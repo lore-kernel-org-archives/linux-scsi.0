@@ -1,72 +1,403 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 00/20] qla2xxx: Patches for target-pending branch
-Date: Mon, 7 Dec 2015 19:48:47 -0500
-Message-ID: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 05/20] qla2xxx: Added interface to send ELS commands from driver.
+Date: Mon, 7 Dec 2015 19:48:52 -0500
+Message-ID: <1449535747-2850-6-git-send-email-himanshu.madhani@qlogic.com>
+References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Nic,
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c   |   36 +++++++
+ drivers/scsi/qla2xxx/qla_dbg.c    |    5 +-
+ drivers/scsi/qla2xxx/qla_def.h    |   19 ++++-
+ drivers/scsi/qla2xxx/qla_gbl.h    |    2 +
+ drivers/scsi/qla2xxx/qla_inline.h |    2 +
+ drivers/scsi/qla2xxx/qla_iocb.c   |  189 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_isr.c    |    6 +
+ 7 files changed, 255 insertions(+), 4 deletions(-)
 
-This patch series adds performance improvement for qla2xxx target mode driver.
-
-Please apply this series to target-pending for next mainline merge window.
-
-Thanks,
-Himanshu
-
-Alexei Potashnik (2):
-  qla2xxx: Delete session if initiator is gone from FW
-  qla2xxx: Wait for all conflicts before ack'ing PLOGI
-
-Dilip Kumar Uppugandla (1):
-  qla2xxx: Check for online flag instead of active reset when
-    transmitting responses
-
-Himanshu Madhani (4):
-  qla2xxx: Enable Extended Login support
-  qla2xxx: Enable Exchange offload support.
-  qla2xxx: Enable Target counters in DebugFS.
-  qla2xxx: Added interface to send ELS commands from driver.
-
-Quinn Tran (13):
-  qla2xxx: Add FW resource count in DebugFS.
-  qla2xxx: Replace QLA_TGT_STATE_ABORTED with a bit.
-  qla2xxx: Change check_stop_free to always return 1
-  qla2xxx: Fix interaction issue between qla2xxx and Target Core Module
-  qla2xxx: Add TAS detection for kernel 3.15 n newer
-  target/tmr: LUN reset cause cmd premature free.
-  qla2xxx: Remove dependency on hardware_lock to reduce lock
-    contention.
-  qla2xxx: Add irq affinity notification
-  qla2xxx: Add selective command queuing
-  qla2xxx: Move atioq to a different lock to reduce lock contention
-  qla2xxx: Disable ZIO at start time.
-  qla2xxx: Set all queues to 4k
-  qla2xxx: Add bulk send for atio & ctio completion paths.
-
- drivers/scsi/qla2xxx/qla_attr.c        |   36 ++
- drivers/scsi/qla2xxx/qla_dbg.c         |   19 +-
- drivers/scsi/qla2xxx/qla_def.h         |   86 ++++-
- drivers/scsi/qla2xxx/qla_dfs.c         |  106 +++++
- drivers/scsi/qla2xxx/qla_gbl.h         |   19 +-
- drivers/scsi/qla2xxx/qla_init.c        |   58 ++-
- drivers/scsi/qla2xxx/qla_inline.h      |    2 +
- drivers/scsi/qla2xxx/qla_iocb.c        |  190 ++++++++
- drivers/scsi/qla2xxx/qla_isr.c         |  129 +++++-
- drivers/scsi/qla2xxx/qla_mbx.c         |  264 +++++++++++-
- drivers/scsi/qla2xxx/qla_os.c          |  163 +++++++-
- drivers/scsi/qla2xxx/qla_target.c      |  737 +++++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_target.h      |   95 +++--
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  205 ++++++++-
- drivers/target/target_core_tmr.c       |   33 ++-
- drivers/target/target_core_transport.c |   35 ++-
- include/target/target_core_base.h      |    2 +
- 17 files changed, 1894 insertions(+), 285 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 6b942d9..6992ebc 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -824,6 +824,41 @@ static struct bin_attribute sysfs_reset_attr = {
+ };
+ 
+ static ssize_t
++qla2x00_issue_logo(struct file *filp, struct kobject *kobj,
++			struct bin_attribute *bin_attr,
++			char *buf, loff_t off, size_t count)
++{
++	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
++	    struct device, kobj)));
++	int type;
++	int rval = 0;
++	port_id_t did;
++
++	type = simple_strtol(buf, NULL, 10);
++
++	did.b.domain = (type & 0x00ff0000) >> 16;
++	did.b.area = (type & 0x0000ff00) >> 8;
++	did.b.al_pa = (type & 0x000000ff);
++
++	ql_log(ql_log_info, vha, 0x70e3, "portid=%02x%02x%02x done\n",
++	    did.b.domain, did.b.area, did.b.al_pa);
++
++	ql_log(ql_log_info, vha, 0x70e4, "%s: %d\n", __func__, type);
++
++	rval = qla24xx_els_dcmd_iocb(vha, ELS_DCMD_LOGO, did);
++	return count;
++}
++
++static struct bin_attribute sysfs_issue_logo_attr = {
++	.attr = {
++		.name = "issue_logo",
++		.mode = S_IWUSR,
++	},
++	.size = 0,
++	.write = qla2x00_issue_logo,
++};
++
++static ssize_t
+ qla2x00_sysfs_read_xgmac_stats(struct file *filp, struct kobject *kobj,
+ 		       struct bin_attribute *bin_attr,
+ 		       char *buf, loff_t off, size_t count)
+@@ -937,6 +972,7 @@ static struct sysfs_entry {
+ 	{ "vpd", &sysfs_vpd_attr, 1 },
+ 	{ "sfp", &sysfs_sfp_attr, 1 },
+ 	{ "reset", &sysfs_reset_attr, },
++	{ "issue_logo", &sysfs_issue_logo_attr, },
+ 	{ "xgmac_stats", &sysfs_xgmac_stats_attr, 3 },
+ 	{ "dcbx_tlv", &sysfs_dcbx_tlv_attr, 3 },
+ 	{ NULL },
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 07451bb..02f01be 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -19,7 +19,7 @@
+  * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
+  * |                              |                    | 0x2011-0x2012, |
+  * |                              |                    | 0x2099-0x20a4  |
+- * | Queue Command and IO tracing |       0x3075       | 0x300b         |
++ * | Queue Command and IO tracing |       0x3074       | 0x300b         |
+  * |                              |                    | 0x3027-0x3028  |
+  * |                              |                    | 0x303d-0x3041  |
+  * |                              |                    | 0x302d,0x3033  |
+@@ -27,12 +27,11 @@
+  * |                              |                    | 0x303a		|
+  * | DPC Thread                   |       0x4023       | 0x4002,0x4013  |
+  * | Async Events                 |       0x508a       | 0x502b-0x502f  |
+- * |                              |                    | 0x5047		|
+  * |                              |                    | 0x5084,0x5075	|
+  * |                              |                    | 0x503d,0x5044  |
+  * |                              |                    | 0x507b,0x505f	|
+  * | Timer Routines               |       0x6012       |                |
+- * | User Space Interactions      |       0x70e2       | 0x7018,0x702e  |
++ * | User Space Interactions      |       0x70e65      | 0x7018,0x702e  |
+  * |				  |		       | 0x7020,0x7024  |
+  * |                              |                    | 0x7039,0x7045  |
+  * |                              |                    | 0x7073-0x7075  |
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index cf32fb9..366f65b 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -310,6 +310,14 @@ struct srb_cmd {
+ /* To identify if a srb is of T10-CRC type. @sp => srb_t pointer */
+ #define IS_PROT_IO(sp)	(sp->flags & SRB_CRC_CTX_DSD_VALID)
+ 
++struct els_logo_payload {
++	uint8_t opcode;
++	uint8_t rsvd[3];
++	uint8_t s_id[3];
++	uint8_t rsvd1[1];
++	uint8_t wwpn[WWN_SIZE];
++};
++
+ /*
+  * SRB extensions.
+  */
+@@ -323,6 +331,15 @@ struct srb_iocb {
+ 			uint16_t data[2];
+ 		} logio;
+ 		struct {
++#define ELS_DCMD_TIMEOUT 20
++#define ELS_DCMD_LOGO 0x5
++			uint32_t flags;
++			uint32_t els_cmd;
++			struct completion comp;
++			struct els_logo_payload *els_logo_pyld;
++			dma_addr_t els_logo_pyld_dma;
++		} els_logo;
++		struct {
+ 			/*
+ 			 * Values for flags field below are as
+ 			 * defined in tsk_mgmt_entry struct
+@@ -383,7 +400,7 @@ struct srb_iocb {
+ #define SRB_FXIOCB_DCMD	10
+ #define SRB_FXIOCB_BCMD	11
+ #define SRB_ABT_CMD	12
+-
++#define SRB_ELS_DCMD	13
+ 
+ typedef struct srb {
+ 	atomic_t ref_count;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 0b6e1c5..2e91966 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -44,6 +44,8 @@ extern int qla2x00_find_new_loop_id(scsi_qla_host_t *, fc_port_t *);
+ extern int qla2x00_fabric_login(scsi_qla_host_t *, fc_port_t *, uint16_t *);
+ extern int qla2x00_local_device_login(scsi_qla_host_t *, fc_port_t *);
+ 
++extern int qla24xx_els_dcmd_iocb(scsi_qla_host_t *, int, port_id_t);
++
+ extern void qla2x00_update_fcports(scsi_qla_host_t *);
+ 
+ extern int qla2x00_abort_isp(scsi_qla_host_t *);
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index fee9eb7..a6b7f15 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -258,6 +258,8 @@ qla2x00_init_timer(srb_t *sp, unsigned long tmo)
+ 	if ((IS_QLAFX00(sp->fcport->vha->hw)) &&
+ 	    (sp->type == SRB_FXIOCB_DCMD))
+ 		init_completion(&sp->u.iocb_cmd.u.fxiocb.fxiocb_comp);
++	if (sp->type == SRB_ELS_DCMD)
++		init_completion(&sp->u.iocb_cmd.u.els_logo.comp);
+ }
+ 
+ static inline int
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c798234..7940bb6 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2011,6 +2011,192 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
+ }
+ 
+ static void
++qla2x00_els_dcmd_sp_free(void *ptr, void *data)
++{
++	struct scsi_qla_host *vha = (scsi_qla_host_t *)ptr;
++	struct qla_hw_data *ha = vha->hw;
++	srb_t *sp = (srb_t *)data;
++	struct srb_iocb *elsio = &sp->u.iocb_cmd;
++
++	if (sp->fcport)
++		kfree(sp->fcport);
++
++	if (elsio->u.els_logo.els_logo_pyld)
++		dma_free_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
++		    elsio->u.els_logo.els_logo_pyld,
++		    elsio->u.els_logo.els_logo_pyld_dma);
++
++	del_timer(&elsio->timer);
++	qla2x00_rel_sp(vha, sp);
++}
++
++static void
++qla2x00_els_dcmd_iocb_timeout(void *data)
++{
++	srb_t *sp = (srb_t *)data;
++	struct srb_iocb *lio = &sp->u.iocb_cmd;
++	fc_port_t *fcport = sp->fcport;
++	struct scsi_qla_host *vha = fcport->vha;
++	struct qla_hw_data *ha = vha->hw;
++	unsigned long flags = 0;
++
++	ql_dbg(ql_dbg_io, vha, 0x3069,
++	    "%s Timeout, hdl=%x, portid=%02x%02x%02x\n",
++	    sp->name, sp->handle, fcport->d_id.b.domain, fcport->d_id.b.area,
++	    fcport->d_id.b.al_pa);
++
++	/* Abort the exchange */
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	if (ha->isp_ops->abort_command(sp)) {
++		ql_dbg(ql_dbg_io, vha, 0x3070,
++		    "mbx abort_command failed.\n");
++	} else {
++		ql_dbg(ql_dbg_io, vha, 0x3071,
++		    "mbx abort_command success.\n");
++	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	complete(&lio->u.els_logo.comp);
++}
++
++static void
++qla2x00_els_dcmd_sp_done(void *data, void *ptr, int res)
++{
++	srb_t *sp = (srb_t *)ptr;
++	fc_port_t *fcport = sp->fcport;
++	struct srb_iocb *lio = &sp->u.iocb_cmd;
++	struct scsi_qla_host *vha = fcport->vha;
++
++	ql_dbg(ql_dbg_io, vha, 0x3072,
++	    "%s hdl=%x, portid=%02x%02x%02x done\n",
++	    sp->name, sp->handle, fcport->d_id.b.domain,
++	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
++
++	complete(&lio->u.els_logo.comp);
++}
++
++int
++qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
++    port_id_t remote_did)
++{
++	srb_t *sp;
++	fc_port_t *fcport = NULL;
++	struct srb_iocb *elsio = NULL;
++	struct qla_hw_data *ha = vha->hw;
++	struct els_logo_payload logo_pyld;
++	int rval = QLA_SUCCESS;
++
++	fcport = qla2x00_alloc_fcport(vha, GFP_KERNEL);
++	if (!fcport) {
++	       ql_log(ql_log_info, vha, 0x70e5,
++		   "fcport allocation failed\n");
++	       return -ENOMEM;
++	}
++
++	/* Alloc SRB structure */
++	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
++	if (!sp) {
++		kfree(fcport);
++		ql_log(ql_log_info, vha, 0x70e6,
++		 "SRB allocation failed\n");
++		return -ENOMEM;
++	}
++
++	elsio = &sp->u.iocb_cmd;
++	fcport->loop_id = 0xFFFF;
++	fcport->d_id.b.domain = remote_did.b.domain;
++	fcport->d_id.b.area = remote_did.b.area;
++	fcport->d_id.b.al_pa = remote_did.b.al_pa;
++
++	ql_dbg(ql_dbg_io, vha, 0x3073, "portid=%02x%02x%02x done\n",
++	    fcport->d_id.b.domain, fcport->d_id.b.area, fcport->d_id.b.al_pa);
++
++	sp->type = SRB_ELS_DCMD;
++	sp->name = "ELS_DCMD";
++	sp->fcport = fcport;
++	qla2x00_init_timer(sp, ELS_DCMD_TIMEOUT);
++	elsio->timeout = qla2x00_els_dcmd_iocb_timeout;
++	sp->done = qla2x00_els_dcmd_sp_done;
++	sp->free = qla2x00_els_dcmd_sp_free;
++
++	elsio->u.els_logo.els_logo_pyld = dma_alloc_coherent(&ha->pdev->dev,
++			    DMA_POOL_SIZE, &elsio->u.els_logo.els_logo_pyld_dma,
++			    GFP_KERNEL);
++
++	if (!elsio->u.els_logo.els_logo_pyld) {
++		sp->free(vha, sp);
++		return QLA_FUNCTION_FAILED;
++	}
++
++	memset(&logo_pyld, 0, sizeof(struct els_logo_payload));
++
++	elsio->u.els_logo.els_cmd = els_opcode;
++	logo_pyld.opcode = els_opcode;
++	logo_pyld.s_id[0] = vha->d_id.b.al_pa;
++	logo_pyld.s_id[1] = vha->d_id.b.area;
++	logo_pyld.s_id[2] = vha->d_id.b.domain;
++	host_to_fcp_swap(logo_pyld.s_id, sizeof(uint32_t));
++	memcpy(&logo_pyld.wwpn, vha->port_name, WWN_SIZE);
++
++	memcpy(elsio->u.els_logo.els_logo_pyld, &logo_pyld,
++	    sizeof(struct els_logo_payload));
++
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS) {
++		sp->free(vha, sp);
++		return QLA_FUNCTION_FAILED;
++	}
++
++	ql_dbg(ql_dbg_io, vha, 0x3074,
++	    "%s LOGO sent, hdl=%x, loopid=%x, portid=%02x%02x%02x.\n",
++	    sp->name, sp->handle, fcport->loop_id, fcport->d_id.b.domain,
++	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
++
++	wait_for_completion(&elsio->u.els_logo.comp);
++
++	sp->free(vha, sp);
++	return rval;
++}
++
++static void
++qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
++{
++	scsi_qla_host_t *vha = sp->fcport->vha;
++	struct srb_iocb *elsio = &sp->u.iocb_cmd;
++
++	els_iocb->entry_type = ELS_IOCB_TYPE;
++	els_iocb->entry_count = 1;
++	els_iocb->sys_define = 0;
++	els_iocb->entry_status = 0;
++	els_iocb->handle = sp->handle;
++	els_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
++	els_iocb->tx_dsd_count = 1;
++	els_iocb->vp_index = vha->vp_idx;
++	els_iocb->sof_type = EST_SOFI3;
++	els_iocb->rx_dsd_count = 0;
++	els_iocb->opcode = elsio->u.els_logo.els_cmd;
++
++	els_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
++	els_iocb->port_id[1] = sp->fcport->d_id.b.area;
++	els_iocb->port_id[2] = sp->fcport->d_id.b.domain;
++	els_iocb->control_flags = 0;
++
++	els_iocb->tx_byte_count = sizeof(struct els_logo_payload);
++	els_iocb->tx_address[0] =
++	    cpu_to_le32(LSD(elsio->u.els_logo.els_logo_pyld_dma));
++	els_iocb->tx_address[1] =
++	    cpu_to_le32(MSD(elsio->u.els_logo.els_logo_pyld_dma));
++	els_iocb->tx_len = cpu_to_le32(sizeof(struct els_logo_payload));
++
++	els_iocb->rx_byte_count = 0;
++	els_iocb->rx_address[0] = 0;
++	els_iocb->rx_address[1] = 0;
++	els_iocb->rx_len = 0;
++
++	sp->fcport->vha->qla_stats.control_requests++;
++}
++
++static void
+ qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ {
+ 	struct fc_bsg_job *bsg_job = sp->u.bsg_job;
+@@ -2624,6 +2810,9 @@ qla2x00_start_sp(srb_t *sp)
+ 			qlafx00_abort_iocb(sp, pkt) :
+ 			qla24xx_abort_iocb(sp, pkt);
+ 		break;
++	case SRB_ELS_DCMD:
++		qla24xx_els_logo_iocb(sp, pkt);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ccf6a7f..ea7e8e8 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1418,6 +1418,12 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	case SRB_CT_CMD:
+ 		type = "ct pass-through";
+ 		break;
++	case SRB_ELS_DCMD:
++		type = "Driver ELS logo";
++		ql_dbg(ql_dbg_user, vha, 0x5047,
++		    "Completing %s: (%p) type=%d.\n", type, sp, sp->type);
++		sp->done(vha, sp, 0);
++		return;
+ 	default:
+ 		ql_dbg(ql_dbg_user, vha, 0x503e,
+ 		    "Unrecognized SRB: (%p) type=%d.\n", sp, sp->type);
 -- 
 1.7.7
