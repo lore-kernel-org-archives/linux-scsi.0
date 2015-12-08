@@ -1,50 +1,83 @@
-From: Boaz Harrosh <ooo@electrozaur.com>
-Subject: Re: [PATCH] [SCSI] osd: fix signed char versus %02x issue
-Date: Wed, 09 Dec 2015 00:21:12 +0200
-Message-ID: <566757D8.4060400@electrozaur.com>
-References: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Tue, 8 Dec 2015 23:47:57 +0000
+Message-ID: <1449618477.16905.126.camel@intel.com>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
+	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
+	 <1449271801.27077.25.camel@HansenPartnership.com>
+	 <1449273524.16905.103.camel@intel.com>
+	 <87egewslfa.fsf@notabene.neil.brown.name>
+	 <1449608892.16905.121.camel@intel.com>
+	 <CAPcyv4gJrdP23sh2cQU94fpq6+Z9GBjxWf0RpBp_4+kydpQAsA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4gJrdP23sh2cQU94fpq6+Z9GBjxWf0RpBp_4+kydpQAsA@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <9EEDFDEF98001E4994C8CE73EEB7C429@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "neilb@suse.com" <neilb@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/08/2015 04:25 PM, Rasmus Villemoes wrote:
-> If char is signed and one of these bytes happen to have a value
-> outside the ascii range, the corresponding output will consist of
-> "ffffff" followed by the two hex chars that were actually
-> intended. One way to fix it would be to change the casts to (u8*) aka
-> (unsigned char*), but it is much simpler (and generates smaller code)
-> to use the %ph extension which was created for such short hexdumps.
-> 
-
-Ha real cool, thanks I hated that crap
-
-ACK-by: Boaz Harrosh <ooo@electrozaur.com>
-
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
->  drivers/scsi/osd/osd_initiator.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-> index 0cccd6033feb..d8a2b5185f56 100644
-> --- a/drivers/scsi/osd/osd_initiator.c
-> +++ b/drivers/scsi/osd/osd_initiator.c
-> @@ -170,10 +170,7 @@ static int _osd_get_print_system_info(struct osd_dev *od,
->  
->  	/* FIXME: Where are the time utilities */
->  	pFirst = get_attrs[a++].val_ptr;
-> -	OSD_INFO("CLOCK                  [0x%02x%02x%02x%02x%02x%02x]\n",
-> -		((char *)pFirst)[0], ((char *)pFirst)[1],
-> -		((char *)pFirst)[2], ((char *)pFirst)[3],
-> -		((char *)pFirst)[4], ((char *)pFirst)[5]);
-> +	OSD_INFO("CLOCK                  [0x%6phN]\n", pFirst);
->  
->  	if (a < nelem) { /* IBM-OSD-SIM bug, Might not have it */
->  		unsigned len = get_attrs[a].len;
-> 
+T24gVHVlLCAyMDE1LTEyLTA4IGF0IDEzOjE4IC0wODAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
+IE9uIFR1ZSwgRGVjIDgsIDIwMTUgYXQgMTowOCBQTSwgVmVybWEsIFZpc2hhbCBMDQo+IDx2aXNo
+YWwubC52ZXJtYUBpbnRlbC5jb20+IHdyb3RlOg0KPiA+IE9uIFdlZCwgMjAxNS0xMi0wOSBhdCAw
+ODowMyArMTEwMCwgTmVpbEJyb3duIHdyb3RlOg0KPiA+ID4gT24gU2F0LCBEZWMgMDUgMjAxNSwg
+VmVybWEsIFZpc2hhbCBMIHdyb3RlOg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gK2ludCBiYWRi
+bG9ja3NfY2xlYXIoc3RydWN0IGJhZGJsb2NrcyAqYmIsIHNlY3Rvcl90IHMsIGludA0KPiA+ID4g
+PiA+ID4gc2VjdG9ycykNCj4gPiA+ID4gPiA+ICt7DQo+ID4gPiA+ID4gWy4uLl0NCj4gPiA+ID4g
+PiA+ICsjZGVmaW5lIERPX0RFQlVHIDENCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBXaHkgaGF2ZSB0
+aGlzIGF0IGFsbCBpZiBpdCdzIHVuY29uZGl0aW9uYWxseSBkZWZpbmVkIGFuZA0KPiA+ID4gPiA+
+IGFsd2F5cw0KPiA+ID4gPiA+IHNldC4NCj4gPiA+ID4gDQo+ID4gPiA+IE5laWwgLSBhbnkgcmVh
+c29uIG9yIGFueXRoaW5nIHlvdSBoYWQgaW4gbWluZCBmb3IgdGhpcz8gT3IgaXMgaXQNCj4gPiA+
+ID4ganVzdCBhbg0KPiA+ID4gPiBhcnRpZmFjdCBhbmQgY2FuIGJlIHJlbW92ZWQuDQo+ID4gPiAN
+Cj4gPiA+IExpa2UgdGhlIGNvbW1lbnQgc2F5czoNCj4gPiA+IA0KPiA+ID4gwqDCoMKgwqDCoMKg
+LyogQWxsb3cgY2xlYXJpbmcgdmlhIHN5c2ZzICpvbmx5KiBmb3IgdGVzdGluZy9kZWJ1Z2dpbmcu
+DQo+ID4gPiDCoMKgwqDCoMKgwqDCoCogTm9ybWFsbHkgb25seSBhIHN1Y2Nlc3NmdWwgd3JpdGUg
+bWF5IGNsZWFyIGEgYmFkYmxvY2sNCj4gPiA+IMKgwqDCoMKgwqDCoMKgKi8NCj4gPiA+IA0KPiA+
+ID4gVGhlIERPX0RFQlVHIGRlZmluZSBhbmQgaWZkZWZzIGFyZSBkb2N1bWVudGF0aW9uIGlkZW50
+aWZ5aW5nIGJpdHMNCj4gPiA+IG9mDQo+ID4gPiBjb2RlIHRoYXQgc2hvdWxkIGJlIHJlbW92ZWQg
+d2hlbiBpdCBhbGwgc2VlbXMgdG8gYmUgd29ya2luZy4NCj4gPiA+IE1heWJlIG5vdyBpcyBhIGdv
+b2QgdGltZSB0byByZW1vdmUgdGhhdCBjb2RlLg0KPiA+ID4gDQo+ID4gSG0sIEkgdGhpbmsgaXQg
+d291bGQgYmUgbmljZSB0byBjb250aW51ZSB0byBoYXZlIHRoZSBhYmlsaXR5IHRvDQo+ID4gY2xl
+YXINCj4gPiBiYWRibG9ja3MgdXNpbmcgc3lzZnMgYXQgbGVhc3QgZm9yIGEgd2hpbGUgbW9yZSwg
+YXMgd2UgdGVzdCB0aGUNCj4gPiB2YXJpb3VzDQo+ID4gZXJyb3IgaGFuZGxpbmcgcGF0aHMgZm9y
+IE5WRElNTVMgKERhbiwgdGhvdWdodHM/KS4NCj4gPiANCj4gPiBXZSBjb3VsZCBlaXRoZXIgcmVt
+b3ZlIGl0IGxhdGVyIG9yIChJJ20gbGVhbmluZyB0b3dhcmRzKSBtYWtlIGl0IGENCj4gPiBjb25m
+aWcgb3B0aW9uIHNpbWlsYXIgdG8gRkFJTF9NQUtFX1JFUVVFU1QgYW5kIGZyaWVuZHMuLg0KPiAN
+Cj4gImxhdGVyIiBhcyBpbiBiZWZvcmUgdjQuNS1yYzE/wqDCoFdlIGNhbiBhbHdheXMgY2Fycnkg
+dGhpcyBkZWJ1ZyBmZWF0dXJlDQo+IGxvY2FsbHkgZm9yIHRlc3RpbmcuwqDCoFdlIGRvbid0IHdh
+bnQgdXNlcnNwYWNlIGdyb3dpbmcgQUJJIGF0dGFjaG1lbnRzDQo+IHRvIHRoaXMgY2FwYWJpbGl0
+eSBub3cgdGhhdCBpdCdzIG1vcmUgdGhhbiBqdXN0IG1kIHRvb2xpbmcgdGhhdCB3aWxsDQo+IHNl
+ZSB0aGlzLg0KDQoNCkFncmVlZC4gVGhlIGZvbGxvd2luZyBpbmNyZW1lbnRhbCBwYXRjaCByZW1v
+dmVzIHN5c2ZzIHN1cHBvcnQuDQpBbGwgdGhlIGxhdGVzdCBiYWRibG9ja3MgcGF0Y2hlcyBjYW4g
+YWxzbyBiZSBmb3VuZCBhdDoNCg0KZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9r
+ZXJuZWwvZ2l0L3Zpc2hhbC9udmRpbW0uZ2l0wqBnZW5kaXNrLWJhZGJsb2Nrcw0KDQoNCjg8LS0t
+LS0NCkZyb20gNWYwZTdhYzMxZDI3YTEzMmYzMTQxMDZmMWRiMzNhZjIyZmRlMDNlZCBNb24gU2Vw
+IDE3IDAwOjAwOjAwIDIwMDENCkZyb206IFZpc2hhbCBWZXJtYSA8dmlzaGFsLmwudmVybWFAaW50
+ZWwuY29tPg0KRGF0ZTogVHVlLCA4IERlYyAyMDE1IDE2OjI4OjMxIC0wNzAwDQpTdWJqZWN0OiBb
+UEFUQ0ggdjQgNC8zXSBiYWRibG9ja3M6IHJlbW92ZSBzdXBwb3J0IGZvciBjbGVhcmluZyB2aWEg
+c3lzZnMNCg0Kc3lzZnMgc3VwcG9ydCBmb3IgY2xlYXJpbmcgYmFkYmxvY2tzIHdhcyBvcmlnaW5h
+bGx5IG1lYW50IGZvciB0ZXN0aW5nDQpvbmx5LiBXaXRoIHRoZSBtb3ZlIHRvIGdlbmVyYWxpemUg
+dGhlIGludGVyZmFjZSwgcmVtb3ZlIHRoaXMgc3VwcG9ydCBzbw0KdGhhdCB1c2Vyc3BhY2UgZG9l
+c24ndCBzdGFydCB0cmVhdGluZyB0aGlzIGFzIGFuIEFCSS4NCg0KU2lnbmVkLW9mZi1ieTogVmlz
+aGFsIFZlcm1hIDx2aXNoYWwubC52ZXJtYUBpbnRlbC5jb20+DQotLS0NCsKgYmxvY2svYmFkYmxv
+Y2tzLmMgfCAxNSAtLS0tLS0tLS0tLS0tLS0NCsKgMSBmaWxlIGNoYW5nZWQsIDE1IGRlbGV0aW9u
+cygtKQ0KDQpkaWZmIC0tZ2l0IGEvYmxvY2svYmFkYmxvY2tzLmMgYi9ibG9jay9iYWRibG9ja3Mu
+Yw0KaW5kZXggZjBhYzI3OS4uZTVkMmE5MSAxMDA2NDQNCi0tLSBhL2Jsb2NrL2JhZGJsb2Nrcy5j
+DQorKysgYi9ibG9jay9iYWRibG9ja3MuYw0KQEAgLTUwMywxNiArNTAzLDYgQEAgc3NpemVfdCBi
+YWRibG9ja3Nfc3RvcmUoc3RydWN0IGJhZGJsb2NrcyAqYmIsIGNvbnN0DQpjaGFyICpwYWdlLCBz
+aXplX3QgbGVuLA0KwqAJaW50IGxlbmd0aDsNCsKgCWNoYXIgbmV3bGluZTsNCsKgDQotCS8qIEFs
+bG93IGNsZWFyaW5nIHZpYSBzeXNmcyAqb25seSogZm9yIHRlc3RpbmcvZGVidWdnaW5nLg0KLQnC
+oCogTm9ybWFsbHkgb25seSBhIHN1Y2Nlc3NmdWwgd3JpdGUgbWF5IGNsZWFyIGEgYmFkYmxvY2sN
+Ci0JwqAqLw0KLQlpbnQgY2xlYXIgPSAwOw0KLQ0KLQlpZiAocGFnZVswXSA9PSAnLScpIHsNCi0J
+CWNsZWFyID0gMTsNCi0JCXBhZ2UrKzsNCi0JfQ0KLQ0KwqAJc3dpdGNoIChzc2NhbmYocGFnZSwg
+IiVsbHUgJWQlYyIsICZzZWN0b3IsICZsZW5ndGgsICZuZXdsaW5lKSkNCnsNCsKgCWNhc2UgMzoN
+CsKgCQlpZiAobmV3bGluZSAhPSAnXG4nKQ0KQEAgLTUyNSwxMSArNTE1LDYgQEAgc3NpemVfdCBi
+YWRibG9ja3Nfc3RvcmUoc3RydWN0IGJhZGJsb2NrcyAqYmIsIGNvbnN0DQpjaGFyICpwYWdlLCBz
+aXplX3QgbGVuLA0KwqAJCXJldHVybiAtRUlOVkFMOw0KwqAJfQ0KwqANCi0JaWYgKGNsZWFyKSB7
+DQotCQliYWRibG9ja3NfY2xlYXIoYmIsIHNlY3RvciwgbGVuZ3RoKTsNCi0JCXJldHVybiBsZW47
+DQotCX0NCi0NCsKgCWlmIChiYWRibG9ja3Nfc2V0KGJiLCBzZWN0b3IsIGxlbmd0aCwgIXVuYWNr
+KSkNCsKgCQlyZXR1cm4gLUVOT1NQQzsNCsKgCWVsc2UNCi0tIA0KMi41LjANCg==
