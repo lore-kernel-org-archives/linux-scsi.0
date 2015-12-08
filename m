@@ -1,83 +1,71 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] ses: Fix problems with simple enclosures
-Date: Tue, 08 Dec 2015 12:06:14 -0500
-Message-ID: <1449594374.4067.164.camel@localhost.localdomain>
-References: <1449594031.2219.9.camel@HansenPartnership.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v4 0/3] Badblock tracking for gendisks
+Date: Tue,  8 Dec 2015 12:18:12 -0700
+Message-ID: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40656 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:23168 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbbLHRGQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Dec 2015 12:06:16 -0500
-In-Reply-To: <1449594031.2219.9.camel@HansenPartnership.com>
+	id S1751854AbbLHTSf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Dec 2015 14:18:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Andrea Gelmini <andrea.gelmini@gelma.net>
+To: linux-nvdimm@lists.01.org
+Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Tue, 2015-12-08 at 09:00 -0800, James Bottomley wrote:
-> Simple enclosure implementations (mostly USB) are allowed to return only
-> page 8 to every diagnostic query.  That really confuses our
-> implementation because we assume the return is the page we asked for and
-> end up doing incorrect offsets based on bogus information leading to
-> accesses outside of allocated ranges.  Fix that by checking the page
-> code of the return and giving an error if it isn't the one we asked for.
-> This should fix reported bugs with USB storage by simply refusing to
-> attach to enclosures that behave like this.  It's also good defensive
-> practise now that we're starting to see more USB enclosures.
-> 
-> Reported-by: Andrea Gelmini <andrea.gelmini@gelma.net>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index dcb0d76..7d9cec5 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -84,6 +84,7 @@ static void init_device_slot_control(unsigned char *dest_desc,
->  static int ses_recv_diag(struct scsi_device *sdev, int page_code,
->  			 void *buf, int bufflen)
->  {
-> +	int ret;
->  	unsigned char cmd[] = {
->  		RECEIVE_DIAGNOSTIC,
->  		1,		/* Set PCV bit */
-> @@ -92,9 +93,26 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
->  		bufflen & 0xff,
->  		0
->  	};
-> +	unsigned char recv_page_code;
->  
-> -	return scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
-> +	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
->  				NULL, SES_TIMEOUT, SES_RETRIES, NULL);
-> +	if (unlikely(!ret))
-> +		return ret;
-> +
-> +	recv_page_code = ((unsigned char *)buf)[0];
-> +
-> +	if (likely(recv_page_code == page_code))
-> +		return ret;
-> +
-> +	/* successful diagnostic but wrong page code.  This happens to some
-> +	 * USB devices, just print a message and pretend there was an error */
-> +
-> +	sdev_printk(KERN_ERR, sdev,
-> +		    "Wrong diagnostic page; asked for %d got %u\n",
-> +		    page_code, recv_page_code);
-> +
-> +	return -EINVAL;
->  }
->  
->  static int ses_send_diag(struct scsi_device *sdev, int page_code,
-> 
-> 
+v4:
+  - Rebase to v4.4-rc4
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+v3:
+  - Add kernel-doc style comments to all exported functions in badblocks.c (James)
+  - Make return values from badblocks functions consistent with themselves
+    and the kernel style. Change the polarity of badblocks_set, and update
+    all callers accordingly (James)
+  - In gendisk, don't unconditionally allocate badblocks, export the initializer.
+    This also allows the initializer to be a non-void return type, so that the
+    badblocks user can act upon failures better (James)
 
+
+v2:
+  - In badblocks_free, make 'page' NULL (patch 1)
+  - Move the core badblocks code to a new .c file (patch 1) (Jens)
+  - Fix a sizeof usage in disk_alloc_badblocks (patch 2) (Dan)
+  - Since disk_alloc_badblocks can fail, check disk->bb for NULL in the
+    genhd wrappers (patch 2) (Jeff)
+  - Update the md conversion to also ise the badblocks init and free
+    functions (patch 3)
+  - Remove the BB_* macros from md.h as they are now in badblocks.h (patch 3)
+
+Patch 1 copies badblock management code into a header of its own,
+making it generally available. It follows common libraries of code
+such as linked lists, where anyone may embed a core data structure
+in another place, and use the provided accessor functions to
+manipulate the data.
+
+Patch 2 adds badblock tracking to gendisks (in preparation for use
+by NVDIMM devices).
+
+Patch 3 converts md over to use the new badblocks 'library'. I have
+done some pretty simple testing on this - created a raid 1 device,
+made sure the sysfs entries show up, and can be used to add and view
+badblocks. A closer look by the md folks would be nice here.
+
+
+Vishal Verma (3):
+  badblocks: Add core badblock management code
+  block: Add badblock management for gendisks
+  md: convert to use the generic badblocks code
+
+ block/Makefile            |   2 +-
+ block/badblocks.c         | 576 ++++++++++++++++++++++++++++++++++++++++++++++
+ block/genhd.c             |  76 ++++++
+ drivers/md/md.c           | 516 ++---------------------------------------
+ drivers/md/md.h           |  40 +---
+ include/linux/badblocks.h |  53 +++++
+ include/linux/genhd.h     |   7 +
+ 7 files changed, 741 insertions(+), 529 deletions(-)
+ create mode 100644 block/badblocks.c
+ create mode 100644 include/linux/badblocks.h
+
+-- 
+2.5.0
 
