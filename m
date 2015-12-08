@@ -1,58 +1,45 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
-Date: Tue, 8 Dec 2015 13:18:31 -0800
-Message-ID: <CAPcyv4gJrdP23sh2cQU94fpq6+Z9GBjxWf0RpBp_4+kydpQAsA@mail.gmail.com>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-	<1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
-	<1449271801.27077.25.camel@HansenPartnership.com>
-	<1449273524.16905.103.camel@intel.com>
-	<87egewslfa.fsf@notabene.neil.brown.name>
-	<1449608892.16905.121.camel@intel.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v4 0/3] Badblock tracking for gendisks
+Date: Wed, 9 Dec 2015 08:52:35 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1512090848001.2126@nippy.intranet>
+References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com> <87poygsmxd.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449608892.16905.121.camel@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, "neilb@suse.com" <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:55410 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbbLHVwt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2015 16:52:49 -0500
+In-Reply-To: <87poygsmxd.fsf@notabene.neil.brown.name>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Tue, Dec 8, 2015 at 1:08 PM, Verma, Vishal L
-<vishal.l.verma@intel.com> wrote:
-> On Wed, 2015-12-09 at 08:03 +1100, NeilBrown wrote:
->> On Sat, Dec 05 2015, Verma, Vishal L wrote:
->> > >
->> > > > +int badblocks_clear(struct badblocks *bb, sector_t s, int
->> > > > sectors)
->> > > > +{
->> > > [...]
->> > > > +#define DO_DEBUG 1
->> > >
->> > > Why have this at all if it's unconditionally defined and always
->> > > set.
->> >
->> > Neil - any reason or anything you had in mind for this? Or is it
->> > just an
->> > artifact and can be removed.
->>
->> Like the comment says:
->>
->>       /* Allow clearing via sysfs *only* for testing/debugging.
->>        * Normally only a successful write may clear a badblock
->>        */
->>
->> The DO_DEBUG define and ifdefs are documentation identifying bits of
->> code that should be removed when it all seems to be working.
->> Maybe now is a good time to remove that code.
->>
-> Hm, I think it would be nice to continue to have the ability to clear
-> badblocks using sysfs at least for a while more, as we test the various
-> error handling paths for NVDIMMS (Dan, thoughts?).
->
-> We could either remove it later or (I'm leaning towards) make it a
-> config option similar to FAIL_MAKE_REQUEST and friends..
 
-"later" as in before v4.5-rc1?  We can always carry this debug feature
-locally for testing.  We don't want userspace growing ABI attachments
-to this capability now that it's more than just md tooling that will
-see this.
+On Wed, 9 Dec 2015, NeilBrown wrote:
+
+> On Wed, Dec 09 2015, Vishal Verma <vishal.l.verma@intel.com> wrote:
+> 
+> >
+> > Patch 3 converts md over to use the new badblocks 'library'. I have 
+> > done some pretty simple testing on this - created a raid 1 device, 
+> > made sure the sysfs entries show up, and can be used to add and view 
+> > badblocks. A closer look by the md folks would be nice here.
+> 
+> Hi,
+>  this all looks reasonably sensible.  I haven't gone over it with a
+>  fine toothed comb (I wonder where that analogy comes from....)
+
+Delousing. (Not debugging.)
+
+> but
+>  nothing is obviously wrong.
+> 
+>  Acked-by: NeilBrown <neilb@suse.com>
+> 
+> Thanks,
+> NeilBrown
+> 
+
+-- 
