@@ -1,295 +1,255 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 04/20] qla2xxx: Add FW resource count in DebugFS.
-Date: Mon, 7 Dec 2015 19:48:51 -0500
-Message-ID: <1449535747-2850-5-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 03/20] qla2xxx: Enable Target counters in DebugFS.
+Date: Mon, 7 Dec 2015 19:48:50 -0500
+Message-ID: <1449535747-2850-4-git-send-email-himanshu.madhani@qlogic.com>
 References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:50877 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932391AbbLHB3a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2015 20:29:30 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@qlogic.com>
+Following counters are added in target mode to help debugging efforts.
 
-DebugFS now will show fw_resource_count node.
+Target Counters
 
-FW Resource count
+qla_core_sbt_cmd = 0
+qla_core_ret_sta_ctio = 0
+qla_core_ret_ctio = 0
+core_qla_que_buf = 0
+core_qla_snd_status = 0
+core_qla_free_cmd = 0
+num alloc iocb failed = 0
+num term exchange sent = 0
+num Q full sent = 0
 
-Original TGT exchg count[0]
-current TGT exchg count[0]
-original Initiator Exchange count[2048]
-Current Initiator Exchange count[2048]
-Original IOCB count[2078]
-Current IOCB count[2067]
-MAX VP count[254]
-MAX FCF count[0]
-
-Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h     |   13 +++++++--
- drivers/scsi/qla2xxx/qla_dfs.c     |   50 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_gbl.h     |    3 +-
- drivers/scsi/qla2xxx/qla_init.c    |   12 +++-----
- drivers/scsi/qla2xxx/qla_mbx.c     |   28 ++++++++-----------
- drivers/scsi/qla2xxx/qla_target.c  |    4 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |    2 +-
- 7 files changed, 81 insertions(+), 31 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h     |   15 +++++++++
+ drivers/scsi/qla2xxx/qla_dfs.c     |   56 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_iocb.c    |    1 +
+ drivers/scsi/qla2xxx/qla_target.c  |    7 ++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |    4 ++
+ 6 files changed, 84 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index e25f5ac..07451bb 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -60,7 +60,7 @@
+  * |                              |                    | 0xb13c-0xb140  |
+  * |                              |                    | 0xb149		|
+  * | MultiQ                       |       0xc00c       |		|
+- * | Misc                         |       0xd300       | 0xd031-0xd0ff	|
++ * | Misc                         |       0xd301       | 0xd031-0xd0ff	|
+  * |                              |                    | 0xd101-0xd1fe	|
+  * |                              |                    | 0xd214-0xd2fe	|
+  * | Target Mode		  |	  0xe080       |		|
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 1d2a51a..cf32fb9 100644
+index be9a674..1d2a51a 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2917,7 +2917,7 @@ struct qlt_hw_data {
- #define MAX_QFULL_CMDS_ALLOC	8192
- #define Q_FULL_THRESH_HOLD_PERCENT 90
- #define Q_FULL_THRESH_HOLD(ha) \
--	((ha->fw_xcb_count/100) * Q_FULL_THRESH_HOLD_PERCENT)
-+	((ha->cur_fw_xcb_count/100) * Q_FULL_THRESH_HOLD_PERCENT)
- 
- #define LEAK_EXCHG_THRESH_HOLD_PERCENT 75	/* 75 percent */
- 
-@@ -3298,8 +3298,14 @@ struct qla_hw_data {
- #define RISC_START_ADDRESS_2100 0x1000
- #define RISC_START_ADDRESS_2300 0x800
- #define RISC_START_ADDRESS_2400 0x100000
--	uint16_t	fw_xcb_count;
--	uint16_t	fw_iocb_count;
-+
-+	uint16_t	orig_fw_tgt_xcb_count;
-+	uint16_t	cur_fw_tgt_xcb_count;
-+	uint16_t	orig_fw_xcb_count;
-+	uint16_t	cur_fw_xcb_count;
-+	uint16_t	orig_fw_iocb_count;
-+	uint16_t	cur_fw_iocb_count;
-+	uint16_t	fw_max_fcf_count;
- 
- 	uint32_t	fw_shared_ram_start;
- 	uint32_t	fw_shared_ram_end;
-@@ -3343,6 +3349,7 @@ struct qla_hw_data {
+@@ -3342,6 +3342,8 @@ struct qla_hw_data {
+ 	uint32_t	chain_offset;
  	struct dentry *dfs_dir;
  	struct dentry *dfs_fce;
- 	struct dentry *dfs_tgt_counters;
-+	struct dentry *dfs_fw_resource_cnt;
- 
++	struct dentry *dfs_tgt_counters;
++
  	dma_addr_t	fce_dma;
  	void		*fce;
+ 	uint32_t	fce_bufs;
+@@ -3499,6 +3501,18 @@ struct qla_hw_data {
+ 	int	allow_cna_fw_dump;
+ };
+ 
++struct qla_tgt_counters {
++	uint64_t qla_core_sbt_cmd;
++	uint64_t core_qla_que_buf;
++	uint64_t qla_core_ret_ctio;
++	uint64_t core_qla_snd_status;
++	uint64_t qla_core_ret_sta_ctio;
++	uint64_t core_qla_free_cmd;
++	uint64_t num_q_full_sent;
++	uint64_t num_alloc_iocb_failed;
++	uint64_t num_term_xchg_sent;
++};
++
+ /*
+  * Qlogic scsi host structure
+  */
+@@ -3651,6 +3665,7 @@ typedef struct scsi_qla_host {
+ 
+ 	atomic_t	vref_count;
+ 	struct qla8044_reset_template reset_tmplt;
++	struct qla_tgt_counters tgt_counters;
+ } scsi_qla_host_t;
+ 
+ #define SET_VP_IDX	1
 diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 449541f..cd8b96a 100644
+index 15cf074..449541f 100644
 --- a/drivers/scsi/qla2xxx/qla_dfs.c
 +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -13,6 +13,43 @@ static struct dentry *qla2x00_dfs_root;
+@@ -13,6 +13,48 @@ static struct dentry *qla2x00_dfs_root;
  static atomic_t qla2x00_dfs_root_count;
  
  static int
-+qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
++qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
 +{
 +	struct scsi_qla_host *vha = s->private;
-+	struct qla_hw_data *ha = vha->hw;
 +
-+	seq_puts(s, "FW Resource count\n\n");
-+	seq_printf(s, "Original TGT exchg count[%d]\n",
-+	    ha->orig_fw_tgt_xcb_count);
-+	seq_printf(s, "current TGT exchg count[%d]\n",
-+	    ha->cur_fw_tgt_xcb_count);
-+	seq_printf(s, "original Initiator Exchange count[%d]\n",
-+	    ha->orig_fw_xcb_count);
-+	seq_printf(s, "Current Initiator Exchange count[%d]\n",
-+	    ha->cur_fw_xcb_count);
-+	seq_printf(s, "Original IOCB count[%d]\n", ha->orig_fw_iocb_count);
-+	seq_printf(s, "Current IOCB count[%d]\n", ha->cur_fw_iocb_count);
-+	seq_printf(s, "MAX VP count[%d]\n", ha->max_npiv_vports);
-+	seq_printf(s, "MAX FCF count[%d]\n", ha->fw_max_fcf_count);
++	seq_puts(s, "Target Counters\n");
++	seq_printf(s, "qla_core_sbt_cmd = %lld\n",
++		vha->tgt_counters.qla_core_sbt_cmd);
++	seq_printf(s, "qla_core_ret_sta_ctio = %lld\n",
++		vha->tgt_counters.qla_core_ret_sta_ctio);
++	seq_printf(s, "qla_core_ret_ctio = %lld\n",
++		vha->tgt_counters.qla_core_ret_ctio);
++	seq_printf(s, "core_qla_que_buf = %lld\n",
++		vha->tgt_counters.core_qla_que_buf);
++	seq_printf(s, "core_qla_snd_status = %lld\n",
++		vha->tgt_counters.core_qla_snd_status);
++	seq_printf(s, "core_qla_free_cmd = %lld\n",
++		vha->tgt_counters.core_qla_free_cmd);
++	seq_printf(s, "num alloc iocb failed = %lld\n",
++		vha->tgt_counters.num_alloc_iocb_failed);
++	seq_printf(s, "num term exchange sent = %lld\n",
++		vha->tgt_counters.num_term_xchg_sent);
++	seq_printf(s, "num Q full sent = %lld\n",
++		vha->tgt_counters.num_q_full_sent);
 +
 +	return 0;
 +}
 +
 +static int
-+qla_dfs_fw_resource_cnt_open(struct inode *inode, struct file *file)
++qla_dfs_tgt_counters_open(struct inode *inode, struct file *file)
 +{
 +	struct scsi_qla_host *vha = inode->i_private;
-+	return single_open(file, qla_dfs_fw_resource_cnt_show, vha);
++	return single_open(file, qla_dfs_tgt_counters_show, vha);
 +}
 +
-+static const struct file_operations dfs_fw_resource_cnt_ops = {
-+	.open           = qla_dfs_fw_resource_cnt_open,
++static const struct file_operations dfs_tgt_counters_ops = {
++	.open           = qla_dfs_tgt_counters_open,
 +	.read           = seq_read,
 +	.llseek         = seq_lseek,
 +	.release        = single_release,
 +};
 +
 +static int
- qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
+ qla2x00_dfs_fce_show(struct seq_file *s, void *unused)
  {
- 	struct scsi_qla_host *vha = s->private;
-@@ -188,6 +225,14 @@ create_dir:
+ 	scsi_qla_host_t *vha = s->private;
+@@ -146,6 +188,14 @@ create_dir:
  	atomic_inc(&qla2x00_dfs_root_count);
  
  create_nodes:
-+	ha->dfs_fw_resource_cnt = debugfs_create_file("fw_resource_count",
-+	    S_IRUSR, ha->dfs_dir, vha, &dfs_fw_resource_cnt_ops);
-+	if (!ha->dfs_fw_resource_cnt) {
-+		ql_log(ql_log_warn, vha, 0x00fd,
-+		    "Unable to create debugFS fw_resource_count node.\n");
++	ha->dfs_tgt_counters = debugfs_create_file("tgt_counters", S_IRUSR,
++	    ha->dfs_dir, vha, &dfs_tgt_counters_ops);
++	if (!ha->dfs_tgt_counters) {
++		ql_log(ql_log_warn, vha, 0xd301,
++		    "Unable to create debugFS tgt_counters node.\n");
 +		goto out;
 +	}
 +
- 	ha->dfs_tgt_counters = debugfs_create_file("tgt_counters", S_IRUSR,
- 	    ha->dfs_dir, vha, &dfs_tgt_counters_ops);
- 	if (!ha->dfs_tgt_counters) {
-@@ -212,6 +257,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
+ 	ha->dfs_fce = debugfs_create_file("fce", S_IRUSR, ha->dfs_dir, vha,
+ 	    &dfs_fce_ops);
+ 	if (!ha->dfs_fce) {
+@@ -161,6 +211,12 @@ int
+ qla2x00_dfs_remove(scsi_qla_host_t *vha)
  {
  	struct qla_hw_data *ha = vha->hw;
- 
-+	if (ha->dfs_fw_resource_cnt) {
-+		debugfs_remove(ha->dfs_fw_resource_cnt);
-+		ha->dfs_fw_resource_cnt = NULL;
++
++	if (ha->dfs_tgt_counters) {
++		debugfs_remove(ha->dfs_tgt_counters);
++		ha->dfs_tgt_counters = NULL;
 +	}
 +
- 	if (ha->dfs_tgt_counters) {
- 		debugfs_remove(ha->dfs_tgt_counters);
- 		ha->dfs_tgt_counters = NULL;
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index f9ebfcf..0b6e1c5 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -329,8 +329,7 @@ extern int
- qla2x00_get_id_list(scsi_qla_host_t *, void *, dma_addr_t, uint16_t *);
- 
- extern int
--qla2x00_get_resource_cnts(scsi_qla_host_t *, uint16_t *, uint16_t *,
--    uint16_t *, uint16_t *, uint16_t *, uint16_t *);
-+qla2x00_get_resource_cnts(scsi_qla_host_t *);
- 
- extern int
- qla2x00_get_fcal_position_map(scsi_qla_host_t *ha, char *pos_map);
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index b3ed3b3..35d1ea8 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1766,10 +1766,10 @@ qla2x00_alloc_outstanding_cmds(struct qla_hw_data *ha, struct req_que *req)
- 	    (ql2xmultique_tag || ql2xmaxqueues > 1)))
- 		req->num_outstanding_cmds = DEFAULT_OUTSTANDING_COMMANDS;
- 	else {
--		if (ha->fw_xcb_count <= ha->fw_iocb_count)
--			req->num_outstanding_cmds = ha->fw_xcb_count;
-+		if (ha->cur_fw_xcb_count <= ha->cur_fw_iocb_count)
-+			req->num_outstanding_cmds = ha->cur_fw_xcb_count;
- 		else
--			req->num_outstanding_cmds = ha->fw_iocb_count;
-+			req->num_outstanding_cmds = ha->cur_fw_iocb_count;
+ 	if (ha->dfs_fce) {
+ 		debugfs_remove(ha->dfs_fce);
+ 		ha->dfs_fce = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c49df34..c798234 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1868,6 +1868,7 @@ skip_cmd_array:
  	}
  
- 	req->outstanding_cmds = kzalloc(sizeof(srb_t *) *
-@@ -1878,9 +1878,7 @@ enable_82xx_npiv:
- 						ha->max_npiv_vports =
- 						    MIN_MULTI_ID_FABRIC - 1;
- 				}
--				qla2x00_get_resource_cnts(vha, NULL,
--				    &ha->fw_xcb_count, NULL, &ha->fw_iocb_count,
--				    &ha->max_npiv_vports, NULL);
-+				qla2x00_get_resource_cnts(vha);
+ queuing_error:
++	vha->tgt_counters.num_alloc_iocb_failed++;
+ 	return pkt;
+ }
  
- 				/*
- 				 * Allocate the array of outstanding commands
-@@ -2262,7 +2260,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 	if (IS_FWI2_CAPABLE(ha)) {
- 		mid_init_cb->options = cpu_to_le16(BIT_1);
- 		mid_init_cb->init_cb.execution_throttle =
--		    cpu_to_le16(ha->fw_xcb_count);
-+		    cpu_to_le16(ha->cur_fw_xcb_count);
- 		/* D-Port Status */
- 		if (IS_DPORT_CAPABLE(ha))
- 			mid_init_cb->init_cb.firmware_options_1 |=
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 06de0eb..286eced 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -2619,10 +2619,9 @@ qla2x00_get_id_list(scsi_qla_host_t *vha, void *id_list, dma_addr_t id_list_dma,
-  *	Kernel context.
-  */
- int
--qla2x00_get_resource_cnts(scsi_qla_host_t *vha, uint16_t *cur_xchg_cnt,
--    uint16_t *orig_xchg_cnt, uint16_t *cur_iocb_cnt,
--    uint16_t *orig_iocb_cnt, uint16_t *max_npiv_vports, uint16_t *max_fcfs)
-+qla2x00_get_resource_cnts(scsi_qla_host_t *vha)
- {
-+	struct qla_hw_data *ha = vha->hw;
- 	int rval;
- 	mbx_cmd_t mc;
- 	mbx_cmd_t *mcp = &mc;
-@@ -2650,19 +2649,16 @@ qla2x00_get_resource_cnts(scsi_qla_host_t *vha, uint16_t *cur_xchg_cnt,
- 		    mcp->mb[3], mcp->mb[6], mcp->mb[7], mcp->mb[10],
- 		    mcp->mb[11], mcp->mb[12]);
- 
--		if (cur_xchg_cnt)
--			*cur_xchg_cnt = mcp->mb[3];
--		if (orig_xchg_cnt)
--			*orig_xchg_cnt = mcp->mb[6];
--		if (cur_iocb_cnt)
--			*cur_iocb_cnt = mcp->mb[7];
--		if (orig_iocb_cnt)
--			*orig_iocb_cnt = mcp->mb[10];
--		if (vha->hw->flags.npiv_supported && max_npiv_vports)
--			*max_npiv_vports = mcp->mb[11];
--		if ((IS_QLA81XX(vha->hw) || IS_QLA83XX(vha->hw) ||
--		    IS_QLA27XX(vha->hw)) && max_fcfs)
--			*max_fcfs = mcp->mb[12];
-+		ha->orig_fw_tgt_xcb_count =  mcp->mb[1];
-+		ha->cur_fw_tgt_xcb_count = mcp->mb[2];
-+		ha->cur_fw_xcb_count = mcp->mb[3];
-+		ha->orig_fw_xcb_count = mcp->mb[6];
-+		ha->cur_fw_iocb_count = mcp->mb[7];
-+		ha->orig_fw_iocb_count = mcp->mb[10];
-+		if (ha->flags.npiv_supported)
-+			ha->max_npiv_vports = mcp->mb[11];
-+		if (IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha))
-+			ha->fw_max_fcf_count = mcp->mb[12];
- 	}
- 
- 	return (rval);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index f404e48..661124a 100644
+index 75514a1..f404e48 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3034,7 +3034,7 @@ static void qlt_init_term_exchange(struct scsi_qla_host *vha)
- 	struct qla_tgt_cmd *cmd, *tcmd;
+@@ -2510,6 +2510,11 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
  
- 	vha->hw->tgt.leak_exchg_thresh_hold =
--	    (vha->hw->fw_xcb_count/100) * LEAK_EXCHG_THRESH_HOLD_PERCENT;
-+	    (vha->hw->cur_fw_xcb_count/100) * LEAK_EXCHG_THRESH_HOLD_PERCENT;
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
  
- 	cmd = tcmd = NULL;
- 	if (!list_empty(&vha->hw->tgt.q_full_list)) {
-@@ -3064,7 +3064,7 @@ static void qlt_chk_exch_leak_thresh_hold(struct scsi_qla_host *vha)
++	if (xmit_type == QLA_TGT_XMIT_STATUS)
++		vha->tgt_counters.core_qla_snd_status++;
++	else
++		vha->tgt_counters.core_qla_que_buf++;
++
+ 	if (qla2x00_reset_active(vha) || cmd->reset_count != ha->chip_reset) {
+ 		/*
+ 		 * Either a chip reset is active or this request was from
+@@ -2957,6 +2962,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 			ret = 1;
+ 	}
  
- 		ql_dbg(ql_dbg_tgt, vha, 0xe079,
- 		    "Chip reset due to exchange starvation: %d/%d.\n",
--		    total_leaked, vha->hw->fw_xcb_count);
-+		    total_leaked, vha->hw->cur_fw_xcb_count);
++	vha->tgt_counters.num_term_xchg_sent++;
+ 	pkt->entry_count = 1;
+ 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
  
- 		if (IS_P3P_TYPE(vha->hw))
- 			set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
+@@ -4916,6 +4922,7 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
+ 		return -ENOMEM;
+ 	}
+ 
++	vha->tgt_counters.num_q_full_sent++;
+ 	pkt->entry_count = 1;
+ 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
+ 
 diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 3403428..74c6e9b 100644
+index 81af294..3403428 100644
 --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
 +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1357,7 +1357,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
- 	struct qla_tgt_sess *sess = qla_tgt_sess;
- 	unsigned char port_name[36];
- 	unsigned long flags;
--	int num_tags = (ha->fw_xcb_count) ? ha->fw_xcb_count :
-+	int num_tags = (ha->cur_fw_xcb_count) ? ha->cur_fw_xcb_count :
- 		       TCM_QLA2XXX_DEFAULT_TAGS;
+@@ -284,6 +284,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
  
- 	lport = vha->vha_tgt.target_lport_ptr;
+ 	WARN_ON(cmd->cmd_flags &  BIT_16);
+ 
++	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
+ 	cmd->cmd_flags |= BIT_16;
+ 	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ }
+@@ -295,6 +296,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+  */
+ static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
+ {
++	cmd->vha->tgt_counters.core_qla_free_cmd++;
+ 	cmd->cmd_in_wq = 1;
+ 	INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
+ 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
+@@ -454,6 +456,7 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ 		return -EINVAL;
+ 	}
+ 
++	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
+ 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
+ 				cmd->unpacked_lun, data_length, fcp_task_attr,
+ 				data_dir, flags);
+@@ -469,6 +472,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
+ 	 */
+ 	cmd->cmd_in_wq = 0;
+ 	cmd->cmd_flags |= BIT_11;
++	cmd->vha->tgt_counters.qla_core_ret_ctio++;
+ 	if (!cmd->write_data_transferred) {
+ 		/*
+ 		 * Check if se_cmd has already been aborted via LUN_RESET, and
 -- 
 1.7.7
-
