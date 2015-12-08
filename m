@@ -1,51 +1,46 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/20] qla2xxx: Add TAS detection for kernel 3.15 n newer
-Date: Mon, 7 Dec 2015 18:48:00 -0800
-Message-ID: <20151208024800.GA32255@infradead.org>
+Subject: Re: [PATCH 12/20] target/tmr: LUN reset cause cmd premature free.
+Date: Mon, 7 Dec 2015 18:48:59 -0800
+Message-ID: <20151208024859.GB32255@infradead.org>
 References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
- <1449535747-2850-12-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41512 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:41581 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755730AbbLHCsA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2015 21:48:00 -0500
+	with ESMTP id S932234AbbLHCs7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2015 21:48:59 -0500
 Content-Disposition: inline
-In-Reply-To: <1449535747-2850-12-git-send-email-himanshu.madhani@qlogic.com>
+In-Reply-To: <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: target-devel@vger.kernel.org, nab@linux-iscsi.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index 842fcca..2e9c194 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -617,6 +617,26 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
->  				struct qla_tgt_cmd, se_cmd);
->  	int xmit_type = QLA_TGT_XMIT_STATUS;
->  
-> +	if (se_cmd->transport_state & CMD_T_ABORTED) {
-> +		/* For TCM TAS support n kernel >= 3.15:
-> +		 * This cmd is attempting to respond with "Task Aborted Status".
-> +		 */
-> +		if (cmd->aborted) {
-> +			return 0;
-> +		} else if ((cmd->state == QLA_TGT_STATE_NEED_DATA) &&
-> +		    cmd->cmd_sent_to_fw) {
-> +			qlt_abort_cmd(cmd);
-> +			return 0;
-> +		} else if (cmd->state == QLA_TGT_STATE_PROCESSED) {
-> +			if (cmd->cmd_sent_to_fw) {
-> +				qlt_abort_cmd(cmd);
-> +				return 0;
-> +			} else {	/* about to be free */
-> +				return 0;
-> +			}
-> +		}
-> +	}
-> +
+On Mon, Dec 07, 2015 at 07:48:59PM -0500, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@qlogic.com>
+> 
+> During LUN/Target reset, the TMR code attempt to intercept
+> cmds and try to aborted them.  Current code assume cmds are
+> always intercepted at the back end device.  The cleanup code
+> would issue a "queue_status() & check_stop_free()" to terminate
+> the command.  However, when a cmd is intercepted at the front
+> end/Fabric layer, current code introduce premature free or
+> cause Fabric to double free.
+> 
+> When command is intercepted at Fabric layer, it means a
+> check_stop_free(cmd_kref--) has been called.  The extra
+> check_stop_free in the Lun Reset cleanup code causes early
+> free.  When a cmd in the Fabric layer is completed, the normal
+> free code adds another another free which introduce a double free.
+> 
+> To fix the issue:
+> - add a new flag/CMD_T_SENT_STATUS to track command that have
+>  made it down to fabric layer after back end good/bad completion.
+> - if cmd reach Fabric Layer at Lun Reset time, add an extra
+>  cmd_kref count to prevent premature free.
 
-This is really something that should be explicitly communicated
-from the core instead of having to second guess it.
+This seems lke something solved by Bart's abort rewrite in a much nicer
+way.  All this special casing based on magic flags isn't maintainable
+in the long run.
