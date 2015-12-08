@@ -1,717 +1,143 @@
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v4 3/3] md: convert to use the generic badblocks code
-Date: Tue,  8 Dec 2015 12:18:15 -0700
-Message-ID: <1449602295-28781-4-git-send-email-vishal.l.verma@intel.com>
-References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-nvdimm@lists.01.org
-Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 01/20] qla2xxx: Enable Extended Login support
+Date: Tue, 8 Dec 2015 19:35:14 +0000
+Message-ID: <D28C7005.CB7E1%himanshu.madhani@qlogic.com>
+References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-2-git-send-email-himanshu.madhani@qlogic.com>
+ <5666FC8D.6060606@suse.de>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_D28C7005CB7E1himanshumadhaniqlogiccom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:20880 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752389AbbLHTfR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2015 14:35:17 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tB8JRd9E029034
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Dec 2015 11:35:17 -0800
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1ykystncnx-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 08 Dec 2015 11:35:17 -0800
+In-Reply-To: <5666FC8D.6060606@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Retain badblocks as part of rdev, but use the accessor functions from
-include/linux/badblocks for all manipulation.
+--_000_D28C7005CB7E1himanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <6AB3570DF0A04945AFCA8CA49AC10E31@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- drivers/md/md.c | 516 +++-----------------------------------------------------
- drivers/md/md.h |  40 +----
- 2 files changed, 28 insertions(+), 528 deletions(-)
+On 12/8/15, 7:51 AM, "Hannes Reinecke" <hare@suse.de> wrote:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 807095f..1e48aa9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -34,6 +34,7 @@
- 
- #include <linux/kthread.h>
- #include <linux/blkdev.h>
-+#include <linux/badblocks.h>
- #include <linux/sysctl.h>
- #include <linux/seq_file.h>
- #include <linux/fs.h>
-@@ -709,8 +710,7 @@ void md_rdev_clear(struct md_rdev *rdev)
- 		put_page(rdev->bb_page);
- 		rdev->bb_page = NULL;
- 	}
--	kfree(rdev->badblocks.page);
--	rdev->badblocks.page = NULL;
-+	badblocks_free(&rdev->badblocks);
- }
- EXPORT_SYMBOL_GPL(md_rdev_clear);
- 
-@@ -1360,8 +1360,6 @@ static __le32 calc_sb_1_csum(struct mdp_superblock_1 *sb)
- 	return cpu_to_le32(csum);
- }
- 
--static int md_set_badblocks(struct badblocks *bb, sector_t s, int sectors,
--			    int acknowledged);
- static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_version)
- {
- 	struct mdp_superblock_1 *sb;
-@@ -1486,8 +1484,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 			count <<= sb->bblog_shift;
- 			if (bb + 1 == 0)
- 				break;
--			if (md_set_badblocks(&rdev->badblocks,
--					     sector, count, 1) == 0)
-+			if (badblocks_set(&rdev->badblocks, sector, count, 1))
- 				return -EINVAL;
- 		}
- 	} else if (sb->bblog_offset != 0)
-@@ -2319,7 +2316,7 @@ repeat:
- 			rdev_for_each(rdev, mddev) {
- 				if (rdev->badblocks.changed) {
- 					rdev->badblocks.changed = 0;
--					md_ack_all_badblocks(&rdev->badblocks);
-+					ack_all_badblocks(&rdev->badblocks);
- 					md_error(mddev, rdev);
- 				}
- 				clear_bit(Blocked, &rdev->flags);
-@@ -2445,7 +2442,7 @@ repeat:
- 			clear_bit(Blocked, &rdev->flags);
- 
- 		if (any_badblocks_changed)
--			md_ack_all_badblocks(&rdev->badblocks);
-+			ack_all_badblocks(&rdev->badblocks);
- 		clear_bit(BlockedBadBlocks, &rdev->flags);
- 		wake_up(&rdev->blocked_wait);
- 	}
-@@ -3046,11 +3043,17 @@ static ssize_t recovery_start_store(struct md_rdev *rdev, const char *buf, size_
- static struct rdev_sysfs_entry rdev_recovery_start =
- __ATTR(recovery_start, S_IRUGO|S_IWUSR, recovery_start_show, recovery_start_store);
- 
--static ssize_t
--badblocks_show(struct badblocks *bb, char *page, int unack);
--static ssize_t
--badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack);
--
-+/* sysfs access to bad-blocks list.
-+ * We present two files.
-+ * 'bad-blocks' lists sector numbers and lengths of ranges that
-+ *    are recorded as bad.  The list is truncated to fit within
-+ *    the one-page limit of sysfs.
-+ *    Writing "sector length" to this file adds an acknowledged
-+ *    bad block list.
-+ * 'unacknowledged-bad-blocks' lists bad blocks that have not yet
-+ *    been acknowledged.  Writing to this file adds bad blocks
-+ *    without acknowledging them.  This is largely for testing.
-+ */
- static ssize_t bb_show(struct md_rdev *rdev, char *page)
- {
- 	return badblocks_show(&rdev->badblocks, page, 0);
-@@ -3165,14 +3168,7 @@ int md_rdev_init(struct md_rdev *rdev)
- 	 * This reserves the space even on arrays where it cannot
- 	 * be used - I wonder if that matters
- 	 */
--	rdev->badblocks.count = 0;
--	rdev->badblocks.shift = -1; /* disabled until explicitly enabled */
--	rdev->badblocks.page = kmalloc(PAGE_SIZE, GFP_KERNEL);
--	seqlock_init(&rdev->badblocks.lock);
--	if (rdev->badblocks.page == NULL)
--		return -ENOMEM;
--
--	return 0;
-+	return badblocks_init(&rdev->badblocks, 0);
- }
- EXPORT_SYMBOL_GPL(md_rdev_init);
- /*
-@@ -8478,254 +8474,9 @@ void md_finish_reshape(struct mddev *mddev)
- }
- EXPORT_SYMBOL(md_finish_reshape);
- 
--/* Bad block management.
-- * We can record which blocks on each device are 'bad' and so just
-- * fail those blocks, or that stripe, rather than the whole device.
-- * Entries in the bad-block table are 64bits wide.  This comprises:
-- * Length of bad-range, in sectors: 0-511 for lengths 1-512
-- * Start of bad-range, sector offset, 54 bits (allows 8 exbibytes)
-- *  A 'shift' can be set so that larger blocks are tracked and
-- *  consequently larger devices can be covered.
-- * 'Acknowledged' flag - 1 bit. - the most significant bit.
-- *
-- * Locking of the bad-block table uses a seqlock so md_is_badblock
-- * might need to retry if it is very unlucky.
-- * We will sometimes want to check for bad blocks in a bi_end_io function,
-- * so we use the write_seqlock_irq variant.
-- *
-- * When looking for a bad block we specify a range and want to
-- * know if any block in the range is bad.  So we binary-search
-- * to the last range that starts at-or-before the given endpoint,
-- * (or "before the sector after the target range")
-- * then see if it ends after the given start.
-- * We return
-- *  0 if there are no known bad blocks in the range
-- *  1 if there are known bad block which are all acknowledged
-- * -1 if there are bad blocks which have not yet been acknowledged in metadata.
-- * plus the start/length of the first bad section we overlap.
-- */
--int md_is_badblock(struct badblocks *bb, sector_t s, int sectors,
--		   sector_t *first_bad, int *bad_sectors)
--{
--	int hi;
--	int lo;
--	u64 *p = bb->page;
--	int rv;
--	sector_t target = s + sectors;
--	unsigned seq;
--
--	if (bb->shift > 0) {
--		/* round the start down, and the end up */
--		s >>= bb->shift;
--		target += (1<<bb->shift) - 1;
--		target >>= bb->shift;
--		sectors = target - s;
--	}
--	/* 'target' is now the first block after the bad range */
--
--retry:
--	seq = read_seqbegin(&bb->lock);
--	lo = 0;
--	rv = 0;
--	hi = bb->count;
--
--	/* Binary search between lo and hi for 'target'
--	 * i.e. for the last range that starts before 'target'
--	 */
--	/* INVARIANT: ranges before 'lo' and at-or-after 'hi'
--	 * are known not to be the last range before target.
--	 * VARIANT: hi-lo is the number of possible
--	 * ranges, and decreases until it reaches 1
--	 */
--	while (hi - lo > 1) {
--		int mid = (lo + hi) / 2;
--		sector_t a = BB_OFFSET(p[mid]);
--		if (a < target)
--			/* This could still be the one, earlier ranges
--			 * could not. */
--			lo = mid;
--		else
--			/* This and later ranges are definitely out. */
--			hi = mid;
--	}
--	/* 'lo' might be the last that started before target, but 'hi' isn't */
--	if (hi > lo) {
--		/* need to check all range that end after 's' to see if
--		 * any are unacknowledged.
--		 */
--		while (lo >= 0 &&
--		       BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
--			if (BB_OFFSET(p[lo]) < target) {
--				/* starts before the end, and finishes after
--				 * the start, so they must overlap
--				 */
--				if (rv != -1 && BB_ACK(p[lo]))
--					rv = 1;
--				else
--					rv = -1;
--				*first_bad = BB_OFFSET(p[lo]);
--				*bad_sectors = BB_LEN(p[lo]);
--			}
--			lo--;
--		}
--	}
--
--	if (read_seqretry(&bb->lock, seq))
--		goto retry;
--
--	return rv;
--}
--EXPORT_SYMBOL_GPL(md_is_badblock);
--
--/*
-- * Add a range of bad blocks to the table.
-- * This might extend the table, or might contract it
-- * if two adjacent ranges can be merged.
-- * We binary-search to find the 'insertion' point, then
-- * decide how best to handle it.
-- */
--static int md_set_badblocks(struct badblocks *bb, sector_t s, int sectors,
--			    int acknowledged)
--{
--	u64 *p;
--	int lo, hi;
--	int rv = 1;
--	unsigned long flags;
--
--	if (bb->shift < 0)
--		/* badblocks are disabled */
--		return 0;
--
--	if (bb->shift) {
--		/* round the start down, and the end up */
--		sector_t next = s + sectors;
--		s >>= bb->shift;
--		next += (1<<bb->shift) - 1;
--		next >>= bb->shift;
--		sectors = next - s;
--	}
--
--	write_seqlock_irqsave(&bb->lock, flags);
--
--	p = bb->page;
--	lo = 0;
--	hi = bb->count;
--	/* Find the last range that starts at-or-before 's' */
--	while (hi - lo > 1) {
--		int mid = (lo + hi) / 2;
--		sector_t a = BB_OFFSET(p[mid]);
--		if (a <= s)
--			lo = mid;
--		else
--			hi = mid;
--	}
--	if (hi > lo && BB_OFFSET(p[lo]) > s)
--		hi = lo;
--
--	if (hi > lo) {
--		/* we found a range that might merge with the start
--		 * of our new range
--		 */
--		sector_t a = BB_OFFSET(p[lo]);
--		sector_t e = a + BB_LEN(p[lo]);
--		int ack = BB_ACK(p[lo]);
--		if (e >= s) {
--			/* Yes, we can merge with a previous range */
--			if (s == a && s + sectors >= e)
--				/* new range covers old */
--				ack = acknowledged;
--			else
--				ack = ack && acknowledged;
--
--			if (e < s + sectors)
--				e = s + sectors;
--			if (e - a <= BB_MAX_LEN) {
--				p[lo] = BB_MAKE(a, e-a, ack);
--				s = e;
--			} else {
--				/* does not all fit in one range,
--				 * make p[lo] maximal
--				 */
--				if (BB_LEN(p[lo]) != BB_MAX_LEN)
--					p[lo] = BB_MAKE(a, BB_MAX_LEN, ack);
--				s = a + BB_MAX_LEN;
--			}
--			sectors = e - s;
--		}
--	}
--	if (sectors && hi < bb->count) {
--		/* 'hi' points to the first range that starts after 's'.
--		 * Maybe we can merge with the start of that range */
--		sector_t a = BB_OFFSET(p[hi]);
--		sector_t e = a + BB_LEN(p[hi]);
--		int ack = BB_ACK(p[hi]);
--		if (a <= s + sectors) {
--			/* merging is possible */
--			if (e <= s + sectors) {
--				/* full overlap */
--				e = s + sectors;
--				ack = acknowledged;
--			} else
--				ack = ack && acknowledged;
--
--			a = s;
--			if (e - a <= BB_MAX_LEN) {
--				p[hi] = BB_MAKE(a, e-a, ack);
--				s = e;
--			} else {
--				p[hi] = BB_MAKE(a, BB_MAX_LEN, ack);
--				s = a + BB_MAX_LEN;
--			}
--			sectors = e - s;
--			lo = hi;
--			hi++;
--		}
--	}
--	if (sectors == 0 && hi < bb->count) {
--		/* we might be able to combine lo and hi */
--		/* Note: 's' is at the end of 'lo' */
--		sector_t a = BB_OFFSET(p[hi]);
--		int lolen = BB_LEN(p[lo]);
--		int hilen = BB_LEN(p[hi]);
--		int newlen = lolen + hilen - (s - a);
--		if (s >= a && newlen < BB_MAX_LEN) {
--			/* yes, we can combine them */
--			int ack = BB_ACK(p[lo]) && BB_ACK(p[hi]);
--			p[lo] = BB_MAKE(BB_OFFSET(p[lo]), newlen, ack);
--			memmove(p + hi, p + hi + 1,
--				(bb->count - hi - 1) * 8);
--			bb->count--;
--		}
--	}
--	while (sectors) {
--		/* didn't merge (it all).
--		 * Need to add a range just before 'hi' */
--		if (bb->count >= MD_MAX_BADBLOCKS) {
--			/* No room for more */
--			rv = 0;
--			break;
--		} else {
--			int this_sectors = sectors;
--			memmove(p + hi + 1, p + hi,
--				(bb->count - hi) * 8);
--			bb->count++;
--
--			if (this_sectors > BB_MAX_LEN)
--				this_sectors = BB_MAX_LEN;
--			p[hi] = BB_MAKE(s, this_sectors, acknowledged);
--			sectors -= this_sectors;
--			s += this_sectors;
--		}
--	}
--
--	bb->changed = 1;
--	if (!acknowledged)
--		bb->unacked_exist = 1;
--	write_sequnlock_irqrestore(&bb->lock, flags);
--
--	return rv;
--}
-+/* Bad block management */
- 
-+/* Returns 1 on success, 0 on failure */
- int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 		       int is_new)
- {
-@@ -8734,114 +8485,19 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 		s += rdev->new_data_offset;
- 	else
- 		s += rdev->data_offset;
--	rv = md_set_badblocks(&rdev->badblocks,
--			      s, sectors, 0);
--	if (rv) {
-+	rv = badblocks_set(&rdev->badblocks, s, sectors, 0);
-+	if (rv == 0) {
- 		/* Make sure they get written out promptly */
- 		sysfs_notify_dirent_safe(rdev->sysfs_state);
- 		set_bit(MD_CHANGE_CLEAN, &rdev->mddev->flags);
- 		set_bit(MD_CHANGE_PENDING, &rdev->mddev->flags);
- 		md_wakeup_thread(rdev->mddev->thread);
--	}
--	return rv;
-+		return 1;
-+	} else
-+		return 0;
- }
- EXPORT_SYMBOL_GPL(rdev_set_badblocks);
- 
--/*
-- * Remove a range of bad blocks from the table.
-- * This may involve extending the table if we spilt a region,
-- * but it must not fail.  So if the table becomes full, we just
-- * drop the remove request.
-- */
--static int md_clear_badblocks(struct badblocks *bb, sector_t s, int sectors)
--{
--	u64 *p;
--	int lo, hi;
--	sector_t target = s + sectors;
--	int rv = 0;
--
--	if (bb->shift > 0) {
--		/* When clearing we round the start up and the end down.
--		 * This should not matter as the shift should align with
--		 * the block size and no rounding should ever be needed.
--		 * However it is better the think a block is bad when it
--		 * isn't than to think a block is not bad when it is.
--		 */
--		s += (1<<bb->shift) - 1;
--		s >>= bb->shift;
--		target >>= bb->shift;
--		sectors = target - s;
--	}
--
--	write_seqlock_irq(&bb->lock);
--
--	p = bb->page;
--	lo = 0;
--	hi = bb->count;
--	/* Find the last range that starts before 'target' */
--	while (hi - lo > 1) {
--		int mid = (lo + hi) / 2;
--		sector_t a = BB_OFFSET(p[mid]);
--		if (a < target)
--			lo = mid;
--		else
--			hi = mid;
--	}
--	if (hi > lo) {
--		/* p[lo] is the last range that could overlap the
--		 * current range.  Earlier ranges could also overlap,
--		 * but only this one can overlap the end of the range.
--		 */
--		if (BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > target) {
--			/* Partial overlap, leave the tail of this range */
--			int ack = BB_ACK(p[lo]);
--			sector_t a = BB_OFFSET(p[lo]);
--			sector_t end = a + BB_LEN(p[lo]);
--
--			if (a < s) {
--				/* we need to split this range */
--				if (bb->count >= MD_MAX_BADBLOCKS) {
--					rv = -ENOSPC;
--					goto out;
--				}
--				memmove(p+lo+1, p+lo, (bb->count - lo) * 8);
--				bb->count++;
--				p[lo] = BB_MAKE(a, s-a, ack);
--				lo++;
--			}
--			p[lo] = BB_MAKE(target, end - target, ack);
--			/* there is no longer an overlap */
--			hi = lo;
--			lo--;
--		}
--		while (lo >= 0 &&
--		       BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
--			/* This range does overlap */
--			if (BB_OFFSET(p[lo]) < s) {
--				/* Keep the early parts of this range. */
--				int ack = BB_ACK(p[lo]);
--				sector_t start = BB_OFFSET(p[lo]);
--				p[lo] = BB_MAKE(start, s - start, ack);
--				/* now low doesn't overlap, so.. */
--				break;
--			}
--			lo--;
--		}
--		/* 'lo' is strictly before, 'hi' is strictly after,
--		 * anything between needs to be discarded
--		 */
--		if (hi - lo > 1) {
--			memmove(p+lo+1, p+hi, (bb->count - hi) * 8);
--			bb->count -= (hi - lo - 1);
--		}
--	}
--
--	bb->changed = 1;
--out:
--	write_sequnlock_irq(&bb->lock);
--	return rv;
--}
--
- int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 			 int is_new)
- {
-@@ -8849,133 +8505,11 @@ int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 		s += rdev->new_data_offset;
- 	else
- 		s += rdev->data_offset;
--	return md_clear_badblocks(&rdev->badblocks,
-+	return badblocks_clear(&rdev->badblocks,
- 				  s, sectors);
- }
- EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
- 
--/*
-- * Acknowledge all bad blocks in a list.
-- * This only succeeds if ->changed is clear.  It is used by
-- * in-kernel metadata updates
-- */
--void md_ack_all_badblocks(struct badblocks *bb)
--{
--	if (bb->page == NULL || bb->changed)
--		/* no point even trying */
--		return;
--	write_seqlock_irq(&bb->lock);
--
--	if (bb->changed == 0 && bb->unacked_exist) {
--		u64 *p = bb->page;
--		int i;
--		for (i = 0; i < bb->count ; i++) {
--			if (!BB_ACK(p[i])) {
--				sector_t start = BB_OFFSET(p[i]);
--				int len = BB_LEN(p[i]);
--				p[i] = BB_MAKE(start, len, 1);
--			}
--		}
--		bb->unacked_exist = 0;
--	}
--	write_sequnlock_irq(&bb->lock);
--}
--EXPORT_SYMBOL_GPL(md_ack_all_badblocks);
--
--/* sysfs access to bad-blocks list.
-- * We present two files.
-- * 'bad-blocks' lists sector numbers and lengths of ranges that
-- *    are recorded as bad.  The list is truncated to fit within
-- *    the one-page limit of sysfs.
-- *    Writing "sector length" to this file adds an acknowledged
-- *    bad block list.
-- * 'unacknowledged-bad-blocks' lists bad blocks that have not yet
-- *    been acknowledged.  Writing to this file adds bad blocks
-- *    without acknowledging them.  This is largely for testing.
-- */
--
--static ssize_t
--badblocks_show(struct badblocks *bb, char *page, int unack)
--{
--	size_t len;
--	int i;
--	u64 *p = bb->page;
--	unsigned seq;
--
--	if (bb->shift < 0)
--		return 0;
--
--retry:
--	seq = read_seqbegin(&bb->lock);
--
--	len = 0;
--	i = 0;
--
--	while (len < PAGE_SIZE && i < bb->count) {
--		sector_t s = BB_OFFSET(p[i]);
--		unsigned int length = BB_LEN(p[i]);
--		int ack = BB_ACK(p[i]);
--		i++;
--
--		if (unack && ack)
--			continue;
--
--		len += snprintf(page+len, PAGE_SIZE-len, "%llu %u\n",
--				(unsigned long long)s << bb->shift,
--				length << bb->shift);
--	}
--	if (unack && len == 0)
--		bb->unacked_exist = 0;
--
--	if (read_seqretry(&bb->lock, seq))
--		goto retry;
--
--	return len;
--}
--
--#define DO_DEBUG 1
--
--static ssize_t
--badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack)
--{
--	unsigned long long sector;
--	int length;
--	char newline;
--#ifdef DO_DEBUG
--	/* Allow clearing via sysfs *only* for testing/debugging.
--	 * Normally only a successful write may clear a badblock
--	 */
--	int clear = 0;
--	if (page[0] == '-') {
--		clear = 1;
--		page++;
--	}
--#endif /* DO_DEBUG */
--
--	switch (sscanf(page, "%llu %d%c", &sector, &length, &newline)) {
--	case 3:
--		if (newline != '\n')
--			return -EINVAL;
--	case 2:
--		if (length <= 0)
--			return -EINVAL;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--#ifdef DO_DEBUG
--	if (clear) {
--		md_clear_badblocks(bb, sector, length);
--		return len;
--	}
--#endif /* DO_DEBUG */
--	if (md_set_badblocks(bb, sector, length, !unack))
--		return len;
--	else
--		return -ENOSPC;
--}
--
- static int md_notify_reboot(struct notifier_block *this,
- 			    unsigned long code, void *x)
- {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 2bea51e..389afc4 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -17,6 +17,7 @@
- 
- #include <linux/blkdev.h>
- #include <linux/backing-dev.h>
-+#include <linux/badblocks.h>
- #include <linux/kobject.h>
- #include <linux/list.h>
- #include <linux/mm.h>
-@@ -28,13 +29,6 @@
- 
- #define MaxSector (~(sector_t)0)
- 
--/* Bad block numbers are stored sorted in a single page.
-- * 64bits is used for each block or extent.
-- * 54 bits are sector number, 9 bits are extent size,
-- * 1 bit is an 'acknowledged' flag.
-- */
--#define MD_MAX_BADBLOCKS	(PAGE_SIZE/8)
--
- /*
-  * MD's 'extended' device
-  */
-@@ -117,22 +111,7 @@ struct md_rdev {
- 	struct kernfs_node *sysfs_state; /* handle for 'state'
- 					   * sysfs entry */
- 
--	struct badblocks {
--		int	count;		/* count of bad blocks */
--		int	unacked_exist;	/* there probably are unacknowledged
--					 * bad blocks.  This is only cleared
--					 * when a read discovers none
--					 */
--		int	shift;		/* shift from sectors to block size
--					 * a -ve shift means badblocks are
--					 * disabled.*/
--		u64	*page;		/* badblock list */
--		int	changed;
--		seqlock_t lock;
--
--		sector_t sector;
--		sector_t size;		/* in sectors */
--	} badblocks;
-+	struct badblocks badblocks;
- };
- enum flag_bits {
- 	Faulty,			/* device is known to have a fault */
-@@ -185,22 +164,11 @@ enum flag_bits {
- 				 */
- };
- 
--#define BB_LEN_MASK	(0x00000000000001FFULL)
--#define BB_OFFSET_MASK	(0x7FFFFFFFFFFFFE00ULL)
--#define BB_ACK_MASK	(0x8000000000000000ULL)
--#define BB_MAX_LEN	512
--#define BB_OFFSET(x)	(((x) & BB_OFFSET_MASK) >> 9)
--#define BB_LEN(x)	(((x) & BB_LEN_MASK) + 1)
--#define BB_ACK(x)	(!!((x) & BB_ACK_MASK))
--#define BB_MAKE(a, l, ack) (((a)<<9) | ((l)-1) | ((u64)(!!(ack)) << 63))
--
--extern int md_is_badblock(struct badblocks *bb, sector_t s, int sectors,
--			  sector_t *first_bad, int *bad_sectors);
- static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
- 			      sector_t *first_bad, int *bad_sectors)
- {
- 	if (unlikely(rdev->badblocks.count)) {
--		int rv = md_is_badblock(&rdev->badblocks, rdev->data_offset + s,
-+		int rv = badblocks_check(&rdev->badblocks, rdev->data_offset + s,
- 					sectors,
- 					first_bad, bad_sectors);
- 		if (rv)
-@@ -213,8 +181,6 @@ extern int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 			      int is_new);
- extern int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 				int is_new);
--extern void md_ack_all_badblocks(struct badblocks *bb);
--
- struct md_cluster_info;
- 
- struct mddev {
--- 
-2.5.0
 
+>On 12/08/2015 01:48 AM, Himanshu Madhani wrote:
+>> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+>> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>> ---
+>A patch description would be nice; ATM it doesn't look
+>as if this interface is used anywhere...
+
+I=B9ll update patch with description of the feature.
+
+>
+>Cheers,
+>
+>Hannes
+>--=20
+>Dr. Hannes Reinecke		      zSeries & Storage
+>hare@suse.de			      +49 911 74053 688
+>SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+>GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
+Thanks,
+Himanshu
+
+
+--_000_D28C7005CB7E1himanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IuwoAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEVBNDgzOEE0
+MTU5MzhDNEZCMkZCNEIyMUVBMjNENTI4ADwHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HDAAIABMA
+IwAOAAIAQAEBIIADAA4AAADfBwwACAATACMADgACAEABAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADkAAABSZTogW1BBVENIIDAxLzIwXSBxbGEyeHh4OiBFbmFibGUgRXh0
+ZW5kZWQgTG9naW4gc3VwcG9ydACLEgEDkAYA2A8AADQAAAACAX8AAQAAAC0AAAA8RDI4QzcwMDUu
+Q0I3RTElaGltYW5zaHUubWFkaGFuaUBxbG9naWMuY29tPgAAAAALAB8OAQAAAAIBCRABAAAACgMA
+AAYDAACQBAAATFpGdf/i3L1hAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gK
+wHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBh
+dAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIX
+slx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/EMIE8D
+oA6QLzgvMQA1LCA3OjUxIORBTSJAIkgAcBhQBCAMUmULgAWQa2UiIEI8EdFlQHN1EgAuMQEAPiB3
+A2AQIDpcrmwjkQqBJXs+IaQwIgCLAdAiICAnYDo0OCKjJkgHcABxaHUF0GFkFRmhaST8PiTgU2ln
+CRhQZC0ZMGYtYnluOig/JAEoVS4AwCjzQCpxCQBnDlAuBaBtPvMpvyrGR2kFECjxBcEHQPxhdgdA
+LDEtoC/ULOEwZJstby5zLTNQJkZBIAqw2nQRwCABAAT0aQIgJPA1CGBsHGBiGeADAGNlQjsioFRN
+IGkFQGQybweQbicFQAkAb2v9JkZhBCAGkBzALGA38QIw/QSQZgDQGeA4YSSBHGAAcHh5d2gEkCSg
+OjAlbEkgXCdCOWwDIHVw/mQYgBngNCQD8DhANHsZMPM4MRngZmUYgAhwJKAl3c0mRkM58ASQcyw/
+DiME7yZGM1ADMCZVRDFQKzAjHGsMhAGgIES0egZiB5Em+wYAGJFhGDAmRiQqRDZEeUArNDkgOTEi
+kDcANDA1MyA2ODiBJkZTVVNFIEwgIBBVWCBQA2BkdWNqdAQgRwbQSCJAKNB4nz4QNXAfYEMRIjE5
+MEkwZUjATjtQRkMEoDWgclJnJkZHRisgSkMid6ZuIkBOkUd1AxBkIkC6RkMgSQeAHcBNMTY40KU+
+EHIoIVJCIcA2SSCgNiAoQUdNGiklbP5UGaEfUEBmK0YlbBVCVfAAAB8AQgABAAAAIgAAAEgAaQBt
+AGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AZQABAAAAOAAAAGgAaQBtAGEAbgBzAGgA
+dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgFBAAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMA
+aAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABo
+AGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAAOAAAAGgAaQBtAGEAbgBzAGgA
+dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAABAAAAAcwBp
+AHAAOgBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAB8AGgwBAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AHwwB
+AAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A
+3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkA
+bQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0B
+AAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwD4PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAj
+QAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHwAAAAAAAAAgSsfpL6jEBmd
+bgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgA
+aQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJ
+XQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAAL
+AEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA6kg4pBWTjE+y+0sh6iPVKAMAFwABAAAAQAA5AADF
+NI/vMdEBQAAIMLtLlY/vMdEBCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAA
+DAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABy
+AAAAUgBlADoAIABbAFAAQQBUAEMASAAgADAAMQAvADIAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAA
+RQBuAGEAYgBsAGUAIABFAHgAdABlAG4AZABlAGQAIABMAG8AZwBpAG4AIABzAHUAcABwAG8AcgB0
+AAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAANgAAADwANQA2ADYA
+NgBGAEMAOABEAC4ANgAwADYAMAA2ADAANgBAAHMAdQBzAGUALgBkAGUAPgAAAAAAAgFxAAEAAAAg
+AAAAAQHRMVfhuCA/x2qu/0WO0r5YIIEUWp7BxBWA//+4VoAfAHAAAQAAAGoAAABbAFAAQQBUAEMA
+SAAgADAAMQAvADIAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAARQBuAGEAYgBsAGUAIABFAHgAdABl
+AG4AZABlAGQAIABMAG8AZwBpAG4AIABzAHUAcABwAG8AcgB0AAAAAAAfADUQAQAAAFoAAAA8AEQA
+MgA4AEMANwAwADAANQAuAEMAQgA3AEUAMQAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBu
+AGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAAAB8AORABAAAAMgEAADwAMQA0ADQAOQA1ADMA
+NQA3ADQANwAtADIAOAA1ADAALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABp
+AG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwA
+MQA0ADQAOQA1ADMANQA3ADQANwAtADIAOAA1ADAALQAyAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBt
+AGEAaQBsAC0AaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0APgAgADwANQA2ADYANgBGAEMAOABEAC4ANgAwADYAMAA2ADAANgBAAHMAdQBzAGUALgBk
+AGUAPgAAAAAAAwDeP69vAABAAAcw4GSJj+8x0QEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0g
+O3A9UUxvZ2ljO2w9QVZNQjMtMTUxMjA4MTkzNTE0Wi0xMTcyMTMAAB8AFRABAAAAWAAAADYAQQBC
+ADMANQA3ADAARABGADAAQQAwADQAOQA0ADUAQQBGAEMAQQA4AEMAQQA0ADkAQQBDADEAMABFADMA
+MQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAABJAAAA7LTwAk8AAAAfAPo/AQAA
+ACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBv
+AGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgA1AC4ANwAuADEANQAxADAAMAA1AAAA
+AAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBu
+AGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAABgEAAEkASQA9ADAAMQAwADEARAAxADMA
+MQBFAEYAOABGADIAMwBEAEIAQgBGAEMAMwAwADEARQBGADUANQA0ADAAOQA5ADEAMgAzAEYAMABF
+AEEARgBCADkARQA1AEYANgA7AFMAQgBNAEkARAA9ADUAOwBTADEAPQA8ADUANgA2ADYARgBDADgA
+RAAuADYAMAA2ADAANgAwADYAQABzAHUAcwBlAC4AZABlAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBl
+AHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQA
+YQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBt
+AHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAA
+AEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAx
+ADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMA
+bABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAALl
+
+--_000_D28C7005CB7E1himanshumadhaniqlogiccom_--
