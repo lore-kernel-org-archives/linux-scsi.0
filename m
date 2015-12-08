@@ -1,229 +1,200 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 20/20] qla2xxx: Check for online flag instead of active reset when transmitting responses
-Date: Mon, 7 Dec 2015 19:49:07 -0500
-Message-ID: <1449535747-2850-21-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 14/20] qla2xxx: Add irq affinity notification
+Date: Mon, 7 Dec 2015 19:49:01 -0500
+Message-ID: <1449535747-2850-15-git-send-email-himanshu.madhani@qlogic.com>
 References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:42150 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932645AbbLHB3g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2015 20:29:36 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Dilip Kumar Uppugandla <dilip@purestorage.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-Driver has following initialization sequence for Target mode
+Register to receive notification of when irq setting change
+occured.
 
-1. Driver initialization starts
-
-2. ISP Abort is scheduled when the target is enabled.
-
-qla2xxx [0000:04:00.0]-4807:25: ISP abort scheduled
-qla2xxx [0000:04:00.0]-00af:25: Performing ISP error recovery - ha=ffff880caa9e0000.
-
-3. DPC thread starts the ISP Abort
-
-4. While DPC is resetting the chip and initializing the firmware, we get
-   async events from the firmware about P2P mode, LOOP UP and PORT UPDATE.
-
-5. PRLI from a initiator is delivered to us followed by a PLOGI and then a
-   SCSI command which creates a session.
-
-6. If the SCSI command is a WRITE in this case, we issue XFR RDY and it
-   gets dropped as can be seen with messages RESET-XFR because ISP Abort
-   is still active
-
-qla2xxx [0000:04:00.0]-e902:25: RESET-XFR active/old-count/new-count = 1/1/1.
-
-7. If the SCSI command is a READ, we issue RESPONSE and they get dropped
-   as well because Abort is still active.
-
-qla2xxx [0000:04:00.0]-e901:25: RESET-RSP active/old-count/new-count = 1/1/1
-
-8. Now eventually, ISP Abort finishes clearing the DPC flags.
-
-qla2xxx [0000:04:00.0]-8822:25: qla2x00_abort_isp succeeded.
-qla2xxx [0000:04:00.0]-4808:25: ISP abort end.
-
-9. Since we dropped SCSI commands silently (without any responses sent
-   to the initiator) initiator waits for a SCSI timeout (which is 60
-   seconds in our case), Sends an ABTS which fails since there
-   no se_cmd found for the tag that ABTS is referencing as the
-   commands were cleaned up in Step 6 and 7.
-
-10. Initiator send an IO after the ABTS which succeed fine.
-
-To fix the above case, the following changes have been made:
-  - To prevent target from dropping commands silently, use the online flag
-    instead to check for an active chip reset. Once the port is online during
-    a chip reset phase, we are good to process the commands.
-  - Clean up qla2x00_restart_isp to not set the online flag and process ATIO
-    as it is unnecessary. During a chip reset, interrupts are enabled only
-    after setting the online flag to 1, so ATIO's won't be missed and hence
-    no need to process ATIO's after setting the online flag.
-
-Signed-off-by: Dilip Kumar Uppugandla <dilip@purestorage.com>
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c   |   34 ++++++++++++++++++++--------------
- drivers/scsi/qla2xxx/qla_target.c |   34 +++++++++++++++++-----------------
- 2 files changed, 37 insertions(+), 31 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |    6 +++
+ drivers/scsi/qla2xxx/qla_isr.c    |   76 ++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_target.c |   11 +++++
+ 3 files changed, 92 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 993dd25..52a8765 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3065,6 +3065,26 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 			atomic_set(&vha->loop_state, LOOP_READY);
- 			ql_dbg(ql_dbg_disc, vha, 0x2069,
- 			    "LOOP READY.\n");
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 7c6369b..9165732 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2714,11 +2714,16 @@ struct isp_operations {
+ 
+ struct scsi_qla_host;
+ 
 +
-+			/*
-+			 * Process any ATIO queue entries that came in
-+			 * while we weren't online.
-+			 */
-+			if (qla_tgt_mode_enabled(vha)) {
-+				if (IS_QLA27XX(ha) || IS_QLA83XX(ha)) {
-+					spin_lock_irqsave(&ha->tgt.atio_lock,
-+					    flags);
-+					qlt_24xx_process_atio_queue(vha, 0);
-+					spin_unlock_irqrestore(
-+					    &ha->tgt.atio_lock, flags);
-+				} else {
-+					spin_lock_irqsave(&ha->hardware_lock,
-+					    flags);
-+					qlt_24xx_process_atio_queue(vha, 1);
-+					spin_unlock_irqrestore(
-+					    &ha->hardware_lock, flags);
-+				}
-+			}
- 		}
++#define QLA83XX_RSPQ_MSIX_ENTRY_NUMBER 1 /* refer to qla83xx_msix_entries */
++
+ struct qla_msix_entry {
+ 	int have_irq;
+ 	uint32_t vector;
+ 	uint16_t entry;
+ 	struct rsp_que *rsp;
++	struct irq_affinity_notify irq_notify;
++	int cpuid;
+ };
+ 
+ #define	WATCH_INTERVAL		1       /* number of seconds */
+@@ -2930,6 +2935,7 @@ struct qlt_hw_data {
+ 	spinlock_t q_full_lock;
+ 	uint32_t leak_exchg_thresh_hold;
+ 	spinlock_t sess_lock;
++	int rspq_vector_cpuid;
+ };
+ 
+ #define MAX_QFULL_CMDS_ALLOC	8192
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ea7e8e8..e879802d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -18,6 +18,10 @@ static void qla2x00_status_entry(scsi_qla_host_t *, struct rsp_que *, void *);
+ static void qla2x00_status_cont_entry(struct rsp_que *, sts_cont_entry_t *);
+ static void qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
+ 	sts_entry_t *);
++static void qla_irq_affinity_notify(struct irq_affinity_notify *,
++    const cpumask_t *);
++static void qla_irq_affinity_release(struct kref *);
++
+ 
+ /**
+  * qla2100_intr_handler() - Process interrupts for the ISP2100 and ISP2200.
+@@ -2548,6 +2552,14 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 	if (!vha->flags.online)
+ 		return;
+ 
++	if (rsp->msix->cpuid != smp_processor_id()) {
++		/* if kernel does not notify qla of IRQ's CPU change,
++		 * then set it here.
++		 */
++		rsp->msix->cpuid = smp_processor_id();
++		ha->tgt.rspq_vector_cpuid = rsp->msix->cpuid;
++	}
++
+ 	while (rsp->ring_ptr->signature != RESPONSE_PROCESSED) {
+ 		pkt = (struct sts_entry_24xx *)rsp->ring_ptr;
+ 
+@@ -2979,8 +2991,11 @@ qla24xx_disable_msix(struct qla_hw_data *ha)
+ 
+ 	for (i = 0; i < ha->msix_count; i++) {
+ 		qentry = &ha->msix_entries[i];
+-		if (qentry->have_irq)
++		if (qentry->have_irq) {
++			/* un-register irq cpu affinity notification */
++			irq_set_affinity_notifier(qentry->vector, NULL);
+ 			free_irq(qentry->vector, qentry->rsp);
++		}
+ 	}
+ 	pci_disable_msix(ha->pdev);
+ 	kfree(ha->msix_entries);
+@@ -3043,6 +3058,9 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		qentry->entry = entries[i].entry;
+ 		qentry->have_irq = 0;
+ 		qentry->rsp = NULL;
++		qentry->irq_notify.notify  = qla_irq_affinity_notify;
++		qentry->irq_notify.release = qla_irq_affinity_release;
++		qentry->cpuid = -1;
  	}
  
-@@ -4919,7 +4939,6 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req = ha->req_q_map[0];
- 	struct rsp_que *rsp = ha->rsp_q_map[0];
--	unsigned long flags, flags2;
+ 	/* Enable MSI-X vectors for the base queue */
+@@ -3061,6 +3079,18 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		qentry->have_irq = 1;
+ 		qentry->rsp = rsp;
+ 		rsp->msix = qentry;
++
++		/* Register for CPU affinity notification. */
++		irq_set_affinity_notifier(qentry->vector, &qentry->irq_notify);
++
++		/* Schedule work (ie. trigger a notification) to read cpu
++		 * mask for this specific irq.
++		 * kref_get is required because
++		* irq_affinity_notify() will do
++		* kref_put().
++		*/
++		kref_get(&qentry->irq_notify.kref);
++		schedule_work(&qentry->irq_notify.work);
+ 	}
  
- 	/* If firmware needs to be loaded */
- 	if (qla2x00_isp_firmware(vha)) {
-@@ -4941,19 +4960,6 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
- 			/* Issue a marker after FW becomes ready. */
- 			qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL);
- 
--			vha->flags.online = 1;
--
--			/*
--			 * Process any ATIO queue entries that came in
--			 * while we weren't online.
--			 */
--			spin_lock_irqsave(&ha->hardware_lock, flags);
--			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
--			if (qla_tgt_mode_enabled(vha))
--				qlt_24xx_process_atio_queue(vha, 1);
--			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
--			spin_unlock_irqrestore(&ha->hardware_lock, flags);
--
- 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
- 		}
- 
+ 	/*
+@@ -3240,3 +3270,47 @@ int qla25xx_request_irq(struct rsp_que *rsp)
+ 	msix->rsp = rsp;
+ 	return ret;
+ }
++
++
++/* irq_set_affinity/irqbalance will trigger notification of cpu mask update */
++static void qla_irq_affinity_notify(struct irq_affinity_notify *notify,
++	const cpumask_t *mask)
++{
++	struct qla_msix_entry *e =
++		container_of(notify, struct qla_msix_entry, irq_notify);
++	struct qla_hw_data *ha;
++	struct scsi_qla_host *base_vha;
++
++	/* user is recommended to set mask to just 1 cpu */
++	e->cpuid = cpumask_first(mask);
++
++	ha = e->rsp->hw;
++	base_vha = pci_get_drvdata(ha->pdev);
++
++	ql_dbg(ql_dbg_init, base_vha, 0xffff,
++		"%s: host %ld : vector %d cpu %d \n", __func__,
++		base_vha->host_no, e->vector, e->cpuid);
++
++	if (e->have_irq) {
++		if ((IS_QLA83XX(ha) || IS_QLA27XX(ha)) &&
++		    (e->entry == QLA83XX_RSPQ_MSIX_ENTRY_NUMBER)) {
++			ha->tgt.rspq_vector_cpuid = e->cpuid;
++			ql_dbg(ql_dbg_init, base_vha, 0xffff,
++			    "%s: host%ld: rspq vector %d cpu %d  runtime change\n",
++			    __func__, base_vha->host_no, e->vector, e->cpuid);
++		}
++	}
++}
++
++void qla_irq_affinity_release(struct kref *ref)
++{
++	struct irq_affinity_notify *notify =
++		container_of(ref, struct irq_affinity_notify, kref);
++	struct qla_msix_entry *e =
++		container_of(notify, struct qla_msix_entry, irq_notify);
++	struct scsi_qla_host *base_vha = pci_get_drvdata(e->rsp->hw->pdev);
++
++	ql_dbg(ql_dbg_init, base_vha, 0xffff,
++	    "%s: host%ld: vector %d cpu %d \n", __func__,
++	    base_vha->host_no, e->vector, e->cpuid);
++}
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 9cf812f..81dd308 100644
+index d4b7e25..dc6ac4e 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -229,7 +229,7 @@ static inline void qlt_decr_num_pend_cmds(struct scsi_qla_host *vha)
- 	spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
- }
- 
--static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
-+static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 	struct atio_from_isp *atio, uint8_t ha_locked)
- {
- 	ql_dbg(ql_dbg_tgt, vha, 0xe072,
-@@ -285,7 +285,7 @@ static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 		break;
- 	}
- 
--	return;
-+	return false;
- }
- 
- void qlt_response_pkt_all_vps(struct scsi_qla_host *vha, response_t *pkt)
-@@ -1736,15 +1736,15 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
--	if (qla2x00_reset_active(vha) || mcmd->reset_count != ha->chip_reset) {
-+	if (!vha->flags.online || mcmd->reset_count != ha->chip_reset) {
- 		/*
--		 * Either a chip reset is active or this request was from
-+		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
- 		 */
- 		ql_dbg(ql_dbg_async, vha, 0xe100,
--			"RESET-TMR active/old-count/new-count = %d/%d/%d.\n",
--			qla2x00_reset_active(vha), mcmd->reset_count,
--			ha->chip_reset);
-+			"RESET-TMR online/active/old-count/new-count = %d/%d/%d/%d.\n",
-+			vha->flags.online, qla2x00_reset_active(vha),
-+			mcmd->reset_count, ha->chip_reset);
- 		ha->tgt.tgt_ops->free_mcmd(mcmd);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		return;
-@@ -2691,17 +2691,17 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	else
- 		vha->tgt_counters.core_qla_que_buf++;
- 
--	if (qla2x00_reset_active(vha) || cmd->reset_count != ha->chip_reset) {
-+	if (!vha->flags.online || cmd->reset_count != ha->chip_reset) {
- 		/*
--		 * Either a chip reset is active or this request was from
-+		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
- 		 */
- 		cmd->state = QLA_TGT_STATE_PROCESSED;
- 		qlt_abort_cmd_on_host_reset(cmd->vha, cmd);
- 		ql_dbg(ql_dbg_async, vha, 0xe101,
--			"RESET-RSP active/old-count/new-count = %d/%d/%d.\n",
--			qla2x00_reset_active(vha), cmd->reset_count,
--			ha->chip_reset);
-+			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
-+			vha->flags.online, qla2x00_reset_active(vha),
-+			cmd->reset_count, ha->chip_reset);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		return 0;
- 	}
-@@ -2832,18 +2832,18 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
--	if (qla2x00_reset_active(vha) || (cmd->reset_count != ha->chip_reset) ||
-+	if (!vha->flags.online || (cmd->reset_count != ha->chip_reset) ||
- 	    (cmd->sess && cmd->sess->deleted == QLA_SESS_DELETION_IN_PROGRESS)) {
- 		/*
--		 * Either a chip reset is active or this request was from
-+		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
- 		 */
- 		cmd->state = QLA_TGT_STATE_NEED_DATA;
- 		qlt_abort_cmd_on_host_reset(cmd->vha, cmd);
- 		ql_dbg(ql_dbg_async, vha, 0xe102,
--			"RESET-XFR active/old-count/new-count = %d/%d/%d.\n",
--			qla2x00_reset_active(vha), cmd->reset_count,
--			ha->chip_reset);
-+			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
-+			vha->flags.online, qla2x00_reset_active(vha),
-+			cmd->reset_count, ha->chip_reset);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		return 0;
- 	}
+@@ -6272,6 +6272,17 @@ qlt_enable_vha(struct scsi_qla_host *vha)
+ 		qla24xx_disable_vp(vha);
+ 		qla24xx_enable_vp(vha);
+ 	} else {
++		if (ha->msix_entries) {
++			ql_dbg(ql_dbg_tgt, vha, 0xffff,
++			    "%s: host%ld : vector %d cpu %d\n",
++			    __func__, vha->host_no,
++			    ha->msix_entries[QLA83XX_RSPQ_MSIX_ENTRY_NUMBER].vector,
++			    ha->msix_entries[QLA83XX_RSPQ_MSIX_ENTRY_NUMBER].cpuid);
++
++			ha->tgt.rspq_vector_cpuid =
++			ha->msix_entries[QLA83XX_RSPQ_MSIX_ENTRY_NUMBER].cpuid;
++		}
++
+ 		set_bit(ISP_ABORT_NEEDED, &base_vha->dpc_flags);
+ 		qla2xxx_wake_dpc(base_vha);
+ 		qla2x00_wait_for_hba_online(base_vha);
 -- 
 1.7.7
-
