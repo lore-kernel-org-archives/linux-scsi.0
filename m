@@ -1,45 +1,55 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch RESEND] atp870u: 64 bit bug in atp885_init()
-Date: Wed, 9 Dec 2015 13:24:53 +0300
-Message-ID: <20151209102453.GE3173@mwanda>
-References: <55B9CA3B.1030205@suse.de>
+Subject: [patch] hisi_sas: fix error codes in hisi_sas_task_prep()
+Date: Wed, 9 Dec 2015 13:48:36 +0300
+Message-ID: <20151209104836.GK3173@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <55B9CA3B.1030205@suse.de>
 Sender: kernel-janitors-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Ondrej Zary <linux@rainbow-software.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: John Garry <john.garry@huawei.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 64 bit CPUs there is a memory corruption bug on probe().  It should
-be a u32 pointer instead of an unsigned long pointer or we write past
-the end of the setupdata[] array.
+There were a couple cases where the error codes weren't set and also I
+changed the success return to "return 0;" which is the same as
+"return rc;" but more explicit.
 
+Fixes: 42e7a69368a5 ('hisi_sas: Add ssp command functio')
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
-Resending because we have shuffled the code around so the patch needed
-to be refreshed against linux-next.  Although I do wonder why we are
-still working on this code since it has never worked on 64 bit systems
-so probably all the users gave up a decade ago.
 
-diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 8b52a9d..b46997c 100644
---- a/drivers/scsi/atp870u.c
-+++ b/drivers/scsi/atp870u.c
-@@ -1413,11 +1413,11 @@ static void atp885_init(struct Scsi_Host *shpnt)
- 			atpdev->global_map[m] = 0;
- 			for (k = 0; k < 4; k++) {
- 				atp_writew_base(atpdev, 0x3c, n++);
--				((unsigned long *)&setupdata[m][0])[k] = atp_readl_base(atpdev, 0x38);
-+				((u32 *)&setupdata[m][0])[k] = atp_readl_base(atpdev, 0x38);
- 			}
- 			for (k = 0; k < 4; k++) {
- 				atp_writew_base(atpdev, 0x3c, n++);
--				((unsigned long *)&atpdev->sp[m][0])[k] = atp_readl_base(atpdev, 0x38);
-+				((u32 *)&atpdev->sp[m][0])[k] = atp_readl_base(atpdev, 0x38);
- 			}
- 			n += 8;
- 		}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 2929018..99b1950 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -208,15 +208,19 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
+ 	slot->status_buffer = dma_pool_alloc(hisi_hba->status_buffer_pool,
+ 					     GFP_ATOMIC,
+ 					     &slot->status_buffer_dma);
+-	if (!slot->status_buffer)
++	if (!slot->status_buffer) {
++		rc = -ENOMEM;
+ 		goto err_out_slot_buf;
++	}
+ 	memset(slot->status_buffer, 0, HISI_SAS_STATUS_BUF_SZ);
+ 
+ 	slot->command_table = dma_pool_alloc(hisi_hba->command_table_pool,
+ 					     GFP_ATOMIC,
+ 					     &slot->command_table_dma);
+-	if (!slot->command_table)
++	if (!slot->command_table) {
++		rc = -ENOMEM;
+ 		goto err_out_status_buf;
++	}
+ 	memset(slot->command_table, 0, HISI_SAS_COMMAND_TABLE_SZ);
+ 	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
+ 
+@@ -254,7 +258,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
+ 	sas_dev->running_req++;
+ 	++(*pass);
+ 
+-	return rc;
++	return 0;
+ 
+ err_out_sge:
+ 	dma_pool_free(hisi_hba->sge_page_pool, slot->sge_page,
