@@ -1,92 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 3/3] ses: fix discovery of SATA devices in SAS enclosures
-Date: Wed, 09 Dec 2015 11:14:55 -0800
-Message-ID: <1449688495.2226.36.camel@HansenPartnership.com>
-References: <1449688206.2226.30.camel@HansenPartnership.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [patch RESEND] atp870u: 64 bit bug in atp885_init()
+Date: Wed, 9 Dec 2015 19:37:32 +0000
+Message-ID: <20151209193732.5940e706@lxorguk.ukuu.org.uk>
+References: <55B9CA3B.1030205@suse.de>
+	<20151209102453.GE3173@mwanda>
+	<20151209115339.46a09d94@lxorguk.ukuu.org.uk>
+	<20151209134512.GA5177@mwanda>
+	<20151209141459.41a237c9@lxorguk.ukuu.org.uk>
+	<20151209174819.GB5177@mwanda>
+	<alpine.DEB.2.10.1512091907590.2491@hadrien>
+	<20151209182822.GC5284@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55130 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753464AbbLITO4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 14:14:56 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 9859C8EE0CC
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:14:56 -0800 (PST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id FdkOBnOqU5aR for <linux-scsi@vger.kernel.org>;
-	Wed,  9 Dec 2015 11:14:56 -0800 (PST)
-Received: from [153.66.254.242] (unknown [184.11.141.41])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 474888EE04D
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:14:56 -0800 (PST)
-In-Reply-To: <1449688206.2226.30.camel@HansenPartnership.com>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43503 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753889AbbLITic (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 14:38:32 -0500
+In-Reply-To: <20151209182822.GC5284@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Julia Lawall <julia.lawall@lip6.fr>, "James E.J. Bottomley" <JBottomley@odin.com>, Ondrej Zary <linux@rainbow-software.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-The current discovery routines use the VPD 0x83 inquiry page to find
-the device SAS address and match it to the end point in the enclosure.
-This doesn't work for SATA devices because expanders (or hosts) simply
-make up an endpoint address for STP and thus the address returned by
-the VPD page never matches.  Instead of doing this, for SAS attached
-devices, match by the direct endpoint address instead.
+> You should just delete that code along with the Kconfig and Makefile
+> entries.  Don't bother moving it to staging.  The move to staging is
+> supposed to give people one last chance to yell if they absolutely need
+> the code.  No one has compiled this code for years so no one will miss
+> it.
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ses.c |   22 ++++------------------
- 1 files changed, 4 insertions(+), 18 deletions(-)
+And for stuff which might be worth saving (eg something that looks rather
+broken but has possibly got users) the driver goes into staging
+in its own directory and the Makefile and Kconfig entry for it move into
+the staging directory with the hope that someone screams and maintains it.
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 7d9cec5..1736935 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -34,6 +34,8 @@
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_host.h>
- 
-+#include <scsi/scsi_transport_sas.h>
-+
- struct ses_device {
- 	unsigned char *page1;
- 	unsigned char *page1_types;
-@@ -571,31 +573,15 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- static void ses_match_to_enclosure(struct enclosure_device *edev,
- 				   struct scsi_device *sdev)
- {
--	unsigned char *desc;
- 	struct efd efd = {
- 		.addr = 0,
- 	};
- 
- 	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
- 
--	if (!sdev->vpd_pg83_len)
--		return;
--
--	desc = sdev->vpd_pg83 + 4;
--	while (desc < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
--		enum scsi_protocol proto = desc[0] >> 4;
--		u8 code_set = desc[0] & 0x0f;
--		u8 piv = desc[1] & 0x80;
--		u8 assoc = (desc[1] & 0x30) >> 4;
--		u8 type = desc[1] & 0x0f;
--		u8 len = desc[3];
--
--		if (piv && code_set == 1 && assoc == 1
--		    && proto == SCSI_PROTOCOL_SAS && type == 3 && len == 8)
--			efd.addr = get_unaligned_be64(&desc[4]);
-+	if (is_sas_attached(sdev))
-+		efd.addr = sas_get_address(sdev);
- 
--		desc += len + 4;
--	}
- 	if (efd.addr) {
- 		efd.dev = &sdev->sdev_gendev;
- 
--- 
-1.7.4.1
-
-
+Alan
 
