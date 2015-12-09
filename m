@@ -1,58 +1,99 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 0/3] Fix the problem of SATA devices within SAS enclosures
-Date: Wed, 09 Dec 2015 11:10:06 -0800
-Message-ID: <1449688206.2226.30.camel@HansenPartnership.com>
+Subject: [PATCH 1/3] scsi_transport_sas: add is_sas_attached() function
+Date: Wed, 09 Dec 2015 11:12:03 -0800
+Message-ID: <1449688323.2226.32.camel@HansenPartnership.com>
+References: <1449688206.2226.30.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55072 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55096 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753346AbbLITKH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 14:10:07 -0500
+	by vger.kernel.org with ESMTP id S1753576AbbLITMF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 14:12:05 -0500
 Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 42FBE8EE0CC
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:10:07 -0800 (PST)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id AA4DC8EE0CC
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:12:04 -0800 (PST)
 Received: from bedivere.hansenpartnership.com ([127.0.0.1])
 	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id MrdgTfvO7bOp for <linux-scsi@vger.kernel.org>;
-	Wed,  9 Dec 2015 11:10:07 -0800 (PST)
+	with ESMTP id B8rmGoQjhXFz for <linux-scsi@vger.kernel.org>;
+	Wed,  9 Dec 2015 11:12:04 -0800 (PST)
 Received: from [153.66.254.242] (unknown [184.11.141.41])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DB2548EE04D
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:10:06 -0800 (PST)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 3C8FD8EE04D
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:12:04 -0800 (PST)
+In-Reply-To: <1449688206.2226.30.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-A big use of SAS enclosures is actually to hold SATA devices.  Right at
-the moment, the ses enclosure system doesn't recognize SATA devices.
-The reason for this is that SAS actually makes up an endpoint address
-for a SATA device since SATA doesn't have an addressing scheme.  The
-problem this causes is that the made up SAS address doesn't match the
-SATA NAA identifier in VPD page 0x83, so the address for the device the
-enclosure reports never matches.
+Adds a function designed to be callable any time (regardless of
+whether the transport attributes are configured or not) which returns
+true if the device is attached over a SAS transport.  The design of
+this function is that transport specific functions can be embedded
+within a
 
-We can fix this by using the SAS transport class to give us the actual
-end point address instead of using the identity VPD page.  This ensures
-SATA devices are always correctly matched at the expense of pulling in
-all the SAS transport code.  Instead of making ses depend on the SAS
-transport class, I've introduced an is_sas_attached() function that will
-allow us to compile out the code if the kernel isn't built with SAS.  If
-anyone ever gets around to doing FC enclosures, they should probably be
-done in the same way.
+if (is_sas_attached(sdev)) {
+	...
+}
 
-James
+which would be compiled out (and thus eliminate the symbols) if SAS is
+not configured.
 
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
+ drivers/scsi/scsi_transport_sas.c |   16 ++++++++++++++++
+ include/scsi/scsi_transport_sas.h |    9 +++++++++
+ 2 files changed, 25 insertions(+), 0 deletions(-)
 
-James Bottomley (3):
-  scsi_transport_sas: add is_sas_attached() function
-  scsi_transport_sas: add function to get SAS endpoint address
-  ses: fix discovery of SATA devices in SAS enclosures
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 30d26e3..b17f763 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -341,6 +341,22 @@ static int do_sas_phy_delete(struct device *dev, void *data)
+ }
+ 
+ /**
++ * is_sas_attached - check if device is SAS attached
++ * @sdev: scsi device to check
++ *
++ * returns true if the device is SAS attached
++ */
++int is_sas_attached(struct scsi_device *sdev)
++{
++	struct Scsi_Host *shost = sdev->host;
++
++	return shost->transportt->host_attrs.ac.class ==
++		&sas_host_class.class;
++}
++EXPORT_SYMBOL(is_sas_attached);
++
++
++/**
+  * sas_remove_children  -  tear down a devices SAS data structures
+  * @dev:	device belonging to the sas object
+  *
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 0bd71e2..a8fdd10 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -10,6 +10,15 @@ struct scsi_transport_template;
+ struct sas_rphy;
+ struct request;
+ 
++#if !IS_ENABLED(CONFIG_SCSI_SAS_ATTRS)
++static inline int is_sas_attached(struct scsi_device *sdev)
++{
++	return 0;
++}
++#else
++extern int is_sas_attached(struct scsi_device *sdev);
++#endif
++
+ static inline int sas_protocol_ata(enum sas_protocol proto)
+ {
+ 	return ((proto & SAS_PROTOCOL_SATA) ||
+-- 
+1.7.4.1
 
- drivers/scsi/scsi_transport_sas.c |   30 ++++++++++++++++++++++++++++++
- drivers/scsi/ses.c                |   22 ++++------------------
- include/scsi/scsi_transport_sas.h |   10 ++++++++++
- 3 files changed, 44 insertions(+), 18 deletions(-)
 
 
