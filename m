@@ -1,83 +1,121 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
-Date: Tue, 8 Dec 2015 23:47:57 +0000
-Message-ID: <1449618477.16905.126.camel@intel.com>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
-	 <1449271801.27077.25.camel@HansenPartnership.com>
-	 <1449273524.16905.103.camel@intel.com>
-	 <87egewslfa.fsf@notabene.neil.brown.name>
-	 <1449608892.16905.121.camel@intel.com>
-	 <CAPcyv4gJrdP23sh2cQU94fpq6+Z9GBjxWf0RpBp_4+kydpQAsA@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH v2] storvsc: add logging for error/warning messages
+Date: Wed, 9 Dec 2015 01:19:44 +0000
+Message-ID: <BY2PR0301MB165447380ACE072570BEC800A0E80@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1449216444-21553-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4gJrdP23sh2cQU94fpq6+Z9GBjxWf0RpBp_4+kydpQAsA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1449216444-21553-1-git-send-email-longli@microsoft.com>
 Content-Language: en-US
-Content-ID: <9EEDFDEF98001E4994C8CE73EEB7C429@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: "neilb@suse.com" <neilb@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE1LTEyLTA4IGF0IDEzOjE4IC0wODAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
-IE9uIFR1ZSwgRGVjIDgsIDIwMTUgYXQgMTowOCBQTSwgVmVybWEsIFZpc2hhbCBMDQo+IDx2aXNo
-YWwubC52ZXJtYUBpbnRlbC5jb20+IHdyb3RlOg0KPiA+IE9uIFdlZCwgMjAxNS0xMi0wOSBhdCAw
-ODowMyArMTEwMCwgTmVpbEJyb3duIHdyb3RlOg0KPiA+ID4gT24gU2F0LCBEZWMgMDUgMjAxNSwg
-VmVybWEsIFZpc2hhbCBMIHdyb3RlOg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gK2ludCBiYWRi
-bG9ja3NfY2xlYXIoc3RydWN0IGJhZGJsb2NrcyAqYmIsIHNlY3Rvcl90IHMsIGludA0KPiA+ID4g
-PiA+ID4gc2VjdG9ycykNCj4gPiA+ID4gPiA+ICt7DQo+ID4gPiA+ID4gWy4uLl0NCj4gPiA+ID4g
-PiA+ICsjZGVmaW5lIERPX0RFQlVHIDENCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBXaHkgaGF2ZSB0
-aGlzIGF0IGFsbCBpZiBpdCdzIHVuY29uZGl0aW9uYWxseSBkZWZpbmVkIGFuZA0KPiA+ID4gPiA+
-IGFsd2F5cw0KPiA+ID4gPiA+IHNldC4NCj4gPiA+ID4gDQo+ID4gPiA+IE5laWwgLSBhbnkgcmVh
-c29uIG9yIGFueXRoaW5nIHlvdSBoYWQgaW4gbWluZCBmb3IgdGhpcz8gT3IgaXMgaXQNCj4gPiA+
-ID4ganVzdCBhbg0KPiA+ID4gPiBhcnRpZmFjdCBhbmQgY2FuIGJlIHJlbW92ZWQuDQo+ID4gPiAN
-Cj4gPiA+IExpa2UgdGhlIGNvbW1lbnQgc2F5czoNCj4gPiA+IA0KPiA+ID4gwqDCoMKgwqDCoMKg
-LyogQWxsb3cgY2xlYXJpbmcgdmlhIHN5c2ZzICpvbmx5KiBmb3IgdGVzdGluZy9kZWJ1Z2dpbmcu
-DQo+ID4gPiDCoMKgwqDCoMKgwqDCoCogTm9ybWFsbHkgb25seSBhIHN1Y2Nlc3NmdWwgd3JpdGUg
-bWF5IGNsZWFyIGEgYmFkYmxvY2sNCj4gPiA+IMKgwqDCoMKgwqDCoMKgKi8NCj4gPiA+IA0KPiA+
-ID4gVGhlIERPX0RFQlVHIGRlZmluZSBhbmQgaWZkZWZzIGFyZSBkb2N1bWVudGF0aW9uIGlkZW50
-aWZ5aW5nIGJpdHMNCj4gPiA+IG9mDQo+ID4gPiBjb2RlIHRoYXQgc2hvdWxkIGJlIHJlbW92ZWQg
-d2hlbiBpdCBhbGwgc2VlbXMgdG8gYmUgd29ya2luZy4NCj4gPiA+IE1heWJlIG5vdyBpcyBhIGdv
-b2QgdGltZSB0byByZW1vdmUgdGhhdCBjb2RlLg0KPiA+ID4gDQo+ID4gSG0sIEkgdGhpbmsgaXQg
-d291bGQgYmUgbmljZSB0byBjb250aW51ZSB0byBoYXZlIHRoZSBhYmlsaXR5IHRvDQo+ID4gY2xl
-YXINCj4gPiBiYWRibG9ja3MgdXNpbmcgc3lzZnMgYXQgbGVhc3QgZm9yIGEgd2hpbGUgbW9yZSwg
-YXMgd2UgdGVzdCB0aGUNCj4gPiB2YXJpb3VzDQo+ID4gZXJyb3IgaGFuZGxpbmcgcGF0aHMgZm9y
-IE5WRElNTVMgKERhbiwgdGhvdWdodHM/KS4NCj4gPiANCj4gPiBXZSBjb3VsZCBlaXRoZXIgcmVt
-b3ZlIGl0IGxhdGVyIG9yIChJJ20gbGVhbmluZyB0b3dhcmRzKSBtYWtlIGl0IGENCj4gPiBjb25m
-aWcgb3B0aW9uIHNpbWlsYXIgdG8gRkFJTF9NQUtFX1JFUVVFU1QgYW5kIGZyaWVuZHMuLg0KPiAN
-Cj4gImxhdGVyIiBhcyBpbiBiZWZvcmUgdjQuNS1yYzE/wqDCoFdlIGNhbiBhbHdheXMgY2Fycnkg
-dGhpcyBkZWJ1ZyBmZWF0dXJlDQo+IGxvY2FsbHkgZm9yIHRlc3RpbmcuwqDCoFdlIGRvbid0IHdh
-bnQgdXNlcnNwYWNlIGdyb3dpbmcgQUJJIGF0dGFjaG1lbnRzDQo+IHRvIHRoaXMgY2FwYWJpbGl0
-eSBub3cgdGhhdCBpdCdzIG1vcmUgdGhhbiBqdXN0IG1kIHRvb2xpbmcgdGhhdCB3aWxsDQo+IHNl
-ZSB0aGlzLg0KDQoNCkFncmVlZC4gVGhlIGZvbGxvd2luZyBpbmNyZW1lbnRhbCBwYXRjaCByZW1v
-dmVzIHN5c2ZzIHN1cHBvcnQuDQpBbGwgdGhlIGxhdGVzdCBiYWRibG9ja3MgcGF0Y2hlcyBjYW4g
-YWxzbyBiZSBmb3VuZCBhdDoNCg0KZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9r
-ZXJuZWwvZ2l0L3Zpc2hhbC9udmRpbW0uZ2l0wqBnZW5kaXNrLWJhZGJsb2Nrcw0KDQoNCjg8LS0t
-LS0NCkZyb20gNWYwZTdhYzMxZDI3YTEzMmYzMTQxMDZmMWRiMzNhZjIyZmRlMDNlZCBNb24gU2Vw
-IDE3IDAwOjAwOjAwIDIwMDENCkZyb206IFZpc2hhbCBWZXJtYSA8dmlzaGFsLmwudmVybWFAaW50
-ZWwuY29tPg0KRGF0ZTogVHVlLCA4IERlYyAyMDE1IDE2OjI4OjMxIC0wNzAwDQpTdWJqZWN0OiBb
-UEFUQ0ggdjQgNC8zXSBiYWRibG9ja3M6IHJlbW92ZSBzdXBwb3J0IGZvciBjbGVhcmluZyB2aWEg
-c3lzZnMNCg0Kc3lzZnMgc3VwcG9ydCBmb3IgY2xlYXJpbmcgYmFkYmxvY2tzIHdhcyBvcmlnaW5h
-bGx5IG1lYW50IGZvciB0ZXN0aW5nDQpvbmx5LiBXaXRoIHRoZSBtb3ZlIHRvIGdlbmVyYWxpemUg
-dGhlIGludGVyZmFjZSwgcmVtb3ZlIHRoaXMgc3VwcG9ydCBzbw0KdGhhdCB1c2Vyc3BhY2UgZG9l
-c24ndCBzdGFydCB0cmVhdGluZyB0aGlzIGFzIGFuIEFCSS4NCg0KU2lnbmVkLW9mZi1ieTogVmlz
-aGFsIFZlcm1hIDx2aXNoYWwubC52ZXJtYUBpbnRlbC5jb20+DQotLS0NCsKgYmxvY2svYmFkYmxv
-Y2tzLmMgfCAxNSAtLS0tLS0tLS0tLS0tLS0NCsKgMSBmaWxlIGNoYW5nZWQsIDE1IGRlbGV0aW9u
-cygtKQ0KDQpkaWZmIC0tZ2l0IGEvYmxvY2svYmFkYmxvY2tzLmMgYi9ibG9jay9iYWRibG9ja3Mu
-Yw0KaW5kZXggZjBhYzI3OS4uZTVkMmE5MSAxMDA2NDQNCi0tLSBhL2Jsb2NrL2JhZGJsb2Nrcy5j
-DQorKysgYi9ibG9jay9iYWRibG9ja3MuYw0KQEAgLTUwMywxNiArNTAzLDYgQEAgc3NpemVfdCBi
-YWRibG9ja3Nfc3RvcmUoc3RydWN0IGJhZGJsb2NrcyAqYmIsIGNvbnN0DQpjaGFyICpwYWdlLCBz
-aXplX3QgbGVuLA0KwqAJaW50IGxlbmd0aDsNCsKgCWNoYXIgbmV3bGluZTsNCsKgDQotCS8qIEFs
-bG93IGNsZWFyaW5nIHZpYSBzeXNmcyAqb25seSogZm9yIHRlc3RpbmcvZGVidWdnaW5nLg0KLQnC
-oCogTm9ybWFsbHkgb25seSBhIHN1Y2Nlc3NmdWwgd3JpdGUgbWF5IGNsZWFyIGEgYmFkYmxvY2sN
-Ci0JwqAqLw0KLQlpbnQgY2xlYXIgPSAwOw0KLQ0KLQlpZiAocGFnZVswXSA9PSAnLScpIHsNCi0J
-CWNsZWFyID0gMTsNCi0JCXBhZ2UrKzsNCi0JfQ0KLQ0KwqAJc3dpdGNoIChzc2NhbmYocGFnZSwg
-IiVsbHUgJWQlYyIsICZzZWN0b3IsICZsZW5ndGgsICZuZXdsaW5lKSkNCnsNCsKgCWNhc2UgMzoN
-CsKgCQlpZiAobmV3bGluZSAhPSAnXG4nKQ0KQEAgLTUyNSwxMSArNTE1LDYgQEAgc3NpemVfdCBi
-YWRibG9ja3Nfc3RvcmUoc3RydWN0IGJhZGJsb2NrcyAqYmIsIGNvbnN0DQpjaGFyICpwYWdlLCBz
-aXplX3QgbGVuLA0KwqAJCXJldHVybiAtRUlOVkFMOw0KwqAJfQ0KwqANCi0JaWYgKGNsZWFyKSB7
-DQotCQliYWRibG9ja3NfY2xlYXIoYmIsIHNlY3RvciwgbGVuZ3RoKTsNCi0JCXJldHVybiBsZW47
-DQotCX0NCi0NCsKgCWlmIChiYWRibG9ja3Nfc2V0KGJiLCBzZWN0b3IsIGxlbmd0aCwgIXVuYWNr
-KSkNCsKgCQlyZXR1cm4gLUVOT1NQQzsNCsKgCWVsc2UNCi0tIA0KMi41LjANCg==
+
+
+> -----Original Message-----
+> From: Long Li [mailto:longli@microsoft.com]
+> Sent: Friday, December 4, 2015 12:07 AM
+> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> <haiyangz@microsoft.com>; James E.J. Bottomley <JBottomley@odin.com>
+> Cc: devel@linuxdriverproject.org; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Long Li <longli@microsoft.com>
+> Subject: [PATCH v2] storvsc: add logging for error/warning messages
+> 
+> Introduce a logging level for storvsc to log certain error/warning messages.
+> Those messages are helpful in some environments, e.g. Microsoft Azure, for
+> customer support and troubleshooting purposes.
+> 
+> Signed-off-by: Long Li <longli@microsoft.com>
+Reviewed-by : K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+
+> ---
+>  drivers/scsi/storvsc_drv.c | 34 +++++++++++++++++++++++++++++++++-
+>  1 file changed, 33 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 40c43ae..f46ed2c 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -164,6 +164,26 @@ static int sense_buffer_size =
+> PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
+>  */
+>  static int vmstor_proto_version;
+> 
+> +#define STORVSC_LOGGING_NONE	0
+> +#define STORVSC_LOGGING_ERROR	1
+> +#define STORVSC_LOGGING_WARN	2
+> +
+> +static int logging_level = STORVSC_LOGGING_ERROR;
+> +module_param(logging_level, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(logging_level,
+> +	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
+> +
+> +static inline bool do_logging(int level)
+> +{
+> +	return logging_level >= level;
+> +}
+> +
+> +#define storvsc_log(dev, level, fmt, ...)			\
+> +do {								\
+> +	if (do_logging(level))					\
+> +		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
+> +} while (0)
+> +
+>  struct vmscsi_win8_extension {
+>  	/*
+>  	 * The following were added in Windows 8
+> @@ -1185,7 +1205,8 @@ static void storvsc_command_completion(struct
+> storvsc_cmd_request *cmd_request)
+> 
+>  	if (scmnd->result) {
+>  		if (scsi_normalize_sense(scmnd->sense_buffer,
+> -				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
+> +				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
+> +		    do_logging(STORVSC_LOGGING_ERROR))
+>  			scsi_print_sense_hdr(scmnd->device, "storvsc",
+>  					     &sense_hdr);
+>  	}
+> @@ -1239,6 +1260,13 @@ static void storvsc_on_io_completion(struct
+> hv_device *device,
+>  	stor_pkt->vm_srb.sense_info_length =
+>  	vstor_packet->vm_srb.sense_info_length;
+> 
+> +	if (vstor_packet->vm_srb.scsi_status != 0 ||
+> +	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
+> +		storvsc_log(device, STORVSC_LOGGING_WARN,
+> +			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
+> +			stor_pkt->vm_srb.cdb[0],
+> +			vstor_packet->vm_srb.scsi_status,
+> +			vstor_packet->vm_srb.srb_status);
+> 
+>  	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
+>  		/* CHECK_CONDITION */
+> @@ -1246,6 +1274,10 @@ static void storvsc_on_io_completion(struct
+> hv_device *device,
+>  			SRB_STATUS_AUTOSENSE_VALID) {
+>  			/* autosense data available */
+> 
+> +			storvsc_log(device, STORVSC_LOGGING_WARN,
+> +				"stor pkt %p autosense data valid - len
+> %d\n",
+> +				request, vstor_packet-
+> >vm_srb.sense_info_length);
+> +
+>  			memcpy(request->cmd->sense_buffer,
+>  			       vstor_packet->vm_srb.sense_data,
+>  			       vstor_packet->vm_srb.sense_info_length);
+> --
+> 1.8.5.6
