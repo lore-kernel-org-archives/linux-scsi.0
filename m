@@ -1,261 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 12/20] target/tmr: LUN reset cause cmd premature free.
-Date: Wed, 9 Dec 2015 08:03:13 +0100
-Message-ID: <5667D231.9080702@suse.de>
-References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
- <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch RESEND] atp870u: 64 bit bug in atp885_init()
+Date: Wed, 9 Dec 2015 13:24:53 +0300
+Message-ID: <20151209102453.GE3173@mwanda>
+References: <55B9CA3B.1030205@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52987 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750843AbbLIHDP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Dec 2015 02:03:15 -0500
-In-Reply-To: <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <55B9CA3B.1030205@suse.de>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Ondrej Zary <linux@rainbow-software.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>, target-devel@vger.kernel.org, nab@linux-iscsi.org
-Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-On 12/08/2015 01:48 AM, Himanshu Madhani wrote:
-> From: Quinn Tran <quinn.tran@qlogic.com>
->=20
-> During LUN/Target reset, the TMR code attempt to intercept
-> cmds and try to aborted them.  Current code assume cmds are
-> always intercepted at the back end device.  The cleanup code
-> would issue a "queue_status() & check_stop_free()" to terminate
-> the command.  However, when a cmd is intercepted at the front
-> end/Fabric layer, current code introduce premature free or
-> cause Fabric to double free.
->=20
-> When command is intercepted at Fabric layer, it means a
-> check_stop_free(cmd_kref--) has been called.  The extra
-> check_stop_free in the Lun Reset cleanup code causes early
-> free.  When a cmd in the Fabric layer is completed, the normal
-> free code adds another another free which introduce a double free.
->=20
-> To fix the issue:
-> - add a new flag/CMD_T_SENT_STATUS to track command that have
->  made it down to fabric layer after back end good/bad completion.
-> - if cmd reach Fabric Layer at Lun Reset time, add an extra
->  cmd_kref count to prevent premature free.
->=20
-> Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> ---
->  drivers/target/target_core_tmr.c       |   33 ++++++++++++++++++++++=
-+++++++++-
->  drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++=
-+++++++
->  include/target/target_core_base.h      |    1 +
->  3 files changed, 63 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target=
-_core_tmr.c
-> index 28fb301..41f8b57 100644
-> --- a/drivers/target/target_core_tmr.c
-> +++ b/drivers/target/target_core_tmr.c
-> @@ -243,7 +243,9 @@ static void core_tmr_drain_state_list(
->  {
->  	LIST_HEAD(drain_task_list);
->  	struct se_cmd *cmd, *next;
-> -	unsigned long flags;
-> +	unsigned long flags, flags2;
-> +	int rmkref;
-> +	struct se_session *se_sess;
-> =20
->  	/*
->  	 * Complete outstanding commands with TASK_ABORTED SAM status.
-> @@ -282,6 +284,16 @@ static void core_tmr_drain_state_list(
->  		if (prout_cmd =3D=3D cmd)
->  			continue;
-> =20
-> +		se_sess =3D cmd->se_sess;
-> +		/* take an extra kref to prevent cmd free race condition. */
-> +		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags2);
-> +		if (!kref_get_unless_zero(&cmd->cmd_kref)) {
-> +			/* cmd is already in the free process */
-> +			spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags2);
-> +			continue;
-> +		}
-> +		spin_unlock_irqrestore(&se_sess->sess_cmd_lock,	flags2);
-> +
->  		list_move_tail(&cmd->state_list, &drain_task_list);
->  		cmd->state_active =3D false;
->  	}
-> @@ -320,9 +332,28 @@ static void core_tmr_drain_state_list(
->  		target_stop_cmd(cmd, &flags);
-> =20
->  		cmd->transport_state |=3D CMD_T_ABORTED;
-> +
-> +		/* CMD_T_SENT_STATUS: cmd is down in fabric layer.
-> +		 * A check stop has been called.  Keep the extra kref
-> +		 * from above because core_tmr_handle_tas_abort will
-> +		 * generate another check_stop.
-> +		 *
-> +		 * !CMD_T_SENT_STATUS: cmd intercepted at back end.
-> +		 * Remove the extra kref from above because only
-> +		 * 1 check_stop is required or generated by
-> +		 * core_tmr_handle_tas_abort()
-> +		 */
-> +		rmkref =3D 0;
-> +		if (!((cmd->t_state =3D=3D TRANSPORT_COMPLETE) &&
-> +		    (cmd->transport_state & CMD_T_SENT_STATUS)))
-> +			rmkref =3D 1;
-> +
->  		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-> =20
->  		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas);
-> +
-> +		if (rmkref)
-> +			target_put_sess_cmd(cmd);
->  	}
->  }
-> =20
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/=
-target_core_transport.c
-> index 4fdcee2..cdd18bf 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -639,9 +639,14 @@ void transport_cmd_finish_abort(struct se_cmd *c=
-md, int remove)
->  static void target_complete_failure_work(struct work_struct *work)
->  {
->  	struct se_cmd *cmd =3D container_of(work, struct se_cmd, work);
-> +	unsigned long flags;
-> =20
->  	transport_generic_request_failure(cmd,
->  			TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE);
-> +
-> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
-> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
-> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
->  }
-> =20
->  /*
-> @@ -1659,6 +1664,7 @@ void transport_generic_request_failure(struct s=
-e_cmd *cmd,
->  		sense_reason_t sense_reason)
->  {
->  	int ret =3D 0, post_ret =3D 0;
-> +	unsigned long flags;
-> =20
->  	pr_debug("-----[ Storage Engine Exception for cmd: %p ITT: 0x%08llx=
-"
->  		" CDB: 0x%02x\n", cmd, cmd->tag, cmd->t_task_cdb[0]);
-> @@ -1670,6 +1676,10 @@ void transport_generic_request_failure(struct =
-se_cmd *cmd,
->  		(cmd->transport_state & CMD_T_STOP) !=3D 0,
->  		(cmd->transport_state & CMD_T_SENT) !=3D 0);
-> =20
-> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
-> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
-> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-> +
->  	/*
->  	 * For SAM Task Attribute emulation for failed struct se_cmd
->  	 */
-> @@ -1951,6 +1961,7 @@ static void transport_complete_task_attr(struct=
- se_cmd *cmd)
->  static void transport_complete_qf(struct se_cmd *cmd)
->  {
->  	int ret =3D 0;
-> +	unsigned long flags;
-> =20
->  	transport_complete_task_attr(cmd);
-> =20
-> @@ -1986,6 +1997,10 @@ out:
->  	}
->  	transport_lun_remove_cmd(cmd);
->  	transport_cmd_check_stop_to_fabric(cmd);
-> +
-> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
-> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
-> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
->  }
-> =20
->  static void transport_handle_queue_full(
-> @@ -2032,6 +2047,7 @@ static void target_complete_ok_work(struct work=
-_struct *work)
->  {
->  	struct se_cmd *cmd =3D container_of(work, struct se_cmd, work);
->  	int ret;
-> +	unsigned long flags;
-> =20
->  	/*
->  	 * Check if we need to move delayed/dormant tasks from cmds on the
-> @@ -2060,6 +2076,10 @@ static void target_complete_ok_work(struct wor=
-k_struct *work)
-> =20
->  		transport_lun_remove_cmd(cmd);
->  		transport_cmd_check_stop_to_fabric(cmd);
-> +
-> +		spin_lock_irqsave(&cmd->t_state_lock, flags);
-> +		cmd->transport_state |=3D CMD_T_SENT_STATUS;
-> +		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
->  		return;
->  	}
->  	/*
-> @@ -2086,6 +2106,11 @@ static void target_complete_ok_work(struct wor=
-k_struct *work)
-> =20
->  			transport_lun_remove_cmd(cmd);
->  			transport_cmd_check_stop_to_fabric(cmd);
-> +
-> +			spin_lock_irqsave(&cmd->t_state_lock, flags);
-> +			cmd->transport_state |=3D CMD_T_SENT_STATUS;
-> +			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-> +
->  			return;
->  		}
->  	}
-> @@ -2136,6 +2161,7 @@ queue_rsp:
->  		ret =3D cmd->se_tfo->queue_status(cmd);
->  		if (ret =3D=3D -EAGAIN || ret =3D=3D -ENOMEM)
->  			goto queue_full;
-> +
->  		break;
->  	default:
->  		break;
-> @@ -2143,6 +2169,10 @@ queue_rsp:
-> =20
->  	transport_lun_remove_cmd(cmd);
->  	transport_cmd_check_stop_to_fabric(cmd);
-> +
-> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
-> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
-> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
->  	return;
-> =20
->  queue_full:
-> diff --git a/include/target/target_core_base.h b/include/target/targe=
-t_core_base.h
-> index aabf0ac..efccd71 100644
-> --- a/include/target/target_core_base.h
-> +++ b/include/target/target_core_base.h
-> @@ -490,6 +490,7 @@ struct se_cmd {
->  #define CMD_T_DEV_ACTIVE	(1 << 7)
->  #define CMD_T_REQUEST_STOP	(1 << 8)
->  #define CMD_T_BUSY		(1 << 9)
-> +#define CMD_T_SENT_STATUS (1 << 10)
->  	spinlock_t		t_state_lock;
->  	struct kref		cmd_kref;
->  	struct completion	t_transport_stop_comp;
->=20
-Same here: using bitops would save you taking the spinlock when
-modifying flags.
+On 64 bit CPUs there is a memory corruption bug on probe().  It should
+be a u32 pointer instead of an unsigned long pointer or we write past
+the end of the setupdata[] array.
 
-Cheers,
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+Resending because we have shuffled the code around so the patch needed
+to be refreshed against linux-next.  Although I do wonder why we are
+still working on this code since it has never worked on 64 bit systems
+so probably all the users gave up a decade ago.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index 8b52a9d..b46997c 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -1413,11 +1413,11 @@ static void atp885_init(struct Scsi_Host *shpnt)
+ 			atpdev->global_map[m] = 0;
+ 			for (k = 0; k < 4; k++) {
+ 				atp_writew_base(atpdev, 0x3c, n++);
+-				((unsigned long *)&setupdata[m][0])[k] = atp_readl_base(atpdev, 0x38);
++				((u32 *)&setupdata[m][0])[k] = atp_readl_base(atpdev, 0x38);
+ 			}
+ 			for (k = 0; k < 4; k++) {
+ 				atp_writew_base(atpdev, 0x3c, n++);
+-				((unsigned long *)&atpdev->sp[m][0])[k] = atp_readl_base(atpdev, 0x38);
++				((u32 *)&atpdev->sp[m][0])[k] = atp_readl_base(atpdev, 0x38);
+ 			}
+ 			n += 8;
+ 		}
