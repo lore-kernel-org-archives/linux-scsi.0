@@ -1,121 +1,19 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH v2] storvsc: add logging for error/warning messages
-Date: Wed, 9 Dec 2015 01:19:44 +0000
-Message-ID: <BY2PR0301MB165447380ACE072570BEC800A0E80@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1449216444-21553-1-git-send-email-longli@microsoft.com>
+From: robert@project.com
+Subject: Update
+Date: Tue, 08 Dec 2015 20:43:16 -0600
+Message-ID: <20151209025522.012182533C__39807.826843071$1449629921$gmane$org@smtp.altrodesign.cz>
+Reply-To: beckfordchambs@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1449216444-21553-1-git-send-email-longli@microsoft.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.altrodesign.cz ([109.123.203.224]:52483 "EHLO
+	smtp2.altrodesign.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626AbbLIC5o convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2015 21:57:44 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <robert@project.com>
 
-
-
-> -----Original Message-----
-> From: Long Li [mailto:longli@microsoft.com]
-> Sent: Friday, December 4, 2015 12:07 AM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; James E.J. Bottomley <JBottomley@odin.com>
-> Cc: devel@linuxdriverproject.org; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Long Li <longli@microsoft.com>
-> Subject: [PATCH v2] storvsc: add logging for error/warning messages
-> 
-> Introduce a logging level for storvsc to log certain error/warning messages.
-> Those messages are helpful in some environments, e.g. Microsoft Azure, for
-> customer support and troubleshooting purposes.
-> 
-> Signed-off-by: Long Li <longli@microsoft.com>
-Reviewed-by : K. Y. Srinivasan <kys@microsoft.com>
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-
-> ---
->  drivers/scsi/storvsc_drv.c | 34 +++++++++++++++++++++++++++++++++-
->  1 file changed, 33 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 40c43ae..f46ed2c 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -164,6 +164,26 @@ static int sense_buffer_size =
-> PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
->  */
->  static int vmstor_proto_version;
-> 
-> +#define STORVSC_LOGGING_NONE	0
-> +#define STORVSC_LOGGING_ERROR	1
-> +#define STORVSC_LOGGING_WARN	2
-> +
-> +static int logging_level = STORVSC_LOGGING_ERROR;
-> +module_param(logging_level, int, S_IRUGO|S_IWUSR);
-> +MODULE_PARM_DESC(logging_level,
-> +	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
-> +
-> +static inline bool do_logging(int level)
-> +{
-> +	return logging_level >= level;
-> +}
-> +
-> +#define storvsc_log(dev, level, fmt, ...)			\
-> +do {								\
-> +	if (do_logging(level))					\
-> +		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
-> +} while (0)
-> +
->  struct vmscsi_win8_extension {
->  	/*
->  	 * The following were added in Windows 8
-> @@ -1185,7 +1205,8 @@ static void storvsc_command_completion(struct
-> storvsc_cmd_request *cmd_request)
-> 
->  	if (scmnd->result) {
->  		if (scsi_normalize_sense(scmnd->sense_buffer,
-> -				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
-> +				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
-> +		    do_logging(STORVSC_LOGGING_ERROR))
->  			scsi_print_sense_hdr(scmnd->device, "storvsc",
->  					     &sense_hdr);
->  	}
-> @@ -1239,6 +1260,13 @@ static void storvsc_on_io_completion(struct
-> hv_device *device,
->  	stor_pkt->vm_srb.sense_info_length =
->  	vstor_packet->vm_srb.sense_info_length;
-> 
-> +	if (vstor_packet->vm_srb.scsi_status != 0 ||
-> +	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-> +		storvsc_log(device, STORVSC_LOGGING_WARN,
-> +			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
-> +			stor_pkt->vm_srb.cdb[0],
-> +			vstor_packet->vm_srb.scsi_status,
-> +			vstor_packet->vm_srb.srb_status);
-> 
->  	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
->  		/* CHECK_CONDITION */
-> @@ -1246,6 +1274,10 @@ static void storvsc_on_io_completion(struct
-> hv_device *device,
->  			SRB_STATUS_AUTOSENSE_VALID) {
->  			/* autosense data available */
-> 
-> +			storvsc_log(device, STORVSC_LOGGING_WARN,
-> +				"stor pkt %p autosense data valid - len
-> %d\n",
-> +				request, vstor_packet-
-> >vm_srb.sense_info_length);
-> +
->  			memcpy(request->cmd->sense_buffer,
->  			       vstor_packet->vm_srb.sense_data,
->  			       vstor_packet->vm_srb.sense_info_length);
-> --
-> 1.8.5.6
+Good day, hoping you read this email and respond to me in good time.I do not intend to solicit for funds but your time and energy in using my own resources to assist the less privileged becauseI am medically ill and confined at the moment hence I request your indulgence.I will give you a comprehensive brief once I hear from you.  Thanks and reply. Robert Grondahl
