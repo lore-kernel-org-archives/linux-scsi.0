@@ -1,129 +1,250 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 11/20] qla2xxx: Add TAS detection for kernel 3.15 n newer
-Date: Wed, 9 Dec 2015 08:02:08 +0100
-Message-ID: <5667D1F0.2000703@suse.de>
+Subject: Re: [PATCH 12/20] target/tmr: LUN reset cause cmd premature free.
+Date: Wed, 9 Dec 2015 08:03:13 +0100
+Message-ID: <5667D231.9080702@suse.de>
 References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
- <1449535747-2850-12-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1449535747-2850-12-git-send-email-himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52987 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750843AbbLIHDP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Dec 2015 02:03:15 -0500
+In-Reply-To: <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>, target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 On 12/08/2015 01:48 AM, Himanshu Madhani wrote:
 > From: Quinn Tran <quinn.tran@qlogic.com>
 >=20
-> For kernel 3.15 and newer with TCM API change, add detection
-> for TCM support of TAS.  Instead of default command terminate
-> for LUN/TARGET reset error handling, allow SCSI status to go
-> out if we know sequece Initiative is own by FW (cmd_sent_to_fw=3D0)
+> During LUN/Target reset, the TMR code attempt to intercept
+> cmds and try to aborted them.  Current code assume cmds are
+> always intercepted at the back end device.  The cleanup code
+> would issue a "queue_status() & check_stop_free()" to terminate
+> the command.  However, when a cmd is intercepted at the front
+> end/Fabric layer, current code introduce premature free or
+> cause Fabric to double free.
+>=20
+> When command is intercepted at Fabric layer, it means a
+> check_stop_free(cmd_kref--) has been called.  The extra
+> check_stop_free in the Lun Reset cleanup code causes early
+> free.  When a cmd in the Fabric layer is completed, the normal
+> free code adds another another free which introduce a double free.
+>=20
+> To fix the issue:
+> - add a new flag/CMD_T_SENT_STATUS to track command that have
+>  made it down to fabric layer after back end good/bad completion.
+> - if cmd reach Fabric Layer at Lun Reset time, add an extra
+>  cmd_kref count to prevent premature free.
 >=20
 > Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 > ---
->  drivers/scsi/qla2xxx/qla_target.c  |   36 +++++++++++++++++---------=
-----------
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c |   20 ++++++++++++++++++++
->  2 files changed, 37 insertions(+), 19 deletions(-)
+>  drivers/target/target_core_tmr.c       |   33 ++++++++++++++++++++++=
++++++++++-
+>  drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++=
++++++++
+>  include/target/target_core_base.h      |    1 +
+>  3 files changed, 63 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx=
-/qla_target.c
-> index 4d42b79..5fca846 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -3239,36 +3239,34 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
->  	struct qla_tgt *tgt =3D cmd->tgt;
->  	struct scsi_qla_host *vha =3D tgt->vha;
->  	struct se_cmd *se_cmd =3D &cmd->se_cmd;
-> -	unsigned long flags,refcount;
-> +	unsigned long flags, refcount;
+> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target=
+_core_tmr.c
+> index 28fb301..41f8b57 100644
+> --- a/drivers/target/target_core_tmr.c
+> +++ b/drivers/target/target_core_tmr.c
+> @@ -243,7 +243,9 @@ static void core_tmr_drain_state_list(
+>  {
+>  	LIST_HEAD(drain_task_list);
+>  	struct se_cmd *cmd, *next;
+> -	unsigned long flags;
+> +	unsigned long flags, flags2;
+> +	int rmkref;
+> +	struct se_session *se_sess;
 > =20
->  	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf014,
->  	    "qla_target(%d): terminating exchange for aborted cmd=3D%p "
->  	    "(se_cmd=3D%p, tag=3D%llu)", vha->vp_idx, cmd, &cmd->se_cmd,
->  	    se_cmd->tag);
+>  	/*
+>  	 * Complete outstanding commands with TASK_ABORTED SAM status.
+> @@ -282,6 +284,16 @@ static void core_tmr_drain_state_list(
+>  		if (prout_cmd =3D=3D cmd)
+>  			continue;
 > =20
-> -    spin_lock_irqsave(&cmd->cmd_lock, flags);
-> -    if (cmd->aborted) {
-> -        spin_unlock_irqrestore(&cmd->cmd_lock, flags);
-> +	spin_lock_irqsave(&cmd->cmd_lock, flags);
-> =20
-> -        /* It's normal to see 2 calls in this path:
-> -         *  1) XFER Rdy completion + CMD_T_ABORT
-> -         *  2) TCM TMR - drain_state_list
-> -         */
-> -        refcount =3D atomic_read(&cmd->se_cmd.cmd_kref.refcount);
-> -        ql_dbg(ql_dbg_tgt_mgt, vha, 0xffff,
-> -               "multiple abort. %p refcount %lx"
-> -               "transport_state %x, t_state %x, se_cmd_flags %x \n",
-> -               cmd, refcount,cmd->se_cmd.transport_state,
-> -               cmd->se_cmd.t_state,cmd->se_cmd.se_cmd_flags);
-> +	if (cmd->aborted) {
-> +		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
-> +		/* It's normal to see 2 calls in this path:
-> +		 *  1) XFER Rdy completion + CMD_T_ABORT
-> +		 *  2) TCM TMR - drain_state_list
-> +		 */
-> +		refcount =3D atomic_read(&cmd->se_cmd.cmd_kref.refcount);
-> +		ql_dbg(ql_dbg_tgt_mgt, vha, 0xffff,
-> +		    "multiple abort. %p refcount %lx"
-> +		    "transport_state %x, t_state %x, se_cmd_flags %x \n",
-> +		    cmd, refcount, cmd->se_cmd.transport_state,
-> +		    cmd->se_cmd.t_state, cmd->se_cmd.se_cmd_flags);
-> =20
-> -        return EIO;
-> -    }
-> +		return EIO;
-> +	}
-> =20
->  	cmd->aborted =3D 1;
->  	cmd->cmd_flags |=3D BIT_6;
-> -    spin_unlock_irqrestore(&cmd->cmd_lock, flags);
-> -
-> -	qlt_send_term_exchange(vha, cmd, &cmd->atio, 0, 1);
-> +	spin_unlock_irqrestore(&cmd->cmd_lock, flags);
-> =20
->  	return 0;
->  }
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xx=
-x/tcm_qla2xxx.c
-> index 842fcca..2e9c194 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -617,6 +617,26 @@ static int tcm_qla2xxx_queue_status(struct se_cm=
-d *se_cmd)
->  				struct qla_tgt_cmd, se_cmd);
->  	int xmit_type =3D QLA_TGT_XMIT_STATUS;
-> =20
-> +	if (se_cmd->transport_state & CMD_T_ABORTED) {
-> +		/* For TCM TAS support n kernel >=3D 3.15:
-> +		 * This cmd is attempting to respond with "Task Aborted Status".
-> +		 */
-> +		if (cmd->aborted) {
-> +			return 0;
-> +		} else if ((cmd->state =3D=3D QLA_TGT_STATE_NEED_DATA) &&
-> +		    cmd->cmd_sent_to_fw) {
-> +			qlt_abort_cmd(cmd);
-> +			return 0;
-> +		} else if (cmd->state =3D=3D QLA_TGT_STATE_PROCESSED) {
-> +			if (cmd->cmd_sent_to_fw) {
-> +				qlt_abort_cmd(cmd);
-> +				return 0;
-> +			} else {	/* about to be free */
-> +				return 0;
-> +			}
+> +		se_sess =3D cmd->se_sess;
+> +		/* take an extra kref to prevent cmd free race condition. */
+> +		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags2);
+> +		if (!kref_get_unless_zero(&cmd->cmd_kref)) {
+> +			/* cmd is already in the free process */
+> +			spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags2);
+> +			continue;
 > +		}
-> +	}
+> +		spin_unlock_irqrestore(&se_sess->sess_cmd_lock,	flags2);
 > +
->  	cmd->bufflen =3D se_cmd->data_length;
->  	cmd->sg =3D NULL;
->  	cmd->sg_cnt =3D 0;
+>  		list_move_tail(&cmd->state_list, &drain_task_list);
+>  		cmd->state_active =3D false;
+>  	}
+> @@ -320,9 +332,28 @@ static void core_tmr_drain_state_list(
+>  		target_stop_cmd(cmd, &flags);
+> =20
+>  		cmd->transport_state |=3D CMD_T_ABORTED;
+> +
+> +		/* CMD_T_SENT_STATUS: cmd is down in fabric layer.
+> +		 * A check stop has been called.  Keep the extra kref
+> +		 * from above because core_tmr_handle_tas_abort will
+> +		 * generate another check_stop.
+> +		 *
+> +		 * !CMD_T_SENT_STATUS: cmd intercepted at back end.
+> +		 * Remove the extra kref from above because only
+> +		 * 1 check_stop is required or generated by
+> +		 * core_tmr_handle_tas_abort()
+> +		 */
+> +		rmkref =3D 0;
+> +		if (!((cmd->t_state =3D=3D TRANSPORT_COMPLETE) &&
+> +		    (cmd->transport_state & CMD_T_SENT_STATUS)))
+> +			rmkref =3D 1;
+> +
+>  		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+> =20
+>  		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas);
+> +
+> +		if (rmkref)
+> +			target_put_sess_cmd(cmd);
+>  	}
+>  }
+> =20
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/=
+target_core_transport.c
+> index 4fdcee2..cdd18bf 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -639,9 +639,14 @@ void transport_cmd_finish_abort(struct se_cmd *c=
+md, int remove)
+>  static void target_complete_failure_work(struct work_struct *work)
+>  {
+>  	struct se_cmd *cmd =3D container_of(work, struct se_cmd, work);
+> +	unsigned long flags;
+> =20
+>  	transport_generic_request_failure(cmd,
+>  			TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE);
+> +
+> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
+> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
+> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  }
+> =20
+>  /*
+> @@ -1659,6 +1664,7 @@ void transport_generic_request_failure(struct s=
+e_cmd *cmd,
+>  		sense_reason_t sense_reason)
+>  {
+>  	int ret =3D 0, post_ret =3D 0;
+> +	unsigned long flags;
+> =20
+>  	pr_debug("-----[ Storage Engine Exception for cmd: %p ITT: 0x%08llx=
+"
+>  		" CDB: 0x%02x\n", cmd, cmd->tag, cmd->t_task_cdb[0]);
+> @@ -1670,6 +1676,10 @@ void transport_generic_request_failure(struct =
+se_cmd *cmd,
+>  		(cmd->transport_state & CMD_T_STOP) !=3D 0,
+>  		(cmd->transport_state & CMD_T_SENT) !=3D 0);
+> =20
+> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
+> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
+> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+> +
+>  	/*
+>  	 * For SAM Task Attribute emulation for failed struct se_cmd
+>  	 */
+> @@ -1951,6 +1961,7 @@ static void transport_complete_task_attr(struct=
+ se_cmd *cmd)
+>  static void transport_complete_qf(struct se_cmd *cmd)
+>  {
+>  	int ret =3D 0;
+> +	unsigned long flags;
+> =20
+>  	transport_complete_task_attr(cmd);
+> =20
+> @@ -1986,6 +1997,10 @@ out:
+>  	}
+>  	transport_lun_remove_cmd(cmd);
+>  	transport_cmd_check_stop_to_fabric(cmd);
+> +
+> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
+> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
+> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  }
+> =20
+>  static void transport_handle_queue_full(
+> @@ -2032,6 +2047,7 @@ static void target_complete_ok_work(struct work=
+_struct *work)
+>  {
+>  	struct se_cmd *cmd =3D container_of(work, struct se_cmd, work);
+>  	int ret;
+> +	unsigned long flags;
+> =20
+>  	/*
+>  	 * Check if we need to move delayed/dormant tasks from cmds on the
+> @@ -2060,6 +2076,10 @@ static void target_complete_ok_work(struct wor=
+k_struct *work)
+> =20
+>  		transport_lun_remove_cmd(cmd);
+>  		transport_cmd_check_stop_to_fabric(cmd);
+> +
+> +		spin_lock_irqsave(&cmd->t_state_lock, flags);
+> +		cmd->transport_state |=3D CMD_T_SENT_STATUS;
+> +		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  		return;
+>  	}
+>  	/*
+> @@ -2086,6 +2106,11 @@ static void target_complete_ok_work(struct wor=
+k_struct *work)
+> =20
+>  			transport_lun_remove_cmd(cmd);
+>  			transport_cmd_check_stop_to_fabric(cmd);
+> +
+> +			spin_lock_irqsave(&cmd->t_state_lock, flags);
+> +			cmd->transport_state |=3D CMD_T_SENT_STATUS;
+> +			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+> +
+>  			return;
+>  		}
+>  	}
+> @@ -2136,6 +2161,7 @@ queue_rsp:
+>  		ret =3D cmd->se_tfo->queue_status(cmd);
+>  		if (ret =3D=3D -EAGAIN || ret =3D=3D -ENOMEM)
+>  			goto queue_full;
+> +
+>  		break;
+>  	default:
+>  		break;
+> @@ -2143,6 +2169,10 @@ queue_rsp:
+> =20
+>  	transport_lun_remove_cmd(cmd);
+>  	transport_cmd_check_stop_to_fabric(cmd);
+> +
+> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
+> +	cmd->transport_state |=3D CMD_T_SENT_STATUS;
+> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  	return;
+> =20
+>  queue_full:
+> diff --git a/include/target/target_core_base.h b/include/target/targe=
+t_core_base.h
+> index aabf0ac..efccd71 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -490,6 +490,7 @@ struct se_cmd {
+>  #define CMD_T_DEV_ACTIVE	(1 << 7)
+>  #define CMD_T_REQUEST_STOP	(1 << 8)
+>  #define CMD_T_BUSY		(1 << 9)
+> +#define CMD_T_SENT_STATUS (1 << 10)
+>  	spinlock_t		t_state_lock;
+>  	struct kref		cmd_kref;
+>  	struct completion	t_transport_stop_comp;
 >=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Same here: using bitops would save you taking the spinlock when
+modifying flags.
 
 Cheers,
 
@@ -133,3 +254,8 @@ Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
