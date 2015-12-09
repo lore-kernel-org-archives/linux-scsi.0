@@ -1,39 +1,58 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch RESEND] atp870u: 64 bit bug in atp885_init()
-Date: Wed, 9 Dec 2015 21:28:22 +0300
-Message-ID: <20151209182822.GC5284@mwanda>
-References: <55B9CA3B.1030205@suse.de>
- <20151209102453.GE3173@mwanda>
- <20151209115339.46a09d94@lxorguk.ukuu.org.uk>
- <20151209134512.GA5177@mwanda>
- <20151209141459.41a237c9@lxorguk.ukuu.org.uk>
- <20151209174819.GB5177@mwanda>
- <alpine.DEB.2.10.1512091907590.2491@hadrien>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH 0/3] Fix the problem of SATA devices within SAS enclosures
+Date: Wed, 09 Dec 2015 11:10:06 -0800
+Message-ID: <1449688206.2226.30.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1512091907590.2491@hadrien>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, "James E.J. Bottomley" <JBottomley@odin.com>, Ondrej Zary <linux@rainbow-software.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55072 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753346AbbLITKH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 14:10:07 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 42FBE8EE0CC
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:10:07 -0800 (PST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id MrdgTfvO7bOp for <linux-scsi@vger.kernel.org>;
+	Wed,  9 Dec 2015 11:10:07 -0800 (PST)
+Received: from [153.66.254.242] (unknown [184.11.141.41])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DB2548EE04D
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 11:10:06 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Dec 09, 2015 at 07:11:15PM +0100, Julia Lawall wrote:
-> Forgive my ignorance, but what is the exact procedure?  For example, the
-> following file: drivers/pcmcia/vrc4173_cardu.c contains the following
-> code: INIT_WORK(&socket->tq_work, cardu_bh, socket);.  The last time
-> INIT_WORK took three arguments was Linux 2.6.19, so I think no one has
-> been compiling this code recently.  There would be the .c file and the
-> associated .h file to move to staging, but it's less clear to me eg what
-> to do with the Kconfig entry and the Makefile entry.  And is there
-> anything else to take into account?
+A big use of SAS enclosures is actually to hold SATA devices.  Right at
+the moment, the ses enclosure system doesn't recognize SATA devices.
+The reason for this is that SAS actually makes up an endpoint address
+for a SATA device since SATA doesn't have an addressing scheme.  The
+problem this causes is that the made up SAS address doesn't match the
+SATA NAA identifier in VPD page 0x83, so the address for the device the
+enclosure reports never matches.
 
-You should just delete that code along with the Kconfig and Makefile
-entries.  Don't bother moving it to staging.  The move to staging is
-supposed to give people one last chance to yell if they absolutely need
-the code.  No one has compiled this code for years so no one will miss
-it.
+We can fix this by using the SAS transport class to give us the actual
+end point address instead of using the identity VPD page.  This ensures
+SATA devices are always correctly matched at the expense of pulling in
+all the SAS transport code.  Instead of making ses depend on the SAS
+transport class, I've introduced an is_sas_attached() function that will
+allow us to compile out the code if the kernel isn't built with SAS.  If
+anyone ever gets around to doing FC enclosures, they should probably be
+done in the same way.
 
-regards,
-dan carpenter
+James
+
+---
+
+James Bottomley (3):
+  scsi_transport_sas: add is_sas_attached() function
+  scsi_transport_sas: add function to get SAS endpoint address
+  ses: fix discovery of SATA devices in SAS enclosures
+
+ drivers/scsi/scsi_transport_sas.c |   30 ++++++++++++++++++++++++++++++
+ drivers/scsi/ses.c                |   22 ++++------------------
+ include/scsi/scsi_transport_sas.h |   10 ++++++++++
+ 3 files changed, 44 insertions(+), 18 deletions(-)
+
+
