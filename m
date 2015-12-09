@@ -1,39 +1,177 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [patch RESEND] atp870u: 64 bit bug in atp885_init()
-Date: Wed, 9 Dec 2015 19:37:32 +0000
-Message-ID: <20151209193732.5940e706@lxorguk.ukuu.org.uk>
-References: <55B9CA3B.1030205@suse.de>
-	<20151209102453.GE3173@mwanda>
-	<20151209115339.46a09d94@lxorguk.ukuu.org.uk>
-	<20151209134512.GA5177@mwanda>
-	<20151209141459.41a237c9@lxorguk.ukuu.org.uk>
-	<20151209174819.GB5177@mwanda>
-	<alpine.DEB.2.10.1512091907590.2491@hadrien>
-	<20151209182822.GC5284@mwanda>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 12/20] target/tmr: LUN reset cause cmd premature free.
+Date: Wed, 9 Dec 2015 20:11:06 +0000
+Message-ID: <D28DC7E3.1B099%quinn.tran@qlogic.com>
+References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
+ <20151208024859.GB32255@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_D28DC7E31B099quinntranqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43503 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753889AbbLITic (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 14:38:32 -0500
-In-Reply-To: <20151209182822.GC5284@mwanda>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:50837 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751863AbbLIUJY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 15:09:24 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tB9K6beN026862
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Dec 2015 12:09:23 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1ykystqnu8-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 09 Dec 2015 12:09:23 -0800
+In-Reply-To: <20151208024859.GB32255@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Julia Lawall <julia.lawall@lip6.fr>, "James E.J. Bottomley" <JBottomley@odin.com>, Ondrej Zary <linux@rainbow-software.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>
 
-> You should just delete that code along with the Kconfig and Makefile
-> entries.  Don't bother moving it to staging.  The move to staging is
-> supposed to give people one last chance to yell if they absolutely need
-> the code.  No one has compiled this code for years so no one will miss
-> it.
+--_000_D28DC7E31B099quinntranqlogiccom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <FB3ED9D35B7DAA43BC2EE74BFD375AD5@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-And for stuff which might be worth saving (eg something that looks rather
-broken but has possibly got users) the driver goes into staging
-in its own directory and the Makefile and Kconfig entry for it move into
-the staging directory with the hope that someone screams and maintains it.
+Christoph,=20
 
-Alan
+Understood.  I was not sure which way the community is swinging.
+For what it=B9s worth, this fix was required to stabilize one of our
+customer environment in the older kernel.
 
+Regards,
+Quinn Tran
+
+
+
+
+On 12/7/15, 6:48 PM, "target-devel-owner@vger.kernel.org on behalf of
+Christoph Hellwig" <target-devel-owner@vger.kernel.org on behalf of
+hch@infradead.org> wrote:
+
+>On Mon, Dec 07, 2015 at 07:48:59PM -0500, Himanshu Madhani wrote:
+>> From: Quinn Tran <quinn.tran@qlogic.com>
+>>=20
+>> During LUN/Target reset, the TMR code attempt to intercept
+>> cmds and try to aborted them.  Current code assume cmds are
+>> always intercepted at the back end device.  The cleanup code
+>> would issue a "queue_status() & check_stop_free()" to terminate
+>> the command.  However, when a cmd is intercepted at the front
+>> end/Fabric layer, current code introduce premature free or
+>> cause Fabric to double free.
+>>=20
+>> When command is intercepted at Fabric layer, it means a
+>> check_stop_free(cmd_kref--) has been called.  The extra
+>> check_stop_free in the Lun Reset cleanup code causes early
+>> free.  When a cmd in the Fabric layer is completed, the normal
+>> free code adds another another free which introduce a double free.
+>>=20
+>> To fix the issue:
+>> - add a new flag/CMD_T_SENT_STATUS to track command that have
+>>  made it down to fabric layer after back end good/bad completion.
+>> - if cmd reach Fabric Layer at Lun Reset time, add an extra
+>>  cmd_kref count to prevent premature free.
+>
+>This seems lke something solved by Bart's abort rewrite in a much nicer
+>way.  All this special casing based on magic flags isn't maintainable
+>in the long run.
+>--
+>To unsubscribe from this list: send the line "unsubscribe target-devel" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--_000_D28DC7E31B099quinntranqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+nXEqkADAav8FsHlQBGA6vj72P6AkwaCnHy2hAhBAsmrQAkBwOi+qLzrNL6CnLaOiLqQwHm11RiJV
+FUKn8AAAAB8AQgABAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AZQABAAAALAAAAHEA
+dQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgFBAAEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBuACAA
+VAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAB8AAl0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwDlXwEAAAA0AAAAcwBpAHAAOgBxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8AGgwBAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AHwwBAAAA
+LAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgEZDAEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkA
+bgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8AAV0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwD4PwEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAjQAEAAAAs
+AAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoA
+AABTAE0AVABQAAAAAAACAfk/AQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBu
+AG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwAJXQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkE
+AAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAACZJoeQkkoUq79j9o5OSvGQMAFwABAAAAQAA5
+AACpT7y9MtEBQAAIMAdRgry9MtEBCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACA
+hgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAAB
+AAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEA
+AACEAAAAUgBlADoAIABbAFAAQQBUAEMASAAgADEAMgAvADIAMABdACAAdABhAHIAZwBlAHQALwB0
+AG0AcgA6ACAATABVAE4AIAByAGUAcwBlAHQAIABjAGEAdQBzAGUAIABjAG0AZAAgAHAAcgBlAG0A
+YQB0AHUAcgBlACAAZgByAGUAZQAuAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAf
+AEIQAQAAAE4AAAA8ADIAMAAxADUAMQAyADAAOAAwADIANAA4ADUAOQAuAEcAQgAzADIAMgA1ADUA
+QABpAG4AZgByAGEAZABlAGEAZAAuAG8AcgBnAD4AAAAAAAIBcQABAAAAIAAAAAEB0TFX/ukr4CYK
+PX5NisLB8O02E8eewOlmgIACLuCAHwBwAAEAAAB8AAAAWwBQAEEAVABDAEgAIAAxADIALwAyADAA
+XQAgAHQAYQByAGcAZQB0AC8AdABtAHIAOgAgAEwAVQBOACAAcgBlAHMAZQB0ACAAYwBhAHUAcwBl
+ACAAYwBtAGQAIABwAHIAZQBtAGEAdAB1AHIAZQAgAGYAcgBlAGUALgAAAB8ANRABAAAATgAAADwA
+RAAyADgARABDADcARQAzAC4AMQBCADAAOQA5ACUAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0APgAAAAAAHwA5EAEAAABMAQAAPAAxADQANAA5ADUAMwA1ADcANAA3AC0A
+MgA4ADUAMAAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBoAGkAbQBhAG4AcwBo
+AHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ACAAPAAxADQANAA5ADUA
+MwA1ADcANAA3AC0AMgA4ADUAMAAtADEAMwAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAt
+AGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4A
+IAA8ADIAMAAxADUAMQAyADAAOAAwADIANAA4ADUAOQAuAEcAQgAzADIAMgA1ADUAQABpAG4AZgBy
+AGEAZABlAGEAZAAuAG8AcgBnAD4AAAADAN4/r28AAEAABzCFy3i8vTLRAQMAJgAAAAAAAgFHAAEA
+AAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNTEyMDkyMDExMDZaLTExNDgxNQAAHwAV
+EAEAAABYAAAARgBCADMARQBEADkARAAzADUAQgA3AEQAQQBBADQAMwBCAEMAMgBFAEUANwA0AEIA
+RgBEADMANwA1AEEARAA1AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAAAUBAABl
+69p+QwAAAB8A+j8BAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AAICGAwIAAAAAAMAA
+AAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBz
+AG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADUALgA1AC4AMQA1ADAAOAAyADEA
+AAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJ
+AG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAgAQAASQBJAD0AMAAxADAAMQBEADEA
+MwAyAEIARAA3AEQARgBBAEMAOQAwADYAQgAyAEIAQQBGAEIANgBDADQAQQBCADAAMAA1AEQAOQAy
+ADUARgAxADEAQgBBADYARAA3ADsAUwBCAE0ASQBEAD0AMQAzADsAUwAxAD0APAAyADAAMQA1ADEA
+MgAwADgAMAAyADQAOAA1ADkALgBHAEIAMwAyADIANQA1AEAAaQBuAGYAcgBhAGQAZQBhAGQALgBv
+AHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUA
+aQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAA
+AgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABp
+AG4AZwAtAGkAcAAAAAAAAQAAABoAAABbADEAMAAuADgALgA1AC4AMgA1ADAAXQAAAAAAHwAAgIYD
+AgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5
+AHAAYQBzAHMAAAAAAE7Y
+
+--_000_D28DC7E31B099quinntranqlogiccom_--
