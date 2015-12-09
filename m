@@ -1,31 +1,25 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 108771] scsi: ses: kasan: ses_enclosure_data_process use after
- free on boot SAS2X28
-Date: Wed, 09 Dec 2015 12:35:21 +0000
-Message-ID: <bug-108771-11613-lsPP1EZkGJ@https.bugzilla.kernel.org/>
-References: <bug-108771-11613@https.bugzilla.kernel.org/>
+From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Subject: Re: [Bug 108771] scsi: ses: kasan: ses_enclosure_data_process use
+ after free on boot SAS2X28
+Date: Wed, 9 Dec 2015 15:35:05 +0300
+Message-ID: <56681FF9.8050100@virtuozzo.com>
+References: <bug-108771-11613@https.bugzilla.kernel.org/>	 <bug-108771-11613-NEJGozmw2J@https.bugzilla.kernel.org/> <1449591386.2219.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41727 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752867AbbLIMfZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Dec 2015 07:35:25 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id CFA42204AE
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 12:35:23 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id A789E20524
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 12:35:21 +0000 (UTC)
-In-Reply-To: <bug-108771-11613@https.bugzilla.kernel.org/>
+Received: from relay.parallels.com ([195.214.232.42]:47994 "EHLO
+	relay.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752867AbbLIMfV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 07:35:21 -0500
+In-Reply-To: <1449591386.2219.5.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=108771
 
---- Comment #2 from Pavel Tikhomirov <ptikhomirov@virtuozzo.com> ---
+
 On 12/08/2015 07:16 PM, James Bottomley wrote:
 > On Mon, 2015-12-07 at 14:01 +0000, bugzilla-daemon@bugzilla.kernel.org
 > wrote:
@@ -207,5 +201,5 @@ Pavel
 >
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Best regards, Tikhomirov Pavel
+Software Developer, Odin.
