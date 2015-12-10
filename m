@@ -1,26 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] cxlflash: drop unlikely before IS_ERR_OR_NULL
-Date: Thu, 10 Dec 2015 12:56:05 -0500
-Message-ID: <yq1d1ue2nnu.fsf@sermon.lab.mkp.net>
-References: <1449177529-58863-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
+Date: Thu, 10 Dec 2015 12:58:00 -0500
+Message-ID: <yq18u522nkn.fsf@sermon.lab.mkp.net>
+References: <20151203132758.GC19092@hansolo.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33659 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267AbbLJR4W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2015 12:56:22 -0500
-In-Reply-To: <1449177529-58863-1-git-send-email-mrochs@linux.vnet.ibm.com>
-	(Matthew R. Ochs's message of "Thu, 3 Dec 2015 15:18:49 -0600")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151203132758.GC19092@hansolo.redhat.com> (Josh Boyer's message
+	of "Thu, 3 Dec 2015 08:27:59 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Josh Boyer <jwboyer@fedoraproject.org>
+Cc: James.Bottomley@hansenpartnership.com, arvindkumar@vmware.com, Thomas Hellstrom <thellstrom@vmware.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, pv-drivers@vmware.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Geliang Tang <geliangtang@163.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Michael Neuling <mikey@neuling.org>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Matthew" == Matthew R Ochs <mrochs@linux.vnet.ibm.com> writes:
+>>>>> "Josh" == Josh Boyer <jwboyer@fedoraproject.org> writes:
 
-Matthew> IS_ERR_OR_NULL already contain an unlikely compiler flag. Drop
-Matthew> it.
+Josh> The driver is missing calls to pci_dma_mapping_error() after
+Josh> performing the DMA mapping, which caused DMA-API warning to show
+Josh> up in dmesg's output. Though that happens only when DMA_API_DEBUG
+Josh> option is enabled. This change fixes the issue and makes
+Josh> pvscsi_map_buffers() function more robust.
 
 Applied to 4.5/scsi-queue.
 
