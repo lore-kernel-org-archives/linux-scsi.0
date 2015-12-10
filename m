@@ -1,76 +1,141 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 14/15] dm kcopyd: change mutex to spinlock
-Date: Thu, 10 Dec 2015 12:31:15 -0500 (EST)
-Message-ID: <alpine.LRH.2.02.1512101216180.25927@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 9/15] dm: implement copy
+Date: Thu, 10 Dec 2015 12:30:49 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1512101213420.25927@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+Cc: linux-block@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-job->lock is only taken for a finite amount of time and the process
-doesn't block while holding it, so change it from mutex to spinlock.
+This patch implements basic copy support for device mapper core.
+Individual targets can enable copy support by setting ti->copy_supported.
 
-This change is needed for the next patch that makes it possible to call
-segment_complete from an interrupt. Taking mutexes inside an interrupt is
-not allowed.
+Device mapper device advertises copy support if at least one target
+supports copy and for this target, at least one underlying device supports
+copy.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- drivers/md/dm-kcopyd.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/md/dm-table.c         |   16 ++++++++++++++++
+ drivers/md/dm.c               |   27 +++++++++++++++++++++++++++
+ include/linux/device-mapper.h |    5 +++++
+ 3 files changed, 48 insertions(+)
 
-Index: linux-3.16-rc5/drivers/md/dm-kcopyd.c
+Index: linux-4.4-rc4/drivers/md/dm.c
 ===================================================================
---- linux-3.16-rc5.orig/drivers/md/dm-kcopyd.c	2014-07-15 19:20:34.000000000 +0200
-+++ linux-3.16-rc5/drivers/md/dm-kcopyd.c	2014-07-15 19:24:20.000000000 +0200
-@@ -21,7 +21,7 @@
- #include <linux/slab.h>
- #include <linux/vmalloc.h>
- #include <linux/workqueue.h>
--#include <linux/mutex.h>
-+#include <linux/spinlock.h>
- #include <linux/delay.h>
- #include <linux/device-mapper.h>
- #include <linux/dm-kcopyd.h>
-@@ -356,7 +356,7 @@ struct kcopyd_job {
- 	 * These fields are only used if the job has been split
- 	 * into more manageable parts.
+--- linux-4.4-rc4.orig/drivers/md/dm.c	2015-12-10 17:04:05.000000000 +0100
++++ linux-4.4-rc4/drivers/md/dm.c	2015-12-10 17:05:48.000000000 +0100
+@@ -1679,6 +1679,31 @@ static int __send_write_same(struct clon
+ 	return __send_changing_extent_only(ci, get_num_write_same_bios, NULL);
+ }
+ 
++static int __send_copy(struct clone_info *ci)
++{
++	struct dm_target *ti;
++	sector_t bound;
++
++	ti = dm_table_find_target(ci->map, ci->sector);
++	if (!dm_target_is_valid(ti))
++		return -EIO;
++
++	if (!ti->copy_supported)
++		return -EOPNOTSUPP;
++
++	bound = max_io_len(ci->sector, ti);
++
++	if (unlikely(ci->sector_count > bound))
++		return -EOPNOTSUPP;
++
++	__clone_and_map_simple_bio(ci, ti, 0, NULL);
++
++	ci->sector += ci->sector_count;
++	ci->sector_count = 0;
++
++	return 0;
++}
++
+ /*
+  * Select the correct strategy for processing a non-flush bio.
+  */
+@@ -1692,6 +1717,8 @@ static int __split_and_process_non_flush
+ 		return __send_discard(ci);
+ 	else if (unlikely(bio->bi_rw & REQ_WRITE_SAME))
+ 		return __send_write_same(ci);
++	else if (unlikely(bio->bi_rw & REQ_COPY))
++		return __send_copy(ci);
+ 
+ 	ti = dm_table_find_target(ci->map, ci->sector);
+ 	if (!dm_target_is_valid(ti))
+Index: linux-4.4-rc4/include/linux/device-mapper.h
+===================================================================
+--- linux-4.4-rc4.orig/include/linux/device-mapper.h	2015-12-10 17:04:05.000000000 +0100
++++ linux-4.4-rc4/include/linux/device-mapper.h	2015-12-10 17:04:59.000000000 +0100
+@@ -271,6 +271,11 @@ struct dm_target {
+ 	 * Set if this target does not return zeroes on discarded blocks.
  	 */
--	struct mutex lock;
-+	spinlock_t lock;
- 	atomic_t sub_jobs;
- 	sector_t progress;
+ 	bool discard_zeroes_data_unsupported:1;
++
++	/*
++	 * Set if the target supports XCOPY.
++	 */
++	bool copy_supported:1;
+ };
  
-@@ -629,7 +629,7 @@ static void segment_complete(int read_er
- 	struct kcopyd_job *job = sub_job->master_job;
- 	struct dm_kcopyd_client *kc = job->kc;
+ /* Each target can link one of these into the table */
+Index: linux-4.4-rc4/drivers/md/dm-table.c
+===================================================================
+--- linux-4.4-rc4.orig/drivers/md/dm-table.c	2015-12-10 17:03:51.000000000 +0100
++++ linux-4.4-rc4/drivers/md/dm-table.c	2015-12-10 17:04:59.000000000 +0100
+@@ -286,6 +286,11 @@ static int device_area_is_invalid(struct
+ 		limits->logical_block_size >> SECTOR_SHIFT;
+ 	char b[BDEVNAME_SIZE];
  
--	mutex_lock(&job->lock);
-+	spin_lock(&job->lock);
++	if (ti->copy_supported)
++		limits->max_copy_sectors =
++			min_not_zero(limits->max_copy_sectors,
++				bdev_get_queue(bdev)->limits.max_copy_sectors);
++
+ 	/*
+ 	 * Some devices exist without request functions,
+ 	 * such as loop devices not yet bound to backing files.
+@@ -1256,6 +1261,13 @@ int dm_calculate_queue_limits(struct dm_
  
- 	/* update the error */
- 	if (read_err)
-@@ -653,7 +653,7 @@ static void segment_complete(int read_er
- 			job->progress += count;
- 		}
+ 		ti = dm_table_get_target(table, i++);
+ 
++		if (ti->begin)
++			ti_limits.copy_boundary = min(ti_limits.copy_boundary,
++					(unsigned char)__ffs64(ti->begin));
++		if (ti->max_io_len)
++			ti_limits.copy_boundary = min(ti_limits.copy_boundary,
++					(unsigned char)__ffs(ti->max_io_len));
++
+ 		if (!ti->type->iterate_devices)
+ 			goto combine_limits;
+ 
+@@ -1289,6 +1301,10 @@ combine_limits:
+ 			       dm_device_name(table->md),
+ 			       (unsigned long long) ti->begin,
+ 			       (unsigned long long) ti->len);
++
++		limits->max_copy_sectors =
++					min_not_zero(limits->max_copy_sectors,
++					ti_limits.max_copy_sectors);
  	}
--	mutex_unlock(&job->lock);
-+	spin_unlock(&job->lock);
  
- 	if (count) {
- 		int i;
-@@ -708,7 +708,7 @@ static void submit_job(struct kcopyd_job
- 	if (job->source.count <= SUB_JOB_SIZE)
- 		dispatch_job(job);
- 	else {
--		mutex_init(&job->lock);
-+		spin_lock_init(&job->lock);
- 		job->progress = 0;
- 		split_job(job);
- 	}
+ 	return validate_hardware_logical_block_alignment(table, limits);
