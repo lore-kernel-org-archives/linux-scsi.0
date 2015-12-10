@@ -1,31 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [SCSI] osd: fix signed char versus %02x issue
-Date: Thu, 10 Dec 2015 13:15:39 -0500
-Message-ID: <yq1zixi186s.fsf@sermon.lab.mkp.net>
-References: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
+Subject: Re: [patch] hisi_sas: fix error codes in hisi_sas_task_prep()
+Date: Thu, 10 Dec 2015 13:17:18 -0500
+Message-ID: <yq1vb861841.fsf@sermon.lab.mkp.net>
+References: <20151209104836.GK3173@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45704 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754692AbbLJSQF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2015 13:16:05 -0500
-In-Reply-To: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
-	(Rasmus Villemoes's message of "Tue, 8 Dec 2015 15:25:16 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20151209104836.GK3173@mwanda> (Dan Carpenter's message of "Wed,
+	9 Dec 2015 13:48:36 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Boaz Harrosh <ooo@electrozaur.com>, Benny Halevy <bhalevy@primarydata.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Rasmus" == Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Rasmus> If char is signed and one of these bytes happen to have a value
-Rasmus> outside the ascii range, the corresponding output will consist
-Rasmus> of "ffffff" followed by the two hex chars that were actually
-Rasmus> intended. One way to fix it would be to change the casts to
-Rasmus> (u8*) aka (unsigned char*), but it is much simpler (and
-Rasmus> generates smaller code) to use the %ph extension which was
-Rasmus> created for such short hexdumps.
+Dan> There were a couple cases where the error codes weren't set and
+Dan> also I changed the success return to "return 0;" which is the same
+Dan> as "return rc;" but more explicit.
 
 Applied to 4.5/scsi-queue.
 
