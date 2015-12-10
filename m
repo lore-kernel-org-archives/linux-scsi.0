@@ -1,128 +1,53 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 4/4] scsi: storvsc: Tighten up the interrupt path
-Date: Thu, 10 Dec 2015 16:14:20 -0800
-Message-ID: <1449792860-15447-4-git-send-email-kys@microsoft.com>
-References: <1449792829-15406-1-git-send-email-kys@microsoft.com>
- <1449792860-15447-1-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1449792860-15447-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 0/6] cxlflash: Miscellaneous fixes and updates
+Date: Thu, 10 Dec 2015 16:51:07 -0600
+Message-ID: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:41372 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbbLJWwJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2015 17:52:09 -0500
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+	Thu, 10 Dec 2015 17:52:08 -0500
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 9E50EC90052
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2015 17:40:15 -0500 (EST)
+Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBAMq6ZD29622472
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2015 22:52:06 GMT
+Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
+	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBAMn846020379
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2015 17:49:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-On the interrupt path, we repeatedly establish the pointer to the
-storvsc_device. Fix this.
+This patch set contains miscellaneous fixes and adds support for
+a future IBM CXL adapter. This series is intended for 4.5 and is
+bisectable.
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reviewed-by: Long Li <longli@microsoft.com>
-Tested-by: Alex Ng <alexng@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   23 ++++++++---------------
- 1 files changed, 8 insertions(+), 15 deletions(-)
+Manoj Kumar (4):
+  cxlflash: Fix to escalate LINK_RESET also on port 1
+  cxlflash: Fix to resolve cmd leak after host reset
+  cxlflash: Resolve oops in wait_port_offline
+  cxlflash: Enable device id for future IBM CXL adapter
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 6f18e94..8ba9908 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -958,19 +958,16 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- }
- 
- 
--static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
-+static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
-+				       struct storvsc_device *stor_dev)
- {
- 	struct scsi_cmnd *scmnd = cmd_request->cmd;
--	struct hv_host_device *host_dev = shost_priv(scmnd->device->host);
- 	struct scsi_sense_hdr sense_hdr;
- 	struct vmscsi_request *vm_srb;
- 	struct Scsi_Host *host;
--	struct storvsc_device *stor_dev;
--	struct hv_device *dev = host_dev->dev;
- 	u32 payload_sz = cmd_request->payload_sz;
- 	void *payload = cmd_request->payload;
- 
--	stor_dev = get_in_stor_device(dev);
- 	host = stor_dev->host;
- 
- 	vm_srb = &cmd_request->vstor_packet.vm_srb;
-@@ -1000,14 +997,13 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
- 		kfree(payload);
- }
- 
--static void storvsc_on_io_completion(struct hv_device *device,
-+static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 				  struct vstor_packet *vstor_packet,
- 				  struct storvsc_cmd_request *request)
- {
--	struct storvsc_device *stor_device;
- 	struct vstor_packet *stor_pkt;
-+	struct hv_device *device = stor_device->device;
- 
--	stor_device = hv_get_drvdata(device);
- 	stor_pkt = &request->vstor_packet;
- 
- 	/*
-@@ -1062,7 +1058,7 @@ static void storvsc_on_io_completion(struct hv_device *device,
- 	stor_pkt->vm_srb.data_transfer_length =
- 	vstor_packet->vm_srb.data_transfer_length;
- 
--	storvsc_command_completion(request);
-+	storvsc_command_completion(request, stor_device);
- 
- 	if (atomic_dec_and_test(&stor_device->num_outstanding_req) &&
- 		stor_device->drain_notify)
-@@ -1071,21 +1067,19 @@ static void storvsc_on_io_completion(struct hv_device *device,
- 
- }
- 
--static void storvsc_on_receive(struct hv_device *device,
-+static void storvsc_on_receive(struct storvsc_device *stor_device,
- 			     struct vstor_packet *vstor_packet,
- 			     struct storvsc_cmd_request *request)
- {
- 	struct storvsc_scan_work *work;
--	struct storvsc_device *stor_device;
- 
- 	switch (vstor_packet->operation) {
- 	case VSTOR_OPERATION_COMPLETE_IO:
--		storvsc_on_io_completion(device, vstor_packet, request);
-+		storvsc_on_io_completion(stor_device, vstor_packet, request);
- 		break;
- 
- 	case VSTOR_OPERATION_REMOVE_DEVICE:
- 	case VSTOR_OPERATION_ENUMERATE_BUS:
--		stor_device = get_in_stor_device(device);
- 		work = kmalloc(sizeof(struct storvsc_scan_work), GFP_ATOMIC);
- 		if (!work)
- 			return;
-@@ -1096,7 +1090,6 @@ static void storvsc_on_receive(struct hv_device *device,
- 		break;
- 
- 	case VSTOR_OPERATION_FCHBA_DATA:
--		stor_device = get_in_stor_device(device);
- 		cache_wwn(stor_device, vstor_packet);
- 		fc_host_node_name(stor_device->host) = stor_device->node_name;
- 		fc_host_port_name(stor_device->host) = stor_device->port_name;
-@@ -1144,7 +1137,7 @@ static void storvsc_on_channel_callback(void *context)
- 					vmscsi_size_delta));
- 				complete(&request->wait_event);
- 			} else {
--				storvsc_on_receive(device,
-+				storvsc_on_receive(stor_device,
- 						(struct vstor_packet *)packet,
- 						request);
- 			}
+Matthew R. Ochs (1):
+  cxlflash: Fix to avoid virtual LUN failover failure
+
+Uma Krishnan (1):
+  cxlflash: Updated date of the driver
+
+ drivers/scsi/cxlflash/common.h     |  2 ++
+ drivers/scsi/cxlflash/main.c       | 51 +++++++++++++++++++++++++++++++++-----
+ drivers/scsi/cxlflash/main.h       |  6 ++---
+ drivers/scsi/cxlflash/vlun.c       |  2 ++
+ include/uapi/scsi/cxlflash_ioctl.h | 10 ++++++++
+ 5 files changed, 62 insertions(+), 9 deletions(-)
+
 -- 
-1.7.4.1
+2.1.0
+
