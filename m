@@ -1,37 +1,1019 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 11/15] dm stripe: support copy
-Date: Thu, 10 Dec 2015 12:31:00 -0500 (EST)
-Message-ID: <alpine.LRH.2.02.1512101214320.25927@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 1/15] block copy: initial XCOPY offload support
+Date: Thu, 10 Dec 2015 12:30:03 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1512101205520.25927@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+Cc: linux-block@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Support the copy operation for the stripe target.
+This is Martin Petersen's xcopy patch
+(https://git.kernel.org/cgit/linux/kernel/git/mkp/linux.git/commit/?h=xcopy&id=0bdeed274e16b3038a851552188512071974eea8)
+with some bug fixes, ported to the current kernel.
 
-In stripe_merge, we verify that the underlying device supports copy. If it
-doesn't, we can fail fast without any bio being contructed.
+This patch makes it possible to use the SCSI XCOPY command.
 
+We create a bio that has REQ_COPY flag in bi_rw and a bi_copy structure
+that defines the source device. The target device is defined in the
+bi_bdev and bi_iter.bi_sector.
+
+There is a new BLKCOPY ioctl that makes it possible to use XCOPY from
+userspace. The ioctl argument is a pointer to an array of four uint64_t
+values.
+
+The first value is a source byte offset, the second value is a destination
+byte offset, the third value is byte length. The forth value is written by
+the kernel and it represents the number of bytes that the kernel actually
+copied.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- drivers/md/dm-stripe.c |    1 +
- 1 file changed, 1 insertion(+)
+ Documentation/ABI/testing/sysfs-block |    9 +
+ block/bio.c                           |    2 
+ block/blk-core.c                      |    5 
+ block/blk-lib.c                       |   95 +++++++++++
+ block/blk-merge.c                     |   11 -
+ block/blk-settings.c                  |   13 +
+ block/blk-sysfs.c                     |   11 +
+ block/compat_ioctl.c                  |    1 
+ block/ioctl.c                         |   50 ++++++
+ drivers/scsi/scsi.c                   |   57 +++++++
+ drivers/scsi/sd.c                     |  271 +++++++++++++++++++++++++++++++++-
+ drivers/scsi/sd.h                     |    4 
+ include/linux/bio.h                   |    9 -
+ include/linux/blk_types.h             |   14 +
+ include/linux/blkdev.h                |   15 +
+ include/scsi/scsi_device.h            |    3 
+ include/uapi/linux/fs.h               |    1 
+ 17 files changed, 557 insertions(+), 14 deletions(-)
 
-Index: linux-4.3-rc1/drivers/md/dm-stripe.c
+Index: linux-4.4-rc4/Documentation/ABI/testing/sysfs-block
 ===================================================================
---- linux-4.3-rc1.orig/drivers/md/dm-stripe.c	2015-09-14 16:06:36.000000000 +0200
-+++ linux-4.3-rc1/drivers/md/dm-stripe.c	2015-09-14 16:23:01.000000000 +0200
-@@ -169,6 +169,7 @@ static int stripe_ctr(struct dm_target *
- 	ti->num_flush_bios = stripes;
- 	ti->num_discard_bios = stripes;
- 	ti->num_write_same_bios = stripes;
-+	ti->copy_supported = 1;
+--- linux-4.4-rc4.orig/Documentation/ABI/testing/sysfs-block	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/Documentation/ABI/testing/sysfs-block	2015-12-10 17:04:30.000000000 +0100
+@@ -235,3 +235,12 @@ Description:
+ 		write_same_max_bytes is 0, write same is not supported
+ 		by the device.
  
- 	sc->chunk_size = chunk_size;
- 	if (chunk_size & (chunk_size - 1))
++
++What:		/sys/block/<disk>/queue/copy_max_bytes
++Date:		January 2014
++Contact:	Martin K. Petersen <martin.petersen@oracle.com>
++Description:
++		Devices that support copy offloading will set this value
++		to indicate the maximum buffer size in bytes that can be
++		copied in one operation. If the copy_max_bytes is 0 the
++		device does not support copy offload.
+Index: linux-4.4-rc4/block/blk-core.c
+===================================================================
+--- linux-4.4-rc4.orig/block/blk-core.c	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/block/blk-core.c	2015-12-10 17:04:30.000000000 +0100
+@@ -1957,6 +1957,11 @@ generic_make_request_checks(struct bio *
+ 		goto end_io;
+ 	}
+ 
++	if (bio->bi_rw & REQ_COPY && !bdev_copy_offload(bio->bi_bdev)) {
++		err = -EOPNOTSUPP;
++		goto end_io;
++	}
++
+ 	/*
+ 	 * Various block parts want %current->io_context and lazy ioc
+ 	 * allocation ends up trading a lot of pain for a small amount of
+Index: linux-4.4-rc4/block/blk-lib.c
+===================================================================
+--- linux-4.4-rc4.orig/block/blk-lib.c	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/block/blk-lib.c	2015-12-10 17:04:30.000000000 +0100
+@@ -299,3 +299,98 @@ int blkdev_issue_zeroout(struct block_de
+ 	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
+ }
+ EXPORT_SYMBOL(blkdev_issue_zeroout);
++
++/**
++ * blkdev_issue_copy - queue a copy same operation
++ * @src_bdev:	source blockdev
++ * @src_sector:	source sector
++ * @dst_bdev:	destination blockdev
++ * @dst_sector: destination sector
++ * @nr_sects:	number of sectors to copy
++ * @gfp_mask:	memory allocation flags (for bio_alloc)
++ *
++ * Description:
++ *    Copy a block range from source device to target device.
++ */
++int blkdev_issue_copy(struct block_device *src_bdev, sector_t src_sector,
++		      struct block_device *dst_bdev, sector_t dst_sector,
++		      unsigned int nr_sects, gfp_t gfp_mask)
++{
++	DECLARE_COMPLETION_ONSTACK(wait);
++	struct request_queue *sq = bdev_get_queue(src_bdev);
++	struct request_queue *dq = bdev_get_queue(dst_bdev);
++	unsigned int max_copy_sectors;
++	struct bio_batch bb;
++	int ret = 0;
++
++	if (!sq || !dq)
++		return -ENXIO;
++
++	max_copy_sectors = min(sq->limits.max_copy_sectors,
++			       dq->limits.max_copy_sectors);
++
++	if (max_copy_sectors == 0)
++		return -EOPNOTSUPP;
++
++	if (src_sector + nr_sects < src_sector ||
++	    dst_sector + nr_sects < dst_sector)
++		return -EINVAL;
++
++	/* Do not support overlapping copies */
++	if (src_bdev == dst_bdev &&
++	    abs((u64)dst_sector - (u64)src_sector) < nr_sects)
++		return -EOPNOTSUPP;
++
++	atomic_set(&bb.done, 1);
++	bb.error = 0;
++	bb.wait = &wait;
++
++	while (nr_sects) {
++		struct bio *bio;
++		struct bio_copy *bc;
++		unsigned int chunk;
++
++		bc = kmalloc(sizeof(struct bio_copy), gfp_mask);
++		if (!bc) {
++			ret = -ENOMEM;
++			break;
++		}
++
++		bio = bio_alloc(gfp_mask, 1);
++		if (!bio) {
++			kfree(bc);
++			ret = -ENOMEM;
++			break;
++		}
++
++		chunk = min(nr_sects, max_copy_sectors);
++
++		bio->bi_iter.bi_sector = dst_sector;
++		bio->bi_iter.bi_size = chunk << 9;
++		bio->bi_end_io = bio_batch_end_io;
++		bio->bi_bdev = dst_bdev;
++		bio->bi_private = &bb;
++		bio->bi_copy = bc;
++
++		bc->bic_bdev = src_bdev;
++		bc->bic_sector = src_sector;
++
++		atomic_inc(&bb.done);
++		submit_bio(REQ_WRITE | REQ_COPY, bio);
++
++		src_sector += chunk;
++		dst_sector += chunk;
++		nr_sects -= chunk;
++	}
++
++	/* Wait for bios in-flight */
++	if (!atomic_dec_and_test(&bb.done))
++		wait_for_completion_io(&wait);
++
++	if (likely(!ret))
++		ret = bb.error;
++
++	return ret;
++}
++EXPORT_SYMBOL(blkdev_issue_copy);
++
+Index: linux-4.4-rc4/block/blk-merge.c
+===================================================================
+--- linux-4.4-rc4.orig/block/blk-merge.c	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/block/blk-merge.c	2015-12-10 17:04:30.000000000 +0100
+@@ -145,7 +145,9 @@ void blk_queue_split(struct request_queu
+ 	struct bio *split, *res;
+ 	unsigned nsegs;
+ 
+-	if ((*bio)->bi_rw & REQ_DISCARD)
++	if ((*bio)->bi_rw & REQ_COPY)
++		return;
++	else if ((*bio)->bi_rw & REQ_DISCARD)
+ 		split = blk_bio_discard_split(q, *bio, bs, &nsegs);
+ 	else if ((*bio)->bi_rw & REQ_WRITE_SAME)
+ 		split = blk_bio_write_same_split(q, *bio, bs, &nsegs);
+@@ -185,10 +187,7 @@ static unsigned int __blk_recalc_rq_segm
+ 	 * This should probably be returning 0, but blk_add_request_payload()
+ 	 * (Christoph!!!!)
+ 	 */
+-	if (bio->bi_rw & REQ_DISCARD)
+-		return 1;
+-
+-	if (bio->bi_rw & REQ_WRITE_SAME)
++	if (bio->bi_rw & (REQ_DISCARD | REQ_WRITE_SAME | REQ_COPY))
+ 		return 1;
+ 
+ 	fbio = bio;
+@@ -361,7 +360,7 @@ static int __blk_bios_map_sg(struct requ
+ 	nsegs = 0;
+ 	cluster = blk_queue_cluster(q);
+ 
+-	if (bio->bi_rw & REQ_DISCARD) {
++	if (bio->bi_rw & (REQ_DISCARD | REQ_COPY)) {
+ 		/*
+ 		 * This is a hack - drivers should be neither modifying the
+ 		 * biovec, nor relying on bi_vcnt - but because of
+Index: linux-4.4-rc4/block/blk-settings.c
+===================================================================
+--- linux-4.4-rc4.orig/block/blk-settings.c	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/block/blk-settings.c	2015-12-10 17:04:30.000000000 +0100
+@@ -95,6 +95,7 @@ void blk_set_default_limits(struct queue
+ 		BLK_SAFE_MAX_SECTORS;
+ 	lim->chunk_sectors = 0;
+ 	lim->max_write_same_sectors = 0;
++	lim->max_copy_sectors = 0;
+ 	lim->max_discard_sectors = 0;
+ 	lim->max_hw_discard_sectors = 0;
+ 	lim->discard_granularity = 0;
+@@ -298,6 +299,18 @@ void blk_queue_max_write_same_sectors(st
+ EXPORT_SYMBOL(blk_queue_max_write_same_sectors);
+ 
+ /**
++ * blk_queue_max_copy_sectors - set max sectors for a single copy operation
++ * @q:  the request queue for the device
++ * @max_copy_sectors: maximum number of sectors per copy operation
++ **/
++void blk_queue_max_copy_sectors(struct request_queue *q,
++				unsigned int max_copy_sectors)
++{
++	q->limits.max_copy_sectors = max_copy_sectors;
++}
++EXPORT_SYMBOL(blk_queue_max_copy_sectors);
++
++/**
+  * blk_queue_max_segments - set max hw segments for a request for this queue
+  * @q:  the request queue for the device
+  * @max_segments:  max number of segments
+Index: linux-4.4-rc4/block/blk-sysfs.c
+===================================================================
+--- linux-4.4-rc4.orig/block/blk-sysfs.c	2015-12-10 17:04:01.000000000 +0100
++++ linux-4.4-rc4/block/blk-sysfs.c	2015-12-10 17:04:30.000000000 +0100
+@@ -193,6 +193,11 @@ static ssize_t queue_write_same_max_show
+ 		(unsigned long long)q->limits.max_write_same_sectors << 9);
+ }
+ 
++static ssize_t queue_copy_max_show(struct request_queue *q, char *page)
++{
++	return sprintf(page, "%llu\n",
++		(unsigned long long)q->limits.max_copy_sectors << 9);
++}
+ 
+ static ssize_t
+ queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
+@@ -443,6 +448,11 @@ static struct queue_sysfs_entry queue_wr
+ 	.show = queue_write_same_max_show,
+ };
+ 
++static struct queue_sysfs_entry queue_copy_max_entry = {
++	.attr = {.name = "copy_max_bytes", .mode = S_IRUGO },
++	.show = queue_copy_max_show,
++};
++
+ static struct queue_sysfs_entry queue_nonrot_entry = {
+ 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
+ 	.show = queue_show_nonrot,
+@@ -498,6 +508,7 @@ static struct attribute *default_attrs[]
+ 	&queue_discard_max_hw_entry.attr,
+ 	&queue_discard_zeroes_data_entry.attr,
+ 	&queue_write_same_max_entry.attr,
++	&queue_copy_max_entry.attr,
+ 	&queue_nonrot_entry.attr,
+ 	&queue_nomerges_entry.attr,
+ 	&queue_rq_affinity_entry.attr,
+Index: linux-4.4-rc4/block/ioctl.c
+===================================================================
+--- linux-4.4-rc4.orig/block/ioctl.c	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/block/ioctl.c	2015-12-10 17:04:30.000000000 +0100
+@@ -249,6 +249,31 @@ static int blk_ioctl_zeroout(struct bloc
+ 	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL, false);
+ }
+ 
++static int blk_ioctl_copy(struct block_device *bdev, uint64_t src_offset,
++			  uint64_t dst_offset, uint64_t len)
++{
++	if (src_offset & 511)
++		return -EINVAL;
++	if (dst_offset & 511)
++		return -EINVAL;
++	if (len & 511)
++		return -EINVAL;
++	src_offset >>= 9;
++	dst_offset >>= 9;
++	len >>= 9;
++
++	if (unlikely(src_offset + len < src_offset) ||
++	    unlikely(src_offset + len > (i_size_read(bdev->bd_inode) >> 9)))
++		return -EINVAL;
++
++	if (unlikely(dst_offset + len < dst_offset) ||
++	    unlikely(dst_offset + len > (i_size_read(bdev->bd_inode) >> 9)))
++		return -EINVAL;
++
++	return blkdev_issue_copy(bdev, src_offset, bdev, dst_offset, len,
++				 GFP_KERNEL);
++}
++
+ static int put_ushort(unsigned long arg, unsigned short val)
+ {
+ 	return put_user(val, (unsigned short __user *)arg);
+@@ -513,6 +538,31 @@ int blkdev_ioctl(struct block_device *bd
+ 				BLKDEV_DISCARD_SECURE);
+ 	case BLKZEROOUT:
+ 		return blk_ioctl_zeroout(bdev, mode, arg);
++	case BLKCOPY: {
++		uint64_t range[4];
++		int ret;
++
++		range[3] = 0;
++
++		if (copy_to_user((void __user *)(arg + 24), &range[3], 8))
++			return -EFAULT;
++
++		if (!(mode & FMODE_WRITE))
++			return -EBADF;
++
++		if (copy_from_user(range, (void __user *)arg, 24))
++			return -EFAULT;
++
++		ret = blk_ioctl_copy(bdev, range[0], range[1], range[2]);
++		if (!ret) {
++			range[3] = range[2];
++			if (copy_to_user((void __user *)(arg + 24), &range[3], 8))
++				return -EFAULT;
++		}
++
++		return ret;
++	}
++
+ 	case HDIO_GETGEO:
+ 		return blkdev_getgeo(bdev, argp);
+ 	case BLKRAGET:
+Index: linux-4.4-rc4/drivers/scsi/scsi.c
+===================================================================
+--- linux-4.4-rc4.orig/drivers/scsi/scsi.c	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/drivers/scsi/scsi.c	2015-12-10 17:04:30.000000000 +0100
+@@ -768,6 +768,62 @@ int scsi_get_vpd_page(struct scsi_device
+ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+ 
+ /**
++ * scsi_lookup_naa - Lookup NAA descriptor in VPD page 0x83
++ * @sdev: The device to ask
++ *
++ * Copy offloading requires us to know the NAA descriptor for both
++ * source and target device. This descriptor is mandatory in the Device
++ * Identification VPD page. Locate this descriptor in the returned VPD
++ * data so we don't have to do lookups for every copy command.
++ */
++static void scsi_lookup_naa(struct scsi_device *sdev)
++{
++	unsigned char *buf = sdev->vpd_pg83;
++	unsigned int len = sdev->vpd_pg83_len;
++
++	if (buf[1] != 0x83 || get_unaligned_be16(&buf[2]) == 0) {
++		sdev_printk(KERN_ERR, sdev,
++			    "%s: VPD page 0x83 contains no descriptors\n",
++			    __func__);
++		return;
++	}
++
++	buf += 4;
++	len -= 4;
++
++	do {
++		unsigned int desig_len = buf[3] + 4;
++
++		/* Binary code set */
++		if ((buf[0] & 0xf) != 1)
++			goto skip;
++
++		/* Target association */
++		if ((buf[1] >> 4) & 0x3)
++			goto skip;
++
++		/* NAA designator */
++		if ((buf[1] & 0xf) != 0x3)
++			goto skip;
++
++		sdev->naa = buf;
++		sdev->naa_len = desig_len;
++
++		return;
++
++	skip:
++		buf += desig_len;
++		len -= desig_len;
++
++	} while (len > 0);
++
++	sdev_printk(KERN_ERR, sdev,
++		    "%s: VPD page 0x83 NAA descriptor not found\n", __func__);
++
++	return;
++}
++
++/**
+  * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
+  * @sdev: The device to ask
+  *
+@@ -851,6 +907,7 @@ retry_pg83:
+ 		}
+ 		sdev->vpd_pg83_len = result;
+ 		sdev->vpd_pg83 = vpd_buf;
++		scsi_lookup_naa(sdev);
+ 	}
+ }
+ 
+Index: linux-4.4-rc4/drivers/scsi/sd.c
+===================================================================
+--- linux-4.4-rc4.orig/drivers/scsi/sd.c	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/drivers/scsi/sd.c	2015-12-10 17:04:30.000000000 +0100
+@@ -101,6 +101,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ 
+ static void sd_config_discard(struct scsi_disk *, unsigned int);
+ static void sd_config_write_same(struct scsi_disk *);
++static void sd_config_copy(struct scsi_disk *);
+ static int  sd_revalidate_disk(struct gendisk *);
+ static void sd_unlock_native_capacity(struct gendisk *disk);
+ static int  sd_probe(struct device *);
+@@ -479,6 +480,48 @@ max_write_same_blocks_store(struct devic
+ }
+ static DEVICE_ATTR_RW(max_write_same_blocks);
+ 
++static ssize_t
++max_copy_blocks_show(struct device *dev, struct device_attribute *attr,
++		     char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->max_copy_blocks);
++}
++
++static ssize_t
++max_copy_blocks_store(struct device *dev, struct device_attribute *attr,
++		      const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++	unsigned long max;
++	int err;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (sdp->type != TYPE_DISK)
++		return -EINVAL;
++
++	err = kstrtoul(buf, 10, &max);
++
++	if (err)
++		return err;
++
++	if (max == 0)
++		sdp->no_copy = 1;
++	else if (max <= SD_MAX_COPY_BLOCKS) {
++		sdp->no_copy = 0;
++		sdkp->max_copy_blocks = max;
++	}
++
++	sd_config_copy(sdkp);
++
++	return count;
++}
++static DEVICE_ATTR_RW(max_copy_blocks);
++
+ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_cache_type.attr,
+ 	&dev_attr_FUA.attr,
+@@ -490,6 +533,7 @@ static struct attribute *sd_disk_attrs[]
+ 	&dev_attr_thin_provisioning.attr,
+ 	&dev_attr_provisioning_mode.attr,
+ 	&dev_attr_max_write_same_blocks.attr,
++	&dev_attr_max_copy_blocks.attr,
+ 	&dev_attr_max_medium_access_timeouts.attr,
+ 	NULL,
+ };
+@@ -879,6 +923,116 @@ static int sd_setup_write_same_cmnd(stru
+ 	return ret;
+ }
+ 
++static void sd_config_copy(struct scsi_disk *sdkp)
++{
++	struct request_queue *q = sdkp->disk->queue;
++	unsigned int logical_block_size = sdkp->device->sector_size;
++
++	if (sdkp->device->no_copy)
++		sdkp->max_copy_blocks = 0;
++
++	/* Segment descriptor 0x02 has a 64k block limit */
++	sdkp->max_copy_blocks = min(sdkp->max_copy_blocks,
++				    (u32)SD_MAX_CSD2_BLOCKS);
++
++	blk_queue_max_copy_sectors(q, sdkp->max_copy_blocks *
++				   (logical_block_size >> 9));
++}
++
++static int sd_setup_copy_cmnd(struct scsi_cmnd *cmd)
++{
++	struct request *rq = cmd->request;
++	struct scsi_device *src_sdp, *dst_sdp;
++	struct gendisk *src_disk;
++	struct request_queue *src_queue, *dst_queue;
++	sector_t src_lba, dst_lba;
++	unsigned int nr_blocks, buf_len, nr_bytes = blk_rq_bytes(rq);
++	int ret;
++	struct bio *bio = rq->bio;
++	struct page *page;
++	unsigned char *buf;
++
++	if (!bio->bi_copy)
++		return BLKPREP_KILL;
++
++	dst_sdp = scsi_disk(rq->rq_disk)->device;
++	dst_queue = rq->rq_disk->queue;
++	src_disk = bio->bi_copy->bic_bdev->bd_disk;
++	src_queue = src_disk->queue;
++	if (!src_queue ||
++	    src_queue->make_request_fn != dst_queue->make_request_fn ||
++	    src_queue->request_fn != dst_queue->request_fn ||
++	    *(struct scsi_driver **)rq->rq_disk->private_data !=
++	    *(struct scsi_driver **)src_disk->private_data)
++		return BLKPREP_KILL;
++	src_sdp = scsi_disk(src_disk)->device;
++
++	if (src_sdp->no_copy || dst_sdp->no_copy)
++		return BLKPREP_KILL;
++
++	if (src_sdp->sector_size != dst_sdp->sector_size)
++		return BLKPREP_KILL;
++
++	dst_lba = blk_rq_pos(rq) >> (ilog2(dst_sdp->sector_size) - 9);
++	src_lba = bio->bi_copy->bic_sector >> (ilog2(src_sdp->sector_size) - 9);
++	nr_blocks = blk_rq_sectors(rq) >> (ilog2(dst_sdp->sector_size) - 9);
++
++	page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
++	if (!page)
++		return BLKPREP_DEFER;
++
++	buf = page_address(page);
++
++	/* Extended Copy (LID1) Parameter List (16 bytes) */
++	buf[0] = 0;				/* LID */
++	buf[1] = 3 << 3;			/* LID usage 11b */
++	put_unaligned_be16(32 + 32, &buf[2]);	/* 32 bytes per E4 desc. */
++	put_unaligned_be32(28, &buf[8]);	/* 28 bytes per B2B desc. */
++	buf += 16;
++
++	/* Source CSCD (32 bytes) */
++	buf[0] = 0xe4;				/* Identification desc. */
++	memcpy(&buf[4], src_sdp->naa, src_sdp->naa_len);
++	buf += 32;
++
++	/* Destination CSCD (32 bytes) */
++	buf[0] = 0xe4;				/* Identification desc. */
++	memcpy(&buf[4], dst_sdp->naa, dst_sdp->naa_len);
++	buf += 32;
++
++	/* Segment descriptor (28 bytes) */
++	buf[0] = 0x02;				/* Block to block desc. */
++	put_unaligned_be16(0x18, &buf[2]);	/* Descriptor length */
++	put_unaligned_be16(0, &buf[4]);		/* Source is desc. 0 */
++	put_unaligned_be16(1, &buf[6]);		/* Dest. is desc. 1 */
++	put_unaligned_be16(nr_blocks, &buf[10]);
++	put_unaligned_be64(src_lba, &buf[12]);
++	put_unaligned_be64(dst_lba, &buf[20]);
++
++	/* CDB */
++	cmd->cmd_len = 16;
++	memset(cmd->cmnd, 0, cmd->cmd_len);
++	cmd->cmnd[0] = EXTENDED_COPY;
++	cmd->cmnd[1] = 0; /* LID1 */
++	buf_len = 16 + 32 + 32 + 28;
++	put_unaligned_be32(buf_len, &cmd->cmnd[10]);
++	rq->timeout = SD_COPY_TIMEOUT;
++
++	rq->completion_data = page;
++	blk_add_request_payload(rq, page, buf_len);
++
++	cmd->transfersize = buf_len;
++	cmd->allowed = 0;	/* don't retry */
++
++	rq->__data_len = buf_len;
++	ret = scsi_init_io(cmd);
++	rq->__data_len = nr_bytes;
++
++	if (ret != BLKPREP_OK)
++		__free_page(page);
++	return ret;
++}
++
+ static int sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+ {
+ 	struct request *rq = cmd->request;
+@@ -1141,6 +1295,8 @@ static int sd_init_command(struct scsi_c
+ 		return sd_setup_discard_cmnd(cmd);
+ 	else if (rq->cmd_flags & REQ_WRITE_SAME)
+ 		return sd_setup_write_same_cmnd(cmd);
++	else if (rq->cmd_flags & REQ_COPY)
++		return sd_setup_copy_cmnd(cmd);
+ 	else if (rq->cmd_flags & REQ_FLUSH)
+ 		return sd_setup_flush_cmnd(cmd);
+ 	else
+@@ -1151,7 +1307,7 @@ static void sd_uninit_command(struct scs
+ {
+ 	struct request *rq = SCpnt->request;
+ 
+-	if (rq->cmd_flags & REQ_DISCARD)
++	if (rq->cmd_flags & (REQ_DISCARD | REQ_COPY))
+ 		__free_page(rq->completion_data);
+ 
+ 	if (SCpnt->cmnd != rq->cmd) {
+@@ -1768,7 +1924,8 @@ static int sd_done(struct scsi_cmnd *SCp
+ 	unsigned char op = SCpnt->cmnd[0];
+ 	unsigned char unmap = SCpnt->cmnd[1] & 8;
+ 
+-	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
++	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME ||
++	    req->cmd_flags & REQ_COPY) {
+ 		if (!result) {
+ 			good_bytes = blk_rq_bytes(req);
+ 			scsi_set_resid(SCpnt, 0);
+@@ -1815,6 +1972,16 @@ static int sd_done(struct scsi_cmnd *SCp
+ 		/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
+ 		if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
+ 			switch (op) {
++			case EXTENDED_COPY:
++				if ((SCpnt->cmnd[1] & 0x1f) == 0) {
++					sdkp->device->no_copy = 1;
++					sd_config_copy(sdkp);
++
++					good_bytes = 0;
++					req->__data_len = blk_rq_bytes(req);
++					req->cmd_flags |= REQ_QUIET;
++				}
++				break;
+ 			case UNMAP:
+ 				sd_config_discard(sdkp, SD_LBP_DISABLE);
+ 				break;
+@@ -2797,6 +2964,105 @@ static void sd_read_write_same(struct sc
+ 		sdkp->ws10 = 1;
+ }
+ 
++static void sd_read_copy_operations(struct scsi_disk *sdkp,
++				    unsigned char *buffer)
++{
++	struct scsi_device *sdev = sdkp->device;
++	struct scsi_sense_hdr sshdr;
++	unsigned char cdb[16];
++	unsigned int result, len, i;
++	bool b2b_desc = false, id_desc = false;
++
++	if (sdev->naa_len == 0)
++		return;
++
++	/* Verify that the device has 3PC set in INQUIRY response */
++	if (sdev->inquiry_len < 6 || (sdev->inquiry[5] & (1 << 3)) == 0)
++		return;
++
++	/* Receive Copy Operation Parameters */
++	memset(cdb, 0, 16);
++	cdb[0] = RECEIVE_COPY_RESULTS;
++	cdb[1] = 0x3;
++	put_unaligned_be32(SD_BUF_SIZE, &cdb[10]);
++
++	memset(buffer, 0, SD_BUF_SIZE);
++	result = scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE,
++				  buffer, SD_BUF_SIZE, &sshdr,
++				  SD_TIMEOUT, SD_MAX_RETRIES, NULL);
++
++	if (!scsi_status_is_good(result)) {
++		sd_printk(KERN_ERR, sdkp,
++			  "%s: Receive Copy Operating Parameters failed\n",
++			  __func__);
++		return;
++	}
++
++	/* The RCOP response is a minimum of 44 bytes long. First 4
++	 * bytes contain the length of the remaining buffer, i.e. 40+
++	 * bytes. Trailing the defined fields is a list of supported
++	 * descriptors. We need at least 2 descriptors to drive the
++	 * target, hence 42.
++	 */
++	len = get_unaligned_be32(&buffer[0]);
++	if (len < 42) {
++		sd_printk(KERN_ERR, sdkp, "%s: result too short (%u)\n",
++			  __func__, len);
++		return;
++	}
++
++	if ((buffer[4] & 1) == 0) {
++		sd_printk(KERN_ERR, sdkp, "%s: does not support SNLID\n",
++			  __func__);
++		return;
++	}
++
++	if (get_unaligned_be16(&buffer[8]) < 2) {
++		sd_printk(KERN_ERR, sdkp,
++			  "%s: Need 2 or more CSCD descriptors\n", __func__);
++		return;
++	}
++
++	if (get_unaligned_be16(&buffer[10]) < 1) {
++		sd_printk(KERN_ERR, sdkp,
++			  "%s: Need 1 or more segment descriptor\n", __func__);
++		return;
++	}
++
++	if (len - 40 != buffer[43]) {
++		sd_printk(KERN_ERR, sdkp,
++			  "%s: Buffer len and descriptor count mismatch " \
++			  "(%u vs. %u)\n", __func__, len - 40, buffer[43]);
++		return;
++	}
++
++	for (i = 44 ; i < len + 4 ; i++) {
++		if (buffer[i] == 0x02)
++			b2b_desc = true;
++
++		if (buffer[i] == 0xe4)
++			id_desc = true;
++	}
++
++	if (!b2b_desc) {
++		sd_printk(KERN_ERR, sdkp,
++			  "%s: No block 2 block descriptor (0x02)\n",
++			  __func__);
++		return;
++	}
++
++	if (!id_desc) {
++		sd_printk(KERN_ERR, sdkp,
++			  "%s: No identification descriptor (0xE4)\n",
++			  __func__);
++		return;
++	}
++
++	sdkp->max_copy_blocks = get_unaligned_be32(&buffer[16])
++		>> ilog2(sdev->sector_size);
++	sd_config_copy(sdkp);
++}
++
+ static int sd_try_extended_inquiry(struct scsi_device *sdp)
+ {
+ 	/* Attempt VPD inquiry if the device blacklist explicitly calls
+@@ -2868,6 +3134,7 @@ static int sd_revalidate_disk(struct gen
+ 		sd_read_cache_type(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
+ 		sd_read_write_same(sdkp, buffer);
++		sd_read_copy_operations(sdkp, buffer);
+ 	}
+ 
+ 	sdkp->first_scan = 0;
+Index: linux-4.4-rc4/drivers/scsi/sd.h
+===================================================================
+--- linux-4.4-rc4.orig/drivers/scsi/sd.h	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/drivers/scsi/sd.h	2015-12-10 17:04:30.000000000 +0100
+@@ -19,6 +19,7 @@
+  */
+ #define SD_FLUSH_TIMEOUT_MULTIPLIER	2
+ #define SD_WRITE_SAME_TIMEOUT	(120 * HZ)
++#define SD_COPY_TIMEOUT		(120 * HZ)
+ 
+ /*
+  * Number of allowed retries
+@@ -48,6 +49,8 @@ enum {
+ 	SD_MAX_XFER_BLOCKS = 0xffffffff,
+ 	SD_MAX_WS10_BLOCKS = 0xffff,
+ 	SD_MAX_WS16_BLOCKS = 0x7fffff,
++	SD_MAX_CSD2_BLOCKS = 0xffff,
++	SD_MAX_COPY_BLOCKS = 0xffffffff,
+ };
+ 
+ enum {
+@@ -70,6 +73,7 @@ struct scsi_disk {
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
++	u32		max_copy_blocks;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
+ 	u32		index;
+Index: linux-4.4-rc4/include/linux/bio.h
+===================================================================
+--- linux-4.4-rc4.orig/include/linux/bio.h	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/include/linux/bio.h	2015-12-10 17:04:30.000000000 +0100
+@@ -106,7 +106,7 @@ static inline bool bio_has_data(struct b
+ {
+ 	if (bio &&
+ 	    bio->bi_iter.bi_size &&
+-	    !(bio->bi_rw & REQ_DISCARD))
++	    !(bio->bi_rw & (REQ_DISCARD | REQ_COPY)))
+ 		return true;
+ 
+ 	return false;
+@@ -249,8 +249,8 @@ static inline unsigned bio_segments(stru
+ 	struct bvec_iter iter;
+ 
+ 	/*
+-	 * We special case discard/write same, because they interpret bi_size
+-	 * differently:
++	 * We special case discard/write same/copy, because they
++	 * interpret bi_size differently:
+ 	 */
+ 
+ 	if (bio->bi_rw & REQ_DISCARD)
+@@ -259,6 +259,9 @@ static inline unsigned bio_segments(stru
+ 	if (bio->bi_rw & REQ_WRITE_SAME)
+ 		return 1;
+ 
++	if (bio->bi_rw & REQ_COPY)
++		return 1;
++
+ 	bio_for_each_segment(bv, bio, iter)
+ 		segs++;
+ 
+Index: linux-4.4-rc4/include/linux/blk_types.h
+===================================================================
+--- linux-4.4-rc4.orig/include/linux/blk_types.h	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/include/linux/blk_types.h	2015-12-10 17:04:30.000000000 +0100
+@@ -39,6 +39,11 @@ struct bvec_iter {
+ 						   current bvec */
+ };
+ 
++struct bio_copy {
++	struct block_device	*bic_bdev;
++	sector_t		bic_sector;
++};
++
+ /*
+  * main unit of I/O for the block layer and lower layers (ie drivers and
+  * stacking drivers)
+@@ -84,6 +89,7 @@ struct bio {
+ 		struct bio_integrity_payload *bi_integrity; /* data integrity */
+ #endif
+ 	};
++	struct bio_copy		*bi_copy; 	/* TODO, use bi_integrity */
+ 
+ 	unsigned short		bi_vcnt;	/* how many bio_vec's */
+ 
+@@ -156,6 +162,7 @@ enum rq_flag_bits {
+ 	__REQ_DISCARD,		/* request to discard sectors */
+ 	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
+ 	__REQ_WRITE_SAME,	/* write same block many times */
++	__REQ_COPY,		/* copy block range */
+ 
+ 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
+ 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
+@@ -201,6 +208,7 @@ enum rq_flag_bits {
+ #define REQ_PRIO		(1ULL << __REQ_PRIO)
+ #define REQ_DISCARD		(1ULL << __REQ_DISCARD)
+ #define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
++#define REQ_COPY		(1ULL << __REQ_COPY)
+ #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
+ #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
+ 
+@@ -209,14 +217,14 @@ enum rq_flag_bits {
+ #define REQ_COMMON_MASK \
+ 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
+ 	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
+-	 REQ_SECURE | REQ_INTEGRITY)
++	 REQ_SECURE | REQ_INTEGRITY | REQ_COPY)
+ #define REQ_CLONE_MASK		REQ_COMMON_MASK
+ 
+-#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
++#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME|REQ_COPY)
+ 
+ /* This mask is used for both bio and request merge checking */
+ #define REQ_NOMERGE_FLAGS \
+-	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
++	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ | REQ_COPY)
+ 
+ #define REQ_RAHEAD		(1ULL << __REQ_RAHEAD)
+ #define REQ_THROTTLED		(1ULL << __REQ_THROTTLED)
+Index: linux-4.4-rc4/include/linux/blkdev.h
+===================================================================
+--- linux-4.4-rc4.orig/include/linux/blkdev.h	2015-12-10 17:04:01.000000000 +0100
++++ linux-4.4-rc4/include/linux/blkdev.h	2015-12-10 17:04:30.000000000 +0100
+@@ -265,6 +265,7 @@ struct queue_limits {
+ 	unsigned int		max_discard_sectors;
+ 	unsigned int		max_hw_discard_sectors;
+ 	unsigned int		max_write_same_sectors;
++	unsigned int		max_copy_sectors;
+ 	unsigned int		discard_granularity;
+ 	unsigned int		discard_alignment;
+ 
+@@ -968,6 +969,8 @@ extern void blk_queue_max_discard_sector
+ 		unsigned int max_discard_sectors);
+ extern void blk_queue_max_write_same_sectors(struct request_queue *q,
+ 		unsigned int max_write_same_sectors);
++extern void blk_queue_max_copy_sectors(struct request_queue *q,
++		unsigned int max_copy_sectors);
+ extern void blk_queue_logical_block_size(struct request_queue *, unsigned short);
+ extern void blk_queue_physical_block_size(struct request_queue *, unsigned int);
+ extern void blk_queue_alignment_offset(struct request_queue *q,
+@@ -1137,6 +1140,8 @@ extern int blkdev_issue_discard(struct b
+ 		sector_t nr_sects, gfp_t gfp_mask, unsigned long flags);
+ extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
++extern int blkdev_issue_copy(struct block_device *, sector_t,
++		struct block_device *, sector_t, unsigned int, gfp_t);
+ extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, bool discard);
+ static inline int sb_issue_discard(struct super_block *sb, sector_t block,
+@@ -1340,6 +1345,16 @@ static inline unsigned int bdev_write_sa
+ 	return 0;
+ }
+ 
++static inline unsigned int bdev_copy_offload(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return q->limits.max_copy_sectors;
++
++	return 0;
++}
++
+ static inline int queue_dma_alignment(struct request_queue *q)
+ {
+ 	return q ? q->dma_alignment : 511;
+Index: linux-4.4-rc4/include/scsi/scsi_device.h
+===================================================================
+--- linux-4.4-rc4.orig/include/scsi/scsi_device.h	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/include/scsi/scsi_device.h	2015-12-10 17:04:30.000000000 +0100
+@@ -120,6 +120,8 @@ struct scsi_device {
+ 	unsigned char *vpd_pg83;
+ 	int vpd_pg80_len;
+ 	unsigned char *vpd_pg80;
++	unsigned char naa_len;
++	unsigned char *naa;
+ 	unsigned char current_tag;	/* current tag */
+ 	struct scsi_target      *sdev_target;   /* used only for single_lun */
+ 
+@@ -150,6 +152,7 @@ struct scsi_device {
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+ 	unsigned no_report_opcodes:1;	/* no REPORT SUPPORTED OPERATION CODES */
+ 	unsigned no_write_same:1;	/* no WRITE SAME command */
++	unsigned no_copy:1;		/* no copy offload */
+ 	unsigned use_16_for_rw:1; /* Use read/write(16) over read/write(10) */
+ 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
+ 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
+Index: linux-4.4-rc4/include/uapi/linux/fs.h
+===================================================================
+--- linux-4.4-rc4.orig/include/uapi/linux/fs.h	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/include/uapi/linux/fs.h	2015-12-10 17:04:30.000000000 +0100
+@@ -152,6 +152,7 @@ struct inodes_stat_t {
+ #define BLKSECDISCARD _IO(0x12,125)
+ #define BLKROTATIONAL _IO(0x12,126)
+ #define BLKZEROOUT _IO(0x12,127)
++#define BLKCOPY _IO(0x12,128)
+ 
+ #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
+ #define FIBMAP	   _IO(0x00,1)	/* bmap access */
+Index: linux-4.4-rc4/block/compat_ioctl.c
+===================================================================
+--- linux-4.4-rc4.orig/block/compat_ioctl.c	2015-12-10 17:04:00.000000000 +0100
++++ linux-4.4-rc4/block/compat_ioctl.c	2015-12-10 17:04:30.000000000 +0100
+@@ -697,6 +697,7 @@ long compat_blkdev_ioctl(struct file *fi
+ 	 * but we call blkdev_ioctl, which gets the lock for us
+ 	 */
+ 	case BLKRRPART:
++	case BLKCOPY:
+ 		return blkdev_ioctl(bdev, mode, cmd,
+ 				(unsigned long)compat_ptr(arg));
+ 	case BLKBSZSET_32:
+Index: linux-4.4-rc4/block/bio.c
+===================================================================
+--- linux-4.4-rc4.orig/block/bio.c	2015-12-10 17:03:59.000000000 +0100
++++ linux-4.4-rc4/block/bio.c	2015-12-10 17:04:30.000000000 +0100
+@@ -238,6 +238,8 @@ static void __bio_free(struct bio *bio)
+ {
+ 	bio_disassociate_task(bio);
+ 
++	kfree(bio->bi_copy);
++
+ 	if (bio_integrity(bio))
+ 		bio_integrity_free(bio);
+ }
