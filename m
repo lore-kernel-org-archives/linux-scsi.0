@@ -1,33 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] storvsc: add logging for error/warning messages
-Date: Thu, 10 Dec 2015 13:12:49 -0500
-Message-ID: <yq14mfq2mvy.fsf@sermon.lab.mkp.net>
-References: <1449216444-21553-1-git-send-email-longli@microsoft.com>
+Subject: Re: [PATCH] [SCSI] osd: fix signed char versus %02x issue
+Date: Thu, 10 Dec 2015 13:15:39 -0500
+Message-ID: <yq1zixi186s.fsf@sermon.lab.mkp.net>
+References: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1449216444-21553-1-git-send-email-longli@microsoft.com> (Long
- Li's message of "Fri, 4 Dec 2015 00:07:24 -0800")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45704 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754692AbbLJSQF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2015 13:16:05 -0500
+In-Reply-To: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
+	(Rasmus Villemoes's message of "Tue, 8 Dec 2015 15:25:16 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Boaz Harrosh <ooo@electrozaur.com>, Benny Halevy <bhalevy@primarydata.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Long" == Long Li <longli@microsoft.com> writes:
+>>>>> "Rasmus" == Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
 
-Long> Introduce a logging level for storvsc to log certain error/warning
-Long> messages. Those messages are helpful in some environments,
-Long> e.g. Microsoft Azure, for customer support and troubleshooting
-Long> purposes.
+Rasmus> If char is signed and one of these bytes happen to have a value
+Rasmus> outside the ascii range, the corresponding output will consist
+Rasmus> of "ffffff" followed by the two hex chars that were actually
+Rasmus> intended. One way to fix it would be to change the casts to
+Rasmus> (u8*) aka (unsigned char*), but it is much simpler (and
+Rasmus> generates smaller code) to use the %ph extension which was
+Rasmus> created for such short hexdumps.
 
 Applied to 4.5/scsi-queue.
 
