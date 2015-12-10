@@ -1,265 +1,252 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/3] hpsa: add box and bay information for enclosure devices
-Date: Wed, 9 Dec 2015 17:41:32 -0600
-Message-ID: <2CD3971E-D620-445C-B97E-5271A471543B@linux.vnet.ibm.com>
-References: <20151209211816.519.50876.stgit@brunhilda> <20151209211857.519.17381.stgit@brunhilda>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 108771] scsi: ses: kasan: ses_enclosure_data_process use
+ after free on boot SAS2X28
+Date: Wed, 09 Dec 2015 16:43:37 -0800
+Message-ID: <1449708217.12548.12.camel@HansenPartnership.com>
+References: <bug-108771-11613@https.bugzilla.kernel.org/>
+		 <bug-108771-11613-NEJGozmw2J@https.bugzilla.kernel.org/>
+	 <1449591386.2219.5.camel@HansenPartnership.com>
+	 <56681FF9.8050100@virtuozzo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e19.ny.us.ibm.com ([129.33.205.209]:60776 "EHLO
-	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753829AbbLIXlj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 18:41:39 -0500
-Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 9 Dec 2015 18:41:37 -0500
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 67637C9005E
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2015 18:29:44 -0500 (EST)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tB9NfZYp28508250
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Dec 2015 23:41:35 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tB9NfYCO011402
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Dec 2015 18:41:35 -0500
-In-Reply-To: <20151209211857.519.17381.stgit@brunhilda>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56948 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751151AbbLJAnj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2015 19:43:39 -0500
+In-Reply-To: <56681FF9.8050100@virtuozzo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>
-Cc: Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, james.bottomley@parallels.com, linux-scsi@vger.kernel.org
+To: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-> On Dec 9, 2015, at 3:18 PM, Don Brace <don.brace@pmcs.com> wrote:
-
-No commit message?
-
+On Wed, 2015-12-09 at 15:35 +0300, Pavel Tikhomirov wrote:
 > 
-> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
-> drivers/scsi/hpsa.c     |  108 ++++++++++++++++++++++++++++++++++++++++++++---
-> drivers/scsi/hpsa_cmd.h |   13 ++++++
-> 2 files changed, 114 insertions(+), 7 deletions(-)
+> On 12/08/2015 07:16 PM, James Bottomley wrote:
+> > On Mon, 2015-12-07 at 14:01 +0000, bugzilla-daemon@bugzilla.kernel.org
+> > wrote:
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=108771
+> >>
+> >> --- Comment #1 from Pavel Tikhomirov <ptikhomirov@virtuozzo.com> ---
+> >> Aditional info about enclosue(from that node, but older 3.10 based kernel):
+> >>
+> >> [root@p9 crash]# modprobe sg
+> >> [root@p9 crash]#  sg_map -i
+> >> /dev/sg0  LSI       SAS2X28           0e12
+> >> /dev/sg1  /dev/sda  LSI  MR9260-4i  2.13
+> >> [root@p9 crash]# lsscsi -gs
+> >> [1:0:16:0]   enclosu LSI      SAS2X28          0e12  -          /dev/sg0
+> >> -
+> >> [1:2:0:0]    disk    LSI      MR9260-4i        2.13  /dev/sda   /dev/sg1
+> >> 3.99TB
+> >> [root@p9 crash]#  sg_ses /dev/sg0
+> >>    LSI       SAS2X28           0e12
+> >> Supported diagnostic pages:
+> >>    Supported Diagnostic Pages [sdp] [0x0]
+> >>    Configuration (SES) [cf] [0x1]
+> >>    Enclosure Status/Control (SES) [ec,es] [0x2]
+> >>    Element Descriptor (SES) [ed] [0x7]
+> >>    Additional Element Status (SES-2) [aes] [0xa]
+> >>    Download Microcode (SES-2) [dm] [0xe]
+> >> [root@p9 crash]#  sg_ses /dev/sg1
+> >>    LSI  MR9260-4i  2.13
+> >>      disk device (not an enclosure)
+> >> Supported diagnostic pages:
+> >
+> > OK, can you give us the contents of pages 1, 2 and 10 with
+> >
+> > sg_ses --page=1 --hex /dev/sg0
+> > sg_ses --page=2 --hex /dev/sg0
+> > sg_ses --page=10 --hex /dev/sg0
+> >
+> > The version of the kernel you do this on doesn't really matter.
 > 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index f8370b8..6f84ec7 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -750,7 +750,6 @@ static ssize_t host_show_hp_ssd_smart_path_enabled(struct device *dev,
-> }
+> Here are these pages:
 > 
-> #define MAX_PATHS 8
-> -
-> static ssize_t path_info_show(struct device *dev,
-> 	     struct device_attribute *attr, char *buf)
-> {
-> @@ -792,9 +791,7 @@ static ssize_t path_info_show(struct device *dev,
-> 				hdev->bus, hdev->target, hdev->lun,
-> 				scsi_device_type(hdev->devtype));
-> 
-> -		if (hdev->external ||
-> -			hdev->devtype == TYPE_RAID ||
-> -			is_logical_device(hdev)) {
-> +		if (hdev->devtype == TYPE_RAID || is_logical_device(hdev)) {
+> [root@p9 ~]# sg_ses --page=1 --hex /dev/sg0
+>    LSI       SAS2X28           0e12
+> Response in hex from diagnostic page: Configuration (SES)
+>   00     01 00 00 c9 00 00 00 00  11 00 09 2c 50 03 04 80 
+> ...........,P...
+>   10     00 a7 1e bf 4c 53 49 20  20 20 20 20 53 41 53 32    ....LSI 
+>   SAS2
+>   20     58 32 38 20 20 20 20 20  20 20 20 20 30 65 31 32    X28 
+>   0e12
+>   30     11 22 33 44 55 00 00 00  17 0c 00 0b 04 01 00 13 
+> ."3DU...........
+>   40     03 03 00 04 12 02 00 0f  02 02 00 0e 0e 01 00 09 
+> ................
+>   50     18 01 00 0d 19 0e 00 0e  11 02 00 0e 44 72 69 76 
+> ............Driv
+>   60     65 20 53 6c 6f 74 73 54  65 6d 70 65 72 61 74 75    e 
+> SlotsTemperatu
+>   70     72 65 20 53 65 6e 73 6f  72 73 46 61 6e 73 56 6f    re 
+> SensorsFansVo
+>   80     6c 74 61 67 65 20 53 65  6e 73 6f 72 73 50 6f 77    ltage 
+> SensorsPow
+>   90     65 72 20 53 75 70 70 6c  69 65 73 45 6e 63 6c 6f    er 
+> SuppliesEnclo
+>   a0     73 75 72 65 53 41 53 20  45 78 70 61 6e 64 65 72    sureSAS 
+> Expander
+>   b0     73 53 41 53 20 43 6f 6e  6e 65 63 74 6f 72 73 45    sSAS 
+> ConnectorsE
+>   c0     74 68 65 72 6e 65 74 20  70 6f 72 74 73             thernet ports
 
-How does removing the check for external here relate to the rest of this commit?
+Wow, that's some crazy enclosure.  The description says it's a single
+primary subenclosure with 9 different element types comprising 12 Device
+slots, 1 temperature sensor, 3 fans, 2 voltage sensors, 2 power
+supplies, 1 Enclosure, 1 SAS Expander,  14 SAS connectors, 2
+Communications ports. For 38 total element descriptors
 
-> 			output_len += scnprintf(buf + output_len,
-> 						PAGE_SIZE - output_len,
-> 						"%s\n", active);
-> @@ -808,8 +805,7 @@ static ssize_t path_info_show(struct device *dev,
-> 			phys_connector[0] = '0';
-> 		if (phys_connector[1] < '0')
-> 			phys_connector[1] = '0';
-> -		if (hdev->phys_connector[i] > 0)
-> -			output_len += scnprintf(buf + output_len,
-> +		output_len += scnprintf(buf + output_len,
+> [root@p9 ~]# sg_ses --page=2 --hex /dev/sg0
+>    LSI       SAS2X28           0e12
+> Response in hex from diagnostic page: Enclosure Status (SES)
+>   00     02 00 00 c0 00 00 00 00  00 00 00 00 05 00 00 00 
+> ................
+>   10     05 00 00 00 01 00 00 00  05 00 00 00 05 00 00 00 
+> ................
+>   20     01 00 00 00 05 00 00 00  05 00 00 00 01 00 00 00 
+> ................
+>   30     05 00 00 00 05 00 00 00  01 00 00 00 00 00 00 00 
+> ................
+>   40     01 00 2c 00 00 00 00 00  05 00 00 50 05 00 00 50 
+> ..,........P...P
+>   50     05 00 00 50 00 00 00 00  01 00 01 f9 01 00 04 b3 
+> ...P............
+>   60     00 00 00 00 47 80 00 20  47 80 00 20 00 00 00 00    ....G.. G.. 
+> ....
+>   70     01 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00 
+> ................
+>   80     01 11 ff 00 01 11 ff 00  01 20 00 00 01 20 00 00    ......... 
+> ... ..
+>   90     01 20 00 00 01 20 00 00  01 20 00 00 01 20 00 00    . ... ... 
+> ... ..
+>   a0     01 20 00 00 01 20 00 00  01 20 00 00 01 20 00 00    . ... ... 
+> ... ..
+>   b0     01 20 00 00 01 20 00 00  00 00 00 00 00 00 00 00    . ... 
+> ..........
+>   c0     00 00 00 00 
 
-Same question regarding the removal of the > 0 check.
+Given each type has one overall descriptor followed by the individual
+ones, we have 38 + 9 = 47 total descriptors, which is what we see here.
 
-> 				PAGE_SIZE - output_len,
-> 				"PORT: %.2s ",
-> 				phys_connector);
-> @@ -3191,6 +3187,90 @@ out:
-> 	return rc;
-> }
-> 
-> +/*
-> + * get enclosure information
-> + * struct ReportExtendedLUNdata *rlep - Used for BMIC drive number
-> + * struct hpsa_scsi_dev_t *encl_dev - device entry for enclosure
-> + * Uses id_physical_device to determine the box_index.
-> + */
-> +static int hpsa_get_enclosure_info(struct ctlr_info *h,
-> +			unsigned char *scsi3addr,
-> +			struct ReportExtendedLUNdata *rlep, int rle_index,
-> +			struct hpsa_scsi_dev_t *encl_dev)
-> +{
-> +	int rc = -1;
-> +	struct CommandList *c = NULL;
-> +	struct ErrorInfo *ei = NULL;
-> +	struct bmic_sense_storage_box_params *bssbp = NULL;
-> +	struct bmic_identify_physical_device *id_phys = NULL;
-> +	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-> +	u16 bmic_device_index = 0;
-> +
-> +
-> +	bssbp = kzalloc(sizeof(*bssbp), GFP_KERNEL);
-> +	if (!bssbp)
-> +		goto out;
-> +
-> +	id_phys = kzalloc(sizeof(*id_phys), GFP_KERNEL);
-> +	if (!id_phys)
-> +		goto out;
-> +
-> +	bmic_device_index = GET_BMIC_DRIVE_NUMBER(&rle->lunid[0]);
-> +
-> +	if (bmic_device_index == 0xFF00)
-> +		goto out;
+> [root@p9 ~]# sg_ses --page=10 --hex /dev/sg0
+>    LSI       SAS2X28           0e12
+> Response in hex from diagnostic page: Additional Element Status (SES-2)
+>   00     0a 00 01 fc 00 00 00 00  16 22 00 00 01 00 00 00 
+> ........."......
+>   10     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   20     00 00 00 00 00 00 00 00  00 00 00 00 16 22 00 01 
+> ............."..
+>   30     01 00 00 01 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   40     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   50     16 22 00 02 01 00 00 02  00 00 00 01 50 03 04 80 
+> ."..........P...
+>   60     00 a7 1e bf 50 03 04 80  00 a7 1e ae 00 00 00 00 
+> ....P...........
+>   70     00 00 00 00 16 22 00 03  01 00 00 03 00 00 00 00 
+> ....."..........
+>   80     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   90     00 00 00 00 00 00 00 00  16 22 00 04 01 00 00 04 
+> ........."......
+>   a0     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   b0     00 00 00 00 00 00 00 00  00 00 00 00 16 22 00 05 
+> ............."..
+>   c0     01 00 00 05 00 00 00 01  50 03 04 80 00 a7 1e bf 
+> ........P.......
+>   d0     50 03 04 80 00 a7 1e b1  00 00 00 00 00 00 00 00 
+> P...............
+>   e0     16 22 00 06 01 00 00 06  00 00 00 00 00 00 00 00 
+> ."..............
+>   f0     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   100    00 00 00 00 16 22 00 07  01 00 00 07 00 00 00 00 
+> ....."..........
+>   110    00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   120    00 00 00 00 00 00 00 00  16 22 00 08 01 00 00 08 
+> ........."......
+>   130    00 00 00 01 50 03 04 80  00 a7 1e bf 50 03 04 80 
+> ....P.......P...
+>   140    00 a7 1e b4 00 00 00 00  00 00 00 00 16 22 00 09 
+> ............."..
+>   150    01 00 00 09 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   160    00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   170    16 22 00 0a 01 00 00 0a  00 00 00 00 00 00 00 00 
+> ."..............
+>   180    00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> ................
+>   190    00 00 00 00 16 22 00 0b  01 00 00 0b 00 00 00 01 
+> ....."..........
+>   1a0    50 03 04 80 00 a7 1e bf  50 03 04 80 00 a7 1e b7 
+> P.......P.......
+>   1b0    00 00 00 00 00 00 00 00  16 46 00 15 1c 40 00 00 
+> .........F...@..
+>   1c0    50 03 04 80 00 a7 1e bf  00 ff 00 ff 00 ff 00 ff 
+> P...............
+>   1d0    01 ff 01 ff 01 ff 01 ff  ff ff ff ff ff ff ff ff 
+> ................
+>   1e0    02 00 03 01 04 02 05 03  06 04 07 05 08 06 09 07 
+> ................
+>   1f0    0a 08 0b 09 0c 0a 0d 0b  ff ff ff ff ff ff ff ff 
+> ................
 
-Why not put this check before the memory allocations so you can
-avoid them if this condition is not met?
+OK, so this is the problem.  There are 12 Array additional descriptors
+and one for the expander.  The standard says (6.1.13.1) that this is all
+in order, so the problem is that ses.c expects every type to have an
+additional element descriptor and we've just never run across an
+enclosure with non-slot components before.
 
-> +
-> +	memset(id_phys, 0, sizeof(*id_phys));
+Does this patch fix it?
 
-Didn't you just obtain zeroed memory from kzalloc()?
+James
 
-> +	rc = hpsa_bmic_id_physical_device(h, scsi3addr, bmic_device_index,
-> +						id_phys, sizeof(*id_phys));
-> +	if (rc) {
-> +		dev_warn(&h->pdev->dev, "%s: id_phys failed %d bdi[0x%x]\n",
-> +			__func__, encl_dev->external, bmic_device_index);
-> +		goto out;
-> +	}
-> +
-> +	c = cmd_alloc(h);
-> +
-> +	rc = fill_cmd(c, BMIC_SENSE_STORAGE_BOX_PARAMS, h, bssbp,
-> +			sizeof(*bssbp), 0, RAID_CTLR_LUNID, TYPE_CMD);
-> +
-> +	if (rc)
-> +		goto out;
-> +
-> +	if (id_phys->phys_connector[1] == 'E')
-> +		c->Request.CDB[5] = id_phys->box_index;
-> +	else
-> +		c->Request.CDB[5] = 0;
-> +
-> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE,
-> +						NO_TIMEOUT);
-> +	if (rc)
-> +		goto out;
-> +
-> +	ei = c->err_info;
-> +	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
-> +		rc = -1;
-> +		goto out;
-> +	}
-> +
-> +	encl_dev->box[id_phys->active_path_number] = bssbp->phys_box_on_port;
-> +	memcpy(&encl_dev->phys_connector[id_phys->active_path_number],
-> +		bssbp->phys_connector, sizeof(bssbp->phys_connector));
-> +
-> +	rc = IO_OK;
-> +out:
-> +	kfree(bssbp);
-> +	kfree(id_phys);
-> +
-> +	if (c)
-> +		cmd_free(h, c);
-> +
-> +	if (rc != IO_OK)
-> +		hpsa_show_dev_msg(KERN_INFO, h, encl_dev,
-> +			"Error, could not get enclosure information\n");
-> +	return rc;
-> +}
-> +
-> static u64 hpsa_get_sas_address_from_report_physical(struct ctlr_info *h,
-> 						unsigned char *scsi3addr)
-> {
-> @@ -4032,7 +4112,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
-> 
-> 		/* skip masked non-disk devices */
-> 		if (MASKED_DEVICE(lunaddrbytes) && physical_device &&
-> -			(physdev_list->LUN[phys_dev_index].device_flags & 0x01))
-> +		   (physdev_list->LUN[phys_dev_index].device_type != 0x06) &&
-> +		   (physdev_list->LUN[phys_dev_index].device_flags & 0x01))
-> 			continue;
-> 
-> 		/* Get device type, vendor, model, device id */
-> @@ -4117,6 +4198,9 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
-> 		case TYPE_TAPE:
-> 		case TYPE_MEDIUM_CHANGER:
+---
 
-Is it 'okay' that these two types are falling through and will call this new
-enclosure info routine?
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 1736935..53ef1cb 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -561,7 +561,15 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ 			if (desc_ptr)
+ 				desc_ptr += len;
+ 
+-			if (addl_desc_ptr)
++			if (addl_desc_ptr &&
++			    /* only find additional descriptions for specific devices */
++			    (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_SAS_EXPANDER ||
++			     /* these elements are optional */
++			     type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_TARGET_PORT ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_INITIATOR_PORT ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS))
+ 				addl_desc_ptr += addl_desc_ptr[1] + 2;
+ 
+ 		}
+diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
+index 7be22da..a4cf57c 100644
+--- a/include/linux/enclosure.h
++++ b/include/linux/enclosure.h
+@@ -29,7 +29,11 @@
+ /* A few generic types ... taken from ses-2 */
+ enum enclosure_component_type {
+ 	ENCLOSURE_COMPONENT_DEVICE = 0x01,
++	ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS = 0x07,
++	ENCLOSURE_COMPONENT_SCSI_TARGET_PORT = 0x14,
++	ENCLOSURE_COMPONENT_SCSI_INITIATOR_PORT = 0x15,
+ 	ENCLOSURE_COMPONENT_ARRAY_DEVICE = 0x17,
++	ENCLOSURE_COMPONENT_SAS_EXPANDER = 0x18,
+ };
+ 
+ /* ses-2 common element status */
 
-> 		case TYPE_ENCLOSURE:
-> +			hpsa_get_enclosure_info(h, lunaddrbytes,
-> +						physdev_list, phys_dev_index,
-> +						this_device);
-
-Any reason this routine wasn't made a void? The return code is not being used
-and the other similar helpers in this path are void.
-
-> 			ncurrent++;
-> 			break;
-> 		case TYPE_RAID:
-> @@ -6629,6 +6713,16 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
-> 			c->Request.CDB[7] = (size >> 16) & 0xFF;
-> 			c->Request.CDB[8] = (size >> 8) & 0XFF;
-> 			break;
-> +		case BMIC_SENSE_STORAGE_BOX_PARAMS:
-> +			c->Request.CDBLen = 10;
-> +			c->Request.type_attr_dir =
-> +				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
-> +			c->Request.Timeout = 0;
-> +			c->Request.CDB[0] = BMIC_READ;
-> +			c->Request.CDB[6] = BMIC_SENSE_STORAGE_BOX_PARAMS;
-> +			c->Request.CDB[7] = (size >> 16) & 0xFF;
-> +			c->Request.CDB[8] = (size >> 8) & 0XFF;
-> +			break;
-> 		case BMIC_IDENTIFY_CONTROLLER:
-> 			c->Request.CDBLen = 10;
-> 			c->Request.type_attr_dir =
-> diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-> index d92ef0d..6a919ad 100644
-> --- a/drivers/scsi/hpsa_cmd.h
-> +++ b/drivers/scsi/hpsa_cmd.h
-> @@ -291,6 +291,7 @@ struct SenseSubsystem_info {
-> #define BMIC_SENSE_DIAG_OPTIONS 0xF5
-> #define HPSA_DIAG_OPTS_DISABLE_RLD_CACHING 0x40000000
-> #define BMIC_SENSE_SUBSYSTEM_INFORMATION 0x66
-> +#define BMIC_SENSE_STORAGE_BOX_PARAMS 0x65
-> 
-> /* Command List Structure */
-> union SCSI3Addr {
-> @@ -842,5 +843,17 @@ struct bmic_sense_subsystem_info {
-> 	u8	pad[332];
-> };
-> 
-> +struct bmic_sense_storage_box_params {
-> +	u8	reserved[36];
-> +	u8	inquiry_valid;
-> +	u8	reserved_1[68];
-> +	u8	phys_box_on_port;
-> +	u8	reserved_2[22];
-> +	u16	connection_info;
-> +	u8	reserver_3[84];
-> +	u8	phys_connector[2];
-> +	u8	reserved_4[296];
-> +};
-> +
-> #pragma pack()
-> #endif /* HPSA_CMD_H */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
