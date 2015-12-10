@@ -1,16 +1,16 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH v2 5/9] aacraid: Set correct msix count for EEH recovery
-Date: Thu, 10 Dec 2015 10:45:55 -0800
-Message-ID: <1449773159-25058-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH v2 9/9] aacraid: Update driver version
+Date: Thu, 10 Dec 2015 10:45:59 -0800
+Message-ID: <1449773159-25058-10-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:53767 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752034AbbLKBkZ (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:32813 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752093AbbLKBka (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Dec 2015 20:40:25 -0500
+	Thu, 10 Dec 2015 20:40:30 -0500
 In-Reply-To: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,48 +19,29 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-During EEH recovery number of online CPU's might change thereby changing
-the number of MSIx vectors. Since each fib is allocated to a vector,
-changes in the number of vectors causes fib to be sent thru invalid
-vectors.In addition the correct number of MSIx vectors is not
-updated in the INIT struct sent to the controller, when it is
-reinitialized.
+Updated diver version to 41052
 
-Fixed by reassigning vectors to fibs based on the updated number of MSIx
-vectors and updating the INIT structure before sending to controller.
-
-Changes in V2:
-Replaced fib vector allocation code with aac_fib_vector_assign
+Changes from V2:
+None
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 ---
- drivers/scsi/aacraid/linit.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/scsi/aacraid/aacraid.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 08c6835..6d79181 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1410,8 +1410,18 @@ static int aac_acquire_resources(struct aac_dev *dev)
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index a440840..22130b3 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -62,7 +62,7 @@ enum {
+ #define	PMC_GLOBAL_INT_BIT0		0x00000001
  
- 	aac_adapter_enable_int(dev);
- 
--	if (!dev->sync_mode)
-+	/*max msix may change  after EEH
-+	 * Re-assign vectors to fibs
-+	 */
-+	aac_fib_vector_assign(dev);
-+
-+	if (!dev->sync_mode) {
-+		/* After EEH recovery or suspend resume, max_msix count
-+		 * may change, therfore updating in init as well.
-+		 */
- 		aac_adapter_start(dev);
-+		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
-+	}
- 	return 0;
- 
- error_iounmap:
+ #ifndef AAC_DRIVER_BUILD
+-# define AAC_DRIVER_BUILD 41010
++# define AAC_DRIVER_BUILD 41052
+ # define AAC_DRIVER_BRANCH "-ms"
+ #endif
+ #define MAXIMUM_NUM_CONTAINERS	32
 -- 
 1.9.1
 
