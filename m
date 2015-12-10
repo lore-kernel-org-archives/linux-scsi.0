@@ -1,56 +1,52 @@
-From: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH 3/6] cxlflash: Updated date of the driver
-Date: Fri, 11 Dec 2015 11:35:50 +1100
-Message-ID: <87d1udkejd.fsf@gamma.ozlabs.ibm.com>
-References: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1449788043-23131-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V2 0/9] aacraid: Patchset for aacraid driver version 41052
+Date: Thu, 10 Dec 2015 10:45:50 -0800
+Message-ID: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34600 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072AbbLKAgG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2015 19:36:06 -0500
-Received: by pacwq6 with SMTP id wq6so55565468pac.1
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2015 16:36:04 -0800 (PST)
-In-Reply-To: <1449788043-23131-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:60977 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750994AbbLKBkS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Dec 2015 20:40:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, RaghavaAditya.Renukunta@pmcs.com
 
---=-=-=
-Content-Type: text/plain
+This patchset includes the following changes (bug fixes and 
+new feature support) specific to aacraid driver.
 
-Hi Uma,
+V2:
+Removed aac_fib_free_tag function
+Setup relevant fib variables only in once
+Created aac_fib_vector_assign function
+Made EEH functions static
+Added character device status macros
+Changed location of aac->shutdown to prevent race condition
+Withdrew patch that disables device ID wild card binding
 
-It looks like CXLFLASH_DRIVER_DATE is only used once, on init, and it's
-just printed. Is it necessary? It looks like having it will require
-sending a patch to update it quite often.
+Raghava Aditya Renukunta (9):
+ [SCSI] aacraid: SCSI blk tag support
+ [SCSI] aacraid: Fix RRQ overload
+ [SCSI] aacraid: Added EEH support
+ [SCSI] aacraid: Fix memory leak in aac_fib_map_free
+ [SCSI] aacraid: Set correct msix count for EEH recovery
+ [SCSI] aacraid: Fundamental reset support for Series 7
+ [SCSI] aacraid: Fix AIF triggered IOP_RESET
+ [SCSI] aacraid: Fix character device re-initialization
+ [SCSI] aacraid: Update driver version
 
-Regards,
-Daniel
+ drivers/scsi/aacraid/aachba.c   |  27 +++---
+ drivers/scsi/aacraid/aacraid.h  |  13 ++-
+ drivers/scsi/aacraid/comminit.c |   4 +-
+ drivers/scsi/aacraid/commsup.c  |  70 ++++++++++++++--
+ drivers/scsi/aacraid/dpcsup.c   |   2 -
+ drivers/scsi/aacraid/linit.c    | 178 ++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/aacraid/src.c      |  30 ++-----
+ 7 files changed, 267 insertions(+), 57 deletions(-)
 
+-- 
+1.9.1
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWahpmAAoJEPC3R3P2I92FSigQAJseIBcAEP73RbpOzdj/PJDe
-zYoI/hKZI/hrQhw0i44r/VeVFsVW8WxPq4oCjuer2CiNZ4T6HPSVNVL9UIUXm/LX
-DeO6oRdYV+S9ccKiVmWcw5A3POUuDNK5E0Nsd1+mUjZ3ZMIUaFCxZviKSuzfgrpt
-RIlmjz+pxX+BhRD2jkydHhMFwfndQ60jAlZooV3NI3OU7XBrFogfSVgRqISK7U2g
-PtmU1K632tKworo6Vk0Y885mjvi2o0KxdhMN66z2c43CzOwIh15FIfUUjozqiTxD
-8anDt880vn/CsUzgatVa1jC3D9SUrrRvJ9iZFM6wZMV7TaBkNNYXtgZ7Z3rQ0mBP
-nn/gxdEEUi+EidZPkP4EEjv7drrLKnVzJOig/sSw7UcFE3ZFhvVhWIYio9kXNKoe
-PzfwRzOKRt/MtPY4GSbl0SDHTdPzcf0XOAqjG2uguCo7rQAa1At7oI0de7mp2wHQ
-k5j9gIRRuKA/7I236s2OAwIS8Ntj71Q6fy8hFem41G2wWtgNsEHBCGxGq3s+iG1l
-nCainAaft41JkCK++fhHvLazpBxDXO4+jhWZrrmTbm+8YcnOwKz6MSsa4oF1Heyu
-R1k578PSdH6hOYezJM8+s0ri7XO59reUWjIHS8xEk0oiE3xAeUTxSwdZvHUVLUCa
-FL9BhChbWeg0xhxD3LA+
-=puNN
------END PGP SIGNATURE-----
---=-=-=--
