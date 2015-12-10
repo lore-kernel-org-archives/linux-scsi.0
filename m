@@ -1,13 +1,12 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 78/71] ncr5380: Add support for HP 53C400A-based cards
- (C2502)
-Date: Fri, 11 Dec 2015 10:38:02 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512111015380.30768@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <1449561099-9981-1-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1512082137380.24631@nippy.intranet> <201512091233.36721.linux@rainbow-software.org>
+Subject: Re: [PATCH v2 74/71] ncr5380: Enable PDMA for NCR53C400A
+Date: Fri, 11 Dec 2015 10:39:36 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1512101140330.6382@nippy.intranet>
+References: <20151118083455.331768508@telegraphics.com.au> <1449440489-9986-1-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1512081242490.18196@nippy.intranet> <201512091439.07424.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <201512091233.36721.linux@rainbow-software.org>
+In-Reply-To: <201512091439.07424.linux@rainbow-software.org>
 Sender: linux-m68k-owner@vger.kernel.org
 To: Ondrej Zary <linux@rainbow-software.org>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -16,34 +15,101 @@ List-Id: linux-scsi@vger.kernel.org
 
 On Wed, 9 Dec 2015, Ondrej Zary wrote:
 
-> > > @@ -743,6 +786,7 @@ module_param(ncr_5380, int, 0);
-> > >  module_param(ncr_53c400, int, 0);
-> > >  module_param(ncr_53c400a, int, 0);
-> > >  module_param(dtc_3181e, int, 0);
-> > > +module_param(hp_53c400a, int, 0);
+> On Tuesday 08 December 2015 03:05:11 Finn Thain wrote:
 > > 
-> > Any reason you did not add the corresponding __setup option?
+> > On Sun, 6 Dec 2015, Ondrej Zary wrote:
+> > 
+> > > Add I/O register mapping for NCR53C400A and enable PDMA mode to
+> > > improve performance and fix non-working IRQ.
+> > > 
+> > > Tested with HP C2502 (and user-space enabler).
+> > > 
+> > > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> > > ---
+> > >  drivers/scsi/g_NCR5380.c |   14 +++++++++++---
+> > >  1 file changed, 11 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+> > > index 86740fd..099fdac 100644
+> > > --- a/drivers/scsi/g_NCR5380.c
+> > > +++ b/drivers/scsi/g_NCR5380.c
+> > > @@ -324,7 +324,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
+> > >  #endif
+> > >  			break;
+> > >  		case BOARD_NCR53C400A:
+> > > -			flags = FLAG_NO_PSEUDO_DMA;
+> > > +			flags = FLAG_NO_DMA_FIXUP;
+> > >  			ports = ncr_53c400a_ports;
+> > >  			break;
+> > >  		case BOARD_DTC3181E:
+> > > @@ -406,11 +406,18 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
+> > >  		 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
+> > >  		 * the base address.
+> > >  		 */
+> > > -		if (overrides[current_override].board == BOARD_NCR53C400) {
+> > > +		switch (overrides[current_override].board) {
+> > > +		case BOARD_NCR53C400:
+> > >  			instance->io_port += 8;
+> > >  			hostdata->c400_ctl_status = 0;
+> > >  			hostdata->c400_blk_cnt = 1;
+> > >  			hostdata->c400_host_buf = 4;
+> > > +			break;
+> > > +		case BOARD_NCR53C400A:
+> > > +			hostdata->c400_ctl_status = 9;
+> > > +			hostdata->c400_blk_cnt = 10;
+> > > +			hostdata->c400_host_buf = 8;
+> > > +			break;
+> > >  		}
+> > >  #else
+> > >  		instance->base = overrides[current_override].NCR5380_map_name;
+> > 
+> > 
+> > For SCSI_G_NCR5380_MEM and BOARD_NCR53C400A (or BOARD_DTC3181E), you have 
+> > not assigned c400_ctl_status, c400_blk_cnt and c400_host_buf. Perhaps we 
+> > should throw an error, something like this?
+> > 
+> >  		hostdata->iomem = iomem;
+> > -		if (overrides[current_override].board == BOARD_NCR53C400) {
+> > +		switch (overrides[current_override].board) {
+> > +		case BOARD_NCR53C400:
+> >  			hostdata->c400_ctl_status = 0x100;
+> >  			hostdata->c400_blk_cnt = 0x101;
+> >  			hostdata->c400_host_buf = 0x104;
+> > +			break;
+> > +		case BOARD_NCR53C400A:
+> > +			pr_err(DRV_MODULE_NAME ": unknown register offsets\n");
+> > +			goto out_unregister;
+> >  		}
+> >  #endif
 > 
-> I wonder if __setup is really required. I thought that it should go away 
-> and module parameters used instead.
-
-Yes, after re-reading the header files I see that you are right.
-
+> We don't need to fail, just disable PDMA by setting:
+> flags = FLAG_NO_PSEUDO_DMA;
 > 
-> > Did you consider re-using the existing ncr_53c400a option (for port & 
-> > irq settings) and adding a new setup option and module param for card 
-> > magic?
+> And BTW. this:
+>                 if (overrides[current_override].board == BOARD_NCR53C400 ||
+>                     overrides[current_override].board == BOARD_NCR53C400A)
+>                         NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
 > 
-> Looks like a good idea.
+> should then be, solving the problem of growing if condition:
+> 		if (!(flags & FLAG_NO_PSEUDO_DMA))
+>                         NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+> 
 
-What I had in mind was an 'ncr_magic' option, to go with 'ncr_irq' and 
-'ncr_addr'. This is supposed to be a generic driver, after all.
+We already resolved that problem. Julian Calaby and I agreed that a switch 
+statement is better than a flag here.
 
-But now that I've seen what that would involve (adding another member to 
-struct override) I've changed my mind.
+Moreover, if the user sets the 'ncr_53c400' or 'ncr_53c400a' module 
+options I presume they expect corresponding device initialization. I don't 
+think PIO means we should skip that.
 
-I think the new board type was the right approach. That is, a combination 
-of your v2 and v3 patches. I'll send my version to you to test.
+Passing 'ncr_53c400' or 'ncr_53c400a' options to the g_NCR5380_mmio module 
+has to give an error if we don't have enough information about the board 
+to allow us to do the right thing.
+
+(Passing the 'ncr_5380' module param may give the result you wanted.)
+
+BTW, I fixed up this patch when I added it to my queue. I'll send you my 
+version to test.
 
 Thanks.
 
