@@ -1,25 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
-Date: Thu, 10 Dec 2015 12:58:00 -0500
-Message-ID: <yq18u522nkn.fsf@sermon.lab.mkp.net>
-References: <20151203132758.GC19092@hansolo.redhat.com>
+Subject: Re: [PATCH v2] storvsc: add logging for error/warning messages
+Date: Thu, 10 Dec 2015 13:12:49 -0500
+Message-ID: <yq14mfq2mvy.fsf@sermon.lab.mkp.net>
+References: <1449216444-21553-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151203132758.GC19092@hansolo.redhat.com> (Josh Boyer's message
-	of "Thu, 3 Dec 2015 08:27:59 -0500")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Josh Boyer <jwboyer@fedoraproject.org>
-Cc: James.Bottomley@hansenpartnership.com, arvindkumar@vmware.com, Thomas Hellstrom <thellstrom@vmware.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, pv-drivers@vmware.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1449216444-21553-1-git-send-email-longli@microsoft.com> (Long
+ Li's message of "Fri, 4 Dec 2015 00:07:24 -0800")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Josh" == Josh Boyer <jwboyer@fedoraproject.org> writes:
+>>>>> "Long" == Long Li <longli@microsoft.com> writes:
 
-Josh> The driver is missing calls to pci_dma_mapping_error() after
-Josh> performing the DMA mapping, which caused DMA-API warning to show
-Josh> up in dmesg's output. Though that happens only when DMA_API_DEBUG
-Josh> option is enabled. This change fixes the issue and makes
-Josh> pvscsi_map_buffers() function more robust.
+Long> Introduce a logging level for storvsc to log certain error/warning
+Long> messages. Those messages are helpful in some environments,
+Long> e.g. Microsoft Azure, for customer support and troubleshooting
+Long> purposes.
 
 Applied to 4.5/scsi-queue.
 
