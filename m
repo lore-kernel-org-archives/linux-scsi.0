@@ -1,116 +1,56 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 74/71] ncr5380: Enable PDMA for NCR53C400A
-Date: Fri, 11 Dec 2015 10:39:36 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512101140330.6382@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <1449440489-9986-1-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1512081242490.18196@nippy.intranet> <201512091439.07424.linux@rainbow-software.org>
+From: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH 3/6] cxlflash: Updated date of the driver
+Date: Fri, 11 Dec 2015 11:35:50 +1100
+Message-ID: <87d1udkejd.fsf@gamma.ozlabs.ibm.com>
+References: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1449788043-23131-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <201512091439.07424.linux@rainbow-software.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34600 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072AbbLKAgG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2015 19:36:06 -0500
+Received: by pacwq6 with SMTP id wq6so55565468pac.1
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2015 16:36:04 -0800 (PST)
+In-Reply-To: <1449788043-23131-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+
+--=-=-=
+Content-Type: text/plain
+
+Hi Uma,
+
+It looks like CXLFLASH_DRIVER_DATE is only used once, on init, and it's
+just printed. Is it necessary? It looks like having it will require
+sending a patch to update it quite often.
+
+Regards,
+Daniel
 
 
-On Wed, 9 Dec 2015, Ondrej Zary wrote:
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> On Tuesday 08 December 2015 03:05:11 Finn Thain wrote:
-> > 
-> > On Sun, 6 Dec 2015, Ondrej Zary wrote:
-> > 
-> > > Add I/O register mapping for NCR53C400A and enable PDMA mode to
-> > > improve performance and fix non-working IRQ.
-> > > 
-> > > Tested with HP C2502 (and user-space enabler).
-> > > 
-> > > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> > > ---
-> > >  drivers/scsi/g_NCR5380.c |   14 +++++++++++---
-> > >  1 file changed, 11 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> > > index 86740fd..099fdac 100644
-> > > --- a/drivers/scsi/g_NCR5380.c
-> > > +++ b/drivers/scsi/g_NCR5380.c
-> > > @@ -324,7 +324,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
-> > >  #endif
-> > >  			break;
-> > >  		case BOARD_NCR53C400A:
-> > > -			flags = FLAG_NO_PSEUDO_DMA;
-> > > +			flags = FLAG_NO_DMA_FIXUP;
-> > >  			ports = ncr_53c400a_ports;
-> > >  			break;
-> > >  		case BOARD_DTC3181E:
-> > > @@ -406,11 +406,18 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
-> > >  		 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
-> > >  		 * the base address.
-> > >  		 */
-> > > -		if (overrides[current_override].board == BOARD_NCR53C400) {
-> > > +		switch (overrides[current_override].board) {
-> > > +		case BOARD_NCR53C400:
-> > >  			instance->io_port += 8;
-> > >  			hostdata->c400_ctl_status = 0;
-> > >  			hostdata->c400_blk_cnt = 1;
-> > >  			hostdata->c400_host_buf = 4;
-> > > +			break;
-> > > +		case BOARD_NCR53C400A:
-> > > +			hostdata->c400_ctl_status = 9;
-> > > +			hostdata->c400_blk_cnt = 10;
-> > > +			hostdata->c400_host_buf = 8;
-> > > +			break;
-> > >  		}
-> > >  #else
-> > >  		instance->base = overrides[current_override].NCR5380_map_name;
-> > 
-> > 
-> > For SCSI_G_NCR5380_MEM and BOARD_NCR53C400A (or BOARD_DTC3181E), you have 
-> > not assigned c400_ctl_status, c400_blk_cnt and c400_host_buf. Perhaps we 
-> > should throw an error, something like this?
-> > 
-> >  		hostdata->iomem = iomem;
-> > -		if (overrides[current_override].board == BOARD_NCR53C400) {
-> > +		switch (overrides[current_override].board) {
-> > +		case BOARD_NCR53C400:
-> >  			hostdata->c400_ctl_status = 0x100;
-> >  			hostdata->c400_blk_cnt = 0x101;
-> >  			hostdata->c400_host_buf = 0x104;
-> > +			break;
-> > +		case BOARD_NCR53C400A:
-> > +			pr_err(DRV_MODULE_NAME ": unknown register offsets\n");
-> > +			goto out_unregister;
-> >  		}
-> >  #endif
-> 
-> We don't need to fail, just disable PDMA by setting:
-> flags = FLAG_NO_PSEUDO_DMA;
-> 
-> And BTW. this:
->                 if (overrides[current_override].board == BOARD_NCR53C400 ||
->                     overrides[current_override].board == BOARD_NCR53C400A)
->                         NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
-> 
-> should then be, solving the problem of growing if condition:
-> 		if (!(flags & FLAG_NO_PSEUDO_DMA))
->                         NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
-> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: GPGTools - https://gpgtools.org
 
-We already resolved that problem. Julian Calaby and I agreed that a switch 
-statement is better than a flag here.
-
-Moreover, if the user sets the 'ncr_53c400' or 'ncr_53c400a' module 
-options I presume they expect corresponding device initialization. I don't 
-think PIO means we should skip that.
-
-Passing 'ncr_53c400' or 'ncr_53c400a' options to the g_NCR5380_mmio module 
-has to give an error if we don't have enough information about the board 
-to allow us to do the right thing.
-
-(Passing the 'ncr_5380' module param may give the result you wanted.)
-
-BTW, I fixed up this patch when I added it to my queue. I'll send you my 
-version to test.
-
-Thanks.
-
--- 
+iQIcBAEBCgAGBQJWahpmAAoJEPC3R3P2I92FSigQAJseIBcAEP73RbpOzdj/PJDe
+zYoI/hKZI/hrQhw0i44r/VeVFsVW8WxPq4oCjuer2CiNZ4T6HPSVNVL9UIUXm/LX
+DeO6oRdYV+S9ccKiVmWcw5A3POUuDNK5E0Nsd1+mUjZ3ZMIUaFCxZviKSuzfgrpt
+RIlmjz+pxX+BhRD2jkydHhMFwfndQ60jAlZooV3NI3OU7XBrFogfSVgRqISK7U2g
+PtmU1K632tKworo6Vk0Y885mjvi2o0KxdhMN66z2c43CzOwIh15FIfUUjozqiTxD
+8anDt880vn/CsUzgatVa1jC3D9SUrrRvJ9iZFM6wZMV7TaBkNNYXtgZ7Z3rQ0mBP
+nn/gxdEEUi+EidZPkP4EEjv7drrLKnVzJOig/sSw7UcFE3ZFhvVhWIYio9kXNKoe
+PzfwRzOKRt/MtPY4GSbl0SDHTdPzcf0XOAqjG2uguCo7rQAa1At7oI0de7mp2wHQ
+k5j9gIRRuKA/7I236s2OAwIS8Ntj71Q6fy8hFem41G2wWtgNsEHBCGxGq3s+iG1l
+nCainAaft41JkCK++fhHvLazpBxDXO4+jhWZrrmTbm+8YcnOwKz6MSsa4oF1Heyu
+R1k578PSdH6hOYezJM8+s0ri7XO59reUWjIHS8xEk0oiE3xAeUTxSwdZvHUVLUCa
+FL9BhChbWeg0xhxD3LA+
+=puNN
+-----END PGP SIGNATURE-----
+--=-=-=--
