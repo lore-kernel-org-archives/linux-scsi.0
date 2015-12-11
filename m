@@ -1,79 +1,25 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [dm-devel] [PATCH 0/15] copy offload patches
-Date: Thu, 10 Dec 2015 23:06:04 -0600
-Message-ID: <566A59BC.9060305@cs.wisc.edu>
-References: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com> <yq1r3iuylwd.fsf@sermon.lab.mkp.net>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v4 0/3] Badblock tracking for gendisks
+Date: Thu, 10 Dec 2015 21:40:57 -0800
+Message-ID: <CAPcyv4jaQN9L3=wUap=XXVAsUkdzUqCb6cOHnqGQH9JpV_sJcw@mail.gmail.com>
+References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1r3iuylwd.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <msnitzer@redhat.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:36725 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbbLKFk6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2015 00:40:58 -0500
+Received: by qgcc31 with SMTP id c31so185698712qgc.3
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2015 21:40:58 -0800 (PST)
+In-Reply-To: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Vishal Verma <vishal.l.verma@intel.com>, Christoph Hellwig <hch@lst.de>
 
-On 12/10/2015 04:33 PM, Martin K. Petersen wrote:
->>>>>> "Mikulas" == Mikulas Patocka <mpatocka@redhat.com> writes:
-> 
-> Mikulas,
-> 
-> Mikulas> This patch series adds copy offload (the XCOPY command) to the
-> Mikulas> block layer, SCSI subsystems and device mapper.
-> 
-> Now that the VFS stuff appears to stabilize I agree it's a good time to
-> revisit all this. I just merged the required VPD patches from Hannes so
-> those will be in 4.5.
-> 
-> I have a bunch of changes to the SCSI code that I worked on over the
-> spring/summer based on a feedback from the array vendors after
-> discussions we started at LSF/MM. Generally speaking, their comments
-> didn't make things easier, nor prettier :( But your two bio approach is
-> a requirement to accommodate those needs (token-based copy) so I'll work
-> on consolidating your changes with mine.
-> 
-> That said, we still need Mike Christie's patches to go in first.
-> 
-> Mike: What's your status? I'm afraid I didn't get a chance to dig very
-> deep in your series since it coincided with me scrambling to sort out
-> SCSI for 4.4. Do you think there's a chance we could get your patches in
-> shape for 4.5? Is there an up-to-date tree I can look at?
-> 
+Hi Jens,
 
-It looks like my original mail did not make it due to an attachment.
-
-
-I just had 2 review comments left:
-
-1. Originally, I had left REQ_FLUSH a flag. Christoph suggested to break
-it up into a op and flag:
-
-http://marc.info/?l=linux-scsi&m=144689113106515&w=2
-
-I started this and messed up  Was going to retry next week.
-
-
-2. Start REQ_OP_READ off at non-zero to try and shake out code that was
-not converted.
-
-There are a several places where we assume reads are zero and writes are
-1 for things like indexing in arrays (like blktrace's ddir_act or dm
-starts), passing into block functions (like nvme_alloc_request's call of
-blk_mq_alloc_request), and if/else's. I am not done fixing all of them
-and testing.
-
-Ok, 3 comments. One I gave myself:
-
-3. Also, the btrfs patch is really large (1000 lines) because that code
-base is so large and there were so many places we passed around rw to
-through multiple functions. I wanted to try and break it up, so it would
-be easier for those guys to review.
-
-
-I uploaded a git tree here:
-
-https://github.com/mikechristie/kernel.git
-
-The patches are in the for-next-req-op.
-
-I made this over Jens's for-next branch in his linux-block tree.
+Are you on-board with this approach?  Any concerns with me carrying
+this through the nvdimm tree along with our other pending
+error-handling enabling?
