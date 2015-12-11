@@ -1,103 +1,103 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2] hisi_sas: use platform_get_irq()
-Date: Fri, 11 Dec 2015 12:56:43 +0100
-Message-ID: <20151211115643.GA31151@c203.arch.suse.de>
-References: <1449835401-200442-1-git-send-email-john.garry@huawei.com>
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: kernel BUG at block/bio.c:1787! while initializing scsi_debug on
+ ppc64 host
+Date: Fri, 11 Dec 2015 20:01:32 +0800
+Message-ID: <20151211115340.GB19209@eguan.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:34521 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754152AbbLKMET (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2015 07:04:19 -0500
+Received: by mail-wm0-f42.google.com with SMTP id c17so9014721wmd.1
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Dec 2015 04:04:18 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1449835401-200442-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: JBottomley@odin.com, martin.petersen@oracle.com, arnd@arndb.de, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, robh@kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, Dec 11, 2015 at 08:03:21PM +0800, John Garry wrote:
-> It is preferred that drivers use platform_get_irq()
-> instead of irq_of_parse_and_map(), so replace.
->=20
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Acked-by: Rob Herring <robh@kernel.org>
->=20
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas=
-/hisi_sas.h
-> index 30a9ab9..5af2e41 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas.h
-> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-> @@ -16,7 +16,6 @@
->  #include <linux/mfd/syscon.h>
->  #include <linux/module.h>
->  #include <linux/of_address.h>
-> -#include <linux/of_irq.h>
->  #include <linux/platform_device.h>
->  #include <linux/regmap.h>
->  #include <scsi/libsas.h>
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hi=
-si_sas/hisi_sas_v1_hw.c
-> index 0ed2f92..d543811 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> @@ -1673,19 +1673,16 @@ static irq_handler_t fatal_interrupts[HISI_SA=
-S_MAX_QUEUES] =3D {
-> =20
->  static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
->  {
-> -	struct device *dev =3D &hisi_hba->pdev->dev;
-> -	struct device_node *np =3D dev->of_node;
-> +	struct platform_device *pdev =3D hisi_hba->pdev;
-> +	struct device *dev =3D &pdev->dev;
->  	int i, j, irq, rc, idx;
-> =20
-> -	if (!np)
-> -		return -ENOENT;
-> -
->  	for (i =3D 0; i < hisi_hba->n_phy; i++) {
->  		struct hisi_sas_phy *phy =3D &hisi_hba->phy[i];
-> =20
->  		idx =3D i * HISI_SAS_PHY_INT_NR;
->  		for (j =3D 0; j < HISI_SAS_PHY_INT_NR; j++, idx++) {
-> -			irq =3D irq_of_parse_and_map(np, idx);
-> +			irq =3D platform_get_irq(pdev, idx);
->  			if (!irq) {
->  				dev_err(dev,
->  					"irq init: fail map phy interrupt %d\n",
-> @@ -1706,7 +1703,7 @@ static int interrupt_init_v1_hw(struct hisi_hba=
- *hisi_hba)
-> =20
->  	idx =3D hisi_hba->n_phy * HISI_SAS_PHY_INT_NR;
->  	for (i =3D 0; i < hisi_hba->queue_count; i++, idx++) {
-> -		irq =3D irq_of_parse_and_map(np, idx);
-> +		irq =3D platform_get_irq(pdev, idx);
->  		if (!irq) {
->  			dev_err(dev, "irq init: could not map cq interrupt %d\n",
->  				idx);
-> @@ -1724,7 +1721,7 @@ static int interrupt_init_v1_hw(struct hisi_hba=
- *hisi_hba)
-> =20
->  	idx =3D (hisi_hba->n_phy * HISI_SAS_PHY_INT_NR) + hisi_hba->queue_c=
-ount;
->  	for (i =3D 0; i < HISI_SAS_FATAL_INT_NR; i++, idx++) {
-> -		irq =3D irq_of_parse_and_map(np, idx);
-> +		irq =3D platform_get_irq(pdev, idx);
->  		if (!irq) {
->  			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
->  				idx);
-> --=20
-> 1.9.1
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi,
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+I saw this kernel BUG_ON on 4.4-rc4 kernel, and this can be reproduced
+easily on ppc64 host by:
+
+modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=256
+
+And I bisected to this commit
+
+	commit ca369d51b3e1649be4a72addd6d6a168cfb3f537
+	Author: Martin K. Petersen <martin.petersen@oracle.com>
+	Date:   Fri Nov 13 16:46:48 2015 -0500
+
+	    block/sd: Fix device-imposed transfer length limits
+
+I confirmed by reverting this commit on top of 4.4-rc4 kernel and test
+passed.
+
+Thanks,
+Eryu
+
+P.S. dmesg log
+[  817.477557] scsi_debug:sdebug_driver_probe: host protection 
+[  817.477571] scsi host1: scsi_debug, version 1.85 [20141022], dev_size_mb=256, opts=0x0 
+[  817.478202] scsi 1:0:0:0: Direct-Access     Linux    scsi_debug       0184 PQ: 0 ANSI: 6 
+[  817.478733] sd 1:0:0:0: Attached scsi generic sg1 type 0 
+[  817.496144] sd 1:0:0:0: [sdb] 524288 512-byte logical blocks: (268 MB/256 MiB) 
+[  817.496155] sd 1:0:0:0: [sdb] 4096-byte physical blocks 
+[  817.506142] sd 1:0:0:0: [sdb] Write Protect is off 
+[  817.526134] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA 
+[  817.646163] ------------[ cut here ]------------ 
+[  817.646168] kernel BUG at block/bio.c:1787! 
+[  817.646172] Oops: Exception in kernel mode, sig: 5 [#1] 
+[  817.646174] SMP NR_CPUS=2048 NUMA pSeries 
+[  817.646178] Modules linked in: scsi_debug(E) nfsv3(E) rpcsec_gss_krb5(E) nfsv4(E) dns_resolver(E) nfs(E) fscache(E) dm_mod(E) loop(E) sg(E) pseries_rng(E) nfsd(E) auth_rpcgss(E) nfs_acl(E) lockd(E) sunrpc(E) grace(E) ip_tables(E) xfs(E) libcrc32c(E) sd_mod(E) ibmvscsi(E) ibmveth(E) scsi_transport_srp(E) 
+[  817.646205] CPU: 6 PID: 166 Comm: kworker/u321:1 Tainted: G            E   4.4.0-rc4 #1 
+[  817.646211] Workqueue: events_unbound .async_run_entry_fn 
+[  817.646215] task: c00000000a0c0000 ti: c00000000a180000 task.ti: c00000000a180000 
+[  817.646218] NIP: c0000000003b1d54 LR: c0000000003c4780 CTR: c0000000003be420 
+[  817.646222] REGS: c00000000a1826c0 TRAP: 0700   Tainted: G            E    (4.4.0-rc4) 
+[  817.646225] MSR: 8000000100029032 <SF,EE,ME,IR,DR,RI>  CR: 24732728  XER: 00000000 
+[  817.646233] CFAR: c0000000003c477c SOFTE: 1  
+GPR00: c0000000003c4780 c00000000a182940 c000000001325e00 c00000016cebcf00  
+GPR04: 0000000000000000 0000000002400000 c00000013c5f4d80 0000000000000040  
+GPR08: f000000000436ac0 0000000000000001 0000000000000000 ffffffffffffffff  
+GPR12: 0000000024732722 c00000000e743900 0000000000000000 f000000000436ac0  
+GPR16: c0000000f9e3eee0 c00000010dab0000 0000000000000001 0000000000000000  
+GPR20: 0000000000000000 0000000000000080 0000000000000000 c00000016cebcf00  
+GPR24: c0000000ff9b5a20 c00000000a182bb8 c00000016cebcf88 0000000000000000  
+GPR28: 0000000000000000 c00000016cebcf00 0000000000000000 0000000000010000  
+[  817.646273] NIP [c0000000003b1d54] .bio_split+0x34/0x110 
+[  817.646277] LR [c0000000003c4780] .blk_queue_split+0x3b0/0x560 
+[  817.646280] Call Trace: 
+[  817.646282] [c00000000a182940] [c00000000a1829d0] 0xc00000000a1829d0 (unreliable) 
+[  817.646287] [c00000000a1829d0] [c0000000003c4780] .blk_queue_split+0x3b0/0x560 
+[  817.646291] [c00000000a182ae0] [c0000000003be460] .blk_queue_bio+0x40/0x430 
+[  817.646295] [c00000000a182b80] [c0000000003bc0f0] .generic_make_request+0x150/0x210 
+[  817.646299] [c00000000a182c30] [c0000000003bc26c] .submit_bio+0xbc/0x1c0 
+[  817.646304] [c00000000a182cf0] [c0000000002cb64c] .submit_bh_wbc+0x19c/0x200 
+[  817.646308] [c00000000a182d90] [c0000000002cbb10] .block_read_full_page+0x310/0x410 
+[  817.646312] [c00000000a183290] [c0000000002cf11c] .blkdev_readpage+0x1c/0x30 
+[  817.646316] [c00000000a183300] [c0000000001e51a0] .do_read_cache_page+0xc0/0x290 
+[  817.646321] [c00000000a1833c0] [c0000000003d59f8] .read_dev_sector+0x38/0xb0 
+[  817.646325] [c00000000a183440] [c0000000003d977c] .read_lba+0xcc/0x1f0 
+[  817.646329] [c00000000a1834f0] [c0000000003da3b8] .efi_partition+0x118/0x780 
+[  817.646333] [c00000000a183670] [c0000000003d6fcc] .check_partition+0x14c/0x2e0 
+[  817.646337] [c00000000a183700] [c0000000003d6260] .rescan_partitions+0xd0/0x380 
+[  817.646341] [c00000000a1837e0] [c0000000002d0b88] .__blkdev_get+0x3d8/0x530 
+[  817.646345] [c00000000a1838a0] [c0000000002d0f10] .blkdev_get+0x230/0x4a0 
+[  817.646348] [c00000000a1839a0] [c0000000003d3288] .add_disk+0x468/0x4f0 
+[  817.646353] [c00000000a183a60] [d000000002026450] .sd_probe_async+0xf0/0x230 [sd_mod] 
+[  817.646357] [c00000000a183af0] [c0000000000d23a8] .async_run_entry_fn+0x98/0x200 
+[  817.646362] [c00000000a183ba0] [c0000000000c6d74] .process_one_work+0x1a4/0x490 
+[  817.646366] [c00000000a183c40] [c0000000000c71dc] .worker_thread+0x17c/0x5a0 
+[  817.646369] [c00000000a183d30] [c0000000000ce704] .kthread+0x104/0x130 
+[  817.646374] [c00000000a183e30] [c000000000009534] .ret_from_kernel_thread+0x58/0xa4 
+[  817.646377] Instruction dump: 
+[  817.646379] 3924ffff 7d292378 fba1ffe8 55290ffe fbc1fff0 fb81ffe0 fbe1fff8 7c9e2378  
+[  817.646386] 7c7d1b78 f8010010 7d2907b4 f821ff71 <0b090000> 81230028 789c0020 5529ba7e  
+[  817.646394] ---[ end trace 0c08ee96e8610127 ]--- 
+[  817.647718]  
+[  819.647756] Kernel panic - not syncing: Fatal exception 
+[  819.656776] Rebooting in 10 seconds.. 
