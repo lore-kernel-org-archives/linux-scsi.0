@@ -1,96 +1,77 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 3/4] scsi: storvsc: Refactor the code in
- storvsc_channel_init()
-Date: Fri, 11 Dec 2015 13:40:47 +0300
-Message-ID: <20151211104047.GG5284@mwanda>
-References: <1449792829-15406-1-git-send-email-kys@microsoft.com>
- <1449792860-15447-1-git-send-email-kys@microsoft.com>
- <1449792860-15447-3-git-send-email-kys@microsoft.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v2] hisi_sas: use platform_get_irq()
+Date: Fri, 11 Dec 2015 20:03:21 +0800
+Message-ID: <1449835401-200442-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1449792860-15447-3-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, hch@infradead.org, apw@canonical.com, devel@linuxdriverproject.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, martin.petersen@oracle.com
+Cc: arnd@arndb.de, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, robh@kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 10, 2015 at 04:14:19PM -0800, K. Y. Srinivasan wrote:
-> @@ -753,27 +740,62 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
->  			       VM_PKT_DATA_INBAND,
->  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->  	if (ret != 0)
-> -		goto cleanup;
-> +		goto done;
->  
->  	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
->  	if (t == 0) {
->  		ret = -ETIMEDOUT;
-> -		goto cleanup;
-> +		goto done;
->  	}
->  
-> +	if (!status_check)
-> +		goto done;
+It is preferred that drivers use platform_get_irq()
+instead of irq_of_parse_and_map(), so replace.
 
-See?  This goto looks exactly the same as the earlier buggy goto but
-it's actually correct.  Meanwhile if you just used an explicit
-"return 0;" then it would be easy to understand.
+Signed-off-by: John Garry <john.garry@huawei.com>
+Acked-by: Rob Herring <robh@kernel.org>
 
-I rant about this all the time but it's because it's bad deliberately.
-It's normal to have bugs, but this deliberate stuff really I can't
-understand it...
-
-> +
->  	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
->  	    vstor_packet->status != 0) {
->  		ret = -EINVAL;
-> -		goto cleanup;
-> +		goto done;
->  	}
->  
-> +done:
-> +	return ret;
-> +}
-> +
-> +static int storvsc_channel_init(struct hv_device *device, bool is_fc)
-> +{
-> +	struct storvsc_device *stor_device;
-> +	struct storvsc_cmd_request *request;
-> +	struct vstor_packet *vstor_packet;
-> +	int ret, i;
-> +	int max_chns;
-> +	bool process_sub_channels = false;
-> +
-> +	stor_device = get_out_stor_device(device);
-> +	if (!stor_device)
-> +		return -ENODEV;
-> +
-> +	request = &stor_device->init_request;
-> +	vstor_packet = &request->vstor_packet;
-> +
-> +	/*
-> +	 * Now, initiate the vsc/vsp initialization protocol on the open
-> +	 * channel
-> +	 */
-> +	memset(request, 0, sizeof(struct storvsc_cmd_request));
-> +	vstor_packet->operation = VSTOR_OPERATION_BEGIN_INITIALIZATION;
-> +	ret = storvsc_execute_vstor_op(device, request, true);
-> +	if (ret)
-> +		goto cleanup;
-
-10 lines earlier there is an explicit "return -ENODEV" so it's not as if
-writing explicit returns will kill you.
-
-regards,
-dan carpenter
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 30a9ab9..5af2e41 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -16,7 +16,6 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+-#include <linux/of_irq.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
+ #include <scsi/libsas.h>
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 0ed2f92..d543811 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1673,19 +1673,16 @@ static irq_handler_t fatal_interrupts[HISI_SAS_MAX_QUEUES] = {
+ 
+ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ {
+-	struct device *dev = &hisi_hba->pdev->dev;
+-	struct device_node *np = dev->of_node;
++	struct platform_device *pdev = hisi_hba->pdev;
++	struct device *dev = &pdev->dev;
+ 	int i, j, irq, rc, idx;
+ 
+-	if (!np)
+-		return -ENOENT;
+-
+ 	for (i = 0; i < hisi_hba->n_phy; i++) {
+ 		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
+ 
+ 		idx = i * HISI_SAS_PHY_INT_NR;
+ 		for (j = 0; j < HISI_SAS_PHY_INT_NR; j++, idx++) {
+-			irq = irq_of_parse_and_map(np, idx);
++			irq = platform_get_irq(pdev, idx);
+ 			if (!irq) {
+ 				dev_err(dev,
+ 					"irq init: fail map phy interrupt %d\n",
+@@ -1706,7 +1703,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 
+ 	idx = hisi_hba->n_phy * HISI_SAS_PHY_INT_NR;
+ 	for (i = 0; i < hisi_hba->queue_count; i++, idx++) {
+-		irq = irq_of_parse_and_map(np, idx);
++		irq = platform_get_irq(pdev, idx);
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
+ 				idx);
+@@ -1724,7 +1721,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 
+ 	idx = (hisi_hba->n_phy * HISI_SAS_PHY_INT_NR) + hisi_hba->queue_count;
+ 	for (i = 0; i < HISI_SAS_FATAL_INT_NR; i++, idx++) {
+-		irq = irq_of_parse_and_map(np, idx);
++		irq = platform_get_irq(pdev, idx);
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
+ 				idx);
+-- 
+1.9.1
