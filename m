@@ -1,47 +1,54 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/6] cxlflash: Fix to avoid virtual LUN failover failure
-Date: Fri, 11 Dec 2015 08:53:29 -0600
-Message-ID: <566AE369.3070809@linux.vnet.ibm.com>
-References: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1449788029-23093-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for
+ host_no management
+Date: Fri, 11 Dec 2015 10:31:51 -0500
+Message-ID: <1449847911.4067.200.camel@localhost.localdomain>
+References: <cover.1444241058.git.lduncan@suse.com>
+	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
+	 <1444830904.2220.28.camel@HansenPartnership.com>
+	 <561EA018.7020700@suse.com>
+	 <1444848835.2220.50.camel@HansenPartnership.com>
+	 <5644BEE1.3010208@suse.com> <yq1ziyhy38c.fsf@sermon.lab.mkp.net>
+	 <5649C79E.9070603@suse.de> <564A4EDC.8060805@suse.com>
+	 <yq1d1v8tdr3.fsf@sermon.lab.mkp.net>  <5669F31C.2010409@suse.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e17.ny.us.ibm.com ([129.33.205.207]:50582 "EHLO
-	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbbLKOxe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2015 09:53:34 -0500
-Received: from localhost
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Fri, 11 Dec 2015 09:53:33 -0500
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 8673BC90043
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Dec 2015 09:41:36 -0500 (EST)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBBErRQ431195388
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Dec 2015 14:53:27 GMT
-Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBBErOfk015013
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Dec 2015 09:53:26 -0500
-In-Reply-To: <1449788029-23093-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5669F31C.2010409@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-On 12/10/2015 4:53 PM, Uma Krishnan wrote:
-> From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-> To remedy this scenario, provide feedback back to the application on
-> virtual LUN creation as to which ports the LUN may be accessed. LUN's
-> spanning both ports are candidates for a retry in a presence of an I/O
-> failure.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+On Thu, 2015-12-10 at 13:48 -0800, Lee Duncan wrote:
+> On 11/17/2015 03:20 PM, Martin K. Petersen wrote:
+> >>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
+> > 
+> > Lee> Martin: I will be glad to update the patch, creating a modprobe
+> > Lee> parameter as suggested, if you find this acceptable.
+> > 
+> > For development use a module parameter would be fine. But I am concerned
+> > about our support folks that rely on the incrementing host number when
+> > analyzing customer log files.
+> > 
+> > Ewan: How do you folks feel about this change?
+> > 
+> 
+> Ewan?
 
-Acked-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
 
+Personally, I think having host numbers that increase essentially
+without limit (I think I've seen this with iSCSI sessions) are a
+problem, the numbers start to lose meaning for people when they
+are not easily recognizable.  Yes, it can help when you're analyzing
+a log file, but it seems to me that you would want to track the
+host state throughout anyway, so you could just follow the number
+as it changes.
 
+If we change the behavior, we have to change documentation, and
+our support people will get calls.  But that's not a reason not
+to do it.
 
+-Ewan
