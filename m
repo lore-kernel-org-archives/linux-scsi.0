@@ -1,54 +1,73 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for
- host_no management
-Date: Fri, 11 Dec 2015 10:31:51 -0500
-Message-ID: <1449847911.4067.200.camel@localhost.localdomain>
-References: <cover.1444241058.git.lduncan@suse.com>
-	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
-	 <1444830904.2220.28.camel@HansenPartnership.com>
-	 <561EA018.7020700@suse.com>
-	 <1444848835.2220.50.camel@HansenPartnership.com>
-	 <5644BEE1.3010208@suse.com> <yq1ziyhy38c.fsf@sermon.lab.mkp.net>
-	 <5649C79E.9070603@suse.de> <564A4EDC.8060805@suse.com>
-	 <yq1d1v8tdr3.fsf@sermon.lab.mkp.net>  <5669F31C.2010409@suse.com>
-Reply-To: emilne@redhat.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] ses: fix additional element traversal bug
+Date: Fri, 11 Dec 2015 09:16:38 -0800
+Message-ID: <1449854198.2169.2.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5669F31C.2010409@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40102 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752096AbbLKRQk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Dec 2015 12:16:40 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
 
-On Thu, 2015-12-10 at 13:48 -0800, Lee Duncan wrote:
-> On 11/17/2015 03:20 PM, Martin K. Petersen wrote:
-> >>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
-> > 
-> > Lee> Martin: I will be glad to update the patch, creating a modprobe
-> > Lee> parameter as suggested, if you find this acceptable.
-> > 
-> > For development use a module parameter would be fine. But I am concerned
-> > about our support folks that rely on the incrementing host number when
-> > analyzing customer log files.
-> > 
-> > Ewan: How do you folks feel about this change?
-> > 
-> 
-> Ewan?
+KASAN found that our additional element processing scripts drop off
+the end of the VPD page into unallocated space.  The reason is that
+not every element has additional information but our traversal
+routines think they do, leading to them expecting far more additional
+information than is present.  Fix this by adding a gate to the
+traversal routine so that it only processes elements that are expected
+to have additional information (list is in SES-2 section 6.1.13.1:
+Additional Element Status diagnostic page overview)
+
+Reported-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Tested-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+
+---
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 1736935..53ef1cb 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -561,7 +561,15 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ 			if (desc_ptr)
+ 				desc_ptr += len;
+ 
+-			if (addl_desc_ptr)
++			if (addl_desc_ptr &&
++			    /* only find additional descriptions for specific devices */
++			    (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_SAS_EXPANDER ||
++			     /* these elements are optional */
++			     type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_TARGET_PORT ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_INITIATOR_PORT ||
++			     type_ptr[0] == ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS))
+ 				addl_desc_ptr += addl_desc_ptr[1] + 2;
+ 
+ 		}
+diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
+index 7be22da..a4cf57c 100644
+--- a/include/linux/enclosure.h
++++ b/include/linux/enclosure.h
+@@ -29,7 +29,11 @@
+ /* A few generic types ... taken from ses-2 */
+ enum enclosure_component_type {
+ 	ENCLOSURE_COMPONENT_DEVICE = 0x01,
++	ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS = 0x07,
++	ENCLOSURE_COMPONENT_SCSI_TARGET_PORT = 0x14,
++	ENCLOSURE_COMPONENT_SCSI_INITIATOR_PORT = 0x15,
+ 	ENCLOSURE_COMPONENT_ARRAY_DEVICE = 0x17,
++	ENCLOSURE_COMPONENT_SAS_EXPANDER = 0x18,
+ };
+ 
+ /* ses-2 common element status */
 
 
-Personally, I think having host numbers that increase essentially
-without limit (I think I've seen this with iSCSI sessions) are a
-problem, the numbers start to lose meaning for people when they
-are not easily recognizable.  Yes, it can help when you're analyzing
-a log file, but it seems to me that you would want to track the
-host state throughout anyway, so you could just follow the number
-as it changes.
-
-If we change the behavior, we have to change documentation, and
-our support people will get calls.  But that's not a reason not
-to do it.
-
--Ewan
