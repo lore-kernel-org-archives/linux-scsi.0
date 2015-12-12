@@ -1,7 +1,7 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 2/4] scsi: storvsc: Properly support Fibre Channel devices
-Date: Sat, 12 Dec 2015 13:53:43 -0800
-Message-ID: <1449957225-9276-2-git-send-email-kys@microsoft.com>
+Subject: [PATCH V2 4/4] scsi: storvsc: Tighten up the interrupt path
+Date: Sat, 12 Dec 2015 13:53:45 -0800
+Message-ID: <1449957225-9276-4-git-send-email-kys@microsoft.com>
 References: <1449957191-9232-1-git-send-email-kys@microsoft.com>
  <1449957225-9276-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -21,350 +21,109 @@ Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-For FC devices managed by this driver, atttach the appropriate transport
-template. This will allow us to create the appropriate sysfs files for
-these devices. With this we can publish the wwn for both the port and the node.
+On the interrupt path, we repeatedly establish the pointer to the
+storvsc_device. Fix this.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Reviewed-by: Long Li <longli@microsoft.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Tested-by: Alex Ng <alexng@microsoft.com>
 ---
-	V2: Fixed error paths - Dan Carpenter <dan.carpenter@oracle.com>
-
- drivers/scsi/storvsc_drv.c |  162 +++++++++++++++++++++++++++++++-------------
- 1 files changed, 115 insertions(+), 47 deletions(-)
+ drivers/scsi/storvsc_drv.c |   23 ++++++++---------------
+ 1 files changed, 8 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 00bb4bd..ab9828c 100644
+index 947f812..3d3d157 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -41,6 +41,7 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_transport_fc.h>
- 
- /*
-  * All wire protocol details (storage protocol between the guest and the host)
-@@ -397,6 +398,7 @@ static int storvsc_timeout = 180;
- 
- static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
- 
-+static struct scsi_transport_template *fc_transport_template;
- 
- static void storvsc_on_channel_callback(void *context);
- 
-@@ -456,6 +458,11 @@ struct storvsc_device {
- 	/* Used for vsc/vsp channel reset process */
- 	struct storvsc_cmd_request init_request;
- 	struct storvsc_cmd_request reset_request;
-+	/*
-+	 * Currently active port and node names for FC devices.
-+	 */
-+	u64 node_name;
-+	u64 port_name;
- };
- 
- struct hv_host_device {
-@@ -695,7 +702,26 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
- 	vmbus_are_subchannels_present(device->channel);
+@@ -943,19 +943,16 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
  }
  
--static int storvsc_channel_init(struct hv_device *device)
-+static void cache_wwn(struct storvsc_device *stor_device,
-+		      struct vstor_packet *vstor_packet)
-+{
-+	/*
-+	 * Cache the currently active port and node ww names.
-+	 */
-+	if (vstor_packet->wwn_packet.primary_active) {
-+		stor_device->node_name =
-+			wwn_to_u64(vstor_packet->wwn_packet.primary_node_wwn);
-+		stor_device->port_name =
-+			wwn_to_u64(vstor_packet->wwn_packet.primary_port_wwn);
-+	} else {
-+		stor_device->node_name =
-+			wwn_to_u64(vstor_packet->wwn_packet.secondary_node_wwn);
-+		stor_device->port_name =
-+			wwn_to_u64(vstor_packet->wwn_packet.secondary_port_wwn);
-+	}
-+}
-+
-+static int storvsc_channel_init(struct hv_device *device, bool is_fc)
+ 
+-static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
++static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
++				       struct storvsc_device *stor_dev)
  {
- 	struct storvsc_device *stor_device;
- 	struct storvsc_cmd_request *request;
-@@ -727,19 +753,15 @@ static int storvsc_channel_init(struct hv_device *device)
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 	if (ret != 0)
--		goto cleanup;
-+		return ret;
- 
- 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
--	if (t == 0) {
--		ret = -ETIMEDOUT;
--		goto cleanup;
--	}
-+	if (t == 0)
-+		return -ETIMEDOUT;
- 
- 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
--	    vstor_packet->status != 0) {
--		ret = -EINVAL;
--		goto cleanup;
--	}
-+	    vstor_packet->status != 0)
-+		return -EINVAL;
- 
- 
- 	for (i = 0; i < ARRAY_SIZE(vmstor_protocols); i++) {
-@@ -764,18 +786,14 @@ static int storvsc_channel_init(struct hv_device *device)
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 		if (ret != 0)
--			goto cleanup;
-+			return ret;
- 
- 		t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
--		if (t == 0) {
--			ret = -ETIMEDOUT;
--			goto cleanup;
--		}
-+		if (t == 0)
-+			return -ETIMEDOUT;
- 
--		if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO) {
--			ret = -EINVAL;
--			goto cleanup;
--		}
-+		if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO)
-+			return -EINVAL;
- 
- 		if (vstor_packet->status == 0) {
- 			vmstor_proto_version =
-@@ -791,10 +809,8 @@ static int storvsc_channel_init(struct hv_device *device)
- 		}
- 	}
- 
--	if (vstor_packet->status != 0) {
--		ret = -EINVAL;
--		goto cleanup;
--	}
-+	if (vstor_packet->status != 0)
-+		return -EINVAL;
- 
- 
- 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
-@@ -809,19 +825,15 @@ static int storvsc_channel_init(struct hv_device *device)
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 
- 	if (ret != 0)
--		goto cleanup;
-+		return ret;
- 
- 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
--	if (t == 0) {
--		ret = -ETIMEDOUT;
--		goto cleanup;
--	}
-+	if (t == 0)
-+		return -ETIMEDOUT;
- 
- 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
--	    vstor_packet->status != 0) {
--		ret = -EINVAL;
--		goto cleanup;
--	}
-+	    vstor_packet->status != 0)
-+		return -EINVAL;
- 
- 	/*
- 	 * Check to see if multi-channel support is there.
-@@ -837,6 +849,38 @@ static int storvsc_channel_init(struct hv_device *device)
- 	stor_device->max_transfer_bytes =
- 		vstor_packet->storage_channel_properties.max_transfer_bytes;
- 
-+	if (!is_fc)
-+		goto done;
-+
-+	memset(vstor_packet, 0, sizeof(struct vstor_packet));
-+	vstor_packet->operation = VSTOR_OPERATION_FCHBA_DATA;
-+	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
-+
-+	ret = vmbus_sendpacket(device->channel, vstor_packet,
-+			       (sizeof(struct vstor_packet) -
-+			       vmscsi_size_delta),
-+			       (unsigned long)request,
-+			       VM_PKT_DATA_INBAND,
-+			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-+
-+	if (ret != 0)
-+		return ret;
-+
-+	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-+	if (t == 0)
-+		return -ETIMEDOUT;
-+
-+	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
-+	    vstor_packet->status != 0)
-+		return -EINVAL;
-+
-+	/*
-+	 * Cache the currently active port and node ww names.
-+	 */
-+	cache_wwn(stor_device, vstor_packet);
-+
-+done:
-+
- 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
- 	vstor_packet->operation = VSTOR_OPERATION_END_INITIALIZATION;
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
-@@ -849,25 +893,19 @@ static int storvsc_channel_init(struct hv_device *device)
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 
- 	if (ret != 0)
--		goto cleanup;
-+		return ret;
- 
- 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
--	if (t == 0) {
--		ret = -ETIMEDOUT;
--		goto cleanup;
--	}
-+	if (t == 0)
-+		return -ETIMEDOUT;
- 
- 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
--	    vstor_packet->status != 0) {
--		ret = -EINVAL;
--		goto cleanup;
--	}
-+	    vstor_packet->status != 0)
-+		return -EINVAL;
- 
- 	if (process_sub_channels)
- 		handle_multichannel_storage(device, max_chns);
- 
--
--cleanup:
- 	return ret;
- }
- 
-@@ -1076,6 +1114,12 @@ static void storvsc_on_receive(struct hv_device *device,
- 		schedule_work(&work->work);
- 		break;
- 
-+	case VSTOR_OPERATION_FCHBA_DATA:
-+		stor_device = get_in_stor_device(device);
-+		cache_wwn(stor_device, vstor_packet);
-+		fc_host_node_name(stor_device->host) = stor_device->node_name;
-+		fc_host_port_name(stor_device->host) = stor_device->port_name;
-+		break;
- 	default:
- 		break;
- 	}
-@@ -1131,7 +1175,8 @@ static void storvsc_on_channel_callback(void *context)
- 	return;
- }
- 
--static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size)
-+static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
-+				  bool is_fc)
- {
- 	struct vmstorage_channel_properties props;
- 	int ret;
-@@ -1148,7 +1193,7 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size)
- 	if (ret != 0)
- 		return ret;
- 
--	ret = storvsc_channel_init(device);
-+	ret = storvsc_channel_init(device, is_fc);
- 
- 	return ret;
- }
-@@ -1573,6 +1618,7 @@ static int storvsc_probe(struct hv_device *device,
+ 	struct scsi_cmnd *scmnd = cmd_request->cmd;
+-	struct hv_host_device *host_dev = shost_priv(scmnd->device->host);
+ 	struct scsi_sense_hdr sense_hdr;
+ 	struct vmscsi_request *vm_srb;
  	struct Scsi_Host *host;
- 	struct hv_host_device *host_dev;
- 	bool dev_is_ide = ((dev_id->driver_data == IDE_GUID) ? true : false);
-+	bool is_fc = ((dev_id->driver_data == SFC_GUID) ? true : false);
- 	int target = 0;
- 	struct storvsc_device *stor_device;
- 	int max_luns_per_target;
-@@ -1630,7 +1676,7 @@ static int storvsc_probe(struct hv_device *device,
- 	hv_set_drvdata(device, stor_device);
+-	struct storvsc_device *stor_dev;
+-	struct hv_device *dev = host_dev->dev;
+ 	u32 payload_sz = cmd_request->payload_sz;
+ 	void *payload = cmd_request->payload;
  
- 	stor_device->port_number = host->host_no;
--	ret = storvsc_connect_to_vsp(device, storvsc_ringbuffer_size);
-+	ret = storvsc_connect_to_vsp(device, storvsc_ringbuffer_size, is_fc);
- 	if (ret)
- 		goto err_out1;
+-	stor_dev = get_in_stor_device(dev);
+ 	host = stor_dev->host;
  
-@@ -1642,6 +1688,7 @@ static int storvsc_probe(struct hv_device *device,
- 		host->max_lun = STORVSC_FC_MAX_LUNS_PER_TARGET;
- 		host->max_id = STORVSC_FC_MAX_TARGETS;
- 		host->max_channel = STORVSC_FC_MAX_CHANNELS - 1;
-+		host->transportt = fc_transport_template;
- 		break;
+ 	vm_srb = &cmd_request->vstor_packet.vm_srb;
+@@ -985,14 +982,13 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+ 		kfree(payload);
+ }
  
- 	case SCSI_GUID:
-@@ -1681,6 +1728,10 @@ static int storvsc_probe(struct hv_device *device,
- 			goto err_out2;
- 		}
- 	}
-+	if (host->transportt == fc_transport_template) {
-+		fc_host_node_name(host) = stor_device->node_name;
-+		fc_host_port_name(host) = stor_device->port_name;
-+	}
- 	return 0;
- 
- err_out2:
-@@ -1706,6 +1757,8 @@ static int storvsc_remove(struct hv_device *dev)
- 	struct storvsc_device *stor_device = hv_get_drvdata(dev);
- 	struct Scsi_Host *host = stor_device->host;
- 
-+	if (host->transportt == fc_transport_template)
-+		fc_remove_host(host);
- 	scsi_remove_host(host);
- 	storvsc_dev_remove(dev);
- 	scsi_host_put(host);
-@@ -1720,8 +1773,14 @@ static struct hv_driver storvsc_drv = {
- 	.remove = storvsc_remove,
- };
- 
-+static struct fc_function_template fc_transport_functions = {
-+	.show_host_node_name = 1,
-+	.show_host_port_name = 1,
-+};
-+
- static int __init storvsc_drv_init(void)
+-static void storvsc_on_io_completion(struct hv_device *device,
++static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+ 				  struct vstor_packet *vstor_packet,
+ 				  struct storvsc_cmd_request *request)
  {
-+	int ret;
+-	struct storvsc_device *stor_device;
+ 	struct vstor_packet *stor_pkt;
++	struct hv_device *device = stor_device->device;
+ 
+-	stor_device = hv_get_drvdata(device);
+ 	stor_pkt = &request->vstor_packet;
  
  	/*
- 	 * Divide the ring buffer data size (which is 1 page less
-@@ -1736,12 +1795,21 @@ static int __init storvsc_drv_init(void)
- 		vmscsi_size_delta,
- 		sizeof(u64)));
+@@ -1047,7 +1043,7 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ 	stor_pkt->vm_srb.data_transfer_length =
+ 	vstor_packet->vm_srb.data_transfer_length;
  
--	return vmbus_driver_register(&storvsc_drv);
-+	fc_transport_template = fc_attach_transport(&fc_transport_functions);
-+	if (!fc_transport_template)
-+		return -ENODEV;
-+
-+	ret = vmbus_driver_register(&storvsc_drv);
-+	if (ret)
-+		fc_release_transport(fc_transport_template);
-+
-+	return ret;
+-	storvsc_command_completion(request);
++	storvsc_command_completion(request, stor_device);
+ 
+ 	if (atomic_dec_and_test(&stor_device->num_outstanding_req) &&
+ 		stor_device->drain_notify)
+@@ -1056,21 +1052,19 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ 
  }
  
- static void __exit storvsc_drv_exit(void)
+-static void storvsc_on_receive(struct hv_device *device,
++static void storvsc_on_receive(struct storvsc_device *stor_device,
+ 			     struct vstor_packet *vstor_packet,
+ 			     struct storvsc_cmd_request *request)
  {
- 	vmbus_driver_unregister(&storvsc_drv);
-+	fc_release_transport(fc_transport_template);
- }
+ 	struct storvsc_scan_work *work;
+-	struct storvsc_device *stor_device;
  
- MODULE_LICENSE("GPL");
+ 	switch (vstor_packet->operation) {
+ 	case VSTOR_OPERATION_COMPLETE_IO:
+-		storvsc_on_io_completion(device, vstor_packet, request);
++		storvsc_on_io_completion(stor_device, vstor_packet, request);
+ 		break;
+ 
+ 	case VSTOR_OPERATION_REMOVE_DEVICE:
+ 	case VSTOR_OPERATION_ENUMERATE_BUS:
+-		stor_device = get_in_stor_device(device);
+ 		work = kmalloc(sizeof(struct storvsc_scan_work), GFP_ATOMIC);
+ 		if (!work)
+ 			return;
+@@ -1081,7 +1075,6 @@ static void storvsc_on_receive(struct hv_device *device,
+ 		break;
+ 
+ 	case VSTOR_OPERATION_FCHBA_DATA:
+-		stor_device = get_in_stor_device(device);
+ 		cache_wwn(stor_device, vstor_packet);
+ 		fc_host_node_name(stor_device->host) = stor_device->node_name;
+ 		fc_host_port_name(stor_device->host) = stor_device->port_name;
+@@ -1129,7 +1122,7 @@ static void storvsc_on_channel_callback(void *context)
+ 					vmscsi_size_delta));
+ 				complete(&request->wait_event);
+ 			} else {
+-				storvsc_on_receive(device,
++				storvsc_on_receive(stor_device,
+ 						(struct vstor_packet *)packet,
+ 						request);
+ 			}
 -- 
 1.7.4.1
