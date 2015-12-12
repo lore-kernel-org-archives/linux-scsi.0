@@ -1,53 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 10/13] IB/srp: use the new CQ API
-Date: Sat, 12 Dec 2015 00:08:33 -0800
-Message-ID: <20151212080833.GA32638@infradead.org>
-References: <1449521512-22921-1-git-send-email-hch@lst.de>
- <1449521512-22921-11-git-send-email-hch@lst.de>
- <5669C7AA.4080206@sandisk.com>
- <20151211142220.GB20201@lst.de>
- <566B0EE5.8080602@redhat.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/7] iSCSI-target: Fine-tuning for three function
+ implementations
+Date: Sat, 12 Dec 2015 15:30:19 +0100
+Message-ID: <566C2F7B.6030704@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60000 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbbLLIIh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2015 03:08:37 -0500
-Content-Disposition: inline
-In-Reply-To: <566B0EE5.8080602@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
+Sender: target-devel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-rdma@vger.kernel.org, sagig@dev.mellanox.co.il, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Dec 11, 2015 at 12:59:01PM -0500, Doug Ledford wrote:
-> On 12/11/2015 09:22 AM, Christoph Hellwig wrote:
-> > Hi Bart,
-> > 
-> > thanks for all the reviews.  I've updated the git branch with your
-> > suggestions and reviewed-by tags.  I'm going to wait a little bit
-> > longer for other reviews to come in before reposting the series.
-> 
-> Indeed, thanks for all the catches Bart.  This patchset, with Bart's
-> fixups, looks good to me.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 12 Dec 2015 15:25:20 +0100
 
-Allright.  How do you want to proceed?  The current rdma-cq branch
-has all kinds of dependencies, but I've also prepared a new rdma-cq.2
-branch that could go straight on top of your current queue:
+Some update suggestions were taken into account from static
+source code analysis.
 
-http://git.infradead.org/users/hch/rdma.git/shortlog/refs/heads/rdma-cq.2
+Markus Elfring (7):
+  Use a variable initialisation in iscsi_set_default_param() directly
+  Less checks in iscsi_set_default_param() after error detection
+  Delete an unnecessary variable initialisation in iscsi_create_default_params()
+  Make a variable initialisation a bit more obvious in iscsi_create_default_params()
+  Rename a jump label in iscsi_create_default_params()
+  Delete unnecessary variable initialisations in iscsi_check_valuelist_for_support()
+  Make two variable initialisations a bit more obvious in iscsi_check_valuelist_for_support()
 
-If you're ready to start the 4.5 tree I can send those out as a patch
-series.
+ drivers/target/iscsi/iscsi_target_parameters.c | 100 ++++++++++++-------------
+ 1 file changed, 47 insertions(+), 53 deletions(-)
 
-> 
-> 
-> -- 
-> Doug Ledford <dledford@redhat.com>
->               GPG KeyID: 0E572FDD
-> 
-> 
-
-
----end quoted text---
+-- 
+2.6.3
