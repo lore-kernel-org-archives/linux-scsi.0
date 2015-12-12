@@ -1,65 +1,61 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [PATCH 7/7] iscsi-target: Make two variable initialisations a
- bit more obvious in iscsi_check_valuelist_for_support()
-Date: Sat, 12 Dec 2015 18:17:46 +0100
-Message-ID: <566C56BA.7010903@bfs.de>
-References: <566ABCD9.1060404@users.sourceforge.net> <566C2F7B.6030704@users.sourceforge.net> <566C3304.1090802@users.sourceforge.net>
-Reply-To: wharms@bfs.de
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 1/7] iscsi-target: Use a variable initialisation in
+ iscsi_set_default_param() directly
+Date: Sat, 12 Dec 2015 22:49:40 +0300
+Message-ID: <20151212194939.GQ5284@mwanda>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <566C2F7B.6030704@users.sourceforge.net>
+ <566C308A.6000109@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx01-fr.bfs.de ([193.174.231.67]:57162 "EHLO mx01-fr.bfs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752073AbbLLRSA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Dec 2015 12:18:00 -0500
-In-Reply-To: <566C3304.1090802@users.sourceforge.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <566C308A.6000109@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: SF Markus Elfring <elfring@users.sourceforge.net>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+List-Id: linux-scsi@vger.kernel.org
 
-
-
-Am 12.12.2015 15:45, schrieb SF Markus Elfring:
+On Sat, Dec 12, 2015 at 03:34:50PM +0100, SF Markus Elfring wrote:
 > From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sat, 12 Dec 2015 15:04:57 +0100
+> Date: Sat, 12 Dec 2015 11:36:02 +0100
 > 
-> The variable "acceptor_values" and "proposer_values" were initialized
-> by null pointers and immediately assigned values from input parameters
-> by separate statements.
-> Let us express the desired variable initialisations directly.
+> Omit the unnecessary setting to a null pointer for the variable "param"
+> at the beginning of the function "iscsi_set_default_param"
+> because it can be directly initialized with the return value
+> from the function "kzalloc".
 > 
 > Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 > ---
->  drivers/target/iscsi/iscsi_target_parameters.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+>  drivers/target/iscsi/iscsi_target_parameters.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
 > diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-> index 53e3345..fb6fd34 100644
+> index 3a1f9a7..0a8bd3f 100644
 > --- a/drivers/target/iscsi/iscsi_target_parameters.c
 > +++ b/drivers/target/iscsi/iscsi_target_parameters.c
-> @@ -921,10 +921,7 @@ static char *iscsi_check_valuelist_for_support(
->  	char *value)
+> @@ -127,9 +127,8 @@ static struct iscsi_param *iscsi_set_default_param(struct iscsi_param_list *para
+>  		char *name, char *value, u8 phase, u8 scope, u8 sender,
+>  		u16 type_range, u8 use)
 >  {
->  	char *tmp1, *tmp2;
-> -	char *acceptor_values = NULL, *proposer_values = NULL;
-> -
-> -	acceptor_values = param->value;
-> -	proposer_values = value;
-> +	char *acceptor_values = param->value, *proposer_values = value;
+> -	struct iscsi_param *param = NULL;
+> +	struct iscsi_param *param = kzalloc(sizeof(*param), GFP_KERNEL);
 >  
+> -	param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
+>  	if (!param) {
+>  		pr_err("Unable to allocate memory for parameter.\n");
+>  		goto out;
 
-I do not thing that this is a good idea,
-i find the first version more readable
-but you are right the NULL can be removed.
+It's better to just get rid of the initialization but leave the
+kzalloc() as-is for two reasons.
 
-just my 2 cents,
+1)  Initializer code normally contains more bugs per line than other
+    code.  I am thinking about dereferencing pointers before checking
+    for NULL or not checking the allocation for failure.
 
-re,
- wh
+2)  It puts a blank line between the allocation and the check for
+    failure.  It's like a new paragraph.  The allocation and the check
+    should be next to each other.
 
-
-
->  	do {
->  		if (!proposer_values)
+regards,
+dan carpenter
