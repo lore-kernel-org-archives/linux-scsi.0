@@ -1,105 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Mon, 14 Dec 2015 16:29:25 +0100
-Message-ID: <566EE055.9050708@suse.de>
-References: <cover.1444241058.git.lduncan@suse.com>
- <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
- <1444830904.2220.28.camel@HansenPartnership.com> <561EA018.7020700@suse.com>
- <1444848835.2220.50.camel@HansenPartnership.com> <5644BEE1.3010208@suse.com>
- <yq1ziyhy38c.fsf@sermon.lab.mkp.net> <5649C79E.9070603@suse.de>
- <564A4EDC.8060805@suse.com> <yq1d1v8tdr3.fsf@sermon.lab.mkp.net>
- <5669F31C.2010409@suse.com> <1449847911.4067.200.camel@localhost.localdomain>
- <566DC3F0.6050206@suse.com> <1450105632.4091.17.camel@localhost.localdomain>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH 10/13] IB/srp: use the new CQ API
+Date: Mon, 14 Dec 2015 11:26:08 -0500
+Message-ID: <566EEDA0.203@redhat.com>
+References: <1449521512-22921-1-git-send-email-hch@lst.de>
+ <1449521512-22921-11-git-send-email-hch@lst.de>
+ <5669C7AA.4080206@sandisk.com> <20151211142220.GB20201@lst.de>
+ <566B0EE5.8080602@redhat.com> <20151212080833.GA32638@infradead.org>
+ <566D47EC.3000000@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54564 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751654AbbLNP32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Dec 2015 10:29:28 -0500
-In-Reply-To: <1450105632.4091.17.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="woAFES8JS3ueHkgLljeVPGQsQPQbMDplG"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <566D47EC.3000000@dev.mellanox.co.il>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-rdma@vger.kernel.org, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: emilne@redhat.com, Lee Duncan <lduncan@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 
-On 12/14/2015 04:07 PM, Ewan Milne wrote:
-> On Sun, 2015-12-13 at 11:16 -0800, Lee Duncan wrote:
->> On 12/11/2015 07:31 AM, Ewan Milne wrote:
->>> On Thu, 2015-12-10 at 13:48 -0800, Lee Duncan wrote:
->>>> On 11/17/2015 03:20 PM, Martin K. Petersen wrote:
->>>>>>>>>> "Lee" =3D=3D Lee Duncan <lduncan@suse.com> writes:
->>>>>
->>>>> Lee> Martin: I will be glad to update the patch, creating a modpr=
-obe
->>>>> Lee> parameter as suggested, if you find this acceptable.
->>>>>
->>>>> For development use a module parameter would be fine. But I am co=
-ncerned
->>>>> about our support folks that rely on the incrementing host number=
- when
->>>>> analyzing customer log files.
->>>>>
->>>>> Ewan: How do you folks feel about this change?
->>>>>
->>>>
->>>> Ewan?
->>>
->>>
->>> Personally, I think having host numbers that increase essentially
->>> without limit (I think I've seen this with iSCSI sessions) are a
->>> problem, the numbers start to lose meaning for people when they
->>> are not easily recognizable.  Yes, it can help when you're analyzin=
-g
->>> a log file, but it seems to me that you would want to track the
->>> host state throughout anyway, so you could just follow the number
->>> as it changes.
->>>
->>> If we change the behavior, we have to change documentation, and
->>> our support people will get calls.  But that's not a reason not
->>> to do it.
->>>
->>> -Ewan
->>>
->>
->> Ewan:
->>
->> Thank you for your reply. I agree with you, which is why I generated
->> this patch.
->>
->> If we *do* make this change, do you think it would be useful to have=
- a
->> module option to revert to the old numbering behavior? I actually th=
-ink
->> it would be more confusing to support two behaviors than it would be=
- to
->> bite the bullet (so to speak) and make the change.
->>
->
-> I'm not opposed to having the module option if others (Martin?) feel
-> they need it, but generally I think it's better to keep things as sim=
-ple
-> as possible.  So, unless there are strong objections, I would say no.
->
-Agreeing with Ewan here.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--woAFES8JS3ueHkgLljeVPGQsQPQbMDplG
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-Martin, I guess it's up to you to tell us whether you absolutely=20
-need a module parameter ...
+On 12/13/2015 05:26 AM, Sagi Grimberg wrote:
+>=20
+>> Allright.  How do you want to proceed?  The current rdma-cq branch
+>> has all kinds of dependencies, but I've also prepared a new rdma-cq.2
+>> branch that could go straight on top of your current queue:
+>>
+>> http://git.infradead.org/users/hch/rdma.git/shortlog/refs/heads/rdma-c=
+q.2
+>>
+>> If you're ready to start the 4.5 tree I can send those out as a patch
+>> series.
+>=20
+> Will this get on top of iser-remote-inv? Or should I resend atop of thi=
+s?
 
-Cheers,
+I'm going through my inbox right now.  I expect somewhere in there Or
+will make his case for why he doesn't like Christoph's patch to get rid
+of the attr struct.  I'll listen, and if I'm not convinced, I'll take
+that patchset first and this one second. (I reviewed the patchset
+already....aside from the fact that I *like* having the attr struct
+elements in an organized sub-struct, it's fine and it definitely
+improves on all of those query calls).
 
-Hannes
 --=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: 0E572FDD
+
+
+
+--woAFES8JS3ueHkgLljeVPGQsQPQbMDplG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBCAAGBQJWbu2gAAoJELgmozMOVy/dWEkQAJgaW67D8ZAMdnP/02niP9K6
+gmbpdwpxSShj7/oM5ZN9NtbxMDumoodsb1D+6CFxl7VxANtj3QGjA13bCSbZR0Zk
+9U/JOJ0HJI75R02pz/G6d7wePVNEU00Vwuc1/eGkNyPwWMHWjzjbF3bJSxklBYdN
+kTOZF/o2dneGLAXKEp5OYyTPc1HVd5raHSPJ1pNSWTFMLE4PQSIjY9uoBir4LdDO
+TtINjsM9Izwlr53JeWqXd1t+UDThMSQxW7d44ANu/NEFAjJ7hjj1xOfH3v28ENV7
+pBp5hmfwTNhegRzt67XbOPdvce+KSEbdwGeWpp97GKjAc41BGQVDSBRNdRL5oK5K
+7M3fwZCxtYwIfOYt5d3ZqzySZoIGxr6NKxtHrNAyXewHzhhveKdxcUEJ+MbDgQeF
+J9bJucUo+QTlp44Ebui2XfabUR6KAcn9ZfmVsvRke9u6ciWUz5+xAhJ5cCRCCvwW
+pZbqK0+1OCKvus2lPMmuL56i7xt5fYikGrHgSpDHmZz3jZYvUBAMHbKW04aiB7h9
+vAJksxNOaSq8OCGj4WED5ZdDJJ2lf4JBiQDq2QmfF0Ylcb8HjdC44uaCaTuxrI1L
+VVMh0cdc5n1Ys0Jq0RNSMIHxcjrAjXrOQ4lW0S2SQr7af4+qZ6eT9wEgQwJ6r+ZP
+VfMLHb1rrvAgBmJf4nbb
+=anU5
+-----END PGP SIGNATURE-----
+
+--woAFES8JS3ueHkgLljeVPGQsQPQbMDplG--
