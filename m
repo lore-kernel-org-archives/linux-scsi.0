@@ -1,89 +1,185 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 6/6] cxlflash: Enable device id for future IBM CXL adapter
-Date: Mon, 14 Dec 2015 15:07:43 -0600
-Message-ID: <1450127263-48261-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-References: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 10/20] qla2xxx: Fix interaction issue between qla2xxx
+ and Target Core Module
+Date: Mon, 14 Dec 2015 21:59:11 +0000
+Message-ID: <D2947AEC.1B91E%quinn.tran@qlogic.com>
+References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-11-git-send-email-himanshu.madhani@qlogic.com>
+ <20151208023700.GB9088@infradead.org> <D28DCE82.1B0CE%quinn.tran@qlogic.com>
+ <20151214103449.GA8095@infradead.org>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_D2947AEC1B91Equinntranqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:35387 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932193AbbLNVIT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 16:08:19 -0500
-Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-	Mon, 14 Dec 2015 14:08:19 -0700
-Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id EA9223E4003E
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:08:17 -0700 (MST)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBEL8H1o25034760
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:08:17 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBEL8Glt010147
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:08:17 -0700
-In-Reply-To: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:34378 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753031AbbLNV5d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Dec 2015 16:57:33 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBELvWv0015948
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 13:57:32 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1yt4xag4dr-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 13:57:32 -0800
+In-Reply-To: <20151214103449.GA8095@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+--_000_D2947AEC1B91Equinntranqlogiccom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <AD0D804AFE74634DAE7352AF37228C2F@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-This drop enables a future card with a device id
-of 0x0600 to be recognized by the cxlflash driver.
+Christoph,  Thanks for reviewing.  I=B9ll withdraw this patch.  Will rework
+with new code and submit at a later time.
 
-As per the design, the Accelerator Function Unit (AFU)
-for this new IBM CXL Flash Adapter retains the same
-host interface as the previous generation. For the early
-prototypes of the new card, the driver with this change
-behaves exactly as the driver prior to this behaved with
-the earlier generation card. Therefore, no card specific
-programming has been added. These card specific changes
-can be staged in later if needed.
+Regards,
+Quinn Tran
 
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/main.c | 3 +++
- drivers/scsi/cxlflash/main.h | 4 ++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 30542ca..f6d90ce 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -2309,6 +2309,7 @@ static struct scsi_host_template driver_template = {
-  * Device dependent values
-  */
- static struct dev_dependent_vals dev_corsa_vals = { CXLFLASH_MAX_SECTORS };
-+static struct dev_dependent_vals dev_flash_gt_vals = { CXLFLASH_MAX_SECTORS };
- 
- /*
-  * PCI device binding table
-@@ -2316,6 +2317,8 @@ static struct dev_dependent_vals dev_corsa_vals = { CXLFLASH_MAX_SECTORS };
- static struct pci_device_id cxlflash_pci_table[] = {
- 	{PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CORSA,
- 	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, (kernel_ulong_t)&dev_corsa_vals},
-+	{PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_FLASH_GT,
-+	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, (kernel_ulong_t)&dev_flash_gt_vals},
- 	{}
- };
- 
-diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
-index 7e2d0e1..0faed42 100644
---- a/drivers/scsi/cxlflash/main.h
-+++ b/drivers/scsi/cxlflash/main.h
-@@ -23,8 +23,8 @@
- #define CXLFLASH_NAME		"cxlflash"
- #define CXLFLASH_ADAPTER_NAME	"IBM POWER CXL Flash Adapter"
- 
--#define PCI_DEVICE_ID_IBM_CORSA	0x04F0
--#define CXLFLASH_SUBS_DEV_ID	0x04F0
-+#define PCI_DEVICE_ID_IBM_CORSA		0x04F0
-+#define PCI_DEVICE_ID_IBM_FLASH_GT	0x0600
- 
- /* Since there is only one target, make it 0 */
- #define CXLFLASH_TARGET		0
--- 
-2.1.0
 
+
+On 12/14/15, 2:34 AM, "Christoph Hellwig" <hch@infradead.org> wrote:
+
+>On Wed, Dec 09, 2015 at 10:07:32PM +0000, Quinn Tran wrote:
+>> >Err, no.  Looking into the refcount inside a kref is never the
+>> >right thing to do.
+>>=20
+>> QT> even for debug purpose??
+>
+>No.  Please treat struct kref as opaque.
+>
+>> QT> These bits provide indication as to where the command has traversed
+>>in
+>> the QLA code.  Each bit is set one time. Due to the async nature of the
+>> TMR code, it triggers QLA driver to repeat this specific free path in
+>>the
+>> double free case.  This BUG_ON allows us trap it early on.
+>>=20
+>> In one of the corner case (below), I need to overloaded it + lock for
+>>the
+>> cleanup process.
+>
+>Setting bits fundamentaly is a read/modify/write cycle.  You either
+>need to use {set,clear,test}_bit or lock around these manipulations.
+>
+>> QT> The cmd->aborted flag is used to track the CMD_T_ABORT flag at TCM
+>> level.  If the command have been requested to be aborted by TCM or
+>>already
+>> aborted, we advance it to the ?free" state because our hardware have
+>> already started freeing up resources associated to this
+>>command/exchange.
+>> In this specific case(above), a XFER RDY was aborted by the TMR.
+>> Returning the cmd to TCM to generate SCSI Status would generate
+>>erroneous
+>> HW error due to freed resource.
+>
+>I really think this nees to be updated on top of Bat's changes as a
+>start and re-reviewed.  The amoutn of special casing and second guessing
+>here is simply not sustainable in the long run.
+
+
+--_000_D2947AEC1B91Equinntranqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+J8Fn/3NhlmIytkdzTCIHcAtQWLD/N+BCQVfAAZALgAGgVaELgP848wkAOIFCgFjnJmUVQpxwHwBC
+AAEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwBlAAEAAAAsAAAAcQB1AGkAbgBuAC4A
+dAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAAC
+AUEAAQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAA
+UwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAC
+XQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVf
+AQAAADQAAABzAGkAcAA6AHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwAaDAEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAfDAEAAAAsAAAAcQB1AGkA
+bgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0AVABQ
+AAAAAAACARkMAQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIA
+YQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwABXQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAfAPg/AQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAAAAAfACNAAQAAACwAAABxAHUAaQBu
+AG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAA
+AAAAAAIB+T8BAAAAZAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFEAdQBpAG4AbgAgAFQAcgBh
+AG4AAABTAE0AVABQAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAfAAldAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
+AwD9P+QEAAACAQswAQAAABAAAABbR0LvvovOT7rSG95xmlYXAwAXAAEAAABAADkAgOG8qbo20QFA
+AAgwVV36qbo20QELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAA
+AAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBu
+AC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAALAAAABSAGUA
+OgAgAFsAUABBAFQAQwBIACAAMQAwAC8AMgAwAF0AIABxAGwAYQAyAHgAeAB4ADoAIABGAGkAeAAg
+AGkAbgB0AGUAcgBhAGMAdABpAG8AbgAgAGkAcwBzAHUAZQAgAGIAZQB0AHcAZQBlAG4AIABxAGwA
+YQAyAHgAeAB4ACAAYQBuAGQAIABUAGEAcgBnAGUAdAAgAEMAbwByAGUAIABNAG8AZAB1AGwAZQAA
+AB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAABMAAAAPAAyADAAMQA1ADEA
+MgAxADQAMQAwADMANAA0ADkALgBHAEEAOAAwADkANQBAAGkAbgBmAHIAYQBkAGUAYQBkAC4AbwBy
+AGcAPgAAAAIBcQABAAAAKgAAAAEB0TFX+5tefbF97mBLm9nPfcVsyUiewOYNAIACUsGAgAegvICA
+ADiXAAAAHwBwAAEAAACoAAAAWwBQAEEAVABDAEgAIAAxADAALwAyADAAXQAgAHEAbABhADIAeAB4
+AHgAOgAgAEYAaQB4ACAAaQBuAHQAZQByAGEAYwB0AGkAbwBuACAAaQBzAHMAdQBlACAAYgBlAHQA
+dwBlAGUAbgAgAHEAbABhADIAeAB4AHgAIABhAG4AZAAgAFQAYQByAGcAZQB0ACAAQwBvAHIAZQAg
+AE0AbwBkAHUAbABlAAAAHwA1EAEAAABOAAAAPABEADIAOQA0ADcAQQBFAEMALgAxAEIAOQAxAEUA
+JQBxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+AAAAAAAfADkQAQAA
+AOQBAAA8ADEANAA0ADkANQAzADUANwA0ADcALQAyADgANQAwAC0AMQAtAGcAaQB0AC0AcwBlAG4A
+ZAAtAGUAbQBhAGkAbAAtAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAD4AIAA8ADEANAA0ADkANQAzADUANwA0ADcALQAyADgANQAwAC0AMQAxAC0A
+ZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABh
+AG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwAMgAwADEANQAxADIAMAA4ADAAMgAzADcA
+MAAwAC4ARwBCADkAMAA4ADgAQABpAG4AZgByAGEAZABlAGEAZAAuAG8AcgBnAD4AIAA8AEQAMgA4
+AEQAQwBFADgAMgAuADEAQgAwAEMARQAlAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAD4AIAA8ADIAMAAxADUAMQAyADEANAAxADAAMwA0ADQAOQAuAEcAQQA4ADAAOQA1
+AEAAaQBuAGYAcgBhAGQAZQBhAGQALgBvAHIAZwA+AAAAAwDeP69vAABAAAcw1Nfwqbo20QEDACYA
+AAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTUxMjE0MjE1OTExWi0x
+MTcwMzMAAB8AFRABAAAAWAAAAEEARAAwAEQAOAAwADQAQQBGAEUANwA0ADYAMwA0AEQAQQBFADcA
+MwA1ADIAQQBGADMANwAyADIAOABDADIARgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAA
+AAwAAAAAAQAAThJKH0MAAAAfAPo/AQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAAAAAfAACA
+hgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABN
+AGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgA1AC4ANQAuADEA
+NQAwADgAMgAxAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBh
+AHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAHAEAAEkASQA9ADAA
+MQAwADEARAAxADMANgBCAEEANgBCADkAMwA3ADYAOQA4ADgAQwAyAEEAMgBDADUARgA0AEMAQQAy
+AEYAMgAxAEUAQQA0ADMANQAzAEQAQQA3ADAANwA7AFMAQgBNAEkARAA9ADUAOwBTADEAPQA8ADIA
+MAAxADUAMQAyADEANAAxADAAMwA0ADQAOQAuAEcAQQA4ADAAOQA1AEAAaQBuAGYAcgBhAGQAZQBh
+AGQALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAzACAA
+KABCAHUAaQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAf
+AACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgA
+AAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBu
+AGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACA
+hgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABi
+AHkAcABhAHMAcwAAAAAAsw0=
+
+--_000_D2947AEC1B91Equinntranqlogiccom_--
