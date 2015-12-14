@@ -1,52 +1,58 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/20] qla2xxx: Add TAS detection for kernel 3.15 n newer
-Date: Mon, 14 Dec 2015 02:37:01 -0800
-Message-ID: <20151214103701.GB8095@infradead.org>
-References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
- <1449535747-2850-12-git-send-email-himanshu.madhani@qlogic.com>
- <20151208024800.GA32255@infradead.org>
- <D28DCACE.1B0B1%quinn.tran@qlogic.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: [PATCH 1/7] iscsi-target: Use a variable initialisation in
+ iscsi_set_default_param() directly
+Date: Mon, 14 Dec 2015 12:38:28 +0100
+Message-ID: <566EAA34.5000301@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <566C2F7B.6030704@users.sourceforge.net>
+ <566C308A.6000109@users.sourceforge.net> <20151212194939.GQ5284@mwanda>
+ <20151214084114.GB31151@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <D28DCACE.1B0B1%quinn.tran@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.web.de ([212.227.15.14]:49945 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932206AbbLNLik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Dec 2015 06:38:40 -0500
+In-Reply-To: <20151214084114.GB31151@c203.arch.suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-On Wed, Dec 09, 2015 at 08:24:57PM +0000, Quinn Tran wrote:
-> >> +	if (se_cmd->transport_state & CMD_T_ABORTED) {
-> >> +		/* For TCM TAS support n kernel >= 3.15:
-> >> +		 * This cmd is attempting to respond with "Task Aborted Status".
-> >> +		 */
-> >> +		if (cmd->aborted) {
-> >> +			return 0;
-> >> +		} else if ((cmd->state == QLA_TGT_STATE_NEED_DATA) &&
-> >> +		    cmd->cmd_sent_to_fw) {
-> >> +			qlt_abort_cmd(cmd);
-> >> +			return 0;
-> >> +		} else if (cmd->state == QLA_TGT_STATE_PROCESSED) {
-> >> +			if (cmd->cmd_sent_to_fw) {
-> >> +				qlt_abort_cmd(cmd);
-> >> +				return 0;
-> >> +			} else {	/* about to be free */
-> >> +				return 0;
-> >> +			}
-> >> +		}
-> >> +	}
-> >> +
-> >
-> >This is really something that should be explicitly communicated
-> >from the core instead of having to second guess it.
+> @@ -127,9 +127,8 @@ static struct iscsi_param *iscsi_set_default_param(struct iscsi_param_list *para
+>  		char *name, char *value, u8 phase, u8 scope, u8 sender,
+>  		u16 type_range, u8 use)
+>  {
+> -	struct iscsi_param *param = NULL;
+> +	struct iscsi_param *param;
+>  
+> 	param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
+>  	if (!param) {
+>  		pr_err("Unable to allocate memory for parameter.\n");
 > 
-> QT> The extra protection of the code here is to reduce erroneous error
-> message and interaction error with our firmware. I think communicating
-> back to the core at this stage might add undue complication.  It?s best to
-> allow the initiator to re-drive the command at this point.
+> 
+> This way it would be _far_ more readable.
 
-I agree with that statement, just not how it's done.  Having parallel
-command state machines in the driver and core isn't something that's
-maintainable.  We need to attack the root cause instead of trying
-to hack around it in drivers.
+I guess that there are some opinions available for this implementation detail.
+
+
+> IMHO one should have a 1 action per line of code style
+
+How often do you care for such style issues?
+
+
+> and only assign values in at declaration time if really necessary.
+
+Which is or might become the official Linux coding style recommendation
+for this aspect?
+
+
+> But what is the benefit from this? Is it fixing a (hypothetical) bug?
+
+I find the shown null pointer initialisation just needless.
+
+Regards,
+Markus
+
