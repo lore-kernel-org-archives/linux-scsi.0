@@ -1,129 +1,182 @@
-From: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH 2/6] cxlflash: Fix to avoid virtual LUN failover failure
-Date: Mon, 14 Dec 2015 16:00:25 +1100
-Message-ID: <87h9jl7hg6.fsf@gamma.ozlabs.ibm.com>
-References: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1449788029-23093-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Subject: [PATCH 1/9] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
+Date: Mon, 14 Dec 2015 11:40:58 +0530
+Message-ID: <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com>
+References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:32981 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801AbbLNFAk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 00:00:40 -0500
-Received: by pfnn128 with SMTP id n128so99310128pfn.0
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Dec 2015 21:00:40 -0800 (PST)
-In-Reply-To: <1449788029-23093-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:54830 "EHLO
+	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752296AbbLNG2Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Dec 2015 01:28:16 -0500
+In-Reply-To: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jitendra <jitendra.bhivare@avagotech.com>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+From: Jitendra <jitendra.bhivare@avagotech.com>
 
+We are taking mbox_lock spinlock which disables pre-emption before we poll
+for mbox completion. Waiting there with spinlock held in excess of 20s will
+cause soft lockup.
 
-> Virtual LUNs may be accessed through one or both ports of the adapter.
+Actual fix is to change mbox_lock to mutex.
+The changes are done in phases. This is the first part.
+1. Changed mgmt_get_all_if_id to use MCC instead of BMBX.
+2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
+wait_event_timeout. Added error handling code for IO reads.
+OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when
+unreachable boot targets are configured.
 
-Is it possible that there might ever be adapters with a number of ports
-other than 2? In particular, is it possible for 3 or 4 port adapters to
-exist?
+Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c |   60 +++++++++++++++++++--------------------
+ drivers/scsi/be2iscsi/be_mgmt.c |   32 ++++++++++++++------
+ 2 files changed, 51 insertions(+), 41 deletions(-)
 
-If so, do you need something with a bit more fidelity?
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 2778089..cd50e3c 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -587,47 +587,42 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
+  **/
+ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+ {
+-#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
++#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
+ 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	unsigned long timeout;
+-	bool read_flag = false;
+-	int ret = 0, i;
+ 	u32 ready;
+-	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(rdybit_check_q);
+ 
+-	if (beiscsi_error(phba))
+-		return -EIO;
++	/*
++	 * This BMBX busy wait path is used during init only.
++	 * For the commands executed during init, 5s should suffice.
++	 */
++	timeout = jiffies + msecs_to_jiffies(BEISCSI_MBX_RDY_BIT_TIMEOUT);
++	do {
++		if (beiscsi_error(phba))
++			return -EIO;
+ 
+-	timeout = jiffies + (HZ * 110);
++		ready = ioread32(db);
++		if (ready == 0xffffffff)
++			return -EIO;
+ 
+-	do {
+-		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
+-			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
+-			if (ready) {
+-				read_flag = true;
+-				break;
+-			}
+-			mdelay(1);
+-		}
++		ready &= MPU_MAILBOX_DB_RDY_MASK;
++		if (ready)
++			return 0;
+ 
+-		if (!read_flag) {
+-			wait_event_timeout(rdybit_check_q,
+-					  (read_flag != true),
+-					   HZ * 5);
+-		}
+-	} while ((time_before(jiffies, timeout)) && !read_flag);
++		if (time_after(jiffies, timeout))
++			break;
++		mdelay(1);
++	} while (!ready);
+ 
+-	if (!read_flag) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-			    "BC_%d : FW Timed Out\n");
+-			phba->fw_timeout = true;
+-			beiscsi_ue_detect(phba);
+-			ret = -EBUSY;
+-	}
++	beiscsi_log(phba, KERN_ERR,
++			BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
++			"BC_%d : FW Timed Out\n");
+ 
+-	return ret;
++	phba->fw_timeout = true;
++	beiscsi_ue_detect(phba);
++
++	return -EBUSY;
+ }
+ 
+ /*
+@@ -674,6 +669,9 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
+ 	if (status)
+ 		return status;
+ 
++	/* RDY is set; small delay before CQE read. */
++	udelay(1);
++
+ 	if (be_mcc_compl_is_new(compl)) {
+ 		status = be_mcc_compl_process(ctrl, &mbox->compl);
+ 		be_mcc_compl_use(compl);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index aea3e6b..7b54b23 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -809,27 +809,39 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
+-	struct be_cmd_get_all_if_id_req *req = embedded_payload(wrb);
+-	struct be_cmd_get_all_if_id_req *pbe_allid = req;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_get_all_if_id_req *req;
++	struct be_cmd_get_all_if_id_req *pbe_allid;
++	unsigned int tag;
+ 	int status = 0;
+ 
+-	memset(wrb, 0, sizeof(*wrb));
+-
+ 	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return -ENOMEM;
++	}
++
++	wrb = wrb_from_mccq(phba);
++	req = embedded_payload(wrb);
++	wrb->tag0 |= tag;
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
+ 			   sizeof(*req));
+-	status = be_mbox_notify(ctrl);
+-	if (!status)
+-		phba->interface_handle = pbe_allid->if_hndl_list[0];
+-	else {
++	be_mcc_notify(phba);
++	spin_unlock(&ctrl->mbox_lock);
++
++	status = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
++	if (status) {
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 			    "BG_%d : Failed in mgmt_get_all_if_id\n");
++		return -EBUSY;
+ 	}
+-	spin_unlock(&ctrl->mbox_lock);
++
++	pbe_allid = embedded_payload(wrb);
++	phba->interface_handle = pbe_allid->if_hndl_list[0];
+ 
+ 	return status;
+ }
+-- 
+1.7.1
 
-If not, this is a good approach.
-
-Regards,
-Daniel
-
-> This access is encoded in the translation entries that comprise the
-> virtual LUN and used by the AFU for load-balancing I/O and handling
-> failover scenarios. In a link loss scenario, even though the AFU is
-> able to maintain connectivity to the LUN, it is up to the application
-> to retry the failed I/O. When applications are unaware of the virtual
-> LUN's underlying topology, they are unable to make a sound decision of
-> when to retry an I/O and therefore are forced to make their reaction to
-> a failed I/O absolute. The result is either a failure to retry I/O or
-> increased latency for scenarios where a retry is pointless.
->
-> To remedy this scenario, provide feedback back to the application on
-> virtual LUN creation as to which ports the LUN may be accessed. LUN's
-> spanning both ports are candidates for a retry in a presence of an I/O
-> failure.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/cxlflash/vlun.c       |  2 ++
->  include/uapi/scsi/cxlflash_ioctl.h | 10 ++++++++++
->  2 files changed, 12 insertions(+)
->
-> diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-> index a53f583..50f8e93 100644
-> --- a/drivers/scsi/cxlflash/vlun.c
-> +++ b/drivers/scsi/cxlflash/vlun.c
-> @@ -1008,6 +1008,8 @@ int cxlflash_disk_virtual_open(struct scsi_device *=
-sdev, void *arg)
->  	virt->last_lba =3D last_lba;
->  	virt->rsrc_handle =3D rsrc_handle;
->=20=20
-> +	if (lli->port_sel =3D=3D BOTH_PORTS)
-> +		virt->hdr.return_flags |=3D DK_CXLFLASH_ALL_PORTS_ACTIVE;
->  out:
->  	if (likely(ctxi))
->  		put_context(ctxi);
-> diff --git a/include/uapi/scsi/cxlflash_ioctl.h b/include/uapi/scsi/cxlfl=
-ash_ioctl.h
-> index 831351b..2302f3c 100644
-> --- a/include/uapi/scsi/cxlflash_ioctl.h
-> +++ b/include/uapi/scsi/cxlflash_ioctl.h
-> @@ -31,6 +31,16 @@ struct dk_cxlflash_hdr {
->  };
->=20=20
->  /*
-> + * Return flag definitions available to all ioctls
-> + *
-> + * Similar to the input flags, these are grown from the bottom-up with t=
-he
-> + * intention that ioctl-specific return flag definitions would grow from=
- the
-> + * top-down, allowing the two sets to co-exist. While not required/enfor=
-ced
-> + * at this time, this provides future flexibility.
-> + */
-> +#define DK_CXLFLASH_ALL_PORTS_ACTIVE	0x0000000000000001ULL
-> +
-> +/*
->   * Notes:
->   * -----
->   * The 'context_id' field of all ioctl structures contains the context
-> --=20
-> 2.1.0
->
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWbkzqAAoJEPC3R3P2I92FFWYQAKTRjNuDkCGuxUGEN7jhxTrK
-syYnjbFhR3IQd1d+EQos/B3/pbxVUOH6yG+ksHECxDNMaH7hp0KfWhifIlYHSxlX
-OK2N/4CQTpfRmEKGLGMS6VkGuJDK6w1RJeQgsKwpGuqYXazj7RcXdSAaLTC4/LOX
-G1mO4QIBAhnKs5uBkEnX9pE5mJFrmceZeCtOWtHYtuoBHKeVESf/DMYZpUFST5wQ
-gOiEkBL0DQV1GBhVRKdgCFVN4HVsR/oEQG0rMjMDih1wc5oXUyu4fEjMg4vqjYOa
-Q68LIH1E4lUO4ARj7hQeJE+2eTr64mxYnZIw1Q2cpUiUVvVoDaCpjk5zZv8JwBNu
-N1pRXjd/E5yrlyX+FDU3wVw7HWKzOH5QzE/UzCPq1p67KVVISY8sO0yWpEtj3gmw
-S8MjSsieOwGh9EDW5ihw1bUpArJDU6XNlGarDcbrbM0j7SyRINWKs6S6FFuAYc2t
-0Li5IW4FuoYyvZrd2O3aPq3g3Gso+hJFBrkIFtuFjQ8p5BPl3NeGvpxGGUuGRoEP
-Gadhvd58vlv0wioItUZzW0HSmrP9pjWBHkluyCk99NZ8UukdxmjdLyujYd9tDSRT
-rxz2x7+mc6OW2ag739X5Cw46ALg6iIYgWMVRK9Sm8/ajqm+0fyjrQrMeQNl89FhQ
-5eTbElazyYepFIFuyYrO
-=y1+S
------END PGP SIGNATURE-----
---=-=-=--
