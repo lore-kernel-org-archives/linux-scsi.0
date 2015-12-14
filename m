@@ -1,26 +1,26 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 4/6] cxlflash: Fix to resolve cmd leak after host reset
-Date: Mon, 14 Dec 2015 15:07:02 -0600
-Message-ID: <1450127222-48145-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 5/6] cxlflash: Resolve oops in wait_port_offline
+Date: Mon, 14 Dec 2015 15:07:23 -0600
+Message-ID: <1450127243-48208-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:37988 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932295AbbLNVIM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 16:08:12 -0500
+Received: from e34.co.us.ibm.com ([32.97.110.152]:44889 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932193AbbLNVIK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 16:08:10 -0500
 Received: from localhost
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-	Mon, 14 Dec 2015 14:08:11 -0700
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id E72A83E40044
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:07:46 -0700 (MST)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBEL7kwS30081196
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:07:46 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBEL7iwm030889
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:07:46 -0700
+	Mon, 14 Dec 2015 14:08:09 -0700
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 15F8019D803F
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 13:56:11 -0700 (MST)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBEL86Rh30998752
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:08:06 -0700
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBEL84Xx027598
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:08:06 -0700
 In-Reply-To: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -29,65 +29,168 @@ Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donn
 
 From: Manoj Kumar <manoj@linux.vnet.ibm.com>
 
-After a few iterations of resetting the card, either during EEH
-recovery, or a host_reset the following is seen in the logs.
-cxlflash 0008:00: cxlflash_queuecommand: could not get a free command
+If an async error interrupt is generated, and the error requires the FC
+link to be reset, it cannot be performed in the interrupt context. So
+a work element is scheduled to complete the link reset in a process
+context. If either an EEH event or an escalation occurs in between
+when the interrupt is generated and the scheduled work is started, the
+MMIO space may no longer be available. This will cause an oops in the
+worker thread.
 
-At every reset of the card, the commands that are outstanding are
-being leaked.  No effort is being made to reap these commands.  A few
-more resets later, the above error message floods the logs and the
-card is rendered totally unusable as no free commands are available.
+[  606.806583] NIP kthread_data+0x28/0x40
+[  606.806633] LR wq_worker_sleeping+0x30/0x100
+[  606.806694] Call Trace:
+[  606.806721] 0x50 (unreliable)
+[  606.806796] wq_worker_sleeping+0x30/0x100
+[  606.806884] __schedule+0x69c/0x8a0
+[  606.806959] schedule+0x44/0xc0
+[  606.807034] do_exit+0x770/0xb90
+[  606.807109] die+0x300/0x460
+[  606.807185] bad_page_fault+0xd8/0x150
+[  606.807259] handle_page_fault+0x2c/0x30
+[  606.807338] wait_port_offline.constprop.12+0x60/0x130 [cxlflash]
 
-Iterated through the 'cmd' queue and printed out the 'free' counter
-and found that on each reset certain commands were in-use and
-stayed in-use through subsequent resets.
-
-To resolve this issue, when the card is reset, reap all the commands
-that are active/outstanding.
+To prevent the problem space area from being unmapped, when there is
+pending work, a mapcount (using the kref mechanism) is held.  The mapcount
+is released only when the work is completed.  The last reference release
+is tied to the unmapping service.
 
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/common.h |  2 ++
+ drivers/scsi/cxlflash/main.c   | 27 ++++++++++++++++++++++++---
+ 2 files changed, 26 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index c11cd19..5ada926 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -165,6 +165,8 @@ struct afu {
+ 	struct sisl_host_map __iomem *host_map;		/* MC host map */
+ 	struct sisl_ctrl_map __iomem *ctrl_map;		/* MC control map */
+ 
++	struct kref mapcount;
++
+ 	ctx_hndl_t ctx_hndl;	/* master's context handle */
+ 	u64 *hrrq_start;
+ 	u64 *hrrq_end;
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 35a3202..ac39856 100644
+index ac39856..30542ca 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -632,15 +632,30 @@ static void free_mem(struct cxlflash_cfg *cfg)
-  * @cfg:	Internal structure associated with the host.
-  *
-  * Safe to call with AFU in a partially allocated/initialized state.
-+ *
-+ * Cleans up all state associated with the command queue, and unmaps
-+ * the MMIO space.
-+ *
-+ *  - complete() will take care of commands we initiated (they'll be checked
-+ *  in as part of the cleanup that occurs after the completion)
-+ *
-+ *  - cmd_checkin() will take care of entries that we did not initiate and that
-+ *  have not (and will not) complete because they are sitting on a [now stale]
-+ *  hardware queue
-  */
- static void stop_afu(struct cxlflash_cfg *cfg)
- {
- 	int i;
- 	struct afu *afu = cfg->afu;
-+	struct afu_cmd *cmd;
+@@ -368,6 +368,7 @@ out:
  
- 	if (likely(afu)) {
--		for (i = 0; i < CXLFLASH_NUM_CMDS; i++)
--			complete(&afu->cmd[i].cevent);
-+		for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
-+			cmd = &afu->cmd[i];
-+			complete(&cmd->cevent);
-+			if (!atomic_read(&cmd->free))
-+				cmd_checkin(cmd);
-+		}
+ no_room:
+ 	afu->read_room = true;
++	kref_get(&cfg->afu->mapcount);
+ 	schedule_work(&cfg->work_q);
+ 	rc = SCSI_MLQUEUE_HOST_BUSY;
+ 	goto out;
+@@ -473,6 +474,16 @@ out:
+ 	return rc;
+ }
  
- 		if (likely(afu->afu_map)) {
++static void afu_unmap(struct kref *ref)
++{
++	struct afu *afu = container_of(ref, struct afu, mapcount);
++
++	if (likely(afu->afu_map)) {
++		cxl_psa_unmap((void __iomem *)afu->afu_map);
++		afu->afu_map = NULL;
++	}
++}
++
+ /**
+  * cxlflash_driver_info() - information handler for this host driver
+  * @host:	SCSI host associated with device.
+@@ -503,6 +514,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	ulong lock_flags;
+ 	short lflag = 0;
+ 	int rc = 0;
++	int kref_got = 0;
+ 
+ 	dev_dbg_ratelimited(dev, "%s: (scp=%p) %d/%d/%d/%llu "
+ 			    "cdb=(%08X-%08X-%08X-%08X)\n",
+@@ -547,6 +559,9 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 		goto out;
+ 	}
+ 
++	kref_get(&cfg->afu->mapcount);
++	kref_got = 1;
++
+ 	cmd->rcb.ctx_id = afu->ctx_hndl;
+ 	cmd->rcb.port_sel = port_sel;
+ 	cmd->rcb.lun_id = lun_to_lunid(scp->device->lun);
+@@ -587,6 +602,8 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	}
+ 
+ out:
++	if (kref_got)
++		kref_put(&afu->mapcount, afu_unmap);
+ 	pr_devel("%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+@@ -661,6 +678,7 @@ static void stop_afu(struct cxlflash_cfg *cfg)
  			cxl_psa_unmap((void __iomem *)afu->afu_map);
+ 			afu->afu_map = NULL;
+ 		}
++		kref_put(&afu->mapcount, afu_unmap);
+ 	}
+ }
+ 
+@@ -746,8 +764,8 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 		scsi_remove_host(cfg->host);
+ 		/* fall through */
+ 	case INIT_STATE_AFU:
+-		term_afu(cfg);
+ 		cancel_work_sync(&cfg->work_q);
++		term_afu(cfg);
+ 	case INIT_STATE_PCI:
+ 		pci_release_regions(cfg->dev);
+ 		pci_disable_device(pdev);
+@@ -1331,6 +1349,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 				__func__, port);
+ 			cfg->lr_state = LINK_RESET_REQUIRED;
+ 			cfg->lr_port = port;
++			kref_get(&cfg->afu->mapcount);
+ 			schedule_work(&cfg->work_q);
+ 		}
+ 
+@@ -1351,6 +1370,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 
+ 		if (info->action & SCAN_HOST) {
+ 			atomic_inc(&cfg->scan_host_needed);
++			kref_get(&cfg->afu->mapcount);
+ 			schedule_work(&cfg->work_q);
+ 		}
+ 	}
+@@ -1746,6 +1766,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 		rc = -ENOMEM;
+ 		goto err1;
+ 	}
++	kref_init(&afu->mapcount);
+ 
+ 	/* No byte reverse on reading afu_version or string will be backwards */
+ 	reg = readq(&afu->afu_map->global.regs.afu_version);
+@@ -1780,8 +1801,7 @@ out:
+ 	return rc;
+ 
+ err2:
+-	cxl_psa_unmap((void __iomem *)afu->afu_map);
+-	afu->afu_map = NULL;
++	kref_put(&afu->mapcount, afu_unmap);
+ err1:
+ 	term_mc(cfg, UNDO_START);
+ 	goto out;
+@@ -2354,6 +2374,7 @@ static void cxlflash_worker_thread(struct work_struct *work)
+ 
+ 	if (atomic_dec_if_positive(&cfg->scan_host_needed) >= 0)
+ 		scsi_scan_host(cfg->host);
++	kref_put(&afu->mapcount, afu_unmap);
+ }
+ 
+ /**
 -- 
 2.1.0
 
