@@ -1,50 +1,60 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/6] cxlflash: Updated date of the driver
-Date: Mon, 14 Dec 2015 13:29:55 -0600
-Message-ID: <566F18B3.6040907@linux.vnet.ibm.com>
-References: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1449788043-23131-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <87d1udkejd.fsf@gamma.ozlabs.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v2 0/6] cxlflash: Miscellaneous fixes and updates
+Date: Mon, 14 Dec 2015 14:51:33 -0600
+Message-ID: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:57655 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112AbbLNT3w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 14:29:52 -0500
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:46700 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753285AbbLNUwa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 15:52:30 -0500
 Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-	Mon, 14 Dec 2015 12:29:51 -0700
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 9361B19D8040
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 12:17:52 -0700 (MST)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBEJTlI230867654
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 12:29:47 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBEJTkXA026805
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 12:29:47 -0700
-In-Reply-To: <87d1udkejd.fsf@gamma.ozlabs.ibm.com>
+	Mon, 14 Dec 2015 15:52:29 -0500
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 514A6C9003E
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 15:40:36 -0500 (EST)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBEKqRh027787450
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 20:52:27 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBEKqP7M005500
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 15:52:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Axtens <dja@axtens.net>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>
 
-On 12/10/2015 6:35 PM, Daniel Axtens wrote:
-> Hi Uma,
->
-> It looks like CXLFLASH_DRIVER_DATE is only used once, on init, and it's
-> just printed. Is it necessary? It looks like having it will require
-> sending a patch to update it quite often.
->
+This patch set contains miscellaneous fixes and adds support for
+a future IBM CXL adapter. This series is intended for 4.5 and is
+bisectable. Please reference the changelog below for details on
+what has been altered from previous versions of this patch set.
 
-Hi Daniel,
+v2 Changes:
+- Incorporate comments from Daniel Axtens
+- Incorporate comments from Andrew Donnellan
+- Removed driver date and simplified driver load print
+- Clarified driver behavior for the future adapter
 
-Valid point. I will pull this out from the code. This should be included
-in the second version of the patch series.
+Manoj Kumar (4):
+  cxlflash: Fix to escalate LINK_RESET also on port 1
+  cxlflash: Fix to resolve cmd leak after host reset
+  cxlflash: Resolve oops in wait_port_offline
+  cxlflash: Enable device id for future IBM CXL adapter
 
-Thanks,
-Uma Krishnan
+Matthew R. Ochs (1):
+  cxlflash: Fix to avoid virtual LUN failover failure
+
+Uma Krishnan (1):
+  cxlflash: Removed driver date print
+
+ drivers/scsi/cxlflash/common.h     |  2 ++
+ drivers/scsi/cxlflash/main.c       | 54 ++++++++++++++++++++++++++++++++------
+ drivers/scsi/cxlflash/main.h       |  5 ++--
+ drivers/scsi/cxlflash/vlun.c       |  2 ++
+ include/uapi/scsi/cxlflash_ioctl.h | 10 +++++++
+ 5 files changed, 62 insertions(+), 11 deletions(-)
+
+-- 
+2.1.0
 
