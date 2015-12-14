@@ -1,14 +1,14 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 1/9] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
-Date: Mon, 14 Dec 2015 11:40:58 +0530
-Message-ID: <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 3/9] be2iscsi: Fix to remove shutdown entry point
+Date: Mon, 14 Dec 2015 11:41:00 +0530
+Message-ID: <1450073466-21077-4-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:54830 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752296AbbLNG2Q (ORCPT
+	by vger.kernel.org with ESMTP id S1752406AbbLNG2S (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Dec 2015 01:28:16 -0500
+	Mon, 14 Dec 2015 01:28:18 -0500
 In-Reply-To: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,166 +17,147 @@ Cc: Jitendra <jitendra.bhivare@avagotech.com>
 
 From: Jitendra <jitendra.bhivare@avagotech.com>
 
-We are taking mbox_lock spinlock which disables pre-emption before we poll
-for mbox completion. Waiting there with spinlock held in excess of 20s will
-cause soft lockup.
+Null pointer dereference in shutdown path after taking dump.
 
-Actual fix is to change mbox_lock to mutex.
-The changes are done in phases. This is the first part.
-1. Changed mgmt_get_all_if_id to use MCC instead of BMBX.
-2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
-wait_event_timeout. Added error handling code for IO reads.
-OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when
-unreachable boot targets are configured.
+Shutdown path is not needed as FW comes up clean every time during probe
+after issuing FUNCTION reset MBOX command.
 
 Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |   60 +++++++++++++++++++--------------------
- drivers/scsi/be2iscsi/be_mgmt.c |   32 ++++++++++++++------
- 2 files changed, 51 insertions(+), 41 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c |   17 +++--------------
+ drivers/scsi/be2iscsi/be_cmds.h |    2 +-
+ drivers/scsi/be2iscsi/be_main.c |   24 ++++--------------------
+ drivers/scsi/be2iscsi/be_main.h |    3 +--
+ 4 files changed, 9 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 2778089..cd50e3c 100644
+index 1e70053..e4cc98f 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -587,47 +587,42 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
+@@ -414,22 +414,11 @@ static struct be_mcc_compl *be_mcc_compl_get(struct beiscsi_hba *phba)
+ }
+ 
+ /**
+- * be2iscsi_fail_session(): Closing session with appropriate error
++ * beiscsi_fail_session(): Closing session with appropriate error
+  * @cls_session: ptr to session
+- *
+- * Depending on adapter state appropriate error flag is passed.
   **/
- static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+-void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
++void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
  {
--#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
-+#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
- 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
- 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
- 	unsigned long timeout;
--	bool read_flag = false;
--	int ret = 0, i;
- 	u32 ready;
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(rdybit_check_q);
- 
--	if (beiscsi_error(phba))
--		return -EIO;
-+	/*
-+	 * This BMBX busy wait path is used during init only.
-+	 * For the commands executed during init, 5s should suffice.
-+	 */
-+	timeout = jiffies + msecs_to_jiffies(BEISCSI_MBX_RDY_BIT_TIMEOUT);
-+	do {
-+		if (beiscsi_error(phba))
-+			return -EIO;
- 
--	timeout = jiffies + (HZ * 110);
-+		ready = ioread32(db);
-+		if (ready == 0xffffffff)
-+			return -EIO;
- 
--	do {
--		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
--			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
--			if (ready) {
--				read_flag = true;
--				break;
--			}
--			mdelay(1);
--		}
-+		ready &= MPU_MAILBOX_DB_RDY_MASK;
-+		if (ready)
-+			return 0;
- 
--		if (!read_flag) {
--			wait_event_timeout(rdybit_check_q,
--					  (read_flag != true),
--					   HZ * 5);
--		}
--	} while ((time_before(jiffies, timeout)) && !read_flag);
-+		if (time_after(jiffies, timeout))
-+			break;
-+		mdelay(1);
-+	} while (!ready);
- 
--	if (!read_flag) {
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : FW Timed Out\n");
--			phba->fw_timeout = true;
--			beiscsi_ue_detect(phba);
--			ret = -EBUSY;
--	}
-+	beiscsi_log(phba, KERN_ERR,
-+			BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+			"BC_%d : FW Timed Out\n");
- 
--	return ret;
-+	phba->fw_timeout = true;
-+	beiscsi_ue_detect(phba);
-+
-+	return -EBUSY;
- }
- 
- /*
-@@ -674,6 +669,9 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
- 	if (status)
- 		return status;
- 
-+	/* RDY is set; small delay before CQE read. */
-+	udelay(1);
-+
- 	if (be_mcc_compl_is_new(compl)) {
- 		status = be_mcc_compl_process(ctrl, &mbox->compl);
- 		be_mcc_compl_use(compl);
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index aea3e6b..7b54b23 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -809,27 +809,39 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
- {
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
--	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
--	struct be_cmd_get_all_if_id_req *req = embedded_payload(wrb);
--	struct be_cmd_get_all_if_id_req *pbe_allid = req;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_get_all_if_id_req *req;
-+	struct be_cmd_get_all_if_id_req *pbe_allid;
-+	unsigned int tag;
- 	int status = 0;
- 
--	memset(wrb, 0, sizeof(*wrb));
+-	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
+-	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+-	uint32_t iscsi_err_flag;
 -
- 	spin_lock(&ctrl->mbox_lock);
-+	tag = alloc_mcc_tag(phba);
-+	if (!tag) {
-+		spin_unlock(&ctrl->mbox_lock);
-+		return -ENOMEM;
-+	}
-+
-+	wrb = wrb_from_mccq(phba);
-+	req = embedded_payload(wrb);
-+	wrb->tag0 |= tag;
- 
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
- 			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
- 			   sizeof(*req));
--	status = be_mbox_notify(ctrl);
--	if (!status)
--		phba->interface_handle = pbe_allid->if_hndl_list[0];
--	else {
-+	be_mcc_notify(phba);
-+	spin_unlock(&ctrl->mbox_lock);
-+
-+	status = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
-+	if (status) {
- 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
- 			    "BG_%d : Failed in mgmt_get_all_if_id\n");
-+		return -EBUSY;
- 	}
--	spin_unlock(&ctrl->mbox_lock);
-+
-+	pbe_allid = embedded_payload(wrb);
-+	phba->interface_handle = pbe_allid->if_hndl_list[0];
- 
- 	return status;
+-	if (phba->state & BE_ADAPTER_STATE_SHUTDOWN)
+-		iscsi_err_flag = ISCSI_ERR_INVALID_HOST;
+-	else
+-		iscsi_err_flag = ISCSI_ERR_CONN_FAILED;
+-
+ 	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
  }
+ 
+@@ -447,7 +436,7 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+ 			    evt->physical_port);
+ 
+ 		iscsi_host_for_each_session(phba->shost,
+-					    be2iscsi_fail_session);
++					    beiscsi_fail_session);
+ 	} else if ((evt->port_link_status & ASYNC_EVENT_LINK_UP) ||
+ 		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+ 		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 4bfca35..5d165ee 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -1367,5 +1367,5 @@ void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
+ void be_cmd_hdr_prepare(struct be_cmd_req_hdr *req_hdr,
+ 			u8 subsystem, u8 opcode, int cmd_len);
+ 
+-void be2iscsi_fail_session(struct iscsi_cls_session *cls_session);
++void beiscsi_fail_session(struct iscsi_cls_session *cls_session);
+ #endif /* !BEISCSI_CMDS_H */
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 61ce86b..2f3e118 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5315,7 +5315,6 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
+ 
+ static void beiscsi_remove(struct pci_dev *pcidev)
+ {
+-
+ 	struct beiscsi_hba *phba = NULL;
+ 
+ 	phba = pci_get_drvdata(pcidev);
+@@ -5325,9 +5324,9 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 	}
+ 
+ 	beiscsi_destroy_def_ifaces(phba);
+-	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
+ 	iscsi_boot_destroy_kset(phba->boot_kset);
+ 	iscsi_host_remove(phba->shost);
++	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
+ 	pci_dev_put(phba->pcidev);
+ 	iscsi_host_free(phba->shost);
+ 	pci_disable_pcie_error_reporting(pcidev);
+@@ -5336,23 +5335,6 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 	pci_disable_device(pcidev);
+ }
+ 
+-static void beiscsi_shutdown(struct pci_dev *pcidev)
+-{
+-
+-	struct beiscsi_hba *phba = NULL;
+-
+-	phba = (struct beiscsi_hba *)pci_get_drvdata(pcidev);
+-	if (!phba) {
+-		dev_err(&pcidev->dev, "beiscsi_shutdown called with no phba\n");
+-		return;
+-	}
+-
+-	phba->state = BE_ADAPTER_STATE_SHUTDOWN;
+-	iscsi_host_for_each_session(phba->shost, be2iscsi_fail_session);
+-	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
+-	pci_disable_device(pcidev);
+-}
+-
+ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ {
+ 	int i, status;
+@@ -5673,6 +5655,9 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		goto hba_free;
+ 	}
+ 
++	/*
++	 * FUNCTION_RESET should clean up any stale info in FW for this fn
++	 */
+ 	ret = beiscsi_cmd_reset_function(phba);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+@@ -5861,7 +5846,6 @@ static struct pci_driver beiscsi_pci_driver = {
+ 	.name = DRV_NAME,
+ 	.probe = beiscsi_dev_probe,
+ 	.remove = beiscsi_remove,
+-	.shutdown = beiscsi_shutdown,
+ 	.id_table = beiscsi_pci_id_table,
+ 	.err_handler = &beiscsi_eeh_handlers
+ };
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 5c67c07..bd9d1e1 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -103,8 +103,7 @@
+ #define BE_ADAPTER_LINK_UP	0x001
+ #define BE_ADAPTER_LINK_DOWN	0x002
+ #define BE_ADAPTER_PCI_ERR	0x004
+-#define BE_ADAPTER_STATE_SHUTDOWN	0x008
+-#define BE_ADAPTER_CHECK_BOOT	0x010
++#define BE_ADAPTER_CHECK_BOOT	0x008
+ 
+ 
+ #define BEISCSI_CLEAN_UNLOAD	0x01
 -- 
 1.7.1
 
