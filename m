@@ -1,14 +1,14 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 9/9] be2iscsi: Update the driver version
-Date: Mon, 14 Dec 2015 11:41:06 +0530
-Message-ID: <1450073466-21077-10-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 2/9] be2iscsi: Fix mbox synchronization replacing spinlock with mutex
+Date: Mon, 14 Dec 2015 11:40:59 +0530
+Message-ID: <1450073466-21077-3-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:54830 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752490AbbLNG2Y (ORCPT
+	by vger.kernel.org with ESMTP id S1752394AbbLNG2R (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Dec 2015 01:28:24 -0500
+	Mon, 14 Dec 2015 01:28:17 -0500
 In-Reply-To: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,26 +17,863 @@ Cc: Jitendra <jitendra.bhivare@avagotech.com>
 
 From: Jitendra <jitendra.bhivare@avagotech.com>
 
-Driver version: 11.0.0.0
+This is second part of actual fix for soft lockup.
+All mbox cmds issued using BMBX and MCC are synchronized using mbox_lock.
+alloc_mcc_tag/free_mcc_tag is done under mcc_lock and tag_state is
+accessed using atomic operations.
+
+Mailbox command time out is now set to 30s as per FW requirement.
 
 Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be_main.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be.h       |    4 +-
+ drivers/scsi/be2iscsi/be_cmds.c  |   94 ++++++++++++++++---------------
+ drivers/scsi/be2iscsi/be_iscsi.c |    7 +-
+ drivers/scsi/be2iscsi/be_main.c  |    2 +-
+ drivers/scsi/be2iscsi/be_mgmt.c  |  115 ++++++++++++++++++++------------------
+ 5 files changed, 116 insertions(+), 106 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 41c708c..16a6fd0 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_iscsi.h>
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 77f992e..419b53f 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -113,7 +113,7 @@ struct beiscsi_mcc_tag_state {
+ #define MCC_TAG_STATE_COMPLETED 0x00
+ #define MCC_TAG_STATE_RUNNING   0x01
+ #define MCC_TAG_STATE_TIMEOUT   0x02
+-	uint8_t tag_state;
++	atomic_t tag_state;
+ 	struct be_dma_mem tag_mem_state;
+ };
  
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"10.6.0.1"
-+#define BUILD_STR		"11.0.0.0"
- #define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
+@@ -124,7 +124,7 @@ struct be_ctrl_info {
+ 	struct pci_dev *pdev;
+ 
+ 	/* Mbox used for cmd request/response */
+-	spinlock_t mbox_lock;	/* For serializing mbox cmds to BE card */
++	struct mutex mbox_lock;	/* For serializing mbox cmds to BE card */
+ 	struct be_dma_mem mbox_mem;
+ 	/* Mbox mem is adjusted to align to 16 bytes. The allocated addr
+ 	 * is stored for freeing purpose */
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index cd50e3c..1e70053 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -118,6 +118,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+ {
+ 	unsigned int tag = 0;
+ 
++	spin_lock(&phba->ctrl.mcc_lock);
+ 	if (phba->ctrl.mcc_tag_available) {
+ 		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
+ 		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
+@@ -130,6 +131,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+ 		else
+ 			phba->ctrl.mcc_alloc_index++;
+ 	}
++	spin_unlock(&phba->ctrl.mcc_lock);
+ 	return tag;
+ }
+ 
+@@ -164,9 +166,8 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 	}
+ 
+ 	/* Set MBX Tag state to Active */
+-	spin_lock(&phba->ctrl.mbox_lock);
+-	phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_RUNNING;
+-	spin_unlock(&phba->ctrl.mbox_lock);
++	atomic_set(&phba->ctrl.ptag_state[tag].tag_state,
++			MCC_TAG_STATE_RUNNING);
+ 
+ 	/* wait for the mccq completion */
+ 	rc = wait_event_interruptible_timeout(
+@@ -178,9 +179,8 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 	if (rc <= 0) {
+ 		struct be_dma_mem *tag_mem;
+ 		/* Set MBX Tag state to timeout */
+-		spin_lock(&phba->ctrl.mbox_lock);
+-		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_TIMEOUT;
+-		spin_unlock(&phba->ctrl.mbox_lock);
++		atomic_set(&phba->ctrl.ptag_state[tag].tag_state,
++				MCC_TAG_STATE_TIMEOUT);
+ 
+ 		/* Store resource addr to be freed later */
+ 		tag_mem = &phba->ctrl.ptag_state[tag].tag_mem_state;
+@@ -199,9 +199,8 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 	} else {
+ 		rc = 0;
+ 		/* Set MBX Tag state to completed */
+-		spin_lock(&phba->ctrl.mbox_lock);
+-		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
+-		spin_unlock(&phba->ctrl.mbox_lock);
++		atomic_set(&phba->ctrl.ptag_state[tag].tag_state,
++				MCC_TAG_STATE_COMPLETED);
+ 	}
+ 
+ 	mcc_tag_response = phba->ctrl.mcc_numtag[tag];
+@@ -257,7 +256,7 @@ release_mcc_tag:
+ 
+ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+ {
+-	spin_lock(&ctrl->mbox_lock);
++	spin_lock(&ctrl->mcc_lock);
+ 	tag = tag & 0x000000FF;
+ 	ctrl->mcc_tag[ctrl->mcc_free_index] = tag;
+ 	if (ctrl->mcc_free_index == (MAX_MCC_CMD - 1))
+@@ -265,7 +264,7 @@ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+ 	else
+ 		ctrl->mcc_free_index++;
+ 	ctrl->mcc_tag_available++;
+-	spin_unlock(&ctrl->mbox_lock);
++	spin_unlock(&ctrl->mcc_lock);
+ }
+ 
+ bool is_link_state_evt(u32 trailer)
+@@ -373,9 +372,11 @@ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
+ 	ctrl->mcc_numtag[tag] |= (extd_status & 0x000000FF) << 8;
+ 	ctrl->mcc_numtag[tag] |= (compl_status & 0x000000FF);
+ 
+-	if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_RUNNING) {
++	if (atomic_read(&ctrl->ptag_state[tag].tag_state) ==
++		MCC_TAG_STATE_RUNNING) {
+ 		wake_up_interruptible(&ctrl->mcc_wait[tag]);
+-	} else if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_TIMEOUT) {
++	} else if (atomic_read(&ctrl->ptag_state[tag].tag_state) ==
++			MCC_TAG_STATE_TIMEOUT) {
+ 		struct be_dma_mem *tag_mem;
+ 		tag_mem = &ctrl->ptag_state[tag].tag_mem_state;
+ 
+@@ -390,9 +391,8 @@ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
+ 					    tag_mem->va, tag_mem->dma);
+ 
+ 		/* Change tag state */
+-		spin_lock(&phba->ctrl.mbox_lock);
+-		ctrl->ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
+-		spin_unlock(&phba->ctrl.mbox_lock);
++		atomic_set(&ctrl->ptag_state[tag].tag_state,
++				MCC_TAG_STATE_COMPLETED);
+ 
+ 		/* Free MCC Tag */
+ 		free_mcc_tag(ctrl, tag);
+@@ -587,7 +587,8 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
+  **/
+ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+ {
+-#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
++	/* wait 30s for generic non-flash MBOX operation */
++#define BEISCSI_MBX_RDY_BIT_TIMEOUT	30000
+ 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	unsigned long timeout;
+@@ -612,7 +613,7 @@ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+ 
+ 		if (time_after(jiffies, timeout))
+ 			break;
+-		mdelay(1);
++		msleep(20);
+ 	} while (!ready);
+ 
+ 	beiscsi_log(phba, KERN_ERR,
+@@ -831,7 +832,7 @@ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
+ 	struct be_dma_mem *q_mem = &eq->dma_mem;
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -858,7 +859,7 @@ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
+ 		eq->id = le16_to_cpu(resp->eq_id);
+ 		eq->created = true;
+ 	}
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -879,7 +880,7 @@ int be_cmd_fw_initialize(struct be_ctrl_info *ctrl)
+ 	int status;
+ 	u8 *endian_check;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	endian_check = (u8 *) wrb;
+@@ -898,7 +899,7 @@ int be_cmd_fw_initialize(struct be_ctrl_info *ctrl)
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 			    "BC_%d : be_cmd_fw_initialize Failed\n");
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -919,7 +920,7 @@ int be_cmd_fw_uninit(struct be_ctrl_info *ctrl)
+ 	int status;
+ 	u8 *endian_check;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	endian_check = (u8 *) wrb;
+@@ -939,7 +940,7 @@ int be_cmd_fw_uninit(struct be_ctrl_info *ctrl)
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 			    "BC_%d : be_cmd_fw_uninit Failed\n");
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -955,7 +956,7 @@ int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
+ 	void *ctxt = &req->context;
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1005,7 +1006,7 @@ int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
+ 			    "BC_%d : In be_cmd_cq_create, status=ox%08x\n",
+ 			    status);
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 
+ 	return status;
+ }
+@@ -1029,7 +1030,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
+ 	void *ctxt;
+ 	int status;
+ 
+-	spin_lock(&phba->ctrl.mbox_lock);
++	mutex_lock(&phba->ctrl.mbox_lock);
+ 	ctrl = &phba->ctrl;
+ 	wrb = wrb_from_mbox(&ctrl->mbox_mem);
+ 	memset(wrb, 0, sizeof(*wrb));
+@@ -1060,7 +1061,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
+ 		mccq->id = le16_to_cpu(resp->id);
+ 		mccq->created = true;
+ 	}
+-	spin_unlock(&phba->ctrl.mbox_lock);
++	mutex_unlock(&phba->ctrl.mbox_lock);
+ 
+ 	return status;
+ }
+@@ -1078,7 +1079,7 @@ int beiscsi_cmd_q_destroy(struct be_ctrl_info *ctrl, struct be_queue_info *q,
+ 		    "BC_%d : In beiscsi_cmd_q_destroy "
+ 		    "queue_type : %d\n", queue_type);
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 
+@@ -1108,7 +1109,7 @@ int beiscsi_cmd_q_destroy(struct be_ctrl_info *ctrl, struct be_queue_info *q,
+ 		opcode = OPCODE_COMMON_ISCSI_CFG_REMOVE_SGL_PAGES;
+ 		break;
+ 	default:
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		BUG();
+ 		return -ENXIO;
+ 	}
+@@ -1118,7 +1119,7 @@ int beiscsi_cmd_q_destroy(struct be_ctrl_info *ctrl, struct be_queue_info *q,
+ 
+ 	status = be_mbox_notify(ctrl);
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -1153,7 +1154,7 @@ int be_cmd_create_default_pdu_queue(struct be_ctrl_info *ctrl,
+ 	void *ctxt = &req->context;
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1225,7 +1226,7 @@ int be_cmd_create_default_pdu_queue(struct be_ctrl_info *ctrl,
+ 			defq_ring->doorbell_offset = resp->doorbell_offset;
+ 		}
+ 	}
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 
+ 	return status;
+ }
+@@ -1253,7 +1254,7 @@ int be_cmd_wrbq_create(struct be_ctrl_info *ctrl,
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1284,7 +1285,7 @@ int be_cmd_wrbq_create(struct be_ctrl_info *ctrl,
+ 			pwrb_context->doorbell_offset = resp->doorbell_offset;
+ 		}
+ 	}
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -1295,7 +1296,7 @@ int be_cmd_iscsi_post_template_hdr(struct be_ctrl_info *ctrl,
+ 	struct be_post_template_pages_req *req = embedded_payload(wrb);
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 
+ 	memset(wrb, 0, sizeof(*wrb));
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1308,7 +1309,7 @@ int be_cmd_iscsi_post_template_hdr(struct be_ctrl_info *ctrl,
+ 	be_cmd_page_addrs_prepare(req->pages, ARRAY_SIZE(req->pages), q_mem);
+ 
+ 	status = be_mbox_notify(ctrl);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -1318,7 +1319,7 @@ int be_cmd_iscsi_remove_template_hdr(struct be_ctrl_info *ctrl)
+ 	struct be_remove_template_pages_req *req = embedded_payload(wrb);
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 
+ 	memset(wrb, 0, sizeof(*wrb));
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1329,7 +1330,7 @@ int be_cmd_iscsi_remove_template_hdr(struct be_ctrl_info *ctrl)
+ 	req->type = BEISCSI_TEMPLATE_HDR_TYPE_ISCSI;
+ 
+ 	status = be_mbox_notify(ctrl);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -1348,7 +1349,7 @@ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 	if (num_pages == 0xff)
+ 		num_pages = 1;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	do {
+ 		memset(wrb, 0, sizeof(*wrb));
+ 		be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1377,7 +1378,7 @@ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 		}
+ 	} while (num_pages > 0);
+ error:
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	if (status != 0)
+ 		beiscsi_cmd_q_destroy(ctrl, NULL, QTYPE_SGL);
+ 	return status;
+@@ -1390,7 +1391,7 @@ int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
+ 	struct be_post_sgl_pages_req *req = embedded_payload(wrb);
+ 	int status;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 
+ 	req = embedded_payload(wrb);
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -1398,7 +1399,7 @@ int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
+ 			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
+ 	status = be_mbox_notify_wait(phba);
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -1420,10 +1421,11 @@ int be_cmd_set_vlan(struct beiscsi_hba *phba,
+ 	struct be_cmd_set_vlan_req *req;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	if (mutex_lock_interruptible(&ctrl->mbox_lock))
++		return 0;
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -1439,7 +1441,7 @@ int be_cmd_set_vlan(struct beiscsi_hba *phba,
+ 	req->vlan_priority = vlan_tag;
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 
+ 	return tag;
+ }
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index b7087ba..188d83f 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -367,13 +367,14 @@ beiscsi_set_vlan_tag(struct Scsi_Host *shost,
+ 		      struct iscsi_iface_param_info *iface_param)
+ {
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+-	int ret = 0;
++	int ret;
+ 
+ 	/* Get the Interface Handle */
+-	if (mgmt_get_all_if_id(phba)) {
++	ret = mgmt_get_all_if_id(phba);
++	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BS_%d : Getting Interface Handle Failed\n");
+-		return -EIO;
++		return ret;
+ 	}
+ 
+ 	switch (iface_param->param) {
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fe0c514..61ce86b 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -727,7 +727,7 @@ static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
+ 	mbox_mem_align->va = PTR_ALIGN(mbox_mem_alloc->va, 16);
+ 	mbox_mem_align->dma = PTR_ALIGN(mbox_mem_alloc->dma, 16);
+ 	memset(mbox_mem_align->va, 0, sizeof(struct be_mcc_mailbox));
+-	spin_lock_init(&ctrl->mbox_lock);
++	mutex_init(&ctrl->mbox_lock);
+ 	spin_lock_init(&phba->ctrl.mcc_lock);
+ 	spin_lock_init(&phba->ctrl.mcc_cq_lock);
+ 
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 7b54b23..a8a1670 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -164,10 +164,10 @@ int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
+ 	unsigned int tag = 0;
+ 	int i;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -188,7 +188,7 @@ int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
+ 	}
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -215,10 +215,10 @@ unsigned int mgmt_reopen_session(struct beiscsi_hba *phba,
+ 		    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 		    "BG_%d : In bescsi_get_boot_target\n");
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -235,7 +235,7 @@ unsigned int mgmt_reopen_session(struct beiscsi_hba *phba,
+ 	req->session_handle = sess_handle;
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -250,10 +250,10 @@ unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba)
+ 		    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 		    "BG_%d : In bescsi_get_boot_target\n");
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -266,7 +266,7 @@ unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba)
+ 			   sizeof(struct be_cmd_get_boot_target_resp));
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -285,10 +285,10 @@ unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
+ 		    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 		    "BG_%d : In beiscsi_get_session_info\n");
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -311,7 +311,7 @@ unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
+ 	sge->len = cpu_to_le32(nonemb_cmd->size);
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -334,7 +334,7 @@ int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
+ 	struct be_fw_cfg *req = embedded_payload(wrb);
+ 	int status = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+@@ -415,7 +415,7 @@ int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
+ 		status = -EINVAL;
+ 	}
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -440,7 +440,7 @@ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
+ 	nonemb_cmd.size = sizeof(struct be_mgmt_controller_attributes);
+ 	req = nonemb_cmd.va;
+ 	memset(req, 0, sizeof(*req));
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	memset(wrb, 0, sizeof(*wrb));
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
+@@ -470,7 +470,7 @@ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
+ 	} else
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 			    "BG_%d :  Failed in mgmt_check_supported_fw\n");
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	if (nonemb_cmd.va)
+ 		pci_free_consistent(ctrl->pdev, nonemb_cmd.size,
+ 				    nonemb_cmd.va, nonemb_cmd.dma);
+@@ -501,8 +501,9 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 	req->region = region;
+ 	req->sector = sector;
+ 	req->offset = offset;
+-	spin_lock(&ctrl->mbox_lock);
+ 
++	if (mutex_lock_interruptible(&ctrl->mbox_lock))
++		return 0;
+ 	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
+ 	case BEISCSI_WRITE_FLASH:
+ 		offset = sector * sector_size + offset;
+@@ -521,13 +522,13 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 			    "BG_%d : Unsupported cmd = 0x%x\n\n",
+ 			    bsg_req->rqst_data.h_vendor.vendor_cmd[0]);
+ 
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return -ENOSYS;
+ 	}
+ 
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -542,7 +543,7 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 
+ 	be_mcc_notify(phba);
+ 
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -562,7 +563,7 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ 	struct iscsi_cleanup_req *req = embedded_payload(wrb);
+ 	int status = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+@@ -576,7 +577,7 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ 	if (status)
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
+ 			    "BG_%d : mgmt_epfw_cleanup , FAILED\n");
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
+@@ -592,10 +593,10 @@ unsigned int  mgmt_invalidate_icds(struct beiscsi_hba *phba,
+ 	struct invalidate_commands_params_in *req;
+ 	unsigned int i, tag = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -622,7 +623,7 @@ unsigned int  mgmt_invalidate_icds(struct beiscsi_hba *phba,
+ 	sge->len = cpu_to_le32(nonemb_cmd->size);
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -637,10 +638,10 @@ unsigned int mgmt_invalidate_connection(struct beiscsi_hba *phba,
+ 	struct iscsi_invalidate_connection_params_in *req;
+ 	unsigned int tag = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 	wrb = wrb_from_mccq(phba);
+@@ -659,7 +660,7 @@ unsigned int mgmt_invalidate_connection(struct beiscsi_hba *phba,
+ 		req->cleanup_type = CMD_ISCSI_CONNECTION_INVALIDATE;
+ 	req->save_cfg = savecfg_flag;
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -671,10 +672,10 @@ unsigned int mgmt_upload_connection(struct beiscsi_hba *phba,
+ 	struct tcp_upload_params_in *req;
+ 	unsigned int tag = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 	wrb = wrb_from_mccq(phba);
+@@ -687,7 +688,7 @@ unsigned int mgmt_upload_connection(struct beiscsi_hba *phba,
+ 	req->id = (unsigned short)cid;
+ 	req->upload_type = (unsigned char)upload_flag;
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -732,10 +733,11 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 
+ 	ptemplate_address = &template_address;
+ 	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
+-	spin_lock(&ctrl->mbox_lock);
++	if (mutex_lock_interruptible(&ctrl->mbox_lock))
++		return 0;
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 	wrb = wrb_from_mccq(phba);
+@@ -773,7 +775,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BG_%d : unknown addr family %d\n",
+ 			    dst_addr->sa_family);
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		free_mcc_tag(&phba->ctrl, tag);
+ 		return -EINVAL;
+ 
+@@ -802,7 +804,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	}
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -815,10 +817,11 @@ unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+ 	unsigned int tag;
+ 	int status = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	if (mutex_lock_interruptible(&ctrl->mbox_lock))
++		return -EINTR;
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -831,7 +834,7 @@ unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+ 			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
+ 			   sizeof(*req));
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 
+ 	status = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
+ 	if (status) {
+@@ -864,10 +867,10 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 	unsigned int tag;
+ 	int rc = 0;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		rc = -ENOMEM;
+ 		goto free_cmd;
+ 	}
+@@ -882,7 +885,7 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 	sge->len = cpu_to_le32(nonemb_cmd->size);
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 
+ 	rc = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd);
+ 
+@@ -1015,8 +1018,9 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 	uint32_t ip_type;
+ 	int rc;
+ 
+-	if (mgmt_get_all_if_id(phba))
+-		return -EIO;
++	rc = mgmt_get_all_if_id(phba);
++	if (rc)
++		return rc;
+ 
+ 	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
+ 		BE2_IPV6 : BE2_IPV4 ;
+@@ -1185,8 +1189,9 @@ int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
+ 	uint32_t ioctl_size = sizeof(struct be_cmd_get_if_info_resp);
+ 	int rc;
+ 
+-	if (mgmt_get_all_if_id(phba))
+-		return -EIO;
++	rc = mgmt_get_all_if_id(phba);
++	if (rc)
++		return rc;
+ 
+ 	do {
+ 		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+@@ -1262,10 +1267,11 @@ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
+ 	struct be_cmd_hba_name *req;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	if (mutex_lock_interruptible(&ctrl->mbox_lock))
++		return 0;
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -1278,7 +1284,7 @@ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
+ 			sizeof(*req));
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -1289,10 +1295,11 @@ unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba)
+ 	struct be_cmd_ntwk_link_status_req *req;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	if (mutex_lock_interruptible(&ctrl->mbox_lock))
++		return 0;
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
+ 
+@@ -1305,7 +1312,7 @@ unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba)
+ 			sizeof(*req));
+ 
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 	return tag;
+ }
+ 
+@@ -1761,10 +1768,10 @@ int beiscsi_logout_fw_sess(struct beiscsi_hba *phba,
+ 		    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 		    "BG_%d : In bescsi_logout_fwboot_sess\n");
+ 
+-	spin_lock(&ctrl->mbox_lock);
++	mutex_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+-		spin_unlock(&ctrl->mbox_lock);
++		mutex_unlock(&ctrl->mbox_lock);
+ 		beiscsi_log(phba, KERN_INFO,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 			    "BG_%d : MBX Tag Failure\n");
+@@ -1782,7 +1789,7 @@ int beiscsi_logout_fw_sess(struct beiscsi_hba *phba,
+ 	/* Set the session handle */
+ 	req->session_handle = fw_sess_handle;
+ 	be_mcc_notify(phba);
+-	spin_unlock(&ctrl->mbox_lock);
++	mutex_unlock(&ctrl->mbox_lock);
+ 
+ 	rc = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
+ 	if (rc) {
 -- 
 1.7.1
 
