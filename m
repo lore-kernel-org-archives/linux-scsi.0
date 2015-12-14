@@ -1,71 +1,54 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Sun, 13 Dec 2015 11:16:00 -0800
-Message-ID: <566DC3F0.6050206@suse.com>
-References: <cover.1444241058.git.lduncan@suse.com>
- <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
- <1444830904.2220.28.camel@HansenPartnership.com> <561EA018.7020700@suse.com>
- <1444848835.2220.50.camel@HansenPartnership.com> <5644BEE1.3010208@suse.com>
- <yq1ziyhy38c.fsf@sermon.lab.mkp.net> <5649C79E.9070603@suse.de>
- <564A4EDC.8060805@suse.com> <yq1d1v8tdr3.fsf@sermon.lab.mkp.net>
- <5669F31C.2010409@suse.com> <1449847911.4067.200.camel@localhost.localdomain>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Subject: Re: [PATCH 6/6] cxlflash: Enable device id for future IBM CXL adapter
+Date: Mon, 14 Dec 2015 14:47:58 +1100
+Message-ID: <566E3BEE.9070307@au1.ibm.com>
+References: <1449787867-23015-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1449788087-23282-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57598 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752306AbbLMTRP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Dec 2015 14:17:15 -0500
-In-Reply-To: <1449847911.4067.200.camel@localhost.localdomain>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:51959 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233AbbLNDtD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Dec 2015 22:49:03 -0500
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+	Mon, 14 Dec 2015 13:48:59 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 296273578054
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:48:56 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBE3mT3h25100498
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:48:37 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBE3mM8J018399
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 14:48:23 +1100
+In-Reply-To: <1449788087-23282-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>
 
-On 12/11/2015 07:31 AM, Ewan Milne wrote:
-> On Thu, 2015-12-10 at 13:48 -0800, Lee Duncan wrote:
->> On 11/17/2015 03:20 PM, Martin K. Petersen wrote:
->>>>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
->>>
->>> Lee> Martin: I will be glad to update the patch, creating a modprobe
->>> Lee> parameter as suggested, if you find this acceptable.
->>>
->>> For development use a module parameter would be fine. But I am concerned
->>> about our support folks that rely on the incrementing host number when
->>> analyzing customer log files.
->>>
->>> Ewan: How do you folks feel about this change?
->>>
->>
->> Ewan?
-> 
-> 
-> Personally, I think having host numbers that increase essentially
-> without limit (I think I've seen this with iSCSI sessions) are a
-> problem, the numbers start to lose meaning for people when they
-> are not easily recognizable.  Yes, it can help when you're analyzing
-> a log file, but it seems to me that you would want to track the
-> host state throughout anyway, so you could just follow the number
-> as it changes.
-> 
-> If we change the behavior, we have to change documentation, and
-> our support people will get calls.  But that's not a reason not
-> to do it.
-> 
-> -Ewan
-> 
+On 11/12/15 09:54, Uma Krishnan wrote:
+> From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+>
+> This drop enables a future card with a device id
+> of 0x0600 to be recognized by the cxlflash driver.
+> No card specific programming has been added. These
+> card specific changes will be staged in later.
+>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-Ewan:
+Without the card-specific code, how does the driver behave if the new 
+card is plugged in?
 
-Thank you for your reply. I agree with you, which is why I generated
-this patch.
 
-If we *do* make this change, do you think it would be useful to have a
-module option to revert to the old numbering behavior? I actually think
-it would be more confusing to support two behaviors than it would be to
-bite the bullet (so to speak) and make the change.
+Andrew
 
 -- 
-Lee Duncan
+Andrew Donnellan              Software Engineer, OzLabs
+andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
++61 2 6201 8874 (work)        IBM Australia Limited
+
