@@ -1,57 +1,76 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/9] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path
- using bmbx
-Date: Mon, 14 Dec 2015 16:04:12 +0100
-Message-ID: <566EDA6C.8030901@suse.de>
-References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for
+ host_no management
+Date: Mon, 14 Dec 2015 10:07:12 -0500
+Message-ID: <1450105632.4091.17.camel@localhost.localdomain>
+References: <cover.1444241058.git.lduncan@suse.com>
+	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
+	 <1444830904.2220.28.camel@HansenPartnership.com>
+	 <561EA018.7020700@suse.com>
+	 <1444848835.2220.50.camel@HansenPartnership.com>
+	 <5644BEE1.3010208@suse.com> <yq1ziyhy38c.fsf@sermon.lab.mkp.net>
+	 <5649C79E.9070603@suse.de> <564A4EDC.8060805@suse.com>
+	 <yq1d1v8tdr3.fsf@sermon.lab.mkp.net> <5669F31C.2010409@suse.com>
+	 <1449847911.4067.200.camel@localhost.localdomain>
+	 <566DC3F0.6050206@suse.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50468 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824AbbLNPEO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Dec 2015 10:04:14 -0500
-In-Reply-To: <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <566DC3F0.6050206@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On 12/14/2015 07:10 AM, Jitendra Bhivare wrote:
-> From: Jitendra <jitendra.bhivare@avagotech.com>
->
-> We are taking mbox_lock spinlock which disables pre-emption before we=
- poll
-> for mbox completion. Waiting there with spinlock held in excess of 20=
-s will
-> cause soft lockup.
->
-> Actual fix is to change mbox_lock to mutex.
-Really? I didn't find that in the patch ...
+On Sun, 2015-12-13 at 11:16 -0800, Lee Duncan wrote:
+> On 12/11/2015 07:31 AM, Ewan Milne wrote:
+> > On Thu, 2015-12-10 at 13:48 -0800, Lee Duncan wrote:
+> >> On 11/17/2015 03:20 PM, Martin K. Petersen wrote:
+> >>>>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
+> >>>
+> >>> Lee> Martin: I will be glad to update the patch, creating a modprobe
+> >>> Lee> parameter as suggested, if you find this acceptable.
+> >>>
+> >>> For development use a module parameter would be fine. But I am concerned
+> >>> about our support folks that rely on the incrementing host number when
+> >>> analyzing customer log files.
+> >>>
+> >>> Ewan: How do you folks feel about this change?
+> >>>
+> >>
+> >> Ewan?
+> > 
+> > 
+> > Personally, I think having host numbers that increase essentially
+> > without limit (I think I've seen this with iSCSI sessions) are a
+> > problem, the numbers start to lose meaning for people when they
+> > are not easily recognizable.  Yes, it can help when you're analyzing
+> > a log file, but it seems to me that you would want to track the
+> > host state throughout anyway, so you could just follow the number
+> > as it changes.
+> > 
+> > If we change the behavior, we have to change documentation, and
+> > our support people will get calls.  But that's not a reason not
+> > to do it.
+> > 
+> > -Ewan
+> > 
+> 
+> Ewan:
+> 
+> Thank you for your reply. I agree with you, which is why I generated
+> this patch.
+> 
+> If we *do* make this change, do you think it would be useful to have a
+> module option to revert to the old numbering behavior? I actually think
+> it would be more confusing to support two behaviors than it would be to
+> bite the bullet (so to speak) and make the change.
+> 
 
-> The changes are done in phases. This is the first part.
-> 1. Changed mgmt_get_all_if_id to use MCC instead of BMBX.
-> 2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
-> wait_event_timeout. Added error handling code for IO reads.
-> OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when
-> unreachable boot targets are configured.
->
-Why did you modify be_mbox_db_ready_wait(), seeing that you're not=20
-using the mailbox interface anymore after this change?
+I'm not opposed to having the module option if others (Martin?) feel
+they need it, but generally I think it's better to keep things as simple
+as possible.  So, unless there are strong objections, I would say no.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Ewan
