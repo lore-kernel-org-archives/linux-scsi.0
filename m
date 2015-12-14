@@ -1,42 +1,49 @@
-From: Andrzej Hajda <a.hajda@samsung.com>
-Subject: [PATCH] be2iscsi: fix handling return value of mgmt_open_connection
-Date: Mon, 14 Dec 2015 11:06:04 +0100
-Message-ID: <1450087564-28441-7-git-send-email-a.hajda@samsung.com>
-References: <1450087564-28441-1-git-send-email-a.hajda@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1450087564-28441-1-git-send-email-a.hajda@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>
-Cc: Andrzej Hajda <a.hajda@samsung.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/20] qla2xxx: Fix interaction issue between qla2xxx and
+ Target Core Module
+Date: Mon, 14 Dec 2015 02:34:49 -0800
+Message-ID: <20151214103449.GA8095@infradead.org>
+References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-11-git-send-email-himanshu.madhani@qlogic.com>
+ <20151208023700.GB9088@infradead.org>
+ <D28DCE82.1B0CE%quinn.tran@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <D28DCE82.1B0CE%quinn.tran@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Quinn Tran <quinn.tran@qlogic.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The function can return negative values, so its result should
-be assigned to signed variable.
+On Wed, Dec 09, 2015 at 10:07:32PM +0000, Quinn Tran wrote:
+> >Err, no.  Looking into the refcount inside a kref is never the
+> >right thing to do.
+> 
+> QT> even for debug purpose??
 
-The problem has been detected using proposed semantic patch
-scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
+No.  Please treat struct kref as opaque.
 
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
+> QT> These bits provide indication as to where the command has traversed in
+> the QLA code.  Each bit is set one time. Due to the async nature of the
+> TMR code, it triggers QLA driver to repeat this specific free path in the
+> double free case.  This BUG_ON allows us trap it early on.
+> 
+> In one of the corner case (below), I need to overloaded it + lock for the
+> cleanup process.
 
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
----
- drivers/scsi/be2iscsi/be_iscsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Setting bits fundamentaly is a read/modify/write cycle.  You either
+need to use {set,clear,test}_bit or lock around these manipulations.
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index b7087ba..ce9f192 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -1106,8 +1106,8 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
- 	struct beiscsi_hba *phba = beiscsi_ep->phba;
- 	struct tcp_connect_and_offload_out *ptcpcnct_out;
- 	struct be_dma_mem nonemb_cmd;
--	unsigned int tag, req_memsize;
--	int ret = -ENOMEM;
-+	unsigned int req_memsize;
-+	int tag, ret = -ENOMEM;
- 
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
- 		    "BS_%d : In beiscsi_open_conn\n");
--- 
-1.9.1
+> QT> The cmd->aborted flag is used to track the CMD_T_ABORT flag at TCM
+> level.  If the command have been requested to be aborted by TCM or already
+> aborted, we advance it to the ?free" state because our hardware have
+> already started freeing up resources associated to this command/exchange.
+> In this specific case(above), a XFER RDY was aborted by the TMR.
+> Returning the cmd to TCM to generate SCSI Status would generate erroneous
+> HW error due to freed resource.
+
+I really think this nees to be updated on top of Bat's changes as a
+start and re-reviewed.  The amoutn of special casing and second guessing
+here is simply not sustainable in the long run.
