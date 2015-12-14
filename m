@@ -1,58 +1,57 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH 1/7] iscsi-target: Use a variable initialisation in
- iscsi_set_default_param() directly
-Date: Mon, 14 Dec 2015 12:38:28 +0100
-Message-ID: <566EAA34.5000301@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <566C2F7B.6030704@users.sourceforge.net>
- <566C308A.6000109@users.sourceforge.net> <20151212194939.GQ5284@mwanda>
- <20151214084114.GB31151@c203.arch.suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/9] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path
+ using bmbx
+Date: Mon, 14 Dec 2015 16:04:12 +0100
+Message-ID: <566EDA6C.8030901@suse.de>
+References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
+ <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:49945 "EHLO mout.web.de"
+Received: from mx2.suse.de ([195.135.220.15]:50468 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932206AbbLNLik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Dec 2015 06:38:40 -0500
-In-Reply-To: <20151214084114.GB31151@c203.arch.suse.de>
+	id S1751824AbbLNPEO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Dec 2015 10:04:14 -0500
+In-Reply-To: <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-> @@ -127,9 +127,8 @@ static struct iscsi_param *iscsi_set_default_param(struct iscsi_param_list *para
->  		char *name, char *value, u8 phase, u8 scope, u8 sender,
->  		u16 type_range, u8 use)
->  {
-> -	struct iscsi_param *param = NULL;
-> +	struct iscsi_param *param;
->  
-> 	param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
->  	if (!param) {
->  		pr_err("Unable to allocate memory for parameter.\n");
-> 
-> 
-> This way it would be _far_ more readable.
+On 12/14/2015 07:10 AM, Jitendra Bhivare wrote:
+> From: Jitendra <jitendra.bhivare@avagotech.com>
+>
+> We are taking mbox_lock spinlock which disables pre-emption before we=
+ poll
+> for mbox completion. Waiting there with spinlock held in excess of 20=
+s will
+> cause soft lockup.
+>
+> Actual fix is to change mbox_lock to mutex.
+Really? I didn't find that in the patch ...
 
-I guess that there are some opinions available for this implementation detail.
+> The changes are done in phases. This is the first part.
+> 1. Changed mgmt_get_all_if_id to use MCC instead of BMBX.
+> 2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
+> wait_event_timeout. Added error handling code for IO reads.
+> OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when
+> unreachable boot targets are configured.
+>
+Why did you modify be_mbox_db_ready_wait(), seeing that you're not=20
+using the mailbox interface anymore after this change?
 
+Cheers,
 
-> IMHO one should have a 1 action per line of code style
-
-How often do you care for such style issues?
-
-
-> and only assign values in at declaration time if really necessary.
-
-Which is or might become the official Linux coding style recommendation
-for this aspect?
-
-
-> But what is the benefit from this? Is it fixing a (hypothetical) bug?
-
-I find the shown null pointer initialisation just needless.
-
-Regards,
-Markus
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
