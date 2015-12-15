@@ -1,166 +1,184 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: RE: [PATCH v2 3/9] aacraid: Added EEH support
-Date: Tue, 15 Dec 2015 19:10:04 +0000
-Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1F149F@BBYEXM01.pmc-sierra.internal>
-References: <1449773159-25058-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <201512130816.M5Va6y9e%fengguang.wu@intel.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Subject: RE: [PATCH] bnx2fc:Add proper locking protection in
+ bnx2fc_ctrlr_enabled
+Date: Tue, 15 Dec 2015 19:51:34 +0000
+Message-ID: <86A17A977688E04689F40F6B1EC20EC60194111FCC@AVMB1.qlogic.org>
+References: <1449949166-3977-1-git-send-email-xerofoify@gmail.com>
+ <alpine.OSX.2.00.1512151139140.1614@administrators-macbook-pro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:45079 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753445AbbLOTKH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 14:10:07 -0500
-In-Reply-To: <201512130816.M5Va6y9e%fengguang.wu@intel.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40446 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754138AbbLOTvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Dec 2015 14:51:39 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBFJkkVY019886
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:51:37 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1yt4xaj27k-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:51:37 -0800
+In-Reply-To: <alpine.OSX.2.00.1512151139140.1614@administrators-macbook-pro.local>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <lkp@intel.com>
-Cc: "kbuild-all@01.org" <kbuild-all@01.org>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Scott Benesh <Scott.Benesh@pmcs.com>
+To: Chad Dupuis <chad.dupuis@qlogic.com>, Nicholas Krause <xerofoify@gmail.com>
+Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>, "JBottomley@odin.com" <JBottomley@odin.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Hello All,
+--_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-It looks like the build robot did not   merge the previous aacraid patches
-which contained the functions aac_release_resources and aac_acquire_resources,
- before applying and building this set of patches.
-
-As is evident from the commit messages here
-
-https://github.com/0day-ci/linux/tree/master/drivers/scsi/aacraid
-
-This kbuild test robot can be safely ignored.
+Also, the patch fails to do what it's message describes, i.e. the calls _bn=
+x2fc_enable() and _bnx2fc_disable() are outside the lock/unlock.
 
 
-Regards,
-Raghava Aditya
+-----Original Message-----
+From: Chad Dupuis=20
+Sent: Tuesday, December 15, 2015 8:43 AM
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>; =
+JBottomley@odin.com; martin.petersen@oracle.com; linux-scsi <linux-scsi@vge=
+r.kernel.org>; linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] bnx2fc:Add proper locking protection in bnx2fc_ctrlr_e=
+nabled
 
-> -----Original Message-----
-> From: kbuild test robot [mailto:lkp@intel.com]
-> Sent: Saturday, December 12, 2015 4:28 PM
-> To: Raghava Aditya Renukunta
-> Cc: kbuild-all@01.org; JBottomley@Parallels.com; linux-scsi@vger.kernel.org;
-> Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
-> aacraid@pmc-sierra.com; Scott Benesh; Raghava Aditya Renukunta
-> Subject: Re: [PATCH v2 3/9] aacraid: Added EEH support
-> 
-> Hi Raghava,
-> 
-> [auto build test ERROR on scsi/for-next]
-> [also build test ERROR on v4.4-rc4 next-20151211]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Raghava-Aditya-
-> Renukunta/aacraid-Patchset-for-aacraid-driver-version-41052/20151211-
-> 094405
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> config: x86_64-randconfig-r0-12130550 (attached as .config)
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/scsi/aacraid/linit.c: In function 'aac_pci_error_detected':
-> >> drivers/scsi/aacraid/linit.c:1546:3: error: implicit declaration of function
-> 'aac_release_resources' [-Werror=implicit-function-declaration]
->       aac_release_resources(aac);
->       ^
->    drivers/scsi/aacraid/linit.c: In function 'aac_pci_resume':
-> >> drivers/scsi/aacraid/linit.c:1617:2: error: implicit declaration of function
-> 'aac_acquire_resources' [-Werror=implicit-function-declaration]
->      aac_acquire_resources(aac);
->      ^
->    cc1: some warnings being treated as errors
-> 
-> vim +/aac_release_resources +1546 drivers/scsi/aacraid/linit.c
-> 
->   1540
->   1541			aac->handle_pci_error = 1;
->   1542			aac->adapter_shutdown = 1;
->   1543
->   1544			scsi_block_requests(aac->scsi_host_ptr);
->   1545			aac_flush_ios(aac);
-> > 1546			aac_release_resources(aac);
->   1547
->   1548			pci_disable_pcie_error_reporting(pdev);
->   1549			aac_adapter_ioremap(aac, 0);
->   1550
->   1551			return PCI_ERS_RESULT_NEED_RESET;
->   1552		case pci_channel_io_perm_failure:
->   1553			aac->handle_pci_error = 1;
->   1554			aac->adapter_shutdown = 1;
->   1555
->   1556			aac_flush_ios(aac);
->   1557			return PCI_ERS_RESULT_DISCONNECT;
->   1558		}
->   1559
->   1560		return PCI_ERS_RESULT_NEED_RESET;
->   1561	}
->   1562
->   1563	static pci_ers_result_t aac_pci_mmio_enabled(struct pci_dev *pdev)
->   1564	{
->   1565		dev_err(&pdev->dev, "aacraid: PCI error - mmio
-> enabled\n");
->   1566		return PCI_ERS_RESULT_NEED_RESET;
->   1567	}
->   1568
->   1569	static pci_ers_result_t aac_pci_slot_reset(struct pci_dev *pdev)
->   1570	{
->   1571		dev_err(&pdev->dev, "aacraid: PCI error - slot reset\n");
->   1572		pci_restore_state(pdev);
->   1573		if (pci_enable_device(pdev)) {
->   1574			dev_warn(&pdev->dev,
->   1575				"aacraid: failed to enable slave\n");
->   1576			goto fail_device;
->   1577		}
->   1578
->   1579		pci_set_master(pdev);
->   1580
->   1581		if (pci_enable_device_mem(pdev)) {
->   1582			dev_err(&pdev->dev, "pci_enable_device_mem
-> failed\n");
->   1583			goto fail_device;
->   1584		}
->   1585
->   1586		return PCI_ERS_RESULT_RECOVERED;
->   1587
->   1588	fail_device:
->   1589		dev_err(&pdev->dev, "aacraid: PCI error - slot reset
-> failed\n");
->   1590		return PCI_ERS_RESULT_DISCONNECT;
->   1591	}
->   1592
->   1593
->   1594	static void aac_pci_resume(struct pci_dev *pdev)
->   1595	{
->   1596		struct Scsi_Host *shost = pci_get_drvdata(pdev);
->   1597		struct scsi_device *sdev = NULL;
->   1598		struct aac_dev *aac = (struct aac_dev *)shost_priv(shost);
->   1599
->   1600		pci_cleanup_aer_uncorrect_error_status(pdev);
->   1601
->   1602		if (aac_adapter_ioremap(aac, aac->base_size)) {
->   1603
->   1604			dev_err(&pdev->dev, "aacraid: ioremap failed\n");
->   1605			/* remap failed, go back ... */
->   1606			aac->comm_interface = AAC_COMM_PRODUCER;
->   1607			if (aac_adapter_ioremap(aac,
-> AAC_MIN_FOOTPRINT_SIZE)) {
->   1608				dev_warn(&pdev->dev,
->   1609					"aacraid: unable to map adapter.\n");
->   1610
->   1611				return;
->   1612			}
->   1613		}
->   1614
->   1615		msleep(10000);
->   1616
-> > 1617		aac_acquire_resources(aac);
->   1618
->   1619		/*
->   1620		 * reset this flag to unblock ioctl() as it was set
-> 
+
+On Sat, 12 Dec 2015, Nicholas Krause wrote:
+
+> This adds proper locking protection in bnx2fc_ctrl_enabled around the=20
+> calls to the functions, _bnx2fc_enable and _bnx2fc_disable in order to=20
+> avoid concurrent access on these functions accessing global referenced=20
+> data structures in their internal intended work.
+>
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 > ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 8 ++++++++
+> 1 file changed, 8 insertions(+)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c=20
+> b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 67405c6..e43648f 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -2177,13 +2177,21 @@ static int bnx2fc_ctlr_enabled(struct=20
+> fcoe_ctlr_device *cdev) {
+> 	struct fcoe_ctlr *ctlr =3D fcoe_ctlr_device_priv(cdev);
+>
+> +	rtnl_lock();
+> +	mutex_lock(&bnx2fc_dev_lock);
+> 	switch (cdev->enabled) {
+> 	case FCOE_CTLR_ENABLED:
+> +		rtnl_unlock();
+> +		mutex_unlock(&bnx2fc_dev_lock);
+> 		return __bnx2fc_enable(ctlr);
+> 	case FCOE_CTLR_DISABLED:
+> +		rtnl_unlock();
+> +		mutex_unlock(&bnx2fc_dev_lock);
+> 		return __bnx2fc_disable(ctlr);
+> 	case FCOE_CTLR_UNUSED:
+> 	default:
+> +		rtnl_unlock();
+> +		mutex_unlock(&bnx2fc_dev_lock);
+> 		return -ENOTSUPP;
+> 	};
+> }
+>
+
+Nack.  All we end up protecting is the check of cdev->enabled and I do not =
+believe taking two mutexes is required for that.
+
+--_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IvV4AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADU2RjIzNDQ0
+RURDRDg0NDE4NDQzNDNDQkZFRTdGMkFBAFMHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HDAAPABMA
+MwAiAAIAawEBIIADAA4AAADfBwwADwATADMAIgACAGsBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEkAAABSRTogW1BBVENIXSBibngyZmM6QWRkIHByb3BlciBsb2NraW5n
+IHByb3RlY3Rpb24gaW4gYm54MmZjX2N0cmxyX2VuYWJsZWQA7xkBA5AGAJARAAA+AAAAAgF/AAEA
+AAA+AAAAPDg2QTE3QTk3NzY4OEUwNDY4OUY0MEY2QjFFQzIwRUM2MDE5NDExMUZDQ0BBVk1CMS5x
+bG9naWMub3JnPgAAAAsAHw4BAAAAAgEJEAEAAACXBQAAkwUAAJgKAABMWkZ1d/NSM2EACmZiaWQE
+AABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0K
+gAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYE
+kBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX
+8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8aggQWwZICwcwGgZ4H0KsHQRwBxwC3AhsBzAbzQg
+ZCMQdxHQBUBpdOYnBCAHgXNhGdEBAATyhmIHkCHgaS5lLiHzgx5RItFfYm54MhGwjl8J8AGgHnAo
+KSAAcF8cYCYmDeEmxglwIAhgdA8AkAEAIfMJAGNrL3WibimSLlxsC4BlCoHVKmstK6JPBRBnC4AH
+QC8F0CQUK6MqVUYDYToghkMR0BxgRHVwdQQAXwMwKmQGYAIwLfBUClBzqGRheSHgRAWQZQbQORux
+MTUh4AHQMMAgOCg6NDMhkE0qVVRvVS3wTg5QaAbwYQQgS8UYcHUSACA8eASQGTBibwaQeUBnAMAD
+EC7JBaBtPipVQ2Mt8DAwCQUwLUUZwCBRTG+dLCBjBgAYkSRCVXAfYFUJcGEcsDw2BC02dS05NvZA
+cQkANjE0czsg+EpCbwJAA3AecDQABHC/C4A0cjnAAMAAIDqxcBIQ2wSQEgBuOoAYcGMecDrU8Sph
+dXgtBPAAkDNgPPhEQHYYMHIuawSRZfs0YAWwZzmxPPQ+tD2WPrRjPl8u1nViagWQL3FSAmUt8FtQ
+QVRDSERdICY0OkFkHGBw/wNgO6AFwCmSC4A14EShECB9QvBpAiAjoAOgJjVC8HK8bHImlQswKm9H
+8U8DoP0GEHQh4A6QMCIw8yHgMn6qd0WiOke8PhJAaC6h/S4wZAQgRK9Fv0bERzYogX8IYCdBIgJM
+JyXEIwEiAmb/KeBOkyUBJiwnL1PSRkEFsOcEgSLyTCdhdjPQHGAb4d5jCHAJcAIwVABjMFAEEb9O
+wSIBM0FSd1elTgJnCQD2YixRCXBmBJAJ8DBQHGDXTCcv4AGQIDcRdULwCHD3B5FGQSIBaQXAC4Ab
+oSxC910yHcAcUXcFsCo3NLZMkCZTLBAYUGQtGTBmLfxieTJfM280ekyQLRhbgdMFEBoxcy89Ui8m
+NGUFSl8RsG88gSB8MUAg9itmpUwnMRxwAxAloRmjfmQh4GaAC4ASADtRUtEo/CspXq8N4AEgY3Es
+IFeR7i9kT2VfTCdia39sj0wnAx2xEDAgNjc0MDUYYzYuJUAxcDY0OPdq4B6RchA0YvprX28/cElP
+ZqFuL3SfcElAQGNwMqAxNzcsMTGAK3mT/3mQeUIfYTtgNlBdMUZoRxj+KFv0UQhl8nvkAQAdYDBQ
+2CAqY35hJxBcAABMNl8Mglvlfbh+wYESPX2/X/tNUHbQKH7jFiBevmcQgAJ7ACAp8F8pkicAg4eE
+lW33KOAQMIVEJieGfnCFQ4Wpz3/0A/AiYoMjLT5HRX8vAyWxYXFGQ09FX0MAVExSX0VOQUL4TEVE
+S6aEhYS4KeSFn/+GaY7Fh2+IfIS0EhAIcAOgHl8mLXvyiG6L3URJU/+M743/jw+QH5Evkj+TTye6
+g5UPlh9fVU5VU5ea93/zAQFhUGwvcJnfmN+jrx+a/5wPnR+TpDWwTk9UkFNVUFCIfVx9iHm3IEBe
+vEe1TgDQKjAgIZHtAyB3GeBd8SAucE43NdH/LqElgyIQKbAowGrgietUA/pJIyJuOgBD4D7wCJAa
+MPUcwGFN83ReUIakXHIEIP0JcHEukAlxHHAFsSIAGIAHKkYVQrZwAB8AQgABAAAAHAAAAEoAbwBl
+ACAAQwBhAHIAbgB1AGMAYwBpAG8AAAAfAGUAAQAAADIAAABqAG8AZQAuAGMAYQByAG4AdQBjAGMA
+aQBvAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFB
+AAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASgBvAGUAIABDAGEAcgBuAHUAYwBjAGkA
+bwAAAFMATQBUAFAAAABqAG8AZQAuAGMAYQByAG4AdQBjAGMAaQBvAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAB8AAl0BAAAAMgAAAGoAbwBlAC4AYwBhAHIAbgB1AGMAYwBpAG8AQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AGoAbwBlAC4AYwBhAHIAbgB1AGMAYwBp
+AG8AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABwAAABKAG8AZQAgAEMAYQByAG4A
+dQBjAGMAaQBvAAAAHwAfDAEAAAAyAAAAagBvAGUALgBjAGEAcgBuAHUAYwBjAGkAbwBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAcAAAAAAA
+AACBKx+kvqMQGZ1uAN0BD1QCAAAAgEoAbwBlACAAQwBhAHIAbgB1AGMAYwBpAG8AAABTAE0AVABQ
+AAAAagBvAGUALgBjAGEAcgBuAHUAYwBjAGkAbwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFd
+AQAAADIAAABqAG8AZQAuAGMAYQByAG4AdQBjAGMAaQBvAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AAAAHwD4PwEAAAAcAAAASgBvAGUAIABDAGEAcgBuAHUAYwBjAGkAbwAAAB8AI0ABAAAAMgAAAGoA
+bwBlAC4AYwBhAHIAbgB1AGMAYwBpAG8AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfACJAAQAA
+AAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBKAG8A
+ZQAgAEMAYQByAG4AdQBjAGMAaQBvAAAAUwBNAFQAUAAAAGoAbwBlAC4AYwBhAHIAbgB1AGMAYwBp
+AG8AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAyAAAAagBvAGUALgBjAGEAcgBuAHUA
+YwBjAGkAbwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQ
+AE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAABW8jRE
+7c2EQYRDQ8v+5/KqAwAXAAEAAABAADkAACc5AHI30QFAAAgwj4SlAHI30QELACkAAAAAAAsAIwAA
+AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcA
+ZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAA
+AB8ANwABAAAAkgAAAFIARQA6ACAAWwBQAEEAVABDAEgAXQAgAGIAbgB4ADIAZgBjADoAQQBkAGQA
+IABwAHIAbwBwAGUAcgAgAGwAbwBjAGsAaQBuAGcAIABwAHIAbwB0AGUAYwB0AGkAbwBuACAAaQBu
+ACAAYgBuAHgAMgBmAGMAXwBjAHQAcgBsAHIAXwBlAG4AYQBiAGwAZQBkAAAAAAAfAD0AAQAAAAoA
+AABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAACMAAAAPABhAGwAcABpAG4AZQAu
+AE8AUwBYAC4AMgAuADAAMAAuADEANQAxADIAMQA1ADEAMQAzADkAMQA0ADAALgAxADYAMQA0AEAA
+YQBkAG0AaQBuAGkAcwB0AHIAYQB0AG8AcgBzAC0AbQBhAGMAYgBvAG8AawAtAHAAcgBvAC4AbABv
+AGMAYQBsAD4AAAACAXEAAQAAACAAAAABAdE1FNNSxfvqFZyASrgIVQ//1FFmnszLKwD//62WYB8A
+cAABAAAAigAAAFsAUABBAFQAQwBIAF0AIABiAG4AeAAyAGYAYwA6AEEAZABkACAAcAByAG8AcABl
+AHIAIABsAG8AYwBrAGkAbgBnACAAcAByAG8AdABlAGMAdABpAG8AbgAgAGkAbgAgAGIAbgB4ADIA
+ZgBjAF8AYwB0AHIAbAByAF8AZQBuAGEAYgBsAGUAZAAAAAAAHwA1EAEAAAB8AAAAPAA4ADYAQQAx
+ADcAQQA5ADcANwA2ADgAOABFADAANAA2ADgAOQBGADQAMABGADYAQgAxAEUAQwAyADAARQBDADYA
+MAAxADkANAAxADEAMQBGAEMAQwBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAA
+AB8AORABAAAA+gAAADwAMQA0ADQAOQA5ADQAOQAxADYANgAtADMAOQA3ADcALQAxAC0AZwBpAHQA
+LQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AeABlAHIAbwBmAG8AaQBmAHkAQABnAG0AYQBpAGwALgBj
+AG8AbQA+ACAAPABhAGwAcABpAG4AZQAuAE8AUwBYAC4AMgAuADAAMAAuADEANQAxADIAMQA1ADEA
+MQAzADkAMQA0ADAALgAxADYAMQA0AEAAYQBkAG0AaQBuAGkAcwB0AHIAYQB0AG8AcgBzAC0AbQBh
+AGMAYgBvAG8AawAtAHAAcgBvAC4AbABvAGMAYQBsAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAA
+wAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/
+////QAAHMM/BoAByN9EBCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAvAAAAYz1VUzth
+PSA7cD1RTG9naWM7bD1BVk1CMS0xNTEyMTUxOTUxMzRaLTE0NTk0OQAAAgEQMAEAAABGAAAAAAAA
+APkM74liutARkasAoCTdjOEHABH+xnbGLtARkZMAoCTdjOEAAAAYgjcAABHw78PX2Y1LlfelAI0v
+wIIBmLumBv4AAAAAHwD6PwEAAAAcAAAASgBvAGUAIABDAGEAcgBuAHUAYwBjAGkAbwAAAAMACVkB
+AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAA
+AAAOhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAAAAAACwAAgAggBgAAAAAAwAAA
+AAAAAEYAAAAAgoUAAAAAAAAfAACACCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIAAABJAFAA
+TQAuAE4AbwB0AGUAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBt
+AHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAA
+AEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAx
+ADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMA
+bABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAH7L
+
+--_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_--
