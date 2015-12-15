@@ -1,71 +1,44 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: qla2xxx: ISP27xx add tests for incomplete template.
-Date: Tue, 15 Dec 2015 23:04:37 +0300
-Message-ID: <20151215200437.GA22468@mwanda>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 3/6] cxlflash: Removed driver date print
+Date: Tue, 15 Dec 2015 15:04:04 -0600
+Message-ID: <56708044.4060008@linux.vnet.ibm.com>
+References: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1450127193-48109-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29190 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbbLOUEp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2015 15:04:45 -0500
-Content-Disposition: inline
+Received: from e32.co.us.ibm.com ([32.97.110.150]:54041 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932443AbbLOVD6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2015 16:03:58 -0500
+Received: from localhost
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
+	Tue, 15 Dec 2015 14:03:57 -0700
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id A59ED19D8026
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 13:51:59 -0700 (MST)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBFL3s5E27656428
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 14:03:54 -0700
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBFL3rmZ004400
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 14:03:54 -0700
+In-Reply-To: <1450127193-48109-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: joe.carnuccio@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>
 
-Hello Joe Carnuccio,
+On 12/14/2015 3:06 PM, Uma Krishnan wrote:
+> Having a date for the driver requires it to be updated quite
+> often. Removing the date which is not necessary. Also made
+> use of the existing symbol to print the driver name.
+>
+> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> ---
 
-The patch 299f5e27ac5f: "qla2xxx: ISP27xx add tests for incomplete
-template." from Sep 25, 2014, leads to the following static checker
-warning:
+Acked-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-	drivers/scsi/qla2xxx/qla_tmpl.c:779 qla27xx_walk_template()
-	warn: should this be 'count == -1'
-
-drivers/scsi/qla2xxx/qla_tmpl.c
-   764  static void
-   765  qla27xx_walk_template(struct scsi_qla_host *vha,
-   766          struct qla27xx_fwdt_template *tmp, void *buf, ulong *len)
-   767  {
-   768          struct qla27xx_fwdt_entry *ent = (void *)tmp + tmp->entry_offset;
-   769          ulong count = tmp->entry_count;
-   770  
-   771          ql_dbg(ql_dbg_misc, vha, 0xd01a,
-   772              "%s: entry count %lx\n", __func__, count);
-   773          while (count--) {
-   774                  if (qla27xx_find_entry(ent->hdr.entry_type)(vha, ent, buf, len))
-   775                          break;
-   776                  ent = qla27xx_next_entry(ent);
-   777          }
-   778  
-   779          if (count)
-   780                  ql_dbg(ql_dbg_misc, vha, 0xd018,
-   781                      "%s: residual count (%lx)\n", __func__, count);
-
-The static checker assumes that we are testing to see if the loop ended
-with a break or not.  These are normally bugs because if we did not
-break the count is set to (ulong)-1.
-
-This code is sort of weird.  It's just debugging so I guess it doesn't
-matter.  Are we expecting -1?
-
-   782  
-   783          if (ent->hdr.entry_type != ENTRY_TYPE_TMP_END)
-   784                  ql_dbg(ql_dbg_misc, vha, 0xd019,
-   785                      "%s: missing end (%lx)\n", __func__, count);
-   786  
-   787          ql_dbg(ql_dbg_misc, vha, 0xd01b,
-   788              "%s: len=%lx\n", __func__, *len);
-   789  
-   790          if (buf) {
-   791                  ql_log(ql_log_warn, vha, 0xd015,
-   792                      "Firmware dump saved to temp buffer (%ld/%p)\n",
-   793                      vha->host_no, vha->hw->fw_dump);
-   794                  qla2x00_post_uevent_work(vha, QLA_UEVENT_CODE_FW_DUMP);
-   795          }
-   796  }
-
-regards,
-dan carpenter
