@@ -1,115 +1,112 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 3/3] ses: fix discovery of SATA devices in SAS
- enclosures
-Date: Tue, 15 Dec 2015 11:17:46 +0100
-Message-ID: <566FE8CA.2090800@suse.de>
-References: <1449688206.2226.30.camel@HansenPartnership.com>
- <1449688495.2226.36.camel@HansenPartnership.com>
- <1449694567.2226.45.camel@HansenPartnership.com>
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: kernel BUG at block/bio.c:1787! while initializing scsi_debug on
+ ppc64 host
+Date: Tue, 15 Dec 2015 19:20:57 +0800
+Message-ID: <20151215112057.GC19209@eguan.usersys.redhat.com>
+References: <20151211115340.GB19209@eguan.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58116 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964798AbbLOKRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 05:17:48 -0500
-In-Reply-To: <1449694567.2226.45.camel@HansenPartnership.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:36457 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964803AbbLOLVD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2015 06:21:03 -0500
+Received: by mail-qg0-f44.google.com with SMTP id 103so3565098qgi.3
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 03:21:02 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20151211115340.GB19209@eguan.usersys.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 12/09/2015 09:56 PM, James Bottomley wrote:
-> The current discovery routines use the VPD 0x83 inquiry page to find
-> the device SAS address and match it to the end point in the enclosure=
-=2E
-> This doesn't work for SATA devices because expanders (or hosts) simpl=
-y
-> make up an endpoint address for STP and thus the address returned by
-> the VPD page never matches.  Instead of doing this, for SAS attached
-> devices, match by the direct endpoint address instead.
->
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com=
->
->
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 5f692ae..2a1d20e 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -194,6 +194,7 @@ config CHR_DEV_SCH
->   config SCSI_ENCLOSURE
->   	tristate "SCSI Enclosure Support"
->   	depends on SCSI && ENCLOSURE_SERVICES
-> +	depends on m || SCSI_SAS_ATTRS !=3D m
->   	help
->   	  Enclosures are devices sitting on or in SCSI backplanes that
->   	  manage devices.  If you have a disk cage, the chances are that
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index 7d9cec5..1736935 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -34,6 +34,8 @@
->   #include <scsi/scsi_driver.h>
->   #include <scsi/scsi_host.h>
->
-> +#include <scsi/scsi_transport_sas.h>
-> +
->   struct ses_device {
->   	unsigned char *page1;
->   	unsigned char *page1_types;
-> @@ -571,31 +573,15 @@ static void ses_enclosure_data_process(struct e=
-nclosure_device *edev,
->   static void ses_match_to_enclosure(struct enclosure_device *edev,
->   				   struct scsi_device *sdev)
->   {
-> -	unsigned char *desc;
->   	struct efd efd =3D {
->   		.addr =3D 0,
->   	};
->
->   	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent)=
-, 0);
->
-> -	if (!sdev->vpd_pg83_len)
-> -		return;
-> -
-> -	desc =3D sdev->vpd_pg83 + 4;
-> -	while (desc < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
-> -		enum scsi_protocol proto =3D desc[0] >> 4;
-> -		u8 code_set =3D desc[0] & 0x0f;
-> -		u8 piv =3D desc[1] & 0x80;
-> -		u8 assoc =3D (desc[1] & 0x30) >> 4;
-> -		u8 type =3D desc[1] & 0x0f;
-> -		u8 len =3D desc[3];
-> -
-> -		if (piv && code_set =3D=3D 1 && assoc =3D=3D 1
-> -		    && proto =3D=3D SCSI_PROTOCOL_SAS && type =3D=3D 3 && len =3D=3D=
- 8)
-> -			efd.addr =3D get_unaligned_be64(&desc[4]);
-> +	if (is_sas_attached(sdev))
-> +		efd.addr =3D sas_get_address(sdev);
->
-> -		desc +=3D len + 4;
-> -	}
->   	if (efd.addr) {
->   		efd.dev =3D &sdev->sdev_gendev;
->
->
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Fri, Dec 11, 2015 at 07:53:40PM +0800, Eryu Guan wrote:
+> Hi,
+> 
+> I saw this kernel BUG_ON on 4.4-rc4 kernel, and this can be reproduced
+> easily on ppc64 host by:
 
-Cheers,
+This is still reproducible with 4.4-rc5 kernel.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Eryu
+
+> 
+> modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=256
+> 
+> And I bisected to this commit
+> 
+> 	commit ca369d51b3e1649be4a72addd6d6a168cfb3f537
+> 	Author: Martin K. Petersen <martin.petersen@oracle.com>
+> 	Date:   Fri Nov 13 16:46:48 2015 -0500
+> 
+> 	    block/sd: Fix device-imposed transfer length limits
+> 
+> I confirmed by reverting this commit on top of 4.4-rc4 kernel and test
+> passed.
+> 
+> Thanks,
+> Eryu
+> 
+> P.S. dmesg log
+> [  817.477557] scsi_debug:sdebug_driver_probe: host protection 
+> [  817.477571] scsi host1: scsi_debug, version 1.85 [20141022], dev_size_mb=256, opts=0x0 
+> [  817.478202] scsi 1:0:0:0: Direct-Access     Linux    scsi_debug       0184 PQ: 0 ANSI: 6 
+> [  817.478733] sd 1:0:0:0: Attached scsi generic sg1 type 0 
+> [  817.496144] sd 1:0:0:0: [sdb] 524288 512-byte logical blocks: (268 MB/256 MiB) 
+> [  817.496155] sd 1:0:0:0: [sdb] 4096-byte physical blocks 
+> [  817.506142] sd 1:0:0:0: [sdb] Write Protect is off 
+> [  817.526134] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA 
+> [  817.646163] ------------[ cut here ]------------ 
+> [  817.646168] kernel BUG at block/bio.c:1787! 
+> [  817.646172] Oops: Exception in kernel mode, sig: 5 [#1] 
+> [  817.646174] SMP NR_CPUS=2048 NUMA pSeries 
+> [  817.646178] Modules linked in: scsi_debug(E) nfsv3(E) rpcsec_gss_krb5(E) nfsv4(E) dns_resolver(E) nfs(E) fscache(E) dm_mod(E) loop(E) sg(E) pseries_rng(E) nfsd(E) auth_rpcgss(E) nfs_acl(E) lockd(E) sunrpc(E) grace(E) ip_tables(E) xfs(E) libcrc32c(E) sd_mod(E) ibmvscsi(E) ibmveth(E) scsi_transport_srp(E) 
+> [  817.646205] CPU: 6 PID: 166 Comm: kworker/u321:1 Tainted: G            E   4.4.0-rc4 #1 
+> [  817.646211] Workqueue: events_unbound .async_run_entry_fn 
+> [  817.646215] task: c00000000a0c0000 ti: c00000000a180000 task.ti: c00000000a180000 
+> [  817.646218] NIP: c0000000003b1d54 LR: c0000000003c4780 CTR: c0000000003be420 
+> [  817.646222] REGS: c00000000a1826c0 TRAP: 0700   Tainted: G            E    (4.4.0-rc4) 
+> [  817.646225] MSR: 8000000100029032 <SF,EE,ME,IR,DR,RI>  CR: 24732728  XER: 00000000 
+> [  817.646233] CFAR: c0000000003c477c SOFTE: 1  
+> GPR00: c0000000003c4780 c00000000a182940 c000000001325e00 c00000016cebcf00  
+> GPR04: 0000000000000000 0000000002400000 c00000013c5f4d80 0000000000000040  
+> GPR08: f000000000436ac0 0000000000000001 0000000000000000 ffffffffffffffff  
+> GPR12: 0000000024732722 c00000000e743900 0000000000000000 f000000000436ac0  
+> GPR16: c0000000f9e3eee0 c00000010dab0000 0000000000000001 0000000000000000  
+> GPR20: 0000000000000000 0000000000000080 0000000000000000 c00000016cebcf00  
+> GPR24: c0000000ff9b5a20 c00000000a182bb8 c00000016cebcf88 0000000000000000  
+> GPR28: 0000000000000000 c00000016cebcf00 0000000000000000 0000000000010000  
+> [  817.646273] NIP [c0000000003b1d54] .bio_split+0x34/0x110 
+> [  817.646277] LR [c0000000003c4780] .blk_queue_split+0x3b0/0x560 
+> [  817.646280] Call Trace: 
+> [  817.646282] [c00000000a182940] [c00000000a1829d0] 0xc00000000a1829d0 (unreliable) 
+> [  817.646287] [c00000000a1829d0] [c0000000003c4780] .blk_queue_split+0x3b0/0x560 
+> [  817.646291] [c00000000a182ae0] [c0000000003be460] .blk_queue_bio+0x40/0x430 
+> [  817.646295] [c00000000a182b80] [c0000000003bc0f0] .generic_make_request+0x150/0x210 
+> [  817.646299] [c00000000a182c30] [c0000000003bc26c] .submit_bio+0xbc/0x1c0 
+> [  817.646304] [c00000000a182cf0] [c0000000002cb64c] .submit_bh_wbc+0x19c/0x200 
+> [  817.646308] [c00000000a182d90] [c0000000002cbb10] .block_read_full_page+0x310/0x410 
+> [  817.646312] [c00000000a183290] [c0000000002cf11c] .blkdev_readpage+0x1c/0x30 
+> [  817.646316] [c00000000a183300] [c0000000001e51a0] .do_read_cache_page+0xc0/0x290 
+> [  817.646321] [c00000000a1833c0] [c0000000003d59f8] .read_dev_sector+0x38/0xb0 
+> [  817.646325] [c00000000a183440] [c0000000003d977c] .read_lba+0xcc/0x1f0 
+> [  817.646329] [c00000000a1834f0] [c0000000003da3b8] .efi_partition+0x118/0x780 
+> [  817.646333] [c00000000a183670] [c0000000003d6fcc] .check_partition+0x14c/0x2e0 
+> [  817.646337] [c00000000a183700] [c0000000003d6260] .rescan_partitions+0xd0/0x380 
+> [  817.646341] [c00000000a1837e0] [c0000000002d0b88] .__blkdev_get+0x3d8/0x530 
+> [  817.646345] [c00000000a1838a0] [c0000000002d0f10] .blkdev_get+0x230/0x4a0 
+> [  817.646348] [c00000000a1839a0] [c0000000003d3288] .add_disk+0x468/0x4f0 
+> [  817.646353] [c00000000a183a60] [d000000002026450] .sd_probe_async+0xf0/0x230 [sd_mod] 
+> [  817.646357] [c00000000a183af0] [c0000000000d23a8] .async_run_entry_fn+0x98/0x200 
+> [  817.646362] [c00000000a183ba0] [c0000000000c6d74] .process_one_work+0x1a4/0x490 
+> [  817.646366] [c00000000a183c40] [c0000000000c71dc] .worker_thread+0x17c/0x5a0 
+> [  817.646369] [c00000000a183d30] [c0000000000ce704] .kthread+0x104/0x130 
+> [  817.646374] [c00000000a183e30] [c000000000009534] .ret_from_kernel_thread+0x58/0xa4 
+> [  817.646377] Instruction dump: 
+> [  817.646379] 3924ffff 7d292378 fba1ffe8 55290ffe fbc1fff0 fb81ffe0 fbe1fff8 7c9e2378  
+> [  817.646386] 7c7d1b78 f8010010 7d2907b4 f821ff71 <0b090000> 81230028 789c0020 5529ba7e  
+> [  817.646394] ---[ end trace 0c08ee96e8610127 ]--- 
+> [  817.647718]  
+> [  819.647756] Kernel panic - not syncing: Fatal exception 
+> [  819.656776] Rebooting in 10 seconds.. 
