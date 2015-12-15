@@ -1,12 +1,12 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 03/15] be2iscsi: Fix to use atomic operations for tag_state
-Date: Tue, 15 Dec 2015 21:24:54 +0530
-Message-ID: <1450194906-12925-4-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 04/15] be2iscsi: Fix to synchronize tag allocation using spin_lock
+Date: Tue, 15 Dec 2015 21:24:55 +0530
+Message-ID: <1450194906-12925-5-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:63985 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754017AbbLOPzW (ORCPT
+	by vger.kernel.org with ESMTP id S1754028AbbLOPzW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 15 Dec 2015 10:55:22 -0500
 In-Reply-To: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
@@ -17,93 +17,51 @@ Cc: Jitendra <jitendra.bhivare@avagotech.com>
 
 From: Jitendra <jitendra.bhivare@avagotech.com>
 
-Replace lock based tag_state manipulations with atomic operations.
+alloc_mcc_tag/free_mcc_tag is now done under mcc_lock spin_lock
 
 Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be.h      |    2 +-
- drivers/scsi/be2iscsi/be_cmds.c |   26 ++++++++++++--------------
- 2 files changed, 13 insertions(+), 15 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index cf19bce..419b53f 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -113,7 +113,7 @@ struct beiscsi_mcc_tag_state {
- #define MCC_TAG_STATE_COMPLETED 0x00
- #define MCC_TAG_STATE_RUNNING   0x01
- #define MCC_TAG_STATE_TIMEOUT   0x02
--	uint8_t tag_state;
-+	atomic_t tag_state;
- 	struct be_dma_mem tag_mem_state;
- };
- 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 6fabded..21c806f 100644
+index 21c806f..6f58063 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -164,9 +164,8 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+@@ -118,6 +118,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+ {
+ 	unsigned int tag = 0;
+ 
++	spin_lock(&phba->ctrl.mcc_lock);
+ 	if (phba->ctrl.mcc_tag_available) {
+ 		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
+ 		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
+@@ -130,6 +131,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+ 		else
+ 			phba->ctrl.mcc_alloc_index++;
  	}
++	spin_unlock(&phba->ctrl.mcc_lock);
+ 	return tag;
+ }
  
- 	/* Set MBX Tag state to Active */
--	mutex_lock(&phba->ctrl.mbox_lock);
--	phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_RUNNING;
--	mutex_unlock(&phba->ctrl.mbox_lock);
-+	atomic_set(&phba->ctrl.ptag_state[tag].tag_state,
-+			MCC_TAG_STATE_RUNNING);
+@@ -254,7 +256,7 @@ release_mcc_tag:
  
- 	/* wait for the mccq completion */
- 	rc = wait_event_interruptible_timeout(
-@@ -178,9 +177,8 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 	if (rc <= 0) {
- 		struct be_dma_mem *tag_mem;
- 		/* Set MBX Tag state to timeout */
--		mutex_lock(&phba->ctrl.mbox_lock);
--		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_TIMEOUT;
--		mutex_unlock(&phba->ctrl.mbox_lock);
-+		atomic_set(&phba->ctrl.ptag_state[tag].tag_state,
-+				MCC_TAG_STATE_TIMEOUT);
+ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+ {
+-	spin_lock(&ctrl->mbox_lock);
++	spin_lock(&ctrl->mcc_lock);
+ 	tag = tag & 0x000000FF;
+ 	ctrl->mcc_tag[ctrl->mcc_free_index] = tag;
+ 	if (ctrl->mcc_free_index == (MAX_MCC_CMD - 1))
+@@ -262,7 +264,7 @@ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+ 	else
+ 		ctrl->mcc_free_index++;
+ 	ctrl->mcc_tag_available++;
+-	spin_unlock(&ctrl->mbox_lock);
++	spin_unlock(&ctrl->mcc_lock);
+ }
  
- 		/* Store resource addr to be freed later */
- 		tag_mem = &phba->ctrl.ptag_state[tag].tag_mem_state;
-@@ -199,9 +197,8 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 	} else {
- 		rc = 0;
- 		/* Set MBX Tag state to completed */
--		mutex_lock(&phba->ctrl.mbox_lock);
--		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
--		mutex_unlock(&phba->ctrl.mbox_lock);
-+		atomic_set(&phba->ctrl.ptag_state[tag].tag_state,
-+				MCC_TAG_STATE_COMPLETED);
- 	}
- 
- 	mcc_tag_response = phba->ctrl.mcc_numtag[tag];
-@@ -373,9 +370,11 @@ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
- 	ctrl->mcc_numtag[tag] |= (extd_status & 0x000000FF) << 8;
- 	ctrl->mcc_numtag[tag] |= (compl_status & 0x000000FF);
- 
--	if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_RUNNING) {
-+	if (atomic_read(&ctrl->ptag_state[tag].tag_state) ==
-+		MCC_TAG_STATE_RUNNING) {
- 		wake_up_interruptible(&ctrl->mcc_wait[tag]);
--	} else if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_TIMEOUT) {
-+	} else if (atomic_read(&ctrl->ptag_state[tag].tag_state) ==
-+			MCC_TAG_STATE_TIMEOUT) {
- 		struct be_dma_mem *tag_mem;
- 		tag_mem = &ctrl->ptag_state[tag].tag_mem_state;
- 
-@@ -390,9 +389,8 @@ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
- 					    tag_mem->va, tag_mem->dma);
- 
- 		/* Change tag state */
--		mutex_lock(&phba->ctrl.mbox_lock);
--		ctrl->ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
--		mutex_unlock(&phba->ctrl.mbox_lock);
-+		atomic_set(&ctrl->ptag_state[tag].tag_state,
-+				MCC_TAG_STATE_COMPLETED);
- 
- 		/* Free MCC Tag */
- 		free_mcc_tag(ctrl, tag);
+ bool is_link_state_evt(u32 trailer)
 -- 
 1.7.1
 
