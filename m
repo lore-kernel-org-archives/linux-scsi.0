@@ -1,83 +1,107 @@
-From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: RE: [PATCH 6/9] be2iscsi: Fix IOPOLL implementation
-Date: Tue, 15 Dec 2015 10:20:37 +0530
-Message-ID: <ebc2ccd8865f41248c3aae95b287916f@mail.gmail.com>
-References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450073466-21077-7-git-send-email-jitendra.bhivare@avagotech.com> <566EDF02.4050100@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] scsi_transport_sas: add is_sas_attached() function
+Date: Tue, 15 Dec 2015 11:16:37 +0100
+Message-ID: <566FE885.4070204@suse.de>
+References: <1449688206.2226.30.camel@HansenPartnership.com>
+ <1449688323.2226.32.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:36246 "EHLO
-	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933098AbbLOEuj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 23:50:39 -0500
-Received: by qkht125 with SMTP id t125so170564921qkh.3
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 20:50:38 -0800 (PST)
-In-Reply-To: <566EDF02.4050100@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:57516 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964798AbbLOKQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Dec 2015 05:16:39 -0500
+In-Reply-To: <1449688323.2226.32.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-The problem statement indicates affinity issue but IOPOLL implementatio=
-n
-had issues too.
-1. IOPOLL budget passed in the callback is not being honored. This was =
-the
-root cause where
-the driver kept polling in softirq.
-2. The interrupts kept coming even when IOPOLL is scheduled. So we need=
-ed
-to fix EQ rearming.
-
-I think, choosing CPU affinity internally by driver is not right thing =
-to
-do. For setting IRQ affinity
-you need to have holistic view of the system and better done by externa=
-l
-entity which has heuristics
-of all the varied workloads on the system.
-
------Original Message-----
-=46rom: Hannes Reinecke [mailto:hare@suse.de]
-Sent: Monday, December 14, 2015 8:54 PM
-To: Jitendra Bhivare; linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
-Subject: Re: [PATCH 6/9] be2iscsi: Fix IOPOLL implementation
-
-On 12/14/2015 07:11 AM, Jitendra Bhivare wrote:
-> From: Jitendra <jitendra.bhivare@avagotech.com>
+On 12/09/2015 08:12 PM, James Bottomley wrote:
+> Adds a function designed to be callable any time (regardless of
+> whether the transport attributes are configured or not) which returns
+> true if the device is attached over a SAS transport.  The design of
+> this function is that transport specific functions can be embedded
+> within a
 >
-> OS not responding when running 2 port traffic on 72 CPUs system.
+> if (is_sas_attached(sdev)) {
+> 	...
+> }
 >
-> be2iscsi IRQs gets affined to CPU0 when irqbalancer is disabled.
-> be_iopoll processing completions in BLOCK_IOPOLL_SOFTIRQ hogged CPU0.
+> which would be compiled out (and thus eliminate the symbols) if SAS i=
+s
+> not configured.
 >
-> 1. Use budget to exit the polling loop in beiscsi_process_cq.
-> 2. Rearming of EQ is done only after iopoll completes.
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com=
 >
-> Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 > ---
->   drivers/scsi/be2iscsi/be_cmds.c  |    2 +-
->   drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
->   drivers/scsi/be2iscsi/be_main.c  |   91
-+++++++++++++++++++++-----------------
->   drivers/scsi/be2iscsi/be_main.h  |    5 +-
->   4 files changed, 56 insertions(+), 44 deletions(-)
+>   drivers/scsi/scsi_transport_sas.c |   16 ++++++++++++++++
+>   include/scsi/scsi_transport_sas.h |    9 +++++++++
+>   2 files changed, 25 insertions(+), 0 deletions(-)
 >
-Hmm. Not sure if I agree with this.
-Doesn't the be2iscsi driver set the cpu affinity internally?
-If not, wouldn't that be the better solution?
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_tr=
+ansport_sas.c
+> index 30d26e3..b17f763 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -341,6 +341,22 @@ static int do_sas_phy_delete(struct device *dev,=
+ void *data)
+>   }
+>
+>   /**
+> + * is_sas_attached - check if device is SAS attached
+> + * @sdev: scsi device to check
+> + *
+> + * returns true if the device is SAS attached
+> + */
+> +int is_sas_attached(struct scsi_device *sdev)
+> +{
+> +	struct Scsi_Host *shost =3D sdev->host;
+> +
+> +	return shost->transportt->host_attrs.ac.class =3D=3D
+> +		&sas_host_class.class;
+> +}
+> +EXPORT_SYMBOL(is_sas_attached);
+> +
+> +
+> +/**
+>    * sas_remove_children  -  tear down a devices SAS data structures
+>    * @dev:	device belonging to the sas object
+>    *
+> diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_tr=
+ansport_sas.h
+> index 0bd71e2..a8fdd10 100644
+> --- a/include/scsi/scsi_transport_sas.h
+> +++ b/include/scsi/scsi_transport_sas.h
+> @@ -10,6 +10,15 @@ struct scsi_transport_template;
+>   struct sas_rphy;
+>   struct request;
+>
+> +#if !IS_ENABLED(CONFIG_SCSI_SAS_ATTRS)
+> +static inline int is_sas_attached(struct scsi_device *sdev)
+> +{
+> +	return 0;
+> +}
+> +#else
+> +extern int is_sas_attached(struct scsi_device *sdev);
+> +#endif
+> +
+>   static inline int sas_protocol_ata(enum sas_protocol proto)
+>   {
+>   	return ((proto & SAS_PROTOCOL_SATA) ||
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
 Hannes
---
+--=20
 Dr. Hannes Reinecke		               zSeries & Storage
 hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton H=
-RB 21284
-(AG N=C3=BCrnberg)
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
