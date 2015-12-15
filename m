@@ -1,184 +1,71 @@
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
-Subject: RE: [PATCH] bnx2fc:Add proper locking protection in
- bnx2fc_ctrlr_enabled
-Date: Tue, 15 Dec 2015 19:51:34 +0000
-Message-ID: <86A17A977688E04689F40F6B1EC20EC60194111FCC@AVMB1.qlogic.org>
-References: <1449949166-3977-1-git-send-email-xerofoify@gmail.com>
- <alpine.OSX.2.00.1512151139140.1614@administrators-macbook-pro.local>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: qla2xxx: ISP27xx add tests for incomplete template.
+Date: Tue, 15 Dec 2015 23:04:37 +0300
+Message-ID: <20151215200437.GA22468@mwanda>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40446 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754138AbbLOTvj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 14:51:39 -0500
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBFJkkVY019886
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:51:37 -0800
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1yt4xaj27k-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:51:37 -0800
-In-Reply-To: <alpine.OSX.2.00.1512151139140.1614@administrators-macbook-pro.local>
-Content-Language: en-US
+Received: from userp1040.oracle.com ([156.151.31.81]:29190 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbbLOUEp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2015 15:04:45 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>, Nicholas Krause <xerofoify@gmail.com>
-Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>, "JBottomley@odin.com" <JBottomley@odin.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: joe.carnuccio@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
---_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hello Joe Carnuccio,
 
-Also, the patch fails to do what it's message describes, i.e. the calls _bn=
-x2fc_enable() and _bnx2fc_disable() are outside the lock/unlock.
+The patch 299f5e27ac5f: "qla2xxx: ISP27xx add tests for incomplete
+template." from Sep 25, 2014, leads to the following static checker
+warning:
 
+	drivers/scsi/qla2xxx/qla_tmpl.c:779 qla27xx_walk_template()
+	warn: should this be 'count == -1'
 
------Original Message-----
-From: Chad Dupuis=20
-Sent: Tuesday, December 15, 2015 8:43 AM
-To: Nicholas Krause <xerofoify@gmail.com>
-Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>; =
-JBottomley@odin.com; martin.petersen@oracle.com; linux-scsi <linux-scsi@vge=
-r.kernel.org>; linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] bnx2fc:Add proper locking protection in bnx2fc_ctrlr_e=
-nabled
+drivers/scsi/qla2xxx/qla_tmpl.c
+   764  static void
+   765  qla27xx_walk_template(struct scsi_qla_host *vha,
+   766          struct qla27xx_fwdt_template *tmp, void *buf, ulong *len)
+   767  {
+   768          struct qla27xx_fwdt_entry *ent = (void *)tmp + tmp->entry_offset;
+   769          ulong count = tmp->entry_count;
+   770  
+   771          ql_dbg(ql_dbg_misc, vha, 0xd01a,
+   772              "%s: entry count %lx\n", __func__, count);
+   773          while (count--) {
+   774                  if (qla27xx_find_entry(ent->hdr.entry_type)(vha, ent, buf, len))
+   775                          break;
+   776                  ent = qla27xx_next_entry(ent);
+   777          }
+   778  
+   779          if (count)
+   780                  ql_dbg(ql_dbg_misc, vha, 0xd018,
+   781                      "%s: residual count (%lx)\n", __func__, count);
 
+The static checker assumes that we are testing to see if the loop ended
+with a break or not.  These are normally bugs because if we did not
+break the count is set to (ulong)-1.
 
-On Sat, 12 Dec 2015, Nicholas Krause wrote:
+This code is sort of weird.  It's just debugging so I guess it doesn't
+matter.  Are we expecting -1?
 
-> This adds proper locking protection in bnx2fc_ctrl_enabled around the=20
-> calls to the functions, _bnx2fc_enable and _bnx2fc_disable in order to=20
-> avoid concurrent access on these functions accessing global referenced=20
-> data structures in their internal intended work.
->
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 8 ++++++++
-> 1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c=20
-> b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 67405c6..e43648f 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -2177,13 +2177,21 @@ static int bnx2fc_ctlr_enabled(struct=20
-> fcoe_ctlr_device *cdev) {
-> 	struct fcoe_ctlr *ctlr =3D fcoe_ctlr_device_priv(cdev);
->
-> +	rtnl_lock();
-> +	mutex_lock(&bnx2fc_dev_lock);
-> 	switch (cdev->enabled) {
-> 	case FCOE_CTLR_ENABLED:
-> +		rtnl_unlock();
-> +		mutex_unlock(&bnx2fc_dev_lock);
-> 		return __bnx2fc_enable(ctlr);
-> 	case FCOE_CTLR_DISABLED:
-> +		rtnl_unlock();
-> +		mutex_unlock(&bnx2fc_dev_lock);
-> 		return __bnx2fc_disable(ctlr);
-> 	case FCOE_CTLR_UNUSED:
-> 	default:
-> +		rtnl_unlock();
-> +		mutex_unlock(&bnx2fc_dev_lock);
-> 		return -ENOTSUPP;
-> 	};
-> }
->
+   782  
+   783          if (ent->hdr.entry_type != ENTRY_TYPE_TMP_END)
+   784                  ql_dbg(ql_dbg_misc, vha, 0xd019,
+   785                      "%s: missing end (%lx)\n", __func__, count);
+   786  
+   787          ql_dbg(ql_dbg_misc, vha, 0xd01b,
+   788              "%s: len=%lx\n", __func__, *len);
+   789  
+   790          if (buf) {
+   791                  ql_log(ql_log_warn, vha, 0xd015,
+   792                      "Firmware dump saved to temp buffer (%ld/%p)\n",
+   793                      vha->host_no, vha->hw->fw_dump);
+   794                  qla2x00_post_uevent_work(vha, QLA_UEVENT_CODE_FW_DUMP);
+   795          }
+   796  }
 
-Nack.  All we end up protecting is the check of cdev->enabled and I do not =
-believe taking two mutexes is required for that.
-
---_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IvV4AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADU2RjIzNDQ0
-RURDRDg0NDE4NDQzNDNDQkZFRTdGMkFBAFMHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HDAAPABMA
-MwAiAAIAawEBIIADAA4AAADfBwwADwATADMAIgACAGsBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEkAAABSRTogW1BBVENIXSBibngyZmM6QWRkIHByb3BlciBsb2NraW5n
-IHByb3RlY3Rpb24gaW4gYm54MmZjX2N0cmxyX2VuYWJsZWQA7xkBA5AGAJARAAA+AAAAAgF/AAEA
-AAA+AAAAPDg2QTE3QTk3NzY4OEUwNDY4OUY0MEY2QjFFQzIwRUM2MDE5NDExMUZDQ0BBVk1CMS5x
-bG9naWMub3JnPgAAAAsAHw4BAAAAAgEJEAEAAACXBQAAkwUAAJgKAABMWkZ1d/NSM2EACmZiaWQE
-AABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0K
-gAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYE
-kBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX
-8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8aggQWwZICwcwGgZ4H0KsHQRwBxwC3AhsBzAbzQg
-ZCMQdxHQBUBpdOYnBCAHgXNhGdEBAATyhmIHkCHgaS5lLiHzgx5RItFfYm54MhGwjl8J8AGgHnAo
-KSAAcF8cYCYmDeEmxglwIAhgdA8AkAEAIfMJAGNrL3WibimSLlxsC4BlCoHVKmstK6JPBRBnC4AH
-QC8F0CQUK6MqVUYDYToghkMR0BxgRHVwdQQAXwMwKmQGYAIwLfBUClBzqGRheSHgRAWQZQbQORux
-MTUh4AHQMMAgOCg6NDMhkE0qVVRvVS3wTg5QaAbwYQQgS8UYcHUSACA8eASQGTBibwaQeUBnAMAD
-EC7JBaBtPipVQ2Mt8DAwCQUwLUUZwCBRTG+dLCBjBgAYkSRCVXAfYFUJcGEcsDw2BC02dS05NvZA
-cQkANjE0czsg+EpCbwJAA3AecDQABHC/C4A0cjnAAMAAIDqxcBIQ2wSQEgBuOoAYcGMecDrU8Sph
-dXgtBPAAkDNgPPhEQHYYMHIuawSRZfs0YAWwZzmxPPQ+tD2WPrRjPl8u1nViagWQL3FSAmUt8FtQ
-QVRDSERdICY0OkFkHGBw/wNgO6AFwCmSC4A14EShECB9QvBpAiAjoAOgJjVC8HK8bHImlQswKm9H
-8U8DoP0GEHQh4A6QMCIw8yHgMn6qd0WiOke8PhJAaC6h/S4wZAQgRK9Fv0bERzYogX8IYCdBIgJM
-JyXEIwEiAmb/KeBOkyUBJiwnL1PSRkEFsOcEgSLyTCdhdjPQHGAb4d5jCHAJcAIwVABjMFAEEb9O
-wSIBM0FSd1elTgJnCQD2YixRCXBmBJAJ8DBQHGDXTCcv4AGQIDcRdULwCHD3B5FGQSIBaQXAC4Ab
-oSxC910yHcAcUXcFsCo3NLZMkCZTLBAYUGQtGTBmLfxieTJfM280ekyQLRhbgdMFEBoxcy89Ui8m
-NGUFSl8RsG88gSB8MUAg9itmpUwnMRxwAxAloRmjfmQh4GaAC4ASADtRUtEo/CspXq8N4AEgY3Es
-IFeR7i9kT2VfTCdia39sj0wnAx2xEDAgNjc0MDUYYzYuJUAxcDY0OPdq4B6RchA0YvprX28/cElP
-ZqFuL3SfcElAQGNwMqAxNzcsMTGAK3mT/3mQeUIfYTtgNlBdMUZoRxj+KFv0UQhl8nvkAQAdYDBQ
-2CAqY35hJxBcAABMNl8Mglvlfbh+wYESPX2/X/tNUHbQKH7jFiBevmcQgAJ7ACAp8F8pkicAg4eE
-lW33KOAQMIVEJieGfnCFQ4Wpz3/0A/AiYoMjLT5HRX8vAyWxYXFGQ09FX0MAVExSX0VOQUL4TEVE
-S6aEhYS4KeSFn/+GaY7Fh2+IfIS0EhAIcAOgHl8mLXvyiG6L3URJU/+M743/jw+QH5Evkj+TTye6
-g5UPlh9fVU5VU5ea93/zAQFhUGwvcJnfmN+jrx+a/5wPnR+TpDWwTk9UkFNVUFCIfVx9iHm3IEBe
-vEe1TgDQKjAgIZHtAyB3GeBd8SAucE43NdH/LqElgyIQKbAowGrgietUA/pJIyJuOgBD4D7wCJAa
-MPUcwGFN83ReUIakXHIEIP0JcHEukAlxHHAFsSIAGIAHKkYVQrZwAB8AQgABAAAAHAAAAEoAbwBl
-ACAAQwBhAHIAbgB1AGMAYwBpAG8AAAAfAGUAAQAAADIAAABqAG8AZQAuAGMAYQByAG4AdQBjAGMA
-aQBvAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFB
-AAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASgBvAGUAIABDAGEAcgBuAHUAYwBjAGkA
-bwAAAFMATQBUAFAAAABqAG8AZQAuAGMAYQByAG4AdQBjAGMAaQBvAEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8AAl0BAAAAMgAAAGoAbwBlAC4AYwBhAHIAbgB1AGMAYwBpAG8AQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AGoAbwBlAC4AYwBhAHIAbgB1AGMAYwBp
-AG8AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABwAAABKAG8AZQAgAEMAYQByAG4A
-dQBjAGMAaQBvAAAAHwAfDAEAAAAyAAAAagBvAGUALgBjAGEAcgBuAHUAYwBjAGkAbwBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAcAAAAAAA
-AACBKx+kvqMQGZ1uAN0BD1QCAAAAgEoAbwBlACAAQwBhAHIAbgB1AGMAYwBpAG8AAABTAE0AVABQ
-AAAAagBvAGUALgBjAGEAcgBuAHUAYwBjAGkAbwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFd
-AQAAADIAAABqAG8AZQAuAGMAYQByAG4AdQBjAGMAaQBvAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAAAHwD4PwEAAAAcAAAASgBvAGUAIABDAGEAcgBuAHUAYwBjAGkAbwAAAB8AI0ABAAAAMgAAAGoA
-bwBlAC4AYwBhAHIAbgB1AGMAYwBpAG8AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfACJAAQAA
-AAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBKAG8A
-ZQAgAEMAYQByAG4AdQBjAGMAaQBvAAAAUwBNAFQAUAAAAGoAbwBlAC4AYwBhAHIAbgB1AGMAYwBp
-AG8AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAyAAAAagBvAGUALgBjAGEAcgBuAHUA
-YwBjAGkAbwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQ
-AE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAABW8jRE
-7c2EQYRDQ8v+5/KqAwAXAAEAAABAADkAACc5AHI30QFAAAgwj4SlAHI30QELACkAAAAAAAsAIwAA
-AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcA
-ZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAA
-AB8ANwABAAAAkgAAAFIARQA6ACAAWwBQAEEAVABDAEgAXQAgAGIAbgB4ADIAZgBjADoAQQBkAGQA
-IABwAHIAbwBwAGUAcgAgAGwAbwBjAGsAaQBuAGcAIABwAHIAbwB0AGUAYwB0AGkAbwBuACAAaQBu
-ACAAYgBuAHgAMgBmAGMAXwBjAHQAcgBsAHIAXwBlAG4AYQBiAGwAZQBkAAAAAAAfAD0AAQAAAAoA
-AABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAACMAAAAPABhAGwAcABpAG4AZQAu
-AE8AUwBYAC4AMgAuADAAMAAuADEANQAxADIAMQA1ADEAMQAzADkAMQA0ADAALgAxADYAMQA0AEAA
-YQBkAG0AaQBuAGkAcwB0AHIAYQB0AG8AcgBzAC0AbQBhAGMAYgBvAG8AawAtAHAAcgBvAC4AbABv
-AGMAYQBsAD4AAAACAXEAAQAAACAAAAABAdE1FNNSxfvqFZyASrgIVQ//1FFmnszLKwD//62WYB8A
-cAABAAAAigAAAFsAUABBAFQAQwBIAF0AIABiAG4AeAAyAGYAYwA6AEEAZABkACAAcAByAG8AcABl
-AHIAIABsAG8AYwBrAGkAbgBnACAAcAByAG8AdABlAGMAdABpAG8AbgAgAGkAbgAgAGIAbgB4ADIA
-ZgBjAF8AYwB0AHIAbAByAF8AZQBuAGEAYgBsAGUAZAAAAAAAHwA1EAEAAAB8AAAAPAA4ADYAQQAx
-ADcAQQA5ADcANwA2ADgAOABFADAANAA2ADgAOQBGADQAMABGADYAQgAxAEUAQwAyADAARQBDADYA
-MAAxADkANAAxADEAMQBGAEMAQwBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAA
-AB8AORABAAAA+gAAADwAMQA0ADQAOQA5ADQAOQAxADYANgAtADMAOQA3ADcALQAxAC0AZwBpAHQA
-LQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AeABlAHIAbwBmAG8AaQBmAHkAQABnAG0AYQBpAGwALgBj
-AG8AbQA+ACAAPABhAGwAcABpAG4AZQAuAE8AUwBYAC4AMgAuADAAMAAuADEANQAxADIAMQA1ADEA
-MQAzADkAMQA0ADAALgAxADYAMQA0AEAAYQBkAG0AaQBuAGkAcwB0AHIAYQB0AG8AcgBzAC0AbQBh
-AGMAYgBvAG8AawAtAHAAcgBvAC4AbABvAGMAYQBsAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAA
-wAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/
-////QAAHMM/BoAByN9EBCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAvAAAAYz1VUzth
-PSA7cD1RTG9naWM7bD1BVk1CMS0xNTEyMTUxOTUxMzRaLTE0NTk0OQAAAgEQMAEAAABGAAAAAAAA
-APkM74liutARkasAoCTdjOEHABH+xnbGLtARkZMAoCTdjOEAAAAYgjcAABHw78PX2Y1LlfelAI0v
-wIIBmLumBv4AAAAAHwD6PwEAAAAcAAAASgBvAGUAIABDAGEAcgBuAHUAYwBjAGkAbwAAAAMACVkB
-AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAA
-AAAOhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAAAAAACwAAgAggBgAAAAAAwAAA
-AAAAAEYAAAAAgoUAAAAAAAAfAACACCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIAAABJAFAA
-TQAuAE4AbwB0AGUAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBt
-AHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAA
-AEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAx
-ADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMA
-bABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAH7L
-
---_000_86A17A977688E04689F40F6B1EC20EC60194111FCCAVMB1qlogicor_--
+regards,
+dan carpenter
