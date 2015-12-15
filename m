@@ -1,14 +1,14 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 04/15] be2iscsi: Fix to synchronize tag allocation using spin_lock
-Date: Tue, 15 Dec 2015 21:24:55 +0530
-Message-ID: <1450194906-12925-5-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 06/15] be2iscsi: Added return value check for mgmt_get_all_if_id
+Date: Tue, 15 Dec 2015 21:24:57 +0530
+Message-ID: <1450194906-12925-7-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:63985 "EHLO
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:63987 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754028AbbLOPzW (ORCPT
+	by vger.kernel.org with ESMTP id S1754113AbbLOPz0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 10:55:22 -0500
+	Tue, 15 Dec 2015 10:55:26 -0500
 In-Reply-To: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,51 +17,65 @@ Cc: Jitendra <jitendra.bhivare@avagotech.com>
 
 From: Jitendra <jitendra.bhivare@avagotech.com>
 
-alloc_mcc_tag/free_mcc_tag is now done under mcc_lock spin_lock
+Use of mutex_lock_interruptible can return -EINTR, handle and log
+the error.
 
 Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c |    7 ++++---
+ drivers/scsi/be2iscsi/be_mgmt.c  |   10 ++++++----
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 21c806f..6f58063 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -118,6 +118,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index b7087ba..188d83f 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -367,13 +367,14 @@ beiscsi_set_vlan_tag(struct Scsi_Host *shost,
+ 		      struct iscsi_iface_param_info *iface_param)
  {
- 	unsigned int tag = 0;
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+-	int ret = 0;
++	int ret;
  
-+	spin_lock(&phba->ctrl.mcc_lock);
- 	if (phba->ctrl.mcc_tag_available) {
- 		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
- 		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
-@@ -130,6 +131,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
- 		else
- 			phba->ctrl.mcc_alloc_index++;
+ 	/* Get the Interface Handle */
+-	if (mgmt_get_all_if_id(phba)) {
++	ret = mgmt_get_all_if_id(phba);
++	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BS_%d : Getting Interface Handle Failed\n");
+-		return -EIO;
++		return ret;
  	}
-+	spin_unlock(&phba->ctrl.mcc_lock);
- 	return tag;
- }
  
-@@ -254,7 +256,7 @@ release_mcc_tag:
+ 	switch (iface_param->param) {
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index a41013e..a8a1670 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1018,8 +1018,9 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 	uint32_t ip_type;
+ 	int rc;
  
- void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
- {
--	spin_lock(&ctrl->mbox_lock);
-+	spin_lock(&ctrl->mcc_lock);
- 	tag = tag & 0x000000FF;
- 	ctrl->mcc_tag[ctrl->mcc_free_index] = tag;
- 	if (ctrl->mcc_free_index == (MAX_MCC_CMD - 1))
-@@ -262,7 +264,7 @@ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
- 	else
- 		ctrl->mcc_free_index++;
- 	ctrl->mcc_tag_available++;
--	spin_unlock(&ctrl->mbox_lock);
-+	spin_unlock(&ctrl->mcc_lock);
- }
+-	if (mgmt_get_all_if_id(phba))
+-		return -EIO;
++	rc = mgmt_get_all_if_id(phba);
++	if (rc)
++		return rc;
  
- bool is_link_state_evt(u32 trailer)
+ 	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
+ 		BE2_IPV6 : BE2_IPV4 ;
+@@ -1188,8 +1189,9 @@ int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
+ 	uint32_t ioctl_size = sizeof(struct be_cmd_get_if_info_resp);
+ 	int rc;
+ 
+-	if (mgmt_get_all_if_id(phba))
+-		return -EIO;
++	rc = mgmt_get_all_if_id(phba);
++	if (rc)
++		return rc;
+ 
+ 	do {
+ 		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
 -- 
 1.7.1
 
