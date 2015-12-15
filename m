@@ -1,63 +1,56 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] bnx2fc:Add proper locking protection in
- bnx2fc_ctrlr_enabled
-Date: Tue, 15 Dec 2015 11:42:40 -0500
-Message-ID: <alpine.OSX.2.00.1512151139140.1614@administrators-macbook-pro.local>
-References: <1449949166-3977-1-git-send-email-xerofoify@gmail.com>
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: kernel BUG at block/bio.c:1787! while initializing scsi_debug on
+ ppc64 host
+Date: Wed, 16 Dec 2015 00:56:58 +0800
+Message-ID: <20151215165658.GE19209@eguan.usersys.redhat.com>
+References: <20151211115340.GB19209@eguan.usersys.redhat.com>
+ <20151215112057.GC19209@eguan.usersys.redhat.com>
+ <CACVXFVOPgONuXjGhBnFVxuRVr+=LFe36QR-VTGVvTkEK+V0JLw@mail.gmail.com>
+ <20151215130631.GD19209@eguan.usersys.redhat.com>
+ <CACVXFVM_bSd=SQeNg8gjaXd1R1oFreV+jnWgEVDoVwozcQ5Nbw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:16234 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965215AbbLOQnB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 11:43:01 -0500
-In-Reply-To: <1449949166-3977-1-git-send-email-xerofoify@gmail.com>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35757 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754098AbbLORBk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2015 12:01:40 -0500
+Received: by mail-wm0-f52.google.com with SMTP id l126so3148442wml.0
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 09:01:39 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <CACVXFVM_bSd=SQeNg8gjaXd1R1oFreV+jnWgEVDoVwozcQ5Nbw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Krause <xerofoify@gmail.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, JBottomley@odin.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
+On Tue, Dec 15, 2015 at 09:27:14PM +0800, Ming Lei wrote:
+> On Tue, Dec 15, 2015 at 9:06 PM, Eryu Guan <guaneryu@gmail.com> wrote:
+> > On Tue, Dec 15, 2015 at 08:06:47PM +0800, Ming Lei wrote:
+> >> On Tue, Dec 15, 2015 at 7:20 PM, Eryu Guan <guaneryu@gmail.com> wrote:
+> >> > On Fri, Dec 11, 2015 at 07:53:40PM +0800, Eryu Guan wrote:
+> >> >> Hi,
+> >> >>
+> >> >> I saw this kernel BUG_ON on 4.4-rc4 kernel, and this can be reproduced
+> >> >> easily on ppc64 host by:
+> >> >
+> >> > This is still reproducible with 4.4-rc5 kernel.
+> >>
+> >> Could you capture the debug log after appyling the attached patch and
+> >> the reproduction?
+> >
+> > Thanks for looking into this! dmesg shows:
+> >
+> > [  686.217682] bio_split: sectors 0, bio_sectors 128, bi_rw 0
+> 
+> Then I guess queue_max_sectors(q) is bad, could you apply the
+> attached patch(and the last patch) and post the log?
 
-On Sat, 12 Dec 2015, Nicholas Krause wrote:
+[  301.279018] blk_bio_segment_split: nseg 0, max_secs 64, max segs 2048
+[  301.279023]   bv.len 65536, bv.offset 0
+[  301.279026] bio_split: sectors 0, bio_sectors 128, bi_rw 0
 
-> This adds proper locking protection in bnx2fc_ctrl_enabled around
-> the calls to the functions, _bnx2fc_enable and _bnx2fc_disable in
-> order to avoid concurrent access on these functions accessing global
-> referenced data structures in their internal intended work.
->
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 8 ++++++++
-> 1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 67405c6..e43648f 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -2177,13 +2177,21 @@ static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev)
-> {
-> 	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
->
-> +	rtnl_lock();
-> +	mutex_lock(&bnx2fc_dev_lock);
-> 	switch (cdev->enabled) {
-> 	case FCOE_CTLR_ENABLED:
-> +		rtnl_unlock();
-> +		mutex_unlock(&bnx2fc_dev_lock);
-> 		return __bnx2fc_enable(ctlr);
-> 	case FCOE_CTLR_DISABLED:
-> +		rtnl_unlock();
-> +		mutex_unlock(&bnx2fc_dev_lock);
-> 		return __bnx2fc_disable(ctlr);
-> 	case FCOE_CTLR_UNUSED:
-> 	default:
-> +		rtnl_unlock();
-> +		mutex_unlock(&bnx2fc_dev_lock);
-> 		return -ENOTSUPP;
-> 	};
-> }
->
+If full call trace is needed please let me know.
 
-Nack.  All we end up protecting is the check of cdev->enabled and I do not 
-believe taking two mutexes is required for that.
+Thanks,
+Eryu
