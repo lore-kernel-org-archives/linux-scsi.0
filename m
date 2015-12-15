@@ -1,47 +1,58 @@
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Subject: Re: [PATCH v2 3/6] cxlflash: Removed driver date print
-Date: Tue, 15 Dec 2015 11:20:35 +1100
-Message-ID: <566F5CD3.1020802@au1.ibm.com>
-References: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1450127193-48109-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH 0/15] copy offload patches
+Date: Mon, 14 Dec 2015 20:22:42 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1512142018030.8189@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com> <yq1r3iuylwd.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:40919 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932649AbbLOAVj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 19:21:39 -0500
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
-	Tue, 15 Dec 2015 10:21:36 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 40F9E3578054
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:21:34 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBF0LRAM6684754
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:21:35 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBF0L0re004002
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 11:21:01 +1100
-In-Reply-To: <1450127193-48109-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54709 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753685AbbLOBWo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Dec 2015 20:22:44 -0500
+In-Reply-To: <yq1r3iuylwd.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-On 15/12/15 08:06, Uma Krishnan wrote:
-> Having a date for the driver requires it to be updated quite
-> often. Removing the date which is not necessary. Also made
-> use of the existing symbol to print the driver name.
->
-> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
--- 
-Andrew Donnellan              Software Engineer, OzLabs
-andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
-+61 2 6201 8874 (work)        IBM Australia Limited
+On Thu, 10 Dec 2015, Martin K. Petersen wrote:
 
+> >>>>> "Mikulas" == Mikulas Patocka <mpatocka@redhat.com> writes:
+> 
+> Mikulas,
+> 
+> Mikulas> This patch series adds copy offload (the XCOPY command) to the
+> Mikulas> block layer, SCSI subsystems and device mapper.
+> 
+> Now that the VFS stuff appears to stabilize I agree it's a good time to
+> revisit all this. I just merged the required VPD patches from Hannes so
+> those will be in 4.5.
+> 
+> I have a bunch of changes to the SCSI code that I worked on over the
+> spring/summer based on a feedback from the array vendors after
+> discussions we started at LSF/MM. Generally speaking, their comments
+> didn't make things easier, nor prettier :( But your two bio approach is
+> a requirement to accommodate those needs (token-based copy) so I'll work
+> on consolidating your changes with mine.
+
+Let me know when you make some progress with that.
+
+Is there some software iSCSI implementation that supports token-based 
+copy? So that I could try to make support for it.
+
+Mikulas
+
+> That said, we still need Mike Christie's patches to go in first.
+> 
+> Mike: What's your status? I'm afraid I didn't get a chance to dig very
+> deep in your series since it coincided with me scrambling to sort out
+> SCSI for 4.4. Do you think there's a chance we could get your patches in
+> shape for 4.5? Is there an up-to-date tree I can look at?
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+
+Mikulas
