@@ -1,74 +1,101 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/3] scsi_transport_sas: add function to get SAS endpoint
- address
-Date: Tue, 15 Dec 2015 11:17:15 +0100
-Message-ID: <566FE8AB.1090701@suse.de>
+Subject: Re: [PATCH v2 3/3] ses: fix discovery of SATA devices in SAS
+ enclosures
+Date: Tue, 15 Dec 2015 11:17:46 +0100
+Message-ID: <566FE8CA.2090800@suse.de>
 References: <1449688206.2226.30.camel@HansenPartnership.com>
- <1449688415.2226.34.camel@HansenPartnership.com>
+ <1449688495.2226.36.camel@HansenPartnership.com>
+ <1449694567.2226.45.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57855 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58116 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964798AbbLOKRR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 05:17:17 -0500
-In-Reply-To: <1449688415.2226.34.camel@HansenPartnership.com>
+	id S964798AbbLOKRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Dec 2015 05:17:48 -0500
+In-Reply-To: <1449694567.2226.45.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On 12/09/2015 08:13 PM, James Bottomley wrote:
-> For a device known to be SAS connected, this will return the endpoint
-> address.  This is useful for getting the SAS address of SATA devices.
+On 12/09/2015 09:56 PM, James Bottomley wrote:
+> The current discovery routines use the VPD 0x83 inquiry page to find
+> the device SAS address and match it to the end point in the enclosure=
+=2E
+> This doesn't work for SATA devices because expanders (or hosts) simpl=
+y
+> make up an endpoint address for STP and thus the address returned by
+> the VPD page never matches.  Instead of doing this, for SAS attached
+> devices, match by the direct endpoint address instead.
 >
 > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com=
 >
-> ---
->   drivers/scsi/scsi_transport_sas.c |   14 ++++++++++++++
->   include/scsi/scsi_transport_sas.h |    1 +
->   2 files changed, 15 insertions(+), 0 deletions(-)
 >
-> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_tr=
-ansport_sas.c
-> index b17f763..80520e2 100644
-> --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -383,6 +383,20 @@ void sas_remove_host(struct Scsi_Host *shost)
->   EXPORT_SYMBOL(sas_remove_host);
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 5f692ae..2a1d20e 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -194,6 +194,7 @@ config CHR_DEV_SCH
+>   config SCSI_ENCLOSURE
+>   	tristate "SCSI Enclosure Support"
+>   	depends on SCSI && ENCLOSURE_SERVICES
+> +	depends on m || SCSI_SAS_ATTRS !=3D m
+>   	help
+>   	  Enclosures are devices sitting on or in SCSI backplanes that
+>   	  manage devices.  If you have a disk cage, the chances are that
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index 7d9cec5..1736935 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -34,6 +34,8 @@
+>   #include <scsi/scsi_driver.h>
+>   #include <scsi/scsi_host.h>
 >
->   /**
-> + * sas_get_address - return the SAS address of the device
-> + * @sdev: scsi device
-> + *
-> + * Returns the SAS address of the scsi device
-> + */
-> +u64 sas_get_address(struct scsi_device *sdev)
-> +{
-> +	struct sas_end_device *rdev =3D sas_sdev_to_rdev(sdev);
+> +#include <scsi/scsi_transport_sas.h>
 > +
-> +	return rdev->rphy.identify.sas_address;
-> +}
-> +EXPORT_SYMBOL(sas_get_address);
-> +
-> +/**
->    * sas_tlr_supported - checking TLR bit in vpd 0x90
->    * @sdev: scsi device struct
->    *
-> diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_tr=
-ansport_sas.h
-> index a8fdd10..13c0b2b 100644
-> --- a/include/scsi/scsi_transport_sas.h
-> +++ b/include/scsi/scsi_transport_sas.h
-> @@ -189,6 +189,7 @@ extern int sas_phy_add(struct sas_phy *);
->   extern void sas_phy_delete(struct sas_phy *);
->   extern int scsi_is_sas_phy(const struct device *);
+>   struct ses_device {
+>   	unsigned char *page1;
+>   	unsigned char *page1_types;
+> @@ -571,31 +573,15 @@ static void ses_enclosure_data_process(struct e=
+nclosure_device *edev,
+>   static void ses_match_to_enclosure(struct enclosure_device *edev,
+>   				   struct scsi_device *sdev)
+>   {
+> -	unsigned char *desc;
+>   	struct efd efd =3D {
+>   		.addr =3D 0,
+>   	};
 >
-> +u64 sas_get_address(struct scsi_device *);
->   unsigned int sas_tlr_supported(struct scsi_device *);
->   unsigned int sas_is_tlr_enabled(struct scsi_device *);
->   void sas_disable_tlr(struct scsi_device *);
+>   	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent)=
+, 0);
+>
+> -	if (!sdev->vpd_pg83_len)
+> -		return;
+> -
+> -	desc =3D sdev->vpd_pg83 + 4;
+> -	while (desc < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
+> -		enum scsi_protocol proto =3D desc[0] >> 4;
+> -		u8 code_set =3D desc[0] & 0x0f;
+> -		u8 piv =3D desc[1] & 0x80;
+> -		u8 assoc =3D (desc[1] & 0x30) >> 4;
+> -		u8 type =3D desc[1] & 0x0f;
+> -		u8 len =3D desc[3];
+> -
+> -		if (piv && code_set =3D=3D 1 && assoc =3D=3D 1
+> -		    && proto =3D=3D SCSI_PROTOCOL_SAS && type =3D=3D 3 && len =3D=3D=
+ 8)
+> -			efd.addr =3D get_unaligned_be64(&desc[4]);
+> +	if (is_sas_attached(sdev))
+> +		efd.addr =3D sas_get_address(sdev);
+>
+> -		desc +=3D len + 4;
+> -	}
+>   	if (efd.addr) {
+>   		efd.dev =3D &sdev->sdev_gendev;
+>
+>
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
