@@ -1,61 +1,72 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: RE: [PATCH 1/9] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path
- using bmbx
-Date: Tue, 15 Dec 2015 09:33:13 +0530
-Message-ID: <4f2e369895ed4be8f460972fd509289e@mail.gmail.com>
+Subject: RE: [PATCH 6/9] be2iscsi: Fix IOPOLL implementation
+Date: Tue, 15 Dec 2015 10:20:37 +0530
+Message-ID: <ebc2ccd8865f41248c3aae95b287916f@mail.gmail.com>
 References: <1450073466-21077-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450073466-21077-2-git-send-email-jitendra.bhivare@avagotech.com> <566EDA6C.8030901@suse.de>
+ <1450073466-21077-7-git-send-email-jitendra.bhivare@avagotech.com> <566EDF02.4050100@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:36504 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbbLOEDQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 23:03:16 -0500
-Received: by qkht125 with SMTP id t125so169448922qkh.3
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 20:03:14 -0800 (PST)
-In-Reply-To: <566EDA6C.8030901@suse.de>
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:36246 "EHLO
+	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933098AbbLOEuj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2015 23:50:39 -0500
+Received: by qkht125 with SMTP id t125so170564921qkh.3
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2015 20:50:38 -0800 (PST)
+In-Reply-To: <566EDF02.4050100@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-be_mbox_db_ready_wait was changed to remove wait_event_timeout done und=
-er
-spinlock held for port initialization FW commands.
-The timeout change and unrecoverable error check inside the wait loop w=
-ere
-needed to be addressed too.
-Though spinlock was replaced with mutex in patch 2/9.
+The problem statement indicates affinity issue but IOPOLL implementatio=
+n
+had issues too.
+1. IOPOLL budget passed in the callback is not being honored. This was =
+the
+root cause where
+the driver kept polling in softirq.
+2. The interrupts kept coming even when IOPOLL is scheduled. So we need=
+ed
+to fix EQ rearming.
+
+I think, choosing CPU affinity internally by driver is not right thing =
+to
+do. For setting IRQ affinity
+you need to have holistic view of the system and better done by externa=
+l
+entity which has heuristics
+of all the varied workloads on the system.
 
 -----Original Message-----
 =46rom: Hannes Reinecke [mailto:hare@suse.de]
-Sent: Monday, December 14, 2015 8:34 PM
+Sent: Monday, December 14, 2015 8:54 PM
 To: Jitendra Bhivare; linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
-Subject: Re: [PATCH 1/9] be2iscsi: Fix soft lockup in mgmt_get_all_if_i=
-d
-path using bmbx
+Subject: Re: [PATCH 6/9] be2iscsi: Fix IOPOLL implementation
 
-On 12/14/2015 07:10 AM, Jitendra Bhivare wrote:
+On 12/14/2015 07:11 AM, Jitendra Bhivare wrote:
 > From: Jitendra <jitendra.bhivare@avagotech.com>
 >
-> We are taking mbox_lock spinlock which disables pre-emption before we
-> poll for mbox completion. Waiting there with spinlock held in excess
-> of 20s will cause soft lockup.
+> OS not responding when running 2 port traffic on 72 CPUs system.
 >
-> Actual fix is to change mbox_lock to mutex.
-Really? I didn't find that in the patch ...
-
-> The changes are done in phases. This is the first part.
-> 1. Changed mgmt_get_all_if_id to use MCC instead of BMBX.
-> 2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
-> wait_event_timeout. Added error handling code for IO reads.
-> OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when
-> unreachable boot targets are configured.
+> be2iscsi IRQs gets affined to CPU0 when irqbalancer is disabled.
+> be_iopoll processing completions in BLOCK_IOPOLL_SOFTIRQ hogged CPU0.
 >
-Why did you modify be_mbox_db_ready_wait(), seeing that you're not usin=
-g
-the mailbox interface anymore after this change?
+> 1. Use budget to exit the polling loop in beiscsi_process_cq.
+> 2. Rearming of EQ is done only after iopoll completes.
+>
+> Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
+> ---
+>   drivers/scsi/be2iscsi/be_cmds.c  |    2 +-
+>   drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
+>   drivers/scsi/be2iscsi/be_main.c  |   91
++++++++++++++++++++++-----------------
+>   drivers/scsi/be2iscsi/be_main.h  |    5 +-
+>   4 files changed, 56 insertions(+), 44 deletions(-)
+>
+Hmm. Not sure if I agree with this.
+Doesn't the be2iscsi driver set the cpu affinity internally?
+If not, wouldn't that be the better solution?
 
 Cheers,
 
