@@ -1,14 +1,14 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 08/15] be2iscsi: Fix VLAN support for IPv6 network
-Date: Tue, 15 Dec 2015 21:24:59 +0530
-Message-ID: <1450194906-12925-9-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 11/15] be2iscsi: Fix return value for MCC completion
+Date: Tue, 15 Dec 2015 21:25:02 +0530
+Message-ID: <1450194906-12925-12-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:63989 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754113AbbLOPzc (ORCPT
+	by vger.kernel.org with ESMTP id S1754133AbbLOPze (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2015 10:55:32 -0500
+	Tue, 15 Dec 2015 10:55:34 -0500
 In-Reply-To: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,28 +17,26 @@ Cc: Jitendra <jitendra.bhivare@avagotech.com>
 
 From: Jitendra <jitendra.bhivare@avagotech.com>
 
-Configuring VLAN parameters through IPv6 interface was not supported in driver.
+Change return value of completed MCC EBUSY to EINVAL.
 
 Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 188d83f..c89a025 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -466,6 +466,10 @@ beiscsi_set_ipv6(struct Scsi_Host *shost,
- 		ret = mgmt_set_ip(phba, iface_param, NULL,
- 				  ISCSI_BOOTPROTO_STATIC);
- 		break;
-+	case ISCSI_NET_PARAM_VLAN_ENABLED:
-+	case ISCSI_NET_PARAM_VLAN_TAG:
-+		ret = beiscsi_set_vlan_tag(shost, iface_param);
-+		break;
- 	default:
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
- 			    "BS_%d : Param %d not supported\n",
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 9bb5905..eced82b 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -323,7 +323,7 @@ static int be_mcc_compl_process(struct be_ctrl_info *ctrl,
+ 			if (resp_hdr->response_length)
+ 				return 0;
+ 		}
+-		return -EBUSY;
++		return -EINVAL;
+ 	}
+ 	return 0;
+ }
 -- 
 1.7.1
 
