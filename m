@@ -1,137 +1,70 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/3] block: Export max_dev_sectors_kb in sysfs
-Date: Wed, 16 Dec 2015 17:53:53 -0500
-Message-ID: <1450306433-20166-3-git-send-email-martin.petersen@oracle.com>
-References: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
+From: james.smart@avagotech.com (James Smart)
+Subject: [PATCH 00/17] lpfc: Update to revision 11.0.0.10
+Date: Wed, 16 Dec 2015 18:11:51 -0500
+Message-ID: <5671efb7.4urkMzb5xQylW142%james.smart@avagotech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17612 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755205AbbLPWyE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 17:54:04 -0500
-In-Reply-To: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34138 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370AbbLPXMK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 18:12:10 -0500
+Received: by mail-pf0-f173.google.com with SMTP id 68so19521014pfc.1
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 15:12:09 -0800 (PST)
+Received: from myfc17 (cm-wififw.emulex.com. [138.239.220.50])
+        by smtp.gmail.com with ESMTPSA id 62sm7011787pfq.90.2015.12.16.15.12.08
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1 cipher=AES128-SHA bits=128/128);
+        Wed, 16 Dec 2015 15:12:08 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-Some storage devices report a maximum transfer length which indicates
-the maximum size of an I/O request that the device can process. This
-limit is enforced in combination with the controller's max_hw_sectors
-and DMA constraints to ensure that we do not issue a command too big for
-the device.
 
-Export the max_dev_sectors_kb queue limit in sysfs and update the
-documentation accordingly.
+This patch set updates the lpfc driver to revision 11.0.0.10
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- Documentation/ABI/testing/sysfs-block |  9 +++++++++
- Documentation/block/queue-sysfs.txt   | 11 +++++++++--
- block/blk-settings.c                  |  4 +++-
- block/blk-sysfs.c                     | 13 +++++++++++++
- 4 files changed, 34 insertions(+), 3 deletions(-)
+The patches were cut against scsi-misc
 
-diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
-index 71d184dbb70d..4f284d38c085 100644
---- a/Documentation/ABI/testing/sysfs-block
-+++ b/Documentation/ABI/testing/sysfs-block
-@@ -235,3 +235,12 @@ Description:
- 		write_same_max_bytes is 0, write same is not supported
- 		by the device.
- 
-+What:		/sys/block/<disk>/queue/max_dev_sectors_kb
-+Date:		December 2015
-+Contact:	Martin K. Petersen <martin.petersen@oracle.com>
-+Description:
-+		Some storage devices report the maximum size that the
-+		device can process in a single READ or WRITE
-+		request. This limit is used in combination with
-+		constraints set by the controller driver to limit the
-+		size of filesystem requests.
-diff --git a/Documentation/block/queue-sysfs.txt b/Documentation/block/queue-sysfs.txt
-index e5d914845be6..a078995f3eae 100644
---- a/Documentation/block/queue-sysfs.txt
-+++ b/Documentation/block/queue-sysfs.txt
-@@ -55,9 +55,15 @@ logical_block_size (RO)
- -----------------------
- This is the logcal block size of the device, in bytes.
- 
-+max_dev_sectors_kb (R)
-+----------------------
-+This is the maximum number of kilobytes supported by the storage device
-+for a READ or WRITE request.
-+
- max_hw_sectors_kb (RO)
- ----------------------
--This is the maximum number of kilobytes supported in a single data transfer.
-+This is the maximum number of kilobytes supported by the storage
-+controller in a single data transfer.
- 
- max_integrity_segments (RO)
- ---------------------------
-@@ -68,7 +74,8 @@ max_sectors_kb (RW)
- -------------------
- This is the maximum number of kilobytes that the block layer will allow
- for a filesystem request. Must be smaller than or equal to the maximum
--size allowed by the hardware.
-+size allowed by the storage controller (max_hw_sectors_kb) and the
-+maximum size allowed by the storage device (max_dev_sectors_kb).
- 
- max_segments (RO)
- -----------------
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index dd4973583978..362b0179c86a 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -232,7 +232,9 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
-  *    max_sectors is a soft limit imposed by the block layer for
-  *    filesystem type requests.  This value can be overridden on a
-  *    per-device basis in /sys/block/<device>/queue/max_sectors_kb.
-- *    The soft limit can not exceed max_hw_sectors.
-+ *
-+ *    The soft limit's lower bound is the page cache size and it can not
-+ *    exceed neither max_hw_sectors, nor max_dev_sectors.
-  **/
- void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_hw_sectors)
- {
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index e140cc487ce1..c289f9f6dcd9 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -225,6 +225,13 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
- 	return queue_var_show(max_hw_sectors_kb, (page));
- }
- 
-+static ssize_t queue_max_dev_sectors_show(struct request_queue *q, char *page)
-+{
-+	int max_dev_sectors_kb = q->limits.max_dev_sectors >> 1;
-+
-+	return queue_var_show(max_dev_sectors_kb, (page));
-+}
-+
- #define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
- static ssize_t								\
- queue_show_##name(struct request_queue *q, char *page)			\
-@@ -371,6 +378,11 @@ static struct queue_sysfs_entry queue_max_hw_sectors_entry = {
- 	.show = queue_max_hw_sectors_show,
- };
- 
-+static struct queue_sysfs_entry queue_max_dev_sectors_entry = {
-+	.attr = {.name = "max_dev_sectors_kb", .mode = S_IRUGO },
-+	.show = queue_max_dev_sectors_show,
-+};
-+
- static struct queue_sysfs_entry queue_max_segments_entry = {
- 	.attr = {.name = "max_segments", .mode = S_IRUGO },
- 	.show = queue_max_segments_show,
-@@ -483,6 +495,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_requests_entry.attr,
- 	&queue_ra_entry.attr,
- 	&queue_max_hw_sectors_entry.attr,
-+	&queue_max_dev_sectors_entry.attr,
- 	&queue_max_sectors_entry.attr,
- 	&queue_max_segments_entry.attr,
- 	&queue_max_integrity_segments_entry.attr,
+James Smart (17):
+  Fix FCF Infinite loop in lpfc_sli4_fcf_rr_next_index_get.
+  Fix the FLOGI discovery logic to comply with T11 standards
+  Added throttle logging support.
+  Fix RegLogin failed error seen on Lancer FC during port bounce
+  Fix driver crash when module parameter lpfc_fcp_io_channel set to 16
+  Fix crash in fcp command completion path.
+  Modularize and cleanup FDMI code in driver
+  Fix RDP Speed reporting.
+  Fix RDP ACC being too long.
+  Make write check error processing more resilient
+  Use new FDMI speed definitions for 10G, 25G and 40G FCoE.
+  Fix mbox reuse in PLOGI completion
+  Fix external loopback failure.
+  Add logging for misconfigured optics.
+  Delete unnecessary checks before the function call "mempool_destroy"
+  Use kzalloc instead of kmalloc
+  Update version to 11.0.0.10 for upstream patch set
+
+ drivers/scsi/lpfc/lpfc.h           |   21 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |   66 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |    7 +-
+ drivers/scsi/lpfc/lpfc_ct.c        | 1864 +++++++++++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_disc.h      |   11 +
+ drivers/scsi/lpfc/lpfc_els.c       |  484 +++++-----
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |   88 +-
+ drivers/scsi/lpfc/lpfc_hw.h        |  184 +++-
+ drivers/scsi/lpfc/lpfc_hw4.h       |   52 +-
+ drivers/scsi/lpfc/lpfc_init.c      |  268 ++++--
+ drivers/scsi/lpfc/lpfc_logmsg.h    |   40 +
+ drivers/scsi/lpfc/lpfc_mem.c       |    6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  134 ++-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   82 +-
+ drivers/scsi/lpfc/lpfc_sli.c       |   30 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |    1 +
+ drivers/scsi/lpfc/lpfc_version.h   |    2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |    8 +
+ 18 files changed, 2186 insertions(+), 1162 deletions(-)
+
 -- 
-2.5.0
+1.7.11.7
 
