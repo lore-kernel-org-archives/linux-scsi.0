@@ -1,50 +1,137 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/3] scsi_debug: Increase the reported optimal transfer length
-Date: Wed, 16 Dec 2015 17:53:51 -0500
-Message-ID: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 3/3] block: Export max_dev_sectors_kb in sysfs
+Date: Wed, 16 Dec 2015 17:53:53 -0500
+Message-ID: <1450306433-20166-3-git-send-email-martin.petersen@oracle.com>
+References: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40812 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbLPWx6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 17:53:58 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:17612 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755205AbbLPWyE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 17:54:04 -0500
+In-Reply-To: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-The OPTIMAL TRANSFER LENGTH reported by scsi_debug is 64 blocks which
-translates to 32KB with the default logical block size. That's much
-lower than what real storage devices typically report (256KB to 1MB).
+Some storage devices report a maximum transfer length which indicates
+the maximum size of an I/O request that the device can process. This
+limit is enforced in combination with the controller's max_hw_sectors
+and DMA constraints to ensure that we do not issue a command too big for
+the device.
 
-Bump the optimal transfer length to 1024 blocks.
+Export the max_dev_sectors_kb queue limit in sysfs and update the
+documentation accordingly.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/scsi_debug.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Documentation/ABI/testing/sysfs-block |  9 +++++++++
+ Documentation/block/queue-sysfs.txt   | 11 +++++++++--
+ block/blk-settings.c                  |  4 +++-
+ block/blk-sysfs.c                     | 13 +++++++++++++
+ 4 files changed, 34 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index d09d60293c27..b80b037f2982 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -129,7 +129,7 @@ static const char *scsi_debug_version_date = "20141022";
- #define DEF_NO_LUN_0   0
- #define DEF_NUM_PARTS   0
- #define DEF_OPTS   0
--#define DEF_OPT_BLKS 64
-+#define DEF_OPT_BLKS 1024
- #define DEF_PHYSBLK_EXP 0
- #define DEF_PTYPE   0
- #define DEF_REMOVABLE false
-@@ -4140,7 +4140,7 @@ MODULE_PARM_DESC(no_lun_0, "no LU number 0 (def=0 -> have lun 0)");
- MODULE_PARM_DESC(no_uld, "stop ULD (e.g. sd driver) attaching (def=0))");
- MODULE_PARM_DESC(num_parts, "number of partitions(def=0)");
- MODULE_PARM_DESC(num_tgts, "number of targets per host to simulate(def=1)");
--MODULE_PARM_DESC(opt_blks, "optimal transfer length in block (def=64)");
-+MODULE_PARM_DESC(opt_blks, "optimal transfer length in blocks (def=1024)");
- MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
- MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
- MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
+index 71d184dbb70d..4f284d38c085 100644
+--- a/Documentation/ABI/testing/sysfs-block
++++ b/Documentation/ABI/testing/sysfs-block
+@@ -235,3 +235,12 @@ Description:
+ 		write_same_max_bytes is 0, write same is not supported
+ 		by the device.
+ 
++What:		/sys/block/<disk>/queue/max_dev_sectors_kb
++Date:		December 2015
++Contact:	Martin K. Petersen <martin.petersen@oracle.com>
++Description:
++		Some storage devices report the maximum size that the
++		device can process in a single READ or WRITE
++		request. This limit is used in combination with
++		constraints set by the controller driver to limit the
++		size of filesystem requests.
+diff --git a/Documentation/block/queue-sysfs.txt b/Documentation/block/queue-sysfs.txt
+index e5d914845be6..a078995f3eae 100644
+--- a/Documentation/block/queue-sysfs.txt
++++ b/Documentation/block/queue-sysfs.txt
+@@ -55,9 +55,15 @@ logical_block_size (RO)
+ -----------------------
+ This is the logcal block size of the device, in bytes.
+ 
++max_dev_sectors_kb (R)
++----------------------
++This is the maximum number of kilobytes supported by the storage device
++for a READ or WRITE request.
++
+ max_hw_sectors_kb (RO)
+ ----------------------
+-This is the maximum number of kilobytes supported in a single data transfer.
++This is the maximum number of kilobytes supported by the storage
++controller in a single data transfer.
+ 
+ max_integrity_segments (RO)
+ ---------------------------
+@@ -68,7 +74,8 @@ max_sectors_kb (RW)
+ -------------------
+ This is the maximum number of kilobytes that the block layer will allow
+ for a filesystem request. Must be smaller than or equal to the maximum
+-size allowed by the hardware.
++size allowed by the storage controller (max_hw_sectors_kb) and the
++maximum size allowed by the storage device (max_dev_sectors_kb).
+ 
+ max_segments (RO)
+ -----------------
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index dd4973583978..362b0179c86a 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -232,7 +232,9 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
+  *    max_sectors is a soft limit imposed by the block layer for
+  *    filesystem type requests.  This value can be overridden on a
+  *    per-device basis in /sys/block/<device>/queue/max_sectors_kb.
+- *    The soft limit can not exceed max_hw_sectors.
++ *
++ *    The soft limit's lower bound is the page cache size and it can not
++ *    exceed neither max_hw_sectors, nor max_dev_sectors.
+  **/
+ void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_hw_sectors)
+ {
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index e140cc487ce1..c289f9f6dcd9 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -225,6 +225,13 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
+ 	return queue_var_show(max_hw_sectors_kb, (page));
+ }
+ 
++static ssize_t queue_max_dev_sectors_show(struct request_queue *q, char *page)
++{
++	int max_dev_sectors_kb = q->limits.max_dev_sectors >> 1;
++
++	return queue_var_show(max_dev_sectors_kb, (page));
++}
++
+ #define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
+ static ssize_t								\
+ queue_show_##name(struct request_queue *q, char *page)			\
+@@ -371,6 +378,11 @@ static struct queue_sysfs_entry queue_max_hw_sectors_entry = {
+ 	.show = queue_max_hw_sectors_show,
+ };
+ 
++static struct queue_sysfs_entry queue_max_dev_sectors_entry = {
++	.attr = {.name = "max_dev_sectors_kb", .mode = S_IRUGO },
++	.show = queue_max_dev_sectors_show,
++};
++
+ static struct queue_sysfs_entry queue_max_segments_entry = {
+ 	.attr = {.name = "max_segments", .mode = S_IRUGO },
+ 	.show = queue_max_segments_show,
+@@ -483,6 +495,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_requests_entry.attr,
+ 	&queue_ra_entry.attr,
+ 	&queue_max_hw_sectors_entry.attr,
++	&queue_max_dev_sectors_entry.attr,
+ 	&queue_max_sectors_entry.attr,
+ 	&queue_max_segments_entry.attr,
+ 	&queue_max_integrity_segments_entry.attr,
 -- 
 2.5.0
 
