@@ -1,772 +1,427 @@
 From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH 02/17] lpfc: Fix the FLOGI discovery logic to comply with
- T11 standards
-Date: Wed, 16 Dec 2015 18:11:53 -0500
-Message-ID: <5671efb9.EUONcdfdiSClKLvo%james.smart@avagotech.com>
+Subject: [PATCH 03/17] lpfc: Added throttle logging support.
+Date: Wed, 16 Dec 2015 18:11:54 -0500
+Message-ID: <5671efba.8C/kxNA2eqfImskd%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:35500 "EHLO
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:36542 "EHLO
 	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbbLPXMM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 18:12:12 -0500
-Received: by mail-pf0-f177.google.com with SMTP id v86so19536840pfa.2
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 15:12:12 -0800 (PST)
+	with ESMTP id S1754836AbbLPXMN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 18:12:13 -0500
+Received: by mail-pf0-f177.google.com with SMTP id o64so19589200pfb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 15:12:13 -0800 (PST)
 Received: from myfc17 (cm-wififw.emulex.com. [138.239.220.50])
-        by smtp.gmail.com with ESMTPSA id kp11sm11431389pab.16.2015.12.16.15.12.10
+        by smtp.gmail.com with ESMTPSA id r72sm7014463pfa.93.2015.12.16.15.12.11
         for <linux-scsi@vger.kernel.org>
         (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Wed, 16 Dec 2015 15:12:10 -0800 (PST)
+        Wed, 16 Dec 2015 15:12:12 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix the FLOGI discovery logic to comply with T11 standards
-
-We weren't properly setting fabric parameters, such as R_A_TOV and E_D_TOV,
-when we registered the vfi object in default configs and pt2pt configs.
-Revise to now pass service params with the values to the firmware and
-ensure they are reset on link bounce. Required reworking the call sequence
-in the discovery threads.
+Implemented a throttle on error logging.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 Signed-off-by: James Smart <james.smart@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_crtn.h      |   1 +
- drivers/scsi/lpfc/lpfc_els.c       | 342 +++++++++++++++++--------------------
- drivers/scsi/lpfc/lpfc_hbadisc.c   |  12 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c | 124 ++++++++------
- 4 files changed, 240 insertions(+), 239 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         |  5 +++
+ drivers/scsi/lpfc/lpfc_attr.c    | 18 +++++++++++
+ drivers/scsi/lpfc/lpfc_crtn.h    |  1 +
+ drivers/scsi/lpfc/lpfc_disc.h    | 11 +++++++
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 23 +++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c    | 70 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_logmsg.h  | 40 +++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_scsi.c    | 41 ++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_sli.c     |  7 ++++
+ 9 files changed, 205 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index ceee9a3..df32b0c 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -347,6 +347,7 @@ struct lpfc_vport {
+ #define FC_CT_RFT_ID		0x10	 /* RFT_ID accepted by switch */
+ 
+ 	struct list_head fc_nodes;
++	uint32_t throttle_cnt;
+ 
+ 	/* Keep counters for the number of entries in each list. */
+ 	uint16_t fc_plogi_cnt;
+@@ -443,6 +444,7 @@ struct lpfc_vport {
+ 	unsigned long rcv_buffer_time_stamp;
+ 	uint32_t vport_flag;
+ #define STATIC_VPORT	1
++	struct throttle_history log;    /* Throttle log history for phba */
+ };
+ 
+ struct hbq_s {
+@@ -750,6 +752,9 @@ struct lpfc_hba {
+ 	uint32_t cfg_request_firmware_upgrade;
+ 	uint32_t cfg_iocb_cnt;
+ 	uint32_t cfg_suppress_link_up;
++	uint32_t cfg_throttle_log_cnt;
++	uint32_t cfg_throttle_log_time;
++	struct throttle_history log;	/* Throttle log history for phba */
+ 	uint32_t cfg_rrq_xri_bitmap_sz;
+ #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
+ #define LPFC_DELAY_INIT_LINK              1	/* layered driver hold off */
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index f6446d7..6061e5d 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -4773,6 +4773,20 @@ LPFC_ATTR_R(prot_sg_seg_cnt, LPFC_DEFAULT_SG_SEG_CNT,
+ 	    LPFC_DEFAULT_SG_SEG_CNT, LPFC_MAX_SG_SEG_CNT,
+ 	    "Max Protection Scatter Gather Segment Count");
+ 
++#define THROTTLE_CNT_MIN	1
++#define	THROTTLE_CNT_MAX	1000
++#define THROTTLE_CNT_DEF	10
++LPFC_ATTR_RW(throttle_log_cnt, THROTTLE_CNT_DEF, THROTTLE_CNT_MIN,
++	     THROTTLE_CNT_MAX, "Do not exceed this number of messages "
++	     "logged within throttle_log_time");
++
++#define THROTTLE_TIME_MIN        1
++#define THROTTLE_TIME_MAX        60
++#define THROTTLE_TIME_DEF        1
++LPFC_ATTR_RW(throttle_log_time, THROTTLE_TIME_DEF, THROTTLE_TIME_MIN,
++	     THROTTLE_TIME_MAX, "Do not exceed throttle_log_cnt within "
++	     "this limit (seconds)");
++
+ struct device_attribute *lpfc_hba_attrs[] = {
+ 	&dev_attr_bg_info,
+ 	&dev_attr_bg_guard_err,
+@@ -4868,6 +4882,8 @@ struct device_attribute *lpfc_hba_attrs[] = {
+ 	&dev_attr_lpfc_sriov_hw_max_virtfn,
+ 	&dev_attr_protocol,
+ 	&dev_attr_lpfc_xlane_supported,
++	&dev_attr_lpfc_throttle_log_cnt,
++	&dev_attr_lpfc_throttle_log_time,
+ 	NULL,
+ };
+ 
+@@ -5858,6 +5874,8 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
+ 	lpfc_iocb_cnt_init(phba, lpfc_iocb_cnt);
+ 	phba->cfg_enable_dss = 1;
++	lpfc_throttle_log_cnt_init(phba, lpfc_throttle_log_cnt);
++	lpfc_throttle_log_time_init(phba, lpfc_throttle_log_time);
+ 	return;
+ }
+ 
 diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index b0e6fe4..80d3c74 100644
+index 80d3c74..a2c2040 100644
 --- a/drivers/scsi/lpfc/lpfc_crtn.h
 +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -72,6 +72,7 @@ void lpfc_cancel_all_vport_retry_delay_timer(struct lpfc_hba *);
- void lpfc_retry_pport_discovery(struct lpfc_hba *);
- void lpfc_release_rpi(struct lpfc_hba *, struct lpfc_vport *, uint16_t);
+@@ -21,6 +21,7 @@
+ typedef int (*node_filter)(struct lpfc_nodelist *, void *);
  
-+void lpfc_mbx_cmpl_local_config_link(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_mbx_cmpl_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_mbx_cmpl_dflt_rpi(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_mbx_cmpl_fabric_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index b6fa257..f6dd15b 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -455,9 +455,9 @@ int
- lpfc_issue_reg_vfi(struct lpfc_vport *vport)
- {
- 	struct lpfc_hba  *phba = vport->phba;
--	LPFC_MBOXQ_t *mboxq;
-+	LPFC_MBOXQ_t *mboxq = NULL;
- 	struct lpfc_nodelist *ndlp;
--	struct lpfc_dmabuf *dmabuf;
-+	struct lpfc_dmabuf *dmabuf = NULL;
- 	int rc = 0;
+ struct fc_rport;
++bool lpfc_throttler(struct lpfc_vport *, struct throttle_history *);
+ void lpfc_down_link(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_sli_read_link_ste(struct lpfc_hba *);
+ void lpfc_dump_mem(struct lpfc_hba *, LPFC_MBOXQ_t *, uint16_t, uint16_t);
+diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+index 361f5b3..5f7ada1 100644
+--- a/drivers/scsi/lpfc/lpfc_disc.h
++++ b/drivers/scsi/lpfc/lpfc_disc.h
+@@ -74,8 +74,19 @@ struct lpfc_node_rrqs {
+ 	unsigned long xri_bitmap[XRI_BITMAP_ULONGS];
+ };
  
- 	/* move forward in case of SLI4 FC port loopback test and pt2pt mode */
-@@ -471,25 +471,33 @@ lpfc_issue_reg_vfi(struct lpfc_vport *vport)
- 		}
- 	}
- 
--	dmabuf = kzalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
--	if (!dmabuf) {
-+	mboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!mboxq) {
- 		rc = -ENOMEM;
- 		goto fail;
- 	}
--	dmabuf->virt = lpfc_mbuf_alloc(phba, MEM_PRI, &dmabuf->phys);
--	if (!dmabuf->virt) {
--		rc = -ENOMEM;
--		goto fail_free_dmabuf;
--	}
- 
--	mboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--	if (!mboxq) {
--		rc = -ENOMEM;
--		goto fail_free_coherent;
-+	/* Supply CSP's only if we are fabric connect or pt-to-pt connect */
-+	if ((vport->fc_flag & FC_FABRIC) || (vport->fc_flag & FC_PT2PT)) {
-+		dmabuf = kzalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
-+		if (!dmabuf) {
-+			rc = -ENOMEM;
-+			goto fail;
-+		}
-+		dmabuf->virt = lpfc_mbuf_alloc(phba, MEM_PRI, &dmabuf->phys);
-+		if (!dmabuf->virt) {
-+			rc = -ENOMEM;
-+			goto fail;
-+		}
-+		memcpy(dmabuf->virt, &phba->fc_fabparam,
-+		       sizeof(struct serv_parm));
- 	}
++struct throttle_history {
++	/* Throttle log defaults if more than 10 messages per second */
++	#define ONE_SEC  1000000 /* one second */
++	bool logit;                 /* True means throttle logging on     */
++	uint32_t log_messages_lost;   /* Messages discarded due to throttle */
++	uint32_t log_messages;        /* Log messages count within second   */
++	uint64_t log_start;           /* start of message burst in usec     */
++	char announcement[16];		/* announcement string */
++};
 +
- 	vport->port_state = LPFC_FABRIC_CFG_LINK;
--	memcpy(dmabuf->virt, &phba->fc_fabparam, sizeof(vport->fc_sparam));
--	lpfc_reg_vfi(mboxq, vport, dmabuf->phys);
-+	if (dmabuf)
-+		lpfc_reg_vfi(mboxq, vport, dmabuf->phys);
-+	else
-+		lpfc_reg_vfi(mboxq, vport, 0);
- 
- 	mboxq->mbox_cmpl = lpfc_mbx_cmpl_reg_vfi;
- 	mboxq->vport = vport;
-@@ -497,17 +505,19 @@ lpfc_issue_reg_vfi(struct lpfc_vport *vport)
- 	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_NOWAIT);
- 	if (rc == MBX_NOT_FINISHED) {
- 		rc = -ENXIO;
--		goto fail_free_mbox;
-+		goto fail;
- 	}
- 	return 0;
- 
--fail_free_mbox:
--	mempool_free(mboxq, phba->mbox_mem_pool);
--fail_free_coherent:
--	lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
--fail_free_dmabuf:
--	kfree(dmabuf);
- fail:
-+	if (mboxq)
-+		mempool_free(mboxq, phba->mbox_mem_pool);
-+	if (dmabuf) {
-+		if (dmabuf->virt)
-+			lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
-+		kfree(dmabuf);
-+	}
-+
- 	lpfc_vport_set_state(vport, FC_VPORT_FAILED);
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
- 		"0289 Issue Register VFI failed: Err %d\n", rc);
-@@ -711,9 +721,10 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	 * For FC we need to do some special processing because of the SLI
- 	 * Port's default settings of the Common Service Parameters.
- 	 */
--	if (phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC) {
-+	if ((phba->sli_rev == LPFC_SLI_REV4) &&
-+	    (phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC)) {
- 		/* If physical FC port changed, unreg VFI and ALL VPIs / RPIs */
--		if ((phba->sli_rev == LPFC_SLI_REV4) && fabric_param_changed)
-+		if (fabric_param_changed)
- 			lpfc_unregister_fcf_prep(phba);
- 
- 		/* This should just update the VFI CSPs*/
-@@ -824,13 +835,21 @@ lpfc_cmpl_els_flogi_nport(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 
- 	spin_lock_irq(shost->host_lock);
- 	vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
-+	vport->fc_flag |= FC_PT2PT;
- 	spin_unlock_irq(shost->host_lock);
- 
--	phba->fc_edtov = FF_DEF_EDTOV;
--	phba->fc_ratov = FF_DEF_RATOV;
-+	/* If physical FC port changed, unreg VFI and ALL VPIs / RPIs */
-+	if ((phba->sli_rev == LPFC_SLI_REV4) && phba->fc_topology_changed) {
-+		lpfc_unregister_fcf_prep(phba);
-+
-+		spin_lock_irq(shost->host_lock);
-+		vport->fc_flag &= ~FC_VFI_REGISTERED;
-+		spin_unlock_irq(shost->host_lock);
-+		phba->fc_topology_changed = 0;
-+	}
-+
- 	rc = memcmp(&vport->fc_portname, &sp->portName,
- 		    sizeof(vport->fc_portname));
--	memcpy(&phba->fc_fabparam, sp, sizeof(struct serv_parm));
- 
- 	if (rc >= 0) {
- 		/* This side will initiate the PLOGI */
-@@ -839,38 +858,14 @@ lpfc_cmpl_els_flogi_nport(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		spin_unlock_irq(shost->host_lock);
- 
- 		/*
--		 * N_Port ID cannot be 0, set our to LocalID the other
--		 * side will be RemoteID.
-+		 * N_Port ID cannot be 0, set our Id to LocalID
-+		 * the other side will be RemoteID.
- 		 */
- 
- 		/* not equal */
- 		if (rc)
- 			vport->fc_myDID = PT2PT_LocalID;
- 
--		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--		if (!mbox)
--			goto fail;
--
--		lpfc_config_link(phba, mbox);
--
--		mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
--		mbox->vport = vport;
--		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
--		if (rc == MBX_NOT_FINISHED) {
--			mempool_free(mbox, phba->mbox_mem_pool);
--			goto fail;
--		}
--
--		/*
--		 * For SLI4, the VFI/VPI are registered AFTER the
--		 * Nport with the higher WWPN sends the PLOGI with
--		 * an assigned NPortId.
--		 */
--
--		/* not equal */
--		if ((phba->sli_rev == LPFC_SLI_REV4) && rc)
--			lpfc_issue_reg_vfi(vport);
--
- 		/* Decrement ndlp reference count indicating that ndlp can be
- 		 * safely released when other references to it are done.
- 		 */
-@@ -912,29 +907,20 @@ lpfc_cmpl_els_flogi_nport(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	/* If we are pt2pt with another NPort, force NPIV off! */
- 	phba->sli3_options &= ~LPFC_SLI3_NPIV_ENABLED;
- 
--	spin_lock_irq(shost->host_lock);
--	vport->fc_flag |= FC_PT2PT;
--	spin_unlock_irq(shost->host_lock);
--	/* If physical FC port changed, unreg VFI and ALL VPIs / RPIs */
--	if ((phba->sli_rev == LPFC_SLI_REV4) && phba->fc_topology_changed) {
--		lpfc_unregister_fcf_prep(phba);
-+	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!mbox)
-+		goto fail;
- 
--		/* The FC_VFI_REGISTERED flag will get clear in the cmpl
--		 * handler for unreg_vfi, but if we don't force the
--		 * FC_VFI_REGISTERED flag then the reg_vfi mailbox could be
--		 * built with the update bit set instead of just the vp bit to
--		 * change the Nport ID.  We need to have the vp set and the
--		 * Upd cleared on topology changes.
--		 */
--		spin_lock_irq(shost->host_lock);
--		vport->fc_flag &= ~FC_VFI_REGISTERED;
--		spin_unlock_irq(shost->host_lock);
--		phba->fc_topology_changed = 0;
--		lpfc_issue_reg_vfi(vport);
-+	lpfc_config_link(phba, mbox);
-+
-+	mbox->mbox_cmpl = lpfc_mbx_cmpl_local_config_link;
-+	mbox->vport = vport;
-+	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
-+	if (rc == MBX_NOT_FINISHED) {
-+		mempool_free(mbox, phba->mbox_mem_pool);
-+		goto fail;
- 	}
- 
--	/* Start discovery - this should just do CLEAR_LA */
--	lpfc_disc_start(vport);
- 	return 0;
- fail:
- 	return -ENXIO;
-@@ -1157,6 +1143,7 @@ flogifail:
- 	spin_lock_irq(&phba->hbalock);
- 	phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
- 	spin_unlock_irq(&phba->hbalock);
-+
- 	lpfc_nlp_put(ndlp);
- 
- 	if (!lpfc_error_lost_link(irsp)) {
-@@ -3898,6 +3885,7 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 	IOCB_t *oldcmd;
- 	struct lpfc_iocbq *elsiocb;
- 	uint8_t *pcmd;
-+	struct serv_parm *sp;
- 	uint16_t cmdsize;
- 	int rc;
- 	ELS_PKT *els_pkt_ptr;
-@@ -3927,6 +3915,7 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 			"Issue ACC:       did:x%x flg:x%x",
- 			ndlp->nlp_DID, ndlp->nlp_flag, 0);
- 		break;
-+	case ELS_CMD_FLOGI:
- 	case ELS_CMD_PLOGI:
- 		cmdsize = (sizeof(struct serv_parm) + sizeof(uint32_t));
- 		elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry,
-@@ -3944,10 +3933,34 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 
- 		*((uint32_t *) (pcmd)) = ELS_CMD_ACC;
- 		pcmd += sizeof(uint32_t);
--		memcpy(pcmd, &vport->fc_sparam, sizeof(struct serv_parm));
-+		sp = (struct serv_parm *)pcmd;
-+
-+		if (flag == ELS_CMD_FLOGI) {
-+			/* Copy the received service parameters back */
-+			memcpy(sp, &phba->fc_fabparam,
-+			       sizeof(struct serv_parm));
-+
-+			/* Clear the F_Port bit */
-+			sp->cmn.fPort = 0;
-+
-+			/* Mark all class service parameters as invalid */
-+			sp->cls1.classValid = 0;
-+			sp->cls2.classValid = 0;
-+			sp->cls3.classValid = 0;
-+			sp->cls4.classValid = 0;
-+
-+			/* Copy our worldwide names */
-+			memcpy(&sp->portName, &vport->fc_sparam.portName,
-+			       sizeof(struct lpfc_name));
-+			memcpy(&sp->nodeName, &vport->fc_sparam.nodeName,
-+			       sizeof(struct lpfc_name));
-+		} else {
-+			memcpy(pcmd, &vport->fc_sparam,
-+			       sizeof(struct serv_parm));
-+		}
- 
- 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_RSP,
--			"Issue ACC PLOGI: did:x%x flg:x%x",
-+			"Issue ACC FLOGI/PLOGI: did:x%x flg:x%x",
- 			ndlp->nlp_DID, ndlp->nlp_flag, 0);
- 		break;
- 	case ELS_CMD_PRLO:
-@@ -5739,7 +5752,6 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	IOCB_t *icmd = &cmdiocb->iocb;
- 	struct serv_parm *sp;
- 	LPFC_MBOXQ_t *mbox;
--	struct ls_rjt stat;
- 	uint32_t cmd, did;
- 	int rc;
- 	uint32_t fc_flag = 0;
-@@ -5765,135 +5777,92 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 		return 1;
- 	}
- 
--	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3, 1))) {
--		/* For a FLOGI we accept, then if our portname is greater
--		 * then the remote portname we initiate Nport login.
--		 */
-+	(void) lpfc_check_sparm(vport, ndlp, sp, CLASS3, 1);
- 
--		rc = memcmp(&vport->fc_portname, &sp->portName,
--			    sizeof(struct lpfc_name));
- 
--		if (!rc) {
--			if (phba->sli_rev < LPFC_SLI_REV4) {
--				mbox = mempool_alloc(phba->mbox_mem_pool,
--						     GFP_KERNEL);
--				if (!mbox)
--					return 1;
--				lpfc_linkdown(phba);
--				lpfc_init_link(phba, mbox,
--					       phba->cfg_topology,
--					       phba->cfg_link_speed);
--				mbox->u.mb.un.varInitLnk.lipsr_AL_PA = 0;
--				mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
--				mbox->vport = vport;
--				rc = lpfc_sli_issue_mbox(phba, mbox,
--							 MBX_NOWAIT);
--				lpfc_set_loopback_flag(phba);
--				if (rc == MBX_NOT_FINISHED)
--					mempool_free(mbox, phba->mbox_mem_pool);
--				return 1;
--			} else {
--				/* abort the flogi coming back to ourselves
--				 * due to external loopback on the port.
--				 */
--				lpfc_els_abort_flogi(phba);
--				return 0;
--			}
--		} else if (rc > 0) {	/* greater than */
--			spin_lock_irq(shost->host_lock);
--			vport->fc_flag |= FC_PT2PT_PLOGI;
--			spin_unlock_irq(shost->host_lock);
-+	/*
-+	 * If our portname is greater than the remote portname,
-+	 * then we initiate Nport login.
-+	 */
- 
--			/* If we have the high WWPN we can assign our own
--			 * myDID; otherwise, we have to WAIT for a PLOGI
--			 * from the remote NPort to find out what it
--			 * will be.
--			 */
--			vport->fc_myDID = PT2PT_LocalID;
--		} else
--			vport->fc_myDID = PT2PT_RemoteID;
-+	rc = memcmp(&vport->fc_portname, &sp->portName,
-+		    sizeof(struct lpfc_name));
- 
--		/*
--		 * The vport state should go to LPFC_FLOGI only
--		 * AFTER we issue a FLOGI, not receive one.
-+	if (!rc) {
-+		if (phba->sli_rev < LPFC_SLI_REV4) {
-+			mbox = mempool_alloc(phba->mbox_mem_pool,
-+					     GFP_KERNEL);
-+			if (!mbox)
-+				return 1;
-+			lpfc_linkdown(phba);
-+			lpfc_init_link(phba, mbox,
-+				       phba->cfg_topology,
-+				       phba->cfg_link_speed);
-+			mbox->u.mb.un.varInitLnk.lipsr_AL_PA = 0;
-+			mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+			mbox->vport = vport;
-+			rc = lpfc_sli_issue_mbox(phba, mbox,
-+						 MBX_NOWAIT);
-+			lpfc_set_loopback_flag(phba);
-+			if (rc == MBX_NOT_FINISHED)
-+				mempool_free(mbox, phba->mbox_mem_pool);
-+			return 1;
-+		}
-+
-+		/* abort the flogi coming back to ourselves
-+		 * due to external loopback on the port.
- 		 */
-+		lpfc_els_abort_flogi(phba);
-+		return 0;
-+
-+	} else if (rc > 0) {	/* greater than */
- 		spin_lock_irq(shost->host_lock);
--		fc_flag = vport->fc_flag;
--		port_state = vport->port_state;
--		vport->fc_flag |= FC_PT2PT;
--		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
-+		vport->fc_flag |= FC_PT2PT_PLOGI;
- 		spin_unlock_irq(shost->host_lock);
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--				 "3311 Rcv Flogi PS x%x new PS x%x "
--				 "fc_flag x%x new fc_flag x%x\n",
--				 port_state, vport->port_state,
--				 fc_flag, vport->fc_flag);
- 
--		/*
--		 * We temporarily set fc_myDID to make it look like we are
--		 * a Fabric. This is done just so we end up with the right
--		 * did / sid on the FLOGI ACC rsp.
-+		/* If we have the high WWPN we can assign our own
-+		 * myDID; otherwise, we have to WAIT for a PLOGI
-+		 * from the remote NPort to find out what it
-+		 * will be.
- 		 */
--		did = vport->fc_myDID;
--		vport->fc_myDID = Fabric_DID;
--
-+		vport->fc_myDID = PT2PT_LocalID;
- 	} else {
--		/* Reject this request because invalid parameters */
--		stat.un.b.lsRjtRsvd0 = 0;
--		stat.un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
--		stat.un.b.lsRjtRsnCodeExp = LSEXP_SPARM_OPTIONS;
--		stat.un.b.vendorUnique = 0;
--
--		/*
--		 * We temporarily set fc_myDID to make it look like we are
--		 * a Fabric. This is done just so we end up with the right
--		 * did / sid on the FLOGI LS_RJT rsp.
--		 */
--		did = vport->fc_myDID;
--		vport->fc_myDID = Fabric_DID;
--
--		lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb, ndlp,
--			NULL);
-+		vport->fc_myDID = PT2PT_RemoteID;
-+	}
- 
--		/* Now lets put fc_myDID back to what its supposed to be */
--		vport->fc_myDID = did;
-+	/*
-+	 * The vport state should go to LPFC_FLOGI only
-+	 * AFTER we issue a FLOGI, not receive one.
-+	 */
-+	spin_lock_irq(shost->host_lock);
-+	fc_flag = vport->fc_flag;
-+	port_state = vport->port_state;
-+	vport->fc_flag |= FC_PT2PT;
-+	vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
-+	spin_unlock_irq(shost->host_lock);
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "3311 Rcv Flogi PS x%x new PS x%x "
-+			 "fc_flag x%x new fc_flag x%x\n",
-+			 port_state, vport->port_state,
-+			 fc_flag, vport->fc_flag);
- 
--		return 1;
--	}
-+	/*
-+	 * We temporarily set fc_myDID to make it look like we are
-+	 * a Fabric. This is done just so we end up with the right
-+	 * did / sid on the FLOGI ACC rsp.
-+	 */
-+	did = vport->fc_myDID;
-+	vport->fc_myDID = Fabric_DID;
- 
--	/* send our FLOGI first */
--	if (vport->port_state < LPFC_FLOGI) {
--		vport->fc_myDID = 0;
--		lpfc_initial_flogi(vport);
--		vport->fc_myDID = Fabric_DID;
--	}
-+	memcpy(&phba->fc_fabparam, sp, sizeof(struct serv_parm));
- 
- 	/* Send back ACC */
--	lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb, ndlp, NULL);
-+	lpfc_els_rsp_acc(vport, ELS_CMD_FLOGI, cmdiocb, ndlp, NULL);
- 
- 	/* Now lets put fc_myDID back to what its supposed to be */
- 	vport->fc_myDID = did;
- 
--	if (!(vport->fc_flag & FC_PT2PT_PLOGI)) {
--
--		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--		if (!mbox)
--			goto fail;
--
--		lpfc_config_link(phba, mbox);
--
--		mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
--		mbox->vport = vport;
--		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
--		if (rc == MBX_NOT_FINISHED) {
--			mempool_free(mbox, phba->mbox_mem_pool);
--			goto fail;
--		}
--	}
--
- 	return 0;
--fail:
--	return 1;
- }
- 
- /**
-@@ -7345,7 +7314,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 
- 	/* reject till our FLOGI completes */
- 	if ((vport->port_state < LPFC_FABRIC_CFG_LINK) &&
--		(cmd != ELS_CMD_FLOGI)) {
-+	    (cmd != ELS_CMD_FLOGI)) {
- 		rjt_err = LSRJT_UNABLE_TPC;
- 		rjt_exp = LSEXP_NOTHING_MORE;
- 		goto lsrjt;
-@@ -7381,6 +7350,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			rjt_exp = LSEXP_NOTHING_MORE;
- 			break;
- 		}
-+
- 		if (vport->port_state < LPFC_DISC_AUTH) {
- 			if (!(phba->pport->fc_flag & FC_PT2PT) ||
- 				(phba->pport->fc_flag & FC_PT2PT_PLOGI)) {
+ struct lpfc_nodelist {
+ 	struct list_head nlp_listp;
++	struct throttle_history log;		/* used to record throttle */
+ 	struct lpfc_name nlp_portname;
+ 	struct lpfc_name nlp_nodename;
+ 	uint32_t         nlp_flag;		/* entry flags */
 diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index bfc2442..c96532c 100644
+index c96532c..f0777f2 100644
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
 +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1083,7 +1083,7 @@ out:
+@@ -3959,6 +3959,29 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	    (rport->scsi_target_id < LPFC_MAX_TARGET)) {
+ 		ndlp->nlp_sid = rport->scsi_target_id;
+ 	}
++
++	lpfc_throttle_vlog(ndlp->vport, &ndlp->log, LOG_NODE,
++			"3237 SCSI ID %d "
++			" WWNN:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, "
++			" WWPN:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
++			ndlp->nlp_sid,
++			ndlp->nlp_nodename.u.wwn[0],
++			ndlp->nlp_nodename.u.wwn[1],
++			ndlp->nlp_nodename.u.wwn[2],
++			ndlp->nlp_nodename.u.wwn[3],
++			ndlp->nlp_nodename.u.wwn[4],
++			ndlp->nlp_nodename.u.wwn[5],
++			ndlp->nlp_nodename.u.wwn[6],
++			ndlp->nlp_nodename.u.wwn[7],
++			ndlp->nlp_portname.u.wwn[0],
++			ndlp->nlp_portname.u.wwn[1],
++			ndlp->nlp_portname.u.wwn[2],
++			ndlp->nlp_portname.u.wwn[3],
++			ndlp->nlp_portname.u.wwn[4],
++			ndlp->nlp_portname.u.wwn[5],
++			ndlp->nlp_portname.u.wwn[6],
++			ndlp->nlp_portname.u.wwn[7]);
++
+ 	return;
  }
  
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index db9446c..ab27d81 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -9543,6 +9543,9 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	if (error)
+ 		goto out_disable_pci_dev;
  
--static void
-+void
- lpfc_mbx_cmpl_local_config_link(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- {
- 	struct lpfc_vport *vport = pmb->vport;
-@@ -1113,8 +1113,10 @@ lpfc_mbx_cmpl_local_config_link(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	/* Start discovery by sending a FLOGI. port_state is identically
- 	 * LPFC_FLOGI while waiting for FLOGI cmpl
- 	 */
--	if (vport->port_state != LPFC_FLOGI || vport->fc_flag & FC_PT2PT_PLOGI)
-+	if (vport->port_state != LPFC_FLOGI)
- 		lpfc_initial_flogi(vport);
-+	else if (vport->fc_flag & FC_PT2PT)
-+		lpfc_disc_start(vport);
- 	return;
++	phba->log.logit = true; /* Turn on throttle logs for Adapter */
++	sprintf(phba->log.announcement, "adapter");
++
+ 	/* Set up SLI-3 specific device PCI memory space */
+ 	error = lpfc_sli_pci_mem_setup(phba);
+ 	if (error) {
+@@ -10313,6 +10316,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	if (error)
+ 		goto out_disable_pci_dev;
  
- out:
-@@ -2963,8 +2965,10 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
++	phba->log.logit = true; /* Turn on throttle logs for Adapter */
++	sprintf(phba->log.announcement, "adapter");
++
+ 	/* Set up SLI-4 specific device PCI memory space */
+ 	error = lpfc_sli4_pci_mem_setup(phba);
+ 	if (error) {
+@@ -11270,6 +11276,70 @@ lpfc_fof_queue_destroy(struct lpfc_hba *phba)
+ 	return 0;
+ }
  
- out_free_mem:
- 	mempool_free(mboxq, phba->mbox_mem_pool);
--	lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
--	kfree(dmabuf);
-+	if (dmabuf) {
-+		lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
-+		kfree(dmabuf);
++/**
++ * lpfc_throttler - lpfc log throttling function
++ * @phba : the adapter instance.
++ *
++ * This routine is to be invoked by lpfc_throttle_log and lpfc_throttle_vlog.
++ * It is controlled using two module parameters.
++ * lpfc_throttle_log_time:  The number of seconds to monitor the log count
++ * lpfc_throttle_log_cnt:   The number of logs that cannot be exceeded within
++ *                          the throttle log time.
++ *
++ * This function acts as a gate to the logger.  It monitors the the lpfc log
++ * load.  If the log load exceeds the threshold, it return false which is a
++ * hint to the caller not to send the log.
++ *
++ * Return codes
++ *   true - Okay to log
++ *   false - Do not log
++ */
++bool
++lpfc_throttler(struct lpfc_vport *vport, struct throttle_history *tlog)
++{
++	/* All times in microseconds */
++	uint64_t now = (jiffies * ONE_SEC) / HZ;
++	struct lpfc_hba *phba = vport->phba;
++
++	if (tlog->logit) {
++		/* Currently Logging */
++		if (now > (tlog->log_start +
++		    (phba->cfg_throttle_log_time * ONE_SEC))) {
++			/* Last Log more than one second ago */
++			tlog->log_messages_lost = 0;
++			tlog->log_messages = 1;
++			tlog->log_start = now;
++		} else if (++tlog->log_messages > phba->cfg_throttle_log_cnt) {
++			/* Transition to throttling */
++			lpfc_printf_log(phba, KERN_INFO, LOG_EVENT,
++					"0040 Log compression on %s starting."
++					"\n", tlog->announcement);
++			tlog->log_messages_lost++;
++			tlog->log_messages = 0;
++			tlog->log_start = now;
++			tlog->logit = false;
++		}
++
++	} else if (now > (tlog->log_start +
++		  (300 * ONE_SEC))) {
++		/* Transition to logging if quiesced for five minutes */
++		lpfc_printf_log(phba, KERN_INFO, LOG_EVENT,
++				"0041 Log compression %s ending, messages "
++				"have been quiesced with %d compressed.\n",
++				tlog->announcement, tlog->log_messages_lost);
++
++
++		tlog->log_start = now;
++		tlog->log_messages_lost = 0;
++		tlog->log_messages = 0;
++		tlog->logit = true;
++	} else {
++		/* Currently throttling */
++		tlog->log_messages_lost++;
 +	}
- 	return;
- }
++	return tlog->logit;
++}
++
+ static struct pci_device_id lpfc_id_table[] = {
+ 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_VIPER,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+diff --git a/drivers/scsi/lpfc/lpfc_logmsg.h b/drivers/scsi/lpfc/lpfc_logmsg.h
+index 2a4e5d2..f82b79f 100644
+--- a/drivers/scsi/lpfc/lpfc_logmsg.h
++++ b/drivers/scsi/lpfc/lpfc_logmsg.h
+@@ -57,3 +57,43 @@ do { \
+ 			   fmt, phba->brd_no, ##arg); \
+ 	} \
+ } while (0)
++
++#define lpfc_throttle_vlog(vport, hist, log, fmt, arg...) \
++do { \
++	{ if (!lpfc_throttler(vport, (hist))) \
++		break; \
++	lpfc_printf_vlog(vport, KERN_INFO, log, \
++		   fmt, arg); \
++	} \
++} while (0)
++
++#define lpfc_throttle_log(phba, hist, log, fmt, arg...) \
++do { \
++	{ if (!lpfc_throttler((phba->pport), (hist))) \
++		break; \
++	lpfc_printf_log(phba, KERN_INFO, log, \
++		   fmt, arg); \
++	} \
++} while (0)
++
++#define lpfc_optioned_vlog(vport, hist, level, mask, fmt, arg...) \
++do { \
++	{ if (!lpfc_throttler(vport, (hist))) \
++	  { lpfc_printf_vlog(vport, level, mask, fmt, ##arg); \
++		break; \
++	  } \
++	dev_printk(level, &((vport)->phba->pcidev)->dev, "%d:(%d):" \
++		   fmt, (vport)->phba->brd_no, vport->vpi, ##arg); \
++	} \
++} while (0)
++
++#define lpfc_optioned_log(phba, hist, level, mask, fmt, arg...) \
++do { \
++	{ if (!lpfc_throttler((phba->pport), (hist))) \
++	  { lpfc_printf_log(phba, level, mask, fmt, ##arg); \
++		break; \
++	  } \
++	dev_printk(level, &((phba)->pcidev)->dev, "%d:" \
++		   fmt, phba->brd_no, ##arg); \
++	} \
++} while (0)
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 4679ed4..d51f751 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4621,14 +4621,34 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 				  &lpfc_cmd->cur_iocbq, SLI_IOCB_RET_IOCB);
+ 	if (err) {
+ 		atomic_dec(&ndlp->cmd_pending);
+-		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
+-				 "3376 FCP could not issue IOCB err %x"
++		lpfc_throttle_vlog(vport, &vport->log, LOG_FCP,
++				   "3376 FCP could not issue IOCB err %x "
++				   "FCP cmd x%x <%d/%llu> "
++				   "sid: x%x did: x%x oxid: x%x "
++				   "Data: x%x x%x x%x x%x\n",
++				   err, cmnd->cmnd[0],
++				   cmnd->device ? cmnd->device->id : 0xffff,
++				   cmnd->device ? cmnd->device->lun : (u64) -1,
++				   vport->fc_myDID, ndlp->nlp_DID,
++				   phba->sli_rev == LPFC_SLI_REV4 ?
++				   lpfc_cmd->cur_iocbq.sli4_xritag : 0xffff,
++				   lpfc_cmd->cur_iocbq.iocb.ulpContext,
++				   lpfc_cmd->cur_iocbq.iocb.ulpIoTag,
++				   lpfc_cmd->cur_iocbq.iocb.ulpTimeout,
++				   (uint32_t)
++				   (cmnd->request->timeout / 1000));
++
++
++		goto out_host_busy_free_buf;
++	} else
++		lpfc_throttle_vlog(vport, &vport->log, LOG_FCP,
++				 "0019 FCP IOCB issued"
+ 				 "FCP cmd x%x <%d/%llu> "
+ 				 "sid: x%x did: x%x oxid: x%x "
+ 				 "Data: x%x x%x x%x x%x\n",
+-				 err, cmnd->cmnd[0],
++				 cmnd->cmnd[0],
+ 				 cmnd->device ? cmnd->device->id : 0xffff,
+-				 cmnd->device ? cmnd->device->lun : (u64) -1,
++				 cmnd->device ? cmnd->device->lun : 0xffff,
+ 				 vport->fc_myDID, ndlp->nlp_DID,
+ 				 phba->sli_rev == LPFC_SLI_REV4 ?
+ 				 lpfc_cmd->cur_iocbq.sli4_xritag : 0xffff,
+@@ -4638,9 +4658,6 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 				 (uint32_t)
+ 				 (cmnd->request->timeout / 1000));
  
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index ed9a2c8..daeda6d 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -280,38 +280,12 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	uint32_t *lp;
- 	IOCB_t *icmd;
- 	struct serv_parm *sp;
-+	uint32_t ed_tov;
- 	LPFC_MBOXQ_t *mbox;
- 	struct ls_rjt stat;
- 	int rc;
- 
- 	memset(&stat, 0, sizeof (struct ls_rjt));
--	if (vport->port_state <= LPFC_FDISC) {
--		/* Before responding to PLOGI, check for pt2pt mode.
--		 * If we are pt2pt, with an outstanding FLOGI, abort
--		 * the FLOGI and resend it first.
--		 */
--		if (vport->fc_flag & FC_PT2PT) {
--			 lpfc_els_abort_flogi(phba);
--		        if (!(vport->fc_flag & FC_PT2PT_PLOGI)) {
--				/* If the other side is supposed to initiate
--				 * the PLOGI anyway, just ACC it now and
--				 * move on with discovery.
--				 */
--				phba->fc_edtov = FF_DEF_EDTOV;
--				phba->fc_ratov = FF_DEF_RATOV;
--				/* Start discovery - this should just do
--				   CLEAR_LA */
--				lpfc_disc_start(vport);
--			} else
--				lpfc_initial_flogi(vport);
--		} else {
--			stat.un.b.lsRjtRsnCode = LSRJT_LOGICAL_BSY;
--			stat.un.b.lsRjtRsnCodeExp = LSEXP_NOTHING_MORE;
--			lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb,
--					    ndlp, NULL);
--			return 0;
--		}
--	}
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
- 	lp = (uint32_t *) pcmd->virt;
- 	sp = (struct serv_parm *) ((uint8_t *) lp + sizeof (uint32_t));
-@@ -404,30 +378,46 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	/* Check for Nport to NPort pt2pt protocol */
- 	if ((vport->fc_flag & FC_PT2PT) &&
- 	    !(vport->fc_flag & FC_PT2PT_PLOGI)) {
 -
- 		/* rcv'ed PLOGI decides what our NPortId will be */
- 		vport->fc_myDID = icmd->un.rcvels.parmRo;
--		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--		if (mbox == NULL)
--			goto out;
--		lpfc_config_link(phba, mbox);
--		mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
--		mbox->vport = vport;
--		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
--		if (rc == MBX_NOT_FINISHED) {
--			mempool_free(mbox, phba->mbox_mem_pool);
--			goto out;
-+
-+		ed_tov = be32_to_cpu(sp->cmn.e_d_tov);
-+		if (sp->cmn.edtovResolution) {
-+			/* E_D_TOV ticks are in nanoseconds */
-+			ed_tov = (phba->fc_edtov + 999999) / 1000000;
- 		}
-+
- 		/*
--		 * For SLI4, the VFI/VPI are registered AFTER the
--		 * Nport with the higher WWPN sends us a PLOGI with
--		 * our assigned NPortId.
-+		 * For pt-to-pt, use the larger EDTOV
-+		 * RATOV = 2 * EDTOV
- 		 */
-+		if (ed_tov > phba->fc_edtov)
-+			phba->fc_edtov = ed_tov;
-+		phba->fc_ratov = (2 * phba->fc_edtov) / 1000;
-+
-+		memcpy(&phba->fc_fabparam, sp, sizeof(struct serv_parm));
-+
-+		/* Issue config_link / reg_vfi to account for updated TOV's */
-+
- 		if (phba->sli_rev == LPFC_SLI_REV4)
- 			lpfc_issue_reg_vfi(vport);
-+		else {
-+			mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+			if (mbox == NULL)
-+				goto out;
-+			lpfc_config_link(phba, mbox);
-+			mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+			mbox->vport = vport;
-+			rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
-+			if (rc == MBX_NOT_FINISHED) {
-+				mempool_free(mbox, phba->mbox_mem_pool);
-+				goto out;
-+			}
-+		}
+-		goto out_host_busy_free_buf;
+-	}
+ 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
+ 		lpfc_sli_handle_fast_ring_event(phba,
+ 			&phba->sli.ring[LPFC_FCP_RING], HA_R0RE_REQ);
+@@ -4900,8 +4917,8 @@ lpfc_check_fcp_rsp(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd)
+ 		rsp_info_code = fcprsp->rspInfo3;
  
- 		lpfc_can_disctmo(vport);
+ 
+-		lpfc_printf_vlog(vport, KERN_INFO,
+-				 LOG_FCP,
++		lpfc_optioned_vlog(vport, &vport->log,
++				KERN_INFO, LOG_FCP,
+ 				 "0706 fcp_rsp valid 0x%x,"
+ 				 " rsp len=%d code 0x%x\n",
+ 				 rsp_info,
+@@ -4910,8 +4927,10 @@ lpfc_check_fcp_rsp(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd)
+ 		if ((fcprsp->rspStatus2&RSP_LEN_VALID) && (rsp_len == 8)) {
+ 			switch (rsp_info_code) {
+ 			case RSP_NO_FAILURE:
+-				lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
+-						 "0715 Task Mgmt No Failure\n");
++				lpfc_optioned_vlog(vport, &vport->log,
++						   KERN_INFO, LOG_FCP,
++						   "0715 Task Mgmt No "
++						   "Failure\n");
+ 				ret = SUCCESS;
+ 				break;
+ 			case RSP_TM_NOT_SUPPORTED: /* TM rejected */
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 6aae828..e504d51 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -108,9 +108,16 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ 	/* If the host has not yet processed the next entry then we are done */
+ 	idx = ((q->host_index + 1) % q->entry_count);
+ 	if (idx == q->hba_index) {
++		lpfc_throttle_log(q->phba, &q->phba->pport->log, LOG_SLI,
++				  "9998 WQ failure.  WQ Full. "
++				  "q_id x%x, host x%x, hba x%x\n",
++				  q->queue_id, idx, q->hba_index);
+ 		q->WQ_overflow++;
+ 		return -ENOMEM;
  	}
-+
- 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		goto out;
-@@ -1038,7 +1028,9 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_vport *vport,
- 	uint32_t *lp;
- 	IOCB_t *irsp;
- 	struct serv_parm *sp;
-+	uint32_t ed_tov;
- 	LPFC_MBOXQ_t *mbox;
-+	int rc;
- 
- 	cmdiocb = (struct lpfc_iocbq *) arg;
- 	rspiocb = cmdiocb->context_un.rsp_iocb;
-@@ -1053,6 +1045,16 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_vport *vport,
- 	if (irsp->ulpStatus)
- 		goto out;
- 
-+	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!mbox) {
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-+				 "0133 PLOGI: no memory for reg_login "
-+				 "Data: x%x x%x x%x x%x\n",
-+				 ndlp->nlp_DID, ndlp->nlp_state,
-+				 ndlp->nlp_flag, ndlp->nlp_rpi);
-+		goto out;
-+	}
-+
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
- 
- 	prsp = list_get_first(&pcmd->list, struct lpfc_dmabuf, list);
-@@ -1094,14 +1096,38 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_vport *vport,
- 	ndlp->nlp_maxframe =
- 		((sp->cmn.bbRcvSizeMsb & 0x0F) << 8) | sp->cmn.bbRcvSizeLsb;
- 
--	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--	if (!mbox) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--			"0133 PLOGI: no memory for reg_login "
--			"Data: x%x x%x x%x x%x\n",
--			ndlp->nlp_DID, ndlp->nlp_state,
--			ndlp->nlp_flag, ndlp->nlp_rpi);
--		goto out;
-+	if ((vport->fc_flag & FC_PT2PT) &&
-+	    (vport->fc_flag & FC_PT2PT_PLOGI)) {
-+		ed_tov = be32_to_cpu(sp->cmn.e_d_tov);
-+		if (sp->cmn.edtovResolution) {
-+			/* E_D_TOV ticks are in nanoseconds */
-+			ed_tov = (phba->fc_edtov + 999999) / 1000000;
-+		}
-+
-+		/*
-+		 * Use the larger EDTOV
-+		 * RATOV = 2 * EDTOV for pt-to-pt
-+		 */
-+		if (ed_tov > phba->fc_edtov)
-+			phba->fc_edtov = ed_tov;
-+		phba->fc_ratov = (2 * phba->fc_edtov) / 1000;
-+
-+		memcpy(&phba->fc_fabparam, sp, sizeof(struct serv_parm));
-+
-+		/* Issue config_link / reg_vfi to account for updated TOV's */
-+		if (phba->sli_rev == LPFC_SLI_REV4) {
-+			lpfc_issue_reg_vfi(vport);
-+		} else {
-+			lpfc_config_link(phba, mbox);
-+
-+			mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+			mbox->vport = vport;
-+			rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
-+			if (rc == MBX_NOT_FINISHED) {
-+				mempool_free(mbox, phba->mbox_mem_pool);
-+				goto out;
-+			}
-+		}
- 	}
- 
- 	lpfc_unreg_rpi(vport, ndlp);
++	lpfc_throttle_log(q->phba, &q->phba->pport->log, LOG_SLI,
++			  "0039 WQ Posted. q_id x%x, host x%x, hba x%x\n",
++			  q->queue_id, idx, q->hba_index);
+ 	q->WQ_posted++;
+ 	/* set consumption flag every once in a while */
+ 	if (!((q->host_index + 1) % q->entry_repost))
 -- 
 1.7.11.7
 
