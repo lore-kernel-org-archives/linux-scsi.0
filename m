@@ -1,54 +1,299 @@
 From: James Smart <james.smart@avagotech.com>
-Subject: Re: [PATCH v2] lpfc: replaced kmalloc + memset with kzalloc
-Date: Wed, 16 Dec 2015 15:20:57 -0800
-Message-ID: <5671F1D9.6050107@avagotech.com>
-References: <1446015219-16131-1-git-send-email-saurabh.truth@gmail.com>
- <1447918452-15299-1-git-send-email-saurabh.truth@gmail.com>
+Subject: Re: [RFC PATCH] lpfc: Add lockdep assertions
+Date: Wed, 16 Dec 2015 15:22:50 -0800
+Message-ID: <5671F24A.1020607@avagotech.com>
+References: <1448023037-43391-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447918452-15299-1-git-send-email-saurabh.truth@gmail.com>
+In-Reply-To: <1448023037-43391-1-git-send-email-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Saurabh Sengar <saurabh.truth@gmail.com>, dick.kennedy@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-fyi - this patch was just pushed in our 11.0.0.10 patch set - patch 16/17
+Johannes,
 
-Note: Patch 16 contains the exact same patch submitted by Punit Vara. I 
-posted Punit's change only as it arrived earlier.
+Thank you for the time and effort on the patch. At this time, as it 
+doesn't functionally change anything, I did not include the patch. I 
+will consider it if we see additional issues it can help resolve.
 
 -- james s
 
 
-
-On 11/18/2015 11:34 PM, Saurabh Sengar wrote:
-> replacing kmalloc and memset by a single call of kzalloc
+On 11/20/2015 4:37 AM, Johannes Thumshirn wrote:
+> Several functions in lpfc have comments stating that the function must be
+> called with the hbalock (or hostlock, or ringlock) held. Add
+> lockdep_assert_held() annotations to these functions, so one can actually
+> verify the locks are held.
 >
-> Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
-> v2 : I didn't got any response for my initial patch,
-> I am sending it again on top of latest kernel(today's)
 >
->   drivers/scsi/lpfc/lpfc_els.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> I'm not sure if this is actually helpfull upstream but it helped me to debug a
+> downstream bug.
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index b6fa257..92dd204 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -4956,13 +4956,12 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   	if (RDP_NPORT_ID_SIZE !=
->   			be32_to_cpu(rdp_req->nport_id_desc.length))
->   		goto rjt_logerr;
-> -	rdp_context = kmalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
-> +	rdp_context = kzalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
->   	if (!rdp_context) {
->   		rjt_err = LSRJT_UNABLE_TPC;
->   		goto error;
->   	}
+>   drivers/scsi/lpfc/lpfc_hbadisc.c |  5 +++++
+>   drivers/scsi/lpfc/lpfc_sli.c     | 43 ++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 48 insertions(+)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> index bfc2442..96de2ab 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -25,6 +25,7 @@
+>   #include <linux/pci.h>
+>   #include <linux/kthread.h>
+>   #include <linux/interrupt.h>
+> +#include <linux/lockdep.h>
 >   
-> -	memset(rdp_context, 0, sizeof(struct lpfc_rdp_context));
->   	cmd = &cmdiocb->iocb;
->   	rdp_context->ndlp = lpfc_nlp_get(ndlp);
->   	rdp_context->ox_id = cmd->unsli3.rcvsli3.ox_id;
+>   #include <scsi/scsi.h>
+>   #include <scsi/scsi_device.h>
+> @@ -1314,6 +1315,8 @@ __lpfc_update_fcf_record_pri(struct lpfc_hba *phba, uint16_t fcf_index,
+>   {
+>   	struct lpfc_fcf_pri *fcf_pri;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	fcf_pri = &phba->fcf.fcf_pri[fcf_index];
+>   	fcf_pri->fcf_rec.fcf_index = fcf_index;
+>   	/* FCF record priority */
+> @@ -1398,6 +1401,8 @@ __lpfc_update_fcf_record(struct lpfc_hba *phba, struct lpfc_fcf_rec *fcf_rec,
+>   		       struct fcf_record *new_fcf_record, uint32_t addr_mode,
+>   		       uint16_t vlan_id, uint32_t flag)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	/* Copy the fields from the HBA's FCF record */
+>   	lpfc_copy_fcf_record(fcf_rec, new_fcf_record);
+>   	/* Update other fields of driver FCF record */
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index f9585cd..6d84c77 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -24,6 +24,7 @@
+>   #include <linux/interrupt.h>
+>   #include <linux/delay.h>
+>   #include <linux/slab.h>
+> +#include <linux/lockdep.h>
+>   
+>   #include <scsi/scsi.h>
+>   #include <scsi/scsi_cmnd.h>
+> @@ -576,6 +577,8 @@ __lpfc_sli_get_iocbq(struct lpfc_hba *phba)
+>   	struct list_head *lpfc_iocb_list = &phba->lpfc_iocb_list;
+>   	struct lpfc_iocbq * iocbq = NULL;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	list_remove_head(lpfc_iocb_list, iocbq, struct lpfc_iocbq, list);
+>   	if (iocbq)
+>   		phba->iocb_cnt++;
+> @@ -797,6 +800,7 @@ int
+>   lpfc_test_rrq_active(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+>   			uint16_t  xritag)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+>   	if (!ndlp)
+>   		return 0;
+>   	if (!ndlp->active_rrqs_xri_bitmap)
+> @@ -914,6 +918,8 @@ __lpfc_sli_get_sglq(struct lpfc_hba *phba, struct lpfc_iocbq *piocbq)
+>   	struct lpfc_nodelist *ndlp;
+>   	int found = 0;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	if (piocbq->iocb_flag &  LPFC_IO_FCP) {
+>   		lpfc_cmd = (struct lpfc_scsi_buf *) piocbq->context1;
+>   		ndlp = lpfc_cmd->rdata->pnode;
+> @@ -1003,6 +1009,8 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+>   	unsigned long iflag = 0;
+>   	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	if (iocbq->sli4_xritag == NO_XRI)
+>   		sglq = NULL;
+>   	else
+> @@ -1058,6 +1066,7 @@ __lpfc_sli_release_iocbq_s3(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+>   {
+>   	size_t start_clean = offsetof(struct lpfc_iocbq, iocb);
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+>   
+>   	/*
+>   	 * Clean all volatile data fields, preserve iotag and node struct.
+> @@ -1080,6 +1089,8 @@ __lpfc_sli_release_iocbq_s3(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+>   static void
+>   __lpfc_sli_release_iocbq(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	phba->__lpfc_sli_release_iocbq(phba, iocbq);
+>   	phba->iocb_cnt--;
+>   }
+> @@ -1310,6 +1321,8 @@ static int
+>   lpfc_sli_ringtxcmpl_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+>   			struct lpfc_iocbq *piocb)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	list_add_tail(&piocb->list, &pring->txcmplq);
+>   	piocb->iocb_flag |= LPFC_IO_ON_TXCMPLQ;
+>   
+> @@ -1344,6 +1357,8 @@ lpfc_sli_ringtx_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+>   {
+>   	struct lpfc_iocbq *cmd_iocb;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	list_remove_head((&pring->txq), cmd_iocb, struct lpfc_iocbq, list);
+>   	return cmd_iocb;
+>   }
+> @@ -1367,6 +1382,9 @@ lpfc_sli_next_iocb_slot (struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+>   {
+>   	struct lpfc_pgp *pgp = &phba->port_gp[pring->ringno];
+>   	uint32_t  max_cmd_idx = pring->sli.sli3.numCiocb;
+> +
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	if ((pring->sli.sli3.next_cmdidx == pring->sli.sli3.cmdidx) &&
+>   	   (++pring->sli.sli3.next_cmdidx >= max_cmd_idx))
+>   		pring->sli.sli3.next_cmdidx = 0;
+> @@ -1497,6 +1515,7 @@ static void
+>   lpfc_sli_submit_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+>   		IOCB_t *iocb, struct lpfc_iocbq *nextiocb)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+>   	/*
+>   	 * Set up an iotag
+>   	 */
+> @@ -1606,6 +1625,8 @@ lpfc_sli_resume_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+>   	IOCB_t *iocb;
+>   	struct lpfc_iocbq *nextiocb;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	/*
+>   	 * Check to see if:
+>   	 *  (a) there is anything on the txq to send
+> @@ -1647,6 +1668,8 @@ lpfc_sli_next_hbq_slot(struct lpfc_hba *phba, uint32_t hbqno)
+>   {
+>   	struct hbq_s *hbqp = &phba->hbqs[hbqno];
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	if (hbqp->next_hbqPutIdx == hbqp->hbqPutIdx &&
+>   	    ++hbqp->next_hbqPutIdx >= hbqp->entry_count)
+>   		hbqp->next_hbqPutIdx = 0;
+> @@ -1747,6 +1770,7 @@ static int
+>   lpfc_sli_hbq_to_firmware(struct lpfc_hba *phba, uint32_t hbqno,
+>   			 struct hbq_dmabuf *hbq_buf)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+>   	return phba->lpfc_sli_hbq_to_firmware(phba, hbqno, hbq_buf);
+>   }
+>   
+> @@ -1768,6 +1792,7 @@ lpfc_sli_hbq_to_firmware_s3(struct lpfc_hba *phba, uint32_t hbqno,
+>   	struct lpfc_hbq_entry *hbqe;
+>   	dma_addr_t physaddr = hbq_buf->dbuf.phys;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+>   	/* Get next HBQ entry slot to use */
+>   	hbqe = lpfc_sli_next_hbq_slot(phba, hbqno);
+>   	if (hbqe) {
+> @@ -1808,6 +1833,7 @@ lpfc_sli_hbq_to_firmware_s4(struct lpfc_hba *phba, uint32_t hbqno,
+>   	struct lpfc_rqe hrqe;
+>   	struct lpfc_rqe drqe;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+>   	hrqe.address_lo = putPaddrLow(hbq_buf->hbuf.phys);
+>   	hrqe.address_hi = putPaddrHigh(hbq_buf->hbuf.phys);
+>   	drqe.address_lo = putPaddrLow(hbq_buf->dbuf.phys);
+> @@ -1986,6 +2012,8 @@ lpfc_sli_hbqbuf_find(struct lpfc_hba *phba, uint32_t tag)
+>   	struct hbq_dmabuf *hbq_buf;
+>   	uint32_t hbqno;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	hbqno = tag >> 16;
+>   	if (hbqno >= LPFC_MAX_HBQS)
+>   		return NULL;
+> @@ -2647,6 +2675,7 @@ lpfc_sli_iocbq_lookup(struct lpfc_hba *phba,
+>   {
+>   	struct lpfc_iocbq *cmd_iocb = NULL;
+>   	uint16_t iotag;
+> +	lockdep_assert_held(&phba->hbalock);
+>   
+>   	iotag = prspiocb->iocb.ulpIoTag;
+>   
+> @@ -2685,6 +2714,7 @@ lpfc_sli_iocbq_lookup_by_tag(struct lpfc_hba *phba,
+>   {
+>   	struct lpfc_iocbq *cmd_iocb;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+>   	if (iotag != 0 && iotag <= phba->sli.last_iotag) {
+>   		cmd_iocb = phba->sli.iocbq_lookup[iotag];
+>   		if (cmd_iocb->iocb_flag & LPFC_IO_ON_TXCMPLQ) {
+> @@ -3799,6 +3829,8 @@ void lpfc_reset_barrier(struct lpfc_hba *phba)
+>   	int  i;
+>   	uint8_t hdrtype;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	pci_read_config_byte(phba->pcidev, PCI_HEADER_TYPE, &hdrtype);
+>   	if (hdrtype != 0x80 ||
+>   	    (FC_JEDEC_ID(phba->vpd.rev.biuRev) != HELIOS_JEDEC_ID &&
+> @@ -7861,6 +7893,7 @@ void
+>   __lpfc_sli_ringtx_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+>   		    struct lpfc_iocbq *piocb)
+>   {
+> +	lockdep_assert_held(&phba->hbalock);
+>   	/* Insert the caller's iocb in the txq tail for later processing. */
+>   	list_add_tail(&piocb->list, &pring->txq);
+>   }
+> @@ -7888,6 +7921,8 @@ lpfc_sli_next_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+>   {
+>   	struct lpfc_iocbq * nextiocb;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	nextiocb = lpfc_sli_ringtx_get(phba, pring);
+>   	if (!nextiocb) {
+>   		nextiocb = *piocb;
+> @@ -7927,6 +7962,8 @@ __lpfc_sli_issue_iocb_s3(struct lpfc_hba *phba, uint32_t ring_number,
+>   	IOCB_t *iocb;
+>   	struct lpfc_sli_ring *pring = &phba->sli.ring[ring_number];
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	if (piocb->iocb_cmpl && (!piocb->vport) &&
+>   	   (piocb->iocb.ulpCommand != CMD_ABORT_XRI_CN) &&
+>   	   (piocb->iocb.ulpCommand != CMD_CLOSE_XRI_CN)) {
+> @@ -8642,6 +8679,8 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+>   	struct lpfc_queue *wq;
+>   	struct lpfc_sli_ring *pring = &phba->sli.ring[ring_number];
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	if (piocb->sli4_xritag == NO_XRI) {
+>   		if (piocb->iocb.ulpCommand == CMD_ABORT_XRI_CN ||
+>   		    piocb->iocb.ulpCommand == CMD_CLOSE_XRI_CN)
+> @@ -9752,6 +9791,8 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+>   	int retval;
+>   	unsigned long iflags;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	/*
+>   	 * There are certain command types we don't want to abort.  And we
+>   	 * don't want to abort commands that are already in the process of
+> @@ -9854,6 +9895,8 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+>   	int retval = IOCB_ERROR;
+>   	IOCB_t *icmd = NULL;
+>   
+> +	lockdep_assert_held(&phba->hbalock);
+> +
+>   	/*
+>   	 * There are certain command types we don't want to abort.  And we
+>   	 * don't want to abort commands that are already in the process of
