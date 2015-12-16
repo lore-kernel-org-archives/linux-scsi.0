@@ -1,32 +1,57 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/15] copy offload patches
-Date: Tue, 15 Dec 2015 22:05:49 -0500
-Message-ID: <yq1bn9rum7m.fsf@sermon.lab.mkp.net>
-References: <alpine.LRH.2.02.1512101145430.25927@file01.intranet.prod.int.rdu2.redhat.com>
-	<yq1r3iuylwd.fsf@sermon.lab.mkp.net>
-	<alpine.LRH.2.02.1512142018030.8189@file01.intranet.prod.int.rdu2.redhat.com>
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: kernel BUG at block/bio.c:1787! while initializing scsi_debug on
+ ppc64 host
+Date: Wed, 16 Dec 2015 15:25:42 +0800
+Message-ID: <20151216071608.GG19209@eguan.usersys.redhat.com>
+References: <20151211115340.GB19209@eguan.usersys.redhat.com>
+ <20151215112057.GC19209@eguan.usersys.redhat.com>
+ <CACVXFVOPgONuXjGhBnFVxuRVr+=LFe36QR-VTGVvTkEK+V0JLw@mail.gmail.com>
+ <20151215130631.GD19209@eguan.usersys.redhat.com>
+ <yq1egenwons.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26457 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932572AbbLPDGM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2015 22:06:12 -0500
-In-Reply-To: <alpine.LRH.2.02.1512142018030.8189@file01.intranet.prod.int.rdu2.redhat.com>
-	(Mikulas Patocka's message of "Mon, 14 Dec 2015 20:22:42 -0500 (EST)")
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35122 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932637AbbLPH0t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 02:26:49 -0500
+Received: by mail-pa0-f42.google.com with SMTP id hk6so19184357pad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2015 23:26:49 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <yq1egenwons.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ming Lei <tom.leiming@gmail.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
->>>>> "Mikulas" == Mikulas Patocka <mpatocka@redhat.com> writes:
+On Tue, Dec 15, 2015 at 01:29:59PM -0500, Martin K. Petersen wrote:
+> >>>>> "Eryu" == Eryu Guan <guaneryu@gmail.com> writes:
+> 
+> Eryu,
+> 
+> Does the patch below fix the issue?
 
-Mikulas> Is there some software iSCSI implementation that supports
-Mikulas> token-based copy? So that I could try to make support for it.
+Unfortunately no, still BUG_ON.
 
-I did write support for token-based copy but it's in a different branch
-from the xcopy stuff. I will have to reconcile those two branches and
-then layer your stuff on top.
+Thanks,
+Eryu
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 3d22fc3e3c1a..d1eb7aa78b8d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2667,8 +2667,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+>  
+>  	if (buffer[3] == 0x3c) {
+>  		unsigned int lba_count, desc_count;
+> +		u64 max_ws = get_unaligned_be64(&buffer[36]);
+>  
+> -		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&buffer[36]);
+> +		sdkp->max_ws_blocks = (u32)max_ws;
+>  
+>  		if (!sdkp->lbpme)
+>  			goto out;
