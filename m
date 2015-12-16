@@ -1,49 +1,59 @@
-From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH 17/17] lpfc: Update version to 11.0.0.10 for upstream
- patch set
-Date: Wed, 16 Dec 2015 18:12:08 -0500
-Message-ID: <5671efc8.ueJ4cpQbwz07Ypto%james.smart@avagotech.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/3] scsi_debug: Increase the reported optimal transfer
+ length
+Date: Wed, 16 Dec 2015 18:14:38 -0500
+Message-ID: <5671F05E.4040109@interlog.com>
+References: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:33446 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755192AbbLPXM1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 18:12:27 -0500
-Received: by mail-pf0-f182.google.com with SMTP id n128so855860pfn.0
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 15:12:27 -0800 (PST)
-Received: from myfc17 (cm-wififw.emulex.com. [138.239.220.50])
-        by smtp.gmail.com with ESMTPSA id e67sm7011717pfj.53.2015.12.16.15.12.25
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Wed, 16 Dec 2015 15:12:25 -0800 (PST)
+Received: from smtp.infotech.no ([82.134.31.41]:48924 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934270AbbLPXOy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Dec 2015 18:14:54 -0500
+In-Reply-To: <1450306433-20166-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
+On 15-12-16 05:53 PM, Martin K. Petersen wrote:
+> The OPTIMAL TRANSFER LENGTH reported by scsi_debug is 64 blocks which
+> translates to 32KB with the default logical block size. That's much
+> lower than what real storage devices typically report (256KB to 1MB).
+>
+> Bump the optimal transfer length to 1024 blocks.
+>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Update version to 11.0.0.10 for upstream patch set
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
-Signed-off-by: James Smart <james.smart@avagotech.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index ea53aa6..4dc2256 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "11.0.0.0."
-+#define LPFC_DRIVER_VERSION "11.0.0.10."
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
--- 
-1.7.11.7
+> ---
+>   drivers/scsi/scsi_debug.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index d09d60293c27..b80b037f2982 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -129,7 +129,7 @@ static const char *scsi_debug_version_date = "20141022";
+>   #define DEF_NO_LUN_0   0
+>   #define DEF_NUM_PARTS   0
+>   #define DEF_OPTS   0
+> -#define DEF_OPT_BLKS 64
+> +#define DEF_OPT_BLKS 1024
+>   #define DEF_PHYSBLK_EXP 0
+>   #define DEF_PTYPE   0
+>   #define DEF_REMOVABLE false
+> @@ -4140,7 +4140,7 @@ MODULE_PARM_DESC(no_lun_0, "no LU number 0 (def=0 -> have lun 0)");
+>   MODULE_PARM_DESC(no_uld, "stop ULD (e.g. sd driver) attaching (def=0))");
+>   MODULE_PARM_DESC(num_parts, "number of partitions(def=0)");
+>   MODULE_PARM_DESC(num_tgts, "number of targets per host to simulate(def=1)");
+> -MODULE_PARM_DESC(opt_blks, "optimal transfer length in block (def=64)");
+> +MODULE_PARM_DESC(opt_blks, "optimal transfer length in blocks (def=1024)");
+>   MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
+>   MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
+>   MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+>
 
