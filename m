@@ -1,92 +1,243 @@
 From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH 12/17] lpfc: Fix mbox reuse in PLOGI completion
-Date: Wed, 16 Dec 2015 18:12:03 -0500
-Message-ID: <5671efc3.0ctNdaGDOZR2f0ML%james.smart@avagotech.com>
+Subject: [PATCH 14/17] lpfc: Add logging for misconfigured optics.
+Date: Wed, 16 Dec 2015 18:12:05 -0500
+Message-ID: <5671efc5.BjzS3MZMgzpO419g%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33354 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754948AbbLPXMW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 18:12:22 -0500
-Received: by mail-pa0-f41.google.com with SMTP id ur14so30973979pab.0
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 15:12:22 -0800 (PST)
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36629 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755274AbbLPXMZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 18:12:25 -0500
+Received: by mail-pf0-f175.google.com with SMTP id o64so19591403pfb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 15:12:24 -0800 (PST)
 Received: from myfc17 (cm-wififw.emulex.com. [138.239.220.50])
-        by smtp.gmail.com with ESMTPSA id 72sm1904025pfa.92.2015.12.16.15.12.20
+        by smtp.gmail.com with ESMTPSA id xr8sm11402193pab.26.2015.12.16.15.12.22
         for <linux-scsi@vger.kernel.org>
         (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Wed, 16 Dec 2015 15:12:20 -0800 (PST)
+        Wed, 16 Dec 2015 15:12:23 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix mbox reuse in PLOGI completion. Moved allocations so that buffer
-properly init'd.
+Add logging for misconfigured optics acqe reported by fw.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 Signed-off-by: James Smart <james.smart@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 31 +++++++++++++++++++++----------
- 1 file changed, 21 insertions(+), 10 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h  | 51 ++++++++++++++++++++++++--------
+ drivers/scsi/lpfc/lpfc_init.c | 67 ++++++++++++++++++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_sli4.h |  1 +
+ 3 files changed, 87 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 9e571dd..193733e 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1045,16 +1045,6 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_vport *vport,
- 	if (irsp->ulpStatus)
- 		goto out;
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index f13a76a..608f941 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -3448,23 +3448,50 @@ struct lpfc_acqe_fc_la {
+ struct lpfc_acqe_misconfigured_event {
+ 	struct {
+ 	uint32_t word0;
+-#define lpfc_sli_misconfigured_port0_SHIFT	0
+-#define lpfc_sli_misconfigured_port0_MASK	0x000000FF
+-#define lpfc_sli_misconfigured_port0_WORD	word0
+-#define lpfc_sli_misconfigured_port1_SHIFT	8
+-#define lpfc_sli_misconfigured_port1_MASK	0x000000FF
+-#define lpfc_sli_misconfigured_port1_WORD	word0
+-#define lpfc_sli_misconfigured_port2_SHIFT	16
+-#define lpfc_sli_misconfigured_port2_MASK	0x000000FF
+-#define lpfc_sli_misconfigured_port2_WORD	word0
+-#define lpfc_sli_misconfigured_port3_SHIFT	24
+-#define lpfc_sli_misconfigured_port3_MASK	0x000000FF
+-#define lpfc_sli_misconfigured_port3_WORD	word0
++#define lpfc_sli_misconfigured_port0_state_SHIFT	0
++#define lpfc_sli_misconfigured_port0_state_MASK		0x000000FF
++#define lpfc_sli_misconfigured_port0_state_WORD		word0
++#define lpfc_sli_misconfigured_port1_state_SHIFT	8
++#define lpfc_sli_misconfigured_port1_state_MASK		0x000000FF
++#define lpfc_sli_misconfigured_port1_state_WORD		word0
++#define lpfc_sli_misconfigured_port2_state_SHIFT	16
++#define lpfc_sli_misconfigured_port2_state_MASK		0x000000FF
++#define lpfc_sli_misconfigured_port2_state_WORD		word0
++#define lpfc_sli_misconfigured_port3_state_SHIFT	24
++#define lpfc_sli_misconfigured_port3_state_MASK		0x000000FF
++#define lpfc_sli_misconfigured_port3_state_WORD		word0
++	uint32_t word1;
++#define lpfc_sli_misconfigured_port0_op_SHIFT		0
++#define lpfc_sli_misconfigured_port0_op_MASK		0x00000001
++#define lpfc_sli_misconfigured_port0_op_WORD		word1
++#define lpfc_sli_misconfigured_port0_severity_SHIFT	1
++#define lpfc_sli_misconfigured_port0_severity_MASK	0x00000003
++#define lpfc_sli_misconfigured_port0_severity_WORD	word1
++#define lpfc_sli_misconfigured_port1_op_SHIFT		8
++#define lpfc_sli_misconfigured_port1_op_MASK		0x00000001
++#define lpfc_sli_misconfigured_port1_op_WORD		word1
++#define lpfc_sli_misconfigured_port1_severity_SHIFT	9
++#define lpfc_sli_misconfigured_port1_severity_MASK	0x00000003
++#define lpfc_sli_misconfigured_port1_severity_WORD	word1
++#define lpfc_sli_misconfigured_port2_op_SHIFT		16
++#define lpfc_sli_misconfigured_port2_op_MASK		0x00000001
++#define lpfc_sli_misconfigured_port2_op_WORD		word1
++#define lpfc_sli_misconfigured_port2_severity_SHIFT	17
++#define lpfc_sli_misconfigured_port2_severity_MASK	0x00000003
++#define lpfc_sli_misconfigured_port2_severity_WORD	word1
++#define lpfc_sli_misconfigured_port3_op_SHIFT		24
++#define lpfc_sli_misconfigured_port3_op_MASK		0x00000001
++#define lpfc_sli_misconfigured_port3_op_WORD		word1
++#define lpfc_sli_misconfigured_port3_severity_SHIFT	25
++#define lpfc_sli_misconfigured_port3_severity_MASK	0x00000003
++#define lpfc_sli_misconfigured_port3_severity_WORD	word1
+ 	} theEvent;
+ #define LPFC_SLI_EVENT_STATUS_VALID			0x00
+ #define LPFC_SLI_EVENT_STATUS_NOT_PRESENT	0x01
+ #define LPFC_SLI_EVENT_STATUS_WRONG_TYPE	0x02
+ #define LPFC_SLI_EVENT_STATUS_UNSUPPORTED	0x03
++#define LPFC_SLI_EVENT_STATUS_UNQUALIFIED	0x04
++#define LPFC_SLI_EVENT_STATUS_UNCERTIFIED	0x05
+ };
  
--	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
--	if (!mbox) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				 "0133 PLOGI: no memory for reg_login "
--				 "Data: x%x x%x x%x x%x\n",
--				 ndlp->nlp_DID, ndlp->nlp_state,
--				 ndlp->nlp_flag, ndlp->nlp_rpi);
--		goto out;
+ struct lpfc_acqe_sli {
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index fdf750e..b94d114 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4079,22 +4079,18 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
+ 	char message[128];
+ 	uint8_t status;
+ 	uint8_t evt_type;
++	uint8_t operational = 0;
+ 	struct temp_event temp_event_data;
+ 	struct lpfc_acqe_misconfigured_event *misconfigured;
+ 	struct Scsi_Host  *shost;
+ 
+ 	evt_type = bf_get(lpfc_trailer_type, acqe_sli);
+ 
+-	/* Special case Lancer */
+-	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
+-		 LPFC_SLI_INTF_IF_TYPE_2) {
+-		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+-				"2901 Async SLI event - Event Data1:x%08x Event Data2:"
+-				"x%08x SLI Event Type:%d\n",
+-				acqe_sli->event_data1, acqe_sli->event_data2,
+-				evt_type);
+-		return;
 -	}
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++			"2901 Async SLI event - Event Data1:x%08x Event Data2:"
++			"x%08x SLI Event Type:%d\n",
++			acqe_sli->event_data1, acqe_sli->event_data2,
++			evt_type);
+ 
+ 	port_name = phba->Port[0];
+ 	if (port_name == 0x00)
+@@ -4140,29 +4136,46 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
+ 		/* fetch the status for this port */
+ 		switch (phba->sli4_hba.lnk_info.lnk_no) {
+ 		case LPFC_LINK_NUMBER_0:
+-			status = bf_get(lpfc_sli_misconfigured_port0,
++			status = bf_get(lpfc_sli_misconfigured_port0_state,
++					&misconfigured->theEvent);
++			operational = bf_get(lpfc_sli_misconfigured_port0_op,
+ 					&misconfigured->theEvent);
+ 			break;
+ 		case LPFC_LINK_NUMBER_1:
+-			status = bf_get(lpfc_sli_misconfigured_port1,
++			status = bf_get(lpfc_sli_misconfigured_port1_state,
++					&misconfigured->theEvent);
++			operational = bf_get(lpfc_sli_misconfigured_port1_op,
+ 					&misconfigured->theEvent);
+ 			break;
+ 		case LPFC_LINK_NUMBER_2:
+-			status = bf_get(lpfc_sli_misconfigured_port2,
++			status = bf_get(lpfc_sli_misconfigured_port2_state,
++					&misconfigured->theEvent);
++			operational = bf_get(lpfc_sli_misconfigured_port2_op,
+ 					&misconfigured->theEvent);
+ 			break;
+ 		case LPFC_LINK_NUMBER_3:
+-			status = bf_get(lpfc_sli_misconfigured_port3,
++			status = bf_get(lpfc_sli_misconfigured_port3_state,
++					&misconfigured->theEvent);
++			operational = bf_get(lpfc_sli_misconfigured_port3_op,
+ 					&misconfigured->theEvent);
+ 			break;
+ 		default:
+-			status = ~LPFC_SLI_EVENT_STATUS_VALID;
+-			break;
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++					"3296 "
++					"LPFC_SLI_EVENT_TYPE_MISCONFIGURED "
++					"event: Invalid link %d",
++					phba->sli4_hba.lnk_info.lnk_no);
++			return;
+ 		}
+ 
++		/* Skip if optic state unchanged */
++		if (phba->sli4_hba.lnk_info.optic_state == status)
++			return;
++
+ 		switch (status) {
+ 		case LPFC_SLI_EVENT_STATUS_VALID:
+-			return; /* no message if the sfp is okay */
++			sprintf(message, "Physical Link is functional");
++			break;
+ 		case LPFC_SLI_EVENT_STATUS_NOT_PRESENT:
+ 			sprintf(message, "Optics faulted/incorrectly "
+ 				"installed/not installed - Reseat optics, "
+@@ -4177,15 +4190,26 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
+ 			sprintf(message, "Incompatible optics - Replace with "
+ 				"compatible optics for card to function.");
+ 			break;
++		case LPFC_SLI_EVENT_STATUS_UNQUALIFIED:
++			sprintf(message, "Unqualified optics - Replace with "
++				"Avago optics for Warranty and Technical "
++				"Support - Link is%s operational",
++				(operational) ? "" : " not");
++			break;
++		case LPFC_SLI_EVENT_STATUS_UNCERTIFIED:
++			sprintf(message, "Uncertified optics - Replace with "
++				"Avago-certified optics to enable link "
++				"operation - Link is%s operational",
++				(operational) ? "" : " not");
++			break;
+ 		default:
+ 			/* firmware is reporting a status we don't know about */
+ 			sprintf(message, "Unknown event status x%02x", status);
+ 			break;
+ 		}
 -
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
++		phba->sli4_hba.lnk_info.optic_state = status;
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-				"3176 Misconfigured Physical Port - "
+-				"Port Name %c %s\n", port_name, message);
++				"3176 Port Name %c %s\n", port_name, message);
+ 		break;
+ 	case LPFC_SLI_EVENT_TYPE_REMOTE_DPORT:
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+@@ -5259,6 +5283,9 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	INIT_LIST_HEAD(&phba->sli4_hba.lpfc_vfi_blk_list);
+ 	INIT_LIST_HEAD(&phba->lpfc_vpi_blk_list);
  
- 	prsp = list_get_first(&pcmd->list, struct lpfc_dmabuf, list);
-@@ -1118,6 +1108,17 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_vport *vport,
- 		if (phba->sli_rev == LPFC_SLI_REV4) {
- 			lpfc_issue_reg_vfi(vport);
- 		} else {
-+			mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+			if (!mbox) {
-+				lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-+						 "0133 PLOGI: no memory "
-+						 "for config_link "
-+						 "Data: x%x x%x x%x x%x\n",
-+						 ndlp->nlp_DID, ndlp->nlp_state,
-+						 ndlp->nlp_flag, ndlp->nlp_rpi);
-+				goto out;
-+			}
++	/* initialize optic_state to 0xFF */
++	phba->sli4_hba.lnk_info.optic_state = 0xff;
 +
- 			lpfc_config_link(phba, mbox);
+ 	/* Initialize the driver internal SLI layer lists. */
+ 	lpfc_sli_setup(phba);
+ 	lpfc_sli_queue_setup(phba);
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 1e916e1..cd780c2 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -442,6 +442,7 @@ struct lpfc_sli4_lnk_info {
+ #define LPFC_LNK_GE	0x0 /* FCoE */
+ #define LPFC_LNK_FC	0x1 /* FC   */
+ 	uint8_t lnk_no;
++	uint8_t optic_state;
+ };
  
- 			mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-@@ -1132,6 +1133,16 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_vport *vport,
- 
- 	lpfc_unreg_rpi(vport, ndlp);
- 
-+	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!mbox) {
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-+				 "0018 PLOGI: no memory for reg_login "
-+				 "Data: x%x x%x x%x x%x\n",
-+				 ndlp->nlp_DID, ndlp->nlp_state,
-+				 ndlp->nlp_flag, ndlp->nlp_rpi);
-+		goto out;
-+	}
-+
- 	if (lpfc_reg_rpi(phba, vport->vpi, irsp->un.elsreq64.remoteID,
- 			 (uint8_t *) sp, mbox, ndlp->nlp_rpi) == 0) {
- 		switch (ndlp->nlp_DID) {
+ #define LPFC_SLI4_HANDLER_CNT		(LPFC_FCP_IO_CHAN_MAX+ \
 -- 
 1.7.11.7
 
