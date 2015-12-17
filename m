@@ -1,86 +1,297 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 00/16]  qla2xxx: Patches for target-pending branch
-Date: Thu, 17 Dec 2015 14:56:55 -0500
-Message-ID: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH v2 04/16] qla2xxx: Add FW resource count in DebugFS.
+Date: Thu, 17 Dec 2015 14:56:59 -0500
+Message-ID: <1450382231-4259-5-git-send-email-himanshu.madhani@qlogic.com>
+References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:64627 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755414AbbLQUh6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Dec 2015 15:37:58 -0500
+In-Reply-To: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
-List-Id: linux-scsi@vger.kernel.org
 
-Hi Nic,
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-Please apply this series to target-pending at your earliest convenience.
+DebugFS now will show fw_resource_count node.
 
-changes from v1 -> v2
+FW Resource count
 
-o Added Reviewed-by tag for reviewed patches.
+Original TGT exchg count[0]
+current TGT exchg count[0]
+original Initiator Exchange count[2048]
+Current Initiator Exchange count[2048]
+Original IOCB count[2078]
+Current IOCB count[2067]
+MAX VP count[254]
+MAX FCF count[0]
 
-o Dropped following patches for rework.
-  - qla2xxx: Change check_stop_free to always return 1
-  - qla2xxx: Fix interaction issue between qla2xxx and Target Core Module
-  - qla2xxx: Add TAS detection for kernel 3.15 n newer
-  - target/tmr: LUN reset cause cmd premature free.
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/qla2xxx/qla_def.h     |   13 +++++++--
+ drivers/scsi/qla2xxx/qla_dfs.c     |   50 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h     |    3 +-
+ drivers/scsi/qla2xxx/qla_init.c    |   12 +++-----
+ drivers/scsi/qla2xxx/qla_mbx.c     |   28 ++++++++-----------
+ drivers/scsi/qla2xxx/qla_target.c  |    4 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |    2 +-
+ 7 files changed, 81 insertions(+), 31 deletions(-)
 
-o Fixed patch description on following patches
-  - qla2xxx: Enable Extended Login support
-  - qla2xxx: Enable Exchange offload support.
-
-o Fixed patch description as well as kbuild warning for
-  - qla2xxx: Added interface to send explicit LOGO.
-
-o Fixed kbuild warning for
-  - qla2xxx: Remove dependency on hardware_lock to reduce lock
-    contention.
-
-Thanks,
-Himanshu
-
-Alexei Potashnik (2):
-  qla2xxx: Delete session if initiator is gone from FW
-  qla2xxx: Wait for all conflicts before ack'ing PLOGI
-
-Dilip Kumar Uppugandla (1):
-  qla2xxx: Check for online flag instead of active reset when
-    transmitting responses
-
-Himanshu Madhani (4):
-  qla2xxx: Enable Extended Logins support
-  qla2xxx: Enable Exchange offload support.
-  qla2xxx: Enable Target counters in DebugFS.
-  qla2xxx: Added interface to send explicit LOGO.
-
-Quinn Tran (9):
-  qla2xxx: Add FW resource count in DebugFS.
-  qla2xxx: Replace QLA_TGT_STATE_ABORTED with a bit.
-  qla2xxx: Remove dependency on hardware_lock to reduce lock
-    contention.
-  qla2xxx: Add irq affinity notification
-  qla2xxx: Add selective command queuing
-  qla2xxx: Move atioq to a different lock to reduce lock contention
-  qla2xxx: Disable ZIO at start time.
-  qla2xxx: Set all queues to 4k
-  qla2xxx: Add bulk send for atio & ctio completion paths.
-
- drivers/scsi/qla2xxx/qla_attr.c        |   36 ++
- drivers/scsi/qla2xxx/qla_dbg.c         |   19 +-
- drivers/scsi/qla2xxx/qla_def.h         |   86 ++++-
- drivers/scsi/qla2xxx/qla_dfs.c         |  106 +++++
- drivers/scsi/qla2xxx/qla_gbl.h         |   18 +-
- drivers/scsi/qla2xxx/qla_init.c        |   58 ++-
- drivers/scsi/qla2xxx/qla_inline.h      |    2 +
- drivers/scsi/qla2xxx/qla_iocb.c        |  188 +++++++++
- drivers/scsi/qla2xxx/qla_isr.c         |  129 ++++++-
- drivers/scsi/qla2xxx/qla_mbx.c         |  265 ++++++++++++-
- drivers/scsi/qla2xxx/qla_os.c          |  165 ++++++++-
- drivers/scsi/qla2xxx/qla_target.c      |  690 +++++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_target.h      |   36 ++-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  107 ++++-
- drivers/target/target_core_transport.c |    5 +-
- include/target/target_core_base.h      |    1 +
- 16 files changed, 1671 insertions(+), 240 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index f63de35..8e89848 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2917,7 +2917,7 @@ struct qlt_hw_data {
+ #define MAX_QFULL_CMDS_ALLOC	8192
+ #define Q_FULL_THRESH_HOLD_PERCENT 90
+ #define Q_FULL_THRESH_HOLD(ha) \
+-	((ha->fw_xcb_count/100) * Q_FULL_THRESH_HOLD_PERCENT)
++	((ha->cur_fw_xcb_count/100) * Q_FULL_THRESH_HOLD_PERCENT)
+ 
+ #define LEAK_EXCHG_THRESH_HOLD_PERCENT 75	/* 75 percent */
+ 
+@@ -3298,8 +3298,14 @@ struct qla_hw_data {
+ #define RISC_START_ADDRESS_2100 0x1000
+ #define RISC_START_ADDRESS_2300 0x800
+ #define RISC_START_ADDRESS_2400 0x100000
+-	uint16_t	fw_xcb_count;
+-	uint16_t	fw_iocb_count;
++
++	uint16_t	orig_fw_tgt_xcb_count;
++	uint16_t	cur_fw_tgt_xcb_count;
++	uint16_t	orig_fw_xcb_count;
++	uint16_t	cur_fw_xcb_count;
++	uint16_t	orig_fw_iocb_count;
++	uint16_t	cur_fw_iocb_count;
++	uint16_t	fw_max_fcf_count;
+ 
+ 	uint32_t	fw_shared_ram_start;
+ 	uint32_t	fw_shared_ram_end;
+@@ -3343,6 +3349,7 @@ struct qla_hw_data {
+ 	struct dentry *dfs_dir;
+ 	struct dentry *dfs_fce;
+ 	struct dentry *dfs_tgt_counters;
++	struct dentry *dfs_fw_resource_cnt;
+ 
+ 	dma_addr_t	fce_dma;
+ 	void		*fce;
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 449541f..cd8b96a 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -13,6 +13,43 @@ static struct dentry *qla2x00_dfs_root;
+ static atomic_t qla2x00_dfs_root_count;
+ 
+ static int
++qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
++{
++	struct scsi_qla_host *vha = s->private;
++	struct qla_hw_data *ha = vha->hw;
++
++	seq_puts(s, "FW Resource count\n\n");
++	seq_printf(s, "Original TGT exchg count[%d]\n",
++	    ha->orig_fw_tgt_xcb_count);
++	seq_printf(s, "current TGT exchg count[%d]\n",
++	    ha->cur_fw_tgt_xcb_count);
++	seq_printf(s, "original Initiator Exchange count[%d]\n",
++	    ha->orig_fw_xcb_count);
++	seq_printf(s, "Current Initiator Exchange count[%d]\n",
++	    ha->cur_fw_xcb_count);
++	seq_printf(s, "Original IOCB count[%d]\n", ha->orig_fw_iocb_count);
++	seq_printf(s, "Current IOCB count[%d]\n", ha->cur_fw_iocb_count);
++	seq_printf(s, "MAX VP count[%d]\n", ha->max_npiv_vports);
++	seq_printf(s, "MAX FCF count[%d]\n", ha->fw_max_fcf_count);
++
++	return 0;
++}
++
++static int
++qla_dfs_fw_resource_cnt_open(struct inode *inode, struct file *file)
++{
++	struct scsi_qla_host *vha = inode->i_private;
++	return single_open(file, qla_dfs_fw_resource_cnt_show, vha);
++}
++
++static const struct file_operations dfs_fw_resource_cnt_ops = {
++	.open           = qla_dfs_fw_resource_cnt_open,
++	.read           = seq_read,
++	.llseek         = seq_lseek,
++	.release        = single_release,
++};
++
++static int
+ qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
+ {
+ 	struct scsi_qla_host *vha = s->private;
+@@ -188,6 +225,14 @@ create_dir:
+ 	atomic_inc(&qla2x00_dfs_root_count);
+ 
+ create_nodes:
++	ha->dfs_fw_resource_cnt = debugfs_create_file("fw_resource_count",
++	    S_IRUSR, ha->dfs_dir, vha, &dfs_fw_resource_cnt_ops);
++	if (!ha->dfs_fw_resource_cnt) {
++		ql_log(ql_log_warn, vha, 0x00fd,
++		    "Unable to create debugFS fw_resource_count node.\n");
++		goto out;
++	}
++
+ 	ha->dfs_tgt_counters = debugfs_create_file("tgt_counters", S_IRUSR,
+ 	    ha->dfs_dir, vha, &dfs_tgt_counters_ops);
+ 	if (!ha->dfs_tgt_counters) {
+@@ -212,6 +257,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 
++	if (ha->dfs_fw_resource_cnt) {
++		debugfs_remove(ha->dfs_fw_resource_cnt);
++		ha->dfs_fw_resource_cnt = NULL;
++	}
++
+ 	if (ha->dfs_tgt_counters) {
+ 		debugfs_remove(ha->dfs_tgt_counters);
+ 		ha->dfs_tgt_counters = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 3dc323c..e37b4c3 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -329,8 +329,7 @@ extern int
+ qla2x00_get_id_list(scsi_qla_host_t *, void *, dma_addr_t, uint16_t *);
+ 
+ extern int
+-qla2x00_get_resource_cnts(scsi_qla_host_t *, uint16_t *, uint16_t *,
+-    uint16_t *, uint16_t *, uint16_t *, uint16_t *);
++qla2x00_get_resource_cnts(scsi_qla_host_t *);
+ 
+ extern int
+ qla2x00_get_fcal_position_map(scsi_qla_host_t *ha, char *pos_map);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index b3ed3b3..35d1ea8 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1766,10 +1766,10 @@ qla2x00_alloc_outstanding_cmds(struct qla_hw_data *ha, struct req_que *req)
+ 	    (ql2xmultique_tag || ql2xmaxqueues > 1)))
+ 		req->num_outstanding_cmds = DEFAULT_OUTSTANDING_COMMANDS;
+ 	else {
+-		if (ha->fw_xcb_count <= ha->fw_iocb_count)
+-			req->num_outstanding_cmds = ha->fw_xcb_count;
++		if (ha->cur_fw_xcb_count <= ha->cur_fw_iocb_count)
++			req->num_outstanding_cmds = ha->cur_fw_xcb_count;
+ 		else
+-			req->num_outstanding_cmds = ha->fw_iocb_count;
++			req->num_outstanding_cmds = ha->cur_fw_iocb_count;
+ 	}
+ 
+ 	req->outstanding_cmds = kzalloc(sizeof(srb_t *) *
+@@ -1878,9 +1878,7 @@ enable_82xx_npiv:
+ 						ha->max_npiv_vports =
+ 						    MIN_MULTI_ID_FABRIC - 1;
+ 				}
+-				qla2x00_get_resource_cnts(vha, NULL,
+-				    &ha->fw_xcb_count, NULL, &ha->fw_iocb_count,
+-				    &ha->max_npiv_vports, NULL);
++				qla2x00_get_resource_cnts(vha);
+ 
+ 				/*
+ 				 * Allocate the array of outstanding commands
+@@ -2262,7 +2260,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 	if (IS_FWI2_CAPABLE(ha)) {
+ 		mid_init_cb->options = cpu_to_le16(BIT_1);
+ 		mid_init_cb->init_cb.execution_throttle =
+-		    cpu_to_le16(ha->fw_xcb_count);
++		    cpu_to_le16(ha->cur_fw_xcb_count);
+ 		/* D-Port Status */
+ 		if (IS_DPORT_CAPABLE(ha))
+ 			mid_init_cb->init_cb.firmware_options_1 |=
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index c7ca223..87e6758 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2620,10 +2620,9 @@ qla2x00_get_id_list(scsi_qla_host_t *vha, void *id_list, dma_addr_t id_list_dma,
+  *	Kernel context.
+  */
+ int
+-qla2x00_get_resource_cnts(scsi_qla_host_t *vha, uint16_t *cur_xchg_cnt,
+-    uint16_t *orig_xchg_cnt, uint16_t *cur_iocb_cnt,
+-    uint16_t *orig_iocb_cnt, uint16_t *max_npiv_vports, uint16_t *max_fcfs)
++qla2x00_get_resource_cnts(scsi_qla_host_t *vha)
+ {
++	struct qla_hw_data *ha = vha->hw;
+ 	int rval;
+ 	mbx_cmd_t mc;
+ 	mbx_cmd_t *mcp = &mc;
+@@ -2651,19 +2650,16 @@ qla2x00_get_resource_cnts(scsi_qla_host_t *vha, uint16_t *cur_xchg_cnt,
+ 		    mcp->mb[3], mcp->mb[6], mcp->mb[7], mcp->mb[10],
+ 		    mcp->mb[11], mcp->mb[12]);
+ 
+-		if (cur_xchg_cnt)
+-			*cur_xchg_cnt = mcp->mb[3];
+-		if (orig_xchg_cnt)
+-			*orig_xchg_cnt = mcp->mb[6];
+-		if (cur_iocb_cnt)
+-			*cur_iocb_cnt = mcp->mb[7];
+-		if (orig_iocb_cnt)
+-			*orig_iocb_cnt = mcp->mb[10];
+-		if (vha->hw->flags.npiv_supported && max_npiv_vports)
+-			*max_npiv_vports = mcp->mb[11];
+-		if ((IS_QLA81XX(vha->hw) || IS_QLA83XX(vha->hw) ||
+-		    IS_QLA27XX(vha->hw)) && max_fcfs)
+-			*max_fcfs = mcp->mb[12];
++		ha->orig_fw_tgt_xcb_count =  mcp->mb[1];
++		ha->cur_fw_tgt_xcb_count = mcp->mb[2];
++		ha->cur_fw_xcb_count = mcp->mb[3];
++		ha->orig_fw_xcb_count = mcp->mb[6];
++		ha->cur_fw_iocb_count = mcp->mb[7];
++		ha->orig_fw_iocb_count = mcp->mb[10];
++		if (ha->flags.npiv_supported)
++			ha->max_npiv_vports = mcp->mb[11];
++		if (IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha))
++			ha->fw_max_fcf_count = mcp->mb[12];
+ 	}
+ 
+ 	return (rval);
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index f404e48..661124a 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3034,7 +3034,7 @@ static void qlt_init_term_exchange(struct scsi_qla_host *vha)
+ 	struct qla_tgt_cmd *cmd, *tcmd;
+ 
+ 	vha->hw->tgt.leak_exchg_thresh_hold =
+-	    (vha->hw->fw_xcb_count/100) * LEAK_EXCHG_THRESH_HOLD_PERCENT;
++	    (vha->hw->cur_fw_xcb_count/100) * LEAK_EXCHG_THRESH_HOLD_PERCENT;
+ 
+ 	cmd = tcmd = NULL;
+ 	if (!list_empty(&vha->hw->tgt.q_full_list)) {
+@@ -3064,7 +3064,7 @@ static void qlt_chk_exch_leak_thresh_hold(struct scsi_qla_host *vha)
+ 
+ 		ql_dbg(ql_dbg_tgt, vha, 0xe079,
+ 		    "Chip reset due to exchange starvation: %d/%d.\n",
+-		    total_leaked, vha->hw->fw_xcb_count);
++		    total_leaked, vha->hw->cur_fw_xcb_count);
+ 
+ 		if (IS_P3P_TYPE(vha->hw))
+ 			set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 3403428..74c6e9b 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1357,7 +1357,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 	struct qla_tgt_sess *sess = qla_tgt_sess;
+ 	unsigned char port_name[36];
+ 	unsigned long flags;
+-	int num_tags = (ha->fw_xcb_count) ? ha->fw_xcb_count :
++	int num_tags = (ha->cur_fw_xcb_count) ? ha->cur_fw_xcb_count :
+ 		       TCM_QLA2XXX_DEFAULT_TAGS;
+ 
+ 	lport = vha->vha_tgt.target_lport_ptr;
 -- 
 1.7.7
+
