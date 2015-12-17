@@ -1,53 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/17] lpfc: Fix the FLOGI discovery logic to comply with
- T11 standards
-Date: Thu, 17 Dec 2015 09:10:10 +0100
-Message-ID: <56726DE2.4060001@suse.de>
-References: <5671efb9.EUONcdfdiSClKLvo%james.smart@avagotech.com>
+Subject: Re: [PATCH 03/17] lpfc: Added throttle logging support.
+Date: Thu, 17 Dec 2015 09:14:51 +0100
+Message-ID: <56726EFB.5060707@suse.de>
+References: <5671efba.8C/kxNA2eqfImskd%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48679 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48870 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750837AbbLQIKM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Dec 2015 03:10:12 -0500
-In-Reply-To: <5671efb9.EUONcdfdiSClKLvo%james.smart@avagotech.com>
+	id S1753444AbbLQIOw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Dec 2015 03:14:52 -0500
+In-Reply-To: <5671efba.8C/kxNA2eqfImskd%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>, linux-scsi@vger.kernel.org
 
 On 12/17/2015 12:11 AM, James Smart wrote:
 >
-> Fix the FLOGI discovery logic to comply with T11 standards
->
-> We weren't properly setting fabric parameters, such as R_A_TOV and E_=
-D_TOV,
-> when we registered the vfi object in default configs and pt2pt config=
-s.
-> Revise to now pass service params with the values to the firmware and
-> ensure they are reset on link bounce. Required reworking the call seq=
-uence
-> in the discovery threads.
+> Implemented a throttle on error logging.
 >
 > Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
 > ---
->   drivers/scsi/lpfc/lpfc_crtn.h      |   1 +
->   drivers/scsi/lpfc/lpfc_els.c       | 342 +++++++++++++++++---------=
------------
->   drivers/scsi/lpfc/lpfc_hbadisc.c   |  12 +-
->   drivers/scsi/lpfc/lpfc_nportdisc.c | 124 ++++++++------
->   4 files changed, 240 insertions(+), 239 deletions(-)
+>   drivers/scsi/lpfc/lpfc.h         |  5 +++
+>   drivers/scsi/lpfc/lpfc_attr.c    | 18 +++++++++++
+>   drivers/scsi/lpfc/lpfc_crtn.h    |  1 +
+>   drivers/scsi/lpfc/lpfc_disc.h    | 11 +++++++
+>   drivers/scsi/lpfc/lpfc_hbadisc.c | 23 +++++++++++++
+>   drivers/scsi/lpfc/lpfc_init.c    | 70 +++++++++++++++++++++++++++++=
++++++++++++
+>   drivers/scsi/lpfc/lpfc_logmsg.h  | 40 +++++++++++++++++++++++
+>   drivers/scsi/lpfc/lpfc_scsi.c    | 41 ++++++++++++++++-------
+>   drivers/scsi/lpfc/lpfc_sli.c     |  7 ++++
+>   9 files changed, 205 insertions(+), 11 deletions(-)
 >
-I hope you know what you're doing ...
+Weeellll ... that stuff doesn't really belong into the driver.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+_If_ that really is an issue it should be moved into a generic=20
+helper, as other drivers will have the same problem.
+There also have been quite some discussions at KS about how to=20
+handle high-volume logging traffic; also systemd implements its own=20
+handling, too.
+
+So it really needs to be discussed separately, and not implemented=20
+within a driver.
 
 Cheers,
 
-Hannes 'who should be following T-11 more closely' Reinecke
+Hannes
 --=20
 Dr. Hannes Reinecke		               zSeries & Storage
 hare@suse.de			               +49 911 74053 688
