@@ -1,208 +1,160 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 10/16] qla2xxx: Add irq affinity notification
-Date: Thu, 17 Dec 2015 14:57:05 -0500
-Message-ID: <1450382231-4259-11-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH v2 08/16] qla2xxx: Replace QLA_TGT_STATE_ABORTED with a bit.
+Date: Thu, 17 Dec 2015 14:57:03 -0500
+Message-ID: <1450382231-4259-9-git-send-email-himanshu.madhani@qlogic.com>
 References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:13738 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755742AbbLQUh7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Dec 2015 15:37:59 -0500
 In-Reply-To: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
-List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@qlogic.com>
 
-Register to receive notification of when irq setting change
-occured.
+Replace QLA_TGT_STATE_ABORTED state with a bit because
+the current state of the command is lost when an abort
+is requested by upper layer.
 
 Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |    6 +++
- drivers/scsi/qla2xxx/qla_isr.c    |   76 ++++++++++++++++++++++++++++++++++++-
- drivers/scsi/qla2xxx/qla_target.c |   12 ++++++
- 3 files changed, 93 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c |   23 ++++++++++-------------
+ drivers/scsi/qla2xxx/qla_target.h |    3 ++-
+ 2 files changed, 12 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 216a944..c4fc32e 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2714,11 +2714,16 @@ struct isp_operations {
- 
- struct scsi_qla_host;
- 
-+
-+#define QLA83XX_RSPQ_MSIX_ENTRY_NUMBER 1 /* refer to qla83xx_msix_entries */
-+
- struct qla_msix_entry {
- 	int have_irq;
- 	uint32_t vector;
- 	uint16_t entry;
- 	struct rsp_que *rsp;
-+	struct irq_affinity_notify irq_notify;
-+	int cpuid;
- };
- 
- #define	WATCH_INTERVAL		1       /* number of seconds */
-@@ -2930,6 +2935,7 @@ struct qlt_hw_data {
- 	spinlock_t q_full_lock;
- 	uint32_t leak_exchg_thresh_hold;
- 	spinlock_t sess_lock;
-+	int rspq_vector_cpuid;
- };
- 
- #define MAX_QFULL_CMDS_ALLOC	8192
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index ea7e8e8..cf0fe8e 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -18,6 +18,10 @@ static void qla2x00_status_entry(scsi_qla_host_t *, struct rsp_que *, void *);
- static void qla2x00_status_cont_entry(struct rsp_que *, sts_cont_entry_t *);
- static void qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
- 	sts_entry_t *);
-+static void qla_irq_affinity_notify(struct irq_affinity_notify *,
-+    const cpumask_t *);
-+static void qla_irq_affinity_release(struct kref *);
-+
- 
- /**
-  * qla2100_intr_handler() - Process interrupts for the ISP2100 and ISP2200.
-@@ -2548,6 +2552,14 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 	if (!vha->flags.online)
- 		return;
- 
-+	if (rsp->msix->cpuid != smp_processor_id()) {
-+		/* if kernel does not notify qla of IRQ's CPU change,
-+		 * then set it here.
-+		 */
-+		rsp->msix->cpuid = smp_processor_id();
-+		ha->tgt.rspq_vector_cpuid = rsp->msix->cpuid;
-+	}
-+
- 	while (rsp->ring_ptr->signature != RESPONSE_PROCESSED) {
- 		pkt = (struct sts_entry_24xx *)rsp->ring_ptr;
- 
-@@ -2979,8 +2991,11 @@ qla24xx_disable_msix(struct qla_hw_data *ha)
- 
- 	for (i = 0; i < ha->msix_count; i++) {
- 		qentry = &ha->msix_entries[i];
--		if (qentry->have_irq)
-+		if (qentry->have_irq) {
-+			/* un-register irq cpu affinity notification */
-+			irq_set_affinity_notifier(qentry->vector, NULL);
- 			free_irq(qentry->vector, qentry->rsp);
-+		}
- 	}
- 	pci_disable_msix(ha->pdev);
- 	kfree(ha->msix_entries);
-@@ -3043,6 +3058,9 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		qentry->entry = entries[i].entry;
- 		qentry->have_irq = 0;
- 		qentry->rsp = NULL;
-+		qentry->irq_notify.notify  = qla_irq_affinity_notify;
-+		qentry->irq_notify.release = qla_irq_affinity_release;
-+		qentry->cpuid = -1;
- 	}
- 
- 	/* Enable MSI-X vectors for the base queue */
-@@ -3061,6 +3079,18 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		qentry->have_irq = 1;
- 		qentry->rsp = rsp;
- 		rsp->msix = qentry;
-+
-+		/* Register for CPU affinity notification. */
-+		irq_set_affinity_notifier(qentry->vector, &qentry->irq_notify);
-+
-+		/* Schedule work (ie. trigger a notification) to read cpu
-+		 * mask for this specific irq.
-+		 * kref_get is required because
-+		* irq_affinity_notify() will do
-+		* kref_put().
-+		*/
-+		kref_get(&qentry->irq_notify.kref);
-+		schedule_work(&qentry->irq_notify.work);
- 	}
- 
- 	/*
-@@ -3240,3 +3270,47 @@ int qla25xx_request_irq(struct rsp_que *rsp)
- 	msix->rsp = rsp;
- 	return ret;
- }
-+
-+
-+/* irq_set_affinity/irqbalance will trigger notification of cpu mask update */
-+static void qla_irq_affinity_notify(struct irq_affinity_notify *notify,
-+	const cpumask_t *mask)
-+{
-+	struct qla_msix_entry *e =
-+		container_of(notify, struct qla_msix_entry, irq_notify);
-+	struct qla_hw_data *ha;
-+	struct scsi_qla_host *base_vha;
-+
-+	/* user is recommended to set mask to just 1 cpu */
-+	e->cpuid = cpumask_first(mask);
-+
-+	ha = e->rsp->hw;
-+	base_vha = pci_get_drvdata(ha->pdev);
-+
-+	ql_dbg(ql_dbg_init, base_vha, 0xffff,
-+	    "%s: host %ld : vector %d cpu %d \n", __func__,
-+	    base_vha->host_no, e->vector, e->cpuid);
-+
-+	if (e->have_irq) {
-+		if ((IS_QLA83XX(ha) || IS_QLA27XX(ha)) &&
-+		    (e->entry == QLA83XX_RSPQ_MSIX_ENTRY_NUMBER)) {
-+			ha->tgt.rspq_vector_cpuid = e->cpuid;
-+			ql_dbg(ql_dbg_init, base_vha, 0xffff,
-+			    "%s: host%ld: rspq vector %d cpu %d  runtime change\n",
-+			    __func__, base_vha->host_no, e->vector, e->cpuid);
-+		}
-+	}
-+}
-+
-+void qla_irq_affinity_release(struct kref *ref)
-+{
-+	struct irq_affinity_notify *notify =
-+		container_of(ref, struct irq_affinity_notify, kref);
-+	struct qla_msix_entry *e =
-+		container_of(notify, struct qla_msix_entry, irq_notify);
-+	struct scsi_qla_host *base_vha = pci_get_drvdata(e->rsp->hw->pdev);
-+
-+	ql_dbg(ql_dbg_init, base_vha, 0xffff,
-+	    "%s: host%ld: vector %d cpu %d \n", __func__,
-+	    base_vha->host_no, e->vector, e->cpuid);
-+}
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 6136987..9a4aed0 100644
+index 2b218b6..104d129 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6232,6 +6232,7 @@ qlt_enable_vha(struct scsi_qla_host *vha)
- 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
- 	unsigned long flags;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
-+	int rspq_ent = QLA83XX_RSPQ_MSIX_ENTRY_NUMBER;
+@@ -1469,7 +1469,7 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
  
- 	if (!tgt) {
- 		ql_dbg(ql_dbg_tgt, vha, 0xe069,
-@@ -6250,6 +6251,17 @@ qlt_enable_vha(struct scsi_qla_host *vha)
- 		qla24xx_disable_vp(vha);
- 		qla24xx_enable_vp(vha);
+ 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
+ 		if (tag == cmd->atio.u.isp24.exchange_addr) {
+-			cmd->state = QLA_TGT_STATE_ABORTED;
++			cmd->aborted = 1;
+ 			spin_unlock(&vha->cmd_list_lock);
+ 			return 1;
+ 		}
+@@ -1511,7 +1511,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
+ 		cmd_lun = scsilun_to_int(
+ 			(struct scsi_lun *)&cmd->atio.u.isp24.fcp_cmnd.lun);
+ 		if (cmd_key == key && cmd_lun == lun)
+-			cmd->state = QLA_TGT_STATE_ABORTED;
++			cmd->aborted = 1;
+ 	}
+ 	spin_unlock(&vha->cmd_list_lock);
+ }
+@@ -3175,7 +3175,7 @@ static void qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 		qlt_alloc_qfull_cmd(vha, atio, 0, 0);
+ 
+ done:
+-	if (cmd && ((cmd->state != QLA_TGT_STATE_ABORTED) ||
++	if (cmd && (!cmd->aborted ||
+ 	    !cmd->cmd_sent_to_fw)) {
+ 		if (cmd->sg_mapped)
+ 			qlt_unmap_sg(vha, cmd);
+@@ -3246,7 +3246,7 @@ void qlt_abort_cmd(struct qla_tgt_cmd *cmd)
+ 	    "(se_cmd=%p, tag=%llu)", vha->vp_idx, cmd, &cmd->se_cmd,
+ 	    se_cmd->tag);
+ 
+-	cmd->state = QLA_TGT_STATE_ABORTED;
++	cmd->aborted = 1;
+ 	cmd->cmd_flags |= BIT_6;
+ 
+ 	qlt_send_term_exchange(vha, cmd, &cmd->atio, 0);
+@@ -3466,9 +3466,6 @@ qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
+ 
+ 		ha->tgt.tgt_ops->handle_data(cmd);
+ 		return;
+-	} else if (cmd->state == QLA_TGT_STATE_ABORTED) {
+-		ql_dbg(ql_dbg_io, vha, 0xff02,
+-		    "HOST-ABORT: handle=%d, state=ABORTED.\n", handle);
  	} else {
-+		if (ha->msix_entries) {
-+			ql_dbg(ql_dbg_tgt, vha, 0xffff,
-+			    "%s: host%ld : vector %d cpu %d\n",
-+			    __func__, vha->host_no,
-+			    ha->msix_entries[rspq_ent].vector,
-+			    ha->msix_entries[rspq_ent].cpuid);
+ 		ql_dbg(ql_dbg_io, vha, 0xff03,
+ 		    "HOST-ABORT: handle=%d, state=BAD(%d).\n", handle,
+@@ -3633,14 +3630,14 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
+ 		}
+ 
+ 
+-		/* "cmd->state == QLA_TGT_STATE_ABORTED" means
++		/* "cmd->aborted" means
+ 		 * cmd is already aborted/terminated, we don't
+ 		 * need to terminate again.  The exchange is already
+ 		 * cleaned up/freed at FW level.  Just cleanup at driver
+ 		 * level.
+ 		 */
+ 		if ((cmd->state != QLA_TGT_STATE_NEED_DATA) &&
+-		    (cmd->state != QLA_TGT_STATE_ABORTED)) {
++		    (!cmd->aborted)) {
+ 			cmd->cmd_flags |= BIT_13;
+ 			if (qlt_term_ctio_exchange(vha, ctio, cmd, status))
+ 				return;
+@@ -3658,7 +3655,7 @@ skip_term:
+ 
+ 		ha->tgt.tgt_ops->handle_data(cmd);
+ 		return;
+-	} else if (cmd->state == QLA_TGT_STATE_ABORTED) {
++	} else if (cmd->aborted) {
+ 		cmd->cmd_flags |= BIT_18;
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01e,
+ 		  "Aborted command %p (tag %lld) finished\n", cmd, se_cmd->tag);
+@@ -3670,7 +3667,7 @@ skip_term:
+ 	}
+ 
+ 	if (unlikely(status != CTIO_SUCCESS) &&
+-		(cmd->state != QLA_TGT_STATE_ABORTED)) {
++		!cmd->aborted) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01f, "Finishing failed CTIO\n");
+ 		dump_stack();
+ 	}
+@@ -3732,7 +3729,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 	if (tgt->tgt_stop)
+ 		goto out_term;
+ 
+-	if (cmd->state == QLA_TGT_STATE_ABORTED) {
++	if (cmd->aborted) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf082,
+ 		    "cmd with tag %u is aborted\n",
+ 		    cmd->atio.u.isp24.exchange_addr);
+@@ -4290,7 +4287,7 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
+ 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
+ 		uint32_t cmd_key = sid_to_key(cmd->atio.u.isp24.fcp_hdr.s_id);
+ 		if (cmd_key == key) {
+-			cmd->state = QLA_TGT_STATE_ABORTED;
++			cmd->aborted = 1;
+ 			count++;
+ 		}
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 0a78545..f5dbeab 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -787,7 +787,7 @@ int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
+ #define QLA_TGT_STATE_NEED_DATA		1 /* target needs data to continue */
+ #define QLA_TGT_STATE_DATA_IN		2 /* Data arrived + target processing */
+ #define QLA_TGT_STATE_PROCESSED		3 /* target done processing */
+-#define QLA_TGT_STATE_ABORTED		4 /* Command aborted */
 +
-+			ha->tgt.rspq_vector_cpuid =
-+			    ha->msix_entries[rspq_ent].cpuid;
-+		}
-+
- 		set_bit(ISP_ABORT_NEEDED, &base_vha->dpc_flags);
- 		qla2xxx_wake_dpc(base_vha);
- 		qla2x00_wait_for_hba_online(base_vha);
+ 
+ /* Special handles */
+ #define QLA_TGT_NULL_HANDLE	0
+@@ -960,6 +960,7 @@ struct qla_tgt_cmd {
+ 	unsigned int term_exchg:1;
+ 	unsigned int cmd_sent_to_fw:1;
+ 	unsigned int cmd_in_wq:1;
++	unsigned int aborted:1;
+ 
+ 	struct scatterlist *sg;	/* cmd data buffer SG vector */
+ 	int sg_cnt;		/* SG segments count */
 -- 
 1.7.7
+
