@@ -1,76 +1,74 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/17] lpfc: Fix RDP Speed reporting.
-Date: Thu, 17 Dec 2015 09:25:15 +0100
-Message-ID: <5672716B.70203@suse.de>
-References: <5671efbf.h8YAdmlPeIEJ3AcO%james.smart@avagotech.com>
+Subject: Re: [PATCH 09/17] lpfc: Fix RDP ACC being too long.
+Date: Thu, 17 Dec 2015 09:25:49 +0100
+Message-ID: <5672718D.808@suse.de>
+References: <5671efc0.SB0qVbj8lP/LNAjA%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49690 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49722 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218AbbLQIZR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Dec 2015 03:25:17 -0500
-In-Reply-To: <5671efbf.h8YAdmlPeIEJ3AcO%james.smart@avagotech.com>
+	id S1751464AbbLQIZv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Dec 2015 03:25:51 -0500
+In-Reply-To: <5671efc0.SB0qVbj8lP/LNAjA%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>, linux-scsi@vger.kernel.org
 
-On 12/17/2015 12:11 AM, James Smart wrote:
+On 12/17/2015 12:12 AM, James Smart wrote:
 >
-> Fix RDP Speed reporting.
+> Fix RDP ACC being too long.
 >
 > Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
 > ---
->   drivers/scsi/lpfc/lpfc_els.c | 17 +++++++----------
->   1 file changed, 7 insertions(+), 10 deletions(-)
+>   drivers/scsi/lpfc/lpfc_els.c | 10 ++++++++++
+>   1 file changed, 10 insertions(+)
 >
 > diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_el=
 s.c
-> index 3394648..f7a2967 100644
+> index f7a2967..817cdfc 100644
 > --- a/drivers/scsi/lpfc/lpfc_els.c
 > +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -4730,28 +4730,25 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_d=
-esc *desc, struct lpfc_hba *phba)
+> @@ -4824,6 +4824,7 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct=
+ lpfc_rdp_context *rdp_context,
+>   	struct lpfc_nodelist *ndlp =3D rdp_context->ndlp;
+>   	struct lpfc_vport *vport =3D ndlp->vport;
+>   	struct lpfc_iocbq *elsiocb;
+> +	struct ulp_bde64 *bpl;
+>   	IOCB_t *icmd;
+>   	uint8_t *pcmd;
+>   	struct ls_rjt *stat;
+> @@ -4833,6 +4834,8 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct=
+ lpfc_rdp_context *rdp_context,
 >
->   	desc->tag =3D cpu_to_be32(RDP_PORT_SPEED_DESC_TAG);
+>   	if (status !=3D SUCCESS)
+>   		goto error;
+> +
+> +	/* This will change once we know the true size of the RDP payload *=
+/
+>   	cmdsize =3D sizeof(struct fc_rdp_res_frame);
 >
-> -	switch (phba->sli4_hba.link_state.speed) {
-> -	case LPFC_FC_LA_SPEED_1G:
-> +	switch (phba->fc_linkspeed) {
-> +	case LPFC_LINK_SPEED_1GHZ:
->   		rdp_speed =3D RDP_PS_1GB;
->   		break;
-> -	case LPFC_FC_LA_SPEED_2G:
-> +	case LPFC_LINK_SPEED_2GHZ:
->   		rdp_speed =3D RDP_PS_2GB;
->   		break;
-> -	case LPFC_FC_LA_SPEED_4G:
-> +	case LPFC_LINK_SPEED_4GHZ:
->   		rdp_speed =3D RDP_PS_4GB;
->   		break;
-> -	case LPFC_FC_LA_SPEED_8G:
-> +	case LPFC_LINK_SPEED_8GHZ:
->   		rdp_speed =3D RDP_PS_8GB;
->   		break;
-> -	case LPFC_FC_LA_SPEED_10G:
-> +	case LPFC_LINK_SPEED_10GHZ:
->   		rdp_speed =3D RDP_PS_10GB;
->   		break;
-> -	case LPFC_FC_LA_SPEED_16G:
-> +	case LPFC_LINK_SPEED_16GHZ:
->   		rdp_speed =3D RDP_PS_16GB;
->   		break;
-> -	case LPFC_FC_LA_SPEED_32G:
-> -		rdp_speed =3D RDP_PS_32GB;
-> -		break;
->   	default:
->   		rdp_speed =3D RDP_PS_UNKNOWN;
->   		break;
+>   	elsiocb =3D lpfc_prep_els_iocb(vport, 0, cmdsize,
+> @@ -4874,6 +4877,13 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struc=
+t lpfc_rdp_context *rdp_context,
+>   	rdp_res->length =3D cpu_to_be32(fec_size + RDP_DESC_PAYLOAD_SIZE);
+>   	elsiocb->iocb_cmpl =3D lpfc_cmpl_els_rsp;
 >
-What happened to 32G? Has development ceased on that?
+> +	/* Now that we know the true size of the payload, update the BPL */
+> +	bpl =3D (struct ulp_bde64 *)
+> +		(((struct lpfc_dmabuf *)(elsiocb->context3))->virt);
+> +	bpl->tus.f.bdeSize =3D (fec_size + RDP_DESC_PAYLOAD_SIZE + 8);
+> +	bpl->tus.f.bdeFlags =3D 0;
+> +	bpl->tus.w =3D le32_to_cpu(bpl->tus.w);
+> +
+>   	phba->fc_stat.elsXmitACC++;
+>   	rc =3D lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+>   	if (rc =3D=3D IOCB_ERROR)
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
