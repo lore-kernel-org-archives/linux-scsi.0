@@ -1,160 +1,332 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 08/16] qla2xxx: Replace QLA_TGT_STATE_ABORTED with a bit.
-Date: Thu, 17 Dec 2015 14:57:03 -0500
-Message-ID: <1450382231-4259-9-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH v2 06/16] qla2xxx: Delete session if initiator is gone from FW
+Date: Thu, 17 Dec 2015 14:57:01 -0500
+Message-ID: <1450382231-4259-7-git-send-email-himanshu.madhani@qlogic.com>
 References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:13738 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755742AbbLQUh7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Dec 2015 15:37:59 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@qlogic.com>
+From: Alexei Potashnik <alexei@purestorage.com>
 
-Replace QLA_TGT_STATE_ABORTED state with a bit because
-the current state of the command is lost when an abort
-is requested by upper layer.
+1. Initiator A is logged in with fc_id(1)/loop_id(1)
+2. Initiator A re-logs in with fc_id(2)/loop_id(2)
+3. Part of old session deletion async logoout for 1/1 is queued
+4. Initiator B logs in with fc_id(1)/loop_id(1), starts
+   passing data and creates session.
+5. Async logo from 3 is processed by DPC and sent to FW
 
-Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+Now initiator B has the session but is logged out from FW.
+
+This condition is detected first with CTIO error 29 at which
+point we should delete current session. During session
+deletion we will send LOGO to initiator to force re-login.
+
+Under rare circumstances initiator might be logged out of FW,
+not have driver session, but still think it's logged in.
+E.g. the above sequence plus session deletion due to re-config.
+Incoming commands will fail to create local session because
+initiator is not found in FW. In this case we also issue LOGO
+to initiator to force him re-login.
+
+Finally this patch fixes exchange leak when commands where
+received in logged out state. In this case loop_id must be
+set to FFFF when corresponding exchange is terminated. The
+patch modifies exchange termination to always use FFFF,
+since in certain scenarios it's impossible to tell whether
+command was received in logged in or logged out state.
+
+Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
+Acked-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c |   23 ++++++++++-------------
- drivers/scsi/qla2xxx/qla_target.h |    3 ++-
- 2 files changed, 12 insertions(+), 14 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |    2 +
+ drivers/scsi/qla2xxx/qla_os.c     |    1 +
+ drivers/scsi/qla2xxx/qla_target.c |  108 +++++++++++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_target.h |    9 +++
+ 4 files changed, 104 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 83d2251..495a0aa 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3652,6 +3652,8 @@ typedef struct scsi_qla_host {
+ 	atomic_t		generation_tick;
+ 	/* Time when global fcport update has been scheduled */
+ 	int			total_fcport_update_gen;
++	/* List of pending LOGOs, protected by tgt_mutex */
++	struct list_head	logo_list;
+ 
+ 	uint32_t	vp_abort_cnt;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2e62d9c..416b45c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3920,6 +3920,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	INIT_LIST_HEAD(&vha->list);
+ 	INIT_LIST_HEAD(&vha->qla_cmd_list);
+ 	INIT_LIST_HEAD(&vha->qla_sess_op_cmd_list);
++	INIT_LIST_HEAD(&vha->logo_list);
+ 
+ 	spin_lock_init(&vha->work_lock);
+ 	spin_lock_init(&vha->cmd_list_lock);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 2b218b6..104d129 100644
+index 661124a..5ef9d4c 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1469,7 +1469,7 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
+@@ -389,6 +389,52 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha, response_t *pkt)
  
- 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
- 		if (tag == cmd->atio.u.isp24.exchange_addr) {
--			cmd->state = QLA_TGT_STATE_ABORTED;
-+			cmd->aborted = 1;
- 			spin_unlock(&vha->cmd_list_lock);
- 			return 1;
- 		}
-@@ -1511,7 +1511,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
- 		cmd_lun = scsilun_to_int(
- 			(struct scsi_lun *)&cmd->atio.u.isp24.fcp_cmnd.lun);
- 		if (cmd_key == key && cmd_lun == lun)
--			cmd->state = QLA_TGT_STATE_ABORTED;
-+			cmd->aborted = 1;
- 	}
- 	spin_unlock(&vha->cmd_list_lock);
  }
-@@ -3175,7 +3175,7 @@ static void qlt_send_term_exchange(struct scsi_qla_host *vha,
- 		qlt_alloc_qfull_cmd(vha, atio, 0, 0);
  
- done:
--	if (cmd && ((cmd->state != QLA_TGT_STATE_ABORTED) ||
-+	if (cmd && (!cmd->aborted ||
- 	    !cmd->cmd_sent_to_fw)) {
- 		if (cmd->sg_mapped)
- 			qlt_unmap_sg(vha, cmd);
-@@ -3246,7 +3246,7 @@ void qlt_abort_cmd(struct qla_tgt_cmd *cmd)
- 	    "(se_cmd=%p, tag=%llu)", vha->vp_idx, cmd, &cmd->se_cmd,
- 	    se_cmd->tag);
++typedef struct {
++	/* These fields must be initialized by the caller */
++	port_id_t id;
++	/*
++	 * number of cmds dropped while we were waiting for
++	 * initiator to ack LOGO initialize to 1 if LOGO is
++	 * triggered by a command, otherwise, to 0
++	 */
++	int cmd_count;
++
++	/* These fields are used by callee */
++	struct list_head list;
++} qlt_port_logo_t;
++
++static void
++qlt_send_first_logo(struct scsi_qla_host *vha, qlt_port_logo_t *logo)
++{
++	qlt_port_logo_t *tmp;
++	int res;
++
++	mutex_lock(&vha->vha_tgt.tgt_mutex);
++
++	list_for_each_entry(tmp, &vha->logo_list, list) {
++		if (tmp->id.b24 == logo->id.b24) {
++			tmp->cmd_count += logo->cmd_count;
++			mutex_unlock(&vha->vha_tgt.tgt_mutex);
++			return;
++		}
++	}
++
++	list_add_tail(&logo->list, &vha->logo_list);
++
++	mutex_unlock(&vha->vha_tgt.tgt_mutex);
++
++	res = qla24xx_els_dcmd_iocb(vha, ELS_DCMD_LOGO, logo->id);
++
++	mutex_lock(&vha->vha_tgt.tgt_mutex);
++	list_del(&logo->list);
++	mutex_unlock(&vha->vha_tgt.tgt_mutex);
++
++	dev_info(&vha->hw->pdev->dev,
++		 "Finished LOGO to %02x:%02x:%02x, dropped %d cmds, res = %#x\n",
++		 logo->id.b.domain, logo->id.b.area, logo->id.b.al_pa,
++		 logo->cmd_count, res);
++}
++
+ static void qlt_free_session_done(struct work_struct *work)
+ {
+ 	struct qla_tgt_sess *sess = container_of(work, struct qla_tgt_sess,
+@@ -402,14 +448,21 @@ static void qlt_free_session_done(struct work_struct *work)
  
--	cmd->state = QLA_TGT_STATE_ABORTED;
-+	cmd->aborted = 1;
- 	cmd->cmd_flags |= BIT_6;
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf084,
+ 		"%s: se_sess %p / sess %p from port %8phC loop_id %#04x"
+-		" s_id %02x:%02x:%02x logout %d keep %d plogi %d\n",
++		" s_id %02x:%02x:%02x logout %d keep %d plogi %d els_logo %d\n",
+ 		__func__, sess->se_sess, sess, sess->port_name, sess->loop_id,
+ 		sess->s_id.b.domain, sess->s_id.b.area, sess->s_id.b.al_pa,
+ 		sess->logout_on_delete, sess->keep_nport_handle,
+-		sess->plogi_ack_needed);
++		sess->plogi_ack_needed, sess->send_els_logo);
  
- 	qlt_send_term_exchange(vha, cmd, &cmd->atio, 0);
-@@ -3466,9 +3466,6 @@ qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
+ 	BUG_ON(!tgt);
  
- 		ha->tgt.tgt_ops->handle_data(cmd);
- 		return;
--	} else if (cmd->state == QLA_TGT_STATE_ABORTED) {
--		ql_dbg(ql_dbg_io, vha, 0xff02,
--		    "HOST-ABORT: handle=%d, state=ABORTED.\n", handle);
- 	} else {
- 		ql_dbg(ql_dbg_io, vha, 0xff03,
- 		    "HOST-ABORT: handle=%d, state=BAD(%d).\n", handle,
-@@ -3633,14 +3630,14 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
- 		}
++	if (sess->send_els_logo) {
++		qlt_port_logo_t logo;
++		logo.id = sess->s_id;
++		logo.cmd_count = 0;
++		qlt_send_first_logo(vha, &logo);
++	}
++
+ 	if (sess->logout_on_delete) {
+ 		int rc;
  
- 
--		/* "cmd->state == QLA_TGT_STATE_ABORTED" means
-+		/* "cmd->aborted" means
- 		 * cmd is already aborted/terminated, we don't
- 		 * need to terminate again.  The exchange is already
- 		 * cleaned up/freed at FW level.  Just cleanup at driver
- 		 * level.
- 		 */
- 		if ((cmd->state != QLA_TGT_STATE_NEED_DATA) &&
--		    (cmd->state != QLA_TGT_STATE_ABORTED)) {
-+		    (!cmd->aborted)) {
- 			cmd->cmd_flags |= BIT_13;
- 			if (qlt_term_ctio_exchange(vha, ctio, cmd, status))
- 				return;
-@@ -3658,7 +3655,7 @@ skip_term:
- 
- 		ha->tgt.tgt_ops->handle_data(cmd);
- 		return;
--	} else if (cmd->state == QLA_TGT_STATE_ABORTED) {
-+	} else if (cmd->aborted) {
- 		cmd->cmd_flags |= BIT_18;
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01e,
- 		  "Aborted command %p (tag %lld) finished\n", cmd, se_cmd->tag);
-@@ -3670,7 +3667,7 @@ skip_term:
+@@ -636,12 +689,12 @@ static int qla24xx_get_loop_id(struct scsi_qla_host *vha, const uint8_t *s_id,
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf045,
+ 		    "qla_target(%d): get_id_list() failed: %x\n",
+ 		    vha->vp_idx, rc);
+-		res = -1;
++		res = -EBUSY;
+ 		goto out_free_id_list;
  	}
  
- 	if (unlikely(status != CTIO_SUCCESS) &&
--		(cmd->state != QLA_TGT_STATE_ABORTED)) {
-+		!cmd->aborted) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01f, "Finishing failed CTIO\n");
- 		dump_stack();
- 	}
-@@ -3732,7 +3729,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 	if (tgt->tgt_stop)
+ 	id_iter = (char *)gid_list;
+-	res = -1;
++	res = -ENOENT;
+ 	for (i = 0; i < entries; i++) {
+ 		struct gid_list_info *gid = (struct gid_list_info *)id_iter;
+ 		if ((gid->al_pa == s_id[2]) &&
+@@ -2968,7 +3021,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 
+ 	ctio24 = (struct ctio7_to_24xx *)pkt;
+ 	ctio24->entry_type = CTIO_TYPE7;
+-	ctio24->nport_handle = cmd ? cmd->loop_id : CTIO7_NHANDLE_UNRECOGNIZED;
++	ctio24->nport_handle = CTIO7_NHANDLE_UNRECOGNIZED;
+ 	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
+ 	ctio24->vp_index = vha->vp_idx;
+ 	ctio24->initiator_id[0] = atio->u.isp24.fcp_hdr.s_id[2];
+@@ -3404,13 +3457,26 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
+ 
+ 		case CTIO_PORT_LOGGED_OUT:
+ 		case CTIO_PORT_UNAVAILABLE:
++		{
++			bool logged_out = (status & 0xFFFF);
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf059,
+-			    "qla_target(%d): CTIO with PORT LOGGED "
+-			    "OUT (29) or PORT UNAVAILABLE (28) status %x "
++			    "qla_target(%d): CTIO with %s status %x "
+ 			    "received (state %x, se_cmd %p)\n", vha->vp_idx,
++			    (logged_out == CTIO_PORT_LOGGED_OUT) ?
++			    "PORT LOGGED OUT" : "PORT UNAVAILABLE",
+ 			    status, cmd->state, se_cmd);
+-			break;
+ 
++			if (logged_out && cmd->sess) {
++				/*
++				 * Session is already logged out, but we need
++				 * to notify initiator, who's not aware of this
++				 */
++				cmd->sess->logout_on_delete = 0;
++				cmd->sess->send_els_logo = 1;
++				qlt_schedule_sess_for_deletion(cmd->sess, true);
++			}
++			break;
++		}
+ 		case CTIO_SRR_RECEIVED:
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf05a,
+ 			    "qla_target(%d): CTIO with SRR_RECEIVED"
+@@ -3698,10 +3764,8 @@ static void qlt_create_sess_from_atio(struct work_struct *work)
  		goto out_term;
- 
--	if (cmd->state == QLA_TGT_STATE_ABORTED) {
-+	if (cmd->aborted) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf082,
- 		    "cmd with tag %u is aborted\n",
- 		    cmd->atio.u.isp24.exchange_addr);
-@@ -4290,7 +4287,7 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
- 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
- 		uint32_t cmd_key = sid_to_key(cmd->atio.u.isp24.fcp_hdr.s_id);
- 		if (cmd_key == key) {
--			cmd->state = QLA_TGT_STATE_ABORTED;
-+			cmd->aborted = 1;
- 			count++;
- 		}
  	}
+ 
+-	mutex_lock(&vha->vha_tgt.tgt_mutex);
+ 	sess = qlt_make_local_sess(vha, s_id);
+ 	/* sess has an extra creation ref. */
+-	mutex_unlock(&vha->vha_tgt.tgt_mutex);
+ 
+ 	if (!sess)
+ 		goto out_term;
+@@ -5541,12 +5605,16 @@ static struct qla_tgt_sess *qlt_make_local_sess(struct scsi_qla_host *vha,
+ 	int rc, global_resets;
+ 	uint16_t loop_id = 0;
+ 
++	mutex_lock(&vha->vha_tgt.tgt_mutex);
++
+ retry:
+ 	global_resets =
+ 	    atomic_read(&vha->vha_tgt.qla_tgt->tgt_global_resets_count);
+ 
+ 	rc = qla24xx_get_loop_id(vha, s_id, &loop_id);
+ 	if (rc != 0) {
++		mutex_unlock(&vha->vha_tgt.tgt_mutex);
++
+ 		if ((s_id[0] == 0xFF) &&
+ 		    (s_id[1] == 0xFC)) {
+ 			/*
+@@ -5557,17 +5625,27 @@ retry:
+ 			    "Unable to find initiator with S_ID %x:%x:%x",
+ 			    s_id[0], s_id[1], s_id[2]);
+ 		} else
+-			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf071,
++			ql_log(ql_log_info, vha, 0xf071,
+ 			    "qla_target(%d): Unable to find "
+ 			    "initiator with S_ID %x:%x:%x",
+ 			    vha->vp_idx, s_id[0], s_id[1],
+ 			    s_id[2]);
++
++		if (rc == -ENOENT) {
++			qlt_port_logo_t logo;
++			sid_to_portid(s_id, &logo.id);
++			logo.cmd_count = 1;
++			qlt_send_first_logo(vha, &logo);
++		}
++
+ 		return NULL;
+ 	}
+ 
+ 	fcport = qlt_get_port_database(vha, loop_id);
+-	if (!fcport)
++	if (!fcport) {
++		mutex_unlock(&vha->vha_tgt.tgt_mutex);
+ 		return NULL;
++	}
+ 
+ 	if (global_resets !=
+ 	    atomic_read(&vha->vha_tgt.qla_tgt->tgt_global_resets_count)) {
+@@ -5582,6 +5660,8 @@ retry:
+ 
+ 	sess = qlt_create_sess(vha, fcport, true);
+ 
++	mutex_unlock(&vha->vha_tgt.tgt_mutex);
++
+ 	kfree(fcport);
+ 	return sess;
+ }
+@@ -5611,10 +5691,8 @@ static void qlt_abort_work(struct qla_tgt *tgt,
+ 	if (!sess) {
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+-		mutex_lock(&vha->vha_tgt.tgt_mutex);
+ 		sess = qlt_make_local_sess(vha, s_id);
+ 		/* sess has got an extra creation ref */
+-		mutex_unlock(&vha->vha_tgt.tgt_mutex);
+ 
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 		if (!sess)
+@@ -5670,10 +5748,8 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 	if (!sess) {
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+-		mutex_lock(&vha->vha_tgt.tgt_mutex);
+ 		sess = qlt_make_local_sess(vha, s_id);
+ 		/* sess has got an extra creation ref */
+-		mutex_unlock(&vha->vha_tgt.tgt_mutex);
+ 
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 		if (!sess)
 diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 0a78545..f5dbeab 100644
+index bca584a..e316d42 100644
 --- a/drivers/scsi/qla2xxx/qla_target.h
 +++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -787,7 +787,7 @@ int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
- #define QLA_TGT_STATE_NEED_DATA		1 /* target needs data to continue */
- #define QLA_TGT_STATE_DATA_IN		2 /* Data arrived + target processing */
- #define QLA_TGT_STATE_PROCESSED		3 /* target done processing */
--#define QLA_TGT_STATE_ABORTED		4 /* Command aborted */
+@@ -909,6 +909,7 @@ struct qla_tgt_sess {
+ 	unsigned int logout_on_delete:1;
+ 	unsigned int plogi_ack_needed:1;
+ 	unsigned int keep_nport_handle:1;
++	unsigned int send_els_logo:1;
+ 
+ 	unsigned char logout_completed;
+ 
+@@ -1120,6 +1121,14 @@ static inline uint32_t sid_to_key(const uint8_t *s_id)
+ 	return key;
+ }
+ 
++static inline void sid_to_portid(const uint8_t *s_id, port_id_t *p)
++{
++	memset(p, 0, sizeof(*p));
++	p->b.domain = s_id[0];
++	p->b.area = s_id[1];
++	p->b.al_pa = s_id[2];
++}
 +
- 
- /* Special handles */
- #define QLA_TGT_NULL_HANDLE	0
-@@ -960,6 +960,7 @@ struct qla_tgt_cmd {
- 	unsigned int term_exchg:1;
- 	unsigned int cmd_sent_to_fw:1;
- 	unsigned int cmd_in_wq:1;
-+	unsigned int aborted:1;
- 
- 	struct scatterlist *sg;	/* cmd data buffer SG vector */
- 	int sg_cnt;		/* SG segments count */
+ /*
+  * Exported symbols from qla_target.c LLD logic used by qla2xxx code..
+  */
 -- 
 1.7.7
-
