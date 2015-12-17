@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 16/16] qla2xxx: Check for online flag instead of active reset when transmitting responses
-Date: Thu, 17 Dec 2015 14:57:11 -0500
-Message-ID: <1450382231-4259-17-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH v2 03/16] qla2xxx: Enable Target counters in DebugFS.
+Date: Thu, 17 Dec 2015 14:56:58 -0500
+Message-ID: <1450382231-4259-4-git-send-email-himanshu.madhani@qlogic.com>
 References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,213 +12,245 @@ To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Dilip Kumar Uppugandla <dilip@purestorage.com>
+Following counters are added in target mode to help debugging efforts.
 
-Driver has following initialization sequence for Target mode
+Target Counters
 
-1. Driver initialization starts
+qla_core_sbt_cmd = 0
+qla_core_ret_sta_ctio = 0
+qla_core_ret_ctio = 0
+core_qla_que_buf = 0
+core_qla_snd_status = 0
+core_qla_free_cmd = 0
+num alloc iocb failed = 0
+num term exchange sent = 0
+num Q full sent = 0
 
-2. ISP Abort is scheduled when the target is enabled.
-
-qla2xxx [0000:04:00.0]-4807:25: ISP abort scheduled
-qla2xxx [0000:04:00.0]-00af:25: Performing ISP error recovery - ha=ffff880caa9e0000.
-
-3. DPC thread starts the ISP Abort
-
-4. While DPC is resetting the chip and initializing the firmware, we get
-   async events from the firmware about P2P mode, LOOP UP and PORT UPDATE.
-
-5. PRLI from a initiator is delivered to us followed by a PLOGI and then a
-   SCSI command which creates a session.
-
-6. If the SCSI command is a WRITE in this case, we issue XFR RDY and it
-   gets dropped as can be seen with messages RESET-XFR because ISP Abort
-   is still active
-
-qla2xxx [0000:04:00.0]-e902:25: RESET-XFR active/old-count/new-count = 1/1/1.
-
-7. If the SCSI command is a READ, we issue RESPONSE and they get dropped
-   as well because Abort is still active.
-
-qla2xxx [0000:04:00.0]-e901:25: RESET-RSP active/old-count/new-count = 1/1/1
-
-8. Now eventually, ISP Abort finishes clearing the DPC flags.
-
-qla2xxx [0000:04:00.0]-8822:25: qla2x00_abort_isp succeeded.
-qla2xxx [0000:04:00.0]-4808:25: ISP abort end.
-
-9. Since we dropped SCSI commands silently (without any responses sent
-   to the initiator) initiator waits for a SCSI timeout (which is 60
-   seconds in our case), Sends an ABTS which fails since there
-   no se_cmd found for the tag that ABTS is referencing as the
-   commands were cleaned up in Step 6 and 7.
-
-10. Initiator send an IO after the ABTS which succeed fine.
-
-To fix the above case, the following changes have been made:
-  - To prevent target from dropping commands silently, use the online flag
-    instead to check for an active chip reset. Once the port is online during
-    a chip reset phase, we are good to process the commands.
-  - Clean up qla2x00_restart_isp to not set the online flag and process ATIO
-    as it is unnecessary. During a chip reset, interrupts are enabled only
-    after setting the online flag to 1, so ATIO's won't be missed and hence
-    no need to process ATIO's after setting the online flag.
-
-Signed-off-by: Dilip Kumar Uppugandla <dilip@purestorage.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c   |   34 ++++++++++++++++++++--------------
- drivers/scsi/qla2xxx/qla_target.c |   34 +++++++++++++++++-----------------
- 2 files changed, 37 insertions(+), 31 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h     |   15 +++++++++
+ drivers/scsi/qla2xxx/qla_dfs.c     |   56 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_iocb.c    |    1 +
+ drivers/scsi/qla2xxx/qla_target.c  |    7 ++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |    4 ++
+ 6 files changed, 84 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 993dd25..52a8765 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3065,6 +3065,26 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 			atomic_set(&vha->loop_state, LOOP_READY);
- 			ql_dbg(ql_dbg_disc, vha, 0x2069,
- 			    "LOOP READY.\n");
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index e8b38db..4d4d784 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -60,7 +60,7 @@
+  * |                              |                    | 0xb13c-0xb140  |
+  * |                              |                    | 0xb149		|
+  * | MultiQ                       |       0xc00c       |		|
+- * | Misc                         |       0xd300       | 0xd031-0xd0ff	|
++ * | Misc                         |       0xd301       | 0xd031-0xd0ff	|
+  * |                              |                    | 0xd101-0xd1fe	|
+  * |                              |                    | 0xd214-0xd2fe	|
+  * | Target Mode		  |	  0xe080       |		|
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index d31401c..f63de35 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3342,6 +3342,8 @@ struct qla_hw_data {
+ 	uint32_t	chain_offset;
+ 	struct dentry *dfs_dir;
+ 	struct dentry *dfs_fce;
++	struct dentry *dfs_tgt_counters;
 +
-+			/*
-+			 * Process any ATIO queue entries that came in
-+			 * while we weren't online.
-+			 */
-+			if (qla_tgt_mode_enabled(vha)) {
-+				if (IS_QLA27XX(ha) || IS_QLA83XX(ha)) {
-+					spin_lock_irqsave(&ha->tgt.atio_lock,
-+					    flags);
-+					qlt_24xx_process_atio_queue(vha, 0);
-+					spin_unlock_irqrestore(
-+					    &ha->tgt.atio_lock, flags);
-+				} else {
-+					spin_lock_irqsave(&ha->hardware_lock,
-+					    flags);
-+					qlt_24xx_process_atio_queue(vha, 1);
-+					spin_unlock_irqrestore(
-+					    &ha->hardware_lock, flags);
-+				}
-+			}
- 		}
+ 	dma_addr_t	fce_dma;
+ 	void		*fce;
+ 	uint32_t	fce_bufs;
+@@ -3499,6 +3501,18 @@ struct qla_hw_data {
+ 	int	allow_cna_fw_dump;
+ };
+ 
++struct qla_tgt_counters {
++	uint64_t qla_core_sbt_cmd;
++	uint64_t core_qla_que_buf;
++	uint64_t qla_core_ret_ctio;
++	uint64_t core_qla_snd_status;
++	uint64_t qla_core_ret_sta_ctio;
++	uint64_t core_qla_free_cmd;
++	uint64_t num_q_full_sent;
++	uint64_t num_alloc_iocb_failed;
++	uint64_t num_term_xchg_sent;
++};
++
+ /*
+  * Qlogic scsi host structure
+  */
+@@ -3651,6 +3665,7 @@ typedef struct scsi_qla_host {
+ 
+ 	atomic_t	vref_count;
+ 	struct qla8044_reset_template reset_tmplt;
++	struct qla_tgt_counters tgt_counters;
+ } scsi_qla_host_t;
+ 
+ #define SET_VP_IDX	1
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 15cf074..449541f 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -13,6 +13,48 @@ static struct dentry *qla2x00_dfs_root;
+ static atomic_t qla2x00_dfs_root_count;
+ 
+ static int
++qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
++{
++	struct scsi_qla_host *vha = s->private;
++
++	seq_puts(s, "Target Counters\n");
++	seq_printf(s, "qla_core_sbt_cmd = %lld\n",
++		vha->tgt_counters.qla_core_sbt_cmd);
++	seq_printf(s, "qla_core_ret_sta_ctio = %lld\n",
++		vha->tgt_counters.qla_core_ret_sta_ctio);
++	seq_printf(s, "qla_core_ret_ctio = %lld\n",
++		vha->tgt_counters.qla_core_ret_ctio);
++	seq_printf(s, "core_qla_que_buf = %lld\n",
++		vha->tgt_counters.core_qla_que_buf);
++	seq_printf(s, "core_qla_snd_status = %lld\n",
++		vha->tgt_counters.core_qla_snd_status);
++	seq_printf(s, "core_qla_free_cmd = %lld\n",
++		vha->tgt_counters.core_qla_free_cmd);
++	seq_printf(s, "num alloc iocb failed = %lld\n",
++		vha->tgt_counters.num_alloc_iocb_failed);
++	seq_printf(s, "num term exchange sent = %lld\n",
++		vha->tgt_counters.num_term_xchg_sent);
++	seq_printf(s, "num Q full sent = %lld\n",
++		vha->tgt_counters.num_q_full_sent);
++
++	return 0;
++}
++
++static int
++qla_dfs_tgt_counters_open(struct inode *inode, struct file *file)
++{
++	struct scsi_qla_host *vha = inode->i_private;
++	return single_open(file, qla_dfs_tgt_counters_show, vha);
++}
++
++static const struct file_operations dfs_tgt_counters_ops = {
++	.open           = qla_dfs_tgt_counters_open,
++	.read           = seq_read,
++	.llseek         = seq_lseek,
++	.release        = single_release,
++};
++
++static int
+ qla2x00_dfs_fce_show(struct seq_file *s, void *unused)
+ {
+ 	scsi_qla_host_t *vha = s->private;
+@@ -146,6 +188,14 @@ create_dir:
+ 	atomic_inc(&qla2x00_dfs_root_count);
+ 
+ create_nodes:
++	ha->dfs_tgt_counters = debugfs_create_file("tgt_counters", S_IRUSR,
++	    ha->dfs_dir, vha, &dfs_tgt_counters_ops);
++	if (!ha->dfs_tgt_counters) {
++		ql_log(ql_log_warn, vha, 0xd301,
++		    "Unable to create debugFS tgt_counters node.\n");
++		goto out;
++	}
++
+ 	ha->dfs_fce = debugfs_create_file("fce", S_IRUSR, ha->dfs_dir, vha,
+ 	    &dfs_fce_ops);
+ 	if (!ha->dfs_fce) {
+@@ -161,6 +211,12 @@ int
+ qla2x00_dfs_remove(scsi_qla_host_t *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
++
++	if (ha->dfs_tgt_counters) {
++		debugfs_remove(ha->dfs_tgt_counters);
++		ha->dfs_tgt_counters = NULL;
++	}
++
+ 	if (ha->dfs_fce) {
+ 		debugfs_remove(ha->dfs_fce);
+ 		ha->dfs_fce = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c49df34..c798234 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1868,6 +1868,7 @@ skip_cmd_array:
  	}
  
-@@ -4919,7 +4939,6 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req = ha->req_q_map[0];
- 	struct rsp_que *rsp = ha->rsp_q_map[0];
--	unsigned long flags, flags2;
- 
- 	/* If firmware needs to be loaded */
- 	if (qla2x00_isp_firmware(vha)) {
-@@ -4941,19 +4960,6 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
- 			/* Issue a marker after FW becomes ready. */
- 			qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL);
- 
--			vha->flags.online = 1;
--
--			/*
--			 * Process any ATIO queue entries that came in
--			 * while we weren't online.
--			 */
--			spin_lock_irqsave(&ha->hardware_lock, flags);
--			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
--			if (qla_tgt_mode_enabled(vha))
--				qlt_24xx_process_atio_queue(vha, 1);
--			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
--			spin_unlock_irqrestore(&ha->hardware_lock, flags);
--
- 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
- 		}
+ queuing_error:
++	vha->tgt_counters.num_alloc_iocb_failed++;
+ 	return pkt;
+ }
  
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 5a87dd4..d7fc8f9 100644
+index 75514a1..f404e48 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -229,7 +229,7 @@ static inline void qlt_decr_num_pend_cmds(struct scsi_qla_host *vha)
- 	spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
- }
+@@ -2510,6 +2510,11 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
  
--static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
-+static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 	struct atio_from_isp *atio, uint8_t ha_locked)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
++	if (xmit_type == QLA_TGT_XMIT_STATUS)
++		vha->tgt_counters.core_qla_snd_status++;
++	else
++		vha->tgt_counters.core_qla_que_buf++;
++
+ 	if (qla2x00_reset_active(vha) || cmd->reset_count != ha->chip_reset) {
+ 		/*
+ 		 * Either a chip reset is active or this request was from
+@@ -2957,6 +2962,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 			ret = 1;
+ 	}
+ 
++	vha->tgt_counters.num_term_xchg_sent++;
+ 	pkt->entry_count = 1;
+ 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
+ 
+@@ -4916,6 +4922,7 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
+ 		return -ENOMEM;
+ 	}
+ 
++	vha->tgt_counters.num_q_full_sent++;
+ 	pkt->entry_count = 1;
+ 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
+ 
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 81af294..3403428 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -284,6 +284,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+ 
+ 	WARN_ON(cmd->cmd_flags &  BIT_16);
+ 
++	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
+ 	cmd->cmd_flags |= BIT_16;
+ 	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ }
+@@ -295,6 +296,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+  */
+ static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
  {
- 	ql_dbg(ql_dbg_tgt, vha, 0xe072,
-@@ -285,7 +285,7 @@ static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
- 		break;
++	cmd->vha->tgt_counters.core_qla_free_cmd++;
+ 	cmd->cmd_in_wq = 1;
+ 	INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
+ 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
+@@ -454,6 +456,7 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ 		return -EINVAL;
  	}
  
--	return;
-+	return false;
- }
- 
- void qlt_response_pkt_all_vps(struct scsi_qla_host *vha, response_t *pkt)
-@@ -1738,15 +1738,15 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
--	if (qla2x00_reset_active(vha) || mcmd->reset_count != ha->chip_reset) {
-+	if (!vha->flags.online || mcmd->reset_count != ha->chip_reset) {
++	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
+ 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
+ 				cmd->unpacked_lun, data_length, fcp_task_attr,
+ 				data_dir, flags);
+@@ -469,6 +472,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
+ 	 */
+ 	cmd->cmd_in_wq = 0;
+ 	cmd->cmd_flags |= BIT_11;
++	cmd->vha->tgt_counters.qla_core_ret_ctio++;
+ 	if (!cmd->write_data_transferred) {
  		/*
--		 * Either a chip reset is active or this request was from
-+		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
- 		 */
- 		ql_dbg(ql_dbg_async, vha, 0xe100,
--			"RESET-TMR active/old-count/new-count = %d/%d/%d.\n",
--			qla2x00_reset_active(vha), mcmd->reset_count,
--			ha->chip_reset);
-+			"RESET-TMR online/active/old-count/new-count = %d/%d/%d/%d.\n",
-+			vha->flags.online, qla2x00_reset_active(vha),
-+			mcmd->reset_count, ha->chip_reset);
- 		ha->tgt.tgt_ops->free_mcmd(mcmd);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		return;
-@@ -2693,17 +2693,17 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	else
- 		vha->tgt_counters.core_qla_que_buf++;
- 
--	if (qla2x00_reset_active(vha) || cmd->reset_count != ha->chip_reset) {
-+	if (!vha->flags.online || cmd->reset_count != ha->chip_reset) {
- 		/*
--		 * Either a chip reset is active or this request was from
-+		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
- 		 */
- 		cmd->state = QLA_TGT_STATE_PROCESSED;
- 		qlt_abort_cmd_on_host_reset(cmd->vha, cmd);
- 		ql_dbg(ql_dbg_async, vha, 0xe101,
--			"RESET-RSP active/old-count/new-count = %d/%d/%d.\n",
--			qla2x00_reset_active(vha), cmd->reset_count,
--			ha->chip_reset);
-+			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
-+			vha->flags.online, qla2x00_reset_active(vha),
-+			cmd->reset_count, ha->chip_reset);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		return 0;
- 	}
-@@ -2834,18 +2834,18 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
--	if (qla2x00_reset_active(vha) || (cmd->reset_count != ha->chip_reset) ||
-+	if (!vha->flags.online || (cmd->reset_count != ha->chip_reset) ||
- 	    (cmd->sess && cmd->sess->deleted == QLA_SESS_DELETION_IN_PROGRESS)) {
- 		/*
--		 * Either a chip reset is active or this request was from
-+		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
- 		 */
- 		cmd->state = QLA_TGT_STATE_NEED_DATA;
- 		qlt_abort_cmd_on_host_reset(cmd->vha, cmd);
- 		ql_dbg(ql_dbg_async, vha, 0xe102,
--			"RESET-XFR active/old-count/new-count = %d/%d/%d.\n",
--			qla2x00_reset_active(vha), cmd->reset_count,
--			ha->chip_reset);
-+			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
-+			vha->flags.online, qla2x00_reset_active(vha),
-+			cmd->reset_count, ha->chip_reset);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		return 0;
- 	}
+ 		 * Check if se_cmd has already been aborted via LUN_RESET, and
 -- 
 1.7.7
