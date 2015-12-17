@@ -1,62 +1,61 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 15/17] lpfc: Delete unnecessary checks before the function
- call "mempool_destroy"
-Date: Thu, 17 Dec 2015 09:38:55 +0100
-Message-ID: <5672749F.3030801@suse.de>
-References: <5671efc6.ZwH5WdfbRkt48aQV%james.smart@avagotech.com>
+Subject: Re: [PATCH 16/17] lpfc: Use kzalloc instead of kmalloc
+Date: Thu, 17 Dec 2015 09:39:13 +0100
+Message-ID: <567274B1.9040602@suse.de>
+References: <5671efc7.97bycJ6w84wBFCRH%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50358 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50376 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751062AbbLQIi4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Dec 2015 03:38:56 -0500
-In-Reply-To: <5671efc6.ZwH5WdfbRkt48aQV%james.smart@avagotech.com>
+	id S1751256AbbLQIjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Dec 2015 03:39:15 -0500
+In-Reply-To: <5671efc7.97bycJ6w84wBFCRH%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>, linux-scsi@vger.kernel.org
 
 On 12/17/2015 12:12 AM, James Smart wrote:
 >
-> From: Markus Elfring <elfring@users.sourceforge.net>
+> From:	Punit Vara <punitvara@gmail.com>
 >
-> The mempool_destroy() function tests whether its argument is NULL
-> and then returns immediately. Thus the test around the calls is not n=
-eeded.
+> This patch is to the lpfc_els.c which resolves following warning
+> reported by coccicheck:
 >
-> This issue was detected by using the Coccinelle software.
+> WARNING: kzalloc should be used for rdp_context, instead of
+> kmalloc/memset
 >
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
 > ---
->   drivers/scsi/lpfc/lpfc_mem.c | 6 ++----
->   1 file changed, 2 insertions(+), 4 deletions(-)
+>   drivers/scsi/lpfc/lpfc_els.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_me=
-m.c
-> index 3fa6533..4fb3581 100644
-> --- a/drivers/scsi/lpfc/lpfc_mem.c
-> +++ b/drivers/scsi/lpfc/lpfc_mem.c
-> @@ -231,15 +231,13 @@ lpfc_mem_free(struct lpfc_hba *phba)
->   	if (phba->lpfc_hbq_pool)
->   		pci_pool_destroy(phba->lpfc_hbq_pool);
->   	phba->lpfc_hbq_pool =3D NULL;
-> -
-> -	if (phba->rrq_pool)
-> -		mempool_destroy(phba->rrq_pool);
-> +	mempool_destroy(phba->rrq_pool);
->   	phba->rrq_pool =3D NULL;
->
->   	/* Free NLP memory pool */
->   	mempool_destroy(phba->nlp_mem_pool);
->   	phba->nlp_mem_pool =3D NULL;
-> -	if (phba->sli_rev =3D=3D LPFC_SLI_REV4 && phba->active_rrq_pool) {
-> +	if (phba->sli_rev =3D=3D LPFC_SLI_REV4) {
->   		mempool_destroy(phba->active_rrq_pool);
->   		phba->active_rrq_pool =3D NULL;
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_el=
+s.c
+> index 273a1db..7f5abb8 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -5016,13 +5016,12 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, st=
+ruct lpfc_iocbq *cmdiocb,
+>   	if (RDP_NPORT_ID_SIZE !=3D
+>   			be32_to_cpu(rdp_req->nport_id_desc.length))
+>   		goto rjt_logerr;
+> -	rdp_context =3D kmalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL=
+);
+> +	rdp_context =3D kzalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL=
+);
+>   	if (!rdp_context) {
+>   		rjt_err =3D LSRJT_UNABLE_TPC;
+>   		goto error;
 >   	}
+>
+> -	memset(rdp_context, 0, sizeof(struct lpfc_rdp_context));
+>   	cmd =3D &cmdiocb->iocb;
+>   	rdp_context->ndlp =3D lpfc_nlp_get(ndlp);
+>   	rdp_context->ox_id =3D cmd->unsli3.rcvsli3.ox_id;
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
