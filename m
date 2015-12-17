@@ -1,410 +1,353 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 05/16] qla2xxx: Added interface to send explicit LOGO.
-Date: Thu, 17 Dec 2015 14:57:00 -0500
-Message-ID: <1450382231-4259-6-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH v2 15/16] qla2xxx: Add bulk send for atio & ctio completion paths.
+Date: Thu, 17 Dec 2015 14:57:10 -0500
+Message-ID: <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
 References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:16383 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:8323 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755737AbbLQUh6 (ORCPT
+	by vger.kernel.org with ESMTP id S1755842AbbLQUiD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Dec 2015 15:37:58 -0500
+	Thu, 17 Dec 2015 15:38:03 -0500
 In-Reply-To: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
 
-This patch adds interface to send explicit LOGO
-explicit LOGO using using ELS commands from driver.
+From: Quinn Tran <quinn.tran@qlogic.com>
 
+At high traffic, the work queue can become a bottle neck.
+Instead of putting each command on the work queue as 1 work
+element, the fix would daisy chain a list of commands that came
+from FW/interrupt under 1 work element to reduce lock contention.
+
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c   |   36 +++++++
- drivers/scsi/qla2xxx/qla_dbg.c    |    5 +-
- drivers/scsi/qla2xxx/qla_def.h    |   19 ++++-
- drivers/scsi/qla2xxx/qla_gbl.h    |    2 +
- drivers/scsi/qla2xxx/qla_inline.h |    2 +
- drivers/scsi/qla2xxx/qla_iocb.c   |  187 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_isr.c    |    6 +
- 7 files changed, 253 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h     |    3 ++
+ drivers/scsi/qla2xxx/qla_isr.c     |    3 ++
+ drivers/scsi/qla2xxx/qla_target.c  |   65 ++++++++++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_target.h  |    2 +
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   71 ++++++++++++++++++++++++++++++++++--
+ 5 files changed, 130 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 6b942d9..6992ebc 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -824,6 +824,41 @@ static struct bin_attribute sysfs_reset_attr = {
- };
- 
- static ssize_t
-+qla2x00_issue_logo(struct file *filp, struct kobject *kobj,
-+			struct bin_attribute *bin_attr,
-+			char *buf, loff_t off, size_t count)
-+{
-+	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
-+	    struct device, kobj)));
-+	int type;
-+	int rval = 0;
-+	port_id_t did;
-+
-+	type = simple_strtol(buf, NULL, 10);
-+
-+	did.b.domain = (type & 0x00ff0000) >> 16;
-+	did.b.area = (type & 0x0000ff00) >> 8;
-+	did.b.al_pa = (type & 0x000000ff);
-+
-+	ql_log(ql_log_info, vha, 0x70e3, "portid=%02x%02x%02x done\n",
-+	    did.b.domain, did.b.area, did.b.al_pa);
-+
-+	ql_log(ql_log_info, vha, 0x70e4, "%s: %d\n", __func__, type);
-+
-+	rval = qla24xx_els_dcmd_iocb(vha, ELS_DCMD_LOGO, did);
-+	return count;
-+}
-+
-+static struct bin_attribute sysfs_issue_logo_attr = {
-+	.attr = {
-+		.name = "issue_logo",
-+		.mode = S_IWUSR,
-+	},
-+	.size = 0,
-+	.write = qla2x00_issue_logo,
-+};
-+
-+static ssize_t
- qla2x00_sysfs_read_xgmac_stats(struct file *filp, struct kobject *kobj,
- 		       struct bin_attribute *bin_attr,
- 		       char *buf, loff_t off, size_t count)
-@@ -937,6 +972,7 @@ static struct sysfs_entry {
- 	{ "vpd", &sysfs_vpd_attr, 1 },
- 	{ "sfp", &sysfs_sfp_attr, 1 },
- 	{ "reset", &sysfs_reset_attr, },
-+	{ "issue_logo", &sysfs_issue_logo_attr, },
- 	{ "xgmac_stats", &sysfs_xgmac_stats_attr, 3 },
- 	{ "dcbx_tlv", &sysfs_dcbx_tlv_attr, 3 },
- 	{ NULL },
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 4d4d784..432db48 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -19,7 +19,7 @@
-  * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
-  * |                              |                    | 0x2011-0x2012, |
-  * |                              |                    | 0x2099-0x20a4  |
-- * | Queue Command and IO tracing |       0x3075       | 0x300b         |
-+ * | Queue Command and IO tracing |       0x3074       | 0x300b         |
-  * |                              |                    | 0x3027-0x3028  |
-  * |                              |                    | 0x303d-0x3041  |
-  * |                              |                    | 0x302d,0x3033  |
-@@ -27,12 +27,11 @@
-  * |                              |                    | 0x303a		|
-  * | DPC Thread                   |       0x4023       | 0x4002,0x4013  |
-  * | Async Events                 |       0x508a       | 0x502b-0x502f  |
-- * |                              |                    | 0x5047		|
-  * |                              |                    | 0x5084,0x5075	|
-  * |                              |                    | 0x503d,0x5044  |
-  * |                              |                    | 0x507b,0x505f	|
-  * | Timer Routines               |       0x6012       |                |
-- * | User Space Interactions      |       0x70e2       | 0x7018,0x702e  |
-+ * | User Space Interactions      |       0x70e65      | 0x7018,0x702e  |
-  * |				  |		       | 0x7020,0x7024  |
-  * |                              |                    | 0x7039,0x7045  |
-  * |                              |                    | 0x7073-0x7075  |
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 8e89848..83d2251 100644
+index 9872f34..7475716 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -310,6 +310,14 @@ struct srb_cmd {
- /* To identify if a srb is of T10-CRC type. @sp => srb_t pointer */
- #define IS_PROT_IO(sp)	(sp->flags & SRB_CRC_CTX_DSD_VALID)
- 
-+struct els_logo_payload {
-+	uint8_t opcode;
-+	uint8_t rsvd[3];
-+	uint8_t s_id[3];
-+	uint8_t rsvd1[1];
-+	uint8_t wwpn[WWN_SIZE];
-+};
+@@ -2937,6 +2937,9 @@ struct qlt_hw_data {
+ 	uint32_t leak_exchg_thresh_hold;
+ 	spinlock_t sess_lock;
+ 	int rspq_vector_cpuid;
 +
- /*
-  * SRB extensions.
-  */
-@@ -323,6 +331,15 @@ struct srb_iocb {
- 			uint16_t data[2];
- 		} logio;
- 		struct {
-+#define ELS_DCMD_TIMEOUT 20
-+#define ELS_DCMD_LOGO 0x5
-+			uint32_t flags;
-+			uint32_t els_cmd;
-+			struct completion comp;
-+			struct els_logo_payload *els_logo_pyld;
-+			dma_addr_t els_logo_pyld_dma;
-+		} els_logo;
-+		struct {
- 			/*
- 			 * Values for flags field below are as
- 			 * defined in tsk_mgmt_entry struct
-@@ -383,7 +400,7 @@ struct srb_iocb {
- #define SRB_FXIOCB_DCMD	10
- #define SRB_FXIOCB_BCMD	11
- #define SRB_ABT_CMD	12
--
-+#define SRB_ELS_DCMD	13
++	void *ctio_for_bulk_process;
++	void *atio_for_bulk_process;
+ 	spinlock_t atio_lock ____cacheline_aligned;
+ };
  
- typedef struct srb {
- 	atomic_t ref_count;
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index e37b4c3..a1b5384 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -44,6 +44,8 @@ extern int qla2x00_find_new_loop_id(scsi_qla_host_t *, fc_port_t *);
- extern int qla2x00_fabric_login(scsi_qla_host_t *, fc_port_t *, uint16_t *);
- extern int qla2x00_local_device_login(scsi_qla_host_t *, fc_port_t *);
- 
-+extern int qla24xx_els_dcmd_iocb(scsi_qla_host_t *, int, port_id_t);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index d4d65eb..0edf2eb 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2646,6 +2646,9 @@ process_err:
+ 		WRT_REG_DWORD(&reg->rsp_q_out[0], rsp->ring_index);
+ 	} else
+ 		WRT_REG_DWORD(rsp->rsp_q_out, rsp->ring_index);
 +
- extern void qla2x00_update_fcports(scsi_qla_host_t *);
- 
- extern int qla2x00_abort_isp(scsi_qla_host_t *);
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index fee9eb7..a6b7f15 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -258,6 +258,8 @@ qla2x00_init_timer(srb_t *sp, unsigned long tmo)
- 	if ((IS_QLAFX00(sp->fcport->vha->hw)) &&
- 	    (sp->type == SRB_FXIOCB_DCMD))
- 		init_completion(&sp->u.iocb_cmd.u.fxiocb.fxiocb_comp);
-+	if (sp->type == SRB_ELS_DCMD)
-+		init_completion(&sp->u.iocb_cmd.u.els_logo.comp);
- }
- 
- static inline int
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index c798234..b41265a 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2011,6 +2011,190 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
++	if (ha->tgt.ctio_for_bulk_process)
++		vha->hw->tgt.tgt_ops->handle_bulk(vha);
  }
  
  static void
-+qla2x00_els_dcmd_sp_free(void *ptr, void *data)
-+{
-+	struct scsi_qla_host *vha = (scsi_qla_host_t *)ptr;
-+	struct qla_hw_data *ha = vha->hw;
-+	srb_t *sp = (srb_t *)data;
-+	struct srb_iocb *elsio = &sp->u.iocb_cmd;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index da35f51..5a87dd4 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3812,12 +3812,23 @@ static void qlt_do_work(struct work_struct *work)
+ 	struct qla_tgt_cmd *cmd = container_of(work, struct qla_tgt_cmd, work);
+ 	scsi_qla_host_t *vha = cmd->vha;
+ 	unsigned long flags;
++	struct list_head h;
++	struct qla_tgt_cmd *c = NULL, *tc = NULL;
+ 
+ 	spin_lock_irqsave(&vha->cmd_list_lock, flags);
+ 	list_del(&cmd->cmd_list);
+ 	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
+ 
++	INIT_LIST_HEAD(&h);
++	if (!list_empty(&cmd->bulk_process_list))
++		list_splice_init(&cmd->bulk_process_list, &h);
 +
-+	kfree(sp->fcport);
+ 	__qlt_do_work(cmd);
 +
-+	if (elsio->u.els_logo.els_logo_pyld)
-+		dma_free_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
-+		    elsio->u.els_logo.els_logo_pyld,
-+		    elsio->u.els_logo.els_logo_pyld_dma);
-+
-+	del_timer(&elsio->timer);
-+	qla2x00_rel_sp(vha, sp);
-+}
-+
-+static void
-+qla2x00_els_dcmd_iocb_timeout(void *data)
-+{
-+	srb_t *sp = (srb_t *)data;
-+	struct srb_iocb *lio = &sp->u.iocb_cmd;
-+	fc_port_t *fcport = sp->fcport;
-+	struct scsi_qla_host *vha = fcport->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags = 0;
-+
-+	ql_dbg(ql_dbg_io, vha, 0x3069,
-+	    "%s Timeout, hdl=%x, portid=%02x%02x%02x\n",
-+	    sp->name, sp->handle, fcport->d_id.b.domain, fcport->d_id.b.area,
-+	    fcport->d_id.b.al_pa);
-+
-+	/* Abort the exchange */
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	if (ha->isp_ops->abort_command(sp)) {
-+		ql_dbg(ql_dbg_io, vha, 0x3070,
-+		    "mbx abort_command failed.\n");
-+	} else {
-+		ql_dbg(ql_dbg_io, vha, 0x3071,
-+		    "mbx abort_command success.\n");
++	list_for_each_entry_safe(c, tc, &h, bulk_process_list) {
++		list_del_init(&c->bulk_process_list);
++		c->work.func(&c->work);
 +	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	complete(&lio->u.els_logo.comp);
-+}
-+
-+static void
-+qla2x00_els_dcmd_sp_done(void *data, void *ptr, int res)
-+{
-+	srb_t *sp = (srb_t *)ptr;
-+	fc_port_t *fcport = sp->fcport;
-+	struct srb_iocb *lio = &sp->u.iocb_cmd;
-+	struct scsi_qla_host *vha = fcport->vha;
-+
-+	ql_dbg(ql_dbg_io, vha, 0x3072,
-+	    "%s hdl=%x, portid=%02x%02x%02x done\n",
-+	    sp->name, sp->handle, fcport->d_id.b.domain,
-+	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+
-+	complete(&lio->u.els_logo.comp);
-+}
-+
-+int
-+qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
-+    port_id_t remote_did)
-+{
-+	srb_t *sp;
-+	fc_port_t *fcport = NULL;
-+	struct srb_iocb *elsio = NULL;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct els_logo_payload logo_pyld;
-+	int rval = QLA_SUCCESS;
-+
-+	fcport = qla2x00_alloc_fcport(vha, GFP_KERNEL);
-+	if (!fcport) {
-+	       ql_log(ql_log_info, vha, 0x70e5, "fcport allocation failed\n");
-+	       return -ENOMEM;
-+	}
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-+	if (!sp) {
-+		kfree(fcport);
-+		ql_log(ql_log_info, vha, 0x70e6,
-+		 "SRB allocation failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	elsio = &sp->u.iocb_cmd;
-+	fcport->loop_id = 0xFFFF;
-+	fcport->d_id.b.domain = remote_did.b.domain;
-+	fcport->d_id.b.area = remote_did.b.area;
-+	fcport->d_id.b.al_pa = remote_did.b.al_pa;
-+
-+	ql_dbg(ql_dbg_io, vha, 0x3073, "portid=%02x%02x%02x done\n",
-+	    fcport->d_id.b.domain, fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+
-+	sp->type = SRB_ELS_DCMD;
-+	sp->name = "ELS_DCMD";
-+	sp->fcport = fcport;
-+	qla2x00_init_timer(sp, ELS_DCMD_TIMEOUT);
-+	elsio->timeout = qla2x00_els_dcmd_iocb_timeout;
-+	sp->done = qla2x00_els_dcmd_sp_done;
-+	sp->free = qla2x00_els_dcmd_sp_free;
-+
-+	elsio->u.els_logo.els_logo_pyld = dma_alloc_coherent(&ha->pdev->dev,
-+			    DMA_POOL_SIZE, &elsio->u.els_logo.els_logo_pyld_dma,
-+			    GFP_KERNEL);
-+
-+	if (!elsio->u.els_logo.els_logo_pyld) {
-+		sp->free(vha, sp);
-+		return QLA_FUNCTION_FAILED;
-+	}
-+
-+	memset(&logo_pyld, 0, sizeof(struct els_logo_payload));
-+
-+	elsio->u.els_logo.els_cmd = els_opcode;
-+	logo_pyld.opcode = els_opcode;
-+	logo_pyld.s_id[0] = vha->d_id.b.al_pa;
-+	logo_pyld.s_id[1] = vha->d_id.b.area;
-+	logo_pyld.s_id[2] = vha->d_id.b.domain;
-+	host_to_fcp_swap(logo_pyld.s_id, sizeof(uint32_t));
-+	memcpy(&logo_pyld.wwpn, vha->port_name, WWN_SIZE);
-+
-+	memcpy(elsio->u.els_logo.els_logo_pyld, &logo_pyld,
-+	    sizeof(struct els_logo_payload));
-+
-+	rval = qla2x00_start_sp(sp);
-+	if (rval != QLA_SUCCESS) {
-+		sp->free(vha, sp);
-+		return QLA_FUNCTION_FAILED;
-+	}
-+
-+	ql_dbg(ql_dbg_io, vha, 0x3074,
-+	    "%s LOGO sent, hdl=%x, loopid=%x, portid=%02x%02x%02x.\n",
-+	    sp->name, sp->handle, fcport->loop_id, fcport->d_id.b.domain,
-+	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+
-+	wait_for_completion(&elsio->u.els_logo.comp);
-+
-+	sp->free(vha, sp);
-+	return rval;
-+}
-+
-+static void
-+qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
-+{
-+	scsi_qla_host_t *vha = sp->fcport->vha;
-+	struct srb_iocb *elsio = &sp->u.iocb_cmd;
-+
-+	els_iocb->entry_type = ELS_IOCB_TYPE;
-+	els_iocb->entry_count = 1;
-+	els_iocb->sys_define = 0;
-+	els_iocb->entry_status = 0;
-+	els_iocb->handle = sp->handle;
-+	els_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
-+	els_iocb->tx_dsd_count = 1;
-+	els_iocb->vp_index = vha->vp_idx;
-+	els_iocb->sof_type = EST_SOFI3;
-+	els_iocb->rx_dsd_count = 0;
-+	els_iocb->opcode = elsio->u.els_logo.els_cmd;
-+
-+	els_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
-+	els_iocb->port_id[1] = sp->fcport->d_id.b.area;
-+	els_iocb->port_id[2] = sp->fcport->d_id.b.domain;
-+	els_iocb->control_flags = 0;
-+
-+	els_iocb->tx_byte_count = sizeof(struct els_logo_payload);
-+	els_iocb->tx_address[0] =
-+	    cpu_to_le32(LSD(elsio->u.els_logo.els_logo_pyld_dma));
-+	els_iocb->tx_address[1] =
-+	    cpu_to_le32(MSD(elsio->u.els_logo.els_logo_pyld_dma));
-+	els_iocb->tx_len = cpu_to_le32(sizeof(struct els_logo_payload));
-+
-+	els_iocb->rx_byte_count = 0;
-+	els_iocb->rx_address[0] = 0;
-+	els_iocb->rx_address[1] = 0;
-+	els_iocb->rx_len = 0;
-+
-+	sp->fcport->vha->qla_stats.control_requests++;
-+}
-+
-+static void
- qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- {
- 	struct fc_bsg_job *bsg_job = sp->u.bsg_job;
-@@ -2624,6 +2808,9 @@ qla2x00_start_sp(srb_t *sp)
- 			qlafx00_abort_iocb(sp, pkt) :
- 			qla24xx_abort_iocb(sp, pkt);
- 		break;
-+	case SRB_ELS_DCMD:
-+		qla24xx_els_logo_iocb(sp, pkt);
-+		break;
- 	default:
- 		break;
+ }
+ 
+ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
+@@ -3849,6 +3860,7 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
+ 	cmd->jiffies_at_alloc = get_jiffies_64();
+ 
+ 	cmd->reset_count = vha->hw->chip_reset;
++	INIT_LIST_HEAD(&cmd->bulk_process_list);
+ 
+ 	return cmd;
+ }
+@@ -3908,6 +3920,7 @@ static void qlt_create_sess_from_atio(struct work_struct *work)
+ 		kfree(op);
+ 		return;
  	}
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index ccf6a7f..ea7e8e8 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1418,6 +1418,12 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	case SRB_CT_CMD:
- 		type = "ct pass-through";
- 		break;
-+	case SRB_ELS_DCMD:
-+		type = "Driver ELS logo";
-+		ql_dbg(ql_dbg_user, vha, 0x5047,
-+		    "Completing %s: (%p) type=%d.\n", type, sp, sp->type);
-+		sp->done(vha, sp, 0);
-+		return;
- 	default:
- 		ql_dbg(ql_dbg_user, vha, 0x503e,
- 		    "Unrecognized SRB: (%p) type=%d.\n", sp, sp->type);
++
+ 	/*
+ 	 * __qlt_do_work() will call ha->tgt.tgt_ops->put_sess() to release
+ 	 * the extra reference taken above by qlt_make_local_sess()
+@@ -3924,6 +3937,40 @@ out_term:
+ 
+ }
+ 
++static void qlt_add_cmd_to_bulk_list(struct qla_tgt_cmd *cmd)
++{
++	struct qla_hw_data *ha = cmd->tgt->ha;
++	struct qla_tgt_cmd *hc = (struct qla_tgt_cmd *)
++		ha->tgt.atio_for_bulk_process;
++
++	if (IS_QLA27XX(ha) || IS_QLA83XX(ha))
++		/* We are running under atio_lock protection here. */
++		assert_spin_locked(&ha->tgt.atio_lock);
++	else
++		assert_spin_locked(&ha->hardware_lock);
++
++	if (hc)
++		list_add_tail(&cmd->bulk_process_list, &hc->bulk_process_list);
++	else
++		ha->tgt.atio_for_bulk_process = (void *)cmd;
++}
++
++static void qlt_send_atio_bulk(struct qla_hw_data *ha)
++{
++	struct qla_tgt_cmd *cmd =
++		(struct qla_tgt_cmd *)ha->tgt.atio_for_bulk_process;
++
++	if (IS_QLA27XX(ha) || IS_QLA83XX(ha))
++		/*We are running under atio_lock protection here */
++		assert_spin_locked(&ha->tgt.atio_lock);
++	else
++		assert_spin_locked(&ha->hardware_lock);
++
++	ha->tgt.atio_for_bulk_process = NULL;
++	queue_work_on(smp_processor_id(), qla_tgt_wq, &cmd->work);
++}
++
++
+ /* ha->hardware_lock supposed to be held on entry */
+ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+ 	struct atio_from_isp *atio)
+@@ -3989,17 +4036,11 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+ 	spin_unlock(&vha->cmd_list_lock);
+ 
+ 	INIT_WORK(&cmd->work, qlt_do_work);
+-	if (ha->msix_count) {
++	if (ha->msix_count)
+ 		cmd->se_cmd.cpuid = ha->tgt.rspq_vector_cpuid;
+-		if (cmd->atio.u.isp24.fcp_cmnd.rddata)
+-			queue_work_on(smp_processor_id(), qla_tgt_wq,
+-			    &cmd->work);
+-		else
+-			queue_work_on(cmd->se_cmd.cpuid, qla_tgt_wq,
+-			    &cmd->work);
+-	} else {
+-		queue_work(qla_tgt_wq, &cmd->work);
+-	}
++
++	qlt_add_cmd_to_bulk_list(cmd);
++
+ 	return 0;
+ 
+ }
+@@ -5234,6 +5275,7 @@ qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
+ 
+ 	qlt_incr_num_pend_cmds(vha);
+ 	INIT_LIST_HEAD(&cmd->cmd_list);
++	INIT_LIST_HEAD(&cmd->bulk_process_list);
+ 	memcpy(&cmd->atio, atio, sizeof(*atio));
+ 
+ 	cmd->tgt = vha->vha_tgt.qla_tgt;
+@@ -6442,6 +6484,9 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha, uint8_t ha_locked)
+ 	/* Adjust ring index */
+ 	WRT_REG_DWORD(ISP_ATIO_Q_OUT(vha), ha->tgt.atio_ring_index);
+ 	RD_REG_DWORD_RELAXED(ISP_ATIO_Q_OUT(vha));
++
++	if (ha->tgt.atio_for_bulk_process)
++		qlt_send_atio_bulk(ha);
+ }
+ 
+ void
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 71b2865..030e129 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -740,6 +740,7 @@ struct qla_tgt_func_tmpl {
+ 	void (*clear_nacl_from_fcport_map)(struct qla_tgt_sess *);
+ 	void (*put_sess)(struct qla_tgt_sess *);
+ 	void (*shutdown_sess)(struct qla_tgt_sess *);
++	void (*handle_bulk)(struct scsi_qla_host *);
+ };
+ 
+ int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
+@@ -976,6 +977,7 @@ struct qla_tgt_cmd {
+ 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
+ 	struct scsi_qla_host *vha;
+ 	struct list_head cmd_list;
++	struct list_head bulk_process_list;
+ 
+ 	struct atio_from_isp atio;
+ 	/* t10dif */
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index faf0a12..8121126 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -279,6 +279,12 @@ static void tcm_qla2xxx_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
+ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+ {
+ 	struct qla_tgt_cmd *cmd = container_of(work, struct qla_tgt_cmd, work);
++	struct list_head h;
++	struct qla_tgt_cmd *c = NULL, *tc = NULL;
++
++	INIT_LIST_HEAD(&h);
++	if (!list_empty(&cmd->bulk_process_list))
++		list_splice_init(&cmd->bulk_process_list, &h);
+ 
+ 	cmd->cmd_in_wq = 0;
+ 
+@@ -287,6 +293,45 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+ 	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
+ 	cmd->cmd_flags |= BIT_16;
+ 	transport_generic_free_cmd(&cmd->se_cmd, 0);
++
++	list_for_each_entry_safe(c, tc, &h, bulk_process_list) {
++		list_del_init(&c->bulk_process_list);
++		c->work.func(&c->work);
++	}
++}
++
++static void tcm_qla2xxx_add_cmd_to_bulk_list(struct qla_tgt_cmd *cmd)
++{
++	struct qla_hw_data *ha = cmd->tgt->ha;
++	struct qla_tgt_cmd *hc;
++	unsigned long flags;
++
++	/* borrowing q_full_lock.  it's not being used very often. */
++	spin_lock_irqsave(&ha->tgt.q_full_lock, flags);
++	hc = (struct qla_tgt_cmd *)ha->tgt.ctio_for_bulk_process;
++
++	if (hc)
++		list_add_tail(&cmd->bulk_process_list, &hc->bulk_process_list);
++	else
++		ha->tgt.ctio_for_bulk_process = (void *)cmd;
++	spin_unlock_irqrestore(&ha->tgt.q_full_lock, flags);
++}
++
++static void tcm_qla2xxx_handle_bulk(struct scsi_qla_host *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct qla_tgt_cmd *cmd;
++	unsigned long flags;
++
++	/* borrowing q_full_lock.  it's not being used very often. */
++	spin_lock_irqsave(&ha->tgt.q_full_lock, flags);
++	cmd = (struct qla_tgt_cmd *)ha->tgt.ctio_for_bulk_process;
++	ha->tgt.ctio_for_bulk_process = NULL;
++	spin_unlock_irqrestore(&ha->tgt.q_full_lock, flags);
++
++	if (cmd)
++		queue_work_on(smp_processor_id(), tcm_qla2xxx_free_wq,
++		    &cmd->work);
+ }
+ 
+ /*
+@@ -465,6 +510,12 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
+ {
+ 	struct qla_tgt_cmd *cmd = container_of(work, struct qla_tgt_cmd, work);
++	struct qla_tgt_cmd *c = NULL, *tc = NULL;
++	struct list_head h;
++
++	INIT_LIST_HEAD(&h);
++	if (!list_empty(&cmd->bulk_process_list))
++		list_splice_init(&cmd->bulk_process_list, &h);
+ 
+ 	/*
+ 	 * Ensure that the complete FCP WRITE payload has been received.
+@@ -480,7 +531,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
+ 		 */
+ 		if (cmd->se_cmd.transport_state & CMD_T_ABORTED) {
+ 			complete(&cmd->se_cmd.t_transport_stop_comp);
+-			return;
++			goto process_bulk;
+ 		}
+ 
+ 		if (cmd->se_cmd.pi_err)
+@@ -490,10 +541,18 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
+ 			transport_generic_request_failure(&cmd->se_cmd,
+ 				TCM_CHECK_CONDITION_ABORT_CMD);
+ 
+-		return;
++		goto process_bulk;
+ 	}
+ 
+-	return target_execute_cmd(&cmd->se_cmd);
++	target_execute_cmd(&cmd->se_cmd);
++
++process_bulk:
++	list_for_each_entry_safe(c, tc, &h, bulk_process_list) {
++		list_del_init(&c->bulk_process_list);
++		c->work.func(&c->work);
++	}
++
++	return;
+ }
+ 
+ /*
+@@ -504,7 +563,7 @@ static void tcm_qla2xxx_handle_data(struct qla_tgt_cmd *cmd)
+ 	cmd->cmd_flags |= BIT_10;
+ 	cmd->cmd_in_wq = 1;
+ 	INIT_WORK(&cmd->work, tcm_qla2xxx_handle_data_work);
+-	queue_work_on(smp_processor_id(), tcm_qla2xxx_free_wq, &cmd->work);
++	tcm_qla2xxx_add_cmd_to_bulk_list(cmd);
+ }
+ 
+ static void tcm_qla2xxx_handle_dif_work(struct work_struct *work)
+@@ -566,6 +625,7 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
+ 				se_cmd->scsi_status);
+ }
+ 
++
+ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
+ {
+ 	struct qla_tgt_cmd *cmd = container_of(se_cmd,
+@@ -641,7 +701,9 @@ static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
+ {
+ 	struct qla_tgt_cmd *cmd = container_of(se_cmd,
+ 				struct qla_tgt_cmd, se_cmd);
++	struct scsi_qla_host *vha = cmd->vha;
+ 	qlt_abort_cmd(cmd);
++	tcm_qla2xxx_handle_bulk(vha);
+ }
+ 
+ static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *,
+@@ -1510,6 +1572,7 @@ static struct qla_tgt_func_tmpl tcm_qla2xxx_template = {
+ 	.clear_nacl_from_fcport_map = tcm_qla2xxx_clear_nacl_from_fcport_map,
+ 	.put_sess		= tcm_qla2xxx_put_sess,
+ 	.shutdown_sess		= tcm_qla2xxx_shutdown_sess,
++	.handle_bulk	= tcm_qla2xxx_handle_bulk,
+ };
+ 
+ static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
 -- 
 1.7.7
 
