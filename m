@@ -1,31 +1,51 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 16/17] lpfc: Use kzalloc instead of kmalloc
-Date: Wed, 16 Dec 2015 18:04:28 -0600
-Message-ID: <7D037592-6F10-44FE-8400-7E371D5089A6@linux.vnet.ibm.com>
-References: <5671efc7.97bycJ6w84wBFCRH%james.smart@avagotech.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Note to driver maintainers
+Date: Wed, 16 Dec 2015 19:32:28 -0500
+Message-ID: <yq1h9jhud7n.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e11.ny.us.ibm.com ([129.33.205.201]:50351 "EHLO
-	e11.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbLQAEg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 19:04:36 -0500
-Received: from localhost
-	by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 16 Dec 2015 19:04:36 -0500
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tBH04Xkq29950074
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 17:04:33 -0700
-Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tBH04V3R032703
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2015 17:04:32 -0700
-In-Reply-To: <5671efc7.97bycJ6w84wBFCRH%james.smart@avagotech.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23746 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934255AbbLQAcb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2015 19:32:31 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id tBH0WUh3031570
+	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Dec 2015 00:32:30 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+	by aserv0021.oracle.com (8.13.8/8.13.8) with ESMTP id tBH0WU7u007111
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Dec 2015 00:32:30 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+	by aserv0122.oracle.com (8.13.8/8.13.8) with ESMTP id tBH0WUkN015366
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Dec 2015 00:32:30 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
+When somebody posts a patch to a piece of code you maintain it is your
+responsibility to respond to it. That's what being a maintainer means.
+
+There are a ton of trivial/Coccinelle fixes posted that nobody has done
+anything about. I'm not talking about spelling fixes or whitespace
+churn. Many of these patches look valid to me. There are also a few
+non-trivial patches that have gotten no attention from the relevant
+driver maintainers.
+
+People such as Hannes, Johannes, Tomas and Christoph are reviewing
+*your* submissions, providing the mandatory impartial review tag that
+permits your patches to go into the main tree.
+
+You can not rely on these people also taking on the burden of reviewing
+third party changes to your code. That really is your job as the driver
+maintainer. Every patch that touches code that you own demands a
+response from you. Every. Single. Patch.
+
+We review your changes. You have to review everybody else's.
+
+Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
