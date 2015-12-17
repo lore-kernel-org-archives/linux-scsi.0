@@ -1,26 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/17] lpfc: Fix RDP Speed reporting.
-Date: Thu, 17 Dec 2015 17:04:27 +0100
-Message-ID: <10690646.WCzAV9QvWj@lennox.hannes-reinecke.de>
-References: <5671efbf.h8YAdmlPeIEJ3AcO%james.smart@avagotech.com> <5672716B.70203@suse.de> <5672D922.2050108@avagotech.com>
+Subject: Re: [PATCH 11/17] lpfc: Use new FDMI speed definitions for 10G, 25G and 40G FCoE.
+Date: Thu, 17 Dec 2015 17:05:12 +0100
+Message-ID: <2071827.nYQf9Y0n6W@lennox.hannes-reinecke.de>
+References: <5671efc2.Tcr1T+jB8naNKSFQ%james.smart@avagotech.com> <56727313.6010301@suse.de> <5672DCC9.4060901@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52010 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52079 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755010AbbLQQE3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2015 11:04:29 -0500
-In-Reply-To: <5672D922.2050108@avagotech.com>
+	id S1755398AbbLQQFO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2015 11:05:14 -0500
+In-Reply-To: <5672DCC9.4060901@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thursday, December 17, 2015 07:47:46 AM James Smart wrote:
-> See patch 11/17 for the 32G additions
+On Thursday, December 17, 2015 08:03:21 AM James Smart wrote:
+> On 12/17/2015 12:32 AM, Hannes Reinecke wrote:
+> > Ah. So here is the missing 32G speed.
+> >=20
+> > Should be moved into the 'Fix RDP Speed reporting' patch, no?
 >=20
-Right.
+> which of these 2 patches is not that meaningful.
+>=20
+Yeah, and not that big deal.
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
