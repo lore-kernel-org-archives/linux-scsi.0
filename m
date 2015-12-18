@@ -1,391 +1,961 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: [PATCH 01/15] megaraid_sas: Do not allow PCI access during OCR
-Date: Fri, 18 Dec 2015 18:56:54 +0530
-Message-ID: <1450445228-26571-2-git-send-email-Sumit.Saxena@avagotech.com>
+Subject: [PATCH 04/15] megaraid_sas: Task management support
+Date: Fri, 18 Dec 2015 18:56:57 +0530
+Message-ID: <1450445228-26571-5-git-send-email-Sumit.Saxena@avagotech.com>
 References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:32889 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbbLRN1x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2015 08:27:53 -0500
-Received: by mail-pf0-f177.google.com with SMTP id n128so31512125pfn.0
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Dec 2015 05:27:53 -0800 (PST)
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33470 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932270AbbLRN2G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2015 08:28:06 -0500
+Received: by mail-pa0-f53.google.com with SMTP id ur14so60621842pab.0
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Dec 2015 05:28:05 -0800 (PST)
 In-Reply-To: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-This patch will do synhronization between OCR function and AEN function using "reset_mutex" lock.
-reset_mutex will be acquire only in first half of the AEN function which issue DCMD. Second half
-of the function calls SCSI API (scsi_add_device/scsi_remove_device) should be out of reset_mutex
-to avoid deadlock between scsi_eh thread and Driver.
+This patch will add task management(TM) support for SCSI commands in megaraid_sas driver.
+Added TM functions are below-
+1)Task abort
+2)Target reset
 
-During chip reset(inside OCR function), there should not be any PCI access and AEN function
-(which is called in delayed context) may be firirng DCMDs(doing PCI writes) when chip reset is
-happening in parallel which will cause FW fault. This patch will solve the problem by making
-AEN thread and OCR thread mutually exclusive.
+Below are few key points-
+
+1. Currently, megaraid_sas driver performs Controller reset when any IO times out.
+With these TM support added in driver, in case of IO timeout task abort and target
+reset will be tried to recover timed out IO. If both fails to recover IO, then
+Controller reset will be called. If the TM request times out, fail the TM and escalate
+to the next level(Controller reset).
+
+2. mr_device_priv_data will be allocated for all generation of controller, but is_tm_capable
+flag will never be set for older controllers (prior to Invader series) as firmware support is not
+available for T.M functionality.
+
+3. whichever firmware is capable for TM will set is_tm_capable flag in firmware API, which will be used
+by Driver to pass TM frame to firmware or return back to OS as Failure to escalate next level of Error handling.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |    2 +
- drivers/scsi/megaraid/megaraid_sas_base.c |  254 +++++++++--------------------
- 2 files changed, 82 insertions(+), 174 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |   13 +
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   63 +++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  479 ++++++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  117 +++++++-
+ 4 files changed, 653 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index c0f7c8c..ef4ff03 100644
+index dcc6ff8..0fcb156 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1083,6 +1083,8 @@ struct megasas_ctrl_info {
+@@ -1520,6 +1520,15 @@ union megasas_frame {
+ 	u8 raw_bytes[64];
+ };
  
- #define VD_EXT_DEBUG 0
++/**
++ * struct MR_PRIV_DEVICE - sdev private hostdata
++ * @is_tm_capable: firmware managed tm_capable flag
++ * @tm_busy: TM request is in progress
++ */
++struct MR_PRIV_DEVICE {
++	bool is_tm_capable;
++	bool tm_busy;
++};
+ struct megasas_cmd;
  
-+#define SCAN_PD_CHANNEL	0x1
-+#define SCAN_VD_CHANNEL	0x2
+ union megasas_evt_class_locale {
+@@ -2073,4 +2082,8 @@ void megasas_return_mfi_mpt_pthr(struct megasas_instance *instance,
+ int megasas_cmd_type(struct scsi_cmnd *cmd);
+ void megasas_setup_jbod_map(struct megasas_instance *instance);
  
- enum MR_SCSI_CMD_TYPE {
- 	READ_WRITE_LDIO = 0,
++void megasas_update_sdev_properties(struct scsi_device *sdev);
++int megasas_reset_fusion(struct Scsi_Host *shost, int reason);
++int megasas_task_abort_fusion(struct scsi_cmnd *scmd);
++int megasas_reset_target_fusion(struct scsi_cmnd *scmd);
+ #endif				/*LSI_MEGARAID_SAS_H */
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 97a1c1c..9650487 100644
+index 380c627..c1dc23c 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5476,7 +5476,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	spin_lock_init(&instance->hba_lock);
- 	spin_lock_init(&instance->completion_lock);
+@@ -189,7 +189,6 @@ int
+ wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 	int seconds);
+ void megasas_reset_reply_desc(struct megasas_instance *instance);
+-int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout);
+ void megasas_fusion_ocr_wq(struct work_struct *work);
+ static int megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
+ 					 int initial);
+@@ -1645,6 +1644,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ {
+ 	struct megasas_instance *instance;
+ 	unsigned long flags;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
  
--	mutex_init(&instance->aen_mutex);
- 	mutex_init(&instance->reset_mutex);
- 
- 	/*
-@@ -6442,10 +6441,10 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
+ 	instance = (struct megasas_instance *)
+ 	    scmd->device->host->hostdata;
+@@ -1681,11 +1681,24 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		return 0;
  	}
+ 
++	mr_device_priv_data = scmd->device->hostdata;
++	if (!mr_device_priv_data) {
++		spin_unlock_irqrestore(&instance->hba_lock, flags);
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		return 0;
++	}
++
+ 	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
+ 		spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
++	if (mr_device_priv_data->tm_busy) {
++		spin_unlock_irqrestore(&instance->hba_lock, flags);
++		return SCSI_MLQUEUE_DEVICE_BUSY;
++	}
++
  	spin_unlock_irqrestore(&instance->hba_lock, flags);
  
--	mutex_lock(&instance->aen_mutex);
-+	mutex_lock(&instance->reset_mutex);
- 	error = megasas_register_aen(instance, aen.seq_num,
- 				     aen.class_locale_word);
--	mutex_unlock(&instance->aen_mutex);
-+	mutex_unlock(&instance->reset_mutex);
- 	return error;
+ 	scmd->result = 0;
+@@ -1736,27 +1749,39 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
  }
  
-@@ -6647,6 +6646,7 @@ megasas_aen_polling(struct work_struct *work)
- 	int     i, j, doscan = 0;
- 	u32 seq_num, wait_time = MEGASAS_RESET_WAIT_TIME;
- 	int error;
-+	u8  dcmd_ret = 0;
+ /*
+-* megasas_set_dma_alignment - Set DMA alignment for PI enabled VD
++* megasas_update_sdev_properties - Update sdev structure based on controller's FW capabilities
+ *
+ * @sdev: OS provided scsi device
+ *
+ * Returns void
+ */
+-static void megasas_set_dma_alignment(struct scsi_device *sdev)
++void megasas_update_sdev_properties(struct scsi_device *sdev)
+ {
++	u16 pd_index = 0;
+ 	u32 device_id, ld;
+ 	struct megasas_instance *instance;
+ 	struct fusion_context *fusion;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
++	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
+ 	struct MR_LD_RAID *raid;
+ 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
  
- 	if (!instance) {
- 		printk(KERN_ERR "invalid instance!\n");
-@@ -6659,16 +6659,7 @@ megasas_aen_polling(struct work_struct *work)
- 		wait_time = MEGASAS_ROUTINE_WAIT_TIME_VF;
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	fusion = instance->ctrl_context;
++	mr_device_priv_data = sdev->hostdata;
  
- 	/* Don't run the event workqueue thread if OCR is running */
--	for (i = 0; i < wait_time; i++) {
--		if (instance->adprecovery == MEGASAS_HBA_OPERATIONAL)
--			break;
--		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
--			dev_notice(&instance->pdev->dev, "%s waiting for "
--			       "controller reset to finish for scsi%d\n",
--			       __func__, instance->host->host_no);
--		}
--		msleep(1000);
--	}
-+	mutex_lock(&instance->reset_mutex);
- 
- 	instance->ev = NULL;
- 	host = instance->host;
-@@ -6676,212 +6667,127 @@ megasas_aen_polling(struct work_struct *work)
- 		megasas_decode_evt(instance);
- 
- 		switch (le32_to_cpu(instance->evt_detail->code)) {
--		case MR_EVT_PD_INSERTED:
--			if (megasas_get_pd_list(instance) == 0) {
--			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
--				for (j = 0;
--				j < MEGASAS_MAX_DEV_PER_CHANNEL;
--				j++) {
--
--				pd_index =
--				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--				sdev1 = scsi_device_lookup(host, i, j, 0);
--
--				if (instance->pd_list[pd_index].driveState
--						== MR_PD_STATE_SYSTEM) {
--					if (!sdev1)
--						scsi_add_device(host, i, j, 0);
--
--					if (sdev1)
--						scsi_device_put(sdev1);
--					}
--				}
--			}
--			}
--			doscan = 0;
--			break;
- 
-+		case MR_EVT_PD_INSERTED:
- 		case MR_EVT_PD_REMOVED:
--			if (megasas_get_pd_list(instance) == 0) {
--			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
--				for (j = 0;
--				j < MEGASAS_MAX_DEV_PER_CHANNEL;
--				j++) {
--
--				pd_index =
--				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--				sdev1 = scsi_device_lookup(host, i, j, 0);
--
--				if (instance->pd_list[pd_index].driveState
--					== MR_PD_STATE_SYSTEM) {
--					if (sdev1)
--						scsi_device_put(sdev1);
--				} else {
--					if (sdev1) {
--						scsi_remove_device(sdev1);
--						scsi_device_put(sdev1);
--					}
--				}
--				}
--			}
--			}
--			doscan = 0;
-+			dcmd_ret = megasas_get_pd_list(instance);
-+			if (dcmd_ret == 0)
-+				doscan = SCAN_PD_CHANNEL;
- 			break;
- 
- 		case MR_EVT_LD_OFFLINE:
- 		case MR_EVT_CFG_CLEARED:
- 		case MR_EVT_LD_DELETED:
--			if (!instance->requestorId ||
--			    megasas_get_ld_vf_affiliation(instance, 0)) {
--				if (megasas_ld_list_query(instance,
--							  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
--					megasas_get_ld_list(instance);
--				for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
--					for (j = 0;
--					     j < MEGASAS_MAX_DEV_PER_CHANNEL;
--					     j++) {
--
--						ld_index =
--							(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--						sdev1 = scsi_device_lookup(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--
--						if (instance->ld_ids[ld_index]
--						    != 0xff) {
--							if (sdev1)
--								scsi_device_put(sdev1);
--						} else {
--							if (sdev1) {
--								scsi_remove_device(sdev1);
--								scsi_device_put(sdev1);
--							}
--						}
--					}
--				}
--				doscan = 0;
--			}
--			break;
- 		case MR_EVT_LD_CREATED:
- 			if (!instance->requestorId ||
--			    megasas_get_ld_vf_affiliation(instance, 0)) {
--				if (megasas_ld_list_query(instance,
--							  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
--					megasas_get_ld_list(instance);
--				for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
--					for (j = 0;
--					     j < MEGASAS_MAX_DEV_PER_CHANNEL;
--					     j++) {
--						ld_index =
--							(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--						sdev1 = scsi_device_lookup(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--
--						if (instance->ld_ids[ld_index]
--						    != 0xff) {
--							if (!sdev1)
--								scsi_add_device(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--						}
--						if (sdev1)
--							scsi_device_put(sdev1);
--					}
--				}
--				doscan = 0;
--			}
-+				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
-+				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
-+
-+			if (dcmd_ret == 0)
-+				doscan = SCAN_VD_CHANNEL;
-+
- 			break;
-+
- 		case MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED:
- 		case MR_EVT_FOREIGN_CFG_IMPORTED:
- 		case MR_EVT_LD_STATE_CHANGE:
--			doscan = 1;
-+			dcmd_ret = megasas_get_pd_list(instance);
-+
-+			if (dcmd_ret != 0)
-+				break;
-+
-+			if (!instance->requestorId ||
-+				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
-+				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
-+
-+			if (dcmd_ret != 0)
-+				break;
-+
-+			doscan = SCAN_VD_CHANNEL | SCAN_PD_CHANNEL;
-+			dev_info(&instance->pdev->dev, "scanning for scsi%d...\n",
-+				instance->host->host_no);
- 			break;
-+
- 		case MR_EVT_CTRL_PROP_CHANGED:
--			megasas_get_ctrl_info(instance);
--			break;
-+				dcmd_ret = megasas_get_ctrl_info(instance);
-+				break;
- 		default:
- 			doscan = 0;
- 			break;
- 		}
- 	} else {
- 		dev_err(&instance->pdev->dev, "invalid evt_detail!\n");
-+		mutex_unlock(&instance->reset_mutex);
- 		kfree(ev);
+-	if (!fusion)
++	if (!fusion || !mr_device_priv_data)
  		return;
+ 
+-	if (sdev->channel >= MEGASAS_MAX_PD_CHANNELS) {
++	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
++		instance->use_seqnum_jbod_fp) {
++		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
++			sdev->id;
++		pd_sync = (void *)fusion->pd_seq_sync
++				[(instance->pd_seq_map_id - 1) & 1];
++		mr_device_priv_data->is_tm_capable =
++			pd_sync->seq[pd_index].capability.tmCapable;
++	} else {
+ 		device_id = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL)
+ 					+ sdev->id;
+ 		local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
+@@ -1764,10 +1789,14 @@ static void megasas_set_dma_alignment(struct scsi_device *sdev)
+ 		raid = MR_LdRaidGet(ld, local_map_ptr);
+ 
+ 		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER)
+-			blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
++		blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
++
++		mr_device_priv_data->is_tm_capable =
++			raid->capability.tmCapable;
+ 	}
+ }
+ 
++
+ static int megasas_slave_configure(struct scsi_device *sdev)
+ {
+ 	u16 pd_index = 0;
+@@ -1784,7 +1813,8 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ 				return -ENXIO;
+ 		}
+ 	}
+-	megasas_set_dma_alignment(sdev);
++	megasas_update_sdev_properties(sdev);
++
+ 	/*
+ 	 * The RAID firmware may require extended timeouts.
+ 	 */
+@@ -1798,6 +1828,7 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ {
+ 	u16 pd_index = 0;
+ 	struct megasas_instance *instance ;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+@@ -1809,13 +1840,26 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 			sdev->id;
+ 		if ((instance->allow_fw_scan || instance->pd_list[pd_index].driveState ==
+ 			MR_PD_STATE_SYSTEM)) {
+-			return 0;
++			goto scan_target;
+ 		}
+ 		return -ENXIO;
+ 	}
++
++scan_target:
++	mr_device_priv_data = kzalloc(sizeof(*mr_device_priv_data),
++					GFP_KERNEL);
++	if (!mr_device_priv_data)
++		return -ENOMEM;
++	sdev->hostdata = mr_device_priv_data;
+ 	return 0;
+ }
+ 
++static void megasas_slave_destroy(struct scsi_device *sdev)
++{
++	kfree(sdev->hostdata);
++	sdev->hostdata = NULL;
++}
++
+ /*
+ * megasas_complete_outstanding_ioctls - Complete outstanding ioctls after a
+ *                                       kill adapter
+@@ -2885,6 +2929,7 @@ static struct scsi_host_template megasas_template = {
+ 	.proc_name = "megaraid_sas",
+ 	.slave_configure = megasas_slave_configure,
+ 	.slave_alloc = megasas_slave_alloc,
++	.slave_destroy = megasas_slave_destroy,
+ 	.queuecommand = megasas_queue_command,
+ 	.eh_device_reset_handler = megasas_reset_device,
+ 	.eh_bus_reset_handler = megasas_reset_bus_host,
+@@ -5434,6 +5479,8 @@ static int megasas_io_attach(struct megasas_instance *instance)
+ 	if (instance->ctrl_context) {
+ 		host->hostt->eh_device_reset_handler = NULL;
+ 		host->hostt->eh_bus_reset_handler = NULL;
++		host->hostt->eh_target_reset_handler = megasas_reset_target_fusion;
++		host->hostt->eh_abort_handler = megasas_task_abort_fusion;
  	}
  
--	if (doscan) {
--		dev_info(&instance->pdev->dev, "scanning for scsi%d...\n",
--		       instance->host->host_no);
--		if (megasas_get_pd_list(instance) == 0) {
--			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
--				for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
--					pd_index = i*MEGASAS_MAX_DEV_PER_CHANNEL + j;
--					sdev1 = scsi_device_lookup(host, i, j, 0);
--					if (instance->pd_list[pd_index].driveState ==
--					    MR_PD_STATE_SYSTEM) {
--						if (!sdev1) {
--							scsi_add_device(host, i, j, 0);
--						}
--						if (sdev1)
--							scsi_device_put(sdev1);
--					} else {
--						if (sdev1) {
--							scsi_remove_device(sdev1);
--							scsi_device_put(sdev1);
--						}
-+	mutex_unlock(&instance->reset_mutex);
+ 	/*
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 1dc4537..0b31f5a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2100,6 +2100,8 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ 	struct LD_LOAD_BALANCE_INFO *lbinfo;
+ 	int threshold_reply_count = 0;
+ 	struct scsi_cmnd *scmd_local = NULL;
++	struct MR_TASK_MANAGE_REQUEST *mr_tm_req;
++	struct MPI2_SCSI_TASK_MANAGE_REQUEST *mpi_tm_req;
+ 
+ 	fusion = instance->ctrl_context;
+ 
+@@ -2141,6 +2143,16 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ 		extStatus = scsi_io_req->RaidContext.exStatus;
+ 
+ 		switch (scsi_io_req->Function) {
++		case MPI2_FUNCTION_SCSI_TASK_MGMT:
++			mr_tm_req = (struct MR_TASK_MANAGE_REQUEST *)
++						cmd_fusion->io_request;
++			mpi_tm_req = (struct MPI2_SCSI_TASK_MANAGE_REQUEST *)
++						&mr_tm_req->TmRequest;
++			dev_dbg(&instance->pdev->dev, "TM completion:"
++				"type: 0x%x TaskMID: 0x%x\n",
++				mpi_tm_req->TaskType, mpi_tm_req->TaskMID);
++			complete(&cmd_fusion->done);
++			break;
+ 		case MPI2_FUNCTION_SCSI_IO_REQUEST:  /*Fast Path IO.*/
+ 			/* Update load balancing info */
+ 			device_id = MEGASAS_DEV_INDEX(scmd_local);
+@@ -2727,6 +2739,457 @@ void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
+ 	}
+ }
+ 
++/*
++ * megasas_track_scsiio : Track SCSI IOs outstanding to a SCSI device
++ * @instance: per adapter struct
++ * @channel: the channel assigned by the OS
++ * @id: the id assigned by the OS
++ *
++ * Returns SUCCESS if no IOs pending to SCSI device, else return FAILED
++ */
 +
-+	if (doscan & SCAN_PD_CHANNEL) {
-+		for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
-+			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
-+				pd_index = i*MEGASAS_MAX_DEV_PER_CHANNEL + j;
-+				sdev1 = scsi_device_lookup(host, i, j, 0);
-+				if (instance->pd_list[pd_index].driveState ==
-+							MR_PD_STATE_SYSTEM) {
-+					if (!sdev1)
-+						scsi_add_device(host, i, j, 0);
-+					else
-+						scsi_device_put(sdev1);
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
- 					}
- 				}
- 			}
- 		}
++static int megasas_track_scsiio(struct megasas_instance *instance,
++		int id, int channel)
++{
++	int i, found = 0;
++	struct megasas_cmd_fusion *cmd_fusion;
++	struct fusion_context *fusion;
++	fusion = instance->ctrl_context;
++
++	for (i = 0 ; i < instance->max_scsi_cmds; i++) {
++		cmd_fusion = fusion->cmd_list[i];
++		if (cmd_fusion->scmd &&
++			(cmd_fusion->scmd->device->id == id &&
++			cmd_fusion->scmd->device->channel == channel)) {
++			dev_info(&instance->pdev->dev,
++				"SCSI commands pending to target"
++				"channel %d id %d \tSMID: 0x%x\n",
++				channel, id, cmd_fusion->index);
++			scsi_print_command(cmd_fusion->scmd);
++			found = 1;
++			break;
++		}
 +	}
- 
--		if (!instance->requestorId ||
--		    megasas_get_ld_vf_affiliation(instance, 0)) {
--			if (megasas_ld_list_query(instance,
--						  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
--				megasas_get_ld_list(instance);
--			for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
--				for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL;
--				     j++) {
--					ld_index =
--						(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--					sdev1 = scsi_device_lookup(host,
--								   MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--					if (instance->ld_ids[ld_index]
--					    != 0xff) {
--						if (!sdev1)
--							scsi_add_device(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--						else
--							scsi_device_put(sdev1);
--					} else {
--						if (sdev1) {
--							scsi_remove_device(sdev1);
--							scsi_device_put(sdev1);
--						}
-+	if (doscan & SCAN_VD_CHANNEL) {
-+		for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
-+			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
-+				ld_index = (i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+				sdev1 = scsi_device_lookup(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
-+				if (instance->ld_ids[ld_index] != 0xff) {
-+					if (!sdev1)
-+						scsi_add_device(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
-+					else
-+						scsi_device_put(sdev1);
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
- 					}
- 				}
- 			}
- 		}
- 	}
- 
--	if (instance->aen_cmd != NULL) {
--		kfree(ev);
--		return ;
--	}
--
--	seq_num = le32_to_cpu(instance->evt_detail->seq_num) + 1;
-+	if (dcmd_ret == 0)
-+		seq_num = le32_to_cpu(instance->evt_detail->seq_num) + 1;
-+	else
-+		seq_num = instance->last_seq_num;
- 
- 	/* Register AEN with FW for latest sequence number plus 1 */
- 	class_locale.members.reserved = 0;
- 	class_locale.members.locale = MR_EVT_LOCALE_ALL;
- 	class_locale.members.class = MR_EVT_CLASS_DEBUG;
--	mutex_lock(&instance->aen_mutex);
 +
-+	if (instance->aen_cmd != NULL) {
-+		kfree(ev);
-+		return;
++	return found ? FAILED : SUCCESS;
++}
++
++/**
++ * megasas_tm_response_code - translation of device response code
++ * @ioc: per adapter object
++ * @mpi_reply: MPI reply returned by firmware
++ *
++ * Return nothing.
++ */
++static void
++megasas_tm_response_code(struct megasas_instance *instance,
++		struct MPI2_SCSI_TASK_MANAGE_REPLY *mpi_reply)
++{
++	char *desc;
++
++	switch (mpi_reply->ResponseCode) {
++	case MPI2_SCSITASKMGMT_RSP_TM_COMPLETE:
++		desc = "task management request completed";
++		break;
++	case MPI2_SCSITASKMGMT_RSP_INVALID_FRAME:
++		desc = "invalid frame";
++		break;
++	case MPI2_SCSITASKMGMT_RSP_TM_NOT_SUPPORTED:
++		desc = "task management request not supported";
++		break;
++	case MPI2_SCSITASKMGMT_RSP_TM_FAILED:
++		desc = "task management request failed";
++		break;
++	case MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED:
++		desc = "task management request succeeded";
++		break;
++	case MPI2_SCSITASKMGMT_RSP_TM_INVALID_LUN:
++		desc = "invalid lun";
++		break;
++	case 0xA:
++		desc = "overlapped tag attempted";
++		break;
++	case MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC:
++		desc = "task queued, however not sent to target";
++		break;
++	default:
++		desc = "unknown";
++		break;
++	}
++	dev_dbg(&instance->pdev->dev, "response_code(%01x): %s\n",
++		mpi_reply->ResponseCode, desc);
++	dev_dbg(&instance->pdev->dev,
++		"TerminationCount/DevHandle/Function/TaskType/IOCStat/IOCLoginfo"
++		" 0x%x/0x%x/0x%x/0x%x/0x%x/0x%x\n",
++		mpi_reply->TerminationCount, mpi_reply->DevHandle,
++		mpi_reply->Function, mpi_reply->TaskType,
++		mpi_reply->IOCStatus, mpi_reply->IOCLogInfo);
++}
++
++/**
++ * megasas_issue_tm - main routine for sending tm requests
++ * @instance: per adapter struct
++ * @device_handle: device handle
++ * @channel: the channel assigned by the OS
++ * @id: the id assigned by the OS
++ * @type: MPI2_SCSITASKMGMT_TASKTYPE__XXX (defined in megaraid_sas_fusion.c)
++ * @smid_task: smid assigned to the task
++ * @m_type: TM_MUTEX_ON or TM_MUTEX_OFF
++ * Context: user
++ *
++ * MegaRaid use MPT interface for Task Magement request.
++ * A generic API for sending task management requests to firmware.
++ *
++ * Return SUCCESS or FAILED.
++ */
++static int
++megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
++	uint channel, uint id, u16 smid_task, u8 type)
++{
++	struct MR_TASK_MANAGE_REQUEST *mr_request;
++	struct MPI2_SCSI_TASK_MANAGE_REQUEST *mpi_request;
++	unsigned long timeleft;
++	struct megasas_cmd_fusion *cmd_fusion;
++	struct megasas_cmd *cmd_mfi;
++	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
++	struct fusion_context *fusion;
++	struct megasas_cmd_fusion *scsi_lookup;
++	int rc;
++	struct MPI2_SCSI_TASK_MANAGE_REPLY *mpi_reply;
++
++	fusion = instance->ctrl_context;
++
++	cmd_mfi = megasas_get_cmd(instance);
++
++	if (!cmd_mfi) {
++		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++			__func__, __LINE__);
++		return -ENOMEM;
++	}
++
++	cmd_fusion = megasas_get_cmd_fusion(instance,
++			instance->max_scsi_cmds + cmd_mfi->index);
++
++	/*  Save the smid. To be used for returning the cmd */
++	cmd_mfi->context.smid = cmd_fusion->index;
++
++	req_desc = megasas_get_request_descriptor(instance,
++			(cmd_fusion->index - 1));
++	if (!req_desc) {
++		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++			__func__, __LINE__);
++		return -ENOMEM;
++	}
++
++	cmd_fusion->request_desc = req_desc;
++	req_desc->Words = 0;
++
++	scsi_lookup = fusion->cmd_list[smid_task - 1];
++
++	mr_request = (struct MR_TASK_MANAGE_REQUEST *) cmd_fusion->io_request;
++	memset(mr_request, 0, sizeof(struct MR_TASK_MANAGE_REQUEST));
++	mpi_request = (struct MPI2_SCSI_TASK_MANAGE_REQUEST *) &mr_request->TmRequest;
++	mpi_request->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
++	mpi_request->DevHandle = cpu_to_le16(device_handle);
++	mpi_request->TaskType = type;
++	mpi_request->TaskMID = cpu_to_le16(smid_task);
++	mpi_request->LUN[1] = 0;
++
++
++	req_desc = cmd_fusion->request_desc;
++	req_desc->HighPriority.SMID = cpu_to_le16(cmd_fusion->index);
++	req_desc->HighPriority.RequestFlags =
++		(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY <<
++		MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
++	req_desc->HighPriority.MSIxIndex =  0;
++	req_desc->HighPriority.LMID = 0;
++	req_desc->HighPriority.Reserved1 = 0;
++
++	if (channel < MEGASAS_MAX_PD_CHANNELS)
++		mr_request->tmReqFlags.isTMForPD = 1;
++	else
++		mr_request->tmReqFlags.isTMForLD = 1;
++
++	init_completion(&cmd_fusion->done);
++	megasas_fire_cmd_fusion(instance, req_desc);
++
++	timeleft = wait_for_completion_timeout(&cmd_fusion->done, 50 * HZ);
++
++	if (!timeleft) {
++		dev_err(&instance->pdev->dev,
++			"task mgmt type 0x%x timed out\n", type);
++		mutex_unlock(&instance->reset_mutex);
++		rc = megasas_reset_fusion(instance->host, MFI_IO_TIMEOUT_OCR);
++		mutex_lock(&instance->reset_mutex);
++		return rc;
++	}
++
++	mpi_reply = (struct MPI2_SCSI_TASK_MANAGE_REPLY *) &mr_request->TMReply;
++	megasas_tm_response_code(instance, mpi_reply);
++
++	megasas_return_cmd(instance, cmd_mfi);
++	rc = SUCCESS;
++	switch (type) {
++	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
++		if (scsi_lookup->scmd == NULL)
++			break;
++		else {
++			instance->instancet->disable_intr(instance);
++			msleep(1000);
++			megasas_complete_cmd_dpc_fusion
++					((unsigned long)instance);
++			instance->instancet->enable_intr(instance);
++			if (scsi_lookup->scmd == NULL)
++				break;
++		}
++		rc = FAILED;
++		break;
++
++	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
++		if ((channel == 0xFFFFFFFF) && (id == 0xFFFFFFFF))
++			break;
++		instance->instancet->disable_intr(instance);
++		msleep(1000);
++		megasas_complete_cmd_dpc_fusion
++				((unsigned long)instance);
++		rc = megasas_track_scsiio(instance, id, channel);
++		instance->instancet->enable_intr(instance);
++
++		break;
++	case MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET:
++	case MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK:
++		break;
++	default:
++		rc = FAILED;
++		break;
++	}
++
++	return rc;
++
++}
++
++/*
++ * megasas_fusion_smid_lookup : Look for fusion command correpspodning to SCSI
++ * @instance: per adapter struct
++ *
++ * Return Non Zero index, if SMID found in outstanding commands
++ */
++static u16 megasas_fusion_smid_lookup(struct scsi_cmnd *scmd)
++{
++	int i, ret = 0;
++	struct megasas_instance *instance;
++	struct megasas_cmd_fusion *cmd_fusion;
++	struct fusion_context *fusion;
++
++	instance = (struct megasas_instance *)scmd->device->host->hostdata;
++
++	fusion = instance->ctrl_context;
++
++	for (i = 0; i < instance->max_scsi_cmds; i++) {
++		cmd_fusion = fusion->cmd_list[i];
++		if (cmd_fusion->scmd && (cmd_fusion->scmd == scmd)) {
++			scmd_printk(KERN_NOTICE, scmd, "Abort request is for"
++				" SMID: %d\n", cmd_fusion->index);
++			ret = cmd_fusion->index;
++			break;
++		}
++	}
++
++	return ret;
++}
++
++/*
++* megasas_get_tm_devhandle - Get devhandle for TM request
++* @sdev-		     OS provided scsi device
++*
++* Returns-		     devhandle/targetID of SCSI device
++*/
++static u16 megasas_get_tm_devhandle(struct scsi_device *sdev)
++{
++	u16 pd_index = 0;
++	u32 device_id;
++	struct megasas_instance *instance;
++	struct fusion_context *fusion;
++	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
++	u16 devhandle = (u16)ULONG_MAX;
++
++	instance = (struct megasas_instance *)sdev->host->hostdata;
++	fusion = instance->ctrl_context;
++
++	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
++		if (instance->use_seqnum_jbod_fp) {
++				pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
++						sdev->id;
++				pd_sync = (void *)fusion->pd_seq_sync
++						[(instance->pd_seq_map_id - 1) & 1];
++				devhandle = pd_sync->seq[pd_index].devHandle;
++		} else
++			sdev_printk(KERN_ERR, sdev, "Firmware expose tmCapable"
++				" without JBOD MAP support from %s %d\n", __func__, __LINE__);
++	} else {
++		device_id = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL)
++				+ sdev->id;
++		devhandle = device_id;
++	}
++
++	return devhandle;
++}
++
++/*
++ * megasas_task_abort_fusion : SCSI task abort function for fusion adapters
++ * @scmd : pointer to scsi command object
++ *
++ * Return SUCCESS, if command aborted else FAILED
++ */
++
++int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
++{
++	struct megasas_instance *instance;
++	u16 smid, devhandle;
++	struct fusion_context *fusion;
++	int ret;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
++	mr_device_priv_data = scmd->device->hostdata;
++
++
++	instance = (struct megasas_instance *)scmd->device->host->hostdata;
++	fusion = instance->ctrl_context;
++
++	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++		dev_err(&instance->pdev->dev, "Controller is not OPERATIONAL,"
++		"SCSI host:%d\n", instance->host->host_no);
++		ret = FAILED;
++		return ret;
++	}
++
++	if (!mr_device_priv_data) {
++		sdev_printk(KERN_INFO, scmd->device, "device been deleted! "
++			"scmd(%p)\n", scmd);
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		ret = SUCCESS;
++		goto out;
++	}
++
++
++	if (!mr_device_priv_data->is_tm_capable) {
++		scmd->result = DID_RESET << 16;
++		ret = FAILED;
++		goto out;
 +	}
 +
 +	mutex_lock(&instance->reset_mutex);
- 	error = megasas_register_aen(instance, seq_num,
- 					class_locale.word);
--	mutex_unlock(&instance->aen_mutex);
--
- 	if (error)
--		dev_err(&instance->pdev->dev, "register aen failed error %x\n", error);
-+		dev_err(&instance->pdev->dev,
-+			"register aen failed error %x\n", error);
- 
++
++	smid = megasas_fusion_smid_lookup(scmd);
++
++	if (!smid) {
++		scmd->result = DID_RESET << 16;
++		ret = SUCCESS;
++		scmd_printk(KERN_NOTICE, scmd, "Command for which abort is"
++			" issued is not found in oustanding commands\n");
++		mutex_unlock(&instance->reset_mutex);
++		goto out;
++	}
++
++	devhandle = megasas_get_tm_devhandle(scmd->device);
++
++	if (devhandle == (u16)ULONG_MAX) {
++		scmd->result = DID_RESET << 16;
++		ret = SUCCESS;
++		sdev_printk(KERN_INFO, scmd->device,
++			"task abort issued for invalid devhandle\n");
++		mutex_unlock(&instance->reset_mutex);
++		goto out;
++	}
++	sdev_printk(KERN_INFO, scmd->device,
++		"attempting task abort! scmd(%p) tm_dev_handle 0x%x\n",
++		scmd, devhandle);
++
++	mr_device_priv_data->tm_busy = 1;
++	ret = megasas_issue_tm(instance, devhandle,
++			scmd->device->channel, scmd->device->id, smid,
++			MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK);
++	mr_device_priv_data->tm_busy = 0;
++
 +	mutex_unlock(&instance->reset_mutex);
- 	kfree(ev);
++out:
++	sdev_printk(KERN_INFO, scmd->device, "task abort: %s scmd(%p)\n",
++			((ret == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
++
++	return ret;
++}
++
++/*
++ * megasas_reset_target_fusion : target reset function for fusion adapters
++ * scmd: SCSI command pointer
++ *
++ * Returns SUCCESS if all commands associated with target aborted else FAILED
++ */
++
++int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
++{
++
++	struct megasas_instance *instance;
++	int ret = FAILED;
++	u16 devhandle;
++	struct fusion_context *fusion;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
++	mr_device_priv_data = scmd->device->hostdata;
++
++	instance = (struct megasas_instance *)scmd->device->host->hostdata;
++	fusion = instance->ctrl_context;
++
++	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++		dev_err(&instance->pdev->dev, "Controller is not OPERATIONAL,"
++		"SCSI host:%d\n", instance->host->host_no);
++		ret = FAILED;
++		return ret;
++	}
++
++	if (!mr_device_priv_data) {
++		sdev_printk(KERN_INFO, scmd->device, "device been deleted! "
++			"scmd(%p)\n", scmd);
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		ret = SUCCESS;
++		goto out;
++	}
++
++
++	if (!mr_device_priv_data->is_tm_capable) {
++		scmd->result = DID_RESET << 16;
++		ret = FAILED;
++		goto out;
++	}
++
++	mutex_lock(&instance->reset_mutex);
++	devhandle = megasas_get_tm_devhandle(scmd->device);
++
++	if (devhandle == (u16)ULONG_MAX) {
++		scmd->result = DID_RESET << 16;
++		ret = SUCCESS;
++		sdev_printk(KERN_INFO, scmd->device,
++			"target reset issued for invalid devhandle\n");
++		mutex_unlock(&instance->reset_mutex);
++		goto out;
++	}
++
++	sdev_printk(KERN_INFO, scmd->device,
++		"attempting target reset! scmd(%p) tm_dev_handle 0x%x\n",
++		scmd, devhandle);
++	mr_device_priv_data->tm_busy = 1;
++	ret = megasas_issue_tm(instance, devhandle,
++			scmd->device->channel, scmd->device->id, 0,
++			MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET);
++	mr_device_priv_data->tm_busy = 0;
++	mutex_unlock(&instance->reset_mutex);
++out:
++	scmd_printk(KERN_NOTICE, scmd, "megasas: target reset %s!!\n",
++		(ret == SUCCESS) ? "SUCCESS" : "FAILED");
++
++	return ret;
++}
++
+ /* Check for a second path that is currently UP */
+ int megasas_check_mpio_paths(struct megasas_instance *instance,
+ 	struct scsi_cmnd *scmd)
+@@ -2752,7 +3215,7 @@ out:
  }
  
+ /* Core fusion reset function */
+-int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
++int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ {
+ 	int retval = SUCCESS, i, convert = 0;
+ 	struct megasas_instance *instance;
+@@ -2761,6 +3224,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 	u32 abs_state, status_reg, reset_adapter;
+ 	u32 io_timeout_in_crash_mode = 0;
+ 	struct scsi_cmnd *scmd_local = NULL;
++	struct scsi_device *sdev;
+ 
+ 	instance = (struct megasas_instance *)shost->hostdata;
+ 	fusion = instance->ctrl_context;
+@@ -2779,8 +3243,8 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 
+ 	/* IO timeout detected, forcibly put FW in FAULT state */
+ 	if (abs_state != MFI_STATE_FAULT && instance->crash_dump_buf &&
+-		instance->crash_dump_app_support && iotimeout) {
+-		dev_info(&instance->pdev->dev, "IO timeout is detected, "
++		instance->crash_dump_app_support && reason) {
++		dev_info(&instance->pdev->dev, "IO/DCMD timeout is detected, "
+ 			"forcibly FAULT Firmware\n");
+ 		instance->adprecovery = MEGASAS_ADPRESET_SM_INFAULT;
+ 		status_reg = readl(&instance->reg_set->doorbell);
+@@ -2819,13 +3283,13 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 	msleep(1000);
+ 
+ 	/* First try waiting for commands to complete */
+-	if (megasas_wait_for_outstanding_fusion(instance, iotimeout,
++	if (megasas_wait_for_outstanding_fusion(instance, reason,
+ 						&convert)) {
+ 		instance->adprecovery = MEGASAS_ADPRESET_SM_INFAULT;
+ 		dev_warn(&instance->pdev->dev, "resetting fusion "
+ 		       "adapter scsi%d.\n", instance->host->host_no);
+ 		if (convert)
+-			iotimeout = 0;
++			reason = 0;
+ 
+ 		/* Now return commands back to the OS */
+ 		for (i = 0 ; i < instance->max_scsi_cmds; i++) {
+@@ -2859,7 +3323,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 		}
+ 
+ 		/* Let SR-IOV VF & PF sync up if there was a HB failure */
+-		if (instance->requestorId && !iotimeout) {
++		if (instance->requestorId && !reason) {
+ 			msleep(MEGASAS_OCR_SETTLE_TIME_VF);
+ 			/* Look for a late HB update after VF settle time */
+ 			if (abs_state == MFI_STATE_OPERATIONAL &&
+@@ -2954,6 +3418,9 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 
+ 			megasas_setup_jbod_map(instance);
+ 
++			shost_for_each_device(sdev, shost)
++				megasas_update_sdev_properties(sdev);
++
+ 			clear_bit(MEGASAS_FUSION_IN_RESET,
+ 				  &instance->reset_flags);
+ 			instance->instancet->enable_intr(instance);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index a9e10c4..a1f1c0b 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -176,6 +176,7 @@ enum REGION_TYPE {
+ #define MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD           (0x0100)
+ #define MPI2_SCSIIO_EEDPFLAGS_INSERT_OP             (0x0004)
+ #define MPI2_FUNCTION_SCSI_IO_REQUEST               (0x00) /* SCSI IO */
++#define MPI2_FUNCTION_SCSI_TASK_MGMT                (0x01)
+ #define MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY       (0x03)
+ #define MPI2_REQ_DESCRIPT_FLAGS_FP_IO               (0x06)
+ #define MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO                 (0x00)
+@@ -278,6 +279,100 @@ union MPI2_SCSI_IO_CDB_UNION {
+ 	struct MPI2_SGE_SIMPLE_UNION SGE;
+ };
+ 
++/****************************************************************************
++*  SCSI Task Management messages
++****************************************************************************/
++
++/*SCSI Task Management Request Message */
++struct MPI2_SCSI_TASK_MANAGE_REQUEST {
++	u16 DevHandle;		/*0x00 */
++	u8 ChainOffset;		/*0x02 */
++	u8 Function;		/*0x03 */
++	u8 Reserved1;		/*0x04 */
++	u8 TaskType;		/*0x05 */
++	u8 Reserved2;		/*0x06 */
++	u8 MsgFlags;		/*0x07 */
++	u8 VP_ID;		/*0x08 */
++	u8 VF_ID;		/*0x09 */
++	u16 Reserved3;		/*0x0A */
++	u8 LUN[8];		/*0x0C */
++	u32 Reserved4[7];	/*0x14 */
++	u16 TaskMID;		/*0x30 */
++	u16 Reserved5;		/*0x32 */
++};
++
++
++/*SCSI Task Management Reply Message */
++struct MPI2_SCSI_TASK_MANAGE_REPLY {
++	u16 DevHandle;		/*0x00 */
++	u8 MsgLength;		/*0x02 */
++	u8 Function;		/*0x03 */
++	u8 ResponseCode;	/*0x04 */
++	u8 TaskType;		/*0x05 */
++	u8 Reserved1;		/*0x06 */
++	u8 MsgFlags;		/*0x07 */
++	u8 VP_ID;		/*0x08 */
++	u8 VF_ID;		/*0x09 */
++	u16 Reserved2;		/*0x0A */
++	u16 Reserved3;		/*0x0C */
++	u16 IOCStatus;		/*0x0E */
++	u32 IOCLogInfo;		/*0x10 */
++	u32 TerminationCount;	/*0x14 */
++	u32 ResponseInfo;	/*0x18 */
++};
++
++struct MR_TM_REQUEST {
++	char request[128];
++};
++
++struct MR_TM_REPLY {
++	char reply[128];
++};
++
++/* SCSI Task Management Request Message */
++struct MR_TASK_MANAGE_REQUEST {
++	/*To be type casted to struct MPI2_SCSI_TASK_MANAGE_REQUEST */
++	struct MR_TM_REQUEST         TmRequest;
++	union {
++		struct {
++#if   defined(__BIG_ENDIAN_BITFIELD)
++			u32 reserved1:30;
++			u32 isTMForPD:1;
++			u32 isTMForLD:1;
++#else
++			u32 isTMForLD:1;
++			u32 isTMForPD:1;
++			u32 reserved1:30;
++#endif
++			u32 reserved2;
++		} tmReqFlags;
++		struct MR_TM_REPLY   TMReply;
++	};
++};
++
++/* TaskType values */
++
++#define MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK           (0x01)
++#define MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET        (0x02)
++#define MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET         (0x03)
++#define MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET   (0x05)
++#define MPI2_SCSITASKMGMT_TASKTYPE_CLEAR_TASK_SET       (0x06)
++#define MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK           (0x07)
++#define MPI2_SCSITASKMGMT_TASKTYPE_CLR_ACA              (0x08)
++#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_TASK_SET         (0x09)
++#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_ASYNC_EVENT      (0x0A)
++
++/* ResponseCode values */
++
++#define MPI2_SCSITASKMGMT_RSP_TM_COMPLETE               (0x00)
++#define MPI2_SCSITASKMGMT_RSP_INVALID_FRAME             (0x02)
++#define MPI2_SCSITASKMGMT_RSP_TM_NOT_SUPPORTED          (0x04)
++#define MPI2_SCSITASKMGMT_RSP_TM_FAILED                 (0x05)
++#define MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED              (0x08)
++#define MPI2_SCSITASKMGMT_RSP_TM_INVALID_LUN            (0x09)
++#define MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG         (0x0A)
++#define MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC          (0x80)
++
+ /*
+  * RAID SCSI IO Request Message
+  * Total SGE count will be one less than  _MPI2_SCSI_IO_REQUEST
+@@ -548,7 +643,8 @@ struct MR_SPAN_BLOCK_INFO {
+ struct MR_LD_RAID {
+ 	struct {
+ #if   defined(__BIG_ENDIAN_BITFIELD)
+-		u32     reserved4:7;
++		u32     reserved4:6;
++		u32     tmCapable:1;
+ 		u32	fpNonRWCapable:1;
+ 		u32     fpReadAcrossStripe:1;
+ 		u32     fpWriteAcrossStripe:1;
+@@ -570,7 +666,8 @@ struct MR_LD_RAID {
+ 		u32     fpWriteAcrossStripe:1;
+ 		u32     fpReadAcrossStripe:1;
+ 		u32	fpNonRWCapable:1;
+-		u32     reserved4:7;
++		u32     tmCapable:1;
++		u32     reserved4:6;
+ #endif
+ 	} capability;
+ 	__le32     reserved6;
+@@ -695,6 +792,7 @@ struct megasas_cmd_fusion {
+ 	u32 sync_cmd_idx;
+ 	u32 index;
+ 	u8 pd_r1_lb;
++	struct completion done;
+ };
+ 
+ struct LD_LOAD_BALANCE_INFO {
+@@ -808,9 +906,18 @@ struct MR_FW_RAID_MAP_EXT {
+  *  * define MR_PD_CFG_SEQ structure for system PDs
+  *   */
+ struct MR_PD_CFG_SEQ {
+-	__le16 seqNum;
+-	__le16 devHandle;
+-	u8  reserved[4];
++	u16 seqNum;
++	u16 devHandle;
++	struct {
++#if   defined(__BIG_ENDIAN_BITFIELD)
++		u8     reserved:7;
++		u8     tmCapable:1;
++#else
++		u8     tmCapable:1;
++		u8     reserved:7;
++#endif
++	} capability;
++	u8  reserved[3];
+ } __packed;
+ 
+ struct MR_PD_CFG_SEQ_NUM_SYNC {
 -- 
 1.7.1
 
