@@ -1,19 +1,19 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 12/15] be2iscsi: Fix IOPOLL implementation
-Date: Fri, 18 Dec 2015 10:04:50 +0100
-Message-ID: <5673CC32.7020204@suse.de>
+Subject: Re: [PATCH 15/15] be2iscsi: Update the driver version
+Date: Fri, 18 Dec 2015 10:08:31 +0100
+Message-ID: <5673CD0F.8010508@suse.de>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450194906-12925-13-git-send-email-jitendra.bhivare@avagotech.com>
+ <1450194906-12925-16-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39745 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39950 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966266AbbLRJEv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 04:04:51 -0500
-In-Reply-To: <1450194906-12925-13-git-send-email-jitendra.bhivare@avagotech.com>
+	id S1753517AbbLRJId (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Dec 2015 04:08:33 -0500
+In-Reply-To: <1450194906-12925-16-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
@@ -21,23 +21,27 @@ To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.or
 On 12/15/2015 04:55 PM, Jitendra Bhivare wrote:
 > From: Jitendra <jitendra.bhivare@avagotech.com>
 >
-> OS not responding when running 2 port traffic on 72 CPUs system.
->
-> be2iscsi IRQs gets affined to CPU0 when irqbalancer is disabled.
-> be_iopoll processing completions in BLOCK_IOPOLL_SOFTIRQ hogged CPU0.
->
-> 1. Use budget to exit the polling loop. beiscsi_process_cq didn't hon=
-our it.
-> 2. Rearming of EQ is done only after iopoll completes.
+> Driver version: 11.0.0.0
 >
 > Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 > ---
->   drivers/scsi/be2iscsi/be_cmds.c  |    2 +-
->   drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
->   drivers/scsi/be2iscsi/be_main.c  |   91 +++++++++++++++++++++------=
------------
->   drivers/scsi/be2iscsi/be_main.h  |    5 +-
->   4 files changed, 56 insertions(+), 44 deletions(-)
+>   drivers/scsi/be2iscsi/be_main.h |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/=
+be_main.h
+> index 41c708c..16a6fd0 100644
+> --- a/drivers/scsi/be2iscsi/be_main.h
+> +++ b/drivers/scsi/be2iscsi/be_main.h
+> @@ -36,7 +36,7 @@
+>   #include <scsi/scsi_transport_iscsi.h>
+>
+>   #define DRV_NAME		"be2iscsi"
+> -#define BUILD_STR		"10.6.0.1"
+> +#define BUILD_STR		"11.0.0.0"
+>   #define BE_NAME			"Emulex OneConnect" \
+>   				"Open-iSCSI Driver version" BUILD_STR
+>   #define DRV_DESC		BE_NAME " " "Driver"
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
