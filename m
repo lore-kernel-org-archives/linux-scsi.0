@@ -1,35 +1,43 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/1] mvsas: add SGPIO support to Marvell 94xx
-Date: Fri, 18 Dec 2015 10:19:24 +0100
-Message-ID: <5673CF9C.3070909@suse.de>
-References: <5645BEE0.3050406@gmx.at>
+Subject: Re: [PATCH 09/15] be2iscsi: Fix to handle misconfigured optics events
+Date: Fri, 18 Dec 2015 10:02:21 +0100
+Message-ID: <5673CB9D.2000005@suse.de>
+References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
+ <1450194906-12925-10-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
+Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41975 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39329 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966812AbbLRJTZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 04:19:25 -0500
-In-Reply-To: <5645BEE0.3050406@gmx.at>
+	id S1753224AbbLRJCX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Dec 2015 04:02:23 -0500
+In-Reply-To: <1450194906-12925-10-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, JBottomley@odin.com, linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On 11/13/2015 11:43 AM, Wilfried Weissmann wrote:
-> add SGPIO support to Marvell 94xx
+On 12/15/2015 04:55 PM, Jitendra Bhivare wrote:
+> From: Jitendra <jitendra.bhivare@avagotech.com>
 >
-> Signed-off-by: Wilfried Weissmann <Wilfried.Weissmann@gmx.at>
+> Log messages for misconfigured transceivers reported by FW.
+>
+> Register async events that driver handles using MCC_CREATE_EXT ioctl.
+> Errors messages for faulted/uncertified/unqualified optics are logged=
+=2E
+> Added IOCTL to get port_name to be displayed in error message.
+>
+> Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 > ---
->
->   drivers/scsi/mvsas/mv_94xx.c |  134 +++++++++++++++++++++++++++++++=
-++
->   drivers/scsi/mvsas/mv_94xx.h |   71 +++++++++++++++++
->   drivers/scsi/mvsas/mv_init.c |    2
->   drivers/scsi/mvsas/mv_sas.c  |   13 +++
->   drivers/scsi/mvsas/mv_sas.h  |    5 +
->   5 files changed, 225 insertions(+)
+>   drivers/scsi/be2iscsi/be_cmds.c |  164 ++++++++++++++++++++++++----=
+----------
+>   drivers/scsi/be2iscsi/be_cmds.h |   47 ++++++++++--
+>   drivers/scsi/be2iscsi/be_main.c |   19 +----
+>   drivers/scsi/be2iscsi/be_main.h |   10 ++-
+>   drivers/scsi/be2iscsi/be_mgmt.c |   42 ++++++++++
+>   drivers/scsi/be2iscsi/be_mgmt.h |    2 +
+>   6 files changed, 199 insertions(+), 85 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
@@ -39,9 +47,9 @@ Hannes
 --=20
 Dr. Hannes Reinecke		               zSeries & Storage
 hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
