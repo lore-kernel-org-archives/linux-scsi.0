@@ -1,433 +1,255 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V3 2/4] scsi: storvsc: Properly support Fibre Channel
- devices
-Date: Fri, 18 Dec 2015 09:49:23 +0100
-Message-ID: <5673C893.6020204@suse.de>
+Subject: Re: [PATCH V3 3/4] scsi: storvsc: Refactor the code in
+ storvsc_channel_init()
+Date: Fri, 18 Dec 2015 09:50:57 +0100
+Message-ID: <5673C8F1.8050507@suse.de>
 References: <1450038486-19211-1-git-send-email-kys@microsoft.com>
  <1450038512-19252-1-git-send-email-kys@microsoft.com>
- <1450038512-19252-2-git-send-email-kys@microsoft.com>
+ <1450038512-19252-3-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1450038512-19252-2-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:38480 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932311AbbLRIu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Dec 2015 03:50:59 -0500
+In-Reply-To: <1450038512-19252-3-git-send-email-kys@microsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
 
 On 12/13/2015 09:28 PM, K. Y. Srinivasan wrote:
-> For FC devices managed by this driver, atttach the appropriate transp=
-ort
-> template. This will allow us to create the appropriate sysfs files fo=
-r
-> these devices. With this we can publish the wwn for both the port and=
- the node.
+> The function storvsc_channel_init() repeatedly interacts with the hos=
+t to
+> extract various channel properties. Refactor this code to eliminate c=
+ode
+> repetition.
 >
 > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 > Reviewed-by: Long Li <longli@microsoft.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 > Tested-by: Alex Ng <alexng@microsoft.com>
 > ---
 > 	V2: Fixed error paths - Dan Carpenter <dan.carpenter@oracle.com>
-> 	V3: Fixed build issues reported by kbuild test robot <lkp@intel.com>
 >
->   drivers/scsi/storvsc_drv.c |  181 ++++++++++++++++++++++++++++++++-=
-----------
->   1 files changed, 134 insertions(+), 47 deletions(-)
+>   drivers/scsi/storvsc_drv.c |  126 ++++++++++++++++-----------------=
+-----------
+>   1 files changed, 46 insertions(+), 80 deletions(-)
 >
 > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 00bb4bd..220b794 100644
+> index 220b794..d6ca4f2 100644
 > --- a/drivers/scsi/storvsc_drv.c
 > +++ b/drivers/scsi/storvsc_drv.c
-> @@ -41,6 +41,7 @@
->   #include <scsi/scsi_eh.h>
->   #include <scsi/scsi_devinfo.h>
->   #include <scsi/scsi_dbg.h>
-> +#include <scsi/scsi_transport_fc.h>
->
->   /*
->    * All wire protocol details (storage protocol between the guest an=
-d the host)
-> @@ -397,6 +398,9 @@ static int storvsc_timeout =3D 180;
->
->   static int msft_blist_flags =3D BLIST_TRY_VPD_PAGES;
->
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +static struct scsi_transport_template *fc_transport_template;
-> +#endif
->
->   static void storvsc_on_channel_callback(void *context);
->
-> @@ -456,6 +460,11 @@ struct storvsc_device {
->   	/* Used for vsc/vsp channel reset process */
->   	struct storvsc_cmd_request init_request;
->   	struct storvsc_cmd_request reset_request;
-> +	/*
-> +	 * Currently active port and node names for FC devices.
-> +	 */
-> +	u64 node_name;
-> +	u64 port_name;
->   };
->
->   struct hv_host_device {
-> @@ -695,7 +704,26 @@ static void  handle_multichannel_storage(struct =
-hv_device *device, int max_chns)
->   	vmbus_are_subchannels_present(device->channel);
+> @@ -723,29 +723,17 @@ static void cache_wwn(struct storvsc_device *st=
+or_device,
+>   	}
 >   }
 >
-> -static int storvsc_channel_init(struct hv_device *device)
-> +static void cache_wwn(struct storvsc_device *stor_device,
-> +		      struct vstor_packet *vstor_packet)
-> +{
-> +	/*
-> +	 * Cache the currently active port and node ww names.
-> +	 */
-> +	if (vstor_packet->wwn_packet.primary_active) {
-> +		stor_device->node_name =3D
-> +			wwn_to_u64(vstor_packet->wwn_packet.primary_node_wwn);
-> +		stor_device->port_name =3D
-> +			wwn_to_u64(vstor_packet->wwn_packet.primary_port_wwn);
-> +	} else {
-> +		stor_device->node_name =3D
-> +			wwn_to_u64(vstor_packet->wwn_packet.secondary_node_wwn);
-> +		stor_device->port_name =3D
-> +			wwn_to_u64(vstor_packet->wwn_packet.secondary_port_wwn);
-> +	}
+> -static int storvsc_channel_init(struct hv_device *device, bool is_fc=
+)
+> +
+> +static int storvsc_execute_vstor_op(struct hv_device *device,
+> +				    struct storvsc_cmd_request *request,
+> +				    bool status_check)
+>   {
+> -	struct storvsc_device *stor_device;
+> -	struct storvsc_cmd_request *request;
+>   	struct vstor_packet *vstor_packet;
+> -	int ret, t, i;
+> -	int max_chns;
+> -	bool process_sub_channels =3D false;
+> -
+> -	stor_device =3D get_out_stor_device(device);
+> -	if (!stor_device)
+> -		return -ENODEV;
+> +	int ret, t;
+>
+> -	request =3D &stor_device->init_request;
+>   	vstor_packet =3D &request->vstor_packet;
+>
+> -	/*
+> -	 * Now, initiate the vsc/vsp initialization protocol on the open
+> -	 * channel
+> -	 */
+> -	memset(request, 0, sizeof(struct storvsc_cmd_request));
+>   	init_completion(&request->wait_event);
+> -	vstor_packet->operation =3D VSTOR_OPERATION_BEGIN_INITIALIZATION;
+>   	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
+>
+>   	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
+> @@ -761,17 +749,50 @@ static int storvsc_channel_init(struct hv_devic=
+e *device, bool is_fc)
+>   	if (t =3D=3D 0)
+>   		return -ETIMEDOUT;
+>
+> +	if (!status_check)
+> +		return ret;
+> +
+>   	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
+>   	    vstor_packet->status !=3D 0)
+>   		return -EINVAL;
+>
+> +	return ret;
 > +}
 > +
 > +static int storvsc_channel_init(struct hv_device *device, bool is_fc=
 )
->   {
->   	struct storvsc_device *stor_device;
->   	struct storvsc_cmd_request *request;
-> @@ -727,19 +755,15 @@ static int storvsc_channel_init(struct hv_devic=
-e *device)
->   			       VM_PKT_DATA_INBAND,
->   			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->   	if (ret !=3D 0)
-> -		goto cleanup;
-> +		return ret;
->
->   	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -	if (t =3D=3D 0) {
-> -		ret =3D -ETIMEDOUT;
-> -		goto cleanup;
-> -	}
-> +	if (t =3D=3D 0)
-> +		return -ETIMEDOUT;
->
->   	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> -	    vstor_packet->status !=3D 0) {
-> -		ret =3D -EINVAL;
-> -		goto cleanup;
-> -	}
-> +	    vstor_packet->status !=3D 0)
-> +		return -EINVAL;
->
->
->   	for (i =3D 0; i < ARRAY_SIZE(vmstor_protocols); i++) {
-> @@ -764,18 +788,14 @@ static int storvsc_channel_init(struct hv_devic=
-e *device)
->   			       VM_PKT_DATA_INBAND,
->   			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->   		if (ret !=3D 0)
-> -			goto cleanup;
-> +			return ret;
->
->   		t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -		if (t =3D=3D 0) {
-> -			ret =3D -ETIMEDOUT;
-> -			goto cleanup;
-> -		}
-> +		if (t =3D=3D 0)
-> +			return -ETIMEDOUT;
->
-> -		if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO) {
-> -			ret =3D -EINVAL;
-> -			goto cleanup;
-> -		}
-> +		if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO)
-> +			return -EINVAL;
->
->   		if (vstor_packet->status =3D=3D 0) {
->   			vmstor_proto_version =3D
-> @@ -791,10 +811,8 @@ static int storvsc_channel_init(struct hv_device=
- *device)
->   		}
->   	}
->
-> -	if (vstor_packet->status !=3D 0) {
-> -		ret =3D -EINVAL;
-> -		goto cleanup;
-> -	}
-> +	if (vstor_packet->status !=3D 0)
-> +		return -EINVAL;
->
->
->   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
-> @@ -809,19 +827,15 @@ static int storvsc_channel_init(struct hv_devic=
-e *device)
->   			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->
->   	if (ret !=3D 0)
-> -		goto cleanup;
-> +		return ret;
->
->   	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -	if (t =3D=3D 0) {
-> -		ret =3D -ETIMEDOUT;
-> -		goto cleanup;
-> -	}
-> +	if (t =3D=3D 0)
-> +		return -ETIMEDOUT;
->
->   	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> -	    vstor_packet->status !=3D 0) {
-> -		ret =3D -EINVAL;
-> -		goto cleanup;
-> -	}
-> +	    vstor_packet->status !=3D 0)
-> +		return -EINVAL;
->
->   	/*
->   	 * Check to see if multi-channel support is there.
-> @@ -837,6 +851,38 @@ static int storvsc_channel_init(struct hv_device=
- *device)
->   	stor_device->max_transfer_bytes =3D
->   		vstor_packet->storage_channel_properties.max_transfer_bytes;
->
-> +	if (!is_fc)
-> +		goto done;
+> +{
+> +	struct storvsc_device *stor_device;
+> +	struct storvsc_cmd_request *request;
+> +	struct vstor_packet *vstor_packet;
+> +	int ret, i;
+> +	int max_chns;
+> +	bool process_sub_channels =3D false;
 > +
-> +	memset(vstor_packet, 0, sizeof(struct vstor_packet));
-> +	vstor_packet->operation =3D VSTOR_OPERATION_FCHBA_DATA;
-> +	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
+> +	stor_device =3D get_out_stor_device(device);
+> +	if (!stor_device)
+> +		return -ENODEV;
 > +
-> +	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
-> +			       (sizeof(struct vstor_packet) -
-> +			       vmscsi_size_delta),
-> +			       (unsigned long)request,
-> +			       VM_PKT_DATA_INBAND,
-> +			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> +
-> +	if (ret !=3D 0)
-> +		return ret;
-> +
-> +	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> +	if (t =3D=3D 0)
-> +		return -ETIMEDOUT;
-> +
-> +	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> +	    vstor_packet->status !=3D 0)
-> +		return -EINVAL;
+> +	request =3D &stor_device->init_request;
+> +	vstor_packet =3D &request->vstor_packet;
 > +
 > +	/*
-> +	 * Cache the currently active port and node ww names.
+> +	 * Now, initiate the vsc/vsp initialization protocol on the open
+> +	 * channel
 > +	 */
-> +	cache_wwn(stor_device, vstor_packet);
-> +
-> +done:
-> +
->   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
->   	vstor_packet->operation =3D VSTOR_OPERATION_END_INITIALIZATION;
->   	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
-> @@ -849,25 +895,19 @@ static int storvsc_channel_init(struct hv_devic=
-e *device)
->   			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->
->   	if (ret !=3D 0)
-> -		goto cleanup;
+> +	memset(request, 0, sizeof(struct storvsc_cmd_request));
+> +	vstor_packet->operation =3D VSTOR_OPERATION_BEGIN_INITIALIZATION;
+> +	ret =3D storvsc_execute_vstor_op(device, request, true);
+> +	if (ret)
 > +		return ret;
+> +	/*
+> +	 * Query host supported protocol version.
+> +	 */
 >
->   	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -	if (t =3D=3D 0) {
-> -		ret =3D -ETIMEDOUT;
-> -		goto cleanup;
-> -	}
-> +	if (t =3D=3D 0)
-> +		return -ETIMEDOUT;
+>   	for (i =3D 0; i < ARRAY_SIZE(vmstor_protocols); i++) {
+>   		/* reuse the packet for version range supported */
+>   		memset(vstor_packet, 0, sizeof(struct vstor_packet));
+>   		vstor_packet->operation =3D
+>   			VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
+> -		vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
 >
->   	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> -	    vstor_packet->status !=3D 0) {
-> -		ret =3D -EINVAL;
-> -		goto cleanup;
-> -	}
-> +	    vstor_packet->status !=3D 0)
-> +		return -EINVAL;
->
->   	if (process_sub_channels)
->   		handle_multichannel_storage(device, max_chns);
->
+>   		vstor_packet->version.major_minor =3D
+>   			vmstor_protocols[i].protocol_version;
+> @@ -780,20 +801,10 @@ static int storvsc_channel_init(struct hv_devic=
+e *device, bool is_fc)
+>   		 * The revision number is only used in Windows; set it to 0.
+>   		 */
+>   		vstor_packet->version.revision =3D 0;
 > -
-> -cleanup:
->   	return ret;
->   }
+> -		ret =3D vmbus_sendpacket(device->channel, vstor_packet,
+> -			       (sizeof(struct vstor_packet) -
+> -				vmscsi_size_delta),
+> -			       (unsigned long)request,
+> -			       VM_PKT_DATA_INBAND,
+> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> +		ret =3D storvsc_execute_vstor_op(device, request, false);
+>   		if (ret !=3D 0)
+>   			return ret;
 >
-> @@ -1076,6 +1116,14 @@ static void storvsc_on_receive(struct hv_devic=
-e *device,
->   		schedule_work(&work->work);
->   		break;
+> -		t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
+> -		if (t =3D=3D 0)
+> -			return -ETIMEDOUT;
+> -
+>   		if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO)
+>   			return -EINVAL;
 >
-> +	case VSTOR_OPERATION_FCHBA_DATA:
-> +		stor_device =3D get_in_stor_device(device);
-> +		cache_wwn(stor_device, vstor_packet);
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +		fc_host_node_name(stor_device->host) =3D stor_device->node_name;
-> +		fc_host_port_name(stor_device->host) =3D stor_device->port_name;
-> +#endif
-> +		break;
->   	default:
->   		break;
->   	}
-> @@ -1131,7 +1179,8 @@ static void storvsc_on_channel_callback(void *c=
-ontext)
->   	return;
->   }
+> @@ -817,26 +828,10 @@ static int storvsc_channel_init(struct hv_devic=
+e *device, bool is_fc)
 >
-> -static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring=
-_size)
-> +static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring=
-_size,
-> +				  bool is_fc)
->   {
->   	struct vmstorage_channel_properties props;
->   	int ret;
-> @@ -1148,7 +1197,7 @@ static int storvsc_connect_to_vsp(struct hv_dev=
-ice *device, u32 ring_size)
+>   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+>   	vstor_packet->operation =3D VSTOR_OPERATION_QUERY_PROPERTIES;
+> -	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
+> -
+> -	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
+> -			       (sizeof(struct vstor_packet) -
+> -				vmscsi_size_delta),
+> -			       (unsigned long)request,
+> -			       VM_PKT_DATA_INBAND,
+> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> -
+> +	ret =3D storvsc_execute_vstor_op(device, request, true);
 >   	if (ret !=3D 0)
 >   		return ret;
 >
-> -	ret =3D storvsc_channel_init(device);
-> +	ret =3D storvsc_channel_init(device, is_fc);
->
->   	return ret;
->   }
-> @@ -1573,6 +1622,7 @@ static int storvsc_probe(struct hv_device *devi=
-ce,
->   	struct Scsi_Host *host;
->   	struct hv_host_device *host_dev;
->   	bool dev_is_ide =3D ((dev_id->driver_data =3D=3D IDE_GUID) ? true =
-: false);
-> +	bool is_fc =3D ((dev_id->driver_data =3D=3D SFC_GUID) ? true : fals=
-e);
->   	int target =3D 0;
->   	struct storvsc_device *stor_device;
->   	int max_luns_per_target;
-> @@ -1630,7 +1680,7 @@ static int storvsc_probe(struct hv_device *devi=
-ce,
->   	hv_set_drvdata(device, stor_device);
->
->   	stor_device->port_number =3D host->host_no;
-> -	ret =3D storvsc_connect_to_vsp(device, storvsc_ringbuffer_size);
-> +	ret =3D storvsc_connect_to_vsp(device, storvsc_ringbuffer_size, is_=
-fc);
->   	if (ret)
->   		goto err_out1;
->
-> @@ -1642,6 +1692,9 @@ static int storvsc_probe(struct hv_device *devi=
-ce,
->   		host->max_lun =3D STORVSC_FC_MAX_LUNS_PER_TARGET;
->   		host->max_id =3D STORVSC_FC_MAX_TARGETS;
->   		host->max_channel =3D STORVSC_FC_MAX_CHANNELS - 1;
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +		host->transportt =3D fc_transport_template;
-> +#endif
->   		break;
->
->   	case SCSI_GUID:
-> @@ -1681,6 +1734,12 @@ static int storvsc_probe(struct hv_device *dev=
-ice,
->   			goto err_out2;
->   		}
->   	}
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +	if (host->transportt =3D=3D fc_transport_template) {
-> +		fc_host_node_name(host) =3D stor_device->node_name;
-> +		fc_host_port_name(host) =3D stor_device->port_name;
-> +	}
-> +#endif
->   	return 0;
->
->   err_out2:
-> @@ -1706,6 +1765,10 @@ static int storvsc_remove(struct hv_device *de=
-v)
->   	struct storvsc_device *stor_device =3D hv_get_drvdata(dev);
->   	struct Scsi_Host *host =3D stor_device->host;
->
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +	if (host->transportt =3D=3D fc_transport_template)
-> +		fc_remove_host(host);
-> +#endif
->   	scsi_remove_host(host);
->   	storvsc_dev_remove(dev);
->   	scsi_host_put(host);
-> @@ -1720,8 +1783,16 @@ static struct hv_driver storvsc_drv =3D {
->   	.remove =3D storvsc_remove,
->   };
->
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +static struct fc_function_template fc_transport_functions =3D {
-> +	.show_host_node_name =3D 1,
-> +	.show_host_port_name =3D 1,
-> +};
-> +#endif
-> +
->   static int __init storvsc_drv_init(void)
->   {
-> +	int ret;
->
+> -	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
+> -	if (t =3D=3D 0)
+> -		return -ETIMEDOUT;
+> -
+> -	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
+> -	    vstor_packet->status !=3D 0)
+> -		return -EINVAL;
+> -
 >   	/*
->   	 * Divide the ring buffer data size (which is 1 page less
-> @@ -1736,12 +1807,28 @@ static int __init storvsc_drv_init(void)
->   		vmscsi_size_delta,
->   		sizeof(u64)));
+>   	 * Check to see if multi-channel support is there.
+>   	 * Hosts that implement protocol version of 5.1 and above
+> @@ -854,28 +849,15 @@ static int storvsc_channel_init(struct hv_devic=
+e *device, bool is_fc)
+>   	if (!is_fc)
+>   		goto done;
 >
-> -	return vmbus_driver_register(&storvsc_drv);
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +	fc_transport_template =3D fc_attach_transport(&fc_transport_functio=
-ns);
-> +	if (!fc_transport_template)
-> +		return -ENODEV;
-> +#endif
-> +
-> +	ret =3D vmbus_driver_register(&storvsc_drv);
-> +
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +	if (ret)
-> +		fc_release_transport(fc_transport_template);
-> +#endif
-> +
-> +	return ret;
->   }
+> +	/*
+> +	 * For FC devices retrieve FC HBA data.
+> +	 */
+>   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+>   	vstor_packet->operation =3D VSTOR_OPERATION_FCHBA_DATA;
+> -	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
+> -
+> -	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
+> -			       (sizeof(struct vstor_packet) -
+> -			       vmscsi_size_delta),
+> -			       (unsigned long)request,
+> -			       VM_PKT_DATA_INBAND,
+> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> -
+> +	ret =3D storvsc_execute_vstor_op(device, request, true);
+>   	if (ret !=3D 0)
+>   		return ret;
 >
->   static void __exit storvsc_drv_exit(void)
->   {
->   	vmbus_driver_unregister(&storvsc_drv);
-> +#ifdef CONFIG_SCSI_FC_ATTRS
-> +	fc_release_transport(fc_transport_template);
-> +#endif
->   }
+> -	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
+> -	if (t =3D=3D 0)
+> -		return -ETIMEDOUT;
+> -
+> -	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
+> -	    vstor_packet->status !=3D 0)
+> -		return -EINVAL;
+> -
+>   	/*
+>   	 * Cache the currently active port and node ww names.
+>   	 */
+> @@ -885,26 +867,10 @@ done:
 >
->   MODULE_LICENSE("GPL");
+>   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+>   	vstor_packet->operation =3D VSTOR_OPERATION_END_INITIALIZATION;
+> -	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
+> -
+> -	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
+> -			       (sizeof(struct vstor_packet) -
+> -				vmscsi_size_delta),
+> -			       (unsigned long)request,
+> -			       VM_PKT_DATA_INBAND,
+> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> -
+> +	ret =3D storvsc_execute_vstor_op(device, request, true);
+>   	if (ret !=3D 0)
+>   		return ret;
 >
-Well.
-This would _always_ attach the FC template to the storvsc driver,=20
-even if it not used. Typically one would be using a separate driver=20
-for that, but hey.
-
-_However_: How should you handle FC attached devices if the FC=20
-transport template is _NOT_ selected?
-By rights one would expect the driver to not handle those devices;=20
-but looking at the code this doesn't happen.
-
-What I would like to see is a clear separation here:
-- Disable FC disk handling if FC attributes are not configured
-- Add a module parameter allowing to disable FC attributes even if=20
-they are compiled in. Remember: this is a virtualized guest, and=20
-people might want so save kernel memory wherever they can. So always=20
-attaching to the fc transport template will make them very unhappy.
-Alternatively you could split out FC device handling into a separate=20
-driver, but seeing the diff that's probably overkill.
+> -	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
+> -	if (t =3D=3D 0)
+> -		return -ETIMEDOUT;
+> -
+> -	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
+> -	    vstor_packet->status !=3D 0)
+> -		return -EINVAL;
+> -
+>   	if (process_sub_channels)
+>   		handle_multichannel_storage(device, max_chns);
+>
+>
+The same applies here; please make the FC support configurable both=20
+during configuration and during runtime.
 
 Cheers,
 
@@ -438,3 +260,8 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
