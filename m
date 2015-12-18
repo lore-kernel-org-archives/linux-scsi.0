@@ -1,20 +1,19 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 06/15] be2iscsi: Added return value check for
- mgmt_get_all_if_id
-Date: Fri, 18 Dec 2015 10:00:50 +0100
-Message-ID: <5673CB42.3080901@suse.de>
+Subject: Re: [PATCH 08/15] be2iscsi: Fix VLAN support for IPv6 network
+Date: Fri, 18 Dec 2015 10:01:40 +0100
+Message-ID: <5673CB74.5030008@suse.de>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450194906-12925-7-git-send-email-jitendra.bhivare@avagotech.com>
+ <1450194906-12925-9-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39184 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39287 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754015AbbLRJAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 04:00:52 -0500
-In-Reply-To: <1450194906-12925-7-git-send-email-jitendra.bhivare@avagotech.com>
+	id S933376AbbLRJBn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Dec 2015 04:01:43 -0500
+In-Reply-To: <1450194906-12925-9-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
@@ -22,14 +21,30 @@ To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.or
 On 12/15/2015 04:54 PM, Jitendra Bhivare wrote:
 > From: Jitendra <jitendra.bhivare@avagotech.com>
 >
-> Use of mutex_lock_interruptible can return -EINTR, handle and log
-> the error.
+> Configuring VLAN parameters through IPv6 interface was not supported =
+in driver.
 >
 > Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 > ---
->   drivers/scsi/be2iscsi/be_iscsi.c |    7 ++++---
->   drivers/scsi/be2iscsi/be_mgmt.c  |   10 ++++++----
->   2 files changed, 10 insertions(+), 7 deletions(-)
+>   drivers/scsi/be2iscsi/be_iscsi.c |    4 ++++
+>   1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi=
+/be_iscsi.c
+> index 188d83f..c89a025 100644
+> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+> @@ -466,6 +466,10 @@ beiscsi_set_ipv6(struct Scsi_Host *shost,
+>   		ret =3D mgmt_set_ip(phba, iface_param, NULL,
+>   				  ISCSI_BOOTPROTO_STATIC);
+>   		break;
+> +	case ISCSI_NET_PARAM_VLAN_ENABLED:
+> +	case ISCSI_NET_PARAM_VLAN_TAG:
+> +		ret =3D beiscsi_set_vlan_tag(shost, iface_param);
+> +		break;
+>   	default:
+>   		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+>   			    "BS_%d : Param %d not supported\n",
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
