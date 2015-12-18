@@ -1,20 +1,20 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/15] be2iscsi: Fix to use atomic operations for
- tag_state
-Date: Fri, 18 Dec 2015 09:59:31 +0100
-Message-ID: <5673CAF3.1090503@suse.de>
+Subject: Re: [PATCH 04/15] be2iscsi: Fix to synchronize tag allocation using
+ spin_lock
+Date: Fri, 18 Dec 2015 09:59:55 +0100
+Message-ID: <5673CB0B.7060702@suse.de>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450194906-12925-4-git-send-email-jitendra.bhivare@avagotech.com>
+ <1450194906-12925-5-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39102 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39121 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934346AbbLRI7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 03:59:33 -0500
-In-Reply-To: <1450194906-12925-4-git-send-email-jitendra.bhivare@avagotech.com>
+	id S1753063AbbLRI75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Dec 2015 03:59:57 -0500
+In-Reply-To: <1450194906-12925-5-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
@@ -22,13 +22,12 @@ To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.or
 On 12/15/2015 04:54 PM, Jitendra Bhivare wrote:
 > From: Jitendra <jitendra.bhivare@avagotech.com>
 >
-> Replace lock based tag_state manipulations with atomic operations.
+> alloc_mcc_tag/free_mcc_tag is now done under mcc_lock spin_lock
 >
 > Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
 > ---
->   drivers/scsi/be2iscsi/be.h      |    2 +-
->   drivers/scsi/be2iscsi/be_cmds.c |   26 ++++++++++++--------------
->   2 files changed, 13 insertions(+), 15 deletions(-)
+>   drivers/scsi/be2iscsi/be_cmds.c |    6 ++++--
+>   1 files changed, 4 insertions(+), 2 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
