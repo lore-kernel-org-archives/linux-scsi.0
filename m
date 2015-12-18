@@ -1,72 +1,543 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: [PATCH 03/15] megaraid_sas: Syncing request flags macro names with firmware
-Date: Fri, 18 Dec 2015 18:56:56 +0530
-Message-ID: <1450445228-26571-4-git-send-email-Sumit.Saxena@avagotech.com>
+Subject: [PATCH 05/15] megaraid_sas: Update device Queue depth based on interface type
+Date: Fri, 18 Dec 2015 18:56:58 +0530
+Message-ID: <1450445228-26571-6-git-send-email-Sumit.Saxena@avagotech.com>
 References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35088 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932264AbbLRN2C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2015 08:28:02 -0500
-Received: by mail-pa0-f45.google.com with SMTP id jx14so31890205pad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Dec 2015 05:28:01 -0800 (PST)
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33499 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932251AbbLRN2K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2015 08:28:10 -0500
+Received: by mail-pa0-f46.google.com with SMTP id ur14so60622636pab.0
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Dec 2015 05:28:09 -0800 (PST)
 In-Reply-To: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    6 +++---
- drivers/scsi/megaraid/megaraid_sas_fusion.h |    3 ++-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+This patch will update device Queue depth based on interface type(SAS, SATA..) for sysPDs.
+For Virtual disks(VDs), there will be no change in queue depth(will remain 256).
+To fetch interface type(SAS or SATA or FC..) of syspD, driver will send DCMD MR_DCMD_PD_GET_INFO per sysPD.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 6e48707..1dc4537 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1666,7 +1666,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				   local_map_ptr, start_lba_lo);
- 		io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
- 		cmd->request_desc->SCSIIO.RequestFlags =
--			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY
-+			(MPI2_REQ_DESCRIPT_FLAGS_FP_IO
- 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
- 		if (fusion->adapter_type == INVADER_SERIES) {
- 			if (io_request->RaidContext.regLockFlags ==
-@@ -1799,7 +1799,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |  270 ++++++++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  127 ++++++++++++++
+ 2 files changed, 396 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 0fcb156..773fc54 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -215,6 +215,7 @@
  
- 		/* build request descriptor */
- 		cmd->request_desc->SCSIIO.RequestFlags =
--			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY <<
-+			(MPI2_REQ_DESCRIPT_FLAGS_FP_IO <<
- 			MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
- 		cmd->request_desc->SCSIIO.DevHandle = devHandle;
+ #define MR_DCMD_CTRL_SET_CRASH_DUMP_PARAMS	0x01190100
+ #define MR_DRIVER_SET_APP_CRASHDUMP_MODE	(0xF0010000 | 0x0600)
++#define MR_DCMD_PD_GET_INFO			0x02020000
  
-@@ -1905,7 +1905,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 				cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
- 		}
- 		cmd->request_desc->SCSIIO.RequestFlags =
--			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY <<
-+			(MPI2_REQ_DESCRIPT_FLAGS_FP_IO <<
- 				MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+ /*
+  * Global functions
+@@ -435,6 +436,257 @@ enum MR_PD_STATE {
+ 	MR_PD_STATE_SYSTEM              = 0x40,
+  };
+ 
++union MR_PD_REF {
++	struct {
++		u16	 deviceId;
++		u16	 seqNum;
++	} mrPdRef;
++	u32	 ref;
++};
++
++/*
++ * define the DDF Type bit structure
++ */
++union MR_PD_DDF_TYPE {
++	 struct {
++		union {
++			struct {
++#ifndef __BIG_ENDIAN_BITFIELD
++				 u16	 forcedPDGUID:1;
++				 u16	 inVD:1;
++				 u16	 isGlobalSpare:1;
++				 u16	 isSpare:1;
++				 u16	 isForeign:1;
++				 u16	 reserved:7;
++				 u16	 intf:4;
++#else
++				 u16	 intf:4;
++				 u16	 reserved:7;
++				 u16	 isForeign:1;
++				 u16	 isSpare:1;
++				 u16	 isGlobalSpare:1;
++				 u16	 inVD:1;
++				 u16	 forcedPDGUID:1;
++#endif
++			 } pdType;
++			 u16	 type;
++		 };
++		 u16	 reserved;
++	 } ddf;
++	 struct {
++		 u32	reserved;
++	 } nonDisk;
++	 u32	 type;
++} __packed;
++
++/*
++ * defines the progress structure
++ */
++union MR_PROGRESS {
++	struct  {
++		u16 progress;
++		union {
++			u16 elapsedSecs;
++			u16 elapsedSecsForLastPercent;
++		};
++	} mrProgress;
++	u32 w;
++} __packed;
++
++/*
++ * defines the physical drive progress structure
++ */
++struct MR_PD_PROGRESS {
++	struct {
++#ifndef MFI_BIG_ENDIAN
++		u32     rbld:1;
++		u32     patrol:1;
++		u32     clear:1;
++		u32     copyBack:1;
++		u32     erase:1;
++		u32     locate:1;
++		u32     reserved:26;
++#else
++		u32     reserved:26;
++		u32     locate:1;
++		u32     erase:1;
++		u32     copyBack:1;
++		u32     clear:1;
++		u32     patrol:1;
++		u32     rbld:1;
++#endif
++	} active;
++	union MR_PROGRESS     rbld;
++	union MR_PROGRESS     patrol;
++	union {
++		union MR_PROGRESS     clear;
++		union MR_PROGRESS     erase;
++	};
++
++	struct {
++#ifndef MFI_BIG_ENDIAN
++		u32     rbld:1;
++		u32     patrol:1;
++		u32     clear:1;
++		u32     copyBack:1;
++		u32     erase:1;
++		u32     reserved:27;
++#else
++		u32     reserved:27;
++		u32     erase:1;
++		u32     copyBack:1;
++		u32     clear:1;
++		u32     patrol:1;
++		u32     rbld:1;
++#endif
++	} pause;
++
++	union MR_PROGRESS     reserved[3];
++} __packed;
++
++struct  MR_PD_INFO {
++	union MR_PD_REF	ref;
++	u8 inquiryData[96];
++	u8 vpdPage83[64];
++	u8 notSupported;
++	u8 scsiDevType;
++
++	union {
++		u8 connectedPortBitmap;
++		u8 connectedPortNumbers;
++	};
++
++	u8 deviceSpeed;
++	u32 mediaErrCount;
++	u32 otherErrCount;
++	u32 predFailCount;
++	u32 lastPredFailEventSeqNum;
++
++	u16 fwState;
++	u8 disabledForRemoval;
++	u8 linkSpeed;
++	union MR_PD_DDF_TYPE state;
++
++	struct {
++		u8 count;
++#ifndef __BIG_ENDIAN_BITFIELD
++		u8 isPathBroken:4;
++		u8 reserved3:3;
++		u8 widePortCapable:1;
++#else
++		u8 widePortCapable:1;
++		u8 reserved3:3;
++		u8 isPathBroken:4;
++#endif
++
++		u8 connectorIndex[2];
++		u8 reserved[4];
++		u64 sasAddr[2];
++		u8 reserved2[16];
++	} pathInfo;
++
++	u64 rawSize;
++	u64 nonCoercedSize;
++	u64 coercedSize;
++	u16 enclDeviceId;
++	u8 enclIndex;
++
++	union {
++		u8 slotNumber;
++		u8 enclConnectorIndex;
++	};
++
++	struct MR_PD_PROGRESS progInfo;
++	u8 badBlockTableFull;
++	u8 unusableInCurrentConfig;
++	u8 vpdPage83Ext[64];
++	u8 powerState;
++	u8 enclPosition;
++	u32 allowedOps;
++	u16 copyBackPartnerId;
++	u16 enclPartnerDeviceId;
++	struct {
++#ifndef __BIG_ENDIAN_BITFIELD
++		u16 fdeCapable:1;
++		u16 fdeEnabled:1;
++		u16 secured:1;
++		u16 locked:1;
++		u16 foreign:1;
++		u16 needsEKM:1;
++		u16 reserved:10;
++#else
++		u16 reserved:10;
++		u16 needsEKM:1;
++		u16 foreign:1;
++		u16 locked:1;
++		u16 secured:1;
++		u16 fdeEnabled:1;
++		u16 fdeCapable:1;
++#endif
++	} security;
++	u8 mediaType;
++	u8 notCertified;
++	u8 bridgeVendor[8];
++	u8 bridgeProductIdentification[16];
++	u8 bridgeProductRevisionLevel[4];
++	u8 satBridgeExists;
++
++	u8 interfaceType;
++	u8 temperature;
++	u8 emulatedBlockSize;
++	u16 userDataBlockSize;
++	u16 reserved2;
++
++	struct {
++#ifndef __BIG_ENDIAN_BITFIELD
++		u32 piType:3;
++		u32 piFormatted:1;
++		u32 piEligible:1;
++		u32 NCQ:1;
++		u32 WCE:1;
++		u32 commissionedSpare:1;
++		u32 emergencySpare:1;
++		u32 ineligibleForSSCD:1;
++		u32 ineligibleForLd:1;
++		u32 useSSEraseType:1;
++		u32 wceUnchanged:1;
++		u32 supportScsiUnmap:1;
++		u32 reserved:18;
++#else
++		u32 reserved:18;
++		u32 supportScsiUnmap:1;
++		u32 wceUnchanged:1;
++		u32 useSSEraseType:1;
++		u32 ineligibleForLd:1;
++		u32 ineligibleForSSCD:1;
++		u32 emergencySpare:1;
++		u32 commissionedSpare:1;
++		u32 WCE:1;
++		u32 NCQ:1;
++		u32 piEligible:1;
++		u32 piFormatted:1;
++		u32 piType:3;
++#endif
++	} properties;
++
++	u64 shieldDiagCompletionTime;
++	u8 shieldCounter;
++
++	u8 linkSpeedOther;
++	u8 reserved4[2];
++
++	struct {
++#ifndef __BIG_ENDIAN_BITFIELD
++		u32 bbmErrCountSupported:1;
++		u32 bbmErrCount:31;
++#else
++		u32 bbmErrCount:31;
++		u32 bbmErrCountSupported:1;
++#endif
++	} bbmErr;
++
++	u8 reserved1[512-428];
++} __packed;
+ 
+  /*
+  * defines the physical drive address structure
+@@ -474,6 +726,7 @@ struct megasas_pd_list {
+ 	u16             tid;
+ 	u8             driveType;
+ 	u8             driveState;
++	u8             interface;
+ } __packed;
+ 
+  /*
+@@ -1718,6 +1971,19 @@ struct MR_DRV_SYSTEM_INFO {
+ 	u8	reserved[1980];
+ };
+ 
++enum MR_PD_TYPE {
++		 UNKNOWN_DRIVE = 0,
++		 PARALLEL_SCSI = 1,
++		 SAS_PD = 2,
++		 SATA_PD = 3,
++		 FC_PD = 4,
++};
++
++/* JBOD Queue depth definitions */
++#define MEGASAS_SATA_QD	32
++#define MEGASAS_SAS_QD	64
++#define MEGASAS_DEFAULT_PD_QD	64
++
+ struct megasas_instance {
+ 
+ 	__le32 *producer;
+@@ -1732,6 +1998,8 @@ struct megasas_instance {
+ 	dma_addr_t vf_affiliation_111_h;
+ 	struct MR_CTRL_HB_HOST_MEM *hb_host_mem;
+ 	dma_addr_t hb_host_mem_h;
++	struct MR_PD_INFO *pd_info;
++	dma_addr_t pd_info_h;
+ 
+ 	__le32 *reply_queue;
+ 	dma_addr_t reply_queue_h;
+@@ -1780,7 +2048,7 @@ struct megasas_instance {
+ 	struct megasas_evt_detail *evt_detail;
+ 	dma_addr_t evt_detail_h;
+ 	struct megasas_cmd *aen_cmd;
+-	struct mutex aen_mutex;
++	struct mutex hba_mutex;
+ 	struct semaphore ioctl_sem;
+ 
+ 	struct Scsi_Host *host;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index c1dc23c..df93fa1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -104,6 +104,8 @@ static int megasas_ld_list_query(struct megasas_instance *instance,
+ static int megasas_issue_init_mfi(struct megasas_instance *instance);
+ static int megasas_register_aen(struct megasas_instance *instance,
+ 				u32 seq_num, u32 class_locale_word);
++static int
++megasas_get_pd_info(struct megasas_instance *instance, u16 device_id);
+ /*
+  * PCI ID table for all supported controllers
+  */
+@@ -1796,6 +1798,44 @@ void megasas_update_sdev_properties(struct scsi_device *sdev)
  	}
  }
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 473005c..a9e10c4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -176,7 +176,8 @@ enum REGION_TYPE {
- #define MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD           (0x0100)
- #define MPI2_SCSIIO_EEDPFLAGS_INSERT_OP             (0x0004)
- #define MPI2_FUNCTION_SCSI_IO_REQUEST               (0x00) /* SCSI IO */
--#define MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY           (0x06)
-+#define MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY       (0x03)
-+#define MPI2_REQ_DESCRIPT_FLAGS_FP_IO               (0x06)
- #define MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO                 (0x00)
- #define MPI2_SGE_FLAGS_64_BIT_ADDRESSING        (0x02)
- #define MPI2_SCSIIO_CONTROL_WRITE               (0x01000000)
+ 
++static void megasas_set_device_queue_depth(struct scsi_device *sdev)
++{
++	u16				pd_index = 0;
++	int		ret = DCMD_FAILED;
++	struct megasas_instance *instance;
++
++	instance = megasas_lookup_instance(sdev->host->host_no);
++
++	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
++		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) + sdev->id;
++
++		if (instance->pd_info) {
++			mutex_lock(&instance->hba_mutex);
++			ret = megasas_get_pd_info(instance, pd_index);
++			mutex_unlock(&instance->hba_mutex);
++		}
++
++		if (ret != DCMD_SUCCESS)
++			return;
++
++		if (instance->pd_list[pd_index].driveState == MR_PD_STATE_SYSTEM) {
++
++			switch (instance->pd_list[pd_index].interface) {
++			case SAS_PD:
++				scsi_change_queue_depth(sdev, MEGASAS_SAS_QD);
++				break;
++
++			case SATA_PD:
++				scsi_change_queue_depth(sdev, MEGASAS_SATA_QD);
++				break;
++
++			default:
++				scsi_change_queue_depth(sdev, MEGASAS_DEFAULT_PD_QD);
++			}
++		}
++	}
++}
++
+ 
+ static int megasas_slave_configure(struct scsi_device *sdev)
+ {
+@@ -1813,6 +1853,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ 				return -ENXIO;
+ 		}
+ 	}
++	megasas_set_device_queue_depth(sdev);
+ 	megasas_update_sdev_properties(sdev);
+ 
+ 	/*
+@@ -3922,6 +3963,73 @@ dcmd_timeout_ocr_possible(struct megasas_instance *instance) {
+ 		return INITIATE_OCR;
+ }
+ 
++static int
++megasas_get_pd_info(struct megasas_instance *instance, u16 device_id)
++{
++	int ret;
++	struct megasas_cmd *cmd;
++	struct megasas_dcmd_frame *dcmd;
++
++	cmd = megasas_get_cmd(instance);
++
++	if (!cmd) {
++		dev_err(&instance->pdev->dev, "Failed to get cmd %s\n", __func__);
++		return -ENOMEM;
++	}
++
++	dcmd = &cmd->frame->dcmd;
++
++	memset(instance->pd_info, 0, sizeof(*instance->pd_info));
++	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
++
++	dcmd->mbox.s[0] = cpu_to_le16(device_id);
++	dcmd->cmd = MFI_CMD_DCMD;
++	dcmd->cmd_status = 0xFF;
++	dcmd->sge_count = 1;
++	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_READ);
++	dcmd->timeout = 0;
++	dcmd->pad_0 = 0;
++	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct MR_PD_INFO));
++	dcmd->opcode = cpu_to_le32(MR_DCMD_PD_GET_INFO);
++	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(instance->pd_info_h);
++	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct MR_PD_INFO));
++
++	if (instance->ctrl_context && !instance->mask_interrupts)
++		ret = megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS);
++	else
++		ret = megasas_issue_polled(instance, cmd);
++
++	switch (ret) {
++	case DCMD_SUCCESS:
++		instance->pd_list[device_id].interface =
++				instance->pd_info->state.ddf.pdType.intf;
++		break;
++
++	case DCMD_TIMEOUT:
++
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			megasas_reset_fusion(instance->host,
++				MFI_IO_TIMEOUT_OCR);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++
++		break;
++	}
++
++	if (ret != DCMD_TIMEOUT)
++		megasas_return_cmd(instance, cmd);
++
++	return ret;
++}
+ /*
+  * megasas_get_pd_list_info -	Returns FW's pd_list structure
+  * @instance:				Adapter soft state
+@@ -5680,6 +5788,12 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 		goto fail_alloc_dma_buf;
+ 	}
+ 
++	instance->pd_info = pci_alloc_consistent(pdev,
++		sizeof(struct MR_PD_INFO), &instance->pd_info_h);
++
++	if (!instance->pd_info)
++		dev_err(&instance->pdev->dev, "Failed to alloc mem for pd_info\n");
++
+ 	/*
+ 	 * Initialize locks and queues
+ 	 */
+@@ -5696,6 +5810,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	spin_lock_init(&instance->completion_lock);
+ 
+ 	mutex_init(&instance->reset_mutex);
++	mutex_init(&instance->hba_mutex);
+ 
+ 	/*
+ 	 * Initialize PCI related and misc parameters
+@@ -5810,6 +5925,10 @@ fail_alloc_dma_buf:
+ 				    instance->evt_detail,
+ 				    instance->evt_detail_h);
+ 
++	if (instance->pd_info)
++		pci_free_consistent(pdev, sizeof(struct MR_PD_INFO),
++					instance->pd_info,
++					instance->pd_info_h);
+ 	if (instance->producer)
+ 		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+ 				    instance->producer_h);
+@@ -6071,6 +6190,10 @@ fail_init_mfi:
+ 				instance->evt_detail,
+ 				instance->evt_detail_h);
+ 
++	if (instance->pd_info)
++		pci_free_consistent(pdev, sizeof(struct MR_PD_INFO),
++					instance->pd_info,
++					instance->pd_info_h);
+ 	if (instance->producer)
+ 		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+ 				instance->producer_h);
+@@ -6189,6 +6312,10 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 		pci_free_consistent(pdev, sizeof(struct megasas_evt_detail),
+ 				instance->evt_detail, instance->evt_detail_h);
+ 
++	if (instance->pd_info)
++		pci_free_consistent(pdev, sizeof(struct MR_PD_INFO),
++					instance->pd_info,
++					instance->pd_info_h);
+ 	if (instance->vf_affiliation)
+ 		pci_free_consistent(pdev, (MAX_LOGICAL_DRIVES + 1) *
+ 				    sizeof(struct MR_LD_VF_AFFILIATION),
 -- 
 1.7.1
 
