@@ -1,48 +1,66 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: [PATCH] megaraid:Make various functions static in megaraid_sas_fusion.c
-Date: Fri, 18 Dec 2015 12:31:18 +0530
-Message-ID: <90fa0319ef5f247c0f9021262d5a2a41@mail.gmail.com>
-References: <1436200567-10779-1-git-send-email-xerofoify@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH V3 1/4] scsi: storvsc: Fix a bug in the layout of the
+ hv_fc_wwn_packet
+Date: Fri, 18 Dec 2015 09:40:58 +0100
+Message-ID: <5673C69A.8090800@suse.de>
+References: <1450038486-19211-1-git-send-email-kys@microsoft.com>
+ <1450038512-19252-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:35814 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907AbbLRHBV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2015 02:01:21 -0500
-Received: by mail-lf0-f52.google.com with SMTP id l133so66433865lfd.2
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Dec 2015 23:01:20 -0800 (PST)
-In-Reply-To: <1436200567-10779-1-git-send-email-xerofoify@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1450038512-19252-1-git-send-email-kys@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Krause <xerofoify@gmail.com>
-Cc: Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, JBottomley@odin.com, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> -----Original Message-----
-> From: Nicholas Krause [mailto:xerofoify@gmail.com]
-> Sent: Monday, July 06, 2015 10:06 PM
-> To: kashyap.desai@avagotech.com
-> Cc: sumit.saxena@avagotech.com; uday.lingala@avagotech.com;
-> JBottomley@odin.com; megaraidlinux.pdl@avagotech.com; linux-
-> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] megaraid:Make various functions static in
-> megaraid_sas_fusion.c
+On 12/13/2015 09:28 PM, K. Y. Srinivasan wrote:
+> The hv_fc_wwn_packet is exchanged over vmbus. Make the definition in Linu=
+x match
+> the Window's definition.
 >
-> This makes various functions that have no external callers outside of
-their
-> definition/declaration in the file megaraid_sas_fusion.c to be properly
-> declared as static functions now.
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Reviewed-by: Long Li <longli@microsoft.com>
+> Tested-by: Alex Ng <alexng@microsoft.com>
+> ---
+>   drivers/scsi/storvsc_drv.c |    5 ++---
+>   1 files changed, 2 insertions(+), 3 deletions(-)
 >
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index c41f674..00bb4bd 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -92,9 +92,8 @@ enum vstor_packet_operation {
+>    */
+>
+>   struct hv_fc_wwn_packet {
+> -	bool	primary_active;
+> -	u8	reserved1;
+> -	u8	reserved2;
+> +	u8	primary_active;
+> +	u8	reserved1[3];
+>   	u8	primary_port_wwn[8];
+>   	u8	primary_node_wwn[8];
+>   	u8	secondary_port_wwn[8];
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Nicholas -
+Cheers,
 
-You posted patch with subject line "megaraid:Make the function
-megasas_alloc_cmd_fusion static" for similar code changes.
-Let's have consolidated patch for this and Avago can post it with next
-change set (to keep git  commit clean without any failure)
+Hannes
+-- =
 
-Just to be clear - You can send us patch and we can add with Submitted by
-your name as signature. For now NACK.
-
-` Kashyap
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
