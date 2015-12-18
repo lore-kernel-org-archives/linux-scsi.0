@@ -1,120 +1,174 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: scsi-mq performance check
-Date: Fri, 18 Dec 2015 17:05:22 +0100
-Message-ID: <56742EC2.2020606@suse.de>
-References: <56741F04.3070506@huawei.com> <56742168.6030200@suse.de>
- <56742403.7000108@sandisk.com> <567427E8.8010608@huawei.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH V3 4/4] scsi: storvsc: Tighten up the interrupt path
+Date: Fri, 18 Dec 2015 16:20:00 +0000
+Message-ID: <BY2PR0301MB16544C0D5B825A54AA0319DFA0E10@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1450038486-19211-1-git-send-email-kys@microsoft.com>
+ <1450038512-19252-1-git-send-email-kys@microsoft.com>
+ <1450038512-19252-4-git-send-email-kys@microsoft.com>
+ <5673C92B.5070602@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38919 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932098AbbLRQFZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 11:05:25 -0500
-In-Reply-To: <567427E8.8010608@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5673C92B.5070602@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, hch@infradead.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "zhangfei.gao@linaro.org" <zhangfei.gao@linaro.org>
 
-On 12/18/2015 04:36 PM, John Garry wrote:
-> On 18/12/2015 15:19, Bart Van Assche wrote:
->> On 12/18/2015 04:08 PM, Hannes Reinecke wrote:
->>> On 12/18/2015 03:58 PM, John Garry wrote:
->>>> Hi,
->>>>
->>>> I have started to enable scsi-mq on the HiSilicon SAS driver.
->>>>
->>>> Are there hints/checks I should use to make sure it is configured
->>>> correctly/optimally? In my initial testing I have seen some
->>>> performance improvements, but none like what I have seen in
->>>> presentations.
->>>>
->>> The whole thing is build around having symmetric submit and receive
->>> queues, so that we can tack a send/receive queue pair to the same
->>> CPU.
->>> With that we can ensure that we don't have any cache
->>> invalidation, as
->>> the request is already in the cache for that CPU when the
->>> completion is
->>> recieved. _And_ we can get rid of most spinlocks as other CPUs
->>> cannot
->>> access our request.
->>>
->>> So make sure to have the submit and receive queues properly done,
->>> and
->>> ensure you don't have any global resources within your driver which
->>> needs to be locked. Or move access to those resources out of the
->>> fast
->>> path.
->>
->> Hello John,
->>
->> It's great news that you started looking into scsi-mq support :-) As
->> Hannes wrote, if the performance improvement is not as big as you
->> expected this could be caused e.g. by lock contention. Are you
->> familiar
->> with the perf tool ? The perf tool can be a great help to verify
->> whether
->> lock contention occurs and also which lock(s) cause it.
->>
->> Bart.
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-> Thanks for the replies.
->
-> One of my main concerns is how we use a spinlock in our task exec
-> function to prepare and deliver a frame to the hardware:
-> hisi_sas_task_exec()
-> {
->      ...
->
->      /* protect task_prep and start_delivery sequence */
->      spin_lock_irqsave(&hisi_hba->lock, flags);
->      rc =3D hisi_sas_task_prep(task, hisi_hba, is_tmf, tmf, &pass);
->      ...
->      hisi_hba->hw->start_delivery(hisi_hba);
->      spin_unlock_irqrestore(&hisi_hba->lock, flags);
->
->      ...
-> }
->
-> We have to lock due to how we reserve a slot in the delivery queue.
-> We are looking to optimise this, but it's not straightforward.
->
-> Perf is a good strategy, but, to be honest, I have not spent a lot
-> of time looking at this so I'm looking for low hanging fruit initiall=
-y.
->
-> FYI, our hardware does have the same number of delivery and
-> completion queues (32), and 16 cores. One thing to note is that a
-> command which was sent on queue x is not quaranteed to complete on
-> queue y.
->
-=2E.. then don't bother looking at scsi-mq. That is the very thing it=20
-relies on ...
 
-Time to change the firmware?
 
-Cheers,
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Friday, December 18, 2015 12:52 AM
+> To: KY Srinivasan <kys@microsoft.com>; gregkh@linuxfoundation.org; li=
+nux-
+> kernel@vger.kernel.org; devel@linuxdriverproject.org; ohering@suse.co=
+m;
+> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.o=
+rg;
+> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
+> martin.petersen@oracle.com
+> Subject: Re: [PATCH V3 4/4] scsi: storvsc: Tighten up the interrupt p=
+ath
+>=20
+> On 12/13/2015 09:28 PM, K. Y. Srinivasan wrote:
+> > On the interrupt path, we repeatedly establish the pointer to the
+> > storvsc_device. Fix this.
+> >
+> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> > Reviewed-by: Long Li <longli@microsoft.com>
+> > Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> > Tested-by: Alex Ng <alexng@microsoft.com>
+> > ---
+> >   drivers/scsi/storvsc_drv.c |   23 ++++++++---------------
+> >   1 files changed, 8 insertions(+), 15 deletions(-)
+> >
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.=
+c
+> > index d6ca4f2..b68aebe 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -945,19 +945,16 @@ static void storvsc_handle_error(struct
+> vmscsi_request *vm_srb,
+> >   }
+> >
+> >
+> > -static void storvsc_command_completion(struct storvsc_cmd_request
+> *cmd_request)
+> > +static void storvsc_command_completion(struct storvsc_cmd_request
+> *cmd_request,
+> > +				       struct storvsc_device *stor_dev)
+> >   {
+> >   	struct scsi_cmnd *scmnd =3D cmd_request->cmd;
+> > -	struct hv_host_device *host_dev =3D shost_priv(scmnd->device-
+> >host);
+> >   	struct scsi_sense_hdr sense_hdr;
+> >   	struct vmscsi_request *vm_srb;
+> >   	struct Scsi_Host *host;
+> > -	struct storvsc_device *stor_dev;
+> > -	struct hv_device *dev =3D host_dev->dev;
+> >   	u32 payload_sz =3D cmd_request->payload_sz;
+> >   	void *payload =3D cmd_request->payload;
+> >
+> > -	stor_dev =3D get_in_stor_device(dev);
+> >   	host =3D stor_dev->host;
+> >
+> >   	vm_srb =3D &cmd_request->vstor_packet.vm_srb;
+> > @@ -987,14 +984,13 @@ static void storvsc_command_completion(struct
+> storvsc_cmd_request *cmd_request)
+> >   		kfree(payload);
+> >   }
+> >
+> > -static void storvsc_on_io_completion(struct hv_device *device,
+> > +static void storvsc_on_io_completion(struct storvsc_device *stor_d=
+evice,
+> >   				  struct vstor_packet *vstor_packet,
+> >   				  struct storvsc_cmd_request *request)
+> >   {
+> > -	struct storvsc_device *stor_device;
+> >   	struct vstor_packet *stor_pkt;
+> > +	struct hv_device *device =3D stor_device->device;
+> >
+> > -	stor_device =3D hv_get_drvdata(device);
+> >   	stor_pkt =3D &request->vstor_packet;
+> >
+> >   	/*
+> > @@ -1049,7 +1045,7 @@ static void storvsc_on_io_completion(struct
+> hv_device *device,
+> >   	stor_pkt->vm_srb.data_transfer_length =3D
+> >   	vstor_packet->vm_srb.data_transfer_length;
+> >
+> > -	storvsc_command_completion(request);
+> > +	storvsc_command_completion(request, stor_device);
+> >
+> >   	if (atomic_dec_and_test(&stor_device->num_outstanding_req) &&
+> >   		stor_device->drain_notify)
+> > @@ -1058,21 +1054,19 @@ static void storvsc_on_io_completion(struct
+> hv_device *device,
+> >
+> >   }
+> >
+> > -static void storvsc_on_receive(struct hv_device *device,
+> > +static void storvsc_on_receive(struct storvsc_device *stor_device,
+> >   			     struct vstor_packet *vstor_packet,
+> >   			     struct storvsc_cmd_request *request)
+> >   {
+> >   	struct storvsc_scan_work *work;
+> > -	struct storvsc_device *stor_device;
+> >
+> >   	switch (vstor_packet->operation) {
+> >   	case VSTOR_OPERATION_COMPLETE_IO:
+> > -		storvsc_on_io_completion(device, vstor_packet, request);
+> > +		storvsc_on_io_completion(stor_device, vstor_packet,
+> request);
+> >   		break;
+> >
+> >   	case VSTOR_OPERATION_REMOVE_DEVICE:
+> >   	case VSTOR_OPERATION_ENUMERATE_BUS:
+> > -		stor_device =3D get_in_stor_device(device);
+> >   		work =3D kmalloc(sizeof(struct storvsc_scan_work),
+> GFP_ATOMIC);
+> >   		if (!work)
+> >   			return;
+> > @@ -1083,7 +1077,6 @@ static void storvsc_on_receive(struct hv_devi=
+ce
+> *device,
+> >   		break;
+> >
+> >   	case VSTOR_OPERATION_FCHBA_DATA:
+> > -		stor_device =3D get_in_stor_device(device);
+> >   		cache_wwn(stor_device, vstor_packet);
+> >   #ifdef CONFIG_SCSI_FC_ATTRS
+> >   		fc_host_node_name(stor_device->host) =3D stor_device-
+> >node_name;
+> > @@ -1133,7 +1126,7 @@ static void storvsc_on_channel_callback(void
+> *context)
+> >   					vmscsi_size_delta));
+> >   				complete(&request->wait_event);
+> >   			} else {
+> > -				storvsc_on_receive(device,
+> > +				storvsc_on_receive(stor_device,
+> >   						(struct vstor_packet
+> *)packet,
+> >   						request);
+> >   			}
+> >
+> Hmm. I would've thought the compiler optimizes this away. Have you
+> checked whether it actually makes a difference in the assembler outpu=
+t?
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have not checked the assembler output. It was easy enough to fix the =
+source.
+
+K. Y
+>=20
+> Cheers,
+>=20
+> Hannes
+> --
+> Dr. Hannes Reinecke		               zSeries & Storage
+> hare@suse.de			               +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=FCrnberg)
