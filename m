@@ -1,53 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v1 0/3] hpsa update
-Date: Fri, 18 Dec 2015 10:12:45 +0100
-Message-ID: <5673CE0D.7020600@suse.de>
-References: <20151215155328.22855.56591.stgit@brunhilda>
+Subject: Re: [PATCH 1/1] mvsas: add SGPIO support to Marvell 94xx
+Date: Fri, 18 Dec 2015 10:19:24 +0100
+Message-ID: <5673CF9C.3070909@suse.de>
+References: <5645BEE0.3050406@gmx.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40140 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41975 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754261AbbLRJMs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 04:12:48 -0500
-In-Reply-To: <20151215155328.22855.56591.stgit@brunhilda>
+	id S966812AbbLRJTZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Dec 2015 04:19:25 -0500
+In-Reply-To: <5645BEE0.3050406@gmx.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, james.bottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org
+To: Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-On 12/15/2015 04:57 PM, Don Brace wrote:
-> These patches are based on Linus's tree
+On 11/13/2015 11:43 AM, Wilfried Weissmann wrote:
+> add SGPIO support to Marvell 94xx
 >
-> The changes are:
->   - correct missing changes from snprintf to scnprintf
->     in path_info_show by Rasmus Villemoes
->   - fix reported bus for SAS transport devices
->   - add in enclosure information
->
-> Changes from initial upload
->   - added short patch description for patch
->     hpsa-add-enclosure-connection-box-bay-information
->   - kept hpsa-change-hba-controller-to-bus-0 the same to
->     minimize changes.
+> Signed-off-by: Wilfried Weissmann <Wilfried.Weissmann@gmx.at>
 > ---
 >
-> Don Brace (3):
->        hpsa: fix path_info_show
->        hpsa: change SAS transport devices to bus 0.
->        hpsa: add box and bay information for enclosure devices
+>   drivers/scsi/mvsas/mv_94xx.c |  134 +++++++++++++++++++++++++++++++=
+++
+>   drivers/scsi/mvsas/mv_94xx.h |   71 +++++++++++++++++
+>   drivers/scsi/mvsas/mv_init.c |    2
+>   drivers/scsi/mvsas/mv_sas.c  |   13 +++
+>   drivers/scsi/mvsas/mv_sas.h  |    5 +
+>   5 files changed, 225 insertions(+)
 >
->
->   drivers/scsi/hpsa.c     |  118 ++++++++++++++++++++++++++++++++++++=
-++++++-----
->   drivers/scsi/hpsa.h     |    2 -
->   drivers/scsi/hpsa_cmd.h |   13 +++++
->   3 files changed, 120 insertions(+), 13 deletions(-)
->
-=46or the entire series:
-
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
