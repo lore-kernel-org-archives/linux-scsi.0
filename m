@@ -1,267 +1,152 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V3 3/4] scsi: storvsc: Refactor the code in
- storvsc_channel_init()
-Date: Fri, 18 Dec 2015 09:50:57 +0100
-Message-ID: <5673C8F1.8050507@suse.de>
+Subject: Re: [PATCH V3 4/4] scsi: storvsc: Tighten up the interrupt path
+Date: Fri, 18 Dec 2015 09:51:55 +0100
+Message-ID: <5673C92B.5070602@suse.de>
 References: <1450038486-19211-1-git-send-email-kys@microsoft.com>
  <1450038512-19252-1-git-send-email-kys@microsoft.com>
- <1450038512-19252-3-git-send-email-kys@microsoft.com>
+ <1450038512-19252-4-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38480 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932311AbbLRIu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2015 03:50:59 -0500
-In-Reply-To: <1450038512-19252-3-git-send-email-kys@microsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1450038512-19252-4-git-send-email-kys@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
+List-Id: linux-scsi@vger.kernel.org
 
 On 12/13/2015 09:28 PM, K. Y. Srinivasan wrote:
-> The function storvsc_channel_init() repeatedly interacts with the hos=
-t to
-> extract various channel properties. Refactor this code to eliminate c=
-ode
-> repetition.
+> On the interrupt path, we repeatedly establish the pointer to the
+> storvsc_device. Fix this.
 >
 > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 > Reviewed-by: Long Li <longli@microsoft.com>
 > Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 > Tested-by: Alex Ng <alexng@microsoft.com>
 > ---
-> 	V2: Fixed error paths - Dan Carpenter <dan.carpenter@oracle.com>
->
->   drivers/scsi/storvsc_drv.c |  126 ++++++++++++++++-----------------=
------------
->   1 files changed, 46 insertions(+), 80 deletions(-)
+>   drivers/scsi/storvsc_drv.c |   23 ++++++++---------------
+>   1 files changed, 8 insertions(+), 15 deletions(-)
 >
 > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 220b794..d6ca4f2 100644
+> index d6ca4f2..b68aebe 100644
 > --- a/drivers/scsi/storvsc_drv.c
 > +++ b/drivers/scsi/storvsc_drv.c
-> @@ -723,29 +723,17 @@ static void cache_wwn(struct storvsc_device *st=
-or_device,
->   	}
+> @@ -945,19 +945,16 @@ static void storvsc_handle_error(struct vmscsi_requ=
+est *vm_srb,
 >   }
 >
-> -static int storvsc_channel_init(struct hv_device *device, bool is_fc=
-)
-> +
-> +static int storvsc_execute_vstor_op(struct hv_device *device,
-> +				    struct storvsc_cmd_request *request,
-> +				    bool status_check)
+>
+> -static void storvsc_command_completion(struct storvsc_cmd_request *cmd_r=
+equest)
+> +static void storvsc_command_completion(struct storvsc_cmd_request *cmd_r=
+equest,
+> +				       struct storvsc_device *stor_dev)
+>   {
+>   	struct scsi_cmnd *scmnd =3D cmd_request->cmd;
+> -	struct hv_host_device *host_dev =3D shost_priv(scmnd->device->host);
+>   	struct scsi_sense_hdr sense_hdr;
+>   	struct vmscsi_request *vm_srb;
+>   	struct Scsi_Host *host;
+> -	struct storvsc_device *stor_dev;
+> -	struct hv_device *dev =3D host_dev->dev;
+>   	u32 payload_sz =3D cmd_request->payload_sz;
+>   	void *payload =3D cmd_request->payload;
+>
+> -	stor_dev =3D get_in_stor_device(dev);
+>   	host =3D stor_dev->host;
+>
+>   	vm_srb =3D &cmd_request->vstor_packet.vm_srb;
+> @@ -987,14 +984,13 @@ static void storvsc_command_completion(struct storv=
+sc_cmd_request *cmd_request)
+>   		kfree(payload);
+>   }
+>
+> -static void storvsc_on_io_completion(struct hv_device *device,
+> +static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+>   				  struct vstor_packet *vstor_packet,
+>   				  struct storvsc_cmd_request *request)
 >   {
 > -	struct storvsc_device *stor_device;
-> -	struct storvsc_cmd_request *request;
->   	struct vstor_packet *vstor_packet;
-> -	int ret, t, i;
-> -	int max_chns;
-> -	bool process_sub_channels =3D false;
-> -
-> -	stor_device =3D get_out_stor_device(device);
-> -	if (!stor_device)
-> -		return -ENODEV;
-> +	int ret, t;
+>   	struct vstor_packet *stor_pkt;
+> +	struct hv_device *device =3D stor_device->device;
 >
-> -	request =3D &stor_device->init_request;
->   	vstor_packet =3D &request->vstor_packet;
+> -	stor_device =3D hv_get_drvdata(device);
+>   	stor_pkt =3D &request->vstor_packet;
 >
-> -	/*
-> -	 * Now, initiate the vsc/vsp initialization protocol on the open
-> -	 * channel
-> -	 */
-> -	memset(request, 0, sizeof(struct storvsc_cmd_request));
->   	init_completion(&request->wait_event);
-> -	vstor_packet->operation =3D VSTOR_OPERATION_BEGIN_INITIALIZATION;
->   	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
->
->   	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
-> @@ -761,17 +749,50 @@ static int storvsc_channel_init(struct hv_devic=
-e *device, bool is_fc)
->   	if (t =3D=3D 0)
->   		return -ETIMEDOUT;
->
-> +	if (!status_check)
-> +		return ret;
-> +
->   	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
->   	    vstor_packet->status !=3D 0)
->   		return -EINVAL;
->
-> +	return ret;
-> +}
-> +
-> +static int storvsc_channel_init(struct hv_device *device, bool is_fc=
-)
-> +{
-> +	struct storvsc_device *stor_device;
-> +	struct storvsc_cmd_request *request;
-> +	struct vstor_packet *vstor_packet;
-> +	int ret, i;
-> +	int max_chns;
-> +	bool process_sub_channels =3D false;
-> +
-> +	stor_device =3D get_out_stor_device(device);
-> +	if (!stor_device)
-> +		return -ENODEV;
-> +
-> +	request =3D &stor_device->init_request;
-> +	vstor_packet =3D &request->vstor_packet;
-> +
-> +	/*
-> +	 * Now, initiate the vsc/vsp initialization protocol on the open
-> +	 * channel
-> +	 */
-> +	memset(request, 0, sizeof(struct storvsc_cmd_request));
-> +	vstor_packet->operation =3D VSTOR_OPERATION_BEGIN_INITIALIZATION;
-> +	ret =3D storvsc_execute_vstor_op(device, request, true);
-> +	if (ret)
-> +		return ret;
-> +	/*
-> +	 * Query host supported protocol version.
-> +	 */
->
->   	for (i =3D 0; i < ARRAY_SIZE(vmstor_protocols); i++) {
->   		/* reuse the packet for version range supported */
->   		memset(vstor_packet, 0, sizeof(struct vstor_packet));
->   		vstor_packet->operation =3D
->   			VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
-> -		vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
->
->   		vstor_packet->version.major_minor =3D
->   			vmstor_protocols[i].protocol_version;
-> @@ -780,20 +801,10 @@ static int storvsc_channel_init(struct hv_devic=
-e *device, bool is_fc)
->   		 * The revision number is only used in Windows; set it to 0.
->   		 */
->   		vstor_packet->version.revision =3D 0;
-> -
-> -		ret =3D vmbus_sendpacket(device->channel, vstor_packet,
-> -			       (sizeof(struct vstor_packet) -
-> -				vmscsi_size_delta),
-> -			       (unsigned long)request,
-> -			       VM_PKT_DATA_INBAND,
-> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> +		ret =3D storvsc_execute_vstor_op(device, request, false);
->   		if (ret !=3D 0)
->   			return ret;
->
-> -		t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -		if (t =3D=3D 0)
-> -			return -ETIMEDOUT;
-> -
->   		if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO)
->   			return -EINVAL;
->
-> @@ -817,26 +828,10 @@ static int storvsc_channel_init(struct hv_devic=
-e *device, bool is_fc)
->
->   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
->   	vstor_packet->operation =3D VSTOR_OPERATION_QUERY_PROPERTIES;
-> -	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
-> -
-> -	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
-> -			       (sizeof(struct vstor_packet) -
-> -				vmscsi_size_delta),
-> -			       (unsigned long)request,
-> -			       VM_PKT_DATA_INBAND,
-> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> -
-> +	ret =3D storvsc_execute_vstor_op(device, request, true);
->   	if (ret !=3D 0)
->   		return ret;
->
-> -	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -	if (t =3D=3D 0)
-> -		return -ETIMEDOUT;
-> -
-> -	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> -	    vstor_packet->status !=3D 0)
-> -		return -EINVAL;
-> -
 >   	/*
->   	 * Check to see if multi-channel support is there.
->   	 * Hosts that implement protocol version of 5.1 and above
-> @@ -854,28 +849,15 @@ static int storvsc_channel_init(struct hv_devic=
-e *device, bool is_fc)
->   	if (!is_fc)
->   		goto done;
+> @@ -1049,7 +1045,7 @@ static void storvsc_on_io_completion(struct hv_devi=
+ce *device,
+>   	stor_pkt->vm_srb.data_transfer_length =3D
+>   	vstor_packet->vm_srb.data_transfer_length;
 >
-> +	/*
-> +	 * For FC devices retrieve FC HBA data.
-> +	 */
->   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
->   	vstor_packet->operation =3D VSTOR_OPERATION_FCHBA_DATA;
-> -	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
-> -
-> -	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
-> -			       (sizeof(struct vstor_packet) -
-> -			       vmscsi_size_delta),
-> -			       (unsigned long)request,
-> -			       VM_PKT_DATA_INBAND,
-> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> -
-> +	ret =3D storvsc_execute_vstor_op(device, request, true);
->   	if (ret !=3D 0)
->   		return ret;
+> -	storvsc_command_completion(request);
+> +	storvsc_command_completion(request, stor_device);
 >
-> -	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -	if (t =3D=3D 0)
-> -		return -ETIMEDOUT;
-> -
-> -	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> -	    vstor_packet->status !=3D 0)
-> -		return -EINVAL;
-> -
->   	/*
->   	 * Cache the currently active port and node ww names.
->   	 */
-> @@ -885,26 +867,10 @@ done:
+>   	if (atomic_dec_and_test(&stor_device->num_outstanding_req) &&
+>   		stor_device->drain_notify)
+> @@ -1058,21 +1054,19 @@ static void storvsc_on_io_completion(struct hv_de=
+vice *device,
 >
->   	memset(vstor_packet, 0, sizeof(struct vstor_packet));
->   	vstor_packet->operation =3D VSTOR_OPERATION_END_INITIALIZATION;
-> -	vstor_packet->flags =3D REQUEST_COMPLETION_FLAG;
-> -
-> -	ret =3D vmbus_sendpacket(device->channel, vstor_packet,
-> -			       (sizeof(struct vstor_packet) -
-> -				vmscsi_size_delta),
-> -			       (unsigned long)request,
-> -			       VM_PKT_DATA_INBAND,
-> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> -
-> +	ret =3D storvsc_execute_vstor_op(device, request, true);
->   	if (ret !=3D 0)
->   		return ret;
+>   }
 >
-> -	t =3D wait_for_completion_timeout(&request->wait_event, 5*HZ);
-> -	if (t =3D=3D 0)
-> -		return -ETIMEDOUT;
-> -
-> -	if (vstor_packet->operation !=3D VSTOR_OPERATION_COMPLETE_IO ||
-> -	    vstor_packet->status !=3D 0)
-> -		return -EINVAL;
-> -
->   	if (process_sub_channels)
->   		handle_multichannel_storage(device, max_chns);
+> -static void storvsc_on_receive(struct hv_device *device,
+> +static void storvsc_on_receive(struct storvsc_device *stor_device,
+>   			     struct vstor_packet *vstor_packet,
+>   			     struct storvsc_cmd_request *request)
+>   {
+>   	struct storvsc_scan_work *work;
+> -	struct storvsc_device *stor_device;
 >
+>   	switch (vstor_packet->operation) {
+>   	case VSTOR_OPERATION_COMPLETE_IO:
+> -		storvsc_on_io_completion(device, vstor_packet, request);
+> +		storvsc_on_io_completion(stor_device, vstor_packet, request);
+>   		break;
 >
-The same applies here; please make the FC support configurable both=20
-during configuration and during runtime.
+>   	case VSTOR_OPERATION_REMOVE_DEVICE:
+>   	case VSTOR_OPERATION_ENUMERATE_BUS:
+> -		stor_device =3D get_in_stor_device(device);
+>   		work =3D kmalloc(sizeof(struct storvsc_scan_work), GFP_ATOMIC);
+>   		if (!work)
+>   			return;
+> @@ -1083,7 +1077,6 @@ static void storvsc_on_receive(struct hv_device *de=
+vice,
+>   		break;
+>
+>   	case VSTOR_OPERATION_FCHBA_DATA:
+> -		stor_device =3D get_in_stor_device(device);
+>   		cache_wwn(stor_device, vstor_packet);
+>   #ifdef CONFIG_SCSI_FC_ATTRS
+>   		fc_host_node_name(stor_device->host) =3D stor_device->node_name;
+> @@ -1133,7 +1126,7 @@ static void storvsc_on_channel_callback(void *conte=
+xt)
+>   					vmscsi_size_delta));
+>   				complete(&request->wait_event);
+>   			} else {
+> -				storvsc_on_receive(device,
+> +				storvsc_on_receive(stor_device,
+>   						(struct vstor_packet *)packet,
+>   						request);
+>   			}
+>
+Hmm. I would've thought the compiler optimizes this away. Have you =
+
+checked whether it actually makes a difference in the assembler output?
 
 Cheers,
 
 Hannes
---=20
+-- =
+
 Dr. Hannes Reinecke		               zSeries & Storage
 hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
