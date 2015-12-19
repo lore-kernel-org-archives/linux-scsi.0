@@ -1,57 +1,58 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] SCSI-lpfc: Use a signed return type for two functions
-Date: Sat, 19 Dec 2015 19:44:06 +0100
-Message-ID: <5675A576.8020008@users.sourceforge.net>
+From: Nicholas Krause <xerofoify@gmail.com>
+Subject: [PATCH] mpt3sas:Fix missing error checks for calls to
+ _transport_phy_reset in mpt3sas_transport.c
+Date: Sat, 19 Dec 2015 14:42:05 -0500
+Message-ID: <1450554125-14756-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:49614 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932750AbbLSSoZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Dec 2015 13:44:25 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: nagalakshmi.nandigama@avagotech.com
+Cc: abhijit.mahajan@avagotech.com, linux-kernel@vger.kernel.org, sbranden@broadcom.com, martin.petersen@oracle.com, jonmason@broadcom.com, rjui@broadcom.com, JBottomley@odin.com, MPT-FusionLinux.pdl@avagotech.co, sreekanth.reddy@avagotech.com, praveen.krishnamoorthy@avagotech.com, bcm-kernel-feedback-list@broadcom.com, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@avagotech.com>, "James E. J. Bottomley" <JBottomley@odin.com>, James Smart <james.smart@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 19 Dec 2015 19:32:27 +0100
+This adds the missing error checks and paths for functions that
+call _transport_phy_reset and do not correctly check that the
+call to this particular function has succeeded by returning zero
+in the file, mpt3sas_transport.c.
 
-The return type "size_t" was used by the functions "lpfc_wwn_set"
-and "lpfc_oas_lun_state_set" despite of the aspect that they will
-eventually return a negative error code.
-Improve this implementation detail by using the type "ssize_t" instead.
-
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index f6446d7..777960e 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2089,7 +2089,7 @@ static char *lpfc_soft_wwn_key = "C99G71SL8032A";
-  * -EINVAL if the buffer does not contain a valid wwn
-  * 0 success
-  **/
--static size_t
-+static ssize_t
- lpfc_wwn_set(const char *buf, size_t cnt, char wwn[])
- {
- 	unsigned int i, j;
-@@ -2570,7 +2570,7 @@ static DEVICE_ATTR(lpfc_xlane_lun_status, S_IRUGO,
-  * -EPERM OAS is not enabled or not supported by this port.
-  *
-  */
--static size_t
-+static ssize_t
- lpfc_oas_lun_state_set(struct lpfc_hba *phba, uint8_t vpt_wwpn[],
- 		       uint8_t tgt_wwpn[], uint64_t lun, uint32_t oas_state)
- {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index ca36d7e..bff5a11 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -1766,7 +1766,7 @@ _transport_phy_enable(struct sas_phy *phy, int enable)
+ 
+ 	/* link reset */
+ 	if (enable)
+-		_transport_phy_reset(phy, 0);
++		rc = _transport_phy_reset(phy, 0);
+ 
+  out:
+ 	kfree(sas_iounit_pg1);
+@@ -1870,7 +1870,9 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ 	}
+ 
+ 	/* link reset */
+-	_transport_phy_reset(phy, 0);
++	rc = _transport_phy_reset(phy, 0);
++	if (rc)
++		goto out;
+ 
+ 	/* read phy page 0, then update the rates in the sas transport phy */
+ 	if (!mpt3sas_config_get_phy_pg0(ioc, &mpi_reply, &phy_pg0,
 -- 
-2.6.3
-
+2.5.0
