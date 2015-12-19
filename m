@@ -1,8 +1,8 @@
 From: Nicholas Krause <xerofoify@gmail.com>
 Subject: [PATCH] mpt3sas:Fix missing error checks for calls to
  _transport_phy_reset in mpt3sas_transport.c
-Date: Sat, 19 Dec 2015 14:42:05 -0500
-Message-ID: <1450554125-14756-1-git-send-email-xerofoify@gmail.com>
+Date: Sat, 19 Dec 2015 14:43:07 -0500
+Message-ID: <1450554187-14812-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -17,7 +17,7 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: nagalakshmi.nandigama@avagotech.com
-Cc: abhijit.mahajan@avagotech.com, linux-kernel@vger.kernel.org, sbranden@broadcom.com, martin.petersen@oracle.com, jonmason@broadcom.com, rjui@broadcom.com, JBottomley@odin.com, MPT-FusionLinux.pdl@avagotech.co, sreekanth.reddy@avagotech.com, praveen.krishnamoorthy@avagotech.com, bcm-kernel-feedback-list@broadcom.com, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: abhijit.mahajan@avagotech.com, sbranden@broadcom.com, martin.petersen@oracle.com, jonmason@broadcom.com, rjui@broadcom.com, JBottomley@odin.com, linux-kernel@vger.kernel.org, sreekanth.reddy@avagotech.com, praveen.krishnamoorthy@avagotech.com, bcm-kernel-feedback-list@broadcom.com, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 This adds the missing error checks and paths for functions that
