@@ -1,51 +1,50 @@
-From: <dg5@JUONGMonday55.onmicrosoft.com>
-Subject: ATTENTION!!!!!!
-Date: Sun, 20 Dec 2015 00:33:27 -0500
-Message-ID: <AM4PR04MB1523CDC1C3A6BCBD79518A80B1E30__8232.48135061494$1450590591$gmane$org@AM4PR04MB1523.eurprd04.prod.outlook.com>
-Reply-To: <frank.david849@yahoo.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 02/15] be2iscsi: Fix mbox synchronization replacing spinlock
+ with mutex
+Date: Sun, 20 Dec 2015 01:35:05 -0600
+Message-ID: <56765A29.2010409@cs.wisc.edu>
+References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com> <1450194906-12925-3-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db3hn0250.outbound.protection.outlook.com ([157.55.234.250]:5632
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751233AbbLTFtb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2015 00:49:31 -0500
-Content-Description: Mail message body
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42046 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754165AbbLTHfN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Dec 2015 02:35:13 -0500
+In-Reply-To: <1450194906-12925-3-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <dg5@JUONGMonday55.onmicrosoft.com>
+To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org
 
-Dear Beneficiary,
+On 12/15/2015 09:54 AM, Jitendra Bhivare wrote:
+> From: Jitendra <jitendra.bhivare@avagotech.com>
+> 
+> This is second part of actual fix for soft lockup.
+> 
+> All mbox cmds issued using BMBX and MCC are synchronized using mutex
+> mbox_lock instead of spin_lock. Used mutex_lock_interruptible where
+> ever possible.
+> 
+> Signed-off-by: Jitendra <jitendra.bhivare@avagotech.com>
+> ---
+>  drivers/scsi/be2iscsi/be.h      |    2 +-
+>  drivers/scsi/be2iscsi/be_cmds.c |   73 ++++++++++++++-------------
+>  drivers/scsi/be2iscsi/be_main.c |    2 +-
+>  drivers/scsi/be2iscsi/be_mgmt.c |  105 ++++++++++++++++++++------------------
+>  4 files changed, 94 insertions(+), 88 deletions(-)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+> index 77f992e..cf19bce 100644
+> --- a/drivers/scsi/be2iscsi/be.h
+> +++ b/drivers/scsi/be2iscsi/be.h
+> @@ -124,7 +124,7 @@ struct be_ctrl_info {
+>  	struct pci_dev *pdev;
+>  
+>  	/* Mbox used for cmd request/response */
+> -	spinlock_t mbox_lock;	/* For serializing mbox cmds to BE card */
+> +	struct mutex mbox_lock;	/* For serializing mbox cmds to BE card */
 
-This is to officially inform you that we have written to you before without getting respond from you and we believe that our previous mail did not get to you therefore we write you again. We are contacting you concerning the release of your inheritance fund / Draft/Cheque /ATM Card which have been delayed for transfer by some officials who claim to be in position of your fund thereby extorting money from you in one way or the other.
+You need to update free_mcc_tag. It still does spin_lock calls on the
+mbox_lock.
 
-Your Fund has finally been approved for transfer by the West Africa Fund Monitoring Unit. Your fund will be transfer to you via MasterCard ATM which is cashable in any ATM machine or Bank anywhere in the world.
-
-We hereby inform you that the ATM card worth US$8.5, 000.000.00 has been credited in your favour as the first part payment of your inheritance fund which has been delayed by these officers who claim to be in position of your fund.
-
- 
-Therefore you are warned to stop any further communication with anybody concerning your inheritance fund.
-
-Your fund to be released via MasterCard ATM in act to uphold the rule of law which we represent.You have to reconfirm the informations below for security reasons. The only money you are obliged to pay is the delivery charges only .
-
-Contact the verification officer incharge of the delivery:
-
-Name: Frank David
-E-mail: frank.david849@yahoo.com
-Telephone +2348140092560
-
-Send them the following informations of yours for the conclusion of your ATM Card:
-
-Full Name:__________
-Delivery Address:____
-Country:_______
-Occupation:_____
-Phone Number:____
-Age:______
-sex:______
-
-Regards,
-Frank David
- 
