@@ -1,35 +1,75 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] target: kthread login failure hung task + CAW
- use-after-free
-Date: Sun, 20 Dec 2015 23:19:19 -0800
-Message-ID: <1450682359.25674.49.camel@haakon3.risingtidesystems.com>
-References: <1447546903-15305-1-git-send-email-nab@daterainc.com>
-	 <56740484.4080206@zoner.cz>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH V3 4/4] scsi: storvsc: Tighten up the interrupt path
+Date: Mon, 21 Dec 2015 08:42:08 +0100
+Message-ID: <5677AD50.4030406@suse.de>
+References: <1450038486-19211-1-git-send-email-kys@microsoft.com>
+ <1450038512-19252-1-git-send-email-kys@microsoft.com>
+ <1450038512-19252-4-git-send-email-kys@microsoft.com>
+ <5673C92B.5070602@suse.de>
+ <BY2PR0301MB16544C0D5B825A54AA0319DFA0E10@BY2PR0301MB1654.namprd03.prod.outlook.com>
+ <1450457288.2439.7.camel@HansenPartnership.com>
+ <BY2PR0301MB1654C8B001A86200B918B9DFA0E20@BY2PR0301MB1654.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <56740484.4080206@zoner.cz>
-Sender: target-devel-owner@vger.kernel.org
-To: Martin Svec <martin.svec@zoner.cz>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <BY2PR0301MB1654C8B001A86200B918B9DFA0E20@BY2PR0301MB1654.namprd03.prod.outlook.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: KY Srinivasan <kys@microsoft.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-12-18 at 14:05 +0100, Martin Svec wrote:
-> Hello Nick,
-> 
-> should these patches be included in 4.1.x LTS series too?:
-> 
-> Nicholas Bellinger (2):
->   iscsi-target: Fix rx_login_comp hang after login failure
->   target: Fix race for SCF_COMPARE_AND_WRITE_POST checking
-> 
-> They are marked as #v3.10+ and #v3.12+ but I still don't see them in 4.1.15.
-> 
-
-FYI, Kamal has applied both to v3.19.y + v3.13.y stable code.
-
-Me thinks Greg-KH stable backlog is higher than usual due to holidays,
-etc.  I'm sure he will be getting back to it soon.  ;)
-
---nab
+T24gMTIvMTkvMjAxNSAwMzoyOCBBTSwgS1kgU3Jpbml2YXNhbiB3cm90ZToKPgpbIC4uIF0KPj4K
+Pj4gQ291bGQgeW91PyAgWW91J3JlIG1ha2luZyB3aGF0IHlvdSBkZXNjcmliZSBhcyBhbiBvcHRp
+bWlzYXRpb24gYnV0Cj4+IHRoZXJlIGFyZSB0d28gcmVhc29ucyB3aHkgdGhpcyBtaWdodCBub3Qg
+YmUgc28uICBUaGUgZmlyc3QgaXMgdGhhdCB0aGUKPj4gY29tcGlsZXIgaXMgZW50aXRsZWQgdG8g
+aW5saW5lIHN0YXRpYyBmdW5jdGlvbnMuICBJZiBpdCBkaWQsIGxpa2VseSBpdAo+PiBwaWNrZWQg
+dXAgdGhlIG9wdG1pc2F0aW9uIGFueXdheSBhcyBIYW5uZXMgc3VnZ2VzdGVkLiAgSG93ZXZlciwg
+dGhlCj4+IG90aGVyIHJlYXNvbiB0aGlzIG1pZ2h0IG5vdCBiZSBhbiBvcHRpbWlzYXRpb24gKGFz
+c3VtaW5nIHRoZSBjb21waWxlcgo+PiBkb2Vzbid0IGlubGluZSB0aGUgZnVuY3Rpb24pIGlzIHlv
+dSdyZSBwYXNzaW5nIGFuIGFyZ3VtZW50IHdoaWNoIGNhbiBiZQo+PiBvZmZzZXQgY29tcHV0ZWQu
+ICBPbiBhbGwgYXJjaGl0ZWN0dXJlcywgeW91IGhhdmUgYSBmaXhlZCBudW1iZXIgb2YKPj4gcmVn
+aXN0ZXJzIGZvciBwYXNzaW5nIGZ1bmN0aW9uIGFyZ3VtZW50cywgdGhlbiB3ZSBoYXZlIHRvIHVz
+ZSB0aGUKPj4gc3RhY2suICBVc2luZyB0aGUgc3RhY2sgY29tZXMgaW4gZmFyIG1vcmUgZXhwZW5z
+aXZlIHRoYW4gY29tcHV0aW5nIGFuCj4+IG9mZnNldCB0byBhbiBleGlzdGluZyBwb2ludGVyLiAg
+RXZlbiBpZiB5b3UncmUgc3RpbGwgaW4gcmVnaXN0ZXJzLCB0aGUKPj4gb2Zmc2V0IG5vdyBoYXMg
+dG8gYmUgY29tcHV0ZWQgYW5kIHN0b3JlZCBhbmQgdGhlIGNvbXBpbGVyIGxvc2VzIHRyYWNrCj4+
+IG9mIHRoZSByZWxhdGlvbi4KPj4KPj4gVGhlIGJvdHRvbSBsaW5lIGlzIHRoYXQgYWRkaW5nIGFu
+IGV4dHJhIGFyZ3VtZW50IGZvciBhIHZhbHVlIHdoaWNoIGNhbgo+PiBiZSBvZmZzZXQgY29tcHV0
+ZWQgaXMgcmFyZWx5IGEgd2luLgo+Cj4gSmFtZXMsCj4gV2hlbiBJIGRpZCB0aGlzLCBJIHdhcyBt
+b3N0bHkgY29uY2VybmVkIGFib3V0IHRoZSBjb3N0IG9mIHJlZXN0YWJsaXNoaW5nIHN0YXRlIHRo
+YXQgd2FzCj4gYWxyZWFkeSBrbm93bi4gU28sIGV2ZW4gd2l0aCB0aGUgZnVuY3Rpb24gYmVpbmcg
+aW4tbGluZWQsIEkgZmVsdCB0aGUgY29zdCBvZiByZWVzdGFibGlzaGluZwo+IHN0YXRlIHRoYXQg
+d2FzIGFscmVhZHkga25vd24gaXMgdW5uZWNlc3NhcnkuIEluIHRoaXMgcGFydGljdWxhciBjYXNl
+LCBJIGRpZCBub3QgY2hhbmdlIHRoZQo+IG51bWJlciBvZiBhcmd1bWVudHMgdGhhdCB3ZXJlIGJl
+aW5nIHBhc3NlZDsgSSBqdXN0IGNoYW5nZWQgdGhlIHR5cGUgb2Ygb25lIG9mIHRoZW0gLQo+IGlu
+c3RlYWQgb2YgcGFzc2luZyBzdHJ1Y3QgaHZfZGV2aWNlICosIEkgYW0gbm93IHBhc3Npbmcgc3Ry
+dWN0IHN0b3J2c2NfZGV2aWNlICouIEluIHRoZQo+IGN1cnJlbnQgY29kZSwgd2UgYXJlIHVzaW5n
+IHN0cnVjdCBodl9kZXZpY2UgKiB0byBlc3RhYmxpc2ggYSBwb2ludGVyIHRvIHN0cnVjdCBzdG9y
+dnNjX2RldmljZSAqCj4gdmlhIHRoZSBmdW5jdGlvbiBnZXRfaW5fc3Rvcl9kZXZpY2UoKS4gVGhp
+cyBwYXR0ZXJuIGN1cnJlbnRseSBleGlzdHMgaW4gdGhlIGNhbGwgY2hhaW4gZnJvbSB0aGUKPiBp
+bnRlcnJ1cHQgaGFuZGxlciAtIHN0b3J2c2Nfb25fY2hhbm5lbF9jYWxsYmFjaygpLgo+Cj4gV2hp
+bGUgdGhlIGNvbXBpbGVyIGlzIHNtYXJ0IGVub3VnaCB0byBpbmxpbmUgYm90aCBnZXRfaW5fc3Rv
+cl9kZXZpY2UoKSBhcyB3ZWxsIGFzIG1hbnkgb2YgdGhlIHN0YXRpYwo+IGZ1bmN0aW9ucyBpbiB0
+aGUgY2FsbCBjaGFpbiBmcm9tIHN0b3J2c2Nfb25fY2hhbm5lbF9jYWxsYmFjaygpLCBsb29raW5n
+IGF0IHRoZSBhc3NlbWJsZWQgY29kZSwKPiB0aGUgY29tcGlsZXIgaXMgcmVwZWF0ZWRseSBpbmxp
+bmluZyB0aGUgY2FsbCB0byBnZXRfaW5fc3Rvcl9kZXZpY2UoKSBhbmQgdGhpcyBjbGVhcmx5IGlz
+IGxlc3MgdGhhbiBvcHRpbWFsLgo+CldoaWNoIG1lYW5zIHlvdSBhY3R1YWxseSBjaGVja2VkIHRo
+ZSBjb21waWxlciBvdXRwdXQsIGFuZCBpdCBtYWRlIGEgCmRpZmZlcmVuY2UuCgpUaGF0J3MgYWxs
+IEkgd2FudGVkIHRvIGtub3csIGFzIGl0J3Mgbm90IGltbWVkaWF0ZWx5IGNsZWFyIGZyb20gdGhl
+IApwYXRjaC4KClNvOgoKUmV2aWV3ZWQtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNv
+bT4KCkNoZWVycywKCkhhbm5lcwotLSAKRHIuIEhhbm5lcyBSZWluZWNrZQkJICAgICAgICAgICAg
+ICAgelNlcmllcyAmIFN0b3JhZ2UKaGFyZUBzdXNlLmRlCQkJICAgICAgICAgICAgICAgKzQ5IDkx
+MSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBHbWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJl
+cmcKR0Y6IEYuIEltZW5kw7ZyZmZlciwgSi4gU21pdGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1
+LCBHLiBOb3J0b24KSFJCIDIxMjg0IChBRyBOw7xybmJlcmcpCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCmRldmVsIG1haWxpbmcgbGlzdApkZXZlbEBsaW51
+eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6Ly9kcml2ZXJkZXYubGludXhkcml2ZXJwcm9qZWN0Lm9y
+Zy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZlcmRldi1kZXZlbAo=
