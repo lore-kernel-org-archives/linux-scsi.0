@@ -1,43 +1,35 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 15/16] qla2xxx: Add bulk send for atio & ctio
- completion paths.
-Date: Sun, 20 Dec 2015 23:13:53 -0800
-Message-ID: <1450682033.25674.44.camel@haakon3.risingtidesystems.com>
-References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
-	 <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 0/2] target: kthread login failure hung task + CAW
+ use-after-free
+Date: Sun, 20 Dec 2015 23:19:19 -0800
+Message-ID: <1450682359.25674.49.camel@haakon3.risingtidesystems.com>
+References: <1447546903-15305-1-git-send-email-nab@daterainc.com>
+	 <56740484.4080206@zoner.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34178 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbbLUHNz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 02:13:55 -0500
-In-Reply-To: <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <56740484.4080206@zoner.cz>
+Sender: target-devel-owner@vger.kernel.org
+To: Martin Svec <martin.svec@zoner.cz>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: target-devel@vger.kernel.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, 2015-12-17 at 14:57 -0500, Himanshu Madhani wrote:
-> From: Quinn Tran <quinn.tran@qlogic.com>
+On Fri, 2015-12-18 at 14:05 +0100, Martin Svec wrote:
+> Hello Nick,
 > 
-> At high traffic, the work queue can become a bottle neck.
-> Instead of putting each command on the work queue as 1 work
-> element, the fix would daisy chain a list of commands that came
-> from FW/interrupt under 1 work element to reduce lock contention.
+> should these patches be included in 4.1.x LTS series too?:
+> 
+> Nicholas Bellinger (2):
+>   iscsi-target: Fix rx_login_comp hang after login failure
+>   target: Fix race for SCF_COMPARE_AND_WRITE_POST checking
+> 
+> They are marked as #v3.10+ and #v3.12+ but I still don't see them in 4.1.15.
 > 
 
-I'm wondering if we are better served by turning this into generic logic
-in kernel/workqueue.c to be used beyond qla2xxx, or:
+FYI, Kamal has applied both to v3.19.y + v3.13.y stable code.
 
-using WQ_UNBOUND (following iser-target) and verify if observed
-bottleneck is due to internal !(WQ_UNBOUND) usage in qla_target.c.
-
-Out of curiosity, what level of performance improvement does this
-patch (as is) actually provide..?
-
-Thank you,
+Me thinks Greg-KH stable backlog is higher than usual due to holidays,
+etc.  I'm sure he will be getting back to it soon.  ;)
 
 --nab
-
