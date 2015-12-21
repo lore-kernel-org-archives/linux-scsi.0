@@ -1,44 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/15] be2iscsi: Fix to process 25G link speed info from
- FW
-Date: Mon, 21 Dec 2015 08:13:00 +0100
-Message-ID: <5677A67C.4010006@suse.de>
-References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1450194906-12925-14-git-send-email-jitendra.bhivare@avagotech.com>
- <5673CCC0.7000004@suse.de>
- <CAOA9gs36+ozeo=ZtqHYMvznwMSG6wKnG_zLOp__=wnKMkKv0CA@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 15/16] qla2xxx: Add bulk send for atio & ctio
+ completion paths.
+Date: Sun, 20 Dec 2015 23:13:53 -0800
+Message-ID: <1450682033.25674.44.camel@haakon3.risingtidesystems.com>
+References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
+	 <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51199 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750794AbbLUHND (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Dec 2015 02:13:03 -0500
-In-Reply-To: <CAOA9gs36+ozeo=ZtqHYMvznwMSG6wKnG_zLOp__=wnKMkKv0CA@mail.gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34178 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbbLUHNz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 02:13:55 -0500
+In-Reply-To: <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: target-devel@vger.kernel.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-On 12/21/2015 04:00 AM, Jitendra Bhivare wrote:
-> Yes, the faults are not being used, it just adds to the confusion,
-> where we just want to get the link state change up or down.
->
-So make it a separate patch explaining this.
+On Thu, 2015-12-17 at 14:57 -0500, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@qlogic.com>
+> 
+> At high traffic, the work queue can become a bottle neck.
+> Instead of putting each command on the work queue as 1 work
+> element, the fix would daisy chain a list of commands that came
+> from FW/interrupt under 1 work element to reduce lock contention.
+> 
 
-Cheers,
+I'm wondering if we are better served by turning this into generic logic
+in kernel/workqueue.c to be used beyond qla2xxx, or:
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+using WQ_UNBOUND (following iser-target) and verify if observed
+bottleneck is due to internal !(WQ_UNBOUND) usage in qla_target.c.
+
+Out of curiosity, what level of performance improvement does this
+patch (as is) actually provide..?
+
+Thank you,
+
+--nab
+
