@@ -1,29 +1,27 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 Subject: RE: [PATCH 10/15] be2iscsi: Add FW config validation
-Date: Mon, 21 Dec 2015 08:27:51 +0530
-Message-ID: <85736e9e891f9e20e8b72e91f5595237@mail.gmail.com>
+Date: Mon, 21 Dec 2015 09:29:20 +0530
+Message-ID: <a6b9e93fa2d3883b19f29e878a41511d@mail.gmail.com>
 References: <1450194906-12925-1-git-send-email-jitendra.bhivare@avagotech.com>
  <1450194906-12925-11-git-send-email-jitendra.bhivare@avagotech.com> <5673CBF8.1040401@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:35679 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbLUC5x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2015 21:57:53 -0500
-Received: by mail-yk0-f174.google.com with SMTP id v6so118027155ykc.2
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Dec 2015 18:57:53 -0800 (PST)
+Received: from mail-yk0-f171.google.com ([209.85.160.171]:35397 "EHLO
+	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbbLUD7Z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2015 22:59:25 -0500
+Received: by mail-yk0-f171.google.com with SMTP id v6so118925316ykc.2
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Dec 2015 19:59:25 -0800 (PST)
 In-Reply-To: <5673CBF8.1040401@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-It stands for Dual ULP Aware. Will add a comment explaining that.
-
-Thanks,
-
-JB
+Yes, the faults are not being used, it just adds to the confusion, we j=
+ust
+intend to get the link state change - UP or DOWN.
 
 -----Original Message-----
 =46rom: Hannes Reinecke [mailto:hare@suse.de]
