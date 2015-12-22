@@ -1,38 +1,41 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 01/77] atari_scsi: Fix SCSI host ID setting
-Date: Tue, 22 Dec 2015 12:17:39 +1100
-Message-ID: <20151222011738.355505173@telegraphics.com.au>
+Subject: [PATCH v3 30/77] ncr5380: Add missing break after case MESSAGE_REJECT
+Date: Tue, 22 Dec 2015 12:18:08 +1100
+Message-ID: <20151222011746.205576191@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_scsi-fix-host-id
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40515 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785AbbLVCbP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:15 -0500
+Content-Disposition: inline; filename=ncr5380-missing-break
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-The NVRAM location of this byte is 16, as documented in
-http://toshyp.atari.org/en/004009.html
+MESSAGE REJECT does not imply DISCONNECT: the target is about to enter
+MESSAGE IN or MESSAGE OUT phase.
 
-This was confirmed by Michael Schmitz, by setting the SCSI host ID
-under EmuTOS and then checking the value in /proc/driver/nvram and
-/dev/nvram under Linux.
+This bug fix comes from atari_NCR5380.c. Unfortunately it never made it
+into the original NCR5380.c core driver.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/atari_scsi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/NCR5380.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Index: linux/drivers/scsi/atari_scsi.c
+Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2015-12-22 12:15:21.000000000 +1100
-@@ -880,7 +880,7 @@ static int __init atari_scsi_probe(struc
- 	} else {
- 		/* Test if a host id is set in the NVRam */
- 		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
--			unsigned char b = nvram_read_byte(14);
-+			unsigned char b = nvram_read_byte(16);
- 
- 			/* Arbitration enabled? (for TOS)
- 			 * If yes, use configured host ID
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:16.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:17.000000000 +1100
+@@ -1990,6 +1990,7 @@ static void NCR5380_information_transfer
+ 					default:
+ 						break;
+ 					}
++					break;
+ 				case DISCONNECT:{
+ 						/* Accept message by clearing ACK */
+ 						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+
+
