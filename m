@@ -1,156 +1,92 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 02/77] ncr5380: Remove redundant static variable initializers
-Date: Tue, 22 Dec 2015 12:17:40 +1100
-Message-ID: <20151222011738.605228689@telegraphics.com.au>
+Subject: [PATCH v3 36/77] ncr5380: Use work_struct instead of delayed_work
+Date: Tue, 22 Dec 2015 12:18:14 +1100
+Message-ID: <20151222011747.805666887@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-redundant-static-initializers
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40494 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752799AbbLVCbQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:16 -0500
+Content-Disposition: inline; filename=ncr5380-work_struct-instead
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+
+Each host instance now has it's own work queue so the main() work item can
+sleep when necessary. That means we can use a simple work item rather than
+a delayed work item. This brings NCR5380.c closer to atari_NCR5380.c.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c   |    2 +-
- drivers/scsi/dtc.c       |    4 ++--
- drivers/scsi/g_NCR5380.c |    4 ++--
- drivers/scsi/pas16.c     |   10 +++++-----
- drivers/scsi/sun3_scsi.c |    8 ++++----
- drivers/scsi/t128.c      |    4 ++--
- 6 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/scsi/NCR5380.c |   12 +++++-------
+ drivers/scsi/NCR5380.h |    1 -
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:15:24.000000000 +1100
-@@ -534,7 +534,7 @@ static void NCR5380_set_timer(struct NCR
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:24.000000000 +1100
+@@ -697,7 +697,7 @@ static int NCR5380_init(struct Scsi_Host
+ 	hostdata->issue_queue = NULL;
+ 	hostdata->disconnected_queue = NULL;
+ 	
+-	INIT_DELAYED_WORK(&hostdata->coroutine, NCR5380_main);
++	INIT_WORK(&hostdata->main_task, NCR5380_main);
+ 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
+ 	                        WQ_UNBOUND | WQ_MEM_RECLAIM,
+ 	                        1, instance->host_no);
+@@ -797,7 +797,7 @@ static void NCR5380_exit(struct Scsi_Hos
+ {
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 
+-	cancel_delayed_work_sync(&hostdata->coroutine);
++	cancel_work_sync(&hostdata->main_task);
+ 	destroy_workqueue(hostdata->work_q);
  }
  
+@@ -859,9 +859,8 @@ static int NCR5380_queue_command(struct
  
--static int probe_irq __initdata = 0;
-+static int probe_irq __initdata;
+ 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
  
- /**
-  *	probe_intr	-	helper for IRQ autoprobe
-Index: linux/drivers/scsi/dtc.c
+-	/* Run the coroutine if it isn't already running. */
+ 	/* Kick off command processing */
+-	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, 0);
++	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	return 0;
+ }
+ 
+@@ -880,7 +879,7 @@ static int NCR5380_queue_command(struct
+ static void NCR5380_main(struct work_struct *work)
+ {
+ 	struct NCR5380_hostdata *hostdata =
+-		container_of(work, struct NCR5380_hostdata, coroutine.work);
++		container_of(work, struct NCR5380_hostdata, main_task);
+ 	struct Scsi_Host *instance = hostdata->host;
+ 	struct scsi_cmnd *tmp, *prev;
+ 	int done;
+@@ -1037,8 +1036,7 @@ static irqreturn_t NCR5380_intr(int dumm
+ 		}	/* if BASR_IRQ */
+ 		spin_unlock_irqrestore(instance->host_lock, flags);
+ 		if(!done)
+-			queue_delayed_work(hostdata->work_q,
+-			                   &hostdata->coroutine, 0);
++			queue_work(hostdata->work_q, &hostdata->main_task);
+ 	} while (!done);
+ 	return IRQ_HANDLED;
+ }
+Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-22 12:15:24.000000000 +1100
-@@ -150,7 +150,7 @@ static const struct signature {
- 
- static int __init dtc_setup(char *str)
- {
--	static int commandline_current = 0;
-+	static int commandline_current;
- 	int i;
- 	int ints[10];
- 
-@@ -188,7 +188,7 @@ __setup("dtc=", dtc_setup);
- 
- static int __init dtc_detect(struct scsi_host_template * tpnt)
- {
--	static int current_override = 0, current_base = 0;
-+	static int current_override, current_base;
- 	struct Scsi_Host *instance;
- 	unsigned int addr;
- 	void __iomem *base;
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:15:24.000000000 +1100
-@@ -121,7 +121,7 @@ static struct override {
- 
- static void __init internal_setup(int board, char *str, int *ints)
- {
--	static int commandline_current = 0;
-+	static int commandline_current;
- 	switch (board) {
- 	case BOARD_NCR5380:
- 		if (ints[0] != 2 && ints[0] != 3) {
-@@ -251,7 +251,7 @@ static int __init do_DTC3181E_setup(char
- 
- static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- {
--	static int current_override = 0;
-+	static int current_override;
- 	int count;
- 	unsigned int *ports;
- #ifndef SCSI_G_NCR5380_MEM
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-12-22 12:15:24.000000000 +1100
-@@ -87,8 +87,8 @@
- #include "NCR5380.h"
- 
- 
--static unsigned short pas16_addr = 0;
--static int pas16_irq = 0;
-+static unsigned short pas16_addr;
-+static int pas16_irq;
-  
- 
- static const int scsi_irq_translate[] =
-@@ -305,7 +305,7 @@ static int __init
- 
- static int __init pas16_setup(char *str)
- {
--    static int commandline_current = 0;
-+	static int commandline_current;
-     int i;
-     int ints[10];
- 
-@@ -344,8 +344,8 @@ __setup("pas16=", pas16_setup);
- 
- static int __init pas16_detect(struct scsi_host_template *tpnt)
- {
--    static int current_override = 0;
--    static unsigned short current_base = 0;
-+	static int current_override;
-+	static unsigned short current_base;
-     struct Scsi_Host *instance;
-     unsigned short io_port;
-     int  count;
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2015-12-22 12:15:24.000000000 +1100
-@@ -100,10 +100,10 @@ static struct scsi_cmnd *sun3_dma_setup_
- static unsigned char *sun3_scsi_regp;
- static volatile struct sun3_dma_regs *dregs;
- static struct sun3_udc_regs *udc_regs;
--static unsigned char *sun3_dma_orig_addr = NULL;
--static unsigned long sun3_dma_orig_count = 0;
--static int sun3_dma_active = 0;
--static unsigned long last_residual = 0;
-+static unsigned char *sun3_dma_orig_addr;
-+static unsigned long sun3_dma_orig_count;
-+static int sun3_dma_active;
-+static unsigned long last_residual;
- static struct Scsi_Host *default_instance;
- 
- /*
-Index: linux/drivers/scsi/t128.c
-===================================================================
---- linux.orig/drivers/scsi/t128.c	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2015-12-22 12:15:24.000000000 +1100
-@@ -126,7 +126,7 @@ static struct signature {
- 
- static int __init t128_setup(char *str)
- {
--    static int commandline_current = 0;
-+	static int commandline_current;
-     int i;
-     int ints[10];
- 
-@@ -165,7 +165,7 @@ __setup("t128=", t128_setup);
- 
- static int __init t128_detect(struct scsi_host_template *tpnt)
- {
--    static int current_override = 0, current_base = 0;
-+	static int current_override, current_base;
-     struct Scsi_Host *instance;
-     unsigned long base;
-     void __iomem *p;
+--- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:16:10.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:16:24.000000000 +1100
+@@ -256,7 +256,6 @@ struct NCR5380_hostdata {
+ 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
+ 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
+ 	int flags;
+-	struct delayed_work coroutine;		/* our co-routine */
+ 	struct scsi_eh_save ses;
+ 	char info[256];
+ 	int read_overruns;                /* number of bytes to cut from a
+
+
