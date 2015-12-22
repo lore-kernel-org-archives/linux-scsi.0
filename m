@@ -1,100 +1,263 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 38/77] ncr5380: Remove UNSAFE macro
-Date: Tue, 22 Dec 2015 12:18:16 +1100
-Message-ID: <20151222011748.365505398@telegraphics.com.au>
+Subject: [PATCH v3 40/77] ncr5380: Introduce NCR5380_poll_politely2
+Date: Tue, 22 Dec 2015 12:18:18 +1100
+Message-ID: <20151222011748.905240513@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-UNSAFE-macro
+Content-Disposition: inline; filename=ncr5380-poll_politely2
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Configuring core drivers using macros like this one prevents re-unifying
-the core driver forks, and prevents implementing the core driver as a
-library or a platform driver.
-
-The UNSAFE macro in particular is a poor workaround for the problem of
-interrupt latency. Releasing the locks complicates things because then we
-would have to handle the possibility of EH handler invocation during a
-PDMA transfer.
-
-The comments say that instead of using this macro, "you're going to be
-better off twiddling with transfersize". I agree. Remove this stuff.
+SCSI bus protocol sometimes requires monitoring two related conditions
+simultaneously. Enhance NCR5380_poll_politely() for this purpose, and
+put it to use in the arbitration algorithm. It will also find use in
+pseudo DMA.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |   15 ---------------
- drivers/scsi/dtc.c     |    2 --
- drivers/scsi/pas16.c   |    1 -
- 3 files changed, 18 deletions(-)
+ drivers/scsi/NCR5380.c       |   66 ++++++++++++++++++++++++-------------------
+ drivers/scsi/atari_NCR5380.c |   62 ++++++++++++++++++++++++----------------
+ 2 files changed, 75 insertions(+), 53 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:24.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:27.000000000 +1100
-@@ -195,12 +195,6 @@
-  *      rely on phase mismatch and EOP interrupts to determine end 
-  *      of phase.
-  *
-- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers.  You
-- *          only really want to use this if you're having a problem with
-- *          dropped characters during high speed communications, and even
-- *          then, you're going to be better off twiddling with transfersize
-- *          in the high level code.
-- *
-  * Defaults for these will be provided although the user may want to adjust 
-  * these to allocate CPU resources to the SCSI driver or "real" code.
-  * 
-@@ -554,9 +548,6 @@ static void prepare_info(struct Scsi_Hos
- #ifdef PSEUDO_DMA
- 	         "PSEUDO_DMA "
- #endif
--#ifdef UNSAFE
--	         "UNSAFE "
--#endif
- 	         "");
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:28.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:30.000000000 +1100
+@@ -457,11 +457,14 @@ static inline void initialize_SCp(struct
  }
  
-@@ -1582,9 +1573,6 @@ static int NCR5380_transfer_dma(struct S
- 	 * before the setting of DMA mode to after transfer of the last byte.
+ /**
+- * NCR5380_poll_politely - wait for chip register value
++ * NCR5380_poll_politely2 - wait for two chip register values
+  * @instance: controller to poll
+- * @reg: 5380 register to poll
+- * @bit: Bitmask to check
+- * @val: Value required to exit
++ * @reg1: 5380 register to poll
++ * @bit1: Bitmask to check
++ * @val1: Expected value
++ * @reg2: Second 5380 register to poll
++ * @bit2: Second bitmask to check
++ * @val2: Second expected value
+  * @wait: Time-out in jiffies
+  *
+  * Polls the chip in a reasonably efficient manner waiting for an
+@@ -469,11 +472,12 @@ static inline void initialize_SCp(struct
+  * (if possible). In irq contexts the time-out is arbitrarily limited.
+  * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns 0 if event occurred otherwise -ETIMEDOUT.
++ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+  */
+ 
+-static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int wait)
++static int NCR5380_poll_politely2(struct Scsi_Host *instance,
++                                  int reg1, int bit1, int val1,
++                                  int reg2, int bit2, int val2, int wait)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned long deadline = jiffies + wait;
+@@ -482,9 +486,11 @@ static int NCR5380_poll_politely(struct
+ 	/* Busy-wait for up to 10 ms */
+ 	n = min(10000U, jiffies_to_usecs(wait));
+ 	n *= hostdata->accesses_per_ms;
+-	n /= 1000;
++	n /= 2000;
+ 	do {
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (n--);
+@@ -495,13 +501,22 @@ static int NCR5380_poll_politely(struct
+ 	/* Repeatedly sleep for 1 ms until deadline */
+ 	while (time_is_after_jiffies(deadline)) {
+ 		schedule_timeout_uninterruptible(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 	}
+ 
+ 	return -ETIMEDOUT;
+ }
+ 
++static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                        int reg, int bit, int val, int wait)
++{
++	return NCR5380_poll_politely2(instance, reg, bit, val,
++	                                        reg, bit, val, wait);
++}
++
+ #include <linux/delay.h>
+ 
+ #if NDEBUG
+@@ -1348,7 +1363,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	int len;
+ 	int err;
+ 	unsigned long flags;
+-	unsigned long timeout;
+ 
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d: starting arbitration, id = %d\n", HOSTNO,
+@@ -1378,20 +1392,18 @@ static int NCR5380_select(struct Scsi_Ho
  	 */
  
--#if defined(PSEUDO_DMA) && defined(UNSAFE)
--	spin_unlock_irq(instance->host_lock);
--#endif
- 	/* KLL May need eop and parity in 53c400 */
- 	if (hostdata->flags & FLAG_NCR53C400)
- 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
-@@ -1793,9 +1781,6 @@ static int NCR5380_transfer_dma(struct S
- 	*data = d + c;
- 	*count = 0;
- 	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
--#if defined(PSEUDO_DMA) && defined(UNSAFE)
--	spin_lock_irq(instance->host_lock);
--#endif				/* defined(REAL_DMA_POLL) */
- 	return foo;
- #endif				/* def REAL_DMA */
+ 	local_irq_restore(flags);
+-	timeout = jiffies + HZ;
+-	while (1) {
+-		if (time_is_before_jiffies(timeout)) {
+-			NCR5380_write(MODE_REG, MR_BASE);
+-			shost_printk(KERN_ERR, instance,
+-			             "select: arbitration timeout\n");
+-			return -1;
+-		}
+-		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+-			/* Reselection interrupt */
+-			return -1;
+-		}
+-		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
+-			break;
++	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
++	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
++	                                       ICR_ARBITRATION_PROGRESS, HZ);
++	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++		/* Reselection interrupt */
++		return -1;
++	}
++	if (err < 0) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		shost_printk(KERN_ERR, instance,
++		             "select: arbitration timeout\n");
++		return -1;
+ 	}
+ 
+ 	/* The SCSI-2 arbitration delay is 2.4 us */
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:28.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:30.000000000 +1100
+@@ -262,11 +262,14 @@ static inline void initialize_SCp(struct
  }
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-22 12:16:07.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-22 12:16:27.000000000 +1100
-@@ -1,7 +1,5 @@
--
- #define PSEUDO_DMA
- #define DONT_USE_INTR
--#define UNSAFE			/* Leave interrupts enabled during pseudo-dma I/O */
- #define DMA_WORKS_RIGHT
  
+ /**
+- * NCR5380_poll_politely - wait for chip register value
++ * NCR5380_poll_politely2 - wait for two chip register values
+  * @instance: controller to poll
+- * @reg: 5380 register to poll
+- * @bit: Bitmask to check
+- * @val: Value required to exit
++ * @reg1: 5380 register to poll
++ * @bit1: Bitmask to check
++ * @val1: Expected value
++ * @reg2: Second 5380 register to poll
++ * @bit2: Second bitmask to check
++ * @val2: Second expected value
+  * @wait: Time-out in jiffies
+  *
+  * Polls the chip in a reasonably efficient manner waiting for an
+@@ -274,11 +277,12 @@ static inline void initialize_SCp(struct
+  * (if possible). In irq contexts the time-out is arbitrarily limited.
+  * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns 0 if event occurred otherwise -ETIMEDOUT.
++ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+  */
  
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-12-22 12:15:56.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-12-22 12:16:27.000000000 +1100
-@@ -1,5 +1,4 @@
- #define PSEUDO_DMA
--#define UNSAFE  /* Not unsafe for PAS16 -- use it */
+-static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int wait)
++static int NCR5380_poll_politely2(struct Scsi_Host *instance,
++                                  int reg1, int bit1, int val1,
++                                  int reg2, int bit2, int val2, int wait)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned long deadline = jiffies + wait;
+@@ -287,9 +291,11 @@ static int NCR5380_poll_politely(struct
+ 	/* Busy-wait for up to 10 ms */
+ 	n = min(10000U, jiffies_to_usecs(wait));
+ 	n *= hostdata->accesses_per_ms;
+-	n /= 1000;
++	n /= 2000;
+ 	do {
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (n--);
+@@ -300,13 +306,22 @@ static int NCR5380_poll_politely(struct
+ 	/* Repeatedly sleep for 1 ms until deadline */
+ 	while (time_is_after_jiffies(deadline)) {
+ 		schedule_timeout_uninterruptible(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 	}
  
- /*
-  * This driver adapted from Drew Eckhardt's Trantor T128 driver
+ 	return -ETIMEDOUT;
+ }
+ 
++static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                        int reg, int bit, int val, int wait)
++{
++	return NCR5380_poll_politely2(instance, reg, bit, val,
++	                                        reg, bit, val, wait);
++}
++
+ static struct {
+ 	unsigned char value;
+ 	const char *name;
+@@ -1101,7 +1116,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	unsigned char *data;
+ 	int len;
+ 	int err;
+-	unsigned long timeout;
+ 
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
+@@ -1125,23 +1139,19 @@ static int NCR5380_select(struct Scsi_Ho
+ 	 */
+ 
+ 	spin_unlock_irq(instance->host_lock);
+-	timeout = jiffies + HZ;
+-	while (1) {
+-		if (time_is_before_jiffies(timeout)) {
+-			NCR5380_write(MODE_REG, MR_BASE);
+-			shost_printk(KERN_ERR, instance,
+-			             "select: arbitration timeout\n");
+-			spin_lock_irq(instance->host_lock);
+-			return -1;
+-		}
+-		spin_lock_irq(instance->host_lock);
+-		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+-			/* Reselection interrupt */
+-			return -1;
+-		}
+-		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
+-			break;
+-		spin_unlock_irq(instance->host_lock);
++	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
++	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
++	                                       ICR_ARBITRATION_PROGRESS, HZ);
++	spin_lock_irq(instance->host_lock);
++	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++		/* Reselection interrupt */
++		return -1;
++	}
++	if (err < 0) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		shost_printk(KERN_ERR, instance,
++		             "select: arbitration timeout\n");
++		return -1;
+ 	}
+ 
+ 	/* The SCSI-2 arbitration delay is 2.4 us */
