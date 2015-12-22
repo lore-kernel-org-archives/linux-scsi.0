@@ -1,75 +1,36 @@
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-Subject: RE: st driver doesn't seem to grok LTO partitioning
-Date: Tue, 22 Dec 2015 05:51:30 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB444FC76D@G4W3219.americas.hpqcorp.net>
-References: <20151218170644.24167419@harpe.intellique.com>
- <20151221134649.293a1a1e@harpe.intellique.com>
- <F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi>
- <20151221185759.38dd21d6@harpe.intellique.com>
- <3F0204AE-89BD-45C7-883F-D6EC3A1D34E2@kolumbus.fi>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 17/77] ncr5380: Keep BSY asserted when entering
+ SELECTION phase
+Date: Tue, 22 Dec 2015 08:01:49 +0100
+Message-ID: <5678F55D.9020200@suse.de>
+References: <20151222011737.980475848@telegraphics.com.au>
+ <20151222011742.635457254@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5009.houston.hp.com ([15.240.92.67]:47222 "EHLO
-	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbbLVFwX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2015 00:52:23 -0500
-In-Reply-To: <3F0204AE-89BD-45C7-883F-D6EC3A1D34E2@kolumbus.fi>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20151222011742.635457254@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>, Emmanuel Florac <eflorac@intellique.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-SWYgeW91IG5lZWQgaGVscCB3aXRoIGFueXRoaW5nIHBsZWFzZSBsZXQgbWUga25vdyBJJ2QgYmUg
-bW9yZSB0aGFuIGhhcHB5IHRvIGNvbnRyaWJ1dGUgKHdpdGggdGVzdGluZyBhbmQgYSByZXZpZXcg
-aWYgeW91IHdhbnQpLiBJIGhhdmUgYSBzeXN0ZW0gd2l0aCBhbiBvbGRlciBMVE8tMyB0YXBlIGRy
-aXZlIHRoYXQgSSBjYW4gdXNlIGFueSB0aW1lIChpdCBkb2VzbuKAmXQgc3VwcG9ydCBwYXJ0aXRp
-b25pbmcgc28gaWYgbm90aGluZyBlbHNlIEkgY2FuIG1ha2Ugc3VyZSBwYXJ0aXRpb25pbmcgYXR0
-ZW1wdHMgZmFpbCBncmFjZWZ1bGx5KS4gSSBtYXkgYmUgYWJsZSB0byBiZWcsIGJvcnJvdywgb3Ig
-c3RlYWwgYWNjZXNzIHRvIGFuIExUTyA1IG9yIDYgZHJpdmUgdGhvdWdoIHRvIGhlbHAgb3V0IGlu
-IHRlc3RpbmcuDQoNCkthaSwgZm9yIHRoZSBzb3VyY2Ugb2YgdGhlIEhQRSBFdmVyU3RvcmUgc29m
-dHdhcmUgc2hvdWxkIGJlIGF2YWlsYWJsZSBoZXJlOg0KDQpodHRwOi8vaDIwNTY0Lnd3dzIuaHBl
-LmNvbS9ocHNjL3N3ZC9wdWJsaWMvcmVhZEluZGV4P3NwNHRzLm9pZD01MTExNjE3DQoNClNlbGVj
-dCBzb21ldGhpbmcgbGlrZSBSSEVMNyBzZXJ2ZXIgZnJvbSB0aGUgZHJvcGRvd24gb24gdGhlIHBh
-Z2UgdGhhdCBsb2FkcyBjbGljayBvbiB0aGUgKyBpbiBmcm9udCBvZiAiU29mdHdhcmUgLSBTdG9y
-YWdlICg0KSIuIElmIHlvdSBjbGljayBvbiB0aGUgZmlyc3QgcHJvZHVjdCBsaXN0ZWQgdGhlbiBj
-bGljayBvbiBzZWxlY3QgKGF0IHRoZSBuZXh0IHNjcmVlbiB5b3Ugd2lsbCB1bmZvcnR1bmF0ZWx5
-IG5lZWQgdG8gY3JlYXRlIGEgSFAgUGFzc3BvcnQgYWNjb3VudCkgYW5kIHRoZW4geW91IG5lZWQg
-dG8gZ2l2ZSBhIGxvdCBvZiBwZXJzb25hbCBpbmZvcm1hdGlvbiB3aGVuIHlvdSBnZXQgdGhlIG9w
-dGlvbiB0byBkb3dubG9hZCB0aGUgc291cmNlIG1ha2Ugc3VyZSB5b3UgY2hhbmdlIHRoZSBwdWxs
-ZG93biBhYm92ZSB0aGUgZG93bmxvYWQgYnV0dG9ucyB0byBzdGFuZGFyZCBkb3dubG9hZC4gVGhl
-IHZlcnNpb24gMy4wIHNvdXJjZSBpcyBhYm91dCAxLjJNYiBpbiBzaXplIChHUEwgdmVyc2lvbiAy
-LjEpLg0KDQpUaGlzIHNlZW1zIHRvIGJlIHRoZSByZWxldmFudCBjb2RlIGZyb20gdGhlIGRyaXZl
-ciB0aG91Z2ggKHRoZSBzYW1lIGRvd25sb2FkIGhhcyB0aGUgaWJtIHRhcGUgZHJpdmVyIGFzIHdl
-bGwpLiBZb3UnbGwgbmVlZCB0byBsb29rIGF0IHRoZSBmb2xsb3dpbmc6DQoNCmx0b3RhcGUuYyAt
-IGx0b3RhcGVfcmVhZHBvc2l0aW9uIHRvIGRldGVybWluZSB0aGUgY3VycmVudCBwYXJ0aXRpb24N
-Cmx0b3RhcGUuYyAtIGx0b3RhcGVfbG9jYXRlIC0gdG8gbW92ZSB0byBhIHBvc2l0aW9uIG9uIHRh
-cGUgKGluY2x1ZGVzIHNldHRpbmcgdGhlIHBhcnRpdGlvbiBhbmQgaGFzIGEgc3BlY2lhbCBmbGFn
-IGZvciBjaGFuZ2luZyBwYXJ0aXRpb25zIGJldHdlZW4gdGhlIHR3byBpdCBzdXBwb3J0cyBpZiBy
-ZXF1aXJlZCkNCmx0b3RhcGUuYyAtIGx0b3RhcGVfZm9ybWF0IC0gZm9yIGNyZWF0aW5nIGFuZCBk
-ZXN0cm95aW5nIHBhcnRpdGlvbnMNCmx0b3RhcGUuYyAtIGx0b3RhcGVfcmVtYWluaW5nX2NhcGFj
-aXR5IC0gd2lsbCBnZXQgeW91IHRoZSByZW1haW5pbmcgYW5kIG1heGltdW0gY2FwYWNpdHkgZm9y
-IHRoZSBwYXJ0aXRpb25zDQoNCldoZW4geW91IGxvb2sgYXQgdGhvc2UgZnVuY3Rpb25zIHlvdSds
-bCBzZWUgVENfRk9STUFUX1RZUEUgcmVmZXJlbmNlZCB0aGlzIGlzIHRoZSBlbnVtIHJlZmVycmVk
-IGl0IGlzIGluIHNyYy9saWJsdGZzL3RhcGVfb3BzLmg6DQoNCnR5cGVkZWYgZW51bSB7DQogICAg
-ICAgIFRDX0ZPUk1BVF9ERUZBVUxUICAgPSAweDAwLCAgIC8qIE1ha2UgMSBwYXJ0aXRpb24gbWVk
-aXVtICovDQogICAgICAgIFRDX0ZPUk1BVF9QQVJUSVRJT04gPSAweDAxLCAgIC8qIE1ha2UgMiBw
-YXJ0aXRpb24gbWVkaXVtICovDQogICAgICAgIFRDX0ZPUk1BVF9ERVNUX1BBUlQgPSAweDAyLCAg
-IC8qIERlc3Ryb3kgYWxsIGRhdGEgYW5kIG1ha2UgMiBwYXJ0aXRpb24gbWVkaXVtICovDQogICAg
-ICAgIFRDX0ZPUk1BVF9NQVggICAgICAgPSAweDAzDQp9IFRDX0ZPUk1BVF9UWVBFOyAgICAvKiBT
-cGFjZSBjb21tYW5kIG9wZXJhdGlvbnMgKi8NCg0KVGhlIGRyaXZlciBhdCB0aGF0IGRvd25sb2Fk
-IGxvb2tzIGxpa2UgaXQgb25seSBzdXBwb3J0cyB0d28gcGFydGl0aW9ucyB0aG91Z2ggYW5kIGlm
-IHlvdSBnbyBsb29raW5nIGFyb3VuZCB0aGUgY29kZSAoZ3JlcCBmb3IgcGFydGl0aW9uKSBzb21l
-IExUTyBkcml2ZXMgKHByb2JhYmx5IG9sZGVyIG9uZXMpIGxvb2sgbGlrZSB0aGV5IG1heSBiZSBw
-YXJ0aXRpb24gYXdhcmUgYnV0IG1heSBub3QgYWN0dWFsbHkgc3VwcG9ydCBwYXJ0aXRpb25zLCBz
-ZWUgdGhpcyBjb21tZW50Og0KDQpsdG90YXBlX3BsYXRmb3JtLmM6ICAgICAgKiBGb3IgYW4gTFRP
-IGRyaXZlLCBuZWVkIHRvIGRldGVybWluZSB3aGV0aGVyIGl0IGlzIHBhcnRpdGlvbi1jYXBhYmxl
-IG9yIG9ubHkgcGFydGl0aW9uLWF3YXJlOg0KDQpTbyB5b3UgbWF5IG5lZWQgdG8gY2hlY2sgZm9y
-IGZpcm13YXJlIHRoYXQgaXMgcGFydGl0aW9uIGF3YXJlIGJ1dCBub3QgcGFydGl0aW9uIGNhcGFi
-bGUuDQoNClRoZSBJQk0gTFRPIFNDU0kgcmVmZXJlbmNlIGlzIG5pY2UgYW5kIGxvbmcgYW5kIGl0
-IGxvb2tzIGxpa2UgeW91IGNhbiBlaXRoZXIgbWFrZSBTRVQgQ0FQQUNJVFkgY2FsbHMgb24gdGhl
-IGN1cnJlbnRseSBtb3VudGVkIG1lZGl1bSB0byBzZXQgdGhlIHNpemVzIGFuZCB0aGVuIGZvcm1h
-dCB0aGUgbWVkaXVtIGl0IGFsc28gcmVmZXJzIHRvIHRoZSBtZWRpdW0gcGFydGl0aW9uIG1vZGUg
-cGFnZSBpbiB0ZXJtcyBvZiBjaGFuZ2luZyB0aGUgcGFydGl0aW9uaW5nIG9mIHRoZSB0YXBlLg0K
+On 12/22/2015 02:17 AM, Finn Thain wrote:
+> NCR5380.c is not compliant with the SCSI-2 standard (at least, not wi=
+th
+> the draft revision 10L that I have to refer to). The selection algori=
+thm
+> in atari_NCR5380.c is correct, so use that.
+>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
