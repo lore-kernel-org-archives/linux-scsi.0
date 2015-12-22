@@ -1,47 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 41/77] ncr5380: Replace redundant flags with
- FLAG_NO_DMA_FIXUP
-Date: Tue, 22 Dec 2015 08:39:07 +0100
-Message-ID: <5678FE1B.8050302@suse.de>
+Subject: Re: [PATCH v3 42/77] ncr5380: Replace READ_OVERRUNS macro with
+ FLAG_NO_DMA_FIXUPS
+Date: Tue, 22 Dec 2015 08:39:37 +0100
+Message-ID: <5678FE39.6090302@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011749.175496389@telegraphics.com.au>
+ <20151222011749.446042594@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20151222011749.175496389@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151222011749.446042594@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> The flags DMA_WORKS_RIGHT, FLAG_NCR53C400 and FLAG_HAS_LAST_BYTE_SENT
-> all mean the same thing, i.e. the chip is not a 538[01]. (More recent
-> devices such as the 53C80 have a 'Last Byte Sent' bit in the Target
-> Command Register as well as other fixes for End-of-DMA errata.)
->
-> These flags have no additional meanings since previous cleanup patche=
-s
-> eliminated the NCR53C400 macro, moved g_NCR5380-specific code out of =
+> The workarounds for chip errata appear twice, in slightly different
+> forms. One is used when defined(REAL_DMA) || defined(REAL_DMA_POLL), =
 the
-> core driver and standardized interrupt handling.
->
-> Use the FLAG_NO_DMA_FIXUP flag to suppress End-of-DMA errata workarou=
-nds,
-> for those cards and drivers that make use of the TCR_LAST_BYTE_SENT b=
-it.
-> Remove the old flags.
+> other when defined(PSEUDO_DMA). In the PDMA case, the workarounds hav=
+e
+> been made conditional on FLAG_NO_DMA_FIXUPS. Do the same for the DMA =
+case,
+> to eliminate the READ_OVERRUNS macro.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->
-> ---
->   drivers/scsi/NCR5380.c   |   68 +++++++++++++++--------------------=
-------------
->   drivers/scsi/NCR5380.h   |    4 --
->   drivers/scsi/dtc.c       |    4 --
->   drivers/scsi/g_NCR5380.c |    2 -
->   4 files changed, 25 insertions(+), 53 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
