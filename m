@@ -1,49 +1,41 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 22/77] ncr5380: Eliminate selecting state
-Date: Tue, 22 Dec 2015 08:14:07 +0100
-Message-ID: <5678F83F.8090903@suse.de>
+Subject: Re: [PATCH v3 23/77] ncr5380: Always retry arbitration and selection
+Date: Tue, 22 Dec 2015 08:14:59 +0100
+Message-ID: <5678F873.2020005@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011743.975930787@telegraphics.com.au>
+ <20151222011744.275507291@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42206 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42238 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751134AbbLVHOJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Dec 2015 02:14:09 -0500
-In-Reply-To: <20151222011743.975930787@telegraphics.com.au>
+	id S1750705AbbLVHPB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Dec 2015 02:15:01 -0500
+In-Reply-To: <20151222011744.275507291@telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> Linux v2.1.105 changed the algorithm for polling for the BSY signal
-> in NCR5380_select() and NCR5380_main().
+> If NCR5380_select() returns -1, it means arbitration was lost or sele=
+ction
+> failed and should be retried. If the main loop simply terminates when=
+ there
+> are still commands on the issue queue, they will remain queued until =
+they
+> expire.
 >
-> Presently, this code has a bug. Back then, NCR5380_set_timer(hostdata=
-, 1)
-> meant reschedule main() after sleeping for 10 ms. Repeated 25 times t=
-his
-> provided the recommended 250 ms selection time-out delay. This got br=
-oken
-> when HZ became configurable.
+> Fix this by clearing the 'done' flag after selection failure or lost
+> arbitration.
 >
-> We could fix this but there's no need to reschedule the main loop. Th=
-is
-> BSY polling presently happens when the NCR5380_main() work queue item
-> calls NCR5380_select(), which in turn schedules NCR5380_main(), which
-> calls NCR5380_select() again, and so on.
->
-> This algorithm is a deviation from the simpler one in atari_NCR5380.c=
+> The "else break" clause in NCR5380_main() that gets removed here appe=
+ars
+> to be a vestige of a long-gone loop that iterated over host instances=
 =2E
-> The extra complexity and state is pointless. There's no reason to
-> stop selection half-way and return to to the main loop when the main
-> loop can do nothing useful until selection completes.
->
-> So just poll for BSY. We can sleep while polling now that we have a
-> suitable workqueue.
+> See commit 491447e1fcff ("[PATCH] next NCR5380 updates") in
+> history/history.git.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 >
