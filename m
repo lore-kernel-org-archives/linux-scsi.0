@@ -1,112 +1,102 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v2 1/3] scsi: make some Additional Sense strings more
- grep'able
-Date: Tue, 22 Dec 2015 15:25:21 -0500
-Message-ID: <5679B1B1.5050206@interlog.com>
+Subject: Re: [PATCH v2 3/3] scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
+Date: Tue, 22 Dec 2015 15:25:33 -0500
+Message-ID: <5679B1BD.7090406@interlog.com>
 References: <1448358147-23663-1-git-send-email-linux@rasmusvillemoes.dk>
- <1448358147-23663-2-git-send-email-linux@rasmusvillemoes.dk>
+ <1448358147-23663-4-git-send-email-linux@rasmusvillemoes.dk>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1448358147-23663-2-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:56062 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755737AbbLVUZs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Dec 2015 15:25:48 -0500
+In-Reply-To: <1448358147-23663-4-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Julian Calaby <julian.calaby@gmail.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 On 15-11-24 04:42 AM, Rasmus Villemoes wrote:
-> There's little point in breaking these strings over multiple lines.
+> On 64 bit, struct error_info has 6 bytes of padding, which amounts to
+> over 4k of wasted space in the additional[] array. We could easily get
+> rid of that by instead using separate arrays for the codes and the
+> pointers. However, we can do even better than that and save an
+> additional 6 bytes per entry: In the table, just store the sizeof()
+> the corresponding string literal. The cumulative sum of these is then
+> the appropriate offset into additional_text, which is built from the
+> concatenation (with '\0's inbetween) of the strings.
+>
+> $ scripts/bloat-o-meter /tmp/vmlinux vmlinux
+> add/remove: 0/0 grow/shrink: 1/1 up/down: 24/-8488 (-8464)
+> function                                     old     new   delta
+> scsi_extd_sense_format                       136     160     +24
+> additional                                 11312    2824   -8488
 >
 > Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 
 Tested-by: Douglas Gilbert <dgilbert@interlog.com>
 
 > ---
->   drivers/scsi/constants.c | 27 +++++++++------------------
->   1 file changed, 9 insertions(+), 18 deletions(-)
+>   drivers/scsi/constants.c | 26 +++++++++++++++++++++-----
+>   1 file changed, 21 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-> index fa09d4be2b53..58d94e3c3713 100644
+> index 6e813eec4f8d..83458f7a2824 100644
 > --- a/drivers/scsi/constants.c
 > +++ b/drivers/scsi/constants.c
-> @@ -346,11 +346,9 @@ static const struct error_info additional[] =
->   	{0x0407, "Logical unit not ready, operation in progress"},
->   	{0x0408, "Logical unit not ready, long write in progress"},
->   	{0x0409, "Logical unit not ready, self-test in progress"},
-> -	{0x040A, "Logical unit not accessible, asymmetric access state "
-> -	 "transition"},
-> +	{0x040A, "Logical unit not accessible, asymmetric access state transition"},
->   	{0x040B, "Logical unit not accessible, target port in standby state"},
-> -	{0x040C, "Logical unit not accessible, target port in unavailable "
-> -	 "state"},
-> +	{0x040C, "Logical unit not accessible, target port in unavailable state"},
->   	{0x040D, "Logical unit not ready, structure check required"},
->   	{0x040E, "Logical unit not ready, security session in progress"},
->   	{0x0410, "Logical unit not ready, auxiliary memory not accessible"},
-> @@ -363,11 +361,9 @@ static const struct error_info additional[] =
->   	{0x0417, "Logical unit not ready, calibration required"},
->   	{0x0418, "Logical unit not ready, a door is open"},
->   	{0x0419, "Logical unit not ready, operating in sequential mode"},
-> -	{0x041A, "Logical unit not ready, start stop unit command in "
-> -	 "progress"},
-> +	{0x041A, "Logical unit not ready, start stop unit command in progress"},
->   	{0x041B, "Logical unit not ready, sanitize in progress"},
-> -	{0x041C, "Logical unit not ready, additional power use not yet "
-> -	 "granted"},
-> +	{0x041C, "Logical unit not ready, additional power use not yet granted"},
->   	{0x041D, "Logical unit not ready, configuration in progress"},
->   	{0x041E, "Logical unit not ready, microcode activation required"},
->   	{0x041F, "Logical unit not ready, microcode download required"},
-> @@ -559,8 +555,7 @@ static const struct error_info additional[] =
->   	{0x2300, "Invalid token operation, cause not reportable"},
->   	{0x2301, "Invalid token operation, unsupported token type"},
->   	{0x2302, "Invalid token operation, remote token usage not supported"},
-> -	{0x2303, "Invalid token operation, remote rod token creation not "
-> -	 "supported"},
-> +	{0x2303, "Invalid token operation, remote rod token creation not supported"},
->   	{0x2304, "Invalid token operation, token unknown"},
->   	{0x2305, "Invalid token operation, token corrupt"},
->   	{0x2306, "Invalid token operation, token revoked"},
-> @@ -641,8 +636,7 @@ static const struct error_info additional[] =
->   	{0x2A0D, "Data encryption capabilities changed"},
->   	{0x2A10, "Timestamp changed"},
->   	{0x2A11, "Data encryption parameters changed by another i_t nexus"},
-> -	{0x2A12, "Data encryption parameters changed by vendor specific "
-> -		 "event"},
-> +	{0x2A12, "Data encryption parameters changed by vendor specific event"},
->   	{0x2A13, "Data encryption key instance counter has changed"},
->   	{0x2A14, "SA creation capabilities data has changed"},
->   	{0x2A15, "Medium removal prevention preempted"},
-> @@ -759,8 +753,7 @@ static const struct error_info additional[] =
->   	{0x3B19, "Element enabled"},
->   	{0x3B1A, "Data transfer device removed"},
->   	{0x3B1B, "Data transfer device inserted"},
-> -	{0x3B1C, "Too many logical objects on partition to support "
-> -	 "operation"},
-> +	{0x3B1C, "Too many logical objects on partition to support operation"},
+> @@ -292,17 +292,30 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
 >
->   	{0x3D00, "Invalid bits in identify message"},
+>   struct error_info {
+>   	unsigned short code12;	/* 0x0302 looks better than 0x03,0x02 */
+> -	const char * text;
+> +	unsigned short size;
+>   };
 >
-> @@ -957,8 +950,7 @@ static const struct error_info additional[] =
->   	{0x5D39, "Data channel impending failure throughput performance"},
->   	{0x5D3A, "Data channel impending failure seek time performance"},
->   	{0x5D3B, "Data channel impending failure spin-up retry count"},
-> -	{0x5D3C, "Data channel impending failure drive calibration retry "
-> -	 "count"},
-> +	{0x5D3C, "Data channel impending failure drive calibration retry count"},
->   	{0x5D40, "Servo impending failure general hard drive failure"},
->   	{0x5D41, "Servo impending failure drive error rate too high"},
->   	{0x5D42, "Servo impending failure data error rate too high"},
-> @@ -1070,8 +1062,7 @@ static const struct error_info additional[] =
+> +/*
+> + * There are 700+ entries in this table. To save space, we don't store
+> + * (code, pointer) pairs, which would make sizeof(struct
+> + * error_info)==16 on 64 bits. Rather, the second element just stores
+> + * the size (including \0) of the corresponding string, and we use the
+> + * sum of these to get the appropriate offset into additional_text
+> + * defined below. This approach saves 12 bytes per entry.
+> + */
+>   static const struct error_info additional[] =
+>   {
+> -#define SENSE_CODE(c, s) {c, s},
+> +#define SENSE_CODE(c, s) {c, sizeof(s)},
+>   #include "sense_codes.h"
+>   #undef SENSE_CODE
+> -	{0, NULL}
+>   };
 >
->   	{0x6E00, "Command to logical unit failed"},
+> +static const char *additional_text =
+> +#define SENSE_CODE(c, s) s "\0"
+> +#include "sense_codes.h"
+> +#undef SENSE_CODE
+> +	;
+> +
+>   struct error_info2 {
+>   	unsigned char code1, code2_min, code2_max;
+>   	const char * str;
+> @@ -364,11 +377,14 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
+>   {
+>   	int i;
+>   	unsigned short code = ((asc << 8) | ascq);
+> +	unsigned offset = 0;
 >
-> -	{0x6F00, "Copy protection key exchange failure - authentication "
-> -	 "failure"},
-> +	{0x6F00, "Copy protection key exchange failure - authentication failure"},
->   	{0x6F01, "Copy protection key exchange failure - key not present"},
->   	{0x6F02, "Copy protection key exchange failure - key not established"},
->   	{0x6F03, "Read of scrambled sector without authentication"},
+>   	*fmt = NULL;
+> -	for (i = 0; additional[i].text; i++)
+> +	for (i = 0; i < ARRAY_SIZE(additional); i++) {
+>   		if (additional[i].code12 == code)
+> -			return additional[i].text;
+> +			return additional_text + offset;
+> +		offset += additional[i].size;
+> +	}
+>   	for (i = 0; additional2[i].fmt; i++) {
+>   		if (additional2[i].code1 == asc &&
+>   		    ascq >= additional2[i].code2_min &&
 >
+
