@@ -1,58 +1,68 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 49/77] ncr5380: Remove redundant ICR_ARBITRATION_LOST
- test and eliminate FLAG_DTC3181E
-Date: Tue, 22 Dec 2015 08:45:14 +0100
-Message-ID: <5678FF8A.8030105@suse.de>
+Subject: Re: [PATCH v3 50/77] ncr5380: Change instance->host_lock to
+ hostdata->lock
+Date: Tue, 22 Dec 2015 08:46:41 +0100
+Message-ID: <5678FFE1.10600@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011751.308030701@telegraphics.com.au>
+ <20151222011751.575811401@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20151222011751.308030701@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151222011751.575811401@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> Remove FLAG_DTC3181E. It was used to suppress a final Arbitration Los=
-t
-> (SEL asserted) test that isn't actually needed. The test was suppress=
-ed
-> because it causes problems for DTC436 and DTC536 chips. It takes plac=
-e
-> after the host wins arbitration, so SEL has been asserted. These chip=
-s
-> can't seem to tell whether it was the host or another bus device that
-> did so.
+> NCR5380.c presently uses the instance->host_lock spin lock. Convert t=
+his
+> to a new spin lock that protects the NCR5380_hostdata struct.
 >
-> This questionable final test appears in a flow chart in an early NCR5=
-380
-> datasheet. It was removed from later documents like the DP5380 datash=
-eet.
+> atari_NCR5380.c previously used local_irq_save/restore() rather than =
+a
+> spin lock. Convert this to hostdata->lock in irq mode. For SMP platfo=
+rms,
+> the interrupt handler now also acquires the spin lock.
 >
-> By the time this final test takes place, the driver has already teste=
-d
-> the Arbitration Lost bit several times. The first test happens 3 us a=
-fter
-> BUS FREE (or longer due to register access delays). The protocol requ=
-ires
-> that a device stop signalling within 1.8 us after BUS FREE unless it =
-won
-> arbitration, in which case it must assert SEL, which is detected 1.2 =
-us
-> later by the first Arbitration Lost test.
+> This brings all locking in the two core drivers into agreement.
+>
+> Adding this locking also means that a bunch of volatile qualifiers ca=
+n be
+> removed from the members of the NCR5380_hostdata struct. This is done=
+ in
+> a subsequent patch.
+>
+> Proper locking will allow the abort handler to locate a command being
+> aborted. This is presently impossible if the abort handler is invoked=
+ when
+> the command has been moved from a queue to a pointer on the stack. (I=
+f
+> eh_abort_handler can't determine whether a command has been completed
+> or is still being processed then it can't decide whether to return
+> success or failure.)
+>
+> The hostdata spin lock is now held when calling NCR5380_select() and
+> NCR5380_information_transfer(). Where possible, the lock is dropped f=
+or
+> polling and PIO transfers.
+>
+> Clean up the now-redundant SELECT_ENABLE_REG writes, that used to pro=
+vide
+> limited mutual exclusion between information_transfer() and reselect(=
+).
+>
+> Accessing hostdata->connected without data races means taking the loc=
+k;
+> cleanup these accesses.
+>
+> The new spin lock falls away for m68k and other UP builds, so this sh=
+ould
+> have little impact there. In the SMP case the new lock should be
+> uncontested even when the SCSI bus is contested.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->
-> ---
->   drivers/scsi/NCR5380.c       |   14 +-------------
->   drivers/scsi/NCR5380.h       |    1 -
->   drivers/scsi/atari_NCR5380.c |    9 ---------
->   drivers/scsi/dmx3191d.c      |    2 +-
->   drivers/scsi/g_NCR5380.c     |    2 +-
->   5 files changed, 3 insertions(+), 25 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
