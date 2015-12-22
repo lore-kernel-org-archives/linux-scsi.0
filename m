@@ -1,206 +1,61 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 41/77] ncr5380: Replace redundant flags with FLAG_NO_DMA_FIXUP
-Date: Tue, 22 Dec 2015 12:18:19 +1100
-Message-ID: <20151222011749.175496389@telegraphics.com.au>
+Subject: [PATCH v3 48/77] atari_NCR5380: Fix queue_size limit
+Date: Tue, 22 Dec 2015 12:18:26 +1100
+Message-ID: <20151222011751.025473889@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-FLAG_NCR53C400
+Content-Disposition: inline; filename=atari_NCR5380-fix-queue_size-limit
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The flags DMA_WORKS_RIGHT, FLAG_NCR53C400 and FLAG_HAS_LAST_BYTE_SENT
-all mean the same thing, i.e. the chip is not a 538[01]. (More recent
-devices such as the 53C80 have a 'Last Byte Sent' bit in the Target
-Command Register as well as other fixes for End-of-DMA errata.)
-
-These flags have no additional meanings since previous cleanup patches
-eliminated the NCR53C400 macro, moved g_NCR5380-specific code out of the
-core driver and standardized interrupt handling.
-
-Use the FLAG_NO_DMA_FIXUP flag to suppress End-of-DMA errata workarounds,
-for those cards and drivers that make use of the TCR_LAST_BYTE_SENT bit.
-Remove the old flags.
+When a target reports a QUEUE_FULL condition it causes the driver to
+update the 'queue_size' limit with the number of currently allocated tags.
+At least, that's what's supposed to happen, according to the comments.
+Unfortunately the terms in the assignment are swapped. Fix this and
+cleanup some obsolete comments.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c   |   68 +++++++++++++++--------------------------------
- drivers/scsi/NCR5380.h   |    4 --
- drivers/scsi/dtc.c       |    4 --
- drivers/scsi/g_NCR5380.c |    2 -
- 4 files changed, 25 insertions(+), 53 deletions(-)
+ drivers/scsi/atari_NCR5380.c |   14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:30.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:32.000000000 +1100
-@@ -541,7 +541,7 @@ static void prepare_info(struct Scsi_Hos
- 	         instance->base, instance->irq,
- 	         instance->can_queue, instance->cmd_per_lun,
- 	         instance->sg_tablesize, instance->this_id,
--	         hostdata->flags & FLAG_NCR53C400     ? "NCR53C400 "     : "",
-+	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
- 	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
- 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
-@@ -702,6 +702,7 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->connected = NULL;
- 	hostdata->issue_queue = NULL;
- 	hostdata->disconnected_queue = NULL;
-+	hostdata->flags = flags;
- 	
- 	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
-@@ -710,12 +711,6 @@ static int NCR5380_init(struct Scsi_Host
- 	if (!hostdata->work_q)
- 		return -ENOMEM;
- 
--	/* The CHECK code seems to break the 53C400. Will check it later maybe */
--	if (flags & FLAG_NCR53C400)
--		hostdata->flags = FLAG_HAS_LAST_BYTE_SENT | flags;
--	else
--		hostdata->flags = FLAG_CHECK_LAST_BYTE_SENT | flags;
--
- 	hostdata->host = instance;
- 
- 	prepare_info(instance);
-@@ -1614,7 +1609,7 @@ static int NCR5380_transfer_dma(struct S
- 	 * before the setting of DMA mode to after transfer of the last byte.
- 	 */
- 
--	if (hostdata->flags & FLAG_NCR53C400)
-+	if (hostdata->flags & FLAG_NO_DMA_FIXUP)
- 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
- 		                        MR_ENABLE_EOP_INTR);
- 	else
-@@ -1734,14 +1729,9 @@ static int NCR5380_transfer_dma(struct S
- 	return 0;
- #else				/* defined(REAL_DMA_POLL) */
- 	if (p & SR_IO) {
--#ifdef DMA_WORKS_RIGHT
--		foo = NCR5380_pread(instance, d, c);
--#else
--		int diff = 1;
--		if (hostdata->flags & FLAG_NCR53C400) {
--			diff = 0;
--		}
--		if (!(foo = NCR5380_pread(instance, d, c - diff))) {
-+		foo = NCR5380_pread(instance, d,
-+			hostdata->flags & FLAG_NO_DMA_FIXUP ? c : c - 1);
-+		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
- 			/*
- 			 * We can't disable DMA mode after successfully transferring 
- 			 * what we plan to be the last byte, since that would open up
-@@ -1764,46 +1754,32 @@ static int NCR5380_transfer_dma(struct S
- 			 * byte.
- 			 */
- 
--			if (!(hostdata->flags & FLAG_NCR53C400)) {
--				while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ));
--				/* Wait for clean handshake */
--				while (NCR5380_read(STATUS_REG) & SR_REQ);
--				d[c - 1] = NCR5380_read(INPUT_DATA_REG);
-+			if (NCR5380_poll_politely(instance, BUS_AND_STATUS_REG,
-+			                          BASR_DRQ, BASR_DRQ, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA read: DRQ timeout\n");
-+			}
-+			if (NCR5380_poll_politely(instance, STATUS_REG,
-+			                          SR_REQ, 0, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA read: !REQ timeout\n");
- 			}
-+			d[c - 1] = NCR5380_read(INPUT_DATA_REG);
- 		}
--#endif
- 	} else {
--#ifdef DMA_WORKS_RIGHT
- 		foo = NCR5380_pwrite(instance, d, c);
--#else
--		int timeout;
--		dprintk(NDEBUG_C400_PWRITE, "About to pwrite %d bytes\n", c);
--		if (!(foo = NCR5380_pwrite(instance, d, c))) {
-+		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
- 			/*
- 			 * Wait for the last byte to be sent.  If REQ is being asserted for 
- 			 * the byte we're interested, we'll ACK it and it will go false.  
- 			 */
--			if (!(hostdata->flags & FLAG_HAS_LAST_BYTE_SENT)) {
--				timeout = 20000;
--				while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) && (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH));
--
--				if (!timeout)
--					dprintk(NDEBUG_LAST_BYTE_SENT, "scsi%d : timed out on last byte\n", instance->host_no);
--
--				if (hostdata->flags & FLAG_CHECK_LAST_BYTE_SENT) {
--					hostdata->flags &= ~FLAG_CHECK_LAST_BYTE_SENT;
--					if (NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT) {
--						hostdata->flags |= FLAG_HAS_LAST_BYTE_SENT;
--						dprintk(NDEBUG_LAST_BYTE_SENT, "scsi%d : last byte sent works\n", instance->host_no);
--					}
--				}
--			} else {
--				dprintk(NDEBUG_C400_PWRITE, "Waiting for LASTBYTE\n");
--				while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT));
--				dprintk(NDEBUG_C400_PWRITE, "Got LASTBYTE\n");
-+			if (NCR5380_poll_politely2(instance,
-+			     BUS_AND_STATUS_REG, BASR_DRQ, BASR_DRQ,
-+			     BUS_AND_STATUS_REG, BASR_PHASE_MATCH, 0, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA write: DRQ and phase timeout\n");
- 			}
- 		}
--#endif
- 	}
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:16:25.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:16:32.000000000 +1100
-@@ -226,9 +226,7 @@
- #define NO_IRQ		0
- #endif
- 
--#define FLAG_HAS_LAST_BYTE_SENT		1	/* NCR53c81 or better */
--#define FLAG_CHECK_LAST_BYTE_SENT	2	/* Only test once */
--#define FLAG_NCR53C400			4	/* NCR53c400 */
-+#define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
- #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
- #define FLAG_DTC3181E			16	/* DTC3181E */
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-22 12:16:28.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-22 12:16:32.000000000 +1100
-@@ -1,7 +1,5 @@
- #define PSEUDO_DMA
- #define DONT_USE_INTR
--#define DMA_WORKS_RIGHT
--
- 
- /*
-  * DTC 3180/3280 driver, by
-@@ -233,7 +231,7 @@ found:
- 		instance->base = addr;
- 		((struct NCR5380_hostdata *)(instance)->hostdata)->base = base;
- 
--		if (NCR5380_init(instance, 0))
-+		if (NCR5380_init(instance, FLAG_NO_DMA_FIXUP))
- 			goto out_unregister;
- 
- 		NCR5380_maybe_reset_bus(instance);
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:16:28.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:16:32.000000000 +1100
-@@ -321,7 +321,7 @@ static int __init generic_NCR5380_detect
- 			break;
- 		case BOARD_NCR53C400:
- #ifdef PSEUDO_DMA
--			flags = FLAG_NCR53C400;
-+			flags = FLAG_NO_DMA_FIXUP;
- #endif
- 			break;
- 		case BOARD_NCR53C400A:
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:37.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:44.000000000 +1100
+@@ -229,9 +229,7 @@ static void do_reset(struct Scsi_Host *)
+  * cannot know it in advance :-( We just see a QUEUE_FULL status being
+  * returned. So, in this case, the driver internal queue size assumption is
+  * reduced to the number of active tags if QUEUE_FULL is returned by the
+- * target. The command is returned to the mid-level, but with status changed
+- * to BUSY, since --as I've seen-- the mid-level can't handle QUEUE_FULL
+- * correctly.
++ * target.
+  *
+  * We're also not allowed running tagged commands as long as an untagged
+  * command is active. And REQUEST SENSE commands after a contingent allegiance
+@@ -2152,21 +2150,13 @@ static void NCR5380_information_transfer
+ #ifdef SUPPORT_TAGS
+ 					cmd_free_tag(cmd);
+ 					if (status_byte(cmd->SCp.Status) == QUEUE_FULL) {
+-						/* Turn a QUEUE FULL status into BUSY, I think the
+-						 * mid level cannot handle QUEUE FULL :-( (The
+-						 * command is retried after BUSY). Also update our
+-						 * queue size to the number of currently issued
+-						 * commands now.
+-						 */
+-						/* ++Andreas: the mid level code knows about
+-						   QUEUE_FULL now. */
+ 						struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][cmd->device->lun];
+ 						dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %llu returned "
+ 							   "QUEUE_FULL after %d commands\n",
+ 							   HOSTNO, cmd->device->id, cmd->device->lun,
+ 							   ta->nr_allocated);
+ 						if (ta->queue_size > ta->nr_allocated)
+-							ta->nr_allocated = ta->queue_size;
++							ta->queue_size = ta->nr_allocated;
+ 					}
+ #else
+ 					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
