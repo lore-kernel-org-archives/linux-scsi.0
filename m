@@ -1,188 +1,238 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 70/77] atari_NCR5380: Merge changes from NCR5380.c
-Date: Tue, 22 Dec 2015 12:18:48 +1100
-Message-ID: <20151222011757.046049621@telegraphics.com.au>
+Subject: [PATCH v3 77/77] ncr5380: Add support for HP C2502
+Date: Tue, 22 Dec 2015 12:18:55 +1100
+Message-ID: <20151222011758.956108574@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-merge-trivia-from-NCR5380
+Content-Disposition: inline; filename=78-71
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In the past, atari_NCR5380.c was overlooked by those working on NCR5380.c
-and this caused needless divergence. All of the changes in this patch were
-taken from NCR5380.c.
+From: Ondrej Zary <linux@rainbow-software.org>
 
-This removes some unimportant discrepancies between the two core driver
-forks so that 'diff' can be used to reveal the important ones, to
-facilitate reunification.
+HP C2502 cards (based on 53C400A chips) use different magic numbers for
+software-based I/O address configuration than other cards.
+The configuration is also extended to allow setting the IRQ.
 
+Move the configuration to a new function magic_configure() and move
+magic the magic numbers into an array. Add new magic numbers for these
+HP cards and hp_c2502 module parameter to use them, e.g.:
+modprobe g_NCR5380 ncr_irq=7 ncr_addr=0x280 hp_c2502=1
+
+Tested with HP C2502 and DTCT-436P.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/atari_NCR5380.c |  108 +++++++++++++++++++++++++------------------
- 1 file changed, 64 insertions(+), 44 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
+Changes to Ondrej's versions:
+- Omit a redundant comment.
+- Throw an error if MMIO register locations are not known.
+- Avoid 'if (...) { ... continue; } else { ... }'
+- Fix "warning: 'port_idx' may be used uninitialized" and
+  "warning: 'magic' may be used uninitialized" for port-mapped config.
+- Rebased.
+
+---
+ drivers/scsi/g_NCR5380.c |   74 ++++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/g_NCR5380.h |    1 
+ 2 files changed, 59 insertions(+), 16 deletions(-)
+
+Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:19.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:24.000000000 +1100
-@@ -443,22 +443,39 @@ static struct {
- 	unsigned char mask;
- 	const char *name;
- } signals[] = {
--	{ SR_DBP, "PARITY"}, { SR_RST, "RST" }, { SR_BSY, "BSY" },
--	{ SR_REQ, "REQ" }, { SR_MSG, "MSG" }, { SR_CD,  "CD" }, { SR_IO, "IO" },
--	{ SR_SEL, "SEL" }, {0, NULL}
--}, basrs[] = {
--	{BASR_ATN, "ATN"}, {BASR_ACK, "ACK"}, {0, NULL}
--}, icrs[] = {
--	{ICR_ASSERT_RST, "ASSERT RST"},{ICR_ASSERT_ACK, "ASSERT ACK"},
--	{ICR_ASSERT_BSY, "ASSERT BSY"}, {ICR_ASSERT_SEL, "ASSERT SEL"},
--	{ICR_ASSERT_ATN, "ASSERT ATN"}, {ICR_ASSERT_DATA, "ASSERT DATA"},
-+	{SR_DBP, "PARITY"},
-+	{SR_RST, "RST"},
-+	{SR_BSY, "BSY"},
-+	{SR_REQ, "REQ"},
-+	{SR_MSG, "MSG"},
-+	{SR_CD, "CD"},
-+	{SR_IO, "IO"},
-+	{SR_SEL, "SEL"},
- 	{0, NULL}
--}, mrs[] = {
--	{MR_BLOCK_DMA_MODE, "MODE BLOCK DMA"}, {MR_TARGET, "MODE TARGET"},
--	{MR_ENABLE_PAR_CHECK, "MODE PARITY CHECK"}, {MR_ENABLE_PAR_INTR,
--	"MODE PARITY INTR"}, {MR_ENABLE_EOP_INTR,"MODE EOP INTR"},
-+},
-+basrs[] = {
-+	{BASR_ATN, "ATN"},
-+	{BASR_ACK, "ACK"},
-+	{0, NULL}
-+},
-+icrs[] = {
-+	{ICR_ASSERT_RST, "ASSERT RST"},
-+	{ICR_ASSERT_ACK, "ASSERT ACK"},
-+	{ICR_ASSERT_BSY, "ASSERT BSY"},
-+	{ICR_ASSERT_SEL, "ASSERT SEL"},
-+	{ICR_ASSERT_ATN, "ASSERT ATN"},
-+	{ICR_ASSERT_DATA, "ASSERT DATA"},
-+	{0, NULL}
-+},
-+mrs[] = {
-+	{MR_BLOCK_DMA_MODE, "MODE BLOCK DMA"},
-+	{MR_TARGET, "MODE TARGET"},
-+	{MR_ENABLE_PAR_CHECK, "MODE PARITY CHECK"},
-+	{MR_ENABLE_PAR_INTR, "MODE PARITY INTR"},
-+	{MR_ENABLE_EOP_INTR, "MODE EOP INTR"},
- 	{MR_MONITOR_BSY, "MODE MONITOR BSY"},
--	{MR_DMA_MODE, "MODE DMA"}, {MR_ARBITRATE, "MODE ARBITRATION"},
-+	{MR_DMA_MODE, "MODE DMA"},
-+	{MR_ARBITRATE, "MODE ARBITRATION"},
- 	{0, NULL}
- };
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:17:32.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:17:33.000000000 +1100
+@@ -80,6 +80,7 @@ static int ncr_5380;
+ static int ncr_53c400;
+ static int ncr_53c400a;
+ static int dtc_3181e;
++static int hp_c2502;
  
-@@ -502,8 +519,12 @@ static struct {
- 	unsigned char value;
- 	const char *name;
- } phases[] = {
--	{PHASE_DATAOUT, "DATAOUT"}, {PHASE_DATAIN, "DATAIN"}, {PHASE_CMDOUT, "CMDOUT"},
--	{PHASE_STATIN, "STATIN"}, {PHASE_MSGOUT, "MSGOUT"}, {PHASE_MSGIN, "MSGIN"},
-+	{PHASE_DATAOUT, "DATAOUT"},
-+	{PHASE_DATAIN, "DATAIN"},
-+	{PHASE_CMDOUT, "CMDOUT"},
-+	{PHASE_STATIN, "STATIN"},
-+	{PHASE_MSGOUT, "MSGOUT"},
-+	{PHASE_MSGIN, "MSGIN"},
- 	{PHASE_UNKNOWN, "UNKNOWN"}
- };
+ static struct override {
+ 	NCR5380_map_type NCR5380_map_name;
+@@ -225,6 +226,30 @@ static int __init do_DTC3181E_setup(char
  
-@@ -529,7 +550,6 @@ static void NCR5380_print_phase(struct S
- 		shost_printk(KERN_DEBUG, instance, "phase %s\n", phases[i].name);
- 	}
- }
--
  #endif
  
++#ifndef SCSI_G_NCR5380_MEM
++/*
++ * Configure I/O address of 53C400A or DTC436 by writing magic numbers
++ * to ports 0x779 and 0x379.
++ */
++static void magic_configure(int idx, u8 irq, u8 magic[])
++{
++	u8 cfg = 0;
++
++	outb(magic[0], 0x779);
++	outb(magic[1], 0x379);
++	outb(magic[2], 0x379);
++	outb(magic[3], 0x379);
++	outb(magic[4], 0x379);
++
++	/* allowed IRQs for HP C2502 */
++	if (irq != 2 && irq != 3 && irq != 4 && irq != 5 && irq != 7)
++		irq = 0;
++	if (idx >= 0 && idx <= 7)
++		cfg = 0x80 | idx | (irq << 4);
++	outb(cfg, 0x379);
++}
++#endif
++
  /**
-@@ -1488,9 +1508,9 @@ static int NCR5380_transfer_pio(struct S
- 				unsigned char *phase, int *count,
- 				unsigned char **data)
- {
--	register unsigned char p = *phase, tmp;
--	register int c = *count;
--	register unsigned char *d = *data;
-+	unsigned char p = *phase, tmp;
-+	int c = *count;
-+	unsigned char *d = *data;
+  * 	generic_NCR5380_detect	-	look for NCR5380 controllers
+  *	@tpnt: the scsi template
+@@ -241,8 +266,10 @@ static int __init generic_NCR5380_detect
+ 	static int current_override;
+ 	int count;
+ 	unsigned int *ports;
++	u8 *magic = NULL;
+ #ifndef SCSI_G_NCR5380_MEM
+ 	int i;
++	int port_idx = -1;
+ 	unsigned long region_size = 16;
+ #endif
+ 	static unsigned int __initdata ncr_53c400a_ports[] = {
+@@ -251,6 +278,12 @@ static int __init generic_NCR5380_detect
+ 	static unsigned int __initdata dtc_3181e_ports[] = {
+ 		0x220, 0x240, 0x280, 0x2a0, 0x2c0, 0x300, 0x320, 0x340, 0
+ 	};
++	static u8 ncr_53c400a_magic[] __initdata = {	/* 53C400A & DTC436 */
++		0x59, 0xb9, 0xc5, 0xae, 0xa6
++	};
++	static u8 hp_c2502_magic[] __initdata = {	/* HP C2502 */
++		0x0f, 0x22, 0xf0, 0x20, 0x80
++	};
+ 	int flags;
+ 	struct Scsi_Host *instance;
+ 	struct NCR5380_hostdata *hostdata;
+@@ -273,6 +306,8 @@ static int __init generic_NCR5380_detect
+ 		overrides[0].board = BOARD_NCR53C400A;
+ 	else if (dtc_3181e)
+ 		overrides[0].board = BOARD_DTC3181E;
++	else if (hp_c2502)
++		overrides[0].board = BOARD_HP_C2502;
+ #ifndef SCSI_G_NCR5380_MEM
+ 	if (!current_override && isapnp_present()) {
+ 		struct pnp_dev *dev = NULL;
+@@ -325,24 +360,26 @@ static int __init generic_NCR5380_detect
+ 		case BOARD_NCR53C400A:
+ 			flags = FLAG_NO_DMA_FIXUP;
+ 			ports = ncr_53c400a_ports;
++			magic = ncr_53c400a_magic;
++			break;
++		case BOARD_HP_C2502:
++			flags = FLAG_NO_DMA_FIXUP;
++			ports = ncr_53c400a_ports;
++			magic = hp_c2502_magic;
+ 			break;
+ 		case BOARD_DTC3181E:
+ 			flags = FLAG_NO_DMA_FIXUP;
+ 			ports = dtc_3181e_ports;
++			magic = ncr_53c400a_magic;
+ 			break;
+ 		}
  
- 	/*
- 	 * The NCR5380 chip will only drive the SCSI bus when the
-@@ -1557,17 +1577,17 @@ static int NCR5380_transfer_pio(struct S
+ #ifndef SCSI_G_NCR5380_MEM
+-		if (ports) {
++		if (ports && magic) {
+ 			/* wakeup sequence for the NCR53C400A and DTC3181E */
  
- 		dsprintk(NDEBUG_HANDSHAKE, instance, "REQ negated, handshake complete\n");
+ 			/* Disable the adapter and look for a free io port */
+-			outb(0x59, 0x779);
+-			outb(0xb9, 0x379);
+-			outb(0xc5, 0x379);
+-			outb(0xae, 0x379);
+-			outb(0xa6, 0x379);
+-			outb(0x00, 0x379);
++			magic_configure(-1, 0, magic);
  
--		/*
--		 * We have several special cases to consider during REQ/ACK handshaking :
--		 * 1.  We were in MSGOUT phase, and we are on the last byte of the
--		 * message.  ATN must be dropped as ACK is dropped.
--		 *
--		 * 2.  We are in a MSGIN phase, and we are on the last byte of the
--		 * message.  We must exit with ACK asserted, so that the calling
--		 * code may raise ATN before dropping ACK to reject the message.
--		 *
--		 * 3.  ACK and ATN are clear and the target may proceed as normal.
--		 */
-+/*
-+ * We have several special cases to consider during REQ/ACK handshaking :
-+ * 1.  We were in MSGOUT phase, and we are on the last byte of the
-+ * message.  ATN must be dropped as ACK is dropped.
-+ *
-+ * 2.  We are in a MSGIN phase, and we are on the last byte of the
-+ * message.  We must exit with ACK asserted, so that the calling
-+ * code may raise ATN before dropping ACK to reject the message.
-+ *
-+ * 3.  ACK and ATN are clear and the target may proceed as normal.
-+ */
- 		if (!(p == PHASE_MSGIN && c == 1)) {
- 			if (p == PHASE_MSGOUT && c > 1)
- 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
-@@ -1632,7 +1652,7 @@ static void do_reset(struct Scsi_Host *i
+ 			if (overrides[current_override].NCR5380_map_name != PORT_AUTO)
+ 				for (i = 0; ports[i]; i++) {
+@@ -361,17 +398,12 @@ static int __init generic_NCR5380_detect
+ 				}
+ 			if (ports[i]) {
+ 				/* At this point we have our region reserved */
+-				outb(0x59, 0x779);
+-				outb(0xb9, 0x379);
+-				outb(0xc5, 0x379);
+-				outb(0xae, 0x379);
+-				outb(0xa6, 0x379);
+-				outb(0x80 | i, 0x379);	/* set io port to be used */
++				magic_configure(i, 0, magic); /* no IRQ yet */
+ 				outb(0xc0, ports[i] + 9);
+ 				if (inb(ports[i] + 9) != 0x80)
+ 					continue;
+-				else
+-					overrides[current_override].NCR5380_map_name = ports[i];
++				overrides[current_override].NCR5380_map_name = ports[i];
++				port_idx = i;
+ 			} else
+ 				continue;
+ 		}
+@@ -417,6 +449,7 @@ static int __init generic_NCR5380_detect
+ 			hostdata->io_width = 2;	/* 16-bit PDMA */
+ 			/* fall through */
+ 		case BOARD_NCR53C400A:
++		case BOARD_HP_C2502:
+ 			hostdata->c400_ctl_status = 9;
+ 			hostdata->c400_blk_cnt = 10;
+ 			hostdata->c400_host_buf = 8;
+@@ -433,6 +466,7 @@ static int __init generic_NCR5380_detect
+ 			break;
+ 		case BOARD_DTC3181E:
+ 		case BOARD_NCR53C400A:
++		case BOARD_HP_C2502:
+ 			pr_err(DRV_MODULE_NAME ": unknown register offsets\n");
+ 			goto out_unregister;
+ 		}
+@@ -445,6 +479,7 @@ static int __init generic_NCR5380_detect
+ 		case BOARD_NCR53C400:
+ 		case BOARD_DTC3181E:
+ 		case BOARD_NCR53C400A:
++		case BOARD_HP_C2502:
+ 			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+ 		}
  
- static int do_abort(struct Scsi_Host *instance)
- {
--	unsigned char tmp, *msgptr, phase;
-+	unsigned char *msgptr, phase, tmp;
- 	int len;
- 	int rc;
+@@ -459,12 +494,18 @@ static int __init generic_NCR5380_detect
+ 		if (instance->irq == 255)
+ 			instance->irq = NO_IRQ;
  
-@@ -2091,18 +2111,18 @@ static void NCR5380_information_transfer
- 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 					break;
- 				case EXTENDED_MESSAGE:
--					/*
--					 * Extended messages are sent in the following format :
--					 * Byte
--					 * 0		EXTENDED_MESSAGE == 1
--					 * 1		length (includes one byte for code, doesn't
--					 * include first two bytes)
--					 * 2		code
--					 * 3..length+1	arguments
--					 *
--					 * Start the extended message buffer with the EXTENDED_MESSAGE
--					 * byte, since spi_print_msg() wants the whole thing.
--					 */
-+/*
-+ * Extended messages are sent in the following format :
-+ * Byte
-+ * 0            EXTENDED_MESSAGE == 1
-+ * 1            length (includes one byte for code, doesn't
-+ * include first two bytes)
-+ * 2            code
-+ * 3..length+1  arguments
-+ *
-+ * Start the extended message buffer with the EXTENDED_MESSAGE
-+ * byte, since spi_print_msg() wants the whole thing.
-+ */
- 					extended_msg[0] = EXTENDED_MESSAGE;
- 					/* Accept first byte by clearing ACK */
- 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		if (instance->irq != NO_IRQ)
++		if (instance->irq != NO_IRQ) {
++#ifndef SCSI_G_NCR5380_MEM
++			/* set IRQ for HP C2502 */
++			if (overrides[current_override].board == BOARD_HP_C2502)
++				magic_configure(port_idx, instance->irq, magic);
++#endif
+ 			if (request_irq(instance->irq, generic_NCR5380_intr,
+ 					0, "NCR5380", instance)) {
+ 				printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
+ 				instance->irq = NO_IRQ;
+ 			}
++		}
+ 
+ 		if (instance->irq == NO_IRQ) {
+ 			printk(KERN_INFO "scsi%d : interrupts not enabled. for better interactive performance,\n", instance->host_no);
+@@ -751,6 +792,7 @@ module_param(ncr_5380, int, 0);
+ module_param(ncr_53c400, int, 0);
+ module_param(ncr_53c400a, int, 0);
+ module_param(dtc_3181e, int, 0);
++module_param(hp_c2502, int, 0);
+ MODULE_LICENSE("GPL");
+ 
+ #if !defined(SCSI_G_NCR5380_MEM) && defined(MODULE)
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-22 12:17:31.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2015-12-22 12:17:33.000000000 +1100
+@@ -88,6 +88,7 @@
+ #define BOARD_NCR53C400	1
+ #define BOARD_NCR53C400A 2
+ #define BOARD_DTC3181E	3
++#define BOARD_HP_C2502	4
+ 
+ #endif /* GENERIC_NCR5380_H */
+ 
