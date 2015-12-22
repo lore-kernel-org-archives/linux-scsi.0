@@ -1,69 +1,93 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 31/77] ncr5380: Fix !REQ timeout in do_abort()
-Date: Tue, 22 Dec 2015 12:18:09 +1100
-Message-ID: <20151222011746.445511731@telegraphics.com.au>
+Subject: [PATCH v3 42/77] ncr5380: Replace READ_OVERRUNS macro with FLAG_NO_DMA_FIXUPS
+Date: Tue, 22 Dec 2015 12:18:20 +1100
+Message-ID: <20151222011749.446042594@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40514 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752789AbbLVCbP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:15 -0500
-Content-Disposition: inline; filename=ncr5380-do_abort-vs-poll_politely
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-remove-READ_OVERRUNS
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+List-Id: linux-scsi@vger.kernel.org
 
-NCR5380_poll_politely() never returns -1. That means do_abort() can fail
-to handle a timeout after waiting for the target to negate REQ. Fix this
-and cleanup other NCR5380_poll_politely() call sites.
+The workarounds for chip errata appear twice, in slightly different
+forms. One is used when defined(REAL_DMA) || defined(REAL_DMA_POLL), the
+other when defined(PSEUDO_DMA). In the PDMA case, the workarounds have
+been made conditional on FLAG_NO_DMA_FIXUPS. Do the same for the DMA case,
+to eliminate the READ_OVERRUNS macro.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/NCR5380.c |   28 +++++++++++-----------------
+ 1 file changed, 11 insertions(+), 17 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:17.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:18.000000000 +1100
-@@ -1271,7 +1271,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	err = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ);
- 	spin_lock_irq(instance->host_lock);
- 	
--	if(err) {
-+	if (err < 0) {
- 		printk(KERN_ERR "scsi%d: timeout at NCR5380.c:%d\n", instance->host_no, __LINE__);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		return -1;
-@@ -1490,8 +1490,7 @@ static int do_abort(struct Scsi_Host *in
- 	 */
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:32.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:34.000000000 +1100
+@@ -94,11 +94,6 @@
+ #undef REAL_DMA
+ #endif
  
- 	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 60 * HZ);
--	
--	if(rc < 0)
-+	if (rc < 0)
+-#ifdef REAL_DMA_POLL
+-#undef READ_OVERRUNS
+-#define READ_OVERRUNS
+-#endif
+-
+ #ifdef BOARD_REQUIRES_NO_DELAY
+ #define io_recovery_delay(x)
+ #else
+@@ -1586,11 +1581,10 @@ static int NCR5380_transfer_dma(struct S
  		return -1;
- 
- 	tmp = (unsigned char)rc;
-@@ -1502,7 +1501,7 @@ static int do_abort(struct Scsi_Host *in
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
- 		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
--		if(rc == -1)
-+		if (rc < 0)
- 			return -1;
  	}
- 	tmp = ABORT;
-@@ -2199,7 +2198,8 @@ static void NCR5380_reselect(struct Scsi
- 	 * FIXME: timeout needed and fail to work queeu
- 	 */
+ #if defined(REAL_DMA) || defined(REAL_DMA_POLL)
+-#ifdef READ_OVERRUNS
+ 	if (p & SR_IO) {
+-		c -= 2;
++		if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS))
++			c -= 2;
+ 	}
+-#endif
+ 	dprintk(NDEBUG_DMA, "scsi%d : initializing DMA channel %d for %s, %d bytes %s %0x\n", instance->host_no, instance->dma_channel, (p & SR_IO) ? "reading" : "writing", c, (p & SR_IO) ? "to" : "from", (unsigned) d);
+ 	hostdata->dma_len = (p & SR_IO) ? NCR5380_dma_read_setup(instance, d, c) : NCR5380_dma_write_setup(instance, d, c);
+ #endif
+@@ -1676,13 +1670,14 @@ static int NCR5380_transfer_dma(struct S
+  */
  
--	if(NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 2*HZ))
-+	if (NCR5380_poll_politely(instance,
-+	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0)
- 		abort = 1;
+ 	if (p & SR_IO) {
+-#ifdef READ_OVERRUNS
+-		udelay(10);
+-		if (((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) == (BASR_PHASE_MATCH | BASR_ACK))) {
+-			saved_data = NCR5380_read(INPUT_DATA_REGISTER);
+-			overrun = 1;
++		if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS)) {
++			udelay(10);
++			if ((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) ==
++			    (BASR_PHASE_MATCH | BASR_ACK)) {
++				saved_data = NCR5380_read(INPUT_DATA_REGISTER);
++				overrun = 1;
++			}
+ 		}
+-#endif
+ 	} else {
+ 		int limit = 100;
+ 		while (((tmp = NCR5380_read(BUS_AND_STATUS_REG)) & BASR_ACK) || (NCR5380_read(STATUS_REG) & SR_REQ)) {
+@@ -1704,8 +1699,8 @@ static int NCR5380_transfer_dma(struct S
+ 	*data += c;
+ 	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
  
- 	len = 1;
-
-
+-#ifdef READ_OVERRUNS
+-	if (*phase == p && (p & SR_IO) && residue == 0) {
++	if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS) &&
++	    *phase == p && (p & SR_IO) && residue == 0) {
+ 		if (overrun) {
+ 			dprintk(NDEBUG_DMA, "Got an input overrun, using saved byte\n");
+ 			**data = saved_data;
+@@ -1720,7 +1715,6 @@ static int NCR5380_transfer_dma(struct S
+ 		NCR5380_transfer_pio(instance, phase, &cnt, data);
+ 		*count -= toPIO - cnt;
+ 	}
+-#endif
+ 
+ 	dprintk(NDEBUG_DMA, "Return with data ptr = 0x%X, count %d, last 0x%X, next 0x%X\n", *data, *count, *(*data + *count - 1), *(*data + *count));
+ 	return 0;
