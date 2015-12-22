@@ -1,38 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 37/77] ncr5380: Standardize work queueing algorithm
-Date: Tue, 22 Dec 2015 08:33:16 +0100
-Message-ID: <5678FCBC.4080404@suse.de>
+Subject: Re: [PATCH v3 38/77] ncr5380: Remove UNSAFE macro
+Date: Tue, 22 Dec 2015 08:34:09 +0100
+Message-ID: <5678FCF1.10305@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011748.092136137@telegraphics.com.au>
+ <20151222011748.365505398@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151222011748.092136137@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20151222011748.365505398@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> The complex main_running/queue_main mechanism is peculiar to
-> atari_NCR5380.c. It isn't SMP safe and offers little value given that
-> the work queue already offers concurrency management. Remove this
-> complexity to bring atari_NCR5380.c closer to NCR5380.c.
+> Configuring core drivers using macros like this one prevents re-unify=
+ing
+> the core driver forks, and prevents implementing the core driver as a
+> library or a platform driver.
 >
-> It is not a good idea to call the information transfer state machine =
-from
-> queuecommand because, according to Documentation/scsi/scsi_mid_low_ap=
-i.txt
-> that could happen in soft irq context. Fix this.
+> The UNSAFE macro in particular is a poor workaround for the problem o=
+f
+> interrupt latency. Releasing the locks complicates things because the=
+n we
+> would have to handle the possibility of EH handler invocation during =
+a
+> PDMA transfer.
+>
+> The comments say that instead of using this macro, "you're going to b=
+e
+> better off twiddling with transfersize". I agree. Remove this stuff.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->
-> ---
->   drivers/scsi/NCR5380.h       |    1
->   drivers/scsi/atari_NCR5380.c |   80 +++----------------------------=
-------------
->   2 files changed, 6 insertions(+), 75 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
