@@ -1,162 +1,199 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH v2 07/17] be2iscsi: Fix to remove shutdown entry point
-Date: Tue, 22 Dec 2015 22:45:52 +0530
-Message-ID: <1450804562-11980-8-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH v2 15/17] be2iscsi: Fix async link event processing
+Date: Tue, 22 Dec 2015 22:46:00 +0530
+Message-ID: <1450804562-11980-16-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450804562-11980-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:49452 "EHLO
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:49477 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751370AbbLVRQc (ORCPT
+	by vger.kernel.org with ESMTP id S1754755AbbLVRQp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Dec 2015 12:16:32 -0500
+	Tue, 22 Dec 2015 12:16:45 -0500
 In-Reply-To: <1450804562-11980-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Null pointer dereference in shutdown path after taking dump.
+Use only port_link_status only to determine link state change.
+Only bit 0 is used to get the state.
+Remove code for processing port_fault.
 
-Shutdown path is not needed as FW comes up clean every time during probe
-after issuing FUNCTION reset MBOX command.
+Fixed get_nic_conf structure definition. Removed rsvd[23] field in
+be_cmd_get_nic_conf_resp.
+
+Moved defintions of struct field values below the field.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 17 +++--------------
- drivers/scsi/be2iscsi/be_cmds.h |  2 +-
- drivers/scsi/be2iscsi/be_main.c | 24 ++++--------------------
- drivers/scsi/be2iscsi/be_main.h |  3 +--
- 4 files changed, 9 insertions(+), 37 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c  | 48 +++++++++++++++++++---------------------
+ drivers/scsi/be2iscsi/be_cmds.h  | 32 +++++++++------------------
+ drivers/scsi/be2iscsi/be_iscsi.c |  2 +-
+ 3 files changed, 34 insertions(+), 48 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index f93ab6d..66a1fc3 100644
+index ce82f4d..34c33d4 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -417,22 +417,11 @@ static struct be_mcc_compl *be_mcc_compl_get(struct beiscsi_hba *phba)
- }
- 
- /**
-- * be2iscsi_fail_session(): Closing session with appropriate error
-+ * beiscsi_fail_session(): Closing session with appropriate error
-  * @cls_session: ptr to session
-- *
-- * Depending on adapter state appropriate error flag is passed.
-  **/
--void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
-+void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
- {
--	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
--	struct beiscsi_hba *phba = iscsi_host_priv(shost);
--	uint32_t iscsi_err_flag;
--
--	if (phba->state & BE_ADAPTER_STATE_SHUTDOWN)
--		iscsi_err_flag = ISCSI_ERR_INVALID_HOST;
--	else
--		iscsi_err_flag = ISCSI_ERR_CONN_FAILED;
--
+@@ -405,32 +405,31 @@ void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
  	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
  }
  
-@@ -450,7 +439,7 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
- 			    evt->physical_port);
- 
- 		iscsi_host_for_each_session(phba->shost,
--					    be2iscsi_fail_session);
-+					    beiscsi_fail_session);
- 	} else if ((evt->port_link_status & ASYNC_EVENT_LINK_UP) ||
- 		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
- 		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 1883d32..f988164 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -1367,5 +1367,5 @@ void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
- void be_cmd_hdr_prepare(struct be_cmd_req_hdr *req_hdr,
- 			u8 subsystem, u8 opcode, int cmd_len);
- 
--void be2iscsi_fail_session(struct iscsi_cls_session *cls_session);
-+void beiscsi_fail_session(struct iscsi_cls_session *cls_session);
- #endif /* !BEISCSI_CMDS_H */
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 61ce86b..2f3e118 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5315,7 +5315,6 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
- 
- static void beiscsi_remove(struct pci_dev *pcidev)
+-static void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+-		struct be_async_event_link_state *evt)
++static void beiscsi_process_async_link(struct beiscsi_hba *phba,
++				       struct be_mcc_compl *compl)
  {
+-	phba->port_speed = evt->port_speed;
+-	if ((evt->port_link_status == ASYNC_EVENT_LINK_DOWN) ||
+-	    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+-	     (evt->port_fault != BEISCSI_PHY_LINK_FAULT_NONE))) {
+-		phba->state = BE_ADAPTER_LINK_DOWN;
++	struct be_async_event_link_state *evt;
+ 
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+-			    "BC_%d : Link Down on Port %d\n",
+-			    evt->physical_port);
++	evt = (struct be_async_event_link_state *)compl;
+ 
+-		iscsi_host_for_each_session(phba->shost,
+-					    beiscsi_fail_session);
+-	} else if ((evt->port_link_status & ASYNC_EVENT_LINK_UP) ||
+-		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+-		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
++	phba->port_speed = evt->port_speed;
++	/**
++	 * Check logical link status in ASYNC event.
++	 * This has been newly introduced in SKH-R Firmware 10.0.338.45.
++	 **/
++	if (evt->port_link_status & BE_ASYNC_LINK_UP_MASK) {
+ 		phba->state = BE_ADAPTER_LINK_UP | BE_ADAPTER_CHECK_BOOT;
+ 		phba->get_boot = BE_GET_BOOT_RETRIES;
 -
- 	struct beiscsi_hba *phba = NULL;
- 
- 	phba = pci_get_drvdata(pcidev);
-@@ -5325,9 +5324,9 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+-			    "BC_%d : Link UP on Port %d\n",
+-			    evt->physical_port);
++		__beiscsi_log(phba, KERN_ERR,
++			      "BC_%d : Link Up on Port %d tag 0x%x\n",
++			      evt->physical_port, evt->event_tag);
++	} else {
++		phba->state = BE_ADAPTER_LINK_DOWN;
++		__beiscsi_log(phba, KERN_ERR,
++			      "BC_%d : Link Down on Port %d tag 0x%x\n",
++			      evt->physical_port, evt->event_tag);
++		iscsi_host_for_each_session(phba->shost,
++					    beiscsi_fail_session);
  	}
- 
- 	beiscsi_destroy_def_ifaces(phba);
--	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
- 	iscsi_boot_destroy_kset(phba->boot_kset);
- 	iscsi_host_remove(phba->shost);
-+	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
- 	pci_dev_put(phba->pcidev);
- 	iscsi_host_free(phba->shost);
- 	pci_disable_pcie_error_reporting(pcidev);
-@@ -5336,23 +5335,6 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 	pci_disable_device(pcidev);
  }
  
--static void beiscsi_shutdown(struct pci_dev *pcidev)
--{
--
--	struct beiscsi_hba *phba = NULL;
--
--	phba = (struct beiscsi_hba *)pci_get_drvdata(pcidev);
--	if (!phba) {
--		dev_err(&pcidev->dev, "beiscsi_shutdown called with no phba\n");
--		return;
--	}
--
--	phba->state = BE_ADAPTER_STATE_SHUTDOWN;
--	iscsi_host_for_each_session(phba->shost, be2iscsi_fail_session);
--	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
--	pci_disable_device(pcidev);
--}
--
- static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- {
- 	int i, status;
-@@ -5673,6 +5655,9 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 		goto hba_free;
+@@ -507,8 +506,7 @@ void beiscsi_process_async_event(struct beiscsi_hba *phba,
+ 	evt_code &= ASYNC_TRAILER_EVENT_CODE_MASK;
+ 	switch (evt_code) {
+ 	case ASYNC_EVENT_CODE_LINK_STATE:
+-		beiscsi_async_link_state_process(phba,
+-				(struct be_async_event_link_state *)compl);
++		beiscsi_process_async_link(phba, compl);
+ 		break;
+ 	case ASYNC_EVENT_CODE_ISCSI:
+ 		phba->state |= BE_ADAPTER_CHECK_BOOT;
+@@ -524,8 +522,8 @@ void beiscsi_process_async_event(struct beiscsi_hba *phba,
  	}
  
-+	/*
-+	 * FUNCTION_RESET should clean up any stale info in FW for this fn
-+	 */
- 	ret = beiscsi_cmd_reset_function(phba);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-@@ -5861,7 +5846,6 @@ static struct pci_driver beiscsi_pci_driver = {
- 	.name = DRV_NAME,
- 	.probe = beiscsi_dev_probe,
- 	.remove = beiscsi_remove,
--	.shutdown = beiscsi_shutdown,
- 	.id_table = beiscsi_pci_id_table,
- 	.err_handler = &beiscsi_eeh_handlers
+ 	beiscsi_log(phba, sev, BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-		    "BC_%d : ASYNC Event: status 0x%08x flags 0x%08x\n",
+-		    compl->status, compl->flags);
++		    "BC_%d : ASYNC Event %x: status 0x%08x flags 0x%08x\n",
++		    evt_code, compl->status, compl->flags);
+ }
+ 
+ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index a194066..7caf585 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -142,7 +142,6 @@ struct be_async_event_trailer {
+ enum {
+ 	ASYNC_EVENT_LINK_DOWN = 0x0,
+ 	ASYNC_EVENT_LINK_UP = 0x1,
+-	ASYNC_EVENT_LOGICAL = 0x2
  };
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 5c67c07..bd9d1e1 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -103,8 +103,7 @@
- #define BE_ADAPTER_LINK_UP	0x001
- #define BE_ADAPTER_LINK_DOWN	0x002
- #define BE_ADAPTER_PCI_ERR	0x004
--#define BE_ADAPTER_STATE_SHUTDOWN	0x008
--#define BE_ADAPTER_CHECK_BOOT	0x010
-+#define BE_ADAPTER_CHECK_BOOT	0x008
  
+ /**
+@@ -152,7 +151,15 @@ enum {
+ struct be_async_event_link_state {
+ 	u8 physical_port;
+ 	u8 port_link_status;
++/**
++ * ASYNC_EVENT_LINK_DOWN		0x0
++ * ASYNC_EVENT_LINK_UP			0x1
++ * ASYNC_EVENT_LINK_LOGICAL_DOWN	0x2
++ * ASYNC_EVENT_LINK_LOGICAL_UP		0x3
++ */
++#define BE_ASYNC_LINK_UP_MASK		0x01
+ 	u8 port_duplex;
++	u8 port_speed;
+ /* BE2ISCSI_LINK_SPEED_ZERO	0x00 - no link */
+ #define BE2ISCSI_LINK_SPEED_10MBPS	0x01
+ #define BE2ISCSI_LINK_SPEED_100MBPS	0x02
+@@ -160,10 +167,6 @@ struct be_async_event_link_state {
+ #define BE2ISCSI_LINK_SPEED_10GBPS	0x04
+ #define BE2ISCSI_LINK_SPEED_25GBPS	0x06
+ #define BE2ISCSI_LINK_SPEED_40GBPS	0x07
+-	u8 port_speed;
+-#define BEISCSI_PHY_LINK_FAULT_NONE	0x00
+-#define BEISCSI_PHY_LINK_FAULT_LOCAL	0x01
+-#define BEISCSI_PHY_LINK_FAULT_REMOTE	0x02
+ 	u8 port_fault;
+ 	u8 event_reason;
+ 	u16 qos_link_speed;
+@@ -684,20 +687,6 @@ struct be_cmd_req_modify_eq_delay {
  
- #define BEISCSI_CLEAN_UNLOAD	0x01
+ /******************** Get MAC ADDR *******************/
+ 
+-#define ETH_ALEN	6
+-
+-struct be_cmd_get_nic_conf_req {
+-	struct be_cmd_req_hdr hdr;
+-	u32 nic_port_count;
+-	u32 speed;
+-	u32 max_speed;
+-	u32 link_state;
+-	u32 max_frame_size;
+-	u16 size_of_structure;
+-	u8 mac_address[ETH_ALEN];
+-	u32 rsvd[23];
+-};
+-
+ struct be_cmd_get_nic_conf_resp {
+ 	struct be_cmd_resp_hdr hdr;
+ 	u32 nic_port_count;
+@@ -706,9 +695,8 @@ struct be_cmd_get_nic_conf_resp {
+ 	u32 link_state;
+ 	u32 max_frame_size;
+ 	u16 size_of_structure;
+-	u8 mac_address[6];
+-	u32 rsvd[23];
+-};
++	u8 mac_address[ETH_ALEN];
++} __packed;
+ 
+ #define BEISCSI_ALIAS_LEN 32
+ 
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index a3bc5e4..9eef68b 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -758,7 +758,7 @@ static void beiscsi_get_port_state(struct Scsi_Host *shost)
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	struct iscsi_cls_host *ihost = shost->shost_data;
+ 
+-	ihost->port_state = (phba->state == BE_ADAPTER_LINK_UP) ?
++	ihost->port_state = (phba->state & BE_ADAPTER_LINK_UP) ?
+ 		ISCSI_PORT_STATE_UP : ISCSI_PORT_STATE_DOWN;
+ }
+ 
 -- 
 1.9.1
 
