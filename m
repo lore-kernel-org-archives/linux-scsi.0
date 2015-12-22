@@ -1,68 +1,48 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 50/77] ncr5380: Change instance->host_lock to
- hostdata->lock
-Date: Tue, 22 Dec 2015 08:46:41 +0100
-Message-ID: <5678FFE1.10600@suse.de>
+Subject: Re: [PATCH v3 51/77] ncr5380: Remove command list debug code
+Date: Tue, 22 Dec 2015 08:47:29 +0100
+Message-ID: <56790011.4040302@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011751.575811401@telegraphics.com.au>
+ <20151222011751.836236766@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151222011751.575811401@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20151222011751.836236766@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> NCR5380.c presently uses the instance->host_lock spin lock. Convert t=
-his
-> to a new spin lock that protects the NCR5380_hostdata struct.
->
-> atari_NCR5380.c previously used local_irq_save/restore() rather than =
-a
-> spin lock. Convert this to hostdata->lock in irq mode. For SMP platfo=
-rms,
-> the interrupt handler now also acquires the spin lock.
->
-> This brings all locking in the two core drivers into agreement.
->
-> Adding this locking also means that a bunch of volatile qualifiers ca=
-n be
-> removed from the members of the NCR5380_hostdata struct. This is done=
- in
-> a subsequent patch.
->
-> Proper locking will allow the abort handler to locate a command being
-> aborted. This is presently impossible if the abort handler is invoked=
- when
-> the command has been moved from a queue to a pointer on the stack. (I=
+> Some NCR5380 hosts offer a .show_info method to access the contents o=
 f
-> eh_abort_handler can't determine whether a command has been completed
-> or is still being processed then it can't decide whether to return
-> success or failure.)
+> the various command list data structures from a procfs file. When NDE=
+BUG
+> is set, the same information is sent to the console during EH.
 >
-> The hostdata spin lock is now held when calling NCR5380_select() and
-> NCR5380_information_transfer(). Where possible, the lock is dropped f=
-or
-> polling and PIO transfers.
+> The two core drivers, atari_NCR5380.c and NCR5380.c differ here. Beca=
+use
+> it is just for debugging, the easiest way to fix the discrepancy is
+> simply remove this code.
 >
-> Clean up the now-redundant SELECT_ENABLE_REG writes, that used to pro=
-vide
-> limited mutual exclusion between information_transfer() and reselect(=
-).
->
-> Accessing hostdata->connected without data races means taking the loc=
-k;
-> cleanup these accesses.
->
-> The new spin lock falls away for m68k and other UP builds, so this sh=
-ould
-> have little impact there. In the SMP case the new lock should be
-> uncontested even when the SCSI bus is contested.
+> The only remaining users of NCR5380_show_info() and NCR5380_write_inf=
+o()
+> are drivers that define PSEUDO_DMA. The others have no use for the
+> .show_info method, so don't initialize it.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>
+> ---
+>   drivers/scsi/NCR5380.c       |   70 ++-----------------------------=
+-
+>   drivers/scsi/arm/oak.c       |    2
+>   drivers/scsi/atari_NCR5380.c |   94 +------------------------------=
+------------
+>   drivers/scsi/atari_scsi.c    |    2
+>   drivers/scsi/g_NCR5380.c     |    1
+>   drivers/scsi/sun3_scsi.c     |    2
+>   6 files changed, 9 insertions(+), 162 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
