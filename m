@@ -1,217 +1,294 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 04/77] ncr5380: Remove more pointless macros
-Date: Tue, 22 Dec 2015 12:17:42 +1100
-Message-ID: <20151222011739.145798408@telegraphics.com.au>
+Subject: [PATCH v3 03/77] ncr5380: Eliminate PDEBUG*, TDEBUG* and DTCDEBUG* macros
+Date: Tue, 22 Dec 2015 12:17:41 +1100
+Message-ID: <20151222011738.855939900@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-pointless-macros
+Content-Disposition: inline; filename=ncr5380-remove-TDEBUG-DTCDEBUG-PDEBUG
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-ASM macro is never defined. rtrc in pas16.c is not used.
-NCR5380_map_config, do_NCR5380_intr, do_t128_intr and do_pas16_intr
-are unused. NCR_NOT_SET harms readability. Remove them.
+Replace {P,T,DTC}DEBUG_INIT with NDEBUG_INIT. Remove dead debugging
+code, including code that's conditional upon *DEBUG_TRANSFER.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.h   |    3 ---
- drivers/scsi/g_NCR5380.c |   29 ++++++++++++++---------------
- drivers/scsi/g_NCR5380.h |    5 -----
- drivers/scsi/pas16.c     |   16 ----------------
- drivers/scsi/pas16.h     |    5 -----
- drivers/scsi/t128.h      |    4 ----
- 6 files changed, 14 insertions(+), 48 deletions(-)
+ drivers/scsi/dtc.c   |   18 ++++++------------
+ drivers/scsi/dtc.h   |   27 ---------------------------
+ drivers/scsi/pas16.c |   21 +++++++--------------
+ drivers/scsi/pas16.h |   16 ----------------
+ drivers/scsi/t128.c  |   18 ++++++------------
+ drivers/scsi/t128.h  |   16 ----------------
+ 6 files changed, 19 insertions(+), 97 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.h
+Index: linux/drivers/scsi/dtc.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:15:28.000000000 +1100
-@@ -244,8 +244,6 @@
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
- #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
+--- linux.orig/drivers/scsi/dtc.c	2015-12-22 12:15:24.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2015-12-22 12:15:26.000000000 +1100
+@@ -205,9 +205,8 @@ static int __init dtc_detect(struct scsi
+ 				addr = 0;
+ 		} else
+ 			for (; !addr && (current_base < NO_BASES); ++current_base) {
+-#if (DTCDEBUG & DTCDEBUG_INIT)
+-				printk(KERN_DEBUG "scsi-dtc : probing address %08x\n", bases[current_base].address);
+-#endif
++				dprintk(NDEBUG_INIT, "dtc: probing address 0x%08x\n",
++				        (unsigned int)bases[current_base].address);
+ 				if (bases[current_base].noauto)
+ 					continue;
+ 				base = ioremap(bases[current_base].address, 0x2000);
+@@ -216,18 +215,14 @@ static int __init dtc_detect(struct scsi
+ 				for (sig = 0; sig < NO_SIGNATURES; ++sig) {
+ 					if (check_signature(base + signatures[sig].offset, signatures[sig].string, strlen(signatures[sig].string))) {
+ 						addr = bases[current_base].address;
+-#if (DTCDEBUG & DTCDEBUG_INIT)
+-						printk(KERN_DEBUG "scsi-dtc : detected board.\n");
+-#endif
++						dprintk(NDEBUG_INIT, "dtc: detected board\n");
+ 						goto found;
+ 					}
+ 				}
+ 				iounmap(base);
+ 			}
  
--#ifndef ASM
--
- #ifdef SUPPORT_TAGS
- struct tag_alloc {
- 	DECLARE_BITMAP(allocated, MAX_TAGS);
-@@ -443,5 +441,4 @@ static __inline__ int NCR5380_pc_dma_res
- #endif				/* defined(i386) || defined(__alpha__) */
- #endif				/* defined(REAL_DMA)  */
- #endif				/* __KERNEL__ */
--#endif				/* ndef ASM */
- #endif				/* NCR5380_H */
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:15:24.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:15:28.000000000 +1100
-@@ -82,14 +82,13 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
+-#if defined(DTCDEBUG) && (DTCDEBUG & DTCDEBUG_INIT)
+-		printk(KERN_DEBUG "scsi-dtc : base = %08x\n", addr);
+-#endif
++		dprintk(NDEBUG_INIT, "dtc: addr = 0x%08x\n", addr);
  
--#define NCR_NOT_SET 0
--static int ncr_irq = NCR_NOT_SET;
--static int ncr_dma = NCR_NOT_SET;
--static int ncr_addr = NCR_NOT_SET;
--static int ncr_5380 = NCR_NOT_SET;
--static int ncr_53c400 = NCR_NOT_SET;
--static int ncr_53c400a = NCR_NOT_SET;
--static int dtc_3181e = NCR_NOT_SET;
-+static int ncr_irq;
-+static int ncr_dma;
-+static int ncr_addr;
-+static int ncr_5380;
-+static int ncr_53c400;
-+static int ncr_53c400a;
-+static int dtc_3181e;
- 
- static struct override {
- 	NCR5380_map_type NCR5380_map_name;
-@@ -271,19 +270,19 @@ static int __init generic_NCR5380_detect
- 	void __iomem *iomem;
+ 		if (!addr)
+ 			break;
+@@ -271,9 +266,8 @@ found:
+ 			printk(KERN_WARNING "scsi%d : interrupts not used. Might as well not jumper it.\n", instance->host_no);
+ 		instance->irq = NO_IRQ;
  #endif
+-#if defined(DTCDEBUG) && (DTCDEBUG & DTCDEBUG_INIT)
+-		printk("scsi%d : irq = %d\n", instance->host_no, instance->irq);
+-#endif
++		dprintk(NDEBUG_INIT, "scsi%d : irq = %d\n",
++		        instance->host_no, instance->irq);
  
--	if (ncr_irq != NCR_NOT_SET)
-+	if (ncr_irq)
- 		overrides[0].irq = ncr_irq;
--	if (ncr_dma != NCR_NOT_SET)
-+	if (ncr_dma)
- 		overrides[0].dma = ncr_dma;
--	if (ncr_addr != NCR_NOT_SET)
-+	if (ncr_addr)
- 		overrides[0].NCR5380_map_name = (NCR5380_map_type) ncr_addr;
--	if (ncr_5380 != NCR_NOT_SET)
-+	if (ncr_5380)
- 		overrides[0].board = BOARD_NCR5380;
--	else if (ncr_53c400 != NCR_NOT_SET)
-+	else if (ncr_53c400)
- 		overrides[0].board = BOARD_NCR53C400;
--	else if (ncr_53c400a != NCR_NOT_SET)
-+	else if (ncr_53c400a)
- 		overrides[0].board = BOARD_NCR53C400A;
--	else if (dtc_3181e != NCR_NOT_SET)
-+	else if (dtc_3181e)
- 		overrides[0].board = BOARD_DTC3181E;
- #ifndef SCSI_G_NCR5380_MEM
- 	if (!current_override && isapnp_present()) {
-Index: linux/drivers/scsi/g_NCR5380.h
+ 		++current_override;
+ 		++count;
+Index: linux/drivers/scsi/dtc.h
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-22 12:14:49.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2015-12-22 12:15:28.000000000 +1100
-@@ -21,8 +21,6 @@
- #define NCR5380_BIOSPARAM NULL
- #endif
+--- linux.orig/drivers/scsi/dtc.h	2015-12-22 12:14:49.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2015-12-22 12:15:26.000000000 +1100
+@@ -10,10 +10,6 @@
+ #ifndef DTC3280_H
+ #define DTC3280_H
  
--#ifndef ASM
+-#define DTCDEBUG 0
+-#define DTCDEBUG_INIT	0x1
+-#define DTCDEBUG_TRANSFER 0x2
 -
  #ifndef CMD_PER_LUN
  #define CMD_PER_LUN 2
  #endif
-@@ -36,7 +34,6 @@
+@@ -33,31 +29,8 @@
  
- #ifndef SCSI_G_NCR5380_MEM
+ #define DTC_address(reg) (base + DTC_5380_OFFSET + reg)
  
--#define NCR5380_map_config port
- #define NCR5380_map_type int
- #define NCR5380_map_name port
- #define NCR5380_instance_name io_port
-@@ -64,7 +61,6 @@
- #else 
- /* therefore SCSI_G_NCR5380_MEM */
- 
--#define NCR5380_map_config memory
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
- #define NCR5380_instance_name base
-@@ -103,6 +99,5 @@
- #define BOARD_NCR53C400A 2
- #define BOARD_DTC3181E	3
- 
--#endif /* ndef ASM */
- #endif /* GENERIC_NCR5380_H */
- 
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-12-22 12:15:26.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-12-22 12:15:28.000000000 +1100
-@@ -145,22 +145,6 @@ static const unsigned short  pas16_offse
- 		    * START_DMA_INITIATOR_RECEIVE_REG wo
- 		    */
-     };
--/*----------------------------------------------------------------*/
--/* the following will set the monitor border color (useful to find
-- where something crashed or gets stuck at */
--/* 1 = blue
-- 2 = green
-- 3 = cyan
-- 4 = red
-- 5 = magenta
-- 6 = yellow
-- 7 = white
--*/
--#if 1
--#define rtrc(i) {inb(0x3da); outb(0x31, 0x3c0); outb((i), 0x3c0);}
+-#define dbNCR5380_read(reg)                                              \
+-    (rval=readb(DTC_address(reg)), \
+-     (((unsigned char) printk("DTC : read register %d at addr %p is: %02x\n"\
+-    , (reg), DTC_address(reg), rval)), rval ) )
+-
+-#define dbNCR5380_write(reg, value) do {                                  \
+-    printk("DTC : write %02x to register %d at address %p\n",         \
+-            (value), (reg), DTC_address(reg));     \
+-    writeb(value, DTC_address(reg));} while(0)
+-
+-
+-#if !(DTCDEBUG & DTCDEBUG_TRANSFER) 
+ #define NCR5380_read(reg) (readb(DTC_address(reg)))
+ #define NCR5380_write(reg, value) (writeb(value, DTC_address(reg)))
 -#else
--#define rtrc(i) {}
+-#define NCR5380_read(reg) (readb(DTC_address(reg)))
+-#define xNCR5380_read(reg)						\
+-    (((unsigned char) printk("DTC : read register %d at address %p\n"\
+-    , (reg), DTC_address(reg))), readb(DTC_address(reg)))
+-
+-#define NCR5380_write(reg, value) do {					\
+-    printk("DTC : write %02x to register %d at address %p\n", 	\
+-	    (value), (reg), DTC_address(reg));	\
+-    writeb(value, DTC_address(reg));} while(0)
 -#endif
  
+ #define NCR5380_intr			dtc_intr
+ #define NCR5380_queue_command		dtc_queue_command
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2015-12-22 12:15:24.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2015-12-22 12:15:26.000000000 +1100
+@@ -1,6 +1,5 @@
+ #define PSEUDO_DMA
+ #define UNSAFE  /* Not unsafe for PAS16 -- use it */
+-#define PDEBUG 0
  
  /*
+  * This driver adapted from Drew Eckhardt's Trantor T128 driver
+@@ -377,23 +376,18 @@ static int __init pas16_detect(struct sc
+ 	}
+ 	else
+ 	    for (; !io_port && (current_base < NO_BASES); ++current_base) {
+-#if (PDEBUG & PDEBUG_INIT)
+-    printk("scsi-pas16 : probing io_port %04x\n", (unsigned int) bases[current_base].io_port);
+-#endif
++		dprintk(NDEBUG_INIT, "pas16: probing io_port 0x%04x\n",
++		        (unsigned int)bases[current_base].io_port);
+ 		if ( !bases[current_base].noauto &&
+ 		     pas16_hw_detect( current_base ) ){
+ 			io_port = bases[current_base].io_port;
+ 			init_board( io_port, default_irqs[ current_base ], 0 ); 
+-#if (PDEBUG & PDEBUG_INIT)
+-			printk("scsi-pas16 : detected board.\n");
+-#endif
++			dprintk(NDEBUG_INIT, "pas16: detected board\n");
+ 		}
+     }
+ 
+-
+-#if defined(PDEBUG) && (PDEBUG & PDEBUG_INIT)
+-	printk("scsi-pas16 : io_port = %04x\n", (unsigned int) io_port);
+-#endif
++	dprintk(NDEBUG_INIT, "pas16: io_port = 0x%04x\n",
++	        (unsigned int)io_port);
+ 
+ 	if (!io_port)
+ 	    break;
+@@ -431,9 +425,8 @@ static int __init pas16_detect(struct sc
+ 	    outb( (inb(io_port + IO_CONFIG_3) & 0x0f), io_port + IO_CONFIG_3 );
+ 	}
+ 
+-#if defined(PDEBUG) && (PDEBUG & PDEBUG_INIT)
+-	printk("scsi%d : irq = %d\n", instance->host_no, instance->irq);
+-#endif
++	dprintk(NDEBUG_INIT, "scsi%d : irq = %d\n",
++	        instance->host_no, instance->irq);
+ 
+ 	++current_override;
+ 	++count;
 Index: linux/drivers/scsi/pas16.h
 ===================================================================
---- linux.orig/drivers/scsi/pas16.h	2015-12-22 12:15:26.000000000 +1100
-+++ linux/drivers/scsi/pas16.h	2015-12-22 12:15:28.000000000 +1100
-@@ -95,9 +95,6 @@
- #define OPERATION_MODE_1 0xec03
- #define IO_CONFIG_3 0xf002
+--- linux.orig/drivers/scsi/pas16.h	2015-12-22 12:14:49.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2015-12-22 12:15:26.000000000 +1100
+@@ -24,9 +24,6 @@
+ #ifndef PAS16_H
+ #define PAS16_H
  
+-#define PDEBUG_INIT	0x1
+-#define PDEBUG_TRANSFER 0x2
 -
--#ifndef ASM
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
-@@ -121,7 +118,6 @@
+ #define PAS16_DEFAULT_BASE_1  0x388
+ #define PAS16_DEFAULT_BASE_2  0x384
+ #define PAS16_DEFAULT_BASE_3  0x38c
+@@ -120,21 +117,8 @@
+ 
+ #define PAS16_io_port(reg) ( io_port + pas16_offset[(reg)] )
+ 
+-#if !(PDEBUG & PDEBUG_TRANSFER) 
+ #define NCR5380_read(reg) ( inb(PAS16_io_port(reg)) )
  #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
+-#else
+-#define NCR5380_read(reg)						\
+-    (((unsigned char) printk("scsi%d : read register %d at io_port %04x\n"\
+-    , instance->hostno, (reg), PAS16_io_port(reg))), inb( PAS16_io_port(reg)) )
+-
+-#define NCR5380_write(reg, value) 					\
+-    (printk("scsi%d : write %02x to register %d at io_port %04x\n", 	\
+-	    instance->hostno, (value), (reg), PAS16_io_port(reg)),	\
+-    outb( (value),PAS16_io_port(reg) ) )
+-
+-#endif
+-
  
  #define NCR5380_intr pas16_intr
--#define do_NCR5380_intr do_pas16_intr
- #define NCR5380_queue_command pas16_queue_command
- #define NCR5380_abort pas16_abort
- #define NCR5380_bus_reset pas16_bus_reset
-@@ -134,5 +130,4 @@
-    
- #define PAS16_IRQS 0xd4a8 
+ #define do_NCR5380_intr do_pas16_intr
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2015-12-22 12:15:24.000000000 +1100
++++ linux/drivers/scsi/t128.c	2015-12-22 12:15:26.000000000 +1100
+@@ -182,9 +182,8 @@ static int __init t128_detect(struct scs
+ 		base = 0;
+ 	} else 
+ 	    for (; !base && (current_base < NO_BASES); ++current_base) {
+-#if (TDEBUG & TDEBUG_INIT)
+-    printk("scsi-t128 : probing address %08x\n", bases[current_base].address);
+-#endif
++		dprintk(NDEBUG_INIT, "t128: probing address 0x%08x\n",
++		        bases[current_base].address);
+ 		if (bases[current_base].noauto)
+ 			continue;
+ 		p = ioremap(bases[current_base].address, 0x2000);
+@@ -195,17 +194,13 @@ static int __init t128_detect(struct scs
+ 					signatures[sig].string,
+ 					strlen(signatures[sig].string))) {
+ 			base = bases[current_base].address;
+-#if (TDEBUG & TDEBUG_INIT)
+-			printk("scsi-t128 : detected board.\n");
+-#endif
++			dprintk(NDEBUG_INIT, "t128: detected board\n");
+ 			goto found;
+ 		    }
+ 		iounmap(p);
+ 	    }
  
--#endif /* ndef ASM */
- #endif /* PAS16_H */
+-#if defined(TDEBUG) && (TDEBUG & TDEBUG_INIT)
+-	printk("scsi-t128 : base = %08x\n", (unsigned int) base);
+-#endif
++	dprintk(NDEBUG_INIT, "t128: base = 0x%08x\n", (unsigned int)base);
+ 
+ 	if (!base)
+ 	    break;
+@@ -242,9 +237,8 @@ found:
+ 	    printk("scsi%d : please jumper the board for a free IRQ.\n", instance->host_no);
+ 	}
+ 
+-#if defined(TDEBUG) && (TDEBUG & TDEBUG_INIT)
+-	printk("scsi%d : irq = %d\n", instance->host_no, instance->irq);
+-#endif
++	dprintk(NDEBUG_INIT, "scsi%d: irq = %d\n",
++	        instance->host_no, instance->irq);
+ 
+ 	++current_override;
+ 	++count;
 Index: linux/drivers/scsi/t128.h
 ===================================================================
---- linux.orig/drivers/scsi/t128.h	2015-12-22 12:15:26.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2015-12-22 12:15:28.000000000 +1100
-@@ -67,8 +67,6 @@
+--- linux.orig/drivers/scsi/t128.h	2015-12-22 12:14:49.000000000 +1100
++++ linux/drivers/scsi/t128.h	2015-12-22 12:15:26.000000000 +1100
+@@ -23,10 +23,6 @@
+ #ifndef T128_H
+ #define T128_H
  
- #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
- 
--#ifndef ASM
+-#define TDEBUG		0
+-#define TDEBUG_INIT	0x1
+-#define TDEBUG_TRANSFER 0x2
 -
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
-@@ -92,7 +90,6 @@
+ /*
+  * The trantor boards are memory mapped. They use an NCR5380 or
+  * equivalent (my sample board had part second sourced from ZILOG).
+@@ -92,20 +88,8 @@
+ 
+ #define T128_address(reg) (base + T_5380_OFFSET + ((reg) * 0x20))
+ 
+-#if !(TDEBUG & TDEBUG_TRANSFER)
+ #define NCR5380_read(reg) readb(T128_address(reg))
  #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+-#else
+-#define NCR5380_read(reg)						\
+-    (((unsigned char) printk("scsi%d : read register %d at address %08x\n"\
+-    , instance->hostno, (reg), T128_address(reg))), readb(T128_address(reg)))
+-
+-#define NCR5380_write(reg, value) {					\
+-    printk("scsi%d : write %02x to register %d at address %08x\n",	\
+-	    instance->hostno, (value), (reg), T128_address(reg));	\
+-    writeb((value), (T128_address(reg)));				\
+-}
+-#endif
  
  #define NCR5380_intr t128_intr
--#define do_NCR5380_intr do_t128_intr
- #define NCR5380_queue_command t128_queue_command
- #define NCR5380_abort t128_abort
- #define NCR5380_bus_reset t128_bus_reset
-@@ -105,5 +102,4 @@
- 
- #define T128_IRQS 0xc4a8
- 
--#endif /* ndef ASM */
- #endif /* T128_H */
+ #define do_NCR5380_intr do_t128_intr
