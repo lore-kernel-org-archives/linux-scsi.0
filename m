@@ -1,42 +1,33 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 47/77] ncr5380: Fix and cleanup scsi_host_template
- initializers
-Date: Tue, 22 Dec 2015 08:43:18 +0100
-Message-ID: <5678FF16.4030406@suse.de>
+Subject: Re: [PATCH v3 48/77] atari_NCR5380: Fix queue_size limit
+Date: Tue, 22 Dec 2015 08:44:03 +0100
+Message-ID: <5678FF43.5050106@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011750.776106983@telegraphics.com.au>
+ <20151222011751.025473889@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151222011750.776106983@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20151222011751.025473889@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> Add missing .module initializer. Use distinct .proc_name values for t=
-he
-> g_NCR5380 and g_NCR5380_mmio modules. Remove pointless CAN_QUEUE and
-> CMD_PER_LUN override macros. Cleanup whitespace and code style.
+> When a target reports a QUEUE_FULL condition it causes the driver to
+> update the 'queue_size' limit with the number of currently allocated =
+tags.
+> At least, that's what's supposed to happen, according to the comments=
+=2E
+> Unfortunately the terms in the assignment are swapped. Fix this and
+> cleanup some obsolete comments.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 >
 > ---
->   drivers/scsi/atari_scsi.c |    2 +-
->   drivers/scsi/dmx3191d.c   |    1 +
->   drivers/scsi/dtc.c        |   32 ++++++++++++++++----------------
->   drivers/scsi/dtc.h        |    8 --------
->   drivers/scsi/g_NCR5380.c  |   26 +++++++++++++-------------
->   drivers/scsi/g_NCR5380.h  |   10 ++--------
->   drivers/scsi/mac_scsi.c   |   28 ++++++++++++++--------------
->   drivers/scsi/pas16.c      |   32 ++++++++++++++++----------------
->   drivers/scsi/pas16.h      |    8 --------
->   drivers/scsi/sun3_scsi.c  |    6 +++---
->   drivers/scsi/t128.c       |   32 ++++++++++++++++----------------
->   drivers/scsi/t128.h       |    8 --------
->   12 files changed, 82 insertions(+), 111 deletions(-)
+>   drivers/scsi/atari_NCR5380.c |   14 ++------------
+>   1 file changed, 2 insertions(+), 12 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
