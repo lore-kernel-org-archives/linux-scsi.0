@@ -1,92 +1,157 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 36/77] ncr5380: Use work_struct instead of delayed_work
-Date: Tue, 22 Dec 2015 12:18:14 +1100
-Message-ID: <20151222011747.805666887@telegraphics.com.au>
+Subject: [PATCH v3 33/77] atari_NCR5380: Set do_abort() timeouts
+Date: Tue, 22 Dec 2015 12:18:11 +1100
+Message-ID: <20151222011746.975776159@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40494 "EHLO
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40516 "EHLO
 	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799AbbLVCbQ (ORCPT
+	with ESMTP id S1752791AbbLVCbQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:16 -0500
-Content-Disposition: inline; filename=ncr5380-work_struct-instead
+Content-Disposition: inline; filename=atari_NCR5380-do_abort-timeouts
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Each host instance now has it's own work queue so the main() work item can
-sleep when necessary. That means we can use a simple work item rather than
-a delayed work item. This brings NCR5380.c closer to atari_NCR5380.c.
+Use timeouts in do_abort() in atari_NCR5380.c instead of infinite loops.
+Also fix the kernel-doc comment. Keep the two core driver forks in sync.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |   12 +++++-------
- drivers/scsi/NCR5380.h |    1 -
- 2 files changed, 5 insertions(+), 8 deletions(-)
+ drivers/scsi/NCR5380.c       |   26 +++++++++++++-------------
+ drivers/scsi/atari_NCR5380.c |   34 +++++++++++++++++++++-------------
+ 2 files changed, 34 insertions(+), 26 deletions(-)
 
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:16.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:20.000000000 +1100
+@@ -1835,19 +1835,19 @@ static void do_reset(struct Scsi_Host *i
+ 	local_irq_restore(flags);
+ }
+ 
+-/*
+- * Function : do_abort (Scsi_Host *host)
++/**
++ * do_abort - abort the currently established nexus by going to
++ * MESSAGE OUT phase and sending an ABORT message.
++ * @instance: relevant scsi host instance
+  *
+- * Purpose : abort the currently established nexus.  Should only be
+- *	called from a routine which can drop into a
+- *
+- * Returns : 0 on success, -1 on failure.
++ * Returns 0 on success, -1 on failure.
+  */
+ 
+ static int do_abort(struct Scsi_Host *instance)
+ {
+ 	unsigned char tmp, *msgptr, phase;
+ 	int len;
++	int rc;
+ 
+ 	/* Request message out phase */
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
+@@ -1862,16 +1862,20 @@ static int do_abort(struct Scsi_Host *in
+ 	 * the target sees, so we just handshake.
+ 	 */
+ 
+-	while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ))
+-		;
++	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 10 * HZ);
++	if (rc < 0)
++		goto timeout;
++
++	tmp = NCR5380_read(STATUS_REG) & PHASE_MASK;
+ 
+ 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
+ 
+-	if ((tmp & PHASE_MASK) != PHASE_MSGOUT) {
+-		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN |
+-			      ICR_ASSERT_ACK);
+-		while (NCR5380_read(STATUS_REG) & SR_REQ)
+-			;
++	if (tmp != PHASE_MSGOUT) {
++		NCR5380_write(INITIATOR_COMMAND_REG,
++		              ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
++		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
++		if (rc < 0)
++			goto timeout;
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
+ 	}
+ 
+@@ -1887,6 +1891,10 @@ static int do_abort(struct Scsi_Host *in
+ 	 */
+ 
+ 	return len ? -1 : 0;
++
++timeout:
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++	return -1;
+ }
+ 
+ #if defined(REAL_DMA)
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:23.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:24.000000000 +1100
-@@ -697,7 +697,7 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->issue_queue = NULL;
- 	hostdata->disconnected_queue = NULL;
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:19.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:20.000000000 +1100
+@@ -1458,16 +1458,12 @@ static void do_reset(struct Scsi_Host *i
+ 	local_irq_restore(flags);
+ }
+ 
+-/*
+- * Function : do_abort (Scsi_Host *host)
+- * 
+- * Purpose : abort the currently established nexus.  Should only be 
+- *      called from a routine which can drop into a 
+- * 
+- * Returns : 0 on success, -1 on failure.
++/**
++ * do_abort - abort the currently established nexus by going to
++ * MESSAGE OUT phase and sending an ABORT message.
++ * @instance: relevant scsi host instance
+  *
+- * Locks: queue lock held by caller
+- *	FIXME: sort this out and get new_eh running
++ * Returns 0 on success, -1 on failure.
+  */
+ 
+ static int do_abort(struct Scsi_Host *instance)
+@@ -1489,9 +1485,9 @@ static int do_abort(struct Scsi_Host *in
+ 	 * the target sees, so we just handshake.
+ 	 */
+ 
+-	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 60 * HZ);
++	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 10 * HZ);
+ 	if (rc < 0)
+-		return -1;
++		goto timeout;
+ 
+ 	tmp = NCR5380_read(STATUS_REG) & PHASE_MASK;
  	
--	INIT_DELAYED_WORK(&hostdata->coroutine, NCR5380_main);
-+	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
- 	                        WQ_UNBOUND | WQ_MEM_RECLAIM,
- 	                        1, instance->host_no);
-@@ -797,7 +797,7 @@ static void NCR5380_exit(struct Scsi_Hos
- {
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+@@ -1500,9 +1496,9 @@ static int do_abort(struct Scsi_Host *in
+ 	if (tmp != PHASE_MSGOUT) {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
+ 		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
+-		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
+ 		if (rc < 0)
+-			return -1;
++			goto timeout;
++		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
+ 	}
+ 	tmp = ABORT;
+ 	msgptr = &tmp;
+@@ -1516,6 +1512,10 @@ static int do_abort(struct Scsi_Host *in
+ 	 */
  
--	cancel_delayed_work_sync(&hostdata->coroutine);
-+	cancel_work_sync(&hostdata->main_task);
- 	destroy_workqueue(hostdata->work_q);
+ 	return len ? -1 : 0;
++
++timeout:
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++	return -1;
  }
  
-@@ -859,9 +859,8 @@ static int NCR5380_queue_command(struct
- 
- 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
- 
--	/* Run the coroutine if it isn't already running. */
- 	/* Kick off command processing */
--	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, 0);
-+	queue_work(hostdata->work_q, &hostdata->main_task);
- 	return 0;
- }
- 
-@@ -880,7 +879,7 @@ static int NCR5380_queue_command(struct
- static void NCR5380_main(struct work_struct *work)
- {
- 	struct NCR5380_hostdata *hostdata =
--		container_of(work, struct NCR5380_hostdata, coroutine.work);
-+		container_of(work, struct NCR5380_hostdata, main_task);
- 	struct Scsi_Host *instance = hostdata->host;
- 	struct scsi_cmnd *tmp, *prev;
- 	int done;
-@@ -1037,8 +1036,7 @@ static irqreturn_t NCR5380_intr(int dumm
- 		}	/* if BASR_IRQ */
- 		spin_unlock_irqrestore(instance->host_lock, flags);
- 		if(!done)
--			queue_delayed_work(hostdata->work_q,
--			                   &hostdata->coroutine, 0);
-+			queue_work(hostdata->work_q, &hostdata->main_task);
- 	} while (!done);
- 	return IRQ_HANDLED;
- }
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:16:10.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:16:24.000000000 +1100
-@@ -256,7 +256,6 @@ struct NCR5380_hostdata {
- 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
- 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
- 	int flags;
--	struct delayed_work coroutine;		/* our co-routine */
- 	struct scsi_eh_save ses;
- 	char info[256];
- 	int read_overruns;                /* number of bytes to cut from a
+ #if defined(REAL_DMA) || defined(PSEUDO_DMA) || defined (REAL_DMA_POLL)
 
 
