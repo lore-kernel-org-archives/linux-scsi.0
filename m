@@ -1,31 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 42/77] ncr5380: Replace READ_OVERRUNS macro with
- FLAG_NO_DMA_FIXUPS
-Date: Tue, 22 Dec 2015 08:39:37 +0100
-Message-ID: <5678FE39.6090302@suse.de>
+Subject: Re: [PATCH v3 43/77] ncr5380: Standardize reselection handling
+Date: Tue, 22 Dec 2015 08:41:03 +0100
+Message-ID: <5678FE8F.8020700@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011749.446042594@telegraphics.com.au>
+ <20151222011749.695503926@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151222011749.446042594@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20151222011749.695503926@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> The workarounds for chip errata appear twice, in slightly different
-> forms. One is used when defined(REAL_DMA) || defined(REAL_DMA_POLL), =
-the
-> other when defined(PSEUDO_DMA). In the PDMA case, the workarounds hav=
-e
-> been made conditional on FLAG_NO_DMA_FIXUPS. Do the same for the DMA =
-case,
-> to eliminate the READ_OVERRUNS macro.
+> Bring the two NCR5380_reselect() implementations into agreement.
+>
+> Replace infinite loops in atari_NCR5380.c with timeouts, as per NCR53=
+80.c.
+>
+> Remove 'abort' flag in NCR5380.c as per atari_NCR5380.c -- if reselec=
+tion
+> fails, there may be no MESSAGE IN phase so don't attempt data transfe=
+r.
+>
+> During selection, don't interfere with the chip registers after a
+> reselection interrupt intervenes.
+>
+> Clean up some trivial issues with code style, comments and printk.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>
+> ---
+>   drivers/scsi/NCR5380.c       |  115 +++++++++++++++++++++++--------=
+------------
+>   drivers/scsi/atari_NCR5380.c |   50 ++++++++++--------
+>   2 files changed, 93 insertions(+), 72 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
