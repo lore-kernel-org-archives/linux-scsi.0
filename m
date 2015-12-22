@@ -1,59 +1,164 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 56/77] ncr5380: Remove redundant volatile qualifiers
-Date: Tue, 22 Dec 2015 12:18:34 +1100
-Message-ID: <20151222011753.195490342@telegraphics.com.au>
+Subject: [PATCH v3 63/77] atari_NCR5380: Remove HOSTNO macro from printk() and seq_printf() calls
+Date: Tue, 22 Dec 2015 12:18:41 +1100
+Message-ID: <20151222011755.175504840@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-redundant-volatile-qualifiers
+Content-Disposition: inline; filename=atari_NCR5380-remove-HOSTNO-printk
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The hostdata struct is now protected by a spin lock so the volatile
-qualifiers are redundant. Remove them.
+Remove the HOSTNO macro that is peculiar to atari_NCR5380.c and
+contributes to the problem of divergence of the NCR5380 core drivers.
+Keep NCR5380.c in sync.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.h       |   12 ++++++------
- drivers/scsi/atari_NCR5380.c |    2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/NCR5380.c       |   17 +++++++++--------
+ drivers/scsi/atari_NCR5380.c |   23 +++++++++--------------
+ 2 files changed, 18 insertions(+), 22 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:16:51.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:16:57.000000000 +1100
-@@ -248,14 +248,14 @@ struct NCR5380_hostdata {
- 	NCR5380_implementation_fields;		/* implementation specific */
- 	struct Scsi_Host *host;			/* Host backpointer */
- 	unsigned char id_mask, id_higher_mask;	/* 1 << id, all bits greater */
--	volatile unsigned char busy[8];		/* index = target, bit = lun */
-+	unsigned char busy[8];			/* index = target, bit = lun */
- #if defined(REAL_DMA) || defined(REAL_DMA_POLL)
--	volatile int dma_len;			/* requested length of DMA */
-+	int dma_len;				/* requested length of DMA */
- #endif
--	volatile unsigned char last_message;	/* last message OUT */
--	volatile struct scsi_cmnd *connected;	/* currently connected command */
--	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
--	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
-+	unsigned char last_message;		/* last message OUT */
-+	struct scsi_cmnd *connected;		/* currently connected cmnd */
-+	struct scsi_cmnd *issue_queue;		/* waiting to be issued */
-+	struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
- 	spinlock_t lock;			/* protects this struct */
- 	int flags;
- 	struct scsi_eh_save ses;
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:56.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:57.000000000 +1100
-@@ -1009,7 +1009,7 @@ static void NCR5380_dma_complete(struct
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int transferred;
- 	unsigned char **data;
--	volatile int *count;
-+	int *count;
- 	int saved_data = 0, overrun = 0;
- 	unsigned char p;
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:09.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:11.000000000 +1100
+@@ -569,12 +569,12 @@ static void NCR5380_print_phase(struct S
  
+ 	status = NCR5380_read(STATUS_REG);
+ 	if (!(status & SR_REQ))
+-		printk(KERN_DEBUG "scsi%d: REQ not asserted, phase unknown.\n", HOSTNO);
++		shost_printk(KERN_DEBUG, instance, "REQ not asserted, phase unknown.\n");
+ 	else {
+ 		for (i = 0; (phases[i].value != PHASE_UNKNOWN) &&
+ 		     (phases[i].value != (status & PHASE_MASK)); ++i)
+ 			;
+-		printk(KERN_DEBUG "scsi%d: phase %s\n", HOSTNO, phases[i].name);
++		shost_printk(KERN_DEBUG, instance, "phase %s\n", phases[i].name);
+ 	}
+ }
+ 
+@@ -1428,8 +1428,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 		NCR5380_reselect(instance);
+ 		if (!hostdata->connected)
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		printk(KERN_ERR "scsi%d: reselection after won arbitration?\n",
+-		       HOSTNO);
++		shost_printk(KERN_ERR, instance, "reselection after won arbitration?\n");
+ 		goto out;
+ 	}
+ 
+@@ -1957,8 +1956,7 @@ static void NCR5380_information_transfer
+ 			switch (phase) {
+ 			case PHASE_DATAOUT:
+ #if (NDEBUG & NDEBUG_NO_DATAOUT)
+-				printk("scsi%d: NDEBUG_NO_DATAOUT set, attempted DATAOUT "
+-				       "aborted\n", HOSTNO);
++				shost_printk(KERN_DEBUG, instance, "NDEBUG_NO_DATAOUT set, attempted DATAOUT aborted\n");
+ 				sink = 1;
+ 				do_abort(instance);
+ 				cmd->result = DID_ERROR << 16;
+@@ -2219,13 +2217,11 @@ static void NCR5380_information_transfer
+ 							tmp = 0;
+ 						}
+ 					} else if (len) {
+-						printk(KERN_NOTICE "scsi%d: error receiving "
+-						       "extended message\n", HOSTNO);
++						shost_printk(KERN_ERR, instance, "error receiving extended message\n");
+ 						tmp = 0;
+ 					} else {
+-						printk(KERN_NOTICE "scsi%d: extended message "
+-							   "code %02x length %d is too long\n",
+-							   HOSTNO, extended_msg[2], extended_msg[1]);
++						shost_printk(KERN_NOTICE, instance, "extended message code %02x length %d is too long\n",
++						             extended_msg[2], extended_msg[1]);
+ 						tmp = 0;
+ 					}
+ 
+@@ -2241,8 +2237,7 @@ static void NCR5380_information_transfer
+ 					 */
+ 				default:
+ 					if (!tmp) {
+-						printk(KERN_INFO "scsi%d: rejecting message ",
+-						       instance->host_no);
++						shost_printk(KERN_ERR, instance, "rejecting message ");
+ 						spi_print_msg(extended_msg);
+ 						printk("\n");
+ 					} else if (tmp != EXTENDED_MESSAGE)
+@@ -2291,7 +2286,7 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Status = tmp;
+ 				break;
+ 			default:
+-				printk("scsi%d: unknown phase\n", HOSTNO);
++				shost_printk(KERN_ERR, instance, "unknown phase\n");
+ 				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			} /* switch(phase) */
+ 		} else {
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:17:09.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:17:11.000000000 +1100
+@@ -418,10 +418,10 @@ static void NCR5380_print_phase(struct S
+ 
+ 	status = NCR5380_read(STATUS_REG);
+ 	if (!(status & SR_REQ))
+-		printk("scsi%d : REQ not asserted, phase unknown.\n", instance->host_no);
++		shost_printk(KERN_DEBUG, instance, "REQ not asserted, phase unknown.\n");
+ 	else {
+ 		for (i = 0; (phases[i].value != PHASE_UNKNOWN) && (phases[i].value != (status & PHASE_MASK)); ++i);
+-		printk("scsi%d : phase %s\n", instance->host_no, phases[i].name);
++		shost_printk(KERN_DEBUG, instance, "phase %s\n", phases[i].name);
+ 	}
+ }
+ #endif
+@@ -1247,7 +1247,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 		NCR5380_reselect(instance);
+ 		if (!hostdata->connected)
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		printk("scsi%d : reselection after won arbitration?\n", instance->host_no);
++		shost_printk(KERN_ERR, instance, "reselection after won arbitration?\n");
+ 		goto out;
+ 	}
+ 
+@@ -1852,7 +1852,7 @@ static void NCR5380_information_transfer
+ 			switch (phase) {
+ 			case PHASE_DATAOUT:
+ #if (NDEBUG & NDEBUG_NO_DATAOUT)
+-				printk("scsi%d : NDEBUG_NO_DATAOUT set, attempted DATAOUT aborted\n", instance->host_no);
++				shost_printk(KERN_DEBUG, instance, "NDEBUG_NO_DATAOUT set, attempted DATAOUT aborted\n");
+ 				sink = 1;
+ 				do_abort(instance);
+ 				cmd->result = DID_ERROR << 16;
+@@ -2053,10 +2053,11 @@ static void NCR5380_information_transfer
+ 							tmp = 0;
+ 						}
+ 					} else if (len) {
+-						printk("scsi%d: error receiving extended message\n", instance->host_no);
++						shost_printk(KERN_ERR, instance, "error receiving extended message\n");
+ 						tmp = 0;
+ 					} else {
+-						printk("scsi%d: extended message code %02x length %d is too long\n", instance->host_no, extended_msg[2], extended_msg[1]);
++						shost_printk(KERN_NOTICE, instance, "extended message code %02x length %d is too long\n",
++						             extended_msg[2], extended_msg[1]);
+ 						tmp = 0;
+ 					}
+ 
+@@ -2072,7 +2073,7 @@ static void NCR5380_information_transfer
+ 					 */
+ 				default:
+ 					if (!tmp) {
+-						printk("scsi%d: rejecting message ", instance->host_no);
++						shost_printk(KERN_ERR, instance, "rejecting message ");
+ 						spi_print_msg(extended_msg);
+ 						printk("\n");
+ 					} else if (tmp != EXTENDED_MESSAGE)
+@@ -2118,7 +2119,7 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Status = tmp;
+ 				break;
+ 			default:
+-				printk("scsi%d : unknown phase\n", instance->host_no);
++				shost_printk(KERN_ERR, instance, "unknown phase\n");
+ 				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			}	/* switch(phase) */
+ 		} else {
