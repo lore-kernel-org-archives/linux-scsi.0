@@ -1,25 +1,25 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 69/77] ncr5380: Merge changes from atari_NCR5380.c
-Date: Tue, 22 Dec 2015 09:05:29 +0100
-Message-ID: <56790449.6020804@suse.de>
+Subject: Re: [PATCH v3 70/77] atari_NCR5380: Merge changes from NCR5380.c
+Date: Tue, 22 Dec 2015 09:05:52 +0100
+Message-ID: <56790460.4080001@suse.de>
 References: <20151222011737.980475848@telegraphics.com.au>
- <20151222011756.785537093@telegraphics.com.au>
+ <20151222011757.046049621@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151222011756.785537093@telegraphics.com.au>
+In-Reply-To: <20151222011757.046049621@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 12/22/2015 02:18 AM, Finn Thain wrote:
-> In the past, NCR5380.c was overlooked by those working on atari_NCR53=
+> In the past, atari_NCR5380.c was overlooked by those working on NCR53=
 80.c
 > and this caused needless divergence. All of the changes in this patch=
  were
-> taken from atari_NCR5380.c.
+> taken from NCR5380.c.
 >
 > This removes some unimportant discrepancies between the two core driv=
 er
@@ -29,9 +29,9 @@ er
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 >
 > ---
->   drivers/scsi/NCR5380.c |  155 +++++++++++++++++++++++++++----------=
+>   drivers/scsi/atari_NCR5380.c |  108 +++++++++++++++++++++++++------=
 ------------
->   1 file changed, 87 insertions(+), 68 deletions(-)
+>   1 file changed, 64 insertions(+), 44 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
