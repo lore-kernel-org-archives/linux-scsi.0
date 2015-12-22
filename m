@@ -1,74 +1,112 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v2 0/3] scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
-Date: Tue, 22 Dec 2015 15:25:14 -0500
-Message-ID: <5679B1AA.3040304@interlog.com>
+Subject: Re: [PATCH v2 1/3] scsi: make some Additional Sense strings more
+ grep'able
+Date: Tue, 22 Dec 2015 15:25:21 -0500
+Message-ID: <5679B1B1.5050206@interlog.com>
 References: <1448358147-23663-1-git-send-email-linux@rasmusvillemoes.dk>
+ <1448358147-23663-2-git-send-email-linux@rasmusvillemoes.dk>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1448358147-23663-1-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <1448358147-23663-2-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Julian Calaby <julian.calaby@gmail.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 15-11-24 04:42 AM, Rasmus Villemoes wrote:
-> This reduces the impact of choosing by about 8KB.
+> There's little point in breaking these strings over multiple lines.
 >
-> 2dd951ecd511 ("scsi: Conditionally compile in constants.c") updated
-> the Kconfig help text from 12KB to 75KB. The 12K predated git so was
-> certainly outdated. But I'm not sure where the 75K comes from; using
-> size(1) on a defconfig (with/without this config option) vmlinux shows
-> a difference of about 47K, and 39K after these patches are applied. In
-> any case, I've left the Kconfig text alone, since I'm not sure I'm
-> counting the same way the 75K was computed (I'm fairly certain of the
-> 8K delta, however).
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+
+Tested-by: Douglas Gilbert <dgilbert@interlog.com>
+
+> ---
+>   drivers/scsi/constants.c | 27 +++++++++------------------
+>   1 file changed, 9 insertions(+), 18 deletions(-)
 >
-> Tested with a trivial module calling scsi_extd_sense_format with a few
-> random known codes and comparing the result to the expected value.
+> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+> index fa09d4be2b53..58d94e3c3713 100644
+> --- a/drivers/scsi/constants.c
+> +++ b/drivers/scsi/constants.c
+> @@ -346,11 +346,9 @@ static const struct error_info additional[] =
+>   	{0x0407, "Logical unit not ready, operation in progress"},
+>   	{0x0408, "Logical unit not ready, long write in progress"},
+>   	{0x0409, "Logical unit not ready, self-test in progress"},
+> -	{0x040A, "Logical unit not accessible, asymmetric access state "
+> -	 "transition"},
+> +	{0x040A, "Logical unit not accessible, asymmetric access state transition"},
+>   	{0x040B, "Logical unit not accessible, target port in standby state"},
+> -	{0x040C, "Logical unit not accessible, target port in unavailable "
+> -	 "state"},
+> +	{0x040C, "Logical unit not accessible, target port in unavailable state"},
+>   	{0x040D, "Logical unit not ready, structure check required"},
+>   	{0x040E, "Logical unit not ready, security session in progress"},
+>   	{0x0410, "Logical unit not ready, auxiliary memory not accessible"},
+> @@ -363,11 +361,9 @@ static const struct error_info additional[] =
+>   	{0x0417, "Logical unit not ready, calibration required"},
+>   	{0x0418, "Logical unit not ready, a door is open"},
+>   	{0x0419, "Logical unit not ready, operating in sequential mode"},
+> -	{0x041A, "Logical unit not ready, start stop unit command in "
+> -	 "progress"},
+> +	{0x041A, "Logical unit not ready, start stop unit command in progress"},
+>   	{0x041B, "Logical unit not ready, sanitize in progress"},
+> -	{0x041C, "Logical unit not ready, additional power use not yet "
+> -	 "granted"},
+> +	{0x041C, "Logical unit not ready, additional power use not yet granted"},
+>   	{0x041D, "Logical unit not ready, configuration in progress"},
+>   	{0x041E, "Logical unit not ready, microcode activation required"},
+>   	{0x041F, "Logical unit not ready, microcode download required"},
+> @@ -559,8 +555,7 @@ static const struct error_info additional[] =
+>   	{0x2300, "Invalid token operation, cause not reportable"},
+>   	{0x2301, "Invalid token operation, unsupported token type"},
+>   	{0x2302, "Invalid token operation, remote token usage not supported"},
+> -	{0x2303, "Invalid token operation, remote rod token creation not "
+> -	 "supported"},
+> +	{0x2303, "Invalid token operation, remote rod token creation not supported"},
+>   	{0x2304, "Invalid token operation, token unknown"},
+>   	{0x2305, "Invalid token operation, token corrupt"},
+>   	{0x2306, "Invalid token operation, token revoked"},
+> @@ -641,8 +636,7 @@ static const struct error_info additional[] =
+>   	{0x2A0D, "Data encryption capabilities changed"},
+>   	{0x2A10, "Timestamp changed"},
+>   	{0x2A11, "Data encryption parameters changed by another i_t nexus"},
+> -	{0x2A12, "Data encryption parameters changed by vendor specific "
+> -		 "event"},
+> +	{0x2A12, "Data encryption parameters changed by vendor specific event"},
+>   	{0x2A13, "Data encryption key instance counter has changed"},
+>   	{0x2A14, "SA creation capabilities data has changed"},
+>   	{0x2A15, "Medium removal prevention preempted"},
+> @@ -759,8 +753,7 @@ static const struct error_info additional[] =
+>   	{0x3B19, "Element enabled"},
+>   	{0x3B1A, "Data transfer device removed"},
+>   	{0x3B1B, "Data transfer device inserted"},
+> -	{0x3B1C, "Too many logical objects on partition to support "
+> -	 "operation"},
+> +	{0x3B1C, "Too many logical objects on partition to support operation"},
 >
-> v2: prepend patch to unsplit a few string literals for greppability,
-> leave the NULL sentinel in the .c file in 2/3 (it's removed in 3/3
-> either way).
+>   	{0x3D00, "Invalid bits in identify message"},
 >
-> Rasmus Villemoes (3):
->    scsi: make some Additional Sense strings more grep'able
->    scsi: move Additional Sense Codes to separate file
->    scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
-
-
-I have been asked by Martin to look at this series of patches.
-The 75 KB win when CONFIG_SCSI_CONSTANTS ("constants") is not
-given, looks like an exaggeration. This from dmesg on my x64
-lk 4.3.3 kernel before any changes (constants selected):
-   Memory: 3708576K/3874608K available (6217K kernel code, 888K rwdata,
-           2624K rodata, 1164K init, 13736K bss, 166032K reserved ...
-
-With these changes (constants selected):
-   Memory: 3708592K/3874608K available (6217K kernel code, 880K rwdata,
-           2616K rodata, 1164K init, 13736K bss, 166016K reserved ...
-
-With these changes (constants not selected):
-   Memory: 3708628K/3874608K available (6216K kernel code, 884K rwdata,
-           2580K rodata, 1160K init, 13736K bss, 165980K reserved ...
-
-The significant change is with the rodata. So there is an 8 KB win
-with this patch set, constants selected, as Rasmus said. But with this
-patch the win for constants deselected shrinks to 36 KB (from 44 KB).
-
-
-As for the patch, I don't see the sense of putting all the array
-elements in a header file since it is only reasonable to include
-that header file one or zero times in the kernel. Also that header
-file include must be embedded inside an array definition (while
-most headers are included at file scope and contain guards against
-multiple inclusion). Perhaps that header file may be useful for
-user space tools to include?
-
-Anyway, with light testing my kernels above properly reported
-SCSI status/sense_data with these patches both with constants
-selected/de-selected.
-
-Doug Gilbert
+> @@ -957,8 +950,7 @@ static const struct error_info additional[] =
+>   	{0x5D39, "Data channel impending failure throughput performance"},
+>   	{0x5D3A, "Data channel impending failure seek time performance"},
+>   	{0x5D3B, "Data channel impending failure spin-up retry count"},
+> -	{0x5D3C, "Data channel impending failure drive calibration retry "
+> -	 "count"},
+> +	{0x5D3C, "Data channel impending failure drive calibration retry count"},
+>   	{0x5D40, "Servo impending failure general hard drive failure"},
+>   	{0x5D41, "Servo impending failure drive error rate too high"},
+>   	{0x5D42, "Servo impending failure data error rate too high"},
+> @@ -1070,8 +1062,7 @@ static const struct error_info additional[] =
+>
+>   	{0x6E00, "Command to logical unit failed"},
+>
+> -	{0x6F00, "Copy protection key exchange failure - authentication "
+> -	 "failure"},
+> +	{0x6F00, "Copy protection key exchange failure - authentication failure"},
+>   	{0x6F01, "Copy protection key exchange failure - key not present"},
+>   	{0x6F02, "Copy protection key exchange failure - key not established"},
+>   	{0x6F03, "Read of scrambled sector without authentication"},
+>
