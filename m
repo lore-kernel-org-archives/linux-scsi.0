@@ -1,61 +1,49 @@
-From: Laurence Oberman <oberman.l@gmail.com>
-Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Tue, 22 Dec 2015 05:31:39 -0500
-Message-ID: <CAAzz28hDDkS43nSCPpw8+az6iaO-HQCWoxjJtzqGUXUTe9GZpQ@mail.gmail.com>
-References: <20151218170644.24167419@harpe.intellique.com>
-	<20151221134649.293a1a1e@harpe.intellique.com>
-	<F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi>
-	<20151221185759.38dd21d6@harpe.intellique.com>
-	<3F0204AE-89BD-45C7-883F-D6EC3A1D34E2@kolumbus.fi>
-	<DDB9C85B850785449757F9914A034FCB444FC76D@G4W3219.americas.hpqcorp.net>
-	<CAAzz28i5=oz_BmcoEC2ApLN9zj_F4aDmGkCXkXaS48HR_Ockew@mail.gmail.com>
-	<20151222110402.4ac6ffcd@harpe.intellique.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH v3 66/77] ncr5380: Fix soft lockups
+Date: Tue, 22 Dec 2015 11:39:03 +0000
+Message-ID: <20151222113903.06422dbe@lxorguk.ukuu.org.uk>
+References: <20151222011737.980475848@telegraphics.com.au>
+ <20151222011755.965510468@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:33640 "EHLO
-	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375AbbLVKbk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2015 05:31:40 -0500
-Received: by mail-vk0-f47.google.com with SMTP id a188so116800162vkc.0
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2015 02:31:40 -0800 (PST)
-In-Reply-To: <20151222110402.4ac6ffcd@harpe.intellique.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20151222011755.965510468@telegraphics.com.au>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Shane M Seymour <shane.seymour@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, =?UTF-8?Q?Kai_M=C3=A4kisara?= <kai.makisara@kolumbus.fi>
 
-I am just waiting on some LTO5 tape cartridges and then will start
-working on this.
-I only have LTO cartridges so had to order a couple of LTO5's
+On Tue, 22 Dec 2015 12:18:44 +1100
+Finn Thain <fthain@telegraphics.com.au> wrote:
 
-On Tue, Dec 22, 2015 at 5:04 AM, Emmanuel Florac <eflorac@intellique.co=
-m> wrote:
-> Le Tue, 22 Dec 2015 02:20:31 -0500
-> Laurence Oberman <oberman.l@gmail.com> =C3=A9crivait:
->
->> I also have access to newer hardware if needed. I have started
->> reviewing all of this and will post back to this thread.
->> Emmanuel can you summarize what you would like to achieve and we wil=
-l
->> all work on this together.
->
-> I'd like to be able to partition LTO media through standard commands,
-> like "mt mkpartition", mostly to be able to create LTFS tapes without
-> relying on hard to compile code from IBM/HP/Quantum/Oracle.
->
-> --
-> ---------------------------------------------------------------------=
----
-> Emmanuel Florac     |   Direction technique
->                     |   Intellique
->                     |   <eflorac@intellique.com>
->                     |   +33 1 78 94 84 02
-> ---------------------------------------------------------------------=
----
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Because of the rudimentary design of the chip, it is necessary to poll the
+> SCSI bus signals during PIO and this tends to hog the CPU. The driver will
+> accept new commands while others execute, and this causes a soft lockup
+> because the workqueue item will not terminate until the issue queue is
+> emptied.
+> 
+> When exercising dmx3191d using sequential IO from dd, the driver is sent
+> 512 KiB WRITE commands and 128 KiB READs. For a PIO transfer, the rate is
+> is only about 300 KiB/s, so these are long-running commands. And although
+> PDMA may run at several MiB/s, interrupts are disabled for the duration
+> of the transfer.
+> 
+> Fix the unresponsiveness and soft lockup issues by calling cond_resched()
+> after each command is completed and by limiting max_sectors for drivers
+> that don't implement real DMA.
+
+Is there a reason for not doing some limiting in the DMA case too. A 512K
+write command even with DMA on a low end 68K box introduces a second of
+latency before another I/O can be scheduled ?
+
+Alan
