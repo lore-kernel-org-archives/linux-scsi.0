@@ -1,225 +1,52 @@
-From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v3 3/3] hpsa: add box and bay information for enclosure
- devices
-Date: Tue, 22 Dec 2015 10:36:48 -0600
-Message-ID: <20151222163648.16655.45202.stgit@brunhilda>
-References: <20151222163508.16655.97012.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Subject: [PATCH v2 00/17] be2iscsi: driver update 11.0.0.0
+Date: Tue, 22 Dec 2015 22:45:45 +0530
+Message-ID: <1450804562-11980-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:32825 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932079AbbLVQhh (ORCPT
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:49452 "EHLO
+	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751601AbbLVRQZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Dec 2015 11:37:37 -0500
-In-Reply-To: <20151222163508.16655.97012.stgit@brunhilda>
+	Tue, 22 Dec 2015 12:16:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Adding a new method to display enclosure device information.
+This patch is generated against for-next branch.
 
-Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Don Brace <don.brace@pmcs.com>
----
- drivers/scsi/hpsa.c     |  107 ++++++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/hpsa_cmd.h |   13 ++++++
- 2 files changed, 113 insertions(+), 7 deletions(-)
+Jitendra Bhivare (17):
+  be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
+  be2iscsi: Fix mbox synchronization replacing spinlock with mutex
+  be2iscsi: Fix to synchronize tag allocation using spin_lock
+  be2iscsi: Set mbox timeout to 30s
+  be2iscsi: Added return value check for mgmt_get_all_if_id
+  be2iscsi: Fix to remove shutdown entry point
+  be2iscsi: Fix VLAN support for IPv6 network
+  be2iscsi: Fix to handle misconfigured optics events
+  be2iscsi: Fix return value for MCC completion
+  be2iscsi: Fix IOPOLL implementation
+  be2iscsi: Fix WRB leak in login/logout path
+  be2iscsi: Update the driver version
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index f8370b8..38ce0e3 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -750,7 +750,6 @@ static ssize_t host_show_hp_ssd_smart_path_enabled(struct device *dev,
- }
- 
- #define MAX_PATHS 8
--
- static ssize_t path_info_show(struct device *dev,
- 	     struct device_attribute *attr, char *buf)
- {
-@@ -792,9 +791,7 @@ static ssize_t path_info_show(struct device *dev,
- 				hdev->bus, hdev->target, hdev->lun,
- 				scsi_device_type(hdev->devtype));
- 
--		if (hdev->external ||
--			hdev->devtype == TYPE_RAID ||
--			is_logical_device(hdev)) {
-+		if (hdev->devtype == TYPE_RAID || is_logical_device(hdev)) {
- 			output_len += scnprintf(buf + output_len,
- 						PAGE_SIZE - output_len,
- 						"%s\n", active);
-@@ -808,8 +805,7 @@ static ssize_t path_info_show(struct device *dev,
- 			phys_connector[0] = '0';
- 		if (phys_connector[1] < '0')
- 			phys_connector[1] = '0';
--		if (hdev->phys_connector[i] > 0)
--			output_len += scnprintf(buf + output_len,
-+		output_len += scnprintf(buf + output_len,
- 				PAGE_SIZE - output_len,
- 				"PORT: %.2s ",
- 				phys_connector);
-@@ -3191,6 +3187,87 @@ out:
- 	return rc;
- }
- 
-+/*
-+ * get enclosure information
-+ * struct ReportExtendedLUNdata *rlep - Used for BMIC drive number
-+ * struct hpsa_scsi_dev_t *encl_dev - device entry for enclosure
-+ * Uses id_physical_device to determine the box_index.
-+ */
-+static void hpsa_get_enclosure_info(struct ctlr_info *h,
-+			unsigned char *scsi3addr,
-+			struct ReportExtendedLUNdata *rlep, int rle_index,
-+			struct hpsa_scsi_dev_t *encl_dev)
-+{
-+	int rc = -1;
-+	struct CommandList *c = NULL;
-+	struct ErrorInfo *ei = NULL;
-+	struct bmic_sense_storage_box_params *bssbp = NULL;
-+	struct bmic_identify_physical_device *id_phys = NULL;
-+	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-+	u16 bmic_device_index = 0;
-+
-+	bmic_device_index = GET_BMIC_DRIVE_NUMBER(&rle->lunid[0]);
-+
-+	if (bmic_device_index == 0xFF00)
-+		goto out;
-+
-+	bssbp = kzalloc(sizeof(*bssbp), GFP_KERNEL);
-+	if (!bssbp)
-+		goto out;
-+
-+	id_phys = kzalloc(sizeof(*id_phys), GFP_KERNEL);
-+	if (!id_phys)
-+		goto out;
-+
-+	rc = hpsa_bmic_id_physical_device(h, scsi3addr, bmic_device_index,
-+						id_phys, sizeof(*id_phys));
-+	if (rc) {
-+		dev_warn(&h->pdev->dev, "%s: id_phys failed %d bdi[0x%x]\n",
-+			__func__, encl_dev->external, bmic_device_index);
-+		goto out;
-+	}
-+
-+	c = cmd_alloc(h);
-+
-+	rc = fill_cmd(c, BMIC_SENSE_STORAGE_BOX_PARAMS, h, bssbp,
-+			sizeof(*bssbp), 0, RAID_CTLR_LUNID, TYPE_CMD);
-+
-+	if (rc)
-+		goto out;
-+
-+	if (id_phys->phys_connector[1] == 'E')
-+		c->Request.CDB[5] = id_phys->box_index;
-+	else
-+		c->Request.CDB[5] = 0;
-+
-+	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE,
-+						NO_TIMEOUT);
-+	if (rc)
-+		goto out;
-+
-+	ei = c->err_info;
-+	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
-+		rc = -1;
-+		goto out;
-+	}
-+
-+	encl_dev->box[id_phys->active_path_number] = bssbp->phys_box_on_port;
-+	memcpy(&encl_dev->phys_connector[id_phys->active_path_number],
-+		bssbp->phys_connector, sizeof(bssbp->phys_connector));
-+
-+	rc = IO_OK;
-+out:
-+	kfree(bssbp);
-+	kfree(id_phys);
-+
-+	if (c)
-+		cmd_free(h, c);
-+
-+	if (rc != IO_OK)
-+		hpsa_show_dev_msg(KERN_INFO, h, encl_dev,
-+			"Error, could not get enclosure information\n");
-+}
-+
- static u64 hpsa_get_sas_address_from_report_physical(struct ctlr_info *h,
- 						unsigned char *scsi3addr)
- {
-@@ -4032,7 +4109,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 
- 		/* skip masked non-disk devices */
- 		if (MASKED_DEVICE(lunaddrbytes) && physical_device &&
--			(physdev_list->LUN[phys_dev_index].device_flags & 0x01))
-+		   (physdev_list->LUN[phys_dev_index].device_type != 0x06) &&
-+		   (physdev_list->LUN[phys_dev_index].device_flags & 0x01))
- 			continue;
- 
- 		/* Get device type, vendor, model, device id */
-@@ -4116,7 +4194,12 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 			break;
- 		case TYPE_TAPE:
- 		case TYPE_MEDIUM_CHANGER:
-+			ncurrent++;
-+			break;
- 		case TYPE_ENCLOSURE:
-+			hpsa_get_enclosure_info(h, lunaddrbytes,
-+						physdev_list, phys_dev_index,
-+						this_device);
- 			ncurrent++;
- 			break;
- 		case TYPE_RAID:
-@@ -6629,6 +6712,16 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			c->Request.CDB[7] = (size >> 16) & 0xFF;
- 			c->Request.CDB[8] = (size >> 8) & 0XFF;
- 			break;
-+		case BMIC_SENSE_STORAGE_BOX_PARAMS:
-+			c->Request.CDBLen = 10;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
-+			c->Request.Timeout = 0;
-+			c->Request.CDB[0] = BMIC_READ;
-+			c->Request.CDB[6] = BMIC_SENSE_STORAGE_BOX_PARAMS;
-+			c->Request.CDB[7] = (size >> 16) & 0xFF;
-+			c->Request.CDB[8] = (size >> 8) & 0XFF;
-+			break;
- 		case BMIC_IDENTIFY_CONTROLLER:
- 			c->Request.CDBLen = 10;
- 			c->Request.type_attr_dir =
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index d92ef0d..6a919ad 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -291,6 +291,7 @@ struct SenseSubsystem_info {
- #define BMIC_SENSE_DIAG_OPTIONS 0xF5
- #define HPSA_DIAG_OPTS_DISABLE_RLD_CACHING 0x40000000
- #define BMIC_SENSE_SUBSYSTEM_INFORMATION 0x66
-+#define BMIC_SENSE_STORAGE_BOX_PARAMS 0x65
- 
- /* Command List Structure */
- union SCSI3Addr {
-@@ -842,5 +843,17 @@ struct bmic_sense_subsystem_info {
- 	u8	pad[332];
- };
- 
-+struct bmic_sense_storage_box_params {
-+	u8	reserved[36];
-+	u8	inquiry_valid;
-+	u8	reserved_1[68];
-+	u8	phys_box_on_port;
-+	u8	reserved_2[22];
-+	u16	connection_info;
-+	u8	reserver_3[84];
-+	u8	phys_connector[2];
-+	u8	reserved_4[296];
-+};
-+
- #pragma pack()
- #endif /* HPSA_CMD_H */
+  be2iscsi: Fix to use atomic bit operations for tag_state
+  be2iscsi: Add FW config validation
+  scsi_transport_iscsi: Add 25G and 40G speed definition
+  be2iscsi: Fix to process 25G link speed info from FW
+  be2iscsi: Fix async link event processing
+
+ drivers/scsi/be2iscsi/be.h          |   9 +-
+ drivers/scsi/be2iscsi/be_cmds.c     | 453 +++++++++++++++++++-----------------
+ drivers/scsi/be2iscsi/be_cmds.h     | 118 +++++-----
+ drivers/scsi/be2iscsi/be_iscsi.c    |  54 ++---
+ drivers/scsi/be2iscsi/be_main.c     | 210 +++++++++--------
+ drivers/scsi/be2iscsi/be_main.h     |  23 +-
+ drivers/scsi/be2iscsi/be_mgmt.c     | 425 ++++++++++++++++++++-------------
+ drivers/scsi/be2iscsi/be_mgmt.h     |   2 +
+ drivers/scsi/scsi_transport_iscsi.c |   2 +
+ include/scsi/iscsi_if.h             |   2 +
+ 10 files changed, 720 insertions(+), 578 deletions(-)
+
+-- 
+1.9.1
 
