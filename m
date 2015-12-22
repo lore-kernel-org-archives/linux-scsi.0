@@ -1,216 +1,140 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 07/77] ncr5380: Split NCR5380_init() into two functions
-Date: Tue, 22 Dec 2015 12:17:45 +1100
-Message-ID: <20151222011739.965586036@telegraphics.com.au>
+Subject: [PATCH v3 49/77] ncr5380: Remove redundant ICR_ARBITRATION_LOST test and eliminate FLAG_DTC3181E
+Date: Tue, 22 Dec 2015 12:18:27 +1100
+Message-ID: <20151222011751.308030701@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline; filename=ncr5380-bus-wedge
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40485 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855AbbLVCbT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:19 -0500
+Content-Disposition: inline; filename=ncr5380-eliminate-redundant-ICR_ARBITRATION_LOST-test
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-This patch splits the NCR5380_init() function into two parts, similar
-to the scheme used with atari_NCR5380.c. This avoids two problems.
+Remove FLAG_DTC3181E. It was used to suppress a final Arbitration Lost
+(SEL asserted) test that isn't actually needed. The test was suppressed
+because it causes problems for DTC436 and DTC536 chips. It takes place
+after the host wins arbitration, so SEL has been asserted. These chips
+can't seem to tell whether it was the host or another bus device that
+did so.
 
-Firstly, NCR5380_init() may perform a bus reset, which would cause the
-chip to assert IRQ. The chip is unable to mask its bus reset interrupt.
-Drivers can't call request_irq() before calling NCR5380_init(), because
-initialization must happen before the interrupt handler executes. If
-driver initialization causes an interrupt it may be problematic on some
-platforms. To avoid that, first move the bus reset code into
-NCR5380_maybe_reset_bus().
+This questionable final test appears in a flow chart in an early NCR5380
+datasheet. It was removed from later documents like the DP5380 datasheet.
 
-Secondly, NCR5380_init() contains some board-specific interrupt setup code
-for the NCR53C400 that does not belong in the core driver. In moving this
-code, better not re-order interrupt initialization and bus reset. Again,
-the solution is to move the bus reset code into NCR5380_maybe_reset_bus().
+By the time this final test takes place, the driver has already tested
+the Arbitration Lost bit several times. The first test happens 3 us after
+BUS FREE (or longer due to register access delays). The protocol requires
+that a device stop signalling within 1.8 us after BUS FREE unless it won
+arbitration, in which case it must assert SEL, which is detected 1.2 us
+later by the first Arbitration Lost test.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c      |   34 ++++++++++++++++++++--------------
- drivers/scsi/NCR5380.h      |    1 +
- drivers/scsi/arm/cumana_1.c |    2 ++
- drivers/scsi/arm/oak.c      |    2 ++
- drivers/scsi/dmx3191d.c     |    2 ++
- drivers/scsi/dtc.c          |    2 ++
- drivers/scsi/g_NCR5380.c    |    2 ++
- drivers/scsi/pas16.c        |    2 ++
- drivers/scsi/t128.c         |    2 ++
- 9 files changed, 35 insertions(+), 14 deletions(-)
+ drivers/scsi/NCR5380.c       |   14 +-------------
+ drivers/scsi/NCR5380.h       |    1 -
+ drivers/scsi/atari_NCR5380.c |    9 ---------
+ drivers/scsi/dmx3191d.c      |    2 +-
+ drivers/scsi/g_NCR5380.c     |    2 +-
+ 5 files changed, 3 insertions(+), 25 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:15:34.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:15:35.000000000 +1100
-@@ -777,8 +777,7 @@ static void lprint_opcode(int opcode, st
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:40.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:45.000000000 +1100
+@@ -528,14 +528,13 @@ static void prepare_info(struct Scsi_Hos
+ 	         "base 0x%lx, irq %d, "
+ 	         "can_queue %d, cmd_per_lun %d, "
+ 	         "sg_tablesize %d, this_id %d, "
+-	         "flags { %s%s%s%s}, "
++	         "flags { %s%s%s}, "
+ 	         "options { %s} ",
+ 	         instance->hostt->name, instance->io_port, instance->n_io_port,
+ 	         instance->base, instance->irq,
+ 	         instance->can_queue, instance->cmd_per_lun,
+ 	         instance->sg_tablesize, instance->this_id,
+ 	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
+-	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
+ 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
+ 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
+ #ifdef AUTOPROBE_IRQ
+@@ -1159,17 +1158,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_write(INITIATOR_COMMAND_REG,
+ 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
  
- static int NCR5380_init(struct Scsi_Host *instance, int flags)
- {
--	int i, pass;
--	unsigned long timeout;
-+	int i;
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 
- 	if(in_interrupt())
-@@ -831,18 +830,26 @@ static int NCR5380_init(struct Scsi_Host
- 		NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
- 	}
- #endif
-+	return 0;
-+}
- 
--	/* 
--	 * Detect and correct bus wedge problems.
--	 *
--	 * If the system crashed, it may have crashed in a state 
--	 * where a SCSI command was still executing, and the 
--	 * SCSI bus is not in a BUS FREE STATE.
--	 *
--	 * If this is the case, we'll try to abort the currently
--	 * established nexus which we know nothing about, and that
--	 * failing, do a hard reset of the SCSI bus 
--	 */
-+/**
-+ * NCR5380_maybe_reset_bus - Detect and correct bus wedge problems.
-+ * @instance: adapter to check
-+ *
-+ * If the system crashed, it may have crashed with a connected target and
-+ * the SCSI bus busy. Check for BUS FREE phase. If not, try to abort the
-+ * currently established nexus, which we know nothing about. Failing that
-+ * do a bus reset.
-+ *
-+ * Note that a bus reset will cause the chip to assert IRQ.
-+ *
-+ * Returns 0 if successful, otherwise -ENXIO.
-+ */
-+
-+static int NCR5380_maybe_reset_bus(struct Scsi_Host *instance)
-+{
-+	int pass;
- 
- 	for (pass = 1; (NCR5380_read(STATUS_REG) & SR_BSY) && pass <= 6; ++pass) {
- 		switch (pass) {
-@@ -850,7 +857,6 @@ static int NCR5380_init(struct Scsi_Host
- 		case 3:
- 		case 5:
- 			printk(KERN_INFO "scsi%d: SCSI bus busy, waiting up to five seconds\n", instance->host_no);
--			timeout = jiffies + 5 * HZ;
- 			NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, 0, 5*HZ);
- 			break;
- 		case 2:
+-	if (!(hostdata->flags & FLAG_DTC3181E) &&
+-	    /* RvC: DTC3181E has some trouble with this
+-	     *      so we simply removed it. Seems to work with
+-	     *      only Mustek scanner attached
+-	     */
+-	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
+-		NCR5380_write(MODE_REG, MR_BASE);
+-		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		dprintk(NDEBUG_ARBITRATION, "scsi%d : lost arbitration, deasserting ICR_ASSERT_SEL\n", instance->host_no);
+-		return -1;
+-	}
+ 	/* 
+ 	 * Again, bus clear + bus settle time is 1.2us, however, this is 
+ 	 * a minimum so we'll udelay ceil(1.2)
 Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:15:28.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:15:35.000000000 +1100
-@@ -318,6 +318,7 @@ static void NCR5380_print(struct Scsi_Ho
- static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
- #endif
- static int NCR5380_init(struct Scsi_Host *instance, int flags);
-+static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
- static void NCR5380_exit(struct Scsi_Host *instance);
- static void NCR5380_information_transfer(struct Scsi_Host *instance);
- #ifndef DONT_USE_INTR
-Index: linux/drivers/scsi/arm/cumana_1.c
+--- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:16:37.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:16:45.000000000 +1100
+@@ -232,7 +232,6 @@
+ 
+ #define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
+ #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
+-#define FLAG_DTC3181E			16	/* DTC3181E */
+ #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
+ #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
+ #define FLAG_TOSHIBA_DELAY		128	/* Allow for borken CD-ROMs */
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2015-12-22 12:15:35.000000000 +1100
-@@ -240,6 +240,8 @@ static int cumanascsi1_probe(struct expa
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:44.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:45.000000000 +1100
+@@ -1420,15 +1420,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_write(INITIATOR_COMMAND_REG,
+ 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
  
- 	NCR5380_init(host, 0);
- 
-+	NCR5380_maybe_reset_bus(host);
-+
-         priv(host)->ctrl = 0;
-         writeb(0, priv(host)->base + CTRL);
- 
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2015-12-22 12:15:35.000000000 +1100
-@@ -145,6 +145,8 @@ static int oakscsi_probe(struct expansio
- 
- 	NCR5380_init(host, 0);
- 
-+	NCR5380_maybe_reset_bus(host);
-+
- 	ret = scsi_add_host(host, &ec->dev);
- 	if (ret)
- 		goto out_unmap;
+-	if ((NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST) ||
+-	    hostdata->connected) {
+-		NCR5380_write(MODE_REG, MR_BASE);
+-		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		dprintk(NDEBUG_ARBITRATION, "scsi%d: lost arbitration, deasserting ICR_ASSERT_SEL\n",
+-			   HOSTNO);
+-		return -1;
+-	}
+-
+ 	/*
+ 	 * Again, bus clear + bus settle time is 1.2us, however, this is
+ 	 * a minimum so we'll udelay ceil(1.2)
 Index: linux/drivers/scsi/dmx3191d.c
 ===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2015-12-22 12:15:35.000000000 +1100
-@@ -97,6 +97,8 @@ static int dmx3191d_probe_one(struct pci
+--- linux.orig/drivers/scsi/dmx3191d.c	2015-12-22 12:16:41.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2015-12-22 12:16:45.000000000 +1100
+@@ -91,7 +91,7 @@ static int dmx3191d_probe_one(struct pci
+ 	 */
+ 	shost->irq = NO_IRQ;
  
- 	NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
+-	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
++	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
+ 	if (error)
+ 		goto out_host_put;
  
-+	NCR5380_maybe_reset_bus(shost);
-+
- 	pci_set_drvdata(pdev, shost);
- 
- 	error = scsi_add_host(shost, &pdev->dev);
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-22 12:15:35.000000000 +1100
-@@ -237,6 +237,8 @@ found:
- 
- 		NCR5380_init(instance, 0);
- 
-+		NCR5380_maybe_reset_bus(instance);
-+
- 		NCR5380_write(DTC_CONTROL_REG, CSR_5380_INTR);	/* Enable int's */
- 		if (overrides[current_override].irq != IRQ_AUTO)
- 			instance->irq = overrides[current_override].irq;
 Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:15:34.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:15:35.000000000 +1100
-@@ -422,6 +422,8 @@ static int __init generic_NCR5380_detect
- 
- 		NCR5380_init(instance, flags);
- 
-+		NCR5380_maybe_reset_bus(instance);
-+
- 		if (overrides[current_override].irq != IRQ_AUTO)
- 			instance->irq = overrides[current_override].irq;
- 		else
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-12-22 12:15:35.000000000 +1100
-@@ -384,6 +384,8 @@ static int __init pas16_detect(struct sc
- 
- 	NCR5380_init(instance, 0);
- 
-+	NCR5380_maybe_reset_bus(instance);
-+
- 	if (overrides[current_override].irq != IRQ_AUTO)
- 	    instance->irq = overrides[current_override].irq;
- 	else 
-Index: linux/drivers/scsi/t128.c
-===================================================================
---- linux.orig/drivers/scsi/t128.c	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2015-12-22 12:15:35.000000000 +1100
-@@ -215,6 +215,8 @@ found:
- 
- 	NCR5380_init(instance, 0);
- 
-+	NCR5380_maybe_reset_bus(instance);
-+
- 	if (overrides[current_override].irq != IRQ_AUTO)
- 	    instance->irq = overrides[current_override].irq;
- 	else 
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:16:41.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:16:45.000000000 +1100
+@@ -326,7 +326,7 @@ static int __init generic_NCR5380_detect
+ 			ports = ncr_53c400a_ports;
+ 			break;
+ 		case BOARD_DTC3181E:
+-			flags = FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E;
++			flags = FLAG_NO_PSEUDO_DMA;
+ 			ports = dtc_3181e_ports;
+ 			break;
+ 		}
+
+
