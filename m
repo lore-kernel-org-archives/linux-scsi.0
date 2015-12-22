@@ -1,319 +1,191 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 22/77] ncr5380: Eliminate selecting state
-Date: Tue, 22 Dec 2015 12:18:00 +1100
-Message-ID: <20151222011743.975930787@telegraphics.com.au>
+Subject: [PATCH v3 71/77] ncr5380: Cleanup whitespace and parentheses
+Date: Tue, 22 Dec 2015 12:18:49 +1100
+Message-ID: <20151222011757.347912867@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-eliminate-selecting-state
+Content-Disposition: inline; filename=ncr5380-fix-whitespace-and-trivia
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Linux v2.1.105 changed the algorithm for polling for the BSY signal
-in NCR5380_select() and NCR5380_main().
-
-Presently, this code has a bug. Back then, NCR5380_set_timer(hostdata, =
-1)
-meant reschedule main() after sleeping for 10 ms. Repeated 25 times thi=
-s
-provided the recommended 250 ms selection time-out delay. This got brok=
-en
-when HZ became configurable.
-
-We could fix this but there's no need to reschedule the main loop. This
-BSY polling presently happens when the NCR5380_main() work queue item
-calls NCR5380_select(), which in turn schedules NCR5380_main(), which
-calls NCR5380_select() again, and so on.
-
-This algorithm is a deviation from the simpler one in atari_NCR5380.c.
-The extra complexity and state is pointless. There's no reason to
-stop selection half-way and return to to the main loop when the main
-loop can do nothing useful until selection completes.
-
-So just poll for BSY. We can sleep while polling now that we have a
-suitable workqueue.
-
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   74 ++++++++--------------------------=
----------
- drivers/scsi/NCR5380.h       |    2 -
- drivers/scsi/atari_NCR5380.c |   49 ++++++++--------------------
- 3 files changed, 29 insertions(+), 96 deletions(-)
+ drivers/scsi/NCR5380.c       |   30 +++++++++++++++++++-----------
+ drivers/scsi/atari_NCR5380.c |   26 +++++++++++++-------------
+ 2 files changed, 32 insertions(+), 24 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:00.000000000 +11=
-00
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:02.000000000 +1100
-@@ -988,7 +988,7 @@ static void NCR5380_main(struct work_str
- 	do {
- 		/* Lock held here */
- 		done =3D 1;
--		if (!hostdata->connected && !hostdata->selecting) {
-+		if (!hostdata->connected) {
- 			dprintk(NDEBUG_MAIN, "scsi%d : not connected\n", instance->host_no)=
-;
- 			/*
- 			 * Search through the issue_queue for a command destined
-@@ -1018,9 +1018,6 @@ static void NCR5380_main(struct work_str
- 					 */
- 					dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, "scsi%d : main() : command for=
- target %d lun %llu removed from issue_queue\n", instance->host_no, tmp=
-->device->id, tmp->device->lun);
- =09
--					hostdata->selecting =3D NULL;
--					/* RvC: have to preset this to indicate a new command is being pe=
-rformed */
--
- 					/*
- 					 * REQUEST SENSE commands are issued without tagged
- 					 * queueing, even on SCSI-II devices because the
-@@ -1038,26 +1035,13 @@ static void NCR5380_main(struct work_str
- 						done =3D 0;
- 						dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, "scsi%d : main(): select() fa=
-iled, returned to issue_queue\n", instance->host_no);
- 					}
--					if (hostdata->connected ||
--					    hostdata->selecting)
-+					if (hostdata->connected)
- 						break;
- 					/* lock held here still */
- 				}	/* if target/lun is not busy */
- 			}	/* for */
- 			/* exited locked */
- 		}	/* if (!hostdata->connected) */
--		if (hostdata->selecting) {
--			tmp =3D (struct scsi_cmnd *) hostdata->selecting;
--			/* Selection will drop and retake the lock */
--			if (!NCR5380_select(instance, tmp)) {
--				/* OK or bad target */
--			} else {
--				LIST(tmp, hostdata->issue_queue);
--				tmp->host_scribble =3D (unsigned char *) hostdata->issue_queue;
--				hostdata->issue_queue =3D tmp;
--				done =3D 0;
--			}
--		}	/* if hostdata->selecting */
- 		if (hostdata->connected
- #ifdef REAL_DMA
- 		    && !hostdata->dmalen
-@@ -1176,7 +1160,6 @@ static irqreturn_t NCR5380_intr(int dumm
-  * Returns : -1 if selection failed but should be retried.
-  *      0 if selection failed and should not be retried.
-  *      0 if selection succeeded completely (hostdata->connected =3D=3D=
- cmd).
-- *      0 if selection in progress (hostdata->selecting =3D=3D cmd).
-  *
-  * Side effects :=20
-  *      If bus busy, arbitration failed, etc, NCR5380_select() will ex=
-it=20
-@@ -1200,13 +1183,8 @@ static int NCR5380_select(struct Scsi_Ho
- 	unsigned char tmp[3], phase;
- 	unsigned char *data;
- 	int len;
--	unsigned long timeout;
--	unsigned char value;
- 	int err;
-=20
--	if (hostdata->selecting)
--		goto part2;
--
- 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
- 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id =3D %d=
-\n", instance->host_no, instance->this_id);
-=20
-@@ -1342,33 +1320,9 @@ static int NCR5380_select(struct Scsi_Ho
- 	 * selection.
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:17:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:17:26.000000000 +1100
+@@ -1113,7 +1113,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 	 * the host and target ID's on the SCSI bus.
  	 */
-=20
--	timeout =3D jiffies + msecs_to_jiffies(250);
--
--	/*=20
--	 * XXX very interesting - we're seeing a bounce where the BSY we=20
--	 * asserted is being reflected / still asserted (propagation delay?)
--	 * and it's detecting as true.  Sigh.
--	 */
--
--	hostdata->select_time =3D 0;	/* we count the clock ticks at which we =
-polled */
--	hostdata->selecting =3D cmd;
--
--part2:
--	/* RvC: here we enter after a sleeping period, or immediately after
--	   execution of part 1
--	   we poll only once ech clock tick */
--	value =3D NCR5380_read(STATUS_REG) & (SR_BSY | SR_IO);
--
--	if (!value && (hostdata->select_time < HZ/4)) {
--		/* RvC: we still must wait for a device response */
--		hostdata->select_time++;	/* after 25 ticks the device has failed */
--		NCR5380_set_timer(hostdata, 1);
--		return 0;	/* RvC: we return here with hostdata->selecting set,
--				   to go to sleep */
--	}
-+	err =3D NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, SR_BSY,
-+	                            msecs_to_jiffies(250));
-=20
--	hostdata->selecting =3D NULL;/* clear this pointer, because we passed=
- the
--					   waiting period */
- 	if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) =3D=3D (SR_SEL | SR=
-_IO)) {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		NCR5380_reselect(instance);
-@@ -1376,6 +1330,17 @@ part2:
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		return -1;
- 	}
-+
-+	if (err < 0) {
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+		cmd->result =3D DID_BAD_TARGET << 16;
-+		cmd->scsi_done(cmd);
-+		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-+		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 25=
-0ms\n",
-+		        instance->host_no);
-+		return 0;
-+	}
-+
- 	/*=20
- 	 * No less than two deskew delays after the initiator detects the=20
- 	 * BSY signal is true, it shall release the SEL signal and may=20
-@@ -1386,15 +1351,6 @@ part2:
-=20
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
-=20
--	if (!(NCR5380_read(STATUS_REG) & SR_BSY)) {
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		cmd->result =3D DID_BAD_TARGET << 16;
--		cmd->scsi_done(cmd);
--		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 25=
-0ms\n", instance->host_no);
--		return 0;
--	}
--
+ 
+-	NCR5380_write(OUTPUT_DATA_REG, (hostdata->id_mask | (1 << scmd_id(cmd))));
++	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask | (1 << scmd_id(cmd)));
+ 
  	/*
- 	 * Since we followed the SCSI spec, and raised ATN while SEL=20
- 	 * was true but before BSY was false during selection, the informatio=
-n
-Index: linux/drivers/scsi/NCR5380.h
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:16:00.000000000 +11=
-00
-+++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:16:02.000000000 +1100
-@@ -267,8 +267,6 @@ struct NCR5380_hostdata {
- 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconne=
-ct */
- 	int flags;
- 	unsigned long time_expires;		/* in jiffies, set prior to sleeping */
--	int select_time;			/* timer in select for target response */
--	volatile struct scsi_cmnd *selecting;
- 	struct delayed_work coroutine;		/* our co-routine */
- 	struct scsi_eh_save ses;
- 	char info[256];
+ 	 * Raise ATN while SEL is true before BSY goes false from arbitration,
+@@ -1121,7 +1121,8 @@ static struct scsi_cmnd *NCR5380_select(
+ 	 * phase immediately after selection.
+ 	 */
+ 
+-	NCR5380_write(INITIATOR_COMMAND_REG, (ICR_BASE | ICR_ASSERT_BSY | ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_SEL));
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_BSY |
++	              ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_SEL);
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 
+ 	/*
+@@ -1139,7 +1140,8 @@ static struct scsi_cmnd *NCR5380_select(
+ 	udelay(1);        /* wingel -- wait two bus deskew delay >2*45ns */
+ 
+ 	/* Reset BSY */
+-	NCR5380_write(INITIATOR_COMMAND_REG, (ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_SEL));
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA |
++	              ICR_ASSERT_ATN | ICR_ASSERT_SEL);
+ 
+ 	/*
+ 	 * Something weird happens when we cease to drive BSY - looks
+@@ -1249,7 +1251,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 	/* XXX need to handle errors here */
+ 
+ 	hostdata->connected = cmd;
+-	hostdata->busy[cmd->device->id] |= (1 << (cmd->device->lun & 0xFF));
++	hostdata->busy[cmd->device->id] |= 1 << cmd->device->lun;
+ 
+ 	initialize_SCp(cmd);
+ 
+@@ -1340,11 +1342,14 @@ static int NCR5380_transfer_pio(struct S
+ 			if (!((p & SR_MSG) && c > 1)) {
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
+ 				NCR5380_dprint(NDEBUG_PIO, instance);
+-				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_ACK);
++				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
++				              ICR_ASSERT_DATA | ICR_ASSERT_ACK);
+ 			} else {
+-				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_ATN);
++				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
++				              ICR_ASSERT_DATA | ICR_ASSERT_ATN);
+ 				NCR5380_dprint(NDEBUG_PIO, instance);
+-				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
++				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
++				              ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
+ 			}
+ 		} else {
+ 			NCR5380_dprint(NDEBUG_PIO, instance);
+@@ -1775,10 +1780,12 @@ static void NCR5380_information_transfer
+ 			if (sink && (phase != PHASE_MSGOUT)) {
+ 				NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
+ 
+-				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
++				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN |
++				              ICR_ASSERT_ACK);
+ 				while (NCR5380_read(STATUS_REG) & SR_REQ)
+ 					;
+-				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
++				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
++				              ICR_ASSERT_ATN);
+ 				sink = 0;
+ 				continue;
+ 			}
+@@ -1848,8 +1855,9 @@ static void NCR5380_information_transfer
+ #endif				/* defined(PSEUDO_DMA) || defined(REAL_DMA_POLL) */
+ 				{
+ 					spin_unlock_irq(&hostdata->lock);
+-					NCR5380_transfer_pio(instance, &phase, (int *) &cmd->SCp.this_residual, (unsigned char **)
+-							     &cmd->SCp.ptr);
++					NCR5380_transfer_pio(instance, &phase,
++					                     (int *)&cmd->SCp.this_residual,
++					                     (unsigned char **)&cmd->SCp.ptr);
+ 					spin_lock_irq(&hostdata->lock);
+ 				}
+ 				break;
 Index: linux/drivers/scsi/atari_NCR5380.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:00.0000000=
-00 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:02.000000000 +1=
-100
-@@ -1431,7 +1431,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	unsigned char tmp[3], phase;
- 	unsigned char *data;
- 	int len;
--	unsigned long timeout;
-+	int err;
- 	unsigned long flags;
-=20
- 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
-@@ -1605,25 +1605,8 @@ static int NCR5380_select(struct Scsi_Ho
- 	 * selection.
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:24.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:26.000000000 +1100
+@@ -1314,7 +1314,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 	 * the host and target ID's on the SCSI bus.
  	 */
-=20
--	timeout =3D jiffies + msecs_to_jiffies(250);
--
--	/*
--	 * XXX very interesting - we're seeing a bounce where the BSY we
--	 * asserted is being reflected / still asserted (propagation delay?)
--	 * and it's detecting as true.  Sigh.
--	 */
--
--#if 0
--	/* ++roman: If a target conformed to the SCSI standard, it wouldn't a=
-ssert
--	 * IO while SEL is true. But again, there are some disks out the in t=
-he
--	 * world that do that nevertheless. (Somebody claimed that this annou=
-nces
--	 * reselection capability of the target.) So we better skip that test=
- and
--	 * only wait for BSY... (Famous german words: Der Kl=C3=BCgere gibt n=
-ach :-)
--	 */
--
--	while (time_before(jiffies, timeout) &&
--	       !(NCR5380_read(STATUS_REG) & (SR_BSY | SR_IO)))
--		;
-+	err =3D NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, SR_BSY,
-+	                            msecs_to_jiffies(250));
-=20
- 	if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) =3D=3D (SR_SEL | SR=
-_IO)) {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-@@ -1633,22 +1616,8 @@ static int NCR5380_select(struct Scsi_Ho
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		return -1;
- 	}
--#else
--	while (time_before(jiffies, timeout) && !(NCR5380_read(STATUS_REG) & =
-SR_BSY))
--		;
--#endif
--
--	/*
--	 * No less than two deskew delays after the initiator detects the
--	 * BSY signal is true, it shall release the SEL signal and may
--	 * change the DATA BUS.                                     -wingel
--	 */
-=20
--	udelay(1);
--
--	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
--
--	if (!(NCR5380_read(STATUS_REG) & SR_BSY)) {
-+	if (err < 0) {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		cmd->result =3D DID_BAD_TARGET << 16;
- #ifdef SUPPORT_TAGS
-@@ -1661,6 +1630,16 @@ static int NCR5380_select(struct Scsi_Ho
- 	}
-=20
+ 
+-	NCR5380_write(OUTPUT_DATA_REG, (hostdata->id_mask | (1 << cmd->device->id)));
++	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask | (1 << scmd_id(cmd)));
+ 
  	/*
-+	 * No less than two deskew delays after the initiator detects the
-+	 * BSY signal is true, it shall release the SEL signal and may
-+	 * change the DATA BUS.                                     -wingel
-+	 */
-+
-+	udelay(1);
-+
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
-+
-+	/*
- 	 * Since we followed the SCSI spec, and raised ATN while SEL
- 	 * was true but before BSY was false during selection, the informatio=
-n
- 	 * transfer phase should be a MESSAGE OUT phase so that we can send t=
-he
+ 	 * Raise ATN while SEL is true before BSY goes false from arbitration,
+@@ -1322,8 +1322,8 @@ static struct scsi_cmnd *NCR5380_select(
+ 	 * phase immediately after selection.
+ 	 */
+ 
+-	NCR5380_write(INITIATOR_COMMAND_REG, (ICR_BASE | ICR_ASSERT_BSY |
+-		      ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_SEL ));
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_BSY |
++	              ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_SEL);
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 
+ 	/*
+@@ -1341,8 +1341,8 @@ static struct scsi_cmnd *NCR5380_select(
+ 	udelay(1);        /* wingel -- wait two bus deskew delay >2*45ns */
+ 
+ 	/* Reset BSY */
+-	NCR5380_write(INITIATOR_COMMAND_REG, (ICR_BASE | ICR_ASSERT_DATA |
+-		      ICR_ASSERT_ATN | ICR_ASSERT_SEL));
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA |
++	              ICR_ASSERT_ATN | ICR_ASSERT_SEL);
+ 
+ 	/*
+ 	 * Something weird happens when we cease to drive BSY - looks
+@@ -1462,7 +1462,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 
+ 	hostdata->connected = cmd;
+ #ifndef SUPPORT_TAGS
+-	hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
++	hostdata->busy[cmd->device->id] |= 1 << cmd->device->lun;
+ #endif
+ #ifdef SUN3_SCSI_VME
+ 	dregs->csr |= CSR_INTR;
+@@ -1558,13 +1558,13 @@ static int NCR5380_transfer_pio(struct S
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
+ 				NCR5380_dprint(NDEBUG_PIO, instance);
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+-					      ICR_ASSERT_DATA | ICR_ASSERT_ACK);
++				              ICR_ASSERT_DATA | ICR_ASSERT_ACK);
+ 			} else {
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+-					      ICR_ASSERT_DATA | ICR_ASSERT_ATN);
++				              ICR_ASSERT_DATA | ICR_ASSERT_ATN);
+ 				NCR5380_dprint(NDEBUG_PIO, instance);
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+-					      ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
++				              ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
+ 			}
+ 		} else {
+ 			NCR5380_dprint(NDEBUG_PIO, instance);
+@@ -1892,11 +1892,11 @@ static void NCR5380_information_transfer
+ 				NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
+ 
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN |
+-					      ICR_ASSERT_ACK);
++				              ICR_ASSERT_ACK);
+ 				while (NCR5380_read(STATUS_REG) & SR_REQ)
+ 					;
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+-					      ICR_ASSERT_ATN);
++				              ICR_ASSERT_ATN);
+ 				sink = 0;
+ 				continue;
+ 			}
+@@ -1985,8 +1985,8 @@ static void NCR5380_information_transfer
+ 				{
+ 					spin_unlock_irq(&hostdata->lock);
+ 					NCR5380_transfer_pio(instance, &phase,
+-							     (int *)&cmd->SCp.this_residual,
+-							     (unsigned char **)&cmd->SCp.ptr);
++					                     (int *)&cmd->SCp.this_residual,
++					                     (unsigned char **)&cmd->SCp.ptr);
+ 					spin_lock_irq(&hostdata->lock);
+ 				}
+ #if defined(CONFIG_SUN3) && defined(REAL_DMA)
