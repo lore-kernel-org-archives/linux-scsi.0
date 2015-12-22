@@ -1,93 +1,204 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 42/77] ncr5380: Replace READ_OVERRUNS macro with FLAG_NO_DMA_FIXUPS
-Date: Tue, 22 Dec 2015 12:18:20 +1100
-Message-ID: <20151222011749.446042594@telegraphics.com.au>
+Subject: [PATCH v3 29/77] ncr5380: Remove references to linked commands
+Date: Tue, 22 Dec 2015 12:18:07 +1100
+Message-ID: <20151222011745.905485656@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-READ_OVERRUNS
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40458 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752780AbbLVCbO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:14 -0500
+Content-Disposition: inline; filename=ncr5380-remove-LINKED
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-The workarounds for chip errata appear twice, in slightly different
-forms. One is used when defined(REAL_DMA) || defined(REAL_DMA_POLL), the
-other when defined(PSEUDO_DMA). In the PDMA case, the workarounds have
-been made conditional on FLAG_NO_DMA_FIXUPS. Do the same for the DMA case,
-to eliminate the READ_OVERRUNS macro.
+From: Hannes Reinecke <hare@suse.de>
+
+Some old drivers partially implemented support for linked commands using
+a "proposed" next_link pointer in struct scsi_cmnd that never actually
+existed. Remove this code.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |   28 +++++++++++-----------------
- 1 file changed, 11 insertions(+), 17 deletions(-)
+
+This is a modified version of Hannes' patch so I have dropped his
+signed-off-by tag. This version has a rewritten commit log and also
+removes additional references to linked commands from comments. This
+version also omits the sun3_NCR5380.c changes since that file no
+longer exists.
+
+---
+ drivers/scsi/NCR5380.c       |   42 ------------------------------
+ drivers/scsi/atari_NCR5380.c |   60 -------------------------------------------
+ 2 files changed, 102 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:32.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:34.000000000 +1100
-@@ -94,11 +94,6 @@
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:15.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:16.000000000 +1100
+@@ -78,9 +78,6 @@
+  * 
+  * 4.  Test SCSI-II tagged queueing (I have no devices which support 
+  *      tagged queueing)
+- *
+- * 5.  Test linked command handling code after Eric is ready with 
+- *      the high level code.
+  */
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_transport_spi.h>
+@@ -94,7 +91,6 @@
+ #endif
+ 
+ #ifndef notyet
+-#undef LINKED
  #undef REAL_DMA
  #endif
  
--#ifdef REAL_DMA_POLL
--#undef READ_OVERRUNS
--#define READ_OVERRUNS
--#endif
--
- #ifdef BOARD_REQUIRES_NO_DELAY
- #define io_recovery_delay(x)
- #else
-@@ -1586,11 +1581,10 @@ static int NCR5380_transfer_dma(struct S
- 		return -1;
- 	}
- #if defined(REAL_DMA) || defined(REAL_DMA_POLL)
--#ifdef READ_OVERRUNS
- 	if (p & SR_IO) {
--		c -= 2;
-+		if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS))
-+			c -= 2;
- 	}
--#endif
- 	dprintk(NDEBUG_DMA, "scsi%d : initializing DMA channel %d for %s, %d bytes %s %0x\n", instance->host_no, instance->dma_channel, (p & SR_IO) ? "reading" : "writing", c, (p & SR_IO) ? "to" : "from", (unsigned) d);
- 	hostdata->dma_len = (p & SR_IO) ? NCR5380_dma_read_setup(instance, d, c) : NCR5380_dma_write_setup(instance, d, c);
- #endif
-@@ -1676,13 +1670,14 @@ static int NCR5380_transfer_dma(struct S
+@@ -191,8 +187,6 @@
+  * DONT_USE_INTR - if defined, never use interrupts, even if we probe or
+  *      override-configure an IRQ.
+  *
+- * LINKED - if defined, linked commands are supported.
+- *
+  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
+  *
+  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
+@@ -1923,42 +1917,6 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Message = tmp;
+ 
+ 				switch (tmp) {
+-					/*
+-					 * Linking lets us reduce the time required to get the 
+-					 * next command out to the device, hopefully this will
+-					 * mean we don't waste another revolution due to the delays
+-					 * required by ARBITRATION and another SELECTION.
+-					 *
+-					 * In the current implementation proposal, low level drivers
+-					 * merely have to start the next command, pointed to by 
+-					 * next_link, done() is called as with unlinked commands.
+-					 */
+-#ifdef LINKED
+-				case LINKED_CMD_COMPLETE:
+-				case LINKED_FLG_CMD_COMPLETE:
+-					/* Accept message by clearing ACK */
+-					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-					dprintk(NDEBUG_LINKED, "scsi%d : target %d lun %llu linked command complete.\n", instance->host_no, cmd->device->id, cmd->device->lun);
+-					/* 
+-					 * Sanity check : A linked command should only terminate with
+-					 * one of these messages if there are more linked commands
+-					 * available.
+-					 */
+-					if (!cmd->next_link) {
+-					    printk("scsi%d : target %d lun %llu linked command complete, no next_link\n" instance->host_no, cmd->device->id, cmd->device->lun);
+-						sink = 1;
+-						do_abort(instance);
+-						return;
+-					}
+-					initialize_SCp(cmd->next_link);
+-					/* The next command is still part of this process */
+-					cmd->next_link->tag = cmd->tag;
+-					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+-					dprintk(NDEBUG_LINKED, "scsi%d : target %d lun %llu linked request done, calling scsi_done().\n", instance->host_no, cmd->device->id, cmd->device->lun);
+-					cmd->scsi_done(cmd);
+-					cmd = hostdata->connected;
+-					break;
+-#endif				/* def LINKED */
+ 				case ABORT:
+ 				case COMMAND_COMPLETE:
+ 					/* Accept message by clearing ACK */
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:15.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:16.000000000 +1100
+@@ -66,12 +66,6 @@
+  *
   */
  
- 	if (p & SR_IO) {
--#ifdef READ_OVERRUNS
--		udelay(10);
--		if (((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) == (BASR_PHASE_MATCH | BASR_ACK))) {
--			saved_data = NCR5380_read(INPUT_DATA_REGISTER);
--			overrun = 1;
-+		if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS)) {
-+			udelay(10);
-+			if ((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) ==
-+			    (BASR_PHASE_MATCH | BASR_ACK)) {
-+				saved_data = NCR5380_read(INPUT_DATA_REGISTER);
-+				overrun = 1;
-+			}
- 		}
--#endif
- 	} else {
- 		int limit = 100;
- 		while (((tmp = NCR5380_read(BUS_AND_STATUS_REG)) & BASR_ACK) || (NCR5380_read(STATUS_REG) & SR_REQ)) {
-@@ -1704,8 +1699,8 @@ static int NCR5380_transfer_dma(struct S
- 	*data += c;
- 	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
+-/*
+- * Further development / testing that should be done :
+- * 1.  Test linked command handling code after Eric is ready with
+- *     the high level code.
+- */
+-
+ /* Adapted for the sun3 by Sam Creasey. */
  
--#ifdef READ_OVERRUNS
--	if (*phase == p && (p & SR_IO) && residue == 0) {
-+	if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS) &&
-+	    *phase == p && (p & SR_IO) && residue == 0) {
- 		if (overrun) {
- 			dprintk(NDEBUG_DMA, "Got an input overrun, using saved byte\n");
- 			**data = saved_data;
-@@ -1720,7 +1715,6 @@ static int NCR5380_transfer_dma(struct S
- 		NCR5380_transfer_pio(instance, phase, &cnt, data);
- 		*count -= toPIO - cnt;
- 	}
--#endif
+ #include <scsi/scsi_dbg.h>
+@@ -98,10 +92,6 @@
+ #define REMOVE(w,x,y,z)
+ #endif
  
- 	dprintk(NDEBUG_DMA, "Return with data ptr = 0x%X, count %d, last 0x%X, next 0x%X\n", *data, *count, *(*data + *count - 1), *(*data + *count));
- 	return 0;
+-#ifndef notyet
+-#undef LINKED
+-#endif
+-
+ /*
+  * Design
+  *
+@@ -172,8 +162,6 @@
+  * DIFFERENTIAL - if defined, NCR53c81 chips will use external differential
+  *	transceivers.
+  *
+- * LINKED - if defined, linked commands are supported.
+- *
+  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
+  *
+  * SUPPORT_TAGS - if defined, SCSI-2 tagged queuing is used where possible
+@@ -2216,54 +2204,6 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Message = tmp;
+ 
+ 				switch (tmp) {
+-				/*
+-				 * Linking lets us reduce the time required to get the
+-				 * next command out to the device, hopefully this will
+-				 * mean we don't waste another revolution due to the delays
+-				 * required by ARBITRATION and another SELECTION.
+-				 *
+-				 * In the current implementation proposal, low level drivers
+-				 * merely have to start the next command, pointed to by
+-				 * next_link, done() is called as with unlinked commands.
+-				 */
+-#ifdef LINKED
+-				case LINKED_CMD_COMPLETE:
+-				case LINKED_FLG_CMD_COMPLETE:
+-					/* Accept message by clearing ACK */
+-					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-
+-					dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked command "
+-						   "complete.\n", HOSTNO, cmd->device->id, cmd->device->lun);
+-
+-					/* Enable reselect interrupts */
+-					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-					/*
+-					 * Sanity check : A linked command should only terminate
+-					 * with one of these messages if there are more linked
+-					 * commands available.
+-					 */
+-
+-					if (!cmd->next_link) {
+-						 printk(KERN_NOTICE "scsi%d: target %d lun %llu "
+-							"linked command complete, no next_link\n",
+-							HOSTNO, cmd->device->id, cmd->device->lun);
+-						sink = 1;
+-						do_abort(instance);
+-						return;
+-					}
+-
+-					initialize_SCp(cmd->next_link);
+-					/* The next command is still part of this process; copy it
+-					 * and don't free it! */
+-					cmd->next_link->tag = cmd->tag;
+-					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+-					dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked request "
+-						   "done, calling scsi_done().\n",
+-						   HOSTNO, cmd->device->id, cmd->device->lun);
+-					cmd->scsi_done(cmd);
+-					cmd = hostdata->connected;
+-					break;
+-#endif /* def LINKED */
+ 				case ABORT:
+ 				case COMMAND_COMPLETE:
+ 					/* Accept message by clearing ACK */
+
+
