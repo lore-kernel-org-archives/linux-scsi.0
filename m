@@ -1,262 +1,428 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 24/77] ncr5380: Implement NCR5380_dma_xfer_len and remove
- LIMIT_TRANSFERSIZE macro
-Date: Tue, 22 Dec 2015 12:18:02 +1100
-Message-ID: <20151222011744.545942658@telegraphics.com.au>
+Subject: [PATCH v3 61/77] ncr5380: Fix EH during arbitration and selection
+Date: Tue, 22 Dec 2015 12:18:39 +1100
+Message-ID: <20151222011754.605516715@telegraphics.com.au>
 References: <20151222011737.980475848@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline; filename=ncr5380-implement-NCR5380_dma_xfer_len
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40432 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752874AbbLVCbX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2015 21:31:23 -0500
+Content-Disposition: inline; filename=ncr5380-fix-abort-during-select
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Follow the example of the atari_NCR5380.c core driver and adopt the
-NCR5380_dma_xfer_len() hook. Implement NCR5380_dma_xfer_len() for dtc.c
-and g_NCR5380.c to take care of the limitations of these cards. Keep the
-default for drivers using PSEUDO_DMA.
+During arbitration and selection, the relevant command is invisible to
+exception handlers and can be found only in a pointer on the stack of a
+different thread.
 
-Eliminate the unused macro LIMIT_TRANSFERSIZE. 
+When eh_abort_handler can't find a given command, it can't decide whether
+that command was completed already or is still in arbitration or selection
+phase. But it must return either SUCCESS (e.g. command completed earlier)
+or FAILED (could not abort the nexus, try bus reset).
+
+The solution is to make sure all commands belonging to the LLD are always
+visible to exception handlers. Add another scsi_cmnd pointer to the
+hostdata struct to track the command in arbitration or selection phase.
+
+Replace 'retain_dma_irq' with the new 'selecting' pointer, to bring
+atari_NCR5380.c into line with NCR5380.c.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   32 +++++---------------------------
- drivers/scsi/arm/cumana_1.c  |    3 +++
- drivers/scsi/arm/oak.c       |    2 ++
- drivers/scsi/atari_NCR5380.c |    8 +++++---
- drivers/scsi/dtc.c           |   14 ++++++++++++++
- drivers/scsi/dtc.h           |    3 +++
- drivers/scsi/g_NCR5380.c     |   15 +++++++++++++++
- drivers/scsi/g_NCR5380.h     |    3 +++
- drivers/scsi/mac_scsi.c      |    1 +
- drivers/scsi/pas16.h         |    2 ++
- drivers/scsi/t128.h          |    2 ++
- 11 files changed, 55 insertions(+), 30 deletions(-)
+ drivers/scsi/NCR5380.c       |   76 +++++++++++++++++++++++++++++----------
+ drivers/scsi/NCR5380.h       |    4 +-
+ drivers/scsi/atari_NCR5380.c |   82 +++++++++++++++++++++++++++++++------------
+ 3 files changed, 119 insertions(+), 43 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:16:04.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:16:07.000000000 +1100
-@@ -201,11 +201,6 @@
-  * DONT_USE_INTR - if defined, never use interrupts, even if we probe or
-  *      override-configure an IRQ.
-  *
-- * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
-- *      bytes at a time.  Since interrupts are disabled by default during
-- *      these transfers, we might need this to give reasonable interrupt
-- *      service time if the transfer size gets too large.
-- *
-  * LINKED - if defined, linked commands are supported.
-  *
-  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
-@@ -2000,29 +1995,12 @@ static void NCR5380_information_transfer
- 				 */
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-22 12:17:05.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-22 12:17:07.000000000 +1100
+@@ -912,9 +912,9 @@ static void NCR5380_main(struct work_str
+ 			 * entire unit.
+ 			 */
  
- #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
--				/* KLL
--				 * PSEUDO_DMA is defined here. If this is the g_NCR5380
--				 * driver then it will always be defined, so the
--				 * FLAG_NO_PSEUDO_DMA is used to inhibit PDMA in the base
--				 * NCR5380 case.  I think this is a fairly clean solution.
--				 * We supplement these 2 if's with the flag.
--				 */
--#ifdef NCR5380_dma_xfer_len
--				if (!cmd->device->borken && !(hostdata->flags & FLAG_NO_PSEUDO_DMA) && (transfersize = NCR5380_dma_xfer_len(instance, cmd)) != 0) {
--#else
--				transfersize = cmd->transfersize;
-+				transfersize = 0;
-+				if (!cmd->device->borken &&
-+				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
-+					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+-			if (!NCR5380_select(instance, cmd)) {
+-				dsprintk(NDEBUG_MAIN, instance, "main: selected target %d for command %p\n",
+-				         scmd_id(cmd), cmd);
++			cmd = NCR5380_select(instance, cmd);
++			if (!cmd) {
++				dsprintk(NDEBUG_MAIN, instance, "main: select complete\n");
+ 			} else {
+ 				dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES, instance,
+ 				         "main: select failed, returning %p to queue\n", cmd);
+@@ -1061,9 +1061,9 @@ static irqreturn_t NCR5380_intr(int irq,
+  * Inputs : instance - instantiation of the 5380 driver on which this 
+  *      target lives, cmd - SCSI command to execute.
+  * 
+- * Returns : -1 if selection failed but should be retried.
+- *      0 if selection failed and should not be retried.
+- *      0 if selection succeeded completely (hostdata->connected == cmd).
++ * Returns cmd if selection failed but should be retried,
++ * NULL if selection failed and should not be retried, or
++ * NULL if selection succeeded (hostdata->connected == cmd).
+  *
+  * Side effects : 
+  *      If bus busy, arbitration failed, etc, NCR5380_select() will exit 
+@@ -1081,7 +1081,8 @@ static irqreturn_t NCR5380_intr(int irq,
+  *	Locks: caller holds hostdata lock in IRQ mode
+  */
+  
+-static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
++static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
++                                        struct scsi_cmnd *cmd)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char tmp[3], phase;
+@@ -1092,6 +1093,15 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
  
--#ifdef LIMIT_TRANSFERSIZE	/* If we have problems with interrupt service */
--				if (transfersize > 512)
--					transfersize = 512;
--#endif				/* LIMIT_TRANSFERSIZE */
--
--				if (!cmd->device->borken && transfersize && !(hostdata->flags & FLAG_NO_PSEUDO_DMA) && cmd->SCp.this_residual && !(cmd->SCp.this_residual % transfersize)) {
--					/* Limit transfers to 32K, for xx400 & xx406
--					 * pseudoDMA that transfers in 128 bytes blocks. */
--					if (transfersize > 32 * 1024)
--						transfersize = 32 * 1024;
--#endif
-+				if (transfersize) {
- 					len = transfersize;
- 					if (NCR5380_transfer_dma(instance, &phase, &len, (unsigned char **) &cmd->SCp.ptr)) {
- 						/*
++	/*
++	 * Arbitration and selection phases are slow and involve dropping the
++	 * lock, so we have to watch out for EH. An exception handler may
++	 * change 'selecting' to NULL. This function will then return NULL
++	 * so that the caller will forget about 'cmd'. (During information
++	 * transfer phases, EH may change 'connected' to NULL.)
++	 */
++	hostdata->selecting = cmd;
++
+ 	/* 
+ 	 * Set the phase bits to 0, otherwise the NCR5380 won't drive the 
+ 	 * data bus during SELECTION.
+@@ -1117,13 +1127,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 	spin_lock_irq(&hostdata->lock);
+ 	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+ 		/* Reselection interrupt */
+-		return -1;
++		goto out;
+ 	}
+ 	if (err < 0) {
+ 		NCR5380_write(MODE_REG, MR_BASE);
+ 		shost_printk(KERN_ERR, instance,
+ 		             "select: arbitration timeout\n");
+-		return -1;
++		goto out;
+ 	}
+ 	spin_unlock_irq(&hostdata->lock);
+ 
+@@ -1135,7 +1145,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 		NCR5380_write(MODE_REG, MR_BASE);
+ 		dprintk(NDEBUG_ARBITRATION, "scsi%d : lost arbitration, deasserting MR_ARBITRATE\n", instance->host_no);
+ 		spin_lock_irq(&hostdata->lock);
+-		return -1;
++		goto out;
+ 	}
+ 
+ 	/* After/during arbitration, BSY should be asserted.
+@@ -1159,7 +1169,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 
+ 	/* NCR5380_reselect() clears MODE_REG after a reselection interrupt */
+ 	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE))
+-		return -1;
++		goto out;
++
++	if (!hostdata->selecting) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++		goto out;
++	}
+ 
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : won arbitration\n", instance->host_no);
+ 
+@@ -1232,18 +1248,21 @@ static int NCR5380_select(struct Scsi_Ho
+ 		if (!hostdata->connected)
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		printk("scsi%d : reselection after won arbitration?\n", instance->host_no);
+-		return -1;
++		goto out;
+ 	}
+ 
+ 	if (err < 0) {
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		cmd->result = DID_BAD_TARGET << 16;
+-		complete_cmd(instance, cmd);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 250ms\n",
+-		        instance->host_no);
+-		return 0;
++		/* Can't touch cmd if it has been reclaimed by the scsi ML */
++		if (hostdata->selecting) {
++			cmd->result = DID_BAD_TARGET << 16;
++			complete_cmd(instance, cmd);
++			dsprintk(NDEBUG_SELECTION, instance, "target did not respond within 250ms\n");
++			cmd = NULL;
++		}
++		goto out;
+ 	}
+ 
+ 	/* 
+@@ -1279,7 +1298,11 @@ static int NCR5380_select(struct Scsi_Ho
+ 		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		return -1;
++		goto out;
++	}
++	if (!hostdata->selecting) {
++		do_abort(instance);
++		goto out;
+ 	}
+ 
+ 	dprintk(NDEBUG_SELECTION, "scsi%d : target %d selected, going into MESSAGE OUT phase.\n", instance->host_no, cmd->device->id);
+@@ -1300,7 +1323,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 
+ 	initialize_SCp(cmd);
+ 
+-	return 0;
++	cmd = NULL;
++
++out:
++	if (!hostdata->selecting)
++		return NULL;
++	hostdata->selecting = NULL;
++	return cmd;
+ }
+ 
+ /* 
+@@ -2352,6 +2381,15 @@ static int NCR5380_abort(struct scsi_cmn
+ 		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
+ 	}
+ 
++	if (hostdata->selecting == cmd) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: cmd %p == selecting\n", cmd);
++		hostdata->selecting = NULL;
++		cmd->result = DID_ABORT << 16;
++		complete_cmd(instance, cmd);
++		goto out;
++	}
++
+ 	if (list_del_cmd(&hostdata->disconnected, cmd)) {
+ 		dsprintk(NDEBUG_ABORT, instance,
+ 		         "abort: removed %p from disconnected list\n", cmd);
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2015-12-22 12:17:03.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-12-22 12:17:07.000000000 +1100
+@@ -255,6 +255,7 @@ struct NCR5380_hostdata {
+ #endif
+ 	unsigned char last_message;		/* last message OUT */
+ 	struct scsi_cmnd *connected;		/* currently connected cmnd */
++	struct scsi_cmnd *selecting;		/* cmnd to be connected */
+ 	struct list_head unissued;		/* waiting to be issued */
+ 	struct list_head autosense;		/* priority issue queue */
+ 	struct list_head disconnected;		/* waiting for reconnect */
+@@ -265,7 +266,6 @@ struct NCR5380_hostdata {
+ 	char info[256];
+ 	int read_overruns;                /* number of bytes to cut from a
+ 	                                   * transfer to handle chip overruns */
+-	int retain_dma_intr;
+ 	struct work_struct main_task;
+ #ifdef SUPPORT_TAGS
+ 	struct tag_alloc TagAlloc[8][8];	/* 8 targets and 8 LUNs */
+@@ -329,7 +329,7 @@ static irqreturn_t NCR5380_intr(int irq,
+ static void NCR5380_main(struct work_struct *work);
+ static const char *NCR5380_info(struct Scsi_Host *instance);
+ static void NCR5380_reselect(struct Scsi_Host *instance);
+-static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd);
++static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *, struct scsi_cmnd *);
+ #if defined(PSEUDO_DMA) || defined(REAL_DMA) || defined(REAL_DMA_POLL)
+ static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
+ #endif
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:04.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:16:07.000000000 +1100
-@@ -2170,11 +2170,13 @@ static void NCR5380_information_transfer
- 				 */
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:05.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-22 12:17:07.000000000 +1100
+@@ -885,7 +885,7 @@ static inline void maybe_release_dma_irq
+ 	    list_empty(&hostdata->unissued) &&
+ 	    list_empty(&hostdata->autosense) &&
+ 	    !hostdata->connected &&
+-	    !hostdata->retain_dma_intr)
++	    !hostdata->selecting)
+ 		NCR5380_release_dma_irq(instance);
+ }
  
- #if defined(REAL_DMA)
--				if (
- #if !defined(CONFIG_SUN3)
--				    !cmd->device->borken &&
-+				transfersize = 0;
-+				if (!cmd->device->borken)
+@@ -1006,14 +1006,11 @@ static void NCR5380_main(struct work_str
+ #ifdef SUPPORT_TAGS
+ 			cmd_get_tag(cmd, cmd->cmnd[0] != REQUEST_SENSE);
  #endif
--				    (transfersize = NCR5380_dma_xfer_len(instance, cmd, phase)) >= DMA_MIN_SIZE) {
-+					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
-+
-+				if (transfersize >= DMA_MIN_SIZE) {
- 					len = transfersize;
- 					cmd->SCp.phase = phase;
- 					if (NCR5380_transfer_dma(instance, &phase,
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-22 12:15:56.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-22 12:16:07.000000000 +1100
-@@ -419,6 +419,20 @@ static inline int NCR5380_pwrite(struct
- 	return (0);
- }
+-			hostdata->retain_dma_intr++;
+-			if (!NCR5380_select(instance, cmd)) {
+-				dsprintk(NDEBUG_MAIN, instance, "main: selected target %d for command %p\n",
+-				         scmd_id(cmd), cmd);
+-				hostdata->retain_dma_intr--;
++			cmd = NCR5380_select(instance, cmd);
++			if (!cmd) {
++				dsprintk(NDEBUG_MAIN, instance, "main: select complete\n");
+ 				maybe_release_dma_irq(instance);
+ 			} else {
+-				hostdata->retain_dma_intr--;
+ 				dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES, instance,
+ 				         "main: select failed, returning %p to queue\n", cmd);
+ 				requeue_cmd(instance, cmd);
+@@ -1241,9 +1238,9 @@ static irqreturn_t NCR5380_intr(int irq,
+  * Inputs : instance - instantiation of the 5380 driver on which this
+  *	target lives, cmd - SCSI command to execute.
+  *
+- * Returns : -1 if selection failed but should be retried.
+- *      0 if selection failed and should not be retried.
+- *      0 if selection succeeded completely (hostdata->connected == cmd).
++ * Returns cmd if selection failed but should be retried,
++ * NULL if selection failed and should not be retried, or
++ * NULL if selection succeeded (hostdata->connected == cmd).
+  *
+  * Side effects :
+  *	If bus busy, arbitration failed, etc, NCR5380_select() will exit
+@@ -1259,7 +1256,8 @@ static irqreturn_t NCR5380_intr(int irq,
+  *		cmd->result host byte set to DID_BAD_TARGET.
+  */
  
-+static int dtc_dma_xfer_len(struct scsi_cmnd *cmd)
-+{
-+	int transfersize = cmd->transfersize;
-+
-+	/* Limit transfers to 32K, for xx400 & xx406
-+	 * pseudoDMA that transfers in 128 bytes blocks.
-+	 */
-+	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
-+	    !(cmd->SCp.this_residual % transfersize))
-+		transfersize = 32 * 1024;
-+
-+	return transfersize;
-+}
-+
- MODULE_LICENSE("GPL");
+-static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
++static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
++                                        struct scsi_cmnd *cmd)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char tmp[3], phase;
+@@ -1272,6 +1270,15 @@ static int NCR5380_select(struct Scsi_Ho
+ 		   instance->this_id);
  
- #include "NCR5380.c"
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-22 12:15:56.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-22 12:16:07.000000000 +1100
-@@ -699,6 +699,21 @@ static inline int NCR5380_pwrite(struct
- 		; 	// TIMEOUT
- 	return 0;
- }
-+
-+static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
-+{
-+	int transfersize = cmd->transfersize;
-+
-+	/* Limit transfers to 32K, for xx400 & xx406
-+	 * pseudoDMA that transfers in 128 bytes blocks.
+ 	/*
++	 * Arbitration and selection phases are slow and involve dropping the
++	 * lock, so we have to watch out for EH. An exception handler may
++	 * change 'selecting' to NULL. This function will then return NULL
++	 * so that the caller will forget about 'cmd'. (During information
++	 * transfer phases, EH may change 'connected' to NULL.)
 +	 */
-+	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
-+	    !(cmd->SCp.this_residual % transfersize))
-+		transfersize = 32 * 1024;
++	hostdata->selecting = cmd;
 +
-+	return transfersize;
-+}
++	/*
+ 	 * Set the phase bits to 0, otherwise the NCR5380 won't drive the
+ 	 * data bus during SELECTION.
+ 	 */
+@@ -1296,13 +1303,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 	spin_lock_irq(&hostdata->lock);
+ 	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+ 		/* Reselection interrupt */
+-		return -1;
++		goto out;
+ 	}
+ 	if (err < 0) {
+ 		NCR5380_write(MODE_REG, MR_BASE);
+ 		shost_printk(KERN_ERR, instance,
+ 		             "select: arbitration timeout\n");
+-		return -1;
++		goto out;
+ 	}
+ 	spin_unlock_irq(&hostdata->lock);
+ 
+@@ -1317,7 +1324,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 		dprintk(NDEBUG_ARBITRATION, "scsi%d: lost arbitration, deasserting MR_ARBITRATE\n",
+ 			   HOSTNO);
+ 		spin_lock_irq(&hostdata->lock);
+-		return -1;
++		goto out;
+ 	}
+ 
+ 	/* After/during arbitration, BSY should be asserted.
+@@ -1341,7 +1348,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 
+ 	/* NCR5380_reselect() clears MODE_REG after a reselection interrupt */
+ 	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE))
+-		return -1;
++		goto out;
 +
- #endif /* PSEUDO_DMA */
++	if (!hostdata->selecting) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++		goto out;
++	}
+ 
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d: won arbitration\n", HOSTNO);
+ 
+@@ -1417,17 +1430,21 @@ static int NCR5380_select(struct Scsi_Ho
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		printk(KERN_ERR "scsi%d: reselection after won arbitration?\n",
+ 		       HOSTNO);
+-		return -1;
++		goto out;
+ 	}
+ 
+ 	if (err < 0) {
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		cmd->result = DID_BAD_TARGET << 16;
+-		complete_cmd(instance, cmd);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		dprintk(NDEBUG_SELECTION, "scsi%d: target did not respond within 250ms\n", HOSTNO);
+-		return 0;
++		/* Can't touch cmd if it has been reclaimed by the scsi ML */
++		if (hostdata->selecting) {
++			cmd->result = DID_BAD_TARGET << 16;
++			complete_cmd(instance, cmd);
++			dsprintk(NDEBUG_SELECTION, instance, "target did not respond within 250ms\n");
++			cmd = NULL;
++		}
++		goto out;
+ 	}
+ 
+ 	/*
+@@ -1463,7 +1480,11 @@ static int NCR5380_select(struct Scsi_Ho
+ 		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		return -1;
++		goto out;
++	}
++	if (!hostdata->selecting) {
++		do_abort(instance);
++		goto out;
+ 	}
+ 
+ 	dprintk(NDEBUG_SELECTION, "scsi%d: target %d selected, going into MESSAGE OUT phase.\n",
+@@ -1499,7 +1520,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 
+ 	initialize_SCp(cmd);
+ 
+-	return 0;
++	cmd = NULL;
++
++out:
++	if (!hostdata->selecting)
++		return NULL;
++	hostdata->selecting = NULL;
++	return cmd;
+ }
  
  /*
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-22 12:15:38.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2015-12-22 12:16:07.000000000 +1100
-@@ -73,6 +73,9 @@
+@@ -2563,6 +2590,15 @@ static int NCR5380_abort(struct scsi_cmn
+ 		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
+ 	}
  
- #endif
- 
-+#define NCR5380_dma_xfer_len(instance, cmd, phase) \
-+        generic_NCR5380_dma_xfer_len(cmd)
++	if (hostdata->selecting == cmd) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: cmd %p == selecting\n", cmd);
++		hostdata->selecting = NULL;
++		cmd->result = DID_ABORT << 16;
++		complete_cmd(instance, cmd);
++		goto out;
++	}
 +
- #define NCR5380_intr generic_NCR5380_intr
- #define NCR5380_queue_command generic_NCR5380_queue_command
- #define NCR5380_abort generic_NCR5380_abort
-Index: linux/drivers/scsi/dtc.h
-===================================================================
---- linux.orig/drivers/scsi/dtc.h	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/dtc.h	2015-12-22 12:16:07.000000000 +1100
-@@ -27,6 +27,9 @@
- #define NCR5380_read(reg) (readb(DTC_address(reg)))
- #define NCR5380_write(reg, value) (writeb(value, DTC_address(reg)))
+ 	if (list_del_cmd(&hostdata->disconnected, cmd)) {
+ 		dsprintk(NDEBUG_ABORT, instance,
+ 		         "abort: removed %p from disconnected list\n", cmd);
+@@ -2680,6 +2716,8 @@ static int NCR5380_bus_reset(struct scsi
+ 	 * commands!
+ 	 */
  
-+#define NCR5380_dma_xfer_len(instance, cmd, phase) \
-+        dtc_dma_xfer_len(cmd)
++	hostdata->selecting = NULL;
 +
- #define NCR5380_intr			dtc_intr
- #define NCR5380_queue_command		dtc_queue_command
- #define NCR5380_abort			dtc_abort
-Index: linux/drivers/scsi/arm/cumana_1.c
-===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2015-12-22 12:15:56.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2015-12-22 12:16:07.000000000 +1100
-@@ -22,6 +22,9 @@
- #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
- #define NCR5380_read(reg)		cumanascsi_read(instance, reg)
- #define NCR5380_write(reg, value)	cumanascsi_write(instance, reg, value)
-+
-+#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
- #define NCR5380_intr			cumanascsi_intr
- #define NCR5380_queue_command		cumanascsi_queue_command
- #define NCR5380_info			cumanascsi_info
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2015-12-22 12:15:56.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2015-12-22 12:16:07.000000000 +1100
-@@ -26,6 +26,8 @@
- #define NCR5380_write(reg, value) \
- 	writeb(value, priv(instance)->base + ((reg) << 2))
- 
-+#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
- #define NCR5380_queue_command		oakscsi_queue_command
- #define NCR5380_info			oakscsi_info
- #define NCR5380_show_info		oakscsi_show_info
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2015-12-22 12:15:56.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2015-12-22 12:16:07.000000000 +1100
-@@ -38,6 +38,7 @@
- 
- #define NCR5380_pread                   macscsi_pread
- #define NCR5380_pwrite                  macscsi_pwrite
-+#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
- 
- #define NCR5380_intr                    macscsi_intr
- #define NCR5380_queue_command           macscsi_queue_command
-Index: linux/drivers/scsi/pas16.h
-===================================================================
---- linux.orig/drivers/scsi/pas16.h	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/pas16.h	2015-12-22 12:16:07.000000000 +1100
-@@ -110,6 +110,8 @@
- #define NCR5380_read(reg) ( inb(PAS16_io_port(reg)) )
- #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
- 
-+#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
- #define NCR5380_intr pas16_intr
- #define NCR5380_queue_command pas16_queue_command
- #define NCR5380_abort pas16_abort
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2015-12-22 12:15:30.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2015-12-22 12:16:07.000000000 +1100
-@@ -84,6 +84,8 @@
- #define NCR5380_read(reg) readb(T128_address(reg))
- #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
- 
-+#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
- #define NCR5380_intr t128_intr
- #define NCR5380_queue_command t128_queue_command
- #define NCR5380_abort t128_abort
+ 	if (hostdata->connected)
+ 		dsprintk(NDEBUG_ABORT, instance, "reset aborted a connected command\n");
+ 	hostdata->connected = NULL;
+
+
