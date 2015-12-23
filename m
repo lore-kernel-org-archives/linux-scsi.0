@@ -1,136 +1,50 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v3 68/77] ncr5380: Fix whitespace issues using regexp
-Date: Wed, 23 Dec 2015 15:14:28 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512231454350.32341@nippy.intranet>
-References: <20151222011737.980475848@telegraphics.com.au>  <20151222011756.506380156@telegraphics.com.au>  <1450795615.21677.10.camel@perches.com>  <alpine.LNX.2.00.1512231138330.28866@nippy.intranet>  <1450833190.3537.2.camel@perches.com>
- <alpine.LNX.2.00.1512231255350.30030@nippy.intranet> <1450837093.3537.6.camel@perches.com>
+From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Subject: RE: [PATCH v2 17/17] be2iscsi: Update the driver version
+Date: Wed, 23 Dec 2015 14:00:35 +0530
+Message-ID: <4ef29a0b91d219eaf9a61aff43de9a9e@mail.gmail.com>
+References: <1450804562-11980-1-git-send-email-jitendra.bhivare@avagotech.com> <1450804562-11980-18-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463806400-926866220-1450842863=:32341"
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1450837093.3537.6.camel@perches.com>
-Content-ID: <alpine.LNX.2.00.1512231508580.32341@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:33306 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753600AbbLWIah (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2015 03:30:37 -0500
+Received: by mail-yk0-f174.google.com with SMTP id 140so187951812ykp.0
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Dec 2015 00:30:37 -0800 (PST)
+In-Reply-To: <1450804562-11980-18-git-send-email-jitendra.bhivare@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Please ignore patch v2 set sending v3 shortly.
 
----1463806400-926866220-1450842863=:32341
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <alpine.LNX.2.00.1512231508581.32341@nippy.intranet>
+-----Original Message-----
+From: Jitendra Bhivare [mailto:jitendra.bhivare@avagotech.com]
+Sent: Tuesday, December 22, 2015 10:46 PM
+To: linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
+Cc: Jitendra Bhivare
+Subject: [PATCH v2 17/17] be2iscsi: Update the driver version
 
+Driver version: 11.0.0.0
 
-On Tue, 22 Dec 2015, Joe Perches wrote:
+Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+---
+ drivers/scsi/be2iscsi/be_main.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> On Wed, 2015-12-23 at 13:03 +1100, Finn Thain wrote:
-> > On Tue, 22 Dec 2015, Joe Perches wrote:
-> >=20
-> > > On Wed, 2015-12-23 at 11:56 +1100, Finn Thain wrote:
-> > > > On Tue, 22 Dec 2015, Joe Perches wrote:
-> > > >=A0
-> > > > > On Tue, 2015-12-22 at 12:18 +1100, Finn Thain wrote:
-> > > > > > This patch is just the result of two substitutions. The first=
-=A0
-> > > > > > removes any tabs and spaces at the end of the line. The second=
-=A0
-> > > > > > replaces runs of tabs and spaces at the beginning of comment li=
-nes=A0
-> > > > > > with a single space.
-> > > > >=A0
-> > > > > I think the second of these isn't done well.
-> > > >=A0
-> > > > The aim of this patch is not to fix code style, but to make it=A0
-> > > > possible to compare these two files so that the fork can be repaire=
-d.=A0
-> > > > Regexp is very helpful in creating uniformity (and a minimal diff).
-> > > >=A0
-> > > > If this was a coding style issue, we would be discussing the use of=
-=A0
-> > > > kernel-doc format for the affected comments, not whitespace.
-> > > >=A0
-> > > > > Many of these comments post reformatting are much worse to read=
-=A0
-> > > > > because of lost alignment.
-> > > >=A0
-> > > > You exaggerate a very trivial point.
-> > >=A0
-> > >=20
-> > >=A0
-> > > I prefer that all patches be improvements.
-> > >=A0
-> >=20
-> > Agreed. But the example you cited is an improvement, in that it creates=
-=A0
-> > consistency.
->=20
-> I think "consistency" isn't a useful argument.
-> The kernel code doesn't care about any other
-> external code bases.
+diff --git a/drivers/scsi/be2iscsi/be_main.h
+b/drivers/scsi/be2iscsi/be_main.h index 41c708c..16a6fd0 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -36,7 +36,7 @@
+ #include <scsi/scsi_transport_iscsi.h>
 
-I prefer that the drivers I maintain be self-consistent.
-
->=20
-> > Like you, I prefer to see formal parameters aligned when wrapped. But t=
-his=A0
-> > isn't a formal parameter list, it is a comment, and no comment should=
-=A0
-> > duplicate code.
-> >=20
-> > Can you suggest a better regexp? Since this is patch 68 in the series,=
-=A0
-> > there is a good chance that it will need to be regenerated.
->=20
-> I suggest you do 2 patches here. =A0One that removes
-> unnecessary trailing spaces
-
-Those are resolved by this patch.
-
-> and converts multiple leading spaces to tabs where appropriate
-
-As I said, trivial cleanups are better done after the fork is resolved, to=
-=20
-avoid churn. To assist with resolving the fork, this patch addresses=20
-inconsistencies.
-
-> and a
-> second patch that fixes whatever odd indentation
-> that does exist after comment leading *.
-
-Those are resolved by this patch.
-
-> I think
-> there aren't many instances of those and I think
-> those should be done by hand rather than regex.
-
-I don't know why a regexp wouldn't work and I don't know what you have in=
-=20
-mind when you say "[fix] odd indentation". Is there some kind of style=20
-guide applicable here, which this patch violates?
-
-Upon re-reading this patch, I did find a table where I think the regexp is=
-=20
-detrimental.
-
-@@ -2096,7 +2096,7 @@ static void NCR5380_information_transfer
- =09=09=09=09=09 * Byte
- =09=09=09=09=09 * 0=09=09EXTENDED_MESSAGE =3D=3D 1
- =09=09=09=09=09 * 1=09=09length (includes one byte for code, doesn't
--=09=09=09=09=09 *=09=09include first two bytes)
-+=09=09=09=09=09 * include first two bytes)
- =09=09=09=09=09 * 2=09=09code
- =09=09=09=09=09 * 3..length+1=09arguments
- =09=09=09=09=09 *
-This table is interesting. Even though the author took the trouble to
-duplicate a portion of the SCSI spec in the source, they were still able=20
-to stuff it up. See patch 44/77 in this series, "ncr5380: Fix off-by-one=20
-bug in extended_msg[] bounds check".
-
-So how about I remove this table in patch 67, along with the other dud=20
-comments, and then regenerate this patch. That way, perhaps we can all=20
-agree that the regexp is not actually detrimental?
-
---=20
----1463806400-926866220-1450842863=:32341--
+ #define DRV_NAME		"be2iscsi"
+-#define BUILD_STR		"10.6.0.1"
++#define BUILD_STR		"11.0.0.0"
+ #define BE_NAME			"Emulex OneConnect" \
+ 				"Open-iSCSI Driver version" BUILD_STR
+ #define DRV_DESC		BE_NAME " " "Driver"
+--
+1.9.1
