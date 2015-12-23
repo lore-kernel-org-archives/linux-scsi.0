@@ -1,80 +1,181 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH v3 06/17] be2iscsi: Added return value check for mgmt_get_all_if_id
-Date: Wed, 23 Dec 2015 14:04:25 +0530
-Message-ID: <1450859676-22025-7-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH v3 01/17] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
+Date: Wed, 23 Dec 2015 14:04:20 +0530
+Message-ID: <1450859676-22025-2-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:55533 "EHLO
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:55526 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933720AbbLWIey (ORCPT
+	by vger.kernel.org with ESMTP id S1753600AbbLWIeq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Dec 2015 03:34:54 -0500
+	Wed, 23 Dec 2015 03:34:46 -0500
 In-Reply-To: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Use of mutex_lock_interruptible can return -EINTR, handle and log
-the error.
+We are taking mbox_lock spinlock which disables pre-emption before we poll
+for mbox completion. Waiting there with spinlock held in excess of 20s will
+cause soft lockup.
+
+Actual fix is to change mbox_lock to mutex.
+The changes are done in phases. This is the first part.
+1. Changed mgmt_get_all_if_id to use MCC where after posting lock is released.
+2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
+wait_event_timeout. Added error handling code for IO reads.
+OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when unreachable
+boot targets configured.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |  7 ++++---
- drivers/scsi/be2iscsi/be_mgmt.c  | 10 ++++++----
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 60 ++++++++++++++++++++---------------------
+ drivers/scsi/be2iscsi/be_mgmt.c | 32 +++++++++++++++-------
+ 2 files changed, 51 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index b7087ba..188d83f 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -367,13 +367,14 @@ beiscsi_set_vlan_tag(struct Scsi_Host *shost,
- 		      struct iscsi_iface_param_info *iface_param)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 2778089..cd50e3c 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -587,47 +587,42 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
+  **/
+ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
  {
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
--	int ret = 0;
-+	int ret;
+-#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
++#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
+ 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	unsigned long timeout;
+-	bool read_flag = false;
+-	int ret = 0, i;
+ 	u32 ready;
+-	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(rdybit_check_q);
  
- 	/* Get the Interface Handle */
--	if (mgmt_get_all_if_id(phba)) {
-+	ret = mgmt_get_all_if_id(phba);
-+	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
- 			    "BS_%d : Getting Interface Handle Failed\n");
+-	if (beiscsi_error(phba))
 -		return -EIO;
-+		return ret;
- 	}
++	/*
++	 * This BMBX busy wait path is used during init only.
++	 * For the commands executed during init, 5s should suffice.
++	 */
++	timeout = jiffies + msecs_to_jiffies(BEISCSI_MBX_RDY_BIT_TIMEOUT);
++	do {
++		if (beiscsi_error(phba))
++			return -EIO;
  
- 	switch (iface_param->param) {
+-	timeout = jiffies + (HZ * 110);
++		ready = ioread32(db);
++		if (ready == 0xffffffff)
++			return -EIO;
+ 
+-	do {
+-		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
+-			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
+-			if (ready) {
+-				read_flag = true;
+-				break;
+-			}
+-			mdelay(1);
+-		}
++		ready &= MPU_MAILBOX_DB_RDY_MASK;
++		if (ready)
++			return 0;
+ 
+-		if (!read_flag) {
+-			wait_event_timeout(rdybit_check_q,
+-					  (read_flag != true),
+-					   HZ * 5);
+-		}
+-	} while ((time_before(jiffies, timeout)) && !read_flag);
++		if (time_after(jiffies, timeout))
++			break;
++		mdelay(1);
++	} while (!ready);
+ 
+-	if (!read_flag) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-			    "BC_%d : FW Timed Out\n");
+-			phba->fw_timeout = true;
+-			beiscsi_ue_detect(phba);
+-			ret = -EBUSY;
+-	}
++	beiscsi_log(phba, KERN_ERR,
++			BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
++			"BC_%d : FW Timed Out\n");
+ 
+-	return ret;
++	phba->fw_timeout = true;
++	beiscsi_ue_detect(phba);
++
++	return -EBUSY;
+ }
+ 
+ /*
+@@ -674,6 +669,9 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
+ 	if (status)
+ 		return status;
+ 
++	/* RDY is set; small delay before CQE read. */
++	udelay(1);
++
+ 	if (be_mcc_compl_is_new(compl)) {
+ 		status = be_mcc_compl_process(ctrl, &mbox->compl);
+ 		be_mcc_compl_use(compl);
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 7f3f8268..7aa7a3c 100644
+index aea3e6b..7b54b23 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1025,8 +1025,9 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
- 	uint32_t ip_type;
- 	int rc;
+@@ -809,27 +809,39 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
+-	struct be_cmd_get_all_if_id_req *req = embedded_payload(wrb);
+-	struct be_cmd_get_all_if_id_req *pbe_allid = req;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_get_all_if_id_req *req;
++	struct be_cmd_get_all_if_id_req *pbe_allid;
++	unsigned int tag;
+ 	int status = 0;
  
--	if (mgmt_get_all_if_id(phba))
--		return -EIO;
-+	rc = mgmt_get_all_if_id(phba);
-+	if (rc)
-+		return rc;
+-	memset(wrb, 0, sizeof(*wrb));
+-
+ 	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return -ENOMEM;
++	}
++
++	wrb = wrb_from_mccq(phba);
++	req = embedded_payload(wrb);
++	wrb->tag0 |= tag;
  
- 	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
- 		BE2_IPV6 : BE2_IPV4 ;
-@@ -1195,8 +1196,9 @@ int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
- 	uint32_t ioctl_size = sizeof(struct be_cmd_get_if_info_resp);
- 	int rc;
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
+ 			   sizeof(*req));
+-	status = be_mbox_notify(ctrl);
+-	if (!status)
+-		phba->interface_handle = pbe_allid->if_hndl_list[0];
+-	else {
++	be_mcc_notify(phba);
++	spin_unlock(&ctrl->mbox_lock);
++
++	status = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
++	if (status) {
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 			    "BG_%d : Failed in mgmt_get_all_if_id\n");
++		return -EBUSY;
+ 	}
+-	spin_unlock(&ctrl->mbox_lock);
++
++	pbe_allid = embedded_payload(wrb);
++	phba->interface_handle = pbe_allid->if_hndl_list[0];
  
--	if (mgmt_get_all_if_id(phba))
--		return -EIO;
-+	rc = mgmt_get_all_if_id(phba);
-+	if (rc)
-+		return rc;
- 
- 	do {
- 		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+ 	return status;
+ }
 -- 
 1.9.1
 
