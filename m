@@ -1,514 +1,234 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH v3 09/17] be2iscsi: Fix to handle misconfigured optics events
-Date: Wed, 23 Dec 2015 14:04:28 +0530
-Message-ID: <1450859676-22025-10-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH v3 14/17] be2iscsi: Fix to process 25G link speed info from FW
+Date: Wed, 23 Dec 2015 14:04:33 +0530
+Message-ID: <1450859676-22025-15-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:55541 "EHLO
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:55547 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933710AbbLWIe7 (ORCPT
+	by vger.kernel.org with ESMTP id S933733AbbLWIfK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Dec 2015 03:34:59 -0500
+	Wed, 23 Dec 2015 03:35:10 -0500
 In-Reply-To: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Log messages for misconfigured transceivers reported by FW.
+Async link event provides port_speed info. Cache the port_speed info
+and use the same to report in ISCSI_HOST_PARAM_PORT_SPEED query.
 
-Register async events that driver handles using MCC_CREATE_EXT ioctl.
-Errors messages for faulted/uncertified/unqualified optics are logged.
-Added IOCTL to get port_name to be displayed in error message.
+Removed link status query IOCTL used to do the same.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 164 +++++++++++++++++++++++++---------------
- drivers/scsi/be2iscsi/be_cmds.h |  47 ++++++++++--
- drivers/scsi/be2iscsi/be_main.c |  19 +----
- drivers/scsi/be2iscsi/be_main.h |  10 ++-
- drivers/scsi/be2iscsi/be_mgmt.c |  42 ++++++++++
- drivers/scsi/be2iscsi/be_mgmt.h |   2 +
- 6 files changed, 199 insertions(+), 85 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c  |  1 +
+ drivers/scsi/be2iscsi/be_cmds.h  | 35 ++++++++++-------------------------
+ drivers/scsi/be2iscsi/be_iscsi.c | 39 +++++++++------------------------------
+ drivers/scsi/be2iscsi/be_main.h  |  1 +
+ drivers/scsi/be2iscsi/be_mgmt.c  | 28 ----------------------------
+ 5 files changed, 21 insertions(+), 83 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 705215e..d69fb0a 100644
+index b294e54..cd14d26 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -267,26 +267,6 @@ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
- 	spin_unlock_bh(&ctrl->mcc_lock);
- }
- 
--bool is_link_state_evt(u32 trailer)
--{
--	return (((trailer >> ASYNC_TRAILER_EVENT_CODE_SHIFT) &
--		  ASYNC_TRAILER_EVENT_CODE_MASK) ==
--		  ASYNC_EVENT_CODE_LINK_STATE);
--}
--
--static bool is_iscsi_evt(u32 trailer)
--{
--	return ((trailer >> ASYNC_TRAILER_EVENT_CODE_SHIFT) &
--		  ASYNC_TRAILER_EVENT_CODE_MASK) ==
--		  ASYNC_EVENT_CODE_ISCSI;
--}
--
--static int iscsi_evt_type(u32 trailer)
--{
--	return (trailer >> ASYNC_TRAILER_EVENT_TYPE_SHIFT) &
--		 ASYNC_TRAILER_EVENT_TYPE_MASK;
--}
--
- static inline bool be_mcc_compl_is_new(struct be_mcc_compl *compl)
- {
- 	if (compl->flags != 0) {
-@@ -425,7 +405,7 @@ void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
- 	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
- }
- 
--void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
-+static void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+@@ -408,6 +408,7 @@ void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
+ static void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
  		struct be_async_event_link_state *evt)
  {
++	phba->port_speed = evt->port_speed;
  	if ((evt->port_link_status == ASYNC_EVENT_LINK_DOWN) ||
-@@ -453,6 +433,100 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
- 	}
- }
- 
-+static char *beiscsi_port_misconf_event_msg[] = {
-+	"Physical Link is functional.",
-+	"Optics faulted/incorrectly installed/not installed - Reseat optics, if issue not resolved, replace.",
-+	"Optics of two types installed - Remove one optic or install matching pair of optics.",
-+	"Incompatible optics - Replace with compatible optics for card to function.",
-+	"Unqualified optics - Replace with Avago optics for Warranty and Technical Support.",
-+	"Uncertified optics - Replace with Avago Certified optics to enable link operation."
-+};
-+
-+static void beiscsi_process_async_sli(struct beiscsi_hba *phba,
-+				      struct be_mcc_compl *compl)
-+{
-+	struct be_async_event_sli *async_sli;
-+	u8 evt_type, state, old_state, le;
-+	char *sev = KERN_WARNING;
-+	char *msg = NULL;
-+
-+	evt_type = compl->flags >> ASYNC_TRAILER_EVENT_TYPE_SHIFT;
-+	evt_type &= ASYNC_TRAILER_EVENT_TYPE_MASK;
-+
-+	/* processing only MISCONFIGURED physical port event */
-+	if (evt_type != ASYNC_SLI_EVENT_TYPE_MISCONFIGURED)
-+		return;
-+
-+	async_sli = (struct be_async_event_sli *)compl;
-+	state = async_sli->event_data1 >>
-+		 (phba->fw_config.phys_port * 8) & 0xff;
-+	le = async_sli->event_data2 >>
-+		 (phba->fw_config.phys_port * 8) & 0xff;
-+
-+	old_state = phba->optic_state;
-+	phba->optic_state = state;
-+
-+	if (state >= ARRAY_SIZE(beiscsi_port_misconf_event_msg)) {
-+		/* fw is reporting a state we don't know, log and return */
-+		__beiscsi_log(phba, KERN_ERR,
-+			    "BC_%d : Port %c: Unrecognized optic state 0x%x\n",
-+			    phba->port_name, async_sli->event_data1);
-+		return;
-+	}
-+
-+	if (ASYNC_SLI_LINK_EFFECT_VALID(le)) {
-+		/* log link effect for unqualified-4, uncertified-5 optics */
-+		if (state > 3)
-+			msg = (ASYNC_SLI_LINK_EFFECT_STATE(le)) ?
-+				" Link is non-operational." :
-+				" Link is operational.";
-+		/* 1 - info */
-+		if (ASYNC_SLI_LINK_EFFECT_SEV(le) == 1)
-+			sev = KERN_INFO;
-+		/* 2 - error */
-+		if (ASYNC_SLI_LINK_EFFECT_SEV(le) == 2)
-+			sev = KERN_ERR;
-+	}
-+
-+	if (old_state != phba->optic_state)
-+		__beiscsi_log(phba, sev, "BC_%d : Port %c: %s%s\n",
-+			      phba->port_name,
-+			      beiscsi_port_misconf_event_msg[state],
-+			      !msg ? "" : msg);
-+}
-+
-+void beiscsi_process_async_event(struct beiscsi_hba *phba,
-+				struct be_mcc_compl *compl)
-+{
-+	char *sev = KERN_INFO;
-+	u8 evt_code;
-+
-+	/* interpret flags as an async trailer */
-+	evt_code = compl->flags >> ASYNC_TRAILER_EVENT_CODE_SHIFT;
-+	evt_code &= ASYNC_TRAILER_EVENT_CODE_MASK;
-+	switch (evt_code) {
-+	case ASYNC_EVENT_CODE_LINK_STATE:
-+		beiscsi_async_link_state_process(phba,
-+				(struct be_async_event_link_state *)compl);
-+		break;
-+	case ASYNC_EVENT_CODE_ISCSI:
-+		phba->state |= BE_ADAPTER_CHECK_BOOT;
-+		phba->get_boot = BE_GET_BOOT_RETRIES;
-+		sev = KERN_ERR;
-+		break;
-+	case ASYNC_EVENT_CODE_SLI:
-+		beiscsi_process_async_sli(phba, compl);
-+		break;
-+	default:
-+		/* event not registered */
-+		sev = KERN_ERR;
-+	}
-+
-+	beiscsi_log(phba, sev, BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+		    "BC_%d : ASYNC Event: status 0x%08x flags 0x%08x\n",
-+		    compl->status, compl->flags);
-+}
-+
- int beiscsi_process_mcc(struct beiscsi_hba *phba)
- {
- 	struct be_mcc_compl *compl;
-@@ -462,45 +536,10 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
- 	spin_lock_bh(&phba->ctrl.mcc_cq_lock);
- 	while ((compl = be_mcc_compl_get(phba))) {
- 		if (compl->flags & CQE_FLAGS_ASYNC_MASK) {
--			/* Interpret flags as an async trailer */
--			if (is_link_state_evt(compl->flags))
--				/* Interpret compl as a async link evt */
--				beiscsi_async_link_state_process(phba,
--				   (struct be_async_event_link_state *) compl);
--			else if (is_iscsi_evt(compl->flags)) {
--				switch (iscsi_evt_type(compl->flags)) {
--				case ASYNC_EVENT_NEW_ISCSI_TGT_DISC:
--				case ASYNC_EVENT_NEW_ISCSI_CONN:
--				case ASYNC_EVENT_NEW_TCP_CONN:
--					phba->state |= BE_ADAPTER_CHECK_BOOT;
--					phba->get_boot = BE_GET_BOOT_RETRIES;
--					beiscsi_log(phba, KERN_ERR,
--						    BEISCSI_LOG_CONFIG |
--						    BEISCSI_LOG_MBOX,
--						    "BC_%d : Async iscsi Event,"
--						    " flags handled = 0x%08x\n",
--						    compl->flags);
--					break;
--				default:
--					phba->state |= BE_ADAPTER_CHECK_BOOT;
--					phba->get_boot = BE_GET_BOOT_RETRIES;
--					beiscsi_log(phba, KERN_ERR,
--						    BEISCSI_LOG_CONFIG |
--						    BEISCSI_LOG_MBOX,
--						    "BC_%d : Unsupported Async"
--						    " Event, flags = 0x%08x\n",
--						    compl->flags);
--				}
--			} else
--				beiscsi_log(phba, KERN_ERR,
--					    BEISCSI_LOG_CONFIG |
--					    BEISCSI_LOG_MBOX,
--					    "BC_%d : Unsupported Async Event, flags"
--					    " = 0x%08x\n", compl->flags);
--
-+			beiscsi_process_async_event(phba, compl);
- 		} else if (compl->flags & CQE_FLAGS_COMPLETED_MASK) {
--				status = be_mcc_compl_process(ctrl, compl);
--				atomic_dec(&phba->ctrl.mcc_obj.q.used);
-+			status = be_mcc_compl_process(ctrl, compl);
-+			atomic_dec(&phba->ctrl.mcc_obj.q.used);
- 		}
- 		be_mcc_compl_use(compl);
- 		num++;
-@@ -1016,7 +1055,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
- 			struct be_queue_info *cq)
- {
- 	struct be_mcc_wrb *wrb;
--	struct be_cmd_req_mcc_create *req;
-+	struct be_cmd_req_mcc_create_ext *req;
- 	struct be_dma_mem *q_mem = &mccq->dma_mem;
- 	struct be_ctrl_info *ctrl;
- 	void *ctxt;
-@@ -1032,9 +1071,12 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
--			OPCODE_COMMON_MCC_CREATE, sizeof(*req));
-+			OPCODE_COMMON_MCC_CREATE_EXT, sizeof(*req));
- 
- 	req->num_pages = PAGES_4K_SPANNED(q_mem->va, q_mem->size);
-+	req->async_evt_bitmap = 1 << ASYNC_EVENT_CODE_LINK_STATE;
-+	req->async_evt_bitmap |= 1 << ASYNC_EVENT_CODE_ISCSI;
-+	req->async_evt_bitmap |= 1 << ASYNC_EVENT_CODE_SLI;
- 
- 	AMAP_SET_BITS(struct amap_mcc_context, fid, ctxt,
- 		      PCI_FUNC(phba->pcidev->devfn));
+ 	    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+ 	     (evt->port_fault != BEISCSI_PHY_LINK_FAULT_NONE))) {
 diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index f988164..724974e 100644
+index 724974e..a194066 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.h
 +++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -119,13 +119,22 @@ struct be_mcc_compl {
- #define ASYNC_TRAILER_EVENT_CODE_MASK	0xFF
- #define ASYNC_EVENT_CODE_LINK_STATE	0x1
- #define ASYNC_EVENT_CODE_ISCSI		0x4
-+#define ASYNC_EVENT_CODE_SLI		0x11
- 
- #define ASYNC_TRAILER_EVENT_TYPE_SHIFT	16	/* bits 16 - 23 */
--#define ASYNC_TRAILER_EVENT_TYPE_MASK	0xF
-+#define ASYNC_TRAILER_EVENT_TYPE_MASK	0xFF
-+
-+/* iSCSI events */
- #define ASYNC_EVENT_NEW_ISCSI_TGT_DISC	0x4
- #define ASYNC_EVENT_NEW_ISCSI_CONN	0x5
- #define ASYNC_EVENT_NEW_TCP_CONN	0x7
- 
-+/* SLI events */
-+#define ASYNC_SLI_EVENT_TYPE_MISCONFIGURED	0x9
-+#define ASYNC_SLI_LINK_EFFECT_VALID(le)		(le & 0x80)
-+#define ASYNC_SLI_LINK_EFFECT_SEV(le)		((le >> 1)  & 0x03)
-+#define ASYNC_SLI_LINK_EFFECT_STATE(le)		(le & 0x01)
-+
- struct be_async_event_trailer {
- 	u32 code;
- };
-@@ -153,6 +162,16 @@ struct be_async_event_link_state {
+@@ -153,12 +153,21 @@ struct be_async_event_link_state {
+ 	u8 physical_port;
+ 	u8 port_link_status;
+ 	u8 port_duplex;
++/* BE2ISCSI_LINK_SPEED_ZERO	0x00 - no link */
++#define BE2ISCSI_LINK_SPEED_10MBPS	0x01
++#define BE2ISCSI_LINK_SPEED_100MBPS	0x02
++#define BE2ISCSI_LINK_SPEED_1GBPS	0x03
++#define BE2ISCSI_LINK_SPEED_10GBPS	0x04
++#define BE2ISCSI_LINK_SPEED_25GBPS	0x06
++#define BE2ISCSI_LINK_SPEED_40GBPS	0x07
+ 	u8 port_speed;
+ #define BEISCSI_PHY_LINK_FAULT_NONE	0x00
+ #define BEISCSI_PHY_LINK_FAULT_LOCAL	0x01
+ #define BEISCSI_PHY_LINK_FAULT_REMOTE	0x02
+ 	u8 port_fault;
+-	u8 rsvd0[7];
++	u8 event_reason;
++	u16 qos_link_speed;
++	u32 event_tag;
  	struct be_async_event_trailer trailer;
  } __packed;
  
-+/**
-+ * When async-trailer is SLI event, mcc_compl is interpreted as
-+ */
-+struct be_async_event_sli {
-+	u32 event_data1;
-+	u32 event_data2;
-+	u32 reserved;
-+	u32 trailer;
-+} __packed;
-+
- struct be_mcc_mailbox {
- 	struct be_mcc_wrb wrb;
- 	struct be_mcc_compl compl;
-@@ -172,6 +191,7 @@ struct be_mcc_mailbox {
- #define OPCODE_COMMON_CQ_CREATE				12
- #define OPCODE_COMMON_EQ_CREATE				13
- #define OPCODE_COMMON_MCC_CREATE			21
-+#define OPCODE_COMMON_MCC_CREATE_EXT			90
- #define OPCODE_COMMON_ADD_TEMPLATE_HEADER_BUFFERS	24
- #define OPCODE_COMMON_REMOVE_TEMPLATE_HEADER_BUFFERS	25
- #define OPCODE_COMMON_GET_CNTL_ATTRIBUTES		32
-@@ -183,6 +203,7 @@ struct be_mcc_mailbox {
- #define OPCODE_COMMON_EQ_DESTROY			55
- #define OPCODE_COMMON_QUERY_FIRMWARE_CONFIG		58
- #define OPCODE_COMMON_FUNCTION_RESET			61
-+#define OPCODE_COMMON_GET_PORT_NAME			77
- 
- /**
-  * LIST of opcodes that are common between Initiator and Target
-@@ -587,10 +608,11 @@ struct amap_mcc_context {
- 	u8 rsvd2[32];
+@@ -711,29 +720,6 @@ struct be_cmd_hba_name {
+ 	u8 initiator_alias[BEISCSI_ALIAS_LEN];
  } __packed;
  
--struct be_cmd_req_mcc_create {
-+struct be_cmd_req_mcc_create_ext {
- 	struct be_cmd_req_hdr hdr;
- 	u16 num_pages;
- 	u16 rsvd0;
-+	u32 async_evt_bitmap;
- 	u8 context[sizeof(struct amap_mcc_context) / 8];
- 	struct phys_addr pages[8];
- } __packed;
-@@ -748,8 +770,8 @@ struct be_mcc_wrb *wrb_from_mccq(struct beiscsi_hba *phba);
- int be_mcc_notify_wait(struct beiscsi_hba *phba, unsigned int tag);
- void be_mcc_notify(struct beiscsi_hba *phba, unsigned int tag);
- unsigned int alloc_mcc_tag(struct beiscsi_hba *phba);
--void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
--		struct be_async_event_link_state *evt);
-+void beiscsi_process_async_event(struct beiscsi_hba *phba,
-+				struct be_mcc_compl *compl);
- int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
- 				    struct be_mcc_compl *compl);
- 
-@@ -777,8 +799,6 @@ int be_cmd_wrbq_create(struct be_ctrl_info *ctrl, struct be_dma_mem *q_mem,
- 		       struct hwi_wrb_context *pwrb_context,
- 		       uint8_t ulp_num);
- 
--bool is_link_state_evt(u32 trailer);
+-struct be_cmd_ntwk_link_status_req {
+-	struct be_cmd_req_hdr hdr;
+-	u32 rsvd0;
+-} __packed;
 -
- /* Configuration Functions */
- int be_cmd_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
+-/*** Port Speed Values ***/
+-#define BE2ISCSI_LINK_SPEED_ZERO	0x00
+-#define BE2ISCSI_LINK_SPEED_10MBPS	0x01
+-#define BE2ISCSI_LINK_SPEED_100MBPS	0x02
+-#define BE2ISCSI_LINK_SPEED_1GBPS	0x03
+-#define BE2ISCSI_LINK_SPEED_10GBPS	0x04
+-struct be_cmd_ntwk_link_status_resp {
+-	struct be_cmd_resp_hdr hdr;
+-	u8 phys_port;
+-	u8 mac_duplex;
+-	u8 mac_speed;
+-	u8 mac_fault;
+-	u8 mgmt_mac_duplex;
+-	u8 mgmt_mac_speed;
+-	u16 qos_link_speed;
+-	u32 logical_link_speed;
+-} __packed;
+-
+ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
+ 			  struct be_queue_info *eq, int eq_delay);
  
-@@ -1137,6 +1157,21 @@ struct be_cmd_get_all_if_id_req {
- 	u32 if_hndl_list[1];
- } __packed;
+@@ -752,7 +738,6 @@ int be_poll_mcc(struct be_ctrl_info *ctrl);
+ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
+ 				      struct beiscsi_hba *phba);
+ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba);
+-unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba);
  
-+struct be_cmd_get_port_name {
-+	union {
-+		struct be_cmd_req_hdr req_hdr;
-+		struct be_cmd_resp_hdr resp_hdr;
-+	} h;
-+	union {
-+		struct {
-+			u32 reserved;
-+		} req;
-+		struct {
-+			u32 port_names;
-+		} resp;
-+	} p;
-+} __packed;
-+
- #define ISCSI_OPCODE_SCSI_DATA_OUT		5
- #define OPCODE_COMMON_NTWK_LINK_STATUS_QUERY 5
- #define OPCODE_COMMON_MODIFY_EQ_DELAY		41
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 2f3e118..8967e05 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2048,21 +2048,7 @@ static void  beiscsi_process_mcc_isr(struct beiscsi_hba *phba)
- 			num_processed = 0;
- 		}
- 		if (mcc_compl->flags & CQE_FLAGS_ASYNC_MASK) {
--			/* Interpret flags as an async trailer */
--			if (is_link_state_evt(mcc_compl->flags))
--				/* Interpret compl as a async link evt */
--				beiscsi_async_link_state_process(phba,
--				(struct be_async_event_link_state *) mcc_compl);
--			else {
--				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_MBOX,
--					    "BM_%d :  Unsupported Async Event, flags"
--					    " = 0x%08x\n",
--					    mcc_compl->flags);
--				if (phba->state & BE_ADAPTER_LINK_UP) {
--					phba->state |= BE_ADAPTER_CHECK_BOOT;
--					phba->get_boot = BE_GET_BOOT_RETRIES;
--				}
--			}
-+			beiscsi_process_async_event(phba, mcc_compl);
- 		} else if (mcc_compl->flags & CQE_FLAGS_COMPLETED_MASK) {
- 			be_mcc_compl_process_isr(&phba->ctrl, mcc_compl);
- 			atomic_dec(&phba->ctrl.mcc_obj.q.used);
-@@ -3868,6 +3854,8 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- 	phwi_context->min_eqd = 0;
- 	phwi_context->cur_eqd = 0;
- 	be_cmd_fw_initialize(&phba->ctrl);
-+	/* set optic state to unknown */
-+	phba->optic_state = 0xff;
+ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag);
  
- 	status = beiscsi_create_eqs(phba, phwi_context);
- 	if (status != 0) {
-@@ -5681,6 +5669,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 			    "BM_%d : Error getting fw config\n");
- 		goto free_port;
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 3545721..a3bc5e4 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -766,34 +766,13 @@ static void beiscsi_get_port_state(struct Scsi_Host *shost)
+  * beiscsi_get_port_speed  - Get the Port Speed from Adapter
+  * @shost : pointer to scsi_host structure
+  *
+- * returns Success/Failure
+  */
+-static int beiscsi_get_port_speed(struct Scsi_Host *shost)
++static void beiscsi_get_port_speed(struct Scsi_Host *shost)
+ {
+-	int rc;
+-	unsigned int tag;
+-	struct be_mcc_wrb *wrb;
+-	struct be_cmd_ntwk_link_status_resp *resp;
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	struct iscsi_cls_host *ihost = shost->shost_data;
+ 
+-	tag = be_cmd_get_port_speed(phba);
+-	if (!tag) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-			    "BS_%d : Getting Port Speed Failed\n");
+-
+-		 return -EBUSY;
+-	}
+-	rc = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
+-	if (rc) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-			    "BS_%d : Port Speed MBX Failed\n");
+-		return rc;
+-	}
+-	resp = embedded_payload(wrb);
+-
+-	switch (resp->mac_speed) {
++	switch (phba->port_speed) {
+ 	case BE2ISCSI_LINK_SPEED_10MBPS:
+ 		ihost->port_speed = ISCSI_PORT_SPEED_10MBPS;
+ 		break;
+@@ -806,10 +785,15 @@ static int beiscsi_get_port_speed(struct Scsi_Host *shost)
+ 	case BE2ISCSI_LINK_SPEED_10GBPS:
+ 		ihost->port_speed = ISCSI_PORT_SPEED_10GBPS;
+ 		break;
++	case BE2ISCSI_LINK_SPEED_25GBPS:
++		ihost->port_speed = ISCSI_PORT_SPEED_25GBPS;
++		break;
++	case BE2ISCSI_LINK_SPEED_40GBPS:
++		ihost->port_speed = ISCSI_PORT_SPEED_40GBPS;
++		break;
+ 	default:
+ 		ihost->port_speed = ISCSI_PORT_SPEED_UNKNOWN;
  	}
-+	mgmt_get_port_name(&phba->ctrl, phba);
- 
- 	if (enable_msix)
- 		find_num_cpus(phba);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index bd9d1e1..c09082a 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -415,6 +415,7 @@ struct beiscsi_hba {
- 	} fw_config;
- 
- 	unsigned int state;
-+	u8 optic_state;
- 	int get_boot;
- 	bool fw_timeout;
- 	bool ue_detected;
-@@ -422,6 +423,7 @@ struct beiscsi_hba {
- 
- 	bool mac_addr_set;
- 	u8 mac_address[ETH_ALEN];
-+	u8 port_name;
- 	char fw_ver_str[BEISCSI_VER_STRLEN];
- 	char wq_name[20];
- 	struct workqueue_struct *wq;	/* The actuak work queue */
-@@ -1073,12 +1075,14 @@ struct hwi_context_memory {
- #define BEISCSI_LOG_CONFIG	0x0020	/* CONFIG Code Path */
- #define BEISCSI_LOG_ISCSI	0x0040	/* SCSI/iSCSI Protocol related Logs */
- 
-+#define __beiscsi_log(phba, level, fmt, arg...) \
-+	shost_printk(level, phba->shost, fmt, __LINE__, ##arg)
-+
- #define beiscsi_log(phba, level, mask, fmt, arg...) \
- do { \
- 	uint32_t log_value = phba->attr_log_enable; \
- 		if (((mask) & log_value) || (level[1] <= '3')) \
--			shost_printk(level, phba->shost, \
--				     fmt, __LINE__, ##arg); \
--} while (0)
-+			__beiscsi_log(phba, level, fmt, ##arg); \
-+} while (0);
- 
- #endif
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 7aa7a3c..5aae153 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -316,6 +316,48 @@ unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
+-	return 0;
  }
  
  /**
-+ * mgmt_get_port_name()- Get port name for the function
-+ * @ctrl: ptr to Ctrl Info
-+ * @phba: ptr to the dev priv structure
-+ *
-+ * Get the alphanumeric character for port
-+ *
-+ **/
-+int mgmt_get_port_name(struct be_ctrl_info *ctrl,
-+		       struct beiscsi_hba *phba)
-+{
-+	int ret = 0;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_get_port_name *ioctl;
-+
-+	mutex_lock(&ctrl->mbox_lock);
-+	wrb = wrb_from_mbox(&ctrl->mbox_mem);
-+	memset(wrb, 0, sizeof(*wrb));
-+	ioctl = embedded_payload(wrb);
-+
-+	be_wrb_hdr_prepare(wrb, sizeof(*ioctl), true, 0);
-+	be_cmd_hdr_prepare(&ioctl->h.req_hdr, CMD_SUBSYSTEM_COMMON,
-+			   OPCODE_COMMON_GET_PORT_NAME,
-+			   EMBED_MBX_MAX_PAYLOAD_SIZE);
-+	ret = be_mbox_notify(ctrl);
-+	phba->port_name = 0;
-+	if (!ret) {
-+		phba->port_name = ioctl->p.resp.port_names >>
-+				  (phba->fw_config.phys_port * 8) & 0xff;
-+	} else {
-+		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
-+			    "BG_%d : GET_PORT_NAME ret 0x%x status 0x%x\n",
-+			    ret, ioctl->h.resp_hdr.status);
-+	}
-+
-+	if (phba->port_name == 0)
-+		phba->port_name = '?';
-+
-+	mutex_unlock(&ctrl->mbox_lock);
-+	return ret;
-+}
-+
-+/**
-  * mgmt_get_fw_config()- Get the FW config for the function
-  * @ctrl: ptr to Ctrl Info
-  * @phba: ptr to the dev priv structure
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index c1dbb69..f3a48a0 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -268,6 +268,8 @@ struct beiscsi_endpoint {
+@@ -859,12 +843,7 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 		status = sprintf(buf, "%s\n", iscsi_get_port_state_name(shost));
+ 		break;
+ 	case ISCSI_HOST_PARAM_PORT_SPEED:
+-		status = beiscsi_get_port_speed(shost);
+-		if (status) {
+-			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-				    "BS_%d : Retreiving Port Speed Failed\n");
+-			return status;
+-		}
++		beiscsi_get_port_speed(shost);
+ 		status = sprintf(buf, "%s\n", iscsi_get_port_speed_name(shost));
+ 		break;
+ 	default:
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index fabade3..41c708c 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -427,6 +427,7 @@ struct beiscsi_hba {
+ 	bool mac_addr_set;
+ 	u8 mac_address[ETH_ALEN];
+ 	u8 port_name;
++	u8 port_speed;
+ 	char fw_ver_str[BEISCSI_VER_STRLEN];
+ 	char wq_name[20];
+ 	struct workqueue_struct *wq;	/* The actuak work queue */
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 3eea8b8..da040e7 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1393,34 +1393,6 @@ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba)
+ 	return tag;
+ }
  
- int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
- 				 struct beiscsi_hba *phba);
-+int mgmt_get_port_name(struct be_ctrl_info *ctrl,
-+		       struct beiscsi_hba *phba);
- 
- unsigned int mgmt_invalidate_connection(struct beiscsi_hba *phba,
- 					 struct beiscsi_endpoint *beiscsi_ep,
+-unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba)
+-{
+-	unsigned int tag = 0;
+-	struct be_mcc_wrb *wrb;
+-	struct be_cmd_ntwk_link_status_req *req;
+-	struct be_ctrl_info *ctrl = &phba->ctrl;
+-
+-	if (mutex_lock_interruptible(&ctrl->mbox_lock))
+-		return 0;
+-	tag = alloc_mcc_tag(phba);
+-	if (!tag) {
+-		mutex_unlock(&ctrl->mbox_lock);
+-		return tag;
+-	}
+-
+-	wrb = wrb_from_mccq(phba);
+-	req = embedded_payload(wrb);
+-	wrb->tag0 |= tag;
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+-	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
+-			OPCODE_COMMON_NTWK_LINK_STATUS_QUERY,
+-			sizeof(*req));
+-
+-	be_mcc_notify(phba, tag);
+-	mutex_unlock(&ctrl->mbox_lock);
+-	return tag;
+-}
+-
+ /**
+  * be_mgmt_get_boot_shandle()- Get the session handle
+  * @phba: device priv structure instance
 -- 
 1.9.1
 
