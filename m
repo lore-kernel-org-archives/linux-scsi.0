@@ -1,138 +1,78 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
-Date: Wed, 23 Dec 2015 00:38:55 +0000
-Message-ID: <1450831135.5616.24.camel@intel.com>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
-	 <1449271801.27077.25.camel@HansenPartnership.com>
-	 <1449273524.16905.103.camel@intel.com>
-	 <87r3if2gij.fsf@notabene.neil.brown.name>
-	 <1450822398.5616.21.camel@intel.com>
-	 <877fk62idp.fsf@notabene.neil.brown.name>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v3 66/77] ncr5380: Fix soft lockups
+Date: Wed, 23 Dec 2015 13:42:54 +1300
+Message-ID: <CAOmrzkKit7to8Rp28soAcMG2CtxwWdKhBD2m1zaYLSnD4XnXAg@mail.gmail.com>
+References: <20151222011737.980475848@telegraphics.com.au>
+	<20151222011755.965510468@telegraphics.com.au>
+	<20151222113903.06422dbe@lxorguk.ukuu.org.uk>
+	<alpine.LNX.2.00.1512222347310.23505@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="=-XyfdK1xyofynMXfkONFy"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877fk62idp.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "neilb@suse.com" <neilb@suse.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:37386 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753763AbbLWAmz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2015 19:42:55 -0500
+In-Reply-To: <alpine.LNX.2.00.1512222347310.23505@nippy.intranet>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, "James E.J. Bottomley" <JBottomley@odin.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 
---=-XyfdK1xyofynMXfkONFy
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'd like to think that, too - probably true for the Atari TT SCSI case
+(can do scatter-gather, can do more than one command per LUN). Worse
+for the Falcon SCSI which is the only one I can test (no
+scatter-gather, one command per LUN, interrupt shared with IDE and IDE
+driver locked out while SCSI command handled).
 
-On Wed, 2015-12-23 at 10:06 +1100, NeilBrown wrote:
-> On Wed, Dec 23 2015, Verma, Vishal L wrote:
->=20
-> > On Tue, 2015-12-22 at 16:34 +1100, NeilBrown wrote:
-> > > On Sat, Dec 05 2015, Verma, Vishal L wrote:
-> > >=20
-> > > > On Fri, 2015-12-04 at 15:30 -0800, James Bottomley wrote:
-> > > > [...]
-> > > > > > +ssize_t badblocks_store(struct badblocks *bb, const char
-> > > > > > *page,
-> > > > > > size_t len,
-> > > > > > +			int unack)
-> > > > > [...]
-> > > > > > +int badblocks_init(struct badblocks *bb, int enable)
-> > > > > > +{
-> > > > > > +	bb->count =3D 0;
-> > > > > > +	if (enable)
-> > > > > > +		bb->shift =3D 0;
-> > > > > > +	else
-> > > > > > +		bb->shift =3D -1;
-> > > > > > +	bb->page =3D kmalloc(PAGE_SIZE, GFP_KERNEL);
-> > > > >=20
-> > > > > Why not __get_free_page(GFP_KERNEL)?=C2=A0=C2=A0The problem with =
-kmalloc
-> > > > > of
-> > > > > an
-> > > > > exactly known page sized quantity is that the slab tracker for
-> > > > > this
-> > > > > requires two contiguous pages for each page because of the
-> > > > > overhead.
-> > > >=20
-> > > > Cool, I didn't know about __get_free_page - I can fix this up
-> > > > too.
-> > > >=20
-> > >=20
-> > > I was reminded of this just recently I thought I should clear up
-> > > the
-> > > misunderstanding.
-> > >=20
-> > > kmalloc(PAGE_SIZE) does *not* incur significant overhead and
-> > > certainly
-> > > does not require two contiguous free pages.
-> > > If you "grep kmalloc-4096 /proc/slabinfo" you will note that both
-> > > objperslab and pagesperslab are 1.=C2=A0=C2=A0So one page is used to =
-store
-> > > each
-> > > 4096 byte allocation.
-> > >=20
-> > > To quote the email from Linus which reminded me about this
-> > >=20
-> > > > If you
-> > > > want to allocate a page, and get a pointer, just use
-> > > > "kmalloc()".
-> > > > Boom, done!
-> > >=20
-> > > https://lkml.org/lkml/2015/12/21/605
-> > >=20
-> > > There probably is a small CPU overhead from using kmalloc, but no
-> > > memory
-> > > overhead.
-> >=20
-> > Thanks Neil.
-> > I just read the rest of that thread - and I'm wondering if we should
-> > change back to kzalloc here.
-> >=20
-> > The one thing __get_free_page gets us is PAGE_SIZE-aligned memory.
-> > Do
-> > you think that would be better for this use? (I can't think of any).
-> > If
-> > not, I can send out a new version reverting back to kzalloc.
->=20
-> kzalloc(PAGE_SIZE) will also always return page-aligned memory.
-> kzalloc returns a void*, __get_free_page returns unsigned long.=C2=A0=C2=
-=A0For
-> that reason alone I would prefer kzalloc.
->=20
-> But I'm not necessarily suggesting you change the code.=C2=A0=C2=A0I just=
- wanted
-> to clarify a misunderstanding.=C2=A0=C2=A0You should produce the
-> code that you are
-> most happy with.
+But that only affects balancing of I/O between IDE and SCSI drivers.
+Is that what you are worried about, Alan?
+
+Happy to test whether limiting max_sectors makes a difference in the DMA case.
+
+Cheers,
+
+  Michael
 
 
-I agree, the typecasting with=C2=A0__get_free_page is pretty ugly. I'll
-change it back to kzalloc.
 
-Thanks,
-	-Vishal
---=-XyfdK1xyofynMXfkONFy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAABAgAGBQJWee0fAAoJEHr6Yb6juE3/FV8P/0lryHr537Czk95+gxwRV8e5
-/f8SP2Fp1+9V/GNxTYk70KmtLbVTqxul0KJO4Mt7cjeeuhFsumY9Njq4PLtJ+C8n
-JSJCZEzxWg8XVK6oqXdY6rEGywrFWpfrN7LiRZuHi+i1xFm0YNMf1Z0ndYC67fjb
-UzhabQGRFBgQb5ogpcPrGxW0pGpK5Zqkq/ifoZ2ZZ4dvcym9llPode5cuA3fbtS7
-lvJ0HeVhnUy8+XkQfPZy0UyTYuZZ8Al0EWGiV4WoXgKTVYa8HqVzDLh9wkFyor+D
-TCvTJp0KbHmmcBVs6qDA1S7aDFAVNWtfUfQOkysD06ywbO+MuZ0rtBd0jsXTv5Sc
-wlpkQiK5wsL4IGLxdpCqz7+1TnNYab5zwlbCCkuoN/f9N5IUkR3slr0rcez6GWMa
-XTCcUdV7XE496SNJbC40SMqtMKWABLRqFC+mQiGySEPWr7odRAjGMLbLpRbf9tJ3
-e8bSFEvPW9TKxQdx5f3+PjuYHIhUwPCViKlrGdOncDvIpbKc6RiQFYjxEZUmUWh6
-6UaRG6rqf07KEbkcjZs0K4w3S8OdLgGetEuhQnWnKWTHsvkDANTVJvT1PvI+dJXG
-scvFo3UtrGfTpt5c7g39HjQJUB401G3nC05Vl0BOp3UF5ZT3hQFo6eDvm4tBrPJg
-DpqPBZETiL8gcGBA1Jfo
-=HQFD
------END PGP SIGNATURE-----
-
---=-XyfdK1xyofynMXfkONFy--
+On Wed, Dec 23, 2015 at 2:47 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+>
+> On Tue, 22 Dec 2015, One Thousand Gnomes wrote:
+>
+>> On Tue, 22 Dec 2015 12:18:44 +1100 Finn Thain
+>> <fthain@telegraphics.com.au> wrote:
+>>
+>> > Because of the rudimentary design of the chip, it is necessary to poll
+>> > the SCSI bus signals during PIO and this tends to hog the CPU. The
+>> > driver will accept new commands while others execute, and this causes
+>> > a soft lockup because the workqueue item will not terminate until the
+>> > issue queue is emptied.
+>> >
+>> > When exercising dmx3191d using sequential IO from dd, the driver is
+>> > sent 512 KiB WRITE commands and 128 KiB READs. For a PIO transfer, the
+>> > rate is is only about 300 KiB/s, so these are long-running commands.
+>> > And although PDMA may run at several MiB/s, interrupts are disabled
+>> > for the duration of the transfer.
+>> >
+>> > Fix the unresponsiveness and soft lockup issues by calling
+>> > cond_resched() after each command is completed and by limiting
+>> > max_sectors for drivers that don't implement real DMA.
+>>
+>> Is there a reason for not doing some limiting in the DMA case too. A
+>> 512K write command even with DMA on a low end 68K box introduces a
+>> second of latency before another I/O can be scheduled ?
+>
+> The DMA case is the atari_scsi case. I'd like to think that atari_scsi
+> would have only the latency issues that might be expected from any SCSI-2
+> host adapter driver.
+>
+> Unlike PDMA, interrupts are not disabled for these DMA transfers. Note
+> that this patch isn't really relevant to DMA, because the main loop
+> iterates only when done == 0, that is, !hostdata->dmalen.
+>
+> --
+>
+>>
+>> Alan
+>
