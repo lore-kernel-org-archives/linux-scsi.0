@@ -1,50 +1,51 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: RE: [PATCH v2 17/17] be2iscsi: Update the driver version
-Date: Wed, 23 Dec 2015 14:00:35 +0530
-Message-ID: <4ef29a0b91d219eaf9a61aff43de9a9e@mail.gmail.com>
-References: <1450804562-11980-1-git-send-email-jitendra.bhivare@avagotech.com> <1450804562-11980-18-git-send-email-jitendra.bhivare@avagotech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v3 00/17] be2iscsi: driver update 11.0.0.0
+Date: Wed, 23 Dec 2015 14:04:19 +0530
+Message-ID: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33306 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753600AbbLWIah (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2015 03:30:37 -0500
-Received: by mail-yk0-f174.google.com with SMTP id 140so187951812ykp.0
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Dec 2015 00:30:37 -0800 (PST)
-In-Reply-To: <1450804562-11980-18-git-send-email-jitendra.bhivare@avagotech.com>
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:55523 "EHLO
+	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753600AbbLWIep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Dec 2015 03:34:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Please ignore patch v2 set sending v3 shortly.
+This patch is generated against for-next branch.
 
------Original Message-----
-From: Jitendra Bhivare [mailto:jitendra.bhivare@avagotech.com]
-Sent: Tuesday, December 22, 2015 10:46 PM
-To: linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
-Cc: Jitendra Bhivare
-Subject: [PATCH v2 17/17] be2iscsi: Update the driver version
+Jitendra Bhivare (17):
+  be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
+  be2iscsi: Fix mbox synchronization replacing spinlock with mutex
+  be2iscsi: Fix to use atomic bit operations for tag_state
+  be2iscsi: Fix to synchronize tag allocation using spin_lock
+  be2iscsi: Set mbox timeout to 30s
+  be2iscsi: Added return value check for mgmt_get_all_if_id
+  be2iscsi: Fix to remove shutdown entry point
+  be2iscsi: Fix VLAN support for IPv6 network
+  be2iscsi: Fix to handle misconfigured optics events
+  be2iscsi: Add FW config validation
+  be2iscsi: Fix return value for MCC completion
+  be2iscsi: Fix IOPOLL implementation
+  scsi_transport_iscsi: Add 25G and 40G speed definition
+  be2iscsi: Fix to process 25G link speed info from FW
+  be2iscsi: Fix async link event processing
+  be2iscsi: Fix WRB leak in login/logout path
+  be2iscsi: Update the driver version
 
-Driver version: 11.0.0.0
+ drivers/scsi/be2iscsi/be.h          |   9 +-
+ drivers/scsi/be2iscsi/be_cmds.c     | 453 +++++++++++++++++++-----------------
+ drivers/scsi/be2iscsi/be_cmds.h     | 118 +++++-----
+ drivers/scsi/be2iscsi/be_iscsi.c    |  54 ++---
+ drivers/scsi/be2iscsi/be_main.c     | 210 +++++++++--------
+ drivers/scsi/be2iscsi/be_main.h     |  23 +-
+ drivers/scsi/be2iscsi/be_mgmt.c     | 426 ++++++++++++++++++++-------------
+ drivers/scsi/be2iscsi/be_mgmt.h     |   2 +
+ drivers/scsi/scsi_transport_iscsi.c |   2 +
+ include/scsi/iscsi_if.h             |   2 +
+ 10 files changed, 721 insertions(+), 578 deletions(-)
 
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
----
- drivers/scsi/be2iscsi/be_main.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.h
-b/drivers/scsi/be2iscsi/be_main.h index 41c708c..16a6fd0 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_iscsi.h>
-
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"10.6.0.1"
-+#define BUILD_STR		"11.0.0.0"
- #define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
---
+-- 
 1.9.1
+
