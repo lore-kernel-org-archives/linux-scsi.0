@@ -1,65 +1,53 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH v3 04/17] be2iscsi: Fix to synchronize tag allocation using spin_lock
-Date: Wed, 23 Dec 2015 14:04:23 +0530
-Message-ID: <1450859676-22025-5-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH v3 05/17] be2iscsi: Set mbox timeout to 30s
+Date: Wed, 23 Dec 2015 14:04:24 +0530
+Message-ID: <1450859676-22025-6-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:55529 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933713AbbLWIew (ORCPT
+	by vger.kernel.org with ESMTP id S933710AbbLWIex (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Dec 2015 03:34:52 -0500
+	Wed, 23 Dec 2015 03:34:53 -0500
 In-Reply-To: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-alloc_mcc_tag/free_mcc_tag is now done under mcc_lock spin_lock
+FW recommended timeout for all mbox command is 30s.
+Use msleep instead mdelay to relinquish CPU when polling for
+mbox completion.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 1913e9e..502c9b6 100644
+index 502c9b6..034b868 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -121,6 +121,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+@@ -590,7 +590,8 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba, unsigned int tag)
+  **/
+ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
  {
- 	unsigned int tag = 0;
+-#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
++	/* wait 30s for generic non-flash MBOX operation */
++#define BEISCSI_MBX_RDY_BIT_TIMEOUT	30000
+ 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	unsigned long timeout;
+@@ -615,7 +616,7 @@ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
  
-+	spin_lock_bh(&phba->ctrl.mcc_lock);
- 	if (phba->ctrl.mcc_tag_available) {
- 		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
- 		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
-@@ -134,6 +135,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
- 		else
- 			phba->ctrl.mcc_alloc_index++;
- 	}
-+	spin_unlock_bh(&phba->ctrl.mcc_lock);
- 	return tag;
- }
+ 		if (time_after(jiffies, timeout))
+ 			break;
+-		mdelay(1);
++		msleep(20);
+ 	} while (!ready);
  
-@@ -254,7 +256,7 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 
- void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
- {
--	spin_lock(&ctrl->mbox_lock);
-+	spin_lock_bh(&ctrl->mcc_lock);
- 	tag = tag & 0x000000FF;
- 	ctrl->mcc_tag[ctrl->mcc_free_index] = tag;
- 	if (ctrl->mcc_free_index == (MAX_MCC_CMD - 1))
-@@ -262,7 +264,7 @@ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
- 	else
- 		ctrl->mcc_free_index++;
- 	ctrl->mcc_tag_available++;
--	spin_unlock(&ctrl->mbox_lock);
-+	spin_unlock_bh(&ctrl->mcc_lock);
- }
- 
- bool is_link_state_evt(u32 trailer)
+ 	beiscsi_log(phba, KERN_ERR,
 -- 
 1.9.1
 
