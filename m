@@ -1,70 +1,90 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: completion queue abstraction V2
-Date: Wed, 23 Dec 2015 14:44:25 -0500
-Message-ID: <567AF999.5050409@redhat.com>
-References: <1449521512-22921-1-git-send-email-hch@lst.de>
+From: Alexei Potashnik <alexei@purestorage.com>
+Subject: RE: qla2xxx: Delete session if initiator is gone from FW
+Date: Thu, 24 Dec 2015 00:11:25 -0800
+Message-ID: <711352de7005df8de3d0df6d13eb17e8@mail.gmail.com>
+References: <20151222194617.GA31313@mwanda>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="gIhumQCG4xigbLhXVv2nGhokxxSNNW5xv"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1449521512-22921-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org
-Cc: sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:33812 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933330AbbLXIL1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Dec 2015 03:11:27 -0500
+Received: by mail-wm0-f46.google.com with SMTP id l126so171941856wml.1
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Dec 2015 00:11:27 -0800 (PST)
+In-Reply-To: <20151222194617.GA31313@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---gIhumQCG4xigbLhXVv2nGhokxxSNNW5xv
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+I my original patch line 3583 was:
 
-On 12/07/2015 03:51 PM, Christoph Hellwig wrote:
-> This series adds a new RDMA core abstraction that insulated the
-> ULPs from the nitty gritty details of CQ polling.  See the individual
-> patches for more details.
->=20
-> Note that this series should be applied on top of my
-> "IB: merge struct ib_device_attr into struct ib_device" patch and the
-> MR cleanups.
++			bool logged_out = (status & 0xFFFF) ==
+CTIO_PORT_LOGGED_OUT;
 
-This has been applied, although I used the clean version from your git
-repo that didn't depend on the previous patch this one relied upon.
+and line 3587 was:
 
-The same comment I made to Christoph Lameter would be helpful here:
-please include the v1/v2 in your --subject-prefix you pass to git.
-Patchworks does not preserve cover letters nor propagate flags from
-cover letter to patch series :-/
++			    logged_out ? "PORT LOGGED OUT" : "PORT
+UNAVAILABLE",
 
+Forwarding  to Quinn and Himanshu who must have massaged it.
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: 0E572FDD
+Alexei
 
-
-
---gIhumQCG4xigbLhXVv2nGhokxxSNNW5xv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCAAGBQJWevmZAAoJELgmozMOVy/dOaYQAJpvqFr9NY9I/ojfLLpTImFX
-p+wnfn5Fa1lhDIyrIC6/hXrHLemralMOlIGRMrYVt1rPtHS5MMk2m7TuyNs5Xu0E
-YgWinu2JLH/tenDcsH9Gsx8ZChxY/wuIMO14v+8o3bBvh5ApGtZTN94Z93o/1PHD
-s+QuGtfuAwDG8HIHUnODu+Efaru2RV/wDosIhbf+EBkQRW/vG6dVQjEx5GqIdYDo
-cuh+dluOjYaeOAf/XkaBEvP/Cl3uBIAmsdN6f9wQcqlKOZAweKi7HP262CFBK5QZ
-hcJpQo7G2mKHhZPZeXBABlztiCxiiH9K9sxdviDuECbI5VSagIcGXsHeyR1MrxaF
-ZwH1lBeVx7W7WE4QG93YVtJ5/JQDNvVQHuY9/jYGXzVi9LZxMiYig4184GpzqHCD
-Omegu7Km6AjiEdM7ELg5ilAP2x3Cv7koOVUYNxsHQ+9xX1Tw6YKF7WyN7Xj1cU0u
-03993nW6p4KZqiQBd3kxTJTsF/JvxdUuSzhV+JtzCX2iYKZn96m9qwROML2n2uAn
-dFwsNIzu/U4YwflPj7EFxciBImMPXjI3U/xah9vzYco23F7whVAAB2XSuK4Hr2Q+
-r2z6d2NSraecSq2AEqUXSp8Iblkg4piO6WaJnu2pyhAzwdKd4zKo9B2Q4FGodZlo
-4NAhmJi7f1LPO6N0RCD6
-=0NrR
------END PGP SIGNATURE-----
-
---gIhumQCG4xigbLhXVv2nGhokxxSNNW5xv--
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Tuesday, December 22, 2015 11:46 AM
+> To: alexei@purestorage.com
+> Cc: linux-scsi@vger.kernel.org
+> Subject: re: qla2xxx: Delete session if initiator is gone from FW
+>
+> Hello Alexei Potashnik,
+>
+> The patch b93bb8ecc389: "qla2xxx: Delete session if initiator is gone
+from
+> FW" from Dec 17, 2015, leads to the following static checker
+> warning:
+>
+> 	drivers/scsi/qla2xxx/qla_target.c:3587 qlt_do_ctio_completion()
+> 	warn: impossible condition '(logged_out == 41) => (0-1 == 41)'
+>
+> drivers/scsi/qla2xxx/qla_target.c
+>   3580                  case CTIO_PORT_LOGGED_OUT:
+>   3581                  case CTIO_PORT_UNAVAILABLE:
+>   3582                  {
+>   3583                          bool logged_out = (status & 0xFFFF);
+>   3584                          ql_dbg(ql_dbg_tgt_mgt, vha, 0xf059,
+>   3585                              "qla_target(%d): CTIO with %s status
+%x "
+>   3586                              "received (state %x, se_cmd %p)\n",
+vha->vp_idx,
+>   3587                              (logged_out == CTIO_PORT_LOGGED_OUT)
+?
+>                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> Bool cannot equal 0x26.
+>
+>   3588                              "PORT LOGGED OUT" : "PORT
+UNAVAILABLE",
+>   3589                              status, cmd->state, se_cmd);
+>   3590
+>   3591                          if (logged_out && cmd->sess) {
+>                                     ^^^^^^^^^^
+> 	== CTIO_PORT_LOGGED_OUT here?
+>
+>   3592                                  /*
+>   3593                                   * Session is already logged
+out, but we need
+>   3594                                   * to notify initiator, who's
+not aware of this
+>   3595                                   */
+>   3596                                  cmd->sess->logout_on_delete = 0;
+>   3597                                  cmd->sess->send_els_logo = 1;
+>   3598
+qlt_schedule_sess_for_deletion(cmd->sess, true);
+>   3599                          }
+>   3600                          break;
+>   3601                  }
+>
+> regards,
+> dan carpenter
