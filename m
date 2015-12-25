@@ -1,90 +1,76 @@
-From: Alexei Potashnik <alexei@purestorage.com>
-Subject: RE: qla2xxx: Delete session if initiator is gone from FW
-Date: Thu, 24 Dec 2015 00:11:25 -0800
-Message-ID: <711352de7005df8de3d0df6d13eb17e8@mail.gmail.com>
-References: <20151222194617.GA31313@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v5 0/3] Badblock tracking for gendisks
+Date: Thu, 24 Dec 2015 19:20:31 -0700
+Message-ID: <1451010034-11236-1-git-send-email-vishal.l.verma@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:33812 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933330AbbLXIL1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Dec 2015 03:11:27 -0500
-Received: by mail-wm0-f46.google.com with SMTP id l126so171941856wml.1
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Dec 2015 00:11:27 -0800 (PST)
-In-Reply-To: <20151222194617.GA31313@mwanda>
+Received: from mga03.intel.com ([134.134.136.65]:39524 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754054AbbLYCV0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Dec 2015 21:21:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>, Dan Williams <dan.j.williams@intel.com>
 
-I my original patch line 3583 was:
+v5:
+  - Rebase to v4.4-rc6
+  - Revert back to using kzalloc from __get_free_page based on the discussion at:
+    http://thread.gmane.org/gmane.linux.kernel/2113292
 
-+			bool logged_out = (status & 0xFFFF) ==
-CTIO_PORT_LOGGED_OUT;
+v4:
+  - Rebase to v4.4-rc4
 
-and line 3587 was:
+v3:
+  - Add kernel-doc style comments to all exported functions in badblocks.c (James)
+  - Make return values from badblocks functions consistent with themselves
+    and the kernel style. Change the polarity of badblocks_set, and update
+    all callers accordingly (James)
+  - In gendisk, don't unconditionally allocate badblocks, export the initializer.
+    This also allows the initializer to be a non-void return type, so that the
+    badblocks user can act upon failures better (James)
 
-+			    logged_out ? "PORT LOGGED OUT" : "PORT
-UNAVAILABLE",
 
-Forwarding  to Quinn and Himanshu who must have massaged it.
+v2:
+  - In badblocks_free, make 'page' NULL (patch 1)
+  - Move the core badblocks code to a new .c file (patch 1) (Jens)
+  - Fix a sizeof usage in disk_alloc_badblocks (patch 2) (Dan)
+  - Since disk_alloc_badblocks can fail, check disk->bb for NULL in the
+    genhd wrappers (patch 2) (Jeff)
+  - Update the md conversion to also ise the badblocks init and free
+    functions (patch 3)
+  - Remove the BB_* macros from md.h as they are now in badblocks.h (patch 3)
 
-Alexei
+Patch 1 copies badblock management code into a header of its own,
+making it generally available. It follows common libraries of code
+such as linked lists, where anyone may embed a core data structure
+in another place, and use the provided accessor functions to
+manipulate the data.
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Tuesday, December 22, 2015 11:46 AM
-> To: alexei@purestorage.com
-> Cc: linux-scsi@vger.kernel.org
-> Subject: re: qla2xxx: Delete session if initiator is gone from FW
->
-> Hello Alexei Potashnik,
->
-> The patch b93bb8ecc389: "qla2xxx: Delete session if initiator is gone
-from
-> FW" from Dec 17, 2015, leads to the following static checker
-> warning:
->
-> 	drivers/scsi/qla2xxx/qla_target.c:3587 qlt_do_ctio_completion()
-> 	warn: impossible condition '(logged_out == 41) => (0-1 == 41)'
->
-> drivers/scsi/qla2xxx/qla_target.c
->   3580                  case CTIO_PORT_LOGGED_OUT:
->   3581                  case CTIO_PORT_UNAVAILABLE:
->   3582                  {
->   3583                          bool logged_out = (status & 0xFFFF);
->   3584                          ql_dbg(ql_dbg_tgt_mgt, vha, 0xf059,
->   3585                              "qla_target(%d): CTIO with %s status
-%x "
->   3586                              "received (state %x, se_cmd %p)\n",
-vha->vp_idx,
->   3587                              (logged_out == CTIO_PORT_LOGGED_OUT)
-?
->                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Bool cannot equal 0x26.
->
->   3588                              "PORT LOGGED OUT" : "PORT
-UNAVAILABLE",
->   3589                              status, cmd->state, se_cmd);
->   3590
->   3591                          if (logged_out && cmd->sess) {
->                                     ^^^^^^^^^^
-> 	== CTIO_PORT_LOGGED_OUT here?
->
->   3592                                  /*
->   3593                                   * Session is already logged
-out, but we need
->   3594                                   * to notify initiator, who's
-not aware of this
->   3595                                   */
->   3596                                  cmd->sess->logout_on_delete = 0;
->   3597                                  cmd->sess->send_els_logo = 1;
->   3598
-qlt_schedule_sess_for_deletion(cmd->sess, true);
->   3599                          }
->   3600                          break;
->   3601                  }
->
-> regards,
-> dan carpenter
+Patch 2 adds badblock tracking to gendisks (in preparation for use
+by NVDIMM devices).
+
+Patch 3 converts md over to use the new badblocks 'library'. I have
+done some pretty simple testing on this - created a raid 1 device,
+made sure the sysfs entries show up, and can be used to add and view
+badblocks. A closer look by the md folks would be nice here.
+
+
+Vishal Verma (3):
+  badblocks: Add core badblock management code
+  block: Add badblock management for gendisks
+  md: convert to use the generic badblocks code
+
+ block/Makefile            |   2 +-
+ block/badblocks.c         | 561 ++++++++++++++++++++++++++++++++++++++++++++++
+ block/genhd.c             |  76 +++++++
+ drivers/md/md.c           | 516 +++---------------------------------------
+ drivers/md/md.h           |  40 +---
+ include/linux/badblocks.h |  53 +++++
+ include/linux/genhd.h     |   7 +
+ 7 files changed, 726 insertions(+), 529 deletions(-)
+ create mode 100644 block/badblocks.c
+ create mode 100644 include/linux/badblocks.h
+
+-- 
+2.5.0
+
