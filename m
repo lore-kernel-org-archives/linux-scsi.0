@@ -1,23 +1,48 @@
-From: 'Lee Dong' <leeddle@centrair.jp>
-Subject: Partnership
-Date: Mon, 28 Dec 2015 15:18:15 +0000
-Message-ID: <20151228151826.2D0A78E278__30132.9969348901$1451326577$gmane$org@mail.takasugi.co.jp>
-Reply-To: lee.dongguo@asia-mail.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] mvsas: add SGPIO support to Marvell 94xx
+Date: Mon, 28 Dec 2015 13:47:28 -0800
+Message-ID: <1451339248.2331.7.camel@HansenPartnership.com>
+References: <5645BEE0.3050406@gmx.at> <yq160zrp5jc.fsf@sermon.lab.mkp.net>
+	 <56803A2F.2030507@gmx.at> <1451245374.2283.2.camel@HansenPartnership.com>
+	 <56804A5F.5040000@gmx.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www4371ub.sakura.ne.jp ([49.212.43.165]:58213 "EHLO
-	mail.takasugi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbbL1SPj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Dec 2015 13:15:39 -0500
-Content-Description: Mail message body
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53992 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752469AbbL1Vra (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Dec 2015 16:47:30 -0500
+In-Reply-To: <56804A5F.5040000@gmx.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <leeddle@centrair.jp>
+To: Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Dear Friend,
-Good day, I have a mutual business proposal to share with you, it involves the transfer of a large sum of money . I got your reference in my search for someone who suits my proposed business relationship. If you are interested in working with me contact me through my private email for further details: lee.dongguo@asia-mail.com. Your earliest response to this letter will be appreciated.
+On Sun, 2015-12-27 at 21:30 +0100, Wilfried Weissmann wrote:
+> Am 27.12.15 um 20:42 schrieb James Bottomley:
+> > On Sun, 2015-12-27 at 20:21 +0100, Wilfried Weissmann wrote:
+> > > add SGPIO support to Marvell 94xx
+> > 
+> > How do you actually use this?  It doesn't seem to be plumbed into
+> > the
+> > standard GPIO subsystem and there appears to be no user accessible
+> > interface for it either (nor is it used internally).
+> > 
+> > There doesn't appear to be much point adding an unusable feature.
+> 
+> sas_domain_function_template.lldd_write_gpio exposes the interface to 
+> libsas. Userspace access is then done via ioctl(SG_IO,...). Existing 
+> user space tools such as ledmon use this method, also smp_utils in 
+> case you want to have more direct control.
 
-Regards, 
-Lee D
+Ah, right, I'd forgotten that got added.
+
+Reviewed-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+
+Thanks,
+
+James
+
+
