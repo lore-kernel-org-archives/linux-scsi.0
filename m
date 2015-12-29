@@ -1,49 +1,56 @@
-From: "U.Mutlu" <for-gmane@mutluit.com>
-Subject: Re: How to set DPOFUA=0 ?
-Date: Tue, 29 Dec 2015 19:04:20 +0100
-Message-ID: <n5uhv4$dqe$1@ger.gmane.org>
-References: <n5kqb4$k8n$1@ger.gmane.org> <n5tqsl$5eg$2@ger.gmane.org>
- <CAGRGNgWG+4YAgD1P=6KZ+U3CxHmCr06rOViHJhW8wRXFcDsThA@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RESEND] csiostor:Fix locking issues in the function
+ csio_scsim_cleanup_io_lnode
+Date: Tue, 29 Dec 2015 11:27:42 -0700
+Message-ID: <5682D09E.2070700@kernel.dk>
+References: <1451413394-21278-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:56002 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752920AbbL2SEb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Dec 2015 13:04:31 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1aDydJ-0001f9-6E
-	for linux-scsi@vger.kernel.org; Tue, 29 Dec 2015 19:04:29 +0100
-Received: from ip4d14b373.dynamic.kabel-deutschland.de ([77.20.179.115])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Dec 2015 19:04:29 +0100
-Received: from for-gmane by ip4d14b373.dynamic.kabel-deutschland.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Dec 2015 19:04:29 +0100
-In-Reply-To: <CAGRGNgWG+4YAgD1P=6KZ+U3CxHmCr06rOViHJhW8wRXFcDsThA@mail.gmail.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:36442 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753612AbbL2S1o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Dec 2015 13:27:44 -0500
+Received: by mail-ob0-f172.google.com with SMTP id ba1so164131034obb.3
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Dec 2015 10:27:44 -0800 (PST)
+In-Reply-To: <1451413394-21278-1-git-send-email-xerofoify@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>, JBottomley@odin.com
+Cc: martin.petersen@oracle.com, anish@chelsio.com, hare@suse.de, davem@davemloft.net, hariprasad@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Julian Calaby wrote on 12/29/2015 12:43 PM:
-> Hi,
+On 12/29/2015 11:23 AM, Nicholas Krause wrote:
+> This fixes locking issues in the function csio_scsim_cleanup_io_lnode
+> by locking around the call to the function csio_csci_gather_active_ios
+> with the function pair spin_lock_irq/spin_unlock_irq as any function
+> calling this particular function must do in order to avoid concurrent
+> threads of execution on the passed structure pointer of type csio_hw
+> as this structure pointer can be shared across mutliple threads in the
+> kernel.
 >
-> On Tue, Dec 29, 2015 at 10:30 PM, U.Mutlu <for-gmane@mutluit.com> wrote:
->> After this nigtmare-ish experience I would suggest the debian maintainers
->> to trash the default jessie kernel 3.16 and replace it with the above
->> 4.2 kernel; otherwise unexperienced users will wonder why their new SSD etc.
->> isn't working in debian/ubuntu & co., as happened to me... :-(
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>   drivers/scsi/csiostor/csio_scsi.c | 2 ++
+>   1 file changed, 2 insertions(+)
 >
-> Have you reported this as a bug against Jessie's kernel package?
+> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+> index 2c4562d..c318855 100644
+> --- a/drivers/scsi/csiostor/csio_scsi.c
+> +++ b/drivers/scsi/csiostor/csio_scsi.c
+> @@ -1327,7 +1327,9 @@ csio_scsim_cleanup_io_lnode(struct csio_scsim *scm, struct csio_lnode *ln)
+>   	sld.level = CSIO_LEV_LNODE;
+>   	sld.lnode = ln;
+>   	INIT_LIST_HEAD(&ln->cmpl_q);
+> +	spin_lock_irq(&hw->lock);
+>   	csio_scsi_gather_active_ios(scm, &sld, &ln->cmpl_q);
+> +	spin_unlock_irq(&hw->lock);
 
-I wasn't sure if that really was a bug, so I just first asked for
-info/confirmation here, and later also in their mailing list ( 
-debian-kernel@lists.debian.org ) as it first seemed to be a SCSI and/or USB issue.
-Then I tried a newer kernel and the problem was gone.
-Yes, I informed the other list too about the solution.
+All the callers grab that lock, you've just added a deadlock instead.
 
+Nick, I've said this before and I'll say this again. Stop sending me 
+patches. They are all untested and broken, you are wasting peoples time.
 
+-- 
+Jens Axboe
 
