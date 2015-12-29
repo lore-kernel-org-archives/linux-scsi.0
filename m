@@ -1,39 +1,94 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: How to set DPOFUA=0 ?
-Date: Tue, 29 Dec 2015 22:43:10 +1100
-Message-ID: <CAGRGNgWG+4YAgD1P=6KZ+U3CxHmCr06rOViHJhW8wRXFcDsThA@mail.gmail.com>
-References: <n5kqb4$k8n$1@ger.gmane.org> <n5tqsl$5eg$2@ger.gmane.org>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: st driver doesn't seem to grok LTO partitioning
+Date: Tue, 29 Dec 2015 17:14:31 +0100
+Message-ID: <20151229171431.13f037fa@harpe.intellique.com>
+References: <20151218170644.24167419@harpe.intellique.com>
+	<20151221134649.293a1a1e@harpe.intellique.com>
+	<F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi>
+	<20151221185759.38dd21d6@harpe.intellique.com>
+	<3F0204AE-89BD-45C7-883F-D6EC3A1D34E2@kolumbus.fi>
+	<alpine.LSU.2.11.1512251732060.4761@xnv.znxvfnen.cevingr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:35766 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbbL2Lna (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Dec 2015 06:43:30 -0500
-Received: by mail-ig0-f177.google.com with SMTP id to4so160505432igc.0
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Dec 2015 03:43:30 -0800 (PST)
-In-Reply-To: <n5tqsl$5eg$2@ger.gmane.org>
+Received: from mail1.g1.pair.com ([66.39.3.162]:13197 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753282AbbL2QO2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Dec 2015 11:14:28 -0500
+In-Reply-To: <alpine.LSU.2.11.1512251732060.4761@xnv.znxvfnen.cevingr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "U.Mutlu" <for-gmane@mutluit.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Le Fri, 25 Dec 2015 17:53:46 +0200 (EET)
+Kai Makisara <Kai.Makisara@kolumbus.fi> =C3=A9crivait:
 
-On Tue, Dec 29, 2015 at 10:30 PM, U.Mutlu <for-gmane@mutluit.com> wrote:
-> After this nigtmare-ish experience I would suggest the debian maintainers
-> to trash the default jessie kernel 3.16 and replace it with the above
-> 4.2 kernel; otherwise unexperienced users will wonder why their new SSD etc.
-> isn't working in debian/ubuntu & co., as happened to me... :-(
+> The patch uses the scsi level of the device to separate processing.
+> The FORMAT MEDIUM command is defined in SCSI-3 and I suppose that no
+> current drive is still SCSI-2. In addition to the "sane" changes
+> using the method to specify partitions, the patch implements the
+> following: if the size is 1, the driver tells the drive to use
+> default partitioning for two partitions. For the HP Ultrium this
+> should result in partition 0 of 1425 GB and 1 of 37.5 GB. I don't
+> know if this is a useful addition.
+>=20
 
-Have you reported this as a bug against Jessie's kernel package?
+I didn't look much at the code, but here's what's happening when
+running "mt -f /dev/st0 mkpartition 1":
 
-I don't believe the Debian kernel maintainers read this mailing list.
+Dec 29 17:01:53 shakuhachi kernel: st: Version 20151225, fixed bufsize =
+32768, s/g segs 256
+Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: Attached scsi tape st0
+Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: try direct i/o: yes=
+ (alignment 512 B)
+Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Rewinding tape.
+Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+Dec 29 17:07:20 shakuhachi kernel: st 7:0:0:0: st0: Error: 8000002,cmd:=
+ 0 0 0 0 0 0
 
-Thanks,
+Note that I've simply patched my plain vanilla 3.18.25 st modules.
+There doesn't seem to be any difference with newer (or older) kernels,
+anyway.
 
--- 
-Julian Calaby
+Do you want me to try anything in particular? Is my mt version OK (v
+1.1)?
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
