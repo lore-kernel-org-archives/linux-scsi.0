@@ -1,78 +1,254 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 08/13] IB/srpt: chain RDMA READ/WRITE requests
-Date: Tue, 29 Dec 2015 10:58:24 +0100
-Message-ID: <56825940.5070404@sandisk.com>
-References: <1449521512-22921-1-git-send-email-hch@lst.de>
- <1449521512-22921-9-git-send-email-hch@lst.de>
+From: "U.Mutlu" <for-gmane@mutluit.com>
+Subject: Re: How to set DPOFUA=0 ?
+Date: Tue, 29 Dec 2015 12:30:28 +0100
+Message-ID: <n5tqsl$5eg$2@ger.gmane.org>
+References: <n5kqb4$k8n$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0089.outbound.protection.outlook.com ([157.56.111.89]:54547
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751649AbbL2J6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Dec 2015 04:58:32 -0500
-In-Reply-To: <1449521512-22921-9-git-send-email-hch@lst.de>
+Received: from plane.gmane.org ([80.91.229.3]:38974 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751618AbbL2LfH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Dec 2015 06:35:07 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1aDsYR-0000OA-Nj
+	for linux-scsi@vger.kernel.org; Tue, 29 Dec 2015 12:35:03 +0100
+Received: from ip4d14b373.dynamic.kabel-deutschland.de ([77.20.179.115])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Dec 2015 12:35:03 +0100
+Received: from for-gmane by ip4d14b373.dynamic.kabel-deutschland.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Dec 2015 12:35:03 +0100
+In-Reply-To: <n5kqb4$k8n$1@ger.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org
-Cc: sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 12/07/2015 09:51 PM, Christoph Hellwig wrote:
-> Remove struct rdma_iu and instead allocate the struct ib_rdma_wr array
-> early and fill out directly.  This allows us to chain the WRs, and thus
-> archive both less lock contention on the HCA workqueue as well as much
-> simpler error handling.
+Solved:
 
-Please consider folding the patch below into this patch.
+By installing a the latest kernel and headers from Debian backports solved the 
+problem:
 
-Thanks,
+apt-get -t jessie-backports install linux-image-amd64 linux-headers-amd64
 
-Bart.
+Info about backports configuration:
+http://backports.debian.org/Instructions/
 
-[PATCH] IB/srpt: Fix a recently introduced kernel crash
+# uname -a
+Linux panther 4.2.0-0.bpo.1-amd64 #1 SMP Debian 4.2.6-3~bpo8+2 (2015-12-14) 
+x86_64 GNU/Linux
 
-BUG: unable to handle kernel paging request at 0000000100000198
-IP: [<ffffffff810a4ea2>] __lock_acquire+0xa2/0x560
-Call Trace:
- [<ffffffff810a53c2>] lock_acquire+0x62/0x80
- [<ffffffff8151bd33>] _raw_spin_lock_irqsave+0x43/0x60
- [<ffffffffa04fd437>] srpt_rdma_read_done+0x57/0x120 [ib_srpt]
- [<ffffffffa0144dd3>] __ib_process_cq+0x43/0xc0 [ib_core]
- [<ffffffffa0145115>] ib_cq_poll_work+0x25/0x70 [ib_core]
- [<ffffffff8107184d>] process_one_work+0x1bd/0x460
- [<ffffffff81073148>] worker_thread+0x118/0x420
- [<ffffffff81078454>] kthread+0xe4/0x100
- [<ffffffff8151cbbf>] ret_from_fork+0x3f/0x70
+After this nigtmare-ish experience I would suggest the debian maintainers
+to trash the default jessie kernel 3.16 and replace it with the above
+4.2 kernel; otherwise unexperienced users will wonder why their new SSD etc.
+isn't working in debian/ubuntu & co., as happened to me... :-(
 
----
- drivers/infiniband/ulp/srpt/ib_srpt.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index 8068aff..3daab39 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -1395,7 +1395,7 @@ static void srpt_rdma_read_done(struct ib_cq *cq, struct ib_wc *wc)
- {
- 	struct srpt_rdma_ch *ch = cq->cq_context;
- 	struct srpt_send_ioctx *ioctx =
--		container_of(wc->wr_cqe, struct srpt_send_ioctx, ioctx.cqe);
-+		container_of(wc->wr_cqe, struct srpt_send_ioctx, rdma_cqe);
- 
- 	WARN_ON(ioctx->n_rdma <= 0);
- 	atomic_add(ioctx->n_rdma, &ch->sq_wr_avail);
-@@ -1418,7 +1418,7 @@ static void srpt_rdma_read_done(struct ib_cq *cq, struct ib_wc *wc)
- static void srpt_rdma_write_done(struct ib_cq *cq, struct ib_wc *wc)
- {
- 	struct srpt_send_ioctx *ioctx =
--		container_of(wc->wr_cqe, struct srpt_send_ioctx, ioctx.cqe);
-+		container_of(wc->wr_cqe, struct srpt_send_ioctx, rdma_cqe);
- 
- 	if (unlikely(wc->status != IB_WC_SUCCESS)) {
- 		pr_info("RDMA_WRITE for ioctx 0x%p failed with status %d\n",
--- 
-2.1.4
+
+U.Mutlu wrote on 12/26/2015 02:25 AM:
+> Hi,
+> I have got 2 different submodels of the SSD Samsung 850 Evo 500 GB.
+> The first one has DPOFUA=0, the second one has DPOFUA=1 (see below).
+> That with DPOFUA=0 works fine, but the other with DPOFUA=1 doesn't work
+> after mounting; it reports errors and switches to read-only mount.
+>
+> It seems Linux has a problem with DPOFUA=1, so then IMO best would be to
+> disable that feature of the device. So, how & where can DPOFUA be set to value
+> 0 ?
+>
+> Thx
+>
+>
+> ############################################################################
+> # uname -a
+> Linux panther 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt20-1+deb8u1 (2015-12-14)
+> x86_64 GNU/Linux
+>
+> ############################################################################
+> Dec 26 00:45:38 panther vmunix: [ 2337.193164] usb 4-1: new SuperSpeed USB
+> device number 2 using xhci_hcd
+> Dec 26 00:45:38 panther vmunix: [ 2337.212852] usb 4-1: New USB device found,
+> idVendor=357d, idProduct=7788
+> Dec 26 00:45:38 panther vmunix: [ 2337.212861] usb 4-1: New USB device
+> strings: Mfr=1, Product=2, SerialNumber=3
+> Dec 26 00:45:38 panther vmunix: [ 2337.212866] usb 4-1: Product: USB to
+> ATA/ATAPI Bridge
+> Dec 26 00:45:38 panther vmunix: [ 2337.212870] usb 4-1: Manufacturer: JMicron
+> Dec 26 00:45:38 panther vmunix: [ 2337.212874] usb 4-1: SerialNumber:
+> 321AE8171482926
+> Dec 26 00:45:38 panther vmunix: [ 2337.245338] usb-storage 4-1:1.0: USB Mass
+> Storage device detected
+> Dec 26 00:45:38 panther vmunix: [ 2337.245591] scsi2 : usb-storage 4-1:1.0
+> Dec 26 00:45:38 panther vmunix: [ 2337.245770] usbcore: registered new
+> interface driver usb-storage
+> Dec 26 00:45:39 panther vmunix: [ 2338.244729] scsi 2:0:0:0: Direct-Access
+> Samsung SSD 850 EVO 500G 0114 PQ: 0 ANSI: 6
+> Dec 26 00:45:39 panther vmunix: [ 2338.245308] sd 2:0:0:0: Attached scsi
+> generic sg2 type 0
+> Dec 26 00:45:39 panther vmunix: [ 2338.247115] sd 2:0:0:0: [sdb] Spinning up
+> disk...
+> Dec 26 00:45:49 panther vmunix: [ 2339.251034] .........
+> Dec 26 00:45:52 panther vmunix: [ 2348.278894] ....ready
+> Dec 26 00:45:52 panther vmunix: [ 2351.288429] sd 2:0:0:0: [sdb] 976773168
+> 512-byte logical blocks: (500 GB/465 GiB)
+> Dec 26 00:45:52 panther vmunix: [ 2351.288953] sd 2:0:0:0: [sdb] Write Protect
+> is off
+> Dec 26 00:45:52 panther vmunix: [ 2351.288959] sd 2:0:0:0: [sdb] Mode Sense:
+> 47 00 10 08
+> Dec 26 00:45:52 panther vmunix: [ 2351.289447] sd 2:0:0:0: [sdb] Write cache:
+> enabled, read cache: enabled, supports DPO and FUA
+> Dec 26 00:45:52 panther vmunix: [ 2351.293763] sdb: sdb1 sdb2 sdb3
+> Dec 26 00:45:52 panther vmunix: [ 2351.295862] sd 2:0:0:0: [sdb] Attached SCSI
+> disk
+> Dec 26 00:47:02 panther vmunix: [ 2421.091552] EXT4-fs (sdb1): mounted
+> filesystem with ordered data mode. Opts: (null)
+> Dec 26 00:47:09 panther vmunix: [ 2428.394003] sd 2:0:0:0: [sdb] Invalid
+> command failure
+> Dec 26 00:47:09 panther vmunix: [ 2428.394013] sd 2:0:0:0: [sdb]
+> Dec 26 00:47:09 panther vmunix: [ 2428.394017] Result: hostbyte=DID_OK
+> driverbyte=DRIVER_SENSE
+> Dec 26 00:47:09 panther vmunix: [ 2428.394021] sd 2:0:0:0: [sdb]
+> Dec 26 00:47:09 panther vmunix: [ 2428.394024] Sense Key : Illegal Request
+> [current]
+> Dec 26 00:47:09 panther vmunix: [ 2428.394030] sd 2:0:0:0: [sdb]
+> Dec 26 00:47:09 panther vmunix: [ 2428.394034] Add. Sense: Invalid field in cdb
+> Dec 26 00:47:09 panther vmunix: [ 2428.394038] sd 2:0:0:0: [sdb] CDB:
+> Dec 26 00:47:09 panther vmunix: [ 2428.394040] Write(10): 2a 08 02 04 08 20 00
+> 00 08 00
+> Dec 26 00:47:09 panther vmunix: [ 2428.394054] end_request: critical target
+> error, dev sdb, sector 33818656
+> Dec 26 00:47:09 panther vmunix: [ 2428.394059] end_request: critical target
+> error, dev sdb, sector 33818656
+> Dec 26 00:47:09 panther vmunix: [ 2428.394120] Aborting journal on device sdb1-8.
+> Dec 26 00:47:09 panther vmunix: [ 2428.471535] EXT4-fs error (device sdb1):
+> ext4_journal_check_start:56: Detected aborted journal
+> Dec 26 00:47:09 panther vmunix: [ 2428.471547] EXT4-fs (sdb1): Remounting
+> filesystem read-only
+>
+>
+> ############################################################################
+> # sdparm -a --long /dev/sda
+>      /dev/sda: ATA       Samsung SSD 850   1B6Q
+>      Direct access device specific parameters: WP=0  DPOFUA=0
+> Read write error recovery [rw] mode page:
+>    AWRE        1  [cha: n, def:  1]  Automatic write reallocation enabled
+>    ARRE        0  [cha: n, def:  0]  Automatic read reallocation enabled
+>    TB          0  [cha: n, def:  0]  Transfer block
+>    RC          0  [cha: n, def:  0]  Read continuous
+>    EER         0  [cha: n, def:  0]  Enable early recovery
+>    PER         0  [cha: n, def:  0]  Post error
+>    DTE         0  [cha: n, def:  0]  Data terminate on error
+>    DCR         0  [cha: n, def:  0]  Disable correction
+>    RRC         0  [cha: n, def:  0]  Read retry count
+>    COR_S       0  [cha: n, def:  0]  Correction span (obsolete)
+>    HOC         0  [cha: n, def:  0]  Head offset count (obsolete)
+>    DSOC        0  [cha: n, def:  0]  Data strobe offset count (obsolete)
+>    LBPERE      0  [cha: n, def:  0]  Logical block provisioning error
+> reporting enabled
+>    WRC         0  [cha: n, def:  0]  Write retry count
+>    RTL         0  [cha: n, def:  0]  Recovery time limit (ms)
+> Caching (SBC) [ca] mode page:
+>    IC          0  [cha: n, def:  0]  Initiator control
+>    ABPF        0  [cha: n, def:  0]  Abort pre-fetch
+>    CAP         0  [cha: n, def:  0]  Caching analysis permitted
+>    DISC        0  [cha: n, def:  0]  Discontinuity
+>    SIZE        0  [cha: n, def:  0]  Size enable
+>    WCE         1  [cha: y, def:  1]  Write cache enable
+>    MF          0  [cha: n, def:  0]  Multiplication factor
+>    RCD         0  [cha: n, def:  0]  Read cache disable
+>    DRRP        0  [cha: n, def:  0]  Demand read retention priority
+>    WRP         0  [cha: n, def:  0]  Write retention priority
+>    DPTL        0  [cha: n, def:  0]  Disable pre-fetch transfer length
+>    MIPF        0  [cha: n, def:  0]  Minimum pre-fetch
+>    MAPF        0  [cha: n, def:  0]  Maximum pre-fetch
+>    MAPFC       0  [cha: n, def:  0]  Maximum pre-fetch ceiling
+>    FSW         0  [cha: n, def:  0]  Force sequential write
+>    LBCSS       0  [cha: n, def:  0]  Logical block cache segment size
+>    DRA         0  [cha: n, def:  0]  Disable read ahead
+>    SYNC_PROG   0  [cha: n, def:  0]  Synchronous cache progress indication
+>    NV_DIS      0  [cha: n, def:  0]  Non-volatile cache disable
+>    NCS         0  [cha: n, def:  0]  Number of cache segments
+>    CSS         0  [cha: n, def:  0]  Cache segment size
+> Control [co] mode page:
+>    TST         0  [cha: n, def:  0]  Task set type
+>    TMF_ONLY    0  [cha: n, def:  0]  Task management functions only
+>    DPICZ       0  [cha: n, def:  0]  Disable protection information check if
+> protect field zero
+>    D_SENSE     0  [cha: n, def:  0]  Descriptor format sense data
+>    GLTSD       1  [cha: n, def:  1]  Global logging target save disable
+>    RLEC        0  [cha: n, def:  0]  Report log exception condition
+>    QAM         0  [cha: n, def:  0]  Queue algorithm modifier
+>    NUAR        0  [cha: n, def:  0]  No unit attention on release
+>    QERR        0  [cha: n, def:  0]  Queue error management
+>    RAC         0  [cha: n, def:  0]  Report a check
+>    UA_INTLCK   0  [cha: n, def:  0]  Unit attention interlocks control
+>    SWP         0  [cha: n, def:  0]  Software write protect
+>    ATO         0  [cha: n, def:  0]  Application tag owner
+>    TAS         0  [cha: n, def:  0]  Task aborted status
+>    ATMPE       0  [cha: n, def:  0]  Application tag mode page enabled
+>    RWWP        0  [cha: n, def:  0]  Reject write without protection
+>    AUTOLOAD    0  [cha: n, def:  0]  Autoload mode
+>    BTP        -1  [cha: n, def: -1]  Busy timeout period (100us)
+>    ESTCT      30  [cha: n, def: 30]  Extended self test completion time (sec)
+>
+>
+> ############################################################################
+> # sdparm -a --long /dev/sdb
+>      /dev/sdb: Samsung   SSD 850 EVO 500G  0114
+>      Direct access device specific parameters: WP=0  DPOFUA=1
+> Caching (SBC) [ca] mode page:
+>    IC          0  [cha: n, def:  0, sav:  0]  Initiator control
+>    ABPF        0  [cha: n, def:  0, sav:  0]  Abort pre-fetch
+>    CAP         0  [cha: n, def:  0, sav:  0]  Caching analysis permitted
+>    DISC        1  [cha: n, def:  1, sav:  1]  Discontinuity
+>    SIZE        0  [cha: n, def:  0, sav:  0]  Size enable
+>    WCE         1  [cha: n, def:  1, sav:  1]  Write cache enable
+>    MF          0  [cha: n, def:  0, sav:  0]  Multiplication factor
+>    RCD         0  [cha: n, def:  0, sav:  0]  Read cache disable
+>    DRRP        0  [cha: n, def:  0, sav:  0]  Demand read retention priority
+>    WRP         0  [cha: n, def:  0, sav:  0]  Write retention priority
+>    DPTL       -1  [cha: n, def: -1, sav: -1]  Disable pre-fetch transfer length
+>    MIPF        0  [cha: n, def:  0, sav:  0]  Minimum pre-fetch
+>    MAPF       -1  [cha: n, def: -1, sav: -1]  Maximum pre-fetch
+>    MAPFC      -1  [cha: n, def: -1, sav: -1]  Maximum pre-fetch ceiling
+>    FSW         0  [cha: n, def:  0, sav:  0]  Force sequential write
+>    LBCSS       0  [cha: n, def:  0, sav:  0]  Logical block cache segment size
+>    DRA         0  [cha: n, def:  0, sav:  0]  Disable read ahead
+>    SYNC_PROG   0  [cha: n, def:  0, sav:  0]  Synchronous cache progress
+> indication
+>    NV_DIS      0  [cha: n, def:  0, sav:  0]  Non-volatile cache disable
+>    NCS       255  [cha: n, def:255, sav:255]  Number of cache segments
+>    CSS         0  [cha: n, def:  0, sav:  0]  Cache segment size
+> Power condition [po] mode page:
+>    PM_BG       0  [cha: n, def:  0, sav:  0]  Power management, background
+> functions, precedence
+>    STANDBY_Y   0  [cha: n, def:  0, sav:  0]  Standby_y timer enable
+>    IDLE_C      0  [cha: n, def:  0, sav:  0]  Idle_c timer enable
+>    IDLE_B      0  [cha: n, def:  0, sav:  0]  Idle_b timer enable
+>    IDLE        0  [cha: n, def:  0, sav:  0]  Idle_a timer enable
+>    STANDBY     0  [cha: y, def:  1, sav:  0]  Standby_z timer enable
+>    ICT         0  [cha: n, def:  0, sav:  0]  Idle_a condition timer (100 ms)
+>    SCT         0  [cha: y, def:18000, sav:  0]  Standby_z condition timer (100
+> ms)
+>    IBCT        0  [cha: n, def:  0, sav:  0]  Idle_b condition timer (100 ms)
+>    ICCT        0  [cha: n, def:  0, sav:  0]  Idle_c condition timer (100 ms)
+>    SYCT        0  [cha: n, def:  0, sav:  0]  Standby_y condition timer (100 ms)
+>    CCF_IDLE    0  [cha: n, def:  0, sav:  0]  check condition on transition
+> from idle
+>    CCF_STAND   0  [cha: n, def:  0, sav:  0]  check condition on transition
+> from standby
+>    CCF_STOPP   0  [cha: n, def:  0, sav:  0]  check condition on transition
+> from stopped
+>
+> ############################################################################
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
