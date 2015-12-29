@@ -1,7 +1,7 @@
 From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Tue, 29 Dec 2015 17:14:31 +0100
-Message-ID: <20151229171431.13f037fa@harpe.intellique.com>
+Date: Tue, 29 Dec 2015 17:58:59 +0100
+Message-ID: <20151229175859.0c2c9b91@harpe.intellique.com>
 References: <20151218170644.24167419@harpe.intellique.com>
 	<20151221134649.293a1a1e@harpe.intellique.com>
 	<F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi>
@@ -12,10 +12,10 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:13197 "EHLO mail1.g1.pair.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:24280 "EHLO mail1.g1.pair.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753282AbbL2QO2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Dec 2015 11:14:28 -0500
+	id S1753200AbbL2Q64 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Dec 2015 11:58:56 -0500
 In-Reply-To: <alpine.LSU.2.11.1512251732060.4761@xnv.znxvfnen.cevingr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -33,50 +33,21 @@ Kai Makisara <Kai.Makisara@kolumbus.fi> =C3=A9crivait:
 > default partitioning for two partitions. For the HP Ultrium this
 > should result in partition 0 of 1425 GB and 1 of 37.5 GB. I don't
 > know if this is a useful addition.
->=20
 
-I didn't look much at the code, but here's what's happening when
-running "mt -f /dev/st0 mkpartition 1":
+Still testing, with another, LTO-5 tape:
 
-Dec 29 17:01:53 shakuhachi kernel: st: Version 20151225, fixed bufsize =
-32768, s/g segs 256
-Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: Attached scsi tape st0
-Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: try direct i/o: yes=
- (alignment 512 B)
-Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+~# mt -f /dev/nst0 mkpartition 0
+/dev/nst0: Invalid argument
+
+Dec 29 17:57:38 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
 777215 bytes.
-Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+Dec 29 17:57:38 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
 11, medium 0, WBS 10, BLL 8
-Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+Dec 29 17:57:38 shakuhachi kernel: st 7:0:0:0: st0: Density 58, tape le=
 ngth: 0, drv buffer: 1
-Dec 29 17:01:53 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+Dec 29 17:57:38 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
 er size: 4096 (1 blocks).
-Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
-777215 bytes.
-Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11, medium 0, WBS 10, BLL 8
-Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
-ngth: 0, drv buffer: 1
-Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er size: 4096 (1 blocks).
-Dec 29 17:02:04 shakuhachi kernel: st 7:0:0:0: st0: Rewinding tape.
-Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
-777215 bytes.
-Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11, medium 0, WBS 10, BLL 8
-Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
-ngth: 0, drv buffer: 1
-Dec 29 17:03:06 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er size: 4096 (1 blocks).
-Dec 29 17:07:20 shakuhachi kernel: st 7:0:0:0: st0: Error: 8000002,cmd:=
- 0 0 0 0 0 0
 
-Note that I've simply patched my plain vanilla 3.18.25 st modules.
-There doesn't seem to be any difference with newer (or older) kernels,
-anyway.
-
-Do you want me to try anything in particular? Is my mt version OK (v
-1.1)?
 
 --=20
 -----------------------------------------------------------------------=
