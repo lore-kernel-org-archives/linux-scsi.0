@@ -1,32 +1,26 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v3 0/4] scsi: cleanup ioctl headers and provide UAPI
- versions
-Date: Tue, 29 Dec 2015 00:27:54 +0100
-Message-ID: <5681C57A.8030200@redhat.com>
-References: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
+From: "Zahra Robert" <jakonyvtar@pr.hu>
+Subject: Assalam o Alaikum
+Date: Tue, 29 Dec 2015 03:03:43 +0100
+Message-ID: <1bce1f3ae08c9485bb9bf7f7467c89ea.squirrel__35934.2373129495$1451354661$gmane$org@oldwebmail.prtelecom.hu>
+Reply-To: zahrarobert@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Cc: bart.vanassche@sandisk.com, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail9.pr.hu ([87.242.0.9]:36878 "EHLO mail9.pr.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753218AbbL2CD7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Dec 2015 21:03:59 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jakonyvtar@pr.hu
 
 
 
-On 25/09/2015 11:27, Paolo Bonzini wrote:
-> This is v3 of the series to provide an "official" sg.h header (and
-> scsi_ioctl.h too, though it's basically obsolete) together with the other
-> userspace API definitions.  The change from v2 to v3 is that defaults
-> for sg.c are not exported in include/uapi/linux/sg.c.
-> 
-> Paolo
-> 
-> 2.5.0
-> 
 
-What happened to these patches?...
+Cordial greeting message from Eva Zahra, I am seeking for your help,I will
+be very glad if you do assist me to relocate a sum of (US$4 Million
+Dollars)into your Bank account in your country for the benefit of both of
+us i want to use this money for investment. I will give you more details
+as you reply Yours Eva Zahra Robert
 
-Paolo
