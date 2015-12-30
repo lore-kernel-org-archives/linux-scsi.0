@@ -1,70 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/20] scsi_dh_alua: Use separate alua_port_group
-	structure
-Date: Wed, 30 Dec 2015 12:17:51 +0100
-Message-ID: <20151230111751.GA14156@lst.de>
-References: <1449560260-53407-1-git-send-email-hare@suse.de> <1449560260-53407-7-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49179 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754483AbbL3LRw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Dec 2015 06:17:52 -0500
-Content-Disposition: inline
-In-Reply-To: <1449560260-53407-7-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andrzej Hajda <a.hajda@samsung.com>
+Subject: [PATCH] scsi_transport_fc: remove useless check
+Date: Wed, 30 Dec 2015 12:18:44 +0100
+Message-ID: <1451474324-15481-3-git-send-email-a.hajda@samsung.com>
+References: <1451474324-15481-1-git-send-email-a.hajda@samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1451474324-15481-1-git-send-email-a.hajda@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Andrzej Hajda <a.hajda@samsung.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jbottomley@odin.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-> +struct alua_dh_data {
-> +	struct alua_port_group	*pg;
-> +	int			group_id;
+simple_strtoul returns only non-negative values and *val is unsigned
+so there is no possibility that *val is lesser than 0.
 
-Keeping the group id here seem odd.  It gets cleaned up later
-in the series, so this is just a nitpick.
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
 
-> -static int realloc_buffer(struct alua_dh_data *h, unsigned len)
-> +static int realloc_buffer(struct alua_port_group *pg, unsigned len)
->  {
-> -	if (h->buff && h->buff != h->inq)
-> -		kfree(h->buff);
-> +	if (pg->buff && pg->buff != pg->inq)
-> +		kfree(pg->buff);
->  
-> -	h->buff = kmalloc(len, GFP_NOIO);
-> -	if (!h->buff) {
-> -		h->buff = h->inq;
-> -		h->bufflen = ALUA_INQUIRY_SIZE;
-> +	pg->buff = kmalloc(len, GFP_NOIO);
-> +	if (!pg->buff) {
-> +		pg->buff = pg->inq;
-> +		pg->bufflen = ALUA_INQUIRY_SIZE;
->  		return 1;
->  	}
-> -	h->bufflen = len;
-> +	pg->bufflen = len;
->  	return 0;
->  }
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2038576
 
-All this disappears in the next patch, wouldn't it have been smarted
-to move the next one before this one?
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  /*
-> + * alua_get_pg - Allocate a new port_group structure
-> + * @sdev: scsi device
-> + * @h: alua device_handler data
-> + * @group_id: port group id
-> + *
-> + * Allocate a new port_group structure for a given
-> + * device.
-> + */
-> +struct alua_port_group *alua_get_pg(struct scsi_device *sdev,
-> +				    int group_id, int tpgs)
-
-Can you call this alua_alloc_pg, please?
-
-Otherwise looks fine:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 8a88226..ecf62d9 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -849,7 +849,7 @@ static int fc_str_to_dev_loss(const char *buf, unsigned long *val)
+ 	char *cp;
+ 
+ 	*val = simple_strtoul(buf, &cp, 0);
+-	if ((*cp && (*cp != '\n')) || (*val < 0))
++	if (*cp && (*cp != '\n'))
+ 		return -EINVAL;
+ 	/*
+ 	 * Check for overflow; dev_loss_tmo is u32
+-- 
+1.9.1
