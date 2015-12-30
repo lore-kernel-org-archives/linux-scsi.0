@@ -1,31 +1,31 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 08/13] IB/srpt: chain RDMA READ/WRITE requests
-Date: Wed, 30 Dec 2015 10:43:32 +0100
-Message-ID: <20151230094332.GC12904@lst.de>
-References: <1449521512-22921-1-git-send-email-hch@lst.de> <1449521512-22921-9-git-send-email-hch@lst.de> <56825940.5070404@sandisk.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 11/16] qla2xxx: Add selective command queuing
+Date: Wed, 30 Dec 2015 02:27:17 -0800
+Message-ID: <20151230102717.GA23966@infradead.org>
+References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1450382231-4259-12-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <56825940.5070404-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1450382231-4259-12-git-send-email-himanshu.madhani@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: target-devel@vger.kernel.org, nab@linux-iscsi.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 29, 2015 at 10:58:24AM +0100, Bart Van Assche wrote:
-> On 12/07/2015 09:51 PM, Christoph Hellwig wrote:
-> > Remove struct rdma_iu and instead allocate the struct ib_rdma_wr array
-> > early and fill out directly.  This allows us to chain the WRs, and thus
-> > archive both less lock contention on the HCA workqueue as well as much
-> > simpler error handling.
-> 
-> Please consider folding the patch below into this patch.
+>  drivers/scsi/qla2xxx/qla_isr.c         |    2 +-
+>  drivers/scsi/qla2xxx/qla_target.c      |   13 ++++++++++++-
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    4 ++--
+>  drivers/target/target_core_transport.c |    5 ++++-
+>  include/target/target_core_base.h      |    1 +
 
-Looks fine,
+please split out target core changes from your drivers bits into a
+separate patch!
 
-Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	cmd->cmd_in_wq = 1;
+>  	cmd->cmd_flags |= BIT_0;
+> +	cmd->se_cmd.cpuid = -1;
+
+As Bart pointed out please use the proper constants.  Also make
+sure this is initialized in the core target code instad of here.
