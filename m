@@ -1,31 +1,24 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 11/16] qla2xxx: Add selective command queuing
-Date: Wed, 30 Dec 2015 02:27:17 -0800
-Message-ID: <20151230102717.GA23966@infradead.org>
-References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
- <1450382231-4259-12-git-send-email-himanshu.madhani@qlogic.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 02/20] scsi_dh_alua: separate out alua_stpg()
+Date: Wed, 30 Dec 2015 12:06:47 +0100
+Message-ID: <20151230110647.GA13951@lst.de>
+References: <1449560260-53407-1-git-send-email-hare@suse.de> <1449560260-53407-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:49146 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754417AbbL3LGt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Dec 2015 06:06:49 -0500
 Content-Disposition: inline
-In-Reply-To: <1450382231-4259-12-git-send-email-himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: target-devel@vger.kernel.org, nab@linux-iscsi.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
+In-Reply-To: <1449560260-53407-3-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jbottomley@odin.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
->  drivers/scsi/qla2xxx/qla_isr.c         |    2 +-
->  drivers/scsi/qla2xxx/qla_target.c      |   13 ++++++++++++-
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    4 ++--
->  drivers/target/target_core_transport.c |    5 ++++-
->  include/target/target_core_base.h      |    1 +
+The stpg variable could be a bool.
 
-please split out target core changes from your drivers bits into a
-separate patch!
+Otherwise looks good,
 
->  	cmd->cmd_in_wq = 1;
->  	cmd->cmd_flags |= BIT_0;
-> +	cmd->se_cmd.cpuid = -1;
-
-As Bart pointed out please use the proper constants.  Also make
-sure this is initialized in the core target code instad of here.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
