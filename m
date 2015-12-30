@@ -1,18 +1,17 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 15/20] scsi_dh_alua: Send TEST UNIT READY to poll for
-	transitioning
-Date: Wed, 30 Dec 2015 14:24:11 +0100
-Message-ID: <20151230132411.GE15270@lst.de>
-References: <1449560260-53407-1-git-send-email-hare@suse.de> <1449560260-53407-16-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 17/20] scsi: Add 'access_state' attribute
+Date: Wed, 30 Dec 2015 14:26:47 +0100
+Message-ID: <20151230132646.GH15270@lst.de>
+References: <1449560260-53407-1-git-send-email-hare@suse.de> <1449560260-53407-18-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49486 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:49522 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754022AbbL3NYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Dec 2015 08:24:12 -0500
+	id S1755209AbbL3N0s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Dec 2015 08:26:48 -0500
 Content-Disposition: inline
-In-Reply-To: <1449560260-53407-16-git-send-email-hare@suse.de>
+In-Reply-To: <1449560260-53407-18-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
