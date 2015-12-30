@@ -1,132 +1,237 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 19/20] scsi_dh_alua: update 'access_state' field
-Date: Wed, 30 Dec 2015 14:34:05 +0100
-Message-ID: <20151230133405.GA15705@lst.de>
-References: <1449560260-53407-1-git-send-email-hare@suse.de> <1449560260-53407-20-git-send-email-hare@suse.de>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: st driver doesn't seem to grok LTO partitioning
+Date: Wed, 30 Dec 2015 19:54:01 +0200 (EET)
+Message-ID: <alpine.LSU.2.11.1512301947150.1713@xnv.znxvfnen.cevingr>
+References: <20151218170644.24167419@harpe.intellique.com> <20151221134649.293a1a1e@harpe.intellique.com> <F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi> <20151221185759.38dd21d6@harpe.intellique.com> <3F0204AE-89BD-45C7-883F-D6EC3A1D34E2@kolumbus.fi>
+ <alpine.LSU.2.11.1512251732060.4761@xnv.znxvfnen.cevingr> <20151229175859.0c2c9b91@harpe.intellique.com> <8BB7A0F5-0F45-48C4-AB16-1EB7F23BD565@kolumbus.fi> <20151229191347.2e0e5f0e@harpe.intellique.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49570 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754022AbbL3NeH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Dec 2015 08:34:07 -0500
-Content-Disposition: inline
-In-Reply-To: <1449560260-53407-20-git-send-email-hare@suse.de>
+Received: from vs19.mail.saunalahti.fi ([62.142.117.200]:45819 "EHLO
+	vs19.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754731AbbL3RyO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Dec 2015 12:54:14 -0500
+In-Reply-To: <20151229191347.2e0e5f0e@harpe.intellique.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Dec 08, 2015 at 08:37:39AM +0100, Hannes Reinecke wrote:
-> Track attached SCSI devices and update the 'access_state' field
-> whenever an ALUA state change has been detected.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 29 ++++++++++++++++++++=
-+++++++++
->  1 file changed, 29 insertions(+)
->=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scs=
-i/device_handler/scsi_dh_alua.c
-> index 6c6ff0b..d01c86407 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -24,6 +24,7 @@
->  #include <linux/module.h>
->  #include <asm/unaligned.h>
->  #include <scsi/scsi.h>
-> +#include <scsi/scsi_proto.h>
->  #include <scsi/scsi_dbg.h>
->  #include <scsi/scsi_eh.h>
->  #include <scsi/scsi_dh.h>
-> @@ -76,6 +77,7 @@ static struct workqueue_struct *kaluad_wq;
->  struct alua_port_group {
->  	struct kref		kref;
->  	struct list_head	node;
-> +	struct list_head	dh_list;
->  	unsigned char		device_id_str[256];
->  	int			device_id_len;
->  	int			group_id;
-> @@ -93,6 +95,7 @@ struct alua_port_group {
->  };
-> =20
->  struct alua_dh_data {
-> +	struct list_head	node;
->  	struct alua_port_group	*pg;
->  	int			rel_port;
->  	spinlock_t		pg_lock;
-> @@ -243,6 +246,7 @@ struct alua_port_group *alua_get_pg(struct scsi_d=
-evice *sdev,
->  	INIT_DELAYED_WORK(&pg->rtpg_work, alua_rtpg_work);
->  	INIT_LIST_HEAD(&pg->rtpg_list);
->  	INIT_LIST_HEAD(&pg->node);
-> +	INIT_LIST_HEAD(&pg->dh_list);
->  	spin_lock_init(&pg->lock);
-> =20
->  	/* Re-check list again to catch concurrent updates */
-> @@ -370,13 +374,26 @@ static int alua_check_vpd(struct scsi_device *s=
-dev, struct alua_dh_data *h,
->  		old_pg =3D pg;
->  		/* port_group has changed. Update to new port group */
->  		if (h->pg !=3D pg) {
-> +			unsigned long flags;
-> +
->  			old_pg =3D h->pg;
->  			rcu_assign_pointer(h->pg, pg);
-> +			spin_lock_irqsave(&old_pg->lock, flags);
-> +			list_del_rcu(&h->node);
-> +			spin_unlock_irqrestore(&old_pg->lock, flags);
-> +			spin_lock_irqsave(&pg->lock, flags);
-> +			list_add_rcu(&h->node, &pg->dh_list);
-> +			spin_unlock_irqrestore(&pg->lock, flags);
+On Tuesday 2015-12-29 20:13, Emmanuel Florac wrote:
 
-I think it makes more sense to remove it from the old list
-before assining the new h->pg pointer to stay consistant.
+...
+>It works when providing the size :
+>
+># mt -f /dev/nst0  mkpartition 36764
+>
+Good.
 
-Also the add code is not common with the other half of the outer
-branch, it would be nice to find a way to share the code between
-those two branches.
+I think I found out why it did not work with the default format. At the 
+end of this message you find a new patch that should correct that. There 
+are also other changes:
+- some changes when specifying the size in the mode page; needed for the
+  IBM 3592 drives but should not change results with LTO
+- formatting with one partition is done directly with FORMAT MEDIUM if
+  the drive requires that command
+- some other bugs fixed
 
->  		list_for_each_entry(tmp_pg, &port_group_list, node) {
-> +			struct alua_dh_data *h;
-> +
->  			if (tmp_pg->group_id !=3D group_id)
->  				continue;
->  			if (tmp_pg->device_id_len !=3D pg->device_id_len)
-> @@ -639,6 +658,12 @@ static int alua_rtpg(struct scsi_device *sdev, s=
-truct alua_port_group *pg)
->  				continue;
->  			tmp_pg->state =3D desc[0] & 0x0f;
->  			tmp_pg->pref =3D desc[0] >> 7;
-> +			rcu_read_lock();
-> +			list_for_each_entry_rcu(h, &tmp_pg->dh_list, node) {
-> +				if (h->sdev)
-> +					h->sdev->access_state =3D desc[0];
-> +			}
-> +			rcu_read_unlock();
+Thanks for testing,
+Kai
 
-=D0=86'd expect h->=D1=95dev to always be non-NULL.  With a little twea=
-k (see below)
-that should indeed be the case.
+-----------------------------------8<------------------------------------
+--- ref/drivers/scsi/st.c	2015-12-21 18:54:05.068882001 +0200
++++ new/drivers/scsi/st.c	2015-12-30 19:30:37.900152216 +0200
+@@ -9,7 +9,7 @@
+    Steve Hirsch, Andreas Koppenh"ofer, Michael Leodolter, Eyal Lebedinsky,
+    Michael Schaefer, J"org Weule, and Eric Youngdale.
+ 
+-   Copyright 1992 - 2010 Kai Makisara
++   Copyright 1992 - 2016 Kai Makisara
+    email Kai.Makisara@kolumbus.fi
+ 
+    Some small formal changes - aeb, 950809
+@@ -17,7 +17,7 @@
+    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
+  */
+ 
+-static const char *verstr = "20101219";
++static const char *verstr = "20151230";
+ 
+ #include <linux/module.h>
+ 
+@@ -3296,7 +3296,10 @@
+ #define PP_OFF_RESERVED        7
+ 
+ #define PP_BIT_IDP             0x20
++#define PP_BIT_FDP             0x80
+ #define PP_MSK_PSUM_MB         0x10
++#define PP_MSK_PSUM_UNITS      0x18
++#define PP_MSK_POFM            0x04
+ 
+ /* Get the number of partitions on the tape. As a side effect reads the
+    mode page into the tape buffer. */
+@@ -3322,6 +3325,29 @@
+ }
+ 
+ 
++static int format_medium(struct scsi_tape *STp, int format)
++{
++	int result = 0;
++	int timeout = STp->long_timeout;
++	unsigned char scmd[MAX_COMMAND_SIZE];
++	struct st_request *SRpnt;
++
++	memset(scmd, 0, MAX_COMMAND_SIZE);
++	scmd[0] = FORMAT_UNIT;
++	scmd[2] = format;
++	if (STp->immediate) {
++		scmd[1] |= 1;		/* Don't wait for completion */
++		timeout = STp->device->request_queue->rq_timeout;
++	}
++	DEBC_printk(STp, "Sending FORMAT MEDIUM\n");
++	SRpnt = st_do_scsi(NULL, STp, scmd, 0, DMA_NONE,
++			   timeout, MAX_RETRIES, 1);
++	if (!SRpnt)
++		result = STp->buffer->syscall_result;
++	return result;
++}
++
++
+ /* Partition the tape into two partitions if size > 0 or one partition if
+    size == 0.
+ 
+@@ -3340,11 +3366,15 @@
+    and 10 when 1 partition is defined (information from Eric Lee Green). This is
+    is acceptable also to some other old drives and enforced if the first partition
+    size field is used for the first additional partition size.
++
++   For drives that advertize SCSI-3 or newer, use the SSC-3 methods.
+  */
+ static int partition_tape(struct scsi_tape *STp, int size)
+ {
+ 	int result;
++	bool scsi3 = STp->device->scsi_level >= SCSI_3,  needs_format = false;
+ 	int pgo, psd_cnt, psdo;
++	int psum = PP_MSK_PSUM_MB, units = 0;
+ 	unsigned char *bp;
+ 
+ 	result = read_mode_page(STp, PART_PAGE, 0);
+@@ -3357,11 +3387,54 @@
+ 	pgo = MODE_HEADER_LENGTH + bp[MH_OFF_BDESCS_LENGTH];
+ 	DEBC_printk(STp, "Partition page length is %d bytes.\n",
+ 		    bp[pgo + MP_OFF_PAGE_LENGTH] + 2);
++	DEBC_printk(STp, "PP: max %u, add %u, xdp %u, psum %02x, pofmetc %u, "
++		    "rec %02x, units %02x, sizes: %u %u\n",
++		    bp[pgo + PP_OFF_MAX_ADD_PARTS],
++		    bp[pgo + PP_OFF_NBR_ADD_PARTS],
++		    (bp[pgo + PP_OFF_FLAGS] & 0xe0) >> 5,
++		    (bp[pgo + PP_OFF_FLAGS] & 0x18) >> 3,
++		    bp[pgo + PP_OFF_FLAGS] & 0x07,
++		    bp[pgo + 5],
++		    bp[pgo + PP_OFF_PART_UNITS],
++		    bp[pgo + 8] * 256 + bp[pgo + 9],
++		    bp[pgo + 10] * 256 + bp[pgo + 11]);
++
++	if (scsi3) {
++		needs_format = (bp[pgo + PP_OFF_FLAGS] & PP_MSK_POFM) != 0;
++		if (needs_format && size == 0) {
++			result = format_medium(STp, 0);
++			goto out;
++		}
++
++		psd_cnt = size > 0 ? 2 : 1;
++		if ((bp[pgo + PP_OFF_FLAGS] & PP_MSK_PSUM_UNITS) == PP_MSK_PSUM_UNITS) {
++			/* Use units scaling for large partitions if the device suggests
++			   it and no precision lost. Required for IBM TS1140/50 drives
++			   that don't support MB units. */
++			if (size >= 1000 && (size % 1000) == 0) {
++				size /= 1000;
++				psum = PP_MSK_PSUM_UNITS;
++				units = 9; /* GB */
++			}
++		}
++		/* Try it anyway if too large to specify in MB */
++		if (psum == PP_MSK_PSUM_MB && size >= 65534) {
++				size /= 1000;
++				psum = PP_MSK_PSUM_UNITS;
++				units = 9;  /* GB */
++		}
++	} else
++		psd_cnt = (bp[pgo + MP_OFF_PAGE_LENGTH] + 2 -
++			   PART_PAGE_FIXED_LENGTH) / 2;
++
++	if (size >= 65534) { /* Does not fit into two bytes */
++		result = -EINVAL;
++		goto out;
++	}
+ 
+-	psd_cnt = (bp[pgo + MP_OFF_PAGE_LENGTH] + 2 - PART_PAGE_FIXED_LENGTH) / 2;
+ 	psdo = pgo + PART_PAGE_FIXED_LENGTH;
+-	if (psd_cnt > bp[pgo + PP_OFF_MAX_ADD_PARTS]) {
+-		bp[psdo] = bp[psdo + 1] = 0xff;  /* Rest of the tape */
++	if (scsi3 || psd_cnt > bp[pgo + PP_OFF_MAX_ADD_PARTS]) {
++		bp[psdo] = bp[psdo + 1] = 0xff;  /* Rest of the tape to partition 0 */
+ 		psdo += 2;
+ 	}
+ 	memset(bp + psdo, 0, bp[pgo + PP_OFF_NBR_ADD_PARTS] * 2);
+@@ -3375,6 +3448,11 @@
+ 		if (psd_cnt <= bp[pgo + PP_OFF_MAX_ADD_PARTS])
+ 		    bp[pgo + MP_OFF_PAGE_LENGTH] = 6;
+ 		DEBC_printk(STp, "Formatting tape with one partition.\n");
++	} else if (size == 1 && units == 0) {
++		bp[pgo + PP_OFF_NBR_ADD_PARTS] = 1;
++		if (psd_cnt <= bp[pgo + PP_OFF_MAX_ADD_PARTS])
++		    bp[pgo + MP_OFF_PAGE_LENGTH] = 6;
++		DEBC_printk(STp, "Formatting tape with two partitions (FDP).\n");
+ 	} else {
+ 		bp[psdo] = (size >> 8) & 0xff;
+ 		bp[psdo + 1] = size & 0xff;
+@@ -3382,18 +3460,45 @@
+ 		if (bp[pgo + MP_OFF_PAGE_LENGTH] < 8)
+ 		    bp[pgo + MP_OFF_PAGE_LENGTH] = 8;
+ 		DEBC_printk(STp, "Formatting tape with two partitions "
+-			    "(1 = %d MB).\n", size);
++			    "(1 = %d MB).\n",
++			    units > 0 ? size * 1000 : size);
+ 	}
+ 	bp[pgo + PP_OFF_PART_UNITS] = 0;
+ 	bp[pgo + PP_OFF_RESERVED] = 0;
+-	bp[pgo + PP_OFF_FLAGS] = PP_BIT_IDP | PP_MSK_PSUM_MB;
++	if (size != 1 || units != 0) {
++		bp[pgo + PP_OFF_FLAGS] = PP_BIT_IDP | psum |
++			(bp[pgo + PP_OFF_FLAGS] & 0x07);
++		bp[pgo + PP_OFF_PART_UNITS] = units;
++	} else
++		bp[pgo + PP_OFF_FLAGS] = PP_BIT_FDP |
++			(bp[pgo + PP_OFF_FLAGS] & 0x07);
++	bp[pgo + MP_OFF_PAGE_LENGTH] = 6 + psd_cnt * 2;
++
++	DEBC_printk(STp, "Sent partition page length is %d bytes. needs_format: %d\n",
++		    bp[pgo + MP_OFF_PAGE_LENGTH] + 2, needs_format);
++	DEBC_printk(STp, "PP: max %u, add %u, xdp %u, psum %02x, pofmetc %u, "
++		    "rec %02x, units %02x, sizes: %u %u\n",
++		    bp[pgo + PP_OFF_MAX_ADD_PARTS],
++		    bp[pgo + PP_OFF_NBR_ADD_PARTS],
++		    (bp[pgo + PP_OFF_FLAGS] & 0xe0) >> 5,
++		    (bp[pgo + PP_OFF_FLAGS] & 0x18) >> 3,
++		    bp[pgo + PP_OFF_FLAGS] & 0x07,
++		    bp[pgo + 5],
++		    bp[pgo + PP_OFF_PART_UNITS],
++		    bp[pgo + 8] * 256 + bp[pgo + 9],
++		    bp[pgo + 10] * 256 + bp[pgo + 11]);
+ 
+ 	result = write_mode_page(STp, PART_PAGE, 1);
++
++	if (!result && needs_format)
++		result = format_medium(STp, 1);
++
+ 	if (result) {
+ 		st_printk(KERN_INFO, STp, "Partitioning of tape failed.\n");
+ 		result = (-EIO);
+ 	}
+ 
++out:
+ 	return result;
+ }
+ 
 
-> @@ -1086,6 +1112,9 @@ static void alua_bus_detach(struct scsi_device =
-*sdev)
->  	h->sdev =3D NULL;
->  	spin_unlock(&h->pg_lock);
->  	if (pg) {
-> +		spin_lock(&pg->lock);
-> +		list_del_rcu(&h->node);
-> +		spin_unlock(&pg->lock);
->  		synchronize_rcu();
->  		if (pg->rtpg_sdev)
->  			flush_delayed_work(&pg->rtpg_work);
-
-Here we'd just need to make sure to do the list_del before setting
-h->sdev to NULL.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
