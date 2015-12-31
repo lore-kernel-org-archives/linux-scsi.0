@@ -1,47 +1,35 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/20] scsi_dh_alua: use unique device id
-Date: Thu, 31 Dec 2015 13:53:47 +0100
-Message-ID: <5685255B.2070101@suse.de>
+Subject: Re: [PATCH 10/20] revert commit a8e5a2d593cb ("[SCSI] scsi_dh_alua:
+ ALUA handler attach should succeed while TPG is transitioning")
+Date: Thu, 31 Dec 2015 13:54:33 +0100
+Message-ID: <56852589.6020607@suse.de>
 References: <1449560260-53407-1-git-send-email-hare@suse.de>
- <1449560260-53407-9-git-send-email-hare@suse.de>
- <20151230112024.GB14156@lst.de>
+ <1449560260-53407-11-git-send-email-hare@suse.de>
+ <20151230112220.GD14156@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60626 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60650 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751565AbbLaMxv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Dec 2015 07:53:51 -0500
-In-Reply-To: <20151230112024.GB14156@lst.de>
+	id S1751602AbbLaMyh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Dec 2015 07:54:37 -0500
+In-Reply-To: <20151230112220.GD14156@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jbottomley@odin.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-On 12/30/2015 12:20 PM, Christoph Hellwig wrote:
-> On Tue, Dec 08, 2015 at 08:37:28AM +0100, Hannes Reinecke wrote:
->> Use scsi_vpd_lun_id() to assign a unique device identification
->> to the alua port group structure.
+On 12/30/2015 12:22 PM, Christoph Hellwig wrote:
+> Maybe this should be folded into the next patch?
 >
-> I really hate the fix length arrays and how they are passed around.
->
-You and me both.
-I would love to be able to identify port group states by a simple 64bit=
-=20
-identifier, but SCSI Names throws everything into disarray,
+I did it on purpose, as this really is a clean revert,
 
-> Can't you move the call to scsi_vpd_lun_id into alua_get_pg (alua_all=
-oc_pg)?
+> Otherwise looks fine:
 >
-Hmm. Think so, yes,
-
-> Also I think the new alua_lookup_pg should be alua_find_get_pg or
-> similar as it takes a reference on the pg.
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 >
-Sure, no problem with that,
-
 Cheers,
 
 Hannes
