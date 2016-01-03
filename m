@@ -1,76 +1,99 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 12/78] ncr5380: Remove unused hostdata->aborted flag
-Date: Sun, 03 Jan 2016 16:05:13 +1100
-Message-ID: <20160103050504.231786500@telegraphics.com.au>
+Subject: [PATCH v4 19/78] ncr5380: Cleanup bogus {request,
+ release}_region() calls
+Date: Sun, 03 Jan 2016 16:05:20 +1100
+Message-ID: <20160103050506.071792341@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-unused-aborted-flag
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline;
+ filename=ncr5380-cleanup-request_region-release_region
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-The aborted flag was introduced in v1.1.38 but never used. Remove it.
+Commit 8b801ead3d7a ("[ARM] rpc: update Acorn SCSI drivers to modern ecard
+interfaces") neglected to remove a request_region() call in cumana_1.c.
+
+Commit eda32612f7b2 ("[PATCH] give all LLDD driver a ->release method") in
+history/history.git added some pointless release_region() calls in dtc.c,
+pas16.c and t128.c.
+
+Fix these issues.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Ondrej Zary <linux@rainbow-software.org>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c       |    2 --
- drivers/scsi/NCR5380.h       |    1 -
- drivers/scsi/atari_NCR5380.c |    2 --
- 3 files changed, 5 deletions(-)
+ drivers/scsi/arm/cumana_1.c |    6 ------
+ drivers/scsi/dtc.c          |    2 --
+ drivers/scsi/pas16.c        |    2 --
+ drivers/scsi/t128.c         |    2 --
+ 4 files changed, 12 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/arm/cumana_1.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:12.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:13.000000000 +1100
-@@ -781,7 +781,6 @@ static int NCR5380_init(struct Scsi_Host
- 	if(in_interrupt())
- 		printk(KERN_ERR "NCR5380_init called with interrupts off!\n");
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2016-01-03 16:03:03.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2016-01-03 16:03:22.000000000 +1100
+@@ -245,12 +245,6 @@ static int cumanascsi1_probe(struct expa
+         priv(host)->ctrl = 0;
+         writeb(0, priv(host)->base + CTRL);
  
--	hostdata->aborted = 0;
- 	hostdata->id_mask = 1 << instance->this_id;
- 	for (i = hostdata->id_mask; i <= 0x80; i <<= 1)
- 		if (i > hostdata->id_mask)
-@@ -2574,7 +2573,6 @@ static int NCR5380_abort(struct scsi_cmn
- 
- 	if (hostdata->connected == cmd) {
- 		dprintk(NDEBUG_ABORT, "scsi%d : aborting connected command\n", instance->host_no);
--		hostdata->aborted = 1;
- /*
-  * We should perform BSY checking, and make sure we haven't slipped
-  * into BUS FREE.
-Index: linux/drivers/scsi/atari_NCR5380.c
+-	host->n_io_port = 255;
+-	if (!(request_region(host->io_port, host->n_io_port, "CumanaSCSI-1"))) {
+-		ret = -EBUSY;
+-		goto out_unmap;
+-	}
+-
+ 	ret = request_irq(host->irq, cumanascsi_intr, 0,
+ 			  "CumanaSCSI-1", host);
+ 	if (ret) {
+Index: linux/drivers/scsi/dtc.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:12.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:13.000000000 +1100
-@@ -813,7 +813,6 @@ static int __init NCR5380_init(struct Sc
- 	SETUP_HOSTDATA(instance);
- 
- 	hostdata->host = instance;
--	hostdata->aborted = 0;
- 	hostdata->id_mask = 1 << instance->this_id;
- 	hostdata->id_higher_mask = 0;
- 	for (i = hostdata->id_mask; i <= 0x80; i <<= 1)
-@@ -2834,7 +2833,6 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 		 */
- 
- 		if (do_abort(instance) == 0) {
--			hostdata->aborted = 1;
- 			hostdata->connected = NULL;
- 			cmd->result = DID_ABORT << 16;
- #ifdef SUPPORT_TAGS
-Index: linux/drivers/scsi/NCR5380.h
+--- linux.orig/drivers/scsi/dtc.c	2016-01-03 16:03:03.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2016-01-03 16:03:22.000000000 +1100
+@@ -423,8 +423,6 @@ static int dtc_release(struct Scsi_Host
+ 	if (shost->irq != NO_IRQ)
+ 		free_irq(shost->irq, shost);
+ 	NCR5380_exit(shost);
+-	if (shost->io_port && shost->n_io_port)
+-		release_region(shost->io_port, shost->n_io_port);
+ 	scsi_unregister(shost);
+ 	iounmap(hostdata->base);
+ 	return 0;
+Index: linux/drivers/scsi/pas16.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2016-01-03 16:03:09.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2016-01-03 16:03:13.000000000 +1100
-@@ -271,7 +271,6 @@ struct NCR5380_hostdata {
- 	volatile int restart_select;		/* we have disconnected,
- 						   used to restart 
- 						   NCR5380_select() */
--	volatile unsigned aborted:1;		/* flag, says aborted */
- 	int flags;
- 	unsigned long time_expires;		/* in jiffies, set prior to sleeping */
- 	int select_time;			/* timer in select for target response */
+--- linux.orig/drivers/scsi/pas16.c	2016-01-03 16:03:03.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2016-01-03 16:03:22.000000000 +1100
+@@ -540,8 +540,6 @@ static int pas16_release(struct Scsi_Hos
+ 	if (shost->irq != NO_IRQ)
+ 		free_irq(shost->irq, shost);
+ 	NCR5380_exit(shost);
+-	if (shost->io_port && shost->n_io_port)
+-		release_region(shost->io_port, shost->n_io_port);
+ 	scsi_unregister(shost);
+ 	return 0;
+ }
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2016-01-03 16:03:03.000000000 +1100
++++ linux/drivers/scsi/t128.c	2016-01-03 16:03:22.000000000 +1100
+@@ -255,8 +255,6 @@ static int t128_release(struct Scsi_Host
+ 	if (shost->irq != NO_IRQ)
+ 		free_irq(shost->irq, shost);
+ 	NCR5380_exit(shost);
+-	if (shost->io_port && shost->n_io_port)
+-		release_region(shost->io_port, shost->n_io_port);
+ 	scsi_unregister(shost);
+ 	iounmap(hostdata->base);
+ 	return 0;
