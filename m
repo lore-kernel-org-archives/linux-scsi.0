@@ -1,34 +1,31 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 12/20] scsi_dh_alua: Allow workqueue to run
-	synchronously
-Date: Sun, 3 Jan 2016 11:54:58 +0100
-Message-ID: <20160103105458.GC10025@lst.de>
-References: <1449560260-53407-1-git-send-email-hare@suse.de> <1449560260-53407-13-git-send-email-hare@suse.de> <20151230132010.GB15270@lst.de> <5685338A.5010801@suse.de>
+Subject: Re: NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s!
+	[kworker/1:1:29]
+Date: Sun, 3 Jan 2016 12:46:28 +0100
+Message-ID: <20160103114628.GA10582@lst.de>
+References: <20151217222737.00000ab6@localhost> <20151231180415.00000bfc@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60024 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:60107 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751656AbcACKzA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 Jan 2016 05:55:00 -0500
+	id S1751707AbcACLq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 Jan 2016 06:46:29 -0500
 Content-Disposition: inline
-In-Reply-To: <5685338A.5010801@suse.de>
+In-Reply-To: <20151231180415.00000bfc@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jbottomley@odin.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+To: Sebastian Herbszt <herbszt@gmx.de>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Thu, Dec 31, 2015 at 02:54:18PM +0100, Hannes Reinecke wrote:
-> ATM the only ones I know of is NetApp (both FAS and E-series; E-series 
-> requires it, and FAS benefits greatly).
-> But this is not to say that these are the only ones, _and_ the more obvious 
-> approach would be to add the handling to multipath-tools settings, so I 
-> really would like to keep the module option for now.
+On Thu, Dec 31, 2015 at 06:04:15PM +0100, Sebastian Herbszt wrote:
+> I still get this on 4.4.0-rc7-1.g276c9f4-default. Since this did not
+> happen on 4.3 I checked the scsi changes and found the following commit:
+> 
+> scsi: restart list search after unlock in scsi_remove_target
+> 
+> Christoph, can it cause this issue?
 
-Anything involving multipath-tools settings is a giant nightmare.  We
-need to get it rifght in the kernel so that multipathing can work
-out of the box.  And the right place for SCSI-level quirks are the
-devlist entries.
-
-Module options for hardware specific behavior are a horrible idea - you
-can be connect to different devies, which is a very common setup.
+Apparently yes.  Bad hard a patch to avoid this when he resubmitted
+my patch, which for some reason didn't get apply.  Can you grab it
+from the list archives and give it a try?
