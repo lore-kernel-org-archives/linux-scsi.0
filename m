@@ -1,218 +1,71 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 04/78] ncr5380: Remove more pointless macros
-Date: Sun, 03 Jan 2016 16:05:05 +1100
-Message-ID: <20160103050502.112773041@telegraphics.com.au>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v4 69/78] ncr5380: Fix whitespace in comments using
+ regexp
+Date: Sat, 02 Jan 2016 23:54:28 -0800
+Message-ID: <1451807668.4334.38.camel@perches.com>
 References: <20160103050501.042035135@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-pointless-macros
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+	 <20160103050520.752909053@telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtprelay0234.hostedemail.com ([216.40.44.234]:52302 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751016AbcACHyc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2016 02:54:32 -0500
+In-Reply-To: <20160103050520.752909053@telegraphics.com.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-ASM macro is never defined. rtrc in pas16.c is not used.
-NCR5380_map_config, do_NCR5380_intr, do_t128_intr and do_pas16_intr
-are unused. NCR_NOT_SET harms readability. Remove them.
+On Sun, 2016-01-03 at 16:06 +1100, Finn Thain wrote:
+> Hanging indentation was a poor choice for the text inside comments. I=
+t
+> has been used in the wrong places and done badly elsewhere. There is
+> little consistency within any file. One fork of the core driver uses
+> tabs for this indentation while the other uses spaces. Better to use
+> flush-left alignment throughout.
+>=20
+> This patch is the result of the following substitution. It replaces t=
+abs
+> and spaces at the start of a comment line with a single space.
+>=20
+> perl -i -pe 's,^(\t*[/ ]\*)[ \t]+,$1 ,' drivers/scsi/{atari_,}NCR5380=
+=2Ec=A0
+>=20
+> This removes some unimportant discrepancies between the two core driv=
+er
+> forks so that the important ones become obvious, to facilitate
+> reunification.
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Ondrej Zary <linux@rainbow-software.org>
+I still think this patch is poor at best and
+overall not useful.
+@@ -32,15 +32,15 @@
+> =A0/*
+> =A0 * Further development / testing that should be done :
+> =A0 * 1.=A0=A0Cleanup the NCR5380_transfer_dma function and DMA opera=
+tion complete
+> - *=A0=A0=A0=A0=A0code so that everything does the same thing that's =
+done at the
+> - *=A0=A0=A0=A0=A0end of a pseudo-DMA read operation.
+> + * code so that everything does the same thing that's done at the
+> + * end of a pseudo-DMA read operation.
+> =A0 *
+> =A0 * 2.=A0=A0Fix REAL_DMA (interrupt driven, polled works fine) -
+> - *=A0=A0=A0=A0=A0basically, transfer size needs to be reduced by one
+> - *=A0=A0=A0=A0=A0and the last byte read as is done with PSEUDO_DMA.
+> + * basically, transfer size needs to be reduced by one
+> + * and the last byte read as is done with PSEUDO_DMA.
+> =A0 *
+> =A0 * 4.=A0=A0Test SCSI-II tagged queueing (I have no devices which s=
+upport
+> - *=A0=A0=A0=A0=A0=A0tagged queueing)
+> + * tagged queueing)
 
----
- drivers/scsi/NCR5380.h   |    3 ---
- drivers/scsi/g_NCR5380.c |   29 ++++++++++++++---------------
- drivers/scsi/g_NCR5380.h |    5 -----
- drivers/scsi/pas16.c     |   16 ----------------
- drivers/scsi/pas16.h     |    5 -----
- drivers/scsi/t128.h      |    4 ----
- 6 files changed, 14 insertions(+), 48 deletions(-)
+Numbering 1, 2, then 4 could be improved.
 
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2016-01-03 16:02:39.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2016-01-03 16:02:54.000000000 +1100
-@@ -244,8 +244,6 @@
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
- #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
- 
--#ifndef ASM
--
- #ifdef SUPPORT_TAGS
- struct tag_alloc {
- 	DECLARE_BITMAP(allocated, MAX_TAGS);
-@@ -443,5 +441,4 @@ static __inline__ int NCR5380_pc_dma_res
- #endif				/* defined(i386) || defined(__alpha__) */
- #endif				/* defined(REAL_DMA)  */
- #endif				/* __KERNEL__ */
--#endif				/* ndef ASM */
- #endif				/* NCR5380_H */
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:02:42.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:02:54.000000000 +1100
-@@ -82,14 +82,13 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- 
--#define NCR_NOT_SET 0
--static int ncr_irq = NCR_NOT_SET;
--static int ncr_dma = NCR_NOT_SET;
--static int ncr_addr = NCR_NOT_SET;
--static int ncr_5380 = NCR_NOT_SET;
--static int ncr_53c400 = NCR_NOT_SET;
--static int ncr_53c400a = NCR_NOT_SET;
--static int dtc_3181e = NCR_NOT_SET;
-+static int ncr_irq;
-+static int ncr_dma;
-+static int ncr_addr;
-+static int ncr_5380;
-+static int ncr_53c400;
-+static int ncr_53c400a;
-+static int dtc_3181e;
- 
- static struct override {
- 	NCR5380_map_type NCR5380_map_name;
-@@ -271,19 +270,19 @@ static int __init generic_NCR5380_detect
- 	void __iomem *iomem;
- #endif
- 
--	if (ncr_irq != NCR_NOT_SET)
-+	if (ncr_irq)
- 		overrides[0].irq = ncr_irq;
--	if (ncr_dma != NCR_NOT_SET)
-+	if (ncr_dma)
- 		overrides[0].dma = ncr_dma;
--	if (ncr_addr != NCR_NOT_SET)
-+	if (ncr_addr)
- 		overrides[0].NCR5380_map_name = (NCR5380_map_type) ncr_addr;
--	if (ncr_5380 != NCR_NOT_SET)
-+	if (ncr_5380)
- 		overrides[0].board = BOARD_NCR5380;
--	else if (ncr_53c400 != NCR_NOT_SET)
-+	else if (ncr_53c400)
- 		overrides[0].board = BOARD_NCR53C400;
--	else if (ncr_53c400a != NCR_NOT_SET)
-+	else if (ncr_53c400a)
- 		overrides[0].board = BOARD_NCR53C400A;
--	else if (dtc_3181e != NCR_NOT_SET)
-+	else if (dtc_3181e)
- 		overrides[0].board = BOARD_DTC3181E;
- #ifndef SCSI_G_NCR5380_MEM
- 	if (!current_override && isapnp_present()) {
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-01-03 16:02:39.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-01-03 16:02:54.000000000 +1100
-@@ -21,8 +21,6 @@
- #define NCR5380_BIOSPARAM NULL
- #endif
- 
--#ifndef ASM
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
-@@ -36,7 +34,6 @@
- 
- #ifndef SCSI_G_NCR5380_MEM
- 
--#define NCR5380_map_config port
- #define NCR5380_map_type int
- #define NCR5380_map_name port
- #define NCR5380_instance_name io_port
-@@ -64,7 +61,6 @@
- #else 
- /* therefore SCSI_G_NCR5380_MEM */
- 
--#define NCR5380_map_config memory
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
- #define NCR5380_instance_name base
-@@ -103,6 +99,5 @@
- #define BOARD_NCR53C400A 2
- #define BOARD_DTC3181E	3
- 
--#endif /* ndef ASM */
- #endif /* GENERIC_NCR5380_H */
- 
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2016-01-03 16:02:47.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2016-01-03 16:02:54.000000000 +1100
-@@ -145,22 +145,6 @@ static const unsigned short  pas16_offse
- 		    * START_DMA_INITIATOR_RECEIVE_REG wo
- 		    */
-     };
--/*----------------------------------------------------------------*/
--/* the following will set the monitor border color (useful to find
-- where something crashed or gets stuck at */
--/* 1 = blue
-- 2 = green
-- 3 = cyan
-- 4 = red
-- 5 = magenta
-- 6 = yellow
-- 7 = white
--*/
--#if 1
--#define rtrc(i) {inb(0x3da); outb(0x31, 0x3c0); outb((i), 0x3c0);}
--#else
--#define rtrc(i) {}
--#endif
- 
- 
- /*
-Index: linux/drivers/scsi/pas16.h
-===================================================================
---- linux.orig/drivers/scsi/pas16.h	2016-01-03 16:02:47.000000000 +1100
-+++ linux/drivers/scsi/pas16.h	2016-01-03 16:02:54.000000000 +1100
-@@ -95,9 +95,6 @@
- #define OPERATION_MODE_1 0xec03
- #define IO_CONFIG_3 0xf002
- 
--
--#ifndef ASM
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
-@@ -121,7 +118,6 @@
- #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
- 
- #define NCR5380_intr pas16_intr
--#define do_NCR5380_intr do_pas16_intr
- #define NCR5380_queue_command pas16_queue_command
- #define NCR5380_abort pas16_abort
- #define NCR5380_bus_reset pas16_bus_reset
-@@ -134,5 +130,4 @@
-    
- #define PAS16_IRQS 0xd4a8 
- 
--#endif /* ndef ASM */
- #endif /* PAS16_H */
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2016-01-03 16:02:47.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2016-01-03 16:02:54.000000000 +1100
-@@ -67,8 +67,6 @@
- 
- #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
- 
--#ifndef ASM
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
-@@ -92,7 +90,6 @@
- #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
- 
- #define NCR5380_intr t128_intr
--#define do_NCR5380_intr do_t128_intr
- #define NCR5380_queue_command t128_queue_command
- #define NCR5380_abort t128_abort
- #define NCR5380_bus_reset t128_bus_reset
-@@ -105,5 +102,4 @@
- 
- #define T128_IRQS 0xc4a8
- 
--#endif /* ndef ASM */
- #endif /* T128_H */
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
