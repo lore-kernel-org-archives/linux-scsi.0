@@ -1,21 +1,80 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 09/78] atari_NCR5380: Reset bus on driver initialization if required
-Date: Sun, 03 Jan 2016 16:05:10 +1100
-Message-ID: <20160103050503.431805510@telegraphics.com.au>
+Subject: [PATCH v4 25/78] ncr5380: Rework disconnect versus poll logic
+Date: Sun, 03 Jan 2016 16:05:26 +1100
+Message-ID: <20160103050507.661802146@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-merge-do_reset
+Content-Disposition: inline; filename=ncr5380-disconnection-reconnection
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Merge the bus reset code from NCR5380.c into atari_NCR5380.c. This allows
-for removal of a lot of duplicated code conditional on the RESET_BOOT
-macro (in the next patch).
+The atari_NCR5380.c and NCR5380.c core drivers differ in their handling of
+target disconnection. This is partly because atari_NCR5380.c had all of
+the polling and sleeping removed to become entirely interrupt-driven, and
+it is partly because of damage done to NCR5380.c after atari_NCR5380.c was
+forked. See commit 37cd23b44929 ("Linux 2.1.105") in history/history.git.
 
-The atari_NCR5380.c fork lacks the do_reset() and NCR5380_poll_politely()
-routines from NCR5380.c, so introduce them. They are indispensible. Keep
-the two implementations in sync.
+The polling changes that were made in v2.1.105 are questionable at best:
+if REQ is not already asserted when NCR5380_transfer_pio() is invoked, and
+if the expected phase is DATA IN or DATA OUT, the function will schedule
+main() to execute after USLEEP_SLEEP jiffies and then return. The problems
+here are the expected REQ timing and the sleep interval*. Avoid this issue
+by using NCR5380_poll_politely() instead of scheduling main().
+
+The atari_NCR5380.c core driver requires the use of the chip interrupt and
+always permits target disconnection. It sets the cmd->device->disconnect
+flag when a device disconnects, but never tests this flag.
+
+The NCR5380.c core driver permits disconnection only when
+instance->irq != NO_IRQ. It sets the cmd->device->disconnect flag when
+a device disconnects and it tests this flag in a couple of places:
+
+1. During NCR5380_information_transfer(), following COMMAND OUT phase,
+   if !cmd->device->disconnect, the initiator will take a guess as to
+   whether or not the target will then choose to go to MESSAGE IN phase
+   and disconnect. If the driver guesses "yes", it will schedule main()
+   to execute after USLEEP_SLEEP jiffies and then return there.
+
+   Unfortunately the driver may guess "yes" even after it has denied
+   the target the disconnection privilege. When the target does not
+   disconnect, the sleep can be beneficial, assuming the sleep interval
+   is appropriate (mostly it is not*).
+
+   And even if the driver guesses "yes" correctly, and the target would
+   then disconnect, the driver still has to go through the MESSAGE IN
+   phase in order to get to BUS FREE phase. The main loop can do nothing
+   useful until BUS FREE, and sleeping just delays the phase transition.
+
+2. If !cmd->device->disconnect and REQ is not already asserted when
+   NCR5380_information_transfer() is invoked, the function polls for REQ
+   for USLEEP_POLL jiffies. If REQ is not asserted, it then schedules
+   main() to execute after USLEEP_SLEEP jiffies and returns.
+
+   The idea is apparently to yeild the CPU while waiting for REQ.
+   This is conditional upon !cmd->device->disconnect, but there seems
+   to be no rhyme or reason for that. For example, the flag may be
+   unset because disconnection privilege was denied because the driver
+   has no IRQ. Or the flag may be unset because the device has never
+   needed to disconnect before. Or if the flag is set, disconnection
+   may have no relevance to the present bus phase.
+
+Another deficiency of the existing algorithm is as follows. When the
+driver has no IRQ, it prevents disconnection, and generally polls and
+sleeps more than it would normally. Now, if the driver is going to poll
+anyway, why not allow the target to disconnect? That way the driver can do
+something useful with the bus instead of polling unproductively!
+
+Avoid this pointless latency, complexity and guesswork by using
+NCR5380_poll_politely() instead of scheduling main().
+
+* For g_NCR5380, the time intervals for USLEEP_SLEEP and USLEEP_POLL are
+  200 ms and 10 ms, respectively. They are 20 ms and 200 ms respectively
+  for the other NCR5380 drivers. There doesn't seem to be any reason for
+  this discrepancy. The timing seems to have no relation to the type of
+  adapter. Bizarrely, the timing in g_NCR5380 seems to relate only to one
+  particular type of target device. This patch attempts to solve the
+  problem for all NCR5380 drivers and all target devices.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
@@ -23,219 +82,356 @@ Tested-by: Ondrej Zary <linux@rainbow-software.org>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c       |   33 +++++++-----
- drivers/scsi/atari_NCR5380.c |  113 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 134 insertions(+), 12 deletions(-)
+ drivers/scsi/NCR5380.c       |  137 ++-----------------------------------------
+ drivers/scsi/NCR5380.h       |   11 ---
+ drivers/scsi/atari_NCR5380.c |   24 ++-----
+ drivers/scsi/g_NCR5380.c     |    4 -
+ 4 files changed, 15 insertions(+), 161 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:06.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:08.000000000 +1100
-@@ -838,19 +838,20 @@ static int NCR5380_maybe_reset_bus(struc
- 		case 1:
- 		case 3:
- 		case 5:
--			printk(KERN_INFO "scsi%d: SCSI bus busy, waiting up to five seconds\n", instance->host_no);
--			NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, 0, 5*HZ);
-+			shost_printk(KERN_ERR, instance, "SCSI bus busy, waiting up to five seconds\n");
-+			NCR5380_poll_politely(instance,
-+			                      STATUS_REG, SR_BSY, 0, 5 * HZ);
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:31.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:33.000000000 +1100
+@@ -139,17 +139,7 @@
+  * piece of hardware that requires you to sit in a loop polling for 
+  * the REQ signal as long as you are connected.  Some devices are 
+  * brain dead (ie, many TEXEL CD ROM drives) and won't disconnect 
+- * while doing long seek operations.
+- * 
+- * The workaround for this is to keep track of devices that have
+- * disconnected.  If the device hasn't disconnected, for commands that
+- * should disconnect, we do something like 
+- *
+- * while (!REQ is asserted) { sleep for N usecs; poll for M usecs }
+- * 
+- * Some tweaking of N and M needs to be done.  An algorithm based 
+- * on "time to data" would give the best results as long as short time
+- * to datas (ie, on the same track) were considered, however these 
++ * while doing long seek operations. [...] These
+  * broken devices are the exception rather than the rule and I'd rather
+  * spend my time optimizing for the normal case.
+  *
+@@ -220,10 +210,6 @@
+  * Defaults for these will be provided although the user may want to adjust 
+  * these to allocate CPU resources to the SCSI driver or "real" code.
+  * 
+- * USLEEP_SLEEP - amount of time, in jiffies, to sleep
+- *
+- * USLEEP_POLL - amount of time, in jiffies, to poll
+- *
+  * These macros MUST be defined :
+  * 
+  * NCR5380_read(register)  - read from the specified register
+@@ -449,73 +435,6 @@ static void NCR5380_print_phase(struct S
+ }
+ #endif
+ 
+-/*
+- * These need tweaking, and would probably work best as per-device 
+- * flags initialized differently for disk, tape, cd, etc devices.
+- * People with broken devices are free to experiment as to what gives
+- * the best results for them.
+- *
+- * USLEEP_SLEEP should be a minimum seek time.
+- *
+- * USLEEP_POLL should be a maximum rotational latency.
+- */
+-#ifndef USLEEP_SLEEP
+-/* 20 ms (reasonable hard disk speed) */
+-#define USLEEP_SLEEP msecs_to_jiffies(20)
+-#endif
+-/* 300 RPM (floppy speed) */
+-#ifndef USLEEP_POLL
+-#define USLEEP_POLL msecs_to_jiffies(200)
+-#endif
+-
+-/* 
+- * Function : int should_disconnect (unsigned char cmd)
+- *
+- * Purpose : decide whether a command would normally disconnect or 
+- *      not, since if it won't disconnect we should go to sleep.
+- *
+- * Input : cmd - opcode of SCSI command
+- *
+- * Returns : DISCONNECT_LONG if we should disconnect for a really long 
+- *      time (ie always, sleep, look for REQ active, sleep), 
+- *      DISCONNECT_TIME_TO_DATA if we would only disconnect for a normal
+- *      time-to-data delay, DISCONNECT_NONE if this command would return
+- *      immediately.
+- *
+- *      Future sleep algorithms based on time to data can exploit 
+- *      something like this so they can differentiate between "normal" 
+- *      (ie, read, write, seek) and unusual commands (ie, * format).
+- *
+- * Note : We don't deal with commands that handle an immediate disconnect,
+- *        
+- */
+-
+-static int should_disconnect(unsigned char cmd)
+-{
+-	switch (cmd) {
+-	case READ_6:
+-	case WRITE_6:
+-	case SEEK_6:
+-	case READ_10:
+-	case WRITE_10:
+-	case SEEK_10:
+-		return DISCONNECT_TIME_TO_DATA;
+-	case FORMAT_UNIT:
+-	case SEARCH_HIGH:
+-	case SEARCH_LOW:
+-	case SEARCH_EQUAL:
+-		return DISCONNECT_LONG;
+-	default:
+-		return DISCONNECT_NONE;
+-	}
+-}
+-
+-static void NCR5380_set_timer(struct NCR5380_hostdata *hostdata, unsigned long timeout)
+-{
+-	hostdata->time_expires = jiffies + timeout;
+-	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, timeout);
+-}
+-
+ 
+ static int probe_irq __initdata;
+ 
+@@ -614,9 +533,6 @@ static void prepare_info(struct Scsi_Hos
+ 	         "can_queue %d, cmd_per_lun %d, "
+ 	         "sg_tablesize %d, this_id %d, "
+ 	         "flags { %s%s%s%s}, "
+-#if defined(USLEEP_POLL) && defined(USLEEP_SLEEP)
+-		 "USLEEP_POLL %lu, USLEEP_SLEEP %lu, "
+-#endif
+ 	         "options { %s} ",
+ 	         instance->hostt->name, instance->io_port, instance->n_io_port,
+ 	         instance->base, instance->irq,
+@@ -626,9 +542,6 @@ static void prepare_info(struct Scsi_Hos
+ 	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
+ 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
+ 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
+-#if defined(USLEEP_POLL) && defined(USLEEP_SLEEP)
+-	         USLEEP_POLL, USLEEP_SLEEP,
+-#endif
+ #ifdef AUTOPROBE_IRQ
+ 	         "AUTOPROBE_IRQ "
+ #endif
+@@ -804,7 +717,6 @@ static int NCR5380_init(struct Scsi_Host
+ 		hostdata->flags = FLAG_CHECK_LAST_BYTE_SENT | flags;
+ 
+ 	hostdata->host = instance;
+-	hostdata->time_expires = 0;
+ 
+ 	prepare_info(instance);
+ 
+@@ -1041,7 +953,6 @@ static void NCR5380_main(struct work_str
+ #ifdef REAL_DMA
+ 		    && !hostdata->dmalen
+ #endif
+-		    && (!hostdata->time_expires || time_before_eq(hostdata->time_expires, jiffies))
+ 		    ) {
+ 			dprintk(NDEBUG_MAIN, "scsi%d : main() : performing information transfer\n", instance->host_no);
+ 			NCR5380_information_transfer(instance);
+@@ -1421,11 +1332,6 @@ static int NCR5380_transfer_pio(struct S
+ 	unsigned char p = *phase, tmp;
+ 	int c = *count;
+ 	unsigned char *d = *data;
+-	/*
+-	 *      RvC: some administrative data to process polling time
+-	 */
+-	int break_allowed = 0;
+-	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 
+ 	if (!(p & SR_IO))
+ 		dprintk(NDEBUG_PIO, "scsi%d : pio write %d bytes\n", instance->host_no, c);
+@@ -1440,35 +1346,19 @@ static int NCR5380_transfer_pio(struct S
+ 
+ 	 NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(p));
+ 
+-	/* RvC: don't know if this is necessary, but other SCSI I/O is short
+-	 *      so breaks are not necessary there
+-	 */
+-	if ((p == PHASE_DATAIN) || (p == PHASE_DATAOUT)) {
+-		break_allowed = 1;
+-	}
+ 	do {
+ 		/* 
+ 		 * Wait for assertion of REQ, after which the phase bits will be 
+ 		 * valid 
+ 		 */
+ 
+-		/* RvC: we simply poll once, after that we stop temporarily
+-		 *      and let the device buffer fill up
+-		 *      if breaking is not allowed, we keep polling as long as needed
+-		 */
+-
+-		/* FIXME */
+-		while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ) && !break_allowed);
+-		if (!(tmp & SR_REQ)) {
+-			/* timeout condition */
+-			NCR5380_set_timer(hostdata, USLEEP_SLEEP);
++		if (NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ) < 0)
  			break;
- 		case 2:
--			printk(KERN_WARNING "scsi%d: bus busy, attempting abort\n", instance->host_no);
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting abort\n");
- 			do_abort(instance);
+-		}
+ 
+ 		dprintk(NDEBUG_HANDSHAKE, "scsi%d : REQ detected\n", instance->host_no);
+ 
+ 		/* Check for phase mismatch */
+-		if ((tmp & PHASE_MASK) != p) {
++		if ((NCR5380_read(STATUS_REG) & PHASE_MASK) != p) {
+ 			dprintk(NDEBUG_HANDSHAKE, "scsi%d : phase mismatch\n", instance->host_no);
+ 			NCR5380_dprint_phase(NDEBUG_HANDSHAKE, instance);
  			break;
- 		case 4:
--			printk(KERN_WARNING "scsi%d: bus busy, attempting reset\n", instance->host_no);
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting reset\n");
- 			do_reset(instance);
- 			break;
- 		case 6:
--			printk(KERN_ERR "scsi%d: bus locked solid or invalid override\n", instance->host_no);
-+			shost_printk(KERN_ERR, instance, "bus locked solid\n");
- 			return -ENXIO;
+@@ -1940,8 +1830,6 @@ static void NCR5380_information_transfer
+ 	unsigned char *data;
+ 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
+ 	struct scsi_cmnd *cmd = (struct scsi_cmnd *) hostdata->connected;
+-	/* RvC: we need to set the end of the polling time */
+-	unsigned long poll_time = jiffies + USLEEP_POLL;
+ 
+ 	while (1) {
+ 		tmp = NCR5380_read(STATUS_REG);
+@@ -2141,7 +2029,6 @@ static void NCR5380_information_transfer
+ 				case DISCONNECT:{
+ 						/* Accept message by clearing ACK */
+ 						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-						cmd->device->disconnect = 1;
+ 						LIST(cmd, hostdata->disconnected_queue);
+ 						cmd->host_scribble = (unsigned char *)
+ 						    hostdata->disconnected_queue;
+@@ -2273,11 +2160,6 @@ static void NCR5380_information_transfer
+ 				 * use the dma transfer function.  
+ 				 */
+ 				NCR5380_transfer_pio(instance, &phase, &len, &data);
+-				if (!cmd->device->disconnect && should_disconnect(cmd->cmnd[0])) {
+-					NCR5380_set_timer(hostdata, USLEEP_SLEEP);
+-					dprintk(NDEBUG_USLEEP, "scsi%d : issued command, sleeping until %lu\n", instance->host_no, hostdata->time_expires);
+-					return;
+-				}
+ 				break;
+ 			case PHASE_STATIN:
+ 				len = 1;
+@@ -2289,15 +2171,10 @@ static void NCR5380_information_transfer
+ 				printk("scsi%d : unknown phase\n", instance->host_no);
+ 				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			}	/* switch(phase) */
+-		}		/* if (tmp * SR_REQ) */
+-		else {
+-			/* RvC: go to sleep if polling time expired
+-			 */
+-			if (!cmd->device->disconnect && time_after_eq(jiffies, poll_time)) {
+-				NCR5380_set_timer(hostdata, USLEEP_SLEEP);
+-				dprintk(NDEBUG_USLEEP, "scsi%d : poll timed out, sleeping until %lu\n", instance->host_no, hostdata->time_expires);
+-				return;
+-			}
++		} else {
++			spin_unlock_irq(instance->host_lock);
++			NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ);
++			spin_lock_irq(instance->host_lock);
  		}
- 	}
-@@ -1579,21 +1580,29 @@ static int NCR5380_transfer_pio(struct S
+ 	}			/* while (1) */
  }
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-01-03 16:03:28.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-01-03 16:03:33.000000000 +1100
+@@ -205,16 +205,6 @@
  
- /**
-- *	do_reset	-	issue a reset command
-- *	@host: adapter to reset
-+ * do_reset - issue a reset command
-+ * @instance: adapter to reset
-  *
-- *	Issue a reset sequence to the NCR5380 and try and get the bus
-- *	back into sane shape.
-+ * Issue a reset sequence to the NCR5380 and try and get the bus
-+ * back into sane shape.
-  *
-- *	Locks: caller holds queue lock
-+ * This clears the reset interrupt flag because there may be no handler for
-+ * it. When the driver is initialized, the NCR5380_intr() handler has not yet
-+ * been installed. And when in EH we may have released the ST DMA interrupt.
-  */
-  
- static void do_reset(struct Scsi_Host *instance)
- {
--	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
-+	NCR5380_write(TARGET_COMMAND_REG,
-+	              PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_RST);
--	udelay(25);
-+	udelay(50);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+	local_irq_restore(flags);
- }
+ #define PHASE_SR_TO_TCR(phase) ((phase) >> 2)
  
- /*
+-/*
+- * The internal should_disconnect() function returns these based on the 
+- * expected length of a disconnect if a device supports disconnect/
+- * reconnect.
+- */
+-
+-#define DISCONNECT_NONE		0
+-#define DISCONNECT_TIME_TO_DATA	1
+-#define DISCONNECT_LONG		2
+-
+ /* 
+  * "Special" value for the (unsigned char) command tag, to indicate
+  * I_T_L nexus instead of I_T_L_Q.
+@@ -266,7 +256,6 @@ struct NCR5380_hostdata {
+ 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
+ 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
+ 	int flags;
+-	unsigned long time_expires;		/* in jiffies, set prior to sleeping */
+ 	struct delayed_work coroutine;		/* our co-routine */
+ 	struct scsi_eh_save ses;
+ 	char info[256];
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:02:37.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:08.000000000 +1100
-@@ -234,6 +234,9 @@
- #define	HOSTNO		instance->host_no
- #define	H_NO(cmd)	(cmd)->device->host->host_no
- 
-+static int do_abort(struct Scsi_Host *);
-+static void do_reset(struct Scsi_Host *);
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:31.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:33.000000000 +1100
+@@ -126,17 +126,7 @@
+  * piece of hardware that requires you to sit in a loop polling for
+  * the REQ signal as long as you are connected.  Some devices are
+  * brain dead (ie, many TEXEL CD ROM drives) and won't disconnect
+- * while doing long seek operations.
+- *
+- * The workaround for this is to keep track of devices that have
+- * disconnected.  If the device hasn't disconnected, for commands that
+- * should disconnect, we do something like
+- *
+- * while (!REQ is asserted) { sleep for N usecs; poll for M usecs }
+- *
+- * Some tweaking of N and M needs to be done.  An algorithm based
+- * on "time to data" would give the best results as long as short time
+- * to datas (ie, on the same track) were considered, however these
++ * while doing long seek operations. [...] These
+  * broken devices are the exception rather than the rule and I'd rather
+  * spend my time optimizing for the normal case.
+  *
+@@ -1740,13 +1730,14 @@ static int NCR5380_transfer_pio(struct S
+ 		 * Wait for assertion of REQ, after which the phase bits will be
+ 		 * valid
+ 		 */
+-		while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ))
+-			;
 +
- #ifdef SUPPORT_TAGS
- 
- /*
-@@ -475,6 +478,47 @@ static inline void initialize_SCp(struct
- 	}
- }
- 
-+/**
-+ * NCR5380_poll_politely - wait for NCR5380 status bits
-+ * @instance: controller to poll
-+ * @reg: 5380 register to poll
-+ * @bit: Bitmask to check
-+ * @val: Value required to exit
-+ *
-+ * Polls the NCR5380 in a reasonably efficient manner waiting for
-+ * an event to occur, after a short quick poll we begin giving the
-+ * CPU back in non IRQ contexts
-+ *
-+ * Returns the value of the register or a negative error code.
-+ */
-+
-+static int NCR5380_poll_politely(struct Scsi_Host *instance,
-+                                 int reg, int bit, int val, int t)
-+{
-+	int n = 500;
-+	unsigned long end = jiffies + t;
-+	int r;
-+
-+	while (n-- > 0) {
-+		r = NCR5380_read(reg);
-+		if ((r & bit) == val)
-+			return 0;
-+		cpu_relax();
-+	}
-+
-+	/* t time yet ? */
-+	while (time_before(jiffies, end)) {
-+		r = NCR5380_read(reg);
-+		if ((r & bit) == val)
-+			return 0;
-+		if (!in_interrupt())
-+			cond_resched();
-+		else
-+			cpu_relax();
-+	}
-+	return -ETIMEDOUT;
-+}
-+
- #include <linux/delay.h>
- 
- #if NDEBUG
-@@ -801,6 +845,49 @@ static int __init NCR5380_init(struct Sc
- }
- 
- /**
-+ * NCR5380_maybe_reset_bus - Detect and correct bus wedge problems.
-+ * @instance: adapter to check
-+ *
-+ * If the system crashed, it may have crashed with a connected target and
-+ * the SCSI bus busy. Check for BUS FREE phase. If not, try to abort the
-+ * currently established nexus, which we know nothing about. Failing that
-+ * do a bus reset.
-+ *
-+ * Note that a bus reset will cause the chip to assert IRQ.
-+ *
-+ * Returns 0 if successful, otherwise -ENXIO.
-+ */
-+
-+static int NCR5380_maybe_reset_bus(struct Scsi_Host *instance)
-+{
-+	int pass;
-+
-+	for (pass = 1; (NCR5380_read(STATUS_REG) & SR_BSY) && pass <= 6; ++pass) {
-+		switch (pass) {
-+		case 1:
-+		case 3:
-+		case 5:
-+			shost_printk(KERN_ERR, instance, "SCSI bus busy, waiting up to five seconds\n");
-+			NCR5380_poll_politely(instance,
-+			                      STATUS_REG, SR_BSY, 0, 5 * HZ);
++		if (NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ) < 0)
 +			break;
-+		case 2:
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting abort\n");
-+			do_abort(instance);
-+			break;
-+		case 4:
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting reset\n");
-+			do_reset(instance);
-+			break;
-+		case 6:
-+			shost_printk(KERN_ERR, instance, "bus locked solid\n");
-+			return -ENXIO;
+ 
+ 		dprintk(NDEBUG_HANDSHAKE, "scsi%d: REQ detected\n", HOSTNO);
+ 
+ 		/* Check for phase mismatch */
+-		if ((tmp & PHASE_MASK) != p) {
++		if ((NCR5380_read(STATUS_REG) & PHASE_MASK) != p) {
+ 			dprintk(NDEBUG_PIO, "scsi%d: phase mismatch\n", HOSTNO);
+ 			NCR5380_dprint_phase(NDEBUG_PIO, instance);
+ 			break;
+@@ -2399,7 +2390,6 @@ static void NCR5380_information_transfer
+ 					/* Accept message by clearing ACK */
+ 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 					local_irq_save(flags);
+-					cmd->device->disconnect = 1;
+ 					LIST(cmd,hostdata->disconnected_queue);
+ 					SET_NEXT(cmd, hostdata->disconnected_queue);
+ 					hostdata->connected = NULL;
+@@ -2564,7 +2554,9 @@ static void NCR5380_information_transfer
+ 				printk("scsi%d: unknown phase\n", HOSTNO);
+ 				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			} /* switch(phase) */
+-		} /* if (tmp * SR_REQ) */
++		} else {
++			NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ);
 +		}
-+	}
-+	return 0;
-+}
-+
-+/**
-  * NCR5380_exit - remove an NCR5380
-  * @instance: adapter to remove
-  *
-@@ -1741,6 +1828,32 @@ static int NCR5380_transfer_pio(struct S
- 		return -1;
+ 	} /* while (1) */
  }
  
-+/**
-+ * do_reset - issue a reset command
-+ * @instance: adapter to reset
-+ *
-+ * Issue a reset sequence to the NCR5380 and try and get the bus
-+ * back into sane shape.
-+ *
-+ * This clears the reset interrupt flag because there may be no handler for
-+ * it. When the driver is initialized, the NCR5380_intr() handler has not yet
-+ * been installed. And when in EH we may have released the ST DMA interrupt.
-+ */
-+
-+static void do_reset(struct Scsi_Host *instance)
-+{
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
-+	NCR5380_write(TARGET_COMMAND_REG,
-+	              PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_RST);
-+	udelay(50);
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+	local_irq_restore(flags);
-+}
-+
- /*
-  * Function : do_abort (Scsi_Host *host)
-  *
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:31.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:33.000000000 +1100
+@@ -56,10 +56,6 @@
+  *     
+  */
+ 
+-/* settings for DTC3181E card with only Mustek scanner attached */
+-#define USLEEP_POLL	msecs_to_jiffies(10)
+-#define USLEEP_SLEEP	msecs_to_jiffies(200)
+-
+ #define AUTOPROBE_IRQ
+ 
+ #ifdef CONFIG_SCSI_GENERIC_NCR53C400
