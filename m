@@ -1,86 +1,270 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 06/78] ncr5380: Remove NCR5380_instance_name macro
-Date: Sun, 03 Jan 2016 16:05:07 +1100
-Message-ID: <20160103050502.641981329@telegraphics.com.au>
+Subject: [PATCH v4 21/78] ncr5380: Sleep when polling, if possible
+Date: Sun, 03 Jan 2016 16:05:22 +1100
+Message-ID: <20160103050506.602095112@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-NCR5380_instance_name
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-sleep-when-polling
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This macro makes the code cryptic. Remove it.
+When in process context, sleep during polling if doing so won't add
+significant latency. In interrupt context or if the lock is held, poll
+briefly then give up. Keep both core drivers in sync.
+
+Calibrate busy-wait iterations to allow for variation in chip register
+access times between different 5380 hardware implementations.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Ondrej Zary <linux@rainbow-software.org>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c   |    2 +-
- drivers/scsi/g_NCR5380.c |    7 ++++---
- drivers/scsi/g_NCR5380.h |    2 --
- 3 files changed, 5 insertions(+), 6 deletions(-)
 
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:02:56.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:02.000000000 +1100
-@@ -412,10 +412,11 @@ static int __init generic_NCR5380_detect
- 			continue;
- 		}
- 
--		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
- #ifndef SCSI_G_NCR5380_MEM
-+		instance->io_port = overrides[current_override].NCR5380_map_name;
- 		instance->n_io_port = region_size;
- #else
-+		instance->base = overrides[current_override].NCR5380_map_name;
- 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
- #endif
- 
-@@ -464,10 +465,10 @@ static int generic_NCR5380_release_resou
- 	NCR5380_exit(instance);
- 
- #ifndef SCSI_G_NCR5380_MEM
--	release_region(instance->NCR5380_instance_name, instance->n_io_port);
-+	release_region(instance->io_port, instance->n_io_port);
- #else
- 	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
--	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
-+	release_mem_region(instance->base, NCR5380_region_size);
- #endif
- 
- 
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-01-03 16:02:56.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-01-03 16:03:02.000000000 +1100
-@@ -36,7 +36,6 @@
- 
- #define NCR5380_map_type int
- #define NCR5380_map_name port
--#define NCR5380_instance_name io_port
- #define NCR53C400_register_offset 0
- #define NCR53C400_address_adjust 8
- 
-@@ -58,7 +57,6 @@
- 
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
--#define NCR5380_instance_name base
- #define NCR53C400_register_offset 0x108
- #define NCR53C400_address_adjust 0
- #define NCR53C400_mem_base 0x3880
+Changed since v1:
+- Don't rely on loops_per_jiffy to estimate register access speed, measure
+  it instead.
+
+Changed since v2:
+- As suggested by Geert Uytterhoeven: calibration now begins when jiffies
+  changes and is now less sensitive to small HZ values. Also uses a
+  power-of-two divisor to simplify arithmetic.
+
+---
+ drivers/scsi/NCR5380.c       |   82 ++++++++++++++++++++++++++-----------------
+ drivers/scsi/NCR5380.h       |    1 
+ drivers/scsi/atari_NCR5380.c |   64 ++++++++++++++++++++++-----------
+ 3 files changed, 94 insertions(+), 53 deletions(-)
+
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:02:56.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:02.000000000 +1100
-@@ -790,7 +790,7 @@ static int NCR5380_init(struct Scsi_Host
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:26.000000000 +1100
+@@ -293,44 +293,48 @@ static inline void initialize_SCp(struct
+ }
  
- #ifdef NCR53C400
- 	if (flags & FLAG_NCR53C400)
--		instance->NCR5380_instance_name += NCR53C400_address_adjust;
-+		instance->io_port += NCR53C400_address_adjust;
+ /**
+- *	NCR5380_poll_politely	-	wait for NCR5380 status bits
+- *	@instance: controller to poll
+- *	@reg: 5380 register to poll
+- *	@bit: Bitmask to check
+- *	@val: Value required to exit
+- *
+- *	Polls the NCR5380 in a reasonably efficient manner waiting for
+- *	an event to occur, after a short quick poll we begin giving the
+- *	CPU back in non IRQ contexts
++ * NCR5380_poll_politely - wait for chip register value
++ * @instance: controller to poll
++ * @reg: 5380 register to poll
++ * @bit: Bitmask to check
++ * @val: Value required to exit
++ * @wait: Time-out in jiffies
++ *
++ * Polls the chip in a reasonably efficient manner waiting for an
++ * event to occur. After a short quick poll we begin to yield the CPU
++ * (if possible). In irq contexts the time-out is arbitrarily limited.
++ * Callers may hold locks as long as they are held in irq mode.
+  *
+- *	Returns the value of the register or a negative error code.
++ * Returns 0 if event occurred otherwise -ETIMEDOUT.
+  */
+- 
+-static int NCR5380_poll_politely(struct Scsi_Host *instance, int reg, int bit, int val, int t)
++
++static int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                 int reg, int bit, int val, int wait)
+ {
+-	int n = 500;		/* At about 8uS a cycle for the cpu access */
+-	unsigned long end = jiffies + t;
+-	int r;
+-
+-	while( n-- > 0)
+-	{
+-		r = NCR5380_read(reg);
+-		if((r & bit) == val)
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	unsigned long deadline = jiffies + wait;
++	unsigned long n;
++
++	/* Busy-wait for up to 10 ms */
++	n = min(10000U, jiffies_to_usecs(wait));
++	n *= hostdata->accesses_per_ms;
++	n /= 1000;
++	do {
++		if ((NCR5380_read(reg) & bit) == val)
+ 			return 0;
+ 		cpu_relax();
+-	}
+-	
+-	/* t time yet ? */
+-	while(time_before(jiffies, end))
+-	{
+-		r = NCR5380_read(reg);
+-		if((r & bit) == val)
++	} while (n--);
++
++	if (irqs_disabled() || in_interrupt())
++		return -ETIMEDOUT;
++
++	/* Repeatedly sleep for 1 ms until deadline */
++	while (time_is_after_jiffies(deadline)) {
++		schedule_timeout_uninterruptible(1);
++		if ((NCR5380_read(reg) & bit) == val)
+ 			return 0;
+-		if(!in_interrupt())
+-			cond_resched();
+-		else
+-			cpu_relax();
+ 	}
++
+ 	return -ETIMEDOUT;
+ }
+ 
+@@ -773,6 +777,7 @@ static int NCR5380_init(struct Scsi_Host
+ {
+ 	int i;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
++	unsigned long deadline;
+ 
+ 	if(in_interrupt())
+ 		printk(KERN_ERR "NCR5380_init called with interrupts off!\n");
+@@ -812,6 +817,21 @@ static int NCR5380_init(struct Scsi_Host
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+ 	NCR5380_write(SELECT_ENABLE_REG, 0);
++
++	/* Calibrate register polling loop */
++	i = 0;
++	deadline = jiffies + 1;
++	do {
++		cpu_relax();
++	} while (time_is_after_jiffies(deadline));
++	deadline += msecs_to_jiffies(256);
++	do {
++		NCR5380_read(STATUS_REG);
++		++i;
++		cpu_relax();
++	} while (time_is_after_jiffies(deadline));
++	hostdata->accesses_per_ms = i / 256;
++
+ 	return 0;
+ }
+ 
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:23.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:26.000000000 +1100
+@@ -479,43 +479,48 @@ static inline void initialize_SCp(struct
+ }
+ 
+ /**
+- * NCR5380_poll_politely - wait for NCR5380 status bits
++ * NCR5380_poll_politely - wait for chip register value
+  * @instance: controller to poll
+  * @reg: 5380 register to poll
+  * @bit: Bitmask to check
+  * @val: Value required to exit
++ * @wait: Time-out in jiffies
+  *
+- * Polls the NCR5380 in a reasonably efficient manner waiting for
+- * an event to occur, after a short quick poll we begin giving the
+- * CPU back in non IRQ contexts
++ * Polls the chip in a reasonably efficient manner waiting for an
++ * event to occur. After a short quick poll we begin to yield the CPU
++ * (if possible). In irq contexts the time-out is arbitrarily limited.
++ * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns the value of the register or a negative error code.
++ * Returns 0 if event occurred otherwise -ETIMEDOUT.
+  */
+ 
+ static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int t)
++                                 int reg, int bit, int val, int wait)
+ {
+-	int n = 500;
+-	unsigned long end = jiffies + t;
+-	int r;
+-
+-	while (n-- > 0) {
+-		r = NCR5380_read(reg);
+-		if ((r & bit) == val)
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	unsigned long deadline = jiffies + wait;
++	unsigned long n;
++
++	/* Busy-wait for up to 10 ms */
++	n = min(10000U, jiffies_to_usecs(wait));
++	n *= hostdata->accesses_per_ms;
++	n /= 1000;
++	do {
++		if ((NCR5380_read(reg) & bit) == val)
+ 			return 0;
+ 		cpu_relax();
+-	}
++	} while (n--);
++
++	if (irqs_disabled() || in_interrupt())
++		return -ETIMEDOUT;
+ 
+-	/* t time yet ? */
+-	while (time_before(jiffies, end)) {
+-		r = NCR5380_read(reg);
+-		if ((r & bit) == val)
++	/* Repeatedly sleep for 1 ms until deadline */
++	while (time_is_after_jiffies(deadline)) {
++		schedule_timeout_uninterruptible(1);
++		if ((NCR5380_read(reg) & bit) == val)
+ 			return 0;
+-		if (!in_interrupt())
+-			cond_resched();
+-		else
+-			cpu_relax();
+ 	}
++
+ 	return -ETIMEDOUT;
+ }
+ 
+@@ -811,6 +816,7 @@ static int __init NCR5380_init(struct Sc
+ {
+ 	int i;
+ 	SETUP_HOSTDATA(instance);
++	unsigned long deadline;
+ 
+ 	hostdata->host = instance;
+ 	hostdata->id_mask = 1 << instance->this_id;
+@@ -845,6 +851,20 @@ static int __init NCR5380_init(struct Sc
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+ 	NCR5380_write(SELECT_ENABLE_REG, 0);
+ 
++	/* Calibrate register polling loop */
++	i = 0;
++	deadline = jiffies + 1;
++	do {
++		cpu_relax();
++	} while (time_is_after_jiffies(deadline));
++	deadline += msecs_to_jiffies(256);
++	do {
++		NCR5380_read(STATUS_REG);
++		++i;
++		cpu_relax();
++	} while (time_is_after_jiffies(deadline));
++	hostdata->accesses_per_ms = i / 256;
++
+ 	return 0;
+ }
+ 
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-01-03 16:03:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-01-03 16:03:26.000000000 +1100
+@@ -285,6 +285,7 @@ struct NCR5380_hostdata {
+ 	unsigned spin_max_w;
  #endif
+ 	struct workqueue_struct *work_q;
++	unsigned long accesses_per_ms;	/* chip register accesses per ms */
+ };
  
- 	hostdata->aborted = 0;
+ #ifdef __KERNEL__
