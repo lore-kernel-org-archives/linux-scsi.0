@@ -1,52 +1,44 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH v4 69/78] ncr5380: Fix whitespace in comments using
- regexp
-Date: Sun, 3 Jan 2016 14:10:51 +0000
-Message-ID: <20160103141051.2d46c245@lxorguk.ukuu.org.uk>
-References: <20160103050501.042035135@telegraphics.com.au>
-	<20160103050520.752909053@telegraphics.com.au>
-	<1451807668.4334.38.camel@perches.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s!
+ [kworker/1:1:29]
+Date: Sun, 3 Jan 2016 19:03:41 +0100
+Message-ID: <20160103190341.0000387b@localhost>
+References: <20151217222737.00000ab6@localhost>
+	<20151231180415.00000bfc@localhost>
+	<20160103114628.GA10582@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1451807668.4334.38.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.15.15]:63994 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752092AbcACSDt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 Jan 2016 13:03:49 -0500
+In-Reply-To: <20160103114628.GA10582@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-On Sat, 02 Jan 2016 23:54:28 -0800
-Joe Perches <joe@perches.com> wrote:
+Christoph Hellwig wrote:
+> On Thu, Dec 31, 2015 at 06:04:15PM +0100, Sebastian Herbszt wrote:
+> > I still get this on 4.4.0-rc7-1.g276c9f4-default. Since this did not
+> > happen on 4.3 I checked the scsi changes and found the following commit:
+> > 
+> > scsi: restart list search after unlock in scsi_remove_target
+> > 
+> > Christoph, can it cause this issue?
+> 
+> Apparently yes.  Bad hard a patch to avoid this when he resubmitted
+> my patch, which for some reason didn't get apply.  Can you grab it
+> from the list archives and give it a try?
 
-> On Sun, 2016-01-03 at 16:06 +1100, Finn Thain wrote:
-> > Hanging indentation was a poor choice for the text inside comments.=
- It
-> > has been used in the wrong places and done badly elsewhere. There i=
-s
-> > little consistency within any file. One fork of the core driver use=
-s
-> > tabs for this indentation while the other uses spaces. Better to us=
-e
-> > flush-left alignment throughout.
-> >=20
-> > This patch is the result of the following substitution. It replaces=
- tabs
-> > and spaces at the start of a comment line with a single space.
-> >=20
-> > perl -i -pe 's,^(\t*[/ ]\*)[ \t]+,$1 ,' drivers/scsi/{atari_,}NCR53=
-80.c=C2=A0
-> >=20
-> > This removes some unimportant discrepancies between the two core dr=
-iver
-> > forks so that the important ones become obvious, to facilitate
-> > reunification.
->=20
-> I still think this patch is poor at best and
-> overall not useful.
+Do you mean the following patch?
 
-I would beg to differ. As a tool for understanding the differences as y=
-ou
-step through the versions it's invaluable.
+"[PATCH v2] Separate target visibility from reaped state information" [1]
 
-Alan
+I can give it a try but it will likely take a few days.
+
+[1] http://marc.info/?l=linux-scsi&m=144771953020415&w=2
+
+Sebastian
