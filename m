@@ -1,195 +1,237 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 08/78] ncr5380: Move NCR53C400-specific code
-Date: Sun, 03 Jan 2016 16:05:09 +1100
-Message-ID: <20160103050503.171740246@telegraphics.com.au>
+Subject: [PATCH v4 54/78] ncr5380: Use dsprintk() for queue debugging
+Date: Sun, 03 Jan 2016 16:05:55 +1100
+Message-ID: <20160103050515.341849728@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49392 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbcACFSJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2016 00:18:09 -0500
-Content-Disposition: inline; filename=ncr5380-remove-NCR53C400-macro
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-use-dsprintk-for-queue-debugging
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Move board-specific code like this,
-	NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
-from the core driver to the board driver. Eliminate the NCR53C400 macro
-from the core driver. Removal of all macros like this one will be
-necessary in order to have one core driver that can support all kinds of
-boards.
+Print the command pointers in the log messages for debugging queue data
+structures. The LIST and REMOVE macros can then be removed.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Ondrej Zary <linux@rainbow-software.org>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
+ drivers/scsi/NCR5380.c       |   36 ++++++++++++++++++++++++------------
+ drivers/scsi/atari_NCR5380.c |   43 +++++++++++++++++++++++--------------------
+ 2 files changed, 47 insertions(+), 32 deletions(-)
 
-Changed since v1:
-- Don't set FLAG_NO_PSEUDO_DMA when !defined(PSEUDO_DMA). It's pointless.
-
----
- drivers/scsi/NCR5380.c   |   18 ------------------
- drivers/scsi/g_NCR5380.c |   21 ++++++++++++++++-----
- drivers/scsi/g_NCR5380.h |    6 ++----
- 3 files changed, 18 insertions(+), 27 deletions(-)
-
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:15.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:17.000000000 +1100
+@@ -936,10 +936,8 @@ static void NCR5380_main(struct work_str
+ 			     prev = NULL; tmp; prev = tmp, tmp = NEXT(tmp)) {
+ 				u8 lun = tmp->device->lun;
+ 
+-				dprintk(NDEBUG_LISTS,
+-				        "MAIN tmp=%p target=%d busy=%d lun=%d\n",
+-				        tmp, scmd_id(tmp), hostdata->busy[scmd_id(tmp)],
+-				        lun);
++				dsprintk(NDEBUG_QUEUES, instance, "main: tmp=%p target=%d busy=%d lun=%d\n",
++				         tmp, scmd_id(tmp), hostdata->busy[scmd_id(tmp)], lun);
+ 				/*  When we find one, remove it from the issue queue. */
+ 				if (
+ #ifdef SUPPORT_TAGS
+@@ -956,6 +954,10 @@ static void NCR5380_main(struct work_str
+ 						hostdata->issue_queue = NEXT(tmp);
+ 					}
+ 					SET_NEXT(tmp, NULL);
++					dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES,
++					         instance, "main: removed %p from issue queue %p\n",
++					         tmp, prev);
++
+ 					hostdata->retain_dma_intr++;
+ 
+ 					/*
+@@ -964,9 +966,6 @@ static void NCR5380_main(struct work_str
+ 					 * On failure, we must add the command back to the
+ 					 *   issue queue so we can keep trying.
+ 					 */
+-					dprintk(NDEBUG_MAIN, "scsi%d: main(): command for target %d "
+-						    "lun %d removed from issue_queue\n",
+-						    HOSTNO, tmp->device->id, lun);
+ 					/*
+ 					 * REQUEST SENSE commands are issued without tagged
+ 					 * queueing, even on SCSI-II devices because the
+@@ -989,13 +988,14 @@ static void NCR5380_main(struct work_str
+ 						LIST(tmp, hostdata->issue_queue);
+ 						SET_NEXT(tmp, hostdata->issue_queue);
+ 						hostdata->issue_queue = tmp;
++						dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES,
++						         instance, "main: select() failed, %p returned to issue queue\n",
++						         tmp);
+ #ifdef SUPPORT_TAGS
+ 						cmd_free_tag(tmp);
+ #endif
+ 						hostdata->retain_dma_intr--;
+ 						done = 0;
+-						dprintk(NDEBUG_MAIN, "scsi%d: main(): select() failed, "
+-							    "returned to issue_queue\n", HOSTNO);
+ 					}
+ 					if (hostdata->connected)
+ 						break;
+@@ -2017,8 +2017,9 @@ static void NCR5380_information_transfer
+ 				case COMMAND_COMPLETE:
+ 					/* Accept message by clearing ACK */
+ 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-					dprintk(NDEBUG_QUEUES, "scsi%d: command for target %d, lun %llu "
+-						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
++					dsprintk(NDEBUG_QUEUES, instance,
++					         "COMMAND COMPLETE %p target %d lun %llu\n",
++					         cmd, scmd_id(cmd), cmd->device->lun);
+ 
+ 					hostdata->connected = NULL;
+ #ifdef SUPPORT_TAGS
+@@ -2067,13 +2068,11 @@ static void NCR5380_information_transfer
+ 					    (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
+ 						scsi_eh_prep_cmnd(cmd, &hostdata->ses, NULL, 0, ~0);
+ 
+-						dprintk(NDEBUG_AUTOSENSE, "scsi%d: performing request sense\n", HOSTNO);
+-
+ 						LIST(cmd,hostdata->issue_queue);
+ 						SET_NEXT(cmd, hostdata->issue_queue);
+ 						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
+-						dsprintk(NDEBUG_QUEUES, instance,
+-						         "REQUEST SENSE cmd %p added to head of issue queue\n",
++						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
++						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
+ 						         cmd);
+ 					} else {
+ 						cmd->scsi_done(cmd);
+@@ -2124,10 +2123,10 @@ static void NCR5380_information_transfer
+ 					SET_NEXT(cmd, hostdata->disconnected_queue);
+ 					hostdata->connected = NULL;
+ 					hostdata->disconnected_queue = cmd;
+-					dprintk(NDEBUG_QUEUES, "scsi%d: command for target %d lun %llu was "
+-						  "moved from connected to the "
+-						  "disconnected_queue\n", HOSTNO,
+-						  cmd->device->id, cmd->device->lun);
++					dsprintk(NDEBUG_INFORMATION | NDEBUG_QUEUES,
++					         instance, "connected command %p for target %d lun %llu moved to disconnected queue\n",
++					         cmd, scmd_id(cmd), cmd->device->lun);
++
+ 					/*
+ 					 * Restore phase bits to 0 so an interrupted selection,
+ 					 * arbitration can resume.
+@@ -2427,7 +2426,11 @@ static void NCR5380_reselect(struct Scsi
+ 		}
+ 	}
+ 
+-	if (!tmp) {
++	if (tmp) {
++		dsprintk(NDEBUG_RESELECTION | NDEBUG_QUEUES, instance,
++		         "reselect: removed %p from disconnected queue\n", tmp);
++	} else {
++
+ #ifdef SUPPORT_TAGS
+ 		shost_printk(KERN_ERR, instance, "target bitmask 0x%02x lun %d tag %d not in disconnected queue.\n",
+ 		             target_mask, lun, tag);
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:03.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:06.000000000 +1100
-@@ -654,9 +654,6 @@ static void prepare_info(struct Scsi_Hos
- #ifdef UNSAFE
- 	         "UNSAFE "
- #endif
--#ifdef NCR53C400
--	         "NCR53C400 "
--#endif
- 	         "");
- }
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:04:15.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:04:17.000000000 +1100
+@@ -828,8 +828,9 @@ static void NCR5380_main(struct work_str
+ 			 */
+ 			for (tmp = (struct scsi_cmnd *) hostdata->issue_queue, prev = NULL; tmp; prev = tmp, tmp = (struct scsi_cmnd *) tmp->host_scribble)
+ 			{
+-				if (prev != tmp)
+-				    dprintk(NDEBUG_LISTS, "MAIN tmp=%p   target=%d   busy=%d lun=%llu\n", tmp, tmp->device->id, hostdata->busy[tmp->device->id], tmp->device->lun);
++				dsprintk(NDEBUG_QUEUES, instance, "main: tmp=%p target=%d busy=%d lun=%llu\n",
++				         tmp, scmd_id(tmp), hostdata->busy[scmd_id(tmp)],
++				         tmp->device->lun);
+ 				/*  When we find one, remove it from the issue queue. */
+ 				if (!(hostdata->busy[tmp->device->id] &
+ 				      (1 << (u8)(tmp->device->lun & 0xff)))) {
+@@ -841,6 +842,9 @@ static void NCR5380_main(struct work_str
+ 						hostdata->issue_queue = (struct scsi_cmnd *) tmp->host_scribble;
+ 					}
+ 					tmp->host_scribble = NULL;
++					dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES,
++					         instance, "main: removed %p from issue queue %p\n",
++					         tmp, prev);
  
-@@ -782,15 +779,6 @@ static int NCR5380_init(struct Scsi_Host
- 
- 	if(in_interrupt())
- 		printk(KERN_ERR "NCR5380_init called with interrupts off!\n");
--	/* 
--	 * On NCR53C400 boards, NCR5380 registers are mapped 8 past 
--	 * the base address.
--	 */
--
--#ifdef NCR53C400
--	if (flags & FLAG_NCR53C400)
--		instance->io_port += NCR53C400_address_adjust;
--#endif
- 
- 	hostdata->aborted = 0;
- 	hostdata->id_mask = 1 << instance->this_id;
-@@ -824,12 +812,6 @@ static int NCR5380_init(struct Scsi_Host
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(TARGET_COMMAND_REG, 0);
- 	NCR5380_write(SELECT_ENABLE_REG, 0);
--
--#ifdef NCR53C400
--	if (hostdata->flags & FLAG_NCR53C400) {
--		NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
--	}
--#endif
- 	return 0;
- }
- 
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:03.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:06.000000000 +1100
-@@ -64,9 +64,7 @@
- #define AUTOPROBE_IRQ
- 
- #ifdef CONFIG_SCSI_GENERIC_NCR53C400
--#define NCR53C400_PSEUDO_DMA 1
- #define PSEUDO_DMA
--#define NCR53C400
- #endif
- 
- #include <asm/io.h>
-@@ -263,7 +261,7 @@ static int __init generic_NCR5380_detect
- 	static unsigned int __initdata dtc_3181e_ports[] = {
- 		0x220, 0x240, 0x280, 0x2a0, 0x2c0, 0x300, 0x320, 0x340, 0
- 	};
--	int flags = 0;
-+	int flags;
- 	struct Scsi_Host *instance;
- #ifdef SCSI_G_NCR5380_MEM
- 	unsigned long base;
-@@ -324,12 +322,15 @@ static int __init generic_NCR5380_detect
- 			continue;
- 
- 		ports = NULL;
-+		flags = 0;
- 		switch (overrides[current_override].board) {
- 		case BOARD_NCR5380:
- 			flags = FLAG_NO_PSEUDO_DMA;
- 			break;
- 		case BOARD_NCR53C400:
-+#ifdef PSEUDO_DMA
- 			flags = FLAG_NCR53C400;
-+#endif
- 			break;
- 		case BOARD_NCR53C400A:
- 			flags = FLAG_NO_PSEUDO_DMA;
-@@ -415,6 +416,13 @@ static int __init generic_NCR5380_detect
- #ifndef SCSI_G_NCR5380_MEM
- 		instance->io_port = overrides[current_override].NCR5380_map_name;
- 		instance->n_io_port = region_size;
+ 					/* 
+ 					 * Attempt to establish an I_T_L nexus here. 
+@@ -848,8 +852,6 @@ static void NCR5380_main(struct work_str
+ 					 * On failure, we must add the command back to the
+ 					 *   issue queue so we can keep trying. 
+ 					 */
+-					dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, "scsi%d : main() : command for target %d lun %llu removed from issue_queue\n", instance->host_no, tmp->device->id, tmp->device->lun);
+-	
+ 					/*
+ 					 * REQUEST SENSE commands are issued without tagged
+ 					 * queueing, even on SCSI-II devices because the
+@@ -864,8 +866,10 @@ static void NCR5380_main(struct work_str
+ 						LIST(tmp, hostdata->issue_queue);
+ 						tmp->host_scribble = (unsigned char *) hostdata->issue_queue;
+ 						hostdata->issue_queue = tmp;
++						dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES,
++						         instance, "main: select() failed, %p returned to issue queue\n",
++						         tmp);
+ 						done = 0;
+-						dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, "scsi%d : main(): select() failed, returned to issue_queue\n", instance->host_no);
+ 					}
+ 					if (hostdata->connected)
+ 						break;
+@@ -1847,8 +1851,11 @@ static void NCR5380_information_transfer
+ 					/* Accept message by clearing ACK */
+ 					sink = 1;
+ 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++					dsprintk(NDEBUG_QUEUES, instance,
++					         "COMMAND COMPLETE %p target %d lun %llu\n",
++					         cmd, scmd_id(cmd), cmd->device->lun);
 +
-+		/*
-+		 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
-+		 * the base address.
-+		 */
-+		if (overrides[current_override].board == BOARD_NCR53C400)
-+			instance->io_port += 8;
- #else
- 		instance->base = overrides[current_override].NCR5380_map_name;
- 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
-@@ -422,6 +430,9 @@ static int __init generic_NCR5380_detect
+ 					hostdata->connected = NULL;
+-					dprintk(NDEBUG_QUEUES, "scsi%d : command for target %d, lun %llu completed\n", instance->host_no, cmd->device->id, cmd->device->lun);
+ 					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
  
- 		NCR5380_init(instance, flags);
+ 					/* 
+@@ -1881,14 +1888,12 @@ static void NCR5380_information_transfer
+ 					if ((cmd->cmnd[0] != REQUEST_SENSE) && (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
+ 						scsi_eh_prep_cmnd(cmd, &hostdata->ses, NULL, 0, ~0);
  
-+		if (overrides[current_override].board == BOARD_NCR53C400)
-+			NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
+-						dprintk(NDEBUG_AUTOSENSE, "scsi%d : performing request sense\n", instance->host_no);
+-
+ 						LIST(cmd, hostdata->issue_queue);
+ 						cmd->host_scribble = (unsigned char *)
+ 						    hostdata->issue_queue;
+ 						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
+-						dsprintk(NDEBUG_QUEUES, instance,
+-						         "REQUEST SENSE cmd %p added to head of issue queue\n",
++						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
++						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
+ 						         cmd);
+ 					} else {
+ 						cmd->scsi_done(cmd);
+@@ -1925,7 +1930,10 @@ static void NCR5380_information_transfer
+ 						    hostdata->disconnected_queue;
+ 						hostdata->connected = NULL;
+ 						hostdata->disconnected_queue = cmd;
+-						dprintk(NDEBUG_QUEUES, "scsi%d : command for target %d lun %llu was moved from connected to" "  the disconnected_queue\n", instance->host_no, cmd->device->id, cmd->device->lun);
++						dsprintk(NDEBUG_INFORMATION | NDEBUG_QUEUES,
++						         instance, "connected command %p for target %d lun %llu moved to disconnected queue\n",
++						         cmd, scmd_id(cmd), cmd->device->lun);
 +
- 		NCR5380_maybe_reset_bus(instance);
- 
- 		if (overrides[current_override].irq != IRQ_AUTO)
-@@ -506,7 +517,7 @@ generic_NCR5380_biosparam(struct scsi_de
- }
- #endif
- 
--#ifdef NCR53C400_PSEUDO_DMA
-+#ifdef PSEUDO_DMA
- 
- /**
-  *	NCR5380_pread		-	pseudo DMA read
-@@ -690,7 +701,7 @@ static inline int NCR5380_pwrite(struct
- 		; 	// TIMEOUT
- 	return 0;
- }
--#endif				/* PSEUDO_DMA */
-+#endif /* PSEUDO_DMA */
- 
- /*
-  *	Include the NCR5380 core code that we build our driver around	
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-01-03 16:03:02.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-01-03 16:03:06.000000000 +1100
-@@ -14,7 +14,7 @@
- #ifndef GENERIC_NCR5380_H
- #define GENERIC_NCR5380_H
- 
--#ifdef NCR53C400
-+#ifdef CONFIG_SCSI_GENERIC_NCR53C400
- #define BIOSPARAM
- #define NCR5380_BIOSPARAM generic_NCR5380_biosparam
- #else
-@@ -37,9 +37,8 @@
- #define NCR5380_map_type int
- #define NCR5380_map_name port
- #define NCR53C400_register_offset 0
--#define NCR53C400_address_adjust 8
- 
--#ifdef NCR53C400
-+#ifdef CONFIG_SCSI_GENERIC_NCR53C400
- #define NCR5380_region_size 16
- #else
- #define NCR5380_region_size 8
-@@ -58,7 +57,6 @@
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
- #define NCR53C400_register_offset 0x108
--#define NCR53C400_address_adjust 0
- #define NCR53C400_mem_base 0x3880
- #define NCR53C400_host_buffer 0x3900
- #define NCR5380_region_size 0x3a00
-
-
+ 						/* 
+ 						 * Restore phase bits to 0 so an interrupted selection, 
+ 						 * arbitration can resume.
+@@ -2178,7 +2186,11 @@ static void NCR5380_reselect(struct Scsi
+ 			break;
+ 		}
+ 	}
+-	if (!tmp) {
++
++	if (tmp) {
++		dsprintk(NDEBUG_RESELECTION | NDEBUG_QUEUES, instance,
++		         "reselect: removed %p from disconnected queue\n", tmp);
++	} else {
+ 		shost_printk(KERN_ERR, instance, "target bitmask 0x%02x lun %d not in disconnected queue.\n",
+ 		             target_mask, lun);
+ 		/*
