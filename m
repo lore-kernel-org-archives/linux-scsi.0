@@ -1,118 +1,217 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 18/78] ncr5380: Eliminate USLEEP_WAITLONG delay
-Date: Sun, 03 Jan 2016 16:05:19 +1100
-Message-ID: <20160103050505.811790912@telegraphics.com.au>
+Subject: [PATCH v4 07/78] ncr5380: Split NCR5380_init() into two functions
+Date: Sun, 03 Jan 2016 16:05:08 +1100
+Message-ID: <20160103050502.911804817@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-eliminate-USLEEP_WAITLONG
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline; filename=ncr5380-bus-wedge
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Linux 2.1.105 introduced the USLEEP_WAITLONG delay, apparently "needed for
-Mustek scanners". It is intended to stall the issue queue for 5 seconds.
-There are a number of problems with this.
+This patch splits the NCR5380_init() function into two parts, similar
+to the scheme used with atari_NCR5380.c. This avoids two problems.
 
-1. Only g_NCR5380 enables the delay, which implies that the other five
-   drivers using the NCR5380.c core driver remain incompatible with
-   Mustek scanners.
+Firstly, NCR5380_init() may perform a bus reset, which would cause the
+chip to assert IRQ. The chip is unable to mask its bus reset interrupt.
+Drivers can't call request_irq() before calling NCR5380_init(), because
+initialization must happen before the interrupt handler executes. If
+driver initialization causes an interrupt it may be problematic on some
+platforms. To avoid that, first move the bus reset code into
+NCR5380_maybe_reset_bus().
 
-2. The delay is not implemented by atari_NCR5380.c, which is problematic
-   for re-unifying the two core driver forks.
-
-3. The delay is implemented using NCR5380_set_timer() which makes it
-   unreliable. A new command queued by the mid-layer cancels the delay.
-
-4. The delay is applied indiscriminately in several situations in which
-   NCR5380_select() returns -1. These are-- reselection by the target,
-   failure of the target to assert BSY, and failure of the target to
-   assert REQ. It's clear from the comments that USLEEP_WAITLONG is not
-   relevant to the reselection case. And reportedly, these scanners do
-   not disconnect.
-
-5. atari_NCR5380.c was forked before Linux 2.1.105, so it was spared some
-   of the damage done to NCR5380.c. In this case, the atari_NCR5380.c core
-   driver was more standard-compliant and may not have needed any
-   workaround like the USLEEP_WAITLONG kludge. The compliance issue was
-   addressed in the previous patch.
-
-If these scanners still don't work, we need a better solution. Retrying
-selection until EH aborts a command offers equivalent robustness. Bugs in
-the existing driver prevent EH working correctly but this is addressed in
-a subsequent patch. Remove USLEEP_WAITLONG.
+Secondly, NCR5380_init() contains some board-specific interrupt setup code
+for the NCR53C400 that does not belong in the core driver. In moving this
+code, better not re-order interrupt initialization and bus reset. Again,
+the solution is to move the bus reset code into NCR5380_maybe_reset_bus().
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Ondrej Zary <linux@rainbow-software.org>
 
 ---
- drivers/scsi/NCR5380.c   |   19 +++++--------------
- drivers/scsi/g_NCR5380.c |    1 -
- 2 files changed, 5 insertions(+), 15 deletions(-)
+ drivers/scsi/NCR5380.c      |   34 ++++++++++++++++++++--------------
+ drivers/scsi/NCR5380.h      |    1 +
+ drivers/scsi/arm/cumana_1.c |    2 ++
+ drivers/scsi/arm/oak.c      |    2 ++
+ drivers/scsi/dmx3191d.c     |    2 ++
+ drivers/scsi/dtc.c          |    2 ++
+ drivers/scsi/g_NCR5380.c    |    2 ++
+ drivers/scsi/pas16.c        |    2 ++
+ drivers/scsi/t128.c         |    2 ++
+ 9 files changed, 35 insertions(+), 14 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:19.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:20.000000000 +1100
-@@ -468,10 +468,6 @@ static void NCR5380_print_phase(struct S
- #ifndef USLEEP_POLL
- #define USLEEP_POLL msecs_to_jiffies(200)
- #endif
--#ifndef USLEEP_WAITLONG
--/* RvC: (reasonable time to wait on select error) */
--#define USLEEP_WAITLONG USLEEP_SLEEP
--#endif
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:02.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:03.000000000 +1100
+@@ -777,8 +777,7 @@ static void lprint_opcode(int opcode, st
  
- /* 
-  * Function : int should_disconnect (unsigned char cmd)
-@@ -619,8 +615,8 @@ static void prepare_info(struct Scsi_Hos
- 	         "can_queue %d, cmd_per_lun %d, "
- 	         "sg_tablesize %d, this_id %d, "
- 	         "flags { %s%s%s%s}, "
--#if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
--		 "USLEEP_POLL %lu, USLEEP_WAITLONG %lu, "
-+#if defined(USLEEP_POLL) && defined(USLEEP_SLEEP)
-+		 "USLEEP_POLL %lu, USLEEP_SLEEP %lu, "
+ static int NCR5380_init(struct Scsi_Host *instance, int flags)
+ {
+-	int i, pass;
+-	unsigned long timeout;
++	int i;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 
+ 	if(in_interrupt())
+@@ -831,18 +830,26 @@ static int NCR5380_init(struct Scsi_Host
+ 		NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
+ 	}
  #endif
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
-@@ -631,8 +627,8 @@ static void prepare_info(struct Scsi_Hos
- 	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
- 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
--#if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
--	         USLEEP_POLL, USLEEP_WAITLONG,
-+#if defined(USLEEP_POLL) && defined(USLEEP_SLEEP)
-+	         USLEEP_POLL, USLEEP_SLEEP,
++	return 0;
++}
+ 
+-	/* 
+-	 * Detect and correct bus wedge problems.
+-	 *
+-	 * If the system crashed, it may have crashed in a state 
+-	 * where a SCSI command was still executing, and the 
+-	 * SCSI bus is not in a BUS FREE STATE.
+-	 *
+-	 * If this is the case, we'll try to abort the currently
+-	 * established nexus which we know nothing about, and that
+-	 * failing, do a hard reset of the SCSI bus 
+-	 */
++/**
++ * NCR5380_maybe_reset_bus - Detect and correct bus wedge problems.
++ * @instance: adapter to check
++ *
++ * If the system crashed, it may have crashed with a connected target and
++ * the SCSI bus busy. Check for BUS FREE phase. If not, try to abort the
++ * currently established nexus, which we know nothing about. Failing that
++ * do a bus reset.
++ *
++ * Note that a bus reset will cause the chip to assert IRQ.
++ *
++ * Returns 0 if successful, otherwise -ENXIO.
++ */
++
++static int NCR5380_maybe_reset_bus(struct Scsi_Host *instance)
++{
++	int pass;
+ 
+ 	for (pass = 1; (NCR5380_read(STATUS_REG) & SR_BSY) && pass <= 6; ++pass) {
+ 		switch (pass) {
+@@ -850,7 +857,6 @@ static int NCR5380_init(struct Scsi_Host
+ 		case 3:
+ 		case 5:
+ 			printk(KERN_INFO "scsi%d: SCSI bus busy, waiting up to five seconds\n", instance->host_no);
+-			timeout = jiffies + 5 * HZ;
+ 			NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, 0, 5*HZ);
+ 			break;
+ 		case 2:
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-01-03 16:02:54.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-01-03 16:03:03.000000000 +1100
+@@ -318,6 +318,7 @@ static void NCR5380_print(struct Scsi_Ho
+ static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
  #endif
- #ifdef AUTOPROBE_IRQ
- 	         "AUTOPROBE_IRQ "
-@@ -1030,15 +1026,10 @@ static void NCR5380_main(struct work_str
- 			if (!NCR5380_select(instance, tmp)) {
- 				/* OK or bad target */
- 			} else {
--				/* RvC: device failed, so we wait a long time
--				   this is needed for Mustek scanners, that
--				   do not respond to commands immediately
--				   after a scan */
--				printk(KERN_DEBUG "scsi%d: device %d did not respond in time\n", instance->host_no, tmp->device->id);
- 				LIST(tmp, hostdata->issue_queue);
- 				tmp->host_scribble = (unsigned char *) hostdata->issue_queue;
- 				hostdata->issue_queue = tmp;
--				NCR5380_set_timer(hostdata, USLEEP_WAITLONG);
-+				done = 0;
- 			}
- 		}	/* if hostdata->selecting */
- 		if (hostdata->connected
+ static int NCR5380_init(struct Scsi_Host *instance, int flags);
++static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
+ static void NCR5380_exit(struct Scsi_Host *instance);
+ static void NCR5380_information_transfer(struct Scsi_Host *instance);
+ #ifndef DONT_USE_INTR
+Index: linux/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2016-01-03 16:02:56.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2016-01-03 16:03:03.000000000 +1100
+@@ -240,6 +240,8 @@ static int cumanascsi1_probe(struct expa
+ 
+ 	NCR5380_init(host, 0);
+ 
++	NCR5380_maybe_reset_bus(host);
++
+         priv(host)->ctrl = 0;
+         writeb(0, priv(host)->base + CTRL);
+ 
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2016-01-03 16:02:56.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2016-01-03 16:03:03.000000000 +1100
+@@ -145,6 +145,8 @@ static int oakscsi_probe(struct expansio
+ 
+ 	NCR5380_init(host, 0);
+ 
++	NCR5380_maybe_reset_bus(host);
++
+ 	ret = scsi_add_host(host, &ec->dev);
+ 	if (ret)
+ 		goto out_unmap;
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-01-03 16:02:56.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-01-03 16:03:03.000000000 +1100
+@@ -97,6 +97,8 @@ static int dmx3191d_probe_one(struct pci
+ 
+ 	NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
+ 
++	NCR5380_maybe_reset_bus(shost);
++
+ 	pci_set_drvdata(pdev, shost);
+ 
+ 	error = scsi_add_host(shost, &pdev->dev);
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2016-01-03 16:02:56.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2016-01-03 16:03:03.000000000 +1100
+@@ -237,6 +237,8 @@ found:
+ 
+ 		NCR5380_init(instance, 0);
+ 
++		NCR5380_maybe_reset_bus(instance);
++
+ 		NCR5380_write(DTC_CONTROL_REG, CSR_5380_INTR);	/* Enable int's */
+ 		if (overrides[current_override].irq != IRQ_AUTO)
+ 			instance->irq = overrides[current_override].irq;
 Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:06.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:20.000000000 +1100
-@@ -59,7 +59,6 @@
- /* settings for DTC3181E card with only Mustek scanner attached */
- #define USLEEP_POLL	msecs_to_jiffies(10)
- #define USLEEP_SLEEP	msecs_to_jiffies(200)
--#define USLEEP_WAITLONG	msecs_to_jiffies(5000)
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:02.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:03:03.000000000 +1100
+@@ -422,6 +422,8 @@ static int __init generic_NCR5380_detect
  
- #define AUTOPROBE_IRQ
+ 		NCR5380_init(instance, flags);
  
++		NCR5380_maybe_reset_bus(instance);
++
+ 		if (overrides[current_override].irq != IRQ_AUTO)
+ 			instance->irq = overrides[current_override].irq;
+ 		else
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2016-01-03 16:02:56.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2016-01-03 16:03:03.000000000 +1100
+@@ -384,6 +384,8 @@ static int __init pas16_detect(struct sc
+ 
+ 	NCR5380_init(instance, 0);
+ 
++	NCR5380_maybe_reset_bus(instance);
++
+ 	if (overrides[current_override].irq != IRQ_AUTO)
+ 	    instance->irq = overrides[current_override].irq;
+ 	else 
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2016-01-03 16:02:56.000000000 +1100
++++ linux/drivers/scsi/t128.c	2016-01-03 16:03:03.000000000 +1100
+@@ -215,6 +215,8 @@ found:
+ 
+ 	NCR5380_init(instance, 0);
+ 
++	NCR5380_maybe_reset_bus(instance);
++
+ 	if (overrides[current_override].irq != IRQ_AUTO)
+ 	    instance->irq = overrides[current_override].irq;
+ 	else 
