@@ -1,16 +1,30 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 53/78] ncr5380: Use shost_priv helper
-Date: Sun, 03 Jan 2016 16:05:54 +1100
-Message-ID: <20160103050515.061821241@telegraphics.com.au>
+Subject: [PATCH v4 49/78] ncr5380: Remove redundant ICR_ARBITRATION_LOST test and eliminate FLAG_DTC3181E
+Date: Sun, 03 Jan 2016 16:05:50 +1100
+Message-ID: <20160103050513.991541564@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-use-shost_priv
+Content-Disposition: inline; filename=ncr5380-eliminate-redundant-ICR_ARBITRATION_LOST-test
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Make use of the shost_priv() helper. Remove HOSTDATA and SETUP_HOSTDATA
-macros because they harm readability.
+Remove FLAG_DTC3181E. It was used to suppress a final Arbitration Lost
+(SEL asserted) test that isn't actually needed. The test was suppressed
+because it causes problems for DTC436 and DTC536 chips. It takes place
+after the host wins arbitration, so SEL has been asserted. These chips
+can't seem to tell whether it was the host or another bus device that
+did so.
+
+This questionable final test appears in a flow chart in an early NCR5380
+datasheet. It was removed from later documents like the DP5380 datasheet.
+
+By the time this final test takes place, the driver has already tested
+the Arbitration Lost bit several times. The first test happens 3 us after
+BUS FREE (or longer due to register access delays). The protocol requires
+that a device stop signalling within 1.8 us after BUS FREE unless it won
+arbitration, in which case it must assert SEL, which is detected 1.2 us
+later by the first Arbitration Lost test.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
@@ -18,186 +32,106 @@ Tested-by: Ondrej Zary <linux@rainbow-software.org>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c       |   23 ++++++++++-------------
- drivers/scsi/atari_NCR5380.c |   20 +++++++-------------
- 2 files changed, 17 insertions(+), 26 deletions(-)
+ drivers/scsi/NCR5380.c       |   14 +-------------
+ drivers/scsi/NCR5380.h       |    1 -
+ drivers/scsi/atari_NCR5380.c |    9 ---------
+ drivers/scsi/dmx3191d.c      |    2 +-
+ drivers/scsi/g_NCR5380.c     |    2 +-
+ 5 files changed, 3 insertions(+), 25 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:04:14.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:04:15.000000000 +1100
-@@ -464,7 +464,7 @@ static irqreturn_t __init probe_intr(int
- static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
- 						int possible)
- {
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned long timeout;
- 	int trying_irqs, i, mask;
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:04:02.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:04:08.000000000 +1100
+@@ -528,14 +528,13 @@ static void prepare_info(struct Scsi_Hos
+ 	         "base 0x%lx, irq %d, "
+ 	         "can_queue %d, cmd_per_lun %d, "
+ 	         "sg_tablesize %d, this_id %d, "
+-	         "flags { %s%s%s%s}, "
++	         "flags { %s%s%s}, "
+ 	         "options { %s} ",
+ 	         instance->hostt->name, instance->io_port, instance->n_io_port,
+ 	         instance->base, instance->irq,
+ 	         instance->can_queue, instance->cmd_per_lun,
+ 	         instance->sg_tablesize, instance->this_id,
+ 	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
+-	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
+ 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
+ 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
+ #ifdef AUTOPROBE_IRQ
+@@ -1159,17 +1158,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_write(INITIATOR_COMMAND_REG,
+ 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
  
-@@ -586,9 +586,7 @@ static int __maybe_unused NCR5380_write_
- static int __maybe_unused NCR5380_show_info(struct seq_file *m,
- 	struct Scsi_Host *instance)
- {
--	struct NCR5380_hostdata *hostdata;
--
--	hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-	if (!(hostdata->flags & FLAG_DTC3181E) &&
+-	    /* RvC: DTC3181E has some trouble with this
+-	     *      so we simply removed it. Seems to work with
+-	     *      only Mustek scanner attached
+-	     */
+-	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
+-		NCR5380_write(MODE_REG, MR_BASE);
+-		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		dprintk(NDEBUG_ARBITRATION, "scsi%d : lost arbitration, deasserting ICR_ASSERT_SEL\n", instance->host_no);
+-		return -1;
+-	}
+ 	/* 
+ 	 * Again, bus clear + bus settle time is 1.2us, however, this is 
+ 	 * a minimum so we'll udelay ceil(1.2)
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-01-03 16:04:00.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-01-03 16:04:08.000000000 +1100
+@@ -232,7 +232,6 @@
  
- 	seq_printf(m, "Highwater I/O busy spin counts: write %d, read %d\n",
- 	        hostdata->spin_max_w, hostdata->spin_max_r);
-@@ -614,8 +612,8 @@ static int __maybe_unused NCR5380_show_i
- 
- static int NCR5380_init(struct Scsi_Host *instance, int flags)
- {
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int i;
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 	unsigned long deadline;
- 
- 	if(in_interrupt())
-@@ -728,7 +726,7 @@ static int NCR5380_maybe_reset_bus(struc
- 
- static void NCR5380_exit(struct Scsi_Host *instance)
- {
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
- 	cancel_work_sync(&hostdata->main_task);
- 	destroy_workqueue(hostdata->work_q);
-@@ -1037,7 +1035,7 @@ static irqreturn_t NCR5380_intr(int irq,
-  
- static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- {
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char tmp[3], phase;
- 	unsigned char *data;
- 	int len;
-@@ -1511,7 +1509,7 @@ static int NCR5380_transfer_dma(struct S
- 	unsigned char saved_data = 0, overrun = 0, residue;
- #endif
- 
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
- 	if ((tmp = (NCR5380_read(STATUS_REG) & PHASE_MASK)) != p) {
- 		*phase = tmp;
-@@ -1743,7 +1741,7 @@ static int NCR5380_transfer_dma(struct S
-  */
- 
- static void NCR5380_information_transfer(struct Scsi_Host *instance) {
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *)instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char msgout = NOP;
- 	int sink = 0;
- 	int len;
-@@ -2090,8 +2088,7 @@ static void NCR5380_information_transfer
-  */
- 
- static void NCR5380_reselect(struct Scsi_Host *instance) {
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *)
--	 instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char target_mask;
- 	unsigned char lun, phase;
- 	int len;
-@@ -2214,7 +2211,7 @@ static void NCR5380_reselect(struct Scsi
- 
- #ifdef REAL_DMA
- static void NCR5380_dma_complete(NCR5380_instance * instance) {
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int transferred;
- 
- 	/*
-@@ -2268,7 +2265,7 @@ static void NCR5380_dma_complete(NCR5380
- static int NCR5380_abort(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *instance = cmd->device->host;
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	struct scsi_cmnd *tmp, **prev;
- 	unsigned long flags;
- 
+ #define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
+ #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
+-#define FLAG_DTC3181E			16	/* DTC3181E */
+ #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
+ #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
+ #define FLAG_TOSHIBA_DELAY		128	/* Allow for borken CD-ROMs */
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:14.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:15.000000000 +1100
-@@ -196,12 +196,6 @@
-  * possible) function may be used.
-  */
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:07.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:08.000000000 +1100
+@@ -1420,15 +1420,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_write(INITIATOR_COMMAND_REG,
+ 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
  
--/* Macros ease life... :-) */
--#define	SETUP_HOSTDATA(in)				\
--    struct NCR5380_hostdata *hostdata =			\
--	(struct NCR5380_hostdata *)(in)->hostdata
--#define	HOSTDATA(in) ((struct NCR5380_hostdata *)(in)->hostdata)
+-	if ((NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST) ||
+-	    hostdata->connected) {
+-		NCR5380_write(MODE_REG, MR_BASE);
+-		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		dprintk(NDEBUG_ARBITRATION, "scsi%d: lost arbitration, deasserting ICR_ASSERT_SEL\n",
+-			   HOSTNO);
+-		return -1;
+-	}
 -
- #define	NEXT(cmd)		((struct scsi_cmnd *)(cmd)->host_scribble)
- #define	SET_NEXT(cmd,next)	((cmd)->host_scribble = (void *)(next))
- #define	NEXTADDR(cmd)		((struct scsi_cmnd **)&(cmd)->host_scribble)
-@@ -672,8 +666,8 @@ static void prepare_info(struct Scsi_Hos
+ 	/*
+ 	 * Again, bus clear + bus settle time is 1.2us, however, this is
+ 	 * a minimum so we'll udelay ceil(1.2)
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-01-03 16:04:03.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-01-03 16:04:08.000000000 +1100
+@@ -91,7 +91,7 @@ static int dmx3191d_probe_one(struct pci
+ 	 */
+ 	shost->irq = NO_IRQ;
  
- static int __init NCR5380_init(struct Scsi_Host *instance, int flags)
- {
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int i;
--	SETUP_HOSTDATA(instance);
- 	unsigned long deadline;
+-	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
++	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
+ 	if (error)
+ 		goto out_host_put;
  
- 	hostdata->host = instance;
-@@ -1038,7 +1032,7 @@ static void NCR5380_main(struct work_str
- 
- static void NCR5380_dma_complete(struct Scsi_Host *instance)
- {
--	SETUP_HOSTDATA(instance);
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int transferred;
- 	unsigned char **data;
- 	volatile int *count;
-@@ -1248,7 +1242,7 @@ static irqreturn_t NCR5380_intr(int irq,
- 
- static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- {
--	SETUP_HOSTDATA(instance);
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char tmp[3], phase;
- 	unsigned char *data;
- 	int len;
-@@ -1742,7 +1736,7 @@ static int NCR5380_transfer_dma(struct S
- 				unsigned char *phase, int *count,
- 				unsigned char **data)
- {
--	SETUP_HOSTDATA(instance);
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	register int c = *count;
- 	register unsigned char p = *phase;
- 
-@@ -1850,7 +1844,7 @@ static int NCR5380_transfer_dma(struct S
- 
- static void NCR5380_information_transfer(struct Scsi_Host *instance)
- {
--	SETUP_HOSTDATA(instance);
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char msgout = NOP;
- 	int sink = 0;
- 	int len;
-@@ -2314,7 +2308,7 @@ static void NCR5380_information_transfer
- 
- static void NCR5380_reselect(struct Scsi_Host *instance)
- {
--	SETUP_HOSTDATA(instance);
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char target_mask;
- 	unsigned char lun;
- #ifdef SUPPORT_TAGS
-@@ -2521,7 +2515,7 @@ static
- int NCR5380_abort(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *instance = cmd->device->host;
--	SETUP_HOSTDATA(instance);
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	struct scsi_cmnd *tmp, **prev;
- 	unsigned long flags;
- 
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-01-03 16:04:03.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-01-03 16:04:08.000000000 +1100
+@@ -326,7 +326,7 @@ static int __init generic_NCR5380_detect
+ 			ports = ncr_53c400a_ports;
+ 			break;
+ 		case BOARD_DTC3181E:
+-			flags = FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E;
++			flags = FLAG_NO_PSEUDO_DMA;
+ 			ports = dtc_3181e_ports;
+ 			break;
+ 		}
