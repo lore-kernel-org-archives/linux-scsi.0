@@ -1,16 +1,28 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 33/78] atari_NCR5380: Set do_abort() timeouts
-Date: Sun, 03 Jan 2016 16:05:34 +1100
-Message-ID: <20160103050509.771815158@telegraphics.com.au>
+Subject: [PATCH v4 35/78] ncr5380: Dont wait for BUS FREE after disconnect
+Date: Sun, 03 Jan 2016 16:05:36 +1100
+Message-ID: <20160103050510.291799369@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-do_abort-timeouts
+Content-Disposition: inline; filename=ncr5380-dont-wait-for-bus-free
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use timeouts in do_abort() in atari_NCR5380.c instead of infinite loops.
-Also fix the kernel-doc comment. Keep the two core driver forks in sync.
+When there is a queued command and no connected command, NCR5380_select()
+is called and arbitration begins. The chip waits for BUS FREE once the
+MR_ARBITRATE bit in the mode register is enabled. That means there is
+no need to wait for BUS FREE after disconnecting.
+
+There is presently no polling for BUS FREE after sending an ABORT or
+other message that might lead to disconnection. It only happens after
+COMMAND COMPLETE or DISCONNECT messages, which seems inconsistent.
+Remove the polling for !BSY in the COMMAND COMPLETE and DISCONNECT
+cases.
+
+BTW, the comments say "avoid nasty timeouts" and perhaps BUS FREE polling
+was somehow helpful back in Linux v0.99.14u, when it was introduced.
+The relevant timeout is presently 1 second (for bus arbitration).
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
@@ -18,137 +30,75 @@ Tested-by: Ondrej Zary <linux@rainbow-software.org>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c       |   26 +++++++++++++-------------
- drivers/scsi/atari_NCR5380.c |   34 +++++++++++++++++++++-------------
- 2 files changed, 34 insertions(+), 26 deletions(-)
+ drivers/scsi/NCR5380.c       |    7 -------
+ drivers/scsi/atari_NCR5380.c |   11 -----------
+ 2 files changed, 18 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:39.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:43.000000000 +1100
-@@ -1835,19 +1835,19 @@ static void do_reset(struct Scsi_Host *i
- 	local_irq_restore(flags);
- }
- 
--/*
-- * Function : do_abort (Scsi_Host *host)
-+/**
-+ * do_abort - abort the currently established nexus by going to
-+ * MESSAGE OUT phase and sending an ABORT message.
-+ * @instance: relevant scsi host instance
-  *
-- * Purpose : abort the currently established nexus.  Should only be
-- *	called from a routine which can drop into a
-- *
-- * Returns : 0 on success, -1 on failure.
-+ * Returns 0 on success, -1 on failure.
-  */
- 
- static int do_abort(struct Scsi_Host *instance)
- {
- 	unsigned char tmp, *msgptr, phase;
- 	int len;
-+	int rc;
- 
- 	/* Request message out phase */
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
-@@ -1862,16 +1862,20 @@ static int do_abort(struct Scsi_Host *in
- 	 * the target sees, so we just handshake.
- 	 */
- 
--	while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ))
--		;
-+	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 10 * HZ);
-+	if (rc < 0)
-+		goto timeout;
-+
-+	tmp = NCR5380_read(STATUS_REG) & PHASE_MASK;
- 
- 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
- 
--	if ((tmp & PHASE_MASK) != PHASE_MSGOUT) {
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN |
--			      ICR_ASSERT_ACK);
--		while (NCR5380_read(STATUS_REG) & SR_REQ)
--			;
-+	if (tmp != PHASE_MSGOUT) {
-+		NCR5380_write(INITIATOR_COMMAND_REG,
-+		              ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
-+		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
-+		if (rc < 0)
-+			goto timeout;
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
- 	}
- 
-@@ -1887,6 +1891,10 @@ static int do_abort(struct Scsi_Host *in
- 	 */
- 
- 	return len ? -1 : 0;
-+
-+timeout:
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	return -1;
- }
- 
- #if defined(REAL_DMA)
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:42.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:43.000000000 +1100
-@@ -1458,16 +1458,12 @@ static void do_reset(struct Scsi_Host *i
- 	local_irq_restore(flags);
- }
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:44.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:46.000000000 +1100
+@@ -1976,9 +1976,6 @@ static void NCR5380_information_transfer
+ 					 * arbitration can resume.
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
+-
+-					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-						barrier();
+ 					return;
+ 				case MESSAGE_REJECT:
+ 					/* Accept message by clearing ACK */
+@@ -2011,10 +2008,6 @@ static void NCR5380_information_transfer
  
--/*
-- * Function : do_abort (Scsi_Host *host)
-- * 
-- * Purpose : abort the currently established nexus.  Should only be 
-- *      called from a routine which can drop into a 
-- * 
-- * Returns : 0 on success, -1 on failure.
-+/**
-+ * do_abort - abort the currently established nexus by going to
-+ * MESSAGE OUT phase and sending an ABORT message.
-+ * @instance: relevant scsi host instance
-  *
-- * Locks: queue lock held by caller
-- *	FIXME: sort this out and get new_eh running
-+ * Returns 0 on success, -1 on failure.
-  */
+ 						/* Enable reselect interrupts */
+ 						NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-						/* Wait for bus free to avoid nasty timeouts - FIXME timeout !*/
+-						/* NCR538_poll_politely(instance, STATUS_REG, SR_BSY, 0, 30 * HZ); */
+-						while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-							barrier();
+ 						return;
+ 					}
+ 					/* 
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:44.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:46.000000000 +1100
+@@ -2213,7 +2213,6 @@ static void NCR5380_information_transfer
+ 						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
  
- static int do_abort(struct Scsi_Host *instance)
-@@ -1489,9 +1485,9 @@ static int do_abort(struct Scsi_Host *in
- 	 * the target sees, so we just handshake.
- 	 */
+ 					local_irq_save(flags);
+-					hostdata->retain_dma_intr++;
+ 					hostdata->connected = NULL;
+ #ifdef SUPPORT_TAGS
+ 					cmd_free_tag(cmd);
+@@ -2282,8 +2281,6 @@ static void NCR5380_information_transfer
+ 						cmd->scsi_done(cmd);
+ 					}
  
--	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 60 * HZ);
-+	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 10 * HZ);
- 	if (rc < 0)
--		return -1;
-+		goto timeout;
+-					local_irq_restore(flags);
+-
+ 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					/*
+ 					 * Restore phase bits to 0 so an interrupted selection,
+@@ -2291,11 +2288,6 @@ static void NCR5380_information_transfer
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
  
- 	tmp = NCR5380_read(STATUS_REG) & PHASE_MASK;
- 	
-@@ -1500,9 +1496,9 @@ static int do_abort(struct Scsi_Host *in
- 	if (tmp != PHASE_MSGOUT) {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
- 		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
- 		if (rc < 0)
--			return -1;
-+			goto timeout;
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
- 	}
- 	tmp = ABORT;
- 	msgptr = &tmp;
-@@ -1516,6 +1512,10 @@ static int do_abort(struct Scsi_Host *in
- 	 */
+-					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-						barrier();
+-
+-					local_irq_save(flags);
+-					hostdata->retain_dma_intr--;
+ 					/* ++roman: For Falcon SCSI, release the lock on the
+ 					 * ST-DMA here if no other commands are waiting on the
+ 					 * disconnected queue.
+@@ -2349,9 +2341,6 @@ static void NCR5380_information_transfer
  
- 	return len ? -1 : 0;
-+
-+timeout:
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	return -1;
- }
- 
- #if defined(REAL_DMA) || defined(PSEUDO_DMA) || defined (REAL_DMA_POLL)
+ 					/* Enable reselect interrupts */
+ 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-					/* Wait for bus free to avoid nasty timeouts */
+-					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-						barrier();
+ #ifdef SUN3_SCSI_VME
+ 					dregs->csr |= CSR_DMA_ENABLE;
+ #endif
