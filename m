@@ -1,63 +1,59 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 48/78] atari_NCR5380: Fix queue_size limit
-Date: Sun, 03 Jan 2016 16:05:49 +1100
-Message-ID: <20160103050513.731754617@telegraphics.com.au>
+Subject: [PATCH v4 44/78] ncr5380: Fix off-by-one bug in extended_msg[] bounds check
+Date: Sun, 03 Jan 2016 16:05:45 +1100
+Message-ID: <20160103050512.683368925@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-fix-queue_size-limit
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49454 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbcACFST (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2016 00:18:19 -0500
+Content-Disposition: inline; filename=ncr5380-extended-message-length
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-When a target reports a QUEUE_FULL condition it causes the driver to
-update the 'queue_size' limit with the number of currently allocated tags.
-At least, that's what's supposed to happen, according to the comments.
-Unfortunately the terms in the assignment are swapped. Fix this and
-cleanup some obsolete comments.
+Fix the array bounds check when transferring an extended message from the
+target.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Ondrej Zary <linux@rainbow-software.org>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/atari_NCR5380.c |   14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ drivers/scsi/NCR5380.c       |    3 ++-
+ drivers/scsi/atari_NCR5380.c |    4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:57.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:59.000000000 +1100
+@@ -2039,7 +2039,8 @@ static void NCR5380_information_transfer
+ 
+ 					dprintk(NDEBUG_EXTENDED, "scsi%d : length=%d, code=0x%02x\n", instance->host_no, (int) extended_msg[1], (int) extended_msg[2]);
+ 
+-					if (!len && extended_msg[1] <= (sizeof(extended_msg) - 1)) {
++					if (!len && extended_msg[1] > 0 &&
++					    extended_msg[1] <= sizeof(extended_msg) - 2) {
+ 						/* Accept third byte by clearing ACK */
+ 						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 						len = extended_msg[1] - 1;
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:00.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:04:07.000000000 +1100
-@@ -229,9 +229,7 @@ static void do_reset(struct Scsi_Host *)
-  * cannot know it in advance :-( We just see a QUEUE_FULL status being
-  * returned. So, in this case, the driver internal queue size assumption is
-  * reduced to the number of active tags if QUEUE_FULL is returned by the
-- * target. The command is returned to the mid-level, but with status changed
-- * to BUSY, since --as I've seen-- the mid-level can't handle QUEUE_FULL
-- * correctly.
-+ * target.
-  *
-  * We're also not allowed running tagged commands as long as an untagged
-  * command is active. And REQUEST SENSE commands after a contingent allegiance
-@@ -2152,21 +2150,13 @@ static void NCR5380_information_transfer
- #ifdef SUPPORT_TAGS
- 					cmd_free_tag(cmd);
- 					if (status_byte(cmd->SCp.Status) == QUEUE_FULL) {
--						/* Turn a QUEUE FULL status into BUSY, I think the
--						 * mid level cannot handle QUEUE FULL :-( (The
--						 * command is retried after BUSY). Also update our
--						 * queue size to the number of currently issued
--						 * commands now.
--						 */
--						/* ++Andreas: the mid level code knows about
--						   QUEUE_FULL now. */
- 						struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][cmd->device->lun];
- 						dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %llu returned "
- 							   "QUEUE_FULL after %d commands\n",
- 							   HOSTNO, cmd->device->id, cmd->device->lun,
- 							   ta->nr_allocated);
- 						if (ta->queue_size > ta->nr_allocated)
--							ta->nr_allocated = ta->queue_size;
-+							ta->queue_size = ta->nr_allocated;
- 					}
- #else
- 					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:57.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:59.000000000 +1100
+@@ -2330,8 +2330,8 @@ static void NCR5380_information_transfer
+ 					dprintk(NDEBUG_EXTENDED, "scsi%d: length=%d, code=0x%02x\n", HOSTNO,
+ 						   (int)extended_msg[1], (int)extended_msg[2]);
+ 
+-					if (!len && extended_msg[1] <=
+-					    (sizeof(extended_msg) - 1)) {
++					if (!len && extended_msg[1] > 0 &&
++					    extended_msg[1] <= sizeof(extended_msg) - 2) {
+ 						/* Accept third byte by clearing ACK */
+ 						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 						len = extended_msg[1] - 1;
+
+
