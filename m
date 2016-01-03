@@ -1,97 +1,241 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 27/78] ncr5380: Add missing lock in eh_abort_handler
-Date: Sun, 03 Jan 2016 16:05:28 +1100
-Message-ID: <20160103050508.181787264@telegraphics.com.au>
+Subject: [PATCH v4 09/78] atari_NCR5380: Reset bus on driver initialization if required
+Date: Sun, 03 Jan 2016 16:05:10 +1100
+Message-ID: <20160103050503.431805510@telegraphics.com.au>
 References: <20160103050501.042035135@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-spin_unlock-crash
+Content-Disposition: inline; filename=atari_NCR5380-merge-do_reset
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The host spin lock needs to be acquired by NCR5380_abort() before it calls
-NCR5380_select(). This patch doesn't actually fix the EH issues in this
-driver but it does avoid this:
+Merge the bus reset code from NCR5380.c into atari_NCR5380.c. This allows
+for removal of a lot of duplicated code conditional on the RESET_BOOT
+macro (in the next patch).
 
-BUG: spinlock already unlocked on CPU#0, kworker/u4:1/14
- lock: 0xc0c0f834, .magic: dead4ead, .owner: <none>/-1, .owner_cpu: -1
- CPU: 0 PID: 14 Comm: kworker/u4:1 Not tainted 3.15.5 #5
- Workqueue: scsi_tmf_4 scmd_eh_abort_handler
- Call Trace:
- [ef885d70] [c0008acc] show_stack+0x70/0x1bc (unreliable)
- [ef885db0] [c0492a00] dump_stack+0x84/0x684
- [ef885dc0] [c006f314] spin_dump+0xd0/0xe8
- [ef885dd0] [c006f460] do_raw_spin_unlock+0xd4/0xd8
- [ef885df0] [c0491c8c] _raw_spin_unlock_irq+0x10/0x3c
- [ef885e00] [f381fe3c] NCR5380_select+0x3e4/0x6e8 [dmx3191d]
- [ef885e40] [f382026c] NCR5380_abort+0x12c/0x190 [dmx3191d]
- [ef885e60] [c02fec9c] scmd_eh_abort_handler+0x100/0x460
- [ef885e80] [c0046470] process_one_work+0x16c/0x420
- [ef885ea0] [c0046870] worker_thread+0x14c/0x430
- [ef885ed0] [c004e4f4] kthread+0xd8/0xec
- [ef885f40] [c00124d4] ret_from_kernel_thread+0x5c/0x64
+The atari_NCR5380.c fork lacks the do_reset() and NCR5380_poll_politely()
+routines from NCR5380.c, so introduce them. They are indispensible. Keep
+the two implementations in sync.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Ondrej Zary <linux@rainbow-software.org>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/NCR5380.c       |   33 +++++++-----
+ drivers/scsi/atari_NCR5380.c |  113 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 134 insertions(+), 12 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:35.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:37.000000000 +1100
-@@ -2374,6 +2374,7 @@ static int NCR5380_abort(struct scsi_cmn
- 
- 	scmd_printk(KERN_WARNING, cmd, "aborting command\n");
- 
-+	spin_lock_irq(instance->host_lock);
- 	NCR5380_print_status(instance);
- 
- 	dprintk(NDEBUG_ABORT, "scsi%d : abort called\n", instance->host_no);
-@@ -2420,6 +2421,7 @@ static int NCR5380_abort(struct scsi_cmn
- 			REMOVE(5, *prev, tmp, tmp->host_scribble);
- 			(*prev) = (struct scsi_cmnd *) tmp->host_scribble;
- 			tmp->host_scribble = NULL;
-+			spin_unlock_irq(instance->host_lock);
- 			tmp->result = DID_ABORT << 16;
- 			dprintk(NDEBUG_ABORT, "scsi%d : abort removed command from issue queue.\n", instance->host_no);
- 			tmp->scsi_done(tmp);
-@@ -2443,6 +2445,7 @@ static int NCR5380_abort(struct scsi_cmn
-  */
- 
- 	if (hostdata->connected) {
-+		spin_unlock_irq(instance->host_lock);
- 		dprintk(NDEBUG_ABORT, "scsi%d : abort failed, command connected.\n", instance->host_no);
- 		return FAILED;
- 	}
-@@ -2475,8 +2478,10 @@ static int NCR5380_abort(struct scsi_cmn
- 		if (cmd == tmp) {
- 			dprintk(NDEBUG_ABORT, "scsi%d : aborting disconnected command.\n", instance->host_no);
- 
--			if (NCR5380_select(instance, cmd))
-+			if (NCR5380_select(instance, cmd)) {
-+				spin_unlock_irq(instance->host_lock);
- 				return FAILED;
-+			}
- 			dprintk(NDEBUG_ABORT, "scsi%d : nexus reestablished.\n", instance->host_no);
- 
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-03 16:03:06.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-03 16:03:08.000000000 +1100
+@@ -838,19 +838,20 @@ static int NCR5380_maybe_reset_bus(struc
+ 		case 1:
+ 		case 3:
+ 		case 5:
+-			printk(KERN_INFO "scsi%d: SCSI bus busy, waiting up to five seconds\n", instance->host_no);
+-			NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, 0, 5*HZ);
++			shost_printk(KERN_ERR, instance, "SCSI bus busy, waiting up to five seconds\n");
++			NCR5380_poll_politely(instance,
++			                      STATUS_REG, SR_BSY, 0, 5 * HZ);
+ 			break;
+ 		case 2:
+-			printk(KERN_WARNING "scsi%d: bus busy, attempting abort\n", instance->host_no);
++			shost_printk(KERN_ERR, instance, "bus busy, attempting abort\n");
  			do_abort(instance);
-@@ -2486,6 +2491,7 @@ static int NCR5380_abort(struct scsi_cmn
- 					REMOVE(5, *prev, tmp, tmp->host_scribble);
- 					*prev = (struct scsi_cmnd *) tmp->host_scribble;
- 					tmp->host_scribble = NULL;
-+					spin_unlock_irq(instance->host_lock);
- 					tmp->result = DID_ABORT << 16;
- 					tmp->scsi_done(tmp);
- 					return SUCCESS;
-@@ -2500,6 +2506,7 @@ static int NCR5380_abort(struct scsi_cmn
-  * so we won't panic, but we will notify the user in case something really
-  * broke.
+ 			break;
+ 		case 4:
+-			printk(KERN_WARNING "scsi%d: bus busy, attempting reset\n", instance->host_no);
++			shost_printk(KERN_ERR, instance, "bus busy, attempting reset\n");
+ 			do_reset(instance);
+ 			break;
+ 		case 6:
+-			printk(KERN_ERR "scsi%d: bus locked solid or invalid override\n", instance->host_no);
++			shost_printk(KERN_ERR, instance, "bus locked solid\n");
+ 			return -ENXIO;
+ 		}
+ 	}
+@@ -1579,21 +1580,29 @@ static int NCR5380_transfer_pio(struct S
+ }
+ 
+ /**
+- *	do_reset	-	issue a reset command
+- *	@host: adapter to reset
++ * do_reset - issue a reset command
++ * @instance: adapter to reset
+  *
+- *	Issue a reset sequence to the NCR5380 and try and get the bus
+- *	back into sane shape.
++ * Issue a reset sequence to the NCR5380 and try and get the bus
++ * back into sane shape.
+  *
+- *	Locks: caller holds queue lock
++ * This clears the reset interrupt flag because there may be no handler for
++ * it. When the driver is initialized, the NCR5380_intr() handler has not yet
++ * been installed. And when in EH we may have released the ST DMA interrupt.
   */
-+	spin_unlock_irq(instance->host_lock);
- 	printk(KERN_WARNING "scsi%d : warning : SCSI command probably completed successfully\n"
- 			"         before abortion\n", instance->host_no);
- 	return FAILED;
+  
+ static void do_reset(struct Scsi_Host *instance)
+ {
+-	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
++	unsigned long flags;
++
++	local_irq_save(flags);
++	NCR5380_write(TARGET_COMMAND_REG,
++	              PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_RST);
+-	udelay(25);
++	udelay(50);
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++	local_irq_restore(flags);
+ }
+ 
+ /*
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-03 16:02:37.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-03 16:03:08.000000000 +1100
+@@ -234,6 +234,9 @@
+ #define	HOSTNO		instance->host_no
+ #define	H_NO(cmd)	(cmd)->device->host->host_no
+ 
++static int do_abort(struct Scsi_Host *);
++static void do_reset(struct Scsi_Host *);
++
+ #ifdef SUPPORT_TAGS
+ 
+ /*
+@@ -475,6 +478,47 @@ static inline void initialize_SCp(struct
+ 	}
+ }
+ 
++/**
++ * NCR5380_poll_politely - wait for NCR5380 status bits
++ * @instance: controller to poll
++ * @reg: 5380 register to poll
++ * @bit: Bitmask to check
++ * @val: Value required to exit
++ *
++ * Polls the NCR5380 in a reasonably efficient manner waiting for
++ * an event to occur, after a short quick poll we begin giving the
++ * CPU back in non IRQ contexts
++ *
++ * Returns the value of the register or a negative error code.
++ */
++
++static int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                 int reg, int bit, int val, int t)
++{
++	int n = 500;
++	unsigned long end = jiffies + t;
++	int r;
++
++	while (n-- > 0) {
++		r = NCR5380_read(reg);
++		if ((r & bit) == val)
++			return 0;
++		cpu_relax();
++	}
++
++	/* t time yet ? */
++	while (time_before(jiffies, end)) {
++		r = NCR5380_read(reg);
++		if ((r & bit) == val)
++			return 0;
++		if (!in_interrupt())
++			cond_resched();
++		else
++			cpu_relax();
++	}
++	return -ETIMEDOUT;
++}
++
+ #include <linux/delay.h>
+ 
+ #if NDEBUG
+@@ -801,6 +845,49 @@ static int __init NCR5380_init(struct Sc
+ }
+ 
+ /**
++ * NCR5380_maybe_reset_bus - Detect and correct bus wedge problems.
++ * @instance: adapter to check
++ *
++ * If the system crashed, it may have crashed with a connected target and
++ * the SCSI bus busy. Check for BUS FREE phase. If not, try to abort the
++ * currently established nexus, which we know nothing about. Failing that
++ * do a bus reset.
++ *
++ * Note that a bus reset will cause the chip to assert IRQ.
++ *
++ * Returns 0 if successful, otherwise -ENXIO.
++ */
++
++static int NCR5380_maybe_reset_bus(struct Scsi_Host *instance)
++{
++	int pass;
++
++	for (pass = 1; (NCR5380_read(STATUS_REG) & SR_BSY) && pass <= 6; ++pass) {
++		switch (pass) {
++		case 1:
++		case 3:
++		case 5:
++			shost_printk(KERN_ERR, instance, "SCSI bus busy, waiting up to five seconds\n");
++			NCR5380_poll_politely(instance,
++			                      STATUS_REG, SR_BSY, 0, 5 * HZ);
++			break;
++		case 2:
++			shost_printk(KERN_ERR, instance, "bus busy, attempting abort\n");
++			do_abort(instance);
++			break;
++		case 4:
++			shost_printk(KERN_ERR, instance, "bus busy, attempting reset\n");
++			do_reset(instance);
++			break;
++		case 6:
++			shost_printk(KERN_ERR, instance, "bus locked solid\n");
++			return -ENXIO;
++		}
++	}
++	return 0;
++}
++
++/**
+  * NCR5380_exit - remove an NCR5380
+  * @instance: adapter to remove
+  *
+@@ -1741,6 +1828,32 @@ static int NCR5380_transfer_pio(struct S
+ 		return -1;
+ }
+ 
++/**
++ * do_reset - issue a reset command
++ * @instance: adapter to reset
++ *
++ * Issue a reset sequence to the NCR5380 and try and get the bus
++ * back into sane shape.
++ *
++ * This clears the reset interrupt flag because there may be no handler for
++ * it. When the driver is initialized, the NCR5380_intr() handler has not yet
++ * been installed. And when in EH we may have released the ST DMA interrupt.
++ */
++
++static void do_reset(struct Scsi_Host *instance)
++{
++	unsigned long flags;
++
++	local_irq_save(flags);
++	NCR5380_write(TARGET_COMMAND_REG,
++	              PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_RST);
++	udelay(50);
++	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++	local_irq_restore(flags);
++}
++
+ /*
+  * Function : do_abort (Scsi_Host *host)
+  *
