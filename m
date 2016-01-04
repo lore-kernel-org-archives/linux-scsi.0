@@ -1,81 +1,135 @@
 From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH v2 15/16] qla2xxx: Add bulk send for atio & ctio
- completion paths.
-Date: Mon, 4 Jan 2016 18:27:58 +0000
-Message-ID: <D2AFECA4.1BF9A%quinn.tran@qlogic.com>
+Subject: Re: [PATCH v2 11/16] qla2xxx: Add selective command queuing
+Date: Mon, 4 Jan 2016 19:04:13 +0000
+Message-ID: <D2AFFFD6.1C02F%quinn.tran@qlogic.com>
 References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
- <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
- <1450682033.25674.44.camel@haakon3.risingtidesystems.com>
+ <1450382231-4259-12-git-send-email-himanshu.madhani@qlogic.com>
+ <56825313.4080405@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1450682033.25674.44.camel@haakon3.risingtidesystems.com>
+Content-Type: multipart/mixed;
+	boundary="_000_D2AFFFD61C02Fquinntranqlogiccom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:52267 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751523AbcADTCe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 14:02:34 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u04IwNbR014264
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Jan 2016 11:02:33 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 206edtat0k-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 04 Jan 2016 11:02:33 -0800
+In-Reply-To: <56825313.4080405@sandisk.com>
 Content-Language: en-US
-Content-ID: <0FCF18F86B792A4989F9B0B486300375@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+
+--_000_D2AFFFD61C02Fquinntranqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <32B84FB0F810B6489199FA0547FDC56B@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
 
+On 12/29/15, 1:32 AM, "linux-scsi-owner@vger.kernel.org on behalf of Bart
+Van Assche" <linux-scsi-owner@vger.kernel.org on behalf of
+bart.vanassche@sandisk.com> wrote:
 
-
-
-On 12/20/15, 11:13 PM, "target-devel-owner@vger.kernel.org on behalf of
-Nicholas A. Bellinger" <target-devel-owner@vger.kernel.org on behalf of
-nab@linux-iscsi.org> wrote:
-
->On Thu, 2015-12-17 at 14:57 -0500, Himanshu Madhani wrote:
->> From: Quinn Tran <quinn.tran@qlogic.com>
->>=20
->> At high traffic, the work queue can become a bottle neck.
->> Instead of putting each command on the work queue as 1 work
->> element, the fix would daisy chain a list of commands that came
->> from FW/interrupt under 1 work element to reduce lock contention.
->>=20
+>On 12/17/2015 08:57 PM, Himanshu Madhani wrote:
+>>From: Quinn Tran <quinn.tran@qlogic.com>
+>>queue work element to specific process lessen cache miss
 >
->I'm wondering if we are better served by turning this into generic log=
-ic
->in kernel/workqueue.c to be used beyond qla2xxx, or:
-
-QT> For every work element, the pool->lock is grabbed.  Unless the lock
-can be grab 1 time and the rest of the work elements piggy back on it t=
-hen
-it=B9s worth it to have a new kernel service.
-
-
+>How about replacing this patch by something like the (untested) patch
+>below ? The advantage of the patch below is that it doesn't require to
+>modify other target driver to keep their current behavior.
 >
->using WQ_UNBOUND (following iser-target) and verify if observed
->bottleneck is due to internal !(WQ_UNBOUND) usage in qla_target.c.
-
-QT> we tried Unbound as one of the low hang fruits. However, Unbound ha=
-s
-negative affect when it comes to scaling.
-
-
+>Thanks,
 >
->Out of curiosity, what level of performance improvement does this
->patch (as is) actually provide..?
+>Bart.
 
-QT> By itself =B3without" this patch series would be minimal.  With the
-patch series, it allows us to consistently maintain an additional (appr=
-ox)
-+50~70k IOPS @4k read. Otherwise, the load is not sustainable or has a
-chance to increase.
+QT> Bart, Thanks for reviewing.  Good point.  Will rework patch to
+preserve current behavior of other drivers.=20
 
-The test I use is 2ports Initiator vs 2 ports target, 2 * Qlogic 16G du=
-al
-port, TCM ramdisk.=20
 
->
->Thank you,
->
->--nab
+--_000_D2AFFFD61C02Fquinntranqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
->
->--
->To unsubscribe from this list: send the line "unsubscribe target-devel=
-" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+eJ8+IjQ1AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADAzREU5REVG
+MUY3QThENEE5QjI2NDE3OEM0NTE0ODFGAEsHAQ2ABAACAAAAAgACAAEFgAMADgAAAOAHAQAEABMA
+BAANAAEAEQEBIIADAA4AAADgBwEABAATAAQADQABABEBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADwAAABSZTogW1BBVENIIHYyIDExLzE2XSBxbGEyeHh4OiBBZGQgc2Vs
+ZWN0aXZlIGNvbW1hbmQgcXVldWluZwB1EwEDkAYAHA8AADQAAAACAX8AAQAAACcAAAA8RDJBRkZG
+RDYuMUMwMkYlcXVpbm4udHJhbkBxbG9naWMuY29tPgAACwAfDgEAAAACAQkQAQAAAAoDAAAGAwAA
+WgQAAExaRnWpU/1HYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQw
+IO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5Q
+A2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ
+5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB8QvyamwLgGUKgE8D
+oA6QL0AyOS8xNSwiIDqgMzIgQU0isCIhoRh1eC0E8ACQLW93iRhRQHYYMHIuawSRSGVsLgWwZyAC
+ICBkYmUR0GxmJXAmAEJrH4EhlVYDkUEEEBHAZXgiIDwjfySPJZkhlWIpH4EudgBwYSdTQHMTAHAN
+4WsuBaBtPiC2dwNgECA6IZUhlT4iBBQxNyJQMCKQIDA4oDo1NyBQIzFIB3BJAHFodQXQYWQZoWkR
+LMw+PkYDYTogUTZ1C4ADoFQYcAOgPHFJMhIudDJxQHEJAGfvDlAsczEXMsBlClAswAWwdGsgKXBl
+B4ACMBzAbzggc3AFkAaQDlAgcP0DYGMHkAQgHnAEEAnwG9BzANAngCBtEXIttS2mSP0ogCABoAhg
+BUAJcAtRNkD7GcAcwGgEADaQGIARwCWg/nk2AANwEhA6gDpBIaApMHM6YRngKHUCMAeQHEEp3zq0
+LaYlsAkAB+A/EkA3wf8wQCthAZAZ0SYhPEI6xT4TnzqROnAYgECABUBkbweQ/G4nObIywQlwNdEt
+pgRh/waQOzAs8CeABcAfcRgwQSH/BRAaMTXSKTA54DwyQgAb0L8IcAlwNbElsh1gBbAuOD73PoAA
+cB9QLDg+JlJGdiGV/FFULLAmUiKwR4QccAWxBwlwHWI6MS4gIEdvuwRwNpBvC4ArQEwQVwMQ/wMg
+CXA1EzrEQkc2oAeQGhLvRW8mEkNURCRzTAAtPBVCAVKQAAAfAEIAAQAAABYAAABRAHUAaQBuAG4A
+IABUAHIAYQBuAAAAAAAfAGUAAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAZAAAAAAAAACBKx+k
+vqMQGZ1uAN0BD1QCAAAAgFEAdQBpAG4AbgAgAFQAcgBhAG4AAABTAE0AVABQAAAAcQB1AGkAbgBu
+AC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAACwAAABxAHUAaQBuAG4A
+LgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAANAAAAHMAaQBwADoAcQB1
+AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAABYAAABRAHUA
+aQBuAG4AIABUAHIAYQBuAAAAAAAfAB8MAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAZAAAAAAA
+AACBKx+kvqMQGZ1uAN0BD1QCAAAAgFEAdQBpAG4AbgAgAFQAcgBhAG4AAABTAE0AVABQAAAAcQB1
+AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAACwAAABxAHUA
+aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAFgAAAFEAdQBp
+AG4AbgAgAFQAcgBhAG4AAAAAAB8AI0ABAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAABkAAAAAAAA
+AIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUA
+aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAALAAAAHEAdQBp
+AG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIA
+AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
+AAPene8feo1KmyZBeMRRSB8DABcAAQAAAEAAOQCA9B2zIkfRAUAACDAvj2izIkfRAQsAAIAIIAYA
+AAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
+AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
+AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAeAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAB2
+ADIAIAAxADEALwAxADYAXQAgAHEAbABhADIAeAB4AHgAOgAgAEEAZABkACAAcwBlAGwAZQBjAHQA
+aQB2AGUAIABjAG8AbQBtAGEAbgBkACAAcQB1AGUAdQBpAG4AZwAAAB8APQABAAAACgAAAFIAZQA6
+ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA+AAAAPAA1ADYAOAAyADUAMwAxADMALgA0ADAAOAAwADQA
+MAA1AEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AAAAAAAIBcQABAAAAIAAAAAEB0TkK4Fm5A9OF
+VyZLhMVslybs1W+e4kuTgIAJh0GAHwBwAAEAAABwAAAAWwBQAEEAVABDAEgAIAB2ADIAIAAxADEA
+LwAxADYAXQAgAHEAbABhADIAeAB4AHgAOgAgAEEAZABkACAAcwBlAGwAZQBjAHQAaQB2AGUAIABj
+AG8AbQBtAGEAbgBkACAAcQB1AGUAdQBpAG4AZwAAAB8ANRABAAAATgAAADwARAAyAEEARgBGAEYA
+RAA2AC4AMQBDADAAMgBGACUAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBv
+AG0APgAAAAAAHwA5EAEAAAA8AQAAPAAxADQANQAwADMAOAAyADIAMwAxAC0ANAAyADUAOQAtADEA
+LQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABo
+AGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ACAAPAAxADQANQAwADMAOAAyADIAMwAxAC0A
+NAAyADUAOQAtADEAMgAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAGgAaQBtAGEAbgBz
+AGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADUANgA4ADIA
+NQAzADEAMwAuADQAMAA4ADAANAAwADUAQABzAGEAbgBkAGkAcwBrAC4AYwBvAG0APgAAAAMA3j+f
+TgAAQAAHME6oXLMiR9EBAwAmAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFW
+TUIyLTE2MDEwNDE5MDQxM1otMTIxODA3AAAfABUQAQAAAFgAAAAzADIAQgA4ADQARgBCADAARgA4
+ADEAMABCADYANAA4ADkAMQA5ADkARgBBADAANQA0ADcARgBEAEMANQA2AEIAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAUgAAAHkdb11PAAAAHwD6PwEAAAAWAAAAUQB1AGkAbgBu
+ACAAVAByAGEAbgAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcA
+ZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBr
+AC8AMQA0AC4ANQAuADUALgAxADUAMAA4ADIAMQAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAA
+OAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4
+AAAAAQAAABABAABJAEkAPQAwADEAMAAxAEQAMQA0ADcAMgAyADcANgA2ADEAMABFAEUAQgBGAEQA
+MgBGAEMAMwBGADcANABFADgANwAxADUAOAAwADgAOQBBADcAOQA2ADkARABGADkAOwBTAEIATQBJ
+AEQAPQAyADQAOwBTADEAPQA8ADUANgA4ADIANQAzADEAMwAuADQAMAA4ADAANAAwADUAQABzAGEA
+bgBkAGkAcwBrAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0
+AC4AMwAgACgAQgB1AGkAbABkACAAMgAzADUALgAwACkALAAgAFMAdABhAGcAZQA9AEgAMgAAAAMA
+DTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0
+AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIA
+aQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAaAAAAWwAxADAALgAzAC4AMQAwAC4ANAAz
+AF0AAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAA
+AAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAABhvQ==
+
+--_000_D2AFFFD61C02Fquinntranqlogiccom_--
