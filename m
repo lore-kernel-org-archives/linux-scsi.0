@@ -1,7 +1,7 @@
 From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Mon, 4 Jan 2016 11:54:14 +0100
-Message-ID: <20160104115414.782ff156@harpe.intellique.com>
+Date: Mon, 4 Jan 2016 12:05:28 +0100
+Message-ID: <20160104120528.5528b3ea@harpe.intellique.com>
 References: <20151218170644.24167419@harpe.intellique.com>
 	<20151221134649.293a1a1e@harpe.intellique.com>
 	<F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi>
@@ -21,10 +21,10 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:64603 "EHLO mail1.g1.pair.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:59320 "EHLO mail1.g1.pair.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751188AbcADKyO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 05:54:14 -0500
+	id S1751423AbcADLF2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 06:05:28 -0500
 In-Reply-To: <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -45,7 +45,103 @@ Kai Makisara <Kai.Makisara@kolumbus.fi> =C3=A9crivait:
 > also been slightly modified (two more bits of the original mode page=20
 > retained).
 
-OK, I'll test 'mt load' first, then the new patch. Stay tuned...
+You were right, it works by sending a "LOAD" first:
+
+=46irst, not working:
+
+# mt -f /dev/nst0 mkpartition 0
+
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Rewinding tape.
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Partition page leng=
+th is 16 bytes.
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: PP: max 3, add 1, x=
+dp 1, psum 03, pofmetc 4, rec 03, units 09, sizes: 2543 38
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Sending FORMAT MEDI=
+UM
+Jan  4 12:02:17 shakuhachi kernel: st 7:0:0:0: st0: Error: 8000002, cmd=
+: 4 0 0 0 0 0
+Jan  4 12:02:17 shakuhachi kernel: st0: Sense Key : Illegal Request [cu=
+rrent]=20
+Jan  4 12:02:17 shakuhachi kernel: st0: Add. Sense: Position past begin=
+ning of medium
+
+Then:
+
+# mt -f /dev/nst0 load
+
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Loading tape.
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Jan  4 12:02:33 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+
+# mt -f /dev/nst0 mkpartition 0
+
+
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 - 16=
+777215 bytes.
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
+11, medium 0, WBS 10, BLL 8
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape le=
+ngth: 0, drv buffer: 1
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
+er size: 4096 (1 blocks).
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Rewinding tape.
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Partition page leng=
+th is 16 bytes.
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: PP: max 3, add 1, x=
+dp 1, psum 03, pofmetc 4, rec 03, units 09, sizes: 2543 38
+Jan  4 12:02:42 shakuhachi kernel: st 7:0:0:0: st0: Sending FORMAT MEDI=
+UM
+
+# tapeinfo -f /dev/sg6
+Product Type: Tape Drive
+Vendor ID: 'HP      '
+Product ID: 'Ultrium 6-SCSI  '
+Revision: '329U'
+Attached Changer API: No
+SerialNumber: 'HU1302U4RC'
+MinBlock: 1
+MaxBlock: 16777215
+SCSI ID: 0
+SCSI LUN: 0
+Ready: yes
+BufferedMode: yes
+Medium Type: Not Loaded
+Density Code: 0x5a
+BlockSize: 0
+DataCompEnabled: yes
+DataCompCapable: yes
+DataDeCompEnabled: yes
+CompType: 0x1
+DeCompType: 0x1
+BOP: yes
+Block Position: 0
+ActivePartition: 0
+EarlyWarningSize: 0
+NumPartitions: 0
+MaxPartitions: 3
+
 
 --=20
 -----------------------------------------------------------------------=
