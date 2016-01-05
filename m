@@ -1,30 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RFC 0/2] avoid crashing when reading /proc/scsi/scsi and simultaneously removing devices
-Date: Mon, 04 Jan 2016 20:58:43 -0500
-Message-ID: <yq1twmslrcc.fsf@sermon.lab.mkp.net>
-References: <1449583704-32400-1-git-send-email-emilne@redhat.com>
+Subject: Re: [PATCH v3 0/3] hpsa update
+Date: Mon, 04 Jan 2016 20:59:15 -0500
+Message-ID: <yq1poxglrbg.fsf@sermon.lab.mkp.net>
+References: <20151222163508.16655.97012.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36525 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbcAEB6s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 20:58:48 -0500
-In-Reply-To: <1449583704-32400-1-git-send-email-emilne@redhat.com> (Ewan
-	D. Milne's message of "Tue, 8 Dec 2015 09:08:22 -0500")
+Received: from aserp1040.oracle.com ([141.146.126.69]:25567 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbcAEB7x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 20:59:53 -0500
+In-Reply-To: <20151222163508.16655.97012.stgit@brunhilda> (Don Brace's message
+	of "Tue, 22 Dec 2015 10:36:29 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>
+Cc: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
->>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
+>>>>> "Don" == Don Brace <don.brace@pmcs.com> writes:
 
-Ewan> The klist traversal used by the reading of /proc/scsi/scsi is not
-Ewan> interlocked against device removal.  It takes a reference on the
-Ewan> containing object, but this does not prevent the device from being
-Ewan> removed from the list.  Thus, we get errors and eventually panic,
-Ewan> as shown in the traces below.  Fix this by keeping a klist
-Ewan> iterator in the seq_file private data.
+Don> These patches are based on Linus's tree The changes are: - correct
+Don> missing changes from snprintf to scnprintf in path_info_show by
+Don> Rasmus Villemoes - fix reported bus for SAS transport devices - add
+Don> in enclosure information
 
 Applied to 4.5/scsi-queue.
 
