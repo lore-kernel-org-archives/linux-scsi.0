@@ -1,10 +1,10 @@
 From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH] scsi: imm: use new parport device model
-Date: Tue,  5 Jan 2016 18:10:50 +0530
-Message-ID: <1451997650-10573-1-git-send-email-sudipm.mukherjee@gmail.com>
+Subject: [PATCH resend] scsi: imm: use new parport device model
+Date: Tue,  5 Jan 2016 18:19:30 +0530
+Message-ID: <1451998170-10899-1-git-send-email-sudipm.mukherjee@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James.Bottomley@hansenpartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
@@ -12,6 +12,13 @@ Modify imm driver to use the new parallel port device model.
 
 Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
 ---
+
+Resending as the first mail bounced back with the error:
+Delivery to the following recipient failed permanently:
+     JBottomley@odin.com
+
+Looking at the MAINTAINERS file gives me multiple email address of
+James. Confused. Using the one which James has used on Jan 3.     
 
 I usually submit checkpatch cleanup and other modifications while
 converting a driver to use parport device model. For this driver i
