@@ -1,38 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V2 0/9] aacraid: Patchset for aacraid driver version 41052
-Date: Mon, 04 Jan 2016 21:07:33 -0500
-Message-ID: <yq1h9islqxm.fsf@sermon.lab.mkp.net>
-References: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: mvsas: fix indenting on return error code
+Date: Tue,  5 Jan 2016 11:56:40 +0000
+Message-ID: <1451995000-9210-1-git-send-email-colin.king@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28140 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753770AbcAECIE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 21:08:04 -0500
-In-Reply-To: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	(Raghava Aditya Renukunta's message of "Thu, 10 Dec 2015 10:45:50
-	-0800")
+Received: from youngberry.canonical.com ([91.189.89.112]:40008 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbcAEL4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2016 06:56:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
->>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-Raghava> This patchset includes the following changes (bug fixes and new
-Raghava> feature support) specific to aacraid driver.
+The return code and error return is incorrectly indented which
+may cause some confusion as it appears at first sight to be associated
+with a device not ready error (with missing { } braces) rather than
+a DEV_IS_GONE() failure.
 
-Raghava> V2: Removed aac_fib_free_tag function Setup relevant fib
-Raghava> variables only in once Created aac_fib_vector_assign function
-Raghava> Made EEH functions static Added character device status macros
-Raghava> Changed location of aac->shutdown to prevent race condition
-Raghava> Withdrew patch that disables device ID wild card binding
+The incorrect indenting was introduced by commit
+0b15fb1fdfd403726542cb6111bc916b7a9f7fad ("[SCSI] mvsas: add support
+for Task collector mode and fixed relative bugs")
 
-You dropped all the review/fix/stable tags you had received from Tomas
-and Johannes.
+No functional change, just a minor code reformatting clean up.
 
-Please apply the relevant tags and resubmit this series.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/mvsas/mv_sas.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 9c78074..e712fe7 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -737,8 +737,8 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 			mv_dprintk("device %016llx not ready.\n",
+ 				SAS_ADDR(dev->sas_addr));
+ 
+-			rc = SAS_PHY_DOWN;
+-			return rc;
++		rc = SAS_PHY_DOWN;
++		return rc;
+ 	}
+ 	tei.port = dev->port->lldd_port;
+ 	if (tei.port && !tei.port->port_attached && !tmf) {
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.6.4
+
