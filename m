@@ -1,28 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mpt3sas: a correction in unmap_resources
-Date: Mon, 04 Jan 2016 21:01:21 -0500
-Message-ID: <yq1lh84lr7y.fsf@sermon.lab.mkp.net>
-References: <1450876907-3913-1-git-send-email-thenzl@redhat.com>
+Subject: Re: [PATCH V2 0/9] aacraid: Patchset for aacraid driver version 41052
+Date: Mon, 04 Jan 2016 21:07:33 -0500
+Message-ID: <yq1h9islqxm.fsf@sermon.lab.mkp.net>
+References: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26370 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:28140 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbcAECBc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 21:01:32 -0500
-In-Reply-To: <1450876907-3913-1-git-send-email-thenzl@redhat.com> (Tomas
-	Henzl's message of "Wed, 23 Dec 2015 14:21:47 +0100")
+	with ESMTP id S1753770AbcAECIE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 21:08:04 -0500
+In-Reply-To: <1449773159-25058-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	(Raghava Aditya Renukunta's message of "Thu, 10 Dec 2015 10:45:50
+	-0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, chaitra.basappa@avagotech.com, mlombard@redhat.com
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com
 
->>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
+>>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com> writes:
 
-Tomas> It might happen that we try to free an already freed pointer.
-Tomas> Tomas
+Raghava> This patchset includes the following changes (bug fixes and new
+Raghava> feature support) specific to aacraid driver.
 
-Applied to 4.5/scsi-queue.
+Raghava> V2: Removed aac_fib_free_tag function Setup relevant fib
+Raghava> variables only in once Created aac_fib_vector_assign function
+Raghava> Made EEH functions static Added character device status macros
+Raghava> Changed location of aac->shutdown to prevent race condition
+Raghava> Withdrew patch that disables device ID wild card binding
+
+You dropped all the review/fix/stable tags you had received from Tomas
+and Johannes.
+
+Please apply the relevant tags and resubmit this series.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
