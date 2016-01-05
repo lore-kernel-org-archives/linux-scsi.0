@@ -1,218 +1,32 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: qla2xxx: Delete session if initiator is gone from FW
-Date: Mon, 4 Jan 2016 20:31:10 +0000
-Message-ID: <D2B01518.D0B0E%himanshu.madhani@qlogic.com>
-References: <20151222194617.GA31313@mwanda>
- <711352de7005df8de3d0df6d13eb17e8@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH RFC 0/2] avoid crashing when reading /proc/scsi/scsi and simultaneously removing devices
+Date: Mon, 04 Jan 2016 20:58:43 -0500
+Message-ID: <yq1twmslrcc.fsf@sermon.lab.mkp.net>
+References: <1449583704-32400-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D2B01518D0B0Ehimanshumadhaniqlogiccom_"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:43550 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753195AbcADUbO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 15:31:14 -0500
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u04KRYWk026718
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Jan 2016 12:31:12 -0800
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 206edtawvx-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 04 Jan 2016 12:31:12 -0800
-In-Reply-To: <711352de7005df8de3d0df6d13eb17e8@mail.gmail.com>
-Content-Language: en-US
+Received: from userp1040.oracle.com ([156.151.31.81]:36525 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbcAEB6s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 20:58:48 -0500
+In-Reply-To: <1449583704-32400-1-git-send-email-emilne@redhat.com> (Ewan
+	D. Milne's message of "Tue, 8 Dec 2015 09:08:22 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexei Potashnik <alexei@purestorage.com>, Dan Carpenter <dan.carpenter@oracle.com>, Quinn Tran <quinn.tran@qlogic.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
---_000_D2B01518D0B0Ehimanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <9604E95C9F98F648B760DFFAC502B935@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+>>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
 
-Hi Alexie/Dan,=20
+Ewan> The klist traversal used by the reading of /proc/scsi/scsi is not
+Ewan> interlocked against device removal.  It takes a reference on the
+Ewan> containing object, but this does not prevent the device from being
+Ewan> removed from the list.  Thus, we get errors and eventually panic,
+Ewan> as shown in the traces below.  Fix this by keeping a klist
+Ewan> iterator in the seq_file private data.
 
-I will send follow up patch to fix this.
+Applied to 4.5/scsi-queue.
 
-Thanks,
--Himanshu
-
-
-
-
-
-On 12/24/15, 12:11 AM, "Alexei Potashnik" <alexei@purestorage.com> wrote:
-
->I my original patch line 3583 was:
->
->+			bool logged_out =3D (status & 0xFFFF) =3D=3D
->CTIO_PORT_LOGGED_OUT;
->
->and line 3587 was:
->
->+			    logged_out ? "PORT LOGGED OUT" : "PORT
->UNAVAILABLE",
->
->Forwarding  to Quinn and Himanshu who must have massaged it.
->
->Alexei
->
->> -----Original Message-----
->> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
->> Sent: Tuesday, December 22, 2015 11:46 AM
->> To: alexei@purestorage.com
->> Cc: linux-scsi@vger.kernel.org
->> Subject: re: qla2xxx: Delete session if initiator is gone from FW
->>
->> Hello Alexei Potashnik,
->>
->> The patch b93bb8ecc389: "qla2xxx: Delete session if initiator is gone
->from
->> FW" from Dec 17, 2015, leads to the following static checker
->> warning:
->>
->> 	drivers/scsi/qla2xxx/qla_target.c:3587 qlt_do_ctio_completion()
->> 	warn: impossible condition '(logged_out =3D=3D 41) =3D> (0-1 =3D=3D 41)=
-'
->>
->> drivers/scsi/qla2xxx/qla_target.c
->>   3580                  case CTIO_PORT_LOGGED_OUT:
->>   3581                  case CTIO_PORT_UNAVAILABLE:
->>   3582                  {
->>   3583                          bool logged_out =3D (status & 0xFFFF);
->>   3584                          ql_dbg(ql_dbg_tgt_mgt, vha, 0xf059,
->>   3585                              "qla_target(%d): CTIO with %s status
->%x "
->>   3586                              "received (state %x, se_cmd %p)\n",
->vha->vp_idx,
->>   3587                              (logged_out =3D=3D CTIO_PORT_LOGGED_=
-OUT)
->?
->>                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->> Bool cannot equal 0x26.
->>
->>   3588                              "PORT LOGGED OUT" : "PORT
->UNAVAILABLE",
->>   3589                              status, cmd->state, se_cmd);
->>   3590
->>   3591                          if (logged_out && cmd->sess) {
->>                                     ^^^^^^^^^^
->> 	=3D=3D CTIO_PORT_LOGGED_OUT here?
->>
->>   3592                                  /*
->>   3593                                   * Session is already logged
->out, but we need
->>   3594                                   * to notify initiator, who's
->not aware of this
->>   3595                                   */
->>   3596                                  cmd->sess->logout_on_delete =3D =
-0;
->>   3597                                  cmd->sess->send_els_logo =3D 1;
->>   3598
->qlt_schedule_sess_for_deletion(cmd->sess, true);
->>   3599                          }
->>   3600                          break;
->>   3601                  }
->>
->> regards,
->> dan carpenter
-
-
---_000_D2B01518D0B0Ehimanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-rV33ik/Lz8ABL61dkC/PH7II75UAgpGDAYLwbmxwX/SDQL4wrU6Wj9Q/0Doj4l9U4KxzX9DygzEx
-rU44L+bnbEIE8F3QZHUecNjgSLE+Xxrh0YRtcrIXInB0cr8KUK0/qa9+6SBAdeo2HqD33U+BuMER
-a4R830CvT947+0coCXBnCxEnJ3OSA5FMBwcinBVC5/AAHwBCAAEAAAAiAAAASABpAG0AYQBuAHMA
-aAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwBlAAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
-AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABTAE0AVABQAAAA
-AAACAUEAAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABN
-AGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
-AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAAEAAAABzAGkAcAA6AGgA
-aQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAa
-DAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAfDAEAAAA4AAAA
-aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
-AIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBz
-AGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA4AAAA
-aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-APg/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfACNAAQAAADgA
-AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBu
-AHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADgA
-AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
-AwD9P+QEAAACAQswAQAAABAAAADPw8dYduzQRqluGhDvtdBRAwAXAAEAAABAADkAAPuw2C5H0QFA
-AAgwbwDg2C5H0QELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAA
-AAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBu
-AC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAHIAAABSAGUA
-OgAgAHEAbABhADIAeAB4AHgAOgAgAEQAZQBsAGUAdABlACAAcwBlAHMAcwBpAG8AbgAgAGkAZgAg
-AGkAbgBpAHQAaQBhAHQAbwByACAAaQBzACAAZwBvAG4AZQAgAGYAcgBvAG0AIABGAFcAAAAAAB8A
-PQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAABkAAAAPAA3ADEAMQAzADUAMgBk
-AGUANwAwADAANQBkAGYAOABkAGUAMwBkADAAZABmADYAZAAxADMAZQBiADEANwBlADgAQABtAGEA
-aQBsAC4AZwBtAGEAaQBsAC4AYwBvAG0APgAAAAIBcQABAAAAIAAAAAEB0TzxdYJ/fa9+GLRFoEWe
-yyI8Alme2lGWgIARkj6AHwBwAAEAAABqAAAAcQBsAGEAMgB4AHgAeAA6ACAARABlAGwAZQB0AGUA
-IABzAGUAcwBzAGkAbwBuACAAaQBmACAAaQBuAGkAdABpAGEAdABvAHIAIABpAHMAIABnAG8AbgBl
-ACAAZgByAG8AbQAgAEYAVwAAAAAAHwA1EAEAAABaAAAAPABEADIAQgAwADEANQAxADgALgBEADAA
-QgAwAEUAJQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQA+AAAAAAAfADkQAQAAAKQAAAA8ADIAMAAxADUAMQAyADIAMgAxADkANAA2ADEANwAuAEcA
-QQAzADEAMwAxADMAQABtAHcAYQBuAGQAYQA+ACAAPAA3ADEAMQAzADUAMgBkAGUANwAwADAANQBk
-AGYAOABkAGUAMwBkADAAZABmADYAZAAxADMAZQBiADEANwBlADgAQABtAGEAaQBsAC4AZwBtAGEA
-aQBsAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMJk929guR9EBAwAmAAAAAAACAUcAAQAAAC8AAABj
-PVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE2MDEwNDIwMzExMFotMTIzOTA1AAAfABUQAQAAAFgA
-AAA5ADYAMAA0AEUAOQA1AEMAOQBGADkAOABGADYANAA4AEIANwA2ADAARABGAEYAQQBDADUAMAAy
-AEIAOQAzADUAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAzgAAAI3ruCVIAAAA
-HwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAAgIYDAgAA
-AAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMA
-cgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4ANQAuADkALgAxADUAMQAx
-ADEAOQAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkA
-bwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAADQBAABJAEkAPQAwADEAMAAx
-AEQAMQA0ADcAMgBFAEQAOAA2AEYAOABGADQAOAAyADAAQwAxAEYANQBBADEANAA0ADkAQgA5ADcA
-MABCAEEAQgAzADQAQQBFAEIANgBCADUAOwBTAEIATQBJAEQAPQAxADsAUwAxAD0APAA3ADEAMQAz
-ADUAMgBkAGUANwAwADAANQBkAGYAOABkAGUAMwBkADAAZABmADYAZAAxADMAZQBiADEANwBlADgA
-QABtAGEAaQBsAC4AZwBtAGEAaQBsAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBz
-AGkAbwBuACAAMQA0AC4AMwAgACgAQgB1AGkAbABkACAAMgAzADUALgAwACkALAAgAFMAdABhAGcA
-ZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBo
-AGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
-IgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAeAAAAWwAxADAALgAy
-ADkALgAxADAAMgAuADMAMwBdAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMA
-YwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAFUU=
-
---_000_D2B01518D0B0Ehimanshumadhaniqlogiccom_--
+-- 
+Martin K. Petersen	Oracle Linux Engineering
