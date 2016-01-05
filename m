@@ -1,28 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 0/3] hpsa update
-Date: Mon, 04 Jan 2016 20:59:15 -0500
-Message-ID: <yq1poxglrbg.fsf@sermon.lab.mkp.net>
-References: <20151222163508.16655.97012.stgit@brunhilda>
+Subject: Re: [PATCH] mpt3sas: a correction in unmap_resources
+Date: Mon, 04 Jan 2016 21:01:21 -0500
+Message-ID: <yq1lh84lr7y.fsf@sermon.lab.mkp.net>
+References: <1450876907-3913-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25567 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:26370 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbcAEB7x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 20:59:53 -0500
-In-Reply-To: <20151222163508.16655.97012.stgit@brunhilda> (Don Brace's message
-	of "Tue, 22 Dec 2015 10:36:29 -0600")
+	with ESMTP id S1753756AbcAECBc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2016 21:01:32 -0500
+In-Reply-To: <1450876907-3913-1-git-send-email-thenzl@redhat.com> (Tomas
+	Henzl's message of "Wed, 23 Dec 2015 14:21:47 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>
-Cc: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, chaitra.basappa@avagotech.com, mlombard@redhat.com
 
->>>>> "Don" == Don Brace <don.brace@pmcs.com> writes:
+>>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
 
-Don> These patches are based on Linus's tree The changes are: - correct
-Don> missing changes from snprintf to scnprintf in path_info_show by
-Don> Rasmus Villemoes - fix reported bus for SAS transport devices - add
-Don> in enclosure information
+Tomas> It might happen that we try to free an already freed pointer.
+Tomas> Tomas
 
 Applied to 4.5/scsi-queue.
 
