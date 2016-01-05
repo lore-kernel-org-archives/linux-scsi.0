@@ -1,370 +1,244 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Tue, 5 Jan 2016 16:55:04 -0500 (EST)
-Message-ID: <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
-References: <20151218170644.24167419@harpe.intellique.com> <20151230193309.0df94c88@harpe.intellique.com> <D1FDE9A6-D190-4ABC-B935-56A65200956A@kolumbus.fi> <20151230222418.03e40cf7@harpe.intellique.com> <AC6651F8-0642-42DF-A3B1-72C5A8D8E665@kolumbus.fi> <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr> <20160104124626.3112e8c0@harpe.intellique.com> <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 05/35] fs: have ll_rw_block users pass in op and flags
+	separately
+Date: Wed, 6 Jan 2016 07:20:33 +0800
+Message-ID: <201601060709.woTc6jMw%fengguang.wu@intel.com>
+References: <1452027218-32303-6-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:47100 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768AbcAEVzR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jan 2016 16:55:17 -0500
-In-Reply-To: <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="EVF5PPMfhYS0aIcm"
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1452027218-32303-6-git-send-email-mchristi@redhat.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, Mike Christie <mchristi@redhat.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, kbuild-all@01.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <oberman.l@gmail.com>oberman.l@gmail.com, eflorac@intellique.com, Kai.Makisara@kolumbus.fi
-Cc: linux-scsi@vger.kernel.org
-
-Testing the patch here in the lab, it seems my firmware will need to be=
- updated to support more than 1 partition.
-Looking into that now.
-
-[  193.647807] st: Version 20160104, fixed bufsize 32768, s/g segs 256
-[  193.648992] st: Debugging enabled debug_flag =3D 1
-[  193.650907] st 0:0:0:0: Attached scsi tape st0
-[  193.652046] st 0:0:0:0: st0: try direct i/o: yes (alignment 4 B)
-
-[  280.069260] st 0:0:0:0: [st0] Block limits 1 - 16777215 bytes.
-[  280.070543] st 0:0:0:0: [st0] Mode sense. Length 11, medium 0, WBS 1=
-0, BLL 8
-[  280.073068] st 0:0:0:0: [st0] Density 58, tape length: 0, drv buffer=
-: 1
-[  280.073725] st 0:0:0:0: [st0] Block size: 0, buffer size: 4096 (1 bl=
-ocks).
-
- mt -f /dev/st0  stsetoption can-partitions
-
-[  676.835972] st 0:0:0:0: [st0] Block limits 1 - 16777215 bytes.
-[  676.837403] st 0:0:0:0: [st0] Mode sense. Length 11, medium 0, WBS 1=
-0, BLL 8
-[  676.838404] st 0:0:0:0: [st0] Density 58, tape length: 0, drv buffer=
-: 1
-[  676.838880] st 0:0:0:0: [st0] Block size: 0, buffer size: 4096 (1 bl=
-ocks).
-[  676.840383] st 0:0:0:0: [st0] Mode 0 options: buffer writes: 1, asyn=
-c writes: 1, read ahead: 1
-[  676.840880] st 0:0:0:0: [st0]     can bsr: 1, two FMs: 0, fast mteom=
-: 0, auto lock: 0,
-[  676.842424] st 0:0:0:0: [st0]     defs for wr: 0, no block limits: 0=
-, partitions: 1, s2 log: 0
-[  676.842937] st 0:0:0:0: [st0]     sysv: 0 nowait: 0 sili: 0 nowait_f=
-ilemark: 0
-[  676.844524] st 0:0:0:0: [st0]     debugging: 1
-[  676.845042] st 0:0:0:0: [st0] Rewinding tape.
-
-mt -f /dev/nst0  mkpartition 1
-
-[  798.711408] st 0:0:0:0: [st0] Block limits 1 - 16777215 bytes.
-[  798.712799] st 0:0:0:0: [st0] Mode sense. Length 11, medium 0, WBS 1=
-0, BLL 8
-[  798.713948] st 0:0:0:0: [st0] Density 58, tape length: 0, drv buffer=
-: 1
-[  798.714504] st 0:0:0:0: [st0] Block size: 0, buffer size: 4096 (1 bl=
-ocks).
-[  798.716227] st 0:0:0:0: [st0] Loading tape.
-[  798.731230] st 0:0:0:0: [st0] Block limits 1 - 16777215 bytes.
-[  798.732874] st 0:0:0:0: [st0] Mode sense. Length 11, medium 0, WBS 1=
-0, BLL 8
-[  798.734269] st 0:0:0:0: [st0] Density 58, tape length: 0, drv buffer=
-: 1
-[  798.734971] st 0:0:0:0: [st0] Block size: 0, buffer size: 4096 (1 bl=
-ocks).
-[  798.737572] st 0:0:0:0: [st0] Partition page length is 10 bytes.
-[  798.739162] st 0:0:0:0: [st0] PP: max 0, add 0, xdp 0, psum 03, pofm=
-etc 0,rec 03, units 09, sizes: 1541 65535
-[  798.739974] st 0:0:0:0: [st0] MP: 11 08 00 00 18 03 09 00 06 05 ff f=
-f
-[  798.740810] st 0:0:0:0: [st0] psd_cnt 2, max.parts 0, nbr_parts 0
-[  798.744194] st 0:0:0:0: [st0] Formatting tape with two partitions (F=
-DP).
-[  798.745045] st 0:0:0:0: [st0] Sent partition page length is 12 bytes=
-=2E  needs_format: 0
-[  798.747718] st 0:0:0:0: [st0] PP: max 0, add 1, xdp 4, psum 03, pofm=
-etc 0 rec 03, units 00, sizes: 65535 65535
-[  798.748558] st 0:0:0:0: [st0] MP: 11 0a 00 01 98 03 00 00 ff ff ff f=
-f
-[  798.752622] st 0:0:0:0: [st0] Error: 8000002, cmd: 15 10 0 0 18 0
-[  798.753465] st 0:0:0:0: [st0] Sense Key : Illegal Request [current]=20
-[  798.754289] st 0:0:0:0: [st0] Add. Sense: Invalid field in parameter=
- list
-[  798.757546] st 0:0:0:0: [st0] Partitioning of tape failed.
 
 
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+Hi Mike,
 
+[auto build test WARNING on next-20160105]
+[cannot apply to dm/for-next v4.4-rc8 v4.4-rc7 v4.4-rc6 v4.4-rc8]
+[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
-=46rom: Emmanuel Florac <eflorac@intellique.com>
-Date: Mon, Jan 4, 2016 at 6:46 AM
-Subject: Re: st driver doesn't seem to grok LTO partitioning
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+url:    https://github.com/0day-ci/linux/commits/mchristi-redhat-com/separate-operations-from-flags-in-the-bio-request-structs/20160106-052858
+reproduce: make htmldocs
 
+All warnings (new ones prefixed by >>):
 
-Le Mon, 4 Jan 2016 12:22:34 +0200 (EET)
-Kai Makisara <Kai.Makisara@kolumbus.fi> =C3=A9crivait:
+>> fs/buffer.c:3091: warning: No description found for parameter 'op_flags'
+   include/linux/jbd2.h:439: warning: No description found for parameter 'i_transaction'
+   include/linux/jbd2.h:439: warning: No description found for parameter 'i_next_transaction'
+   include/linux/jbd2.h:439: warning: No description found for parameter 'i_list'
+   include/linux/jbd2.h:439: warning: No description found for parameter 'i_vfs_inode'
+   include/linux/jbd2.h:439: warning: No description found for parameter 'i_flags'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_rsv_handle'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_reserved'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_type'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_line_no'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_start_jiffies'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_requested_credits'
+   include/linux/jbd2.h:495: warning: No description found for parameter 'h_lockdep_map'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_chkpt_bhs[JBD2_NR_BATCH]'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_devname[BDEVNAME_SIZE+24]'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_average_commit_time'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_min_batch_time'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_max_batch_time'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_commit_callback'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_failed_commit'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_chksum_driver'
+   include/linux/jbd2.h:1038: warning: No description found for parameter 'j_csum_seed'
+   include/linux/jbd2.h:1038: warning: Excess struct/union/enum/typedef member 'j_history' description in 'journal_s'
+   include/linux/jbd2.h:1038: warning: Excess struct/union/enum/typedef member 'j_history_max' description in 'journal_s'
+   include/linux/jbd2.h:1038: warning: Excess struct/union/enum/typedef member 'j_history_cur' description in 'journal_s'
+   fs/jbd2/transaction.c:429: warning: No description found for parameter 'rsv_blocks'
+   fs/jbd2/transaction.c:429: warning: No description found for parameter 'gfp_mask'
+   fs/jbd2/transaction.c:429: warning: No description found for parameter 'type'
+   fs/jbd2/transaction.c:429: warning: No description found for parameter 'line_no'
+   fs/jbd2/transaction.c:505: warning: No description found for parameter 'type'
+   fs/jbd2/transaction.c:505: warning: No description found for parameter 'line_no'
+   fs/jbd2/transaction.c:635: warning: No description found for parameter 'gfp_mask'
 
-> Here is again a new version of the patch. This does load before
-> partitioning. The code performing default partitioning (FDP=3D1) has
-> also been slightly modified (two more bits of the original mode page
-> retained).
->
-> The patch has been tested with my DDS-4 drive.
+vim +/op_flags +3091 fs/buffer.c
 
-That works fine for me. I'm going to do some testing with other drives
-I have (LTO-3 -- should fail -- and LTO-5).
+^1da177e Linus Torvalds    2005-04-16  3075   *
+^1da177e Linus Torvalds    2005-04-16  3076   * This function drops any buffer that it cannot get a lock on (with the
+9cb569d6 Christoph Hellwig 2010-08-11  3077   * BH_Lock state bit), any buffer that appears to be clean when doing a write
+9cb569d6 Christoph Hellwig 2010-08-11  3078   * request, and any buffer that appears to be up-to-date when doing read
+9cb569d6 Christoph Hellwig 2010-08-11  3079   * request.  Further it marks as clean buffers that are processed for
+9cb569d6 Christoph Hellwig 2010-08-11  3080   * writing (the buffer cache won't assume that they are actually clean
+9cb569d6 Christoph Hellwig 2010-08-11  3081   * until the buffer gets unlocked).
+^1da177e Linus Torvalds    2005-04-16  3082   *
+^1da177e Linus Torvalds    2005-04-16  3083   * ll_rw_block sets b_end_io to simple completion handler that marks
+e227867f Masanari Iida     2014-02-18  3084   * the buffer up-to-date (if appropriate), unlocks the buffer and wakes
+^1da177e Linus Torvalds    2005-04-16  3085   * any waiters. 
+^1da177e Linus Torvalds    2005-04-16  3086   *
+^1da177e Linus Torvalds    2005-04-16  3087   * All of the buffers must be for the same device, and must also be a
+^1da177e Linus Torvalds    2005-04-16  3088   * multiple of the current approved size for the device.
+^1da177e Linus Torvalds    2005-04-16  3089   */
+3390b48e Mike Christie     2016-01-05  3090  void ll_rw_block(int op, int op_flags,  int nr, struct buffer_head *bhs[])
+^1da177e Linus Torvalds    2005-04-16 @3091  {
+^1da177e Linus Torvalds    2005-04-16  3092  	int i;
+^1da177e Linus Torvalds    2005-04-16  3093  
+^1da177e Linus Torvalds    2005-04-16  3094  	for (i = 0; i < nr; i++) {
+^1da177e Linus Torvalds    2005-04-16  3095  		struct buffer_head *bh = bhs[i];
+^1da177e Linus Torvalds    2005-04-16  3096  
+9cb569d6 Christoph Hellwig 2010-08-11  3097  		if (!trylock_buffer(bh))
+^1da177e Linus Torvalds    2005-04-16  3098  			continue;
+3390b48e Mike Christie     2016-01-05  3099  		if (op == WRITE) {
 
-# modprobe st
+:::::: The code at line 3091 was first introduced by commit
+:::::: 1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 Linux-2.6.12-rc2
 
-Jan  4 12:31:53 shakuhachi kernel: st: Version 20160104, fixed bufsize
-32768, s/g segs 256
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: Attached scsi tape st0
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: try direct i/o: yes
-(alignment 512 B)
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:31:53 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
+:::::: TO: Linus Torvalds <torvalds@ppc970.osdl.org>
+:::::: CC: Linus Torvalds <torvalds@ppc970.osdl.org>
 
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-# mt -f /dev/st0  stsetoption debug
+--EVF5PPMfhYS0aIcm
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0: Mode 0 options: buf=
-fer
-writes: 1, async writes: 1, read ahead: 1
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0:     can bsr: 1, two
-=46Ms: 0, fast mteom: 0, auto lock: 0,
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0:     defs for wr: 0,=
- no
-block limits: 0, partitions: 0, s2 log: 0
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0:     sysv: 0 nowait:=
- 0
-sili: 0 nowait_filemark: 0
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0:     debugging: 1
-Jan  4 12:32:04 shakuhachi kernel: st 7:0:0:0: st0: Rewinding tape.
+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
 
-# mt -f /dev/st0  stsetoption can-partitions
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0: Mode 0 options: buf=
-fer
-writes: 1, async writes: 1, read ahead: 1
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0:     can bsr: 1, two
-=46Ms: 0, fast mteom: 0, auto lock: 0,
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0:     defs for wr: 0,=
- no
-block limits: 0, partitions: 1, s2 log: 0
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0:     sysv: 0 nowait:=
- 0
-sili: 0 nowait_filemark: 0
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0:     debugging: 1
-Jan  4 12:39:38 shakuhachi kernel: st 7:0:0:0: st0: Rewinding tape.
-
-# mt -f /dev/nst0  mkpartition 1
-
-
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Updating partition
-number in status.
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Got tape pos. blk 0
-part 0.
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Loading tape.
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Partition page leng=
-th
-is 16 bytes.
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: PP: max 3, add 0, x=
-dp
-1, psum 03, pofmetc 4, rec 03, units 09, sizes: 2620 0
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: MP: 11 0e 03 00 3c =
-03
-09 00 0a 3c 00 00
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: psd_cnt 2, max.part=
-s 3,
-nbr_parts 0
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Formatting tape wit=
-h
-two partitions (FDP).
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Sent partition page
-length is 12 bytes. needs_format: 1
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: PP: max 3, add 1, x=
-dp
-4, psum 03, pofmetc 4, rec 03, units 00, sizes: 65535 0
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: MP: 11 0a 03 01 9c =
-03
-00 00 ff ff 00 00
-Jan  4 12:40:01 shakuhachi kernel: st 7:0:0:0: st0: Sending FORMAT MEDI=
-UM
-
-
-# mt -f /dev/nst0 status
-SCSI 2 tape drive:
-=46ile number=3D0, block number=3D0, partition=3D0.
-Tape block size 0 bytes. Density code 0x5a (no translation).
-Soft error count since last status=3D0
-General status bits on (41010000):
- BOT ONLINE IM_REP_EN
-
-Jan  4 12:40:28 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:40:28 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:40:28 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:40:28 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-
-# mt -f /dev/nst0 setpartition 1
-# mt -f /dev/nst0 status
-SCSI 2 tape drive:
-=46ile number=3D0, block number=3D0, partition=3D1.
-Tape block size 0 bytes. Density code 0x5a (no translation).
-Soft error count since last status=3D0
-General status bits on (41010000):
- BOT ONLINE IM_REP_EN
-
-# mt -f /dev/nst0 mkpartition 0
-
-
-Jan  4 12:42:15 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:42:15 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:42:15 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:42:15 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:42:15 shakuhachi kernel: st 7:0:0:0: st0: Loading tape.
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: Block limits 1 -
-16777215 bytes.
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: Mode sense. Length =
-11,
-medium 0, WBS 10, BLL 8
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: Density 5a, tape
-length: 0, drv buffer: 1
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: Block size: 0, buff=
-er
-size: 4096 (1 blocks).
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: Partition page leng=
-th
-is 16 bytes.
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: PP: max 3, add 1, x=
-dp
-1, psum 03, pofmetc 4, rec 03, units 09, sizes: 2543 38
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: MP: 11 0e 03 01 3c =
-03
-09 00 09 ef 00 26
-Jan  4 12:42:18 shakuhachi kernel: st 7:0:0:0: st0: Sending FORMAT MEDI=
-UM
-
-# tapeinfo -f /dev/sg6
-Product Type: Tape Drive
-Vendor ID: 'HP      '
-Product ID: 'Ultrium 6-SCSI  '
-Revision: '329U'
-Attached Changer API: No
-SerialNumber: 'HU1302U4RC'
-MinBlock: 1
-MaxBlock: 16777215
-SCSI ID: 0
-SCSI LUN: 0
-Ready: yes
-BufferedMode: yes
-Medium Type: Not Loaded
-Density Code: 0x5a
-BlockSize: 0
-DataCompEnabled: yes
-DataCompCapable: yes
-DataDeCompEnabled: yes
-CompType: 0x1
-DeCompType: 0x1
-BOP: yes
-Block Position: 0
-ActivePartition: 0
-EarlyWarningSize: 0
-NumPartitions: 0
-MaxPartitions: 3
-
-
-
---
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |   <eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--EVF5PPMfhYS0aIcm--
