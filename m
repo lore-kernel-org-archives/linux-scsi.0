@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 14/35] hfsplus: set bi_op to REQ_OP
-Date: Tue,  5 Jan 2016 14:53:17 -0600
-Message-ID: <1452027218-32303-15-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 16/35] nilfs: set bi_op to REQ_OP
+Date: Tue,  5 Jan 2016 14:53:19 -0600
+Message-ID: <1452027218-32303-17-git-send-email-mchristi@redhat.com>
 References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -24,133 +24,82 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has hfsplus set the bio bi_op to a REQ_OP, and
+This patch has nilfs set the bio bi_op to a REQ_OP, and
 rq_flag_bits to bi_rw.
 
 This patch is compile tested only.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- fs/hfsplus/hfsplus_fs.h |  2 +-
- fs/hfsplus/part_tbl.c   |  5 +++--
- fs/hfsplus/super.c      |  6 ++++--
- fs/hfsplus/wrapper.c    | 15 +++++++++------
- 4 files changed, 17 insertions(+), 11 deletions(-)
+ fs/nilfs2/segbuf.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/fs/hfsplus/hfsplus_fs.h b/fs/hfsplus/hfsplus_fs.h
-index f91a1fa..80154aa 100644
---- a/fs/hfsplus/hfsplus_fs.h
-+++ b/fs/hfsplus/hfsplus_fs.h
-@@ -525,7 +525,7 @@ int hfsplus_compare_dentry(const struct dentry *parent,
+diff --git a/fs/nilfs2/segbuf.c b/fs/nilfs2/segbuf.c
+index 428ece8..8784272 100644
+--- a/fs/nilfs2/segbuf.c
++++ b/fs/nilfs2/segbuf.c
+@@ -350,7 +350,8 @@ static void nilfs_end_bio_write(struct bio *bio)
+ }
  
- /* wrapper.c */
- int hfsplus_submit_bio(struct super_block *sb, sector_t sector, void *buf,
--		       void **data, int rw);
-+		       void **data, int op, int op_flags);
- int hfsplus_read_wrapper(struct super_block *sb);
- 
- /* time macros */
-diff --git a/fs/hfsplus/part_tbl.c b/fs/hfsplus/part_tbl.c
-index eb355d8..63164eb 100644
---- a/fs/hfsplus/part_tbl.c
-+++ b/fs/hfsplus/part_tbl.c
-@@ -112,7 +112,8 @@ static int hfs_parse_new_pmap(struct super_block *sb, void *buf,
- 		if ((u8 *)pm - (u8 *)buf >= buf_size) {
- 			res = hfsplus_submit_bio(sb,
- 						 *part_start + HFS_PMAP_BLK + i,
--						 buf, (void **)&pm, READ);
-+						 buf, (void **)&pm, REQ_OP_READ,
-+						 0);
- 			if (res)
- 				return res;
- 		}
-@@ -136,7 +137,7 @@ int hfs_part_find(struct super_block *sb,
- 		return -ENOMEM;
- 
- 	res = hfsplus_submit_bio(sb, *part_start + HFS_PMAP_BLK,
--				 buf, &data, READ);
-+				 buf, &data, REQ_OP_READ, 0);
- 	if (res)
- 		goto out;
- 
-diff --git a/fs/hfsplus/super.c b/fs/hfsplus/super.c
-index 5d54490..01cf313 100644
---- a/fs/hfsplus/super.c
-+++ b/fs/hfsplus/super.c
-@@ -219,7 +219,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
- 
- 	error2 = hfsplus_submit_bio(sb,
- 				   sbi->part_start + HFSPLUS_VOLHEAD_SECTOR,
--				   sbi->s_vhdr_buf, NULL, WRITE_SYNC);
-+				   sbi->s_vhdr_buf, NULL, REQ_OP_WRITE,
-+				   WRITE_SYNC);
- 	if (!error)
- 		error = error2;
- 	if (!write_backup)
-@@ -227,7 +228,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
- 
- 	error2 = hfsplus_submit_bio(sb,
- 				  sbi->part_start + sbi->sect_count - 2,
--				  sbi->s_backup_vhdr_buf, NULL, WRITE_SYNC);
-+				  sbi->s_backup_vhdr_buf, NULL, REQ_OP_WRITE,
-+				  WRITE_SYNC);
- 	if (!error)
- 		error2 = error;
- out:
-diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
-index 7e605b5..d09b726 100644
---- a/fs/hfsplus/wrapper.c
-+++ b/fs/hfsplus/wrapper.c
-@@ -30,7 +30,8 @@ struct hfsplus_wd {
-  * @sector: block to read or write, for blocks of HFSPLUS_SECTOR_SIZE bytes
-  * @buf: buffer for I/O
-  * @data: output pointer for location of requested data
-- * @rw: direction of I/O
-+ * @op: direction of I/O
-+ * @op_flags: request op flags
-  *
-  * The unit of I/O is hfsplus_min_io_size(sb), which may be bigger than
-  * HFSPLUS_SECTOR_SIZE, and @buf must be sized accordingly. On reads
-@@ -44,7 +45,7 @@ struct hfsplus_wd {
-  * will work correctly.
-  */
- int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
--		void *buf, void **data, int rw)
-+		       void *buf, void **data, int op, int op_flags)
+ static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
+-				   struct nilfs_write_info *wi, int mode)
++				   struct nilfs_write_info *wi, int mode,
++				   int mode_flags)
  {
- 	struct bio *bio;
- 	int ret = 0;
-@@ -65,9 +66,10 @@ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
- 	bio = bio_alloc(GFP_NOIO, 1);
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_bdev = sb->s_bdev;
--	bio->bi_rw |= rw;
-+	bio->bi_op = op;
-+	bio->bi_rw |= op_flags;
+ 	struct bio *bio = wi->bio;
+ 	int err;
+@@ -368,7 +369,8 @@ static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
  
--	if (!(rw & WRITE) && data)
-+	if (op != WRITE && data)
- 		*data = (u8 *)buf + offset;
+ 	bio->bi_end_io = nilfs_end_bio_write;
+ 	bio->bi_private = segbuf;
+-	bio->bi_rw |= mode;
++	bio->bi_op = mode;
++	bio->bi_rw |= mode_flags;
+ 	submit_bio(bio);
+ 	segbuf->sb_nbio++;
  
- 	while (io_size > 0) {
-@@ -182,7 +184,7 @@ int hfsplus_read_wrapper(struct super_block *sb)
- reread:
- 	error = hfsplus_submit_bio(sb, part_start + HFSPLUS_VOLHEAD_SECTOR,
- 				   sbi->s_vhdr_buf, (void **)&sbi->s_vhdr,
--				   READ);
-+				   REQ_OP_READ, 0);
- 	if (error)
- 		goto out_free_backup_vhdr;
+@@ -442,7 +444,7 @@ static int nilfs_segbuf_submit_bh(struct nilfs_segment_buffer *segbuf,
+ 		return 0;
+ 	}
+ 	/* bio is FULL */
+-	err = nilfs_segbuf_submit_bio(segbuf, wi, mode);
++	err = nilfs_segbuf_submit_bio(segbuf, wi, mode, 0);
+ 	/* never submit current bh */
+ 	if (likely(!err))
+ 		goto repeat;
+@@ -466,19 +468,19 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
+ {
+ 	struct nilfs_write_info wi;
+ 	struct buffer_head *bh;
+-	int res = 0, rw = WRITE;
++	int res = 0;
  
-@@ -214,7 +216,8 @@ reread:
+ 	wi.nilfs = nilfs;
+ 	nilfs_segbuf_prepare_write(segbuf, &wi);
  
- 	error = hfsplus_submit_bio(sb, part_start + part_size - 2,
- 				   sbi->s_backup_vhdr_buf,
--				   (void **)&sbi->s_backup_vhdr, READ);
-+				   (void **)&sbi->s_backup_vhdr, REQ_OP_READ,
-+				   0);
- 	if (error)
- 		goto out_free_backup_vhdr;
+ 	list_for_each_entry(bh, &segbuf->sb_segsum_buffers, b_assoc_buffers) {
+-		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
++		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
+ 		if (unlikely(res))
+ 			goto failed_bio;
+ 	}
  
+ 	list_for_each_entry(bh, &segbuf->sb_payload_buffers, b_assoc_buffers) {
+-		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
++		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
+ 		if (unlikely(res))
+ 			goto failed_bio;
+ 	}
+@@ -488,8 +490,8 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
+ 		 * Last BIO is always sent through the following
+ 		 * submission.
+ 		 */
+-		rw |= REQ_SYNC;
+-		res = nilfs_segbuf_submit_bio(segbuf, &wi, rw);
++		res = nilfs_segbuf_submit_bio(segbuf, &wi, REQ_OP_WRITE,
++					      REQ_SYNC);
+ 	}
+ 
+  failed_bio:
 -- 
 1.8.3.1
