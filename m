@@ -1,150 +1,150 @@
 From: mchristi@redhat.com
-Subject: [PATCH 31/35] block, fs: remove old REQ definitions.
-Date: Tue,  5 Jan 2016 14:53:34 -0600
-Message-ID: <1452027218-32303-32-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 24/35] xen: set bi_op to REQ_OP
+Date: Tue,  5 Jan 2016 14:53:27 -0600
+Message-ID: <1452027218-32303-25-git-send-email-mchristi@redhat.com>
 References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-btrfs-owner@vger.kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-Sender: linux-btrfs-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-We no longer use REQ_WRITE. REQ_WRITE_SAME and REQ_DISCARD,
-so this patch removes them.
+This patch has xen set the bio bi_op to a REQ_OP, and rq_flag_bits
+to bi_rw.
+
+This patch is compile tested only.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- include/linux/blk_types.h   | 19 +++++--------------
- include/linux/fs.h          | 21 +++++++++++----------
- include/trace/events/f2fs.h |  1 -
- 3 files changed, 16 insertions(+), 25 deletions(-)
+ drivers/block/xen-blkback/blkback.c | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 6e49c91..bb30c2b 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -151,7 +151,6 @@ struct bio {
-  */
- enum rq_flag_bits {
- 	/* common flags */
--	__REQ_WRITE,		/* not set, read. set, write */
- 	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
- 	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
- 	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
-@@ -159,9 +158,7 @@ enum rq_flag_bits {
- 	__REQ_SYNC,		/* request is sync (sync write or read) */
- 	__REQ_META,		/* metadata io request */
- 	__REQ_PRIO,		/* boost priority in cfq */
--	__REQ_DISCARD,		/* request to discard sectors */
- 	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
--	__REQ_WRITE_SAME,	/* write same block many times */
+diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
+index c7e89af..c7d9643 100644
+--- a/drivers/block/xen-blkback/blkback.c
++++ b/drivers/block/xen-blkback/blkback.c
+@@ -488,7 +488,7 @@ static int xen_vbd_translate(struct phys_req *req, struct xen_blkif *blkif,
+ 	struct xen_vbd *vbd = &blkif->vbd;
+ 	int rc = -EACCES;
  
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
- 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
-@@ -197,28 +194,22 @@ enum rq_flag_bits {
- 	__REQ_NR_BITS,		/* stops here */
- };
+-	if ((operation != READ) && vbd->readonly)
++	if ((operation != REQ_OP_READ) && vbd->readonly)
+ 		goto out;
  
--#define REQ_WRITE		(1ULL << __REQ_WRITE)
- #define REQ_FAILFAST_DEV	(1ULL << __REQ_FAILFAST_DEV)
- #define REQ_FAILFAST_TRANSPORT	(1ULL << __REQ_FAILFAST_TRANSPORT)
- #define REQ_FAILFAST_DRIVER	(1ULL << __REQ_FAILFAST_DRIVER)
- #define REQ_SYNC		(1ULL << __REQ_SYNC)
- #define REQ_META		(1ULL << __REQ_META)
- #define REQ_PRIO		(1ULL << __REQ_PRIO)
--#define REQ_DISCARD		(1ULL << __REQ_DISCARD)
--#define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
- #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
+ 	if (likely(req->nr_sects)) {
+@@ -995,7 +995,7 @@ static int dispatch_discard_io(struct xen_blkif *blkif,
+ 	preq.sector_number = req->u.discard.sector_number;
+ 	preq.nr_sects      = req->u.discard.nr_sectors;
  
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
--	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
--	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
--	 REQ_SECURE | REQ_INTEGRITY)
-+	(REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | REQ_NOIDLE | \
-+	 REQ_FLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
+-	err = xen_vbd_translate(&preq, blkif, WRITE);
++	err = xen_vbd_translate(&preq, blkif, REQ_OP_WRITE);
+ 	if (err) {
+ 		pr_warn("access denied: DISCARD [%llu->%llu] on dev=%04x\n",
+ 			preq.sector_number,
+@@ -1208,6 +1208,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	struct bio **biolist = pending_req->biolist;
+ 	int i, nbio = 0;
+ 	int operation;
++	int operation_flags = 0;
+ 	struct blk_plug plug;
+ 	bool drain = false;
+ 	struct grant_page **pages = pending_req->segments;
+@@ -1226,17 +1227,19 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	switch (req_operation) {
+ 	case BLKIF_OP_READ:
+ 		blkif->st_rd_req++;
+-		operation = READ;
++		operation = REQ_OP_READ;
+ 		break;
+ 	case BLKIF_OP_WRITE:
+ 		blkif->st_wr_req++;
+-		operation = WRITE_ODIRECT;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_ODIRECT;
+ 		break;
+ 	case BLKIF_OP_WRITE_BARRIER:
+ 		drain = true;
+ 	case BLKIF_OP_FLUSH_DISKCACHE:
+ 		blkif->st_f_req++;
+-		operation = WRITE_FLUSH;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_FLUSH;
+ 		break;
+ 	default:
+ 		operation = 0; /* make gcc happy */
+@@ -1248,7 +1251,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	nseg = req->operation == BLKIF_OP_INDIRECT ?
+ 	       req->u.indirect.nr_segments : req->u.rw.nr_segments;
  
--#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
--
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
- 	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
-@@ -250,9 +241,9 @@ enum rq_flag_bits {
+-	if (unlikely(nseg == 0 && operation != WRITE_FLUSH) ||
++	if (unlikely(nseg == 0 && operation_flags != WRITE_FLUSH) ||
+ 	    unlikely((req->operation != BLKIF_OP_INDIRECT) &&
+ 		     (nseg > BLKIF_MAX_SEGMENTS_PER_REQUEST)) ||
+ 	    unlikely((req->operation == BLKIF_OP_INDIRECT) &&
+@@ -1289,7 +1292,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
  
- enum req_op {
- 	REQ_OP_READ,
--	REQ_OP_WRITE		= REQ_WRITE,
--	REQ_OP_DISCARD		= REQ_DISCARD,
--	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
-+	REQ_OP_WRITE,
-+	REQ_OP_DISCARD,		/* request to discard sectors */
-+	REQ_OP_WRITE_SAME,	/* write same block many times */
- };
+ 	if (xen_vbd_translate(&preq, blkif, operation) != 0) {
+ 		pr_debug("access denied: %s of [%llu,%llu] on dev=%04x\n",
+-			 operation == READ ? "read" : "write",
++			 operation == REQ_OP_READ ? "read" : "write",
+ 			 preq.sector_number,
+ 			 preq.sector_number + preq.nr_sects,
+ 			 blkif->vbd.pdevice);
+@@ -1348,7 +1351,8 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 			bio->bi_private = pending_req;
+ 			bio->bi_end_io  = end_block_io_op;
+ 			bio->bi_iter.bi_sector  = preq.sector_number;
+-			bio->bi_rw	|= operation;
++			bio->bi_op	= operation;
++			bio->bi_rw	|= operation_flags;
+ 		}
  
- typedef unsigned int blk_qc_t;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 85007cd..d57a5b5 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -151,9 +151,10 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
- #define CHECK_IOVEC_ONLY -1
+ 		preq.sector_number += seg[i].nsec;
+@@ -1356,7 +1360,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
  
- /*
-- * The below are the various read and write types that we support. Some of
-+ * The below are the various read and write flags that we support. Some of
-  * them include behavioral modifiers that send information down to the
-- * block layer and IO scheduler. Terminology:
-+ * block layer and IO scheduler. They should be used along with a req_op.
-+ * Terminology:
-  *
-  *	The block layer uses device plugging to defer IO a little bit, in
-  *	the hope that we will see more IO very shortly. This increases
-@@ -192,19 +193,19 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
-  *			non-volatile media on completion.
-  *
-  */
--#define RW_MASK			REQ_WRITE
-+#define RW_MASK			REQ_OP_WRITE
- #define RWA_MASK		REQ_RAHEAD
+ 	/* This will be hit if the operation was a flush or discard. */
+ 	if (!bio) {
+-		BUG_ON(operation != WRITE_FLUSH);
++		BUG_ON(operation_flags != WRITE_FLUSH);
  
--#define READ			0
-+#define READ			REQ_OP_READ
- #define WRITE			RW_MASK
- #define READA			RWA_MASK
+ 		bio = bio_alloc(GFP_KERNEL, 0);
+ 		if (unlikely(bio == NULL))
+@@ -1366,7 +1370,8 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 		bio->bi_bdev    = preq.bdev;
+ 		bio->bi_private = pending_req;
+ 		bio->bi_end_io  = end_block_io_op;
+-		bio->bi_rw	|= operation;
++		bio->bi_op	= operation;
++		bio->bi_rw	|= operation_flags;
+ 	}
  
--#define READ_SYNC		(READ | REQ_SYNC)
--#define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE)
--#define WRITE_ODIRECT		(WRITE | REQ_SYNC)
--#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
--#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FUA)
--#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
-+#define READ_SYNC		REQ_SYNC
-+#define WRITE_SYNC		(REQ_SYNC | REQ_NOIDLE)
-+#define WRITE_ODIRECT		REQ_SYNC
-+#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
-+#define WRITE_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FUA)
-+#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
+ 	atomic_set(&pending_req->pendcnt, nbio);
+@@ -1378,9 +1383,9 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	/* Let the I/Os go.. */
+ 	blk_finish_plug(&plug);
  
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index ddf4144..ed3fc87 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -31,7 +31,6 @@ TRACE_DEFINE_ENUM(BG_GC);
- TRACE_DEFINE_ENUM(LFS);
- TRACE_DEFINE_ENUM(SSR);
- TRACE_DEFINE_ENUM(__REQ_RAHEAD);
--TRACE_DEFINE_ENUM(__REQ_WRITE);
- TRACE_DEFINE_ENUM(__REQ_SYNC);
- TRACE_DEFINE_ENUM(__REQ_NOIDLE);
- TRACE_DEFINE_ENUM(__REQ_FLUSH);
+-	if (operation == READ)
++	if (operation == REQ_OP_READ)
+ 		blkif->st_rd_sect += preq.nr_sects;
+-	else if (operation & WRITE)
++	else if (operation == REQ_OP_WRITE)
+ 		blkif->st_wr_sect += preq.nr_sects;
+ 
+ 	return 0;
 -- 
 1.8.3.1
-
