@@ -1,94 +1,39 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 00/16]  qla2xxx: Patches for target-pending branch
-Date: Wed, 06 Jan 2016 11:01:32 -0800
-Message-ID: <1452106892.26125.36.camel@haakon3.risingtidesystems.com>
-References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
-	 <1450681047.25674.32.camel@haakon3.risingtidesystems.com>
-	 <D2B2862C.D155F%himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 25/35] target: set bi_op to REQ_OP
+Date: Wed, 06 Jan 2016 11:06:00 -0800
+Message-ID: <1452107160.26125.39.camel@haakon3.risingtidesystems.com>
+References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+	 <1452027218-32303-26-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49667 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbcAFTBe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 14:01:34 -0500
-In-Reply-To: <D2B2862C.D155F%himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <1452027218-32303-26-git-send-email-mchristi@redhat.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: mchristi@redhat.com
+Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2016-01-06 at 17:00 +0000, Himanshu Madhani wrote:
-> Hi Nic,
->=20
->=20
-> On 12/20/15, 10:57 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> =
-wrote:
->=20
-> >Hi Himanshu & Co,
-> >
-> >On Thu, 2015-12-17 at 14:56 -0500, Himanshu Madhani wrote:
-> >> Hi Nic,
-> >>=20
-> >> Please apply this series to target-pending at your earliest conven=
-ience.
-> >>=20
-> >> changes from v1 -> v2
-> >>=20
-> >> o Added Reviewed-by tag for reviewed patches.
-> >>=20
-> >> o Dropped following patches for rework.
-> >>   - qla2xxx: Change check_stop_free to always return 1
-> >>   - qla2xxx: Fix interaction issue between qla2xxx and Target Core
-> >>Module
-> >>   - qla2xxx: Add TAS detection for kernel 3.15 n newer
-> >>   - target/tmr: LUN reset cause cmd premature free.
-> >>=20
-> >
-> >Thanks for dropping these for the moment.
-> >
-> >I'll be following up on outstanding TMR LUN_RESET reference counting
-> >bugs over the holiday.
-> >
-> >> o Fixed patch description on following patches
-> >>   - qla2xxx: Enable Extended Login support
-> >>   - qla2xxx: Enable Exchange offload support.
-> >>=20
-> >> o Fixed patch description as well as kbuild warning for
-> >>   - qla2xxx: Added interface to send explicit LOGO.
-> >>=20
-> >> o Fixed kbuild warning for
-> >>   - qla2xxx: Remove dependency on hardware_lock to reduce lock
-> >>     contention.
-> >>=20
+Hi Mike,
 
-<SNIP>
+On Tue, 2016-01-05 at 14:53 -0600, mchristi@redhat.com wrote:
+> From: Mike Christie <mchristi@redhat.com>
+> 
+> This patch has the target modules set the bio bi_op to a REQ_OP, and
+> rq_flag_bits to bi_rw.
+> 
+> This patch is compile tested only.
+> 
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> ---
+>  drivers/target/target_core_iblock.c | 38 ++++++++++++++++++++++---------------
+>  drivers/target/target_core_pscsi.c  |  2 +-
+>  2 files changed, 24 insertions(+), 16 deletions(-)
+> 
 
-> >
-> >Applied patches #1 -> #14 + #16 to target-pending/for-next code.
-> >
-> >Adding commenting inline for patch #15.
-> >
-> >Thank you,
-> >
-> >--nab
->=20
-> We need to rework patch #11 (=C2=B3qla2xxx: Add selective command que=
-uing=C2=B2) to
-> address review comments from Bart and Christoph.
-> Can you please drop it from your queue. We=C2=B9ll send updated patch=
- once its
-> ready.
->=20
+Nice work to clean this long standing abuse.  ;)
 
-No need to resend the whole patch.
+For the target/iblock bit:
 
-Just address the comments with an incremental patch, and I'll fold into
-the original when applying.
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
