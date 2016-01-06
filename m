@@ -1,31 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Wed, 6 Jan 2016 10:48:44 -0500
-Message-ID: <568D375C.1020800@interlog.com>
-References: <20151218170644.24167419@harpe.intellique.com>
- <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
- <20160104124626.3112e8c0@harpe.intellique.com>
- <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
- <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
- <20160106161049.34f29973@harpe.intellique.com>
- <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com>
- <197363090.3557312.1452093937340.JavaMail.zimbra@redhat.com>
- <434451353.3559713.1452094368819.JavaMail.zimbra@redhat.com>
-Reply-To: dgilbert@interlog.com
+Date: Wed, 6 Jan 2016 10:54:42 -0500 (EST)
+Message-ID: <1857025395.3569226.1452095682086.JavaMail.zimbra@redhat.com>
+References: <20151218170644.24167419@harpe.intellique.com> <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com> <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com> <20160106161049.34f29973@harpe.intellique.com> <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com> <197363090.3557312.1452093937340.JavaMail.zimbra@redhat.com> <434451353.3559713.1452094368819.JavaMail.zimbra@redhat.com> <568D375C.1020800@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:39993 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbcAFPs4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jan 2016 10:48:56 -0500
-In-Reply-To: <434451353.3559713.1452094368819.JavaMail.zimbra@redhat.com>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:50349 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbcAFPyz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 10:54:55 -0500
+In-Reply-To: <568D375C.1020800@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>
-Cc: Laurence Oberman <oberman.l@gmail.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
+
+Thanks Doug
+Trying that now
+
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Douglas Gilbert" <dgilbert@interlog.com>
+To: "Laurence Oberman" <loberman@redhat.com>, "Emmanuel Florac" <eflora=
+c@intellique.com>
+Cc: "Laurence Oberman" <oberman.l@gmail.com>, "Kai Makisara" <Kai.Makis=
+ara@kolumbus.fi>, linux-scsi@vger.kernel.org
+Sent: Wednesday, January 6, 2016 10:48:44 AM
+Subject: Re: st driver doesn't seem to grok LTO partitioning
 
 On 16-01-06 10:32 AM, Laurence Oberman wrote:
 > Firmware update fails as follows:
