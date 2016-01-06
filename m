@@ -1,33 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 15/16] qla2xxx: Add bulk send for atio & ctio
- completion paths.
-Date: Tue, 5 Jan 2016 22:07:10 -0800
-Message-ID: <20160106060710.GA17359@infradead.org>
-References: <1450382231-4259-1-git-send-email-himanshu.madhani@qlogic.com>
- <1450382231-4259-16-git-send-email-himanshu.madhani@qlogic.com>
- <1450682033.25674.44.camel@haakon3.risingtidesystems.com>
- <D2AFECA4.1BF9A%quinn.tran@qlogic.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s!
+	[kworker/1:1:29]
+Date: Wed, 6 Jan 2016 07:10:45 +0100
+Message-ID: <20160106061045.GB16509@lst.de>
+References: <20151217222737.00000ab6@localhost> <20151231180415.00000bfc@localhost> <20160103114628.GA10582@lst.de> <20160103190341.0000387b@localhost> <20160105210600.000017c5@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:42164 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750845AbcAFGKr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jan 2016 01:10:47 -0500
 Content-Disposition: inline
-In-Reply-To: <D2AFECA4.1BF9A%quinn.tran@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <20160105210600.000017c5@localhost>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sebastian Herbszt <herbszt@gmx.de>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
 
-Hi Quinn ,
-
-On Mon, Jan 04, 2016 at 06:27:58PM +0000, Quinn Tran wrote:
-> >in kernel/workqueue.c to be used beyond qla2xxx, or:
+On Tue, Jan 05, 2016 at 09:06:00PM +0100, Sebastian Herbszt wrote:
+> > I can give it a try but it will likely take a few days.
+> > 
+> > [1] http://marc.info/?l=linux-scsi&m=144771953020415&w=2
 > 
-> QT> For every work element, the pool->lock is grabbed.  Unless the lock
-> can be grab 1 time and the rest of the work elements piggy back on it then
-> it?s worth it to have a new kernel service.
+> Bart's patch mentioned above seems to fix my issue.
 
-Can you remove these 'QT>' markers?  They really mess up display in
-most common mailers and make every first line of your text look like
-you quoted it from the previous mail.
+Bart, can you resend that patch with a a Reported-by and Tested-by for
+Sebastian?
 
-This made your two mails almost unreadable for me.
+> The soft lockup is gone and now I am getting the following but that
+> already happened on 4.3 too:
+
+This looks power management related.  Might be worth to send a separate
+bug report to both linux-scsi and the people responsible for
+drivers/base/power/sysfs.c
