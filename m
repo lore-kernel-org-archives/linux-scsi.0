@@ -1,39 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 25/35] target: set bi_op to REQ_OP
-Date: Wed, 06 Jan 2016 11:06:00 -0800
-Message-ID: <1452107160.26125.39.camel@haakon3.risingtidesystems.com>
-References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-	 <1452027218-32303-26-git-send-email-mchristi@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: mvsas: fix indenting on return error code
+Date: Wed, 06 Jan 2016 15:29:03 -0500
+Message-ID: <yq1y4c2ih9s.fsf@sermon.lab.mkp.net>
+References: <1451995000-9210-1-git-send-email-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <1452027218-32303-26-git-send-email-mchristi@redhat.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: mchristi@redhat.com
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1451995000-9210-1-git-send-email-colin.king@canonical.com>
+	(Colin King's message of "Tue, 5 Jan 2016 11:56:40 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Mike,
+>>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
 
-On Tue, 2016-01-05 at 14:53 -0600, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
-> 
-> This patch has the target modules set the bio bi_op to a REQ_OP, and
-> rq_flag_bits to bi_rw.
-> 
-> This patch is compile tested only.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> ---
->  drivers/target/target_core_iblock.c | 38 ++++++++++++++++++++++---------------
->  drivers/target/target_core_pscsi.c  |  2 +-
->  2 files changed, 24 insertions(+), 16 deletions(-)
-> 
+Colin,
 
-Nice work to clean this long standing abuse.  ;)
+Colin> The return code and error return is incorrectly indented which
+Colin> may cause some confusion as it appears at first sight to be
+Colin> associated with a device not ready error (with missing { }
+Colin> braces) rather than a DEV_IS_GONE() failure.
 
-For the target/iblock bit:
+This problem has already been addressed:
 
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
+https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git/commit/?h=4.5/scsi-queue&id=7789cd39274c
 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
