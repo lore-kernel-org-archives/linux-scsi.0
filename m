@@ -1,19 +1,24 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH net-next 2/3] libcxgbi: add pdu parsing of LRO'ed skbs
-Date: Wed, 6 Jan 2016 21:12:02 +0800
-Message-ID: <201601062125.9w2snRiL%fengguang.wu@intel.com>
-References: <1452083376-7180-3-git-send-email-hariprasad@chelsio.com>
+Subject: Re: [PATCH net-next 3/3] cxgb4i: add iscsi LRO for chelsio t4/t5
+ adapters
+Date: Wed, 6 Jan 2016 21:32:39 +0800
+Message-ID: <201601062156.zyaqGH6T%fengguang.wu@intel.com>
+References: <1452083376-7180-4-git-send-email-hariprasad@chelsio.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="r5Pyd7+fXNt84Ff3"
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="DocE+STaALJfprDB"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:51988 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751998AbcAFNdz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jan 2016 08:33:55 -0500
 Content-Disposition: inline
-In-Reply-To: <1452083376-7180-3-git-send-email-hariprasad@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-Cc: kbuild-all@01.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, JBottomley@odin.com, martin.petersen@oracle.com, leedom@chelsio.com, kxie@chelsio.com, manojmalviya@chelsio.com, nirranjan@chelsio.com, Hariprasad Shenai <hariprasad@chelsio.com>
+In-Reply-To: <1452083376-7180-4-git-send-email-hariprasad@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: kbuild-all@01.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, JBottomley@odin.com, martin.petersen@oracle.com, leedom@chelsio.com, kxie@chelsio.com, manojmalviya@chelsio.com, nirranjan@chelsio.com, Hariprasad Shenai <hariprasad@chelsio.com>
 
 
---r5Pyd7+fXNt84Ff3
+--DocE+STaALJfprDB
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -29,32 +34,32 @@ reproduce:
 
 All errors (new ones prefixed by >>):
 
->> drivers/scsi/cxgbi/libcxgbi.c:38:23: fatal error: cxgbi_lro.h: No such file or directory
+>> drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:36:26: fatal error: ../cxgbi_lro.h: No such file or directory
    compilation terminated.
 
-vim +38 drivers/scsi/cxgbi/libcxgbi.c
+vim +36 drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
 
-    32	#include <linux/module.h>
-    33	#include <net/tcp.h>
+    30	#include "cxgb4i.h"
+    31	#include "clip_tbl.h"
+    32	
+    33	static unsigned int dbg_level;
     34	
-    35	static unsigned int dbg_level;
-    36	
-    37	#include "libcxgbi.h"
-  > 38	#include "cxgbi_lro.h"
-    39	
-    40	#define DRV_MODULE_NAME		"libcxgbi"
-    41	#define DRV_MODULE_DESC		"Chelsio iSCSI driver library"
+    35	#include "../libcxgbi.h"
+  > 36	#include "../cxgbi_lro.h"
+    37	
+    38	#define	DRV_MODULE_NAME		"cxgb4i"
+    39	#define DRV_MODULE_DESC		"Chelsio T4/T5 iSCSI Driver"
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---r5Pyd7+fXNt84Ff3
+--DocE+STaALJfprDB
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICOERjVYAAy5jb25maWcAjDzJdty2svt8RR/nLe5dONZs57yjBRoEu5EmCRoAWy1teBSp
+H4sICLMWjVYAAy5jb25maWcAjDzJdty2svt8RR/nLe5dONZs57yjBRoEu5EmCRoAWy1teBSp
 HetcDX6SnOv8/asCOBRAUEkWkVlVADHUXMX++aefF+z769PD9evdzfX9/V+LP/aP++fr1/3t
 4svd/f5/F5laVMouRCbtL0Bc3D1+//Hh7vjT2eLkl5NfDt4/33xcbPbPj/v7BX96/HL3x3cY
 fff0+NPPQM1VlctVe3aylHZx97J4fHpdvOxff+rgu09n7fHR+V/keXyQlbG64Vaqqs0EV5nQ
@@ -1031,4 +1036,4 @@ DA0AdSYzuWo7J2RhlF7Bw7CkiEUVU7MOHHSPxKzUPGKSX3lDT2JSXIgVXqmVrpkTRBtB+LGG
 a35JATtyz/u1YC6WyHT0fuQhdGQi9O2dhp9A6Pv78sCBIDh8KiQYmIbIBRwCLnUH70Jmu15N
 cqFUBl3uve/tOfBy933JVrsabnWk4jo19ngNgzDQuTAYQBHtBu+g/wODiCD4TzoDAA==
 
---r5Pyd7+fXNt84Ff3--
+--DocE+STaALJfprDB--
