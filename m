@@ -1,7 +1,7 @@
 From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Wed, 6 Jan 2016 17:16:40 +0100
-Message-ID: <20160106171640.465a0d48@harpe.intellique.com>
+Date: Wed, 6 Jan 2016 17:44:49 +0100
+Message-ID: <20160106174449.63e6bc5c@harpe.intellique.com>
 References: <20151218170644.24167419@harpe.intellique.com>
 	<20151221134649.293a1a1e@harpe.intellique.com>
 	<F89B43DA-FE51-4FEF-97BB-C79A401050D7@kolumbus.fi>
@@ -17,34 +17,33 @@ References: <20151218170644.24167419@harpe.intellique.com>
 	<20151230222418.03e40cf7@harpe.intellique.com>
 	<AC6651F8-0642-42DF-A3B1-72C5A8D8E665@kolumbus.fi>
 	<alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
-	<20160104124626.3112e8c0@harpe.intellique.com>
-	<20160106171015.4edacf41@harpe.intellique.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:46949 "EHLO mail1.g1.pair.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:50067 "EHLO mail1.g1.pair.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572AbcAFQQg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 11:16:36 -0500
-In-Reply-To: <20160106171015.4edacf41@harpe.intellique.com>
+	id S1751755AbcAFQoq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 11:44:46 -0500
+In-Reply-To: <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai Makisara <Kai.Makisara@kolumbus.fi>
 Cc: linux-scsi@vger.kernel.org
 
-Le Wed, 6 Jan 2016 17:10:15 +0100
-Emmanuel Florac <eflorac@intellique.com> =C3=A9crivait:
+Le Mon, 4 Jan 2016 12:22:34 +0200 (EET)
+Kai Makisara <Kai.Makisara@kolumbus.fi> =C3=A9crivait:
 
-> Works OK with LTO-5 (HP). Sizing the partitions is quite difficult, a=
-s
-> you can see. To get one "wrap" in the first partition, "1400000" and
-> "1424000" work, but "1450000" doesn't. Same for LTO-6 (I'm still
-> looking for the proper size).
->=20
+> The patch has been tested with my DDS-4 drive.
 
-Looks like the proper size for a "one wrap" 38 GB partition 0 on LTO-6
-is "2450000". Go figure.
+Oh BTW, may be you could correct this one while you're at it :) I don't
+think my kernel is so old... :)
+
+~# mt -f /dev/st0 stshowopt
+Your kernel (3.18.25) may be too old for this command.
+The options set: buffer-writes async-writes read-ahead debug can-bsr ca=
+n-partitions
+
 
 --=20
 -----------------------------------------------------------------------=
