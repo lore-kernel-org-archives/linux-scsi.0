@@ -1,43 +1,72 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] [SCSI] osst: remove double conversion of timeout
-Date: Thu,  7 Jan 2016 21:10:33 +0100
-Message-ID: <1452197433-26086-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: mchristi@redhat.com
+Subject: [PATCH 1/1] scsi: add Synology to 1024 sector blacklist
+Date: Thu,  7 Jan 2016 16:34:05 -0600
+Message-ID: <1452206045-18332-1-git-send-email-mchristi@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40679 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752230AbcAGWeI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jan 2016 17:34:08 -0500
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 2C009C001273
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Jan 2016 22:34:08 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <mchristi@redhat.com>
 
-If the time is actually in jiffies already it seems cleaner to call
-schedule_timeout_interruptible() than to call msleep and covert the
-timeout. In this case it will actually optimize the code a bit as 
-it does not need to call jiffies_to_msecs here.
+From: Mike Christie <mchristi@redhat.com>
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Another iscsi target that cannot handle large IOs,
+but does not tell us a limit.
+
+The Synology iSCSI targets report:
+
+Block limits VPD page (SBC):
+  Write same no zero (WSNZ): 0
+  Maximum compare and write length: 0 blocks
+  Optimal transfer length granularity: 0 blocks
+  Maximum transfer length: 0 blocks
+  Optimal transfer length: 0 blocks
+  Maximum prefetch length: 0 blocks
+  Maximum unmap LBA count: 0
+  Maximum unmap block descriptor count: 0
+  Optimal unmap granularity: 0
+  Unmap granularity alignment valid: 0
+  Unmap granularity alignment: 0
+  Maximum write same length: 0x0 blocks
+
+and the size of the command it can handle seems to depend on how much
+memory it can allocate at the time. This results in IO errors when
+handling large IOs. This patch just has us use the old 1024 default
+sectors for this target by adding it to the scsi blacklist. We do
+not have good contacs with this vendors, so I have not been able to
+try and fix on their side.
+
+I have posted this a long while back, but it was not merged. This
+version just fixes it up for merge/patch failures in the original
+version.
+
+Reported-by: Ancoron Luciferis <ancoron.luciferis@googlemail.com>
+Reported-by: Michael Meyers <steltek@tcnnet.com>
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+
 ---
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-problem was found by coccinelle spatch
-
-patch was compile tested with: x86_64_defconfig +
-CONFIG_CHR_DEV_OSST=m
-
-patch is against linux-next (localversion-next is -next-20160107)
-
- drivers/scsi/osst.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 5033223..d8e5aa9 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -760,7 +760,7 @@ static int osst_wait_ready(struct osst_tape * STp, struct osst_request ** aSRpnt
- #endif
- 
- 	if (initial_delay > 0)
--		msleep(jiffies_to_msecs(initial_delay));
-+		schedule_timeout_uninterruptible(initial_delay);
- 
- 	memset(cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = TEST_UNIT_READY;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 2c1160c7..47b9d13 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -227,6 +227,7 @@ static struct {
+ 	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+ 	{"Promise", "", NULL, BLIST_SPARSELUN},
+ 	{"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024},
++	{"SYNOLOGY", "iSCSI Storage", NULL, BLIST_MAX_1024},
+ 	{"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
+ 	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+ 	{"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
 -- 
-2.1.4
+1.8.3.1
+
