@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V2 6/9] aacraid: Fundamental reset support for Series 7
-Date: Wed, 6 Jan 2016 23:22:21 -0800
-Message-ID: <1452151344-417-7-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V2 8/9] aacraid: Fix character device re-initialization
+Date: Wed, 6 Jan 2016 23:22:23 -0800
+Message-ID: <1452151344-417-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1452151344-417-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:44844 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752163AbcAFXMh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 18:12:37 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:40450 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752540AbcAFXMj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 18:12:39 -0500
 In-Reply-To: <1452151344-417-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,36 +18,101 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Series 7 does not support PCI hot reset used by EEH.
+During EEH PCI hotplug activity kernel unloads and loads the driver,
+causing character device to be unregistered(aac_remove_one).When the
+driver is loaded back using aac_probe_one the character device needs
+to be registered again for the AIF management tools to work.
 
-Enabled fundamental reset only for Series 7
+Fixed by adding code to register character device in aac_probe_one if
+it is unregistered in aac_remove_one.
 
 Changes in V2:
-None
+Added macros to track character device state
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/aacraid/linit.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/aacraid/aacraid.h |  7 +++++++
+ drivers/scsi/aacraid/linit.c   | 21 ++++++++++++++-------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 2916288..a440840 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -94,6 +94,13 @@ enum {
+ #define aac_phys_to_logical(x)  ((x)+1)
+ #define aac_logical_to_phys(x)  ((x)?(x)-1:0)
+ 
++/*
++ * These macros are for keeping track of
++ * character device state.
++ */
++#define AAC_CHARDEV_UNREGISTERED	(-1)
++#define AAC_CHARDEV_NEEDS_REINIT	(-2)
++
+ /* #define AAC_DETAILED_STATUS_INFO */
+ 
+ struct diskparm
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 6d79181..6944560 100644
+index 6944560..fea1ba1 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -1135,6 +1135,12 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	u64 dmamask;
- 	extern int aac_sync_mode;
+@@ -80,7 +80,7 @@ MODULE_VERSION(AAC_DRIVER_FULL_VERSION);
  
-+	/*
-+	 * Only series 7 needs freset.
-+	 */
-+	 if (pdev->device == PMC_DEVICE_S7)
-+		pdev->needs_freset = 1;
+ static DEFINE_MUTEX(aac_mutex);
+ static LIST_HEAD(aac_devices);
+-static int aac_cfg_major = -1;
++static int aac_cfg_major = AAC_CHARDEV_UNREGISTERED;
+ char aac_driver_version[] = AAC_DRIVER_FULL_VERSION;
+ 
+ /*
+@@ -1123,6 +1123,13 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 	else if (aac->max_msix > 1)
+ 		pci_disable_msix(aac->pdev);
+ }
++static void aac_init_char(void)
++{
++	aac_cfg_major = register_chrdev(0, "aac", &aac_cfg_fops);
++	if (aac_cfg_major < 0) {
++		pr_err("aacraid: unable to register \"aac\" device.\n");
++	}
++}
+ 
+ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+@@ -1180,6 +1187,9 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_cmd_len = 16;
+ 	shost->use_cmd_list = 1;
+ 
++	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
++		aac_init_char();
 +
- 	list_for_each_entry(aac, &aac_devices, entry) {
- 		if (aac->id > unique_id)
- 			break;
+ 	aac = (struct aac_dev *)shost->hostdata;
+ 	aac->base_start = pci_resource_start(pdev, 0);
+ 	aac->scsi_host_ptr = shost;
+@@ -1517,7 +1527,7 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	pci_disable_device(pdev);
+ 	if (list_empty(&aac_devices)) {
+ 		unregister_chrdev(aac_cfg_major, "aac");
+-		aac_cfg_major = -1;
++		aac_cfg_major = AAC_CHARDEV_NEEDS_REINIT;
+ 	}
+ }
+ 
+@@ -1680,11 +1690,8 @@ static int __init aac_init(void)
+ 	if (error < 0)
+ 		return error;
+ 
+-	aac_cfg_major = register_chrdev( 0, "aac", &aac_cfg_fops);
+-	if (aac_cfg_major < 0) {
+-		printk(KERN_WARNING
+-			"aacraid: unable to register \"aac\" device.\n");
+-	}
++	aac_init_char();
++
+ 
+ 	return 0;
+ }
 -- 
 1.9.1
 
