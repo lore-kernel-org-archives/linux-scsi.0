@@ -1,51 +1,30 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 00/35 v2] separate operations from flags in
-	the bio/request structs
-Date: Wed, 06 Jan 2016 20:40:09 -0500
-Message-ID: <yq14meqi2va.fsf@sermon.lab.mkp.net>
-References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 0/6] cxlflash: Miscellaneous fixes and updates
+Date: Wed, 06 Jan 2016 21:01:45 -0500
+Message-ID: <yq1ziwignau.fsf@sermon.lab.mkp.net>
+References: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <1452027218-32303-1-git-send-email-mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-	(mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org's message of "Tue, 5 Jan 2016 14:53:03 -0600")
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22665 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751905AbcAGCCN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 21:02:13 -0500
+In-Reply-To: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+	(Uma Krishnan's message of "Mon, 14 Dec 2015 14:51:33 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>
 
->>>>> "Mike" == mchristi  <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+>>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
 
-Mike> The following patches begin to cleanup the request->cmd_flags and
-bio-> bi_rw mess. We currently use cmd_flags to specify the operation,
-Mike> attributes and state of the request. For bi_rw we use it for
-Mike> similar info and also the priority but then also have another
-Mike> bi_flags field for state. At some point, we abused them so much we
-Mike> just made cmd_flags 64 bits, so we could add more.
+Uma> This patch set contains miscellaneous fixes and adds support for a
+Uma> future IBM CXL adapter. This series is intended for 4.5 and is
+Uma> bisectable. Please reference the changelog below for details on
+Uma> what has been altered from previous versions of this patch set.
 
-Mike> The following patches seperate the operation (read, write discard,
-Mike> flush, etc) from cmd_flags/bi_rw.
-
-Mike> This patchset was made against linux-next from today Jan 5 2016.
-Mike> (git tag next-20160105).
-
-Very nice work. Thanks for doing this!
-
-I think it's a much needed cleanup. I focused mainly on the core block,
-discard, write same and sd.c pieces and everything looks sensible to me.
-
-I wonder what the best approach is to move a patch set with this many
-stakeholders forward? Set a "speak now or forever hold your peace"
-review deadline?
+Applied to 4.5/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
