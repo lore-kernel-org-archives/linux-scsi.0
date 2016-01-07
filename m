@@ -1,30 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 0/6] cxlflash: Miscellaneous fixes and updates
-Date: Wed, 06 Jan 2016 21:01:45 -0500
-Message-ID: <yq1ziwignau.fsf@sermon.lab.mkp.net>
-References: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 00/78] More fixes, cleanup and modernization for NCR5380 drivers
+Date: Wed, 06 Jan 2016 21:53:07 -0500
+Message-ID: <yq17fjmayng.fsf@sermon.lab.mkp.net>
+References: <20160103050501.042035135@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22665 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbcAGCCN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2016 21:02:13 -0500
-In-Reply-To: <1450126293-47440-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-	(Uma Krishnan's message of "Mon, 14 Dec 2015 14:51:33 -0600")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20160103050501.042035135@telegraphics.com.au> (Finn Thain's
+	message of "Sun, 03 Jan 2016 16:05:01 +1100")
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>
 
->>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+>>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
 
-Uma> This patch set contains miscellaneous fixes and adds support for a
-Uma> future IBM CXL adapter. This series is intended for 4.5 and is
-Uma> bisectable. Please reference the changelog below for details on
-Uma> what has been altered from previous versions of this patch set.
+Finn> Like my previous work on the NCR5380 drivers, this patch series
+Finn> has bug fixes, code cleanup and modernization. These drivers
+Finn> suffer from mistakes, poor style and neglect and this long series
+Finn> addresses the worst of it, covering all ten wrapper drivers and
+Finn> both of the core driver forks. The combined size of the drivers is
+Finn> reduced by over 700 LoC.
 
-Applied to 4.5/scsi-queue.
+I have staged this for inclusion in a separate branch. Will pull it into
+the main queue unless kbuild complains.
+
+http://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git/log/?h=4.5/ncr5380
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
