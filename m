@@ -1,47 +1,66 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 15/15] megaraid_sas: SPERC boot driver reorder
-Date: Fri, 8 Jan 2016 12:37:00 +0530
-Message-ID: <667c88bca37fe6c51b8dc68a7cad498e@mail.gmail.com>
-References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
- <1450445228-26571-16-git-send-email-Sumit.Saxena@avagotech.com> <20151218140510.GA6679@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/4] target: Close se_node_acl lookup race
+Date: Fri,  8 Jan 2016 07:15:44 +0000
+Message-ID: <1452237348-2277-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:34550 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040AbcAHHHD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 02:07:03 -0500
-Received: by mail-lb0-f172.google.com with SMTP id cl12so2605817lbc.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Jan 2016 23:07:02 -0800 (PST)
-In-Reply-To: <20151218140510.GA6679@infradead.org>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:33102 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040AbcAHHRv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 02:17:51 -0500
+Received: by mail-oi0-f52.google.com with SMTP id y66so329782322oig.0
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Jan 2016 23:17:51 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: jbottomley@parallels.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Friday, December 18, 2015 7:35 PM
-> To: Sumit Saxena
-> Cc: jbottomley@parallels.com; hch@infradead.org;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> kashyap.desai@avagotech.com; Uday Lingala
-> Subject: Re: [PATCH 15/15] megaraid_sas: SPERC boot driver reorder
->
-> On Fri, Dec 18, 2015 at 06:57:08PM +0530, Sumit Saxena wrote:
-> > This patch will add support for drive ordering for a particular set of
-device ID
-> (0x005D, 0x005F) & subsystem vendor ID(0x1028).
->
-> This really has no business in Linux.  Everyone should be using uuid
-based disk
-> addressing if they care.  Tell Dell they should stop coming up with this
-crap, as
-> they keep leaking this weird ordering things in again and again.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch can be ignored. We discussed with Dell on this and they are
-fine to backout the patch.
-Can you provide any feedback on rest of the patches?
+Hi folks,
 
-Thanks,
-Sumit
+This series addresses a long standing race between when
+fabric driver se_node_acl lookup and associated pointer
+dereference happens, and when kref_get() of ->acl_kref
+actually occurs within __transport_register_session()
+code.
+
+To address this bug, patch #1 makes get_initiator_node_acl
+lookup obtain ->acl_kref while ->acl_node_mutex is held,
+and uses existing core_tpg_del_initiator_node_acl() logic
+for shutdown based on struct kref + struct completion.
+
+Also while auditing existing se_node_acl lookup users,
+there is one particular case in target-core during session
+queue depth change where lookup is completely unnecessary.
+Go ahead and drop this pointless lookup in patch #2.
+
+Finally, convert the last two remaining fabric drivers
+that once upon a time where using some manner of internal
+or quasi internal driver methods for node acl lookup.
+Do this for tcm_fc + ib_srpt drivers in patch #3 + #4.
+
+Please review,
+
+--nab
+
+Nicholas Bellinger (4):
+  target: Obtain se_node_acl->acl_kref during get_initiator_node_acl
+  target: Remove useless set_initiator_node_queue_depth acl lookup
+  tcm_fc: Convert acl lookup to modern get_initiator_node_acl usage
+  ib_srpt: Convert acl lookup to modern get_initiator_node_acl usage
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c        | 78 ++++++----------------------
+ drivers/infiniband/ulp/srpt/ib_srpt.h        |  2 -
+ drivers/target/iscsi/iscsi_target_configfs.c |  6 +--
+ drivers/target/iscsi/iscsi_target_tpg.c      | 10 ----
+ drivers/target/iscsi/iscsi_target_tpg.h      |  2 -
+ drivers/target/target_core_tpg.c             | 29 ++++-------
+ drivers/target/target_core_transport.c       | 18 ++++---
+ drivers/target/tcm_fc/tfc_conf.c             | 26 +++-------
+ drivers/target/tcm_fc/tfc_sess.c             | 18 ++++---
+ include/target/target_core_fabric.h          |  2 +-
+ 10 files changed, 61 insertions(+), 130 deletions(-)
+
+-- 
+1.9.1
+
