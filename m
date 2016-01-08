@@ -1,23 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: imm: use new parport device model
-Date: Fri, 08 Jan 2016 13:10:28 -0500
-Message-ID: <yq137u8eycr.fsf@sermon.lab.mkp.net>
-References: <1451997650-10573-1-git-send-email-sudipm.mukherjee@gmail.com>
+From: "Luck, Tony" <tony.luck@intel.com>
+Subject: RE: System "hangs" on kernels > v4.4-rc1 - mpt2sas problem?
+Date: Fri, 8 Jan 2016 18:23:46 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F39FA77D9@ORSMSX114.amr.corp.intel.com>
+References: <3908561D78D1C84285E8C5FCA982C28F39FA658E@ORSMSX114.amr.corp.intel.com>
+	<yq137u8iyue.fsf@sermon.lab.mkp.net>
+	<3908561D78D1C84285E8C5FCA982C28F39FA727F@ORSMSX114.amr.corp.intel.com>
+	<yq1r3hsf0bg.fsf@sermon.lab.mkp.net>
+	<3908561D78D1C84285E8C5FCA982C28F39FA73FD@ORSMSX114.amr.corp.intel.com>
+ <yq1io34ezoh.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1451997650-10573-1-git-send-email-sudipm.mukherjee@gmail.com>
-	(Sudip Mukherjee's message of "Tue, 5 Jan 2016 18:10:50 +0530")
+In-Reply-To: <yq1io34ezoh.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sudip" == Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+> Tony> /me goes to find how to tell Dracut to add the mpt3sas module to
+> Tony> the initrd.
+>
+> Great!
 
-Sudip> Modify imm driver to use the new parallel port device model.
+/etc/dracut.conf
+add_drivers+="mpt3sas"
 
-Applied to 4.5/scsi-queue.
+and now my system boots.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks again for the help.
+
+-Tony
