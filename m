@@ -1,49 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the error
- handling function
-Date: Thu, 07 Jan 2016 15:48:31 -0800
-Message-ID: <1452210511.15259.38.camel@HansenPartnership.com>
-References: <1452213645-18889-1-git-send-email-kys@microsoft.com>
+From: "Seymour, Shane M" <shane.seymour@hpe.com>
+Subject: RE: [PATCH] [SCSI] osst: remove double conversion of timeout
+Date: Fri, 8 Jan 2016 00:02:18 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB445092F8@G9W0766.americas.hpqcorp.net>
+References: <1452197433-26086-1-git-send-email-hofrat@osadl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1452213645-18889-1-git-send-email-kys@microsoft.com>
-Sender: stable-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
-Cc: stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:19734 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbcAHACU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2016 19:02:20 -0500
+In-Reply-To: <1452197433-26086-1-git-send-email-hofrat@osadl.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nicholas Mc Guire <hofrat@osadl.org>, Willem Riede <osst@riede.org>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "osst-users@lists.sourceforge.net" <osst-users@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, 2016-01-07 at 16:40 -0800, K. Y. Srinivasan wrote:
-> The macro startget_to_rport() can return NULL; handle that case
-> properly.
+Hi Nicholas,
 
-OK, can we unwind why you think you could possibly need this?  It would
-mean that fc_timed_out was called for a non-FC device, which was
-thought to be an impossibility when the fc transport class was
-designed.
+> -		msleep(jiffies_to_msecs(initial_delay));
+> +		schedule_timeout_uninterruptible(initial_delay);
+ 
+The code to msleep looks like this:
 
-James
+/**
+ * msleep - sleep safely even with waitqueue interruptions
+ * @msecs: Time in milliseconds to sleep for
+ */
+void msleep(unsigned int msecs)
+{
+	unsigned long timeout = msecs_to_jiffies(msecs) + 1;
 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: <stable@vger.kernel.org>
-> ---
->  drivers/scsi/scsi_transport_fc.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c
-> b/drivers/scsi/scsi_transport_fc.c
-> index 24eaaf6..42a908f 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -2081,7 +2081,7 @@ fc_timed_out(struct scsi_cmnd *scmd)
->  {
->  	struct fc_rport *rport = starget_to_rport(scsi_target(scmd
-> ->device));
->  
-> -	if (rport->port_state == FC_PORTSTATE_BLOCKED)
-> +	if ((rport == NULL) || (rport->port_state ==
-> FC_PORTSTATE_BLOCKED))
->  		return BLK_EH_RESET_TIMER;
->  
->  	return BLK_EH_NOT_HANDLED;
+	while (timeout)
+		timeout = schedule_timeout_uninterruptible(timeout);
+}
+
+So msleep will wait for the requested amount of time to pass even if woken early but your change may not. To make it equivalent you would need to borrow code from msleep and remove the "if (initial_delay > 0)" and just have:
+
+	while (initial_delay)
+		initial_delay = schedule_timeout_uninterruptible(initial_delay);
+
+We can change initial_delay since it's not used elsewhere in the function and if initial_delay is 0 we won't ever call schedule_timeout_uninterruptible in the while loop so there's no need to test if it's > 0 or not.
+ 
+Thanks
+Shane
