@@ -1,19 +1,32 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/35 v2] separate operations from flags in the
- bio/request structs
-Date: Fri, 8 Jan 2016 05:32:37 -0800
-Message-ID: <20160108133237.GA7663@infradead.org>
-References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+Subject: Re: Last call for 4.5
+Date: Fri, 8 Jan 2016 05:34:13 -0800
+Message-ID: <20160108133413.GA10878@infradead.org>
+References: <yq1egdshhob.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:50544 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751284AbcAHNeN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 08:34:13 -0500
 Content-Disposition: inline
-In-Reply-To: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mchristi@redhat.com
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+In-Reply-To: <yq1egdshhob.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-This looks good to me from a highlevel point of view.
-Do you also have a git tree to take a look at all the changes in a
-single big diff?
+On Thu, Jan 07, 2016 at 10:30:12PM -0500, Martin K. Petersen wrote:
+> 
+> Hannes is on vacation this week and I would like to get the remaining
+> pieces reviewed before the merge window opens.
+> 
+> 3w-xxxx:
+> 	https://patchwork.kernel.org/patch/7920471/
+> 
+> 	One-liner.
+
+
+Can you add the subject lines as well?  The browser indirection with the
+links isn't very helpful.
