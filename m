@@ -1,179 +1,134 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: parisc late boot crash in 4.4-rc, scsi-related
-Date: Fri, 8 Jan 2016 23:30:22 +0200 (EET)
-Message-ID: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the error
+ handling function
+Date: Fri, 8 Jan 2016 21:35:33 +0000
+Message-ID: <BY2PR0301MB1654FD6E3CD9CCD9A5A765A0A0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1452213645-18889-1-git-send-email-kys@microsoft.com>
+	 <1452210511.15259.38.camel@HansenPartnership.com>
+	 <BY2PR0301MB1654D797E802F3CF5355942FA0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
+	 <1452280852.2297.17.camel@HansenPartnership.com>
+	 <BY2PR0301MB1654941121DDC4AD7EA043A4A0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
+ <1452284796.2297.25.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:51995 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751909AbcAHVap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jan 2016 16:30:45 -0500
+Received: from mail-bn1bon0119.outbound.protection.outlook.com ([157.56.111.119]:13107
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754201AbcAHVfg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jan 2016 16:35:36 -0500
+In-Reply-To: <1452284796.2297.25.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
+Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>
 
-(Try 2, spelling linux-block correctly - please ignore the previous one)
-
-I noticed on RP3440 and A500 that recent 4.4-rc* crashes on boot. The 
-following is dmesg that was copied piecewise by hand from ILO console 
-log (so it can contain some whitespace damage), from 
-4.4.0-rc7-00028-gc616920 on RP3440:
-
-SCSI subsystem initialized
-NET: Registered protocol family 2
-TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
-TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
-TCP: Hash tables configured (established 131072 bind 65536)
-UDP hash table entries: 8192 (order: 6, 262144 bytes)
-UDP-Lite hash table entries: 8192 (order: 6, 262144 bytes)
-NET: Registered protocol family 1
-Chassis warnings not supported.
-Performance monitoring counters enabled for Storm Peak Slow
-futex hash table entries: 1024 (order: 3, 32768 bytes)
-HugeTLB registered 2 MB page size, pre-allocated 0 pages
-Block layer SCSI generic (bsg) driver version 0.4 loaded (major 253)
-io scheduler noop registered
-io scheduler deadline registered
-io scheduler cfq registered (default)
-PDC Stable Storage facility v0.30
-STI GSC/PCI core graphics driver Version 0.9b
-Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-0000:e0:01.0: ttyS0 at MMIO 0xfffffffff4051000 (irq = 27, base_baud = 115200) is a 16450
-0000:e0:01.1: ttyS1 at MMIO 0xfffffffff4050000 (irq = 27, base_baud = 115200) is a 16550A
-console [ttyS1] enabled
-console [ttyS1] enabled
-bootconsole [ttyB0] disabled
-bootconsole [ttyB0] disabled
-0000:e0:01.1: ttyS2 at MMIO 0xfffffffff4050010 (irq = 27, base_baud = 115200) is a 16550A
-0000:e0:01.1: ttyS3 at MMIO 0xfffffffff4050038 (irq = 27, base_baud = 115200) is a 16550A
-sym0: <1010-66> rev 0x1 at pci 0000:20:01.0 irq 22
-sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
-sym0: SCSI BUS has been reset.
-scsi host0: sym-2.2.3
-scsi 0:0:0:0: Direct-Access     COMPAQ   BF07285A36       HPB7 PQ: 0 ANSI: 3
-scsi target0:0:0: tagged command queuing enabled, command queue depth 16.
-scsi target0:0:0: Beginning Domain Validation
-scsi target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
-scsi target0:0:0: Ending Domain Validation
-random: nonblocking pool is initialized
-sym1: <1010-66> rev 0x1 at pci 0000:20:01.1 irq 23
-sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
-sym1: SCSI BUS has been reset.
-scsi host1: sym-2.2.3
-mousedev: PS/2 mouse device common for all mice
-sd 0:0:0:0: [sda] 142264000 512-byte logical blocks: (72.8 GB/67.8 GiB)
-rtc-generic rtc-generic: rtc core: registered rtc-generic as rtc0
-NET: Registered protocol family 17
-sd 0:0:0:0: [sda] Write Protect is off
-rtc-generic rtc-generic: setting system clock to 2015-12-31 11:45:39 UTC (1451562339)
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
- sda: sda1 sda2 sda3 sda4
-sd 0:0:0:0: [sda] Attached SCSI disk
-EXT4-fs (sda3): couldn't mount as ext3 due to feature incompatibilities
-EXT4-fs (sda3): couldn't mount as ext2 due to feature incompatibilities
-EXT4-fs (sda3): mounted filesystem with ordered data mode. Opts: (null)
-VFS: Mounted root (ext4 filesystem) readonly on device 8:3.
-devtmpfs: mounted
-Freeing unused kernel memory: 1024K (0000000040100000 - 0000000040200000)
-------------[ cut here ]------------
-WARNING: at block/blk-merge.c:438
-Modules linked in:
-CPU: 0 PID: 1 Comm: init Not tainted 4.4.0-rc7-00028-gc616920 #81
-task: 000000007fce8000 ti: 000000007fc3c000 task.ti: 000000007fc3c000
-
-     YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-PSW: 00001000000001101111111100001111 Not tainted
-r00-03  000000ff0806ff0f 000000007fc3d990 0000000000000000 000000007fc3d990
-r04-07  00000000407b20b0 0000000000000000 0000000000000110 0000000000000000
-r08-11  0000000000000000 0000000000000001 000000033f8b6bf0 0000000000000000
-r12-15  0000000000001000 000000033f9e0000 0000000000000002 0000000000000011
-r16-19  0000000042174470 000000033f8b6bf0 000000033f8b6930 0000000000000000
-r20-23  0000000000000000 000000007f1dd800 0000000000011000 0000000000000000
-r24-27  0000000000000000 2ffffedf40000000 000000033f8b6bf0 00000000407b20b0
-r28-31  0000000000000001 0000000000001000 000000007fc3dac0 0000000000000001
-sr00-03  0000000000000000 0000000000000800 0000000000000000 0000000000000800
-sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000000
-
-IASQ: 0000000000000000 0000000000000000 IAOQ: 0000000040481d9c 0000000040481da0
- IIR: 03ffe01f    ISR: 0000000010340800  IOR: 000003fe2d8b6bf0
- CPU:        0   CR30: 000000007fc3c000 CR31: ffffffffffffffff
- ORIG_R28: 0000000000000158
- IAOQ[0]: blk_rq_map_sg+0x5cc/0x600
- IAOQ[1]: blk_rq_map_sg+0x5d0/0x600
- RP(r2):           (null)
-Backtrace:
- [<00000000405510d0>] scsi_init_sgtable+0xa0/0x130
- [<00000000405511b4>] scsi_init_io+0x54/0x160
- [<0000000040570958>] sd_init_command+0x68/0x708
- [<00000000405513c4>] scsi_setup_cmnd+0x104/0x1a0
- [<0000000040551f54>] scsi_queue_rq+0x864/0x9f8
- [<00000000404877f4>] __blk_mq_run_hw_queue+0x2e4/0x4e0
- [<00000000404874e4>] blk_mq_run_hw_queue+0xdc/0x108
- [<000000004048928c>] blk_mq_insert_requests+0x15c/0x190
- [<000000004048a19c>] blk_mq_flush_plug_list+0x17c/0x1a8
- [<000000004047af64>] blk_flush_plug_list+0x104/0x2b0
- [<000000004047b4c4>] blk_finish_plug+0x44/0x68
- [<00000000402ee0dc>] __do_page_cache_readahead+0x29c/0x360
- [<00000000402dfb4c>] filemap_fault+0x4f4/0x5a0
- [<000000004030d464>] __do_fault+0x5c/0x148
- [<000000004031360c>] handle_mm_fault+0xa84/0x1a10
-
----[ end trace 4a3faaec387ada43 ]---
-------------[ cut here ]------------
-kernel BUG at drivers/scsi/scsi_lib.c:1096!
-CPU: 0 PID: 1 Comm: init Tainted: G        W       4.4.0-rc7-00028-gc616920 #81
-task: 000000007fce8000 ti: 000000007fc3c000 task.ti: 000000007fc3c000
-
-     YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-PSW: 00001000000001101111111100001111 Tainted: G        W
-r00-03  000000ff0806ff0f 000000007fc3d990 00000000405510d0 000000007fc3d8f0
-r04-07  00000000407b20b0 0000000000000001 000000033f8b6b48 000000033f8b6930
-r08-11  000000033f871000 000000007f148000 0000000000011000 0000000040999d00
-r12-15  000000033f871000 000000033f8b6930 0000000000000000 000000033f871000
-r16-19  0000000000000000 0000000000000158 000000033f854ba0 0000000000000000
-r20-23  0000000000000000 000000007f1dd800 0000000000011000 0000000000000000
-r24-27  0000000000000000 2ffffedf40000000 000000033f8b6bf0 00000000407b20b0
-r28-31  0000000000000002 0000000000001000 000000007fc3d990 0000000000000001
-sr00-03  0000000000000000 0000000000000800 0000000000000000 0000000000000800
-sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000000
-
-IASQ: 0000000000000000 0000000000000000 IAOQ: 0000000040551140 0000000040551144
- IIR: 03ffe01f    ISR: 0000000000000000  IOR: 0000000000000000
- CPU:        0   CR30: 000000007fc3c000 CR31: ffffffffffffffff
- ORIG_R28: 0000000000000000
- IAOQ[0]: scsi_init_sgtable+0x110/0x130
- IAOQ[1]: scsi_init_sgtable+0x114/0x130
- RP(r2): scsi_init_sgtable+0xa0/0x130
-Backtrace:
- [<00000000405511b4>] scsi_init_io+0x54/0x160
- [<0000000040570958>] sd_init_command+0x68/0x708
- [<00000000405513c4>] scsi_setup_cmnd+0x104/0x1a0
- [<0000000040551f54>] scsi_queue_rq+0x864/0x9f8
- [<00000000404877f4>] __blk_mq_run_hw_queue+0x2e4/0x4e0
- [<00000000404874e4>] blk_mq_run_hw_queue+0xdc/0x108
- [<000000004048928c>] blk_mq_insert_requests+0x15c/0x190
- [<000000004048a19c>] blk_mq_flush_plug_list+0x17c/0x1a8
- [<000000004047af64>] blk_flush_plug_list+0x104/0x2b0
- [<000000004047b4c4>] blk_finish_plug+0x44/0x68
- [<00000000402ee0dc>] __do_page_cache_readahead+0x29c/0x360
- [<00000000402dfb4c>] filemap_fault+0x4f4/0x5a0
- [<000000004030d464>] __do_fault+0x5c/0x148
- [<000000004031360c>] handle_mm_fault+0xa84/0x1a10
-
-CPU: 0 PID: 1 Comm: init Tainted: G        W       4.4.0-rc7-00028-gc616920 #81
-Backtrace:
- [<0000000040216888>] show_stack+0x20/0x38
- [<00000000404a2fac>] dump_stack+0xac/0x130
- [<0000000040216a5c>] die_if_kernel+0x19c/0x2e0
- [<0000000040217948>] handle_interruption+0x9a8/0x9d0
-
----[ end trace 4a3faaec387ada44 ]---
-note: init[1] exited with preempt_count 2
-Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
-
----[ end Kernel panic - not syncing: Attempted to kill init! 
-exitcode=0x0000000b
-
--- 
-Meelis Roos (mroos@linux.ee)
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+RnJpZGF5LCBKYW51YXJ5IDgsIDIwMTYgMTI6MjcgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4gPGt5
+c0BtaWNyb3NvZnQuY29tPjsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IGxpbnV4LQ0KPiBr
+ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVy
+aW5nQHN1c2UuY29tOw0KPiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IGhjaEBpbmZyYWRlYWQu
+b3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsNCj4gYXB3QGNhbm9uaWNhbC5jb207IHZr
+dXpuZXRzQHJlZGhhdC5jb207IGphc293YW5nQHJlZGhhdC5jb207DQo+IG1hcnRpbi5wZXRlcnNl
+bkBvcmFjbGUuY29tOyBoYXJlQHN1c2UuZGUNCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzFdIHNjc2k6IHNjc2lfdHJhbnNwb3J0X2ZjOiBGaXgg
+YSBidWcgaW4gdGhlIGVycm9yDQo+IGhhbmRsaW5nIGZ1bmN0aW9uDQo+IA0KPiBPbiBGcmksIDIw
+MTYtMDEtMDggYXQgMjA6MTIgKzAwMDAsIEtZIFNyaW5pdmFzYW4gd3JvdGU6DQo+ID4NCj4gPiA+
+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkN
+Cj4gW21haWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tDQo+ID4gPiBd
+DQo+ID4gPiBTZW50OiBGcmlkYXksIEphbnVhcnkgOCwgMjAxNiAxMToyMSBBTQ0KPiA+ID4gVG86
+IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPjsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlv
+bi5vcmc7DQo+ID4gPiBsaW51eC0NCj4gPiA+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVs
+QGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7DQo+ID4gPiBvaGVyaW5nQHN1c2UuY29tOw0KPiA+ID4g
+amJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsNCj4gPiA+IGxpbnV4
+LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gYXB3QGNhbm9uaWNhbC5jb207IHZrdXpuZXRz
+QHJlZGhhdC5jb207IGphc293YW5nQHJlZGhhdC5jb207DQo+ID4gPiBtYXJ0aW4ucGV0ZXJzZW5A
+b3JhY2xlLmNvbTsgaGFyZUBzdXNlLmRlDQo+ID4gPiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9y
+Zw0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzFdIHNjc2k6IHNjc2lfdHJhbnNwb3J0X2Zj
+OiBGaXggYSBidWcgaW4gdGhlDQo+ID4gPiBlcnJvcg0KPiA+ID4gaGFuZGxpbmcgZnVuY3Rpb24N
+Cj4gPiA+DQo+ID4gPiBPbiBGcmksIDIwMTYtMDEtMDggYXQgMTg6NTggKzAwMDAsIEtZIFNyaW5p
+dmFzYW4gd3JvdGU6DQo+ID4gPiA+DQo+ID4gPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCj4gPiA+ID4gPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkNCj4gPiA+IFttYWlsdG86SmFtZXMu
+Qm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbQ0KPiA+ID4gPiA+IF0NCj4gPiA+ID4gPiBT
+ZW50OiBUaHVyc2RheSwgSmFudWFyeSA3LCAyMDE2IDM6NDkgUE0NCj4gPiA+ID4gPiBUbzogS1kg
+U3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+Ow0KPiA+ID4gPiA+IGdyZWdraEBsaW51eGZv
+dW5kYXRpb24ub3JnOw0KPiA+ID4gPiA+IGxpbnV4LQ0KPiA+ID4gPiA+IGtlcm5lbEB2Z2VyLmtl
+cm5lbC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7DQo+ID4gPiA+ID4gb2hlcmlu
+Z0BzdXNlLmNvbTsNCj4gPiA+ID4gPiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IGhjaEBpbmZy
+YWRlYWQub3JnOw0KPiA+ID4gPiA+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4g
+PiA+IGFwd0BjYW5vbmljYWwuY29tOyB2a3V6bmV0c0ByZWRoYXQuY29tOyBqYXNvd2FuZ0ByZWRo
+YXQuY29tOw0KPiA+ID4gPiA+IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOyBoYXJlQHN1c2Uu
+ZGUNCj4gPiA+ID4gPiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gPiA+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggMS8xXSBzY3NpOiBzY3NpX3RyYW5zcG9ydF9mYzogRml4IGEgYnVnIGlu
+DQo+ID4gPiA+ID4gdGhlDQo+ID4gPiA+ID4gZXJyb3INCj4gPiA+ID4gPiBoYW5kbGluZyBmdW5j
+dGlvbg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gT24gVGh1LCAyMDE2LTAxLTA3IGF0IDE2OjQwIC0w
+ODAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+ID4gPiA+ID4gVGhlIG1hY3JvIHN0YXJ0
+Z2V0X3RvX3Jwb3J0KCkgY2FuIHJldHVybiBOVUxMOyBoYW5kbGUgdGhhdA0KPiA+ID4gPiA+ID4g
+Y2FzZQ0KPiA+ID4gPiA+ID4gcHJvcGVybHkuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBPSywgY2Fu
+IHdlIHVud2luZCB3aHkgeW91IHRoaW5rIHlvdSBjb3VsZCBwb3NzaWJseSBuZWVkIHRoaXM/DQo+
+ID4gPiA+ID4gIEl0DQo+ID4gPiA+ID4gd291bGQNCj4gPiA+ID4gPiBtZWFuIHRoYXQgZmNfdGlt
+ZWRfb3V0IHdhcyBjYWxsZWQgZm9yIGEgbm9uLUZDIGRldmljZSwgd2hpY2gNCj4gPiA+ID4gPiB3
+YXMNCj4gPiA+ID4gPiB0aG91Z2h0IHRvIGJlIGFuIGltcG9zc2liaWxpdHkgd2hlbiB0aGUgZmMg
+dHJhbnNwb3J0IGNsYXNzIHdhcw0KPiA+ID4gPiA+IGRlc2lnbmVkLg0KPiA+ID4gPg0KPiA+ID4g
+PiBBcyB5b3Uga25vdywgb24gSHlwZXItViwgRkMgZGV2aWNlcyBhcmUgaGFuZGxlZCBleGFjdGx5
+IGxpa2UNCj4gPiA+ID4gbm9ybWFsDQo+ID4gPiA+IHNjc2kgZGV2aWNlcyBhbmQgdGhlIG9ubHkg
+YWRkaXRpb25hbCBpbmZvcm1hdGlvbiB0aGF0IGlzIHByb3ZpZGVkDQo+ID4gPiA+IGZvcg0KPiA+
+ID4gPiBGQyBkZXZpY2VzIGlzIHRoZSBXV04gZm9yIHBvcnQgYW5kIG5vZGUuIFRpbGwgcmVjZW50
+bHksIEkgd2FzIG5vdA0KPiA+ID4gPiBwdWJsaXNoaW5nIHRoZSBXV04gaW4gdGhlIGd1ZXN0IGFu
+ZCBzbyBJIHdhcyBub3QgZXZlbiB1c2luZyB0aGUNCj4gPiA+ID4gRkMNCj4gPiA+ID4gdHJhbnNw
+b3J0LiBSZWNlbnRseSwgSSBpbXBsZW1lbnRlZCBzdXBwb3J0IGZvciBwdWJsaXNoaW5nIHRoZSBX
+V04NCj4gPiA+ID4gaW4NCj4gPiA+ID4gdGhlIGd1ZXN0IGFuZCBmb3IgdGhhdCBJIGFtIHVzaW5n
+IHRoZSBGQyB0cmFuc3BvcnQgZm9yIEZDIGhvc3RzLg0KPiA+ID4gPiBXaGVuDQo+ID4gPiA+IGFu
+IEZDIExVTiBpcyBkeW5hbWljYWxseSByZW1vdmVkLCBzb21ldGltZXMgSSBzZWUgdGhlIHRpbWVv
+dXQNCj4gPiA+ID4gb2NjdXJyaQ0KPiA+ID4gPiBuZyBhbmQgc2luY2UgdGhlcmUgaXMgbm8gcnBv
+cnQgYXNzb2NpYXRlZCB3aXRoIHRoZXNlIGRldmljZXMgSSBhbQ0KPiA+ID4gPiBoaXR0aW5nIHRo
+ZSBpc3N1ZSB0aGlzIHBhdGNoIGlzIGFkZHJlc3NpbmcuIEkgY291bGQgaGF2ZQ0KPiA+ID4gPiBh
+ZGRyZXNzZWQNCj4gPiA+ID4gdGhpcyBwcm9ibGVtIGJ5IGVzdGFibGlzaGluZyBhIHN0b3J2c2Mg
+c3BlY2lmaWMgdGltZSBvdXQgZnVuY3Rpb24NCj4gPiA+ID4gZXZlbiBmb3IgRkMgZGV2aWNlcyAt
+IHRoZSBzYW1lIHRpbWVvdXQgZnVuY3Rpb24gdGhhdCBJIGN1cnJlbnRseQ0KPiA+ID4gPiB1c2UN
+Cj4gPiA+ID4gZm9yIHNjc2kgZGV2aWNlcyAtICBzdG9ydnNjX2VoX3RpbWVkX291dCgpLiBJIGNo
+b3NlIHRvIGluc3RlYWQNCj4gPiA+ID4gZml4DQo+ID4gPiA+IHRoZSBmY190aW1lZF9vdXQoKSBm
+dW5jdGlvbiBzaW5jZSB0aGUgY29kZSB3YXMgbm90IGhhbmRsaW5nIGENCj4gPiA+ID4gcG9zc2li
+bGUgY29uZGl0aW9uLg0KPiA+ID4NCj4gPiA+IE9LLCBzbyB0aGUgc3BlY2lmaWMgcHJvYmxlbSBp
+cyB0aGF0IHRoZSBkZXZpY2UgaXMgcGFydGx5IHRvcm4gZG93bg0KPiA+ID4gd2hlbg0KPiA+ID4g
+dGhlIHRpbWVvdXQgZmlyZXM/ICBJJ20gaGF2aW5nIGEgaGFyZCB0aW1lIHNlZWluZyBob3cgd2Ug
+Z2V0IGEgbnVsbA0KPiA+ID4gcnBvcnQgaW4gdGhhdCBjYXNlLiAgVGhlIHN0YXJnZXRfdG9fcnBv
+cnQoKSBjYW4gb25seSByZXR1cm4gTlVMTCBpZg0KPiA+ID4gdGhlDQo+ID4gPiBwYXJlbnQgaXNu
+J3QgYW4gcnBvcnQgLi4uIHRoYXQgc2hvdWxkbid0IGRlcGVuZCBvbiB0aGUgc3RhdGUgb2YgdGhl
+DQo+ID4gPiBGQw0KPiA+ID4gZGV2aWNlIGJlY2F1c2UgdGhlIHBhcmVudCBpcyB0b3JuIGRvd24g
+YWZ0ZXIgdGhlIGNoaWxkLg0KPiA+DQo+ID4gSW4gb3VyIGNhc2UsIHRoZSBwYXJlbnQgaXMgbm90
+IGFuIHJwb3J0IHNpbmNlIEkgZG9uJ3QgaW52b2tlDQo+ID4gZmNfcmVtb3RlX3BvcnRfYWRkKCkg
+YW5kIHNvIEkgZG8gZ2V0IGEgTlVMTCB2YWx1ZSBmcm9tIHRoZQ0KPiA+IHN0YXJnZXRfdG9fcnBv
+cnQoKS4NCj4gDQo+IE9LLCBzbyBpdCdzIG5vdGhpbmcgdG8gZG8gd2l0aCB0ZWFyZG93bj8gSSdt
+IGdvaW5nIHRvIG5lZWQgdGhlIEZDDQo+IHBlb3BsZSB0byBjb21tZW50IG9uIHRoaXMuICBUaGUg
+dHJhbnNwb3J0IGNsYXNzIHdhcyBhcHBhcmVudGx5IGRlc2lnbmVkDQo+IHRvIGFsbG93IHVzZSB3
+aXRob3V0IHJwb3J0cy4gIEhvd2V2ZXIsIHRoZXJlIGFyZSBzZXZlcmFsIHBsYWNlcyB3aGVyZQ0K
+PiB3ZSBhc3N1bWUgcnBvcnRzIGFyZSBwcmVzZW50OiAgVGhlIHRpbWVzIG91dCBhbmQgdGhlIHBv
+cnQgYmxvY2sNCj4gaW50ZXJmYWNlIC4uLiBJJ20gYmV0dGluZyBhbGwgY3VycmVudCB1c2VycyBh
+cmUgcnBvcnQgb3RoZXJ3aXNlIHdlDQo+IHdvdWxkIGhhdmUgc3BvdHRlZCB0aGlzIHByb2JsZW0g
+c29vbmVyLg0KPiANCj4gPiA+IEluIGFueSBjYXNlLCByZXR1cm5pbmcgQkxLX0VIX1JFU0VUX1RJ
+TUVSIHdpbGwgY2F1c2UgYWxsIHNvcnRzIG9mDQo+ID4gPiBwcm9ibGVtcyBiZWNhdXNlIGl0IHJl
+c2V0cyB0aGUgdGltZXIgdG8gZmlyZSBhZ2FpbiBmb3IgdGhlIGRldmljZS4NCj4gPiA+ICBXaGF0
+IHlvdSB3YW50IGlzIHNvbWV0aGluZyB0byByZXR1cm4gQkxLX0VIX0hBTkRMRUQgd2hpY2ggd2ls
+bA0KPiA+ID4ganVzdA0KPiA+ID4gY29tcGxldGUgdGhlIHJlcXVlc3QgLi4uIHByb2JhYmx5IGF0
+IGEgZ2VuZXJpYyBsZXZlbCwgc2luY2UgdGhpcw0KPiA+ID4gZG9lc24ndCBzb3VuZCB0byBiZSBz
+cGVjaWZpYyB0byBGQy4NCj4gPg0KPiA+IE9uIEh5cGVyLVYsIHRoZSBob3N0IGltcGxlbWVudHMg
+YSB2YXJpZXR5IG9mIHJlY292ZXJ5IHN0cmF0ZWdpZXMgYW5kDQo+ID4gZm9yIHRoYXQgcmVhc29u
+LCB0aGUgIGVoX3RpbWVkX291dCBoYW5kbGVyIGZvciBzdGFuZGFyZCBzY3NpIGRldmljZXMNCj4g
+PiB3aWxsIGVmZmVjdGl2ZWx5IGhhdmUgaW5maW5pdGUgdGltZW91dCB2YWx1ZTogc3RvcnZzY19l
+aF90aW1lZF9vdXQoKQ0KPiA+IGp1c3QgcmVzZXRzIHRoZSB0aW1lci4gVGhpcyBpcyB0aGUgYmVo
+YXZpb3IgSSB3YW50ZWQgZm9yIHRoZSBGQw0KPiA+IGRldmljZXMgYXMgd2VsbC4NCj4gDQo+IEFs
+bCB0aGUgd29ybGQgaXNuJ3QgaHlwZXItdi4gIElmIHdlIGNoYW5nZSBzb21ldGhpbmcgaW4gdGhl
+IGdlbmVyaWMNCj4gaW50ZXJmYWNlLCBpdCBuZWVkcyB0byB3b3JrIGZvciBldmVyeW9uZS4gIFRv
+IG1lIGl0IGxvb2tzIGxpa2UNCj4gZmNfdGltZWRfb3V0IGlzIGRlc2lnbmVkIHRvIHN1cHBvcnQg
+dGhlIHBvcnQgYmxvY2sgZnVuY3Rpb24uICBJZiB3ZQ0KPiBhc3N1bWUgcG9ydCBibG9jayBpcyBu
+b3Qgc3VwcG9ydGVkIGZvciBub24tcnBvcnQgZGV2aWNlcywgdGhlbg0KPiBmY190aW1lZF9vdXQg
+c2hvdWxkIGJlIHJldHVybmluZyBCTEtfRUhfTk9UX0hBTkRMRUQgZm9yIHRoZSBub24tcnBvcnQN
+Cj4gY2FzZS4NCg0KWW91IGFyZSByaWdodCBhbmQgSSB3YXMgbm90IGltcGx5aW5nIHRoYXQgZWl0
+aGVyLiBJZiBpdCBpcyBvayB3aXRoIHlvdSwgSSBjYW4gc3VibWl0IGEgDQpwYXRjaCB3aGVyZSB0
+aGUgY2hhbmdlIHdpbGwgYmUgaW4gdGhlIHN0b3J2c2MgZHJpdmVyIC0gSSB3aWxsIGVzdGFibGlz
+aCB0aGUgc2FtZSB0aW1lb3V0DQpmdW5jdGlvbiBmb3IgYm90aCBub3JtYWwgc2NzaSBhbmQgRkMg
+ZGV2aWNlcy4NCg0KUmVnYXJkcywNCg0KSy4gWSAgDQo+IA0KPiBKYW1lcw0KDQo=
