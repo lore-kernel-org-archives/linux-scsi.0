@@ -1,72 +1,70 @@
-From: Nicholas Mc Guire <der.herr@hofr.at>
-Subject: Re: [PATCH] [SCSI] osst: remove double conversion of timeout
-Date: Fri, 8 Jan 2016 07:31:55 +0000
-Message-ID: <20160108073155.GA16584@osadl.at>
-References: <1452197433-26086-1-git-send-email-hofrat@osadl.org>
- <DDB9C85B850785449757F9914A034FCB445092F8@G9W0766.americas.hpqcorp.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/4] target: Obtain se_node_acl->acl_kref during
+	get_initiator_node_acl
+Date: Fri, 8 Jan 2016 09:14:12 +0100
+Message-ID: <20160108081412.GA32138@lst.de>
+References: <1452237348-2277-1-git-send-email-nab@daterainc.com> <1452237348-2277-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:50200 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751213AbcAHIOP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jan 2016 03:14:15 -0500
 Content-Disposition: inline
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB445092F8@G9W0766.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hpe.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>, Willem Riede <osst@riede.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "osst-users@lists.sourceforge.net" <osst-users@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1452237348-2277-2-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Fri, Jan 08, 2016 at 12:02:18AM +0000, Seymour, Shane M wrote:
-> Hi Nicholas,
-> 
-> > -		msleep(jiffies_to_msecs(initial_delay));
-> > +		schedule_timeout_uninterruptible(initial_delay);
->  
-> The code to msleep looks like this:
-> 
-> /**
->  * msleep - sleep safely even with waitqueue interruptions
->  * @msecs: Time in milliseconds to sleep for
->  */
-> void msleep(unsigned int msecs)
-> {
-> 	unsigned long timeout = msecs_to_jiffies(msecs) + 1;
-> 
-> 	while (timeout)
-> 		timeout = schedule_timeout_uninterruptible(timeout);
-> }
-> 
-> So msleep will wait for the requested amount of time to pass even if woken early but your change may not. To make it equivalent you would need to borrow code from msleep and remove the "if (initial_delay > 0)" and just have:
+>  	mutex_lock(&tpg->acl_node_mutex);
+>  	acl =3D __core_tpg_get_initiator_node_acl(tpg, initiatorname);
+> +	/*
+> +	 * Obtain the acl_kref now, which will be dropped upon the
+> +	 * release of se_sess memory within transport_free_session().
+> +	 */
+> +	if (acl)
+> +		kref_get(&acl->acl_kref);
 
-If I understand the documentation to 
-schedule_timeout() correctly then this is not the 
-case:
-<snip>
-/**
- * schedule_timeout - sleep until timeout
- * @timeout: timeout value in jiffies
- *
- * Make the current task sleep until @timeout jiffies have
- * elapsed. The routine will return immediately unless
- * the current task state has been set (see set_current_state()).
- *
- * You can set the task state as follows -
- *
- * %TASK_UNINTERRUPTIBLE - at least @timeout jiffies are guaranteed to
- * pass before the routine returns. The routine will return 0
-...
-<snip>
+=D0=86 think the comment is highly confusing as it's about one of the
+callers, while the function has many.
 
- and schedule_timeout_uninterruptiple does that
+I'd suggest you move it to core_tpg_check_initiator_node_acl instead.
 
-signed long __sched schedule_timeout_uninterruptible(signed long timeout)
-{
-        __set_current_state(TASK_UNINTERRUPTIBLE);
-        return schedule_timeout(timeout);
-}
+Also I think iscsit_build_sendtargets_response will need a put on
+the nacl, otherwise you'll leak references.
 
-so my understanding is that this will not return early and should thus
-be equivalent to the behavior of msleep.
+While we're at it - is there any god reason to keep acl_pr_ref_count
+as a separate entity from acl_kref?
 
-did I overlook something here ?
+>  void transport_free_session(struct se_session *se_sess)
+>  {
+> +	struct se_node_acl *se_nacl =3D se_sess->se_node_acl;
+> +	/*
+> +	 * Drop the se_node_acl->nacl_kref obtained from within
+> +	 * core_tpg_get_initiator_node_acl().
+> +	 */
+> +	if (se_nacl) {
+> +		se_sess->se_node_acl =3D NULL;
 
-thx!
-hofrat
+Whats the point of zeroing se_node_acl just before freeing se_sess?
+
+>  	/*
+>  	 * If last kref is dropping now for an explicit NodeACL, awake slee=
+ping
+>  	 * ->acl_free_comp caller to wakeup configfs se_node_acl->acl_group
+> -	 * removal context.
+> +	 * removal context from within transport_free_session() code.
+>  	 */
+
+The comment neds to move to transport_free_session.  Or maybe just remo=
+ved
+given that it's obvious from the code flow.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
