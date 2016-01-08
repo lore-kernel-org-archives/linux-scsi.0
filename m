@@ -1,49 +1,68 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/4] target: Obtain se_node_acl->acl_kref during
- get_initiator_node_acl
-Date: Fri, 08 Jan 2016 00:47:39 -0800
-Message-ID: <1452242859.27508.12.camel@haakon3.risingtidesystems.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 4/4] ib_srpt: Convert acl lookup to modern
+ get_initiator_node_acl usage
+Date: Fri, 8 Jan 2016 09:52:43 +0100
+Message-ID: <568F78DB.9090404@sandisk.com>
 References: <1452237348-2277-1-git-send-email-nab@daterainc.com>
-	 <1452237348-2277-2-git-send-email-nab@daterainc.com>
-	 <20160108081412.GA32138@lst.de> <568F73D2.2090808@sandisk.com>
+ <1452237348-2277-5-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <568F73D2.2090808@sandisk.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0093.outbound.protection.outlook.com ([157.56.110.93]:9952
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750794AbcAHIww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jan 2016 03:52:52 -0500
+In-Reply-To: <1452237348-2277-5-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Fri, 2016-01-08 at 09:31 +0100, Bart Van Assche wrote:
-> On 01/08/2016 09:14 AM, Christoph Hellwig wrote:
-> >>   	mutex_lock(&tpg->acl_node_mutex);
-> >>   	acl =3D __core_tpg_get_initiator_node_acl(tpg, initiatorname);
-> >> +	/*
-> >> +	 * Obtain the acl_kref now, which will be dropped upon the
-> >> +	 * release of se_sess memory within transport_free_session().
-> >> +	 */
-> >> +	if (acl)
-> >> +		kref_get(&acl->acl_kref);
-> >
-> > =D0=86 think the comment is highly confusing as it's about one of t=
-he
-> > callers, while the function has many.
-> >
-> > I'd suggest you move it to core_tpg_check_initiator_node_acl instea=
-d.
-> >
-> > Also I think iscsit_build_sendtargets_response will need a put on
-> > the nacl, otherwise you'll leak references.
->=20
-> Indeed. All error paths in all target drivers will have to be modifie=
-d=20
-> to avoid that an acl reference leak is triggered if=20
-> transport_init_session() fails after core_tpg_check_initiator_node_ac=
-l()=20
-> succeeded.
->=20
+On 01/08/2016 08:15 AM, Nicholas A. Bellinger wrote:
+> @@ -2574,24 +2558,18 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
+>
+>   	pr_debug("registering session %s\n", ch->sess_name);
+>
+> -	nacl = srpt_lookup_acl(sport, ch->i_port_id);
+> -	if (!nacl) {
+> +	se_acl = core_tpg_get_initiator_node_acl(&sport->port_tpg_1, ch->sess_name);
+> +	if (!se_acl) {
+>   		pr_info("Rejected login because no ACL has been"
+>   			" configured yet for initiator %s.\n", ch->sess_name);
+>   		rej->reason = cpu_to_be32(
+> -			      SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED);
+> +				SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED);
+> +		transport_free_session(ch->sess);
+>   		goto destroy_ib;
+>   	}
+> +	ch->sess->se_node_acl = se_acl;
 
-Actually no, they do not.  That's the way that everything outside of
-tcm_fc + ib_srpt driver code has already worked for a long time.
+This is a backwards-incompatible change. Today the ib_srpt target driver 
+accepts initiator port names with and without leading "0x". With this 
+change the "0x" prefix becomes mandatory.
+
+> diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
+> index 5faad8ac..bb4fbe2 100644
+> --- a/drivers/infiniband/ulp/srpt/ib_srpt.h
+> +++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
+> @@ -364,11 +364,9 @@ struct srpt_port {
+>   	u16			sm_lid;
+>   	u16			lid;
+>   	union ib_gid		gid;
+> -	spinlock_t		port_acl_lock;
+>   	struct work_struct	work;
+>   	struct se_portal_group	port_tpg_1;
+>   	struct se_wwn		port_wwn;
+> -	struct list_head	port_acl_list;
+>   	struct srpt_port_attrib port_attrib;
+>   };
+
+With this patch applied the following srpt_node_acl members are no 
+longer read: i_port_id, sport and list. Hence please remove the 
+srpt_node_acl structure definition and use struct se_node_acl instead.
+
+Thanks,
+
+Bart.
