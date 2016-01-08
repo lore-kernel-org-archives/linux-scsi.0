@@ -1,36 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: System "hangs" on kernels > v4.4-rc1 - mpt2sas problem?
-Date: Thu, 07 Jan 2016 21:34:01 -0500
-Message-ID: <yq137u8iyue.fsf@sermon.lab.mkp.net>
-References: <3908561D78D1C84285E8C5FCA982C28F39FA658E@ORSMSX114.amr.corp.intel.com>
+Subject: Re: [PATCH 1/1] scsi: add Synology to 1024 sector blacklist
+Date: Thu, 07 Jan 2016 21:44:35 -0500
+Message-ID: <yq1twmohjsc.fsf@sermon.lab.mkp.net>
+References: <1452206045-18332-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F39FA658E@ORSMSX114.amr.corp.intel.com>
-	(Tony Luck's message of "Thu, 7 Jan 2016 22:55:50 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21438 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753826AbcAHCol (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jan 2016 21:44:41 -0500
+In-Reply-To: <1452206045-18332-1-git-send-email-mchristi@redhat.com>
+	(mchristi@redhat.com's message of "Thu, 7 Jan 2016 16:34:05 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mchristi@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Tony" == Luck, Tony <tony.luck@intel.com> writes:
+>>>>> "Mike" == mchristi  <mchristi@redhat.com> writes:
 
-Tony,
+Mike> Another iscsi target that cannot handle large IOs, but does not
+Mike> tell us a limit.
 
-Tony> This one has been hard for me to bisect. Partly because it just
-Tony> takes so long to reboot the servers that have the problem, but
-Tony> also because there may be more than one thing going on.  One thing
-Tony> that seems pretty certain is that things are OK prior to:
-
-We consolidated the mpt2sas and mpt3sas drivers in 4.4. I can see the
-driver getting loaded (and failing to allocate memory for some reason)
-in your first log but it's absent in the second.
-
-Tony>     megaraid_sas: Increase timeout to 60 secs for abort frames
-Tony> during shutdown
-
-megaraid_sas is an entirely different beast from mpt[23]sas. Please let
-us know which type of controller your disks are hanging off of.
+Applied.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
