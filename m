@@ -1,66 +1,96 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the error
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the error
  handling function
-Date: Fri, 8 Jan 2016 18:58:20 +0000
-Message-ID: <BY2PR0301MB1654D797E802F3CF5355942FA0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Date: Fri, 08 Jan 2016 11:20:52 -0800
+Message-ID: <1452280852.2297.17.camel@HansenPartnership.com>
 References: <1452213645-18889-1-git-send-email-kys@microsoft.com>
- <1452210511.15259.38.camel@HansenPartnership.com>
+	 <1452210511.15259.38.camel@HansenPartnership.com>
+	 <BY2PR0301MB1654D797E802F3CF5355942FA0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1452210511.15259.38.camel@HansenPartnership.com>
-Content-Language: en-US
+In-Reply-To: <BY2PR0301MB1654D797E802F3CF5355942FA0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
+To: KY Srinivasan <kys@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
 Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIEphbnVhcnkgNywgMjAxNiAzOjQ5IFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuIDxr
-eXNAbWljcm9zb2Z0LmNvbT47IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC0NCj4g
-a2VybmVsQHZnZXIua2VybmVsLm9yZzsgZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hl
-cmluZ0BzdXNlLmNvbTsNCj4gamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFkZWFk
-Lm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29tOyB2
-a3V6bmV0c0ByZWRoYXQuY29tOyBqYXNvd2FuZ0ByZWRoYXQuY29tOw0KPiBtYXJ0aW4ucGV0ZXJz
-ZW5Ab3JhY2xlLmNvbTsgaGFyZUBzdXNlLmRlDQo+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3Jn
-DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBzY3NpOiBzY3NpX3RyYW5zcG9ydF9mYzogRml4
-IGEgYnVnIGluIHRoZSBlcnJvcg0KPiBoYW5kbGluZyBmdW5jdGlvbg0KPiANCj4gT24gVGh1LCAy
-MDE2LTAxLTA3IGF0IDE2OjQwIC0wODAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+IFRo
-ZSBtYWNybyBzdGFydGdldF90b19ycG9ydCgpIGNhbiByZXR1cm4gTlVMTDsgaGFuZGxlIHRoYXQg
-Y2FzZQ0KPiA+IHByb3Blcmx5Lg0KPiANCj4gT0ssIGNhbiB3ZSB1bndpbmQgd2h5IHlvdSB0aGlu
-ayB5b3UgY291bGQgcG9zc2libHkgbmVlZCB0aGlzPyAgSXQgd291bGQNCj4gbWVhbiB0aGF0IGZj
-X3RpbWVkX291dCB3YXMgY2FsbGVkIGZvciBhIG5vbi1GQyBkZXZpY2UsIHdoaWNoIHdhcw0KPiB0
-aG91Z2h0IHRvIGJlIGFuIGltcG9zc2liaWxpdHkgd2hlbiB0aGUgZmMgdHJhbnNwb3J0IGNsYXNz
-IHdhcw0KPiBkZXNpZ25lZC4NCg0KQXMgeW91IGtub3csIG9uIEh5cGVyLVYsIEZDIGRldmljZXMg
-YXJlIGhhbmRsZWQgZXhhY3RseSBsaWtlIG5vcm1hbCBzY3NpDQpkZXZpY2VzIGFuZCB0aGUgb25s
-eSBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIHRoYXQgaXMgcHJvdmlkZWQgZm9yIEZDIGRldmljZXMN
-CmlzIHRoZSBXV04gZm9yIHBvcnQgYW5kIG5vZGUuIFRpbGwgcmVjZW50bHksIEkgd2FzIG5vdCBw
-dWJsaXNoaW5nIHRoZSBXV04gaW4NCnRoZSBndWVzdCBhbmQgc28gSSB3YXMgbm90IGV2ZW4gdXNp
-bmcgdGhlIEZDIHRyYW5zcG9ydC4gUmVjZW50bHksIEkgaW1wbGVtZW50ZWQNCnN1cHBvcnQgZm9y
-IHB1Ymxpc2hpbmcgdGhlIFdXTiBpbiB0aGUgZ3Vlc3QgYW5kIGZvciB0aGF0IEkgYW0gdXNpbmcg
-dGhlIEZDIHRyYW5zcG9ydA0KZm9yIEZDIGhvc3RzLiBXaGVuIGFuIEZDIExVTiBpcyBkeW5hbWlj
-YWxseSByZW1vdmVkLCBzb21ldGltZXMgSSBzZWUgdGhlIHRpbWVvdXQNCm9jY3VycmluZyBhbmQg
-c2luY2UgdGhlcmUgaXMgbm8gcnBvcnQgYXNzb2NpYXRlZCB3aXRoIHRoZXNlIGRldmljZXMgSSBh
-bSBoaXR0aW5nIHRoZSBpc3N1ZQ0KdGhpcyBwYXRjaCBpcyBhZGRyZXNzaW5nLiBJIGNvdWxkIGhh
-dmUgYWRkcmVzc2VkIHRoaXMgcHJvYmxlbSBieSBlc3RhYmxpc2hpbmcgYSBzdG9ydnNjIHNwZWNp
-ZmljDQp0aW1lIG91dCBmdW5jdGlvbiBldmVuIGZvciBGQyBkZXZpY2VzIC0gdGhlIHNhbWUgdGlt
-ZW91dCBmdW5jdGlvbiB0aGF0IEkgY3VycmVudGx5IHVzZSBmb3Igc2NzaQ0KZGV2aWNlcyAtICBz
-dG9ydnNjX2VoX3RpbWVkX291dCgpLiBJIGNob3NlIHRvIGluc3RlYWQgZml4IHRoZSBmY190aW1l
-ZF9vdXQoKSBmdW5jdGlvbiBzaW5jZQ0KdGhlIGNvZGUgd2FzIG5vdCBoYW5kbGluZyBhIHBvc3Np
-YmxlIGNvbmRpdGlvbi4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gSmFtZXMNCj4gDQo+ID4g
-U2lnbmVkLW9mZi1ieTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4g
-Q2M6IDxzdGFibGVAdmdlci5rZXJuZWwub3JnPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kv
-c2NzaV90cmFuc3BvcnRfZmMuYyB8ICAgIDIgKy0NCj4gPiAgMSBmaWxlcyBjaGFuZ2VkLCAxIGlu
-c2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMNCj4gPiBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5z
-cG9ydF9mYy5jDQo+ID4gaW5kZXggMjRlYWFmNi4uNDJhOTA4ZiAxMDA2NDQNCj4gPiAtLS0gYS9k
-cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfZmMuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9z
-Y3NpX3RyYW5zcG9ydF9mYy5jDQo+ID4gQEAgLTIwODEsNyArMjA4MSw3IEBAIGZjX3RpbWVkX291
-dChzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKQ0KPiA+ICB7DQo+ID4gIAlzdHJ1Y3QgZmNfcnBvcnQg
-KnJwb3J0ID0gc3RhcmdldF90b19ycG9ydChzY3NpX3RhcmdldChzY21kDQo+ID4gLT5kZXZpY2Up
-KTsNCj4gPg0KPiA+IC0JaWYgKHJwb3J0LT5wb3J0X3N0YXRlID09IEZDX1BPUlRTVEFURV9CTE9D
-S0VEKQ0KPiA+ICsJaWYgKChycG9ydCA9PSBOVUxMKSB8fCAocnBvcnQtPnBvcnRfc3RhdGUgPT0N
-Cj4gPiBGQ19QT1JUU1RBVEVfQkxPQ0tFRCkpDQo+ID4gIAkJcmV0dXJuIEJMS19FSF9SRVNFVF9U
-SU1FUjsNCj4gPg0KPiA+ICAJcmV0dXJuIEJMS19FSF9OT1RfSEFORExFRDsNCg0K
+On Fri, 2016-01-08 at 18:58 +0000, KY Srinivasan wrote:
+> 
+> > -----Original Message-----
+> > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com
+> > ]
+> > Sent: Thursday, January 7, 2016 3:49 PM
+> > To: KY Srinivasan <kys@microsoft.com>; gregkh@linuxfoundation.org;
+> > linux-
+> > kernel@vger.kernel.org; devel@linuxdriverproject.org; 
+> > ohering@suse.com;
+> > jbottomley@parallels.com; hch@infradead.org; 
+> > linux-scsi@vger.kernel.org;
+> > apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
+> > martin.petersen@oracle.com; hare@suse.de
+> > Cc: stable@vger.kernel.org
+> > Subject: Re: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the
+> > error
+> > handling function
+> > 
+> > On Thu, 2016-01-07 at 16:40 -0800, K. Y. Srinivasan wrote:
+> > > The macro startget_to_rport() can return NULL; handle that case
+> > > properly.
+> > 
+> > OK, can we unwind why you think you could possibly need this?  It
+> > would
+> > mean that fc_timed_out was called for a non-FC device, which was
+> > thought to be an impossibility when the fc transport class was
+> > designed.
+> 
+> As you know, on Hyper-V, FC devices are handled exactly like normal 
+> scsi devices and the only additional information that is provided for 
+> FC devices is the WWN for port and node. Till recently, I was not 
+> publishing the WWN in the guest and so I was not even using the FC 
+> transport. Recently, I implemented support for publishing the WWN in 
+> the guest and for that I am using the FC transport for FC hosts. When 
+> an FC LUN is dynamically removed, sometimes I see the timeout occurri
+> ng and since there is no rport associated with these devices I am 
+> hitting the issue this patch is addressing. I could have addressed 
+> this problem by establishing a storvsc specific time out function 
+> even for FC devices - the same timeout function that I currently use 
+> for scsi devices -  storvsc_eh_timed_out(). I chose to instead fix 
+> the fc_timed_out() function since the code was not handling a
+> possible condition.
+
+OK, so the specific problem is that the device is partly torn down when
+the timeout fires?  I'm having a hard time seeing how we get a null
+rport in that case.  The starget_to_rport() can only return NULL if the
+parent isn't an rport ... that shouldn't depend on the state of the FC
+device because the parent is torn down after the child.
+
+In any case, returning BLK_EH_RESET_TIMER will cause all sorts of
+problems because it resets the timer to fire again for the device. 
+ What you want is something to return BLK_EH_HANDLED which will just
+complete the request ... probably at a generic level, since this
+doesn't sound to be specific to FC.
+
+Something like the below ... assuming the teardown issue is the real
+problem.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 984ddcb..3c514c6 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -273,6 +273,10 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+ 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
+ 	struct Scsi_Host *host = scmd->device->host;
+ 
++	/* timeout for an already dead device, just kill the request */
++	if (scmd->device->sdev_state == SDEV_DEL)
++		return BLK_EH_HANDLED;
++
+ 	trace_scsi_dispatch_cmd_timeout(scmd);
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
