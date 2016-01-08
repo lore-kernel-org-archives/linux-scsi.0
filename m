@@ -1,44 +1,25 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v2, RESEND] Separate target visibility from reaped state
- information
-Date: Fri, 8 Jan 2016 17:15:17 +0100
-Message-ID: <568FE095.4060901@sandisk.com>
-References: <568CCF4F.2000108@sandisk.com>
- <1452095926.2312.2.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [patch] cxgbi: typo in MODULE_PARM_DESC
+Date: Fri, 8 Jan 2016 10:37:01 -0600
+Message-ID: <5EF9B846-BF22-4D71-A572-98ADD394FB42@linux.vnet.ibm.com>
+References: <20160108110136.GG32195@mwanda>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0074.outbound.protection.outlook.com ([157.56.111.74]:33888
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755797AbcAHQPZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jan 2016 11:15:25 -0500
-In-Reply-To: <1452095926.2312.2.camel@HansenPartnership.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:55795 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754316AbcAHQhJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 11:37:09 -0500
+Received: from localhost
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 8 Jan 2016 09:37:09 -0700
+In-Reply-To: <20160108110136.GG32195@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Karen Xie <kxie@chelsio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 01/06/2016 04:58 PM, James Bottomley wrote:
-> On Wed, 2016-01-06 at 09:24 +0100, Bart Van Assche wrote:
->> Instead of representing the states "visible in sysfs" and
->> "has been removed from the target list" by a single state
->> variable, use two variables to represent this information.
->>
->> This patch avoids that SCSI device removal can trigger a
->> soft lockup.
->
-> It does?  When I asked you this the last time, you said the soft lockup
-> was fixed by a prior patch:
->
-> http://thread.gmane.org/gmane.linux.scsi/107248
->
-> If you've actually caught a problem, can we have details because the
-> distro people will want to know what gets fixed by this.
+Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com> 
 
-Hello James,
-
-I will address your feedback and repost this patch.
-
-Bart.
