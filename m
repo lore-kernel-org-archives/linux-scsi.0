@@ -1,13 +1,19 @@
 From: Meelis Roos <mroos@linux.ee>
 Subject: parisc late boot crash in 4.4-rc, scsi-related
-Date: Fri, 8 Jan 2016 22:56:43 +0200 (EET)
-Message-ID: <alpine.LRH.2.20.1601082249420.19024@math.ut.ee>
+Date: Fri, 8 Jan 2016 23:30:22 +0200 (EET)
+Message-ID: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-parisc-owner@vger.kernel.org>
-Sender: linux-parisc-owner@vger.kernel.org
-To: linux-parisc@vger.kernel.org, linux.block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.it.da.ut.ee ([193.40.5.66]:51995 "EHLO smtp1.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751909AbcAHVap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jan 2016 16:30:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+
+(Try 2, spelling linux-block correctly - please ignore the previous one)
 
 I noticed on RP3440 and A500 that recent 4.4-rc* crashes on boot. The 
 following is dmesg that was copied piecewise by hand from ILO console 
