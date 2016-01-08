@@ -1,22 +1,21 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch] cxgbi: typo in MODULE_PARM_DESC
-Date: Fri, 08 Jan 2016 12:52:11 -0500
-Message-ID: <yq17fjkez78.fsf@sermon.lab.mkp.net>
-References: <20160108110136.GG32195@mwanda>
+Subject: Re: [PATCH] scsi: imm: use new parport device model
+Date: Fri, 08 Jan 2016 13:10:28 -0500
+Message-ID: <yq137u8eycr.fsf@sermon.lab.mkp.net>
+References: <1451997650-10573-1-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160108110136.GG32195@mwanda> (Dan Carpenter's message of "Fri,
-	8 Jan 2016 14:01:36 +0300")
+In-Reply-To: <1451997650-10573-1-git-send-email-sudipm.mukherjee@gmail.com>
+	(Sudip Mukherjee's message of "Tue, 5 Jan 2016 18:10:50 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+>>>>> "Sudip" == Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
 
-Dan> The module_param is "cxgb3i_rx_credit_thres" so the
-Dan> MODULE_PARM_DESC() should match that.
+Sudip> Modify imm driver to use the new parallel port device model.
 
 Applied to 4.5/scsi-queue.
 
