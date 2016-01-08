@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/4] target: Remove useless set_initiator_node_queue_depth acl lookup
-Date: Fri,  8 Jan 2016 07:15:46 +0000
-Message-ID: <1452237348-2277-3-git-send-email-nab@daterainc.com>
+Subject: [PATCH 4/4] ib_srpt: Convert acl lookup to modern get_initiator_node_acl usage
+Date: Fri,  8 Jan 2016 07:15:48 +0000
+Message-ID: <1452237348-2277-5-git-send-email-nab@daterainc.com>
 References: <1452237348-2277-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1452237348-2277-1-git-send-email-nab@daterainc.com>
@@ -12,162 +12,191 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-With the changes in place to obtain se_node_acl->acl_kref
-from within core_tpg_del_initiator_node_acl() and auditing
-existing users, it's clear there is no need to perform the
-lookup during core_tpg_set_initiator_node_queue_depth().
+This patch does a simple conversion of ib_srpt code to use
+proper modern core_tpg_get_initiator_node_acl() lookup using
+se_node_acl->acl_kref, and drops the legacy internal list
+usage from srpt_lookup_acl().
 
-This is because se_node_acl->acl_group is already protecting
-the se_node_acl reference via configfs, and ->acl_group
-shutdown in core_tpg_del_initiator_node_acl() can't occur
-until core_tpg_set_initiator_node_queue_depth() completes.
+This involves doing transport_init_session() earlier, and
+making sure transport_free_session() is called during
+a se_node_acl lookup failure to drop the last ->acl_kref.
 
-Also, remove a related pointless wrapper in iscsi-target.
+Also, go ahead and drop port_acl_list port_acl_lock since
+they are no longer used.
 
+Cc: Vu Pham <vu@mellanox.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Andy Grover <agrover@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c |  6 +++---
- drivers/target/iscsi/iscsi_target_tpg.c      | 10 ----------
- drivers/target/iscsi/iscsi_target_tpg.h      |  2 --
- drivers/target/target_core_tpg.c             | 23 ++++-------------------
- include/target/target_core_fabric.h          |  2 +-
- 5 files changed, 8 insertions(+), 35 deletions(-)
+ drivers/infiniband/ulp/srpt/ib_srpt.c | 78 +++++++----------------------------
+ drivers/infiniband/ulp/srpt/ib_srpt.h |  2 -
+ 2 files changed, 16 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 255204c..6469321 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -726,10 +726,10 @@ static ssize_t lio_target_nacl_cmdsn_depth_store(struct config_item *item,
- 	if (iscsit_get_tpg(tpg) < 0)
- 		return -EINVAL;
- 	/*
--	 * iscsit_tpg_set_initiator_node_queue_depth() assumes force=1
-+	 * core_tpg_set_initiator_node_queue_depth() assumes force=1
- 	 */
--	ret = iscsit_tpg_set_initiator_node_queue_depth(tpg,
--				config_item_name(acl_ci), cmdsn_depth, 1);
-+	ret = core_tpg_set_initiator_node_queue_depth(se_tpg, se_nacl,
-+						      cmdsn_depth, 1);
- 
- 	pr_debug("LIO_Target_ConfigFS: %s/%s Set CmdSN Window: %u for"
- 		"InitiatorName: %s\n", config_item_name(wwn_ci),
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-index 23c95cd..0814e58 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -590,16 +590,6 @@ int iscsit_tpg_del_network_portal(
- 	return iscsit_tpg_release_np(tpg_np, tpg, np);
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
+index 2e2fe81..0a6ca2d 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.c
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+@@ -2370,31 +2370,6 @@ static void srpt_release_channel_work(struct work_struct *w)
+ 	kfree(ch);
  }
  
--int iscsit_tpg_set_initiator_node_queue_depth(
--	struct iscsi_portal_group *tpg,
--	unsigned char *initiatorname,
--	u32 queue_depth,
--	int force)
+-static struct srpt_node_acl *__srpt_lookup_acl(struct srpt_port *sport,
+-					       u8 i_port_id[16])
 -{
--	return core_tpg_set_initiator_node_queue_depth(&tpg->tpg_se_tpg,
--		initiatorname, queue_depth, force);
+-	struct srpt_node_acl *nacl;
+-
+-	list_for_each_entry(nacl, &sport->port_acl_list, list)
+-		if (memcmp(nacl->i_port_id, i_port_id,
+-			   sizeof(nacl->i_port_id)) == 0)
+-			return nacl;
+-
+-	return NULL;
 -}
 -
- int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authentication)
- {
- 	unsigned char buf1[256], buf2[256], *none = NULL;
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/iscsi/iscsi_target_tpg.h
-index 9db32bd..2da2119 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.h
-+++ b/drivers/target/iscsi/iscsi_target_tpg.h
-@@ -26,8 +26,6 @@ extern struct iscsi_tpg_np *iscsit_tpg_add_network_portal(struct iscsi_portal_gr
- 			int);
- extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
- 			struct iscsi_tpg_np *);
--extern int iscsit_tpg_set_initiator_node_queue_depth(struct iscsi_portal_group *,
--			unsigned char *, u32, int);
- extern int iscsit_ta_authentication(struct iscsi_portal_group *, u32);
- extern int iscsit_ta_login_timeout(struct iscsi_portal_group *, u32);
- extern int iscsit_ta_netif_timeout(struct iscsi_portal_group *, u32);
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index fb77fe1..550d6f8 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -371,30 +371,18 @@ void core_tpg_del_initiator_node_acl(struct se_node_acl *acl)
-  */
- int core_tpg_set_initiator_node_queue_depth(
- 	struct se_portal_group *tpg,
--	unsigned char *initiatorname,
-+	struct se_node_acl *acl,
- 	u32 queue_depth,
- 	int force)
- {
- 	struct se_session *sess, *init_sess = NULL;
--	struct se_node_acl *acl;
- 	unsigned long flags;
- 	int dynamic_acl = 0;
- 
--	mutex_lock(&tpg->acl_node_mutex);
--	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
--	if (!acl) {
--		pr_err("Access Control List entry for %s Initiator"
--			" Node %s does not exists for TPG %hu, ignoring"
--			" request.\n", tpg->se_tpg_tfo->get_fabric_name(),
--			initiatorname, tpg->se_tpg_tfo->tpg_get_tag(tpg));
--		mutex_unlock(&tpg->acl_node_mutex);
--		return -ENODEV;
--	}
- 	if (acl->dynamic_node_acl) {
- 		acl->dynamic_node_acl = 0;
- 		dynamic_acl = 1;
+-static struct srpt_node_acl *srpt_lookup_acl(struct srpt_port *sport,
+-					     u8 i_port_id[16])
+-{
+-	struct srpt_node_acl *nacl;
+-
+-	spin_lock_irq(&sport->port_acl_lock);
+-	nacl = __srpt_lookup_acl(sport, i_port_id);
+-	spin_unlock_irq(&sport->port_acl_lock);
+-
+-	return nacl;
+-}
+-
+ /**
+  * srpt_cm_req_recv() - Process the event IB_CM_REQ_RECEIVED.
+  *
+@@ -2412,7 +2387,7 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
+ 	struct srp_login_rej *rej;
+ 	struct ib_cm_rep_param *rep_param;
+ 	struct srpt_rdma_ch *ch, *tmp_ch;
+-	struct srpt_node_acl *nacl;
++	struct se_node_acl *se_acl;
+ 	u32 it_iu_len;
+ 	int i;
+ 	int ret = 0;
+@@ -2565,6 +2540,15 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
+ 		       " RTR failed (error code = %d)\n", ret);
+ 		goto destroy_ib;
  	}
--	mutex_unlock(&tpg->acl_node_mutex);
++
++	ch->sess = transport_init_session(TARGET_PROT_NORMAL);
++	if (IS_ERR(ch->sess)) {
++		rej->reason = cpu_to_be32(
++				SRP_LOGIN_REJ_INSUFFICIENT_RESOURCES);
++		pr_debug("Failed to create session\n");
++		goto destroy_ib;
++	}
++
+ 	/*
+ 	 * Use the initator port identifier as the session name.
+ 	 */
+@@ -2574,24 +2558,18 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
  
- 	spin_lock_irqsave(&tpg->session_lock, flags);
- 	list_for_each_entry(sess, &tpg->tpg_sess_list, sess_list) {
-@@ -407,13 +395,12 @@ int core_tpg_set_initiator_node_queue_depth(
- 				" operational.  To forcefully change the queue"
- 				" depth and force session reinstatement"
- 				" use the \"force=1\" parameter.\n",
--				tpg->se_tpg_tfo->get_fabric_name(), initiatorname);
-+				tpg->se_tpg_tfo->get_fabric_name(),
-+				acl->initiatorname);
- 			spin_unlock_irqrestore(&tpg->session_lock, flags);
+ 	pr_debug("registering session %s\n", ch->sess_name);
  
--			mutex_lock(&tpg->acl_node_mutex);
- 			if (dynamic_acl)
- 				acl->dynamic_node_acl = 1;
--			mutex_unlock(&tpg->acl_node_mutex);
- 			return -EEXIST;
- 		}
- 		/*
-@@ -464,13 +451,11 @@ int core_tpg_set_initiator_node_queue_depth(
+-	nacl = srpt_lookup_acl(sport, ch->i_port_id);
+-	if (!nacl) {
++	se_acl = core_tpg_get_initiator_node_acl(&sport->port_tpg_1, ch->sess_name);
++	if (!se_acl) {
+ 		pr_info("Rejected login because no ACL has been"
+ 			" configured yet for initiator %s.\n", ch->sess_name);
+ 		rej->reason = cpu_to_be32(
+-			      SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED);
++				SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED);
++		transport_free_session(ch->sess);
+ 		goto destroy_ib;
+ 	}
++	ch->sess->se_node_acl = se_acl;
  
- 	pr_debug("Successfully changed queue depth to: %d for Initiator"
- 		" Node: %s on %s Target Portal Group: %u\n", queue_depth,
--		initiatorname, tpg->se_tpg_tfo->get_fabric_name(),
-+		acl->initiatorname, tpg->se_tpg_tfo->get_fabric_name(),
- 		tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-	ch->sess = transport_init_session(TARGET_PROT_NORMAL);
+-	if (IS_ERR(ch->sess)) {
+-		rej->reason = cpu_to_be32(
+-			      SRP_LOGIN_REJ_INSUFFICIENT_RESOURCES);
+-		pr_debug("Failed to create session\n");
+-		goto deregister_session;
+-	}
+-	ch->sess->se_node_acl = &nacl->nacl;
+-	transport_register_session(&sport->port_tpg_1, &nacl->nacl, ch->sess, ch);
++	transport_register_session(&sport->port_tpg_1, se_acl, ch->sess, ch);
  
--	mutex_lock(&tpg->acl_node_mutex);
- 	if (dynamic_acl)
- 		acl->dynamic_node_acl = 1;
--	mutex_unlock(&tpg->acl_node_mutex);
+ 	pr_debug("Establish connection sess=%p name=%s cm_id=%p\n", ch->sess,
+ 		 ch->sess_name, ch->cm_id);
+@@ -2635,8 +2613,6 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
+ release_channel:
+ 	srpt_set_ch_state(ch, CH_RELEASING);
+ 	transport_deregister_session_configfs(ch->sess);
+-
+-deregister_session:
+ 	transport_deregister_session(ch->sess);
+ 	ch->sess = NULL;
  
+@@ -3273,8 +3249,6 @@ static void srpt_add_one(struct ib_device *device)
+ 		sport->port_attrib.srp_max_rsp_size = DEFAULT_MAX_RSP_SIZE;
+ 		sport->port_attrib.srp_sq_size = DEF_SRPT_SQ_SIZE;
+ 		INIT_WORK(&sport->work, srpt_refresh_port_work);
+-		INIT_LIST_HEAD(&sport->port_acl_list);
+-		spin_lock_init(&sport->port_acl_lock);
+ 
+ 		if (srpt_refresh_port(sport)) {
+ 			pr_err("MAD registration failed for %s-%d.\n",
+@@ -3522,28 +3496,9 @@ static int srpt_init_nodeacl(struct se_node_acl *se_nacl, const char *name)
+ 	memcpy(&nacl->i_port_id[0], &i_port_id[0], 16);
+ 	nacl->sport = sport;
+ 
+-	spin_lock_irq(&sport->port_acl_lock);
+-	list_add_tail(&nacl->list, &sport->port_acl_list);
+-	spin_unlock_irq(&sport->port_acl_lock);
+-
  	return 0;
  }
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index de21130..7f83295 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -172,7 +172,7 @@ struct se_node_acl *core_tpg_get_initiator_node_acl(struct se_portal_group *tpg,
- struct se_node_acl *core_tpg_check_initiator_node_acl(struct se_portal_group *,
- 		unsigned char *);
- int	core_tpg_set_initiator_node_queue_depth(struct se_portal_group *,
--		unsigned char *, u32, int);
-+		struct se_node_acl *, u32, int);
- int	core_tpg_set_initiator_node_tag(struct se_portal_group *,
- 		struct se_node_acl *, const char *);
- int	core_tpg_register(struct se_wwn *, struct se_portal_group *, int);
+ 
+-/*
+- * configfs callback function invoked for
+- * rmdir /sys/kernel/config/target/$driver/$port/$tpg/acls/$i_port_id
+- */
+-static void srpt_cleanup_nodeacl(struct se_node_acl *se_nacl)
+-{
+-	struct srpt_node_acl *nacl =
+-		container_of(se_nacl, struct srpt_node_acl, nacl);
+-	struct srpt_port *sport = nacl->sport;
+-
+-	spin_lock_irq(&sport->port_acl_lock);
+-	list_del(&nacl->list);
+-	spin_unlock_irq(&sport->port_acl_lock);
+-}
+-
+ static ssize_t srpt_tpg_attrib_srp_max_rdma_size_show(struct config_item *item,
+ 		char *page)
+ {
+@@ -3820,7 +3775,6 @@ static const struct target_core_fabric_ops srpt_template = {
+ 	.fabric_make_tpg		= srpt_make_tpg,
+ 	.fabric_drop_tpg		= srpt_drop_tpg,
+ 	.fabric_init_nodeacl		= srpt_init_nodeacl,
+-	.fabric_cleanup_nodeacl		= srpt_cleanup_nodeacl,
+ 
+ 	.tfc_wwn_attrs			= srpt_wwn_attrs,
+ 	.tfc_tpg_base_attrs		= srpt_tpg_attrs,
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
+index 5faad8ac..bb4fbe2 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.h
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
+@@ -364,11 +364,9 @@ struct srpt_port {
+ 	u16			sm_lid;
+ 	u16			lid;
+ 	union ib_gid		gid;
+-	spinlock_t		port_acl_lock;
+ 	struct work_struct	work;
+ 	struct se_portal_group	port_tpg_1;
+ 	struct se_wwn		port_wwn;
+-	struct list_head	port_acl_list;
+ 	struct srpt_port_attrib port_attrib;
+ };
+ 
 -- 
 1.9.1
