@@ -1,64 +1,31 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: Last call for 4.5
-Date: Fri, 8 Jan 2016 09:57:35 +0000
-Message-ID: <568F880F.1010807@huawei.com>
-References: <yq1egdshhob.fsf@sermon.lab.mkp.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] cxgbi: typo in MODULE_PARM_DESC
+Date: Fri, 8 Jan 2016 14:01:36 +0300
+Message-ID: <20160108110136.GG32195@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:50756 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503AbcAHJ6D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 04:58:03 -0500
-In-Reply-To: <yq1egdshhob.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On 08/01/2016 03:30, Martin K. Petersen wrote:
->
-> Hannes is on vacation this week and I would like to get the remaining
-> pieces reviewed before the merge window opens.
->
-> 3w-xxxx:
-> 	https://patchwork.kernel.org/patch/7920471/
->
-> 	One-liner.
->
-> aacraid:
-> 	https://patchwork.kernel.org/bundle/mkp/aacraid/
->
-> 	Need reviews for revised patches: 1, 5, 7, 8.
->
-> be2iscsi:
-> 	https://patchwork.kernel.org/bundle/mkp/be2iscsi/
->
-> 	Need reviews for revised patches: 2, 3, 4, 10, 13, 14, 15.
->
->          Tomas, Johannes: I believe you guys asked for some of these
->          changes...
->
-> imm:
-> 	https://patchwork.kernel.org/patch/7954581/
->
-> hisi_sas:
-> 	https://patchwork.kernel.org/bundle/mkp/hisi_sas/
->
-> 	Small fixes. Should be quick and easy.
->
-> megaraid_sas:
-> 	https://patchwork.kernel.org/bundle/mkp/megaraid_sas/
->
-> 	I will review this series tomorrow. Another set of eyes would be
-> 	great.
->
+The module_param is "cxgb3i_rx_credit_thres" so the MODULE_PARM_DESC()
+should match that.
 
-I was going to send out my patchset for hisi_sas v2 hw support today. It 
-may be too late, but at least it's out there.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-cheers,
-john
-
-BTW, thanks to Shane and Matthew for the reviews.
-
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index 0e2bee9..e22a268 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -57,7 +57,7 @@ MODULE_PARM_DESC(cxgb3i_snd_win, "TCP send window in bytes (default=128KB)");
+ 
+ static int cxgb3i_rx_credit_thres = 10 * 1024;
+ module_param(cxgb3i_rx_credit_thres, int, 0644);
+-MODULE_PARM_DESC(rx_credit_thres,
++MODULE_PARM_DESC(cxgb3i_rx_credit_thres,
+ 		 "RX credits return threshold in bytes (default=10KB)");
+ 
+ static unsigned int cxgb3i_max_connect = 8 * 1024;
