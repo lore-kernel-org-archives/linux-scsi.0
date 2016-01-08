@@ -1,102 +1,43 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the error
- handling function
-Date: Fri, 8 Jan 2016 20:12:40 +0000
-Message-ID: <BY2PR0301MB1654941121DDC4AD7EA043A4A0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1452213645-18889-1-git-send-email-kys@microsoft.com>
-	 <1452210511.15259.38.camel@HansenPartnership.com>
-	 <BY2PR0301MB1654D797E802F3CF5355942FA0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
- <1452280852.2297.17.camel@HansenPartnership.com>
+From: Laison Computech Inc <cglsa@cglsa.com.py>
+Subject: RE: CISCO IP PHONES AND CPU's
+Date: Fri, 8 Jan 2016 15:17:56 -0300 (PYST)
+Message-ID: <210127425.92271.1452277076519.JavaMail.zimbra@cglsa.com.py>
+Reply-To: " Laison Computech Inc" <sales@laisoncomputech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1452280852.2297.17.camel@HansenPartnership.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
-Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.cglsa.com.py ([190.128.239.62]:52371 "EHLO
+	mail.cglsa.com.py" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723AbcAHUR5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 15:17:57 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-RnJpZGF5LCBKYW51YXJ5IDgsIDIwMTYgMTE6MjEgQU0NCj4gVG86IEtZIFNyaW5pdmFzYW4gPGt5
-c0BtaWNyb3NvZnQuY29tPjsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IGxpbnV4LQ0KPiBr
-ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVy
-aW5nQHN1c2UuY29tOw0KPiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IGhjaEBpbmZyYWRlYWQu
-b3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsNCj4gYXB3QGNhbm9uaWNhbC5jb207IHZr
-dXpuZXRzQHJlZGhhdC5jb207IGphc293YW5nQHJlZGhhdC5jb207DQo+IG1hcnRpbi5wZXRlcnNl
-bkBvcmFjbGUuY29tOyBoYXJlQHN1c2UuZGUNCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcN
-Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzFdIHNjc2k6IHNjc2lfdHJhbnNwb3J0X2ZjOiBGaXgg
-YSBidWcgaW4gdGhlIGVycm9yDQo+IGhhbmRsaW5nIGZ1bmN0aW9uDQo+IA0KPiBPbiBGcmksIDIw
-MTYtMDEtMDggYXQgMTg6NTggKzAwMDAsIEtZIFNyaW5pdmFzYW4gd3JvdGU6DQo+ID4NCj4gPiA+
-IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkN
-Cj4gW21haWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tDQo+ID4gPiBd
-DQo+ID4gPiBTZW50OiBUaHVyc2RheSwgSmFudWFyeSA3LCAyMDE2IDM6NDkgUE0NCj4gPiA+IFRv
-OiBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT47IGdyZWdraEBsaW51eGZvdW5kYXRp
-b24ub3JnOw0KPiA+ID4gbGludXgtDQo+ID4gPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyBkZXZl
-bEBsaW51eGRyaXZlcnByb2plY3Qub3JnOw0KPiA+ID4gb2hlcmluZ0BzdXNlLmNvbTsNCj4gPiA+
-IGpib3R0b21sZXlAcGFyYWxsZWxzLmNvbTsgaGNoQGluZnJhZGVhZC5vcmc7DQo+ID4gPiBsaW51
-eC1zY3NpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGFwd0BjYW5vbmljYWwuY29tOyB2a3V6bmV0
-c0ByZWRoYXQuY29tOyBqYXNvd2FuZ0ByZWRoYXQuY29tOw0KPiA+ID4gbWFydGluLnBldGVyc2Vu
-QG9yYWNsZS5jb207IGhhcmVAc3VzZS5kZQ0KPiA+ID4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5v
-cmcNCj4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBzY3NpOiBzY3NpX3RyYW5zcG9ydF9m
-YzogRml4IGEgYnVnIGluIHRoZQ0KPiA+ID4gZXJyb3INCj4gPiA+IGhhbmRsaW5nIGZ1bmN0aW9u
-DQo+ID4gPg0KPiA+ID4gT24gVGh1LCAyMDE2LTAxLTA3IGF0IDE2OjQwIC0wODAwLCBLLiBZLiBT
-cmluaXZhc2FuIHdyb3RlOg0KPiA+ID4gPiBUaGUgbWFjcm8gc3RhcnRnZXRfdG9fcnBvcnQoKSBj
-YW4gcmV0dXJuIE5VTEw7IGhhbmRsZSB0aGF0IGNhc2UNCj4gPiA+ID4gcHJvcGVybHkuDQo+ID4g
-Pg0KPiA+ID4gT0ssIGNhbiB3ZSB1bndpbmQgd2h5IHlvdSB0aGluayB5b3UgY291bGQgcG9zc2li
-bHkgbmVlZCB0aGlzPyAgSXQNCj4gPiA+IHdvdWxkDQo+ID4gPiBtZWFuIHRoYXQgZmNfdGltZWRf
-b3V0IHdhcyBjYWxsZWQgZm9yIGEgbm9uLUZDIGRldmljZSwgd2hpY2ggd2FzDQo+ID4gPiB0aG91
-Z2h0IHRvIGJlIGFuIGltcG9zc2liaWxpdHkgd2hlbiB0aGUgZmMgdHJhbnNwb3J0IGNsYXNzIHdh
-cw0KPiA+ID4gZGVzaWduZWQuDQo+ID4NCj4gPiBBcyB5b3Uga25vdywgb24gSHlwZXItViwgRkMg
-ZGV2aWNlcyBhcmUgaGFuZGxlZCBleGFjdGx5IGxpa2Ugbm9ybWFsDQo+ID4gc2NzaSBkZXZpY2Vz
-IGFuZCB0aGUgb25seSBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIHRoYXQgaXMgcHJvdmlkZWQgZm9y
-DQo+ID4gRkMgZGV2aWNlcyBpcyB0aGUgV1dOIGZvciBwb3J0IGFuZCBub2RlLiBUaWxsIHJlY2Vu
-dGx5LCBJIHdhcyBub3QNCj4gPiBwdWJsaXNoaW5nIHRoZSBXV04gaW4gdGhlIGd1ZXN0IGFuZCBz
-byBJIHdhcyBub3QgZXZlbiB1c2luZyB0aGUgRkMNCj4gPiB0cmFuc3BvcnQuIFJlY2VudGx5LCBJ
-IGltcGxlbWVudGVkIHN1cHBvcnQgZm9yIHB1Ymxpc2hpbmcgdGhlIFdXTiBpbg0KPiA+IHRoZSBn
-dWVzdCBhbmQgZm9yIHRoYXQgSSBhbSB1c2luZyB0aGUgRkMgdHJhbnNwb3J0IGZvciBGQyBob3N0
-cy4gV2hlbg0KPiA+IGFuIEZDIExVTiBpcyBkeW5hbWljYWxseSByZW1vdmVkLCBzb21ldGltZXMg
-SSBzZWUgdGhlIHRpbWVvdXQgb2NjdXJyaQ0KPiA+IG5nIGFuZCBzaW5jZSB0aGVyZSBpcyBubyBy
-cG9ydCBhc3NvY2lhdGVkIHdpdGggdGhlc2UgZGV2aWNlcyBJIGFtDQo+ID4gaGl0dGluZyB0aGUg
-aXNzdWUgdGhpcyBwYXRjaCBpcyBhZGRyZXNzaW5nLiBJIGNvdWxkIGhhdmUgYWRkcmVzc2VkDQo+
-ID4gdGhpcyBwcm9ibGVtIGJ5IGVzdGFibGlzaGluZyBhIHN0b3J2c2Mgc3BlY2lmaWMgdGltZSBv
-dXQgZnVuY3Rpb24NCj4gPiBldmVuIGZvciBGQyBkZXZpY2VzIC0gdGhlIHNhbWUgdGltZW91dCBm
-dW5jdGlvbiB0aGF0IEkgY3VycmVudGx5IHVzZQ0KPiA+IGZvciBzY3NpIGRldmljZXMgLSAgc3Rv
-cnZzY19laF90aW1lZF9vdXQoKS4gSSBjaG9zZSB0byBpbnN0ZWFkIGZpeA0KPiA+IHRoZSBmY190
-aW1lZF9vdXQoKSBmdW5jdGlvbiBzaW5jZSB0aGUgY29kZSB3YXMgbm90IGhhbmRsaW5nIGENCj4g
-PiBwb3NzaWJsZSBjb25kaXRpb24uDQo+IA0KPiBPSywgc28gdGhlIHNwZWNpZmljIHByb2JsZW0g
-aXMgdGhhdCB0aGUgZGV2aWNlIGlzIHBhcnRseSB0b3JuIGRvd24gd2hlbg0KPiB0aGUgdGltZW91
-dCBmaXJlcz8gIEknbSBoYXZpbmcgYSBoYXJkIHRpbWUgc2VlaW5nIGhvdyB3ZSBnZXQgYSBudWxs
-DQo+IHJwb3J0IGluIHRoYXQgY2FzZS4gIFRoZSBzdGFyZ2V0X3RvX3Jwb3J0KCkgY2FuIG9ubHkg
-cmV0dXJuIE5VTEwgaWYgdGhlDQo+IHBhcmVudCBpc24ndCBhbiBycG9ydCAuLi4gdGhhdCBzaG91
-bGRuJ3QgZGVwZW5kIG9uIHRoZSBzdGF0ZSBvZiB0aGUgRkMNCj4gZGV2aWNlIGJlY2F1c2UgdGhl
-IHBhcmVudCBpcyB0b3JuIGRvd24gYWZ0ZXIgdGhlIGNoaWxkLg0KDQpJbiBvdXIgY2FzZSwgdGhl
-IHBhcmVudCBpcyBub3QgYW4gcnBvcnQgc2luY2UgSSBkb24ndCBpbnZva2UgZmNfcmVtb3RlX3Bv
-cnRfYWRkKCkgYW5kDQpzbyBJIGRvIGdldCBhIE5VTEwgdmFsdWUgZnJvbSB0aGUgc3RhcmdldF90
-b19ycG9ydCgpLg0KDQo+IA0KPiBJbiBhbnkgY2FzZSwgcmV0dXJuaW5nIEJMS19FSF9SRVNFVF9U
-SU1FUiB3aWxsIGNhdXNlIGFsbCBzb3J0cyBvZg0KPiBwcm9ibGVtcyBiZWNhdXNlIGl0IHJlc2V0
-cyB0aGUgdGltZXIgdG8gZmlyZSBhZ2FpbiBmb3IgdGhlIGRldmljZS4NCj4gIFdoYXQgeW91IHdh
-bnQgaXMgc29tZXRoaW5nIHRvIHJldHVybiBCTEtfRUhfSEFORExFRCB3aGljaCB3aWxsIGp1c3QN
-Cj4gY29tcGxldGUgdGhlIHJlcXVlc3QgLi4uIHByb2JhYmx5IGF0IGEgZ2VuZXJpYyBsZXZlbCwg
-c2luY2UgdGhpcw0KPiBkb2Vzbid0IHNvdW5kIHRvIGJlIHNwZWNpZmljIHRvIEZDLg0KDQpPbiBI
-eXBlci1WLCB0aGUgaG9zdCBpbXBsZW1lbnRzIGEgdmFyaWV0eSBvZiByZWNvdmVyeSBzdHJhdGVn
-aWVzIGFuZCBmb3IgdGhhdCByZWFzb24sDQp0aGUgIGVoX3RpbWVkX291dCBoYW5kbGVyIGZvciBz
-dGFuZGFyZCBzY3NpIGRldmljZXMgd2lsbCBlZmZlY3RpdmVseSBoYXZlIGluZmluaXRlIHRpbWVv
-dXQgdmFsdWU6DQpzdG9ydnNjX2VoX3RpbWVkX291dCgpIGp1c3QgcmVzZXRzIHRoZSB0aW1lci4g
-VGhpcyBpcyB0aGUgYmVoYXZpb3IgSSB3YW50ZWQgZm9yIHRoZSBGQyBkZXZpY2VzIGFzIHdlbGwu
-DQoNCksuIFkNCg0KPiANCj4gU29tZXRoaW5nIGxpa2UgdGhlIGJlbG93IC4uLiBhc3N1bWluZyB0
-aGUgdGVhcmRvd24gaXNzdWUgaXMgdGhlIHJlYWwNCj4gcHJvYmxlbS4NCj4gDQo+IEphbWVzDQo+
-IA0KPiAtLS0NCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jIGIv
-ZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYw0KPiBpbmRleCA5ODRkZGNiLi4zYzUxNGM2IDEwMDY0
-NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jDQo+ICsrKyBiL2RyaXZlcnMvc2Nz
-aS9zY3NpX2Vycm9yLmMNCj4gQEAgLTI3Myw2ICsyNzMsMTAgQEAgZW51bSBibGtfZWhfdGltZXJf
-cmV0dXJuIHNjc2lfdGltZXNfb3V0KHN0cnVjdA0KPiByZXF1ZXN0ICpyZXEpDQo+ICAJZW51bSBi
-bGtfZWhfdGltZXJfcmV0dXJuIHJ0biA9IEJMS19FSF9OT1RfSEFORExFRDsNCj4gIAlzdHJ1Y3Qg
-U2NzaV9Ib3N0ICpob3N0ID0gc2NtZC0+ZGV2aWNlLT5ob3N0Ow0KPiANCj4gKwkvKiB0aW1lb3V0
-IGZvciBhbiBhbHJlYWR5IGRlYWQgZGV2aWNlLCBqdXN0IGtpbGwgdGhlIHJlcXVlc3QgKi8NCj4g
-KwlpZiAoc2NtZC0+ZGV2aWNlLT5zZGV2X3N0YXRlID09IFNERVZfREVMKQ0KPiArCQlyZXR1cm4g
-QkxLX0VIX0hBTkRMRUQ7DQo+ICsNCj4gIAl0cmFjZV9zY3NpX2Rpc3BhdGNoX2NtZF90aW1lb3V0
-KHNjbWQpOw0KPiAgCXNjc2lfbG9nX2NvbXBsZXRpb24oc2NtZCwgVElNRU9VVF9FUlJPUik7DQo+
-IA0KDQo=
+
+
+Dear Sir/Madam,
+ 
+ Clean tested working pulls CPUs and QTYs in stock.
+ 
+ 280  X  X5650
+ 64  X  X5660
+ 350  X  E5645
+ 70  X  X5680
+ 95  X  X5690
+ 
+ Brand new sealed  IP phones and QTYs in stock.
+ 
+ 55 x CP-7937G
+ 77 x CP-7942G
+ 54 x CP-7945G
+ 75 x CP-7962G
+ 
+ Let me know if you're interested. We are very open to offers and willing to work with you to make sure that we have a deal.
+ 
+ Barbara Johnson
+ Laison Computech Inc
+ 210 N Scoring Ave,
+ Rialto California, 92376
+ Tel: +1-657-232-7047
+ Fax: +1-347-214-0478
