@@ -1,101 +1,99 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 00/35 v2] separate operations from flags in the
- bio/request structs
-Date: Fri, 8 Jan 2016 18:07:10 -0500
-Message-ID: <20160108230709.GA15655@redhat.com>
-References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
- <20160108133237.GA7663@infradead.org>
- <56902132.8080008@cs.wisc.edu>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: RE: [PATCH V2 7/9] aacraid: Fix AIF triggered IOP_RESET
+Date: Fri, 8 Jan 2016 23:37:15 +0000
+Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1F3EE6@BBYEXM01.pmc-sierra.internal>
+References: <1452151344-417-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1452151344-417-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <DDB9C85B850785449757F9914A034FCB4450951E@G9W0766.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56902132.8080008@cs.wisc.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, mchristi@redhat.com, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, ocfs2-devel@oss.oracle.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48580 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755950AbcAHXhQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jan 2016 18:37:16 -0500
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB4450951E@G9W0766.americas.hpqcorp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Seymour, Shane M" <shane.seymour@hpe.com>, "JBottomley@odin.com" <JBottomley@odin.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Scott Benesh <Scott.Benesh@pmcs.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "thenzl@redhat.com" <thenzl@redhat.com>, David Carroll <David.Carroll@pmcs.com>
 
-On Fri, Jan 08 2016 at  3:50P -0500,
-Mike Christie <michaelc@cs.wisc.edu> wrote:
+Hello Shane,
 
-> On 01/08/2016 07:32 AM, Christoph Hellwig wrote:
-> > This looks good to me from a highlevel point of view.
-> > Do you also have a git tree to take a look at all the changes in a
-> > single big diff?
+> -----Original Message-----
+> From: Seymour, Shane M [mailto:shane.seymour@hpe.com]
+> Sent: Thursday, January 7, 2016 9:58 PM
+> To: Raghava Aditya Renukunta; JBottomley@odin.com; linux-
+> scsi@vger.kernel.org
+> Cc: Mahesh Rajashekhara; Murthy Bhat; Gana Sridaran; aacraid@pmc-
+> sierra.com; Scott Benesh; jthumshirn@suse.de; thenzl@redhat.com; David
+> Carroll
+> Subject: RE: [PATCH V2 7/9] aacraid: Fix AIF triggered IOP_RESET
 > 
-> I uploaded a git tree here:
+> Is there still a race in the code so the same issue can happen even with this
+> patch?
 > 
-> https://github.com/mikechristie/linux-kernel.git
+> When __aac_shutdown is called it clears out the events and stops the kernel
+> thread and
+> then it calls aac_send_shutdown which sets adapter_shutdown. The ioctl
+> path checks
+> adapter_shutdown then allows the ioctl to proceed so is there still a window
+> where someone
+> can get past the checks and restart the kernel thread? To me it looks likely it's
+> a very small
+> window but it still appears to be there because you don't prevent ioctl calls
+> from continuing
+> until after you've stopped the kernel thread. It seems as though
+> adapter_shutdown needs to
+> get set at the very start of __aac_shutdown as well to prevent any more
+> requests from
+> being queued when __aac_shutdown gets called.
+
+I agree aac_send_shutdown needs to be called first thing in 
+__aac_shutdown, to prevent ioctls from coming through.
+ 
+
+> Also since one CPU may be setting the value of adapter_shutdown when
+> another one is
+> reading it and you don't use any kind of lock to control access to the value are
+> you going to
+> have SMP coherency issues with the value of adapter_shutdown? That is you
+> read it as 0
+> because the CPU that changed it to 1 has it in a register and hasn't stored it
+> yet. For example
+> in the ioctl checking case:
 > 
-> based off of linux-next today. The patches are just in the master branch.
+> static long aac_cfg_ioctl(struct file *file,
+>                 unsigned int cmd, unsigned long arg)
+> {
+>         int ret;
+>         struct aac_dev *aac;
+>         aac = (struct aac_dev *)file->private_data;
+>         if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
+>                 return -EPERM;
+>         mutex_lock(&aac_mutex);
+>         ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
+>         mutex_unlock(&aac_mutex);
+> 
+>         return ret;
+> }
+> 
+> It could be loaded speculatively and you don't know for sure that it's value is
+> correct at
+> the time you do the test.
 
-Hi Mike,
+Yes, that is true, I think making aac->adapter_shutdown as  atomic variable will 
+Prevent SMP coherency issues.
 
-I had a look at your DM changes.  That sucked (but things looked good).
-So much so that I want to thank you for tackling this task (and taking
-one for the team).
+I will make the necessary changes and resubmit this series.
 
-I'll get this kernel built and tested (using the various DM testsuites:
-lvm2, cryptsetup, device-mapper-test-suite for dm-thinp and dm-cache).
+Thank you very much for your Feedback Shane.
 
-But I did make some changes during my review that I'd appreciate if
-you'd fold in to wherever you think it appropriate in your series:
+Regards,
+Raghava Aditya
 
-diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
-index 96b5c1b..9e29dba 100644
---- a/drivers/md/dm-stats.c
-+++ b/drivers/md/dm-stats.c
-@@ -514,11 +514,10 @@ static void dm_stat_round(struct dm_stat *s, struct dm_stat_shared *shared,
- }
- 
- static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
--			      unsigned long bi_rw, sector_t len,
-+			      int idx, sector_t len,
- 			      struct dm_stats_aux *stats_aux, bool end,
- 			      unsigned long duration_jiffies)
- {
--	unsigned long idx = bi_rw;
- 	struct dm_stat_shared *shared = &s->stat_shared[entry];
- 	struct dm_stat_percpu *p;
- 
-@@ -584,7 +583,7 @@ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
- #endif
- }
- 
--static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
-+static void __dm_stat_bio(struct dm_stat *s, int bi_rw,
- 			  sector_t bi_sector, sector_t end_sector,
- 			  bool end, unsigned long duration_jiffies,
- 			  struct dm_stats_aux *stats_aux)
-@@ -622,7 +621,7 @@ static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
- 	} while (unlikely(todo != 0));
- }
- 
--void dm_stats_account_io(struct dm_stats *stats, unsigned long bi_rw,
-+void dm_stats_account_io(struct dm_stats *stats, int bi_rw,
- 			 sector_t bi_sector, unsigned bi_sectors, bool end,
- 			 unsigned long duration_jiffies,
- 			 struct dm_stats_aux *stats_aux)
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 5e940f7..9a4b3cb 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1326,7 +1326,7 @@ static int device_fua_capable(struct dm_target *ti, struct dm_dev *dev,
- }
- 
- static bool dm_table_supports_flush(struct dm_table *t,
--				    iterate_devices_callout_fn support_test)
-+				    iterate_devices_callout_fn callout_fn)
- {
- 	struct dm_target *ti;
- 	unsigned i = 0;
-@@ -1347,7 +1347,7 @@ static bool dm_table_supports_flush(struct dm_table *t,
- 			return true;
- 
- 		if (ti->type->iterate_devices &&
--		    ti->type->iterate_devices(ti, support_test, NULL))
-+		    ti->type->iterate_devices(ti, callout_fn, NULL))
- 			return true;
- 	}
- 
+> Thanks
+> Shane
