@@ -1,138 +1,60 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 15/23] hisi_sas: add v2 SATA interrupt handler
-Date: Fri, 8 Jan 2016 22:15:34 +0800
-Message-ID: <1452262542-64589-16-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 02/23] hisi_sas: relocate DEV_IS_EXPANDER
+Date: Fri, 8 Jan 2016 22:15:21 +0800
+Message-ID: <1452262542-64589-3-git-send-email-john.garry@huawei.com>
 References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1452262542-64589-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 99 ++++++++++++++++++++++++++++++++++
- 1 file changed, 99 insertions(+)
+Relocate DEV_IS_EXPANDER to hisi_sas.h as
+it will be required for v2 hw support.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index f276d20..43a2c95 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -860,6 +860,85 @@ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
- 	return IRQ_HANDLED;
- }
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h      | 4 ++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 4 ----
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 5af2e41..21eb2bb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -37,6 +37,10 @@
+ #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
+ #define HISI_SAS_MAX_SMP_RESP_SZ 1028
  
-+static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
-+{
-+	struct hisi_sas_phy *phy = p;
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct	hisi_sas_initial_fis *initial_fis;
-+	struct dev_to_host_fis *fis;
-+	u32 ent_tmp, ent_msk, ent_int, port_id, link_rate, hard_phy_linkrate;
-+	irqreturn_t res = IRQ_HANDLED;
-+	u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
-+	int phy_no;
++#define DEV_IS_EXPANDER(type) \
++	((type == SAS_EDGE_EXPANDER_DEVICE) || \
++	(type == SAS_FANOUT_EXPANDER_DEVICE))
 +
-+	phy_no = sas_phy->id;
-+	initial_fis = &hisi_hba->initial_fis[phy_no];
-+	fis = &initial_fis->fis;
-+
-+	ent_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK1);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, ent_msk | 1 << phy_no);
-+
-+	ent_int = hisi_sas_read32(hisi_hba, ENT_INT_SRC1);
-+	ent_tmp = ent_int;
-+	ent_int >>= ENT_INT_SRC1_D2H_FIS_CH1_OFF * (phy_no % 4);
-+	if ((ent_int & ENT_INT_SRC1_D2H_FIS_CH0_MSK) == 0) {
-+		dev_warn(dev, "sata int: phy%d did not receive FIS\n", phy_no);
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC1, ent_tmp);
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, ent_msk);
-+		res = IRQ_NONE;
-+		goto end;
-+	}
-+
-+	if (unlikely(phy_no == 8)) {
-+		u32 port_state = hisi_sas_read32(hisi_hba, PORT_STATE);
-+
-+		port_id = (port_state & PORT_STATE_PHY8_PORT_NUM_MSK) >>
-+			  PORT_STATE_PHY8_PORT_NUM_OFF;
-+		link_rate = (port_state & PORT_STATE_PHY8_CONN_RATE_MSK) >>
-+			    PORT_STATE_PHY8_CONN_RATE_OFF;
-+	} else {
-+		port_id = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
-+		port_id = (port_id >> (4 * phy_no)) & 0xf;
-+		link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
-+		link_rate = (link_rate >> (phy_no * 4)) & 0xf;
-+	}
-+
-+	if (port_id == 0xf) {
-+		dev_err(dev, "sata int: phy%d invalid portid\n", phy_no);
-+		res = IRQ_NONE;
-+		goto end;
-+	}
-+
-+	sas_phy->linkrate = link_rate;
-+	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
-+						HARD_PHY_LINKRATE);
-+	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
-+	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
-+
-+	sas_phy->oob_mode = SATA_OOB_MODE;
-+	/* Make up some unique SAS address */
-+	attached_sas_addr[0] = 0x50;
-+	attached_sas_addr[7] = phy_no;
-+	memcpy(sas_phy->attached_sas_addr, attached_sas_addr, SAS_ADDR_SIZE);
-+	memcpy(sas_phy->frame_rcvd, fis, sizeof(struct dev_to_host_fis));
-+	dev_info(dev, "sata int phyup: phy%d link_rate=%d\n", phy_no, link_rate);
-+	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
-+	phy->phy_type |= PORT_TYPE_SATA;
-+	phy->phy_attached = 1;
-+	phy->identify.device_type = SAS_SATA_DEV;
-+	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
-+	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
-+	queue_work(hisi_hba->wq, &phy->phyup_ws);
-+
-+end:
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, ent_tmp);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, ent_msk);
-+
-+	return res;
-+}
-+
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_phy_updown_v2_hw,
- 	int_chnl_int_v2_hw,
-@@ -899,6 +978,26 @@ static int interrupt_init_v2_hw(struct hisi_hba *hisi_hba)
- 		}
- 	}
+ struct hisi_hba;
  
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
-+		int idx = i + 72; /* First SATA interrupt is irq72 */
-+
-+		irq = irq_map[idx];
-+		if (!irq) {
-+			dev_err(dev, "irq init: fail map phy interrupt %d\n",
-+				idx);
-+			return -ENOENT;
-+		}
-+
-+		rc = devm_request_irq(dev, irq, sata_int_v2_hw, 0,
-+				      DRV_NAME " sata", phy);
-+		if (rc) {
-+			dev_err(dev, "irq init: could not request "
-+				"sata interrupt %d, rc=%d\n",
-+				irq, rc);
-+			return -ENOENT;
-+		}
-+	}
- 	return 0;
- }
+ enum {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 99b1950..7689939 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -12,10 +12,6 @@
+ #include "hisi_sas.h"
+ #define DRV_NAME "hisi_sas"
+ 
+-#define DEV_IS_EXPANDER(type) \
+-	((type == SAS_EDGE_EXPANDER_DEVICE) || \
+-	(type == SAS_FANOUT_EXPANDER_DEVICE))
+-
+ #define DEV_IS_GONE(dev) \
+ 	((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
  
 -- 
 1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
