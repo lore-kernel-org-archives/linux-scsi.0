@@ -1,34 +1,26 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
-Date: Fri, 8 Jan 2016 23:20:00 +0900
-Message-ID: <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
-References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
-	<20160107094437.GA11038@infradead.org>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/23] HiSilicon SAS v2 hw support
+Date: Fri, 8 Jan 2016 14:31:14 +0000
+Message-ID: <568FC832.60108@huawei.com>
+References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f54.google.com ([209.85.213.54]:36611 "EHLO
-	mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbcAHOUC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 09:20:02 -0500
-Received: by mail-vk0-f54.google.com with SMTP id n1so37823646vkb.3
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Jan 2016 06:20:01 -0800 (PST)
-In-Reply-To: <20160107094437.GA11038@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1452262542-64589-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Cc: martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
 
-2016-01-07 18:44 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
->> This driver patch includes a core driver and glue drivers for pci and platform
->> for the DesignWare UFS Host IP.
->
-> Why doesn't this use the existing ufs core?  The architecture looks
-> completely backwards to me.
+My patchset was bounced by JBottomley-wo1vFcy6AUs@public.gmane.org
 
-I agree.  The existing ufs driver can have variant specific operations
-(hba->vops) and also can define quirks.  So if DesignWare UFS host
-controller requires vendor specific register settings or DME operations
-in initialization, or needs special workarounds for the specific versions,
-it can use those mechanisms and shares common parts between other host
-controllers.
+It seems sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org had the same issue earlier this 
+week, but other contributors seem to continue using the same address - 
+shall I resend with alternate address?
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
