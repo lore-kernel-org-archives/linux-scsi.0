@@ -1,54 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: System "hangs" on kernels > v4.4-rc1 - mpt2sas problem?
-Date: Fri, 08 Jan 2016 10:56:57 -0800
-Message-ID: <1452279417.2297.5.camel@HansenPartnership.com>
-References: <3908561D78D1C84285E8C5FCA982C28F39FA658E@ORSMSX114.amr.corp.intel.com>
-	 <yq137u8iyue.fsf@sermon.lab.mkp.net>
-	 <3908561D78D1C84285E8C5FCA982C28F39FA727F@ORSMSX114.amr.corp.intel.com>
-	 <yq1r3hsf0bg.fsf@sermon.lab.mkp.net>
-	 <3908561D78D1C84285E8C5FCA982C28F39FA73FD@ORSMSX114.amr.corp.intel.com>
-	 <yq1io34ezoh.fsf@sermon.lab.mkp.net>
-	 <3908561D78D1C84285E8C5FCA982C28F39FA77D9@ORSMSX114.amr.corp.intel.com>
-	 <1452277927.2297.2.camel@HansenPartnership.com>
-	 <3908561D78D1C84285E8C5FCA982C28F39FA7873@ORSMSX114.amr.corp.intel.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: scsi_transport_fc: Fix a bug in the error
+ handling function
+Date: Fri, 8 Jan 2016 18:58:20 +0000
+Message-ID: <BY2PR0301MB1654D797E802F3CF5355942FA0F60@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1452213645-18889-1-git-send-email-kys@microsoft.com>
+ <1452210511.15259.38.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F39FA7873@ORSMSX114.amr.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Luck, Tony" <tony.luck@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1452210511.15259.38.camel@HansenPartnership.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
+Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2016-01-08 at 18:42 +0000, Luck, Tony wrote:
-> > We're not quite out of the woods yet: dracut should have seen this
-> > automatically because of the module alias bindings.  Is your system
-> > somehow unusual and you don't expect the initrd automatic module
-> > selection to work?  If not, could you help us debug why it didn't?
-> 
-> I saw the same problem building a 4.4-rc* kernel on a RHEL7.2
-> and SLES12-SP1 system.
-> 
-> My build process is in both cases is:
-> $ tar xf linux-...
-> $ cd linux...
-> $ cp /boot/config-xyzzy .
-> $ yes "" | make oldconfig
-> $ make -j 100
-> $ su
-> # make -j 100 modules_install && make install
-> 
-> What sort of features of a system might be considered "unusual"?
-> This looks a very simple system ... just one disk controller with two
-> drive bays occupied.
-> 
-> Let me know if you'd like run any topology reporting commands.
-
-No, the problem will lie in the initrd building part.  I know that with
-debian mkinitramfs takes the -v option which will tell you what modules
-it's selecting and why, but I'm not very familiar with enterprise
-distributions; chances are whatever command you use to build the initrd
-does take a -v.
-
-James
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+VGh1cnNkYXksIEphbnVhcnkgNywgMjAxNiAzOjQ5IFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuIDxr
+eXNAbWljcm9zb2Z0LmNvbT47IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC0NCj4g
+a2VybmVsQHZnZXIua2VybmVsLm9yZzsgZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hl
+cmluZ0BzdXNlLmNvbTsNCj4gamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFkZWFk
+Lm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29tOyB2
+a3V6bmV0c0ByZWRoYXQuY29tOyBqYXNvd2FuZ0ByZWRoYXQuY29tOw0KPiBtYXJ0aW4ucGV0ZXJz
+ZW5Ab3JhY2xlLmNvbTsgaGFyZUBzdXNlLmRlDQo+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3Jn
+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBzY3NpOiBzY3NpX3RyYW5zcG9ydF9mYzogRml4
+IGEgYnVnIGluIHRoZSBlcnJvcg0KPiBoYW5kbGluZyBmdW5jdGlvbg0KPiANCj4gT24gVGh1LCAy
+MDE2LTAxLTA3IGF0IDE2OjQwIC0wODAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+IFRo
+ZSBtYWNybyBzdGFydGdldF90b19ycG9ydCgpIGNhbiByZXR1cm4gTlVMTDsgaGFuZGxlIHRoYXQg
+Y2FzZQ0KPiA+IHByb3Blcmx5Lg0KPiANCj4gT0ssIGNhbiB3ZSB1bndpbmQgd2h5IHlvdSB0aGlu
+ayB5b3UgY291bGQgcG9zc2libHkgbmVlZCB0aGlzPyAgSXQgd291bGQNCj4gbWVhbiB0aGF0IGZj
+X3RpbWVkX291dCB3YXMgY2FsbGVkIGZvciBhIG5vbi1GQyBkZXZpY2UsIHdoaWNoIHdhcw0KPiB0
+aG91Z2h0IHRvIGJlIGFuIGltcG9zc2liaWxpdHkgd2hlbiB0aGUgZmMgdHJhbnNwb3J0IGNsYXNz
+IHdhcw0KPiBkZXNpZ25lZC4NCg0KQXMgeW91IGtub3csIG9uIEh5cGVyLVYsIEZDIGRldmljZXMg
+YXJlIGhhbmRsZWQgZXhhY3RseSBsaWtlIG5vcm1hbCBzY3NpDQpkZXZpY2VzIGFuZCB0aGUgb25s
+eSBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIHRoYXQgaXMgcHJvdmlkZWQgZm9yIEZDIGRldmljZXMN
+CmlzIHRoZSBXV04gZm9yIHBvcnQgYW5kIG5vZGUuIFRpbGwgcmVjZW50bHksIEkgd2FzIG5vdCBw
+dWJsaXNoaW5nIHRoZSBXV04gaW4NCnRoZSBndWVzdCBhbmQgc28gSSB3YXMgbm90IGV2ZW4gdXNp
+bmcgdGhlIEZDIHRyYW5zcG9ydC4gUmVjZW50bHksIEkgaW1wbGVtZW50ZWQNCnN1cHBvcnQgZm9y
+IHB1Ymxpc2hpbmcgdGhlIFdXTiBpbiB0aGUgZ3Vlc3QgYW5kIGZvciB0aGF0IEkgYW0gdXNpbmcg
+dGhlIEZDIHRyYW5zcG9ydA0KZm9yIEZDIGhvc3RzLiBXaGVuIGFuIEZDIExVTiBpcyBkeW5hbWlj
+YWxseSByZW1vdmVkLCBzb21ldGltZXMgSSBzZWUgdGhlIHRpbWVvdXQNCm9jY3VycmluZyBhbmQg
+c2luY2UgdGhlcmUgaXMgbm8gcnBvcnQgYXNzb2NpYXRlZCB3aXRoIHRoZXNlIGRldmljZXMgSSBh
+bSBoaXR0aW5nIHRoZSBpc3N1ZQ0KdGhpcyBwYXRjaCBpcyBhZGRyZXNzaW5nLiBJIGNvdWxkIGhh
+dmUgYWRkcmVzc2VkIHRoaXMgcHJvYmxlbSBieSBlc3RhYmxpc2hpbmcgYSBzdG9ydnNjIHNwZWNp
+ZmljDQp0aW1lIG91dCBmdW5jdGlvbiBldmVuIGZvciBGQyBkZXZpY2VzIC0gdGhlIHNhbWUgdGlt
+ZW91dCBmdW5jdGlvbiB0aGF0IEkgY3VycmVudGx5IHVzZSBmb3Igc2NzaQ0KZGV2aWNlcyAtICBz
+dG9ydnNjX2VoX3RpbWVkX291dCgpLiBJIGNob3NlIHRvIGluc3RlYWQgZml4IHRoZSBmY190aW1l
+ZF9vdXQoKSBmdW5jdGlvbiBzaW5jZQ0KdGhlIGNvZGUgd2FzIG5vdCBoYW5kbGluZyBhIHBvc3Np
+YmxlIGNvbmRpdGlvbi4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gSmFtZXMNCj4gDQo+ID4g
+U2lnbmVkLW9mZi1ieTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4g
+Q2M6IDxzdGFibGVAdmdlci5rZXJuZWwub3JnPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kv
+c2NzaV90cmFuc3BvcnRfZmMuYyB8ICAgIDIgKy0NCj4gPiAgMSBmaWxlcyBjaGFuZ2VkLCAxIGlu
+c2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMNCj4gPiBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5z
+cG9ydF9mYy5jDQo+ID4gaW5kZXggMjRlYWFmNi4uNDJhOTA4ZiAxMDA2NDQNCj4gPiAtLS0gYS9k
+cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfZmMuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9z
+Y3NpX3RyYW5zcG9ydF9mYy5jDQo+ID4gQEAgLTIwODEsNyArMjA4MSw3IEBAIGZjX3RpbWVkX291
+dChzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKQ0KPiA+ICB7DQo+ID4gIAlzdHJ1Y3QgZmNfcnBvcnQg
+KnJwb3J0ID0gc3RhcmdldF90b19ycG9ydChzY3NpX3RhcmdldChzY21kDQo+ID4gLT5kZXZpY2Up
+KTsNCj4gPg0KPiA+IC0JaWYgKHJwb3J0LT5wb3J0X3N0YXRlID09IEZDX1BPUlRTVEFURV9CTE9D
+S0VEKQ0KPiA+ICsJaWYgKChycG9ydCA9PSBOVUxMKSB8fCAocnBvcnQtPnBvcnRfc3RhdGUgPT0N
+Cj4gPiBGQ19QT1JUU1RBVEVfQkxPQ0tFRCkpDQo+ID4gIAkJcmV0dXJuIEJMS19FSF9SRVNFVF9U
+SU1FUjsNCj4gPg0KPiA+ICAJcmV0dXJuIEJMS19FSF9OT1RfSEFORExFRDsNCg0K
