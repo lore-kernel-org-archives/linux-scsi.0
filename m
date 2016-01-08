@@ -1,135 +1,124 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/4] tcm_fc: Convert acl lookup to modern get_initiator_node_acl usage
-Date: Fri,  8 Jan 2016 07:15:47 +0000
-Message-ID: <1452237348-2277-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH 1/4] target: Obtain se_node_acl->acl_kref during get_initiator_node_acl
+Date: Fri,  8 Jan 2016 07:15:45 +0000
+Message-ID: <1452237348-2277-2-git-send-email-nab@daterainc.com>
 References: <1452237348-2277-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:35497 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690AbcAHHRx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 02:17:53 -0500
+Received: by mail-oi0-f47.google.com with SMTP id l9so301842884oia.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Jan 2016 23:17:53 -0800 (PST)
 In-Reply-To: <1452237348-2277-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch does a simple conversion of tcm_fc code to use
-proper modern core_tpg_get_initiator_node_acl() lookup using
-se_node_acl->acl_kref, and drops the legacy list walk from
-ft_acl_get().
+This patch addresses a long standing race where obtaining
+se_node_acl->acl_kref in __transport_register_session()
+happens a bit too late, and leaves open the potential
+for core_tpg_del_initiator_node_acl() to hit a NULL
+pointer dereference.
 
-Note the original lookup also took node_name into account,
-but since ft_init_nodeacl() only ever sets port_name for
-se_node_acl->acl_group within configfs, this is purely
-a mechanical change.
+Instead, get ->acl_kref in core_tpg_get_initiator_node_acl()
+while se_portal_group->acl_node_mutex is held, and move the
+final target_put_nacl() from transport_deregister_session()
+into transport_free_session() so that fabric driver login
+failure handling using the modern method to still work
+as expected.
 
-Cc: Vasu Dev <vasu.dev@linux.intel.com>
+Note the existing wait_for_completion(&acl->acl_free_comp)
+in core_tpg_del_initiator_node_acl() does not change.
+
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Andy Grover <agrover@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/tcm_fc/tfc_conf.c | 26 ++++++++------------------
- drivers/target/tcm_fc/tfc_sess.c | 18 +++++++++++-------
- 2 files changed, 19 insertions(+), 25 deletions(-)
+ drivers/target/target_core_tpg.c       |  6 ++++++
+ drivers/target/target_core_transport.c | 18 ++++++++++++------
+ 2 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 9cdb2ac..9389ba3 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -222,27 +222,17 @@ static int ft_init_nodeacl(struct se_node_acl *nacl, const char *name)
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 62103a8..fb77fe1 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -78,6 +78,12 @@ struct se_node_acl *core_tpg_get_initiator_node_acl(
  
- struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, struct fc_rport_priv *rdata)
+ 	mutex_lock(&tpg->acl_node_mutex);
+ 	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
++	/*
++	 * Obtain the acl_kref now, which will be dropped upon the
++	 * release of se_sess memory within transport_free_session().
++	 */
++	if (acl)
++		kref_get(&acl->acl_kref);
+ 	mutex_unlock(&tpg->acl_node_mutex);
+ 
+ 	return acl;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index eb7aaf0..81cc699 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -341,7 +341,6 @@ void __transport_register_session(
+ 					&buf[0], PR_REG_ISID_LEN);
+ 			se_sess->sess_bin_isid = get_unaligned_be64(&buf[0]);
+ 		}
+-		kref_get(&se_nacl->acl_kref);
+ 
+ 		spin_lock_irq(&se_nacl->nacl_sess_lock);
+ 		/*
+@@ -464,6 +463,15 @@ EXPORT_SYMBOL(transport_deregister_session_configfs);
+ 
+ void transport_free_session(struct se_session *se_sess)
  {
--	struct ft_node_acl *found = NULL;
--	struct ft_node_acl *acl;
- 	struct se_portal_group *se_tpg = &tpg->se_tpg;
- 	struct se_node_acl *se_acl;
-+	unsigned char initiatorname[TRANSPORT_IQN_LEN];
- 
--	mutex_lock(&se_tpg->acl_node_mutex);
--	list_for_each_entry(se_acl, &se_tpg->acl_node_list, acl_list) {
--		acl = container_of(se_acl, struct ft_node_acl, se_node_acl);
--		pr_debug("acl %p port_name %llx\n",
--			acl, (unsigned long long)acl->node_auth.port_name);
--		if (acl->node_auth.port_name == rdata->ids.port_name ||
--		    acl->node_auth.node_name == rdata->ids.node_name) {
--			pr_debug("acl %p port_name %llx matched\n", acl,
--				    (unsigned long long)rdata->ids.port_name);
--			found = acl;
--			/* XXX need to hold onto ACL */
--			break;
--		}
--	}
--	mutex_unlock(&se_tpg->acl_node_mutex);
--	return found;
-+	ft_format_wwn(&initiatorname[0], TRANSPORT_IQN_LEN, rdata->ids.port_name);
-+
-+	se_acl = core_tpg_get_initiator_node_acl(se_tpg, &initiatorname[0]);
-+	if (!se_acl)
-+		return NULL;
-+
-+	return container_of(se_acl, struct ft_node_acl, se_node_acl);
- }
- 
- /*
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 45947e2..b3db638 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -191,9 +191,10 @@ out:
-  * Caller holds ft_lport_lock.
-  */
- static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
--				      struct ft_node_acl *acl)
-+				      struct fc_rport_priv *rdata)
- {
- 	struct ft_sess *sess;
-+	struct ft_node_acl *acl;
- 	struct hlist_head *head;
- 
- 	head = &tport->hash[ft_sess_hash(port_id)];
-@@ -212,6 +213,14 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
- 		kfree(sess);
- 		return NULL;
- 	}
-+
-+	acl = ft_acl_get(tport->tpg, rdata);
-+	if (!acl) {
-+		transport_free_session(sess->se_sess);
-+		kfree(sess);
-+		return NULL;
++	struct se_node_acl *se_nacl = se_sess->se_node_acl;
++	/*
++	 * Drop the se_node_acl->nacl_kref obtained from within
++	 * core_tpg_get_initiator_node_acl().
++	 */
++	if (se_nacl) {
++		se_sess->se_node_acl = NULL;
++		target_put_nacl(se_nacl);
 +	}
-+
- 	sess->se_sess->se_node_acl = &acl->se_node_acl;
- 	sess->tport = tport;
- 	sess->port_id = port_id;
-@@ -349,17 +358,12 @@ static int ft_prli_locked(struct fc_rport_priv *rdata, u32 spp_len,
- {
- 	struct ft_tport *tport;
- 	struct ft_sess *sess;
--	struct ft_node_acl *acl;
- 	u32 fcp_parm;
+ 	if (se_sess->sess_cmd_map) {
+ 		percpu_ida_destroy(&se_sess->sess_tag_pool);
+ 		kvfree(se_sess->sess_cmd_map);
+@@ -478,7 +486,7 @@ void transport_deregister_session(struct se_session *se_sess)
+ 	const struct target_core_fabric_ops *se_tfo;
+ 	struct se_node_acl *se_nacl;
+ 	unsigned long flags;
+-	bool comp_nacl = true, drop_nacl = false;
++	bool drop_nacl = false;
  
- 	tport = ft_tport_get(rdata->local_port);
- 	if (!tport)
- 		goto not_target;	/* not a target for this local port */
+ 	if (!se_tpg) {
+ 		transport_free_session(se_sess);
+@@ -510,18 +518,16 @@ void transport_deregister_session(struct se_session *se_sess)
+ 	if (drop_nacl) {
+ 		core_tpg_wait_for_nacl_pr_ref(se_nacl);
+ 		core_free_device_list_for_node(se_nacl, se_tpg);
++		se_sess->se_node_acl = NULL;
+ 		kfree(se_nacl);
+-		comp_nacl = false;
+ 	}
+ 	pr_debug("TARGET_CORE[%s]: Deregistered fabric_sess\n",
+ 		se_tpg->se_tpg_tfo->get_fabric_name());
+ 	/*
+ 	 * If last kref is dropping now for an explicit NodeACL, awake sleeping
+ 	 * ->acl_free_comp caller to wakeup configfs se_node_acl->acl_group
+-	 * removal context.
++	 * removal context from within transport_free_session() code.
+ 	 */
+-	if (se_nacl && comp_nacl)
+-		target_put_nacl(se_nacl);
  
--	acl = ft_acl_get(tport->tpg, rdata);
--	if (!acl)
--		goto not_target;	/* no target for this remote */
--
- 	if (!rspp)
- 		goto fill;
- 
-@@ -381,7 +385,7 @@ static int ft_prli_locked(struct fc_rport_priv *rdata, u32 spp_len,
- 		spp->spp_flags |= FC_SPP_EST_IMG_PAIR;
- 		if (!(fcp_parm & FCP_SPPF_INIT_FCN))
- 			return FC_SPP_RESP_CONF;
--		sess = ft_sess_create(tport, rdata->ids.port_id, acl);
-+		sess = ft_sess_create(tport, rdata->ids.port_id, rdata);
- 		if (!sess)
- 			return FC_SPP_RESP_RES;
- 		if (!sess->params)
+ 	transport_free_session(se_sess);
+ }
 -- 
 1.9.1
+
