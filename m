@@ -1,227 +1,101 @@
-From: Helge Deller <deller@gmx.de>
-Subject: Re: parisc late boot crash in 4.4-rc, scsi-related
-Date: Fri, 8 Jan 2016 22:43:19 +0100
-Message-ID: <56902D77.1020200@gmx.de>
-References: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 00/35 v2] separate operations from flags in the
+ bio/request structs
+Date: Fri, 8 Jan 2016 18:07:10 -0500
+Message-ID: <20160108230709.GA15655@redhat.com>
+References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+ <20160108133237.GA7663@infradead.org>
+ <56902132.8080008@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <56902132.8080008@cs.wisc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, mchristi@redhat.com, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, ocfs2-devel@oss.oracle.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 08.01.2016 22:30, Meelis Roos wrote:
-> (Try 2, spelling linux-block correctly - please ignore the previous one)
-> 
-> I noticed on RP3440 and A500 that recent 4.4-rc* crashes on boot.
+On Fri, Jan 08 2016 at  3:50P -0500,
+Mike Christie <michaelc@cs.wisc.edu> wrote:
 
-I've not seen it with 4.4-rc yet, but I've seen it on debian kernel 4.3.3:
+> On 01/08/2016 07:32 AM, Christoph Hellwig wrote:
+> > This looks good to me from a highlevel point of view.
+> > Do you also have a git tree to take a look at all the changes in a
+> > single big diff?
+> 
+> I uploaded a git tree here:
+> 
+> https://github.com/mikechristie/linux-kernel.git
+> 
+> based off of linux-next today. The patches are just in the master branch.
 
-[   25.516000] scsi_id(112): unaligned access to 0x00000000facdf009 at ip=0x000000004100390b
-[   25.628000] sd 3:0:6:0: [sdb] Attached SCSI disk
-[   25.716000] scsi_id(113): unaligned access to 0x00000000fada7009 at ip=0x000000004100390b
-[   25.864000] random: nonblocking pool is initialized
-[   25.928000] Backtrace:
-[   25.928000]  [<000000000046feb8>] scsi_init_sgtable+0x70/0x168 [scsi_mod]
-[   25.928000]  [<000000000047001c>] scsi_init_io+0x6c/0x258 [scsi_mod]
-[   25.928000]  [<0000000000828f28>] sd_init_command+0x70/0xec8 [sd_mod]
-[   25.928000] 
-[   25.928000] 
-[   25.928000] Bad Address (null pointer deref?): Code=15 regs=00000000bbe69100 (Addr=c00002613ce9de94)
-[   25.928000] CPU: 0 PID: 67 Comm: systemd-udevd Not tainted 4.3.0-1-parisc64-smp #1 Debian 4.3.3-4
-[   25.928000] task: 00000000bbe67548 ti: 00000000bbe68000 task.ti: 00000000bbe68000
-[   25.928000] 
-[   25.928000]      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-[   25.928000] PSW: 00001000000001001111111100001110 Not tainted
-[   25.928000] r00-03  000000ff0804ff0e 00000000bbe68fd0 000000004043abd8 00000000bbe68fd0
-[   25.928000] r04-07  00000000408eea40 0000000000014000 0000000000000000 000000000000001c
-[   25.928000] r08-11  0000000000000001 0000000000000000 f4b3d2613ce9de94 00000000bbd94100
-[   25.928000] r12-15  00000000000001c0 000000000000000a 0000000000001000 000000007f8c3148
-[   25.928000] r16-19  0000000000000000 0000000000001000 0000000041dfa600 0000000000001000
-[   25.928000] r20-23  0000000000000000 000000007fabac00 0000000000011000 0000000040987a40
-[   25.928000] r24-27  0000000000000000 0000000040e18000 000000007fac1d30 00000000408eea40
-[   25.928000] r28-31  f4b3d2613ce9de94 00000000bbe690d0 00000000bbe69100 0000000000000001
-[   25.928000] sr00-03  0000000000014000 0000000000000000 0000000000000000 0000000000014000
-[   25.928000] sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   25.928000] 
-[   25.928000] IASQ: 0000000000000000 0000000000000000 IAOQ: 000000004043abe0 000000004043abe4
-[   25.928000]  IIR: 0d4010dc    ISR: 0000000034b3d000  IOR: c00002613ce9de94
-[   25.928000]  CPU:        0   CR30: 00000000bbe68000 CR31: 00000000d20345e0
-[   25.928000]  ORIG_R28: 0000000000000000
-[   25.928000]  IAOQ[0]: blk_rq_map_sg+0x2a0/0x568
-[   25.928000]  IAOQ[1]: blk_rq_map_sg+0x2a4/0x568
-[   25.928000]  RP(r2): blk_rq_map_sg+0x298/0x568
-[   25.928000] Backtrace:
-[   25.928000]  [<000000000046feb8>] scsi_init_sgtable+0x70/0x168 [scsi_mod]
-[   25.928000]  [<000000000047001c>] scsi_init_io+0x6c/0x258 [scsi_mod]
-[   25.928000]  [<0000000000828f28>] sd_init_command+0x70/0xec8 [sd_mod]
+Hi Mike,
 
+I had a look at your DM changes.  That sucked (but things looked good).
+So much so that I want to thank you for tackling this task (and taking
+one for the team).
 
-Interestingly on a C8000 workstation I see instead:
-[   25.920000] kernel BUG at /build/linux-2YuUZy/linux-4.3.3/drivers/scsi/scsi_lib.c:1096!
+I'll get this kernel built and tested (using the various DM testsuites:
+lvm2, cryptsetup, device-mapper-test-suite for dm-thinp and dm-cache).
 
-Helge
+But I did make some changes during my review that I'd appreciate if
+you'd fold in to wherever you think it appropriate in your series:
 
-> The 
-> following is dmesg that was copied piecewise by hand from ILO console 
-> log (so it can contain some whitespace damage), from 
-> 4.4.0-rc7-00028-gc616920 on RP3440:
-> 
-> SCSI subsystem initialized
-> NET: Registered protocol family 2
-> TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
-> TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
-> TCP: Hash tables configured (established 131072 bind 65536)
-> UDP hash table entries: 8192 (order: 6, 262144 bytes)
-> UDP-Lite hash table entries: 8192 (order: 6, 262144 bytes)
-> NET: Registered protocol family 1
-> Chassis warnings not supported.
-> Performance monitoring counters enabled for Storm Peak Slow
-> futex hash table entries: 1024 (order: 3, 32768 bytes)
-> HugeTLB registered 2 MB page size, pre-allocated 0 pages
-> Block layer SCSI generic (bsg) driver version 0.4 loaded (major 253)
-> io scheduler noop registered
-> io scheduler deadline registered
-> io scheduler cfq registered (default)
-> PDC Stable Storage facility v0.30
-> STI GSC/PCI core graphics driver Version 0.9b
-> Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-> 0000:e0:01.0: ttyS0 at MMIO 0xfffffffff4051000 (irq = 27, base_baud = 115200) is a 16450
-> 0000:e0:01.1: ttyS1 at MMIO 0xfffffffff4050000 (irq = 27, base_baud = 115200) is a 16550A
-> console [ttyS1] enabled
-> console [ttyS1] enabled
-> bootconsole [ttyB0] disabled
-> bootconsole [ttyB0] disabled
-> 0000:e0:01.1: ttyS2 at MMIO 0xfffffffff4050010 (irq = 27, base_baud = 115200) is a 16550A
-> 0000:e0:01.1: ttyS3 at MMIO 0xfffffffff4050038 (irq = 27, base_baud = 115200) is a 16550A
-> sym0: <1010-66> rev 0x1 at pci 0000:20:01.0 irq 22
-> sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
-> sym0: SCSI BUS has been reset.
-> scsi host0: sym-2.2.3
-> scsi 0:0:0:0: Direct-Access     COMPAQ   BF07285A36       HPB7 PQ: 0 ANSI: 3
-> scsi target0:0:0: tagged command queuing enabled, command queue depth 16.
-> scsi target0:0:0: Beginning Domain Validation
-> scsi target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
-> scsi target0:0:0: Ending Domain Validation
-> random: nonblocking pool is initialized
-> sym1: <1010-66> rev 0x1 at pci 0000:20:01.1 irq 23
-> sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
-> sym1: SCSI BUS has been reset.
-> scsi host1: sym-2.2.3
-> mousedev: PS/2 mouse device common for all mice
-> sd 0:0:0:0: [sda] 142264000 512-byte logical blocks: (72.8 GB/67.8 GiB)
-> rtc-generic rtc-generic: rtc core: registered rtc-generic as rtc0
-> NET: Registered protocol family 17
-> sd 0:0:0:0: [sda] Write Protect is off
-> rtc-generic rtc-generic: setting system clock to 2015-12-31 11:45:39 UTC (1451562339)
-> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
->  sda: sda1 sda2 sda3 sda4
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> EXT4-fs (sda3): couldn't mount as ext3 due to feature incompatibilities
-> EXT4-fs (sda3): couldn't mount as ext2 due to feature incompatibilities
-> EXT4-fs (sda3): mounted filesystem with ordered data mode. Opts: (null)
-> VFS: Mounted root (ext4 filesystem) readonly on device 8:3.
-> devtmpfs: mounted
-> Freeing unused kernel memory: 1024K (0000000040100000 - 0000000040200000)
-> ------------[ cut here ]------------
-> WARNING: at block/blk-merge.c:438
-> Modules linked in:
-> CPU: 0 PID: 1 Comm: init Not tainted 4.4.0-rc7-00028-gc616920 #81
-> task: 000000007fce8000 ti: 000000007fc3c000 task.ti: 000000007fc3c000
-> 
->      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-> PSW: 00001000000001101111111100001111 Not tainted
-> r00-03  000000ff0806ff0f 000000007fc3d990 0000000000000000 000000007fc3d990
-> r04-07  00000000407b20b0 0000000000000000 0000000000000110 0000000000000000
-> r08-11  0000000000000000 0000000000000001 000000033f8b6bf0 0000000000000000
-> r12-15  0000000000001000 000000033f9e0000 0000000000000002 0000000000000011
-> r16-19  0000000042174470 000000033f8b6bf0 000000033f8b6930 0000000000000000
-> r20-23  0000000000000000 000000007f1dd800 0000000000011000 0000000000000000
-> r24-27  0000000000000000 2ffffedf40000000 000000033f8b6bf0 00000000407b20b0
-> r28-31  0000000000000001 0000000000001000 000000007fc3dac0 0000000000000001
-> sr00-03  0000000000000000 0000000000000800 0000000000000000 0000000000000800
-> sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000000
-> 
-> IASQ: 0000000000000000 0000000000000000 IAOQ: 0000000040481d9c 0000000040481da0
->  IIR: 03ffe01f    ISR: 0000000010340800  IOR: 000003fe2d8b6bf0
->  CPU:        0   CR30: 000000007fc3c000 CR31: ffffffffffffffff
->  ORIG_R28: 0000000000000158
->  IAOQ[0]: blk_rq_map_sg+0x5cc/0x600
->  IAOQ[1]: blk_rq_map_sg+0x5d0/0x600
->  RP(r2):           (null)
-> Backtrace:
->  [<00000000405510d0>] scsi_init_sgtable+0xa0/0x130
->  [<00000000405511b4>] scsi_init_io+0x54/0x160
->  [<0000000040570958>] sd_init_command+0x68/0x708
->  [<00000000405513c4>] scsi_setup_cmnd+0x104/0x1a0
->  [<0000000040551f54>] scsi_queue_rq+0x864/0x9f8
->  [<00000000404877f4>] __blk_mq_run_hw_queue+0x2e4/0x4e0
->  [<00000000404874e4>] blk_mq_run_hw_queue+0xdc/0x108
->  [<000000004048928c>] blk_mq_insert_requests+0x15c/0x190
->  [<000000004048a19c>] blk_mq_flush_plug_list+0x17c/0x1a8
->  [<000000004047af64>] blk_flush_plug_list+0x104/0x2b0
->  [<000000004047b4c4>] blk_finish_plug+0x44/0x68
->  [<00000000402ee0dc>] __do_page_cache_readahead+0x29c/0x360
->  [<00000000402dfb4c>] filemap_fault+0x4f4/0x5a0
->  [<000000004030d464>] __do_fault+0x5c/0x148
->  [<000000004031360c>] handle_mm_fault+0xa84/0x1a10
-> 
-> ---[ end trace 4a3faaec387ada43 ]---
-> ------------[ cut here ]------------
-> kernel BUG at drivers/scsi/scsi_lib.c:1096!
-> CPU: 0 PID: 1 Comm: init Tainted: G        W       4.4.0-rc7-00028-gc616920 #81
-> task: 000000007fce8000 ti: 000000007fc3c000 task.ti: 000000007fc3c000
-> 
->      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-> PSW: 00001000000001101111111100001111 Tainted: G        W
-> r00-03  000000ff0806ff0f 000000007fc3d990 00000000405510d0 000000007fc3d8f0
-> r04-07  00000000407b20b0 0000000000000001 000000033f8b6b48 000000033f8b6930
-> r08-11  000000033f871000 000000007f148000 0000000000011000 0000000040999d00
-> r12-15  000000033f871000 000000033f8b6930 0000000000000000 000000033f871000
-> r16-19  0000000000000000 0000000000000158 000000033f854ba0 0000000000000000
-> r20-23  0000000000000000 000000007f1dd800 0000000000011000 0000000000000000
-> r24-27  0000000000000000 2ffffedf40000000 000000033f8b6bf0 00000000407b20b0
-> r28-31  0000000000000002 0000000000001000 000000007fc3d990 0000000000000001
-> sr00-03  0000000000000000 0000000000000800 0000000000000000 0000000000000800
-> sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000000
-> 
-> IASQ: 0000000000000000 0000000000000000 IAOQ: 0000000040551140 0000000040551144
->  IIR: 03ffe01f    ISR: 0000000000000000  IOR: 0000000000000000
->  CPU:        0   CR30: 000000007fc3c000 CR31: ffffffffffffffff
->  ORIG_R28: 0000000000000000
->  IAOQ[0]: scsi_init_sgtable+0x110/0x130
->  IAOQ[1]: scsi_init_sgtable+0x114/0x130
->  RP(r2): scsi_init_sgtable+0xa0/0x130
-> Backtrace:
->  [<00000000405511b4>] scsi_init_io+0x54/0x160
->  [<0000000040570958>] sd_init_command+0x68/0x708
->  [<00000000405513c4>] scsi_setup_cmnd+0x104/0x1a0
->  [<0000000040551f54>] scsi_queue_rq+0x864/0x9f8
->  [<00000000404877f4>] __blk_mq_run_hw_queue+0x2e4/0x4e0
->  [<00000000404874e4>] blk_mq_run_hw_queue+0xdc/0x108
->  [<000000004048928c>] blk_mq_insert_requests+0x15c/0x190
->  [<000000004048a19c>] blk_mq_flush_plug_list+0x17c/0x1a8
->  [<000000004047af64>] blk_flush_plug_list+0x104/0x2b0
->  [<000000004047b4c4>] blk_finish_plug+0x44/0x68
->  [<00000000402ee0dc>] __do_page_cache_readahead+0x29c/0x360
->  [<00000000402dfb4c>] filemap_fault+0x4f4/0x5a0
->  [<000000004030d464>] __do_fault+0x5c/0x148
->  [<000000004031360c>] handle_mm_fault+0xa84/0x1a10
-> 
-> CPU: 0 PID: 1 Comm: init Tainted: G        W       4.4.0-rc7-00028-gc616920 #81
-> Backtrace:
->  [<0000000040216888>] show_stack+0x20/0x38
->  [<00000000404a2fac>] dump_stack+0xac/0x130
->  [<0000000040216a5c>] die_if_kernel+0x19c/0x2e0
->  [<0000000040217948>] handle_interruption+0x9a8/0x9d0
-> 
-> ---[ end trace 4a3faaec387ada44 ]---
-> note: init[1] exited with preempt_count 2
-> Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
-> 
-> ---[ end Kernel panic - not syncing: Attempted to kill init! 
-> exitcode=0x0000000b
-> 
-
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 96b5c1b..9e29dba 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -514,11 +514,10 @@ static void dm_stat_round(struct dm_stat *s, struct dm_stat_shared *shared,
+ }
+ 
+ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+-			      unsigned long bi_rw, sector_t len,
++			      int idx, sector_t len,
+ 			      struct dm_stats_aux *stats_aux, bool end,
+ 			      unsigned long duration_jiffies)
+ {
+-	unsigned long idx = bi_rw;
+ 	struct dm_stat_shared *shared = &s->stat_shared[entry];
+ 	struct dm_stat_percpu *p;
+ 
+@@ -584,7 +583,7 @@ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+ #endif
+ }
+ 
+-static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
++static void __dm_stat_bio(struct dm_stat *s, int bi_rw,
+ 			  sector_t bi_sector, sector_t end_sector,
+ 			  bool end, unsigned long duration_jiffies,
+ 			  struct dm_stats_aux *stats_aux)
+@@ -622,7 +621,7 @@ static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
+ 	} while (unlikely(todo != 0));
+ }
+ 
+-void dm_stats_account_io(struct dm_stats *stats, unsigned long bi_rw,
++void dm_stats_account_io(struct dm_stats *stats, int bi_rw,
+ 			 sector_t bi_sector, unsigned bi_sectors, bool end,
+ 			 unsigned long duration_jiffies,
+ 			 struct dm_stats_aux *stats_aux)
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 5e940f7..9a4b3cb 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1326,7 +1326,7 @@ static int device_fua_capable(struct dm_target *ti, struct dm_dev *dev,
+ }
+ 
+ static bool dm_table_supports_flush(struct dm_table *t,
+-				    iterate_devices_callout_fn support_test)
++				    iterate_devices_callout_fn callout_fn)
+ {
+ 	struct dm_target *ti;
+ 	unsigned i = 0;
+@@ -1347,7 +1347,7 @@ static bool dm_table_supports_flush(struct dm_table *t,
+ 			return true;
+ 
+ 		if (ti->type->iterate_devices &&
+-		    ti->type->iterate_devices(ti, support_test, NULL))
++		    ti->type->iterate_devices(ti, callout_fn, NULL))
+ 			return true;
+ 	}
+ 
