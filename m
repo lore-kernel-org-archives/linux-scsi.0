@@ -1,35 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: System "hangs" on kernels > v4.4-rc1 - mpt2sas problem?
-Date: Fri, 08 Jan 2016 12:41:50 -0500
-Message-ID: <yq1io34ezoh.fsf@sermon.lab.mkp.net>
-References: <3908561D78D1C84285E8C5FCA982C28F39FA658E@ORSMSX114.amr.corp.intel.com>
-	<yq137u8iyue.fsf@sermon.lab.mkp.net>
-	<3908561D78D1C84285E8C5FCA982C28F39FA727F@ORSMSX114.amr.corp.intel.com>
-	<yq1r3hsf0bg.fsf@sermon.lab.mkp.net>
-	<3908561D78D1C84285E8C5FCA982C28F39FA73FD@ORSMSX114.amr.corp.intel.com>
+Subject: Re: [patch] storvsc: fix typo in MODULE_PARM_DESC
+Date: Fri, 08 Jan 2016 12:51:55 -0500
+Message-ID: <yq1bn8wez7o.fsf@sermon.lab.mkp.net>
+References: <20160108110204.GH32195@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F39FA73FD@ORSMSX114.amr.corp.intel.com>
-	(Tony Luck's message of "Fri, 8 Jan 2016 17:32:50 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20160108110204.GH32195@mwanda> (Dan Carpenter's message of "Fri,
+ 8 Jan 2016 14:02:04 +0300")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tony" == Luck, Tony <tony.luck@intel.com> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Tony> The failure mode is very, very odd though. Shouldn't I have got a
-Tony> "can't mount root" error?
+Dan> The module_param is "storvsc_vcpus_per_sub_channel" so we need to
+Dan> use that for MODULE_PARM_DESC() as well.
 
-The init stuff can be pretty patient when it comes to waiting for the
-root disk to materialize. It's conceivable that you would have gotten an
-error if you had waited long enough.
-
-Tony> /me goes to find how to tell Dracut to add the mpt3sas module to
-Tony> the initrd.
-
-Great!
+Applied to 4.5/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
