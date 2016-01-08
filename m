@@ -1,53 +1,45 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 01/23] devicetree: bindings: hisi_sas: add v2 HW bindings
-Date: Fri, 8 Jan 2016 15:34:37 +0000
-Message-ID: <568FD70D.1090303@huawei.com>
-References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
- <1452262542-64589-2-git-send-email-john.garry@huawei.com>
- <20160108145256.GG3097@leverpostej> <568FD281.4050207@huawei.com>
- <20160108151934.GA32692@leverpostej>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
+Date: Fri, 8 Jan 2016 15:51:22 +0000
+Message-ID: <568FDAFA.9020507@synopsys.com>
+References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
+ <20160107094437.GA11038@infradead.org>
+ <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:8876 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175AbcAHPft (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 10:35:49 -0500
-In-Reply-To: <20160108151934.GA32692@leverpostej>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:42644 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033AbcAHPv2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 10:51:28 -0500
+In-Reply-To: <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
 
+Hi,
 
->>>> +Optional main node properties:
->>>> + - am-max-trans : limit controller for am max transmissions
->>>
->>> Is this a boolean? Number?
->>>
+On 1/8/2016 2:20 PM, Akinobu Mita wrote:
+> 2016-01-07 18:44 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
+>>> This driver patch includes a core driver and glue drivers for pci and platform
+>>> for the DesignWare UFS Host IP.
 >>
->> This is a boolean. It is for dealing with a quirk in the chipset: an
->> instance of the controller in the hip06 chipset requires registers
->> set with a different init value.
->
-> Ok. I think the property at needs a better description for that.
->
-> It's not clear to me how "limit controller for am max transmissions"
-> maps to writing a specific value to some registers, but I don't know
-> much about SAS.
->
-> Is this some well-known thing, or values specific to hip06?
->
-> Thanks,
-> Mark.
->
+>> Why doesn't this use the existing ufs core?  The architecture looks
+>> completely backwards to me.
+> 
+> I agree.  The existing ufs driver can have variant specific operations
+> (hba->vops) and also can define quirks.  So if DesignWare UFS host
+> controller requires vendor specific register settings or DME operations
+> in initialization, or needs special workarounds for the specific versions,
+> it can use those mechanisms and shares common parts between other host
+> controllers.
+> 
 
-This is a specific issue for hip06 chipset. There is a bug in the HW on 
-hip06 where controller #1 has to set to 2 registers to non-default 
-values to limit "am-max-transmissions". This would not be a common 
-SAS/SCSI controller property and is specific to our HW.
+I agree with you. We're already engaging internally a patch rework and so there
+will be a new patch soon based on your comments.
 
-Thanks,
-John
+Thank you for your comments.
 
+Joao
