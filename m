@@ -1,22 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] hisi_sas v1 hw itct fixes
-Date: Fri, 08 Jan 2016 12:13:01 -0500
-Message-ID: <yq160z4gfky.fsf@sermon.lab.mkp.net>
-References: <1450697709-120516-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH 1/1] 3w-xxxx: pass through compat mode ioctls
+Date: Fri, 08 Jan 2016 12:14:23 -0500
+Message-ID: <yq11t9sgfio.fsf@sermon.lab.mkp.net>
+References: <1451022327-26943-1-git-send-email-nemesis@icequake.net>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1450697709-120516-1-git-send-email-john.garry@huawei.com> (John
-	Garry's message of "Mon, 21 Dec 2015 19:35:06 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: JBottomley@odin.com, martin.petersen@oracle.com, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Shane M Seymour <shane.seymour@hpe.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21944 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbcAHRO2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 12:14:28 -0500
+In-Reply-To: <1451022327-26943-1-git-send-email-nemesis@icequake.net> (Ryan
+	C. Underwood's message of "Thu, 24 Dec 2015 21:45:27 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ryan C. Underwood" <nemesis@icequake.net>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Ryan" == Ryan C Underwood <nemesis@icequake.net> writes:
 
-John> This patchset introduces some minor fixes for v1 hw itct
-John> configuration.
+Ryan> This allows 32-bit userspace tools (tw_cli, smartctl) to work on a
+Ryan> 64-bit system.  The command buffer is opaque to us, so, no word
+Ryan> size problems.
 
 Applied to 4.5/scsi-queue.
 
