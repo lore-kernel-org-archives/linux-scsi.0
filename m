@@ -1,7 +1,7 @@
 From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 18/23] hisi_sas: add v2 code to send smp command
-Date: Fri, 8 Jan 2016 22:15:37 +0800
-Message-ID: <1452262542-64589-19-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 13/23] hisi_sas: add v2 phy down handler
+Date: Fri, 8 Jan 2016 22:15:32 +0800
+Message-ID: <1452262542-64589-14-git-send-email-john.garry@huawei.com>
 References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,98 +14,90 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 71 ++++++++++++++++++++++++++++++++++
- 1 file changed, 71 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 49 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index e9d3db9..94499b1 100644
+index ba2f792..d70e5d7 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -743,6 +743,76 @@ static int prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+@@ -627,6 +627,29 @@ static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
  }
  
-+static int prep_smp_v2_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
++static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
 +{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct scatterlist *sg_req, *sg_resp;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	dma_addr_t req_dma_addr;
-+	unsigned int req_len, resp_len;
-+	int elem, rc;
++	int i, bitmap = 0;
++	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
++	u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
 +
-+	/*
-+	* DMA-map SMP request, response buffers
-+	*/
-+	/* req */
-+	sg_req = &task->smp_task.smp_req;
-+	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
-+	if (!elem)
-+		return -ENOMEM;
-+	req_len = sg_dma_len(sg_req);
-+	req_dma_addr = sg_dma_address(sg_req);
++	for (i = 0; i < (hisi_hba->n_phy < 9 ? hisi_hba->n_phy : 8); i++)
++		if (phy_state & 1 << i)
++			if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
++				bitmap |= 1 << i;
 +
-+	/* resp */
-+	sg_resp = &task->smp_task.smp_resp;
-+	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
-+	if (!elem) {
-+		rc = -ENOMEM;
-+		goto err_out_req;
-+	}
-+	resp_len = sg_dma_len(sg_resp);
-+	if ((req_len & 0x3) || (resp_len & 0x3)) {
-+		rc = -EINVAL;
-+		goto err_out_resp;
++	if (hisi_hba->n_phy == 9) {
++		u32 port_state = hisi_sas_read32(hisi_hba, PORT_STATE);
++
++		if (phy_state & 1 << 8)
++			if (((port_state & PORT_STATE_PHY8_PORT_NUM_MSK) >>
++			     PORT_STATE_PHY8_PORT_NUM_OFF) == port_id)
++				bitmap |= 1 << 9;
 +	}
 +
-+	/* create header */
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
-+			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
-+			       (2 << CMD_HDR_CMD_OFF)); /* smp */
-+
-+	/* map itct entry */
-+	hdr->dw1 = cpu_to_le32((sas_dev->device_id << CMD_HDR_DEV_ID_OFF) |
-+			       (1 << CMD_HDR_FRAME_TYPE_OFF) |
-+			       (DIR_NO_DATA << CMD_HDR_DIR_OFF));
-+
-+	/* dw2 */
-+	hdr->dw2 = cpu_to_le32((((req_len - 4) / 4) << CMD_HDR_CFL_OFF) |
-+			       (HISI_SAS_MAX_SMP_RESP_SZ / 4 <<
-+			       CMD_HDR_MRFL_OFF));
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
-+
-+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	return 0;
-+
-+err_out_resp:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
-+		     DMA_FROM_DEVICE);
-+err_out_req:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
-+		     DMA_TO_DEVICE);
-+	return rc;
++	return bitmap;
 +}
 +
- static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot, int is_tmf,
- 			  struct hisi_sas_tmf_task *tmf)
-@@ -1399,6 +1469,7 @@ static const struct hisi_sas_hw hisi_sas_v2_hw = {
+ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -704,6 +727,25 @@ end:
+ 	return res;
+ }
+ 
++static int phy_down_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
++{
++	int res = 0;
++	u32 phy_cfg, phy_state;
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 1);
++
++	phy_cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
++
++	hisi_sas_phy_down(hisi_hba, phy_no, (phy_state & 1 << phy_no) ? 1 : 0);
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, CHL_INT0_NOT_RDY_MSK);
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 0);
++
++	return res;
++}
++
+ static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
+ {
+ 	struct hisi_hba *hisi_hba = p;
+@@ -725,6 +767,12 @@ static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
+ 					goto end;
+ 				}
+ 
++			if (irq_value & CHL_INT0_NOT_RDY_MSK)
++				/* phy down */
++				if (phy_down_v2_hw(phy_no, hisi_hba)) {
++					res = IRQ_NONE;
++					goto end;
++				}
+ 		}
+ 		irq_msk >>= 1;
+ 		phy_no++;
+@@ -795,6 +843,7 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ static const struct hisi_sas_hw hisi_sas_v2_hw = {
  	.hw_init = hisi_sas_v2_init,
  	.sl_notify = sl_notify_v2_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
-+	.prep_smp = prep_smp_v2_hw,
- 	.prep_ssp = prep_ssp_v2_hw,
- 	.get_free_slot = get_free_slot_v2_hw,
- 	.start_delivery = start_delivery_v2_hw,
++	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v2_hdr),
+ };
 -- 
 1.9.1
 
