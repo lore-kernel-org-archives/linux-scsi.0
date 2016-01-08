@@ -1,66 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/4] tcm_fc: Convert acl lookup to modern
-	get_initiator_node_acl usage
-Date: Fri, 8 Jan 2016 09:21:15 +0100
-Message-ID: <20160108082114.GC32138@lst.de>
-References: <1452237348-2277-1-git-send-email-nab@daterainc.com> <1452237348-2277-4-git-send-email-nab@daterainc.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 1/4] target: Obtain se_node_acl->acl_kref during
+ get_initiator_node_acl
+Date: Fri, 8 Jan 2016 09:31:14 +0100
+Message-ID: <568F73D2.2090808@sandisk.com>
+References: <1452237348-2277-1-git-send-email-nab@daterainc.com>
+ <1452237348-2277-2-git-send-email-nab@daterainc.com>
+ <20160108081412.GA32138@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1452237348-2277-4-git-send-email-nab@daterainc.com>
+In-Reply-To: <20160108081412.GA32138@lst.de>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 08, 2016 at 07:15:47AM +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch does a simple conversion of tcm_fc code to use
-> proper modern core_tpg_get_initiator_node_acl() lookup using
-> se_node_acl->acl_kref, and drops the legacy list walk from
-> ft_acl_get().
-> 
-> Note the original lookup also took node_name into account,
-> but since ft_init_nodeacl() only ever sets port_name for
-> se_node_acl->acl_group within configfs, this is purely
-> a mechanical change.
-> 
-> Cc: Vasu Dev <vasu.dev@linux.intel.com>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Andy Grover <agrover@redhat.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/tcm_fc/tfc_conf.c | 26 ++++++++------------------
->  drivers/target/tcm_fc/tfc_sess.c | 18 +++++++++++-------
->  2 files changed, 19 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-> index 9cdb2ac..9389ba3 100644
-> --- a/drivers/target/tcm_fc/tfc_conf.c
-> +++ b/drivers/target/tcm_fc/tfc_conf.c
-> @@ -222,27 +222,17 @@ static int ft_init_nodeacl(struct se_node_acl *nacl, const char *name)
->  
->  struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, struct fc_rport_priv *rdata)
->  {
->  	struct se_portal_group *se_tpg = &tpg->se_tpg;
->  	struct se_node_acl *se_acl;
-> +	unsigned char initiatorname[TRANSPORT_IQN_LEN];
->  
-> +	ft_format_wwn(&initiatorname[0], TRANSPORT_IQN_LEN, rdata->ids.port_name);
-> +
-> +	se_acl = core_tpg_get_initiator_node_acl(se_tpg, &initiatorname[0]);
-> +	if (!se_acl)
-> +		return NULL;
-> +
-> +	return container_of(se_acl, struct ft_node_acl, se_node_acl);
+On 01/08/2016 09:14 AM, Christoph Hellwig wrote:
+>>   	mutex_lock(&tpg->acl_node_mutex);
+>>   	acl =3D __core_tpg_get_initiator_node_acl(tpg, initiatorname);
+>> +	/*
+>> +	 * Obtain the acl_kref now, which will be dropped upon the
+>> +	 * release of se_sess memory within transport_free_session().
+>> +	 */
+>> +	if (acl)
+>> +		kref_get(&acl->acl_kref);
+>
+> =D0=86 think the comment is highly confusing as it's about one of the
+> callers, while the function has many.
+>
+> I'd suggest you move it to core_tpg_check_initiator_node_acl instead.
+>
+> Also I think iscsit_build_sendtargets_response will need a put on
+> the nacl, otherwise you'll leak references.
 
-I'd say kill this function and opencode it in ft_sess_create.  It
-shouldn't be used elsewhere, and ft_sess_create really wants the
-se_node_acl and not the ft_node_acl anyway.
+Indeed. All error paths in all target drivers will have to be modified=20
+to avoid that an acl reference leak is triggered if=20
+transport_init_session() fails after core_tpg_check_initiator_node_acl(=
+)=20
+succeeded.
 
-Btw, who is dropping the reference we're acuiring through
-core_tpg_get_initiator_node_acl?
+Bart.
