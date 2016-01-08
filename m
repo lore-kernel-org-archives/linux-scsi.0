@@ -1,34 +1,34 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 23/23] hisi_sas: update driver version to 1.1
-Date: Fri, 8 Jan 2016 22:15:42 +0800
-Message-ID: <1452262542-64589-24-git-send-email-john.garry@huawei.com>
-References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
+Date: Fri, 8 Jan 2016 23:20:00 +0900
+Message-ID: <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
+References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
+	<20160107094437.GA11038@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vk0-f54.google.com ([209.85.213.54]:36611 "EHLO
+	mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050AbcAHOUC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jan 2016 09:20:02 -0500
+Received: by mail-vk0-f54.google.com with SMTP id n1so37823646vkb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Jan 2016 06:20:01 -0800 (PST)
+In-Reply-To: <20160107094437.GA11038@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+2016-01-07 18:44 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
+>> This driver patch includes a core driver and glue drivers for pci and platform
+>> for the DesignWare UFS Host IP.
+>
+> Why doesn't this use the existing ufs core?  The architecture looks
+> completely backwards to me.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index f00b55b..9f08c0c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -21,7 +21,7 @@
- #include <scsi/sas_ata.h>
- #include <scsi/libsas.h>
- 
--#define DRV_VERSION "v1.0"
-+#define DRV_VERSION "v1.1"
- 
- #define HISI_SAS_MAX_PHYS	9
- #define HISI_SAS_MAX_QUEUES	32
--- 
-1.9.1
+I agree.  The existing ufs driver can have variant specific operations
+(hba->vops) and also can define quirks.  So if DesignWare UFS host
+controller requires vendor specific register settings or DME operations
+in initialization, or needs special workarounds for the specific versions,
+it can use those mechanisms and shares common parts between other host
+controllers.
