@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 01/23] devicetree: bindings: hisi_sas: add v2 HW bindings
-Date: Fri, 8 Jan 2016 22:15:20 +0800
-Message-ID: <1452262542-64589-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 11/23] hisi_sas: add v2 phy init code
+Date: Fri, 8 Jan 2016 22:15:30 +0800
+Message-ID: <1452262542-64589-12-git-send-email-john.garry@huawei.com>
 References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,74 +12,84 @@ To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.m
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add the dt bindings for HiSi SAS controller v2 HW.
-
-The main difference in the controllers from dt perspective
-is interrupts.
-
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- .../devicetree/bindings/scsi/hisilicon-sas.txt       | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 49 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-index 0a7a325..2695023 100644
---- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-+++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-@@ -5,6 +5,7 @@ The HiSilicon SAS controller supports SAS/SATA.
- Main node required properties:
-   - compatible : value should be as follows:
- 	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
-+	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
-   - sas-addr : array of 8 bytes for host SAS address
-   - reg : Address and length of the SAS register
-   - hisilicon,sas-syscon: phandle of syscon used for sas control
-@@ -13,11 +14,11 @@ Main node required properties:
-   - ctrl-clock-ena-reg : offset to controller clock enable register in ctrl reg
-   - queue-count : number of delivery and completion queues in the controller
-   - phy-count : number of phys accessible by the controller
--  - interrupts : Interrupts for phys, completion queues, and fatal
-+  - interrupts : For v1 hw: Interrupts for phys, completion queues, and fatal
- 		sources; the interrupts are ordered in 3 groups, as follows:
--			- Phy interrupts
--			- Completion queue interrupts
--			- Fatal interrupts
-+		  - Phy interrupts
-+		  - Completion queue interrupts
-+		  - Fatal interrupts
- 		Phy interrupts : Each phy has 3 interrupt sources:
- 			- broadcast
- 			- phyup
-@@ -25,11 +26,28 @@ Main node required properties:
- 		The phy interrupts are ordered into groups of 3 per phy
- 		(broadcast, phyup, and abnormal) in increasing order.
- 		Completion queue interrupts : each completion queue has 1
--			interrupt source.
--			The interrupts are ordered in increasing order.
-+			interrupt source. The interrupts are ordered in
-+			increasing order.
- 		Fatal interrupts : the fatal interrupts are ordered as follows:
- 			- ECC
- 			- AXI bus
-+		For v2 hw: Interrupts for phys, Sata, and completion queues;
-+		the interrupts are ordered in 3 groups, as follows:
-+		  - Phy interrupts
-+		  - Sata interrupts
-+		  - Completion queue interrupts
-+		Phy interrupts : Each controller has 2 phy interrupts:
-+			- phy up/down
-+			- channel interrupt
-+		Sata interrupts : Each phy on the controller has 1 Sata
-+			interrupt. The interrupts are ordered in increasing
-+			order.
-+		Completion queue interrupts : each completion queue has 1
-+			interrupt source. The interrupts are ordered in
-+			increasing order.
-+
-+Optional main node properties:
-+ - am-max-trans : limit controller for am max transmissions
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 6ab0503..325b287 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -288,6 +288,15 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
+ 	return readl(regs);
+ }
  
- Example:
- 	sas0: sas@c1000000 {
++static void config_phy_opt_mode_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	cfg &= ~PHY_CFG_DC_OPT_MSK;
++	cfg |= 1 << PHY_CFG_DC_OPT_OFF;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
++}
++
+ static void config_id_frame_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	struct sas_identify_frame identify_frame;
+@@ -562,6 +571,44 @@ static int hw_init_v2_hw(struct hisi_hba *hisi_hba)
+ 	return 0;
+ }
+ 
++static void enable_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	cfg |= PHY_CFG_ENA_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
++}
++
++static void start_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	config_id_frame_v2_hw(hisi_hba, phy_no);
++	config_phy_opt_mode_v2_hw(hisi_hba, phy_no);
++	enable_phy_v2_hw(hisi_hba, phy_no);
++}
++
++static void start_phys_v2_hw(unsigned long data)
++{
++	struct hisi_hba *hisi_hba = (struct hisi_hba *)data;
++	int i;
++
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		start_phy_v2_hw(hisi_hba, i);
++}
++
++static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
++{
++	int i;
++	struct timer_list *timer = &hisi_hba->timer;
++
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x6a);
++		hisi_sas_phy_read32(hisi_hba, i, CHL_INT2_MSK);
++	}
++
++	setup_timer(timer, start_phys_v2_hw, (unsigned long)hisi_hba);
++	mod_timer(timer, jiffies + HZ);
++}
++
+ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ {
+ 	int rc;
+@@ -570,6 +617,8 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ 	if (rc)
+ 		return rc;
+ 
++	phys_init_v2_hw(hisi_hba);
++
+ 	return 0;
+ }
+ 
 -- 
 1.9.1
