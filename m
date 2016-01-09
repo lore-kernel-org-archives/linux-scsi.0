@@ -1,47 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
- [sr_mod]
-Date: Sat, 9 Jan 2016 11:36:14 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1601091130560.7068-100000@netrider.rowland.org>
-References: <1452353032.1150.4.camel@giantmonkey.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.4-rc8
+Date: Sat, 09 Jan 2016 09:51:24 -0800
+Message-ID: <1452361884.2361.20.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:38976 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756136AbcAIQgP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2016 11:36:15 -0500
-In-Reply-To: <1452353032.1150.4.camel@giantmonkey.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Menzel <paul.menzel@giantmonkey.de>
-Cc: Ben Hutchings <ben@decadent.org.uk>, "James E. J. Bottomley" <JBottomley@odin.com>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Erich Schubert <erich@debian.org>, Alexandre Rossi <alexandre.rossi@gmail.com>
 
-On Sat, 9 Jan 2016, Paul Menzel wrote:
+Single fix for machines with pages > 4k (PPC mostly).  There's a bug in
+our optimal transfer size code where we don't account for pages > 4k
+and can set the transfer size to be less than the page size causing
+nasty failures.
 
-> Version: 4.4~rc8-1~exp1
-> 
-> Dear Alan,
-> 
-> 
-> Thank you for your help!
-> 
-> There were some follow-ups to the bug report [1], but I think you and I
-> were not in CC.
+The patch is available here:
 
-I wasn't.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-> > 	http://marc.info/?l=linux-scsi&m=144185206825609&w=2
-> > 	http://marc.info/?l=linux-scsi&m=144185208525611&w=2
+The short changelog is:
 
-> I can only say, that I am still unable to boot my system with Linux
-> 4.4-rc8 [2]. Are these patches included there?
+Martin K. Petersen (1):
+      sd: Reject optimal transfer length smaller than page size
 
-They are.  I don't see how they could cause a NULL pointer dereference 
-in sd_resume(), though.  If you revert them, does the problem go away?
+And the diffstat:
 
-Also, can you add some debugging statements to sd_resume() so we can 
-see where the NULL pointer comes from?
+ drivers/scsi/sd.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Alan Stern
+With full diff below.
 
+James
+
+---
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3d22fc3..4e08d1cd 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2885,10 +2885,13 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 
+ 	/*
+ 	 * Use the device's preferred I/O size for reads and writes
+-	 * unless the reported value is unreasonably large (or garbage).
++	 * unless the reported value is unreasonably small, large, or
++	 * garbage.
+ 	 */
+-	if (sdkp->opt_xfer_blocks && sdkp->opt_xfer_blocks <= dev_max &&
+-	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS)
++	if (sdkp->opt_xfer_blocks &&
++	    sdkp->opt_xfer_blocks <= dev_max &&
++	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
++	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_CACHE_SIZE)
+ 		rw_max = q->limits.io_opt =
+ 			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+ 	else
