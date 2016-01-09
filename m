@@ -1,93 +1,73 @@
 From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Subject: [PATCH 1/6] scsi: bfa: bfa_svc: Use ktime_get_real_seconds()
-Date: Sat, 9 Jan 2016 19:56:50 +0530
-Message-ID: <20160109142650.GA7406@amitoj-Inspiron-3542>
+Subject: [PATCH 2/6] scsi: bfa: bfa_svc: Remove 'struct timeval'
+Date: Sat, 9 Jan 2016 19:59:02 +0530
+Message-ID: <20160109142902.GA7459@amitoj-Inspiron-3542>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
 To: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-32 bit systems using 'struct timeval' will break in the year 2038, so
-we modify the code appropriately.
-
-This patch removes the function bfa_get_log_time() which is only used
-to get current time in seconds. bfa_get_log_time() is replaced with
-ktime_get_real_seconds() which returns a 64 bit value.
-
-Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
----
- drivers/scsi/bfa/bfa_svc.c | 21 +++++----------------
- 1 file changed, 5 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 625225f..b3668e9 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -15,6 +15,7 @@
-  * General Public License for more details.
-  */
- 
-+#include <linux/ktime.h>
- #include "bfad_drv.h"
- #include "bfad_im.h"
- #include "bfa_plog.h"
-@@ -303,18 +304,6 @@ plkd_validate_logrec(struct bfa_plog_rec_s *pl_rec)
- 	return 0;
- }
- 
--static u64
--bfa_get_log_time(void)
--{
--	u64 system_time = 0;
--	struct timeval tv;
--	do_gettimeofday(&tv);
--
--	/* We are interested in seconds only. */
--	system_time = tv.tv_sec;
--	return system_time;
--}
--
- static void
- bfa_plog_add(struct bfa_plog_s *plog, struct bfa_plog_rec_s *pl_rec)
- {
-@@ -335,7 +324,7 @@ bfa_plog_add(struct bfa_plog_s *plog, struct bfa_plog_rec_s *pl_rec)
- 
- 	memcpy(pl_recp, pl_rec, sizeof(struct bfa_plog_rec_s));
- 
--	pl_recp->tv = bfa_get_log_time();
-+	pl_recp->tv = ktime_get_real_seconds();
- 	BFA_PL_LOG_REC_INCR(plog->tail);
- 
- 	if (plog->head == plog->tail)
-@@ -6278,7 +6267,7 @@ bfa_fcdiag_lb_is_running(struct bfa_s *bfa)
-  *	D-port
-  */
- #define bfa_dport_result_start(__dport, __mode) do {			\
--		(__dport)->result.start_time = bfa_get_log_time();	\
-+		(__dport)->result.start_time = ktime_get_real_seconds();\
- 		(__dport)->result.status = DPORT_TEST_ST_INPRG;		\
- 		(__dport)->result.mode = (__mode);			\
- 		(__dport)->result.rp_pwwn = (__dport)->rp_pwwn;		\
-@@ -6717,7 +6706,7 @@ bfa_dport_scn(struct bfa_dport_s *dport, struct bfi_diag_dport_scn_s *msg)
- 
- 	switch (dport->i2hmsg.scn.state) {
- 	case BFI_DPORT_SCN_TESTCOMP:
--		dport->result.end_time = bfa_get_log_time();
-+		dport->result.end_time = ktime_get_real_seconds();
- 		bfa_trc(dport->bfa, dport->result.end_time);
- 
- 		dport->result.status = msg->info.testcomp.status;
-@@ -6764,7 +6753,7 @@ bfa_dport_scn(struct bfa_dport_s *dport, struct bfi_diag_dport_scn_s *msg)
- 	case BFI_DPORT_SCN_SUBTESTSTART:
- 		subtesttype = msg->info.teststart.type;
- 		dport->result.subtest[subtesttype].start_time =
--			bfa_get_log_time();
-+			ktime_get_real_seconds();
- 		dport->result.subtest[subtesttype].status =
- 			DPORT_TEST_ST_INPRG;
- 
--- 
-1.9.1
+MzIgYml0IHN5c3RlbXMgdXNpbmcgJ3N0cnVjdCB0aW1ldmFsJyB3aWxsIGJyZWFrIGluIHRoZSB5
+ZWFyIDIwMzgsIHNvCndlIG1vZGlmeSB0aGUgY29kZSBhcHByb3ByaWF0ZWx5LgoKV2Ugb25seSBu
+ZWVkIHRvIGZpbmQgdGhlIGVsYXBzZWQgc2Vjb25kcyByYXRoZXIgdGhhbiBhYnNvbHV0ZSB0aW1l
+LAphbmQgd2Ugb25seSBjYXJlIGFib3V0IGZ1bGwgc2Vjb25kcywgc28gaXQncyBiZXR0ZXIgdG8g
+dXNlIG1vbm90b25pYwp0aW1lcywgc28gdXNpbmcga3RpbWVfZ2V0X3NlY29uZHMoKSBtYWtlcyB0
+aGUgY29kZSBtb3JlIGVmZmljaWVudAphbmQgbW9yZSByb2J1c3QgYWdhaW5zdCBhIGNvbmN1cnJl
+bnQgc2V0dGltZW9mZGF5KCkKClNpbmNlIHdlIG5lZWQgbW9ub3RvbmljIHRpbWUgb25seSwgc3Rh
+dHNfcmVzZXRfdGltZSB2YXJpYWJsZQpkb2VzIG5vdCBuZWVkIHRvIGJlIGNoYW5nZWQgZnJvbSB1
+MzIgdG8gdTY0IHR5cGUuCgpBZnRlciB0aGUgY29udmVyc2lvbiB3ZSBnZXQgYSBoYXJtbGVzcyBj
+b21waWxlciB3YXJuaW5nIGFib3V0IHRoZQpwb3NzaWJsZSB1c2Ugb2YgYW4gdW5pbml0aWFsaXNl
+ZCB3YXJuaW5nLiBnY2MgaXMgd3JvbmcgaGVyZSBhbmQgdGhlCmNvZGUgaXMgYWN0dWFsbHkgb2su
+IEludHJvZHVjaW5nIGEgdGVtcG9yYXJ5IHN0YXR1c19vayB2YXJpYWJsZSB0bwpzdG9yZSB0aGUg
+Y29uZGl0aW9uIGF2b2lkcyB0aGUgd2FybmluZy4KClNpZ25lZC1vZmYtYnk6IEFtaXRvaiBLYXVy
+IENoYXdsYSA8YW1pdG9qMTYwNkBnbWFpbC5jb20+Ci0tLQogZHJpdmVycy9zY3NpL2JmYS9iZmFf
+c3ZjLmMgfCAxNSArKysrKysrLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMo
+KyksIDggZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2JmYS9iZmFfc3Zj
+LmMgYi9kcml2ZXJzL3Njc2kvYmZhL2JmYV9zdmMuYwppbmRleCBiMzY2OGU5Li42NTIxODk2IDEw
+MDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvYmZhL2JmYV9zdmMuYworKysgYi9kcml2ZXJzL3Njc2kv
+YmZhL2JmYV9zdmMuYwpAQCAtMzA4MSw3ICszMDgxLDYgQEAgYmZhX2ZjcG9ydF9hdHRhY2goc3Ry
+dWN0IGJmYV9zICpiZmEsIHZvaWQgKmJmYWQsIHN0cnVjdCBiZmFfaW9jZmNfY2ZnX3MgKmNmZywK
+IAlzdHJ1Y3QgYmZhX2ZjcG9ydF9zICpmY3BvcnQgPSBCRkFfRkNQT1JUX01PRChiZmEpOwogCXN0
+cnVjdCBiZmFfcG9ydF9jZmdfcyAqcG9ydF9jZmcgPSAmZmNwb3J0LT5jZmc7CiAJc3RydWN0IGJm
+YV9mY3BvcnRfbG5fcyAqbG4gPSAmZmNwb3J0LT5sbjsKLQlzdHJ1Y3QgdGltZXZhbCB0djsKIAog
+CWZjcG9ydC0+YmZhID0gYmZhOwogCWxuLT5mY3BvcnQgPSBmY3BvcnQ7CkBAIC0zMDk0LDggKzMw
+OTMsNyBAQCBiZmFfZmNwb3J0X2F0dGFjaChzdHJ1Y3QgYmZhX3MgKmJmYSwgdm9pZCAqYmZhZCwg
+c3RydWN0IGJmYV9pb2NmY19jZmdfcyAqY2ZnLAogCS8qCiAJICogaW5pdGlhbGl6ZSB0aW1lIHN0
+YW1wIGZvciBzdGF0cyByZXNldAogCSAqLwotCWRvX2dldHRpbWVvZmRheSgmdHYpOwotCWZjcG9y
+dC0+c3RhdHNfcmVzZXRfdGltZSA9IHR2LnR2X3NlYzsKKwlmY3BvcnQtPnN0YXRzX3Jlc2V0X3Rp
+bWUgPSBrdGltZV9nZXRfc2Vjb25kcygpOwogCWZjcG9ydC0+c3RhdHNfZG1hX3JlYWR5ID0gQkZB
+X0ZBTFNFOwogCiAJLyoKQEAgLTMzNDUsMTYgKzMzNDMsMTcgQEAgX19iZmFfY2JfZmNwb3J0X3N0
+YXRzX2dldCh2b2lkICpjYmFyZywgYmZhX2Jvb2xlYW5fdCBjb21wbGV0ZSkKIAlzdHJ1Y3QgYmZh
+X2NiX3BlbmRpbmdfcV9zICpjYjsKIAlzdHJ1Y3QgbGlzdF9oZWFkICpxZSwgKnFlbjsKIAl1bmlv
+biBiZmFfZmNwb3J0X3N0YXRzX3UgKnJldDsKKwlib29sIHN0YXR1c19vayA9IChmY3BvcnQtPnN0
+YXRzX3N0YXR1cyA9PSBCRkFfU1RBVFVTX09LKTsKIAogCWlmIChjb21wbGV0ZSkgewotCQlzdHJ1
+Y3QgdGltZXZhbCB0djsKLQkJaWYgKGZjcG9ydC0+c3RhdHNfc3RhdHVzID09IEJGQV9TVEFUVVNf
+T0spCi0JCQlkb19nZXR0aW1lb2ZkYXkoJnR2KTsKKwkJdGltZTY0X3QgdGltZXN0YW1wOworCQlp
+ZiAoc3RhdHVzX29rKQorCQkJdGltZXN0YW1wID0ga3RpbWVfZ2V0X3NlY29uZHMoKTsKIAogCQls
+aXN0X2Zvcl9lYWNoX3NhZmUocWUsIHFlbiwgJmZjcG9ydC0+c3RhdHNfcGVuZGluZ19xKSB7CiAJ
+CQliZmFfcV9kZXEoJmZjcG9ydC0+c3RhdHNfcGVuZGluZ19xLCAmcWUpOwogCQkJY2IgPSAoc3Ry
+dWN0IGJmYV9jYl9wZW5kaW5nX3FfcyAqKXFlOwotCQkJaWYgKGZjcG9ydC0+c3RhdHNfc3RhdHVz
+ID09IEJGQV9TVEFUVVNfT0spIHsKKwkJCWlmIChzdGF0dXNfb2spIHsKIAkJCQlyZXQgPSAodW5p
+b24gYmZhX2ZjcG9ydF9zdGF0c191ICopY2ItPmRhdGE7CiAJCQkJLyogU3dhcCBGQyBRb1Mgb3Ig
+RkNvRSBzdGF0cyAqLwogCQkJCWlmIChiZmFfaW9jX2dldF9mY21vZGUoJmZjcG9ydC0+YmZhLT5p
+b2MpKQpAQCAtMzM2NCw3ICszMzYzLDcgQEAgX19iZmFfY2JfZmNwb3J0X3N0YXRzX2dldCh2b2lk
+ICpjYmFyZywgYmZhX2Jvb2xlYW5fdCBjb21wbGV0ZSkKIAkJCQkJYmZhX2ZjcG9ydF9mY29lX3N0
+YXRzX3N3YXAoJnJldC0+ZmNvZSwKIAkJCQkJCQkmZmNwb3J0LT5zdGF0cy0+ZmNvZSk7CiAJCQkJ
+CXJldC0+ZmNvZS5zZWNzX3Jlc2V0ID0KLQkJCQkJdHYudHZfc2VjIC0gZmNwb3J0LT5zdGF0c19y
+ZXNldF90aW1lOworCQkJCQl0aW1lc3RhbXAgLSBmY3BvcnQtPnN0YXRzX3Jlc2V0X3RpbWU7CiAJ
+CQkJfQogCQkJfQogCQkJYmZhX2NiX3F1ZXVlX3N0YXR1cyhmY3BvcnQtPmJmYSwgJmNiLT5oY2Jf
+cWUsCi0tIAoxLjkuMQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9s
+aXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
