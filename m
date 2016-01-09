@@ -1,27 +1,32 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCHv2 net-next 1/3] cxgb4: Add LRO infrastructure for
- cxgb4i driver
-Date: Fri, 08 Jan 2016 21:53:25 -0500 (EST)
-Message-ID: <20160108.215325.556490793545398776.davem@davemloft.net>
-References: <1452158647-9714-1-git-send-email-hariprasad@chelsio.com>
-	<1452158647-9714-2-git-send-email-hariprasad@chelsio.com>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 0/2] scsi: storvsc: Miscellaneous fixes
+Date: Fri,  8 Jan 2016 21:51:37 -0800
+Message-ID: <1452318697-25451-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1452158647-9714-2-git-send-email-hariprasad@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: hariprasad@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@odin.com, martin.petersen@oracle.com, leedom@chelsio.com, kxie@chelsio.com, manojmalviya@chelsio.com, nirranjan@chelsio.com
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-From: Hariprasad Shenai <hariprasad@chelsio.com>
-Date: Thu,  7 Jan 2016 14:54:05 +0530
+Some miscellaneous fixes.
 
-> +	struct sk_buff *skb_head, *skb_tail; /* list of aggregated sessions */
+K. Y. Srinivasan (2):
+  scsi: storvsc: Install the storvsc specific timeout handler for FC
+    devices
+  scsi: storvsc: Use the specified target ID in device lookup
 
-Don't invent your own list scheme, use struct sk_buff_head and
-the appropriate initializers and helpers.
+ drivers/scsi/storvsc_drv.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-If people do their own list handling, then it's extremely difficult
-to change the skb queue implementation.
+-- 
+1.7.4.1
