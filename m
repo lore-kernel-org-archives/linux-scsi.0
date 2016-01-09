@@ -1,40 +1,93 @@
 From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Subject: [PATCH 0/6] scsi: bfa: Use y2038 safe timestamps
-Date: Sat, 9 Jan 2016 19:52:46 +0530
-Message-ID: <20160109142246.GA7316@amitoj-Inspiron-3542>
+Subject: [PATCH 1/6] scsi: bfa: bfa_svc: Use ktime_get_real_seconds()
+Date: Sat, 9 Jan 2016 19:56:50 +0530
+Message-ID: <20160109142650.GA7406@amitoj-Inspiron-3542>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-MzIgYml0IHN5c3RlbXMgdXNpbmcgJ3N0cnVjdCB0aW1ldmFsJyB3aWxsIGJyZWFrIGluIHRoZSB5
-ZWFyIDIwMzgsIHNvCnRoZXNlIGZpbGVzIGhhdmUgYmVlbiBtb2RpZmllZCBhcHByb3ByaWF0ZWx5
-IHRvIG1ha2UgdGhlbSB5MjAzOCBzYWZlLgoKQW1pdG9qIEthdXIgQ2hhd2xhICg2KToKICBzY3Np
-OiBiZmE6IGJmYV9zdmM6IFVzZSBrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkKICBzY3NpOiBiZmE6
-IGJmYV9zdmM6IFJlbW92ZSAnc3RydWN0IHRpbWV2YWwnCiAgc2NzaTogYmZhOiBVc2UgJ2t0aW1l
-X2dldF9yZWFsX3NlY29uZHMoKScKICBzY3NpOiBiZmE6IFJlbW92ZSB1c2Ugb2YgdGltZV90CiAg
-c2NzaTogYmZhOiBiZmFfcG9ydDogUmVtb3ZlICdzdHJ1Y3QgdGltZXZhbCcKICBzY3NpOiBiZmE6
-IGJmYV9jczogUmVtb3ZlIHN0cnVjdCB0aW1ldmFsCgogZHJpdmVycy9zY3NpL2JmYS9iZmFfY3Mu
-aCAgICAgICB8ICA4ICstLS0tLS0tCiBkcml2ZXJzL3Njc2kvYmZhL2JmYV9kZWZzX3N2Yy5oIHwg
-IDQgKysrKwogZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNwaW0uYyAgICB8ICA3ICsrKystLS0KIGRy
-aXZlcnMvc2NzaS9iZmEvYmZhX2ZjcGltLmggICAgfCAgNCArKy0tCiBkcml2ZXJzL3Njc2kvYmZh
-L2JmYV9wb3J0LmMgICAgIHwgMTYgKysrKy0tLS0tLS0tLS0tLQogZHJpdmVycy9zY3NpL2JmYS9i
-ZmFfcG9ydC5oICAgICB8ICAyICstCiBkcml2ZXJzL3Njc2kvYmZhL2JmYV9zdmMuYyAgICAgIHwg
-MzYgKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL3Njc2kvYmZh
-L2JmYWRfYnNnLmMgICAgIHwgIDYgKysrLS0tCiA4IGZpbGVzIGNoYW5nZWQsIDMxIGluc2VydGlv
-bnMoKyksIDUyIGRlbGV0aW9ucygtKQoKLS0gCjEuOS4xCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhAbGlzdHMu
-bGluYXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5mby95MjAz
-OAo=
+32 bit systems using 'struct timeval' will break in the year 2038, so
+we modify the code appropriately.
+
+This patch removes the function bfa_get_log_time() which is only used
+to get current time in seconds. bfa_get_log_time() is replaced with
+ktime_get_real_seconds() which returns a 64 bit value.
+
+Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+---
+ drivers/scsi/bfa/bfa_svc.c | 21 +++++----------------
+ 1 file changed, 5 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 625225f..b3668e9 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -15,6 +15,7 @@
+  * General Public License for more details.
+  */
+ 
++#include <linux/ktime.h>
+ #include "bfad_drv.h"
+ #include "bfad_im.h"
+ #include "bfa_plog.h"
+@@ -303,18 +304,6 @@ plkd_validate_logrec(struct bfa_plog_rec_s *pl_rec)
+ 	return 0;
+ }
+ 
+-static u64
+-bfa_get_log_time(void)
+-{
+-	u64 system_time = 0;
+-	struct timeval tv;
+-	do_gettimeofday(&tv);
+-
+-	/* We are interested in seconds only. */
+-	system_time = tv.tv_sec;
+-	return system_time;
+-}
+-
+ static void
+ bfa_plog_add(struct bfa_plog_s *plog, struct bfa_plog_rec_s *pl_rec)
+ {
+@@ -335,7 +324,7 @@ bfa_plog_add(struct bfa_plog_s *plog, struct bfa_plog_rec_s *pl_rec)
+ 
+ 	memcpy(pl_recp, pl_rec, sizeof(struct bfa_plog_rec_s));
+ 
+-	pl_recp->tv = bfa_get_log_time();
++	pl_recp->tv = ktime_get_real_seconds();
+ 	BFA_PL_LOG_REC_INCR(plog->tail);
+ 
+ 	if (plog->head == plog->tail)
+@@ -6278,7 +6267,7 @@ bfa_fcdiag_lb_is_running(struct bfa_s *bfa)
+  *	D-port
+  */
+ #define bfa_dport_result_start(__dport, __mode) do {			\
+-		(__dport)->result.start_time = bfa_get_log_time();	\
++		(__dport)->result.start_time = ktime_get_real_seconds();\
+ 		(__dport)->result.status = DPORT_TEST_ST_INPRG;		\
+ 		(__dport)->result.mode = (__mode);			\
+ 		(__dport)->result.rp_pwwn = (__dport)->rp_pwwn;		\
+@@ -6717,7 +6706,7 @@ bfa_dport_scn(struct bfa_dport_s *dport, struct bfi_diag_dport_scn_s *msg)
+ 
+ 	switch (dport->i2hmsg.scn.state) {
+ 	case BFI_DPORT_SCN_TESTCOMP:
+-		dport->result.end_time = bfa_get_log_time();
++		dport->result.end_time = ktime_get_real_seconds();
+ 		bfa_trc(dport->bfa, dport->result.end_time);
+ 
+ 		dport->result.status = msg->info.testcomp.status;
+@@ -6764,7 +6753,7 @@ bfa_dport_scn(struct bfa_dport_s *dport, struct bfi_diag_dport_scn_s *msg)
+ 	case BFI_DPORT_SCN_SUBTESTSTART:
+ 		subtesttype = msg->info.teststart.type;
+ 		dport->result.subtest[subtesttype].start_time =
+-			bfa_get_log_time();
++			ktime_get_real_seconds();
+ 		dport->result.subtest[subtesttype].status =
+ 			DPORT_TEST_ST_INPRG;
+ 
+-- 
+1.9.1
