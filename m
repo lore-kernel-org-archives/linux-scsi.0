@@ -1,7 +1,7 @@
 From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Subject: [PATCH 3/6] scsi: bfa: Use 'ktime_get_real_seconds()'
-Date: Sat, 9 Jan 2016 20:01:06 +0530
-Message-ID: <20160109143106.GA7491@amitoj-Inspiron-3542>
+Subject: [PATCH 4/6] scsi: bfa: Remove use of time_t
+Date: Sat, 9 Jan 2016 20:03:25 +0530
+Message-ID: <20160109143325.GA7531@amitoj-Inspiron-3542>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -10,97 +10,60 @@ Sender: linux-kernel-owner@vger.kernel.org
 To: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch replaces u32 time storing variable with u64 variable to
-store the 64 bit seconds value returned by ktime_get_real_seconds().
+32 bit systems using 'time_t' will break in the year 2038, so
+we modify the code appropriately.
 
-A cast to time_t has also been added to the assignment statement
-which will cause a build error when we eventually remove the time_t
-definition from the kernel.
+This patch removes the cast to 'time_t' in the assignment statement
+since we are eventually removing the time_t definition from the kernel
+as an effort to solve the y2038 problem. This change will avoid the
+build error but the code is still broken and requires a change in the
+ioctl interface.
 
-We can't change the layout of the structure retrieving profile
-data as it is being used in a vendor specific command that can get
-sent from user space.
+Further, since the variable io_profile_start_time will break in 2038
+or 2106 depending on user space interpreting it as signed or unsigned,
+comments have been added to highlight the same.
 
 Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
 ---
- drivers/scsi/bfa/bfa_fcpim.c | 6 +++---
- drivers/scsi/bfa/bfa_fcpim.h | 4 ++--
- drivers/scsi/bfa/bfad_bsg.c  | 6 +++---
- 3 files changed, 8 insertions(+), 8 deletions(-)
 
+Only apply this patch if it's seen as acceptable that the
+io_profile_start_time remains truncated to 32 bits in
+IOCMD_ITNIM_GET_IOPROFILE. If this is something that needs to
+be fixed by adding a replacement vendor command, leave the
+cast in place as a reminder.
+
+ drivers/scsi/bfa/bfa_defs_svc.h | 4 ++++
+ drivers/scsi/bfa/bfa_fcpim.c    | 3 ++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index 638f441f..8ab7964 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -1211,6 +1211,10 @@ struct bfa_itnim_ioprofile_s {
+ 	u32 clock_res_mul;
+ 	u32 clock_res_div;
+ 	u32 index;
++	/*
++	* Overflow in 2038 or 2106 depending on user space interpreting it as
++	* signed or unsigned.
++	*/
+ 	u32 io_profile_start_time;	/*  IO profile start time	*/
+ 	u32 iocomps[BFA_IOBUCKET_MAX];	/*  IO completed	*/
+ 	struct bfa_itnim_latency_s io_latency;
 diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index d7385d1..6730340 100644
+index 6730340..56df8d0 100644
 --- a/drivers/scsi/bfa/bfa_fcpim.c
 +++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -468,7 +468,7 @@ bfa_ioim_profile_start(struct bfa_ioim_s *ioim)
- }
- 
- bfa_status_t
--bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time)
-+bfa_fcpim_profile_on(struct bfa_s *bfa, u64 time)
- {
- 	struct bfa_itnim_s *itnim;
- 	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
-@@ -1478,8 +1478,8 @@ bfa_itnim_get_ioprofile(struct bfa_itnim_s *itnim,
+@@ -1478,7 +1478,8 @@ bfa_itnim_get_ioprofile(struct bfa_itnim_s *itnim,
  		return BFA_STATUS_IOPROFILE_OFF;
  
  	itnim->ioprofile.index = BFA_IOBUCKET_MAX;
--	itnim->ioprofile.io_profile_start_time =
--				bfa_io_profile_start_time(itnim->bfa);
-+	itnim->ioprofile.io_profile_start_time = (u32)(time_t)
-+					bfa_io_profile_start_time(itnim->bfa);
+-	itnim->ioprofile.io_profile_start_time = (u32)(time_t)
++	/* io_profile_start_time will overflow in 2038 or 2106 */
++	itnim->ioprofile.io_profile_start_time = (u32)
+ 					bfa_io_profile_start_time(itnim->bfa);
  	itnim->ioprofile.clock_res_mul = bfa_io_lat_clock_res_mul;
  	itnim->ioprofile.clock_res_div = bfa_io_lat_clock_res_div;
- 	*ioprofile = itnim->ioprofile;
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index e693af6..274e3af 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -135,7 +135,7 @@ struct bfa_fcpim_s {
- 	struct bfa_fcpim_del_itn_stats_s del_itn_stats;
- 	bfa_boolean_t		ioredirect;
- 	bfa_boolean_t		io_profile;
--	u32			io_profile_start_time;
-+	u64			io_profile_start_time;
- 	bfa_fcpim_profile_t     profile_comp;
- 	bfa_fcpim_profile_t     profile_start;
- };
-@@ -309,7 +309,7 @@ bfa_status_t bfa_fcpim_port_iostats(struct bfa_s *bfa,
- 			struct bfa_itnim_iostats_s *stats, u8 lp_tag);
- void bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *fcpim_stats,
- 			struct bfa_itnim_iostats_s *itnim_stats);
--bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time);
-+bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, u64 time);
- bfa_status_t bfa_fcpim_profile_off(struct bfa_s *bfa);
- 
- #define bfa_fcpim_ioredirect_enabled(__bfa)				\
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 023b9d4..92f5b0f 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -15,6 +15,7 @@
-  * General Public License for more details.
-  */
- 
-+#include <linux/ktime.h>
- #include <linux/uaccess.h>
- #include "bfad_drv.h"
- #include "bfad_im.h"
-@@ -2093,13 +2094,12 @@ bfad_iocmd_fcpim_cfg_profile(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
- {
- 	struct bfa_bsg_fcpim_profile_s *iocmd =
- 				(struct bfa_bsg_fcpim_profile_s *)cmd;
--	struct timeval  tv;
- 	unsigned long	flags;
- 
--	do_gettimeofday(&tv);
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	if (v_cmd == IOCMD_FCPIM_PROFILE_ON)
--		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa, tv.tv_sec);
-+		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa,
-+						ktime_get_real_seconds());
- 	else if (v_cmd == IOCMD_FCPIM_PROFILE_OFF)
- 		iocmd->status = bfa_fcpim_profile_off(&bfad->bfa);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 -- 
 1.9.1
