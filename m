@@ -1,60 +1,52 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/2] scsi: storvsc: Install the storvsc specific timeout
- handler for FC devices
-Date: Fri,  8 Jan 2016 21:51:58 -0800
-Message-ID: <1452318719-25490-1-git-send-email-kys@microsoft.com>
-References: <1452318697-25451-1-git-send-email-kys@microsoft.com>
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: Re: [PATCH] scsi: sim710: fix build warning
+Date: Sat, 9 Jan 2016 13:12:06 +0530
+Message-ID: <20160109074206.GA27241@sudip-pc>
+References: <1441375829-6061-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <20150915080000.GE9305@sudip-pc>
+ <20151209114551.GB24852@sudip-pc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1452318697-25451-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:36621 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbcAIHmR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jan 2016 02:42:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20151209114551.GB24852@sudip-pc>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-The default timeout routine used for FC transport is not
-suitable for FC devices managed by storvsc since FC devices
-managed by storvsc driver do not have an rport associated
-with them. Use the time out handler used for SCSI devices
-for FC devices as well.
+On Wed, Dec 09, 2015 at 05:15:51PM +0530, Sudip Mukherjee wrote:
+> On Tue, Sep 15, 2015 at 01:30:00PM +0530, Sudip Mukherjee wrote:
+> > On Fri, Sep 04, 2015 at 07:40:29PM +0530, Sudip Mukherjee wrote:
+> > > We were getting build warning about:
+> > >  "Section mismatch in reference from the variable sim710_eisa_driver to
+> > >  the function .init.text:sim710_eisa_probe()
+> > >  The variable sim710_eisa_driver references the function __init
+> > >  sim710_eisa_probe()"
+> > > 
+> > > sim710_eisa_probe() was having __init but that was being referenced from
+> > > sim710_eisa_driver.
+> > > 
+> > > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> > > ---
+> > A gentle ping.
+> > I still get the build warning while building for i386 allmodconfig with
+> > next-20150915.
+> > Build is at https://travis-ci.org/sudipm-mukherjee/parport/jobs/80365417
+> 
+> Another gentle ping. Build warning with i386 allmodconfig is still there
+> with next-20151209.
+> Build log is at:
+> https://travis-ci.org/sudipm-mukherjee/parport/jobs/95746184
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Another gentle ping. Build warning with i386 allmodconfig is still there
+with next-20160108.
+Build log is at:
+https://travis-ci.org/sudipm-mukherjee/parport/jobs/101006139
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 41c115c..622f64a 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -42,6 +42,7 @@
- #include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_transport_fc.h>
-+#include <scsi/scsi_transport.h>
- 
- /*
-  * All wire protocol details (storage protocol between the guest and the host)
-@@ -1770,6 +1771,11 @@ static int __init storvsc_drv_init(void)
- 	fc_transport_template = fc_attach_transport(&fc_transport_functions);
- 	if (!fc_transport_template)
- 		return -ENODEV;
-+
-+	/*
-+	 * Install Hyper-V specific timeout handler.
-+	 */
-+	fc_transport_template->eh_timed_out = storvsc_eh_timed_out;
- #endif
- 
- 	ret = vmbus_driver_register(&storvsc_drv);
--- 
-1.7.4.1
+regards
+sudip
