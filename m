@@ -1,73 +1,106 @@
 From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Subject: [PATCH 2/6] scsi: bfa: bfa_svc: Remove 'struct timeval'
-Date: Sat, 9 Jan 2016 19:59:02 +0530
-Message-ID: <20160109142902.GA7459@amitoj-Inspiron-3542>
+Subject: [PATCH 3/6] scsi: bfa: Use 'ktime_get_real_seconds()'
+Date: Sat, 9 Jan 2016 20:01:06 +0530
+Message-ID: <20160109143106.GA7491@amitoj-Inspiron-3542>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-MzIgYml0IHN5c3RlbXMgdXNpbmcgJ3N0cnVjdCB0aW1ldmFsJyB3aWxsIGJyZWFrIGluIHRoZSB5
-ZWFyIDIwMzgsIHNvCndlIG1vZGlmeSB0aGUgY29kZSBhcHByb3ByaWF0ZWx5LgoKV2Ugb25seSBu
-ZWVkIHRvIGZpbmQgdGhlIGVsYXBzZWQgc2Vjb25kcyByYXRoZXIgdGhhbiBhYnNvbHV0ZSB0aW1l
-LAphbmQgd2Ugb25seSBjYXJlIGFib3V0IGZ1bGwgc2Vjb25kcywgc28gaXQncyBiZXR0ZXIgdG8g
-dXNlIG1vbm90b25pYwp0aW1lcywgc28gdXNpbmcga3RpbWVfZ2V0X3NlY29uZHMoKSBtYWtlcyB0
-aGUgY29kZSBtb3JlIGVmZmljaWVudAphbmQgbW9yZSByb2J1c3QgYWdhaW5zdCBhIGNvbmN1cnJl
-bnQgc2V0dGltZW9mZGF5KCkKClNpbmNlIHdlIG5lZWQgbW9ub3RvbmljIHRpbWUgb25seSwgc3Rh
-dHNfcmVzZXRfdGltZSB2YXJpYWJsZQpkb2VzIG5vdCBuZWVkIHRvIGJlIGNoYW5nZWQgZnJvbSB1
-MzIgdG8gdTY0IHR5cGUuCgpBZnRlciB0aGUgY29udmVyc2lvbiB3ZSBnZXQgYSBoYXJtbGVzcyBj
-b21waWxlciB3YXJuaW5nIGFib3V0IHRoZQpwb3NzaWJsZSB1c2Ugb2YgYW4gdW5pbml0aWFsaXNl
-ZCB3YXJuaW5nLiBnY2MgaXMgd3JvbmcgaGVyZSBhbmQgdGhlCmNvZGUgaXMgYWN0dWFsbHkgb2su
-IEludHJvZHVjaW5nIGEgdGVtcG9yYXJ5IHN0YXR1c19vayB2YXJpYWJsZSB0bwpzdG9yZSB0aGUg
-Y29uZGl0aW9uIGF2b2lkcyB0aGUgd2FybmluZy4KClNpZ25lZC1vZmYtYnk6IEFtaXRvaiBLYXVy
-IENoYXdsYSA8YW1pdG9qMTYwNkBnbWFpbC5jb20+Ci0tLQogZHJpdmVycy9zY3NpL2JmYS9iZmFf
-c3ZjLmMgfCAxNSArKysrKysrLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMo
-KyksIDggZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2JmYS9iZmFfc3Zj
-LmMgYi9kcml2ZXJzL3Njc2kvYmZhL2JmYV9zdmMuYwppbmRleCBiMzY2OGU5Li42NTIxODk2IDEw
-MDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvYmZhL2JmYV9zdmMuYworKysgYi9kcml2ZXJzL3Njc2kv
-YmZhL2JmYV9zdmMuYwpAQCAtMzA4MSw3ICszMDgxLDYgQEAgYmZhX2ZjcG9ydF9hdHRhY2goc3Ry
-dWN0IGJmYV9zICpiZmEsIHZvaWQgKmJmYWQsIHN0cnVjdCBiZmFfaW9jZmNfY2ZnX3MgKmNmZywK
-IAlzdHJ1Y3QgYmZhX2ZjcG9ydF9zICpmY3BvcnQgPSBCRkFfRkNQT1JUX01PRChiZmEpOwogCXN0
-cnVjdCBiZmFfcG9ydF9jZmdfcyAqcG9ydF9jZmcgPSAmZmNwb3J0LT5jZmc7CiAJc3RydWN0IGJm
-YV9mY3BvcnRfbG5fcyAqbG4gPSAmZmNwb3J0LT5sbjsKLQlzdHJ1Y3QgdGltZXZhbCB0djsKIAog
-CWZjcG9ydC0+YmZhID0gYmZhOwogCWxuLT5mY3BvcnQgPSBmY3BvcnQ7CkBAIC0zMDk0LDggKzMw
-OTMsNyBAQCBiZmFfZmNwb3J0X2F0dGFjaChzdHJ1Y3QgYmZhX3MgKmJmYSwgdm9pZCAqYmZhZCwg
-c3RydWN0IGJmYV9pb2NmY19jZmdfcyAqY2ZnLAogCS8qCiAJICogaW5pdGlhbGl6ZSB0aW1lIHN0
-YW1wIGZvciBzdGF0cyByZXNldAogCSAqLwotCWRvX2dldHRpbWVvZmRheSgmdHYpOwotCWZjcG9y
-dC0+c3RhdHNfcmVzZXRfdGltZSA9IHR2LnR2X3NlYzsKKwlmY3BvcnQtPnN0YXRzX3Jlc2V0X3Rp
-bWUgPSBrdGltZV9nZXRfc2Vjb25kcygpOwogCWZjcG9ydC0+c3RhdHNfZG1hX3JlYWR5ID0gQkZB
-X0ZBTFNFOwogCiAJLyoKQEAgLTMzNDUsMTYgKzMzNDMsMTcgQEAgX19iZmFfY2JfZmNwb3J0X3N0
-YXRzX2dldCh2b2lkICpjYmFyZywgYmZhX2Jvb2xlYW5fdCBjb21wbGV0ZSkKIAlzdHJ1Y3QgYmZh
-X2NiX3BlbmRpbmdfcV9zICpjYjsKIAlzdHJ1Y3QgbGlzdF9oZWFkICpxZSwgKnFlbjsKIAl1bmlv
-biBiZmFfZmNwb3J0X3N0YXRzX3UgKnJldDsKKwlib29sIHN0YXR1c19vayA9IChmY3BvcnQtPnN0
-YXRzX3N0YXR1cyA9PSBCRkFfU1RBVFVTX09LKTsKIAogCWlmIChjb21wbGV0ZSkgewotCQlzdHJ1
-Y3QgdGltZXZhbCB0djsKLQkJaWYgKGZjcG9ydC0+c3RhdHNfc3RhdHVzID09IEJGQV9TVEFUVVNf
-T0spCi0JCQlkb19nZXR0aW1lb2ZkYXkoJnR2KTsKKwkJdGltZTY0X3QgdGltZXN0YW1wOworCQlp
-ZiAoc3RhdHVzX29rKQorCQkJdGltZXN0YW1wID0ga3RpbWVfZ2V0X3NlY29uZHMoKTsKIAogCQls
-aXN0X2Zvcl9lYWNoX3NhZmUocWUsIHFlbiwgJmZjcG9ydC0+c3RhdHNfcGVuZGluZ19xKSB7CiAJ
-CQliZmFfcV9kZXEoJmZjcG9ydC0+c3RhdHNfcGVuZGluZ19xLCAmcWUpOwogCQkJY2IgPSAoc3Ry
-dWN0IGJmYV9jYl9wZW5kaW5nX3FfcyAqKXFlOwotCQkJaWYgKGZjcG9ydC0+c3RhdHNfc3RhdHVz
-ID09IEJGQV9TVEFUVVNfT0spIHsKKwkJCWlmIChzdGF0dXNfb2spIHsKIAkJCQlyZXQgPSAodW5p
-b24gYmZhX2ZjcG9ydF9zdGF0c191ICopY2ItPmRhdGE7CiAJCQkJLyogU3dhcCBGQyBRb1Mgb3Ig
-RkNvRSBzdGF0cyAqLwogCQkJCWlmIChiZmFfaW9jX2dldF9mY21vZGUoJmZjcG9ydC0+YmZhLT5p
-b2MpKQpAQCAtMzM2NCw3ICszMzYzLDcgQEAgX19iZmFfY2JfZmNwb3J0X3N0YXRzX2dldCh2b2lk
-ICpjYmFyZywgYmZhX2Jvb2xlYW5fdCBjb21wbGV0ZSkKIAkJCQkJYmZhX2ZjcG9ydF9mY29lX3N0
-YXRzX3N3YXAoJnJldC0+ZmNvZSwKIAkJCQkJCQkmZmNwb3J0LT5zdGF0cy0+ZmNvZSk7CiAJCQkJ
-CXJldC0+ZmNvZS5zZWNzX3Jlc2V0ID0KLQkJCQkJdHYudHZfc2VjIC0gZmNwb3J0LT5zdGF0c19y
-ZXNldF90aW1lOworCQkJCQl0aW1lc3RhbXAgLSBmY3BvcnQtPnN0YXRzX3Jlc2V0X3RpbWU7CiAJ
-CQkJfQogCQkJfQogCQkJYmZhX2NiX3F1ZXVlX3N0YXR1cyhmY3BvcnQtPmJmYSwgJmNiLT5oY2Jf
-cWUsCi0tIAoxLjkuMQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9s
-aXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
+This patch replaces u32 time storing variable with u64 variable to
+store the 64 bit seconds value returned by ktime_get_real_seconds().
+
+A cast to time_t has also been added to the assignment statement
+which will cause a build error when we eventually remove the time_t
+definition from the kernel.
+
+We can't change the layout of the structure retrieving profile
+data as it is being used in a vendor specific command that can get
+sent from user space.
+
+Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+---
+ drivers/scsi/bfa/bfa_fcpim.c | 6 +++---
+ drivers/scsi/bfa/bfa_fcpim.h | 4 ++--
+ drivers/scsi/bfa/bfad_bsg.c  | 6 +++---
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index d7385d1..6730340 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -468,7 +468,7 @@ bfa_ioim_profile_start(struct bfa_ioim_s *ioim)
+ }
+ 
+ bfa_status_t
+-bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time)
++bfa_fcpim_profile_on(struct bfa_s *bfa, u64 time)
+ {
+ 	struct bfa_itnim_s *itnim;
+ 	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+@@ -1478,8 +1478,8 @@ bfa_itnim_get_ioprofile(struct bfa_itnim_s *itnim,
+ 		return BFA_STATUS_IOPROFILE_OFF;
+ 
+ 	itnim->ioprofile.index = BFA_IOBUCKET_MAX;
+-	itnim->ioprofile.io_profile_start_time =
+-				bfa_io_profile_start_time(itnim->bfa);
++	itnim->ioprofile.io_profile_start_time = (u32)(time_t)
++					bfa_io_profile_start_time(itnim->bfa);
+ 	itnim->ioprofile.clock_res_mul = bfa_io_lat_clock_res_mul;
+ 	itnim->ioprofile.clock_res_div = bfa_io_lat_clock_res_div;
+ 	*ioprofile = itnim->ioprofile;
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index e693af6..274e3af 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -135,7 +135,7 @@ struct bfa_fcpim_s {
+ 	struct bfa_fcpim_del_itn_stats_s del_itn_stats;
+ 	bfa_boolean_t		ioredirect;
+ 	bfa_boolean_t		io_profile;
+-	u32			io_profile_start_time;
++	u64			io_profile_start_time;
+ 	bfa_fcpim_profile_t     profile_comp;
+ 	bfa_fcpim_profile_t     profile_start;
+ };
+@@ -309,7 +309,7 @@ bfa_status_t bfa_fcpim_port_iostats(struct bfa_s *bfa,
+ 			struct bfa_itnim_iostats_s *stats, u8 lp_tag);
+ void bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *fcpim_stats,
+ 			struct bfa_itnim_iostats_s *itnim_stats);
+-bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time);
++bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, u64 time);
+ bfa_status_t bfa_fcpim_profile_off(struct bfa_s *bfa);
+ 
+ #define bfa_fcpim_ioredirect_enabled(__bfa)				\
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 023b9d4..92f5b0f 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -15,6 +15,7 @@
+  * General Public License for more details.
+  */
+ 
++#include <linux/ktime.h>
+ #include <linux/uaccess.h>
+ #include "bfad_drv.h"
+ #include "bfad_im.h"
+@@ -2093,13 +2094,12 @@ bfad_iocmd_fcpim_cfg_profile(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
+ {
+ 	struct bfa_bsg_fcpim_profile_s *iocmd =
+ 				(struct bfa_bsg_fcpim_profile_s *)cmd;
+-	struct timeval  tv;
+ 	unsigned long	flags;
+ 
+-	do_gettimeofday(&tv);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	if (v_cmd == IOCMD_FCPIM_PROFILE_ON)
+-		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa, tv.tv_sec);
++		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa,
++						ktime_get_real_seconds());
+ 	else if (v_cmd == IOCMD_FCPIM_PROFILE_OFF)
+ 		iocmd->status = bfa_fcpim_profile_off(&bfad->bfa);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+-- 
+1.9.1
