@@ -1,47 +1,65 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
- [sr_mod]
-Date: Sun, 10 Jan 2016 10:32:43 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1601101029120.8000-100000@netrider.rowland.org>
-References: <CAGKbab_BpwV-8pFW+pbbzBd1i_QntjzpApZ7oWNQDKHDnoyqRw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2 0/4] target: Close se_node_acl lookup race
+Date: Sun, 10 Jan 2016 20:28:40 +0000
+Message-ID: <1452457724-10629-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:60328 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755212AbcAJPcp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2016 10:32:45 -0500
-In-Reply-To: <CAGKbab_BpwV-8pFW+pbbzBd1i_QntjzpApZ7oWNQDKHDnoyqRw@mail.gmail.com>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33532 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757265AbcAJUay (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2016 15:30:54 -0500
+Received: by mail-oi0-f49.google.com with SMTP id w75so9597188oie.0
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Jan 2016 12:30:53 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Erich Schubert <erich@debian.org>
-Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Alexandre Rossi <alexandre.rossi@gmail.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Sun, 10 Jan 2016, Erich Schubert wrote:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> Hi all,
-> 4.4-rc8 does not fix the problem for me.
-> Anything beyond 4.1.0 remains unable to boot this computer.
-> 
-> Unfortunately, because the error occurs during early early SCSI
-> initialization, I do not have easy access to the log - no disk, no
-> network.
-> It happens during SATA initialization: "scsi_runtime_resume".
+Hi folks,
 
-You didn't include any debugging information.  However...
+This -v2 series addresses a long standing race between
+fabric driver se_node_acl lookup + pointer dereference
+during session login, and when kref_get() of ->acl_kref
+actually happens within __transport_register_session()
+code. 
 
-> So my back trace looks different than Alex in
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?msg=42;filename=scsi-null-pointer-dereference.log;bug=801925;att=1
-> but like the one Paul is seeing:
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?msg=15;filename=20151020_006.jpg;bug=801925;att=3
+Also as reported earlier by HCH, go ahead and convert
+core_tpg_set_initiator_node_queue_depth() to use proper
+se_node_acl->se_acl_list -> se_session dereference,
+following how core_tpg_del_initiator_node_acl() works
+for invoking explicit session shutdown.
 
-The information in that bug report says that the failure happens in
-sr_runtime_resume, not in scsi_runtime_resume.  Compare with the
-Subject: line in this email thread.
+Please review,
 
-> I will try to do a photo next time, too.
+--nab
 
-If I send you a patch, can you build and test it?
+-v2 changes:
+  - Have tcm_fc/ib_srpt conversion preceed other changes
+  - Fix demo-mode acl regression with generate_node_acls=1
+  - Fix set_initiator_node_queue_depth session reference
+    usage.
+  - Add ib_srpt hack to avoid potential user-space
+    backwards-compat issue.
 
-Alan Stern
+Nicholas Bellinger (4):
+  tcm_fc: Convert acl lookup to modern get_initiator_node_acl usage
+  ib_srpt: Convert acl lookup to modern get_initiator_node_acl usage
+  target: Fix change depth se_session reference usage
+  target: Obtain se_node_acl->acl_kref during get_initiator_node_acl
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |  95 +++++-----------
+ drivers/infiniband/ulp/srpt/ib_srpt.h        |   2 -
+ drivers/target/iscsi/iscsi_target_configfs.c |  14 ++-
+ drivers/target/iscsi/iscsi_target_tpg.c      |  10 --
+ drivers/target/iscsi/iscsi_target_tpg.h      |   2 -
+ drivers/target/target_core_tpg.c             | 161 +++++++++++----------------
+ drivers/target/target_core_transport.c       |  22 ++--
+ drivers/target/tcm_fc/tfc_conf.c             |  26 ++---
+ drivers/target/tcm_fc/tfc_sess.c             |  18 +--
+ include/target/target_core_fabric.h          |   4 +-
+ 10 files changed, 137 insertions(+), 217 deletions(-)
+
+-- 
+1.9.1
 
