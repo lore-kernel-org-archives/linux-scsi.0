@@ -1,121 +1,183 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-for-4.6 1/6] target: Add target_alloc_session() helper function
-Date: Sun, 10 Jan 2016 20:44:23 +0000
-Message-ID: <1452458668-11034-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH-for-4.6 3/6] vhost/scsi: Convert to target_alloc_session usage
+Date: Sun, 10 Jan 2016 20:44:25 +0000
+Message-ID: <1452458668-11034-4-git-send-email-nab@daterainc.com>
 References: <1452458668-11034-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:35526 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757348AbcAJUql (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2016 15:46:41 -0500
-Received: by mail-ob0-f182.google.com with SMTP id py5so17099864obc.2
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Jan 2016 12:46:41 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1452458668-11034-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, "Michael S. Tsirkin" <mst@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Based on HCH's original patch, this adds a full version to
-support percpu-ida tag pre-allocation and callback function
-pointer into fabric driver code to complete session setup.
-
-Reported-by: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Andy Grover <agrover@redhat.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c | 55 ++++++++++++++++++++++++++++++++++
- include/target/target_core_fabric.h    |  6 ++++
- 2 files changed, 61 insertions(+)
+ drivers/vhost/scsi.c | 99 ++++++++++++++++++++++------------------------------
+ 1 file changed, 41 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index c5035b9..fd4404f6 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -374,6 +374,61 @@ void transport_register_session(
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 29cfc57..cd5f20f 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -1664,8 +1664,7 @@ static void vhost_scsi_port_unlink(struct se_portal_group *se_tpg,
+ 	mutex_unlock(&vhost_scsi_mutex);
  }
- EXPORT_SYMBOL(transport_register_session);
  
-+struct se_session *
-+target_alloc_session(struct se_portal_group *tpg,
-+		     unsigned int tag_num, unsigned int tag_size,
-+		     enum target_prot_op prot_op,
-+		     const char *initiatorname, void *private,
-+		     int (*callback)(struct se_portal_group *,
-+				     struct se_session *, void *))
-+{
-+	struct se_session *sess;
-+
-+	if (tag_num != 0 && !tag_size) {
-+		pr_err("target_alloc_session called with percpu-ida tag_num:"
-+		       " %u, but zero tag_size\n", tag_num);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	if (!tag_num && tag_size) {
-+		pr_err("target_alloc_session called with percpu-ida tag_size:"
-+		       " %u, but zero tag_num\n", tag_size);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	/*
-+	 * If the fabric driver is using percpu-ida based pre allocation
-+	 * of I/O descriptor tags, go ahead and perform that setup now..
-+	 */
-+	if (tag_num != 0)
-+		sess = transport_init_session_tags(tag_num, tag_size, prot_op);
-+	else
-+		sess = transport_init_session(prot_op);
-+
-+	if (IS_ERR(sess))
-+		return sess;
-+
-+	sess->se_node_acl = core_tpg_check_initiator_node_acl(tpg,
-+					(unsigned char *)initiatorname);
-+	if (!sess->se_node_acl) {
-+		transport_free_session(sess);
-+		return ERR_PTR(-EACCES);
-+	}
-+	/*
-+	 * Go ahead and perform any remaining fabric setup that is
-+	 * required before transport_register_session().
-+	 */
-+	if (callback != NULL) {
-+		int rc = callback(tpg, sess, private);
-+		if (rc) {
-+			transport_free_session(sess);
-+			return ERR_PTR(rc);
-+		}
-+	}
-+
-+	transport_register_session(tpg, sess->se_node_acl, sess, private);
-+	return sess;
-+}
-+EXPORT_SYMBOL(target_alloc_session);
-+
- static void target_release_session(struct kref *kref)
+-static void vhost_scsi_free_cmd_map_res(struct vhost_scsi_nexus *nexus,
+-				       struct se_session *se_sess)
++static void vhost_scsi_free_cmd_map_res(struct se_session *se_sess)
  {
- 	struct se_session *se_sess = container_of(kref,
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index dc6b09e..7d59273 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -108,6 +108,12 @@ void target_unregister_template(const struct target_core_fabric_ops *fo);
- int target_depend_item(struct config_item *item);
- void target_undepend_item(struct config_item *item);
+ 	struct vhost_scsi_cmd *tv_cmd;
+ 	unsigned int i;
+@@ -1721,98 +1720,82 @@ static struct configfs_attribute *vhost_scsi_tpg_attrib_attrs[] = {
+ 	NULL,
+ };
  
-+struct se_session *target_alloc_session(struct se_portal_group *,
-+		unsigned int, unsigned int, enum target_prot_op prot_op,
-+		const char *, void *,
-+		int (*callback)(struct se_portal_group *,
-+				struct se_session *, void *));
+-static int vhost_scsi_make_nexus(struct vhost_scsi_tpg *tpg,
+-				const char *name)
++static int vhost_scsi_nexus_cb(struct se_portal_group *se_tpg,
++			       struct se_session *se_sess, void *p)
+ {
+-	struct se_portal_group *se_tpg;
+-	struct se_session *se_sess;
+-	struct vhost_scsi_nexus *tv_nexus;
+ 	struct vhost_scsi_cmd *tv_cmd;
+ 	unsigned int i;
+ 
+-	mutex_lock(&tpg->tv_tpg_mutex);
+-	if (tpg->tpg_nexus) {
+-		mutex_unlock(&tpg->tv_tpg_mutex);
+-		pr_debug("tpg->tpg_nexus already exists\n");
+-		return -EEXIST;
+-	}
+-	se_tpg = &tpg->se_tpg;
+-
+-	tv_nexus = kzalloc(sizeof(struct vhost_scsi_nexus), GFP_KERNEL);
+-	if (!tv_nexus) {
+-		mutex_unlock(&tpg->tv_tpg_mutex);
+-		pr_err("Unable to allocate struct vhost_scsi_nexus\n");
+-		return -ENOMEM;
+-	}
+-	/*
+-	 *  Initialize the struct se_session pointer and setup tagpool
+-	 *  for struct vhost_scsi_cmd descriptors
+-	 */
+-	tv_nexus->tvn_se_sess = transport_init_session_tags(
+-					VHOST_SCSI_DEFAULT_TAGS,
+-					sizeof(struct vhost_scsi_cmd),
+-					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS);
+-	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+-		mutex_unlock(&tpg->tv_tpg_mutex);
+-		kfree(tv_nexus);
+-		return -ENOMEM;
+-	}
+-	se_sess = tv_nexus->tvn_se_sess;
+ 	for (i = 0; i < VHOST_SCSI_DEFAULT_TAGS; i++) {
+ 		tv_cmd = &((struct vhost_scsi_cmd *)se_sess->sess_cmd_map)[i];
+ 
+ 		tv_cmd->tvc_sgl = kzalloc(sizeof(struct scatterlist) *
+ 					VHOST_SCSI_PREALLOC_SGLS, GFP_KERNEL);
+ 		if (!tv_cmd->tvc_sgl) {
+-			mutex_unlock(&tpg->tv_tpg_mutex);
+ 			pr_err("Unable to allocate tv_cmd->tvc_sgl\n");
+ 			goto out;
+ 		}
+ 
+ 		tv_cmd->tvc_upages = kzalloc(sizeof(struct page *) *
+-					VHOST_SCSI_PREALLOC_UPAGES, GFP_KERNEL);
++				VHOST_SCSI_PREALLOC_UPAGES, GFP_KERNEL);
+ 		if (!tv_cmd->tvc_upages) {
+-			mutex_unlock(&tpg->tv_tpg_mutex);
+ 			pr_err("Unable to allocate tv_cmd->tvc_upages\n");
+ 			goto out;
+ 		}
+ 
+ 		tv_cmd->tvc_prot_sgl = kzalloc(sizeof(struct scatterlist) *
+-					VHOST_SCSI_PREALLOC_PROT_SGLS, GFP_KERNEL);
++				VHOST_SCSI_PREALLOC_PROT_SGLS, GFP_KERNEL);
+ 		if (!tv_cmd->tvc_prot_sgl) {
+-			mutex_unlock(&tpg->tv_tpg_mutex);
+ 			pr_err("Unable to allocate tv_cmd->tvc_prot_sgl\n");
+ 			goto out;
+ 		}
+ 	}
++	return 0;
++out:
++	vhost_scsi_free_cmd_map_res(se_sess);
++	return -ENOMEM;
++}
 +
- struct se_session *transport_init_session(enum target_prot_op);
- int transport_alloc_session_tags(struct se_session *, unsigned int,
- 		unsigned int);
++static int vhost_scsi_make_nexus(struct vhost_scsi_tpg *tpg,
++				const char *name)
++{
++	struct se_portal_group *se_tpg;
++	struct vhost_scsi_nexus *tv_nexus;
++
++	mutex_lock(&tpg->tv_tpg_mutex);
++	if (tpg->tpg_nexus) {
++		mutex_unlock(&tpg->tv_tpg_mutex);
++		pr_debug("tpg->tpg_nexus already exists\n");
++		return -EEXIST;
++	}
++	se_tpg = &tpg->se_tpg;
++
++	tv_nexus = kzalloc(sizeof(struct vhost_scsi_nexus), GFP_KERNEL);
++	if (!tv_nexus) {
++		mutex_unlock(&tpg->tv_tpg_mutex);
++		pr_err("Unable to allocate struct vhost_scsi_nexus\n");
++		return -ENOMEM;
++	}
+ 	/*
+ 	 * Since we are running in 'demo mode' this call with generate a
+ 	 * struct se_node_acl for the vhost_scsi struct se_portal_group with
+ 	 * the SCSI Initiator port name of the passed configfs group 'name'.
+ 	 */
+-	tv_nexus->tvn_se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
+-				se_tpg, (unsigned char *)name);
+-	if (!tv_nexus->tvn_se_sess->se_node_acl) {
++	tv_nexus->tvn_se_sess = target_alloc_session(&tpg->se_tpg,
++					VHOST_SCSI_DEFAULT_TAGS,
++					sizeof(struct vhost_scsi_cmd),
++					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
++					(unsigned char *)name, tv_nexus,
++					vhost_scsi_nexus_cb);
++	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+ 		mutex_unlock(&tpg->tv_tpg_mutex);
+-		pr_debug("core_tpg_check_initiator_node_acl() failed"
+-				" for %s\n", name);
+-		goto out;
++		kfree(tv_nexus);
++		return -ENOMEM;
+ 	}
+-	/*
+-	 * Now register the TCM vhost virtual I_T Nexus as active.
+-	 */
+-	transport_register_session(se_tpg, tv_nexus->tvn_se_sess->se_node_acl,
+-			tv_nexus->tvn_se_sess, tv_nexus);
+ 	tpg->tpg_nexus = tv_nexus;
+ 
+ 	mutex_unlock(&tpg->tv_tpg_mutex);
+ 	return 0;
+-
+-out:
+-	vhost_scsi_free_cmd_map_res(tv_nexus, se_sess);
+-	transport_free_session(se_sess);
+-	kfree(tv_nexus);
+-	return -ENOMEM;
+ }
+ 
+ static int vhost_scsi_drop_nexus(struct vhost_scsi_tpg *tpg)
+@@ -1853,7 +1836,7 @@ static int vhost_scsi_drop_nexus(struct vhost_scsi_tpg *tpg)
+ 		" %s Initiator Port: %s\n", vhost_scsi_dump_proto_id(tpg->tport),
+ 		tv_nexus->tvn_se_sess->se_node_acl->initiatorname);
+ 
+-	vhost_scsi_free_cmd_map_res(tv_nexus, se_sess);
++	vhost_scsi_free_cmd_map_res(se_sess);
+ 	/*
+ 	 * Release the SCSI I_T Nexus to the emulated vhost Target Port
+ 	 */
 -- 
 1.9.1
-
