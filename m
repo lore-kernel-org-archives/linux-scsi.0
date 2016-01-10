@@ -1,34 +1,47 @@
-From: Gloria Hood <Gloria.Hood@greene.k12.ga.us>
-Subject: Letzte Benachrichtigung!!!!
-Date: Sun, 10 Jan 2016 08:30:03 -0500
-Message-ID: <6433AEE965FF76469C6CC58BE20EAE2C08587054A74A__47985.8067621992$1452433052$gmane$org@mail.greene.k12.ga.us>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
+ [sr_mod]
+Date: Sun, 10 Jan 2016 10:32:43 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1601101029120.8000-100000@netrider.rowland.org>
+References: <CAGKbab_BpwV-8pFW+pbbzBd1i_QntjzpApZ7oWNQDKHDnoyqRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.greene.k12.ga.us ([168.8.117.25]:54241 "EHLO
-	mail.greene.k12.ga.us" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756152AbcAJNga convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2016 08:36:30 -0500
-Content-Language: en-US
+Received: from netrider.rowland.org ([192.131.102.5]:60328 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755212AbcAJPcp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jan 2016 10:32:45 -0500
+In-Reply-To: <CAGKbab_BpwV-8pFW+pbbzBd1i_QntjzpApZ7oWNQDKHDnoyqRw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Erich Schubert <erich@debian.org>
+Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Alexandre Rossi <alexandre.rossi@gmail.com>
 
-Letzte Benachrichtigung!!!!
-Ihre E-Mail-ID hat nur gewonnen (=80750,000,000) in den laufenden Guinn=
-ess Fortune Interanational Spanien Award E-lotterie Award mit Lucky Num=
-bers 7/11/15/24/43 und REF:ES/9520X2/78 und Ticket:Zahlen:06/18/19/34/0=
-1/08.
-Ihre e-mail Adresse ausgew=E4hlt wurde basierend auf einer Internet Zuf=
-=E4llige Auswahl =DCbung,Sie wurden von der Firma Guinness.
-Weitere Informationen und Antrag verfahren Kontakt
-ONLINE-Koordinator.
-Barr. Carlos Moreno
-Tel.: 34-632-593-469
-E-Mail:Financetrust@netscape.net
-gratulieren.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, 10 Jan 2016, Erich Schubert wrote:
+
+> Hi all,
+> 4.4-rc8 does not fix the problem for me.
+> Anything beyond 4.1.0 remains unable to boot this computer.
+> 
+> Unfortunately, because the error occurs during early early SCSI
+> initialization, I do not have easy access to the log - no disk, no
+> network.
+> It happens during SATA initialization: "scsi_runtime_resume".
+
+You didn't include any debugging information.  However...
+
+> So my back trace looks different than Alex in
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?msg=42;filename=scsi-null-pointer-dereference.log;bug=801925;att=1
+> but like the one Paul is seeing:
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?msg=15;filename=20151020_006.jpg;bug=801925;att=3
+
+The information in that bug report says that the failure happens in
+sr_runtime_resume, not in scsi_runtime_resume.  Compare with the
+Subject: line in this email thread.
+
+> I will try to do a photo next time, too.
+
+If I send you a patch, can you build and test it?
+
+Alan Stern
+
