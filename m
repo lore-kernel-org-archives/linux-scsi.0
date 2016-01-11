@@ -1,188 +1,53 @@
 From: mchristi@redhat.com
-Subject: [PATCH 12/35] gfs2: set bi_op to REQ_OP
-Date: Mon, 11 Jan 2016 14:21:10 -0600
-Message-ID: <1452543693-4440-13-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 29/35] ide cd: do not set REQ_WRITE on
+	requests.
+Date: Mon, 11 Jan 2016 14:21:27 -0600
+Message-ID: <1452543693-4440-30-git-send-email-mchristi@redhat.com>
 References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has gfs2 set the bio bi_op to a REQ_OP, and
-rq_flag_bits to bi_rw.
+The block layer will set the correct READ/WRITE operation flags/fields
+when creating a request, so there is not need for drivers to set the
+REQ_WRITE flag.
 
 This patch is compile tested only.
 
-v2:
-
-Bob, I did not add your signed off, because there was
-the gfs2_submit_bhs changes since last time you reviewed
-it.
-
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- fs/gfs2/log.c        |  8 ++++----
- fs/gfs2/lops.c       | 12 +++++++-----
- fs/gfs2/lops.h       |  2 +-
- fs/gfs2/meta_io.c    |  8 +++++---
- fs/gfs2/ops_fstype.c |  1 +
- 5 files changed, 18 insertions(+), 13 deletions(-)
+ drivers/ide/ide-cd_ioctl.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
-index 0ff028c..e58ccef0 100644
---- a/fs/gfs2/log.c
-+++ b/fs/gfs2/log.c
-@@ -657,7 +657,7 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
- 	struct gfs2_log_header *lh;
- 	unsigned int tail;
- 	u32 hash;
--	int rw = WRITE_FLUSH_FUA | REQ_META;
-+	int op_flags = WRITE_FLUSH_FUA | REQ_META;
- 	struct page *page = mempool_alloc(gfs2_page_pool, GFP_NOIO);
- 	enum gfs2_freeze_state state = atomic_read(&sdp->sd_freeze_state);
- 	lh = page_address(page);
-@@ -682,12 +682,12 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
- 	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags)) {
- 		gfs2_ordered_wait(sdp);
- 		log_flush_wait(sdp);
--		rw = WRITE_SYNC | REQ_META | REQ_PRIO;
-+		op_flags = WRITE_SYNC | REQ_META | REQ_PRIO;
- 	}
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 474173e..5887a7a 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -459,9 +459,6 @@ int ide_cdrom_packet(struct cdrom_device_info *cdi,
+ 	   layer. the packet must be complete, as we do not
+ 	   touch it at all. */
  
- 	sdp->sd_log_idle = (tail == sdp->sd_log_flush_head);
- 	gfs2_log_write_page(sdp, page);
--	gfs2_log_flush_bio(sdp, rw);
-+	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, op_flags);
- 	log_flush_wait(sdp);
+-	if (cgc->data_direction == CGC_DATA_WRITE)
+-		flags |= REQ_WRITE;
+-
+ 	if (cgc->sense)
+ 		memset(cgc->sense, 0, sizeof(struct request_sense));
  
- 	if (sdp->sd_log_tail != tail)
-@@ -738,7 +738,7 @@ void gfs2_log_flush(struct gfs2_sbd *sdp, struct gfs2_glock *gl,
- 
- 	gfs2_ordered_write(sdp);
- 	lops_before_commit(sdp, tr);
--	gfs2_log_flush_bio(sdp, WRITE);
-+	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 
- 	if (sdp->sd_log_head != sdp->sd_log_flush_head) {
- 		log_flush_wait(sdp);
-diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-index ce28242..c1099b4 100644
---- a/fs/gfs2/lops.c
-+++ b/fs/gfs2/lops.c
-@@ -230,17 +230,19 @@ static void gfs2_end_log_write(struct bio *bio)
- /**
-  * gfs2_log_flush_bio - Submit any pending log bio
-  * @sdp: The superblock
-- * @rw: The rw flags
-+ * @op: REQ_OP
-+ * @op_flags: rq_flag_bits
-  *
-  * Submit any pending part-built or full bio to the block device. If
-  * there is no pending bio, then this is a no-op.
-  */
- 
--void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw)
-+void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags)
- {
- 	if (sdp->sd_log_bio) {
- 		atomic_inc(&sdp->sd_log_in_flight);
--		sdp->sd_log_bio->bi_rw = rw;
-+		sdp->sd_log_bio->bi_op = op;
-+		sdp->sd_log_bio->bi_rw = op_flags;
- 		submit_bio(sdp->sd_log_bio);
- 		sdp->sd_log_bio = NULL;
- 	}
-@@ -300,7 +302,7 @@ static struct bio *gfs2_log_get_bio(struct gfs2_sbd *sdp, u64 blkno)
- 		nblk >>= sdp->sd_fsb2bb_shift;
- 		if (blkno == nblk)
- 			return bio;
--		gfs2_log_flush_bio(sdp, WRITE);
-+		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 	}
- 
- 	return gfs2_log_alloc_bio(sdp, blkno);
-@@ -329,7 +331,7 @@ static void gfs2_log_write(struct gfs2_sbd *sdp, struct page *page,
- 	bio = gfs2_log_get_bio(sdp, blkno);
- 	ret = bio_add_page(bio, page, size, offset);
- 	if (ret == 0) {
--		gfs2_log_flush_bio(sdp, WRITE);
-+		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 		bio = gfs2_log_alloc_bio(sdp, blkno);
- 		ret = bio_add_page(bio, page, size, offset);
- 		WARN_ON(ret == 0);
-diff --git a/fs/gfs2/lops.h b/fs/gfs2/lops.h
-index a65a7ba..e529f53 100644
---- a/fs/gfs2/lops.h
-+++ b/fs/gfs2/lops.h
-@@ -27,7 +27,7 @@ extern const struct gfs2_log_operations gfs2_databuf_lops;
- 
- extern const struct gfs2_log_operations *gfs2_log_ops[];
- extern void gfs2_log_write_page(struct gfs2_sbd *sdp, struct page *page);
--extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw);
-+extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags);
- extern void gfs2_pin(struct gfs2_sbd *sdp, struct buffer_head *bh);
- 
- static inline unsigned int buf_limit(struct gfs2_sbd *sdp)
-diff --git a/fs/gfs2/meta_io.c b/fs/gfs2/meta_io.c
-index 96c8140..f790f38 100644
---- a/fs/gfs2/meta_io.c
-+++ b/fs/gfs2/meta_io.c
-@@ -213,7 +213,8 @@ static void gfs2_meta_read_endio(struct bio *bio)
-  * Submit several consecutive buffer head I/O requests as a single bio I/O
-  * request.  (See submit_bh_wbc.)
-  */
--static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
-+static void gfs2_submit_bhs(int op, int op_flags, struct buffer_head *bhs[],
-+			    int num)
- {
- 	struct buffer_head *bh = bhs[0];
- 	struct bio *bio;
-@@ -230,7 +231,8 @@ static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
- 		bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
- 	}
- 	bio->bi_end_io = gfs2_meta_read_endio;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	submit_bio(bio);
- }
- 
-@@ -281,7 +283,7 @@ int gfs2_meta_read(struct gfs2_glock *gl, u64 blkno, int flags,
- 		}
- 	}
- 
--	gfs2_submit_bhs(READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
-+	gfs2_submit_bhs(REQ_OP_READ, READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
- 	if (!(flags & DIO_WAIT))
- 		return 0;
- 
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index 4872a61..f3e1e0e 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -246,6 +246,7 @@ static int gfs2_read_super(struct gfs2_sbd *sdp, sector_t sector, int silent)
- 
- 	bio->bi_end_io = end_bio_io_page;
- 	bio->bi_private = page;
-+	bio->bi_op = REQ_OP_READ;
- 	bio->bi_rw = READ_SYNC | REQ_META;
- 	submit_bio(bio);
- 	wait_on_page_locked(page);
 -- 
 1.8.3.1
