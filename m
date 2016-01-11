@@ -1,188 +1,204 @@
 From: mchristi@redhat.com
-Subject: [PATCH 15/35] mpage: set bi_op to REQ_OP
-Date: Mon, 11 Jan 2016 14:21:13 -0600
-Message-ID: <1452543693-4440-16-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 32/35] block: shrink bi_rw and bi_op
+Date: Mon, 11 Jan 2016 14:21:30 -0600
+Message-ID: <1452543693-4440-33-git-send-email-mchristi@redhat.com>
 References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the mpage.c code set the bio bi_op to a REQ_OP, and
-rq_flag_bits to bi_rw.
-
-I have run xfstest with xfs, but I am not sure
-if I have stressed these code paths well.
+There is no need for bi_op/op and bi_rw to be so large
+now, so this patch shrinks them.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- fs/mpage.c | 41 +++++++++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+ block/blk-core.c           |  2 +-
+ drivers/md/dm-flakey.c     |  2 +-
+ drivers/md/raid5.c         | 13 +++++++------
+ fs/btrfs/check-integrity.c |  4 ++--
+ fs/btrfs/inode.c           |  2 +-
+ include/linux/bio.h        | 13 ++-----------
+ include/linux/blk_types.h  | 11 +++--------
+ include/linux/blkdev.h     |  2 +-
+ 8 files changed, 18 insertions(+), 31 deletions(-)
 
-diff --git a/fs/mpage.c b/fs/mpage.c
-index d9adde2..006a3ef 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -55,11 +55,12 @@ static void mpage_end_io(struct bio *bio)
- 	bio_put(bio);
- }
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b3db65c..1681f7e 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1853,7 +1853,7 @@ static void handle_bad_sector(struct bio *bio)
+ 	char b[BDEVNAME_SIZE];
  
--static struct bio *mpage_bio_submit(int rw, struct bio *bio)
-+static struct bio *mpage_bio_submit(int op, int op_flags, struct bio *bio)
- {
- 	bio->bi_end_io = mpage_end_io;
--	bio->bi_rw = rw;
--	guard_bio_eod(rw, bio);
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
-+	guard_bio_eod(op, bio);
- 	submit_bio(bio);
- 	return NULL;
- }
-@@ -269,7 +270,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && (*last_block_in_bio != blocks[0] - 1))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	printk(KERN_INFO "attempt to access beyond end of device\n");
+-	printk(KERN_INFO "%s: rw=%d,%ld, want=%Lu, limit=%Lu\n",
++	printk(KERN_INFO "%s: rw=%d,%u, want=%Lu, limit=%Lu\n",
+ 			bdevname(bio->bi_bdev, b),
+ 			bio->bi_op, bio->bi_rw,
+ 			(unsigned long long)bio_end_sector(bio),
+diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
+index 09e2afc..b831226 100644
+--- a/drivers/md/dm-flakey.c
++++ b/drivers/md/dm-flakey.c
+@@ -266,7 +266,7 @@ static void corrupt_bio_data(struct bio *bio, struct flakey_c *fc)
+ 		data[fc->corrupt_bio_byte - 1] = fc->corrupt_bio_value;
  
- alloc_new:
- 	if (bio == NULL) {
-@@ -286,7 +287,7 @@ alloc_new:
+ 		DMDEBUG("Corrupting data bio=%p by writing %u to byte %u "
+-			"(rw=%c bi_rw=%lu bi_sector=%llu cur_bytes=%u)\n",
++			"(rw=%c bi_rw=%u bi_sector=%llu cur_bytes=%u)\n",
+ 			bio, fc->corrupt_bio_value, fc->corrupt_bio_byte,
+ 			(bio_data_dir(bio) == WRITE) ? 'w' : 'r', bio->bi_rw,
+ 			(unsigned long long)bio->bi_iter.bi_sector, bio_bytes);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 1a5edba..792366c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1015,9 +1015,9 @@ again:
+ 				: raid5_end_read_request;
+ 			bi->bi_private = sh;
  
- 	length = first_hole << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 		goto alloc_new;
- 	}
+-			pr_debug("%s: for %llu schedule op %ld on disc %d\n",
++			pr_debug("%s: for %llu schedule op %d,%u on disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+-				bi->bi_rw, i);
++				bi->bi_op, bi->bi_rw, i);
+ 			atomic_inc(&sh->count);
+ 			if (sh != head_sh)
+ 				atomic_inc(&head_sh->count);
+@@ -1067,10 +1067,10 @@ again:
+ 			rbi->bi_end_io = raid5_end_write_request;
+ 			rbi->bi_private = sh;
  
-@@ -294,7 +295,7 @@ alloc_new:
- 	nblocks = map_bh->b_size >> blkbits;
- 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
- 	    (first_hole != blocks_per_page))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	else
- 		*last_block_in_bio = blocks[blocks_per_page - 1];
- out:
-@@ -302,7 +303,7 @@ out:
- 
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	if (!PageUptodate(page))
- 	        block_read_full_page(page, get_block);
- 	else
-@@ -384,7 +385,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
- 	}
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
- }
- EXPORT_SYMBOL(mpage_readpages);
-@@ -405,7 +406,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
- 	bio = do_mpage_readpage(bio, page, 1, &last_block_in_bio,
- 			&map_bh, &first_logical_block, get_block, gfp);
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
- }
- EXPORT_SYMBOL(mpage_readpage);
-@@ -486,7 +487,7 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
- 	struct buffer_head map_bh;
- 	loff_t i_size = i_size_read(inode);
- 	int ret = 0;
--	int wr = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
-+	int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : 0);
- 
- 	if (page_has_buffers(page)) {
- 		struct buffer_head *head = page_buffers(page);
-@@ -595,7 +596,7 @@ page_is_mapped:
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- alloc_new:
- 	if (bio == NULL) {
-@@ -622,7 +623,7 @@ alloc_new:
- 	wbc_account_io(wbc, page, PAGE_SIZE);
- 	length = first_unmapped << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		goto alloc_new;
- 	}
- 
-@@ -632,7 +633,7 @@ alloc_new:
- 	set_page_writeback(page);
- 	unlock_page(page);
- 	if (boundary || (first_unmapped != blocks_per_page)) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		if (boundary_block) {
- 			write_boundary_block(boundary_bdev,
- 					boundary_block, 1 << blkbits);
-@@ -644,7 +645,7 @@ alloc_new:
- 
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- 	if (mpd->use_writepage) {
- 		ret = mapping->a_ops->writepage(page, wbc);
-@@ -701,9 +702,9 @@ mpage_writepages(struct address_space *mapping,
- 
- 		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
- 		if (mpd.bio) {
--			int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--				  WRITE_SYNC : WRITE);
--			mpage_bio_submit(wr, mpd.bio);
-+			int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+				  WRITE_SYNC : 0);
-+			mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+-			pr_debug("%s: for %llu schedule op %ld on "
++			pr_debug("%s: for %llu schedule op %d,%u on "
+ 				 "replacement disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+-				rbi->bi_rw, i);
++				rbi->bi_op, rbi->bi_rw, i);
+ 			atomic_inc(&sh->count);
+ 			if (sh != head_sh)
+ 				atomic_inc(&head_sh->count);
+@@ -1102,8 +1102,9 @@ again:
+ 		if (!rdev && !rrdev) {
+ 			if (op_is_write(op))
+ 				set_bit(STRIPE_DEGRADED, &sh->state);
+-			pr_debug("skip op %ld on disc %d for sector %llu\n",
+-				bi->bi_rw, i, (unsigned long long)sh->sector);
++			pr_debug("skip op %d,%u on disc %d for sector %llu\n",
++				 bi->bi_op, bi->bi_rw, i,
++				 (unsigned long long)sh->sector);
+ 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
  		}
- 	}
- 	blk_finish_plug(&plug);
-@@ -722,9 +723,9 @@ int mpage_writepage(struct page *page, get_block_t get_block,
- 	};
- 	int ret = __mpage_writepage(page, wbc, &mpd);
- 	if (mpd.bio) {
--		int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--			  WRITE_SYNC : WRITE);
--		mpage_bio_submit(wr, mpd.bio);
-+		int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+			  WRITE_SYNC : 0);
-+		mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
- 	}
- 	return ret;
- }
+diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
+index e409d1f..1623d11 100644
+--- a/fs/btrfs/check-integrity.c
++++ b/fs/btrfs/check-integrity.c
+@@ -2985,7 +2985,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bio(rw=%d,0x%lx, bi_vcnt=%u,"
++			       "submit_bio(rw=%d,0x%x, bi_vcnt=%u,"
+ 			       " bi_sector=%llu (bytenr %llu), bi_bdev=%p)\n",
+ 			       bio->bi_op, bio->bi_rw, bio->bi_vcnt,
+ 			       (unsigned long long)bio->bi_iter.bi_sector,
+@@ -3028,7 +3028,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bio(rw=%d,0x%lx FLUSH, bdev=%p)\n",
++			       "submit_bio(rw=%d,0x%x FLUSH, bdev=%p)\n",
+ 			       bio->bi_op, bio->bi_rw, bio->bi_bdev);
+ 		if (!dev_state->dummy_block_for_bio_bh_flush.is_iodone) {
+ 			if ((dev_state->state->print_mask &
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index bb35ed2..22404a5 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8061,7 +8061,7 @@ static void btrfs_end_dio_bio(struct bio *bio)
+ 
+ 	if (err)
+ 		btrfs_warn(BTRFS_I(dip->inode)->root->fs_info,
+-			   "direct IO failed ino %llu rw %d,%lu sector %#Lx len %u err no %d",
++			   "direct IO failed ino %llu rw %d,0x%x sector %#Lx len %u err no %d",
+ 			   btrfs_ino(dip->inode), bio->bi_op, bio->bi_rw,
+ 			   (unsigned long long)bio->bi_iter.bi_sector,
+ 			   bio->bi_iter.bi_size, err);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 1e4b3b5..c91afc1 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -44,18 +44,9 @@
+ #define BIO_MAX_SIZE		(BIO_MAX_PAGES << PAGE_CACHE_SHIFT)
+ #define BIO_MAX_SECTORS		(BIO_MAX_SIZE >> 9)
+ 
+-/*
+- * upper 16 bits of bi_rw define the io priority of this bio
+- */
+-#define BIO_PRIO_SHIFT	(8 * sizeof(unsigned long) - IOPRIO_BITS)
+-#define bio_prio(bio)	((bio)->bi_rw >> BIO_PRIO_SHIFT)
++#define bio_prio(bio)		(bio)->bi_ioprio
+ #define bio_prio_valid(bio)	ioprio_valid(bio_prio(bio))
+-
+-#define bio_set_prio(bio, prio)		do {			\
+-	WARN_ON(prio >= (1 << IOPRIO_BITS));			\
+-	(bio)->bi_rw &= ((1UL << BIO_PRIO_SHIFT) - 1);		\
+-	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
+-} while (0)
++#define bio_set_prio(bio, prio)	((bio)->bi_ioprio = prio)
+ 
+ /*
+  * various member access, note that bio_data should of course not be used
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index b4251ed..498f395 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -48,14 +48,9 @@ struct bio {
+ 	struct block_device	*bi_bdev;
+ 	unsigned int		bi_flags;	/* status, command, etc */
+ 	int			bi_error;
+-	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
+-						 * top bits priority
+-						 */
+-	/*
+-	 * this will be a u8 in the next patches and bi_rw can be shrunk to
+-	 * a u32. For compat in these transistional patches op is a int here.
+-	 */
+-	int			bi_op;		/* REQ_OP */
++	unsigned int		bi_rw;		/* rq_flag_bits */
++	unsigned short		bi_ioprio;
++	u8			bi_op;		/* REQ_OP */
+ 
+ 
+ 	struct bvec_iter	bi_iter;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index bc024c7..83d6f033 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -96,7 +96,7 @@ struct request {
+ 	struct request_queue *q;
+ 	struct blk_mq_ctx *mq_ctx;
+ 
+-	int op;
++	u8 op;
+ 	u64 cmd_flags;
+ 	unsigned cmd_type;
+ 	unsigned long atomic_flags;
 -- 
 1.8.3.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
