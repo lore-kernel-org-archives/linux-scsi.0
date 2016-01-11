@@ -1,132 +1,58 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH 2/2] scsi_proc: Change /proc/scsi/scsi to use bus device iterator
-Date: Mon, 11 Jan 2016 12:28:27 -0500
-Message-ID: <1452533307-30142-3-git-send-email-emilne@redhat.com>
-References: <1452533307-30142-1-git-send-email-emilne@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1452533307-30142-1-git-send-email-emilne@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, martin.petersen@oracle.com, hare@suse.com
+From: Nicholas Krause <xerofoify@gmail.com>
+Subject: [PATCH RESEND] mpt3sas:Fix missing error checks for calls to
+ _transport_phy_reset in mpt3sas_transport.c
+Date: Mon, 11 Jan 2016 14:10:24 -0500
+Message-ID: <1452539424-22916-1-git-send-email-xerofoify@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: nagalakshmi.nandigama@avagotech.com
+Cc: abhijit.mahajan@avagotech.com, sbranden@broadcom.com, martin.petersen@oracle.com, jonmason@broadcom.com, rjui@broadcom.com, JBottomley@odin.com, linux-kernel@vger.kernel.org, sreekanth.reddy@avagotech.com, praveen.krishnamoorthy@avagotech.com, bcm-kernel-feedback-list@broadcom.com, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+This adds the missing error checks and paths for functions that
+call _transport_phy_reset and do not correctly check that the
+call to this particular function has succeeded by returning zero
+in the file, mpt3sas_transport.c.
 
-This prevents crashing due to accessing a removed element on the list,
-the iterator will now hold the correct reference.  It was not sufficient
-to rely on the klist's reference on the containing device object.
-
->From a patch originally developed by David Jeffery <djeffery@redhat.com>
-
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 ---
- drivers/scsi/scsi_proc.c | 49 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 29 insertions(+), 20 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index 251598e..6c1b79d 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -40,6 +40,11 @@
- /* 4K page size, but our output routines, use some slack for overruns */
- #define PROC_BLOCK_SIZE (3*1024)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index ca36d7e..bff5a11 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -1766,7 +1766,7 @@ _transport_phy_enable(struct sas_phy *phy, int enable)
  
-+struct scsi_proc_state {
-+	struct klist_iter iter;
-+	int pos;
-+};
-+
- static struct proc_dir_entry *proc_scsi;
+ 	/* link reset */
+ 	if (enable)
+-		_transport_phy_reset(phy, 0);
++		rc = _transport_phy_reset(phy, 0);
  
- /* Protect sht->present and sht->proc_dir */
-@@ -370,47 +375,50 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
- 	return err;
- }
- 
--static int always_match(struct device *dev, void *data)
--{
--	return 1;
--}
--
--static inline struct device *next_scsi_device(struct device *start)
--{
--	struct device *next = bus_find_device(&scsi_bus_type, start, NULL,
--					      always_match);
--	put_device(start);
--	return next;
--}
--
- static void *scsi_seq_start(struct seq_file *sfile, loff_t *pos)
- {
-+	struct scsi_proc_state *state = sfile->private;
- 	struct device *dev = NULL;
- 	loff_t n = *pos;
-+	int err;
-+
-+	err = bus_device_iter_init(&state->iter, &scsi_bus_type);
-+	if (err < 0)
-+		return ERR_PTR(err);
- 
--	while ((dev = next_scsi_device(dev))) {
-+	while ((dev = bus_device_iter_next(&state->iter))) {
- 		if (!n--)
- 			break;
--		sfile->private++;
-+		put_device(dev);
-+		state->pos++;
+  out:
+ 	kfree(sas_iounit_pg1);
+@@ -1870,7 +1870,9 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
  	}
- 	return dev;
- }
  
- static void *scsi_seq_next(struct seq_file *sfile, void *v, loff_t *pos)
- {
-+	struct scsi_proc_state *state = sfile->private;
-+
- 	(*pos)++;
--	sfile->private++;
--	return next_scsi_device(v);
-+	put_device(v);
-+	state->pos++;
-+
-+	return bus_device_iter_next(&state->iter);
- }
+ 	/* link reset */
+-	_transport_phy_reset(phy, 0);
++	rc = _transport_phy_reset(phy, 0);
++	if (rc)
++		goto out;
  
- static void scsi_seq_stop(struct seq_file *sfile, void *v)
- {
-+	struct scsi_proc_state *state = sfile->private;
-+
- 	put_device(v);
-+	bus_device_iter_exit(&state->iter);
- }
- 
- static int scsi_seq_show(struct seq_file *sfile, void *dev)
- {
--	if (!sfile->private)
-+	struct scsi_proc_state *state = sfile->private;
-+
-+	if (!state->pos)
- 		seq_puts(sfile, "Attached devices:\n");
- 
- 	return proc_print_scsidevice(dev, sfile);
-@@ -436,7 +444,8 @@ static int proc_scsi_open(struct inode *inode, struct file *file)
- 	 * We don't really need this for the write case but it doesn't
- 	 * harm either.
- 	 */
--	return seq_open(file, &scsi_seq_ops);
-+	return seq_open_private(file, &scsi_seq_ops,
-+				sizeof(struct scsi_proc_state));
- }
- 
- static const struct file_operations proc_scsi_operations = {
-@@ -445,7 +454,7 @@ static const struct file_operations proc_scsi_operations = {
- 	.read		= seq_read,
- 	.write		= proc_scsi_write,
- 	.llseek		= seq_lseek,
--	.release	= seq_release,
-+	.release	= seq_release_private,
- };
- 
- /**
+ 	/* read phy page 0, then update the rates in the sas transport phy */
+ 	if (!mpt3sas_config_get_phy_pg0(ioc, &mpi_reply, &phy_pg0,
 -- 
-2.1.0
+2.5.0
