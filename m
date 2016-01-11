@@ -1,89 +1,101 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] scsi: storvsc: Use the specified target ID in device
- lookup
-Date: Mon, 11 Jan 2016 08:09:52 +0100
-Message-ID: <56935540.7060304@suse.de>
-References: <1452318697-25451-1-git-send-email-kys@microsoft.com>
- <1452318719-25490-1-git-send-email-kys@microsoft.com>
- <1452318719-25490-2-git-send-email-kys@microsoft.com>
+From: "Singhal, Maneesh" <Maneesh.Singhal@emc.com>
+Subject: RE: EMCCTD kernel driver Patch for review
+Date: Mon, 11 Jan 2016 09:56:42 +0000
+Message-ID: <82807C73E0BDBB498164AAE7B8F6A1481C6082E4@MX105CL01.corp.emc.com>
+References: <82807C73E0BDBB498164AAE7B8F6A1481C6055F9@MX105CL01.corp.emc.com>
+ <DDB9C85B850785449757F9914A034FCB4450A204@G9W0766.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; Format="flowed"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1452318719-25490-2-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Seymour, Shane M" <shane.seymour@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@odin.com" <JBottomley@odin.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/09/2016 06:51 AM, K. Y. Srinivasan wrote:
-> The current code assumes that there is only one target in device lookup.
-> Fix this bug. This will alow us to correctly handle hot reomoval of LUNs.
->
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->   drivers/scsi/storvsc_drv.c |    6 ++++--
->   1 files changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 622f64a..5faf357 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -479,6 +479,7 @@ struct storvsc_scan_work {
->   	struct work_struct work;
->   	struct Scsi_Host *host;
->   	uint lun;
-> +	uint tgt_id;
->   };
->
->   static void storvsc_device_scan(struct work_struct *work)
-> @@ -490,7 +491,7 @@ static void storvsc_device_scan(struct work_struct *w=
-ork)
->   	wrk =3D container_of(work, struct storvsc_scan_work, work);
->   	lun =3D wrk->lun;
->
-> -	sdev =3D scsi_device_lookup(wrk->host, 0, 0, lun);
-> +	sdev =3D scsi_device_lookup(wrk->host, 0, wrk->tgt_id, lun);
->   	if (!sdev)
->   		goto done;
->   	scsi_rescan_device(&sdev->sdev_gendev);
-> @@ -541,7 +542,7 @@ static void storvsc_remove_lun(struct work_struct *wo=
-rk)
->   	if (!scsi_host_get(wrk->host))
->   		goto done;
->
-> -	sdev =3D scsi_device_lookup(wrk->host, 0, 0, wrk->lun);
-> +	sdev =3D scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk->lun);
->
->   	if (sdev) {
->   		scsi_remove_device(sdev);
-> @@ -941,6 +942,7 @@ static void storvsc_handle_error(struct vmscsi_reques=
-t *vm_srb,
->
->   	wrk->host =3D host;
->   	wrk->lun =3D vm_srb->lun;
-> +	wrk->tgt_id =3D vm_srb->target_id;
->   	INIT_WORK(&wrk->work, process_err_fn);
->   	schedule_work(&wrk->work);
->   }
->
-As a side note, are these really 32-bit values?
-Both the LUN and the target?
+Hello Shane,
 
-Cheers,
-
-Hannes
--- =
-
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Thanks for the quick review. Please find my replies below:
+ 
+> > -----Original Message-----
+> > From: Seymour, Shane M [mailto:shane.seymour@hpe.com]
+> > Sent: Monday, January 11, 2016 8:36 AM
+> > To: Singhal, Maneesh; linux-scsi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; JBottomley@odin.com;
+> > martin.petersen@oracle.com
+> > Subject: RE: EMCCTD kernel driver Patch for review
+> >
+> > Can I make some suggestions:
+> >
+> > 1) Include linux-api in the review or your new driver - you're
+> > creating new files in /proc and there's a good chance you'll get told
+> > that isn't going to be allowed.
+> [MS>] I will do that.
+> > 2) With this comment in the source:
+> >
+> > + *        DO NOT MODIFY ANY DATA STRUCTURES IN THIS FILE
+> WITHOUT
+> > CONSULTING THE
+> > + *        GUEST OS GROUP!
+> >
+> > How would someone do that? If someone really wanted to change a
+> > structure and others (outside of EMC) and had really good reasons
+> for
+> > doing so I don't think you can really stop someone from doing it (as
+> > much as you may not like it). You might try something less direct like
+> > "Before modifying any data structures in this file please discuss the
+> > change with the EMC Guest OS group" and say if the maintainers
+> email
+> > address should be used or something else.
+> >
+> [MS>] I agree. Will remove the comment.
+> 
+> > 3) The patch doesn't patch the MAINTAINERS file to indicate who is
+> the
+> > maintainer for the driver
+> [MS>] Will add
+> > 4) Have you run it through checkpatch.pl? It should be producing no
+> > warnings or errors (that cannot be justified). I would have expected
+> > it to have triggered the following warning multiple times at the very
+> > least (since there's an overabundance of LINUX_VERSION_CODE in
+> the
+> > patch):
+> >
+> > # avoid LINUX_VERSION_CODE
+> > 		if ($line =~ /\bLINUX_VERSION_CODE\b/) {
+> > 			WARN("LINUX_VERSION_CODE",
+> > 			     "LINUX_VERSION_CODE should be avoided,
+> code should be for the
+> > version to which it is merged\n" . $herecurr);
+> > 		}
+> >
+> > I know I stopped looking at anything after seeing lots of #ifdefs
+> > containing LINUX_VERSION_CODE.
+> >
+> [MS>] I did run checkpatch.pl. And yes, there are many warnings as
+> well. About VERSION_CODE warning, we actually have to run driver for
+> multiple kernel versions, so does this mean that I submit the patch
+> only for current or latest kernel version, and maintain a local copy of
+> driver for all other versions ?
+> 
+> > 5) What about any relevant documentation for the driver under the
+> > Documentation directory (if you switch to sysfs you will need to
+> > create documentation for every new file you create in sysfs
+> describing
+> > what it is).
+> [MS>] Will add.
+> > 6) Read all of:
+> > https://www.kernel.org/doc/Documentation/SubmittingPatches -
+> running
+> > checkpatch.pl is covered as is number 6 - no attachments (you are
+> > probably lucky if anyone apart from me opened it). Your email should
+> > have started with [PATCH] in the subject - without that it may get
+> > lost of the mailing list and nobody may read it.
+> [MS>] Sure. Will check all of them again, and resubmit the patch. Can
+> you please help me on answering the VERSION_CODE thingy.
+> >
+> > Consider addressing all of these. I doubt that you'll get much
+> > interest in terms of reviews until you do so.
+> >
+> > Thanks
+> > Shane
