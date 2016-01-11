@@ -1,153 +1,150 @@
 From: mchristi@redhat.com
-Subject: [PATCH 25/35] target: set bi_op to REQ_OP
-Date: Mon, 11 Jan 2016 14:21:23 -0600
-Message-ID: <1452543693-4440-26-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 31/35] block, fs: remove old REQ definitions.
+Date: Mon, 11 Jan 2016 14:21:29 -0600
+Message-ID: <1452543693-4440-32-git-send-email-mchristi@redhat.com>
 References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the target modules set the bio bi_op to a REQ_OP, and
-rq_flag_bits to bi_rw.
-
-This patch is compile tested only.
+We no longer use REQ_WRITE. REQ_WRITE_SAME and REQ_DISCARD,
+so this patch removes them.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_iblock.c | 38 ++++++++++++++++++++++---------------
- drivers/target/target_core_pscsi.c  |  2 +-
- 2 files changed, 24 insertions(+), 16 deletions(-)
+ include/linux/blk_types.h   | 21 ++++++---------------
+ include/linux/fs.h          | 21 +++++++++++----------
+ include/trace/events/f2fs.h |  1 -
+ 3 files changed, 17 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 7455df9..30f4f41 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -330,7 +330,8 @@ static void iblock_bio_done(struct bio *bio)
- }
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 6e49c91..b4251ed 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -151,7 +151,6 @@ struct bio {
+  */
+ enum rq_flag_bits {
+ 	/* common flags */
+-	__REQ_WRITE,		/* not set, read. set, write */
+ 	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
+ 	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
+ 	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
+@@ -159,9 +158,7 @@ enum rq_flag_bits {
+ 	__REQ_SYNC,		/* request is sync (sync write or read) */
+ 	__REQ_META,		/* metadata io request */
+ 	__REQ_PRIO,		/* boost priority in cfq */
+-	__REQ_DISCARD,		/* request to discard sectors */
+-	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
+-	__REQ_WRITE_SAME,	/* write same block many times */
++	__REQ_SECURE,		/* secure discard (used with REQ_OP_DISCARD) */
  
- static struct bio *
--iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
-+iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
-+	       int op_flags)
- {
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
- 	struct bio *bio;
-@@ -352,7 +353,8 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
- 	bio->bi_private = cmd;
- 	bio->bi_end_io = &iblock_bio_done;
- 	bio->bi_iter.bi_sector = lba;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
+ 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
+ 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
+@@ -197,28 +194,22 @@ enum rq_flag_bits {
+ 	__REQ_NR_BITS,		/* stops here */
+ };
  
- 	return bio;
- }
-@@ -458,7 +460,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		goto fail;
- 	cmd->priv = ibr;
+-#define REQ_WRITE		(1ULL << __REQ_WRITE)
+ #define REQ_FAILFAST_DEV	(1ULL << __REQ_FAILFAST_DEV)
+ #define REQ_FAILFAST_TRANSPORT	(1ULL << __REQ_FAILFAST_TRANSPORT)
+ #define REQ_FAILFAST_DRIVER	(1ULL << __REQ_FAILFAST_DRIVER)
+ #define REQ_SYNC		(1ULL << __REQ_SYNC)
+ #define REQ_META		(1ULL << __REQ_META)
+ #define REQ_PRIO		(1ULL << __REQ_PRIO)
+-#define REQ_DISCARD		(1ULL << __REQ_DISCARD)
+-#define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
+ #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
+ #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
  
--	bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
-+	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE, 0);
- 	if (!bio)
- 		goto fail_free_ibr;
+ #define REQ_FAILFAST_MASK \
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ #define REQ_COMMON_MASK \
+-	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
+-	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
+-	 REQ_SECURE | REQ_INTEGRITY)
++	(REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | REQ_NOIDLE | \
++	 REQ_FLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY)
+ #define REQ_CLONE_MASK		REQ_COMMON_MASK
  
-@@ -471,7 +473,8 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
- 				!= sg->length) {
+-#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
+-
+ /* This mask is used for both bio and request merge checking */
+ #define REQ_NOMERGE_FLAGS \
+ 	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
+@@ -250,9 +241,9 @@ enum rq_flag_bits {
  
--			bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
-+			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE,
-+					     0);
- 			if (!bio)
- 				goto fail_put_bios;
+ enum req_op {
+ 	REQ_OP_READ,
+-	REQ_OP_WRITE		= REQ_WRITE,
+-	REQ_OP_DISCARD		= REQ_DISCARD,
+-	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
++	REQ_OP_WRITE,
++	REQ_OP_DISCARD,		/* request to discard sectors */
++	REQ_OP_WRITE_SAME,	/* write same block many times */
+ };
  
-@@ -657,7 +660,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	u32 sg_num = sgl_nents;
- 	sector_t block_lba;
- 	unsigned bio_cnt;
--	int rw = 0;
-+	int op_flags = 0;
-+	int op = 0;
- 	int i;
+ typedef unsigned int blk_qc_t;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0a9fe5a..2fbed45 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -151,9 +151,10 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+ #define CHECK_IOVEC_ONLY -1
  
- 	if (data_direction == DMA_TO_DEVICE) {
-@@ -668,17 +672,20 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		 * is not enabled, or if initiator set the Force Unit Access bit.
- 		 */
- 		if (q->flush_flags & REQ_FUA) {
--			if (cmd->se_cmd_flags & SCF_FUA)
--				rw = WRITE_FUA;
--			else if (!(q->flush_flags & REQ_FLUSH))
--				rw = WRITE_FUA;
--			else
--				rw = WRITE;
-+			if (cmd->se_cmd_flags & SCF_FUA) {
-+				op = REQ_OP_WRITE;
-+				op_flags = WRITE_FUA;
-+			} else if (!(q->flush_flags & REQ_FLUSH)) {
-+				op = REQ_OP_WRITE;
-+				op_flags = WRITE_FUA;
-+			} else {
-+				op = REQ_OP_WRITE;
-+			}
- 		} else {
--			rw = WRITE;
-+			op = REQ_OP_WRITE;
- 		}
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
+ /*
+- * The below are the various read and write types that we support. Some of
++ * The below are the various read and write flags that we support. Some of
+  * them include behavioral modifiers that send information down to the
+- * block layer and IO scheduler. Terminology:
++ * block layer and IO scheduler. They should be used along with a req_op.
++ * Terminology:
+  *
+  *	The block layer uses device plugging to defer IO a little bit, in
+  *	the hope that we will see more IO very shortly. This increases
+@@ -192,19 +193,19 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+  *			non-volatile media on completion.
+  *
+  */
+-#define RW_MASK			REQ_WRITE
++#define RW_MASK			REQ_OP_WRITE
+ #define RWA_MASK		REQ_RAHEAD
  
- 	/*
-@@ -710,7 +717,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		return 0;
- 	}
+-#define READ			0
++#define READ			REQ_OP_READ
+ #define WRITE			RW_MASK
+ #define READA			RWA_MASK
  
--	bio = iblock_get_bio(cmd, block_lba, sgl_nents, rw);
-+	bio = iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
- 	if (!bio)
- 		goto fail_free_ibr;
+-#define READ_SYNC		(READ | REQ_SYNC)
+-#define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE)
+-#define WRITE_ODIRECT		(WRITE | REQ_SYNC)
+-#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
+-#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FUA)
+-#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
++#define READ_SYNC		REQ_SYNC
++#define WRITE_SYNC		(REQ_SYNC | REQ_NOIDLE)
++#define WRITE_ODIRECT		REQ_SYNC
++#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
++#define WRITE_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FUA)
++#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
  
-@@ -734,7 +741,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 				bio_cnt = 0;
- 			}
- 
--			bio = iblock_get_bio(cmd, block_lba, sg_num, rw);
-+			bio = iblock_get_bio(cmd, block_lba, sg_num, op,
-+					     op_flags);
- 			if (!bio)
- 				goto fail_put_bios;
- 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index de18790..2cf915c 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -922,7 +922,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 					goto fail;
- 
- 				if (rw)
--					bio->bi_rw |= REQ_WRITE;
-+					bio->bi_op = REQ_OP_WRITE;
- 
- 				pr_debug("PSCSI: Allocated bio: %p,"
- 					" dir: %s nr_vecs: %d\n", bio,
+ /*
+  * Attribute flags.  These should be or-ed together to figure out what
+diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
+index 851c335..1d568ee 100644
+--- a/include/trace/events/f2fs.h
++++ b/include/trace/events/f2fs.h
+@@ -31,7 +31,6 @@ TRACE_DEFINE_ENUM(BG_GC);
+ TRACE_DEFINE_ENUM(LFS);
+ TRACE_DEFINE_ENUM(SSR);
+ TRACE_DEFINE_ENUM(__REQ_RAHEAD);
+-TRACE_DEFINE_ENUM(__REQ_WRITE);
+ TRACE_DEFINE_ENUM(__REQ_SYNC);
+ TRACE_DEFINE_ENUM(__REQ_NOIDLE);
+ TRACE_DEFINE_ENUM(__REQ_FLUSH);
 -- 
 1.8.3.1
