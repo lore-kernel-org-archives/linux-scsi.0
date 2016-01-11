@@ -1,68 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/2] avoid crashing when reading /proc/scsi/scsi and
- simultaneously removing devices
-Date: Mon, 11 Jan 2016 11:15:18 -0800
-Message-ID: <1452539718.2363.12.camel@HansenPartnership.com>
-References: <1452533307-30142-1-git-send-email-emilne@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: mchristi@redhat.com
+Subject: [PATCH 00/35 v3] eparate operations from flags in the bio/request structs
+Date: Mon, 11 Jan 2016 14:20:58 -0600
+Message-ID: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1452533307-30142-1-git-send-email-emilne@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, martin.petersen@oracle.com, hare@suse.com
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2016-01-11 at 12:28 -0500, Ewan D. Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
-> 
-> The klist traversal used by the reading of /proc/scsi/scsi is not
-> interlocked
-> against device removal.  It takes a reference on the containing
-> object, but
-> this does not prevent the device from being removed from the list. 
->  Thus, we
-> get errors and eventually panic, as shown in the traces below.  Fix
-> this by
-> keeping a klist iterator in the seq_file private data.
-> 
-> The problem can be easily reproduced by repeatedly increasing
-> scsi_debug's
-> max_luns to 30 and then deleting the devices via sysfs, while
-> simulatenously
-> accessing /proc/scsi/scsi.
->     
-> From a patch originally developed by David Jeffery <
-> djeffery@redhat.com>
+The following patches begin to cleanup the request->cmd_flags and
+bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+attributes and state of the request. For bi_rw we use it for similar
+info and also the priority but then also have another bi_flags field
+for state. At some point, we abused them so much we just made cmd_flags
+64 bits, so we could add more.
 
-OK, so it looks like this is a bug in the klist system.  When a
-starting point is used, there should be a check to see if it's still
-active otherwise the whole thing is racy.  If it's fixed in klist, the
-fix works for everyone, not just SCSI.
+The following patches seperate the operation (read, write discard,
+flush, etc) from cmd_flags/bi_rw.
 
-How about this?  It causes the iterator to start at the beginning if
-the node has been deleted.  That will produce double output during some
-of your test, but I think that's OK given that this is a rare race.
+This patchset was made against linux-next from today Jan 11 2016.
+(git tag next-20160111).
 
-James
+I put a git tree here:
+https://github.com/mikechristie/linux-kernel.git
 
----
+v3:
 
-diff --git a/lib/klist.c b/lib/klist.c
-index d74cf7a..0507fa5 100644
---- a/lib/klist.c
-+++ b/lib/klist.c
-@@ -282,9 +282,9 @@ void klist_iter_init_node(struct klist *k, struct klist_iter *i,
- 			  struct klist_node *n)
- {
- 	i->i_klist = k;
--	i->i_cur = n;
--	if (n)
--		kref_get(&n->n_ref);
-+	i->i_cur = NULL;
-+	if (n && kref_get_unless_zero(&n->n_ref))
-+		i->i_cur = n;
- }
- EXPORT_SYMBOL_GPL(klist_iter_init_node);
- 
+1. Used "=" instead of "|="  to setup bio bi_rw.
+2. Removed __get_request cmd_flags compat code.
+3. Merged initial dm related changes requested by Mike Snitzer.
+4. Fixed ubd kbuild errors in flush related patches.
+5. Fix 80 char col issues in several patches.
+6. Fix issue with one of the btrfs patches where it looks like I reverted
+a patch when trying to fix a merge error.
+
+v2
+
+1. Dropped arguments from submit_bio, and had callers setup
+bio.
+2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
+to REQ_PREFLUSH for make_request_fn users.
+3. Dropped bio/rq_data_dir functions, and added a op_is_write
+function instead.
