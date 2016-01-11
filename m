@@ -1,369 +1,363 @@
 From: mchristi@redhat.com
-Subject: [PATCH 07/35] btrfs: have submit_one_bio users setup bio bi_op
-Date: Mon, 11 Jan 2016 14:21:05 -0600
-Message-ID: <1452543693-4440-8-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 28/35] blktrace: get op from req->op/bio->bi_op
+Date: Mon, 11 Jan 2016 14:21:26 -0600
+Message-ID: <1452543693-4440-29-git-send-email-mchristi@redhat.com>
 References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50548 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965170AbcAKUWq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jan 2016 15:22:46 -0500
 In-Reply-To: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has btrfs's submit_one_bio callers set
-the bio->bi_op to a REQ_OP and the bi_rw to rq_flag_bits.
+The bio and request struct now store the operation in
+bio->bi_op/request->op. This patch has blktrace not
+check bi_rw/cmd_flags.
 
-The next patches will continue to convert btrfs,
-so submit_bio_hook and merge_bio_hook
-related code will be modified to take only the bio. I did
-not do it in this patch to try and keep it smaller.
-
-Note:
-I have run xfs tests on these btrfs patches. There were some failures
-with and without the patches. I have not had time to track down why
-xfstest fails without the patches.
+This patch is only compile tested.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- fs/btrfs/extent_io.c | 92 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 47 insertions(+), 45 deletions(-)
+ include/linux/blktrace_api.h  |  2 +-
+ include/trace/events/bcache.h | 12 ++++++----
+ include/trace/events/block.h  | 31 +++++++++++++++++---------
+ kernel/trace/blktrace.c       | 52 +++++++++++++++++++++++--------------------
+ 4 files changed, 57 insertions(+), 40 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 8e7bf941..a4830f0 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2382,7 +2382,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	int read_mode;
- 	int ret;
- 
--	BUG_ON(failed_bio->bi_rw & REQ_WRITE);
-+	BUG_ON(failed_bio->bi_op == REQ_OP_WRITE);
- 
- 	ret = btrfs_get_io_failure_record(inode, start, end, &failrec);
- 	if (ret)
-@@ -2408,6 +2408,8 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 		free_io_failure(inode, failrec);
- 		return -EIO;
- 	}
-+	bio->bi_op = REQ_OP_READ;
-+	bio->bi_rw = read_mode;
- 
- 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
- 		 read_mode, failrec->this_mirror, failrec->in_validation);
-@@ -2719,8 +2721,8 @@ struct bio *btrfs_io_bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index afc1343..ee25ba4 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -109,7 +109,7 @@ static inline int blk_cmd_buf_len(struct request *rq)
  }
  
+ extern void blk_dump_cmd(char *buf, struct request *rq);
+-extern void blk_fill_rwbs(char *rwbs, u32 rw, int bytes);
++extern void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes);
  
--static int __must_check submit_one_bio(int rw, struct bio *bio,
--				       int mirror_num, unsigned long bio_flags)
-+static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
-+				       unsigned long bio_flags)
+ #endif /* CONFIG_EVENT_TRACING && CONFIG_BLOCK */
+ 
+diff --git a/include/trace/events/bcache.h b/include/trace/events/bcache.h
+index 981acf7..8abe564 100644
+--- a/include/trace/events/bcache.h
++++ b/include/trace/events/bcache.h
+@@ -27,7 +27,8 @@ DECLARE_EVENT_CLASS(bcache_request,
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->orig_sector	= bio->bi_iter.bi_sector - 16;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u (from %d,%d @ %llu)",
+@@ -101,7 +102,8 @@ DECLARE_EVENT_CLASS(bcache_bio,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d  %s %llu + %u",
+@@ -136,7 +138,8 @@ TRACE_EVENT(bcache_read,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		__entry->cache_hit = hit;
+ 		__entry->bypass = bypass;
+ 	),
+@@ -167,7 +170,8 @@ TRACE_EVENT(bcache_write,
+ 		__entry->inode		= inode;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		__entry->writeback = writeback;
+ 		__entry->bypass = bypass;
+ 	),
+diff --git a/include/trace/events/block.h b/include/trace/events/block.h
+index e8a5eca..4416dcd 100644
+--- a/include/trace/events/block.h
++++ b/include/trace/events/block.h
+@@ -84,7 +84,8 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
+ 					0 : blk_rq_sectors(rq);
+ 		__entry->errors    = rq->errors;
+ 
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 	),
+ 
+@@ -162,7 +163,7 @@ TRACE_EVENT(block_rq_complete,
+ 		__entry->nr_sector = nr_bytes >> 9;
+ 		__entry->errors    = rq->errors;
+ 
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, nr_bytes);
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags, nr_bytes);
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 	),
+ 
+@@ -198,7 +199,8 @@ DECLARE_EVENT_CLASS(block_rq,
+ 		__entry->bytes     = (rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
+ 					blk_rq_bytes(rq) : 0;
+ 
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+@@ -272,7 +274,8 @@ TRACE_EVENT(block_bio_bounce,
+ 					  bio->bi_bdev->bd_dev : 0;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -310,7 +313,8 @@ TRACE_EVENT(block_bio_complete,
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+ 		__entry->error		= error;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u [%d]",
+@@ -337,7 +341,8 @@ DECLARE_EVENT_CLASS(block_bio_merge,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -404,7 +409,8 @@ TRACE_EVENT(block_bio_queue,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -432,7 +438,7 @@ DECLARE_EVENT_CLASS(block_get_rq,
+ 		__entry->dev		= bio ? bio->bi_bdev->bd_dev : 0;
+ 		__entry->sector		= bio ? bio->bi_iter.bi_sector : 0;
+ 		__entry->nr_sector	= bio ? bio_sectors(bio) : 0;
+-		blk_fill_rwbs(__entry->rwbs,
++		blk_fill_rwbs(__entry->rwbs, bio ? bio->bi_op : 0,
+ 			      bio ? bio->bi_rw : 0, __entry->nr_sector);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+         ),
+@@ -567,7 +573,8 @@ TRACE_EVENT(block_split,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->new_sector	= new_sector;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -610,7 +617,8 @@ TRACE_EVENT(block_bio_remap,
+ 		__entry->nr_sector	= bio_sectors(bio);
+ 		__entry->old_dev	= dev;
+ 		__entry->old_sector	= from;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu",
+@@ -656,7 +664,8 @@ TRACE_EVENT(block_rq_remap,
+ 		__entry->old_dev	= dev;
+ 		__entry->old_sector	= from;
+ 		__entry->nr_bios	= blk_rq_count_bios(rq);
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu %u",
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 2aeb6ff..4a9ac83 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -199,7 +199,8 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
+  * blk_io_trace structure and places it in a per-cpu subbuffer.
+  */
+ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+-		     int rw, u32 what, int error, int pdu_len, void *pdu_data)
++		     int op, int op_flags, u32 what, int error, int pdu_len,
++		     void *pdu_data)
  {
- 	int ret = 0;
- 	struct bio_vec *bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
-@@ -2731,12 +2733,12 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	start = page_offset(page) + bvec->bv_offset;
+ 	struct task_struct *tsk = current;
+ 	struct ring_buffer_event *event = NULL;
+@@ -214,13 +215,14 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
+ 		return;
  
- 	bio->bi_private = NULL;
--	bio->bi_rw = rw;
- 	bio_get(bio);
+-	what |= ddir_act[rw & WRITE];
+-	what |= MASK_TC_BIT(rw, SYNC);
+-	what |= MASK_TC_BIT(rw, RAHEAD);
+-	what |= MASK_TC_BIT(rw, META);
+-	what |= MASK_TC_BIT(rw, DISCARD);
+-	what |= MASK_TC_BIT(rw, FLUSH);
+-	what |= MASK_TC_BIT(rw, FUA);
++	what |= ddir_act[op_is_write(op) ? WRITE : READ];
++	what |= MASK_TC_BIT(op_flags, SYNC);
++	what |= MASK_TC_BIT(op_flags, RAHEAD);
++	what |= MASK_TC_BIT(op_flags, META);
++	what |= MASK_TC_BIT(op_flags, FLUSH);
++	what |= MASK_TC_BIT(op_flags, FUA);
++	if (op == REQ_OP_DISCARD)
++		what |= BLK_TC_ACT(BLK_TC_DISCARD);
  
- 	if (tree->ops && tree->ops->submit_bio_hook)
--		ret = tree->ops->submit_bio_hook(page->mapping->host, rw, bio,
--					   mirror_num, bio_flags, start);
-+		ret = tree->ops->submit_bio_hook(page->mapping->host,
-+						 bio->bi_rw, bio, mirror_num,
-+						 bio_flags, start);
+ 	pid = tsk->pid;
+ 	if (act_log_check(bt, what, sector, pid))
+@@ -708,11 +710,11 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		what |= BLK_TC_ACT(BLK_TC_PC);
+-		__blk_add_trace(bt, 0, nr_bytes, rq->cmd_flags,
++		__blk_add_trace(bt, 0, nr_bytes, rq->op, rq->cmd_flags,
+ 				what, rq->errors, rq->cmd_len, rq->cmd);
+ 	} else  {
+ 		what |= BLK_TC_ACT(BLK_TC_FS);
+-		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes,
++		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes, rq->op,
+ 				rq->cmd_flags, what, rq->errors, 0, NULL);
+ 	}
+ }
+@@ -770,7 +772,7 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+ 		return;
+ 
+ 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio->bi_rw, what, error, 0, NULL);
++			bio->bi_op, bio->bi_rw, what, error, 0, NULL);
+ }
+ 
+ static void blk_add_trace_bio_bounce(void *ignore,
+@@ -818,7 +820,8 @@ static void blk_add_trace_getrq(void *ignore,
+ 		struct blk_trace *bt = q->blk_trace;
+ 
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, BLK_TA_GETRQ, 0, 0, NULL);
++			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_GETRQ, 0, 0,
++					NULL);
+ 	}
+ }
+ 
+@@ -833,7 +836,7 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 		struct blk_trace *bt = q->blk_trace;
+ 
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, BLK_TA_SLEEPRQ,
++			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+ 					0, 0, NULL);
+ 	}
+ }
+@@ -843,7 +846,7 @@ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
+ 	struct blk_trace *bt = q->blk_trace;
+ 
+ 	if (bt)
+-		__blk_add_trace(bt, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
++		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
+ }
+ 
+ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+@@ -860,7 +863,7 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 		else
+ 			what = BLK_TA_UNPLUG_TIMER;
+ 
+-		__blk_add_trace(bt, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
++		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
+ 	}
+ }
+ 
+@@ -874,8 +877,9 @@ static void blk_add_trace_split(void *ignore,
+ 		__be64 rpdu = cpu_to_be64(pdu);
+ 
+ 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
+-				bio->bi_iter.bi_size, bio->bi_rw, BLK_TA_SPLIT,
+-				bio->bi_error, sizeof(rpdu), &rpdu);
++				bio->bi_iter.bi_size, bio->bi_op, bio->bi_rw,
++				BLK_TA_SPLIT, bio->bi_error, sizeof(rpdu),
++				&rpdu);
+ 	}
+ }
+ 
+@@ -907,7 +911,7 @@ static void blk_add_trace_bio_remap(void *ignore,
+ 	r.sector_from = cpu_to_be64(from);
+ 
+ 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
++			bio->bi_op, bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
+ 			sizeof(r), &r);
+ }
+ 
+@@ -940,7 +944,7 @@ static void blk_add_trace_rq_remap(void *ignore,
+ 	r.sector_from = cpu_to_be64(from);
+ 
+ 	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
+-			rq_data_dir(rq), BLK_TA_REMAP, !!rq->errors,
++			rq_data_dir(rq), 0, BLK_TA_REMAP, !!rq->errors,
+ 			sizeof(r), &r);
+ }
+ 
+@@ -965,10 +969,10 @@ void blk_add_driver_data(struct request_queue *q,
+ 		return;
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC)
+-		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0,
++		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0, 0,
+ 				BLK_TA_DRV_DATA, rq->errors, len, data);
  	else
- 		btrfsic_submit_bio(bio);
- 
-@@ -2744,20 +2746,20 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	return ret;
+-		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0,
++		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0, 0,
+ 				BLK_TA_DRV_DATA, rq->errors, len, data);
  }
- 
--static int merge_bio(int rw, struct extent_io_tree *tree, struct page *page,
-+static int merge_bio(struct extent_io_tree *tree, struct page *page,
- 		     unsigned long offset, size_t size, struct bio *bio,
- 		     unsigned long bio_flags)
- {
- 	int ret = 0;
- 	if (tree->ops && tree->ops->merge_bio_hook)
--		ret = tree->ops->merge_bio_hook(rw, page, offset, size, bio,
--						bio_flags);
-+		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
-+						bio, bio_flags);
- 	BUG_ON(ret < 0);
- 	return ret;
- 
- }
- 
--static int submit_extent_page(int rw, struct extent_io_tree *tree,
-+static int submit_extent_page(int op, int op_flags, struct extent_io_tree *tree,
- 			      struct writeback_control *wbc,
- 			      struct page *page, sector_t sector,
- 			      size_t size, unsigned long offset,
-@@ -2785,10 +2787,9 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 
- 		if (prev_bio_flags != bio_flags || !contig ||
- 		    force_bio_submit ||
--		    merge_bio(rw, tree, page, offset, page_size, bio, bio_flags) ||
-+		    merge_bio(tree, page, offset, page_size, bio, bio_flags) ||
- 		    bio_add_page(bio, page, page_size, offset) < page_size) {
--			ret = submit_one_bio(rw, bio, mirror_num,
--					     prev_bio_flags);
-+			ret = submit_one_bio(bio, mirror_num, prev_bio_flags);
- 			if (ret < 0) {
- 				*bio_ret = NULL;
- 				return ret;
-@@ -2809,6 +2810,8 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	bio_add_page(bio, page, page_size, offset);
- 	bio->bi_end_io = end_io_func;
- 	bio->bi_private = tree;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	if (wbc) {
- 		wbc_init_bio(wbc, bio);
- 		wbc_account_io(wbc, page, page_size);
-@@ -2817,7 +2820,7 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	if (bio_ret)
- 		*bio_ret = bio;
- 	else
--		ret = submit_one_bio(rw, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 
- 	return ret;
- }
-@@ -2881,7 +2884,7 @@ static int __do_readpage(struct extent_io_tree *tree,
- 			 get_extent_t *get_extent,
- 			 struct extent_map **em_cached,
- 			 struct bio **bio, int mirror_num,
--			 unsigned long *bio_flags, int rw,
-+			 unsigned long *bio_flags, int read_flags,
- 			 u64 *prev_em_start)
- {
- 	struct inode *inode = page->mapping->host;
-@@ -3072,8 +3075,8 @@ static int __do_readpage(struct extent_io_tree *tree,
- 		}
- 
- 		pnr -= page->index;
--		ret = submit_extent_page(rw, tree, NULL, page,
--					 sector, disk_io_size, pg_offset,
-+		ret = submit_extent_page(REQ_OP_READ, read_flags, tree, NULL,
-+					 page, sector, disk_io_size, pg_offset,
- 					 bdev, bio, pnr,
- 					 end_bio_extent_readpage, mirror_num,
- 					 *bio_flags,
-@@ -3105,7 +3108,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 					     get_extent_t *get_extent,
- 					     struct extent_map **em_cached,
- 					     struct bio **bio, int mirror_num,
--					     unsigned long *bio_flags, int rw,
-+					     unsigned long *bio_flags,
- 					     u64 *prev_em_start)
- {
- 	struct inode *inode;
-@@ -3126,7 +3129,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 
- 	for (index = 0; index < nr_pages; index++) {
- 		__do_readpage(tree, pages[index], get_extent, em_cached, bio,
--			      mirror_num, bio_flags, rw, prev_em_start);
-+			      mirror_num, bio_flags, 0, prev_em_start);
- 		page_cache_release(pages[index]);
+ EXPORT_SYMBOL_GPL(blk_add_driver_data);
+@@ -1767,16 +1771,16 @@ void blk_dump_cmd(char *buf, struct request *rq)
  	}
  }
-@@ -3136,7 +3139,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 			       int nr_pages, get_extent_t *get_extent,
- 			       struct extent_map **em_cached,
- 			       struct bio **bio, int mirror_num,
--			       unsigned long *bio_flags, int rw,
-+			       unsigned long *bio_flags,
- 			       u64 *prev_em_start)
+ 
+-void blk_fill_rwbs(char *rwbs, u32 rw, int bytes)
++void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes)
  {
- 	u64 start = 0;
-@@ -3158,7 +3161,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 						  index - first_index, start,
- 						  end, get_extent, em_cached,
- 						  bio, mirror_num, bio_flags,
--						  rw, prev_em_start);
-+						  prev_em_start);
- 			start = page_start;
- 			end = start + PAGE_CACHE_SIZE - 1;
- 			first_index = index;
-@@ -3169,7 +3172,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 		__do_contiguous_readpages(tree, &pages[first_index],
- 					  index - first_index, start,
- 					  end, get_extent, em_cached, bio,
--					  mirror_num, bio_flags, rw,
-+					  mirror_num, bio_flags,
- 					  prev_em_start);
- }
+ 	int i = 0;
  
-@@ -3177,7 +3180,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
- 				   struct page *page,
- 				   get_extent_t *get_extent,
- 				   struct bio **bio, int mirror_num,
--				   unsigned long *bio_flags, int rw)
-+				   unsigned long *bio_flags, int read_flags)
- {
- 	struct inode *inode = page->mapping->host;
- 	struct btrfs_ordered_extent *ordered;
-@@ -3196,7 +3199,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
- 	}
+ 	if (rw & REQ_FLUSH)
+ 		rwbs[i++] = 'F';
  
- 	ret = __do_readpage(tree, page, get_extent, NULL, bio, mirror_num,
--			    bio_flags, rw, NULL);
-+			    bio_flags, read_flags, NULL);
- 	return ret;
- }
- 
-@@ -3208,9 +3211,9 @@ int extent_read_full_page(struct extent_io_tree *tree, struct page *page,
- 	int ret;
- 
- 	ret = __extent_read_full_page(tree, page, get_extent, &bio, mirror_num,
--				      &bio_flags, READ);
-+				      &bio_flags, 0);
- 	if (bio)
--		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 	return ret;
- }
- 
-@@ -3222,9 +3225,9 @@ int extent_read_full_page_nolock(struct extent_io_tree *tree, struct page *page,
- 	int ret;
- 
- 	ret = __do_readpage(tree, page, get_extent, NULL, &bio, mirror_num,
--			    &bio_flags, READ, NULL);
-+			    &bio_flags, 0, NULL);
- 	if (bio)
--		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 	return ret;
- }
- 
-@@ -3471,7 +3474,8 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
- 				       page->index, cur, end);
- 			}
- 
--			ret = submit_extent_page(write_flags, tree, wbc, page,
-+			ret = submit_extent_page(REQ_OP_WRITE, write_flags,
-+						 tree, wbc, page,
- 						 sector, iosize, pg_offset,
- 						 bdev, &epd->bio, max_nr,
- 						 end_bio_extent_writepage,
-@@ -3511,13 +3515,11 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
- 	size_t pg_offset = 0;
- 	loff_t i_size = i_size_read(inode);
- 	unsigned long end_index = i_size >> PAGE_CACHE_SHIFT;
--	int write_flags;
-+	int write_flags = 0;
- 	unsigned long nr_written = 0;
- 
- 	if (wbc->sync_mode == WB_SYNC_ALL)
- 		write_flags = WRITE_SYNC;
--	else
--		write_flags = WRITE;
- 
- 	trace___extent_writepage(page, inode, wbc);
- 
-@@ -3761,7 +3763,7 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 	u64 offset = eb->start;
- 	unsigned long i, num_pages;
- 	unsigned long bio_flags = 0;
--	int rw = (epd->sync_io ? WRITE_SYNC : WRITE) | REQ_META;
-+	int write_flags = (epd->sync_io ? WRITE_SYNC : 0) | REQ_META;
- 	int ret = 0;
- 
- 	clear_bit(EXTENT_BUFFER_WRITE_ERR, &eb->bflags);
-@@ -3775,9 +3777,10 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 
- 		clear_page_dirty_for_io(p);
- 		set_page_writeback(p);
--		ret = submit_extent_page(rw, tree, wbc, p, offset >> 9,
--					 PAGE_CACHE_SIZE, 0, bdev, &epd->bio,
--					 -1, end_bio_extent_buffer_writepage,
-+		ret = submit_extent_page(REQ_OP_WRITE, write_flags, tree, wbc,
-+					 p, offset >> 9, PAGE_CACHE_SIZE, 0,
-+					 bdev, &epd->bio, -1,
-+					 end_bio_extent_buffer_writepage,
- 					 0, epd->bio_flags, bio_flags, false);
- 		epd->bio_flags = bio_flags;
- 		if (ret) {
-@@ -4066,13 +4069,13 @@ retry:
- static void flush_epd_write_bio(struct extent_page_data *epd)
- {
- 	if (epd->bio) {
--		int rw = WRITE;
- 		int ret;
- 
-+		epd->bio->bi_op = REQ_OP_WRITE;
- 		if (epd->sync_io)
--			rw = WRITE_SYNC;
-+			epd->bio->bi_rw = WRITE_SYNC;
- 
--		ret = submit_one_bio(rw, epd->bio, 0, epd->bio_flags);
-+		ret = submit_one_bio(epd->bio, 0, epd->bio_flags);
- 		BUG_ON(ret < 0); /* -ENOMEM */
- 		epd->bio = NULL;
- 	}
-@@ -4199,19 +4202,19 @@ int extent_readpages(struct extent_io_tree *tree,
- 		if (nr < ARRAY_SIZE(pagepool))
- 			continue;
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 		nr = 0;
- 	}
- 	if (nr)
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 
- 	if (em_cached)
- 		free_extent_map(em_cached);
- 
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		return submit_one_bio(READ, bio, 0, bio_flags);
-+		return submit_one_bio(bio, 0, bio_flags);
- 	return 0;
- }
- 
-@@ -5233,7 +5236,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 			err = __extent_read_full_page(tree, page,
- 						      get_extent, &bio,
- 						      mirror_num, &bio_flags,
--						      READ | REQ_META);
-+						      REQ_META);
- 			if (err)
- 				ret = err;
- 		} else {
-@@ -5242,8 +5245,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 	}
- 
- 	if (bio) {
--		err = submit_one_bio(READ | REQ_META, bio, mirror_num,
--				     bio_flags);
-+		err = submit_one_bio(bio, mirror_num, bio_flags);
- 		if (err)
- 			return err;
- 	}
+-	if (rw & WRITE)
++	if (op == REQ_OP_WRITE)
+ 		rwbs[i++] = 'W';
+-	else if (rw & REQ_DISCARD)
++	else if (op == REQ_OP_DISCARD)
+ 		rwbs[i++] = 'D';
+ 	else if (bytes)
+ 		rwbs[i++] = 'R';
 -- 
 1.8.3.1
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
