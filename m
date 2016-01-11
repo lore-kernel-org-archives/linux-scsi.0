@@ -1,8 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 20/35] dm: pass dm stats data dir instead of
-	bi_rw
-Date: Mon, 11 Jan 2016 14:21:18 -0600
-Message-ID: <1452543693-4440-21-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 24/35] xen: set bi_op to REQ_OP
+Date: Mon, 11 Jan 2016 14:21:22 -0600
+Message-ID: <1452543693-4440-25-git-send-email-mchristi@redhat.com>
 References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -24,122 +23,127 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-It looks like dm stats cares about the data direction
-(READ vs WRITE) and does not need the bio/request flags.
-Commands like REQ_FLUSH, REQ_DISCARD and REQ_WRITE_SAME
-are currently always set with REQ_WRITE, so the extra check for
-REQ_DISCARD in dm_stats_account_io is not needed.
-
-This patch has it use the bio and request data_dir helpers
-instead of accessing the bi_rw/cmd_flags directly. This makes
-the next patches that remove the operation from the cmd_flags
-and bi_rw easier, because we will no longer have the REQ_WRITE
-bit set for operations like discards.
+This patch has xen set the bio bi_op to a REQ_OP, and rq_flag_bits
+to bi_rw.
 
 This patch is compile tested only.
 
-v2:
-
-1. Merged Mike Snitzer's fixes to pass in int instead of
-unsigned long.
-
-2. Fix 80 char col issues.
-
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/md/dm-stats.c |  9 ++++-----
- drivers/md/dm.c       | 21 ++++++++++++---------
- 2 files changed, 16 insertions(+), 14 deletions(-)
+ drivers/block/xen-blkback/blkback.c | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
-index 8289804..4fba26c 100644
---- a/drivers/md/dm-stats.c
-+++ b/drivers/md/dm-stats.c
-@@ -514,11 +514,10 @@ static void dm_stat_round(struct dm_stat *s, struct dm_stat_shared *shared,
- }
+diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
+index 733d397..f977d29 100644
+--- a/drivers/block/xen-blkback/blkback.c
++++ b/drivers/block/xen-blkback/blkback.c
+@@ -488,7 +488,7 @@ static int xen_vbd_translate(struct phys_req *req, struct xen_blkif *blkif,
+ 	struct xen_vbd *vbd = &blkif->vbd;
+ 	int rc = -EACCES;
  
- static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
--			      unsigned long bi_rw, sector_t len,
-+			      int idx, sector_t len,
- 			      struct dm_stats_aux *stats_aux, bool end,
- 			      unsigned long duration_jiffies)
- {
--	unsigned long idx = bi_rw & REQ_WRITE;
- 	struct dm_stat_shared *shared = &s->stat_shared[entry];
- 	struct dm_stat_percpu *p;
+-	if ((operation != READ) && vbd->readonly)
++	if ((operation != REQ_OP_READ) && vbd->readonly)
+ 		goto out;
  
-@@ -584,7 +583,7 @@ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
- #endif
- }
+ 	if (likely(req->nr_sects)) {
+@@ -995,7 +995,7 @@ static int dispatch_discard_io(struct xen_blkif *blkif,
+ 	preq.sector_number = req->u.discard.sector_number;
+ 	preq.nr_sects      = req->u.discard.nr_sectors;
  
--static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
-+static void __dm_stat_bio(struct dm_stat *s, int bi_rw,
- 			  sector_t bi_sector, sector_t end_sector,
- 			  bool end, unsigned long duration_jiffies,
- 			  struct dm_stats_aux *stats_aux)
-@@ -645,8 +644,8 @@ void dm_stats_account_io(struct dm_stats *stats, unsigned long bi_rw,
- 		last = raw_cpu_ptr(stats->last);
- 		stats_aux->merged =
- 			(bi_sector == (ACCESS_ONCE(last->last_sector) &&
--				       ((bi_rw & (REQ_WRITE | REQ_DISCARD)) ==
--					(ACCESS_ONCE(last->last_rw) & (REQ_WRITE | REQ_DISCARD)))
-+				       ((bi_rw == WRITE) ==
-+					(ACCESS_ONCE(last->last_rw) == WRITE))
- 				       ));
- 		ACCESS_ONCE(last->last_sector) = end_sector;
- 		ACCESS_ONCE(last->last_rw) = bi_rw;
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 1777c9c..b882e56c 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -686,8 +686,9 @@ static void start_io_acct(struct dm_io *io)
- 		atomic_inc_return(&md->pending[rw]));
+-	err = xen_vbd_translate(&preq, blkif, WRITE);
++	err = xen_vbd_translate(&preq, blkif, REQ_OP_WRITE);
+ 	if (err) {
+ 		pr_warn("access denied: DISCARD [%llu->%llu] on dev=%04x\n",
+ 			preq.sector_number,
+@@ -1208,6 +1208,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	struct bio **biolist = pending_req->biolist;
+ 	int i, nbio = 0;
+ 	int operation;
++	int operation_flags = 0;
+ 	struct blk_plug plug;
+ 	bool drain = false;
+ 	struct grant_page **pages = pending_req->segments;
+@@ -1226,17 +1227,19 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	switch (req_operation) {
+ 	case BLKIF_OP_READ:
+ 		blkif->st_rd_req++;
+-		operation = READ;
++		operation = REQ_OP_READ;
+ 		break;
+ 	case BLKIF_OP_WRITE:
+ 		blkif->st_wr_req++;
+-		operation = WRITE_ODIRECT;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_ODIRECT;
+ 		break;
+ 	case BLKIF_OP_WRITE_BARRIER:
+ 		drain = true;
+ 	case BLKIF_OP_FLUSH_DISKCACHE:
+ 		blkif->st_f_req++;
+-		operation = WRITE_FLUSH;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_FLUSH;
+ 		break;
+ 	default:
+ 		operation = 0; /* make gcc happy */
+@@ -1248,7 +1251,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	nseg = req->operation == BLKIF_OP_INDIRECT ?
+ 	       req->u.indirect.nr_segments : req->u.rw.nr_segments;
  
- 	if (unlikely(dm_stats_used(&md->stats)))
--		dm_stats_account_io(&md->stats, bio->bi_rw, bio->bi_iter.bi_sector,
--				    bio_sectors(bio), false, 0, &io->stats_aux);
-+		dm_stats_account_io(&md->stats, bio_data_dir(bio),
-+				    bio->bi_iter.bi_sector, bio_sectors(bio),
-+				    false, 0, &io->stats_aux);
- }
+-	if (unlikely(nseg == 0 && operation != WRITE_FLUSH) ||
++	if (unlikely(nseg == 0 && operation_flags != WRITE_FLUSH) ||
+ 	    unlikely((req->operation != BLKIF_OP_INDIRECT) &&
+ 		     (nseg > BLKIF_MAX_SEGMENTS_PER_REQUEST)) ||
+ 	    unlikely((req->operation == BLKIF_OP_INDIRECT) &&
+@@ -1289,7 +1292,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
  
- static void end_io_acct(struct dm_io *io)
-@@ -701,8 +702,9 @@ static void end_io_acct(struct dm_io *io)
- 	generic_end_io_acct(rw, &dm_disk(md)->part0, io->start_time);
+ 	if (xen_vbd_translate(&preq, blkif, operation) != 0) {
+ 		pr_debug("access denied: %s of [%llu,%llu] on dev=%04x\n",
+-			 operation == READ ? "read" : "write",
++			 operation == REQ_OP_READ ? "read" : "write",
+ 			 preq.sector_number,
+ 			 preq.sector_number + preq.nr_sects,
+ 			 blkif->vbd.pdevice);
+@@ -1348,7 +1351,8 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 			bio->bi_private = pending_req;
+ 			bio->bi_end_io  = end_block_io_op;
+ 			bio->bi_iter.bi_sector  = preq.sector_number;
+-			bio->bi_rw	= operation;
++			bio->bi_op	= operation;
++			bio->bi_rw	= operation_flags;
+ 		}
  
- 	if (unlikely(dm_stats_used(&md->stats)))
--		dm_stats_account_io(&md->stats, bio->bi_rw, bio->bi_iter.bi_sector,
--				    bio_sectors(bio), true, duration, &io->stats_aux);
-+		dm_stats_account_io(&md->stats, bio_data_dir(bio),
-+				    bio->bi_iter.bi_sector, bio_sectors(bio),
-+				    true, duration, &io->stats_aux);
+ 		preq.sector_number += seg[i].nsec;
+@@ -1356,7 +1360,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
  
- 	/*
- 	 * After this is decremented the bio must not be touched if it is
-@@ -1084,9 +1086,9 @@ static void rq_end_stats(struct mapped_device *md, struct request *orig)
- 	if (unlikely(dm_stats_used(&md->stats))) {
- 		struct dm_rq_target_io *tio = tio_from_request(orig);
- 		tio->duration_jiffies = jiffies - tio->duration_jiffies;
--		dm_stats_account_io(&md->stats, orig->cmd_flags, blk_rq_pos(orig),
--				    tio->n_sectors, true, tio->duration_jiffies,
--				    &tio->stats_aux);
-+		dm_stats_account_io(&md->stats, rq_data_dir(orig),
-+				    blk_rq_pos(orig), tio->n_sectors, true,
-+				    tio->duration_jiffies, &tio->stats_aux);
+ 	/* This will be hit if the operation was a flush or discard. */
+ 	if (!bio) {
+-		BUG_ON(operation != WRITE_FLUSH);
++		BUG_ON(operation_flags != WRITE_FLUSH);
+ 
+ 		bio = bio_alloc(GFP_KERNEL, 0);
+ 		if (unlikely(bio == NULL))
+@@ -1366,7 +1370,8 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 		bio->bi_bdev    = preq.bdev;
+ 		bio->bi_private = pending_req;
+ 		bio->bi_end_io  = end_block_io_op;
+-		bio->bi_rw	= operation;
++		bio->bi_op	= operation;
++		bio->bi_rw	= operation_flags;
  	}
- }
  
-@@ -2017,8 +2019,9 @@ static void dm_start_request(struct mapped_device *md, struct request *orig)
- 		struct dm_rq_target_io *tio = tio_from_request(orig);
- 		tio->duration_jiffies = jiffies;
- 		tio->n_sectors = blk_rq_sectors(orig);
--		dm_stats_account_io(&md->stats, orig->cmd_flags, blk_rq_pos(orig),
--				    tio->n_sectors, false, 0, &tio->stats_aux);
-+		dm_stats_account_io(&md->stats, rq_data_dir(orig),
-+				    blk_rq_pos(orig), tio->n_sectors, false, 0,
-+				    &tio->stats_aux);
- 	}
+ 	atomic_set(&pending_req->pendcnt, nbio);
+@@ -1378,9 +1383,9 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	/* Let the I/Os go.. */
+ 	blk_finish_plug(&plug);
  
- 	/*
+-	if (operation == READ)
++	if (operation == REQ_OP_READ)
+ 		blkif->st_rd_sect += preq.nr_sects;
+-	else if (operation & WRITE)
++	else if (operation == REQ_OP_WRITE)
+ 		blkif->st_wr_sect += preq.nr_sects;
+ 
+ 	return 0;
 -- 
 1.8.3.1
