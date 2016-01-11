@@ -1,83 +1,128 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/23] HiSilicon SAS v2 hw support
-Date: Mon, 11 Jan 2016 14:43:52 +0100
-Message-ID: <5693B198.2010504@suse.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 01/23] devicetree: bindings: hisi_sas: add v2 HW bindings
+Date: Mon, 11 Jan 2016 14:00:58 +0000
+Message-ID: <5693B59A.6000705@huawei.com>
 References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
+ <1452262542-64589-2-git-send-email-john.garry@huawei.com>
+ <20160108145256.GG3097@leverpostej> <568FD281.4050207@huawei.com>
+ <20160108151934.GA32692@leverpostej> <568FD70D.1090303@huawei.com>
+ <20160108164910.GD32692@leverpostej>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53860 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932180AbcAKNn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jan 2016 08:43:57 -0500
-In-Reply-To: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:14644 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760227AbcAKOCK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2016 09:02:10 -0500
+In-Reply-To: <20160108164910.GD32692@leverpostej>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org
 
-On 01/08/2016 03:15 PM, John Garry wrote:
-> This patchset introduces support for the HiSi SAS v2 hw.
-> The major difference between v1 and v2 hw is support
-> for SATA/STP.
+>> This is a specific issue for hip06 chipset.
 >
-> Known limitation:
-> - We cannot connect a SATA disk through a 12G expander
->    without disabling the STP buffer. Direcly connecting
->    a SATA disk to the HBA is ok.
+> Ok. So is this:
 >
-> John Garry (23):
->    devicetree: bindings: hisi_sas: add v2 HW bindings
->    hisi_sas: relocate DEV_IS_EXPANDER
->    hisi_sas: set max commands as configurable
->    hisi_sas: reduce max itct entries
->    hisi_sas: add hisi_sas_err_record_v1
->    hisi_sas: rename some fields in hisi_sas_itct
->    hisi_sas: add bare v2 hw driver
->    hisi_sas: add v2 register definitions
->    hisi_sas: add v2 hw init
->    hisi_sas: add init_id_frame_v2_hw()
->    hisi_sas: add v2 phy init code
->    hisi_sas: add v2 int init and phy up handler
->    hisi_sas: add v2 phy down handler
->    hisi_sas: add v2 channel interrupt handler
->    hisi_sas: add v2 SATA interrupt handler
->    hisi_sas: add v2 cq interrupt handler
->    hisi_sas: add v2 path to send ssp frame
->    hisi_sas: add v2 code to send smp command
->    hisi_sas: add v2 code for itct setup and free
->    hisi_sas: add v2 path to send ATA command
->    hisi_sas: add v2 slot error handler
->    hisi_sas: add v2 tmf functions
->    hisi_sas: update driver version to 1.1
+> * a bug within the SAS controller in hip06, or:
 >
->   .../devicetree/bindings/scsi/hisilicon-sas.txt     |   20 +-
->   drivers/scsi/hisi_sas/Makefile                     |    2 +-
->   drivers/scsi/hisi_sas/hisi_sas.h                   |   39 +-
->   drivers/scsi/hisi_sas/hisi_sas_main.c              |   36 +-
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |   20 +-
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             | 2206 +++++++++=
-+++++++++++
->   6 files changed, 2277 insertions(+), 46 deletions(-)
->   create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> * a requirement/bug of an endpoint attached to the controller, or:
 >
-=46or the entire series:
+> * a requirement/bug of some interconnect between the controller and
+>    endpoint, or:
+>
+> * some other integration bug?
+>
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+This is related to how the SAS controller IP was integrated into the 
+chip. It is related to how many bursts are permitted for this controller 
+on the AXI bus.
+
+> Please describe what the issue is that you're trying to work around, not
+> only your solution to it.
+>
+>> There is a bug in the HW on hip06 where controller #1 has to set to 2
+>> registers to non-default values to limit "am-max-transmissions".
+>
+> I got that. However, I have no idea what "am-max-transmissions" is, no
+> idea why you need to limit it (hopefully you can describe that a little
+> better above), nor what the semantics are for "limit".
+>
+
+So am-max-transmissions is a SW configurable feature of the controller. 
+ From a high-level, it means how many commands we can send in parallel 
+to the end device(s) without waiting for a response. It is dependent on 
+the chip bus design.
+
+> The description of the property is an imperative, which reads like a
+> description of a specific driver behaviour rather than a property of the
+> hardware that leads to that behaviour being necessary. That's a warning
+> sign that the property is ill-defined, and we may encounter problems in
+> future due to changes in Linux.
+>
+
+Agreed.
+
+> Without knowing _why_ it's necessary to limit this, it's not possible to
+> know if the property is both necessary and sufficient to solve the
+> problem such that it doesn't rear its ugly head in future.
+>
+> For example, if this is simply one way to work around a hip06-specific
+> integration bug that we cannot imagine occurring elsewhere, it may be
+> better to instead key off of a platform-specific compatible string for
+> the v2 SAS controller in hip06. That gives us more freedom to apply
+> different workarounds if we have to.
+>
+> I see that the presence of this property will cause the driver to writes
+> hard-coded values two two registers. Not knowing the format of those
+> registers, their default values, nor how they respond to writes, I can't
+> tell:
+>
+
+As for writing hardcoded values, by default the related registers will 
+hold 0x40, which means we can have upto 64 outstanding requests on this 
+controller. Due to controller #1 integration restrictions, we can only 
+issue 32 requests.
+
+> * If the writes have other effects.
+>
+> * If the limit is a single bit being flipped (i.e. this is a boolean in
+>    hardware too).
+>
+> * If the limit is some arbitrary chosen value which is not described in
+>    the property or the binding, nor what that value is. If we encounter a
+>    similar bug requiring a different bound in future, it may be
+>    problematic to have chosen an arbitrary fixed value, and it may make
+>    more sense to describe the value in the DT.
+>
+> So, please:
+>
+> * Update the DT property description to describe the specific HW issue
+>    that needs to be worked around, with a full description in the commit
+>    message.
+>
+> * Add a comment to the driver to explain what the effect of the register
+>    writes is intended to be, i.e. what value am max transmissions is
+>    being set to, and why that value isn't arbitrary.
+>
+
+As I understand, there are no more restictions/special requirements for 
+controller #1. This v2 controller IP will be used in other chips, so we 
+may have this issue again - I am seeking information from HW people. As 
+such, it may be useful to know this info before decided on how this is 
+decribed in the DT.
+
+>> This would not be a common SAS/SCSI controller property and is
+>> specific to our HW.
+>
+> Ok.
+>
+> Thanks,
+> Mark.
+>
 
 Cheers,
+John
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
