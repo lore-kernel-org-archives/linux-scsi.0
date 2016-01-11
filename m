@@ -1,58 +1,68 @@
-From: Nicholas Krause <xerofoify@gmail.com>
-Subject: [PATCH RESEND] mpt3sas:Fix missing error checks for calls to
- _transport_phy_reset in mpt3sas_transport.c
-Date: Mon, 11 Jan 2016 14:10:24 -0500
-Message-ID: <1452539424-22916-1-git-send-email-xerofoify@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] avoid crashing when reading /proc/scsi/scsi and
+ simultaneously removing devices
+Date: Mon, 11 Jan 2016 11:15:18 -0800
+Message-ID: <1452539718.2363.12.camel@HansenPartnership.com>
+References: <1452533307-30142-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: nagalakshmi.nandigama@avagotech.com
-Cc: abhijit.mahajan@avagotech.com, sbranden@broadcom.com, martin.petersen@oracle.com, jonmason@broadcom.com, rjui@broadcom.com, JBottomley@odin.com, linux-kernel@vger.kernel.org, sreekanth.reddy@avagotech.com, praveen.krishnamoorthy@avagotech.com, bcm-kernel-feedback-list@broadcom.com, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1452533307-30142-1-git-send-email-emilne@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, martin.petersen@oracle.com, hare@suse.com
 List-Id: linux-scsi@vger.kernel.org
 
-This adds the missing error checks and paths for functions that
-call _transport_phy_reset and do not correctly check that the
-call to this particular function has succeeded by returning zero
-in the file, mpt3sas_transport.c.
+On Mon, 2016-01-11 at 12:28 -0500, Ewan D. Milne wrote:
+> From: "Ewan D. Milne" <emilne@redhat.com>
+> 
+> The klist traversal used by the reading of /proc/scsi/scsi is not
+> interlocked
+> against device removal.  It takes a reference on the containing
+> object, but
+> this does not prevent the device from being removed from the list. 
+>  Thus, we
+> get errors and eventually panic, as shown in the traces below.  Fix
+> this by
+> keeping a klist iterator in the seq_file private data.
+> 
+> The problem can be easily reproduced by repeatedly increasing
+> scsi_debug's
+> max_luns to 30 and then deleting the devices via sysfs, while
+> simulatenously
+> accessing /proc/scsi/scsi.
+>     
+> From a patch originally developed by David Jeffery <
+> djeffery@redhat.com>
 
-Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+OK, so it looks like this is a bug in the klist system.  When a
+starting point is used, there should be a check to see if it's still
+active otherwise the whole thing is racy.  If it's fixed in klist, the
+fix works for everyone, not just SCSI.
+
+How about this?  It causes the iterator to start at the beginning if
+the node has been deleted.  That will produce double output during some
+of your test, but I think that's OK given that this is a rare race.
+
+James
+
 ---
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index ca36d7e..bff5a11 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -1766,7 +1766,7 @@ _transport_phy_enable(struct sas_phy *phy, int enable)
+diff --git a/lib/klist.c b/lib/klist.c
+index d74cf7a..0507fa5 100644
+--- a/lib/klist.c
++++ b/lib/klist.c
+@@ -282,9 +282,9 @@ void klist_iter_init_node(struct klist *k, struct klist_iter *i,
+ 			  struct klist_node *n)
+ {
+ 	i->i_klist = k;
+-	i->i_cur = n;
+-	if (n)
+-		kref_get(&n->n_ref);
++	i->i_cur = NULL;
++	if (n && kref_get_unless_zero(&n->n_ref))
++		i->i_cur = n;
+ }
+ EXPORT_SYMBOL_GPL(klist_iter_init_node);
  
- 	/* link reset */
- 	if (enable)
--		_transport_phy_reset(phy, 0);
-+		rc = _transport_phy_reset(phy, 0);
- 
-  out:
- 	kfree(sas_iounit_pg1);
-@@ -1870,7 +1870,9 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
- 	}
- 
- 	/* link reset */
--	_transport_phy_reset(phy, 0);
-+	rc = _transport_phy_reset(phy, 0);
-+	if (rc)
-+		goto out;
- 
- 	/* read phy page 0, then update the rates in the sas transport phy */
- 	if (!mpt3sas_config_get_phy_pg0(ioc, &mpi_reply, &phy_pg0,
--- 
-2.5.0
