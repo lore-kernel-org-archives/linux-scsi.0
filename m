@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 18/22] scsi_dh: add 'rescan' callback
-Date: Tue, 12 Jan 2016 16:40:54 +0100
-Message-ID: <1452613258-94084-19-git-send-email-hare@suse.de>
+Subject: [PATCHv2 19/22] scsi: Add 'access_state' attribute
+Date: Tue, 12 Jan 2016 16:40:55 +0100
+Message-ID: <1452613258-94084-20-git-send-email-hare@suse.de>
 References: <1452613258-94084-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38698 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38662 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762831AbcALPlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753037AbcALPlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 12 Jan 2016 10:41:07 -0500
 In-Reply-To: <1452613258-94084-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,98 +14,139 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-If a device needs to be rescanned the device_handler might need
-to be rechecked, too.
-So add a 'rescan' callback to the device handler and call it
-upon scsi_rescan_device().
+Add an 'access_state' attribute to struct scsi_device to
+display the asymmetric LUN access state.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++++++
- drivers/scsi/scsi_lib.c                    | 1 +
- drivers/scsi/scsi_scan.c                   | 8 +++++++-
- include/scsi/scsi_dh.h                     | 1 +
- 4 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_scan.c   |  1 +
+ drivers/scsi/scsi_sysfs.c  | 49 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h |  1 +
+ include/scsi/scsi_proto.h  | 13 ++++++++++++
+ 4 files changed, 64 insertions(+)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 9df2203..ffc419e 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1038,6 +1038,13 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
- 
- }
- 
-+static void alua_rescan(struct scsi_device *sdev)
-+{
-+	struct alua_dh_data *h = sdev->handler_data;
-+
-+	alua_initialize(sdev, h);
-+}
-+
- /*
-  * alua_bus_attach - Attach device handler
-  * @sdev: device to be attached to
-@@ -1101,6 +1108,7 @@ static struct scsi_device_handler alua_dh = {
- 	.prep_fn = alua_prep_fn,
- 	.check_sense = alua_check_sense,
- 	.activate = alua_activate,
-+	.rescan = alua_rescan,
- 	.set_params = alua_set_params,
- };
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fa6b2c4..d46193a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2699,6 +2699,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- 		envp[idx++] = "SDEV_MEDIA_CHANGE=1";
- 		break;
- 	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
-+		scsi_rescan_device(&sdev->sdev_gendev);
- 		envp[idx++] = "SDEV_UA=INQUIRY_DATA_HAS_CHANGED";
- 		break;
- 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index a1c195d..05dc1aa 100644
+index 05dc1aa..9fc1531 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -43,6 +43,7 @@
- #include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_dh.h>
- #include <scsi/scsi_eh.h>
+@@ -231,6 +231,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	sdev->lun = lun;
+ 	sdev->channel = starget->channel;
+ 	sdev->sdev_state = SDEV_CREATED;
++	sdev->access_state = SCSI_ACCESS_STATE_UNKNOWN;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+ 	INIT_LIST_HEAD(&sdev->cmd_list);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ef36053..80b4c67 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -81,6 +81,34 @@ const char *scsi_host_state_name(enum scsi_host_state state)
+ 	return name;
+ }
  
- #include "scsi_priv.h"
-@@ -1516,9 +1517,14 @@ EXPORT_SYMBOL(scsi_add_device);
- 
- void scsi_rescan_device(struct device *dev)
++static const struct {
++	enum scsi_access_state	value;
++	char			*name;
++} sdev_access_states[] = {
++	{ SCSI_ACCESS_STATE_OPTIMAL, "active/optimized" },
++	{ SCSI_ACCESS_STATE_ACTIVE, "active/non-optimized" },
++	{ SCSI_ACCESS_STATE_STANDBY, "standby" },
++	{ SCSI_ACCESS_STATE_UNAVAILABLE, "unavailable" },
++	{ SCSI_ACCESS_STATE_LBA, "lba-dependent" },
++	{ SCSI_ACCESS_STATE_OFFLINE, "offline" },
++	{ SCSI_ACCESS_STATE_TRANSITIONING, "transitioning" },
++	{ SCSI_ACCESS_STATE_UNKNOWN, "unknown" },
++};
++
++const char *scsi_access_state_name(enum scsi_access_state state)
++{
++	int i;
++	char *name = NULL;
++
++	for (i = 0; i < ARRAY_SIZE(sdev_access_states); i++) {
++		if (sdev_access_states[i].value == state) {
++			name = sdev_access_states[i].name;
++			break;
++		}
++	}
++	return name;
++}
++
+ static int check_set(unsigned long long *val, char *src)
  {
+ 	char *last;
+@@ -973,6 +1001,26 @@ sdev_store_dh_state(struct device *dev, struct device_attribute *attr,
+ 
+ static DEVICE_ATTR(dh_state, S_IRUGO | S_IWUSR, sdev_show_dh_state,
+ 		   sdev_store_dh_state);
++
++static ssize_t
++sdev_show_access_state(struct device *dev,
++		       struct device_attribute *attr,
++		       char *buf)
++{
 +	struct scsi_device *sdev = to_scsi_device(dev);
++	enum scsi_access_state access_state;
++	bool pref = false;
 +
- 	device_lock(dev);
- 
--	scsi_attach_vpd(to_scsi_device(dev));
-+	scsi_attach_vpd(sdev);
++	if (sdev->access_state & SCSI_ACCESS_STATE_PREFERRED)
++		pref = true;
 +
-+	if (sdev->handler && sdev->handler->rescan)
-+		sdev->handler->rescan(sdev);
++	access_state = (sdev->access_state & SCSI_ACCESS_STATE_MASK);
++
++	return snprintf(buf, 32, "%s%s\n",
++			scsi_access_state_name(access_state),
++			pref ? " preferred" : "");
++}
++static DEVICE_ATTR(access_state, S_IRUGO, sdev_show_access_state, NULL);
+ #endif
  
- 	if (dev->driver && try_module_get(dev->driver->owner)) {
- 		struct scsi_driver *drv = to_scsi_driver(dev->driver);
-diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 7e184c6..c7bba2b 100644
---- a/include/scsi/scsi_dh.h
-+++ b/include/scsi/scsi_dh.h
-@@ -71,6 +71,7 @@ struct scsi_device_handler {
- 	int (*activate)(struct scsi_device *, activate_complete, void *);
- 	int (*prep_fn)(struct scsi_device *, struct request *);
- 	int (*set_params)(struct scsi_device *, const char *);
-+	void (*rescan)(struct scsi_device *);
+ static ssize_t
+@@ -1047,6 +1095,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_wwid.attr,
+ #ifdef CONFIG_SCSI_DH
+ 	&dev_attr_dh_state.attr,
++	&dev_attr_access_state.attr,
+ #endif
+ 	&dev_attr_queue_ramp_up_period.attr,
+ 	REF_EVT(media_change),
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f63a167..5dd00e9f 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -200,6 +200,7 @@ struct scsi_device {
+ 	struct scsi_device_handler *handler;
+ 	void			*handler_data;
+ 
++	enum scsi_access_state	access_state;
+ 	enum scsi_device_state sdev_state;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index a9fbf1b..80e85e7 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -277,5 +277,18 @@ struct scsi_lun {
+ 	__u8 scsi_lun[8];
  };
  
- #ifdef CONFIG_SCSI_DH
++/* SPC asymmetric access states */
++enum scsi_access_state {
++	SCSI_ACCESS_STATE_OPTIMAL = 0,
++	SCSI_ACCESS_STATE_ACTIVE,
++	SCSI_ACCESS_STATE_STANDBY,
++	SCSI_ACCESS_STATE_UNAVAILABLE,
++	SCSI_ACCESS_STATE_LBA,
++	SCSI_ACCESS_STATE_OFFLINE = 0xe,
++	SCSI_ACCESS_STATE_TRANSITIONING = 0xf,
++	SCSI_ACCESS_STATE_UNKNOWN = 0x70,
++};
++#define SCSI_ACCESS_STATE_MASK 0x0f
++#define SCSI_ACCESS_STATE_PREFERRED 0x80
+ 
+ #endif /* _SCSI_PROTO_H_ */
 -- 
 1.8.5.6
 
