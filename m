@@ -1,34 +1,42 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH-v2 4/4] target: Obtain se_node_acl->acl_kref during
-	get_initiator_node_acl
-Date: Tue, 12 Jan 2016 16:09:41 +0100
-Message-ID: <20160112150941.GC2058@lst.de>
-References: <1452457724-10629-1-git-send-email-nab@daterainc.com> <1452457724-10629-5-git-send-email-nab@daterainc.com>
+Subject: Re: [PATCH-for-4.6 1/6] target: Add target_alloc_session() helper
+	function
+Date: Tue, 12 Jan 2016 16:11:19 +0100
+Message-ID: <20160112151119.GD2058@lst.de>
+References: <1452458668-11034-1-git-send-email-nab@daterainc.com> <1452458668-11034-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1452457724-10629-5-git-send-email-nab@daterainc.com>
+In-Reply-To: <1452458668-11034-2-git-send-email-nab@daterainc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>
 Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> +++ b/drivers/target/target_core_tpg.c
-> @@ -75,9 +75,16 @@ struct se_node_acl *core_tpg_get_initiator_node_acl(
->  	unsigned char *initiatorname)
->  {
->  	struct se_node_acl *acl;
-> -
-> +	/*
-> +	 * Obtain the acl_kref now, which will be dropped upon the
-> +	 * release of se_sess memory within transport_free_session().
-> +	 */
+> +struct se_session *
+> +target_alloc_session(struct se_portal_group *tpg,
+> +		     unsigned int tag_num, unsigned int tag_size,
+> +		     enum target_prot_op prot_op,
+> +		     const char *initiatorname, void *private,
+> +		     int (*callback)(struct se_portal_group *,
+> +				     struct se_session *, void *))
+> +{
 
-As said before this is incorrect, or rather shold be incorrect.  I
-think it should be removed, but if you want to keep it should be
-in core_tpg_check_initiator_node_acl and not here.
+I'd much rather have the fabrics drivers call transport_alloc_session_tags
+directly from the callback than growing even more arguments here.
 
-The call of core_tpg_get_initiator_node_acl in
-iscsit_build_sendtargets_response needs a put to balance out the
-get of this kref while we're at it.
+> +	struct se_session *sess;
+> +
+> +	if (tag_num != 0 && !tag_size) {
+> +		pr_err("target_alloc_session called with percpu-ida tag_num:"
+> +		       " %u, but zero tag_size\n", tag_num);
+> +		return ERR_PTR(-EINVAL);
+> +	}
+> +	if (!tag_num && tag_size) {
+> +		pr_err("target_alloc_session called with percpu-ida tag_size:"
+> +		       " %u, but zero tag_num\n", tag_size);
+> +		return ERR_PTR(-EINVAL);
+> +	}
+
+These checks should be in transport_alloc_session_tags.
