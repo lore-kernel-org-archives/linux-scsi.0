@@ -1,117 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: LSF/MM 2016: Call for Proposals
-Date: Tue, 12 Jan 2016 11:05:45 -0500
-Message-ID: <yq14meiye92.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 1/2] target: Fix LUN_RESET active I/O handling for
+ ACK_KREF
+Date: Tue, 12 Jan 2016 08:32:48 -0800
+Message-ID: <56952AB0.1070806@sandisk.com>
+References: <1452594245-921-1-git-send-email-nab@daterainc.com>
+ <1452594245-921-2-git-send-email-nab@daterainc.com>
+ <20160112152059.GB2294@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
-To: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
-Cc: lsf-pc@lists.linux-foundation.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bn0100.outbound.protection.outlook.com ([157.56.110.100]:48212
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761454AbcALQcy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jan 2016 11:32:54 -0500
+In-Reply-To: <20160112152059.GB2294@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
+On 01/12/2016 07:20 AM, Christoph Hellwig wrote:
+>> It also introduces SCF_ACK_KREF to determine when
+>> transport_cmd_finish_abort() needs to drop the second
+>> extra reference, ahead of calling target_put_sess_cmd()
+>> for the final kref_put(&se_cmd->cmd_kref).
+>
+> It would be really useful to have all drivers follow that
+> ACK KREF model instead of needing to deal with driver
+> differences everywhere..
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2016 will be held on April 18th and 19th at the Raleigh Marriott City
-center, Raleigh, NC.
+Hello Christoph,
 
-Like last year, LSF/MM will be colocated with the Linux Foundation Vault
-conference which takes place on April 20th and 21st in the same
-venue. For those that do not know, Vault is designed to be an event
-where open source storage and filesystem practitioners meet storage
-implementors and, as such, it would be of benefit for LSF/MM attendees
-to attend.
+How about eliminating the TARGET_SCF_ACK_KREF flag ? If a command would 
+only be freed upon the last target_put_sess_cmd() call then I think that 
+the check_stop_free() callback wouldn't have to call 
+target_put_sess_cmd() and hence that the TARGET_SCF_ACK_KREF flag could 
+be removed.
 
-	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
-	http://events.linuxfoundation.org/events/vault
-
-On behalf of the committee I am issuing a call for agenda proposals that
-are suitable for cross-track discussion as well as technical subjects
-for the breakout sessions.
-
-1) Proposals for agenda topics should be sent before February 29th, 2016
-to:
-
-	lsf-pc@lists.linux-foundation.org
-
-and cc the Linux list or lists that are relevant for the topic in
-question:
-
-	ATA:	linux-ide@vger.kernel.org
-	Block:	linux-block@vger.kernel.org
-	FS:	linux-fsdevel@vger.kernel.org
-	MM:	linux-mm@kvack.org
-	SCSI:	linux-scsi@vger.kernel.org
-
-If advance notice is required for visa applications then please send
-proposals before February 11th. The committee will complete the first
-round of selections near that date to accommodate applications.
-
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one.
-
-Agenda topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees at the
-summit.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions, although the final numbers will depend on the room sizes at
-the venue.
-
-2) Requests to attend the summit should be sent to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Please summarise what expertise you will bring to the meeting, and what
-you would like to discuss. Please also tag your email with [LSF/MM
-ATTEND] so there is less chance of it getting lost.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged. There will be no recording or audio bridge. However, we
-expect that written minutes will be published as we did in previous
-years
-
-2015:
-	https://lwn.net/Articles/lsfmm2015/
-
-2014:
-	http://lwn.net/Articles/LSFMM2014/
-
-2013:
-	http://lwn.net/Articles/548089/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-Storage:
-	Jens Axboe (track chair)
-	James Bottomley
-	Christoph Hellwig
-	Martin K. Petersen (program chair)
-
-Filesystems:
-	Josef Bacik
-	Jan Kara
-	Jeff Layton (track chair)
-	Anna Schumaker
-	Theodore Ts'o
-	Ric Wheeler
-
-MM:
-	Mel Gorman
-	Johannes Weiner
-	Rik van Riel (track chair)
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Bart.
