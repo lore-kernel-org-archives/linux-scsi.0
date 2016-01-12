@@ -1,150 +1,117 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 02/22] scsi_dh_alua: separate out alua_stpg()
-Date: Tue, 12 Jan 2016 16:40:38 +0100
-Message-ID: <1452613258-94084-3-git-send-email-hare@suse.de>
-References: <1452613258-94084-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38579 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761512AbcALPlB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jan 2016 10:41:01 -0500
-In-Reply-To: <1452613258-94084-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: LSF/MM 2016: Call for Proposals
+Date: Tue, 12 Jan 2016 11:05:45 -0500
+Message-ID: <yq14meiye92.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
+Cc: lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Separate out SET TARGET PORT GROUP functionality into a separate
-function alua_stpg().
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 95 +++++++++++++++++++-----------
- 1 file changed, 61 insertions(+), 34 deletions(-)
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2016 will be held on April 18th and 19th at the Raleigh Marriott City
+center, Raleigh, NC.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index df71e85..7c66e4a 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -579,6 +579,65 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- }
- 
- /*
-+ * alua_stpg - Issue a SET TARGET GROUP STATES command
-+ *
-+ * Issue a SET TARGET GROUP STATES command and evaluate the
-+ * response. Returns SCSI_DH_RETRY if the target port group
-+ * state is found to be in 'transitioning'.
-+ * If SCSI_DH_OK is returned the passed-in 'fn' function
-+ * this function will take care of executing 'fn'.
-+ * Otherwise 'fn' should be executed by the caller with the
-+ * returned error code.
-+ */
-+static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h,
-+			  activate_complete fn, void *data)
-+{
-+	int err = SCSI_DH_OK;
-+	int stpg = 0;
-+
-+	if (!(h->tpgs & TPGS_MODE_EXPLICIT))
-+		/* Only implicit ALUA supported */
-+		goto out;
-+
-+	switch (h->state) {
-+	case TPGS_STATE_NONOPTIMIZED:
-+		stpg = 1;
-+		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
-+		    !h->pref &&
-+		    (h->tpgs & TPGS_MODE_IMPLICIT))
-+			stpg = 0;
-+		break;
-+	case TPGS_STATE_STANDBY:
-+	case TPGS_STATE_UNAVAILABLE:
-+		stpg = 1;
-+		break;
-+	case TPGS_STATE_OFFLINE:
-+		err = SCSI_DH_IO;
-+		break;
-+	case TPGS_STATE_TRANSITIONING:
-+		err = SCSI_DH_RETRY;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (stpg) {
-+		h->callback_fn = fn;
-+		h->callback_data = data;
-+		err = submit_stpg(h);
-+		if (err != SCSI_DH_OK)
-+			h->callback_fn = h->callback_data = NULL;
-+		else
-+			fn = NULL;
-+	}
-+out:
-+	if (fn)
-+		fn(data, err);
-+
-+	return err;
-+}
-+
-+/*
-  * alua_initialize - Initialize ALUA state
-  * @sdev: the device to be initialized
-  *
-@@ -655,7 +714,6 @@ static int alua_activate(struct scsi_device *sdev,
- {
- 	struct alua_dh_data *h = sdev->handler_data;
- 	int err = SCSI_DH_OK;
--	int stpg = 0;
- 
- 	err = alua_rtpg(sdev, h, 1);
- 	if (err != SCSI_DH_OK)
-@@ -664,41 +722,10 @@ static int alua_activate(struct scsi_device *sdev,
- 	if (optimize_stpg)
- 		h->flags |= ALUA_OPTIMIZE_STPG;
- 
--	if (h->tpgs & TPGS_MODE_EXPLICIT) {
--		switch (h->state) {
--		case TPGS_STATE_NONOPTIMIZED:
--			stpg = 1;
--			if ((h->flags & ALUA_OPTIMIZE_STPG) &&
--			    (!h->pref) &&
--			    (h->tpgs & TPGS_MODE_IMPLICIT))
--				stpg = 0;
--			break;
--		case TPGS_STATE_STANDBY:
--		case TPGS_STATE_UNAVAILABLE:
--			stpg = 1;
--			break;
--		case TPGS_STATE_OFFLINE:
--			err = SCSI_DH_IO;
--			break;
--		case TPGS_STATE_TRANSITIONING:
--			err = SCSI_DH_RETRY;
--			break;
--		default:
--			break;
--		}
--	}
--
--	if (stpg) {
--		h->callback_fn = fn;
--		h->callback_data = data;
--		err = submit_stpg(h);
--		if (err == SCSI_DH_OK)
--			return 0;
--		h->callback_fn = h->callback_data = NULL;
--	}
-+	err = alua_stpg(sdev, h, fn, data);
- 
- out:
--	if (fn)
-+	if (err != SCSI_DH_OK && fn)
- 		fn(data, err);
- 	return 0;
- }
+Like last year, LSF/MM will be colocated with the Linux Foundation Vault
+conference which takes place on April 20th and 21st in the same
+venue. For those that do not know, Vault is designed to be an event
+where open source storage and filesystem practitioners meet storage
+implementors and, as such, it would be of benefit for LSF/MM attendees
+to attend.
+
+	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
+	http://events.linuxfoundation.org/events/vault
+
+On behalf of the committee I am issuing a call for agenda proposals that
+are suitable for cross-track discussion as well as technical subjects
+for the breakout sessions.
+
+1) Proposals for agenda topics should be sent before February 29th, 2016
+to:
+
+	lsf-pc@lists.linux-foundation.org
+
+and cc the Linux list or lists that are relevant for the topic in
+question:
+
+	ATA:	linux-ide@vger.kernel.org
+	Block:	linux-block@vger.kernel.org
+	FS:	linux-fsdevel@vger.kernel.org
+	MM:	linux-mm@kvack.org
+	SCSI:	linux-scsi@vger.kernel.org
+
+If advance notice is required for visa applications then please send
+proposals before February 11th. The committee will complete the first
+round of selections near that date to accommodate applications.
+
+Please tag your proposal with [LSF/MM TOPIC] to make it easier to
+track. In addition, please make sure to start a new thread for each
+topic rather than following up to an existing one.
+
+Agenda topics and attendees will be selected by the program committee,
+but the final agenda will be formed by consensus of the attendees at the
+summit.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions, although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend the summit should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarise what expertise you will bring to the meeting, and what
+you would like to discuss. Please also tag your email with [LSF/MM
+ATTEND] so there is less chance of it getting lost.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However, we
+expect that written minutes will be published as we did in previous
+years
+
+2015:
+	https://lwn.net/Articles/lsfmm2015/
+
+2014:
+	http://lwn.net/Articles/LSFMM2014/
+
+2013:
+	http://lwn.net/Articles/548089/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+	Jens Axboe (track chair)
+	James Bottomley
+	Christoph Hellwig
+	Martin K. Petersen (program chair)
+
+Filesystems:
+	Josef Bacik
+	Jan Kara
+	Jeff Layton (track chair)
+	Anna Schumaker
+	Theodore Ts'o
+	Ric Wheeler
+
+MM:
+	Mel Gorman
+	Johannes Weiner
+	Rik van Riel (track chair)
+
 -- 
-1.8.5.6
+Martin K. Petersen	Oracle Linux Engineering
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
