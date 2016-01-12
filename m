@@ -1,62 +1,51 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 15/15] megaraid_sas: SPERC boot driver reorder
-Date: Tue, 12 Jan 2016 10:56:37 +0530
-Message-ID: <1d2733ee978aebc5d201b4ace1900d89@mail.gmail.com>
-References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
- <1450445228-26571-16-git-send-email-Sumit.Saxena@avagotech.com>
- <20151218140510.GA6679@infradead.org> 667c88bca37fe6c51b8dc68a7cad498e@mail.gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:33145 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713AbcALF0j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2016 00:26:39 -0500
-Received: by mail-lb0-f178.google.com with SMTP id x4so9198335lbm.0
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jan 2016 21:26:38 -0800 (PST)
-In-Reply-To: 667c88bca37fe6c51b8dc68a7cad498e@mail.gmail.com
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/2] target: Fix LUN_RESET active I/O + TMR handling
+Date: Tue, 12 Jan 2016 10:24:03 +0000
+Message-ID: <1452594245-921-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: jbottomley@parallels.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
 
-> -----Original Message-----
-> From: Sumit Saxena [mailto:sumit.saxena@avagotech.com]
-> Sent: Friday, January 08, 2016 12:37 PM
-> To: 'Christoph Hellwig'
-> Cc: 'jbottomley@parallels.com'; 'martin.petersen@oracle.com'; 'linux-
-> scsi@vger.kernel.org'; Kashyap Desai; Uday Lingala
-> Subject: RE: [PATCH 15/15] megaraid_sas: SPERC boot driver reorder
->
->
->
-> > -----Original Message-----
-> > From: Christoph Hellwig [mailto:hch@infradead.org]
-> > Sent: Friday, December 18, 2015 7:35 PM
-> > To: Sumit Saxena
-> > Cc: jbottomley@parallels.com; hch@infradead.org;
-> > martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> > kashyap.desai@avagotech.com; Uday Lingala
-> > Subject: Re: [PATCH 15/15] megaraid_sas: SPERC boot driver reorder
-> >
-> > On Fri, Dec 18, 2015 at 06:57:08PM +0530, Sumit Saxena wrote:
-> > > This patch will add support for drive ordering for a particular set
-> > > of device ID
-> > (0x005D, 0x005F) & subsystem vendor ID(0x1028).
-> >
-> > This really has no business in Linux.  Everyone should be using uuid
-> > based disk addressing if they care.  Tell Dell they should stop coming
-> > up with this crap, as they keep leaking this weird ordering things in
-again and
-> again.
->
-> This patch can be ignored. We discussed with Dell on this and they are
-fine to
-> backout the patch.
-> Can you provide any feedback on rest of the patches?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Gentle reminder..
+Hi all,
 
->
-> Thanks,
-> Sumit
+This -v1 series is to address two LUN_RESET active
+I/O + TMR se_cmd->cmd_kref < 0 bugs as reported
+recently by Quinn & Co, that can occur during
+active I/O LUN_RESET with single / multiple LIO
+export port configs.
+
+To address this bug, add __target_check_io_state()
+common handler for ABORT_TASK + LUN_RESET I/O abort
+cases, and move remaining se_cmd SGL page + release
+into target_free_cmd_mem() to now be called directly
+from the final target_release_cmd_kref() callback.
+
+Following __target_check_io_state() code, also obtain
+kref_get_unless_zero(&se_cmd->cmd_kref) for LUN_RESET
+TMR abort in core_tmr_drain_tmr_list(), in order to
+utilize common transport_wait_for_tasks() code
+when se_tmr_req descriptors are being shutdown.
+
+Note there are a few more cleanups to be had but
+have been left off for the moment, ahead of these
+specific fixes getting merged for v4.5-rc code.
+
+Please review,
+
+--nab
+
+Nicholas Bellinger (2):
+  target: Fix LUN_RESET active I/O handling for ACK_KREF
+  target: Fix LUN_RESET active TMR descriptor handling
+
+ drivers/target/target_core_tmr.c       | 96 +++++++++++++++++++++++++++-------
+ drivers/target/target_core_transport.c | 66 ++++++++++++++---------
+ include/target/target_core_base.h      |  1 +
+ 3 files changed, 118 insertions(+), 45 deletions(-)
+
+-- 
+1.9.1
