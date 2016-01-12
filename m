@@ -1,164 +1,141 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/2] target: Fix LUN_RESET active TMR descriptor handling
-Date: Tue, 12 Jan 2016 10:24:05 +0000
-Message-ID: <1452594245-921-3-git-send-email-nab@daterainc.com>
-References: <1452594245-921-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:35467 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964946AbcALK0T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2016 05:26:19 -0500
-Received: by mail-ob0-f173.google.com with SMTP id py5so55514657obc.2
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2016 02:26:19 -0800 (PST)
-In-Reply-To: <1452594245-921-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 01/23] devicetree: bindings: hisi_sas: add v2 HW bindings
+Date: Tue, 12 Jan 2016 12:16:34 +0000
+Message-ID: <5694EEA2.8060000@huawei.com>
+References: <1452262542-64589-1-git-send-email-john.garry@huawei.com>
+ <1452262542-64589-2-git-send-email-john.garry@huawei.com>
+ <20160108145256.GG3097@leverpostej> <568FD281.4050207@huawei.com>
+ <20160108151934.GA32692@leverpostej> <568FD70D.1090303@huawei.com>
+ <20160108164910.GD32692@leverpostej> <5693B59A.6000705@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5693B59A.6000705-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 11/01/2016 14:00, John Garry wrote:
+>>> This is a specific issue for hip06 chipset.
+>>
+>> Ok. So is this:
+>>
+>> * a bug within the SAS controller in hip06, or:
+>>
+>> * a requirement/bug of an endpoint attached to the controller, or:
+>>
+>> * a requirement/bug of some interconnect between the controller and
+>>    endpoint, or:
+>>
+>> * some other integration bug?
+>>
+>
+> This is related to how the SAS controller IP was integrated into the
+> chip. It is related to how many bursts are permitted for this controller
+> on the AXI bus.
+>
+>> Please describe what the issue is that you're trying to work around, not
+>> only your solution to it.
+>>
+>>> There is a bug in the HW on hip06 where controller #1 has to set to 2
+>>> registers to non-default values to limit "am-max-transmissions".
+>>
+>> I got that. However, I have no idea what "am-max-transmissions" is, no
+>> idea why you need to limit it (hopefully you can describe that a little
+>> better above), nor what the semantics are for "limit".
+>>
+>
+> So am-max-transmissions is a SW configurable feature of the controller.
+>  From a high-level, it means how many commands we can send in parallel
+> to the end device(s) without waiting for a response. It is dependent on
+> the chip bus design.
+>
+>> The description of the property is an imperative, which reads like a
+>> description of a specific driver behaviour rather than a property of the
+>> hardware that leads to that behaviour being necessary. That's a warning
+>> sign that the property is ill-defined, and we may encounter problems in
+>> future due to changes in Linux.
+>>
+>
+> Agreed.
+>
+>> Without knowing _why_ it's necessary to limit this, it's not possible to
+>> know if the property is both necessary and sufficient to solve the
+>> problem such that it doesn't rear its ugly head in future.
+>>
+>> For example, if this is simply one way to work around a hip06-specific
+>> integration bug that we cannot imagine occurring elsewhere, it may be
+>> better to instead key off of a platform-specific compatible string for
+>> the v2 SAS controller in hip06. That gives us more freedom to apply
+>> different workarounds if we have to.
+>>
+>> I see that the presence of this property will cause the driver to writes
+>> hard-coded values two two registers. Not knowing the format of those
+>> registers, their default values, nor how they respond to writes, I can't
+>> tell:
+>>
+>
+> As for writing hardcoded values, by default the related registers will
+> hold 0x40, which means we can have upto 64 outstanding requests on this
+> controller. Due to controller #1 integration restrictions, we can only
+> issue 32 requests.
+>
+>> * If the writes have other effects.
+>>
+>> * If the limit is a single bit being flipped (i.e. this is a boolean in
+>>    hardware too).
+>>
+>> * If the limit is some arbitrary chosen value which is not described in
+>>    the property or the binding, nor what that value is. If we encounter a
+>>    similar bug requiring a different bound in future, it may be
+>>    problematic to have chosen an arbitrary fixed value, and it may make
+>>    more sense to describe the value in the DT.
+>>
+>> So, please:
+>>
+>> * Update the DT property description to describe the specific HW issue
+>>    that needs to be worked around, with a full description in the commit
+>>    message.
+>>
+>> * Add a comment to the driver to explain what the effect of the register
+>>    writes is intended to be, i.e. what value am max transmissions is
+>>    being set to, and why that value isn't arbitrary.
+>>
+>
+> As I understand, there are no more restictions/special requirements for
+> controller #1. This v2 controller IP will be used in other chips, so we
+> may have this issue again - I am seeking information from HW people. As
+> such, it may be useful to know this info before decided on how this is
+> decribed in the DT.
 
-This patch fixes a NULL pointer se_cmd->cmd_kref < 0
-refcount bug during TMR LUN_RESET with TMR se_cmd,
-triggered during se_cmd + se_tmr_req descriptor
-shutdown + release via core_tmr_drain_tmr_list().
+This issue is specific to only SAS controller #1 in hip06. The 
+controller is designed to permit upto 64, but, due to chip bus design, 
+this specific controller is limited to support 32.
+So, after considering this, would a platform-specific compatible string 
+be a better way of decribing this specific controller?
 
-It obtains kref_get_unless_zero(&se_cmd->cmd_kref)
-following __target_check_io_state() for active I/O
-CMD_T_ABORTED, and adds transport_wait_for_tasks()
-followed by the final target_put_sess_cmd() to
-release TMR logic locally obtained ->cmd_kref.
+>
+>>> This would not be a common SAS/SCSI controller property and is
+>>> specific to our HW.
+>>
+>> Ok.
+>>
+>> Thanks,
+>> Mark.
+>>
+>
+thanks,
+John
 
-Also add two new checks within target_tmr_work() to
-avoid CMD_T_ABORTED -> TFO->queue_tm_rsp() callbacks
-ahead of invoking the backend -> fabric put in
-transport_cmd_check_stop_to_fabric().
+> _______________________________________________
+> linuxarm mailing list
+> linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
 
-For good measure, also change core_tmr_release_req()
-to use !list_empty() + list_del_init() ahead of
-se_tmr_req memory free.
 
-Cc: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_tmr.c       | 24 +++++++++++++++++++++++-
- drivers/target/target_core_transport.c | 17 +++++++++++++++++
- 2 files changed, 40 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index af4adb6..894a0b0 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -68,7 +68,8 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
- 
- 	if (dev) {
- 		spin_lock_irqsave(&dev->se_tmr_lock, flags);
--		list_del(&tmr->tmr_list);
-+		if (!list_empty(&tmr->tmr_list))
-+			list_del_init(&tmr->tmr_list);
- 		spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
- 	}
- 
-@@ -192,9 +193,12 @@ static void core_tmr_drain_tmr_list(
- 	struct list_head *preempt_and_abort_list)
- {
- 	LIST_HEAD(drain_tmr_list);
-+	struct se_session *sess;
- 	struct se_tmr_req *tmr_p, *tmr_pp;
- 	struct se_cmd *cmd;
- 	unsigned long flags;
-+	bool rc;
-+
- 	/*
- 	 * Release all pending and outgoing TMRs aside from the received
- 	 * LUN_RESET tmr..
-@@ -220,6 +224,12 @@ static void core_tmr_drain_tmr_list(
- 		if (target_check_cdb_and_preempt(preempt_and_abort_list, cmd))
- 			continue;
- 
-+		sess = cmd->se_sess;
-+		if (!sess) {
-+			dump_stack();
-+			continue;
-+		}
-+
- 		spin_lock(&cmd->t_state_lock);
- 		if (!(cmd->transport_state & CMD_T_ACTIVE)) {
- 			spin_unlock(&cmd->t_state_lock);
-@@ -229,8 +239,16 @@ static void core_tmr_drain_tmr_list(
- 			spin_unlock(&cmd->t_state_lock);
- 			continue;
- 		}
-+		cmd->transport_state |= CMD_T_ABORTED;
- 		spin_unlock(&cmd->t_state_lock);
- 
-+		spin_lock(&sess->sess_cmd_lock);
-+		rc = kref_get_unless_zero(&cmd->cmd_kref);
-+		spin_unlock(&sess->sess_cmd_lock);
-+		if (!rc) {
-+			printk("LUN_RESET TMR: non-zero kref_get_unless_zero\n");
-+			continue;
-+		}
- 		list_move_tail(&tmr_p->tmr_list, &drain_tmr_list);
- 	}
- 	spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
-@@ -244,7 +262,11 @@ static void core_tmr_drain_tmr_list(
- 			(preempt_and_abort_list) ? "Preempt" : "", tmr_p,
- 			tmr_p->function, tmr_p->response, cmd->t_state);
- 
-+		cancel_work_sync(&cmd->work);
-+		transport_wait_for_tasks(cmd);
-+
- 		transport_cmd_finish_abort(cmd, 1);
-+		target_put_sess_cmd(cmd);
- 	}
- }
- 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index f2c596b..f6ecb60 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2905,8 +2905,17 @@ static void target_tmr_work(struct work_struct *work)
- 	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_tmr_req *tmr = cmd->se_tmr_req;
-+	unsigned long flags;
- 	int ret;
- 
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	if (cmd->transport_state & CMD_T_ABORTED) {
-+		tmr->response = TMR_FUNCTION_REJECTED;
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+		goto check_stop;
-+	}
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+
- 	switch (tmr->function) {
- 	case TMR_ABORT_TASK:
- 		core_tmr_abort_task(dev, tmr, cmd->se_sess);
-@@ -2939,9 +2948,17 @@ static void target_tmr_work(struct work_struct *work)
- 		break;
- 	}
- 
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	if (cmd->transport_state & CMD_T_ABORTED) {
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+		goto check_stop;
-+	}
- 	cmd->t_state = TRANSPORT_ISTATE_PROCESSING;
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+
- 	cmd->se_tfo->queue_tm_rsp(cmd);
- 
-+check_stop:
- 	transport_cmd_check_stop_to_fabric(cmd);
- }
- 
--- 
-1.9.1
-
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
