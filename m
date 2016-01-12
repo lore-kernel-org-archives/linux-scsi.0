@@ -1,113 +1,60 @@
-From: Nicholas Mc Guire <der.herr@hofr.at>
-Subject: Re: [PATCH] [SCSI] osst: remove double conversion of timeout
-Date: Tue, 12 Jan 2016 15:10:42 +0000
-Message-ID: <20160112151042.GA27289@osadl.at>
-References: <1452197433-26086-1-git-send-email-hofrat@osadl.org>
- <DDB9C85B850785449757F9914A034FCB445092F8@G9W0766.americas.hpqcorp.net>
- <20160108073155.GA16584@osadl.at>
- <DDB9C85B850785449757F9914A034FCB4450A1AF@G9W0766.americas.hpqcorp.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] target: Fix LUN_RESET active I/O handling for
+	ACK_KREF
+Date: Tue, 12 Jan 2016 16:20:59 +0100
+Message-ID: <20160112152059.GB2294@lst.de>
+References: <1452594245-921-1-git-send-email-nab@daterainc.com> <1452594245-921-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB4450A1AF@G9W0766.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hpe.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>, Willem Riede <osst@riede.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "osst-users@lists.sourceforge.net" <osst-users@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1452594245-921-2-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 11, 2016 at 12:54:48AM +0000, Seymour, Shane M wrote:
-> 
-> > did I overlook something here ?
-> 
-> You probably didn't overlook anything my comments were based on how msleep
-> was coded.
->
-...I did overlookck something - comments in the code may not always be 
-correct...
+> It also introduces SCF_ACK_KREF to determine when
+> transport_cmd_finish_abort() needs to drop the second
+> extra reference, ahead of calling target_put_sess_cmd()
+> for the final kref_put(&se_cmd->cmd_kref).
 
-Unfortunatly the comment regarding schedule_timeout() in timer.c turns out 
-to be wrong as clarified by Thomas Gleixnr - see below:
+It would be really useful to have all drivers follow that
+ACK KREF model instead of needing to deal with driver
+differences everywhere..
 
-<snip>
-On Tue, 12 Jan 2016, Nicholas Mc Guire wrote:
-> On Mon, Jan 11, 2016 at 09:15:25AM +0100, Thomas Gleixner wrote:
-> > On Sat, 9 Jan 2016, Nicholas Mc Guire wrote:
-> > 
-> > >  The while loop in msleep does not seem necessary as
-> > > timeout is unsigned long and no larger than MAX_JIFFY_OFFSET (which is
-> > > LONG_MAX/2 - 1) so the while-loop condition is always true at the beginning
-> > > (msecs_to_jiffies will return >=0 always and with the +1 timeout is >= 1 so
-> > > the while condition is always true at the start) and
-> > > schedule_timeout_uninterruptible always returns 0, so the while loop always
-> > > terminates after the first loop.
-> > 
-> > Err, no. schedule_timeout_uninterruptible() can return > 0 when there was a
-> > non timer wakeup. Thinks spurious wakeups. So we need that loop.
-> 
-> ok - thanks - was following the comment in schedule_timeout which states:
-> /**
->  * schedule_timeout - sleep until timeout
->  * @timeout: timeout value in jiffies
->  *
->  * Make the current task sleep until @timeout jiffies have
->  * elapsed. The routine will return immediately unless
->  * the current task state has been set (see set_current_state()).
->  *
->  * You can set the task state as follows -
->  *
->  * %TASK_UNINTERRUPTIBLE - at least @timeout jiffies are guaranteed to
->  * pass before the routine returns. The routine will return 0
-> <snip>
-> 
-> So I had assumed that would not actualy be possible given this comment.
-> Is the while(timeout) loop im msleep() just defensive programming or is 
-> there a spurious timer wakeup path that defeats TASK_UNINTERRUPTIBLE ? 
-> Probably a stupid question but I was unable to figure out how such an 
-> wakeup would occure.
+> Finally, move transport_put_cmd() release of SGL +
+> TMR + extended CDB memory into target_free_cmd_mem()
+> in order to avoid potential resource leaks in TMR
+> ABORT_TASK + LUN_RESET code-paths.  Also update
+> target_release_cmd_kref() accordingly.
 
-That comment is wrong. Just a simple example:
+Sounds like that should be a separate patch.
 
-     wait_for_completion_io_timeout(x, timeout)
-       wait_for_common_io(x, timeout, TASK_UNINTERRUPTIBLE)
-         __wait_for_common(x, io_schedule_timeout, timeout, state)
-	   do_wait_for_common(x, action, timeout, state)
-   	     ...
-	     io_schedule_timeout(timeout)
-		schedule_timeout(timeout);
+> +/*
+> + * Called with se_session->sess_cmd_lock held with irq disabled
+> + */
 
-So the function can return either because the timer fired or the completion
-completed. In the latter case the @timeout jiffies certainly have not passed.
+Please enforce this in the code instead of the comments, e.g.
 
-> > > Q: what is the purpose of the + 1 offset to the jiffies here ?
-> > > 
-> > > msleep was introduced in 2.6.7 but without the + 1, so with:
-> > > 	unsigned long timeout = msecs_to_jiffies(msecs);
-> > > in 2.6.10-rc2 the msecs_to_jiffies(msecs) + 1; is introduced.
-> > > Nishanth Aravamudan <nacc@us.ibm.com> (https://lkml.org/lkml/2004/11/19/294)
-> > > seems to be the origin while converting msleep to a macro, but no reason
-> > > for the + 1 is given there.
-> > 
-> > Not really. The +1 was introduced with the following commit:
-> > 
-> > https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/kernel/timer.c?id=c259ef842622a5e64418d9dab3b62ee051867edf
-> >
-> 
-> thanks - was ignorant of history.git being available.
-> will go try and understand where that "lost jiffie" could come from.
+	assert_spin_locked(&se_session->sess_cmd_lock);
+	WARN_ON_ONCE(!irqs_disabled());
 
-Assume HZ=1000 and msleep(1). If the msleep() is issued right at the edge of
-the next tick interrupt, then it would return almost immediately. Certainly
-not what you would expect, right?
+> +static bool __target_check_io_state(struct se_cmd *se_cmd)
+> +{
+> +	struct se_session *sess = se_cmd->se_sess;
+> +
+> +	if (!sess)
+> +		return false;
 
-Thanks,
+Given that you expect the session lock to be held this doesn't
+make sense.
 
-	tglx
+> +		/*
+> +		 * Obtain cmd_kref and move to list for shutdown processing
+> +		 * if se_cmd->cmd_kref is still active, the command has not
+> +		 * already reached CMD_T_COMPLETE
+> +		 */
 
-<snip>
-
- So the proposed patch is simply wrong and the replacement of the 
-msleep() by schedule_timeout_uninterruptible() is not equivalent.
-
-thx!
-hofrat
+This just explains what __target_check_io_state does, but no why.
+I'd suggest to remove the comment as it doesn't add any value.
