@@ -1,61 +1,108 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 12/22] scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
-Date: Tue, 12 Jan 2016 16:40:48 +0100
-Message-ID: <1452613258-94084-13-git-send-email-hare@suse.de>
+Subject: [PATCHv2 09/22] scsi_dh_alua: simplify alua_initialize()
+Date: Tue, 12 Jan 2016 16:40:45 +0100
+Message-ID: <1452613258-94084-10-git-send-email-hare@suse.de>
 References: <1452613258-94084-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38674 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38670 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761842AbcALPlF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1762781AbcALPlF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 12 Jan 2016 10:41:05 -0500
 In-Reply-To: <1452613258-94084-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The 'relative port' field is not used, and might get stale when
-the port group changes. So remove the field altogether.
+Rework alua_check_vpd() to use scsi_vpd_get_tpg()
+and move the port group selection into the function, too.
+With that we can simplify alua_initialize() to just
+call alua_check_tpgs() and alua_check_vpd();
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 42 ++++++++++++------------------
+ 1 file changed, 17 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 7bd5108..c9d028c 100644
+index 41fd5e8..c4ee225 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -87,7 +87,6 @@ struct alua_port_group {
- struct alua_dh_data {
- 	struct alua_port_group	*pg;
- 	int			group_id;
--	int			rel_port;
- 	struct scsi_device	*sdev;
- 	activate_complete	callback_fn;
- 	void			*callback_data;
-@@ -323,12 +322,10 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
- 			return SCSI_DH_NOMEM;
+@@ -92,6 +92,7 @@ struct alua_dh_data {
+ #define ALUA_POLICY_SWITCH_CURRENT	0
+ #define ALUA_POLICY_SWITCH_ALL		1
+ 
++static int alua_rtpg(struct scsi_device *, struct alua_port_group *, int);
+ static char print_alua_state(int);
+ 
+ static void release_port_group(struct kref *kref)
+@@ -292,7 +293,8 @@ static int alua_check_tpgs(struct scsi_device *sdev)
+  * Extract the relative target port and the target port group
+  * descriptor from the list of identificators.
+  */
+-static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
++static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
++			  int tpgs)
+ {
+ 	int rel_port = -1, group_id;
+ 
+@@ -308,13 +310,21 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ 			    ALUA_DH_NAME);
  		return SCSI_DH_DEV_UNSUPP;
  	}
--	h->rel_port = rel_port;
--
+-	h->group_id = group_id;
++
++	h->pg = alua_alloc_pg(sdev, group_id, tpgs);
++	if (PTR_ERR(h->pg)) {
++		if (PTR_ERR(h->pg) == -ENOMEM)
++			return SCSI_DH_NOMEM;
++		return SCSI_DH_DEV_UNSUPP;
++	}
++	h->rel_port = rel_port;
+ 
  	sdev_printk(KERN_INFO, sdev,
- 		    "%s: device %s port group %02x rel port %02x\n",
- 		    ALUA_DH_NAME, h->pg->device_id_str,
--		    h->group_id, h->rel_port);
-+		    h->group_id, rel_port);
+-		    "%s: port group %02x rel port %02x\n",
+-		    ALUA_DH_NAME, h->group_id, h->rel_port);
++		    "%s: device %s port group %02x rel port %02x\n",
++		    ALUA_DH_NAME, h->pg->device_id_str,
++		    h->group_id, h->rel_port);
  
- 	return alua_rtpg(sdev, h->pg);
+-	return 0;
++	return alua_rtpg(sdev, h->pg, 0);
  }
-@@ -764,7 +761,6 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 	if (!h)
- 		return -ENOMEM;
- 	h->pg = NULL;
--	h->rel_port = -1;
- 	h->sdev = sdev;
  
- 	err = alua_initialize(sdev, h);
+ static char print_alua_state(int state)
+@@ -635,27 +645,9 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
+ 	int err = SCSI_DH_DEV_UNSUPP, tpgs;
+ 
+ 	tpgs = alua_check_tpgs(sdev);
+-	if (tpgs == TPGS_MODE_NONE)
+-		goto out;
+-
+-	err = alua_check_vpd(sdev, h);
+-	if (err != SCSI_DH_OK)
+-		goto out;
++	if (tpgs != TPGS_MODE_NONE)
++		err = alua_check_vpd(sdev, h, tpgs);
+ 
+-	h->pg = alua_alloc_pg(sdev, h->group_id, tpgs);
+-	if (PTR_ERR(h->pg)) {
+-		if (PTR_ERR(h->pg) == -ENOMEM)
+-			err = SCSI_DH_NOMEM;
+-		goto out;
+-	}
+-	sdev_printk(KERN_INFO, sdev,
+-		    "%s: device %s port group %02x rel port %02x\n",
+-		    ALUA_DH_NAME, h->pg->device_id_str,
+-		    h->group_id, h->rel_port);
+-	kref_get(&h->pg->kref);
+-	err = alua_rtpg(sdev, h->pg, 0);
+-	kref_put(&h->pg->kref, release_port_group);
+-out:
+ 	return err;
+ }
+ /*
 -- 
 1.8.5.6
 
