@@ -1,47 +1,71 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] target: Fix LUN_RESET active TMR descriptor
-	handling
-Date: Tue, 12 Jan 2016 16:25:13 +0100
-Message-ID: <20160112152513.GC2294@lst.de>
-References: <1452594245-921-1-git-send-email-nab@daterainc.com> <1452594245-921-3-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 00/22] ALUA device handler update, part II
+Date: Tue, 12 Jan 2016 16:40:36 +0100
+Message-ID: <1452613258-94084-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38553 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:38581 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965427AbcALPZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jan 2016 10:25:14 -0500
-Content-Disposition: inline
-In-Reply-To: <1452594245-921-3-git-send-email-nab@daterainc.com>
+	id S1752562AbcALPlB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jan 2016 10:41:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
->  	if (dev) {
->  		spin_lock_irqsave(&dev->se_tmr_lock, flags);
-> -		list_del(&tmr->tmr_list);
-> +		if (!list_empty(&tmr->tmr_list))
-> +			list_del_init(&tmr->tmr_list);
+(resending as I failed to include linux-scsi :-( )
 
-list_del_init on a empty list is fine.
+Hi all,
 
-> +		sess = cmd->se_sess;
-> +		if (!sess) {
-> +			dump_stack();
-> +			continue;
-> +		}
+as promised here is now the second part of my ALUA device handler update.
+This contains a major rework of the ALUA device handler as execution is
+moved onto a workqueue. This has the advantage that we avoid having to
+do multiple calls to the same LUN (as happens frequently when failing
+over a LUN with several paths) and finally retries are handled correctly.
+As some arrays are only capable of handling one STPG at a time I've added
+a second hardware handler parameter which then uses a singlethreaded
+workqueue, thereby effectively synchronize STPG handling.
+Thanks to Bart for this suggestion.
 
-Why not something like:
+As usual, comments and reviews are welcome.
 
-		if (WARN_ON_ONCE(!sess))
-			continue;
+Changes to v1:
+- Include reviews from hch
+- Switch to hardware handler parameter instead of module option
 
-same for the previous patch.
+Hannes Reinecke (22):
+  scsi_dh_alua: Pass buffer as function argument
+  scsi_dh_alua: separate out alua_stpg()
+  scsi_dh_alua: Make stpg synchronous
+  scsi_dh_alua: call alua_rtpg() if stpg fails
+  scsi_dh_alua: switch to scsi_execute_req_flags()
+  scsi_dh_alua: allocate RTPG buffer separately
+  scsi_dh_alua: Use separate alua_port_group structure
+  scsi_dh_alua: use unique device id
+  scsi_dh_alua: simplify alua_initialize()
+  revert commit a8e5a2d593cb ("[SCSI] scsi_dh_alua: ALUA handler attach
+    should succeed while TPG is transitioning")
+  scsi_dh_alua: move optimize_stpg evaluation
+  scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
+  scsi_dh_alua: Use workqueue for RTPG
+  scsi_dh_alua: Allow workqueue to run synchronously
+  scsi_dh_alua: Recheck state on unit attention
+  scsi_dh_alua: update all port states
+  scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
+  scsi_dh: add 'rescan' callback
+  scsi: Add 'access_state' attribute
+  scsi_dh_alua: use common definitions for ALUA state
+  scsi_dh_alua: update 'access_state' field
+  scsi_dh_alua: Update version to 2.0
 
-> +		spin_lock(&sess->sess_cmd_lock);
-> +		rc = kref_get_unless_zero(&cmd->cmd_kref);
-> +		spin_unlock(&sess->sess_cmd_lock);
+ drivers/scsi/device_handler/scsi_dh_alua.c | 983 ++++++++++++++++++++---------
+ drivers/scsi/scsi_lib.c                    |   1 +
+ drivers/scsi/scsi_scan.c                   |   9 +-
+ drivers/scsi/scsi_sysfs.c                  |  49 ++
+ include/scsi/scsi_device.h                 |   1 +
+ include/scsi/scsi_dh.h                     |   2 +
+ include/scsi/scsi_proto.h                  |  13 +
+ 7 files changed, 747 insertions(+), 311 deletions(-)
 
-no need to take a lock around kref_get_unless_zero, it's not going to
-help with anything.
+-- 
+1.8.5.6
+
