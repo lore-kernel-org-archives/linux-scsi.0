@@ -1,122 +1,84 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 2/2] scsi: storvsc: Use the specified target ID in device
- lookup
-Date: Tue, 12 Jan 2016 01:04:35 +0000
-Message-ID: <BY2PR0301MB165444FAB69D52C96AB052ADA0CA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1452318697-25451-1-git-send-email-kys@microsoft.com>
- <1452318719-25490-1-git-send-email-kys@microsoft.com>
- <1452318719-25490-2-git-send-email-kys@microsoft.com>
- <56935540.7060304@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] avoid crashing when reading /proc/scsi/scsi and
+ simultaneously removing devices
+Date: Mon, 11 Jan 2016 18:35:42 -0800
+Message-ID: <1452566142.2554.7.camel@HansenPartnership.com>
+References: <1452533307-30142-1-git-send-email-emilne@redhat.com>
+	 <1452539718.2363.12.camel@HansenPartnership.com>
+	 <1452547979.22112.42.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0119.outbound.protection.outlook.com ([157.56.111.119]:41570
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759116AbcALBEj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2016 20:04:39 -0500
-In-Reply-To: <56935540.7060304@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1452547979.22112.42.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: emilne@redhat.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, martin.petersen@oracle.com, hare@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
+On Mon, 2016-01-11 at 16:32 -0500, Ewan Milne wrote:
+> On Mon, 2016-01-11 at 11:15 -0800, James Bottomley wrote:
+> > On Mon, 2016-01-11 at 12:28 -0500, Ewan D. Milne wrote:
+> > > From: "Ewan D. Milne" <emilne@redhat.com>
+> > > 
+> > > The klist traversal used by the reading of /proc/scsi/scsi is not
+> > > interlocked
+> > > against device removal.  It takes a reference on the containing
+> > > object, but
+> > > this does not prevent the device from being removed from the
+> > > list. 
+> > >  Thus, we
+> > > get errors and eventually panic, as shown in the traces below. 
+> > >  Fix
+> > > this by
+> > > keeping a klist iterator in the seq_file private data.
+> > > 
+> > > The problem can be easily reproduced by repeatedly increasing
+> > > scsi_debug's
+> > > max_luns to 30 and then deleting the devices via sysfs, while
+> > > simulatenously
+> > > accessing /proc/scsi/scsi.
+> > >     
+> > > From a patch originally developed by David Jeffery <
+> > > djeffery@redhat.com>
+> > 
+> > OK, so it looks like this is a bug in the klist system.  When a
+> > starting point is used, there should be a check to see if it's
+> > still
+> > active otherwise the whole thing is racy.  If it's fixed in klist,
+> > the
+> > fix works for everyone, not just SCSI.
+> > 
+> > How about this?  It causes the iterator to start at the beginning
+> > if
+> > the node has been deleted.  That will produce double output during
+> > some
+> > of your test, but I think that's OK given that this is a rare race.
+> > 
+> > James
+> 
+> I'm running with your change now, it does appear to fix the problem.
+> I guess the question is whether this behavior would trip up any other
+> klist users,
 
+I don't see how it can.  We simply can't use a removed node as the
+starting point without triggering the kref warn on you see in your log.
+ Things just go downhill from there.  This will happen to any klist
+user, not just us.  I'd contend that starting at the beginning is
+better than an eventual panic for anyone.
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Sunday, January 10, 2016 11:10 PM
-> To: KY Srinivasan <kys@microsoft.com>; gregkh@linuxfoundation.org; li=
-nux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; ohering@suse.co=
-m;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.o=
-rg;
-> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
-> martin.petersen@oracle.com
-> Subject: Re: [PATCH 2/2] scsi: storvsc: Use the specified target ID i=
-n device
-> lookup
->=20
-> On 01/09/2016 06:51 AM, K. Y. Srinivasan wrote:
-> > The current code assumes that there is only one target in device lo=
-okup.
-> > Fix this bug. This will alow us to correctly handle hot reomoval of=
- LUNs.
-> >
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > ---
-> >   drivers/scsi/storvsc_drv.c |    6 ++++--
-> >   1 files changed, 4 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.=
-c
-> > index 622f64a..5faf357 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -479,6 +479,7 @@ struct storvsc_scan_work {
-> >   	struct work_struct work;
-> >   	struct Scsi_Host *host;
-> >   	uint lun;
-> > +	uint tgt_id;
-> >   };
-> >
-> >   static void storvsc_device_scan(struct work_struct *work)
-> > @@ -490,7 +491,7 @@ static void storvsc_device_scan(struct work_str=
-uct
-> *work)
-> >   	wrk =3D container_of(work, struct storvsc_scan_work, work);
-> >   	lun =3D wrk->lun;
-> >
-> > -	sdev =3D scsi_device_lookup(wrk->host, 0, 0, lun);
-> > +	sdev =3D scsi_device_lookup(wrk->host, 0, wrk->tgt_id, lun);
-> >   	if (!sdev)
-> >   		goto done;
-> >   	scsi_rescan_device(&sdev->sdev_gendev);
-> > @@ -541,7 +542,7 @@ static void storvsc_remove_lun(struct work_stru=
-ct
-> *work)
-> >   	if (!scsi_host_get(wrk->host))
-> >   		goto done;
-> >
-> > -	sdev =3D scsi_device_lookup(wrk->host, 0, 0, wrk->lun);
-> > +	sdev =3D scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk->lun);
-> >
-> >   	if (sdev) {
-> >   		scsi_remove_device(sdev);
-> > @@ -941,6 +942,7 @@ static void storvsc_handle_error(struct
-> vmscsi_request *vm_srb,
-> >
-> >   	wrk->host =3D host;
-> >   	wrk->lun =3D vm_srb->lun;
-> > +	wrk->tgt_id =3D vm_srb->target_id;
-> >   	INIT_WORK(&wrk->work, process_err_fn);
-> >   	schedule_work(&wrk->work);
-> >   }
-> >
-> As a side note, are these really 32-bit values?
-> Both the LUN and the target?
+What you should see currently is actually the list is truncated when
+the problem is hit because the next pointer is set to the poison value.
+ That causes another warn on and traversal truncation (or straight
+dereference if you're unlucky).
 
-No, these are 8 bit values as communicated in the vmscsi_request.
+>  for /proc/scsi/scsi it is probably not a problem.  The
+> worst that might happen is that userspace tools that parse the output
+> would get duplicate entries.
 
-Regards,
+Well, it's not really possible to keep the current behaviour and
+truncate the list (before oopsing).  There's no non-racy way of
+positioning the iterator at the last element so it exits on
+klist_next() because the list can be added to during the iteration.
 
-K. Y
-
-
->=20
-> Cheers,
->=20
-> Hannes
-> --
-> Dr. Hannes Reinecke		               zSeries & Storage
-> hare@suse.de			               +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-> HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
