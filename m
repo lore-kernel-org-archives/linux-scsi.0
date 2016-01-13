@@ -1,32 +1,60 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH-for-4.6 1/6] target: Add target_alloc_session() helper
-	function
-Date: Wed, 13 Jan 2016 09:17:00 +0100
-Message-ID: <20160113081700.GB12642@lst.de>
-References: <1452458668-11034-1-git-send-email-nab@daterainc.com> <1452458668-11034-2-git-send-email-nab@daterainc.com> <20160112151119.GD2058@lst.de> <1452672566.27508.44.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH-v2 3/4] target: Fix change depth se_session reference
+	usage
+Date: Wed, 13 Jan 2016 09:24:36 +0100
+Message-ID: <20160113082436.GA13113@lst.de>
+References: <1452457724-10629-1-git-send-email-nab@daterainc.com> <1452457724-10629-4-git-send-email-nab@daterainc.com> <20160112150707.GB2058@lst.de> <1452670172.27508.32.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1452672566.27508.44.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1452670172.27508.32.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 13, 2016 at 12:09:26AM -0800, Nicholas A. Bellinger wrote:
-> > I'd much rather have the fabrics drivers call transport_alloc_session_tags
-> > directly from the callback than growing even more arguments here.
+On Tue, Jan 12, 2016 at 11:29:32PM -0800, Nicholas A. Bellinger wrote:
+> With this patch in place, this function is now also called by
+> core_tpg_set_initiator_node_queue_depth(), where previously it was
+> called only during target_alloc_node_acl().
+> 
+> Might as well drop the ignored return while we're at it..
+
+Please add it to the patch description..
+
+> > > +			continue;
+> > > +		}
+> > > +		target_put_session(sess);
+> > > +		spin_lock_irqsave(&acl->nacl_sess_lock, flags);
+> > >  	}
+> > > +	spin_unlock_irqrestore(&acl->nacl_sess_lock, flags);
+> > 
+> > It seems at thus point there is no need for ->shutdown_session, it
+> > could be folded into ->close_session in a follow on patch.
 > > 
 > 
-> What's the point..?
+> Not exactly.
 > 
-> Only vhost-scsi currently needs to allocate extra resources for
-> se_session percpu-ida tag pre-allocation.
+> It's the final target_put_session() -> kref_put() upon
+> se_sess->sess_kref that invokes TFO->close_session().
 
-The point is that allocating "tags" (or better command structures) isn't
-fundamentally related to allocating a session, and in fact not even
-used by many drivers.  A flow where drivers that need these "tags"
-explicitly allocate them is a lot more obvious than forcing more
-arguments to a function that already has a lot and isn't related to
-these "tags" otherwise.
+I know.  But we are dropping the only long term held reference
+here, so the two are more or less equivalent. 
+
+> > > -void target_get_session(struct se_session *se_sess)
+> > > +int target_get_session(struct se_session *se_sess)
+> > >  {
+> > > -	kref_get(&se_sess->sess_kref);
+> > > +	return kref_get_unless_zero(&se_sess->sess_kref);
+> > >  }
+> > >  EXPORT_SYMBOL(target_get_session);
+> > 
+> > I'd be much happier to have a separate prep patch for this..
+> 
+> Since this will need to hit stable at some point, it likely needs to
+> stay with the original bug-fix.
+
+Please at least document it in the patch description.  I'd still
+be happier to have the change to target_get_session as a preparatory
+patch, though.
