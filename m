@@ -1,194 +1,255 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 22/24] scsi_dh_alua: use common definitions for ALUA state
-Date: Wed, 13 Jan 2016 09:09:57 +0100
-Message-ID: <1452672599-9820-23-git-send-email-hare@suse.de>
+Subject: [PATCHv3 03/24] scsi_dh_alua: Make stpg synchronous
+Date: Wed, 13 Jan 2016 09:09:38 +0100
+Message-ID: <1452672599-9820-4-git-send-email-hare@suse.de>
 References: <1452672599-9820-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58947 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58900 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754942AbcAMIKU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 03:10:20 -0500
+	id S1751049AbcAMIKQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 03:10:16 -0500
 In-Reply-To: <1452672599-9820-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-scsi_proto.h now contains definitions for the ALUA state,
-so we don't have to carry them in the device handler.
+The 'activate_complete' function needs to be executed after
+stpg has finished, so we can as well execute stpg synchronously
+and call the function directly.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 62 +++++++++++++-----------------
- 1 file changed, 27 insertions(+), 35 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 156 ++++++++++-------------------
+ 1 file changed, 55 insertions(+), 101 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index d602d98..50f42cb 100644
+index 7c66e4a..609691f 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -32,14 +32,6 @@
- #define ALUA_DH_NAME "alua"
- #define ALUA_DH_VER "1.3"
- 
--#define TPGS_STATE_OPTIMIZED		0x0
--#define TPGS_STATE_NONOPTIMIZED		0x1
--#define TPGS_STATE_STANDBY		0x2
--#define TPGS_STATE_UNAVAILABLE		0x3
--#define TPGS_STATE_LBA_DEPENDENT	0x4
--#define TPGS_STATE_OFFLINE		0xe
--#define TPGS_STATE_TRANSITIONING	0xf
--
- #define TPGS_SUPPORT_NONE		0x00
- #define TPGS_SUPPORT_OPTIMIZED		0x01
- #define TPGS_SUPPORT_NONOPTIMIZED	0x02
-@@ -180,7 +172,7 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
- 
- 	/* Prepare the data buffer */
- 	memset(stpg_data, 0, stpg_len);
--	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
-+	stpg_data[4] = SCSI_ACCESS_STATE_OPTIMAL & 0x0f;
- 	put_unaligned_be16(group_id, &stpg_data[6]);
- 
- 	/* Prepare the command. */
-@@ -248,7 +240,7 @@ struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
- 	}
- 	pg->group_id = group_id;
- 	pg->tpgs = tpgs;
--	pg->state = TPGS_STATE_OPTIMIZED;
-+	pg->state = SCSI_ACCESS_STATE_OPTIMAL;
- 	if (optimize_stpg)
- 		pg->flags |= ALUA_OPTIMIZE_STPG;
- 	kref_init(&pg->kref);
-@@ -392,22 +384,22 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
- 	return SCSI_DH_OK;
+@@ -169,81 +169,28 @@ done:
  }
  
--static char print_alua_state(int state)
-+static char print_alua_state(enum scsi_access_state state)
+ /*
+- * stpg_endio - Evaluate SET TARGET GROUP STATES
+- * @sdev: the device to be evaluated
+- * @state: the new target group state
+- *
+- * Evaluate a SET TARGET GROUP STATES command response.
+- */
+-static void stpg_endio(struct request *req, int error)
+-{
+-	struct alua_dh_data *h = req->end_io_data;
+-	struct scsi_sense_hdr sense_hdr;
+-	unsigned err = SCSI_DH_OK;
+-
+-	if (host_byte(req->errors) != DID_OK ||
+-	    msg_byte(req->errors) != COMMAND_COMPLETE) {
+-		err = SCSI_DH_IO;
+-		goto done;
+-	}
+-
+-	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+-				 &sense_hdr)) {
+-		if (sense_hdr.sense_key == NOT_READY &&
+-		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a) {
+-			/* ALUA state transition already in progress */
+-			err = SCSI_DH_OK;
+-			goto done;
+-		}
+-		if (sense_hdr.sense_key == UNIT_ATTENTION) {
+-			err = SCSI_DH_RETRY;
+-			goto done;
+-		}
+-		sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
+-			    ALUA_DH_NAME);
+-		scsi_print_sense_hdr(h->sdev, ALUA_DH_NAME, &sense_hdr);
+-		err = SCSI_DH_IO;
+-	} else if (error)
+-		err = SCSI_DH_IO;
+-
+-	if (err == SCSI_DH_OK) {
+-		h->state = TPGS_STATE_OPTIMIZED;
+-		sdev_printk(KERN_INFO, h->sdev,
+-			    "%s: port group %02x switched to state %c\n",
+-			    ALUA_DH_NAME, h->group_id,
+-			    print_alua_state(h->state));
+-	}
+-done:
+-	req->end_io_data = NULL;
+-	__blk_put_request(req->q, req);
+-	if (h->callback_fn) {
+-		h->callback_fn(h->callback_data, err);
+-		h->callback_fn = h->callback_data = NULL;
+-	}
+-	return;
+-}
+-
+-/*
+  * submit_stpg - Issue a SET TARGET GROUP STATES command
+  *
+  * Currently we're only setting the current target port group state
+  * to 'active/optimized' and let the array firmware figure out
+  * the states of the remaining groups.
+  */
+-static unsigned submit_stpg(struct alua_dh_data *h)
++static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
++			    unsigned char *sense)
  {
- 	switch (state) {
--	case TPGS_STATE_OPTIMIZED:
-+	case SCSI_ACCESS_STATE_OPTIMAL:
- 		return 'A';
--	case TPGS_STATE_NONOPTIMIZED:
-+	case SCSI_ACCESS_STATE_ACTIVE:
- 		return 'N';
--	case TPGS_STATE_STANDBY:
-+	case SCSI_ACCESS_STATE_STANDBY:
- 		return 'S';
--	case TPGS_STATE_UNAVAILABLE:
-+	case SCSI_ACCESS_STATE_UNAVAILABLE:
- 		return 'U';
--	case TPGS_STATE_LBA_DEPENDENT:
-+	case SCSI_ACCESS_STATE_LBA:
- 		return 'L';
--	case TPGS_STATE_OFFLINE:
-+	case SCSI_ACCESS_STATE_OFFLINE:
- 		return 'O';
--	case TPGS_STATE_TRANSITIONING:
-+	case SCSI_ACCESS_STATE_TRANSITIONING:
- 		return 'T';
- 	default:
- 		return 'X';
-@@ -658,7 +650,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		    valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
+ 	struct request *rq;
++	unsigned char stpg_data[8];
+ 	int stpg_len = 8;
+-	struct scsi_device *sdev = h->sdev;
++	int err = 0;
  
- 	switch (pg->state) {
--	case TPGS_STATE_TRANSITIONING:
-+	case SCSI_ACCESS_STATE_TRANSITIONING:
- 		if (time_before(jiffies, pg->expiry)) {
- 			/* State transition, retry */
- 			pg->interval = 2;
-@@ -666,11 +658,11 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		} else {
- 			/* Transitioning time exceeded, set port to standby */
- 			err = SCSI_DH_IO;
--			pg->state = TPGS_STATE_STANDBY;
-+			pg->state = SCSI_ACCESS_STATE_STANDBY;
- 			pg->expiry = 0;
- 		}
- 		break;
--	case TPGS_STATE_OFFLINE:
-+	case SCSI_ACCESS_STATE_OFFLINE:
- 		/* Path unusable */
- 		err = SCSI_DH_DEV_OFFLINED;
- 		pg->expiry = 0;
-@@ -703,21 +695,21 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		return SCSI_DH_RETRY;
- 	}
- 	switch (pg->state) {
--	case TPGS_STATE_OPTIMIZED:
-+	case SCSI_ACCESS_STATE_OPTIMAL:
- 		return SCSI_DH_OK;
--	case TPGS_STATE_NONOPTIMIZED:
-+	case SCSI_ACCESS_STATE_ACTIVE:
- 		if ((pg->flags & ALUA_OPTIMIZE_STPG) &&
- 		    !pg->pref &&
- 		    (pg->tpgs & TPGS_MODE_IMPLICIT))
- 			return SCSI_DH_OK;
- 		break;
--	case TPGS_STATE_STANDBY:
--	case TPGS_STATE_UNAVAILABLE:
-+	case SCSI_ACCESS_STATE_STANDBY:
-+	case SCSI_ACCESS_STATE_UNAVAILABLE:
- 		break;
--	case TPGS_STATE_OFFLINE:
-+	case SCSI_ACCESS_STATE_OFFLINE:
- 		return SCSI_DH_IO;
- 		break;
--	case TPGS_STATE_TRANSITIONING:
-+	case SCSI_ACCESS_STATE_TRANSITIONING:
- 		break;
- 	default:
- 		sdev_printk(KERN_INFO, sdev,
-@@ -727,7 +719,7 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		break;
- 	}
- 	/* Set state to transitioning */
--	pg->state = TPGS_STATE_TRANSITIONING;
-+	pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
- 	retval = submit_stpg(sdev, pg->group_id, &sense_hdr);
+ 	/* Prepare the data buffer */
+-	memset(h->buff, 0, stpg_len);
+-	h->buff[4] = TPGS_STATE_OPTIMIZED & 0x0f;
+-	put_unaligned_be16(h->group_id, &h->buff[6]);
++	memset(stpg_data, 0, stpg_len);
++	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
++	put_unaligned_be16(group_id, &stpg_data[6]);
  
- 	if (retval) {
-@@ -773,7 +765,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 		int state = pg->state;
+-	rq = get_alua_req(sdev, h->buff, stpg_len, WRITE);
++	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
+ 	if (!rq)
+-		return SCSI_DH_RES_TEMP_UNAVAIL;
++		return DRIVER_BUSY << 24;
  
- 		spin_unlock_irqrestore(&pg->lock, flags);
--		if (state == TPGS_STATE_TRANSITIONING) {
-+		if (state == SCSI_ACCESS_STATE_TRANSITIONING) {
- 			if (alua_tur(sdev) == SCSI_DH_RETRY) {
- 				spin_lock_irqsave(&pg->lock, flags);
- 				pg->flags &= ~ALUA_PG_RUNNING;
-@@ -1010,7 +1002,7 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_OUT;
+@@ -251,13 +198,17 @@ static unsigned submit_stpg(struct alua_dh_data *h)
+ 	put_unaligned_be32(stpg_len, &rq->cmd[6]);
+ 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
+ 
+-	rq->sense = h->sense;
++	rq->sense = sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = 0;
+-	rq->end_io_data = h;
+ 
+-	blk_execute_rq_nowait(rq->q, NULL, rq, 1, stpg_endio);
+-	return SCSI_DH_OK;
++	blk_execute_rq(rq->q, NULL, rq, 1);
++	if (rq->errors)
++		err = rq->errors;
++
++	blk_put_request(rq);
++
++	return err;
+ }
+ 
+ /*
+@@ -582,59 +533,63 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+  * alua_stpg - Issue a SET TARGET GROUP STATES command
+  *
+  * Issue a SET TARGET GROUP STATES command and evaluate the
+- * response. Returns SCSI_DH_RETRY if the target port group
+- * state is found to be in 'transitioning'.
+- * If SCSI_DH_OK is returned the passed-in 'fn' function
+- * this function will take care of executing 'fn'.
+- * Otherwise 'fn' should be executed by the caller with the
+- * returned error code.
++ * response. Returns SCSI_DH_RETRY per default to trigger
++ * a re-evaluation of the target group state or SCSI_DH_OK
++ * if no further action needs to be taken.
+  */
+-static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h,
+-			  activate_complete fn, void *data)
++static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
  {
- 	struct alua_dh_data *h = sdev->handler_data;
- 	struct alua_port_group __rcu *pg;
--	int state = TPGS_STATE_OPTIMIZED;
-+	enum scsi_access_state state = SCSI_ACCESS_STATE_OPTIMAL;
- 	int ret = BLKPREP_OK;
+-	int err = SCSI_DH_OK;
+-	int stpg = 0;
+-
+-	if (!(h->tpgs & TPGS_MODE_EXPLICIT))
+-		/* Only implicit ALUA supported */
+-		goto out;
++	int retval;
++	struct scsi_sense_hdr sense_hdr;
  
- 	rcu_read_lock();
-@@ -1019,14 +1011,14 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
- 		state = pg->state;
- 		/* Defer I/O while rtpg_work is active */
- 		if (pg->rtpg_sdev)
--			state = TPGS_STATE_TRANSITIONING;
-+			state = SCSI_ACCESS_STATE_TRANSITIONING;
++	if (!(h->tpgs & TPGS_MODE_EXPLICIT)) {
++		/* Only implicit ALUA supported, retry */
++		return SCSI_DH_RETRY;
++	}
+ 	switch (h->state) {
++	case TPGS_STATE_OPTIMIZED:
++		return SCSI_DH_OK;
+ 	case TPGS_STATE_NONOPTIMIZED:
+-		stpg = 1;
+ 		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
+ 		    !h->pref &&
+ 		    (h->tpgs & TPGS_MODE_IMPLICIT))
+-			stpg = 0;
++			return SCSI_DH_OK;
+ 		break;
+ 	case TPGS_STATE_STANDBY:
+ 	case TPGS_STATE_UNAVAILABLE:
+-		stpg = 1;
+ 		break;
+ 	case TPGS_STATE_OFFLINE:
+-		err = SCSI_DH_IO;
++		return SCSI_DH_IO;
+ 		break;
+ 	case TPGS_STATE_TRANSITIONING:
+-		err = SCSI_DH_RETRY;
+ 		break;
+ 	default:
++		sdev_printk(KERN_INFO, sdev,
++			    "%s: stpg failed, unhandled TPGS state %d",
++			    ALUA_DH_NAME, h->state);
++		return SCSI_DH_NOSYS;
+ 		break;
  	}
- 	rcu_read_unlock();
--	if (state == TPGS_STATE_TRANSITIONING)
-+	if (state == SCSI_ACCESS_STATE_TRANSITIONING)
- 		ret = BLKPREP_DEFER;
--	else if (state != TPGS_STATE_OPTIMIZED &&
--		 state != TPGS_STATE_NONOPTIMIZED &&
--		 state != TPGS_STATE_LBA_DEPENDENT) {
-+	else if (state != SCSI_ACCESS_STATE_OPTIMAL &&
-+		 state != SCSI_ACCESS_STATE_ACTIVE &&
-+		 state != SCSI_ACCESS_STATE_LBA) {
- 		ret = BLKPREP_KILL;
- 		req->cmd_flags |= REQ_QUIET;
++	/* Set state to transitioning */
++	h->state = TPGS_STATE_TRANSITIONING;
++	retval = submit_stpg(sdev, h->group_id, h->sense);
+ 
+-	if (stpg) {
+-		h->callback_fn = fn;
+-		h->callback_data = data;
+-		err = submit_stpg(h);
+-		if (err != SCSI_DH_OK)
+-			h->callback_fn = h->callback_data = NULL;
+-		else
+-			fn = NULL;
++	if (retval) {
++		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
++					  &sense_hdr)) {
++			sdev_printk(KERN_INFO, sdev,
++				    "%s: stpg failed, result %d",
++				    ALUA_DH_NAME, retval);
++			if (driver_byte(retval) == DRIVER_BUSY)
++				return SCSI_DH_DEV_TEMP_BUSY;
++		} else {
++			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
++				    ALUA_DH_NAME);
++			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
++		}
  	}
+-out:
+-	if (fn)
+-		fn(data, err);
+-
+-	return err;
++	/* Retry RTPG */
++	return SCSI_DH_RETRY;
+ }
+ 
+ /*
+@@ -722,10 +677,9 @@ static int alua_activate(struct scsi_device *sdev,
+ 	if (optimize_stpg)
+ 		h->flags |= ALUA_OPTIMIZE_STPG;
+ 
+-	err = alua_stpg(sdev, h, fn, data);
+-
++	err = alua_stpg(sdev, h);
+ out:
+-	if (err != SCSI_DH_OK && fn)
++	if (fn)
+ 		fn(data, err);
+ 	return 0;
+ }
 -- 
 1.8.5.6
 
