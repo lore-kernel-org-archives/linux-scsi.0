@@ -1,76 +1,51 @@
-From: "Benjamin Marzinski" <bmarzins@redhat.com>
-Subject: Re: [dm-devel] [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
-Date: Wed, 13 Jan 2016 11:52:39 -0600
-Message-ID: <20160113175239.GE24960@octiron.msp.redhat.com>
-References: <56961493.5010901@suse.de>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
+Date: Wed, 13 Jan 2016 18:41:01 +0000
+Message-ID: <56969A3D.50701@synopsys.com>
+References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
+ <20160107094437.GA11038@infradead.org>
+ <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34425 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932507AbcAMRwl (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 12:52:41 -0500
-Content-Disposition: inline
-In-Reply-To: <56961493.5010901@suse.de>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:59841 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750943AbcAMSlK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 13:41:10 -0500
+In-Reply-To: <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
+To: Akinobu Mita <akinobu.mita@gmail.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
 
-On Wed, Jan 13, 2016 at 10:10:43AM +0100, Hannes Reinecke wrote:
-> Hi all,
+Hi,
+
+On 1/8/2016 2:20 PM, Akinobu Mita wrote:
+> 2016-01-07 18:44 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
+>>> This driver patch includes a core driver and glue drivers for pci and platform
+>>> for the DesignWare UFS Host IP.
+>>
+>> Why doesn't this use the existing ufs core?  The architecture looks
+>> completely backwards to me.
 > 
-> I'd like to attend LSF/MM and would like to present my ideas for a multipath
-> redesign.
+> I agree.  The existing ufs driver can have variant specific operations
+> (hba->vops) and also can define quirks.  So if DesignWare UFS host
+> controller requires vendor specific register settings or DME operations
+> in initialization, or needs special workarounds for the specific versions,
+> it can use those mechanisms and shares common parts between other host
+> controllers.
 > 
-> The overall idea is to break up the centralized multipath handling in
-> device-mapper (and multipath-tools) and delegate to the appropriate
-> sub-systems.
-> 
-> Individually the plan is:
-> a) use the 'wwid' sysfs attribute to detect multipath devices;
->    this removes the need of the current 'path_id' functionality
->    in multipath-tools
 
-If all the devices that we support advertise their WWID through sysfs,
-I'm all for this. Not needing to worry about callouts or udev sounds
-great.
+I am planning to make some tests with the ufs kernel existing core driver in our
+setup, but I noticed that despite the scsi/ufs driver package contains a
+platform driver, this is not the typical platform driver (glue driver) which can
+be addressed from device tree. The only one available is the qcom's.
+Would I need to submit a designware platform glue driver also as done by QCom?
 
-> b) leverage topology information from scsi_dh_alua (which we will
->    have once my ALUA handler update is in) to detect the multipath
->    topology. This removes the need of a 'prio' infrastructure
->    in multipath-tools
+We also need a pci glue driver, but you already have one. In your opinion the
+best approach is to add synopsys device id to the pci device list in the driver
+and add quirks or add a new designware pci glue driver?
 
-What about devices that don't use alua? Or users who want to be able to
-pick a specific path to prefer? While I definitely prefer simple, we
-can't drop real funtionality to get there. Have you posted your
-scsi_dh_alua update somewhere?
-
-I've recently had requests from users to
-1. make a path with the TPGS pref bit set be in its own path group with
-the highest priority
-2. make the weighted prioritizer use persistent information to make its
-choice, so its actually useful. This is to deal with the need to prefer a
-specific path in a non-alua setup.
-
-Some of the complexity with priorities is there out of necessity.
-
-> c) implement block or scsi events whenever a remote port becomes
->    unavailable. This removes the need of the 'path_checker'
->    functionality in multipath-tools.
-
-I'm not convinced that we will be able to find out when paths come back
-online in all cases without some sort of actual polling. Again, I'd love
-this to be simpler, but asking all the types of storage we plan to
-support to notify us when they are up and down may not be realistic.
-
-> d) leverage these events to handle path-up/path-down events
->    in-kernel
-
-If polling is necessary, I'd rather it be done in userspace. Personally,
-I think the checker code is probably the least obectionable part of the
-multipath-tools (It's getting all the device information to set up the
-devices in the first place and coordinating with uevents that's really
-ugly, IMHO).
-
--Ben
+Thanks,
+Joao
