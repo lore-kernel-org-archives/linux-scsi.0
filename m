@@ -1,30 +1,65 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 3/4] target: Fix change depth se_session reference
- usage
-Date: Wed, 13 Jan 2016 00:58:23 -0800
-Message-ID: <1452675503.27508.52.camel@haakon3.risingtidesystems.com>
-References: <1452457724-10629-1-git-send-email-nab@daterainc.com>
-	 <1452457724-10629-4-git-send-email-nab@daterainc.com>
-	 <20160113082738.GA13158@lst.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
+Date: Wed, 13 Jan 2016 10:10:43 +0100
+Message-ID: <56961493.5010901@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160113082738.GA13158@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36639 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750830AbcAMJKq (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 04:10:46 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
 
-On Wed, 2016-01-13 at 09:27 +0100, Christoph Hellwig wrote:
-> >  int core_tpg_set_initiator_node_queue_depth(
-> >  	struct se_portal_group *tpg,
-> > -	unsigned char *initiatorname,
-> > +	struct se_node_acl *acl,
-> >  	u32 queue_depth,
-> >  	int force)
-> 
-> And while we're at it - the tpg should be dropped as well, we can
-> get it from acl->se_tpg trivially.
+Hi all,
 
-Done.
+I'd like to attend LSF/MM and would like to present my ideas for a=20
+multipath redesign.
+
+The overall idea is to break up the centralized multipath handling=20
+in device-mapper (and multipath-tools) and delegate to the=20
+appropriate sub-systems.
+
+Individually the plan is:
+a) use the 'wwid' sysfs attribute to detect multipath devices;
+    this removes the need of the current 'path_id' functionality
+    in multipath-tools
+b) leverage topology information from scsi_dh_alua (which we will
+    have once my ALUA handler update is in) to detect the multipath
+    topology. This removes the need of a 'prio' infrastructure
+    in multipath-tools
+c) implement block or scsi events whenever a remote port becomes
+    unavailable. This removes the need of the 'path_checker'
+    functionality in multipath-tools.
+d) leverage these events to handle path-up/path-down events
+    in-kernel
+e) move the I/O redirection logic out of device-mapper proper
+    and use blk-mq to redirect I/O. This is still a bit of
+    hand-waving, and definitely would need discussion to figure
+    out if and how it can be achieved.
+    This is basically the same topic Mike Snitzer proposed, but
+    coming from a different angle.
+
+But in the end we should be able to do strip down the current=20
+(rather complex) multipath-tools to just handle topology changes;=20
+everything else will be done internally.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
