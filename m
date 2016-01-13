@@ -1,56 +1,76 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-for-4.6 1/6] target: Add target_alloc_session() helper
- function
-Date: Wed, 13 Jan 2016 00:09:26 -0800
-Message-ID: <1452672566.27508.44.camel@haakon3.risingtidesystems.com>
-References: <1452458668-11034-1-git-send-email-nab@daterainc.com>
-	 <1452458668-11034-2-git-send-email-nab@daterainc.com>
-	 <20160112151119.GD2058@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160112151119.GD2058@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv3 01/24] scsi_dh_alua: Pass buffer as function argument
+Date: Wed, 13 Jan 2016 09:09:36 +0100
+Message-ID: <1452672599-9820-2-git-send-email-hare@suse.de>
+References: <1452672599-9820-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:58901 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750856AbcAMIKQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 03:10:16 -0500
+In-Reply-To: <1452672599-9820-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2016-01-12 at 16:11 +0100, Christoph Hellwig wrote:
-> > +struct se_session *
-> > +target_alloc_session(struct se_portal_group *tpg,
-> > +		     unsigned int tag_num, unsigned int tag_size,
-> > +		     enum target_prot_op prot_op,
-> > +		     const char *initiatorname, void *private,
-> > +		     int (*callback)(struct se_portal_group *,
-> > +				     struct se_session *, void *))
-> > +{
-> 
-> I'd much rather have the fabrics drivers call transport_alloc_session_tags
-> directly from the callback than growing even more arguments here.
-> 
+Pass in the buffer as a function argument for submit_rtpg().
 
-What's the point..?
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Only vhost-scsi currently needs to allocate extra resources for
-se_session percpu-ida tag pre-allocation.
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 5a328bf..df71e85 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -135,12 +135,13 @@ static struct request *get_alua_req(struct scsi_device *sdev,
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
++static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
++			    int bufflen, unsigned char *sense, int flags)
+ {
+ 	struct request *rq;
+ 	int err = 0;
+ 
+-	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
++	rq = get_alua_req(sdev, buff, bufflen, READ);
+ 	if (!rq) {
+ 		err = DRIVER_BUSY << 24;
+ 		goto done;
+@@ -148,14 +149,14 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_IN;
+-	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
++	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+-	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
++	put_unaligned_be32(bufflen, &rq->cmd[6]);
+ 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+ 
+-	rq->sense = h->sense;
++	rq->sense = sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = 0;
+ 
+@@ -446,7 +447,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+ 
+  retry:
+-	retval = submit_rtpg(sdev, h);
++	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
+ 	if (retval) {
+ 		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+ 					  &sense_hdr)) {
+-- 
+1.8.5.6
 
-The rest of the consumers can just use this common code.
-
-> > +	struct se_session *sess;
-> > +
-> > +	if (tag_num != 0 && !tag_size) {
-> > +		pr_err("target_alloc_session called with percpu-ida tag_num:"
-> > +		       " %u, but zero tag_size\n", tag_num);
-> > +		return ERR_PTR(-EINVAL);
-> > +	}
-> > +	if (!tag_num && tag_size) {
-> > +		pr_err("target_alloc_session called with percpu-ida tag_size:"
-> > +		       " %u, but zero tag_num\n", tag_size);
-> > +		return ERR_PTR(-EINVAL);
-> > +	}
-> 
-> These checks should be in transport_alloc_session_tags.
-> 
-
-Done.
