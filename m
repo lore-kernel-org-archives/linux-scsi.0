@@ -1,83 +1,88 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 13/22] scsi_dh_alua: Use workqueue for RTPG
-Date: Wed, 13 Jan 2016 11:27:23 +0100
-Message-ID: <5696268B.2090502@suse.de>
-References: <1452613258-94084-1-git-send-email-hare@suse.de>
- <1452613258-94084-14-git-send-email-hare@suse.de>
- <20160112171404.GE23947@lst.de> <5695F66A.9040709@suse.de>
- <20160113100425.GA15163@lst.de>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
+Date: Wed, 13 Jan 2016 12:50:03 +0200
+Message-ID: <56962BDB.4080509@dev.mellanox.co.il>
+References: <56961493.5010901@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42250 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755593AbcAMK1Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 05:27:25 -0500
-In-Reply-To: <20160113100425.GA15163@lst.de>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:35279 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754277AbcAMKuK (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 05:50:10 -0500
+Received: by mail-wm0-f47.google.com with SMTP id f206so288655314wmf.0
+        for <Linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 02:50:10 -0800 (PST)
+In-Reply-To: <56961493.5010901@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-On 01/13/2016 11:04 AM, Christoph Hellwig wrote:
-> On Wed, Jan 13, 2016 at 08:02:02AM +0100, Hannes Reinecke wrote:
->>>> +	/* Check for existing port_group references */
->>>> +	spin_lock(&h->pg_lock);
->>>> +	if (h->pg) {
->>>> +		old_pg =3D pg;
->>>> +		/* port_group has changed. Update to new port group */
->>>> +		if (h->pg !=3D pg) {
->>>> +			old_pg =3D h->pg;
->>>> +			rcu_assign_pointer(h->pg, pg);
->>>> +			pg_updated =3D true;
->>>> +		}
->>>> +	} else {
->>>> +		rcu_assign_pointer(h->pg, pg);
->>>> +		pg_updated =3D true;
->>>> +	}
->>>> +	alua_rtpg_queue(h->pg, sdev, NULL);
->>>> +	spin_unlock(&h->pg_lock);
->>>> +
->>>> +	if (pg_updated)
->>>> +		synchronize_rcu();
->>>> +	if (old_pg) {
->>>> +		if (old_pg->rtpg_sdev)
->>>> +			flush_delayed_work(&old_pg->rtpg_work);
->>>> +		kref_put(&old_pg->kref, release_port_group);
->>>> +	}
->>>
->>> The synchronize_rcu() needs to be done in release_port_group, or ev=
-en
->>> better be replaced by doing a kfree_rcu there instead of a kfree.
->>>
->> Point is that we don't necessarily have an old_pg to call
->> release_port_group() on, but we still need to call synchronize_rcu()
->> to inform everyong that h->pg now has a new value.
+
+> Hi all,
 >
-> No, you don't.  synchronize_rcu() just waits for all previously
-> started RCU grace periods to finish.  If old_pg doesn't get freed
-> you don't need to wait for the grace period.  synchronize_rcu does
-> not notify anyone about anything, it just waits.
+> I'd like to attend LSF/MM and would like to present my ideas for a
+> multipath redesign.
 >
-Ah. Right. Good point. Of course we don't need to call it if there's=20
-nothing to be freed.
+> The overall idea is to break up the centralized multipath handling in
+> device-mapper (and multipath-tools) and delegate to the appropriate
+> sub-systems.
 
-Will be folding it into the next round of patches, or just resending=20
-this one if the remaining patches meets with approval.
+I agree that would be very useful. Great topic. I'd like to attend
+this talk as well.
 
-Cheers,
+>
+> Individually the plan is:
+> a) use the 'wwid' sysfs attribute to detect multipath devices;
+>     this removes the need of the current 'path_id' functionality
+>     in multipath-tools
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+CC'ing Linux-nvme,
+
+I've recently looked at multipathing support for nvme (and nvme over
+fabrics) as well. For nvme the wwid equivalent is the nsid (namespace
+identifier). I'm wandering if we can have better abstraction for
+user-space so it won't need to change its behavior for scsi/nvme.
+The same applies for the the timeout attribute for example which
+assumes scsi device sysfs structure.
+
+> b) leverage topology information from scsi_dh_alua (which we will
+>     have once my ALUA handler update is in) to detect the multipath
+>     topology. This removes the need of a 'prio' infrastructure
+>     in multipath-tools
+
+This would require further attention for nvme.
+
+> c) implement block or scsi events whenever a remote port becomes
+>     unavailable. This removes the need of the 'path_checker'
+>     functionality in multipath-tools.
+
+I'd prefer if we'd have it in the block layer so we can have it for all
+block drivers. Also, this assumes that port events are independent of
+I/O. This assumption is incorrect in SRP for example which detects port
+failures only by I/O errors (which makes path sensing a must).
+
+> d) leverage these events to handle path-up/path-down events
+>     in-kernel
+> e) move the I/O redirection logic out of device-mapper proper
+>     and use blk-mq to redirect I/O. This is still a bit of
+>     hand-waving, and definitely would need discussion to figure
+>     out if and how it can be achieved.
+>     This is basically the same topic Mike Snitzer proposed, but
+>     coming from a different angle.
+
+Another (adjacent) topic is multipath performance with blk-mq.
+
+As I said, I've been looking at nvme multipathing support and
+initial measurements show huge contention on the multipath lock
+which really defeats the entire point of blk-mq...
+
+I have yet to report this as my work is still in progress. I'm not sure
+if it's a topic on it's own but I'd love to talk about that as well...
+
+> But in the end we should be able to do strip down the current (rather
+> complex) multipath-tools to just handle topology changes; everything
+> else will be done internally.
+
+I'd love to see that happening.
