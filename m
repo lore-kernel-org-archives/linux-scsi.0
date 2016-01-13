@@ -1,90 +1,150 @@
-From: Anne Mulhern <amulhern@redhat.com>
-Subject: Re: /sys/.../enclosure_device:<something> ?
-Date: Wed, 13 Jan 2016 15:15:04 -0500 (EST)
-Message-ID: <1033193682.7255311.1452716104867.JavaMail.zimbra@redhat.com>
-References: <2054826122.7150196.1452702532315.JavaMail.zimbra@redhat.com> <1452712505.2363.19.camel@HansenPartnership.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 0/2] target: Fix LUN_RESET active I/O + TMR handling
+Date: Wed, 13 Jan 2016 20:26:03 +0000
+Message-ID: <DABA8BB8-F4EB-494B-AF0F-16339CDBC22E@qlogic.com>
+References: <1452594245-921-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_DABA8BB8F4EB494BAF0F16339CDBC22Eqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:58045 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758600AbcAMUPF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 15:15:05 -0500
-In-Reply-To: <1452712505.2363.19.camel@HansenPartnership.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:19050 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754329AbcAMUY0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 15:24:26 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0DKM0po000531
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 12:24:25 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 20b22t6dhc-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 12:24:25 -0800
+In-Reply-To: <1452594245-921-1-git-send-email-nab@daterainc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
+--_000_DABA8BB8F4EB494BAF0F16339CDBC22Eqlogiccom_
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <CE54B76AA095CD42858561445EAFBCC2@qlogic.com>
+Content-Transfer-Encoding: base64
 
+DQpPbiAxLzEyLzE2LCAyOjI0IEFNLCAiTmljaG9sYXMgQS4gQmVsbGluZ2VyIiA8bmFiQGRhdGVy
+YWluYy5jb20+IHdyb3RlOg0KDQo+RnJvbTogTmljaG9sYXMgQmVsbGluZ2VyIDxuYWJAbGludXgt
+aXNjc2kub3JnPg0KPg0KPkhpIGFsbCwNCj4NCj5UaGlzIC12MSBzZXJpZXMgaXMgdG8gYWRkcmVz
+cyB0d28gTFVOX1JFU0VUIGFjdGl2ZQ0KPkkvTyArIFRNUiBzZV9jbWQtPmNtZF9rcmVmIDwgMCBi
+dWdzIGFzIHJlcG9ydGVkDQo+cmVjZW50bHkgYnkgUXVpbm4gJiBDbywgdGhhdCBjYW4gb2NjdXIg
+ZHVyaW5nDQo+YWN0aXZlIEkvTyBMVU5fUkVTRVQgd2l0aCBzaW5nbGUgLyBtdWx0aXBsZSBMSU8N
+Cj5leHBvcnQgcG9ydCBjb25maWdzLg0KPg0KPlRvIGFkZHJlc3MgdGhpcyBidWcsIGFkZCBfX3Rh
+cmdldF9jaGVja19pb19zdGF0ZSgpDQo+Y29tbW9uIGhhbmRsZXIgZm9yIEFCT1JUX1RBU0sgKyBM
+VU5fUkVTRVQgSS9PIGFib3J0DQo+Y2FzZXMsIGFuZCBtb3ZlIHJlbWFpbmluZyBzZV9jbWQgU0dM
+IHBhZ2UgKyByZWxlYXNlDQo+aW50byB0YXJnZXRfZnJlZV9jbWRfbWVtKCkgdG8gbm93IGJlIGNh
+bGxlZCBkaXJlY3RseQ0KPmZyb20gdGhlIGZpbmFsIHRhcmdldF9yZWxlYXNlX2NtZF9rcmVmKCkg
+Y2FsbGJhY2suDQo+DQo+Rm9sbG93aW5nIF9fdGFyZ2V0X2NoZWNrX2lvX3N0YXRlKCkgY29kZSwg
+YWxzbyBvYnRhaW4NCj5rcmVmX2dldF91bmxlc3NfemVybygmc2VfY21kLT5jbWRfa3JlZikgZm9y
+IExVTl9SRVNFVA0KPlRNUiBhYm9ydCBpbiBjb3JlX3Rtcl9kcmFpbl90bXJfbGlzdCgpLCBpbiBv
+cmRlciB0bw0KPnV0aWxpemUgY29tbW9uIHRyYW5zcG9ydF93YWl0X2Zvcl90YXNrcygpIGNvZGUN
+Cj53aGVuIHNlX3Rtcl9yZXEgZGVzY3JpcHRvcnMgYXJlIGJlaW5nIHNodXRkb3duLg0KPg0KPk5v
+dGUgdGhlcmUgYXJlIGEgZmV3IG1vcmUgY2xlYW51cHMgdG8gYmUgaGFkIGJ1dA0KPmhhdmUgYmVl
+biBsZWZ0IG9mZiBmb3IgdGhlIG1vbWVudCwgYWhlYWQgb2YgdGhlc2UNCj5zcGVjaWZpYyBmaXhl
+cyBnZXR0aW5nIG1lcmdlZCBmb3IgdjQuNS1yYyBjb2RlLg0KPg0KPlBsZWFzZSByZXZpZXcsDQo+
+DQo+LS1uYWINCj4NCj5OaWNob2xhcyBCZWxsaW5nZXIgKDIpOg0KPiAgdGFyZ2V0OiBGaXggTFVO
+X1JFU0VUIGFjdGl2ZSBJL08gaGFuZGxpbmcgZm9yIEFDS19LUkVGDQo+ICB0YXJnZXQ6IEZpeCBM
+VU5fUkVTRVQgYWN0aXZlIFRNUiBkZXNjcmlwdG9yIGhhbmRsaW5nDQo+DQo+IGRyaXZlcnMvdGFy
+Z2V0L3RhcmdldF9jb3JlX3Rtci5jICAgICAgIHwgOTYgKysrKysrKysrKysrKysrKysrKysrKysr
+KysrLS0tLS0tLQ0KPiBkcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV90cmFuc3BvcnQuYyB8IDY2
+ICsrKysrKysrKysrKysrLS0tLS0tLS0tDQo+IGluY2x1ZGUvdGFyZ2V0L3RhcmdldF9jb3JlX2Jh
+c2UuaCAgICAgIHwgIDEgKw0KPiAzIGZpbGVzIGNoYW5nZWQsIDExOCBpbnNlcnRpb25zKCspLCA0
+NSBkZWxldGlvbnMoLSkNCj4NCj4tLSANCj4xLjkuMQ0KPg0KDQpRVDogIE5pY2hvbGFzLCAgYm90
+aCBwYXRjaGVzIGxvb2tzIGdvb2QuICBUaGFua3MuDQo+DQo=
 
+--_000_DABA8BB8F4EB494BAF0F16339CDBC22Eqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
+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
+VAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBu
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4A
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA0AAAAcwBpAHAAOgBxAHUAaQBuAG4ALgB0
+AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAFgAAAFEAdQBpAG4AbgAgAFQA
+cgBhAG4AAAAAAB8AHwwBAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABkAAAAAAAAAIErH6S+oxAZ
+nW4A3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0
+AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALAAAAHEAdQBpAG4AbgAuAHQA
+cgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAWAAAAUQB1AGkAbgBuACAAVABy
+AGEAbgAAAAAAHwAjQAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAGQAAAAAAAAAgSsfpL6jEBmd
+bgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQA
+cgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAsAAAAcQB1AGkAbgBuAC4AdABy
+AGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4A
+TgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA57YS/MXvJEKE
+5bFSq6PjdgMAFwABAAAAQAA5AIA/bJ9ATtEBQAAIMMl+mZ9ATtEBCwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABh
+AG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABG
+AAAAAAaFAAAAAAAAHwA3AAEAAACAAAAAUgBlADoAIABbAFAAQQBUAEMASAAgADAALwAyAF0AIAB0
+AGEAcgBnAGUAdAA6ACAARgBpAHgAIABMAFUATgBfAFIARQBTAEUAVAAgAGEAYwB0AGkAdgBlACAA
+SQAvAE8AIAArACAAVABNAFIAIABoAGEAbgBkAGwAaQBuAGcAAAAfAD0AAQAAAAoAAABSAGUAOgAg
+AAAAAAADADYAAAAAAB8AQhABAAAAaAAAADwAMQA0ADUAMgA1ADkANAAyADQANQAtADkAMgAxAC0A
+MQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAG4AYQBiAEAAZABhAHQAZQByAGEAaQBu
+AGMALgBjAG8AbQA+AAAAAgFxAAEAAAAbAAAAAQHRTSOsiGPeR8X7nEuU1PqEXFjdyJ755n8AAB8A
+cAABAAAAeAAAAFsAUABBAFQAQwBIACAAMAAvADIAXQAgAHQAYQByAGcAZQB0ADoAIABGAGkAeAAg
+AEwAVQBOAF8AUgBFAFMARQBUACAAYQBjAHQAaQB2AGUAIABJAC8ATwAgACsAIABUAE0AUgAgAGgA
+YQBuAGQAbABpAG4AZwAAAB8ANRABAAAAZAAAADwARABBAEIAQQA4AEIAQgA4AC0ARgA0AEUAQgAt
+ADQAOQA0AEIALQBBAEYAMABGAC0AMQA2ADMAMwA5AEMARABCAEMAMgAyAEUAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAD4AAAAfADkQAQAAAGgAAAA8ADEANAA1ADIANQA5ADQAMgA0ADUALQA5ADIAMQAt
+ADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBuAGEAYgBAAGQAYQB0AGUAcgBhAGkA
+bgBjAC4AYwBvAG0APgAAAAMA3j/p/QAAQAAHMIg2i59ATtEBAwAmAAAAAAACAUcAAQAAAC8AAABj
+PVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE2MDExMzIwMjYwM1otMTI2Mjk5AAAfABUQAQAAAFgA
+AABDAEUANQA0AEIANwA2AEEAQQAwADkANQBDAEQANAAyADgANQA4ADUANgAxADQANAA1AEUAQQBG
+AEIAQwBDADIAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAmwAAAPIqp6ZPAAAA
+HwD6PwEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
+AAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABEAAAATQBpAGMAcgBvAHMAbwBmAHQA
+LQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMAAuADAALgAwAC4AMQA2ADAAMQAwADkAAAAfAACAH6Tr
+M6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQA
+cgBhAGMAawBpAG4AZwBFAHgAAAABAAAAOgEAAEkASQA9ADAAMQAwADEARAAxADQARQA0ADAANgAz
+ADkANwA2ADIARQBDADQAQwBDADAARQAyADYANwA0AEMAQQAxAEEANAA4ADQANwAxADUAOAA0AEEA
+RABFADcARQA7AFMAQgBNAEkARAA9ADIANwA7AFMAMQA9ADwAMQA0ADUAMgA1ADkANAAyADQANQAt
+ADkAMgAxAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAG4AYQBiAEAAZABhAHQA
+ZQByAGEAaQBuAGMALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAx
+ADQALgAzACAAKABCAHUAaQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAA
+AAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBh
+AHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0A
+bwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAAAFsAMQAwAC4AMwAuADEAMAAu
+ADQAMwBdAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUA
+cgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAr4o=
 
------ Original Message -----
-> From: "James Bottomley" <James.Bottomley@HansenPartnership.com>
-> To: "Anne Mulhern" <amulhern@redhat.com>, linux-scsi@vger.kernel.org
-> Sent: Wednesday, January 13, 2016 2:15:05 PM
-> Subject: Re: /sys/.../enclosure_device:<something> ?
-> 
-> On Wed, 2016-01-13 at 11:28 -0500, Anne Mulhern wrote:
-> > Hi!
-> > 
-> > I'm looking for the most precise information available about the
-> > meaning of <something>
-> > and from what it is derived. I'm also interested in what the values
-> > in the files in that directory
-> > may mean. Could somebody point me there?
-> 
-> It's in drivers/misc/enclosure.c:enclosure_link_name()
-> 
-
-Thanks. I will do my best with that.
-
-> > Also, how can there be more than one enclosure_device subdirectory
-> > for the same device,
-> > or, alternatively, why isn't <something> stored in a file in the more
-> > regularly named directory
-> > /sys/.../enclosure_device?
-> 
-> I'm not sure I parse the question, but if you're asking how can a
-> single enclosure bay appear to have more than one device, that's when
-> there are multiple paths to the device.
-
-I'm afraid the word path is so overloaded...I'm assuming that you
-are talking about a multipathed environment, where two device nodes, say
-/dev/sdb, /dev/sdc correspond to the same disk, and are hence multipathed.
-Of course, in that case, it makes sense that both devices should share a
-bay. And that's what I observe.
-
-If I understand you correctly, then my question is actually the opposite. Why does it
-look as if the directories are set up so that there can be multiple bays
-for a single device...i.e., the directory naming scheme allows me to specify
-an arbitrary number of bays for /dev/sdb. It seems like there should never
-be more than one?
-
-- mulhern
-
-> James
-> 
-> > (It would be nice to be able to obtain the value of <something> using
-> > libudev's attribute
-> > lookup facilities, but making that value a part of the specially
-> > named directory enclosure_device:<something>
-> > makes such a process especially difficult.)
-> > 
-> > Thanks,
-> > 
-> > - mulhern
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+--_000_DABA8BB8F4EB494BAF0F16339CDBC22Eqlogiccom_--
