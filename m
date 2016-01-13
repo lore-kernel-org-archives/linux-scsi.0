@@ -1,38 +1,43 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
-Date: Wed, 13 Jan 2016 18:30:35 +0200
-Message-ID: <56967BAB.9000809@dev.mellanox.co.il>
-References: <56961493.5010901@suse.de> <56962BDB.4080509@dev.mellanox.co.il>
- <20160113154243.GA2563@redhat.com> <569675F5.8070501@dev.mellanox.co.il>
- <20160113162102.GA2933@redhat.com>
+Subject: Re: [PATCH-v2 2/4] ib_srpt: Convert acl lookup to modern
+ get_initiator_node_acl usage
+Date: Wed, 13 Jan 2016 18:39:20 +0200
+Message-ID: <56967DB8.5000401@dev.mellanox.co.il>
+References: <1452457724-10629-1-git-send-email-nab@daterainc.com>
+ <1452457724-10629-3-git-send-email-nab@daterainc.com>
+ <56941FF6.5090003@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:33709 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929AbcAMQaj (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 11:30:39 -0500
-Received: by mail-wm0-f47.google.com with SMTP id f206so303014426wmf.0
-        for <Linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 08:30:38 -0800 (PST)
-In-Reply-To: <20160113162102.GA2933@redhat.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34098 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbcAMQjY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 11:39:24 -0500
+Received: by mail-wm0-f46.google.com with SMTP id u188so305559532wmu.1
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 08:39:23 -0800 (PST)
+In-Reply-To: <56941FF6.5090003@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, device-mapper development <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
 
->> Hmm. I turned on /sys/module/dm_mod/parameters/use_blk_mq and indeed
->> saw a significant performance improvement. Anything else I was missing?
 >
-> You can enable CONFIG_DM_MQ_DEFAULT so you don't need to manually set
-> use_blk_mq.
+> The "goto try_again" statement is executed at most once. Since the above loop
+> can be unfolded with only a very minor code duplication I think it should
+> be unfolded, e.g. as follows:
+>
+> 	se_acl = core_tpg_get_initiator_node_acl(&sport->port_tpg_1, ch->sess_name);
+> 	if (!se_acl)
+> 		se_acl = core_tpg_get_initiator_node_acl(&sport->port_tpg_1, ch->sess_name + strlen("0x"));
+> 	if (!se_acl) {
+> 		pr_info("Rejected login because no ACL has been"
+> 			" configured yet for initiator %s.\n",
+> 			ch->sess_name);
+> 		[ ... ]
+> 	}
+>
 
-I do, I started out with the manual option to test the improvements but
-got tired of it very quickly :)
-
-> OK, so you're only getting 1/3 of the throughput.  Time for us to hunt
-> down the bottleneck (before real devices hit it).
-
-I have some initial instrumentation analysis so I'll be happy if we can
-work on that (probably can free this thread and move it to dm-devel).
+I tend to agree, and it would be a bit cleaner to hide this behind
+srpt_get_initiator_node_acl wrapper.
