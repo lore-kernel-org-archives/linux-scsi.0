@@ -1,60 +1,25 @@
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH-v2 3/4] target: Fix change depth se_session reference
 	usage
-Date: Wed, 13 Jan 2016 09:24:36 +0100
-Message-ID: <20160113082436.GA13113@lst.de>
-References: <1452457724-10629-1-git-send-email-nab@daterainc.com> <1452457724-10629-4-git-send-email-nab@daterainc.com> <20160112150707.GB2058@lst.de> <1452670172.27508.32.camel@haakon3.risingtidesystems.com>
+Date: Wed, 13 Jan 2016 09:27:38 +0100
+Message-ID: <20160113082738.GA13158@lst.de>
+References: <1452457724-10629-1-git-send-email-nab@daterainc.com> <1452457724-10629-4-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1452670172.27508.32.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <1452457724-10629-4-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 12, 2016 at 11:29:32PM -0800, Nicholas A. Bellinger wrote:
-> With this patch in place, this function is now also called by
-> core_tpg_set_initiator_node_queue_depth(), where previously it was
-> called only during target_alloc_node_acl().
-> 
-> Might as well drop the ignored return while we're at it..
+>  int core_tpg_set_initiator_node_queue_depth(
+>  	struct se_portal_group *tpg,
+> -	unsigned char *initiatorname,
+> +	struct se_node_acl *acl,
+>  	u32 queue_depth,
+>  	int force)
 
-Please add it to the patch description..
-
-> > > +			continue;
-> > > +		}
-> > > +		target_put_session(sess);
-> > > +		spin_lock_irqsave(&acl->nacl_sess_lock, flags);
-> > >  	}
-> > > +	spin_unlock_irqrestore(&acl->nacl_sess_lock, flags);
-> > 
-> > It seems at thus point there is no need for ->shutdown_session, it
-> > could be folded into ->close_session in a follow on patch.
-> > 
-> 
-> Not exactly.
-> 
-> It's the final target_put_session() -> kref_put() upon
-> se_sess->sess_kref that invokes TFO->close_session().
-
-I know.  But we are dropping the only long term held reference
-here, so the two are more or less equivalent. 
-
-> > > -void target_get_session(struct se_session *se_sess)
-> > > +int target_get_session(struct se_session *se_sess)
-> > >  {
-> > > -	kref_get(&se_sess->sess_kref);
-> > > +	return kref_get_unless_zero(&se_sess->sess_kref);
-> > >  }
-> > >  EXPORT_SYMBOL(target_get_session);
-> > 
-> > I'd be much happier to have a separate prep patch for this..
-> 
-> Since this will need to hit stable at some point, it likely needs to
-> stay with the original bug-fix.
-
-Please at least document it in the patch description.  I'd still
-be happier to have the change to target_get_session as a preparatory
-patch, though.
+And while we're at it - the tpg should be dropped as well, we can
+get it from acl->se_tpg trivially.
