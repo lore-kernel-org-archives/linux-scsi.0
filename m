@@ -1,93 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 13/22] scsi_dh_alua: Use workqueue for RTPG
-Date: Wed, 13 Jan 2016 08:13:54 +0100
-Message-ID: <5695F932.5010806@suse.de>
-References: <1452613258-94084-1-git-send-email-hare@suse.de>
- <1452613258-94084-14-git-send-email-hare@suse.de>
- <20160112171404.GE23947@lst.de> <5695F66A.9040709@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hariprasad Shenai <hariprasad@chelsio.com>
+Subject: [PATCHv3 net-next 0/3] cxgb4/cxgb4i: add iscsi LRO  support for chelsio t4/t5 adapters
+Date: Wed, 13 Jan 2016 12:47:36 +0530
+Message-ID: <1452669459-15082-1-git-send-email-hariprasad@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54538 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353AbcAMHN4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 02:13:56 -0500
-In-Reply-To: <5695F66A.9040709@suse.de>
+Received: from stargate.chelsio.com ([12.32.117.8]:12512 "EHLO
+	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751255AbcAMHQC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 02:16:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: davem@davemloft.net, James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, leedom@chelsio.com, kxie@chelsio.com, manojmalviya@chelsio.com, nirranjan@chelsio.com, Hariprasad Shenai <hariprasad@chelsio.com>
 
-On 01/13/2016 08:02 AM, Hannes Reinecke wrote:
-> On 01/12/2016 06:14 PM, Christoph Hellwig wrote:
->>> -        kref_get(&pg->kref);
->>> +        if (!kref_get_unless_zero(&pg->kref))
->>> +            continue;
->>
->> As pointed out earlier this should be done from the start.
->>
-> Yep.
->
->>> +    /* Check for existing port_group references */
->>> +    spin_lock(&h->pg_lock);
->>> +    if (h->pg) {
->>> +        old_pg =3D pg;
->>> +        /* port_group has changed. Update to new port group */
->>> +        if (h->pg !=3D pg) {
->>> +            old_pg =3D h->pg;
->>> +            rcu_assign_pointer(h->pg, pg);
->>> +            pg_updated =3D true;
->>> +        }
->>> +    } else {
->>> +        rcu_assign_pointer(h->pg, pg);
->>> +        pg_updated =3D true;
->>> +    }
->>> +    alua_rtpg_queue(h->pg, sdev, NULL);
->>> +    spin_unlock(&h->pg_lock);
->>> +
->>> +    if (pg_updated)
->>> +        synchronize_rcu();
->>> +    if (old_pg) {
->>> +        if (old_pg->rtpg_sdev)
->>> +            flush_delayed_work(&old_pg->rtpg_work);
->>> +        kref_put(&old_pg->kref, release_port_group);
->>> +    }
->>
->> The synchronize_rcu() needs to be done in release_port_group, or eve=
-n
->> better be replaced by doing a kfree_rcu there instead of a kfree.
->>
-> Point is that we don't necessarily have an old_pg to call
-> release_port_group() on, but we still need to call synchronize_rcu()
-> to inform everyong that h->pg now has a new value.
-> So while I could do that it would end with a mess of if-clauses here.
->
->> And unless I'm mistaken the flush_delayed_work should probably be
->> done in release_port_group as well.
->>
-> _Actually_ we only need to call flush_delayed_work if sdev =3D=3D
-> rtgp_sdev. Otherwise the workqueue item is running off a different
-> device and won't be affected.
->
-Hmm. Well, not quite. We run into flush_delayed_work()  only if the=20
-port group changes or upon bus detach.
-=46or all other callers rtpg_sdev() should already be NULL.
-But looking at the call sites we can indeed move the=20
-flush_delayed_work() into the release function.
+Hi
 
-Cheers,
+This patch series adds LRO iscsi support for chelsio T4/T5 adapters.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch series has been created against net-next tree and includes
+patches on cxgb4 and cxgb4i driver.
+
+We have included all the maintainers of respective drivers. Kindly review
+the change and let us know in case of any review comments.
+
+Thanks
+
+V3:
+ Use sk_buff_head and the appropriate initializers and helpers for
+ maintaining list of aggregated sessions. Based on review comments by
+ David Miller.
+V2:
+ Missed a new header file cxgbi_lro.h in PATCH 2/3. Adding it.
+ Based on failure reported by by kbuild test bot <lkp@intel.com>
+
+Hariprasad Shenai (3):
+  cxgb4: Add LRO infrastructure for cxgb4i driver
+  libcxgbi: add pdu parsing of LRO'ed skbs
+  cxgb4i: add iscsi LRO for chelsio t4/t5 adapters
+
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  15 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |  40 ++-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h  |   5 +
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  11 +-
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c              | 369 ++++++++++++++++++++-
+ drivers/scsi/cxgbi/cxgbi_lro.h                  |  72 ++++
+ drivers/scsi/cxgbi/libcxgbi.c                   | 415 +++++++++++++++++++-----
+ drivers/scsi/cxgbi/libcxgbi.h                   |   4 +
+ 8 files changed, 814 insertions(+), 117 deletions(-)
+ create mode 100644 drivers/scsi/cxgbi/cxgbi_lro.h
+
+-- 
+2.3.4
+
