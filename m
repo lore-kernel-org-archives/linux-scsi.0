@@ -1,67 +1,110 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: klist: fix starting point removed bug in klist iterators
-Date: Wed, 13 Jan 2016 08:10:31 -0800
-Message-ID: <1452701431.2363.12.camel@HansenPartnership.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
+Date: Wed, 13 Jan 2016 17:18:50 +0100
+Message-ID: <569678EA.3000000@suse.de>
+References: <56961493.5010901@suse.de> <56962BDB.4080509@dev.mellanox.co.il>
+ <20160113154243.GA2563@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <greg@kroah.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Ewan D. Milne" <emilne@redhat.com>
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:44924 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752725AbcAMQSy (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 11:18:54 -0500
+In-Reply-To: <20160113154243.GA2563@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, device-mapper development <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
 
-The starting node for a klist iteration is often passed in from
-somewhere way above the klist infrastructure, meaning there's no
-guarantee the node is still on the list.  We've seen this in SCSI where
-we use bus_find_device() to iterate through a list of devices.  In the
-face of heavy hotplug activity, the last device returned by
-bus_find_device() can be removed before the next call.  This leads to
+On 01/13/2016 04:42 PM, Mike Snitzer wrote:
+> On Wed, Jan 13 2016 at  5:50am -0500,
+> Sagi Grimberg <sagig@dev.mellanox.co.il> wrote:
+>
+>> Another (adjacent) topic is multipath performance with blk-mq.
+>>
+>> As I said, I've been looking at nvme multipathing support and
+>> initial measurements show huge contention on the multipath lock
+>> which really defeats the entire point of blk-mq...
+>>
+>> I have yet to report this as my work is still in progress. I'm not s=
+ure
+>> if it's a topic on it's own but I'd love to talk about that as well.=
+=2E.
+>
+> This sounds like you aren't actually using blk-mq for the top-level D=
+M
+> multipath queue.  And your findings contradicts what I heard from Kei=
+th
+> Busch when I developed request-based DM's blk-mq support, from commit
+> bfebd1cdb497 ("dm: add full blk-mq support to request-based DM"):
+>
+>       "Just providing a performance update. All my fio tests are gett=
+ing
+>        roughly equal performance whether accessed through the raw blo=
+ck
+>        device or the multipath device mapper (~470k IOPS). I could on=
+ly push
+>        ~20% of the raw iops through dm before this conversion, so thi=
+s latest
+>        tree is looking really solid from a performance standpoint."
+>
+>>> But in the end we should be able to do strip down the current (rath=
+er
+>>> complex) multipath-tools to just handle topology changes; everythin=
+g
+>>> else will be done internally.
+>>
+>> I'd love to see that happening.
+>
+> Honestly, this needs to be a hardened plan that is hashed out _before=
+_
+> LSF and then findings presented.  It is a complete waste of time to
+> debate nuance with Hannes in a one hour session.
+>
+> Until I implemented the above DM core changes hch and Hannes were ver=
+y
+> enthusiastic to throw away the existing DM multipath and multipath-to=
+ols
+> code (the old .request_fn queue lock bottleneck being the straw that
+> broke the camel's back).  Seems Hannes' enthusiasm hasn't tempered bu=
+t
+> his hand-waving is still in full form.
+>
+> Details matter.  I have no doubts aspects of what we have could be
+> improved but I really fail to see how moving multipathing to blk-mq i=
+s a
+> constructive way forward.
+>
+So what is your plan?
+Move the full blk-mq infrastructure into device-mapper?
 
-Dec  3 13:22:02 localhost kernel: WARNING: CPU: 2 PID: 28073 at include/linux/kref.h:47 klist_iter_init_node+0x3d/0x50()
-Dec  3 13:22:02 localhost kernel: Modules linked in: scsi_debug x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel joydev iTCO_wdt dcdbas ipmi_devintf acpi_power_meter iTCO_vendor_support ipmi_si imsghandler pcspkr wmi acpi_cpufreq tpm_tis tpm shpchp lpc_ich mfd_core nfsd nfs_acl lockd grace sunrpc tg3 ptp pps_core
-Dec  3 13:22:02 localhost kernel: CPU: 2 PID: 28073 Comm: cat Not tainted 4.4.0-rc1+ #2
-Dec  3 13:22:02 localhost kernel: Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
-Dec  3 13:22:02 localhost kernel: ffffffff81a20e77 ffff880613acfd18 ffffffff81321eef 0000000000000000
-Dec  3 13:22:02 localhost kernel: ffff880613acfd50 ffffffff8107ca52 ffff88061176b198 0000000000000000
-Dec  3 13:22:02 localhost kernel: ffffffff814542b0 ffff880610cfb100 ffff88061176b198 ffff880613acfd60
-Dec  3 13:22:02 localhost kernel: Call Trace:
-Dec  3 13:22:02 localhost kernel: [<ffffffff81321eef>] dump_stack+0x44/0x55
-Dec  3 13:22:02 localhost kernel: [<ffffffff8107ca52>] warn_slowpath_common+0x82/0xc0
-Dec  3 13:22:02 localhost kernel: [<ffffffff814542b0>] ? proc_scsi_show+0x20/0x20
-Dec  3 13:22:02 localhost kernel: [<ffffffff8107cb4a>] warn_slowpath_null+0x1a/0x20
-Dec  3 13:22:02 localhost kernel: [<ffffffff8167225d>] klist_iter_init_node+0x3d/0x50
-Dec  3 13:22:02 localhost kernel: [<ffffffff81421d41>] bus_find_device+0x51/0xb0
-Dec  3 13:22:02 localhost kernel: [<ffffffff814545ad>] scsi_seq_next+0x2d/0x40
-[...]
+ From my perspective, blk-mq and multipath I/O handling have a lot=20
+in common (the ->map_queue callback is in effect the same ->map_rq=20
+does), so I still think it should be possible to leverage that directly=
+=2E
+But for that to happen we would need to address some of the=20
+mentioned issues like individual queue failures and dynamic queue=20
+remapping; my hope is that they'll be implemented in the course of=20
+NVMe over fabrics.
 
-And an eventual crash. It can actually occur in any hotplug system
-which has a device finder and a starting device.
+Also note that my proposal is more with the infrastructure=20
+surrounding multipathing (ie topology detection and setup), so it's=20
+somewhat orthogonal to your proposal.
 
-We can fix this globally by making sure the starting node for
-klist_iter_init_node() is actually a member of the list before using it
-(and by starting from the beginning if it isn't).
+Cheers,
 
-Reported-by: Ewan D. Milne <emilne@redhat.com>
-Tested-by: Ewan D. Milne <emilne@redhat.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
----
-
-diff --git a/lib/klist.c b/lib/klist.c
-index d74cf7a..0507fa5 100644
---- a/lib/klist.c
-+++ b/lib/klist.c
-@@ -282,9 +282,9 @@ void klist_iter_init_node(struct klist *k, struct klist_iter *i,
- 			  struct klist_node *n)
- {
- 	i->i_klist = k;
--	i->i_cur = n;
--	if (n)
--		kref_get(&n->n_ref);
-+	i->i_cur = NULL;
-+	if (n && kref_get_unless_zero(&n->n_ref))
-+		i->i_cur = n;
- }
- EXPORT_SYMBOL_GPL(klist_iter_init_node);
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
