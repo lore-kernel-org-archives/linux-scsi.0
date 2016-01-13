@@ -1,58 +1,80 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/1] scsi: add Synology to 1024 sector blacklist
-Date: Tue, 12 Jan 2016 18:54:55 +0100
-Message-ID: <56953DEF.1050306@redhat.com>
-References: <1452206045-18332-1-git-send-email-mchristi@redhat.com>
+From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Subject: RE: [PATCH v3 04/17] be2iscsi: Fix to synchronize tag allocation
+ using spin_lock
+Date: Wed, 13 Jan 2016 08:38:02 +0530
+Message-ID: <07f50d49647a69bfaa4ba2454dd099dc@mail.gmail.com>
+References: <1450859676-22025-1-git-send-email-jitendra.bhivare@avagotech.com>
+ <1450859676-22025-5-git-send-email-jitendra.bhivare@avagotech.com> <5694195F.6060501@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34642 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802AbcALRzA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2016 12:55:00 -0500
-Received: by mail-wm0-f65.google.com with SMTP id b14so32676083wmb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2016 09:54:59 -0800 (PST)
-In-Reply-To: <1452206045-18332-1-git-send-email-mchristi@redhat.com>
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:36231 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752529AbcAMDIE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2016 22:08:04 -0500
+Received: by mail-yk0-f175.google.com with SMTP id v14so381195707ykd.3
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2016 19:08:04 -0800 (PST)
+In-Reply-To: <5694195F.6060501@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mchristi@redhat.com, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
+Thanks Mike.
 
+It is not needed, will send the updated diff.
 
-On 07/01/2016 23:34, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
-> 
-> Another iscsi target that cannot handle large IOs,
-> but does not tell us a limit.
-> 
-> The Synology iSCSI targets report:
-> 
-> Block limits VPD page (SBC):
->   Write same no zero (WSNZ): 0
->   Maximum compare and write length: 0 blocks
->   Optimal transfer length granularity: 0 blocks
->   Maximum transfer length: 0 blocks
->   Optimal transfer length: 0 blocks
->   Maximum prefetch length: 0 blocks
->   Maximum unmap LBA count: 0
->   Maximum unmap block descriptor count: 0
->   Optimal unmap granularity: 0
->   Unmap granularity alignment valid: 0
->   Unmap granularity alignment: 0
->   Maximum write same length: 0x0 blocks
-> 
-> and the size of the command it can handle seems to depend on how much
-> memory it can allocate at the time. This results in IO errors when
-> handling large IOs. This patch just has us use the old 1024 default
-> sectors for this target by adding it to the scsi blacklist. We do
-> not have good contacs with this vendors, so I have not been able to
-> try and fix on their side.
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+Sent: Tuesday, January 12, 2016 2:37 AM
+To: Jitendra Bhivare; linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 04/17] be2iscsi: Fix to synchronize tag allocation
+using spin_lock
 
-Synology is just (an old fork of?) LIO.  IIRC I saw similar problems a
-couple years ago with LIO because iscsit_map_iovec maps everything a
-page at a time and produced too large an iovec for the underlying
-storage.  I'm afraid you're going to get this for pretty much every user
-of LIO.
+On 12/23/2015 02:34 AM, Jitendra Bhivare wrote:
+> alloc_mcc_tag/free_mcc_tag is now done under mcc_lock spin_lock
+>
+> Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+> ---
+>  drivers/scsi/be2iscsi/be_cmds.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_cmds.c
+> b/drivers/scsi/be2iscsi/be_cmds.c index 1913e9e..502c9b6 100644
+> --- a/drivers/scsi/be2iscsi/be_cmds.c
+> +++ b/drivers/scsi/be2iscsi/be_cmds.c
+> @@ -121,6 +121,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba
+> *phba)  {
+>  	unsigned int tag = 0;
+>
+> +	spin_lock_bh(&phba->ctrl.mcc_lock);
+>  	if (phba->ctrl.mcc_tag_available) {
+>  		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
+>  		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0; @@
+-134,6
+> +135,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+>  		else
+>  			phba->ctrl.mcc_alloc_index++;
+>  	}
+> +	spin_unlock_bh(&phba->ctrl.mcc_lock);
+>  	return tag;
+>  }
+>
+> @@ -254,7 +256,7 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+>
+>  void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)  {
+> -	spin_lock(&ctrl->mbox_lock);
+> +	spin_lock_bh(&ctrl->mcc_lock);
+>  	tag = tag & 0x000000FF;
+>  	ctrl->mcc_tag[ctrl->mcc_free_index] = tag;
+>  	if (ctrl->mcc_free_index == (MAX_MCC_CMD - 1)) @@ -262,7 +264,7 @@
 
-Paolo
+> void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+>  	else
+>  		ctrl->mcc_free_index++;
+>  	ctrl->mcc_tag_available++;
+> -	spin_unlock(&ctrl->mbox_lock);
+> +	spin_unlock_bh(&ctrl->mcc_lock);
+>  }
+>
+
+What was the _bh change for?
