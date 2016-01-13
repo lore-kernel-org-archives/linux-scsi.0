@@ -1,31 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 13/22] scsi_dh_alua: Use workqueue for RTPG
-Date: Wed, 13 Jan 2016 11:05:03 +0100
-Message-ID: <20160113100503.GB15163@lst.de>
-References: <1452613258-94084-1-git-send-email-hare@suse.de> <1452613258-94084-14-git-send-email-hare@suse.de> <20160112171404.GE23947@lst.de> <5695F66A.9040709@suse.de> <5695F932.5010806@suse.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-for-4.6 1/6] target: Add target_alloc_session() helper
+ function
+Date: Wed, 13 Jan 2016 02:14:21 -0800
+Message-ID: <1452680061.27508.93.camel@haakon3.risingtidesystems.com>
+References: <1452458668-11034-1-git-send-email-nab@daterainc.com>
+	 <1452458668-11034-2-git-send-email-nab@daterainc.com>
+	 <20160112151119.GD2058@lst.de>
+	 <1452672566.27508.44.camel@haakon3.risingtidesystems.com>
+	 <20160113081700.GB12642@lst.de>
+	 <1452676969.27508.60.camel@haakon3.risingtidesystems.com>
+	 <20160113093336.GB14377@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41984 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750955AbcAMKFE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 05:05:04 -0500
-Content-Disposition: inline
-In-Reply-To: <5695F932.5010806@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160113093336.GB14377@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On Wed, Jan 13, 2016 at 08:13:54AM +0100, Hannes Reinecke wrote:
->> _Actually_ we only need to call flush_delayed_work if sdev ==
->> rtgp_sdev. Otherwise the workqueue item is running off a different
->> device and won't be affected.
->>
-> Hmm. Well, not quite. We run into flush_delayed_work()  only if the port 
-> group changes or upon bus detach.
-> For all other callers rtpg_sdev() should already be NULL.
-> But looking at the call sites we can indeed move the flush_delayed_work() 
-> into the release function.
+On Wed, 2016-01-13 at 10:33 +0100, Christoph Hellwig wrote:
+> On Wed, Jan 13, 2016 at 01:22:49AM -0800, Nicholas A. Bellinger wrote:
+> > Huh..?  It's used by iscsi-target, ib_isert, tcm_qla2xxx, vhost-scsi and
+> > tcm_fc.
+> > 
+> > That's the majority of the drivers people care about.
+> 
+> ib_isert never calls transport_init_session / transport_init_session_tags
+> directly.
+> 
 
-Looks like the earlier you made sense after all :)
+Yes.
+
+Not to mention, there is a new struct iscsit_transport based driver on
+the way that assumes percpu-ida tag preallocation using this same
+method.
+
+> We've got 3 callers to transport_init_session_tags vs 6 to
+> transport_init_session.
+> 
+
+In that case, I'll look into converting sbp-target, usb-gadget and
+xen-scsiback to use percpu-ida like the other consumers here for v4.6
+code. 
+
+> iSCSI already works roughly the way I suggest everything should
+> work in the future - it uses transport_init_session but manually
+> allocates the tags.
+
+iscsi-target needs it open-coded for discovery purposes, because
+se_node_acl lookup does not occur.
+
+However for the normal session login se_node_acl lookup back, I don't
+see a reason why iscsi-target can't use target_alloc_session() here too.
