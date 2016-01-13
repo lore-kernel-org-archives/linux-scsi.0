@@ -1,452 +1,567 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 07/24] scsi_dh_alua: Use separate alua_port_group structure
-Date: Wed, 13 Jan 2016 09:09:42 +0100
-Message-ID: <1452672599-9820-8-git-send-email-hare@suse.de>
+Subject: [PATCHv3 13/24] scsi_dh_alua: Use workqueue for RTPG
+Date: Wed, 13 Jan 2016 09:09:48 +0100
+Message-ID: <1452672599-9820-14-git-send-email-hare@suse.de>
 References: <1452672599-9820-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58942 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58975 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754775AbcAMIKS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 03:10:18 -0500
+	id S1753290AbcAMIKU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 03:10:20 -0500
 In-Reply-To: <1452672599-9820-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The port group needs to be a separate structure as several
-LUNs might belong to the same group.
+The current ALUA device_handler has two drawbacks:
+- We're sending a 'SET TARGET PORT GROUP' command to every LUN,
+  disregarding the fact that several LUNs might be in a port group
+  and will be automatically switched whenever _any_ LUN within
+  that port group receives the command.
+- Whenever a LUN is in 'transitioning' mode we cannot block I/O
+  to that LUN, instead the controller has to abort the command.
+  This leads to increased traffic across the wire and heavy load
+  on the controller during switchover.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
+With this patch the RTPG handling is moved to a per-portgroup
+workqueue. This reduces the number of 'REPORT TARGET PORT GROUP'
+and 'SET TARGET PORT GROUPS' sent to the controller as we're sending
+them now per port group, and not per device as previously.
+It also allows us to block I/O to any LUN / port group found to be
+in 'transitioning' ALUA mode, as the workqueue item will be requeued
+until the controller moves out of transitioning.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 183 ++++++++++++++++++++---------
- include/scsi/scsi_dh.h                     |   1 +
- 2 files changed, 130 insertions(+), 54 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 303 ++++++++++++++++++++++++-----
+ 1 file changed, 252 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 49dea42..14b4ca6 100644
+index b73a7ed..5add1a1 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -64,14 +64,24 @@
- #define ALUA_OPTIMIZE_STPG		1
- #define ALUA_RTPG_EXT_HDR_UNSUPP	2
+@@ -59,10 +59,15 @@
+ #define ALUA_RTPG_SIZE			128
+ #define ALUA_FAILOVER_TIMEOUT		60
+ #define ALUA_FAILOVER_RETRIES		5
++#define ALUA_RTPG_DELAY_MSECS		5
  
--struct alua_dh_data {
-+static LIST_HEAD(port_group_list);
-+static DEFINE_SPINLOCK(port_group_lock);
-+
-+struct alua_port_group {
-+	struct kref		kref;
-+	struct list_head	node;
- 	int			group_id;
--	int			rel_port;
- 	int			tpgs;
- 	int			state;
+ /* device handler flags */
+-#define ALUA_OPTIMIZE_STPG		1
+-#define ALUA_RTPG_EXT_HDR_UNSUPP	2
++#define ALUA_OPTIMIZE_STPG		0x01
++#define ALUA_RTPG_EXT_HDR_UNSUPP	0x02
++/* State machine flags */
++#define ALUA_PG_RUN_RTPG		0x10
++#define ALUA_PG_RUN_STPG		0x20
++#define ALUA_PG_RUNNING			0x40
+ 
+ static uint optimize_stpg;
+ module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
+@@ -70,6 +75,7 @@ MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than
+ 
+ static LIST_HEAD(port_group_list);
+ static DEFINE_SPINLOCK(port_group_lock);
++static struct workqueue_struct *kaluad_wq;
+ 
+ struct alua_port_group {
+ 	struct kref		kref;
+@@ -82,12 +88,25 @@ struct alua_port_group {
  	int			pref;
  	unsigned		flags; /* used for optimizing STPG */
  	unsigned char		transition_tmo;
++	unsigned long		expiry;
++	unsigned long		interval;
++	struct delayed_work	rtpg_work;
++	spinlock_t		lock;
++	struct list_head	rtpg_list;
++	struct scsi_device	*rtpg_sdev;
+ };
+ 
+ struct alua_dh_data {
+ 	struct alua_port_group	*pg;
+ 	int			group_id;
++	spinlock_t		pg_lock;
+ 	struct scsi_device	*sdev;
++	int			init_error;
++	struct mutex		init_mutex;
 +};
 +
-+struct alua_dh_data {
-+	struct alua_port_group	*pg;
-+	int			group_id;
-+	int			rel_port;
- 	struct scsi_device	*sdev;
++struct alua_queue_data {
++	struct list_head	entry;
  	activate_complete	callback_fn;
  	void			*callback_data;
-@@ -82,6 +92,17 @@ struct alua_dh_data {
+ };
+@@ -95,14 +114,18 @@ struct alua_dh_data {
+ #define ALUA_POLICY_SWITCH_CURRENT	0
+ #define ALUA_POLICY_SWITCH_ALL		1
  
- static char print_alua_state(int);
+-static int alua_rtpg(struct scsi_device *, struct alua_port_group *);
+-static char print_alua_state(int);
++static void alua_rtpg_work(struct work_struct *work);
++static void alua_rtpg_queue(struct alua_port_group *pg,
++			    struct scsi_device *sdev,
++			    struct alua_queue_data *qdata);
  
-+static void release_port_group(struct kref *kref)
-+{
-+	struct alua_port_group *pg;
-+
-+	pg = container_of(kref, struct alua_port_group, kref);
-+	spin_lock(&port_group_lock);
-+	list_del(&pg->node);
-+	spin_unlock(&port_group_lock);
-+	kfree(pg);
-+}
-+
- /*
-  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-  * @sdev: sdev the command should be sent to
-@@ -142,6 +163,35 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
- }
+ static void release_port_group(struct kref *kref)
+ {
+ 	struct alua_port_group *pg;
  
- /*
-+ * alua_alloc_pg - Allocate a new port_group structure
-+ * @sdev: scsi device
-+ * @h: alua device_handler data
-+ * @group_id: port group id
-+ *
-+ * Allocate a new port_group structure for a given
-+ * device.
-+ */
-+struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
-+				      int group_id, int tpgs)
-+{
-+	struct alua_port_group *pg;
-+
-+	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
-+	if (!pg)
-+		return NULL;
-+
-+	pg->group_id = group_id;
-+	pg->tpgs = tpgs;
-+	pg->state = TPGS_STATE_OPTIMIZED;
-+	kref_init(&pg->kref);
-+	spin_lock(&port_group_lock);
-+	list_add(&pg->node, &port_group_list);
-+	spin_unlock(&port_group_lock);
-+
-+	return pg;
-+}
-+
-+/*
-  * alua_check_tpgs - Evaluate TPGS setting
-  * @sdev: device to be checked
-  *
-@@ -216,7 +266,6 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 			    ALUA_DH_NAME);
+ 	pg = container_of(kref, struct alua_port_group, kref);
++	if (pg->rtpg_sdev)
++		flush_delayed_work(&pg->rtpg_work);
+ 	spin_lock(&port_group_lock);
+ 	list_del(&pg->node);
+ 	spin_unlock(&port_group_lock);
+@@ -225,6 +248,10 @@ struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
+ 	if (optimize_stpg)
+ 		pg->flags |= ALUA_OPTIMIZE_STPG;
+ 	kref_init(&pg->kref);
++	INIT_DELAYED_WORK(&pg->rtpg_work, alua_rtpg_work);
++	INIT_LIST_HEAD(&pg->rtpg_list);
++	INIT_LIST_HEAD(&pg->node);
++	spin_lock_init(&pg->lock);
+ 
+ 	spin_lock(&port_group_lock);
+ 	tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
+@@ -304,6 +331,8 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 			  int tpgs)
+ {
+ 	int rel_port = -1, group_id;
++	struct alua_port_group *pg, *old_pg = NULL;
++	bool pg_updated = false;
+ 
+ 	group_id = scsi_vpd_tpg_id(sdev, &rel_port);
+ 	if (group_id < 0) {
+@@ -318,18 +347,39 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
  		return SCSI_DH_DEV_UNSUPP;
  	}
--	h->state = TPGS_STATE_OPTIMIZED;
- 	h->group_id = group_id;
  
+-	h->pg = alua_alloc_pg(sdev, group_id, tpgs);
+-	if (PTR_ERR(h->pg)) {
++	pg = alua_alloc_pg(sdev, group_id, tpgs);
++	if (PTR_ERR(pg)) {
+ 		if (PTR_ERR(h->pg) == -ENOMEM)
+ 			return SCSI_DH_NOMEM;
+ 		return SCSI_DH_DEV_UNSUPP;
+ 	}
  	sdev_printk(KERN_INFO, sdev,
-@@ -312,7 +361,7 @@ static int alua_check_sense(struct scsi_device *sdev,
-  * Returns SCSI_DH_DEV_OFFLINED if the path is
-  * found to be unusable.
-  */
--static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_for_transition)
-+static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
- {
- 	struct scsi_sense_hdr sense_hdr;
+ 		    "%s: device %s port group %02x rel port %02x\n",
+-		    ALUA_DH_NAME, h->pg->device_id_str,
+-		    h->group_id, rel_port);
++		    ALUA_DH_NAME, pg->device_id_str, group_id, rel_port);
++
++	/* Check for existing port_group references */
++	spin_lock(&h->pg_lock);
++	if (h->pg) {
++		old_pg = pg;
++		/* port_group has changed. Update to new port group */
++		if (h->pg != pg) {
++			old_pg = h->pg;
++			rcu_assign_pointer(h->pg, pg);
++			pg_updated = true;
++		}
++	} else {
++		rcu_assign_pointer(h->pg, pg);
++		pg_updated = true;
++	}
++	alua_rtpg_queue(h->pg, sdev, NULL);
++	spin_unlock(&h->pg_lock);
++
++	if (pg_updated)
++		synchronize_rcu();
++	if (old_pg)
++		kref_put(&old_pg->kref, release_port_group);
+ 
+-	return alua_rtpg(sdev, h->pg);
++	return SCSI_DH_OK;
+ }
+ 
+ static char print_alua_state(int state)
+@@ -423,14 +473,17 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
-@@ -322,17 +371,17 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 	unsigned char *ucp, *buff;
+ 	unsigned err, retval;
+-	unsigned long expiry, interval = 0;
  	unsigned int tpg_desc_tbl_off;
  	unsigned char orig_transition_tmo;
  
--	if (!h->transition_tmo)
-+	if (!pg->transition_tmo)
- 		expiry = round_jiffies_up(jiffies + ALUA_FAILOVER_TIMEOUT * HZ);
- 	else
--		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
-+		expiry = round_jiffies_up(jiffies + pg->transition_tmo * HZ);
+-	if (!pg->transition_tmo)
+-		expiry = round_jiffies_up(jiffies + ALUA_FAILOVER_TIMEOUT * HZ);
+-	else
+-		expiry = round_jiffies_up(jiffies + pg->transition_tmo * HZ);
++	if (!pg->expiry) {
++		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
++
++		if (pg->transition_tmo)
++			transition_tmo = pg->transition_tmo * HZ;
++
++		pg->expiry = round_jiffies_up(jiffies + transition_tmo);
++	}
  
  	buff = kzalloc(bufflen, GFP_KERNEL);
  	if (!buff)
- 		return SCSI_DH_DEV_TEMP_BUSY;
- 
-  retry:
--	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, h->flags);
-+	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
- 
- 	if (retval) {
- 		if (!scsi_sense_valid(&sense_hdr)) {
-@@ -353,10 +402,10 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		 * The retry without rtpg_ext_hdr_req set
- 		 * handles this.
- 		 */
--		if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP) &&
-+		if (!(pg->flags & ALUA_RTPG_EXT_HDR_UNSUPP) &&
- 		    sense_hdr.sense_key == ILLEGAL_REQUEST &&
- 		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
--			h->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
-+			pg->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
- 			goto retry;
+@@ -473,16 +526,18 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			err = SCSI_DH_RETRY;
+ 		else if (sense_hdr.sense_key == UNIT_ATTENTION)
+ 			err = SCSI_DH_RETRY;
+-		if (err == SCSI_DH_RETRY && time_before(jiffies, expiry)) {
++		if (err == SCSI_DH_RETRY &&
++		    pg->expiry != 0 && time_before(jiffies, pg->expiry)) {
+ 			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
+ 				    ALUA_DH_NAME);
+ 			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+-			goto retry;
++			return err;
  		}
- 		/*
-@@ -397,18 +446,18 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		goto retry;
+ 		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
+ 			    ALUA_DH_NAME);
+ 		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+ 		kfree(buff);
++		pg->expiry = 0;
+ 		return SCSI_DH_IO;
  	}
  
--	orig_transition_tmo = h->transition_tmo;
-+	orig_transition_tmo = pg->transition_tmo;
- 	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR && buff[5] != 0)
--		h->transition_tmo = buff[5];
-+		pg->transition_tmo = buff[5];
- 	else
--		h->transition_tmo = ALUA_FAILOVER_TIMEOUT;
-+		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
- 
- 	if (wait_for_transition &&
--	    (orig_transition_tmo != h->transition_tmo)) {
-+	    (orig_transition_tmo != pg->transition_tmo)) {
+@@ -497,6 +552,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			sdev_printk(KERN_WARNING, sdev,
+ 				    "%s: kmalloc buffer failed\n",__func__);
+ 			/* Temporary failure, bypass */
++			pg->expiry = 0;
+ 			return SCSI_DH_DEV_TEMP_BUSY;
+ 		}
+ 		goto retry;
+@@ -512,7 +568,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  		sdev_printk(KERN_INFO, sdev,
  			    "%s: transition timeout set to %d seconds\n",
--			    ALUA_DH_NAME, h->transition_tmo);
--		expiry = jiffies + h->transition_tmo * HZ;
-+			    ALUA_DH_NAME, pg->transition_tmo);
-+		expiry = jiffies + pg->transition_tmo * HZ;
+ 			    ALUA_DH_NAME, pg->transition_tmo);
+-		expiry = jiffies + pg->transition_tmo * HZ;
++		pg->expiry = jiffies + pg->transition_tmo * HZ;
  	}
  
  	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR)
-@@ -420,9 +469,9 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 	     k < len;
- 	     k += off, ucp += off) {
+@@ -546,23 +602,26 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  
--		if (h->group_id == get_unaligned_be16(&ucp[2])) {
--			h->state = ucp[0] & 0x0f;
--			h->pref = ucp[0] >> 7;
-+		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
-+			pg->state = ucp[0] & 0x0f;
-+			pg->pref = ucp[0] >> 7;
- 			valid_states = ucp[1];
- 		}
- 		off = 8 + (ucp[7] * 4);
-@@ -430,8 +479,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 
- 	sdev_printk(KERN_INFO, sdev,
- 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
--		    ALUA_DH_NAME, h->group_id, print_alua_state(h->state),
--		    h->pref ? "preferred" : "non-preferred",
-+		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-+		    pg->pref ? "preferred" : "non-preferred",
- 		    valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
- 		    valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
- 		    valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
-@@ -440,7 +489,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		    valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
- 		    valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
- 
--	switch (h->state) {
-+	switch (pg->state) {
+ 	switch (pg->state) {
  	case TPGS_STATE_TRANSITIONING:
- 		if (wait_for_transition) {
- 			if (time_before(jiffies, expiry)) {
-@@ -455,7 +504,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+-		if (time_before(jiffies, expiry)) {
++		if (time_before(jiffies, pg->expiry)) {
+ 			/* State transition, retry */
+-			interval += 2000;
+-			msleep(interval);
+-			goto retry;
++			pg->interval = 2;
++			err = SCSI_DH_RETRY;
++		} else {
++			/* Transitioning time exceeded, set port to standby */
++			err = SCSI_DH_IO;
++			pg->state = TPGS_STATE_STANDBY;
++			pg->expiry = 0;
  		}
- 
- 		/* Transitioning time exceeded, set port to standby */
--		h->state = TPGS_STATE_STANDBY;
-+		pg->state = TPGS_STATE_STANDBY;
+-		/* Transitioning time exceeded, set port to standby */
+-		err = SCSI_DH_RETRY;
+-		pg->state = TPGS_STATE_STANDBY;
  		break;
  	case TPGS_STATE_OFFLINE:
  		/* Path unusable */
-@@ -478,22 +527,22 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
-  * a re-evaluation of the target group state or SCSI_DH_OK
-  * if no further action needs to be taken.
-  */
--static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
-+static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
- {
- 	int retval;
- 	struct scsi_sense_hdr sense_hdr;
- 
--	if (!(h->tpgs & TPGS_MODE_EXPLICIT)) {
-+	if (!(pg->tpgs & TPGS_MODE_EXPLICIT)) {
- 		/* Only implicit ALUA supported, retry */
- 		return SCSI_DH_RETRY;
- 	}
--	switch (h->state) {
-+	switch (pg->state) {
- 	case TPGS_STATE_OPTIMIZED:
- 		return SCSI_DH_OK;
- 	case TPGS_STATE_NONOPTIMIZED:
--		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
--		    !h->pref &&
--		    (h->tpgs & TPGS_MODE_IMPLICIT))
-+		if ((pg->flags & ALUA_OPTIMIZE_STPG) &&
-+		    !pg->pref &&
-+		    (pg->tpgs & TPGS_MODE_IMPLICIT))
- 			return SCSI_DH_OK;
+ 		err = SCSI_DH_DEV_OFFLINED;
++		pg->expiry = 0;
  		break;
- 	case TPGS_STATE_STANDBY:
-@@ -507,13 +556,13 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
  	default:
- 		sdev_printk(KERN_INFO, sdev,
- 			    "%s: stpg failed, unhandled TPGS state %d",
--			    ALUA_DH_NAME, h->state);
-+			    ALUA_DH_NAME, pg->state);
- 		return SCSI_DH_NOSYS;
+ 		/* Useable path if active */
+ 		err = SCSI_DH_OK;
++		pg->expiry = 0;
  		break;
  	}
- 	/* Set state to transitioning */
--	h->state = TPGS_STATE_TRANSITIONING;
--	retval = submit_stpg(sdev, h->group_id, &sense_hdr);
-+	pg->state = TPGS_STATE_TRANSITIONING;
-+	retval = submit_stpg(sdev, pg->group_id, &sense_hdr);
+ 	kfree(buff);
+@@ -631,6 +690,106 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	return SCSI_DH_RETRY;
+ }
  
- 	if (retval) {
- 		if (!scsi_sense_valid(&sense_hdr)) {
-@@ -523,7 +572,7 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 			if (driver_byte(retval) == DRIVER_ERROR)
- 				return SCSI_DH_DEV_TEMP_BUSY;
- 		} else {
--			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
-+			sdev_printk(KERN_INFO, sdev, "%s: stpg failed\n",
- 				    ALUA_DH_NAME);
- 			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
- 		}
-@@ -541,20 +590,24 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
-  */
- static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
- {
--	int err = SCSI_DH_DEV_UNSUPP;
-+	int err = SCSI_DH_DEV_UNSUPP, tpgs;
- 
--	h->tpgs = alua_check_tpgs(sdev);
--	if (h->tpgs == TPGS_MODE_NONE)
-+	tpgs = alua_check_tpgs(sdev);
-+	if (tpgs == TPGS_MODE_NONE)
- 		goto out;
- 
- 	err = alua_check_vpd(sdev, h);
- 	if (err != SCSI_DH_OK)
- 		goto out;
- 
--	err = alua_rtpg(sdev, h, 0);
--	if (err != SCSI_DH_OK)
-+	h->pg = alua_alloc_pg(sdev, h->group_id, tpgs);
-+	if (!h->pg) {
-+		err = SCSI_DH_NOMEM;
- 		goto out;
--
++static void alua_rtpg_work(struct work_struct *work)
++{
++	struct alua_port_group *pg =
++		container_of(work, struct alua_port_group, rtpg_work.work);
++	struct scsi_device *sdev;
++	LIST_HEAD(qdata_list);
++	int err = SCSI_DH_OK;
++	struct alua_queue_data *qdata, *tmp;
++	unsigned long flags;
++
++	spin_lock_irqsave(&pg->lock, flags);
++	sdev = pg->rtpg_sdev;
++	if (!sdev) {
++		WARN_ON(pg->flags & ALUA_PG_RUN_RTPG ||
++			pg->flags & ALUA_PG_RUN_STPG);
++		spin_unlock_irqrestore(&pg->lock, flags);
++		return;
 +	}
-+	kref_get(&h->pg->kref);
-+	err = alua_rtpg(sdev, h->pg, 0);
-+	kref_put(&h->pg->kref, release_port_group);
- out:
++	pg->flags |= ALUA_PG_RUNNING;
++	if (pg->flags & ALUA_PG_RUN_RTPG) {
++		spin_unlock_irqrestore(&pg->lock, flags);
++		err = alua_rtpg(sdev, pg);
++		spin_lock_irqsave(&pg->lock, flags);
++		if (err == SCSI_DH_RETRY) {
++			pg->flags &= ~ALUA_PG_RUNNING;
++			spin_unlock_irqrestore(&pg->lock, flags);
++			queue_delayed_work(kaluad_wq, &pg->rtpg_work,
++					   pg->interval * HZ);
++			return;
++		}
++		pg->flags &= ~ALUA_PG_RUN_RTPG;
++		if (err != SCSI_DH_OK)
++			pg->flags &= ~ALUA_PG_RUN_STPG;
++	}
++	if (pg->flags & ALUA_PG_RUN_STPG) {
++		spin_unlock_irqrestore(&pg->lock, flags);
++		err = alua_stpg(sdev, pg);
++		spin_lock_irqsave(&pg->lock, flags);
++		pg->flags &= ~ALUA_PG_RUN_STPG;
++		if (err == SCSI_DH_RETRY) {
++			pg->flags |= ALUA_PG_RUN_RTPG;
++			pg->interval = 0;
++			pg->flags &= ~ALUA_PG_RUNNING;
++			spin_unlock_irqrestore(&pg->lock, flags);
++			queue_delayed_work(kaluad_wq, &pg->rtpg_work,
++					   pg->interval * HZ);
++			return;
++		}
++	}
++
++	list_splice_init(&pg->rtpg_list, &qdata_list);
++	pg->rtpg_sdev = NULL;
++	spin_unlock_irqrestore(&pg->lock, flags);
++
++	list_for_each_entry_safe(qdata, tmp, &qdata_list, entry) {
++		list_del(&qdata->entry);
++		if (qdata->callback_fn)
++			qdata->callback_fn(qdata->callback_data, err);
++		kfree(qdata);
++	}
++	spin_lock_irqsave(&pg->lock, flags);
++	pg->flags &= ~ALUA_PG_RUNNING;
++	spin_unlock_irqrestore(&pg->lock, flags);
++	scsi_device_put(sdev);
++	kref_put(&pg->kref, release_port_group);
++}
++
++static void alua_rtpg_queue(struct alua_port_group *pg,
++			    struct scsi_device *sdev,
++			    struct alua_queue_data *qdata)
++{
++	int start_queue = 0;
++	unsigned long flags;
++
++	if (!pg)
++		return;
++
++	spin_lock_irqsave(&pg->lock, flags);
++	if (qdata) {
++		list_add_tail(&qdata->entry, &pg->rtpg_list);
++		pg->flags |= ALUA_PG_RUN_STPG;
++	}
++	if (pg->rtpg_sdev == NULL) {
++		pg->interval = 0;
++		pg->flags |= ALUA_PG_RUN_RTPG;
++		kref_get(&pg->kref);
++		pg->rtpg_sdev = sdev;
++		scsi_device_get(sdev);
++		start_queue = 1;
++	}
++	spin_unlock_irqrestore(&pg->lock, flags);
++
++	if (start_queue &&
++	    !queue_delayed_work(kaluad_wq, &pg->rtpg_work,
++				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
++		scsi_device_put(sdev);
++		kref_put(&pg->kref, release_port_group);
++	}
++}
++
+ /*
+  * alua_initialize - Initialize ALUA state
+  * @sdev: the device to be initialized
+@@ -642,10 +801,12 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+ 	int err = SCSI_DH_DEV_UNSUPP, tpgs;
+ 
++	mutex_lock(&h->init_mutex);
+ 	tpgs = alua_check_tpgs(sdev);
+ 	if (tpgs != TPGS_MODE_NONE)
+ 		err = alua_check_vpd(sdev, h, tpgs);
+-
++	h->init_error = err;
++	mutex_unlock(&h->init_mutex);
  	return err;
  }
-@@ -570,6 +623,7 @@ out:
+ /*
+@@ -660,10 +821,11 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
  static int alua_set_params(struct scsi_device *sdev, const char *params)
  {
  	struct alua_dh_data *h = sdev->handler_data;
-+	struct alua_port_group *pg = NULL;
+-	struct alua_port_group *pg = NULL;
++	struct alua_port_group __rcu *pg = NULL;
  	unsigned int optimize = 0, argc;
  	const char *p = params;
  	int result = SCSI_DH_OK;
-@@ -582,10 +636,14 @@ static int alua_set_params(struct scsi_device *sdev, const char *params)
++	unsigned long flags;
+ 
+ 	if ((sscanf(params, "%u", &argc) != 1) || (argc != 1))
+ 		return -EINVAL;
+@@ -673,14 +835,19 @@ static int alua_set_params(struct scsi_device *sdev, const char *params)
  	if ((sscanf(p, "%u", &optimize) != 1) || (optimize > 1))
  		return -EINVAL;
  
-+	pg = h->pg;
-+	if (!pg)
-+		return -ENXIO;
-+
+-	pg = h->pg;
+-	if (!pg)
++	rcu_read_lock();
++	pg = rcu_dereference(h->pg);
++	if (!pg) {
++		rcu_read_unlock();
+ 		return -ENXIO;
+-
++	}
++	spin_lock_irqsave(&pg->lock, flags);
  	if (optimize)
--		h->flags |= ALUA_OPTIMIZE_STPG;
-+		pg->flags |= ALUA_OPTIMIZE_STPG;
+ 		pg->flags |= ALUA_OPTIMIZE_STPG;
  	else
--		h->flags &= ~ALUA_OPTIMIZE_STPG;
-+		pg->flags |= ~ALUA_OPTIMIZE_STPG;
+ 		pg->flags |= ~ALUA_OPTIMIZE_STPG;
++	spin_unlock_irqrestore(&pg->lock, flags);
++	rcu_read_unlock();
  
  	return result;
  }
-@@ -610,16 +668,23 @@ static int alua_activate(struct scsi_device *sdev,
+@@ -700,21 +867,33 @@ static int alua_activate(struct scsi_device *sdev,
+ {
  	struct alua_dh_data *h = sdev->handler_data;
  	int err = SCSI_DH_OK;
++	struct alua_queue_data *qdata;
++	struct alua_port_group __rcu *pg;
  
--	err = alua_rtpg(sdev, h, 1);
--	if (err != SCSI_DH_OK)
-+	if (!h->pg)
+-	if (!h->pg)
++	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
++	if (!qdata) {
++		err = SCSI_DH_RES_TEMP_UNAVAIL;
  		goto out;
- 
-+	kref_get(&h->pg->kref);
-+
- 	if (optimize_stpg)
--		h->flags |= ALUA_OPTIMIZE_STPG;
-+		h->pg->flags |= ALUA_OPTIMIZE_STPG;
- 
--	err = alua_stpg(sdev, h);
-+	err = alua_rtpg(sdev, h->pg, 1);
-+	if (err != SCSI_DH_OK) {
-+		kref_put(&h->pg->kref, release_port_group);
-+		goto out;
+-
+-	kref_get(&h->pg->kref);
+-
+-	err = alua_rtpg(sdev, h->pg);
+-	if (err != SCSI_DH_OK) {
+-		kref_put(&h->pg->kref, release_port_group);
 +	}
-+	err = alua_stpg(sdev, h->pg);
- 	if (err == SCSI_DH_RETRY)
--		err = alua_rtpg(sdev, h, 1);
-+		err = alua_rtpg(sdev, h->pg, 1);
-+	kref_put(&h->pg->kref, release_port_group);
++	qdata->callback_fn = fn;
++	qdata->callback_data = data;
++
++	mutex_lock(&h->init_mutex);
++	rcu_read_lock();
++	pg = rcu_dereference(h->pg);
++	if (!pg || !kref_get_unless_zero(&pg->kref)) {
++		rcu_read_unlock();
++		kfree(qdata);
++		err = h->init_error;
++		mutex_unlock(&h->init_mutex);
+ 		goto out;
+ 	}
+-	err = alua_stpg(sdev, h->pg);
+-	if (err == SCSI_DH_RETRY)
+-		err = alua_rtpg(sdev, h->pg);
+-	kref_put(&h->pg->kref, release_port_group);
++	mutex_unlock(&h->init_mutex);
++	fn = NULL;
++	rcu_read_unlock();
++
++	alua_rtpg_queue(pg, sdev, qdata);
++	kref_put(&pg->kref, release_port_group);
  out:
  	if (fn)
  		fn(data, err);
-@@ -635,13 +700,19 @@ out:
+@@ -730,14 +909,19 @@ out:
  static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
  {
  	struct alua_dh_data *h = sdev->handler_data;
-+	int state;
+-	int state;
++	struct alua_port_group __rcu *pg;
++	int state = TPGS_STATE_OPTIMIZED;
  	int ret = BLKPREP_OK;
  
--	if (h->state == TPGS_STATE_TRANSITIONING)
-+	if (!h->pg)
-+		return ret;
-+	kref_get(&h->pg->kref);
-+	state = h->pg->state;
-+	kref_put(&h->pg->kref, release_port_group);
-+	if (state == TPGS_STATE_TRANSITIONING)
+-	if (!h->pg)
+-		return ret;
+-	kref_get(&h->pg->kref);
+-	state = h->pg->state;
+-	kref_put(&h->pg->kref, release_port_group);
++	rcu_read_lock();
++	pg = rcu_dereference(h->pg);
++	if (pg) {
++		state = pg->state;
++		/* Defer I/O while rtpg_work is active */
++		if (pg->rtpg_sdev)
++			state = TPGS_STATE_TRANSITIONING;
++	}
++	rcu_read_unlock();
+ 	if (state == TPGS_STATE_TRANSITIONING)
  		ret = BLKPREP_DEFER;
--	else if (h->state != TPGS_STATE_OPTIMIZED &&
--		 h->state != TPGS_STATE_NONOPTIMIZED &&
--		 h->state != TPGS_STATE_LBA_DEPENDENT) {
-+	else if (state != TPGS_STATE_OPTIMIZED &&
-+		 state != TPGS_STATE_NONOPTIMIZED &&
-+		 state != TPGS_STATE_LBA_DEPENDENT) {
- 		ret = BLKPREP_KILL;
- 		req->cmd_flags |= REQ_QUIET;
- 	}
-@@ -656,18 +727,18 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
- static int alua_bus_attach(struct scsi_device *sdev)
- {
- 	struct alua_dh_data *h;
--	int err;
-+	int err, ret = -EINVAL;
- 
+ 	else if (state != TPGS_STATE_OPTIMIZED &&
+@@ -762,9 +946,12 @@ static int alua_bus_attach(struct scsi_device *sdev)
  	h = kzalloc(sizeof(*h) , GFP_KERNEL);
  	if (!h)
  		return -ENOMEM;
--	h->tpgs = TPGS_MODE_UNINITIALIZED;
--	h->state = TPGS_STATE_OPTIMIZED;
--	h->group_id = -1;
-+	h->pg = NULL;
- 	h->rel_port = -1;
+-	h->pg = NULL;
++	spin_lock_init(&h->pg_lock);
++	rcu_assign_pointer(h->pg, NULL);
++	h->init_error = SCSI_DH_OK;
  	h->sdev = sdev;
  
++	mutex_init(&h->init_mutex);
  	err = alua_initialize(sdev, h);
-+	if (err == SCSI_DH_NOMEM)
-+		ret = -ENOMEM;
- 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
- 		goto failed;
- 
-@@ -675,7 +746,7 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 	return 0;
- failed:
- 	kfree(h);
--	return -EINVAL;
-+	return ret;
- }
- 
- /*
-@@ -686,6 +757,10 @@ static void alua_bus_detach(struct scsi_device *sdev)
+ 	if (err == SCSI_DH_NOMEM)
+ 		ret = -ENOMEM;
+@@ -785,10 +972,16 @@ failed:
+ static void alua_bus_detach(struct scsi_device *sdev)
  {
  	struct alua_dh_data *h = sdev->handler_data;
++	struct alua_port_group *pg;
  
-+	if (h->pg) {
-+		kref_put(&h->pg->kref, release_port_group);
-+		h->pg = NULL;
-+	}
+-	if (h->pg) {
+-		kref_put(&h->pg->kref, release_port_group);
+-		h->pg = NULL;
++	spin_lock(&h->pg_lock);
++	pg = h->pg;
++	rcu_assign_pointer(h->pg, NULL);
++	h->sdev = NULL;
++	spin_unlock(&h->pg_lock);
++	if (pg) {
++		synchronize_rcu();
++		kref_put(&pg->kref, release_port_group);
+ 	}
  	sdev->handler_data = NULL;
  	kfree(h);
+@@ -809,16 +1002,24 @@ static int __init alua_init(void)
+ {
+ 	int r;
+ 
++	kaluad_wq = alloc_workqueue("kaluad", WQ_MEM_RECLAIM, 0);
++	if (!kaluad_wq) {
++		/* Temporary failure, bypass */
++		return SCSI_DH_DEV_TEMP_BUSY;
++	}
+ 	r = scsi_register_device_handler(&alua_dh);
+-	if (r != 0)
++	if (r != 0) {
+ 		printk(KERN_ERR "%s: Failed to register scsi device handler",
+ 			ALUA_DH_NAME);
++		destroy_workqueue(kaluad_wq);
++	}
+ 	return r;
  }
-diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 85d7317..7e184c6 100644
---- a/include/scsi/scsi_dh.h
-+++ b/include/scsi/scsi_dh.h
-@@ -52,6 +52,7 @@ enum {
- 	SCSI_DH_TIMED_OUT,
- 	SCSI_DH_RES_TEMP_UNAVAIL,
- 	SCSI_DH_DEV_OFFLINED,
-+	SCSI_DH_NOMEM,
- 	SCSI_DH_NOSYS,
- 	SCSI_DH_DRIVER_MAX,
- };
+ 
+ static void __exit alua_exit(void)
+ {
+ 	scsi_unregister_device_handler(&alua_dh);
++	destroy_workqueue(kaluad_wq);
+ }
+ 
+ module_init(alua_init);
 -- 
 1.8.5.6
 
