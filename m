@@ -1,23 +1,23 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCHv2 05/22] scsi_dh_alua: switch to scsi_execute_req_flags()
-Date: Wed, 13 Jan 2016 13:48:43 +0800
-Message-ID: <201601131346.BxlFXjT0%fengguang.wu@intel.com>
-References: <1452613258-94084-6-git-send-email-hare@suse.de>
+Subject: Re: [PATCHv2 13/22] scsi_dh_alua: Use workqueue for RTPG
+Date: Wed, 13 Jan 2016 14:10:38 +0800
+Message-ID: <201601131449.cEpMK3u2%fengguang.wu@intel.com>
+References: <1452613258-94084-14-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="9amGYk9869ThD9tj"
+Content-Type: multipart/mixed; boundary="xHFwDpU9dbj6ez1V"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:53550 "EHLO mga04.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:58739 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754308AbcAMFt1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2016 00:49:27 -0500
+	id S1750769AbcAMGMI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 01:12:08 -0500
 Content-Disposition: inline
-In-Reply-To: <1452613258-94084-6-git-send-email-hare@suse.de>
+In-Reply-To: <1452613258-94084-14-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
 
---9amGYk9869ThD9tj
+--xHFwDpU9dbj6ez1V
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -40,58 +40,166 @@ reproduce:
 All warnings (new ones prefixed by >>):
 
    drivers/scsi/device_handler/scsi_dh_alua.c: In function 'alua_rtpg':
->> drivers/scsi/device_handler/scsi_dh_alua.c:478:1: warning: 'alua_rtpg' uses dynamic stack allocation
+   drivers/scsi/device_handler/scsi_dh_alua.c:630:1: warning: 'alua_rtpg' uses dynamic stack allocation
     }
     ^
-   drivers/scsi/device_handler/scsi_dh_alua.c: In function 'alua_activate':
-   drivers/scsi/device_handler/scsi_dh_alua.c:634:1: warning: 'alua_activate' uses dynamic stack allocation
+   drivers/scsi/device_handler/scsi_dh_alua.c: In function 'alua_rtpg_work':
+>> drivers/scsi/device_handler/scsi_dh_alua.c:759:1: warning: 'alua_rtpg_work' uses dynamic stack allocation
     }
     ^
 
-vim +/alua_rtpg +478 drivers/scsi/device_handler/scsi_dh_alua.c
+vim +/alua_rtpg_work +759 drivers/scsi/device_handler/scsi_dh_alua.c
 
-a8e5a2d5 Stewart, Sean   2013-10-15  462  			err = SCSI_DH_OK;
-a8e5a2d5 Stewart, Sean   2013-10-15  463  		}
-a8e5a2d5 Stewart, Sean   2013-10-15  464  
-a8e5a2d5 Stewart, Sean   2013-10-15  465  		/* Transitioning time exceeded, set port to standby */
-69723d17 Hannes Reinecke 2010-09-24  466  		h->state = TPGS_STATE_STANDBY;
-057ea7c9 Hannes Reinecke 2008-07-17  467  		break;
-057ea7c9 Hannes Reinecke 2008-07-17  468  	case TPGS_STATE_OFFLINE:
-e47f8976 Bart Van Assche 2012-08-24  469  		/* Path unusable */
-057ea7c9 Hannes Reinecke 2008-07-17  470  		err = SCSI_DH_DEV_OFFLINED;
-057ea7c9 Hannes Reinecke 2008-07-17  471  		break;
-057ea7c9 Hannes Reinecke 2008-07-17  472  	default:
-057ea7c9 Hannes Reinecke 2008-07-17  473  		/* Useable path if active */
-057ea7c9 Hannes Reinecke 2008-07-17  474  		err = SCSI_DH_OK;
-69723d17 Hannes Reinecke 2010-09-24  475  		break;
-057ea7c9 Hannes Reinecke 2008-07-17  476  	}
-057ea7c9 Hannes Reinecke 2008-07-17  477  	return err;
-057ea7c9 Hannes Reinecke 2008-07-17 @478  }
-057ea7c9 Hannes Reinecke 2008-07-17  479  
-057ea7c9 Hannes Reinecke 2008-07-17  480  /*
-d8af10dc Hannes Reinecke 2016-01-12  481   * alua_stpg - Issue a SET TARGET GROUP STATES command
-d8af10dc Hannes Reinecke 2016-01-12  482   *
-d8af10dc Hannes Reinecke 2016-01-12  483   * Issue a SET TARGET GROUP STATES command and evaluate the
-0d223456 Hannes Reinecke 2016-01-12  484   * response. Returns SCSI_DH_RETRY per default to trigger
-0d223456 Hannes Reinecke 2016-01-12  485   * a re-evaluation of the target group state or SCSI_DH_OK
-0d223456 Hannes Reinecke 2016-01-12  486   * if no further action needs to be taken.
-
-:::::: The code at line 478 was first introduced by commit
-:::::: 057ea7c9683c3d684128cced796f03c179ecf1c2 [SCSI] scsi_dh: add generic SPC-3 alua handler
-
-:::::: TO: Hannes Reinecke <hare@suse.de>
-:::::: CC: James Bottomley <James.Bottomley@HansenPartnership.com>
+   624			err = SCSI_DH_OK;
+   625			pg->expiry = 0;
+   626			break;
+   627		}
+   628		kfree(buff);
+   629		return err;
+ > 630	}
+   631	
+   632	/*
+   633	 * alua_stpg - Issue a SET TARGET GROUP STATES command
+   634	 *
+   635	 * Issue a SET TARGET GROUP STATES command and evaluate the
+   636	 * response. Returns SCSI_DH_RETRY per default to trigger
+   637	 * a re-evaluation of the target group state or SCSI_DH_OK
+   638	 * if no further action needs to be taken.
+   639	 */
+   640	static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+   641	{
+   642		int retval;
+   643		struct scsi_sense_hdr sense_hdr;
+   644	
+   645		if (!(pg->tpgs & TPGS_MODE_EXPLICIT)) {
+   646			/* Only implicit ALUA supported, retry */
+   647			return SCSI_DH_RETRY;
+   648		}
+   649		switch (pg->state) {
+   650		case TPGS_STATE_OPTIMIZED:
+   651			return SCSI_DH_OK;
+   652		case TPGS_STATE_NONOPTIMIZED:
+   653			if ((pg->flags & ALUA_OPTIMIZE_STPG) &&
+   654			    !pg->pref &&
+   655			    (pg->tpgs & TPGS_MODE_IMPLICIT))
+   656				return SCSI_DH_OK;
+   657			break;
+   658		case TPGS_STATE_STANDBY:
+   659		case TPGS_STATE_UNAVAILABLE:
+   660			break;
+   661		case TPGS_STATE_OFFLINE:
+   662			return SCSI_DH_IO;
+   663			break;
+   664		case TPGS_STATE_TRANSITIONING:
+   665			break;
+   666		default:
+   667			sdev_printk(KERN_INFO, sdev,
+   668				    "%s: stpg failed, unhandled TPGS state %d",
+   669				    ALUA_DH_NAME, pg->state);
+   670			return SCSI_DH_NOSYS;
+   671			break;
+   672		}
+   673		/* Set state to transitioning */
+   674		pg->state = TPGS_STATE_TRANSITIONING;
+   675		retval = submit_stpg(sdev, pg->group_id, &sense_hdr);
+   676	
+   677		if (retval) {
+   678			if (!scsi_sense_valid(&sense_hdr)) {
+   679				sdev_printk(KERN_INFO, sdev,
+   680					    "%s: stpg failed, result %d",
+   681					    ALUA_DH_NAME, retval);
+   682				if (driver_byte(retval) == DRIVER_ERROR)
+   683					return SCSI_DH_DEV_TEMP_BUSY;
+   684			} else {
+   685				sdev_printk(KERN_INFO, sdev, "%s: stpg failed\n",
+   686					    ALUA_DH_NAME);
+   687				scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+   688			}
+   689		}
+   690		/* Retry RTPG */
+   691		return SCSI_DH_RETRY;
+   692	}
+   693	
+   694	static void alua_rtpg_work(struct work_struct *work)
+   695	{
+   696		struct alua_port_group *pg =
+   697			container_of(work, struct alua_port_group, rtpg_work.work);
+   698		struct scsi_device *sdev;
+   699		LIST_HEAD(qdata_list);
+   700		int err = SCSI_DH_OK;
+   701		struct alua_queue_data *qdata, *tmp;
+   702		unsigned long flags;
+   703	
+   704		spin_lock_irqsave(&pg->lock, flags);
+   705		sdev = pg->rtpg_sdev;
+   706		if (!sdev) {
+   707			WARN_ON(pg->flags & ALUA_PG_RUN_RTPG ||
+   708				pg->flags & ALUA_PG_RUN_STPG);
+   709			spin_unlock_irqrestore(&pg->lock, flags);
+   710			return;
+   711		}
+   712		pg->flags |= ALUA_PG_RUNNING;
+   713		if (pg->flags & ALUA_PG_RUN_RTPG) {
+   714			spin_unlock_irqrestore(&pg->lock, flags);
+   715			err = alua_rtpg(sdev, pg);
+   716			spin_lock_irqsave(&pg->lock, flags);
+   717			if (err == SCSI_DH_RETRY) {
+   718				pg->flags &= ~ALUA_PG_RUNNING;
+   719				spin_unlock_irqrestore(&pg->lock, flags);
+   720				queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+   721						   pg->interval * HZ);
+   722				return;
+   723			}
+   724			pg->flags &= ~ALUA_PG_RUN_RTPG;
+   725			if (err != SCSI_DH_OK)
+   726				pg->flags &= ~ALUA_PG_RUN_STPG;
+   727		}
+   728		if (pg->flags & ALUA_PG_RUN_STPG) {
+   729			spin_unlock_irqrestore(&pg->lock, flags);
+   730			err = alua_stpg(sdev, pg);
+   731			spin_lock_irqsave(&pg->lock, flags);
+   732			pg->flags &= ~ALUA_PG_RUN_STPG;
+   733			if (err == SCSI_DH_RETRY) {
+   734				pg->flags |= ALUA_PG_RUN_RTPG;
+   735				pg->interval = 0;
+   736				pg->flags &= ~ALUA_PG_RUNNING;
+   737				spin_unlock_irqrestore(&pg->lock, flags);
+   738				queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+   739						   pg->interval * HZ);
+   740				return;
+   741			}
+   742		}
+   743	
+   744		list_splice_init(&pg->rtpg_list, &qdata_list);
+   745		pg->rtpg_sdev = NULL;
+   746		spin_unlock_irqrestore(&pg->lock, flags);
+   747	
+   748		list_for_each_entry_safe(qdata, tmp, &qdata_list, entry) {
+   749			list_del(&qdata->entry);
+   750			if (qdata->callback_fn)
+   751				qdata->callback_fn(qdata->callback_data, err);
+   752			kfree(qdata);
+   753		}
+   754		spin_lock_irqsave(&pg->lock, flags);
+   755		pg->flags &= ~ALUA_PG_RUNNING;
+   756		spin_unlock_irqrestore(&pg->lock, flags);
+   757		scsi_device_put(sdev);
+   758		kref_put(&pg->kref, release_port_group);
+ > 759	}
+   760	
+   761	static void alua_rtpg_queue(struct alua_port_group *pg,
+   762				    struct scsi_device *sdev,
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---9amGYk9869ThD9tj
+--xHFwDpU9dbj6ez1V
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICGvjlVYAAy5jb25maWcAlFxLd+Q2rt7nV9TpzOLexaTbj1TSd44XlERVcUoS1SJVfmx0
+H4sICAnplVYAAy5jb25maWcAlFxLd+Q2rt7nV9TpzOLexaTbj1TSd44XlERVcUoS1SJVfmx0
 3O7qjk9sV49dziT//gLUC3xI5WSRtvCBFAkCIABS9eMPPy7Y62H/eHu4v7t9ePhr8W33tHu+
 Pey+LL7eP+z+tUjkopB6wROhfwLm7P7p9c/3L2cfPyzOfzr/6cM/n+/OF5vd89PuYRHvn77e
 f3uF1vf7px9+/CGWRSpWTZ7XF3/1Dzey4E2Ss5GSyXiT8LJRdVnKSo+A0ize6IrF3MfWbMub
@@ -822,4 +930,4 @@ Nc6AyZwQcL7d7Z+vfmz/58nZpW8N49n44EeXtTEvjVWWeWIa00XCXdGBZWHHAcrj4xyQKt61
 /uXpbO3HpNNxPudm6AESZgDlmKnvA9TDu2oJh7vI/zFgyXWBP4fA3vA61aFePUnXFK3lNMci
 hLh18ALrQHWeVU1r8uzSizIWvcRWaEja2KbU9EbqtPc3+z+r4UFbS3QCAA==
 
---9amGYk9869ThD9tj--
+--xHFwDpU9dbj6ez1V--
