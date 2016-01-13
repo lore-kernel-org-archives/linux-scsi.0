@@ -1,74 +1,76 @@
-From: Greg Kroah-Hartman <greg@kroah.com>
-Subject: Re: klist: fix starting point removed bug in klist iterators
-Date: Wed, 13 Jan 2016 09:11:54 -0800
-Message-ID: <20160113171154.GA29535@kroah.com>
-References: <1452701431.2363.12.camel@HansenPartnership.com>
+From: "Benjamin Marzinski" <bmarzins@redhat.com>
+Subject: Re: [dm-devel] [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
+Date: Wed, 13 Jan 2016 11:52:39 -0600
+Message-ID: <20160113175239.GE24960@octiron.msp.redhat.com>
+References: <56961493.5010901@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34425 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932507AbcAMRwl (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 12:52:41 -0500
 Content-Disposition: inline
-In-Reply-To: <1452701431.2363.12.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Ewan D. Milne" <emilne@redhat.com>
+In-Reply-To: <56961493.5010901@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
 
-On Wed, Jan 13, 2016 at 08:10:31AM -0800, James Bottomley wrote:
-> The starting node for a klist iteration is often passed in from
-> somewhere way above the klist infrastructure, meaning there's no
-> guarantee the node is still on the list.  We've seen this in SCSI where
-> we use bus_find_device() to iterate through a list of devices.  In the
-> face of heavy hotplug activity, the last device returned by
-> bus_find_device() can be removed before the next call.  This leads to
+On Wed, Jan 13, 2016 at 10:10:43AM +0100, Hannes Reinecke wrote:
+> Hi all,
 > 
-> Dec  3 13:22:02 localhost kernel: WARNING: CPU: 2 PID: 28073 at include/linux/kref.h:47 klist_iter_init_node+0x3d/0x50()
-> Dec  3 13:22:02 localhost kernel: Modules linked in: scsi_debug x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel joydev iTCO_wdt dcdbas ipmi_devintf acpi_power_meter iTCO_vendor_support ipmi_si imsghandler pcspkr wmi acpi_cpufreq tpm_tis tpm shpchp lpc_ich mfd_core nfsd nfs_acl lockd grace sunrpc tg3 ptp pps_core
-> Dec  3 13:22:02 localhost kernel: CPU: 2 PID: 28073 Comm: cat Not tainted 4.4.0-rc1+ #2
-> Dec  3 13:22:02 localhost kernel: Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
-> Dec  3 13:22:02 localhost kernel: ffffffff81a20e77 ffff880613acfd18 ffffffff81321eef 0000000000000000
-> Dec  3 13:22:02 localhost kernel: ffff880613acfd50 ffffffff8107ca52 ffff88061176b198 0000000000000000
-> Dec  3 13:22:02 localhost kernel: ffffffff814542b0 ffff880610cfb100 ffff88061176b198 ffff880613acfd60
-> Dec  3 13:22:02 localhost kernel: Call Trace:
-> Dec  3 13:22:02 localhost kernel: [<ffffffff81321eef>] dump_stack+0x44/0x55
-> Dec  3 13:22:02 localhost kernel: [<ffffffff8107ca52>] warn_slowpath_common+0x82/0xc0
-> Dec  3 13:22:02 localhost kernel: [<ffffffff814542b0>] ? proc_scsi_show+0x20/0x20
-> Dec  3 13:22:02 localhost kernel: [<ffffffff8107cb4a>] warn_slowpath_null+0x1a/0x20
-> Dec  3 13:22:02 localhost kernel: [<ffffffff8167225d>] klist_iter_init_node+0x3d/0x50
-> Dec  3 13:22:02 localhost kernel: [<ffffffff81421d41>] bus_find_device+0x51/0xb0
-> Dec  3 13:22:02 localhost kernel: [<ffffffff814545ad>] scsi_seq_next+0x2d/0x40
-> [...]
+> I'd like to attend LSF/MM and would like to present my ideas for a multipath
+> redesign.
 > 
-> And an eventual crash. It can actually occur in any hotplug system
-> which has a device finder and a starting device.
+> The overall idea is to break up the centralized multipath handling in
+> device-mapper (and multipath-tools) and delegate to the appropriate
+> sub-systems.
 > 
-> We can fix this globally by making sure the starting node for
-> klist_iter_init_node() is actually a member of the list before using it
-> (and by starting from the beginning if it isn't).
-> 
-> Reported-by: Ewan D. Milne <emilne@redhat.com>
-> Tested-by: Ewan D. Milne <emilne@redhat.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> diff --git a/lib/klist.c b/lib/klist.c
-> index d74cf7a..0507fa5 100644
-> --- a/lib/klist.c
-> +++ b/lib/klist.c
-> @@ -282,9 +282,9 @@ void klist_iter_init_node(struct klist *k, struct klist_iter *i,
->  			  struct klist_node *n)
->  {
->  	i->i_klist = k;
-> -	i->i_cur = n;
-> -	if (n)
-> -		kref_get(&n->n_ref);
-> +	i->i_cur = NULL;
-> +	if (n && kref_get_unless_zero(&n->n_ref))
-> +		i->i_cur = n;
->  }
->  EXPORT_SYMBOL_GPL(klist_iter_init_node);
+> Individually the plan is:
+> a) use the 'wwid' sysfs attribute to detect multipath devices;
+>    this removes the need of the current 'path_id' functionality
+>    in multipath-tools
 
-Thanks for this, looks good, I'll queue it up after 4.5-rc1 is out.
+If all the devices that we support advertise their WWID through sysfs,
+I'm all for this. Not needing to worry about callouts or udev sounds
+great.
 
-greg k-h
+> b) leverage topology information from scsi_dh_alua (which we will
+>    have once my ALUA handler update is in) to detect the multipath
+>    topology. This removes the need of a 'prio' infrastructure
+>    in multipath-tools
+
+What about devices that don't use alua? Or users who want to be able to
+pick a specific path to prefer? While I definitely prefer simple, we
+can't drop real funtionality to get there. Have you posted your
+scsi_dh_alua update somewhere?
+
+I've recently had requests from users to
+1. make a path with the TPGS pref bit set be in its own path group with
+the highest priority
+2. make the weighted prioritizer use persistent information to make its
+choice, so its actually useful. This is to deal with the need to prefer a
+specific path in a non-alua setup.
+
+Some of the complexity with priorities is there out of necessity.
+
+> c) implement block or scsi events whenever a remote port becomes
+>    unavailable. This removes the need of the 'path_checker'
+>    functionality in multipath-tools.
+
+I'm not convinced that we will be able to find out when paths come back
+online in all cases without some sort of actual polling. Again, I'd love
+this to be simpler, but asking all the types of storage we plan to
+support to notify us when they are up and down may not be realistic.
+
+> d) leverage these events to handle path-up/path-down events
+>    in-kernel
+
+If polling is necessary, I'd rather it be done in userspace. Personally,
+I think the checker code is probably the least obectionable part of the
+multipath-tools (It's getting all the device information to set up the
+devices in the first place and coordinating with uevents that's really
+ugly, IMHO).
+
+-Ben
