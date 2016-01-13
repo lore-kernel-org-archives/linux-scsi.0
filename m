@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 17/24] scsi_dh_alua: Recheck state on unit attention
-Date: Wed, 13 Jan 2016 09:09:52 +0100
-Message-ID: <1452672599-9820-18-git-send-email-hare@suse.de>
+Subject: [PATCHv3 18/24] scsi_dh_alua: update all port states
+Date: Wed, 13 Jan 2016 09:09:53 +0100
+Message-ID: <1452672599-9820-19-git-send-email-hare@suse.de>
 References: <1452672599-9820-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58942 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58979 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754916AbcAMIKU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755003AbcAMIKU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 13 Jan 2016 03:10:20 -0500
 In-Reply-To: <1452672599-9820-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,153 +14,70 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart von Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-When we receive a unit attention code of 'ALUA state changed'
-we should recheck the state, as it might be due to an implicit
-ALUA state transition. This allows us to return NEEDS_RETRY
-instead of ADD_TO_MLQUEUE, allowing to terminate the retries
-after a certain time.
-At the same time a workqueue item might already be queued, which
-should be started immediately to avoid any delays.
+When we read in the target port group state we should be
+updating all affected port groups, otherwise we risk
+running out of sync.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 57 ++++++++++++++++++++++++------
- 1 file changed, 46 insertions(+), 11 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 31 +++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index f0687ba..294551a 100644
+index 294551a..e347a31 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -120,7 +120,8 @@ struct alua_queue_data {
- static void alua_rtpg_work(struct work_struct *work);
- static void alua_rtpg_queue(struct alua_port_group *pg,
- 			    struct scsi_device *sdev,
--			    struct alua_queue_data *qdata);
-+			    struct alua_queue_data *qdata, bool force);
-+static void alua_check(struct scsi_device *sdev, bool force);
- 
- static void release_port_group(struct kref *kref)
+@@ -490,11 +490,13 @@ static int alua_check_sense(struct scsi_device *sdev,
+ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  {
-@@ -380,7 +381,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 	struct scsi_sense_hdr sense_hdr;
++	struct alua_port_group *tmp_pg;
+ 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+-	unsigned char *ucp, *buff;
++	unsigned char *desc, *buff;
+ 	unsigned err, retval;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
++	unsigned long flags;
+ 
+ 	if (!pg->expiry) {
+ 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
+@@ -596,16 +598,27 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	else
+ 		tpg_desc_tbl_off = 4;
+ 
+-	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
++	for (k = tpg_desc_tbl_off, desc = buff + tpg_desc_tbl_off;
+ 	     k < len;
+-	     k += off, ucp += off) {
+-
+-		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
+-			pg->state = ucp[0] & 0x0f;
+-			pg->pref = ucp[0] >> 7;
+-			valid_states = ucp[1];
++	     k += off, desc += off) {
++		u16 group_id = get_unaligned_be16(&desc[2]);
++
++		spin_lock_irqsave(&port_group_lock, flags);
++		list_for_each_entry(tmp_pg, &port_group_list, node) {
++			if (tmp_pg->group_id != group_id)
++				continue;
++			if (tmp_pg->device_id_len != pg->device_id_len)
++				continue;
++			if (strncmp(tmp_pg->device_id_str, pg->device_id_str,
++				    tmp_pg->device_id_len))
++				continue;
++			tmp_pg->state = desc[0] & 0x0f;
++			tmp_pg->pref = desc[0] >> 7;
++			if (tmp_pg == pg)
++				valid_states = desc[1];
+ 		}
+-		off = 8 + (ucp[7] * 4);
++		spin_unlock_irqrestore(&port_group_lock, flags);
++		off = 8 + (desc[7] * 4);
  	}
- 	if (bflags & BLIST_SYNC_ALUA)
- 		pg->flags |= ALUA_SYNC_STPG;
--	alua_rtpg_queue(h->pg, sdev, NULL);
-+	alua_rtpg_queue(h->pg, sdev, NULL, true);
- 	spin_unlock(&h->pg_lock);
  
- 	if (pg_updated)
-@@ -418,18 +419,24 @@ static int alua_check_sense(struct scsi_device *sdev,
- {
- 	switch (sense_hdr->sense_key) {
- 	case NOT_READY:
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a)
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
- 			/*
- 			 * LUN Not Accessible - ALUA state transition
- 			 */
--			return ADD_TO_MLQUEUE;
-+			alua_check(sdev, false);
-+			return NEEDS_RETRY;
-+		}
- 		break;
- 	case UNIT_ATTENTION:
--		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-+		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
- 			/*
--			 * Power On, Reset, or Bus Device Reset, just retry.
-+			 * Power On, Reset, or Bus Device Reset.
-+			 * Might have obscured a state transition,
-+			 * so schedule a recheck.
- 			 */
-+			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
-+		}
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
- 			/*
- 			 * Device internal reset
-@@ -440,16 +447,20 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			 * Mode Parameters Changed
- 			 */
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
-+		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
- 			/*
- 			 * ALUA state changed
- 			 */
-+			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07)
-+		}
-+		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
- 			/*
- 			 * Implicit ALUA state transition failed
- 			 */
-+			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
-+		}
- 		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
- 			/*
- 			 * Inquiry data has changed
-@@ -771,7 +782,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 
- static void alua_rtpg_queue(struct alua_port_group *pg,
- 			    struct scsi_device *sdev,
--			    struct alua_queue_data *qdata)
-+			    struct alua_queue_data *qdata, bool force)
- {
- 	int start_queue = 0;
- 	unsigned long flags;
-@@ -792,7 +803,9 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		pg->rtpg_sdev = sdev;
- 		scsi_device_get(sdev);
- 		start_queue = 1;
--	}
-+	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force)
-+		start_queue = 1;
-+
- 	if (pg->flags & ALUA_SYNC_STPG)
- 		alua_wq = kaluad_sync_wq;
- 	spin_unlock_irqrestore(&pg->lock, flags);
-@@ -907,7 +920,7 @@ static int alua_activate(struct scsi_device *sdev,
- 	fn = NULL;
- 	rcu_read_unlock();
- 
--	alua_rtpg_queue(pg, sdev, qdata);
-+	alua_rtpg_queue(pg, sdev, qdata, true);
- 	kref_put(&pg->kref, release_port_group);
- out:
- 	if (fn)
-@@ -916,6 +929,28 @@ out:
- }
- 
- /*
-+ * alua_check - check path status
-+ * @sdev: device on the path to be checked
-+ *
-+ * Check the device status
-+ */
-+static void alua_check(struct scsi_device *sdev, bool force)
-+{
-+	struct alua_dh_data *h = sdev->handler_data;
-+	struct alua_port_group *pg;
-+
-+	rcu_read_lock();
-+	pg = rcu_dereference(h->pg);
-+	if (!pg || !kref_get_unless_zero(&pg->kref)) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+	rcu_read_unlock();
-+	alua_rtpg_queue(pg, sdev, NULL, force);
-+	kref_put(&pg->kref, release_port_group);
-+}
-+
-+/*
-  * alua_prep_fn - request callback
-  *
-  * Fail I/O to all paths not in state
+ 	sdev_printk(KERN_INFO, sdev,
 -- 
 1.8.5.6
 
