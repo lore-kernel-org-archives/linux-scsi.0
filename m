@@ -1,51 +1,58 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
-Date: Wed, 13 Jan 2016 18:41:01 +0000
-Message-ID: <56969A3D.50701@synopsys.com>
-References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
- <20160107094437.GA11038@infradead.org>
- <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: /sys/.../enclosure_device:<something> ?
+Date: Wed, 13 Jan 2016 11:15:05 -0800
+Message-ID: <1452712505.2363.19.camel@HansenPartnership.com>
+References: <2054826122.7150196.1452702532315.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:59841 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbcAMSlK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 13:41:10 -0500
-In-Reply-To: <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44536 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932757AbcAMTPL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jan 2016 14:15:11 -0500
+In-Reply-To: <2054826122.7150196.1452702532315.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
+To: Anne Mulhern <amulhern@redhat.com>, linux-scsi@vger.kernel.org
 
-Hi,
-
-On 1/8/2016 2:20 PM, Akinobu Mita wrote:
-> 2016-01-07 18:44 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
->>> This driver patch includes a core driver and glue drivers for pci and platform
->>> for the DesignWare UFS Host IP.
->>
->> Why doesn't this use the existing ufs core?  The architecture looks
->> completely backwards to me.
+On Wed, 2016-01-13 at 11:28 -0500, Anne Mulhern wrote:
+> Hi!
 > 
-> I agree.  The existing ufs driver can have variant specific operations
-> (hba->vops) and also can define quirks.  So if DesignWare UFS host
-> controller requires vendor specific register settings or DME operations
-> in initialization, or needs special workarounds for the specific versions,
-> it can use those mechanisms and shares common parts between other host
-> controllers.
+> I'm looking for the most precise information available about the
+> meaning of <something>
+> and from what it is derived. I'm also interested in what the values
+> in the files in that directory
+> may mean. Could somebody point me there?
+
+It's in drivers/misc/enclosure.c:enclosure_link_name()
+
+> Also, how can there be more than one enclosure_device subdirectory
+> for the same device,
+> or, alternatively, why isn't <something> stored in a file in the more
+> regularly named directory
+> /sys/.../enclosure_device?
+
+I'm not sure I parse the question, but if you're asking how can a
+single enclosure bay appear to have more than one device, that's when
+there are multiple paths to the device.
+
+James
+
+> (It would be nice to be able to obtain the value of <something> using
+> libudev's attribute
+> lookup facilities, but making that value a part of the specially
+> named directory enclosure_device:<something>
+> makes such a process especially difficult.)
+> 
+> Thanks,
+> 
+> - mulhern
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-I am planning to make some tests with the ufs kernel existing core driver in our
-setup, but I noticed that despite the scsi/ufs driver package contains a
-platform driver, this is not the typical platform driver (glue driver) which can
-be addressed from device tree. The only one available is the qcom's.
-Would I need to submit a designware platform glue driver also as done by QCom?
-
-We also need a pci glue driver, but you already have one. In your opinion the
-best approach is to add synopsys device id to the pci device list in the driver
-and add quirks or add a new designware pci glue driver?
-
-Thanks,
-Joao
