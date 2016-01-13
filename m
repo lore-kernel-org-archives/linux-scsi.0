@@ -1,42 +1,51 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/2] target: Fix LUN_RESET active I/O handling for
- ACK_KREF
-Date: Wed, 13 Jan 2016 01:14:37 -0800
-Message-ID: <1452676477.27508.56.camel@haakon3.risingtidesystems.com>
-References: <1452594245-921-1-git-send-email-nab@daterainc.com>
-	 <1452594245-921-2-git-send-email-nab@daterainc.com>
-	 <20160112152059.GB2294@lst.de> <56952AB0.1070806@sandisk.com>
-	 <20160113083446.GA13330@lst.de>
+Subject: Re: [PATCH-for-4.6 1/6] target: Add target_alloc_session() helper
+ function
+Date: Wed, 13 Jan 2016 01:22:49 -0800
+Message-ID: <1452676969.27508.60.camel@haakon3.risingtidesystems.com>
+References: <1452458668-11034-1-git-send-email-nab@daterainc.com>
+	 <1452458668-11034-2-git-send-email-nab@daterainc.com>
+	 <20160112151119.GD2058@lst.de>
+	 <1452672566.27508.44.camel@haakon3.risingtidesystems.com>
+	 <20160113081700.GB12642@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160113083446.GA13330@lst.de>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160113081700.GB12642@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Vasu Dev <vasu.dev@linux.intel.com>, Vu Pham <vu@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2016-01-13 at 09:34 +0100, Christoph Hellwig wrote:
-> On Tue, Jan 12, 2016 at 08:32:48AM -0800, Bart Van Assche wrote:
-> > Hello Christoph,
-> >
-> > How about eliminating the TARGET_SCF_ACK_KREF flag ? If a command would 
-> > only be freed upon the last target_put_sess_cmd() call then I think that 
-> > the check_stop_free() callback wouldn't have to call target_put_sess_cmd() 
-> > and hence that the TARGET_SCF_ACK_KREF flag could be removed.
+On Wed, 2016-01-13 at 09:17 +0100, Christoph Hellwig wrote:
+> On Wed, Jan 13, 2016 at 12:09:26AM -0800, Nicholas A. Bellinger wrote:
+> > > I'd much rather have the fabrics drivers call transport_alloc_session_tags
+> > > directly from the callback than growing even more arguments here.
+> > > 
+> > 
+> > What's the point..?
+> > 
+> > Only vhost-scsi currently needs to allocate extra resources for
+> > se_session percpu-ida tag pre-allocation.
 > 
-> Yes, that's what I meant.  I think it shoul be generally feasibly, but
-> would require a careful audit of the !TARGET_SCF_ACK_KREF code path
-> first.
+> The point is that allocating "tags" (or better command structures) isn't
+> fundamentally related to allocating a session, and in fact not even
+> used by many drivers.
 
-No, no, no.
+Huh..?  It's used by iscsi-target, ib_isert, tcm_qla2xxx, vhost-scsi and
+tcm_fc.
 
-The whole point of TARGET_SCF_ACK_KREF was so the backend driver
-completion path calling check_stop_free() for one ->cmd_kref, and the
-fabric driver patch calling target_put_sess_cmd() for the second
-->cmd_kref both complete before attempting to free se_cmd memory.
+That's the majority of the drivers people care about.
 
-The hw fabric drivers that have a hard requirement for
-TARGET_SCF_ACK_KREF already use it, but it wouldn't hurt to convert the
-remaining ones to use it.
+>  A flow where drivers that need these "tags"
+> explicitly allocate them is a lot more obvious than forcing more
+> arguments to a function that already has a lot and isn't related to
+> these "tags" otherwise.
+
+The goal is to get to the point where all fabric drivers use tag
+pre-allocation, and not vice-versa.
+
+That said, I think it makes sense to leave it as is instead of adding
+new callbacks for iscsi-target, ib_isert, and tcm_fc to just handle
+se_session tag pre-allocation.
