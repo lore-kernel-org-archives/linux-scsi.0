@@ -1,38 +1,38 @@
-From: Anne Mulhern <amulhern@redhat.com>
-Subject: /sys/.../enclosure_device:<something> ?
-Date: Wed, 13 Jan 2016 11:28:52 -0500 (EST)
-Message-ID: <2054826122.7150196.1452702532315.JavaMail.zimbra@redhat.com>
-References: <1790412140.7137014.1452701936079.JavaMail.zimbra@redhat.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [LSF/MM ATTEND][LSF/MM TOPIC] Multipath redesign
+Date: Wed, 13 Jan 2016 18:30:35 +0200
+Message-ID: <56967BAB.9000809@dev.mellanox.co.il>
+References: <56961493.5010901@suse.de> <56962BDB.4080509@dev.mellanox.co.il>
+ <20160113154243.GA2563@redhat.com> <569675F5.8070501@dev.mellanox.co.il>
+ <20160113162102.GA2933@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:42858 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbcAMQ2w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 11:28:52 -0500
-Received: from zmail21.collab.prod.int.phx2.redhat.com (zmail21.collab.prod.int.phx2.redhat.com [10.5.83.24])
-	by mx3-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id u0DGSq8P031680
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 11:28:52 -0500
-In-Reply-To: <1790412140.7137014.1452701936079.JavaMail.zimbra@redhat.com>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:33709 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929AbcAMQaj (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 13 Jan 2016 11:30:39 -0500
+Received: by mail-wm0-f47.google.com with SMTP id f206so303014426wmf.0
+        for <Linux-scsi@vger.kernel.org>; Wed, 13 Jan 2016 08:30:38 -0800 (PST)
+In-Reply-To: <20160113162102.GA2933@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, device-mapper development <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
 
-Hi!
 
-I'm looking for the most precise information available about the meaning of <something>
-and from what it is derived. I'm also interested in what the values in the files in that directory
-may mean. Could somebody point me there?
+>> Hmm. I turned on /sys/module/dm_mod/parameters/use_blk_mq and indeed
+>> saw a significant performance improvement. Anything else I was missing?
+>
+> You can enable CONFIG_DM_MQ_DEFAULT so you don't need to manually set
+> use_blk_mq.
 
-Also, how can there be more than one enclosure_device subdirectory for the same device,
-or, alternatively, why isn't <something> stored in a file in the more regularly named directory
-/sys/.../enclosure_device?
+I do, I started out with the manual option to test the improvements but
+got tired of it very quickly :)
 
-(It would be nice to be able to obtain the value of <something> using libudev's attribute
-lookup facilities, but making that value a part of the specially named directory enclosure_device:<something>
-makes such a process especially difficult.)
+> OK, so you're only getting 1/3 of the throughput.  Time for us to hunt
+> down the bottleneck (before real devices hit it).
 
-Thanks,
-
-- mulhern
+I have some initial instrumentation analysis so I'll be happy if we can
+work on that (probably can free this thread and move it to dm-devel).
