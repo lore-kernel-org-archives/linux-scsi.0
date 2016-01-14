@@ -1,20 +1,22 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] scsi: don't count non-failure CHECK_CONDITION as error
-Date: Thu, 14 Jan 2016 16:46:02 -0500
-Message-ID: <20160114214602.GC3520@mtj.duckdns.org>
+Subject: [PATCH REPOST] scsi: don't count non-failure CHECK_CONDITION as error
+Date: Thu, 14 Jan 2016 16:49:34 -0500
+Message-ID: <20160114214934.GD3520@mtj.duckdns.org>
+References: <20160114214602.GC3520@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:36279 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754585AbcANVqE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2016 16:46:04 -0500
-Received: by mail-yk0-f172.google.com with SMTP id v14so429167638ykd.3
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jan 2016 13:46:04 -0800 (PST)
+Received: from mail-yk0-f195.google.com ([209.85.160.195]:35067 "EHLO
+	mail-yk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753592AbcANVtg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2016 16:49:36 -0500
+Received: by mail-yk0-f195.google.com with SMTP id a85so33023579ykb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Jan 2016 13:49:36 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <20160114214602.GC3520@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, Dave Jones <dsj@fb.com>, kernel-team@fb.com
 
 SCSI command completion path bumps ioerr_cnt whenever scsi_cmd->result
@@ -30,6 +32,13 @@ data is available.
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Reported-by: Dave Jones <dsj@fb.com>
 ---
+Hello,
+
+Reposting because the email address listed under "SCSI SUBSYSTEM",
+JBottomley@odin.com, bounced.  James, can you please update the entry?
+
+Thanks.
+
  drivers/scsi/scsi_lib.c |    3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
