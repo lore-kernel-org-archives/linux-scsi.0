@@ -1,99 +1,60 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: very strange message: driver bug?
-Date: Fri, 15 Jan 2016 11:03:27 +0100
-Message-ID: <5698C3EF.7090901@suse.de>
-References: <20160114154852.582817e9@harpe.intellique.com>
+Subject: Re: [PATCH] scsi: don't count non-failure CHECK_CONDITION as error
+Date: Fri, 15 Jan 2016 11:04:32 +0100
+Message-ID: <5698C430.5030102@suse.de>
+References: <20160114214602.GC3520@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53919 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53970 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbcAOKDg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2016 05:03:36 -0500
-In-Reply-To: <20160114154852.582817e9@harpe.intellique.com>
+	id S1752137AbcAOKEe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jan 2016 05:04:34 -0500
+In-Reply-To: <20160114214602.GC3520@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Emmanuel Florac <eflorac@intellique.com>, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Dave Jones <dsj@fb.com>, kernel-team@fb.com
 
-On 01/14/2016 03:48 PM, Emmanuel Florac wrote:
+On 01/14/2016 10:46 PM, Tejun Heo wrote:
+> SCSI command completion path bumps ioerr_cnt whenever scsi_cmd->resul=
+t
+> isn't zero; unfortunately, this means that non-error sense reporting
+> bumps the counter too.  This is pronounced with ATA passthrough
+> commands because most of them explicitly request the resulting
+> taskfile to be transported via sense data bumping the count
+> unconditionally.
 >
-> On a machine running a plain vanilla 3.10.23 kernel (old, I know) on
-> Debian Wheezy (7.3, not up to date either), with RAID arrays connecte=
-d
-> through an Adaptec ASR-6445 RAID controller (aacraid driver, version
-> 30200), I've seen messages like below filling up /var/log/messages.
->
->
-> Of course some hardware fault occurred, but I don't understand why th=
+> Don't bump the counter if scsi_cmd->result simply indicates that sens=
 e
-> message is so mangled. Could it be a driver bug? something else?
+> data is available.
 >
-> Jan 13 18:40:28 storiq -- MARK --
-> Jan 13 18:44:45 storiq kernel: <<3>sd 6:0:2:0: rejecting I/O to offli=
-ne device
-> Jan 13 18:45:10 storiq kernel: quiet_error: 6 callbacks suppressed
-> Jan 13 18:45:10 storiq kernel: lost page write due to I/O error on dm=
--1
-> Jan 13 18:45:10 storiq last message repeated 9 times
-> Jan 13 18:45:15 storiq kernel: <3<3>sd<3>sd<3>s<3>s<3<3<3>sd<3><3>s<3=
-><3>sd<3><3<3>s<<3><3><3>sd <3><<<3>sd <3><3<3>sd<<3><3>sd 6<3>sd<3>sd<=
-3>sd<<3><3><3>s<3>s<3>sd <3><3>s<3>s<3><3>sd<3><3<3>s<<3>sd<3>sd<<3>s<3=
-><3>s<3>sd<3>s<3<3>s<3>sd <3>sd<3><3><3><3>sd<3><3><3><3<3>s<<3<3><3<3<=
-3><3><3><3><3>sd<3<3><3><3><3><<3>s<3>sd <3>sd <3>sd<3><3>sd<3>s<3>sd <=
-3><3><<<3<3>s<3>sd <3>sd 6:0:2:0: re<3>s<3>s<3>s<3>sd<3>sd<3>sd<3>sd <<=
-3>s<3>sd <3>sd <3>sd<3>sd <3>sd <<3>sd <3<3>sd<3><3>s<3<3>s<<3><3>sd<3>=
-sd<3>sd<<3>sd<3>sd<3>sd<<3><3>s<3>s<3>sd<<3><3><3>sd<3<3><<3>sd <3>s<<3=
->s<<3>s<3>s<3>sd<3>sd <3>sd<<3>sd<3>sd<3><3>sd<<3>sd<3>sd<3>sd<3>sd<3><=
-3>sd <3>s<3>sd <3>sd 6:<3><<3>s<3>s<3>s<3>sd<3>s<3>s<3>s<3>s<3>s<3>sd<3=
->s<3><3>s<3>sd<3><3>sd<3>s<3<3><3<3>sd<3><3<3>sd<<3>sd<3<3>s<3>sd <3><3=
-><3>s<3>s<3>sd<3<3><3>s<3>s<3>sd 6:0:2:0: rejectin<3>sd <3>sd<<3><3<<3>=
-s<3>sd <3><3>s<3<3><3>s<3>sd <3>sd <3>s<3>sd<3>sd 6<3>sd<3><3<3>sd <3>s=
-d<3>s<3>sd <3><3><3>s<3<3>sd<3>s<3<3>s<3>sd <<3>sd<3><3><3>sd<3><3>s<3<=
-<3><
- 3
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: Dave Jones <dsj@fb.com>
+> ---
+>   drivers/scsi/scsi_lib.c |    3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
 >
->   <3>sd 6:<<<3>s<3>sd <3>sd<3>
-> Jan 13 18:45:15 storiq kernel: >sd <3>sd <3>s<3>sd<3>s<<3><3>s<3>sd<3=
-<3<<3>sd<3>sd <3>sd<3>sd<3>sd <<3><3><<3>s<3>sd <<3>sd <3>s<3>s<3>sd <3=
->sd<3>sd <3><3><3>s<3>s<3><3><3<3><3>sd<3><3<3>s<3><3>sd<3>sd <3><3>sd<=
-3><3>sd<3><3><3>s<3>sd <<3>sd 6:0:2:0: rejecting<3><3<3<3>s<3>sd<3>s<3>=
-sd<3>sd <<3>s<3>sd <3<3><3>s<3>sd<3>sd<<3>sd<3>sd<3>sd <3>sd<3>s<3>sd <=
-3>sd <<3>s<3>sd 6:<3>sd<3>sd <3>sd<3>sd <3>sd<<3><3><3><3>s<3>sd<<<3>sd=
-<<3>sd<<3><3>sd<<3>sd<3>s<3>sd<3><3><3><3><<3>s<3>sd <3>sd<3>s<3>sd<3>s=
-d<<3>s<3>sd <3><3><3>sd 6<<3>sd<3>sd<3>sd<3>sd <3><3><3>sd <3>sd<3>sd <=
-3>sd <3>sd <3><3><3>sd<3>sd <3><3><3>sd <3>sd <3>sd <3><3>sd<3>s<3>s<3<=
-<3>sd<3>sd<3><3>sd<<3><3<3>sd<3>s<3><3>s<3>sd<<3>sd<3>sd <<3><3><3>s<3>=
-sd <3>sd 6<3>sd<<3>s<3>s<3><3>sd <3>s<3>sd<<3><<3>sd <3>sd <3>s<3<3>sd =
-6<<3>s<3>sd <3>sd <3>sd <3><3<3>sd<3<3><3>s<3>s<3>s<3<3>s<3>sd <<3>s<3>=
-sd <3>sd<3<3>s<3><3<3>s<3>sd<3>sd <<3>sd<3><3>s<3>s<3>s<3><3>sd <3>s<3>=
-s<3>sd<3<3><3>sd <3>sd<3<3><3>sd <3>sd 6<3>s<3>sd <3>s<3>sd <3><3><3>sd=
-<<3>
- s
-d
->    <3>sd <3><3<3>sd<3>sd<3>sd<
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index fa6b2c4..e90e3f7 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1622,7 +1622,8 @@ static void scsi_softirq_done(struct request *r=
+q)
+>   	INIT_LIST_HEAD(&cmd->eh_entry);
+>
+>   	atomic_inc(&cmd->device->iodone_cnt);
+> -	if (cmd->result)
+> +	if (cmd->result &&
+> +	    cmd->result !=3D ((DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITI=
+ON))
+>   		atomic_inc(&cmd->device->ioerr_cnt);
+>
+>   	disposition =3D scsi_decide_disposition(cmd);
 
-This is an artifact of the linux logging system.
-The '<3>' is in fact the logging priority prefix, which _should_=20
-have been evaluated and dropped by the call to 'printk'.
-
-However, printk() has this brilliant function of 'line=20
-continuation', which will assume the output line is to be continued=20
-when no trailing newline is found.
-
-If you add to that the printk() might be called from different=20
-contexts / thread / CPUs simultaneously, you might get a message=20
-interleaving under high load (ie when lots of messages are printed=20
-simultaneously).
-And then the message continuation kicks in, and tries to print=20
-everything in one line and doesn't interpret the leading '<3>'.
-Which is what you see.
-
-So I wouldn't classify this as a driver bug, but rather a=20
-shortcoming in the linux logging system.
-
-Cheers,
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Hannes
 --=20
