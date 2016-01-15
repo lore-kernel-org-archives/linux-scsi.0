@@ -1,22 +1,79 @@
 From: "Seymour, Shane M" <shane.seymour@hpe.com>
-Subject: RE: [PATCH V3 1/9] aacraid: SCSI blk tag support
-Date: Fri, 15 Jan 2016 00:17:10 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB4450CE7A@G9W0766.americas.hpqcorp.net>
-References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1452842182-684-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: RE: st driver doesn't seem to grok LTO partitioning
+Date: Fri, 15 Jan 2016 00:21:29 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net>
+References: <20151218170644.24167419@harpe.intellique.com>
+ <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
+ <20160104124626.3112e8c0@harpe.intellique.com>
+ <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
+ <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
+ <20160106161049.34f29973@harpe.intellique.com>
+ <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com>
+ <20160106170720.61db9e86@harpe.intellique.com>
+ <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5008.houston.hp.com ([15.240.92.66]:60596 "EHLO
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:33528 "EHLO
 	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756227AbcAOASH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2016 19:18:07 -0500
-In-Reply-To: <1452842182-684-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	with ESMTP id S1754401AbcAOAXF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2016 19:23:05 -0500
+In-Reply-To: <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Mahesh.Rajashekhara@pmcs.com" <Mahesh.Rajashekhara@pmcs.com>, "Murthy.Bhat@pmcs.com" <Murthy.Bhat@pmcs.com>, "Gana.Sridaran@pmcs.com" <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, "Scott.Benesh@pmcs.com" <Scott.Benesh@pmcs.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "thenzl@redhat.com" <thenzl@redhat.com>, "David.Carroll@pmcs.com" <David.Carroll@pmcs.com>
+To: Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>
+Cc: Laurence Oberman <oberman.l@gmail.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+VW5mb3J0dW5hdGVseSBJJ20gdW5hYmxlIHRvIGxheSBteSBoYW5kcyBvbiBhbiBMVE8gNSB0YXBl
+IGRyaXZlIHNvIEknbSBub3QgYWJsZSB0byB0ZXN0IHRoYXQgaXQgd29ya3MgZWl0aGVyLiBJZiBp
+dCBoZWxwcyBhdCBhbGwgSSBjYW4gdGVzdCBpbiB0aGUgbmVnYXRpdmUgYW5kIG1ha2Ugc3VyZSB0
+aGF0IGZvciBhbiBMVE8gMyBkcml2ZSBpdCBmYWlscyBncmFjZWZ1bGx5IGJ1dCB0aGF0J3MgYWJv
+dXQgaXQgYXQgdGhlIG1vbWVudC4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBG
+cm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2kt
+DQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIExhdXJlbmNlIE9iZXJtYW4N
+Cj4gU2VudDogRnJpZGF5LCBKYW51YXJ5IDE1LCAyMDE2IDc6MTMgQU0NCj4gVG86IEVtbWFudWVs
+IEZsb3JhYw0KPiBDYzogTGF1cmVuY2UgT2Jlcm1hbjsgS2FpIE1ha2lzYXJhOyBsaW51eC1zY3Np
+QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogc3QgZHJpdmVyIGRvZXNuJ3Qgc2VlbSB0
+byBncm9rIExUTyBwYXJ0aXRpb25pbmcNCj4gDQo+IEFsbCBhdHRlbXB0cyB0byBnZXQgbXkgZHJp
+dmUgYW5kIGNoYW5nZXIgZmlybXdhcmUgdXBkYXRlZCBoYXZlIGZhaWxlZC4NCj4gU28gSSB3b250
+IGJlIGFibGUgdG8gYWRkIGFub3RoZXIgInRlc3RlZCBieSIgdG8gdGhpcyB0aHJlYWQgdW5sZXNz
+IEkgY2FuIGZpbmQNCj4gYW5vdGhlciBkcml2ZS4NCj4gDQo+IEV2ZW4gdXNpbmcgRG91ZydzIG1l
+dGhvZCBmYWlscyB0byBhY3R1YWxseSB1cGRhdGUuIFNlZW1zIHRvIHN1Y2sgdXAgdGhlDQo+IGlt
+YWdlIGFuZCB0aGVuIGRvIG5vdGhpbmcuDQo+IExhbmRzIHVwIGluIGdldHRpbmcgaHVuZyBhbmQg
+bmVlZHMgYSBmdWxsIHBvd2VyIHJlc2V0Lg0KPiANCj4gVGhlIGltYWdlIEkgaGF2ZSBpcyB0aGUg
+Y29ycmVjdCBpbWFnZS4NCj4gDQo+IEkgZG9udCB3YW50IHRvIHRyeSB0byBtYW55IGNvbnZvbHV0
+ZWQgbWV0aG9kcyBiZWNhdXNlIEkgZG9udCB3YW50IHRvIGJyaWNrDQo+IHRoZSBjaGFuZ2VyLg0K
+PiANCj4gSXRzIHRoZSBvbmx5IG9uZSBJIGhhdmUgZm9yIGRvaW5nIGFsbCB0aGUgc3QgZHJpdmVy
+IHRlc3RpbmcgaGVyZSBhdCBSZWQgSGF0IGluIHRoZQ0KPiBHU1MgdGVhbS4NCj4gDQo+IFRoYW5r
+cw0KPiANCj4gTGF1cmVuY2UgT2Jlcm1hbg0KPiBQcmluY2lwYWwgU29mdHdhcmUgTWFpbnRlbmFu
+Y2UgRW5naW5lZXINCj4gUmVkIEhhdCBHbG9iYWwgU3VwcG9ydCBTZXJ2aWNlcw0KPiANCj4gLS0t
+LS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLQ0KPiBGcm9tOiAiRW1tYW51ZWwgRmxvcmFjIiA8ZWZs
+b3JhY0BpbnRlbGxpcXVlLmNvbT4NCj4gVG86ICJMYXVyZW5jZSBPYmVybWFuIiA8bG9iZXJtYW5A
+cmVkaGF0LmNvbT4NCj4gQ2M6ICJMYXVyZW5jZSBPYmVybWFuIiA8b2Jlcm1hbi5sQGdtYWlsLmNv
+bT4sICJLYWkgTWFraXNhcmEiDQo+IDxLYWkuTWFraXNhcmFAa29sdW1idXMuZmk+LCBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZw0KPiBTZW50OiBXZWRuZXNkYXksIEphbnVhcnkgNiwgMjAxNiAx
+MTowNzoyMCBBTQ0KPiBTdWJqZWN0OiBSZTogc3QgZHJpdmVyIGRvZXNuJ3Qgc2VlbSB0byBncm9r
+IExUTyBwYXJ0aXRpb25pbmcNCj4gDQo+IExlIFdlZCwgNiBKYW4gMjAxNiAxMDoyMzozNCAtMDUw
+MCAoRVNUKQ0KPiBMYXVyZW5jZSBPYmVybWFuIDxsb2Jlcm1hbkByZWRoYXQuY29tPiDDqWNyaXZh
+aXQ6DQo+IA0KPiA+IE1heFBhcnRpdGlvbnM6IDANCj4gPg0KPiA+IERyaXZlIGlzIHdvcmtpbmcg
+ZmluZSwNCj4gPg0KPiA+ICMgbXQgLWYgL2Rldi9zdDAgc3RhdHVzDQo+ID4gU0NTSSAyIHRhcGUg
+ZHJpdmU6DQo+ID4gRmlsZSBudW1iZXI9MCwgYmxvY2sgbnVtYmVyPTAsIHBhcnRpdGlvbj0wLg0K
+PiA+IFRhcGUgYmxvY2sgc2l6ZSA1MTIgYnl0ZXMuIERlbnNpdHkgY29kZSAweDU4IChubyB0cmFu
+c2xhdGlvbikuDQo+ID4gU29mdCBlcnJvciBjb3VudCBzaW5jZSBsYXN0IHN0YXR1cz0wDQo+ID4g
+R2VuZXJhbCBzdGF0dXMgYml0cyBvbiAoNDEwMTAwMDApOg0KPiA+ICBCT1QgT05MSU5FIElNX1JF
+UF9FTg0KPiA+DQo+ID4gVGhpcyBpcyB3aGF0IEkgZ2V0IHdoZW4gSSB0cnkgYW5kIHBhcnRpdGlv
+biBhbmQgSSBiZWxpZXZlIHRoaXMgbWF5IGJlDQo+ID4gYSBmaXJtd2FyZSBpc3N1ZSBmb3IgbWUu
+DQo+IA0KPiBZZXMgcHJvYmFibHksIGl0IHJlcG9ydHMgIk1heFBhcnRpdGlvbnMgMCIsIHNob3Vs
+ZCBiZSAxIGZvciBhbiBMVE8tNSBkcml2ZS4NCj4gV2VpcmQuDQo+IA0KPiAtLQ0KPiAtLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0NCj4gRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQ0K
+PiAgICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlDQo+ICAgICAgICAgICAgICAgICAg
+ICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4NCj4gICAgICAgICAgICAgICAgICAgICB8ICAg
+KzMzIDEgNzggOTQgODQgMDINCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IC0tDQo+IFRvIHVuc3Vic2Ny
+aWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3Np
+IiBpbiB0aGUNCj4gYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9y
+ZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jk
+b21vLWluZm8uaHRtbA0K
