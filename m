@@ -1,46 +1,77 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] megaraid_sas: Fallback to older scanning if not disks are found
-Date: Fri, 15 Jan 2016 15:13:13 +0100
-Message-ID: <1452867193-41266-1-git-send-email-hare@suse.de>
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: Re: 4.4 regression/bisected: error message due to "block/sd: Fix
+ device-imposed transfer length limits"
+Date: Fri, 15 Jan 2016 15:48:21 +0100
+Message-ID: <569906B5.3040103@de.ibm.com>
+References: <56964DE0.60407@de.ibm.com> <yq1ziw9vck7.fsf@sermon.lab.mkp.net>
+ <5696560D.2010105@de.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47908 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752987AbcAOONR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2016 09:13:17 -0500
+Received: from e06smtp08.uk.ibm.com ([195.75.94.104]:48601 "EHLO
+	e06smtp08.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbcAOOs2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2016 09:48:28 -0500
+Received: from localhost
+	by e06smtp08.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <borntraeger@de.ibm.com>;
+	Fri, 15 Jan 2016 14:48:26 -0000
+In-Reply-To: <5696560D.2010105@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, megaraidlinux.pdl@avagotech.com, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Steffen Maier <maier@linux.vnet.ibm.com>
 
-commit 21c9e160a51383d4cb0b882398534b0c95c0cc3b implemented a
-new driver lookup using the MR_DCMD_LD_LIST_QUERY firmware command.
-However, this command might not work properly on older firmware,
-causing the command to return no drives instead of an error.
-This causes a regression on older firmware as the driver will
-no longer detect any drives.
-This patch checks if MR_DCMD_LD_LIST_QUERY return no drives,
-and falls back to the original method if so.
+On 01/13/2016 02:50 PM, Christian Borntraeger wrote:
+> On 01/13/2016 02:22 PM, Martin K. Petersen wrote:
+>>>>>>> "Christian" == Christian Borntraeger <borntraeger@de.ibm.com> writes:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Martin,
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index f97ec34..79dff70 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4107,6 +4107,10 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
- 		ret = megasas_issue_polled(instance, cmd);
- 
- 	tgtid_count = le32_to_cpu(ci->count);
-+	if (tgtid_count == 0) {
-+		/* No drives found, try the older LD list DCMD */
-+		ret = 1;
-+	}
- 
- 	if ((ret == 0) && (tgtid_count <= (instance->fw_supported_vd_count))) {
- 		memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
--- 
-1.8.5.6
+does the data make any sense to you?
+
+>>
+>> Christian> device-mapper: table: 253:4: adding target device sdq caused
+>> Christian> an alignment inconsistency: physical_block_size=4096,
+>> Christian> logical_block_size=512, alignment_offset=0, start=0
+>>
+>> Odd.
+>>
+>> Please provide the output of:
+>>
+>> # sg_readcap -l /dev/sdN
+>> # sg_vpd -p bl /dev/sdN
+>>
+> 
+> From a different system with a different disk, but the same storage server and the same error.
+> 
+> sg_vpd -p bl /dev/sdu
+> Block limits VPD page (SBC):
+>   Write same no zero (WSNZ): 1
+>   Maximum compare and write length: 0 blocks
+>   Optimal transfer length granularity: 128 blocks
+>   Maximum transfer length: 0 blocks
+>   Optimal transfer length: 1024 blocks
+>   Maximum prefetch length: 0 blocks
+>   Maximum unmap LBA count: 0
+>   Maximum unmap block descriptor count: 0
+>   Optimal unmap granularity: 0
+>   Unmap granularity alignment valid: 0
+>   Unmap granularity alignment: 0
+>   Maximum write same length: 0x0 blocks
+> sg_readcap -l /dev/sdu
+> Read Capacity results:
+>    Protection: prot_en=0, p_type=0, p_i_exponent=0
+>    Logical block provisioning: lbpme=0, lbprz=0
+>    Last logical block address=4294967295 (0xffffffff), Number of logical blocks=4294967296
+>    Logical block length=512 bytes
+>    Logical blocks per physical block exponent=3
+>    Lowest aligned logical block address=0
+> Hence:
+>    Device size: 2199023255552 bytes, 2097152.0 MiB, 2199.02 GB
+> 
+> This is part of a big multipath setup, if that makes a difference.
+> 
+> 
 
