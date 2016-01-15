@@ -1,53 +1,86 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH] megaraid_sas: Fallback to older scanning if not disks are
- found
-Date: Fri, 15 Jan 2016 13:59:29 -0800
-Message-ID: <56996BC1.40400@suse.com>
-References: <1452867193-41266-1-git-send-email-hare@suse.de>
+From: "LAW FIRM" <esqricorasolicitor@consultant.com>
+Subject: Mein lieber Freund!
+Date: Sat, 16 Jan 2016 03:06:26 +0530
+Message-ID: <e21c8629479b4434b845423e415744cb.squirrel__12227.5801878006$1452901718$gmane$org@linux.gipdns.com>
+Reply-To: esqantonioricor@consultant.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46299 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752378AbcAOWBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2016 17:01:24 -0500
-In-Reply-To: <1452867193-41266-1-git-send-email-hare@suse.de>
+Received: from Linux.gipdns.com ([104.194.233.171]:39057 "EHLO
+	linux.gipdns.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752029AbcAOXsP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2016 18:48:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, megaraidlinux.pdl@avagotech.com, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On 01/15/2016 06:13 AM, Hannes Reinecke wrote:
-> commit 21c9e160a51383d4cb0b882398534b0c95c0cc3b implemented a
-> new driver lookup using the MR_DCMD_LD_LIST_QUERY firmware command.
-> However, this command might not work properly on older firmware,
-> causing the command to return no drives instead of an error.
-> This causes a regression on older firmware as the driver will
-> no longer detect any drives.
-> This patch checks if MR_DCMD_LD_LIST_QUERY return no drives,
-> and falls back to the original method if so.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index f97ec34..79dff70 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4107,6 +4107,10 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
->  		ret = megasas_issue_polled(instance, cmd);
->  
->  	tgtid_count = le32_to_cpu(ci->count);
-> +	if (tgtid_count == 0) {
-> +		/* No drives found, try the older LD list DCMD */
-> +		ret = 1;
-> +	}
->  
->  	if ((ret == 0) && (tgtid_count <= (instance->fw_supported_vd_count))) {
->  		memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
-> 
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+
+Mein lieber Freund,
+
+Ich m=F6chte mich erstmals gerne vorstellen.  Mein Name ist Herr Antoni=
+o
+Ricor die pers=F6nliche Investment Berater und Verm=F6gensverwalterin m=
+eines
+verstorbenen Mandanten, der ihre familienname tragt. Er war als private=
+r
+Gesch=E4ftsmann im internationalen Bereich t=E4tig. Im Jahr 2008 starb =
+mein
+Mandant an einen schweren Herzinfarkt. Mein Mandant war ledig und
+kinderlos.
+
+Er hinterlie=DF ein Verm=F6gen im Wert von =8010.500.000 (Zehn Millione=
+n
+f=FCnfhunderttausend Euro), das sich in einer Bank in Spanien befindet.=
+  Die
+Bank lie=DF mir zukommen, dass ich einen Erbberechtigen, Beg=FCnstigten
+vorstellen muss.
+
+Nach mehreren Recherchen erhielt ich keine weiteren hilfreichen
+Informationen, =FCber die  Verwandten meines verstorbenen Mandanten. Au=
+s
+diesem Grund schrieb ich Sie an, da Sie den gleichen Nachnamen haben. I=
+ch
+ben=F6tige Ihre Zustimmung und Ihre Kooperation um Sie als den Beg=FCns=
+tigten
+vorzustellen. Alle meine Bem=FChungen Verwandte meines verstorbenen
+Mandanten zu finden, waren erfolglos. Infolgedessen w=FCrde ich vorschl=
+agen
+das Verm=F6gen aufzuteilen, Sie erhalten 45% Prozent des Anteils und  4=
+5%
+Prozent w=FCrde mir dann zustehen. 10% Prozent werden an Gemeinn=FCtzig=
+e
+Organisationen gespendet.
+
+Alle notwendigen Dokumente beinhalten sinngem=E4=DF auch das Ursprungsz=
+eugnis,
+um demnach  Fragen von der zust=E4ndigen Bank zu vermeiden. Die beantra=
+gten
+Dokumente, die Sie f=FCr das Verfahren ben=F6tigen, sind legal und begl=
+aubigt.
+Das Verm=F6gen enth=E4lt kein kriminellen Ursprung. Das Verfahren wird
+einwandfrei ohne Komplikationen erfolgen,  die Geld=FCberweisung wird r=
+echts
+gem=E4=DF abgeschlossen. Alles was ich von Ihnen ben=F6tige  ist Ihr Ve=
+rtrauen
+und eine gute Zusammenarbeit.
+
+Kontaktieren Sie mich bitte unter der privaten Fax: +34-911-820-350, od=
+er
+meine private E-Mail: esqantonioricor1@consultant.com Die geplante
+Transaktion wird  durch legale Rechtsmitteln f=FCr Ihren rechtlichen Sc=
+hutz
+gef=FChrt.
+
+Mit freundlichen Grussen
+
+Abogado Antonio Ricor.
+Dipl.finanzfachanwaltin
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
