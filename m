@@ -1,86 +1,44 @@
-From: "LAW FIRM" <esqricorasolicitor@consultant.com>
-Subject: Mein lieber Freund!
-Date: Sat, 16 Jan 2016 03:06:26 +0530
-Message-ID: <e21c8629479b4434b845423e415744cb.squirrel__12227.5801878006$1452901718$gmane$org@linux.gipdns.com>
-Reply-To: esqantonioricor@consultant.com
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 07/13] IB: add a proper completion queue abstraction
+Date: Sun, 17 Jan 2016 11:24:51 +0200
+Message-ID: <569B5DE3.1010908@dev.mellanox.co.il>
+References: <1449521512-22921-1-git-send-email-hch@lst.de>
+ <1449521512-22921-8-git-send-email-hch@lst.de>
+ <CAG53R5WYHQ+w3R621KqDMLjUo9VBBjDhnJzwwJtfmo3oUWCxUg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Linux.gipdns.com ([104.194.233.171]:39057 "EHLO
-	linux.gipdns.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752029AbcAOXsP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2016 18:48:15 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAG53R5WYHQ+w3R621KqDMLjUo9VBBjDhnJzwwJtfmo3oUWCxUg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Parav Pandit <pandit.parav@gmail.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-rdma@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
+> Hi Christoph, Sagi,
+>
+> On Tue, Dec 8, 2015 at 2:21 AM, Christoph Hellwig <hch@lst.de> wrote:
+>
+>> +static void ib_cq_poll_work(struct work_struct *work)
+>> +{
+>> +       struct ib_cq *cq = container_of(work, struct ib_cq, work);
+>> +       int completed;
+>> +
+>> +       completed = __ib_process_cq(cq, IB_POLL_BUDGET_WORKQUEUE);
+>> +       if (completed >= IB_POLL_BUDGET_WORKQUEUE ||
+>> +           ib_req_notify_cq(cq, IB_POLL_FLAGS) > 0)
+>> +               queue_work(ib_comp_wq, &cq->work);
+>> +}
+>
+> In above code, Let says completion is added in a time window where
+> ib_process_cq is completed (CQ is diarmed in hw at that point) and
+> ib_req_notify_cq is yet to be called.
+> Provider vendor driver say mlx4 or mlx5 as specific case always
+> returns ib_req_notify_cq = 0.
+> Will it result into a missed notification? (so queue_work is not done).
 
-Mein lieber Freund,
-
-Ich m=F6chte mich erstmals gerne vorstellen.  Mein Name ist Herr Antoni=
-o
-Ricor die pers=F6nliche Investment Berater und Verm=F6gensverwalterin m=
-eines
-verstorbenen Mandanten, der ihre familienname tragt. Er war als private=
-r
-Gesch=E4ftsmann im internationalen Bereich t=E4tig. Im Jahr 2008 starb =
-mein
-Mandant an einen schweren Herzinfarkt. Mein Mandant war ledig und
-kinderlos.
-
-Er hinterlie=DF ein Verm=F6gen im Wert von =8010.500.000 (Zehn Millione=
-n
-f=FCnfhunderttausend Euro), das sich in einer Bank in Spanien befindet.=
-  Die
-Bank lie=DF mir zukommen, dass ich einen Erbberechtigen, Beg=FCnstigten
-vorstellen muss.
-
-Nach mehreren Recherchen erhielt ich keine weiteren hilfreichen
-Informationen, =FCber die  Verwandten meines verstorbenen Mandanten. Au=
-s
-diesem Grund schrieb ich Sie an, da Sie den gleichen Nachnamen haben. I=
-ch
-ben=F6tige Ihre Zustimmung und Ihre Kooperation um Sie als den Beg=FCns=
-tigten
-vorzustellen. Alle meine Bem=FChungen Verwandte meines verstorbenen
-Mandanten zu finden, waren erfolglos. Infolgedessen w=FCrde ich vorschl=
-agen
-das Verm=F6gen aufzuteilen, Sie erhalten 45% Prozent des Anteils und  4=
-5%
-Prozent w=FCrde mir dann zustehen. 10% Prozent werden an Gemeinn=FCtzig=
-e
-Organisationen gespendet.
-
-Alle notwendigen Dokumente beinhalten sinngem=E4=DF auch das Ursprungsz=
-eugnis,
-um demnach  Fragen von der zust=E4ndigen Bank zu vermeiden. Die beantra=
-gten
-Dokumente, die Sie f=FCr das Verfahren ben=F6tigen, sind legal und begl=
-aubigt.
-Das Verm=F6gen enth=E4lt kein kriminellen Ursprung. Das Verfahren wird
-einwandfrei ohne Komplikationen erfolgen,  die Geld=FCberweisung wird r=
-echts
-gem=E4=DF abgeschlossen. Alles was ich von Ihnen ben=F6tige  ist Ihr Ve=
-rtrauen
-und eine gute Zusammenarbeit.
-
-Kontaktieren Sie mich bitte unter der privaten Fax: +34-911-820-350, od=
-er
-meine private E-Mail: esqantonioricor1@consultant.com Die geplante
-Transaktion wird  durch legale Rechtsmitteln f=FCr Ihren rechtlichen Sc=
-hutz
-gef=FChrt.
-
-Mit freundlichen Grussen
-
-Abogado Antonio Ricor.
-Dipl.finanzfachanwaltin
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If we have not drained the CQ (consumed budget or more) the second
+condition (ib_req_notify_cq) will not be invoked. We are only rearming
+the CQ when we drained it completely. So I don't see how we can end up
+with missed notifications.
