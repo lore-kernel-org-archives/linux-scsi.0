@@ -1,150 +1,65 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V3 8/9] aacraid: Fix character device re-initialization
-Date: Mon, 18 Jan 2016 12:58:08 +0100
-Message-ID: <20160118115808.GK2742@c203.arch.suse.de>
-References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1452842182-684-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Insu Yun <wuninsu@gmail.com>
+Subject: [PATCH] aic94xx: fix potential integer signedness error
+Date: Mon, 18 Jan 2016 10:15:03 -0500
+Message-ID: <1453130103-10645-1-git-send-email-wuninsu@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46430 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754573AbcARL6L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jan 2016 06:58:11 -0500
-Content-Disposition: inline
-In-Reply-To: <1452842182-684-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:36131 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347AbcARPNK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2016 10:13:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, thenzl@redhat.com, shane.seymour@hpe.com, David.Carroll@pmcs.com
+To: JBottomley@odin.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
 
-On Thu, Jan 14, 2016 at 11:16:21PM -0800, Raghava Aditya Renukunta wrot=
-e:
-> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
->=20
-> During EEH PCI hotplug activity kernel unloads and loads the driver,
-> causing character device to be unregistered(aac_remove_one).When the
-> driver is loaded back using aac_probe_one the character device needs
-> to be registered again for the AIF management tools to work.
->=20
-> Fixed by adding code to register character device in aac_probe_one if
-> it is unregistered in aac_remove_one.
->=20
-> Changes in V2:
-> Added macros to track character device state
->=20
-> Changes in V3:
-> None
->=20
-> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs=
-=2Ecom>
-> Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
-> ---
->  drivers/scsi/aacraid/aacraid.h |  7 +++++++
->  drivers/scsi/aacraid/linit.c   | 21 ++++++++++++++-------
->  2 files changed, 21 insertions(+), 7 deletions(-)
->=20
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aa=
-craid.h
-> index 3473668..4b669ef 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -94,6 +94,13 @@ enum {
->  #define aac_phys_to_logical(x)  ((x)+1)
->  #define aac_logical_to_phys(x)  ((x)?(x)-1:0)
-> =20
-> +/*
-> + * These macros are for keeping track of
-> + * character device state.
-> + */
-> +#define AAC_CHARDEV_UNREGISTERED	(-1)
-> +#define AAC_CHARDEV_NEEDS_REINIT	(-2)
-> +
->  /* #define AAC_DETAILED_STATUS_INFO */
-> =20
->  struct diskparm
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/lini=
-t.c
-> index 27b3fcd..057c07c 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -80,7 +80,7 @@ MODULE_VERSION(AAC_DRIVER_FULL_VERSION);
-> =20
->  static DEFINE_MUTEX(aac_mutex);
->  static LIST_HEAD(aac_devices);
-> -static int aac_cfg_major =3D -1;
-> +static int aac_cfg_major =3D AAC_CHARDEV_UNREGISTERED;
->  char aac_driver_version[] =3D AAC_DRIVER_FULL_VERSION;
-> =20
->  /*
-> @@ -1125,6 +1125,13 @@ static void __aac_shutdown(struct aac_dev * aa=
-c)
->  	else if (aac->max_msix > 1)
->  		pci_disable_msix(aac->pdev);
->  }
-> +static void aac_init_char(void)
-> +{
-> +	aac_cfg_major =3D register_chrdev(0, "aac", &aac_cfg_fops);
-> +	if (aac_cfg_major < 0) {
-> +		pr_err("aacraid: unable to register \"aac\" device.\n");
-> +	}
-> +}
-> =20
->  static int aac_probe_one(struct pci_dev *pdev, const struct pci_devi=
-ce_id *id)
->  {
-> @@ -1182,6 +1189,9 @@ static int aac_probe_one(struct pci_dev *pdev, =
-const struct pci_device_id *id)
->  	shost->max_cmd_len =3D 16;
->  	shost->use_cmd_list =3D 1;
-> =20
-> +	if (aac_cfg_major =3D=3D AAC_CHARDEV_NEEDS_REINIT)
-> +		aac_init_char();
-> +
->  	aac =3D (struct aac_dev *)shost->hostdata;
->  	aac->base_start =3D pci_resource_start(pdev, 0);
->  	aac->scsi_host_ptr =3D shost;
-> @@ -1519,7 +1529,7 @@ static void aac_remove_one(struct pci_dev *pdev=
-)
->  	pci_disable_device(pdev);
->  	if (list_empty(&aac_devices)) {
->  		unregister_chrdev(aac_cfg_major, "aac");
-> -		aac_cfg_major =3D -1;
-> +		aac_cfg_major =3D AAC_CHARDEV_NEEDS_REINIT;
->  	}
->  }
-> =20
-> @@ -1681,11 +1691,8 @@ static int __init aac_init(void)
->  	if (error < 0)
->  		return error;
-> =20
-> -	aac_cfg_major =3D register_chrdev( 0, "aac", &aac_cfg_fops);
-> -	if (aac_cfg_major < 0) {
-> -		printk(KERN_WARNING
-> -			"aacraid: unable to register \"aac\" device.\n");
-> -	}
-> +	aac_init_char();
-> +
-> =20
->  	return 0;
->  }
-> --=20
-> 1.9.1
->=20
+In asd_turn_led and asd_control_led, phy_id's upper bound is checked.
+However, since phy_id is signed integer type, it can be less than 0.
+Since phy_id is unsigned variable, for safety, it is better to change
+a type of phy_id into unsigned integer variable. 
 
-Looks good
+Signed-off-by: Insu Yun <wuninsu@gmail.com>
+---
+ drivers/scsi/aic94xx/aic94xx_hwi.c | 4 ++--
+ drivers/scsi/aic94xx/aic94xx_hwi.h | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
+index 9f636a3..f6ebc9b 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
+@@ -1276,7 +1276,7 @@ int asd_post_escb_list(struct asd_ha_struct *asd_ha, struct asd_ascb *ascb,
+  * @phy_id: the PHY id whose LED we want to manupulate
+  * @op: 1 to turn on, 0 to turn off
+  */
+-void asd_turn_led(struct asd_ha_struct *asd_ha, int phy_id, int op)
++void asd_turn_led(struct asd_ha_struct *asd_ha, u32 phy_id, int op)
+ {
+ 	if (phy_id < ASD_MAX_PHYS) {
+ 		u32 v = asd_read_reg_dword(asd_ha, LmCONTROL(phy_id));
+@@ -1297,7 +1297,7 @@ void asd_turn_led(struct asd_ha_struct *asd_ha, int phy_id, int op)
+  * First we output enable the LED, then we set the source
+  * to be an external module.
+  */
+-void asd_control_led(struct asd_ha_struct *asd_ha, int phy_id, int op)
++void asd_control_led(struct asd_ha_struct *asd_ha, u32 phy_id, int op)
+ {
+ 	if (phy_id < ASD_MAX_PHYS) {
+ 		u32 v;
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.h b/drivers/scsi/aic94xx/aic94xx_hwi.h
+index 8c1c282..0a22dda 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.h
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.h
+@@ -388,8 +388,8 @@ int  asd_post_escb_list(struct asd_ha_struct *asd_ha, struct asd_ascb *ascb,
+ 
+ int  asd_init_post_escbs(struct asd_ha_struct *asd_ha);
+ void asd_build_control_phy(struct asd_ascb *ascb, int phy_id, u8 subfunc);
+-void asd_control_led(struct asd_ha_struct *asd_ha, int phy_id, int op);
+-void asd_turn_led(struct asd_ha_struct *asd_ha, int phy_id, int op);
++void asd_control_led(struct asd_ha_struct *asd_ha, u32 phy_id, int op);
++void asd_turn_led(struct asd_ha_struct *asd_ha, u32 phy_id, int op);
+ int  asd_enable_phys(struct asd_ha_struct *asd_ha, const u8 phy_mask);
+ 
+ void asd_ascb_timedout(unsigned long data);
+-- 
+1.9.1
+
