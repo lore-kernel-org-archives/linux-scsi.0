@@ -1,226 +1,323 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] Separate target visibility from reaped state information
-Date: Mon, 18 Jan 2016 09:55:33 +0100
-Message-ID: <20160118085533.GB2742@c203.arch.suse.de>
-References: <568FE922.9090004@sandisk.com>
+Subject: Re: [PATCH V3 1/9] aacraid: SCSI blk tag support
+Date: Mon, 18 Jan 2016 12:13:46 +0100
+Message-ID: <20160118111345.GG2742@c203.arch.suse.de>
+References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1452842182-684-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53889 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42593 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754091AbcARIzi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jan 2016 03:55:38 -0500
+	id S1753970AbcARLOG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jan 2016 06:14:06 -0500
 Content-Disposition: inline
-In-Reply-To: <568FE922.9090004@sandisk.com>
+In-Reply-To: <1452842182-684-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Sebastian Herbszt <herbszt@gmx.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, thenzl@redhat.com, shane.seymour@hpe.com, David.Carroll@pmcs.com
 
-On Fri, Jan 08, 2016 at 05:51:46PM +0100, Bart Van Assche wrote:
-> Instead of representing the states "visible in sysfs" and
-> "has been removed from the target list" by a single state
-> variable, use two variables to represent this information.
+On Thu, Jan 14, 2016 at 11:16:14PM -0800, Raghava Aditya Renukunta wrot=
+e:
+> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 >=20
-> This patch avoids that SCSI device removal can trigger the
-> following soft lockup:
+> The method to allocate and free FIB's in the present code utilizes
+> spinlocks.Multiple IO's have to wait on the spinlock to acquire or
+> free fibs creating a performance bottleneck.
 >=20
-> NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [kworker/1:1:29=
-]
-> CPU: 1 PID: 29 Comm: kworker/1:1 Tainted: G           O    4.4.0-rc5-=
-2.g1e923a3-default #1
-> Workqueue: fc_wq_4 fc_rport_final_delete [scsi_transport_fc]
-> Call Trace:
->  [<c066b0f7>] scsi_remove_target+0x167/0x1c0
->  [<f8f0a4ed>] fc_rport_final_delete+0x9d/0x1e0 [scsi_transport_fc]
->  [<c026cb25>] process_one_work+0x155/0x3e0
->  [<c026cde7>] worker_thread+0x37/0x490
->  [<c027214b>] kthread+0x9b/0xb0
->  [<c07e72c1>] ret_from_kernel_thread+0x21/0x40
+> An alternative solution would be to use block layer tags to keep trac=
+k
+> of the fibs allocated and freed. To this end aac_fib_alloc_tag was
+> created to utilize the blk layer tags to plug into the Fib pool.These
+> functions are used exclusively in the IO path. 8 fibs are reserved fo=
+r
+> the use of AIF management software and utilize the previous spinlock =
+based
+> implementations.
 >=20
-> See also commit bc3f02a795d3 ("scsi_remove_target: fix softlockup
-> regression on hot remove").
+> Changes in V2:
+> Removed aac_fib_free_tag since it was a stub function
+> Moved population of fib fields that are constant to aac_fib_setup
 >=20
-> Reported-by: Sebastian Herbszt <herbszt@gmx.de>
-> Tested-by: Sebastian Herbszt <herbszt@gmx.de>
-> Fixes: commit 40998193560d ("scsi: restart list search after unlock i=
-n scsi_remove_target")
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: stable <stable@vger.kernel.org>
+> Changes in V3:
+> None
+>=20
+> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs=
+=2Ecom>
 > ---
->  drivers/scsi/scsi_scan.c   | 31 +++----------------------------
->  drivers/scsi/scsi_sysfs.c  |  7 ++++---
->  include/scsi/scsi_device.h |  9 ++-------
->  3 files changed, 9 insertions(+), 38 deletions(-)
+>  drivers/scsi/aacraid/aachba.c  | 27 ++++++++++++---------------
+>  drivers/scsi/aacraid/aacraid.h |  1 +
+>  drivers/scsi/aacraid/commsup.c | 32 +++++++++++++++++++++++++++++---
+>  drivers/scsi/aacraid/dpcsup.c  |  2 --
+>  drivers/scsi/aacraid/linit.c   |  2 ++
+>  5 files changed, 44 insertions(+), 20 deletions(-)
 >=20
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 054923e..c455a88 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -314,7 +314,6 @@ static void scsi_target_destroy(struct scsi_targe=
-t *starget)
->  	struct Scsi_Host *shost =3D dev_to_shost(dev->parent);
->  	unsigned long flags;
-> =20
-> -	starget->state =3D STARGET_DEL;
->  	transport_destroy_device(dev);
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	if (shost->hostt->target_destroy)
-> @@ -379,19 +378,15 @@ static void scsi_target_reap_ref_release(struct=
- kref *kref)
->  	struct scsi_target *starget
->  		=3D container_of(kref, struct scsi_target, reap_ref);
-> =20
-> -	/*
-> -	 * if we get here and the target is still in the CREATED state that
-> -	 * means it was allocated but never made visible (because a scan
-> -	 * turned up no LUNs), so don't call device_del() on it.
-> -	 */
-> -	if (starget->state !=3D STARGET_CREATED) {
-> +	if (starget->is_visible) {
-> +		starget->is_visible =3D false;
->  		transport_remove_device(&starget->dev);
->  		device_del(&starget->dev);
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aac=
+hba.c
+> index e4c2437..7dfd0fa 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -323,7 +323,6 @@ static inline int aac_valid_context(struct scsi_c=
+mnd *scsicmd,
+>  	if (unlikely(!scsicmd || !scsicmd->scsi_done)) {
+>  		dprintk((KERN_WARNING "aac_valid_context: scsi command corrupt\n")=
+);
+>  		aac_fib_complete(fibptr);
+> -		aac_fib_free(fibptr);
+>  		return 0;
 >  	}
->  	scsi_target_destroy(starget);
+>  	scsicmd->SCp.phase =3D AAC_OWNER_MIDLEVEL;
+> @@ -331,7 +330,6 @@ static inline int aac_valid_context(struct scsi_c=
+mnd *scsicmd,
+>  	if (unlikely(!device || !scsi_device_online(device))) {
+>  		dprintk((KERN_WARNING "aac_valid_context: scsi device corrupt\n"))=
+;
+>  		aac_fib_complete(fibptr);
+> -		aac_fib_free(fibptr);
+>  		return 0;
+>  	}
+>  	return 1;
+> @@ -541,7 +539,6 @@ static void get_container_name_callback(void *con=
+text, struct fib * fibptr)
+>  	scsicmd->result =3D DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT=
+_GOOD;
+> =20
+>  	aac_fib_complete(fibptr);
+> -	aac_fib_free(fibptr);
+>  	scsicmd->scsi_done(scsicmd);
 >  }
 > =20
-> -static void scsi_target_reap_ref_put(struct scsi_target *starget)
-> +void scsi_target_reap(struct scsi_target *starget)
->  {
->  	kref_put(&starget->reap_ref, scsi_target_reap_ref_release);
+> @@ -557,7 +554,8 @@ static int aac_get_container_name(struct scsi_cmn=
+d * scsicmd)
+> =20
+>  	dev =3D (struct aac_dev *)scsicmd->device->host->hostdata;
+> =20
+> -	if (!(cmd_fibcontext =3D aac_fib_alloc(dev)))
+> +	cmd_fibcontext =3D aac_fib_alloc_tag(dev, scsicmd);
+> +	if (!cmd_fibcontext)
+>  		return -ENOMEM;
+> =20
+>  	aac_fib_init(cmd_fibcontext);
+> @@ -586,7 +584,6 @@ static int aac_get_container_name(struct scsi_cmn=
+d * scsicmd)
+> =20
+>  	printk(KERN_WARNING "aac_get_container_name: aac_fib_send failed wi=
+th status: %d.\n", status);
+>  	aac_fib_complete(cmd_fibcontext);
+> -	aac_fib_free(cmd_fibcontext);
+>  	return -1;
 >  }
-> @@ -437,7 +432,6 @@ static struct scsi_target *scsi_alloc_target(stru=
-ct device *parent,
->  	starget->can_queue =3D 0;
->  	INIT_LIST_HEAD(&starget->siblings);
->  	INIT_LIST_HEAD(&starget->devices);
-> -	starget->state =3D STARGET_CREATED;
->  	starget->scsi_level =3D SCSI_2;
->  	starget->max_target_blocked =3D SCSI_DEFAULT_TARGET_BLOCKED;
->   retry:
-> @@ -498,25 +492,6 @@ static struct scsi_target *scsi_alloc_target(str=
-uct device *parent,
+> =20
+> @@ -1024,7 +1021,6 @@ static void get_container_serial_callback(void =
+*context, struct fib * fibptr)
+>  	scsicmd->result =3D DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT=
+_GOOD;
+> =20
+>  	aac_fib_complete(fibptr);
+> -	aac_fib_free(fibptr);
+>  	scsicmd->scsi_done(scsicmd);
+>  }
+> =20
+> @@ -1040,7 +1036,8 @@ static int aac_get_container_serial(struct scsi=
+_cmnd * scsicmd)
+> =20
+>  	dev =3D (struct aac_dev *)scsicmd->device->host->hostdata;
+> =20
+> -	if (!(cmd_fibcontext =3D aac_fib_alloc(dev)))
+> +	cmd_fibcontext =3D aac_fib_alloc_tag(dev, scsicmd);
+> +	if (!cmd_fibcontext)
+>  		return -ENOMEM;
+> =20
+>  	aac_fib_init(cmd_fibcontext);
+> @@ -1068,7 +1065,6 @@ static int aac_get_container_serial(struct scsi=
+_cmnd * scsicmd)
+> =20
+>  	printk(KERN_WARNING "aac_get_container_serial: aac_fib_send failed =
+with status: %d.\n", status);
+>  	aac_fib_complete(cmd_fibcontext);
+> -	aac_fib_free(cmd_fibcontext);
+>  	return -1;
+>  }
+> =20
+> @@ -1869,7 +1865,6 @@ static void io_callback(void *context, struct f=
+ib * fibptr)
+>  		break;
+>  	}
+>  	aac_fib_complete(fibptr);
+> -	aac_fib_free(fibptr);
+> =20
+>  	scsicmd->scsi_done(scsicmd);
+>  }
+> @@ -1954,7 +1949,8 @@ static int aac_read(struct scsi_cmnd * scsicmd)
+>  	/*
+>  	 *	Alocate and initialize a Fib
+>  	 */
+> -	if (!(cmd_fibcontext =3D aac_fib_alloc(dev))) {
+> +	cmd_fibcontext =3D aac_fib_alloc_tag(dev, scsicmd);
+> +	if (!cmd_fibcontext) {
+>  		printk(KERN_WARNING "aac_read: fib allocation failed\n");
+>  		return -1;
+>  	}
+> @@ -2051,7 +2047,8 @@ static int aac_write(struct scsi_cmnd * scsicmd=
+)
+>  	/*
+>  	 *	Allocate and initialize a Fib then setup a BlockWrite command
+>  	 */
+> -	if (!(cmd_fibcontext =3D aac_fib_alloc(dev))) {
+> +	cmd_fibcontext =3D aac_fib_alloc_tag(dev, scsicmd);
+> +	if (!cmd_fibcontext) {
+>  		/* FIB temporarily unavailable,not catastrophic failure */
+> =20
+>  		/* scsicmd->result =3D DID_ERROR << 16;
+> @@ -2285,7 +2282,7 @@ static int aac_start_stop(struct scsi_cmnd *scs=
+icmd)
+>  	/*
+>  	 *	Allocate and initialize a Fib
+>  	 */
+> -	cmd_fibcontext =3D aac_fib_alloc(aac);
+> +	cmd_fibcontext =3D aac_fib_alloc_tag(aac, scsicmd);
+>  	if (!cmd_fibcontext)
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+> =20
+> @@ -3157,7 +3154,6 @@ static void aac_srb_callback(void *context, str=
+uct fib * fibptr)
+>  	scsicmd->result |=3D le32_to_cpu(srbreply->scsi_status);
+> =20
+>  	aac_fib_complete(fibptr);
+> -	aac_fib_free(fibptr);
+>  	scsicmd->scsi_done(scsicmd);
+>  }
+> =20
+> @@ -3187,9 +3183,10 @@ static int aac_send_srb_fib(struct scsi_cmnd* =
+scsicmd)
+>  	/*
+>  	 *	Allocate and initialize a Fib then setup a BlockWrite command
+>  	 */
+> -	if (!(cmd_fibcontext =3D aac_fib_alloc(dev))) {
+> +	cmd_fibcontext =3D aac_fib_alloc_tag(dev, scsicmd);
+> +	if (!cmd_fibcontext)
+>  		return -1;
+> -	}
+> +
+>  	status =3D aac_adapter_scsi(cmd_fibcontext, scsicmd);
+> =20
+>  	/*
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aa=
+craid.h
+> index 074878b..f51f0a0 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -2114,6 +2114,7 @@ int aac_acquire_irq(struct aac_dev *dev);
+>  void aac_free_irq(struct aac_dev *dev);
+>  const char *aac_driverinfo(struct Scsi_Host *);
+>  struct fib *aac_fib_alloc(struct aac_dev *dev);
+> +struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd =
+*scmd);
+>  int aac_fib_setup(struct aac_dev *dev);
+>  void aac_fib_map_free(struct aac_dev *dev);
+>  void aac_fib_free(struct fib * context);
+> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/co=
+mmsup.c
+> index a1f90fe..6b286b3 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -137,6 +137,7 @@ int aac_fib_setup(struct aac_dev * dev)
+>  		i++, fibptr++)
+>  	{
+>  		fibptr->flags =3D 0;
+> +		fibptr->size =3D sizeof(struct fib);
+>  		fibptr->dev =3D dev;
+>  		fibptr->hw_fib_va =3D hw_fib;
+>  		fibptr->data =3D (void *) fibptr->hw_fib_va->data;
+> @@ -156,13 +157,38 @@ int aac_fib_setup(struct aac_dev * dev)
+>  	 */
+>  	dev->fibs[dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1].next=
+ =3D NULL;
+>  	/*
+> -	 *	Enable this to debug out of queue space
+> -	 */
+> -	dev->free_fib =3D &dev->fibs[0];
+> +	*	Set 8 fibs aside for management tools
+> +	*/
+> +	dev->free_fib =3D &dev->fibs[dev->scsi_host_ptr->can_queue];
+>  	return 0;
 >  }
 > =20
 >  /**
-> - * scsi_target_reap - check to see if target is in use and destroy i=
-f not
-> - * @starget: target to be checked
-> - *
-> - * This is used after removing a LUN or doing a last put of the targ=
-et
-> - * it checks atomically that nothing is using the target and removes
-> - * it if so.
-> - */
-> -void scsi_target_reap(struct scsi_target *starget)
-> -{
-> -	/*
-> -	 * serious problem if this triggers: STARGET_DEL is only set in the=
- if
-> -	 * the reap_ref drops to zero, so we're trying to do another final =
-put
-> -	 * on an already released kref
-> -	 */
-> -	BUG_ON(starget->state =3D=3D STARGET_DEL);
-> -	scsi_target_reap_ref_put(starget);
-> -}
-> -
-> -/**
->   * sanitize_inquiry_string - remove non-graphical chars from an INQU=
-IRY result string
->   * @s: INQUIRY result string to sanitize
->   * @len: length of the string
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 21930c9..532c062 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1000,7 +1000,7 @@ static int scsi_target_add(struct scsi_target *=
-starget)
->  {
->  	int error;
+> + *	aac_fib_alloc_tag	-	allocate a fib
+> + *	@dev: Adapter to allocate the fib for
+> + *
+> + *	Allocate a fib from the adapter fib pool using tags
+> + *	from the blk layer.
+> + */
+> +
+> +struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd =
+*scmd)
+> +{
+> +	struct fib *fibptr;
+> +
+> +	fibptr =3D &dev->fibs[scmd->request->tag];
+> +	/*
+> +	 *	Null out fields that depend on being zero at the start of
+> +	 *	each I/O
+> +	 */
+> +	fibptr->hw_fib_va->header.XferState =3D 0;
+> +	fibptr->type =3D FSAFS_NTC_FIB_CONTEXT;
+> +	fibptr->callback_data =3D NULL;
+> +	fibptr->callback =3D NULL;
+> +
+> +	return fibptr;
+> +}
+> +
+> +/**
+>   *	aac_fib_alloc	-	allocate a fib
+>   *	@dev: Adapter to allocate the fib for
+>   *
+> diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpc=
+sup.c
+> index da9d993..d677b52 100644
+> --- a/drivers/scsi/aacraid/dpcsup.c
+> +++ b/drivers/scsi/aacraid/dpcsup.c
+> @@ -394,7 +394,6 @@ unsigned int aac_intr_normal(struct aac_dev *dev,=
+ u32 index,
+>  				fib->callback(fib->callback_data, fib);
+>  			} else {
+>  				aac_fib_complete(fib);
+> -				aac_fib_free(fib);
+>  			}
+>  		} else {
+>  			unsigned long flagv;
+> @@ -416,7 +415,6 @@ unsigned int aac_intr_normal(struct aac_dev *dev,=
+ u32 index,
+>  				fib->done =3D 0;
+>  				spin_unlock_irqrestore(&fib->event_lock, flagv);
+>  				aac_fib_complete(fib);
+> -				aac_fib_free(fib);
+>  			}
 > =20
-> -	if (starget->state !=3D STARGET_CREATED)
-> +	if (starget->is_visible)
->  		return 0;
+>  		}
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/lini=
+t.c
+> index 76eaa38..129a515 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -454,6 +454,8 @@ static int aac_slave_configure(struct scsi_device=
+ *sdev)
+>  	} else
+>  		scsi_change_queue_depth(sdev, 1);
 > =20
->  	error =3D device_add(&starget->dev);
-> @@ -1009,7 +1009,7 @@ static int scsi_target_add(struct scsi_target *=
-starget)
->  		return error;
->  	}
->  	transport_add_device(&starget->dev);
-> -	starget->state =3D STARGET_RUNNING;
-> +	starget->is_visible =3D true;
+> +		sdev->tagged_supported =3D 1;
+> +
+>  	return 0;
+>  }
 > =20
->  	pm_runtime_set_active(&starget->dev);
->  	pm_runtime_enable(&starget->dev);
-> @@ -1198,10 +1198,11 @@ void scsi_remove_target(struct device *dev)
->  restart:
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	list_for_each_entry(starget, &shost->__targets, siblings) {
-> -		if (starget->state =3D=3D STARGET_DEL)
-> +		if (starget->reaped)
->  			continue;
->  		if (starget->dev.parent =3D=3D dev || &starget->dev =3D=3D dev) {
->  			kref_get(&starget->reap_ref);
-> +			starget->reaped =3D true;
->  			spin_unlock_irqrestore(shost->host_lock, flags);
->  			__scsi_remove_target(starget);
->  			scsi_target_reap(starget);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index fe89d7c..f11c794 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -236,12 +236,6 @@ scmd_printk(const char *, const struct scsi_cmnd=
- *, const char *, ...);
->  			sdev_dbg((scmd)->device, fmt, ##a);		   \
->  	} while (0)
-> =20
-> -enum scsi_target_state {
-> -	STARGET_CREATED =3D 1,
-> -	STARGET_RUNNING,
-> -	STARGET_DEL,
-> -};
-> -
->  /*
->   * scsi_target: representation of a scsi target, for now, this is on=
-ly
->   * used for single_lun devices. If no one has active IO to the targe=
-t,
-> @@ -267,6 +261,8 @@ struct scsi_target {
->  	unsigned int		expecting_lun_change:1;	/* A device has reported
->  						 * a 3F/0E UA, other devices on
->  						 * the same target will also. */
-> +	unsigned int		is_visible:1; /* visible in sysfs */
-> +	unsigned int		reaped:1; /* removed from target list */
->  	/* commands actually active on LLD. */
->  	atomic_t		target_busy;
->  	atomic_t		target_blocked;
-> @@ -280,7 +276,6 @@ struct scsi_target {
->  #define SCSI_DEFAULT_TARGET_BLOCKED	3
-> =20
->  	char			scsi_level;
-> -	enum scsi_target_state	state;
->  	void 			*hostdata; /* available to low-level driver */
->  	unsigned long		starget_data[0]; /* for the transport */
->  	/* starget_data must be the last element!!!! */
 > --=20
-> 2.1.4
+> 1.9.1
 >=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Looks fine to me.
-Thanks
-
+Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 --=20
