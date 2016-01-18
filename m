@@ -1,165 +1,187 @@
-From: Insu Yun <wuninsu@gmail.com>
-Subject: [PATCH] scsi: fix potential integer signedness problem
-Date: Mon, 18 Jan 2016 14:55:09 -0500
-Message-ID: <1453146909-28314-1-git-send-email-wuninsu@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: /sys/.../enclosure_device:<something> ?
+Date: Mon, 18 Jan 2016 12:08:13 -0800
+Message-ID: <1453147693.2363.8.camel@HansenPartnership.com>
+References: <2054826122.7150196.1452702532315.JavaMail.zimbra@redhat.com>
+	 <1452712505.2363.19.camel@HansenPartnership.com>
+	 <1033193682.7255311.1452716104867.JavaMail.zimbra@redhat.com>
+	 <1452717007.2363.22.camel@HansenPartnership.com>
+	 <2130071638.8171118.1452886337562.JavaMail.zimbra@redhat.com>
+	 <1452886685.2356.25.camel@HansenPartnership.com>
+	 <883788487.8803359.1453141490468.JavaMail.zimbra@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48478 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932164AbcARUIQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jan 2016 15:08:16 -0500
+In-Reply-To: <883788487.8803359.1453141490468.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anne Mulhern <amulhern@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-Since len is signed integer variable, it is better to check
-whether len is non-negative or not.
-If non-negative value len gives, it can cause heap overflow.
+On Mon, 2016-01-18 at 13:24 -0500, Anne Mulhern wrote:
+> Thanks.
+> 
+> Are there any guidelines or rules available regarding the use
+> of namespaces in sysfs that you can refer me to?
 
-Signed-off-by: Insu Yun <wuninsu@gmail.com>
----
- drivers/scsi/scsi_lib.c | 33 ++++++++++++++++++---------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+I don't believe there are any, sorry.  What I'm describing isn't really
+true namespacing, it's using namespace techniques to avoid potential
+unique name clashes.  There's nothing formally documented about this in
+sysfs-rules.txt;  it is simply the type of thing that often gets done
+to avoid unique name issues in filesystems.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fa6b2c4..5c64c80 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -271,7 +271,7 @@ int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
- {
- 	char *sense = NULL;
- 	int result;
--	
-+
- 	if (sshdr) {
- 		sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
- 		if (!sense)
-@@ -374,7 +374,7 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		scsi_kick_queue(sdev->request_queue);
- 		spin_lock_irqsave(shost->host_lock, flags);
--	
-+
- 		scsi_device_put(sdev);
- 	}
-  out:
-@@ -1089,7 +1089,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
- 					req->mq_ctx != NULL)))
- 		return BLKPREP_DEFER;
- 
--	/* 
-+	/*
- 	 * Next, walk the list, and fill in the addresses and sizes of
- 	 * each segment.
- 	 */
-@@ -1835,7 +1835,7 @@ static void scsi_request_fn(struct request_queue *q)
- 
- 		if (!scsi_host_queue_ready(q, shost, sdev))
- 			goto host_not_ready;
--	
-+
- 		if (sdev->simple_tags)
- 			cmd->flags |= SCMD_TAGGED;
- 		else
-@@ -2349,6 +2349,9 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
- 	unsigned char *real_buffer;
- 	int ret;
- 
-+	if (len < 0)
-+		return -EINVAL;
-+
- 	memset(cmd, 0, sizeof(cmd));
- 	cmd[1] = (pf ? 0x10 : 0) | (sp ? 0x01 : 0);
- 
-@@ -2386,7 +2389,7 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
- 		real_buffer[1] = data->medium_type;
- 		real_buffer[2] = data->device_specific;
- 		real_buffer[3] = data->block_descriptor_length;
--		
-+
- 
- 		cmd[0] = MODE_SELECT;
- 		cmd[4] = len;
-@@ -2470,7 +2473,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 		if (scsi_sense_valid(sshdr)) {
- 			if ((sshdr->sense_key == ILLEGAL_REQUEST) &&
- 			    (sshdr->asc == 0x20) && (sshdr->ascq == 0)) {
--				/* 
-+				/*
- 				 * Invalid command operation code
- 				 */
- 				sdev->use_10_for_ms = 0;
-@@ -2562,7 +2565,7 @@ EXPORT_SYMBOL(scsi_test_unit_ready);
-  *	@sdev:	scsi device to change the state of.
-  *	@state:	state to change to.
-  *
-- *	Returns zero if unsuccessful or an error if the requested 
-+ *	Returns zero if unsuccessful or an error if the requested
-  *	transition is illegal.
-  */
- int
-@@ -2582,7 +2585,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 			goto illegal;
- 		}
- 		break;
--			
-+
- 	case SDEV_RUNNING:
- 		switch (oldstate) {
- 		case SDEV_CREATED:
-@@ -2859,7 +2862,7 @@ EXPORT_SYMBOL_GPL(sdev_evt_send_simple);
-  *	(which must be a legal transition).  When the device is in this
-  *	state, only special requests will be accepted, all others will
-  *	be deferred.  Since special requests may also be requeued requests,
-- *	a successful return doesn't guarantee the device will be 
-+ *	a successful return doesn't guarantee the device will be
-  *	totally quiescent.
-  *
-  *	Must be called with user context, may sleep.
-@@ -2940,7 +2943,7 @@ EXPORT_SYMBOL(scsi_target_resume);
-  *
-  * Returns zero if successful or error if not
-  *
-- * Notes:       
-+ * Notes:
-  *	This routine transitions the device to the SDEV_BLOCK state
-  *	(which must be a legal transition).  When the device is in this
-  *	state, all commands are deferred until the scsi lld reenables
-@@ -2961,10 +2964,10 @@ scsi_internal_device_block(struct scsi_device *sdev)
- 			return err;
- 	}
- 
--	/* 
-+	/*
- 	 * The device has transitioned to SDEV_BLOCK.  Stop the
- 	 * block layer from calling the midlayer with this device's
--	 * request queue. 
-+	 * request queue.
- 	 */
- 	if (q->mq_ops) {
- 		blk_mq_stop_hw_queues(q);
-@@ -2977,7 +2980,7 @@ scsi_internal_device_block(struct scsi_device *sdev)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(scsi_internal_device_block);
-- 
-+
- /**
-  * scsi_internal_device_unblock - resume a device after a block request
-  * @sdev:	device to resume
-@@ -2989,7 +2992,7 @@ EXPORT_SYMBOL_GPL(scsi_internal_device_block);
-  *
-  * Returns zero if successful or error if not.
-  *
-- * Notes:       
-+ * Notes:
-  *	This routine transitions the device to the SDEV_RUNNING state
-  *	or to one of the offline states (which must be a legal transition)
-  *	allowing the midlayer to goose the queue for this device.
-@@ -2998,7 +3001,7 @@ int
- scsi_internal_device_unblock(struct scsi_device *sdev,
- 			     enum scsi_device_state new_state)
- {
--	struct request_queue *q = sdev->request_queue; 
-+	struct request_queue *q = sdev->request_queue;
- 	unsigned long flags;
- 
- 	/*
--- 
-1.9.1
+James
+
+> I maintain pyudev, which is a python wrapper around libudev
+> with some added conveniences, and I'm wondering if there is
+> some functionality around namespaces that could be usefully
+> added.
+> 
+> - mulhern
+> 
+> ----- Original Message -----
+> > From: "James Bottomley" <James.Bottomley@HansenPartnership.com>
+> > To: "Anne Mulhern" <amulhern@redhat.com>
+> > Cc: linux-scsi@vger.kernel.org
+> > Sent: Friday, January 15, 2016 2:38:05 PM
+> > Subject: Re: /sys/.../enclosure_device:<something> ?
+> > 
+> > On Fri, 2016-01-15 at 14:32 -0500, Anne Mulhern wrote:
+> > > 
+> > > 
+> > > 
+> > > ----- Original Message -----
+> > > > From: "James Bottomley" <James.Bottomley@HansenPartnership.com>
+> > > > To: "Anne Mulhern" <amulhern@redhat.com>
+> > > > Cc: linux-scsi@vger.kernel.org
+> > > > Sent: Wednesday, January 13, 2016 3:30:07 PM
+> > > > Subject: Re: /sys/.../enclosure_device:<something> ?
+> > > > 
+> > > > On Wed, 2016-01-13 at 15:15 -0500, Anne Mulhern wrote:
+> > > > > 
+> > > > > 
+> > > > > 
+> > > > > ----- Original Message -----
+> > > > > > From: "James Bottomley" <
+> > > > > > James.Bottomley@HansenPartnership.com>
+> > > > > > To: "Anne Mulhern" <amulhern@redhat.com>,
+> > > > > > linux-scsi@vger.kernel.org
+> > > > > > Sent: Wednesday, January 13, 2016 2:15:05 PM
+> > > > > > Subject: Re: /sys/.../enclosure_device:<something> ?
+> > > > > > 
+> > > > > > On Wed, 2016-01-13 at 11:28 -0500, Anne Mulhern wrote:
+> > > > > > > Hi!
+> > > > > > > 
+> > > > > > > I'm looking for the most precise information available
+> > > > > > > about
+> > > > > > > the
+> > > > > > > meaning of <something>
+> > > > > > > and from what it is derived. I'm also interested in what
+> > > > > > > the
+> > > > > > > values
+> > > > > > > in the files in that directory
+> > > > > > > may mean. Could somebody point me there?
+> > > > > > 
+> > > > > > It's in drivers/misc/enclosure.c:enclosure_link_name()
+> > > > > > 
+> > > > > 
+> > > > > Thanks. I will do my best with that.
+> > > > > 
+> > > > > > > Also, how can there be more than one enclosure_device
+> > > > > > > subdirectory
+> > > > > > > for the same device,
+> > > > > > > or, alternatively, why isn't <something> stored in a file
+> > > > > > > in
+> > > > > > > the
+> > > > > > > more
+> > > > > > > regularly named directory
+> > > > > > > /sys/.../enclosure_device?
+> > > > > > 
+> > > > > > I'm not sure I parse the question, but if you're asking how
+> > > > > > can
+> > > > > > a
+> > > > > > single enclosure bay appear to have more than one device,
+> > > > > > that's
+> > > > > > when
+> > > > > > there are multiple paths to the device.
+> > > > > 
+> > > > > I'm afraid the word path is so overloaded...I'm assuming that
+> > > > > you
+> > > > > are talking about a multipathed environment, where two device
+> > > > > nodes,
+> > > > > say /dev/sdb, /dev/sdc correspond to the same disk, and are
+> > > > > hence
+> > > > > multipathed. Of course, in that case, it makes sense that
+> > > > > both
+> > > > > devices should share a bay. And that's what I observe.
+> > > > 
+> > > > Yes, that's what I meant.
+> > > > 
+> > > > > If I understand you correctly, then my question is actually
+> > > > > the
+> > > > > opposite. Why does it look as if the directories are set up
+> > > > > so
+> > > > > that
+> > > > > there can be multiple bays for a single device...i.e., the
+> > > > > directory
+> > > > > naming scheme allows me to specify an arbitrary number of
+> > > > > bays
+> > > > > for
+> > > > > /dev/sdb. It seems like there should never be more than one?
+> > > > 
+> > > > There is only one bay per device since a physical disk can't be
+> > > > in
+> > > > more
+> > > > than one bay at once.  Why do you think it was set up to allow
+> > > > >1?
+> > > > 
+> > > 
+> > > Purely because the naming scheme for the directory,
+> > > 'enclosure_device:<identifier>' supports more than 1.
+> > > 
+> > > This directory pops up in the directory of the parent device
+> > > representing
+> > > a block device, and should represent just the bay for that
+> > > device,
+> > > AFAIU.
+> > > 
+> > > The most compelling reason for this naming scheme to support more
+> > > than 1
+> > > subdirectory is if it is necessary, i.e., there are more than one
+> > > possible.
+> > > 
+> > > That might be true if my understanding of the block device's
+> > > parent
+> > > device's
+> > > meaning is incorrect or if something else doesn't mean what I
+> > > think
+> > > it means.
+> > 
+> > The enclosure_device: is a namespace prefix.  It's sysfs, so we
+> > can't
+> > have two files of the same name and <identifier> is supplied by
+> > page 7
+> > of the enclosure device ... it could be anything.  The only way to
+> > ensure we don't have a clash is to use a namespace prefix.
+> > 
+> > James
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux
+> > -scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
