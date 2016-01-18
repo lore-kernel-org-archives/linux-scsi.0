@@ -1,52 +1,72 @@
-From: "Mr.  Eugene Gomi" <d18@greenhhh.sz.cx>
-Subject: Do You Authorize Change of Beneficiary Account?
-Date: Sun, 17 Jan 2016 18:49:03 -0500
-Message-ID: <TY1PR01MB0221F5C01C23CB9302EF29E196CF0@TY1PR01MB0221.jpnprd01.prod.outlook.com>
-Reply-To: <standchbank100@pisem.net>
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+Subject: RE: [PATCH] megaraid_sas: Fallback to older scanning if not disks are found
+Date: Mon, 18 Jan 2016 10:44:31 +0530
+Message-ID: <7df34cf7b9d82b4bfcb79c3630fbf373@mail.gmail.com>
+References: <1452867193-41266-1-git-send-email-hare@suse.de> <56996BC1.40400@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-hk2apc01hn0203.outbound.protection.outlook.com ([104.47.124.203]:62306
-	"EHLO APC01-HK2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752806AbcARADC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2016 19:03:02 -0500
-Content-Description: Mail message body
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:33909 "EHLO
+	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbcARFOe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2016 00:14:34 -0500
+Received: by mail-lf0-f44.google.com with SMTP id 17so110171224lfz.1
+        for <linux-scsi@vger.kernel.org>; Sun, 17 Jan 2016 21:14:33 -0800 (PST)
+In-Reply-To: <56996BC1.40400@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <d18@greenhhh.sz.cx>
+To: Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@avagotech.com>
+Cc: "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-Standard Chartered Bank
-1/2 Idumota Street
-Victoria I/S Lagos
+> -----Original Message-----
+> From: Lee Duncan [mailto:lduncan@suse.com]
+> Sent: Saturday, January 16, 2016 3:29 AM
+> To: Hannes Reinecke; Sumit Saxena
+> Cc: Kashyap Desai; megaraidlinux.pdl@avagotech.com; Martin K. Petersen;
+> James Bottomley; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH] megaraid_sas: Fallback to older scanning if not
+disks
+> are found
+>
+> On 01/15/2016 06:13 AM, Hannes Reinecke wrote:
+> > commit 21c9e160a51383d4cb0b882398534b0c95c0cc3b implemented a
+> new
+> > driver lookup using the MR_DCMD_LD_LIST_QUERY firmware command.
+> > However, this command might not work properly on older firmware,
+> > causing the command to return no drives instead of an error.
+> > This causes a regression on older firmware as the driver will no
+> > longer detect any drives.
+> > This patch checks if MR_DCMD_LD_LIST_QUERY return no drives, and falls
+> > back to the original method if so.
+> >
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > index f97ec34..79dff70 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > @@ -4107,6 +4107,10 @@ megasas_ld_list_query(struct
+> megasas_instance *instance, u8 query_type)
+> >  		ret = megasas_issue_polled(instance, cmd);
+> >
+> >  	tgtid_count = le32_to_cpu(ci->count);
+> > +	if (tgtid_count == 0) {
+> > +		/* No drives found, try the older LD list DCMD */
+> > +		ret = 1;
+> > +	}
+> >
+> >  	if ((ret == 0) && (tgtid_count <= (instance-
+> >fw_supported_vd_count))) {
+> >  		memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+> >
+>
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
 
-Attn: Beneficiary,
-
-In our office today was the presence of One Mr. John T. Pullen of 122 Fitch Way, Sacramento,CA.USA 95864, filing application contrary to your pending fund transfer.
-
-The above mentioned person visited this Bank yesterday with a power of attorney given in his favor by you, granting him the benefit to process and claim your inheritance of $2,500,000.00(Two Million, Five Hundred Thousand United States Dollars) for personal reasons.
-
-He further stated that the online account will be terminated while the fund should be wired to his bank immediately;
-
-Bank Name;Bank Of America,
-Account Number # 12908576457
-Routing Number# 121000358.
-
-We ask Mr. John T. Pullen, to return back to the bank within 48 hours to enable us have a personal confirmation from you being hitherto the beneficiary.
-
-We are sorry to have delayed your instruction in giving out this fund since we must adhere to the Modus Operandi of this honorable bank by making sure this request is verified and confirmed by the beneficiary and his existing attorney.
-
-Your confirmation to the above will be appreciated. We look forward to hear from you soon.
-
-Reply to this email address; Email; standchbank100@pisem.net
-                                    
-Dr. GM Gardner (A/G)
-Foreign Remittance Director
-
-Regards,
-Mr Eugene Gomi
-Manager.
-
-
- 
+NACK as fix is already provided in another patch.
+Please review patch - http://marc.info/?l=linux-scsi&m=145044529215209&w=2
+It has changes to handle this particular issue as well along with many
+other areas of MFI DCMD timeout.
