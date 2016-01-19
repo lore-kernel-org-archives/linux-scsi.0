@@ -1,170 +1,45 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V3 7/9] aacraid: Fix AIF triggered IOP_RESET
-Date: Tue, 19 Jan 2016 17:14:28 +0100
-Message-ID: <569E60E4.4000903@redhat.com>
-References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1452842182-684-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
+ [sr_mod]
+Date: Tue, 19 Jan 2016 11:38:32 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1601191127020.1727-100000@iolanthe.rowland.org>
+References: <CAGKbab941Nh7Sy1NTZC6ySxG_P5g7HpjATQ_GSCvDY8y=qgmHA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57230 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932168AbcASQOc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jan 2016 11:14:32 -0500
-In-Reply-To: <1452842182-684-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:58306 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755740AbcASQie (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 11:38:34 -0500
+In-Reply-To: <CAGKbab941Nh7Sy1NTZC6ySxG_P5g7HpjATQ_GSCvDY8y=qgmHA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, shane.seymour@hpe.com, David.Carroll@pmcs.com
+To: Erich Schubert <erich@debian.org>
+Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Alexandre Rossi <alexandre.rossi@gmail.com>
 
-On 15.1.2016 08:16, Raghava Aditya Renukunta wrote:
-> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
->
-> while driver removal is in progress or PCI shutdown is invoked, driver
-> kills AIF aacraid thread, but IOCTL requests from the management tools
-> re-start AIF thread leading to IOP_RESET.
->
-> Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
->
-> Changes in V2:
-> Set adapter_shutdown flag before shutdown command is sent to \
-> controller
->
-> Changes in V3:
-> Call aac_send_shut_shutdown first thing in __aac_shutdown
-> Convert adapter_shutdown to atomic_t variable to prevent \
-> SMP coherency issues(race conditions)
+On Tue, 19 Jan 2016, Erich Schubert wrote:
 
-Hi,
-I don't think that an atomic variable can change it, imagine that
-thread just passed your test in aac_cfg_ioctl and another thread
-enter a bit later the adapter_shutdown so both - an I/O and your shutdown code
-will run in parallel.
-Also you need to fix your compat_ioctl path too.
+> Hi,
+> Attached are photos of the Kernel null pointer BUG that I'm observing.
+> 
+> These shots are with 4.4.0-rc8.
+> As you can see, I have a similar trace to Paul, but the error occurs
+> one stack frame earlier?
 
---tm
+Yours is only slighly similar to Paul's.  He got an error in 
+sr_runtime_suspend, but your error occurs in sd_resume -- a completely 
+different function in a different source file.
 
->
-> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> ---
->  drivers/scsi/aacraid/aacraid.h  |  2 +-
->  drivers/scsi/aacraid/comminit.c |  6 +++---
->  drivers/scsi/aacraid/linit.c    | 15 ++++++++-------
->  3 files changed, 12 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 2916288..3473668 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -1234,7 +1234,7 @@ struct aac_dev
->  	int			msi_enabled;	/* MSI/MSI-X enabled */
->  	struct msix_entry	msixentry[AAC_MAX_MSIX];
->  	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
-> -	u8			adapter_shutdown;
-> +	atomic_t		adapter_shutdown;
->  	u32			handle_pci_error;
->  };
->  
-> diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-> index 0e954e3..d361673 100644
-> --- a/drivers/scsi/aacraid/comminit.c
-> +++ b/drivers/scsi/aacraid/comminit.c
-> @@ -212,8 +212,9 @@ int aac_send_shutdown(struct aac_dev * dev)
->  		return -ENOMEM;
->  	aac_fib_init(fibctx);
->  
-> -	cmd = (struct aac_close *) fib_data(fibctx);
-> +	atomic_set(&dev->adapter_shutdown, 1);
->  
-> +	cmd = (struct aac_close *) fib_data(fibctx);
->  	cmd->command = cpu_to_le32(VM_CloseAll);
->  	cmd->cid = cpu_to_le32(0xfffffffe);
->  
-> @@ -229,7 +230,6 @@ int aac_send_shutdown(struct aac_dev * dev)
->  	/* FIB should be freed only after getting the response from the F/W */
->  	if (status != -ERESTARTSYS)
->  		aac_fib_free(fibctx);
-> -	dev->adapter_shutdown = 1;
->  	if ((dev->pdev->device == PMC_DEVICE_S7 ||
->  	     dev->pdev->device == PMC_DEVICE_S8 ||
->  	     dev->pdev->device == PMC_DEVICE_S9) &&
-> @@ -468,7 +468,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
->  	}
->  	dev->max_msix = 0;
->  	dev->msi_enabled = 0;
-> -	dev->adapter_shutdown = 0;
-> +	atomic_set(&dev->adapter_shutdown, 0);
->  	if ((!aac_adapter_sync_cmd(dev, GET_COMM_PREFERRED_SETTINGS,
->  	  0, 0, 0, 0, 0, 0,
->  	  status+0, status+1, status+2, status+3, status+4))
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 6944560..27b3fcd 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -706,7 +706,7 @@ static long aac_cfg_ioctl(struct file *file,
->  	int ret;
->  	struct aac_dev *aac;
->  	aac = (struct aac_dev *)file->private_data;
-> -	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
-> +	if (!capable(CAP_SYS_RAWIO) || atomic_read(&aac->adapter_shutdown))
->  		return -EPERM;
->  	mutex_lock(&aac_mutex);
->  	ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
-> @@ -1078,6 +1078,8 @@ static void __aac_shutdown(struct aac_dev * aac)
->  	int i;
->  	int cpu;
->  
-> +	aac_send_shutdown(aac);
-> +
->  	if (aac->aif_thread) {
->  		int i;
->  		/* Clear out events first */
-> @@ -1089,7 +1091,7 @@ static void __aac_shutdown(struct aac_dev * aac)
->  		}
->  		kthread_stop(aac->thread);
->  	}
-> -	aac_send_shutdown(aac);
-> +
->  	aac_adapter_disable_int(aac);
->  	cpu = cpumask_first(cpu_online_mask);
->  	if (aac->pdev->device == PMC_DEVICE_S6 ||
-> @@ -1474,7 +1476,7 @@ static int aac_resume(struct pci_dev *pdev)
->  	* reset this flag to unblock ioctl() as it was set at
->  	* aac_send_shutdown() to block ioctls from upperlayer
->  	*/
-> -	aac->adapter_shutdown = 0;
-> +	atomic_set(&aac->adapter_shutdown, 0);
->  	scsi_unblock_requests(shost);
->  
->  	return 0;
-> @@ -1553,9 +1555,8 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
->  	case pci_channel_io_normal:
->  		return PCI_ERS_RESULT_CAN_RECOVER;
->  	case pci_channel_io_frozen:
-> -
->  		aac->handle_pci_error = 1;
-> -		aac->adapter_shutdown = 1;
-> +		atomic_set(&aac->adapter_shutdown, 1);
->  
->  		scsi_block_requests(aac->scsi_host_ptr);
->  		aac_flush_ios(aac);
-> @@ -1567,7 +1568,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
->  		return PCI_ERS_RESULT_NEED_RESET;
->  	case pci_channel_io_perm_failure:
->  		aac->handle_pci_error = 1;
-> -		aac->adapter_shutdown = 1;
-> +		atomic_set(&aac->adapter_shutdown, 1);
->  
->  		aac_flush_ios(aac);
->  		return PCI_ERS_RESULT_DISCONNECT;
-> @@ -1636,7 +1637,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
->  	 * reset this flag to unblock ioctl() as it was set
->  	 * at aac_send_shutdown() to block ioctls from upperlayer
->  	 */
-> -	aac->adapter_shutdown = 0;
-> +	atomic_set(&aac->adapter_shutdown, 0);
->  	aac->handle_pci_error = 0;
->  
->  	shost_for_each_device(sdev, shost)
+> Maybe Alex issue is the same bug, but triggered slightly different or
+> just the kernel compiled differently.
+> __rpm_callback, scsi_autopm_put_device, __pm_runtime_resume, sd_probe
+> is present in all of these traces.
+> 
+> Sorry, I do not have a lot of time right now to help testing or debugging.
+
+I can't tell what's going wrong without some real debugging.  This
+means somebody has to build and test a patched kernel.  There are no
+problems on my computer, so it will have to be one or more of you guys.
+
+Alan Stern
 
