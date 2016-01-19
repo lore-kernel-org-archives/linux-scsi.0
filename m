@@ -1,24 +1,53 @@
-From: "Mr.jaluca pallizzari" <signup@mecuru.jp>
-Subject: Business Proposition for you
-Date: Mon, 18 Jan 2016 15:35:42 +0100
-Message-ID: <20160118143524.0F83F277BBC__22582.8718896539$1453195791$gmane$org@mail.takasugi.co.jp>
-Reply-To: <jaluca.pellizzari@aol.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 1/2] hisi_sas: SCSI_HISI_SAS should depend on HAS_DMA
+Date: Tue, 19 Jan 2016 09:47:05 +0000
+Message-ID: <569E0619.6020809@huawei.com>
+References: <1452865149-32064-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www4371ub.sakura.ne.jp ([49.212.43.165]:37876 "EHLO
-	mail.takasugi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932624AbcASJ3f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 04:29:35 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1452865149-32064-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On 15/01/2016 13:39, Geert Uytterhoeven wrote:
+> If NO_DMA=y:
+>
+>      ERROR: "dma_map_sg" [drivers/scsi/hisi_sas/hisi_sas_v1_hw.ko] undefined!
+>      ERROR: "dma_pool_alloc" [drivers/scsi/hisi_sas/hisi_sas_v1_hw.ko] undefined!
+>      ERROR: "dma_unmap_sg" [drivers/scsi/hisi_sas/hisi_sas_v1_hw.ko] undefined!
+>      ERROR: "dma_unmap_sg" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_set_mask" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_map_sg" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_pool_destroy" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_free_coherent" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_pool_free" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_alloc_coherent" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_pool_alloc" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_supported" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>      ERROR: "dma_pool_create" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+>
+> Add a dependency on HAS_DMA to fix this.
+>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> ---
+>   drivers/scsi/hisi_sas/Kconfig | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
+> index 37a0c7156087905b..2c05021636a5fea6 100644
+> --- a/drivers/scsi/hisi_sas/Kconfig
+> +++ b/drivers/scsi/hisi_sas/Kconfig
+> @@ -1,5 +1,6 @@
+>   config SCSI_HISI_SAS
+>   	tristate "HiSilicon SAS"
+> +	depends on HAS_DMA
+>   	select SCSI_SAS_LIBSAS
+>   	select BLK_DEV_INTEGRITY
+>   	help
+>
 
- Hello
-
-I have a proposal for you.kindly get back to me 
-
-Best Regards.
-jaluca pallizzari
+Reviewed-by: John Garry <john.garry@huawei.com>
