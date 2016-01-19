@@ -1,57 +1,92 @@
-From: Dmitry Katsubo <dma_k@mail.ru>
-Subject: Re: How to set DPOFUA=0 ?
-Date: Tue, 19 Jan 2016 23:10:37 +0100
-Message-ID: <569EB45D.1020102@mail.ru>
-References: <n5kqb4$k8n$1@ger.gmane.org> <569EA17B.7050601@mail.ru>
+From: Paul Menzel <paul.menzel@giantmonkey.de>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>]
+ sr_runtime_suspend+0xc/0x20 [sr_mod]
+Date: Wed, 20 Jan 2016 00:20:27 +0100
+Message-ID: <1453245627.1947.3.camel@giantmonkey.de>
+References: <Pine.LNX.4.44L0.1601191532210.1312-200000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-EuNzQCAJ8+bC7EHGw1Hn"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fallback7.mail.ru ([94.100.181.128]:60432 "EHLO
-	fallback7.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252AbcASWOJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 17:14:09 -0500
-In-Reply-To: <569EA17B.7050601@mail.ru>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:33792 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933139AbcASXUl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 18:20:41 -0500
+Received: by mail-wm0-f51.google.com with SMTP id u188so163558605wmu.1
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2016 15:20:40 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.44L0.1601191532210.1312-200000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "U.Mutlu" <for-gmane@mutluit.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Alexandre Rossi <alexandre.rossi@gmail.com>
 
-> Solved:
-> 
-> By installing a the latest kernel and headers from Debian backports solved the 
-> problem:
-> 
-> apt-get -t jessie-backports install linux-image-amd64 linux-headers-amd64
-> 
-> Info about backports configuration:
-> http://backports.debian.org/Instructions/
-> 
-> # uname -a
-> Linux panther 4.2.0-0.bpo.1-amd64 #1 SMP Debian 4.2.6-3~bpo8+2 (2015-12-14) 
-> x86_64 GNU/Linux
-> 
-> After this nigtmare-ish experience I would suggest the debian maintainers
-> to trash the default jessie kernel 3.16 and replace it with the above
-> 4.2 kernel; otherwise unexperienced users will wonder why their new SSD etc.
-> isn't working in debian/ubuntu & co., as happened to me... :-(
 
-I have missed that your message. Solved? Amazing, because the patch I had in
-mind was not applied to 4.2.6. Also the device you are reporting has different
-productId. I think that in newer kernels (4.x) another driver is used (UAS),
-which has already given device logged as "special", see
+--=-EuNzQCAJ8+bC7EHGw1Hn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/usb/storage/unusual_uas.h#n145
+Dear Alan,
 
-/* Reported-by: Takeo Nakayama <javhera@gmx.com> */
-UNUSUAL_DEV(0x357d, 0x7788, 0x0000, 0x9999,
-		"JMicron",
-		"JMS566",
-		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-		US_FL_NO_REPORT_OPCODES),
 
-However it does not have US_FL_BROKEN_FUA flag set. Mystery.
+Am Dienstag, den 19.01.2016, 16:08 -0500 schrieb Alan Stern:
+> On Tue, 19 Jan 2016, Paul Menzel wrote:
+>
+> > Could you please attach the debugging patch. Hopefully Alexandre, Erich=
+,
+> > or I will have some spare time to build an image from it.
+>=20
+> Actually, this patch is an attempt at a fix.  After looking more=20
+> carefully at your log pictures, I realized what the problem must be. =20
 
--- 
-With best regards,
-Dmitry
+that indeed fixed it for me. I applied your patch on
+linux-image-4.4.0-rc8-686 [1] and was able to get to the LUKS passphrase
+dialog. Awesome! Thank you very, very much!
+
+[=E2=80=A6]
+
+
+Thanks,
+
+Paul
+
+
+[1] https://packages.debian.org/experimental/linux-image-4.4.0-rc8-686
+--=20
+GPG-Schl=C3=BCssel: 33623E9B
+Fingerabdruck =3D 0EB1 649D 4361 D04F 3C70  6F71 4DD7 BF75 3362 3E9B
+
+Giant Monkey Software Engineering GmbH
+
+Brunnenstr. 7D
+10119 Berlin Mitte
+
+Gesch=C3=A4ftsf=C3=BChrer Adrian Fuhrmann, Lion Vollnhals und Paul Menzel
+
+USt-IdNr.: DE281524720
+HRB 139495 B Amtsgericht Charlottenburg
+
+--=-EuNzQCAJ8+bC7EHGw1Hn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJWnsTEAAoJEE3Xv3UzYj6bqvEP/jJuwEBe6aaXQgox1+uOcXXH
+qd1V9h0k7G10L13oBlhwV3bQgxZPXSQRy/S7zOArZmFsDpBYTiDNNyJyEe3LfEo/
+ZMBaq7bvdo2+bzcJa5Q6smDbY1A76sIaH5qS/s0hd+w+MvBEe5Mcf45xV2OJpuKc
+9wA1uab+yYu8FtH+W7CucZxUEybnHDIk5LmK7C4x8cbldMaal9+KjO2VuIR6F8Vz
+Cb78kPI9KULgUhjnf/FkXT562b6Kntg6eDtDnzOGdoRDmMpcwqlBbI4URbaERi3M
+Z2OW/KSZjSqHZs34MG5CnjjUJt70ntDkOuRet1lqbCcA9ySYaPApNq3wO9wHvA65
+Xt/Cyc2utng3Gy4KFZvp3OiUxyX3jRBB/CjXngmwHFu5+yyf7EWWrkCckzeW88Nh
+9few8XlnKZ/e/ju79k/asycI4+aLilVL43dLKsf/eciXCS2OBLmxGZwt8p90WoR0
+Ghhp6LWZ3fTHeAbnKwz3jqA5oC4dvA39aiXWHnN/bcTuxWTZ8Sr/BIrqHyxGmdM7
+Dzxe5Tn+Frt3OPBGPbBVaiG/Hi3nZ9q/DxrKFRmG68wosjoXiqAskKSlqkdvKKCz
+9bMBZY7FMnfp59vigt00lPlXE2vgG3zVhI77XtgF6JE5dS+1CzBUNyYNg0MtLuhS
+3CTcF4dQVH3wCJKNCEzg
+=PN3V
+-----END PGP SIGNATURE-----
+
+--=-EuNzQCAJ8+bC7EHGw1Hn--
+
