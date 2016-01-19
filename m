@@ -1,60 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
- recognized correctly
-Date: Tue, 19 Jan 2016 14:33:15 +0000
-Message-ID: <bug-98171-11613-JMOApdD51k@https.bugzilla.kernel.org/>
-References: <bug-98171-11613@https.bugzilla.kernel.org/>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 13/15] megaraid_sas: Introduce module parameter for SCSI
+ command-timeout
+Date: Tue, 19 Jan 2016 15:57:28 +0100
+Message-ID: <569E4ED8.9010904@redhat.com>
+References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
+ <1450445228-26571-14-git-send-email-Sumit.Saxena@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39546 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:41417 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754602AbcASOdT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 09:33:19 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id F34912043C
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2016 14:33:17 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 08A3620452
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2016 14:33:17 +0000 (UTC)
-In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
+	id S1755849AbcASO5b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jan 2016 09:57:31 -0500
+In-Reply-To: <1450445228-26571-14-git-send-email-Sumit.Saxena@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@avagotech.com>, jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D98171
+On 18.12.2015 14:27, Sumit Saxena wrote:
+> This patch will introduce module-parameter for SCSI command timeout value and fix setting of resetwaitime beyond a value.
+>
+> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c   |   15 ++++++++++++---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c |    2 +-
+>  2 files changed, 13 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index cc843d6..316d5a0 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -83,7 +83,7 @@ module_param(throttlequeuedepth, int, S_IRUGO);
+>  MODULE_PARM_DESC(throttlequeuedepth,
+>  	"Adapter queue depth when throttled due to I/O timeout. Default: 16");
+>  
+> -int resetwaittime = MEGASAS_RESET_WAIT_TIME;
+> +unsigned int resetwaittime = MEGASAS_RESET_WAIT_TIME;
+>  module_param(resetwaittime, int, S_IRUGO);
+>  MODULE_PARM_DESC(resetwaittime, "Wait time in seconds after I/O timeout "
+>  		 "before resetting adapter. Default: 180");
+> @@ -100,6 +100,10 @@ unsigned int dual_qdepth_disable;
+>  module_param(dual_qdepth_disable, int, S_IRUGO);
+>  MODULE_PARM_DESC(dual_qdepth_disable, "Disable dual queue depth feature. Default: 0");
+>  
+> +unsigned int scmd_timeout = MEGASAS_DEFAULT_CMD_TIMEOUT;
+> +module_param(scmd_timeout, int, S_IRUGO);
+> +MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s), default 90s. See megasas_reset_timer.");
 
-J=C3=BCrgen H=C3=B6rmann <info@juergenhoermann.de> changed:
+When you know that "The RAID firmware may require extended timeouts" what do you expect
+when an user sets a short timeout value ?
+Other than that, I don't think that lot of tunables in a driver makes it better,
+from my point of view you could remove both resetwaittime + scmd_timeout.
+Okay, I don't want to stay in the way if you really need it so -
 
-           What    |Removed                     |Added
------------------------------------------------------------------------=
------
-                 CC|                            |info@juergenhoermann.d=
-e
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
---- Comment #5 from J=C3=BCrgen H=C3=B6rmann <info@juergenhoermann.de> =
----
-Having this issue too.
-My apt database got corrupted while installing update packages.
+Tomas
 
-[    2.232046] ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0=
-x6
-[    2.232054] ata14.00: irq_stat 0x40000001
-[    2.232067] ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 2 =
-dma
-16640 in
-                        Inquiry 12 01 00 00 ff 00res
-00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
-
-
-My System: Ubuntu 15.10 64bit
-Kernel: 4.2.0-23-generic
-
---=20
-You are receiving this mail because:
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
