@@ -1,108 +1,146 @@
-From: Paul Menzel <paul.menzel@giantmonkey.de>
-Subject: Re: NULL pointer dereference: IP: [<f828a00c>]
- sr_runtime_suspend+0xc/0x20 [sr_mod]
-Date: Tue, 19 Jan 2016 17:52:53 +0100
-Message-ID: <1453222373.3588.3.camel@giantmonkey.de>
-References: <Pine.LNX.4.44L0.1601191127020.1727-100000@iolanthe.rowland.org>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] drivers/scsi/emcctd: drivers/scsi/emcctd: Client driver
+ implementation for  EMC-Symmetrix GuestOS emulated Cut-Through Device
+Date: Tue, 19 Jan 2016 10:12:26 -0800
+Message-ID: <20160119181226.GB10487@kroah.com>
+References: <82807C73E0BDBB498164AAE7B8F6A1481C61263E@MX105CL01.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-JKWXd0Fwv2CMiHEBay6j"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:38053 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbcASQxI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 11:53:08 -0500
-Received: by mail-wm0-f44.google.com with SMTP id b14so181164698wmb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2016 08:53:07 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.44L0.1601191127020.1727-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <82807C73E0BDBB498164AAE7B8F6A1481C61263E-7nf3+EsVnp4EVr6dp/gChrOUoyqYp7Dr@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Singhal, Maneesh" <Maneesh.Singhal-mb1K0bWo544@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "JBottomley-wo1vFcy6AUs@public.gmane.org" <JBottomley-wo1vFcy6AUs@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Alexandre Rossi <alexandre.rossi@gmail.com>
 
+On Tue, Jan 19, 2016 at 11:58:06AM +0000, Singhal, Maneesh wrote:
+> Hello,
+> Kindly review the following patch for the following driver to be added in SCSI subsystem -
+> 
+> Regards
+> Maneesh
+> 
+> ----------------------------------------------------------------------------
+> >From f3c4b836d6f130b1d7ded618002c8164f8f4a06d Mon Sep 17 00:00:00 2001
+> From: "maneesh.singhal" <maneesh.singhal-mb1K0bWo544@public.gmane.org>
+> Date: Tue, 19 Jan 2016 06:39:35 -0500
+> Subject: [PATCH] [PATCH] drivers/scsi/emcctd: Client driver implementation for
+>  EMC-Symmetrix GuestOS emulated Cut-Through Device.
+> 
+> The patch is a driver implementation  EMC-Symmetrix GuestOS emulated Cut-Through
+> Device. The Cut-Through Device PCI emulation is implemented for GuestOS
+> environments in the HyperMax OS. GuestOS environments allows loading of
+> any x86 compliant operating systems like Linux/FreeBSD etc.
+> 
+> The client driver is a SCSI HBA implementation which interfaces with SCSI
+> midlayer in the north-bound interfaces and connects with the emulated PCI device
+> on the south side.
+> 
+> The PCI vendor ID:product ID for emulated Cut-Through Device is 0x1120:0x1B00.
+> 
+> Signed-off-by: maneesh.singhal <maneesh.singhal-mb1K0bWo544@public.gmane.org>
+> ---
+>  Documentation/scsi/emcctd.txt           |   57 +
+>  MAINTAINERS                             |    9 +
+>  drivers/scsi/Kconfig                    |    1 +
+>  drivers/scsi/Makefile                   |    1 +
+>  drivers/scsi/emcctd/Kconfig             |    7 +
+>  drivers/scsi/emcctd/Makefile            |    1 +
+>  drivers/scsi/emcctd/README              |   10 +
+>  drivers/scsi/emcctd/emc_ctd_interface.h |  386 +++++
+>  drivers/scsi/emcctd/emcctd.c            | 2840 +++++++++++++++++++++++++++++++
+>  drivers/scsi/emcctd/emcctd.h            |  232 +++
+>  10 files changed, 3544 insertions(+)
+>  create mode 100644 Documentation/scsi/emcctd.txt
+>  create mode 100644 drivers/scsi/emcctd/Kconfig
+>  create mode 100644 drivers/scsi/emcctd/Makefile
+>  create mode 100644 drivers/scsi/emcctd/README
+>  create mode 100644 drivers/scsi/emcctd/emc_ctd_interface.h
+>  create mode 100644 drivers/scsi/emcctd/emcctd.c
+>  create mode 100644 drivers/scsi/emcctd/emcctd.h
+> 
+> diff --git a/Documentation/scsi/emcctd.txt b/Documentation/scsi/emcctd.txt
+> new file mode 100644
+> index 0000000..bcafc87
+> --- /dev/null
+> +++ b/Documentation/scsi/emcctd.txt
+> @@ -0,0 +1,56 @@
+> +This file contains brief information about the EMC Cut-Through Driver (emcctd).
+> +The driver is currently maintained by Singhal, Maneesh (maneesh.singhal-mb1K0bWo544@public.gmane.org)
+> +
+> +Last modified: Mon Jan 18 2016 by Maneesh Singhal
+> +
+> +BASICS
+> +
+> +Its a client driver implementation for EMC-Symmetrix GuestOS emulated
+> +Cut-Through Device. The Cut-Through Device PCI emulation is implemented for
+> +GuestOS environments in the HyperMax OS. GuestOS environments allows loading of
+> +any x86 compliant operating systems like Linux/FreeBSD etc.
+> +
+> +The client driver is a SCSI HBA implementation which interfaces with SCSI
+> +midlayer in the north-bound interfaces and connects with the emulated PCI device
+> +on the south side.
+> +
+> +The PCI vendor ID:product ID for emulated Cut-Through Device is 0x1120:0x1B00.
+> +
+> +VERSIONING
+> +
+> +The Version of the driver is maintained as 2.0.0.X, where 2 refers to the CTD
+> +protocol in use, and X refers to the ongoing version of the driver.
+> +
+> +
+> +SYSFS SUPPORT
+> +
+> +The driver creates the directory /sys/module/emcctd and populates it with
+> +version file and a directory for various parameters as described in MODULE
+> +PARAMETERS section.
+> +
+> +PROCFS SUPPORT
+> +
+> +The driver creates the directory /proc/emc and creates files emcctd_stats_x
+> +where 'x' refers to the PCI emulation number this client driver connected to.
+> +These files cotains WWN information and IO statistics for the particular PCI
+> +emulation.
 
---=-JKWXd0Fwv2CMiHEBay6j
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+No, no driver should be adding proc files, please use sysfs or debugfs
+for debugging things.
 
-Dear Alan, dear Erich,
+> +MODULE PARAMETERS
 
+No driver should be using module parameters anymore, again, please use
+the correct interfaces.
 
-Am Dienstag, den 19.01.2016, 11:38 -0500 schrieb Alan Stern:
-> On Tue, 19 Jan 2016, Erich Schubert wrote:
+> +
+> +The supported parameters which could add debuggability or change the runtime
+> +behavior of the driver are as following:
+> +
+> +ctd_debug=0 | 1		Enable driver debug messages(0=off, 1=on)
 
-> > Attached are photos of the Kernel null pointer BUG that I'm observing.
-> >=20
-> > These shots are with 4.4.0-rc8.
-> > As you can see, I have a similar trace to Paul, but the error occurs
-> > one stack frame earlier?
->
-> Yours is only slighly similar to Paul's.  He got an error in=20
-> sr_runtime_suspend, but your error occurs in sd_resume -- a completely
-> different function in a different source file.
+Use the dynamic debugging interface, don't make a custom one just for
+your tiny, single, driver.
 
-if I remember correctly, it happened it different places for me too. In
-the backlog you should see, that Ben gave me a patch to try and then it
-wasn=E2=80=99t triggered as it failed somewhere else.
+> +
+> +max_luns=xx		Specify the maximum number of LUN's per
+> +			host(default=16384)
 
-> > Maybe Alex issue is the same bug, but triggered slightly different or
-> > just the kernel compiled differently.
-> > __rpm_callback, scsi_autopm_put_device, __pm_runtime_resume, sd_probe
-> > is present in all of these traces.
-> >=20
-> > Sorry, I do not have a lot of time right now to help testing or debuggi=
-ng.
->
-> I can't tell what's going wrong without some real debugging.  This
-> means somebody has to build and test a patched kernel.  There are no
-> problems on my computer, so it will have to be one or more of you
-> guys.
+Why can't this be dynamic?  Why do you need a static number?
 
-Could you please attach the debugging patch. Hopefully Alexandre, Erich,
-or I will have some spare time to build an image from it.
+> +
+> +cmd_per_lun=xx		Specify the maximum commands per lun(default=16)
 
-Alan, thank you a lot for being so responsive and helpful!
+Why do you need to change this?  Why can't it be dynamic?
 
+> +
+> +DEBUGGING HINTS
+> +
+> +Debugging code is now compiled in by default but debugging is turned off
+> +with the kernel module parameter debug_flag defaulting to 0.
 
-Thanks,
+Again, no, use the dynamic debug interface, don't make something
+"special" just for a single driver, we spent a lot of time trying to
+unify everything, don't go backwards.
 
-Paul
---=20
-GPG-Schl=C3=BCssel: 33623E9B
-Fingerabdruck =3D 0EB1 649D 4361 D04F 3C70  6F71 4DD7 BF75 3362 3E9B
+thanks,
 
-Giant Monkey Software Engineering GmbH
-
-Brunnenstr. 7D
-10119 Berlin Mitte
-
-Gesch=C3=A4ftsf=C3=BChrer Adrian Fuhrmann, Lion Vollnhals und Paul Menzel
-
-USt-IdNr.: DE281524720
-HRB 139495 B Amtsgericht Charlottenburg
-
---=-JKWXd0Fwv2CMiHEBay6j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJWnmnvAAoJEE3Xv3UzYj6bMUUP/RywY6802gBMHuNrfAUI9P8q
-+hHOLgyoB+RlppUfqmCdLfBLKtMUqWT9IBgFphjGwxbinNqaftF4KxBmJRqlEgpI
-y+cOCK5nyjP4vJpRgSNO1DezaXa/vzirVFK6se62/V9Z6ow6guu9xxZtMS6OeOMA
-6bw5R1qosd4cCmJ2h0s0kol4McpsplZQ7XLKhEALNLkCUmlgMXjqITmRaCX+IBgv
-EsFaqKu0F5eeLtYZfRUgLB58IllvZLfjcxOKRDLDAMApofWc6L07MMzFknfK0ney
-QfNDuiQafNzPJ+2wfwWfXmB492NgnPMz1SXn96RxGSN3+0LsyPRVsGP9R1ldppQX
-OQaGItKA59+wrbCbreHjwogQWbs7fyClmzvx1dj6+9KN2nLyMnlKRAXR/XvAaR/U
-+Q9wr63wn8UG6xcLgPA/TIqGgHRMoz20nK4g8ChL9G/cLK7SH8X0wwP7g22gyvTC
-lMIP7sjunEzfIq1WW+ohqPvilcPEt5Fc5JeV+QgjXBa/LGg4Uhe/xTAiGtkZHeHx
-GP2AeTyGDaEN7iD6L531LNB4oj2HruZudL3eIdsjtiV3gNmr9VGYQsCwbitilplh
-Hy7oBiiLYXbUhHATnuK5KitLvb1QYGhJQABlh/P+ZK792jkBGI9UZ6hgjFJAjLm+
-C02hIzAbTkM37y0uK1zv
-=WMms
------END PGP SIGNATURE-----
-
---=-JKWXd0Fwv2CMiHEBay6j--
-
+greg k-h
