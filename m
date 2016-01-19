@@ -1,203 +1,88 @@
-From: Dmitry Katsubo <dma_k@mail.ru>
-Subject: Re: How to set DPOFUA=0 ?
-Date: Tue, 19 Jan 2016 21:50:03 +0100
-Message-ID: <569EA17B.7050601@mail.ru>
-References: <n5kqb4$k8n$1@ger.gmane.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
+ [sr_mod]
+Date: Tue, 19 Jan 2016 16:08:10 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1601191532210.1312-200000@iolanthe.rowland.org>
+References: <1453222373.3588.3.camel@giantmonkey.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1559625215-770959619-1453237690=:1312"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fallback6.mail.ru ([94.100.181.147]:47510 "EHLO
-	fallback6.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252AbcASVD3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 16:03:29 -0500
-In-Reply-To: <n5kqb4$k8n$1@ger.gmane.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:34802 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932702AbcASVIL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 16:08:11 -0500
+In-Reply-To: <1453222373.3588.3.camel@giantmonkey.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "U.Mutlu" <for-gmane@mutluit.com>
-Cc: linux-scsi@vger.kernel.org
+To: Paul Menzel <paul.menzel@giantmonkey.de>
+Cc: Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org, Alexandre Rossi <alexandre.rossi@gmail.com>
 
-On 2015-12-26 02:25, U.Mutlu wrote:
-> Hi,
-> I have got 2 different submodels of the SSD Samsung 850 Evo 500 GB.
-> The first one has DPOFUA=0, the second one has DPOFUA=1 (see below).
-> That with DPOFUA=0 works fine, but the other with DPOFUA=1 doesn't work
-> after mounting; it reports errors and switches to read-only mount.
-> 
-> It seems Linux has a problem with DPOFUA=1, so then IMO best would be to
-> disable that feature of the device. So, how & where can DPOFUA be set to value 0 ?
-> 
-> Thx
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-I think the issue is related to one I have reported earlier in another
-maillist [1]. The issue was with JMicron USB-to-SATA bridge that
-incorrectly reported that it supports FUA, while in fact it does not.
+---1559625215-770959619-1453237690=:1312
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-[1] http://thread.gmane.org/gmane.linux.usb.general/133281
+On Tue, 19 Jan 2016, Paul Menzel wrote:
 
-You need to find or add a section to drivers/usb/storage/unusual_devs.h
-which e.g. reads as follows (replace 0x???? with bcdDevice value from
-lsusb output):
+> Could you please attach the debugging patch. Hopefully Alexandre, Erich,
+> or I will have some spare time to build an image from it.
 
-UNUSUAL_DEV(  0x357d, 0x7788, 0x????, 0x????,
-		"JMicron",
-		"USB to ATA/ATAPI Bridge",
-		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-		US_FL_BROKEN_FUA ),
+Actually, this patch is an attempt at a fix.  After looking more 
+carefully at your log pictures, I realized what the problem must be.  
 
-Recompile the kernel, reboot & enjoy :)
+It's too bad nobody was able to capture a log where the error 
+occurred in sr_runtime_suspend, though -- all the logs in the bug 
+report show sd_runtime_resume.
 
-> ############################################################################
-> # uname -a
-> Linux panther 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt20-1+deb8u1 (2015-12-14) x86_64 GNU/Linux
-> 
-> ############################################################################
-> Dec 26 00:45:38 panther vmunix: [ 2337.193164] usb 4-1: new SuperSpeed USB device number 2 using xhci_hcd
-> Dec 26 00:45:38 panther vmunix: [ 2337.212852] usb 4-1: New USB device found, idVendor=357d, idProduct=7788
-> Dec 26 00:45:38 panther vmunix: [ 2337.212861] usb 4-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> Dec 26 00:45:38 panther vmunix: [ 2337.212866] usb 4-1: Product: USB to ATA/ATAPI Bridge
-> Dec 26 00:45:38 panther vmunix: [ 2337.212870] usb 4-1: Manufacturer: JMicron
-> Dec 26 00:45:38 panther vmunix: [ 2337.212874] usb 4-1: SerialNumber: 321AE8171482926
-> Dec 26 00:45:38 panther vmunix: [ 2337.245338] usb-storage 4-1:1.0: USB Mass Storage device detected
-> Dec 26 00:45:38 panther vmunix: [ 2337.245591] scsi2 : usb-storage 4-1:1.0
-> Dec 26 00:45:38 panther vmunix: [ 2337.245770] usbcore: registered new interface driver usb-storage
-> Dec 26 00:45:39 panther vmunix: [ 2338.244729] scsi 2:0:0:0: Direct-Access Samsung SSD 850 EVO 500G 0114 PQ: 0 ANSI: 6
-> Dec 26 00:45:39 panther vmunix: [ 2338.245308] sd 2:0:0:0: Attached scsi generic sg2 type 0
-> Dec 26 00:45:39 panther vmunix: [ 2338.247115] sd 2:0:0:0: [sdb] Spinning up disk...
-> Dec 26 00:45:49 panther vmunix: [ 2339.251034] .........
-> Dec 26 00:45:52 panther vmunix: [ 2348.278894] ....ready
-> Dec 26 00:45:52 panther vmunix: [ 2351.288429] sd 2:0:0:0: [sdb] 976773168 512-byte logical blocks: (500 GB/465 GiB)
-> Dec 26 00:45:52 panther vmunix: [ 2351.288953] sd 2:0:0:0: [sdb] Write Protect is off
-> Dec 26 00:45:52 panther vmunix: [ 2351.288959] sd 2:0:0:0: [sdb] Mode Sense: 47 00 10 08
-> Dec 26 00:45:52 panther vmunix: [ 2351.289447] sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
-> Dec 26 00:45:52 panther vmunix: [ 2351.293763] sdb: sdb1 sdb2 sdb3
-> Dec 26 00:45:52 panther vmunix: [ 2351.295862] sd 2:0:0:0: [sdb] Attached SCSI disk
-> Dec 26 00:47:02 panther vmunix: [ 2421.091552] EXT4-fs (sdb1): mounted filesystem with ordered data mode. Opts: (null)
-> Dec 26 00:47:09 panther vmunix: [ 2428.394003] sd 2:0:0:0: [sdb] Invalid command failure
-> Dec 26 00:47:09 panther vmunix: [ 2428.394013] sd 2:0:0:0: [sdb]
-> Dec 26 00:47:09 panther vmunix: [ 2428.394017] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> Dec 26 00:47:09 panther vmunix: [ 2428.394021] sd 2:0:0:0: [sdb]
-> Dec 26 00:47:09 panther vmunix: [ 2428.394024] Sense Key : Illegal Request [current]
-> Dec 26 00:47:09 panther vmunix: [ 2428.394030] sd 2:0:0:0: [sdb]
-> Dec 26 00:47:09 panther vmunix: [ 2428.394034] Add. Sense: Invalid field in cdb
-> Dec 26 00:47:09 panther vmunix: [ 2428.394038] sd 2:0:0:0: [sdb] CDB:
-> Dec 26 00:47:09 panther vmunix: [ 2428.394040] Write(10): 2a 08 02 04 08 20 00 00 08 00
-> Dec 26 00:47:09 panther vmunix: [ 2428.394054] end_request: critical target error, dev sdb, sector 33818656
-> Dec 26 00:47:09 panther vmunix: [ 2428.394059] end_request: critical target error, dev sdb, sector 33818656
-> Dec 26 00:47:09 panther vmunix: [ 2428.394120] Aborting journal on device sdb1-8.
-> Dec 26 00:47:09 panther vmunix: [ 2428.471535] EXT4-fs error (device sdb1): ext4_journal_check_start:56: Detected aborted journal
-> Dec 26 00:47:09 panther vmunix: [ 2428.471547] EXT4-fs (sdb1): Remounting filesystem read-only
-> 
-> 
-> ############################################################################
-> # sdparm -a --long /dev/sda
->     /dev/sda: ATA       Samsung SSD 850   1B6Q
->     Direct access device specific parameters: WP=0  DPOFUA=0
-> Read write error recovery [rw] mode page:
->   AWRE        1  [cha: n, def:  1]  Automatic write reallocation enabled
->   ARRE        0  [cha: n, def:  0]  Automatic read reallocation enabled
->   TB          0  [cha: n, def:  0]  Transfer block
->   RC          0  [cha: n, def:  0]  Read continuous
->   EER         0  [cha: n, def:  0]  Enable early recovery
->   PER         0  [cha: n, def:  0]  Post error
->   DTE         0  [cha: n, def:  0]  Data terminate on error
->   DCR         0  [cha: n, def:  0]  Disable correction
->   RRC         0  [cha: n, def:  0]  Read retry count
->   COR_S       0  [cha: n, def:  0]  Correction span (obsolete)
->   HOC         0  [cha: n, def:  0]  Head offset count (obsolete)
->   DSOC        0  [cha: n, def:  0]  Data strobe offset count (obsolete)
->   LBPERE      0  [cha: n, def:  0]  Logical block provisioning error reporting enabled
->   WRC         0  [cha: n, def:  0]  Write retry count
->   RTL         0  [cha: n, def:  0]  Recovery time limit (ms)
-> Caching (SBC) [ca] mode page:
->   IC          0  [cha: n, def:  0]  Initiator control
->   ABPF        0  [cha: n, def:  0]  Abort pre-fetch
->   CAP         0  [cha: n, def:  0]  Caching analysis permitted
->   DISC        0  [cha: n, def:  0]  Discontinuity
->   SIZE        0  [cha: n, def:  0]  Size enable
->   WCE         1  [cha: y, def:  1]  Write cache enable
->   MF          0  [cha: n, def:  0]  Multiplication factor
->   RCD         0  [cha: n, def:  0]  Read cache disable
->   DRRP        0  [cha: n, def:  0]  Demand read retention priority
->   WRP         0  [cha: n, def:  0]  Write retention priority
->   DPTL        0  [cha: n, def:  0]  Disable pre-fetch transfer length
->   MIPF        0  [cha: n, def:  0]  Minimum pre-fetch
->   MAPF        0  [cha: n, def:  0]  Maximum pre-fetch
->   MAPFC       0  [cha: n, def:  0]  Maximum pre-fetch ceiling
->   FSW         0  [cha: n, def:  0]  Force sequential write
->   LBCSS       0  [cha: n, def:  0]  Logical block cache segment size
->   DRA         0  [cha: n, def:  0]  Disable read ahead
->   SYNC_PROG   0  [cha: n, def:  0]  Synchronous cache progress indication
->   NV_DIS      0  [cha: n, def:  0]  Non-volatile cache disable
->   NCS         0  [cha: n, def:  0]  Number of cache segments
->   CSS         0  [cha: n, def:  0]  Cache segment size
-> Control [co] mode page:
->   TST         0  [cha: n, def:  0]  Task set type
->   TMF_ONLY    0  [cha: n, def:  0]  Task management functions only
->   DPICZ       0  [cha: n, def:  0]  Disable protection information check if protect field zero
->   D_SENSE     0  [cha: n, def:  0]  Descriptor format sense data
->   GLTSD       1  [cha: n, def:  1]  Global logging target save disable
->   RLEC        0  [cha: n, def:  0]  Report log exception condition
->   QAM         0  [cha: n, def:  0]  Queue algorithm modifier
->   NUAR        0  [cha: n, def:  0]  No unit attention on release
->   QERR        0  [cha: n, def:  0]  Queue error management
->   RAC         0  [cha: n, def:  0]  Report a check
->   UA_INTLCK   0  [cha: n, def:  0]  Unit attention interlocks control
->   SWP         0  [cha: n, def:  0]  Software write protect
->   ATO         0  [cha: n, def:  0]  Application tag owner
->   TAS         0  [cha: n, def:  0]  Task aborted status
->   ATMPE       0  [cha: n, def:  0]  Application tag mode page enabled
->   RWWP        0  [cha: n, def:  0]  Reject write without protection
->   AUTOLOAD    0  [cha: n, def:  0]  Autoload mode
->   BTP        -1  [cha: n, def: -1]  Busy timeout period (100us)
->   ESTCT      30  [cha: n, def: 30]  Extended self test completion time (sec)
-> 
-> 
-> ############################################################################
-> # sdparm -a --long /dev/sdb
->     /dev/sdb: Samsung   SSD 850 EVO 500G  0114
->     Direct access device specific parameters: WP=0  DPOFUA=1
-> Caching (SBC) [ca] mode page:
->   IC          0  [cha: n, def:  0, sav:  0]  Initiator control
->   ABPF        0  [cha: n, def:  0, sav:  0]  Abort pre-fetch
->   CAP         0  [cha: n, def:  0, sav:  0]  Caching analysis permitted
->   DISC        1  [cha: n, def:  1, sav:  1]  Discontinuity
->   SIZE        0  [cha: n, def:  0, sav:  0]  Size enable
->   WCE         1  [cha: n, def:  1, sav:  1]  Write cache enable
->   MF          0  [cha: n, def:  0, sav:  0]  Multiplication factor
->   RCD         0  [cha: n, def:  0, sav:  0]  Read cache disable
->   DRRP        0  [cha: n, def:  0, sav:  0]  Demand read retention priority
->   WRP         0  [cha: n, def:  0, sav:  0]  Write retention priority
->   DPTL       -1  [cha: n, def: -1, sav: -1]  Disable pre-fetch transfer length
->   MIPF        0  [cha: n, def:  0, sav:  0]  Minimum pre-fetch
->   MAPF       -1  [cha: n, def: -1, sav: -1]  Maximum pre-fetch
->   MAPFC      -1  [cha: n, def: -1, sav: -1]  Maximum pre-fetch ceiling
->   FSW         0  [cha: n, def:  0, sav:  0]  Force sequential write
->   LBCSS       0  [cha: n, def:  0, sav:  0]  Logical block cache segment size
->   DRA         0  [cha: n, def:  0, sav:  0]  Disable read ahead
->   SYNC_PROG   0  [cha: n, def:  0, sav:  0]  Synchronous cache progress indication
->   NV_DIS      0  [cha: n, def:  0, sav:  0]  Non-volatile cache disable
->   NCS       255  [cha: n, def:255, sav:255]  Number of cache segments
->   CSS         0  [cha: n, def:  0, sav:  0]  Cache segment size
-> Power condition [po] mode page:
->   PM_BG       0  [cha: n, def:  0, sav:  0]  Power management, background functions, precedence
->   STANDBY_Y   0  [cha: n, def:  0, sav:  0]  Standby_y timer enable
->   IDLE_C      0  [cha: n, def:  0, sav:  0]  Idle_c timer enable
->   IDLE_B      0  [cha: n, def:  0, sav:  0]  Idle_b timer enable
->   IDLE        0  [cha: n, def:  0, sav:  0]  Idle_a timer enable
->   STANDBY     0  [cha: y, def:  1, sav:  0]  Standby_z timer enable
->   ICT         0  [cha: n, def:  0, sav:  0]  Idle_a condition timer (100 ms)
->   SCT         0  [cha: y, def:18000, sav:  0]  Standby_z condition timer (100 ms)
->   IBCT        0  [cha: n, def:  0, sav:  0]  Idle_b condition timer (100 ms)
->   ICCT        0  [cha: n, def:  0, sav:  0]  Idle_c condition timer (100 ms)
->   SYCT        0  [cha: n, def:  0, sav:  0]  Standby_y condition timer (100 ms)
->   CCF_IDLE    0  [cha: n, def:  0, sav:  0]  check condition on transition from idle
->   CCF_STAND   0  [cha: n, def:  0, sav:  0]  check condition on transition from standby
->   CCF_STOPP   0  [cha: n, def:  0, sav:  0]  check condition on transition from stopped
-> 
-> ############################################################################
+> Alan, thank you a lot for being so responsive and helpful!
 
+You're welcome.
 
--- 
-With best regards,
-Dmitry
+Alan Stern
+
+---1559625215-770959619-1453237690=:1312
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=sd-sr-rpm-fix
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44L0.1601191608100.1312@iolanthe.rowland.org>
+Content-Description: 
+Content-Disposition: attachment; filename=sd-sr-rpm-fix
+
+IGRyaXZlcnMvc2NzaS9zZC5jIHwgICAgNyArKysrKy0tDQogZHJpdmVycy9z
+Y3NpL3NyLmMgfCAgICA0ICsrKysNCiAyIGZpbGVzIGNoYW5nZWQsIDkgaW5z
+ZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCg0KSW5kZXg6IHVzYi00LjQv
+ZHJpdmVycy9zY3NpL3NkLmMNCj09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi0t
+LSB1c2ItNC40Lm9yaWcvZHJpdmVycy9zY3NpL3NkLmMNCisrKyB1c2ItNC40
+L2RyaXZlcnMvc2NzaS9zZC5jDQpAQCAtMzI3NSw4ICszMjc1LDggQEAgc3Rh
+dGljIGludCBzZF9zdXNwZW5kX2NvbW1vbihzdHJ1Y3QgZGV2aQ0KIAlzdHJ1
+Y3Qgc2NzaV9kaXNrICpzZGtwID0gZGV2X2dldF9kcnZkYXRhKGRldik7DQog
+CWludCByZXQgPSAwOw0KIA0KLQlpZiAoIXNka3ApDQotCQlyZXR1cm4gMDsJ
+LyogdGhpcyBjYW4gaGFwcGVuICovDQorCWlmICghc2RrcCkJLyogRS5nLjog
+cnVudGltZSBzdXNwZW5kIGZvbGxvd2luZyBzZF9yZW1vdmUoKSAqLw0KKwkJ
+cmV0dXJuIDA7DQogDQogCWlmIChzZGtwLT5XQ0UgJiYgc2RrcC0+bWVkaWFf
+cHJlc2VudCkgew0KIAkJc2RfcHJpbnRrKEtFUk5fTk9USUNFLCBzZGtwLCAi
+U3luY2hyb25pemluZyBTQ1NJIGNhY2hlXG4iKTsNCkBAIC0zMzE1LDYgKzMz
+MTUsOSBAQCBzdGF0aWMgaW50IHNkX3Jlc3VtZShzdHJ1Y3QgZGV2aWNlICpk
+ZXYpDQogew0KIAlzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwID0gZGV2X2dldF9k
+cnZkYXRhKGRldik7DQogDQorCWlmICghc2RrcCkJLyogRS5nLjogcnVudGlt
+ZSByZXN1bWUgYXQgdGhlIHN0YXJ0IG9mIHNkX3Byb2JlKCkgKi8NCisJCXJl
+dHVybiAwOw0KKw0KIAlpZiAoIXNka3AtPmRldmljZS0+bWFuYWdlX3N0YXJ0
+X3N0b3ApDQogCQlyZXR1cm4gMDsNCiANCkluZGV4OiB1c2ItNC40L2RyaXZl
+cnMvc2NzaS9zci5jDQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQotLS0gdXNi
+LTQuNC5vcmlnL2RyaXZlcnMvc2NzaS9zci5jDQorKysgdXNiLTQuNC9kcml2
+ZXJzL3Njc2kvc3IuYw0KQEAgLTE0NCw2ICsxNDQsOSBAQCBzdGF0aWMgaW50
+IHNyX3J1bnRpbWVfc3VzcGVuZChzdHJ1Y3QgZGV2DQogew0KIAlzdHJ1Y3Qg
+c2NzaV9jZCAqY2QgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsNCiANCisJaWYg
+KCFjZCkJLyogRS5nLjogcnVudGltZSBzdXNwZW5kIGZvbGxvd2luZyBzcl9y
+ZW1vdmUoKSAqLw0KKwkJcmV0dXJuIDA7DQorDQogCWlmIChjZC0+bWVkaWFf
+cHJlc2VudCkNCiAJCXJldHVybiAtRUJVU1k7DQogCWVsc2UNCkBAIC05ODUs
+NiArOTg4LDcgQEAgc3RhdGljIGludCBzcl9yZW1vdmUoc3RydWN0IGRldmlj
+ZSAqZGV2KQ0KIAlzY3NpX2F1dG9wbV9nZXRfZGV2aWNlKGNkLT5kZXZpY2Up
+Ow0KIA0KIAlkZWxfZ2VuZGlzayhjZC0+ZGlzayk7DQorCWRldl9zZXRfZHJ2
+ZGF0YShkZXYsIE5VTEwpOw0KIA0KIAltdXRleF9sb2NrKCZzcl9yZWZfbXV0
+ZXgpOw0KIAlrcmVmX3B1dCgmY2QtPmtyZWYsIHNyX2tyZWZfcmVsZWFzZSk7
+DQo=
+---1559625215-770959619-1453237690=:1312--
