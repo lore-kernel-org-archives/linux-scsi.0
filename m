@@ -1,111 +1,62 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 19/23] scsi_dh: add 'rescan' callback
-Date: Tue, 19 Jan 2016 09:22:03 +0100
-Message-ID: <1453191727-3626-20-git-send-email-hare@suse.de>
+Subject: [PATCHv4 12/23] scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
+Date: Tue, 19 Jan 2016 09:21:56 +0100
+Message-ID: <1453191727-3626-13-git-send-email-hare@suse.de>
 References: <1453191727-3626-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60703 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60723 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757453AbcASIWj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jan 2016 03:22:39 -0500
+	id S1757424AbcASIWg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jan 2016 03:22:36 -0500
 In-Reply-To: <1453191727-3626-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-If a device needs to be rescanned the device_handler might need
-to be rechecked, too.
-So add a 'rescan' callback to the device handler and call it
-upon scsi_rescan_device().
+The 'relative port' field is not used, and might get stale when
+the port group changes. So remove the field altogether.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++++++
- drivers/scsi/scsi_lib.c                    | 1 +
- drivers/scsi/scsi_scan.c                   | 8 +++++++-
- include/scsi/scsi_dh.h                     | 1 +
- 4 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 7f28115..57856d6 100644
+index 10287ac..b73a7ed 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1025,6 +1025,13 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+@@ -87,7 +87,6 @@ struct alua_port_group {
+ struct alua_dh_data {
+ 	struct alua_port_group	*pg;
+ 	int			group_id;
+-	int			rel_port;
+ 	struct scsi_device	*sdev;
+ 	activate_complete	callback_fn;
+ 	void			*callback_data;
+@@ -325,12 +324,10 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 			return SCSI_DH_NOMEM;
+ 		return SCSI_DH_DEV_UNSUPP;
+ 	}
+-	h->rel_port = rel_port;
+-
+ 	sdev_printk(KERN_INFO, sdev,
+ 		    "%s: device %s port group %02x rel port %02x\n",
+ 		    ALUA_DH_NAME, h->pg->device_id_str,
+-		    h->group_id, h->rel_port);
++		    h->group_id, rel_port);
  
+ 	return alua_rtpg(sdev, h->pg);
  }
+@@ -766,7 +763,6 @@ static int alua_bus_attach(struct scsi_device *sdev)
+ 	if (!h)
+ 		return -ENOMEM;
+ 	h->pg = NULL;
+-	h->rel_port = -1;
+ 	h->sdev = sdev;
  
-+static void alua_rescan(struct scsi_device *sdev)
-+{
-+	struct alua_dh_data *h = sdev->handler_data;
-+
-+	alua_initialize(sdev, h);
-+}
-+
- /*
-  * alua_bus_attach - Attach device handler
-  * @sdev: device to be attached to
-@@ -1085,6 +1092,7 @@ static struct scsi_device_handler alua_dh = {
- 	.prep_fn = alua_prep_fn,
- 	.check_sense = alua_check_sense,
- 	.activate = alua_activate,
-+	.rescan = alua_rescan,
- 	.set_params = alua_set_params,
- };
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fa6b2c4..d46193a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2699,6 +2699,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- 		envp[idx++] = "SDEV_MEDIA_CHANGE=1";
- 		break;
- 	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
-+		scsi_rescan_device(&sdev->sdev_gendev);
- 		envp[idx++] = "SDEV_UA=INQUIRY_DATA_HAS_CHANGED";
- 		break;
- 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index af60709..4d61604 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -43,6 +43,7 @@
- #include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_dh.h>
- #include <scsi/scsi_eh.h>
- 
- #include "scsi_priv.h"
-@@ -1519,9 +1520,14 @@ EXPORT_SYMBOL(scsi_add_device);
- 
- void scsi_rescan_device(struct device *dev)
- {
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
- 	device_lock(dev);
- 
--	scsi_attach_vpd(to_scsi_device(dev));
-+	scsi_attach_vpd(sdev);
-+
-+	if (sdev->handler && sdev->handler->rescan)
-+		sdev->handler->rescan(sdev);
- 
- 	if (dev->driver && try_module_get(dev->driver->owner)) {
- 		struct scsi_driver *drv = to_scsi_driver(dev->driver);
-diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 7e184c6..c7bba2b 100644
---- a/include/scsi/scsi_dh.h
-+++ b/include/scsi/scsi_dh.h
-@@ -71,6 +71,7 @@ struct scsi_device_handler {
- 	int (*activate)(struct scsi_device *, activate_complete, void *);
- 	int (*prep_fn)(struct scsi_device *, struct request *);
- 	int (*set_params)(struct scsi_device *, const char *);
-+	void (*rescan)(struct scsi_device *);
- };
- 
- #ifdef CONFIG_SCSI_DH
+ 	err = alua_initialize(sdev, h);
 -- 
 1.8.5.6
 
