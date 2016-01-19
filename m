@@ -1,185 +1,60 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 12/15] megaraid_sas: MFI adapter's OCR changes
-Date: Tue, 19 Jan 2016 15:22:57 +0100
-Message-ID: <569E46C1.7060104@redhat.com>
-References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
- <1450445228-26571-13-git-send-email-Sumit.Saxena@avagotech.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
+ recognized correctly
+Date: Tue, 19 Jan 2016 14:33:15 +0000
+Message-ID: <bug-98171-11613-JMOApdD51k@https.bugzilla.kernel.org/>
+References: <bug-98171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58020 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:39546 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753558AbcASOXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jan 2016 09:23:00 -0500
-In-Reply-To: <1450445228-26571-13-git-send-email-Sumit.Saxena@avagotech.com>
+	id S1754602AbcASOdT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 09:33:19 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id F34912043C
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2016 14:33:17 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 08A3620452
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2016 14:33:17 +0000 (UTC)
+In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>, jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com
+To: linux-scsi@vger.kernel.org
 
-On 18.12.2015 14:27, Sumit Saxena wrote:
-> Optimized MFI adapters' OCR path, particularly megasas_wait_for_outstanding() function.
->
-> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |  104 +++++++++++++++--------------
->  1 files changed, 54 insertions(+), 50 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 5eaf6fd..cc843d6 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -2456,15 +2456,19 @@ void megasas_sriov_heartbeat_handler(unsigned long instance_addr)
->   */
->  static int megasas_wait_for_outstanding(struct megasas_instance *instance)
->  {
-> -	int i;
-> +	int i, sl, outstanding;
->  	u32 reset_index;
->  	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
->  	unsigned long flags;
->  	struct list_head clist_local;
->  	struct megasas_cmd *reset_cmd;
->  	u32 fw_state;
-> -	u8 kill_adapter_flag;
->  
-> +	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
-> +		dev_info(&instance->pdev->dev, "%s:%d HBA is killed.\n",
-> +		__func__, __LINE__);
-> +		return FAILED;
-> +	}
->  
->  	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
->  
-> @@ -2521,7 +2525,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
->  	}
->  
->  	for (i = 0; i < resetwaittime; i++) {
-> -		int outstanding = atomic_read(&instance->fw_outstanding);
-> +		outstanding = atomic_read(&instance->fw_outstanding);
->  
->  		if (!outstanding)
->  			break;
-> @@ -2540,65 +2544,65 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
->  	}
->  
->  	i = 0;
-> -	kill_adapter_flag = 0;
-> +	outstanding = atomic_read(&instance->fw_outstanding);
-> +	fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
-> +
-> +	if ((!outstanding && (fw_state == MFI_STATE_OPERATIONAL)))
-> +		goto no_outstanding;
-> +
-> +	if (instance->disableOnlineCtrlReset)
-> +		goto kill_hba_and_failed;
->  	do {
-> -		fw_state = instance->instancet->read_fw_status_reg(
-> -					instance->reg_set) & MFI_STATE_MASK;
-> -		if ((fw_state == MFI_STATE_FAULT) &&
-> -			(instance->disableOnlineCtrlReset == 0)) {
-> -			if (i == 3) {
-> -				kill_adapter_flag = 2;
-> -				break;
-> -			}
-> +		if ((fw_state == MFI_STATE_FAULT) || atomic_read(&instance->fw_outstanding)) {
-> +			dev_info(&instance->pdev->dev,
-> +				"%s:%d waiting_for_outstanding: before issue OCR. FW state = 0x%x, oustanding 0x%x\n",
-> +				__func__, __LINE__, fw_state, atomic_read(&instance->fw_outstanding));
-> +			if (i == 3)
-> +				goto kill_hba_and_failed;
->  			megasas_do_ocr(instance);
-> -			kill_adapter_flag = 1;
->  
-> -			/* wait for 1 secs to let FW finish the pending cmds */
-> -			msleep(1000);
-> +			if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
-> +				dev_info(&instance->pdev->dev, "%s:%d OCR failed and HBA is killed.\n",
-> +				__func__, __LINE__);
-> +				return FAILED;
-> +			}
-> +			dev_info(&instance->pdev->dev, "%s:%d waiting_for_outstanding: after issue OCR.\n",
-> +				__func__, __LINE__);
-> +
-> +			for (sl = 0; sl < 10; sl++)
-> +				msleep(500);
+https://bugzilla.kernel.org/show_bug.cgi?id=3D98171
 
-		ssleep(5); ?
+J=C3=BCrgen H=C3=B6rmann <info@juergenhoermann.de> changed:
 
-> +
-> +			outstanding = atomic_read(&instance->fw_outstanding);
-> +
-> +			fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
-> +			if ((!outstanding && (fw_state == MFI_STATE_OPERATIONAL)))
-> +				goto no_outstanding;
->  		}
->  		i++;
->  	} while (i <= 3);
->  
-> -	if (atomic_read(&instance->fw_outstanding) && !kill_adapter_flag) {
-> -		if (instance->disableOnlineCtrlReset == 0) {
-> -			megasas_do_ocr(instance);
-> +no_outstanding:
->  
-> -			/* wait for 5 secs to let FW finish the pending cmds */
-> -			for (i = 0; i < wait_time; i++) {
-> -				int outstanding =
-> -					atomic_read(&instance->fw_outstanding);
-> -				if (!outstanding)
-> -					return SUCCESS;
-> -				msleep(1000);
-> -			}
-> -		}
-> -	}
-> +	dev_info(&instance->pdev->dev, "%s:%d no more pending commands remain after reset handling.\n",
-> +		__func__, __LINE__);
-> +	return SUCCESS;
->  
-> -	if (atomic_read(&instance->fw_outstanding) ||
-> -					(kill_adapter_flag == 2)) {
-> -		dev_notice(&instance->pdev->dev, "pending cmds after reset\n");
-> -		/*
-> -		 * Send signal to FW to stop processing any pending cmds.
-> -		 * The controller will be taken offline by the OS now.
-> -		 */
-> -		if ((instance->pdev->device ==
-> -			PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
-> -			(instance->pdev->device ==
-> -			PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-> -			writel(MFI_STOP_ADP,
-> -				&instance->reg_set->doorbell);
-> -		} else {
-> -			writel(MFI_STOP_ADP,
-> -				&instance->reg_set->inbound_doorbell);
-> -		}
-> +kill_hba_and_failed:
-> +
-> +	fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
-> +	if (instance->disableOnlineCtrlReset ||
-> +		atomic_read(&instance->fw_outstanding) ||
-> +		(fw_state == MFI_STATE_FAULT)) {
+           What    |Removed                     |Added
+-----------------------------------------------------------------------=
+-----
+                 CC|                            |info@juergenhoermann.d=
+e
 
-You have tested all that many times before (fw_state etc.), so when you after all that
-have arrived at kill_hba_and_failed: please just kill the HBA and return FAILED.
+--- Comment #5 from J=C3=BCrgen H=C3=B6rmann <info@juergenhoermann.de> =
+---
+Having this issue too.
+My apt database got corrupted while installing update packages.
 
-> +		/* Reset not supported, kill adapter */
-> +		dev_info(&instance->pdev->dev, "%s:%d killing adapter scsi%d"
-> +			" disableOnlineCtrlReset %d fw_outstanding %d \n",
-> +			__func__, __LINE__, instance->host->host_no, instance->disableOnlineCtrlReset,
-> +			atomic_read(&instance->fw_outstanding));
->  		megasas_dump_pending_frames(instance);
-> -		atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
-> -		return FAILED;
-> +		megaraid_sas_kill_hba(instance);
->  	}
->  
-> -	dev_notice(&instance->pdev->dev, "no pending cmds after reset\n");
-> -
-> -	return SUCCESS;
-> +	return FAILED;
->  }
->  
->  /**
+[    2.232046] ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0=
+x6
+[    2.232054] ata14.00: irq_stat 0x40000001
+[    2.232067] ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 2 =
+dma
+16640 in
+                        Inquiry 12 01 00 00 ff 00res
+00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
 
+
+My System: Ubuntu 15.10 64bit
+Kernel: 4.2.0-23-generic
+
+--=20
+You are receiving this mail because:
+You are watching the assignee of the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
