@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 02/23] scsi_dh_alua: separate out alua_stpg()
-Date: Tue, 19 Jan 2016 09:21:46 +0100
-Message-ID: <1453191727-3626-3-git-send-email-hare@suse.de>
+Subject: [PATCHv4 04/23] scsi_dh_alua: call alua_rtpg() if stpg fails
+Date: Tue, 19 Jan 2016 09:21:48 +0100
+Message-ID: <1453191727-3626-5-git-send-email-hare@suse.de>
 References: <1453191727-3626-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60675 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60671 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757360AbcASIWe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751786AbcASIWe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 19 Jan 2016 03:22:34 -0500
 In-Reply-To: <1453191727-3626-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,137 +14,29 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Separate out SET TARGET PORT GROUP functionality into a separate
-function alua_stpg().
+If the call to SET TARGET PORT GROUPS fails we have no idea what
+state the array is left in, so we need to issue a call to
+REPORT TARGET PORT GROUPS in these cases.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 95 +++++++++++++++++++-----------
- 1 file changed, 61 insertions(+), 34 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index df71e85..7c66e4a 100644
+index 609691f..ba3d23e 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -579,6 +579,65 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- }
- 
- /*
-+ * alua_stpg - Issue a SET TARGET GROUP STATES command
-+ *
-+ * Issue a SET TARGET GROUP STATES command and evaluate the
-+ * response. Returns SCSI_DH_RETRY if the target port group
-+ * state is found to be in 'transitioning'.
-+ * If SCSI_DH_OK is returned the passed-in 'fn' function
-+ * this function will take care of executing 'fn'.
-+ * Otherwise 'fn' should be executed by the caller with the
-+ * returned error code.
-+ */
-+static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h,
-+			  activate_complete fn, void *data)
-+{
-+	int err = SCSI_DH_OK;
-+	int stpg = 0;
-+
-+	if (!(h->tpgs & TPGS_MODE_EXPLICIT))
-+		/* Only implicit ALUA supported */
-+		goto out;
-+
-+	switch (h->state) {
-+	case TPGS_STATE_NONOPTIMIZED:
-+		stpg = 1;
-+		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
-+		    !h->pref &&
-+		    (h->tpgs & TPGS_MODE_IMPLICIT))
-+			stpg = 0;
-+		break;
-+	case TPGS_STATE_STANDBY:
-+	case TPGS_STATE_UNAVAILABLE:
-+		stpg = 1;
-+		break;
-+	case TPGS_STATE_OFFLINE:
-+		err = SCSI_DH_IO;
-+		break;
-+	case TPGS_STATE_TRANSITIONING:
-+		err = SCSI_DH_RETRY;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (stpg) {
-+		h->callback_fn = fn;
-+		h->callback_data = data;
-+		err = submit_stpg(h);
-+		if (err != SCSI_DH_OK)
-+			h->callback_fn = h->callback_data = NULL;
-+		else
-+			fn = NULL;
-+	}
-+out:
-+	if (fn)
-+		fn(data, err);
-+
-+	return err;
-+}
-+
-+/*
-  * alua_initialize - Initialize ALUA state
-  * @sdev: the device to be initialized
-  *
-@@ -655,7 +714,6 @@ static int alua_activate(struct scsi_device *sdev,
- {
- 	struct alua_dh_data *h = sdev->handler_data;
- 	int err = SCSI_DH_OK;
--	int stpg = 0;
- 
- 	err = alua_rtpg(sdev, h, 1);
- 	if (err != SCSI_DH_OK)
-@@ -664,41 +722,10 @@ static int alua_activate(struct scsi_device *sdev,
- 	if (optimize_stpg)
+@@ -678,6 +678,8 @@ static int alua_activate(struct scsi_device *sdev,
  		h->flags |= ALUA_OPTIMIZE_STPG;
  
--	if (h->tpgs & TPGS_MODE_EXPLICIT) {
--		switch (h->state) {
--		case TPGS_STATE_NONOPTIMIZED:
--			stpg = 1;
--			if ((h->flags & ALUA_OPTIMIZE_STPG) &&
--			    (!h->pref) &&
--			    (h->tpgs & TPGS_MODE_IMPLICIT))
--				stpg = 0;
--			break;
--		case TPGS_STATE_STANDBY:
--		case TPGS_STATE_UNAVAILABLE:
--			stpg = 1;
--			break;
--		case TPGS_STATE_OFFLINE:
--			err = SCSI_DH_IO;
--			break;
--		case TPGS_STATE_TRANSITIONING:
--			err = SCSI_DH_RETRY;
--			break;
--		default:
--			break;
--		}
--	}
--
--	if (stpg) {
--		h->callback_fn = fn;
--		h->callback_data = data;
--		err = submit_stpg(h);
--		if (err == SCSI_DH_OK)
--			return 0;
--		h->callback_fn = h->callback_data = NULL;
--	}
-+	err = alua_stpg(sdev, h, fn, data);
- 
+ 	err = alua_stpg(sdev, h);
++	if (err == SCSI_DH_RETRY)
++		err = alua_rtpg(sdev, h, 1);
  out:
--	if (fn)
-+	if (err != SCSI_DH_OK && fn)
+ 	if (fn)
  		fn(data, err);
- 	return 0;
- }
 -- 
 1.8.5.6
 
