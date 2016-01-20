@@ -1,30 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 04/17] be2iscsi: Fix to synchronize tag allocation
- using spin_lock
-Date: Wed, 20 Jan 2016 11:14:16 +0100
-Message-ID: <569F5DF8.5010104@suse.de>
+Subject: Re: [PATCH v4 10/17] be2iscsi: Add FW config validation
+Date: Wed, 20 Jan 2016 11:15:48 +0100
+Message-ID: <569F5E54.8030404@suse.de>
 References: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1453279261-659-5-git-send-email-jitendra.bhivare@avagotech.com>
+ <1453279261-659-11-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39165 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39476 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934350AbcATKOS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 05:14:18 -0500
-In-Reply-To: <1453279261-659-5-git-send-email-jitendra.bhivare@avagotech.com>
+	id S933611AbcATKPu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2016 05:15:50 -0500
+In-Reply-To: <1453279261-659-11-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
 On 01/20/2016 09:40 AM, Jitendra Bhivare wrote:
-> alloc_mcc_tag needs to be done under mcc_lock.
+> System crash in I+T card personality
+>=20
+> Fix to add validation for ULP in initiator mode, physical port number=
+,
+> and supported queue, icd, cid counts.
 >=20
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 > ---
->  drivers/scsi/be2iscsi/be_cmds.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/scsi/be2iscsi/be_main.c |   2 +-
+>  drivers/scsi/be2iscsi/be_main.h |   2 +
+>  drivers/scsi/be2iscsi/be_mgmt.c | 188 ++++++++++++++++++++++++++----=
+----------
+>  3 files changed, 125 insertions(+), 67 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
