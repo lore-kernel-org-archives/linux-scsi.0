@@ -1,36 +1,51 @@
-From: Andrew Donnellan <andrew.donnellan-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 03/13] irq_poll: fold irq_poll_sched_prep into
- irq_poll_sched
-Date: Wed, 20 Jan 2016 18:15:15 +1100
-Message-ID: <569F3403.10309@au1.ibm.com>
-References: <1449521512-22921-1-git-send-email-hch@lst.de>
- <1449521512-22921-4-git-send-email-hch@lst.de> <5682584A.5030708@sandisk.com>
- <20151230094253.GB12904@lst.de> <569F3106.7000205@au1.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <569F3106.7000205-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Subject: [PATCH v4 00/17] be2iscsi: driver update 11.0.0.0
+Date: Wed, 20 Jan 2016 14:10:44 +0530
+Message-ID: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:55634 "EHLO
+	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933591AbcATIl2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2016 03:41:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-On 20/01/16 18:02, Andrew Donnellan wrote:
-> I'm hitting an issue on a ppc64le box running linux-next, which
-> according to git bisect is caused by this patch.
+This patch is generated against for-next branch.
 
-Whoops, that should be linuxppc*-dev*@lists.ozlabs.org in the Cc.
+Jitendra Bhivare (17):
+  be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
+  be2iscsi: Fix mbox synchronization replacing spinlock with mutex
+  be2iscsi: Fix to use atomic bit operations for tag_state
+  be2iscsi: Fix to synchronize tag allocation using spin_lock
+  be2iscsi: Set mbox timeout to 30s
+  be2iscsi: Added return value check for mgmt_get_all_if_id
+  be2iscsi: Fix to remove shutdown entry point
+  be2iscsi: Fix VLAN support for IPv6 network
+  be2iscsi: Fix to handle misconfigured optics events
+  be2iscsi: Add FW config validation
+  be2iscsi: Fix return value for MCC completion
+  be2iscsi: Fix IOPOLL implementation
+  scsi_transport_iscsi: Add 25G and 40G speed definition
+  be2iscsi: Fix to process 25G link speed info from FW
+  be2iscsi: Fix async link event processing
+  be2iscsi: Fix WRB leak in login/logout path
+  be2iscsi: Update the driver version
 
-
-Andrew
+ drivers/scsi/be2iscsi/be.h          |   9 +-
+ drivers/scsi/be2iscsi/be_cmds.c     | 453 +++++++++++++++++++-----------------
+ drivers/scsi/be2iscsi/be_cmds.h     | 118 +++++-----
+ drivers/scsi/be2iscsi/be_iscsi.c    |  54 ++---
+ drivers/scsi/be2iscsi/be_main.c     | 210 +++++++++--------
+ drivers/scsi/be2iscsi/be_main.h     |  23 +-
+ drivers/scsi/be2iscsi/be_mgmt.c     | 426 ++++++++++++++++++++-------------
+ drivers/scsi/be2iscsi/be_mgmt.h     |   2 +
+ drivers/scsi/scsi_transport_iscsi.c |   2 +
+ include/scsi/iscsi_if.h             |   2 +
+ 10 files changed, 721 insertions(+), 578 deletions(-)
 
 -- 
-Andrew Donnellan              Software Engineer, OzLabs
-andrew.donnellan-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org  Australia Development Lab, Canberra
-+61 2 6201 8874 (work)        IBM Australia Limited
+2.5.0
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
