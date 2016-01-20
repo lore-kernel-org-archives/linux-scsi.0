@@ -1,30 +1,44 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH] lpfc: Remove redundant code block in
- lpfc_scsi_cmd_iocb_cmpl
-Date: Wed, 20 Jan 2016 22:52:55 +0100
-Message-ID: <20160120225255.00000544@localhost>
-References: <1453302520-10499-1-git-send-email-jthumshirn@suse.de>
+From: Alexandre Rossi <alexandre.rossi@gmail.com>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
+ [sr_mod]
+Date: Wed, 20 Jan 2016 23:07:29 +0100
+Message-ID: <CAM79t8GJvQPzOt1oDikxv3wPZ9xgVMez5EUgXmeVH2zKJCeaAw@mail.gmail.com>
+References: <1453222373.3588.3.camel@giantmonkey.de>
+	<Pine.LNX.4.44L0.1601191532210.1312-200000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:60866 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751034AbcATVx1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 16:53:27 -0500
-In-Reply-To: <1453302520-10499-1-git-send-email-jthumshirn@suse.de>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:32888 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935093AbcATWH3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2016 17:07:29 -0500
+Received: by mail-ig0-f178.google.com with SMTP id z14so110892696igp.0
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 14:07:29 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.44L0.1601191532210.1312-200000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org
 
-Johannes Thumshirn wrote:
-> This removes a redundant code block that will either be executed if the
-> ENABLE_FCP_RING_POLLING flag is set in phba->cfg_poll or not. The code is just
-> duplicated in both cases, hence we unify it again.
-> 
-> This probably is a left over from some sort of refactoring.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Hi,
 
-Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
+>> Could you please attach the debugging patch. Hopefully Alexandre, Erich,
+>> or I will have some spare time to build an image from it.
+>
+> Actually, this patch is an attempt at a fix.  After looking more
+> carefully at your log pictures, I realized what the problem must be.
+>
+> It's too bad nobody was able to capture a log where the error
+> occurred in sr_runtime_suspend, though -- all the logs in the bug
+> report show sd_runtime_resume.
+
+I just tested the patch applied on top of 4.3.3 (4.3.3-6 in Debian).
+
+It still crashes at boot, but the stacktrace is different : it happens
+in blk_post_runtime_resume . Maybe I'm bit by a different bug or maybe
+the I need to try with 4.4.
+
+I'll post the captured log when I have access to a wired network. I'd
+be happy to provide the logs of a debugging patch.
+
+Alex
