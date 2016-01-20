@@ -1,114 +1,39 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCHv2] SCSI: usd ida for host number management
-Date: Wed, 20 Jan 2016 11:48:00 -0800
-Message-ID: <1453319280-15417-1-git-send-email-lduncan@suse.com>
+Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
+ management
+Date: Wed, 20 Jan 2016 11:49:20 -0800
+Message-ID: <569FE4C0.9000608@suse.com>
+References: <cover.1444241058.git.lduncan@suse.com>
+ <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
+ <1444830904.2220.28.camel@HansenPartnership.com> <561EA018.7020700@suse.com>
+ <1444848835.2220.50.camel@HansenPartnership.com> <5644BEE1.3010208@suse.com>
+ <yq1ziyhy38c.fsf@sermon.lab.mkp.net> <5649C79E.9070603@suse.de>
+ <564A4EDC.8060805@suse.com> <yq1d1v8tdr3.fsf@sermon.lab.mkp.net>
+ <5669F31C.2010409@suse.com> <1449847911.4067.200.camel@localhost.localdomain>
+ <566DC3F0.6050206@suse.com> <1450105632.4091.17.camel@localhost.localdomain>
+ <566EE055.9050708@suse.de> <yq1r3iowk5j.fsf@sermon.lab.mkp.net>
+ <56730BEB.2050007@suse.com> <568ACBD7.9010504@suse.com>
+ <yq1fuybk2h0.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1fuybk2h0.fsf@sermon.lab.mkp.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, martin.petersen@oracle.com, emilne@redhat.com, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Lee Duncan <lduncan@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, emilne@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Update the SCSI hosts module to use ida to manage its
-host_no index instead of an ATOMIC integer. This means
-that the SCSI host number will now be reclaimable.
+On 01/05/2016 03:53 PM, Martin K. Petersen wrote:
+>>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
+>
+> Lee> Do you need me to resubmit this patch now that it's accepted?
+>
+> Please resend.
+>
+> Thanks!
+>
 
-Use the ida "simple" mechanism, since there should be no
-need for a separate spin lock current usage. Ida was chosen
-over idr because the hosts module already has its
-own instance and locking mechanisms that aren't easily
-changed.
-
-Changes from v1:
-* First version used regular ida routines
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/hosts.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 82ac1cd818ac..94025c5cf797 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -33,7 +33,7 @@
- #include <linux/transport_class.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
--
-+#include <linux/idr.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -42,7 +42,7 @@
- #include "scsi_logging.h"
- 
- 
--static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
-+static DEFINE_IDA(host_index_ida);
- 
- 
- static void scsi_host_cls_release(struct device *dev)
-@@ -355,6 +355,8 @@ static void scsi_host_dev_release(struct device *dev)
- 
- 	kfree(shost->shost_data);
- 
-+	ida_simple_remove(&host_index_ida, shost->host_no);
-+
- 	if (parent)
- 		put_device(parent);
- 	kfree(shost);
-@@ -388,6 +390,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- {
- 	struct Scsi_Host *shost;
- 	gfp_t gfp_mask = GFP_KERNEL;
-+	int index;
- 
- 	if (sht->unchecked_isa_dma && privsize)
- 		gfp_mask |= __GFP_DMA;
-@@ -406,11 +409,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	init_waitqueue_head(&shost->host_wait);
- 	mutex_init(&shost->scan_mutex);
- 
--	/*
--	 * subtract one because we increment first then return, but we need to
--	 * know what the next host number was before increment
--	 */
--	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
-+	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
-+	if (index < 0)
-+		goto fail_kfree;
-+	shost->host_no = index;
-+
- 	shost->dma_channel = 0xff;
- 
- 	/* These three are default values which can be overridden */
-@@ -495,7 +498,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 		shost_printk(KERN_WARNING, shost,
- 			"error handler thread failed to spawn, error = %ld\n",
- 			PTR_ERR(shost->ehandler));
--		goto fail_kfree;
-+		goto fail_index_remove;
- 	}
- 
- 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
-@@ -511,6 +514,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 
-  fail_kthread:
- 	kthread_stop(shost->ehandler);
-+ fail_index_remove:
-+	ida_simple_remove(&host_index_ida, shost->host_no);
-  fail_kfree:
- 	kfree(shost);
- 	return NULL;
-@@ -606,6 +611,7 @@ int scsi_init_hosts(void)
- void scsi_exit_hosts(void)
- {
- 	class_unregister(&shost_class);
-+	ida_destroy(&host_index_ida);
- }
- 
- int scsi_is_host_device(const struct device *dev)
+Done, submitted against scsi tree, misc branch.
 -- 
-2.1.4
+Lee Duncan
