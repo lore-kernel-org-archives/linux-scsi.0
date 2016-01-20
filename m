@@ -1,39 +1,44 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 15/17] be2iscsi: Fix async link event processing
-Date: Wed, 20 Jan 2016 11:17:55 +0100
-Message-ID: <569F5ED3.1020909@suse.de>
+Subject: Re: [PATCH v4 17/17] be2iscsi: Update the driver version
+Date: Wed, 20 Jan 2016 11:18:30 +0100
+Message-ID: <569F5EF6.7040407@suse.de>
 References: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1453279261-659-16-git-send-email-jitendra.bhivare@avagotech.com>
+ <1453279261-659-18-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39751 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39860 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934792AbcATKR4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 05:17:56 -0500
-In-Reply-To: <1453279261-659-16-git-send-email-jitendra.bhivare@avagotech.com>
+	id S933652AbcATKSb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2016 05:18:31 -0500
+In-Reply-To: <1453279261-659-18-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On 01/20/2016 09:40 AM, Jitendra Bhivare wrote:
-> Use only port_link_status only to determine link state change.
-> Only bit 0 is used to get the state.
-> Remove code for processing port_fault.
->=20
-> Fixed get_nic_conf structure definition. Removed rsvd[23] field in
-> be_cmd_get_nic_conf_resp.
->=20
-> Moved defintions of struct field values below the field.
+On 01/20/2016 09:41 AM, Jitendra Bhivare wrote:
+> Driver version: 11.0.0.0
 >=20
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 > ---
->  drivers/scsi/be2iscsi/be_cmds.c  | 48 +++++++++++++++++++-----------=
-----------
->  drivers/scsi/be2iscsi/be_cmds.h  | 32 +++++++++------------------
->  drivers/scsi/be2iscsi/be_iscsi.c |  2 +-
->  3 files changed, 34 insertions(+), 48 deletions(-)
+>  drivers/scsi/be2iscsi/be_main.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/=
+be_main.h
+> index 41c708c..16a6fd0 100644
+> --- a/drivers/scsi/be2iscsi/be_main.h
+> +++ b/drivers/scsi/be2iscsi/be_main.h
+> @@ -36,7 +36,7 @@
+>  #include <scsi/scsi_transport_iscsi.h>
+> =20
+>  #define DRV_NAME		"be2iscsi"
+> -#define BUILD_STR		"10.6.0.1"
+> +#define BUILD_STR		"11.0.0.0"
+>  #define BE_NAME			"Emulex OneConnect" \
+>  				"Open-iSCSI Driver version" BUILD_STR
+>  #define DRV_DESC		BE_NAME " " "Driver"
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
