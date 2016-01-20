@@ -1,61 +1,40 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] lpfc: Remove redundant code block in
- lpfc_scsi_cmd_iocb_cmpl
-Date: Wed, 20 Jan 2016 17:01:11 +0100
-Message-ID: <569FAF47.4070405@redhat.com>
-References: <1453302520-10499-1-git-send-email-jthumshirn@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453302520-10499-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] sd: Optimal I/O size is in bytes, not sectors
+Date: Wed, 20 Jan 2016 11:01:23 -0500
+Message-ID: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50695 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934624AbcATQBb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2016 11:01:31 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: borntraeger@de.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 20.1.2016 16:08, Johannes Thumshirn wrote:
-> This removes a redundant code block that will either be executed if the
-> ENABLE_FCP_RING_POLLING flag is set in phba->cfg_poll or not. The code is just
-> duplicated in both cases, hence we unify it again.
->
-> This probably is a left over from some sort of refactoring.
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Commit ca369d51b3e1 ("block/sd: Fix device-imposed transfer length
+limits") accidentally switched optimal I/O size reporting from bytes to
+block layer sectors.
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
+---
+ drivers/scsi/sd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tomas
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4e08d1cd704d..ec163d08f6c3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2893,7 +2893,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
+ 	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_CACHE_SIZE)
+ 		rw_max = q->limits.io_opt =
+-			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
++			sdkp->opt_xfer_blocks * sdp->sector_size;
+ 	else
+ 		rw_max = BLK_DEF_MAX_SECTORS;
+ 
+-- 
+2.5.0
 
-> ---
->  drivers/scsi/lpfc/lpfc_scsi.c | 17 -----------------
->  1 file changed, 17 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index 152b3c8..3bd0be6 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -4139,23 +4139,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
->  	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
->  	cmd->scsi_done(cmd);
->  
-> -	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
-> -		spin_lock_irqsave(&phba->hbalock, flags);
-> -		lpfc_cmd->pCmd = NULL;
-> -		spin_unlock_irqrestore(&phba->hbalock, flags);
-> -
-> -		/*
-> -		 * If there is a thread waiting for command completion
-> -		 * wake up the thread.
-> -		 */
-> -		spin_lock_irqsave(shost->host_lock, flags);
-> -		if (lpfc_cmd->waitq)
-> -			wake_up(lpfc_cmd->waitq);
-> -		spin_unlock_irqrestore(shost->host_lock, flags);
-> -		lpfc_release_scsi_buf(phba, lpfc_cmd);
-> -		return;
-> -	}
-> -
->  	spin_lock_irqsave(&phba->hbalock, flags);
->  	lpfc_cmd->pCmd = NULL;
->  	spin_unlock_irqrestore(&phba->hbalock, flags);
