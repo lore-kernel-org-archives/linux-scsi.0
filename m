@@ -1,54 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Ewan Milne <emilne@redhat.com>
 Subject: Re: [PATCH] sd: Optimal I/O size is in bytes, not sectors
-Date: Wed, 20 Jan 2016 08:47:29 -0800
-Message-ID: <1453308449.2341.22.camel@HansenPartnership.com>
+Date: Wed, 20 Jan 2016 12:17:15 -0500
+Message-ID: <1453310235.22112.115.camel@localhost.localdomain>
 References: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
-	 <1453306765.2341.11.camel@HansenPartnership.com>
-	 <yq1lh7kp5lo.fsf@sermon.lab.mkp.net>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58978 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934698AbcATQrb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 11:47:31 -0500
-In-Reply-To: <yq1lh7kp5lo.fsf@sermon.lab.mkp.net>
+Received: from mx1.redhat.com ([209.132.183.28]:49176 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934940AbcATRRQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2016 12:17:16 -0500
+In-Reply-To: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, borntraeger@de.ibm.com, Greg Kroah-Hartman <greg@kroah.com>
+Cc: linux-scsi@vger.kernel.org, borntraeger@de.ibm.com
 
-On Wed, 2016-01-20 at 11:40 -0500, Martin K. Petersen wrote:
-> > > > > > "James" == James Bottomley <
-> > > > > > James.Bottomley@HansenPartnership.com> writes:
+On Wed, 2016-01-20 at 11:01 -0500, Martin K. Petersen wrote:
+> Commit ca369d51b3e1 ("block/sd: Fix device-imposed transfer length
+> limits") accidentally switched optimal I/O size reporting from bytes to
+> block layer sectors.
 > 
-> James> We should mark the commit causing the problems, which went
-> into
-> James> 4.4 if I remember correctly:
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
+> ---
+>  drivers/scsi/sd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> James> Fixes: ca369d51b3e1649be4a72addd6d6a168cfb3f537 Cc:
-> James> stable@vger.kernel.org # 4.4+ Reviewed-by: James E.J.
-> Bottomley
-> James> <James.Bottomley@HansenPartnership.com>
-> 
-> I'll add the tags. The reason I didn't explicitly put 4.4+ is that 
-> the original commit has made its way quite far in various stable 
-> trees by now.
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 4e08d1cd704d..ec163d08f6c3 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2893,7 +2893,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
+>  	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_CACHE_SIZE)
+>  		rw_max = q->limits.io_opt =
+> -			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+> +			sdkp->opt_xfer_blocks * sdp->sector_size;
+>  	else
+>  		rw_max = BLK_DEF_MAX_SECTORS;
+>  
 
-It has?  It wasn't tagged for stable.  However, if it got applied to
-stable trees, then we should certainly backport further.  I sort of
-hope the stable process uses the Fixes: tag to decide when to backport
-anyway, since the stable commit contains the original upstream sha256,
-they can certainly identify it.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-Greg, are we OK not to bother with qualifying the cc: stable tag if we
-have a Fixes tag, or do you still want to see both?  Perhaps an
-addition to stable_kernel_rules.txt mentioning Fixes: might be useful
-as well.
-
-Thanks,
-
-James
 
