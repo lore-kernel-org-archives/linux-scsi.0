@@ -1,51 +1,181 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH v4 00/17] be2iscsi: driver update 11.0.0.0
-Date: Wed, 20 Jan 2016 14:10:44 +0530
-Message-ID: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH v4 01/17] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
+Date: Wed, 20 Jan 2016 14:10:45 +0530
+Message-ID: <1453279261-659-2-git-send-email-jitendra.bhivare@avagotech.com>
+References: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:55634 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933591AbcATIl2 (ORCPT
+	by vger.kernel.org with ESMTP id S933631AbcATIl3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 03:41:28 -0500
+	Wed, 20 Jan 2016 03:41:29 -0500
+In-Reply-To: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-This patch is generated against for-next branch.
+We are taking mbox_lock spinlock which disables pre-emption before we poll
+for mbox completion. Waiting there with spinlock held in excess of 20s will
+cause soft lockup.
 
-Jitendra Bhivare (17):
-  be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
-  be2iscsi: Fix mbox synchronization replacing spinlock with mutex
-  be2iscsi: Fix to use atomic bit operations for tag_state
-  be2iscsi: Fix to synchronize tag allocation using spin_lock
-  be2iscsi: Set mbox timeout to 30s
-  be2iscsi: Added return value check for mgmt_get_all_if_id
-  be2iscsi: Fix to remove shutdown entry point
-  be2iscsi: Fix VLAN support for IPv6 network
-  be2iscsi: Fix to handle misconfigured optics events
-  be2iscsi: Add FW config validation
-  be2iscsi: Fix return value for MCC completion
-  be2iscsi: Fix IOPOLL implementation
-  scsi_transport_iscsi: Add 25G and 40G speed definition
-  be2iscsi: Fix to process 25G link speed info from FW
-  be2iscsi: Fix async link event processing
-  be2iscsi: Fix WRB leak in login/logout path
-  be2iscsi: Update the driver version
+Actual fix is to change mbox_lock to mutex.
+The changes are done in phases. This is the first part.
+1. Changed mgmt_get_all_if_id to use MCC where after posting lock is released.
+2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
+wait_event_timeout. Added error handling code for IO reads.
+OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when unreachable
+boot targets configured.
 
- drivers/scsi/be2iscsi/be.h          |   9 +-
- drivers/scsi/be2iscsi/be_cmds.c     | 453 +++++++++++++++++++-----------------
- drivers/scsi/be2iscsi/be_cmds.h     | 118 +++++-----
- drivers/scsi/be2iscsi/be_iscsi.c    |  54 ++---
- drivers/scsi/be2iscsi/be_main.c     | 210 +++++++++--------
- drivers/scsi/be2iscsi/be_main.h     |  23 +-
- drivers/scsi/be2iscsi/be_mgmt.c     | 426 ++++++++++++++++++++-------------
- drivers/scsi/be2iscsi/be_mgmt.h     |   2 +
- drivers/scsi/scsi_transport_iscsi.c |   2 +
- include/scsi/iscsi_if.h             |   2 +
- 10 files changed, 721 insertions(+), 578 deletions(-)
+Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c | 60 ++++++++++++++++++++---------------------
+ drivers/scsi/be2iscsi/be_mgmt.c | 32 +++++++++++++++-------
+ 2 files changed, 51 insertions(+), 41 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 2778089..cd50e3c 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -587,47 +587,42 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
+  **/
+ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+ {
+-#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
++#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
+ 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	unsigned long timeout;
+-	bool read_flag = false;
+-	int ret = 0, i;
+ 	u32 ready;
+-	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(rdybit_check_q);
+ 
+-	if (beiscsi_error(phba))
+-		return -EIO;
++	/*
++	 * This BMBX busy wait path is used during init only.
++	 * For the commands executed during init, 5s should suffice.
++	 */
++	timeout = jiffies + msecs_to_jiffies(BEISCSI_MBX_RDY_BIT_TIMEOUT);
++	do {
++		if (beiscsi_error(phba))
++			return -EIO;
+ 
+-	timeout = jiffies + (HZ * 110);
++		ready = ioread32(db);
++		if (ready == 0xffffffff)
++			return -EIO;
+ 
+-	do {
+-		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
+-			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
+-			if (ready) {
+-				read_flag = true;
+-				break;
+-			}
+-			mdelay(1);
+-		}
++		ready &= MPU_MAILBOX_DB_RDY_MASK;
++		if (ready)
++			return 0;
+ 
+-		if (!read_flag) {
+-			wait_event_timeout(rdybit_check_q,
+-					  (read_flag != true),
+-					   HZ * 5);
+-		}
+-	} while ((time_before(jiffies, timeout)) && !read_flag);
++		if (time_after(jiffies, timeout))
++			break;
++		mdelay(1);
++	} while (!ready);
+ 
+-	if (!read_flag) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-			    "BC_%d : FW Timed Out\n");
+-			phba->fw_timeout = true;
+-			beiscsi_ue_detect(phba);
+-			ret = -EBUSY;
+-	}
++	beiscsi_log(phba, KERN_ERR,
++			BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
++			"BC_%d : FW Timed Out\n");
+ 
+-	return ret;
++	phba->fw_timeout = true;
++	beiscsi_ue_detect(phba);
++
++	return -EBUSY;
+ }
+ 
+ /*
+@@ -674,6 +669,9 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
+ 	if (status)
+ 		return status;
+ 
++	/* RDY is set; small delay before CQE read. */
++	udelay(1);
++
+ 	if (be_mcc_compl_is_new(compl)) {
+ 		status = be_mcc_compl_process(ctrl, &mbox->compl);
+ 		be_mcc_compl_use(compl);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index aea3e6b..7b54b23 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -809,27 +809,39 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
+-	struct be_cmd_get_all_if_id_req *req = embedded_payload(wrb);
+-	struct be_cmd_get_all_if_id_req *pbe_allid = req;
++	struct be_mcc_wrb *wrb;
++	struct be_cmd_get_all_if_id_req *req;
++	struct be_cmd_get_all_if_id_req *pbe_allid;
++	unsigned int tag;
+ 	int status = 0;
+ 
+-	memset(wrb, 0, sizeof(*wrb));
+-
+ 	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return -ENOMEM;
++	}
++
++	wrb = wrb_from_mccq(phba);
++	req = embedded_payload(wrb);
++	wrb->tag0 |= tag;
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
+ 			   sizeof(*req));
+-	status = be_mbox_notify(ctrl);
+-	if (!status)
+-		phba->interface_handle = pbe_allid->if_hndl_list[0];
+-	else {
++	be_mcc_notify(phba);
++	spin_unlock(&ctrl->mbox_lock);
++
++	status = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
++	if (status) {
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 			    "BG_%d : Failed in mgmt_get_all_if_id\n");
++		return -EBUSY;
+ 	}
+-	spin_unlock(&ctrl->mbox_lock);
++
++	pbe_allid = embedded_payload(wrb);
++	phba->interface_handle = pbe_allid->if_hndl_list[0];
+ 
+ 	return status;
+ }
 -- 
 2.5.0
 
