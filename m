@@ -1,30 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Separate target visibility from reaped state information
-Date: Tue, 19 Jan 2016 19:30:23 -0500
-Message-ID: <yq1oachqehs.fsf@sermon.lab.mkp.net>
-References: <568FE922.9090004@sandisk.com>
+Subject: Re: [PATCH] lpfc: Fix race on command completion
+Date: Tue, 19 Jan 2016 19:40:40 -0500
+Message-ID: <yq1k2n5qe0n.fsf@sermon.lab.mkp.net>
+References: <1452851303-89378-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36795 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932533AbcATAar (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 19:30:47 -0500
-In-Reply-To: <568FE922.9090004@sandisk.com> (Bart Van Assche's message of
-	"Fri, 8 Jan 2016 17:51:46 +0100")
+Received: from aserp1050.oracle.com ([141.146.126.70]:25891 "EHLO
+	aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932776AbcATAly (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 19:41:54 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+	by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u0K0fqHd002291
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 00:41:53 GMT
+In-Reply-To: <1452851303-89378-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Fri, 15 Jan 2016 10:48:23 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, Sebastian Herbszt <herbszt@gmx.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Bart> Instead of representing the states "visible in sysfs" and "has
-Bart> been removed from the target list" by a single state variable, use
-Bart> two variables to represent this information.
+Hannes> Upon command completion the lpfc driver would call ->done() on
+Hannes> the scsi command before taking the host lock and releasing the
+Hannes> command internally.  This opens up a race window there this
+Hannes> command might be re-used after ->done(), leading to a double
+Hannes> completion on the same command.
 
-James: Are you happy with the latest iteration of this? Should I queue
-it?
+Hannes> This patch takes the host lock before accessing the scsi
+Hannes> command, and disconnect the internal command under the same
+Hannes> lock.
+
+James/Dick: Please review.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
