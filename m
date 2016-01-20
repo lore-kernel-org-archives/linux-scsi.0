@@ -1,46 +1,30 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 03/17] be2iscsi: Fix to use atomic bit operations for
- tag_state
-Date: Wed, 20 Jan 2016 11:13:50 +0100
-Message-ID: <569F5DDE.80900@suse.de>
+Subject: Re: [PATCH v4 04/17] be2iscsi: Fix to synchronize tag allocation
+ using spin_lock
+Date: Wed, 20 Jan 2016 11:14:16 +0100
+Message-ID: <569F5DF8.5010104@suse.de>
 References: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1453279261-659-4-git-send-email-jitendra.bhivare@avagotech.com>
+ <1453279261-659-5-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39095 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39165 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934903AbcATKNv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 05:13:51 -0500
-In-Reply-To: <1453279261-659-4-git-send-email-jitendra.bhivare@avagotech.com>
+	id S934350AbcATKOS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2016 05:14:18 -0500
+In-Reply-To: <1453279261-659-5-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
 On 01/20/2016 09:40 AM, Jitendra Bhivare wrote:
-> beiscsi_mccq_compl sets MCC_TAG_STATE_TIMEOUT before setting up
-> tag_mem_state. be_mcc_compl_process_isr checks for
-> MCC_TAG_STATE_TIMEOUT first then accesses tag_mem_state which might b=
-e
-> still getting populated in the process context.
->=20
-> Fix:
-> Set MCC_TAG_STATE_TIMEOUT after tag_mem_state is populated.
-> Removed MCC_TAG_STATE_COMPLETED. When posted its in running state and
-> the running state is cleared in be_mcc_compl_process_isr.
-> be_mcc_notify now takes tag argument to set it to running state.
-> Use bit operations for tag_state. Use barriers before setting the sta=
-te.
+> alloc_mcc_tag needs to be done under mcc_lock.
 >=20
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 > ---
->  drivers/scsi/be2iscsi/be.h      |   7 ++-
->  drivers/scsi/be2iscsi/be_cmds.c | 111 ++++++++++++++++++++----------=
-----------
->  drivers/scsi/be2iscsi/be_cmds.h |   4 +-
->  drivers/scsi/be2iscsi/be_mgmt.c |  39 ++++++++------
->  4 files changed, 84 insertions(+), 77 deletions(-)
+>  drivers/scsi/be2iscsi/be_cmds.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
