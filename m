@@ -1,81 +1,87 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: UFS: MPHY configuration issue
-Date: Wed, 20 Jan 2016 18:57:15 +0000
-Message-ID: <569FD88B.1010407@synopsys.com>
+From: Don Brace <don.brace@pmcs.com>
+Subject: [PATCH] scsi: export function scsi_scan.c:sanitize_inquiry_string
+Date: Wed, 20 Jan 2016 13:41:41 -0600
+Message-ID: <20160120194141.23159.5168.stgit@brunhilda>
+References: <20160120194028.23159.25263.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:53972 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754174AbcATS5T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2016 13:57:19 -0500
-Received: from us02secmta1.synopsys.com (us02secmta1.synopsys.com [10.12.235.96])
-	by smtprelay.synopsys.com (Postfix) with ESMTP id 7DCD924E0694
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
-Received: from us02secmta1.internal.synopsys.com (us02secmta1.internal.synopsys.com [127.0.0.1])
-	by us02secmta1.internal.synopsys.com (Service) with ESMTP id 6C1444E213
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
-Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-	by us02secmta1.internal.synopsys.com (Service) with ESMTP id 50E9A4E202
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
-Received: from mailhost.synopsys.com (localhost [127.0.0.1])
-	by mailhost.synopsys.com (Postfix) with ESMTP id 3CADE31E
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
-Received: from us01wehtc1.internal.synopsys.com (us01wehtc1-vip.internal.synopsys.com [10.12.239.236])
-	by mailhost.synopsys.com (Postfix) with ESMTP id 2E28F31C
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
+Received: from [216.241.235.118] ([216.241.235.118]:45689 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752027AbcATTnU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2016 14:43:20 -0500
+In-Reply-To: <20160120194028.23159.25263.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+The hpsa driver uses this function to cleanup inquiry
+data. Our new pqi driver will also use this
+function. This function was copied into both drivers.
 
-I am trying to configure my MPHY through UNIPRO but I am experiencing a kernel
-crash when executing a dme instruction:
+This patch exports sanitize_inquiry_string so the hpsa
+and the pqi drivers can use this function directly.
 
-As an example I am executing the following:
+Hannes recommended the change in review:
+https://www.marc.info/?l=linux-scsi&m=144619249003064&w=2
+that using the existing function in scsi_scan would be
+preferrable.
 
-result = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(PA_RXHSUNTERMCAP, 0), 1);
+Suggested-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Don Brace <don.brace@pmcs.com>
+---
+ drivers/scsi/scsi_scan.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-In ufshcd_dme_set_attr() I have the following data ready to execute:
-
-set = dme-set
-uic_cmd.command:2
-uic_cmd.argument1 = 15a50000
-uic_cmd.argument2 = 0
-uic_cmd.argument3 = 1
-
-And then the ufshcd_send_uic_cmd() procedure originates a crash as you can see
-below.
-
-Crash log:
-
-Path: /bin/busybox
-CPU: 0 PID: 97 Comm: modprobe Not tainted 4.4.0-rc1 #26
-task: 9f1f9c00 ti: 9f1ba000 task.ti: 9f1ba000
-
-[ECR   ]: 0x00220200 => Invalid Write @ 0x00000000 by insn @ 0x80a8a8c2
-[EFA   ]: 0x00000000
-[BLINK ]: ufshcd_release+0x14a2/0x1738 [ufshcd]
-[ERET  ]: __mutex_lock_slowpath+0x46/0x100
-[STAT32]: 0x0000080e : K       A1 E2 E1
-BTA: 0x70054f4e  SP: 0x9f1bbc64  FP: 0x00000000
-LPS: 0x808765b8 LPE: 0x808765bc LPC: 0x00000000
-r00: 0x9f2b5b50 r01: 0x9f1bbcb4 r02: 0x00000000
-r03: 0x9f1bbc64 r04: 0x00000000 r05: 0x00000002
-r06: 0x6affd617 r07: 0x00000000 r08: 0x6affd617
-r09: 0x00000000 r10: 0x00000008 r11: 0x0000403f
-r12: 0x00000000
-
-Stack Trace:
-  __mutex_lock_slowpath+0x46/0x100
-  ufshcd_release+0x14a2/0x1738 [ufshcd]
-
-I would like to hear some opinions about this issue!
-
-Thank you very much!
-
-BR
-Joao
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6a82066..1f02e84 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -518,7 +518,8 @@ void scsi_target_reap(struct scsi_target *starget)
+ }
+ 
+ /**
+- * sanitize_inquiry_string - remove non-graphical chars from an INQUIRY result string
++ * scsi_sanitize_inquiry_string - remove non-graphical chars from an
++ *                                INQUIRY result string
+  * @s: INQUIRY result string to sanitize
+  * @len: length of the string
+  *
+@@ -531,7 +532,7 @@ void scsi_target_reap(struct scsi_target *starget)
+  *	string terminator, so all the following characters are set to
+  *	spaces.
+  **/
+-static void sanitize_inquiry_string(unsigned char *s, int len)
++void scsi_sanitize_inquiry_string(unsigned char *s, int len)
+ {
+ 	int terminated = 0;
+ 
+@@ -542,6 +543,7 @@ static void sanitize_inquiry_string(unsigned char *s, int len)
+ 			*s = ' ';
+ 	}
+ }
++EXPORT_SYMBOL(scsi_sanitize_inquiry_string);
+ 
+ /**
+  * scsi_probe_lun - probe a single LUN using a SCSI INQUIRY
+@@ -627,9 +629,9 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	}
+ 
+ 	if (result == 0) {
+-		sanitize_inquiry_string(&inq_result[8], 8);
+-		sanitize_inquiry_string(&inq_result[16], 16);
+-		sanitize_inquiry_string(&inq_result[32], 4);
++		scsi_sanitize_inquiry_string(&inq_result[8], 8);
++		scsi_sanitize_inquiry_string(&inq_result[16], 16);
++		scsi_sanitize_inquiry_string(&inq_result[32], 4);
+ 
+ 		response_len = inq_result[4] + 5;
+ 		if (response_len > 255)
 
