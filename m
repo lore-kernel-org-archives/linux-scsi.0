@@ -1,181 +1,65 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH v4 01/17] be2iscsi: Fix soft lockup in mgmt_get_all_if_id path using bmbx
-Date: Wed, 20 Jan 2016 14:10:45 +0530
-Message-ID: <1453279261-659-2-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH v4 04/17] be2iscsi: Fix to synchronize tag allocation using spin_lock
+Date: Wed, 20 Jan 2016 14:10:48 +0530
+Message-ID: <1453279261-659-5-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:55634 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933631AbcATIl3 (ORCPT
+	by vger.kernel.org with ESMTP id S933745AbcATIlh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 03:41:29 -0500
+	Wed, 20 Jan 2016 03:41:37 -0500
 In-Reply-To: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-We are taking mbox_lock spinlock which disables pre-emption before we poll
-for mbox completion. Waiting there with spinlock held in excess of 20s will
-cause soft lockup.
-
-Actual fix is to change mbox_lock to mutex.
-The changes are done in phases. This is the first part.
-1. Changed mgmt_get_all_if_id to use MCC where after posting lock is released.
-2. Changed be_mbox_db_ready_wait to busy wait for 12s max and removed
-wait_event_timeout. Added error handling code for IO reads.
-OPCODE_COMMON_QUERY_FIRMWARE_CONFIG mbox command takes 8s time when unreachable
-boot targets configured.
+alloc_mcc_tag needs to be done under mcc_lock.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 60 ++++++++++++++++++++---------------------
- drivers/scsi/be2iscsi/be_mgmt.c | 32 +++++++++++++++-------
- 2 files changed, 51 insertions(+), 41 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 2778089..cd50e3c 100644
+index 1913e9e..db03149 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -587,47 +587,42 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
-  **/
- static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+@@ -121,6 +121,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
  {
--#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
-+#define BEISCSI_MBX_RDY_BIT_TIMEOUT	12000	/* 12sec */
- 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
- 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
- 	unsigned long timeout;
--	bool read_flag = false;
--	int ret = 0, i;
- 	u32 ready;
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(rdybit_check_q);
+ 	unsigned int tag = 0;
  
--	if (beiscsi_error(phba))
--		return -EIO;
-+	/*
-+	 * This BMBX busy wait path is used during init only.
-+	 * For the commands executed during init, 5s should suffice.
-+	 */
-+	timeout = jiffies + msecs_to_jiffies(BEISCSI_MBX_RDY_BIT_TIMEOUT);
-+	do {
-+		if (beiscsi_error(phba))
-+			return -EIO;
- 
--	timeout = jiffies + (HZ * 110);
-+		ready = ioread32(db);
-+		if (ready == 0xffffffff)
-+			return -EIO;
- 
--	do {
--		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
--			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
--			if (ready) {
--				read_flag = true;
--				break;
--			}
--			mdelay(1);
--		}
-+		ready &= MPU_MAILBOX_DB_RDY_MASK;
-+		if (ready)
-+			return 0;
- 
--		if (!read_flag) {
--			wait_event_timeout(rdybit_check_q,
--					  (read_flag != true),
--					   HZ * 5);
--		}
--	} while ((time_before(jiffies, timeout)) && !read_flag);
-+		if (time_after(jiffies, timeout))
-+			break;
-+		mdelay(1);
-+	} while (!ready);
- 
--	if (!read_flag) {
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : FW Timed Out\n");
--			phba->fw_timeout = true;
--			beiscsi_ue_detect(phba);
--			ret = -EBUSY;
--	}
-+	beiscsi_log(phba, KERN_ERR,
-+			BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+			"BC_%d : FW Timed Out\n");
- 
--	return ret;
-+	phba->fw_timeout = true;
-+	beiscsi_ue_detect(phba);
-+
-+	return -EBUSY;
- }
- 
- /*
-@@ -674,6 +669,9 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
- 	if (status)
- 		return status;
- 
-+	/* RDY is set; small delay before CQE read. */
-+	udelay(1);
-+
- 	if (be_mcc_compl_is_new(compl)) {
- 		status = be_mcc_compl_process(ctrl, &mbox->compl);
- 		be_mcc_compl_use(compl);
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index aea3e6b..7b54b23 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -809,27 +809,39 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
- {
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
--	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
--	struct be_cmd_get_all_if_id_req *req = embedded_payload(wrb);
--	struct be_cmd_get_all_if_id_req *pbe_allid = req;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_get_all_if_id_req *req;
-+	struct be_cmd_get_all_if_id_req *pbe_allid;
-+	unsigned int tag;
- 	int status = 0;
- 
--	memset(wrb, 0, sizeof(*wrb));
--
- 	spin_lock(&ctrl->mbox_lock);
-+	tag = alloc_mcc_tag(phba);
-+	if (!tag) {
-+		spin_unlock(&ctrl->mbox_lock);
-+		return -ENOMEM;
-+	}
-+
-+	wrb = wrb_from_mccq(phba);
-+	req = embedded_payload(wrb);
-+	wrb->tag0 |= tag;
- 
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
- 			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
- 			   sizeof(*req));
--	status = be_mbox_notify(ctrl);
--	if (!status)
--		phba->interface_handle = pbe_allid->if_hndl_list[0];
--	else {
-+	be_mcc_notify(phba);
-+	spin_unlock(&ctrl->mbox_lock);
-+
-+	status = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
-+	if (status) {
- 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
- 			    "BG_%d : Failed in mgmt_get_all_if_id\n");
-+		return -EBUSY;
++	spin_lock(&phba->ctrl.mcc_lock);
+ 	if (phba->ctrl.mcc_tag_available) {
+ 		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
+ 		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
+@@ -134,6 +135,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+ 		else
+ 			phba->ctrl.mcc_alloc_index++;
  	}
--	spin_unlock(&ctrl->mbox_lock);
-+
-+	pbe_allid = embedded_payload(wrb);
-+	phba->interface_handle = pbe_allid->if_hndl_list[0];
- 
- 	return status;
++	spin_unlock(&phba->ctrl.mcc_lock);
+ 	return tag;
  }
+ 
+@@ -254,7 +256,7 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 
+ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+ {
+-	spin_lock(&ctrl->mbox_lock);
++	spin_lock(&ctrl->mcc_lock);
+ 	tag = tag & 0x000000FF;
+ 	ctrl->mcc_tag[ctrl->mcc_free_index] = tag;
+ 	if (ctrl->mcc_free_index == (MAX_MCC_CMD - 1))
+@@ -262,7 +264,7 @@ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+ 	else
+ 		ctrl->mcc_free_index++;
+ 	ctrl->mcc_tag_available++;
+-	spin_unlock(&ctrl->mbox_lock);
++	spin_unlock(&ctrl->mcc_lock);
+ }
+ 
+ bool is_link_state_evt(u32 trailer)
 -- 
 2.5.0
 
