@@ -1,61 +1,81 @@
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: Re: [PATCH] sd: Optimal I/O size is in bytes, not sectors
-Date: Wed, 20 Jan 2016 19:28:54 +0100
-Message-ID: <569FD1E6.30309@de.ibm.com>
-References: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: UFS: MPHY configuration issue
+Date: Wed, 20 Jan 2016 18:57:15 +0000
+Message-ID: <569FD88B.1010407@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp09.uk.ibm.com ([195.75.94.105]:33775 "EHLO
-	e06smtp09.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934679AbcATS3A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2016 13:29:00 -0500
-Received: from localhost
-	by e06smtp09.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <borntraeger@de.ibm.com>;
-	Wed, 20 Jan 2016 18:28:58 -0000
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 815B01B08069
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 18:29:00 +0000 (GMT)
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u0KISteL5046726
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 18:28:55 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u0KIStH2032767
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 11:28:55 -0700
-In-Reply-To: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:53972 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754174AbcATS5T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2016 13:57:19 -0500
+Received: from us02secmta1.synopsys.com (us02secmta1.synopsys.com [10.12.235.96])
+	by smtprelay.synopsys.com (Postfix) with ESMTP id 7DCD924E0694
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
+Received: from us02secmta1.internal.synopsys.com (us02secmta1.internal.synopsys.com [127.0.0.1])
+	by us02secmta1.internal.synopsys.com (Service) with ESMTP id 6C1444E213
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
+Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
+	by us02secmta1.internal.synopsys.com (Service) with ESMTP id 50E9A4E202
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
+Received: from mailhost.synopsys.com (localhost [127.0.0.1])
+	by mailhost.synopsys.com (Postfix) with ESMTP id 3CADE31E
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
+Received: from us01wehtc1.internal.synopsys.com (us01wehtc1-vip.internal.synopsys.com [10.12.239.236])
+	by mailhost.synopsys.com (Postfix) with ESMTP id 2E28F31C
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 10:57:19 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 01/20/2016 05:01 PM, Martin K. Petersen wrote:
-> Commit ca369d51b3e1 ("block/sd: Fix device-imposed transfer length
-> limits") accidentally switched optimal I/O size reporting from bytes to
-> block layer sectors.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
-> ---
->  drivers/scsi/sd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 4e08d1cd704d..ec163d08f6c3 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2893,7 +2893,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
->  	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_CACHE_SIZE)
->  		rw_max = q->limits.io_opt =
-> -			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
-> +			sdkp->opt_xfer_blocks * sdp->sector_size;
->  	else
->  		rw_max = BLK_DEF_MAX_SECTORS;
-> 
+Hi,
 
-the error message is gone
+I am trying to configure my MPHY through UNIPRO but I am experiencing a kernel
+crash when executing a dme instruction:
 
-Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
+As an example I am executing the following:
 
+result = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(PA_RXHSUNTERMCAP, 0), 1);
+
+In ufshcd_dme_set_attr() I have the following data ready to execute:
+
+set = dme-set
+uic_cmd.command:2
+uic_cmd.argument1 = 15a50000
+uic_cmd.argument2 = 0
+uic_cmd.argument3 = 1
+
+And then the ufshcd_send_uic_cmd() procedure originates a crash as you can see
+below.
+
+Crash log:
+
+Path: /bin/busybox
+CPU: 0 PID: 97 Comm: modprobe Not tainted 4.4.0-rc1 #26
+task: 9f1f9c00 ti: 9f1ba000 task.ti: 9f1ba000
+
+[ECR   ]: 0x00220200 => Invalid Write @ 0x00000000 by insn @ 0x80a8a8c2
+[EFA   ]: 0x00000000
+[BLINK ]: ufshcd_release+0x14a2/0x1738 [ufshcd]
+[ERET  ]: __mutex_lock_slowpath+0x46/0x100
+[STAT32]: 0x0000080e : K       A1 E2 E1
+BTA: 0x70054f4e  SP: 0x9f1bbc64  FP: 0x00000000
+LPS: 0x808765b8 LPE: 0x808765bc LPC: 0x00000000
+r00: 0x9f2b5b50 r01: 0x9f1bbcb4 r02: 0x00000000
+r03: 0x9f1bbc64 r04: 0x00000000 r05: 0x00000002
+r06: 0x6affd617 r07: 0x00000000 r08: 0x6affd617
+r09: 0x00000000 r10: 0x00000008 r11: 0x0000403f
+r12: 0x00000000
+
+Stack Trace:
+  __mutex_lock_slowpath+0x46/0x100
+  ufshcd_release+0x14a2/0x1738 [ufshcd]
+
+I would like to hear some opinions about this issue!
+
+Thank you very much!
+
+BR
+Joao
 
