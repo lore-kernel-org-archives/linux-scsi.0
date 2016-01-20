@@ -1,46 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Separate target visibility from reaped state information
-Date: Tue, 19 Jan 2016 17:03:29 -0800
-Message-ID: <1453251809.2320.56.camel@HansenPartnership.com>
-References: <568FE922.9090004@sandisk.com>
-	 <yq1oachqehs.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/2] hisi_sas: Restrict SCSI_HISI_SAS to arm64
+Date: Tue, 19 Jan 2016 19:25:34 -0500
+Message-ID: <yq1si1tqept.fsf@sermon.lab.mkp.net>
+References: <1452865149-32064-1-git-send-email-geert@linux-m68k.org>
+	<1452865149-32064-2-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55580 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932748AbcATBDb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jan 2016 20:03:31 -0500
-In-Reply-To: <yq1oachqehs.fsf@sermon.lab.mkp.net>
+Received: from aserp1050.oracle.com ([141.146.126.70]:30160 "EHLO
+	aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934275AbcATB0G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 20:26:06 -0500
+In-Reply-To: <1452865149-32064-2-git-send-email-geert@linux-m68k.org> (Geert
+	Uytterhoeven's message of "Fri, 15 Jan 2016 14:39:09 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, Sebastian Herbszt <herbszt@gmx.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2016-01-19 at 19:30 -0500, Martin K. Petersen wrote:
-> > > > > > "Bart" == Bart Van Assche <bart.vanassche@sandisk.com>
-> > > > > > writes:
-> 
-> Bart> Instead of representing the states "visible in sysfs" and "has
-> Bart> been removed from the target list" by a single state variable,
-> use
-> Bart> two variables to represent this information.
-> 
-> James: Are you happy with the latest iteration of this? Should I
-> queue
-> it?
+>>>>> "Geert" == Geert Uytterhoeven <geert@linux-m68k.org> writes:
 
-Well, I'm OK with the patch: it's a simple transformation of the
-enumerated state to a two bit state.  What I can't see is how it fixes
-any soft lockup.
+Geert> The HiSilicon SAS HBA is available in HiSilicon arm64 SoCs only.
+Geert> Restrict it to arm64, unless compile-testing.
 
-The only change from the current workflow is that the DEL transition
-(now the reaped flag) is done before the spin lock is dropped which
-would fix a tiny window for two threads both trying to remove the same
-target, but there's nothing that could possibly fix an iterative soft
-lockup caused by restarting the loop, which is what the changelog says.
+Applied to 4.5/scsi-fixes.
 
-James
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
