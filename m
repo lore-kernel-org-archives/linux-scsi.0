@@ -1,169 +1,60 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: RE: [PATCH V3 8/9] aacraid: Fix character device re-initialization
-Date: Wed, 20 Jan 2016 20:43:41 +0000
-Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1F6AE0@BBYEXM01.pmc-sierra.internal>
-References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1452842182-684-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <569F8E7A.7090703@redhat.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: [PATCH] qla2xxx: Fix warning reported by static checker
+Date: Wed, 20 Jan 2016 15:11:27 -0500
+Message-ID: <1453320687-15708-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [216.241.235.117] ([216.241.235.117]:59639 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750781AbcATUoN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2016 15:44:13 -0500
-In-Reply-To: <569F8E7A.7090703@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Scott Benesh <Scott.Benesh@pmcs.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "shane.seymour@hpe.com" <shane.seymour@hpe.com>, zzzDavid Carroll <David.Carroll@pmcs.com>
 
+This patch fixes following warning
 
-Hello Tomas,
+drivers/scsi/qla2xxx/qla_target.c:3587 qlt_do_ctio_completion()
+warn: impossible condition '(logged_out == 41) => (0-1 == 41)'
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Wednesday, January 20, 2016 5:41 AM
-> To: Raghava Aditya Renukunta; James.Bottomley@HansenPartnership.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
-> Cc: Mahesh Rajashekhara; Murthy Bhat; Gana Sridaran; aacraid@pmc-
-> sierra.com; Scott Benesh; jthumshirn@suse.de; shane.seymour@hpe.com;
-> zzzDavid Carroll
-> Subject: Re: [PATCH V3 8/9] aacraid: Fix character device re-initialization
-> 
-> On 15.1.2016 08:16, Raghava Aditya Renukunta wrote:
-> > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> >
-> > During EEH PCI hotplug activity kernel unloads and loads the driver,
-> > causing character device to be unregistered(aac_remove_one).When the
-> > driver is loaded back using aac_probe_one the character device needs
-> > to be registered again for the AIF management tools to work.
-> >
-> > Fixed by adding code to register character device in aac_probe_one if
-> > it is unregistered in aac_remove_one.
-> >
-> > Changes in V2:
-> > Added macros to track character device state
-> >
-> > Changes in V3:
-> > None
-> >
-> > Signed-off-by: Raghava Aditya Renukunta
-> <raghavaaditya.renukunta@pmcs.com>
-> > Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
-> 
-> Hi Raghava,
-> when aacraid is loaded (modprobe) without an controller attached to the
-> system
-> the driver loads and creates the character device. Later when you hotplug a
-> device and remove again we see the driver loaded but now without the
-> char device. I'd prefer consistency here - either create the char device
-> when the first controller is probed (preferred) or do not remove it
-> until the driver exits.
-> This is not a nack, just a wish that you changed it in next series.
-> 
-> --tm
+drivers/scsi/qla2xxx/qla_target.c
+ 3580                  case CTIO_PORT_LOGGED_OUT:
+ 3581                  case CTIO_PORT_UNAVAILABLE:
+ 3582                  {
+ 3583                          bool logged_out = (status & 0xFFFF);
+ 3584                          ql_dbg(ql_dbg_tgt_mgt, vha, 0xf059,
+ 3585				   "qla_target(%d): CTIO with %s status %x "
+ 3586                              "received (state %x, se_cmd %p)\n", vha->vp_idx,
+ 3587                              (logged_out == CTIO_PORT_LOGGED_OUT) ?
+ 				    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+				    Bool cannot equal 0x26.
+ 3588				   "PORT LOGGED OUT" : "PORT UNAVAILABLE",
 
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-Yes I will make the necessary changes  so that character device is created when
-The controller is probed, and when the driver is removed (aac_remove_one),delete 
-the character device. I will keep the character device during resume and suspend.
-
-Do you want to do this in the next version of the patches or the next series of patches after this one is 
-Accepted. ?
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 80651cd..829b534 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3597,12 +3597,13 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
+ 		case CTIO_PORT_LOGGED_OUT:
+ 		case CTIO_PORT_UNAVAILABLE:
+ 		{
+-			bool logged_out = (status & 0xFFFF);
++			bool logged_out =
++			    (status & 0xFFFF) == CTIO_PORT_LOGGED_OUT;
++
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf059,
+ 			    "qla_target(%d): CTIO with %s status %x "
+ 			    "received (state %x, se_cmd %p)\n", vha->vp_idx,
+-			    (logged_out == CTIO_PORT_LOGGED_OUT) ?
+-			    "PORT LOGGED OUT" : "PORT UNAVAILABLE",
++			    logged_out ? "PORT LOGGED OUT" : "PORT UNAVAILABLE",
+ 			    status, cmd->state, se_cmd);
  
-Regards,
-Raghava Aditya
-
-
-> > ---
-> >  drivers/scsi/aacraid/aacraid.h |  7 +++++++
-> >  drivers/scsi/aacraid/linit.c   | 21 ++++++++++++++-------
-> >  2 files changed, 21 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> > index 3473668..4b669ef 100644
-> > --- a/drivers/scsi/aacraid/aacraid.h
-> > +++ b/drivers/scsi/aacraid/aacraid.h
-> > @@ -94,6 +94,13 @@ enum {
-> >  #define aac_phys_to_logical(x)  ((x)+1)
-> >  #define aac_logical_to_phys(x)  ((x)?(x)-1:0)
-> >
-> > +/*
-> > + * These macros are for keeping track of
-> > + * character device state.
-> > + */
-> > +#define AAC_CHARDEV_UNREGISTERED	(-1)
-> > +#define AAC_CHARDEV_NEEDS_REINIT	(-2)
-> > +
-> >  /* #define AAC_DETAILED_STATUS_INFO */
-> >
-> >  struct diskparm
-> > diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> > index 27b3fcd..057c07c 100644
-> > --- a/drivers/scsi/aacraid/linit.c
-> > +++ b/drivers/scsi/aacraid/linit.c
-> > @@ -80,7 +80,7 @@ MODULE_VERSION(AAC_DRIVER_FULL_VERSION);
-> >
-> >  static DEFINE_MUTEX(aac_mutex);
-> >  static LIST_HEAD(aac_devices);
-> > -static int aac_cfg_major = -1;
-> > +static int aac_cfg_major = AAC_CHARDEV_UNREGISTERED;
-> >  char aac_driver_version[] = AAC_DRIVER_FULL_VERSION;
-> >
-> >  /*
-> > @@ -1125,6 +1125,13 @@ static void __aac_shutdown(struct aac_dev *
-> aac)
-> >  	else if (aac->max_msix > 1)
-> >  		pci_disable_msix(aac->pdev);
-> >  }
-> > +static void aac_init_char(void)
-> > +{
-> > +	aac_cfg_major = register_chrdev(0, "aac", &aac_cfg_fops);
-> > +	if (aac_cfg_major < 0) {
-> > +		pr_err("aacraid: unable to register \"aac\" device.\n");
-> > +	}
-> > +}
-> >
-> >  static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id
-> *id)
-> >  {
-> > @@ -1182,6 +1189,9 @@ static int aac_probe_one(struct pci_dev *pdev,
-> const struct pci_device_id *id)
-> >  	shost->max_cmd_len = 16;
-> >  	shost->use_cmd_list = 1;
-> >
-> > +	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
-> > +		aac_init_char();
-> > +
-> >  	aac = (struct aac_dev *)shost->hostdata;
-> >  	aac->base_start = pci_resource_start(pdev, 0);
-> >  	aac->scsi_host_ptr = shost;
-> > @@ -1519,7 +1529,7 @@ static void aac_remove_one(struct pci_dev
-> *pdev)
-> >  	pci_disable_device(pdev);
-> >  	if (list_empty(&aac_devices)) {
-> >  		unregister_chrdev(aac_cfg_major, "aac");
-> > -		aac_cfg_major = -1;
-> > +		aac_cfg_major = AAC_CHARDEV_NEEDS_REINIT;
-> >  	}
-> >  }
-> >
-> > @@ -1681,11 +1691,8 @@ static int __init aac_init(void)
-> >  	if (error < 0)
-> >  		return error;
-> >
-> > -	aac_cfg_major = register_chrdev( 0, "aac", &aac_cfg_fops);
-> > -	if (aac_cfg_major < 0) {
-> > -		printk(KERN_WARNING
-> > -			"aacraid: unable to register \"aac\" device.\n");
-> > -	}
-> > +	aac_init_char();
-> > +
-> >
-> >  	return 0;
-> >  }
-
+ 			if (logged_out && cmd->sess) {
+-- 
+1.7.1
