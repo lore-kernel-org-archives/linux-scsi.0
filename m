@@ -1,39 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: Fix race on command completion
-Date: Tue, 19 Jan 2016 19:40:40 -0500
-Message-ID: <yq1k2n5qe0n.fsf@sermon.lab.mkp.net>
-References: <1452851303-89378-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH] be2iscsi: add checks for dma mapping errors
+Date: Tue, 19 Jan 2016 19:59:38 -0500
+Message-ID: <yq1fuxtqd51.fsf@sermon.lab.mkp.net>
+References: <1452894334-8984-1-git-send-email-khoroshilov@ispras.ru>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:25891 "EHLO
-	aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932776AbcATAly (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 19:41:54 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-	by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u0K0fqHd002291
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 00:41:53 GMT
-In-Reply-To: <1452851303-89378-1-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Fri, 15 Jan 2016 10:48:23 +0100")
+Received: from aserp1040.oracle.com ([141.146.126.69]:47376 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932748AbcATBAA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2016 20:00:00 -0500
+In-Reply-To: <1452894334-8984-1-git-send-email-khoroshilov@ispras.ru> (Alexey
+	Khoroshilov's message of "Sat, 16 Jan 2016 00:45:34 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Alexey" == Alexey Khoroshilov <khoroshilov@ispras.ru> writes:
 
-Hannes> Upon command completion the lpfc driver would call ->done() on
-Hannes> the scsi command before taking the host lock and releasing the
-Hannes> command internally.  This opens up a race window there this
-Hannes> command might be re-used after ->done(), leading to a double
-Hannes> completion on the same command.
+Alexey> hwi_write_buffer() does not check if mapping dma memory succeed.
+Alexey> The patch adds the check and failure handling.
 
-Hannes> This patch takes the host lock before accessing the scsi
-Hannes> command, and disconnect the internal command under the same
-Hannes> lock.
-
-James/Dick: Please review.
+Jitendra, please review.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
