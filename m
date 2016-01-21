@@ -1,7 +1,7 @@
 From: Alexander Duyck <aduyck@mirantis.com>
-Subject: [PATCH 1/2] scsi: Do not attach VPD to devices that don't support it
-Date: Wed, 20 Jan 2016 22:35:22 -0800
-Message-ID: <20160121063522.3803.23150.stgit@localhost.localdomain>
+Subject: [PATCH 2/2] scsi: Fix RCU handling for VPD pages
+Date: Wed, 20 Jan 2016 22:35:28 -0800
+Message-ID: <20160121063528.3803.92532.stgit@localhost.localdomain>
 References: <20160121063039.3803.66.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,45 +13,219 @@ To: jbottomley@odin.com, hare@suse.de, linux-scsi@vger.kernel.org
 Cc: alexander.duyck@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, shane.seymour@hpe.com, jthumshirn@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-The patch "scsi: rescan VPD attributes" introduced a regression in which
-devices that don't support VPD were being scanned for VPD attributes
-anyway.  This could cause issues for this parts and should be avoided so
-the check for scsi_level has been moved out of scsi_add_lun and into
-scsi_attach_vpd so that all callers will not scan VPD for devices that
-don't support it.
+This patch is meant to fix the RCU handling for VPD pages.  The original
+code had a number of issues including the fact that the local variables
+were being declared as __rcu, the RCU variable being directly accessed
+outside of the RCU locked region, and the fact that length was not
+associated with the data so it would be possible to get a mix and match of
+the length for one VPD page with the data from another.
 
 Fixes: 09e2b0b14690 ("scsi: rescan VPD attributes")
 Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
 ---
- drivers/scsi/scsi.c      |    3 +++
- drivers/scsi/scsi_scan.c |    3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi.c        |   52 +++++++++++++++++++++++---------------------
+ drivers/scsi/scsi_lib.c    |   12 +++++-----
+ drivers/scsi/scsi_sysfs.c  |   14 +++++++-----
+ include/scsi/scsi_device.h |   14 ++++++++----
+ 4 files changed, 50 insertions(+), 42 deletions(-)
 
 diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index b1bf42b93fcc..ed085e78c893 100644
+index ed085e78c893..143b384fd145 100644
 --- a/drivers/scsi/scsi.c
 +++ b/drivers/scsi/scsi.c
-@@ -784,6 +784,9 @@ void scsi_attach_vpd(struct scsi_device *sdev)
+@@ -782,7 +782,7 @@ void scsi_attach_vpd(struct scsi_device *sdev)
+ 	int vpd_len = SCSI_VPD_PG_LEN;
+ 	int pg80_supported = 0;
  	int pg83_supported = 0;
- 	unsigned char __rcu *vpd_buf, *orig_vpd_buf = NULL;
+-	unsigned char __rcu *vpd_buf, *orig_vpd_buf = NULL;
++	unsigned char *vpd_buf;
  
-+	if (sdev->scsi_level < SCSI_3)
-+		return;
-+
- 	if (sdev->skip_vpd_pages)
+ 	if (sdev->scsi_level < SCSI_3)
  		return;
- retry_pg0:
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 6a820668d442..1b16c89e0cf9 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -986,8 +986,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+@@ -816,58 +816,60 @@ retry_pg0:
+ 	vpd_len = SCSI_VPD_PG_LEN;
+ 
+ 	if (pg80_supported) {
++		struct scsi_vpd_pg *vpd, *orig_vpd;
+ retry_pg80:
+-		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
+-		if (!vpd_buf)
++		vpd = kmalloc(sizeof(*vpd) + vpd_len, GFP_KERNEL);
++		if (!vpd)
+ 			return;
+ 
+-		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80, vpd_len);
++		result = scsi_vpd_inquiry(sdev, vpd->buf, 0x80, vpd_len);
+ 		if (result < 0) {
+-			kfree(vpd_buf);
++			kfree(vpd);
+ 			return;
  		}
+ 		if (result > vpd_len) {
+ 			vpd_len = result;
+-			kfree(vpd_buf);
++			kfree(vpd);
+ 			goto retry_pg80;
+ 		}
++		vpd->len = result;
++
+ 		mutex_lock(&sdev->inquiry_mutex);
+-		orig_vpd_buf = sdev->vpd_pg80;
+-		sdev->vpd_pg80_len = result;
+-		rcu_assign_pointer(sdev->vpd_pg80, vpd_buf);
++		orig_vpd = rcu_dereference_protected(sdev->vpd_pg80, 1);
++		rcu_assign_pointer(sdev->vpd_pg80, vpd);
+ 		mutex_unlock(&sdev->inquiry_mutex);
+-		synchronize_rcu();
+-		if (orig_vpd_buf) {
+-			kfree(orig_vpd_buf);
+-			orig_vpd_buf = NULL;
+-		}
++
++		if (orig_vpd)
++			kfree_rcu(orig_vpd, rcu);
+ 		vpd_len = SCSI_VPD_PG_LEN;
  	}
  
--	if (sdev->scsi_level >= SCSI_3)
--		scsi_attach_vpd(sdev);
-+	scsi_attach_vpd(sdev);
+ 	if (pg83_supported) {
++		struct scsi_vpd_pg *vpd, *orig_vpd;
+ retry_pg83:
+-		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
+-		if (!vpd_buf)
++		vpd = kmalloc(sizeof(*vpd) + vpd_len, GFP_KERNEL);
++		if (!vpd)
+ 			return;
  
- 	sdev->max_queue_depth = sdev->queue_depth;
+-		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83, vpd_len);
++		result = scsi_vpd_inquiry(sdev, vpd->buf, 0x83, vpd_len);
+ 		if (result < 0) {
+-			kfree(vpd_buf);
++			kfree(vpd);
+ 			return;
+ 		}
+ 		if (result > vpd_len) {
+ 			vpd_len = result;
+-			kfree(vpd_buf);
++			kfree(vpd);
+ 			goto retry_pg83;
+ 		}
++		vpd->len = result;
++
+ 		mutex_lock(&sdev->inquiry_mutex);
+-		orig_vpd_buf = sdev->vpd_pg83;
+-		sdev->vpd_pg83_len = result;
+-		rcu_assign_pointer(sdev->vpd_pg83, vpd_buf);
++		orig_vpd = rcu_dereference_protected(sdev->vpd_pg83, 1);
++		rcu_assign_pointer(sdev->vpd_pg83, vpd);
+ 		mutex_unlock(&sdev->inquiry_mutex);
+-		synchronize_rcu();
+-		if (orig_vpd_buf)
+-			kfree(orig_vpd_buf);
++
++		if (orig_vpd)
++			kfree_rcu(orig_vpd, rcu);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index fa6b2c4eb7a2..e44f66bc4c90 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3175,7 +3175,7 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ 	u8 cur_id_type = 0xff;
+ 	u8 cur_id_size = 0;
+ 	unsigned char *d, *cur_id_str;
+-	unsigned char __rcu *vpd_pg83;
++	struct scsi_vpd_pg *vpd_pg83;
+ 	int id_size = -EINVAL;
+ 
+ 	rcu_read_lock();
+@@ -3205,8 +3205,8 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ 	}
+ 
+ 	memset(id, 0, id_len);
+-	d = vpd_pg83 + 4;
+-	while (d < vpd_pg83 + sdev->vpd_pg83_len) {
++	d = vpd_pg83->buf + 4;
++	while (d < vpd_pg83->buf + vpd_pg83->len) {
+ 		/* Skip designators not referring to the LUN */
+ 		if ((d[1] & 0x30) != 0x00)
+ 			goto next_desig;
+@@ -3308,7 +3308,7 @@ EXPORT_SYMBOL(scsi_vpd_lun_id);
+ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ {
+ 	unsigned char *d;
+-	unsigned char __rcu *vpd_pg83;
++	struct scsi_vpd_pg *vpd_pg83;
+ 	int group_id = -EAGAIN, rel_port = -1;
+ 
+ 	rcu_read_lock();
+@@ -3318,8 +3318,8 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ 		return -ENXIO;
+ 	}
+ 
+-	d = sdev->vpd_pg83 + 4;
+-	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
++	d = vpd_pg83->buf + 4;
++	while (d < vpd_pg83->buf + vpd_pg83->len) {
+ 		switch (d[1] & 0xf) {
+ 		case 0x4:
+ 			/* Relative target port */
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 4f18a851e2c7..061c6ec539dc 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -761,13 +761,15 @@ show_vpd_##_page(struct file *filp, struct kobject *kobj,	\
+ {									\
+ 	struct device *dev = container_of(kobj, struct device, kobj);	\
+ 	struct scsi_device *sdev = to_scsi_device(dev);			\
+-	int ret;							\
+-	if (!sdev->vpd_##_page)						\
+-		return -EINVAL;						\
++	struct scsi_vpd_pg *vpd_pg;					\
++	ssize_t ret = -EINVAL;						\
++									\
+ 	rcu_read_lock();						\
+-	ret = memory_read_from_buffer(buf, count, &off,			\
+-				      rcu_dereference(sdev->vpd_##_page), \
+-				       sdev->vpd_##_page##_len);	\
++	vpd_pg = rcu_dereference(sdev->vpd_##_page);			\
++	if (vpd_pg)							\
++		ret = memory_read_from_buffer(buf, count, &off,		\
++					      vpd_pg->buf,		\
++					      vpd_pg->len);		\
+ 	rcu_read_unlock();						\
+ 	return ret;						\
+ }									\
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f63a16760ae9..073a411c18ae 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -74,6 +74,13 @@ struct scsi_event {
+ 	 */
+ };
+ 
++#define SCSI_VPD_PG_LEN                255
++struct scsi_vpd_pg {
++	struct rcu_head rcu;
++	int len;
++	unsigned char buf[0];
++};
++
+ struct scsi_device {
+ 	struct Scsi_Host *host;
+ 	struct request_queue *request_queue;
+@@ -116,11 +123,8 @@ struct scsi_device {
+ 	const char * model;		/* ... after scan; point to static string */
+ 	const char * rev;		/* ... "nullnullnullnull" before scan */
+ 
+-#define SCSI_VPD_PG_LEN                255
+-	int vpd_pg83_len;
+-	unsigned char __rcu *vpd_pg83;
+-	int vpd_pg80_len;
+-	unsigned char __rcu *vpd_pg80;
++	struct scsi_vpd_pg __rcu *vpd_pg80;
++	struct scsi_vpd_pg __rcu *vpd_pg83;
+ 	unsigned char current_tag;	/* current tag */
+ 	struct scsi_target      *sdev_target;   /* used only for single_lun */
  
