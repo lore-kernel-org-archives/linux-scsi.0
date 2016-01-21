@@ -1,115 +1,73 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: export function scsi_scan.c:sanitize_inquiry_string
-Date: Thu, 21 Jan 2016 07:35:02 +0100
-Message-ID: <20160121063502.GS2742@c203.arch.suse.de>
-References: <20160120194028.23159.25263.stgit@brunhilda>
- <20160120194141.23159.5168.stgit@brunhilda>
+From: Alexander Duyck <aduyck@mirantis.com>
+Subject: [PATCH 0/2] scsi: Fix endless loop of ATA hard resets due to VPD
+ reads
+Date: Wed, 20 Jan 2016 22:35:15 -0800
+Message-ID: <20160121063039.3803.66.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45006 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758585AbcAUGfI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jan 2016 01:35:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20160120194141.23159.5168.stgit@brunhilda>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34324 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758585AbcAUGfS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2016 01:35:18 -0500
+Received: by mail-pa0-f41.google.com with SMTP id uo6so18387745pac.1
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2016 22:35:17 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>
-Cc: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+To: jbottomley@odin.com, hare@suse.de, linux-scsi@vger.kernel.org
+Cc: alexander.duyck@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, shane.seymour@hpe.com, jthumshirn@suse.de
 
-On Wed, Jan 20, 2016 at 01:41:41PM -0600, Don Brace wrote:
-> The hpsa driver uses this function to cleanup inquiry
-> data. Our new pqi driver will also use this
-> function. This function was copied into both drivers.
->=20
-> This patch exports sanitize_inquiry_string so the hpsa
-> and the pqi drivers can use this function directly.
->=20
-> Hannes recommended the change in review:
-> https://www.marc.info/?l=3Dlinux-scsi&m=3D144619249003064&w=3D2
-> that using the existing function in scsi_scan would be
-> preferrable.
->=20
-> Suggested-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
->  drivers/scsi/scsi_scan.c |   12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 6a82066..1f02e84 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -518,7 +518,8 @@ void scsi_target_reap(struct scsi_target *starget=
-)
->  }
-> =20
->  /**
-> - * sanitize_inquiry_string - remove non-graphical chars from an INQU=
-IRY result string
-> + * scsi_sanitize_inquiry_string - remove non-graphical chars from an
-> + *                                INQUIRY result string
->   * @s: INQUIRY result string to sanitize
->   * @len: length of the string
->   *
-> @@ -531,7 +532,7 @@ void scsi_target_reap(struct scsi_target *starget=
-)
->   *	string terminator, so all the following characters are set to
->   *	spaces.
->   **/
-> -static void sanitize_inquiry_string(unsigned char *s, int len)
-> +void scsi_sanitize_inquiry_string(unsigned char *s, int len)
->  {
->  	int terminated =3D 0;
-> =20
-> @@ -542,6 +543,7 @@ static void sanitize_inquiry_string(unsigned char=
- *s, int len)
->  			*s =3D ' ';
->  	}
->  }
-> +EXPORT_SYMBOL(scsi_sanitize_inquiry_string);
-> =20
->  /**
->   * scsi_probe_lun - probe a single LUN using a SCSI INQUIRY
-> @@ -627,9 +629,9 @@ static int scsi_probe_lun(struct scsi_device *sde=
-v, unsigned char *inq_result,
->  	}
-> =20
->  	if (result =3D=3D 0) {
-> -		sanitize_inquiry_string(&inq_result[8], 8);
-> -		sanitize_inquiry_string(&inq_result[16], 16);
-> -		sanitize_inquiry_string(&inq_result[32], 4);
-> +		scsi_sanitize_inquiry_string(&inq_result[8], 8);
-> +		scsi_sanitize_inquiry_string(&inq_result[16], 16);
-> +		scsi_sanitize_inquiry_string(&inq_result[32], 4);
-> =20
->  		response_len =3D inq_result[4] + 5;
->  		if (response_len > 255)
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Recent changes to the kernel pulled in during the merge window have
+resulted in my system generating an endless loop of the following type of
+errors:
+
+[  318.965756] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  318.968457] ata14.00: configured for UDMA/66
+[  318.970656] ata14: EH complete
+[  318.984366] ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+[  318.986854] ata14.00: irq_stat 0x40000001
+[  318.989138] ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 22 dma 16640 in
+         Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
+[  318.995986] ata14: hard resetting link
+
+I bisected the issue and found the patch responsible for the issue was
+commit 09e2b0b14690 "scsi: rescan VPD attributes".  This commit contained
+several issues.
+
+First, the commit had changed the behavior in terms of what devices we
+called scsi_attach_vpd() for.  As a result we were calling it for devices
+that didn't support a scsi_level of 6, SCSI 3, so VPD accesses could
+result in errors.
+
+Second, the commit as well as a follow-on patch for it contained a number
+of RCU errors.  Specifically the code was structured such that we had
+accesses outside of RCU locked regions, and repeated use of the RCU
+protected pointer without using the proper accessors.  As such it was
+possible to get into a serious corruption situation should a pointer be
+updated.
+
+Ultimately neither of these bugs were my root cause.  It turns out the
+Marvel Console SCSI device in my system needed to have a flag set to
+disable VPD access in order to keep things from looping through the error
+repeatedly.  In order to resolve it I had to add the kernel parameter
+"scsi_mod.dev_flags=Marvell:Console:0x4000000".  This allowed my system to
+boot without any errors, however the first two issues described above are
+still relevent so I thought I would provide the patches since I had already
+written them up.
+
+---
+
+Alexander Duyck (2):
+      scsi: Do not attach VPD to devices that don't support it
+      scsi: Fix RCU handling for VPD pages
 
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+ drivers/scsi/scsi.c        |   55 ++++++++++++++++++++++++--------------------
+ drivers/scsi/scsi_lib.c    |   12 +++++-----
+ drivers/scsi/scsi_scan.c   |    3 +-
+ drivers/scsi/scsi_sysfs.c  |   14 ++++++-----
+ include/scsi/scsi_device.h |   14 +++++++----
+ 5 files changed, 54 insertions(+), 44 deletions(-)
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
