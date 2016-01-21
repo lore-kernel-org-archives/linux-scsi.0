@@ -1,22 +1,44 @@
-From: =?utf-8?Q?=22Kai_M=C3=A4kisara_=28Kolumbus=29=22?=
-	<kai.makisara@kolumbus.fi>
-Subject: What partition should the MTMKPART argument specify? Was: Re: st driver doesn't seem to grok LTO partitioning
-Date: Thu, 21 Jan 2016 22:58:46 +0200
-Message-ID: <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
-References: <20151218170644.24167419@harpe.intellique.com> <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr> <20160104124626.3112e8c0@harpe.intellique.com> <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com> <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com> <20160106161049.34f29973@harpe.intellique.com> <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com> <20160106170720.61db9e86@harpe.intellique.com> <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net>
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
+ st driver doesn't seem to grok LTO partitioning
+Date: Thu, 21 Jan 2016 17:06:03 -0500 (EST)
+Message-ID: <1281192568.8282297.1453413963788.JavaMail.zimbra@redhat.com>
+References: <20151218170644.24167419@harpe.intellique.com> <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com> <20160106161049.34f29973@harpe.intellique.com> <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com> <20160106170720.61db9e86@harpe.intellique.com> <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vs15.mail.saunalahti.fi ([62.142.117.202]:41349 "EHLO
-	vs15.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760189AbcAUU6z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2016 15:58:55 -0500
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:45794 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbcAUWGQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2016 17:06:16 -0500
+In-Reply-To: <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hpe.com>
-Cc: Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
+Cc: Shane M Seymour <shane.seymour@hpe.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, linux-scsi@vger.kernel.org
+
+Given what we see at customers I am leaning towards the SCSI level <=3D=
+2 to ensure the older LTO5's are supported.
+The newer ones should be backwards compatible.
+I may have an older LTO5 showing up that wont need a F/W update to work=
+, and will be able to add a "tested by" once I get it.
+
+But lets see what the others have to say
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>
+To: "Shane M Seymour" <shane.seymour@hpe.com>
+Cc: "Laurence Oberman" <loberman@redhat.com>, "Emmanuel Florac" <eflora=
+c@intellique.com>, "Laurence Oberman" <oberman.l@gmail.com>, linux-scsi=
+@vger.kernel.org
+Sent: Thursday, January 21, 2016 3:58:46 PM
+Subject: What partition should the MTMKPART argument specify? Was: Re: =
+st driver doesn't seem to grok LTO partitioning
 
 
 > On 15.1.2016, at 2.21, Seymour, Shane M <shane.seymour@hpe.com> wrote=
