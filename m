@@ -1,85 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi_dh_rdac: always retry MODE SELECT on command lock
- violation
-Date: Fri, 22 Jan 2016 15:48:18 +0100
-Message-ID: <20160122144818.GA5963@c203.arch.suse.de>
-References: <1453473761-54777-1-git-send-email-hare@suse.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [Y2038] [PATCH, RESEND 2] qla2xxx: Remove use of 'struct timeval'
+Date: Fri, 22 Jan 2016 16:12:25 +0100
+Message-ID: <1700481.AdoIR1LgPH@wuerfel>
+References: <1528415.ru8bxkDU1V@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59702 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753761AbcAVOsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jan 2016 09:48:24 -0500
-Content-Disposition: inline
-In-Reply-To: <1453473761-54777-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1528415.ru8bxkDU1V@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: y2038@lists.linaro.org
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Tina Ruchandani <ruchandani.tina@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Fri, Jan 22, 2016 at 03:42:41PM +0100, Hannes Reinecke wrote:
-> If MODE SELECT returns with sense '05/91/36' (command lock violation)
-> it should always be retried without counting the number of retries.
-> During an HBA upgrade or similar circumstances one might see a flood
-> of MODE SELECT command from various HBAs, which will easily trigger
-> the sense code and exceed the retry count.
->=20
-> References: bsc#956949
+On Friday 22 January 2016 15:28:32 Arnd Bergmann wrote:
+> struct register_host_info stores a 64-bit UTC system time timestamp.
+> This patch removes the use of 'struct timeval' to obtain that timestamp
+> as its tv_sec value will overflow on 32-bit systems in year 2038 beyond.
+> The patch uses ktime_get_real_seconds() which returns a 64-bit seconds value.
+> 
+> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
 
-Without the bugzilla refrence
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/device_handler/scsi_dh_rdac.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scs=
-i/device_handler/scsi_dh_rdac.c
-> index 3613581..93880ed 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -562,7 +562,7 @@ static int mode_select_handle_sense(struct scsi_d=
-evice *sdev,
->  			/*
->  			 * Command Lock contention
->  			 */
-> -			err =3D SCSI_DH_RETRY;
-> +			err =3D SCSI_DH_IMM_RETRY;
->  		break;
->  	default:
->  		break;
-> @@ -612,6 +612,8 @@ retry:
->  		err =3D mode_select_handle_sense(sdev, h->sense);
->  		if (err =3D=3D SCSI_DH_RETRY && retry_cnt--)
->  			goto retry;
-> +		if (err =3D=3D SCSI_DH_IMM_RETRY)
-> +			goto retry;
->  	}
->  	if (err =3D=3D SCSI_DH_OK) {
->  		h->state =3D RDAC_STATE_ACTIVE;
-> --=20
-> 1.8.5.6
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I was missing
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Tina Ruchandani <ruchandani.tina@gmail.com>
+
+If anyone is going to pick this up, let me know whether you will fix
+it up yourself or if I should resend.
