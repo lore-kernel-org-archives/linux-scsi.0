@@ -1,114 +1,162 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 1/2] iscsi_ibft: Add prefix-len attribute
-Date: Fri, 22 Jan 2016 11:49:12 -0800
-Message-ID: <d3149ad6dd01934a080fcd634d4dbfbaa35b3500.1453419653.git.lduncan@suse.com>
-References: <cover.1453419653.git.lduncan@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54964 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753117AbcAVTvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jan 2016 14:51:31 -0500
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id C9E51AC86
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 19:51:28 +0000 (UTC)
-In-Reply-To: <cover.1453419653.git.lduncan@suse.com>
-In-Reply-To: <cover.1453419653.git.lduncan@suse.com>
-References: <cover.1453419653.git.lduncan@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] final round of SCSI updates for the 4.4+ merge window
+Date: Fri, 22 Jan 2016 11:52:44 -0800
+Message-ID: <1453492364.2339.49.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hare@suse.de, Lee Duncan <lduncan@suse.com>
 
-From: Hannes Reinecke <hare@suse.de>
+This is mostly stuff which missed the first pull request because it
+needed to incubate longer.  It's mainly made up of the ncr 5380 rework
+but also has a few assorted bug fixes.
 
-The iBFT table only specifies a prefix length, not a netmask.
-And the netmask is pretty much pointless for IPv6.
-So introduce a new attribute 'prefix-len' and display the
-netmask attribute only for IPv4 addresses.
+The patch is available here:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/firmware/iscsi_ibft.c    | 12 +++++++++++-
- drivers/scsi/iscsi_boot_sysfs.c  |  5 +++++
- include/linux/iscsi_boot_sysfs.h |  1 +
- 3 files changed, 17 insertions(+), 1 deletion(-)
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-index 72791232e46b..2dd1fbb8cccc 100644
---- a/drivers/firmware/iscsi_ibft.c
-+++ b/drivers/firmware/iscsi_ibft.c
-@@ -319,6 +319,9 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
- 		val = cpu_to_be32(~((1 << (32-nic->subnet_mask_prefix))-1));
- 		str += sprintf(str, "%pI4", &val);
- 		break;
-+	case ISCSI_BOOT_ETH_PREFIX_LEN:
-+		str += sprintf(str, "%d\n", nic->subnet_mask_prefix);
-+		break;
- 	case ISCSI_BOOT_ETH_ORIGIN:
- 		str += sprintf(str, "%d\n", nic->origin);
- 		break;
-@@ -460,10 +463,17 @@ static umode_t ibft_check_nic_for(void *data, int type)
- 		if (address_not_null(nic->ip_addr))
- 			rc = S_IRUGO;
- 		break;
--	case ISCSI_BOOT_ETH_SUBNET_MASK:
-+	case ISCSI_BOOT_ETH_PREFIX_LEN:
- 		if (nic->subnet_mask_prefix)
- 			rc = S_IRUGO;
- 		break;
-+	case ISCSI_BOOT_ETH_SUBNET_MASK:
-+		if (!memcmp(nic->ip_addr, nulls, 10) &&
-+		    (nic->ip_addr[10] == 0xff) &&
-+		    (nic->ip_addr[11] == 0xff) &&
-+		    nic->subnet_mask_prefix)
-+			rc = S_IRUGO;
-+		break;
- 	case ISCSI_BOOT_ETH_ORIGIN:
- 		rc = S_IRUGO;
- 		break;
-diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-index 680bf6f0ce76..8f0ea97cf31f 100644
---- a/drivers/scsi/iscsi_boot_sysfs.c
-+++ b/drivers/scsi/iscsi_boot_sysfs.c
-@@ -166,6 +166,7 @@ static struct attribute_group iscsi_boot_target_attr_group = {
- iscsi_boot_rd_attr(eth_index, index, ISCSI_BOOT_ETH_INDEX);
- iscsi_boot_rd_attr(eth_flags, flags, ISCSI_BOOT_ETH_FLAGS);
- iscsi_boot_rd_attr(eth_ip, ip-addr, ISCSI_BOOT_ETH_IP_ADDR);
-+iscsi_boot_rd_attr(eth_prefix, prefix-len, ISCSI_BOOT_ETH_PREFIX_LEN);
- iscsi_boot_rd_attr(eth_subnet, subnet-mask, ISCSI_BOOT_ETH_SUBNET_MASK);
- iscsi_boot_rd_attr(eth_origin, origin, ISCSI_BOOT_ETH_ORIGIN);
- iscsi_boot_rd_attr(eth_gateway, gateway, ISCSI_BOOT_ETH_GATEWAY);
-@@ -181,6 +182,7 @@ static struct attribute *ethernet_attrs[] = {
- 	&iscsi_boot_attr_eth_index.attr,
- 	&iscsi_boot_attr_eth_flags.attr,
- 	&iscsi_boot_attr_eth_ip.attr,
-+	&iscsi_boot_attr_eth_prefix.attr,
- 	&iscsi_boot_attr_eth_subnet.attr,
- 	&iscsi_boot_attr_eth_origin.attr,
- 	&iscsi_boot_attr_eth_gateway.attr,
-@@ -208,6 +210,9 @@ static umode_t iscsi_boot_eth_attr_is_visible(struct kobject *kobj,
- 	else if (attr ==  &iscsi_boot_attr_eth_ip.attr)
- 		return boot_kobj->is_visible(boot_kobj->data,
- 					     ISCSI_BOOT_ETH_IP_ADDR);
-+	else if (attr ==  &iscsi_boot_attr_eth_prefix.attr)
-+		return boot_kobj->is_visible(boot_kobj->data,
-+					     ISCSI_BOOT_ETH_PREFIX_LEN);
- 	else if (attr ==  &iscsi_boot_attr_eth_subnet.attr)
- 		return boot_kobj->is_visible(boot_kobj->data,
- 					     ISCSI_BOOT_ETH_SUBNET_MASK);
-diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
-index 2a8b1659bf35..548d55395488 100644
---- a/include/linux/iscsi_boot_sysfs.h
-+++ b/include/linux/iscsi_boot_sysfs.h
-@@ -23,6 +23,7 @@ enum iscsi_boot_eth_properties_enum {
- 	ISCSI_BOOT_ETH_INDEX,
- 	ISCSI_BOOT_ETH_FLAGS,
- 	ISCSI_BOOT_ETH_IP_ADDR,
-+	ISCSI_BOOT_ETH_PREFIX_LEN,
- 	ISCSI_BOOT_ETH_SUBNET_MASK,
- 	ISCSI_BOOT_ETH_ORIGIN,
- 	ISCSI_BOOT_ETH_GATEWAY,
--- 
-1.8.5.2
+The short changelog is:
 
+Dan Carpenter (2):
+      storvsc: Fix typo in MODULE_PARM_DESC
+      cxgbi: Typo in MODULE_PARM_DESC
+
+Finn Thain (71):
+      ncr5380: Cleanup whitespace and parentheses
+      atari_NCR5380: Merge changes from NCR5380.c
+      ncr5380: Merge changes from atari_NCR5380.c
+      ncr5380: Fix whitespace in comments using regexp
+      ncr5380: Fix trailing whitespace using regexp
+      ncr5380: Cleanup comments
+      ncr5380: Fix soft lockups
+      atari_scsi, sun3_scsi: Remove global Scsi_Host pointer
+      atari_NCR5380: Eliminate HOSTNO macro
+      atari_NCR5380: Remove HOSTNO macro from printk() and seq_printf() calls
+      ncr5380: Implement new eh_bus_reset_handler
+      ncr5380: Fix EH during arbitration and selection
+      ncr5380: Implement new eh_abort_handler
+      ncr5380: Fix autosense bugs
+      ncr5380: Refactor command completion
+      ncr5380: Use standard list data structure
+      ncr5380: Remove redundant volatile qualifiers
+      ncr5380: Remove LIST and REMOVE macros
+      ncr5380: Use dsprintk() for queue debugging
+      ncr5380: Use shost_priv helper
+      ncr5380: Remove H_NO macro and introduce dsprintk
+      ncr5380: Remove command list debug code
+      ncr5380: Change instance->host_lock to hostdata->lock
+      ncr5380: Remove redundant ICR_ARBITRATION_LOST test and eliminate FLAG_DTC3181E
+      atari_NCR5380: Fix queue_size limit
+      ncr5380: Fix and cleanup scsi_host_template initializers
+      ncr5380: Fix NDEBUG_NO_DATAOUT flag
+      ncr5380: Cleanup #include directives
+      ncr5380: Fix off-by-one bug in extended_msg[] bounds check
+      ncr5380: Standardize reselection handling
+      ncr5380: Replace READ_OVERRUNS macro with FLAG_NO_DMA_FIXUPS
+      ncr5380: Replace redundant flags with FLAG_NO_DMA_FIXUP
+      ncr5380: Introduce NCR5380_poll_politely2
+      ncr5380: Standardize interrupt handling
+      ncr5380: Remove UNSAFE macro
+      ncr5380: Standardize work queueing algorithm
+      ncr5380: Use work_struct instead of delayed_work
+      ncr5380: Dont wait for BUS FREE after disconnect
+      atari_NCR5380: Use arbitration timeout
+      atari_NCR5380: Set do_abort() timeouts
+      ncr5380: Fix bus phase in do_abort()
+      ncr5380: Fix !REQ timeout in do_abort()
+      ncr5380: Add missing break after case MESSAGE_REJECT
+      ncr5380: Drop DEF_SCSI_QCMD macro
+      ncr5380: Add missing lock in eh_abort_handler
+      ncr5380: Fix NCR5380_transfer_pio() result
+      ncr5380: Rework disconnect versus poll logic
+      ncr5380: Implement NCR5380_dma_xfer_len and remove LIMIT_TRANSFERSIZE macro
+      ncr5380: Always retry arbitration and selection
+      ncr5380: Eliminate selecting state
+      ncr5380: Sleep when polling, if possible
+      ncr5380: Introduce unbound workqueue
+      ncr5380: Cleanup bogus {request,release}_region() calls
+      ncr5380: Eliminate USLEEP_WAITLONG delay
+      ncr5380: Keep BSY asserted when entering SELECTION phase
+      ncr5380: Proceed with next command after NCR5380_select() calls scsi_done
+      ncr5380: Always escalate bad target time-out in NCR5380_select()
+      ncr5380: Use return instead of goto in NCR5380_select()
+      ncr5380: Remove redundant register writes
+      ncr5380: Remove unused hostdata->aborted flag
+      ncr5380: Simplify bus reset handlers
+      atari_NCR5380: Remove RESET_BOOT, CONFIG_ATARI_SCSI_TOSHIBA_DELAY and CONFIG_ATARI_SCSI_RESET_BOOT
+      atari_NCR5380: Reset bus on driver initialization if required
+      ncr5380: Move NCR53C400-specific code
+      ncr5380: Split NCR5380_init() into two functions
+      ncr5380: Remove NCR5380_instance_name macro
+      ncr5380: Remove NCR5380_local_declare and NCR5380_setup macros
+      ncr5380: Remove more pointless macros
+      ncr5380: Eliminate PDEBUG*, TDEBUG* and DTCDEBUG* macros
+      ncr5380: Remove redundant static variable initializers
+      atari_scsi: Fix SCSI host ID setting
+
+Hannes Reinecke (1):
+      ncr5380: Remove references to linked commands
+
+Insu Yun (1):
+      ipr: Fix out-of-bounds null overwrite
+
+John Garry (3):
+      hisi_sas: Use u64 for qw0 in free_device_v1_hw()
+      hisi_sas: Fix typo in setup_itct_v1_hw()
+      hisi_sas: Fix v1 itct masks
+
+Mike Christie (1):
+      scsi: add Synology to 1024 sector blacklist
+
+Nicholas Krause (1):
+      megaraid: Fix possible NULL pointer deference in mraid_mm_ioctl
+
+Ondrej Zary (6):
+      ncr5380: Add support for HP C2502
+      ncr5380: Fix wait for 53C80 registers registers after PDMA
+      ncr5380: Enable PDMA for DTC chips
+      ncr5380: Enable PDMA for NCR53C400A
+      ncr5380: Use runtime register mapping
+      ncr5380: Fix pseudo DMA transfers on 53C400
+
+Ryan C. Underwood (1):
+      3w-xxxx: Pass through compat mode ioctls
+
+Sudip Mukherjee (1):
+      imm: Use new parport device model
+
+And the diffstat:
+
+ drivers/scsi/3w-xxxx.c                 |    3 +
+ drivers/scsi/Kconfig                   |   17 -
+ drivers/scsi/NCR5380.c                 | 2870 +++++++++++++++-----------------
+ drivers/scsi/NCR5380.h                 |   87 +-
+ drivers/scsi/arm/cumana_1.c            |   31 +-
+ drivers/scsi/arm/oak.c                 |   27 +-
+ drivers/scsi/atari_NCR5380.c           | 2272 +++++++++++--------------
+ drivers/scsi/atari_scsi.c              |  102 +-
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c     |    2 +-
+ drivers/scsi/dmx3191d.c                |   33 +-
+ drivers/scsi/dtc.c                     |  115 +-
+ drivers/scsi/dtc.h                     |   45 +-
+ drivers/scsi/g_NCR5380.c               |  408 +++--
+ drivers/scsi/g_NCR5380.h               |   66 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   40 +-
+ drivers/scsi/imm.c                     |   50 +-
+ drivers/scsi/ipr.c                     |    5 +-
+ drivers/scsi/mac_scsi.c                |  117 +-
+ drivers/scsi/megaraid/megaraid_mm.c    |    4 +
+ drivers/scsi/pas16.c                   |  116 +-
+ drivers/scsi/pas16.h                   |   40 +-
+ drivers/scsi/scsi_devinfo.c            |    1 +
+ drivers/scsi/storvsc_drv.c             |    2 +-
+ drivers/scsi/sun3_scsi.c               |  141 +-
+ drivers/scsi/t128.c                    |  102 +-
+ drivers/scsi/t128.h                    |   39 +-
+ 26 files changed, 3013 insertions(+), 3722 deletions(-)
+
+James
