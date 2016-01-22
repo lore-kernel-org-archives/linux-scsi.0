@@ -1,37 +1,40 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
-Date: Fri, 22 Jan 2016 13:11:43 -0600
-Message-ID: <56A27EEF.7060204@cs.wisc.edu>
-References: <1447304741-6594-1-git-send-email-mchristi@redhat.com> <56A25DD7.5090700@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Lee Duncan <lduncan@suse.com>
+Subject: [PATCH 0/2] RESEND: Enable iBFT IPv6 booting with prefix length
+Date: Fri, 22 Jan 2016 11:49:11 -0800
+Message-ID: <cover.1453419653.git.lduncan@suse.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49070 "EHLO sabe.cs.wisc.edu"
+Received: from mx2.suse.de ([195.135.220.15]:54942 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753432AbcAVTL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jan 2016 14:11:59 -0500
-In-Reply-To: <56A25DD7.5090700@linux.vnet.ibm.com>
+	id S1753002AbcAVTv2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jan 2016 14:51:28 -0500
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id E8967AC01
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 19:51:25 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>, mchristi@redhat.com, linux-scsi@vger.kernel.org
-Cc: Guilherme Piccoli <gpiccoli@linux.vnet.ibm.com>, Or Gerlitz <ogerlitz@mellanox.com>, "gerlitz.or@gmail.com >> Or Gerlitz" <gerlitz.or@gmail.com>, Chris Leech <cleech@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: hare@suse.de, Lee Duncan <lduncan@suse.com>
 
-On 01/22/2016 10:50 AM, Brian King wrote:
-> On 11/11/2015 11:05 PM, mchristi@redhat.com wrote:
->> From: Mike Christie <mchristi@redhat.com>
->>
->> This patch fixes this oops report by Guilherme Piccol:
->>
->> list_del corruption. prev->next should be c000000f3da2b080, but was c000000f3da2c080
-> 
-> Hi Mike! I haven't seen any follow ups on this for a while. What is the plan for this one? 
-> 
+[Resending. Apologies if you get this twice.]
 
-Hey,
+It turns out that IPv6 doesn't care about netmask, but
+instead uses "prefix length" to determine the subnet, but
+the iBFT subsystem still just supports netmask.
 
-I ended up sending Guilherme a patch for the problem I described here.
-They were not hitting that problem. Checked if we were hitting a
-different regression in the abort path. Not hitting that either.
+These two patches enable IPv6 iBFT (iscsi booting)
+by adding support for IPv6 prefix and prefix length.
+Open-iscsi changes to use these new values will be
+introduced once these changes are present.
 
-Or was still debugging it.
+Hannes Reinecke (2):
+  iscsi_ibft: Add prefix-len attribute
+  iscsi_ibft: Always display netmask
+
+ drivers/firmware/iscsi_ibft.c    | 4 ++++
+ drivers/scsi/iscsi_boot_sysfs.c  | 5 +++++
+ include/linux/iscsi_boot_sysfs.h | 1 +
+ 3 files changed, 10 insertions(+)
+
+-- 
+1.8.5.2
+
