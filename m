@@ -1,50 +1,37 @@
-From: Brian King <brking@linux.vnet.ibm.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
-Date: Fri, 22 Jan 2016 10:50:31 -0600
-Message-ID: <56A25DD7.5090700@linux.vnet.ibm.com>
-References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
+Date: Fri, 22 Jan 2016 13:11:43 -0600
+Message-ID: <56A27EEF.7060204@cs.wisc.edu>
+References: <1447304741-6594-1-git-send-email-mchristi@redhat.com> <56A25DD7.5090700@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:49355 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304AbcAVQui (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2016 11:50:38 -0500
-Received: from localhost
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 22 Jan 2016 09:50:38 -0700
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id ACF583E4005E
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 09:50:36 -0700 (MST)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u0MGoafX27721802
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 16:50:36 GMT
-Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u0MGoYJ5014846
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 11:50:34 -0500
-In-Reply-To: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49070 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753432AbcAVTL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jan 2016 14:11:59 -0500
+In-Reply-To: <56A25DD7.5090700@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mchristi@redhat.com, linux-scsi@vger.kernel.org
-Cc: Guilherme Piccoli <gpiccoli@linux.vnet.ibm.com>
+To: Brian King <brking@linux.vnet.ibm.com>, mchristi@redhat.com, linux-scsi@vger.kernel.org
+Cc: Guilherme Piccoli <gpiccoli@linux.vnet.ibm.com>, Or Gerlitz <ogerlitz@mellanox.com>, "gerlitz.or@gmail.com >> Or Gerlitz" <gerlitz.or@gmail.com>, Chris Leech <cleech@redhat.com>
 
-On 11/11/2015 11:05 PM, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
+On 01/22/2016 10:50 AM, Brian King wrote:
+> On 11/11/2015 11:05 PM, mchristi@redhat.com wrote:
+>> From: Mike Christie <mchristi@redhat.com>
+>>
+>> This patch fixes this oops report by Guilherme Piccol:
+>>
+>> list_del corruption. prev->next should be c000000f3da2b080, but was c000000f3da2c080
 > 
-> This patch fixes this oops report by Guilherme Piccol:
+> Hi Mike! I haven't seen any follow ups on this for a while. What is the plan for this one? 
 > 
-> list_del corruption. prev->next should be c000000f3da2b080, but was c000000f3da2c080
 
-Hi Mike! I haven't seen any follow ups on this for a while. What is the plan for this one? 
+Hey,
 
-Thanks,
+I ended up sending Guilherme a patch for the problem I described here.
+They were not hitting that problem. Checked if we were hitting a
+different regression in the abort path. Not hitting that either.
 
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+Or was still debugging it.
