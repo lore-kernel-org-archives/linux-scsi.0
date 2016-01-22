@@ -1,268 +1,168 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V3 7/9] aacraid: Fix AIF triggered IOP_RESET
-Date: Fri, 22 Jan 2016 14:14:49 +0100
-Message-ID: <56A22B49.1040702@redhat.com>
-References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1452842182-684-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <569E60E4.4000903@redhat.com>
- <198D06D448A18D4E93F08FB849C4E39D7D1F6AA9@BBYEXM01.pmc-sierra.internal>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] scsi: Allow activation of scsi-mq per-driver
+Date: Fri, 22 Jan 2016 14:41:28 +0100
+Message-ID: <1453470088-43959-1-git-send-email-jthumshirn@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59993 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:52850 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753405AbcAVNOy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jan 2016 08:14:54 -0500
-In-Reply-To: <198D06D448A18D4E93F08FB849C4E39D7D1F6AA9@BBYEXM01.pmc-sierra.internal>
+	id S1753801AbcAVNlf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jan 2016 08:41:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Scott Benesh <Scott.Benesh@pmcs.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "shane.seymour@hpe.com" <shane.seymour@hpe.com>, zzzDavid Carroll <David.Carroll@pmcs.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On 20.1.2016 21:32, Raghava Aditya Renukunta wrote:
->
->> -----Original Message-----
->> From: Tomas Henzl [mailto:thenzl@redhat.com]
->> Sent: Tuesday, January 19, 2016 8:14 AM
->> To: Raghava Aditya Renukunta; James.Bottomley@HansenPartnership.com;
->> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
->> Cc: Mahesh Rajashekhara; Murthy Bhat; Gana Sridaran; aacraid@pmc-
->> sierra.com; Scott Benesh; jthumshirn@suse.de; shane.seymour@hpe.com;
->> David Carroll
->> Subject: Re: [PATCH V3 7/9] aacraid: Fix AIF triggered IOP_RESET
->>
->> On 15.1.2016 08:16, Raghava Aditya Renukunta wrote:
->>> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
->>>
->>> while driver removal is in progress or PCI shutdown is invoked, driver
->>> kills AIF aacraid thread, but IOCTL requests from the management tools
->>> re-start AIF thread leading to IOP_RESET.
->>>
->>> Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
->>>
->>> Changes in V2:
->>> Set adapter_shutdown flag before shutdown command is sent to \
->>> controller
->>>
->>> Changes in V3:
->>> Call aac_send_shut_shutdown first thing in __aac_shutdown
->>> Convert adapter_shutdown to atomic_t variable to prevent \
->>> SMP coherency issues(race conditions)
->> Hi,
->> I don't think that an atomic variable can change it, imagine that
->> thread just passed your test in aac_cfg_ioctl and another thread
->> enter a bit later the adapter_shutdown so both - an I/O and your shutdown
->> code
->> will run in parallel.
->> Also you need to fix your compat_ioctl path too.
->>
->> --tm
-> Hello Tomas,
-> Yes that would not solve this problem.
-> I can think of 2 solutions
->
-> 1.Place a delay after setting adapter_shutdown and before sending the actual
-> shutdown command in aac_send_shutdown. This way any impending commands will be 
-> processed before the adapter  actually receives the shutdown command. Since management 
-> commands are sync only , shutdown command will be sent last. This solution uses an
-> estimation of the delay
->
-> 2.Since  commands are sync , place a check in aac_fib_send to block 
->  commands once adapter_shutdown is set(only shutdown command will be sent thru)
+Allow the activation of the scsi-mq feature on a per-driver bassis as opposed
+to the current stack global (de)activation.
 
-This option looks better but I guess you still can find a tiny race window.
-What do you think about a mutual exclusive access using a mutex, do you think this could work?
+This allows us to have setups which can combine "slow" rotational media and
+fast media on two different HBA types.
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 54195a117f..b9505c58db 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -858,6 +858,8 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
- 	/*
- 	 *	HBA gets first crack
- 	 */
-+	if (dev->adapter_shutdown)
-+		return -EACCES;
+The following is from a host with rotational disks behind a HP SAS Adapter and
+a fibre channel array behind a Emulex FC Adapter. The hpsa driver does not
+support scsi-mq yet (and has rotational disks attached to it), but the lpfc
+does. This patch allows an optimal combination of the scsi-mq enabled lpfc
+driver and the hpsa driver which still uses a single queue scsi layer and thus
+can make use of IO schedulers.
+
+host:~ # cat /sys/block/sd?/queue/scheduler
+noop deadline [cfq]
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+none
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/fnic/fnic_main.c | 10 ++++++++++
+ drivers/scsi/hosts.c          |  2 +-
+ drivers/scsi/lpfc/lpfc_init.c |  8 ++++++++
+ drivers/scsi/virtio_scsi.c    | 11 +++++++++++
+ include/scsi/scsi_host.h      |  3 ---
+ 5 files changed, 30 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 58ce902..dcb06eb 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -83,6 +83,15 @@ static unsigned int fnic_max_qdepth = FNIC_DFLT_QUEUE_DEPTH;
+ module_param(fnic_max_qdepth, uint, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(fnic_max_qdepth, "Queue depth to report for each LUN");
  
- 	status = aac_dev_ioctl(dev, cmd, arg);
- 	if (status != -ENOTTY)
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 0e954e37f0..02535c07a4 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -212,6 +212,10 @@ int aac_send_shutdown(struct aac_dev * dev)
++#ifdef CONFIG_SCSI_MQ_DEFAULT
++static bool fnic_use_blk_mq = true;
++#else
++static bool fnic_use_blk_mq = false;
++#endif
++
++module_param_named(use_blk_mq, fnic_use_blk_mq, bool, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(use_blk_mq, "Use blk-mq for fnic");
++
+ static struct libfc_function_template fnic_transport_template = {
+ 	.frame_send = fnic_send,
+ 	.lport_set_port_id = fnic_set_port_id,
+@@ -567,6 +576,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		 host->host_no);
+ 
+ 	host->transportt = fnic_fc_transport;
++	host->use_blk_mq = fnic_use_blk_mq;
+ 
+ 	err = fnic_stats_debugfs_init(fnic);
+ 	if (err) {
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 94025c5..d64288a 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -479,7 +479,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	else
+ 		shost->dma_boundary = 0xffffffff;
+ 
+-	shost->use_blk_mq = scsi_use_blk_mq && !shost->hostt->disable_blk_mq;
++	shost->use_blk_mq = scsi_use_blk_mq;
+ 
+ 	device_initialize(&shost->shost_gendev);
+ 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index db9446c..2ea7704 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -86,6 +86,13 @@ static struct scsi_transport_template *lpfc_transport_template = NULL;
+ static struct scsi_transport_template *lpfc_vport_transport_template = NULL;
+ static DEFINE_IDR(lpfc_hba_index);
+ 
++#ifdef CONFIG_SCSI_MQ_DEFAULT
++static bool lpfc_use_blk_mq = true;
++#else
++static bool lpfc_use_blk_mq = false;
++#endif
++module_param_named(use_blk_mq, lpfc_use_blk_mq, bool, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(use_blk_mq, "Use blk-mq for lpfc driver");
+ /**
+  * lpfc_config_port_prep - Perform lpfc initialization prior to config port
+  * @phba: pointer to lpfc hba data structure.
+@@ -3311,6 +3318,7 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	shost->this_id = -1;
+ 	shost->max_cmd_len = 16;
+ 	shost->nr_hw_queues = phba->cfg_fcp_io_channel;
++	shost->use_blk_mq = lpfc_use_blk_mq;
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		shost->dma_boundary =
+ 			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 7dbbb29..a6e7294 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -34,6 +34,14 @@
+ #define VIRTIO_SCSI_EVENT_LEN 8
+ #define VIRTIO_SCSI_VQ_BASE 2
+ 
++#ifdef CONFIG_SCSI_MQ_DEFAULT
++static bool virtio_use_blk_mq = true;
++#else
++static bool virtio_use_blk_mq = false;
++#endif
++module_param_named(use_blk_mq, virtio_use_blk_mq, bool, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(use_blk_mq, "Use blk-mq for virtio_scsi driver");
++
+ /* Command queue element */
+ struct virtio_scsi_cmd {
+ 	struct scsi_cmnd *sc;
+@@ -976,6 +984,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	if (!shost)
  		return -ENOMEM;
- 	aac_fib_init(fibctx);
  
-+	mutex_lock(&aac_mutex);
-+	dev->adapter_shutdown = 1;
-+	mutex_unlock(&aac_mutex);
++	if (hostt == &virtscsi_host_template_multi)
++		shost->use_blk_mq = virtio_use_blk_mq;
 +
- 	cmd = (struct aac_close *) fib_data(fibctx);
+ 	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+ 	shost->sg_tablesize = sg_elems;
+ 	vscsi = shost_priv(shost);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index fcfa3d7..3d6a2de 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -495,9 +495,6 @@ struct scsi_host_template {
+ 	 */
+ 	unsigned int cmd_size;
+ 	struct scsi_host_cmd_pool *cmd_pool;
+-
+-	/* temporary flag to disable blk-mq I/O path */
+-	bool disable_blk_mq;
+ };
  
- 	cmd->command = cpu_to_le32(VM_CloseAll);
-@@ -229,7 +233,6 @@ int aac_send_shutdown(struct aac_dev * dev)
- 	/* FIB should be freed only after getting the response from the F/W */
- 	if (status != -ERESTARTSYS)
- 		aac_fib_free(fibctx);
--	dev->adapter_shutdown = 1;
- 	if ((dev->pdev->device == PMC_DEVICE_S7 ||
- 	     dev->pdev->device == PMC_DEVICE_S8 ||
- 	     dev->pdev->device == PMC_DEVICE_S9) &&
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 6944560e22..a87880ab32 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -706,8 +706,9 @@ static long aac_cfg_ioctl(struct file *file,
- 	int ret;
- 	struct aac_dev *aac;
- 	aac = (struct aac_dev *)file->private_data;
--	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
-+	if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
-+
- 	mutex_lock(&aac_mutex);
- 	ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
- 	mutex_unlock(&aac_mutex);
-
->
-> I am more inclined to go with option 2.
->
-> Regards,
-> Raghava Aditya
->
->>> Signed-off-by: Raghava Aditya Renukunta
->> <raghavaaditya.renukunta@pmcs.com>
->>> ---
->>>  drivers/scsi/aacraid/aacraid.h  |  2 +-
->>>  drivers/scsi/aacraid/comminit.c |  6 +++---
->>>  drivers/scsi/aacraid/linit.c    | 15 ++++++++-------
->>>  3 files changed, 12 insertions(+), 11 deletions(-)
->>>
->>> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
->>> index 2916288..3473668 100644
->>> --- a/drivers/scsi/aacraid/aacraid.h
->>> +++ b/drivers/scsi/aacraid/aacraid.h
->>> @@ -1234,7 +1234,7 @@ struct aac_dev
->>>  	int			msi_enabled;	/* MSI/MSI-X enabled */
->>>  	struct msix_entry	msixentry[AAC_MAX_MSIX];
->>>  	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
->>> -	u8			adapter_shutdown;
->>> +	atomic_t		adapter_shutdown;
->>>  	u32			handle_pci_error;
->>>  };
->>>
->>> diff --git a/drivers/scsi/aacraid/comminit.c
->> b/drivers/scsi/aacraid/comminit.c
->>> index 0e954e3..d361673 100644
->>> --- a/drivers/scsi/aacraid/comminit.c
->>> +++ b/drivers/scsi/aacraid/comminit.c
->>> @@ -212,8 +212,9 @@ int aac_send_shutdown(struct aac_dev * dev)
->>>  		return -ENOMEM;
->>>  	aac_fib_init(fibctx);
->>>
->>> -	cmd = (struct aac_close *) fib_data(fibctx);
->>> +	atomic_set(&dev->adapter_shutdown, 1);
->>>
->>> +	cmd = (struct aac_close *) fib_data(fibctx);
->>>  	cmd->command = cpu_to_le32(VM_CloseAll);
->>>  	cmd->cid = cpu_to_le32(0xfffffffe);
->>>
->>> @@ -229,7 +230,6 @@ int aac_send_shutdown(struct aac_dev * dev)
->>>  	/* FIB should be freed only after getting the response from the F/W
->> */
->>>  	if (status != -ERESTARTSYS)
->>>  		aac_fib_free(fibctx);
->>> -	dev->adapter_shutdown = 1;
->>>  	if ((dev->pdev->device == PMC_DEVICE_S7 ||
->>>  	     dev->pdev->device == PMC_DEVICE_S8 ||
->>>  	     dev->pdev->device == PMC_DEVICE_S9) &&
->>> @@ -468,7 +468,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev
->> *dev)
->>>  	}
->>>  	dev->max_msix = 0;
->>>  	dev->msi_enabled = 0;
->>> -	dev->adapter_shutdown = 0;
->>> +	atomic_set(&dev->adapter_shutdown, 0);
->>>  	if ((!aac_adapter_sync_cmd(dev,
->> GET_COMM_PREFERRED_SETTINGS,
->>>  	  0, 0, 0, 0, 0, 0,
->>>  	  status+0, status+1, status+2, status+3, status+4))
->>> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
->>> index 6944560..27b3fcd 100644
->>> --- a/drivers/scsi/aacraid/linit.c
->>> +++ b/drivers/scsi/aacraid/linit.c
->>> @@ -706,7 +706,7 @@ static long aac_cfg_ioctl(struct file *file,
->>>  	int ret;
->>>  	struct aac_dev *aac;
->>>  	aac = (struct aac_dev *)file->private_data;
->>> -	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
->>> +	if (!capable(CAP_SYS_RAWIO) || atomic_read(&aac-
->>> adapter_shutdown))
->>>  		return -EPERM;
->>>  	mutex_lock(&aac_mutex);
->>>  	ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
->>> @@ -1078,6 +1078,8 @@ static void __aac_shutdown(struct aac_dev * aac)
->>>  	int i;
->>>  	int cpu;
->>>
->>> +	aac_send_shutdown(aac);
->>> +
->>>  	if (aac->aif_thread) {
->>>  		int i;
->>>  		/* Clear out events first */
->>> @@ -1089,7 +1091,7 @@ static void __aac_shutdown(struct aac_dev * aac)
->>>  		}
->>>  		kthread_stop(aac->thread);
->>>  	}
->>> -	aac_send_shutdown(aac);
->>> +
->>>  	aac_adapter_disable_int(aac);
->>>  	cpu = cpumask_first(cpu_online_mask);
->>>  	if (aac->pdev->device == PMC_DEVICE_S6 ||
->>> @@ -1474,7 +1476,7 @@ static int aac_resume(struct pci_dev *pdev)
->>>  	* reset this flag to unblock ioctl() as it was set at
->>>  	* aac_send_shutdown() to block ioctls from upperlayer
->>>  	*/
->>> -	aac->adapter_shutdown = 0;
->>> +	atomic_set(&aac->adapter_shutdown, 0);
->>>  	scsi_unblock_requests(shost);
->>>
->>>  	return 0;
->>> @@ -1553,9 +1555,8 @@ static pci_ers_result_t
->> aac_pci_error_detected(struct pci_dev *pdev,
->>>  	case pci_channel_io_normal:
->>>  		return PCI_ERS_RESULT_CAN_RECOVER;
->>>  	case pci_channel_io_frozen:
->>> -
->>>  		aac->handle_pci_error = 1;
->>> -		aac->adapter_shutdown = 1;
->>> +		atomic_set(&aac->adapter_shutdown, 1);
->>>
->>>  		scsi_block_requests(aac->scsi_host_ptr);
->>>  		aac_flush_ios(aac);
->>> @@ -1567,7 +1568,7 @@ static pci_ers_result_t
->> aac_pci_error_detected(struct pci_dev *pdev,
->>>  		return PCI_ERS_RESULT_NEED_RESET;
->>>  	case pci_channel_io_perm_failure:
->>>  		aac->handle_pci_error = 1;
->>> -		aac->adapter_shutdown = 1;
->>> +		atomic_set(&aac->adapter_shutdown, 1);
->>>
->>>  		aac_flush_ios(aac);
->>>  		return PCI_ERS_RESULT_DISCONNECT;
->>> @@ -1636,7 +1637,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
->>>  	 * reset this flag to unblock ioctl() as it was set
->>>  	 * at aac_send_shutdown() to block ioctls from upperlayer
->>>  	 */
->>> -	aac->adapter_shutdown = 0;
->>> +	atomic_set(&aac->adapter_shutdown, 0);
->>>  	aac->handle_pci_error = 0;
->>>
->>>  	shost_for_each_device(sdev, shost)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ /*
+-- 
+1.8.5.6
 
