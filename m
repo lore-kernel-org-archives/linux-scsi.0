@@ -1,70 +1,131 @@
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: spurious use after free bug in dio_bio_complete on scsi disks (with
- multipath)
-Date: Fri, 22 Jan 2016 12:14:56 +0100
-Message-ID: <56A20F30.4050705@de.ibm.com>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
+ st driver doesn't seem to grok LTO partitioning
+Date: Fri, 22 Jan 2016 12:24:57 +0100
+Message-ID: <20160122122457.7afae563@harpe.intellique.com>
+References: <20151218170644.24167419@harpe.intellique.com>
+	<alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
+	<20160104124626.3112e8c0@harpe.intellique.com>
+	<CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
+	<688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
+	<20160106161049.34f29973@harpe.intellique.com>
+	<1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com>
+	<20160106170720.61db9e86@harpe.intellique.com>
+	<1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
+	<DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net>
+	<0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
+	<DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390 <linux-s390@vger.kernel.org>, Steffen Maier <maier@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail1.g1.pair.com ([66.39.3.162]:48853 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752561AbcAVLY6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2016 06:24:58 -0500
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Seymour, Shane M" <shane.seymour@hpe.com>
+Cc: "Kai =?UTF-8?B?TcOka2lzYXJh?= (Kolumbus)" <kai.makisara@kolumbus.fi>, Laurence Oberman <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-When I enable DEBUG_PAGEALLOC (notice: needs also enablement on the command line)
-I get spurious warnings like the following
+Le Fri, 22 Jan 2016 02:10:03 +0000
+"Seymour, Shane M" <shane.seymour@hpe.com> =C3=A9crivait:
 
-[ 2664.756567] Unable to handle kernel pointer dereference in virtual kernel address space
-[ 2664.756575] failing address: 000000f9ef84c000 TEID: 000000f9ef84c803
-[ 2664.756577] Fault in home space mode while using kernel ASCE.
-[ 2664.756582] AS:0000000000f8b007 R3:000000ff62c03007 S:000000ff62887000 P:000000f9ef84c400 
-[ 2664.756618] Oops: 0011 ilc:2 [#1] SMP DEBUG_PAGEALLOC
-[ 2664.756629] Modules linked in: nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ipt_REJECT nf_reject_ipv4 xt_tcpudp iptable_filter ip_tables x_tables bridge stp llc btrfs xor raid6_pq ghash_s390 prng ecb aes_s390 des_s390 des_generic sha512_s390 sha256_s390 sha1_s390 sha_common eadm_sch nfsd auth_rpcgss oid_registry nfs_acl lockd grace vhost_net tun vhost macvtap macvlan sunrpc dm_service_time dm_multipath dm_mod autofs4
-[ 2664.756721] CPU: 33 PID: 0 Comm: swapper/33 Not tainted 4.4.0+ #117
-[ 2664.756726] task: 000000fa6e86e0a0 ti: 000000fa6e870000 task.ti: 000000fa6e870000
-[ 2664.756731] Krnl PSW : 0704e00180000000 000000000034efba (dio_bio_complete+0xf2/0x100)
-[ 2664.756743]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:0 EA:3
-               Krnl GPRS: 0000000000000000 000000fa6e870000 0000000000000001 0000000000000000
-[ 2664.756751]            000000000034efba 0000000000000000 0000000000000000 000000fa59ff2bc8
-[ 2664.756754]            000000fa4e6a5f00 000000f9ef84ce00 000000fa00001000 000000fa4e6a5f38
-[ 2664.756757]            0000000000001000 0000000000841a88 000000000034efba 000000fa6de6bbe8
-[ 2664.756770] Krnl Code: 000000000034efac: a784ffb6            brc     8,34ef18
-                          000000000034efb0: b9040029            lgr     %r2,%r9
-                         #000000000034efb4: c0e5000f064e        brasl   %r14,52fc50
-                         >000000000034efba: 58c09014            l       %r12,20(%r9)
-                          000000000034efbe: a7f4ffec            brc     15,34ef96
-                          000000000034efc2: 0707                bcr     0,%r7
-                          000000000034efc4: 0707                bcr     0,%r7
-                          000000000034efc6: 0707                bcr     0,%r7
-[ 2664.756826] Call Trace:
-[ 2664.756829] ([<000000000034efba>] dio_bio_complete+0xf2/0x100)
-[ 2664.756833]  [<000000000034f26a>] dio_bio_end_aio+0x42/0x168
-[ 2664.756837]  [<0000000000538b0a>] blk_update_request+0x102/0x468
-[ 2664.756842]  [<0000000000607f20>] scsi_end_request+0x48/0x1d0
-[ 2664.756845]  [<0000000000609b88>] scsi_io_completion+0x110/0x690
-[ 2664.756849]  [<0000000000542186>] blk_done_softirq+0xb6/0xd0
-[ 2664.756854]  [<0000000000165e3c>] __do_softirq+0xd4/0x4b0
-[ 2664.756856]  [<00000000001665f2>] irq_exit+0xe2/0x100
-[ 2664.756859]  [<000000000010ce02>] do_IRQ+0x6a/0x88
-[ 2664.756863]  [<000000000081d5e6>] io_int_handler+0x11a/0x25c
-[ 2664.756867]  [<0000000000104900>] enabled_wait+0x58/0xe8
-[ 2664.756870] ([<00000000001048e8>] enabled_wait+0x40/0xe8)
-[ 2664.756875]  [<0000000000104da2>] arch_cpu_idle+0x32/0x48
-[ 2664.756880]  [<00000000001b45a6>] default_idle_call+0x3e/0x58
-[ 2664.756883]  [<00000000001b481c>] cpu_startup_entry+0x25c/0x358
-[ 2664.756887]  [<00000000001153ca>] smp_start_secondary+0xf2/0x100
-[ 2664.756890]  [<000000000081dbb2>] restart_int_handler+0x62/0x78
-[ 2664.756893]  [<000000000081d894>] save_fpu_regs+0xc/0x78
-[ 2664.756895] INFO: lockdep is turned off.
-[ 2664.756898] Last Breaking-Event-Address:
-[ 2664.756903]  [<00000000002f0278>] kmem_cache_free+0x1f8/0x3c0
-[ 2664.756907]  
-[ 2664.756911] Kernel panic - not syncing: Fatal exception in interrupt
+> > However, before making the final patch, we should decide which
+> > partition the specified size should apply to. For the SCSI level
+> > <=3D2 it applies to partition 1. For other drives we may have some
+> > freedom to =E2=80=9Ctune=E2=80=9D the definition. The size should a=
+pply to the
+> > partition the users expect it to apply. =20
+>=20
+> I'd argue for consistency here in the current interface and that it
+> should apply in the same way more on that below.
+
+I agree, it would be extremely surprising (in a bad way) to see your
+application behave differently when upgrading your drive, for instance.
+
+> > Partitioning with two partitions is used for storing index in a
+> > small partition and use the rest of the tape for data. In this
+> > case, it is probably natural to specify the size of the index. The
+> > LTFS definition supports index in any partition. The open source
+> > code I have seen seem to default to index in partition 0.
+> >=20
+> > The HP and IBM LTO default partitioning (FDP=3D1) specifies two wra=
+ps
+> > (minimum) to partition 1 and the rest to 0. =20
+
+LTFS 2.2 specifications doesn't explicitly number partitions, however
+it makes it clear that the "index" partition (the smaller one) must com=
+e
+first. Furthermore, all LTFS tapes I've had a look at have partition 0
+as index.=20
+Add to this the fact that current LTO-7 tapes are 6 TB. That comes to
+pretty big numbers when you want to size a partition in MB.=20
+
+> It may be worth noting (if you're going to update any documentation)
+> that isn't 100% accurate. You actually get one wrap in partition 1
+> and the rest minus one wrap into partition 0. There is one wrap used
+> as a guard between the two partitions. The size given to a partition
+> is rounded up to the size of a wrap as well.
+>=20
+> See
+> https://docs.oracle.com/cd/E21419_04/en/LTO5_Vol3_E5b/LTO5_Vol3_E5b.p=
+df
+>=20
+> Page 100 where it gives examples of how partition sizes are
+> calculated on HP LTO5 drives.
+>=20
+
+Ican confirm this from the tests I've made on LTO-5 and LTO-6. The size
+of the partition you'll obtain may end quite different from the size
+you've asked for. This is made particularly difficult when you must
+convert a few TB to MB, and you don't know exactly where it'll=20
+
+> >=20
+> > There seem to be lot of arguments supporting both possible choices.
+> > Should we use the existing definition (1) or change it for the
+> > drives supporting SCSI level >=3D 3 (or supporting FORMAT MEDIUM)?
+> > The definition can=E2=80=99t be changed later. This is why we shoul=
+d make a
+> > good decision.
+> >=20
+> > Opinions? =20
+>=20
+> How about using the fact the size is signed to indicate one slightly
+> different thing? I'm not sure if you'd call this using or abusing the
+> fact that it's signed.
+>=20
+> Make the default behavior for a positive size the same as the current
+> behavior for SCSI-2 (size applies to partition 1). If the size is
+> negative then the absolute value of the size applies to partition 0.
+> That provides some flexibility in choosing which partition the size
+> applies to if it worked that way for all devices.
+>=20
+> With that you also get consistent behavior between tape drives withou=
+t
+> having to know if the size will apply to partition 0 or partition 1
+> based on the tape technology and you get the benefit of being able to
+> set an explicit size for partition 0 or partition 1.
+>=20
+> You could overload the value of 0 as well to use FDP to choose the
+> sizes for the partitions (assuming 0 doesn't already have a side
+> effect in the code). Then you get whatever the tape drive wants to do=
+=2E
 
 
-I can reproduce on 4.4 and 4.3 and had not yet the chance to go back to older
-versions. I can create a dump anytime, so I can look into some data structures
-if that is of any help. Any ideas or ideas how to debug that further?
 
-Christian
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
