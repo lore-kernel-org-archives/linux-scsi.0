@@ -1,120 +1,70 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: st driver doesn't seem to grok LTO partitioning
-Date: Fri, 22 Jan 2016 11:17:23 +0100
-Message-ID: <56A201B3.6070502@interlog.com>
-References: <20151218170644.24167419@harpe.intellique.com>
- <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
- <20160104124626.3112e8c0@harpe.intellique.com>
- <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
- <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
- <20160106161049.34f29973@harpe.intellique.com>
- <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com>
- <20160106170720.61db9e86@harpe.intellique.com>
- <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
-Reply-To: dgilbert@interlog.com
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: spurious use after free bug in dio_bio_complete on scsi disks (with
+ multipath)
+Date: Fri, 22 Jan 2016 12:14:56 +0100
+Message-ID: <56A20F30.4050705@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:39848 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751529AbcAVKRc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jan 2016 05:17:32 -0500
-In-Reply-To: <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390 <linux-s390@vger.kernel.org>, Steffen Maier <maier@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>
-Cc: Laurence Oberman <oberman.l@gmail.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
 
-Laurence,
-Shane Seymour from HP provided this useful link:
-   https://docs.oracle.com/cd/E21419_04/en/LTO5_Vol3_E5b/LTO5_Vol3_E5b.=
-pdf
+When I enable DEBUG_PAGEALLOC (notice: needs also enablement on the command line)
+I get spurious warnings like the following
 
-That documents the WRITE BUFFER command on pages 228 and 229 used
-by HP LTO-5 drives. For sending new firmware it looks like you need
-to use MODE 4 or 5. [That description does not look like the work of
-an engineer who understands the subject matter :-)].
+[ 2664.756567] Unable to handle kernel pointer dereference in virtual kernel address space
+[ 2664.756575] failing address: 000000f9ef84c000 TEID: 000000f9ef84c803
+[ 2664.756577] Fault in home space mode while using kernel ASCE.
+[ 2664.756582] AS:0000000000f8b007 R3:000000ff62c03007 S:000000ff62887000 P:000000f9ef84c400 
+[ 2664.756618] Oops: 0011 ilc:2 [#1] SMP DEBUG_PAGEALLOC
+[ 2664.756629] Modules linked in: nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ipt_REJECT nf_reject_ipv4 xt_tcpudp iptable_filter ip_tables x_tables bridge stp llc btrfs xor raid6_pq ghash_s390 prng ecb aes_s390 des_s390 des_generic sha512_s390 sha256_s390 sha1_s390 sha_common eadm_sch nfsd auth_rpcgss oid_registry nfs_acl lockd grace vhost_net tun vhost macvtap macvlan sunrpc dm_service_time dm_multipath dm_mod autofs4
+[ 2664.756721] CPU: 33 PID: 0 Comm: swapper/33 Not tainted 4.4.0+ #117
+[ 2664.756726] task: 000000fa6e86e0a0 ti: 000000fa6e870000 task.ti: 000000fa6e870000
+[ 2664.756731] Krnl PSW : 0704e00180000000 000000000034efba (dio_bio_complete+0xf2/0x100)
+[ 2664.756743]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:0 EA:3
+               Krnl GPRS: 0000000000000000 000000fa6e870000 0000000000000001 0000000000000000
+[ 2664.756751]            000000000034efba 0000000000000000 0000000000000000 000000fa59ff2bc8
+[ 2664.756754]            000000fa4e6a5f00 000000f9ef84ce00 000000fa00001000 000000fa4e6a5f38
+[ 2664.756757]            0000000000001000 0000000000841a88 000000000034efba 000000fa6de6bbe8
+[ 2664.756770] Krnl Code: 000000000034efac: a784ffb6            brc     8,34ef18
+                          000000000034efb0: b9040029            lgr     %r2,%r9
+                         #000000000034efb4: c0e5000f064e        brasl   %r14,52fc50
+                         >000000000034efba: 58c09014            l       %r12,20(%r9)
+                          000000000034efbe: a7f4ffec            brc     15,34ef96
+                          000000000034efc2: 0707                bcr     0,%r7
+                          000000000034efc4: 0707                bcr     0,%r7
+                          000000000034efc6: 0707                bcr     0,%r7
+[ 2664.756826] Call Trace:
+[ 2664.756829] ([<000000000034efba>] dio_bio_complete+0xf2/0x100)
+[ 2664.756833]  [<000000000034f26a>] dio_bio_end_aio+0x42/0x168
+[ 2664.756837]  [<0000000000538b0a>] blk_update_request+0x102/0x468
+[ 2664.756842]  [<0000000000607f20>] scsi_end_request+0x48/0x1d0
+[ 2664.756845]  [<0000000000609b88>] scsi_io_completion+0x110/0x690
+[ 2664.756849]  [<0000000000542186>] blk_done_softirq+0xb6/0xd0
+[ 2664.756854]  [<0000000000165e3c>] __do_softirq+0xd4/0x4b0
+[ 2664.756856]  [<00000000001665f2>] irq_exit+0xe2/0x100
+[ 2664.756859]  [<000000000010ce02>] do_IRQ+0x6a/0x88
+[ 2664.756863]  [<000000000081d5e6>] io_int_handler+0x11a/0x25c
+[ 2664.756867]  [<0000000000104900>] enabled_wait+0x58/0xe8
+[ 2664.756870] ([<00000000001048e8>] enabled_wait+0x40/0xe8)
+[ 2664.756875]  [<0000000000104da2>] arch_cpu_idle+0x32/0x48
+[ 2664.756880]  [<00000000001b45a6>] default_idle_call+0x3e/0x58
+[ 2664.756883]  [<00000000001b481c>] cpu_startup_entry+0x25c/0x358
+[ 2664.756887]  [<00000000001153ca>] smp_start_secondary+0xf2/0x100
+[ 2664.756890]  [<000000000081dbb2>] restart_int_handler+0x62/0x78
+[ 2664.756893]  [<000000000081d894>] save_fpu_regs+0xc/0x78
+[ 2664.756895] INFO: lockdep is turned off.
+[ 2664.756898] Last Breaking-Event-Address:
+[ 2664.756903]  [<00000000002f0278>] kmem_cache_free+0x1f8/0x3c0
+[ 2664.756907]  
+[ 2664.756911] Kernel panic - not syncing: Fatal exception in interrupt
 
-And it seems like HP implement the REPORT SUPPORTED OPCODES command
-which means you can use the sg_opcodes utility. For the WRITE BUFFER
-command, that should break out the MODE numbers that the drive
-actually supports. For example, this from a SSD:
-=2E..
-  3b  0  10  Write buffer, combined header and data [or multiple modes]
-  3b  2  10  Write buffer, data
-  3b  4  10  Write buffer, download microcode and activate
-  3b  5  10  Write buffer, download microcode, save, and activate
-  3b  6  10  Write buffer, download microcode with offsets and activate
-  3b  7  10  Write buffer, download microcode with offsets, save, and a=
-ctivate
-  3b  a  10  Write buffer, write data to echo buffer
-=2E..
 
-Looking back in this thread I see you mention a Quantum Ultrium 5
-tape drive; so this HP information may not apply.
+I can reproduce on 4.4 and 4.3 and had not yet the chance to go back to older
+versions. I can create a dump anytime, so I can look into some data structures
+if that is of any help. Any ideas or ideas how to debug that further?
 
-Doug Gilbert
-
-
-On 16-01-14 09:12 PM, Laurence Oberman wrote:
-> All attempts to get my drive and changer firmware updated have failed=
-=2E
-> So I wont be able to add another "tested by" to this thread unless I =
-can find another drive.
->
-> Even using Doug's method fails to actually update. Seems to suck up t=
-he image and then do nothing.
-> Lands up in getting hung and needs a full power reset.
->
-> The image I have is the correct image.
->
-> I dont want to try to many convoluted methods because I dont want to =
-brick the changer.
->
-> Its the only one I have for doing all the st driver testing here at R=
-ed Hat in the GSS team.
->
-> Thanks
->
-> Laurence Oberman
-> Principal Software Maintenance Engineer
-> Red Hat Global Support Services
->
-> ----- Original Message -----
-> From: "Emmanuel Florac" <eflorac@intellique.com>
-> To: "Laurence Oberman" <loberman@redhat.com>
-> Cc: "Laurence Oberman" <oberman.l@gmail.com>, "Kai Makisara" <Kai.Mak=
-isara@kolumbus.fi>, linux-scsi@vger.kernel.org
-> Sent: Wednesday, January 6, 2016 11:07:20 AM
-> Subject: Re: st driver doesn't seem to grok LTO partitioning
->
-> Le Wed, 6 Jan 2016 10:23:34 -0500 (EST)
-> Laurence Oberman <loberman@redhat.com> =C3=A9crivait:
->
->> MaxPartitions: 0
->>
->> Drive is working fine,
->>
->> # mt -f /dev/st0 status
->> SCSI 2 tape drive:
->> File number=3D0, block number=3D0, partition=3D0.
->> Tape block size 512 bytes. Density code 0x58 (no translation).
->> Soft error count since last status=3D0
->> General status bits on (41010000):
->>   BOT ONLINE IM_REP_EN
->>
->> This is what I get when I try and partition and I believe this may b=
-e
->> a firmware issue for me.
->
-> Yes probably, it reports "MaxPartitions 0", should be 1 for an LTO-5
-> drive. Weird.
->
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Christian
