@@ -1,52 +1,52 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH, RESEND 2] qla2xxx: Remove use of 'struct timeval'
-Date: Fri, 22 Jan 2016 15:28:32 +0100
-Message-ID: <1528415.ru8bxkDU1V@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, y2038@lists.linaro.org, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Tina Ruchandani <ruchandani.tina@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_dh_rdac: always retry MODE SELECT on command lock violation
+Date: Fri, 22 Jan 2016 15:42:41 +0100
+Message-ID: <1453473761-54777-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:58898 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753608AbcAVOmp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jan 2016 09:42:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-c3RydWN0IHJlZ2lzdGVyX2hvc3RfaW5mbyBzdG9yZXMgYSA2NC1iaXQgVVRDIHN5c3RlbSB0aW1l
-IHRpbWVzdGFtcC4KVGhpcyBwYXRjaCByZW1vdmVzIHRoZSB1c2Ugb2YgJ3N0cnVjdCB0aW1ldmFs
-JyB0byBvYnRhaW4gdGhhdCB0aW1lc3RhbXAKYXMgaXRzIHR2X3NlYyB2YWx1ZSB3aWxsIG92ZXJm
-bG93IG9uIDMyLWJpdCBzeXN0ZW1zIGluIHllYXIgMjAzOCBiZXlvbmQuClRoZSBwYXRjaCB1c2Vz
-IGt0aW1lX2dldF9yZWFsX3NlY29uZHMoKSB3aGljaCByZXR1cm5zIGEgNjQtYml0IHNlY29uZHMg
-dmFsdWUuCgpTaWduZWQtb2ZmLWJ5OiBUaW5hIFJ1Y2hhbmRhbmkgPHJ1Y2hhbmRhbmkudGluYUBn
-bWFpbC5jb20+ClJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVtc2hpcm5Ac3Vz
-ZS5kZT4KU2lnbmVkLW9mZi1ieTogQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4KCmRpZmYg
-LS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbXIuYyBiL2RyaXZlcnMvc2NzaS9xbGEy
-eHh4L3FsYV9tci5jCmluZGV4IGI1MDI5ZTU0M2I5MS4uMTVkZmY3MDk5OTU1IDEwMDY0NAotLS0g
-YS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbXIuYworKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfbXIuYwpAQCAtNiw2ICs2LDcgQEAKICAqLwogI2luY2x1ZGUgInFsYV9kZWYuaCIKICNp
-bmNsdWRlIDxsaW51eC9kZWxheS5oPgorI2luY2x1ZGUgPGxpbnV4L2t0aW1lLmg+CiAjaW5jbHVk
-ZSA8bGludXgvcGNpLmg+CiAjaW5jbHVkZSA8bGludXgvcmF0ZWxpbWl0Lmg+CiAjaW5jbHVkZSA8
-bGludXgvdm1hbGxvYy5oPgpAQCAtMTgxMiw3ICsxODEzLDYgQEAgcWxhZngwMF9meF9kaXNjKHNj
-c2lfcWxhX2hvc3RfdCAqdmhhLCBmY19wb3J0X3QgKmZjcG9ydCwgdWludDE2X3QgZnhfdHlwZSkK
-IAlzdHJ1Y3QgaG9zdF9zeXN0ZW1faW5mbyAqcGhvc3RfaW5mbzsKIAlzdHJ1Y3QgcmVnaXN0ZXJf
-aG9zdF9pbmZvICpwcmVnX2hzaTsKIAlzdHJ1Y3QgbmV3X3V0c25hbWUgKnBfc3lzaWQgPSBOVUxM
-OwotCXN0cnVjdCB0aW1ldmFsIHR2OwogCiAJc3AgPSBxbGEyeDAwX2dldF9zcCh2aGEsIGZjcG9y
-dCwgR0ZQX0tFUk5FTCk7CiAJaWYgKCFzcCkKQEAgLTE4ODYsOCArMTg4Niw3IEBAIHFsYWZ4MDBf
-ZnhfZGlzYyhzY3NpX3FsYV9ob3N0X3QgKnZoYSwgZmNfcG9ydF90ICpmY3BvcnQsIHVpbnQxNl90
-IGZ4X3R5cGUpCiAJCQkgICAgcF9zeXNpZC0+ZG9tYWlubmFtZSwgRE9NTkFNRV9MRU5HVEgpOwog
-CQkJc3RybmNweShwaG9zdF9pbmZvLT5ob3N0ZHJpdmVyLAogCQkJICAgIFFMQTJYWFhfVkVSU0lP
-TiwgVkVSU0lPTl9MRU5HVEgpOwotCQkJZG9fZ2V0dGltZW9mZGF5KCZ0dik7Ci0JCQlwcmVnX2hz
-aS0+dXRjID0gKHVpbnQ2NF90KXR2LnR2X3NlYzsKKwkJCXByZWdfaHNpLT51dGMgPSAodWludDY0
-X3Qpa3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpOwogCQkJcWxfZGJnKHFsX2RiZ19pbml0LCB2aGEs
-IDB4MDE0OSwKIAkJCSAgICAiSVNQJTA0WDogSG9zdCByZWdpc3RyYXRpb24gd2l0aCBmaXJtd2Fy
-ZVxuIiwKIAkJCSAgICBoYS0+cGRldi0+ZGV2aWNlKTsKCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1haWxpbmcgbGlzdApZMjAzOEBsaXN0cy5s
-aW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3kyMDM4
-Cg==
+If MODE SELECT returns with sense '05/91/36' (command lock violation)
+it should always be retried without counting the number of retries.
+During an HBA upgrade or similar circumstances one might see a flood
+of MODE SELECT command from various HBAs, which will easily trigger
+the sense code and exceed the retry count.
+
+References: bsc#956949
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_rdac.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 3613581..93880ed 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -562,7 +562,7 @@ static int mode_select_handle_sense(struct scsi_device *sdev,
+ 			/*
+ 			 * Command Lock contention
+ 			 */
+-			err = SCSI_DH_RETRY;
++			err = SCSI_DH_IMM_RETRY;
+ 		break;
+ 	default:
+ 		break;
+@@ -612,6 +612,8 @@ retry:
+ 		err = mode_select_handle_sense(sdev, h->sense);
+ 		if (err == SCSI_DH_RETRY && retry_cnt--)
+ 			goto retry;
++		if (err == SCSI_DH_IMM_RETRY)
++			goto retry;
+ 	}
+ 	if (err == SCSI_DH_OK) {
+ 		h->state = RDAC_STATE_ACTIVE;
+-- 
+1.8.5.6
+
