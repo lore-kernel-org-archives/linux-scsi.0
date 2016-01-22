@@ -1,34 +1,50 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [Y2038] [PATCH, RESEND 2] qla2xxx: Remove use of 'struct timeval'
-Date: Fri, 22 Jan 2016 16:12:25 +0100
-Message-ID: <1700481.AdoIR1LgPH@wuerfel>
-References: <1528415.ru8bxkDU1V@wuerfel>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
+Date: Fri, 22 Jan 2016 10:50:31 -0600
+Message-ID: <56A25DD7.5090700@linux.vnet.ibm.com>
+References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528415.ru8bxkDU1V@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: y2038@lists.linaro.org
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Tina Ruchandani <ruchandani.tina@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:49355 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbcAVQui (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2016 11:50:38 -0500
+Received: from localhost
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 22 Jan 2016 09:50:38 -0700
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id ACF583E4005E
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 09:50:36 -0700 (MST)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u0MGoafX27721802
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 16:50:36 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u0MGoYJ5014846
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2016 11:50:34 -0500
+In-Reply-To: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mchristi@redhat.com, linux-scsi@vger.kernel.org
+Cc: Guilherme Piccoli <gpiccoli@linux.vnet.ibm.com>
 
-On Friday 22 January 2016 15:28:32 Arnd Bergmann wrote:
-> struct register_host_info stores a 64-bit UTC system time timestamp.
-> This patch removes the use of 'struct timeval' to obtain that timestamp
-> as its tv_sec value will overflow on 32-bit systems in year 2038 beyond.
-> The patch uses ktime_get_real_seconds() which returns a 64-bit seconds value.
+On 11/11/2015 11:05 PM, mchristi@redhat.com wrote:
+> From: Mike Christie <mchristi@redhat.com>
 > 
-> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> This patch fixes this oops report by Guilherme Piccol:
 > 
+> list_del corruption. prev->next should be c000000f3da2b080, but was c000000f3da2c080
 
+Hi Mike! I haven't seen any follow ups on this for a while. What is the plan for this one? 
 
+Thanks,
 
-I was missing
+Brian
 
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-If anyone is going to pick this up, let me know whether you will fix
-it up yourself or if I should resend.
