@@ -1,96 +1,111 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
+From: "Seymour, Shane M" <shane.seymour@hpe.com>
+Subject: RE: What partition should the MTMKPART argument specify? Was: Re:
  st driver doesn't seem to grok LTO partitioning
-Date: Thu, 21 Jan 2016 17:06:03 -0500 (EST)
-Message-ID: <1281192568.8282297.1453413963788.JavaMail.zimbra@redhat.com>
-References: <20151218170644.24167419@harpe.intellique.com> <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com> <20160106161049.34f29973@harpe.intellique.com> <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com> <20160106170720.61db9e86@harpe.intellique.com> <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
+Date: Fri, 22 Jan 2016 02:10:03 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net>
+References: <20151218170644.24167419@harpe.intellique.com>
+ <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
+ <20160104124626.3112e8c0@harpe.intellique.com>
+ <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
+ <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
+ <20160106161049.34f29973@harpe.intellique.com>
+ <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com>
+ <20160106170720.61db9e86@harpe.intellique.com>
+ <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
+ <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net>
+ <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:45794 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbcAUWGQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2016 17:06:16 -0500
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:44183 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbcAVCKX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2016 21:10:23 -0500
 In-Reply-To: <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
-Cc: Shane M Seymour <shane.seymour@hpe.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, linux-scsi@vger.kernel.org
+To: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+Cc: Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Given what we see at customers I am leaning towards the SCSI level <=3D=
-2 to ensure the older LTO5's are supported.
-The newer ones should be backwards compatible.
-I may have an older LTO5 showing up that wont need a F/W update to work=
-, and will be able to add a "tested by" once I get it.
-
-But lets see what the others have to say
-
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
-
------ Original Message -----
-=46rom: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>
-To: "Shane M Seymour" <shane.seymour@hpe.com>
-Cc: "Laurence Oberman" <loberman@redhat.com>, "Emmanuel Florac" <eflora=
-c@intellique.com>, "Laurence Oberman" <oberman.l@gmail.com>, linux-scsi=
-@vger.kernel.org
-Sent: Thursday, January 21, 2016 3:58:46 PM
-Subject: What partition should the MTMKPART argument specify? Was: Re: =
-st driver doesn't seem to grok LTO partitioning
-
-
-> On 15.1.2016, at 2.21, Seymour, Shane M <shane.seymour@hpe.com> wrote=
-:
->=20
-> Unfortunately I'm unable to lay my hands on an LTO 5 tape drive so I'=
-m not able to test that it works either. If it helps at all I can test =
-in the negative and make sure that for an LTO 3 drive it fails graceful=
-ly but that's about it at the moment.
-
-Thanks for all testers and those who attempted to test. The latest patc=
-h applies the standard quite strictly and I think it should work with m=
-ost drives. The implementation can be fixed later if problems are found=
-=2E
-
-However, before making the final patch, we should decide which partitio=
-n the specified size should apply to. For the SCSI level <=3D2 it appli=
-es to partition 1. For other drives we may have some freedom to =E2=80=9C=
-tune=E2=80=9D the definition. The size should apply to the partition th=
-e users expect it to apply.=20
-
-The current documentation says "the argument gives in megabytes the siz=
-e of partition 1 that is physically the first partition of the tape=E2=80=
-=9D. The documentation I have found for current drives (HP and IBM LTO,=
- IBM 3592, Storagetek T1000) all number the partitions sequentially fro=
-m the start of the tape. The access time for any partition is probably =
-about the same when wrapwise partitioning is used. It does matter with =
-linear partitioning. Unfortunately, the standards leave the numbering t=
-o the implementor.
-
-Partitioning with two partitions is used for storing index in a small p=
-artition and use the rest of the tape for data. In this case, it is pro=
-bably natural to specify the size of the index. The LTFS definition sup=
-ports index in any partition. The open source code I have seen seem to =
-default to index in partition 0.
-
-The HP and IBM LTO default partitioning (FDP=3D1) specifies two wraps (=
-minimum) to partition 1 and the rest to 0.
-
-There seem to be lot of arguments supporting both possible choices. Sho=
-uld we use the existing definition (1) or change it for the drives supp=
-orting SCSI level >=3D 3 (or supporting FORMAT MEDIUM)? The definition =
-can=E2=80=99t be changed later. This is why we should make a good decis=
-ion.
-
-Opinions?
-
-Thanks,
-Kai
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGkgS2FpLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXNj
+c2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtc2NzaS0NCj4gb3duZXJAdmdl
+ci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgIkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSINCj4g
+U2VudDogRnJpZGF5LCBKYW51YXJ5IDIyLCAyMDE2IDc6NTkgQU0NCj4gVG86IFNleW1vdXIsIFNo
+YW5lIE0NCj4gQ2M6IExhdXJlbmNlIE9iZXJtYW47IEVtbWFudWVsIEZsb3JhYzsgTGF1cmVuY2Ug
+T2Jlcm1hbjsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFdoYXQg
+cGFydGl0aW9uIHNob3VsZCB0aGUgTVRNS1BBUlQgYXJndW1lbnQgc3BlY2lmeT8gV2FzOiBSZToN
+Cj4gc3QgZHJpdmVyIGRvZXNuJ3Qgc2VlbSB0byBncm9rIExUTyBwYXJ0aXRpb25pbmcNCj4gDQo+
+IA0KPiA+IE9uIDE1LjEuMjAxNiwgYXQgMi4yMSwgU2V5bW91ciwgU2hhbmUgTSA8c2hhbmUuc2V5
+bW91ckBocGUuY29tPg0KPiB3cm90ZToNCj4gPg0KPiA+IFVuZm9ydHVuYXRlbHkgSSdtIHVuYWJs
+ZSB0byBsYXkgbXkgaGFuZHMgb24gYW4gTFRPIDUgdGFwZSBkcml2ZSBzbyBJJ20gbm90DQo+IGFi
+bGUgdG8gdGVzdCB0aGF0IGl0IHdvcmtzIGVpdGhlci4gSWYgaXQgaGVscHMgYXQgYWxsIEkgY2Fu
+IHRlc3QgaW4gdGhlIG5lZ2F0aXZlIGFuZA0KPiBtYWtlIHN1cmUgdGhhdCBmb3IgYW4gTFRPIDMg
+ZHJpdmUgaXQgZmFpbHMgZ3JhY2VmdWxseSBidXQgdGhhdCdzIGFib3V0IGl0IGF0IHRoZQ0KPiBt
+b21lbnQuDQo+IA0KPiBUaGFua3MgZm9yIGFsbCB0ZXN0ZXJzIGFuZCB0aG9zZSB3aG8gYXR0ZW1w
+dGVkIHRvIHRlc3QuIFRoZSBsYXRlc3QgcGF0Y2gNCj4gYXBwbGllcyB0aGUgc3RhbmRhcmQgcXVp
+dGUgc3RyaWN0bHkgYW5kIEkgdGhpbmsgaXQgc2hvdWxkIHdvcmsgd2l0aCBtb3N0IGRyaXZlcy4N
+Cj4gVGhlIGltcGxlbWVudGF0aW9uIGNhbiBiZSBmaXhlZCBsYXRlciBpZiBwcm9ibGVtcyBhcmUg
+Zm91bmQuDQo+IA0KPiBIb3dldmVyLCBiZWZvcmUgbWFraW5nIHRoZSBmaW5hbCBwYXRjaCwgd2Ug
+c2hvdWxkIGRlY2lkZSB3aGljaCBwYXJ0aXRpb24NCj4gdGhlIHNwZWNpZmllZCBzaXplIHNob3Vs
+ZCBhcHBseSB0by4gRm9yIHRoZSBTQ1NJIGxldmVsIDw9MiBpdCBhcHBsaWVzIHRvIHBhcnRpdGlv
+bg0KPiAxLiBGb3Igb3RoZXIgZHJpdmVzIHdlIG1heSBoYXZlIHNvbWUgZnJlZWRvbSB0byDigJx0
+dW5l4oCdIHRoZSBkZWZpbml0aW9uLiBUaGUNCj4gc2l6ZSBzaG91bGQgYXBwbHkgdG8gdGhlIHBh
+cnRpdGlvbiB0aGUgdXNlcnMgZXhwZWN0IGl0IHRvIGFwcGx5Lg0KDQpJJ2QgYXJndWUgZm9yIGNv
+bnNpc3RlbmN5IGhlcmUgaW4gdGhlIGN1cnJlbnQgaW50ZXJmYWNlIGFuZCB0aGF0IGl0IHNob3Vs
+ZCANCmFwcGx5IGluIHRoZSBzYW1lIHdheSBtb3JlIG9uIHRoYXQgYmVsb3cuDQoNCj4gDQo+IFRo
+ZSBjdXJyZW50IGRvY3VtZW50YXRpb24gc2F5cyAidGhlIGFyZ3VtZW50IGdpdmVzIGluIG1lZ2Fi
+eXRlcyB0aGUgc2l6ZQ0KPiBvZiBwYXJ0aXRpb24gMSB0aGF0IGlzIHBoeXNpY2FsbHkgdGhlIGZp
+cnN0IHBhcnRpdGlvbiBvZiB0aGUgdGFwZeKAnS4gVGhlDQo+IGRvY3VtZW50YXRpb24gSSBoYXZl
+IGZvdW5kIGZvciBjdXJyZW50IGRyaXZlcyAoSFAgYW5kIElCTSBMVE8sIElCTSAzNTkyLA0KPiBT
+dG9yYWdldGVrIFQxMDAwKSBhbGwgbnVtYmVyIHRoZSBwYXJ0aXRpb25zIHNlcXVlbnRpYWxseSBm
+cm9tIHRoZSBzdGFydCBvZiB0aGUNCj4gdGFwZS4gVGhlIGFjY2VzcyB0aW1lIGZvciBhbnkgcGFy
+dGl0aW9uIGlzIHByb2JhYmx5IGFib3V0IHRoZSBzYW1lIHdoZW4NCj4gd3JhcHdpc2UgcGFydGl0
+aW9uaW5nIGlzIHVzZWQuIEl0IGRvZXMgbWF0dGVyIHdpdGggbGluZWFyIHBhcnRpdGlvbmluZy4N
+Cj4gVW5mb3J0dW5hdGVseSwgdGhlIHN0YW5kYXJkcyBsZWF2ZSB0aGUgbnVtYmVyaW5nIHRvIHRo
+ZSBpbXBsZW1lbnRvci4NCj4gDQo+IFBhcnRpdGlvbmluZyB3aXRoIHR3byBwYXJ0aXRpb25zIGlz
+IHVzZWQgZm9yIHN0b3JpbmcgaW5kZXggaW4gYSBzbWFsbCBwYXJ0aXRpb24NCj4gYW5kIHVzZSB0
+aGUgcmVzdCBvZiB0aGUgdGFwZSBmb3IgZGF0YS4gSW4gdGhpcyBjYXNlLCBpdCBpcyBwcm9iYWJs
+eSBuYXR1cmFsIHRvDQo+IHNwZWNpZnkgdGhlIHNpemUgb2YgdGhlIGluZGV4LiBUaGUgTFRGUyBk
+ZWZpbml0aW9uIHN1cHBvcnRzIGluZGV4IGluIGFueQ0KPiBwYXJ0aXRpb24uIFRoZSBvcGVuIHNv
+dXJjZSBjb2RlIEkgaGF2ZSBzZWVuIHNlZW0gdG8gZGVmYXVsdCB0byBpbmRleCBpbg0KPiBwYXJ0
+aXRpb24gMC4NCj4gDQo+IFRoZSBIUCBhbmQgSUJNIExUTyBkZWZhdWx0IHBhcnRpdGlvbmluZyAo
+RkRQPTEpIHNwZWNpZmllcyB0d28gd3JhcHMNCj4gKG1pbmltdW0pIHRvIHBhcnRpdGlvbiAxIGFu
+ZCB0aGUgcmVzdCB0byAwLg0KDQpJdCBtYXkgYmUgd29ydGggbm90aW5nIChpZiB5b3UncmUgZ29p
+bmcgdG8gdXBkYXRlIGFueSBkb2N1bWVudGF0aW9uKQ0KdGhhdCBpc24ndCAxMDAlIGFjY3VyYXRl
+LiBZb3UgYWN0dWFsbHkgZ2V0IG9uZSB3cmFwIGluIHBhcnRpdGlvbiAxIGFuZCB0aGUNCnJlc3Qg
+bWludXMgb25lIHdyYXAgaW50byBwYXJ0aXRpb24gMC4gVGhlcmUgaXMgb25lIHdyYXAgdXNlZCBh
+cyBhIGd1YXJkDQpiZXR3ZWVuIHRoZSB0d28gcGFydGl0aW9ucy4gVGhlIHNpemUgZ2l2ZW4gdG8g
+YSBwYXJ0aXRpb24gaXMgcm91bmRlZCB1cA0KdG8gdGhlIHNpemUgb2YgYSB3cmFwIGFzIHdlbGwu
+DQoNClNlZSBodHRwczovL2RvY3Mub3JhY2xlLmNvbS9jZC9FMjE0MTlfMDQvZW4vTFRPNV9Wb2wz
+X0U1Yi9MVE81X1ZvbDNfRTViLnBkZg0KDQpQYWdlIDEwMCB3aGVyZSBpdCBnaXZlcyBleGFtcGxl
+cyBvZiBob3cgcGFydGl0aW9uIHNpemVzIGFyZSBjYWxjdWxhdGVkIG9uIEhQIExUTzUgZHJpdmVz
+Lg0KDQo+IA0KPiBUaGVyZSBzZWVtIHRvIGJlIGxvdCBvZiBhcmd1bWVudHMgc3VwcG9ydGluZyBi
+b3RoIHBvc3NpYmxlIGNob2ljZXMuIFNob3VsZA0KPiB3ZSB1c2UgdGhlIGV4aXN0aW5nIGRlZmlu
+aXRpb24gKDEpIG9yIGNoYW5nZSBpdCBmb3IgdGhlIGRyaXZlcyBzdXBwb3J0aW5nIFNDU0kNCj4g
+bGV2ZWwgPj0gMyAob3Igc3VwcG9ydGluZyBGT1JNQVQgTUVESVVNKT8gVGhlIGRlZmluaXRpb24g
+Y2Fu4oCZdCBiZQ0KPiBjaGFuZ2VkIGxhdGVyLiBUaGlzIGlzIHdoeSB3ZSBzaG91bGQgbWFrZSBh
+IGdvb2QgZGVjaXNpb24uDQo+IA0KPiBPcGluaW9ucz8NCg0KSG93IGFib3V0IHVzaW5nIHRoZSBm
+YWN0IHRoZSBzaXplIGlzIHNpZ25lZCB0byBpbmRpY2F0ZSBvbmUgc2xpZ2h0bHkgZGlmZmVyZW50
+DQp0aGluZz8gSSdtIG5vdCBzdXJlIGlmIHlvdSdkIGNhbGwgdGhpcyB1c2luZyBvciBhYnVzaW5n
+IHRoZSBmYWN0IHRoYXQgaXQncyBzaWduZWQuDQoNCk1ha2UgdGhlIGRlZmF1bHQgYmVoYXZpb3Ig
+Zm9yIGEgcG9zaXRpdmUgc2l6ZSB0aGUgc2FtZSBhcyB0aGUgY3VycmVudA0KYmVoYXZpb3IgZm9y
+IFNDU0ktMiAoc2l6ZSBhcHBsaWVzIHRvIHBhcnRpdGlvbiAxKS4gSWYgdGhlIHNpemUgaXMgbmVn
+YXRpdmUgdGhlbg0KdGhlIGFic29sdXRlIHZhbHVlIG9mIHRoZSBzaXplIGFwcGxpZXMgdG8gcGFy
+dGl0aW9uIDAuIFRoYXQgcHJvdmlkZXMgc29tZQ0KZmxleGliaWxpdHkgaW4gY2hvb3Npbmcgd2hp
+Y2ggcGFydGl0aW9uIHRoZSBzaXplIGFwcGxpZXMgdG8gaWYgaXQgd29ya2VkIHRoYXQNCndheSBm
+b3IgYWxsIGRldmljZXMuDQoNCldpdGggdGhhdCB5b3UgYWxzbyBnZXQgY29uc2lzdGVudCBiZWhh
+dmlvciBiZXR3ZWVuIHRhcGUgZHJpdmVzIHdpdGhvdXQNCmhhdmluZyB0byBrbm93IGlmIHRoZSBz
+aXplIHdpbGwgYXBwbHkgdG8gcGFydGl0aW9uIDAgb3IgcGFydGl0aW9uIDEgYmFzZWQgb24NCnRo
+ZSB0YXBlIHRlY2hub2xvZ3kgYW5kIHlvdSBnZXQgdGhlIGJlbmVmaXQgb2YgYmVpbmcgYWJsZSB0
+byBzZXQgYW4NCmV4cGxpY2l0IHNpemUgZm9yIHBhcnRpdGlvbiAwIG9yIHBhcnRpdGlvbiAxLg0K
+DQpZb3UgY291bGQgb3ZlcmxvYWQgdGhlIHZhbHVlIG9mIDAgYXMgd2VsbCB0byB1c2UgRkRQIHRv
+IGNob29zZSB0aGUgc2l6ZXMNCmZvciB0aGUgcGFydGl0aW9ucyAoYXNzdW1pbmcgMCBkb2Vzbid0
+IGFscmVhZHkgaGF2ZSBhIHNpZGUgZWZmZWN0IGluDQp0aGUgY29kZSkuIFRoZW4geW91IGdldCB3
+aGF0ZXZlciB0aGUgdGFwZSBkcml2ZSB3YW50cyB0byBkby4NCg0KVGhhbmtzDQpTaGFuZQ0KDQo+
+IA0KPiBUaGFua3MsDQo+IEthaQ0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
+IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluIHRoZQ0KPiBi
+b2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jk
+b21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
+DQo=
