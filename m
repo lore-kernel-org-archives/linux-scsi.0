@@ -1,69 +1,62 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
-Date: Tue, 26 Jan 2016 08:56:26 +1300
-Message-ID: <CAOmrzkLccCjboTpQo05UjDr=Evwd_nF7e3SK+r2y3zkzTjdh_g@mail.gmail.com>
-References: <20160103050501.042035135@telegraphics.com.au>
-	<20160103050510.031796194@telegraphics.com.au>
-	<CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com>
-	<alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
-	<CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH, RESEND 3] qla2xxx: Remove use of 'struct timeval'
+Date: Mon, 25 Jan 2016 23:00:20 +0100
+Message-ID: <3640852.TIcaPixAiA@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.73]:60920 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763AbcAYWAk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 17:00:40 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Tina Ruchandani <ruchandani.tina@gmail.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, y2038@lists.linaro.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>
 
-Hi Geert,
+From: Tina Ruchandani <ruchandani.tina@gmail.com>
 
-On Mon, Jan 25, 2016 at 9:05 PM, Geert Uytterhoeven
-<geert@linux-m68k.org> wrote:
+struct register_host_info stores a 64-bit UTC system time timestamp.
+This patch removes the use of 'struct timeval' to obtain that timestamp
+as its tv_sec value will overflow on 32-bit systems in year 2038 beyond.
+The patch uses ktime_get_real_seconds() which returns a 64-bit seconds value.
 
->>> Perhaps this is an ARAnyM quirk?
->
->> The MR_ARBITRATE bit should remain set until the driver clears it (or the
->> reset logic clears it). But it looks like aranym simply discards writes to
->> the mode register, such that reads always return 0.
->>
->> Compare
->>   http://sourceforge.net/p/aranym/code/ci/master/tree/src/ncr5380.cpp
->> with the MAME/MESS emulated device
->>   https://github.com/mamedev/mame/blob/master/src/devices/machine/ncr5380.cpp
->>
->> I don't know what the Hatari emulator does.
->>
->> In principle I think that Linux drivers should not carry workarounds for
->> emulators.
->
-> Please consider ARAnyM is the current m68k workhorse, so it would be
-> nice to handle this someway.
->
-> Alternatively, we need to fix ARAnyM, or can make the creation of the
-> atari_scsi platform device conditional on not running under ARAnyM.
+Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+Resent with correct author field and added Ack
 
-Should be possible based on the machine cookie, unless that gets
-munged by kernel startup code.
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index b5029e543b91..15dff7099955 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -6,6 +6,7 @@
+  */
+ #include "qla_def.h"
+ #include <linux/delay.h>
++#include <linux/ktime.h>
+ #include <linux/pci.h>
+ #include <linux/ratelimit.h>
+ #include <linux/vmalloc.h>
+@@ -1812,7 +1813,6 @@ qlafx00_fx_disc(scsi_qla_host_t *vha, fc_port_t *fcport, uint16_t fx_type)
+ 	struct host_system_info *phost_info;
+ 	struct register_host_info *preg_hsi;
+ 	struct new_utsname *p_sysid = NULL;
+-	struct timeval tv;
+ 
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+ 	if (!sp)
+@@ -1886,8 +1886,7 @@ qlafx00_fx_disc(scsi_qla_host_t *vha, fc_port_t *fcport, uint16_t fx_type)
+ 			    p_sysid->domainname, DOMNAME_LENGTH);
+ 			strncpy(phost_info->hostdriver,
+ 			    QLA2XXX_VERSION, VERSION_LENGTH);
+-			do_gettimeofday(&tv);
+-			preg_hsi->utc = (uint64_t)tv.tv_sec;
++			preg_hsi->utc = (uint64_t)ktime_get_real_seconds();
+ 			ql_dbg(ql_dbg_init, vha, 0x0149,
+ 			    "ISP%04X: Host registration with firmware\n",
+ 			    ha->pdev->device);
 
-(Making the 5380 emulation a bit more complete such as in the MAME
-source snippet would be my preference, too)
-
-Cheers,
-
-  Michael
-
-
->
-> Thanks!
->
-> Gr{oetje,eeting}s,
->
->                         Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
