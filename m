@@ -1,276 +1,231 @@
-From: j00310691 <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 08/23] hisi_sas: add v2 register definitions
-Date: Tue, 26 Jan 2016 01:21:57 +0800
-Message-ID: <1453742532-53092-9-git-send-email-john.garry@huawei.com>
+From: j00310691 <john.garry@huawei.com>
+Subject: [PATCH v2 12/23] hisi_sas: add v2 int init and phy up handler
+Date: Tue, 26 Jan 2016 01:22:01 +0800
+Message-ID: <1453742532-53092-13-git-send-email-john.garry@huawei.com>
 References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1453742532-53092-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:55461 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757959AbcAYRI4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 12:08:56 -0500
+In-Reply-To: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
 
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: John Garry <john.garry@huawei.com>
 
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 237 +++++++++++++++++++++++++++++++++
- 1 file changed, 237 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 171 +++++++++++++++++++++++++++++++++
+ 1 file changed, 171 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 0f7f2af..31e4fdc 100644
+index 1990d65..a7b83bd 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -12,6 +12,243 @@
- #include "hisi_sas.h"
- #define DRV_NAME "hisi_sas_v2_hw"
- 
-+/* global registers need init*/
-+#define DLVRY_QUEUE_ENABLE		0x0
-+#define IOST_BASE_ADDR_LO		0x8
-+#define IOST_BASE_ADDR_HI		0xc
-+#define ITCT_BASE_ADDR_LO		0x10
-+#define ITCT_BASE_ADDR_HI		0x14
-+#define IO_BROKEN_MSG_ADDR_LO		0x18
-+#define IO_BROKEN_MSG_ADDR_HI		0x1c
-+#define PHY_CONTEXT			0x20
-+#define PHY_STATE			0x24
-+#define PHY_PORT_NUM_MA			0x28
-+#define PORT_STATE			0x2c
-+#define PORT_STATE_PHY8_PORT_NUM_OFF	16
-+#define PORT_STATE_PHY8_PORT_NUM_MSK	(0xf << PORT_STATE_PHY8_PORT_NUM_OFF)
-+#define PORT_STATE_PHY8_CONN_RATE_OFF	20
-+#define PORT_STATE_PHY8_CONN_RATE_MSK	(0xf << PORT_STATE_PHY8_CONN_RATE_OFF)
-+#define PHY_CONN_RATE			0x30
-+#define HGC_TRANS_TASK_CNT_LIMIT	0x38
-+#define AXI_AHB_CLK_CFG			0x3c
-+#define ITCT_CLR			0x44
-+#define ITCT_CLR_EN_OFF			16
-+#define ITCT_CLR_EN_MSK			(0x1 << ITCT_CLR_EN_OFF)
-+#define ITCT_DEV_OFF			0
-+#define ITCT_DEV_MSK			(0x7ff << ITCT_DEV_OFF)
-+#define AXI_USER1			0x48
-+#define AXI_USER2			0x4c
-+#define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
-+#define IO_SATA_BROKEN_MSG_ADDR_HI	0x5c
-+#define SATA_INITI_D2H_STORE_ADDR_LO	0x60
-+#define SATA_INITI_D2H_STORE_ADDR_HI	0x64
-+#define HGC_SAS_TX_OPEN_FAIL_RETRY_CTRL	0x84
-+#define HGC_SAS_TXFAIL_RETRY_CTRL	0x88
-+#define HGC_GET_ITV_TIME		0x90
-+#define DEVICE_MSG_WORK_MODE		0x94
-+#define OPENA_WT_CONTI_TIME		0x9c
-+#define I_T_NEXUS_LOSS_TIME		0xa0
-+#define MAX_CON_TIME_LIMIT_TIME		0xa4
-+#define BUS_INACTIVE_LIMIT_TIME		0xa8
-+#define REJECT_TO_OPEN_LIMIT_TIME	0xac
-+#define CFG_AGING_TIME			0xbc
-+#define HGC_DFX_CFG2			0xc0
-+#define HGC_IOMB_PROC1_STATUS	0x104
-+#define CFG_1US_TIMER_TRSH		0xcc
-+#define HGC_INVLD_DQE_INFO		0x148
-+#define HGC_INVLD_DQE_INFO_FB_CH0_OFF	9
-+#define HGC_INVLD_DQE_INFO_FB_CH0_MSK	(0x1 << HGC_INVLD_DQE_INFO_FB_CH0_OFF)
-+#define HGC_INVLD_DQE_INFO_FB_CH3_OFF	18
-+#define INT_COAL_EN			0x19c
-+#define OQ_INT_COAL_TIME		0x1a0
-+#define OQ_INT_COAL_CNT			0x1a4
-+#define ENT_INT_COAL_TIME		0x1a8
-+#define ENT_INT_COAL_CNT		0x1ac
-+#define OQ_INT_SRC			0x1b0
-+#define OQ_INT_SRC_MSK			0x1b4
-+#define ENT_INT_SRC1			0x1b8
-+#define ENT_INT_SRC1_D2H_FIS_CH0_OFF	0
-+#define ENT_INT_SRC1_D2H_FIS_CH0_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH0_OFF)
-+#define ENT_INT_SRC1_D2H_FIS_CH1_OFF	8
-+#define ENT_INT_SRC1_D2H_FIS_CH1_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH1_OFF)
-+#define ENT_INT_SRC2			0x1bc
-+#define ENT_INT_SRC3			0x1c0
-+#define ENT_INT_SRC3_ITC_INT_OFF	15
-+#define ENT_INT_SRC3_ITC_INT_MSK	(0x1 << ENT_INT_SRC3_ITC_INT_OFF)
-+#define ENT_INT_SRC_MSK1		0x1c4
-+#define ENT_INT_SRC_MSK2		0x1c8
-+#define ENT_INT_SRC_MSK3		0x1cc
-+#define ENT_INT_SRC_MSK3_ENT95_MSK_OFF	31
-+#define ENT_INT_SRC_MSK3_ENT95_MSK_MSK	(0x1 << ENT_INT_SRC_MSK3_ENT95_MSK_OFF)
-+#define SAS_ECC_INTR_MSK		0x1ec
-+#define HGC_ERR_STAT_EN			0x238
-+#define DLVRY_Q_0_BASE_ADDR_LO		0x260
-+#define DLVRY_Q_0_BASE_ADDR_HI		0x264
-+#define DLVRY_Q_0_DEPTH			0x268
-+#define DLVRY_Q_0_WR_PTR		0x26c
-+#define DLVRY_Q_0_RD_PTR		0x270
-+#define HYPER_STREAM_ID_EN_CFG		0xc80
-+#define OQ0_INT_SRC_MSK			0xc90
-+#define COMPL_Q_0_BASE_ADDR_LO		0x4e0
-+#define COMPL_Q_0_BASE_ADDR_HI		0x4e4
-+#define COMPL_Q_0_DEPTH			0x4e8
-+#define COMPL_Q_0_WR_PTR		0x4ec
-+#define COMPL_Q_0_RD_PTR		0x4f0
-+
-+/* phy registers need init */
-+#define PORT_BASE			(0x2000)
-+
-+#define PHY_CFG				(PORT_BASE + 0x0)
-+#define HARD_PHY_LINKRATE		(PORT_BASE + 0x4)
-+#define PHY_CFG_ENA_OFF			0
-+#define PHY_CFG_ENA_MSK			(0x1 << PHY_CFG_ENA_OFF)
-+#define PHY_CFG_DC_OPT_OFF		2
-+#define PHY_CFG_DC_OPT_MSK		(0x1 << PHY_CFG_DC_OPT_OFF)
-+#define PROG_PHY_LINK_RATE		(PORT_BASE + 0x8)
-+#define PROG_PHY_LINK_RATE_MAX_OFF	0
-+#define PROG_PHY_LINK_RATE_MAX_MSK	(0xff << PROG_PHY_LINK_RATE_MAX_OFF)
-+#define PHY_CTRL			(PORT_BASE + 0x14)
-+#define PHY_CTRL_RESET_OFF		0
-+#define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
-+#define SAS_PHY_CTRL			(PORT_BASE + 0x20)
-+#define SL_CFG				(PORT_BASE + 0x84)
-+#define PHY_PCN				(PORT_BASE + 0x44)
-+#define SL_TOUT_CFG			(PORT_BASE + 0x8c)
-+#define SL_CONTROL			(PORT_BASE + 0x94)
-+#define SL_CONTROL_NOTIFY_EN_OFF	0
-+#define SL_CONTROL_NOTIFY_EN_MSK	(0x1 << SL_CONTROL_NOTIFY_EN_OFF)
-+#define TX_ID_DWORD0			(PORT_BASE + 0x9c)
-+#define TX_ID_DWORD1			(PORT_BASE + 0xa0)
-+#define TX_ID_DWORD2			(PORT_BASE + 0xa4)
-+#define TX_ID_DWORD3			(PORT_BASE + 0xa8)
-+#define TX_ID_DWORD4			(PORT_BASE + 0xaC)
-+#define TX_ID_DWORD5			(PORT_BASE + 0xb0)
-+#define TX_ID_DWORD6			(PORT_BASE + 0xb4)
-+#define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
-+#define RX_IDAF_DWORD1			(PORT_BASE + 0xc8)
-+#define RX_IDAF_DWORD2			(PORT_BASE + 0xcc)
-+#define RX_IDAF_DWORD3			(PORT_BASE + 0xd0)
-+#define RX_IDAF_DWORD4			(PORT_BASE + 0xd4)
-+#define RX_IDAF_DWORD5			(PORT_BASE + 0xd8)
-+#define RX_IDAF_DWORD6			(PORT_BASE + 0xdc)
-+#define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
-+#define DONE_RECEIVED_TIME		(PORT_BASE + 0x11c)
-+#define CHL_INT0			(PORT_BASE + 0x1b4)
-+#define CHL_INT0_HOTPLUG_TOUT_OFF	0
-+#define CHL_INT0_HOTPLUG_TOUT_MSK	(0x1 << CHL_INT0_HOTPLUG_TOUT_OFF)
-+#define CHL_INT0_SL_RX_BCST_ACK_OFF	1
-+#define CHL_INT0_SL_RX_BCST_ACK_MSK	(0x1 << CHL_INT0_SL_RX_BCST_ACK_OFF)
-+#define CHL_INT0_SL_PHY_ENABLE_OFF	2
-+#define CHL_INT0_SL_PHY_ENABLE_MSK	(0x1 << CHL_INT0_SL_PHY_ENABLE_OFF)
-+#define CHL_INT0_NOT_RDY_OFF		4
-+#define CHL_INT0_NOT_RDY_MSK		(0x1 << CHL_INT0_NOT_RDY_OFF)
-+#define CHL_INT0_PHY_RDY_OFF		5
-+#define CHL_INT0_PHY_RDY_MSK		(0x1 << CHL_INT0_PHY_RDY_OFF)
-+#define CHL_INT1			(PORT_BASE + 0x1b8)
-+#define CHL_INT1_DMAC_TX_ECC_ERR_OFF	15
-+#define CHL_INT1_DMAC_TX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_TX_ECC_ERR_OFF)
-+#define CHL_INT1_DMAC_RX_ECC_ERR_OFF	17
-+#define CHL_INT1_DMAC_RX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_RX_ECC_ERR_OFF)
-+#define CHL_INT2			(PORT_BASE + 0x1bc)
-+#define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
-+#define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
-+#define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-+#define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
-+#define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
-+#define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
-+#define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
-+#define PHYCTRL_PHY_ENA_MSK		(PORT_BASE + 0x2bc)
-+#define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
-+#define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
-+#define DMA_TX_STATUS			(PORT_BASE + 0x2d0)
-+#define DMA_TX_STATUS_BUSY_OFF		0
-+#define DMA_TX_STATUS_BUSY_MSK		(0x1 << DMA_TX_STATUS_BUSY_OFF)
-+#define DMA_RX_STATUS			(PORT_BASE + 0x2e8)
-+#define DMA_RX_STATUS_BUSY_OFF		0
-+#define DMA_RX_STATUS_BUSY_MSK		(0x1 << DMA_RX_STATUS_BUSY_OFF)
-+
-+#define AXI_CFG				(0x5100)
-+#define AM_CFG_MAX_TRANS		(0x5010)
-+#define AM_CFG_SINGLE_PORT_MAX_TRANS	(0x5014)
-+
-+/* HW dma structures */
-+/* Delivery queue header */
-+/* dw0 */
-+#define CMD_HDR_RESP_REPORT_OFF		5
-+#define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
-+#define CMD_HDR_TLR_CTRL_OFF		6
-+#define CMD_HDR_TLR_CTRL_MSK		(0x3 << CMD_HDR_TLR_CTRL_OFF)
-+#define CMD_HDR_PORT_OFF		18
-+#define CMD_HDR_PORT_MSK		(0xf << CMD_HDR_PORT_OFF)
-+#define CMD_HDR_PRIORITY_OFF		27
-+#define CMD_HDR_PRIORITY_MSK		(0x1 << CMD_HDR_PRIORITY_OFF)
-+#define CMD_HDR_CMD_OFF			29
-+#define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
-+/* dw1 */
-+#define CMD_HDR_DIR_OFF			5
-+#define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
-+#define CMD_HDR_RESET_OFF		7
-+#define CMD_HDR_RESET_MSK		(0x1 << CMD_HDR_RESET_OFF)
-+#define CMD_HDR_VDTL_OFF		10
-+#define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
-+#define CMD_HDR_FRAME_TYPE_OFF		11
-+#define CMD_HDR_FRAME_TYPE_MSK		(0x1f << CMD_HDR_FRAME_TYPE_OFF)
-+#define CMD_HDR_DEV_ID_OFF		16
-+#define CMD_HDR_DEV_ID_MSK		(0xffff << CMD_HDR_DEV_ID_OFF)
-+/* dw2 */
-+#define CMD_HDR_CFL_OFF			0
-+#define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
-+#define CMD_HDR_NCQ_TAG_OFF		10
-+#define CMD_HDR_NCQ_TAG_MSK		(0x1f << CMD_HDR_NCQ_TAG_OFF)
-+#define CMD_HDR_MRFL_OFF		15
-+#define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
-+#define CMD_HDR_SG_MOD_OFF		24
-+#define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
-+#define CMD_HDR_FIRST_BURST_OFF		26
-+#define CMD_HDR_FIRST_BURST_MSK		(0x1 << CMD_HDR_SG_MOD_OFF)
-+/* dw3 */
-+#define CMD_HDR_IPTT_OFF		0
-+#define CMD_HDR_IPTT_MSK		(0xffff << CMD_HDR_IPTT_OFF)
-+/* dw6 */
-+#define CMD_HDR_DIF_SGL_LEN_OFF		0
-+#define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
-+#define CMD_HDR_DATA_SGL_LEN_OFF	16
-+#define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
-+
-+/* Completion header */
-+/* dw0 */
-+#define CMPLT_HDR_RSPNS_XFRD_OFF	10
-+#define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
-+#define CMPLT_HDR_ERX_OFF		12
-+#define CMPLT_HDR_ERX_MSK		(0x1 << CMPLT_HDR_ERX_OFF)
-+/* dw1 */
-+#define CMPLT_HDR_IPTT_OFF		0
-+#define CMPLT_HDR_IPTT_MSK		(0xffff << CMPLT_HDR_IPTT_OFF)
-+#define CMPLT_HDR_DEV_ID_OFF		16
-+#define CMPLT_HDR_DEV_ID_MSK		(0xffff << CMPLT_HDR_DEV_ID_OFF)
-+
-+/* ITCT header */
-+/* qw0 */
-+#define ITCT_HDR_DEV_TYPE_OFF		0
-+#define ITCT_HDR_DEV_TYPE_MSK		(0x3 << ITCT_HDR_DEV_TYPE_OFF)
-+#define ITCT_HDR_VALID_OFF		2
-+#define ITCT_HDR_VALID_MSK		(0x1 << ITCT_HDR_VALID_OFF)
-+#define ITCT_HDR_MCR_OFF		5
-+#define ITCT_HDR_MCR_MSK		(0xf << ITCT_HDR_MCR_OFF)
-+#define ITCT_HDR_VLN_OFF		9
-+#define ITCT_HDR_VLN_MSK		(0xf << ITCT_HDR_VLN_OFF)
-+#define ITCT_HDR_PORT_ID_OFF		28
-+#define ITCT_HDR_PORT_ID_MSK		(0xf << ITCT_HDR_PORT_ID_OFF)
-+/* qw2 */
-+#define ITCT_HDR_INLT_OFF		0
-+#define ITCT_HDR_INLT_MSK		(0xffffULL << ITCT_HDR_INLT_OFF)
-+#define ITCT_HDR_BITLT_OFF		16
-+#define ITCT_HDR_BITLT_MSK		(0xffffULL << ITCT_HDR_BITLT_OFF)
-+#define ITCT_HDR_MCTLT_OFF		32
-+#define ITCT_HDR_MCTLT_MSK		(0xffffULL << ITCT_HDR_MCTLT_OFF)
-+#define ITCT_HDR_RTOLT_OFF		48
-+#define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
-+
- static const struct hisi_sas_hw hisi_sas_v2_hw = {
+@@ -256,6 +256,11 @@ struct hisi_sas_complete_v2_hdr {
+ 	__le32 dw3;
  };
  
++enum {
++	HISI_SAS_PHY_PHY_UPDOWN,
++	HISI_SAS_PHY_INT_NR
++};
++
+ #define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
+ 
+ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+@@ -610,6 +615,167 @@ static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
+ 	mod_timer(timer, jiffies + HZ);
+ }
+ 
++static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 sl_control;
++
++	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
++	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
++	msleep(1);
++	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
++	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
++}
++
++static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
++{
++	int i, res = 0;
++	u32 context, port_id, link_rate, hard_phy_linkrate;
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
++	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
++
++	/* Check for SATA dev */
++	context = hisi_sas_read32(hisi_hba, PHY_CONTEXT);
++	if (context & (1 << phy_no))
++		goto end;
++
++	if (phy_no == 8) {
++		u32 port_state = hisi_sas_read32(hisi_hba, PORT_STATE);
++
++		port_id = (port_state & PORT_STATE_PHY8_PORT_NUM_MSK) >>
++			  PORT_STATE_PHY8_PORT_NUM_OFF;
++		link_rate = (port_state & PORT_STATE_PHY8_CONN_RATE_MSK) >>
++			    PORT_STATE_PHY8_CONN_RATE_OFF;
++	} else {
++		port_id = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
++		port_id = (port_id >> (4 * phy_no)) & 0xf;
++		link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
++		link_rate = (link_rate >> (phy_no * 4)) & 0xf;
++	}
++
++	if (port_id == 0xf) {
++		dev_err(dev, "phyup: phy%d invalid portid\n", phy_no);
++		res = IRQ_NONE;
++		goto end;
++	}
++
++	for (i = 0; i < 6; i++) {
++		u32 idaf = hisi_sas_phy_read32(hisi_hba, phy_no,
++					       RX_IDAF_DWORD0 + (i * 4));
++		frame_rcvd[i] = __swab32(idaf);
++	}
++
++	/* Get the linkrates */
++	link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
++	link_rate = (link_rate >> (phy_no * 4)) & 0xf;
++	sas_phy->linkrate = link_rate;
++	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
++						HARD_PHY_LINKRATE);
++	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
++	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
++
++	sas_phy->oob_mode = SAS_OOB_MODE;
++	memcpy(sas_phy->attached_sas_addr, &id->sas_addr, SAS_ADDR_SIZE);
++	dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
++	phy->port_id = port_id;
++	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
++	phy->phy_type |= PORT_TYPE_SAS;
++	phy->phy_attached = 1;
++	phy->identify.device_type = id->dev_type;
++	phy->frame_rcvd_size =	sizeof(struct sas_identify_frame);
++	if (phy->identify.device_type == SAS_END_DEVICE)
++		phy->identify.target_port_protocols =
++			SAS_PROTOCOL_SSP;
++	else if (phy->identify.device_type != SAS_PHY_UNUSED)
++		phy->identify.target_port_protocols =
++			SAS_PROTOCOL_SMP;
++	queue_work(hisi_hba->wq, &phy->phyup_ws);
++
++end:
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
++			     CHL_INT0_SL_PHY_ENABLE_MSK);
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 0);
++
++	return res;
++}
++
++static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
++{
++	struct hisi_hba *hisi_hba = p;
++	u32 irq_msk;
++	int phy_no = 0;
++	irqreturn_t res = IRQ_HANDLED;
++
++	irq_msk = (hisi_sas_read32(hisi_hba, HGC_INVLD_DQE_INFO)
++		   >> HGC_INVLD_DQE_INFO_FB_CH0_OFF) & 0x1ff;
++	while (irq_msk) {
++		if (irq_msk  & 1) {
++			u32 irq_value = hisi_sas_phy_read32(hisi_hba, phy_no,
++							    CHL_INT0);
++
++			if (irq_value & CHL_INT0_SL_PHY_ENABLE_MSK)
++				/* phy up */
++				if (phy_up_v2_hw(phy_no, hisi_hba)) {
++					res = IRQ_NONE;
++					goto end;
++				}
++
++		}
++		irq_msk >>= 1;
++		phy_no++;
++	}
++
++end:
++	return res;
++}
++
++static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
++	int_phy_updown_v2_hw,
++};
++
++/**
++ * There is a limitation in the hip06 chipset that we need
++ * to map in all mbigen interrupts, even if they are not used.
++ */
++static int interrupt_init_v2_hw(struct hisi_hba *hisi_hba)
++{
++	struct platform_device *pdev = hisi_hba->pdev;
++	struct device *dev = &pdev->dev;
++	int i, irq, rc, irq_map[128];
++
++
++	for (i = 0; i < 128; i++)
++		irq_map[i] = platform_get_irq(pdev, i);
++
++	for (i = 0; i < HISI_SAS_PHY_INT_NR; i++) {
++		int idx = i;
++
++		irq = irq_map[idx + 1]; /* Phy up/down is irq1 */
++		if (!irq) {
++			dev_err(dev, "irq init: fail map phy interrupt %d\n",
++				idx);
++			return -ENOENT;
++		}
++
++		rc = devm_request_irq(dev, irq, phy_interrupts[i], 0,
++				      DRV_NAME " phy", hisi_hba);
++		if (rc) {
++			dev_err(dev, "irq init: could not request "
++				"phy interrupt %d, rc=%d\n",
++				irq, rc);
++			return -ENOENT;
++		}
++	}
++
++	return 0;
++}
++
+ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ {
+ 	int rc;
+@@ -618,6 +784,10 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ 	if (rc)
+ 		return rc;
+ 
++	rc = interrupt_init_v2_hw(hisi_hba);
++	if (rc)
++		return rc;
++
+ 	phys_init_v2_hw(hisi_hba);
+ 
+ 	return 0;
+@@ -625,6 +795,7 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ 
+ static const struct hisi_sas_hw hisi_sas_v2_hw = {
+ 	.hw_init = hisi_sas_v2_init,
++	.sl_notify = sl_notify_v2_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v2_hdr),
+ };
 -- 
 1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
