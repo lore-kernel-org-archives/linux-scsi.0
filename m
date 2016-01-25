@@ -1,7 +1,7 @@
 From: j00310691 <john.garry@huawei.com>
-Subject: [PATCH v2 03/23] hisi_sas: set max commands as configurable
-Date: Tue, 26 Jan 2016 01:21:52 +0800
-Message-ID: <1453742532-53092-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 05/23] hisi_sas: add hisi_sas_err_record_v1
+Date: Tue, 26 Jan 2016 01:21:54 +0800
+Message-ID: <1453742532-53092-6-git-send-email-john.garry@huawei.com>
 References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,159 +14,80 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: John Garry <john.garry@huawei.com>
 
-Since v2 hardware permits different numbers of
-commands to v1, set this as configurable in
-hisi_sas_hw.
+Since the error record structure is different for
+v2 hw, make hisi_sas_err_record opaque and add
+hisi_sas_err_record_v1.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  2 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 24 ++++++++++++------------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  3 +++
- 3 files changed, 16 insertions(+), 13 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       | 12 +-----------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 17 +++++++++++++++--
+ 2 files changed, 16 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 21eb2bb..5ed5cf1 100644
+index 7c05eb3..e5a58c5 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -27,7 +27,6 @@
- #define HISI_SAS_QUEUE_SLOTS 512
- #define HISI_SAS_MAX_ITCT_ENTRIES 4096
- #define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
--#define HISI_SAS_COMMAND_ENTRIES 8192
- 
- #define HISI_SAS_STATUS_BUF_SZ \
- 		(sizeof(struct hisi_sas_err_record) + 1024)
-@@ -144,6 +143,7 @@ struct hisi_sas_hw {
- 	void (*free_device)(struct hisi_hba *hisi_hba,
- 			    struct hisi_sas_device *dev);
- 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
-+	int max_command_entries;
- 	int complete_hdr_size;
+@@ -270,17 +270,7 @@ struct hisi_sas_iost {
  };
  
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 7689939..c48df6d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -973,9 +973,9 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ struct hisi_sas_err_record {
+-	/* dw0 */
+-	__le32 dma_err_type;
+-
+-	/* dw1 */
+-	__le32 trans_tx_fail_type;
+-
+-	/* dw2 */
+-	__le32 trans_rx_fail_type;
+-
+-	/* dw3 */
+-	u32 rsvd;
++	u32	data[4];
+ };
  
- static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- {
--	int i, s;
- 	struct platform_device *pdev = hisi_hba->pdev;
- 	struct device *dev = &pdev->dev;
-+	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
- 
- 	spin_lock_init(&hisi_hba->lock);
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
-@@ -1035,13 +1035,13 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- 	memset(hisi_hba->itct, 0, s);
- 
--	hisi_hba->slot_info = devm_kcalloc(dev, HISI_SAS_COMMAND_ENTRIES,
-+	hisi_hba->slot_info = devm_kcalloc(dev, max_command_entries,
- 					   sizeof(struct hisi_sas_slot),
- 					   GFP_KERNEL);
- 	if (!hisi_hba->slot_info)
- 		goto err_out;
- 
--	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_iost);
-+	s = max_command_entries * sizeof(struct hisi_sas_iost);
- 	hisi_hba->iost = dma_alloc_coherent(dev, s, &hisi_hba->iost_dma,
- 					    GFP_KERNEL);
- 	if (!hisi_hba->iost)
-@@ -1049,7 +1049,7 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- 	memset(hisi_hba->iost, 0, s);
- 
--	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint);
-+	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
- 	hisi_hba->breakpoint = dma_alloc_coherent(dev, s,
- 				&hisi_hba->breakpoint_dma, GFP_KERNEL);
- 	if (!hisi_hba->breakpoint)
-@@ -1057,7 +1057,7 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- 	memset(hisi_hba->breakpoint, 0, s);
- 
--	hisi_hba->slot_index_count = HISI_SAS_COMMAND_ENTRIES;
-+	hisi_hba->slot_index_count = max_command_entries;
- 	s = hisi_hba->slot_index_count / sizeof(unsigned long);
- 	hisi_hba->slot_index_tags = devm_kzalloc(dev, s, GFP_KERNEL);
- 	if (!hisi_hba->slot_index_tags)
-@@ -1075,7 +1075,7 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 		goto err_out;
- 	memset(hisi_hba->initial_fis, 0, s);
- 
--	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint) * 2;
-+	s = max_command_entries * sizeof(struct hisi_sas_breakpoint) * 2;
- 	hisi_hba->sata_breakpoint = dma_alloc_coherent(dev, s,
- 				&hisi_hba->sata_breakpoint_dma, GFP_KERNEL);
- 	if (!hisi_hba->sata_breakpoint)
-@@ -1098,7 +1098,7 @@ err_out:
- static void hisi_sas_free(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = &hisi_hba->pdev->dev;
--	int i, s;
-+	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
- 
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
- 		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
-@@ -1123,12 +1123,12 @@ static void hisi_sas_free(struct hisi_hba *hisi_hba)
- 		dma_free_coherent(dev, s,
- 				  hisi_hba->itct, hisi_hba->itct_dma);
- 
--	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_iost);
-+	s = max_command_entries * sizeof(struct hisi_sas_iost);
- 	if (hisi_hba->iost)
- 		dma_free_coherent(dev, s,
- 				  hisi_hba->iost, hisi_hba->iost_dma);
- 
--	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint);
-+	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
- 	if (hisi_hba->breakpoint)
- 		dma_free_coherent(dev, s,
- 				  hisi_hba->breakpoint,
-@@ -1141,7 +1141,7 @@ static void hisi_sas_free(struct hisi_hba *hisi_hba)
- 				  hisi_hba->initial_fis,
- 				  hisi_hba->initial_fis_dma);
- 
--	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint) * 2;
-+	s = max_command_entries * sizeof(struct hisi_sas_breakpoint) * 2;
- 	if (hisi_hba->sata_breakpoint)
- 		dma_free_coherent(dev, s,
- 				  hisi_hba->sata_breakpoint,
-@@ -1273,8 +1273,8 @@ int hisi_sas_probe(struct platform_device *pdev,
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
- 	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
--	shost->can_queue = HISI_SAS_COMMAND_ENTRIES;
--	shost->cmd_per_lun = HISI_SAS_COMMAND_ENTRIES;
-+	shost->can_queue = hisi_hba->hw->max_command_entries;
-+	shost->cmd_per_lun = hisi_hba->hw->max_command_entries;
- 
- 	sha->sas_ha_name = DRV_NAME;
- 	sha->dev = &hisi_hba->pdev->dev;
+ struct hisi_sas_initial_fis {
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 3d562de..9bbcf6d 100644
+index 9bbcf6d..87a0622 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -392,6 +392,8 @@ enum {
- 	TRANS_RX_SMP_RESP_TIMEOUT_ERR, /* 0x31a */
+@@ -288,6 +288,20 @@ struct hisi_sas_complete_v1_hdr {
+ 	__le32 data;
  };
  
-+#define HISI_SAS_COMMAND_ENTRIES_V1_HW 8192
++struct hisi_sas_err_record_v1 {
++	/* dw0 */
++	__le32 dma_err_type;
 +
- #define HISI_SAS_PHY_MAX_INT_NR (HISI_SAS_PHY_INT_NR * HISI_SAS_MAX_PHYS)
- #define HISI_SAS_CQ_MAX_INT_NR (HISI_SAS_MAX_QUEUES)
- #define HISI_SAS_FATAL_INT_NR (2)
-@@ -1799,6 +1801,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.phy_disable = disable_phy_v1_hw,
- 	.phy_hard_reset = phy_hard_reset_v1_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
-+	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V1_HW,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
- };
++	/* dw1 */
++	__le32 trans_tx_fail_type;
++
++	/* dw2 */
++	__le32 trans_rx_fail_type;
++
++	/* dw3 */
++	u32 rsvd;
++};
++
+ enum {
+ 	HISI_SAS_PHY_BCAST_ACK = 0,
+ 	HISI_SAS_PHY_SL_PHY_ENABLED,
+@@ -1098,7 +1112,7 @@ static void slot_err_v1_hw(struct hisi_hba *hisi_hba,
+ 			   struct hisi_sas_slot *slot)
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+-	struct hisi_sas_err_record *err_record = slot->status_buffer;
++	struct hisi_sas_err_record_v1 *err_record = slot->status_buffer;
+ 	struct device *dev = &hisi_hba->pdev->dev;
  
+ 	switch (task->task_proto) {
+@@ -1222,7 +1236,6 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+ 	struct domain_device *device;
+ 	enum exec_status sts;
+ 	struct hisi_sas_complete_v1_hdr *complete_queue =
+-			(struct hisi_sas_complete_v1_hdr *)
+ 			hisi_hba->complete_hdr[slot->cmplt_queue];
+ 	struct hisi_sas_complete_v1_hdr *complete_hdr;
+ 	u32 cmplt_hdr_data;
 -- 
 1.9.1
