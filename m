@@ -1,92 +1,95 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [RESEND PATCH v2 07/23] hisi_sas: add bare v2 hw driver
-Date: Tue, 26 Jan 2016 02:47:07 +0800
-Message-ID: <1453747643-61875-8-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [RESEND PATCH v2 11/23] hisi_sas: add v2 phy init code
+Date: Tue, 26 Jan 2016 02:47:11 +0800
+Message-ID: <1453747643-61875-12-git-send-email-john.garry@huawei.com>
 References: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1453747643-61875-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Just add enough to build and init the module.
-
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/Makefile         |  2 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 48 ++++++++++++++++++++++++++++++++++
- 2 files changed, 49 insertions(+), 1 deletion(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 49 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-index 3e70eae..c6d3a1b 100644
---- a/drivers/scsi/hisi_sas/Makefile
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -1,2 +1,2 @@
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
--obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o
-+obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o hisi_sas_v2_hw.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-new file mode 100644
-index 0000000..0f7f2af
---- /dev/null
+index 6f05333..1990d65 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -0,0 +1,48 @@
-+/*
-+ * Copyright (c) 2016 Linaro Ltd.
-+ * Copyright (c) 2016 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas_v2_hw"
-+
-+static const struct hisi_sas_hw hisi_sas_v2_hw = {
-+};
-+
-+static int hisi_sas_v2_probe(struct platform_device *pdev)
+@@ -288,6 +288,15 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
+ 	return readl(regs);
+ }
+ 
++static void config_phy_opt_mode_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	return hisi_sas_probe(pdev, &hisi_sas_v2_hw);
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	cfg &= ~PHY_CFG_DC_OPT_MSK;
++	cfg |= 1 << PHY_CFG_DC_OPT_OFF;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
 +}
 +
-+static int hisi_sas_v2_remove(struct platform_device *pdev)
+ static void config_id_frame_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	struct sas_identify_frame identify_frame;
+@@ -563,6 +572,44 @@ static int hw_init_v2_hw(struct hisi_hba *hisi_hba)
+ 	return 0;
+ }
+ 
++static void enable_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	return hisi_sas_remove(pdev);
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	cfg |= PHY_CFG_ENA_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
 +}
 +
-+static const struct of_device_id sas_v2_of_match[] = {
-+	{ .compatible = "hisilicon,hip06-sas-v2",},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, sas_v2_of_match);
++static void start_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	config_id_frame_v2_hw(hisi_hba, phy_no);
++	config_phy_opt_mode_v2_hw(hisi_hba, phy_no);
++	enable_phy_v2_hw(hisi_hba, phy_no);
++}
 +
-+static struct platform_driver hisi_sas_v2_driver = {
-+	.probe = hisi_sas_v2_probe,
-+	.remove = hisi_sas_v2_remove,
-+	.driver = {
-+		.name = DRV_NAME,
-+		.of_match_table = sas_v2_of_match,
-+	},
-+};
++static void start_phys_v2_hw(unsigned long data)
++{
++	struct hisi_hba *hisi_hba = (struct hisi_hba *)data;
++	int i;
 +
-+module_platform_driver(hisi_sas_v2_driver);
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		start_phy_v2_hw(hisi_hba, i);
++}
 +
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>");
-+MODULE_DESCRIPTION("HISILICON SAS controller v2 hw driver");
-+MODULE_ALIAS("platform:" DRV_NAME);
++static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
++{
++	int i;
++	struct timer_list *timer = &hisi_hba->timer;
++
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x6a);
++		hisi_sas_phy_read32(hisi_hba, i, CHL_INT2_MSK);
++	}
++
++	setup_timer(timer, start_phys_v2_hw, (unsigned long)hisi_hba);
++	mod_timer(timer, jiffies + HZ);
++}
++
+ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ {
+ 	int rc;
+@@ -571,6 +618,8 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ 	if (rc)
+ 		return rc;
+ 
++	phys_init_v2_hw(hisi_hba);
++
+ 	return 0;
+ }
+ 
 -- 
 1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
