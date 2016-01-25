@@ -1,7 +1,7 @@
 From: j00310691 <john.garry@huawei.com>
-Subject: [PATCH v2 18/23] hisi_sas: add v2 code to send smp command
-Date: Tue, 26 Jan 2016 01:22:07 +0800
-Message-ID: <1453742532-53092-19-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 14/23] hisi_sas: add v2 channel interrupt handler
+Date: Tue, 26 Jan 2016 01:22:03 +0800
+Message-ID: <1453742532-53092-15-git-send-email-john.garry@huawei.com>
 References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,99 +14,112 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: John Garry <john.garry@huawei.com>
 
+This also includes broadcast handler. Unlike v1 hw,
+broadcast does not have its own dedicated interrupt.
+
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 71 ++++++++++++++++++++++++++++++++++
- 1 file changed, 71 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 79 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 79 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index ab6ea25..2c6a753 100644
+index 35ce7b6..5af2069 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -744,6 +744,76 @@ static int prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+@@ -258,6 +258,7 @@ struct hisi_sas_complete_v2_hdr {
+ 
+ enum {
+ 	HISI_SAS_PHY_PHY_UPDOWN,
++	HISI_SAS_PHY_CHNL_INT,
+ 	HISI_SAS_PHY_INT_NR
+ };
+ 
+@@ -783,8 +784,86 @@ end:
+ 	return res;
  }
  
-+static int prep_smp_v2_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
++static void phy_bcast_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
 +{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct scatterlist *sg_req, *sg_resp;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	dma_addr_t req_dma_addr;
-+	unsigned int req_len, resp_len;
-+	int elem, rc;
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
++	unsigned long flags;
 +
-+	/*
-+	* DMA-map SMP request, response buffers
-+	*/
-+	/* req */
-+	sg_req = &task->smp_task.smp_req;
-+	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
-+	if (!elem)
-+		return -ENOMEM;
-+	req_len = sg_dma_len(sg_req);
-+	req_dma_addr = sg_dma_address(sg_req);
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 1);
 +
-+	/* resp */
-+	sg_resp = &task->smp_task.smp_resp;
-+	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
-+	if (!elem) {
-+		rc = -ENOMEM;
-+		goto err_out_req;
-+	}
-+	resp_len = sg_dma_len(sg_resp);
-+	if ((req_len & 0x3) || (resp_len & 0x3)) {
-+		rc = -EINVAL;
-+		goto err_out_resp;
-+	}
++	spin_lock_irqsave(&hisi_hba->lock, flags);
++	sas_ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
 +
-+	/* create header */
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
-+			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
-+			       (2 << CMD_HDR_CMD_OFF)); /* smp */
-+
-+	/* map itct entry */
-+	hdr->dw1 = cpu_to_le32((sas_dev->device_id << CMD_HDR_DEV_ID_OFF) |
-+			       (1 << CMD_HDR_FRAME_TYPE_OFF) |
-+			       (DIR_NO_DATA << CMD_HDR_DIR_OFF));
-+
-+	/* dw2 */
-+	hdr->dw2 = cpu_to_le32((((req_len - 4) / 4) << CMD_HDR_CFL_OFF) |
-+			       (HISI_SAS_MAX_SMP_RESP_SZ / 4 <<
-+			       CMD_HDR_MRFL_OFF));
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
-+
-+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	return 0;
-+
-+err_out_resp:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
-+		     DMA_FROM_DEVICE);
-+err_out_req:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
-+		     DMA_TO_DEVICE);
-+	return rc;
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
++			     CHL_INT0_SL_RX_BCST_ACK_MSK);
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 0);
 +}
 +
- static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot, int is_tmf,
- 			  struct hisi_sas_tmf_task *tmf)
-@@ -1395,6 +1465,7 @@ static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.hw_init = hisi_sas_v2_init,
- 	.sl_notify = sl_notify_v2_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
-+	.prep_smp = prep_smp_v2_hw,
- 	.prep_ssp = prep_ssp_v2_hw,
- 	.get_free_slot = get_free_slot_v2_hw,
- 	.start_delivery = start_delivery_v2_hw,
++static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
++{
++	struct hisi_hba *hisi_hba = p;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 ent_msk, ent_tmp, irq_msk;
++	int phy_no = 0;
++
++	ent_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
++	ent_tmp = ent_msk;
++	ent_msk |= ENT_INT_SRC_MSK3_ENT95_MSK_MSK;
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, ent_msk);
++
++	irq_msk = (hisi_sas_read32(hisi_hba, HGC_INVLD_DQE_INFO) >>
++			HGC_INVLD_DQE_INFO_FB_CH3_OFF) & 0x1ff;
++
++	while (irq_msk) {
++		if (irq_msk & (1 << phy_no)) {
++			u32 irq_value0 = hisi_sas_phy_read32(hisi_hba, phy_no,
++							     CHL_INT0);
++			u32 irq_value1 = hisi_sas_phy_read32(hisi_hba, phy_no,
++							     CHL_INT1);
++			u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
++							     CHL_INT2);
++
++			if (irq_value1) {
++				if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
++						  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
++					panic("%s: DMAC RX/TX ecc bad error! (0x%x)",
++						dev_name(dev), irq_value1);
++
++				hisi_sas_phy_write32(hisi_hba, phy_no,
++						     CHL_INT1, irq_value1);
++			}
++
++			if (irq_value2)
++				hisi_sas_phy_write32(hisi_hba, phy_no,
++						     CHL_INT2, irq_value2);
++
++
++			if (irq_value0) {
++				if (irq_value0 & CHL_INT0_SL_RX_BCST_ACK_MSK)
++					phy_bcast_v2_hw(phy_no, hisi_hba);
++
++				hisi_sas_phy_write32(hisi_hba, phy_no,
++						CHL_INT0, irq_value0
++						& (~CHL_INT0_HOTPLUG_TOUT_MSK)
++						& (~CHL_INT0_SL_PHY_ENABLE_MSK)
++						& (~CHL_INT0_NOT_RDY_MSK));
++			}
++		}
++		irq_msk &= ~(1 << phy_no);
++		phy_no++;
++	}
++
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, ent_tmp);
++
++	return IRQ_HANDLED;
++}
++
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+ 	int_phy_updown_v2_hw,
++	int_chnl_int_v2_hw,
+ };
+ 
+ /**
 -- 
 1.9.1
