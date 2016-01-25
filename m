@@ -1,81 +1,58 @@
-From: "Singhal, Maneesh" <Maneesh.Singhal-mb1K0bWo544@public.gmane.org>
-Subject: RE: [PATCH] drivers/scsi/emcctd: drivers/scsi/emcctd: Client driver
- implementation for  EMC-Symmetrix GuestOS emulated Cut-Through Device
-Date: Mon, 25 Jan 2016 10:16:30 +0000
-Message-ID: <82807C73E0BDBB498164AAE7B8F6A1481C61B01A@MX105CL01.corp.emc.com>
-References: <82807C73E0BDBB498164AAE7B8F6A1481C61263E@MX105CL01.corp.emc.com>
- <20160119160421.GM2742@c203.arch.suse.de>
- <82807C73E0BDBB498164AAE7B8F6A1481C6181A4@MX105CL01.corp.emc.com>
- <20160125092612.GB29561@c203.arch.suse.de>
- <82807C73E0BDBB498164AAE7B8F6A1481C61AE33@MX105CL01.corp.emc.com>
- <20160125100831.GC29561@c203.arch.suse.de>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
+ st driver doesn't seem to grok LTO partitioning
+Date: Mon, 25 Jan 2016 11:21:30 +0100
+Message-ID: <20160125112130.1350643c@harpe.intellique.com>
+References: <20151218170644.24167419@harpe.intellique.com>
+	<alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr>
+	<20160104124626.3112e8c0@harpe.intellique.com>
+	<CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com>
+	<688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com>
+	<20160106161049.34f29973@harpe.intellique.com>
+	<1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com>
+	<20160106170720.61db9e86@harpe.intellique.com>
+	<1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com>
+	<DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net>
+	<0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi>
+	<DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net>
+	<alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160125100831.GC29561-3LAbnSA0sDC4fIQPS+WK3rNAH6kLmebB@public.gmane.org>
-Content-Language: en-US
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "JBottomley-wo1vFcy6AUs@public.gmane.org" <JBottomley-wo1vFcy6AUs@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail1.g1.pair.com ([66.39.3.162]:43294 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755173AbcAYKVa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 05:21:30 -0500
+In-Reply-To: <alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: "Seymour, Shane M" <shane.seymour@hpe.com>, Laurence Oberman <loberman@redhat.com>, Laurence Oberman <oberman.l@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Thanks a lot for detailed information. Appreciate it !
+Le Sun, 24 Jan 2016 23:05:17 +0200 (EET)
+Kai Makisara <Kai.Makisara@kolumbus.fi> =C3=A9crivait:
 
-Regards
-Maneesh
+> Below is a test patch that implements the current behaviour with=20
+> non-negative argument (but works with LTOs etc.) and makes partition=20
+> zero size absolute value of argument (MB) if argument is negative. If=
+=20
+> you want to test the patch, note that the current mt-st does not
+> accept negative numbers. A minimal patch is needed.
 
-> -----Original Message-----
-> From: Johannes Thumshirn [mailto:jthumshirn-l3A5Bk7waGM@public.gmane.org]
-> Sent: Monday, January 25, 2016 3:39 PM
-> To: Singhal, Maneesh
-> Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
-> JBottomley-wo1vFcy6AUs@public.gmane.org; martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org; linux-
-> api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Subject: Re: [PATCH] drivers/scsi/emcctd: drivers/scsi/emcctd: Client
-> driver implementation for EMC-Symmetrix GuestOS emulated Cut-
-> Through Device
->=20
-> On Mon, Jan 25, 2016 at 09:30:47AM +0000, Singhal, Maneesh wrote:
-> > Thanks Johannes for generously reviewing my patch. It indeed is
-> going to improve the thing a lot. I agree with all your comments so f=
-ar,
-> and will submit a newer patch soon.
-> > Since this is my first patch, I have couple of questions regarding
-> submitting the patch:
-> >
-> > 1.  Is there a page/place where I can see the review comments
-> rather neatly ?, finding out all the comments and infact reading to
-> entire code on text file is cumbersome. If there is no way, then its
-> fine,... I can live with it.
->=20
-> Nope unfortunately not. That's why it's nice when people trim their e=
+OK I'm going to try this one.
+
+--=20
+-----------------------------------------------------------------------=
 -
-> mails
-> ;-)
->=20
-> > 2. When I address the review comments and want to resubmit the
-> patch, do I need to submit the incremental patch or the entire code
-> patch again ? git-format-patch gives me incremental patch only.
->=20
-> Ususally you change your code and do a git commit --amend. This
-> modifies your commit instead of creating a new one. If you already
-> have a new commit than you can use git rebase -i <version befor
-> commit to amend> and squash the commit's into one (git gives you a
-> nice readme when doing rebase -i). Afterwards you do a git format-
-> patch -1 -v 2, this creates a v2-0001-your-patch-name.patch for git
-> send-email which has an updated [PATCH V2] in the subject.
->=20
-> At least, the above is the way I do it (i.e. there are more than one =
-ways
-> to do it).
->=20
->=20
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton HRB 21284 (AG
-> N=FCrnberg) Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 96=
-9D
-> 2D76 0850
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
