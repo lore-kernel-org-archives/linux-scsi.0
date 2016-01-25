@@ -1,27 +1,61 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 00/23] HiSilicon SAS v2 hw support
-Date: Mon, 25 Jan 2016 17:24:30 +0000
-Message-ID: <56A65A4E.2000006@huawei.com>
-References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1453742532-53092-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH v3] mptlan: add checks for dma mapping errors
+Date: Mon, 25 Jan 2016 19:02:24 +0100
+Message-ID: <1453744944-4065-1-git-send-email-khoroshilov@ispras.ru>
+References: <56A6568B.9020707@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56A6568B.9020707@ispras.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
-I'll re-send this patchset with my real name. I had my user name set to 
-my company ID in my terminal.
+mpt_lan_sdu_send() and mpt_lan_post_receive_buckets() do not check
+if mapping dma memory succeed.
+The patch adds the checks and failure handling.
 
-I did send a trail patchset to myself, but my mail client autochanged 
-the ID to my real name so I never detected.
+v3: Fix resource deallocation (reported by Tomas Henzl).
 
-John
+Found by Linux Driver Verification project (linuxtesting.org).
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/message/fusion/mptlan.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index cbe96072a6cc..e9b83fc7be35 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -734,6 +734,13 @@ mpt_lan_sdu_send (struct sk_buff *skb, struct net_device *dev)
+ 
+         dma = pci_map_single(mpt_dev->pcidev, skb->data, skb->len,
+ 			     PCI_DMA_TODEVICE);
++	if (pci_dma_mapping_error(mpt_dev->pcidev, dma)) {
++		mpt_put_msg_frame(LanCtx, mpt_dev, mf);
++		netif_stop_queue(dev);
++
++		printk (KERN_ERR "%s: dma mapping failed\n", __func__);
++		return NETDEV_TX_BUSY;
++	}
+ 
+ 	priv->SendCtl[ctx].skb = skb;
+ 	priv->SendCtl[ctx].dma = dma;
+@@ -1232,6 +1239,15 @@ mpt_lan_post_receive_buckets(struct mpt_lan_priv *priv)
+ 
+ 				dma = pci_map_single(mpt_dev->pcidev, skb->data,
+ 						     len, PCI_DMA_FROMDEVICE);
++				if (pci_dma_mapping_error(mpt_dev->pcidev, dma)) {
++					printk (KERN_WARNING
++						MYNAM "/%s: dma mapping failed\n",
++						__func__);
++					dev_kfree_skb(skb);
++					priv->mpt_rxfidx[++priv->mpt_rxfidx_tail] = ctx;
++					spin_unlock_irqrestore(&priv->rxfidx_lock, flags);
++					break;
++				}
+ 
+ 				priv->RcvCtl[ctx].skb = skb;
+ 				priv->RcvCtl[ctx].dma = dma;
+-- 
+1.9.1
