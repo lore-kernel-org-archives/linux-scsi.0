@@ -1,14 +1,14 @@
 From: j00310691 <john.garry@huawei.com>
-Subject: [PATCH v2 12/23] hisi_sas: add v2 int init and phy up handler
-Date: Tue, 26 Jan 2016 01:22:01 +0800
-Message-ID: <1453742532-53092-13-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 13/23] hisi_sas: add v2 phy down handler
+Date: Tue, 26 Jan 2016 01:22:02 +0800
+Message-ID: <1453742532-53092-14-git-send-email-john.garry@huawei.com>
 References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55461 "EHLO
+Received: from szxga01-in.huawei.com ([58.251.152.64]:55370 "EHLO
 	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757959AbcAYRI4 (ORCPT
+	with ESMTP id S1757969AbcAYRI4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 12:08:56 -0500
 In-Reply-To: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -20,209 +20,87 @@ From: John Garry <john.garry@huawei.com>
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 171 +++++++++++++++++++++++++++++++++
- 1 file changed, 171 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 49 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 1990d65..a7b83bd 100644
+index a7b83bd..35ce7b6 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -256,6 +256,11 @@ struct hisi_sas_complete_v2_hdr {
- 	__le32 dw3;
- };
- 
-+enum {
-+	HISI_SAS_PHY_PHY_UPDOWN,
-+	HISI_SAS_PHY_INT_NR
-+};
-+
- #define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
- 
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
-@@ -610,6 +615,167 @@ static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
- 	mod_timer(timer, jiffies + HZ);
+@@ -628,6 +628,29 @@ static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
  }
  
-+static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
 +{
-+	u32 sl_control;
++	int i, bitmap = 0;
++	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
++	u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
 +
-+	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-+	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-+	msleep(1);
-+	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-+	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-+}
++	for (i = 0; i < (hisi_hba->n_phy < 9 ? hisi_hba->n_phy : 8); i++)
++		if (phy_state & 1 << i)
++			if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
++				bitmap |= 1 << i;
 +
-+static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
-+{
-+	int i, res = 0;
-+	u32 context, port_id, link_rate, hard_phy_linkrate;
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
-+	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
-+
-+	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
-+
-+	/* Check for SATA dev */
-+	context = hisi_sas_read32(hisi_hba, PHY_CONTEXT);
-+	if (context & (1 << phy_no))
-+		goto end;
-+
-+	if (phy_no == 8) {
++	if (hisi_hba->n_phy == 9) {
 +		u32 port_state = hisi_sas_read32(hisi_hba, PORT_STATE);
 +
-+		port_id = (port_state & PORT_STATE_PHY8_PORT_NUM_MSK) >>
-+			  PORT_STATE_PHY8_PORT_NUM_OFF;
-+		link_rate = (port_state & PORT_STATE_PHY8_CONN_RATE_MSK) >>
-+			    PORT_STATE_PHY8_CONN_RATE_OFF;
-+	} else {
-+		port_id = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
-+		port_id = (port_id >> (4 * phy_no)) & 0xf;
-+		link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
-+		link_rate = (link_rate >> (phy_no * 4)) & 0xf;
++		if (phy_state & 1 << 8)
++			if (((port_state & PORT_STATE_PHY8_PORT_NUM_MSK) >>
++			     PORT_STATE_PHY8_PORT_NUM_OFF) == port_id)
++				bitmap |= 1 << 9;
 +	}
 +
-+	if (port_id == 0xf) {
-+		dev_err(dev, "phyup: phy%d invalid portid\n", phy_no);
-+		res = IRQ_NONE;
-+		goto end;
-+	}
++	return bitmap;
++}
 +
-+	for (i = 0; i < 6; i++) {
-+		u32 idaf = hisi_sas_phy_read32(hisi_hba, phy_no,
-+					       RX_IDAF_DWORD0 + (i * 4));
-+		frame_rcvd[i] = __swab32(idaf);
-+	}
+ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -705,6 +728,25 @@ end:
+ 	return res;
+ }
+ 
++static int phy_down_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
++{
++	int res = 0;
++	u32 phy_cfg, phy_state;
 +
-+	/* Get the linkrates */
-+	link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
-+	link_rate = (link_rate >> (phy_no * 4)) & 0xf;
-+	sas_phy->linkrate = link_rate;
-+	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
-+						HARD_PHY_LINKRATE);
-+	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
-+	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 1);
 +
-+	sas_phy->oob_mode = SAS_OOB_MODE;
-+	memcpy(sas_phy->attached_sas_addr, &id->sas_addr, SAS_ADDR_SIZE);
-+	dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
-+	phy->port_id = port_id;
-+	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
-+	phy->phy_type |= PORT_TYPE_SAS;
-+	phy->phy_attached = 1;
-+	phy->identify.device_type = id->dev_type;
-+	phy->frame_rcvd_size =	sizeof(struct sas_identify_frame);
-+	if (phy->identify.device_type == SAS_END_DEVICE)
-+		phy->identify.target_port_protocols =
-+			SAS_PROTOCOL_SSP;
-+	else if (phy->identify.device_type != SAS_PHY_UNUSED)
-+		phy->identify.target_port_protocols =
-+			SAS_PROTOCOL_SMP;
-+	queue_work(hisi_hba->wq, &phy->phyup_ws);
++	phy_cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
 +
-+end:
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
-+			     CHL_INT0_SL_PHY_ENABLE_MSK);
-+	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 0);
++	phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
++
++	hisi_sas_phy_down(hisi_hba, phy_no, (phy_state & 1 << phy_no) ? 1 : 0);
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, CHL_INT0_NOT_RDY_MSK);
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 0);
 +
 +	return res;
 +}
 +
-+static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
-+{
-+	struct hisi_hba *hisi_hba = p;
-+	u32 irq_msk;
-+	int phy_no = 0;
-+	irqreturn_t res = IRQ_HANDLED;
-+
-+	irq_msk = (hisi_sas_read32(hisi_hba, HGC_INVLD_DQE_INFO)
-+		   >> HGC_INVLD_DQE_INFO_FB_CH0_OFF) & 0x1ff;
-+	while (irq_msk) {
-+		if (irq_msk  & 1) {
-+			u32 irq_value = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							    CHL_INT0);
-+
-+			if (irq_value & CHL_INT0_SL_PHY_ENABLE_MSK)
-+				/* phy up */
-+				if (phy_up_v2_hw(phy_no, hisi_hba)) {
+ static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
+ {
+ 	struct hisi_hba *hisi_hba = p;
+@@ -726,6 +768,12 @@ static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
+ 					goto end;
+ 				}
+ 
++			if (irq_value & CHL_INT0_NOT_RDY_MSK)
++				/* phy down */
++				if (phy_down_v2_hw(phy_no, hisi_hba)) {
 +					res = IRQ_NONE;
 +					goto end;
 +				}
-+
-+		}
-+		irq_msk >>= 1;
-+		phy_no++;
-+	}
-+
-+end:
-+	return res;
-+}
-+
-+static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
-+	int_phy_updown_v2_hw,
-+};
-+
-+/**
-+ * There is a limitation in the hip06 chipset that we need
-+ * to map in all mbigen interrupts, even if they are not used.
-+ */
-+static int interrupt_init_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct platform_device *pdev = hisi_hba->pdev;
-+	struct device *dev = &pdev->dev;
-+	int i, irq, rc, irq_map[128];
-+
-+
-+	for (i = 0; i < 128; i++)
-+		irq_map[i] = platform_get_irq(pdev, i);
-+
-+	for (i = 0; i < HISI_SAS_PHY_INT_NR; i++) {
-+		int idx = i;
-+
-+		irq = irq_map[idx + 1]; /* Phy up/down is irq1 */
-+		if (!irq) {
-+			dev_err(dev, "irq init: fail map phy interrupt %d\n",
-+				idx);
-+			return -ENOENT;
-+		}
-+
-+		rc = devm_request_irq(dev, irq, phy_interrupts[i], 0,
-+				      DRV_NAME " phy", hisi_hba);
-+		if (rc) {
-+			dev_err(dev, "irq init: could not request "
-+				"phy interrupt %d, rc=%d\n",
-+				irq, rc);
-+			return -ENOENT;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
- {
- 	int rc;
-@@ -618,6 +784,10 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
- 	if (rc)
- 		return rc;
- 
-+	rc = interrupt_init_v2_hw(hisi_hba);
-+	if (rc)
-+		return rc;
-+
- 	phys_init_v2_hw(hisi_hba);
- 
- 	return 0;
-@@ -625,6 +795,7 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
- 
+ 		}
+ 		irq_msk >>= 1;
+ 		phy_no++;
+@@ -796,6 +844,7 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
  static const struct hisi_sas_hw hisi_sas_v2_hw = {
  	.hw_init = hisi_sas_v2_init,
-+	.sl_notify = sl_notify_v2_hw,
+ 	.sl_notify = sl_notify_v2_hw,
++	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
  	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
  	.complete_hdr_size = sizeof(struct hisi_sas_complete_v2_hdr),
  };
