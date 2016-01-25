@@ -1,61 +1,33 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH v3] mptlan: add checks for dma mapping errors
-Date: Mon, 25 Jan 2016 19:02:24 +0100
-Message-ID: <1453744944-4065-1-git-send-email-khoroshilov@ispras.ru>
-References: <56A6568B.9020707@ispras.ru>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56A6568B.9020707@ispras.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+From: Andreas Schwab <schwab@linux-m68k.org>
+Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
+Date: Mon, 25 Jan 2016 19:28:22 +0100
+Message-ID: <87h9i1ms3d.fsf@igel.home>
+References: <20160103050501.042035135@telegraphics.com.au>
+	<20160103050510.031796194@telegraphics.com.au>
+	<CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com>
+	<alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
+	<CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+	(Geert Uytterhoeven's message of "Mon, 25 Jan 2016 09:05:09 +0100")
+Sender: linux-m68k-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-mpt_lan_sdu_send() and mpt_lan_post_receive_buckets() do not check
-if mapping dma memory succeed.
-The patch adds the checks and failure handling.
+Geert Uytterhoeven <geert@linux-m68k.org> writes:
 
-v3: Fix resource deallocation (reported by Tomas Henzl).
+> Alternatively, we need to fix ARAnyM, or can make the creation of the
+> atari_scsi platform device conditional on not running under ARAnyM.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+Given the ncr5380 emulation in ARAnyM is just a stub, making it less a
+stub would be preferred.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/message/fusion/mptlan.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Andreas.
 
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index cbe96072a6cc..e9b83fc7be35 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -734,6 +734,13 @@ mpt_lan_sdu_send (struct sk_buff *skb, struct net_device *dev)
- 
-         dma = pci_map_single(mpt_dev->pcidev, skb->data, skb->len,
- 			     PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(mpt_dev->pcidev, dma)) {
-+		mpt_put_msg_frame(LanCtx, mpt_dev, mf);
-+		netif_stop_queue(dev);
-+
-+		printk (KERN_ERR "%s: dma mapping failed\n", __func__);
-+		return NETDEV_TX_BUSY;
-+	}
- 
- 	priv->SendCtl[ctx].skb = skb;
- 	priv->SendCtl[ctx].dma = dma;
-@@ -1232,6 +1239,15 @@ mpt_lan_post_receive_buckets(struct mpt_lan_priv *priv)
- 
- 				dma = pci_map_single(mpt_dev->pcidev, skb->data,
- 						     len, PCI_DMA_FROMDEVICE);
-+				if (pci_dma_mapping_error(mpt_dev->pcidev, dma)) {
-+					printk (KERN_WARNING
-+						MYNAM "/%s: dma mapping failed\n",
-+						__func__);
-+					dev_kfree_skb(skb);
-+					priv->mpt_rxfidx[++priv->mpt_rxfidx_tail] = ctx;
-+					spin_unlock_irqrestore(&priv->rxfidx_lock, flags);
-+					break;
-+				}
- 
- 				priv->RcvCtl[ctx].skb = skb;
- 				priv->RcvCtl[ctx].dma = dma;
 -- 
-1.9.1
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
