@@ -1,46 +1,69 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 01/23] devicetree: bindings: hisi_sas: add v2 HW
- bindings
-Date: Mon, 25 Jan 2016 13:31:14 -0600
-Message-ID: <20160125193114.GA16531@rob-hp-laptop>
-References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
- <1453742532-53092-2-git-send-email-john.garry@huawei.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
+Date: Tue, 26 Jan 2016 08:56:26 +1300
+Message-ID: <CAOmrzkLccCjboTpQo05UjDr=Evwd_nF7e3SK+r2y3zkzTjdh_g@mail.gmail.com>
+References: <20160103050501.042035135@telegraphics.com.au>
+	<20160103050510.031796194@telegraphics.com.au>
+	<CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com>
+	<alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
+	<CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1453742532-53092-2-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: j00310691 <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 26, 2016 at 01:21:50AM +0800, j00310691 wrote:
-> From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> 
-> Add the dt bindings for HiSi SAS controller v2 HW.
-> 
-> The main difference in the controller from dt perspective
-> is interrupts. The v2 controller does not have dedicated
-> fatal and broadcast interrupts - they are multiplexed on
-> the channel interrupt.
-> 
-> Each SAS v2 controller can issue upto 64 commands
-> (or connection requests) on the system bus without waiting
-> for a response - this is know as am-max-transmissions.
-> In hip06, sas controller #1 has a limitation that it has to
-> limit am-max-transmissions to 32 - this limitation is due
-> to chip system bus design. It is not anticipated that any
-> future chip incorporating v2 controller will have such a
-> limitation.
-> 
-> Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  .../devicetree/bindings/scsi/hisilicon-sas.txt      | 21 ++++++++++++++++++++-
->  1 file changed, 20 insertions(+), 1 deletion(-)
+Hi Geert,
 
-Acked-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, Jan 25, 2016 at 9:05 PM, Geert Uytterhoeven
+<geert@linux-m68k.org> wrote:
+
+>>> Perhaps this is an ARAnyM quirk?
+>
+>> The MR_ARBITRATE bit should remain set until the driver clears it (or the
+>> reset logic clears it). But it looks like aranym simply discards writes to
+>> the mode register, such that reads always return 0.
+>>
+>> Compare
+>>   http://sourceforge.net/p/aranym/code/ci/master/tree/src/ncr5380.cpp
+>> with the MAME/MESS emulated device
+>>   https://github.com/mamedev/mame/blob/master/src/devices/machine/ncr5380.cpp
+>>
+>> I don't know what the Hatari emulator does.
+>>
+>> In principle I think that Linux drivers should not carry workarounds for
+>> emulators.
+>
+> Please consider ARAnyM is the current m68k workhorse, so it would be
+> nice to handle this someway.
+>
+> Alternatively, we need to fix ARAnyM, or can make the creation of the
+> atari_scsi platform device conditional on not running under ARAnyM.
+
+Should be possible based on the machine cookie, unless that gets
+munged by kernel startup code.
+
+(Making the 5380 emulation a bit more complete such as in the MAME
+source snippet would be my preference, too)
+
+Cheers,
+
+  Michael
+
+
+>
+> Thanks!
+>
+> Gr{oetje,eeting}s,
+>
+>                         Geert
+>
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                 -- Linus Torvalds
