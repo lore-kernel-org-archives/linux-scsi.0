@@ -1,90 +1,67 @@
 From: j00310691 <john.garry@huawei.com>
-Subject: [PATCH v2 01/23] devicetree: bindings: hisi_sas: add v2 HW bindings
-Date: Tue, 26 Jan 2016 01:21:50 +0800
-Message-ID: <1453742532-53092-2-git-send-email-john.garry@huawei.com>
-References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 00/23] HiSilicon SAS v2 hw support
+Date: Tue, 26 Jan 2016 01:21:49 +0800
+Message-ID: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:24653 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757659AbcAYRIw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 12:08:52 -0500
-In-Reply-To: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: John Garry <john.garry@huawei.com>
 
-Add the dt bindings for HiSi SAS controller v2 HW.
+This patchset introduces support for the HiSi SAS v2 hw.
+The major difference between v1 and v2 hw is support
+for SATA/STP.
 
-The main difference in the controller from dt perspective
-is interrupts. The v2 controller does not have dedicated
-fatal and broadcast interrupts - they are multiplexed on
-the channel interrupt.
+Known limitation:
+- We cannot connect a SATA disk through an expander
+  which enables DMA setup auto-activate, as our controller
+  does not support this feature. Directly connecting
+  a SATA disk to the HBA is ok.
 
-Each SAS v2 controller can issue upto 64 commands
-(or connection requests) on the system bus without waiting
-for a response - this is know as am-max-transmissions.
-In hip06, sas controller #1 has a limitation that it has to
-limit am-max-transmissions to 32 - this limitation is due
-to chip system bus design. It is not anticipated that any
-future chip incorporating v2 controller will have such a
-limitation.
+Differences to v1:
+- Update dt bindings, specificially for am-max-transmissions
+- some small SATA fixes
+- minor formatting changes
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- .../devicetree/bindings/scsi/hisilicon-sas.txt      | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+John Garry (23):
+  devicetree: bindings: hisi_sas: add v2 HW bindings
+  hisi_sas: relocate DEV_IS_EXPANDER
+  hisi_sas: set max commands as configurable
+  hisi_sas: reduce max itct entries
+  hisi_sas: add hisi_sas_err_record_v1
+  hisi_sas: rename some fields in hisi_sas_itct
+  hisi_sas: add bare v2 hw driver
+  hisi_sas: add v2 register definitions
+  hisi_sas: add v2 hw init
+  hisi_sas: add init_id_frame_v2_hw()
+  hisi_sas: add v2 phy init code
+  hisi_sas: add v2 int init and phy up handler
+  hisi_sas: add v2 phy down handler
+  hisi_sas: add v2 channel interrupt handler
+  hisi_sas: add v2 SATA interrupt handler
+  hisi_sas: add v2 cq interrupt handler
+  hisi_sas: add v2 path to send ssp frame
+  hisi_sas: add v2 code to send smp command
+  hisi_sas: add v2 code for itct setup and free
+  hisi_sas: add v2 path to send ATA command
+  hisi_sas: add v2 slot error handler
+  hisi_sas: add v2 tmf functions
+  hisi_sas: update driver version to 1.1
 
-diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-index f67e761..f3da463 100644
---- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-+++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-@@ -5,6 +5,7 @@ The HiSilicon SAS controller supports SAS/SATA.
- Main node required properties:
-   - compatible : value should be as follows:
- 	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
-+	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
-   - sas-addr : array of 8 bytes for host SAS address
-   - reg : Address and length of the SAS register
-   - hisilicon,sas-syscon: phandle of syscon used for sas control
-@@ -13,7 +14,7 @@ Main node required properties:
-   - ctrl-clock-ena-reg : offset to controller clock enable register in ctrl reg
-   - queue-count : number of delivery and completion queues in the controller
-   - phy-count : number of phys accessible by the controller
--  - interrupts : Interrupts for phys, completion queues, and fatal
-+  - interrupts : For v1 hw: Interrupts for phys, completion queues, and fatal
- 		sources; the interrupts are ordered in 3 groups, as follows:
- 			- Phy interrupts
- 			- Completion queue interrupts
-@@ -30,6 +31,24 @@ Main node required properties:
- 		Fatal interrupts : the fatal interrupts are ordered as follows:
- 			- ECC
- 			- AXI bus
-+		For v2 hw: Interrupts for phys, Sata, and completion queues;
-+		the interrupts are ordered in 3 groups, as follows:
-+			- Phy interrupts
-+			- Sata interrupts
-+			- Completion queue interrupts
-+		Phy interrupts : Each controller has 2 phy interrupts:
-+			- phy up/down
-+			- channel interrupt
-+		Sata interrupts : Each phy on the controller has 1 Sata
-+			interrupt. The interrupts are ordered in increasing
-+			order.
-+		Completion queue interrupts : each completion queue has 1
-+			interrupt source. The interrupts are ordered in
-+			increasing order.
-+
-+Optional main node properties:
-+ - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
-+			    "am-max-transmissions" limitation.
- 
- Example:
- 	sas0: sas@c1000000 {
+ .../devicetree/bindings/scsi/hisilicon-sas.txt     |   21 +-
+ drivers/scsi/hisi_sas/Kconfig                      |    1 +
+ drivers/scsi/hisi_sas/Makefile                     |    2 +-
+ drivers/scsi/hisi_sas/hisi_sas.h                   |   39 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c              |   36 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |   20 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             | 2205 ++++++++++++++++++++
+ 7 files changed, 2278 insertions(+), 46 deletions(-)
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 -- 
 1.9.1
-
