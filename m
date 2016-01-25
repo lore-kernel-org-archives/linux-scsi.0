@@ -1,67 +1,27 @@
-From: j00310691 <john.garry@huawei.com>
-Subject: [PATCH v2 00/23] HiSilicon SAS v2 hw support
-Date: Tue, 26 Jan 2016 01:21:49 +0800
-Message-ID: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 00/23] HiSilicon SAS v2 hw support
+Date: Mon, 25 Jan 2016 17:24:30 +0000
+Message-ID: <56A65A4E.2000006@huawei.com>
+References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1453742532-53092-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+I'll re-send this patchset with my real name. I had my user name set to 
+my company ID in my terminal.
 
-This patchset introduces support for the HiSi SAS v2 hw.
-The major difference between v1 and v2 hw is support
-for SATA/STP.
+I did send a trail patchset to myself, but my mail client autochanged 
+the ID to my real name so I never detected.
 
-Known limitation:
-- We cannot connect a SATA disk through an expander
-  which enables DMA setup auto-activate, as our controller
-  does not support this feature. Directly connecting
-  a SATA disk to the HBA is ok.
+John
 
-Differences to v1:
-- Update dt bindings, specificially for am-max-transmissions
-- some small SATA fixes
-- minor formatting changes
-
-John Garry (23):
-  devicetree: bindings: hisi_sas: add v2 HW bindings
-  hisi_sas: relocate DEV_IS_EXPANDER
-  hisi_sas: set max commands as configurable
-  hisi_sas: reduce max itct entries
-  hisi_sas: add hisi_sas_err_record_v1
-  hisi_sas: rename some fields in hisi_sas_itct
-  hisi_sas: add bare v2 hw driver
-  hisi_sas: add v2 register definitions
-  hisi_sas: add v2 hw init
-  hisi_sas: add init_id_frame_v2_hw()
-  hisi_sas: add v2 phy init code
-  hisi_sas: add v2 int init and phy up handler
-  hisi_sas: add v2 phy down handler
-  hisi_sas: add v2 channel interrupt handler
-  hisi_sas: add v2 SATA interrupt handler
-  hisi_sas: add v2 cq interrupt handler
-  hisi_sas: add v2 path to send ssp frame
-  hisi_sas: add v2 code to send smp command
-  hisi_sas: add v2 code for itct setup and free
-  hisi_sas: add v2 path to send ATA command
-  hisi_sas: add v2 slot error handler
-  hisi_sas: add v2 tmf functions
-  hisi_sas: update driver version to 1.1
-
- .../devicetree/bindings/scsi/hisilicon-sas.txt     |   21 +-
- drivers/scsi/hisi_sas/Kconfig                      |    1 +
- drivers/scsi/hisi_sas/Makefile                     |    2 +-
- drivers/scsi/hisi_sas/hisi_sas.h                   |   39 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c              |   36 +-
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |   20 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             | 2205 ++++++++++++++++++++
- 7 files changed, 2278 insertions(+), 46 deletions(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
--- 
-1.9.1
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
