@@ -1,49 +1,48 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: Re: [PATCH v2] mptlan: add checks for dma mapping errors
-Date: Mon, 25 Jan 2016 18:08:27 +0100
-Message-ID: <56A6568B.9020707@ispras.ru>
-References: <1453509715-13146-1-git-send-email-khoroshilov@ispras.ru>
- <56A640E4.2040509@redhat.com>
+From: j00310691 <john.garry@huawei.com>
+Subject: [PATCH v2 04/23] hisi_sas: reduce max itct entries
+Date: Tue, 26 Jan 2016 01:21:53 +0800
+Message-ID: <1453742532-53092-5-git-send-email-john.garry@huawei.com>
+References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56A640E4.2040509@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:24654 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757634AbcAYRIv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 12:08:51 -0500
+In-Reply-To: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
 
-On 25.01.2016 16:36, Tomas Henzl wrote:
-> On 23.1.2016 01:41, Alexey Khoroshilov wrote:
->> mpt_lan_sdu_send() and mpt_lan_post_receive_buckets() do not check
->> if mapping dma memory succeed.
->> The patch adds the checks and failure handling.
->>
->> Found by Linux Driver Verification project (linuxtesting.org).
->>
->> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
->> ---
->>  drivers/message/fusion/mptlan.c | 14 ++++++++++++++
->>  1 file changed, 14 insertions(+)
->>
->> diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
->> index cbe96072a6cc..3b6c8a755713 100644
->> --- a/drivers/message/fusion/mptlan.c
->> +++ b/drivers/message/fusion/mptlan.c
->> @@ -734,6 +734,12 @@ mpt_lan_sdu_send (struct sk_buff *skb, struct net_device *dev)
->>  
->>          dma = pci_map_single(mpt_dev->pcidev, skb->data, skb->len,
->>  			     PCI_DMA_TODEVICE);
->> +	if (pci_dma_mapping_error(mpt_dev->pcidev, dma)) {
->> +		netif_stop_queue(dev);
-> 
-> Hi Alexey,
-> isn't a mpt_put_msg_frame needed here ?
-> and a similar de-alloc in next chunk too?
-> -tms
+From: John Garry <john.garry@huawei.com>
 
-Hi Tomas,
+Since v2 hw only supports 2048 itct entries,
+as opposed to 4096 for v1 hw, set the max itct
+entries to the lower of the two.
 
-You are right, thank you!
-I'll resend the patch.
+It is not anticipated that any device with v1
+will ever require to connect > 2048 devices.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 5ed5cf1..7c05eb3 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -25,7 +25,7 @@
+ #define HISI_SAS_MAX_PHYS	9
+ #define HISI_SAS_MAX_QUEUES	32
+ #define HISI_SAS_QUEUE_SLOTS 512
+-#define HISI_SAS_MAX_ITCT_ENTRIES 4096
++#define HISI_SAS_MAX_ITCT_ENTRIES 2048
+ #define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
+ 
+ #define HISI_SAS_STATUS_BUF_SZ \
+-- 
+1.9.1
+
