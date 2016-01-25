@@ -1,172 +1,111 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 10/12] usb-gadget/tcm: Convert to TARGET_SCF_ACK_KREF I/O krefs
-Date: Mon, 25 Jan 2016 08:11:04 +0000
-Message-ID: <1453709466-6308-11-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 07/12] sbp-target: Conversion to percpu_ida tag pre-allocation
+Date: Mon, 25 Jan 2016 08:11:01 +0000
+Message-ID: <1453709466-6308-8-git-send-email-nab@daterainc.com>
 References: <1453709466-6308-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:33455 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753332AbcAYIOG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2016 03:14:06 -0500
+Received: by mail-oi0-f47.google.com with SMTP id w75so82743056oie.0
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2016 00:14:05 -0800 (PST)
 In-Reply-To: <1453709466-6308-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch drops struct usbg_cmd->kref internal kref-erence
-usage, for proper TARGET_SCF_ACK_KREF conversion.
-
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Andrzej Pietrasiewicz <andrzej.p@samsung.com>
+Cc: Chris Boot <bootc@bootc.net>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/usb/gadget/function/f_tcm.c | 51 ++++++++-----------------------------
- 1 file changed, 11 insertions(+), 40 deletions(-)
+ drivers/target/sbp/sbp_target.c | 38 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 33 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index 8773572..7276a73 100644
---- a/drivers/usb/gadget/function/f_tcm.c
-+++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -41,13 +41,6 @@ static inline struct f_uas *to_f_uas(struct usb_function *f)
- 	return container_of(f, struct f_uas, function);
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index ddd3398..756e87f 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -209,8 +209,10 @@ static struct sbp_session *sbp_session_create(
+ 	INIT_DELAYED_WORK(&sess->maint_work, session_maintenance_work);
+ 	sess->guid = guid;
+ 
+-	sess->se_sess = target_alloc_session(&tpg->se_tpg, 0, 0, TARGET_PROT_NORMAL,
+-					     guid_str, sess, NULL);
++	sess->se_sess = target_alloc_session(&tpg->se_tpg, 128,
++					     sizeof(struct sbp_target_request),
++					     TARGET_PROT_NORMAL, guid_str,
++					     sess, NULL);
+ 	if (IS_ERR(sess->se_sess)) {
+ 		pr_err("failed to init se_session\n");
+ 		ret = PTR_ERR(sess->se_sess);
+@@ -921,6 +923,24 @@ static inline bool tgt_agent_check_active(struct sbp_target_agent *agent)
+ 	return active;
  }
  
--static void usbg_cmd_release(struct kref *);
--
--static inline void usbg_cleanup_cmd(struct usbg_cmd *cmd)
--{
--	kref_put(&cmd->ref, usbg_cmd_release);
--}
--
- /* Start bot.c code */
- 
- static int bot_enqueue_cmd_cbw(struct f_uas *fu)
-@@ -68,7 +61,7 @@ static void bot_status_complete(struct usb_ep *ep, struct usb_request *req)
- 	struct usbg_cmd *cmd = req->context;
- 	struct f_uas *fu = cmd->fu;
- 
--	usbg_cleanup_cmd(cmd);
-+	transport_generic_free_cmd(&cmd->se_cmd, 0);
- 	if (req->status < 0) {
- 		pr_err("ERR %s(%d)\n", __func__, __LINE__);
- 		return;
-@@ -605,7 +598,7 @@ static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
- 		break;
- 
- 	case UASP_QUEUE_COMMAND:
--		usbg_cleanup_cmd(cmd);
-+		transport_generic_free_cmd(&cmd->se_cmd, 0);
- 		usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
- 		break;
- 
-@@ -615,7 +608,7 @@ static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
- 	return;
- 
- cleanup:
--	usbg_cleanup_cmd(cmd);
-+	transport_generic_free_cmd(&cmd->se_cmd, 0);
- }
- 
- static int uasp_send_status_response(struct usbg_cmd *cmd)
-@@ -977,7 +970,7 @@ static void usbg_data_write_cmpl(struct usb_ep *ep, struct usb_request *req)
- 	return;
- 
- cleanup:
--	usbg_cleanup_cmd(cmd);
-+	transport_generic_free_cmd(&cmd->se_cmd, 0);
- }
- 
- static int usbg_prepare_w_request(struct usbg_cmd *cmd, struct usb_request *req)
-@@ -1046,7 +1039,7 @@ static void usbg_cmd_work(struct work_struct *work)
- 	struct se_cmd *se_cmd;
- 	struct tcm_usbg_nexus *tv_nexus;
- 	struct usbg_tpg *tpg;
--	int dir;
-+	int dir, flags = (TARGET_SCF_UNKNOWN_SIZE | TARGET_SCF_ACK_KREF);
- 
- 	se_cmd = &cmd->se_cmd;
- 	tpg = cmd->fu->tpg;
-@@ -1060,9 +1053,9 @@ static void usbg_cmd_work(struct work_struct *work)
- 		goto out;
- 	}
- 
--	if (target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
--			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
--			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE) < 0)
-+	if (target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess, cmd->cmd_buf,
-+			      cmd->sense_iu.sense, cmd->unpacked_lun, 0,
-+			      cmd->prio_attr, dir, flags) < 0)
- 		goto out;
- 
- 	return;
-@@ -1070,7 +1063,7 @@ static void usbg_cmd_work(struct work_struct *work)
- out:
- 	transport_send_check_condition_and_sense(se_cmd,
- 			TCM_UNSUPPORTED_SCSI_OPCODE, 1);
--	usbg_cleanup_cmd(cmd);
-+	transport_generic_free_cmd(&cmd->se_cmd, 0);
- }
- 
- static struct usbg_cmd *usbg_get_cmd(struct f_uas *fu,
-@@ -1125,11 +1118,6 @@ static int usbg_submit_command(struct f_uas *fu,
- 		pr_err("usbg_get_cmd failed\n");
- 		return -ENOMEM;
- 	}
--
--	/* XXX until I figure out why I can't free in on complete */
--	kref_init(&cmd->ref);
--	kref_get(&cmd->ref);
--
- 	memcpy(cmd->cmd_buf, cmd_iu->cdb, cmd_len);
- 
- 	if (fu->flags & USBG_USE_STREAMS) {
-@@ -1202,7 +1190,7 @@ static void bot_cmd_work(struct work_struct *work)
- out:
- 	transport_send_check_condition_and_sense(se_cmd,
- 				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
--	usbg_cleanup_cmd(cmd);
-+	transport_generic_free_cmd(&cmd->se_cmd, 0);
- }
- 
- static int bot_submit_command(struct f_uas *fu,
-@@ -1238,11 +1226,6 @@ static int bot_submit_command(struct f_uas *fu,
- 		pr_err("usbg_get_cmd failed\n");
- 		return -ENOMEM;
- 	}
--
--	/* XXX until I figure out why I can't free in on complete */
--	kref_init(&cmd->ref);
--	kref_get(&cmd->ref);
--
- 	memcpy(cmd->cmd_buf, cbw->CDB, cmd_len);
- 
- 	cmd->bot_tag = cbw->Tag;
-@@ -1296,14 +1279,6 @@ static u32 usbg_tpg_get_inst_index(struct se_portal_group *se_tpg)
- 	return 1;
- }
- 
--static void usbg_cmd_release(struct kref *ref)
--{
--	struct usbg_cmd *cmd = container_of(ref, struct usbg_cmd,
--			ref);
--
--	transport_generic_free_cmd(&cmd->se_cmd, 0);
--}
--
- static void usbg_release_cmd(struct se_cmd *se_cmd)
++static struct sbp_target_request *sbp_mgt_get_req(struct sbp_session *sess,
++	struct fw_card *card, u64 next_orb)
++{
++	struct se_session *se_sess = sess->se_sess;
++	struct sbp_target_request *req;
++	int tag;
++
++	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, GFP_ATOMIC);
++	if (tag < 0)
++		return ERR_PTR(-ENOMEM);
++
++	req = &((struct sbp_target_request *)se_sess->sess_cmd_map)[tag];
++	req->se_cmd.map_tag = tag;
++	req->se_cmd.tag = next_orb;
++
++	return req;
++}
++
+ static void tgt_agent_fetch_work(struct work_struct *work)
  {
- 	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd,
-@@ -1733,11 +1708,7 @@ static void usbg_port_unlink(struct se_portal_group *se_tpg,
+ 	struct sbp_target_agent *agent =
+@@ -932,7 +952,7 @@ static void tgt_agent_fetch_work(struct work_struct *work)
+ 	u64 next_orb = agent->orb_pointer;
  
- static int usbg_check_stop_free(struct se_cmd *se_cmd)
+ 	while (next_orb && tgt_agent_check_active(agent)) {
+-		req = kzalloc(sizeof(*req), GFP_KERNEL);
++		req = sbp_mgt_get_req(sess, sess->card, next_orb);
+ 		if (!req) {
+ 			spin_lock_bh(&agent->lock);
+ 			agent->state = AGENT_STATE_DEAD;
+@@ -1430,9 +1450,13 @@ static int sbp_send_sense(struct sbp_target_request *req)
+ 
+ static void sbp_free_request(struct sbp_target_request *req)
  {
--	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd,
--			se_cmd);
--
--	kref_put(&cmd->ref, usbg_cmd_release);
--	return 1;
-+	return target_put_sess_cmd(se_cmd);
++	struct se_cmd *se_cmd = &req->se_cmd;
++	struct se_session *se_sess = se_cmd->se_sess;
++
+ 	kfree(req->pg_tbl);
+ 	kfree(req->cmd_buf);
+-	kfree(req);
++
++	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
  }
  
- static const struct target_core_fabric_ops usbg_ops = {
+ static void sbp_mgt_agent_process(struct work_struct *work)
+@@ -1592,8 +1616,12 @@ static void sbp_mgt_agent_rw(struct fw_card *card,
+ 			rcode = RCODE_CONFLICT_ERROR;
+ 			goto out;
+ 		}
+-
++		// XXX:
++#if 0
++		req = sbp_mgt_get_req(agent->login->sess, card);
++#else
+ 		req = kzalloc(sizeof(*req), GFP_ATOMIC);
++#endif
+ 		if (!req) {
+ 			rcode = RCODE_CONFLICT_ERROR;
+ 			goto out;
 -- 
 1.9.1
+
