@@ -1,33 +1,162 @@
-From: Andreas Schwab <schwab@linux-m68k.org>
-Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
-Date: Mon, 25 Jan 2016 19:28:22 +0100
-Message-ID: <87h9i1ms3d.fsf@igel.home>
-References: <20160103050501.042035135@telegraphics.com.au>
-	<20160103050510.031796194@telegraphics.com.au>
-	<CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com>
-	<alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
-	<CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [Y2038] [PATCH, RESEND 2] qla2xxx: Remove use of 'struct
+ timeval'
+Date: Mon, 25 Jan 2016 18:26:03 +0000
+Message-ID: <D2CBA845.D5960%himanshu.madhani@qlogic.com>
+References: <1528415.ru8bxkDU1V@wuerfel> <1700481.AdoIR1LgPH@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
-	(Geert Uytterhoeven's message of "Mon, 25 Jan 2016 09:05:09 +0100")
-Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed;
+	boundary="_000_D2CBA845D5960himanshumadhaniqlogiccom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:10886 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757338AbcAYS3V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jan 2016 13:29:21 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0PIR7Ml013847
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2016 10:29:17 -0800
+Received: from avcashub1.qlogic.com ([198.186.0.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 20nrnvr13h-3
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2016 10:29:17 -0800
+In-Reply-To: <1700481.AdoIR1LgPH@wuerfel>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "y2038@lists.linaro.org" <y2038@lists.linaro.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel <linux-kernel@vger.kernel.org>, Tina Ruchandani <ruchandani.tina@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+--_000_D2CBA845D5960himanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <8CF2041BF970014C947C290D91DAE584@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-> Alternatively, we need to fix ARAnyM, or can make the creation of the
-> atari_scsi platform device conditional on not running under ARAnyM.
+Hi Arnd,=20
 
-Given the ncr5380 emulation in ARAnyM is just a stub, making it less a
-stub would be preferred.
 
-Andreas.
 
--- 
-Andreas Schwab, schwab@linux-m68k.org
-GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
+On 1/22/16, 7:12 AM, "linux-scsi-owner@vger.kernel.org on behalf of Arnd
+Bergmann" <linux-scsi-owner@vger.kernel.org on behalf of arnd@arndb.de>
+wrote:
+
+>On Friday 22 January 2016 15:28:32 Arnd Bergmann wrote:
+>> struct register_host_info stores a 64-bit UTC system time timestamp.
+>> This patch removes the use of 'struct timeval' to obtain that timestamp
+>> as its tv_sec value will overflow on 32-bit systems in year 2038 beyond.
+>> The patch uses ktime_get_real_seconds() which returns a 64-bit seconds
+>>value.
+>>=20
+>> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+>> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>>=20
+>
+>
+>
+>I was missing
+>
+>From: Tina Ruchandani <ruchandani.tina@gmail.com>
+>
+>If anyone is going to pick this up, let me know whether you will fix
+>it up yourself or if I should resend.
+
+Please resend the patch and add Acked-by: Himanshu Madhani
+<himanshu.madhani@qlogic.com>
+
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Thanks,
+- Himanshu
+
+
+--_000_D2CBA845D5960himanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+LgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAIgAAAEgAaQBt
+AGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AHwwBAAAAOAAAAGgAaQBtAGEAbgBzAGgA
+dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgEZDAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMA
+aAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABo
+AGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgA
+dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAiAAAASABp
+AG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAjQAEAAAA4AAAAaABpAG0AYQBuAHMA
+aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABT
+AE0AVABQAAAAAAACAfk/AQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4A
+cwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBk
+AGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA4AAAAaABpAG0AYQBuAHMA
+aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6AQAAAB8AGgAB
+AAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEA
+AAAQAAAAn02R4waFoEeAVskyx7xD2QMAFwABAAAAQAA5AIBv2NidV9EBQAAIMHII2didV9EBCwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAA
+YQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAI
+IAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACMAAAAUgBlADoAIABbAFkAMgAwADMA
+OABdACAAWwBQAEEAVABDAEgALAAgAFIARQBTAEUATgBEACAAMgBdACAAcQBsAGEAMgB4AHgAeAA6
+ACAAUgBlAG0AbwB2AGUAIAB1AHMAZQAgAG8AZgAgACcAcwB0AHIAdQBjAHQAIAB0AGkAbQBlAHYA
+YQBsACcAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAOgAAADwAMQA3
+ADAAMAA0ADgAMQAuAEEAZABvAEkAUgAxAEwAZwBQAEgAQAB3AHUAZQByAGYAZQBsAD4AAAAAAAIB
+cQABAAAAIAAAAAEB0VUhggzvgkgxptdAuG+WmIqovyafCCpygIAEZvOAHwBwAAEAAACEAAAAWwBZ
+ADIAMAAzADgAXQAgAFsAUABBAFQAQwBIACwAIABSAEUAUwBFAE4ARAAgADIAXQAgAHEAbABhADIA
+eAB4AHgAOgAgAFIAZQBtAG8AdgBlACAAdQBzAGUAIABvAGYAIAAnAHMAdAByAHUAYwB0ACAAdABp
+AG0AZQB2AGEAbAAnAAAAHwA1EAEAAABaAAAAPABEADIAQwBCAEEAOAA0ADUALgBEADUAOQA2ADAA
+JQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+
+AAAAAAAfADkQAQAAAHQAAAA8ADEANQAyADgANAAxADUALgByAHUAOABiAHgAawBEAFUAMQBWAEAA
+dwB1AGUAcgBmAGUAbAA+ACAAPAAxADcAMAAwADQAOAAxAC4AQQBkAG8ASQBSADEATABnAFAASABA
+AHcAdQBlAHIAZgBlAGwAPgAAAAMA3j+fTgAAQAAHMNleyNidV9EBAwAmAAAAAAACAUcAAQAAAC8A
+AABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE2MDEyNTE4MjYwM1otMTMyMjQyAAAfABUQAQAA
+AFgAAAA4AEMARgAyADAANAAxAEIARgA5ADcAMAAwADEANABDADkANAA3AEMAMgA5ADAARAA5ADEA
+RABBAEUANQA4ADQAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAiwAAAA9TrglI
+AAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAAgIYD
+AgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBp
+AGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4ANQAuADkALgAxADUA
+MQAxADEAOQAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0
+AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAAwBAABJAEkAPQAwADEA
+MAAxAEQAMQA1ADcAOQBEAEQAOAA3ADgAMQAyADEANgA5AEIARQBEADEARABDADYANAA4ADkARgBG
+ADkARQBEAEYAMAAxAEQARQBCADYAMAAxAEUAOwBTAEIATQBJAEQAPQAzADIAOwBTADEAPQA8ADEA
+NwAwADAANAA4ADEALgBBAGQAbwBJAFIAMQBMAGcAUABIAEAAdwB1AGUAcgBmAGUAbAA+ADsAVgBl
+AHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUAaQBsAGQAIAAyADMA
+NQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAA
+RgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACA
+hgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAA
+AAAAAQAAAB4AAABbADEAMAAuADIAOQAuADEAMAAyAC4AMwAyAF0AAAAAAB8AAICGAwIAAAAAAMAA
+AAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBz
+AAAAAAD6Qw==
+
+--_000_D2CBA845D5960himanshumadhaniqlogiccom_--
