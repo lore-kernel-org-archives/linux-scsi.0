@@ -1,94 +1,124 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 05/12] tcm_fc: Convert to target_alloc_session usage
-Date: Mon, 25 Jan 2016 08:10:59 +0000
-Message-ID: <1453709466-6308-6-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 12/12] xen-scsiback: Convert to TARGET_SCF_ACK_KREF I/O krefs
+Date: Mon, 25 Jan 2016 08:11:06 +0000
+Message-ID: <1453709466-6308-13-git-send-email-nab@daterainc.com>
 References: <1453709466-6308-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1453709466-6308-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, Vasu Dev <vasu.dev@linux.intel.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, David Vrabel <david.vrabel@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Cc: Vasu Dev <vasu.dev@linux.intel.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: David Vrabel <david.vrabel@citrix.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/tcm_fc/tfc_sess.c | 44 ++++++++++++++++++++--------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+ drivers/xen/xen-scsiback.c | 53 +++++++++++++++++++++++-----------------------
+ 1 file changed, 26 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index e19f4c5..d0c3e18 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -186,6 +186,20 @@ out:
- 	return NULL;
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 640fb22..a10e5f1 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -381,6 +381,12 @@ static void scsiback_cmd_done(struct vscsibk_pend *pending_req)
+ 	scsiback_do_resp_with_sense(sense_buffer, errors, resid, pending_req,
+ 				    pending_req->rqid);
+ 	scsiback_put(info);
++	/*
++	 * Drop the extra KREF_ACK reference taken by target_submit_cmd_map_sgls()
++	 * ahead of scsiback_check_stop_free() ->  transport_generic_free_cmd()
++	 * final se_cmd->cmd_kref put.
++	 */
++	target_put_sess_cmd(&pending_req->se_cmd);
  }
  
-+static int ft_sess_alloc_cb(struct se_portal_group *se_tpg,
-+			    struct se_session *se_sess, void *p)
-+{
-+	struct ft_sess *sess = p;
-+	struct ft_tport *tport = sess->tport;
-+	struct hlist_head *head = &tport->hash[ft_sess_hash(sess->port_id)];
-+
-+	pr_debug("port_id %x sess %p\n", sess->port_id, sess);
-+	hlist_add_head_rcu(&sess->hash, head);
-+	tport->sess_count++;
-+
-+	return 0;
-+}
-+
- /*
-  * Allocate session and enter it in the hash for the local port.
-  * Caller holds ft_lport_lock.
-@@ -194,7 +208,6 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
- 				      struct fc_rport_priv *rdata)
+ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
+@@ -398,7 +404,7 @@ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
+ 	rc = target_submit_cmd_map_sgls(se_cmd, sess, pending_req->cmnd,
+ 			pending_req->sense_buffer, pending_req->v2p->lun,
+ 			pending_req->data_len, 0,
+-			pending_req->sc_data_direction, 0,
++			pending_req->sc_data_direction, TARGET_SCF_ACK_KREF,
+ 			pending_req->sgl, pending_req->n_sg,
+ 			NULL, 0, NULL, 0);
+ 	if (rc < 0) {
+@@ -587,31 +593,28 @@ static void scsiback_disconnect(struct vscsibk_info *info)
+ static void scsiback_device_action(struct vscsibk_pend *pending_req,
+ 	enum tcm_tmreq_table act, int tag)
  {
- 	struct se_portal_group *se_tpg = &tport->tpg->se_tpg;
--	struct se_node_acl *se_acl;
- 	struct ft_sess *sess;
- 	struct hlist_head *head;
- 	unsigned char initiatorname[TRANSPORT_IQN_LEN];
-@@ -210,31 +223,18 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
- 	if (!sess)
- 		return NULL;
+-	int rc, err = FAILED;
+ 	struct scsiback_tpg *tpg = pending_req->v2p->tpg;
++	struct scsiback_nexus *nexus = tpg->tpg_nexus;
+ 	struct se_cmd *se_cmd = &pending_req->se_cmd;
+ 	struct scsiback_tmr *tmr;
++	u64 unpacked_lun = pending_req->v2p->lun;
++	int rc, err = FAILED;
  
--	sess->se_sess = transport_init_session_tags(TCM_FC_DEFAULT_TAGS,
--						    sizeof(struct ft_cmd),
--						    TARGET_PROT_NORMAL);
--	if (IS_ERR(sess->se_sess)) {
--		kfree(sess);
--		return NULL;
--	}
-+	kref_init(&sess->kref); /* ref for table entry */
-+	sess->tport = tport;
-+	sess->port_id = port_id;
+ 	tmr = kzalloc(sizeof(struct scsiback_tmr), GFP_KERNEL);
+-	if (!tmr)
+-		goto out;
++	if (!tmr) {
++		target_put_sess_cmd(se_cmd);
++		goto err;
++	}
  
--	se_acl = core_tpg_get_initiator_node_acl(se_tpg, &initiatorname[0]);
--	if (!se_acl) {
--		transport_free_session(sess->se_sess);
-+	sess->se_sess = target_alloc_session(se_tpg, TCM_FC_DEFAULT_TAGS,
-+					     sizeof(struct ft_cmd),
-+					     TARGET_PROT_NORMAL, &initiatorname[0],
-+					     sess, ft_sess_alloc_cb);
-+	if (IS_ERR(sess->se_sess)) {
- 		kfree(sess);
- 		return NULL;
- 	}
--	sess->se_sess->se_node_acl = se_acl;
--	sess->tport = tport;
--	sess->port_id = port_id;
--	kref_init(&sess->kref);	/* ref for table entry */
--	hlist_add_head_rcu(&sess->hash, head);
--	tport->sess_count++;
+ 	init_waitqueue_head(&tmr->tmr_wait);
+ 
+-	transport_init_se_cmd(se_cmd, tpg->se_tpg.se_tpg_tfo,
+-		tpg->tpg_nexus->tvn_se_sess, 0, DMA_NONE, TCM_SIMPLE_TAG,
+-		&pending_req->sense_buffer[0]);
 -
--	pr_debug("port_id %x sess %p\n", port_id, sess);
+-	rc = core_tmr_alloc_req(se_cmd, tmr, act, GFP_KERNEL);
+-	if (rc < 0)
+-		goto out;
 -
--	transport_register_session(&tport->tpg->se_tpg, se_acl,
--				   sess->se_sess, sess);
- 	return sess;
+-	se_cmd->se_tmr_req->ref_task_tag = tag;
++	rc = target_submit_tmr(&pending_req->se_cmd, nexus->tvn_se_sess,
++			       &pending_req->sense_buffer[0],
++			       unpacked_lun, tmr, act, GFP_KERNEL,
++			       tag, TARGET_SCF_ACK_KREF);
++	if (rc)
++		goto err;
+ 
+-	if (transport_lookup_tmr_lun(se_cmd, pending_req->v2p->lun) < 0)
+-		goto out;
+-
+-	transport_generic_handle_tmr(se_cmd);
+ 	wait_event(tmr->tmr_wait, atomic_read(&tmr->tmr_complete));
+ 
+ 	err = (se_cmd->se_tmr_req->response == TMR_FUNCTION_COMPLETE) ?
+@@ -1368,16 +1371,7 @@ static u32 scsiback_tpg_get_inst_index(struct se_portal_group *se_tpg)
+ 
+ static int scsiback_check_stop_free(struct se_cmd *se_cmd)
+ {
+-	/*
+-	 * Do not release struct se_cmd's containing a valid TMR pointer.
+-	 * These will be released directly in scsiback_device_action()
+-	 * with transport_generic_free_cmd().
+-	 */
+-	if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
+-		return 0;
+-
+-	transport_generic_free_cmd(se_cmd, 0);
+-	return 1;
++	return transport_generic_free_cmd(se_cmd, 0);
+ }
+ 
+ static void scsiback_release_cmd(struct se_cmd *se_cmd)
+@@ -1385,6 +1379,11 @@ static void scsiback_release_cmd(struct se_cmd *se_cmd)
+ 	struct se_session *se_sess = se_cmd->se_sess;
+ 	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
+ 
++	if (se_tmr && se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) {
++		struct scsiback_tmr *tmr = se_tmr->fabric_tmr_ptr;
++		kfree(tmr);
++	}
++
+ 	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
  }
  
 -- 
