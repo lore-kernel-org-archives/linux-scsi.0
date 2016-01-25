@@ -1,7 +1,7 @@
 From: j00310691 <john.garry@huawei.com>
-Subject: [PATCH v2 14/23] hisi_sas: add v2 channel interrupt handler
-Date: Tue, 26 Jan 2016 01:22:03 +0800
-Message-ID: <1453742532-53092-15-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 19/23] hisi_sas: add v2 code for itct setup and free
+Date: Tue, 26 Jan 2016 01:22:08 +0800
+Message-ID: <1453742532-53092-20-git-send-email-john.garry@huawei.com>
 References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,112 +14,122 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: John Garry <john.garry@huawei.com>
 
-This also includes broadcast handler. Unlike v1 hw,
-broadcast does not have its own dedicated interrupt.
-
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 79 ++++++++++++++++++++++++++++++++++
- 1 file changed, 79 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 92 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 92 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 35ce7b6..5af2069 100644
+index 2c6a753..8b51acf 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -258,6 +258,7 @@ struct hisi_sas_complete_v2_hdr {
- 
- enum {
- 	HISI_SAS_PHY_PHY_UPDOWN,
-+	HISI_SAS_PHY_CHNL_INT,
- 	HISI_SAS_PHY_INT_NR
- };
- 
-@@ -783,8 +784,86 @@ end:
- 	return res;
+@@ -353,6 +353,96 @@ static void init_id_frame_v2_hw(struct hisi_hba *hisi_hba)
+ 		config_id_frame_v2_hw(hisi_hba, i);
  }
  
-+static void phy_bcast_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
++static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
++			     struct hisi_sas_device *sas_dev)
 +{
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
-+	unsigned long flags;
-+
-+	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 1);
-+
-+	spin_lock_irqsave(&hisi_hba->lock, flags);
-+	sas_ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-+	spin_unlock_irqrestore(&hisi_hba->lock, flags);
-+
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
-+			     CHL_INT0_SL_RX_BCST_ACK_MSK);
-+	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 0);
-+}
-+
-+static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
-+{
-+	struct hisi_hba *hisi_hba = p;
++	struct domain_device *device = sas_dev->sas_device;
 +	struct device *dev = &hisi_hba->pdev->dev;
-+	u32 ent_msk, ent_tmp, irq_msk;
-+	int phy_no = 0;
++	u64 qw0, device_id = sas_dev->device_id;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
++	struct domain_device *parent_dev = device->parent;
++	struct hisi_sas_port *port = device->port->lldd_port;
 +
-+	ent_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
-+	ent_tmp = ent_msk;
-+	ent_msk |= ENT_INT_SRC_MSK3_ENT95_MSK_MSK;
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, ent_msk);
++	memset(itct, 0, sizeof(*itct));
 +
-+	irq_msk = (hisi_sas_read32(hisi_hba, HGC_INVLD_DQE_INFO) >>
-+			HGC_INVLD_DQE_INFO_FB_CH3_OFF) & 0x1ff;
-+
-+	while (irq_msk) {
-+		if (irq_msk & (1 << phy_no)) {
-+			u32 irq_value0 = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							     CHL_INT0);
-+			u32 irq_value1 = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							     CHL_INT1);
-+			u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							     CHL_INT2);
-+
-+			if (irq_value1) {
-+				if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
-+						  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
-+					panic("%s: DMAC RX/TX ecc bad error! (0x%x)",
-+						dev_name(dev), irq_value1);
-+
-+				hisi_sas_phy_write32(hisi_hba, phy_no,
-+						     CHL_INT1, irq_value1);
-+			}
-+
-+			if (irq_value2)
-+				hisi_sas_phy_write32(hisi_hba, phy_no,
-+						     CHL_INT2, irq_value2);
-+
-+
-+			if (irq_value0) {
-+				if (irq_value0 & CHL_INT0_SL_RX_BCST_ACK_MSK)
-+					phy_bcast_v2_hw(phy_no, hisi_hba);
-+
-+				hisi_sas_phy_write32(hisi_hba, phy_no,
-+						CHL_INT0, irq_value0
-+						& (~CHL_INT0_HOTPLUG_TOUT_MSK)
-+						& (~CHL_INT0_SL_PHY_ENABLE_MSK)
-+						& (~CHL_INT0_NOT_RDY_MSK));
-+			}
-+		}
-+		irq_msk &= ~(1 << phy_no);
-+		phy_no++;
++	/* qw0 */
++	qw0 = 0;
++	switch (sas_dev->dev_type) {
++	case SAS_END_DEVICE:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
++		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	case SAS_SATA_DEV:
++		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
++			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
++		else
++			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	default:
++		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
++			 sas_dev->dev_type);
 +	}
 +
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, ent_tmp);
++	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
++		(device->max_linkrate << ITCT_HDR_MCR_OFF) |
++		(1 << ITCT_HDR_VLN_OFF) |
++		(port->id << ITCT_HDR_PORT_ID_OFF));
++	itct->qw0 = cpu_to_le64(qw0);
 +
-+	return IRQ_HANDLED;
++	/* qw1 */
++	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
++	itct->sas_addr = __swab64(itct->sas_addr);
++
++	/* qw2 */
++	itct->qw2 = cpu_to_le64((500ULL << ITCT_HDR_INLT_OFF) |
++				(0xff00ULL << ITCT_HDR_BITLT_OFF) |
++				(0xff00ULL << ITCT_HDR_MCTLT_OFF) |
++				(0xff00ULL << ITCT_HDR_RTOLT_OFF));
 +}
 +
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_phy_updown_v2_hw,
-+	int_chnl_int_v2_hw,
- };
++static void free_device_v2_hw(struct hisi_hba *hisi_hba,
++			      struct hisi_sas_device *sas_dev)
++{
++	u64 qw0, dev_id = sas_dev->device_id;
++	struct device *dev = &hisi_hba->pdev->dev;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
++	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++	int i;
++
++	/* clear the itct interrupt state */
++	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++				 ENT_INT_SRC3_ITC_INT_MSK);
++
++	/* clear the itct int*/
++	for (i = 0; i < 2; i++) {
++		/* clear the itct table*/
++		reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
++		reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
++		hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
++
++		udelay(10);
++		reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++		if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
++			dev_dbg(dev, "got clear ITCT done interrupt\n");
++
++			/* invalid the itct state*/
++			qw0 = cpu_to_le64(itct->qw0);
++			qw0 &= ~(1 << ITCT_HDR_VALID_OFF);
++			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++					 ENT_INT_SRC3_ITC_INT_MSK);
++			hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
++			hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
++
++			/* clear the itct */
++			hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
++			dev_dbg(dev, "clear ITCT ok\n");
++			break;
++		}
++	}
++}
++
+ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int i, reset_val;
+@@ -1463,8 +1553,10 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
  
- /**
+ static const struct hisi_sas_hw hisi_sas_v2_hw = {
+ 	.hw_init = hisi_sas_v2_init,
++	.setup_itct = setup_itct_v2_hw,
+ 	.sl_notify = sl_notify_v2_hw,
+ 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
++	.free_device = free_device_v2_hw,
+ 	.prep_smp = prep_smp_v2_hw,
+ 	.prep_ssp = prep_ssp_v2_hw,
+ 	.get_free_slot = get_free_slot_v2_hw,
 -- 
 1.9.1
