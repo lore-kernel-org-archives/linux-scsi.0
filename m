@@ -1,241 +1,144 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [RESEND PATCH v2 17/23] hisi_sas: add v2 path to send ssp frame
-Date: Tue, 26 Jan 2016 02:47:17 +0800
-Message-ID: <1453747643-61875-18-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [RESEND PATCH v2 15/23] hisi_sas: add v2 SATA interrupt handler
+Date: Tue, 26 Jan 2016 02:47:15 +0800
+Message-ID: <1453747643-61875-16-git-send-email-john.garry@huawei.com>
 References: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1453747643-61875-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Include code to prep ssp frame and deliver
-to hardware.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 185 +++++++++++++++++++++++++++++++++
- 1 file changed, 185 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 100 +++++++++++++++++++++++++++++++++
+ 1 file changed, 100 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 099bc13..ab6ea25 100644
+index 5af2069..c4a887c 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -264,6 +264,11 @@ enum {
- 
- #define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
- 
-+#define DIR_NO_DATA 0
-+#define DIR_TO_INI 1
-+#define DIR_TO_DEVICE 2
-+#define DIR_RESERVED 3
-+
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -271,6 +276,13 @@ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- 	return readl(regs);
+@@ -861,6 +861,86 @@ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
+ 	return IRQ_HANDLED;
  }
  
-+static u32 hisi_sas_read32_relaxed(struct hisi_hba *hisi_hba, u32 off)
++static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
 +{
-+	void __iomem *regs = hisi_hba->regs + off;
++	struct hisi_sas_phy *phy = p;
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct device *dev = &hisi_hba->pdev->dev;
++	struct	hisi_sas_initial_fis *initial_fis;
++	struct dev_to_host_fis *fis;
++	u32 ent_tmp, ent_msk, ent_int, port_id, link_rate, hard_phy_linkrate;
++	irqreturn_t res = IRQ_HANDLED;
++	u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
++	int phy_no;
 +
-+	return readl_relaxed(regs);
++	phy_no = sas_phy->id;
++	initial_fis = &hisi_hba->initial_fis[phy_no];
++	fis = &initial_fis->fis;
++
++	ent_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK1);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, ent_msk | 1 << phy_no);
++
++	ent_int = hisi_sas_read32(hisi_hba, ENT_INT_SRC1);
++	ent_tmp = ent_int;
++	ent_int >>= ENT_INT_SRC1_D2H_FIS_CH1_OFF * (phy_no % 4);
++	if ((ent_int & ENT_INT_SRC1_D2H_FIS_CH0_MSK) == 0) {
++		dev_warn(dev, "sata int: phy%d did not receive FIS\n", phy_no);
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC1, ent_tmp);
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, ent_msk);
++		res = IRQ_NONE;
++		goto end;
++	}
++
++	if (unlikely(phy_no == 8)) {
++		u32 port_state = hisi_sas_read32(hisi_hba, PORT_STATE);
++
++		port_id = (port_state & PORT_STATE_PHY8_PORT_NUM_MSK) >>
++			  PORT_STATE_PHY8_PORT_NUM_OFF;
++		link_rate = (port_state & PORT_STATE_PHY8_CONN_RATE_MSK) >>
++			    PORT_STATE_PHY8_CONN_RATE_OFF;
++	} else {
++		port_id = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
++		port_id = (port_id >> (4 * phy_no)) & 0xf;
++		link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
++		link_rate = (link_rate >> (phy_no * 4)) & 0xf;
++	}
++
++	if (port_id == 0xf) {
++		dev_err(dev, "sata int: phy%d invalid portid\n", phy_no);
++		res = IRQ_NONE;
++		goto end;
++	}
++
++	sas_phy->linkrate = link_rate;
++	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
++						HARD_PHY_LINKRATE);
++	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
++	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
++
++	sas_phy->oob_mode = SATA_OOB_MODE;
++	/* Make up some unique SAS address */
++	attached_sas_addr[0] = 0x50;
++	attached_sas_addr[7] = phy_no;
++	memcpy(sas_phy->attached_sas_addr, attached_sas_addr, SAS_ADDR_SIZE);
++	memcpy(sas_phy->frame_rcvd, fis, sizeof(struct dev_to_host_fis));
++	dev_info(dev, "sata int phyup: phy%d link_rate=%d\n", phy_no, link_rate);
++	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
++	phy->port_id = port_id;
++	phy->phy_type |= PORT_TYPE_SATA;
++	phy->phy_attached = 1;
++	phy->identify.device_type = SAS_SATA_DEV;
++	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
++	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
++	queue_work(hisi_hba->wq, &phy->phyup_ws);
++
++end:
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, ent_tmp);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, ent_msk);
++
++	return res;
 +}
 +
- static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
- {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -652,6 +664,176 @@ static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
- 	return bitmap;
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+ 	int_phy_updown_v2_hw,
+ 	int_chnl_int_v2_hw,
+@@ -900,6 +980,26 @@ static int interrupt_init_v2_hw(struct hisi_hba *hisi_hba)
+ 		}
+ 	}
+ 
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
++		int idx = i + 72; /* First SATA interrupt is irq72 */
++
++		irq = irq_map[idx];
++		if (!irq) {
++			dev_err(dev, "irq init: fail map phy interrupt %d\n",
++				idx);
++			return -ENOENT;
++		}
++
++		rc = devm_request_irq(dev, irq, sata_int_v2_hw, 0,
++				      DRV_NAME " sata", phy);
++		if (rc) {
++			dev_err(dev, "irq init: could not request "
++				"sata interrupt %d, rc=%d\n",
++				irq, rc);
++			return -ENOENT;
++		}
++	}
+ 	return 0;
  }
  
-+/**
-+ * This function allocates across all queues to load balance.
-+ * Slots are allocated from queues in a round-robin fashion.
-+ *
-+ * The callpath to this function and upto writing the write
-+ * queue pointer should be safe from interruption.
-+ */
-+static int get_free_slot_v2_hw(struct hisi_hba *hisi_hba, int *q, int *s)
-+{
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	u32 r, w;
-+	int queue = hisi_hba->queue;
-+
-+	while (1) {
-+		w = hisi_sas_read32_relaxed(hisi_hba,
-+					    DLVRY_Q_0_WR_PTR + (queue * 0x14));
-+		r = hisi_sas_read32_relaxed(hisi_hba,
-+					    DLVRY_Q_0_RD_PTR + (queue * 0x14));
-+		if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
-+			queue = (queue + 1) % hisi_hba->queue_count;
-+			if (queue == hisi_hba->queue) {
-+				dev_warn(dev, "could not find free slot\n");
-+				return -EAGAIN;
-+			}
-+			continue;
-+		}
-+		break;
-+	}
-+	hisi_hba->queue = (queue + 1) % hisi_hba->queue_count;
-+	*q = queue;
-+	*s = w;
-+	return 0;
-+}
-+
-+static void start_delivery_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	int dlvry_queue = hisi_hba->slot_prep->dlvry_queue;
-+	int dlvry_queue_slot = hisi_hba->slot_prep->dlvry_queue_slot;
-+
-+	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14),
-+			 ++dlvry_queue_slot % HISI_SAS_QUEUE_SLOTS);
-+}
-+
-+static int prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
-+			      struct hisi_sas_slot *slot,
-+			      struct hisi_sas_cmd_hdr *hdr,
-+			      struct scatterlist *scatter,
-+			      int n_elem)
-+{
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct scatterlist *sg;
-+	int i;
-+
-+	if (n_elem > HISI_SAS_SGE_PAGE_CNT) {
-+		dev_err(dev, "prd err: n_elem(%d) > HISI_SAS_SGE_PAGE_CNT",
-+			n_elem);
-+		return -EINVAL;
-+	}
-+
-+	slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
-+					&slot->sge_page_dma);
-+	if (!slot->sge_page)
-+		return -ENOMEM;
-+
-+	for_each_sg(scatter, sg, n_elem, i) {
-+		struct hisi_sas_sge *entry = &slot->sge_page->sge[i];
-+
-+		entry->addr = cpu_to_le64(sg_dma_address(sg));
-+		entry->page_ctrl_0 = entry->page_ctrl_1 = 0;
-+		entry->data_len = cpu_to_le32(sg_dma_len(sg));
-+		entry->data_off = 0;
-+	}
-+
-+	hdr->prd_table_addr = cpu_to_le64(slot->sge_page_dma);
-+
-+	hdr->sg_len = cpu_to_le32(n_elem << CMD_HDR_DATA_SGL_LEN_OFF);
-+
-+	return 0;
-+}
-+
-+static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot, int is_tmf,
-+			  struct hisi_sas_tmf_task *tmf)
-+{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct sas_ssp_task *ssp_task = &task->ssp_task;
-+	struct scsi_cmnd *scsi_cmnd = ssp_task->cmd;
-+	int has_data = 0, rc, priority = is_tmf;
-+	u8 *buf_cmd;
-+	u32 dw1 = 0, dw2 = 0;
-+
-+	hdr->dw0 = cpu_to_le32((1 << CMD_HDR_RESP_REPORT_OFF) |
-+			       (2 << CMD_HDR_TLR_CTRL_OFF) |
-+			       (port->id << CMD_HDR_PORT_OFF) |
-+			       (priority << CMD_HDR_PRIORITY_OFF) |
-+			       (1 << CMD_HDR_CMD_OFF)); /* ssp */
-+
-+	dw1 = 1 << CMD_HDR_VDTL_OFF;
-+	if (is_tmf) {
-+		dw1 |= 2 << CMD_HDR_FRAME_TYPE_OFF;
-+		dw1 |= DIR_NO_DATA << CMD_HDR_DIR_OFF;
-+	} else {
-+		dw1 |= 1 << CMD_HDR_FRAME_TYPE_OFF;
-+		switch (scsi_cmnd->sc_data_direction) {
-+		case DMA_TO_DEVICE:
-+			has_data = 1;
-+			dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
-+			break;
-+		case DMA_FROM_DEVICE:
-+			has_data = 1;
-+			dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
-+			break;
-+		default:
-+			dw1 &= ~CMD_HDR_DIR_MSK;
-+		}
-+	}
-+
-+	/* map itct entry */
-+	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
-+	hdr->dw1 = cpu_to_le32(dw1);
-+
-+	dw2 = (((sizeof(struct ssp_command_iu) + sizeof(struct ssp_frame_hdr)
-+	      + 3) / 4) << CMD_HDR_CFL_OFF) |
-+	      ((HISI_SAS_MAX_SSP_RESP_SZ / 4) << CMD_HDR_MRFL_OFF) |
-+	      (2 << CMD_HDR_SG_MOD_OFF);
-+	hdr->dw2 = cpu_to_le32(dw2);
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
-+	if (has_data) {
-+		rc = prep_prd_sge_v2_hw(hisi_hba, slot, hdr, task->scatter,
-+					slot->n_elem);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
-+	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	buf_cmd = slot->command_table + sizeof(struct ssp_frame_hdr);
-+
-+	memcpy(buf_cmd, &task->ssp_task.LUN, 8);
-+	if (!is_tmf) {
-+		buf_cmd[9] = task->ssp_task.task_attr |
-+				(task->ssp_task.task_prio << 3);
-+		memcpy(buf_cmd + 12, task->ssp_task.cmd->cmnd,
-+				task->ssp_task.cmd->cmd_len);
-+	} else {
-+		buf_cmd[10] = tmf->tmf;
-+		switch (tmf->tmf) {
-+		case TMF_ABORT_TASK:
-+		case TMF_QUERY_TASK:
-+			buf_cmd[12] =
-+				(tmf->tag_of_task_to_be_managed >> 8) & 0xff;
-+			buf_cmd[13] =
-+				tmf->tag_of_task_to_be_managed & 0xff;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int
- slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
- 		    int abort)
-@@ -1213,6 +1395,9 @@ static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.hw_init = hisi_sas_v2_init,
- 	.sl_notify = sl_notify_v2_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
-+	.prep_ssp = prep_ssp_v2_hw,
-+	.get_free_slot = get_free_slot_v2_hw,
-+	.start_delivery = start_delivery_v2_hw,
- 	.slot_complete = slot_complete_v2_hw,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v2_hdr),
 -- 
 1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
