@@ -1,133 +1,64 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [RESEND PATCH v2 19/23] hisi_sas: add v2 code for itct setup and free
-Date: Tue, 26 Jan 2016 02:47:19 +0800
-Message-ID: <1453747643-61875-20-git-send-email-john.garry@huawei.com>
-References: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
+Subject: [RESEND PATCH v2 00/23] HiSilicon SAS v2 hw support
+Date: Tue, 26 Jan 2016 02:47:00 +0800
+Message-ID: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453747643-61875-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 92 ++++++++++++++++++++++++++++++++++
- 1 file changed, 92 insertions(+)
+This patchset introduces support for the HiSi SAS v2 hw.
+The major difference between v1 and v2 hw is support
+for SATA/STP.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 2c6a753..8b51acf 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -353,6 +353,96 @@ static void init_id_frame_v2_hw(struct hisi_hba *hisi_hba)
- 		config_id_frame_v2_hw(hisi_hba, i);
- }
- 
-+static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
-+			     struct hisi_sas_device *sas_dev)
-+{
-+	struct domain_device *device = sas_dev->sas_device;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	u64 qw0, device_id = sas_dev->device_id;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
-+	struct domain_device *parent_dev = device->parent;
-+	struct hisi_sas_port *port = device->port->lldd_port;
-+
-+	memset(itct, 0, sizeof(*itct));
-+
-+	/* qw0 */
-+	qw0 = 0;
-+	switch (sas_dev->dev_type) {
-+	case SAS_END_DEVICE:
-+	case SAS_EDGE_EXPANDER_DEVICE:
-+	case SAS_FANOUT_EXPANDER_DEVICE:
-+		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	case SAS_SATA_DEV:
-+		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
-+		else
-+			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	default:
-+		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
-+			 sas_dev->dev_type);
-+	}
-+
-+	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
-+		(device->max_linkrate << ITCT_HDR_MCR_OFF) |
-+		(1 << ITCT_HDR_VLN_OFF) |
-+		(port->id << ITCT_HDR_PORT_ID_OFF));
-+	itct->qw0 = cpu_to_le64(qw0);
-+
-+	/* qw1 */
-+	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
-+	itct->sas_addr = __swab64(itct->sas_addr);
-+
-+	/* qw2 */
-+	itct->qw2 = cpu_to_le64((500ULL << ITCT_HDR_INLT_OFF) |
-+				(0xff00ULL << ITCT_HDR_BITLT_OFF) |
-+				(0xff00ULL << ITCT_HDR_MCTLT_OFF) |
-+				(0xff00ULL << ITCT_HDR_RTOLT_OFF));
-+}
-+
-+static void free_device_v2_hw(struct hisi_hba *hisi_hba,
-+			      struct hisi_sas_device *sas_dev)
-+{
-+	u64 qw0, dev_id = sas_dev->device_id;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
-+	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	int i;
-+
-+	/* clear the itct interrupt state */
-+	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+				 ENT_INT_SRC3_ITC_INT_MSK);
-+
-+	/* clear the itct int*/
-+	for (i = 0; i < 2; i++) {
-+		/* clear the itct table*/
-+		reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
-+		reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
-+		hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
-+
-+		udelay(10);
-+		reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+		if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
-+			dev_dbg(dev, "got clear ITCT done interrupt\n");
-+
-+			/* invalid the itct state*/
-+			qw0 = cpu_to_le64(itct->qw0);
-+			qw0 &= ~(1 << ITCT_HDR_VALID_OFF);
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+					 ENT_INT_SRC3_ITC_INT_MSK);
-+			hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
-+			hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
-+
-+			/* clear the itct */
-+			hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
-+			dev_dbg(dev, "clear ITCT ok\n");
-+			break;
-+		}
-+	}
-+}
-+
- static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
- {
- 	int i, reset_val;
-@@ -1463,8 +1553,10 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
- 
- static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.hw_init = hisi_sas_v2_init,
-+	.setup_itct = setup_itct_v2_hw,
- 	.sl_notify = sl_notify_v2_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
-+	.free_device = free_device_v2_hw,
- 	.prep_smp = prep_smp_v2_hw,
- 	.prep_ssp = prep_ssp_v2_hw,
- 	.get_free_slot = get_free_slot_v2_hw,
+Known limitation:
+- We cannot connect a SATA disk through an expander
+  which enables DMA setup auto-activate, as our controller
+  does not support this feature. Directly connecting
+  a SATA disk to the HBA is ok.
+
+Differences to v1:
+- Update dt bindings, specificially for am-max-transmissions
+- some small SATA fixes
+- minor formatting changes
+
+John Garry (23):
+  devicetree: bindings: hisi_sas: add v2 HW bindings
+  hisi_sas: relocate DEV_IS_EXPANDER
+  hisi_sas: set max commands as configurable
+  hisi_sas: reduce max itct entries
+  hisi_sas: add hisi_sas_err_record_v1
+  hisi_sas: rename some fields in hisi_sas_itct
+  hisi_sas: add bare v2 hw driver
+  hisi_sas: add v2 register definitions
+  hisi_sas: add v2 hw init
+  hisi_sas: add init_id_frame_v2_hw()
+  hisi_sas: add v2 phy init code
+  hisi_sas: add v2 int init and phy up handler
+  hisi_sas: add v2 phy down handler
+  hisi_sas: add v2 channel interrupt handler
+  hisi_sas: add v2 SATA interrupt handler
+  hisi_sas: add v2 cq interrupt handler
+  hisi_sas: add v2 path to send ssp frame
+  hisi_sas: add v2 code to send smp command
+  hisi_sas: add v2 code for itct setup and free
+  hisi_sas: add v2 path to send ATA command
+  hisi_sas: add v2 slot error handler
+  hisi_sas: add v2 tmf functions
+  hisi_sas: update driver version to 1.1
+
+ .../devicetree/bindings/scsi/hisilicon-sas.txt     |   21 +-
+ drivers/scsi/hisi_sas/Makefile                     |    2 +-
+ drivers/scsi/hisi_sas/hisi_sas.h                   |   39 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c              |   36 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |   20 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             | 2205 ++++++++++++++++++++
+ 6 files changed, 2277 insertions(+), 46 deletions(-)
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 -- 
 1.9.1
