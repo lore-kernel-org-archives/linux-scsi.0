@@ -1,341 +1,475 @@
-From: j00310691 <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 09/23] hisi_sas: add v2 hw init
-Date: Tue, 26 Jan 2016 01:21:58 +0800
-Message-ID: <1453742532-53092-10-git-send-email-john.garry@huawei.com>
+From: j00310691 <john.garry@huawei.com>
+Subject: [PATCH v2 21/23] hisi_sas: add v2 slot error handler
+Date: Tue, 26 Jan 2016 01:22:10 +0800
+Message-ID: <1453742532-53092-22-git-send-email-john.garry@huawei.com>
 References: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1453742532-53092-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1453742532-53092-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, martin.petersen@oracle.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, devicetree@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: John Garry <john.garry@huawei.com>
 
-Add code to initialise the hardware.
-
-Support is also added to deal with the
-"am-max-transmissions" (amt) limitation in hip06
-controller #1. This is how many connection requests
-we can send on the system bus before waiting for a
-response.
-Due to chip bus design, controller #1 is limited to
-32 amt, while, by design, a controller supports 64.
-The default value for the nibbles in the relevant
-registers is 0x40; these need to be programmed with
-0x20.
-
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 288 +++++++++++++++++++++++++++++++++
- 1 file changed, 288 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 421 +++++++++++++++++++++++++++++++++
+ 1 file changed, 421 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 31e4fdc..da9c375 100644
+index cea0b36..481aff9 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -249,7 +249,295 @@
- #define ITCT_HDR_RTOLT_OFF		48
- #define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
- 
-+struct hisi_sas_complete_v2_hdr {
-+	__le32 dw0;
-+	__le32 dw1;
-+	__le32 act;
-+	__le32 dw3;
-+};
-+
-+#define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
-+
-+static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
-+{
-+	void __iomem *regs = hisi_hba->regs + off;
-+
-+	return readl(regs);
-+}
-+
-+static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
-+{
-+	void __iomem *regs = hisi_hba->regs + off;
-+
-+	writel(val, regs);
-+}
-+
-+static void hisi_sas_phy_write32(struct hisi_hba *hisi_hba, int phy_no,
-+				 u32 off, u32 val)
-+{
-+	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
-+
-+	writel(val, regs);
-+}
-+
-+static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
-+				      int phy_no, u32 off)
-+{
-+	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
-+
-+	return readl(regs);
-+}
-+
-+static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	int i, reset_val;
-+	u32 val;
-+	unsigned long end_time;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+
-+	/* The mask needs to be set depending on the number of phys */
-+	if (hisi_hba->n_phy == 9)
-+		reset_val = 0x1fffff;
-+	else
-+		reset_val = 0x7ffff;
-+
-+	/* Disable all of the DQ */
-+	for (i = 0; i < HISI_SAS_MAX_QUEUES; i++)
-+		hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0);
-+
-+	/* Disable all of the PHYs */
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		u32 phy_cfg = hisi_sas_phy_read32(hisi_hba, i, PHY_CFG);
-+
-+		phy_cfg &= ~PHY_CTRL_RESET_MSK;
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CFG, phy_cfg);
-+	}
-+	udelay(50);
-+
-+	/* Ensure DMA tx & rx idle */
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		u32 dma_tx_status, dma_rx_status;
-+
-+		end_time = jiffies + msecs_to_jiffies(1000);
-+
-+		while (1) {
-+			dma_tx_status = hisi_sas_phy_read32(hisi_hba, i,
-+							    DMA_TX_STATUS);
-+			dma_rx_status = hisi_sas_phy_read32(hisi_hba, i,
-+							    DMA_RX_STATUS);
-+
-+			if (!(dma_tx_status & DMA_TX_STATUS_BUSY_MSK) &&
-+				!(dma_rx_status & DMA_RX_STATUS_BUSY_MSK))
-+				break;
-+
-+			msleep(20);
-+			if (time_after(jiffies, end_time))
-+				return -EIO;
-+		}
-+	}
-+
-+	/* Ensure axi bus idle */
-+	end_time = jiffies + msecs_to_jiffies(1000);
-+	while (1) {
-+		u32 axi_status =
-+			hisi_sas_read32(hisi_hba, AXI_CFG);
-+
-+		if (axi_status == 0)
-+			break;
-+
-+		msleep(20);
-+		if (time_after(jiffies, end_time))
-+			return -EIO;
-+	}
-+
-+	/* reset and disable clock*/
-+	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_reset_reg,
-+			reset_val);
-+	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg + 4,
-+			reset_val);
-+	msleep(1);
-+	regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg, &val);
-+	if (reset_val != (val & reset_val)) {
-+		dev_err(dev, "SAS reset fail.\n");
-+		return -EIO;
-+	}
-+
-+	/* De-reset and enable clock*/
-+	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_reset_reg + 4,
-+			reset_val);
-+	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg,
-+			reset_val);
-+	msleep(1);
-+	regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg,
-+			&val);
-+	if (val & reset_val) {
-+		dev_err(dev, "SAS de-reset fail.\n");
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	int i;
-+
-+	/* Global registers init */
-+
-+	/* Deal with am-max-transmissions quirk */
-+	if (of_get_property(np, "hip06-sas-v2-quirk-amt", NULL)) {
-+		hisi_sas_write32(hisi_hba, AM_CFG_MAX_TRANS, 0x2020);
-+		hisi_sas_write32(hisi_hba, AM_CFG_SINGLE_PORT_MAX_TRANS,
-+				 0x2020);
-+	} /* Else, use defaults -> do nothing */
-+
-+	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE,
-+			 (u32)((1ULL << hisi_hba->queue_count) - 1));
-+	hisi_sas_write32(hisi_hba, AXI_USER1, 0xc0000000);
-+	hisi_sas_write32(hisi_hba, AXI_USER2, 0x10000);
-+	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
-+	hisi_sas_write32(hisi_hba, HGC_SAS_TX_OPEN_FAIL_RETRY_CTRL, 0x7FF);
-+	hisi_sas_write32(hisi_hba, OPENA_WT_CONTI_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, I_T_NEXUS_LOSS_TIME, 0x1F4);
-+	hisi_sas_write32(hisi_hba, MAX_CON_TIME_LIMIT_TIME, 0x4E20);
-+	hisi_sas_write32(hisi_hba, BUS_INACTIVE_LIMIT_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, CFG_AGING_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, HGC_ERR_STAT_EN, 0x1);
-+	hisi_sas_write32(hisi_hba, HGC_GET_ITV_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
-+	hisi_sas_write32(hisi_hba, ENT_INT_COAL_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, ENT_INT_COAL_CNT, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0x0);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0x7efefefe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0x7efefefe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0x7ffffffe);
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, 0xfffff3c0);
-+	for (i = 0; i < hisi_hba->queue_count; i++)
-+		hisi_sas_write32(hisi_hba, OQ0_INT_SRC_MSK+0x4*i, 0);
-+
-+	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
-+	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, 0x30b9908);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_TOUT_CFG, 0x7d7d7d7d);
-+		hisi_sas_phy_write32(hisi_hba, i, DONE_RECEIVED_TIME, 0x10);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x23f801fc);
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_DWS_RESET_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_PHY_ENA_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT_COAL_EN, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199B694);
-+	}
-+
-+	for (i = 0; i < hisi_hba->queue_count; i++) {
-+		/* Delivery queue */
-+		hisi_sas_write32(hisi_hba,
-+				 DLVRY_Q_0_BASE_ADDR_HI + (i * 0x14),
-+				 upper_32_bits(hisi_hba->cmd_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, DLVRY_Q_0_BASE_ADDR_LO + (i * 0x14),
-+				 lower_32_bits(hisi_hba->cmd_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, DLVRY_Q_0_DEPTH + (i * 0x14),
-+				 HISI_SAS_QUEUE_SLOTS);
-+
-+		/* Completion queue */
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_HI + (i * 0x14),
-+				 upper_32_bits(hisi_hba->complete_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_LO + (i * 0x14),
-+				 lower_32_bits(hisi_hba->complete_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_DEPTH + (i * 0x14),
-+				 HISI_SAS_QUEUE_SLOTS);
-+	}
-+
-+	/* itct */
-+	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->itct_dma));
-+
-+	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->itct_dma));
-+
-+	/* iost */
-+	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->iost_dma));
-+
-+	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->iost_dma));
-+
-+	/* breakpoint */
-+	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_LO,
-+			 lower_32_bits(hisi_hba->breakpoint_dma));
-+
-+	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_HI,
-+			 upper_32_bits(hisi_hba->breakpoint_dma));
-+
-+	/* SATA broken msg */
-+	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_LO,
-+			 lower_32_bits(hisi_hba->sata_breakpoint_dma));
-+
-+	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_HI,
-+			 upper_32_bits(hisi_hba->sata_breakpoint_dma));
-+
-+	/* SATA initial fis */
-+	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->initial_fis_dma));
-+
-+	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->initial_fis_dma));
-+}
-+
-+static int hw_init_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	int rc;
-+
-+	rc = reset_hw_v2_hw(hisi_hba);
-+	if (rc) {
-+		dev_err(dev, "hisi_sas_reset_hw failed, rc=%d", rc);
-+		return rc;
-+	}
-+
-+	msleep(100);
-+	init_reg_v2_hw(hisi_hba);
-+
-+	return 0;
-+}
-+
-+static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
-+{
-+	int rc;
-+
-+	rc = hw_init_v2_hw(hisi_hba);
-+	if (rc)
-+		return rc;
-+
-+	return 0;
-+}
-+
- static const struct hisi_sas_hw hisi_sas_v2_hw = {
-+	.hw_init = hisi_sas_v2_init,
-+	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
-+	.complete_hdr_size = sizeof(struct hisi_sas_complete_v2_hdr),
+@@ -256,12 +256,165 @@ struct hisi_sas_complete_v2_hdr {
+ 	__le32 dw3;
  };
  
- static int hisi_sas_v2_probe(struct platform_device *pdev)
++struct hisi_sas_err_record_v2 {
++	/* dw0 */
++	__le32 trans_tx_fail_type;
++
++	/* dw1 */
++	__le32 trans_rx_fail_type;
++
++	/* dw2 */
++	__le16 dma_tx_err_type;
++	__le16 sipc_rx_err_type;
++
++	/* dw3 */
++	__le32 dma_rx_err_type;
++};
++
+ enum {
+ 	HISI_SAS_PHY_PHY_UPDOWN,
+ 	HISI_SAS_PHY_CHNL_INT,
+ 	HISI_SAS_PHY_INT_NR
+ };
+ 
++enum {
++	TRANS_TX_FAIL_BASE = 0x0, /* dw0 */
++	TRANS_RX_FAIL_BASE = 0x100, /* dw1 */
++	DMA_TX_ERR_BASE = 0x200, /* dw2 bit 15-0 */
++	SIPC_RX_ERR_BASE = 0x300, /* dw2 bit 31-16*/
++	DMA_RX_ERR_BASE = 0x400, /* dw3 */
++
++	/* trans tx*/
++	TRANS_TX_OPEN_FAIL_WITH_IT_NEXUS_LOSS = TRANS_TX_FAIL_BASE, /* 0x0 */
++	TRANS_TX_ERR_PHY_NOT_ENABLE, /* 0x1 */
++	TRANS_TX_OPEN_CNX_ERR_WRONG_DESTINATION, /* 0x2 */
++	TRANS_TX_OPEN_CNX_ERR_ZONE_VIOLATION, /* 0x3 */
++	TRANS_TX_OPEN_CNX_ERR_BY_OTHER, /* 0x4 */
++	RESERVED0, /* 0x5 */
++	TRANS_TX_OPEN_CNX_ERR_AIP_TIMEOUT, /* 0x6 */
++	TRANS_TX_OPEN_CNX_ERR_STP_RESOURCES_BUSY, /* 0x7 */
++	TRANS_TX_OPEN_CNX_ERR_PROTOCOL_NOT_SUPPORTED, /* 0x8 */
++	TRANS_TX_OPEN_CNX_ERR_CONNECTION_RATE_NOT_SUPPORTED, /* 0x9 */
++	TRANS_TX_OPEN_CNX_ERR_BAD_DESTINATION, /* 0xa */
++	TRANS_TX_OPEN_CNX_ERR_BREAK_RCVD, /* 0xb */
++	TRANS_TX_OPEN_CNX_ERR_LOW_PHY_POWER, /* 0xc */
++	TRANS_TX_OPEN_CNX_ERR_PATHWAY_BLOCKED, /* 0xd */
++	TRANS_TX_OPEN_CNX_ERR_OPEN_TIMEOUT, /* 0xe */
++	TRANS_TX_OPEN_CNX_ERR_NO_DESTINATION, /* 0xf */
++	TRANS_TX_OPEN_RETRY_ERR_THRESHOLD_REACHED, /* 0x10 */
++	TRANS_TX_ERR_FRAME_TXED, /* 0x11 */
++	TRANS_TX_ERR_WITH_BREAK_TIMEOUT, /* 0x12 */
++	TRANS_TX_ERR_WITH_BREAK_REQUEST, /* 0x13 */
++	TRANS_TX_ERR_WITH_BREAK_RECEVIED, /* 0x14 */
++	TRANS_TX_ERR_WITH_CLOSE_TIMEOUT, /* 0x15 */
++	TRANS_TX_ERR_WITH_CLOSE_NORMAL, /* 0x16 for ssp*/
++	TRANS_TX_ERR_WITH_CLOSE_PHYDISALE, /* 0x17 */
++	TRANS_TX_ERR_WITH_CLOSE_DWS_TIMEOUT, /* 0x18 */
++	TRANS_TX_ERR_WITH_CLOSE_COMINIT, /* 0x19 */
++	TRANS_TX_ERR_WITH_NAK_RECEVIED, /* 0x1a for ssp*/
++	TRANS_TX_ERR_WITH_ACK_NAK_TIMEOUT, /* 0x1b for ssp*/
++	/*IO_TX_ERR_WITH_R_ERR_RECEVIED, [> 0x1b for sata/stp<] */
++	TRANS_TX_ERR_WITH_CREDIT_TIMEOUT, /* 0x1c for ssp */
++	/*IO_RX_ERR_WITH_SATA_DEVICE_LOST 0x1c for sata/stp */
++	TRANS_TX_ERR_WITH_IPTT_CONFLICT, /* 0x1d for ssp/smp */
++	TRANS_TX_ERR_WITH_OPEN_BY_DES_OR_OTHERS, /* 0x1e */
++	/*IO_TX_ERR_WITH_SYNC_RXD, [> 0x1e <] for sata/stp */
++	TRANS_TX_ERR_WITH_WAIT_RECV_TIMEOUT, /* 0x1f for sata/stp */
++
++	/* trans rx */
++	TRANS_RX_ERR_WITH_RXFRAME_CRC_ERR = TRANS_RX_FAIL_BASE, /* 0x100 */
++	TRANS_RX_ERR_WITH_RXFIS_8B10B_DISP_ERR, /* 0x101 for sata/stp */
++	TRANS_RX_ERR_WITH_RXFRAME_HAVE_ERRPRM, /* 0x102 for ssp/smp */
++	/*IO_ERR_WITH_RXFIS_8B10B_CODE_ERR, [> 0x102 <] for sata/stp */
++	TRANS_RX_ERR_WITH_RXFIS_DECODE_ERROR, /* 0x103 for sata/stp */
++	TRANS_RX_ERR_WITH_RXFIS_CRC_ERR, /* 0x104 for sata/stp */
++	TRANS_RX_ERR_WITH_RXFRAME_LENGTH_OVERRUN, /* 0x105 for smp */
++	/*IO_ERR_WITH_RXFIS_TX SYNCP, [> 0x105 <] for sata/stp */
++	TRANS_RX_ERR_WITH_RXFIS_RX_SYNCP, /* 0x106 for sata/stp*/
++	TRANS_RX_ERR_WITH_LINK_BUF_OVERRUN, /* 0x107 */
++	TRANS_RX_ERR_WITH_BREAK_TIMEOUT, /* 0x108 */
++	TRANS_RX_ERR_WITH_BREAK_REQUEST, /* 0x109 */
++	TRANS_RX_ERR_WITH_BREAK_RECEVIED, /* 0x10a */
++	RESERVED1, /* 0x10b */
++	TRANS_RX_ERR_WITH_CLOSE_NORMAL, /* 0x10c */
++	TRANS_RX_ERR_WITH_CLOSE_PHY_DISABLE, /* 0x10d */
++	TRANS_RX_ERR_WITH_CLOSE_DWS_TIMEOUT, /* 0x10e */
++	TRANS_RX_ERR_WITH_CLOSE_COMINIT, /* 0x10f */
++	TRANS_RX_ERR_WITH_DATA_LEN0, /* 0x110 for ssp/smp */
++	TRANS_RX_ERR_WITH_BAD_HASH, /* 0x111 for ssp */
++	/*IO_RX_ERR_WITH_FIS_TOO_SHORT, [> 0x111 <] for sata/stp */
++	TRANS_RX_XRDY_WLEN_ZERO_ERR, /* 0x112 for ssp*/
++	/*IO_RX_ERR_WITH_FIS_TOO_LONG, [> 0x112 <] for sata/stp */
++	TRANS_RX_SSP_FRM_LEN_ERR, /* 0x113 for ssp */
++	/*IO_RX_ERR_WITH_SATA_DEVICE_LOST, [> 0x113 <] for sata */
++	RESERVED2, /* 0x114 */
++	RESERVED3, /* 0x115 */
++	RESERVED4, /* 0x116 */
++	RESERVED5, /* 0x117 */
++	TRANS_RX_ERR_WITH_BAD_FRM_TYPE, /* 0x118 */
++	TRANS_RX_SMP_FRM_LEN_ERR, /* 0x119 */
++	TRANS_RX_SMP_RESP_TIMEOUT_ERR, /* 0x11a */
++	RESERVED6, /* 0x11b */
++	RESERVED7, /* 0x11c */
++	RESERVED8, /* 0x11d */
++	RESERVED9, /* 0x11e */
++	TRANS_RX_R_ERR, /* 0x11f */
++
++	/* dma tx */
++	DMA_TX_DIF_CRC_ERR = DMA_TX_ERR_BASE, /* 0x200 */
++	DMA_TX_DIF_APP_ERR, /* 0x201 */
++	DMA_TX_DIF_RPP_ERR, /* 0x202 */
++	DMA_TX_DATA_SGL_OVERFLOW, /* 0x203 */
++	DMA_TX_DIF_SGL_OVERFLOW, /* 0x204 */
++	DMA_TX_UNEXP_XFER_ERR, /* 0x205 */
++	DMA_TX_UNEXP_RETRANS_ERR, /* 0x206 */
++	DMA_TX_XFER_LEN_OVERFLOW, /* 0x207 */
++	DMA_TX_XFER_OFFSET_ERR, /* 0x208 */
++	DMA_TX_RAM_ECC_ERR, /* 0x209 */
++	DMA_TX_DIF_LEN_ALIGN_ERR, /* 0x20a */
++
++	/* sipc rx */
++	SIPC_RX_FIS_STATUS_ERR_BIT_VLD = SIPC_RX_ERR_BASE, /* 0x300 */
++	SIPC_RX_PIO_WRSETUP_STATUS_DRQ_ERR, /* 0x301 */
++	SIPC_RX_FIS_STATUS_BSY_BIT_ERR, /* 0x302 */
++	SIPC_RX_WRSETUP_LEN_ODD_ERR, /* 0x303 */
++	SIPC_RX_WRSETUP_LEN_ZERO_ERR, /* 0x304 */
++	SIPC_RX_WRDATA_LEN_NOT_MATCH_ERR, /* 0x305 */
++	SIPC_RX_NCQ_WRSETUP_OFFSET_ERR, /* 0x306 */
++	SIPC_RX_NCQ_WRSETUP_AUTO_ACTIVE_ERR, /* 0x307 */
++	SIPC_RX_SATA_UNEXP_FIS_ERR, /* 0x308 */
++	SIPC_RX_WRSETUP_ESTATUS_ERR, /* 0x309 */
++	SIPC_RX_DATA_UNDERFLOW_ERR, /* 0x30a */
++
++	/* dma rx */
++	DMA_RX_DIF_CRC_ERR = DMA_RX_ERR_BASE, /* 0x400 */
++	DMA_RX_DIF_APP_ERR, /* 0x401 */
++	DMA_RX_DIF_RPP_ERR, /* 0x402 */
++	DMA_RX_DATA_SGL_OVERFLOW, /* 0x403 */
++	DMA_RX_DIF_SGL_OVERFLOW, /* 0x404 */
++	DMA_RX_DATA_LEN_OVERFLOW, /* 0x405 */
++	DMA_RX_DATA_LEN_UNDERFLOW, /* 0x406 */
++	DMA_RX_DATA_OFFSET_ERR, /* 0x407 */
++	RESERVED10, /* 0x408 */
++	DMA_RX_SATA_FRAME_TYPE_ERR, /* 0x409 */
++	DMA_RX_RESP_BUF_OVERFLOW, /* 0x40a */
++	DMA_RX_UNEXP_RETRANS_RESP_ERR, /* 0x40b */
++	DMA_RX_UNEXP_NORM_RESP_ERR, /* 0x40c */
++	DMA_RX_UNEXP_RDFRAME_ERR, /* 0x40d */
++	DMA_RX_PIO_DATA_LEN_ERR, /* 0x40e */
++	DMA_RX_RDSETUP_STATUS_ERR, /* 0x40f */
++	DMA_RX_RDSETUP_STATUS_DRQ_ERR, /* 0x410 */
++	DMA_RX_RDSETUP_STATUS_BSY_ERR, /* 0x411 */
++	DMA_RX_RDSETUP_LEN_ODD_ERR, /* 0x412 */
++	DMA_RX_RDSETUP_LEN_ZERO_ERR, /* 0x413 */
++	DMA_RX_RDSETUP_LEN_OVER_ERR, /* 0x414 */
++	DMA_RX_RDSETUP_OFFSET_ERR, /* 0x415 */
++	DMA_RX_RDSETUP_ACTIVE_ERR, /* 0x416 */
++	DMA_RX_RDSETUP_ESTATUS_ERR, /* 0x417 */
++	DMA_RX_RAM_ECC_ERR, /* 0x418 */
++	DMA_RX_UNKNOWN_FRM_ERR, /* 0x419 */
++};
++
+ #define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
+ 
+ #define DIR_NO_DATA 0
+@@ -1013,6 +1166,273 @@ static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 
+ 	ts->buf_valid_size = sizeof(*resp);
+ }
++
++/* by default, task resp is complete */
++static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
++			   struct sas_task *task,
++			   struct hisi_sas_slot *slot)
++{
++	struct task_status_struct *ts = &task->task_status;
++	struct hisi_sas_err_record_v2 *err_record = slot->status_buffer;
++	u32 trans_tx_fail_type = cpu_to_le32(err_record->trans_tx_fail_type);
++	u32 trans_rx_fail_type = cpu_to_le32(err_record->trans_rx_fail_type);
++	u16 dma_tx_err_type = cpu_to_le16(err_record->dma_tx_err_type);
++	u16 sipc_rx_err_type = cpu_to_le16(err_record->sipc_rx_err_type);
++	u32 dma_rx_err_type = cpu_to_le32(err_record->dma_rx_err_type);
++	int error = -1;
++
++	if (dma_rx_err_type) {
++		error = ffs(dma_rx_err_type)
++			- 1 + DMA_RX_ERR_BASE;
++	} else if (sipc_rx_err_type) {
++		error = ffs(sipc_rx_err_type)
++			- 1 + SIPC_RX_ERR_BASE;
++	}  else if (dma_tx_err_type) {
++		error = ffs(dma_tx_err_type)
++			- 1 + DMA_TX_ERR_BASE;
++	} else if (trans_rx_fail_type) {
++		error = ffs(trans_rx_fail_type)
++			- 1 + TRANS_RX_FAIL_BASE;
++	} else if (trans_tx_fail_type) {
++		error = ffs(trans_tx_fail_type)
++			- 1 + TRANS_TX_FAIL_BASE;
++	}
++
++	switch (task->task_proto) {
++	case SAS_PROTOCOL_SSP:
++	{
++		switch (error) {
++		case TRANS_TX_OPEN_CNX_ERR_NO_DESTINATION:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_NO_DEST;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_PATHWAY_BLOCKED:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_PATH_BLOCKED;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_PROTOCOL_NOT_SUPPORTED:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_EPROTO;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_CONNECTION_RATE_NOT_SUPPORTED:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_CONN_RATE;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_BAD_DESTINATION:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_BAD_DEST;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_BREAK_RCVD:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_WRONG_DESTINATION:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_WRONG_DEST;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_ZONE_VIOLATION:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_UNKNOWN;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_LOW_PHY_POWER:
++		{
++			/* not sure */
++			ts->stat = SAS_DEV_NO_RESPONSE;
++			break;
++		}
++		case TRANS_RX_ERR_WITH_CLOSE_PHY_DISABLE:
++		{
++			ts->stat = SAS_PHY_DOWN;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_OPEN_TIMEOUT:
++		{
++			ts->stat = SAS_OPEN_TO;
++			break;
++		}
++		case DMA_RX_DATA_LEN_OVERFLOW:
++		{
++			ts->stat = SAS_DATA_OVERRUN;
++			ts->residual = 0;
++			break;
++		}
++		case DMA_RX_DATA_LEN_UNDERFLOW:
++		case SIPC_RX_DATA_UNDERFLOW_ERR:
++		{
++			ts->residual = trans_tx_fail_type;
++			ts->stat = SAS_DATA_UNDERRUN;
++			break;
++		}
++		case TRANS_TX_OPEN_FAIL_WITH_IT_NEXUS_LOSS:
++		case TRANS_TX_ERR_PHY_NOT_ENABLE:
++		case TRANS_TX_OPEN_CNX_ERR_BY_OTHER:
++		case TRANS_TX_OPEN_CNX_ERR_AIP_TIMEOUT:
++		case TRANS_TX_OPEN_RETRY_ERR_THRESHOLD_REACHED:
++		case TRANS_TX_ERR_WITH_BREAK_TIMEOUT:
++		case TRANS_TX_ERR_WITH_BREAK_REQUEST:
++		case TRANS_TX_ERR_WITH_BREAK_RECEVIED:
++		case TRANS_TX_ERR_WITH_CLOSE_TIMEOUT:
++		case TRANS_TX_ERR_WITH_CLOSE_NORMAL:
++		case TRANS_TX_ERR_WITH_CLOSE_DWS_TIMEOUT:
++		case TRANS_TX_ERR_WITH_CLOSE_COMINIT:
++		case TRANS_TX_ERR_WITH_NAK_RECEVIED:
++		case TRANS_TX_ERR_WITH_ACK_NAK_TIMEOUT:
++		case TRANS_TX_ERR_WITH_IPTT_CONFLICT:
++		case TRANS_TX_ERR_WITH_CREDIT_TIMEOUT:
++		case TRANS_RX_ERR_WITH_RXFRAME_CRC_ERR:
++		case TRANS_RX_ERR_WITH_RXFIS_8B10B_DISP_ERR:
++		case TRANS_RX_ERR_WITH_RXFRAME_HAVE_ERRPRM:
++		case TRANS_RX_ERR_WITH_BREAK_TIMEOUT:
++		case TRANS_RX_ERR_WITH_BREAK_REQUEST:
++		case TRANS_RX_ERR_WITH_BREAK_RECEVIED:
++		case TRANS_RX_ERR_WITH_CLOSE_NORMAL:
++		case TRANS_RX_ERR_WITH_CLOSE_DWS_TIMEOUT:
++		case TRANS_RX_ERR_WITH_CLOSE_COMINIT:
++		case TRANS_RX_ERR_WITH_DATA_LEN0:
++		case TRANS_RX_ERR_WITH_BAD_HASH:
++		case TRANS_RX_XRDY_WLEN_ZERO_ERR:
++		case TRANS_RX_SSP_FRM_LEN_ERR:
++		case TRANS_RX_ERR_WITH_BAD_FRM_TYPE:
++		case DMA_TX_UNEXP_XFER_ERR:
++		case DMA_TX_UNEXP_RETRANS_ERR:
++		case DMA_TX_XFER_LEN_OVERFLOW:
++		case DMA_TX_XFER_OFFSET_ERR:
++		case DMA_RX_DATA_OFFSET_ERR:
++		case DMA_RX_UNEXP_NORM_RESP_ERR:
++		case DMA_RX_UNEXP_RDFRAME_ERR:
++		case DMA_RX_UNKNOWN_FRM_ERR:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_UNKNOWN;
++			break;
++		}
++		default:
++			break;
++		}
++	}
++		break;
++	case SAS_PROTOCOL_SMP:
++		ts->stat = SAM_STAT_CHECK_CONDITION;
++		break;
++
++	case SAS_PROTOCOL_SATA:
++	case SAS_PROTOCOL_STP:
++	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
++	{
++		switch (error) {
++		case TRANS_TX_OPEN_CNX_ERR_LOW_PHY_POWER:
++		case TRANS_TX_OPEN_CNX_ERR_PATHWAY_BLOCKED:
++		case TRANS_TX_OPEN_CNX_ERR_NO_DESTINATION:
++		{
++			ts->resp = SAS_TASK_UNDELIVERED;
++			ts->stat = SAS_DEV_NO_RESPONSE;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_PROTOCOL_NOT_SUPPORTED:
++		case TRANS_TX_OPEN_CNX_ERR_CONNECTION_RATE_NOT_SUPPORTED:
++		case TRANS_TX_OPEN_CNX_ERR_BAD_DESTINATION:
++		case TRANS_TX_OPEN_CNX_ERR_BREAK_RCVD:
++		case TRANS_TX_OPEN_CNX_ERR_WRONG_DESTINATION:
++		case TRANS_TX_OPEN_CNX_ERR_ZONE_VIOLATION:
++		case TRANS_TX_OPEN_CNX_ERR_STP_RESOURCES_BUSY:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			break;
++		}
++		case TRANS_TX_OPEN_CNX_ERR_OPEN_TIMEOUT:
++		{
++			ts->stat = SAS_OPEN_TO;
++			break;
++		}
++		case DMA_RX_DATA_LEN_OVERFLOW:
++		{
++			ts->stat = SAS_DATA_OVERRUN;
++			break;
++		}
++		case TRANS_TX_OPEN_FAIL_WITH_IT_NEXUS_LOSS:
++		case TRANS_TX_ERR_PHY_NOT_ENABLE:
++		case TRANS_TX_OPEN_CNX_ERR_BY_OTHER:
++		case TRANS_TX_OPEN_CNX_ERR_AIP_TIMEOUT:
++		case TRANS_TX_OPEN_RETRY_ERR_THRESHOLD_REACHED:
++		case TRANS_TX_ERR_WITH_BREAK_TIMEOUT:
++		case TRANS_TX_ERR_WITH_BREAK_REQUEST:
++		case TRANS_TX_ERR_WITH_BREAK_RECEVIED:
++		case TRANS_TX_ERR_WITH_CLOSE_TIMEOUT:
++		case TRANS_TX_ERR_WITH_CLOSE_NORMAL:
++		case TRANS_TX_ERR_WITH_CLOSE_DWS_TIMEOUT:
++		case TRANS_TX_ERR_WITH_CLOSE_COMINIT:
++		case TRANS_TX_ERR_WITH_NAK_RECEVIED:
++		case TRANS_TX_ERR_WITH_ACK_NAK_TIMEOUT:
++		case TRANS_TX_ERR_WITH_CREDIT_TIMEOUT:
++		case TRANS_TX_ERR_WITH_WAIT_RECV_TIMEOUT:
++		case TRANS_RX_ERR_WITH_RXFIS_8B10B_DISP_ERR:
++		case TRANS_RX_ERR_WITH_RXFRAME_HAVE_ERRPRM:
++		case TRANS_RX_ERR_WITH_RXFIS_DECODE_ERROR:
++		case TRANS_RX_ERR_WITH_RXFIS_CRC_ERR:
++		case TRANS_RX_ERR_WITH_RXFRAME_LENGTH_OVERRUN:
++		case TRANS_RX_ERR_WITH_RXFIS_RX_SYNCP:
++		case TRANS_RX_ERR_WITH_CLOSE_NORMAL:
++		case TRANS_RX_ERR_WITH_CLOSE_PHY_DISABLE:
++		case TRANS_RX_ERR_WITH_CLOSE_DWS_TIMEOUT:
++		case TRANS_RX_ERR_WITH_CLOSE_COMINIT:
++		case TRANS_RX_ERR_WITH_DATA_LEN0:
++		case TRANS_RX_ERR_WITH_BAD_HASH:
++		case TRANS_RX_XRDY_WLEN_ZERO_ERR:
++		case TRANS_RX_SSP_FRM_LEN_ERR:
++		case SIPC_RX_FIS_STATUS_ERR_BIT_VLD:
++		case SIPC_RX_PIO_WRSETUP_STATUS_DRQ_ERR:
++		case SIPC_RX_FIS_STATUS_BSY_BIT_ERR:
++		case SIPC_RX_WRSETUP_LEN_ODD_ERR:
++		case SIPC_RX_WRSETUP_LEN_ZERO_ERR:
++		case SIPC_RX_WRDATA_LEN_NOT_MATCH_ERR:
++		case SIPC_RX_SATA_UNEXP_FIS_ERR:
++		case DMA_RX_SATA_FRAME_TYPE_ERR:
++		case DMA_RX_UNEXP_RDFRAME_ERR:
++		case DMA_RX_PIO_DATA_LEN_ERR:
++		case DMA_RX_RDSETUP_STATUS_ERR:
++		case DMA_RX_RDSETUP_STATUS_DRQ_ERR:
++		case DMA_RX_RDSETUP_STATUS_BSY_ERR:
++		case DMA_RX_RDSETUP_LEN_ODD_ERR:
++		case DMA_RX_RDSETUP_LEN_ZERO_ERR:
++		case DMA_RX_RDSETUP_LEN_OVER_ERR:
++		case DMA_RX_RDSETUP_OFFSET_ERR:
++		case DMA_RX_RDSETUP_ACTIVE_ERR:
++		case DMA_RX_RDSETUP_ESTATUS_ERR:
++		case DMA_RX_UNKNOWN_FRM_ERR:
++		{
++			ts->stat = SAS_OPEN_REJECT;
++			break;
++		}
++		default:
++		{
++			ts->stat = SAS_PROTO_RESPONSE;
++			break;
++		}
++		}
++		sata_done_v2_hw(hisi_hba, task, slot);
++	}
++		break;
++	default:
++		break;
++	}
++}
++
+ static int
+ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
+ 		    int abort)
+@@ -1055,6 +1475,7 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
+ 			__func__, slot->cmplt_queue_slot,
+ 			complete_hdr->dw0 & CMPLT_HDR_ERX_MSK);
+ 
++		slot_err_v2_hw(hisi_hba, task, slot);
+ 		goto out;
+ 	}
+ 
 -- 
 1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
