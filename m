@@ -1,215 +1,58 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 05/11] qla2xxx: Add support for buffer to buffer credit value for ISP27XX.
-Date: Tue, 26 Jan 2016 12:10:40 -0500
-Message-ID: <1453828246-28686-6-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 02/11] qla2xxx: Seed init-cb login timeout from nvram exclusively.
+Date: Tue, 26 Jan 2016 12:10:37 -0500
+Message-ID: <1453828246-28686-3-git-send-email-himanshu.madhani@qlogic.com>
 References: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:62118 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:13879 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756929AbcAZRxT (ORCPT
+	by vger.kernel.org with ESMTP id S1757006AbcAZRxX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jan 2016 12:53:19 -0500
+	Tue, 26 Jan 2016 12:53:23 -0500
 In-Reply-To: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, martin.petersen@oracle.com
 Cc: giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |   55 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_bsg.h |   24 +++++++++++++++++
- drivers/scsi/qla2xxx/qla_def.h |    2 +
- drivers/scsi/qla2xxx/qla_fw.h  |    4 ++-
- drivers/scsi/qla2xxx/qla_mbx.c |    8 ++++++
- 5 files changed, 92 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 64fe17a..d135d6a 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -2181,6 +2181,58 @@ qla27xx_set_flash_upd_cap(struct fc_bsg_job *bsg_job)
- }
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 52a8765..a663ff6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2844,7 +2844,6 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ 	if (nv->login_timeout < 4)
+ 		nv->login_timeout = 4;
+ 	ha->login_timeout = nv->login_timeout;
+-	icb->login_timeout = nv->login_timeout;
  
- static int
-+qla27xx_get_bbcr_data(struct fc_bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = bsg_job->shost;
-+	scsi_qla_host_t *vha = shost_priv(host);
-+	struct qla_hw_data *ha = vha->hw;
-+	struct qla_bbcr_data bbcr;
-+	uint16_t loop_id, topo, sw_cap;
-+	uint8_t domain, area, al_pa, state;
-+	int rval;
-+
-+	if (!(IS_QLA27XX(ha)))
-+		return -EPERM;
-+
-+	memset(&bbcr, 0, sizeof(bbcr));
-+
-+	if (vha->flags.bbcr_enable)
-+		bbcr.status = QLA_BBCR_STATUS_ENABLED;
-+	else
-+		bbcr.status = QLA_BBCR_STATUS_DISABLED;
-+
-+	if (bbcr.status == QLA_BBCR_STATUS_ENABLED) {
-+		rval = qla2x00_get_adapter_id(vha, &loop_id, &al_pa,
-+			&area, &domain, &topo, &sw_cap);
-+		if (rval != QLA_SUCCESS)
-+			return -EIO;
-+
-+		state = (vha->bbcr >> 12) & 0x1;
-+
-+		if (state) {
-+			bbcr.state = QLA_BBCR_STATE_OFFLINE;
-+			bbcr.offline_reason_code = QLA_BBCR_REASON_LOGIN_REJECT;
-+		} else {
-+			bbcr.state = QLA_BBCR_STATE_ONLINE;
-+			bbcr.negotiated_bbscn = (vha->bbcr >> 8) & 0xf;
-+		}
-+
-+		bbcr.configured_bbscn = vha->bbcr & 0xf;
-+	}
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+		bsg_job->reply_payload.sg_cnt, &bbcr, sizeof(bbcr));
-+	bsg_job->reply->reply_payload_rcv_len = sizeof(bbcr);
-+
-+	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job->reply->result = DID_OK << 16;
-+	bsg_job->job_done(bsg_job);
-+	return 0;
-+}
-+
-+static int
- qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- {
- 	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
-@@ -2241,6 +2293,9 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 	case QL_VND_SET_FLASH_UPDATE_CAPS:
- 		return qla27xx_set_flash_upd_cap(bsg_job);
+ 	/* Set minimum RATOV to 100 tenths of a second. */
+ 	ha->r_a_tov = 100;
+@@ -5274,7 +5273,6 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 	if (le16_to_cpu(nv->login_timeout) < 4)
+ 		nv->login_timeout = cpu_to_le16(4);
+ 	ha->login_timeout = le16_to_cpu(nv->login_timeout);
+-	icb->login_timeout = nv->login_timeout;
  
-+	case QL_VND_GET_BBCR_DATA:
-+		return qla27xx_get_bbcr_data(bsg_job);
-+
- 	default:
- 		return -ENOSYS;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index 6c45bf4..4275177 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -27,6 +27,7 @@
- #define	QL_VND_SERDES_OP_EX	0x14
- #define QL_VND_GET_FLASH_UPDATE_CAPS    0x15
- #define QL_VND_SET_FLASH_UPDATE_CAPS    0x16
-+#define QL_VND_GET_BBCR_DATA    0x17
+ 	/* Set minimum RATOV to 100 tenths of a second. */
+ 	ha->r_a_tov = 100;
+@@ -6231,7 +6229,6 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	if (le16_to_cpu(nv->login_timeout) < 4)
+ 		nv->login_timeout = cpu_to_le16(4);
+ 	ha->login_timeout = le16_to_cpu(nv->login_timeout);
+-	icb->login_timeout = nv->login_timeout;
  
- /* BSG Vendor specific subcode returns */
- #define EXT_STATUS_OK			0
-@@ -239,4 +240,27 @@ struct qla_flash_update_caps {
- 	uint32_t  outage_duration;
- 	uint8_t   reserved[20];
- } __packed;
-+
-+/* BB_CR Status */
-+#define QLA_BBCR_STATUS_DISABLED       0
-+#define QLA_BBCR_STATUS_ENABLED        1
-+
-+/* BB_CR State */
-+#define QLA_BBCR_STATE_OFFLINE         0
-+#define QLA_BBCR_STATE_ONLINE          1
-+
-+/* BB_CR Offline Reason Code */
-+#define QLA_BBCR_REASON_PORT_SPEED     1
-+#define QLA_BBCR_REASON_PEER_PORT      2
-+#define QLA_BBCR_REASON_SWITCH         3
-+#define QLA_BBCR_REASON_LOGIN_REJECT   4
-+
-+struct  qla_bbcr_data {
-+	uint8_t   status;         /* 1 - enabled, 0 - Disabled */
-+	uint8_t   state;          /* 1 - online, 0 - offline */
-+	uint8_t   configured_bbscn;       /* 0-15 */
-+	uint8_t   negotiated_bbscn;       /* 0-15 */
-+	uint8_t   offline_reason_code;
-+	uint8_t   reserved[11];
-+} __packed;
- #endif
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 987480f..c4bd62a 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3583,6 +3583,7 @@ typedef struct scsi_qla_host {
- 		uint32_t	delete_progress:1;
- 
- 		uint32_t	fw_tgt_reported:1;
-+		uint32_t	bbcr_enable:1;
- 	} flags;
- 
- 	atomic_t	loop_state;
-@@ -3715,6 +3716,7 @@ typedef struct scsi_qla_host {
- 	atomic_t	vref_count;
- 	struct qla8044_reset_template reset_tmplt;
- 	struct qla_tgt_counters tgt_counters;
-+	uint16_t	bbcr;
- } scsi_qla_host_t;
- 
- struct qla27xx_image_status {
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 7f095e3..4c0f3a7 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1288,7 +1288,9 @@ struct vp_rpt_id_entry_24xx {
- 
- 	uint8_t vp_idx_map[16];
- 
--	uint8_t reserved_4[32];
-+	uint8_t reserved_4[28];
-+	uint16_t bbcr;
-+	uint8_t reserved_5[6];
- };
- 
- #define VF_EVFP_IOCB_TYPE       0x26    /* Exchange Virtual Fabric Parameters entry. */
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 87e6758..4433cfb 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1349,6 +1349,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
- 		mcp->in_mb |= MBX_13|MBX_12|MBX_11|MBX_10;
- 	if (IS_FWI2_CAPABLE(vha->hw))
- 		mcp->in_mb |= MBX_19|MBX_18|MBX_17|MBX_16;
-+	if (IS_QLA27XX(vha->hw))
-+		mcp->in_mb |= MBX_15;
- 	mcp->tov = MBX_TOV_SECONDS;
- 	mcp->flags = 0;
- 	rval = qla2x00_mailbox_command(vha, mcp);
-@@ -1400,6 +1402,9 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
- 				    wwn_to_u64(vha->port_name));
- 			}
- 		}
-+
-+		if (IS_QLA27XX(vha->hw))
-+			vha->bbcr = mcp->mb[15];
- 	}
- 
- 	return rval;
-@@ -3612,6 +3617,9 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
- 		    rptid_entry->port_id[0]);
- 
-+		/* buffer to buffer credit flag */
-+		vha->flags.bbcr_enable = (rptid_entry->bbcr & 0xf) != 0;
-+
- 		/* FA-WWN is only for physical port */
- 		if (!vp_idx) {
- 			void *wwpn = ha->init_cb->port_name;
+ 	/* Set minimum RATOV to 100 tenths of a second. */
+ 	ha->r_a_tov = 100;
 -- 
 1.7.7
 
