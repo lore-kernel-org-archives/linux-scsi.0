@@ -1,59 +1,62 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 03/22] scsi: Fix dependencies for !HAS_IOMEM and !HAS_DMA
- archs
-Date: Tue, 26 Jan 2016 10:54:58 +0000
-Message-ID: <56A75082.6050104@huawei.com>
-References: <1453760661-1444-1-git-send-email-richard@nod.at>
- <1453760661-1444-4-git-send-email-richard@nod.at>
- <56A74743.6000308@huawei.com> <56A74AF6.90307@nod.at>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
+Date: Tue, 26 Jan 2016 12:13:20 +0100
+Message-ID: <CAMuHMdWNRM88KQRLsKfzbNFJChjVu-jR26jr7S2193p2wRGNCg@mail.gmail.com>
+References: <20160103050501.042035135@telegraphics.com.au>
+	<20160103050510.031796194@telegraphics.com.au>
+	<CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com>
+	<alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
+	<CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+	<alpine.LNX.2.00.1601261117280.15080@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56A74AF6.90307@nod.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Richard Weinberger <richard@nod.at>, linux-kernel@vger.kernel.org
-Cc: user-mode-linux-devel@lists.sourceforge.net, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1601261117280.15080@nippy.intranet>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 26/01/2016 10:31, Richard Weinberger wrote:
-> Am 26.01.2016 um 11:15 schrieb John Garry:
->> On 25/01/2016 22:24, Richard Weinberger wrote:
->>> Not every arch has io or DMA memory.
->>> So, unbreak the build by fixing the dependencies.
->>>
->>> Signed-off-by: Richard Weinberger <richard@nod.at>
->>> ---
->>>    drivers/scsi/hisi_sas/Kconfig | 1 +
->>>    1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
->>> index 37a0c71..f9157f4 100644
->>> --- a/drivers/scsi/hisi_sas/Kconfig
->>> +++ b/drivers/scsi/hisi_sas/Kconfig
->>> @@ -2,5 +2,6 @@ config SCSI_HISI_SAS
->>>        tristate "HiSilicon SAS"
->>>        select SCSI_SAS_LIBSAS
->>>        select BLK_DEV_INTEGRITY
->>> +    depends on HAS_IOMEM && HAS_DMA
->>>        help
->>>            This driver supports HiSilicon's SAS HBA
->>>
+Hi Finn,
+
+On Tue, Jan 26, 2016 at 1:18 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> On Mon, 25 Jan 2016, Geert Uytterhoeven wrote:
+>> > In principle I think that Linux drivers should not carry workarounds
+>> > for emulators.
 >>
->> I think that there is already a fix for depencencies from Geert:
->> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/log/?h=fixes
+>> Please consider ARAnyM is the current m68k workhorse, so it would be
+>> nice to handle this someway.
 >
-> Hmm, right. But we still need HAS_IOMEM too.
->
-> Thanks,
-> //richard
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> AFAICT atari_scsi on aranym never did anything useful. Those aranym users
+> who need to run Linux 4.5 can set CONFIG_ATARI_SCSI=n or blacklist the
+> atari_scsi module (up until aranym can be patched).
 
-We can just add HAS_IOMEM dependency on the scsi fixes branch, ok?
+FTR. adding "initcall_blacklist=atari_scsi_driver_init" to the kernel command
+line makes it boot again.
 
-Cheers,
-John
+>> Alternatively, we need to fix ARAnyM,
+>
+> I'll look into writing a patch for the emulator after I've finished
+> testing the exception handling fixes for the driver.
+
+Thank you!
+
+>> or can make the creation of the atari_scsi platform device conditional
+>> on not running under ARAnyM.
+>
+> Fixing the emulator is the only sensible approach. If S operating systems
+> have to carry workarounds for B emulator bugs, the cost is (at least)
+> proportional to S * B.
+
+Sure.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
