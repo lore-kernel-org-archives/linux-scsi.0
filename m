@@ -1,52 +1,42 @@
-From: Richard Weinberger <richard@nod.at>
-Subject: [PATCH 03/22] scsi: Fix dependencies for !HAS_IOMEM and
-	!HAS_DMA archs
-Date: Mon, 25 Jan 2016 23:24:02 +0100
-Message-ID: <1453760661-1444-4-git-send-email-richard@nod.at>
-References: <1453760661-1444-1-git-send-email-richard@nod.at>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
+Date: Tue, 26 Jan 2016 11:18:18 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1601261117280.15080@nippy.intranet>
+References: <20160103050501.042035135@telegraphics.com.au> <20160103050510.031796194@telegraphics.com.au> <CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com> <alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
+ <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <user-mode-linux-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1453760661-1444-1-git-send-email-richard@nod.at>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-devel>,
-	<mailto:user-mode-linux-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=user-mode-linux-devel>
-List-Post: <mailto:user-mode-linux-devel@lists.sourceforge.net>
-List-Help: <mailto:user-mode-linux-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-devel>,
-	<mailto:user-mode-linux-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: user-mode-linux-devel-bounces@lists.sourceforge.net
-To: linux-kernel@vger.kernel.org
-Cc: John Garry <john.garry@huawei.com>, user-mode-linux-devel@lists.sourceforge.net, "Martin K. Petersen" <martin.petersen@oracle.com>, Richard Weinberger <richard@nod.at>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Not every arch has io or DMA memory.
-So, unbreak the build by fixing the dependencies.
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- drivers/scsi/hisi_sas/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+On Mon, 25 Jan 2016, Geert Uytterhoeven wrote:
 
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-index 37a0c71..f9157f4 100644
---- a/drivers/scsi/hisi_sas/Kconfig
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -2,5 +2,6 @@ config SCSI_HISI_SAS
- 	tristate "HiSilicon SAS"
- 	select SCSI_SAS_LIBSAS
- 	select BLK_DEV_INTEGRITY
-+	depends on HAS_IOMEM && HAS_DMA
- 	help
- 		This driver supports HiSilicon's SAS HBA
+> > In principle I think that Linux drivers should not carry workarounds 
+> > for emulators.
+> 
+> Please consider ARAnyM is the current m68k workhorse, so it would be 
+> nice to handle this someway.
+
+AFAICT atari_scsi on aranym never did anything useful. Those aranym users 
+who need to run Linux 4.5 can set CONFIG_ATARI_SCSI=n or blacklist the 
+atari_scsi module (up until aranym can be patched).
+
+> 
+> Alternatively, we need to fix ARAnyM,
+
+I'll look into writing a patch for the emulator after I've finished 
+testing the exception handling fixes for the driver.
+
+> or can make the creation of the atari_scsi platform device conditional 
+> on not running under ARAnyM.
+
+Fixing the emulator is the only sensible approach. If S operating systems 
+have to carry workarounds for B emulator bugs, the cost is (at least) 
+proportional to S * B.
+
 -- 
-1.8.4.5
-
-
-------------------------------------------------------------------------------
-Site24x7 APM Insight: Get Deep Visibility into Application Performance
-APM + Mobile APM + RUM: Monitor 3 App instances at just $35/Month
-Monitor end-to-end web transactions and take corrective actions now
-Troubleshoot faster and improve end-user experience. Signup Now!
-http://pubads.g.doubleclick.net/gampad/clk?id=267308311&iu=/4140
