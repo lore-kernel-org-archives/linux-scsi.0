@@ -1,42 +1,44 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v4 34/78] atari_NCR5380: Use arbitration timeout
-Date: Tue, 26 Jan 2016 11:18:18 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1601261117280.15080@nippy.intranet>
-References: <20160103050501.042035135@telegraphics.com.au> <20160103050510.031796194@telegraphics.com.au> <CAMuHMdXKDwfEE0J2xjan2vhO3gyfBwaeRMa3Vh4-ewUrW61pvA@mail.gmail.com> <alpine.LNX.2.00.1601251109090.24503@nippy.intranet>
- <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdVevVnEa=ZgThGMObv--5zoOxvXXEPP9fe00Z1sPQHbhQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] ncr5380: Don't re-enter NCR5380_select() when aborting a command
+Date: Tue, 26 Jan 2016 13:31:14 +1100
+Message-ID: <20160126023113.571639451@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-dont-reenter-NCR5380_select
+Sender: linux-m68k-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Fixes: 707d62b37fbb ("ncr5380: Fix EH during arbitration and selection")
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-On Mon, 25 Jan 2016, Geert Uytterhoeven wrote:
+---
+ drivers/scsi/NCR5380.c       |    2 +-
+ drivers/scsi/atari_NCR5380.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> > In principle I think that Linux drivers should not carry workarounds 
-> > for emulators.
-> 
-> Please consider ARAnyM is the current m68k workhorse, so it would be 
-> nice to handle this someway.
-
-AFAICT atari_scsi on aranym never did anything useful. Those aranym users 
-who need to run Linux 4.5 can set CONFIG_ATARI_SCSI=n or blacklist the 
-atari_scsi module (up until aranym can be patched).
-
-> 
-> Alternatively, we need to fix ARAnyM,
-
-I'll look into writing a patch for the emulator after I've finished 
-testing the exception handling fixes for the driver.
-
-> or can make the creation of the atari_scsi platform device conditional 
-> on not running under ARAnyM.
-
-Fixing the emulator is the only sensible approach. If S operating systems 
-have to carry workarounds for B emulator bugs, the cost is (at least) 
-proportional to S * B.
-
--- 
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-01-26 13:31:10.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-01-26 13:31:10.000000000 +1100
+@@ -2337,7 +2337,7 @@ static int NCR5380_abort(struct scsi_cmn
+ 		dsprintk(NDEBUG_ABORT, instance,
+ 		         "abort: removed %p from disconnected list\n", cmd);
+ 		cmd->result = DID_ERROR << 16;
+-		if (!hostdata->connected)
++		if (!hostdata->connected && !hostdata->selecting)
+ 			NCR5380_select(instance, cmd);
+ 		if (hostdata->connected != cmd) {
+ 			complete_cmd(instance, cmd);
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-26 13:31:10.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-01-26 13:31:10.000000000 +1100
+@@ -2532,7 +2532,7 @@ static int NCR5380_abort(struct scsi_cmn
+ 		dsprintk(NDEBUG_ABORT, instance,
+ 		         "abort: removed %p from disconnected list\n", cmd);
+ 		cmd->result = DID_ERROR << 16;
+-		if (!hostdata->connected)
++		if (!hostdata->connected && !hostdata->selecting)
+ 			NCR5380_select(instance, cmd);
+ 		if (hostdata->connected != cmd) {
+ 			complete_cmd(instance, cmd);
