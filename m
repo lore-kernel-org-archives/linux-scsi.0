@@ -1,79 +1,50 @@
-From: Vlastimil Babka <vbabka@suse.cz>
-Subject: Re: mm: VM_BUG_ON_PAGE(PageTail(page)) in mbind
-Date: Tue, 26 Jan 2016 22:37:35 +0100
-Message-ID: <56A7E71F.4060905@suse.cz>
-References: <CACT4Y+YK7or=W4RGpv1k1T5-xDHu3_PPVZWqsQU6nWoArsV5vA@mail.gmail.com>
- <20160126202829.GA21250@node.shutemov.name>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111341] New: Firmware loader
+Date: Tue, 26 Jan 2016 23:17:35 +0000
+Message-ID: <bug-111341-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53123 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:57583 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751372AbcAZVhm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jan 2016 16:37:42 -0500
-In-Reply-To: <20160126202829.GA21250@node.shutemov.name>
+	id S1751859AbcAZXRj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jan 2016 18:17:39 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9015B2027D
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2016 23:17:37 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id F1C022026D
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Jan 2016 23:17:35 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kirill A. Shutemov" <kirill@shutemov.name>, Dmitry Vyukov <dvyukov@google.com>, Doug Gilbert <dgilbert@interlog.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>
-Cc: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Shiraz Hashim <shashim@codeaurora.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Hugh Dickins <hughd@google.com>, Sasha Levin <sasha.levin@oracle.com>, syzkaller <syzkaller@googlegroups.com>, Kostya Serebryany <kcc@google.com>, Alexander Potapenko <glider@google.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 26.1.2016 21:28, Kirill A. Shutemov wrote:
-> From 396ad132be07a2d2b9ec5d1d6ec9fe2fffe8105e Mon Sep 17 00:00:00 2001
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> Date: Tue, 26 Jan 2016 22:59:16 +0300
-> Subject: [PATCH] sg: mark VMA as VM_IO to prevent migration
-> 
-> Reduced testcase:
-> 
-> 	#include <fcntl.h>
-> 	#include <unistd.h>
-> 	#include <sys/mman.h>
-> 	#include <numaif.h>
-> 
-> 	#define SIZE 0x2000
-> 
-> 	int main()
-> 	{
-> 		int fd;
-> 		void *p;
-> 
-> 		fd = open("/dev/sg0", O_RDWR);
-> 		p = mmap(NULL, SIZE, PROT_EXEC, MAP_PRIVATE | MAP_LOCKED, fd, 0);
-> 		mbind(p, SIZE, 0, NULL, 0, MPOL_MF_MOVE);
-> 		return 0;
-> 	}
-> 
-> We shouldn't try to migrate pages in sg VMA as we don't have a way to
-> update Sg_scatter_hold::pages accordingly from mm core.
-> 
-> Let's mark the VMA as VM_IO to indicate to mm core that the VMA is
-> migratable.
+https://bugzilla.kernel.org/show_bug.cgi?id=111341
 
- ^ not migratable.
+            Bug ID: 111341
+           Summary: Firmware loader
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.5_rc1
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: walter.moeller@moeller-it.net
+        Regression: No
 
-Acked-by: Vlastimil Babka <vbabka@suse.cz>
+Intel driver HDD ahci c600 /sas /sata build in kernel does not build in
+firmware.
 
+kernel 4.4.0 ist ok
 
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> ---
->  drivers/scsi/sg.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 503ab8b46c0b..5e820674432c 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1261,7 +1261,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
->  	}
->  
->  	sfp->mmap_called = 1;
-> -	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
-> +	vma->vm_flags |= VM_IO | VM_DONTEXPAND | VM_DONTDUMP;
->  	vma->vm_private_data = sfp;
->  	vma->vm_ops = &sg_mmap_vm_ops;
->  	return 0;
-> 
+regards
 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
