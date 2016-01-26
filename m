@@ -1,39 +1,53 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH-v2 1/3] target: Fix LUN_RESET active I/O handling for
-	ACK_KREF
-Date: Tue, 26 Jan 2016 18:19:00 +0100
-Message-ID: <20160126171900.GA3663@lst.de>
-References: <1453513067-23169-1-git-send-email-nab@daterainc.com> <1453513067-23169-2-git-send-email-nab@daterainc.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] hisi_sas: fix v1 hw check for slot error
+Date: Wed, 27 Jan 2016 01:31:17 +0800
+Message-ID: <1453829477-40725-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1453513067-23169-2-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:62596 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966846AbcAZRVJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2016 12:21:09 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@odin.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ricardo.salveti@linaro.org, John Garry <john.garry@huawei.com>
 
-> +static bool __target_check_io_state(struct se_cmd *se_cmd)
-> +{
-> +	struct se_session *sess = se_cmd->se_sess;
-> +
-> +	assert_spin_locked(&se_session->sess_cmd_lock);
-> +	WARN_ON_ONCE(!irqs_disabled());
+Completion header bit CMPLT_HDR_RSPNS_XFRD flags
+whether the response frame is received into host memory,
+and not whether the response frame has an error.
+As such, change the decision on whether a slot has
+an error.
+Also redundant check on CMPLT_HDR_CMD_CMPLT_MSK is
+removed.
 
-Btw, I looked a the code and can't really see what sess_cmd_lock is
-supposed to protect here.
+Fixes: 27a3f229 ("hisi_sas: Add cq interrupt handler")
 
-> +		sess = cmd->se_sess;
-> +		if (WARN_ON_ONCE(!sess))
-> +			continue;
-> +
-> +		spin_lock(&sess->sess_cmd_lock);
-> +		rc = __target_check_io_state(cmd);
-> +		spin_unlock(&sess->sess_cmd_lock);
-> +		if (!rc) {
-> +			printk("LUN_RESET I/O: non-zero kref_get_unless_zero\n");
-> +			continue;
-> +		}
+Signed-off-by: John Garry <john.garry@huawei.com>
+Tested-by: Ricardo Salveti <ricardo.salveti@linaro.org>
 
-And thus why we care about taking it here.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 057fdeb..eea24d7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1289,13 +1289,10 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+ 		goto out;
+ 	}
+ 
+-	if (cmplt_hdr_data & CMPLT_HDR_ERR_RCRD_XFRD_MSK) {
+-		if (!(cmplt_hdr_data & CMPLT_HDR_CMD_CMPLT_MSK) ||
+-		    !(cmplt_hdr_data & CMPLT_HDR_RSPNS_XFRD_MSK))
+-			ts->stat = SAS_DATA_OVERRUN;
+-		else
+-			slot_err_v1_hw(hisi_hba, task, slot);
++	if (cmplt_hdr_data & CMPLT_HDR_ERR_RCRD_XFRD_MSK &&
++		!(cmplt_hdr_data & CMPLT_HDR_RSPNS_XFRD_MSK)) {
+ 
++		slot_err_v1_hw(hisi_hba, task, slot);
+ 		goto out;
+ 	}
+ 
+-- 
+1.9.1
+
