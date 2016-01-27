@@ -1,48 +1,67 @@
-From: Sathya Prakash <sathya.prakash@avagotech.com>
-Subject: RE: [PATCH v3] mptlan: add checks for dma mapping errors
-Date: Tue, 26 Jan 2016 22:44:21 -0700
-Message-ID: <ef60565bb858fae9ddede39bbf1ebd73@mail.gmail.com>
-References: <56A6568B.9020707@ispras.ru>	<1453744944-4065-1-git-send-email-khoroshilov@ispras.ru>
-	<56A79FD3.2060200@redhat.com> <yq1pownhibu.fsf@sermon.lab.mkp.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 11/12] xen-scsiback: Convert to percpu_ida tag
+ allocation
+Date: Tue, 26 Jan 2016 22:28:10 -0800
+Message-ID: <1453876090.6746.123.camel@haakon3.risingtidesystems.com>
+References: <1453709466-6308-1-git-send-email-nab@daterainc.com>
+	 <1453709466-6308-12-git-send-email-nab@daterainc.com>
+	 <56A7401E.7070005@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1pownhibu.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <56A7401E.7070005@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Juergen Gross <jgross@suse.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, David Vrabel <david.vrabel@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There is no fusion based network card and resources exists today in
-Avago(LSI) to test this patch so we prefer to leave it as is. We would
-like to prevent any new changes on MPT (FC/SCSI/SAS/LAN) drivers as we
-don't have support for those cards anymore,  is there a way we could
-remove those drivers from newer kernels or mark them as unmaintained?.
+On Tue, 2016-01-26 at 10:45 +0100, Juergen Gross wrote:
+> On 25/01/16 09:11, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Cc: Juergen Gross <jgross@suse.com>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: David Vrabel <david.vrabel@citrix.com>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/xen/xen-scsiback.c | 163 ++++++++++++++++++++++++---------------------
+> >  1 file changed, 87 insertions(+), 76 deletions(-)
+> > 
+> > diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> > index 594f8a7..640fb22 100644
+> > --- a/drivers/xen/xen-scsiback.c
+> > +++ b/drivers/xen/xen-scsiback.c
+> > @@ -190,7 +190,6 @@ module_param_named(max_buffer_pages, scsiback_max_buffer_pages, int, 0644);
+> >  MODULE_PARM_DESC(max_buffer_pages,
+> >  "Maximum number of free pages to keep in backend buffer");
+> >  
+> > -static struct kmem_cache *scsiback_cachep;
+> >  static DEFINE_SPINLOCK(free_pages_lock);
+> >  static int free_pages_num;
+> >  static LIST_HEAD(scsiback_free_pages);
+> > @@ -322,7 +321,8 @@ static void scsiback_free_translation_entry(struct kref *kref)
+> >  }
+> >  
+> >  static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
+> > -			uint32_t resid, struct vscsibk_pend *pending_req)
+> > +			uint32_t resid, struct vscsibk_pend *pending_req,
+> > +			uint16_t rqid)
+> >  {
+> >  	struct vscsiif_response *ring_res;
+> >  	struct vscsibk_info *info = pending_req->info;
+> 
+> pending_req might be NULL now, so this will panic the system.
+> 
 
-Thanks
-Sathya
+Thanks for the review.
 
------Original Message-----
-From: mpt-fusionlinux.pdl@avagotech.com
-[mailto:mpt-fusionlinux.pdl@avagotech.com] On Behalf Of Martin K. Petersen
-Sent: Tuesday, January 26, 2016 7:23 PM
-To: Tomas Henzl
-Cc: Alexey Khoroshilov; Sreekanth Reddy;
-MPT-FusionLinux.pdl@avagotech.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; ldv-project@linuxtesting.org
-Subject: Re: [PATCH v3] mptlan: add checks for dma mapping errors
+Added the following to propagate up original *info into
+scsiback_do_resp_with_sense() to address the early pending_req
+failure case.
 
->>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
+https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=queue-next&id=5873f22a9b7c7aa16ff9a85074a07b739f1d06a5
 
-Tomas> Other than that - previous patch for this driver came in in 2010
-Tomas> - six years ago and the driver seems unmaintained now.  I'm not
-Tomas> sure if we should fix hw we can't test and when there is not an
-Tomas> user bug report. This example nicely shows how easy it is to add
-Tomas> new bugs even when a fix looks trivial.
+Will plan to fold into the original for -v3 code.
 
-Yeah, I'm inclined to leave it as is.
-
-If somebody provides a Tested-by: I'll reconsider.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks Juergen!
