@@ -1,121 +1,86 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH-v2 11/12] xen-scsiback: Convert to percpu_ida tag
- allocation
-Date: Wed, 27 Jan 2016 11:57:39 +0100
-Message-ID: <56A8A2A3.30407@suse.com>
-References: <1453709466-6308-1-git-send-email-nab@daterainc.com>
- <1453709466-6308-12-git-send-email-nab@daterainc.com>
- <56A7401E.7070005@suse.com>
- <1453876090.6746.123.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1453876090.6746.123.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, David Vrabel <david.vrabel@citrix.com>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] SCSI: Add Marvell Console to VPD blacklist
+Date: Wed, 27 Jan 2016 16:19:13 +0200
+Message-ID: <1453904353-42756-1-git-send-email-mika.westerberg@linux.intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:23445 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932555AbcA0OTV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jan 2016 09:19:21 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-scsi@vger.kernel.org
 
-On 27/01/16 07:28, Nicholas A. Bellinger wrote:
-> On Tue, 2016-01-26 at 10:45 +0100, Juergen Gross wrote:
->> On 25/01/16 09:11, Nicholas A. Bellinger wrote:
->>> From: Nicholas Bellinger <nab@linux-iscsi.org>
->>>
->>> Cc: Juergen Gross <jgross@suse.com>
->>> Cc: Hannes Reinecke <hare@suse.de>
->>> Cc: David Vrabel <david.vrabel@citrix.com>
->>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
->>> ---
->>>  drivers/xen/xen-scsiback.c | 163 ++++++++++++++++++++++++---------------------
->>>  1 file changed, 87 insertions(+), 76 deletions(-)
->>>
->>> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
->>> index 594f8a7..640fb22 100644
->>> --- a/drivers/xen/xen-scsiback.c
->>> +++ b/drivers/xen/xen-scsiback.c
->>> @@ -190,7 +190,6 @@ module_param_named(max_buffer_pages, scsiback_max_buffer_pages, int, 0644);
->>>  MODULE_PARM_DESC(max_buffer_pages,
->>>  "Maximum number of free pages to keep in backend buffer");
->>>  
->>> -static struct kmem_cache *scsiback_cachep;
->>>  static DEFINE_SPINLOCK(free_pages_lock);
->>>  static int free_pages_num;
->>>  static LIST_HEAD(scsiback_free_pages);
->>> @@ -322,7 +321,8 @@ static void scsiback_free_translation_entry(struct kref *kref)
->>>  }
->>>  
->>>  static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
->>> -			uint32_t resid, struct vscsibk_pend *pending_req)
->>> +			uint32_t resid, struct vscsibk_pend *pending_req,
->>> +			uint16_t rqid)
->>>  {
->>>  	struct vscsiif_response *ring_res;
->>>  	struct vscsibk_info *info = pending_req->info;
->>
->> pending_req might be NULL now, so this will panic the system.
->>
-> 
-> Thanks for the review.
-> 
-> Added the following to propagate up original *info into
-> scsiback_do_resp_with_sense() to address the early pending_req
-> failure case.
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=queue-next&id=5873f22a9b7c7aa16ff9a85074a07b739f1d06a5
+I have a Marvell 88SE9230 SATA Controller that has some sort of
+integrated console SCSI device attached to one of the ports.
 
-Hmm, wouldn't it make more sense to split scsiback_do_resp_with_sense()
-into two functions now? Something like:
+  ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+  ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
+  ata14.00: configured for UDMA/66
+  scsi 13:0:0:0: Processor         Marvell  Console 1.01 PQ: 0 ANSI: 5
 
+Sending it VPD INQUIRY command seem to always fail with following error:
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index ad4eb10..0d71467 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -321,11 +321,10 @@ static void scsiback_free_translation_entry(struct
-kref *kref)
-        kfree(entry);
- }
+  ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+  ata14.00: irq_stat 0x40000001
+  ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 2 dma 16640 in
+            Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
+  ata14: hard resetting link
 
--static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
--                       uint32_t resid, struct vscsibk_pend *pending_req)
-+static void scsiback_send_response(struct vscsibk_info *info,
-+       char *sense_buffer, int32_t result, uint32_t resid, uint16_t rqid)
- {
-        struct vscsiif_response *ring_res;
--       struct vscsibk_info *info = pending_req->info;
-        int notify;
-        struct scsi_sense_hdr sshdr;
-        unsigned long flags;
-@@ -337,7 +336,7 @@ static void scsiback_do_resp_with_sense(char
-*sense_buffer, int32_t result,
-        info->ring.rsp_prod_pvt++;
+This has been minor annoyance (only error printed on dmesg) until commit
+09e2b0b14690 ("scsi: rescan VPD attributes") added call to scsi_attach_vpd()
+in scsi_rescan_device(). The commit causes the system to splat out
+following errors continuously without ever reaching the UI:
 
-        ring_res->rslt   = result;
--       ring_res->rqid   = pending_req->rqid;
-+       ring_res->rqid   = rqid;
+  ata14.00: configured for UDMA/66
+  ata14: EH complete
+  ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+  ata14.00: irq_stat 0x40000001
+  ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 6 dma 16640 in
+            Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
+  ata14: hard resetting link
+  ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+  ata14.00: configured for UDMA/66
+  ata14: EH complete
+  ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+  ata14.00: irq_stat 0x40000001
+  ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 7 dma 16640 in
+            Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
 
-        if (sense_buffer != NULL &&
-            scsi_normalize_sense(sense_buffer, VSCSIIF_SENSE_BUFFERSIZE,
-@@ -357,6 +356,13 @@ static void scsiback_do_resp_with_sense(char
-*sense_buffer, int32_t result,
+Without in-depth understanding of SCSI layer and the Marvell controller, I
+suspect this happens because when the link goes down (because of an error)
+we schedule scsi_rescan_device() which again fails to read VPD data... ad
+infinitum.
 
-        if (notify)
-                notify_remote_via_irq(info->irq);
-+}
-+
-+static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
-+                       uint32_t resid, struct vscsibk_pend *pending_req)
-+{
-+       scsiback_send_response(pending_req->info, sense_buffer, result,
-+                              resid, pending_req->rqid);
+Since VPD data cannot be read from the device anyway we prevent the SCSI
+layer from even trying by blacklisting the device. This gets away the error
+and the system starts up normally.
 
-        if (pending_req->v2p)
-                kref_put(&pending_req->v2p->kref,
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Hannes Reinecke <hare@suse.de>
+---
+I'm not sure if this is most ideal fix. Comment on top of
+scsi_static_device_list[] says that the list is going away eventually and
+suggest me to use command line instead. I can do that but then everyone
+else having similar device will need to do the same to get rid of the boot
+failure.
 
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-And then call scsiback_send_response() directly in case pending_req
-is NULL.
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 47b9d13..350cbed 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -205,6 +205,7 @@ static struct {
+ 	{"Intel", "Multi-Flex", NULL, BLIST_NO_RSOC},
+ 	{"iRiver", "iFP Mass Driver", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
++	{"Marvell", "Console", "1.01", BLIST_SKIP_VPD_PAGES},
+ 	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+-- 
+2.5.0
 
-
-Juergen
