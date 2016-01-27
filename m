@@ -1,40 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v3] mptlan: add checks for dma mapping errors
-Date: Wed, 27 Jan 2016 08:23:41 -0800
-Message-ID: <1453911821.2322.13.camel@HansenPartnership.com>
-References: <56A6568B.9020707@ispras.ru>
-	 <1453744944-4065-1-git-send-email-khoroshilov@ispras.ru>
-	 <56A79FD3.2060200@redhat.com> <yq1pownhibu.fsf@sermon.lab.mkp.net>
-	 <ef60565bb858fae9ddede39bbf1ebd73@mail.gmail.com>
-	 <56A8ECCD.2010102@redhat.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: UFS Help: OCS is returning invalid (0x7)
+Date: Wed, 27 Jan 2016 16:58:23 +0000
+Message-ID: <56A8F72F.40302@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56A8ECCD.2010102@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, Sathya Prakash <sathya.prakash@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:54987 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485AbcA0Q62 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2016 11:58:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akinobu.mita@gmail.com, hch@infradead.org, ygardi@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
 
-On Wed, 2016-01-27 at 17:14 +0100, Tomas Henzl wrote:
-> On 27.1.2016 06:44, Sathya Prakash wrote:
-> > There is no fusion based network card and resources exists today in
-> > Avago(LSI) to test this patch so we prefer to leave it as is. We
-> > would
-> > like to prevent any new changes on MPT (FC/SCSI/SAS/LAN) drivers as
-> > we
-> > don't have support for those cards anymore,  is there a way we
-> > could
-> > remove those drivers from newer kernels or mark them as
-> > unmaintained?.
-> 
-> There still are users of some of those drivers (mptsas for example)
-> in certain distributions, so even if in fact they aren't
-> directly maintained, we should keep them in mainline.
+Hi!
+I am currently working in the implementation of DesignWare Quirks in the
+existing UFS core and implementing a glue platform driver.
+The project status is the following:
 
-Agreed: the last gen PA-RISC has a mptspi controller ... they'd get a
-bit annoyed if we remove it because they wouldn't be able to update
-their build machines to newer kernels.
+- Synopsys MPHY Test Chip is well configured
+- Link is up in Host & Device (validated through the 0xd083 register)
+- Additional connection setup are made successfully
+- HBA is operational
+- NOP_OUT is failing with OCS = 0x7
 
-James
+The OCS value is calculated in ufshcd_get_tr_ocs() in ufshcd.c.
+I made a dump of the UTRD pointer where we can check the status = 7 ([2]).
+
+UTRD at: 7007c3e0
+@0000 [0]:21000000
+@0004 [1]:93936a6a
+@0008 [2]:00000007
+@000c [3]:93936a6a
+@0010 [4]:9f317400
+@0014 [5]:00000000
+@0018 [6]:00800080
+@001c [7]:01006a6a
+
+Did anyone have the same problem? Any hints to overcome this issue?
+
+Thank you very much for your help!
+
+Joao
