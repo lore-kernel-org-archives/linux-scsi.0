@@ -1,49 +1,72 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 4/7] scsi: fas216: avoid fas216_log_setup for loadable module
-Date: Wed, 27 Jan 2016 16:57:20 +0100
-Message-ID: <1453910247-3447628-5-git-send-email-arnd@arndb.de>
+Subject: [PATCH 5/7] scsi: qla4xxx: shut up warning for rd_reg_indirect
+Date: Wed, 27 Jan 2016 16:57:21 +0100
+Message-ID: <1453910247-3447628-6-git-send-email-arnd@arndb.de>
 References: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, James.Bottomley@HansenPartnership.com
-Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, Russell King <linux@arm.linux.org.uk>, linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, QLogic-Storage-Upstream@qlogic.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We get a warning for the fas216 driver when it is compiled as
-a loadable module, as the __setup() functions are never called
-then:
+The qla4_83xx_rd_reg_indirect() function can fail when it is unable
+to read a register, but not all callers check its return value before
+using the register data, and gcc correctly warns about this:
 
-scsi/arm/fas216.c:101:19: warning: 'fas216_log_setup' defined but not used [-Wunused-function]
- static int __init fas216_log_setup(char *str)
+qla4xxx/ql4_83xx.c: In function 'qla4_83xx_process_reset_template':
+qla4xxx/ql4_83xx.c:1073:36: warning: 'value' may be used uninitialized in this function
+     ha->reset_tmplt.array[index++] = value;
+                                    ^
+qla4xxx/ql4_83xx.c:1050:11: note: 'value' was declared here
+  uint32_t value;
+           ^
+qla4xxx/ql4_83xx.c:902:8: warning: 'value' may be used uninitialized in this function
+  value &= p_rmw_hdr->test_mask;
+        ^
+qla4xxx/ql4_83xx.c:895:11: note: 'value' was declared here
+  uint32_t value;
+           ^
+In file included from ../include/linux/io.h:25:0,
+                 from ../include/linux/pci.h:31,
+                 from ../drivers/scsi/qla4xxx/ql4_def.h:16,
+                 from ../drivers/scsi/qla4xxx/ql4_83xx.c:10:
+asm/io.h:101:2: warning: 'value' may be used uninitialized in this function
+  asm volatile("str %1, %0"
+  ^
+qla4xxx/ql4_83xx.c:874:11: note: 'value' was declared here
+  uint32_t value;
+           ^
 
-This adds an #ifndef MODULE around the definition to shut up
-the warning and clarify for the reader when it is used or not.
+Unfortunately, I don't see any helpful way to add proper error handling
+for this case, and the failure scenario for rd_reg seems rather obscure,
+so this bails out and makes the rd_reg accessor set the result to 0xffffffff
+so we at least get a predictable value.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/arm/fas216.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qla4xxx/ql4_83xx.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index decdc71b6b86..24388795ee9a 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -98,6 +98,7 @@ static int level_mask = LOG_ERROR;
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index 5d4f8e67fb25..638f72c5ab05 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -46,11 +46,13 @@ int qla4_83xx_rd_reg_indirect(struct scsi_qla_host *ha, uint32_t addr,
  
- module_param(level_mask, int, 0644);
+ 	ret_val = qla4_83xx_set_win_base(ha, addr);
  
-+#ifndef MODULE
- static int __init fas216_log_setup(char *str)
- {
- 	char *s;
-@@ -138,6 +139,7 @@ static int __init fas216_log_setup(char *str)
+-	if (ret_val == QLA_SUCCESS)
++	if (ret_val == QLA_SUCCESS) {
+ 		*data = qla4_83xx_rd_reg(ha, QLA83XX_WILDCARD);
+-	else
++	} else {
++		*data = 0xffffffff;
+ 		ql4_printk(KERN_ERR, ha, "%s: failed read of addr 0x%x!\n",
+ 			   __func__, addr);
++	}
+ 
+ 	return ret_val;
  }
- 
- __setup("fas216_logging=", fas216_log_setup);
-+#endif
- 
- static inline unsigned char fas216_readb(FAS216_Info *info, unsigned int reg)
- {
 -- 
 2.7.0
