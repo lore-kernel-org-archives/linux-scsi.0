@@ -1,24 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] be2iscsi: add checks for dma mapping errors
-Date: Tue, 26 Jan 2016 20:46:21 -0500
-Message-ID: <yq1si1jiyky.fsf@sermon.lab.mkp.net>
-References: <1452894334-8984-1-git-send-email-khoroshilov@ispras.ru>
+Subject: Re: [PATCH 00/11] qla2xxx: Patches for scsi "misc" branch.
+Date: Tue, 26 Jan 2016 20:50:27 -0500
+Message-ID: <yq1oac7iye4.fsf@sermon.lab.mkp.net>
+References: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1452894334-8984-1-git-send-email-khoroshilov@ispras.ru> (Alexey
-	Khoroshilov's message of "Sat, 16 Jan 2016 00:45:34 +0300")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:26232 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbcA0Bud (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2016 20:50:33 -0500
+In-Reply-To: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
+	(Himanshu Madhani's message of "Tue, 26 Jan 2016 12:10:35 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: martin.petersen@oracle.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
->>>>> "Alexey" == Alexey Khoroshilov <khoroshilov@ispras.ru> writes:
+>>>>> "Himanshu" == Himanshu Madhani <himanshu.madhani@qlogic.com> writes:
 
-Alexey> hwi_write_buffer() does not check if mapping dma memory succeed.
-Alexey> The patch adds the check and failure handling.
+Himanshu> Please apply following patches to the scsi tree, misc branch
+Himanshu> at your earliest convenience.
 
-Applied to 4.6/scsi-queue.
+Please fix kbuild warnings and repost.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
