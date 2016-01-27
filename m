@@ -1,28 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: Remove redundant code block in lpfc_scsi_cmd_iocb_cmpl
-Date: Tue, 26 Jan 2016 21:33:43 -0500
-Message-ID: <yq1d1snhhtk.fsf@sermon.lab.mkp.net>
-References: <1453302520-10499-1-git-send-email-jthumshirn@suse.de>
+Subject: Re: [PATCH V3 7/9] aacraid: Fix AIF triggered IOP_RESET
+Date: Tue, 26 Jan 2016 21:31:27 -0500
+Message-ID: <yq1h9hzhhxc.fsf@sermon.lab.mkp.net>
+References: <1452842182-684-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	<1452842182-684-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	<569E60E4.4000903@redhat.com>
+	<198D06D448A18D4E93F08FB849C4E39D7D1F6AA9@BBYEXM01.pmc-sierra.internal>
+	<56A22B49.1040702@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453302520-10499-1-git-send-email-jthumshirn@suse.de> (Johannes
-	Thumshirn's message of "Wed, 20 Jan 2016 16:08:40 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25309 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670AbcA0Cgk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2016 21:36:40 -0500
+In-Reply-To: <56A22B49.1040702@redhat.com> (Tomas Henzl's message of "Fri, 22
+	Jan 2016 14:14:49 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Scott Benesh <Scott.Benesh@pmcs.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "shane.seymour@hpe.com" <shane.seymour@hpe.com>, zzzDavid Carroll <David.Carroll@pmcs.com>
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
 
-Johannes> This removes a redundant code block that will either be
-Johannes> executed if the ENABLE_FCP_RING_POLLING flag is set in
-Johannes> phba->cfg_poll or not. The code is just duplicated in both
-Johannes> cases, hence we unify it again.
+>> 2.Since commands are sync , place a check in aac_fib_send to block
+>> commands once adapter_shutdown is set(only shutdown command will be
+>> sent thru)
 
-Johannes> This probably is a left over from some sort of refactoring.
+Tomas> This option looks better but I guess you still can find a tiny
+Tomas> race window.  What do you think about a mutual exclusive access
+Tomas> using a mutex, do you think this could work?
 
-James/Dick: Please review.
+[...]
+
+Raghava?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
