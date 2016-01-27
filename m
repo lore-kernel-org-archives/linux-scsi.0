@@ -1,72 +1,44 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 5/7] scsi: qla4xxx: shut up warning for rd_reg_indirect
-Date: Wed, 27 Jan 2016 16:57:21 +0100
-Message-ID: <1453910247-3447628-6-git-send-email-arnd@arndb.de>
+Subject: [PATCH 6/7] scsi: aha1542: avoid uninitialized variable warnings
+Date: Wed, 27 Jan 2016 16:57:22 +0100
+Message-ID: <1453910247-3447628-7-git-send-email-arnd@arndb.de>
 References: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, James.Bottomley@HansenPartnership.com
-Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, QLogic-Storage-Upstream@qlogic.com, linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The qla4_83xx_rd_reg_indirect() function can fail when it is unable
-to read a register, but not all callers check its return value before
-using the register data, and gcc correctly warns about this:
+Gcc incorrectly detects that two variables in aha1542_queuecommand might
+be used without an initialization:
 
-qla4xxx/ql4_83xx.c: In function 'qla4_83xx_process_reset_template':
-qla4xxx/ql4_83xx.c:1073:36: warning: 'value' may be used uninitialized in this function
-     ha->reset_tmplt.array[index++] = value;
-                                    ^
-qla4xxx/ql4_83xx.c:1050:11: note: 'value' was declared here
-  uint32_t value;
-           ^
-qla4xxx/ql4_83xx.c:902:8: warning: 'value' may be used uninitialized in this function
-  value &= p_rmw_hdr->test_mask;
-        ^
-qla4xxx/ql4_83xx.c:895:11: note: 'value' was declared here
-  uint32_t value;
-           ^
-In file included from ../include/linux/io.h:25:0,
-                 from ../include/linux/pci.h:31,
-                 from ../drivers/scsi/qla4xxx/ql4_def.h:16,
-                 from ../drivers/scsi/qla4xxx/ql4_83xx.c:10:
-asm/io.h:101:2: warning: 'value' may be used uninitialized in this function
-  asm volatile("str %1, %0"
-  ^
-qla4xxx/ql4_83xx.c:874:11: note: 'value' was declared here
-  uint32_t value;
-           ^
+scsi/aha1542.c: In function 'aha1542_queuecommand':
+scsi/aha1542.c:382:16: error: 'cptr' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+scsi/aha1542.c:379:11: error: 'sg_count' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Unfortunately, I don't see any helpful way to add proper error handling
-for this case, and the failure scenario for rd_reg seems rather obscure,
-so this bails out and makes the rd_reg accessor set the result to 0xffffffff
-so we at least get a predictable value.
+The only user of these is doing the same check that the assigment
+has, so it is actually guaranteed to work. Adding an "else" clause
+with a fake initialization shuts up the warning.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/qla4xxx/ql4_83xx.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/aha1542.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
-index 5d4f8e67fb25..638f72c5ab05 100644
---- a/drivers/scsi/qla4xxx/ql4_83xx.c
-+++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-@@ -46,11 +46,13 @@ int qla4_83xx_rd_reg_indirect(struct scsi_qla_host *ha, uint32_t addr,
- 
- 	ret_val = qla4_83xx_set_win_base(ha, addr);
- 
--	if (ret_val == QLA_SUCCESS)
-+	if (ret_val == QLA_SUCCESS) {
- 		*data = qla4_83xx_rd_reg(ha, QLA83XX_WILDCARD);
--	else
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 5b8b2937a3fe..7db448ec8beb 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -403,6 +403,9 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 		cptr = kmalloc(sizeof(*cptr) * sg_count, GFP_KERNEL | GFP_DMA);
+ 		if (!cptr)
+ 			return SCSI_MLQUEUE_HOST_BUSY;
 +	} else {
-+		*data = 0xffffffff;
- 		ql4_printk(KERN_ERR, ha, "%s: failed read of addr 0x%x!\n",
- 			   __func__, addr);
-+	}
++		sg_count = 0;
++		cptr = NULL;
+ 	}
  
- 	return ret_val;
- }
+ 	/* Use the outgoing mailboxes in a round-robin fashion, because this
 -- 
 2.7.0
