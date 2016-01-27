@@ -1,73 +1,121 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 10/11] qla2xxx: Set relogin flag when we fail to queue
- login requests.
-Date: Wed, 27 Jan 2016 09:48:15 +0100
-Message-ID: <56A8844F.1030601@suse.de>
-References: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
- <1453828246-28686-11-git-send-email-himanshu.madhani@qlogic.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH-v2 11/12] xen-scsiback: Convert to percpu_ida tag
+ allocation
+Date: Wed, 27 Jan 2016 11:57:39 +0100
+Message-ID: <56A8A2A3.30407@suse.com>
+References: <1453709466-6308-1-git-send-email-nab@daterainc.com>
+ <1453709466-6308-12-git-send-email-nab@daterainc.com>
+ <56A7401E.7070005@suse.com>
+ <1453876090.6746.123.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60796 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754009AbcA0IsQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jan 2016 03:48:16 -0500
-In-Reply-To: <1453828246-28686-11-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1453876090.6746.123.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, David Vrabel <david.vrabel@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>, jbottomley@parallels.com, martin.petersen@oracle.com
-Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-On 01/26/2016 06:10 PM, Himanshu Madhani wrote:
-> From: Chad Dupuis <chad.dupuis@qlogic.com>
->=20
-> If we fail to queue an srb for an async login we should set the
-> relogin flag so it will be retried as the reason for the queuing
-> failure was most likely transient.  Failure to do this can lead to
-> failed paths as login is never retried if the relogin flag is not
-> set.
->=20
-> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> ---
->  drivers/scsi/qla2xxx/qla_init.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/q=
-la_init.c
-> index 8001c89..184b6b6 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -157,8 +157,12 @@ qla2x00_async_login(struct scsi_qla_host *vha, f=
-c_port_t *fcport,
->  	if (data[1] & QLA_LOGIO_LOGIN_RETRIED)
->  		lio->u.logio.flags |=3D SRB_LOGIN_RETRIED;
->  	rval =3D qla2x00_start_sp(sp);
-> -	if (rval !=3D QLA_SUCCESS)
-> +	if (rval !=3D QLA_SUCCESS) {
-> +		fcport->flags &=3D ~FCF_ASYNC_SENT;
-> +		fcport->flags |=3D FCF_LOGIN_NEEDED;
-> +		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
->  		goto done_free_sp;
-> +	}
-> =20
->  	ql_dbg(ql_dbg_disc, vha, 0x2072,
->  	    "Async-login - hdl=3D%x, loopid=3D%x portid=3D%02x%02x%02x "
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On 27/01/16 07:28, Nicholas A. Bellinger wrote:
+> On Tue, 2016-01-26 at 10:45 +0100, Juergen Gross wrote:
+>> On 25/01/16 09:11, Nicholas A. Bellinger wrote:
+>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>
+>>> Cc: Juergen Gross <jgross@suse.com>
+>>> Cc: Hannes Reinecke <hare@suse.de>
+>>> Cc: David Vrabel <david.vrabel@citrix.com>
+>>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+>>> ---
+>>>  drivers/xen/xen-scsiback.c | 163 ++++++++++++++++++++++++---------------------
+>>>  1 file changed, 87 insertions(+), 76 deletions(-)
+>>>
+>>> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+>>> index 594f8a7..640fb22 100644
+>>> --- a/drivers/xen/xen-scsiback.c
+>>> +++ b/drivers/xen/xen-scsiback.c
+>>> @@ -190,7 +190,6 @@ module_param_named(max_buffer_pages, scsiback_max_buffer_pages, int, 0644);
+>>>  MODULE_PARM_DESC(max_buffer_pages,
+>>>  "Maximum number of free pages to keep in backend buffer");
+>>>  
+>>> -static struct kmem_cache *scsiback_cachep;
+>>>  static DEFINE_SPINLOCK(free_pages_lock);
+>>>  static int free_pages_num;
+>>>  static LIST_HEAD(scsiback_free_pages);
+>>> @@ -322,7 +321,8 @@ static void scsiback_free_translation_entry(struct kref *kref)
+>>>  }
+>>>  
+>>>  static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
+>>> -			uint32_t resid, struct vscsibk_pend *pending_req)
+>>> +			uint32_t resid, struct vscsibk_pend *pending_req,
+>>> +			uint16_t rqid)
+>>>  {
+>>>  	struct vscsiif_response *ring_res;
+>>>  	struct vscsibk_info *info = pending_req->info;
+>>
+>> pending_req might be NULL now, so this will panic the system.
+>>
+> 
+> Thanks for the review.
+> 
+> Added the following to propagate up original *info into
+> scsiback_do_resp_with_sense() to address the early pending_req
+> failure case.
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=queue-next&id=5873f22a9b7c7aa16ff9a85074a07b739f1d06a5
 
-Cheers,
+Hmm, wouldn't it make more sense to split scsiback_do_resp_with_sense()
+into two functions now? Something like:
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index ad4eb10..0d71467 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -321,11 +321,10 @@ static void scsiback_free_translation_entry(struct
+kref *kref)
+        kfree(entry);
+ }
+
+-static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
+-                       uint32_t resid, struct vscsibk_pend *pending_req)
++static void scsiback_send_response(struct vscsibk_info *info,
++       char *sense_buffer, int32_t result, uint32_t resid, uint16_t rqid)
+ {
+        struct vscsiif_response *ring_res;
+-       struct vscsibk_info *info = pending_req->info;
+        int notify;
+        struct scsi_sense_hdr sshdr;
+        unsigned long flags;
+@@ -337,7 +336,7 @@ static void scsiback_do_resp_with_sense(char
+*sense_buffer, int32_t result,
+        info->ring.rsp_prod_pvt++;
+
+        ring_res->rslt   = result;
+-       ring_res->rqid   = pending_req->rqid;
++       ring_res->rqid   = rqid;
+
+        if (sense_buffer != NULL &&
+            scsi_normalize_sense(sense_buffer, VSCSIIF_SENSE_BUFFERSIZE,
+@@ -357,6 +356,13 @@ static void scsiback_do_resp_with_sense(char
+*sense_buffer, int32_t result,
+
+        if (notify)
+                notify_remote_via_irq(info->irq);
++}
++
++static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
++                       uint32_t resid, struct vscsibk_pend *pending_req)
++{
++       scsiback_send_response(pending_req->info, sense_buffer, result,
++                              resid, pending_req->rqid);
+
+        if (pending_req->v2p)
+                kref_put(&pending_req->v2p->kref,
+
+
+And then call scsiback_send_response() directly in case pending_req
+is NULL.
+
+
+Juergen
