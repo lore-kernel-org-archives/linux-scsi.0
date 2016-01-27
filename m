@@ -1,33 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111381] mvsas 0.8.16 on Marvell 88SE9485 reports timeouts on
- load
-Date: Wed, 27 Jan 2016 22:18:37 +0000
-Message-ID: <bug-111381-11613-4Hk7aAIlCe@https.bugzilla.kernel.org/>
-References: <bug-111381-11613@https.bugzilla.kernel.org/>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH] storvsc: use small sg_tablesize on x86
+Date: Wed, 27 Jan 2016 23:09:29 +0000
+Message-ID: <BY2PR0301MB1654E0BA47F3D2CC6D83BD64A0D90@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1441706801-15300-1-git-send-email-olaf@aepfle.de>
+ <BY2PR0301MB16540206D42C1E00EC353D0EA04C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+ <1443732718.6886.23.camel@HansenPartnership.com>
+ <20151002171415.GA30430@gmail.com> <20160125083514.GA11991@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45329 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934656AbcA0WSk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jan 2016 17:18:40 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 1296520279
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 22:18:39 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id A8E9B20270
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 22:18:37 +0000 (UTC)
-In-Reply-To: <bug-111381-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160125083514.GA11991@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111381
-
---- Comment #1 from Gabriel A. Devenyi <gdevenyi@gmail.com> ---
-Okay, I'll move around the cables and see if the problems move with them.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21h
+aWx0bzpvbGFmQGFlcGZsZS5kZV0NCj4gU2VudDogTW9uZGF5LCBKYW51YXJ5IDI1LCAyMDE2IDEy
+OjM1IEFNDQo+IFRvOiBKYW1lcyBCb3R0b21sZXkgPEphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0
+bmVyc2hpcC5jb20+DQo+IENjOiBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT47IEhh
+aXlhbmcgWmhhbmcNCj4gPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+OyBsaW51eC1rZXJuZWxAdmdl
+ci5rZXJuZWwub3JnOyBsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDog
+UmU6IFtQQVRDSF0gc3RvcnZzYzogdXNlIHNtYWxsIHNnX3RhYmxlc2l6ZSBvbiB4ODYNCj4gDQo+
+IE9uIEZyaSwgT2N0IDAyLCBPbGFmIEhlcmluZyB3cm90ZToNCj4gDQo+ID4gT24gVGh1LCBPY3Qg
+MDEsIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gPg0KPiA+ID4gT24gVGh1LCAyMDE1LTEwLTAx
+IGF0IDIwOjMwICswMDAwLCBLWSBTcmluaXZhc2FuIHdyb3RlOg0KPiA+DQo+ID4gPiA+ID4gKyNp
+ZiBkZWZpbmVkKENPTkZJR19YODZfMzIpDQo+ID4NCj4gPiA+IFVtLCB0aGlzIGlzIGEgYml0IGFy
+Y2hpdGVjdHVyZSBzcGVjaWZpYyAoSSBrbm93IEF6dXJlIGlzIHg4NiwgYnV0DQo+ID4gPiBzdGls
+bCkuICBDYW4geW91IG1ha2UgdGhlIGRlZmluZSBjaGVjayBDT05GSUdfMzJCSVQgcmF0aGVyIHRo
+YW4NCj4gPiA+IENPTkZJR19YODZfMzI/DQo+ID4NCj4gPiBBY2NvcmRpbmcgdG8gYXJjaC94ODYv
+S2NvbmZpZyB0aGVyZSBpcyBubyBzdWNoIHRoaW5nLg0KPiANCj4gV2hhdCBpcyB0aGUgc3RhdHVz
+IG9mIHRoaXMgY2hhbmdlPyBMb29rcyBsaWtlIHRoZXJlIGlzIG5vdGhpbmcgbW9yZSB0bw0KPiBk
+byBvbiBteSBzaWRlLg0KDQpPbGFmLA0KDQpXZSBkbyBoYXZlIHRoZSBjb25maWcgb3B0aW9uOiBD
+T05GSUdfWDg2XzY0LiBQZXJoYXBzIHdlIGNvdWxkIHVzZSB0aGlzLg0KQ291bGQgeW91IHJlc3Vi
+bWl0IHRoZSBwYXRjaCB3aXRoIHRoaXMgY2hhbmdlLg0KDQpSZWdhcmRzLA0KDQpLLiBZDQoNCiAN
+Cj4gDQo+IE9sYWYNCg==
