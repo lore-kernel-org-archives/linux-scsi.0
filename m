@@ -1,81 +1,172 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] LIO/SCST Merger
-Date: Wed, 27 Jan 2016 10:31:34 -0800
-Message-ID: <1453919494.2322.28.camel@HansenPartnership.com>
-References: <56A9043B.7030207@sandisk.com>
-	 <1453918104.2322.26.camel@HansenPartnership.com>
-	 <56A90A20.3020101@sandisk.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 03/11] qla2xxx: Allow fw to hold status before sending
+ ABTS response.
+Date: Wed, 27 Jan 2016 18:33:12 +0000
+Message-ID: <D2CE4630.D5CA3%himanshu.madhani@qlogic.com>
+References: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1453828246-28686-4-git-send-email-himanshu.madhani@qlogic.com>
+ <56A87EB8.4080507@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_D2CE4630D5CA3himanshumadhaniqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42320 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934825AbcA0Sbg (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14416 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964984AbcA0SdP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jan 2016 13:31:36 -0500
-In-Reply-To: <56A90A20.3020101@sandisk.com>
+	Wed, 27 Jan 2016 13:33:15 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0RIR7LL029377
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 10:33:14 -0800
+Received: from avcashub1.qlogic.com ([198.186.0.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 20q35xg0c0-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 10:33:14 -0800
+In-Reply-To: <56A87EB8.4080507@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2016-01-27 at 10:19 -0800, Bart Van Assche wrote:
-> On 01/27/2016 10:08 AM, James Bottomley wrote:
-> > On Wed, 2016-01-27 at 09:54 -0800, Bart Van Assche wrote:
-> > > Last year, during the 2015 LSF/MM summit, it has been decided
-> > > that
-> > > the LIO/SCST merger project should proceed by sending the
-> > > functionality upstream that is present in SCST but not yet in
-> > > LIO.
-> > > This will help to reduce the workload of target driver
-> > > maintainers
-> > > that maintain a version of their target driver for both LIO and
-> > > SCST
-> > > (QLogic FC and FCoE target drivers, Emulex FC and FCoE target
-> > > drivers, RDMA iSER target driver, RDMA SRP target driver, ...).
-> > > My
-> > > proposal is to organize a session during which the following is
-> > > discussed:
-> > > * Which patches are already upstream in the context of the
-> > > LIO/SCST
-> > > merger project.
-> > > * About which patches there is agreement but that are not yet
-> > > upstream.
-> > > * To discuss how to proceed from here and what to address first.
-> > 
-> > Can you begin this in email ... I don't think any of us are clear
-> > if
-> > there's still an issue here ... or that we'd say more than send the
-> > patches upstream, like we did last year.  Just reporting on patch
-> > status isn't that useful ... if there were design disputes or
-> > issues to
-> > discuss that caused the patches not to be accepted, that would be
-> > more
-> > useful.
-> 
-> Hello James,
-> 
-> Several patch series have been posted by different authors. Some of 
-> these patch series have already been reworked several times for 
-> different kernel versions. I think a meeting in person would make it 
-> easier to discuss which patch series to take upstream first and 
-> thereby avoid to have to keep reworking these patch series against an
-> evolving target API. These patch series are:
-> 
-> * Christoph Hellwig, [RFC] simplify session shutdown, January 14 
-> (http://thread.gmane.org/gmane.linux.scsi.target.devel/11135).
-> * Nicholas Bellinger, [PATCH 0/2] target: Fix LUN_RESET active I/O +
-> TMR 
-> handling, January 12, 2016 
-> (http://thread.gmane.org/gmane.linux.scsi.target.devel/11097).
-> * Bart Van Assche,  [PATCH 00/21] SCSI target patches for kernel
-> v4.5, 
-> January 5 (
-> http://thread.gmane.org/gmane.linux.scsi.target.devel/10905)
-
-So you don't really want a topic, you want a BoF?  We can do that.
-
-James
+--_000_D2CE4630D5CA3himanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <EFC874E7214B564C91087E08A8469A54@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
 
+On 1/27/16, 12:24 AM, "Hannes Reinecke" <hare@suse.de> wrote:
+
+>On 01/26/2016 06:10 PM, Himanshu Madhani wrote:
+>> Set bit 12 of additional firmware options 3 to let firmware
+>> hold status IOCB until ABTS response is received from Target.
+>>=20
+>> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+>> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>> ---
+>>  drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
+>>  drivers/scsi/qla2xxx/qla_init.c |   11 ++++++++++-
+>>  drivers/scsi/qla2xxx/qla_os.c   |    7 +++++++
+>>  3 files changed, 18 insertions(+), 1 deletions(-)
+>>=20
+>:-)
+>We would have needed that earlier...
+
+Sorry did not see this response before I reposted series with fix for
+build warning.=20
+
+
+>
+>Begs the question what happens if you do _not_ receive an ABTS
+>response; will the iocb freed eventually?
+
+Yes.
+
+>
+>Other than that:
+>
+>Reviewed-by: Hannes Reinecke <hare@suse.com>
+>
+>Cheers,
+>
+>Hannes
+>--=20
+>Dr. Hannes Reinecke		   Teamlead Storage & Networking
+>hare@suse.de			               +49 911 74053 688
+>SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+>GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+>HRB 21284 (AG N=FCrnberg)
+
+
+--_000_D2CE4630D5CA3himanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAAEAAAABzAGkAcAA6AGgA
+aQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAa
+DAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAfDAEAAAA4AAAA
+aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+AB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
+AIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBz
+AGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA4AAAA
+aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+APg/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfACNAAQAAADgA
+AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
+AAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBu
+AHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADgA
+AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
+AwD9P+QEAAACAQswAQAAABAAAACj+QzC2Lh1SYALWkcBygKdAwAXAAEAAABAADkAACRgLTFZ0QFA
+AAgw1hLBLTFZ0QELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAA
+AAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBu
+AC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAKIAAABSAGUA
+OgAgAFsAUABBAFQAQwBIACAAMAAzAC8AMQAxAF0AIABxAGwAYQAyAHgAeAB4ADoAIABBAGwAbABv
+AHcAIABmAHcAIAB0AG8AIABoAG8AbABkACAAcwB0AGEAdAB1AHMAIABiAGUAZgBvAHIAZQAgAHMA
+ZQBuAGQAaQBuAGcAIABBAEIAVABTACAAcgBlAHMAcABvAG4AcwBlAC4AAAAAAB8APQABAAAACgAA
+AFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA2AAAAPAA1ADYAQQA4ADcARQBCADgALgA0ADAA
+OAAwADUAMAA3AEAAcwB1AHMAZQAuAGQAZQA+AAAAAAACAXEAAQAAACAAAAABAdFYYmW3ySNyM9fE
+TZs72ua0ZyGpnw+NmQCAACP5gB8AcAABAAAAmgAAAFsAUABBAFQAQwBIACAAMAAzAC8AMQAxAF0A
+IABxAGwAYQAyAHgAeAB4ADoAIABBAGwAbABvAHcAIABmAHcAIAB0AG8AIABoAG8AbABkACAAcwB0
+AGEAdAB1AHMAIABiAGUAZgBvAHIAZQAgAHMAZQBuAGQAaQBuAGcAIABBAEIAVABTACAAcgBlAHMA
+cABvAG4AcwBlAC4AAAAAAB8ANRABAAAAWgAAADwARAAyAEMARQA0ADYAMwAwAC4ARAA1AEMAQQAz
+ACUAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+PgAAAAAAHwA5EAEAAAA2AQAAPAAxADQANQAzADgAMgA4ADIANAA2AC0AMgA4ADYAOAA2AC0AMQAt
+AGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
+YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADEANAA1ADMAOAAyADgAMgA0ADYALQAy
+ADgANgA4ADYALQA0AC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABpAG0AYQBuAHMA
+aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwANQA2AEEAOAA3
+AEUAQgA4AC4ANAAwADgAMAA1ADAANwBAAHMAdQBzAGUALgBkAGUAPgAAAAAAAwDeP69vAABAAAcw
+Wo23LTFZ0QEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMtMTYw
+MTI3MTgzMzEyWi0xMzMzMzAAAB8AFRABAAAAWAAAAEUARgBDADgANwA0AEUANwAyADEANABCADUA
+NgA0AEMAOQAxADAAOAA3AEUAMAA4AEEAOAA0ADYAOQBBADUANABAAHEAbABvAGcAaQBjAC4AYwBv
+AG0AAAACARQwAQAAAAwAAAB/AAAAwRZDe08AAAAfAPo/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUA
+IABNAGEAZABoAGEAbgBpAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAt
+AGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwA
+bwBvAGsALwAxADQALgA1AC4AOQAuADEANQAxADEAMQA5AAAAAAAfAACAH6TrM6h6LkK+e3nhqY5U
+swEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4A
+ZwBFAHgAAAABAAAABgEAAEkASQA9ADAAMQAwADEARAAxADUAOQAzADEAMgBEADkAOABBADUANgA0
+AEYARAA3ADUANAAzAEYARgA0AEYAOABEAEQAOAA4ADAAMwBGADUAQwA0ADgAQgAwAEIARQA7AFMA
+QgBNAEkARAA9ADMAOwBTADEAPQA8ADUANgBBADgANwBFAEIAOAAuADQAMAA4ADAANQAwADcAQABz
+AHUAcwBlAC4AZABlAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMA
+IAAoAEIAdQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9
+PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEA
+YwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBn
+AGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAeAAAAWwAxADAALgAyADkALgAxADAAMgAuADMA
+MwBdAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAA
+AAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAArns=
+
+--_000_D2CE4630D5CA3himanshumadhaniqlogiccom_--
