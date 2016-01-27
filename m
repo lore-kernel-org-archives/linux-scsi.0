@@ -1,42 +1,32 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [LSF/MM TOPIC] Improving DISCARD support
-Date: Wed, 27 Jan 2016 09:48:47 -0800
-Message-ID: <56A902FF.8050102@sandisk.com>
+Subject: [LSF/MM TOPIC] LIO/SCST Merger
+Date: Wed, 27 Jan 2016 09:54:03 -0800
+Message-ID: <56A9043B.7030207@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0071.outbound.protection.outlook.com ([65.55.169.71]:30479
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932953AbcA0Rsy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jan 2016 12:48:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Increasing the discard granularity of an SSD helps with reducing the 
-production cost of an SSD. This makes it likely that in the future even 
-more SSDs will have a discard granularity that is larger than the block 
-size than today. Kernel drivers like DRBD and OCFS2 need a way to 
-efficiently erase a data range. This is why the function 
-blkdev_issue_zeroout() has been introduced in the block layer. This 
-function uses the DISCARD operation for those devices for which 
-discarded ranges read back as zero (discard_zeroes_data == 1). However, 
-support in the block layer for devices with a discard granularity that 
-is larger than the block size is suboptimal. Callers of 
-blkdev_issue_zeroout() namely have to ensure that the start and end of 
-the range that has to be zeroed are aligned with discard boundaries. 
-This forces driver writers to write wrapper functions that work around 
-this limitation. An example can be found in [1]. My proposal is to 
-provide such functionality in the block layer instead of forcing every 
-driver author to reimplement this functionality. A candidate 
-implementation is available in [2].
+Last year, during the 2015 LSF/MM summit, it has been decided that the 
+LIO/SCST merger project should proceed by sending the functionality 
+upstream that is present in SCST but not yet in LIO. This will help to 
+reduce the workload of target driver maintainers that maintain a version 
+of their target driver for both LIO and SCST (QLogic FC and FCoE target 
+drivers, Emulex FC and FCoE target drivers, RDMA iSER target driver, 
+RDMA SRP target driver, ...). My proposal is to organize a session 
+during which the following is discussed:
+* Which patches are already upstream in the context of the LIO/SCST 
+merger project.
+* About which patches there is agreement but that are not yet upstream.
+* To discuss how to proceed from here and what to address first.
 
-[1] Lars Ellenberg, drbd: when receiving P_TRIM, zero-out partial 
-unaligned chunks, October 2015 
-(http://git.drbd.org/drbd-8.4.git/commitdiff/5204727f9dfa695fc57915c4edeb2a9f186e5fba).
-[2] Bart Van Assche, Make blkdev_issue_discard() submit aligned discard 
-requests, December 2015 
-(http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/23801).
+References:
+[1] Bart Van Assche,  [LSF/MM TOPIC] Unifying the LIO and SCST target 
+drivers, January 2015 
+(http://thread.gmane.org/gmane.linux.scsi.target.devel/7779)
+[2] James Bottomley, LIO/SCST merger, April 2015 
+(https://plus.google.com/112086662098298535411/posts/HuGsCMU41uy).
