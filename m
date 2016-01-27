@@ -1,48 +1,46 @@
-From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: RE: [PATCH v4 00/17] be2iscsi: driver update 11.0.0.0
-Date: Wed, 27 Jan 2016 13:49:53 +0530
-Message-ID: <a9722d8a121c76ad11eb2bb05a03f109@mail.gmail.com>
-References: <1453279261-659-1-git-send-email-jitendra.bhivare@avagotech.com> <yq1wpqviymr.fsf@sermon.lab.mkp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/11] qla2xxx: Remove unneeded link offline message.
+Date: Wed, 27 Jan 2016 09:21:43 +0100
+Message-ID: <56A87E17.5040407@suse.de>
+References: <1453828246-28686-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1453828246-28686-2-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:36153 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267AbcA0IUG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2016 03:20:06 -0500
-Received: by mail-yk0-f178.google.com with SMTP id v14so232060639ykd.3
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 00:20:06 -0800 (PST)
-In-Reply-To: <yq1wpqviymr.fsf@sermon.lab.mkp.net>
+Received: from mx2.suse.de ([195.135.220.15]:58121 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752396AbcA0IVp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jan 2016 03:21:45 -0500
+In-Reply-To: <1453828246-28686-2-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>, jbottomley@parallels.com, martin.petersen@oracle.com
+Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Wednesday, January 27, 2016 7:15 AM
-> To: Jitendra Bhivare
-> Cc: linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
-> Subject: Re: [PATCH v4 00/17] be2iscsi: driver update 11.0.0.0
->
-> >>>>> "Jitendra" == Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-writes:
->
-> Applied to 4.6/scsi-queue.
->
-> PATCH 12/17: "be2iscsi: Fix IOPOLL implementation" conflicted with
-Christoph's
-> irq_poll changes. I fixed it up but please verify:
->
->
-http://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git/commit/?h=4.6/scs
-i-
-> queue&id=fa512e1a3156
->
-> --
-> Martin K. Petersen	Oracle Linux Engineering
-Reviewed by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+On 01/26/2016 06:10 PM, Himanshu Madhani wrote:
+> From: Chad Dupuis <chad.dupuis@qlogic.com>
+>=20
+> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_dbg.c |    1 +
+>  drivers/scsi/qla2xxx/qla_isr.c |    4 ----
+>  2 files changed, 1 insertions(+), 4 deletions(-)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Thanks,
+Cheers,
 
-JB
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
