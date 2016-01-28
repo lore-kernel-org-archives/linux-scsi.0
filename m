@@ -1,81 +1,175 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: [PATCH v2 08/15] megaraid_sas: Code optimization build_and_issue_cmd return-type
-Date: Thu, 28 Jan 2016 21:04:29 +0530
-Message-ID: <1453995276-24955-9-git-send-email-sumit.saxena@avagotech.com>
+Subject: [PATCH v2 12/15] megaraid_sas: MFI adapter's OCR changes
+Date: Thu, 28 Jan 2016 21:04:33 +0530
+Message-ID: <1453995276-24955-13-git-send-email-sumit.saxena@avagotech.com>
 References: <1453995276-24955-1-git-send-email-sumit.saxena@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34410 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967035AbcA1Pfi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 10:35:38 -0500
-Received: by mail-pa0-f44.google.com with SMTP id uo6so25317136pac.1
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 07:35:38 -0800 (PST)
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:35136 "EHLO
+	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966997AbcA1Pf4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 10:35:56 -0500
+Received: by mail-pf0-f179.google.com with SMTP id 65so25277638pfd.2
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 07:35:55 -0800 (PST)
 In-Reply-To: <1453995276-24955-1-git-send-email-sumit.saxena@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com, thenzl@redhat.com
 Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-build_and_issue_cmd should return SCSI_MLQUEUE_HOST_BUSY for few error case instead of returning 1.
+Optimized MFI adapters' OCR path, particularly megasas_wait_for_outstanding() function.
+Accomodated Tomas' comments provided on last time sent patch- remove redundant checks when label- kill_hba_and_failed is being called.
 
-There are no changes in this patch from last time sent patch.
-
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 9 ++-------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 4 ++--
- 2 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 101 +++++++++++++++---------------
+ 1 file changed, 50 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 8df58c2..edf8911 100644
+index 1bd5da4..d2ea977 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1636,7 +1636,7 @@ megasas_build_and_issue_cmd(struct megasas_instance *instance,
- 	return 0;
- out_return_cmd:
- 	megasas_return_cmd(instance, cmd);
--	return 1;
-+	return SCSI_MLQUEUE_HOST_BUSY;
+@@ -2455,15 +2455,19 @@ void megasas_sriov_heartbeat_handler(unsigned long instance_addr)
+  */
+ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ {
+-	int i;
++	int i, sl, outstanding;
+ 	u32 reset_index;
+ 	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
+ 	unsigned long flags;
+ 	struct list_head clist_local;
+ 	struct megasas_cmd *reset_cmd;
+ 	u32 fw_state;
+-	u8 kill_adapter_flag;
+ 
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
++		dev_info(&instance->pdev->dev, "%s:%d HBA is killed.\n",
++		__func__, __LINE__);
++		return FAILED;
++	}
+ 
+ 	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 
+@@ -2520,7 +2524,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 	}
+ 
+ 	for (i = 0; i < resetwaittime; i++) {
+-		int outstanding = atomic_read(&instance->fw_outstanding);
++		outstanding = atomic_read(&instance->fw_outstanding);
+ 
+ 		if (!outstanding)
+ 			break;
+@@ -2539,65 +2543,60 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 	}
+ 
+ 	i = 0;
+-	kill_adapter_flag = 0;
++	outstanding = atomic_read(&instance->fw_outstanding);
++	fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
++
++	if ((!outstanding && (fw_state == MFI_STATE_OPERATIONAL)))
++		goto no_outstanding;
++
++	if (instance->disableOnlineCtrlReset)
++		goto kill_hba_and_failed;
+ 	do {
+-		fw_state = instance->instancet->read_fw_status_reg(
+-					instance->reg_set) & MFI_STATE_MASK;
+-		if ((fw_state == MFI_STATE_FAULT) &&
+-			(instance->disableOnlineCtrlReset == 0)) {
+-			if (i == 3) {
+-				kill_adapter_flag = 2;
+-				break;
+-			}
++		if ((fw_state == MFI_STATE_FAULT) || atomic_read(&instance->fw_outstanding)) {
++			dev_info(&instance->pdev->dev,
++				"%s:%d waiting_for_outstanding: before issue OCR. FW state = 0x%x, oustanding 0x%x\n",
++				__func__, __LINE__, fw_state, atomic_read(&instance->fw_outstanding));
++			if (i == 3)
++				goto kill_hba_and_failed;
+ 			megasas_do_ocr(instance);
+-			kill_adapter_flag = 1;
+ 
+-			/* wait for 1 secs to let FW finish the pending cmds */
+-			msleep(1000);
++			if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
++				dev_info(&instance->pdev->dev, "%s:%d OCR failed and HBA is killed.\n",
++				__func__, __LINE__);
++				return FAILED;
++			}
++			dev_info(&instance->pdev->dev, "%s:%d waiting_for_outstanding: after issue OCR.\n",
++				__func__, __LINE__);
++
++			for (sl = 0; sl < 10; sl++)
++				msleep(500);
++
++			outstanding = atomic_read(&instance->fw_outstanding);
++
++			fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
++			if ((!outstanding && (fw_state == MFI_STATE_OPERATIONAL)))
++				goto no_outstanding;
+ 		}
+ 		i++;
+ 	} while (i <= 3);
+ 
+-	if (atomic_read(&instance->fw_outstanding) && !kill_adapter_flag) {
+-		if (instance->disableOnlineCtrlReset == 0) {
+-			megasas_do_ocr(instance);
++no_outstanding:
+ 
+-			/* wait for 5 secs to let FW finish the pending cmds */
+-			for (i = 0; i < wait_time; i++) {
+-				int outstanding =
+-					atomic_read(&instance->fw_outstanding);
+-				if (!outstanding)
+-					return SUCCESS;
+-				msleep(1000);
+-			}
+-		}
+-	}
++	dev_info(&instance->pdev->dev, "%s:%d no more pending commands remain after reset handling.\n",
++		__func__, __LINE__);
++	return SUCCESS;
+ 
+-	if (atomic_read(&instance->fw_outstanding) ||
+-					(kill_adapter_flag == 2)) {
+-		dev_notice(&instance->pdev->dev, "pending cmds after reset\n");
+-		/*
+-		 * Send signal to FW to stop processing any pending cmds.
+-		 * The controller will be taken offline by the OS now.
+-		 */
+-		if ((instance->pdev->device ==
+-			PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+-			(instance->pdev->device ==
+-			PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
+-			writel(MFI_STOP_ADP,
+-				&instance->reg_set->doorbell);
+-		} else {
+-			writel(MFI_STOP_ADP,
+-				&instance->reg_set->inbound_doorbell);
+-		}
+-		megasas_dump_pending_frames(instance);
+-		atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
+-		return FAILED;
+-	}
++kill_hba_and_failed:
+ 
+-	dev_notice(&instance->pdev->dev, "no pending cmds after reset\n");
++	/* Reset not supported, kill adapter */
++	dev_info(&instance->pdev->dev, "%s:%d killing adapter scsi%d"
++		" disableOnlineCtrlReset %d fw_outstanding %d \n",
++		__func__, __LINE__, instance->host->host_no, instance->disableOnlineCtrlReset,
++		atomic_read(&instance->fw_outstanding));
++	megasas_dump_pending_frames(instance);
++	megaraid_sas_kill_hba(instance);
+ 
+-	return SUCCESS;
++	return FAILED;
  }
  
- 
-@@ -1728,12 +1728,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		break;
- 	}
- 
--	if (instance->instancet->build_and_issue_cmd(instance, scmd)) {
--		dev_err(&instance->pdev->dev, "Err returned from build_and_issue_cmd\n");
--		return SCSI_MLQUEUE_HOST_BUSY;
--	}
--
--	return 0;
-+	return instance->instancet->build_and_issue_cmd(instance, scmd);
- 
-  out_done:
- 	scmd->scsi_done(scmd);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 1351cae..f553830 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2125,7 +2125,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 
- 	req_desc = megasas_get_request_descriptor(instance, index-1);
- 	if (!req_desc)
--		return 1;
-+		return SCSI_MLQUEUE_HOST_BUSY;
- 
- 	req_desc->Words = 0;
- 	cmd->request_desc = req_desc;
-@@ -2134,7 +2134,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 		megasas_return_cmd_fusion(instance, cmd);
- 		dev_err(&instance->pdev->dev, "Error building command\n");
- 		cmd->request_desc = NULL;
--		return 1;
-+		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
- 	req_desc = cmd->request_desc;
+ /**
 -- 
 1.8.3.1
 
