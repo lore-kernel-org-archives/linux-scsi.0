@@ -1,51 +1,64 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 1/3] target: Fix LUN_RESET active I/O handling for
- ACK_KREF
-Date: Wed, 27 Jan 2016 21:34:42 -0800
-Message-ID: <1453959282.6746.213.camel@haakon3.risingtidesystems.com>
-References: <1453513067-23169-1-git-send-email-nab@daterainc.com>
-	 <1453513067-23169-2-git-send-email-nab@daterainc.com>
-	 <20160126171900.GA3663@lst.de>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild test
+ robot
+Date: Wed, 27 Jan 2016 23:29:07 -0800
+Message-ID: <1453966147-10568-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160126171900.GA3663@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2016-01-26 at 18:19 +0100, Christoph Hellwig wrote:
-> > +static bool __target_check_io_state(struct se_cmd *se_cmd)
-> > +{
-> > +	struct se_session *sess = se_cmd->se_sess;
-> > +
-> > +	assert_spin_locked(&se_session->sess_cmd_lock);
-> > +	WARN_ON_ONCE(!irqs_disabled());
-> 
-> Btw, I looked a the code and can't really see what sess_cmd_lock is
-> supposed to protect here.
-> 
-> > +		sess = cmd->se_sess;
-> > +		if (WARN_ON_ONCE(!sess))
-> > +			continue;
-> > +
-> > +		spin_lock(&sess->sess_cmd_lock);
-> > +		rc = __target_check_io_state(cmd);
-> > +		spin_unlock(&sess->sess_cmd_lock);
-> > +		if (!rc) {
-> > +			printk("LUN_RESET I/O: non-zero kref_get_unless_zero\n");
-> > +			continue;
-> > +		}
-> 
-> And thus why we care about taking it here.
+tree:   https://na01.safelinks.protection.outlook.com/?url=https%3a%2f%2fgit.kernel.org%2fpub%2fscm%2flinux%2fkernel%2fgit%2ftorvalds%2flinux.git&data=01%7c01%7ckys%40microsoft.com%7ce2e0622715844b79ad7108d32796ec3c%7c72f988bf86f141af91ab2d7cd011db47%7c1&sdata=ubr4GbBaNS%2ftOz%2buJBk0CL9N0UNG9x2TidLgy6Yovg4%3d master
+head:   03c21cb775a313f1ff19be59c5d02df3e3526471
+commit: dac582417bc449b1f7f572d3f1dd9d23eec15cc9 storvsc: Properly support Fibre Channel devices
+date:   3 weeks ago
+config: x86_64-randconfig-s3-01281016 (attached as .config)
+reproduce:
+        git checkout dac582417bc449b1f7f572d3f1dd9d23eec15cc9
+        # save the attached .config to linux build tree
+        make ARCH=x86_64
 
-I'm still working on -v3 series to handle se_session shutdown during
-this specific multi-port LUN_RESET case, and considering using the
-existing se_cmd->cmd_wait_set bit to signal when this special case
-happens.
+All errors (new ones prefixed by >>):
 
-Currently ->sess_cmd_lock is held in target_release_cmd_kref() and
-target_sess_cmd_list_set_waiting() while checking and setting this
-value.
+   drivers/built-in.o: In function `storvsc_remove':
+>> storvsc_drv.c:(.text+0x213af7): undefined reference to `fc_remove_host'
+   drivers/built-in.o: In function `storvsc_drv_init':
+>> storvsc_drv.c:(.init.text+0xcbcc): undefined reference to `fc_attach_transport'
+>> storvsc_drv.c:(.init.text+0xcc06): undefined reference to `fc_release_transport'
+   drivers/built-in.o: In function `storvsc_drv_exit':
+>> storvsc_drv.c:(.exit.text+0x123c): undefined reference to `fc_release_transport'
+
+With this commit, the storvsc driver depends on FC atttributes. Make this
+dependency explicit.
+
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+ drivers/scsi/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 64eed87..24365c3 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -594,6 +594,7 @@ config XEN_SCSI_FRONTEND
+ config HYPERV_STORAGE
+ 	tristate "Microsoft Hyper-V virtual storage driver"
+ 	depends on SCSI && HYPERV
++	depends on SCSI_FC_ATTRS
+ 	default HYPERV
+ 	help
+ 	  Select this option to enable the Hyper-V virtual storage driver.
+-- 
+1.7.4.1
