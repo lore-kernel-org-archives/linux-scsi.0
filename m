@@ -1,91 +1,122 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 05/11] qla2xxx: Add support for buffer to buffer
- credit value for ISP27XX.
-Date: Thu, 28 Jan 2016 09:57:45 +0100
-Message-ID: <20160128085745.GJ27565@c203.arch.suse.de>
+Subject: Re: [PATCH v2 06/11] qla2xxx: Add support for Private link
+ statistics counters.
+Date: Thu, 28 Jan 2016 09:59:21 +0100
+Message-ID: <20160128085921.GK27565@c203.arch.suse.de>
 References: <1453914218-380-1-git-send-email-himanshu.madhani@qlogic.com>
- <1453914218-380-6-git-send-email-himanshu.madhani@qlogic.com>
+ <1453914218-380-7-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60693 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:32969 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964967AbcA1I5r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jan 2016 03:57:47 -0500
+	id S1755158AbcA1I7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jan 2016 03:59:23 -0500
 Content-Disposition: inline
-In-Reply-To: <1453914218-380-6-git-send-email-himanshu.madhani@qlogic.com>
+In-Reply-To: <1453914218-380-7-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-On Wed, Jan 27, 2016 at 12:03:32PM -0500, Himanshu Madhani wrote:
-> From: Sawan Chandak <sawan.chandak@qlogic.com>
+On Wed, Jan 27, 2016 at 12:03:33PM -0500, Himanshu Madhani wrote:
+> From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 >=20
-> Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
+> Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 > ---
->  drivers/scsi/qla2xxx/qla_bsg.c |   55 ++++++++++++++++++++++++++++++=
+>  drivers/scsi/qla2xxx/qla_attr.c |    6 ++-
+>  drivers/scsi/qla2xxx/qla_bsg.c  |   61 +++++++++++++++++++++++++++++=
 ++++++++++
->  drivers/scsi/qla2xxx/qla_bsg.h |   24 +++++++++++++++++
->  drivers/scsi/qla2xxx/qla_def.h |    2 +
->  drivers/scsi/qla2xxx/qla_fw.h  |    4 ++-
->  drivers/scsi/qla2xxx/qla_mbx.c |    8 ++++++
->  5 files changed, 92 insertions(+), 1 deletions(-)
+>  drivers/scsi/qla2xxx/qla_bsg.h  |    1 +
+>  drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+>  drivers/scsi/qla2xxx/qla_def.h  |   32 +++++++++++++++++++-
+>  drivers/scsi/qla2xxx/qla_mbx.c  |    3 +-
+>  6 files changed, 99 insertions(+), 6 deletions(-)
 >=20
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/q=
+la_attr.c
+> index fef659a..fadce04 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -1917,7 +1917,8 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *sho=
+st)
+>  	if (qla2x00_reset_active(vha))
+>  		goto done;
+> =20
+> -	stats =3D dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &stats_dma);
+> +	stats =3D dma_alloc_coherent(&ha->pdev->dev,
+> +	    sizeof(struct link_statistics), &stats_dma, GFP_KERNEL);
+>  	if (stats =3D=3D NULL) {
+>  		ql_log(ql_log_warn, vha, 0x707d,
+>  		    "Failed to allocate memory for stats.\n");
+> @@ -1965,7 +1966,8 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *sho=
+st)
+>  	do_div(pfc_host_stat->seconds_since_last_reset, HZ);
+> =20
+>  done_free:
+> -        dma_pool_free(ha->s_dma_pool, stats, stats_dma);
+> +	dma_free_coherent(&ha->pdev->dev, sizeof(struct link_statistics),
+> +	    stats, stats_dma);
+>  done:
+>  	return pfc_host_stat;
+>  }
 > diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/ql=
 a_bsg.c
-> index 64fe17a..d135d6a 100644
+> index d135d6a..913fef2 100644
 > --- a/drivers/scsi/qla2xxx/qla_bsg.c
 > +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2181,6 +2181,58 @@ qla27xx_set_flash_upd_cap(struct fc_bsg_job *b=
-sg_job)
+> @@ -2233,6 +2233,64 @@ qla27xx_get_bbcr_data(struct fc_bsg_job *bsg_j=
+ob)
 >  }
 > =20
 >  static int
-> +qla27xx_get_bbcr_data(struct fc_bsg_job *bsg_job)
+> +qla2x00_get_priv_stats(struct fc_bsg_job *bsg_job)
 > +{
 > +	struct Scsi_Host *host =3D bsg_job->shost;
 > +	scsi_qla_host_t *vha =3D shost_priv(host);
 > +	struct qla_hw_data *ha =3D vha->hw;
-> +	struct qla_bbcr_data bbcr;
-> +	uint16_t loop_id, topo, sw_cap;
-> +	uint8_t domain, area, al_pa, state;
-> +	int rval;
+> +	struct scsi_qla_host *base_vha =3D pci_get_drvdata(ha->pdev);
+> +	struct link_statistics *stats =3D NULL;
+> +	dma_addr_t stats_dma;
+> +	int rval =3D QLA_FUNCTION_FAILED;
 > +
-> +	if (!(IS_QLA27XX(ha)))
-> +		return -EPERM;
+> +	if (test_bit(UNLOADING, &vha->dpc_flags))
+> +		goto done;
 > +
-> +	memset(&bbcr, 0, sizeof(bbcr));
+> +	if (unlikely(pci_channel_offline(ha->pdev)))
+> +		goto done;
 > +
-> +	if (vha->flags.bbcr_enable)
-> +		bbcr.status =3D QLA_BBCR_STATUS_ENABLED;
-> +	else
-> +		bbcr.status =3D QLA_BBCR_STATUS_DISABLED;
+> +	if (qla2x00_reset_active(vha))
+> +		goto done;
 > +
-> +	if (bbcr.status =3D=3D QLA_BBCR_STATUS_ENABLED) {
-> +		rval =3D qla2x00_get_adapter_id(vha, &loop_id, &al_pa,
-> +			&area, &domain, &topo, &sw_cap);
-> +		if (rval !=3D QLA_SUCCESS)
-> +			return -EIO;
+> +	if (!IS_FWI2_CAPABLE(ha))
+> +		goto done;
 > +
-> +		state =3D (vha->bbcr >> 12) & 0x1;
-> +
-> +		if (state) {
-> +			bbcr.state =3D QLA_BBCR_STATE_OFFLINE;
-> +			bbcr.offline_reason_code =3D QLA_BBCR_REASON_LOGIN_REJECT;
-> +		} else {
-> +			bbcr.state =3D QLA_BBCR_STATE_ONLINE;
-> +			bbcr.negotiated_bbscn =3D (vha->bbcr >> 8) & 0xf;
-> +		}
-> +
-> +		bbcr.configured_bbscn =3D vha->bbcr & 0xf;
+> +	stats =3D dma_alloc_coherent(&ha->pdev->dev,
+> +		sizeof(struct link_statistics), &stats_dma, GFP_KERNEL);
+> +	if (!stats) {
+> +		ql_log(ql_log_warn, vha, 0x70e2,
+> +		"Failed to allocate memory for stats.\n");
+> +		goto done;
 > +	}
 > +
+> +	memset(stats, 0, sizeof(struct link_statistics));
+> +
+> +	rval =3D qla24xx_get_isp_stats(base_vha, stats, stats_dma);
+> +
+> +	if (rval !=3D QLA_SUCCESS)
+> +		goto done_free;
+> +
+> +	ql_dump_buffer(ql_dbg_user + ql_dbg_verbose, vha, 0x70e3,
+> +	    (uint8_t *)stats, sizeof(struct link_statistics));
+> +
 > +	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-> +		bsg_job->reply_payload.sg_cnt, &bbcr, sizeof(bbcr));
-> +	bsg_job->reply->reply_payload_rcv_len =3D sizeof(bbcr);
+> +	bsg_job->reply_payload.sg_cnt, stats, sizeof(struct link_statistics=
+));
+> +	bsg_job->reply->reply_payload_rcv_len =3D sizeof(struct link_statis=
+tics);
 > +
 > +	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =3D EXT_STATU=
 S_OK;
@@ -93,140 +124,128 @@ S_OK;
 > +	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
 > +	bsg_job->reply->result =3D DID_OK << 16;
 > +	bsg_job->job_done(bsg_job);
-> +	return 0;
+> +
+> +done_free:
+> +	dma_free_coherent(&ha->pdev->dev, sizeof(struct link_statistics),
+> +		stats, stats_dma);
+> +done:
+> +	return rval;
 > +}
 > +
 > +static int
 >  qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
 >  {
 >  	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
-> @@ -2241,6 +2293,9 @@ qla2x00_process_vendor_specific(struct fc_bsg_j=
+> @@ -2296,6 +2354,9 @@ qla2x00_process_vendor_specific(struct fc_bsg_j=
 ob *bsg_job)
->  	case QL_VND_SET_FLASH_UPDATE_CAPS:
->  		return qla27xx_set_flash_upd_cap(bsg_job);
+>  	case QL_VND_GET_BBCR_DATA:
+>  		return qla27xx_get_bbcr_data(bsg_job);
 > =20
-> +	case QL_VND_GET_BBCR_DATA:
-> +		return qla27xx_get_bbcr_data(bsg_job);
+> +	case QL_VND_GET_PRIV_STATS:
+> +		return qla2x00_get_priv_stats(bsg_job);
 > +
 >  	default:
 >  		return -ENOSYS;
 >  	}
 > diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/ql=
 a_bsg.h
-> index 6c45bf4..4275177 100644
+> index 4275177..c40dd8b 100644
 > --- a/drivers/scsi/qla2xxx/qla_bsg.h
 > +++ b/drivers/scsi/qla2xxx/qla_bsg.h
-> @@ -27,6 +27,7 @@
->  #define	QL_VND_SERDES_OP_EX	0x14
+> @@ -28,6 +28,7 @@
 >  #define QL_VND_GET_FLASH_UPDATE_CAPS    0x15
 >  #define QL_VND_SET_FLASH_UPDATE_CAPS    0x16
-> +#define QL_VND_GET_BBCR_DATA    0x17
+>  #define QL_VND_GET_BBCR_DATA    0x17
+> +#define QL_VND_GET_PRIV_STATS	0x18
 > =20
 >  /* BSG Vendor specific subcode returns */
 >  #define EXT_STATUS_OK			0
-> @@ -239,4 +240,27 @@ struct qla_flash_update_caps {
->  	uint32_t  outage_duration;
->  	uint8_t   reserved[20];
->  } __packed;
-> +
-> +/* BB_CR Status */
-> +#define QLA_BBCR_STATUS_DISABLED       0
-> +#define QLA_BBCR_STATUS_ENABLED        1
-> +
-> +/* BB_CR State */
-> +#define QLA_BBCR_STATE_OFFLINE         0
-> +#define QLA_BBCR_STATE_ONLINE          1
-> +
-> +/* BB_CR Offline Reason Code */
-> +#define QLA_BBCR_REASON_PORT_SPEED     1
-> +#define QLA_BBCR_REASON_PEER_PORT      2
-> +#define QLA_BBCR_REASON_SWITCH         3
-> +#define QLA_BBCR_REASON_LOGIN_REJECT   4
-> +
-> +struct  qla_bbcr_data {
-> +	uint8_t   status;         /* 1 - enabled, 0 - Disabled */
-> +	uint8_t   state;          /* 1 - online, 0 - offline */
-> +	uint8_t   configured_bbscn;       /* 0-15 */
-> +	uint8_t   negotiated_bbscn;       /* 0-15 */
-> +	uint8_t   offline_reason_code;
-> +	uint8_t   reserved[11];
-> +} __packed;
->  #endif
+> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/ql=
+a_dbg.c
+> index 493a3ea81..aa6694b 100644
+> --- a/drivers/scsi/qla2xxx/qla_dbg.c
+> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
+> @@ -32,7 +32,7 @@
+>   * |                              |                    | 0x503d,0x50=
+44  |
+>   * |                              |                    | 0x507b,0x50=
+5f	|
+>   * | Timer Routines               |       0x6012       |            =
+    |
+> - * | User Space Interactions      |       0x70e65      | 0x7018,0x70=
+2e  |
+> + * | User Space Interactions      |       0x70e3       | 0x7018,0x70=
+2e  |
+>   * |				  |		       | 0x7020,0x7024  |
+>   * |                              |                    | 0x7039,0x70=
+45  |
+>   * |                              |                    | 0x7073-0x70=
+75  |
 > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/ql=
 a_def.h
-> index 987480f..c4bd62a 100644
+> index c4bd62a..ceb452d 100644
 > --- a/drivers/scsi/qla2xxx/qla_def.h
 > +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -3583,6 +3583,7 @@ typedef struct scsi_qla_host {
->  		uint32_t	delete_progress:1;
-> =20
->  		uint32_t	fw_tgt_reported:1;
-> +		uint32_t	bbcr_enable:1;
->  	} flags;
-> =20
->  	atomic_t	loop_state;
-> @@ -3715,6 +3716,7 @@ typedef struct scsi_qla_host {
->  	atomic_t	vref_count;
->  	struct qla8044_reset_template reset_tmplt;
->  	struct qla_tgt_counters tgt_counters;
-> +	uint16_t	bbcr;
->  } scsi_qla_host_t;
-> =20
->  struct qla27xx_image_status {
-> diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla=
-_fw.h
-> index 7f095e3..4c0f3a7 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw.h
-> @@ -1288,7 +1288,9 @@ struct vp_rpt_id_entry_24xx {
-> =20
->  	uint8_t vp_idx_map[16];
-> =20
-> -	uint8_t reserved_4[32];
-> +	uint8_t reserved_4[28];
-> +	uint16_t bbcr;
-> +	uint8_t reserved_5[6];
+> @@ -1254,13 +1254,41 @@ struct link_statistics {
+>  	uint32_t inval_xmit_word_cnt;
+>  	uint32_t inval_crc_cnt;
+>  	uint32_t lip_cnt;
+> -	uint32_t unused1[0x1a];
+> +	uint32_t link_up_cnt;
+> +	uint32_t link_down_loop_init_tmo;
+> +	uint32_t link_down_los;
+> +	uint32_t link_down_loss_rcv_clk;
+> +	uint32_t reserved0[5];
+> +	uint32_t port_cfg_chg;
+> +	uint32_t reserved1[11];
+> +	uint32_t rsp_q_full;
+> +	uint32_t atio_q_full;
+> +	uint32_t drop_ae;
+> +	uint32_t els_proto_err;
+> +	uint32_t reserved2;
+>  	uint32_t tx_frames;
+>  	uint32_t rx_frames;
+>  	uint32_t discarded_frames;
+>  	uint32_t dropped_frames;
+> -	uint32_t unused2[1];
+> +	uint32_t reserved3;
+>  	uint32_t nos_rcvd;
+> +	uint32_t reserved4[4];
+> +	uint32_t tx_prjt;
+> +	uint32_t rcv_exfail;
+> +	uint32_t rcv_abts;
+> +	uint32_t seq_frm_miss;
+> +	uint32_t corr_err;
+> +	uint32_t mb_rqst;
+> +	uint32_t nport_full;
+> +	uint32_t eofa;
+> +	uint32_t reserved5;
+> +	uint32_t fpm_recv_word_cnt_lo;
+> +	uint32_t fpm_recv_word_cnt_hi;
+> +	uint32_t fpm_disc_word_cnt_lo;
+> +	uint32_t fpm_disc_word_cnt_hi;
+> +	uint32_t fpm_xmit_word_cnt_lo;
+> +	uint32_t fpm_xmit_word_cnt_hi;
+> +	uint32_t reserved6[70];
 >  };
 > =20
->  #define VF_EVFP_IOCB_TYPE       0x26    /* Exchange Virtual Fabric P=
-arameters entry. */
+>  /*
 > diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/ql=
 a_mbx.c
-> index 87e6758..4433cfb 100644
+> index 4433cfb..3dd3398 100644
 > --- a/drivers/scsi/qla2xxx/qla_mbx.c
 > +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -1349,6 +1349,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, ui=
-nt16_t *id, uint8_t *al_pa,
->  		mcp->in_mb |=3D MBX_13|MBX_12|MBX_11|MBX_10;
->  	if (IS_FWI2_CAPABLE(vha->hw))
->  		mcp->in_mb |=3D MBX_19|MBX_18|MBX_17|MBX_16;
-> +	if (IS_QLA27XX(vha->hw))
-> +		mcp->in_mb |=3D MBX_15;
->  	mcp->tov =3D MBX_TOV_SECONDS;
->  	mcp->flags =3D 0;
->  	rval =3D qla2x00_mailbox_command(vha, mcp);
-> @@ -1400,6 +1402,9 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, ui=
-nt16_t *id, uint8_t *al_pa,
->  				    wwn_to_u64(vha->port_name));
->  			}
->  		}
-> +
-> +		if (IS_QLA27XX(vha->hw))
-> +			vha->bbcr =3D mcp->mb[15];
->  	}
-> =20
->  	return rval;
-> @@ -3612,6 +3617,9 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *=
-vha,
->  		    rptid_entry->port_id[2], rptid_entry->port_id[1],
->  		    rptid_entry->port_id[0]);
-> =20
-> +		/* buffer to buffer credit flag */
-> +		vha->flags.bbcr_enable =3D (rptid_entry->bbcr & 0xf) !=3D 0;
-> +
->  		/* FA-WWN is only for physical port */
->  		if (!vp_idx) {
->  			void *wwpn =3D ha->init_cb->port_name;
+> @@ -2799,7 +2799,8 @@ qla2x00_get_link_status(scsi_qla_host_t *vha, u=
+int16_t loop_id,
+>  			/* Copy over data -- firmware data is LE. */
+>  			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1086,
+>  			    "Done %s.\n", __func__);
+> -			dwords =3D offsetof(struct link_statistics, unused1) / 4;
+> +			dwords =3D offsetof(struct link_statistics,
+> +					link_up_cnt) / 4;
+>  			siter =3D diter =3D &stats->link_fail_cnt;
+>  			while (dwords--)
+>  				*diter++ =3D le32_to_cpu(*siter++);
 > --=20
 > 1.7.7
 >=20
@@ -235,6 +254,8 @@ vha,
  in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Seriously, be more verbose on commit messages.
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 --=20
