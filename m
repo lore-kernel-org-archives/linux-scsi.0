@@ -1,74 +1,52 @@
-From: "Laison Computech Inc" <danny@lamicro.com>
-Subject: NEW ARRIVALS, CISCO,CPU's,Memory, LAPTOP AND AVAYA
-Date: Wed, 27 Jan 2016 12:42:07 +0700
-Message-ID: <201601270544.AQX06505__932.577267713164$1453951411$gmane$org@razorgate1.infokom.net>
-Reply-To: <LaisonComputer@computer4u.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [LSF/MM TOPIC] NVMe target support
+Date: Wed, 27 Jan 2016 20:41:43 -0800
+Message-ID: <1453956103.6746.195.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from razorgate1.infokom.net ([202.147.192.101]:12525 "EHLO
-	razorgate1.infokom.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965587AbcA1DXO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2016 22:23:14 -0500
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54432 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967825AbcA1Elp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jan 2016 23:41:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lsf-pc <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, linux-nvme@lists.infradead.org
+Cc: Christoph Hellwig <hch@lst.de>, "Minturn, Dave B" <dave.b.minturn@intel.com>, Sagi Grimberg <sagig@mellanox.com>, Ming Lin <mlin@kernel.org>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@kernel.org>, Mike Christie <mchristi@redhat.com>
 
-Dear Sir/Madam,
+Hi lsf-pc & Co,
 
-Clean tested working pulls CPUs and QTYs in stock.
+I'd like to propose a NVMe target discussion topic for LSF/MM 2016.
 
-115  X   X5650
-65  X   E5410
-75  X   X5660
-145  X   E5530
-100  X   E5645
-40  X   X5680
-75  X   X5690
+My interest wrt NVMe target drivers is specifically around using shared
+infrastructure with existing TCM backend drivers (IBLOCK, FILEIO,
+RAMDISK), and how se_device->dev_group configfs symlinks can be
+associated with NVMe target driver ports following HCH's WIP code.
+Also, there is still a vendor need around some type of NVMe backend
+driver (eg: target_core_nvme) for exposing + mapping NVMe-HI queues to
+front-end fabric driver RDMA queues.
 
-Brand new sealed  IP phones and QTYs in stock.
+Beyond the back-end driver discussion, our target_core_fabric_configfs.c
+logic for exposing a common user-space ABI has served LIO target drivers
+well over the last 10 upstream fabrics, plus other out-of-tree and WIP
+drivers.  The design has never once had to break userspace ABI
+compatibility, and the only user-visible addition to original design
+was allowing network portal attributes to be exposed by fabrics for
+iser-target + iscsit_transport friends.
 
-55 x CP-7937G
-77 x CP-7942G
-54 x CP-7945G
-75 x CP-7962G
-......
-45 x Avaya 9630
-65 x Avaya 9641
-55 x Avaya 9640
+I think one of the more interesting questions is going to be around how
+NVMe-over-Fabrics (NVMe_OF) + vhost-nvme will end up using
+target_core_fabric_configfs.c code.  What struct config_groups from
+target_core_fabric_configfs.c can be common across both SCSI target and
+NVMe controller export..?
 
-All NIB.
+The folks for such a discussion would include:
 
-Here is our current stock list.
+   Christoph Hellwig, Hannes Reinecke, Dave Minturn, Sagi Grimberg,
+   Ming Lin, Roland Dreier and Mike Christie.
 
- SSD drives and 750 gig 2.5" sata drives
+Thank you,
 
-We also have
-250 x i5 dell
-133 x HP
-360 x Lenevo
-all grade A
+--nab
 
-Here is the qty in stock for laptops
- 
-150 x E6500 Dell Latitude E6500 Core 2 Duo 2.80GHz T9600 4GB 160GB DVD+/-RW Win 7
- 60 x E6510 Dell Ltitude E6510. 15.6" Intel Core i5- M520 @ 2.40GHz. 4GB. 320GB DVD+/-RW Win 7
-30 X 8530P HP EliteBook 8530p 15.4" Laptop 2.53GHz Core 2 Duo T9400, 4GB RAM, 160GB HDD, Win
-100 x  8740W  HP EliteBook 8740w 17" 2.4Ghz Core i5 6GB 250GB Win 7 Pr
-45 x 8760W HP EliteBook 8760W 17.3" 2nd Gen Intel Core i7 2.70GHz 8GB 320GB Windows 7 Pro
-50 x DELL 6520Dell latitude e6520 15.6" i5-2520M 2.5Ghz, 8GB Ram, 500GB HD Win 7 @ $115
-120 x DELL 6420 Laptop Dell Latitude E6420 14" Intel Core i5 2.4Ghz 4GB RAM 250GB HDD DVD Win 7
-150 x T410 Lenovo ThinkPad Laptop T410s 14.1" 2.40GHz Core i5 4GB RAM 160GB Win 7
-180 x 8440P HP EliteBook 8440p 14" M520 Core i5 2.4GHz 4GB 250GB Win 7
-
-
-Let me know if you're interested. We are very open to offers and willing to work with you to make sure that we have a deal.
-
-Thank You
-Barbara Johnson
-Laison Computech Inc
-210 N Scoring Ave,
-Rialto California, 92376
-Tel: +1-657-232-7047
-Fax: +1-347-214-047
