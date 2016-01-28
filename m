@@ -1,97 +1,46 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
-Date: Thu, 28 Jan 2016 18:21:42 +0000
-Message-ID: <56AA5C36.5040407@synopsys.com>
-References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
- <20160107094437.GA11038@infradead.org>
- <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
- <56969A3D.50701@synopsys.com>
- <CAC5umyjiTOzU9RCb4O-8aAHH35UWjMmE8fzWD4zUxQhwN9nUXg@mail.gmail.com>
- <5697715F.8060608@synopsys.com> <56A8F886.3010401@synopsys.com>
- <CAC5umyhHnAMqBfkPoJfZ7qhw89-0AqFQG70-XnyRzQk1Yxb=6Q@mail.gmail.com>
- <56AA492C.80707@synopsys.com> <56AA58E8.7010908@synopsys.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
+ test robot
+Date: Thu, 28 Jan 2016 19:07:28 +0000
+Message-ID: <BY2PR0301MB1654D5EDF0A489A1E212BF6AA0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1453966147-10568-1-git-send-email-kys@microsoft.com>
+ <20160128155613.GA12447@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:44442 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964807AbcA1SVr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 13:21:47 -0500
-In-Reply-To: <56AA58E8.7010908@synopsys.com>
+Received: from mail-by2on0119.outbound.protection.outlook.com ([207.46.100.119]:64838
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751692AbcA1THa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jan 2016 14:07:30 -0500
+In-Reply-To: <20160128155613.GA12447@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
+To: Olaf Hering <olaf@aepfle.de>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
 
-HI,
-
-Solved it.
-else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE || lrbp->command_type ==
-DWC_UTRD_CMD_TYPE_UFS_STORAGE)
-was also needed ufshcd_transfer_req_compl(). Step by step :)
-
-Thanks.
-Joao
-
-On 1/28/2016 6:07 PM, Joao Pinto wrote:
-> Hi Akinobu,
-> 
-> I managed to make the following replacement:
-> "lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;" for
-> "lrbp->command_type = DWC_UTRD_CMD_TYPE_UFS_STORAGE;" being
-> DWC_UTRD_CMD_TYPE_UFS_STORAGE = 0x11
-> 
-> Now I get OCS = 0 which is good:
-> @0000 [0]:11000000
-> @0004 [1]:93936a6a
-> @0008 [2]:00000000
-> @000c [3]:93936a6a
-> @0010 [4]:9f317400
-> @0014 [5]:00000000
-> @0018 [6]:00800080
-> @001c [7]:01006a6a
-> 
-> But now the command is not completed time left is 0 in ufshcd_wait_for_dev_cmd()
-> and even after clearing the door bell the issue is not fixed. Did you ever have
-> this problem?
-> 
-> Joao
-> 
-> On 1/28/2016 5:00 PM, Joao Pinto wrote:
->> Hi Akinobu,
->> Thanks for the tip!
->>
->> Joao
->>
->> On 1/28/2016 12:35 PM, Akinobu Mita wrote:
->>> Hi Joao,
->>>
->>> 2016-01-28 2:04 GMT+09:00 Joao Pinto <Joao.Pinto@synopsys.com>:
->>>> - NOP_OUT is failing with OCS = 0x7
->>>>
->>>> The OCS value is calculated in ufshcd_get_tr_ocs() in ufshcd.c.
->>>> I made a dump of the UTRD pointer where we can check the status = 7 ([2]).
->>>>
->>>> UTRD at: 7007c3e0
->>>> @0000 [0]:21000000
->>>> @0004 [1]:93936a6a
->>>> @0008 [2]:00000007
->>>> @000c [3]:93936a6a
->>>> @0010 [4]:9f317400
->>>> @0014 [5]:00000000
->>>> @0018 [6]:00800080
->>>> @001c [7]:01006a6a
->>>>
->>>> Did anyone have the same problem? Any hints to overcome this issue?
->>>
->>> I have seen similar problem when using UFS 2.0 controller.
->>>
->>> The ufs driver currently doesn't set correct command type field in
->>> UTP transfer request descriptor (bit 31:28 in DW0) for UFS 2.0
->>> controller.  I checked that your DesignWare UFS driver handles it
->>> correctly, so please try with that change.
->>>
->>
-> 
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21h
+aWx0bzpvbGFmQGFlcGZsZS5kZV0NCj4gU2VudDogVGh1cnNkYXksIEphbnVhcnkgMjgsIDIwMTYg
+Nzo1NiBBTQ0KPiBUbzogS1kgU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+IENjOiBn
+cmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsN
+Cj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsNCj4gamJv
+dHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2Vy
+Lmtlcm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29tOyB2a3V6bmV0c0ByZWRoYXQuY29tOyBq
+YXNvd2FuZ0ByZWRoYXQuY29tOw0KPiBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgaGFyZUBz
+dXNlLmRlDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBzY3NpOiBzdG9ydnNjOiBGaXggYSBi
+dWlsZCBpc3N1ZSByZXBvcnRlZCBieSBrYnVpbGQgdGVzdA0KPiByb2JvdA0KPiANCj4gT24gV2Vk
+LCBKYW4gMjcsIEsuIFkuIFNyaW5pdmFzYW4gd3JvdGU6DQo+IA0KPiA+ICsJZGVwZW5kcyBvbiBT
+Q1NJX0ZDX0FUVFJTDQo+IA0KPiBJIHRoaW5rICdkZXBlbmRzJyBpbnN0ZWFkIG9mICdzZWxlY3Qn
+IHdpbGwgY2F1c2UgSFlQRVJWX1NUT1JBR0UgdG8NCj4gZGlzYXBlcGFyIGR1cmluZyBtYWtlIG9s
+ZGNvbmZpZyBpZiBTQ1NJX0ZDX0FUVFJTIHdhcyBub3Qgc2V0IGJlZm9yZS4NCj4gTm90IHN1cmUg
+d2hhdCB0aGUgcG9saWN5IG9mICdkZXBlbmRzJyB2cy4gICdzZWxlY3QnIGFjdHVhbGx5IGlzLiAg
+SWYNCj4gU0NTSV9GQ19BVFRSUyBpcyBzdXBwb3NlZCB0byBiZSBhIGxpYnJhcnkga2luZCBvZiB0
+aGluZyB0aGVuICdzZWxlY3QnDQo+IG1pZ2h0IGJlIHRoZSBjb3JyZWN0IHdheS4NCg0KVGhlIGN1
+cnJlbnQgYnVpbGQgaXNzdWUgaXMgYmVjYXVzZSB0aGUgSHlwZXItViBzdG9yYWdlIGlzIGNvbmZp
+Z3VyZWQgdG8gYmUgYnVpbHQgd2l0aA0KdGhlIGtlcm5lbCB3aGlsZSB0aGUgU0NTSV9GQ19BQVRS
+UyBpcyBjb25maWd1cmVkIGFzIGEgbW9kdWxlLiBUaGlzIHBhdGNoIGZpeGVzIHRoYXQgaXNzdWUu
+DQpJIHRvbyBhbSBub3Qgc3VyZSB3aGF0IHRoZSBwb2xpY3kgb2YgdXNpbmcgImRlcGVuZHMiIHZz
+ICIgc2VsZWN0IiBpcy4NCkphbWVzLCB3aGF0IHdvdWxkIGJlIHlvdXIgcmVjb21tZW5kYXRpb24g
+aGVyZS4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gT2xhZg0K
