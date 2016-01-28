@@ -1,46 +1,86 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
- test robot
-Date: Thu, 28 Jan 2016 19:07:28 +0000
-Message-ID: <BY2PR0301MB1654D5EDF0A489A1E212BF6AA0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1453966147-10568-1-git-send-email-kys@microsoft.com>
- <20160128155613.GA12447@gmail.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
+ st driver doesn't seem to grok LTO partitioning
+Date: Thu, 28 Jan 2016 14:21:23 -0500 (EST)
+Message-ID: <77882221.9950832.1454008883494.JavaMail.zimbra@redhat.com>
+References: <20151218170644.24167419@harpe.intellique.com> <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net> <alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr> <DDB9C85B850785449757F9914A034FCB44522A7B@G9W0766.americas.hpqcorp.net> <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0119.outbound.protection.outlook.com ([207.46.100.119]:64838
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751692AbcA1THa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jan 2016 14:07:30 -0500
-In-Reply-To: <20160128155613.GA12447@gmail.com>
-Content-Language: en-US
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:42040 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966732AbcA1TVh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 14:21:37 -0500
+In-Reply-To: <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
+To: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
+Cc: Shane M Seymour <shane.seymour@hpe.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21h
-aWx0bzpvbGFmQGFlcGZsZS5kZV0NCj4gU2VudDogVGh1cnNkYXksIEphbnVhcnkgMjgsIDIwMTYg
-Nzo1NiBBTQ0KPiBUbzogS1kgU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+IENjOiBn
-cmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsN
-Cj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsNCj4gamJv
-dHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2Vy
-Lmtlcm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29tOyB2a3V6bmV0c0ByZWRoYXQuY29tOyBq
-YXNvd2FuZ0ByZWRoYXQuY29tOw0KPiBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgaGFyZUBz
-dXNlLmRlDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBzY3NpOiBzdG9ydnNjOiBGaXggYSBi
-dWlsZCBpc3N1ZSByZXBvcnRlZCBieSBrYnVpbGQgdGVzdA0KPiByb2JvdA0KPiANCj4gT24gV2Vk
-LCBKYW4gMjcsIEsuIFkuIFNyaW5pdmFzYW4gd3JvdGU6DQo+IA0KPiA+ICsJZGVwZW5kcyBvbiBT
-Q1NJX0ZDX0FUVFJTDQo+IA0KPiBJIHRoaW5rICdkZXBlbmRzJyBpbnN0ZWFkIG9mICdzZWxlY3Qn
-IHdpbGwgY2F1c2UgSFlQRVJWX1NUT1JBR0UgdG8NCj4gZGlzYXBlcGFyIGR1cmluZyBtYWtlIG9s
-ZGNvbmZpZyBpZiBTQ1NJX0ZDX0FUVFJTIHdhcyBub3Qgc2V0IGJlZm9yZS4NCj4gTm90IHN1cmUg
-d2hhdCB0aGUgcG9saWN5IG9mICdkZXBlbmRzJyB2cy4gICdzZWxlY3QnIGFjdHVhbGx5IGlzLiAg
-SWYNCj4gU0NTSV9GQ19BVFRSUyBpcyBzdXBwb3NlZCB0byBiZSBhIGxpYnJhcnkga2luZCBvZiB0
-aGluZyB0aGVuICdzZWxlY3QnDQo+IG1pZ2h0IGJlIHRoZSBjb3JyZWN0IHdheS4NCg0KVGhlIGN1
-cnJlbnQgYnVpbGQgaXNzdWUgaXMgYmVjYXVzZSB0aGUgSHlwZXItViBzdG9yYWdlIGlzIGNvbmZp
-Z3VyZWQgdG8gYmUgYnVpbHQgd2l0aA0KdGhlIGtlcm5lbCB3aGlsZSB0aGUgU0NTSV9GQ19BQVRS
-UyBpcyBjb25maWd1cmVkIGFzIGEgbW9kdWxlLiBUaGlzIHBhdGNoIGZpeGVzIHRoYXQgaXNzdWUu
-DQpJIHRvbyBhbSBub3Qgc3VyZSB3aGF0IHRoZSBwb2xpY3kgb2YgdXNpbmcgImRlcGVuZHMiIHZz
-ICIgc2VsZWN0IiBpcy4NCkphbWVzLCB3aGF0IHdvdWxkIGJlIHlvdXIgcmVjb21tZW5kYXRpb24g
-aGVyZS4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gT2xhZg0K
+Hi Kai
+
+What kernel was the last patch you attached against.
+
+Thanks
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>
+To: "Shane M Seymour" <shane.seymour@hpe.com>
+Cc: "Laurence Oberman" <loberman@redhat.com>, "Emmanuel Florac" <eflora=
+c@intellique.com>, "Laurence Oberman" <oberman.l@gmail.com>, linux-scsi=
+@vger.kernel.org
+Sent: Thursday, January 28, 2016 12:04:20 PM
+Subject: Re: What partition should the MTMKPART argument specify? Was: =
+Re: st driver doesn't seem to grok LTO partitioning
+
+
+> On 28.1.2016, at 9.36, Seymour, Shane M <shane.seymour@hpe.com> wrote=
+:
+>=20
+> Hi Kai,
+>=20
+> With the changes the I get a failure partitioning a HP DAT72 drive (D=
+DS-5):
+>=20
+> # ./mt -f /dev/st1 stsetoption debug
+> # ./mt -f /dev/st1 stsetoption can-partitions
+> # ./mt -f /dev/st1 mkpartition 1000
+> /dev/st1: Input/output error
+>=20
+=2E..
+> [ 3976.389605] st 6:0:3:0: [st1] Partition page length is 10 bytes.
+> [ 3976.389610] st 6:0:3:0: [st1] PP: max 1, add 0, xdp 0, psum 02, po=
+fmetc 0, rec 03, units 00, sizes: 0 65535
+> [ 3976.389614] st 6:0:3:0: [st1] MP: 11 08 01 00 10 03 00 00 00 00 ff=
+ ff
+> [ 3976.389618] st 6:0:3:0: [st1] psd_cnt 2, max.parts 1, nbr_parts 0
+                                                     ^^^^^^^^^
+The problem is here
+
+=2E..
+> Using a slightly older kernel to partition the DAT72 drive works (sam=
+e 3 commands as above):
+=2E..
+> [  351.584906] st 6:0:3:0: [st1] Partition page length is 10 bytes.
+> [  351.584908] st 6:0:3:0: [st1] psd_cnt 1, max.parts 1, nbr_parts 0
+
+The old driver computes the psd_cnt from the returned page length. The =
+same applies
+to the patched driver if the SCSI level of the device < SCSI_3. This wo=
+rks correctly with
+my drive that reports SCSI_2. So, the question is: what SCSI level does=
+ your device
+report?
+
+Kai
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
