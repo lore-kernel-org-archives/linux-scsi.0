@@ -1,18 +1,533 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [LSF/MM TOPIC] NVMe target support
-Date: Thu, 28 Jan 2016 00:52:10 -0800
-Message-ID: <20160128085210.GB18023@infradead.org>
-References: <1453956103.6746.195.camel@haakon3.risingtidesystems.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2 04/11] qla2xxx: Add support for online flash update
+ for ISP27XX.
+Date: Thu, 28 Jan 2016 09:56:55 +0100
+Message-ID: <20160128085655.GI27565@c203.arch.suse.de>
+References: <1453914218-380-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1453914218-380-5-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60539 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754757AbcA1I46 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jan 2016 03:56:58 -0500
 Content-Disposition: inline
-In-Reply-To: <1453956103.6746.195.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: lsf-pc <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>, "Minturn, Dave B" <dave.b.minturn@intel.com>, Sagi Grimberg <sagig@mellanox.com>, Ming Lin <mlin@kernel.org>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@kernel.org>, Mike Christie <mchristi@redhat.com>
+In-Reply-To: <1453914218-380-5-git-send-email-himanshu.madhani@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-I think the frame is wrong, nevermind that I doubt I'll be able to
-discuss anything NVMe Fabrics related before the spec is public.  Which
-I doubt is in time for LSF/MM.
+On Wed, Jan 27, 2016 at 12:03:31PM -0500, Himanshu Madhani wrote:
+> From: Sawan Chandak <sawan.chandak@qlogic.com>
+>=20
+> Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_attr.c |   12 ++++-
+>  drivers/scsi/qla2xxx/qla_bsg.c  |   80 +++++++++++++++++++++++++++++=
++++++
+>  drivers/scsi/qla2xxx/qla_bsg.h  |    7 +++
+>  drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+>  drivers/scsi/qla2xxx/qla_def.h  |   22 +++++++++
+>  drivers/scsi/qla2xxx/qla_fw.h   |   10 ++++
+>  drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
+>  drivers/scsi/qla2xxx/qla_init.c |   91 +++++++++++++++++++++++++++++=
+++++++++++
+>  drivers/scsi/qla2xxx/qla_sup.c  |   47 +++++++++++++++++++-
+>  9 files changed, 266 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/q=
+la_attr.c
+> index 6992ebc..fef659a 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -562,6 +562,7 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct =
+kobject *kobj,
+>  	struct scsi_qla_host *vha =3D shost_priv(dev_to_shost(container_of(=
+kobj,
+>  	    struct device, kobj)));
+>  	struct qla_hw_data *ha =3D vha->hw;
+> +	uint32_t faddr;
+> =20
+>  	if (unlikely(pci_channel_offline(ha->pdev)))
+>  		return -EAGAIN;
+> @@ -569,9 +570,16 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct=
+ kobject *kobj,
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EINVAL;
+> =20
+> -	if (IS_NOCACHE_VPD_TYPE(ha))
+> -		ha->isp_ops->read_optrom(vha, ha->vpd, ha->flt_region_vpd << 2,
+> +	if (IS_NOCACHE_VPD_TYPE(ha)) {
+> +		faddr =3D ha->flt_region_vpd << 2;
+> +
+> +		if (IS_QLA27XX(ha) &&
+> +		    qla27xx_find_valid_image(vha) =3D=3D QLA27XX_SECONDARY_IMAGE)
+> +			faddr =3D ha->flt_region_vpd_sec << 2;
+> +
+> +		ha->isp_ops->read_optrom(vha, ha->vpd, faddr,
+>  		    ha->vpd_size);
+> +	}
+>  	return memory_read_from_buffer(buf, count, &off, ha->vpd, ha->vpd_s=
+ize);
+>  }
+> =20
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/ql=
+a_bsg.c
+> index c26acde..64fe17a 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -2107,6 +2107,80 @@ qla8044_serdes_op(struct fc_bsg_job *bsg_job)
+>  }
+> =20
+>  static int
+> +qla27xx_get_flash_upd_cap(struct fc_bsg_job *bsg_job)
+> +{
+> +	struct Scsi_Host *host =3D bsg_job->shost;
+> +	scsi_qla_host_t *vha =3D shost_priv(host);
+> +	struct qla_hw_data *ha =3D vha->hw;
+> +	struct qla_flash_update_caps cap;
+> +
+> +	if (!(IS_QLA27XX(ha)))
+> +		return -EPERM;
+> +
+> +	memset(&cap, 0, sizeof(cap));
+> +	cap.capabilities =3D (uint64_t)ha->fw_attributes_ext[1] << 48 |
+> +			   (uint64_t)ha->fw_attributes_ext[0] << 32 |
+> +			   (uint64_t)ha->fw_attributes_h << 16 |
+> +			   (uint64_t)ha->fw_attributes;
+> +
+> +	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+> +	    bsg_job->reply_payload.sg_cnt, &cap, sizeof(cap));
+> +	bsg_job->reply->reply_payload_rcv_len =3D sizeof(cap);
+> +
+> +	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+> +	    EXT_STATUS_OK;
+> +
+> +	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
+> +	bsg_job->reply->result =3D DID_OK << 16;
+> +	bsg_job->job_done(bsg_job);
+> +	return 0;
+> +}
+> +
+> +static int
+> +qla27xx_set_flash_upd_cap(struct fc_bsg_job *bsg_job)
+> +{
+> +	struct Scsi_Host *host =3D bsg_job->shost;
+> +	scsi_qla_host_t *vha =3D shost_priv(host);
+> +	struct qla_hw_data *ha =3D vha->hw;
+> +	uint64_t online_fw_attr =3D 0;
+> +	struct qla_flash_update_caps cap;
+> +
+> +	if (!(IS_QLA27XX(ha)))
+> +		return -EPERM;
+> +
+> +	memset(&cap, 0, sizeof(cap));
+> +	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+> +	    bsg_job->request_payload.sg_cnt, &cap, sizeof(cap));
+> +
+> +	online_fw_attr =3D (uint64_t)ha->fw_attributes_ext[1] << 48 |
+> +			 (uint64_t)ha->fw_attributes_ext[0] << 32 |
+> +			 (uint64_t)ha->fw_attributes_h << 16 |
+> +			 (uint64_t)ha->fw_attributes;
+> +
+> +	if (online_fw_attr !=3D cap.capabilities) {
+> +		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+> +		    EXT_STATUS_INVALID_PARAM;
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (cap.outage_duration < MAX_LOOP_TIMEOUT)  {
+> +		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+> +		    EXT_STATUS_INVALID_PARAM;
+> +		return -EINVAL;
+> +	}
+> +
+> +	bsg_job->reply->reply_payload_rcv_len =3D 0;
+> +
+> +	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+> +	    EXT_STATUS_OK;
+> +
+> +	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
+> +	bsg_job->reply->result =3D DID_OK << 16;
+> +	bsg_job->job_done(bsg_job);
+> +	return 0;
+> +}
+> +
+> +static int
+>  qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+>  {
+>  	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
+> @@ -2161,6 +2235,12 @@ qla2x00_process_vendor_specific(struct fc_bsg_=
+job *bsg_job)
+>  	case QL_VND_SERDES_OP_EX:
+>  		return qla8044_serdes_op(bsg_job);
+> =20
+> +	case QL_VND_GET_FLASH_UPDATE_CAPS:
+> +		return qla27xx_get_flash_upd_cap(bsg_job);
+> +
+> +	case QL_VND_SET_FLASH_UPDATE_CAPS:
+> +		return qla27xx_set_flash_upd_cap(bsg_job);
+> +
+>  	default:
+>  		return -ENOSYS;
+>  	}
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/ql=
+a_bsg.h
+> index d38f9ef..6c45bf4 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.h
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.h
+> @@ -25,6 +25,8 @@
+>  #define QL_VND_FX00_MGMT_CMD	0x12
+>  #define QL_VND_SERDES_OP	0x13
+>  #define	QL_VND_SERDES_OP_EX	0x14
+> +#define QL_VND_GET_FLASH_UPDATE_CAPS    0x15
+> +#define QL_VND_SET_FLASH_UPDATE_CAPS    0x16
+> =20
+>  /* BSG Vendor specific subcode returns */
+>  #define EXT_STATUS_OK			0
+> @@ -232,4 +234,9 @@ struct qla_serdes_reg_ex {
+>  	uint32_t val;
+>  } __packed;
+> =20
+> +struct qla_flash_update_caps {
+> +	uint64_t  capabilities;
+> +	uint32_t  outage_duration;
+> +	uint8_t   reserved[20];
+> +} __packed;
+>  #endif
+> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/ql=
+a_dbg.c
+> index 9e714cc..493a3ea81 100644
+> --- a/drivers/scsi/qla2xxx/qla_dbg.c
+> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
+> @@ -11,7 +11,7 @@
+>   * -----------------------------------------------------------------=
+-----
+>   * |             Level            |   Last Value Used  |     Holes	|
+>   * -----------------------------------------------------------------=
+-----
+> - * | Module Init and Probe        |       0x017f       | 0x0146     =
+    |
+> + * | Module Init and Probe        |       0x018f       | 0x0146     =
+    |
+>   * |                              |                    | 0x015b-0x01=
+60	|
+>   * |                              |                    | 0x016e-0x01=
+70  |
+>   * | Mailbox commands             |       0x1192       |		|
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/ql=
+a_def.h
+> index 9872f34..987480f 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -1060,6 +1060,12 @@ struct mbx_cmd_32 {
+>  #define FSTATE_FATAL_ERROR         4
+>  #define FSTATE_LOOP_BACK_CONN      5
+> =20
+> +#define QLA27XX_IMG_STATUS_VER_MAJOR   0x01
+> +#define QLA27XX_IMG_STATUS_VER_MINOR    0x00
+> +#define QLA27XX_IMG_STATUS_SIGN   0xFACEFADE
+> +#define QLA27XX_PRIMARY_IMAGE  1
+> +#define QLA27XX_SECONDARY_IMAGE    2
+> +
+>  /*
+>   * Port Database structure definition
+>   * Little endian except where noted.
+> @@ -3433,14 +3439,20 @@ struct qla_hw_data {
+>  	uint32_t        flt_region_flt;
+>  	uint32_t        flt_region_fdt;
+>  	uint32_t        flt_region_boot;
+> +	uint32_t        flt_region_boot_sec;
+>  	uint32_t        flt_region_fw;
+> +	uint32_t        flt_region_fw_sec;
+>  	uint32_t        flt_region_vpd_nvram;
+>  	uint32_t        flt_region_vpd;
+> +	uint32_t        flt_region_vpd_sec;
+>  	uint32_t        flt_region_nvram;
+>  	uint32_t        flt_region_npiv_conf;
+>  	uint32_t	flt_region_gold_fw;
+>  	uint32_t	flt_region_fcp_prio;
+>  	uint32_t	flt_region_bootload;
+> +	uint32_t	flt_region_img_status_pri;
+> +	uint32_t	flt_region_img_status_sec;
+> +	uint8_t         active_image;
+> =20
+>  	/* Needed for BEACON */
+>  	uint16_t        beacon_blink_led;
+> @@ -3705,6 +3717,16 @@ typedef struct scsi_qla_host {
+>  	struct qla_tgt_counters tgt_counters;
+>  } scsi_qla_host_t;
+> =20
+> +struct qla27xx_image_status {
+> +	uint8_t image_status_mask;
+> +	uint16_t generation_number;
+> +	uint8_t reserved[3];
+> +	uint8_t ver_minor;
+> +	uint8_t ver_major;
+> +	uint32_t checksum;
+> +	uint32_t signature;
+> +} __packed;
+> +
+>  #define SET_VP_IDX	1
+>  #define SET_AL_PA	2
+>  #define RESET_VP_IDX	3
+> diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla=
+_fw.h
+> index 42bb357..7f095e3 100644
+> --- a/drivers/scsi/qla2xxx/qla_fw.h
+> +++ b/drivers/scsi/qla2xxx/qla_fw.h
+> @@ -1393,6 +1393,16 @@ struct qla_flt_header {
+>  #define FLT_REG_FCOE_NVRAM_0	0xAA
+>  #define FLT_REG_FCOE_NVRAM_1	0xAC
+> =20
+> +/* 27xx */
+> +#define FLT_REG_IMG_PRI_27XX	0x95
+> +#define FLT_REG_IMG_SEC_27XX	0x96
+> +#define FLT_REG_FW_SEC_27XX	0x02
+> +#define FLT_REG_BOOTLOAD_SEC_27XX	0x9
+> +#define FLT_REG_VPD_SEC_27XX_0	0x50
+> +#define FLT_REG_VPD_SEC_27XX_1	0x52
+> +#define FLT_REG_VPD_SEC_27XX_2	0xD8
+> +#define FLT_REG_VPD_SEC_27XX_3	0xDA
+> +
+>  struct qla_flt_region {
+>  	uint32_t code;
+>  	uint32_t size;
+> diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/ql=
+a_gbl.h
+> index 1bfdcdf..fe94377 100644
+> --- a/drivers/scsi/qla2xxx/qla_gbl.h
+> +++ b/drivers/scsi/qla2xxx/qla_gbl.h
+> @@ -90,6 +90,7 @@ extern int qla2xxx_mctp_dump(scsi_qla_host_t *);
+>  extern int
+>  qla2x00_alloc_outstanding_cmds(struct qla_hw_data *, struct req_que =
+*);
+>  extern int qla2x00_init_rings(scsi_qla_host_t *);
+> +extern uint8_t qla27xx_find_valid_image(struct scsi_qla_host *);
+> =20
+>  /*
+>   * Global Data in qla_os.c source file.
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/q=
+la_init.c
+> index cf487b9..ffbc655 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -5348,6 +5348,93 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+>  	return (rval);
+>  }
+> =20
+> +uint8_t qla27xx_find_valid_image(struct scsi_qla_host *vha)
+> +{
+> +	struct qla27xx_image_status pri_image_status, sec_image_status;
+> +	uint8_t valid_pri_image, valid_sec_image;
+> +	uint32_t *wptr;
+> +	uint32_t cnt, chksum, size;
+> +	struct qla_hw_data *ha =3D vha->hw;
+> +
+> +	valid_pri_image =3D valid_sec_image =3D 1;
+> +	ha->active_image =3D 0;
+> +	size =3D sizeof(struct qla27xx_image_status) / sizeof(uint32_t);
+> +
+> +	if (!ha->flt_region_img_status_pri) {
+> +		valid_pri_image =3D 0;
+> +		goto check_sec_image;
+> +	}
+> +
+> +	qla24xx_read_flash_data(vha, (uint32_t *)(&pri_image_status),
+> +	    ha->flt_region_img_status_pri, size);
+> +
+> +	if (pri_image_status.signature !=3D QLA27XX_IMG_STATUS_SIGN) {
+> +		ql_dbg(ql_dbg_init, vha, 0x018b,
+> +		    "Primary image signature (0x%x) not valid\n",
+> +		    pri_image_status.signature);
+> +		valid_pri_image =3D 0;
+> +		goto check_sec_image;
+> +	}
+> +
+> +	wptr =3D (uint32_t *)(&pri_image_status);
+> +	cnt =3D size;
+> +
+> +	for (chksum =3D 0; cnt; cnt--)
+> +		chksum +=3D le32_to_cpu(*wptr++);
+> +	if (chksum) {
+> +		ql_dbg(ql_dbg_init, vha, 0x018c,
+> +		    "Checksum validation failed for primary image (0x%x)\n",
+> +		    chksum);
+> +		valid_pri_image =3D 0;
+> +	}
+> +
+> +check_sec_image:
+> +	if (!ha->flt_region_img_status_sec) {
+> +		valid_sec_image =3D 0;
+> +		goto check_valid_image;
+> +	}
+> +
+> +	qla24xx_read_flash_data(vha, (uint32_t *)(&sec_image_status),
+> +	    ha->flt_region_img_status_sec, size);
+> +
+> +	if (sec_image_status.signature !=3D QLA27XX_IMG_STATUS_SIGN) {
+> +		ql_dbg(ql_dbg_init, vha, 0x018d,
+> +		    "Secondary image signature(0x%x) not valid\n",
+> +		    sec_image_status.signature);
+> +		valid_sec_image =3D 0;
+> +		goto check_valid_image;
+> +	}
+> +
+> +	wptr =3D (uint32_t *)(&sec_image_status);
+> +	cnt =3D size;
+> +	for (chksum =3D 0; cnt; cnt--)
+> +		chksum +=3D le32_to_cpu(*wptr++);
+> +	if (chksum) {
+> +		ql_dbg(ql_dbg_init, vha, 0x018e,
+> +		    "Checksum validation failed for secondary image (0x%x)\n",
+> +		    chksum);
+> +		valid_sec_image =3D 0;
+> +	}
+> +
+> +check_valid_image:
+> +	if (valid_pri_image && (pri_image_status.image_status_mask & 0x1))
+> +		ha->active_image =3D QLA27XX_PRIMARY_IMAGE;
+> +	if (valid_sec_image && (sec_image_status.image_status_mask & 0x1)) =
+{
+> +		if (!ha->active_image ||
+> +		    pri_image_status.generation_number <
+> +		    sec_image_status.generation_number)
+> +			ha->active_image =3D QLA27XX_SECONDARY_IMAGE;
+> +	}
+> +
+> +	ql_dbg(ql_dbg_init, vha, 0x018f, "%s image\n",
+> +	    ha->active_image =3D=3D 0 ? "default bootld and fw" :
+> +	    ha->active_image =3D=3D 1 ? "primary" :
+> +	    ha->active_image =3D=3D 2 ? "secondary" :
+> +	    "Invalid");
+> +
+> +	return ha->active_image;
+> +}
+> +
+>  static int
+>  qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+>      uint32_t faddr)
+> @@ -5370,6 +5457,10 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, =
+uint32_t *srisc_addr,
+>  	dcode =3D (uint32_t *)req->ring;
+>  	*srisc_addr =3D 0;
+> =20
+> +	if (IS_QLA27XX(ha) &&
+> +	    qla27xx_find_valid_image(vha) =3D=3D QLA27XX_SECONDARY_IMAGE)
+> +		faddr =3D ha->flt_region_fw_sec;
+> +
+>  	/* Validate firmware image by checking version. */
+>  	qla24xx_read_flash_data(vha, dcode, faddr + 4, 4);
+>  	for (i =3D 0; i < 4; i++)
+> diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/ql=
+a_sup.c
+> index 3272ed5b..786ead2 100644
+> --- a/drivers/scsi/qla2xxx/qla_sup.c
+> +++ b/drivers/scsi/qla2xxx/qla_sup.c
+> @@ -846,6 +846,38 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint3=
+2_t flt_addr)
+>  			if (ha->port_no =3D=3D 1)
+>  				ha->flt_region_nvram =3D start;
+>  			break;
+> +		case FLT_REG_IMG_PRI_27XX:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_img_status_pri =3D start;
+> +			break;
+> +		case FLT_REG_IMG_SEC_27XX:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_img_status_sec =3D start;
+> +			break;
+> +		case FLT_REG_FW_SEC_27XX:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_fw_sec =3D start;
+> +			break;
+> +		case FLT_REG_BOOTLOAD_SEC_27XX:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_boot_sec =3D start;
+> +			break;
+> +		case FLT_REG_VPD_SEC_27XX_0:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_vpd_sec =3D start;
+> +			break;
+> +		case FLT_REG_VPD_SEC_27XX_1:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_vpd_sec =3D start;
+> +			break;
+> +		case FLT_REG_VPD_SEC_27XX_2:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_vpd_sec =3D start;
+> +			break;
+> +		case FLT_REG_VPD_SEC_27XX_3:
+> +			if (IS_QLA27XX(ha))
+> +				ha->flt_region_vpd_sec =3D start;
+> +			break;
+>  		}
+>  	}
+>  	goto done;
+> @@ -2989,6 +3021,9 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha,=
+ void *mbuf)
+>  	uint8_t code_type, last_image;
+>  	int i;
+>  	struct qla_hw_data *ha =3D vha->hw;
+> +	uint32_t faddr =3D 0;
+> +
+> +	pcihdr =3D pcids =3D 0;
+> =20
+>  	if (IS_P3P_TYPE(ha))
+>  		return ret;
+> @@ -3002,9 +3037,11 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha=
+, void *mbuf)
+>  	memset(ha->fw_revision, 0, sizeof(ha->fw_revision));
+> =20
+>  	dcode =3D mbuf;
+> -
+> -	/* Begin with first PCI expansion ROM header. */
+>  	pcihdr =3D ha->flt_region_boot << 2;
+> +	if (IS_QLA27XX(ha) &&
+> +	    qla27xx_find_valid_image(vha) =3D=3D QLA27XX_SECONDARY_IMAGE)
+> +		pcihdr =3D ha->flt_region_boot_sec << 2;
+> +
+>  	last_image =3D 1;
+>  	do {
+>  		/* Verify PCI expansion ROM header. */
+> @@ -3077,8 +3114,12 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha=
+, void *mbuf)
+>  	/* Read firmware image information. */
+>  	memset(ha->fw_revision, 0, sizeof(ha->fw_revision));
+>  	dcode =3D mbuf;
+> +	faddr =3D ha->flt_region_fw;
+> +	if (IS_QLA27XX(ha) &&
+> +	    qla27xx_find_valid_image(vha) =3D=3D QLA27XX_SECONDARY_IMAGE)
+> +		faddr =3D ha->flt_region_fw_sec;
+> =20
+> -	qla24xx_read_flash_data(vha, dcode, ha->flt_region_fw + 4, 4);
+> +	qla24xx_read_flash_data(vha, dcode, faddr + 4, 4);
+>  	for (i =3D 0; i < 4; i++)
+>  		dcode[i] =3D be32_to_cpu(dcode[i]);
+> =20
+> --=20
+> 1.7.7
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
