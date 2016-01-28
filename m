@@ -1,25 +1,26 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [LSF/MM TOPIC] NVMe target support
-Date: Thu, 28 Jan 2016 10:11:49 +0100
-Message-ID: <20160128091149.GA10449@lst.de>
-References: <1453956103.6746.195.camel@haakon3.risingtidesystems.com> <20160128085210.GB18023@infradead.org> <1453972182.6746.248.camel@haakon3.risingtidesystems.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [mpt3sas driver 02/10] mpt3sas: Used IEEE SGL instead of MPI SGL
+ while framing a SMP Passthrough request message.
+Date: Thu, 28 Jan 2016 01:16:09 -0800
+Message-ID: <20160128091609.GA26956@infradead.org>
+References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
+ <1453963027-19770-3-git-send-email-suganath-prabu.subramani@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45301 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754927AbcA1JLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jan 2016 04:11:52 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1453972182.6746.248.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1453963027-19770-3-git-send-email-suganath-prabu.subramani@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>
+Cc: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, krishnaraddi.mankani@avagotech.com, linux-kernel@vger.kernel.org, chaitra.basappa@avagotech.com, sreekanth.reddy@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, lsf-pc <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>, "Minturn, Dave B" <dave.b.minturn@intel.com>, Sagi Grimberg <sagig@mellanox.com>, Ming Lin <mlin@kernel.org>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@kernel.org>, Mike Christie <mchristi@redhat.com>
 
-There is a upcoming 'NVMe over Fabrics' spec, and it seems to be your are
-using the word 'fabrics' in a different context, so you might want to
-explain it in lay mans term.
+On Thu, Jan 28, 2016 at 12:06:59PM +0530, Suganath prabu Subaramani wrote:
+> From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+> 
+> As driver was using MPI SGL while framing the SMP Passthrough request
+> message due to which firmware unable to post the Reply Data in the host
+> memory and timeout is observed for this SMP Passthrough request message
+> and so unable to perform phy disable operation.
 
-If I was dictator for life I'd forbid the use of the word 'fabrics'
-for any not related to textiles..
+Does this also do the right thing for MPT2 HBAs?
