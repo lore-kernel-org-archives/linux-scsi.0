@@ -1,33 +1,117 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH] storvsc: use small sg_tablesize on x86
-Date: Thu, 28 Jan 2016 07:48:23 +0100
-Message-ID: <20160128064822.GA12884@aepfle.de>
-References: <1441706801-15300-1-git-send-email-olaf@aepfle.de>
- <BY2PR0301MB16540206D42C1E00EC353D0EA04C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
- <1443732718.6886.23.camel@HansenPartnership.com>
- <20151002171415.GA30430@gmail.com>
- <20160125083514.GA11991@gmail.com>
- <BY2PR0301MB1654E0BA47F3D2CC6D83BD64A0D90@BY2PR0301MB1654.namprd03.prod.outlook.com>
- <1453960859.2322.58.camel@HansenPartnership.com>
+From: Sumit Saxena <sumit.saxena@avagotech.com>
+Subject: RE: [PATCH 10/15] megaraid_sas: IO throttling support
+Date: Thu, 28 Jan 2016 12:48:13 +0530
+Message-ID: <75f584b953b9ad3a901011e049e3715e@mail.gmail.com>
+References: <1450445228-26571-1-git-send-email-Sumit.Saxena@avagotech.com>
+ <1450445228-26571-11-git-send-email-Sumit.Saxena@avagotech.com> <569E3C3C.6040507@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.162]:11337 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbcA1Gs2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 01:48:28 -0500
-Content-Disposition: inline
-In-Reply-To: <1453960859.2322.58.camel@HansenPartnership.com>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:32858 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbcA1HSP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 02:18:15 -0500
+Received: by mail-lb0-f175.google.com with SMTP id x4so18699084lbm.0
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 23:18:14 -0800 (PST)
+In-Reply-To: <569E3C3C.6040507@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Tomas Henzl <thenzl@redhat.com>, jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@avagotech.com>
 
-On Wed, Jan 27, James Bottomley wrote:
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Tuesday, January 19, 2016 7:08 PM
+> To: Sumit Saxena; jbottomley@parallels.com; hch@infradead.org;
+> martin.petersen@oracle.com
+> Cc: linux-scsi@vger.kernel.org; kashyap.desai@avagotech.com
+> Subject: Re: [PATCH 10/15] megaraid_sas: IO throttling support
+>
+> On 18.12.2015 14:27, Sumit Saxena wrote:
+> > This patch will add capability in driver to tell firmware that it can
+> > throttle IOs in case Controller's Queue depth is downgraded post OFU
+(Online
+> firmware upgrade). This feature will ensure firmware can be downgraded
+from
+> higher queue depth to lower queue depth without needing system reboot.
+> > Added throttling code in IO path of driver, in case OS tries to send
+more IOs
+> than post OFU firmware's queue depth.
+> >
+> > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas.h        |    6 ++++--
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.c |    7 +++++++
+> >  2 files changed, 11 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+> > b/drivers/scsi/megaraid/megaraid_sas.h
+> > index 4595ef4..9d2b3da 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas.h
+> > +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> > @@ -1537,7 +1537,8 @@ union megasas_sgl_frame {  typedef union
+> > _MFI_CAPABILITIES {
+> >  	struct {
+> >  #if   defined(__BIG_ENDIAN_BITFIELD)
+> > -		u32     reserved:21;
+> > +		u32     reserved:20;
+> > +		u32     support_qd_throttling:1;
+> >  		u32     support_fp_rlbypass:1;
+> >  		u32     support_vfid_in_ioframe:1;
+> >  		u32     support_ext_io_size:1;
+> > @@ -1561,7 +1562,8 @@ typedef union _MFI_CAPABILITIES {
+> >  		u32     support_ext_io_size:1;
+> >  		u32     support_vfid_in_ioframe:1;
+> >  		u32     support_fp_rlbypass:1;
+> > -		u32     reserved:21;
+> > +		u32     support_qd_throttling:1;
+> > +		u32     reserved:20;
+> >  #endif
+> >  	} mfi_capabilities;
+> >  	__le32		reg;
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > index 7cc7806..1248c7a 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > @@ -801,6 +801,7 @@ megasas_ioc_init_fusion(struct megasas_instance
+> *instance)
+> >  	if (!dual_qdepth_disable)
+> >  		drv_ops->mfi_capabilities.support_ext_queue_depth = 1;
+> >
+> > +	drv_ops->mfi_capabilities.support_qd_throttling = 1;
+> >  	/* Convert capability to LE32 */
+> >  	cpu_to_le32s((u32
+> > *)&init_frame->driver_operations.mfi_capabilities);
+> >
+> > @@ -2182,6 +2183,12 @@ megasas_build_and_issue_cmd_fusion(struct
+> megasas_instance *instance,
+> >  			atomic_inc(&instance->ldio_outstanding);
+> >  	}
+> >
+> > +	if (atomic_read(&instance->fw_outstanding) >=
+> > +			instance->host->can_queue) {
+> > +		dev_err(&instance->pdev->dev, "Throttle IOs beyond
+Controller
+> queue depth\n");
+> > +		return SCSI_MLQUEUE_HOST_BUSY;
+> > +	}
+>
+> Same as in the previous patch, this this test above won't you protect
+when
+> several processes read the same value in parallel. In addition to that,
+when the
+> scsi layer knows the new smaller can_queue value it will not queue new
+> commands above the limit.
 
-> It's not really architecture independent, is it?  Just use the bit
-> width config.
-
-Again: which one? This driver is not for mips|powerpc|score|sh.
-
-Olaf
+Agree that SCSI mid layer itself will not send IOs beyond can_queue value
+and we can remove this code. This code was just extra check for older
+kernels- if IOs returned to SCSI mid layer by driver with DID_RESET status
+does not check updated can_queue value(not sure if it was always taken
+care of so added this code).
+>
+> > +
+> >  	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
+> >
+> >  	index = cmd->index;
