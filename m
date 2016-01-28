@@ -1,15 +1,15 @@
 From: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>
-Subject: [mpt3sas driver 06/10] mpt3sas: Added smp_affinity_enable module parameter.
-Date: Thu, 28 Jan 2016 12:07:03 +0530
-Message-ID: <1453963027-19770-7-git-send-email-suganath-prabu.subramani@avagotech.com>
+Subject: [mpt3sas driver 09/10] mpt3sas: Fix for Asynchronous completion of timedout IO and task abort of timedout IO.
+Date: Thu, 28 Jan 2016 12:07:06 +0530
+Message-ID: <1453963027-19770-10-git-send-email-suganath-prabu.subramani@avagotech.com>
 References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:33309 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965362AbcA1GiB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 01:38:01 -0500
-Received: by mail-pa0-f53.google.com with SMTP id cy9so18126092pac.0
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 22:38:01 -0800 (PST)
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34244 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965515AbcA1GiP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 01:38:15 -0500
+Received: by mail-pf0-f181.google.com with SMTP id o185so13754599pfb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jan 2016 22:38:14 -0800 (PST)
 In-Reply-To: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,95 +18,167 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avago
 
 From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
 
-Module parameter to enable/disable configuring
-affinity hint for msix vector.
-SMP affinity feature can be enabled/disabled by setting
-module parameter "smp_affinity_enable" to 1/0.
-By default this feature is enabled. (smp_affinity_enable = 1 enabled).
+Track msix of each IO and use the same msix for issuing
+abort to timed out IO. With this driver will process IO's
+reply first followed by TM.
 
 Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
 Signed-off-by: Chaitra P B <chaitra.basappa@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 20 +++++++++++---------
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  5 ++++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++++---
+ 4 files changed, 25 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 31838d9a..a1a3b39 100644
+index 0f623fb..9307269 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -83,6 +83,10 @@ static int msix_disable = -1;
- module_param(msix_disable, int, 0);
- MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
- 
-+static int smp_affinity_enable = 1;
-+module_param(smp_affinity_enable, int, S_IRUGO);
-+MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Default: enable(1)");
-+
- static int max_msix_vectors = -1;
- module_param(max_msix_vectors, int, 0);
- MODULE_PARM_DESC(max_msix_vectors,
-@@ -1812,8 +1816,10 @@ _base_free_irq(struct MPT3SAS_ADAPTER *ioc)
- 
- 	list_for_each_entry_safe(reply_q, next, &ioc->reply_queue_list, list) {
- 		list_del(&reply_q->list);
--		irq_set_affinity_hint(reply_q->vector, NULL);
--		free_cpumask_var(reply_q->affinity_hint);
-+		if (smp_affinity_enable) {
-+			irq_set_affinity_hint(reply_q->vector, NULL);
-+			free_cpumask_var(reply_q->affinity_hint);
-+		}
- 		synchronize_irq(reply_q->vector);
- 		free_irq(reply_q->vector, reply_q);
- 		kfree(reply_q);
-@@ -1844,9 +1850,11 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
- 	reply_q->msix_index = index;
- 	reply_q->vector = vector;
- 
--	if (!alloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
--		return -ENOMEM;
--	cpumask_clear(reply_q->affinity_hint);
-+	if (smp_affinity_enable) {
-+		if (!alloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
-+			return -ENOMEM;
-+		cpumask_clear(reply_q->affinity_hint);
-+	}
- 
- 	atomic_set(&reply_q->busy, 0);
- 	if (ioc->msix_enable)
-@@ -1909,16 +1917,17 @@ _base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc)
- 
- 		for (i = 0 ; i < group ; i++) {
- 			ioc->cpu_msix_table[cpu] = index;
--			cpumask_or(reply_q->affinity_hint,
-+			if (smp_affinity_enable)
-+				cpumask_or(reply_q->affinity_hint,
- 				   reply_q->affinity_hint, get_cpu_mask(cpu));
- 			cpu = cpumask_next(cpu, cpu_online_mask);
- 		}
--
--		if (irq_set_affinity_hint(reply_q->vector,
-+		if (smp_affinity_enable)
-+			if (irq_set_affinity_hint(reply_q->vector,
- 					   reply_q->affinity_hint))
--			dinitprintk(ioc, pr_info(MPT3SAS_FMT
--			    "error setting affinity hint for irq vector %d\n",
--			    ioc->name, reply_q->vector));
-+				dinitprintk(ioc, pr_info(MPT3SAS_FMT
-+				 "Err setting affinity hint to irq vector %d\n",
-+				 ioc->name, reply_q->vector));
- 		index++;
- 	}
+@@ -2258,6 +2258,12 @@ mpt3sas_base_get_reply_virt_addr(struct MPT3SAS_ADAPTER *ioc, u32 phys_addr)
+ 	return ioc->reply + (phys_addr - (u32)ioc->reply_dma);
  }
-@@ -1976,6 +1985,9 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
- 	} else if (max_msix_vectors == 0)
- 		goto try_ioapic;
  
-+	if (ioc->msix_vector_count < ioc->cpu_count)
-+		smp_affinity_enable = 0;
++static inline u8
++_base_get_msix_index(struct MPT3SAS_ADAPTER *ioc)
++{
++	return ioc->cpu_msix_table[raw_smp_processor_id()];
++}
 +
- 	entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
- 	    GFP_KERNEL);
- 	if (!entries) {
+ /**
+  * mpt3sas_base_get_smid - obtain a free smid from internal queue
+  * @ioc: per adapter object
+@@ -2318,6 +2324,7 @@ mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+ 	request->scmd = scmd;
+ 	request->cb_idx = cb_idx;
+ 	smid = request->smid;
++	request->msix_io = _base_get_msix_index(ioc);
+ 	list_del(&request->tracker_list);
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 	return smid;
+@@ -2440,12 +2447,6 @@ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ }
+ #endif
+ 
+-static inline u8
+-_base_get_msix_index(struct MPT3SAS_ADAPTER *ioc)
+-{
+-	return ioc->cpu_msix_table[raw_smp_processor_id()];
+-}
+-
+ /**
+  * mpt3sas_base_put_smid_scsi_io - send SCSI_IO request to firmware
+  * @ioc: per adapter object
+@@ -2499,18 +2500,19 @@ mpt3sas_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+  * mpt3sas_base_put_smid_hi_priority - send Task Managment request to firmware
+  * @ioc: per adapter object
+  * @smid: system request message index
+- *
++ * @msix_task: msix_task will be same as msix of IO incase of task abort else 0.
+  * Return nothing.
+  */
+ void
+-mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u16 msix_task)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+ 	u64 *request = (u64 *)&descriptor;
+ 
+ 	descriptor.HighPriority.RequestFlags =
+ 	    MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
+-	descriptor.HighPriority.MSIxIndex =  0;
++	descriptor.HighPriority.MSIxIndex =  msix_task;
+ 	descriptor.HighPriority.SMID = cpu_to_le16(smid);
+ 	descriptor.HighPriority.LMID = 0;
+ 	descriptor.HighPriority.Reserved1 = 0;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index d1fee34..24bd19a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -649,6 +649,7 @@ struct chain_tracker {
+  * @cb_idx: callback index
+  * @direct_io: To indicate whether I/O is direct (WARPDRIVE)
+  * @tracker_list: list of free request (ioc->free_list)
++ * @msix_io: IO's msix
+  */
+ struct scsiio_tracker {
+ 	u16	smid;
+@@ -657,6 +658,7 @@ struct scsiio_tracker {
+ 	u8	direct_io;
+ 	struct list_head chain_list;
+ 	struct list_head tracker_list;
++	u16     msix_io;
+ };
+ 
+ /**
+@@ -1245,7 +1247,8 @@ void mpt3sas_base_put_smid_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 handle);
+ void mpt3sas_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 handle);
+-void mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++void mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc,
++	u16 smid, u16 msix_task);
+ void mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+ void mpt3sas_base_initialize_callback_handler(void);
+ u8 mpt3sas_base_register_callback_handler(MPT_CALLBACK cb_func);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index d872587..7d00f09 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -832,7 +832,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		    tm_request->DevHandle));
+ 		ioc->build_sg_mpi(ioc, psge, data_out_dma, data_out_sz,
+ 		    data_in_dma, data_in_sz);
+-		mpt3sas_base_put_smid_hi_priority(ioc, smid);
++		mpt3sas_base_put_smid_hi_priority(ioc, smid, 0);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_SMP_PASSTHROUGH:
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index b12cada..e0e4920 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2217,6 +2217,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	unsigned long timeleft;
+ 	struct scsiio_tracker *scsi_lookup = NULL;
+ 	int rc;
++	u16 msix_task = 0;
+ 
+ 	if (m_type == TM_MUTEX_ON)
+ 		mutex_lock(&ioc->tm_cmds.mutex);
+@@ -2280,7 +2281,12 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
+ 	mpt3sas_scsih_set_tm_flag(ioc, handle);
+ 	init_completion(&ioc->tm_cmds.done);
+-	mpt3sas_base_put_smid_hi_priority(ioc, smid);
++	if ((type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) &&
++			(scsi_lookup->msix_io < ioc->reply_queue_count))
++		msix_task = scsi_lookup->msix_io;
++	else
++		msix_task = 0;
++	mpt3sas_base_put_smid_hi_priority(ioc, smid, msix_task);
+ 	timeleft = wait_for_completion_timeout(&ioc->tm_cmds.done, timeout*HZ);
+ 	if (!(ioc->tm_cmds.status & MPT3_CMD_COMPLETE)) {
+ 		pr_err(MPT3SAS_FMT "%s: timeout\n",
+@@ -3187,7 +3193,7 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+ 	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpi_request->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET;
+-	mpt3sas_base_put_smid_hi_priority(ioc, smid);
++	mpt3sas_base_put_smid_hi_priority(ioc, smid, 0);
+ 	mpt3sas_trigger_master(ioc, MASTER_TRIGGER_DEVICE_REMOVAL);
+ 
+ out:
+@@ -3376,7 +3382,7 @@ _scsih_tm_tr_volume_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+ 	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpi_request->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET;
+-	mpt3sas_base_put_smid_hi_priority(ioc, smid);
++	mpt3sas_base_put_smid_hi_priority(ioc, smid, 0);
+ }
+ 
+ /**
 -- 
 1.8.3.1
 
