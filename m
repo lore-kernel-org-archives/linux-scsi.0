@@ -1,74 +1,27 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
  test robot
-Date: Thu, 28 Jan 2016 15:46:04 +0000
-Message-ID: <BY2PR0301MB16547480B07A074583ADB529A0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Date: Thu, 28 Jan 2016 16:56:13 +0100
+Message-ID: <20160128155613.GA12447@gmail.com>
 References: <1453966147-10568-1-git-send-email-kys@microsoft.com>
- <1453960962.2322.60.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453960962.2322.60.camel@HansenPartnership.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1453966147-10568-1-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-V2VkbmVzZGF5LCBKYW51YXJ5IDI3LCAyMDE2IDEwOjAzIFBNDQo+IFRvOiBLWSBTcmluaXZhc2Fu
-IDxreXNAbWljcm9zb2Z0LmNvbT47IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC0N
-Cj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsg
-b2hlcmluZ0BzdXNlLmNvbTsNCj4gamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFk
-ZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29t
-OyB2a3V6bmV0c0ByZWRoYXQuY29tOyBqYXNvd2FuZ0ByZWRoYXQuY29tOw0KPiBtYXJ0aW4ucGV0
-ZXJzZW5Ab3JhY2xlLmNvbTsgaGFyZUBzdXNlLmRlDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8x
-XSBzY3NpOiBzdG9ydnNjOiBGaXggYSBidWlsZCBpc3N1ZSByZXBvcnRlZCBieSBrYnVpbGQgdGVz
-dA0KPiByb2JvdA0KPiANCj4gT24gV2VkLCAyMDE2LTAxLTI3IGF0IDIzOjI5IC0wODAwLCBLLiBZ
-LiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+IHRyZWU6ICAgaHR0cHM6Ly9uYTAxLnNhZmVsaW5rcy5w
-cm90ZWN0aW9uLm91dGxvb2suY29tLz91cmw9aHR0cHMlM2ElMg0KPiA+IGYlMmZnaXQua2VybmVs
-Lm9yZyUyZnB1YiUyZnNjbSUyZmxpbnV4JTJma2VybmVsJTJmZ2l0JTJmdG9ydmFsZHMlMmZsaQ0K
-PiA+DQo+IG51eC5naXQmZGF0YT0wMSU3YzAxJTdja3lzJTQwbWljcm9zb2Z0LmNvbSU3Y2UyZTA2
-MjI3MTU4NDRiNzlhZDcxDQo+IDA4ZDMNCj4gPg0KPiAyNzk2ZWMzYyU3YzcyZjk4OGJmODZmMTQx
-YWY5MWFiMmQ3Y2QwMTFkYjQ3JTdjMSZzZGF0YT11YnI0R2JCYU5TDQo+ICUyZnRPDQo+ID4geiUy
-YnVKQmswQ0w5TjBVTkc5eDJUaWRMZ3k2WW92ZzQlM2QgbWFzdGVyDQo+ID4gaGVhZDogICAwM2My
-MWNiNzc1YTMxM2YxZmYxOWJlNTljNWQwMmRmM2UzNTI2NDcxDQo+ID4gY29tbWl0OiBkYWM1ODI0
-MTdiYzQ0OWIxZjdmNTcyZDNmMWRkOWQyM2VlYzE1Y2M5IHN0b3J2c2M6IFByb3Blcmx5DQo+ID4g
-c3VwcG9ydCBGaWJyZSBDaGFubmVsIGRldmljZXMNCj4gPiBkYXRlOiAgIDMgd2Vla3MgYWdvDQo+
-ID4gY29uZmlnOiB4ODZfNjQtcmFuZGNvbmZpZy1zMy0wMTI4MTAxNiAoYXR0YWNoZWQgYXMgLmNv
-bmZpZykNCj4gPiByZXByb2R1Y2U6DQo+ID4gICAgICAgICBnaXQgY2hlY2tvdXQgZGFjNTgyNDE3
-YmM0NDliMWY3ZjU3MmQzZjFkZDlkMjNlZWMxNWNjOQ0KPiA+ICAgICAgICAgIyBzYXZlIHRoZSBh
-dHRhY2hlZCAuY29uZmlnIHRvIGxpbnV4IGJ1aWxkIHRyZWUNCj4gPiAgICAgICAgIG1ha2UgQVJD
-SD14ODZfNjQNCj4gPg0KPiA+IEFsbCBlcnJvcnMgKG5ldyBvbmVzIHByZWZpeGVkIGJ5ID4+KToN
-Cj4gPg0KPiA+ICAgIGRyaXZlcnMvYnVpbHQtaW4ubzogSW4gZnVuY3Rpb24gYHN0b3J2c2NfcmVt
-b3ZlJzoNCj4gPiA+ID4gc3RvcnZzY19kcnYuYzooLnRleHQrMHgyMTNhZjcpOiB1bmRlZmluZWQg
-cmVmZXJlbmNlIHRvDQo+ID4gPiA+IGBmY19yZW1vdmVfaG9zdCcNCj4gPiAgICBkcml2ZXJzL2J1
-aWx0LWluLm86IEluIGZ1bmN0aW9uIGBzdG9ydnNjX2Rydl9pbml0JzoNCj4gPiA+ID4gc3RvcnZz
-Y19kcnYuYzooLmluaXQudGV4dCsweGNiY2MpOiB1bmRlZmluZWQgcmVmZXJlbmNlIHRvDQo+ID4g
-PiA+IGBmY19hdHRhY2hfdHJhbnNwb3J0Jw0KPiA+ID4gPiBzdG9ydnNjX2Rydi5jOiguaW5pdC50
-ZXh0KzB4Y2MwNik6IHVuZGVmaW5lZCByZWZlcmVuY2UgdG8NCj4gPiA+ID4gYGZjX3JlbGVhc2Vf
-dHJhbnNwb3J0Jw0KPiA+ICAgIGRyaXZlcnMvYnVpbHQtaW4ubzogSW4gZnVuY3Rpb24gYHN0b3J2
-c2NfZHJ2X2V4aXQnOg0KPiA+ID4gPiBzdG9ydnNjX2Rydi5jOiguZXhpdC50ZXh0KzB4MTIzYyk6
-IHVuZGVmaW5lZCByZWZlcmVuY2UgdG8NCj4gPiA+ID4gYGZjX3JlbGVhc2VfdHJhbnNwb3J0Jw0K
-PiA+DQo+ID4gV2l0aCB0aGlzIGNvbW1pdCwgdGhlIHN0b3J2c2MgZHJpdmVyIGRlcGVuZHMgb24g
-RkMgYXR0dHJpYnV0ZXMuIE1ha2UNCj4gPiB0aGlzDQo+ID4gZGVwZW5kZW5jeSBleHBsaWNpdC4N
-Cj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEsuIFkuIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQu
-Y29tPg0KPiA+IFJlcG9ydGVkLWJ5OiBGZW5nZ3VhbmcgV3UgPGZlbmdndWFuZy53dUBpbnRlbC5j
-b20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9LY29uZmlnIHwgICAgMSArDQo+ID4gIDEg
-ZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9LY29uZmlnIGIvZHJpdmVycy9zY3NpL0tjb25maWcN
-Cj4gPiBpbmRleCA2NGVlZDg3Li4yNDM2NWMzIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2Nz
-aS9LY29uZmlnDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL0tjb25maWcNCj4gPiBAQCAtNTk0LDYg
-KzU5NCw3IEBAIGNvbmZpZyBYRU5fU0NTSV9GUk9OVEVORA0KPiA+ICBjb25maWcgSFlQRVJWX1NU
-T1JBR0UNCj4gPiAgCXRyaXN0YXRlICJNaWNyb3NvZnQgSHlwZXItViB2aXJ0dWFsIHN0b3JhZ2Ug
-ZHJpdmVyIg0KPiA+ICAJZGVwZW5kcyBvbiBTQ1NJICYmIEhZUEVSVg0KPiA+ICsJZGVwZW5kcyBv
-biBTQ1NJX0ZDX0FUVFJTDQo+ID4gIAlkZWZhdWx0IEhZUEVSVg0KPiA+ICAJaGVscA0KPiA+ICAJ
-ICBTZWxlY3QgdGhpcyBvcHRpb24gdG8gZW5hYmxlIHRoZSBIeXBlci1WIHZpcnR1YWwgc3RvcmFn
-ZQ0KPiA+IGRyaXZlci4NCj4gDQo+IE9LLCBzbyBJIHRob3VnaHQgSGFubmVzIHJlcXVlc3RlZCB0
-aGF0IHlvdSBub3QgbWFrZSB0aGUgaHlwZXJ2IGRyaXZlcg0KPiBkZXBlbmQgb24gdGhlIEZDIGF0
-dHJzIGFuZCB5b3Ugc2FpZCB5b3Ugd291bGQgLi4uIGhhcyB0aGlzIGNoYW5nZWQ/DQpTaW5jZSA5
-OSUgb2YgdGhlIGNvZGUgd291bGQgYmUgaWRlbnRpY2FsLCBIYW5uZXMgYWdyZWVkIHRoYXQgaXQg
-d291bGQgbm90IGJlDQpnb29kIHRvIGhhdmUgYSBzZXBhcmF0ZSBGQyBkcml2ZXIuIEdpdmVuIHRo
-YXQsIHRoaXMgaXMgdGhlIG9ubHkgb3B0aW9uIHdlIGhhdmUuDQoNClJlZ2FyZHMsDQoNCksuIFkN
-Cj4gDQo+IEphbWVzDQoNCg==
+On Wed, Jan 27, K. Y. Srinivasan wrote:
+
+> +	depends on SCSI_FC_ATTRS
+
+I think 'depends' instead of 'select' will cause HYPERV_STORAGE to
+disapepar during make oldconfig if SCSI_FC_ATTRS was not set before.
+Not sure what the policy of 'depends' vs.  'select' actually is.  If
+SCSI_FC_ATTRS is supposed to be a library kind of thing then 'select'
+might be the correct way.
+
+Olaf
