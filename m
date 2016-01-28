@@ -1,87 +1,60 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 08/11] qla2xxx: Provide mbx info in BBCR data after
- mbx failure
-Date: Thu, 28 Jan 2016 10:00:31 +0100
-Message-ID: <20160128090031.GM27565@c203.arch.suse.de>
+Subject: Re: [PATCH v2 09/11] qla2xxx: Enable T10-DIF for ISP27XX
+Date: Thu, 28 Jan 2016 10:00:56 +0100
+Message-ID: <20160128090056.GN27565@c203.arch.suse.de>
 References: <1453914218-380-1-git-send-email-himanshu.madhani@qlogic.com>
- <1453914218-380-9-git-send-email-himanshu.madhani@qlogic.com>
+ <1453914218-380-10-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33481 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33625 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755165AbcA1JAd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jan 2016 04:00:33 -0500
+	id S934180AbcA1JA7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jan 2016 04:00:59 -0500
 Content-Disposition: inline
-In-Reply-To: <1453914218-380-9-git-send-email-himanshu.madhani@qlogic.com>
+In-Reply-To: <1453914218-380-10-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-On Wed, Jan 27, 2016 at 12:03:35PM -0500, Himanshu Madhani wrote:
-> From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
->=20
-> Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+On Wed, Jan 27, 2016 at 12:03:36PM -0500, Himanshu Madhani wrote:
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 > ---
->  drivers/scsi/qla2xxx/qla_bsg.c |    9 +++++++--
->  drivers/scsi/qla2xxx/qla_bsg.h |    4 +++-
->  2 files changed, 10 insertions(+), 3 deletions(-)
+>  drivers/scsi/qla2xxx/qla_os.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/ql=
-a_bsg.c
-> index 913fef2..392c147 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2204,8 +2204,12 @@ qla27xx_get_bbcr_data(struct fc_bsg_job *bsg_j=
-ob)
->  	if (bbcr.status =3D=3D QLA_BBCR_STATUS_ENABLED) {
->  		rval =3D qla2x00_get_adapter_id(vha, &loop_id, &al_pa,
->  			&area, &domain, &topo, &sw_cap);
-> -		if (rval !=3D QLA_SUCCESS)
-> -			return -EIO;
-> +		if (rval !=3D QLA_SUCCESS) {
-> +			bbcr.status =3D QLA_BBCR_STATUS_UNKNOWN;
-> +			bbcr.state =3D QLA_BBCR_STATE_OFFLINE;
-> +			bbcr.mbx1 =3D loop_id;
-> +			goto done;
-> +		}
-> =20
->  		state =3D (vha->bbcr >> 12) & 0x1;
-> =20
-> @@ -2220,6 +2224,7 @@ qla27xx_get_bbcr_data(struct fc_bsg_job *bsg_jo=
-b)
->  		bbcr.configured_bbscn =3D vha->bbcr & 0xf;
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla=
+_os.c
+> index d94a236..fa017e9 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -2217,6 +2217,7 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+>  		ha->device_type |=3D DT_ZIO_SUPPORTED;
+>  		ha->device_type |=3D DT_FWI2;
+>  		ha->device_type |=3D DT_IIDMA;
+> +		ha->device_type |=3D DT_T10_PI;
+>  		ha->fw_srisc_address =3D RISC_START_ADDRESS_2400;
+>  		break;
+>  	case PCI_DEVICE_ID_QLOGIC_ISP2271:
+> @@ -2224,6 +2225,7 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+>  		ha->device_type |=3D DT_ZIO_SUPPORTED;
+>  		ha->device_type |=3D DT_FWI2;
+>  		ha->device_type |=3D DT_IIDMA;
+> +		ha->device_type |=3D DT_T10_PI;
+>  		ha->fw_srisc_address =3D RISC_START_ADDRESS_2400;
+>  		break;
+>  	case PCI_DEVICE_ID_QLOGIC_ISP2261:
+> @@ -2231,6 +2233,7 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+>  		ha->device_type |=3D DT_ZIO_SUPPORTED;
+>  		ha->device_type |=3D DT_FWI2;
+>  		ha->device_type |=3D DT_IIDMA;
+> +		ha->device_type |=3D DT_T10_PI;
+>  		ha->fw_srisc_address =3D RISC_START_ADDRESS_2400;
+>  		break;
 >  	}
-> =20
-> +done:
->  	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
->  		bsg_job->reply_payload.sg_cnt, &bbcr, sizeof(bbcr));
->  	bsg_job->reply->reply_payload_rcv_len =3D sizeof(bbcr);
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/ql=
-a_bsg.h
-> index c40dd8b..c80192d 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.h
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.h
-> @@ -245,6 +245,7 @@ struct qla_flash_update_caps {
->  /* BB_CR Status */
->  #define QLA_BBCR_STATUS_DISABLED       0
->  #define QLA_BBCR_STATUS_ENABLED        1
-> +#define QLA_BBCR_STATUS_UNKNOWN        2
-> =20
->  /* BB_CR State */
->  #define QLA_BBCR_STATE_OFFLINE         0
-> @@ -262,6 +263,7 @@ struct  qla_bbcr_data {
->  	uint8_t   configured_bbscn;       /* 0-15 */
->  	uint8_t   negotiated_bbscn;       /* 0-15 */
->  	uint8_t   offline_reason_code;
-> -	uint8_t   reserved[11];
-> +	uint16_t  mbx1;			/* Port state */
-> +	uint8_t   reserved[9];
->  } __packed;
->  #endif
 > --=20
 > 1.7.7
 >=20
