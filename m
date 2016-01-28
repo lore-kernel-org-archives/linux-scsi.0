@@ -1,22 +1,42 @@
 From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
  st driver doesn't seem to grok LTO partitioning
-Date: Thu, 28 Jan 2016 18:23:13 -0500 (EST)
-Message-ID: <1586705024.9989294.1454023393133.JavaMail.zimbra@redhat.com>
-References: <20151218170644.24167419@harpe.intellique.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net> <alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr> <DDB9C85B850785449757F9914A034FCB44522A7B@G9W0766.americas.hpqcorp.net> <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44523469@G9W0766.americas.hpqcorp.net>
+Date: Thu, 28 Jan 2016 18:25:05 -0500 (EST)
+Message-ID: <2089155930.9989498.1454023505926.JavaMail.zimbra@redhat.com>
+References: <20151218170644.24167419@harpe.intellique.com> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net> <alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr> <DDB9C85B850785449757F9914A034FCB44522A7B@G9W0766.americas.hpqcorp.net> <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44523469@G9W0766.americas.hpqcorp.net> <1586705024.9989294.1454023393133.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:43861 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbcA1XXb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 18:23:31 -0500
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB44523469@G9W0766.americas.hpqcorp.net>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:33628 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751158AbcA1XZS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 18:25:18 -0500
+In-Reply-To: <1586705024.9989294.1454023393133.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Shane M Seymour <shane.seymour@hpe.com>
 Cc: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, linux-scsi@vger.kernel.org
+
+Meant to mention, still waiting for my new LTO5, also this is the first=
+ time I am testing the DAT72.
+
+Shane, have you had the DAT working before this last patch, if so which=
+ patch
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Laurence Oberman" <loberman@redhat.com>
+To: "Shane M Seymour" <shane.seymour@hpe.com>
+Cc: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>, "Emmanue=
+l Florac" <eflorac@intellique.com>, "Laurence Oberman" <oberman.l@gmail=
+=2Ecom>, linux-scsi@vger.kernel.org
+Sent: Thursday, January 28, 2016 6:23:13 PM
+Subject: Re: What partition should the MTMKPART argument specify? Was: =
+Re: st driver doesn't seem to grok LTO partitioning
 
 On My DAT tape with the latest patch
 
