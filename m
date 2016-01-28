@@ -1,59 +1,36 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] add driver for DesignWare UFS Host Controller
-Date: Thu, 28 Jan 2016 17:00:28 +0000
-Message-ID: <56AA492C.80707@synopsys.com>
-References: <c6de799a23c6626b95ccdcb89ba0b2341b441fa0.1450293353.git.jpinto@synopsys.com>
- <20160107094437.GA11038@infradead.org>
- <CAC5umyg=vhQ_5Nz60u8gsZFEOFP45cmXnSGny-v4ddk4qNeMHA@mail.gmail.com>
- <56969A3D.50701@synopsys.com>
- <CAC5umyjiTOzU9RCb4O-8aAHH35UWjMmE8fzWD4zUxQhwN9nUXg@mail.gmail.com>
- <5697715F.8060608@synopsys.com> <56A8F886.3010401@synopsys.com>
- <CAC5umyhHnAMqBfkPoJfZ7qhw89-0AqFQG70-XnyRzQk1Yxb=6Q@mail.gmail.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH-v2 1/3] target: Fix LUN_RESET active I/O handling for
+ ACK_KREF
+Date: Thu, 28 Jan 2016 19:00:28 +0200
+Message-ID: <56AA492C.2080301@dev.mellanox.co.il>
+References: <1453513067-23169-1-git-send-email-nab@daterainc.com>
+ <1453513067-23169-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:51527 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161314AbcA1RAg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 12:00:36 -0500
-In-Reply-To: <CAC5umyhHnAMqBfkPoJfZ7qhw89-0AqFQG70-XnyRzQk1Yxb=6Q@mail.gmail.com>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35974 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966744AbcA1RAe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 12:00:34 -0500
+Received: by mail-wm0-f53.google.com with SMTP id p63so33889706wmp.1
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 09:00:33 -0800 (PST)
+In-Reply-To: <1453513067-23169-2-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi Akinobu,
-Thanks for the tip!
 
-Joao
+> +		sess = cmd->se_sess;
+> +		if (WARN_ON_ONCE(!sess))
+> +			continue;
+> +
+> +		spin_lock(&sess->sess_cmd_lock);
+> +		rc = __target_check_io_state(cmd);
+> +		spin_unlock(&sess->sess_cmd_lock);
+> +		if (!rc) {
+> +			printk("LUN_RESET I/O: non-zero kref_get_unless_zero\n");
 
-On 1/28/2016 12:35 PM, Akinobu Mita wrote:
-> Hi Joao,
-> 
-> 2016-01-28 2:04 GMT+09:00 Joao Pinto <Joao.Pinto@synopsys.com>:
->> - NOP_OUT is failing with OCS = 0x7
->>
->> The OCS value is calculated in ufshcd_get_tr_ocs() in ufshcd.c.
->> I made a dump of the UTRD pointer where we can check the status = 7 ([2]).
->>
->> UTRD at: 7007c3e0
->> @0000 [0]:21000000
->> @0004 [1]:93936a6a
->> @0008 [2]:00000007
->> @000c [3]:93936a6a
->> @0010 [4]:9f317400
->> @0014 [5]:00000000
->> @0018 [6]:00800080
->> @001c [7]:01006a6a
->>
->> Did anyone have the same problem? Any hints to overcome this issue?
-> 
-> I have seen similar problem when using UFS 2.0 controller.
-> 
-> The ufs driver currently doesn't set correct command type field in
-> UTP transfer request descriptor (bit 31:28 in DW0) for UFS 2.0
-> controller.  I checked that your DesignWare UFS driver handles it
-> correctly, so please try with that change.
-> 
-
+Is this message always correct? __target_check_io_state() will return
+false for commands that were completed..
