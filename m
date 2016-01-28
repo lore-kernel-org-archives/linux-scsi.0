@@ -1,64 +1,57 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild test
- robot
-Date: Wed, 27 Jan 2016 23:29:07 -0800
-Message-ID: <1453966147-10568-1-git-send-email-kys@microsoft.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] storvsc: use small sg_tablesize on x86
+Date: Wed, 27 Jan 2016 22:00:59 -0800
+Message-ID: <1453960859.2322.58.camel@HansenPartnership.com>
+References: <1441706801-15300-1-git-send-email-olaf@aepfle.de>
+	 <BY2PR0301MB16540206D42C1E00EC353D0EA04C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+	 <1443732718.6886.23.camel@HansenPartnership.com>
+	 <20151002171415.GA30430@gmail.com> <20160125083514.GA11991@gmail.com>
+	 <BY2PR0301MB1654E0BA47F3D2CC6D83BD64A0D90@BY2PR0301MB1654.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <BY2PR0301MB1654E0BA47F3D2CC6D83BD64A0D90@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>, Olaf Hering <olaf@aepfle.de>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-tree:   https://na01.safelinks.protection.outlook.com/?url=https%3a%2f%2fgit.kernel.org%2fpub%2fscm%2flinux%2fkernel%2fgit%2ftorvalds%2flinux.git&data=01%7c01%7ckys%40microsoft.com%7ce2e0622715844b79ad7108d32796ec3c%7c72f988bf86f141af91ab2d7cd011db47%7c1&sdata=ubr4GbBaNS%2ftOz%2buJBk0CL9N0UNG9x2TidLgy6Yovg4%3d master
-head:   03c21cb775a313f1ff19be59c5d02df3e3526471
-commit: dac582417bc449b1f7f572d3f1dd9d23eec15cc9 storvsc: Properly support Fibre Channel devices
-date:   3 weeks ago
-config: x86_64-randconfig-s3-01281016 (attached as .config)
-reproduce:
-        git checkout dac582417bc449b1f7f572d3f1dd9d23eec15cc9
-        # save the attached .config to linux build tree
-        make ARCH=x86_64
+On Wed, 2016-01-27 at 23:09 +0000, KY Srinivasan wrote:
+> 
+> > -----Original Message-----
+> > From: Olaf Hering [mailto:olaf@aepfle.de]
+> > Sent: Monday, January 25, 2016 12:35 AM
+> > To: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> > <haiyangz@microsoft.com>; linux-kernel@vger.kernel.org; linux-
+> > scsi@vger.kernel.org
+> > Subject: Re: [PATCH] storvsc: use small sg_tablesize on x86
+> > 
+> > On Fri, Oct 02, Olaf Hering wrote:
+> > 
+> > > On Thu, Oct 01, James Bottomley wrote:
+> > > 
+> > > > On Thu, 2015-10-01 at 20:30 +0000, KY Srinivasan wrote:
+> > > 
+> > > > > > +#if defined(CONFIG_X86_32)
+> > > 
+> > > > Um, this is a bit architecture specific (I know Azure is x86,
+> > > > but
+> > > > still).  Can you make the define check CONFIG_32BIT rather than
+> > > > CONFIG_X86_32?
+> > > 
+> > > According to arch/x86/Kconfig there is no such thing.
+> > 
+> > What is the status of this change? Looks like there is nothing more 
+> > to do on my side.
+> 
+> Olaf,
+> 
+> We do have the config option: CONFIG_X86_64. Perhaps we could use 
+> this. Could you resubmit the patch with this change.
 
-All errors (new ones prefixed by >>):
+It's not really architecture independent, is it?  Just use the bit
+width config.
 
-   drivers/built-in.o: In function `storvsc_remove':
->> storvsc_drv.c:(.text+0x213af7): undefined reference to `fc_remove_host'
-   drivers/built-in.o: In function `storvsc_drv_init':
->> storvsc_drv.c:(.init.text+0xcbcc): undefined reference to `fc_attach_transport'
->> storvsc_drv.c:(.init.text+0xcc06): undefined reference to `fc_release_transport'
-   drivers/built-in.o: In function `storvsc_drv_exit':
->> storvsc_drv.c:(.exit.text+0x123c): undefined reference to `fc_release_transport'
-
-With this commit, the storvsc driver depends on FC atttributes. Make this
-dependency explicit.
-
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
----
- drivers/scsi/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 64eed87..24365c3 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -594,6 +594,7 @@ config XEN_SCSI_FRONTEND
- config HYPERV_STORAGE
- 	tristate "Microsoft Hyper-V virtual storage driver"
- 	depends on SCSI && HYPERV
-+	depends on SCSI_FC_ATTRS
- 	default HYPERV
- 	help
- 	  Select this option to enable the Hyper-V virtual storage driver.
--- 
-1.7.4.1
+James
