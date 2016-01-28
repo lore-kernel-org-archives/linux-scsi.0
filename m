@@ -1,890 +1,516 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: [PATCH v2 07/15] megaraid_sas: Reply Descriptor Post Queue(RDPQ) support
-Date: Thu, 28 Jan 2016 21:04:28 +0530
-Message-ID: <1453995276-24955-8-git-send-email-sumit.saxena@avagotech.com>
+Subject: [PATCH v2 11/15] megaraid_sas: Make adprecovery variable atomic
+Date: Thu, 28 Jan 2016 21:04:32 +0530
+Message-ID: <1453995276-24955-12-git-send-email-sumit.saxena@avagotech.com>
 References: <1453995276-24955-1-git-send-email-sumit.saxena@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36481 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966982AbcA1Pfh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 10:35:37 -0500
-Received: by mail-pa0-f45.google.com with SMTP id yy13so24762523pab.3
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 07:35:34 -0800 (PST)
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33030 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966897AbcA1Pfx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 10:35:53 -0500
+Received: by mail-pf0-f174.google.com with SMTP id x125so25514427pfb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 07:35:51 -0800 (PST)
 In-Reply-To: <1453995276-24955-1-git-send-email-sumit.saxena@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com, thenzl@redhat.com
 Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-This patch will create reply queue pool for each MSI-x index and will provide array of all reply queue base address
-instead of single base address of legacy mode. Using this new interface Driver can support higher Queue depth allocating
-more reply queue as scattered DMA pool. 
+Make instance->adprecovery variable atomic and removes hba_lock spinlock while accessing instance->adprecovery.
 
-If array mode is not supported driver will fall back to legacy method of allocation reply pool. 
-This method fall back controller queue depth to 1K max. To enable more than 1K QD, driver expect FW to support Array mode 
-and scratch_pad3 should provide new queue depth value.
+Tomas commented on last time sent patch asking to use u8 instead of atomic for adprecovery. I agree that atomic_t is not required
+here but this is done for not to touch legacy code of MFI adapters and replace hba_lock with atomic_t so there are no changes
+in this patch on top of last time sent patch.
 
-Using this method, Firmware should not allow downgrade (OFU) if latest driver and latest FW report 4K QD and Array mode reply queue.
-This type of FW upgrade may cause firmware fault and it should not be supported. Upgrade of FW will work, 
-but queue depth of the controller will be unchanged until reboot/driver reload.
-
-I have accomodated Tomas' comments in this patch- fix few error handling cases inside functions-
-megasas_alloc_cmdlist_fusion() and megasas_alloc_cmds_fusion(), fix typo- disable(old- disbale)
-in rdpq_enable module parameter's description, modify print to reflect RDPQ support statement correctly.
-
-
-Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |   6 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   |   9 +
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 543 ++++++++++++++++------------
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  12 +-
- 4 files changed, 331 insertions(+), 239 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 95 +++++++++++------------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 27 ++++----
+ 3 files changed, 50 insertions(+), 74 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 01135be..3b1ed2d 100644
+index c8d25a7..3e92f20 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -152,6 +152,7 @@
- #define MFI_RESET_FLAGS				MFI_INIT_READY| \
- 						MFI_INIT_MFIMODE| \
- 						MFI_INIT_ABORT
-+#define MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE    (0x01)
+@@ -2101,7 +2101,7 @@ struct megasas_instance {
+ 	u16 drv_supported_vd_count;
+ 	u16 drv_supported_pd_count;
  
- /*
-  * MFI frame flags
-@@ -1416,6 +1417,7 @@ enum DCMD_TIMEOUT_ACTION {
- #define MR_MAX_REPLY_QUEUES_EXT_OFFSET          0X003FC000
- #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
- #define MR_MAX_MSIX_REG_ARRAY                   16
-+#define MR_RDPQ_MODE_OFFSET			0X00800000
- /*
- * register set for both 1068 and 1078 controllers
- * structure extended for 1078 registers
-@@ -1455,8 +1457,9 @@ struct megasas_register_set {
- 
- 	u32 	outbound_scratch_pad ;		/*00B0h*/
- 	u32	outbound_scratch_pad_2;         /*00B4h*/
-+	u32	outbound_scratch_pad_3;         /*00B8h*/
- 
--	u32	reserved_4[2];			/*00B8h*/
-+	u32	reserved_4;			/*00BCh*/
- 
- 	u32 	inbound_low_queue_port ;	/*00C0h*/
- 
-@@ -2117,6 +2120,7 @@ struct megasas_instance {
- 	u8 mask_interrupts;
- 	u16 max_chain_frame_sz;
- 	u8 is_imr;
-+	u8 is_rdpq;
- 	bool dev_handle;
- };
- struct MR_LD_VF_MAP {
+-	u8 adprecovery;
++	atomic_t adprecovery;
+ 	unsigned long last_time;
+ 	u32 mfiStatus;
+ 	u32 last_seq_num;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index ea3994b..8df58c2 100644
+index 961c024..1bd5da4 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -92,6 +92,10 @@ int smp_affinity_enable = 1;
- module_param(smp_affinity_enable, int, S_IRUGO);
- MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Default: enable(1)");
- 
-+int rdpq_enable = 1;
-+module_param(rdpq_enable, int, S_IRUGO);
-+MODULE_PARM_DESC(rdpq_enable, " Allocate reply queue in chunks for large queue depth enable/disable Default: disable(0)");
-+
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
-@@ -5080,6 +5084,9 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 				instance->msix_vectors = ((scratch_pad_2
- 					& MR_MAX_REPLY_QUEUES_EXT_OFFSET)
- 					>> MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT) + 1;
-+				if (rdpq_enable)
-+					instance->is_rdpq = (scratch_pad_2 & MR_RDPQ_MODE_OFFSET) ?
-+								1 : 0;
- 				fw_msix_count = instance->msix_vectors;
- 				/* Save 1-15 reply post index address to local memory
- 				 * Index 0 is already saved from reg offset
-@@ -5116,6 +5123,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	dev_info(&instance->pdev->dev,
- 		"current msix/online cpus\t: (%d/%d)\n",
- 		instance->msix_vectors, (unsigned int)num_online_cpus());
-+	dev_info(&instance->pdev->dev,
-+		"RDPQ mode\t: (%s)\n", instance->is_rdpq ? "enabled" : "disabled");
- 
- 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
- 		(unsigned long)instance);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 518b488..1351cae 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -92,6 +92,8 @@ void megasas_start_timer(struct megasas_instance *instance,
- 			 void *fn, unsigned long interval);
- extern struct megasas_mgmt_info megasas_mgmt_info;
- extern int resetwaittime;
-+static void megasas_free_rdpq_fusion(struct megasas_instance *instance);
-+static void megasas_free_reply_fusion(struct megasas_instance *instance);
- 
- 
- 
-@@ -205,112 +207,74 @@ megasas_fire_cmd_fusion(struct megasas_instance *instance,
- #endif
- }
- 
--
- /**
-- * megasas_teardown_frame_pool_fusion -	Destroy the cmd frame DMA pool
-- * @instance:				Adapter soft state
-+ * megasas_free_cmds_fusion -	Free all the cmds in the free cmd pool
-+ * @instance:		Adapter soft state
-  */
--static void megasas_teardown_frame_pool_fusion(
--	struct megasas_instance *instance)
-+void
-+megasas_free_cmds_fusion(struct megasas_instance *instance)
+@@ -483,7 +483,7 @@ static int
+ megasas_check_reset_xscale(struct megasas_instance *instance,
+ 		struct megasas_register_set __iomem *regs)
  {
- 	int i;
- 	struct fusion_context *fusion = instance->ctrl_context;
--
--	u16 max_cmd = instance->max_fw_cmds;
--
- 	struct megasas_cmd_fusion *cmd;
- 
--	if (!fusion->sg_dma_pool || !fusion->sense_dma_pool) {
--		dev_err(&instance->pdev->dev, "dma pool is null. SG Pool %p, "
--		       "sense pool : %p\n", fusion->sg_dma_pool,
--		       fusion->sense_dma_pool);
--		return;
--	}
--
--	/*
--	 * Return all frames to pool
--	 */
--	for (i = 0; i < max_cmd; i++) {
--
-+	/* SG, Sense */
-+	for (i = 0; i < instance->max_fw_cmds; i++) {
- 		cmd = fusion->cmd_list[i];
--
--		if (cmd->sg_frame)
--			pci_pool_free(fusion->sg_dma_pool, cmd->sg_frame,
-+		if (cmd) {
-+			if (cmd->sg_frame)
-+				pci_pool_free(fusion->sg_dma_pool, cmd->sg_frame,
- 				      cmd->sg_frame_phys_addr);
--
--		if (cmd->sense)
--			pci_pool_free(fusion->sense_dma_pool, cmd->sense,
-+			if (cmd->sense)
-+				pci_pool_free(fusion->sense_dma_pool, cmd->sense,
- 				      cmd->sense_phys_addr);
-+		}
- 	}
- 
--	/*
--	 * Now destroy the pool itself
--	 */
--	pci_pool_destroy(fusion->sg_dma_pool);
--	pci_pool_destroy(fusion->sense_dma_pool);
--
--	fusion->sg_dma_pool = NULL;
--	fusion->sense_dma_pool = NULL;
--}
--
--/**
-- * megasas_free_cmds_fusion -	Free all the cmds in the free cmd pool
-- * @instance:		Adapter soft state
-- */
--void
--megasas_free_cmds_fusion(struct megasas_instance *instance)
--{
--	int i;
--	struct fusion_context *fusion = instance->ctrl_context;
--
--	u32 max_cmds, req_sz, reply_sz, io_frames_sz;
--
-+	if (fusion->sg_dma_pool) {
-+		pci_pool_destroy(fusion->sg_dma_pool);
-+		fusion->sg_dma_pool = NULL;
-+	}
-+	if (fusion->sense_dma_pool) {
-+		pci_pool_destroy(fusion->sense_dma_pool);
-+		fusion->sense_dma_pool = NULL;
-+	}
- 
--	req_sz = fusion->request_alloc_sz;
--	reply_sz = fusion->reply_alloc_sz;
--	io_frames_sz = fusion->io_frames_alloc_sz;
- 
--	max_cmds = instance->max_fw_cmds;
-+	/* Reply Frame, Desc*/
-+	if (instance->is_rdpq)
-+		megasas_free_rdpq_fusion(instance);
-+	else
-+		megasas_free_reply_fusion(instance);
- 
--	/* Free descriptors and request Frames memory */
-+	/* Request Frame, Desc*/
- 	if (fusion->req_frames_desc)
--		dma_free_coherent(&instance->pdev->dev, req_sz,
--				  fusion->req_frames_desc,
--				  fusion->req_frames_desc_phys);
--
--	if (fusion->reply_frames_desc) {
--		pci_pool_free(fusion->reply_frames_desc_pool,
--			      fusion->reply_frames_desc,
--			      fusion->reply_frames_desc_phys);
--		pci_pool_destroy(fusion->reply_frames_desc_pool);
--	}
--
--	if (fusion->io_request_frames) {
-+		dma_free_coherent(&instance->pdev->dev,
-+			fusion->request_alloc_sz, fusion->req_frames_desc,
-+			fusion->req_frames_desc_phys);
-+	if (fusion->io_request_frames)
- 		pci_pool_free(fusion->io_request_frames_pool,
--			      fusion->io_request_frames,
--			      fusion->io_request_frames_phys);
-+			fusion->io_request_frames,
-+			fusion->io_request_frames_phys);
-+	if (fusion->io_request_frames_pool) {
- 		pci_pool_destroy(fusion->io_request_frames_pool);
-+		fusion->io_request_frames_pool = NULL;
- 	}
- 
--	/* Free the Fusion frame pool */
--	megasas_teardown_frame_pool_fusion(instance);
- 
--	/* Free all the commands in the cmd_list */
--	for (i = 0; i < max_cmds; i++)
-+	/* cmd_list */
-+	for (i = 0; i < instance->max_fw_cmds; i++)
- 		kfree(fusion->cmd_list[i]);
- 
--	/* Free the cmd_list buffer itself */
- 	kfree(fusion->cmd_list);
--	fusion->cmd_list = NULL;
--
- }
- 
- /**
-- * megasas_create_frame_pool_fusion -	Creates DMA pool for cmd frames
-+ * megasas_create_sg_sense_fusion -	Creates DMA pool for cmd frames
-  * @instance:			Adapter soft state
-  *
-  */
--static int megasas_create_frame_pool_fusion(struct megasas_instance *instance)
-+static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
+-	if ((instance->adprecovery != MEGASAS_HBA_OPERATIONAL) &&
++	if ((atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) &&
+ 	    (le32_to_cpu(*instance->consumer) ==
+ 		MEGASAS_ADPRESET_INPROG_SIGN))
+ 		return 1;
+@@ -619,7 +619,7 @@ static int
+ megasas_check_reset_ppc(struct megasas_instance *instance,
+ 			struct megasas_register_set __iomem *regs)
  {
- 	int i;
- 	u32 max_cmd;
-@@ -321,25 +285,17 @@ static int megasas_create_frame_pool_fusion(struct megasas_instance *instance)
- 	max_cmd = instance->max_fw_cmds;
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL)
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL)
+ 		return 1;
  
+ 	return 0;
+@@ -756,7 +756,7 @@ static int
+ megasas_check_reset_skinny(struct megasas_instance *instance,
+ 				struct megasas_register_set __iomem *regs)
+ {
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL)
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL)
+ 		return 1;
  
--	/*
--	 * Use DMA pool facility provided by PCI layer
--	 */
--
--	fusion->sg_dma_pool = pci_pool_create("sg_pool_fusion", instance->pdev,
--						instance->max_chain_frame_sz,
--						4, 0);
--	if (!fusion->sg_dma_pool) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "failed to setup request pool fusion\n");
--		return -ENOMEM;
+ 	return 0;
+@@ -950,9 +950,8 @@ static int
+ megasas_check_reset_gen2(struct megasas_instance *instance,
+ 		struct megasas_register_set __iomem *regs)
+ {
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL)
+ 		return 1;
 -	}
--	fusion->sense_dma_pool = pci_pool_create("sense pool fusion",
--						 instance->pdev,
--						 SCSI_SENSE_BUFFERSIZE, 64, 0);
-+	fusion->sg_dma_pool =
-+			pci_pool_create("mr_sg", instance->pdev,
-+				instance->max_chain_frame_sz, 4, 0);
-+	/* SCSI_SENSE_BUFFERSIZE  = 96 bytes */
-+	fusion->sense_dma_pool =
-+			pci_pool_create("mr_sense", instance->pdev,
-+				SCSI_SENSE_BUFFERSIZE, 64, 0);
  
--	if (!fusion->sense_dma_pool) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "failed to setup sense pool fusion\n");
--		pci_pool_destroy(fusion->sg_dma_pool);
--		fusion->sg_dma_pool = NULL;
-+	if (!fusion->sense_dma_pool || !fusion->sg_dma_pool) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
- 		return -ENOMEM;
- 	}
+ 	return 0;
+ }
+@@ -998,7 +997,7 @@ megasas_issue_polled(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ 	frame_hdr->cmd_status = MFI_STAT_INVALID_STATUS;
+ 	frame_hdr->flags |= cpu_to_le16(MFI_FRAME_DONT_POST_IN_REPLY_QUEUE);
  
-@@ -347,160 +303,280 @@ static int megasas_create_frame_pool_fusion(struct megasas_instance *instance)
- 	 * Allocate and attach a frame to each of the commands in cmd_list
- 	 */
- 	for (i = 0; i < max_cmd; i++) {
--
- 		cmd = fusion->cmd_list[i];
--
- 		cmd->sg_frame = pci_pool_alloc(fusion->sg_dma_pool,
--					       GFP_KERNEL,
--					       &cmd->sg_frame_phys_addr);
-+					GFP_KERNEL, &cmd->sg_frame_phys_addr);
+-	if ((instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) ||
++	if ((atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) ||
+ 		(instance->instancet->issue_dcmd(instance, cmd))) {
+ 		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+ 			__func__, __LINE__);
+@@ -1026,7 +1025,7 @@ megasas_issue_blocked_cmd(struct megasas_instance *instance,
+ 	int ret = 0;
+ 	cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
  
- 		cmd->sense = pci_pool_alloc(fusion->sense_dma_pool,
--					    GFP_KERNEL, &cmd->sense_phys_addr);
--		/*
--		 * megasas_teardown_frame_pool_fusion() takes care of freeing
--		 * whatever has been allocated
--		 */
-+					GFP_KERNEL, &cmd->sense_phys_addr);
- 		if (!cmd->sg_frame || !cmd->sense) {
--			dev_printk(KERN_DEBUG, &instance->pdev->dev, "pci_pool_alloc failed\n");
--			megasas_teardown_frame_pool_fusion(instance);
-+			dev_err(&instance->pdev->dev,
-+				"Failed from %s %d\n",  __func__, __LINE__);
- 			return -ENOMEM;
+-	if ((instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) ||
++	if ((atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) ||
+ 		(instance->instancet->issue_dcmd(instance, cmd))) {
+ 		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+ 			__func__, __LINE__);
+@@ -1090,7 +1089,7 @@ megasas_issue_blocked_abort_cmd(struct megasas_instance *instance,
+ 	cmd->sync_cmd = 1;
+ 	cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
+ 
+-	if ((instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) ||
++	if ((atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) ||
+ 		(instance->instancet->issue_dcmd(instance, cmd))) {
+ 		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+ 			__func__, __LINE__);
+@@ -1653,7 +1652,6 @@ static int
+ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ {
+ 	struct megasas_instance *instance;
+-	unsigned long flags;
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 
+ 	instance = (struct megasas_instance *)
+@@ -1668,24 +1666,20 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	if (instance->issuepend_done == 0)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+-	spin_lock_irqsave(&instance->hba_lock, flags);
+ 
+ 	/* Check for an mpio path and adjust behavior */
+-	if (instance->adprecovery == MEGASAS_ADPRESET_SM_INFAULT) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_ADPRESET_SM_INFAULT) {
+ 		if (megasas_check_mpio_paths(instance, scmd) ==
+ 		    (DID_RESET << 16)) {
+-			spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 			return SCSI_MLQUEUE_HOST_BUSY;
+ 		} else {
+-			spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 			scmd->result = DID_NO_CONNECT << 16;
+ 			scmd->scsi_done(scmd);
+ 			return 0;
  		}
  	}
- 	return 0;
- }
  
--/**
-- * megasas_alloc_cmds_fusion -	Allocates the command packets
-- * @instance:		Adapter soft state
-- *
-- *
-- * Each frame has a 32-bit field called context. This context is used to get
-- * back the megasas_cmd_fusion from the frame when a frame gets completed
-- * In this driver, the 32 bit values are the indices into an array cmd_list.
-- * This array is used only to look up the megasas_cmd_fusion given the context.
-- * The free commands themselves are maintained in a linked list called cmd_pool.
-- *
-- * cmds are formed in the io_request and sg_frame members of the
-- * megasas_cmd_fusion. The context field is used to get a request descriptor
-- * and is used as SMID of the cmd.
-- * SMID value range is from 1 to max_fw_cmds.
-- */
- int
--megasas_alloc_cmds_fusion(struct megasas_instance *instance)
-+megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
- {
--	int i, j, count;
--	u32 max_cmd, io_frames_sz;
-+	u32 max_cmd, i;
- 	struct fusion_context *fusion;
--	struct megasas_cmd_fusion *cmd;
--	union MPI2_REPLY_DESCRIPTORS_UNION *reply_desc;
--	u32 offset;
--	dma_addr_t io_req_base_phys;
--	u8 *io_req_base;
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+@@ -1693,23 +1687,17 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
  
- 	fusion = instance->ctrl_context;
- 
- 	max_cmd = instance->max_fw_cmds;
- 
-+	/*
-+	 * fusion->cmd_list is an array of struct megasas_cmd_fusion pointers.
-+	 * Allocate the dynamic array first and then allocate individual
-+	 * commands.
-+	 */
-+	fusion->cmd_list = kzalloc(sizeof(struct megasas_cmd_fusion *) * max_cmd,
-+						GFP_KERNEL);
-+	if (!fusion->cmd_list) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
-+	}
-+
-+	for (i = 0; i < max_cmd; i++) {
-+		fusion->cmd_list[i] = kzalloc(sizeof(struct megasas_cmd_fusion),
-+					      GFP_KERNEL);
-+		if (!fusion->cmd_list[i]) {
-+			dev_err(&instance->pdev->dev,
-+				"Failed from %s %d\n",  __func__, __LINE__);
-+			return -ENOMEM;
-+		}
-+	}
-+	return 0;
-+}
-+int
-+megasas_alloc_request_fusion(struct megasas_instance *instance)
-+{
-+	struct fusion_context *fusion;
-+
-+	fusion = instance->ctrl_context;
-+
- 	fusion->req_frames_desc =
- 		dma_alloc_coherent(&instance->pdev->dev,
--				   fusion->request_alloc_sz,
--				   &fusion->req_frames_desc_phys, GFP_KERNEL);
--
-+			fusion->request_alloc_sz,
-+			&fusion->req_frames_desc_phys, GFP_KERNEL);
- 	if (!fusion->req_frames_desc) {
--		dev_err(&instance->pdev->dev, "Could not allocate memory for "
--		       "request_frames\n");
--		goto fail_req_desc;
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
+ 	mr_device_priv_data = scmd->device->hostdata;
+ 	if (!mr_device_priv_data) {
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
  	}
  
-+	fusion->io_request_frames_pool =
-+			pci_pool_create("mr_ioreq", instance->pdev,
-+				fusion->io_frames_alloc_sz, 16, 0);
-+
-+	if (!fusion->io_request_frames_pool) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
-+	}
-+
-+	fusion->io_request_frames =
-+			pci_pool_alloc(fusion->io_request_frames_pool,
-+				GFP_KERNEL, &fusion->io_request_frames_phys);
-+	if (!fusion->io_request_frames) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
-+	}
-+	return 0;
-+}
-+
-+int
-+megasas_alloc_reply_fusion(struct megasas_instance *instance)
-+{
-+	int i, count;
-+	struct fusion_context *fusion;
-+	union MPI2_REPLY_DESCRIPTORS_UNION *reply_desc;
-+	fusion = instance->ctrl_context;
-+
- 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
- 	fusion->reply_frames_desc_pool =
--		pci_pool_create("reply_frames pool", instance->pdev,
-+			pci_pool_create("mr_reply", instance->pdev,
- 				fusion->reply_alloc_sz * count, 16, 0);
- 
- 	if (!fusion->reply_frames_desc_pool) {
--		dev_err(&instance->pdev->dev, "Could not allocate memory for "
--		       "reply_frame pool\n");
--		goto fail_reply_desc;
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
- 	}
- 
--	fusion->reply_frames_desc =
--		pci_pool_alloc(fusion->reply_frames_desc_pool, GFP_KERNEL,
--			       &fusion->reply_frames_desc_phys);
--	if (!fusion->reply_frames_desc) {
--		dev_err(&instance->pdev->dev, "Could not allocate memory for "
--		       "reply_frame pool\n");
--		pci_pool_destroy(fusion->reply_frames_desc_pool);
--		goto fail_reply_desc;
-+	fusion->reply_frames_desc[0] =
-+		pci_pool_alloc(fusion->reply_frames_desc_pool,
-+			GFP_KERNEL, &fusion->reply_frames_desc_phys[0]);
-+	if (!fusion->reply_frames_desc[0]) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
- 	}
--
--	reply_desc = fusion->reply_frames_desc;
-+	reply_desc = fusion->reply_frames_desc[0];
- 	for (i = 0; i < fusion->reply_q_depth * count; i++, reply_desc++)
- 		reply_desc->Words = cpu_to_le64(ULLONG_MAX);
- 
--	io_frames_sz = fusion->io_frames_alloc_sz;
-+	/* This is not a rdpq mode, but driver still populate
-+	 * reply_frame_desc array to use same msix index in ISR path.
-+	 */
-+	for (i = 0; i < (count - 1); i++)
-+		fusion->reply_frames_desc[i + 1] =
-+			fusion->reply_frames_desc[i] +
-+			(fusion->reply_alloc_sz)/sizeof(union MPI2_REPLY_DESCRIPTORS_UNION);
- 
--	fusion->io_request_frames_pool =
--		pci_pool_create("io_request_frames pool", instance->pdev,
--				fusion->io_frames_alloc_sz, 16, 0);
-+	return 0;
-+}
- 
--	if (!fusion->io_request_frames_pool) {
--		dev_err(&instance->pdev->dev, "Could not allocate memory for "
--		       "io_request_frame pool\n");
--		goto fail_io_frames;
-+int
-+megasas_alloc_rdpq_fusion(struct megasas_instance *instance)
-+{
-+	int i, j, count;
-+	struct fusion_context *fusion;
-+	union MPI2_REPLY_DESCRIPTORS_UNION *reply_desc;
-+
-+	fusion = instance->ctrl_context;
-+
-+	fusion->rdpq_virt = pci_alloc_consistent(instance->pdev,
-+				sizeof(struct MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY) * MAX_MSIX_QUEUES_FUSION,
-+				&fusion->rdpq_phys);
-+	if (!fusion->rdpq_virt) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
- 	}
- 
--	fusion->io_request_frames =
--		pci_pool_alloc(fusion->io_request_frames_pool, GFP_KERNEL,
--			       &fusion->io_request_frames_phys);
--	if (!fusion->io_request_frames) {
--		dev_err(&instance->pdev->dev, "Could not allocate memory for "
--		       "io_request_frames frames\n");
--		pci_pool_destroy(fusion->io_request_frames_pool);
--		goto fail_io_frames;
-+	memset(fusion->rdpq_virt, 0,
-+			sizeof(struct MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY) * MAX_MSIX_QUEUES_FUSION);
-+	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
-+	fusion->reply_frames_desc_pool = pci_pool_create("mr_rdpq",
-+							 instance->pdev, fusion->reply_alloc_sz, 16, 0);
-+
-+	if (!fusion->reply_frames_desc_pool) {
-+		dev_err(&instance->pdev->dev,
-+			"Failed from %s %d\n",  __func__, __LINE__);
-+		return -ENOMEM;
- 	}
- 
--	/*
--	 * fusion->cmd_list is an array of struct megasas_cmd_fusion pointers.
--	 * Allocate the dynamic array first and then allocate individual
--	 * commands.
--	 */
--	fusion->cmd_list = kzalloc(sizeof(struct megasas_cmd_fusion *)
--				   * max_cmd, GFP_KERNEL);
-+	for (i = 0; i < count; i++) {
-+		fusion->reply_frames_desc[i] =
-+				pci_pool_alloc(fusion->reply_frames_desc_pool,
-+					GFP_KERNEL, &fusion->reply_frames_desc_phys[i]);
-+		if (!fusion->reply_frames_desc[i]) {
-+			dev_err(&instance->pdev->dev,
-+				"Failed from %s %d\n",  __func__, __LINE__);
-+			return -ENOMEM;
-+		}
- 
--	if (!fusion->cmd_list) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "out of memory. Could not alloc "
--		       "memory for cmd_list_fusion\n");
--		goto fail_cmd_list;
-+		fusion->rdpq_virt[i].RDPQBaseAddress =
-+			fusion->reply_frames_desc_phys[i];
-+
-+		reply_desc = fusion->reply_frames_desc[i];
-+		for (j = 0; j < fusion->reply_q_depth; j++, reply_desc++)
-+			reply_desc->Words = cpu_to_le64(ULLONG_MAX);
- 	}
-+	return 0;
-+}
- 
--	max_cmd = instance->max_fw_cmds;
--	for (i = 0; i < max_cmd; i++) {
--		fusion->cmd_list[i] = kmalloc(sizeof(struct megasas_cmd_fusion),
--					      GFP_KERNEL);
--		if (!fusion->cmd_list[i]) {
--			dev_err(&instance->pdev->dev, "Could not alloc cmd list fusion\n");
-+static void
-+megasas_free_rdpq_fusion(struct megasas_instance *instance) {
- 
--			for (j = 0; j < i; j++)
--				kfree(fusion->cmd_list[j]);
-+	int i;
-+	struct fusion_context *fusion;
- 
--			kfree(fusion->cmd_list);
--			fusion->cmd_list = NULL;
--			goto fail_cmd_list;
--		}
-+	fusion = instance->ctrl_context;
-+
-+	for (i = 0; i < MAX_MSIX_QUEUES_FUSION; i++) {
-+		if (fusion->reply_frames_desc[i])
-+			pci_pool_free(fusion->reply_frames_desc_pool,
-+				fusion->reply_frames_desc[i],
-+				fusion->reply_frames_desc_phys[i]);
- 	}
- 
--	/* The first 256 bytes (SMID 0) is not used. Don't add to cmd list */
--	io_req_base = fusion->io_request_frames +
--		MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
--	io_req_base_phys = fusion->io_request_frames_phys +
--		MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
-+	if (fusion->reply_frames_desc_pool)
-+		pci_pool_destroy(fusion->reply_frames_desc_pool);
-+
-+	if (fusion->rdpq_virt)
-+		pci_free_consistent(instance->pdev,
-+			sizeof(struct MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY) * MAX_MSIX_QUEUES_FUSION,
-+			fusion->rdpq_virt, fusion->rdpq_phys);
-+}
-+
-+static void
-+megasas_free_reply_fusion(struct megasas_instance *instance) {
-+
-+	struct fusion_context *fusion;
-+
-+	fusion = instance->ctrl_context;
-+
-+	if (fusion->reply_frames_desc[0])
-+		pci_pool_free(fusion->reply_frames_desc_pool,
-+			fusion->reply_frames_desc[0],
-+			fusion->reply_frames_desc_phys[0]);
-+
-+	if (fusion->reply_frames_desc_pool)
-+		pci_pool_destroy(fusion->reply_frames_desc_pool);
-+
-+}
-+
-+
-+/**
-+ * megasas_alloc_cmds_fusion -	Allocates the command packets
-+ * @instance:		Adapter soft state
-+ *
-+ *
-+ * Each frame has a 32-bit field called context. This context is used to get
-+ * back the megasas_cmd_fusion from the frame when a frame gets completed
-+ * In this driver, the 32 bit values are the indices into an array cmd_list.
-+ * This array is used only to look up the megasas_cmd_fusion given the context.
-+ * The free commands themselves are maintained in a linked list called cmd_pool.
-+ *
-+ * cmds are formed in the io_request and sg_frame members of the
-+ * megasas_cmd_fusion. The context field is used to get a request descriptor
-+ * and is used as SMID of the cmd.
-+ * SMID value range is from 1 to max_fw_cmds.
-+ */
-+int
-+megasas_alloc_cmds_fusion(struct megasas_instance *instance)
-+{
-+	int i;
-+	struct fusion_context *fusion;
-+	struct megasas_cmd_fusion *cmd;
-+	u32 offset;
-+	dma_addr_t io_req_base_phys;
-+	u8 *io_req_base;
-+
-+
-+	fusion = instance->ctrl_context;
-+
-+	if (megasas_alloc_cmdlist_fusion(instance))
-+		goto fail_exit;
-+
-+	if (megasas_alloc_request_fusion(instance))
-+		goto fail_exit;
-+
-+	if (instance->is_rdpq) {
-+		if (megasas_alloc_rdpq_fusion(instance))
-+			goto fail_exit;
-+	} else
-+		if (megasas_alloc_reply_fusion(instance))
-+			goto fail_exit;
-+
-+
-+	/* The first 256 bytes (SMID 0) is not used. Don't add to the cmd list */
-+	io_req_base = fusion->io_request_frames + MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
-+	io_req_base_phys = fusion->io_request_frames_phys + MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
- 
- 	/*
- 	 * Add all the commands to command pool (fusion->cmd_pool)
- 	 */
- 
- 	/* SMID 0 is reserved. Set SMID/index from 1 */
--	for (i = 0; i < max_cmd; i++) {
-+	for (i = 0; i < instance->max_fw_cmds; i++) {
- 		cmd = fusion->cmd_list[i];
- 		offset = MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE * i;
- 		memset(cmd, 0, sizeof(struct megasas_cmd_fusion));
-@@ -518,35 +594,13 @@ megasas_alloc_cmds_fusion(struct megasas_instance *instance)
- 		cmd->io_request_phys_addr = io_req_base_phys + offset;
- 	}
- 
--	/*
--	 * Create a frame pool and assign one frame to each cmd
--	 */
--	if (megasas_create_frame_pool_fusion(instance)) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Error creating frame DMA pool\n");
--		megasas_free_cmds_fusion(instance);
--		goto fail_req_desc;
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
 -	}
-+	if (megasas_create_sg_sense_fusion(instance))
-+		goto fail_exit;
  
- 	return 0;
+-	if (mr_device_priv_data->tm_busy) {
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
++	if (mr_device_priv_data->tm_busy)
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+-	}
  
--fail_cmd_list:
--	pci_pool_free(fusion->io_request_frames_pool, fusion->io_request_frames,
--		      fusion->io_request_frames_phys);
--	pci_pool_destroy(fusion->io_request_frames_pool);
--fail_io_frames:
--	dma_free_coherent(&instance->pdev->dev, fusion->request_alloc_sz,
--			  fusion->reply_frames_desc,
--			  fusion->reply_frames_desc_phys);
--	pci_pool_free(fusion->reply_frames_desc_pool,
--		      fusion->reply_frames_desc,
--		      fusion->reply_frames_desc_phys);
--	pci_pool_destroy(fusion->reply_frames_desc_pool);
--
--fail_reply_desc:
--	dma_free_coherent(&instance->pdev->dev, fusion->request_alloc_sz,
--			  fusion->req_frames_desc,
--			  fusion->req_frames_desc_phys);
--fail_req_desc:
-+fail_exit:
-+	megasas_free_cmds_fusion(instance);
- 	return -ENOMEM;
- }
+-	spin_unlock_irqrestore(&instance->hba_lock, flags);
  
-@@ -594,16 +648,17 @@ int
- megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 	scmd->result = 0;
+ 
+@@ -1942,7 +1930,7 @@ static void megasas_complete_outstanding_ioctls(struct megasas_instance *instanc
+ void megaraid_sas_kill_hba(struct megasas_instance *instance)
  {
- 	struct megasas_init_frame *init_frame;
--	struct MPI2_IOC_INIT_REQUEST *IOCInitMessage;
-+	struct MPI2_IOC_INIT_REQUEST *IOCInitMessage = NULL;
- 	dma_addr_t	ioc_init_handle;
- 	struct megasas_cmd *cmd;
--	u8 ret;
-+	u8 ret, cur_rdpq_mode;
- 	struct fusion_context *fusion;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION req_desc;
+ 	/* Set critical error to block I/O & ioctls in case caller didn't */
+-	instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
++	atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
+ 	/* Wait 1 second to ensure IO or ioctls in build have posted */
+ 	msleep(1000);
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+@@ -2002,7 +1990,7 @@ static void megasas_complete_cmd_dpc(unsigned long instance_addr)
+ 	unsigned long flags;
+ 
+ 	/* If we have already declared adapter dead, donot complete cmds */
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR)
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+ 		return;
+ 
+ 	spin_lock_irqsave(&instance->completion_lock, flags);
+@@ -2071,7 +2059,7 @@ void megasas_do_ocr(struct megasas_instance *instance)
+ 		*instance->consumer = cpu_to_le32(MEGASAS_ADPRESET_INPROG_SIGN);
+ 	}
+ 	instance->instancet->disable_intr(instance);
+-	instance->adprecovery   = MEGASAS_ADPRESET_SM_INFAULT;
++	atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_INFAULT);
+ 	instance->issuepend_done = 0;
+ 
+ 	atomic_set(&instance->fw_outstanding, 0);
+@@ -2470,18 +2458,14 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
  	int i;
- 	struct megasas_header *frame_hdr;
- 	const char *sys_info;
- 	MFI_CAPABILITIES *drv_ops;
-+	u32 scratch_pad_2;
+ 	u32 reset_index;
+ 	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
+-	u8 adprecovery;
+ 	unsigned long flags;
+ 	struct list_head clist_local;
+ 	struct megasas_cmd *reset_cmd;
+ 	u32 fw_state;
+ 	u8 kill_adapter_flag;
+ 
+-	spin_lock_irqsave(&instance->hba_lock, flags);
+-	adprecovery = instance->adprecovery;
+-	spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 
+-	if (adprecovery != MEGASAS_HBA_OPERATIONAL) {
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 
+ 		INIT_LIST_HEAD(&clist_local);
+ 		spin_lock_irqsave(&instance->hba_lock, flags);
+@@ -2492,18 +2476,13 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 		dev_notice(&instance->pdev->dev, "HBA reset wait ...\n");
+ 		for (i = 0; i < wait_time; i++) {
+ 			msleep(1000);
+-			spin_lock_irqsave(&instance->hba_lock, flags);
+-			adprecovery = instance->adprecovery;
+-			spin_unlock_irqrestore(&instance->hba_lock, flags);
+-			if (adprecovery == MEGASAS_HBA_OPERATIONAL)
++			if (atomic_read(&instance->adprecovery) == MEGASAS_HBA_OPERATIONAL)
+ 				break;
+ 		}
+ 
+-		if (adprecovery != MEGASAS_HBA_OPERATIONAL) {
++		if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 			dev_notice(&instance->pdev->dev, "reset: Stopping HBA.\n");
+-			spin_lock_irqsave(&instance->hba_lock, flags);
+-			instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
+-			spin_unlock_irqrestore(&instance->hba_lock, flags);
++			atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
+ 			return FAILED;
+ 		}
+ 
+@@ -2612,9 +2591,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 				&instance->reg_set->inbound_doorbell);
+ 		}
+ 		megasas_dump_pending_frames(instance);
+-		spin_lock_irqsave(&instance->hba_lock, flags);
+-		instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
++		atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
+ 		return FAILED;
+ 	}
+ 
+@@ -2641,7 +2618,7 @@ static int megasas_generic_reset(struct scsi_cmnd *scmd)
+ 	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET cmd=%x retries=%x\n",
+ 		 scmd->cmnd[0], scmd->retries);
+ 
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+ 		dev_err(&instance->pdev->dev, "cannot recover from previous reset failures\n");
+ 		return FAILED;
+ 	}
+@@ -3385,13 +3362,13 @@ process_fw_state_change_wq(struct work_struct *work)
+ 	u32 wait;
+ 	unsigned long flags;
+ 
+-	if (instance->adprecovery != MEGASAS_ADPRESET_SM_INFAULT) {
++    if (atomic_read(&instance->adprecovery) != MEGASAS_ADPRESET_SM_INFAULT) {
+ 		dev_notice(&instance->pdev->dev, "error, recovery st %x\n",
+-				instance->adprecovery);
++				atomic_read(&instance->adprecovery));
+ 		return ;
+ 	}
+ 
+-	if (instance->adprecovery == MEGASAS_ADPRESET_SM_INFAULT) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_ADPRESET_SM_INFAULT) {
+ 		dev_notice(&instance->pdev->dev, "FW detected to be in fault"
+ 					"state, restarting it...\n");
+ 
+@@ -3434,7 +3411,7 @@ process_fw_state_change_wq(struct work_struct *work)
+ 		megasas_issue_init_mfi(instance);
+ 
+ 		spin_lock_irqsave(&instance->hba_lock, flags);
+-		instance->adprecovery	= MEGASAS_HBA_OPERATIONAL;
++		atomic_set(&instance->adprecovery, MEGASAS_HBA_OPERATIONAL);
+ 		spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 		instance->instancet->enable_intr(instance);
+ 
+@@ -3499,14 +3476,14 @@ megasas_deplete_reply_queue(struct megasas_instance *instance,
+ 
+ 
+ 			instance->instancet->disable_intr(instance);
+-			instance->adprecovery	= MEGASAS_ADPRESET_SM_INFAULT;
++			atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_INFAULT);
+ 			instance->issuepend_done = 0;
+ 
+ 			atomic_set(&instance->fw_outstanding, 0);
+ 			megasas_internal_reset_defer_cmds(instance);
+ 
+ 			dev_notice(&instance->pdev->dev, "fwState=%x, stage:%d\n",
+-					fw_state, instance->adprecovery);
++					fw_state, atomic_read(&instance->adprecovery));
+ 
+ 			schedule_work(&instance->work_init);
+ 			return IRQ_HANDLED;
+@@ -5795,7 +5772,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	instance->flag_ieee = 0;
+ 	instance->ev = NULL;
+ 	instance->issuepend_done = 1;
+-	instance->adprecovery = MEGASAS_HBA_OPERATIONAL;
++	atomic_set(&instance->adprecovery, MEGASAS_HBA_OPERATIONAL);
+ 	instance->is_imr = 0;
+ 
+ 	instance->evt_detail = pci_alloc_consistent(pdev,
+@@ -5974,7 +5951,7 @@ static void megasas_flush_cache(struct megasas_instance *instance)
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_dcmd_frame *dcmd;
+ 
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR)
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+ 		return;
+ 
+ 	cmd = megasas_get_cmd(instance);
+@@ -6017,7 +5994,7 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_dcmd_frame *dcmd;
+ 
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR)
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+ 		return;
+ 
+ 	cmd = megasas_get_cmd(instance);
+@@ -6462,7 +6439,7 @@ static int megasas_set_crash_dump_params_ioctl(struct megasas_cmd *cmd)
+ 	for (i = 0; i < megasas_mgmt_info.max_index; i++) {
+ 		local_instance = megasas_mgmt_info.instance[i];
+ 		if (local_instance && local_instance->crash_dump_drv_support) {
+-			if ((local_instance->adprecovery ==
++			if ((atomic_read(&local_instance->adprecovery) ==
+ 				MEGASAS_HBA_OPERATIONAL) &&
+ 				!megasas_set_crash_dump_params(local_instance,
+ 					crash_support)) {
+@@ -6710,7 +6687,7 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 		goto out_kfree_ioc;
+ 	}
+ 
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+ 		dev_err(&instance->pdev->dev, "Controller in crit error\n");
+ 		error = -ENODEV;
+ 		goto out_kfree_ioc;
+@@ -6729,7 +6706,7 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 	for (i = 0; i < wait_time; i++) {
+ 
+ 		spin_lock_irqsave(&instance->hba_lock, flags);
+-		if (instance->adprecovery == MEGASAS_HBA_OPERATIONAL) {
++		if (atomic_read(&instance->adprecovery) == MEGASAS_HBA_OPERATIONAL) {
+ 			spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 			break;
+ 		}
+@@ -6744,7 +6721,7 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 	}
+ 
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 		spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 
+ 		dev_err(&instance->pdev->dev, "timed out while"
+@@ -6786,7 +6763,7 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
+ 	if (!instance)
+ 		return -ENODEV;
+ 
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6797,7 +6774,7 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
+ 	for (i = 0; i < wait_time; i++) {
+ 
+ 		spin_lock_irqsave(&instance->hba_lock, flags);
+-		if (instance->adprecovery == MEGASAS_HBA_OPERATIONAL) {
++		if (atomic_read(&instance->adprecovery) == MEGASAS_HBA_OPERATIONAL) {
+ 			spin_unlock_irqrestore(&instance->hba_lock,
+ 						flags);
+ 			break;
+@@ -6814,7 +6791,7 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
+ 	}
+ 
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 		spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 		dev_err(&instance->pdev->dev, "timed out while waiting"
+ 				"for HBA to recover\n");
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 2c4912f..64926f7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2246,7 +2246,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
  
  	fusion = instance->ctrl_context;
  
-@@ -615,6 +670,18 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		goto fail_get_cmd;
- 	}
- 
-+	scratch_pad_2 = readl
-+		(&instance->reg_set->outbound_scratch_pad_2);
-+
-+	cur_rdpq_mode = (scratch_pad_2 & MR_RDPQ_MODE_OFFSET) ? 1 : 0;
-+
-+	if (instance->is_rdpq && !cur_rdpq_mode) {
-+		dev_err(&instance->pdev->dev, "Firmware downgrade *NOT SUPPORTED*"
-+			" from RDPQ mode to non RDPQ mode\n");
-+		ret = 1;
-+		goto fail_fw_init;
-+	}
-+
- 	IOCInitMessage =
- 	  dma_alloc_coherent(&instance->pdev->dev,
- 			     sizeof(struct MPI2_IOC_INIT_REQUEST),
-@@ -636,7 +703,11 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	IOCInitMessage->SystemRequestFrameSize = cpu_to_le16(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE / 4);
- 
- 	IOCInitMessage->ReplyDescriptorPostQueueDepth = cpu_to_le16(fusion->reply_q_depth);
--	IOCInitMessage->ReplyDescriptorPostQueueAddress	= cpu_to_le64(fusion->reply_frames_desc_phys);
-+	IOCInitMessage->ReplyDescriptorPostQueueAddress = instance->is_rdpq ?
-+			cpu_to_le64(fusion->rdpq_phys) :
-+			cpu_to_le64(fusion->reply_frames_desc_phys[0]);
-+	IOCInitMessage->MsgFlags = instance->is_rdpq ?
-+			MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE : 0;
- 	IOCInitMessage->SystemRequestFrameBaseAddress = cpu_to_le64(fusion->io_request_frames_phys);
- 	IOCInitMessage->HostMSIxVectors = instance->msix_vectors;
- 	init_frame = (struct megasas_init_frame *)cmd->frame;
-@@ -1087,7 +1158,10 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 	 */
- 	instance->max_fw_cmds =
- 		instance->instancet->read_fw_status_reg(reg_set) & 0x00FFFF;
--	instance->max_fw_cmds = min(instance->max_fw_cmds, (u16)1008);
-+	dev_info(&instance->pdev->dev,
-+		"firmware support max fw cmd\t: (%d)\n", instance->max_fw_cmds);
-+	if (!instance->is_rdpq)
-+		instance->max_fw_cmds = min_t(u16, instance->max_fw_cmds, 1024);
- 
- 	/*
- 	 * Reduce the max supported cmds by 1. This is to ensure that the
-@@ -2110,10 +2184,8 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
- 	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR)
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR)
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
  		return IRQ_HANDLED;
  
--	desc = fusion->reply_frames_desc;
--	desc += ((MSIxIndex * fusion->reply_alloc_sz)/
--		 sizeof(union MPI2_REPLY_DESCRIPTORS_UNION)) +
--		fusion->last_reply_idx[MSIxIndex];
-+	desc = fusion->reply_frames_desc[MSIxIndex] +
-+				fusion->last_reply_idx[MSIxIndex];
+ 	desc = fusion->reply_frames_desc[MSIxIndex] +
+@@ -2413,7 +2413,7 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
  
- 	reply_desc = (struct MPI2_SCSI_IO_SUCCESS_REPLY_DESCRIPTOR *)desc;
- 
-@@ -2208,9 +2280,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
- 
- 		/* Get the next reply descriptor */
- 		if (!fusion->last_reply_idx[MSIxIndex])
--			desc = fusion->reply_frames_desc +
--				((MSIxIndex * fusion->reply_alloc_sz)/
--				 sizeof(union MPI2_REPLY_DESCRIPTORS_UNION));
-+			desc = fusion->reply_frames_desc[MSIxIndex];
- 		else
- 			desc++;
- 
-@@ -2688,17 +2758,18 @@ out:
- 
- void  megasas_reset_reply_desc(struct megasas_instance *instance)
- {
--	int i, count;
-+	int i, j, count;
- 	struct fusion_context *fusion;
- 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_desc;
- 
+ 	/* If we have already declared adapter dead, donot complete cmds */
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+ 		spin_unlock_irqrestore(&instance->hba_lock, flags);
+ 		return;
+ 	}
+@@ -3197,7 +3197,7 @@ int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
+ 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
  	fusion = instance->ctrl_context;
- 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
--	for (i = 0 ; i < count ; i++)
-+	for (i = 0 ; i < count ; i++) {
- 		fusion->last_reply_idx[i] = 0;
--	reply_desc = fusion->reply_frames_desc;
--	for (i = 0 ; i < fusion->reply_q_depth * count; i++, reply_desc++)
--		reply_desc->Words = cpu_to_le64(ULLONG_MAX);
-+		reply_desc = fusion->reply_frames_desc[i];
-+		for (j = 0 ; j < fusion->reply_q_depth; j++, reply_desc++)
-+			reply_desc->Words = cpu_to_le64(ULLONG_MAX);
-+	}
- }
  
- /*
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index db0978d..80eaee2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -928,6 +928,12 @@ struct MR_PD_CFG_SEQ_NUM_SYNC {
- 	struct MR_PD_CFG_SEQ seq[1];
- } __packed;
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 		dev_err(&instance->pdev->dev, "Controller is not OPERATIONAL,"
+ 		"SCSI host:%d\n", instance->host->host_no);
+ 		ret = FAILED;
+@@ -3277,7 +3277,7 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
+ 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
+ 	fusion = instance->ctrl_context;
  
-+struct MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY {
-+	u64 RDPQBaseAddress;
-+	u32 Reserved1;
-+	u32 Reserved2;
-+};
-+
- struct fusion_context {
- 	struct megasas_cmd_fusion **cmd_list;
- 	dma_addr_t req_frames_desc_phys;
-@@ -940,8 +946,8 @@ struct fusion_context {
- 	struct dma_pool *sg_dma_pool;
- 	struct dma_pool *sense_dma_pool;
+-	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 		dev_err(&instance->pdev->dev, "Controller is not OPERATIONAL,"
+ 		"SCSI host:%d\n", instance->host->host_no);
+ 		ret = FAILED;
+@@ -3366,7 +3366,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
  
--	dma_addr_t reply_frames_desc_phys;
--	union MPI2_REPLY_DESCRIPTORS_UNION *reply_frames_desc;
-+	dma_addr_t reply_frames_desc_phys[MAX_MSIX_QUEUES_FUSION];
-+	union MPI2_REPLY_DESCRIPTORS_UNION *reply_frames_desc[MAX_MSIX_QUEUES_FUSION];
- 	struct dma_pool *reply_frames_desc_pool;
+ 	mutex_lock(&instance->reset_mutex);
  
- 	u16 last_reply_idx[MAX_MSIX_QUEUES_FUSION];
-@@ -951,6 +957,8 @@ struct fusion_context {
- 	u32 reply_alloc_sz;
- 	u32 io_frames_alloc_sz;
+-	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+ 		dev_warn(&instance->pdev->dev, "Hardware critical error, "
+ 		       "returning FAILED for scsi%d.\n",
+ 			instance->host->host_no);
+@@ -3381,7 +3381,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 		instance->crash_dump_app_support && reason) {
+ 		dev_info(&instance->pdev->dev, "IO/DCMD timeout is detected, "
+ 			"forcibly FAULT Firmware\n");
+-		instance->adprecovery = MEGASAS_ADPRESET_SM_INFAULT;
++		atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_INFAULT);
+ 		status_reg = readl(&instance->reg_set->doorbell);
+ 		writel(status_reg | MFI_STATE_FORCE_OCR,
+ 			&instance->reg_set->doorbell);
+@@ -3393,10 +3393,10 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 			dev_dbg(&instance->pdev->dev, "waiting for [%d] "
+ 				"seconds for crash dump collection and OCR "
+ 				"to be done\n", (io_timeout_in_crash_mode * 3));
+-		} while ((instance->adprecovery != MEGASAS_HBA_OPERATIONAL) &&
++		} while ((atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) &&
+ 			(io_timeout_in_crash_mode < 80));
  
-+	struct MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY *rdpq_virt;
-+	dma_addr_t rdpq_phys;
- 	u16	max_sge_in_main_msg;
- 	u16	max_sge_in_chain;
+-		if (instance->adprecovery == MEGASAS_HBA_OPERATIONAL) {
++		if (atomic_read(&instance->adprecovery) == MEGASAS_HBA_OPERATIONAL) {
+ 			dev_info(&instance->pdev->dev, "OCR done for IO "
+ 				"timeout case\n");
+ 			retval = SUCCESS;
+@@ -3413,14 +3413,14 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
+ 		del_timer_sync(&instance->sriov_heartbeat_timer);
+ 	set_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
+-	instance->adprecovery = MEGASAS_ADPRESET_SM_POLLING;
++	atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_POLLING);
+ 	instance->instancet->disable_intr(instance);
+ 	msleep(1000);
  
+ 	/* First try waiting for commands to complete */
+ 	if (megasas_wait_for_outstanding_fusion(instance, reason,
+ 						&convert)) {
+-		instance->adprecovery = MEGASAS_ADPRESET_SM_INFAULT;
++		atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_INFAULT);
+ 		dev_warn(&instance->pdev->dev, "resetting fusion "
+ 		       "adapter scsi%d.\n", instance->host->host_no);
+ 		if (convert)
+@@ -3503,8 +3503,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 					       status_reg);
+ 					megaraid_sas_kill_hba(instance);
+ 					instance->skip_heartbeat_timer_del = 1;
+-					instance->adprecovery =
+-						MEGASAS_HW_CRITICAL_ERROR;
++					atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
+ 					retval = FAILED;
+ 					goto out;
+ 				}
+@@ -3563,7 +3562,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 			clear_bit(MEGASAS_FUSION_IN_RESET,
+ 				  &instance->reset_flags);
+ 			instance->instancet->enable_intr(instance);
+-			instance->adprecovery = MEGASAS_HBA_OPERATIONAL;
++			atomic_set(&instance->adprecovery, MEGASAS_HBA_OPERATIONAL);
+ 
+ 			/* Restart SR-IOV heartbeat */
+ 			if (instance->requestorId) {
+@@ -3608,7 +3607,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 		}
+ 		clear_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
+ 		instance->instancet->enable_intr(instance);
+-		instance->adprecovery = MEGASAS_HBA_OPERATIONAL;
++		atomic_set(&instance->adprecovery, MEGASAS_HBA_OPERATIONAL);
+ 	}
+ out:
+ 	clear_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
 -- 
 1.8.3.1
 
