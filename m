@@ -1,86 +1,67 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: What partition should the MTMKPART argument specify? Was: Re:
- st driver doesn't seem to grok LTO partitioning
-Date: Thu, 28 Jan 2016 14:21:23 -0500 (EST)
-Message-ID: <77882221.9950832.1454008883494.JavaMail.zimbra@redhat.com>
-References: <20151218170644.24167419@harpe.intellique.com> <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net> <alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr> <DDB9C85B850785449757F9914A034FCB44522A7B@G9W0766.americas.hpqcorp.net> <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
+ test robot
+Date: Thu, 28 Jan 2016 11:22:23 -0800
+Message-ID: <1454008943.2342.33.camel@HansenPartnership.com>
+References: <1453966147-10568-1-git-send-email-kys@microsoft.com>
+	 <20160128155613.GA12447@gmail.com>
+	 <BY2PR0301MB1654D5EDF0A489A1E212BF6AA0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:42040 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966732AbcA1TVh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 14:21:37 -0500
-In-Reply-To: <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49932 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966732AbcA1TW1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jan 2016 14:22:27 -0500
+In-Reply-To: <BY2PR0301MB1654D5EDF0A489A1E212BF6AA0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
-Cc: Shane M Seymour <shane.seymour@hpe.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, linux-scsi@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>, Olaf Hering <olaf@aepfle.de>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
 
-Hi Kai
+On Thu, 2016-01-28 at 19:07 +0000, KY Srinivasan wrote:
+> 
+> > -----Original Message-----
+> > From: Olaf Hering [mailto:olaf@aepfle.de]
+> > Sent: Thursday, January 28, 2016 7:56 AM
+> > To: KY Srinivasan <kys@microsoft.com>
+> > Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; ohering@suse.com;
+> > jbottomley@parallels.com; hch@infradead.org; 
+> > linux-scsi@vger.kernel.org;
+> > apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
+> > martin.petersen@oracle.com; hare@suse.de
+> > Subject: Re: [PATCH 1/1] scsi: storvsc: Fix a build issue reported
+> > by kbuild test
+> > robot
+> > 
+> > On Wed, Jan 27, K. Y. Srinivasan wrote:
+> > 
+> > > +	depends on SCSI_FC_ATTRS
+> > 
+> > I think 'depends' instead of 'select' will cause HYPERV_STORAGE to
+> > disapepar during make oldconfig if SCSI_FC_ATTRS was not set
+> > before.
+> > Not sure what the policy of 'depends' vs.  'select' actually is. 
+> >  If
+> > SCSI_FC_ATTRS is supposed to be a library kind of thing then
+> > 'select'
+> > might be the correct way.
+> 
+> The current build issue is because the Hyper-V storage is configured
+> to be built with
+> the kernel while the SCSI_FC_AATRS is configured as a module. This
+> patch fixes that issue.
+> I too am not sure what the policy of using "depends" vs " select" is.
+> James, what would be your recommendation here.
 
-What kernel was the last patch you attached against.
+Oh, you don't care if FC_ATTRS are enabled, but if they are you need to
+exclude the case where storvsc is built in but FC_ATTRS is a module? 
+ This is the accepted way of doing it:
 
-Thanks
+depends on m || SCSI_FC_ATTRS != m
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+James
 
------ Original Message -----
-=46rom: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>
-To: "Shane M Seymour" <shane.seymour@hpe.com>
-Cc: "Laurence Oberman" <loberman@redhat.com>, "Emmanuel Florac" <eflora=
-c@intellique.com>, "Laurence Oberman" <oberman.l@gmail.com>, linux-scsi=
-@vger.kernel.org
-Sent: Thursday, January 28, 2016 12:04:20 PM
-Subject: Re: What partition should the MTMKPART argument specify? Was: =
-Re: st driver doesn't seem to grok LTO partitioning
-
-
-> On 28.1.2016, at 9.36, Seymour, Shane M <shane.seymour@hpe.com> wrote=
-:
->=20
-> Hi Kai,
->=20
-> With the changes the I get a failure partitioning a HP DAT72 drive (D=
-DS-5):
->=20
-> # ./mt -f /dev/st1 stsetoption debug
-> # ./mt -f /dev/st1 stsetoption can-partitions
-> # ./mt -f /dev/st1 mkpartition 1000
-> /dev/st1: Input/output error
->=20
-=2E..
-> [ 3976.389605] st 6:0:3:0: [st1] Partition page length is 10 bytes.
-> [ 3976.389610] st 6:0:3:0: [st1] PP: max 1, add 0, xdp 0, psum 02, po=
-fmetc 0, rec 03, units 00, sizes: 0 65535
-> [ 3976.389614] st 6:0:3:0: [st1] MP: 11 08 01 00 10 03 00 00 00 00 ff=
- ff
-> [ 3976.389618] st 6:0:3:0: [st1] psd_cnt 2, max.parts 1, nbr_parts 0
-                                                     ^^^^^^^^^
-The problem is here
-
-=2E..
-> Using a slightly older kernel to partition the DAT72 drive works (sam=
-e 3 commands as above):
-=2E..
-> [  351.584906] st 6:0:3:0: [st1] Partition page length is 10 bytes.
-> [  351.584908] st 6:0:3:0: [st1] psd_cnt 1, max.parts 1, nbr_parts 0
-
-The old driver computes the psd_cnt from the returned page length. The =
-same applies
-to the patched driver if the SCSI level of the device < SCSI_3. This wo=
-rks correctly with
-my drive that reports SCSI_2. So, the question is: what SCSI level does=
- your device
-report?
-
-Kai
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
