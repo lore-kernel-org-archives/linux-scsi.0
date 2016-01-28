@@ -1,30 +1,36 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: [PATCH v2 01/15] megaraid_sas: Do not allow PCI access during OCR
-Date: Thu, 28 Jan 2016 21:04:22 +0530
-Message-ID: <1453995276-24955-2-git-send-email-sumit.saxena@avagotech.com>
+Subject: [PATCH v2 02/15] megaraid_sas: MFI IO timeout handling
+Date: Thu, 28 Jan 2016 21:04:23 +0530
+Message-ID: <1453995276-24955-3-git-send-email-sumit.saxena@avagotech.com>
 References: <1453995276-24955-1-git-send-email-sumit.saxena@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34154 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966489AbcA1PfH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 10:35:07 -0500
-Received: by mail-pa0-f48.google.com with SMTP id uo6so25310252pac.1
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 07:35:07 -0800 (PST)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35239 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966973AbcA1PfM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jan 2016 10:35:12 -0500
+Received: by mail-pa0-f44.google.com with SMTP id ho8so24803563pac.2
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jan 2016 07:35:12 -0800 (PST)
 In-Reply-To: <1453995276-24955-1-git-send-email-sumit.saxena@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com, thenzl@redhat.com
 Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-This patch will do synhronization between OCR function and AEN function using "reset_mutex" lock.
-reset_mutex will be acquire only in first half of the AEN function which issue DCMD. Second half
-of the function calls SCSI API (scsi_add_device/scsi_remove_device) should be out of reset_mutex
-to avoid deadlock between scsi_eh thread and Driver.
+This patch will do proper error handling for DCMD timeout and failed cases for fusion adapters.
+Below are few key design points-
+1. For MFI adapters, in case of DCMD timeout(DCMD which must return SUCCESS) driver will call kill adapter. 
+2. What action needs to be taken in case of DCMD timeout is decided by function dcmd_timeout_ocr_possible().
+DCMD timeout causing OCR is applicable to below DCMDs-
 
-During chip reset(inside OCR function), there should not be any PCI access and AEN function
-(which is called in delayed context) may be firirng DCMDs(doing PCI writes) when chip reset is
-happening in parallel which will cause FW fault. This patch will solve the problem by making
-AEN thread and OCR thread mutually exclusive.
+MR_DCMD_PD_LIST_QUERY
+MR_DCMD_LD_GET_LIST
+MR_DCMD_LD_LIST_QUERY
+MR_DCMD_CTRL_SET_CRASH_DUMP_PARAMS
+MR_DCMD_SYSTEM_PD_MAP_GET_INFO(for non pended DCMD)
+MR_DCMD_LD_MAP_GET_INFO(for non pended DCMD)
+
+3. If DCMD fails from Driver init path, there are certain DCMD which is must to be return SUCCESS. If those DCMD fails,
+driver bail out load. For optional DCMD like pd_info etc, driver continue without executing certain functionality.
 
 There are no changes in this patch from last time sent patch.
 
@@ -32,363 +38,871 @@ Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |   2 +
- drivers/scsi/megaraid/megaraid_sas_base.c | 254 ++++++++++--------------------
- 2 files changed, 82 insertions(+), 174 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |  22 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 372 +++++++++++++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  54 ++--
+ 3 files changed, 338 insertions(+), 110 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index c0f7c8c..ef4ff03 100644
+index ef4ff03..dcc6ff8 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1083,6 +1083,8 @@ struct megasas_ctrl_info {
+@@ -170,6 +170,7 @@
  
- #define VD_EXT_DEBUG 0
+ /* Driver internal */
+ #define DRV_DCMD_POLLED_MODE		0x1
++#define DRV_DCMD_SKIP_REFIRE		0x2
  
-+#define SCAN_PD_CHANNEL	0x1
-+#define SCAN_VD_CHANNEL	0x2
+ /*
+  * Definition for cmd_status
+@@ -1093,6 +1094,11 @@ enum MR_SCSI_CMD_TYPE {
+ 	NON_READ_WRITE_SYSPDIO = 3,
+ };
  
- enum MR_SCSI_CMD_TYPE {
- 	READ_WRITE_LDIO = 0,
++enum DCMD_TIMEOUT_ACTION {
++	INITIATE_OCR = 0,
++	KILL_ADAPTER = 1,
++	IGNORE_TIMEOUT = 2,
++};
+ /* Frame Type */
+ #define IO_FRAME				0
+ #define PTHRU_FRAME				1
+@@ -1139,6 +1145,7 @@ enum MR_SCSI_CMD_TYPE {
+ 
+ #define MFI_OB_INTR_STATUS_MASK			0x00000002
+ #define MFI_POLL_TIMEOUT_SECS			60
++#define MFI_IO_TIMEOUT_SECS			180
+ #define MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF	(5 * HZ)
+ #define MEGASAS_OCR_SETTLE_TIME_VF		(1000 * 30)
+ #define MEGASAS_ROUTINE_WAIT_TIME_VF		300
+@@ -1918,7 +1925,7 @@ struct megasas_instance_template {
+ 	u32 (*init_adapter)(struct megasas_instance *);
+ 	u32 (*build_and_issue_cmd) (struct megasas_instance *,
+ 				    struct scsi_cmnd *);
+-	void (*issue_dcmd) (struct megasas_instance *instance,
++	int (*issue_dcmd)(struct megasas_instance *instance,
+ 			    struct megasas_cmd *cmd);
+ };
+ 
+@@ -2016,6 +2023,19 @@ struct megasas_mgmt_info {
+ 	int max_index;
+ };
+ 
++enum MEGASAS_OCR_CAUSE {
++	FW_FAULT_OCR			= 0,
++	SCSIIO_TIMEOUT_OCR		= 1,
++	MFI_IO_TIMEOUT_OCR		= 2,
++};
++
++enum DCMD_RETURN_STATUS {
++	DCMD_SUCCESS		= 0,
++	DCMD_TIMEOUT		= 1,
++	DCMD_FAILED		= 2,
++	DCMD_NOT_FIRED		= 3,
++};
++
+ u8
+ MR_BuildRaidContext(struct megasas_instance *instance,
+ 		    struct IO_REQUEST_INFO *io_info,
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 97a1c1c..9650487 100644
+index 9650487..380c627 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5476,7 +5476,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	spin_lock_init(&instance->hba_lock);
- 	spin_lock_init(&instance->completion_lock);
+@@ -196,11 +196,12 @@ static int megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
+ int megasas_check_mpio_paths(struct megasas_instance *instance,
+ 			     struct scsi_cmnd *scmd);
  
--	mutex_init(&instance->aen_mutex);
- 	mutex_init(&instance->reset_mutex);
- 
- 	/*
-@@ -6442,10 +6441,10 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
- 	}
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
- 
--	mutex_lock(&instance->aen_mutex);
-+	mutex_lock(&instance->reset_mutex);
- 	error = megasas_register_aen(instance, aen.seq_num,
- 				     aen.class_locale_word);
--	mutex_unlock(&instance->aen_mutex);
-+	mutex_unlock(&instance->reset_mutex);
- 	return error;
+-void
++int
+ megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ {
+ 	instance->instancet->fire_cmd(instance,
+ 		cmd->frame_phys_addr, 0, instance->reg_set);
++	return 0;
  }
  
-@@ -6647,6 +6646,7 @@ megasas_aen_polling(struct work_struct *work)
+ /**
+@@ -983,25 +984,20 @@ extern struct megasas_instance_template megasas_instance_template_fusion;
+ int
+ megasas_issue_polled(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ {
+-	int seconds;
+ 	struct megasas_header *frame_hdr = &cmd->frame->hdr;
+ 
+-	frame_hdr->cmd_status = MFI_CMD_STATUS_POLL_MODE;
++	frame_hdr->cmd_status = MFI_STAT_INVALID_STATUS;
+ 	frame_hdr->flags |= cpu_to_le16(MFI_FRAME_DONT_POST_IN_REPLY_QUEUE);
+ 
+-	/*
+-	 * Issue the frame using inbound queue port
+-	 */
+-	instance->instancet->issue_dcmd(instance, cmd);
++	if ((instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) ||
++		(instance->instancet->issue_dcmd(instance, cmd))) {
++		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++			__func__, __LINE__);
++		return DCMD_NOT_FIRED;
++	}
+ 
+-	/*
+-	 * Wait for cmd_status to change
+-	 */
+-	if (instance->requestorId)
+-		seconds = MEGASAS_ROUTINE_WAIT_TIME_VF;
+-	else
+-		seconds = MFI_POLL_TIMEOUT_SECS;
+-	return wait_and_poll(instance, cmd, seconds);
++	return wait_and_poll(instance, cmd, instance->requestorId ?
++			MEGASAS_ROUTINE_WAIT_TIME_VF : MFI_IO_TIMEOUT_SECS);
+ }
+ 
+ /**
+@@ -1019,21 +1015,29 @@ megasas_issue_blocked_cmd(struct megasas_instance *instance,
+ 			  struct megasas_cmd *cmd, int timeout)
+ {
+ 	int ret = 0;
+-
+ 	cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
+ 
+-	instance->instancet->issue_dcmd(instance, cmd);
++	if ((instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) ||
++		(instance->instancet->issue_dcmd(instance, cmd))) {
++		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++			__func__, __LINE__);
++		return DCMD_NOT_FIRED;
++	}
++
+ 	if (timeout) {
+ 		ret = wait_event_timeout(instance->int_cmd_wait_q,
+ 				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS, timeout * HZ);
+-		if (!ret)
+-			return 1;
++		if (!ret) {
++			dev_err(&instance->pdev->dev, "Failed from %s %d DCMD Timed out\n",
++				__func__, __LINE__);
++			return DCMD_TIMEOUT;
++		}
+ 	} else
+ 		wait_event(instance->int_cmd_wait_q,
+ 				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS);
+ 
+ 	return (cmd->cmd_status_drv == MFI_STAT_OK) ?
+-		0 : 1;
++		DCMD_SUCCESS : DCMD_FAILED;
+ }
+ 
+ /**
+@@ -1077,15 +1081,20 @@ megasas_issue_blocked_abort_cmd(struct megasas_instance *instance,
+ 	cmd->sync_cmd = 1;
+ 	cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
+ 
+-	instance->instancet->issue_dcmd(instance, cmd);
++	if ((instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) ||
++		(instance->instancet->issue_dcmd(instance, cmd))) {
++		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++			__func__, __LINE__);
++		return DCMD_NOT_FIRED;
++	}
+ 
+ 	if (timeout) {
+ 		ret = wait_event_timeout(instance->abort_cmd_wait_q,
+ 				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS, timeout * HZ);
+ 		if (!ret) {
+-			dev_err(&instance->pdev->dev, "Command timedout"
+-				"from %s\n", __func__);
+-			return 1;
++			dev_err(&instance->pdev->dev, "Failed from %s %d Abort Timed out\n",
++				__func__, __LINE__);
++			return DCMD_TIMEOUT;
+ 		}
+ 	} else
+ 		wait_event(instance->abort_cmd_wait_q,
+@@ -1094,7 +1103,8 @@ megasas_issue_blocked_abort_cmd(struct megasas_instance *instance,
+ 	cmd->sync_cmd = 0;
+ 
+ 	megasas_return_cmd(instance, cmd);
+-	return 0;
++	return (cmd->cmd_status_drv == MFI_STAT_OK) ?
++		DCMD_SUCCESS : DCMD_FAILED;
+ }
+ 
+ /**
+@@ -2054,9 +2064,7 @@ static int megasas_get_ld_vf_affiliation_111(struct megasas_instance *instance,
+ 	dev_warn(&instance->pdev->dev, "SR-IOV: Getting LD/VF affiliation for "
+ 	       "scsi%d\n", instance->host->host_no);
+ 
+-	megasas_issue_blocked_cmd(instance, cmd, 0);
+-
+-	if (dcmd->cmd_status) {
++	if (megasas_issue_blocked_cmd(instance, cmd, 0) != DCMD_SUCCESS) {
+ 		dev_warn(&instance->pdev->dev, "SR-IOV: LD/VF affiliation DCMD"
+ 		       " failed with status 0x%x for scsi%d\n",
+ 		       dcmd->cmd_status, instance->host->host_no);
+@@ -2166,9 +2174,8 @@ static int megasas_get_ld_vf_affiliation_12(struct megasas_instance *instance,
+ 	dev_warn(&instance->pdev->dev, "SR-IOV: Getting LD/VF affiliation for "
+ 	       "scsi%d\n", instance->host->host_no);
+ 
+-	megasas_issue_blocked_cmd(instance, cmd, 0);
+ 
+-	if (dcmd->cmd_status) {
++	if (megasas_issue_blocked_cmd(instance, cmd, 0) != DCMD_SUCCESS) {
+ 		dev_warn(&instance->pdev->dev, "SR-IOV: LD/VF affiliation DCMD"
+ 		       " failed with status 0x%x for scsi%d\n",
+ 		       dcmd->cmd_status, instance->host->host_no);
+@@ -3852,6 +3859,25 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ }
+ 
+ /*
++ * dcmd_timeout_ocr_possible -	Check if OCR is possible based on Driver/FW state.
++ * @instance:				Adapter soft state
++ *
++ * Return 0 for only Fusion adapter, if driver load/unload is not in progress
++ * or FW is not under OCR.
++ */
++inline int
++dcmd_timeout_ocr_possible(struct megasas_instance *instance) {
++
++	if (!instance->ctrl_context)
++		return KILL_ADAPTER;
++	else if (instance->unload ||
++			test_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags))
++		return IGNORE_TIMEOUT;
++	else
++		return INITIATE_OCR;
++}
++
++/*
+  * megasas_get_pd_list_info -	Returns FW's pd_list structure
+  * @instance:				Adapter soft state
+  * @pd_list:				pd_list structure
+@@ -3906,42 +3932,72 @@ megasas_get_pd_list(struct megasas_instance *instance)
+ 
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+ 		ret = megasas_issue_blocked_cmd(instance, cmd,
+-			MEGASAS_BLOCKED_CMD_TIMEOUT);
++			MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+-	/*
+-	 * the following function will get the instance PD LIST.
+-	 */
++	switch (ret) {
++	case DCMD_FAILED:
++		megaraid_sas_kill_hba(instance);
++		break;
++	case DCMD_TIMEOUT:
+ 
+-	pd_addr = ci->addr;
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			/*
++			 * DCMD failed from AEN path.
++			 * AEN path already hold reset_mutex to avoid PCI access
++			 * while OCR is in progress.
++			 */
++			mutex_unlock(&instance->reset_mutex);
++			megasas_reset_fusion(instance->host,
++						MFI_IO_TIMEOUT_OCR);
++			mutex_lock(&instance->reset_mutex);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d \n",
++				__func__, __LINE__);
++			break;
++		}
+ 
+-	if (ret == 0 &&
+-	     (le32_to_cpu(ci->count) <
+-		  (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL))) {
++		break;
++
++	case DCMD_SUCCESS:
++		pd_addr = ci->addr;
++
++		if ((le32_to_cpu(ci->count) >
++			(MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL)))
++			break;
+ 
+ 		memset(instance->local_pd_list, 0,
+-			MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
++				MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
+ 
+ 		for (pd_index = 0; pd_index < le32_to_cpu(ci->count); pd_index++) {
+-
+ 			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
+-				le16_to_cpu(pd_addr->deviceId);
++					le16_to_cpu(pd_addr->deviceId);
+ 			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
+-							pd_addr->scsiDevType;
++					pd_addr->scsiDevType;
+ 			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
+-							MR_PD_STATE_SYSTEM;
++					MR_PD_STATE_SYSTEM;
+ 			pd_addr++;
+ 		}
++
+ 		memcpy(instance->pd_list, instance->local_pd_list,
+ 			sizeof(instance->pd_list));
++		break;
++
+ 	}
+ 
+ 	pci_free_consistent(instance->pdev,
+ 				MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
+ 				ci, ci_h);
+ 
+-	megasas_return_cmd(instance, cmd);
++	if (ret != DCMD_TIMEOUT)
++		megasas_return_cmd(instance, cmd);
+ 
+ 	return ret;
+ }
+@@ -4002,33 +4058,63 @@ megasas_get_ld_list(struct megasas_instance *instance)
+ 
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+ 		ret = megasas_issue_blocked_cmd(instance, cmd,
+-			MEGASAS_BLOCKED_CMD_TIMEOUT);
++			MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+-
+ 	ld_count = le32_to_cpu(ci->ldCount);
+ 
+-	/* the following function will get the instance PD LIST */
++	switch (ret) {
++	case DCMD_FAILED:
++		megaraid_sas_kill_hba(instance);
++		break;
++	case DCMD_TIMEOUT:
++
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			/*
++			 * DCMD failed from AEN path.
++			 * AEN path already hold reset_mutex to avoid PCI access
++			 * while OCR is in progress.
++			 */
++			mutex_unlock(&instance->reset_mutex);
++			megasas_reset_fusion(instance->host,
++						MFI_IO_TIMEOUT_OCR);
++			mutex_lock(&instance->reset_mutex);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++
++		break;
++
++	case DCMD_SUCCESS:
++		if (ld_count > instance->fw_supported_vd_count)
++			break;
+ 
+-	if ((ret == 0) && (ld_count <= instance->fw_supported_vd_count)) {
+ 		memset(instance->ld_ids, 0xff, MAX_LOGICAL_DRIVES_EXT);
+ 
+ 		for (ld_index = 0; ld_index < ld_count; ld_index++) {
+ 			if (ci->ldList[ld_index].state != 0) {
+ 				ids = ci->ldList[ld_index].ref.targetId;
+-				instance->ld_ids[ids] =
+-					ci->ldList[ld_index].ref.targetId;
++				instance->ld_ids[ids] = ci->ldList[ld_index].ref.targetId;
+ 			}
+ 		}
++
++		break;
+ 	}
+ 
+-	pci_free_consistent(instance->pdev,
+-				sizeof(struct MR_LD_LIST),
+-				ci,
+-				ci_h);
++	pci_free_consistent(instance->pdev, sizeof(struct MR_LD_LIST), ci, ci_h);
++
++	if (ret != DCMD_TIMEOUT)
++		megasas_return_cmd(instance, cmd);
+ 
+-	megasas_return_cmd(instance, cmd);
+ 	return ret;
+ }
+ 
+@@ -4090,26 +4176,61 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
+ 	dcmd->pad_0  = 0;
+ 
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+-		ret = megasas_issue_blocked_cmd(instance, cmd,
+-			MEGASAS_BLOCKED_CMD_TIMEOUT);
++		ret = megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+-	tgtid_count = le32_to_cpu(ci->count);
++	switch (ret) {
++	case DCMD_FAILED:
++		dev_info(&instance->pdev->dev,
++			"DCMD not supported by firmware - %s %d\n",
++				__func__, __LINE__);
++		ret = megasas_get_ld_list(instance);
++		break;
++	case DCMD_TIMEOUT:
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			/*
++			 * DCMD failed from AEN path.
++			 * AEN path already hold reset_mutex to avoid PCI access
++			 * while OCR is in progress.
++			 */
++			mutex_unlock(&instance->reset_mutex);
++			megasas_reset_fusion(instance->host,
++						MFI_IO_TIMEOUT_OCR);
++			mutex_lock(&instance->reset_mutex);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++
++		break;
++	case DCMD_SUCCESS:
++		tgtid_count = le32_to_cpu(ci->count);
++
++		if ((tgtid_count > (instance->fw_supported_vd_count)))
++			break;
+ 
+-	if ((ret == 0) && (tgtid_count <= (instance->fw_supported_vd_count))) {
+ 		memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+ 		for (ld_index = 0; ld_index < tgtid_count; ld_index++) {
+ 			ids = ci->targetId[ld_index];
+ 			instance->ld_ids[ids] = ci->targetId[ld_index];
+ 		}
+ 
++		break;
+ 	}
+ 
+ 	pci_free_consistent(instance->pdev, sizeof(struct MR_LD_TARGETID_LIST),
+-			    ci, ci_h);
++		    ci, ci_h);
+ 
+-	megasas_return_cmd(instance, cmd);
++	if (ret != DCMD_TIMEOUT)
++		megasas_return_cmd(instance, cmd);
+ 
+ 	return ret;
+ }
+@@ -4223,38 +4344,73 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
+ 	dcmd->mbox.b[0] = 1;
+ 
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+-		ret = megasas_issue_blocked_cmd(instance, cmd,
+-			MEGASAS_BLOCKED_CMD_TIMEOUT);
++		ret = megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+-	if (!ret) {
++	switch (ret) {
++	case DCMD_SUCCESS:
+ 		memcpy(ctrl_info, ci, sizeof(struct megasas_ctrl_info));
++		/* Save required controller information in
++		 * CPU endianness format.
++		 */
+ 		le32_to_cpus((u32 *)&ctrl_info->properties.OnOffProperties);
+ 		le32_to_cpus((u32 *)&ctrl_info->adapterOperations2);
+ 		le32_to_cpus((u32 *)&ctrl_info->adapterOperations3);
++
++		/* Update the latest Ext VD info.
++		 * From Init path, store current firmware details.
++		 * From OCR path, detect any firmware properties changes.
++		 * in case of Firmware upgrade without system reboot.
++		 */
+ 		megasas_update_ext_vd_details(instance);
+ 		instance->use_seqnum_jbod_fp =
+ 			ctrl_info->adapterOperations3.useSeqNumJbodFP;
++
++		/*Check whether controller is iMR or MR */
+ 		instance->is_imr = (ctrl_info->memory_size ? 0 : 1);
+ 		dev_info(&instance->pdev->dev,
+-				"controller type\t: %s(%dMB)\n",
+-				instance->is_imr ? "iMR" : "MR",
+-				le16_to_cpu(ctrl_info->memory_size));
++			"controller type\t: %s(%dMB)\n",
++			instance->is_imr ? "iMR" : "MR",
++			le16_to_cpu(ctrl_info->memory_size));
++
+ 		instance->disableOnlineCtrlReset =
+ 			ctrl_info->properties.OnOffProperties.disableOnlineCtrlReset;
+-		dev_info(&instance->pdev->dev, "Online Controller Reset(OCR)\t: %s\n",
+-			instance->disableOnlineCtrlReset ? "Disabled" : "Enabled");
+ 		instance->secure_jbod_support =
+ 			ctrl_info->adapterOperations3.supportSecurityonJBOD;
++		dev_info(&instance->pdev->dev, "Online Controller Reset(OCR)\t: %s\n",
++			instance->disableOnlineCtrlReset ? "Disabled" : "Enabled");
+ 		dev_info(&instance->pdev->dev, "Secure JBOD support\t: %s\n",
+ 			instance->secure_jbod_support ? "Yes" : "No");
++		break;
++
++	case DCMD_TIMEOUT:
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			megasas_reset_fusion(instance->host,
++				MFI_IO_TIMEOUT_OCR);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++	case DCMD_FAILED:
++		megaraid_sas_kill_hba(instance);
++		break;
++
+ 	}
+ 
+ 	pci_free_consistent(instance->pdev, sizeof(struct megasas_ctrl_info),
+ 			    ci, ci_h);
+ 
+ 	megasas_return_cmd(instance, cmd);
++
++
+ 	return ret;
+ }
+ 
+@@ -4304,12 +4460,28 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 	dcmd->sgl.sge32[0].length = cpu_to_le32(CRASH_DMA_BUF_SIZE);
+ 
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+-		ret = megasas_issue_blocked_cmd(instance, cmd,
+-			MEGASAS_BLOCKED_CMD_TIMEOUT);
++		ret = megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+-	megasas_return_cmd(instance, cmd);
++	if (ret == DCMD_TIMEOUT) {
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			megasas_reset_fusion(instance->host,
++					MFI_IO_TIMEOUT_OCR);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++	} else
++		megasas_return_cmd(instance, cmd);
++
+ 	return ret;
+ }
+ 
+@@ -5035,10 +5207,8 @@ megasas_get_seq_num(struct megasas_instance *instance,
+ 	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(el_info_h);
+ 	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct megasas_evt_log_info));
+ 
+-	if (megasas_issue_blocked_cmd(instance, cmd, 30))
+-		dev_err(&instance->pdev->dev, "Command timedout"
+-			"from %s\n", __func__);
+-	else {
++	if (megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS) ==
++		DCMD_SUCCESS) {
+ 		/*
+ 		 * Copy the data back into callers buffer
+ 		 */
+@@ -5047,7 +5217,9 @@ megasas_get_seq_num(struct megasas_instance *instance,
+ 		eli->clear_seq_num = el_info->clear_seq_num;
+ 		eli->shutdown_seq_num = el_info->shutdown_seq_num;
+ 		eli->boot_seq_num = el_info->boot_seq_num;
+-	}
++	} else
++		dev_err(&instance->pdev->dev, "DCMD failed "
++			"from %s\n", __func__);
+ 
+ 	pci_free_consistent(instance->pdev, sizeof(struct megasas_evt_log_info),
+ 			    el_info, el_info_h);
+@@ -5637,9 +5809,12 @@ static void megasas_flush_cache(struct megasas_instance *instance)
+ 	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_CACHE_FLUSH);
+ 	dcmd->mbox.b[0] = MR_FLUSH_CTRL_CACHE | MR_FLUSH_DISK_CACHE;
+ 
+-	if (megasas_issue_blocked_cmd(instance, cmd, 30))
+-		dev_err(&instance->pdev->dev, "Command timedout"
+-			" from %s\n", __func__);
++	if (megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS)
++			!= DCMD_SUCCESS) {
++		dev_err(&instance->pdev->dev,
++			"return from %s %d\n", __func__, __LINE__);
++		return;
++	}
+ 
+ 	megasas_return_cmd(instance, cmd);
+ }
+@@ -5665,13 +5840,13 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 
+ 	if (instance->aen_cmd)
+ 		megasas_issue_blocked_abort_cmd(instance,
+-			instance->aen_cmd, MEGASAS_BLOCKED_CMD_TIMEOUT);
++			instance->aen_cmd, MFI_IO_TIMEOUT_SECS);
+ 	if (instance->map_update_cmd)
+ 		megasas_issue_blocked_abort_cmd(instance,
+-			instance->map_update_cmd, MEGASAS_BLOCKED_CMD_TIMEOUT);
++			instance->map_update_cmd, MFI_IO_TIMEOUT_SECS);
+ 	if (instance->jbod_seq_cmd)
+ 		megasas_issue_blocked_abort_cmd(instance,
+-			instance->jbod_seq_cmd, MEGASAS_BLOCKED_CMD_TIMEOUT);
++			instance->jbod_seq_cmd, MFI_IO_TIMEOUT_SECS);
+ 
+ 	dcmd = &cmd->frame->dcmd;
+ 
+@@ -5686,9 +5861,12 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	dcmd->data_xfer_len = 0;
+ 	dcmd->opcode = cpu_to_le32(opcode);
+ 
+-	if (megasas_issue_blocked_cmd(instance, cmd, 30))
+-		dev_err(&instance->pdev->dev, "Command timedout"
+-			"from %s\n", __func__);
++	if (megasas_issue_blocked_cmd(instance, cmd, MFI_IO_TIMEOUT_SECS)
++			!= DCMD_SUCCESS) {
++		dev_err(&instance->pdev->dev,
++			"return from %s %d\n", __func__, __LINE__);
++		return;
++	}
+ 
+ 	megasas_return_cmd(instance, cmd);
+ }
+@@ -6226,7 +6404,15 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
+ 	 * cmd to the SCSI mid-layer
+ 	 */
+ 	cmd->sync_cmd = 1;
+-	megasas_issue_blocked_cmd(instance, cmd, 0);
++	if (megasas_issue_blocked_cmd(instance, cmd, 0) == DCMD_NOT_FIRED) {
++		cmd->sync_cmd = 0;
++		dev_err(&instance->pdev->dev,
++			"return -EBUSY from %s %d opcode 0x%x cmd->cmd_status_drv 0x%x\n",
++			__func__, __LINE__, cmd->frame->dcmd.opcode,
++			cmd->cmd_status_drv);
++		return -EBUSY;
++	}
++
+ 	cmd->sync_cmd = 0;
+ 
+ 	if (instance->unload == 1) {
+@@ -6646,7 +6832,7 @@ megasas_aen_polling(struct work_struct *work)
  	int     i, j, doscan = 0;
  	u32 seq_num, wait_time = MEGASAS_RESET_WAIT_TIME;
  	int error;
-+	u8  dcmd_ret = 0;
+-	u8  dcmd_ret = 0;
++	u8  dcmd_ret = DCMD_SUCCESS;
  
  	if (!instance) {
  		printk(KERN_ERR "invalid instance!\n");
-@@ -6659,16 +6659,7 @@ megasas_aen_polling(struct work_struct *work)
- 		wait_time = MEGASAS_ROUTINE_WAIT_TIME_VF;
- 
- 	/* Don't run the event workqueue thread if OCR is running */
--	for (i = 0; i < wait_time; i++) {
--		if (instance->adprecovery == MEGASAS_HBA_OPERATIONAL)
--			break;
--		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
--			dev_notice(&instance->pdev->dev, "%s waiting for "
--			       "controller reset to finish for scsi%d\n",
--			       __func__, instance->host->host_no);
--		}
--		msleep(1000);
--	}
-+	mutex_lock(&instance->reset_mutex);
- 
- 	instance->ev = NULL;
- 	host = instance->host;
-@@ -6676,212 +6667,127 @@ megasas_aen_polling(struct work_struct *work)
- 		megasas_decode_evt(instance);
- 
- 		switch (le32_to_cpu(instance->evt_detail->code)) {
--		case MR_EVT_PD_INSERTED:
--			if (megasas_get_pd_list(instance) == 0) {
--			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
--				for (j = 0;
--				j < MEGASAS_MAX_DEV_PER_CHANNEL;
--				j++) {
--
--				pd_index =
--				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--				sdev1 = scsi_device_lookup(host, i, j, 0);
--
--				if (instance->pd_list[pd_index].driveState
--						== MR_PD_STATE_SYSTEM) {
--					if (!sdev1)
--						scsi_add_device(host, i, j, 0);
--
--					if (sdev1)
--						scsi_device_put(sdev1);
--					}
--				}
--			}
--			}
--			doscan = 0;
--			break;
- 
-+		case MR_EVT_PD_INSERTED:
+@@ -6671,7 +6857,7 @@ megasas_aen_polling(struct work_struct *work)
+ 		case MR_EVT_PD_INSERTED:
  		case MR_EVT_PD_REMOVED:
--			if (megasas_get_pd_list(instance) == 0) {
--			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
--				for (j = 0;
--				j < MEGASAS_MAX_DEV_PER_CHANNEL;
--				j++) {
--
--				pd_index =
--				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--				sdev1 = scsi_device_lookup(host, i, j, 0);
--
--				if (instance->pd_list[pd_index].driveState
--					== MR_PD_STATE_SYSTEM) {
--					if (sdev1)
--						scsi_device_put(sdev1);
--				} else {
--					if (sdev1) {
--						scsi_remove_device(sdev1);
--						scsi_device_put(sdev1);
--					}
--				}
--				}
--			}
--			}
--			doscan = 0;
-+			dcmd_ret = megasas_get_pd_list(instance);
-+			if (dcmd_ret == 0)
-+				doscan = SCAN_PD_CHANNEL;
+ 			dcmd_ret = megasas_get_pd_list(instance);
+-			if (dcmd_ret == 0)
++			if (dcmd_ret == DCMD_SUCCESS)
+ 				doscan = SCAN_PD_CHANNEL;
  			break;
  
- 		case MR_EVT_LD_OFFLINE:
- 		case MR_EVT_CFG_CLEARED:
- 		case MR_EVT_LD_DELETED:
--			if (!instance->requestorId ||
--			    megasas_get_ld_vf_affiliation(instance, 0)) {
--				if (megasas_ld_list_query(instance,
--							  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
--					megasas_get_ld_list(instance);
--				for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
--					for (j = 0;
--					     j < MEGASAS_MAX_DEV_PER_CHANNEL;
--					     j++) {
--
--						ld_index =
--							(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--						sdev1 = scsi_device_lookup(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--
--						if (instance->ld_ids[ld_index]
--						    != 0xff) {
--							if (sdev1)
--								scsi_device_put(sdev1);
--						} else {
--							if (sdev1) {
--								scsi_remove_device(sdev1);
--								scsi_device_put(sdev1);
--							}
--						}
--					}
--				}
--				doscan = 0;
--			}
--			break;
- 		case MR_EVT_LD_CREATED:
- 			if (!instance->requestorId ||
--			    megasas_get_ld_vf_affiliation(instance, 0)) {
--				if (megasas_ld_list_query(instance,
--							  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
--					megasas_get_ld_list(instance);
--				for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
--					for (j = 0;
--					     j < MEGASAS_MAX_DEV_PER_CHANNEL;
--					     j++) {
--						ld_index =
--							(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--						sdev1 = scsi_device_lookup(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--
--						if (instance->ld_ids[ld_index]
--						    != 0xff) {
--							if (!sdev1)
--								scsi_add_device(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--						}
--						if (sdev1)
--							scsi_device_put(sdev1);
--					}
--				}
--				doscan = 0;
--			}
-+				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
-+				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
-+
-+			if (dcmd_ret == 0)
-+				doscan = SCAN_VD_CHANNEL;
-+
+@@ -6683,7 +6869,7 @@ megasas_aen_polling(struct work_struct *work)
+ 				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
+ 				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
+ 
+-			if (dcmd_ret == 0)
++			if (dcmd_ret == DCMD_SUCCESS)
+ 				doscan = SCAN_VD_CHANNEL;
+ 
  			break;
-+
- 		case MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED:
- 		case MR_EVT_FOREIGN_CFG_IMPORTED:
+@@ -6693,14 +6879,14 @@ megasas_aen_polling(struct work_struct *work)
  		case MR_EVT_LD_STATE_CHANGE:
--			doscan = 1;
-+			dcmd_ret = megasas_get_pd_list(instance);
-+
-+			if (dcmd_ret != 0)
-+				break;
-+
-+			if (!instance->requestorId ||
-+				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
-+				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
-+
-+			if (dcmd_ret != 0)
-+				break;
-+
-+			doscan = SCAN_VD_CHANNEL | SCAN_PD_CHANNEL;
-+			dev_info(&instance->pdev->dev, "scanning for scsi%d...\n",
-+				instance->host->host_no);
- 			break;
-+
- 		case MR_EVT_CTRL_PROP_CHANGED:
--			megasas_get_ctrl_info(instance);
--			break;
-+				dcmd_ret = megasas_get_ctrl_info(instance);
-+				break;
- 		default:
- 			doscan = 0;
- 			break;
- 		}
- 	} else {
- 		dev_err(&instance->pdev->dev, "invalid evt_detail!\n");
-+		mutex_unlock(&instance->reset_mutex);
- 		kfree(ev);
- 		return;
- 	}
+ 			dcmd_ret = megasas_get_pd_list(instance);
  
--	if (doscan) {
--		dev_info(&instance->pdev->dev, "scanning for scsi%d...\n",
--		       instance->host->host_no);
--		if (megasas_get_pd_list(instance) == 0) {
--			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
--				for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
--					pd_index = i*MEGASAS_MAX_DEV_PER_CHANNEL + j;
--					sdev1 = scsi_device_lookup(host, i, j, 0);
--					if (instance->pd_list[pd_index].driveState ==
--					    MR_PD_STATE_SYSTEM) {
--						if (!sdev1) {
--							scsi_add_device(host, i, j, 0);
--						}
--						if (sdev1)
--							scsi_device_put(sdev1);
--					} else {
--						if (sdev1) {
--							scsi_remove_device(sdev1);
--							scsi_device_put(sdev1);
--						}
-+	mutex_unlock(&instance->reset_mutex);
-+
-+	if (doscan & SCAN_PD_CHANNEL) {
-+		for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
-+			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
-+				pd_index = i*MEGASAS_MAX_DEV_PER_CHANNEL + j;
-+				sdev1 = scsi_device_lookup(host, i, j, 0);
-+				if (instance->pd_list[pd_index].driveState ==
-+							MR_PD_STATE_SYSTEM) {
-+					if (!sdev1)
-+						scsi_add_device(host, i, j, 0);
-+					else
-+						scsi_device_put(sdev1);
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
- 					}
- 				}
- 			}
- 		}
-+	}
+-			if (dcmd_ret != 0)
++			if (dcmd_ret != DCMD_SUCCESS)
+ 				break;
  
--		if (!instance->requestorId ||
--		    megasas_get_ld_vf_affiliation(instance, 0)) {
--			if (megasas_ld_list_query(instance,
--						  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
--				megasas_get_ld_list(instance);
--			for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
--				for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL;
--				     j++) {
--					ld_index =
--						(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
--
--					sdev1 = scsi_device_lookup(host,
--								   MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--					if (instance->ld_ids[ld_index]
--					    != 0xff) {
--						if (!sdev1)
--							scsi_add_device(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
--						else
--							scsi_device_put(sdev1);
--					} else {
--						if (sdev1) {
--							scsi_remove_device(sdev1);
--							scsi_device_put(sdev1);
--						}
-+	if (doscan & SCAN_VD_CHANNEL) {
-+		for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
-+			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
-+				ld_index = (i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+				sdev1 = scsi_device_lookup(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
-+				if (instance->ld_ids[ld_index] != 0xff) {
-+					if (!sdev1)
-+						scsi_add_device(host, MEGASAS_MAX_PD_CHANNELS + i, j, 0);
-+					else
-+						scsi_device_put(sdev1);
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
- 					}
- 				}
- 			}
+ 			if (!instance->requestorId ||
+ 				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
+ 				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
+ 
+-			if (dcmd_ret != 0)
++			if (dcmd_ret != DCMD_SUCCESS)
+ 				break;
+ 
+ 			doscan = SCAN_VD_CHANNEL | SCAN_PD_CHANNEL;
+@@ -6765,7 +6951,7 @@ megasas_aen_polling(struct work_struct *work)
  		}
  	}
  
--	if (instance->aen_cmd != NULL) {
--		kfree(ev);
--		return ;
--	}
+-	if (dcmd_ret == 0)
++	if (dcmd_ret == DCMD_SUCCESS)
+ 		seq_num = le32_to_cpu(instance->evt_detail->seq_num) + 1;
+ 	else
+ 		seq_num = instance->last_seq_num;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 8d630a5..6e48707 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -576,11 +576,12 @@ wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 		msleep(20);
+ 	}
+ 
+-	if (frame_hdr->cmd_status == 0xff)
+-		return -ETIME;
 -
--	seq_num = le32_to_cpu(instance->evt_detail->seq_num) + 1;
-+	if (dcmd_ret == 0)
-+		seq_num = le32_to_cpu(instance->evt_detail->seq_num) + 1;
+-	return (frame_hdr->cmd_status == MFI_STAT_OK) ?
+-		0 : 1;
++	if (frame_hdr->cmd_status == MFI_STAT_INVALID_STATUS)
++		return DCMD_TIMEOUT;
++	else if (frame_hdr->cmd_status == MFI_STAT_OK)
++		return DCMD_SUCCESS;
 +	else
-+		seq_num = instance->last_seq_num;
- 
- 	/* Register AEN with FW for latest sequence number plus 1 */
- 	class_locale.members.reserved = 0;
- 	class_locale.members.locale = MR_EVT_LOCALE_ALL;
- 	class_locale.members.class = MR_EVT_CLASS_DEBUG;
--	mutex_lock(&instance->aen_mutex);
-+
-+	if (instance->aen_cmd != NULL) {
-+		kfree(ev);
-+		return;
-+	}
-+
-+	mutex_lock(&instance->reset_mutex);
- 	error = megasas_register_aen(instance, seq_num,
- 					class_locale.word);
--	mutex_unlock(&instance->aen_mutex);
--
- 	if (error)
--		dev_err(&instance->pdev->dev, "register aen failed error %x\n", error);
-+		dev_err(&instance->pdev->dev,
-+			"register aen failed error %x\n", error);
- 
-+	mutex_unlock(&instance->reset_mutex);
- 	kfree(ev);
++		return DCMD_FAILED;
  }
  
+ /**
+@@ -784,7 +785,8 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+ 
+ 	/* Below code is only for non pended DCMD */
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+-		ret = megasas_issue_blocked_cmd(instance, cmd, 60);
++		ret = megasas_issue_blocked_cmd(instance, cmd,
++			MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+@@ -795,7 +797,10 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+ 		ret = -EINVAL;
+ 	}
+ 
+-	if (!ret)
++	if (ret == DCMD_TIMEOUT && instance->ctrl_context)
++		megaraid_sas_kill_hba(instance);
++
++	if (ret == DCMD_SUCCESS)
+ 		instance->pd_seq_map_id++;
+ 
+ 	megasas_return_cmd(instance, cmd);
+@@ -875,10 +880,13 @@ megasas_get_ld_map_info(struct megasas_instance *instance)
+ 
+ 	if (instance->ctrl_context && !instance->mask_interrupts)
+ 		ret = megasas_issue_blocked_cmd(instance, cmd,
+-			MEGASAS_BLOCKED_CMD_TIMEOUT);
++			MFI_IO_TIMEOUT_SECS);
+ 	else
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
++	if (ret == DCMD_TIMEOUT && instance->ctrl_context)
++		megaraid_sas_kill_hba(instance);
++
+ 	megasas_return_cmd(instance, cmd);
+ 
+ 	return ret;
+@@ -2411,7 +2419,7 @@ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+  * @cmd:			mfi cmd pointer
+  *
+  */
+-void
++int
+ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
+ 			  struct megasas_cmd *cmd)
+ {
+@@ -2419,10 +2427,13 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
+ 
+ 	req_desc = build_mpt_cmd(instance, cmd);
+ 	if (!req_desc) {
+-		dev_err(&instance->pdev->dev, "Couldn't issue MFI pass thru cmd\n");
+-		return;
++		dev_info(&instance->pdev->dev, "Failed from %s %d\n",
++					__func__, __LINE__);
++		return DCMD_NOT_FIRED;
+ 	}
++
+ 	megasas_fire_cmd_fusion(instance, req_desc);
++	return DCMD_SUCCESS;
+ }
+ 
+ /**
+@@ -2583,7 +2594,7 @@ megasas_check_reset_fusion(struct megasas_instance *instance,
+ 
+ /* This function waits for outstanding commands on fusion to complete */
+ int megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
+-					int iotimeout, int *convert)
++					int reason, int *convert)
+ {
+ 	int i, outstanding, retval = 0, hb_seconds_missed = 0;
+ 	u32 fw_state;
+@@ -2599,14 +2610,22 @@ int megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
+ 			retval = 1;
+ 			goto out;
+ 		}
++
++		if (reason == MFI_IO_TIMEOUT_OCR) {
++			dev_info(&instance->pdev->dev,
++				"MFI IO is timed out, initiating OCR\n");
++			retval = 1;
++			goto out;
++		}
++
+ 		/* If SR-IOV VF mode & heartbeat timeout, don't wait */
+-		if (instance->requestorId && !iotimeout) {
++		if (instance->requestorId && !reason) {
+ 			retval = 1;
+ 			goto out;
+ 		}
+ 
+ 		/* If SR-IOV VF mode & I/O timeout, check for HB timeout */
+-		if (instance->requestorId && iotimeout) {
++		if (instance->requestorId && reason) {
+ 			if (instance->hb_host_mem->HB.fwCounter !=
+ 			    instance->hb_host_mem->HB.driverCounter) {
+ 				instance->hb_host_mem->HB.driverCounter =
+@@ -2680,6 +2699,7 @@ void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
+ 	struct megasas_cmd *cmd_mfi;
+ 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+ 	u16 smid;
++	bool refire_cmd = 0;
+ 
+ 	fusion = instance->ctrl_context;
+ 
+@@ -2695,10 +2715,12 @@ void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
+ 			continue;
+ 		req_desc = megasas_get_request_descriptor
+ 					(instance, smid - 1);
+-		if (req_desc && ((cmd_mfi->frame->dcmd.opcode !=
++		refire_cmd = req_desc && ((cmd_mfi->frame->dcmd.opcode !=
+ 				cpu_to_le32(MR_DCMD_LD_MAP_GET_INFO)) &&
+ 				 (cmd_mfi->frame->dcmd.opcode !=
+-				cpu_to_le32(MR_DCMD_SYSTEM_PD_MAP_GET_INFO))))
++				cpu_to_le32(MR_DCMD_SYSTEM_PD_MAP_GET_INFO)))
++				&& !(cmd_mfi->flags & DRV_DCMD_SKIP_REFIRE);
++		if (refire_cmd)
+ 			megasas_fire_cmd_fusion(instance, req_desc);
+ 		else
+ 			megasas_return_cmd(instance, cmd_mfi);
 -- 
 1.8.3.1
 
