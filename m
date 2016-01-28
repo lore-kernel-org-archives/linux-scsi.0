@@ -1,67 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
  test robot
-Date: Thu, 28 Jan 2016 11:22:23 -0800
-Message-ID: <1454008943.2342.33.camel@HansenPartnership.com>
+Date: Thu, 28 Jan 2016 19:28:04 +0000
+Message-ID: <BY2PR0301MB1654BC24471FF383958739D0A0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
 References: <1453966147-10568-1-git-send-email-kys@microsoft.com>
 	 <20160128155613.GA12447@gmail.com>
 	 <BY2PR0301MB1654D5EDF0A489A1E212BF6AA0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+ <1454008943.2342.33.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49932 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966732AbcA1TW1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jan 2016 14:22:27 -0500
-In-Reply-To: <BY2PR0301MB1654D5EDF0A489A1E212BF6AA0DA0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Received: from mail-bn1bon0138.outbound.protection.outlook.com ([157.56.111.138]:23765
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751379AbcA1T2I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jan 2016 14:28:08 -0500
+In-Reply-To: <1454008943.2342.33.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>, Olaf Hering <olaf@aepfle.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Olaf Hering <olaf@aepfle.de>
 Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
 
-On Thu, 2016-01-28 at 19:07 +0000, KY Srinivasan wrote:
-> 
-> > -----Original Message-----
-> > From: Olaf Hering [mailto:olaf@aepfle.de]
-> > Sent: Thursday, January 28, 2016 7:56 AM
-> > To: KY Srinivasan <kys@microsoft.com>
-> > Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > devel@linuxdriverproject.org; ohering@suse.com;
-> > jbottomley@parallels.com; hch@infradead.org; 
-> > linux-scsi@vger.kernel.org;
-> > apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
-> > martin.petersen@oracle.com; hare@suse.de
-> > Subject: Re: [PATCH 1/1] scsi: storvsc: Fix a build issue reported
-> > by kbuild test
-> > robot
-> > 
-> > On Wed, Jan 27, K. Y. Srinivasan wrote:
-> > 
-> > > +	depends on SCSI_FC_ATTRS
-> > 
-> > I think 'depends' instead of 'select' will cause HYPERV_STORAGE to
-> > disapepar during make oldconfig if SCSI_FC_ATTRS was not set
-> > before.
-> > Not sure what the policy of 'depends' vs.  'select' actually is. 
-> >  If
-> > SCSI_FC_ATTRS is supposed to be a library kind of thing then
-> > 'select'
-> > might be the correct way.
-> 
-> The current build issue is because the Hyper-V storage is configured
-> to be built with
-> the kernel while the SCSI_FC_AATRS is configured as a module. This
-> patch fixes that issue.
-> I too am not sure what the policy of using "depends" vs " select" is.
-> James, what would be your recommendation here.
-
-Oh, you don't care if FC_ATTRS are enabled, but if they are you need to
-exclude the case where storvsc is built in but FC_ATTRS is a module? 
- This is the accepted way of doing it:
-
-depends on m || SCSI_FC_ATTRS != m
-
-James
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+VGh1cnNkYXksIEphbnVhcnkgMjgsIDIwMTYgMTE6MjIgQU0NCj4gVG86IEtZIFNyaW5pdmFzYW4g
+PGt5c0BtaWNyb3NvZnQuY29tPjsgT2xhZiBIZXJpbmcgPG9sYWZAYWVwZmxlLmRlPg0KPiBDYzog
+Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7
+DQo+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207DQo+IGpi
+b3R0b21sZXlAcGFyYWxsZWxzLmNvbTsgaGNoQGluZnJhZGVhZC5vcmc7IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnOw0KPiBhcHdAY2Fub25pY2FsLmNvbTsgdmt1em5ldHNAcmVkaGF0LmNvbTsg
+amFzb3dhbmdAcmVkaGF0LmNvbTsNCj4gbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207IGhhcmVA
+c3VzZS5kZQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gc2NzaTogc3RvcnZzYzogRml4IGEg
+YnVpbGQgaXNzdWUgcmVwb3J0ZWQgYnkga2J1aWxkIHRlc3QNCj4gcm9ib3QNCj4gDQo+IE9uIFRo
+dSwgMjAxNi0wMS0yOCBhdCAxOTowNyArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90ZToNCj4gPg0K
+PiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IE9sYWYgSGVyaW5n
+IFttYWlsdG86b2xhZkBhZXBmbGUuZGVdDQo+ID4gPiBTZW50OiBUaHVyc2RheSwgSmFudWFyeSAy
+OCwgMjAxNiA3OjU2IEFNDQo+ID4gPiBUbzogS1kgU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5j
+b20+DQo+ID4gPiBDYzogZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IGxpbnV4LWtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVy
+aW5nQHN1c2UuY29tOw0KPiA+ID4gamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFk
+ZWFkLm9yZzsNCj4gPiA+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gYXB3QGNh
+bm9uaWNhbC5jb207IHZrdXpuZXRzQHJlZGhhdC5jb207IGphc293YW5nQHJlZGhhdC5jb207DQo+
+ID4gPiBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgaGFyZUBzdXNlLmRlDQo+ID4gPiBTdWJq
+ZWN0OiBSZTogW1BBVENIIDEvMV0gc2NzaTogc3RvcnZzYzogRml4IGEgYnVpbGQgaXNzdWUgcmVw
+b3J0ZWQNCj4gPiA+IGJ5IGtidWlsZCB0ZXN0DQo+ID4gPiByb2JvdA0KPiA+ID4NCj4gPiA+IE9u
+IFdlZCwgSmFuIDI3LCBLLiBZLiBTcmluaXZhc2FuIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gKwlk
+ZXBlbmRzIG9uIFNDU0lfRkNfQVRUUlMNCj4gPiA+DQo+ID4gPiBJIHRoaW5rICdkZXBlbmRzJyBp
+bnN0ZWFkIG9mICdzZWxlY3QnIHdpbGwgY2F1c2UgSFlQRVJWX1NUT1JBR0UgdG8NCj4gPiA+IGRp
+c2FwZXBhciBkdXJpbmcgbWFrZSBvbGRjb25maWcgaWYgU0NTSV9GQ19BVFRSUyB3YXMgbm90IHNl
+dA0KPiA+ID4gYmVmb3JlLg0KPiA+ID4gTm90IHN1cmUgd2hhdCB0aGUgcG9saWN5IG9mICdkZXBl
+bmRzJyB2cy4gICdzZWxlY3QnIGFjdHVhbGx5IGlzLg0KPiA+ID4gIElmDQo+ID4gPiBTQ1NJX0ZD
+X0FUVFJTIGlzIHN1cHBvc2VkIHRvIGJlIGEgbGlicmFyeSBraW5kIG9mIHRoaW5nIHRoZW4NCj4g
+PiA+ICdzZWxlY3QnDQo+ID4gPiBtaWdodCBiZSB0aGUgY29ycmVjdCB3YXkuDQo+ID4NCj4gPiBU
+aGUgY3VycmVudCBidWlsZCBpc3N1ZSBpcyBiZWNhdXNlIHRoZSBIeXBlci1WIHN0b3JhZ2UgaXMg
+Y29uZmlndXJlZA0KPiA+IHRvIGJlIGJ1aWx0IHdpdGgNCj4gPiB0aGUga2VybmVsIHdoaWxlIHRo
+ZSBTQ1NJX0ZDX0FBVFJTIGlzIGNvbmZpZ3VyZWQgYXMgYSBtb2R1bGUuIFRoaXMNCj4gPiBwYXRj
+aCBmaXhlcyB0aGF0IGlzc3VlLg0KPiA+IEkgdG9vIGFtIG5vdCBzdXJlIHdoYXQgdGhlIHBvbGlj
+eSBvZiB1c2luZyAiZGVwZW5kcyIgdnMgIiBzZWxlY3QiIGlzLg0KPiA+IEphbWVzLCB3aGF0IHdv
+dWxkIGJlIHlvdXIgcmVjb21tZW5kYXRpb24gaGVyZS4NCj4gDQo+IE9oLCB5b3UgZG9uJ3QgY2Fy
+ZSBpZiBGQ19BVFRSUyBhcmUgZW5hYmxlZCwgYnV0IGlmIHRoZXkgYXJlIHlvdSBuZWVkIHRvDQo+
+IGV4Y2x1ZGUgdGhlIGNhc2Ugd2hlcmUgc3RvcnZzYyBpcyBidWlsdCBpbiBidXQgRkNfQVRUUlMg
+aXMgYSBtb2R1bGU/DQo+ICBUaGlzIGlzIHRoZSBhY2NlcHRlZCB3YXkgb2YgZG9pbmcgaXQ6DQo+
+IA0KPiBkZXBlbmRzIG9uIG0gfHwgU0NTSV9GQ19BVFRSUyAhPSBtDQoNClRoYW5rcyBKYW1lcywg
+SSB3aWxsIHJlc3VibWl0IHRoaXMgcGF0Y2ggd2l0aCB0aGUgY2hhbmdlIHlvdSBoYXZlIHJlY29t
+bWVuZGVkLg0KDQpLLiBZDQo=
