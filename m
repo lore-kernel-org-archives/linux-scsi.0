@@ -1,16 +1,16 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V4 9/9] aacraid: Update driver version
-Date: Fri, 29 Jan 2016 14:45:50 -0800
-Message-ID: <1454107550-24173-10-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V4 7/9] aacraid: Fix AIF triggered IOP_RESET
+Date: Fri, 29 Jan 2016 14:45:48 -0800
+Message-ID: <1454107550-24173-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:36245 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:36236 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932343AbcA2Wfp (ORCPT
+	by vger.kernel.org with ESMTP id S932641AbcA2Wfo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jan 2016 17:35:45 -0500
+	Fri, 29 Jan 2016 17:35:44 -0500
 In-Reply-To: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,36 +19,235 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Updated diver version to 41052
+while driver removal is in progress or PCI shutdown is invoked, driver
+kills AIF aacraid thread, but IOCTL requests from the management tools
+re-start AIF thread leading to IOP_RESET.
+
+Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
 
 Changes in V2:
-None
+Set adapter_shutdown flag before shutdown command is sent to \
+controller
 
 Changes in V3:
-None
+Call aac_send_shut_shutdown first thing in __aac_shutdown
+Convert adapter_shutdown to atomic_t variable to prevent \
+SMP coherency issues(race conditions)
 
 Changes in V4:
-None
+Used mutex to protect ioctl path and adapter_shutdown to prevent \
+race conditions.
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/aacraid.h  |  2 +-
+ drivers/scsi/aacraid/commctrl.c |  3 ++
+ drivers/scsi/aacraid/comminit.c |  6 ++--
+ drivers/scsi/aacraid/linit.c    | 63 +++++++++++++++++++++++++++++++----------
+ 4 files changed, 56 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 332e3c9..b5f4f09 100644
+index 2916288..6c55749 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
+@@ -1123,7 +1123,7 @@ struct aac_dev
  
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 41010
-+# define AAC_DRIVER_BUILD 41052
- # define AAC_DRIVER_BRANCH "-ms"
+ 	struct fib		*free_fib;
+ 	spinlock_t		fib_lock;
+-
++	struct mutex		ioctl_mutex;
+ 	struct aac_queue_block *queues;
+ 	/*
+ 	 *	The user API will use an IOCTL to register itself to receive
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 54195a1..8d3438c 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -855,6 +855,9 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+ {
+ 	int status;
+ 
++	if (dev->adapter_shutdown)
++		return -EACCES;
++
+ 	/*
+ 	 *	HBA gets first crack
+ 	 */
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 0e954e3..2b4e753 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -212,8 +212,11 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 		return -ENOMEM;
+ 	aac_fib_init(fibctx);
+ 
+-	cmd = (struct aac_close *) fib_data(fibctx);
++	mutex_lock(&dev->ioctl_mutex);
++	dev->adapter_shutdown = 1;
++	mutex_unlock(&dev->ioctl_mutex);
+ 
++	cmd = (struct aac_close *) fib_data(fibctx);
+ 	cmd->command = cpu_to_le32(VM_CloseAll);
+ 	cmd->cid = cpu_to_le32(0xfffffffe);
+ 
+@@ -229,7 +232,6 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 	/* FIB should be freed only after getting the response from the F/W */
+ 	if (status != -ERESTARTSYS)
+ 		aac_fib_free(fibctx);
+-	dev->adapter_shutdown = 1;
+ 	if ((dev->pdev->device == PMC_DEVICE_S7 ||
+ 	     dev->pdev->device == PMC_DEVICE_S8 ||
+ 	     dev->pdev->device == PMC_DEVICE_S9) &&
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index af8974e..9453e11 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -524,10 +524,17 @@ static struct device_attribute *aac_dev_attrs[] = {
+ 
+ static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
+ {
+-	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
++	int ret;
++	struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
++
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	return aac_do_ioctl(dev, cmd, arg);
++
++	mutex_lock(&aac->ioctl_mutex);
++	ret = aac_do_ioctl(aac, cmd, arg);
++	mutex_unlock(&aac->ioctl_mutex);
++
++	return ret;
+ }
+ 
+ static int aac_eh_abort(struct scsi_cmnd* cmd)
+@@ -704,13 +711,14 @@ static long aac_cfg_ioctl(struct file *file,
+ 		unsigned int cmd, unsigned long arg)
+ {
+ 	int ret;
+-	struct aac_dev *aac;
+-	aac = (struct aac_dev *)file->private_data;
+-	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
++	struct aac_dev *aac = (struct aac_dev *)file->private_data;
++
++	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	mutex_lock(&aac_mutex);
+-	ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
+-	mutex_unlock(&aac_mutex);
++
++	mutex_lock(&aac->ioctl_mutex);
++	ret = aac_do_ioctl(aac, cmd, (void __user *)arg);
++	mutex_unlock(&aac->ioctl_mutex);
+ 
+ 	return ret;
+ }
+@@ -719,7 +727,10 @@ static long aac_cfg_ioctl(struct file *file,
+ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long arg)
+ {
+ 	long ret;
+-	mutex_lock(&aac_mutex);
++
++	if (dev->adapter_shutdown)
++		return -EACCES;
++
+ 	switch (cmd) {
+ 	case FSACTL_MINIPORT_REV_CHECK:
+ 	case FSACTL_SENDFIB:
+@@ -753,23 +764,37 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
+ 		ret = -ENOIOCTLCMD;
+ 		break;
+ 	}
+-	mutex_unlock(&aac_mutex);
+ 	return ret;
+ }
+ 
+ static int aac_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ {
+-	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
++	int ret;
++	struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
++
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	return aac_compat_do_ioctl(dev, cmd, (unsigned long)arg);
++
++	mutex_lock(&aac->ioctl_mutex);
++	ret = aac_compat_do_ioctl(aac, cmd, (unsigned long)arg);
++	mutex_unlock(&aac->ioctl_mutex);
++
++	return ret;
+ }
+ 
+ static long aac_compat_cfg_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+ {
++	int ret;
++	struct aac_dev *aac = (struct aac_dev *)file->private_data;
++
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	return aac_compat_do_ioctl(file->private_data, cmd, arg);
++
++	mutex_lock(&aac->ioctl_mutex);
++	ret =  aac_compat_do_ioctl(aac, cmd, arg);
++	mutex_unlock(&aac->ioctl_mutex);
++
++	return ret;
+ }
  #endif
- #define MAXIMUM_NUM_CONTAINERS	32
+ 
+@@ -1078,6 +1103,8 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 	int i;
+ 	int cpu;
+ 
++	aac_send_shutdown(aac);
++
+ 	if (aac->aif_thread) {
+ 		int i;
+ 		/* Clear out events first */
+@@ -1089,7 +1116,7 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 		}
+ 		kthread_stop(aac->thread);
+ 	}
+-	aac_send_shutdown(aac);
++
+ 	aac_adapter_disable_int(aac);
+ 	cpu = cpumask_first(cpu_online_mask);
+ 	if (aac->pdev->device == PMC_DEVICE_S6 ||
+@@ -1193,7 +1220,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!aac->fibs)
+ 		goto out_free_host;
+ 	spin_lock_init(&aac->fib_lock);
+-
++	mutex_init(&aac->ioctl_mutex);
+ 	/*
+ 	 *	Map in the registers from the adapter.
+ 	 */
+@@ -1474,7 +1501,10 @@ static int aac_resume(struct pci_dev *pdev)
+ 	* reset this flag to unblock ioctl() as it was set at
+ 	* aac_send_shutdown() to block ioctls from upperlayer
+ 	*/
++	mutex_lock(&aac->ioctl_mutex);
+ 	aac->adapter_shutdown = 0;
++	mutex_unlock(&aac->ioctl_mutex);
++
+ 	scsi_unblock_requests(shost);
+ 
+ 	return 0;
+@@ -1633,7 +1663,10 @@ static void aac_pci_resume(struct pci_dev *pdev)
+ 	 * reset this flag to unblock ioctl() as it was set
+ 	 * at aac_send_shutdown() to block ioctls from upperlayer
+ 	 */
++	mutex_lock(&aac->ioctl_mutex);
+ 	aac->adapter_shutdown = 0;
++	mutex_unlock(&aac->ioctl_mutex);
++
+ 	aac->handle_pci_error = 0;
+ 
+ 	shost_for_each_device(sdev, shost)
 -- 
 1.9.1
 
