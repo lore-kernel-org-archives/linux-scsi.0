@@ -1,76 +1,87 @@
-From: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>
-Subject: RE: [Bug 111441] New: iscsi fails to attach to targets
-Date: Fri, 29 Jan 2016 22:21:54 +0000
-Message-ID: <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111441] iscsi fails to attach to targets
+Date: Fri, 29 Jan 2016 22:21:59 +0000
+Message-ID: <bug-111441-11613-8YMxYE8sBk@https.bugzilla.kernel.org/>
 References: <bug-111441-11613@https.bugzilla.kernel.org/>
- <56AAC605.1080707@cs.wisc.edu>
- <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
- <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
- <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
- <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
- <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
- <56ABBCFF.9060003@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-1.cisco.com ([173.37.86.72]:37411 "EHLO
-	rcdn-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124AbcA2WV5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jan 2016 17:21:57 -0500
-In-Reply-To: <56ABBCFF.9060003@cs.wisc.edu>
-Content-Language: en-US
+Received: from mail.kernel.org ([198.145.29.136]:38090 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752633AbcA2WWG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jan 2016 17:22:06 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9CB5D20382
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 22:22:04 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4AAF420396
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 22:22:00 +0000 (UTC)
+In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D111441
+
+--- Comment #7 from Serguei Bezverkhi <sbezverk@cisco.com> ---
 HI Mike,
 
 I tried your patch and it is has eliminated first traceback but I still=
- do not see my remote targets.
+ do not
+see my remote targets.
 
 
 Here is dmesg
 
 [   26.103812] scsi 3:0:0:2: Direct-Access     LIO-ORG  san-disk-2     =
-  4.0  PQ: 0 ANSI: 5
+  4.0=20
+PQ: 0 ANSI: 5
 [   26.104338] sd 3:0:0:2: alua: supports implicit and explicit TPGS
 [   26.104549] sd 3:0:0:2: alua: No target port descriptors found
 [   26.104552] sd 3:0:0:2: alua: Attach failed (-22)
 [   26.104554] sd 3:0:0:2: failed to add device handler: -22
 [   26.104578] sd 3:0:0:2: [sdc] 20507809792 512-byte logical blocks: (=
-10.4 TB/9.54 TiB)
+10.4
+TB/9.54 TiB)
 [   26.104905] sd 3:0:0:2: [sdc] Write Protect is off
 [   26.104908] sd 3:0:0:2: [sdc] Mode Sense: 43 00 10 08
 [   26.105036] sd 3:0:0:2: [sdc] Write cache: enabled, read cache: enab=
-led, supports DPO and FUA
+led,
+supports DPO and FUA
 [   26.112294] scsi host6: iSCSI Initiator over TCP/IP
 [   26.113279] scsi 4:0:0:3: Direct-Access     LIO-ORG  san-disk-3     =
-  4.0  PQ: 0 ANSI: 5
+  4.0=20
+PQ: 0 ANSI: 5
 [   26.113690] sd 4:0:0:3: alua: supports implicit and explicit TPGS
 [   26.113877] sd 4:0:0:3: [sdd] 9765625856 512-byte logical blocks: (5=
-=2E00 TB/4.54 TiB)
+=2E00
+TB/4.54 TiB)
 [   26.113948] sd 4:0:0:3: alua: No target port descriptors found
 [   26.113951] sd 4:0:0:3: alua: Attach failed (-22)
 [   26.113953] sd 4:0:0:3: failed to add device handler: -22
 [   26.114292] sd 4:0:0:3: [sdd] Write Protect is off
 [   26.114295] sd 4:0:0:3: [sdd] Mode Sense: 43 00 10 08
 [   26.114503] sd 4:0:0:3: [sdd] Write cache: enabled, read cache: enab=
-led, supports DPO and FUA
+led,
+supports DPO and FUA
 [   26.123875] scsi 5:0:0:1: Direct-Access     LIO-ORG  san-disk-1     =
-  4.0  PQ: 0 ANSI: 5
+  4.0=20
+PQ: 0 ANSI: 5
 [   26.123911] scsi 6:0:0:4: Direct-Access     LIO-ORG  san-disk-4     =
-  4.0  PQ: 0 ANSI: 5
+  4.0=20
+PQ: 0 ANSI: 5
 [   26.124452] sd 6:0:0:4: alua: supports implicit and explicit TPGS
 [   26.124453] sd 5:0:0:1: alua: supports implicit and explicit TPGS
 [   26.124724] sd 5:0:0:1: alua: No target port descriptors found
 [   26.124727] sd 5:0:0:1: alua: Attach failed (-22)
 [   26.124728] sd 5:0:0:1: failed to add device handler: -22
 [   26.124736] sd 6:0:0:4: [sde] 10742171648 512-byte logical blocks: (=
-5.49 TB/5.00 TiB)
+5.49
+TB/5.00 TiB)
 [   26.124773] sd 5:0:0:1: [sdf] 7812499389 512-byte logical blocks: (3=
-=2E99 TB/3.63 TiB)
+=2E99
+TB/3.63 TiB)
 [   26.124777] sd 6:0:0:4: alua: No target port descriptors found
 [   26.124779] sd 6:0:0:4: alua: Attach failed (-22)
 [   26.124780] sd 6:0:0:4: failed to add device handler: -22
@@ -79,9 +90,11 @@ led, supports DPO and FUA
 [   26.125217] sd 6:0:0:4: [sde] Write Protect is off
 [   26.125220] sd 6:0:0:4: [sde] Mode Sense: 43 00 10 08
 [   26.125306] sd 5:0:0:1: [sdf] Write cache: enabled, read cache: enab=
-led, supports DPO and FUA
+led,
+supports DPO and FUA
 [   26.125512] sd 6:0:0:4: [sde] Write cache: enabled, read cache: enab=
-led, supports DPO and FUA
+led,
+supports DPO and FUA
 [   26.129633]  sdf: sdf1
 [   26.130637] sd 5:0:0:1: [sdf] Attached SCSI disk
 [   26.144377] ixgbe 0000:04:00.0: registered PHC device on enp4s0f0
@@ -96,56 +109,72 @@ led, supports DPO and FUA
 [   26.233212] sd 3:0:0:2: [sdc] Synchronizing SCSI cache
 [   26.233440] sd 4:0:0:3: [sdd] Synchronizing SCSI cache
 [   26.236755] Buffer I/O error on dev sdc, logical block 2563476132, a=
-sync page read
+sync
+page read
 [   26.238897] Buffer I/O error on dev sdd, logical block 1220703182, a=
-sync page read
+sync
+page read
 [   26.245773] ixgbe 0000:04:00.1: SR-IOV enabled with 8 VFs
 [   26.245775] ixgbe 0000:04:00.1: configure port vlans to keep your VF=
 s secure
 [   26.274544] scsi 6:0:0:0: Unexpected response from lun 4 while scann=
-ing, scan aborted
+ing,
+scan aborted
 [   26.283173] scsi 3:0:0:0: Unexpected response from lun 2 while scann=
-ing, scan aborted
+ing,
+scan aborted
 [   26.288571] scsi 4:0:0:0: Unexpected response from lun 3 while scann=
-ing, scan aborted
+ing,
+scan aborted
 [   26.288618] scsi 5:0:0:0: Unexpected response from lun 1 while scann=
-ing, scan aborted
+ing,
+scan aborted
 
 
 Second traceback is gone too, but still no luck attaching local iscsi t=
-argets either.
+argets
+either.
 
 
 [  639.148875] TARGET_CORE[iSCSI]: Expected Transfer Length: 264 does n=
-ot match SCSI CDB Length: 8 for SAM Opcode: 0x12
+ot match
+SCSI CDB Length: 8 for SAM Opcode: 0x12
 [  639.148911] sd 7:0:0:0: [sdc] 115343360 512-byte logical blocks: (59=
-=2E0 GB/55.0 GiB)
+=2E0
+GB/55.0 GiB)
 [  639.148925] sd 7:0:0:0: alua: No target port descriptors found
 [  639.148928] sd 7:0:0:0: alua: Attach failed (-22)
 [  639.149186] sd 7:0:0:0: [sdc] Write Protect is off
 [  639.149188] sd 7:0:0:0: [sdc] Mode Sense: 43 00 10 08
 [  639.149279] sd 7:0:0:0: [sdc] Write cache: enabled, read cache: enab=
-led, supports DPO and FUA
+led,
+supports DPO and FUA
 [  639.149298] iSCSI/iqn.1994-05.com.redhat:cf7f1fafca4b: Unsupported S=
-CSI Opcode 0xa3, sending CHECK_CONDITION.
+CSI
+Opcode 0xa3, sending CHECK_CONDITION.
 [  639.149530] sd 7:0:0:0: failed to add device handler: -22
 [  639.154762] sd 7:0:0:0: [sdc] Attached SCSI disk
 [  639.154857] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
 [  655.279047] scsi 7:0:0:0: Direct-Access     LIO-ORG  IBLOCK         =
-  4.0  PQ: 0 ANSI: 5
+  4.0=20
+PQ: 0 ANSI: 5
 [  655.279397] sd 7:0:0:0: alua: supports implicit and explicit TPGS
 [  655.279503] TARGET_CORE[iSCSI]: Expected Transfer Length: 264 does n=
-ot match SCSI CDB Length: 8 for SAM Opcode: 0x12
+ot match
+SCSI CDB Length: 8 for SAM Opcode: 0x12
 [  655.279533] sd 7:0:0:0: alua: No target port descriptors found
 [  655.279535] sd 7:0:0:0: alua: Attach failed (-22)
 [  655.279587] sd 7:0:0:0: [sdc] 115343360 512-byte logical blocks: (59=
-=2E0 GB/55.0 GiB)
+=2E0
+GB/55.0 GiB)
 [  655.279848] sd 7:0:0:0: [sdc] Write Protect is off
 [  655.279849] sd 7:0:0:0: [sdc] Mode Sense: 43 00 10 08
 [  655.279981] sd 7:0:0:0: [sdc] Write cache: enabled, read cache: enab=
-led, supports DPO and FUA
+led,
+supports DPO and FUA
 [  655.280034] iSCSI/iqn.1994-05.com.redhat:cf7f1fafca4b: Unsupported S=
-CSI Opcode 0xa3, sending CHECK_CONDITION.
+CSI
+Opcode 0xa3, sending CHECK_CONDITION.
 [  655.280171] sd 7:0:0:0: failed to add device handler: -22
 [  655.286008] sd 7:0:0:0: [sdc] Attached SCSI disk
 [  655.286132] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
@@ -155,8 +184,8 @@ Serguei Bezverkhi,
 TECHNICAL LEADER.SERVICES
 Global SP Services
 sbezverk@cisco.com
-Phone:=A0+1 416 306 7312
-Mobile:=A0+1 514 234 7374
+Phone:=C2=A0+1 416 306 7312
+Mobile:=C2=A0+1 514 234 7374
 
 CCIE (R&S,SP,Sec) - #9527
 
@@ -164,13 +193,17 @@ Cisco.com
 
 
 
-=A0Think before you print.
+=C2=A0Think before you print.
 This email may contain confidential and privileged material for the sol=
-e use of the intended recipient. Any review, use, distribution or discl=
-osure by others is strictly prohibited. If you are not the intended rec=
-ipient (or authorized to receive for the recipient), please contact the=
- sender by reply email and delete all copies of this message.
-Please=A0click here=A0for Company Registration Information.
+e use of
+the intended recipient. Any review, use, distribution or disclosure by =
+others
+is strictly prohibited. If you are not the intended recipient (or autho=
+rized to
+receive for the recipient), please contact the sender by reply email an=
+d delete
+all copies of this message.
+Please=C2=A0click here=C2=A0for Company Registration Information.
 
 
 
@@ -190,14 +223,16 @@ f.
 >=20
 
 Bugzilla must be messing something up. I attached to one of the previou=
-s mails. Attaching it here again.
+s mails.
+Attaching it here again.
 
 Email me offlist and without bugzilla if you do not get it here.
 
 The patch will fix the syfs bug ons you are hitting.
 
 I am not sure if it will fix the genhd one. We can deal with that one n=
-ext if it is a different issue.
+ext if
+it is a different issue.
 
 
 > Serguei
@@ -258,9 +293,11 @@ m?
 =20
 > in the body of a message to majordomo@vger.kernel.org More majordomo=20
 > info at  http://vger.kernel.org/majordomo-info.html
->=20
+>
 
---
+--=20
+You are receiving this mail because:
+You are the assignee for the bug.--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
