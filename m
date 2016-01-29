@@ -1,16 +1,16 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V4 1/9] aacraid: SCSI blk tag support
-Date: Fri, 29 Jan 2016 14:45:42 -0800
-Message-ID: <1454107550-24173-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V4 2/9] aacraid: Fix RRQ overload
+Date: Fri, 29 Jan 2016 14:45:43 -0800
+Message-ID: <1454107550-24173-3-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:36187 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755506AbcA2Wfj (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:48608 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932537AbcA2Wfk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jan 2016 17:35:39 -0500
+	Fri, 29 Jan 2016 17:35:40 -0500
 In-Reply-To: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,20 +19,23 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-The method to allocate and free FIB's in the present code utilizes
-spinlocks.Multiple IO's have to wait on the spinlock to acquire or
-free fibs creating a performance bottleneck.
+The driver utilizes an array of atomic variables to keep track of
+IO submissions to each vector. To submit an IO multiple threads
+iterate through the array to find a vector which has empty slots
+to send an IO. The reading and updating of the variable is not atomic,
+causing race conditions when a thread uses a full vector to
+submit an IO.
 
-An alternative solution would be to use block layer tags to keep track
-of the fibs allocated and freed. To this end aac_fib_alloc_tag was
-created to utilize the blk layer tags to plug into the Fib pool.These
-functions are used exclusively in the IO path. 8 fibs are reserved for
-the use of AIF management software and utilize the previous spinlock based
-implementations.
+Fixed by mapping each FIB to a vector, the submission path then uses
+said vector to submit IO thereby removing the possibly of a race
+condition.The vector assignment is started from 1 since vector 0 is
+reserved for the use of AIF management FIBS.If the number of MSIx
+vectors is 1 (MSI or INTx mode) then all the fibs are allocated to
+vector 0.
 
 Changes in V2:
-Removed aac_fib_free_tag since it was a stub function
-Moved population of fib fields that are constant to aac_fib_setup
+Created function aac_fib_vector_assign to assign vector numbers to
+fib and to prevent code duplication
 
 Changes in V3:
 None
@@ -40,247 +43,141 @@ None
 Changes in V4:
 None
 
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+Fixes: 495c0217 "aacraid: MSI-x support"
+Cc: stable@vger.kernel.org # v4.1
+
+Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/aacraid/aachba.c  | 27 ++++++++++++---------------
- drivers/scsi/aacraid/aacraid.h |  1 +
- drivers/scsi/aacraid/commsup.c | 32 +++++++++++++++++++++++++++++---
- drivers/scsi/aacraid/dpcsup.c  |  2 --
- drivers/scsi/aacraid/linit.c   |  2 ++
- 5 files changed, 44 insertions(+), 20 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |  2 ++
+ drivers/scsi/aacraid/commsup.c | 28 ++++++++++++++++++++++++++++
+ drivers/scsi/aacraid/src.c     | 30 +++++++-----------------------
+ 3 files changed, 37 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index e4c2437..7dfd0fa 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -323,7 +323,6 @@ static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
- 	if (unlikely(!scsicmd || !scsicmd->scsi_done)) {
- 		dprintk((KERN_WARNING "aac_valid_context: scsi command corrupt\n"));
- 		aac_fib_complete(fibptr);
--		aac_fib_free(fibptr);
- 		return 0;
- 	}
- 	scsicmd->SCp.phase = AAC_OWNER_MIDLEVEL;
-@@ -331,7 +330,6 @@ static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
- 	if (unlikely(!device || !scsi_device_online(device))) {
- 		dprintk((KERN_WARNING "aac_valid_context: scsi device corrupt\n"));
- 		aac_fib_complete(fibptr);
--		aac_fib_free(fibptr);
- 		return 0;
- 	}
- 	return 1;
-@@ -541,7 +539,6 @@ static void get_container_name_callback(void *context, struct fib * fibptr)
- 	scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
- 
- 	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
- 	scsicmd->scsi_done(scsicmd);
- }
- 
-@@ -557,7 +554,8 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
- 
- 	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
- 
--	if (!(cmd_fibcontext = aac_fib_alloc(dev)))
-+	cmd_fibcontext = aac_fib_alloc_tag(dev, scsicmd);
-+	if (!cmd_fibcontext)
- 		return -ENOMEM;
- 
- 	aac_fib_init(cmd_fibcontext);
-@@ -586,7 +584,6 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
- 
- 	printk(KERN_WARNING "aac_get_container_name: aac_fib_send failed with status: %d.\n", status);
- 	aac_fib_complete(cmd_fibcontext);
--	aac_fib_free(cmd_fibcontext);
- 	return -1;
- }
- 
-@@ -1024,7 +1021,6 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 	scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
- 
- 	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
- 	scsicmd->scsi_done(scsicmd);
- }
- 
-@@ -1040,7 +1036,8 @@ static int aac_get_container_serial(struct scsi_cmnd * scsicmd)
- 
- 	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
- 
--	if (!(cmd_fibcontext = aac_fib_alloc(dev)))
-+	cmd_fibcontext = aac_fib_alloc_tag(dev, scsicmd);
-+	if (!cmd_fibcontext)
- 		return -ENOMEM;
- 
- 	aac_fib_init(cmd_fibcontext);
-@@ -1068,7 +1065,6 @@ static int aac_get_container_serial(struct scsi_cmnd * scsicmd)
- 
- 	printk(KERN_WARNING "aac_get_container_serial: aac_fib_send failed with status: %d.\n", status);
- 	aac_fib_complete(cmd_fibcontext);
--	aac_fib_free(cmd_fibcontext);
- 	return -1;
- }
- 
-@@ -1869,7 +1865,6 @@ static void io_callback(void *context, struct fib * fibptr)
- 		break;
- 	}
- 	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
- 
- 	scsicmd->scsi_done(scsicmd);
- }
-@@ -1954,7 +1949,8 @@ static int aac_read(struct scsi_cmnd * scsicmd)
- 	/*
- 	 *	Alocate and initialize a Fib
- 	 */
--	if (!(cmd_fibcontext = aac_fib_alloc(dev))) {
-+	cmd_fibcontext = aac_fib_alloc_tag(dev, scsicmd);
-+	if (!cmd_fibcontext) {
- 		printk(KERN_WARNING "aac_read: fib allocation failed\n");
- 		return -1;
- 	}
-@@ -2051,7 +2047,8 @@ static int aac_write(struct scsi_cmnd * scsicmd)
- 	/*
- 	 *	Allocate and initialize a Fib then setup a BlockWrite command
- 	 */
--	if (!(cmd_fibcontext = aac_fib_alloc(dev))) {
-+	cmd_fibcontext = aac_fib_alloc_tag(dev, scsicmd);
-+	if (!cmd_fibcontext) {
- 		/* FIB temporarily unavailable,not catastrophic failure */
- 
- 		/* scsicmd->result = DID_ERROR << 16;
-@@ -2285,7 +2282,7 @@ static int aac_start_stop(struct scsi_cmnd *scsicmd)
- 	/*
- 	 *	Allocate and initialize a Fib
- 	 */
--	cmd_fibcontext = aac_fib_alloc(aac);
-+	cmd_fibcontext = aac_fib_alloc_tag(aac, scsicmd);
- 	if (!cmd_fibcontext)
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
-@@ -3157,7 +3154,6 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
- 	scsicmd->result |= le32_to_cpu(srbreply->scsi_status);
- 
- 	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
- 	scsicmd->scsi_done(scsicmd);
- }
- 
-@@ -3187,9 +3183,10 @@ static int aac_send_srb_fib(struct scsi_cmnd* scsicmd)
- 	/*
- 	 *	Allocate and initialize a Fib then setup a BlockWrite command
- 	 */
--	if (!(cmd_fibcontext = aac_fib_alloc(dev))) {
-+	cmd_fibcontext = aac_fib_alloc_tag(dev, scsicmd);
-+	if (!cmd_fibcontext)
- 		return -1;
--	}
-+
- 	status = aac_adapter_scsi(cmd_fibcontext, scsicmd);
- 
- 	/*
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 074878b..f51f0a0 100644
+index f51f0a0..fff1306 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2114,6 +2114,7 @@ int aac_acquire_irq(struct aac_dev *dev);
+@@ -944,6 +944,7 @@ struct fib {
+ 	 */
+ 	struct list_head	fiblink;
+ 	void			*data;
++	u32			vector_no;
+ 	struct hw_fib		*hw_fib_va;		/* Actual shared object */
+ 	dma_addr_t		hw_fib_pa;		/* physical address of hw_fib*/
+ };
+@@ -2113,6 +2114,7 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
+ int aac_acquire_irq(struct aac_dev *dev);
  void aac_free_irq(struct aac_dev *dev);
  const char *aac_driverinfo(struct Scsi_Host *);
++void aac_fib_vector_assign(struct aac_dev *dev);
  struct fib *aac_fib_alloc(struct aac_dev *dev);
-+struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd);
+ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd);
  int aac_fib_setup(struct aac_dev *dev);
- void aac_fib_map_free(struct aac_dev *dev);
- void aac_fib_free(struct fib * context);
 diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index a1f90fe..46a2a2f 100644
+index 46a2a2f..07a42a3 100644
 --- a/drivers/scsi/aacraid/commsup.c
 +++ b/drivers/scsi/aacraid/commsup.c
-@@ -137,6 +137,7 @@ int aac_fib_setup(struct aac_dev * dev)
- 		i++, fibptr++)
- 	{
- 		fibptr->flags = 0;
-+		fibptr->size = sizeof(struct fib);
- 		fibptr->dev = dev;
- 		fibptr->hw_fib_va = hw_fib;
- 		fibptr->data = (void *) fibptr->hw_fib_va->data;
-@@ -156,13 +157,38 @@ int aac_fib_setup(struct aac_dev * dev)
- 	 */
- 	dev->fibs[dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1].next = NULL;
- 	/*
--	 *	Enable this to debug out of queue space
--	 */
--	dev->free_fib = &dev->fibs[0];
-+	*	Set 8 fibs aside for management tools
-+	*/
-+	dev->free_fib = &dev->fibs[dev->scsi_host_ptr->can_queue];
- 	return 0;
+@@ -90,6 +90,28 @@ void aac_fib_map_free(struct aac_dev *dev)
+ 	dev->hw_fib_pa = 0;
  }
  
- /**
-+ *	aac_fib_alloc_tag-allocate a fib using tags
-+ *	@dev: Adapter to allocate the fib for
-+ *
-+ *	Allocate a fib from the adapter fib pool using tags
-+ *	from the blk layer.
-+ */
-+
-+struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
++void aac_fib_vector_assign(struct aac_dev *dev)
 +{
-+	struct fib *fibptr;
++	u32 i = 0;
++	u32 vector = 1;
++	struct fib *fibptr = NULL;
 +
-+	fibptr = &dev->fibs[scmd->request->tag];
-+	/*
-+	 *	Null out fields that depend on being zero at the start of
-+	 *	each I/O
-+	 */
-+	fibptr->hw_fib_va->header.XferState = 0;
-+	fibptr->type = FSAFS_NTC_FIB_CONTEXT;
-+	fibptr->callback_data = NULL;
-+	fibptr->callback = NULL;
-+
-+	return fibptr;
++	for (i = 0, fibptr = &dev->fibs[i];
++		i < (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB);
++		i++, fibptr++) {
++		if ((dev->max_msix == 1) ||
++		  (i > ((dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1)
++			- dev->vector_cap))) {
++			fibptr->vector_no = 0;
++		} else {
++			fibptr->vector_no = vector;
++			vector++;
++			if (vector == dev->max_msix)
++				vector = 1;
++		}
++	}
 +}
 +
-+/**
-  *	aac_fib_alloc	-	allocate a fib
-  *	@dev: Adapter to allocate the fib for
-  *
-diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
-index da9d993..d677b52 100644
---- a/drivers/scsi/aacraid/dpcsup.c
-+++ b/drivers/scsi/aacraid/dpcsup.c
-@@ -394,7 +394,6 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 index,
- 				fib->callback(fib->callback_data, fib);
- 			} else {
- 				aac_fib_complete(fib);
--				aac_fib_free(fib);
- 			}
- 		} else {
- 			unsigned long flagv;
-@@ -416,7 +415,6 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 index,
- 				fib->done = 0;
- 				spin_unlock_irqrestore(&fib->event_lock, flagv);
- 				aac_fib_complete(fib);
--				aac_fib_free(fib);
- 			}
- 
- 		}
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 76eaa38..129a515 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -454,6 +454,8 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 	} else
- 		scsi_change_queue_depth(sdev, 1);
- 
-+		sdev->tagged_supported = 1;
+ /**
+  *	aac_fib_setup	-	setup the fibs
+  *	@dev: Adapter to set up
+@@ -152,6 +174,12 @@ int aac_fib_setup(struct aac_dev * dev)
+ 		hw_fib_pa = hw_fib_pa +
+ 			dev->max_fib_size + sizeof(struct aac_fib_xporthdr);
+ 	}
 +
- 	return 0;
- }
++	/*
++	 *Assign vector numbers to fibs
++	 */
++	aac_fib_vector_assign(dev);
++
+ 	/*
+ 	 *	Add the fib chain to the free list
+ 	 */
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 2aa34ea..bc0203f 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -156,8 +156,8 @@ static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
+ 				break;
+ 			if (dev->msi_enabled && dev->max_msix > 1)
+ 				atomic_dec(&dev->rrq_outstanding[vector_no]);
+-			aac_intr_normal(dev, handle-1, 0, isFastResponse, NULL);
+ 			dev->host_rrq[index++] = 0;
++			aac_intr_normal(dev, handle-1, 0, isFastResponse, NULL);
+ 			if (index == (vector_no + 1) * dev->vector_cap)
+ 				index = vector_no * dev->vector_cap;
+ 			dev->host_rrq_idx[vector_no] = index;
+@@ -452,36 +452,20 @@ static int aac_src_deliver_message(struct fib *fib)
+ #endif
  
+ 	u16 hdr_size = le16_to_cpu(fib->hw_fib_va->header.Size);
++	u16 vector_no;
+ 
+ 	atomic_inc(&q->numpending);
+ 
+ 	if (dev->msi_enabled && fib->hw_fib_va->header.Command != AifRequest &&
+ 	    dev->max_msix > 1) {
+-		u_int16_t vector_no, first_choice = 0xffff;
+-
+-		vector_no = dev->fibs_pushed_no % dev->max_msix;
+-		do {
+-			vector_no += 1;
+-			if (vector_no == dev->max_msix)
+-				vector_no = 1;
+-			if (atomic_read(&dev->rrq_outstanding[vector_no]) <
+-			    dev->vector_cap)
+-				break;
+-			if (0xffff == first_choice)
+-				first_choice = vector_no;
+-			else if (vector_no == first_choice)
+-				break;
+-		} while (1);
+-		if (vector_no == first_choice)
+-			vector_no = 0;
+-		atomic_inc(&dev->rrq_outstanding[vector_no]);
+-		if (dev->fibs_pushed_no == 0xffffffff)
+-			dev->fibs_pushed_no = 0;
+-		else
+-			dev->fibs_pushed_no++;
++		vector_no = fib->vector_no;
+ 		fib->hw_fib_va->header.Handle += (vector_no << 16);
++	} else {
++		vector_no = 0;
+ 	}
+ 
++	atomic_inc(&dev->rrq_outstanding[vector_no]);
++
+ 	if (dev->comm_interface == AAC_COMM_MESSAGE_TYPE2) {
+ 		/* Calculate the amount to the fibsize bits */
+ 		fibsize = (hdr_size + 127) / 128 - 1;
 -- 
 1.9.1
 
