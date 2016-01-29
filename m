@@ -1,52 +1,54 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-Date: Fri, 29 Jan 2016 02:25:43 -0600
-Message-ID: <56AB2207.3060607@cs.wisc.edu>
-References: <bug-111441-11613@https.bugzilla.kernel.org/> <56AAC605.1080707@cs.wisc.edu> <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com> <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+From: Hannes Reinecke <hare@suse.de>
+Subject: blk-mq and interrupt affinity
+Date: Fri, 29 Jan 2016 10:40:27 +0100
+Message-ID: <56AB338B.4020804@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070802040700060300020509"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53300 "EHLO sabe.cs.wisc.edu"
+Received: from mx2.suse.de ([195.135.220.15]:59059 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbcA2IZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jan 2016 03:25:52 -0500
-In-Reply-To: <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+	id S1751475AbcA2Jk3 (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Fri, 29 Jan 2016 04:40:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>
-Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@fb.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-This is a multi-part message in MIME format.
---------------070802040700060300020509
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Hi all,
 
-On 01/29/2016 02:01 AM, Michael Christie wrote:
-> Can you send me your lio config?
-> 
+Looking through the blk-mq code I tried to figure out if and how the
+driver is supposed to set any interrupt affinity when block-mq is
+enabled.
 
-Not sure what I was thinking. Don't send me anything. Could you just try
-the attached patch?
+Thing is, for your typical driver you would set the interrupt
+affinity during init time (eg for SCSI drivers during host_alloc).
+But to set the interrupt affinity you'd need the cpumask, which is
+only populated way later during queue setup.
 
---------------070802040700060300020509
-Content-Type: text/x-patch;
- name="fix-add-dev-alua-attach-fail-regression.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="fix-add-dev-alua-attach-fail-regression.patch"
+So now I got two bad choices: either I have to delay setting the
+interrupt affinity until after the queue is created, making things
+awkward with several queues, or I have to out-guess the blk-mq
+mapping algorithm and set the interrupt affinity prior to queue setup.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 21930c9..4269cbc 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1061,6 +1061,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
- 				"failed to add device handler: %d\n", error);
-+		device_del(&sdev->sdev_gendev);
- 		return error;
- 	}
- 
+Tests with the lpfc driver found that one absolutely _does_ want to
+do irq affinity; not doing so limits the performance to single-queue
+results.
 
---------------070802040700060300020509--
+So what is the expected strategy here?
+Or am I just too stupid to find it?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
