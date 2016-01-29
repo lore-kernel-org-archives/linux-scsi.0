@@ -1,62 +1,77 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V4 0/9] aacraid: Patchset for aacraid driver version 41052
-Date: Fri, 29 Jan 2016 14:45:41 -0800
-Message-ID: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V4 5/9] aacraid: Set correct msix count for EEH recovery
+Date: Fri, 29 Jan 2016 14:45:46 -0800
+Message-ID: <1454107550-24173-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+References: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:36178 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:36217 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755532AbcA2Wfj (ORCPT
+	by vger.kernel.org with ESMTP id S932583AbcA2Wfm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jan 2016 17:35:39 -0500
+	Fri, 29 Jan 2016 17:35:42 -0500
+In-Reply-To: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, thenzl@redhat.com, shane.seymour@hpe.com, RaghavaAditya.Renukunta@pmcs.com
 
-This patchset includes the following changes (bug fixes and new feature
-support) specific to aacraid driver.
+From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-V2:
-Removed aac_fib_free_tag function
-Setup relevant fib variables only once
-Created aac_fib_vector_assign function
-Made EEH functions static
-Added character device status macros
-changed location of aac->shutdown to prevent race condition
-Withdrew patch that disables device ID wild card binding
-Added Reviewed-by, Cc and Fixes tags from  mailing list
+During EEH recovery number of online CPU's might change thereby changing
+the number of MSIx vectors. Since each fib is allocated to a vector,
+changes in the number of vectors causes fib to be sent thru invalid
+vectors.In addition the correct number of MSIx vectors is not
+updated in the INIT struct sent to the controller, when it is
+reinitialized.
 
-V3:
-Moved aac_send_shutdown to top of __aac_shutdown
-Converted aac->adapter_shutdown to atomic
+Fixed by reassigning vectors to fibs based on the updated number of MSIx
+vectors and updating the INIT structure before sending to controller.
 
-V4:
-Reverted adapter_shutdown from atomic
-Used mutex to prevent shutdown race conditions on ioctl path
+Changes in V2:
+Replaced fib vector allocation code with aac_fib_vector_assign
 
-Raghava Aditya Renukunta (9):
- [SCSI] aacraid: SCSI blk tag support
- [SCSI] aacraid: Fix RRQ overload
- [SCSI] aacraid: Added EEH support
- [SCSI] aacraid: Fix memory leak in aac_fib_map_free
- [SCSI] aacraid: Set correct msix count for EEH recovery
- [SCSI] aacraid: Fundamental reset support for Series 7
- [SCSI] aacraid: Fix AIF triggered IOP_RESET
- [SCSI] aacraid: Fix character device re-initialization
- [SCSI] aacraid: Update driver version
+Changes in V3:
+None
 
- drivers/scsi/aacraid/aachba.c   |  27 ++---
- drivers/scsi/aacraid/aacraid.h  |  15 ++-
- drivers/scsi/aacraid/commctrl.c |   3 +
- drivers/scsi/aacraid/comminit.c |   6 +-
- drivers/scsi/aacraid/commsup.c  |  69 +++++++++++-
- drivers/scsi/aacraid/dpcsup.c   |   2 -
- drivers/scsi/aacraid/linit.c    | 241 ++++++++++++++++++++++++++++++++++++----
- drivers/scsi/aacraid/src.c      |  30 ++---
- 8 files changed, 320 insertions(+), 73 deletions(-)
+Changes in V4:
+None
 
+Fixes: MSI-X vector calculation for suspend/resume
+Cc: stable@vger.kernel.org
+
+Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+Reviewed-by: Johannes Thumshirn <jthushirn@suse.de>
+---
+ drivers/scsi/aacraid/linit.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 62ac7be..4bc4503 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1410,8 +1410,18 @@ static int aac_acquire_resources(struct aac_dev *dev)
+ 
+ 	aac_adapter_enable_int(dev);
+ 
+-	if (!dev->sync_mode)
++	/*max msix may change  after EEH
++	 * Re-assign vectors to fibs
++	 */
++	aac_fib_vector_assign(dev);
++
++	if (!dev->sync_mode) {
++		/* After EEH recovery or suspend resume, max_msix count
++		 * may change, therfore updating in init as well.
++		 */
+ 		aac_adapter_start(dev);
++		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
++	}
+ 	return 0;
+ 
+ error_iounmap:
 -- 
 1.9.1
 
