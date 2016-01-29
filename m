@@ -1,114 +1,66 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-Date: Fri, 29 Jan 2016 13:26:55 -0600
-Message-ID: <56ABBCFF.9060003@cs.wisc.edu>
-References: <bug-111441-11613@https.bugzilla.kernel.org/>
- <56AAC605.1080707@cs.wisc.edu>
- <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
- <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
- <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
- <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
- <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH] bnx2fc: Show information about log levels in 'modinfo'
+Date: Fri, 29 Jan 2016 15:50:22 -0500
+Message-ID: <alpine.OSX.2.00.1601291549340.2314@administrators-macbook-pro.local>
+References: <1454078366-1839-1-git-send-email-jcastillo@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070406030407050909050406"
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53552 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756713AbcA2T1E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jan 2016 14:27:04 -0500
-In-Reply-To: <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:3375 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753566AbcA2Uuf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jan 2016 15:50:35 -0500
+In-Reply-To: <1454078366-1839-1-git-send-email-jcastillo@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>
-Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------070406030407050909050406
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+To: Jose Castillo <jcastillo@redhat.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
 
 
+On Fri, 29 Jan 2016, Jose Castillo wrote:
 
-On 01/29/2016 01:11 PM, Serguei Bezverkhi (sbezverk) wrote:
-> If you send me the diff for your patch, I will build new kernel myself.
-> 
+> This patch adds the information of the different values that can be used
+> in the module parameter 'debug_logging', as it is shown below:
+>
+> $ modinfo bnx2fc
+> [...]
+> parm:           debug_logging:Option to enable extended logging,
+> 		Default is 0 - no logging.
+> 		0x01 - SCSI cmd error, cleanup.
+> 		0x02 - Session setup, cleanup, etc.
+> 		0x04 - lport events, link, mtu, etc.
+> 		0x08 - ELS logs.
+> 		0x10 - fcoe L2 fame related logs.
+> 		0xff - LOG all messages. (int)
+>
+> Signed-off-by: Jose Castillo <jcastillo@redhat.com>
+> ---
+> drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 9 +++++++++
+> 1 file changed, 9 insertions(+)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 67405c6..d7029ea 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -97,6 +97,15 @@ static void __exit bnx2fc_mod_exit(void);
+>
+> unsigned int bnx2fc_debug_level;
+> module_param_named(debug_logging, bnx2fc_debug_level, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(debug_logging,
+> +		"Option to enable extended logging,\n"
+> +		"\t\tDefault is 0 - no logging.\n"
+> +		"\t\t0x01 - SCSI cmd error, cleanup.\n"
+> +		"\t\t0x02 - Session setup, cleanup, etc.\n"
+> +		"\t\t0x04 - lport events, link, mtu, etc.\n"
+> +		"\t\t0x08 - ELS logs.\n"
+> +		"\t\t0x10 - fcoe L2 fame related logs.\n"
+> +		"\t\t0xff - LOG all messages.");
+>
+> static int bnx2fc_cpu_callback(struct notifier_block *nfb,
+> 			     unsigned long action, void *hcpu);
+>
 
-Bugzilla must be messing something up. I attached to one of the previous
-mails. Attaching it here again.
+Looks good, thanks.
 
-Email me offlist and without bugzilla if you do not get it here.
-
-The patch will fix the syfs bug ons you are hitting.
-
-I am not sure if it will fix the genhd one. We can deal with that one
-next if it is a different issue.
-
-
-> Serguei
-> 
-> 
-> Serguei Bezverkhi,
-> TECHNICAL LEADER.SERVICES
-> Global SP Services
-> sbezverk@cisco.com
-> Phone: +1 416 306 7312
-> Mobile: +1 514 234 7374
-> 
-> CCIE (R&S,SP,Sec) - #9527
-> 
-> Cisco.com
-> 
-> 
-> 
->  Think before you print.
-> This email may contain confidential and privileged material for the sole use of the intended recipient. Any review, use, distribution or disclosure by others is strictly prohibited. If you are not the intended recipient (or authorized to receive for the recipient), please contact the sender by reply email and delete all copies of this message.
-> Please click here for Company Registration Information.
-> 
-> 
-> 
-> 
-> -----Original Message-----
-> From: Michael Christie [mailto:michaelc@cs.wisc.edu] 
-> Sent: Friday, January 29, 2016 2:09 PM
-> To: Serguei Bezverkhi (sbezverk) <sbezverk@cisco.com>
-> Cc: bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org
-> Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-> 
-> 
->> On Jan 29, 2016, at 6:04 AM, Serguei Bezverkhi (sbezverk) <sbezverk@cisco.com> wrote:
->>
->> Actually this server uses both cases: Local taregts (since it is OpenStack server) and remote targets as it tries to mount 4 remotefile systems.  
->>
->> You are correct, I always use the same box I just change the kernel it is using to boot. No other changes to the environment. I do not mind to load a test kernel without that suspected patch, just get me the RPM.
->>
-> 
-> I do not know what you mean. I think the patch I sent will fix the sysfs errors caused due to alua not being setup properly on your system and scsi_dh_alua failing to attach. That patch should be applied to the 4.4 upstream kernel. Are you saying you want me to make you a kernel rpm?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
---------------070406030407050909050406
-Content-Type: text/x-patch;
- name="fix-add-dev-alua-attach-fail-regression.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="fix-add-dev-alua-attach-fail-regression.patch"
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 21930c9..4269cbc 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1061,6 +1061,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
- 				"failed to add device handler: %d\n", error);
-+		device_del(&sdev->sdev_gendev);
- 		return error;
- 	}
- 
-
---------------070406030407050909050406--
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
