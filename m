@@ -1,194 +1,102 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 04/14] tcm_qla2xxx: Convert to target_alloc_session usage
-Date: Sat, 30 Jan 2016 07:05:48 +0000
-Message-ID: <1454137558-30396-5-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 05/14] tcm_fc: Convert to target_alloc_session usage
+Date: Sat, 30 Jan 2016 07:05:49 +0000
+Message-ID: <1454137558-30396-6-git-send-email-nab@daterainc.com>
 References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:34832 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756270AbcA3HIx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 02:08:53 -0500
-Received: by mail-ob0-f179.google.com with SMTP id ny8so59663245obc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 23:08:53 -0800 (PST)
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:34845 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756335AbcA3HIz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 02:08:55 -0500
+Received: by mail-ob0-f180.google.com with SMTP id ny8so59663557obc.2
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 23:08:55 -0800 (PST)
 In-Reply-To: <1454137558-30396-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, Vasu Dev <vasu.dev@linux.intel.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
+Cc: Vasu Dev <vasu.dev@linux.intel.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c  |  8 +---
- drivers/scsi/qla2xxx/qla_target.h  |  2 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 79 +++++++++++++++++++-------------------
- 3 files changed, 43 insertions(+), 46 deletions(-)
+ drivers/target/tcm_fc/tfc_sess.c | 44 ++++++++++++++++++++--------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 8075a4c..905f431 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -879,7 +879,6 @@ static struct qla_tgt_sess *qlt_create_sess(
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt_sess *sess;
- 	unsigned long flags;
--	unsigned char be_sid[3];
- 
- 	/* Check to avoid double sessions */
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-@@ -948,17 +947,14 @@ static struct qla_tgt_sess *qlt_create_sess(
- 	    "Adding sess %p to tgt %p via ->check_initiator_node_acl()\n",
- 	    sess, vha->vha_tgt.qla_tgt);
- 
--	be_sid[0] = sess->s_id.b.domain;
--	be_sid[1] = sess->s_id.b.area;
--	be_sid[2] = sess->s_id.b.al_pa;
- 	/*
- 	 * Determine if this fc_port->port_name is allowed to access
- 	 * target mode using explict NodeACLs+MappedLUNs, or using
- 	 * TPG demo mode.  If this is successful a target mode FC nexus
- 	 * is created.
- 	 */
--	if (ha->tgt.tgt_ops->check_initiator_node_acl(vha,
--	    &fcport->port_name[0], sess, &be_sid[0], fcport->loop_id) < 0) {
-+	if (ha->tgt.tgt_ops->check_initiator_node_acl(vha, &fcport->port_name[0],
-+						      sess)) {
- 		kfree(sess);
- 		return NULL;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 71b2865..409bd5f 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -731,7 +731,7 @@ struct qla_tgt_func_tmpl {
- 	void (*free_session)(struct qla_tgt_sess *);
- 
- 	int (*check_initiator_node_acl)(struct scsi_qla_host *, unsigned char *,
--					void *, uint8_t *, uint16_t);
-+					struct qla_tgt_sess *);
- 	void (*update_sess)(struct qla_tgt_sess *, port_id_t, uint16_t, bool);
- 	struct qla_tgt_sess *(*find_sess_by_loop_id)(struct scsi_qla_host *,
- 						const uint16_t);
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index faf0a12..f982ae7 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1336,6 +1336,39 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
- 	transport_deregister_session(sess->se_sess);
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index e19f4c5..d0c3e18 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -186,6 +186,20 @@ out:
+ 	return NULL;
  }
  
-+static int tcm_qla2xxx_session_cb(struct se_portal_group *se_tpg,
-+				  struct se_session *se_sess, void *p)
++static int ft_sess_alloc_cb(struct se_portal_group *se_tpg,
++			    struct se_session *se_sess, void *p)
 +{
-+	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
-+				struct tcm_qla2xxx_tpg, se_tpg);
-+	struct tcm_qla2xxx_lport *lport = tpg->lport;
-+	struct qla_hw_data *ha = lport->qla_vha->hw;
-+	struct se_node_acl *se_nacl = se_sess->se_node_acl;
-+	struct tcm_qla2xxx_nacl *nacl = container_of(se_nacl,
-+				struct tcm_qla2xxx_nacl, se_node_acl);
-+	struct qla_tgt_sess *qlat_sess = p;
-+	uint16_t loop_id = qlat_sess->loop_id;
-+	unsigned long flags;
-+	unsigned char be_sid[3];
++	struct ft_sess *sess = p;
++	struct ft_tport *tport = sess->tport;
++	struct hlist_head *head = &tport->hash[ft_sess_hash(sess->port_id)];
 +
-+	be_sid[0] = qlat_sess->s_id.b.domain;
-+	be_sid[1] = qlat_sess->s_id.b.area;
-+	be_sid[2] = qlat_sess->s_id.b.al_pa;
-+
-+	/*
-+	 * And now setup se_nacl and session pointers into HW lport internal
-+	 * mappings for fabric S_ID and LOOP_ID.
-+	 */
-+	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-+	tcm_qla2xxx_set_sess_by_s_id(lport, se_nacl, nacl,
-+				     se_sess, qlat_sess, be_sid);
-+	tcm_qla2xxx_set_sess_by_loop_id(lport, se_nacl, nacl,
-+					se_sess, qlat_sess, loop_id);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
++	pr_debug("port_id %x sess %p\n", sess->port_id, sess);
++	hlist_add_head_rcu(&sess->hash, head);
++	tport->sess_count++;
 +
 +	return 0;
 +}
 +
  /*
-  * Called via qlt_create_sess():ha->qla2x_tmpl->check_initiator_node_acl()
-  * to locate struct se_node_acl
-@@ -1343,20 +1376,13 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
- static int tcm_qla2xxx_check_initiator_node_acl(
- 	scsi_qla_host_t *vha,
- 	unsigned char *fc_wwpn,
--	void *qla_tgt_sess,
--	uint8_t *s_id,
--	uint16_t loop_id)
-+	struct qla_tgt_sess *qlat_sess)
+  * Allocate session and enter it in the hash for the local port.
+  * Caller holds ft_lport_lock.
+@@ -194,7 +208,6 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 				      struct fc_rport_priv *rdata)
  {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct tcm_qla2xxx_lport *lport;
- 	struct tcm_qla2xxx_tpg *tpg;
--	struct tcm_qla2xxx_nacl *nacl;
--	struct se_portal_group *se_tpg;
--	struct se_node_acl *se_nacl;
- 	struct se_session *se_sess;
--	struct qla_tgt_sess *sess = qla_tgt_sess;
- 	unsigned char port_name[36];
--	unsigned long flags;
- 	int num_tags = (ha->cur_fw_xcb_count) ? ha->cur_fw_xcb_count :
- 		       TCM_QLA2XXX_DEFAULT_TAGS;
+ 	struct se_portal_group *se_tpg = &tport->tpg->se_tpg;
+-	struct se_node_acl *se_acl;
+ 	struct ft_sess *sess;
+ 	struct hlist_head *head;
+ 	unsigned char initiatorname[TRANSPORT_IQN_LEN];
+@@ -210,31 +223,18 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	if (!sess)
+ 		return NULL;
  
-@@ -1374,15 +1400,6 @@ static int tcm_qla2xxx_check_initiator_node_acl(
- 		pr_err("Unable to lcoate struct tcm_qla2xxx_lport->tpg_1\n");
- 		return -EINVAL;
+-	sess->se_sess = transport_init_session_tags(TCM_FC_DEFAULT_TAGS,
+-						    sizeof(struct ft_cmd),
+-						    TARGET_PROT_NORMAL);
+-	if (IS_ERR(sess->se_sess)) {
+-		kfree(sess);
+-		return NULL;
+-	}
++	kref_init(&sess->kref); /* ref for table entry */
++	sess->tport = tport;
++	sess->port_id = port_id;
+ 
+-	se_acl = core_tpg_get_initiator_node_acl(se_tpg, &initiatorname[0]);
+-	if (!se_acl) {
+-		transport_free_session(sess->se_sess);
++	sess->se_sess = target_alloc_session(se_tpg, TCM_FC_DEFAULT_TAGS,
++					     sizeof(struct ft_cmd),
++					     TARGET_PROT_NORMAL, &initiatorname[0],
++					     sess, ft_sess_alloc_cb);
++	if (IS_ERR(sess->se_sess)) {
+ 		kfree(sess);
+ 		return NULL;
  	}
--	se_tpg = &tpg->se_tpg;
+-	sess->se_sess->se_node_acl = se_acl;
+-	sess->tport = tport;
+-	sess->port_id = port_id;
+-	kref_init(&sess->kref);	/* ref for table entry */
+-	hlist_add_head_rcu(&sess->hash, head);
+-	tport->sess_count++;
 -
--	se_sess = transport_init_session_tags(num_tags,
--					      sizeof(struct qla_tgt_cmd),
--					      TARGET_PROT_ALL);
--	if (IS_ERR(se_sess)) {
--		pr_err("Unable to initialize struct se_session\n");
--		return PTR_ERR(se_sess);
--	}
- 	/*
- 	 * Format the FCP Initiator port_name into colon seperated values to
- 	 * match the format by tcm_qla2xxx explict ConfigFS NodeACLs.
-@@ -1393,28 +1410,12 @@ static int tcm_qla2xxx_check_initiator_node_acl(
- 	 * Locate our struct se_node_acl either from an explict NodeACL created
- 	 * via ConfigFS, or via running in TPG demo mode.
- 	 */
--	se_sess->se_node_acl = core_tpg_check_initiator_node_acl(se_tpg,
--					port_name);
--	if (!se_sess->se_node_acl) {
--		transport_free_session(se_sess);
--		return -EINVAL;
--	}
--	se_nacl = se_sess->se_node_acl;
--	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
--	/*
--	 * And now setup the new se_nacl and session pointers into our HW lport
--	 * mappings for fabric S_ID and LOOP_ID.
--	 */
--	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
--	tcm_qla2xxx_set_sess_by_s_id(lport, se_nacl, nacl, se_sess,
--			qla_tgt_sess, s_id);
--	tcm_qla2xxx_set_sess_by_loop_id(lport, se_nacl, nacl, se_sess,
--			qla_tgt_sess, loop_id);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
--	/*
--	 * Finally register the new FC Nexus with TCM
--	 */
--	transport_register_session(se_nacl->se_tpg, se_nacl, se_sess, sess);
-+	se_sess = target_alloc_session(&tpg->se_tpg, num_tags,
-+				       sizeof(struct qla_tgt_cmd),
-+				       TARGET_PROT_ALL, port_name,
-+				       qlat_sess, tcm_qla2xxx_session_cb);
-+	if (IS_ERR(se_sess))
-+		return PTR_ERR(se_sess);
- 
- 	return 0;
+-	pr_debug("port_id %x sess %p\n", port_id, sess);
+-
+-	transport_register_session(&tport->tpg->se_tpg, se_acl,
+-				   sess->se_sess, sess);
+ 	return sess;
  }
+ 
 -- 
 1.9.1
 
