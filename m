@@ -1,70 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111441] iscsi fails to attach to targets
-Date: Sat, 30 Jan 2016 07:46:20 +0000
-Message-ID: <bug-111441-11613-gtiiCDNU9S@https.bugzilla.kernel.org/>
-References: <bug-111441-11613@https.bugzilla.kernel.org/>
+From: Jornadas de Derecho Administrativo <jornadasderadm@udec.cl>
+Subject: Masaje webmail
+Date: Sat, 30 Jan 2016 08:30:46 -0300
+Message-ID: <e78e307c3bca94e49d41b69868d39d90@udec.cl>
+Reply-To: webcenter@mail2world.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52631 "EHLO mail.kernel.org"
+Received: from mail.udec.cl ([152.74.16.12]:60281 "EHLO mail.udec.cl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751943AbcA3HqY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Jan 2016 02:46:24 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A51DB20382
-	for <linux-scsi@vger.kernel.org>; Sat, 30 Jan 2016 07:46:23 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 1231D2039E
-	for <linux-scsi@vger.kernel.org>; Sat, 30 Jan 2016 07:46:21 +0000 (UTC)
-In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
+	id S1751945AbcA3Lhi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Jan 2016 06:37:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111441
 
---- Comment #8 from nab <nab@linux-iscsi.org> ---
-On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
-> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
-> > HI Mike,
-> > 
-> > I tried your patch and it is has eliminated first traceback but I still do not see my remote targets.
-> > 
-> 
-> That is sort of expected. Your target is not setup for ALUA properly. It
-> says it supports ALUA, but when scsi_dh_alua asks about the ports it is
-> reporting there are none. Ccing the people that made the patch that
-> added the issue and own the code.
-> 
-> Hey Christoph and Hannes,
-> 
-> The dh/alua changes that added this:
-> 
->         error = scsi_dh_add_device(sdev);
->         if (error) {
->                 sdev_printk(KERN_INFO, sdev,
->                                 "failed to add device handler: %d\n",
-> error);
->                 return error;
->         }
-> 
-> to scsi_sysfs_add_sdev are adding a regression.
-> 
-> 1. If that fails, then we forget to do device_del before doing the
-> return. My patch in this thread added that back, so we do not see the
-> sysfs oopses anymore. But.....
-> 
-> 2. It looks like in older kernels, we would allow misconfigured targets
-> like this one to still setup devices. Do we want that old behavior back?
-> Should we just ignore the return value from scsi_dh_add_device above?
-> Note that in this case, it is LIO so it can be easily fixed on the
-> target side by just setting it up properly. I do not think other targets
-> would hit this type of issue.
-> 
 
-Btw, what does misconfigured mean here wrt target ALUA..?
+--=20
+Estimado usuario de la cuenta;
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Actualizamos nuestro servidor de correo; actualizar su servicio,=20
+complete
+sus datos a continuaci=C3=B3n;
+
+* Nombre de usuario:
+* Contrase=C3=B1a:
+* Confirmar Contrase=C3=B1a:
+* El tel=C3=A9fono no:
+
+=C2=A1Advertencia! se niega a actualizar su cuenta puede determinar la
+suspensi=C3=B3n de su cuenta
+
+Gracias por usar nuestro sistema de correo electr=C3=B3nico
+
+Atentamente;
+Administrador del sistema
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
