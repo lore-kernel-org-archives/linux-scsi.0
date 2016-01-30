@@ -1,15 +1,15 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 5/5] target: Drop legacy se_cmd->task_stop_comp + REQUEST_STOP usage
-Date: Sat, 30 Jan 2016 05:37:02 +0000
-Message-ID: <1454132222-29009-6-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 2/5] target: Fix LUN_RESET active TMR descriptor handling
+Date: Sat, 30 Jan 2016 05:36:59 +0000
+Message-ID: <1454132222-29009-3-git-send-email-nab@daterainc.com>
 References: <1454132222-29009-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:33073 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbcA3FkK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 00:40:10 -0500
-Received: by mail-ob0-f176.google.com with SMTP id is5so80504456obc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 21:40:09 -0800 (PST)
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:33025 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbcA3FkD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 00:40:03 -0500
+Received: by mail-ob0-f180.google.com with SMTP id is5so80503214obc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 21:40:03 -0800 (PST)
 In-Reply-To: <1454132222-29009-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,119 +18,148 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>,
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-With CMD_T_FABRIC_STOP + se_cmd->cmd_wait_set usage in place,
-go ahead and drop left-over CMD_T_REQUEST_STOP checks in
-target_complete_cmd() and unused target_stop_cmd().
+This patch fixes a NULL pointer se_cmd->cmd_kref < 0
+refcount bug during TMR LUN_RESET with active TMRs,
+triggered during se_cmd + se_tmr_req descriptor
+shutdown + release via core_tmr_drain_tmr_list().
 
-Cc: Quinn Tran <quinn.tran@qlogic.com>
+To address this bug, go ahead and obtain a local
+kref_get_unless_zero(&se_cmd->cmd_kref) for active I/O
+to set CMD_T_ABORTED, and transport_wait_for_tasks()
+followed by the final target_put_sess_cmd() to drop
+the local ->cmd_kref.
+
+Also add two new checks within target_tmr_work() to
+avoid CMD_T_ABORTED -> TFO->queue_tm_rsp() callbacks
+ahead of invoking the backend -> fabric put in
+transport_cmd_check_stop_to_fabric().
+
+For good measure, also change core_tmr_release_req()
+to use list_del_init() ahead of se_tmr_req memory
+free.
+
+Reviewed-by: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Andy Grover <agrover@redhat.com>
 Cc: Mike Christie <mchristi@redhat.com>
+Cc: stable@vger.kernel.org # 3.10+
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_internal.h  |  1 -
- drivers/target/target_core_transport.c | 37 ----------------------------------
- include/target/target_core_base.h      |  4 ----
- 3 files changed, 42 deletions(-)
+ drivers/target/target_core_tmr.c       | 22 +++++++++++++++++++++-
+ drivers/target/target_core_transport.c | 17 +++++++++++++++++
+ 2 files changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index dae0750c..db4412f 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -141,7 +141,6 @@ void	transport_dump_vpd_proto_id(struct t10_vpd *, unsigned char *, int);
- int	transport_dump_vpd_assoc(struct t10_vpd *, unsigned char *, int);
- int	transport_dump_vpd_ident_type(struct t10_vpd *, unsigned char *, int);
- int	transport_dump_vpd_ident(struct t10_vpd *, unsigned char *, int);
--bool	target_stop_cmd(struct se_cmd *cmd, unsigned long *flags);
- void	transport_clear_lun_ref(struct se_lun *);
- void	transport_send_task_abort(struct se_cmd *);
- sense_reason_t	target_cmd_size_check(struct se_cmd *cmd, unsigned int size);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 36a70e0..463838d 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -693,15 +693,6 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 2248075..c75ef29 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -68,7 +68,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
+ 
+ 	if (dev) {
+ 		spin_lock_irqsave(&dev->se_tmr_lock, flags);
+-		list_del(&tmr->tmr_list);
++		list_del_init(&tmr->tmr_list);
+ 		spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
  	}
  
+@@ -199,9 +199,11 @@ static void core_tmr_drain_tmr_list(
+ 	struct list_head *preempt_and_abort_list)
+ {
+ 	LIST_HEAD(drain_tmr_list);
++	struct se_session *sess;
+ 	struct se_tmr_req *tmr_p, *tmr_pp;
+ 	struct se_cmd *cmd;
+ 	unsigned long flags;
++	bool rc;
  	/*
--	 * See if we are waiting to complete for an exception condition.
--	 */
--	if (cmd->transport_state & CMD_T_REQUEST_STOP) {
--		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
--		complete(&cmd->task_stop_comp);
--		return;
--	}
--
--	/*
- 	 * Check for case where an explicit ABORT_TASK has been received
- 	 * and transport_wait_for_tasks() will be waiting for completion..
- 	 */
-@@ -1202,7 +1193,6 @@ void transport_init_se_cmd(
- 	INIT_LIST_HEAD(&cmd->state_list);
- 	init_completion(&cmd->t_transport_stop_comp);
- 	init_completion(&cmd->cmd_wait_comp);
--	init_completion(&cmd->task_stop_comp);
- 	spin_lock_init(&cmd->t_state_lock);
- 	kref_init(&cmd->cmd_kref);
- 	cmd->transport_state = CMD_T_DEV_ACTIVE;
-@@ -1634,33 +1624,6 @@ int target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
- EXPORT_SYMBOL(target_submit_tmr);
+ 	 * Release all pending and outgoing TMRs aside from the received
+ 	 * LUN_RESET tmr..
+@@ -227,17 +229,31 @@ static void core_tmr_drain_tmr_list(
+ 		if (target_check_cdb_and_preempt(preempt_and_abort_list, cmd))
+ 			continue;
  
- /*
-- * If the cmd is active, request it to be stopped and sleep until it
-- * has completed.
-- */
--bool target_stop_cmd(struct se_cmd *cmd, unsigned long *flags)
--	__releases(&cmd->t_state_lock)
--	__acquires(&cmd->t_state_lock)
--{
--	bool was_active = false;
--
--	if (cmd->transport_state & CMD_T_BUSY) {
--		cmd->transport_state |= CMD_T_REQUEST_STOP;
--		spin_unlock_irqrestore(&cmd->t_state_lock, *flags);
--
--		pr_debug("cmd %p waiting to complete\n", cmd);
--		wait_for_completion(&cmd->task_stop_comp);
--		pr_debug("cmd %p stopped successfully\n", cmd);
--
--		spin_lock_irqsave(&cmd->t_state_lock, *flags);
--		cmd->transport_state &= ~CMD_T_REQUEST_STOP;
--		cmd->transport_state &= ~CMD_T_BUSY;
--		was_active = true;
--	}
--
--	return was_active;
--}
--
--/*
-  * Handle SAM-esque emulation for generic transport request failures.
-  */
- void transport_generic_request_failure(struct se_cmd *cmd,
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 1579539e..d71a3ea 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -491,7 +491,6 @@ struct se_cmd {
- #define CMD_T_SENT		(1 << 4)
- #define CMD_T_STOP		(1 << 5)
- #define CMD_T_DEV_ACTIVE	(1 << 7)
--#define CMD_T_REQUEST_STOP	(1 << 8)
- #define CMD_T_BUSY		(1 << 9)
- #define CMD_T_TAS		(1 << 10)
- #define CMD_T_FABRIC_STOP	(1 << 11)
-@@ -514,9 +513,6 @@ struct se_cmd {
++		sess = cmd->se_sess;
++		if (WARN_ON_ONCE(!sess))
++			continue;
++
++		spin_lock(&sess->sess_cmd_lock);
+ 		spin_lock(&cmd->t_state_lock);
+ 		if (!(cmd->transport_state & CMD_T_ACTIVE)) {
+ 			spin_unlock(&cmd->t_state_lock);
++			spin_unlock(&sess->sess_cmd_lock);
+ 			continue;
+ 		}
+ 		if (cmd->t_state == TRANSPORT_ISTATE_PROCESSING) {
+ 			spin_unlock(&cmd->t_state_lock);
++			spin_unlock(&sess->sess_cmd_lock);
+ 			continue;
+ 		}
++		cmd->transport_state |= CMD_T_ABORTED;
+ 		spin_unlock(&cmd->t_state_lock);
  
- 	struct list_head	state_list;
++		rc = kref_get_unless_zero(&cmd->cmd_kref);
++		spin_unlock(&sess->sess_cmd_lock);
++		if (!rc) {
++			printk("LUN_RESET TMR: non-zero kref_get_unless_zero\n");
++			continue;
++		}
+ 		list_move_tail(&tmr_p->tmr_list, &drain_tmr_list);
+ 	}
+ 	spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
+@@ -251,7 +267,11 @@ static void core_tmr_drain_tmr_list(
+ 			(preempt_and_abort_list) ? "Preempt" : "", tmr_p,
+ 			tmr_p->function, tmr_p->response, cmd->t_state);
  
--	/* old task stop completion, consider merging with some of the above */
--	struct completion	task_stop_comp;
--
- 	/* backend private data */
- 	void			*priv;
++		cancel_work_sync(&cmd->work);
++		transport_wait_for_tasks(cmd);
++
+ 		transport_cmd_finish_abort(cmd, 1);
++		target_put_sess_cmd(cmd);
+ 	}
+ }
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index af52f8b..94e372a 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2900,8 +2900,17 @@ static void target_tmr_work(struct work_struct *work)
+ 	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_tmr_req *tmr = cmd->se_tmr_req;
++	unsigned long flags;
+ 	int ret;
+ 
++	spin_lock_irqsave(&cmd->t_state_lock, flags);
++	if (cmd->transport_state & CMD_T_ABORTED) {
++		tmr->response = TMR_FUNCTION_REJECTED;
++		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++		goto check_stop;
++	}
++	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++
+ 	switch (tmr->function) {
+ 	case TMR_ABORT_TASK:
+ 		core_tmr_abort_task(dev, tmr, cmd->se_sess);
+@@ -2934,9 +2943,17 @@ static void target_tmr_work(struct work_struct *work)
+ 		break;
+ 	}
+ 
++	spin_lock_irqsave(&cmd->t_state_lock, flags);
++	if (cmd->transport_state & CMD_T_ABORTED) {
++		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++		goto check_stop;
++	}
+ 	cmd->t_state = TRANSPORT_ISTATE_PROCESSING;
++	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++
+ 	cmd->se_tfo->queue_tm_rsp(cmd);
+ 
++check_stop:
+ 	transport_cmd_check_stop_to_fabric(cmd);
+ }
  
 -- 
 1.9.1
