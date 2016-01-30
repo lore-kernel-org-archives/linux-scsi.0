@@ -1,161 +1,140 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 14/14] ib_srpt: Convert to percpu_ida tag allocation
-Date: Sat, 30 Jan 2016 07:05:58 +0000
-Message-ID: <1454137558-30396-15-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 12/14] xen-scsiback: Convert to TARGET_SCF_ACK_KREF I/O krefs
+Date: Sat, 30 Jan 2016 07:05:56 +0000
+Message-ID: <1454137558-30396-13-git-send-email-nab@daterainc.com>
 References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:34936 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756572AbcA3HJI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 02:09:08 -0500
-Received: by mail-ob0-f170.google.com with SMTP id ny8so59665811obc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 23:09:08 -0800 (PST)
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:33753 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756550AbcA3HJF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 02:09:05 -0500
+Received: by mail-ob0-f173.google.com with SMTP id is5so81398761obc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 23:09:05 -0800 (PST)
 In-Reply-To: <1454137558-30396-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, Vu Pham <vu@mellanox.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, David Vrabel <david.vrabel@citrix.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Cc: Vu Pham <vu@mellanox.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: David Vrabel <david.vrabel@citrix.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/infiniband/ulp/srpt/ib_srpt.c | 55 +++++++++++------------------------
- drivers/infiniband/ulp/srpt/ib_srpt.h |  2 --
- 2 files changed, 17 insertions(+), 40 deletions(-)
+ drivers/xen/xen-scsiback.c | 56 +++++++++++++++++++++++-----------------------
+ 1 file changed, 28 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index 72a671e..b0707a7 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -1261,40 +1261,26 @@ free_mem:
-  */
- static struct srpt_send_ioctx *srpt_get_send_ioctx(struct srpt_rdma_ch *ch)
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index ea3b822..eaf9e21 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -386,6 +386,12 @@ static void scsiback_cmd_done(struct vscsibk_pend *pending_req)
+ 	scsiback_fast_flush_area(pending_req);
+ 	scsiback_do_resp_with_sense(sense_buffer, errors, resid, pending_req);
+ 	scsiback_put(info);
++	/*
++	 * Drop the extra KREF_ACK reference taken by target_submit_cmd_map_sgls()
++	 * ahead of scsiback_check_stop_free() ->  transport_generic_free_cmd()
++	 * final se_cmd->cmd_kref put.
++	 */
++	target_put_sess_cmd(&pending_req->se_cmd);
+ }
+ 
+ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
+@@ -403,7 +409,7 @@ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
+ 	rc = target_submit_cmd_map_sgls(se_cmd, sess, pending_req->cmnd,
+ 			pending_req->sense_buffer, pending_req->v2p->lun,
+ 			pending_req->data_len, 0,
+-			pending_req->sc_data_direction, 0,
++			pending_req->sc_data_direction, TARGET_SCF_ACK_KREF,
+ 			pending_req->sgl, pending_req->n_sg,
+ 			NULL, 0, NULL, 0);
+ 	if (rc < 0) {
+@@ -592,31 +598,28 @@ static void scsiback_disconnect(struct vscsibk_info *info)
+ static void scsiback_device_action(struct vscsibk_pend *pending_req,
+ 	enum tcm_tmreq_table act, int tag)
  {
-+	struct se_session *se_sess;
- 	struct srpt_send_ioctx *ioctx;
--	unsigned long flags;
-+	int tag;
+-	int rc, err = FAILED;
+ 	struct scsiback_tpg *tpg = pending_req->v2p->tpg;
++	struct scsiback_nexus *nexus = tpg->tpg_nexus;
+ 	struct se_cmd *se_cmd = &pending_req->se_cmd;
+ 	struct scsiback_tmr *tmr;
++	u64 unpacked_lun = pending_req->v2p->lun;
++	int rc, err = FAILED;
  
- 	BUG_ON(!ch);
-+	se_sess = ch->sess;
+ 	tmr = kzalloc(sizeof(struct scsiback_tmr), GFP_KERNEL);
+-	if (!tmr)
+-		goto out;
++	if (!tmr) {
++		target_put_sess_cmd(se_cmd);
++		goto err;
++	}
  
--	ioctx = NULL;
--	spin_lock_irqsave(&ch->spinlock, flags);
--	if (!list_empty(&ch->free_list)) {
--		ioctx = list_first_entry(&ch->free_list,
--					 struct srpt_send_ioctx, free_list);
--		list_del(&ioctx->free_list);
-+	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, TASK_RUNNING);
-+	if (tag < 0) {
-+		pr_err("Unable to obtain tag for srpt_send_ioctx\n");
-+		return NULL;
- 	}
--	spin_unlock_irqrestore(&ch->spinlock, flags);
+ 	init_waitqueue_head(&tmr->tmr_wait);
+ 
+-	transport_init_se_cmd(se_cmd, tpg->se_tpg.se_tpg_tfo,
+-		tpg->tpg_nexus->tvn_se_sess, 0, DMA_NONE, TCM_SIMPLE_TAG,
+-		&pending_req->sense_buffer[0]);
 -
--	if (!ioctx)
--		return ioctx;
+-	rc = core_tmr_alloc_req(se_cmd, tmr, act, GFP_KERNEL);
+-	if (rc < 0)
+-		goto out;
 -
--	BUG_ON(ioctx->ch != ch);
-+	ioctx = &((struct srpt_send_ioctx *)se_sess->sess_cmd_map)[tag];
-+	memset(ioctx, 0, sizeof(struct srpt_send_ioctx));
-+	ioctx->ch = ch;
- 	spin_lock_init(&ioctx->spinlock);
- 	ioctx->state = SRPT_STATE_NEW;
--	ioctx->n_rbuf = 0;
--	ioctx->rbufs = NULL;
--	ioctx->n_rdma = 0;
--	ioctx->n_rdma_wrs = 0;
--	ioctx->rdma_wrs = NULL;
--	ioctx->mapped_sg_count = 0;
- 	init_completion(&ioctx->tx_done);
--	ioctx->queue_status_only = false;
+-	se_cmd->se_tmr_req->ref_task_tag = tag;
+-
+-	if (transport_lookup_tmr_lun(se_cmd, pending_req->v2p->lun) < 0)
+-		goto out;
++	rc = target_submit_tmr(&pending_req->se_cmd, nexus->tvn_se_sess,
++			       &pending_req->sense_buffer[0],
++			       unpacked_lun, tmr, act, GFP_KERNEL,
++			       tag, TARGET_SCF_ACK_KREF);
++	if (rc)
++		goto err;
+ 
+-	transport_generic_handle_tmr(se_cmd);
+ 	wait_event(tmr->tmr_wait, atomic_read(&tmr->tmr_complete));
+ 
+ 	err = (se_cmd->se_tmr_req->response == TMR_FUNCTION_COMPLETE) ?
+@@ -625,7 +628,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
+ 	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
+ 	transport_generic_free_cmd(&pending_req->se_cmd, 1);
+ 	return;
+-out:
++err:
+ 	if (tmr)
+ 		kfree(tmr);
+ 	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
+@@ -1370,21 +1373,18 @@ static u32 scsiback_tpg_get_inst_index(struct se_portal_group *se_tpg)
+ 
+ static int scsiback_check_stop_free(struct se_cmd *se_cmd)
+ {
 -	/*
--	 * transport_init_se_cmd() does not initialize all fields, so do it
--	 * here.
+-	 * Do not release struct se_cmd's containing a valid TMR pointer.
+-	 * These will be released directly in scsiback_device_action()
+-	 * with transport_generic_free_cmd().
 -	 */
--	memset(&ioctx->cmd, 0, sizeof(ioctx->cmd));
--	memset(&ioctx->sense_data, 0, sizeof(ioctx->sense_data));
-+
-+	ioctx->cmd.map_tag = tag;
- 
- 	return ioctx;
- }
-@@ -2241,7 +2227,7 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
- 	struct ib_cm_rep_param *rep_param;
- 	struct srpt_rdma_ch *ch, *tmp_ch;
- 	u32 it_iu_len;
--	int i, ret = 0;
-+	int ret = 0;
- 	unsigned char *p;
- 
- 	WARN_ON_ONCE(irqs_disabled());
-@@ -2370,12 +2356,6 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
- 	if (!ch->ioctx_ring)
- 		goto free_ch;
- 
--	INIT_LIST_HEAD(&ch->free_list);
--	for (i = 0; i < ch->rq_size; i++) {
--		ch->ioctx_ring[i]->ch = ch;
--		list_add_tail(&ch->ioctx_ring[i]->free_list, &ch->free_list);
--	}
+-	if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
+-		return 0;
 -
- 	ret = srpt_create_ch_ib(ch);
- 	if (ret) {
- 		rej->reason = cpu_to_be32(
-@@ -2406,7 +2386,8 @@ static int srpt_cm_req_recv(struct ib_cm_id *cm_id,
- 	p = &ch->sess_name[0];
- 
- try_again:
--	ch->sess = target_alloc_session(&sport->port_tpg_1, 0, 0,
-+	ch->sess = target_alloc_session(&sport->port_tpg_1, ch->rq_size,
-+					sizeof(struct srpt_send_ioctx),
- 					TARGET_PROT_NORMAL, p, ch, NULL);
- 	if (IS_ERR(ch->sess)) {
- 		pr_info("Rejected login because no ACL has been"
-@@ -3194,7 +3175,7 @@ static void srpt_release_cmd(struct se_cmd *se_cmd)
- 	struct srpt_send_ioctx *ioctx = container_of(se_cmd,
- 				struct srpt_send_ioctx, cmd);
- 	struct srpt_rdma_ch *ch = ioctx->ch;
--	unsigned long flags;
-+	struct se_session *se_sess = ch->sess;
- 
- 	WARN_ON(ioctx->state != SRPT_STATE_DONE);
- 	WARN_ON(ioctx->mapped_sg_count != 0);
-@@ -3205,9 +3186,7 @@ static void srpt_release_cmd(struct se_cmd *se_cmd)
- 		ioctx->n_rbuf = 0;
- 	}
- 
--	spin_lock_irqsave(&ch->spinlock, flags);
--	list_add(&ioctx->free_list, &ch->free_list);
--	spin_unlock_irqrestore(&ch->spinlock, flags);
-+	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
+-	transport_generic_free_cmd(se_cmd, 0);
+-	return 1;
++	return transport_generic_free_cmd(se_cmd, 0);
  }
  
- /**
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
-index 09037f2..6fbb6e7 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.h
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
-@@ -179,7 +179,6 @@ struct srpt_recv_ioctx {
-  * struct srpt_send_ioctx - SRPT send I/O context.
-  * @ioctx:       See above.
-  * @ch:          Channel pointer.
-- * @free_list:   Node in srpt_rdma_ch.free_list.
-  * @n_rbuf:      Number of data buffers in the received SRP command.
-  * @rbufs:       Pointer to SRP data buffer array.
-  * @single_rbuf: SRP data buffer if the command has only a single buffer.
-@@ -202,7 +201,6 @@ struct srpt_send_ioctx {
- 	struct srp_direct_buf	*rbufs;
- 	struct srp_direct_buf	single_rbuf;
- 	struct scatterlist	*sg;
--	struct list_head	free_list;
- 	spinlock_t		spinlock;
- 	enum srpt_command_state	state;
- 	struct se_cmd		cmd;
+ static void scsiback_release_cmd(struct se_cmd *se_cmd)
+ {
+ 	struct se_session *se_sess = se_cmd->se_sess;
++	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
++
++	if (se_tmr && se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) {
++		struct scsiback_tmr *tmr = se_tmr->fabric_tmr_ptr;
++		kfree(tmr);
++	}
+ 
+ 	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
+ }
 -- 
 1.9.1
 
