@@ -1,123 +1,122 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 3/5] target: Fix TAS handling for multi-session se_node_acls
-Date: Sat, 30 Jan 2016 05:37:00 +0000
-Message-ID: <1454132222-29009-4-git-send-email-nab@daterainc.com>
-References: <1454132222-29009-1-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 01/14] target: Add target_alloc_session() helper function
+Date: Sat, 30 Jan 2016 07:05:45 +0000
+Message-ID: <1454137558-30396-2-git-send-email-nab@daterainc.com>
+References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1454132222-29009-1-git-send-email-nab@daterainc.com>
+In-Reply-To: <1454137558-30396-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a bug in TMR task aborted status (TAS)
-handling when multiple sessions are connected to the
-same target WWPN endpoint and se_node_acl descriptor,
-resulting in TASK_ABORTED status to not be generated
-for aborted se_cmds on the remote port.
+Based on HCH's original patch, this adds a full version to
+support percpu-ida tag pre-allocation and callback function
+pointer into fabric driver code to complete session setup.
 
-This is due to core_tmr_handle_tas_abort() incorrectly
-comparing se_node_acl instead of se_session, for which
-the multi-session case is expected to be sharing the
-same se_node_acl.
-
-Instead, go ahead and update core_tmr_handle_tas_abort()
-to compare tmr_sess + cmd->se_sess in order to determine
-if the LUN_RESET was received on a different I_T nexus,
-and TASK_ABORTED status response needs to be generated.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Reported-by: Christoph Hellwig <hch@lst.de>
 Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Andy Grover <agrover@redhat.com>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: stable@vger.kernel.org # 3.10+
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tmr.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/target/target_core_transport.c | 56 ++++++++++++++++++++++++++++++++++
+ include/target/target_core_fabric.h    |  6 ++++
+ 2 files changed, 62 insertions(+)
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index c75ef29..9d67d16 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -76,7 +76,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 9f3608e..6becc94 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -281,6 +281,17 @@ struct se_session *transport_init_session_tags(unsigned int tag_num,
+ 	struct se_session *se_sess;
+ 	int rc;
+ 
++	if (tag_num != 0 && !tag_size) {
++		pr_err("init_session_tags called with percpu-ida tag_num:"
++		       " %u, but zero tag_size\n", tag_num);
++		return ERR_PTR(-EINVAL);
++	}
++	if (!tag_num && tag_size) {
++		pr_err("init_session_tags called with percpu-ida tag_size:"
++		       " %u, but zero tag_num\n", tag_size);
++		return ERR_PTR(-EINVAL);
++	}
++
+ 	se_sess = transport_init_session(sup_prot_ops);
+ 	if (IS_ERR(se_sess))
+ 		return se_sess;
+@@ -374,6 +385,51 @@ void transport_register_session(
  }
+ EXPORT_SYMBOL(transport_register_session);
  
- static void core_tmr_handle_tas_abort(
--	struct se_node_acl *tmr_nacl,
-+	struct se_session *tmr_sess,
- 	struct se_cmd *cmd,
- 	int tas)
++struct se_session *
++target_alloc_session(struct se_portal_group *tpg,
++		     unsigned int tag_num, unsigned int tag_size,
++		     enum target_prot_op prot_op,
++		     const char *initiatorname, void *private,
++		     int (*callback)(struct se_portal_group *,
++				     struct se_session *, void *))
++{
++	struct se_session *sess;
++
++	/*
++	 * If the fabric driver is using percpu-ida based pre allocation
++	 * of I/O descriptor tags, go ahead and perform that setup now..
++	 */
++	if (tag_num != 0)
++		sess = transport_init_session_tags(tag_num, tag_size, prot_op);
++	else
++		sess = transport_init_session(prot_op);
++
++	if (IS_ERR(sess))
++		return sess;
++
++	sess->se_node_acl = core_tpg_check_initiator_node_acl(tpg,
++					(unsigned char *)initiatorname);
++	if (!sess->se_node_acl) {
++		transport_free_session(sess);
++		return ERR_PTR(-EACCES);
++	}
++	/*
++	 * Go ahead and perform any remaining fabric setup that is
++	 * required before transport_register_session().
++	 */
++	if (callback != NULL) {
++		int rc = callback(tpg, sess, private);
++		if (rc) {
++			transport_free_session(sess);
++			return ERR_PTR(rc);
++		}
++	}
++
++	transport_register_session(tpg, sess->se_node_acl, sess, private);
++	return sess;
++}
++EXPORT_SYMBOL(target_alloc_session);
++
+ static void target_release_session(struct kref *kref)
  {
-@@ -84,7 +84,7 @@ static void core_tmr_handle_tas_abort(
- 	/*
- 	 * TASK ABORTED status (TAS) bit support
- 	 */
--	if ((tmr_nacl && (tmr_nacl != cmd->se_sess->se_node_acl)) && tas) {
-+	if (tmr_sess && tmr_sess != cmd->se_sess && tas) {
- 		remove = false;
- 		transport_send_task_abort(cmd);
- 	}
-@@ -111,7 +111,7 @@ static bool __target_check_io_state(struct se_cmd *se_cmd)
- {
- 	struct se_session *sess = se_cmd->se_sess;
+ 	struct se_session *se_sess = container_of(kref,
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 5665340..685a51a 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -108,6 +108,12 @@ void target_unregister_template(const struct target_core_fabric_ops *fo);
+ int target_depend_item(struct config_item *item);
+ void target_undepend_item(struct config_item *item);
  
--	assert_spin_locked(&se_session->sess_cmd_lock);
-+	assert_spin_locked(&sess->sess_cmd_lock);
- 	WARN_ON_ONCE(!irqs_disabled());
- 	/*
- 	 * If command already reached CMD_T_COMPLETE state within
-@@ -278,7 +278,7 @@ static void core_tmr_drain_tmr_list(
- static void core_tmr_drain_state_list(
- 	struct se_device *dev,
- 	struct se_cmd *prout_cmd,
--	struct se_node_acl *tmr_nacl,
-+	struct se_session *tmr_sess,
- 	int tas,
- 	struct list_head *preempt_and_abort_list)
- {
-@@ -369,7 +369,7 @@ static void core_tmr_drain_state_list(
- 		cancel_work_sync(&cmd->work);
- 		transport_wait_for_tasks(cmd);
- 
--		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas);
-+		core_tmr_handle_tas_abort(tmr_sess, cmd, tas);
- 		target_put_sess_cmd(cmd);
- 	}
- }
-@@ -382,6 +382,7 @@ int core_tmr_lun_reset(
- {
- 	struct se_node_acl *tmr_nacl = NULL;
- 	struct se_portal_group *tmr_tpg = NULL;
-+	struct se_session *tmr_sess = NULL;
- 	int tas;
-         /*
- 	 * TASK_ABORTED status bit, this is configurable via ConfigFS
-@@ -400,8 +401,9 @@ int core_tmr_lun_reset(
- 	 * or struct se_device passthrough..
- 	 */
- 	if (tmr && tmr->task_cmd && tmr->task_cmd->se_sess) {
--		tmr_nacl = tmr->task_cmd->se_sess->se_node_acl;
--		tmr_tpg = tmr->task_cmd->se_sess->se_tpg;
-+		tmr_sess = tmr->task_cmd->se_sess;
-+		tmr_nacl = tmr_sess->se_node_acl;
-+		tmr_tpg = tmr_sess->se_tpg;
- 		if (tmr_nacl && tmr_tpg) {
- 			pr_debug("LUN_RESET: TMR caller fabric: %s"
- 				" initiator port %s\n",
-@@ -414,7 +416,7 @@ int core_tmr_lun_reset(
- 		dev->transport->name, tas);
- 
- 	core_tmr_drain_tmr_list(dev, tmr, preempt_and_abort_list);
--	core_tmr_drain_state_list(dev, prout_cmd, tmr_nacl, tas,
-+	core_tmr_drain_state_list(dev, prout_cmd, tmr_sess, tas,
- 				preempt_and_abort_list);
- 
- 	/*
++struct se_session *target_alloc_session(struct se_portal_group *,
++		unsigned int, unsigned int, enum target_prot_op prot_op,
++		const char *, void *,
++		int (*callback)(struct se_portal_group *,
++				struct se_session *, void *));
++
+ struct se_session *transport_init_session(enum target_prot_op);
+ int transport_alloc_session_tags(struct se_session *, unsigned int,
+ 		unsigned int);
 -- 
 1.9.1
