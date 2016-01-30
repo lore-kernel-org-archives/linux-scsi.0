@@ -1,77 +1,68 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 00/14] target_alloc_session w/ percpu_ida+ACK_KREF conversion
-Date: Sat, 30 Jan 2016 07:05:44 +0000
-Message-ID: <1454137558-30396-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
+Date: Fri, 29 Jan 2016 23:38:53 -0800
+Message-ID: <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
+References: <bug-111441-11613@https.bugzilla.kernel.org/>
+	 <56AAC605.1080707@cs.wisc.edu>
+	 <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
+	 <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+	 <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
+	 <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
+	 <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+	 <56ABBCFF.9060003@cs.wisc.edu>
+	 <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
+	 <56ABF6A6.8070506@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:40973 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583AbcA3HjE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 02:39:04 -0500
+In-Reply-To: <56ABF6A6.8070506@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
+> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
+> > HI Mike,
+> > 
+> > I tried your patch and it is has eliminated first traceback but I still do not see my remote targets.
+> > 
+> 
+> That is sort of expected. Your target is not setup for ALUA properly. It
+> says it supports ALUA, but when scsi_dh_alua asks about the ports it is
+> reporting there are none. Ccing the people that made the patch that
+> added the issue and own the code.
+> 
+> Hey Christoph and Hannes,
+> 
+> The dh/alua changes that added this:
+> 
+>         error = scsi_dh_add_device(sdev);
+>         if (error) {
+>                 sdev_printk(KERN_INFO, sdev,
+>                                 "failed to add device handler: %d\n",
+> error);
+>                 return error;
+>         }
+> 
+> to scsi_sysfs_add_sdev are adding a regression.
+> 
+> 1. If that fails, then we forget to do device_del before doing the
+> return. My patch in this thread added that back, so we do not see the
+> sysfs oopses anymore. But.....
+> 
+> 2. It looks like in older kernels, we would allow misconfigured targets
+> like this one to still setup devices. Do we want that old behavior back?
+> Should we just ignore the return value from scsi_dh_add_device above?
+> Note that in this case, it is LIO so it can be easily fixed on the
+> target side by just setting it up properly. I do not think other targets
+> would hit this type of issue.
+> 
 
-Hi all,
+Btw, what does misconfigured mean here wrt target ALUA..?
 
-Here is -v3 series code for target_alloc_session() helper
-support using existing percpu-ida tag pre-allocation, along
-with a new (*callback)() for allowing fabric driver code
-setup to complete ahead of transport_register_session()
-completing I_T nexus setup.
-
-This includes a tree-wide fabric driver conversion to use
-use target_alloc_session() + associated (*callback)() with
-common code.  It updates vhost/iscsi and tcm_qla2xxx code
-to use the new callback to finish their internal driver
-setup for se_session.
-
-As per HCH, it also contains sbp-target, usb-gadget/tcm,
-xen-scsiback, tcm_fc and ib_srpt driver percpu_ida tag
-pre-allocation conversions, along with TARGET_SCF_ACK_KREF
-changes for v4.6-rc code.
-
-Please review.
-
---nab
-
-v3 changes:
-
-  - Add xen-scsiback wrapper for handling pending_req tag failure
-  - Add tcm_fc conversion to TARGET_SCF_ACK_KREF
-  - Add ib_srpt conversion to percpu_ida tag allocation
-
-Christoph Hellwig (1):
-  target: Convert demo-mode only drivers to target_alloc_session
-
-Nicholas Bellinger (13):
-  target: Add target_alloc_session() helper function
-  vhost/scsi: Convert to target_alloc_session usage
-  tcm_qla2xxx: Convert to target_alloc_session usage
-  tcm_fc: Convert to target_alloc_session usage
-  ib_srpt: Convert to target_alloc_session usage
-  sbp-target: Conversion to percpu_ida tag pre-allocation
-  sbp-target: Convert to TARGET_SCF_ACK_KREF I/O krefs
-  usb-gadget/tcm: Conversion to percpu_ida tag pre-allocation
-  usb-gadget/tcm: Convert to TARGET_SCF_ACK_KREF I/O krefs
-  xen-scsiback: Convert to percpu_ida tag allocation
-  xen-scsiback: Convert to TARGET_SCF_ACK_KREF I/O krefs
-  tcm_fc: Convert to TARGET_SCF_ACK_KREF I/O + TMR krefs
-  ib_srpt: Convert to percpu_ida tag allocation
-
- drivers/infiniband/ulp/srpt/ib_srpt.c  |  76 +++-------
- drivers/infiniband/ulp/srpt/ib_srpt.h  |   2 -
- drivers/scsi/qla2xxx/qla_target.c      |   8 +-
- drivers/scsi/qla2xxx/qla_target.h      |   2 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  79 +++++-----
- drivers/target/loopback/tcm_loop.c     |  35 +----
- drivers/target/sbp/sbp_target.c        |  97 ++++++------
- drivers/target/target_core_transport.c |  56 +++++++
- drivers/target/tcm_fc/tfc_cmd.c        |  15 +-
- drivers/target/tcm_fc/tfc_sess.c       |  44 +++---
- drivers/usb/gadget/function/f_tcm.c    | 181 ++++++++++------------
- drivers/vhost/scsi.c                   |  99 +++++-------
- drivers/xen/xen-scsiback.c             | 265 ++++++++++++++++-----------------
- include/target/target_core_fabric.h    |   6 +
- 14 files changed, 467 insertions(+), 498 deletions(-)
-
--- 
-1.9.1
