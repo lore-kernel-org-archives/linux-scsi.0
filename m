@@ -1,83 +1,81 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V2 1/1] scsi: storvsc: Fix a build issue reported by
- kbuild test robot
-Date: Sat, 30 Jan 2016 06:36:18 +0100
-Message-ID: <1454132178.9326.1.camel@HansenPartnership.com>
-References: <1454124987-20848-1-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1454124987-20848-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v3 0/5] Fix LUN_RESET active I/O + TMR handling
+Date: Sat, 30 Jan 2016 05:36:57 +0000
+Message-ID: <1454132222-29009-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36471 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbcA3Fjv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2016 00:39:51 -0500
+Received: by mail-oi0-f51.google.com with SMTP id o124so60304102oia.3
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2016 21:39:51 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Fri, 2016-01-29 at 19:36 -0800, K. Y. Srinivasan wrote:
-> tree:   https://na01.safelinks.protection.outlook.com/?url=https%3a%2
-> f%2fgit.kernel.org%2fpub%2fscm%2flinux%2fkernel%2fgit%2ftorvalds%2fli
-> nux.git&data=01%7c01%7ckys%40microsoft.com%7ce2e0622715844b79ad7108d3
-> 2796ec3c%7c72f988bf86f141af91ab2d7cd011db47%7c1&sdata=ubr4GbBaNS%2ftO
-> z%2buJBk0CL9N0UNG9x2TidLgy6Yovg4%3d master
-> head:   03c21cb775a313f1ff19be59c5d02df3e3526471
-> commit: dac582417bc449b1f7f572d3f1dd9d23eec15cc9 storvsc: Properly
-> support Fibre Channel devices
-> date:   3 weeks ago
-> config: x86_64-randconfig-s3-01281016 (attached as .config)
-> reproduce:
->         git checkout dac582417bc449b1f7f572d3f1dd9d23eec15cc9
->         # save the attached .config to linux build tree
->         make ARCH=x86_64
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/built-in.o: In function `storvsc_remove':
-> > > storvsc_drv.c:(.text+0x213af7): undefined reference to
-> > > `fc_remove_host'
->    drivers/built-in.o: In function `storvsc_drv_init':
-> > > storvsc_drv.c:(.init.text+0xcbcc): undefined reference to
-> > > `fc_attach_transport'
-> > > storvsc_drv.c:(.init.text+0xcc06): undefined reference to
-> > > `fc_release_transport'
->    drivers/built-in.o: In function `storvsc_drv_exit':
-> > > storvsc_drv.c:(.exit.text+0x123c): undefined reference to
-> > > `fc_release_transport'
-> 
-> With this commit, the storvsc driver depends on FC atttributes. Make
-> this
-> dependency explicit.
-> 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> ---
-> 	V2: Fixed the dependency based on suggestion by James Bottomley
-> <James.Bottomley@HansenPartnership.com>
-> 
->  drivers/scsi/Kconfig |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 64eed87..ce0d07b 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -594,6 +594,7 @@ config XEN_SCSI_FRONTEND
->  config HYPERV_STORAGE
->  	tristate "Microsoft Hyper-V virtual storage driver"
->  	depends on SCSI && HYPERV
-> +	depends on SCSI_FC_ATTRS || SCSI_FC_ATTRS !=m
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-No ... if you want to depend on the FC_ATTRS then a simple depend
-works.  If you want to be able to build without them or with them, then
-that line must read
+Hi folks,
 
-depends on m || SCSI_FC_ATTRS != m
+This is -v3 series to address three LUN_RESET active
+I/O + TMR se_cmd->cmd_kref < 0 bugs as reported
+recently by Quinn & Co.  This can occur during active
+I/O remote port TMR LUN_RESET with multi-port LIO
+configurations.
 
-James
+To address this bug, it adds __target_check_io_state()
+common handler for ABORT_TASK + LUN_RESET I/O abort
+cases, and moves remaining se_cmd SGL page + release
+into target_free_cmd_mem() to now be called directly
+from the final target_release_cmd_kref() callback.
+
+New for -v3, patch #4 is to address the case where
+se_cmd driver level shutdown occurs while TMR
+CMD_T_ABORTED is already happening.  It introduces
+CMD_T_FABRIC_STOP to replace CMD_T_REQUEST_STOP,
+and use existing ->cmd_wait_set + ->cmd->wait_comp
+to handle this special case for existing drivers.
+
+Note that #4 + #5 needs more testing, so likely
+patch #1 + #3 will be pushed in the next -rc to
+address the primary case, ahead of the other to
+fix the special case and drop legacy left-overs.
+
+Please review.
+
+--nab
+
+v3 changes:
+
+- Drop unncessary braces in core_tmr_handle_tas_abort
+- Drop misleading printk() during __target_check_io_state() failure
+- Avoid calling target_remove_from_state_list() from
+  transport_generic_free_cmd with cmd->t_state_lock held.
+- Make TMR ABORTED use se_cmd->cmd_wait_set + ->cmd_wait_comp
+  during shutdown.
+- Take ->cmd_kref during target_sess_cmd_list_set_waiting(),
+  and drop in target_wait_for_sess_cmds()
+- Pass 'fabric_stop' to transport_wait_for_tasks(), and make
+  transport_generic_free_cmd() aware of aborted + tas status
+  bits.
+- Drop left-over ->task_stop_comp + CMD_T_REQUEST_STOP
+
+Nicholas Bellinger (5):
+  target: Fix LUN_RESET active I/O handling for ACK_KREF
+  target: Fix LUN_RESET active TMR descriptor handling
+  target: Fix TAS handling for multi-session se_node_acls
+  target: Fix remote-port TMR ABORT + se_cmd fabric stop
+  target: Drop legacy se_cmd->task_stop_comp + REQUEST_STOP usage
+
+ drivers/target/iscsi/iscsi_target_erl2.c |   3 +-
+ drivers/target/target_core_internal.h    |   1 -
+ drivers/target/target_core_tmr.c         | 137 ++++++++++++++++++-----
+ drivers/target/target_core_transport.c   | 186 +++++++++++++++++--------------
+ include/target/target_core_base.h        |   7 +-
+ include/target/target_core_fabric.h      |   2 +-
+ 6 files changed, 220 insertions(+), 116 deletions(-)
+
+-- 
+1.9.1
+
