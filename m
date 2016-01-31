@@ -1,64 +1,52 @@
-From: "Muthoot Finance Pvt Ltd" <info@adovation.org>
-Subject: my subject...
-Date: Sun, 31 Jan 2016 02:43:16 +0100
-Message-ID: <20160131020402.33803E687B3__38204.9515181736$1454241272$gmane$org@adovation.org>
-Reply-To: muthootfinanccehome@gmail.com
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH] Separate target visibility from reaped state
+ information
+Date: Sun, 31 Jan 2016 18:54:55 +0100
+Message-ID: <20160131185455.00000ef7@localhost>
+References: <568FE922.9090004@sandisk.com>
+	<yq1oachqehs.fsf@sermon.lab.mkp.net>
+	<1453251809.2320.56.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adovation.org ([108.170.1.90]:40660 "EHLO adovation.org"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757292AbcAaLyE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jan 2016 06:54:04 -0500
-Content-Description: Mail message body
+Received: from mout.gmx.net ([212.227.15.19]:58770 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932825AbcAaRz0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Jan 2016 12:55:26 -0500
+In-Reply-To: <1453251809.2320.56.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <info@adovation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
 
-Be informed that Muthoot Finance give out Guarantee Business Loans, Aut=
-omobile Purchase Loans, House Purchase Loans, Personal Loans at 3% inte=
-rest rate, for more info email: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Estar informado de que Muthoot Finanzas Dar a conocer Garanta de negoci=
-os Prstamos, Prstamos de Automviles Compra, Casa Compra prstamos, prsta=
-mos personales a tasa de inters del 3%, para obtener ms informacin emai=
-l: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Assunto: meu tema Ser informado de que Muthoot Finance dar empr=C3=A9st=
-imos de Garantia de Neg=C3=B3cios, Automobile Os empr=C3=A9stimos Purch=
-ase, Casa empr=C3=A9stimos Purchase, empr=C3=A9stimos pessoais na taxa =
-de juros de 3%, para mais informa=C3=A7=C3=B5es e-mail: muthootfinancce=
-home@gmail.com
-=3D=3D=3D=3D
-Nous portons =C3=A0 votre connaissance que Muthoot Finance vous donne d=
-es pr=C3=AAts d=E2=80=99affaires, pour l=E2=80=99achat des automobiles,=
- des maisons, des pr=C3=AAts personnels, tous pour un taux d'int=C3=A9r=
-=C3=AAts de 3%, pour plus des d=C3=A9tails consultez: muthootfinancceho=
-me@gmail.com
-=3D=3D=3D=3D
-Byt informovan=C3=BD, =C5=BEe Muthoot Financie rozd=C3=A1vat z=C3=A1ruc=
-nej podnikatelsk=C3=BDch =C3=BAverov, automobilov=C3=BD N=C3=A1kup p=C3=
-=B4=C5=BEiciek, =C3=BAverov na b=C3=BDvanie, osobn=C3=A9 p=C3=B4=C5=BEi=
-cky vo v=C3=BD=C5=A1ke 3% =C3=BArokovou sadzbou, pre viac inform=C3=A1c=
-i=C3=AD e-mail: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Wir teilen mit, dass Muthoot Finance Firmen-Darlehen, Darlehen zur Ansc=
-haffung von Kfz-Fahrzeugen, Erwerb von Immobilien sowie pers=C3=B6nlich=
-e Darlehen zu 3% effektiven Jahreszins anbietet, weitere Informationen =
-erhalten Sie per E-Mail: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Det opplyses om at Muthoot Finance gir ut garanti Business l=C3=A5n, Au=
-tomobile kj=C3=B8pe l=C3=A5n, hus kj=C3=B8pe l=C3=A5n, personlige l=C3=A5=
-n p=C3=A5 3% rente, for mer info e-post: muthootfinanccehome@gmail.com
+James Bottomley wrote:
+> On Tue, 2016-01-19 at 19:30 -0500, Martin K. Petersen wrote:
+> > > > > > > "Bart" == Bart Van Assche <bart.vanassche@sandisk.com>
+> > > > > > > writes:
+> > 
+> > Bart> Instead of representing the states "visible in sysfs" and "has
+> > Bart> been removed from the target list" by a single state variable,
+> > use
+> > Bart> two variables to represent this information.
+> > 
+> > James: Are you happy with the latest iteration of this? Should I
+> > queue
+> > it?
+> 
+> Well, I'm OK with the patch: it's a simple transformation of the
+> enumerated state to a two bit state.  What I can't see is how it fixes
+> any soft lockup.
+> 
+> The only change from the current workflow is that the DEL transition
+> (now the reaped flag) is done before the spin lock is dropped which
+> would fix a tiny window for two threads both trying to remove the same
+> target, but there's nothing that could possibly fix an iterative soft
+> lockup caused by restarting the loop, which is what the changelog says.
+> 
+> James
 
----
-This email is free from viruses and malware because avast! Antivirus pr=
-otection is active.
-https://www.avast.com/antivirus
+James, Martin, what's the status of this patch?
+I still hit the reported soft lockup on 4.5-rc1.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sebastian
