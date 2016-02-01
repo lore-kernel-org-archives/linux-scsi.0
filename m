@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 09/14] scsi: ufs: fix error recovery after the hibern8 exit failure
-Date: Mon,  1 Feb 2016 15:02:45 +0200
-Message-ID: <1454331770-29642-10-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 04/14] scsi: ufs: clear outstanding_request bit in case query timeout
+Date: Mon,  1 Feb 2016 15:02:40 +0200
+Message-ID: <1454331770-29642-5-git-send-email-ygardi@codeaurora.org>
 References: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
@@ -10,146 +10,69 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hibern8 exit can be called from 3 different context:
-    - ufshcd_hibern8_exit_work
-    - ufshcd_ungate_work
-    - runtime/system resume
+When sending a query to the device returns with a timeout error,
+we clear the corresponding bit in the DOORBELL register but
+we don't clear the outstanding_request field as we should.
+This patch fixes this bug.
 
-If hibern8 exit fails for some reason then we try to bring the link to
-active state by link startup but this recovery mechanism results into
-deadlock or errors from first 2 context listed above. This change fixes
-the recovery by adding proper error handling mechanism.
-
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 58 +++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 53 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1581d03..da08a40 100644
+index 8a34f61..4863e93 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -608,6 +608,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->clk_gating.active_reqs++;
- 
-+	if (ufshcd_eh_in_progress(hba)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		return 0;
-+	}
-+
- start:
- 	switch (hba->clk_gating.state) {
- 	case CLKS_ON:
-@@ -723,7 +728,8 @@ static void __ufshcd_release(struct ufs_hba *hba)
- 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
- 		|| hba->lrb_in_use || hba->outstanding_tasks
--		|| hba->active_uic_cmd || hba->uic_async_done)
-+		|| hba->active_uic_cmd || hba->uic_async_done
-+		|| ufshcd_eh_in_progress(hba))
- 		return;
- 
- 	hba->clk_gating.state = REQ_CLKS_OFF;
-@@ -1360,6 +1366,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		cmd->scsi_done(cmd);
- 		goto out_unlock;
- 	}
-+
-+	/* if error handling is in progress, don't issue commands */
-+	if (ufshcd_eh_in_progress(hba)) {
-+		set_host_byte(cmd, DID_ERROR);
-+		cmd->scsi_done(cmd);
-+		goto out_unlock;
-+	}
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/* acquire the tag to make sure device cmds don't use it */
-@@ -2390,6 +2403,31 @@ out:
- 	return ret;
+@@ -364,6 +364,16 @@ static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
  }
  
-+static int ufshcd_link_recovery(struct ufs_hba *hba)
+ /**
++ * ufshcd_outstanding_req_clear - Clear a bit in outstanding request field
++ * @hba: per adapter instance
++ * @tag: position of the bit to be cleared
++ */
++static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
 +{
-+	int ret;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
-+	ufshcd_set_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	ret = ufshcd_host_reset_and_restore(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (ret)
-+		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+	ufshcd_clear_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	if (ret)
-+		dev_err(hba->dev, "%s: link recovery failed, err %d",
-+			__func__, ret);
-+
-+	return ret;
++	__clear_bit(tag, &hba->outstanding_reqs);
 +}
 +
- static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
- 	int ret;
-@@ -2398,10 +2436,18 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
++/**
+  * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
+  * @reg: Register value of host controller status
+  *
+@@ -1501,9 +1511,17 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
  
--	if (ret)
-+	if (ret) {
- 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
- 			__func__, ret);
- 
+ 	if (!time_left) {
+ 		err = -ETIMEDOUT;
++		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
++			__func__, lrbp->task_tag);
+ 		if (!ufshcd_clear_cmd(hba, lrbp->task_tag))
+-			/* sucessfully cleared the command, retry if needed */
++			/* successfully cleared the command, retry if needed */
+ 			err = -EAGAIN;
 +		/*
-+		 * If link recovery fails then return error so that caller
-+		 * don't retry the hibern8 enter again.
++		 * in case of an error, after clearing the doorbell,
++		 * we also need to clear the outstanding_request
++		 * field in hba
 +		 */
-+		if (ufshcd_link_recovery(hba))
-+			ret = -ENOLINK;
-+	}
-+
- 	return ret;
- }
- 
-@@ -2426,8 +2472,9 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- 	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	if (ret) {
--		ufshcd_set_link_off(hba);
--		ret = ufshcd_host_reset_and_restore(hba);
-+		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
-+			__func__, ret);
-+		ret = ufshcd_link_recovery(hba);
++		ufshcd_outstanding_req_clear(hba, lrbp->task_tag);
  	}
  
- 	return ret;
-@@ -4379,7 +4426,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
--	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	hba->wlun_dev_clr_ua = true;
+ 	return err;
+@@ -3941,7 +3959,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	scsi_dma_unmap(cmd);
  
- 	if (ufshcd_get_max_pwr_mode(hba)) {
-@@ -4393,6 +4439,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 					__func__, ret);
- 	}
+ 	spin_lock_irqsave(host->host_lock, flags);
+-	__clear_bit(tag, &hba->outstanding_reqs);
++	ufshcd_outstanding_req_clear(hba, tag);
+ 	hba->lrb[tag].cmd = NULL;
+ 	spin_unlock_irqrestore(host->host_lock, flags);
  
-+	/* set the state as operational after switching to desired gear */
-+	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	/*
- 	 * If we are in error handling context or in power management callbacks
- 	 * context, no need to scan the host
 -- 
 1.8.5.2
 
