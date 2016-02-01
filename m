@@ -1,44 +1,287 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] target: fix cast from pointer to phys_addr_t
-Date: Mon, 01 Feb 2016 17:29:45 +0100
-Message-ID: <3114027.BKdWsaRxO0@wuerfel>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V4 7/9] aacraid: Fix AIF triggered IOP_RESET
+Date: Mon, 1 Feb 2016 17:43:49 +0100
+Message-ID: <56AF8B45.6030101@redhat.com>
+References: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1454107550-24173-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, "Hans J. Koch" <hjk@hansjkoch.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53524 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753516AbcBAQnx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Feb 2016 11:43:53 -0500
+In-Reply-To: <1454107550-24173-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, shane.seymour@hpe.com
 
-The uio_mem structure has a member that is a phys_addr_t, but can
-be a number of other types too. The target core driver attempts
-to assign a pointer from vmalloc() to it, by casting it to
-phys_addr_t, but that causes a warning when phys_addr_t is longer
-than a pointer:
+On 29.1.2016 23:45, Raghava Aditya Renukunta wrote:
+> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+>
+> while driver removal is in progress or PCI shutdown is invoked, driver
+> kills AIF aacraid thread, but IOCTL requests from the management tools
+> re-start AIF thread leading to IOP_RESET.
+>
+> Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
+>
+> Changes in V2:
+> Set adapter_shutdown flag before shutdown command is sent to \
+> controller
+>
+> Changes in V3:
+> Call aac_send_shut_shutdown first thing in __aac_shutdown
+> Convert adapter_shutdown to atomic_t variable to prevent \
+> SMP coherency issues(race conditions)
+>
+> Changes in V4:
+> Used mutex to protect ioctl path and adapter_shutdown to prevent \
+> race conditions.
+>
+> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+> Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/aacraid/aacraid.h  |  2 +-
+>  drivers/scsi/aacraid/commctrl.c |  3 ++
+>  drivers/scsi/aacraid/comminit.c |  6 ++--
+>  drivers/scsi/aacraid/linit.c    | 63 +++++++++++++++++++++++++++++++----------
+>  4 files changed, 56 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+> index 2916288..6c55749 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -1123,7 +1123,7 @@ struct aac_dev
+>  
+>  	struct fib		*free_fib;
+>  	spinlock_t		fib_lock;
+> -
+> +	struct mutex		ioctl_mutex;
+>  	struct aac_queue_block *queues;
+>  	/*
+>  	 *	The user API will use an IOCTL to register itself to receive
+> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+> index 54195a1..8d3438c 100644
+> --- a/drivers/scsi/aacraid/commctrl.c
+> +++ b/drivers/scsi/aacraid/commctrl.c
+> @@ -855,6 +855,9 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+>  {
+>  	int status;
+>  
+> +	if (dev->adapter_shutdown)
+> +		return -EACCES;
+> +
+>  	/*
+>  	 *	HBA gets first crack
+>  	 */
+> diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+> index 0e954e3..2b4e753 100644
+> --- a/drivers/scsi/aacraid/comminit.c
+> +++ b/drivers/scsi/aacraid/comminit.c
+> @@ -212,8 +212,11 @@ int aac_send_shutdown(struct aac_dev * dev)
+>  		return -ENOMEM;
+>  	aac_fib_init(fibctx);
+>  
+> -	cmd = (struct aac_close *) fib_data(fibctx);
+> +	mutex_lock(&dev->ioctl_mutex);
+> +	dev->adapter_shutdown = 1;
+> +	mutex_unlock(&dev->ioctl_mutex);
+>  
+> +	cmd = (struct aac_close *) fib_data(fibctx);
+>  	cmd->command = cpu_to_le32(VM_CloseAll);
+>  	cmd->cid = cpu_to_le32(0xfffffffe);
+>  
+> @@ -229,7 +232,6 @@ int aac_send_shutdown(struct aac_dev * dev)
+>  	/* FIB should be freed only after getting the response from the F/W */
+>  	if (status != -ERESTARTSYS)
+>  		aac_fib_free(fibctx);
+> -	dev->adapter_shutdown = 1;
+>  	if ((dev->pdev->device == PMC_DEVICE_S7 ||
+>  	     dev->pdev->device == PMC_DEVICE_S8 ||
+>  	     dev->pdev->device == PMC_DEVICE_S9) &&
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index af8974e..9453e11 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -524,10 +524,17 @@ static struct device_attribute *aac_dev_attrs[] = {
+>  
+>  static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
+>  {
+> -	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+> +	int ret;
+> +	struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
+> +
+>  	if (!capable(CAP_SYS_RAWIO))
+>  		return -EPERM;
+> -	return aac_do_ioctl(dev, cmd, arg);
+> +
+> +	mutex_lock(&aac->ioctl_mutex);
+> +	ret = aac_do_ioctl(aac, cmd, arg);
+> +	mutex_unlock(&aac->ioctl_mutex);
+> +
+> +	return ret;
+>  }
+>  
+>  static int aac_eh_abort(struct scsi_cmnd* cmd)
+> @@ -704,13 +711,14 @@ static long aac_cfg_ioctl(struct file *file,
+>  		unsigned int cmd, unsigned long arg)
+>  {
+>  	int ret;
+> -	struct aac_dev *aac;
+> -	aac = (struct aac_dev *)file->private_data;
+> -	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
+> +	struct aac_dev *aac = (struct aac_dev *)file->private_data;
+> +
+> +	if (!capable(CAP_SYS_RAWIO))
+>  		return -EPERM;
+> -	mutex_lock(&aac_mutex);
+> -	ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
+> -	mutex_unlock(&aac_mutex);
+> +
+> +	mutex_lock(&aac->ioctl_mutex);
+> +	ret = aac_do_ioctl(aac, cmd, (void __user *)arg);
+> +	mutex_unlock(&aac->ioctl_mutex);
+>  
+>  	return ret;
+>  }
+> @@ -719,7 +727,10 @@ static long aac_cfg_ioctl(struct file *file,
+>  static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long arg)
+>  {
+>  	long ret;
+> -	mutex_lock(&aac_mutex);
+> +
+> +	if (dev->adapter_shutdown)
+> +		return -EACCES;
 
-drivers/target/target_core_user.c: In function 'tcmu_configure_device':
-drivers/target/target_core_user.c:906:22: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]
+There is another test for the same in aac_do_ioctl, this duplicated test is needless.
 
-This adds another cast to uintptr_t to shut up the warning.
-A nicer fix might be to have additional fields in uio_mem
-for the different purposes, so we can assign a pointer directly.
+> +
+>  	switch (cmd) {
+>  	case FSACTL_MINIPORT_REV_CHECK:
+>  	case FSACTL_SENDFIB:
+> @@ -753,23 +764,37 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
+>  		ret = -ENOIOCTLCMD;
+>  		break;
+>  	}
+> -	mutex_unlock(&aac_mutex);
+>  	return ret;
+>  }
+>  
+>  static int aac_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+>  {
+> -	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+> +	int ret;
+> +	struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
+> +
+>  	if (!capable(CAP_SYS_RAWIO))
+>  		return -EPERM;
+> -	return aac_compat_do_ioctl(dev, cmd, (unsigned long)arg);
+> +
+> +	mutex_lock(&aac->ioctl_mutex);
+> +	ret = aac_compat_do_ioctl(aac, cmd, (unsigned long)arg);
+> +	mutex_unlock(&aac->ioctl_mutex);
+> +
+> +	return ret;
+>  }
+>  
+>  static long aac_compat_cfg_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+>  {
+> +	int ret;
+> +	struct aac_dev *aac = (struct aac_dev *)file->private_data;
+> +
+>  	if (!capable(CAP_SYS_RAWIO))
+>  		return -EPERM;
+> -	return aac_compat_do_ioctl(file->private_data, cmd, arg);
+> +
+> +	mutex_lock(&aac->ioctl_mutex);
+> +	ret =  aac_compat_do_ioctl(aac, cmd, arg);
+> +	mutex_unlock(&aac->ioctl_mutex);
+> +
+> +	return ret;
+>  }
+>  #endif
+>  
+> @@ -1078,6 +1103,8 @@ static void __aac_shutdown(struct aac_dev * aac)
+>  	int i;
+>  	int cpu;
+>  
+> +	aac_send_shutdown(aac);
+> +
+>  	if (aac->aif_thread) {
+>  		int i;
+>  		/* Clear out events first */
+> @@ -1089,7 +1116,7 @@ static void __aac_shutdown(struct aac_dev * aac)
+>  		}
+>  		kthread_stop(aac->thread);
+>  	}
+> -	aac_send_shutdown(aac);
+> +
+>  	aac_adapter_disable_int(aac);
+>  	cpu = cpumask_first(cpu_online_mask);
+>  	if (aac->pdev->device == PMC_DEVICE_S6 ||
+> @@ -1193,7 +1220,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	if (!aac->fibs)
+>  		goto out_free_host;
+>  	spin_lock_init(&aac->fib_lock);
+> -
+> +	mutex_init(&aac->ioctl_mutex);
+>  	/*
+>  	 *	Map in the registers from the adapter.
+>  	 */
+> @@ -1474,7 +1501,10 @@ static int aac_resume(struct pci_dev *pdev)
+>  	* reset this flag to unblock ioctl() as it was set at
+>  	* aac_send_shutdown() to block ioctls from upperlayer
+>  	*/
+> +	mutex_lock(&aac->ioctl_mutex);
+>  	aac->adapter_shutdown = 0;
+> +	mutex_unlock(&aac->ioctl_mutex);
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-This has been around for a long while, but did not trigger in
-my randconfig testing until now, don't know why.
+A mutex surrounding adapter_shutdown = 0; is needless.
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index dd600e5ead71..94f5154ac788 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -903,7 +903,7 @@ static int tcmu_configure_device(struct se_device *dev)
- 	info->version = __stringify(TCMU_MAILBOX_VERSION);
- 
- 	info->mem[0].name = "tcm-user command & data buffer";
--	info->mem[0].addr = (phys_addr_t) udev->mb_addr;
-+	info->mem[0].addr = (phys_addr_t)(uintptr_t)udev->mb_addr;
- 	info->mem[0].size = TCMU_RING_SIZE;
- 	info->mem[0].memtype = UIO_MEM_VIRTUAL;
- 
+> +
+>  	scsi_unblock_requests(shost);
+>  
+>  	return 0;
+> @@ -1633,7 +1663,10 @@ static void aac_pci_resume(struct pci_dev *pdev)
+>  	 * reset this flag to unblock ioctl() as it was set
+>  	 * at aac_send_shutdown() to block ioctls from upperlayer
+>  	 */
+> +	mutex_lock(&aac->ioctl_mutex);
+>  	aac->adapter_shutdown = 0;
+> +	mutex_unlock(&aac->ioctl_mutex);
+
+Same here.
+
+
+aac_compat_do_ioctl and  aac_do_ioctl is surrounded by mutexes - that is fine,
+but by moving the mutex down to  aac_do_ioctl the code would be easier
+and more readable.
+
+With the new mutex, you have changed the functionality so that a new patch
+is needed for that - before this patch there was no mutex in the main
+.ioctl path.
+
+I have found no functional issues so regardless whether you follow
+my comments now, later or never -
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Cheers
+Tomas
+
+
+
+
+
+
+
+
+
+> +
+>  	aac->handle_pci_error = 0;
+>  
+>  	shost_for_each_device(sdev, shost)
+
