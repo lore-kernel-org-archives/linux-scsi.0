@@ -1,51 +1,48 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH v2] megaraid_sas: add an i/o barrier
-Date: Mon, 1 Feb 2016 15:12:04 +0100
-Message-ID: <56AF67B4.2010702@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "Sumit.Saxena@avagotech.com" <Sumit.Saxena@avagotech.com>, "Desai, Kashyap" <Kashyap.Desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, stable@vger.kernel.org
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] bnx2fc: bnx2fc_eh_abort(): fix wrong return code.
+Date: Mon,  1 Feb 2016 16:08:45 +0100
+Message-ID: <1454339325-12579-1-git-send-email-mlombard@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38527 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932962AbcBAPIs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Feb 2016 10:08:48 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, chad.dupuis@qlogic.com
 
-A barrier should be added to ensure proper
-ordering of memory mapped writes.
+If the link is not ready, the bnx2fc_eh_abort() function
+should return FAILED.
 
-V2: - added the barrier also to megasas_fire_cmd_skinny,
-as suggested by Kashyap Desai
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 1 +
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index cc92c8198d..9f7689515c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -749,6 +749,7 @@ megasas_fire_cmd_skinny(struct megasas_instance *instance,
- 	       &(regs)->inbound_high_queue_port);
- 	writel((lower_32_bits(frame_phys_addr) | (frame_count<<1))|1,
- 	       &(regs)->inbound_low_queue_port);
-+	mmiowb();
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
- }
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 0002caf..2230dab 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1104,8 +1104,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	struct bnx2fc_cmd *io_req;
+ 	struct fc_lport *lport;
+ 	struct bnx2fc_rport *tgt;
+-	int rc = FAILED;
+-
++	int rc;
  
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index d9d0029fb1..98a848bdfd 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -204,6 +204,7 @@ megasas_fire_cmd_fusion(struct megasas_instance *instance,
- 		&instance->reg_set->inbound_low_queue_port);
- 	writel(le32_to_cpu(req_desc->u.high),
- 		&instance->reg_set->inbound_high_queue_port);
-+	mmiowb();
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
- #endif
- }
+ 	rc = fc_block_scsi_eh(sc_cmd);
+ 	if (rc)
+@@ -1114,7 +1113,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	lport = shost_priv(sc_cmd->device->host);
+ 	if ((lport->state != LPORT_ST_READY) || !(lport->link_up)) {
+ 		printk(KERN_ERR PFX "eh_abort: link not ready\n");
+-		return rc;
++		return FAILED;
+ 	}
+ 
+ 	tgt = (struct bnx2fc_rport *)&rp[1];
 -- 
-2.4.3
+Maurizio Lombardi
+
