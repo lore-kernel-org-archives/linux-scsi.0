@@ -1,91 +1,75 @@
-From: Nilesh Javali <nilesh.javali@qlogic.com>
-Subject: Re: [PATCH 5/7] scsi: qla4xxx: shut up warning for rd_reg_indirect
-Date: Mon, 1 Feb 2016 08:17:48 +0000
-Message-ID: <D2D511DF.1CBA9%nilesh.javali@qlogic.com>
-References: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
- <1453910247-3447628-6-git-send-email-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453910247-3447628-6-git-send-email-arnd@arndb.de>
-Content-Language: en-US
-Content-ID: <618D1F2A08DBE04C96EE41CC04D050D6@namprd11.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+Subject: [PATCH 01/12] be2iscsi: Remove unused mcc_cq_lock
+Date: Mon,  1 Feb 2016 15:42:40 +0530
+Message-ID: <1454321571-16167-2-git-send-email-jitendra.bhivare@avagotech.com>
+References: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:54813 "EHLO
+	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752947AbcBAKNW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 05:13:22 -0500
+In-Reply-To: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
+mcc_cq_lock spin_lock is used only in beiscsi_process_mcc which is called
+only when all interrupts are disabled from mgmt_epfw_cleanup during
+unloading of driver. There is no other context where there can be
+contention for the processing of CQ.
 
+Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
+---
+ drivers/scsi/be2iscsi/be.h      | 1 -
+ drivers/scsi/be2iscsi/be_cmds.c | 2 --
+ drivers/scsi/be2iscsi/be_main.c | 1 -
+ 3 files changed, 4 deletions(-)
 
-On 27/01/16 9:27 PM, "Arnd Bergmann" <arnd@arndb.de> wrote:
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 7d425af..1524fe4 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -132,7 +132,6 @@ struct be_ctrl_info {
+ 	/* MCC Rings */
+ 	struct be_mcc_obj mcc_obj;
+ 	spinlock_t mcc_lock;	/* For serializing mcc cmds to BE card */
+-	spinlock_t mcc_cq_lock;
+ 
+ 	wait_queue_head_t mcc_wait[MAX_MCC_CMD + 1];
+ 	unsigned int mcc_tag[MAX_MCC_CMD];
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 34c33d4..e8e9d22 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -532,7 +532,6 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 	int num = 0, status = 0;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 
+-	spin_lock_bh(&phba->ctrl.mcc_cq_lock);
+ 	while ((compl = be_mcc_compl_get(phba))) {
+ 		if (compl->flags & CQE_FLAGS_ASYNC_MASK) {
+ 			beiscsi_process_async_event(phba, compl);
+@@ -547,7 +546,6 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 	if (num)
+ 		hwi_ring_cq_db(phba, phba->ctrl.mcc_obj.cq.id, num, 1);
+ 
+-	spin_unlock_bh(&phba->ctrl.mcc_cq_lock);
+ 	return status;
+ }
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 70179e1..314fd2c 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -730,7 +730,6 @@ static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
+ 	memset(mbox_mem_align->va, 0, sizeof(struct be_mcc_mailbox));
+ 	mutex_init(&ctrl->mbox_lock);
+ 	spin_lock_init(&phba->ctrl.mcc_lock);
+-	spin_lock_init(&phba->ctrl.mcc_cq_lock);
+ 
+ 	return status;
+ }
+-- 
+2.5.0
 
->The qla4_83xx_rd_reg_indirect() function can fail when it is unable
->to read a register, but not all callers check its return value before
->using the register data, and gcc correctly warns about this:
->
->qla4xxx/ql4_83xx.c: In function 'qla4_83xx_process_reset_template':
->qla4xxx/ql4_83xx.c:1073:36: warning: 'value' may be used uninitialized in
->this function
->     ha->reset_tmplt.array[index++] = value;
->                                    ^
->qla4xxx/ql4_83xx.c:1050:11: note: 'value' was declared here
->  uint32_t value;
->           ^
->qla4xxx/ql4_83xx.c:902:8: warning: 'value' may be used uninitialized in
->this function
->  value &= p_rmw_hdr->test_mask;
->        ^
->qla4xxx/ql4_83xx.c:895:11: note: 'value' was declared here
->  uint32_t value;
->           ^
->In file included from ../include/linux/io.h:25:0,
->                 from ../include/linux/pci.h:31,
->                 from ../drivers/scsi/qla4xxx/ql4_def.h:16,
->                 from ../drivers/scsi/qla4xxx/ql4_83xx.c:10:
->asm/io.h:101:2: warning: 'value' may be used uninitialized in this
->function
->  asm volatile("str %1, %0"
->  ^
->qla4xxx/ql4_83xx.c:874:11: note: 'value' was declared here
->  uint32_t value;
->           ^
->
->Unfortunately, I don't see any helpful way to add proper error handling
->for this case, and the failure scenario for rd_reg seems rather obscure,
->so this bails out and makes the rd_reg accessor set the result to
->0xffffffff
->so we at least get a predictable value.
->
->Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->---
-> drivers/scsi/qla4xxx/ql4_83xx.c | 6 ++++--
-> 1 file changed, 4 insertions(+), 2 deletions(-)
->
->diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c
->b/drivers/scsi/qla4xxx/ql4_83xx.c
->index 5d4f8e67fb25..638f72c5ab05 100644
->--- a/drivers/scsi/qla4xxx/ql4_83xx.c
->+++ b/drivers/scsi/qla4xxx/ql4_83xx.c
->@@ -46,11 +46,13 @@ int qla4_83xx_rd_reg_indirect(struct scsi_qla_host
->*ha, uint32_t addr,
-> 
-> 	ret_val = qla4_83xx_set_win_base(ha, addr);
-> 
->-	if (ret_val == QLA_SUCCESS)
->+	if (ret_val == QLA_SUCCESS) {
-> 		*data = qla4_83xx_rd_reg(ha, QLA83XX_WILDCARD);
->-	else
->+	} else {
->+		*data = 0xffffffff;
-> 		ql4_printk(KERN_ERR, ha, "%s: failed read of addr 0x%x!\n",
-> 			   __func__, addr);
->+	}
-> 
-> 	return ret_val;
-> }
->-- 
->2.7.0
->
-
-Acked-by: Nilesh Javali <nilesh.javali@qlogic.com>
