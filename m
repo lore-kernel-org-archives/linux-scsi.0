@@ -1,131 +1,80 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 07/12] be2iscsi: Cleanup processing of BMBX completion
-Date: Mon,  1 Feb 2016 15:42:46 +0530
-Message-ID: <1454321571-16167-8-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 10/12] be2iscsi: Fix ExpStatSn in management tasks
+Date: Mon,  1 Feb 2016 15:42:49 +0530
+Message-ID: <1454321571-16167-11-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:54821 "EHLO
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:54823 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753394AbcBAKN2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 05:13:28 -0500
+	by vger.kernel.org with ESMTP id S1753209AbcBAKNf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 05:13:35 -0500
 In-Reply-To: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Remove confusingly named be_mcc_compl_is_new and be_mcc_compl_use functions
-in processing of BMBX. Rearrange beiscsi_process_mbox_compl function.
+Connection resets observed from some targets when NOP-Out with wrong
+ExpStatSn is sent.
+
+FW keeps track of StatSn and fills up ExpStatSn accordingly.
+The header filled up by the stack needs to be modified by driver to clear
+ExpStatSn. If the field is not cleared, FW recalculates ExpStatSn and
+wrong offset'ed ExpStatSn is seen in the wire trace.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 75 ++++++++++++++++++++---------------------
- 1 file changed, 36 insertions(+), 39 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 60db2de..728aa133 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -263,21 +263,6 @@ int beiscsi_mccq_compl_wait(struct beiscsi_hba *phba,
- 	return rc;
- }
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 3f08a11..03265b6 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -4926,7 +4926,6 @@ int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
  
--static inline bool be_mcc_compl_is_new(struct be_mcc_compl *compl)
--{
--	if (compl->flags != 0) {
--		compl->flags = le32_to_cpu(compl->flags);
--		WARN_ON((compl->flags & CQE_FLAGS_VALID_MASK) == 0);
--		return true;
--	} else
--		return false;
--}
+ 	pwrb = io_task->pwrb_handle->pwrb;
+ 
+-	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
+ 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+ 
+ 	if (writedir) {
+@@ -4987,7 +4986,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
+ 	unsigned int doorbell = 0;
+ 
+ 	pwrb = io_task->pwrb_handle->pwrb;
+-	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
+ 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+ 
+ 	if (writedir) {
+@@ -5159,23 +5157,21 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
+ {
+ 	struct beiscsi_io_task *io_task = task->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+-	struct beiscsi_hba *phba = NULL;
++	struct beiscsi_hba *phba;
+ 	struct scatterlist *sg;
+ 	int num_sg;
+ 	unsigned int  writedir = 0, xferlen = 0;
+ 
+-	phba = ((struct beiscsi_conn *)task->conn->dd_data)->phba;
++	if (!io_task->conn->login_in_progress)
++		task->hdr->exp_statsn = 0;
+ 
+ 	if (!sc)
+ 		return beiscsi_mtask(task);
+ 
+ 	io_task->scsi_cmnd = sc;
+ 	num_sg = scsi_dma_map(sc);
++	phba = io_task->conn->phba;
+ 	if (num_sg < 0) {
+-		struct iscsi_conn *conn = task->conn;
+-		struct beiscsi_hba *phba = NULL;
 -
--static inline void be_mcc_compl_use(struct be_mcc_compl *compl)
--{
--	compl->flags = 0;
--}
--
- /*
-  * beiscsi_process_mbox_compl()- Check the MBX completion status
-  * @ctrl: Function specific MBX data structure
-@@ -298,30 +283,46 @@ static int beiscsi_process_mbox_compl(struct be_ctrl_info *ctrl,
- 	struct be_cmd_req_hdr *hdr = embedded_payload(wrb);
- 	struct be_cmd_resp_hdr *resp_hdr;
- 
--	be_dws_le_to_cpu(compl, 4);
-+	/**
-+	 * To check if valid bit is set, check the entire word as we don't know
-+	 * the endianness of the data (old entry is host endian while a new
-+	 * entry is little endian)
-+	 */
-+	if (!compl->flags) {
-+		beiscsi_log(phba, KERN_ERR,
-+				BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+				"BC_%d : BMBX busy, no completion\n");
-+		return -EBUSY;
-+	}
-+	compl->flags = le32_to_cpu(compl->flags);
-+	WARN_ON((compl->flags & CQE_FLAGS_VALID_MASK) == 0);
- 
-+	/**
-+	 * Just swap the status to host endian;
-+	 * mcc tag is opaquely copied from mcc_wrb.
-+	 */
-+	be_dws_le_to_cpu(compl, 4);
- 	compl_status = (compl->status >> CQE_STATUS_COMPL_SHIFT) &
--					CQE_STATUS_COMPL_MASK;
--	if (compl_status != MCC_STATUS_SUCCESS) {
--		extd_status = (compl->status >> CQE_STATUS_EXTD_SHIFT) &
--						CQE_STATUS_EXTD_MASK;
-+		CQE_STATUS_COMPL_MASK;
-+	extd_status = (compl->status >> CQE_STATUS_EXTD_SHIFT) &
-+		CQE_STATUS_EXTD_MASK;
-+	/* Need to reset the entire word that houses the valid bit */
-+	compl->flags = 0;
- 
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : error in cmd completion: "
--			    "Subsystem : %d Opcode : %d "
--			    "status(compl/extd)=%d/%d\n",
--			    hdr->subsystem, hdr->opcode,
--			    compl_status, extd_status);
--
--		if (compl_status == MCC_STATUS_INSUFFICIENT_BUFFER) {
--			resp_hdr = (struct be_cmd_resp_hdr *) hdr;
--			if (resp_hdr->response_length)
--				return 0;
--		}
--		return -EINVAL;
-+	if (compl_status == MCC_STATUS_SUCCESS)
-+		return 0;
-+
-+	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+		    "BC_%d : error in cmd completion: Subsystem : %d Opcode : %d status(compl/extd)=%d/%d\n",
-+		    hdr->subsystem, hdr->opcode, compl_status, extd_status);
-+
-+	if (compl_status == MCC_STATUS_INSUFFICIENT_BUFFER) {
-+		/* if status is insufficient buffer, check the length */
-+		resp_hdr = (struct be_cmd_resp_hdr *) hdr;
-+		if (resp_hdr->response_length)
-+			return 0;
- 	}
--	return 0;
-+	return -EINVAL;
- }
- 
- static void beiscsi_process_async_link(struct beiscsi_hba *phba,
-@@ -453,10 +454,6 @@ int beiscsi_process_mcc_compl(struct be_ctrl_info *ctrl,
- 	struct be_dma_mem *tag_mem;
- 	unsigned int tag, wrb_idx;
- 
--	/**
--	 * Just swap the status to host endian; mcc tag is opaquely copied
--	 * from mcc_wrb
--	 */
- 	be_dws_le_to_cpu(compl, 4);
- 	tag = (compl->tag0 & MCC_Q_CMD_TAG_MASK);
- 	wrb_idx = (compl->tag0 & CQE_STATUS_WRB_MASK) >> CQE_STATUS_WRB_SHIFT;
+-		phba = ((struct beiscsi_conn *)conn->dd_data)->phba;
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_IO | BEISCSI_LOG_ISCSI,
+ 			    "BM_%d : scsi_dma_map Failed "
 -- 
 2.5.0
 
