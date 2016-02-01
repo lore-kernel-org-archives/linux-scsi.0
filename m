@@ -1,68 +1,110 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 05/14] scsi: ufs: increase fDeviceInit query response timeout
-Date: Mon,  1 Feb 2016 15:02:41 +0200
-Message-ID: <1454331770-29642-6-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 07/14] scsi: ufs: add retries to dme_peer get and set attribute
+Date: Mon,  1 Feb 2016 15:02:43 +0200
+Message-ID: <1454331770-29642-8-git-send-email-ygardi@codeaurora.org>
 References: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-fDeviceInit query response time for some devices is too long that default
-query request timeout of 100ms may not be enough. Experiments show that
-fDeviceInit response sometimes takes 500ms so to be on safer side this
-change sets the timeout to 600ms. Without this change, we might
-unnecessarily have to retry fDeviceInit query requests multiple times and
-each query request timeout prints one error message.
+The dme_peer get/set attribute commands are prone to errors, therefore
+we add three retries for the UIC command sending.
+Error code returned from ufshcd_send_uic_cmd() is checked, and unless
+it was successful or the retries have finished, another command will be
+sent.
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Lee Susman <lsusman@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4863e93..e74c53a 100644
+index e374b79..4c0827f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -58,6 +58,12 @@
- #define QUERY_REQ_RETRIES 10
- /* Query request timeout */
- #define QUERY_REQ_TIMEOUT 30 /* msec */
-+/*
-+ * Query request timeout for fDeviceInit flag
-+ * fDeviceInit query response time for some devices is too large that default
-+ * QUERY_REQ_TIMEOUT may not be enough for such devices.
-+ */
-+#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
- 
+@@ -68,6 +68,9 @@
  /* Task management command timeout */
  #define TM_CMD_TIMEOUT	100 /* msecs */
-@@ -1650,6 +1656,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	struct ufs_query_req *request = NULL;
- 	struct ufs_query_res *response = NULL;
- 	int err, index = 0, selector = 0;
-+	int timeout = QUERY_REQ_TIMEOUT;
  
- 	BUG_ON(!hba);
- 
-@@ -1682,7 +1689,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 		goto out_unlock;
- 	}
- 
--	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
-+	if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
-+		timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
++/* maximum number of retries for a general UIC command  */
++#define UFS_UIC_COMMAND_RETRIES 3
 +
-+	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
+ /* maximum number of link-startup retries */
+ #define DME_LINKSTARTUP_RETRIES 3
  
- 	if (err) {
- 		dev_err(hba->dev,
+@@ -2182,6 +2185,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	};
+ 	const char *set = action[!!peer];
+ 	int ret;
++	int retries = UFS_UIC_COMMAND_RETRIES;
+ 
+ 	uic_cmd.command = peer ?
+ 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
+@@ -2189,10 +2193,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
+ 	uic_cmd.argument3 = mib_val;
+ 
+-	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+-	if (ret)
+-		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
+-			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++	do {
++		/* for peer attributes we retry upon failure */
++		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++		if (ret)
++			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
++				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++	} while (ret && peer && --retries);
++
++	if (!retries)
++		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
++				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
++				retries);
+ 
+ 	return ret;
+ }
+@@ -2217,6 +2229,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	};
+ 	const char *get = action[!!peer];
+ 	int ret;
++	int retries = UFS_UIC_COMMAND_RETRIES;
+ 	struct ufs_pa_layer_attr orig_pwr_info;
+ 	struct ufs_pa_layer_attr temp_pwr_info;
+ 	bool pwr_mode_change = false;
+@@ -2247,14 +2260,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
+ 	uic_cmd.argument1 = attr_sel;
+ 
+-	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+-	if (ret) {
+-		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
+-			get, UIC_GET_ATTR_ID(attr_sel), ret);
+-		goto out;
+-	}
++	do {
++		/* for peer attributes we retry upon failure */
++		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++		if (ret)
++			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
++				get, UIC_GET_ATTR_ID(attr_sel), ret);
++	} while (ret && peer && --retries);
++
++	if (!retries)
++		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
++				get, UIC_GET_ATTR_ID(attr_sel), retries);
+ 
+-	if (mib_val)
++	if (mib_val && !ret)
+ 		*mib_val = uic_cmd.argument3;
+ 
+ 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
 -- 
 1.8.5.2
 
