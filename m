@@ -1,137 +1,87 @@
 From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 05/12] be2iscsi: Remove be_mbox_notify_wait function
-Date: Mon,  1 Feb 2016 15:42:44 +0530
-Message-ID: <1454321571-16167-6-git-send-email-jitendra.bhivare@avagotech.com>
+Subject: [PATCH 12/12] be2iscsi: Add lock to protect WRB alloc and free
+Date: Mon,  1 Feb 2016 15:42:51 +0530
+Message-ID: <1454321571-16167-13-git-send-email-jitendra.bhivare@avagotech.com>
 References: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:54813 "EHLO
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:54823 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753373AbcBAKN0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 05:13:26 -0500
+	by vger.kernel.org with ESMTP id S1753209AbcBAKNh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 05:13:37 -0500
 In-Reply-To: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-be_mbox_notify_wait does exactly same thing as be_mbox_notify.
+FW got into UE after running IO stress test
+
+With kernel change to split session lock in frwd_lock and back_lock for tx
+and rx path correspondingly, in the IO path, common resource used in driver
+such as WRB was left unprotected.
+
+Add wrb_lock spinlock to protect allocation and freeing of WRB.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 79 +++--------------------------------------
- 1 file changed, 4 insertions(+), 75 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 5 +++++
+ drivers/scsi/be2iscsi/be_main.h | 1 +
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 8dd8521..12b60dd 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -625,8 +625,6 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
- 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
- 	struct be_dma_mem *mbox_mem = &ctrl->mbox_mem;
- 	struct be_mcc_mailbox *mbox = mbox_mem->va;
--	struct be_mcc_compl *compl = &mbox->compl;
--	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fa2b589..0892ee2 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -1190,12 +1190,14 @@ beiscsi_get_wrb_handle(struct hwi_wrb_context *pwrb_context,
+ {
+ 	struct wrb_handle *pwrb_handle;
  
- 	status = be_mbox_db_ready_poll(ctrl);
- 	if (status)
-@@ -654,77 +652,8 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
- 	/* RDY is set; small delay before CQE read. */
- 	udelay(1);
++	spin_lock_bh(&pwrb_context->wrb_lock);
+ 	pwrb_handle = pwrb_context->pwrb_handle_base[pwrb_context->alloc_index];
+ 	pwrb_context->wrb_handles_available--;
+ 	if (pwrb_context->alloc_index == (wrbs_per_cxn - 1))
+ 		pwrb_context->alloc_index = 0;
+ 	else
+ 		pwrb_context->alloc_index++;
++	spin_unlock_bh(&pwrb_context->wrb_lock);
  
--	if (be_mcc_compl_is_new(compl)) {
--		status = beiscsi_process_mbox_compl(ctrl, compl);
--		be_mcc_compl_use(compl);
--		if (status) {
--			beiscsi_log(phba, KERN_ERR,
--				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--				    "BC_%d : After be_mcc_compl_process\n");
--
--			return status;
--		}
--	} else {
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : Invalid Mailbox Completion\n");
--
--		return -EBUSY;
--	}
--	return 0;
--}
--
--/*
-- * Insert the mailbox address into the doorbell in two steps
-- * Polls on the mbox doorbell till a command completion (or a timeout) occurs
-- */
--static int be_mbox_notify_wait(struct beiscsi_hba *phba)
--{
--	int status;
--	u32 val = 0;
--	void __iomem *db = phba->ctrl.db + MPU_MAILBOX_DB_OFFSET;
--	struct be_dma_mem *mbox_mem = &phba->ctrl.mbox_mem;
--	struct be_mcc_mailbox *mbox = mbox_mem->va;
--	struct be_mcc_compl *compl = &mbox->compl;
--	struct be_ctrl_info *ctrl = &phba->ctrl;
--
--	status = be_mbox_db_ready_poll(ctrl);
--	if (status)
--		return status;
--
--	val |= MPU_MAILBOX_DB_HI_MASK;
--	/* at bits 2 - 31 place mbox dma addr msb bits 34 - 63 */
--	val |= (upper_32_bits(mbox_mem->dma) >> 2) << 2;
--	iowrite32(val, db);
--
--	/* wait for ready to be set */
--	status = be_mbox_db_ready_poll(ctrl);
--	if (status != 0)
--		return status;
--
--	val = 0;
--	/* at bits 2 - 31 place mbox dma addr lsb bits 4 - 33 */
--	val |= (u32)(mbox_mem->dma >> 4) << 2;
--	iowrite32(val, db);
--
--	status = be_mbox_db_ready_poll(ctrl);
--	if (status != 0)
--		return status;
--
--	/* A cq entry has been made now */
--	if (be_mcc_compl_is_new(compl)) {
--		status = be_mcc_compl_process(ctrl, &mbox->compl);
--		be_mcc_compl_use(compl);
--		if (status)
--			return status;
--	} else {
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : invalid mailbox completion\n");
--
--		return -EBUSY;
--	}
--	return 0;
-+	status = beiscsi_process_mbox_compl(ctrl, &mbox->compl);
-+	return status;
+ 	return pwrb_handle;
+ }
+@@ -1227,12 +1229,14 @@ beiscsi_put_wrb_handle(struct hwi_wrb_context *pwrb_context,
+ 		       struct wrb_handle *pwrb_handle,
+ 		       unsigned int wrbs_per_cxn)
+ {
++	spin_lock_bh(&pwrb_context->wrb_lock);
+ 	pwrb_context->pwrb_handle_base[pwrb_context->free_index] = pwrb_handle;
+ 	pwrb_context->wrb_handles_available++;
+ 	if (pwrb_context->free_index == (wrbs_per_cxn - 1))
+ 		pwrb_context->free_index = 0;
+ 	else
+ 		pwrb_context->free_index++;
++	spin_unlock_bh(&pwrb_context->wrb_lock);
  }
  
- void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
-@@ -1039,7 +968,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
- 
- 	be_cmd_page_addrs_prepare(req->pages, ARRAY_SIZE(req->pages), q_mem);
- 
--	status = be_mbox_notify_wait(phba);
-+	status = be_mbox_notify(ctrl);
- 	if (!status) {
- 		struct be_cmd_resp_mcc_create *resp = embedded_payload(wrb);
- 		mccq->id = le16_to_cpu(resp->id);
-@@ -1381,7 +1310,7 @@ int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
- 			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
--	status = be_mbox_notify_wait(phba);
-+	status = be_mbox_notify(ctrl);
- 
- 	mutex_unlock(&ctrl->mbox_lock);
- 	return status;
+ /**
+@@ -2920,6 +2924,7 @@ static int beiscsi_init_wrb_handle(struct beiscsi_hba *phba)
+ 			}
+ 			num_cxn_wrbh--;
+ 		}
++		spin_lock_init(&pwrb_context->wrb_lock);
+ 	}
+ 	idx = 0;
+ 	for (index = 0; index < phba->params.cxns_per_ctrl; index++) {
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 5ded3fa..30a4606 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -304,6 +304,7 @@ struct invalidate_command_table {
+ #define BEISCSI_GET_ULP_FROM_CRI(phwi_ctrlr, cri) \
+ 	(phwi_ctrlr->wrb_context[cri].ulp_num)
+ struct hwi_wrb_context {
++	spinlock_t wrb_lock;
+ 	struct list_head wrb_handle_list;
+ 	struct list_head wrb_handle_drvr_list;
+ 	struct wrb_handle **pwrb_handle_base;
 -- 
 2.5.0
 
