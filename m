@@ -1,149 +1,189 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 05/12] be2iscsi: Remove be_mbox_notify_wait function
-Date: Mon, 1 Feb 2016 12:27:38 +0100
-Message-ID: <20160201112738.GE27969@c203.arch.suse.de>
+Subject: Re: [PATCH 06/12] be2iscsi: Fix be_mcc_compl_poll to use tag_state
+Date: Mon, 1 Feb 2016 12:29:23 +0100
+Message-ID: <20160201112923.GF27969@c203.arch.suse.de>
 References: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1454321571-16167-6-git-send-email-jitendra.bhivare@avagotech.com>
+ <1454321571-16167-7-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51575 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52933 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753489AbcBAL1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Feb 2016 06:27:40 -0500
+	id S1753758AbcBAL30 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Feb 2016 06:29:26 -0500
 Content-Disposition: inline
-In-Reply-To: <1454321571-16167-6-git-send-email-jitendra.bhivare@avagotech.com>
+In-Reply-To: <1454321571-16167-7-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On Mon, Feb 01, 2016 at 03:42:44PM +0530, Jitendra Bhivare wrote:
-> be_mbox_notify_wait does exactly same thing as be_mbox_notify.
+On Mon, Feb 01, 2016 at 03:42:45PM +0530, Jitendra Bhivare wrote:
+> be_mcc_compl_poll waits till 'used' count of MCC WRBQ is zero. This i=
+s to
+> determine the completion of an MCC sent.
+>=20
+> Change function to poll for the tag of MCC sent, instead, and wait ti=
+ll
+> its tag_state is cleared.
 >=20
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 > ---
->  drivers/scsi/be2iscsi/be_cmds.c | 79 +++----------------------------=
+>  drivers/scsi/be2iscsi/be_cmds.c | 92 +++++++++++++++++++++----------=
 ----------
->  1 file changed, 4 insertions(+), 75 deletions(-)
+>  1 file changed, 47 insertions(+), 45 deletions(-)
 >=20
 > diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/=
 be_cmds.c
-> index 8dd8521..12b60dd 100644
+> index 12b60dd..60db2de 100644
 > --- a/drivers/scsi/be2iscsi/be_cmds.c
 > +++ b/drivers/scsi/be2iscsi/be_cmds.c
-> @@ -625,8 +625,6 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
->  	void __iomem *db =3D ctrl->db + MPU_MAILBOX_DB_OFFSET;
->  	struct be_dma_mem *mbox_mem =3D &ctrl->mbox_mem;
->  	struct be_mcc_mailbox *mbox =3D mbox_mem->va;
-> -	struct be_mcc_compl *compl =3D &mbox->compl;
-> -	struct beiscsi_hba *phba =3D pci_get_drvdata(ctrl->pdev);
-> =20
->  	status =3D be_mbox_db_ready_poll(ctrl);
->  	if (status)
-> @@ -654,77 +652,8 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
->  	/* RDY is set; small delay before CQE read. */
->  	udelay(1);
-> =20
-> -	if (be_mcc_compl_is_new(compl)) {
-> -		status =3D beiscsi_process_mbox_compl(ctrl, compl);
-> -		be_mcc_compl_use(compl);
-> -		if (status) {
-> -			beiscsi_log(phba, KERN_ERR,
-> -				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-> -				    "BC_%d : After be_mcc_compl_process\n");
-> -
-> -			return status;
-> -		}
-> -	} else {
-> -		beiscsi_log(phba, KERN_ERR,
-> -			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-> -			    "BC_%d : Invalid Mailbox Completion\n");
-> -
-> -		return -EBUSY;
-> -	}
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Insert the mailbox address into the doorbell in two steps
-> - * Polls on the mbox doorbell till a command completion (or a timeou=
-t) occurs
-> - */
-> -static int be_mbox_notify_wait(struct beiscsi_hba *phba)
-> -{
-> -	int status;
-> -	u32 val =3D 0;
-> -	void __iomem *db =3D phba->ctrl.db + MPU_MAILBOX_DB_OFFSET;
-> -	struct be_dma_mem *mbox_mem =3D &phba->ctrl.mbox_mem;
-> -	struct be_mcc_mailbox *mbox =3D mbox_mem->va;
-> -	struct be_mcc_compl *compl =3D &mbox->compl;
-> -	struct be_ctrl_info *ctrl =3D &phba->ctrl;
-> -
-> -	status =3D be_mbox_db_ready_poll(ctrl);
-> -	if (status)
-> -		return status;
-> -
-> -	val |=3D MPU_MAILBOX_DB_HI_MASK;
-> -	/* at bits 2 - 31 place mbox dma addr msb bits 34 - 63 */
-> -	val |=3D (upper_32_bits(mbox_mem->dma) >> 2) << 2;
-> -	iowrite32(val, db);
-> -
-> -	/* wait for ready to be set */
-> -	status =3D be_mbox_db_ready_poll(ctrl);
-> -	if (status !=3D 0)
-> -		return status;
-> -
-> -	val =3D 0;
-> -	/* at bits 2 - 31 place mbox dma addr lsb bits 4 - 33 */
-> -	val |=3D (u32)(mbox_mem->dma >> 4) << 2;
-> -	iowrite32(val, db);
-> -
-> -	status =3D be_mbox_db_ready_poll(ctrl);
-> -	if (status !=3D 0)
-> -		return status;
-> -
-> -	/* A cq entry has been made now */
-> -	if (be_mcc_compl_is_new(compl)) {
-> -		status =3D be_mcc_compl_process(ctrl, &mbox->compl);
-> -		be_mcc_compl_use(compl);
-> -		if (status)
-> -			return status;
-> -	} else {
-> -		beiscsi_log(phba, KERN_ERR,
-> -			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-> -			    "BC_%d : invalid mailbox completion\n");
-> -
-> -		return -EBUSY;
-> -	}
-> -	return 0;
-> +	status =3D beiscsi_process_mbox_compl(ctrl, &mbox->compl);
-> +	return status;
+> @@ -104,19 +104,6 @@ int be_chk_reset_complete(struct beiscsi_hba *ph=
+ba)
+>  	return 0;
 >  }
 > =20
->  void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
-> @@ -1039,7 +968,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *=
+> -void be_mcc_notify(struct beiscsi_hba *phba, unsigned int tag)
+> -{
+> -	struct be_queue_info *mccq =3D &phba->ctrl.mcc_obj.q;
+> -	u32 val =3D 0;
+> -
+> -	set_bit(MCC_TAG_STATE_RUNNING, &phba->ctrl.ptag_state[tag].tag_stat=
+e);
+> -	val |=3D mccq->id & DB_MCCQ_RING_ID_MASK;
+> -	val |=3D 1 << DB_MCCQ_NUM_POSTED_SHIFT;
+> -	/* ring doorbell after all of request and state is written */
+> -	wmb();
+> -	iowrite32(val, phba->db_va + DB_MCCQ_OFFSET);
+> -}
+> -
+>  unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+>  {
+>  	unsigned int tag =3D 0;
+> @@ -139,6 +126,28 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *p=
+hba)
+>  	return tag;
+>  }
+> =20
+> +void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+> +{
+> +	spin_lock_bh(&ctrl->mcc_lock);
+> +	tag =3D tag & MCC_Q_CMD_TAG_MASK;
+> +	ctrl->mcc_tag[ctrl->mcc_free_index] =3D tag;
+> +	if (ctrl->mcc_free_index =3D=3D (MAX_MCC_CMD - 1))
+> +		ctrl->mcc_free_index =3D 0;
+> +	else
+> +		ctrl->mcc_free_index++;
+> +	ctrl->mcc_tag_available++;
+> +	spin_unlock_bh(&ctrl->mcc_lock);
+> +}
+> +
+> +/**
+> + * beiscsi_fail_session(): Closing session with appropriate error
+> + * @cls_session: ptr to session
+> + **/
+> +void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
+> +{
+> +	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
+> +}
+> +
+>  /*
+>   * beiscsi_mccq_compl_wait()- Process completion in MCC CQ
+>   * @phba: Driver private structure
+> @@ -254,19 +263,6 @@ int beiscsi_mccq_compl_wait(struct beiscsi_hba *=
 phba,
+>  	return rc;
+>  }
 > =20
->  	be_cmd_page_addrs_prepare(req->pages, ARRAY_SIZE(req->pages), q_mem=
-);
+> -void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag)
+> -{
+> -	spin_lock(&ctrl->mcc_lock);
+> -	tag =3D tag & MCC_Q_CMD_TAG_MASK;
+> -	ctrl->mcc_tag[ctrl->mcc_free_index] =3D tag;
+> -	if (ctrl->mcc_free_index =3D=3D (MAX_MCC_CMD - 1))
+> -		ctrl->mcc_free_index =3D 0;
+> -	else
+> -		ctrl->mcc_free_index++;
+> -	ctrl->mcc_tag_available++;
+> -	spin_unlock(&ctrl->mcc_lock);
+> -}
+> -
+>  static inline bool be_mcc_compl_is_new(struct be_mcc_compl *compl)
+>  {
+>  	if (compl->flags !=3D 0) {
+> @@ -328,15 +324,6 @@ static int beiscsi_process_mbox_compl(struct be_=
+ctrl_info *ctrl,
+>  	return 0;
+>  }
 > =20
-> -	status =3D be_mbox_notify_wait(phba);
-> +	status =3D be_mbox_notify(ctrl);
->  	if (!status) {
->  		struct be_cmd_resp_mcc_create *resp =3D embedded_payload(wrb);
->  		mccq->id =3D le16_to_cpu(resp->id);
-> @@ -1381,7 +1310,7 @@ int beiscsi_cmd_reset_function(struct beiscsi_h=
-ba  *phba)
->  	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
->  	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
->  			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
-> -	status =3D be_mbox_notify_wait(phba);
-> +	status =3D be_mbox_notify(ctrl);
+> -/**
+> - * beiscsi_fail_session(): Closing session with appropriate error
+> - * @cls_session: ptr to session
+> - **/
+> -void beiscsi_fail_session(struct iscsi_cls_session *cls_session)
+> -{
+> -	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
+> -}
+> -
+>  static void beiscsi_process_async_link(struct beiscsi_hba *phba,
+>  				       struct be_mcc_compl *compl)
+>  {
+> @@ -532,6 +519,7 @@ int beiscsi_process_mcc_compl(struct be_ctrl_info=
+ *ctrl,
+>   **/
+>  int be_mcc_compl_poll(struct beiscsi_hba *phba, unsigned int tag)
+>  {
+> +	struct be_ctrl_info *ctrl =3D &phba->ctrl;
+>  	int i;
 > =20
->  	mutex_unlock(&ctrl->mbox_lock);
->  	return status;
+>  	for (i =3D 0; i < mcc_timeout; i++) {
+> @@ -540,19 +528,33 @@ int be_mcc_compl_poll(struct beiscsi_hba *phba,=
+ unsigned int tag)
+> =20
+>  		beiscsi_process_mcc_cq(phba);
+> =20
+> -		if (atomic_read(&phba->ctrl.mcc_obj.q.used) =3D=3D 0)
+> +		if (!test_bit(MCC_TAG_STATE_RUNNING,
+> +			      &ctrl->ptag_state[tag].tag_state))
+>  			break;
+>  		udelay(100);
+>  	}
+> -	if (i =3D=3D mcc_timeout) {
+> -		beiscsi_log(phba, KERN_ERR,
+> -			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+> -			    "BC_%d : FW Timed Out\n");
+> -		phba->fw_timeout =3D true;
+> -		beiscsi_ue_detect(phba);
+> -		return -EBUSY;
+> -	}
+> -	return 0;
+> +
+> +	if (i < mcc_timeout)
+> +		return 0;
+> +
+> +	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+> +		    "BC_%d : FW Timed Out\n");
+> +	phba->fw_timeout =3D true;
+> +	beiscsi_ue_detect(phba);
+> +	return -EBUSY;
+> +}
+> +
+> +void be_mcc_notify(struct beiscsi_hba *phba, unsigned int tag)
+> +{
+> +	struct be_queue_info *mccq =3D &phba->ctrl.mcc_obj.q;
+> +	u32 val =3D 0;
+> +
+> +	set_bit(MCC_TAG_STATE_RUNNING, &phba->ctrl.ptag_state[tag].tag_stat=
+e);
+> +	val |=3D mccq->id & DB_MCCQ_RING_ID_MASK;
+> +	val |=3D 1 << DB_MCCQ_NUM_POSTED_SHIFT;
+> +	/* make request available for DMA */
+> +	wmb();
+> +	iowrite32(val, phba->db_va + DB_MCCQ_OFFSET);
+>  }
+> =20
+>  /*
 > --=20
 > 2.5.0
 >=20
