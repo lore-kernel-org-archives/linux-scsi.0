@@ -1,110 +1,100 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 07/14] scsi: ufs: add retries to dme_peer get and set attribute
-Date: Mon,  1 Feb 2016 15:02:43 +0200
-Message-ID: <1454331770-29642-8-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 01/14] scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
+Date: Mon,  1 Feb 2016 15:02:37 +0200
+Message-ID: <1454331770-29642-2-git-send-email-ygardi@codeaurora.org>
 References: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The dme_peer get/set attribute commands are prone to errors, therefore
-we add three retries for the UIC command sending.
-Error code returned from ufshcd_send_uic_cmd() is checked, and unless
-it was successful or the retries have finished, another command will be
-sent.
+Clear the UFS data structures before sending new request.
+
+The SCSI command is sent to the device within the UFS UPIU request.
+As part of the transfer UPIU preparation, the SCSI command is copied
+to the UPIU structure according to the SCSI command size.
+As different SCSI commands differ in size from each other, we need
+to clear the whole SCSI command field to prevent sending uninitialized
+data to the device.
+
+The UPIU response doesn't always include the sense data and can differ
+in size.
+Hence, the UPIU response should also be cleared before the transfer.
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e374b79..4c0827f 100644
+index 85cd256..03533f0 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -68,6 +68,9 @@
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -3,7 +3,7 @@
+  *
+  * This code is based on drivers/scsi/ufs/ufshcd.c
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+@@ -1035,6 +1035,7 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+ 				cpu_to_le32(lower_32_bits(sg->dma_address));
+ 			prd_table[i].upper_addr =
+ 				cpu_to_le32(upper_32_bits(sg->dma_address));
++			prd_table[i].reserved = 0;
+ 		}
+ 	} else {
+ 		lrbp->utr_descriptor_ptr->prd_table_length = 0;
+@@ -1117,7 +1118,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
  
-+/* maximum number of retries for a general UIC command  */
-+#define UFS_UIC_COMMAND_RETRIES 3
-+
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
- 
-@@ -2182,6 +2185,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *set = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 
- 	uic_cmd.command = peer ?
- 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-@@ -2189,10 +2193,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
- 	uic_cmd.argument3 = mib_val;
- 
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret)
--		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
--			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	} while (ret && peer && --retries);
-+
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
-+				retries);
- 
- 	return ret;
+ 	/* Transfer request descriptor header fields */
+ 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+-
++	/* dword_1 is reserved, hence it is set to 0 */
++	req_desc->header.dword_1 = 0;
+ 	/*
+ 	 * assigning invalid value for command status. Controller
+ 	 * updates OCS on command completion, with the command
+@@ -1125,6 +1127,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 	 */
+ 	req_desc->header.dword_2 =
+ 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
++	/* dword_3 is reserved, hence it is set to 0 */
++	req_desc->header.dword_3 = 0;
  }
-@@ -2217,6 +2229,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *get = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 	struct ufs_pa_layer_attr orig_pwr_info;
- 	struct ufs_pa_layer_attr temp_pwr_info;
- 	bool pwr_mode_change = false;
-@@ -2247,14 +2260,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
- 	uic_cmd.argument1 = attr_sel;
  
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret) {
--		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
--			get, UIC_GET_ATTR_ID(attr_sel), ret);
--		goto out;
--	}
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), ret);
-+	} while (ret && peer && --retries);
+ /**
+@@ -1137,6 +1141,7 @@ static
+ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ {
+ 	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
++	unsigned short cdb_len;
+ 
+ 	/* command descriptor fields */
+ 	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+@@ -1151,8 +1156,11 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ 	ucd_req_ptr->sc.exp_data_transfer_len =
+ 		cpu_to_be32(lrbp->cmd->sdb.length);
+ 
+-	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd,
+-		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
++	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
++	memset(ucd_req_ptr->sc.cdb, 0, MAX_CDB_SIZE);
++	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
 +
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), retries);
++	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+ }
  
--	if (mib_val)
-+	if (mib_val && !ret)
- 		*mib_val = uic_cmd.argument3;
- 
- 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+ /**
 -- 
 1.8.5.2
 
