@@ -1,70 +1,66 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-Date: Mon, 01 Feb 2016 10:55:08 -0600
-Message-ID: <56AF8DEC.5000002@cs.wisc.edu>
-References: <bug-111441-11613@https.bugzilla.kernel.org/> <56AAC605.1080707@cs.wisc.edu> <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com> <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu> <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com> <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu> <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com> <56ABBCFF.9060003@cs.wisc.edu> <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com> <56ABF6A6.8070506@cs.wisc.edu> <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: =?utf-8?Q?=22Kai_M=C3=A4kisara_=28Kolumbus=29=22?=
+	<kai.makisara@kolumbus.fi>
+Subject: Re: What partition should the MTMKPART argument specify? Was: Re: st driver doesn't seem to grok LTO partitioning
+Date: Mon, 1 Feb 2016 20:43:26 +0200
+Message-ID: <5A3F5643-16A4-4010-B3D2-3F931B620128@kolumbus.fi>
+References: <20151218170644.24167419@harpe.intellique.com> <alpine.LSU.2.11.1601041219340.1615@xnv.znxvfnen.cevingr> <20160104124626.3112e8c0@harpe.intellique.com> <CAAzz28iCoG-rjnL7EsjHXA7UtRJSCEXuwL3+27ZBo7fckcBAfg@mail.gmail.com> <688812570.3359420.1452030904683.JavaMail.zimbra@redhat.com> <20160106161049.34f29973@harpe.intellique.com> <1993563395.3556606.1452093814452.JavaMail.zimbra@redhat.com> <20160106170720.61db9e86@harpe.intellique.com> <1371374871.6203837.1452802373256.JavaMail.zimbra@redhat.com> <DDB9C85B850785449757F9914A034FCB4450CE9B@G9W0766.americas.hpqcorp.net> <0840949A-970D-43FB-A691-E2F8AC2A0804@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44517327@G4W3219.americas.hpqcorp.net> <alpine.LSU.2.11.1601242247440.3145@xnv.znxvfnen.cevingr> <DDB9C85B850785449757F9914A034FCB44
+ 522A7B@G9W0766.americas.hpqcorp.net> <6685EAA5-B880-40FB-951D-BA94883049B3@kolumbus.fi> <DDB9C85B850785449757F9914A034FCB44523469@G9W0766.americas.hpqcorp.net> <alpine.LSU.2.11.1601291915010
+ .22105@x
+ nv.znxvfnen.cevingr> <DDB9C85B850785449757F9914A034FCB4452416B@G9W0766.americas.hpqcorp.net>
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:55211 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752827AbcBAQzs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Feb 2016 11:55:48 -0500
-In-Reply-To: <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
+Received: from vs16.mail.saunalahti.fi ([62.142.117.197]:35225 "EHLO
+	vs16.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400AbcBASne convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 13:43:34 -0500
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB4452416B@G9W0766.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+To: "Seymour, Shane M" <shane.seymour@hpe.com>
+Cc: Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>, Laurence Oberman <oberman.l@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/30/2016 01:38 AM, Nicholas A. Bellinger wrote:
-> On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
->> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
->>> HI Mike,
->>>
->>> I tried your patch and it is has eliminated first traceback but I still do not see my remote targets.
->>>
->>
->> That is sort of expected. Your target is not setup for ALUA properly. It
->> says it supports ALUA, but when scsi_dh_alua asks about the ports it is
->> reporting there are none. Ccing the people that made the patch that
->> added the issue and own the code.
->>
->> Hey Christoph and Hannes,
->>
->> The dh/alua changes that added this:
->>
->>         error = scsi_dh_add_device(sdev);
->>         if (error) {
->>                 sdev_printk(KERN_INFO, sdev,
->>                                 "failed to add device handler: %d\n",
->> error);
->>                 return error;
->>         }
->>
->> to scsi_sysfs_add_sdev are adding a regression.
->>
->> 1. If that fails, then we forget to do device_del before doing the
->> return. My patch in this thread added that back, so we do not see the
->> sysfs oopses anymore. But.....
->>
->> 2. It looks like in older kernels, we would allow misconfigured targets
->> like this one to still setup devices. Do we want that old behavior back?
->> Should we just ignore the return value from scsi_dh_add_device above?
->> Note that in this case, it is LIO so it can be easily fixed on the
->> target side by just setting it up properly. I do not think other targets
->> would hit this type of issue.
->>
+
+> On 1.2.2016, at 8.31, Seymour, Shane M <shane.seymour@hpe.com> wrote:
 > 
-> Btw, what does misconfigured mean here wrt target ALUA..?
+> Hi Kai,
+> 
+> Thanks for the changes the HPE DAT72 DDS5 drive now works as expected:
+> 
+Good. Thanks for testing.
 
-[   25.833195] sd 6:0:0:4: alua: supports implicit and explicit TPGS
-[   25.833360] sd 6:0:0:4: alua: No target port descriptors found
-[   25.833363] sd 6:0:0:4: alua: Attach failed (-22)
-[   25.833365] sd 6:0:0:4: failed to add device handler: -22
+...
+> 
+> I'm asking around again one final time to see if I can lay my hands on a LTO5 or greater drive so I can test LTO partitioning as well.
+> 
+> The only other thing I can think of (I'm not sure if this is an improvement or not) is if bp[pgo + PP_OFF_MAX_ADD_PARTS] + bp[pgo + PP_OFF_NBR_ADD_PARTS] (max.parts and nbr_parts in the debug message) is zero just return -EINVAL unless you know of any take drives that report them both as 0 but can be partitioned? That is after this:
+> 
+>        DEBC_printk(STp, "psd_cnt %d, max.parts %d, nbr_parts %d\n",
+>                    psd_cnt, bp[pgo + PP_OFF_MAX_ADD_PARTS],
+>                    bp[pgo + PP_OFF_NBR_ADD_PARTS]);
+> 
+> add (and also turn off the can-partitions option):
+> 
+> 	if ((bp[pgo + PP_OFF_MAX_ADD_PARTS] + bp[pgo + PP_OFF_NBR_ADD_PARTS]) == 0) {
+> 		DEBC_printk(STp, "Drive not partitionable - max.parts+nbr_parts is 0\n");
+> 		STp->can_partitions = 0;
+> 		return -EINVAL;
+> 	}
+> 
+> I'm not especially fussed if you don't want to add that though.
+> 
+I thought about a test like this (only test maximum number) but decided not to add it. The reason was that
+I did not want to change anything that has worked before. I quite trust that the current drives return sense
+data instead of crashing and the end result for the user would be the same. However, one can argue that
+returning EINVAL is better than EIO but does the user notice? If the common opinion is that a test like this
+should be added, I am not against it. It can be added to the code for SCSI >=3 where it does not risk
+anything for the old drives.
 
-He has LIO configured to report it supports implicit/explicit ALUA, but
-the ports do not seem to be configured.
+IMHO, can_partitions should not be cleared based on the test. For example, trying to partition a LTO-4 tape
+in a LTO-5 drive should not disable partitioning. (The mode page should return zero as maximum number of
+partitions when a LTO-4 tape is inserted.)
 
-For the LIO config side, are his LUNs just not in a the default_lu_gp or
-any other group?
+Thanks,
+Kai
+
