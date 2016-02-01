@@ -1,70 +1,79 @@
-From: Alex Gorbachev <ag@iss-integration.com>
-Subject: Re: [LSF/MM TOPIC] LIO/SCST Merger
-Date: Sun, 31 Jan 2016 21:44:16 -0500
-Message-ID: <CADb9450kp3wYHs0ODXD3SP5=YHg1L1zN79UKDmJnnph9F1WTQw@mail.gmail.com>
-References: <56A9043B.7030207@sandisk.com>
-	<1453963019.6746.244.camel@haakon3.risingtidesystems.com>
-	<56AA3518.8060507@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <56AA3518.8060507@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Abhilash Jindal <klock.android@gmail.com>
+Subject: [PATCH] 3w-9xxx: use boottime to compare time
+Date: Sun, 31 Jan 2016 23:14:47 -0500
+Message-ID: <1454300087-19910-1-git-send-email-klock.android@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f180.google.com ([209.85.223.180]:36566 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757654AbcBAEOu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jan 2016 23:14:50 -0500
+Received: by mail-io0-f180.google.com with SMTP id g73so145437199ioe.3
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Jan 2016 20:14:49 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, JBottomley@odin.com, linuxraid@lsi.com, Abhilash Jindal <klock.android@gmail.com>
 
-$0.02 from the heavy user of both frameworks in mission critical
-clinical environment, we tremendously appreciate the contribution of
-all developers, maintainers and organizers, the innovative and
-versatile approach of LIO (especially the Ceph back end for us) and
-the stability and automation of SCST.  I hope the great work you guys
-are doing is able to complement each other and result in powerful
-solutions that will allow us, Mission Critical users, designers and
-integrators, to offer a truly competitive options to large box SANs.
+Wall time is susceptible to sudden jumps due to user setting the time or
+due to NTP.  Boot time is constantly increasing time better suited for
+subtracting two timestamps.
 
-What you are doing makes a difference every day.
+Signed-off-by: Abhilash Jindal <klock.android@gmail.com>
+---
+ drivers/scsi/3w-9xxx.c |   13 ++++++-------
+ drivers/scsi/3w-9xxx.h |    2 +-
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
---
-Alex Gorbachev
-Storcium
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index a56a7b2..12e9141 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -651,8 +651,7 @@ static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+ 	TW_Command_Full *full_command_packet;
+ 	TW_Compatibility_Info *tw_compat_info;
+ 	TW_Event *event;
+-	struct timeval current_time;
+-	u32 current_time_ms;
++	ktime_t current_time;
+ 	TW_Device_Extension *tw_dev = twa_device_extension_list[iminor(inode)];
+ 	int retval = TW_IOCTL_ERROR_OS_EFAULT;
+ 	void __user *argp = (void __user *)arg;
+@@ -843,17 +842,17 @@ static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+ 		break;
+ 	case TW_IOCTL_GET_LOCK:
+ 		tw_lock = (TW_Lock *)tw_ioctl->data_buffer;
+-		do_gettimeofday(&current_time);
+-		current_time_ms = (current_time.tv_sec * 1000) + (current_time.tv_usec / 1000);
++		current_time = ktime_get_boottime();
+ 
+-		if ((tw_lock->force_flag == 1) || (tw_dev->ioctl_sem_lock == 0) || (current_time_ms >= tw_dev->ioctl_msec)) {
++		if ((tw_lock->force_flag == 1) || (tw_dev->ioctl_sem_lock == 0) 
++			|| (ktime_compare(current_time, tw_dev->ioctl_time) >= 0)) {
+ 			tw_dev->ioctl_sem_lock = 1;
+-			tw_dev->ioctl_msec = current_time_ms + tw_lock->timeout_msec;
++			tw_dev->ioctl_time = ktime_add_ms(current_time, tw_lock->timeout_msec);
+ 			tw_ioctl->driver_command.status = 0;
+ 			tw_lock->time_remaining_msec = tw_lock->timeout_msec;
+ 		} else {
+ 			tw_ioctl->driver_command.status = TW_IOCTL_ERROR_STATUS_LOCKED;
+-			tw_lock->time_remaining_msec = tw_dev->ioctl_msec - current_time_ms;
++			tw_lock->time_remaining_msec = ktime_to_ms(ktime_sub(tw_dev->ioctl_time, current_time));
+ 		}
+ 		break;
+ 	case TW_IOCTL_RELEASE_LOCK:
+diff --git a/drivers/scsi/3w-9xxx.h b/drivers/scsi/3w-9xxx.h
+index 0fdc83c..6f5d7e3 100644
+--- a/drivers/scsi/3w-9xxx.h
++++ b/drivers/scsi/3w-9xxx.h
+@@ -669,7 +669,7 @@ typedef struct TAG_TW_Device_Extension {
+ 	unsigned char		event_queue_wrapped;
+ 	unsigned int            error_sequence_id;
+ 	int                     ioctl_sem_lock;
+-	u32                     ioctl_msec;
++	ktime_t                 ioctl_time;
+ 	int			chrdev_request_id;
+ 	wait_queue_head_t	ioctl_wqueue;
+ 	struct mutex		ioctl_lock;
+-- 
+1.7.9.5
 
-
-On Thu, Jan 28, 2016 at 10:34 AM, Bart Van Assche
-<bart.vanassche@sandisk.com> wrote:
-> On 01/27/16 22:37, Nicholas A. Bellinger wrote:
->>
->> [ ... ]
->
->
-> Hi Nic,
->
-> Since in the most recent years all my communication to you was neutral and
-> professional in tone it is not clear to me why you wrote such a misleading
-> and unfair e-mail. Anyway, I would like to point out that the following
-> information is missing from your e-mail:
-> - That last year the storage HBA vendors and Linux distributor
->   representatives who attended my session about this topic where
->   unanimously enthusiastic about my proposal. You were the only
->   attendee who was not (yet?) enthusiast.
-> - That I am working on sending the ib_srpt patches upstream you
->   referred to in your e-mail and that a first version of that patch
->   series has already been posted on the linux-rdma mailing list.
-> - Although five years ago some SCST users switched to LIO, recently
->   several LIO users switched back to SCST because the latter is still
->   more stable and easier to configure than LIO. In other words, it is
->   in your own interest to help the LIO patches upstream that I posted
->   recently.
-> - One of the reasons that the LIO core patches I'm working on are not
->   yet upstream is because of how long it takes before you as a
->   maintainer provide feedback. The first version of my patch to make
->   ABORT and LUN RESET handling synchronous was posted on October 12,
->   2015. It took until November 15, 2015 before I received the first
->   feedback from you for that patch.
->
-> Bart.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
