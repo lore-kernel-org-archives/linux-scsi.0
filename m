@@ -1,57 +1,68 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 00/14] Big fixes, retries, handle a race condition
-Date: Mon,  1 Feb 2016 15:02:36 +0200
-Message-ID: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Subject: [PATCH v7 05/14] scsi: ufs: increase fDeviceInit query response timeout
+Date: Mon,  1 Feb 2016 15:02:41 +0200
+Message-ID: <1454331770-29642-6-git-send-email-ygardi@codeaurora.org>
+References: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-V7:
-updated patch 0001 according to a comment
-also, removed patch 07/15 from V6, so now there are only 14 patches
+fDeviceInit query response time for some devices is too long that default
+query request timeout of 100ms may not be enough. Experiments show that
+fDeviceInit response sometimes takes 500ms so to be on safer side this
+change sets the timeout to 600ms. Without this change, we might
+unnecessarily have to retry fDeviceInit query requests multiple times and
+each query request timeout prints one error message.
 
-V6:
-update Reviewed-by from various reviewers
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-V5:
-removed un-necessary wmb()
+---
+ drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-V4:
-fixing a few comments from reviewers
-
-V3:
-removed specific calls to wmb() since they are redundant.
-
-V2:
-a few minor changes
-
-V1:
-This serie of 15 small patches should be pushed after the series of 8 patches
-I have uploaded to the upstream a week ago:
-"Fix error message and present UFS variant probe"
-
-Yaniv Gardi (14):
-  scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: verify command tag validity
-  scsi: ufs: clear outstanding_request bit in case query timeout
-  scsi: ufs: increase fDeviceInit query response timeout
-  scsi: ufs: avoid exception event handler racing with PM callbacks
-  scsi: ufs: add retries to dme_peer get and set attribute
-  scsi: ufs: add retries for hibern8 enter
-  scsi: ufs: fix error recovery after the hibern8 exit failure
-  scsi: ufs: retry failed query flag requests
-  scsi: ufs: reduce the interrupts for power mode change requests
-  scsi: ufs: add missing memory barriers
-  scsi: ufs: commit descriptors before setting the doorbell
-  scsi: ufs: add wrapper for retrying sending query attribute
-
- drivers/scsi/ufs/ufshcd.c | 395 ++++++++++++++++++++++++++++++++++++----------
- drivers/scsi/ufs/ufshcd.h |   4 +
- 2 files changed, 319 insertions(+), 80 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 4863e93..e74c53a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -58,6 +58,12 @@
+ #define QUERY_REQ_RETRIES 10
+ /* Query request timeout */
+ #define QUERY_REQ_TIMEOUT 30 /* msec */
++/*
++ * Query request timeout for fDeviceInit flag
++ * fDeviceInit query response time for some devices is too large that default
++ * QUERY_REQ_TIMEOUT may not be enough for such devices.
++ */
++#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
+ 
+ /* Task management command timeout */
+ #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -1650,6 +1656,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	struct ufs_query_req *request = NULL;
+ 	struct ufs_query_res *response = NULL;
+ 	int err, index = 0, selector = 0;
++	int timeout = QUERY_REQ_TIMEOUT;
+ 
+ 	BUG_ON(!hba);
+ 
+@@ -1682,7 +1689,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 		goto out_unlock;
+ 	}
+ 
+-	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
++	if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
++		timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
++
++	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
+ 
+ 	if (err) {
+ 		dev_err(hba->dev,
 -- 
 1.8.5.2
 
