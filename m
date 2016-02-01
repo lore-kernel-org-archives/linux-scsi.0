@@ -1,80 +1,37 @@
-From: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
-Subject: [PATCH 10/12] be2iscsi: Fix ExpStatSn in management tasks
-Date: Mon,  1 Feb 2016 15:42:49 +0530
-Message-ID: <1454321571-16167-11-git-send-email-jitendra.bhivare@avagotech.com>
-References: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:54823 "EHLO
-	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753209AbcBAKNf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 05:13:35 -0500
-In-Reply-To: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: ygardi@codeaurora.org
+Subject: RE: [PATCH v6 01/15] scsi: ufs: clear UTRD, UPIU req and rsp before
+ new transfers
+Date: Mon, 1 Feb 2016 10:40:25 -0000
+Message-ID: <6945e53b5c34415df0b60c7efb9f21aa.squirrel@www.codeaurora.org>
+References: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
+    <1446038045-17102-2-git-send-email-ygardi@codeaurora.org>
+    <5B8DA87D05A7694D9FA63FD143655C1B41E4C272@hasmsx108.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B41E4C272@hasmsx108.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, "robherring2@gmail.com" <robherring2@gmail.com>, "James.Bottomley@HansenPartnership.com" <james.bottomley@hansenpartnership.com>, "pebolle@tiscali.nl" <pebolle@tiscali.nl>, "hch@infradead.org" <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "santoshsy@gmail.com" <santoshsy@gmail.com>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "gbroner@codeaurora.org" <gbroner@codeaurora.org>, "draviv@codeaurora.org" <draviv@codeaurora.org>, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 
-Connection resets observed from some targets when NOP-Out with wrong
-ExpStatSn is sent.
+>
+>
+>> +	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
+>> +	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
+>> +	if (cdb_len < MAX_CDB_SIZE)
+>> +		memset(ucd_req_ptr->sc.cdb + cdb_len, 0,
+>> +		       (MAX_CDB_SIZE - cdb_len));
+> It's just 16 bytes, setting all to zero prior  to copy will be as good as
+> this if statement
+> memset(ucd_req_ptr->sc.cdb, 0, MAX_CDB_SIZE);
+>
 
-FW keeps track of StatSn and fills up ExpStatSn accordingly.
-The header filled up by the stack needs to be modified by driver to clear
-ExpStatSn. If the field is not cleared, FW recalculates ExpStatSn and
-wrong offset'ed ExpStatSn is seen in the wire trace.
-
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
----
- drivers/scsi/be2iscsi/be_main.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 3f08a11..03265b6 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4926,7 +4926,6 @@ int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
- 
- 	pwrb = io_task->pwrb_handle->pwrb;
- 
--	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
- 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
- 
- 	if (writedir) {
-@@ -4987,7 +4986,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 	unsigned int doorbell = 0;
- 
- 	pwrb = io_task->pwrb_handle->pwrb;
--	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
- 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
- 
- 	if (writedir) {
-@@ -5159,23 +5157,21 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
- {
- 	struct beiscsi_io_task *io_task = task->dd_data;
- 	struct scsi_cmnd *sc = task->sc;
--	struct beiscsi_hba *phba = NULL;
-+	struct beiscsi_hba *phba;
- 	struct scatterlist *sg;
- 	int num_sg;
- 	unsigned int  writedir = 0, xferlen = 0;
- 
--	phba = ((struct beiscsi_conn *)task->conn->dd_data)->phba;
-+	if (!io_task->conn->login_in_progress)
-+		task->hdr->exp_statsn = 0;
- 
- 	if (!sc)
- 		return beiscsi_mtask(task);
- 
- 	io_task->scsi_cmnd = sc;
- 	num_sg = scsi_dma_map(sc);
-+	phba = io_task->conn->phba;
- 	if (num_sg < 0) {
--		struct iscsi_conn *conn = task->conn;
--		struct beiscsi_hba *phba = NULL;
--
--		phba = ((struct beiscsi_conn *)conn->dd_data)->phba;
- 		beiscsi_log(phba, KERN_ERR,
- 			    BEISCSI_LOG_IO | BEISCSI_LOG_ISCSI,
- 			    "BM_%d : scsi_dma_map Failed "
--- 
-2.5.0
-
+i agree. will be modified in V7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
