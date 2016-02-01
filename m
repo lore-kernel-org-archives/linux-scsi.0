@@ -1,146 +1,85 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/12] be2iscsi: Cleanup processing of BMBX completion
-Date: Mon, 1 Feb 2016 12:41:07 +0100
-Message-ID: <20160201114107.GG27969@c203.arch.suse.de>
+Subject: Re: [PATCH 08/12] be2iscsi: Fix MCC WRB leak in open_connection
+Date: Mon, 1 Feb 2016 12:45:43 +0100
+Message-ID: <20160201114543.GH27969@c203.arch.suse.de>
 References: <1454321571-16167-1-git-send-email-jitendra.bhivare@avagotech.com>
- <1454321571-16167-8-git-send-email-jitendra.bhivare@avagotech.com>
+ <1454321571-16167-9-git-send-email-jitendra.bhivare@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54286 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54661 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753641AbcBALlK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Feb 2016 06:41:10 -0500
+	id S1753641AbcBALpp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Feb 2016 06:45:45 -0500
 Content-Disposition: inline
-In-Reply-To: <1454321571-16167-8-git-send-email-jitendra.bhivare@avagotech.com>
+In-Reply-To: <1454321571-16167-9-git-send-email-jitendra.bhivare@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On Mon, Feb 01, 2016 at 03:42:46PM +0530, Jitendra Bhivare wrote:
-> Remove confusingly named be_mcc_compl_is_new and be_mcc_compl_use fun=
-ctions
-> in processing of BMBX. Rearrange beiscsi_process_mbox_compl function.
+On Mon, Feb 01, 2016 at 03:42:47PM +0530, Jitendra Bhivare wrote:
+> In open with IP of unknown address family, only tag is freed and erro=
+r
+> returned. MCC WRB allocated for the operation is not freed.
+>=20
+> Added check for supported family of IP in the beginning before
+> allocating the tag and WRB.
 >=20
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@avagotech.com>
 > ---
->  drivers/scsi/be2iscsi/be_cmds.c | 75 ++++++++++++++++++++-----------=
-----------
->  1 file changed, 36 insertions(+), 39 deletions(-)
+>  drivers/scsi/be2iscsi/be_mgmt.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
 >=20
-> diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/=
-be_cmds.c
-> index 60db2de..728aa133 100644
-> --- a/drivers/scsi/be2iscsi/be_cmds.c
-> +++ b/drivers/scsi/be2iscsi/be_cmds.c
-> @@ -263,21 +263,6 @@ int beiscsi_mccq_compl_wait(struct beiscsi_hba *=
-phba,
->  	return rc;
->  }
+> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/=
+be_mgmt.c
+> index 85044b8..ccac1d7 100644
+> --- a/drivers/scsi/be2iscsi/be_mgmt.c
+> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
+> @@ -829,6 +829,13 @@ int mgmt_open_connection(struct beiscsi_hba *phb=
+a,
+>  	unsigned short cid =3D beiscsi_ep->ep_cid;
+>  	struct be_sge *sge;
 > =20
-> -static inline bool be_mcc_compl_is_new(struct be_mcc_compl *compl)
-> -{
-> -	if (compl->flags !=3D 0) {
-> -		compl->flags =3D le32_to_cpu(compl->flags);
-> -		WARN_ON((compl->flags & CQE_FLAGS_VALID_MASK) =3D=3D 0);
-> -		return true;
-> -	} else
-> -		return false;
-> -}
-> -
-> -static inline void be_mcc_compl_use(struct be_mcc_compl *compl)
-> -{
-> -	compl->flags =3D 0;
-> -}
-> -
->  /*
->   * beiscsi_process_mbox_compl()- Check the MBX completion status
->   * @ctrl: Function specific MBX data structure
-> @@ -298,30 +283,46 @@ static int beiscsi_process_mbox_compl(struct be=
-_ctrl_info *ctrl,
->  	struct be_cmd_req_hdr *hdr =3D embedded_payload(wrb);
->  	struct be_cmd_resp_hdr *resp_hdr;
-> =20
-> -	be_dws_le_to_cpu(compl, 4);
-> +	/**
-> +	 * To check if valid bit is set, check the entire word as we don't =
-know
-> +	 * the endianness of the data (old entry is host endian while a new
-> +	 * entry is little endian)
-> +	 */
-> +	if (!compl->flags) {
-> +		beiscsi_log(phba, KERN_ERR,
-> +				BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-> +				"BC_%d : BMBX busy, no completion\n");
-> +		return -EBUSY;
+> +	if (dst_addr->sa_family !=3D PF_INET && dst_addr->sa_family !=3D PF=
+_INET6) {
+> +		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+> +			    "BG_%d : unknown addr family %d\n",
+> +			    dst_addr->sa_family);
+> +		return -EINVAL;
 > +	}
-> +	compl->flags =3D le32_to_cpu(compl->flags);
-> +	WARN_ON((compl->flags & CQE_FLAGS_VALID_MASK) =3D=3D 0);
+> +
+>  	phwi_ctrlr =3D phba->phwi_ctrlr;
+>  	phwi_context =3D phwi_ctrlr->phwi_ctxt;
 > =20
-> +	/**
-> +	 * Just swap the status to host endian;
-> +	 * mcc tag is opaquely copied from mcc_wrb.
-> +	 */
-> +	be_dws_le_to_cpu(compl, 4);
->  	compl_status =3D (compl->status >> CQE_STATUS_COMPL_SHIFT) &
-> -					CQE_STATUS_COMPL_MASK;
-> -	if (compl_status !=3D MCC_STATUS_SUCCESS) {
-> -		extd_status =3D (compl->status >> CQE_STATUS_EXTD_SHIFT) &
-> -						CQE_STATUS_EXTD_MASK;
-> +		CQE_STATUS_COMPL_MASK;
-> +	extd_status =3D (compl->status >> CQE_STATUS_EXTD_SHIFT) &
-> +		CQE_STATUS_EXTD_MASK;
-> +	/* Need to reset the entire word that houses the valid bit */
-> +	compl->flags =3D 0;
-> =20
-> -		beiscsi_log(phba, KERN_ERR,
-> -			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-> -			    "BC_%d : error in cmd completion: "
-> -			    "Subsystem : %d Opcode : %d "
-> -			    "status(compl/extd)=3D%d/%d\n",
-> -			    hdr->subsystem, hdr->opcode,
-> -			    compl_status, extd_status);
-> -
-> -		if (compl_status =3D=3D MCC_STATUS_INSUFFICIENT_BUFFER) {
-> -			resp_hdr =3D (struct be_cmd_resp_hdr *) hdr;
-> -			if (resp_hdr->response_length)
-> -				return 0;
-> -		}
+> @@ -868,7 +875,8 @@ int mgmt_open_connection(struct beiscsi_hba *phba=
+,
+>  		beiscsi_ep->dst_addr =3D daddr_in->sin_addr.s_addr;
+>  		beiscsi_ep->dst_tcpport =3D ntohs(daddr_in->sin_port);
+>  		beiscsi_ep->ip_type =3D BE2_IPV4;
+> -	} else if (dst_addr->sa_family =3D=3D PF_INET6) {
+> +	} else {
+> +		/* else its PF_INET6 family */
+>  		req->ip_address.ip_type =3D BE2_IPV6;
+>  		memcpy(&req->ip_address.addr,
+>  		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+> @@ -877,14 +885,6 @@ int mgmt_open_connection(struct beiscsi_hba *phb=
+a,
+>  		memcpy(&beiscsi_ep->dst6_addr,
+>  		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+>  		beiscsi_ep->ip_type =3D BE2_IPV6;
+> -	} else{
+> -		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+> -			    "BG_%d : unknown addr family %d\n",
+> -			    dst_addr->sa_family);
+> -		mutex_unlock(&ctrl->mbox_lock);
+> -		free_mcc_tag(&phba->ctrl, tag);
 > -		return -EINVAL;
-> +	if (compl_status =3D=3D MCC_STATUS_SUCCESS)
-> +		return 0;
-> +
-> +	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-> +		    "BC_%d : error in cmd completion: Subsystem : %d Opcode : %d s=
-tatus(compl/extd)=3D%d/%d\n",
-> +		    hdr->subsystem, hdr->opcode, compl_status, extd_status);
-> +
-> +	if (compl_status =3D=3D MCC_STATUS_INSUFFICIENT_BUFFER) {
-> +		/* if status is insufficient buffer, check the length */
-> +		resp_hdr =3D (struct be_cmd_resp_hdr *) hdr;
-> +		if (resp_hdr->response_length)
-> +			return 0;
+> -
 >  	}
-> -	return 0;
-> +	return -EINVAL;
->  }
-> =20
->  static void beiscsi_process_async_link(struct beiscsi_hba *phba,
-> @@ -453,10 +454,6 @@ int beiscsi_process_mcc_compl(struct be_ctrl_inf=
-o *ctrl,
->  	struct be_dma_mem *tag_mem;
->  	unsigned int tag, wrb_idx;
-> =20
-> -	/**
-> -	 * Just swap the status to host endian; mcc tag is opaquely copied
-> -	 * from mcc_wrb
-> -	 */
->  	be_dws_le_to_cpu(compl, 4);
->  	tag =3D (compl->tag0 & MCC_Q_CMD_TAG_MASK);
->  	wrb_idx =3D (compl->tag0 & CQE_STATUS_WRB_MASK) >> CQE_STATUS_WRB_S=
-HIFT;
+>  	req->cid =3D cid;
+>  	i =3D phba->nxt_cqid++;
 > --=20
 > 2.5.0
 >=20
