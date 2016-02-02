@@ -1,60 +1,99 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-Date: Tue, 2 Feb 2016 10:09:56 -0800
-Message-ID: <20160202180956.GB13880@infradead.org>
-References: <bug-111441-11613@https.bugzilla.kernel.org/>
- <56AAC605.1080707@cs.wisc.edu>
- <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
- <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
- <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
- <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
- <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
- <56ABBCFF.9060003@cs.wisc.edu>
- <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
- <56ABF6A6.8070506@cs.wisc.edu>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [LSF/MM TOPIC] multiqueue and interrupt assignment
+Date: Tue, 2 Feb 2016 10:23:23 -0800
+Message-ID: <56B0F41B.8010706@sandisk.com>
+References: <56B0D9CF.1080001@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57430 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932913AbcBBSJ7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 13:09:59 -0500
-Content-Disposition: inline
-In-Reply-To: <56ABF6A6.8070506@cs.wisc.edu>
+Received: from mail-by2on0064.outbound.protection.outlook.com ([207.46.100.64]:61520
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755802AbcBBSX1 convert rfc822-to-8bit (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 13:23:27 -0500
+In-Reply-To: <56B0D9CF.1080001@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On Fri, Jan 29, 2016 at 05:32:54PM -0600, Mike Christie wrote:
-> Hey Christoph and Hannes,
-> 
-> The dh/alua changes that added this:
-> 
->         error = scsi_dh_add_device(sdev);
->         if (error) {
->                 sdev_printk(KERN_INFO, sdev,
->                                 "failed to add device handler: %d\n",
-> error);
->                 return error;
->         }
-> 
-> to scsi_sysfs_add_sdev are adding a regression.
-> 
-> 1. If that fails, then we forget to do device_del before doing the
-> return. My patch in this thread added that back, so we do not see the
-> sysfs oopses anymore. But.....
+On 02/02/2016 08:31 AM, Hannes Reinecke wrote:
+> here's another topic which I've hit during my performance tests:
+> How should interrupt affinity be handled with blk-multiqueue?
+>
+> The problem is that the blk-multiqueue assumes a certain
+> CPU-to-queue mapping, _and_ the 'queue' in blk-mq syntax is actually
+> a submission/completion queue pair.
+>
+> To achieve optimal performance one should set the interrupt affinity
+> for a given (hardware) queue to the matchine (blk-mq) queue.
+> But typically the interrupt affinity has to be set during HBA setup
+> ie way before any queues are allocated.
+> Which means we have three choices:
+> - outguess the blk-mq algorithm in the driver and set the
+>    interrupt affinity during HBA setup
+> - Add some callbacks to coordinate interrupt affinity between
+>    driver and blk-mq
+> - Defer it to manual assignment, but inferring the risk of
+>    a suboptimal performance.
+>
+> At LSF/MM  I would like to have a discussion on how the interrupt
+> affinity should be handled for blk-mq, and whether a generic method
+> is possible or desirable.
+> Also there is the issue of certain drivers (eg lpfc) which normally
+> do interrupt affinity themselves, but disable it for multiqueue.
+> Which results in abysmal performance when comparing single queue
+> against multiqueue :-(
+>
+> As a side note, what does blk-mq do if the interrupt affinity is
+> _deliberately_ set wrong? IE if the completions for one command
+> arrive on completely the wrong queue? Discard the completion? Move
+> it to the correct queue?
 
-Ok.
+Hello Hannes,
 
-> 2. It looks like in older kernels, we would allow misconfigured targets
-> like this one to still setup devices. Do we want that old behavior back?
-> Should we just ignore the return value from scsi_dh_add_device above?
-> Note that in this case, it is LIO so it can be easily fixed on the
-> target side by just setting it up properly. I do not think other targets
-> would hit this type of issue.
+This topic indeed needs further attention. I also encountered this
+challenge while adding scsi-mq support to the SRP initiator driver. What
+I learned while working on the SRP driver is the following:
+- Although I agree that requests and interrupts should be processed on
+   the same processor (same physical chip) if the request has been
+   submitted from the CPU closest to the HBA, I'm not convinced that
+   processing request completions and interrupts on the same CPU core
+   yields the best performance. I would appreciate it if there would
+   remain some freedom in how to assign interrupts to CPU cores.
+- In several older NUMA systems (Nehalem) the distance from processor
+   to PCI adapter is the same for all processors. However, in current
+   NUMA systems (Sandy Bridge and later) typically only from one
+   processor access latency to a given PCI adapter is optimal. The
+   question then becomes which code should hit the QPI latency penalty:
+   the interrupt handler or the blk-mq request completion processing
+   code ?
+- All HBAs I know of support reassignment of an interrupt to another
+   CPU core through /proc/irq/<n>/smp_affinity so I was surprised to
+   read that you encountered a HBA for which CPU affinity has to be
+   set at driver load time ?
+- For HBAs that support multiple MSI-X vectors we need an approach for
+   associating blk-mq hw-queues with MSI-X vectors. The approach
+   implemented in the ib_srp driver is that that driver assumes that
+   MSI-X vectors have been spread evenly over physical processors. The
+   ib_srp driver then selects an MSI-X vector per hwqueue based on that
+   assumption. Since neither the kernel nor irqbalance currently support
+   this approach I wrote a script to implement this (see also
+http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/21312/focus=98409).
+- We need support in irqbalance for HBAs that support multiple MSI-X
+   vectors. Last time I checked irqbalance did not support this concept
+   which means that it even could happen that irqbalance assigned
+   multiple of these interrupt vectors to the same CPU core, something
+   that doesn't make sense to me.
 
-Be liberal in what you accept..  I guess we need to continue allowing
-to connect to these broken targets, but a warning would be useful.
+A previous discussion about this topic is available in the following
+e-mail thread: Christoph Hellwig, [TECH TOPIC] IRQ affinity, linux-rdma
+and linux-kernel mailing lists, July 2015
+(http://thread.gmane.org/gmane.linux.drivers.rdma/27418). I would
+appreciate it if Matthew Wilcox' proposal could be discussed further
+during the LSF/MM (http://thread.gmane.org/gmane.linux.drivers.rdma/27418).
 
-Can you send a patch?
+Thanks,
+
+Bart.
+PLEASE NOTE: The information contained in this electronic mail message is intended only for the use of the designated recipient(s) named above. If the reader of this message is not the intended recipient, you are hereby notified that you have received this message in error and that any review, dissemination, distribution, or copying of this message is strictly prohibited. If you have received this communication in error, please notify the sender by telephone or e-mail (as shown above) immediately and destroy any and all copies of this message in your possession (whether hard copies or electronically stored copies).
