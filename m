@@ -1,30 +1,33 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111441] iscsi fails to attach to targets
-Date: Tue, 02 Feb 2016 22:56:30 +0000
-Message-ID: <bug-111441-11613-FaS3ifDMhv@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
+Date: Tue, 02 Feb 2016 14:56:25 -0800
+Message-ID: <1454453785.25549.20.camel@haakon3.risingtidesystems.com>
 References: <bug-111441-11613@https.bugzilla.kernel.org/>
+	 <56AAC605.1080707@cs.wisc.edu>
+	 <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
+	 <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+	 <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
+	 <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
+	 <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+	 <56ABBCFF.9060003@cs.wisc.edu>
+	 <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
+	 <56ABF6A6.8070506@cs.wisc.edu>
+	 <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
+	 <56AF8DEC.5000002@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41964 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753622AbcBBW4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Feb 2016 17:56:33 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A178320306
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 22:56:32 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id D1DC4202EB
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 22:56:30 +0000 (UTC)
-In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:56314 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752099AbcBBW41 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 17:56:27 -0500
+In-Reply-To: <56AF8DEC.5000002@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111441
-
---- Comment #13 from nab <nab@linux-iscsi.org> ---
 On Mon, 2016-02-01 at 10:55 -0600, Mike Christie wrote:
 > On 01/30/2016 01:38 AM, Nicholas A. Bellinger wrote:
 > > On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
@@ -123,6 +126,3 @@ correct too.
 
 Hannes, any ideas..?
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
