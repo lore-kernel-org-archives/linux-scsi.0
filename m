@@ -1,125 +1,308 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH-v3 4/5] target: Fix remote-port TMR ABORT + se_cmd
-	fabric stop
-Date: Tue, 2 Feb 2016 11:54:37 +0100
-Message-ID: <20160202105437.GA28143@lst.de>
-References: <1454132222-29009-1-git-send-email-nab@daterainc.com> <1454132222-29009-5-git-send-email-nab@daterainc.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] add support for DWC UFS Host Controller
+Date: Tue, 2 Feb 2016 22:44:54 +1100
+Message-ID: <CAGRGNgVwqKWM5_QmSisEJPM098RjxmmAHMhrvXenBKSy+Jh9wQ@mail.gmail.com>
+References: <33d190af027d92da449f379a5e60366729d37eab.1454330442.git.jpinto@synopsys.com>
+ <CAGRGNgUZOZx80yQoqLq-YWxj7u7rWvGEy9UKSRU++t7VtXEOXQ@mail.gmail.com> <56B08359.1010405@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1454132222-29009-5-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56B08359.1010405@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Christoph Hellwig <hch@infradead.org>, gbroner@codeaurora.org, subhashj@codeaurora.org, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com, Ian Campbell <ijc+devicetree@hellion.org.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-> +	bool aborted = false, tas = false;
->  
->  	/*
->  	 * Allocate an struct iscsi_conn_recovery for this connection.
-> @@ -398,7 +399,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
->  
->  		iscsit_free_all_datain_reqs(cmd);
->  
-> -		transport_wait_for_tasks(&cmd->se_cmd);
-> +		transport_wait_for_tasks(&cmd->se_cmd, false, &aborted, &tas);
+Hi Joao,
 
-please keep the existing transport_wait_for_tasks prototype and factor
-out a new helper for the transport_generic_free_cmd special case to avoid
-all this boiler plate.
+On Tue, Feb 2, 2016 at 9:22 PM, Joao Pinto <Joao.Pinto@synopsys.com> wrote:
+> Hi Julian,
+>
+> Thanks for the review. My comments are below.
+>
+> On 2/2/2016 1:00 AM, Julian Calaby wrote:
+>> Hi Joao,
+>>
+>> On Mon, Feb 1, 2016 at 11:47 PM, Joao Pinto <Joao.Pinto@synopsys.com> wrote:
+>>> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+>>> index d15eaa4..0ee6c62 100644
+>>> --- a/drivers/scsi/ufs/ufshcd-pci.c
+>>> +++ b/drivers/scsi/ufs/ufshcd-pci.c
+>>> @@ -167,6 +167,8 @@ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
+>>>
+>>>  static const struct pci_device_id ufshcd_pci_tbl[] = {
+>>>         { PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+>>> +       { PCI_VENDOR_ID_SYNOPSYS, 0xB101, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+>>> +       { PCI_VENDOR_ID_SYNOPSYS, 0xB102, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+>>
+>> Listing these here implies that the devices these lines match are
+>> "normal" PCI UFSHCD devices that don't require any special handling
+>> whatsoever. Is that correct?
+>
+> Yes they are normal PCI UFSHCD devices.
+>
+>>
+>> If they do require special handling, then you need to put them in a
+>> separate driver, e.g. ufs-dwc-pci.c
+>
+> Both ufs-dwc and pci driver must execute the same init sequence to correctly
+> kick-off the hardware. That's why the common code is in the ufshcd.c.
+> Maybe create a ufshcd-dwc-quirks.c with the dwc specififc code would be better.
+> This way it could be used by ufs-dwc platform driver and pci.
+> Since dwc hardware uses a specific init routine would it be better to have a
+> ufs-dwc-pci and ufs-dwc calling the dwc specific init routine?
 
-> +	ret = kref_get_unless_zero(&se_cmd->cmd_kref);
-> +	if (ret)
-> +		se_cmd->cmd_wait_set = 1;
+What you suggested below, i.e. having a ufshcd-dwc.c file containing
+the common stuff then having separate platform and PCI drivers sounds
+like the best option.
 
-I don't like the dual use of cmd_wait_set and the combination
-with CMD_T_FABRIC_STOP.
+>>>         { }     /* terminate list */
+>>>  };
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index 85cd256..05d309d 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -5521,6 +5541,790 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
+>>>         .get_dev_status = ufshcd_devfreq_get_dev_status,
+>>>  };
+>>>
+>>> +#ifdef CONFIG_SCSI_UFS_DWC_HOOKS
+>>
+>> This doesn't look right.
+>>
+>> The driver should be structured like this:
+>>
+>>  - ufs-dwc: contains everything that is specific to your hardware.
+>>  - ufshcd: contains everything that is common to multiple types of
+>> ufshcd from different vendors
+>>
+>> Your "hooks" here look like they're doing stuff that is specific to
+>> the Designware hardware. They should not be in this file as it's for
+>> hardware type independent code.
+>>
+>> If you need to do something special at some point in the common code,
+>> then this should be exposed as an op in struct ufs_hba_variant_ops
+>> which is then implemented in your device-specific code.
+>
+> Yes I agree that maybe the ufs core drive is not the perfect spot for specific
+> vendor code. But DWC HW can be using pci or platform and so it has to share
+> common code and that's why I put it in the ufshcd.
+>
+> I think creating a ufshcd-dwc.c would be better to share code between ufs-dwc
+> and ufs-dwc-pci. Agree?
 
-How about the following alternative:
+Agreed.
 
-pull in my prep patch to rewrite target_sess_cmd_list_set_waiting so
-that it doesn't need to iterate over all commands and set cmd_wait_set:
+>>> +/**
+>>> + * ufshcd_dwc_program_clk_div()
+>>> + * This function programs the clk divider value. This value is needed to
+>>> + * provide 1 microsecond tick to unipro layer.
+>>> + * @hba: Private Structure pointer
+>>> + * @divider_val: clock divider value to be programmed
+>>> + *
+>>> + */
+>>> +void ufshcd_dwc_program_clk_div(struct ufs_hba *hba, u32 divider_val)
+>>> +{
+>>> +       ufshcd_writel(hba, divider_val, DWC_UFS_REG_HCLKDIV);
+>>> +}
+>>> +
+>>> +/**
+>>> + * ufshcd_dwc_link_is_up()
+>>> + * Check if link is up
+>>> + * @hba: private structure poitner
+>>> + *
+>>> + * Returns 0 on success, non-zero value on failure
+>>> + */
+>>> +int ufshcd_dwc_link_is_up(struct ufs_hba *hba)
+>>> +{
+>>> +       int dme_result = 0;
+>>> +
+>>> +       ufshcd_dme_get(hba, UIC_ARG_MIB(VS_POWERSTATE), &dme_result);
+>>> +
+>>> +       if (dme_result == UFSHCD_LINK_IS_UP) {
+>>> +               ufshcd_set_link_active(hba);
+>>> +               return 0;
+>>> +       }
+>>> +
+>>> +       return 1;
+>>> +}
+>>> +
+>>> +/**
+>>> + * ufshcd_dwc_connection_setup()
+>>> + * This function configures both the local side (host) and the peer side
+>>> + * (device) unipro attributes to establish the connection to application/
+>>> + * cport.
+>>> + * This function is not required if the hardware is properly configured to
+>>> + * have this connection setup on reset. But invoking this function does no
+>>> + * harm and should be fine even working with any ufs device.
+>>> + *
+>>> + * @hba: pointer to drivers private data
+>>> + *
+>>> + * Returns 0 on success non-zero value on failure
+>>> + */
+>>> +int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
+>>> +{
+>>> +       int ret = 0;
+>>> +
+>>> +       /* Local side Configuration */
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(N_DEVICEID), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(N_DEVICEID_VALID), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERDEVICEID), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERCPORTID), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_TRAFFICCLASS), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CPORTFLAGS), 0x6);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CPORTMODE), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +
+>>> +       /* Peer side Configuration */
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(N_DEVICEID), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(N_DEVICEID_VALID), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_PEERDEVICEID), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_PEERCPORTID), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_TRAFFICCLASS), 0);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CPORTFLAGS), 0x6);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CPORTMODE), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 1);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +out:
+>>> +       return ret;
+>>> +}
+>>> +
+>>> +/**
+>>> + * ufshcd_dwc_setup_20bit_rmmi_lane0()
+>>> + * This function configures Synopsys MPHY 20-bit RMMI Lane 0
+>>> + * @hba: Pointer to drivers structure
+>>> + *
+>>> + * Returns 0 on success or non-zero value on failure
+>>> + */
+>>> +int ufshcd_dwc_setup_20bit_rmmi_lane0(struct ufs_hba *hba)
+>>> +{
+>>> +       int ret = 0;
+>>> +
+>>> +       /* TX Reference Clock 26MHz */
+>>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(TX_REFCLKFREQ,
+>>> +                                                       SELIND_LN0_TX), 0x01);
+>>> +       if (ret)
+>>> +               goto out;
+>>> +
+>>> +#ifdef CONFIG_SCSI_UFS_DWC_MPHY_TC_GEN2
+>>
+>> Furthermore, the ARM developers are moving towards having single
+>> kernels that support multiple different hardware platforms based on
+>> the devicetree loaded at boot.
+>>
+>> It's expected that a single kernel might have drivers to support
+>> multiple different types of UFS hardware from multiple vendors.
+>>
+>> Consequently, as the GEN2 hardware needs extra stuff, this stuff
+>> should be enabled either by:
+>> 1. detecting it at runtime
+>
+> Not yet possible unfornately.
 
-	http://www.spinics.net/lists/target-devel/msg11446.html
+I would have been surprised if it had been.
 
-This gives us a free hand use a different completion for per-command
-waiting.  Now your new usage of cmd_wait_set can be simplified as we
-don't need a CMD_T_FABRIC_STOP to undo it, it can simply be cleared.
-While we're at it I'd suggest using a CMD_T_ flag instead of a bitfield
-for it.
+>> 2. adding a second compatible string and checking it where needed
+>
+> Maybe, but Kconfig is more intuitive for users in my perspective.
 
->  	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD)) {
->  		if (wait_for_tasks && (cmd->se_cmd_flags & SCF_SCSI_TMR_CDB))
-> -			transport_wait_for_tasks(cmd);
-> +			transport_wait_for_tasks(cmd, true, &aborted, &tas);
->  
-> -		ret = transport_put_cmd(cmd);
-> +		if (!aborted || tas)
-> +			ret = transport_put_cmd(cmd);
->  	} else {
->  		if (wait_for_tasks)
-> -			transport_wait_for_tasks(cmd);
-> +			transport_wait_for_tasks(cmd, true, &aborted, &tas);
->  		/*
->  		 * Handle WRITE failure case where transport_generic_new_cmd()
->  		 * has already added se_cmd to state_list, but fabric has
-> @@ -2454,9 +2456,21 @@ int transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
->  		if (cmd->se_lun)
->  			transport_lun_remove_cmd(cmd);
->  
-> -		ret = transport_put_cmd(cmd);
-> +		if (!aborted || tas)
-> +			ret = transport_put_cmd(cmd);
->  	}
+Users will be expecting to enable the Designware UFS driver in Kconfig
+and get something that works with both versions. The way you have this
+structured is not compatible with building a single kernel and having
+it work over multiple devices.
 
-FYI, this can be simplified a bit more.
+>> 3. using a separate driver with a different compatible string
+>
+> Gen 2 Test Chip are init as the Gen 1 Test Chip with a few twists, so I fon't
+> think it would be eficient to create a another driver with replicated init
+> routines because Gen1 and Gen2 share most of the init instructions.
 
-Call transport_wait_for_tasks
+Fair enough.
 
-	if (wait_for_tasks &&
-	    (cmd->se_cmd_flags & (SCF_SE_LUN_CMD | SCF_SCSI_TMR_CDB))) {
+>>> @@ -5645,8 +6449,16 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>>>          */
+>>>         ufshcd_set_ufs_dev_poweroff(hba);
+>>>
+>>> +#ifndef CONFIG_SCSI_UFS_DWC_HOOKS
+>>>         async_schedule(ufshcd_async_scan, hba);
+>>> -
+>>> +#else
+>>> +       /* Synopsys DWC Core + MPHY Test Chip needs a specific init routine */
+>>> +       err = ufshcd_dwc_host_configuration(hba);
+>>> +       if (err)
+>>> +               dev_err(dev, "DWC host configuration failed\n");
+>>> +       else
+>>> +               dev_info(dev, "DWC host configuration successful\n");
+>>> +#endif
+>>
+>> This initialisation should be in your hardware specific code.
+>
+> Already commented previously.
 
-and then the
+if your hardware needs some special initialisation at this point, then
+you should add a function in struct vendor_ops to do this. That's what
+it's there for.
 
-	if (!aborted || tas)
-		et = transport_put_cmd(cmd);
+Thanks,
 
-can be moved behind the conditional for LUN_CMDs as well.
+-- 
+Julian Calaby
 
-> -	return ret;
-> +	/*
-> +	 * If the task has been internally aborted due to TMR ABORT_TASK
-> +	 * or LUN_RESET, target_core_tmr.c is responsible for performing
-> +	 * the remaining calls to target_put_sess_cmd(), and not the
-> +	 * callers of this function.
-> +	 */
-> +	if (aborted) {
-> +		pr_debug("Detected CMD_T_ABORTED for ITT: %llu\n", cmd->tag);
-> +		wait_for_completion(&cmd->cmd_wait_comp);
-> +		cmd->se_tfo->release_cmd(cmd);
-> +	}
-> +	return (aborted) ? 1 : ret;
-
-This could be simplified to:
-
-	if (aborted) {
-		...
-
-		ret = 1;
-	}
-
-	return ret;
-
-> +	if (cmd->transport_state & CMD_T_ABORTED)
-> +		*aborted = true;
-> +	else
-> +		*aborted = false;
-> +
-> +	if (cmd->transport_state & CMD_T_TAS)
-> +		*tas = true;
-> +	else
-> +		*tas = false;
-
-All callers already initialize these two to false, so the else
-branches seem superflous.
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
