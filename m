@@ -1,54 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: fix cast from pointer to phys_addr_t
-Date: Tue, 02 Feb 2016 14:08:49 -0800
-Message-ID: <1454450929.25549.1.camel@haakon3.risingtidesystems.com>
-References: <3114027.BKdWsaRxO0@wuerfel>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] add support for DWC UFS Host Controller
+Date: Wed, 3 Feb 2016 09:27:46 +1100
+Message-ID: <CAGRGNgU_Wzhrckr6HurtzA2TB_zY68AeDWPLoa=UDY4Uy3zc6w@mail.gmail.com>
+References: <33d190af027d92da449f379a5e60366729d37eab.1454330442.git.jpinto@synopsys.com>
+ <CAGRGNgUZOZx80yQoqLq-YWxj7u7rWvGEy9UKSRU++t7VtXEOXQ@mail.gmail.com>
+ <56B08359.1010405@synopsys.com> <CAGRGNgVwqKWM5_QmSisEJPM098RjxmmAHMhrvXenBKSy+Jh9wQ@mail.gmail.com>
+ <56B09762.10402@synopsys.com> <CAGRGNgWmjnf-fUqMEQ5K2sykdwk8dV9fkJv_0=Q5bz2CiqA-8Q@mail.gmail.com>
+ <56B0C183.3010509@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <3114027.BKdWsaRxO0@wuerfel>
-Sender: target-devel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, "Hans J. Koch" <hjk@hansjkoch.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-arm-kernel@lists.infradead.org, Andy Grover <agrover@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:32997 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752906AbcBBW2H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 17:28:07 -0500
+In-Reply-To: <56B0C183.3010509@synopsys.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Christoph Hellwig <hch@infradead.org>, gbroner@codeaurora.org, subhashj@codeaurora.org, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, CARLOS.PALMINHA@synopsys.com, Ian Campbell <ijc+devicetree@hellion.org.uk>
 
-(Adding Andy CC')
+Hi Joao,
 
-On Mon, 2016-02-01 at 17:29 +0100, Arnd Bergmann wrote:
-> The uio_mem structure has a member that is a phys_addr_t, but can
-> be a number of other types too. The target core driver attempts
-> to assign a pointer from vmalloc() to it, by casting it to
-> phys_addr_t, but that causes a warning when phys_addr_t is longer
-> than a pointer:
-> 
-> drivers/target/target_core_user.c: In function 'tcmu_configure_device':
-> drivers/target/target_core_user.c:906:22: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]
-> 
-> This adds another cast to uintptr_t to shut up the warning.
-> A nicer fix might be to have additional fields in uio_mem
-> for the different purposes, so we can assign a pointer directly.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> This has been around for a long while, but did not trigger in
-> my randconfig testing until now, don't know why.
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index dd600e5ead71..94f5154ac788 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -903,7 +903,7 @@ static int tcmu_configure_device(struct se_device *dev)
->  	info->version = __stringify(TCMU_MAILBOX_VERSION);
->  
->  	info->mem[0].name = "tcm-user command & data buffer";
-> -	info->mem[0].addr = (phys_addr_t) udev->mb_addr;
-> +	info->mem[0].addr = (phys_addr_t)(uintptr_t)udev->mb_addr;
->  	info->mem[0].size = TCMU_RING_SIZE;
->  	info->mem[0].memtype = UIO_MEM_VIRTUAL;
->  
-> 
+On Wed, Feb 3, 2016 at 1:47 AM, Joao Pinto <Joao.Pinto@synopsys.com> wrote:
+> Hi,
+> In order to make a ufs-dwc-pci glue driver I will need to create a "pci driver
+> lib" like we have already for platform (ufshcd-pltfm.c). Should I call the
+> samsung glue driver ufs-samsung-pci.c which will use common pci functions from a
+> ufshcd-pci.c? Agree?
 
-Applied to target-pending/master.
+That sounds sensible.
 
-Thanks Arnd.
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
