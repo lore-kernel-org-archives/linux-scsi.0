@@ -1,271 +1,224 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111441] iscsi fails to attach to targets
-Date: Tue, 02 Feb 2016 23:21:30 +0000
-Message-ID: <bug-111441-11613-0pA4LV25Nz@https.bugzilla.kernel.org/>
+From: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>
+Subject: RE: [Bug 111441] New: iscsi fails to attach to targets
+Date: Tue, 2 Feb 2016 23:21:21 +0000
+Message-ID: <f05bf917f7e145e2b0042ba4e0dfb803@XCH-ALN-006.cisco.com>
 References: <bug-111441-11613@https.bugzilla.kernel.org/>
+	 <56AAC605.1080707@cs.wisc.edu>
+	 <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
+	 <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+	 <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
+	 <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
+	 <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+	 <56ABBCFF.9060003@cs.wisc.edu>
+	 <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
+	 <56ABF6A6.8070506@cs.wisc.edu>
+	 <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
+	 <56AF8DEC.5000002@cs.wisc.edu>
+ <1454453785.25549.20.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43028 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754739AbcBBXVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Feb 2016 18:21:35 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id D294C20266
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 23:21:33 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 35DFC202E9
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 23:21:31 +0000 (UTC)
-In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
+Received: from alln-iport-1.cisco.com ([173.37.142.88]:42045 "EHLO
+	alln-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849AbcBBXVZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 18:21:25 -0500
+In-Reply-To: <1454453785.25549.20.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111441
-
---- Comment #14 from Serguei Bezverkhi <sbezverk@cisco.com> ---
-Here you go, same output to compare for 4.4.1 and 3.10.0
-
-Linux 4.4.1 #1 SMP Tue Feb 2 16:15:36 EST 2016
-
-[root@sbezverk-osp-3 ~(keystone_admin)]#  sg_inq -Hi /dev/sdc
-VPD INQUIRY: Device Identification page
-  Designation descriptor number 1, descriptor length: 20
-    designator_type: NAA,  code_set: Binary
-    associated with the addressed logical unit
-    designator header(hex): 01 03 00 10
-    designator:
- 00     60 01 40 56 5f e9 25 e7  94 a4 20 69 2c 0c b3 c6    `.@V_.%... i,...
-  Designation descriptor number 2, descriptor length: 60
-    designator_type: T10 vendor identification,  code_set: ASCII
-    associated with the addressed logical unit
-    designator header(hex): 02 01 00 38
-    designator:
- 00     4c 49 4f 2d 4f 52 47 00  73 61 6e 2d 64 69 73 6b    LIO-ORG.san-disk
- 10     2d 32 3a 36 35 66 65 39  32 35 65 2d 37 39 34 61    -2:65fe925e-794a
- 20     2d 34 32 30 36 2d 39 32  63 30 2d 63 62 33 63 36    -4206-92c0-cb3c6
- 30     39 61 35 33 34 39 61 00                             9a5349a.
-  Designation descriptor number 3, descriptor length: 8
-    transport: Internet SCSI (iSCSI)
-    designator_type: Relative target port,  code_set: Binary
-    associated with the target port
-    designator header(hex): 51 94 00 04
-    designator:
- 00     00 00 00 01                                         ....
-  Designation descriptor number 4, descriptor length: 8
-    transport: Internet SCSI (iSCSI)
-    designator_type: Target port group,  code_set: Binary
-    associated with the target port
-    designator header(hex): 51 95 00 04
-    designator:
- 00     00 00 00 00                                         ....
-  Designation descriptor number 5, descriptor length: 8
-    designator_type: Logical unit group,  code_set: Binary
-    associated with the addressed logical unit
-    designator header(hex): 01 06 00 04
-    designator:
- 00     00 00 00 00                                         ....
-  Designation descriptor number 6, descriptor length: 80
-    transport: Internet SCSI (iSCSI)
-    designator_type: SCSI name string,  code_set: UTF-8
-    associated with the target port
-    designator header(hex): 53 98 00 4c
-    designator:
- 00     69 71 6e 2e 32 30 30 33  2d 30 31 2e 6f 72 67 2e    iqn.2003-01.org.
- 10     6c 69 6e 75 78 2d 69 73  63 73 69 2e 73 62 65 7a    linux-iscsi.sbez
- 20     76 65 72 6b 2d 73 61 6e  2d 31 2e 78 38 36 36 34    verk-san-1.x8664
- 30     3a 73 6e 2e 33 64 66 63  66 66 62 64 66 66 34 33    :sn.3dfcffbdff43
- 40     2c 74 2c 30 78 30 30 30  31 00 00 00                ,t,0x0001...
-  Designation descriptor number 7, descriptor length: 72
-    transport: Internet SCSI (iSCSI)
-    designator_type: SCSI name string,  code_set: UTF-8
-    associated with the target device that contains addressed lu
-    designator header(hex): 53 a8 00 44
-    designator:
- 00     69 71 6e 2e 32 30 30 33  2d 30 31 2e 6f 72 67 2e    iqn.2003-01.org.
- 10     6c 69 6e 75 78 2d 69 73  63 73 69 2e 73 62 65 7a    linux-iscsi.sbez
- 20     76 65 72 6b 2d 73 61 6e  2d 31 2e 78 38 36 36 34    verk-san-1.x8664
- 30     3a 73 6e 2e 33 64 66 63  66 66 62 64 66 66 34 33    :sn.3dfcffbdff43
- 40     00 00 00 00
-
-Linux 3.10.0-327.4.5.el7.x86_64 #1 SMP Thu Jan 21 04:10:29 EST 2016
-
- [root@sbezverk-osp-3 ~(keystone_admin)]# sg_inq -Hi /dev/sdc
-
-VPD INQUIRY: Device Identification page
-  Designation descriptor number 1, descriptor length: 20
-    designator_type: NAA,  code_set: Binary
-    associated with the addressed logical unit
-    designator header(hex): 01 03 00 10
-    designator:
- 00     60 01 40 56 5f e9 25 e7  94 a4 20 69 2c 0c b3 c6    `.@V_.%... i,...
-  Designation descriptor number 2, descriptor length: 60
-    designator_type: T10 vendor identification,  code_set: ASCII
-    associated with the addressed logical unit
-    designator header(hex): 02 01 00 38
-    designator:
- 00     4c 49 4f 2d 4f 52 47 00  73 61 6e 2d 64 69 73 6b    LIO-ORG.san-disk
- 10     2d 32 3a 36 35 66 65 39  32 35 65 2d 37 39 34 61    -2:65fe925e-794a
- 20     2d 34 32 30 36 2d 39 32  63 30 2d 63 62 33 63 36    -4206-92c0-cb3c6
- 30     39 61 35 33 34 39 61 00                             9a5349a.
-  Designation descriptor number 3, descriptor length: 8
-    transport: Internet SCSI (iSCSI)
-    designator_type: Relative target port,  code_set: Binary
-    associated with the target port
-    designator header(hex): 51 94 00 04
-    designator:
- 00     00 00 00 01                                         ....
-  Designation descriptor number 4, descriptor length: 8
-    transport: Internet SCSI (iSCSI)
-    designator_type: Target port group,  code_set: Binary
-    associated with the target port
-    designator header(hex): 51 95 00 04
-    designator:
- 00     00 00 00 00                                         ....
-  Designation descriptor number 5, descriptor length: 8
-    designator_type: Logical unit group,  code_set: Binary
-    associated with the addressed logical unit
-    designator header(hex): 01 06 00 04
-    designator:
- 00     00 00 00 00                                         ....
-  Designation descriptor number 6, descriptor length: 80
-    transport: Internet SCSI (iSCSI)
-    designator_type: SCSI name string,  code_set: UTF-8
-    associated with the target port
-    designator header(hex): 53 98 00 4c
-    designator:
- 00     69 71 6e 2e 32 30 30 33  2d 30 31 2e 6f 72 67 2e    iqn.2003-01.org.
- 10     6c 69 6e 75 78 2d 69 73  63 73 69 2e 73 62 65 7a    linux-iscsi.sbez
- 20     76 65 72 6b 2d 73 61 6e  2d 31 2e 78 38 36 36 34    verk-san-1.x8664
- 30     3a 73 6e 2e 33 64 66 63  66 66 62 64 66 66 34 33    :sn.3dfcffbdff43
- 40     2c 74 2c 30 78 30 30 30  31 00 00 00                ,t,0x0001...
-  Designation descriptor number 7, descriptor length: 72
-    transport: Internet SCSI (iSCSI)
-    designator_type: SCSI name string,  code_set: UTF-8
-    associated with the target device that contains addressed lu
-    designator header(hex): 53 a8 00 44
-    designator:
- 00     69 71 6e 2e 32 30 30 33  2d 30 31 2e 6f 72 67 2e    iqn.2003-01.org.
- 10     6c 69 6e 75 78 2d 69 73  63 73 69 2e 73 62 65 7a    linux-iscsi.sbez
- 20     76 65 72 6b 2d 73 61 6e  2d 31 2e 78 38 36 36 34    verk-san-1.x8664
- 30     3a 73 6e 2e 33 64 66 63  66 66 62 64 66 66 34 33    :sn.3dfcffbdff43
- 40     00 00 00 00                           
-
-
-Let me know if you need any additional info.
-
-Thank you
-
-Serguei
-
-
------Original Message-----
-From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org] 
-Sent: Tuesday, February 02, 2016 5:56 PM
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Serguei Bezverkhi (sbezverk) <sbezverk@cisco.com>;
-bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org; Christoph
-Hellwig <hch@infradead.org>; Hannes Reinecke <hare@suse.de>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-
-On Mon, 2016-02-01 at 10:55 -0600, Mike Christie wrote:
-> On 01/30/2016 01:38 AM, Nicholas A. Bellinger wrote:
-> > On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
-> >> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
-> >>> HI Mike,
-> >>>
-> >>> I tried your patch and it is has eliminated first traceback but I still do not see my remote targets.
-> >>>
-> >>
-> >> That is sort of expected. Your target is not setup for ALUA 
-> >> properly. It says it supports ALUA, but when scsi_dh_alua asks 
-> >> about the ports it is reporting there are none. Ccing the people 
-> >> that made the patch that added the issue and own the code.
-> >>
-> >> Hey Christoph and Hannes,
-> >>
-> >> The dh/alua changes that added this:
-> >>
-> >>         error = scsi_dh_add_device(sdev);
-> >>         if (error) {
-> >>                 sdev_printk(KERN_INFO, sdev,
-> >>                                 "failed to add device handler: 
-> >> %d\n", error);
-> >>                 return error;
-> >>         }
-> >>
-> >> to scsi_sysfs_add_sdev are adding a regression.
-> >>
-> >> 1. If that fails, then we forget to do device_del before doing the 
-> >> return. My patch in this thread added that back, so we do not see 
-> >> the sysfs oopses anymore. But.....
-> >>
-> >> 2. It looks like in older kernels, we would allow misconfigured 
-> >> targets like this one to still setup devices. Do we want that old behavior back?
-> >> Should we just ignore the return value from scsi_dh_add_device above?
-> >> Note that in this case, it is LIO so it can be easily fixed on the 
-> >> target side by just setting it up properly. I do not think other 
-> >> targets would hit this type of issue.
-> >>
-> > 
-> > Btw, what does misconfigured mean here wrt target ALUA..?
-> 
-> [   25.833195] sd 6:0:0:4: alua: supports implicit and explicit TPGS
-> [   25.833360] sd 6:0:0:4: alua: No target port descriptors found
-> [   25.833363] sd 6:0:0:4: alua: Attach failed (-22)
-> [   25.833365] sd 6:0:0:4: failed to add device handler: -22
-> 
-
-Strange, this hasn't changed in forever on the target side..
-
-> He has LIO configured to report it supports implicit/explicit ALUA, 
-> but the ports do not seem to be configured.
-> 
-> For the LIO config side, are his LUNs just not in a the default_lu_gp 
-> or any other group?
-
-So every non-PSCSI backend device becomes part of default_lu_gp +
-default_tg_pt_gp and automatically shows up in EVPD=0x83, without user needing
-to do any additional configuration.
-
-Here's what the output looks like:
-
-root@haakon3:/usr/src/target-pending.git# sg_inq -Hi /dev/sdb VPD INQUIRY:
-Device Identification page
-  <SNIP>
-  Designation descriptor number 3, descriptor length: 8
-    transport: Serial Attached SCSI Protocol (SPL-2)
-    designator_type: Relative target port,  code_set: Binary
-    associated with the target port
-    designator header(hex): 61 94 00 04
-    designator:
- 00     00 00 00 02                                         ....
-  Designation descriptor number 4, descriptor length: 8
-    transport: Serial Attached SCSI Protocol (SPL-2)
-    designator_type: Target port group,  code_set: Binary
-    associated with the target port
-    designator header(hex): 61 95 00 04
-    designator:
- 00     00 00 00 00                                         ....
-  Designation descriptor number 5, descriptor length: 8
-    designator_type: Logical unit group,  code_set: Binary
-    associated with the addressed logical unit
-    designator header(hex): 01 06 00 04
-    designator:
- 00     00 00 00 00                                         ....
- <SNIP>
-
-So AFAICT, the relative target port, target port group, and logical unit group
-being returned from target on v4.5-rc1 code looks correct.
-
-Serguei, can you confirm with 'sg_inq -Hi /dev/sdX' output on your side with
-the v3.10 based target..?
-
-AFAICT the parsing in scsi_vpd_tpg_id() from commit a8aa3978 looks correct too.
-
-Hannes, any ideas..?
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+SGVyZSB5b3UgZ28sIHNhbWUgb3V0cHV0IHRvIGNvbXBhcmUgZm9yIDQuNC4xIGFuZCAzLjEwLjAN
+Cg0KTGludXggNC40LjEgIzEgU01QIFR1ZSBGZWIgMiAxNjoxNTozNiBFU1QgMjAxNg0KDQpbcm9v
+dEBzYmV6dmVyay1vc3AtMyB+KGtleXN0b25lX2FkbWluKV0jICBzZ19pbnEgLUhpIC9kZXYvc2Rj
+DQpWUEQgSU5RVUlSWTogRGV2aWNlIElkZW50aWZpY2F0aW9uIHBhZ2UNCiAgRGVzaWduYXRpb24g
+ZGVzY3JpcHRvciBudW1iZXIgMSwgZGVzY3JpcHRvciBsZW5ndGg6IDIwDQogICAgZGVzaWduYXRv
+cl90eXBlOiBOQUEsICBjb2RlX3NldDogQmluYXJ5DQogICAgYXNzb2NpYXRlZCB3aXRoIHRoZSBh
+ZGRyZXNzZWQgbG9naWNhbCB1bml0DQogICAgZGVzaWduYXRvciBoZWFkZXIoaGV4KTogMDEgMDMg
+MDAgMTANCiAgICBkZXNpZ25hdG9yOg0KIDAwICAgICA2MCAwMSA0MCA1NiA1ZiBlOSAyNSBlNyAg
+OTQgYTQgMjAgNjkgMmMgMGMgYjMgYzYgICAgYC5AVl8uJS4uLiBpLC4uLg0KICBEZXNpZ25hdGlv
+biBkZXNjcmlwdG9yIG51bWJlciAyLCBkZXNjcmlwdG9yIGxlbmd0aDogNjANCiAgICBkZXNpZ25h
+dG9yX3R5cGU6IFQxMCB2ZW5kb3IgaWRlbnRpZmljYXRpb24sICBjb2RlX3NldDogQVNDSUkNCiAg
+ICBhc3NvY2lhdGVkIHdpdGggdGhlIGFkZHJlc3NlZCBsb2dpY2FsIHVuaXQNCiAgICBkZXNpZ25h
+dG9yIGhlYWRlcihoZXgpOiAwMiAwMSAwMCAzOA0KICAgIGRlc2lnbmF0b3I6DQogMDAgICAgIDRj
+IDQ5IDRmIDJkIDRmIDUyIDQ3IDAwICA3MyA2MSA2ZSAyZCA2NCA2OSA3MyA2YiAgICBMSU8tT1JH
+LnNhbi1kaXNrDQogMTAgICAgIDJkIDMyIDNhIDM2IDM1IDY2IDY1IDM5ICAzMiAzNSA2NSAyZCAz
+NyAzOSAzNCA2MSAgICAtMjo2NWZlOTI1ZS03OTRhDQogMjAgICAgIDJkIDM0IDMyIDMwIDM2IDJk
+IDM5IDMyICA2MyAzMCAyZCA2MyA2MiAzMyA2MyAzNiAgICAtNDIwNi05MmMwLWNiM2M2DQogMzAg
+ICAgIDM5IDYxIDM1IDMzIDM0IDM5IDYxIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAgICA5
+YTUzNDlhLg0KICBEZXNpZ25hdGlvbiBkZXNjcmlwdG9yIG51bWJlciAzLCBkZXNjcmlwdG9yIGxl
+bmd0aDogOA0KICAgIHRyYW5zcG9ydDogSW50ZXJuZXQgU0NTSSAoaVNDU0kpDQogICAgZGVzaWdu
+YXRvcl90eXBlOiBSZWxhdGl2ZSB0YXJnZXQgcG9ydCwgIGNvZGVfc2V0OiBCaW5hcnkNCiAgICBh
+c3NvY2lhdGVkIHdpdGggdGhlIHRhcmdldCBwb3J0DQogICAgZGVzaWduYXRvciBoZWFkZXIoaGV4
+KTogNTEgOTQgMDAgMDQNCiAgICBkZXNpZ25hdG9yOg0KIDAwICAgICAwMCAwMCAwMCAwMSAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLi4uLg0KICBEZXNpZ25hdGlvbiBk
+ZXNjcmlwdG9yIG51bWJlciA0LCBkZXNjcmlwdG9yIGxlbmd0aDogOA0KICAgIHRyYW5zcG9ydDog
+SW50ZXJuZXQgU0NTSSAoaVNDU0kpDQogICAgZGVzaWduYXRvcl90eXBlOiBUYXJnZXQgcG9ydCBn
+cm91cCwgIGNvZGVfc2V0OiBCaW5hcnkNCiAgICBhc3NvY2lhdGVkIHdpdGggdGhlIHRhcmdldCBw
+b3J0DQogICAgZGVzaWduYXRvciBoZWFkZXIoaGV4KTogNTEgOTUgMDAgMDQNCiAgICBkZXNpZ25h
+dG9yOg0KIDAwICAgICAwMCAwMCAwMCAwMCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgLi4uLg0KICBEZXNpZ25hdGlvbiBkZXNjcmlwdG9yIG51bWJlciA1LCBkZXNjcmlw
+dG9yIGxlbmd0aDogOA0KICAgIGRlc2lnbmF0b3JfdHlwZTogTG9naWNhbCB1bml0IGdyb3VwLCAg
+Y29kZV9zZXQ6IEJpbmFyeQ0KICAgIGFzc29jaWF0ZWQgd2l0aCB0aGUgYWRkcmVzc2VkIGxvZ2lj
+YWwgdW5pdA0KICAgIGRlc2lnbmF0b3IgaGVhZGVyKGhleCk6IDAxIDA2IDAwIDA0DQogICAgZGVz
+aWduYXRvcjoNCiAwMCAgICAgMDAgMDAgMDAgMDAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIC4uLi4NCiAgRGVzaWduYXRpb24gZGVzY3JpcHRvciBudW1iZXIgNiwgZGVz
+Y3JpcHRvciBsZW5ndGg6IDgwDQogICAgdHJhbnNwb3J0OiBJbnRlcm5ldCBTQ1NJIChpU0NTSSkN
+CiAgICBkZXNpZ25hdG9yX3R5cGU6IFNDU0kgbmFtZSBzdHJpbmcsICBjb2RlX3NldDogVVRGLTgN
+CiAgICBhc3NvY2lhdGVkIHdpdGggdGhlIHRhcmdldCBwb3J0DQogICAgZGVzaWduYXRvciBoZWFk
+ZXIoaGV4KTogNTMgOTggMDAgNGMNCiAgICBkZXNpZ25hdG9yOg0KIDAwICAgICA2OSA3MSA2ZSAy
+ZSAzMiAzMCAzMCAzMyAgMmQgMzAgMzEgMmUgNmYgNzIgNjcgMmUgICAgaXFuLjIwMDMtMDEub3Jn
+Lg0KIDEwICAgICA2YyA2OSA2ZSA3NSA3OCAyZCA2OSA3MyAgNjMgNzMgNjkgMmUgNzMgNjIgNjUg
+N2EgICAgbGludXgtaXNjc2kuc2Jleg0KIDIwICAgICA3NiA2NSA3MiA2YiAyZCA3MyA2MSA2ZSAg
+MmQgMzEgMmUgNzggMzggMzYgMzYgMzQgICAgdmVyay1zYW4tMS54ODY2NA0KIDMwICAgICAzYSA3
+MyA2ZSAyZSAzMyA2NCA2NiA2MyAgNjYgNjYgNjIgNjQgNjYgNjYgMzQgMzMgICAgOnNuLjNkZmNm
+ZmJkZmY0Mw0KIDQwICAgICAyYyA3NCAyYyAzMCA3OCAzMCAzMCAzMCAgMzEgMDAgMDAgMDAgICAg
+ICAgICAgICAgICAgLHQsMHgwMDAxLi4uDQogIERlc2lnbmF0aW9uIGRlc2NyaXB0b3IgbnVtYmVy
+IDcsIGRlc2NyaXB0b3IgbGVuZ3RoOiA3Mg0KICAgIHRyYW5zcG9ydDogSW50ZXJuZXQgU0NTSSAo
+aVNDU0kpDQogICAgZGVzaWduYXRvcl90eXBlOiBTQ1NJIG5hbWUgc3RyaW5nLCAgY29kZV9zZXQ6
+IFVURi04DQogICAgYXNzb2NpYXRlZCB3aXRoIHRoZSB0YXJnZXQgZGV2aWNlIHRoYXQgY29udGFp
+bnMgYWRkcmVzc2VkIGx1DQogICAgZGVzaWduYXRvciBoZWFkZXIoaGV4KTogNTMgYTggMDAgNDQN
+CiAgICBkZXNpZ25hdG9yOg0KIDAwICAgICA2OSA3MSA2ZSAyZSAzMiAzMCAzMCAzMyAgMmQgMzAg
+MzEgMmUgNmYgNzIgNjcgMmUgICAgaXFuLjIwMDMtMDEub3JnLg0KIDEwICAgICA2YyA2OSA2ZSA3
+NSA3OCAyZCA2OSA3MyAgNjMgNzMgNjkgMmUgNzMgNjIgNjUgN2EgICAgbGludXgtaXNjc2kuc2Jl
+eg0KIDIwICAgICA3NiA2NSA3MiA2YiAyZCA3MyA2MSA2ZSAgMmQgMzEgMmUgNzggMzggMzYgMzYg
+MzQgICAgdmVyay1zYW4tMS54ODY2NA0KIDMwICAgICAzYSA3MyA2ZSAyZSAzMyA2NCA2NiA2MyAg
+NjYgNjYgNjIgNjQgNjYgNjYgMzQgMzMgICAgOnNuLjNkZmNmZmJkZmY0Mw0KIDQwICAgICAwMCAw
+MCAwMCAwMA0KDQpMaW51eCAzLjEwLjAtMzI3LjQuNS5lbDcueDg2XzY0ICMxIFNNUCBUaHUgSmFu
+IDIxIDA0OjEwOjI5IEVTVCAyMDE2DQoNCiBbcm9vdEBzYmV6dmVyay1vc3AtMyB+KGtleXN0b25l
+X2FkbWluKV0jIHNnX2lucSAtSGkgL2Rldi9zZGMNCg0KVlBEIElOUVVJUlk6IERldmljZSBJZGVu
+dGlmaWNhdGlvbiBwYWdlDQogIERlc2lnbmF0aW9uIGRlc2NyaXB0b3IgbnVtYmVyIDEsIGRlc2Ny
+aXB0b3IgbGVuZ3RoOiAyMA0KICAgIGRlc2lnbmF0b3JfdHlwZTogTkFBLCAgY29kZV9zZXQ6IEJp
+bmFyeQ0KICAgIGFzc29jaWF0ZWQgd2l0aCB0aGUgYWRkcmVzc2VkIGxvZ2ljYWwgdW5pdA0KICAg
+IGRlc2lnbmF0b3IgaGVhZGVyKGhleCk6IDAxIDAzIDAwIDEwDQogICAgZGVzaWduYXRvcjoNCiAw
+MCAgICAgNjAgMDEgNDAgNTYgNWYgZTkgMjUgZTcgIDk0IGE0IDIwIDY5IDJjIDBjIGIzIGM2ICAg
+IGAuQFZfLiUuLi4gaSwuLi4NCiAgRGVzaWduYXRpb24gZGVzY3JpcHRvciBudW1iZXIgMiwgZGVz
+Y3JpcHRvciBsZW5ndGg6IDYwDQogICAgZGVzaWduYXRvcl90eXBlOiBUMTAgdmVuZG9yIGlkZW50
+aWZpY2F0aW9uLCAgY29kZV9zZXQ6IEFTQ0lJDQogICAgYXNzb2NpYXRlZCB3aXRoIHRoZSBhZGRy
+ZXNzZWQgbG9naWNhbCB1bml0DQogICAgZGVzaWduYXRvciBoZWFkZXIoaGV4KTogMDIgMDEgMDAg
+MzgNCiAgICBkZXNpZ25hdG9yOg0KIDAwICAgICA0YyA0OSA0ZiAyZCA0ZiA1MiA0NyAwMCAgNzMg
+NjEgNmUgMmQgNjQgNjkgNzMgNmIgICAgTElPLU9SRy5zYW4tZGlzaw0KIDEwICAgICAyZCAzMiAz
+YSAzNiAzNSA2NiA2NSAzOSAgMzIgMzUgNjUgMmQgMzcgMzkgMzQgNjEgICAgLTI6NjVmZTkyNWUt
+Nzk0YQ0KIDIwICAgICAyZCAzNCAzMiAzMCAzNiAyZCAzOSAzMiAgNjMgMzAgMmQgNjMgNjIgMzMg
+NjMgMzYgICAgLTQyMDYtOTJjMC1jYjNjNg0KIDMwICAgICAzOSA2MSAzNSAzMyAzNCAzOSA2MSAw
+MCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgOWE1MzQ5YS4NCiAgRGVzaWduYXRpb24gZGVz
+Y3JpcHRvciBudW1iZXIgMywgZGVzY3JpcHRvciBsZW5ndGg6IDgNCiAgICB0cmFuc3BvcnQ6IElu
+dGVybmV0IFNDU0kgKGlTQ1NJKQ0KICAgIGRlc2lnbmF0b3JfdHlwZTogUmVsYXRpdmUgdGFyZ2V0
+IHBvcnQsICBjb2RlX3NldDogQmluYXJ5DQogICAgYXNzb2NpYXRlZCB3aXRoIHRoZSB0YXJnZXQg
+cG9ydA0KICAgIGRlc2lnbmF0b3IgaGVhZGVyKGhleCk6IDUxIDk0IDAwIDA0DQogICAgZGVzaWdu
+YXRvcjoNCiAwMCAgICAgMDAgMDAgMDAgMDEgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIC4uLi4NCiAgRGVzaWduYXRpb24gZGVzY3JpcHRvciBudW1iZXIgNCwgZGVzY3Jp
+cHRvciBsZW5ndGg6IDgNCiAgICB0cmFuc3BvcnQ6IEludGVybmV0IFNDU0kgKGlTQ1NJKQ0KICAg
+IGRlc2lnbmF0b3JfdHlwZTogVGFyZ2V0IHBvcnQgZ3JvdXAsICBjb2RlX3NldDogQmluYXJ5DQog
+ICAgYXNzb2NpYXRlZCB3aXRoIHRoZSB0YXJnZXQgcG9ydA0KICAgIGRlc2lnbmF0b3IgaGVhZGVy
+KGhleCk6IDUxIDk1IDAwIDA0DQogICAgZGVzaWduYXRvcjoNCiAwMCAgICAgMDAgMDAgMDAgMDAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC4uLi4NCiAgRGVzaWduYXRp
+b24gZGVzY3JpcHRvciBudW1iZXIgNSwgZGVzY3JpcHRvciBsZW5ndGg6IDgNCiAgICBkZXNpZ25h
+dG9yX3R5cGU6IExvZ2ljYWwgdW5pdCBncm91cCwgIGNvZGVfc2V0OiBCaW5hcnkNCiAgICBhc3Nv
+Y2lhdGVkIHdpdGggdGhlIGFkZHJlc3NlZCBsb2dpY2FsIHVuaXQNCiAgICBkZXNpZ25hdG9yIGhl
+YWRlcihoZXgpOiAwMSAwNiAwMCAwNA0KICAgIGRlc2lnbmF0b3I6DQogMDAgICAgIDAwIDAwIDAw
+IDAwICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAuLi4uDQogIERlc2ln
+bmF0aW9uIGRlc2NyaXB0b3IgbnVtYmVyIDYsIGRlc2NyaXB0b3IgbGVuZ3RoOiA4MA0KICAgIHRy
+YW5zcG9ydDogSW50ZXJuZXQgU0NTSSAoaVNDU0kpDQogICAgZGVzaWduYXRvcl90eXBlOiBTQ1NJ
+IG5hbWUgc3RyaW5nLCAgY29kZV9zZXQ6IFVURi04DQogICAgYXNzb2NpYXRlZCB3aXRoIHRoZSB0
+YXJnZXQgcG9ydA0KICAgIGRlc2lnbmF0b3IgaGVhZGVyKGhleCk6IDUzIDk4IDAwIDRjDQogICAg
+ZGVzaWduYXRvcjoNCiAwMCAgICAgNjkgNzEgNmUgMmUgMzIgMzAgMzAgMzMgIDJkIDMwIDMxIDJl
+IDZmIDcyIDY3IDJlICAgIGlxbi4yMDAzLTAxLm9yZy4NCiAxMCAgICAgNmMgNjkgNmUgNzUgNzgg
+MmQgNjkgNzMgIDYzIDczIDY5IDJlIDczIDYyIDY1IDdhICAgIGxpbnV4LWlzY3NpLnNiZXoNCiAy
+MCAgICAgNzYgNjUgNzIgNmIgMmQgNzMgNjEgNmUgIDJkIDMxIDJlIDc4IDM4IDM2IDM2IDM0ICAg
+IHZlcmstc2FuLTEueDg2NjQNCiAzMCAgICAgM2EgNzMgNmUgMmUgMzMgNjQgNjYgNjMgIDY2IDY2
+IDYyIDY0IDY2IDY2IDM0IDMzICAgIDpzbi4zZGZjZmZiZGZmNDMNCiA0MCAgICAgMmMgNzQgMmMg
+MzAgNzggMzAgMzAgMzAgIDMxIDAwIDAwIDAwICAgICAgICAgICAgICAgICx0LDB4MDAwMS4uLg0K
+ICBEZXNpZ25hdGlvbiBkZXNjcmlwdG9yIG51bWJlciA3LCBkZXNjcmlwdG9yIGxlbmd0aDogNzIN
+CiAgICB0cmFuc3BvcnQ6IEludGVybmV0IFNDU0kgKGlTQ1NJKQ0KICAgIGRlc2lnbmF0b3JfdHlw
+ZTogU0NTSSBuYW1lIHN0cmluZywgIGNvZGVfc2V0OiBVVEYtOA0KICAgIGFzc29jaWF0ZWQgd2l0
+aCB0aGUgdGFyZ2V0IGRldmljZSB0aGF0IGNvbnRhaW5zIGFkZHJlc3NlZCBsdQ0KICAgIGRlc2ln
+bmF0b3IgaGVhZGVyKGhleCk6IDUzIGE4IDAwIDQ0DQogICAgZGVzaWduYXRvcjoNCiAwMCAgICAg
+NjkgNzEgNmUgMmUgMzIgMzAgMzAgMzMgIDJkIDMwIDMxIDJlIDZmIDcyIDY3IDJlICAgIGlxbi4y
+MDAzLTAxLm9yZy4NCiAxMCAgICAgNmMgNjkgNmUgNzUgNzggMmQgNjkgNzMgIDYzIDczIDY5IDJl
+IDczIDYyIDY1IDdhICAgIGxpbnV4LWlzY3NpLnNiZXoNCiAyMCAgICAgNzYgNjUgNzIgNmIgMmQg
+NzMgNjEgNmUgIDJkIDMxIDJlIDc4IDM4IDM2IDM2IDM0ICAgIHZlcmstc2FuLTEueDg2NjQNCiAz
+MCAgICAgM2EgNzMgNmUgMmUgMzMgNjQgNjYgNjMgIDY2IDY2IDYyIDY0IDY2IDY2IDM0IDMzICAg
+IDpzbi4zZGZjZmZiZGZmNDMNCiA0MCAgICAgMDAgMDAgMDAgMDAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICANCg0KDQpMZXQgbWUga25vdyBpZiB5b3UgbmVlZCBhbnkgYWRkaXRpb25hbCBpbmZv
+Lg0KDQpUaGFuayB5b3UNCg0KU2VyZ3VlaQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiBOaWNob2xhcyBBLiBCZWxsaW5nZXIgW21haWx0bzpuYWJAbGludXgtaXNjc2kub3Jn
+XSANClNlbnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDAyLCAyMDE2IDU6NTYgUE0NClRvOiBNaWtlIENo
+cmlzdGllIDxtaWNoYWVsY0Bjcy53aXNjLmVkdT4NCkNjOiBTZXJndWVpIEJlenZlcmtoaSAoc2Jl
+enZlcmspIDxzYmV6dmVya0BjaXNjby5jb20+OyBidWd6aWxsYS1kYWVtb25AYnVnemlsbGEua2Vy
+bmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IENocmlzdG9waCBIZWxsd2lnIDxo
+Y2hAaW5mcmFkZWFkLm9yZz47IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KU3ViamVj
+dDogUmU6IFtCdWcgMTExNDQxXSBOZXc6IGlzY3NpIGZhaWxzIHRvIGF0dGFjaCB0byB0YXJnZXRz
+DQoNCk9uIE1vbiwgMjAxNi0wMi0wMSBhdCAxMDo1NSAtMDYwMCwgTWlrZSBDaHJpc3RpZSB3cm90
+ZToNCj4gT24gMDEvMzAvMjAxNiAwMTozOCBBTSwgTmljaG9sYXMgQS4gQmVsbGluZ2VyIHdyb3Rl
+Og0KPiA+IE9uIEZyaSwgMjAxNi0wMS0yOSBhdCAxNzozMiAtMDYwMCwgTWlrZSBDaHJpc3RpZSB3
+cm90ZToNCj4gPj4gT24gMDEvMjkvMjAxNiAwNDoyMSBQTSwgU2VyZ3VlaSBCZXp2ZXJraGkgKHNi
+ZXp2ZXJrKSB3cm90ZToNCj4gPj4+IEhJIE1pa2UsDQo+ID4+Pg0KPiA+Pj4gSSB0cmllZCB5b3Vy
+IHBhdGNoIGFuZCBpdCBpcyBoYXMgZWxpbWluYXRlZCBmaXJzdCB0cmFjZWJhY2sgYnV0IEkgc3Rp
+bGwgZG8gbm90IHNlZSBteSByZW1vdGUgdGFyZ2V0cy4NCj4gPj4+DQo+ID4+DQo+ID4+IFRoYXQg
+aXMgc29ydCBvZiBleHBlY3RlZC4gWW91ciB0YXJnZXQgaXMgbm90IHNldHVwIGZvciBBTFVBIA0K
+PiA+PiBwcm9wZXJseS4gSXQgc2F5cyBpdCBzdXBwb3J0cyBBTFVBLCBidXQgd2hlbiBzY3NpX2Ro
+X2FsdWEgYXNrcyANCj4gPj4gYWJvdXQgdGhlIHBvcnRzIGl0IGlzIHJlcG9ydGluZyB0aGVyZSBh
+cmUgbm9uZS4gQ2NpbmcgdGhlIHBlb3BsZSANCj4gPj4gdGhhdCBtYWRlIHRoZSBwYXRjaCB0aGF0
+IGFkZGVkIHRoZSBpc3N1ZSBhbmQgb3duIHRoZSBjb2RlLg0KPiA+Pg0KPiA+PiBIZXkgQ2hyaXN0
+b3BoIGFuZCBIYW5uZXMsDQo+ID4+DQo+ID4+IFRoZSBkaC9hbHVhIGNoYW5nZXMgdGhhdCBhZGRl
+ZCB0aGlzOg0KPiA+Pg0KPiA+PiAgICAgICAgIGVycm9yID0gc2NzaV9kaF9hZGRfZGV2aWNlKHNk
+ZXYpOw0KPiA+PiAgICAgICAgIGlmIChlcnJvcikgew0KPiA+PiAgICAgICAgICAgICAgICAgc2Rl
+dl9wcmludGsoS0VSTl9JTkZPLCBzZGV2LA0KPiA+PiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICJmYWlsZWQgdG8gYWRkIGRldmljZSBoYW5kbGVyOiANCj4gPj4gJWRcbiIsIGVycm9y
+KTsNCj4gPj4gICAgICAgICAgICAgICAgIHJldHVybiBlcnJvcjsNCj4gPj4gICAgICAgICB9DQo+
+ID4+DQo+ID4+IHRvIHNjc2lfc3lzZnNfYWRkX3NkZXYgYXJlIGFkZGluZyBhIHJlZ3Jlc3Npb24u
+DQo+ID4+DQo+ID4+IDEuIElmIHRoYXQgZmFpbHMsIHRoZW4gd2UgZm9yZ2V0IHRvIGRvIGRldmlj
+ZV9kZWwgYmVmb3JlIGRvaW5nIHRoZSANCj4gPj4gcmV0dXJuLiBNeSBwYXRjaCBpbiB0aGlzIHRo
+cmVhZCBhZGRlZCB0aGF0IGJhY2ssIHNvIHdlIGRvIG5vdCBzZWUgDQo+ID4+IHRoZSBzeXNmcyBv
+b3BzZXMgYW55bW9yZS4gQnV0Li4uLi4NCj4gPj4NCj4gPj4gMi4gSXQgbG9va3MgbGlrZSBpbiBv
+bGRlciBrZXJuZWxzLCB3ZSB3b3VsZCBhbGxvdyBtaXNjb25maWd1cmVkIA0KPiA+PiB0YXJnZXRz
+IGxpa2UgdGhpcyBvbmUgdG8gc3RpbGwgc2V0dXAgZGV2aWNlcy4gRG8gd2Ugd2FudCB0aGF0IG9s
+ZCBiZWhhdmlvciBiYWNrPw0KPiA+PiBTaG91bGQgd2UganVzdCBpZ25vcmUgdGhlIHJldHVybiB2
+YWx1ZSBmcm9tIHNjc2lfZGhfYWRkX2RldmljZSBhYm92ZT8NCj4gPj4gTm90ZSB0aGF0IGluIHRo
+aXMgY2FzZSwgaXQgaXMgTElPIHNvIGl0IGNhbiBiZSBlYXNpbHkgZml4ZWQgb24gdGhlIA0KPiA+
+PiB0YXJnZXQgc2lkZSBieSBqdXN0IHNldHRpbmcgaXQgdXAgcHJvcGVybHkuIEkgZG8gbm90IHRo
+aW5rIG90aGVyIA0KPiA+PiB0YXJnZXRzIHdvdWxkIGhpdCB0aGlzIHR5cGUgb2YgaXNzdWUuDQo+
+ID4+DQo+ID4gDQo+ID4gQnR3LCB3aGF0IGRvZXMgbWlzY29uZmlndXJlZCBtZWFuIGhlcmUgd3J0
+IHRhcmdldCBBTFVBLi4/DQo+IA0KPiBbICAgMjUuODMzMTk1XSBzZCA2OjA6MDo0OiBhbHVhOiBz
+dXBwb3J0cyBpbXBsaWNpdCBhbmQgZXhwbGljaXQgVFBHUw0KPiBbICAgMjUuODMzMzYwXSBzZCA2
+OjA6MDo0OiBhbHVhOiBObyB0YXJnZXQgcG9ydCBkZXNjcmlwdG9ycyBmb3VuZA0KPiBbICAgMjUu
+ODMzMzYzXSBzZCA2OjA6MDo0OiBhbHVhOiBBdHRhY2ggZmFpbGVkICgtMjIpDQo+IFsgICAyNS44
+MzMzNjVdIHNkIDY6MDowOjQ6IGZhaWxlZCB0byBhZGQgZGV2aWNlIGhhbmRsZXI6IC0yMg0KPiAN
+Cg0KU3RyYW5nZSwgdGhpcyBoYXNuJ3QgY2hhbmdlZCBpbiBmb3JldmVyIG9uIHRoZSB0YXJnZXQg
+c2lkZS4uDQoNCj4gSGUgaGFzIExJTyBjb25maWd1cmVkIHRvIHJlcG9ydCBpdCBzdXBwb3J0cyBp
+bXBsaWNpdC9leHBsaWNpdCBBTFVBLCANCj4gYnV0IHRoZSBwb3J0cyBkbyBub3Qgc2VlbSB0byBi
+ZSBjb25maWd1cmVkLg0KPiANCj4gRm9yIHRoZSBMSU8gY29uZmlnIHNpZGUsIGFyZSBoaXMgTFVO
+cyBqdXN0IG5vdCBpbiBhIHRoZSBkZWZhdWx0X2x1X2dwIA0KPiBvciBhbnkgb3RoZXIgZ3JvdXA/
+DQoNClNvIGV2ZXJ5IG5vbi1QU0NTSSBiYWNrZW5kIGRldmljZSBiZWNvbWVzIHBhcnQgb2YgZGVm
+YXVsdF9sdV9ncCArIGRlZmF1bHRfdGdfcHRfZ3AgYW5kIGF1dG9tYXRpY2FsbHkgc2hvd3MgdXAg
+aW4gRVZQRD0weDgzLCB3aXRob3V0IHVzZXIgbmVlZGluZyB0byBkbyBhbnkgYWRkaXRpb25hbCBj
+b25maWd1cmF0aW9uLg0KDQpIZXJlJ3Mgd2hhdCB0aGUgb3V0cHV0IGxvb2tzIGxpa2U6DQoNCnJv
+b3RAaGFha29uMzovdXNyL3NyYy90YXJnZXQtcGVuZGluZy5naXQjIHNnX2lucSAtSGkgL2Rldi9z
+ZGIgVlBEIElOUVVJUlk6IERldmljZSBJZGVudGlmaWNhdGlvbiBwYWdlDQogIDxTTklQPg0KICBE
+ZXNpZ25hdGlvbiBkZXNjcmlwdG9yIG51bWJlciAzLCBkZXNjcmlwdG9yIGxlbmd0aDogOA0KICAg
+IHRyYW5zcG9ydDogU2VyaWFsIEF0dGFjaGVkIFNDU0kgUHJvdG9jb2wgKFNQTC0yKQ0KICAgIGRl
+c2lnbmF0b3JfdHlwZTogUmVsYXRpdmUgdGFyZ2V0IHBvcnQsICBjb2RlX3NldDogQmluYXJ5DQog
+ICAgYXNzb2NpYXRlZCB3aXRoIHRoZSB0YXJnZXQgcG9ydA0KICAgIGRlc2lnbmF0b3IgaGVhZGVy
+KGhleCk6IDYxIDk0IDAwIDA0DQogICAgZGVzaWduYXRvcjoNCiAwMCAgICAgMDAgMDAgMDAgMDIg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC4uLi4NCiAgRGVzaWduYXRp
+b24gZGVzY3JpcHRvciBudW1iZXIgNCwgZGVzY3JpcHRvciBsZW5ndGg6IDgNCiAgICB0cmFuc3Bv
+cnQ6IFNlcmlhbCBBdHRhY2hlZCBTQ1NJIFByb3RvY29sIChTUEwtMikNCiAgICBkZXNpZ25hdG9y
+X3R5cGU6IFRhcmdldCBwb3J0IGdyb3VwLCAgY29kZV9zZXQ6IEJpbmFyeQ0KICAgIGFzc29jaWF0
+ZWQgd2l0aCB0aGUgdGFyZ2V0IHBvcnQNCiAgICBkZXNpZ25hdG9yIGhlYWRlcihoZXgpOiA2MSA5
+NSAwMCAwNA0KICAgIGRlc2lnbmF0b3I6DQogMDAgICAgIDAwIDAwIDAwIDAwICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAuLi4uDQogIERlc2lnbmF0aW9uIGRlc2NyaXB0
+b3IgbnVtYmVyIDUsIGRlc2NyaXB0b3IgbGVuZ3RoOiA4DQogICAgZGVzaWduYXRvcl90eXBlOiBM
+b2dpY2FsIHVuaXQgZ3JvdXAsICBjb2RlX3NldDogQmluYXJ5DQogICAgYXNzb2NpYXRlZCB3aXRo
+IHRoZSBhZGRyZXNzZWQgbG9naWNhbCB1bml0DQogICAgZGVzaWduYXRvciBoZWFkZXIoaGV4KTog
+MDEgMDYgMDAgMDQNCiAgICBkZXNpZ25hdG9yOg0KIDAwICAgICAwMCAwMCAwMCAwMCAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLi4uLg0KIDxTTklQPg0KDQpTbyBBRkFJ
+Q1QsIHRoZSByZWxhdGl2ZSB0YXJnZXQgcG9ydCwgdGFyZ2V0IHBvcnQgZ3JvdXAsIGFuZCBsb2dp
+Y2FsIHVuaXQgZ3JvdXAgYmVpbmcgcmV0dXJuZWQgZnJvbSB0YXJnZXQgb24gdjQuNS1yYzEgY29k
+ZSBsb29rcyBjb3JyZWN0Lg0KDQpTZXJndWVpLCBjYW4geW91IGNvbmZpcm0gd2l0aCAnc2dfaW5x
+IC1IaSAvZGV2L3NkWCcgb3V0cHV0IG9uIHlvdXIgc2lkZSB3aXRoIHRoZSB2My4xMCBiYXNlZCB0
+YXJnZXQuLj8NCg0KQUZBSUNUIHRoZSBwYXJzaW5nIGluIHNjc2lfdnBkX3RwZ19pZCgpIGZyb20g
+Y29tbWl0IGE4YWEzOTc4IGxvb2tzIGNvcnJlY3QgdG9vLg0KDQpIYW5uZXMsIGFueSBpZGVhcy4u
+Pw0KDQo=
