@@ -1,43 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Separate target visibility from reaped state information
-Date: Mon, 01 Feb 2016 20:11:29 -0500
-Message-ID: <yq160y7q5ku.fsf@sermon.lab.mkp.net>
-References: <568FE922.9090004@sandisk.com>
-	<yq1oachqehs.fsf@sermon.lab.mkp.net>
-	<1453251809.2320.56.camel@HansenPartnership.com>
-	<20160131185455.00000ef7@localhost>
+Subject: Re: [PATCH 0/2] RESEND: Enable iBFT IPv6 booting with prefix length
+Date: Mon, 01 Feb 2016 20:17:30 -0500
+Message-ID: <yq11t8vq5at.fsf@sermon.lab.mkp.net>
+References: <cover.1453419653.git.lduncan@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34408 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837AbcBBBLo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 20:11:44 -0500
-In-Reply-To: <20160131185455.00000ef7@localhost> (Sebastian Herbszt's message
-	of "Sun, 31 Jan 2016 18:54:55 +0100")
+Received: from userp1040.oracle.com ([156.151.31.81]:46944 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbcBBBRk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 20:17:40 -0500
+In-Reply-To: <cover.1453419653.git.lduncan@suse.com> (Lee Duncan's message of
+	"Fri, 22 Jan 2016 11:49:11 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, Lee Duncan <lduncan@suse.com>
 
->>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
+>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
 
->> The only change from the current workflow is that the DEL transition
->> (now the reaped flag) is done before the spin lock is dropped which
->> would fix a tiny window for two threads both trying to remove the
->> same target, but there's nothing that could possibly fix an iterative
->> soft lockup caused by restarting the loop, which is what the
->> changelog says.
+Lee> [Resending. Apologies if you get this twice.]  It turns out that
+Lee> IPv6 doesn't care about netmask, but instead uses "prefix length"
+Lee> to determine the subnet, but the iBFT subsystem still just supports
+Lee> netmask.
 
-Sebastian> James, Martin, what's the status of this patch?  I still hit
-Sebastian> the reported soft lockup on 4.5-rc1.
+Mike, care to review?
 
-And you have verified that Bart's patch applied on top of 4.5-rc1 still
-fixes the lockup? (I know you tested a previous version)
-
-I am concerned about queuing something as a stable fix if it is just
-masking a fundamental underlying problem. James' comment suggests that
-there is something else going on.
+	https://patchwork.kernel.org/patch/8092511/
+	https://patchwork.kernel.org/patch/8092501/
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
