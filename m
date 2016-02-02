@@ -1,64 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: blk-merge: BIO front merge size check for chunked devices
-Date: Tue, 2 Feb 2016 08:46:05 +0100
-Message-ID: <56B05EBD.8030308@suse.de>
-References: <7A8F97E9-36F4-43C8-9646-895B818C632A@hgst.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
+ recognized correctly
+Date: Tue, 02 Feb 2016 08:01:15 +0000
+Message-ID: <bug-98171-11613-k50TbY29jc@https.bugzilla.kernel.org/>
+References: <bug-98171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51989 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:58844 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753410AbcBBHqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Feb 2016 02:46:08 -0500
-In-Reply-To: <7A8F97E9-36F4-43C8-9646-895B818C632A@hgst.com>
+	id S1753139AbcBBIBT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Feb 2016 03:01:19 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 1B52C20266
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 08:01:18 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id F3E172027D
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 08:01:16 +0000 (UTC)
+In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 02/02/2016 08:06 AM, Damien Le Moal wrote:
->=20
-> Hello,
->=20
-> In ll_front_merge_fn, the request size result of the eventual front
-> merge of a BIO with a request is checked against the maximum
-> size allowed for the request using blk_rq_get_max_sectors. This
-> function will also check that the merge result will not span block
-> chunks for chunked block devices using the function blk_max_size_offs=
-et.
->=20
-> However, blk_rq_get_max_sectors always calls blk_max_size_offset usin=
-g
-> the request sector position, which in the case of a front merge is no=
-t
-> the position at which the merged request would be issued: the sector
-> position to use must be that of the BIO, and not that of the request.
->=20
-> This problem can trigger a =E2=80=9Cboundary violation error=E2=80=9D=
- for write
-> requests on ZAC/ZBC host-managed SMR disks as the last write BIO
-> of a zone (a chunk) can end up being front-merged with the first
-> request of the following zone (chunk).
->=20
-> The attached patch against linux-4.5-rc2 fixes this problem by adding
-> an offset argument to the function blk_rq_get_max_sectors.
->=20
+https://bugzilla.kernel.org/show_bug.cgi?id=98171
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+jrickman@myamigos.us changed:
 
-I can easily respin this as a proper patch if required.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |jrickman@myamigos.us
 
-Cheers,
+--- Comment #6 from jrickman@myamigos.us ---
+I see almost the exact same error across multiple (qty 4, all the same HW
+configs) Supermicro X10SBA motherboards that I have.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jan 30 06:52:52 tank2 kernel: [    1.689428] ata12.00: exception Emask 0x0 SAct
+0x0 SErr 0x0 action 0x6
+Jan 30 06:52:52 tank2 kernel: [    1.689430] ata12.00: irq_stat 0x40000001
+Jan 30 06:52:52 tank2 kernel: [    1.689440] ata12.00: cmd
+a0/01:00:00:00:01/00:00:00:00:00/a0 tag 2 dma 16640 in
+Jan 30 06:52:52 tank2 kernel: [    1.689440]          opcode=0x12 12 01 00 00
+ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
+Jan 30 06:52:52 tank2 kernel: [    1.689446] ata12: hard resetting link
+
+These motherboards use the Marvell 9230 chip to add 4 SATA ports to the 2 SATA
+ports provided by the BayTrail SoC.
+
+I can sometimes recreate this error when placing the filesystem under heavy
+load. In this case it is a multi-terabyte ZFS "tank" and "zpool" is doing a
+"scrub".
+
+Gentoo Linux running gentoo-sources-4.1.15-r1
+
+I do not remember when I first started to see this error appear.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
