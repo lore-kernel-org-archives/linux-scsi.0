@@ -1,40 +1,67 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v7 02/14] scsi: ufs: clear fields UTRD, UPIU req and rsp
- before new transfers
-Date: Tue, 2 Feb 2016 10:07:26 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54164238@hasmsx108.ger.corp.intel.com>
-References: <1454331770-29642-1-git-send-email-ygardi@codeaurora.org>
- <1454331770-29642-3-git-send-email-ygardi@codeaurora.org>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH 0/2] scsi: Fix endless loop of ATA hard resets due to VPD
+ reads
+Date: Tue, 2 Feb 2016 12:18:30 +0200
+Message-ID: <20160202101830.GA3786@node.shutemov.name>
+References: <20160121063039.3803.66.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1454331770-29642-3-git-send-email-ygardi@codeaurora.org>
-Content-Language: en-US
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>, "robherring2@gmail.com" <robherring2@gmail.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "pebolle@tiscali.nl" <pebolle@tiscali.nl>, "hch@infradead.org" <hch@infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "santoshsy@gmail.com" <santoshsy@gmail.com>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "gbroner@codeaurora.org" <gbroner@codeaurora.org>, "draviv@codeaurora.org" <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160121063039.3803.66.stgit@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Duyck <aduyck@mirantis.com>
+Cc: jbottomley@odin.com, hare@suse.de, linux-scsi@vger.kernel.org, alexander.duyck@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, shane.seymour@hpe.com, jthumshirn@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Jan 20, 2016 at 10:35:15PM -0800, Alexander Duyck wrote:
+> Ultimately neither of these bugs were my root cause.  It turns out the
+> Marvel Console SCSI device in my system needed to have a flag set to
+> disable VPD access in order to keep things from looping through the error
+> repeatedly.  In order to resolve it I had to add the kernel parameter
+> "scsi_mod.dev_flags=Marvell:Console:0x4000000".  This allowed my system to
+> boot without any errors, however the first two issues described above are
+> still relevent so I thought I would provide the patches since I had already
+> written them up.
 
+I have the same problem.
 
-> Some of the data structures (like response UPIU) and/or its elements
-> (unused fields) should be cleared before sending out the respective
-> command to UFS device.
-> 
-> This change clears the UPIU response data structure for query commands
-> and NOP command before sending out the command. We also initialize the
-> PRDT table length to zero which should take care of commands which doesn't
-> have any data associated with it. We are also clearing the unused fields in
-> request UPIU for NOP command.
-> 
-> Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
-> Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Shouldn't we put quirk for that?
 
+>From d5ad5e1ee4128c454f39d7f3ccaa0b202e0e8534 Mon Sep 17 00:00:00 2001
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Date: Tue, 2 Feb 2016 12:44:04 +0300
+Subject: [PATCH] scsi: add Marvell Console to the ignore VPD pages blacklist
 
-You can add my ack and/or tested by (we have similar fix running in our code base for a long time :))
+With current upstream, I see these messages in loop.
 
-Thanks
-Tomas
+	ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+	ata14.00: configured for UDMA/66
+	ata14: EH complete
+	ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+	ata14.00: irq_stat 0x40000001
+	ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 22 dma 16640 in
+	Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
+	ata14: hard resetting link
+
+Looks like we should blacklist the device to stop it.
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+---
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 47b9d13f97b8..da2e068ee47d 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -205,6 +205,7 @@ static struct {
+ 	{"Intel", "Multi-Flex", NULL, BLIST_NO_RSOC},
+ 	{"iRiver", "iFP Mass Driver", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
++	{"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+-- 
+ Kirill A. Shutemov
