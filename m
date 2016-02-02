@@ -1,64 +1,103 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [LSF/MM TOPIC] multiqueue and interrupt assignment
-Date: Tue, 2 Feb 2016 17:31:11 +0100
-Message-ID: <56B0D9CF.1080001@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111441] iscsi fails to attach to targets
+Date: Tue, 02 Feb 2016 16:41:32 +0000
+Message-ID: <bug-111441-11613-77O4K4kXsX@https.bugzilla.kernel.org/>
+References: <bug-111441-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52498 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:39012 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755698AbcBBQbN (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-	Tue, 2 Feb 2016 11:31:13 -0500
+	id S1751779AbcBBQlg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Feb 2016 11:41:36 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id EF8492025B
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 16:41:34 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 81500202F0
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Feb 2016 16:41:32 +0000 (UTC)
+In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi all,
+https://bugzilla.kernel.org/show_bug.cgi?id=111441
 
-here's another topic which I've hit during my performance tests:
-How should interrupt affinity be handled with blk-multiqueue?
+--- Comment #10 from Serguei Bezverkhi <sbezverk@cisco.com> ---
+Hello,
 
-The problem is that the blk-multiqueue assumes a certain
-CPU-to-queue mapping, _and_ the 'queue' in blk-mq syntax is actually
-a submission/completion queue pair.
+Any chance we could move forward with this investigation? I still cannot attach
+to any remove iscsi targets with either 4.4.0 or 4.4.1 kernels.
 
-To achieve optimal performance one should set the interrupt affinity
-for a given (hardware) queue to the matchine (blk-mq) queue.
-But typically the interrupt affinity has to be set during HBA setup
-ie way before any queues are allocated.
-Which means we have three choices:
-- outguess the blk-mq algorithm in the driver and set the
-  interrupt affinity during HBA setup
-- Add some callbacks to coordinate interrupt affinity between
-  driver and blk-mq
-- Defer it to manual assignment, but inferring the risk of
-  a suboptimal performance.
+Thank you
 
-At LSF/MM  I would like to have a discussion on how the interrupt
-affinity should be handled for blk-mq, and whether a generic method
-is possible or desirable.
-Also there is the issue of certain drivers (eg lpfc) which normally
-do interrupt affinity themselves, but disable it for multiqueue.
-Which results in abysmal performance when comparing single queue
-against multiqueue :-(
+Serguei
 
-As a side note, what does blk-mq do if the interrupt affinity is
-_deliberately_ set wrong? IE if the completions for one command
-arrive on completely the wrong queue? Discard the completion? Move
-it to the correct queue?
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Monday, February 01, 2016 11:55 AM
+To: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Cc: Serguei Bezverkhi (sbezverk) <sbezverk@cisco.com>;
+bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org; Christoph
+Hellwig <hch@infradead.org>; Hannes Reinecke <hare@suse.de>
+Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
+
+On 01/30/2016 01:38 AM, Nicholas A. Bellinger wrote:
+> On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
+>> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
+>>> HI Mike,
+>>>
+>>> I tried your patch and it is has eliminated first traceback but I still do not see my remote targets.
+>>>
+>>
+>> That is sort of expected. Your target is not setup for ALUA properly. 
+>> It says it supports ALUA, but when scsi_dh_alua asks about the ports 
+>> it is reporting there are none. Ccing the people that made the patch 
+>> that added the issue and own the code.
+>>
+>> Hey Christoph and Hannes,
+>>
+>> The dh/alua changes that added this:
+>>
+>>         error = scsi_dh_add_device(sdev);
+>>         if (error) {
+>>                 sdev_printk(KERN_INFO, sdev,
+>>                                 "failed to add device handler: %d\n", 
+>> error);
+>>                 return error;
+>>         }
+>>
+>> to scsi_sysfs_add_sdev are adding a regression.
+>>
+>> 1. If that fails, then we forget to do device_del before doing the 
+>> return. My patch in this thread added that back, so we do not see the 
+>> sysfs oopses anymore. But.....
+>>
+>> 2. It looks like in older kernels, we would allow misconfigured 
+>> targets like this one to still setup devices. Do we want that old behavior back?
+>> Should we just ignore the return value from scsi_dh_add_device above?
+>> Note that in this case, it is LIO so it can be easily fixed on the 
+>> target side by just setting it up properly. I do not think other 
+>> targets would hit this type of issue.
+>>
+> 
+> Btw, what does misconfigured mean here wrt target ALUA..?
+
+[   25.833195] sd 6:0:0:4: alua: supports implicit and explicit TPGS
+[   25.833360] sd 6:0:0:4: alua: No target port descriptors found
+[   25.833363] sd 6:0:0:4: alua: Attach failed (-22)
+[   25.833365] sd 6:0:0:4: failed to add device handler: -22
+
+He has LIO configured to report it supports implicit/explicit ALUA, but the
+ports do not seem to be configured.
+
+For the LIO config side, are his LUNs just not in a the default_lu_gp or any
+other group?
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
