@@ -1,65 +1,137 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/2] iscsi_ibft: Always display netmask
-Date: Tue, 2 Feb 2016 00:45:31 -0600
-Message-ID: <56B0508B.9020003@cs.wisc.edu>
-References: <cover.1453419653.git.lduncan@suse.com>
- <71c84546d99332f77d1f462d735ec1e38aa1e7ba.1453419653.git.lduncan@suse.com>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: blk-merge: BIO front merge size check for chunked devices
+Date: Tue, 2 Feb 2016 07:06:17 +0000
+Message-ID: <7A8F97E9-36F4-43C8-9646-895B818C632A@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_002_7A8F97E936F443C89646895B818C632Ahgstcom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:55741 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752796AbcBBGpn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Feb 2016 01:45:43 -0500
-In-Reply-To: <71c84546d99332f77d1f462d735ec1e38aa1e7ba.1453419653.git.lduncan@suse.com>
+Received: from sjc00mx1.hgst.com ([199.255.44.36]:13438 "EHLO
+	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513AbcBBHQ2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 02:16:28 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org
-Cc: hare@suse.de
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On 01/22/2016 01:49 PM, Lee Duncan wrote:
-> From: Hannes Reinecke <hare@suse.de>
-> 
-> Some older user-space code might rely on the netmask attribute
-> being present, so we should always display it.
-> This fixes a regression introduced by commit
-> 0b2eb3c4060a16f3ec11a4d6d4c934e7e5d5334f.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->  drivers/firmware/iscsi_ibft.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-> index 2dd1fbb8cccc..81037e5fe301 100644
-> --- a/drivers/firmware/iscsi_ibft.c
-> +++ b/drivers/firmware/iscsi_ibft.c
-> @@ -464,14 +464,8 @@ static umode_t ibft_check_nic_for(void *data, int type)
->  			rc = S_IRUGO;
->  		break;
->  	case ISCSI_BOOT_ETH_PREFIX_LEN:
-> -		if (nic->subnet_mask_prefix)
-> -			rc = S_IRUGO;
-> -		break;
->  	case ISCSI_BOOT_ETH_SUBNET_MASK:
-> -		if (!memcmp(nic->ip_addr, nulls, 10) &&
-> -		    (nic->ip_addr[10] == 0xff) &&
-> -		    (nic->ip_addr[11] == 0xff) &&
-> -		    nic->subnet_mask_prefix)
-> +		if (nic->subnet_mask_prefix)
->  			rc = S_IRUGO;
->  		break;
->  	case ISCSI_BOOT_ETH_ORIGIN:
-> 
+--_002_7A8F97E936F443C89646895B818C632Ahgstcom_
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <6A5F8DFAA9EF3A4B926A3143796925C1@namprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
 
-Sorry. I thought I sent this mail already.
+DQpIZWxsbywNCg0KSW4gbGxfZnJvbnRfbWVyZ2VfZm4sIHRoZSByZXF1ZXN0IHNpemUgcmVzdWx0
+IG9mIHRoZSBldmVudHVhbCBmcm9udA0KbWVyZ2Ugb2YgYSBCSU8gd2l0aCBhIHJlcXVlc3QgaXMg
+Y2hlY2tlZCBhZ2FpbnN0IHRoZSBtYXhpbXVtDQpzaXplIGFsbG93ZWQgZm9yIHRoZSByZXF1ZXN0
+IHVzaW5nIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMuIFRoaXMNCmZ1bmN0aW9uIHdpbGwgYWxzbyBj
+aGVjayB0aGF0IHRoZSBtZXJnZSByZXN1bHQgd2lsbCBub3Qgc3BhbiBibG9jaw0KY2h1bmtzIGZv
+ciBjaHVua2VkIGJsb2NrIGRldmljZXMgdXNpbmcgdGhlIGZ1bmN0aW9uIGJsa19tYXhfc2l6ZV9v
+ZmZzZXQuDQoNCkhvd2V2ZXIsIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMgYWx3YXlzIGNhbGxzIGJs
+a19tYXhfc2l6ZV9vZmZzZXQgdXNpbmcNCnRoZSByZXF1ZXN0IHNlY3RvciBwb3NpdGlvbiwgd2hp
+Y2ggaW4gdGhlIGNhc2Ugb2YgYSBmcm9udCBtZXJnZSBpcyBub3QNCnRoZSBwb3NpdGlvbiBhdCB3
+aGljaCB0aGUgbWVyZ2VkIHJlcXVlc3Qgd291bGQgYmUgaXNzdWVkOiB0aGUgc2VjdG9yDQpwb3Np
+dGlvbiB0byB1c2UgbXVzdCBiZSB0aGF0IG9mIHRoZSBCSU8sIGFuZCBub3QgdGhhdCBvZiB0aGUg
+cmVxdWVzdC4NCg0KVGhpcyBwcm9ibGVtIGNhbiB0cmlnZ2VyIGEg4oCcYm91bmRhcnkgdmlvbGF0
+aW9uIGVycm9y4oCdIGZvciB3cml0ZQ0KcmVxdWVzdHMgb24gWkFDL1pCQyBob3N0LW1hbmFnZWQg
+U01SIGRpc2tzIGFzIHRoZSBsYXN0IHdyaXRlIEJJTw0Kb2YgYSB6b25lIChhIGNodW5rKSBjYW4g
+ZW5kIHVwIGJlaW5nIGZyb250LW1lcmdlZCB3aXRoIHRoZSBmaXJzdA0KcmVxdWVzdCBvZiB0aGUg
+Zm9sbG93aW5nIHpvbmUgKGNodW5rKS4NCg0KVGhlIGF0dGFjaGVkIHBhdGNoIGFnYWluc3QgbGlu
+dXgtNC41LXJjMiBmaXhlcyB0aGlzIHByb2JsZW0gYnkgYWRkaW5nDQphbiBvZmZzZXQgYXJndW1l
+bnQgdG8gdGhlIGZ1bmN0aW9uIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMuDQoNCkJlc3QgcmVnYXJk
+cy4NCg0KZGlmZiAtTmF1ciBsaW51eC00LjUtcmMyL2Jsb2NrL2Jsay1tZXJnZS5jIGxpbnV4LTQu
+NS1yYzItcGF0Y2hlZC9ibG9jay9ibGstbWVyZ2UuYw0KLS0tIGxpbnV4LTQuNS1yYzIvYmxvY2sv
+YmxrLW1lcmdlLmMJMjAxNi0wMi0wMSAxMToxMjoxNi4wMDAwMDAwMDAgKzA5MDANCisrKyBsaW51
+eC00LjUtcmMyLXBhdGNoZWQvYmxvY2svYmxrLW1lcmdlLmMJMjAxNi0wMi0wMiAxNToyODowNy42
+MjYxMDc1MDkgKzA5MDANCkBAIC01MDQsNyArNTA0LDcgQEANCiAJICAgIGludGVncml0eV9yZXFf
+Z2FwX2JhY2tfbWVyZ2UocmVxLCBiaW8pKQ0KIAkJcmV0dXJuIDA7DQogCWlmIChibGtfcnFfc2Vj
+dG9ycyhyZXEpICsgYmlvX3NlY3RvcnMoYmlvKSA+DQotCSAgICBibGtfcnFfZ2V0X21heF9zZWN0
+b3JzKHJlcSkpIHsNCisJICAgIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMocmVxLCBibGtfcnFfcG9z
+KHJlcSkpKSB7DQogCQlyZXEtPmNtZF9mbGFncyB8PSBSRVFfTk9NRVJHRTsNCiAJCWlmIChyZXEg
+PT0gcS0+bGFzdF9tZXJnZSkNCiAJCQlxLT5sYXN0X21lcmdlID0gTlVMTDsNCkBAIC01MjgsNyAr
+NTI4LDcgQEANCiAJICAgIGludGVncml0eV9yZXFfZ2FwX2Zyb250X21lcmdlKHJlcSwgYmlvKSkN
+CiAJCXJldHVybiAwOw0KIAlpZiAoYmxrX3JxX3NlY3RvcnMocmVxKSArIGJpb19zZWN0b3JzKGJp
+bykgPg0KLQkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhyZXEpKSB7DQorCSAgICBibGtfcnFf
+Z2V0X21heF9zZWN0b3JzKHJlcSwgYmlvLT5iaV9pdGVyLmJpX3NlY3RvcikpIHsNCiAJCXJlcS0+
+Y21kX2ZsYWdzIHw9IFJFUV9OT01FUkdFOw0KIAkJaWYgKHJlcSA9PSBxLT5sYXN0X21lcmdlKQ0K
+IAkJCXEtPmxhc3RfbWVyZ2UgPSBOVUxMOw0KQEAgLTU3NCw3ICs1NzQsNyBAQA0KIAkgKiBXaWxs
+IGl0IGJlY29tZSB0b28gbGFyZ2U/DQogCSAqLw0KIAlpZiAoKGJsa19ycV9zZWN0b3JzKHJlcSkg
+KyBibGtfcnFfc2VjdG9ycyhuZXh0KSkgPg0KLQkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhy
+ZXEpKQ0KKwkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhyZXEsIGJsa19ycV9wb3MocmVxKSkp
+DQogCQlyZXR1cm4gMDsNCiANCiAJdG90YWxfcGh5c19zZWdtZW50cyA9IHJlcS0+bnJfcGh5c19z
+ZWdtZW50cyArIG5leHQtPm5yX3BoeXNfc2VnbWVudHM7DQpkaWZmIC1OYXVyIGxpbnV4LTQuNS1y
+YzIvaW5jbHVkZS9saW51eC9ibGtkZXYuaCBsaW51eC00LjUtcmMyLXBhdGNoZWQvaW5jbHVkZS9s
+aW51eC9ibGtkZXYuaA0KLS0tIGxpbnV4LTQuNS1yYzIvaW5jbHVkZS9saW51eC9ibGtkZXYuaAky
+MDE2LTAyLTAxIDExOjEyOjE2LjAwMDAwMDAwMCArMDkwMA0KKysrIGxpbnV4LTQuNS1yYzItcGF0
+Y2hlZC9pbmNsdWRlL2xpbnV4L2Jsa2Rldi5oCTIwMTYtMDItMDIgMTU6MjY6MzkuMzEzMjgzOTAy
+ICswOTAwDQpAQCAtODg4LDcgKzg4OCw4IEBADQogCQkJKG9mZnNldCAmIChxLT5saW1pdHMuY2h1
+bmtfc2VjdG9ycyAtIDEpKTsNCiB9DQogDQotc3RhdGljIGlubGluZSB1bnNpZ25lZCBpbnQgYmxr
+X3JxX2dldF9tYXhfc2VjdG9ycyhzdHJ1Y3QgcmVxdWVzdCAqcnEpDQorc3RhdGljIGlubGluZSB1
+bnNpZ25lZCBpbnQgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhzdHJ1Y3QgcmVxdWVzdCAqcnEsDQor
+CQkJCQkgICAgICAgc2VjdG9yX3Qgb2Zmc2V0KQ0KIHsNCiAJc3RydWN0IHJlcXVlc3RfcXVldWUg
+KnEgPSBycS0+cTsNCiANCkBAIC04OTgsNyArODk5LDcgQEANCiAJaWYgKCFxLT5saW1pdHMuY2h1
+bmtfc2VjdG9ycyB8fCAocnEtPmNtZF9mbGFncyAmIFJFUV9ESVNDQVJEKSkNCiAJCXJldHVybiBi
+bGtfcXVldWVfZ2V0X21heF9zZWN0b3JzKHEsIHJxLT5jbWRfZmxhZ3MpOw0KIA0KLQlyZXR1cm4g
+bWluKGJsa19tYXhfc2l6ZV9vZmZzZXQocSwgYmxrX3JxX3BvcyhycSkpLA0KKwlyZXR1cm4gbWlu
+KGJsa19tYXhfc2l6ZV9vZmZzZXQocSwgb2Zmc2V0KSwNCiAJCQlibGtfcXVldWVfZ2V0X21heF9z
+ZWN0b3JzKHEsIHJxLT5jbWRfZmxhZ3MpKTsNCiB9DQoNCg0KLS0NCkRhbWllbiBMZSBNb2FsLA0K
+U3lzdGVtIFNvZnR3YXJlIEdyb3VwLCBXVyBSZXNlYXJjaCwNCkhHU1QsIGEgV2VzdGVybiBEaWdp
+dGFsIGNvbXBhbnkNCldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAoYW5kIGl0cyBzdWJzaWRp
+YXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlzY2xhaW1lcjoKClRoaXMg
+ZS1tYWlsIGFuZCBhbnkgZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBtYXkgY29udGFpbiBjb25m
+aWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIG9mIFdEQyBhbmQvb3Ig
+aXRzIGFmZmlsaWF0ZXMsIGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0aGUgdXNlIG9mIHRo
+ZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBhZGRyZXNzZWQuIElmIHlv
+dSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNjbG9zdXJlLCBjb3B5aW5n
+LCBkaXN0cmlidXRpb24gb3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0dGVkIHRvIGJlIHRha2Vu
+IGluIHJlbGlhbmNlIG9uIGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0
+aGlzIGUtbWFpbCBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5
+IGFuZCBkZWxldGUgdGhlIGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJvbSB5b3VyIHN5c3RlbS4K
 
-Is the commit id above supposed to be referencing the first patch? I
-could not match it to anything. If so, then shouldn't this patch just be
-combined with the second patch and some comment about us always
-displaying it for compat reasons added to the code?
+--_002_7A8F97E936F443C89646895B818C632Ahgstcom_
+Content-Type: application/octet-stream; name="bio-merge-size-check.patch"
+Content-Description: bio-merge-size-check.patch
+Content-Disposition: attachment; filename="bio-merge-size-check.patch";
+	size=1972; creation-date="Tue, 02 Feb 2016 07:06:17 GMT";
+	modification-date="Tue, 02 Feb 2016 07:06:17 GMT"
+Content-ID: <25F72E32C4D2984BB5A0622FB865EC7E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 
-Also, you should normally cc Konrad for iscsi_ibft.c patches, because he
-is actually the maintainer.
+ZGlmZiAtTmF1ciBsaW51eC00LjUtcmMyL2Jsb2NrL2Jsay1tZXJnZS5jIGxpbnV4LTQuNS1yYzIt
+cGF0Y2hlZC9ibG9jay9ibGstbWVyZ2UuYwotLS0gbGludXgtNC41LXJjMi9ibG9jay9ibGstbWVy
+Z2UuYwkyMDE2LTAyLTAxIDExOjEyOjE2LjAwMDAwMDAwMCArMDkwMAorKysgbGludXgtNC41LXJj
+Mi1wYXRjaGVkL2Jsb2NrL2Jsay1tZXJnZS5jCTIwMTYtMDItMDIgMTU6Mjg6MDcuNjI2MTA3NTA5
+ICswOTAwCkBAIC01MDQsNyArNTA0LDcgQEAKIAkgICAgaW50ZWdyaXR5X3JlcV9nYXBfYmFja19t
+ZXJnZShyZXEsIGJpbykpCiAJCXJldHVybiAwOwogCWlmIChibGtfcnFfc2VjdG9ycyhyZXEpICsg
+YmlvX3NlY3RvcnMoYmlvKSA+Ci0JICAgIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMocmVxKSkgewor
+CSAgICBibGtfcnFfZ2V0X21heF9zZWN0b3JzKHJlcSwgYmxrX3JxX3BvcyhyZXEpKSkgewogCQly
+ZXEtPmNtZF9mbGFncyB8PSBSRVFfTk9NRVJHRTsKIAkJaWYgKHJlcSA9PSBxLT5sYXN0X21lcmdl
+KQogCQkJcS0+bGFzdF9tZXJnZSA9IE5VTEw7CkBAIC01MjgsNyArNTI4LDcgQEAKIAkgICAgaW50
+ZWdyaXR5X3JlcV9nYXBfZnJvbnRfbWVyZ2UocmVxLCBiaW8pKQogCQlyZXR1cm4gMDsKIAlpZiAo
+YmxrX3JxX3NlY3RvcnMocmVxKSArIGJpb19zZWN0b3JzKGJpbykgPgotCSAgICBibGtfcnFfZ2V0
+X21heF9zZWN0b3JzKHJlcSkpIHsKKwkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhyZXEsIGJp
+by0+YmlfaXRlci5iaV9zZWN0b3IpKSB7CiAJCXJlcS0+Y21kX2ZsYWdzIHw9IFJFUV9OT01FUkdF
+OwogCQlpZiAocmVxID09IHEtPmxhc3RfbWVyZ2UpCiAJCQlxLT5sYXN0X21lcmdlID0gTlVMTDsK
+QEAgLTU3NCw3ICs1NzQsNyBAQAogCSAqIFdpbGwgaXQgYmVjb21lIHRvbyBsYXJnZT8KIAkgKi8K
+IAlpZiAoKGJsa19ycV9zZWN0b3JzKHJlcSkgKyBibGtfcnFfc2VjdG9ycyhuZXh0KSkgPgotCSAg
+ICBibGtfcnFfZ2V0X21heF9zZWN0b3JzKHJlcSkpCisJICAgIGJsa19ycV9nZXRfbWF4X3NlY3Rv
+cnMocmVxLCBibGtfcnFfcG9zKHJlcSkpKQogCQlyZXR1cm4gMDsKIAogCXRvdGFsX3BoeXNfc2Vn
+bWVudHMgPSByZXEtPm5yX3BoeXNfc2VnbWVudHMgKyBuZXh0LT5ucl9waHlzX3NlZ21lbnRzOwpk
+aWZmIC1OYXVyIGxpbnV4LTQuNS1yYzIvaW5jbHVkZS9saW51eC9ibGtkZXYuaCBsaW51eC00LjUt
+cmMyLXBhdGNoZWQvaW5jbHVkZS9saW51eC9ibGtkZXYuaAotLS0gbGludXgtNC41LXJjMi9pbmNs
+dWRlL2xpbnV4L2Jsa2Rldi5oCTIwMTYtMDItMDEgMTE6MTI6MTYuMDAwMDAwMDAwICswOTAwCisr
+KyBsaW51eC00LjUtcmMyLXBhdGNoZWQvaW5jbHVkZS9saW51eC9ibGtkZXYuaAkyMDE2LTAyLTAy
+IDE1OjI2OjM5LjMxMzI4MzkwMiArMDkwMApAQCAtODg4LDcgKzg4OCw4IEBACiAJCQkob2Zmc2V0
+ICYgKHEtPmxpbWl0cy5jaHVua19zZWN0b3JzIC0gMSkpOwogfQogCi1zdGF0aWMgaW5saW5lIHVu
+c2lnbmVkIGludCBibGtfcnFfZ2V0X21heF9zZWN0b3JzKHN0cnVjdCByZXF1ZXN0ICpycSkKK3N0
+YXRpYyBpbmxpbmUgdW5zaWduZWQgaW50IGJsa19ycV9nZXRfbWF4X3NlY3RvcnMoc3RydWN0IHJl
+cXVlc3QgKnJxLAorCQkJCQkgICAgICAgc2VjdG9yX3Qgb2Zmc2V0KQogewogCXN0cnVjdCByZXF1
+ZXN0X3F1ZXVlICpxID0gcnEtPnE7CiAKQEAgLTg5OCw3ICs4OTksNyBAQAogCWlmICghcS0+bGlt
+aXRzLmNodW5rX3NlY3RvcnMgfHwgKHJxLT5jbWRfZmxhZ3MgJiBSRVFfRElTQ0FSRCkpCiAJCXJl
+dHVybiBibGtfcXVldWVfZ2V0X21heF9zZWN0b3JzKHEsIHJxLT5jbWRfZmxhZ3MpOwogCi0JcmV0
+dXJuIG1pbihibGtfbWF4X3NpemVfb2Zmc2V0KHEsIGJsa19ycV9wb3MocnEpKSwKKwlyZXR1cm4g
+bWluKGJsa19tYXhfc2l6ZV9vZmZzZXQocSwgb2Zmc2V0KSwKIAkJCWJsa19xdWV1ZV9nZXRfbWF4
+X3NlY3RvcnMocSwgcnEtPmNtZF9mbGFncykpOwogfQogCg==
+
+--_002_7A8F97E936F443C89646895B818C632Ahgstcom_--
+
