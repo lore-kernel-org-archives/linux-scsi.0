@@ -1,137 +1,64 @@
-From: Damien Le Moal <Damien.LeMoal@hgst.com>
-Subject: blk-merge: BIO front merge size check for chunked devices
-Date: Tue, 2 Feb 2016 07:06:17 +0000
-Message-ID: <7A8F97E9-36F4-43C8-9646-895B818C632A@hgst.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: blk-merge: BIO front merge size check for chunked devices
+Date: Tue, 2 Feb 2016 08:46:05 +0100
+Message-ID: <56B05EBD.8030308@suse.de>
+References: <7A8F97E9-36F4-43C8-9646-895B818C632A@hgst.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_7A8F97E936F443C89646895B818C632Ahgstcom_"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sjc00mx1.hgst.com ([199.255.44.36]:13438 "EHLO
-	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbcBBHQ2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 02:16:28 -0500
-Content-Language: en-US
+Received: from mx2.suse.de ([195.135.220.15]:51989 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753410AbcBBHqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Feb 2016 02:46:08 -0500
+In-Reply-To: <7A8F97E9-36F4-43C8-9646-895B818C632A@hgst.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: Damien Le Moal <Damien.LeMoal@hgst.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
---_002_7A8F97E936F443C89646895B818C632Ahgstcom_
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <6A5F8DFAA9EF3A4B926A3143796925C1@namprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
+On 02/02/2016 08:06 AM, Damien Le Moal wrote:
+>=20
+> Hello,
+>=20
+> In ll_front_merge_fn, the request size result of the eventual front
+> merge of a BIO with a request is checked against the maximum
+> size allowed for the request using blk_rq_get_max_sectors. This
+> function will also check that the merge result will not span block
+> chunks for chunked block devices using the function blk_max_size_offs=
+et.
+>=20
+> However, blk_rq_get_max_sectors always calls blk_max_size_offset usin=
+g
+> the request sector position, which in the case of a front merge is no=
+t
+> the position at which the merged request would be issued: the sector
+> position to use must be that of the BIO, and not that of the request.
+>=20
+> This problem can trigger a =E2=80=9Cboundary violation error=E2=80=9D=
+ for write
+> requests on ZAC/ZBC host-managed SMR disks as the last write BIO
+> of a zone (a chunk) can end up being front-merged with the first
+> request of the following zone (chunk).
+>=20
+> The attached patch against linux-4.5-rc2 fixes this problem by adding
+> an offset argument to the function blk_rq_get_max_sectors.
+>=20
 
-DQpIZWxsbywNCg0KSW4gbGxfZnJvbnRfbWVyZ2VfZm4sIHRoZSByZXF1ZXN0IHNpemUgcmVzdWx0
-IG9mIHRoZSBldmVudHVhbCBmcm9udA0KbWVyZ2Ugb2YgYSBCSU8gd2l0aCBhIHJlcXVlc3QgaXMg
-Y2hlY2tlZCBhZ2FpbnN0IHRoZSBtYXhpbXVtDQpzaXplIGFsbG93ZWQgZm9yIHRoZSByZXF1ZXN0
-IHVzaW5nIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMuIFRoaXMNCmZ1bmN0aW9uIHdpbGwgYWxzbyBj
-aGVjayB0aGF0IHRoZSBtZXJnZSByZXN1bHQgd2lsbCBub3Qgc3BhbiBibG9jaw0KY2h1bmtzIGZv
-ciBjaHVua2VkIGJsb2NrIGRldmljZXMgdXNpbmcgdGhlIGZ1bmN0aW9uIGJsa19tYXhfc2l6ZV9v
-ZmZzZXQuDQoNCkhvd2V2ZXIsIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMgYWx3YXlzIGNhbGxzIGJs
-a19tYXhfc2l6ZV9vZmZzZXQgdXNpbmcNCnRoZSByZXF1ZXN0IHNlY3RvciBwb3NpdGlvbiwgd2hp
-Y2ggaW4gdGhlIGNhc2Ugb2YgYSBmcm9udCBtZXJnZSBpcyBub3QNCnRoZSBwb3NpdGlvbiBhdCB3
-aGljaCB0aGUgbWVyZ2VkIHJlcXVlc3Qgd291bGQgYmUgaXNzdWVkOiB0aGUgc2VjdG9yDQpwb3Np
-dGlvbiB0byB1c2UgbXVzdCBiZSB0aGF0IG9mIHRoZSBCSU8sIGFuZCBub3QgdGhhdCBvZiB0aGUg
-cmVxdWVzdC4NCg0KVGhpcyBwcm9ibGVtIGNhbiB0cmlnZ2VyIGEg4oCcYm91bmRhcnkgdmlvbGF0
-aW9uIGVycm9y4oCdIGZvciB3cml0ZQ0KcmVxdWVzdHMgb24gWkFDL1pCQyBob3N0LW1hbmFnZWQg
-U01SIGRpc2tzIGFzIHRoZSBsYXN0IHdyaXRlIEJJTw0Kb2YgYSB6b25lIChhIGNodW5rKSBjYW4g
-ZW5kIHVwIGJlaW5nIGZyb250LW1lcmdlZCB3aXRoIHRoZSBmaXJzdA0KcmVxdWVzdCBvZiB0aGUg
-Zm9sbG93aW5nIHpvbmUgKGNodW5rKS4NCg0KVGhlIGF0dGFjaGVkIHBhdGNoIGFnYWluc3QgbGlu
-dXgtNC41LXJjMiBmaXhlcyB0aGlzIHByb2JsZW0gYnkgYWRkaW5nDQphbiBvZmZzZXQgYXJndW1l
-bnQgdG8gdGhlIGZ1bmN0aW9uIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMuDQoNCkJlc3QgcmVnYXJk
-cy4NCg0KZGlmZiAtTmF1ciBsaW51eC00LjUtcmMyL2Jsb2NrL2Jsay1tZXJnZS5jIGxpbnV4LTQu
-NS1yYzItcGF0Y2hlZC9ibG9jay9ibGstbWVyZ2UuYw0KLS0tIGxpbnV4LTQuNS1yYzIvYmxvY2sv
-YmxrLW1lcmdlLmMJMjAxNi0wMi0wMSAxMToxMjoxNi4wMDAwMDAwMDAgKzA5MDANCisrKyBsaW51
-eC00LjUtcmMyLXBhdGNoZWQvYmxvY2svYmxrLW1lcmdlLmMJMjAxNi0wMi0wMiAxNToyODowNy42
-MjYxMDc1MDkgKzA5MDANCkBAIC01MDQsNyArNTA0LDcgQEANCiAJICAgIGludGVncml0eV9yZXFf
-Z2FwX2JhY2tfbWVyZ2UocmVxLCBiaW8pKQ0KIAkJcmV0dXJuIDA7DQogCWlmIChibGtfcnFfc2Vj
-dG9ycyhyZXEpICsgYmlvX3NlY3RvcnMoYmlvKSA+DQotCSAgICBibGtfcnFfZ2V0X21heF9zZWN0
-b3JzKHJlcSkpIHsNCisJICAgIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMocmVxLCBibGtfcnFfcG9z
-KHJlcSkpKSB7DQogCQlyZXEtPmNtZF9mbGFncyB8PSBSRVFfTk9NRVJHRTsNCiAJCWlmIChyZXEg
-PT0gcS0+bGFzdF9tZXJnZSkNCiAJCQlxLT5sYXN0X21lcmdlID0gTlVMTDsNCkBAIC01MjgsNyAr
-NTI4LDcgQEANCiAJICAgIGludGVncml0eV9yZXFfZ2FwX2Zyb250X21lcmdlKHJlcSwgYmlvKSkN
-CiAJCXJldHVybiAwOw0KIAlpZiAoYmxrX3JxX3NlY3RvcnMocmVxKSArIGJpb19zZWN0b3JzKGJp
-bykgPg0KLQkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhyZXEpKSB7DQorCSAgICBibGtfcnFf
-Z2V0X21heF9zZWN0b3JzKHJlcSwgYmlvLT5iaV9pdGVyLmJpX3NlY3RvcikpIHsNCiAJCXJlcS0+
-Y21kX2ZsYWdzIHw9IFJFUV9OT01FUkdFOw0KIAkJaWYgKHJlcSA9PSBxLT5sYXN0X21lcmdlKQ0K
-IAkJCXEtPmxhc3RfbWVyZ2UgPSBOVUxMOw0KQEAgLTU3NCw3ICs1NzQsNyBAQA0KIAkgKiBXaWxs
-IGl0IGJlY29tZSB0b28gbGFyZ2U/DQogCSAqLw0KIAlpZiAoKGJsa19ycV9zZWN0b3JzKHJlcSkg
-KyBibGtfcnFfc2VjdG9ycyhuZXh0KSkgPg0KLQkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhy
-ZXEpKQ0KKwkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhyZXEsIGJsa19ycV9wb3MocmVxKSkp
-DQogCQlyZXR1cm4gMDsNCiANCiAJdG90YWxfcGh5c19zZWdtZW50cyA9IHJlcS0+bnJfcGh5c19z
-ZWdtZW50cyArIG5leHQtPm5yX3BoeXNfc2VnbWVudHM7DQpkaWZmIC1OYXVyIGxpbnV4LTQuNS1y
-YzIvaW5jbHVkZS9saW51eC9ibGtkZXYuaCBsaW51eC00LjUtcmMyLXBhdGNoZWQvaW5jbHVkZS9s
-aW51eC9ibGtkZXYuaA0KLS0tIGxpbnV4LTQuNS1yYzIvaW5jbHVkZS9saW51eC9ibGtkZXYuaAky
-MDE2LTAyLTAxIDExOjEyOjE2LjAwMDAwMDAwMCArMDkwMA0KKysrIGxpbnV4LTQuNS1yYzItcGF0
-Y2hlZC9pbmNsdWRlL2xpbnV4L2Jsa2Rldi5oCTIwMTYtMDItMDIgMTU6MjY6MzkuMzEzMjgzOTAy
-ICswOTAwDQpAQCAtODg4LDcgKzg4OCw4IEBADQogCQkJKG9mZnNldCAmIChxLT5saW1pdHMuY2h1
-bmtfc2VjdG9ycyAtIDEpKTsNCiB9DQogDQotc3RhdGljIGlubGluZSB1bnNpZ25lZCBpbnQgYmxr
-X3JxX2dldF9tYXhfc2VjdG9ycyhzdHJ1Y3QgcmVxdWVzdCAqcnEpDQorc3RhdGljIGlubGluZSB1
-bnNpZ25lZCBpbnQgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhzdHJ1Y3QgcmVxdWVzdCAqcnEsDQor
-CQkJCQkgICAgICAgc2VjdG9yX3Qgb2Zmc2V0KQ0KIHsNCiAJc3RydWN0IHJlcXVlc3RfcXVldWUg
-KnEgPSBycS0+cTsNCiANCkBAIC04OTgsNyArODk5LDcgQEANCiAJaWYgKCFxLT5saW1pdHMuY2h1
-bmtfc2VjdG9ycyB8fCAocnEtPmNtZF9mbGFncyAmIFJFUV9ESVNDQVJEKSkNCiAJCXJldHVybiBi
-bGtfcXVldWVfZ2V0X21heF9zZWN0b3JzKHEsIHJxLT5jbWRfZmxhZ3MpOw0KIA0KLQlyZXR1cm4g
-bWluKGJsa19tYXhfc2l6ZV9vZmZzZXQocSwgYmxrX3JxX3BvcyhycSkpLA0KKwlyZXR1cm4gbWlu
-KGJsa19tYXhfc2l6ZV9vZmZzZXQocSwgb2Zmc2V0KSwNCiAJCQlibGtfcXVldWVfZ2V0X21heF9z
-ZWN0b3JzKHEsIHJxLT5jbWRfZmxhZ3MpKTsNCiB9DQoNCg0KLS0NCkRhbWllbiBMZSBNb2FsLA0K
-U3lzdGVtIFNvZnR3YXJlIEdyb3VwLCBXVyBSZXNlYXJjaCwNCkhHU1QsIGEgV2VzdGVybiBEaWdp
-dGFsIGNvbXBhbnkNCldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAoYW5kIGl0cyBzdWJzaWRp
-YXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlzY2xhaW1lcjoKClRoaXMg
-ZS1tYWlsIGFuZCBhbnkgZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBtYXkgY29udGFpbiBjb25m
-aWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIG9mIFdEQyBhbmQvb3Ig
-aXRzIGFmZmlsaWF0ZXMsIGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0aGUgdXNlIG9mIHRo
-ZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBhZGRyZXNzZWQuIElmIHlv
-dSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNjbG9zdXJlLCBjb3B5aW5n
-LCBkaXN0cmlidXRpb24gb3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0dGVkIHRvIGJlIHRha2Vu
-IGluIHJlbGlhbmNlIG9uIGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0
-aGlzIGUtbWFpbCBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5
-IGFuZCBkZWxldGUgdGhlIGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJvbSB5b3VyIHN5c3RlbS4K
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
---_002_7A8F97E936F443C89646895B818C632Ahgstcom_
-Content-Type: application/octet-stream; name="bio-merge-size-check.patch"
-Content-Description: bio-merge-size-check.patch
-Content-Disposition: attachment; filename="bio-merge-size-check.patch";
-	size=1972; creation-date="Tue, 02 Feb 2016 07:06:17 GMT";
-	modification-date="Tue, 02 Feb 2016 07:06:17 GMT"
-Content-ID: <25F72E32C4D2984BB5A0622FB865EC7E@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+I can easily respin this as a proper patch if required.
 
-ZGlmZiAtTmF1ciBsaW51eC00LjUtcmMyL2Jsb2NrL2Jsay1tZXJnZS5jIGxpbnV4LTQuNS1yYzIt
-cGF0Y2hlZC9ibG9jay9ibGstbWVyZ2UuYwotLS0gbGludXgtNC41LXJjMi9ibG9jay9ibGstbWVy
-Z2UuYwkyMDE2LTAyLTAxIDExOjEyOjE2LjAwMDAwMDAwMCArMDkwMAorKysgbGludXgtNC41LXJj
-Mi1wYXRjaGVkL2Jsb2NrL2Jsay1tZXJnZS5jCTIwMTYtMDItMDIgMTU6Mjg6MDcuNjI2MTA3NTA5
-ICswOTAwCkBAIC01MDQsNyArNTA0LDcgQEAKIAkgICAgaW50ZWdyaXR5X3JlcV9nYXBfYmFja19t
-ZXJnZShyZXEsIGJpbykpCiAJCXJldHVybiAwOwogCWlmIChibGtfcnFfc2VjdG9ycyhyZXEpICsg
-YmlvX3NlY3RvcnMoYmlvKSA+Ci0JICAgIGJsa19ycV9nZXRfbWF4X3NlY3RvcnMocmVxKSkgewor
-CSAgICBibGtfcnFfZ2V0X21heF9zZWN0b3JzKHJlcSwgYmxrX3JxX3BvcyhyZXEpKSkgewogCQly
-ZXEtPmNtZF9mbGFncyB8PSBSRVFfTk9NRVJHRTsKIAkJaWYgKHJlcSA9PSBxLT5sYXN0X21lcmdl
-KQogCQkJcS0+bGFzdF9tZXJnZSA9IE5VTEw7CkBAIC01MjgsNyArNTI4LDcgQEAKIAkgICAgaW50
-ZWdyaXR5X3JlcV9nYXBfZnJvbnRfbWVyZ2UocmVxLCBiaW8pKQogCQlyZXR1cm4gMDsKIAlpZiAo
-YmxrX3JxX3NlY3RvcnMocmVxKSArIGJpb19zZWN0b3JzKGJpbykgPgotCSAgICBibGtfcnFfZ2V0
-X21heF9zZWN0b3JzKHJlcSkpIHsKKwkgICAgYmxrX3JxX2dldF9tYXhfc2VjdG9ycyhyZXEsIGJp
-by0+YmlfaXRlci5iaV9zZWN0b3IpKSB7CiAJCXJlcS0+Y21kX2ZsYWdzIHw9IFJFUV9OT01FUkdF
-OwogCQlpZiAocmVxID09IHEtPmxhc3RfbWVyZ2UpCiAJCQlxLT5sYXN0X21lcmdlID0gTlVMTDsK
-QEAgLTU3NCw3ICs1NzQsNyBAQAogCSAqIFdpbGwgaXQgYmVjb21lIHRvbyBsYXJnZT8KIAkgKi8K
-IAlpZiAoKGJsa19ycV9zZWN0b3JzKHJlcSkgKyBibGtfcnFfc2VjdG9ycyhuZXh0KSkgPgotCSAg
-ICBibGtfcnFfZ2V0X21heF9zZWN0b3JzKHJlcSkpCisJICAgIGJsa19ycV9nZXRfbWF4X3NlY3Rv
-cnMocmVxLCBibGtfcnFfcG9zKHJlcSkpKQogCQlyZXR1cm4gMDsKIAogCXRvdGFsX3BoeXNfc2Vn
-bWVudHMgPSByZXEtPm5yX3BoeXNfc2VnbWVudHMgKyBuZXh0LT5ucl9waHlzX3NlZ21lbnRzOwpk
-aWZmIC1OYXVyIGxpbnV4LTQuNS1yYzIvaW5jbHVkZS9saW51eC9ibGtkZXYuaCBsaW51eC00LjUt
-cmMyLXBhdGNoZWQvaW5jbHVkZS9saW51eC9ibGtkZXYuaAotLS0gbGludXgtNC41LXJjMi9pbmNs
-dWRlL2xpbnV4L2Jsa2Rldi5oCTIwMTYtMDItMDEgMTE6MTI6MTYuMDAwMDAwMDAwICswOTAwCisr
-KyBsaW51eC00LjUtcmMyLXBhdGNoZWQvaW5jbHVkZS9saW51eC9ibGtkZXYuaAkyMDE2LTAyLTAy
-IDE1OjI2OjM5LjMxMzI4MzkwMiArMDkwMApAQCAtODg4LDcgKzg4OCw4IEBACiAJCQkob2Zmc2V0
-ICYgKHEtPmxpbWl0cy5jaHVua19zZWN0b3JzIC0gMSkpOwogfQogCi1zdGF0aWMgaW5saW5lIHVu
-c2lnbmVkIGludCBibGtfcnFfZ2V0X21heF9zZWN0b3JzKHN0cnVjdCByZXF1ZXN0ICpycSkKK3N0
-YXRpYyBpbmxpbmUgdW5zaWduZWQgaW50IGJsa19ycV9nZXRfbWF4X3NlY3RvcnMoc3RydWN0IHJl
-cXVlc3QgKnJxLAorCQkJCQkgICAgICAgc2VjdG9yX3Qgb2Zmc2V0KQogewogCXN0cnVjdCByZXF1
-ZXN0X3F1ZXVlICpxID0gcnEtPnE7CiAKQEAgLTg5OCw3ICs4OTksNyBAQAogCWlmICghcS0+bGlt
-aXRzLmNodW5rX3NlY3RvcnMgfHwgKHJxLT5jbWRfZmxhZ3MgJiBSRVFfRElTQ0FSRCkpCiAJCXJl
-dHVybiBibGtfcXVldWVfZ2V0X21heF9zZWN0b3JzKHEsIHJxLT5jbWRfZmxhZ3MpOwogCi0JcmV0
-dXJuIG1pbihibGtfbWF4X3NpemVfb2Zmc2V0KHEsIGJsa19ycV9wb3MocnEpKSwKKwlyZXR1cm4g
-bWluKGJsa19tYXhfc2l6ZV9vZmZzZXQocSwgb2Zmc2V0KSwKIAkJCWJsa19xdWV1ZV9nZXRfbWF4
-X3NlY3RvcnMocSwgcnEtPmNtZF9mbGFncykpOwogfQogCg==
+Cheers,
 
---_002_7A8F97E936F443C89646895B818C632Ahgstcom_--
-
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
