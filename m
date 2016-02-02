@@ -1,32 +1,43 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 0/9] aacraid: Patchset for aacraid driver version 41052
-Date: Mon, 01 Feb 2016 19:56:54 -0500
-Message-ID: <yq1d1sgorop.fsf@sermon.lab.mkp.net>
-References: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: Re: [PATCH] Separate target visibility from reaped state information
+Date: Mon, 01 Feb 2016 20:11:29 -0500
+Message-ID: <yq160y7q5ku.fsf@sermon.lab.mkp.net>
+References: <568FE922.9090004@sandisk.com>
+	<yq1oachqehs.fsf@sermon.lab.mkp.net>
+	<1453251809.2320.56.camel@HansenPartnership.com>
+	<20160131185455.00000ef7@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30624 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:34408 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbcBBBCP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 20:02:15 -0500
-In-Reply-To: <1454107550-24173-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	(Raghava Aditya Renukunta's message of "Fri, 29 Jan 2016 14:45:41
-	-0800")
+	with ESMTP id S1752837AbcBBBLo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2016 20:11:44 -0500
+In-Reply-To: <20160131185455.00000ef7@localhost> (Sebastian Herbszt's message
+	of "Sun, 31 Jan 2016 18:54:55 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, thenzl@redhat.com, shane.seymour@hpe.com
+To: Sebastian Herbszt <herbszt@gmx.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com> writes:
+>>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
 
-Raghava,
+>> The only change from the current workflow is that the DEL transition
+>> (now the reaped flag) is done before the spin lock is dropped which
+>> would fix a tiny window for two threads both trying to remove the
+>> same target, but there's nothing that could possibly fix an iterative
+>> soft lockup caused by restarting the loop, which is what the
+>> changelog says.
 
-Raghava> This patchset includes the following changes (bug fixes and new
-Raghava> feature support) specific to aacraid driver.
+Sebastian> James, Martin, what's the status of this patch?  I still hit
+Sebastian> the reported soft lockup on 4.5-rc1.
 
-Please fix the build failure in patch 3/9 when CONFIG_PM is not defined
-and address Tomas' comments for 7/9.
+And you have verified that Bart's patch applied on top of 4.5-rc1 still
+fixes the lockup? (I know you tested a previous version)
+
+I am concerned about queuing something as a stable fix if it is just
+masking a fundamental underlying problem. James' comment suggests that
+there is something else going on.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
