@@ -1,29 +1,44 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [LSF/MM TOPIC] multiqueue and interrupt assignment
-Date: Wed, 3 Feb 2016 15:32:35 +0200
-Message-ID: <56B20173.10006@dev.mellanox.co.il>
-References: <56B0D9CF.1080001@suse.de> <56B0F41B.8010706@sandisk.com>
- <56B1F951.5010001@dev.mellanox.co.il> <56B1FCFC.2010104@suse.de>
+From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [usb-storage] Re: [PATCH 04/14] uas: lock the abort handler
+Date: Wed, 03 Feb 2016 15:28:56 +0100
+Message-ID: <1454509736.1930.9.camel@suse.com>
+References: <Pine.LNX.4.44L0.1601261026301.2062-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37653 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757092AbcBCNck (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 08:32:40 -0500
-Received: by mail-wm0-f52.google.com with SMTP id l66so70516831wml.0
-        for <Linux-scsi@vger.kernel.org>; Wed, 03 Feb 2016 05:32:39 -0800 (PST)
-In-Reply-To: <56B1FCFC.2010104@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1601261026301.2062-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+
+On Tue, 2016-01-26 at 10:28 -0500, Alan Stern wrote:
+> On Tue, 26 Jan 2016, Oliver Neukum wrote:
+
+> > That is problematic. The ABORT_TMF does need IO for which we need
+> > to wait. And if we just submit and pretend the abort worked, the tag
+> > will be reused.
+> > Perhaps we could drop the spinlock. I think it is time to talk to
+> > the SCSI people.
+> 
+> The abort handler doesn't have to wait for the command to terminate.  
+> It merely has to initiate an abort and return.  The SCSI layer gets 
+> notified via the usual mechanism when the command eventually finishes, 
+> whether it was successful or not.
+
+This is stange. I don't see how we can guarantee a command completion
+if eh_abort_handler() has sent the TMF.
+It was my understanding that returning from eh_abort_handler()
+means that a tag is considered free again and will be reused.
+Could you clarify?
+
+	Regards
+		Oliver
 
 
-> Indeed, something like this.
-> Quite some issues would be solved if we could push a hctx mapping
-> into blk-mq, instead of having it assign its own made-up one.
 
-For that you can provide your own .map_queue in blk_mq_ops I think
-(no one does that at the moment). This requires every driver to
-implement it's own routine (probably with a similar logic) though...
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
