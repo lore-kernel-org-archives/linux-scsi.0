@@ -1,50 +1,32 @@
-From: Lars-Peter Clausen <lars@metafoo.de>
-Subject: [PATCH resend 2/2] mpt3sas: Remove unnecessary synchronize_irq() before free_irq()
-Date: Tue,  2 Feb 2016 21:02:28 +0100
-Message-ID: <1454443348-12783-2-git-send-email-lars@metafoo.de>
-References: <1454443348-12783-1-git-send-email-lars@metafoo.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111341] Firmware loader
+Date: Wed, 03 Feb 2016 12:42:58 +0000
+Message-ID: <bug-111341-11613-2g0nNSq5U6@https.bugzilla.kernel.org/>
+References: <bug-111341-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out-195.synserver.de ([212.40.185.195]:1139 "EHLO
-	smtp-out-195.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754985AbcBCMEO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 07:04:14 -0500
-In-Reply-To: <1454443348-12783-1-git-send-email-lars@metafoo.de>
+Received: from mail.kernel.org ([198.145.29.136]:60080 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932159AbcBCMnB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Feb 2016 07:43:01 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 27AA420266
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Feb 2016 12:43:00 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id A86A72025B
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Feb 2016 12:42:58 +0000 (UTC)
+In-Reply-To: <bug-111341-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, Lars-Peter Clausen <lars@metafoo.de>
+To: linux-scsi@vger.kernel.org
 
-Calling synchronize_irq() right before free_irq() is quite useless. On one
-hand the IRQ can easily fire again before free_irq() is entered, on the
-other hand free_irq() itself calls synchronize_irq() internally (in a race
-condition free way), before any state associated with the IRQ is freed.
+https://bugzilla.kernel.org/show_bug.cgi?id=111341
 
-Patch was generated using the following semantic patch:
-// <smpl>
-@@
-expression irq;
-@@
--synchronize_irq(irq);
- free_irq(irq, ...);
-// </smpl>
+--- Comment #1 from walter59 <walter.moeller@moeller-it.net> ---
+error in kernel 4.5_rc2 not cleaned --- same error as in rc1
 
-Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 83658ac..72f71e2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1799,7 +1799,6 @@ _base_free_irq(struct MPT3SAS_ADAPTER *ioc)
- 		list_del(&reply_q->list);
- 		irq_set_affinity_hint(reply_q->vector, NULL);
- 		free_cpumask_var(reply_q->affinity_hint);
--		synchronize_irq(reply_q->vector);
- 		free_irq(reply_q->vector, reply_q);
- 		kfree(reply_q);
- 	}
 -- 
-2.1.4
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
