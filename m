@@ -1,130 +1,43 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V5 08/10] aacraid: Fix AIF triggered IOP_RESET
-Date: Wed, 3 Feb 2016 11:54:47 +0100
-Message-ID: <56B1DC77.8060208@redhat.com>
-References: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1454461088-32482-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46631 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751259AbcBCKyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2016 05:54:51 -0500
-In-Reply-To: <1454461088-32482-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 0/3] add support for DWC UFS Controller
+Date: Wed,  3 Feb 2016 11:28:23 +0000
+Message-ID: <cover.1454498292.git.jpinto@synopsys.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: santosh.sy@samsung.com, h.vinayak@samsung.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org
+Cc: gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, shane.seymour@hpe.com
 
-On 3.2.2016 01:58, Raghava Aditya Renukunta wrote:
-> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
->
-> while driver removal is in progress or PCI shutdown is invoked, driver
-> kills AIF aacraid thread, but IOCTL requests from the management tools
-> re-start AIF thread leading to IOP_RESET.
->
-> Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
->
-> Changes in V2:
-> Set adapter_shutdown flag before shutdown command is sent to \
-> controller
->
-> Changes in V3:
-> Call aac_send_shut_shutdown first thing in __aac_shutdown
-> Convert adapter_shutdown to atomic_t variable to prevent \
-> SMP coherency issues(race conditions)
->
-> Changes in V4:
-> Used mutex to protect ioctl path and adapter_shutdown to prevent \
-> race conditions.
->
-> Changes in V5:
-> Moved replacement of aac_mutex with ioctl_mutex to previous patch
->
-> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/aacraid/commctrl.c | 3 +++
->  drivers/scsi/aacraid/comminit.c | 6 ++++--
->  drivers/scsi/aacraid/linit.c    | 5 +++--
->  3 files changed, 10 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-> index 4d5f4e7..f6692d1 100644
-> --- a/drivers/scsi/aacraid/commctrl.c
-> +++ b/drivers/scsi/aacraid/commctrl.c
-> @@ -857,6 +857,9 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
->  
->  	mutex_lock(&dev->ioctl_mutex);
->  
-> +	if (dev->adapter_shutdown)
-> +		return -EACCES;
+The work consisted of:
+- Tweak ufshcd.c for UFS 2.0 support
+- Implement ufshcd-dwc which contains all DWC HW specific code
+- Implement a ufs-dwc glue platform driver
 
-and here too - mutex_unlock please
+Joao Pinto (3):
+  fixed typo
+  added support for ufs 2.0
+  add support for DWC UFS Host Controller
 
--tm
+ Documentation/devicetree/bindings/ufs/ufs-dwc.txt |  16 +
+ MAINTAINERS                                       |   6 +
+ drivers/scsi/ufs/Kconfig                          |  45 ++
+ drivers/scsi/ufs/Makefile                         |   2 +
+ drivers/scsi/ufs/ufs-dwc.c                        |  96 +++
+ drivers/scsi/ufs/ufshcd-dwc.c                     | 768 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd-dwc.h                     |  26 +
+ drivers/scsi/ufs/ufshcd-pci.c                     |  20 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c                  |   2 +-
+ drivers/scsi/ufs/ufshcd.c                         |  61 +-
+ drivers/scsi/ufs/ufshcd.h                         |  22 +
+ drivers/scsi/ufs/ufshci-dwc.h                     |  42 ++
+ drivers/scsi/ufs/ufshci.h                         |   1 +
+ drivers/scsi/ufs/unipro.h                         |  39 ++
+ 14 files changed, 1127 insertions(+), 19 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+ create mode 100644 drivers/scsi/ufs/ufs-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
+ create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
 
-> +
->  	/*
->  	 *	HBA gets first crack
->  	 */
-> diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-> index 0e954e3..2b4e753 100644
-> --- a/drivers/scsi/aacraid/comminit.c
-> +++ b/drivers/scsi/aacraid/comminit.c
-> @@ -212,8 +212,11 @@ int aac_send_shutdown(struct aac_dev * dev)
->  		return -ENOMEM;
->  	aac_fib_init(fibctx);
->  
-> -	cmd = (struct aac_close *) fib_data(fibctx);
-> +	mutex_lock(&dev->ioctl_mutex);
-> +	dev->adapter_shutdown = 1;
-> +	mutex_unlock(&dev->ioctl_mutex);
->  
-> +	cmd = (struct aac_close *) fib_data(fibctx);
->  	cmd->command = cpu_to_le32(VM_CloseAll);
->  	cmd->cid = cpu_to_le32(0xfffffffe);
->  
-> @@ -229,7 +232,6 @@ int aac_send_shutdown(struct aac_dev * dev)
->  	/* FIB should be freed only after getting the response from the F/W */
->  	if (status != -ERESTARTSYS)
->  		aac_fib_free(fibctx);
-> -	dev->adapter_shutdown = 1;
->  	if ((dev->pdev->device == PMC_DEVICE_S7 ||
->  	     dev->pdev->device == PMC_DEVICE_S8 ||
->  	     dev->pdev->device == PMC_DEVICE_S9) &&
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 5f08bcf..2c7405a 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -703,7 +703,7 @@ static int aac_cfg_open(struct inode *inode, struct file *file)
->  static long aac_cfg_ioctl(struct file *file,
->  		unsigned int cmd, unsigned long arg)
->  {
-> -	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
-> +	if (!capable(CAP_SYS_RAWIO))
->  		return -EPERM;
->  	return aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
->  }
-> @@ -1069,6 +1069,8 @@ static void __aac_shutdown(struct aac_dev * aac)
->  	int i;
->  	int cpu;
->  
-> +	aac_send_shutdown(aac);
-> +
->  	if (aac->aif_thread) {
->  		int i;
->  		/* Clear out events first */
-> @@ -1080,7 +1082,6 @@ static void __aac_shutdown(struct aac_dev * aac)
->  		}
->  		kthread_stop(aac->thread);
->  	}
-> -	aac_send_shutdown(aac);
->  	aac_adapter_disable_int(aac);
->  	cpu = cpumask_first(cpu_online_mask);
->  	if (aac->pdev->device == PMC_DEVICE_S6 ||
-
+-- 
+1.8.1.5
