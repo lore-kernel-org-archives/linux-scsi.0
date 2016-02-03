@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V5 02/10] aacraid: Fix RRQ overload
-Date: Tue, 2 Feb 2016 16:58:00 -0800
-Message-ID: <1454461088-32482-3-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V5 03/10] aacraid: Added EEH support
+Date: Tue, 2 Feb 2016 16:58:01 -0800
+Message-ID: <1454461088-32482-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:40789 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754791AbcBCAr7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 19:47:59 -0500
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:58422 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754826AbcBCAsA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 19:48:00 -0500
 In-Reply-To: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,168 +18,230 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-The driver utilizes an array of atomic variables to keep track of
-IO submissions to each vector. To submit an IO multiple threads
-iterate through the array to find a vector which has empty slots
-to send an IO. The reading and updating of the variable is not atomic,
-causing race conditions when a thread uses a full vector to
-submit an IO.
-
-Fixed by mapping each FIB to a vector, the submission path then uses
-said vector to submit IO thereby removing the possibly of a race
-condition.The vector assignment is started from 1 since vector 0 is
-reserved for the use of AIF management FIBS.If the number of MSIx
-vectors is 1 (MSI or INTx mode) then all the fibs are allocated to
-vector 0.
+Added support for PCI EEH(extended error handling).
 
 Changes in V2:
-Created function aac_fib_vector_assign to assign vector numbers to
-fib and to prevent code duplication
+Made local functions static
+Removed call to  aac_fib_free_tag
+Set adapter_shutdown flag when PCI error detected
 
 Changes in V3:
 None
 
 Changes in V4:
-None
+Removed setting of adapter_shutdown flag when \
+PCI error detected
 
 Changes in V5:
-None
-
-Fixes: 495c0217 "aacraid: MSI-x support"
-Cc: stable@vger.kernel.org # v4.1
+Removed CONFIG_PM macro conditional compilation for \
+aac_release_resources and aac_acquire_resources
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/aacraid/aacraid.h |  2 ++
- drivers/scsi/aacraid/commsup.c | 28 ++++++++++++++++++++++++++++
- drivers/scsi/aacraid/src.c     | 30 +++++++-----------------------
- 3 files changed, 37 insertions(+), 23 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |   1 +
+ drivers/scsi/aacraid/linit.c   | 140 ++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 140 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index f51f0a0..fff1306 100644
+index fff1306..2916288 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -944,6 +944,7 @@ struct fib {
- 	 */
- 	struct list_head	fiblink;
- 	void			*data;
-+	u32			vector_no;
- 	struct hw_fib		*hw_fib_va;		/* Actual shared object */
- 	dma_addr_t		hw_fib_pa;		/* physical address of hw_fib*/
+@@ -1235,6 +1235,7 @@ struct aac_dev
+ 	struct msix_entry	msixentry[AAC_MAX_MSIX];
+ 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+ 	u8			adapter_shutdown;
++	u32			handle_pci_error;
  };
-@@ -2113,6 +2114,7 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
- int aac_acquire_irq(struct aac_dev *dev);
- void aac_free_irq(struct aac_dev *dev);
- const char *aac_driverinfo(struct Scsi_Host *);
-+void aac_fib_vector_assign(struct aac_dev *dev);
- struct fib *aac_fib_alloc(struct aac_dev *dev);
- struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd);
- int aac_fib_setup(struct aac_dev *dev);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 46a2a2f..07a42a3 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -90,6 +90,28 @@ void aac_fib_map_free(struct aac_dev *dev)
- 	dev->hw_fib_pa = 0;
+ 
+ #define aac_adapter_interrupt(dev) \
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 129a515..822b695 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -38,6 +38,7 @@
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/pci.h>
++#include <linux/aer.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/slab.h>
+ #include <linux/mutex.h>
+@@ -1298,6 +1299,9 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_deinit;
+ 	scsi_scan_host(shost);
+ 
++	pci_enable_pcie_error_reporting(pdev);
++	pci_save_state(pdev);
++
+ 	return 0;
+ 
+  out_deinit:
+@@ -1319,7 +1323,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return error;
  }
  
-+void aac_fib_vector_assign(struct aac_dev *dev)
-+{
-+	u32 i = 0;
-+	u32 vector = 1;
-+	struct fib *fibptr = NULL;
+-#if (defined(CONFIG_PM))
+ static void aac_release_resources(struct aac_dev *aac)
+ {
+ 	int i;
+@@ -1414,6 +1417,8 @@ error_iounmap:
+ 	return -1;
+ 
+ }
 +
-+	for (i = 0, fibptr = &dev->fibs[i];
-+		i < (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB);
-+		i++, fibptr++) {
-+		if ((dev->max_msix == 1) ||
-+		  (i > ((dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1)
-+			- dev->vector_cap))) {
-+			fibptr->vector_no = 0;
-+		} else {
-+			fibptr->vector_no = vector;
-+			vector++;
-+			if (vector == dev->max_msix)
-+				vector = 1;
++#if (defined(CONFIG_PM))
+ static int aac_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 
+@@ -1501,6 +1506,138 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	}
+ }
+ 
++static void aac_flush_ios(struct aac_dev *aac)
++{
++	int i;
++	struct scsi_cmnd *cmd;
++
++	for (i = 0; i < aac->scsi_host_ptr->can_queue; i++) {
++		cmd = (struct scsi_cmnd *)aac->fibs[i].callback_data;
++		if (cmd && (cmd->SCp.phase == AAC_OWNER_FIRMWARE)) {
++			scsi_dma_unmap(cmd);
++
++			if (aac->handle_pci_error)
++				cmd->result = DID_NO_CONNECT << 16;
++			else
++				cmd->result = DID_RESET << 16;
++
++			cmd->scsi_done(cmd);
 +		}
 +	}
 +}
 +
- /**
-  *	aac_fib_setup	-	setup the fibs
-  *	@dev: Adapter to set up
-@@ -152,6 +174,12 @@ int aac_fib_setup(struct aac_dev * dev)
- 		hw_fib_pa = hw_fib_pa +
- 			dev->max_fib_size + sizeof(struct aac_fib_xporthdr);
- 	}
++static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
++					enum pci_channel_state error)
++{
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct aac_dev *aac = shost_priv(shost);
++
++	dev_err(&pdev->dev, "aacraid: PCI error detected %x\n", error);
++
++	switch (error) {
++	case pci_channel_io_normal:
++		return PCI_ERS_RESULT_CAN_RECOVER;
++	case pci_channel_io_frozen:
++		aac->handle_pci_error = 1;
++
++		scsi_block_requests(aac->scsi_host_ptr);
++		aac_flush_ios(aac);
++		aac_release_resources(aac);
++
++		pci_disable_pcie_error_reporting(pdev);
++		aac_adapter_ioremap(aac, 0);
++
++		return PCI_ERS_RESULT_NEED_RESET;
++	case pci_channel_io_perm_failure:
++		aac->handle_pci_error = 1;
++
++		aac_flush_ios(aac);
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	return PCI_ERS_RESULT_NEED_RESET;
++}
++
++static pci_ers_result_t aac_pci_mmio_enabled(struct pci_dev *pdev)
++{
++	dev_err(&pdev->dev, "aacraid: PCI error - mmio enabled\n");
++	return PCI_ERS_RESULT_NEED_RESET;
++}
++
++static pci_ers_result_t aac_pci_slot_reset(struct pci_dev *pdev)
++{
++	dev_err(&pdev->dev, "aacraid: PCI error - slot reset\n");
++	pci_restore_state(pdev);
++	if (pci_enable_device(pdev)) {
++		dev_warn(&pdev->dev,
++			"aacraid: failed to enable slave\n");
++		goto fail_device;
++	}
++
++	pci_set_master(pdev);
++
++	if (pci_enable_device_mem(pdev)) {
++		dev_err(&pdev->dev, "pci_enable_device_mem failed\n");
++		goto fail_device;
++	}
++
++	return PCI_ERS_RESULT_RECOVERED;
++
++fail_device:
++	dev_err(&pdev->dev, "aacraid: PCI error - slot reset failed\n");
++	return PCI_ERS_RESULT_DISCONNECT;
++}
++
++
++static void aac_pci_resume(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct scsi_device *sdev = NULL;
++	struct aac_dev *aac = (struct aac_dev *)shost_priv(shost);
++
++	pci_cleanup_aer_uncorrect_error_status(pdev);
++
++	if (aac_adapter_ioremap(aac, aac->base_size)) {
++
++		dev_err(&pdev->dev, "aacraid: ioremap failed\n");
++		/* remap failed, go back ... */
++		aac->comm_interface = AAC_COMM_PRODUCER;
++		if (aac_adapter_ioremap(aac, AAC_MIN_FOOTPRINT_SIZE)) {
++			dev_warn(&pdev->dev,
++				"aacraid: unable to map adapter.\n");
++
++			return;
++		}
++	}
++
++	msleep(10000);
++
++	aac_acquire_resources(aac);
 +
 +	/*
-+	 *Assign vector numbers to fibs
++	 * reset this flag to unblock ioctl() as it was set
++	 * at aac_send_shutdown() to block ioctls from upperlayer
 +	 */
-+	aac_fib_vector_assign(dev);
++	aac->adapter_shutdown = 0;
++	aac->handle_pci_error = 0;
 +
- 	/*
- 	 *	Add the fib chain to the free list
- 	 */
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 2aa34ea..bc0203f 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -156,8 +156,8 @@ static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
- 				break;
- 			if (dev->msi_enabled && dev->max_msix > 1)
- 				atomic_dec(&dev->rrq_outstanding[vector_no]);
--			aac_intr_normal(dev, handle-1, 0, isFastResponse, NULL);
- 			dev->host_rrq[index++] = 0;
-+			aac_intr_normal(dev, handle-1, 0, isFastResponse, NULL);
- 			if (index == (vector_no + 1) * dev->vector_cap)
- 				index = vector_no * dev->vector_cap;
- 			dev->host_rrq_idx[vector_no] = index;
-@@ -452,36 +452,20 @@ static int aac_src_deliver_message(struct fib *fib)
++	shost_for_each_device(sdev, shost)
++		if (sdev->sdev_state == SDEV_OFFLINE)
++			sdev->sdev_state = SDEV_RUNNING;
++	scsi_unblock_requests(aac->scsi_host_ptr);
++	scsi_scan_host(aac->scsi_host_ptr);
++	pci_save_state(pdev);
++
++	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
++}
++
++static struct pci_error_handlers aac_pci_err_handler = {
++	.error_detected		= aac_pci_error_detected,
++	.mmio_enabled		= aac_pci_mmio_enabled,
++	.slot_reset		= aac_pci_slot_reset,
++	.resume			= aac_pci_resume,
++};
++
+ static struct pci_driver aac_pci_driver = {
+ 	.name		= AAC_DRIVERNAME,
+ 	.id_table	= aac_pci_tbl,
+@@ -1511,6 +1648,7 @@ static struct pci_driver aac_pci_driver = {
+ 	.resume		= aac_resume,
  #endif
+ 	.shutdown	= aac_shutdown,
++	.err_handler    = &aac_pci_err_handler,
+ };
  
- 	u16 hdr_size = le16_to_cpu(fib->hw_fib_va->header.Size);
-+	u16 vector_no;
- 
- 	atomic_inc(&q->numpending);
- 
- 	if (dev->msi_enabled && fib->hw_fib_va->header.Command != AifRequest &&
- 	    dev->max_msix > 1) {
--		u_int16_t vector_no, first_choice = 0xffff;
--
--		vector_no = dev->fibs_pushed_no % dev->max_msix;
--		do {
--			vector_no += 1;
--			if (vector_no == dev->max_msix)
--				vector_no = 1;
--			if (atomic_read(&dev->rrq_outstanding[vector_no]) <
--			    dev->vector_cap)
--				break;
--			if (0xffff == first_choice)
--				first_choice = vector_no;
--			else if (vector_no == first_choice)
--				break;
--		} while (1);
--		if (vector_no == first_choice)
--			vector_no = 0;
--		atomic_inc(&dev->rrq_outstanding[vector_no]);
--		if (dev->fibs_pushed_no == 0xffffffff)
--			dev->fibs_pushed_no = 0;
--		else
--			dev->fibs_pushed_no++;
-+		vector_no = fib->vector_no;
- 		fib->hw_fib_va->header.Handle += (vector_no << 16);
-+	} else {
-+		vector_no = 0;
- 	}
- 
-+	atomic_inc(&dev->rrq_outstanding[vector_no]);
-+
- 	if (dev->comm_interface == AAC_COMM_MESSAGE_TYPE2) {
- 		/* Calculate the amount to the fibsize bits */
- 		fibsize = (hdr_size + 127) / 128 - 1;
+ static int __init aac_init(void)
 -- 
 1.9.1
 
