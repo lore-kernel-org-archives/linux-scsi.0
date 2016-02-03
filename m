@@ -1,55 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/MM TOPIC] multiqueue and interrupt assignment
-Date: Wed, 3 Feb 2016 16:03:19 +0100
-Message-ID: <56B216B7.309@suse.de>
-References: <56B0D9CF.1080001@suse.de> <56B0F41B.8010706@sandisk.com>
- <56B1F951.5010001@dev.mellanox.co.il> <56B1FCFC.2010104@suse.de>
- <56B20173.10006@dev.mellanox.co.il>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Subject: Re: [PATCH 0/2] scsi: Fix endless loop of ATA hard resets due to VPD reads
+Date: Wed, 3 Feb 2016 07:27:20 -0800
+Message-ID: <CAKgT0UcWHgeRXuMDsOCXacwv6OL9T8FBCbqCYR1wu1iQkCmhmQ@mail.gmail.com>
+References: <20160121063039.3803.66.stgit@localhost.localdomain>
+	<20160202101830.GA3786@node.shutemov.name>
+	<yq1fuxamrz7.fsf@sermon.lab.mkp.net>
+	<20160203064808.GA10548@node.shutemov.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50996 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932499AbcBCPDV (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2016 10:03:21 -0500
-In-Reply-To: <56B20173.10006@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160203064808.GA10548@node.shutemov.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Alexander Duyck <aduyck@mirantis.com>, jbottomley@odin.com, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Shane M. Seymour" <shane.seymour@hpe.com>, jthumshirn@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On 02/03/2016 02:32 PM, Sagi Grimberg wrote:
->=20
->> Indeed, something like this.
->> Quite some issues would be solved if we could push a hctx mapping
->> into blk-mq, instead of having it assign its own made-up one.
->=20
-> For that you can provide your own .map_queue in blk_mq_ops I think
-> (no one does that at the moment). This requires every driver to
-> implement it's own routine (probably with a similar logic) though...
+On Tue, Feb 2, 2016 at 10:48 PM, Kirill A. Shutemov
+<kirill@shutemov.name> wrote:
+> On Tue, Feb 02, 2016 at 09:45:48PM -0500, Martin K. Petersen wrote:
+>> >>>>> "Kirill" == Kirill A Shutemov <kirill@shutemov.name> writes:
+>>
+>> Kirill> I have the same problem.
+>>
+>> Kirill> Shouldn't we put quirk for that?
+>>
+>> I was hoping that Hannes' patch would do the trick so we could avoid
+>> blacklisting:
+>>
+>>       https://patchwork.kernel.org/patch/8079011/
+>
+> It didn't help me.
 
-And at the same time direct interrupt assigment from the driver is
-frowned upon ... feels a bit stupid, having to setup a cpu-to-queue
-assigment (which typically is identical to the cpu-to-msix
-assignment), then pass this information to blk-mq, which then passed
-it to user-space, which then uses the information to setup a
-cpu-to-msix assignment.
-There is room for improvement there ...
+My patch didn't resolve the Marvell issue, it just resolved other
+cases that could also lead to the same problem.
 
-Are there any plans addressing this in blk-mq?
-What does NVMe and virtio do?
+I added a line to my kernel parameters to blacklist the Marvell
+console.  I wasn't sure if blacklisting would have been acceptable.
+That is why I called out that I still had to add that line to my
+kernel in the cover letter for my patch set.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- Alex
