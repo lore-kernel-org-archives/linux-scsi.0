@@ -1,185 +1,104 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v3 4/5] target: Fix remote-port TMR ABORT + se_cmd
- fabric stop
-Date: Tue, 02 Feb 2016 17:33:27 -0800
-Message-ID: <1454463207.25549.61.camel@haakon3.risingtidesystems.com>
-References: <1454132222-29009-1-git-send-email-nab@daterainc.com>
-	 <1454132222-29009-5-git-send-email-nab@daterainc.com>
-	 <20160202105437.GA28143@lst.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Separate target visibility from reaped state information
+Date: Tue, 02 Feb 2016 18:01:35 -0800
+Message-ID: <1454464895.2363.6.camel@HansenPartnership.com>
+References: <568FE922.9090004@sandisk.com>
+	 <yq1oachqehs.fsf@sermon.lab.mkp.net>
+	 <1453251809.2320.56.camel@HansenPartnership.com>
+	 <56B025E4.9010009@sandisk.com>
+	 <1454413585.2349.11.camel@HansenPartnership.com>
+	 <56B0F58B.60708@sandisk.com>
+	 <1454460201.2363.3.camel@HansenPartnership.com>
+	 <56B1551F.4070800@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:57906 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688AbcBCBda (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 20:33:30 -0500
-In-Reply-To: <20160202105437.GA28143@lst.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50074 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754270AbcBCCBi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 21:01:38 -0500
+In-Reply-To: <56B1551F.4070800@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, Sebastian Herbszt <herbszt@gmx.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2016-02-02 at 11:54 +0100, Christoph Hellwig wrote:
-> > +	bool aborted = false, tas = false;
-> >  
-> >  	/*
-> >  	 * Allocate an struct iscsi_conn_recovery for this connection.
-> > @@ -398,7 +399,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
-> >  
-> >  		iscsit_free_all_datain_reqs(cmd);
-> >  
-> > -		transport_wait_for_tasks(&cmd->se_cmd);
-> > +		transport_wait_for_tasks(&cmd->se_cmd, false, &aborted, &tas);
+On Tue, 2016-02-02 at 17:17 -0800, Bart Van Assche wrote:
+> On 02/02/2016 04:43 PM, James Bottomley wrote:
+> > On Tue, 2016-02-02 at 10:29 -0800, Bart Van Assche wrote:
+> > > On 02/02/2016 03:46 AM, James Bottomley wrote:
+> > > > diff --git a/drivers/scsi/scsi_sysfs.c
+> > > > b/drivers/scsi/scsi_sysfs.c
+> > > > index 4f18a85..00bc721 100644
+> > > > --- a/drivers/scsi/scsi_sysfs.c
+> > > > +++ b/drivers/scsi/scsi_sysfs.c
+> > > > @@ -1272,16 +1272,18 @@ static void __scsi_remove_target(struct
+> > > > scsi_target *starget)
+> > > >    void scsi_remove_target(struct device *dev)
+> > > >    {
+> > > >        struct Scsi_Host *shost = dev_to_shost(dev->parent);
+> > > > -     struct scsi_target *starget;
+> > > > +     struct scsi_target *starget, *last_target = NULL;
+> > > >        unsigned long flags;
+> > > > 
+> > > >    restart:
+> > > >        spin_lock_irqsave(shost->host_lock, flags);
+> > > >        list_for_each_entry(starget, &shost->__targets,
+> > > > siblings) {
+> > > > -             if (starget->state == STARGET_DEL)
+> > > > +             if (starget->state == STARGET_DEL ||
+> > > > +                 starget == last_target)
+> > > >                        continue;
+> > > >                if (starget->dev.parent == dev || &starget->dev
+> > > > ==
+> > > > dev) {
+> > > >                        kref_get(&starget->reap_ref);
+> > > > +                     last_target = starget;
+> > > >                        spin_unlock_irqrestore(shost->host_lock,
+> > > > flags);
+> > > >                        __scsi_remove_target(starget);
+> > > >                        scsi_target_reap(starget);
+> > > 
+> > > Hello James,
+> > > 
+> > > Do you think it is a robust approach to store the pointer to the
+> > > last
+> > > removed target in the last_target variable ?
+> > 
+> > Well, yes, I think it will work, if that's what you mean.
+> > 
+> > >   What if e.g. scsi_target_reap() frees the memory the
+> > > last_target
+> > > pointer points at and another thread reallocates a scsi_target
+> > > data
+> > > structure ? Can that last data structure have the same address as
+> > > the
+> > > contents of the last_target variable ?
+> > 
+> > Yes, but it doesn't matter, does it?  Add/Remove has always (and
+> > will
+> > always) be racy.  Under current conditions you can still add to the
+> > target after the list_for_each terminates and have
+> > scsi_remove_target()
+> > return with attached devices.  The only way to close the race is
+> > basically to forbid scanning as we shut down the host and wait for
+> > all
+> > in-progress scans before starting the final removals.
 > 
-> please keep the existing transport_wait_for_tasks prototype and factor
-> out a new helper for the transport_generic_free_cmd special case to avoid
-> all this boiler plate.
+> Hello James,
+> 
+> Although the scenario I described is unlikely if it happens it might 
+> be really hard to figure out what went wrong for someone who has not
+> followed this discussion. This makes me wonder whether the above 
+> patch is really the best way to fix the reported soft lockup ...
 
-Seems reasonable enough.
+The race you're worrying about exists without the fix, so the fix
+doesn't alter the current situation as I explained.  If you see another
+issue, please say so (and explain it).
 
-Moved existing code to __transport_wait_for_tasks() minus
-taking/dropping the lock on entry/exit so a transport_wait_for_tasks()
-wrapper works for existing callers, plus adding a new
-target_wait_free_cmd() for transport_generic_free_cmd() special case.
+Thanks,
 
-> 
-> > +	ret = kref_get_unless_zero(&se_cmd->cmd_kref);
-> > +	if (ret)
-> > +		se_cmd->cmd_wait_set = 1;
-> 
-> I don't like the dual use of cmd_wait_set and the combination
-> with CMD_T_FABRIC_STOP.
-> 
+James
 
-The dual use is required because there needs to be a mechanism for the
-TMR path to release the command, but at the same time must also be aware
-when the front-end driver needs to shutdown the command (from it's
-calling context) at the same time, due to session reset.
-
-For the session reset case, the key aspect is the fabric driver calling
-target_wait_for_sess_cmds() or transport_generic_free_cmd() MUST NOT
-return until se_cmd->se_tfo->release_cmd() has completed.
-
-This is why the caller who sets ->cmd_wait_set is responsible for
-calling ->release_cmd(), and not target_release_cmd_kref() callback
-itself.
-
-> How about the following alternative:
-> 
-> pull in my prep patch to rewrite target_sess_cmd_list_set_waiting so
-> that it doesn't need to iterate over all commands and set cmd_wait_set:
-> 
-> 	http://www.spinics.net/lists/target-devel/msg11446.html
-> 
-
-Your patch has one key assumption incorrect.
-
-That is, it's not safe for target_wait_for_sess_cmds() to return until
-all se_cmd->se_tfo->release_cmd() callbacks have been invoked.  This is
-because current code assumes that once this function completes, all
-possible se_cmd related dereferences to se_session are finished.
-
-The patch mentioned above ignores this requirement, and allows
-target_wait_for_sess_cmds() to return before all ->release_cmd() calls
-finish, while target_release_cmd_kref() completes in the back-ground
-resulting in a sure-fire use-after-free.
-
-> This gives us a free hand use a different completion for per-command
-> waiting.  Now your new usage of cmd_wait_set can be simplified as we
-> don't need a CMD_T_FABRIC_STOP to undo it, it can simply be cleared.
-> While we're at it I'd suggest using a CMD_T_ flag instead of a bitfield
-> for it.
-> 
-> >  	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD)) {
-> >  		if (wait_for_tasks && (cmd->se_cmd_flags & SCF_SCSI_TMR_CDB))
-> > -			transport_wait_for_tasks(cmd);
-> > +			transport_wait_for_tasks(cmd, true, &aborted, &tas);
-> >  
-> > -		ret = transport_put_cmd(cmd);
-> > +		if (!aborted || tas)
-> > +			ret = transport_put_cmd(cmd);
-> >  	} else {
-> >  		if (wait_for_tasks)
-> > -			transport_wait_for_tasks(cmd);
-> > +			transport_wait_for_tasks(cmd, true, &aborted, &tas);
-> >  		/*
-> >  		 * Handle WRITE failure case where transport_generic_new_cmd()
-> >  		 * has already added se_cmd to state_list, but fabric has
-> > @@ -2454,9 +2456,21 @@ int transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
-> >  		if (cmd->se_lun)
-> >  			transport_lun_remove_cmd(cmd);
-> >  
-> > -		ret = transport_put_cmd(cmd);
-> > +		if (!aborted || tas)
-> > +			ret = transport_put_cmd(cmd);
-> >  	}
-> 
-> FYI, this can be simplified a bit more.
-> 
-> Call transport_wait_for_tasks
-> 
-> 	if (wait_for_tasks &&
-> 	    (cmd->se_cmd_flags & (SCF_SE_LUN_CMD | SCF_SCSI_TMR_CDB))) {
-> 
-> and then the
-> 
-> 	if (!aborted || tas)
-> 		et = transport_put_cmd(cmd);
-> 
-> can be moved behind the conditional for LUN_CMDs as well.
-> 
-
-That doesn't quite work, because target_remove_from_state_list() +
-transport_lun_remove_cmd() must be called before the potentially final
-transport_put_cmd() -> target_put_sess_cmd() callback.
-
-Also, SCF_SCSI_TMR_CDB is still slightly different in this regard, as it
-doesn't take se_lun->lun_ref atm.
-
-That said, I'm in agreement that this can be cleaned up further, but
-given this patch will need to back-ported stable, I'd prefer to keep
-additional cleanups as separate post bug-fix improvements.
-
-> > -	return ret;
-> > +	/*
-> > +	 * If the task has been internally aborted due to TMR ABORT_TASK
-> > +	 * or LUN_RESET, target_core_tmr.c is responsible for performing
-> > +	 * the remaining calls to target_put_sess_cmd(), and not the
-> > +	 * callers of this function.
-> > +	 */
-> > +	if (aborted) {
-> > +		pr_debug("Detected CMD_T_ABORTED for ITT: %llu\n", cmd->tag);
-> > +		wait_for_completion(&cmd->cmd_wait_comp);
-> > +		cmd->se_tfo->release_cmd(cmd);
-> > +	}
-> > +	return (aborted) ? 1 : ret;
-> 
-> This could be simplified to:
-> 
-> 	if (aborted) {
-> 		...
-> 
-> 		ret = 1;
-> 	}
-> 
-> 	return ret;
-> 
-
-Done.
-
-> > +	if (cmd->transport_state & CMD_T_ABORTED)
-> > +		*aborted = true;
-> > +	else
-> > +		*aborted = false;
-> > +
-> > +	if (cmd->transport_state & CMD_T_TAS)
-> > +		*tas = true;
-> > +	else
-> > +		*tas = false;
-> 
-> All callers already initialize these two to false, so the else
-> branches seem superflous.
-
-Dropped.
 
