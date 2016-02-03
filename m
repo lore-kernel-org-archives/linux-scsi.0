@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V6 04/10] aacraid: Fix memory leak in aac_fib_map_free
-Date: Wed, 3 Feb 2016 15:06:02 -0800
-Message-ID: <1454540768-12271-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V6 05/10] aacraid: Set correct msix count for EEH recovery
+Date: Wed, 3 Feb 2016 15:06:03 -0800
+Message-ID: <1454540768-12271-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57320 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756662AbcBCWz7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 17:55:59 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:38054 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756800AbcBCW4A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 17:56:00 -0500
 In-Reply-To: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,17 +18,18 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-aac_fib_map_free() calls pci_free_consistent() without checking that
-dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
-are indeed NULL/0, this will result in a hang as pci_free_consistent()
-will attempt to invalidate cache for the entire 64-bit address space
-(which would take a very long time).
+During EEH recovery number of online CPU's might change thereby changing
+the number of MSIx vectors. Since each fib is allocated to a vector,
+changes in the number of vectors causes fib to be sent thru invalid
+vectors.In addition the correct number of MSIx vectors is not
+updated in the INIT struct sent to the controller, when it is
+reinitialized.
 
-Fixed by adding a check to make sure that dev->hw_fib_va and
-dev->max_fib_size are not NULL and 0 respectively.
+Fixed by reassigning vectors to fibs based on the updated number of MSIx
+vectors and updating the INIT structure before sending to controller.
 
 Changes in V2:
-None
+Replaced fib vector allocation code with aac_fib_vector_assign
 
 Changes in V3:
 None
@@ -42,37 +43,40 @@ None
 Changes in V6:
 None
 
-Fixes: 9ad5204d6 - "[SCSI]aacraid: incorrect dma mapping mask
-during blinked recover or user initiated reset"
+Fixes: MSI-X vector calculation for suspend/resume
 Cc: stable@vger.kernel.org
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+Reviewed-by: Johannes Thumshirn <jthushirn@suse.de>
 ---
- drivers/scsi/aacraid/commsup.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/linit.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 07a42a3..511bbc5 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 822b695..5117220 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1409,8 +1409,18 @@ static int aac_acquire_resources(struct aac_dev *dev)
  
- void aac_fib_map_free(struct aac_dev *dev)
- {
--	pci_free_consistent(dev->pdev,
--	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
--	  dev->hw_fib_va, dev->hw_fib_pa);
-+	if (dev->hw_fib_va && dev->max_fib_size) {
-+		pci_free_consistent(dev->pdev,
-+		(dev->max_fib_size *
-+		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
-+		dev->hw_fib_va, dev->hw_fib_pa);
+ 	aac_adapter_enable_int(dev);
+ 
+-	if (!dev->sync_mode)
++	/*max msix may change  after EEH
++	 * Re-assign vectors to fibs
++	 */
++	aac_fib_vector_assign(dev);
++
++	if (!dev->sync_mode) {
++		/* After EEH recovery or suspend resume, max_msix count
++		 * may change, therfore updating in init as well.
++		 */
+ 		aac_adapter_start(dev);
++		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
 +	}
- 	dev->hw_fib_va = NULL;
- 	dev->hw_fib_pa = 0;
- }
+ 	return 0;
+ 
+ error_iounmap:
 -- 
 1.9.1
 
