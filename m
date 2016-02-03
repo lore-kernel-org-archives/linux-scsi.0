@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V5 03/10] aacraid: Added EEH support
-Date: Tue, 2 Feb 2016 16:58:01 -0800
-Message-ID: <1454461088-32482-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V5 05/10] aacraid: Set correct msix count for EEH recovery
+Date: Tue, 2 Feb 2016 16:58:03 -0800
+Message-ID: <1454461088-32482-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:58422 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:58433 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754826AbcBCAsA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 19:48:00 -0500
+	by vger.kernel.org with ESMTP id S1754791AbcBCAsB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 19:48:01 -0500
 In-Reply-To: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,230 +18,62 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Added support for PCI EEH(extended error handling).
+During EEH recovery number of online CPU's might change thereby changing
+the number of MSIx vectors. Since each fib is allocated to a vector,
+changes in the number of vectors causes fib to be sent thru invalid
+vectors.In addition the correct number of MSIx vectors is not
+updated in the INIT struct sent to the controller, when it is
+reinitialized.
+
+Fixed by reassigning vectors to fibs based on the updated number of MSIx
+vectors and updating the INIT structure before sending to controller.
 
 Changes in V2:
-Made local functions static
-Removed call to  aac_fib_free_tag
-Set adapter_shutdown flag when PCI error detected
+Replaced fib vector allocation code with aac_fib_vector_assign
 
 Changes in V3:
 None
 
 Changes in V4:
-Removed setting of adapter_shutdown flag when \
-PCI error detected
+None
 
 Changes in V5:
-Removed CONFIG_PM macro conditional compilation for \
-aac_release_resources and aac_acquire_resources
+None
+
+Fixes: MSI-X vector calculation for suspend/resume
+Cc: stable@vger.kernel.org
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+Reviewed-by: Johannes Thumshirn <jthushirn@suse.de>
 ---
- drivers/scsi/aacraid/aacraid.h |   1 +
- drivers/scsi/aacraid/linit.c   | 140 ++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 140 insertions(+), 1 deletion(-)
+ drivers/scsi/aacraid/linit.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index fff1306..2916288 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1235,6 +1235,7 @@ struct aac_dev
- 	struct msix_entry	msixentry[AAC_MAX_MSIX];
- 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
- 	u8			adapter_shutdown;
-+	u32			handle_pci_error;
- };
- 
- #define aac_adapter_interrupt(dev) \
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 129a515..822b695 100644
+index 822b695..5117220 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -38,6 +38,7 @@
- #include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/pci.h>
-+#include <linux/aer.h>
- #include <linux/pci-aspm.h>
- #include <linux/slab.h>
- #include <linux/mutex.h>
-@@ -1298,6 +1299,9 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_deinit;
- 	scsi_scan_host(shost);
+@@ -1409,8 +1409,18 @@ static int aac_acquire_resources(struct aac_dev *dev)
  
-+	pci_enable_pcie_error_reporting(pdev);
-+	pci_save_state(pdev);
+ 	aac_adapter_enable_int(dev);
+ 
+-	if (!dev->sync_mode)
++	/*max msix may change  after EEH
++	 * Re-assign vectors to fibs
++	 */
++	aac_fib_vector_assign(dev);
 +
++	if (!dev->sync_mode) {
++		/* After EEH recovery or suspend resume, max_msix count
++		 * may change, therfore updating in init as well.
++		 */
+ 		aac_adapter_start(dev);
++		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
++	}
  	return 0;
  
-  out_deinit:
-@@ -1319,7 +1323,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return error;
- }
- 
--#if (defined(CONFIG_PM))
- static void aac_release_resources(struct aac_dev *aac)
- {
- 	int i;
-@@ -1414,6 +1417,8 @@ error_iounmap:
- 	return -1;
- 
- }
-+
-+#if (defined(CONFIG_PM))
- static int aac_suspend(struct pci_dev *pdev, pm_message_t state)
- {
- 
-@@ -1501,6 +1506,138 @@ static void aac_remove_one(struct pci_dev *pdev)
- 	}
- }
- 
-+static void aac_flush_ios(struct aac_dev *aac)
-+{
-+	int i;
-+	struct scsi_cmnd *cmd;
-+
-+	for (i = 0; i < aac->scsi_host_ptr->can_queue; i++) {
-+		cmd = (struct scsi_cmnd *)aac->fibs[i].callback_data;
-+		if (cmd && (cmd->SCp.phase == AAC_OWNER_FIRMWARE)) {
-+			scsi_dma_unmap(cmd);
-+
-+			if (aac->handle_pci_error)
-+				cmd->result = DID_NO_CONNECT << 16;
-+			else
-+				cmd->result = DID_RESET << 16;
-+
-+			cmd->scsi_done(cmd);
-+		}
-+	}
-+}
-+
-+static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
-+					enum pci_channel_state error)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct aac_dev *aac = shost_priv(shost);
-+
-+	dev_err(&pdev->dev, "aacraid: PCI error detected %x\n", error);
-+
-+	switch (error) {
-+	case pci_channel_io_normal:
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+	case pci_channel_io_frozen:
-+		aac->handle_pci_error = 1;
-+
-+		scsi_block_requests(aac->scsi_host_ptr);
-+		aac_flush_ios(aac);
-+		aac_release_resources(aac);
-+
-+		pci_disable_pcie_error_reporting(pdev);
-+		aac_adapter_ioremap(aac, 0);
-+
-+		return PCI_ERS_RESULT_NEED_RESET;
-+	case pci_channel_io_perm_failure:
-+		aac->handle_pci_error = 1;
-+
-+		aac_flush_ios(aac);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+static pci_ers_result_t aac_pci_mmio_enabled(struct pci_dev *pdev)
-+{
-+	dev_err(&pdev->dev, "aacraid: PCI error - mmio enabled\n");
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+static pci_ers_result_t aac_pci_slot_reset(struct pci_dev *pdev)
-+{
-+	dev_err(&pdev->dev, "aacraid: PCI error - slot reset\n");
-+	pci_restore_state(pdev);
-+	if (pci_enable_device(pdev)) {
-+		dev_warn(&pdev->dev,
-+			"aacraid: failed to enable slave\n");
-+		goto fail_device;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	if (pci_enable_device_mem(pdev)) {
-+		dev_err(&pdev->dev, "pci_enable_device_mem failed\n");
-+		goto fail_device;
-+	}
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+
-+fail_device:
-+	dev_err(&pdev->dev, "aacraid: PCI error - slot reset failed\n");
-+	return PCI_ERS_RESULT_DISCONNECT;
-+}
-+
-+
-+static void aac_pci_resume(struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct scsi_device *sdev = NULL;
-+	struct aac_dev *aac = (struct aac_dev *)shost_priv(shost);
-+
-+	pci_cleanup_aer_uncorrect_error_status(pdev);
-+
-+	if (aac_adapter_ioremap(aac, aac->base_size)) {
-+
-+		dev_err(&pdev->dev, "aacraid: ioremap failed\n");
-+		/* remap failed, go back ... */
-+		aac->comm_interface = AAC_COMM_PRODUCER;
-+		if (aac_adapter_ioremap(aac, AAC_MIN_FOOTPRINT_SIZE)) {
-+			dev_warn(&pdev->dev,
-+				"aacraid: unable to map adapter.\n");
-+
-+			return;
-+		}
-+	}
-+
-+	msleep(10000);
-+
-+	aac_acquire_resources(aac);
-+
-+	/*
-+	 * reset this flag to unblock ioctl() as it was set
-+	 * at aac_send_shutdown() to block ioctls from upperlayer
-+	 */
-+	aac->adapter_shutdown = 0;
-+	aac->handle_pci_error = 0;
-+
-+	shost_for_each_device(sdev, shost)
-+		if (sdev->sdev_state == SDEV_OFFLINE)
-+			sdev->sdev_state = SDEV_RUNNING;
-+	scsi_unblock_requests(aac->scsi_host_ptr);
-+	scsi_scan_host(aac->scsi_host_ptr);
-+	pci_save_state(pdev);
-+
-+	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
-+}
-+
-+static struct pci_error_handlers aac_pci_err_handler = {
-+	.error_detected		= aac_pci_error_detected,
-+	.mmio_enabled		= aac_pci_mmio_enabled,
-+	.slot_reset		= aac_pci_slot_reset,
-+	.resume			= aac_pci_resume,
-+};
-+
- static struct pci_driver aac_pci_driver = {
- 	.name		= AAC_DRIVERNAME,
- 	.id_table	= aac_pci_tbl,
-@@ -1511,6 +1648,7 @@ static struct pci_driver aac_pci_driver = {
- 	.resume		= aac_resume,
- #endif
- 	.shutdown	= aac_shutdown,
-+	.err_handler    = &aac_pci_err_handler,
- };
- 
- static int __init aac_init(void)
+ error_iounmap:
 -- 
 1.9.1
 
