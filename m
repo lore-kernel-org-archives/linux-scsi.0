@@ -1,32 +1,43 @@
-From: "Fng" <hranac@seznam.cz>
-Subject: =?iso-8859-1?Q?spolupr=E1ce?=
-Date: Wed, 3 Feb 2016 07:42:19 -0500
-Message-ID: <d9cf6d36c4d6385149af47f3d203d498.squirrel__1917.72859911925$1454529451$gmane$org@185.121.132.20>
-Reply-To: fg.ni116@yandex.com
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: *** GMX Spamverdacht *** Re: [PATCH] Separate target visibility
+ from reaped state information
+Date: Wed, 3 Feb 2016 22:37:38 +0100
+Message-ID: <20160203223738.00000af8@localhost>
+References: <568FE922.9090004@sandisk.com>
+	<yq1oachqehs.fsf@sermon.lab.mkp.net>
+	<1453251809.2320.56.camel@HansenPartnership.com>
+	<20160131185455.00000ef7@localhost>
+	<yq160y7q5ku.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [185.121.132.20] ([185.121.132.20]:36545 "EHLO mail.abc.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751849AbcBCT5Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2016 14:57:16 -0500
+Received: from mout.gmx.net ([212.227.15.19]:53040 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755565AbcBCViJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Feb 2016 16:38:09 -0500
+In-Reply-To: <yq160y7q5ku.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
 
+Martin K. Petersen wrote:
+> >>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
+> 
+> >> The only change from the current workflow is that the DEL transition
+> >> (now the reaped flag) is done before the spin lock is dropped which
+> >> would fix a tiny window for two threads both trying to remove the
+> >> same target, but there's nothing that could possibly fix an iterative
+> >> soft lockup caused by restarting the loop, which is what the
+> >> changelog says.
+> 
+> Sebastian> James, Martin, what's the status of this patch?  I still hit
+> Sebastian> the reported soft lockup on 4.5-rc1.
+> 
+> And you have verified that Bart's patch applied on top of 4.5-rc1 still
+> fixes the lockup? (I know you tested a previous version)
 
+I did not (yet) - will do soon.
 
-
-Odpoledne dobry,
-
-R=E1d bych V=E1s informovali o investici stejn=FDch v=FDhod pro n=E1s, =
-a ty me meli
-kontaktovat na e-mailu n=ED=9Ee tomto, pokud m=E1te z=E1jem.
-
-email: fg.ni116@yandex.com
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sebastian
