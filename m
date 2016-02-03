@@ -1,118 +1,59 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH] Separate target visibility from reaped state
- information
-Date: Thu, 4 Feb 2016 00:28:46 +0100
-Message-ID: <20160204002846.000041dd@localhost>
-References: <568FE922.9090004@sandisk.com>
-	<yq1oachqehs.fsf@sermon.lab.mkp.net>
-	<1453251809.2320.56.camel@HansenPartnership.com>
-	<56B025E4.9010009@sandisk.com>
-	<1454413585.2349.11.camel@HansenPartnership.com>
-	<20160203233816.00004da7@localhost>
-	<1454540110.2338.14.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:55812 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933345AbcBCX3T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2016 18:29:19 -0500
-In-Reply-To: <1454540110.2338.14.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: [PATCH 4/6] ibmvscsi: Use of_root to access OF device tree root node
+Date: Wed,  3 Feb 2016 17:28:32 -0600
+Message-ID: <1454542114-1797-5-git-send-email-tyreld@linux.vnet.ibm.com>
+References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, hare@suse.de, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dick Kennedy <dick.kennedy@avagotech.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
 
-James Bottomley wrote:
-> On Wed, 2016-02-03 at 23:38 +0100, Sebastian Herbszt wrote:
-> > James Bottomley wrote:
-> > > On Mon, 2016-02-01 at 19:43 -0800, Bart Van Assche wrote:
-> > > > On 01/19/16 17:03, James Bottomley wrote:
-> > > > > On Tue, 2016-01-19 at 19:30 -0500, Martin K. Petersen wrote:
-> > > > > > > > > > > "Bart" == Bart Van Assche <
-> > > > > > > > > > > bart.vanassche@sandisk.com>
-> > > > > > > > > > > writes:
-> > > > > > 
-> > > > > > Bart> Instead of representing the states "visible in sysfs"
-> > > > > > and
-> > > > > > "has
-> > > > > > Bart> been removed from the target list" by a single state
-> > > > > > variable,
-> > > > > > use
-> > > > > > Bart> two variables to represent this information.
-> > > > > > 
-> > > > > > James: Are you happy with the latest iteration of this?
-> > > > > > Should I
-> > > > > > queue
-> > > > > > it?
-> > > > > 
-> > > > > Well, I'm OK with the patch: it's a simple transformation of
-> > > > > the
-> > > > > enumerated state to a two bit state.  What I can't see is how
-> > > > > it
-> > > > > fixes
-> > > > > any soft lockup.
-> > > > > 
-> > > > > The only change from the current workflow is that the DEL
-> > > > > transition
-> > > > > (now the reaped flag) is done before the spin lock is dropped
-> > > > > which
-> > > > > would fix a tiny window for two threads both trying to remove
-> > > > > the
-> > > > > same
-> > > > > target, but there's nothing that could possibly fix an
-> > > > > iterative
-> > > > > soft
-> > > > > lockup caused by restarting the loop, which is what the
-> > > > > changelog
-> > > > > says.
-> > > > 
-> > > > Hello James,
-> > > > 
-> > > > scsi_remove_target() doesn't lock the scan_mutex which means that
-> > > > concurrent SCSI scanning activity is not prohibited. Such
-> > > > scanning 
-> > > > activity can postpone the transition of the state of a SCSI
-> > > > target 
-> > > > into STARGET_DEL. I think if the scheduler decides to run the
-> > > > thread 
-> > > > that executes scsi_remove_target() on the same CPU as the
-> > > > scanning 
-> > > > code after the scanning code has obtained a reap ref and before
-> > > > the 
-> > > > scanning code has released the reap ref again that the soft
-> > > > lockup 
-> > > > can be triggered that has been reported by Sebastian Herbszt.
-> > > 
-> > > OK, I finally understand the scenario;  I'm not sure I understand
-> > > how
-> > > we're getting concurrent scanning and removal from a simple rmmod
-> > > ... I
-> > > take it this is insmod rmmod in a tight loop?
-> > 
-> > I am able to trigger the soft lockup with this test case run once:
-> > 
-> > modprobe lpfc
-> > run fio for 10 seconds
-> > rmmod lpfc
-> > 
-> > My test setup involves running qla2xxx in target mode (SCST) and
-> > lpfc as initiator on the same system with one exported volume.
-> 
-> Hm, that doesn't seem to involve scanning colliding with removal. 
->  Probably something else is pinning the target for some reason ...
-> unless there's some instability or constant change on the FC fabric
-> itself?  FC is hotplug, so if devices continually appear and disappear,
-> they'd effectively cause a scan of the added device to take place even
-> during the rmmod.
+The root node of the OF device tree is exported as of_root. No need
+to look up the root by path name. Instead just get a reference
+directly via of_root.
 
-No FC fabric involved; there is a direct connection between both HBAs.
+Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-> Anyway, does the last_scan patch fix the issue?
-
-Will try to test it soon.
-
-> James
-
-Sebastian
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 7e51615..47cfe33 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -248,25 +248,23 @@ static void ibmvscsi_task(void *data)
+ 
+ static void gather_partition_info(void)
+ {
+-	struct device_node *rootdn;
+-
+ 	const char *ppartition_name;
+ 	const __be32 *p_number_ptr;
+ 
+ 	/* Retrieve information about this partition */
+-	rootdn = of_find_node_by_path("/");
+-	if (!rootdn) {
++	if (!of_root)
+ 		return;
+-	}
+ 
+-	ppartition_name = of_get_property(rootdn, "ibm,partition-name", NULL);
++	of_node_get(of_root);
++
++	ppartition_name = of_get_property(of_root, "ibm,partition-name", NULL);
+ 	if (ppartition_name)
+ 		strncpy(partition_name, ppartition_name,
+ 				sizeof(partition_name));
+-	p_number_ptr = of_get_property(rootdn, "ibm,partition-no", NULL);
++	p_number_ptr = of_get_property(of_root, "ibm,partition-no", NULL);
+ 	if (p_number_ptr)
+ 		partition_number = of_read_number(p_number_ptr, 1);
+-	of_node_put(rootdn);
++	of_node_put(of_root);
+ }
+ 
+ static void set_adapter_info(struct ibmvscsi_host_data *hostdata)
+-- 
+2.5.0
