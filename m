@@ -1,181 +1,64 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 3/3] add support for DWC UFS Host Controller
-Date: Wed, 03 Feb 2016 13:54:25 +0100
-Message-ID: <2072510.CA47OHQsUN@wuerfel>
-References: <cover.1454498292.git.jpinto@synopsys.com> <a519617624ecdc98be82c376d4359a91f6a823b0.1454498292.git.jpinto@synopsys.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [LSF/MM TOPIC] multiqueue and interrupt assignment
+Date: Wed, 3 Feb 2016 14:57:53 +0200
+Message-ID: <56B1F951.5010001@dev.mellanox.co.il>
+References: <56B0D9CF.1080001@suse.de> <56B0F41B.8010706@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:61218 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757693AbcBCMzB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 07:55:01 -0500
-In-Reply-To: <a519617624ecdc98be82c376d4359a91f6a823b0.1454498292.git.jpinto@synopsys.com>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:36393 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756461AbcBCM55 (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 07:57:57 -0500
+Received: by mail-wm0-f42.google.com with SMTP id p63so163859674wmp.1
+        for <Linux-scsi@vger.kernel.org>; Wed, 03 Feb 2016 04:57:56 -0800 (PST)
+In-Reply-To: <56B0F41B.8010706@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: santosh.sy@samsung.com, h.vinayak@samsung.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On Wednesday 03 February 2016 11:28:26 Joao Pinto wrote:
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Hi Bart and Hannes,
 
-This needs a changelog comment, like every patch.
+> This topic indeed needs further attention. I also encountered this
+> challenge while adding scsi-mq support to the SRP initiator driver. What
+> I learned while working on the SRP driver is the following:
+> - Although I agree that requests and interrupts should be processed on
+>    the same processor (same physical chip) if the request has been
+>    submitted from the CPU closest to the HBA, I'm not convinced that
+>    processing request completions and interrupts on the same CPU core
+>    yields the best performance. I would appreciate it if there would
+>    remain some freedom in how to assign interrupts to CPU cores.
 
-> @@ -0,0 +1,16 @@
-> +* Universal Flash Storage (UFS) DesignWare Host Controller
-> +
-> +DWC_UFSHC nodes are defined to describe on-chip UFS host controllers.
-> +Each UFS controller instance should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains "snps,ufshcd"
+This is true not only for this reason. Some block storage transports
+(e.g. srp/iser) share the HBA with the networking stack and possibly
+with user-space workloads in the case of RDMA. This is why I don't see
+how would MSIX assignments can be done anywhere other than user-space.
 
-Are there multiple versions of this controller? Usually for designware
-parts the version is known, so we should document which versions exist
+However what I think we can do is have blk-mq ask the drivers
+information about the MSIX mappings. This concept was introduced in
+2011 by Ben Hutchings with the CPU affinity reverse-mapping API [1].
 
-> +
-> +config SCSI_UFS_DWC_HOOKS
-> +	bool "DesignWare hooks to UFS controller"
-> +	depends on SCSI_UFSHCD
-> +	---help---
-> +	  This selects the DesignWare hooks for the UFS host controller.
-> +
-> +	  Select this if you have a DesignWare UFS controller.
-> +	  If unsure, say N.
+Perhaps we'd want to have drivers provide blk-mq a struct cpu_rmap when
+assigning the hctx mappings, or possibly per I/O if we want to be
+agnostic to MSIX topology changes. I think this approach would solve
+Hannes is experiencing.
 
-This could be a silent symbol that gets selected by SCSI_UFS_DWC_PLAT
+Thoughts?
 
-> +config SCSI_UFS_DWC_MPHY_TC
-> +	bool "Support for the Synopsys MPHY Test Chip"
-> +	depends on SCSI_UFS_DWC_HOOKS && (SCSI_UFSHCD_PCI || SCSI_UFS_DWC_PLAT)
-> +	---help---
-> +	  This selects the support for the Synopsys MPHY Test Chip.
-> +
-> +	  Select this if you have a Synopsys MPHY Test Chip.
-> +	  If unsure, say N.
-> +
-> +config SCSI_UFS_DWC_20BIT_RMMI
-> +	bool "20-bit RMMI MPHY"
-> +	depends on SCSI_UFS_DWC_MPHY_TC
-> +	---help---
-> +	  This specifies that the Synopsys MPHY supports 40-bit RMMI operations.
-> +
-> +	  Select this if you are using a 40-bit RMMI Synopsys MPHY.
-> +	  If unsure, say N.
-> +
-> +config SCSI_UFS_DWC_40BIT_RMMI
-> +	bool "40-bit RMMI MPHY"
-> +	depends on SCSI_UFS_DWC_MPHY_TC
-> +	---help---
-> +	  This specifies that the Synopsys MPHY supports 40-bit RMMI operations.
-> +
-> +	  Select this if you are using a 40-bit RMMI Synopsys MPHY.
-> +	  If unsure, say N.
+[1]:
+commit c39649c331c70952700f99832b03f87e9d7f5b4b
+Author: Ben Hutchings <bhutchings@solarflare.com>
+Date:   Wed Jan 19 11:03:25 2011 +0000
 
-Move the PHY config options to drivers/phy/ along with the respective
-drivers, the device using the PHY should not need to be aware which
-one is being used.
+     lib: cpu_rmap: CPU affinity reverse-mapping
 
-> +/**
-> + * ufshcd_dwc_setup_mphy()
-> + * This function configures Local (host) Synopsys MPHY specific attributes
-> + *
-> + * @hba: Pointer to drivers structure
-> + *
-> + * Returns 0 on success non-zero value on failure
-> + */
-> +int ufshcd_dwc_setup_mphy(struct ufs_hba *hba)
-> +{
-> +	int ret = 0;
-> +
-> +#ifdef CONFIG_SCSI_UFS_DWC_40BIT_RMMI
-> +	dev_info(hba->dev, "Configuring MPHY 40-bit RMMI");
-> +	ret = ufshcd_dwc_setup_40bit_rmmi(hba);
-> +	if (ret) {
-> +		dev_err(hba->dev, "40-bit RMMI configuration failed");
-> +		goto out;
-> +	}
-> +#else
-> +#ifdef CONFIG_SCSI_UFS_DWC_20BIT_RMMI
-> +	dev_info(hba->dev, "Configuring MPHY 20-bit RMMI");
-> +	ret = ufshcd_dwc_setup_20bit_rmmi(hba);
-> +	if (ret) {
-> +		dev_err(hba->dev, "20-bit RMMI configuration failed");
-> +		goto out;
-> +	}
-> +#endif
-> +#endif
-> +	/* To write Shadow register bank to effective configuration block */
-> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
-> +	if (ret)
-> +		goto out;
-> +
-> +	/* To configure Debug OMC */
-> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
-> +
-> +out:
-> +	return ret;
-> +}
+     When initiating I/O on a multiqueue and multi-IRQ device, we may want
+     to select a queue for which the response will be handled on the same
+     or a nearby CPU.  This requires a reverse-map of IRQ affinity.  Add
+     library functions to support a generic reverse-mapping from CPUs to
+     objects with affinity and the specific case where the objects are
+     IRQs.
 
-Try to use the generic PHY abstraction here and remove all the #ifdef etc.
-
-> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-> index d15eaa4..66518a1 100644
-> --- a/drivers/scsi/ufs/ufshcd-pci.c
-> +++ b/drivers/scsi/ufs/ufshcd-pci.c
-> @@ -34,6 +34,9 @@
->   */
->  
->  #include "ufshcd.h"
-> +#ifdef CONFIG_SCSI_UFS_DWC_HOOKS
-> +#include "ufshcd-dwc.h"
-> +#endif
->  #include <linux/pci.h>
->  #include <linux/pm_runtime.h>
->  
-> @@ -83,6 +86,16 @@ static int ufshcd_pci_runtime_idle(struct device *dev)
->  #define ufshcd_pci_runtime_idle	NULL
->  #endif /* CONFIG_PM */
->  
-> +#ifdef CONFIG_SCSI_UFS_DWC_HOOKS
-> +/**
-> + * struct ufs_hba_dwc_vops - UFS DWC specific variant operations
-> + */
-> +static struct ufs_hba_variant_ops ufs_dwc_pci_hba_vops = {
-> +	.name                   = "dwc-pci",
-> +	.custom_probe_hba	= ufshcd_dwc_configuration,
-> +};
-> +#endif
-> +
->  /**
->   * ufshcd_pci_shutdown - main function to put the controller in reset state
->   * @pdev: pointer to PCI device handle
-> @@ -144,6 +157,9 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  
->  	INIT_LIST_HEAD(&hba->clk_list_head);
->  
-> +#ifdef CONFIG_SCSI_UFS_DWC_HOOKS
-> +	hba->vops = &ufs_dwc_pci_hba_vops;
-> +#endif
->  	err = ufshcd_init(hba, mmio_base, pdev->irq);
->  	if (err) {
->  		dev_err(&pdev->dev, "Initialization failed\n");
-> @@ -167,6 +183,10 @@ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
->  
->  static const struct pci_device_id ufshcd_pci_tbl[] = {
->  	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> +#ifdef CONFIG_SCSI_UFS_DWC_HOOKS
-> +	{ PCI_VENDOR_ID_SYNOPSYS, 0xB101, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> +	{ PCI_VENDOR_ID_SYNOPSYS, 0xB102, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> +#endif
->  	{ }	/* terminate list */
->  };
-
-I think you're better off with a separate PCI driver for this. Remove
-all the #ifdef mess here, put whatever is dwc specific into a new file,
-and perhaps move the common parts into a shared file that can be used
-by both the samsung and designware drivers.
-
-	Arnd
+     Signed-off-by: Ben Hutchings <bhutchings@solarflare.com>
+     Signed-off-by: David S. Miller <davem@davemloft.net>
