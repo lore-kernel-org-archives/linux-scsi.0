@@ -1,7 +1,7 @@
 From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 1/3] fixed typo in ufshcd-pltfrm
-Date: Wed,  3 Feb 2016 11:28:24 +0000
-Message-ID: <1eef4f4cd43d7363d54c6571d47da62da464a836.1454498292.git.jpinto@synopsys.com>
+Subject: [PATCH 2/3] added support for ufs 2.0
+Date: Wed,  3 Feb 2016 11:28:25 +0000
+Message-ID: <7e2182b745cad6e10704c9a8dc4e59564c8ae6e9.1454498292.git.jpinto@synopsys.com>
 References: <cover.1454498292.git.jpinto@synopsys.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1454498292.git.jpinto@synopsys.com>
@@ -15,20 +15,91 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 29 +++++++++++++++++++++++++----
+ drivers/scsi/ufs/ufshci.h |  1 +
+ 2 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index d2a7b12..0522891 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -353,6 +353,6 @@ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 85cd256..2b5f2bf 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1223,6 +1223,7 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 			ret = -EINVAL;
+ 		}
+ 		break;
++	case UTP_CMD_TYPE_UFS_STORAGE:
+ 	case UTP_CMD_TYPE_DEV_MANAGE:
+ 		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
+ 		if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
+@@ -1287,6 +1288,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	struct ufshcd_lrb *lrbp;
+ 	struct ufs_hba *hba;
+ 	unsigned long flags;
++	u32 upiu_flags;
+ 	int tag;
+ 	int err = 0;
  
- MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
--MODULE_DESCRIPTION("UFS host controller Pltform bus based glue driver");
-+MODULE_DESCRIPTION("UFS host controller Platform bus based glue driver");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(UFSHCD_DRIVER_VERSION);
+@@ -1343,10 +1345,23 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+ 	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+-	lrbp->command_type = UTP_CMD_TYPE_SCSI;
++
++	if (hba->ufs_version == UFSHCI_VERSION_20)
++		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
++	else
++		lrbp->command_type = UTP_CMD_TYPE_SCSI;
+ 
+ 	/* form UPIU before issuing the command */
+-	ufshcd_compose_upiu(hba, lrbp);
++	if (hba->ufs_version == UFSHCI_VERSION_20) {
++		if (likely(lrbp->cmd)) {
++			ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
++					lrbp->cmd->sc_data_direction);
++			ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
++		} else
++			err = -EINVAL;
++	} else
++		ufshcd_compose_upiu(hba, lrbp);
++
+ 	err = ufshcd_map_sg(lrbp);
+ 	if (err) {
+ 		lrbp->cmd = NULL;
+@@ -1371,7 +1386,12 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+ 	lrbp->sense_buffer = NULL;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = 0; /* device management cmd is not specific to any LUN */
+-	lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++
++	if (hba->ufs_version == UFSHCI_VERSION_20)
++		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
++	else
++		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
+ 	hba->dev_cmd.type = cmd_type;
+ 
+@@ -3187,7 +3207,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 			/* Do not touch lrbp after scsi done */
+ 			cmd->scsi_done(cmd);
+ 			__ufshcd_release(hba);
+-		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE) {
++		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
++			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+ 			if (hba->dev_cmd.complete)
+ 				complete(hba->dev_cmd.complete);
+ 		}
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 0ae0967..8dba0e7 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -273,6 +273,7 @@ enum {
+ 	UTP_CMD_TYPE_SCSI		= 0x0,
+ 	UTP_CMD_TYPE_UFS		= 0x1,
+ 	UTP_CMD_TYPE_DEV_MANAGE		= 0x2,
++	UTP_CMD_TYPE_UFS_STORAGE	= 0x11,
+ };
+ 
+ enum {
 -- 
 1.8.1.5
