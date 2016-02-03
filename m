@@ -1,43 +1,52 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: *** GMX Spamverdacht *** Re: [PATCH] Separate target visibility
- from reaped state information
-Date: Wed, 3 Feb 2016 22:37:38 +0100
-Message-ID: <20160203223738.00000af8@localhost>
-References: <568FE922.9090004@sandisk.com>
-	<yq1oachqehs.fsf@sermon.lab.mkp.net>
-	<1453251809.2320.56.camel@HansenPartnership.com>
-	<20160131185455.00000ef7@localhost>
-	<yq160y7q5ku.fsf@sermon.lab.mkp.net>
+From: Ruediger Meier <sweet_f_a-Mmb7MZpHnFY@public.gmane.org>
+Subject: Re: scsi_debug, iosize optimal < minimum
+Date: Wed, 3 Feb 2016 22:55:44 +0100
+Message-ID: <201602032255.44508.sweet_f_a@gmx.de>
+References: <201601291131.29201.sweet_f_a@gmx.de> <201601291718.21185.sweet_f_a@gmx.de> <yq1fuxcr5lk.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:53040 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755565AbcBCViJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2016 16:38:09 -0500
-In-Reply-To: <yq160y7q5ku.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <util-linux-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <yq1fuxcr5lk.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
+Content-Disposition: inline
+Sender: util-linux-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Karel Zak <kzak-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, util-linux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
 
-Martin K. Petersen wrote:
-> >>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
-> 
-> >> The only change from the current workflow is that the DEL transition
-> >> (now the reaped flag) is done before the spin lock is dropped which
-> >> would fix a tiny window for two threads both trying to remove the
-> >> same target, but there's nothing that could possibly fix an iterative
-> >> soft lockup caused by restarting the loop, which is what the
-> >> changelog says.
-> 
-> Sebastian> James, Martin, what's the status of this patch?  I still hit
-> Sebastian> the reported soft lockup on 4.5-rc1.
-> 
-> And you have verified that Bart's patch applied on top of 4.5-rc1 still
-> fixes the lockup? (I know you tested a previous version)
+On Monday 01 February 2016, Martin K. Petersen wrote:
+> >>>>> "Ruediger" == Ruediger Meier <sweet_f_a-Mmb7MZpHnFY@public.gmane.org> writes:
+>
+> Ruediger> I've noticed a possible problem with scsi_debug devices
+> where Ruediger> optimal_io_size < minimum_io_size.
+>
+> Ruediger> The problem seems reproducable with kernel 4.4.0 and also
+> with Ruediger> stable version 4.1.15. For stable tree the last known
+> working Ruediger> version is 4.1.13.
+>
+> http://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git/commit/?h=4.
+>5/scsi-fixes&id=d0eb20a863ba7dc1d3f4b841639671f134560be2
 
-I did not (yet) - will do soon.
 
-Sebastian
+Ah thanks!
+
+But I'm still wondering a bit. Using kernel 4.5-rc2 (where 9c1d9c20 and 
+d0eb20a8 is included) I get
+
+$ getconf PAGESIZE
+4096
+$ modprobe scsi_debug
+$  cat /sys/block/$devname/queue/{minimum_io_size,optimal_io_size}
+512
+524288
+
+In past (kernel<=4.1) optimal_io_size io size was 32768. Is this really 
+correct now?
+
+cu,
+Rudi
+--
+To unsubscribe from this list: send the line "unsubscribe util-linux" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
