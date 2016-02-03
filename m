@@ -1,71 +1,78 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V6 00/10] aacraid: Patchset for aacraid driver version 41052
-Date: Wed, 3 Feb 2016 15:05:58 -0800
-Message-ID: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V6 04/10] aacraid: Fix memory leak in aac_fib_map_free
+Date: Wed, 3 Feb 2016 15:06:02 -0800
+Message-ID: <1454540768-12271-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+References: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57291 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57320 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751600AbcBCWz4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 17:55:56 -0500
+	by vger.kernel.org with ESMTP id S1756662AbcBCWz7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 17:55:59 -0500
+In-Reply-To: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, thenzl@redhat.com, shane.seymour@hpe.com, RaghavaAditya.Renukunta@pmcs.com
 
-This patchset includes the following changes (bug fixes and new feature 
-support) specific to aacraid driver
+From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-V2:
-Removed aac_fib_free_tag function
-Setup relevant fib variables only once
-Created aac_fib_vector_assign function
-Made EEH functions static
-Added character device status macros
-changed location of aac->shutdown to prevent race condition
-Withdrew patch that disables device ID wild card binding
-Added Reviewed-by, Cc and Fixes tags from  mailing list
+aac_fib_map_free() calls pci_free_consistent() without checking that
+dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
+are indeed NULL/0, this will result in a hang as pci_free_consistent()
+will attempt to invalidate cache for the entire 64-bit address space
+(which would take a very long time).
 
-V3:
-Moved aac_send_shutdown to top of __aac_shutdown
-Converted aac->adapter_shutdown to atomic
+Fixed by adding a check to make sure that dev->hw_fib_va and
+dev->max_fib_size are not NULL and 0 respectively.
 
-V4:
-Reverted adapter_shutdown from atomic
-Used mutex to prevent shutdown race conditions on ioctl path
+Changes in V2:
+None
 
-V5:
-Created new patch for ioctl_mutex
-Moved ioctl_mutex to aac_do_ioctl
-Fixed CONFIG_PM compilation issue
+Changes in V3:
+None
 
-V6:
-Fix compilation compilation issue
-Added return path with mutex unlock incase of error condition
+Changes in V4:
+None
 
-Raghava Aditya Renukunta (10):
-  [SCSI] aacraid: SCSI blk tag support
-  [SCSI] aacraid: Fix RRQ overload
-  [SCSI] aacraid: Added EEH support
-  [SCSI] aacraid: Fix memory leak in aac_fib_map_free
-  [SCSI] aacraid: Set correct msix count for EEH recovery
-  [SCSI] aacraid: Fundamental reset support for Series 7
-  [SCSI] aacraid: Created new mutex for ioctl path
-  [SCSI] aacraid: Fix AIF triggered IOP_RESET
-  [SCSI] aacraid: Fix character device re-initialization
-  [SCSI] aacraid: Update driver version
+Changes in V5:
+None
 
- drivers/scsi/aacraid/aachba.c   |  27 +++---
- drivers/scsi/aacraid/aacraid.h  |  14 ++-
- drivers/scsi/aacraid/commctrl.c |  13 ++-
- drivers/scsi/aacraid/comminit.c |   6 +-
- drivers/scsi/aacraid/commsup.c  |  69 ++++++++++++--
- drivers/scsi/aacraid/dpcsup.c   |   2 -
- drivers/scsi/aacraid/linit.c    | 199 ++++++++++++++++++++++++++++++++++++----
- drivers/scsi/aacraid/src.c      |  30 ++----
- 8 files changed, 290 insertions(+), 70 deletions(-)
+Changes in V6:
+None
 
+Fixes: 9ad5204d6 - "[SCSI]aacraid: incorrect dma mapping mask
+during blinked recover or user initiated reset"
+Cc: stable@vger.kernel.org
+
+Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/aacraid/commsup.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 07a42a3..511bbc5 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
+ 
+ void aac_fib_map_free(struct aac_dev *dev)
+ {
+-	pci_free_consistent(dev->pdev,
+-	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
+-	  dev->hw_fib_va, dev->hw_fib_pa);
++	if (dev->hw_fib_va && dev->max_fib_size) {
++		pci_free_consistent(dev->pdev,
++		(dev->max_fib_size *
++		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
++		dev->hw_fib_va, dev->hw_fib_pa);
++	}
+ 	dev->hw_fib_va = NULL;
+ 	dev->hw_fib_pa = 0;
+ }
 -- 
 1.9.1
 
