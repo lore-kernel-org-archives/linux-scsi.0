@@ -1,59 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v3 12/14] xen-scsiback: Convert to TARGET_SCF_ACK_KREF
- I/O krefs
-Date: Tue, 02 Feb 2016 21:03:14 -0800
-Message-ID: <1454475794.10512.3.camel@haakon3.risingtidesystems.com>
-References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
-	 <1454137558-30396-13-git-send-email-nab@daterainc.com>
-	 <56B0D9DB.90901@suse.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH 0/2] scsi: Fix endless loop of ATA hard resets due to VPD
+ reads
+Date: Wed, 3 Feb 2016 08:48:09 +0200
+Message-ID: <20160203064808.GA10548@node.shutemov.name>
+References: <20160121063039.3803.66.stgit@localhost.localdomain>
+ <20160202101830.GA3786@node.shutemov.name>
+ <yq1fuxamrz7.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <56B0D9DB.90901@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, David Vrabel <david.vrabel@citrix.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33622 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbcBCGsM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 01:48:12 -0500
+Received: by mail-wm0-f65.google.com with SMTP id r129so5890303wmr.0
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Feb 2016 22:48:12 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <yq1fuxamrz7.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, jbottomley@odin.com, hare@suse.de, linux-scsi@vger.kernel.org, alexander.duyck@gmail.com, linux-kernel@vger.kernel.org, shane.seymour@hpe.com, jthumshirn@suse.de
 
-Hi Juergen,
-
-On Tue, 2016-02-02 at 17:31 +0100, Juergen Gross wrote:
-> On 30/01/16 08:05, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Cc: Juergen Gross <jgross@suse.com>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Cc: David Vrabel <david.vrabel@citrix.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, Feb 02, 2016 at 09:45:48PM -0500, Martin K. Petersen wrote:
+> >>>>> "Kirill" == Kirill A Shutemov <kirill@shutemov.name> writes:
 > 
-> Sorry, with your patches applied xen-scsiback isn't working any more.
-> I've tried multiple times with and without your patches. Without the
-> patches everything is fine, while with the patches applied I get the
-> warnings shown in the attached log. I just passed through a DVD drive
-> and did "eject" in the domain.
+> Kirill> I have the same problem.
 > 
+> Kirill> Shouldn't we put quirk for that?
+> 
+> I was hoping that Hannes' patch would do the trick so we could avoid
+> blacklisting:
+> 
+> 	https://patchwork.kernel.org/patch/8079011/
 
-Thanks for testing.  :)
+It didn't help me.
 
-So it looks like a left-over memset of pending_req->se_cmd memory in
-scsiback_cmd_exec() was clobbering the saved percpu_ida map_tag from
-scsiback_get_pend_req(), resulting in a use-after-free.
-
-Please verify with the following:
-
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index eaf9e21..c3f55a2 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -400,10 +400,6 @@ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
-        struct se_session *sess = pending_req->v2p->tpg->tpg_nexus->tvn_se_sess;
-        int rc;
- 
--       memset(pending_req->sense_buffer, 0, VSCSIIF_SENSE_BUFFERSIZE);
--
--       memset(se_cmd, 0, sizeof(*se_cmd));
--
-        scsiback_get(pending_req->info);
-        se_cmd->tag = pending_req->rqid;
-        rc = target_submit_cmd_map_sgls(se_cmd, sess, pending_req->cmnd,
+-- 
+ Kirill A. Shutemov
