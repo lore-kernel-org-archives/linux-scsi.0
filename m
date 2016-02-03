@@ -1,50 +1,29 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: [PATCH 04/14] uas: lock the abort handler
-Date: Wed, 3 Feb 2016 11:53:54 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1602031146540.2041-100000@iolanthe.rowland.org>
-References: <1454509736.1930.9.camel@suse.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] Separate target visibility from reaped state
+	information
+Date: Wed, 3 Feb 2016 18:17:27 +0100
+Message-ID: <20160203171727.GA4828@lst.de>
+References: <568FE922.9090004@sandisk.com> <yq1oachqehs.fsf@sermon.lab.mkp.net> <1453251809.2320.56.camel@HansenPartnership.com> <20160131185455.00000ef7@localhost> <yq160y7q5ku.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:51284 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756281AbcBCQxz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 11:53:55 -0500
-In-Reply-To: <1454509736.1930.9.camel@suse.com>
+Received: from verein.lst.de ([213.95.11.211]:43140 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933788AbcBCRR3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Feb 2016 12:17:29 -0500
+Content-Disposition: inline
+In-Reply-To: <yq160y7q5ku.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-usb@vger.kernel.org, kraxel@redhat.com, mdharm-usb@one-eyed-alien.net, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Sebastian Herbszt <herbszt@gmx.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 3 Feb 2016, Oliver Neukum wrote:
+On Mon, Feb 01, 2016 at 08:11:29PM -0500, Martin K. Petersen wrote:
+> I am concerned about queuing something as a stable fix if it is just
+> masking a fundamental underlying problem.
 
-> On Tue, 2016-01-26 at 10:28 -0500, Alan Stern wrote:
-> > On Tue, 26 Jan 2016, Oliver Neukum wrote:
-> 
-> > > That is problematic. The ABORT_TMF does need IO for which we need
-> > > to wait. And if we just submit and pretend the abort worked, the tag
-> > > will be reused.
-> > > Perhaps we could drop the spinlock. I think it is time to talk to
-> > > the SCSI people.
-> > 
-> > The abort handler doesn't have to wait for the command to terminate.  
-> > It merely has to initiate an abort and return.  The SCSI layer gets 
-> > notified via the usual mechanism when the command eventually finishes, 
-> > whether it was successful or not.
-> 
-> This is stange. I don't see how we can guarantee a command completion
-> if eh_abort_handler() has sent the TMF.
-> It was my understanding that returning from eh_abort_handler()
-> means that a tag is considered free again and will be reused.
-> Could you clarify?
-
-I'm sorry, it looks like I misremembered how usb-storage works.
-
-After checking the code, I see that the abort handler _does_ wait for 
-the command to finish before returning.  The abort handler is called 
-with no locks held, and it releases its spinlock while it waits.
-
-Is there any reason uas can't do the same thing?
-
-Alan Stern
-
+It's not masking a fundamental problem.  It fixes the target
+state so that we can mark a starget as being under deletion
+before we have to drop the list protecting the target list
+iteration.  Independ of any any other scanning changes it is the
+right thing to do.
