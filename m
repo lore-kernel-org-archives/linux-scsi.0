@@ -1,116 +1,75 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH V5 07/10] aacraid: Created new mutex for ioctl path
-Date: Tue, 2 Feb 2016 16:58:05 -0800
-Message-ID: <1454461088-32482-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V5 04/10] aacraid: Fix memory leak in aac_fib_map_free
+Date: Tue, 2 Feb 2016 16:58:02 -0800
+Message-ID: <1454461088-32482-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:58452 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754891AbcBCAsE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 19:48:04 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:40800 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751832AbcBCAsA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Feb 2016 19:48:00 -0500
 In-Reply-To: <1454461088-32482-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, thenzl@redhat.com, shane.seymour@hpe.com, RaghavaAditya.Renukunta@pmcs.com
 
-aac_mutex was used to create protect the ioctl path for only the
-compat path, it would be make more sense to place mutex in
-aac_do_ioctl, which is the main ioctl function call that handles
-all ioctl commands.
+From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Created new mutex ioctl_mutex in struct aac_dev to protect switch
-case in aac_do_ioctl and removed aac_mutex from aac_cfg_ioctl and
-aac_compat_do_ioctl
+aac_fib_map_free() calls pci_free_consistent() without checking that
+dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
+are indeed NULL/0, this will result in a hang as pci_free_consistent()
+will attempt to invalidate cache for the entire 64-bit address space
+(which would take a very long time).
 
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Fixed by adding a check to make sure that dev->hw_fib_va and
+dev->max_fib_size are not NULL and 0 respectively.
+
+Changes in V2:
+None
+
+Changes in V3:
+None
+
+Changes in V4:
+None
+
+Changes in V5:
+None
+
+Fixes: 9ad5204d6 - "[SCSI]aacraid: incorrect dma mapping mask
+during blinked recover or user initiated reset"
+Cc: stable@vger.kernel.org
+
+Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/aacraid/aacraid.h  |  1 +
- drivers/scsi/aacraid/commctrl.c |  4 ++++
- drivers/scsi/aacraid/linit.c    | 12 ++----------
- 3 files changed, 7 insertions(+), 10 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 2916288..75bc65e 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1124,6 +1124,7 @@ struct aac_dev
- 	struct fib		*free_fib;
- 	spinlock_t		fib_lock;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 07a42a3..511bbc5 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
  
-+	struct mutex		ioctl_mutex;
- 	struct aac_queue_block *queues;
- 	/*
- 	 *	The user API will use an IOCTL to register itself to receive
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 54195a1..4d5f4e7 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -855,6 +855,8 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+ void aac_fib_map_free(struct aac_dev *dev)
  {
- 	int status;
- 
-+	mutex_lock(&dev->ioctl_mutex);
-+
- 	/*
- 	 *	HBA gets first crack
- 	 */
-@@ -890,6 +892,8 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
- 		status = -ENOTTY;
- 		break;
- 	}
-+	mutex_unlock(&dev->ioctl_mutex);
-+
- 	return status;
+-	pci_free_consistent(dev->pdev,
+-	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
+-	  dev->hw_fib_va, dev->hw_fib_pa);
++	if (dev->hw_fib_va && dev->max_fib_size) {
++		pci_free_consistent(dev->pdev,
++		(dev->max_fib_size *
++		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
++		dev->hw_fib_va, dev->hw_fib_pa);
++	}
+ 	dev->hw_fib_va = NULL;
+ 	dev->hw_fib_pa = 0;
  }
- 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 48e2a79..5f08bcf 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -703,23 +703,15 @@ static int aac_cfg_open(struct inode *inode, struct file *file)
- static long aac_cfg_ioctl(struct file *file,
- 		unsigned int cmd, unsigned long arg)
- {
--	int ret;
--	struct aac_dev *aac;
--	aac = (struct aac_dev *)file->private_data;
- 	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
- 		return -EPERM;
--	mutex_lock(&aac_mutex);
--	ret = aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
--	mutex_unlock(&aac_mutex);
--
--	return ret;
-+	return aac_do_ioctl(file->private_data, cmd, (void __user *)arg);
- }
- 
- #ifdef CONFIG_COMPAT
- static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long arg)
- {
- 	long ret;
--	mutex_lock(&aac_mutex);
- 	switch (cmd) {
- 	case FSACTL_MINIPORT_REV_CHECK:
- 	case FSACTL_SENDFIB:
-@@ -753,7 +745,6 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
- 		ret = -ENOIOCTLCMD;
- 		break;
- 	}
--	mutex_unlock(&aac_mutex);
- 	return ret;
- }
- 
-@@ -1194,6 +1185,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_free_host;
- 	spin_lock_init(&aac->fib_lock);
- 
-+	mutex_init(&aac->ioctl_mutex);
- 	/*
- 	 *	Map in the registers from the adapter.
- 	 */
 -- 
 1.9.1
 
