@@ -1,121 +1,129 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Separate target visibility from reaped state information
-Date: Wed, 03 Feb 2016 14:55:10 -0800
-Message-ID: <1454540110.2338.14.camel@HansenPartnership.com>
-References: <568FE922.9090004@sandisk.com>
-	 <yq1oachqehs.fsf@sermon.lab.mkp.net>
-	 <1453251809.2320.56.camel@HansenPartnership.com>
-	 <56B025E4.9010009@sandisk.com>
-	 <1454413585.2349.11.camel@HansenPartnership.com>
-	 <20160203233816.00004da7@localhost>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH V6 08/10] aacraid: Fix AIF triggered IOP_RESET
+Date: Wed, 3 Feb 2016 15:06:06 -0800
+Message-ID: <1454540768-12271-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+References: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56670 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756542AbcBCWzM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 17:55:12 -0500
-In-Reply-To: <20160203233816.00004da7@localhost>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:38075 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756695AbcBCW4C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 17:56:02 -0500
+In-Reply-To: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>, Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, thenzl@redhat.com, shane.seymour@hpe.com, RaghavaAditya.Renukunta@pmcs.com
 
-On Wed, 2016-02-03 at 23:38 +0100, Sebastian Herbszt wrote:
-> James Bottomley wrote:
-> > On Mon, 2016-02-01 at 19:43 -0800, Bart Van Assche wrote:
-> > > On 01/19/16 17:03, James Bottomley wrote:
-> > > > On Tue, 2016-01-19 at 19:30 -0500, Martin K. Petersen wrote:
-> > > > > > > > > > "Bart" == Bart Van Assche <
-> > > > > > > > > > bart.vanassche@sandisk.com>
-> > > > > > > > > > writes:
-> > > > > 
-> > > > > Bart> Instead of representing the states "visible in sysfs"
-> > > > > and
-> > > > > "has
-> > > > > Bart> been removed from the target list" by a single state
-> > > > > variable,
-> > > > > use
-> > > > > Bart> two variables to represent this information.
-> > > > > 
-> > > > > James: Are you happy with the latest iteration of this?
-> > > > > Should I
-> > > > > queue
-> > > > > it?
-> > > > 
-> > > > Well, I'm OK with the patch: it's a simple transformation of
-> > > > the
-> > > > enumerated state to a two bit state.  What I can't see is how
-> > > > it
-> > > > fixes
-> > > > any soft lockup.
-> > > > 
-> > > > The only change from the current workflow is that the DEL
-> > > > transition
-> > > > (now the reaped flag) is done before the spin lock is dropped
-> > > > which
-> > > > would fix a tiny window for two threads both trying to remove
-> > > > the
-> > > > same
-> > > > target, but there's nothing that could possibly fix an
-> > > > iterative
-> > > > soft
-> > > > lockup caused by restarting the loop, which is what the
-> > > > changelog
-> > > > says.
-> > > 
-> > > Hello James,
-> > > 
-> > > scsi_remove_target() doesn't lock the scan_mutex which means that
-> > > concurrent SCSI scanning activity is not prohibited. Such
-> > > scanning 
-> > > activity can postpone the transition of the state of a SCSI
-> > > target 
-> > > into STARGET_DEL. I think if the scheduler decides to run the
-> > > thread 
-> > > that executes scsi_remove_target() on the same CPU as the
-> > > scanning 
-> > > code after the scanning code has obtained a reap ref and before
-> > > the 
-> > > scanning code has released the reap ref again that the soft
-> > > lockup 
-> > > can be triggered that has been reported by Sebastian Herbszt.
-> > 
-> > OK, I finally understand the scenario;  I'm not sure I understand
-> > how
-> > we're getting concurrent scanning and removal from a simple rmmod
-> > ... I
-> > take it this is insmod rmmod in a tight loop?
-> 
-> I am able to trigger the soft lockup with this test case run once:
-> 
-> modprobe lpfc
-> run fio for 10 seconds
-> rmmod lpfc
-> 
-> My test setup involves running qla2xxx in target mode (SCST) and
-> lpfc as initiator on the same system with one exported volume.
+From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Hm, that doesn't seem to involve scanning colliding with removal. 
- Probably something else is pinning the target for some reason ...
-unless there's some instability or constant change on the FC fabric
-itself?  FC is hotplug, so if devices continually appear and disappear,
-they'd effectively cause a scan of the added device to take place even
-during the rmmod.
+while driver removal is in progress or PCI shutdown is invoked, driver
+kills AIF aacraid thread, but IOCTL requests from the management tools
+re-start AIF thread leading to IOP_RESET.
 
-Anyway, does the last_scan patch fix the issue?
+Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
 
-James
+Changes in V2:
+Set adapter_shutdown flag before shutdown command is sent to \
+controller
 
+Changes in V3:
+Call aac_send_shut_shutdown first thing in __aac_shutdown
+Convert adapter_shutdown to atomic_t variable to prevent \
+SMP coherency issues(race conditions)
 
-> Dick, how did you trigger the lockup?
-> 
-> Sebastian
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Changes in V4:
+Used mutex to protect ioctl path and adapter_shutdown to prevent \
+race conditions.
+
+Changes in V5:
+Moved replacement of aac_mutex with ioctl_mutex to previous patch
+
+Changes in V6:
+Unlock ioctl_mutex if adpater_shutdown is set
+
+Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+Reviewed-by: Shane Seymour <shane.seymour@hpe.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/aacraid/commctrl.c | 5 +++++
+ drivers/scsi/aacraid/comminit.c | 6 ++++--
+ drivers/scsi/aacraid/linit.c    | 5 +++--
+ 3 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index ebf214b..4b3bb52 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -857,6 +857,11 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+ 
+ 	mutex_lock(&dev->ioctl_mutex);
+ 
++	if (dev->adapter_shutdown) {
++		status = -EACCES;
++		goto cleanup;
++	}
++
+ 	/*
+ 	 *	HBA gets first crack
+ 	 */
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 0e954e3..2b4e753 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -212,8 +212,11 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 		return -ENOMEM;
+ 	aac_fib_init(fibctx);
+ 
+-	cmd = (struct aac_close *) fib_data(fibctx);
++	mutex_lock(&dev->ioctl_mutex);
++	dev->adapter_shutdown = 1;
++	mutex_unlock(&dev->ioctl_mutex);
+ 
++	cmd = (struct aac_close *) fib_data(fibctx);
+ 	cmd->command = cpu_to_le32(VM_CloseAll);
+ 	cmd->cid = cpu_to_le32(0xfffffffe);
+ 
+@@ -229,7 +232,6 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 	/* FIB should be freed only after getting the response from the F/W */
+ 	if (status != -ERESTARTSYS)
+ 		aac_fib_free(fibctx);
+-	dev->adapter_shutdown = 1;
+ 	if ((dev->pdev->device == PMC_DEVICE_S7 ||
+ 	     dev->pdev->device == PMC_DEVICE_S8 ||
+ 	     dev->pdev->device == PMC_DEVICE_S9) &&
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3f9c741..334f2a6 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -705,7 +705,7 @@ static long aac_cfg_ioctl(struct file *file,
+ {
+ 	struct aac_dev *aac = (struct aac_dev *)file->private_data;
+ 
+-	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
++	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+ 
+ 	return aac_do_ioctl(aac, cmd, (void __user *)arg);
+@@ -1072,6 +1072,8 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 	int i;
+ 	int cpu;
+ 
++	aac_send_shutdown(aac);
++
+ 	if (aac->aif_thread) {
+ 		int i;
+ 		/* Clear out events first */
+@@ -1083,7 +1085,6 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 		}
+ 		kthread_stop(aac->thread);
+ 	}
+-	aac_send_shutdown(aac);
+ 	aac_adapter_disable_int(aac);
+ 	cpu = cpumask_first(cpu_online_mask);
+ 	if (aac->pdev->device == PMC_DEVICE_S6 ||
+-- 
+1.9.1
 
