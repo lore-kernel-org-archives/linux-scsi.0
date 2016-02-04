@@ -1,178 +1,149 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [v4 04/14] scsi: ufs: verify hba controller hce reg value
-Date: Thu,  4 Feb 2016 12:36:10 +0200
-Message-ID: <1454582180-3823-5-git-send-email-ygardi@codeaurora.org>
+Subject: [v4 06/14] scsi: ufs: disable vccq if it's not needed by UFS device
+Date: Thu,  4 Feb 2016 12:36:12 +0200
+Message-ID: <1454582180-3823-7-git-send-email-ygardi@codeaurora.org>
 References: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Sometimes due to hw issues it takes some time to the
-host controller register to update. In order to verify the register
-has updated, a polling is done until its value is set.
+Some UFS devices don't require VCCQ rail for device operations hence
+this change adds support to recognize such devices and remove vote for
+the unused VCCQ rail.
 
-In addition the functions ufshcd_hba_stop() and
-ufshcd_wait_for_register() was updated with an additional input
-parameter, indicating the timeout between reads will
-be done by sleeping or spinning the cpu.
-
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h | 12 +++--------
- 2 files changed, 35 insertions(+), 30 deletions(-)
+ drivers/scsi/ufs/ufs.h    |  1 +
+ drivers/scsi/ufs/ufshcd.c | 60 +++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 57 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 8dd608b..0a20912 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -501,6 +501,7 @@ struct ufs_vreg {
+ 	struct regulator *reg;
+ 	const char *name;
+ 	bool enabled;
++	bool unused;
+ 	int min_uV;
+ 	int max_uV;
+ 	int min_uA;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 99cd679..df0316b 100644
+index 95db156..aa82b67 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
-  * @val - wait condition
-  * @interval_us - polling interval in microsecs
-  * @timeout_ms - timeout in millisecs
-+ * @can_sleep - perform sleep or just spin
-  *
-  * Returns -ETIMEDOUT on error, zero on success
-  */
--static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
--		u32 val, unsigned long interval_us, unsigned long timeout_ms)
-+int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+				u32 val, unsigned long interval_us,
-+				unsigned long timeout_ms, bool can_sleep)
- {
- 	int err = 0;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
-@@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
- 	val = val & mask;
+@@ -195,6 +195,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 bool skip_ref_clk);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
++static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
+ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+@@ -4593,6 +4594,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 		goto out;
  
- 	while ((ufshcd_readl(hba, reg) & mask) != val) {
--		/* wakeup within 50us of expiry */
--		usleep_range(interval_us, interval_us + 50);
--
-+		if (can_sleep)
-+			usleep_range(interval_us, interval_us + 50);
-+		else
-+			udelay(interval_us);
- 		if (time_after(jiffies, timeout)) {
- 			if ((ufshcd_readl(hba, reg) & mask) != val)
- 				err = -ETIMEDOUT;
-@@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
- 	 */
- 	err = ufshcd_wait_for_register(hba,
- 			REG_UTP_TRANSFER_REQ_DOOR_BELL,
--			mask, ~mask, 1000, 1000);
-+			mask, ~mask, 1000, 1000, true);
- 
- 	return err;
- }
-@@ -2815,6 +2818,23 @@ out:
- }
- 
- /**
-+ * ufshcd_hba_stop - Send controller to reset state
-+ * @hba: per adapter instance
-+ * @can_sleep: perform sleep or just spin
-+ */
-+static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
-+{
-+	int err;
+ 	ufs_advertise_fixup_device(hba);
 +
-+	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
-+	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
-+					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
-+					10, 1, can_sleep);
-+	if (err)
-+		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
++	ret = ufshcd_set_vccq_rail_unused(hba,
++		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
++	if (ret)
++		goto out;
++
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+@@ -4743,13 +4750,24 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+ static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
++	if (!vreg)
++		return 0;
++	else if (vreg->unused)
++		return 0;
++	else
++		return ufshcd_config_vreg_load(hba->dev, vreg,
++					       UFS_VREG_LPM_LOAD_UA);
+ }
+ 
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
++	if (!vreg)
++		return 0;
++	else if (vreg->unused)
++		return 0;
++	else
++		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+ }
+ 
+ static int ufshcd_config_vreg(struct device *dev,
+@@ -4784,7 +4802,9 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg || vreg->enabled)
++	if (!vreg)
++		goto out;
++	else if (vreg->enabled || vreg->unused)
+ 		goto out;
+ 
+ 	ret = ufshcd_config_vreg(dev, vreg, true);
+@@ -4804,7 +4824,9 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg || !vreg->enabled)
++	if (!vreg)
++		goto out;
++	else if (!vreg->enabled || vreg->unused)
+ 		goto out;
+ 
+ 	ret = regulator_disable(vreg->reg);
+@@ -4910,6 +4932,36 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
++static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
++{
++	int ret = 0;
++	struct ufs_vreg_info *info = &hba->vreg_info;
++
++	if (!info)
++		goto out;
++	else if (!info->vccq)
++		goto out;
++
++	if (unused) {
++		/* shut off the rail here */
++		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
++		/*
++		 * Mark this rail as no longer used, so it doesn't get enabled
++		 * later by mistake
++		 */
++		if (!ret)
++			info->vccq->unused = true;
++	} else {
++		/*
++		 * rail should have been already enabled hence just make sure
++		 * that unused flag is cleared.
++		 */
++		info->vccq->unused = false;
++	}
++out:
++	return ret;
 +}
 +
-+/**
-  * ufshcd_hba_enable - initialize the controller
-  * @hba: per adapter instance
-  *
-@@ -2834,18 +2854,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	 * development and testing of this driver. msleep can be changed to
- 	 * mdelay and retry count can be reduced based on the controller.
- 	 */
--	if (!ufshcd_is_hba_active(hba)) {
--
-+	if (!ufshcd_is_hba_active(hba))
- 		/* change controller state to "reset state" */
--		ufshcd_hba_stop(hba);
--
--		/*
--		 * This delay is based on the testing done with UFS host
--		 * controller FPGA. The delay can be changed based on the
--		 * host controller used.
--		 */
--		msleep(5);
--	}
-+		ufshcd_hba_stop(hba, true);
- 
- 	/* UniPro link is disabled at this point */
- 	ufshcd_set_link_off(hba);
-@@ -3898,7 +3909,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- 	/* poll for max. 1 sec to clear door bell register by h/w */
- 	err = ufshcd_wait_for_register(hba,
- 			REG_UTP_TASK_REQ_DOOR_BELL,
--			mask, 0, 1000, 1000);
-+			mask, 0, 1000, 1000, true);
- out:
- 	return err;
- }
-@@ -4180,7 +4191,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 
- 	/* Reset the host controller */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_hba_stop(hba);
-+	ufshcd_hba_stop(hba, false);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	err = ufshcd_hba_enable(hba);
-@@ -5133,7 +5144,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 		 * Change controller state to "reset state" which
- 		 * should also put the link in off/reset state
- 		 */
--		ufshcd_hba_stop(hba);
-+		ufshcd_hba_stop(hba, true);
- 		/*
- 		 * TODO: Check if we need any delay to make sure that
- 		 * controller is reset
-@@ -5609,7 +5620,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	scsi_remove_host(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
--	ufshcd_hba_stop(hba);
-+	ufshcd_hba_stop(hba, true);
- 
- 	scsi_host_put(hba->host);
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 2e5bbce..27ae395 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -590,15 +590,9 @@ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- void ufshcd_dealloc_host(struct ufs_hba *);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
--
--/**
-- * ufshcd_hba_stop - Send controller to reset state
-- * @hba: per adapter instance
-- */
--static inline void ufshcd_hba_stop(struct ufs_hba *hba)
--{
--	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
--}
-+int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+				u32 val, unsigned long interval_us,
-+				unsigned long timeout_ms, bool can_sleep);
- 
- static inline void check_upiu_size(void)
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 					bool skip_ref_clk)
  {
 -- 
 1.8.5.2
