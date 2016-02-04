@@ -1,150 +1,148 @@
 From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: [Resend PATCH 2/3] scsi:stex.c Add hotplug support
-Date: Thu, 04 Feb 2016 19:21:36 +0800
-Message-ID: <56B33440.50409@gmail.com>
-References: <55E83DB3.5050209@gmail.com> <mqdegifbnzg.fsf@c203.arch.suse.de> <56AB4B89.6070309@gmail.com>
+Subject: [Resend PATCH 3/3] scsi:stex.c Add S3/S4 support
+Date: Thu, 04 Feb 2016 19:22:59 +0800
+Message-ID: <56B33493.80300@gmail.com>
+References: <55E83F66.2060300@gmail.com> <mqd8u8nbnw5.fsf@c203.arch.suse.de> <56AB4BBD.2030702@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56AB4B89.6070309@gmail.com>
+In-Reply-To: <56AB4BBD.2030702@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>
 Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, eva.cheng@tw.promise.com
 List-Id: linux-scsi@vger.kernel.org
 
-
- From 60e14c245c18cbe0300cfa244334e2850a52a381 Mon Sep 17 00:00:00 2001
+ From f442518879f8f41d103b684046d912eca13844e7 Mon Sep 17 00:00:00 2001
 From: Charles <charles.chiou@tw.promise.com>
-Date: Wed, 2 Sep 2015 20:48:55 +0800
-Subject: [PATCH 2/3] scsi:stex.c Add hotplug support
+Date: Wed, 2 Sep 2015 20:54:45 +0800
+Subject: [PATCH 3/3] scsi:stex.c Add S3/S4 support
 
-1. Add hotplug support. Pegasus support surprise removal. To this end, I
-     use return_abnormal_state function to return DID_NO_CONNECT for all
-        commands which sent to driver.
+Add S3/S4 support, add .suspend and .resume function in pci_driver.
+In .suspend handler, driver send S3/S4 signal to the device.
 
-2. Remove stex_hba_stop in stex_remove because we cannot send command to
-     device after hotplug.
-
-3. Add new device status:  MU_STATE_STOP, MU_STATE_NOCONNECT,
-     MU_STATE_STOP. MU_STATE_STOP is currently not referenced.
-     MU_STATE_NOCONNECT represent that device is plugged out from the host.
-
-4. Use return_abnormal_function() to substitute part of code in 
-stex_do_reset.
-
-V2: N/A
+V2: Remove blank lines
 
 Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 ---
-   drivers/scsi/stex.c | 53 
-++++++++++++++++++++++++++++++++++-------------------
-   1 file changed, 34 insertions(+), 19 deletions(-)
+   drivers/scsi/stex.c | 59 
+++++++++++++++++++++++++++++++++++++++++++++++++++---
+   1 file changed, 56 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 0c93f1f..4ef0c80 100644
+index 4ef0c80..c96a86d 100644
 --- a/drivers/scsi/stex.c
 +++ b/drivers/scsi/stex.c
-@@ -83,6 +83,8 @@ enum {
-       MU_STATE_STARTED            = 2,
-       MU_STATE_RESETTING            = 3,
-       MU_STATE_FAILED                = 4,
-+    MU_STATE_STOP                = 5,
-+    MU_STATE_NOCONNECT            = 6,
+@@ -166,6 +166,13 @@ enum {
 
-       MU_MAX_DELAY                = 120,
-       MU_HANDSHAKE_SIGNATURE            = 0x55aaaa55,
-@@ -544,6 +546,27 @@ stex_ss_send_cmd(struct st_hba *hba, struct req_msg 
-*req,
-u16 tag)
-       readl(hba->mmio_base + YH2I_REQ); /* flush */
+       ST_ADDITIONAL_MEM            = 0x200000,
+       ST_ADDITIONAL_MEM_MIN            = 0x80000,
++    PMIC_SHUTDOWN                = 0x0D,
++    PMIC_REUMSE                    = 0x10,
++    ST_IGNORED                    = -1,
++    ST_S3                        = 3,
++    ST_S4                        = 4,
++    ST_S5                        = 5,
++    ST_S6                        = 6,
+   };
+
+   struct st_sgitem {
+@@ -1733,7 +1740,7 @@ out_disable:
+       return err;
    }
 
-+static void return_abnormal_state(struct st_hba *hba, int status)
-+{
-+    struct st_ccb *ccb;
-+    unsigned long flags;
-+    u16 tag;
-+
-+    spin_lock_irqsave(hba->host->host_lock, flags);
-+    for (tag = 0; tag < hba->host->can_queue; tag++) {
-+        ccb = &hba->ccb[tag];
-+        if (ccb->req == NULL)
-+            continue;
-+        ccb->req = NULL;
-+        if (ccb->cmd) {
-+            scsi_dma_unmap(ccb->cmd);
-+            ccb->cmd->result = status << 16;
-+            ccb->cmd->scsi_done(ccb->cmd);
-+            ccb->cmd = NULL;
-+        }
-+    }
-+    spin_unlock_irqrestore(hba->host->host_lock, flags);
-+}
-   static int
-   stex_slave_config(struct scsi_device *sdev)
+-static void stex_hba_stop(struct st_hba *hba)
++static void stex_hba_stop(struct st_hba *hba, int st_sleep_mic)
    {
-@@ -567,8 +590,12 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void
-(*done)(struct scsi_cmnd *))
-       id = cmd->device->id;
-       lun = cmd->device->lun;
-       hba = (struct st_hba *) &host->hostdata[0];
--
--    if (unlikely(hba->mu_status == MU_STATE_RESETTING))
-+    if (hba->mu_status == MU_STATE_NOCONNECT) {
-+        cmd->result = DID_NO_CONNECT;
-+        done(cmd);
-+        return 0;
-+    }
-+    if (unlikely(hba->mu_status != MU_STATE_STARTED))
-           return SCSI_MLQUEUE_HOST_BUSY;
+       struct req_msg *req;
+       struct st_msg_header *msg_h;
+@@ -1749,11 +1756,18 @@ static void stex_hba_stop(struct st_hba *hba)
+       } else
+           memset(req, 0, hba->rq_size);
 
-       switch (cmd->cmnd[0]) {
-@@ -1267,10 +1294,8 @@ static void stex_ss_reset(struct st_hba *hba)
+-    if (hba->cardtype == st_yosemite || hba->cardtype == st_yel) {
++    if ((hba->cardtype == st_yosemite || hba->cardtype == st_yel)
++        && st_sleep_mic == ST_IGNORED) {
+           req->cdb[0] = MGT_CMD;
+           req->cdb[1] = MGT_CMD_SIGNATURE;
+           req->cdb[2] = CTLR_CONFIG_CMD;
+           req->cdb[3] = CTLR_SHUTDOWN;
++    } else if (hba->cardtype == st_yel && st_sleep_mic != ST_IGNORED) {
++        req->cdb[0] = MGT_CMD;
++        req->cdb[1] = MGT_CMD_SIGNATURE;
++        req->cdb[2] = CTLR_CONFIG_CMD;
++        req->cdb[3] = PMIC_SHUTDOWN;
++        req->cdb[4] = st_sleep_mic;
+       } else {
+           req->cdb[0] = CONTROLLER_CMD;
+           req->cdb[1] = CTLR_POWER_STATE_CHANGE;
+@@ -1773,10 +1787,12 @@ static void stex_hba_stop(struct st_hba *hba)
+       while (hba->ccb[tag].req_type & PASSTHRU_REQ_TYPE) {
+           if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
+               hba->ccb[tag].req_type = 0;
++            hba->mu_status = MU_STATE_STOP;
+               return;
+           }
+           msleep(1);
+       }
++    hba->mu_status = MU_STATE_STOP;
+   }
 
-   static int stex_do_reset(struct st_hba *hba)
-   {
--    struct st_ccb *ccb;
-       unsigned long flags;
-       unsigned int mu_status = MU_STATE_RESETTING;
--    u16 tag;
-
-       spin_lock_irqsave(hba->host->host_lock, flags);
-       if (hba->mu_status == MU_STATE_STARTING) {
-@@ -1304,20 +1329,8 @@ static int stex_do_reset(struct st_hba *hba)
-       else if (hba->cardtype == st_yel)
-           stex_ss_reset(hba);
-
--    spin_lock_irqsave(hba->host->host_lock, flags);
--    for (tag = 0; tag < hba->host->can_queue; tag++) {
--        ccb = &hba->ccb[tag];
--        if (ccb->req == NULL)
--            continue;
--        ccb->req = NULL;
--        if (ccb->cmd) {
--            scsi_dma_unmap(ccb->cmd);
--            ccb->cmd->result = DID_RESET << 16;
--            ccb->cmd->scsi_done(ccb->cmd);
--            ccb->cmd = NULL;
--        }
--    }
--    spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+    return_abnormal_state(hba, DID_RESET);
-
-       if (stex_handshake(hba) == 0)
-           return 0;
-@@ -1786,9 +1799,11 @@ static void stex_remove(struct pci_dev *pdev)
+   static void stex_hba_free(struct st_hba *hba)
+@@ -1816,9 +1832,44 @@ static void stex_shutdown(struct pci_dev *pdev)
    {
        struct st_hba *hba = pci_get_drvdata(pdev);
 
-+    hba->mu_status = MU_STATE_NOCONNECT;
-+    return_abnormal_state(hba, DID_NO_CONNECT);
-       scsi_remove_host(hba->host);
-
 -    stex_hba_stop(hba);
-+    scsi_block_requests(hba->host);
++    if (hba->supports_pm == 0)
++        stex_hba_stop(hba, ST_IGNORED);
++    else
++        stex_hba_stop(hba, ST_S5);
++}
++
++static int stex_choice_sleep_mic(pm_message_t state)
++{
++    switch (state.event) {
++    case PM_EVENT_SUSPEND:
++        return ST_S3;
++    case PM_EVENT_FREEZE:
++    case PM_EVENT_HIBERNATE:
++        return ST_S4;
++    default:
++        return ST_S4;
++    }
++}
++
++static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++    struct st_hba *hba = pci_get_drvdata(pdev);
++
++    if (hba->cardtype == st_yel && hba->supports_pm == 1)
++        stex_hba_stop(hba, stex_choice_sleep_mic(state));
++    else
++        stex_hba_stop(hba, ST_IGNORED);
++    return 0;
+   }
 
-       stex_hba_free(hba);
++static int stex_resume(struct pci_dev *pdev)
++{
++    struct st_hba *hba = pci_get_drvdata(pdev);
++
++    hba->mu_status = MU_STATE_STARTING;
++    stex_handshake(hba);
++    return 0;
++}
+   MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
+
+   static struct pci_driver stex_pci_driver = {
+@@ -1827,6 +1878,8 @@ static struct pci_driver stex_pci_driver = {
+       .probe        = stex_probe,
+       .remove        = stex_remove,
+       .shutdown    = stex_shutdown,
++    .suspend    = stex_suspend,
++    .resume        = stex_resume,
+   };
+
+   static int __init stex_init(void)
