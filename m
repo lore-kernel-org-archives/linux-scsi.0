@@ -1,150 +1,263 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [v4 06/14] scsi: ufs: disable vccq if it's not needed by UFS device
-Date: Thu,  4 Feb 2016 12:36:12 +0200
-Message-ID: <1454582180-3823-7-git-send-email-ygardi@codeaurora.org>
+Subject: [v4 11/14] scsi: ufs: tune UniPro parameters to optimize hibern8 exit time
+Date: Thu,  4 Feb 2016 12:36:17 +0200
+Message-ID: <1454582180-3823-12-git-send-email-ygardi@codeaurora.org>
 References: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some UFS devices don't require VCCQ rail for device operations hence
-this change adds support to recognize such devices and remove vote for
-the unused VCCQ rail.
+Optimal values of local UniPro parameters like PA_Hibern8Time &
+PA_TActivate can help reduce the hibern8 exit latency. If both host and
+device supports UniPro ver1.6 or later, these parameters will be
+automatically tuned during link startup itself. But if either host or
+device doesn't support UniPro ver 1.6 or later, we have to manually
+tune them. But to keep manual tuning logic simple, we will only do
+manual tuning if local unipro version doesn't support ver1.6 or later.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs.h    |  1 +
- drivers/scsi/ufs/ufshcd.c | 60 +++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 57 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 118 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h |   1 +
+ drivers/scsi/ufs/ufshci.h |   2 +
+ drivers/scsi/ufs/unipro.h |  21 +++++++++
+ 4 files changed, 142 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 8dd608b..0a20912 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -501,6 +501,7 @@ struct ufs_vreg {
- 	struct regulator *reg;
- 	const char *name;
- 	bool enabled;
-+	bool unused;
- 	int min_uV;
- 	int max_uV;
- 	int min_uA;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 95db156..aa82b67 100644
+index 3f27466..3c550e2 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -195,6 +195,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 				 bool skip_ref_clk);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
-+static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
- static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
- static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
-@@ -4593,6 +4594,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		goto out;
+@@ -570,6 +570,34 @@ static inline int ufshcd_is_hba_active(struct ufs_hba *hba)
+ 	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
+ }
  
- 	ufs_advertise_fixup_device(hba);
++u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
++{
++	/* HCI version 1.0 and 1.1 supports UniPro 1.41 */
++	if ((hba->ufs_version == UFSHCI_VERSION_10) ||
++	    (hba->ufs_version == UFSHCI_VERSION_11))
++		return UFS_UNIPRO_VER_1_41;
++	else
++		return UFS_UNIPRO_VER_1_6;
++}
++EXPORT_SYMBOL(ufshcd_get_local_unipro_ver);
 +
-+	ret = ufshcd_set_vccq_rail_unused(hba,
-+		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
++static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
++{
++	/*
++	 * If both host and device support UniPro ver1.6 or later, PA layer
++	 * parameters tuning happens during link startup itself.
++	 *
++	 * We can manually tune PA layer parameters if either host or device
++	 * doesn't support UniPro ver 1.6 or later. But to keep manual tuning
++	 * logic simple, we will only do manual tuning if local unipro version
++	 * doesn't support ver1.6 or later.
++	 */
++	if (ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6)
++		return true;
++	else
++		return false;
++}
++
+ static void ufshcd_ungate_work(struct work_struct *work)
+ {
+ 	int ret;
+@@ -4783,6 +4811,95 @@ out:
+ }
+ 
+ /**
++ * ufshcd_tune_pa_tactivate - Tunes PA_TActivate of local UniPro
++ * @hba: per-adapter instance
++ *
++ * PA_TActivate parameter can be tuned manually if UniPro version is less than
++ * 1.61. PA_TActivate needs to be greater than or equal to peerM-PHY's
++ * RX_MIN_ACTIVATETIME_CAPABILITY attribute. This optimal value can help reduce
++ * the hibern8 exit latency.
++ *
++ * Returns zero on success, non-zero error value on failure.
++ */
++static int ufshcd_tune_pa_tactivate(struct ufs_hba *hba)
++{
++	int ret = 0;
++	u32 peer_rx_min_activatetime = 0, tuned_pa_tactivate;
++
++	ret = ufshcd_dme_peer_get(hba,
++				  UIC_ARG_MIB_SEL(
++					RX_MIN_ACTIVATETIME_CAPABILITY,
++					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
++				  &peer_rx_min_activatetime);
 +	if (ret)
 +		goto out;
 +
- 	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
-@@ -4743,13 +4750,24 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
-+	if (!vreg)
-+		return 0;
-+	else if (vreg->unused)
-+		return 0;
-+	else
-+		return ufshcd_config_vreg_load(hba->dev, vreg,
-+					       UFS_VREG_LPM_LOAD_UA);
- }
- 
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
-+	if (!vreg)
-+		return 0;
-+	else if (vreg->unused)
-+		return 0;
-+	else
-+		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
- }
- 
- static int ufshcd_config_vreg(struct device *dev,
-@@ -4784,7 +4802,9 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
- 
--	if (!vreg || vreg->enabled)
-+	if (!vreg)
-+		goto out;
-+	else if (vreg->enabled || vreg->unused)
- 		goto out;
- 
- 	ret = ufshcd_config_vreg(dev, vreg, true);
-@@ -4804,7 +4824,9 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
- 
--	if (!vreg || !vreg->enabled)
-+	if (!vreg)
-+		goto out;
-+	else if (!vreg->enabled || vreg->unused)
- 		goto out;
- 
- 	ret = regulator_disable(vreg->reg);
-@@ -4910,6 +4932,36 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
- 	return 0;
- }
- 
-+static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
-+{
-+	int ret = 0;
-+	struct ufs_vreg_info *info = &hba->vreg_info;
++	/* make sure proper unit conversion is applied */
++	tuned_pa_tactivate =
++		((peer_rx_min_activatetime * RX_MIN_ACTIVATETIME_UNIT_US)
++		 / PA_TACTIVATE_TIME_UNIT_US);
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE),
++			     tuned_pa_tactivate);
 +
-+	if (!info)
-+		goto out;
-+	else if (!info->vccq)
-+		goto out;
-+
-+	if (unused) {
-+		/* shut off the rail here */
-+		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
-+		/*
-+		 * Mark this rail as no longer used, so it doesn't get enabled
-+		 * later by mistake
-+		 */
-+		if (!ret)
-+			info->vccq->unused = true;
-+	} else {
-+		/*
-+		 * rail should have been already enabled hence just make sure
-+		 * that unused flag is cleared.
-+		 */
-+		info->vccq->unused = false;
-+	}
 +out:
 +	return ret;
 +}
 +
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 					bool skip_ref_clk)
- {
++/**
++ * ufshcd_tune_pa_hibern8time - Tunes PA_Hibern8Time of local UniPro
++ * @hba: per-adapter instance
++ *
++ * PA_Hibern8Time parameter can be tuned manually if UniPro version is less than
++ * 1.61. PA_Hibern8Time needs to be maximum of local M-PHY's
++ * TX_HIBERN8TIME_CAPABILITY & peer M-PHY's RX_HIBERN8TIME_CAPABILITY.
++ * This optimal value can help reduce the hibern8 exit latency.
++ *
++ * Returns zero on success, non-zero error value on failure.
++ */
++static int ufshcd_tune_pa_hibern8time(struct ufs_hba *hba)
++{
++	int ret = 0;
++	u32 local_tx_hibern8_time_cap = 0, peer_rx_hibern8_time_cap = 0;
++	u32 max_hibern8_time, tuned_pa_hibern8time;
++
++	ret = ufshcd_dme_get(hba,
++			     UIC_ARG_MIB_SEL(TX_HIBERN8TIME_CAPABILITY,
++					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
++				  &local_tx_hibern8_time_cap);
++	if (ret)
++		goto out;
++
++	ret = ufshcd_dme_peer_get(hba,
++				  UIC_ARG_MIB_SEL(RX_HIBERN8TIME_CAPABILITY,
++					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
++				  &peer_rx_hibern8_time_cap);
++	if (ret)
++		goto out;
++
++	max_hibern8_time = max(local_tx_hibern8_time_cap,
++			       peer_rx_hibern8_time_cap);
++	/* make sure proper unit conversion is applied */
++	tuned_pa_hibern8time = ((max_hibern8_time * HIBERN8TIME_UNIT_US)
++				/ PA_HIBERN8_TIME_UNIT_US);
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
++			     tuned_pa_hibern8time);
++out:
++	return ret;
++}
++
++static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
++{
++	if (ufshcd_is_unipro_pa_params_tuning_req(hba)) {
++		ufshcd_tune_pa_tactivate(hba);
++		ufshcd_tune_pa_hibern8time(hba);
++	}
++
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_TACTIVATE)
++		/* set 1ms timeout for PA_TACTIVATE */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE), 10);
++}
++
++/**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
+  *
+@@ -4814,6 +4931,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 		goto out;
+ 
+ 	ufs_advertise_fixup_device(hba);
++	ufshcd_tune_unipro_params(hba);
+ 
+ 	ret = ufshcd_set_vccq_rail_unused(hba,
+ 		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 51b00e1..724f21c 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -699,6 +699,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
++u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba);
+ 
+ /* Wrapper functions for safely calling variant operations */
+ static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 2b05bfb..4cb1cc6 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -92,6 +92,7 @@ enum {
+ 	UFSHCI_VERSION_10 = 0x00010000, /* 1.0 */
+ 	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
+ 	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
++	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
+ };
+ 
+ /*
+@@ -211,6 +212,7 @@ enum {
+ 
+ /* GenSelectorIndex calculation macros for M-PHY attributes */
+ #define UIC_ARG_MPHY_TX_GEN_SEL_INDEX(lane) (lane)
++#define UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane) (PA_MAXDATALANES + (lane))
+ 
+ #define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
+ 					 ((sel) & 0xFFFF))
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+index 816a8a4..8082020 100644
+--- a/drivers/scsi/ufs/unipro.h
++++ b/drivers/scsi/ufs/unipro.h
+@@ -15,6 +15,7 @@
+ /*
+  * M-TX Configuration Attributes
+  */
++#define TX_HIBERN8TIME_CAPABILITY		0x000F
+ #define TX_MODE					0x0021
+ #define TX_HSRATE_SERIES			0x0022
+ #define TX_HSGEAR				0x0023
+@@ -48,8 +49,12 @@
+ #define RX_ENTER_HIBERN8			0x00A7
+ #define RX_BYPASS_8B10B_ENABLE			0x00A8
+ #define RX_TERMINATION_FORCE_ENABLE		0x0089
++#define RX_MIN_ACTIVATETIME_CAPABILITY		0x008F
++#define RX_HIBERN8TIME_CAPABILITY		0x0092
+ 
+ #define is_mphy_tx_attr(attr)			(attr < RX_MODE)
++#define RX_MIN_ACTIVATETIME_UNIT_US		100
++#define HIBERN8TIME_UNIT_US			100
+ /*
+  * PHY Adpater attributes
+  */
+@@ -110,6 +115,12 @@
+ #define PA_STALLNOCONFIGTIME	0x15A3
+ #define PA_SAVECONFIGTIME	0x15A4
+ 
++#define PA_TACTIVATE_TIME_UNIT_US	10
++#define PA_HIBERN8_TIME_UNIT_US		100
++
++/* PHY Adapter Protocol Constants */
++#define PA_MAXDATALANES	4
++
+ /* PA power modes */
+ enum {
+ 	FAST_MODE	= 1,
+@@ -143,6 +154,16 @@ enum ufs_hs_gear_tag {
+ 	UFS_HS_G3,		/* HS Gear 3 */
+ };
+ 
++enum ufs_unipro_ver {
++	UFS_UNIPRO_VER_RESERVED = 0,
++	UFS_UNIPRO_VER_1_40 = 1, /* UniPro version 1.40 */
++	UFS_UNIPRO_VER_1_41 = 2, /* UniPro version 1.41 */
++	UFS_UNIPRO_VER_1_6 = 3,  /* UniPro version 1.6 */
++	UFS_UNIPRO_VER_MAX = 4,  /* UniPro unsupported version */
++	/* UniPro version field mask in PA_LOCALVERINFO */
++	UFS_UNIPRO_VER_MASK = 0xF,
++};
++
+ /*
+  * Data Link Layer Attributes
+  */
 -- 
 1.8.5.2
 
