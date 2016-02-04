@@ -1,138 +1,182 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v1 05/12] be2iscsi: Remove be_mbox_notify_wait function
-Date: Thu,  4 Feb 2016 15:49:13 +0530
-Message-ID: <1454581160-31869-6-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v1 11/12] be2iscsi: _bh for io_sgl_lock and mgmt_sgl_lock
+Date: Thu,  4 Feb 2016 15:49:19 +0530
+Message-ID: <1454581160-31869-12-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:62101 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757836AbcBDKhd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 05:37:33 -0500
+	by vger.kernel.org with ESMTP id S964835AbcBDKhj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 05:37:39 -0500
 In-Reply-To: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-be_mbox_notify_wait does exactly same thing as be_mbox_notify.
+Processing of mgmt and IO tasks are done in process context and sofitrqs.
+
+Allocation and freeing of sgl_handles needs to be done under
+spin_lock_bh/spin_unlock_bh and move the locks to the routines.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 79 +++--------------------------------------
- 1 file changed, 4 insertions(+), 75 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 1fe8eb8..12b60dd 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -625,8 +625,6 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
- 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
- 	struct be_dma_mem *mbox_mem = &ctrl->mbox_mem;
- 	struct be_mcc_mailbox *mbox = mbox_mem->va;
--	struct be_mcc_compl *compl = &mbox->compl;
--	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 03265b6..fa2b589 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -1132,6 +1132,7 @@ static struct sgl_handle *alloc_io_sgl_handle(struct beiscsi_hba *phba)
+ {
+ 	struct sgl_handle *psgl_handle;
  
- 	status = be_mbox_db_ready_poll(ctrl);
- 	if (status)
-@@ -654,77 +652,8 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
- 	/* RDY is set; small delay before CQE read. */
- 	udelay(1);
- 
--	if (be_mcc_compl_is_new(compl)) {
--		status = beiscsi_process_mbox_compl(ctrl, compl);
--		be_mcc_compl_use(compl);
--		if (status) {
--			beiscsi_log(phba, KERN_ERR,
--				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--				    "BC_%d : After beiscsi_process_mbox_compl\n");
--
--			return status;
--		}
--	} else {
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : Invalid Mailbox Completion\n");
--
--		return -EBUSY;
--	}
--	return 0;
--}
--
--/*
-- * Insert the mailbox address into the doorbell in two steps
-- * Polls on the mbox doorbell till a command completion (or a timeout) occurs
-- */
--static int be_mbox_notify_wait(struct beiscsi_hba *phba)
--{
--	int status;
--	u32 val = 0;
--	void __iomem *db = phba->ctrl.db + MPU_MAILBOX_DB_OFFSET;
--	struct be_dma_mem *mbox_mem = &phba->ctrl.mbox_mem;
--	struct be_mcc_mailbox *mbox = mbox_mem->va;
--	struct be_mcc_compl *compl = &mbox->compl;
--	struct be_ctrl_info *ctrl = &phba->ctrl;
--
--	status = be_mbox_db_ready_poll(ctrl);
--	if (status)
--		return status;
--
--	val |= MPU_MAILBOX_DB_HI_MASK;
--	/* at bits 2 - 31 place mbox dma addr msb bits 34 - 63 */
--	val |= (upper_32_bits(mbox_mem->dma) >> 2) << 2;
--	iowrite32(val, db);
--
--	/* wait for ready to be set */
--	status = be_mbox_db_ready_poll(ctrl);
--	if (status != 0)
--		return status;
--
--	val = 0;
--	/* at bits 2 - 31 place mbox dma addr lsb bits 4 - 33 */
--	val |= (u32)(mbox_mem->dma >> 4) << 2;
--	iowrite32(val, db);
--
--	status = be_mbox_db_ready_poll(ctrl);
--	if (status != 0)
--		return status;
--
--	/* A cq entry has been made now */
--	if (be_mcc_compl_is_new(compl)) {
--		status = beiscsi_process_mbox_compl(ctrl, &mbox->compl);
--		be_mcc_compl_use(compl);
--		if (status)
--			return status;
--	} else {
--		beiscsi_log(phba, KERN_ERR,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--			    "BC_%d : invalid mailbox completion\n");
--
--		return -EBUSY;
--	}
--	return 0;
-+	status = beiscsi_process_mbox_compl(ctrl, &mbox->compl);
-+	return status;
++	spin_lock_bh(&phba->io_sgl_lock);
+ 	if (phba->io_sgl_hndl_avbl) {
+ 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
+ 			    "BM_%d : In alloc_io_sgl_handle,"
+@@ -1149,12 +1150,14 @@ static struct sgl_handle *alloc_io_sgl_handle(struct beiscsi_hba *phba)
+ 			phba->io_sgl_alloc_index++;
+ 	} else
+ 		psgl_handle = NULL;
++	spin_unlock_bh(&phba->io_sgl_lock);
+ 	return psgl_handle;
  }
  
- void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
-@@ -1039,7 +968,7 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
+ static void
+ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ {
++	spin_lock_bh(&phba->io_sgl_lock);
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
+ 		    "BM_%d : In free_,io_sgl_free_index=%d\n",
+ 		    phba->io_sgl_free_index);
+@@ -1169,6 +1172,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ 			     "value there=%p\n", phba->io_sgl_free_index,
+ 			     phba->io_sgl_hndl_base
+ 			     [phba->io_sgl_free_index]);
++		 spin_unlock_bh(&phba->io_sgl_lock);
+ 		return;
+ 	}
+ 	phba->io_sgl_hndl_base[phba->io_sgl_free_index] = psgl_handle;
+@@ -1177,6 +1181,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ 		phba->io_sgl_free_index = 0;
+ 	else
+ 		phba->io_sgl_free_index++;
++	spin_unlock_bh(&phba->io_sgl_lock);
+ }
  
- 	be_cmd_page_addrs_prepare(req->pages, ARRAY_SIZE(req->pages), q_mem);
+ static inline struct wrb_handle *
+@@ -1257,6 +1262,7 @@ static struct sgl_handle *alloc_mgmt_sgl_handle(struct beiscsi_hba *phba)
+ {
+ 	struct sgl_handle *psgl_handle;
  
--	status = be_mbox_notify_wait(phba);
-+	status = be_mbox_notify(ctrl);
- 	if (!status) {
- 		struct be_cmd_resp_mcc_create *resp = embedded_payload(wrb);
- 		mccq->id = le16_to_cpu(resp->id);
-@@ -1381,7 +1310,7 @@ int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
- 			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
--	status = be_mbox_notify_wait(phba);
-+	status = be_mbox_notify(ctrl);
++	spin_lock_bh(&phba->mgmt_sgl_lock);
+ 	if (phba->eh_sgl_hndl_avbl) {
+ 		psgl_handle = phba->eh_sgl_hndl_base[phba->eh_sgl_alloc_index];
+ 		phba->eh_sgl_hndl_base[phba->eh_sgl_alloc_index] = NULL;
+@@ -1274,13 +1280,14 @@ static struct sgl_handle *alloc_mgmt_sgl_handle(struct beiscsi_hba *phba)
+ 			phba->eh_sgl_alloc_index++;
+ 	} else
+ 		psgl_handle = NULL;
++	spin_unlock_bh(&phba->mgmt_sgl_lock);
+ 	return psgl_handle;
+ }
  
- 	mutex_unlock(&ctrl->mbox_lock);
- 	return status;
+ void
+ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ {
+-
++	spin_lock_bh(&phba->mgmt_sgl_lock);
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
+ 		    "BM_%d : In  free_mgmt_sgl_handle,"
+ 		    "eh_sgl_free_index=%d\n",
+@@ -1295,6 +1302,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ 			    "BM_%d : Double Free in eh SGL ,"
+ 			    "eh_sgl_free_index=%d\n",
+ 			    phba->eh_sgl_free_index);
++		spin_unlock_bh(&phba->mgmt_sgl_lock);
+ 		return;
+ 	}
+ 	phba->eh_sgl_hndl_base[phba->eh_sgl_free_index] = psgl_handle;
+@@ -1304,6 +1312,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ 		phba->eh_sgl_free_index = 0;
+ 	else
+ 		phba->eh_sgl_free_index++;
++	spin_unlock_bh(&phba->mgmt_sgl_lock);
+ }
+ 
+ static void
+@@ -4616,11 +4625,9 @@ beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
+ 	}
+ 
+ 	if (io_task->psgl_handle) {
+-		spin_lock_bh(&phba->mgmt_sgl_lock);
+ 		free_mgmt_sgl_handle(phba,
+ 				     io_task->psgl_handle);
+ 		io_task->psgl_handle = NULL;
+-		spin_unlock_bh(&phba->mgmt_sgl_lock);
+ 	}
+ 
+ 	if (io_task->mtask_addr) {
+@@ -4666,9 +4673,7 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
+ 		}
+ 
+ 		if (io_task->psgl_handle) {
+-			spin_lock(&phba->io_sgl_lock);
+ 			free_io_sgl_handle(phba, io_task->psgl_handle);
+-			spin_unlock(&phba->io_sgl_lock);
+ 			io_task->psgl_handle = NULL;
+ 		}
+ 
+@@ -4784,9 +4789,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 	io_task->pwrb_handle = NULL;
+ 
+ 	if (task->sc) {
+-		spin_lock(&phba->io_sgl_lock);
+ 		io_task->psgl_handle = alloc_io_sgl_handle(phba);
+-		spin_unlock(&phba->io_sgl_lock);
+ 		if (!io_task->psgl_handle) {
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+@@ -4811,10 +4814,8 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 		if ((opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGIN) {
+ 			beiscsi_conn->task = task;
+ 			if (!beiscsi_conn->login_in_progress) {
+-				spin_lock(&phba->mgmt_sgl_lock);
+ 				io_task->psgl_handle = (struct sgl_handle *)
+ 						alloc_mgmt_sgl_handle(phba);
+-				spin_unlock(&phba->mgmt_sgl_lock);
+ 				if (!io_task->psgl_handle) {
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_IO |
+@@ -4853,9 +4854,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 						beiscsi_conn->plogin_wrb_handle;
+ 			}
+ 		} else {
+-			spin_lock(&phba->mgmt_sgl_lock);
+ 			io_task->psgl_handle = alloc_mgmt_sgl_handle(phba);
+-			spin_unlock(&phba->mgmt_sgl_lock);
+ 			if (!io_task->psgl_handle) {
+ 				beiscsi_log(phba, KERN_ERR,
+ 					    BEISCSI_LOG_IO |
+@@ -4890,15 +4889,11 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 	return 0;
+ 
+ free_io_hndls:
+-	spin_lock(&phba->io_sgl_lock);
+ 	free_io_sgl_handle(phba, io_task->psgl_handle);
+-	spin_unlock(&phba->io_sgl_lock);
+ 	goto free_hndls;
+ free_mgmt_hndls:
+-	spin_lock(&phba->mgmt_sgl_lock);
+ 	free_mgmt_sgl_handle(phba, io_task->psgl_handle);
+ 	io_task->psgl_handle = NULL;
+-	spin_unlock(&phba->mgmt_sgl_lock);
+ free_hndls:
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	cri_index = BE_GET_CRI_FROM_CID(
 -- 
 2.5.0
 
