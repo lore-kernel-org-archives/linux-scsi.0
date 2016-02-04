@@ -1,108 +1,74 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [v4 09/14] scsi: ufs: add retry for query descriptors
-Date: Thu,  4 Feb 2016 12:36:15 +0200
-Message-ID: <1454582180-3823-10-git-send-email-ygardi@codeaurora.org>
-References: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Subject: [PATCH v1 08/12] be2iscsi: Fix MCC WRB leak in open_connection
+Date: Thu,  4 Feb 2016 15:49:16 +0530
+Message-ID: <1454581160-31869-9-git-send-email-jitendra.bhivare@broadcom.com>
+References: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmrelayp1.emulex.com ([138.239.112.140]:62101 "EHLO
+	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933439AbcBDKhg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 05:37:36 -0500
+In-Reply-To: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Query commands have 100ms timeout and it may timeout if they are
-issued in parallel to ongoing read/write SCSI commands, this change
-adds the retry (max: 10) in case command timeouts.
+In open with IP of unknown address family, only tag is freed and error
+returned. MCC WRB allocated for the operation is not freed.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Added check for supported family of IP in the beginning before
+allocating the tag and WRB.
 
+Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/ufs/ufshcd.c | 55 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 37 insertions(+), 18 deletions(-)
+ drivers/scsi/be2iscsi/be_mgmt.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1893ccb..bf8ca48 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1875,21 +1875,7 @@ static int ufshcd_query_attr_retry(struct ufs_hba *hba,
- 	return ret;
- }
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 85044b8..ccac1d7 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -829,6 +829,13 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	unsigned short cid = beiscsi_ep->ep_cid;
+ 	struct be_sge *sge;
  
--/**
-- * ufshcd_query_descriptor - API function for sending descriptor requests
-- * hba: per-adapter instance
-- * opcode: attribute opcode
-- * idn: attribute idn to access
-- * index: index field
-- * selector: selector field
-- * desc_buf: the buffer that contains the descriptor
-- * buf_len: length parameter passed to the device
-- *
-- * Returns 0 for success, non-zero in case of failure.
-- * The buf_len parameter will contain, on return, the length parameter
-- * received on the response.
-- */
--static int ufshcd_query_descriptor(struct ufs_hba *hba,
-+static int __ufshcd_query_descriptor(struct ufs_hba *hba,
- 			enum query_opcode opcode, enum desc_idn idn, u8 index,
- 			u8 selector, u8 *desc_buf, int *buf_len)
- {
-@@ -1954,6 +1940,39 @@ out:
- }
- 
- /**
-+ * ufshcd_query_descriptor_retry - API function for sending descriptor
-+ * requests
-+ * hba: per-adapter instance
-+ * opcode: attribute opcode
-+ * idn: attribute idn to access
-+ * index: index field
-+ * selector: selector field
-+ * desc_buf: the buffer that contains the descriptor
-+ * buf_len: length parameter passed to the device
-+ *
-+ * Returns 0 for success, non-zero in case of failure.
-+ * The buf_len parameter will contain, on return, the length parameter
-+ * received on the response.
-+ */
-+int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
-+			enum query_opcode opcode, enum desc_idn idn, u8 index,
-+			u8 selector, u8 *desc_buf, int *buf_len)
-+{
-+	int err;
-+	int retries;
-+
-+	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
-+		err = __ufshcd_query_descriptor(hba, opcode, idn, index,
-+						selector, desc_buf, buf_len);
-+		if (!err || err == -EINVAL)
-+			break;
++	if (dst_addr->sa_family != PF_INET && dst_addr->sa_family != PF_INET6) {
++		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
++			    "BG_%d : unknown addr family %d\n",
++			    dst_addr->sa_family);
++		return -EINVAL;
 +	}
 +
-+	return err;
-+}
-+EXPORT_SYMBOL(ufshcd_query_descriptor_retry);
-+
-+/**
-  * ufshcd_read_desc_param - read the specified descriptor parameter
-  * @hba: Pointer to adapter instance
-  * @desc_id: descriptor idn value
-@@ -1995,9 +2014,9 @@ static int ufshcd_read_desc_param(struct ufs_hba *hba,
- 			return -ENOMEM;
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	phwi_context = phwi_ctrlr->phwi_ctxt;
+ 
+@@ -868,7 +875,8 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 		beiscsi_ep->dst_addr = daddr_in->sin_addr.s_addr;
+ 		beiscsi_ep->dst_tcpport = ntohs(daddr_in->sin_port);
+ 		beiscsi_ep->ip_type = BE2_IPV4;
+-	} else if (dst_addr->sa_family == PF_INET6) {
++	} else {
++		/* else its PF_INET6 family */
+ 		req->ip_address.ip_type = BE2_IPV6;
+ 		memcpy(&req->ip_address.addr,
+ 		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+@@ -877,14 +885,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 		memcpy(&beiscsi_ep->dst6_addr,
+ 		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+ 		beiscsi_ep->ip_type = BE2_IPV6;
+-	} else{
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-			    "BG_%d : unknown addr family %d\n",
+-			    dst_addr->sa_family);
+-		mutex_unlock(&ctrl->mbox_lock);
+-		free_mcc_tag(&phba->ctrl, tag);
+-		return -EINVAL;
+-
  	}
- 
--	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
--				      desc_id, desc_index, 0, desc_buf,
--				      &buff_len);
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+					desc_id, desc_index, 0, desc_buf,
-+					&buff_len);
- 
- 	if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
- 	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
+ 	req->cid = cid;
+ 	i = phba->nxt_cqid++;
 -- 
-1.8.5.2
+2.5.0
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
