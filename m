@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 4/4] qla2xxx: Add DebugFS node to show irq vector's cpuid
-Date: Thu, 4 Feb 2016 11:45:19 -0500
-Message-ID: <1454604319-27947-5-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 1/4] qla2xxx: Fix stale pointer access.
+Date: Thu, 4 Feb 2016 11:45:16 -0500
+Message-ID: <1454604319-27947-2-git-send-email-himanshu.madhani@qlogic.com>
 References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,149 +14,194 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@qlogic.com>
 
-> cat /sys/kernel/debug/qla2xxx/*/irq_cpuid
-qla2xxx_81
-            IRQ Name  Vector  CPUID
-   qla2xxx (default)  150     9
-     qla2xxx (rsp_q)  151     9
-    qla2xxx (atio_q)  152     9
+[ Upstream Commit 84e32a06f4f8756ce9ec3c8dc7e97896575f0771 ]
 
+Commit 84e32a0 ("qla2xxx: Use pci_enable_msix_range() instead of
+pci_enable_msix()") introduced a regression when target mode is enabled.
+In qla24xx_enable_msix(), ha->max_rsp_queues was incorrectly set
+to a value higher than the number of response queues allocated causing
+an invalid dereference. Specifically here in qla2x00_init_rings():
+    *rsp->in_ptr = 0;
+
+Add additional check to make sure the pointer is valid. following
+call stack will be seen
+
+---- 8< ----
+RIP: 0010:[<ffffffffa02ccadc>]  [<ffffffffa02ccadc>] qla2x00_init_rings+0xdc/0x320 [qla2xxx]
+RSP: 0018:ffff880429447dd8  EFLAGS: 00010082
+....
+Call Trace:
+[<ffffffffa02ceb40>] qla2x00_abort_isp+0x170/0x6b0 [qla2xxx]
+[<ffffffffa02c6f77>] qla2x00_do_dpc+0x357/0x7f0 [qla2xxx]
+[<ffffffffa02c6c20>] ? qla2x00_relogin+0x260/0x260 [qla2xxx]
+[<ffffffff8107d2c9>] kthread+0xc9/0xe0
+[<ffffffff8107d200>] ? flush_kthread_worker+0x90/0x90
+[<ffffffff8172cc6f>] ret_from_fork+0x3f/0x70
+[<ffffffff8107d200>] ? flush_kthread_worker+0x90/0x90
+---- 8< ----
+
+Cc: <stable@vger.kernel.org>
 Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |    2 +
- drivers/scsi/qla2xxx/qla_dfs.c |   49 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_isr.c |   16 +++++++++++++
- 3 files changed, 67 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |   10 +++++-----
+ drivers/scsi/qla2xxx/qla_isr.c  |    4 ++--
+ drivers/scsi/qla2xxx/qla_mid.c  |    4 ++--
+ drivers/scsi/qla2xxx/qla_os.c   |    6 ++++++
+ drivers/scsi/qla2xxx/qla_tmpl.c |   16 ++++++++++++++++
+ 5 files changed, 31 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index e6c5bcf..c6cc519 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2722,6 +2722,7 @@ struct qla_msix_entry {
- 	int have_irq;
- 	uint32_t vector;
- 	uint16_t entry;
-+	const char *name;
- 	struct rsp_que *rsp;
- 	struct irq_affinity_notify irq_notify;
- 	int cpuid;
-@@ -3377,6 +3378,7 @@ struct qla_hw_data {
- 	struct dentry *dfs_fce;
- 	struct dentry *dfs_tgt_counters;
- 	struct dentry *dfs_fw_resource_cnt;
-+	struct dentry *dfs_irq_cpuid;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 52a8765..692a757 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2204,7 +2204,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 	/* Clear outstanding commands array. */
+ 	for (que = 0; que < ha->max_req_queues; que++) {
+ 		req = ha->req_q_map[que];
+-		if (!req)
++		if (!req || !test_bit(que, ha->req_qid_map))
+ 			continue;
+ 		req->out_ptr = (void *)(req->ring + req->length);
+ 		*req->out_ptr = 0;
+@@ -2221,7 +2221,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
  
- 	dma_addr_t	fce_dma;
- 	void		*fce;
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 34272fd..4ff17f6 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -13,6 +13,41 @@ static struct dentry *qla2x00_dfs_root;
- static atomic_t qla2x00_dfs_root_count;
+ 	for (que = 0; que < ha->max_rsp_queues; que++) {
+ 		rsp = ha->rsp_q_map[que];
+-		if (!rsp)
++		if (!rsp || !test_bit(que, ha->rsp_qid_map))
+ 			continue;
+ 		rsp->in_ptr = (void *)(rsp->ring + rsp->length);
+ 		*rsp->in_ptr = 0;
+@@ -4981,7 +4981,7 @@ qla25xx_init_queues(struct qla_hw_data *ha)
  
- static int
-+qla2x00_dfs_irq_cpuid_show(struct seq_file *s, void *unused)
-+{
-+	scsi_qla_host_t *vha = s->private;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct qla_msix_entry *qentry;
-+	int i;
-+
-+	seq_printf(s, "%s\n",vha->host_str);
-+	seq_printf(s, "%20s  Vector  CPUID\n","IRQ Name");
-+
-+	for (i = 0; i < ha->msix_count; i++) {
-+		qentry = &ha->msix_entries[i];
-+		if (qentry->have_irq)
-+			seq_printf(s, "%20s  %3d      %d\n", qentry->name,
-+			    qentry->vector, qentry->cpuid);
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+qla2x00_dfs_irq_cpuid_open(struct inode *inode, struct file *file)
-+{
-+	scsi_qla_host_t *vha = inode->i_private;
-+	return single_open(file, qla2x00_dfs_irq_cpuid_show, vha);
-+}
-+
-+static const struct file_operations dfs_irq_cpuid_ops = {
-+	.open		= qla2x00_dfs_irq_cpuid_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+};
-+
-+static int
- qla2x00_dfs_tgt_sess_show(struct seq_file *s, void *unused)
- {
- 	scsi_qla_host_t *vha = s->private;
-@@ -298,6 +333,15 @@ create_nodes:
- 		goto out;
+ 	for (i = 1; i < ha->max_rsp_queues; i++) {
+ 		rsp = ha->rsp_q_map[i];
+-		if (rsp) {
++		if (rsp && test_bit(i, ha->rsp_qid_map)) {
+ 			rsp->options &= ~BIT_0;
+ 			ret = qla25xx_init_rsp_que(base_vha, rsp);
+ 			if (ret != QLA_SUCCESS)
+@@ -4996,8 +4996,8 @@ qla25xx_init_queues(struct qla_hw_data *ha)
  	}
- 
-+	ha->dfs_irq_cpuid = debugfs_create_file("irq_cpuid",
-+		S_IRUSR, ha->dfs_dir, vha, &dfs_irq_cpuid_ops);
-+	if (!ha->dfs_irq_cpuid) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+			"Unable to create debugFS irq_cpuid node.\n");
-+		goto out;
-+	}
-+
-+
- out:
- 	return 0;
- }
-@@ -307,6 +351,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 
-+	if (ha->dfs_irq_cpuid) {
-+		debugfs_remove(ha->dfs_irq_cpuid);
-+		ha->dfs_irq_cpuid = NULL;
-+	}
-+
- 	if (ha->tgt.dfs_tgt_sess) {
- 		debugfs_remove(ha->tgt.dfs_tgt_sess);
- 		ha->tgt.dfs_tgt_sess = NULL;
+ 	for (i = 1; i < ha->max_req_queues; i++) {
+ 		req = ha->req_q_map[i];
+-		if (req) {
+-		/* Clear outstanding commands array. */
++		if (req && test_bit(i, ha->req_qid_map)) {
++			/* Clear outstanding commands array. */
+ 			req->options &= ~BIT_0;
+ 			ret = qla25xx_init_req_que(base_vha, req);
+ 			if (ret != QLA_SUCCESS)
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 4af9547..d527189 100644
+index d4d65eb..4af9547 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3102,6 +3102,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 			goto msix_register_fail;
- 		qentry->have_irq = 1;
- 		qentry->rsp = rsp;
-+		qentry->name = msix_entries[i].name;
- 		rsp->msix = qentry;
- 
- 		/* Register for CPU affinity notification. */
-@@ -3128,7 +3129,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 			0, qla83xx_msix_entries[ATIO_VECTOR].name, rsp);
- 		qentry->have_irq = 1;
- 		qentry->rsp = rsp;
-+		qentry->name = qla83xx_msix_entries[ATIO_VECTOR].name;
-+		qentry->irq_notify.notify  = qla_irq_affinity_notify;
-+		qentry->irq_notify.release = qla_irq_affinity_release;
- 		rsp->msix = qentry;
-+
-+		/* Register for CPU affinity notification. */
-+		irq_set_affinity_notifier(qentry->vector, &qentry->irq_notify);
-+
-+		/* Schedule work (ie. trigger a notification) to read cpu
-+		 * mask for this specific irq.
-+		 * kref_get is required because
-+		* irq_affinity_notify() will do
-+		* kref_put().
-+		*/
-+		kref_get(&qentry->irq_notify.kref);
-+		schedule_work(&qentry->irq_notify.work);
+@@ -3063,9 +3063,9 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
++		ha->msix_count = ret;
++		ha->max_rsp_queues = ha->msix_count - 1;
  	}
+-	ha->msix_count = ret;
+-	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index c5dd594..cf7ba52 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -600,7 +600,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
+ 	/* Delete request queues */
+ 	for (cnt = 1; cnt < ha->max_req_queues; cnt++) {
+ 		req = ha->req_q_map[cnt];
+-		if (req) {
++		if (req && test_bit(cnt, ha->req_qid_map)) {
+ 			ret = qla25xx_delete_req_que(vha, req);
+ 			if (ret != QLA_SUCCESS) {
+ 				ql_log(ql_log_warn, vha, 0x00ea,
+@@ -614,7 +614,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
+ 	/* Delete response queues */
+ 	for (cnt = 1; cnt < ha->max_rsp_queues; cnt++) {
+ 		rsp = ha->rsp_q_map[cnt];
+-		if (rsp) {
++		if (rsp && test_bit(cnt, ha->rsp_qid_map)) {
+ 			ret = qla25xx_delete_rsp_que(vha, rsp);
+ 			if (ret != QLA_SUCCESS) {
+ 				ql_log(ql_log_warn, vha, 0x00eb,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index f1788db..f6c7ce3 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -409,6 +409,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
+ 	int cnt;
  
- msix_register_fail:
+ 	for (cnt = 0; cnt < ha->max_req_queues; cnt++) {
++		if (!test_bit(cnt, ha->req_qid_map))
++			continue;
++
+ 		req = ha->req_q_map[cnt];
+ 		qla2x00_free_req_que(ha, req);
+ 	}
+@@ -416,6 +419,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
+ 	ha->req_q_map = NULL;
+ 
+ 	for (cnt = 0; cnt < ha->max_rsp_queues; cnt++) {
++		if (!test_bit(cnt, ha->rsp_qid_map))
++			continue;
++
+ 		rsp = ha->rsp_q_map[cnt];
+ 		qla2x00_free_rsp_que(ha, rsp);
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index ddbe2e7..c3e6225 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -395,6 +395,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 	if (ent->t263.queue_type == T263_QUEUE_TYPE_REQ) {
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
++
++			if (!test_bit(i, vha->hw->req_qid_map))
++				continue;
++
+ 			if (req || !buf) {
+ 				length = req ?
+ 				    req->length : REQUEST_ENTRY_CNT_24XX;
+@@ -408,6 +412,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 	} else if (ent->t263.queue_type == T263_QUEUE_TYPE_RSP) {
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
++
++			if (!test_bit(i, vha->hw->rsp_qid_map))
++				continue;
++
+ 			if (rsp || !buf) {
+ 				length = rsp ?
+ 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
+@@ -634,6 +642,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 	if (ent->t274.queue_type == T274_QUEUE_TYPE_REQ_SHAD) {
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
++
++			if (!test_bit(i, vha->hw->req_qid_map))
++				continue;
++
+ 			if (req || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
+@@ -645,6 +657,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_RSP_SHAD) {
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
++
++			if (!test_bit(i, vha->hw->rsp_qid_map))
++				continue;
++
+ 			if (rsp || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
 -- 
 1.7.7
