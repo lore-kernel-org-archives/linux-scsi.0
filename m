@@ -1,114 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] block/sd: Return -EREMOTEIO when WRITE SAME and DISCARD are disabled
-Date: Thu,  4 Feb 2016 01:48:03 -0500
-Message-ID: <1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
-References: <20160204042528.GA15599@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_rdac: always retry MODE SELECT on command lock
+ violation
+Date: Thu, 4 Feb 2016 08:01:44 +0100
+Message-ID: <56B2F758.9050502@suse.de>
+References: <1453473761-54777-1-git-send-email-hare@suse.de>
+ <yq1y4b1i41e.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44640 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932319AbcBDGs3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 01:48:29 -0500
-In-Reply-To: <20160204042528.GA15599@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:40518 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753166AbcBDHBq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Feb 2016 02:01:46 -0500
+In-Reply-To: <yq1y4b1i41e.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: jiangyiwen@huawei.com, snitzer@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-When a storage device rejects a WRITE SAME command we will disable write
-same functionality for the device and return -EREMOTEIO to the block
-layer. -EREMOTEIO will in turn prevent DM from retrying the I/O and/or
-failing the path.
+On 02/04/2016 03:48 AM, Martin K. Petersen wrote:
+>>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
+>=20
+> Hannes> If MODE SELECT returns with sense '05/91/36' (command lock
+> Hannes> violation) it should always be retried without counting the
+> Hannes> number of retries.  During an HBA upgrade or similar
+> Hannes> circumstances one might see a flood of MODE SELECT command fr=
+om
+> Hannes> various HBAs, which will easily trigger the sense code and
+> Hannes> exceed the retry count.
+>=20
+> Should this be Cc: stable?
+>=20
+Probably, yes.
 
-Yiwen Jiang discovered a small race where WRITE SAME requests issued
-simultaneously would cause -EIO to be returned. This happened because
-any requests being prepared after WRITE SAME had been disabled for the
-device caused us to return BLKPREP_KILL. The latter caused the block
-layer to return -EIO upon completion.
+Can you do it?
 
-To overcome this we introduce BLKPREP_INVALID which indicates that this
-is an invalid request for the device. blk_peek_request() is modified to
-return -EREMOTEIO in that case.
+Cheers,
 
-Reported-by: Yiwen Jiang <jiangyiwen@huawei.com>
-Suggested-by: Mike Snitzer <snitzer@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
----
-
-I contemplated making blk_peek_request() use rq->errors to decide what
-to return up the stack. However, I cringed at mixing errnos and SCSI
-midlayer status information in the same location.
----
- block/blk-core.c       | 6 ++++--
- drivers/scsi/sd.c      | 4 ++--
- include/linux/blkdev.h | 9 ++++++---
- 3 files changed, 12 insertions(+), 7 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 33e2f62d5062..ee833af2f892 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2446,14 +2446,16 @@ struct request *blk_peek_request(struct request_queue *q)
- 
- 			rq = NULL;
- 			break;
--		} else if (ret == BLKPREP_KILL) {
-+		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID) {
-+			int err = ret == BLKPREP_INVALID ? -EREMOTEIO : -EIO;
-+
- 			rq->cmd_flags |= REQ_QUIET;
- 			/*
- 			 * Mark this request as started so we don't trigger
- 			 * any debug logic in the end I/O path.
- 			 */
- 			blk_start_request(rq);
--			__blk_end_request_all(rq, -EIO);
-+			__blk_end_request_all(rq, err);
- 		} else {
- 			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
- 			break;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ec163d08f6c3..6e841c6da632 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -761,7 +761,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
- 		break;
- 
- 	default:
--		ret = BLKPREP_KILL;
-+		ret = BLKPREP_INVALID;
- 		goto out;
- 	}
- 
-@@ -839,7 +839,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 	int ret;
- 
- 	if (sdkp->device->no_write_same)
--		return BLKPREP_KILL;
-+		return BLKPREP_INVALID;
- 
- 	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c70e3588a48c..e990d181625a 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -680,9 +680,12 @@ static inline bool blk_write_same_mergeable(struct bio *a, struct bio *b)
- /*
-  * q->prep_rq_fn return values
-  */
--#define BLKPREP_OK		0	/* serve it */
--#define BLKPREP_KILL		1	/* fatal error, kill */
--#define BLKPREP_DEFER		2	/* leave on queue */
-+enum {
-+	BLKPREP_OK,		/* serve it */
-+	BLKPREP_KILL,		/* fatal error, kill, return -EIO */
-+	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
-+	BLKPREP_DEFER,		/* leave on queue */
-+};
- 
- extern unsigned long blk_max_low_pfn, blk_max_pfn;
- 
--- 
-2.7.0
-
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
