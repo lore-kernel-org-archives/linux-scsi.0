@@ -1,182 +1,81 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v1 11/12] be2iscsi: _bh for io_sgl_lock and mgmt_sgl_lock
-Date: Thu,  4 Feb 2016 15:49:19 +0530
-Message-ID: <1454581160-31869-12-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v1 10/12] be2iscsi: Fix ExpStatSn in management tasks
+Date: Thu,  4 Feb 2016 15:49:18 +0530
+Message-ID: <1454581160-31869-11-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmrelayp1.emulex.com ([138.239.112.140]:62101 "EHLO
 	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S964835AbcBDKhj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 05:37:39 -0500
+	by vger.kernel.org with ESMTP id S964847AbcBDKhi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 05:37:38 -0500
 In-Reply-To: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Processing of mgmt and IO tasks are done in process context and sofitrqs.
+Connection resets observed from some targets when NOP-Out with wrong
+ExpStatSn is sent.
 
-Allocation and freeing of sgl_handles needs to be done under
-spin_lock_bh/spin_unlock_bh and move the locks to the routines.
+FW keeps track of StatSn and fills up ExpStatSn accordingly.
+The header filled up by the stack needs to be modified by driver to clear
+ExpStatSn. If the field is not cleared, FW recalculates ExpStatSn and
+wrong offset'ed ExpStatSn is seen in the wire trace.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/be2iscsi/be_main.c | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 03265b6..fa2b589 100644
+index 3f08a11..03265b6 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1132,6 +1132,7 @@ static struct sgl_handle *alloc_io_sgl_handle(struct beiscsi_hba *phba)
+@@ -4926,7 +4926,6 @@ int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
+ 
+ 	pwrb = io_task->pwrb_handle->pwrb;
+ 
+-	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
+ 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+ 
+ 	if (writedir) {
+@@ -4987,7 +4986,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
+ 	unsigned int doorbell = 0;
+ 
+ 	pwrb = io_task->pwrb_handle->pwrb;
+-	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
+ 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+ 
+ 	if (writedir) {
+@@ -5159,23 +5157,21 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
  {
- 	struct sgl_handle *psgl_handle;
+ 	struct beiscsi_io_task *io_task = task->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+-	struct beiscsi_hba *phba = NULL;
++	struct beiscsi_hba *phba;
+ 	struct scatterlist *sg;
+ 	int num_sg;
+ 	unsigned int  writedir = 0, xferlen = 0;
  
-+	spin_lock_bh(&phba->io_sgl_lock);
- 	if (phba->io_sgl_hndl_avbl) {
- 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
- 			    "BM_%d : In alloc_io_sgl_handle,"
-@@ -1149,12 +1150,14 @@ static struct sgl_handle *alloc_io_sgl_handle(struct beiscsi_hba *phba)
- 			phba->io_sgl_alloc_index++;
- 	} else
- 		psgl_handle = NULL;
-+	spin_unlock_bh(&phba->io_sgl_lock);
- 	return psgl_handle;
- }
+-	phba = ((struct beiscsi_conn *)task->conn->dd_data)->phba;
++	if (!io_task->conn->login_in_progress)
++		task->hdr->exp_statsn = 0;
  
- static void
- free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- {
-+	spin_lock_bh(&phba->io_sgl_lock);
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
- 		    "BM_%d : In free_,io_sgl_free_index=%d\n",
- 		    phba->io_sgl_free_index);
-@@ -1169,6 +1172,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 			     "value there=%p\n", phba->io_sgl_free_index,
- 			     phba->io_sgl_hndl_base
- 			     [phba->io_sgl_free_index]);
-+		 spin_unlock_bh(&phba->io_sgl_lock);
- 		return;
- 	}
- 	phba->io_sgl_hndl_base[phba->io_sgl_free_index] = psgl_handle;
-@@ -1177,6 +1181,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		phba->io_sgl_free_index = 0;
- 	else
- 		phba->io_sgl_free_index++;
-+	spin_unlock_bh(&phba->io_sgl_lock);
- }
+ 	if (!sc)
+ 		return beiscsi_mtask(task);
  
- static inline struct wrb_handle *
-@@ -1257,6 +1262,7 @@ static struct sgl_handle *alloc_mgmt_sgl_handle(struct beiscsi_hba *phba)
- {
- 	struct sgl_handle *psgl_handle;
- 
-+	spin_lock_bh(&phba->mgmt_sgl_lock);
- 	if (phba->eh_sgl_hndl_avbl) {
- 		psgl_handle = phba->eh_sgl_hndl_base[phba->eh_sgl_alloc_index];
- 		phba->eh_sgl_hndl_base[phba->eh_sgl_alloc_index] = NULL;
-@@ -1274,13 +1280,14 @@ static struct sgl_handle *alloc_mgmt_sgl_handle(struct beiscsi_hba *phba)
- 			phba->eh_sgl_alloc_index++;
- 	} else
- 		psgl_handle = NULL;
-+	spin_unlock_bh(&phba->mgmt_sgl_lock);
- 	return psgl_handle;
- }
- 
- void
- free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- {
+ 	io_task->scsi_cmnd = sc;
+ 	num_sg = scsi_dma_map(sc);
++	phba = io_task->conn->phba;
+ 	if (num_sg < 0) {
+-		struct iscsi_conn *conn = task->conn;
+-		struct beiscsi_hba *phba = NULL;
 -
-+	spin_lock_bh(&phba->mgmt_sgl_lock);
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
- 		    "BM_%d : In  free_mgmt_sgl_handle,"
- 		    "eh_sgl_free_index=%d\n",
-@@ -1295,6 +1302,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 			    "BM_%d : Double Free in eh SGL ,"
- 			    "eh_sgl_free_index=%d\n",
- 			    phba->eh_sgl_free_index);
-+		spin_unlock_bh(&phba->mgmt_sgl_lock);
- 		return;
- 	}
- 	phba->eh_sgl_hndl_base[phba->eh_sgl_free_index] = psgl_handle;
-@@ -1304,6 +1312,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		phba->eh_sgl_free_index = 0;
- 	else
- 		phba->eh_sgl_free_index++;
-+	spin_unlock_bh(&phba->mgmt_sgl_lock);
- }
- 
- static void
-@@ -4616,11 +4625,9 @@ beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
- 	}
- 
- 	if (io_task->psgl_handle) {
--		spin_lock_bh(&phba->mgmt_sgl_lock);
- 		free_mgmt_sgl_handle(phba,
- 				     io_task->psgl_handle);
- 		io_task->psgl_handle = NULL;
--		spin_unlock_bh(&phba->mgmt_sgl_lock);
- 	}
- 
- 	if (io_task->mtask_addr) {
-@@ -4666,9 +4673,7 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
- 		}
- 
- 		if (io_task->psgl_handle) {
--			spin_lock(&phba->io_sgl_lock);
- 			free_io_sgl_handle(phba, io_task->psgl_handle);
--			spin_unlock(&phba->io_sgl_lock);
- 			io_task->psgl_handle = NULL;
- 		}
- 
-@@ -4784,9 +4789,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 	io_task->pwrb_handle = NULL;
- 
- 	if (task->sc) {
--		spin_lock(&phba->io_sgl_lock);
- 		io_task->psgl_handle = alloc_io_sgl_handle(phba);
--		spin_unlock(&phba->io_sgl_lock);
- 		if (!io_task->psgl_handle) {
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
-@@ -4811,10 +4814,8 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 		if ((opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGIN) {
- 			beiscsi_conn->task = task;
- 			if (!beiscsi_conn->login_in_progress) {
--				spin_lock(&phba->mgmt_sgl_lock);
- 				io_task->psgl_handle = (struct sgl_handle *)
- 						alloc_mgmt_sgl_handle(phba);
--				spin_unlock(&phba->mgmt_sgl_lock);
- 				if (!io_task->psgl_handle) {
- 					beiscsi_log(phba, KERN_ERR,
- 						    BEISCSI_LOG_IO |
-@@ -4853,9 +4854,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 						beiscsi_conn->plogin_wrb_handle;
- 			}
- 		} else {
--			spin_lock(&phba->mgmt_sgl_lock);
- 			io_task->psgl_handle = alloc_mgmt_sgl_handle(phba);
--			spin_unlock(&phba->mgmt_sgl_lock);
- 			if (!io_task->psgl_handle) {
- 				beiscsi_log(phba, KERN_ERR,
- 					    BEISCSI_LOG_IO |
-@@ -4890,15 +4889,11 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 	return 0;
- 
- free_io_hndls:
--	spin_lock(&phba->io_sgl_lock);
- 	free_io_sgl_handle(phba, io_task->psgl_handle);
--	spin_unlock(&phba->io_sgl_lock);
- 	goto free_hndls;
- free_mgmt_hndls:
--	spin_lock(&phba->mgmt_sgl_lock);
- 	free_mgmt_sgl_handle(phba, io_task->psgl_handle);
- 	io_task->psgl_handle = NULL;
--	spin_unlock(&phba->mgmt_sgl_lock);
- free_hndls:
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	cri_index = BE_GET_CRI_FROM_CID(
+-		phba = ((struct beiscsi_conn *)conn->dd_data)->phba;
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_IO | BEISCSI_LOG_ISCSI,
+ 			    "BM_%d : scsi_dma_map Failed "
 -- 
 2.5.0
 
