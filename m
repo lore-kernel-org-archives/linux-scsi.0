@@ -1,63 +1,55 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [v4 00/14] add fixes, device quirks, error recovery,
-Date: Thu,  4 Feb 2016 12:36:06 +0200
-Message-ID: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [v4 02/14] scsi: ufs: avoid spurious UFS host controller interrupts
+Date: Thu,  4 Feb 2016 12:36:08 +0200
+Message-ID: <1454582180-3823-3-git-send-email-ygardi@codeaurora.org>
+References: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-V4:
-fixed DOS EOL symbols in 2 new files
+When control reaches to Linux UFS driver during UFS boot mode, UFS host
+controller interrupt status/enable registers may have left over
+settings.
+In order to avoid any spurious interrupts due to these left overs,
+it's important to clear these interrupt status/enable registers before
+enabling UFS interrupt handling.
 
-V3:
-Due to comments in V2
-Removed change 02/17 of V2 
-Removed change 03/17 of V2
-Removed change 17/17 of V2
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-V2:
-This series should be pushed on top of 15 patches series:
-"Big fixes, retries, handle a race condition"
-fixed and few comments.
+---
+ drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-V1:
-This series should be pushed on top of 15 patches series:
-"Big fixes, retries, handle a race condition"
-
-Yaniv Gardi (14):
-  scsi: ufs-qcom: add number of lanes per direction
-  scsi: ufs: avoid spurious UFS host controller interrupts
-  scsi: ufs: implement scsi host timeout handler
-  scsi: ufs: verify hba controller hce reg value
-  scsi: ufs: separate device and host quirks
-  scsi: ufs: disable vccq if it's not needed by UFS device
-  scsi: ufs: make error handling bit faster
-  scsi: ufs: add error recovery after DL NAC error
-  scsi: ufs: add retry for query descriptors
-  scsi: ufs: handle non spec compliant bkops behaviour by device
-  scsi: ufs: tune UniPro parameters to optimize hibern8 exit time
-  scsi: ufs: fix leakage during link off state
-  scsi: ufs: add device quirk delay before putting UFS rails in LPM
-  scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
-
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   3 +
- drivers/scsi/ufs/Makefile                          |   2 +-
- drivers/scsi/ufs/ufs-qcom.c                        | 155 ++++-
- drivers/scsi/ufs/ufs-qcom.h                        |   9 +
- drivers/scsi/ufs/ufs.h                             |  33 +
- drivers/scsi/ufs/ufs_quirks.c                      | 104 +++
- drivers/scsi/ufs/ufs_quirks.h                      | 133 ++++
- drivers/scsi/ufs/ufshcd-pltfrm.c                   |  19 +
- drivers/scsi/ufs/ufshcd.c                          | 749 ++++++++++++++++++---
- drivers/scsi/ufs/ufshcd.h                          |  40 +-
- drivers/scsi/ufs/ufshci.h                          |   4 +
- drivers/scsi/ufs/unipro.h                          |  22 +
- 12 files changed, 1145 insertions(+), 128 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufs_quirks.c
- create mode 100644 drivers/scsi/ufs/ufs_quirks.h
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 65593b3..b0ef94d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5837,6 +5837,21 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	init_waitqueue_head(&hba->dev_cmd.tag_wq);
+ 
+ 	ufshcd_init_clk_gating(hba);
++
++	/*
++	 * In order to avoid any spurious interrupt immediately after
++	 * registering UFS controller interrupt handler, clear any pending UFS
++	 * interrupt status and disable all the UFS interrupts.
++	 */
++	ufshcd_writel(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS),
++		      REG_INTERRUPT_STATUS);
++	ufshcd_writel(hba, 0, REG_INTERRUPT_ENABLE);
++	/*
++	 * Make sure that UFS interrupts are disabled and any pending interrupt
++	 * status is cleared before registering UFS interrupt handler.
++	 */
++	mb();
++
+ 	/* IRQ registration */
+ 	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
+ 	if (err) {
 -- 
 1.8.5.2
 
