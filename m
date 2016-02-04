@@ -1,186 +1,103 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [v4 01/14] scsi: ufs-qcom: add number of lanes per direction
-Date: Thu,  4 Feb 2016 12:36:07 +0200
-Message-ID: <1454582180-3823-2-git-send-email-ygardi@codeaurora.org>
-References: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1454582180-3823-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "open list:OPEN FIRMWARE AND FLATTENED
-	DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [Resend PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Thu, 04 Feb 2016 19:19:23 +0800
+Message-ID: <56B333BB.6040603@gmail.com>
+References: <55E83D39.4030107@gmail.com> <mqd37yvbnbo.fsf@c203.arch.suse.de> <56AB4B4C.4050405@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56AB4B4C.4050405@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Different platform may have different number of lanes
-for the UFS link.
-Add parameter to device tree specifying how many lanes
-should be configured for the UFS link.
+ From 9d7973dfa05a7785d0eb1e9bcfb0fb6d2c493209 Mon Sep 17 00:00:00 2001
+From: Charles <charles.chiou@tw.promise.com>
+Date: Wed, 2 Sep 2015 20:41:56 +0800
+Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
 
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
+
+1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
+     It should support backward compatibility.
+
+2. Change the driver version.
+
+V2: Remove blank lines
+
+Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 ---
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  3 ++
- drivers/scsi/ufs/ufs-qcom.c                        | 39 ++++++++++++----------
- drivers/scsi/ufs/ufshcd-pltfrm.c                   | 19 +++++++++++
- drivers/scsi/ufs/ufshcd.c                          |  1 +
- drivers/scsi/ufs/ufshcd.h                          |  2 ++
- 5 files changed, 47 insertions(+), 17 deletions(-)
+   drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
+   1 file changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index 03c0e98..66f6adf 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -38,6 +38,9 @@ Optional properties:
- 			  defined or a value in the array is "0" then it is assumed
- 			  that the frequency is set by the parent clock or a
- 			  fixed rate clock source.
-+-lanes-per-direction	: number of lanes available per direction - either 1 or 2.
-+			  Note that it is assume same number of lanes is used both
-+			  directions at once. If not specified, default is 2 lanes per direction.
- 
- Note: If above properties are not defined it can be assumed that the supply
- regulators or clocks are always on.
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 4f38d00..ed57729 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
-+ * Copyright (c) 2013-2016, Linux Foundation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 and
-@@ -132,21 +132,24 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto disable_rx_l0;
- 
--	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
--		host->rx_l1_sync_clk);
--	if (err)
--		goto disable_tx_l0;
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
-+			host->rx_l1_sync_clk);
-+		if (err)
-+			goto disable_tx_l0;
- 
--	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
--		host->tx_l1_sync_clk);
--	if (err)
--		goto disable_rx_l1;
-+		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-+			host->tx_l1_sync_clk);
-+		if (err)
-+			goto disable_rx_l1;
-+	}
- 
- 	host->is_lane_clks_enabled = true;
- 	goto out;
- 
- disable_rx_l1:
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- disable_tx_l0:
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
- disable_rx_l0:
-@@ -170,14 +173,16 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto out;
- 
--	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
--		&host->rx_l1_sync_clk);
--	if (err)
--		goto out;
--
--	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
--		&host->tx_l1_sync_clk);
-+	/* In case of single lane per direction, don't read lane1 clocks */
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
-+			&host->rx_l1_sync_clk);
-+		if (err)
-+			goto out;
- 
-+		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-+			&host->tx_l1_sync_clk);
-+	}
- out:
- 	return err;
- }
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index d2a7b12..718f12e 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -40,6 +40,8 @@
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
- 
-+#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
-+
- static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- {
- 	int ret = 0;
-@@ -277,6 +279,21 @@ void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
- }
- EXPORT_SYMBOL_GPL(ufshcd_pltfrm_shutdown);
- 
-+static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
-+{
-+	struct device *dev = hba->dev;
-+	int ret;
-+
-+	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
-+		&hba->lanes_per_direction);
-+	if (ret) {
-+		dev_dbg(hba->dev,
-+			"%s: failed to read lanes-per-direction, ret=%d\n",
-+			__func__, ret);
-+		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
-+	}
-+}
-+
- /**
-  * ufshcd_pltfrm_init - probe routine of the driver
-  * @pdev: pointer to Platform device handle
-@@ -331,6 +348,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 	pm_runtime_set_active(&pdev->dev);
- 	pm_runtime_enable(&pdev->dev);
- 
-+	ufshcd_init_lanes_per_dir(hba);
-+
- 	err = ufshcd_init(hba, mmio_base, irq);
- 	if (err) {
- 		dev_err(dev, "Initialization failed\n");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7ab6a45..65593b3 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -40,6 +40,7 @@
- #include <linux/async.h>
- #include <linux/devfreq.h>
- 
-+#include <linux/of.h>
- #include "ufshcd.h"
- #include "unipro.h"
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8e22e6c..2e5bbce 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -509,6 +509,8 @@ struct ufs_hba {
- 
- 	bool wlun_dev_clr_ua;
- 
-+	/* Number of lanes available (1 or 2) for Rx/Tx */
-+	u32 lanes_per_direction;
- 	struct ufs_pa_layer_attr pwr_info;
- 	struct ufs_pwr_mode_info max_pwr_info;
- 
--- 
-1.8.5.2
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 98a62bc..0c93f1f 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1,7 +1,7 @@
+   /*
+    * SuperTrak EX Series Storage Controller driver for Linux
+    *
+- *    Copyright (C) 2005-2009 Promise Technology Inc.
++ *    Copyright (C) 2005-2015 Promise Technology Inc.
+    *
+    *    This program is free software; you can redistribute it and/or
+    *    modify it under the terms of the GNU General Public License
+@@ -37,11 +37,11 @@
+   #include <scsi/scsi_eh.h>
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+   #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR        4
+-#define ST_VER_MINOR        6
+-#define ST_OEM            0
+-#define ST_BUILD_VER        4
++#define ST_DRIVER_VERSION    "5.00.0000.01"
++#define ST_VER_MAJOR        5
++#define ST_VER_MINOR        00
++#define ST_OEM                0000
++#define ST_BUILD_VER        01
+
+   enum {
+       /* MU register offset */
+@@ -327,6 +327,7 @@ struct st_hba {
+       u16 rq_count;
+       u16 rq_size;
+       u16 sts_count;
++    u8  supports_pm;
+   };
+
+   struct st_card_info {
+@@ -1568,6 +1569,25 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct
+pci_device_id *id)
+
+       hba->cardtype = (unsigned int) id->driver_data;
+       ci = &stex_card_info[hba->cardtype];
++    switch (id->subdevice) {
++    case 0x4221:
++    case 0x4222:
++    case 0x4223:
++    case 0x4224:
++    case 0x4225:
++    case 0x4226:
++    case 0x4227:
++    case 0x4261:
++    case 0x4262:
++    case 0x4263:
++    case 0x4264:
++    case 0x4265:
++        break;
++    default:
++        if (hba->cardtype == st_yel)
++            hba->supports_pm = 1;
++    }
++
+       sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+       if (hba->cardtype == st_yel)
+           sts_offset += (ci->sts_count+1) * sizeof(u32);
