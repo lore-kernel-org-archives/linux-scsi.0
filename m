@@ -1,37 +1,85 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 5/6] ibmvscsi: Remove unsupported host config MAD and
- sysfs interface
-Date: Thu, 4 Feb 2016 09:03:17 +0100
-Message-ID: <20160204080317.GT27969@c203.arch.suse.de>
-References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <1454542114-1797-6-git-send-email-tyreld@linux.vnet.ibm.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH-v3 12/14] xen-scsiback: Convert to TARGET_SCF_ACK_KREF I/O
+ krefs
+Date: Thu, 4 Feb 2016 09:22:17 +0100
+Message-ID: <56B30A39.2070305@suse.com>
+References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
+ <1454137558-30396-13-git-send-email-nab@daterainc.com>
+ <56B0D9DB.90901@suse.com>
+ <1454475794.10512.3.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1454542114-1797-6-git-send-email-tyreld@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: JBottomley@odin.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, hare@suse.de
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:43745 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752439AbcBDIWW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Feb 2016 03:22:22 -0500
+In-Reply-To: <1454475794.10512.3.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, David Vrabel <david.vrabel@citrix.com>
 
-On Wed, Feb 03, 2016 at 05:28:33PM -0600, Tyrel Datwyler wrote:
-> A VIOSRP_HOST_CONFIG_TYPE management datagram (MAD) has existed in
-> the code for some time. From what information I've gathered from
-> Brian King this was likely implemented on the host side in a SLES 9
-> based VIOS, which is no longer supported anywhere. Further, it is
-> not defined in PAPR or supported by any AIX based VIOS.
->=20
-> Treating as bit rot and removing the sysfs interface and associated
-> host config code accordingly.
+On 03/02/16 06:03, Nicholas A. Bellinger wrote:
+> Hi Juergen,
+> 
+> On Tue, 2016-02-02 at 17:31 +0100, Juergen Gross wrote:
+>> On 30/01/16 08:05, Nicholas A. Bellinger wrote:
+>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>
+>>> Cc: Juergen Gross <jgross@suse.com>
+>>> Cc: Hannes Reinecke <hare@suse.de>
+>>> Cc: David Vrabel <david.vrabel@citrix.com>
+>>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+>>
+>> Sorry, with your patches applied xen-scsiback isn't working any more.
+>> I've tried multiple times with and without your patches. Without the
+>> patches everything is fine, while with the patches applied I get the
+>> warnings shown in the attached log. I just passed through a DVD drive
+>> and did "eject" in the domain.
+>>
+> 
+> Thanks for testing.  :)
 
-Doesn't removing a sysfs interface potentially break userspace code?
+You're welcome. :-)
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> 
+> So it looks like a left-over memset of pending_req->se_cmd memory in
+> scsiback_cmd_exec() was clobbering the saved percpu_ida map_tag from
+> scsiback_get_pend_req(), resulting in a use-after-free.
+> 
+> Please verify with the following:
+
+Thanks, is working now!
+
+With that change you can add my:
+
+Acked-by: Juergen Gross <jgross@suse.com>
+Tested-by: Juergen Gross <jgross@suse.com>
+
+to the xen-scsiback related patches.
+
+
+Juergen
+
+> 
+> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> index eaf9e21..c3f55a2 100644
+> --- a/drivers/xen/xen-scsiback.c
+> +++ b/drivers/xen/xen-scsiback.c
+> @@ -400,10 +400,6 @@ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
+>         struct se_session *sess = pending_req->v2p->tpg->tpg_nexus->tvn_se_sess;
+>         int rc;
+>  
+> -       memset(pending_req->sense_buffer, 0, VSCSIIF_SENSE_BUFFERSIZE);
+> -
+> -       memset(se_cmd, 0, sizeof(*se_cmd));
+> -
+>         scsiback_get(pending_req->info);
+>         se_cmd->tag = pending_req->rqid;
+>         rc = target_submit_cmd_map_sgls(se_cmd, sess, pending_req->cmnd,
+> 
+> 
+> 
+
