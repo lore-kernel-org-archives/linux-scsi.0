@@ -1,85 +1,151 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH-v3 12/14] xen-scsiback: Convert to TARGET_SCF_ACK_KREF I/O
- krefs
-Date: Thu, 4 Feb 2016 09:22:17 +0100
-Message-ID: <56B30A39.2070305@suse.com>
-References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
- <1454137558-30396-13-git-send-email-nab@daterainc.com>
- <56B0D9DB.90901@suse.com>
- <1454475794.10512.3.camel@haakon3.risingtidesystems.com>
+From: jiangyiwen <jiangyiwen@huawei.com>
+Subject: Re: dm-mpath: fix a tiny case which can cause an infinite loop
+Date: Thu, 4 Feb 2016 16:25:46 +0800
+Message-ID: <56B30B0A.5080600@huawei.com>
+References: <56B2B282.60400@huawei.com> <20160204032452.GA15344@redhat.com>
+ <56B2CA48.9010802@huawei.com> <20160204042528.GA15599@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43745 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752439AbcBDIWW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Feb 2016 03:22:22 -0500
-In-Reply-To: <1454475794.10512.3.camel@haakon3.risingtidesystems.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:40776 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752984AbcBDI0U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 03:26:20 -0500
+In-Reply-To: <20160204042528.GA15599@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, David Vrabel <david.vrabel@citrix.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, xuejiufei@huawei.com, "Qijiang (Joseph, Euler)" <joseph.qi@huawei.com>, martin.petersen@oracle.com
 
-On 03/02/16 06:03, Nicholas A. Bellinger wrote:
-> Hi Juergen,
+On 2016/2/4 12:25, Mike Snitzer wrote:
+> On Wed, Feb 03 2016 at 10:49pm -0500,
+> jiangyiwen <jiangyiwen@huawei.com> wrote:
 > 
-> On Tue, 2016-02-02 at 17:31 +0100, Juergen Gross wrote:
->> On 30/01/16 08:05, Nicholas A. Bellinger wrote:
->>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>> On 2016/2/4 11:24, Mike Snitzer wrote:
+>>> On Wed, Feb 03 2016 at  9:08pm -0500,
+>>> jiangyiwen <jiangyiwen@huawei.com> wrote:
 >>>
->>> Cc: Juergen Gross <jgross@suse.com>
->>> Cc: Hannes Reinecke <hare@suse.de>
->>> Cc: David Vrabel <david.vrabel@citrix.com>
->>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>> When two processes submit WRTIE SAME bio simultaneously and
+>>>> first IO return failed because of INVALID FIELD IN CDB, and
+>>>> then second IO can enter into an infinite loop.
+>>>> The problem can be described as follows:
+>>>>
+>>>> process 1                              process 2
+>>>> submit_bio(REQ_WRITE_SAME) and
+>>>> wait io completion
+>>>>                                        begin submit_bio(REQ_WRITE_SAME)
+>>>>                                        -> blk_queue_bio()
+>>>>                                          -> dm_request_fn()
+>>>>                                            -> map_request()
+>>>>                                              -> scsi_request_fn()
+>>>>                                                -> blk_peek_request()
+>>>>                                                  -> scsi_prep_fn()
+>>>> In the moment, IO return and
+>>>> sense_key with illegal_request,
+>>>> sense_code with 0x24(INVALID FIELD IN CDB).
+>>>> In this way it will set no_write_same = 1
+>>>> in sd_done() and disable write same
+>>>>                                        In sd_setup_write_same_cmnd()
+>>>>                                        when find (no_write_same == 1)
+>>>>                                        will return BLKPREP_KILL,
+>>>>                                        and then in blk_peek_request()
+>>>>                                        set error to EIO.
+>>>>                                        However, in multipath_end_io()
+>>>>                                        when find error is EIO it will
+>>>>                                        fail path and retry even if
+>>>>                                        device doesn't support WRITE SAME.
+>>>>
+>>>> In this situation, when process of multipathd reinstate
+>>>> path by using test_unit_ready periodically, it will cause
+>>>> second WRITE SAME IO enters into an infinite loop and
+>>>> loop never terminates.
+>>>>
+>>>> In do_end_io(), when finding device doesn't support WRITE SAME and
+>>>> request is WRITE SAME, return EOPNOTSUPP to applications.
+>>>>
+>>>> Signed-off-by: Yiwen Jiang <jiangyiwen@huawei.com>
+>>>> Reviewed-by: Joseph Qi <joseph.qi@huawei.com>
+>>>> Reviewed-by: xuejiufei <xuejiufei@huawei.com>
+>>>> ---
+>>>>  drivers/md/dm-mpath.c | 5 +++++
+>>>>  1 file changed, 5 insertions(+)
+>>>>
+>>>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+>>>> index cfa29f5..ad1602a 100644
+>>>> --- a/drivers/md/dm-mpath.c
+>>>> +++ b/drivers/md/dm-mpath.c
+>>>> @@ -1269,6 +1269,11 @@ static int do_end_io(struct multipath *m, struct request *clone,
+>>>>  	if (noretry_error(error))
+>>>>  		return error;
+>>>>
+>>>> +	/* do not retry in case of WRITE SAME not supporting */
+>>>> +	if ((clone->cmd_flags & REQ_WRITE_SAME) &&
+>>>> +			!clone->q->limits.max_write_same_sectors)
+>>>> +		return -EOPNOTSUPP;
+>>>> +
+>>>>  	if (mpio->pgpath)
+>>>>  		fail_path(mpio->pgpath);
+>>>>
+>>>
+>>> Did you test this patch?  Looks like it isn't going to make a
+>>> difference.  'error' will be -EREMOTEIO, which will be caught by
+>>> noretry_error().  So we'll never go on to run your new code.
+>>>
+>>> Please see commit 7eee4ae2db ("dm: disable WRITE SAME if it fails").
+>>>
+>>> I think DM already handles this case properly.  The only thing is it'll
+>>> return -EREMOTEIO (rather than -EOPNOTSUPP) further up the stack.
+>>>
+>>> .
+>>>
+>> Hi Mike,
+>> Yes, I have already test in version linux-3.8, and I also have already
+>> carefully checked latest kernel code, and find that it also exists this
+>> problem. I know about this commit 7eee4ae2db ("dm: disable WRITE SAME
+>> if it fails"), it only can solve first IO situation which I mentioned
+>> above, in other words, when WRITE SAME IO truly send to device, it
+>> actually return -EREMOTEIO if device doesn't support WRITE SAME.
+>> But in above situation which issues two WRITE SAME IO simultaneously,
+>> second IO will not truly send to device instead of returning
+>> BLKPREP_KILL in sd_setup_write_same_cmnd() because find
+>> (no_write_same == 1) which no_write_same is set when first IO returned,
+>> and then in blk_peek_request() will return EIO to MD/DM which caused
+>> the problem above mentioned.
 >>
->> Sorry, with your patches applied xen-scsiback isn't working any more.
->> I've tried multiple times with and without your patches. Without the
->> patches everything is fine, while with the patches applied I get the
->> warnings shown in the attached log. I just passed through a DVD drive
->> and did "eject" in the domain.
->>
+>> I have described detailed process of problem, you will find actually
+>> it is a problem when reviewed carefully.
 > 
-> Thanks for testing.  :)
-
-You're welcome. :-)
-
+> OK, so -EIO is getting returned.  That shouldn't happen.  -EIO is the
+> generic catch-all error that we're going to retry.  We have
+> differentiated IO errors in SCSI that get returned up the IO stack
+> (e.g. -EREMOTEIO, etc).
 > 
-> So it looks like a left-over memset of pending_req->se_cmd memory in
-> scsiback_cmd_exec() was clobbering the saved percpu_ida map_tag from
-> scsiback_get_pend_req(), resulting in a use-after-free.
+> The SCSI, or block layer, should return a non-retryable error for this
+> case.  But we only have the differentiated IO errors for SCSI cmds that
+> are issued, so it seems we still need to train SCSI (and block by
+> association/dependency) to return permanent errors that are identified
+> during request preparation.
 > 
-> Please verify with the following:
-
-Thanks, is working now!
-
-With that change you can add my:
-
-Acked-by: Juergen Gross <jgross@suse.com>
-Tested-by: Juergen Gross <jgross@suse.com>
-
-to the xen-scsiback related patches.
-
-
-Juergen
-
+> But it may be that we need to widen the WRITE_SAME error handling code
+> in DM to check for -EREMOTEIO or -EOPNOTSUPP.  But I'm really not in
+> favor of special-casing -EIO for WRITE_SAME, we need to be sprinkling
+> less special-case code to make up for lack of information for lower
+> layers.
 > 
-> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-> index eaf9e21..c3f55a2 100644
-> --- a/drivers/xen/xen-scsiback.c
-> +++ b/drivers/xen/xen-scsiback.c
-> @@ -400,10 +400,6 @@ static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
->         struct se_session *sess = pending_req->v2p->tpg->tpg_nexus->tvn_se_sess;
->         int rc;
->  
-> -       memset(pending_req->sense_buffer, 0, VSCSIIF_SENSE_BUFFERSIZE);
-> -
-> -       memset(se_cmd, 0, sizeof(*se_cmd));
-> -
->         scsiback_get(pending_req->info);
->         se_cmd->tag = pending_req->rqid;
->         rc = target_submit_cmd_map_sgls(se_cmd, sess, pending_req->cmnd,
+> .
 > 
-> 
-> 
+I totally agree with you. SCSI or block layer should not return EIO
+to MD/DM, but the return code associated with many other process,
+it will influence more if I modify blk_peek_request. So I use this
+method to avoid it, and I also expect martin can get a better idea.
+
+In addition, with increasing number of various storage, I worried
+whether multipath still can occur an infinite loop as I mentioned
+above someday. Thus I think whether multipath should have a
+timeout mechanism to solve this type of problem which will cause a
+ping-pong effect, for instance, return error to applications when
+try a certain counts or time in multipath. This is my idea, I hope
+it will have more people to discuss it.
+
 
