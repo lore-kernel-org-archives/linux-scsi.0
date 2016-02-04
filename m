@@ -1,150 +1,45 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/6] ibmvscsi: Add and use enums for valid CRQ header
- values
-Date: Thu, 4 Feb 2016 13:25:21 -0800
-Message-ID: <56B3C1C1.3080804@linux.vnet.ibm.com>
-References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <1454542114-1797-3-git-send-email-tyreld@linux.vnet.ibm.com>
- <56B3ACC9.60009@linux.vnet.ibm.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH-v3 06/14] ib_srpt: Convert to target_alloc_session usage
+Date: Thu, 4 Feb 2016 14:14:52 -0800
+Message-ID: <56B3CD5C.1050905@sandisk.com>
+References: <1454137558-30396-1-git-send-email-nab@daterainc.com>
+ <1454137558-30396-7-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56B3ACC9.60009@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: manoj@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, JBottomley@odin.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1454137558-30396-7-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Nicholas Bellinger <nab@linux-iscsi.org>, Vu Pham <vu@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/04/2016 11:55 AM, Manoj Kumar wrote:
-> On 2/3/2016 5:28 PM, Tyrel Datwyler wrote:
->> The PAPR defines four valid header values for the first byte of a
->> CRQ message. Namely, an unused/empty message (0x00), a valid
->> command/response entry (0x80), a valid initialization entry (0xC0),
->> and a transport event (0xFF). Define these values as enums and use
->> them in the code in place of their magic number equivalents.
->>
->> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
->> ---
->>   drivers/scsi/ibmvscsi/ibmvscsi.c | 14 +++++++-------
->>   drivers/scsi/ibmvscsi/viosrp.h   |  7 +++++++
->>   2 files changed, 14 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
->> index adfef9d..176260d 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
->> @@ -182,7 +182,7 @@ static struct viosrp_crq *crq_queue_next_crq(struct crq_queue *queue)
->>
->>   	spin_lock_irqsave(&queue->lock, flags);
->>   	crq = &queue->msgs[queue->cur];
->> -	if (crq->valid & 0x80) {
->> +	if (crq->valid & VIOSRP_CRQ_VALID) {
-> 
-> After the switch to enums, bitwise operators are a bit misleading.
-> Especially in this case since multiple values would satisfy this
-> condition: VIOSRP_CRQ_VALID, VIOSRP_CRQ_INIT and
-> VIOSRP_CRQ_TRANSPORT.
+On 01/29/2016 11:05 PM, Nicholas A. Bellinger wrote:
+>   try_again:
+> -	se_acl = core_tpg_get_initiator_node_acl(&sport->port_tpg_1, p);
+> -	if (!se_acl) {
+> +	ch->sess = target_alloc_session(&sport->port_tpg_1, 0, 0,
+> +					TARGET_PROT_NORMAL, p, ch, NULL);
+> +	if (IS_ERR(ch->sess)) {
+>   		pr_info("Rejected login because no ACL has been"
+> -			" configured yet for initiator %s.\n", ch->sess_name);
+> +			" configured yet for initiator %s.\n", p);
+>   		/*
+>   		 * XXX: Hack to retry of ch->i_port_id without leading '0x'
+>   		 */
+> @@ -2426,14 +2418,11 @@ try_again:
+>   			p += 2;
+>   			goto try_again;
+>   		}
+> -		rej->reason = cpu_to_be32(
+> +		rej->reason = cpu_to_be32((PTR_ERR(ch->sess) == -ENOMEM) ?
+> +				SRP_LOGIN_REJ_INSUFFICIENT_RESOURCES :
+>   				SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED);
 
-Yeah, I can see how that is confusing. Since, all three possible valid
-crq message types have the first bit set I think this was originally a
-cute hack to grab anything that was likely valid. Then in
-ibmvscsi_handle_crq() we explicitly match the full header value in a
-switch statement logging anything that turned out actually invalid.
+Hello Nic,
 
-> 
-> If 'valid' will only have one of these four enums defined, would
-> this be better written as:
-> 
-> 	if (crq->valid != VIOSRP_CRQ_FREE)
+The "no ACL has been configured yet" error message will be printed for 
+initator ACLs that do not start with "0x" even if the second lookup 
+succeeds. This will confuse users. Otherwise this patch looks fine to me.
 
-This definitely would make the logic easier to read and follow. Also,
-this would make sure any crq with an invalid header that doesn't have
-its first bit set will also be logged by the ibmvscsi_handle_crq()
-switch statement default block and not silently ignored.
-
--Tyrel
-
-> 
->>   		if (++queue->cur == queue->size)
->>   			queue->cur = 0;
->>
->> @@ -231,7 +231,7 @@ static void ibmvscsi_task(void *data)
->>   		/* Pull all the valid messages off the CRQ */
->>   		while ((crq = crq_queue_next_crq(&hostdata->queue)) != NULL) {
->>   			ibmvscsi_handle_crq(crq, hostdata);
->> -			crq->valid = 0x00;
->> +			crq->valid = VIOSRP_CRQ_FREE;
->>   		}
->>
->>   		vio_enable_interrupts(vdev);
->> @@ -239,7 +239,7 @@ static void ibmvscsi_task(void *data)
->>   		if (crq != NULL) {
->>   			vio_disable_interrupts(vdev);
->>   			ibmvscsi_handle_crq(crq, hostdata);
->> -			crq->valid = 0x00;
->> +			crq->valid = VIOSRP_CRQ_FREE;
->>   		} else {
->>   			done = 1;
->>   		}
->> @@ -474,7 +474,7 @@ static int initialize_event_pool(struct event_pool *pool,
->>   		struct srp_event_struct *evt = &pool->events[i];
->>   		memset(&evt->crq, 0x00, sizeof(evt->crq));
->>   		atomic_set(&evt->free, 1);
->> -		evt->crq.valid = 0x80;
->> +		evt->crq.valid = VIOSRP_CRQ_VALID;
->>   		evt->crq.IU_length = cpu_to_be16(sizeof(*evt->xfer_iu));
->>   		evt->crq.IU_data_ptr = cpu_to_be64(pool->iu_token +
->>   			sizeof(*evt->xfer_iu) * i);
->> @@ -1767,7 +1767,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
->>   	struct srp_event_struct *evt_struct =
->>   			(__force struct srp_event_struct *)crq->IU_data_ptr;
->>   	switch (crq->valid) {
->> -	case 0xC0:		/* initialization */
->> +	case VIOSRP_CRQ_INIT:		/* initialization */
->>   		switch (crq->format) {
->>   		case 0x01:	/* Initialization message */
->>   			dev_info(hostdata->dev, "partner initialized\n");
->> @@ -1791,7 +1791,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
->>   			dev_err(hostdata->dev, "unknown crq message type: %d\n", crq->format);
->>   		}
->>   		return;
->> -	case 0xFF:	/* Hypervisor telling us the connection is closed */
->> +	case VIOSRP_CRQ_TRANSPORT:	/* Hypervisor telling us the connection is closed */
->>   		scsi_block_requests(hostdata->host);
->>   		atomic_set(&hostdata->request_limit, 0);
->>   		if (crq->format == 0x06) {
->> @@ -1807,7 +1807,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
->>   			ibmvscsi_reset_host(hostdata);
->>   		}
->>   		return;
->> -	case 0x80:		/* real payload */
->> +	case VIOSRP_CRQ_VALID:		/* real payload */
->>   		break;
->>   	default:
->>   		dev_err(hostdata->dev, "got an invalid message type 0x%02x\n",
->> diff --git a/drivers/scsi/ibmvscsi/viosrp.h b/drivers/scsi/ibmvscsi/viosrp.h
->> index d1044e9..17f2de0 100644
->> --- a/drivers/scsi/ibmvscsi/viosrp.h
->> +++ b/drivers/scsi/ibmvscsi/viosrp.h
->> @@ -51,6 +51,13 @@ union srp_iu {
->>   	u8 reserved[SRP_MAX_IU_LEN];
->>   };
->>
->> +enum viosrp_crq_headers {
->> +	VIOSRP_CRQ_FREE = 0x00,
->> +	VIOSRP_CRQ_VALID = 0x80,
->> +	VIOSRP_CRQ_INIT = 0xC0,
->> +	VIOSRP_CRQ_TRANSPORT = 0xFF
->> +};
->> +
->>   enum viosrp_crq_formats {
->>   	VIOSRP_SRP_FORMAT = 0x01,
->>   	VIOSRP_MAD_FORMAT = 0x02,
->>
-> 
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-> 
+Bart.
