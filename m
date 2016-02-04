@@ -1,131 +1,162 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] block/sd: Return -EREMOTEIO when WRITE SAME and
- DISCARD are disabled
-Date: Thu, 04 Feb 2016 11:36:52 -0500
-Message-ID: <1454603812.22112.246.camel@localhost.localdomain>
-References: <20160204042528.GA15599@redhat.com>
-	 <1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
-Reply-To: emilne@redhat.com
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: [PATCH 4/4] qla2xxx: Add DebugFS node to show irq vector's cpuid
+Date: Thu, 4 Feb 2016 11:45:19 -0500
+Message-ID: <1454604319-27947-5-git-send-email-himanshu.madhani@qlogic.com>
+References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53895 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750769AbcBDQgx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Feb 2016 11:36:53 -0500
-In-Reply-To: <1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, jiangyiwen@huawei.com, snitzer@redhat.com
 
-See below.
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-On Thu, 2016-02-04 at 01:48 -0500, Martin K. Petersen wrote:
-> When a storage device rejects a WRITE SAME command we will disable write
-> same functionality for the device and return -EREMOTEIO to the block
-> layer. -EREMOTEIO will in turn prevent DM from retrying the I/O and/or
-> failing the path.
-> 
-> Yiwen Jiang discovered a small race where WRITE SAME requests issued
-> simultaneously would cause -EIO to be returned. This happened because
-> any requests being prepared after WRITE SAME had been disabled for the
-> device caused us to return BLKPREP_KILL. The latter caused the block
-> layer to return -EIO upon completion.
-> 
-> To overcome this we introduce BLKPREP_INVALID which indicates that this
-> is an invalid request for the device. blk_peek_request() is modified to
-> return -EREMOTEIO in that case.
-> 
-> Reported-by: Yiwen Jiang <jiangyiwen@huawei.com>
-> Suggested-by: Mike Snitzer <snitzer@redhat.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> ---
-> 
-> I contemplated making blk_peek_request() use rq->errors to decide what
-> to return up the stack. However, I cringed at mixing errnos and SCSI
-> midlayer status information in the same location.
-> ---
->  block/blk-core.c       | 6 ++++--
->  drivers/scsi/sd.c      | 4 ++--
->  include/linux/blkdev.h | 9 ++++++---
->  3 files changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 33e2f62d5062..ee833af2f892 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2446,14 +2446,16 @@ struct request *blk_peek_request(struct request_queue *q)
->  
->  			rq = NULL;
->  			break;
-> -		} else if (ret == BLKPREP_KILL) {
-> +		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID) {
-> +			int err = ret == BLKPREP_INVALID ? -EREMOTEIO : -EIO;
+> cat /sys/kernel/debug/qla2xxx/*/irq_cpuid
+qla2xxx_81
+            IRQ Name  Vector  CPUID
+   qla2xxx (default)  150     9
+     qla2xxx (rsp_q)  151     9
+    qla2xxx (atio_q)  152     9
 
-Maybe it's unnecessary, but I would put parenthesis around (ret == ... -EIO); for clarity.
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_def.h |    2 +
+ drivers/scsi/qla2xxx/qla_dfs.c |   49 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_isr.c |   16 +++++++++++++
+ 3 files changed, 67 insertions(+), 0 deletions(-)
 
-> +
->  			rq->cmd_flags |= REQ_QUIET;
->  			/*
->  			 * Mark this request as started so we don't trigger
->  			 * any debug logic in the end I/O path.
->  			 */
->  			blk_start_request(rq);
-> -			__blk_end_request_all(rq, -EIO);
-> +			__blk_end_request_all(rq, err);
->  		} else {
->  			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
->  			break;
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index ec163d08f6c3..6e841c6da632 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -761,7 +761,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
->  		break;
->  
->  	default:
-> -		ret = BLKPREP_KILL;
-> +		ret = BLKPREP_INVALID;
->  		goto out;
->  	}
->  
-> @@ -839,7 +839,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
->  	int ret;
->  
->  	if (sdkp->device->no_write_same)
-> -		return BLKPREP_KILL;
-> +		return BLKPREP_INVALID;
->  
->  	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
->  
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index c70e3588a48c..e990d181625a 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -680,9 +680,12 @@ static inline bool blk_write_same_mergeable(struct bio *a, struct bio *b)
->  /*
->   * q->prep_rq_fn return values
->   */
-> -#define BLKPREP_OK		0	/* serve it */
-> -#define BLKPREP_KILL		1	/* fatal error, kill */
-> -#define BLKPREP_DEFER		2	/* leave on queue */
-> +enum {
-> +	BLKPREP_OK,		/* serve it */
-> +	BLKPREP_KILL,		/* fatal error, kill, return -EIO */
-> +	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
-> +	BLKPREP_DEFER,		/* leave on queue */
-> +};
-
-I would prefer that additional enum/constant values be added to the end
-of the series, here you are changing the ordinal value of BLKPREP_DEFER
-from 2 to 3.  Could you swap these?
-
->  extern unsigned long blk_max_low_pfn, blk_max_pfn;
->  
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index e6c5bcf..c6cc519 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2722,6 +2722,7 @@ struct qla_msix_entry {
+ 	int have_irq;
+ 	uint32_t vector;
+ 	uint16_t entry;
++	const char *name;
+ 	struct rsp_que *rsp;
+ 	struct irq_affinity_notify irq_notify;
+ 	int cpuid;
+@@ -3377,6 +3378,7 @@ struct qla_hw_data {
+ 	struct dentry *dfs_fce;
+ 	struct dentry *dfs_tgt_counters;
+ 	struct dentry *dfs_fw_resource_cnt;
++	struct dentry *dfs_irq_cpuid;
+ 
+ 	dma_addr_t	fce_dma;
+ 	void		*fce;
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 34272fd..4ff17f6 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -13,6 +13,41 @@ static struct dentry *qla2x00_dfs_root;
+ static atomic_t qla2x00_dfs_root_count;
+ 
+ static int
++qla2x00_dfs_irq_cpuid_show(struct seq_file *s, void *unused)
++{
++	scsi_qla_host_t *vha = s->private;
++	struct qla_hw_data *ha = vha->hw;
++	struct qla_msix_entry *qentry;
++	int i;
++
++	seq_printf(s, "%s\n",vha->host_str);
++	seq_printf(s, "%20s  Vector  CPUID\n","IRQ Name");
++
++	for (i = 0; i < ha->msix_count; i++) {
++		qentry = &ha->msix_entries[i];
++		if (qentry->have_irq)
++			seq_printf(s, "%20s  %3d      %d\n", qentry->name,
++			    qentry->vector, qentry->cpuid);
++	}
++
++	return 0;
++}
++
++static int
++qla2x00_dfs_irq_cpuid_open(struct inode *inode, struct file *file)
++{
++	scsi_qla_host_t *vha = inode->i_private;
++	return single_open(file, qla2x00_dfs_irq_cpuid_show, vha);
++}
++
++static const struct file_operations dfs_irq_cpuid_ops = {
++	.open		= qla2x00_dfs_irq_cpuid_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++static int
+ qla2x00_dfs_tgt_sess_show(struct seq_file *s, void *unused)
+ {
+ 	scsi_qla_host_t *vha = s->private;
+@@ -298,6 +333,15 @@ create_nodes:
+ 		goto out;
+ 	}
+ 
++	ha->dfs_irq_cpuid = debugfs_create_file("irq_cpuid",
++		S_IRUSR, ha->dfs_dir, vha, &dfs_irq_cpuid_ops);
++	if (!ha->dfs_irq_cpuid) {
++		ql_log(ql_log_warn, vha, 0xffff,
++			"Unable to create debugFS irq_cpuid node.\n");
++		goto out;
++	}
++
++
+ out:
+ 	return 0;
+ }
+@@ -307,6 +351,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 
++	if (ha->dfs_irq_cpuid) {
++		debugfs_remove(ha->dfs_irq_cpuid);
++		ha->dfs_irq_cpuid = NULL;
++	}
++
+ 	if (ha->tgt.dfs_tgt_sess) {
+ 		debugfs_remove(ha->tgt.dfs_tgt_sess);
+ 		ha->tgt.dfs_tgt_sess = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 4af9547..d527189 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3102,6 +3102,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 			goto msix_register_fail;
+ 		qentry->have_irq = 1;
+ 		qentry->rsp = rsp;
++		qentry->name = msix_entries[i].name;
+ 		rsp->msix = qentry;
+ 
+ 		/* Register for CPU affinity notification. */
+@@ -3128,7 +3129,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 			0, qla83xx_msix_entries[ATIO_VECTOR].name, rsp);
+ 		qentry->have_irq = 1;
+ 		qentry->rsp = rsp;
++		qentry->name = qla83xx_msix_entries[ATIO_VECTOR].name;
++		qentry->irq_notify.notify  = qla_irq_affinity_notify;
++		qentry->irq_notify.release = qla_irq_affinity_release;
+ 		rsp->msix = qentry;
++
++		/* Register for CPU affinity notification. */
++		irq_set_affinity_notifier(qentry->vector, &qentry->irq_notify);
++
++		/* Schedule work (ie. trigger a notification) to read cpu
++		 * mask for this specific irq.
++		 * kref_get is required because
++		* irq_affinity_notify() will do
++		* kref_put().
++		*/
++		kref_get(&qentry->irq_notify.kref);
++		schedule_work(&qentry->irq_notify.work);
+ 	}
+ 
+ msix_register_fail:
+-- 
+1.7.7
