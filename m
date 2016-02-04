@@ -1,32 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_dh_rdac: always retry MODE SELECT on command lock violation
-Date: Wed, 03 Feb 2016 21:48:45 -0500
-Message-ID: <yq1y4b1i41e.fsf@sermon.lab.mkp.net>
-References: <1453473761-54777-1-git-send-email-hare@suse.de>
+Subject: Re: [patch] bfa: use strncpy() instead of memcpy()
+Date: Wed, 03 Feb 2016 21:54:05 -0500
+Message-ID: <yq1twlpi3si.fsf@sermon.lab.mkp.net>
+References: <20160130143603.GB3462@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43578 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756441AbcBDCs6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2016 21:48:58 -0500
-In-Reply-To: <1453473761-54777-1-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Fri, 22 Jan 2016 15:42:41 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20160130143603.GB3462@mwanda> (Dan Carpenter's message of "Sat,
+	30 Jan 2016 17:36:03 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Hannes> If MODE SELECT returns with sense '05/91/36' (command lock
-Hannes> violation) it should always be retried without counting the
-Hannes> number of retries.  During an HBA upgrade or similar
-Hannes> circumstances one might see a flood of MODE SELECT command from
-Hannes> various HBAs, which will easily trigger the sense code and
-Hannes> exceed the retry count.
+Dan> BFA_MFG_NAME is "QLogic" which is only 7 bytes, but we are copying
+Dan> 8 bytes.  It's harmless because the badding byte is likely zero but
+Dan> it makes static checkers complain.
 
-Should this be Cc: stable?
+Applied to 4.6/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
