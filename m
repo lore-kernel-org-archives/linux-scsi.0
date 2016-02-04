@@ -1,151 +1,62 @@
-From: jiangyiwen <jiangyiwen@huawei.com>
-Subject: Re: dm-mpath: fix a tiny case which can cause an infinite loop
-Date: Thu, 4 Feb 2016 16:25:46 +0800
-Message-ID: <56B30B0A.5080600@huawei.com>
-References: <56B2B282.60400@huawei.com> <20160204032452.GA15344@redhat.com>
- <56B2CA48.9010802@huawei.com> <20160204042528.GA15599@redhat.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/6] ibmvscsi: Correct values for several
+ viosrp_crq_format enums
+Date: Thu, 4 Feb 2016 09:38:32 +0100
+Message-ID: <20160204083832.GU27969@c203.arch.suse.de>
+References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <1454542114-1797-2-git-send-email-tyreld@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:40776 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752984AbcBDI0U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 03:26:20 -0500
-In-Reply-To: <20160204042528.GA15599@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <1454542114-1797-2-git-send-email-tyreld@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@odin.com, linux-kernel@vger.kernel.org, hare@suse.de, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, xuejiufei@huawei.com, "Qijiang (Joseph, Euler)" <joseph.qi@huawei.com>, martin.petersen@oracle.com
 
-On 2016/2/4 12:25, Mike Snitzer wrote:
-> On Wed, Feb 03 2016 at 10:49pm -0500,
-> jiangyiwen <jiangyiwen@huawei.com> wrote:
-> 
->> On 2016/2/4 11:24, Mike Snitzer wrote:
->>> On Wed, Feb 03 2016 at  9:08pm -0500,
->>> jiangyiwen <jiangyiwen@huawei.com> wrote:
->>>
->>>> When two processes submit WRTIE SAME bio simultaneously and
->>>> first IO return failed because of INVALID FIELD IN CDB, and
->>>> then second IO can enter into an infinite loop.
->>>> The problem can be described as follows:
->>>>
->>>> process 1                              process 2
->>>> submit_bio(REQ_WRITE_SAME) and
->>>> wait io completion
->>>>                                        begin submit_bio(REQ_WRITE_SAME)
->>>>                                        -> blk_queue_bio()
->>>>                                          -> dm_request_fn()
->>>>                                            -> map_request()
->>>>                                              -> scsi_request_fn()
->>>>                                                -> blk_peek_request()
->>>>                                                  -> scsi_prep_fn()
->>>> In the moment, IO return and
->>>> sense_key with illegal_request,
->>>> sense_code with 0x24(INVALID FIELD IN CDB).
->>>> In this way it will set no_write_same = 1
->>>> in sd_done() and disable write same
->>>>                                        In sd_setup_write_same_cmnd()
->>>>                                        when find (no_write_same == 1)
->>>>                                        will return BLKPREP_KILL,
->>>>                                        and then in blk_peek_request()
->>>>                                        set error to EIO.
->>>>                                        However, in multipath_end_io()
->>>>                                        when find error is EIO it will
->>>>                                        fail path and retry even if
->>>>                                        device doesn't support WRITE SAME.
->>>>
->>>> In this situation, when process of multipathd reinstate
->>>> path by using test_unit_ready periodically, it will cause
->>>> second WRITE SAME IO enters into an infinite loop and
->>>> loop never terminates.
->>>>
->>>> In do_end_io(), when finding device doesn't support WRITE SAME and
->>>> request is WRITE SAME, return EOPNOTSUPP to applications.
->>>>
->>>> Signed-off-by: Yiwen Jiang <jiangyiwen@huawei.com>
->>>> Reviewed-by: Joseph Qi <joseph.qi@huawei.com>
->>>> Reviewed-by: xuejiufei <xuejiufei@huawei.com>
->>>> ---
->>>>  drivers/md/dm-mpath.c | 5 +++++
->>>>  1 file changed, 5 insertions(+)
->>>>
->>>> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
->>>> index cfa29f5..ad1602a 100644
->>>> --- a/drivers/md/dm-mpath.c
->>>> +++ b/drivers/md/dm-mpath.c
->>>> @@ -1269,6 +1269,11 @@ static int do_end_io(struct multipath *m, struct request *clone,
->>>>  	if (noretry_error(error))
->>>>  		return error;
->>>>
->>>> +	/* do not retry in case of WRITE SAME not supporting */
->>>> +	if ((clone->cmd_flags & REQ_WRITE_SAME) &&
->>>> +			!clone->q->limits.max_write_same_sectors)
->>>> +		return -EOPNOTSUPP;
->>>> +
->>>>  	if (mpio->pgpath)
->>>>  		fail_path(mpio->pgpath);
->>>>
->>>
->>> Did you test this patch?  Looks like it isn't going to make a
->>> difference.  'error' will be -EREMOTEIO, which will be caught by
->>> noretry_error().  So we'll never go on to run your new code.
->>>
->>> Please see commit 7eee4ae2db ("dm: disable WRITE SAME if it fails").
->>>
->>> I think DM already handles this case properly.  The only thing is it'll
->>> return -EREMOTEIO (rather than -EOPNOTSUPP) further up the stack.
->>>
->>> .
->>>
->> Hi Mike,
->> Yes, I have already test in version linux-3.8, and I also have already
->> carefully checked latest kernel code, and find that it also exists this
->> problem. I know about this commit 7eee4ae2db ("dm: disable WRITE SAME
->> if it fails"), it only can solve first IO situation which I mentioned
->> above, in other words, when WRITE SAME IO truly send to device, it
->> actually return -EREMOTEIO if device doesn't support WRITE SAME.
->> But in above situation which issues two WRITE SAME IO simultaneously,
->> second IO will not truly send to device instead of returning
->> BLKPREP_KILL in sd_setup_write_same_cmnd() because find
->> (no_write_same == 1) which no_write_same is set when first IO returned,
->> and then in blk_peek_request() will return EIO to MD/DM which caused
->> the problem above mentioned.
->>
->> I have described detailed process of problem, you will find actually
->> it is a problem when reviewed carefully.
-> 
-> OK, so -EIO is getting returned.  That shouldn't happen.  -EIO is the
-> generic catch-all error that we're going to retry.  We have
-> differentiated IO errors in SCSI that get returned up the IO stack
-> (e.g. -EREMOTEIO, etc).
-> 
-> The SCSI, or block layer, should return a non-retryable error for this
-> case.  But we only have the differentiated IO errors for SCSI cmds that
-> are issued, so it seems we still need to train SCSI (and block by
-> association/dependency) to return permanent errors that are identified
-> during request preparation.
-> 
-> But it may be that we need to widen the WRITE_SAME error handling code
-> in DM to check for -EREMOTEIO or -EOPNOTSUPP.  But I'm really not in
-> favor of special-casing -EIO for WRITE_SAME, we need to be sprinkling
-> less special-case code to make up for lack of information for lower
-> layers.
-> 
-> .
-> 
-I totally agree with you. SCSI or block layer should not return EIO
-to MD/DM, but the return code associated with many other process,
-it will influence more if I modify blk_peek_request. So I use this
-method to avoid it, and I also expect martin can get a better idea.
-
-In addition, with increasing number of various storage, I worried
-whether multipath still can occur an infinite loop as I mentioned
-above someday. Thus I think whether multipath should have a
-timeout mechanism to solve this type of problem which will cause a
-ping-pong effect, for instance, return error to applications when
-try a certain counts or time in multipath. This is my idea, I hope
-it will have more people to discuss it.
-
-
+T24gV2VkLCBGZWIgMDMsIDIwMTYgYXQgMDU6Mjg6MjlQTSAtMDYwMCwgVHlyZWwgRGF0d3lsZXIg
+d3JvdGU6Cj4gVGhlIGVudW0gdmFsdWVzIGZvciBWSU9TUlBfTElOVVhfRk9STUFUIGFuZCBWSU9T
+UlBfSU5MSU5FX0ZPUk1BVCBhcmUKPiBvZmYgYnkgb25lLiBUaGV5IGFyZSBjdXJyZW50bHkgZGVm
+aW5lZCBhcyAweDA2IGFuZCAweDA3IHJlc3BldGl2ZWx5Lgo+IFRoZXNlIHZhbHVlcyBhcmUgZGVm
+aW5lZCBpbiBQQVBSIGNvcnJlY3RseSBhcyAweDA1IGFuZCAweDA2LiBUaGlzCj4gaW5jb25zaXN0
+ZW5jeSBoYXMgZ29uZSB1bm5vdGljZWQgYXMgbmVpdGhlciBlbnVtIGlzIGN1cnJlbnRseSB1c2Vk
+Lgo+IFRoZSBwb3NzaWJsZSBmdXR1cmUgc3VwcG9ydCBvZiBQSU5HIG1lc3NhZ2VzIGJldHdlZW4g
+dGhlIFZJT1MgYW5kCj4gY2xpZW50IGFkYXB0ZXIgcmVsaWVzIG9uIFZJT1NSUF9JTkxJTkVfRk9S
+TUFUIGNycSBtZXNzYWdlcy4KPiBDb3JyZWN0ZWQgdGhlc2UgZW51bSB2YWx1ZXMgdG8gbWF0Y2gg
+UEFQUiBkZWZpbml0aW9ucy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBUeXJlbCBEYXR3eWxlciA8dHly
+ZWxkQGxpbnV4LnZuZXQuaWJtLmNvbT4KPiAtLS0KPiAgZHJpdmVycy9zY3NpL2libXZzY3NpL3Zp
+b3NycC5oIHwgNCArKy0tCj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVs
+ZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9pYm12c2NzaS92aW9zcnAu
+aCBiL2RyaXZlcnMvc2NzaS9pYm12c2NzaS92aW9zcnAuaAo+IGluZGV4IDExNjI0MzAuLmQxMDQ0
+ZTkgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9zY3NpL2libXZzY3NpL3Zpb3NycC5oCj4gKysrIGIv
+ZHJpdmVycy9zY3NpL2libXZzY3NpL3Zpb3NycC5oCj4gQEAgLTU2LDggKzU2LDggQEAgZW51bSB2
+aW9zcnBfY3JxX2Zvcm1hdHMgewo+ICAJVklPU1JQX01BRF9GT1JNQVQgPSAweDAyLAo+ICAJVklP
+U1JQX09TNDAwX0ZPUk1BVCA9IDB4MDMsCj4gIAlWSU9TUlBfQUlYX0ZPUk1BVCA9IDB4MDQsCj4g
+LQlWSU9TUlBfTElOVVhfRk9STUFUID0gMHgwNiwKPiAtCVZJT1NSUF9JTkxJTkVfRk9STUFUID0g
+MHgwNwo+ICsJVklPU1JQX0xJTlVYX0ZPUk1BVCA9IDB4MDUsCj4gKwlWSU9TUlBfSU5MSU5FX0ZP
+Uk1BVCA9IDB4MDYKPiAgfTsKPiAgCj4gIGVudW0gdmlvc3JwX2NycV9zdGF0dXMgewo+IC0tIAo+
+IDIuNS4wCj4gCj4gLS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
+bGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2Ug
+dG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0
+dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAoKUmV2aWV3ZWQtYnk6IEpv
+aGFubmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPgotLSAKSm9oYW5uZXMgVGh1bXNo
+aXJuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgU3RvcmFnZQpqdGh1
+bXNoaXJuQHN1c2UuZGUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQw
+NTMgNjg5ClNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnCkdG
+OiBGZWxpeCBJbWVuZMO2cmZmZXIsIEphbmUgU21pdGhhcmQsIEdyYWhhbSBOb3J0b24KSFJCIDIx
+Mjg0IChBRyBOw7xybmJlcmcpCktleSBmaW5nZXJwcmludCA9IEVDMzggOUNBQiBDMkM0IEYyNUQg
+ODYwMCBEMEQwIDAzOTMgOTY5RCAyRDc2IDA4NTAKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KTGludXhwcGMtZGV2IG1haWxpbmcgbGlzdApMaW51eHBwYy1k
+ZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xpc3RzLm96bGFicy5vcmcvbGlzdGluZm8vbGlu
+dXhwcGMtZGV2
