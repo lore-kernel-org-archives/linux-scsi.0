@@ -1,32 +1,40 @@
-From: Oliver Neukum <oneukum@suse.com>
-Subject: Re: [Resend PATCH 3/3] scsi:stex.c Add S3/S4 support
-Date: Thu, 04 Feb 2016 12:37:25 +0100
-Message-ID: <1454585845.16206.2.camel@suse.com>
-References: <55E83F66.2060300@gmail.com> <mqd8u8nbnw5.fsf@c203.arch.suse.de>
-	 <56AB4BBD.2030702@gmail.com> <56B33493.80300@gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V6 07/10] aacraid: Created new mutex for ioctl path
+Date: Thu, 4 Feb 2016 13:29:17 +0100
+Message-ID: <56B3441D.8020003@redhat.com>
+References: <1454540768-12271-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1454540768-12271-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56B33493.80300@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, eva.cheng@tw.promise.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49692 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751333AbcBDM3W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Feb 2016 07:29:22 -0500
+In-Reply-To: <1454540768-12271-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Scott.Benesh@pmcs.com, jthumshirn@suse.de, shane.seymour@hpe.com
 
-On Thu, 2016-02-04 at 19:22 +0800, Charles Chiou wrote:
-> +static int stex_choice_sleep_mic(pm_message_t state)
-> +{
-> +    switch (state.event) {
-> +    case PM_EVENT_SUSPEND:
-> +        return ST_S3;
-> +    case PM_EVENT_FREEZE:
+On 4.2.2016 00:06, Raghava Aditya Renukunta wrote:
+> aac_mutex was used to create protect the ioctl path for only the
+> compat path, it would be make more sense to place mutex in
+> aac_do_ioctl, which is the main ioctl function call that handles
+> all ioctl commands.
+>
+> Created new mutex ioctl_mutex in struct aac_dev to protect switch
+> case in aac_do_ioctl and removed aac_mutex from aac_cfg_ioctl and
+> aac_compat_do_ioctl
+>
+> Changes in V1:
+> Unlock ioctl_mutex incase of error
+> Fix compilation error with aac->adapter_shutdown
+>
+> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
 
-Why do you react to PM_EVENT_FREEZE at all?
-That is too early. You will get a HIBERNATE
-event anyway. If the write out fails you are
-in trouble if you already reacted to 
-PM_EVENT_FREEZE
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-	Regards
-		Oliver
+Tomas
+
