@@ -1,277 +1,179 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [v3 07/14] scsi: ufs: make error handling bit faster
-Date: Thu,  4 Feb 2016 11:45:21 +0200
-Message-ID: <1454579128-2682-8-git-send-email-ygardi@codeaurora.org>
+Subject: [v3 04/14] scsi: ufs: verify hba controller hce reg value
+Date: Thu,  4 Feb 2016 11:45:18 +0200
+Message-ID: <1454579128-2682-5-git-send-email-ygardi@codeaurora.org>
 References: <1454579128-2682-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1454579128-2682-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-UFS driver's error handler forcefully tries to clear all the pending
-requests. For each pending request in the queue, it waits 1 sec for it
-to get cleared. If we have multiple requests in the queue then it's
-possible that we might end up waiting for those many seconds before
-resetting the host. But note that resetting host would any way clear
-all the pending requests from the hardware. Hence this change skips
-the forceful clear of the pending requests if we are anyway going to
-reset the host (for fatal errors).
+Sometimes due to hw issues it takes some time to the
+host controller register to update. In order to verify the register
+has updated, a polling is done until its value is set.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+In addition the functions ufshcd_hba_stop() and
+ufshcd_wait_for_register() was updated with an additional input
+parameter, indicating the timeout between reads will
+be done by sleeping or spinning the cpu.
+
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 155 +++++++++++++++++++++++++++++++++-------------
- 1 file changed, 112 insertions(+), 43 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h | 12 +++--------
+ 2 files changed, 35 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index aa82b67..85c5865 100644
+index 99cd679..df0316b 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -133,9 +133,11 @@ enum {
- /* UFSHCD UIC layer error flags */
- enum {
- 	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
--	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
--	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
--	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
-+	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR = (1 << 1), /* Data link layer error */
-+	UFSHCD_UIC_DL_TCx_REPLAY_ERROR = (1 << 2), /* Data link layer error */
-+	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
-+	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
-+	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
- };
- 
- /* Interrupt configuration options */
-@@ -3465,31 +3467,18 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- }
- 
- /**
-- * ufshcd_transfer_req_compl - handle SCSI and query command completion
-+ * __ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-+ * @completed_reqs: requests to complete
+@@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+  * @val - wait condition
+  * @interval_us - polling interval in microsecs
+  * @timeout_ms - timeout in millisecs
++ * @can_sleep - perform sleep or just spin
+  *
+  * Returns -ETIMEDOUT on error, zero on success
   */
--static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
-+static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
-+					unsigned long completed_reqs)
+-static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+-		u32 val, unsigned long interval_us, unsigned long timeout_ms)
++int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
++				u32 val, unsigned long interval_us,
++				unsigned long timeout_ms, bool can_sleep)
  {
- 	struct ufshcd_lrb *lrbp;
- 	struct scsi_cmnd *cmd;
--	unsigned long completed_reqs;
--	u32 tr_doorbell;
- 	int result;
- 	int index;
+ 	int err = 0;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+@@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+ 	val = val & mask;
  
--	/* Resetting interrupt aggregation counters first and reading the
--	 * DOOR_BELL afterward allows us to handle all the completed requests.
--	 * In order to prevent other interrupts starvation the DB is read once
--	 * after reset. The down side of this solution is the possibility of
--	 * false interrupt if device completes another request after resetting
--	 * aggregation and before reading the DB.
--	 */
--	if (ufshcd_is_intr_aggr_allowed(hba))
--		ufshcd_reset_intr_aggr(hba);
+ 	while ((ufshcd_readl(hba, reg) & mask) != val) {
+-		/* wakeup within 50us of expiry */
+-		usleep_range(interval_us, interval_us + 50);
 -
--	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
--
- 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
- 		lrbp = &hba->lrb[index];
- 		cmd = lrbp->cmd;
-@@ -3519,6 +3508,31 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
++		if (can_sleep)
++			usleep_range(interval_us, interval_us + 50);
++		else
++			udelay(interval_us);
+ 		if (time_after(jiffies, timeout)) {
+ 			if ((ufshcd_readl(hba, reg) & mask) != val)
+ 				err = -ETIMEDOUT;
+@@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
+ 	 */
+ 	err = ufshcd_wait_for_register(hba,
+ 			REG_UTP_TRANSFER_REQ_DOOR_BELL,
+-			mask, ~mask, 1000, 1000);
++			mask, ~mask, 1000, 1000, true);
+ 
+ 	return err;
+ }
+@@ -2815,6 +2818,23 @@ out:
  }
  
  /**
-+ * ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * ufshcd_hba_stop - Send controller to reset state
 + * @hba: per adapter instance
++ * @can_sleep: perform sleep or just spin
 + */
-+static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
++static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
 +{
-+	unsigned long completed_reqs;
-+	u32 tr_doorbell;
++	int err;
 +
-+	/* Resetting interrupt aggregation counters first and reading the
-+	 * DOOR_BELL afterward allows us to handle all the completed requests.
-+	 * In order to prevent other interrupts starvation the DB is read once
-+	 * after reset. The down side of this solution is the possibility of
-+	 * false interrupt if device completes another request after resetting
-+	 * aggregation and before reading the DB.
-+	 */
-+	if (ufshcd_is_intr_aggr_allowed(hba))
-+		ufshcd_reset_intr_aggr(hba);
-+
-+	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
-+
-+	__ufshcd_transfer_req_compl(hba, completed_reqs);
++	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
++	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
++					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
++					10, 1, can_sleep);
++	if (err)
++		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
 +}
 +
 +/**
-  * ufshcd_disable_ee - disable exception event
-  * @hba: per-adapter instance
-  * @mask: exception event to disable
-@@ -3773,6 +3787,13 @@ out:
- 	return;
- }
- 
-+/* Complete requests that have door-bell cleared */
-+static void ufshcd_complete_requests(struct ufs_hba *hba)
-+{
-+	ufshcd_transfer_req_compl(hba);
-+	ufshcd_tmc_handler(hba);
-+}
-+
- /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -3785,6 +3806,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	u32 err_tm = 0;
- 	int err = 0;
- 	int tag;
-+	bool needs_reset = false;
- 
- 	hba = container_of(work, struct ufs_hba, eh_work);
- 
-@@ -3792,40 +3814,75 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	ufshcd_hold(hba, false);
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
- 		goto out;
--	}
- 
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 	ufshcd_set_eh_in_progress(hba);
- 
- 	/* Complete requests that have door-bell cleared by h/w */
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	ufshcd_complete_requests(hba);
-+	if ((hba->saved_err & INT_FATAL_ERRORS) ||
-+	    ((hba->saved_err & UIC_ERROR) &&
-+	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
-+				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-+				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
-+		needs_reset = true;
- 
-+	/*
-+	 * if host reset is required then skip clearing the pending
-+	 * transfers forcefully because they will automatically get
-+	 * cleared after link startup.
-+	 */
-+	if (needs_reset)
-+		goto skip_pending_xfer_clear;
-+
-+	/* release lock as clear command might sleep */
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	/* Clear pending transfer requests */
--	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
--		if (ufshcd_clear_cmd(hba, tag))
--			err_xfer |= 1 << tag;
-+	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-+		if (ufshcd_clear_cmd(hba, tag)) {
-+			err_xfer = true;
-+			goto lock_skip_pending_xfer_clear;
-+		}
-+	}
- 
- 	/* Clear pending task management requests */
--	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
--		if (ufshcd_clear_tm_cmd(hba, tag))
--			err_tm |= 1 << tag;
-+	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-+		if (ufshcd_clear_tm_cmd(hba, tag)) {
-+			err_tm = true;
-+			goto lock_skip_pending_xfer_clear;
-+		}
-+	}
- 
--	/* Complete the requests that are cleared by s/w */
-+lock_skip_pending_xfer_clear:
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	/* Complete the requests that are cleared by s/w */
-+	ufshcd_complete_requests(hba);
-+
-+	if (err_xfer || err_tm)
-+		needs_reset = true;
-+
-+skip_pending_xfer_clear:
- 	/* Fatal errors need reset */
--	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
--			((hba->saved_err & UIC_ERROR) &&
--			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
-+	if (needs_reset) {
-+		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
-+
-+		/*
-+		 * ufshcd_reset_and_restore() does the link reinitialization
-+		 * which will need atleast one empty doorbell slot to send the
-+		 * device management commands (NOP and query commands).
-+		 * If there is no slot empty at this moment then free up last
-+		 * slot forcefully.
-+		 */
-+		if (hba->outstanding_reqs == max_doorbells)
-+			__ufshcd_transfer_req_compl(hba,
-+						    (1UL << (hba->nutrs - 1)));
-+
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		err = ufshcd_reset_and_restore(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 		if (err) {
- 			dev_err(hba->dev, "%s: reset and restore failed\n",
- 					__func__);
-@@ -3839,9 +3896,18 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		hba->saved_err = 0;
- 		hba->saved_uic_err = 0;
- 	}
-+
-+	if (!needs_reset) {
-+		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+		if (hba->saved_err || hba->saved_uic_err)
-+			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
-+			    __func__, hba->saved_err, hba->saved_uic_err);
-+	}
-+
- 	ufshcd_clear_eh_in_progress(hba);
- 
- out:
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	scsi_unblock_requests(hba->host);
- 	ufshcd_release(hba);
- 	pm_runtime_put_sync(hba->dev);
-@@ -3896,15 +3962,18 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 	}
- 
- 	if (queue_eh_work) {
-+		/*
-+		 * update the transfer error masks to sticky bits, let's do this
-+		 * irrespective of current ufshcd_state.
-+		 */
-+		hba->saved_err |= hba->errors;
-+		hba->saved_uic_err |= hba->uic_error;
-+
- 		/* handle fatal errors only when link is functional */
- 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
- 			/* block commands from scsi mid-layer */
- 			scsi_block_requests(hba->host);
- 
--			/* transfer error masks to sticky bits */
--			hba->saved_err |= hba->errors;
--			hba->saved_uic_err |= hba->uic_error;
+  * ufshcd_hba_enable - initialize the controller
+  * @hba: per adapter instance
+  *
+@@ -2834,18 +2854,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+ 	 * development and testing of this driver. msleep can be changed to
+ 	 * mdelay and retry count can be reduced based on the controller.
+ 	 */
+-	if (!ufshcd_is_hba_active(hba)) {
 -
- 			hba->ufshcd_state = UFSHCD_STATE_ERROR;
- 			schedule_work(&hba->eh_work);
- 		}
++	if (!ufshcd_is_hba_active(hba))
+ 		/* change controller state to "reset state" */
+-		ufshcd_hba_stop(hba);
+-
+-		/*
+-		 * This delay is based on the testing done with UFS host
+-		 * controller FPGA. The delay can be changed based on the
+-		 * host controller used.
+-		 */
+-		msleep(5);
+-	}
++		ufshcd_hba_stop(hba, true);
+ 
+ 	/* UniPro link is disabled at this point */
+ 	ufshcd_set_link_off(hba);
+@@ -3898,7 +3909,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+ 	/* poll for max. 1 sec to clear door bell register by h/w */
+ 	err = ufshcd_wait_for_register(hba,
+ 			REG_UTP_TASK_REQ_DOOR_BELL,
+-			mask, 0, 1000, 1000);
++			mask, 0, 1000, 1000, true);
+ out:
+ 	return err;
+ }
+@@ -4180,7 +4191,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 
+ 	/* Reset the host controller */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ufshcd_hba_stop(hba);
++	ufshcd_hba_stop(hba, false);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	err = ufshcd_hba_enable(hba);
+@@ -5133,7 +5144,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
+ 		 * Change controller state to "reset state" which
+ 		 * should also put the link in off/reset state
+ 		 */
+-		ufshcd_hba_stop(hba);
++		ufshcd_hba_stop(hba, true);
+ 		/*
+ 		 * TODO: Check if we need any delay to make sure that
+ 		 * controller is reset
+@@ -5609,7 +5620,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	scsi_remove_host(hba->host);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+-	ufshcd_hba_stop(hba);
++	ufshcd_hba_stop(hba, true);
+ 
+ 	scsi_host_put(hba->host);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2e5bbce..27ae395 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -590,15 +590,9 @@ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+ void ufshcd_dealloc_host(struct ufs_hba *);
+ int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+ void ufshcd_remove(struct ufs_hba *);
+-
+-/**
+- * ufshcd_hba_stop - Send controller to reset state
+- * @hba: per adapter instance
+- */
+-static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+-{
+-	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+-}
++int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
++				u32 val, unsigned long interval_us,
++				unsigned long timeout_ms, bool can_sleep);
+ 
+ static inline void check_upiu_size(void)
+ {
 -- 
 1.8.5.2
 
