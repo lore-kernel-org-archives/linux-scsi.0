@@ -1,73 +1,204 @@
-From: wangyijing <wangyijing@huawei.com>
-Subject: Question for Patch"libsas: fix "sysfs group not found" warnings at
- port teardown time"
-Date: Fri, 5 Feb 2016 17:20:03 +0800
-Message-ID: <56B46943.5040808@huawei.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH 1/2] megaraid_sas: Fix for IO failing post OCR in SRIOV environment
+Date: Fri, 5 Feb 2016 17:54:44 +0530
+Message-ID: <a0b3432aef90520fb4989748238b9565@mail.gmail.com>
+References: <1453995866-25097-1-git-send-email-sumit.saxena@avagotech.com>
+ <1453995866-25097-2-git-send-email-sumit.saxena@avagotech.com> <56AB9083.5060304@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([58.251.152.179]:36987 "EHLO
-	szxga05-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752366AbcBEJWq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 04:22:46 -0500
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:36697 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752930AbcBEMYr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 07:24:47 -0500
+Received: by mail-lb0-f176.google.com with SMTP id dx2so48589984lbd.3
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Feb 2016 04:24:46 -0800 (PST)
+In-Reply-To: <56AB9083.5060304@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dan.j.williams@intel.com, Praveen Murali <pmurali@logicube.com>
-Cc: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@avagotech.com>, jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, Uday Lingala <uday.lingala@avagotech.com>
 
-Hi Dan and Praveen,
-   I found a patch titled "libsas: fix "sysfs group not found" warnings at port teardown time" by google,
-https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Friday, January 29, 2016 9:47 PM
+> To: Sumit Saxena; jbottomley@parallels.com; hch@infradead.org;
+> martin.petersen@oracle.com
+> Cc: linux-scsi@vger.kernel.org; kashyap.desai@avagotech.com; Uday
+Lingala
+> Subject: Re: [PATCH 1/2] megaraid_sas: Fix for IO failing post OCR in
+SRIOV
+> environment
+>
+> On 28.1.2016 16:44, Sumit Saxena wrote:
+> > Driver assumes that VFs always have peers present whenever they have
+same
+> LD IDs. But this is not the case.
+> > This patch handles the above mentioned by explicitly checking for a
+peer
+> before making HA/non-HA path decision.
+> >
+> > Signed-off-by: Uday Lingala <uday.lingala@avagotech.com>
+> > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> >
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas.h        | 13 ++++++---
+> >  drivers/scsi/megaraid/megaraid_sas_base.c   |  6 +++--
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 42
+> > ++++++++++++++++++-----------
+> >  3 files changed, 39 insertions(+), 22 deletions(-)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+> > b/drivers/scsi/megaraid/megaraid_sas.h
+> > index b6fdb48..4484e63 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas.h
+> > +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> > @@ -393,6 +393,7 @@ enum MR_EVT_ARGS {
+> >
+> >
+> >  #define SGE_BUFFER_SIZE	4096
+> > +#define MEGASAS_CLUSTER_ID_SIZE	16
+> >  /*
+> >   * define constants for device list query options
+> >   */
+> > @@ -1227,7 +1228,8 @@ struct megasas_ctrl_info {
+> >  	*/
+> >  	struct {
+> >  #if defined(__BIG_ENDIAN_BITFIELD)
+> > -		u32     reserved:26;
+> > +		u32     reserved:25;
+> > +		u32     passive:1;
+> >  		u32     premiumFeatureMismatch:1;
+> >  		u32     ctrlPropIncompatible:1;
+> >  		u32     fwVersionMismatch:1;
+> > @@ -1241,11 +1243,12 @@ struct megasas_ctrl_info {
+> >  		u32     fwVersionMismatch:1;
+> >  		u32     ctrlPropIncompatible:1;
+> >  		u32     premiumFeatureMismatch:1;
+> > -		u32     reserved:26;
+> > +		u32     passive:1;
+> > +		u32     reserved:25;
+> >  #endif
+> >  	} cluster;
+> >
+> > -	char clusterId[16];                     /*7D4h */
+> > +	char clusterId[MEGASAS_CLUSTER_ID_SIZE]; /*0x7D4 */
+> >  	struct {
+> >  		u8  maxVFsSupported;            /*0x7E4*/
+> >  		u8  numVFsEnabled;              /*0x7E5*/
+> > @@ -2126,7 +2129,9 @@ struct megasas_instance {
+> >  	char skip_heartbeat_timer_del;
+> >  	u8 requestorId;
+> >  	char PlasmaFW111;
+> > -	char mpio;
+> > +	char clusterId[MEGASAS_CLUSTER_ID_SIZE];
+> > +	u8 peerIsPresent;
+> > +	u8 passive;
+> >  	u16 throttlequeuedepth;
+> >  	u8 mask_interrupts;
+> >  	u16 max_chain_frame_sz;
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > index 54922e5..52f3419 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > @@ -1943,7 +1943,7 @@ void megaraid_sas_kill_hba(struct
+> megasas_instance *instance)
+> >  		writel(MFI_STOP_ADP, &instance->reg_set->doorbell);
+> >  		/* Flush */
+> >  		readl(&instance->reg_set->doorbell);
+> > -		if (instance->mpio && instance->requestorId)
+> > +		if (instance->requestorId && instance->peerIsPresent)
+> >  			memset(instance->ld_ids, 0xff,
+> MEGASAS_MAX_LD_IDS);
+> >  	} else {
+> >  		writel(MFI_STOP_ADP,
+> > @@ -5182,7 +5182,9 @@ static int megasas_init_fw(struct
+> > megasas_instance *instance)
+> >
+> >  	tmp_sectors = min_t(u32, max_sectors_1, max_sectors_2);
+> >
+> > -	instance->mpio = ctrl_info->adapterOperations2.mpio;
+> > +	instance->peerIsPresent = ctrl_info->cluster.peerIsPresent;
+> > +	instance->passive = ctrl_info->cluster.passive;
+> > +	memcpy(instance->clusterId, ctrl_info->clusterId,
+> > +sizeof(instance->clusterId));
+> >  	instance->UnevenSpanSupport =
+> >  		ctrl_info->adapterOperations2.supportUnevenSpans;
+> >  	if (instance->UnevenSpanSupport) {
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > index be9c3f1..d9d0029 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > @@ -3325,27 +3325,37 @@ out:
+> >  	return ret;
+> >  }
+> >
+> > +/*SRIOV get other instance in cluster if any*/ struct
+> > +megasas_instance *megasas_get_peer_instance(struct megasas_instance
+> > +*instance) {
+> > +	int i;
+> > +
+> > +	for (i = 0; i < MAX_MGMT_ADAPTERS; i++) {
+> > +		if (megasas_mgmt_info.instance[i] &&
+> > +			(megasas_mgmt_info.instance[i] != instance) &&
+> > +			 megasas_mgmt_info.instance[i]->requestorId &&
+> > +			 megasas_mgmt_info.instance[i]->peerIsPresent &&
+> > +
+(memcmp((megasas_mgmt_info.instance[i]->clusterId),
+> > +			instance->clusterId, MEGASAS_CLUSTER_ID_SIZE) ==
+0))
+> > +			return megasas_mgmt_info.instance[i];
+> > +	}
+> > +	return NULL;
+> > +}
+> > +
+> >  /* Check for a second path that is currently UP */  int
+> > megasas_check_mpio_paths(struct megasas_instance *instance,
+> >  	struct scsi_cmnd *scmd)
+> >  {
+> > -	int i, j, retval = (DID_RESET << 16);
+> > -
+> > -	if (instance->mpio && instance->requestorId) {
+>
+> Seems to me that you've removed this test (instance->requestorId) maybe
+it is
+> not needed, is it removed intentionally ?
 
-I found the same warning calltrace in my platform, but I didn't find the patch changes in the latest kernel 4.5-rc2.
-So is this issue still in kernel ?
-
-I think your patch could fix this issue we found, but I'm worried about another problem.
-
-Now when unplug a disk
-
-LLDD report a event loss_of_singal
-    sas_deform_port
-	sas_unregister_domain_devices
-		sas_unregister_dev
-			sas_discover_event(dev->port, DISCE_DESTRUCT);
-	sas_port_delete
-	phy->port = NULL;
-
-and after your patch changes
-
-LLDD report a event loss_of_singal
-	sas_deform_port
-		sas_unregister_domain_devices
-			sas_unregister_dev
-				sas_discover_event(dev->port, DISCE_DESTRUCT);
-	phy->port = NULL;
-
-...
-	sas_destruct_devices
-		sas_port_delete   //now we actually delete the port device, but we set 	phy->port = NULL;  before this time.
-
-
-So if we hotplug the disk quickly, plug,unplug,plug,
-The new dmaed event(plug) would try to alloc and add a new port, but the old port device is still alive.
-Another calltrace would occur
-
-WARNING: CPU: 0 PID: 1038 at lib/kobject.c:240 kobject_add_internal+0x258/0x318()
-kobject_add_internal failed for port-0:0 with -EEXIST, don't try to register things with the same name in the same directory.
-CPU: 0 PID: 1038 Comm: kworker/u64:2 Tainted: G        W       4.1.6+ #140
-[<ffff800000089918>] dump_backtrace+0x0/0x124
-[<ffff800000089a4c>] show_stack+0x10/0x1c
-[<ffff80000009fcbc>] warn_slowpath_fmt+0x4c/0x58
-[<ffff8000003cdc04>] device_add+0x28c/0x5b8
-[<ffff80000040d4ec>] sas_port_add+0x20/0xbc
-[<ffff80000040f3e8>] sas_porte_bytes_dmaed
-[<ffff8000000b5504>] process_one_work+0x13c/0x344
-
-Because I am not a sas guy, so if you could comment this or post new patch, I would be thanks a lot!
-
-Thanks!
-Yijing.
-
-
-
+Sorry for delay in response. This is removed intentionally.
+>
+> --tm
+>
+>
+> > -		for (i = 0 ; i < MAX_MGMT_ADAPTERS ; i++)
+> > -			for (j = 0 ; j < MAX_LOGICAL_DRIVES; j++)
+> > -				if (megasas_mgmt_info.instance[i] &&
+> > -				    (megasas_mgmt_info.instance[i] !=
+instance)
+> &&
+> > -				    megasas_mgmt_info.instance[i]->mpio &&
+> > -				    megasas_mgmt_info.instance[i]-
+> >requestorId
+> > -				    &&
+> > -
+(megasas_mgmt_info.instance[i]->ld_ids[j]
+> > -				     == scmd->device->id)) {
+> > -					    retval = (DID_NO_CONNECT <<
+16);
+> > -					    goto out;
+> > -				}
+> > +	struct megasas_instance *peer_instance = NULL;
+> > +	int retval = (DID_RESET << 16);
+> > +
+> > +	if (instance->peerIsPresent) {
+> > +		peer_instance = megasas_get_peer_instance(instance);
+> > +		if ((peer_instance) &&
+> > +			(atomic_read(&peer_instance->adprecovery) ==
+> > +			MEGASAS_HBA_OPERATIONAL))
+> > +			retval = (DID_NO_CONNECT << 16);
+> >  	}
+> > -out:
+> >  	return retval;
+> >  }
+> >
