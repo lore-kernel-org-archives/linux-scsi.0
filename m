@@ -1,31 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1 00/12] be2iscsi: Important fixes for 11.0.0.0 in 4.6/scsi-queue
-Date: Thu, 04 Feb 2016 20:50:53 -0500
-Message-ID: <yq1twlogc1u.fsf@sermon.lab.mkp.net>
-References: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: Re: [mpt3sas driver patches 00/10] mpt3sas driver enhancements and
+Date: Thu, 04 Feb 2016 21:04:15 -0500
+Message-ID: <yq1powbhq00.fsf@sermon.lab.mkp.net>
+References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45656 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbcBEBvC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 20:51:02 -0500
-In-Reply-To: <1454581160-31869-1-git-send-email-jitendra.bhivare@broadcom.com>
-	(Jitendra Bhivare's message of "Thu, 4 Feb 2016 15:49:08 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
+	(Suganath prabu Subaramani's message of "Thu, 28 Jan 2016 12:06:57
+	+0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>
+Cc: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, krishnaraddi.mankani@avagotech.com, linux-kernel@vger.kernel.org, chaitra.basappa@avagotech.com, sreekanth.reddy@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Johannes Thumshirn <jthumshirn@suse.de>
 
->>>>> "Jitendra" == Jitendra Bhivare <jitendra.bhivare@broadcom.com> writes:
+>>>>> "Suganath" == Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com> writes:
 
-Jitendra> This driver update has critical fixes for following issues: -
-Jitendra> Management tasks with incorrect ExpStatSn - WRB allocation
-Jitendra> failures in IO path - MCC WRB leak
+Suganath> Posting 10 patches for mpt3sas driver enhancements and few
+Suganath> fixes.
 
-Applied to 4.6/scsi-queue.
+Please address Tomas' comments to patches 6 and 7 and resubmit.
 
-Thanks!
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
