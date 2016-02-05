@@ -1,169 +1,70 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [mpt3sas driver 07/10] mpt3sas: Add support for configurable
- Chain Frame Size
-Date: Fri, 5 Feb 2016 13:26:28 +0530
-Message-ID: <CAK=zhgpHxib0kcXXRH7o-dRew0aUwFTdAXsLxOun4RZVgsw+Rw@mail.gmail.com>
-References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
-	<1453963027-19770-8-git-send-email-suganath-prabu.subramani@avagotech.com>
-	<56B368C2.8080607@redhat.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 5/6] ibmvscsi: Remove unsupported host config MAD and
+ sysfs interface
+Date: Fri, 5 Feb 2016 09:34:13 +0100
+Message-ID: <20160205083413.GF27969@c203.arch.suse.de>
+References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <1454542114-1797-6-git-send-email-tyreld@linux.vnet.ibm.com>
+ <20160204080317.GT27969@c203.arch.suse.de>
+ <56B38EE7.6060102@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56B368C2.8080607@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <56B38EE7.6060102@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Krishnaraddi Mankani <krishnaraddi.mankani@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chaitra Basappa <chaitra.basappa@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@odin.com, linux-kernel@vger.kernel.org, hare@suse.de, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 4, 2016 at 8:35 PM, Tomas Henzl <thenzl@redhat.com> wrote:
-> On 28.1.2016 07:37, Suganath prabu Subaramani wrote:
->> From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
->>
->> Added support for configurable Chain Frame Size. Calculate the
->> Chain Message Frame size from the IOCMaxChainSegementSize (iocfacts).
->> Applicable only for mpt3sas/SAS3.0 HBA's.
->>
->> Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
->> Signed-off-by: Chaitra P B <chaitra.basappa@avagotech.com>
->
-> Is this done in order to prepare for some future patch, or how  does it work?
-> I noticed only changes in allocation of (probably larger) fields, but
-> how is it actually used ?
+On Thu, Feb 04, 2016 at 09:48:23AM -0800, Tyrel Datwyler wrote:
+> On 02/04/2016 12:03 AM, Johannes Thumshirn wrote:
+> > On Wed, Feb 03, 2016 at 05:28:33PM -0600, Tyrel Datwyler wrote:
+> >> A VIOSRP_HOST_CONFIG_TYPE management datagram (MAD) has existed in
+> >> the code for some time. From what information I've gathered from
+> >> Brian King this was likely implemented on the host side in a SLES =
+9
+> >> based VIOS, which is no longer supported anywhere. Further, it is
+> >> not defined in PAPR or supported by any AIX based VIOS.
+> >>
+> >> Treating as bit rot and removing the sysfs interface and associate=
+d
+> >> host config code accordingly.
+> >=20
+> > Doesn't removing a sysfs interface potentially break userspace code=
+?
+> >=20
+>=20
+> In the general case yes, but I feel in this case no. First, Reading f=
+rom
+> this config attribute of a vscsi host adapter always returns nothing.
+> Second, any userspace code using this attribute better be checking fo=
+r
+> the existence of config. Just a quick look for
+> /sys/class/scsi_host/host*/config under other host adapters on my sys=
+tem
+> I find that attribute doesn't exist for any of them.
+>=20
+> If there is truly enough concern that somebody may actually be access=
+ing
+> this useless attribute from userspace then we can still strip out the
+> unsupported code, but leave the attribute and return nothing directly
+> from the show function.
 
-Tomas,
+Which is what I kinda prefer. Slowly deprecate and phase out, but don't=
+ break
+userspace. You never know who is writing some obscure piece of code rel=
+aying on
+some sysfs attribute.
 
-In this patch set we have added new Intruder and Cutlass (high ports)
-PCI devices which are based on MPI26 version.
-In this MPI26 version, Request Frame size is doubled when compared to
-older MPI version, but their is
-no change in the Chain buffer size from MPI26 to older versions. In
-older version Request frame size and
-chain buffer size were same, so in the drivers previously we used to
-use Request Frame size reference for
-Chain buffer size. But we can't use that reference now. So now we are
-determining the chain buffer size from
-IOCFact's IOCMaxChainSegementSize field instead of using the Request
-frame size reference.
+Thanks,
+	Johannes
 
-~Sreekanth
-
-
->
-> --tm
->
->> ---
->>  drivers/scsi/mpt3sas/mpt3sas_base.c | 27 ++++++++++++++++++++++-----
->>  drivers/scsi/mpt3sas/mpt3sas_base.h |  8 +++++++-
->>  2 files changed, 29 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> index a1a3b39..0f623fb 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -3248,6 +3248,19 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
->>       /* reply frame size */
->>       ioc->reply_sz = facts->ReplyFrameSize * 4;
->>
->> +     /* chain segment size */
->> +     if (ioc->hba_mpi_version_belonged != MPI2_VERSION) {
->> +             if (facts->IOCMaxChainSegmentSize)
->> +                     ioc->chain_segment_sz =
->> +                                     facts->IOCMaxChainSegmentSize *
->> +                                     MAX_CHAIN_ELEMT_SZ;
->> +             else
->> +             /* set to 128 bytes size if IOCMaxChainSegmentSize is zero */
->> +                     ioc->chain_segment_sz = DEFAULT_NUM_FWCHAIN_ELEMTS *
->> +                                                 MAX_CHAIN_ELEMT_SZ;
->> +     } else
->> +             ioc->chain_segment_sz = ioc->request_sz;
->> +
->>       /* calculate the max scatter element size */
->>       sge_size = max_t(u16, ioc->sge_size, ioc->sge_size_ieee);
->>
->> @@ -3259,7 +3272,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
->>       ioc->max_sges_in_main_message = max_sge_elements/sge_size;
->>
->>       /* now do the same for a chain buffer */
->> -     max_sge_elements = ioc->request_sz - sge_size;
->> +     max_sge_elements = ioc->chain_segment_sz - sge_size;
->>       ioc->max_sges_in_chain_message = max_sge_elements/sge_size;
->>
->>       /*
->> @@ -3451,7 +3464,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
->>               goto out;
->>       }
->>       ioc->chain_dma_pool = pci_pool_create("chain pool", ioc->pdev,
->> -         ioc->request_sz, 16, 0);
->> +         ioc->chain_segment_sz, 16, 0);
->>       if (!ioc->chain_dma_pool) {
->>               pr_err(MPT3SAS_FMT "chain_dma_pool: pci_pool_create failed\n",
->>                       ioc->name);
->> @@ -3465,13 +3478,13 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
->>                       ioc->chain_depth = i;
->>                       goto chain_done;
->>               }
->> -             total_sz += ioc->request_sz;
->> +             total_sz += ioc->chain_segment_sz;
->>       }
->>   chain_done:
->>       dinitprintk(ioc, pr_info(MPT3SAS_FMT
->>               "chain pool depth(%d), frame_size(%d), pool_size(%d kB)\n",
->> -             ioc->name, ioc->chain_depth, ioc->request_sz,
->> -             ((ioc->chain_depth *  ioc->request_sz))/1024));
->> +             ioc->name, ioc->chain_depth, ioc->chain_segment_sz,
->> +             ((ioc->chain_depth *  ioc->chain_segment_sz))/1024));
->>
->>       /* initialize hi-priority queue smid's */
->>       ioc->hpr_lookup = kcalloc(ioc->hi_priority_depth,
->> @@ -4332,6 +4345,10 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
->>       facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
->>       facts->IOCRequestFrameSize =
->>           le16_to_cpu(mpi_reply.IOCRequestFrameSize);
->> +     if (ioc->hba_mpi_version_belonged != MPI2_VERSION) {
->> +             facts->IOCMaxChainSegmentSize =
->> +                     le16_to_cpu(mpi_reply.IOCMaxChainSegmentSize);
->> +     }
->>       facts->MaxInitiators = le16_to_cpu(mpi_reply.MaxInitiators);
->>       facts->MaxTargets = le16_to_cpu(mpi_reply.MaxTargets);
->>       ioc->shost->max_id = -1;
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
->> index 4b52a07..d1fee34 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
->> @@ -129,6 +129,9 @@
->>
->>  #define MPT3SAS_INVALID_DEVICE_HANDLE        0xFFFF
->>
->> +#define MAX_CHAIN_ELEMT_SZ           16
->> +#define DEFAULT_NUM_FWCHAIN_ELEMTS   8
->> +
->>  /*
->>   * reset phases
->>   */
->> @@ -759,7 +762,7 @@ struct mpt3sas_facts {
->>       u32                     IOCCapabilities;
->>       union mpi3_version_union        FWVersion;
->>       u16                     IOCRequestFrameSize;
->> -     u16                     Reserved3;
->> +     u16                     IOCMaxChainSegmentSize;
->>       u16                     MaxInitiators;
->>       u16                     MaxTargets;
->>       u16                     MaxSasExpanders;
->> @@ -906,6 +909,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
->>   * @max_sges_in_chain_message: number sg elements per chain
->>   * @chains_needed_per_io: max chains per io
->>   * @chain_depth: total chains allocated
->> + * @chain_segment_sz: gives the max number of
->> + *                   SGEs accommodate on single chain buffer
->>   * @hi_priority_smid:
->>   * @hi_priority:
->>   * @hi_priority_dma:
->> @@ -1113,6 +1118,7 @@ struct MPT3SAS_ADAPTER {
->>       u16             max_sges_in_chain_message;
->>       u16             chains_needed_per_io;
->>       u32             chain_depth;
->> +     u16             chain_segment_sz;
->>
->>       /* hi-priority queue */
->>       u16             hi_priority_smid;
->
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
