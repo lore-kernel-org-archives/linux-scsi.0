@@ -1,65 +1,54 @@
 From: jiangyiwen <jiangyiwen@huawei.com>
-Subject: Re: [PATCH] block/sd: Return -EREMOTEIO when WRITE SAME and DISCARD
- are disabled
-Date: Fri, 5 Feb 2016 11:39:53 +0800
-Message-ID: <56B41989.1060104@huawei.com>
-References: <20160204042528.GA15599@redhat.com>
- <1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
- <56B316EA.9090803@huawei.com> <yq14mdnhmry.fsf@sermon.lab.mkp.net>
+Subject: [PATCH] block: do not return -EOPNOTSUPP only when issue a discard
+ request
+Date: Fri, 5 Feb 2016 15:10:46 +0800
+Message-ID: <56B44AF6.2090003@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:41322 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbcBEDkR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 22:40:17 -0500
-In-Reply-To: <yq14mdnhmry.fsf@sermon.lab.mkp.net>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:47113 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164AbcBEHKz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 02:10:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, snitzer@redhat.com
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>
 
-On 2016/2/5 11:13, Martin K. Petersen wrote:
->>>>>> "Yiwen" == jiangyiwen  <jiangyiwen@huawei.com> writes:
-> 
-> Yiwen,
-> 
-> Yiwen> First, I don't understand why blk_peek_request() return
-> Yiwen> EREMOTEIO, as I know, in this situation we only prepare scsi
-> Yiwen> command without sending to device, and I think EREMOTEIO should
-> Yiwen> be returned only when IO has already sent to device, maybe I
-> Yiwen> don't understand definition of EREMOTEIO.  So, Why don't return
-> Yiwen> the errno with EOPNOTSUPP?
-> 
-> DM currently has special handling for EREMOTEIO failures (because that's
-> what we'd return when a device responds with ILLEGAL REQUEST).
-> 
-> I am not opposed to returning EOPNOTSUPP but it would require more
-> changes and since this is a bugfix for stable I want to keep it as small
-> as possible.
-> 
-> Yiwen> In addition, I still worried with whether there has other
-> Yiwen> situations which will return EIO or other error. In this way,
-> Yiwen> MD/DM still can happen this type of problem, so I think may be in
-> Yiwen> multipath we still needs a protection to avoid it.
-> 
-> There are various error scenarios where we can end up bailing with a
-> BLKPREP_KILL. But the general rule of thumb is that these conditions all
-> demand a retry. The optional commands like WRITE SAME and UNMAP are
-> special in that they are irrecoverable.
-> 
-> Yiwen> At last, I have a additional problem, I remember that you
-> Yiwen> previously send a series of patches about XCOPY, why don't have
-> Yiwen> any news latter later? I very much expect that I can see these
-> Yiwen> patches which are merged into kernel.
-> 
-> I am working on a refresh of the series that includes token-based copy
-> offload support in addition to EXTENDED COPY. The patches depend on Mike
-> Christie's request flag patch series which has yet to be merged.
-> 
-Reviewed-by: Yiwen Jiang <jiangyiwen@huawei.com>
+commit 8af1954d172a("blkdev: Do not return -EOPNOTSUPP if discard
+is supported") only solve the situation of discard, because When
+applications issue a discard request to device, they can't expect
+deterministic behaviour. However, WRITE SAME should not ignore error
+with EOPNOTSUPP, because if applications issue WRITE SAME requests to
+device, it should return deterministic results to applications
+according to the T10 standard, or else it will cause an inconsistent
+state between upper layer and bottom layer.
 
-Thanks,
-Yiwen Jiang.
+So ignoring error with EOPNOTSUPP only in discard situation.
+
+Signed-off-by: Yiwen Jiang <jiangyiwen@huawei.com>
+Reviewed-by: Lukas Czerner <lczerner@redhat.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ block/blk-lib.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 9ebf653..e4f02f1 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -19,7 +19,9 @@ static void bio_batch_end_io(struct bio *bio)
+ {
+ 	struct bio_batch *bb = bio->bi_private;
+
+-	if (bio->bi_error && bio->bi_error != -EOPNOTSUPP)
++	/* ignore -EOPNOTSUPP only when issue a discard request */
++	if (bio->bi_error && (!(bio->bi_rw & REQ_DISCARD) ||
++			(bio->bi_error != -EOPNOTSUPP)))
+ 		bb->error = bio->bi_error;
+ 	if (atomic_dec_and_test(&bb->done))
+ 		complete(bb->wait);
+-- 
+1.8.4.3
 
