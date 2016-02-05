@@ -1,26 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/3] hisi_sas: use Unified Device Properties API
-Date: Thu, 04 Feb 2016 22:22:33 -0500
-Message-ID: <yq1vb63g7t2.fsf@sermon.lab.mkp.net>
-References: <1454523970-118251-1-git-send-email-john.garry@huawei.com>
-	<1454523970-118251-2-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] megaraid: fix null pointer check in megasas_detach_one().
+Date: Thu, 04 Feb 2016 22:24:00 -0500
+Message-ID: <yq1r3grg7qn.fsf@sermon.lab.mkp.net>
+References: <1453466502-9335-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1454523970-118251-2-git-send-email-john.garry@huawei.com> (John
-	Garry's message of "Thu, 4 Feb 2016 02:26:08 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33573 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbcBEDYO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 22:24:14 -0500
+In-Reply-To: <1453466502-9335-1-git-send-email-mlombard@redhat.com> (Maurizio
+	Lombardi's message of "Fri, 22 Jan 2016 13:41:42 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: sumit.saxena@avagotech.com, kashyap.desai@avagotech.com, uday.lingala@avagotech.com, linux-scsi@vger.kernel.org, jbottomley@parallels.com, thenzl@redhat.com
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Maurizio" == Maurizio Lombardi <mlombard@redhat.com> writes:
 
-John> The hisi_sas driver is required to support both device tree and
-John> ACPI. The scanning of the device properties now uses the Unified
-John> Device Properties API, which serves both OF and ACPI.
+Maurizio> The pd_seq_sync pointer can't be NULL, we have to check its
+Maurizio> entries instead.
 
-Series applied to 4.6/scsi-queue.
+Applied to 4.6/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
