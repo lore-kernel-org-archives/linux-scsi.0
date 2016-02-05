@@ -1,37 +1,107 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
 Subject: Re: [PATCH 4/4] qla2xxx: Add DebugFS node to show irq vector's cpuid
-Date: Fri, 5 Feb 2016 18:49:09 +0000
-Message-ID: <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
+Date: Fri, 5 Feb 2016 11:42:24 -0800
+Message-ID: <56B4FB20.9080302@sandisk.com>
 References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
  <1454604319-27947-5-git-send-email-himanshu.madhani@qlogic.com>
  <56B39653.6090903@sandisk.com>
+ <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <56B39653.6090903@sandisk.com>
-Content-Language: en-US
-Content-ID: <DD04CEC11EE8524E97B8231E632A70EC@qlogic.com>
+In-Reply-To: <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+To: Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-QmFydCwNCg0KQ3VycmVudGx5LCB0aGUgZGF0YSBmcm9tIHRoZSAyIG1lbnRpb25lZCDigJwvcHJv
-Y+KAnSBlbnRyeSBwb2ludHMgd2VyZSBub3QgYWJsZSB0byBnaXZlIHVzIHRoZSBob3N0X2lkL3Bv
-cnQgJiB0aGUgdmVjdG9yIGluZm9ybWF0aW9uLg0KDQpUaGUgMiBhbHRlcm5hdGl2ZXMgYXJlIGkp
-IGNoYW5nZSB0aGUgZHJpdmVyIGNvZGUgdG8gcmVnaXN0ZXIgaG9zdCBpZCBhbG9uZyB3aXRoIHRo
-ZSB2ZWN0b3IgYW5kIGFkZCBzY3JpcHQgdG8gY29tYmluZSB0aGUgaW5mb3MsICBpaSkgMSBjb2Rl
-IGNoYW5nZSB0aGF0IGdpdmVzIHVzIHRoZSBzdW1tYXJ5Lg0KDQpXZSBjaG9vc2UgcGF0aCAyIGZv
-ciB0aGUgZWFzZSBvZiB1c2FnZS4NCg0KUmVnYXJkcywNClF1aW5uIFRyYW4NCg0KDQoNCg0KDQoN
-Ck9uIDIvNC8xNiwgMTA6MjAgQU0sICJCYXJ0IFZhbiBBc3NjaGUiIDxiYXJ0LnZhbmFzc2NoZUBz
-YW5kaXNrLmNvbT4gd3JvdGU6DQoNCj5PbiAwMi8wNC8yMDE2IDA4OjQ1IEFNLCBIaW1hbnNodSBN
-YWRoYW5pIHdyb3RlOg0KPj4gRnJvbTogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29t
-Pg0KPj4NCj4+PiBjYXQgL3N5cy9rZXJuZWwvZGVidWcvcWxhMnh4eC8qL2lycV9jcHVpZA0KPj4g
-cWxhMnh4eF84MQ0KPj4gICAgICAgICAgICAgIElSUSBOYW1lICBWZWN0b3IgIENQVUlEDQo+PiAg
-ICAgcWxhMnh4eCAoZGVmYXVsdCkgIDE1MCAgICAgOQ0KPj4gICAgICAgcWxhMnh4eCAocnNwX3Ep
-ICAxNTEgICAgIDkNCj4+ICAgICAgcWxhMnh4eCAoYXRpb19xKSAgMTUyICAgICA5DQo+DQo+SGVs
-bG8gUXVpbm4gYW5kIEhpbWFuc2h1LA0KPg0KPkRvIHlvdSB0aGluayBpdCB3b3VsZCBiZSBwb3Nz
-aWJsZSB0byBnZW5lcmF0ZSB0aGlzIGluZm9ybWF0aW9uIHZpYSBhIA0KPnVzZXItc3BhY2Ugc2Ny
-aXB0IGZyb20gL3Byb2MvaW50ZXJydXB0cyBhbmQgL3Byb2MvaXJxLzxuPi9zbXBfYWZmaW5pdHk/
-DQo+DQo+VGhhbmtzLA0KPg0KPkJhcnQuDQo=
+On 02/05/2016 10:49 AM, Quinn Tran wrote:
+> On 2/4/16, 10:20 AM, "Bart Van Assche" <bart.vanassche@sandisk.com> w=
+rote:
+>> On 02/04/2016 08:45 AM, Himanshu Madhani wrote:
+>>> From: Quinn Tran <quinn.tran@qlogic.com>
+>>>
+>>>> cat /sys/kernel/debug/qla2xxx/*/irq_cpuid
+>>> qla2xxx_81
+>>>               IRQ Name  Vector  CPUID
+>>>      qla2xxx (default)  150     9
+>>>        qla2xxx (rsp_q)  151     9
+>>>       qla2xxx (atio_q)  152     9
+>>
+>> Hello Quinn and Himanshu,
+>>
+>> Do you think it would be possible to generate this information via a
+>> user-space script from /proc/interrupts and /proc/irq/<n>/smp_affini=
+ty?
+>>
+>> Thanks,
+>>
+>> Bart.
+>
+> Bart,
+>=20
+> Currently, the data from the 2 mentioned =E2=80=9C/proc=E2=80=9D entr=
+y points were not able to give us the host_id/port & the vector informa=
+tion.
+>=20
+> The 2 alternatives are i) change the driver code to register host id =
+along with the vector and add script to combine the infos,  ii) 1 code =
+change that gives us the summary.
+>=20
+> We choose path 2 for the ease of usage.
+
+Hello Quinn,
+
+Please have another look at /proc/interrupts and
+/proc/irq/<n>/smp_affinity. The information that is exported through
+this patch is already available there. This is why I think this patch
+should be dropped. All you need is something like the shell script belo=
+w.
+
+Sample output (nn =3D NUMA node; num =3D IRQ vector):
+
+=3D=3D=3D=3D IRQs
+nn cpu num count name
+0  6   105  1753 PCI-MSI-edge      qla2xxx (rsp_q)                =20
+1  1   104  8781 PCI-MSI-edge      qla2xxx (default)              =20
+1  1   107  1629 PCI-MSI-edge      qla2xxx (rsp_q)                =20
+
+The shell script that produced the above output:
+
+ppi() {
+    { echo "$(<"/sys/devices/system/cpu/cpu$1/topology/physical_package=
+_id")" || echo '?'; } 2>/dev/null
+}
+
+echo "=3D=3D=3D=3D IRQs"
+printf "%-2s %-3s %-3s %12s %-50s\n" nn cpu num count name
+cat /proc/interrupts |
+  while read line; do
+    num=3D"$(echo "$line" | sed -n 's/^[[:blank:]]*\([0-9]*\):\([0-9[:b=
+lank:]]*\)\(.*\)/\1/p')"
+    [ -z "$num" ] && continue
+    count=3D0
+    for c in $(echo "$line" | sed -n 's/^[[:blank:]]*\([0-9]*\):\([0-9[=
+:blank:]]*\)\(.*\)/\2/p'); do
+	count=3D$((count+c))
+    done
+    name=3D"$(echo "$line" | sed -n 's/^[[:blank:]]*\([0-9]*\):\([0-9[:=
+blank:]]*\)\(.*\)/\3/p')"
+    if [ -r "/proc/irq/$num/smp_affinity_list" ]; then
+	al=3D"$(<"/proc/irq/$num/smp_affinity_list")"
+	cpu=3D"${al/-*}"=20
+	cpu=3D"${cpu/,*}"
+	ppi=3D"$(ppi "$cpu")"
+    else
+	cpu=3D"?"
+	ppi=3D"?"
+    fi
+    printf "%-2s %-3d %-3d %12d %-50s\n" "$ppi" "$cpu" "$num" "$count" =
+"$name"
+  done |
+  sort -n -k1,3
+
+Thanks,
+
+Bart.
