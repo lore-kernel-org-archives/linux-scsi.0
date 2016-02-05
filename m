@@ -1,68 +1,169 @@
-From: wangyijing <wangyijing@huawei.com>
-Subject: Warning Calltrace when hotplug sas disk
-Date: Fri, 5 Feb 2016 15:05:09 +0800
-Message-ID: <56B449A5.3010209@huawei.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [mpt3sas driver 07/10] mpt3sas: Add support for configurable
+ Chain Frame Size
+Date: Fri, 5 Feb 2016 13:26:28 +0530
+Message-ID: <CAK=zhgpHxib0kcXXRH7o-dRew0aUwFTdAXsLxOun4RZVgsw+Rw@mail.gmail.com>
+References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
+	<1453963027-19770-8-git-send-email-suganath-prabu.subramani@avagotech.com>
+	<56B368C2.8080607@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([58.251.152.52]:49929 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750789AbcBEHLc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 02:11:32 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56B368C2.8080607@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Krishnaraddi Mankani <krishnaraddi.mankani@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chaitra Basappa <chaitra.basappa@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi list, I tried to hotplug disk in my machine, but when I hot remove the disk, I found some warning calltrace.
+On Thu, Feb 4, 2016 at 8:35 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+> On 28.1.2016 07:37, Suganath prabu Subaramani wrote:
+>> From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+>>
+>> Added support for configurable Chain Frame Size. Calculate the
+>> Chain Message Frame size from the IOCMaxChainSegementSize (iocfacts).
+>> Applicable only for mpt3sas/SAS3.0 HBA's.
+>>
+>> Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+>> Signed-off-by: Chaitra P B <chaitra.basappa@avagotech.com>
+>
+> Is this done in order to prepare for some future patch, or how  does it work?
+> I noticed only changes in allocation of (probably larger) fields, but
+> how is it actually used ?
 
-When we try to unplug a disk,
+Tomas,
 
-The lldd report a loss_of_singal event to sas, so
+In this patch set we have added new Intruder and Cutlass (high ports)
+PCI devices which are based on MPI26 version.
+In this MPI26 version, Request Frame size is doubled when compared to
+older MPI version, but their is
+no change in the Chain buffer size from MPI26 to older versions. In
+older version Request frame size and
+chain buffer size were same, so in the drivers previously we used to
+use Request Frame size reference for
+Chain buffer size. But we can't use that reference now. So now we are
+determining the chain buffer size from
+IOCFact's IOCMaxChainSegementSize field instead of using the Request
+frame size reference.
 
-sas_deform_port
-	sas_unregister_domain_devices
-		sas_unregister_dev
-			queue the destruct to scsi work queue
-	sas_port_delete
-		device_del(port)  //port device is parent of phy and end device, so in this case, we first delete the parent kobj then to delete the children device.
-..
-sas_destruct_devices
-	sas_rphy_delete
-		...
-
-It seems caused by delete the parent device before the children devices. This is my personal idea, if anyone could comment on this, I will be appreciate very much, thanks.
-
-
-WARNING: CPU: 2 PID: 6 at fs/sysfs/group.c:224 sysfs_remove_group+0xa0/0xa4()
-kobj ffff8013e8389410 sysfs group (power)ffff800000a2dbe8 not found for kobject '0:0:1:0'
-Modules linked in:
-CPU: 2 PID: 6 Comm: kworker/u64:0 Not tainted 4.1.6+ #160
-Hardware name: Hisilicon PhosphorV660 Development Board (DT)
-Workqueue: scsi_wq_0 sas_destruct_devices
-Call trace:
-[<ffff800000089918>] dump_backtrace+0x0/0x124
-[<ffff800000089a4c>] show_stack+0x10/0x1c
-[<ffff8000006ecdf8>] dump_stack+0x78/0x98
-[<ffff80000009fc38>] warn_slowpath_common+0x98/0xd0
-[<ffff80000009fcbc>] warn_slowpath_fmt+0x4c/0x58
-[<ffff8000001fc194>] sysfs_remove_group+0x9c/0xa4
-[<ffff8000003d7bb8>] dpm_sysfs_remove+0x54/0x94
-[<ffff8000003cca3c>] device_del+0x58/0x24c
-[<ffff8000003ccc40>] device_unregister+0x10/0x2c
-[<ffff80000030781c>] bsg_unregister_queue+0xbc/0xf8
-[<ffff8000003fa498>] __scsi_remove_device+0x9c/0xbc
-[<ffff8000003fa4fc>] scsi_remove_device+0x44/0x64
-[<ffff8000003fa6ec>] scsi_remove_target+0x198/0x258
-[<ffff80000040c178>] sas_rphy_remove+0x8c/0xb4
-[<ffff80000040c1d4>] sas_rphy_delete+0x34/0x54
-[<ffff8000004103b8>] sas_destruct_devices+0x60/0x98
-[<ffff8000000b5490>] process_one_work+0x13c/0x344
-[<ffff8000000b57d4>] worker_thread+0x13c/0x494
-[<ffff8000000bafb8>] kthread+0xd8/0xf0
----[ end trace b69dffc64eb59f96 ]---
+~Sreekanth
 
 
-
-
-
+>
+> --tm
+>
+>> ---
+>>  drivers/scsi/mpt3sas/mpt3sas_base.c | 27 ++++++++++++++++++++++-----
+>>  drivers/scsi/mpt3sas/mpt3sas_base.h |  8 +++++++-
+>>  2 files changed, 29 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> index a1a3b39..0f623fb 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> @@ -3248,6 +3248,19 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+>>       /* reply frame size */
+>>       ioc->reply_sz = facts->ReplyFrameSize * 4;
+>>
+>> +     /* chain segment size */
+>> +     if (ioc->hba_mpi_version_belonged != MPI2_VERSION) {
+>> +             if (facts->IOCMaxChainSegmentSize)
+>> +                     ioc->chain_segment_sz =
+>> +                                     facts->IOCMaxChainSegmentSize *
+>> +                                     MAX_CHAIN_ELEMT_SZ;
+>> +             else
+>> +             /* set to 128 bytes size if IOCMaxChainSegmentSize is zero */
+>> +                     ioc->chain_segment_sz = DEFAULT_NUM_FWCHAIN_ELEMTS *
+>> +                                                 MAX_CHAIN_ELEMT_SZ;
+>> +     } else
+>> +             ioc->chain_segment_sz = ioc->request_sz;
+>> +
+>>       /* calculate the max scatter element size */
+>>       sge_size = max_t(u16, ioc->sge_size, ioc->sge_size_ieee);
+>>
+>> @@ -3259,7 +3272,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+>>       ioc->max_sges_in_main_message = max_sge_elements/sge_size;
+>>
+>>       /* now do the same for a chain buffer */
+>> -     max_sge_elements = ioc->request_sz - sge_size;
+>> +     max_sge_elements = ioc->chain_segment_sz - sge_size;
+>>       ioc->max_sges_in_chain_message = max_sge_elements/sge_size;
+>>
+>>       /*
+>> @@ -3451,7 +3464,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+>>               goto out;
+>>       }
+>>       ioc->chain_dma_pool = pci_pool_create("chain pool", ioc->pdev,
+>> -         ioc->request_sz, 16, 0);
+>> +         ioc->chain_segment_sz, 16, 0);
+>>       if (!ioc->chain_dma_pool) {
+>>               pr_err(MPT3SAS_FMT "chain_dma_pool: pci_pool_create failed\n",
+>>                       ioc->name);
+>> @@ -3465,13 +3478,13 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+>>                       ioc->chain_depth = i;
+>>                       goto chain_done;
+>>               }
+>> -             total_sz += ioc->request_sz;
+>> +             total_sz += ioc->chain_segment_sz;
+>>       }
+>>   chain_done:
+>>       dinitprintk(ioc, pr_info(MPT3SAS_FMT
+>>               "chain pool depth(%d), frame_size(%d), pool_size(%d kB)\n",
+>> -             ioc->name, ioc->chain_depth, ioc->request_sz,
+>> -             ((ioc->chain_depth *  ioc->request_sz))/1024));
+>> +             ioc->name, ioc->chain_depth, ioc->chain_segment_sz,
+>> +             ((ioc->chain_depth *  ioc->chain_segment_sz))/1024));
+>>
+>>       /* initialize hi-priority queue smid's */
+>>       ioc->hpr_lookup = kcalloc(ioc->hi_priority_depth,
+>> @@ -4332,6 +4345,10 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+>>       facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
+>>       facts->IOCRequestFrameSize =
+>>           le16_to_cpu(mpi_reply.IOCRequestFrameSize);
+>> +     if (ioc->hba_mpi_version_belonged != MPI2_VERSION) {
+>> +             facts->IOCMaxChainSegmentSize =
+>> +                     le16_to_cpu(mpi_reply.IOCMaxChainSegmentSize);
+>> +     }
+>>       facts->MaxInitiators = le16_to_cpu(mpi_reply.MaxInitiators);
+>>       facts->MaxTargets = le16_to_cpu(mpi_reply.MaxTargets);
+>>       ioc->shost->max_id = -1;
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+>> index 4b52a07..d1fee34 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+>> @@ -129,6 +129,9 @@
+>>
+>>  #define MPT3SAS_INVALID_DEVICE_HANDLE        0xFFFF
+>>
+>> +#define MAX_CHAIN_ELEMT_SZ           16
+>> +#define DEFAULT_NUM_FWCHAIN_ELEMTS   8
+>> +
+>>  /*
+>>   * reset phases
+>>   */
+>> @@ -759,7 +762,7 @@ struct mpt3sas_facts {
+>>       u32                     IOCCapabilities;
+>>       union mpi3_version_union        FWVersion;
+>>       u16                     IOCRequestFrameSize;
+>> -     u16                     Reserved3;
+>> +     u16                     IOCMaxChainSegmentSize;
+>>       u16                     MaxInitiators;
+>>       u16                     MaxTargets;
+>>       u16                     MaxSasExpanders;
+>> @@ -906,6 +909,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+>>   * @max_sges_in_chain_message: number sg elements per chain
+>>   * @chains_needed_per_io: max chains per io
+>>   * @chain_depth: total chains allocated
+>> + * @chain_segment_sz: gives the max number of
+>> + *                   SGEs accommodate on single chain buffer
+>>   * @hi_priority_smid:
+>>   * @hi_priority:
+>>   * @hi_priority_dma:
+>> @@ -1113,6 +1118,7 @@ struct MPT3SAS_ADAPTER {
+>>       u16             max_sges_in_chain_message;
+>>       u16             chains_needed_per_io;
+>>       u32             chain_depth;
+>> +     u16             chain_segment_sz;
+>>
+>>       /* hi-priority queue */
+>>       u16             hi_priority_smid;
+>
