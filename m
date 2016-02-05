@@ -1,78 +1,217 @@
-From: "Interfax Online" <incoming@interfax.net>
-Subject: You have received fax, document 000208651
-Date: Fri, 5 Feb 2016 15:00:32 -0500
-Message-ID: <278f522c7553bb7ff5b1f4b387fa4527@interfax.net>
-Reply-To: "Interfax Online" <incoming@interfax.net>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Add DebugFS node for target sess list.
+Date: Fri, 5 Feb 2016 20:17:22 +0000
+Message-ID: <D2DA42C9.34C6B%giridhar.malavali@qlogic.com>
+References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1454604319-27947-4-git-send-email-himanshu.madhani@qlogic.com>
+ <56B39597.2020405@sandisk.com> <D2DA1ACE.D6B81%himanshu.madhani@qlogic.com>
+ <56B4FF43.7030806@sandisk.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="b1_d15db61bd3813d1e46b748228b7e745c"
-Content-Transfer-Encoding: 8bit
+	boundary="_000_D2DA42C934C6Bgiridharmalavaliqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:58436 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492AbcBEUFe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Feb 2016 15:05:34 -0500
-Received: from icpu4704.perfora.net ([66.175.239.1]) by mrelay.perfora.net
- (mreueus001) with ESMTPA (Nemesis) id 0MdMQ9-1ak8Lz2p6J-00IVrx for
- <linux-scsi@vger.kernel.org>; Fri, 05 Feb 2016 21:00:32 +0100
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:26687 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751335AbcBEURZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 15:17:25 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u15KF1gq030885
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Feb 2016 12:17:24 -0800
+Received: from avcashub1.qlogic.com ([198.186.0.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 20tmsv5urc-1
+	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 05 Feb 2016 12:17:24 -0800
+In-Reply-To: <56B4FF43.7030806@sandisk.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>
 
---b1_d15db61bd3813d1e46b748228b7e745c
-Content-Type: text/plain; charset=us-ascii
-
-A new fax document for you.
-
-You can find your fax document in the attachment.
-
-Resolution:       600 DPI
-From:             Stanley Wallace
-Filename:         task_000208651.doc
-Scan time:        57 seconds
-Date of scan:     Fri, 5 Feb 2016 04:48:30 +0300
-Pages sent:       4
-Filesize:         206 Kb
-
-Thank you for using Interfax!
+--_000_D2DA42C934C6Bgiridharmalavaliqlogiccom_
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <0B8B1919510EBC4591AB52F18F24938C@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
 
---b1_d15db61bd3813d1e46b748228b7e745c
-Content-Type: application/zip; name="task_000208651.zip"
+
+On 2/5/16, 12:00 PM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
+
+>On 02/05/2016 09:26 AM, Himanshu Madhani wrote:
+>> On 2/4/16, 10:16 AM, "Bart Van Assche" <bart.vanassche@sandisk.com>
+>>wrote:
+>>> On 02/04/2016 08:45 AM, Himanshu Madhani wrote:
+>>>> From: Quinn Tran <quinn.tran@qlogic.com>
+>>>>
+>>>>    #cat  /sys/kernel/debug/qla2xxx/qla2xxx_31/tgt_sess
+>>>>    qla2xxx_31
+>>>>    Port ID   Port Name                Handle
+>>>>    ff:fc:01  21:fd:00:05:33:c7:ec:16  0
+>>>>    01:0e:00  21:00:00:24:ff:7b:8a:e4  1
+>>>>    01:0f:00  21:00:00:24:ff:7b:8a:e5  2
+>>>>    ....
+>>>
+>>> Hello Quinn and Himanshu,
+>>>
+>>> The above information is not only useful to people who are debugging
+>>>the
+>>> QLogic target driver but also to end users who want to check which
+>>> initiator ports have already logged in to a target port. Hence my
+>>> proposal to move this information from debugfs to another location
+>>>(e.g.
+>>> configfs or sysfs). Users of other target drivers are probably also
+>>> interested in seeing which sessions are active. How about adding the
+>>> functionality for reporting session information per target port in the
+>>> LIO core in such a way that some attributes are available for all
+>>>target
+>>> drivers (e.g. initiator port name, SCSI command statistics) and such
+>>> that target drivers can define additional attributes to exported for
+>>> each session (e.g. port ID, handle, ...).
+>>
+>> We had initially implemented this as a sysfs hook, but knowing that
+>>sysfs
+>> is not encouraged, we decided to put this information via debugfs.
+>>Would it
+>> make more sense if we send a sysfs patch?
+>
+>Hello Himanshu,
+>
+>Let's try to reach agreement about the approach first before starting to
+>rework this patch.
+>
+>Five years ago I explained in a message that I posted on the linux-scsi
+>mailing list why LIO should use sysfs to export information that changes
+>dynamically (see also http://thread.gmane.org/gmane.linux.scsi/65615/).
+>I think this patch shows that there is a real need to have detailed
+>session information from LIO target drivers in user space. We need one
+>directory per session instead of exporting all session information
+>through a single file. sysfs is the right filesystem to export such
+>information because configfs directories should be created by the user
+>and not from inside the kernel. If no agreement can be reached about
+>this over e-mail my proposal is to discuss this further at the 2016
+>LSF/MM summit.
+
+Bart,=20
+
+I see lot of target customers requesting for such information and having
+something that can be created inside kernel space will be helpful. Let us
+discuss further at 2016 LSF/MM summit.
+
+=8B Giri
+
+
+
+>
+>Thanks,
+>
+>Bart.
+
+
+--_000_D2DA42C934C6Bgiridharmalavaliqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=task_000208651.zip
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-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
-AAAA
+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
+V6RoAkBwOi870Gj/XGJkkAOBZIAFsDqQrASjo4IupAIvNjU2MSLA94ZofHCPsW6eCqYCHjB+9f9j
+EVDhieJcYQMgGFCPFFvz/wEAAZADEAmAJ4ZxD2GmdFL/Z61dMVhyZiAKsF6wXmCHsf+xkwIgQWcN
+4AlwbOAFsFJg/3JCs2hqsYfxZxGChGtieDHvcP9jqauRCGBndUIAkBnA/3fCsqFeYIokUcGa4gUQ
+vTD/BUC98jmhECAcsac3fhpRCv+cEB5QpoJld7hGCJAEIKYV75wQG9BcYRxCYnWiGeBYcv8nhk5C
+UfIcg7mhjvGa0znk/V5gSWcgUfCZ2YBCxJGZgz8cUW2TvGhRwVDBBcBlLb+kwl7RX6i+sk3ADeFj
+UoD/sCJRwVKwACBjErBkIpAoocGYN1NGL01NdQF8sP9bEEwmIZUs8iMAIZx8cKqS/wkAUhFnIFaV
+zZEYkAeAWKH/CXA2MGqha2JwInUTUQpOQv9b8VR4dhKu0ouEyWbExsdFfznktpQmoAMQAyDEkS3A
+bP5wUrFeYJixUnEhlc1mzjkHKJPP7yHJXCc4QiD+R5vApDbgr5X7UGAAcB9QH5evLPLQvRVC5dAA
+AAAfAEIAAQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAAAfAGUAAQAA
+ADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAIAAAAAAAAAAgSsfpL6jEBmd
+bgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQAAAA
+ZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AB8AAl0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAQgAAAHMAaQBwADoAZwBpAHIAaQBkAGgAYQByAC4AbQBh
+AGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAkAAAARwBpAHIA
+aQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAfDAEAAAA6AAAAZwBpAHIAaQBkAGgAYQBy
+AC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAA
+UwBNAFQAUAAAAAAAAgEZDAEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARwBpAHIAaQBk
+AGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABoAGEAcgAuAG0A
+YQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADoAAABnAGkAcgBp
+AGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/
+AQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAAAfACNAAQAAADoAAABn
+AGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+AAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9U
+AgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBpAHIA
+aQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0B
+AAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQA
+AAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAACCFZEPxkUWT7v5kA6zodPlAwAXAAEAAABAADkA
+ADViOFJg0QFAAAgwS6llOFJg0QELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICG
+AwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEA
+AAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAA
+AIAAAABSAGUAOgAgAFsAUABBAFQAQwBIACAAMwAvADQAXQAgAHEAbABhADIAeAB4AHgAOgAgAEEA
+ZABkACAARABlAGIAdQBnAEYAUwAgAG4AbwBkAGUAIABmAG8AcgAgAHQAYQByAGcAZQB0ACAAcwBl
+AHMAcwAgAGwAaQBzAHQALgAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEA
+AAA+AAAAPAA1ADYAQgA0AEYARgA0ADMALgA3ADAAMwAwADgAMAA2AEAAcwBhAG4AZABpAHMAawAu
+AGMAbwBtAD4AAAAAAAIBcQABAAAAKgAAAAEB0V9xYbcpzoeZm5pNmLxjJ0KZIVOfHLeugIABhByA
+gAArCYD//36zAAAAHwBwAAEAAAB4AAAAWwBQAEEAVABDAEgAIAAzAC8ANABdACAAcQBsAGEAMgB4
+AHgAeAA6ACAAQQBkAGQAIABEAGUAYgB1AGcARgBTACAAbgBvAGQAZQAgAGYAbwByACAAdABhAHIA
+ZwBlAHQAIABzAGUAcwBzACAAbABpAHMAdAAuAAAAHwA1EAEAAABcAAAAPABEADIARABBADQAMgBD
+ADkALgAzADQAQwA2AEIAJQBnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAD4AAAAfADkQAQAAANYBAAA8ADEANAA1ADQANgAwADQAMwAxADkALQAy
+ADcAOQA0ADcALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABpAG0AYQBuAHMA
+aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwAMQA0ADUANAA2
+ADAANAAzADEAOQAtADIANwA5ADQANwAtADQALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwA
+LQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+
+ACAAPAA1ADYAQgAzADkANQA5ADcALgAyADAAMgAwADQAMAA1AEAAcwBhAG4AZABpAHMAawAuAGMA
+bwBtAD4AIAA8AEQAMgBEAEEAMQBBAEMARQAuAEQANgBCADgAMQAlAGgAaQBtAGEAbgBzAGgAdQAu
+AG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADUANgBCADQARgBGADQA
+MwAuADcAMAAzADAAOAAwADYAQABzAGEAbgBkAGkAcwBrAC4AYwBvAG0APgAAAAAAAwDeP+QEAABA
+AAcwW5M/OFJg0QEDACYAAAAAAAIBRwABAAAALAAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMt
+MTYwMjA1MjAxNzIyWi0xOTkAHwAVEAEAAABYAAAAMABCADgAQgAxADkAMQA5ADUAMQAwAEUAQgBD
+ADQANQA5ADEAQQBCADUAMgBGADEAOABGADIANAA5ADMAOABDAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAIBFDABAAAADAAAAGgBAACDZU6ZTwAAAB8A+j8BAAAAJAAAAEcAaQByAGkAZABoAGEAcgAg
+AE0AYQBsAGEAdgBhAGwAaQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0A
+YQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABv
+AG8AawAvADEANAAuADUALgA5AC4AMQA1ADEAMQAxADkAAAAAAB8AAIAfpOszqHouQr57eeGpjlSz
+AQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBn
+AEUAeAAAAAEAAAASAQAASQBJAD0AMAAxADAAMQBEADEANgAwADUAMgAzADgAQQAyADgAOQA0AEIA
+NgAzADcAQwA1ADgANwBDADQAMwA5ADQAMwA3AEIAMAA5ADkAOABEADYAQgAyAEUARABFADsAUwBC
+AE0ASQBEAD0AMgAwADQAOwBTADEAPQA8ADUANgBCADQARgBGADQAMwAuADcAMAAzADAAOAAwADYA
+QABzAGEAbgBkAGkAcwBrAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBu
+ACAAMQA0AC4AMwAgACgAQgB1AGkAbABkACAAMgAzADUALgAwACkALAAgAFMAdABhAGcAZQA9AEgA
+MgAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBz
+AC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAA
+eAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0
+AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUA
+cgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAAfw=
 
-
---b1_d15db61bd3813d1e46b748228b7e745c--
-
+--_000_D2DA42C934C6Bgiridharmalavaliqlogiccom_--
