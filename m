@@ -1,89 +1,72 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: Re: Question for Patch"libsas: fix "sysfs group not found" warnings
- at port teardown time"
-Date: Fri, 5 Feb 2016 21:33:22 +0000
-Message-ID: <73C1379F-2511-4C31-AB88-65061EBFAEBC@logicube.com>
-References: <56B46943.5040808@huawei.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 4/4] qla2xxx: Add DebugFS node to show irq vector's cpuid
+Date: Fri, 5 Feb 2016 21:52:24 +0000
+Message-ID: <1D5F47C3-35A0-4460-893F-909E7EEAA281@qlogic.com>
+References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1454604319-27947-5-git-send-email-himanshu.madhani@qlogic.com>
+ <56B39653.6090903@sandisk.com>
+ <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
+ <56B4FB20.9080302@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from s12p02o142.mxlogic.net ([208.65.145.65]:37129 "EHLO
-	s12p02o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721AbcBEVoY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 16:44:24 -0500
-In-Reply-To: <56B46943.5040808@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <56B4FB20.9080302@sandisk.com>
 Content-Language: en-US
-Content-ID: <DC1096C143337647A80E10563B1FD4E6@logicube.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <BEEF94B100138940B151BCD7343DE0FB@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: wangyijing <wangyijing@huawei.com>
-Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hi Yijing,
-  The fix was deemed inappropriate and I think the explanation provided by James was kind similar to what your observation is. Also, as far as I remember the consensus was that these error messages (sysfs group not found) are harmless at this point. I think James can provide a better explanation and direction for you (copying him here).
-
-Praveen
-
-> On Feb 5, 2016, at 1:20 AM, wangyijing <wangyijing@huawei.com> wrote:
-> 
-> Hi Dan and Praveen,
->   I found a patch titled "libsas: fix "sysfs group not found" warnings at port teardown time" by google,
-> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
-> 
-> I found the same warning calltrace in my platform, but I didn't find the patch changes in the latest kernel 4.5-rc2.
-> So is this issue still in kernel ?
-> 
-> I think your patch could fix this issue we found, but I'm worried about another problem.
-> 
-> Now when unplug a disk
-> 
-> LLDD report a event loss_of_singal
->    sas_deform_port
-> 	sas_unregister_domain_devices
-> 		sas_unregister_dev
-> 			sas_discover_event(dev->port, DISCE_DESTRUCT);
-> 	sas_port_delete
-> 	phy->port = NULL;
-> 
-> and after your patch changes
-> 
-> LLDD report a event loss_of_singal
-> 	sas_deform_port
-> 		sas_unregister_domain_devices
-> 			sas_unregister_dev
-> 				sas_discover_event(dev->port, DISCE_DESTRUCT);
-> 	phy->port = NULL;
-> 
-> ...
-> 	sas_destruct_devices
-> 		sas_port_delete   //now we actually delete the port device, but we set 	phy->port = NULL;  before this time.
-> 
-> 
-> So if we hotplug the disk quickly, plug,unplug,plug,
-> The new dmaed event(plug) would try to alloc and add a new port, but the old port device is still alive.
-> Another calltrace would occur
-> 
-> WARNING: CPU: 0 PID: 1038 at lib/kobject.c:240 kobject_add_internal+0x258/0x318()
-> kobject_add_internal failed for port-0:0 with -EEXIST, don't try to register things with the same name in the same directory.
-> CPU: 0 PID: 1038 Comm: kworker/u64:2 Tainted: G        W       4.1.6+ #140
-> [<ffff800000089918>] dump_backtrace+0x0/0x124
-> [<ffff800000089a4c>] show_stack+0x10/0x1c
-> [<ffff80000009fcbc>] warn_slowpath_fmt+0x4c/0x58
-> [<ffff8000003cdc04>] device_add+0x28c/0x5b8
-> [<ffff80000040d4ec>] sas_port_add+0x20/0xbc
-> [<ffff80000040f3e8>] sas_porte_bytes_dmaed
-> [<ffff8000000b5504>] process_one_work+0x13c/0x344
-> 
-> Because I am not a sas guy, so if you could comment this or post new patch, I would be thanks a lot!
-> 
-> Thanks!
-> Yijing.
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+QmFydCwNCg0KVGhhbmtzIGZvciBzaGFyaW5nIHRoZSBzY3JpcHQuICBXaWxsIGRyb3AgdGhlIHBh
+dGNoLg0KDQpSZWdhcmRzLA0KUXVpbm4gVHJhbg0KDQoNCg0KDQoNCg0KT24gMi81LzE2LCAxMTo0
+MiBBTSwgIkJhcnQgVmFuIEFzc2NoZSIgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPiB3cm90
+ZToNCg0KPk9uIDAyLzA1LzIwMTYgMTA6NDkgQU0sIFF1aW5uIFRyYW4gd3JvdGU6DQo+PiBPbiAy
+LzQvMTYsIDEwOjIwIEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3NjaGVAc2FuZGlz
+ay5jb20+IHdyb3RlOg0KPj4+IE9uIDAyLzA0LzIwMTYgMDg6NDUgQU0sIEhpbWFuc2h1IE1hZGhh
+bmkgd3JvdGU6DQo+Pj4+IEZyb206IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4N
+Cj4+Pj4NCj4+Pj4+IGNhdCAvc3lzL2tlcm5lbC9kZWJ1Zy9xbGEyeHh4LyovaXJxX2NwdWlkDQo+
+Pj4+IHFsYTJ4eHhfODENCj4+Pj4gICAgICAgICAgICAgICBJUlEgTmFtZSAgVmVjdG9yICBDUFVJ
+RA0KPj4+PiAgICAgIHFsYTJ4eHggKGRlZmF1bHQpICAxNTAgICAgIDkNCj4+Pj4gICAgICAgIHFs
+YTJ4eHggKHJzcF9xKSAgMTUxICAgICA5DQo+Pj4+ICAgICAgIHFsYTJ4eHggKGF0aW9fcSkgIDE1
+MiAgICAgOQ0KPj4+DQo+Pj4gSGVsbG8gUXVpbm4gYW5kIEhpbWFuc2h1LA0KPj4+DQo+Pj4gRG8g
+eW91IHRoaW5rIGl0IHdvdWxkIGJlIHBvc3NpYmxlIHRvIGdlbmVyYXRlIHRoaXMgaW5mb3JtYXRp
+b24gdmlhIGENCj4+PiB1c2VyLXNwYWNlIHNjcmlwdCBmcm9tIC9wcm9jL2ludGVycnVwdHMgYW5k
+IC9wcm9jL2lycS88bj4vc21wX2FmZmluaXR5Pw0KPj4+DQo+Pj4gVGhhbmtzLA0KPj4+DQo+Pj4g
+QmFydC4NCj4+DQo+PiBCYXJ0LA0KPj4gDQo+PiBDdXJyZW50bHksIHRoZSBkYXRhIGZyb20gdGhl
+IDIgbWVudGlvbmVkIOKAnC9wcm9j4oCdIGVudHJ5IHBvaW50cyB3ZXJlIG5vdCBhYmxlIHRvIGdp
+dmUgdXMgdGhlIGhvc3RfaWQvcG9ydCAmIHRoZSB2ZWN0b3IgaW5mb3JtYXRpb24uDQo+PiANCj4+
+IFRoZSAyIGFsdGVybmF0aXZlcyBhcmUgaSkgY2hhbmdlIHRoZSBkcml2ZXIgY29kZSB0byByZWdp
+c3RlciBob3N0IGlkIGFsb25nIHdpdGggdGhlIHZlY3RvciBhbmQgYWRkIHNjcmlwdCB0byBjb21i
+aW5lIHRoZSBpbmZvcywgIGlpKSAxIGNvZGUgY2hhbmdlIHRoYXQgZ2l2ZXMgdXMgdGhlIHN1bW1h
+cnkuDQo+PiANCj4+IFdlIGNob29zZSBwYXRoIDIgZm9yIHRoZSBlYXNlIG9mIHVzYWdlLg0KPg0K
+PkhlbGxvIFF1aW5uLA0KPg0KPlBsZWFzZSBoYXZlIGFub3RoZXIgbG9vayBhdCAvcHJvYy9pbnRl
+cnJ1cHRzIGFuZA0KPi9wcm9jL2lycS88bj4vc21wX2FmZmluaXR5LiBUaGUgaW5mb3JtYXRpb24g
+dGhhdCBpcyBleHBvcnRlZCB0aHJvdWdoDQo+dGhpcyBwYXRjaCBpcyBhbHJlYWR5IGF2YWlsYWJs
+ZSB0aGVyZS4gVGhpcyBpcyB3aHkgSSB0aGluayB0aGlzIHBhdGNoDQo+c2hvdWxkIGJlIGRyb3Bw
+ZWQuIEFsbCB5b3UgbmVlZCBpcyBzb21ldGhpbmcgbGlrZSB0aGUgc2hlbGwgc2NyaXB0IGJlbG93
+Lg0KPg0KPlNhbXBsZSBvdXRwdXQgKG5uID0gTlVNQSBub2RlOyBudW0gPSBJUlEgdmVjdG9yKToN
+Cj4NCj49PT09IElSUXMNCj5ubiBjcHUgbnVtIGNvdW50IG5hbWUNCj4wICA2ICAgMTA1ICAxNzUz
+IFBDSS1NU0ktZWRnZSAgICAgIHFsYTJ4eHggKHJzcF9xKSAgICAgICAgICAgICAgICAgDQo+MSAg
+MSAgIDEwNCAgODc4MSBQQ0ktTVNJLWVkZ2UgICAgICBxbGEyeHh4IChkZWZhdWx0KSAgICAgICAg
+ICAgICAgIA0KPjEgIDEgICAxMDcgIDE2MjkgUENJLU1TSS1lZGdlICAgICAgcWxhMnh4eCAocnNw
+X3EpICAgICAgICAgICAgICAgICANCj4NCj5UaGUgc2hlbGwgc2NyaXB0IHRoYXQgcHJvZHVjZWQg
+dGhlIGFib3ZlIG91dHB1dDoNCj4NCj5wcGkoKSB7DQo+ICAgIHsgZWNobyAiJCg8Ii9zeXMvZGV2
+aWNlcy9zeXN0ZW0vY3B1L2NwdSQxL3RvcG9sb2d5L3BoeXNpY2FsX3BhY2thZ2VfaWQiKSIgfHwg
+ZWNobyAnPyc7IH0gMj4vZGV2L251bGwNCj59DQo+DQo+ZWNobyAiPT09PSBJUlFzIg0KPnByaW50
+ZiAiJS0ycyAlLTNzICUtM3MgJTEycyAlLTUwc1xuIiBubiBjcHUgbnVtIGNvdW50IG5hbWUNCj5j
+YXQgL3Byb2MvaW50ZXJydXB0cyB8DQo+ICB3aGlsZSByZWFkIGxpbmU7IGRvDQo+ICAgIG51bT0i
+JChlY2hvICIkbGluZSIgfCBzZWQgLW4gJ3MvXltbOmJsYW5rOl1dKlwoWzAtOV0qXCk6XChbMC05
+WzpibGFuazpdXSpcKVwoLipcKS9cMS9wJykiDQo+ICAgIFsgLXogIiRudW0iIF0gJiYgY29udGlu
+dWUNCj4gICAgY291bnQ9MA0KPiAgICBmb3IgYyBpbiAkKGVjaG8gIiRsaW5lIiB8IHNlZCAtbiAn
+cy9eW1s6Ymxhbms6XV0qXChbMC05XSpcKTpcKFswLTlbOmJsYW5rOl1dKlwpXCguKlwpL1wyL3An
+KTsgZG8NCj4JY291bnQ9JCgoY291bnQrYykpDQo+ICAgIGRvbmUNCj4gICAgbmFtZT0iJChlY2hv
+ICIkbGluZSIgfCBzZWQgLW4gJ3MvXltbOmJsYW5rOl1dKlwoWzAtOV0qXCk6XChbMC05WzpibGFu
+azpdXSpcKVwoLipcKS9cMy9wJykiDQo+ICAgIGlmIFsgLXIgIi9wcm9jL2lycS8kbnVtL3NtcF9h
+ZmZpbml0eV9saXN0IiBdOyB0aGVuDQo+CWFsPSIkKDwiL3Byb2MvaXJxLyRudW0vc21wX2FmZmlu
+aXR5X2xpc3QiKSINCj4JY3B1PSIke2FsLy0qfSIgDQo+CWNwdT0iJHtjcHUvLCp9Ig0KPglwcGk9
+IiQocHBpICIkY3B1IikiDQo+ICAgIGVsc2UNCj4JY3B1PSI/Ig0KPglwcGk9Ij8iDQo+ICAgIGZp
+DQo+ICAgIHByaW50ZiAiJS0ycyAlLTNkICUtM2QgJTEyZCAlLTUwc1xuIiAiJHBwaSIgIiRjcHUi
+ICIkbnVtIiAiJGNvdW50IiAiJG5hbWUiDQo+ICBkb25lIHwNCj4gIHNvcnQgLW4gLWsxLDMNCj4N
+Cj5UaGFua3MsDQo+DQo+QmFydC4NCg==
