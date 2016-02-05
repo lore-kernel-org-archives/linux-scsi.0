@@ -1,106 +1,67 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 4/4] qla2xxx: Add DebugFS node to show irq vector's cpuid
-Date: Fri, 5 Feb 2016 11:42:24 -0800
-Message-ID: <56B4FB20.9080302@sandisk.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Add DebugFS node for target sess list.
+Date: Fri, 5 Feb 2016 12:00:03 -0800
+Message-ID: <56B4FF43.7030806@sandisk.com>
 References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
- <1454604319-27947-5-git-send-email-himanshu.madhani@qlogic.com>
- <56B39653.6090903@sandisk.com>
- <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
+ <1454604319-27947-4-git-send-email-himanshu.madhani@qlogic.com>
+ <56B39597.2020405@sandisk.com> <D2DA1ACE.D6B81%himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
+In-Reply-To: <D2DA1ACE.D6B81%himanshu.madhani@qlogic.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/05/2016 10:49 AM, Quinn Tran wrote:
-> On 2/4/16, 10:20 AM, "Bart Van Assche" <bart.vanassche@sandisk.com> w=
-rote:
+On 02/05/2016 09:26 AM, Himanshu Madhani wrote:
+> On 2/4/16, 10:16 AM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
 >> On 02/04/2016 08:45 AM, Himanshu Madhani wrote:
 >>> From: Quinn Tran <quinn.tran@qlogic.com>
 >>>
->>>> cat /sys/kernel/debug/qla2xxx/*/irq_cpuid
->>> qla2xxx_81
->>>               IRQ Name  Vector  CPUID
->>>      qla2xxx (default)  150     9
->>>        qla2xxx (rsp_q)  151     9
->>>       qla2xxx (atio_q)  152     9
+>>>    #cat  /sys/kernel/debug/qla2xxx/qla2xxx_31/tgt_sess
+>>>    qla2xxx_31
+>>>    Port ID   Port Name                Handle
+>>>    ff:fc:01  21:fd:00:05:33:c7:ec:16  0
+>>>    01:0e:00  21:00:00:24:ff:7b:8a:e4  1
+>>>    01:0f:00  21:00:00:24:ff:7b:8a:e5  2
+>>>    ....
 >>
 >> Hello Quinn and Himanshu,
 >>
->> Do you think it would be possible to generate this information via a
->> user-space script from /proc/interrupts and /proc/irq/<n>/smp_affini=
-ty?
->>
->> Thanks,
->>
->> Bart.
+>> The above information is not only useful to people who are debugging the
+>> QLogic target driver but also to end users who want to check which
+>> initiator ports have already logged in to a target port. Hence my
+>> proposal to move this information from debugfs to another location (e.g.
+>> configfs or sysfs). Users of other target drivers are probably also
+>> interested in seeing which sessions are active. How about adding the
+>> functionality for reporting session information per target port in the
+>> LIO core in such a way that some attributes are available for all target
+>> drivers (e.g. initiator port name, SCSI command statistics) and such
+>> that target drivers can define additional attributes to exported for
+>> each session (e.g. port ID, handle, ...).
 >
-> Bart,
->=20
-> Currently, the data from the 2 mentioned =E2=80=9C/proc=E2=80=9D entr=
-y points were not able to give us the host_id/port & the vector informa=
-tion.
->=20
-> The 2 alternatives are i) change the driver code to register host id =
-along with the vector and add script to combine the infos,  ii) 1 code =
-change that gives us the summary.
->=20
-> We choose path 2 for the ease of usage.
+> We had initially implemented this as a sysfs hook, but knowing that sysfs
+> is not encouraged, we decided to put this information via debugfs. Would it
+> make more sense if we send a sysfs patch?
 
-Hello Quinn,
+Hello Himanshu,
 
-Please have another look at /proc/interrupts and
-/proc/irq/<n>/smp_affinity. The information that is exported through
-this patch is already available there. This is why I think this patch
-should be dropped. All you need is something like the shell script belo=
-w.
+Let's try to reach agreement about the approach first before starting to 
+rework this patch.
 
-Sample output (nn =3D NUMA node; num =3D IRQ vector):
-
-=3D=3D=3D=3D IRQs
-nn cpu num count name
-0  6   105  1753 PCI-MSI-edge      qla2xxx (rsp_q)                =20
-1  1   104  8781 PCI-MSI-edge      qla2xxx (default)              =20
-1  1   107  1629 PCI-MSI-edge      qla2xxx (rsp_q)                =20
-
-The shell script that produced the above output:
-
-ppi() {
-    { echo "$(<"/sys/devices/system/cpu/cpu$1/topology/physical_package=
-_id")" || echo '?'; } 2>/dev/null
-}
-
-echo "=3D=3D=3D=3D IRQs"
-printf "%-2s %-3s %-3s %12s %-50s\n" nn cpu num count name
-cat /proc/interrupts |
-  while read line; do
-    num=3D"$(echo "$line" | sed -n 's/^[[:blank:]]*\([0-9]*\):\([0-9[:b=
-lank:]]*\)\(.*\)/\1/p')"
-    [ -z "$num" ] && continue
-    count=3D0
-    for c in $(echo "$line" | sed -n 's/^[[:blank:]]*\([0-9]*\):\([0-9[=
-:blank:]]*\)\(.*\)/\2/p'); do
-	count=3D$((count+c))
-    done
-    name=3D"$(echo "$line" | sed -n 's/^[[:blank:]]*\([0-9]*\):\([0-9[:=
-blank:]]*\)\(.*\)/\3/p')"
-    if [ -r "/proc/irq/$num/smp_affinity_list" ]; then
-	al=3D"$(<"/proc/irq/$num/smp_affinity_list")"
-	cpu=3D"${al/-*}"=20
-	cpu=3D"${cpu/,*}"
-	ppi=3D"$(ppi "$cpu")"
-    else
-	cpu=3D"?"
-	ppi=3D"?"
-    fi
-    printf "%-2s %-3d %-3d %12d %-50s\n" "$ppi" "$cpu" "$num" "$count" =
-"$name"
-  done |
-  sort -n -k1,3
+Five years ago I explained in a message that I posted on the linux-scsi 
+mailing list why LIO should use sysfs to export information that changes 
+dynamically (see also http://thread.gmane.org/gmane.linux.scsi/65615/). 
+I think this patch shows that there is a real need to have detailed 
+session information from LIO target drivers in user space. We need one 
+directory per session instead of exporting all session information 
+through a single file. sysfs is the right filesystem to export such 
+information because configfs directories should be created by the user 
+and not from inside the kernel. If no agreement can be reached about 
+this over e-mail my proposal is to discuss this further at the 2016 
+LSF/MM summit.
 
 Thanks,
 
