@@ -1,51 +1,41 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
- recognized correctly
-Date: Fri, 05 Feb 2016 16:20:44 +0000
-Message-ID: <bug-98171-11613-3LND0IAztR@https.bugzilla.kernel.org/>
-References: <bug-98171-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 111381] mvsas 0.8.16 on Marvell 88SE9485 reports timeouts on
+ load
+Date: Fri, 05 Feb 2016 16:33:03 +0000
+Message-ID: <bug-111381-11613-k8tz3tLnRA@https.bugzilla.kernel.org/>
+References: <bug-111381-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53897 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:55357 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751821AbcBEQUr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Feb 2016 11:20:47 -0500
+	id S1753505AbcBEQdG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Feb 2016 11:33:06 -0500
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 6529A203A1
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:20:46 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 989A22039C
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:20:45 +0000 (UTC)
-In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
+	by mail.kernel.org (Postfix) with ESMTP id 525C520395
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:33:05 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id D0D5E20383
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:33:03 +0000 (UTC)
+In-Reply-To: <bug-111381-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=98171
+https://bugzilla.kernel.org/show_bug.cgi?id=111381
 
---- Comment #7 from Clay Harris <bugs@claycon.org> ---
-I'm seeing the following:
+--- Comment #3 from Gabriel A. Devenyi <gdevenyi@gmail.com> ---
+Recently problems very similar to this showed up in a discussion on reddit.
 
-ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata16.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
-ata16.00: configured for UDMA/66
-ata16.00: exception Emask 0x1 SAct 0x0 SErr 0x0 action 0x6
-ata16.00: irq_stat 0x40000001
-ata16.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 1 dma 16640 in
-Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM
-violation)
-ata16: hard resetting link
+See
+https://www.reddit.com/r/zfs/comments/43z0sn/scrub_knocked_a_drive_offline_flaky_hardware_other/
 
-Controller is:
-a:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6 Gb/s
-RAID controller with HyperDuo (rev 11) (prog-if 01 [AHCI 1.0])
-Subsystem: ASUSTeK Computer Inc. P8P67 Deluxe Motherboard
+It kinda looks like Marvell controllers (or the mvsas driver?) are sensitive to
+cable length.
 
-Linux 4.3.4-300.fc23.x86_64
-
-I see this error most every boot.
+I'm looking at halving the length of my cabling, will report back if the issues
+resolve.
 
 -- 
 You are receiving this mail because:
