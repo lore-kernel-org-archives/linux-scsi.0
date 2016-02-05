@@ -1,42 +1,42 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111381] mvsas 0.8.16 on Marvell 88SE9485 reports timeouts on
- load
-Date: Fri, 05 Feb 2016 16:33:03 +0000
-Message-ID: <bug-111381-11613-k8tz3tLnRA@https.bugzilla.kernel.org/>
-References: <bug-111381-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 101891] mvsas prep failed, NULL pointer dereference in
+ mvs_slot_task_free+0x5/0x1f0 [mvsas]
+Date: Fri, 05 Feb 2016 16:45:27 +0000
+Message-ID: <bug-101891-11613-KNkpWA0Vyi@https.bugzilla.kernel.org/>
+References: <bug-101891-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55357 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:56661 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505AbcBEQdG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Feb 2016 11:33:06 -0500
+	id S1751105AbcBEQp3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 11:45:29 -0500
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 525C520395
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:33:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEBB220389
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:45:28 +0000 (UTC)
 Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id D0D5E20383
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:33:03 +0000 (UTC)
-In-Reply-To: <bug-111381-11613@https.bugzilla.kernel.org/>
+	by mail.kernel.org (Postfix) with ESMTP id 9577D20397
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Feb 2016 16:45:27 +0000 (UTC)
+In-Reply-To: <bug-101891-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111381
+https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
 
---- Comment #3 from Gabriel A. Devenyi <gdevenyi@gmail.com> ---
-Recently problems very similar to this showed up in a discussion on reddit.
+D=C4=81vis <davispuh@gmail.com> changed:
 
-See
-https://www.reddit.com/r/zfs/comments/43z0sn/scrub_knocked_a_drive_offline_flaky_hardware_other/
+           What    |Removed                     |Added
+-----------------------------------------------------------------------=
+-----
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |CODE_FIX
 
-It kinda looks like Marvell controllers (or the mvsas driver?) are sensitive to
-cable length.
-
-I'm looking at halving the length of my cabling, will report back if the issues
-resolve.
-
--- 
+--=20
 You are receiving this mail because:
-You are watching the assignee of the bug.
+You are watching the assignee of the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
