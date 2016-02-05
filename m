@@ -1,37 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] block/sd: Return -EREMOTEIO when WRITE SAME and DISCARD are disabled
-Date: Thu, 04 Feb 2016 22:16:14 -0500
-Message-ID: <yq1zivfg83l.fsf@sermon.lab.mkp.net>
-References: <20160204042528.GA15599@redhat.com>
-	<1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
-	<1454603812.22112.246.camel@localhost.localdomain>
+Subject: Re: [PATCH 1/3] hisi_sas: use Unified Device Properties API
+Date: Thu, 04 Feb 2016 22:22:33 -0500
+Message-ID: <yq1vb63g7t2.fsf@sermon.lab.mkp.net>
+References: <1454523970-118251-1-git-send-email-john.garry@huawei.com>
+	<1454523970-118251-2-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27356 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbcBEDQZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 22:16:25 -0500
-In-Reply-To: <1454603812.22112.246.camel@localhost.localdomain> (Ewan Milne's
-	message of "Thu, 04 Feb 2016 11:36:52 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1454523970-118251-2-git-send-email-john.garry@huawei.com> (John
+	Garry's message of "Thu, 4 Feb 2016 02:26:08 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ewan Milne <emilne@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, jiangyiwen@huawei.com, snitzer@redhat.com
 
->>>>> "Ewan" == Ewan Milne <emilne@redhat.com> writes:
+>>>>> "John" == John Garry <john.garry@huawei.com> writes:
 
-Ewan> Maybe it's unnecessary, but I would put parenthesis around (ret ==
-Ewan> ... -EIO); for clarity.
+John> The hisi_sas driver is required to support both device tree and
+John> ACPI. The scanning of the device properties now uses the Unified
+John> Device Properties API, which serves both OF and ACPI.
 
-Sure.
-
-Ewan> I would prefer that additional enum/constant values be added to
-Ewan> the end of the series, here you are changing the ordinal value of
-Ewan> BLKPREP_DEFER from 2 to 3.  Could you swap these?
-
-I felt that KILL and INVALID were closely related. That's why I kept
-them together. But it doesn't matter to me.
+Series applied to 4.6/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
