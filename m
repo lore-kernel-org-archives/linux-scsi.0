@@ -1,70 +1,73 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 5/6] ibmvscsi: Remove unsupported host config MAD and
- sysfs interface
-Date: Fri, 5 Feb 2016 09:34:13 +0100
-Message-ID: <20160205083413.GF27969@c203.arch.suse.de>
-References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <1454542114-1797-6-git-send-email-tyreld@linux.vnet.ibm.com>
- <20160204080317.GT27969@c203.arch.suse.de>
- <56B38EE7.6060102@gmail.com>
+From: wangyijing <wangyijing@huawei.com>
+Subject: Question for Patch"libsas: fix "sysfs group not found" warnings at
+ port teardown time"
+Date: Fri, 5 Feb 2016 17:20:03 +0800
+Message-ID: <56B46943.5040808@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56B38EE7.6060102@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@odin.com, linux-kernel@vger.kernel.org, hare@suse.de, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([58.251.152.179]:36987 "EHLO
+	szxga05-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752366AbcBEJWq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 04:22:46 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dan.j.williams@intel.com, Praveen Murali <pmurali@logicube.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Feb 04, 2016 at 09:48:23AM -0800, Tyrel Datwyler wrote:
-> On 02/04/2016 12:03 AM, Johannes Thumshirn wrote:
-> > On Wed, Feb 03, 2016 at 05:28:33PM -0600, Tyrel Datwyler wrote:
-> >> A VIOSRP_HOST_CONFIG_TYPE management datagram (MAD) has existed in
-> >> the code for some time. From what information I've gathered from
-> >> Brian King this was likely implemented on the host side in a SLES =
-9
-> >> based VIOS, which is no longer supported anywhere. Further, it is
-> >> not defined in PAPR or supported by any AIX based VIOS.
-> >>
-> >> Treating as bit rot and removing the sysfs interface and associate=
-d
-> >> host config code accordingly.
-> >=20
-> > Doesn't removing a sysfs interface potentially break userspace code=
-?
-> >=20
->=20
-> In the general case yes, but I feel in this case no. First, Reading f=
-rom
-> this config attribute of a vscsi host adapter always returns nothing.
-> Second, any userspace code using this attribute better be checking fo=
-r
-> the existence of config. Just a quick look for
-> /sys/class/scsi_host/host*/config under other host adapters on my sys=
-tem
-> I find that attribute doesn't exist for any of them.
->=20
-> If there is truly enough concern that somebody may actually be access=
-ing
-> this useless attribute from userspace then we can still strip out the
-> unsupported code, but leave the attribute and return nothing directly
-> from the show function.
+Hi Dan and Praveen,
+   I found a patch titled "libsas: fix "sysfs group not found" warnings at port teardown time" by google,
+https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
 
-Which is what I kinda prefer. Slowly deprecate and phase out, but don't=
- break
-userspace. You never know who is writing some obscure piece of code rel=
-aying on
-some sysfs attribute.
+I found the same warning calltrace in my platform, but I didn't find the patch changes in the latest kernel 4.5-rc2.
+So is this issue still in kernel ?
 
-Thanks,
-	Johannes
+I think your patch could fix this issue we found, but I'm worried about another problem.
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Now when unplug a disk
+
+LLDD report a event loss_of_singal
+    sas_deform_port
+	sas_unregister_domain_devices
+		sas_unregister_dev
+			sas_discover_event(dev->port, DISCE_DESTRUCT);
+	sas_port_delete
+	phy->port = NULL;
+
+and after your patch changes
+
+LLDD report a event loss_of_singal
+	sas_deform_port
+		sas_unregister_domain_devices
+			sas_unregister_dev
+				sas_discover_event(dev->port, DISCE_DESTRUCT);
+	phy->port = NULL;
+
+...
+	sas_destruct_devices
+		sas_port_delete   //now we actually delete the port device, but we set 	phy->port = NULL;  before this time.
+
+
+So if we hotplug the disk quickly, plug,unplug,plug,
+The new dmaed event(plug) would try to alloc and add a new port, but the old port device is still alive.
+Another calltrace would occur
+
+WARNING: CPU: 0 PID: 1038 at lib/kobject.c:240 kobject_add_internal+0x258/0x318()
+kobject_add_internal failed for port-0:0 with -EEXIST, don't try to register things with the same name in the same directory.
+CPU: 0 PID: 1038 Comm: kworker/u64:2 Tainted: G        W       4.1.6+ #140
+[<ffff800000089918>] dump_backtrace+0x0/0x124
+[<ffff800000089a4c>] show_stack+0x10/0x1c
+[<ffff80000009fcbc>] warn_slowpath_fmt+0x4c/0x58
+[<ffff8000003cdc04>] device_add+0x28c/0x5b8
+[<ffff80000040d4ec>] sas_port_add+0x20/0xbc
+[<ffff80000040f3e8>] sas_porte_bytes_dmaed
+[<ffff8000000b5504>] process_one_work+0x13c/0x344
+
+Because I am not a sas guy, so if you could comment this or post new patch, I would be thanks a lot!
+
+Thanks!
+Yijing.
+
+
+
