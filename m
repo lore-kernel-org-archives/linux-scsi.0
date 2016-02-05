@@ -1,28 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid: fix null pointer check in megasas_detach_one().
-Date: Thu, 04 Feb 2016 22:24:00 -0500
-Message-ID: <yq1r3grg7qn.fsf@sermon.lab.mkp.net>
-References: <1453466502-9335-1-git-send-email-mlombard@redhat.com>
+Subject: Re: [PATCH] scsi_dh_rdac: always retry MODE SELECT on command lock violation
+Date: Thu, 04 Feb 2016 22:28:16 -0500
+Message-ID: <yq1mvrfg7jj.fsf@sermon.lab.mkp.net>
+References: <1453473761-54777-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33573 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:34593 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750723AbcBEDYO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 22:24:14 -0500
-In-Reply-To: <1453466502-9335-1-git-send-email-mlombard@redhat.com> (Maurizio
-	Lombardi's message of "Fri, 22 Jan 2016 13:41:42 +0100")
+	with ESMTP id S1750722AbcBED20 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2016 22:28:26 -0500
+In-Reply-To: <1453473761-54777-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Fri, 22 Jan 2016 15:42:41 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: sumit.saxena@avagotech.com, kashyap.desai@avagotech.com, uday.lingala@avagotech.com, linux-scsi@vger.kernel.org, jbottomley@parallels.com, thenzl@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
->>>>> "Maurizio" == Maurizio Lombardi <mlombard@redhat.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Maurizio> The pd_seq_sync pointer can't be NULL, we have to check its
-Maurizio> entries instead.
+Hannes> If MODE SELECT returns with sense '05/91/36' (command lock
+Hannes> violation) it should always be retried without counting the
+Hannes> number of retries.  During an HBA upgrade or similar
+Hannes> circumstances one might see a flood of MODE SELECT command from
+Hannes> various HBAs, which will easily trigger the sense code and
+Hannes> exceed the retry count.
 
-Applied to 4.6/scsi-queue.
+Applied to 4.5/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
