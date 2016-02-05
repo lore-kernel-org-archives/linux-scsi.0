@@ -1,37 +1,61 @@
-From: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
-Subject: Re: Question for Patch"libsas: fix "sysfs group not found" warnings
- at port teardown time"
-Date: Fri, 5 Feb 2016 19:22:44 +0200
-Message-ID: <CAOE4rSyHYcNyzeAK7w6f29sR+QEn+z7AUV3NF4SgBroL101+5Q@mail.gmail.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Add DebugFS node for target sess list.
+Date: Fri, 5 Feb 2016 17:26:01 +0000
+Message-ID: <D2DA1ACE.D6B81%himanshu.madhani@qlogic.com>
+References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1454604319-27947-4-git-send-email-himanshu.madhani@qlogic.com>
+ <56B39597.2020405@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:34435 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067AbcBERWo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2016 12:22:44 -0500
-Received: by mail-ig0-f171.google.com with SMTP id ik10so45229316igb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Feb 2016 09:22:44 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <56B39597.2020405@sandisk.com>
+Content-Language: en-US
+Content-ID: <8FC8AE962393C74D81847053B0A9AC10@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-2016-02-05 11:20 GMT+02:00 wangyijing <wangyijing@huawei.com>:
+Hi Bart, 
+
+
+On 2/4/16, 10:16 AM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
+
+>On 02/04/2016 08:45 AM, Himanshu Madhani wrote:
+>> From: Quinn Tran <quinn.tran@qlogic.com>
+>>
+>>   #cat  /sys/kernel/debug/qla2xxx/qla2xxx_31/tgt_sess
+>>   qla2xxx_31
+>>   Port ID   Port Name                Handle
+>>   ff:fc:01  21:fd:00:05:33:c7:ec:16  0
+>>   01:0e:00  21:00:00:24:ff:7b:8a:e4  1
+>>   01:0f:00  21:00:00:24:ff:7b:8a:e5  2
+>>   ....
 >
-> Hi Dan and Praveen,
->    I found a patch titled "libsas: fix "sysfs group not found" warnings at
-> port teardown time" by google,
-> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
+>Hello Quinn and Himanshu,
 >
+>The above information is not only useful to people who are debugging the
+>QLogic target driver but also to end users who want to check which
+>initiator ports have already logged in to a target port. Hence my
+>proposal to move this information from debugfs to another location (e.g.
+>configfs or sysfs). Users of other target drivers are probably also
+>interested in seeing which sessions are active. How about adding the
+>functionality for reporting session information per target port in the
+>LIO core in such a way that some attributes are available for all target
+>drivers (e.g. initiator port name, SCSI command statistics) and such
+>that target drivers can define additional attributes to exported for
+>each session (e.g. port ID, handle, ...).
 
- Maybe this is related?
+We had initially implemented this as a sysfs hook, but knowing that sysfs
+is not encouraged, we decided to put this information via debugfs. Would it
+make more sense if we send a sysfs patch?
 
- kernel: WARNING: CPU: 4 PID: 16820 at fs/sysfs/group.c:237
- sysfs_remove_group+0x8b/0x90()
- kernel: sysfs group ffffffff818a3b60 not found for kobject 'end_device-7:7'
- [...]
- kernel: Workqueue: scsi_wq_7 sas_destruct_devices [libsas]
 
- I'm getting this warning when removing disk from HighPoint RocketRAID 2760
- controller (mvsas driver)
- See https://bugzilla.kernel.org/show_bug.cgi?id=71021#c3
+>
+>Thanks,
+>
+>Bart.
+
+Thanks,
+- Himanshu
