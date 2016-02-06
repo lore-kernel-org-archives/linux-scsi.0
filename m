@@ -1,72 +1,73 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH 4/4] qla2xxx: Add DebugFS node to show irq vector's cpuid
-Date: Fri, 5 Feb 2016 21:52:24 +0000
-Message-ID: <1D5F47C3-35A0-4460-893F-909E7EEAA281@qlogic.com>
-References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
- <1454604319-27947-5-git-send-email-himanshu.madhani@qlogic.com>
- <56B39653.6090903@sandisk.com>
- <883FB6FF-C20D-4352-AA6E-CCA5332F6379@qlogic.com>
- <56B4FB20.9080302@sandisk.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 71021] WARNING: CPU: 0 PID: 5517 at
+ /build/buildd/linux-3.13.0/fs/sysfs/group.c:214
+ sysfs_remove_group+0xc6/0xd0()
+Date: Sat, 06 Feb 2016 01:20:11 +0000
+Message-ID: <bug-71021-11613-D922FNVOYw@https.bugzilla.kernel.org/>
+References: <bug-71021-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <56B4FB20.9080302@sandisk.com>
-Content-Language: en-US
-Content-ID: <BEEF94B100138940B151BCD7343DE0FB@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52886 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811AbcBFBUZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Feb 2016 20:20:25 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DA820203C2
+	for <linux-scsi@vger.kernel.org>; Sat,  6 Feb 2016 01:20:23 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 87E37203DC
+	for <linux-scsi@vger.kernel.org>; Sat,  6 Feb 2016 01:20:11 +0000 (UTC)
+In-Reply-To: <bug-71021-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-QmFydCwNCg0KVGhhbmtzIGZvciBzaGFyaW5nIHRoZSBzY3JpcHQuICBXaWxsIGRyb3AgdGhlIHBh
-dGNoLg0KDQpSZWdhcmRzLA0KUXVpbm4gVHJhbg0KDQoNCg0KDQoNCg0KT24gMi81LzE2LCAxMTo0
-MiBBTSwgIkJhcnQgVmFuIEFzc2NoZSIgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPiB3cm90
-ZToNCg0KPk9uIDAyLzA1LzIwMTYgMTA6NDkgQU0sIFF1aW5uIFRyYW4gd3JvdGU6DQo+PiBPbiAy
-LzQvMTYsIDEwOjIwIEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3NjaGVAc2FuZGlz
-ay5jb20+IHdyb3RlOg0KPj4+IE9uIDAyLzA0LzIwMTYgMDg6NDUgQU0sIEhpbWFuc2h1IE1hZGhh
-bmkgd3JvdGU6DQo+Pj4+IEZyb206IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4N
-Cj4+Pj4NCj4+Pj4+IGNhdCAvc3lzL2tlcm5lbC9kZWJ1Zy9xbGEyeHh4LyovaXJxX2NwdWlkDQo+
-Pj4+IHFsYTJ4eHhfODENCj4+Pj4gICAgICAgICAgICAgICBJUlEgTmFtZSAgVmVjdG9yICBDUFVJ
-RA0KPj4+PiAgICAgIHFsYTJ4eHggKGRlZmF1bHQpICAxNTAgICAgIDkNCj4+Pj4gICAgICAgIHFs
-YTJ4eHggKHJzcF9xKSAgMTUxICAgICA5DQo+Pj4+ICAgICAgIHFsYTJ4eHggKGF0aW9fcSkgIDE1
-MiAgICAgOQ0KPj4+DQo+Pj4gSGVsbG8gUXVpbm4gYW5kIEhpbWFuc2h1LA0KPj4+DQo+Pj4gRG8g
-eW91IHRoaW5rIGl0IHdvdWxkIGJlIHBvc3NpYmxlIHRvIGdlbmVyYXRlIHRoaXMgaW5mb3JtYXRp
-b24gdmlhIGENCj4+PiB1c2VyLXNwYWNlIHNjcmlwdCBmcm9tIC9wcm9jL2ludGVycnVwdHMgYW5k
-IC9wcm9jL2lycS88bj4vc21wX2FmZmluaXR5Pw0KPj4+DQo+Pj4gVGhhbmtzLA0KPj4+DQo+Pj4g
-QmFydC4NCj4+DQo+PiBCYXJ0LA0KPj4gDQo+PiBDdXJyZW50bHksIHRoZSBkYXRhIGZyb20gdGhl
-IDIgbWVudGlvbmVkIOKAnC9wcm9j4oCdIGVudHJ5IHBvaW50cyB3ZXJlIG5vdCBhYmxlIHRvIGdp
-dmUgdXMgdGhlIGhvc3RfaWQvcG9ydCAmIHRoZSB2ZWN0b3IgaW5mb3JtYXRpb24uDQo+PiANCj4+
-IFRoZSAyIGFsdGVybmF0aXZlcyBhcmUgaSkgY2hhbmdlIHRoZSBkcml2ZXIgY29kZSB0byByZWdp
-c3RlciBob3N0IGlkIGFsb25nIHdpdGggdGhlIHZlY3RvciBhbmQgYWRkIHNjcmlwdCB0byBjb21i
-aW5lIHRoZSBpbmZvcywgIGlpKSAxIGNvZGUgY2hhbmdlIHRoYXQgZ2l2ZXMgdXMgdGhlIHN1bW1h
-cnkuDQo+PiANCj4+IFdlIGNob29zZSBwYXRoIDIgZm9yIHRoZSBlYXNlIG9mIHVzYWdlLg0KPg0K
-PkhlbGxvIFF1aW5uLA0KPg0KPlBsZWFzZSBoYXZlIGFub3RoZXIgbG9vayBhdCAvcHJvYy9pbnRl
-cnJ1cHRzIGFuZA0KPi9wcm9jL2lycS88bj4vc21wX2FmZmluaXR5LiBUaGUgaW5mb3JtYXRpb24g
-dGhhdCBpcyBleHBvcnRlZCB0aHJvdWdoDQo+dGhpcyBwYXRjaCBpcyBhbHJlYWR5IGF2YWlsYWJs
-ZSB0aGVyZS4gVGhpcyBpcyB3aHkgSSB0aGluayB0aGlzIHBhdGNoDQo+c2hvdWxkIGJlIGRyb3Bw
-ZWQuIEFsbCB5b3UgbmVlZCBpcyBzb21ldGhpbmcgbGlrZSB0aGUgc2hlbGwgc2NyaXB0IGJlbG93
-Lg0KPg0KPlNhbXBsZSBvdXRwdXQgKG5uID0gTlVNQSBub2RlOyBudW0gPSBJUlEgdmVjdG9yKToN
-Cj4NCj49PT09IElSUXMNCj5ubiBjcHUgbnVtIGNvdW50IG5hbWUNCj4wICA2ICAgMTA1ICAxNzUz
-IFBDSS1NU0ktZWRnZSAgICAgIHFsYTJ4eHggKHJzcF9xKSAgICAgICAgICAgICAgICAgDQo+MSAg
-MSAgIDEwNCAgODc4MSBQQ0ktTVNJLWVkZ2UgICAgICBxbGEyeHh4IChkZWZhdWx0KSAgICAgICAg
-ICAgICAgIA0KPjEgIDEgICAxMDcgIDE2MjkgUENJLU1TSS1lZGdlICAgICAgcWxhMnh4eCAocnNw
-X3EpICAgICAgICAgICAgICAgICANCj4NCj5UaGUgc2hlbGwgc2NyaXB0IHRoYXQgcHJvZHVjZWQg
-dGhlIGFib3ZlIG91dHB1dDoNCj4NCj5wcGkoKSB7DQo+ICAgIHsgZWNobyAiJCg8Ii9zeXMvZGV2
-aWNlcy9zeXN0ZW0vY3B1L2NwdSQxL3RvcG9sb2d5L3BoeXNpY2FsX3BhY2thZ2VfaWQiKSIgfHwg
-ZWNobyAnPyc7IH0gMj4vZGV2L251bGwNCj59DQo+DQo+ZWNobyAiPT09PSBJUlFzIg0KPnByaW50
-ZiAiJS0ycyAlLTNzICUtM3MgJTEycyAlLTUwc1xuIiBubiBjcHUgbnVtIGNvdW50IG5hbWUNCj5j
-YXQgL3Byb2MvaW50ZXJydXB0cyB8DQo+ICB3aGlsZSByZWFkIGxpbmU7IGRvDQo+ICAgIG51bT0i
-JChlY2hvICIkbGluZSIgfCBzZWQgLW4gJ3MvXltbOmJsYW5rOl1dKlwoWzAtOV0qXCk6XChbMC05
-WzpibGFuazpdXSpcKVwoLipcKS9cMS9wJykiDQo+ICAgIFsgLXogIiRudW0iIF0gJiYgY29udGlu
-dWUNCj4gICAgY291bnQ9MA0KPiAgICBmb3IgYyBpbiAkKGVjaG8gIiRsaW5lIiB8IHNlZCAtbiAn
-cy9eW1s6Ymxhbms6XV0qXChbMC05XSpcKTpcKFswLTlbOmJsYW5rOl1dKlwpXCguKlwpL1wyL3An
-KTsgZG8NCj4JY291bnQ9JCgoY291bnQrYykpDQo+ICAgIGRvbmUNCj4gICAgbmFtZT0iJChlY2hv
-ICIkbGluZSIgfCBzZWQgLW4gJ3MvXltbOmJsYW5rOl1dKlwoWzAtOV0qXCk6XChbMC05WzpibGFu
-azpdXSpcKVwoLipcKS9cMy9wJykiDQo+ICAgIGlmIFsgLXIgIi9wcm9jL2lycS8kbnVtL3NtcF9h
-ZmZpbml0eV9saXN0IiBdOyB0aGVuDQo+CWFsPSIkKDwiL3Byb2MvaXJxLyRudW0vc21wX2FmZmlu
-aXR5X2xpc3QiKSINCj4JY3B1PSIke2FsLy0qfSIgDQo+CWNwdT0iJHtjcHUvLCp9Ig0KPglwcGk9
-IiQocHBpICIkY3B1IikiDQo+ICAgIGVsc2UNCj4JY3B1PSI/Ig0KPglwcGk9Ij8iDQo+ICAgIGZp
-DQo+ICAgIHByaW50ZiAiJS0ycyAlLTNkICUtM2QgJTEyZCAlLTUwc1xuIiAiJHBwaSIgIiRjcHUi
-ICIkbnVtIiAiJGNvdW50IiAiJG5hbWUiDQo+ICBkb25lIHwNCj4gIHNvcnQgLW4gLWsxLDMNCj4N
-Cj5UaGFua3MsDQo+DQo+QmFydC4NCg==
+https://bugzilla.kernel.org/show_bug.cgi?id=71021
+
+Yijing Wang <wangyijing@huawei.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |wangyijing@huawei.com
+
+--- Comment #4 from Yijing Wang <wangyijing@huawei.com> ---
+I also found the same issue when remove my disk in my platform, I think the
+code logic is incorrect, this call trace would appear every disk remove. I
+found  Dan Williams posted a fix patch, but it was not merged to kernel.
+
+https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
+
+Following is my call trace:
+
+WARNING: CPU: 2 PID: 6 at fs/sysfs/group.c:224 sysfs_remove_group+0x9c/0xa0()
+sysfs group (power)ffff800000a2dbe8 not found for kobject '0:0:1:0'
+Modules linked in:
+CPU: 2 PID: 6 Comm: kworker/u64:0 Not tainted 4.1.6+ #157
+Hardware name: Hisilicon PhosphorV660 Development Board (DT)
+Workqueue: scsi_wq_0 sas_destruct_devices
+Call trace:
+[<ffff800000089918>] dump_backtrace+0x0/0x124
+[<ffff800000089a4c>] show_stack+0x10/0x1c
+[<ffff8000006ecd10>] dump_stack+0x78/0x98
+[<ffff80000009fc38>] warn_slowpath_common+0x98/0xd0
+[<ffff80000009fcbc>] warn_slowpath_fmt+0x4c/0x58
+[<ffff8000001fc190>] sysfs_remove_group+0x98/0xa0
+[<ffff8000003d7afc>] dpm_sysfs_remove+0x54/0x68
+[<ffff8000003cca20>] device_del+0x3c/0x208
+[<ffff8000003ccbfc>] device_unregister+0x10/0x2c
+[<ffff800000307810>] bsg_unregister_queue+0xbc/0xf8
+[<ffff8000003fa3b0>] __scsi_remove_device+0x9c/0xbc
+[<ffff8000003fa414>] scsi_remove_device+0x44/0x64
+[<ffff8000003fa604>] scsi_remove_target+0x198/0x258
+[<ffff80000040c090>] sas_rphy_remove+0x8c/0xb4
+[<ffff80000040c0ec>] sas_rphy_delete+0x34/0x54
+[<ffff8000004102d0>] sas_destruct_devices+0x60/0x98
+[<ffff8000000b5490>] process_one_work+0x13c/0x344
+[<ffff8000000b57d4>] worker_thread+0x13c/0x494
+[<ffff8000000bafb8>] kthread+0xd8/0xf0
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
