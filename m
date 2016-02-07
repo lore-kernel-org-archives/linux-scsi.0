@@ -1,100 +1,58 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v4 0/5] Fix LUN_RESET active I/O + TMR handling
-Date: Sun, 07 Feb 2016 11:24:27 -0800
-Message-ID: <1454873067.10001.55.camel@haakon3.risingtidesystems.com>
-References: <1454815082-15380-1-git-send-email-nab@daterainc.com>
-	 <56B6C5D8.6070403@sandisk.com>
-	 <1454822367.10001.38.camel@haakon3.risingtidesystems.com>
-	 <56B76A7E.6080903@sandisk.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: complete boot failure in 4.5-rc1 caused by nvme: make SG_IO
+ support optional
+Date: Sun, 7 Feb 2016 15:28:55 -0700
+Message-ID: <56B7C527.6050300@kernel.dk>
+References: <1454783624.2809.6.camel@HansenPartnership.com>
+ <20160207092241.GA15331@lst.de>
+ <1454861040.2329.4.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <56B76A7E.6080903@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:34103 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754607AbcBGW25 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2016 17:28:57 -0500
+Received: by mail-pf0-f174.google.com with SMTP id o185so99256493pfb.1
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Feb 2016 14:28:57 -0800 (PST)
+In-Reply-To: <1454861040.2329.4.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>
+Cc: "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sun, 2016-02-07 at 08:02 -0800, Bart Van Assche wrote:
-> On 02/06/16 21:19, Nicholas A. Bellinger wrote:
-> > On Sat, 2016-02-06 at 20:19 -0800, Bart Van Assche wrote:
-> >> On 02/06/16 19:17, Nicholas A. Bellinger wrote:
-> >>> Here is -v4 series to address the set of of LUN_RESET
-> >>> active I/O + TMR se_cmd->cmd_kref < 0 bugs as reported
-> >>> recently by Quinn & Co.  This can occur during active
-> >>> I/O remote port TMR LUN_RESET with multi-port LIO
-> >>> configurations.
-> >>
-> >> Hi Nic,
-> >>
-> >> If I understood the purpose of this patch series correctly then this
-> >> patch series is a brave attempt to fix what is also fixed by my patch
-> >> called "target: Make ABORT and LUN RESET handling synchronous". Wouldn't
-> >> it be better to focus on that patch instead of trying to fix the current
-> >> approach in which TMR handling happens from the another context than the
-> >> command processing context ?
-> >>
-> >
-> > This statement is a gross oversimplification of the issues involved.
-> >
-> > If you'll recall, this was already highlighted in the context of your
-> > patch here:
-> >
-> > http://www.spinics.net/lists/target-devel/msg11057.html
-> >
-> > There are a number of comments on why the bug-fix was incorrect and
-> > broken, the basics of what needed to be done and in what order it should
-> > happen.
-> >
-> > But instead of replying to the comments, this was your response:
-> >
-> > http://www.spinics.net/lists/target-devel/msg11542.html
-> >
-> > If you are authentically interested in understanding the issues
-> > involved, you'll probably need to go back and comment on those topics
-> > individually, instead of ignoring them.
-> 
-> Hi Nic,
-> 
-> What you write is not correct. All your review comments that made sense 
-> have been addressed in the latest version of my patch 
-> (http://www.spinics.net/lists/target-devel/msg11666.html).
+On 02/07/2016 09:04 AM, James Bottomley wrote:
+> On Sun, 2016-02-07 at 10:22 +0100, Christoph Hellwig wrote:
+>> Keith said it should be on by default, and I promised him to change
+>> it once we run into problems, which I guess this counts as.
+>>
+>> But just curious:  what distro are you using?  Upstream systemd
+>> explicitly rejected using scsi_id for NVMe here:
+>>
+>> 	https://github.com/systemd/systemd/issues/1453
+>>
+>> and all my test systems don't do this either.
+>
+> This was SUSE (in my case, openSUSE Leap).  I just checked the source
+> package; they patch the by-id rules back in for NVME:
+>
+> # PATCH-FIX-SUSE 1101-rules-persistent-device-names-for-NVMe-devices.patch (bsc#944132)
+> Patch1101:      1101-rules-persistent-device-names-for-NVMe-devices.patch
+>
+> The bugzilla is giving access denied for bug id 944132, so it's likely
+> some proprietary vendor problem.  The patch has no preamble, so it's
+> hard to tell what they were thinking.
 
-Did you respond to the specific feedback of my email..?  No.
+I run root-on-nvme on my laptop, and I haven't observed any problems. 
+Generally I hate for options to default y unless absolutely necessary, 
+it's a sure fire way to feature creep your kernel without noticing. I 
+don't think getting all hot about this issue is fair, if the only known 
+case is suse.
 
-Did you include a change-log in the subsequent patch explaining the
-changes..?  No.
+If anything, let's make the description better. It's trying to be funny, 
+it'd be better if it was descriptive and covered this case as well.
 
-If you're still not willing or able to have a technical discussion on
-the specific issues involved or give feedback inline to the patch series
-itself, then you are just trying to waste everyone's time.
+-- 
+Jens Axboe
 
-> 
-> Additionally, you haven't answered my question. My question was: why to 
-> spend more energy on trying to fix the current approach if the LIO TMR 
-> handling code can be simplified greatly by handling ABORT and LUN RESET 
-> from the regular command execution path ?
-> 
-
-Because your patch was incorrect and broken, and you still don't seem
-interested in taking the time to actually understand why that is.
-
-Listen, Bart, I'm getting tired of your inability to have a technical
-discussion of the issues.
-
-So that said, I'm going to put down some ground rules for our future
-interactions.  I expect you to:
-
-   - Ask questions when you're unsure of a specific piece of code, 
-     before attempting to push changes to re-write significant pieces 
-     and spend community review cycles. 
-   - Comment inline to all feedback for changes of substance.
-   - Stop ignoring subsystem maintainer feedback.
-   - Provide a change-log between patches for all changes of substance.
-
-If you are genuinely interested in contributing to LIO, then these
-should be a no-brainer. 
-
-If you aren't genuinely interested in contributing to LIO, then keep
-doing what you're doing.
