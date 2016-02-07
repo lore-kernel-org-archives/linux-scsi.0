@@ -1,58 +1,43 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: complete boot failure in 4.5-rc1 caused by nvme: make SG_IO
- support optional
-Date: Sun, 7 Feb 2016 15:28:55 -0700
-Message-ID: <56B7C527.6050300@kernel.dk>
-References: <1454783624.2809.6.camel@HansenPartnership.com>
- <20160207092241.GA15331@lst.de>
- <1454861040.2329.4.camel@HansenPartnership.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH] Separate target visibility from reaped state
+ information
+Date: Sun, 7 Feb 2016 23:48:28 +0100
+Message-ID: <20160207234828.0000708e@localhost>
+References: <568FE922.9090004@sandisk.com>
+	<yq1oachqehs.fsf@sermon.lab.mkp.net>
+	<1453251809.2320.56.camel@HansenPartnership.com>
+	<20160131185455.00000ef7@localhost>
+	<yq160y7q5ku.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:34103 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754607AbcBGW25 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Feb 2016 17:28:57 -0500
-Received: by mail-pf0-f174.google.com with SMTP id o185so99256493pfb.1
-        for <linux-scsi@vger.kernel.org>; Sun, 07 Feb 2016 14:28:57 -0800 (PST)
-In-Reply-To: <1454861040.2329.4.camel@HansenPartnership.com>
+Received: from mout.gmx.net ([212.227.15.19]:50501 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752807AbcBGWss (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Feb 2016 17:48:48 -0500
+In-Reply-To: <yq160y7q5ku.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>
-Cc: "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
 
-On 02/07/2016 09:04 AM, James Bottomley wrote:
-> On Sun, 2016-02-07 at 10:22 +0100, Christoph Hellwig wrote:
->> Keith said it should be on by default, and I promised him to change
->> it once we run into problems, which I guess this counts as.
->>
->> But just curious:  what distro are you using?  Upstream systemd
->> explicitly rejected using scsi_id for NVMe here:
->>
->> 	https://github.com/systemd/systemd/issues/1453
->>
->> and all my test systems don't do this either.
->
-> This was SUSE (in my case, openSUSE Leap).  I just checked the source
-> package; they patch the by-id rules back in for NVME:
->
-> # PATCH-FIX-SUSE 1101-rules-persistent-device-names-for-NVMe-devices.patch (bsc#944132)
-> Patch1101:      1101-rules-persistent-device-names-for-NVMe-devices.patch
->
-> The bugzilla is giving access denied for bug id 944132, so it's likely
-> some proprietary vendor problem.  The patch has no preamble, so it's
-> hard to tell what they were thinking.
+Martin K. Petersen wrote:
+> >>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
+> 
+> >> The only change from the current workflow is that the DEL transition
+> >> (now the reaped flag) is done before the spin lock is dropped which
+> >> would fix a tiny window for two threads both trying to remove the
+> >> same target, but there's nothing that could possibly fix an iterative
+> >> soft lockup caused by restarting the loop, which is what the
+> >> changelog says.
+> 
+> Sebastian> James, Martin, what's the status of this patch?  I still hit
+> Sebastian> the reported soft lockup on 4.5-rc1.
+> 
+> And you have verified that Bart's patch applied on top of 4.5-rc1 still
+> fixes the lockup? (I know you tested a previous version)
 
-I run root-on-nvme on my laptop, and I haven't observed any problems. 
-Generally I hate for options to default y unless absolutely necessary, 
-it's a sure fire way to feature creep your kernel without noticing. I 
-don't think getting all hot about this issue is fair, if the only known 
-case is suse.
+I now have verified that Bart's patch does fix my soft lockup on 4.5-rc2.
 
-If anything, let's make the description better. It's trying to be funny, 
-it'd be better if it was descriptive and covered this case as well.
-
--- 
-Jens Axboe
-
+Sebastian
