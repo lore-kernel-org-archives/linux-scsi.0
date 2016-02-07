@@ -1,114 +1,166 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 3/5] target: Fix TAS handling for multi-session se_node_acls
-Date: Sun,  7 Feb 2016 03:18:00 +0000
-Message-ID: <1454815082-15380-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v4 2/5] target: Fix LUN_RESET active TMR descriptor handling
+Date: Sun,  7 Feb 2016 03:17:59 +0000
+Message-ID: <1454815082-15380-3-git-send-email-nab@daterainc.com>
 References: <1454815082-15380-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:33442 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbcBGDVO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Feb 2016 22:21:14 -0500
+Received: by mail-ob0-f180.google.com with SMTP id is5so119288045obc.0
+        for <linux-scsi@vger.kernel.org>; Sat, 06 Feb 2016 19:21:13 -0800 (PST)
 In-Reply-To: <1454815082-15380-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a bug in TMR task aborted status (TAS)
-handling when multiple sessions are connected to the
-same target WWPN endpoint and se_node_acl descriptor,
-resulting in TASK_ABORTED status to not be generated
-for aborted se_cmds on the remote port.
+This patch fixes a NULL pointer se_cmd->cmd_kref < 0
+refcount bug during TMR LUN_RESET with active TMRs,
+triggered during se_cmd + se_tmr_req descriptor
+shutdown + release via core_tmr_drain_tmr_list().
 
-This is due to core_tmr_handle_tas_abort() incorrectly
-comparing se_node_acl instead of se_session, for which
-the multi-session case is expected to be sharing the
-same se_node_acl.
+To address this bug, go ahead and obtain a local
+kref_get_unless_zero(&se_cmd->cmd_kref) for active I/O
+to set CMD_T_ABORTED, and transport_wait_for_tasks()
+followed by the final target_put_sess_cmd() to drop
+the local ->cmd_kref.
 
-Instead, go ahead and update core_tmr_handle_tas_abort()
-to compare tmr_sess + cmd->se_sess in order to determine
-if the LUN_RESET was received on a different I_T nexus,
-and TASK_ABORTED status response needs to be generated.
+Also add two new checks within target_tmr_work() to
+avoid CMD_T_ABORTED -> TFO->queue_tm_rsp() callbacks
+ahead of invoking the backend -> fabric put in
+transport_cmd_check_stop_to_fabric().
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
+For good measure, also change core_tmr_release_req()
+to use list_del_init() ahead of se_tmr_req memory
+free.
+
+Reviewed-by: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Andy Grover <agrover@redhat.com>
 Cc: Mike Christie <mchristi@redhat.com>
 Cc: stable@vger.kernel.org # 3.10+
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tmr.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/target/target_core_tmr.c       | 22 +++++++++++++++++++++-
+ drivers/target/target_core_transport.c | 17 +++++++++++++++++
+ 2 files changed, 38 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 072af07..3e0d77a 100644
+index fb3decc..072af07 100644
 --- a/drivers/target/target_core_tmr.c
 +++ b/drivers/target/target_core_tmr.c
-@@ -76,7 +76,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
- }
+@@ -68,7 +68,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
  
- static void core_tmr_handle_tas_abort(
--	struct se_node_acl *tmr_nacl,
-+	struct se_session *tmr_sess,
- 	struct se_cmd *cmd,
- 	int tas)
- {
-@@ -84,7 +84,7 @@ static void core_tmr_handle_tas_abort(
- 	/*
- 	 * TASK ABORTED status (TAS) bit support
- 	 */
--	if ((tmr_nacl && (tmr_nacl != cmd->se_sess->se_node_acl)) && tas) {
-+	if (tmr_sess && tmr_sess != cmd->se_sess && tas) {
- 		remove = false;
- 		transport_send_task_abort(cmd);
+ 	if (dev) {
+ 		spin_lock_irqsave(&dev->se_tmr_lock, flags);
+-		list_del(&tmr->tmr_list);
++		list_del_init(&tmr->tmr_list);
+ 		spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
  	}
-@@ -273,7 +273,7 @@ static void core_tmr_drain_tmr_list(
- static void core_tmr_drain_state_list(
- 	struct se_device *dev,
- 	struct se_cmd *prout_cmd,
--	struct se_node_acl *tmr_nacl,
-+	struct se_session *tmr_sess,
- 	int tas,
+ 
+@@ -194,9 +194,11 @@ static void core_tmr_drain_tmr_list(
  	struct list_head *preempt_and_abort_list)
  {
-@@ -364,7 +364,7 @@ static void core_tmr_drain_state_list(
- 		cancel_work_sync(&cmd->work);
- 		transport_wait_for_tasks(cmd);
+ 	LIST_HEAD(drain_tmr_list);
++	struct se_session *sess;
+ 	struct se_tmr_req *tmr_p, *tmr_pp;
+ 	struct se_cmd *cmd;
+ 	unsigned long flags;
++	bool rc;
+ 	/*
+ 	 * Release all pending and outgoing TMRs aside from the received
+ 	 * LUN_RESET tmr..
+@@ -222,17 +224,31 @@ static void core_tmr_drain_tmr_list(
+ 		if (target_check_cdb_and_preempt(preempt_and_abort_list, cmd))
+ 			continue;
  
--		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas);
-+		core_tmr_handle_tas_abort(tmr_sess, cmd, tas);
- 		target_put_sess_cmd(cmd);
++		sess = cmd->se_sess;
++		if (WARN_ON_ONCE(!sess))
++			continue;
++
++		spin_lock(&sess->sess_cmd_lock);
+ 		spin_lock(&cmd->t_state_lock);
+ 		if (!(cmd->transport_state & CMD_T_ACTIVE)) {
+ 			spin_unlock(&cmd->t_state_lock);
++			spin_unlock(&sess->sess_cmd_lock);
+ 			continue;
+ 		}
+ 		if (cmd->t_state == TRANSPORT_ISTATE_PROCESSING) {
+ 			spin_unlock(&cmd->t_state_lock);
++			spin_unlock(&sess->sess_cmd_lock);
+ 			continue;
+ 		}
++		cmd->transport_state |= CMD_T_ABORTED;
+ 		spin_unlock(&cmd->t_state_lock);
+ 
++		rc = kref_get_unless_zero(&cmd->cmd_kref);
++		spin_unlock(&sess->sess_cmd_lock);
++		if (!rc) {
++			printk("LUN_RESET TMR: non-zero kref_get_unless_zero\n");
++			continue;
++		}
+ 		list_move_tail(&tmr_p->tmr_list, &drain_tmr_list);
+ 	}
+ 	spin_unlock_irqrestore(&dev->se_tmr_lock, flags);
+@@ -246,7 +262,11 @@ static void core_tmr_drain_tmr_list(
+ 			(preempt_and_abort_list) ? "Preempt" : "", tmr_p,
+ 			tmr_p->function, tmr_p->response, cmd->t_state);
+ 
++		cancel_work_sync(&cmd->work);
++		transport_wait_for_tasks(cmd);
++
+ 		transport_cmd_finish_abort(cmd, 1);
++		target_put_sess_cmd(cmd);
  	}
  }
-@@ -377,6 +377,7 @@ int core_tmr_lun_reset(
- {
- 	struct se_node_acl *tmr_nacl = NULL;
- 	struct se_portal_group *tmr_tpg = NULL;
-+	struct se_session *tmr_sess = NULL;
- 	int tas;
-         /*
- 	 * TASK_ABORTED status bit, this is configurable via ConfigFS
-@@ -395,8 +396,9 @@ int core_tmr_lun_reset(
- 	 * or struct se_device passthrough..
- 	 */
- 	if (tmr && tmr->task_cmd && tmr->task_cmd->se_sess) {
--		tmr_nacl = tmr->task_cmd->se_sess->se_node_acl;
--		tmr_tpg = tmr->task_cmd->se_sess->se_tpg;
-+		tmr_sess = tmr->task_cmd->se_sess;
-+		tmr_nacl = tmr_sess->se_node_acl;
-+		tmr_tpg = tmr_sess->se_tpg;
- 		if (tmr_nacl && tmr_tpg) {
- 			pr_debug("LUN_RESET: TMR caller fabric: %s"
- 				" initiator port %s\n",
-@@ -409,7 +411,7 @@ int core_tmr_lun_reset(
- 		dev->transport->name, tas);
  
- 	core_tmr_drain_tmr_list(dev, tmr, preempt_and_abort_list);
--	core_tmr_drain_state_list(dev, prout_cmd, tmr_nacl, tas,
-+	core_tmr_drain_state_list(dev, prout_cmd, tmr_sess, tas,
- 				preempt_and_abort_list);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index af52f8b..94e372a 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2900,8 +2900,17 @@ static void target_tmr_work(struct work_struct *work)
+ 	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_tmr_req *tmr = cmd->se_tmr_req;
++	unsigned long flags;
+ 	int ret;
  
- 	/*
++	spin_lock_irqsave(&cmd->t_state_lock, flags);
++	if (cmd->transport_state & CMD_T_ABORTED) {
++		tmr->response = TMR_FUNCTION_REJECTED;
++		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++		goto check_stop;
++	}
++	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++
+ 	switch (tmr->function) {
+ 	case TMR_ABORT_TASK:
+ 		core_tmr_abort_task(dev, tmr, cmd->se_sess);
+@@ -2934,9 +2943,17 @@ static void target_tmr_work(struct work_struct *work)
+ 		break;
+ 	}
+ 
++	spin_lock_irqsave(&cmd->t_state_lock, flags);
++	if (cmd->transport_state & CMD_T_ABORTED) {
++		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++		goto check_stop;
++	}
+ 	cmd->t_state = TRANSPORT_ISTATE_PROCESSING;
++	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++
+ 	cmd->se_tfo->queue_tm_rsp(cmd);
+ 
++check_stop:
+ 	transport_cmd_check_stop_to_fabric(cmd);
+ }
+ 
 -- 
 1.9.1
+
