@@ -1,121 +1,176 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [mpt3sas driver 06/10] mpt3sas: Added smp_affinity_enable module
- parameter.
-Date: Mon, 8 Feb 2016 13:38:27 +0100
-Message-ID: <56B88C43.2070904@redhat.com>
-References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
- <1453963027-19770-7-git-send-email-suganath-prabu.subramani@avagotech.com>
- <56B367B5.5030001@redhat.com>
- <CA+RiK65WEot9z4H6M-9PEuCT0U7uMcwvVFskoQU1XBYLwdev+w@mail.gmail.com>
+Subject: Re: [PATCH 1/2] megaraid_sas: Fix for IO failing post OCR in SRIOV
+ environment
+Date: Mon, 8 Feb 2016 13:57:03 +0100
+Message-ID: <56B8909F.90006@redhat.com>
+References: <1453995866-25097-1-git-send-email-sumit.saxena@avagotech.com>
+ <1453995866-25097-2-git-send-email-sumit.saxena@avagotech.com>
+ <56AB9083.5060304@redhat.com>
+ <a0b3432aef90520fb4989748238b9565@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+RiK65WEot9z4H6M-9PEuCT0U7uMcwvVFskoQU1XBYLwdev+w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>, JBottomley@parallels.com, jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Krishnaraddi Mankani <krishnaraddi.mankani@avagotech.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "Elliott, Robert (Server Storage)" <elliott@hp.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41500 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbcBHM5H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 07:57:07 -0500
+In-Reply-To: <a0b3432aef90520fb4989748238b9565@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@broadcom.com>, Sumit Saxena <sumit.saxena@avagotech.com>, jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, Uday Lingala <uday.lingala@avagotech.com>
 
-On 8.2.2016 07:01, Suganath Prabu Subramani wrote:
-> Hi Tomas,
-> Initially, we posted this patch with "zalloc_cpumassk_var" and Robert
-> has suggested to use "alloc_cpumask_var". Please check the below link.
-> "http://www.gossamer-threads.com/lists/linux/kernel/2068280?do=post_view_threaded#2068280"
-
-That thread is about allocating more than KMALLOC_MAX_SIZE with a kmalloc,
-it doesn't matter if it is a kzalloc or kmalloc.
-
-If that is an issue in mpt3sas, in your code fails already here when !CONFIG_CPUMASK_OFFSTACK
-
-        reply_q =  kzalloc(sizeof(struct adapter_reply_queue), GFP_KERNEL);
-....
-Good news is that the the size allocated in your case is much smaller than what
-the lpfc tried at that time, (it used a struct with struct cpumask  maskbits;
-and multiplied it with nr_cpus) -> this is not your case.
-You can use that zalloc_cpumask_var.
-
---tm
-
->
-> We incorporated other review comments for freeing reply_q and
-> cpumask_var in this patch and sending it soon.
->
-> Thanks,
-> Suganath prabu S
->
-> On Thu, Feb 4, 2016 at 8:31 PM, Tomas Henzl <thenzl@redhat.com> wrote:
->> On 28.1.2016 07:37, Suganath prabu Subaramani wrote:
->>> From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+On 5.2.2016 13:24, Sumit Saxena wrote:
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com]
+>> Sent: Friday, January 29, 2016 9:47 PM
+>> To: Sumit Saxena; jbottomley@parallels.com; hch@infradead.org;
+>> martin.petersen@oracle.com
+>> Cc: linux-scsi@vger.kernel.org; kashyap.desai@avagotech.com; Uday
+> Lingala
+>> Subject: Re: [PATCH 1/2] megaraid_sas: Fix for IO failing post OCR in
+> SRIOV
+>> environment
+>>
+>> On 28.1.2016 16:44, Sumit Saxena wrote:
+>>> Driver assumes that VFs always have peers present whenever they have
+> same
+>> LD IDs. But this is not the case.
+>>> This patch handles the above mentioned by explicitly checking for a
+> peer
+>> before making HA/non-HA path decision.
+>>> Signed-off-by: Uday Lingala <uday.lingala@avagotech.com>
+>>> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 >>>
->>> Module parameter to enable/disable configuring
->>> affinity hint for msix vector.
->>> SMP affinity feature can be enabled/disabled by setting
->>> module parameter "smp_affinity_enable" to 1/0.
->>> By default this feature is enabled. (smp_affinity_enable = 1 enabled).
->>>
->>> Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
->>> Signed-off-by: Chaitra P B <chaitra.basappa@avagotech.com>
 >>> ---
->>>  drivers/scsi/mpt3sas/mpt3sas_base.c | 34 +++++++++++++++++++++++-----------
->>>  1 file changed, 23 insertions(+), 11 deletions(-)
+>>>  drivers/scsi/megaraid/megaraid_sas.h        | 13 ++++++---
+>>>  drivers/scsi/megaraid/megaraid_sas_base.c   |  6 +++--
+>>>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 42
+>>> ++++++++++++++++++-----------
+>>>  3 files changed, 39 insertions(+), 22 deletions(-)
 >>>
->>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
->>> index 31838d9a..a1a3b39 100644
->>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->>> @@ -83,6 +83,10 @@ static int msix_disable = -1;
->>>  module_param(msix_disable, int, 0);
->>>  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
+>>> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+>>> b/drivers/scsi/megaraid/megaraid_sas.h
+>>> index b6fdb48..4484e63 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_sas.h
+>>> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+>>> @@ -393,6 +393,7 @@ enum MR_EVT_ARGS {
 >>>
->>> +static int smp_affinity_enable = 1;
->>> +module_param(smp_affinity_enable, int, S_IRUGO);
->>> +MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Default: enable(1)");
+>>>
+>>>  #define SGE_BUFFER_SIZE	4096
+>>> +#define MEGASAS_CLUSTER_ID_SIZE	16
+>>>  /*
+>>>   * define constants for device list query options
+>>>   */
+>>> @@ -1227,7 +1228,8 @@ struct megasas_ctrl_info {
+>>>  	*/
+>>>  	struct {
+>>>  #if defined(__BIG_ENDIAN_BITFIELD)
+>>> -		u32     reserved:26;
+>>> +		u32     reserved:25;
+>>> +		u32     passive:1;
+>>>  		u32     premiumFeatureMismatch:1;
+>>>  		u32     ctrlPropIncompatible:1;
+>>>  		u32     fwVersionMismatch:1;
+>>> @@ -1241,11 +1243,12 @@ struct megasas_ctrl_info {
+>>>  		u32     fwVersionMismatch:1;
+>>>  		u32     ctrlPropIncompatible:1;
+>>>  		u32     premiumFeatureMismatch:1;
+>>> -		u32     reserved:26;
+>>> +		u32     passive:1;
+>>> +		u32     reserved:25;
+>>>  #endif
+>>>  	} cluster;
+>>>
+>>> -	char clusterId[16];                     /*7D4h */
+>>> +	char clusterId[MEGASAS_CLUSTER_ID_SIZE]; /*0x7D4 */
+>>>  	struct {
+>>>  		u8  maxVFsSupported;            /*0x7E4*/
+>>>  		u8  numVFsEnabled;              /*0x7E5*/
+>>> @@ -2126,7 +2129,9 @@ struct megasas_instance {
+>>>  	char skip_heartbeat_timer_del;
+>>>  	u8 requestorId;
+>>>  	char PlasmaFW111;
+>>> -	char mpio;
+>>> +	char clusterId[MEGASAS_CLUSTER_ID_SIZE];
+>>> +	u8 peerIsPresent;
+>>> +	u8 passive;
+>>>  	u16 throttlequeuedepth;
+>>>  	u8 mask_interrupts;
+>>>  	u16 max_chain_frame_sz;
+>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> index 54922e5..52f3419 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> @@ -1943,7 +1943,7 @@ void megaraid_sas_kill_hba(struct
+>> megasas_instance *instance)
+>>>  		writel(MFI_STOP_ADP, &instance->reg_set->doorbell);
+>>>  		/* Flush */
+>>>  		readl(&instance->reg_set->doorbell);
+>>> -		if (instance->mpio && instance->requestorId)
+>>> +		if (instance->requestorId && instance->peerIsPresent)
+>>>  			memset(instance->ld_ids, 0xff,
+>> MEGASAS_MAX_LD_IDS);
+>>>  	} else {
+>>>  		writel(MFI_STOP_ADP,
+>>> @@ -5182,7 +5182,9 @@ static int megasas_init_fw(struct
+>>> megasas_instance *instance)
+>>>
+>>>  	tmp_sectors = min_t(u32, max_sectors_1, max_sectors_2);
+>>>
+>>> -	instance->mpio = ctrl_info->adapterOperations2.mpio;
+>>> +	instance->peerIsPresent = ctrl_info->cluster.peerIsPresent;
+>>> +	instance->passive = ctrl_info->cluster.passive;
+>>> +	memcpy(instance->clusterId, ctrl_info->clusterId,
+>>> +sizeof(instance->clusterId));
+>>>  	instance->UnevenSpanSupport =
+>>>  		ctrl_info->adapterOperations2.supportUnevenSpans;
+>>>  	if (instance->UnevenSpanSupport) {
+>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> index be9c3f1..d9d0029 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> @@ -3325,27 +3325,37 @@ out:
+>>>  	return ret;
+>>>  }
+>>>
+>>> +/*SRIOV get other instance in cluster if any*/ struct
+>>> +megasas_instance *megasas_get_peer_instance(struct megasas_instance
+>>> +*instance) {
+>>> +	int i;
 >>> +
->>>  static int max_msix_vectors = -1;
->>>  module_param(max_msix_vectors, int, 0);
->>>  MODULE_PARM_DESC(max_msix_vectors,
->>> @@ -1812,8 +1816,10 @@ _base_free_irq(struct MPT3SAS_ADAPTER *ioc)
->>>
->>>       list_for_each_entry_safe(reply_q, next, &ioc->reply_queue_list, list) {
->>>               list_del(&reply_q->list);
->>> -             irq_set_affinity_hint(reply_q->vector, NULL);
->>> -             free_cpumask_var(reply_q->affinity_hint);
->>> +             if (smp_affinity_enable) {
->>> +                     irq_set_affinity_hint(reply_q->vector, NULL);
->>> +                     free_cpumask_var(reply_q->affinity_hint);
->>> +             }
->>>               synchronize_irq(reply_q->vector);
->>>               free_irq(reply_q->vector, reply_q);
->>>               kfree(reply_q);
->>> @@ -1844,9 +1850,11 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
->>>       reply_q->msix_index = index;
->>>       reply_q->vector = vector;
->>>
->>> -     if (!alloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
->>> -             return -ENOMEM;
->>> -     cpumask_clear(reply_q->affinity_hint);
->>> +     if (smp_affinity_enable) {
->>> +             if (!alloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
->> a kfree(reply_q); should go here
->>
->>> +                     return -ENOMEM;
->>> +             cpumask_clear(reply_q->affinity_hint);
->> maybe zalloc_cpumask_var ?
->>
->>> +     }
->>         if (r) {
->>                 pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
->>                     reply_q->name, vector);
->>                 kfree(reply_q);
->> and a  free_cpumask_var (..)  here ?
->>                 return -EBUSY;
->>
->>
->> cheers,
->> tomash
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> +	for (i = 0; i < MAX_MGMT_ADAPTERS; i++) {
+>>> +		if (megasas_mgmt_info.instance[i] &&
+>>> +			(megasas_mgmt_info.instance[i] != instance) &&
+>>> +			 megasas_mgmt_info.instance[i]->requestorId &&
+>>> +			 megasas_mgmt_info.instance[i]->peerIsPresent &&
+>>> +
+> (memcmp((megasas_mgmt_info.instance[i]->clusterId),
+>>> +			instance->clusterId, MEGASAS_CLUSTER_ID_SIZE) ==
+> 0))
+>>> +			return megasas_mgmt_info.instance[i];
+>>> +	}
+>>> +	return NULL;
+>>> +}
+>>> +
+>>>  /* Check for a second path that is currently UP */  int
+>>> megasas_check_mpio_paths(struct megasas_instance *instance,
+>>>  	struct scsi_cmnd *scmd)
+>>>  {
+>>> -	int i, j, retval = (DID_RESET << 16);
+>>> -
+>>> -	if (instance->mpio && instance->requestorId) {
+>> Seems to me that you've removed this test (instance->requestorId) maybe
+> it is
+>> not needed, is it removed intentionally ?
+> Sorry for delay in response. This is removed intentionally.
+
+ok, thanks,
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Tomas
+
