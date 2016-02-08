@@ -1,45 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: T10 adds locally assigned UUID designation descriptor
-Date: Mon, 08 Feb 2016 11:00:00 -0800
-Message-ID: <1454958000.2543.39.camel@HansenPartnership.com>
-References: <56B8D14D.7020502@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54298 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750922AbcBHTAF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Feb 2016 14:00:05 -0500
-In-Reply-To: <56B8D14D.7020502@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v4 0/2] add support for DWC UFS Controller
+Date: Mon,  8 Feb 2016 19:07:49 +0000
+Message-ID: <cover.1454957580.git.jpinto@synopsys.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, mark.rutland@arm.com
+Cc: gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2016-02-08 at 12:33 -0500, Douglas Gilbert wrote:
-> Recently, in draft spc5r08, T10 added a locally assigned RFC 4122
-> UUID *** designation descriptor. That descriptor can now be
-> returned for VPD page 0x83 (device identification) amongst others.
-> It can be used anywhere SCSI needs a unique identifier expanding
-> the previous set of preferred identifiers: EUI, NAA and SCSI_name
-> (iSCSI).
-> 
-> In the soon to be released sg3_utils version 1.42 the new UUID
-> designation descriptor is decoded including Hannes' --export
-> option found in sg_inq, for example:
-> 
-> # sg_inq --export /dev/sg0
->    ...
->    SCSI_IDENT_LUN_UUID=11223344-5566-7788-aabb-ccddeeffffee
-> 
-> Perhaps some udev work is needed to incorporate this new identifier.
+The work consisted of:
+- Fixed typo in ufshcd-pltfrm.c
+- Tweak ufshcd.c for UFS 2.0 support
+- Implement ufshcd-dwc which contains all DWC HW specific code
+- Unipro attributes were added and new registers were added to the driver
+- Implement a ufs-dwc glue platform driver
+- Implement a ufs-dwc-pci glue pci driver
 
-Hm, we're going to have to do this carefully.  With the move to GPT
-partitions, both the UUID= designator in fstab and the /dev/disk/by
--uuid/ of udev means the GPT UUID.  In theory the design of the UUID
-space is to allow random selection without clashing, so we could just
-place the SCSI ones in here as well and perhaps there won't be a
-problem, but I'd like us to think about the consequences first.
+Joao Pinto (2):
+  fixed typo in ufshcd-pltfrm
+  add support for DWC UFS Host Controller
 
-James
+ Documentation/devicetree/bindings/ufs/ufs-dwc.txt |  17 +
+ MAINTAINERS                                       |   6 +
+ drivers/scsi/ufs/Kconfig                          |  50 ++
+ drivers/scsi/ufs/Makefile                         |   3 +
+ drivers/scsi/ufs/ufs-dwc-pci.c                    | 180 +++++
+ drivers/scsi/ufs/ufs-dwc.c                        | 102 +++
+ drivers/scsi/ufs/ufshcd-dwc.c                     | 768 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd-dwc.h                     |  26 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c                  |   2 +-
+ drivers/scsi/ufs/ufshcd.c                         |  61 +-
+ drivers/scsi/ufs/ufshcd.h                         |  22 +
+ drivers/scsi/ufs/ufshci-dwc.h                     |  42 ++
+ drivers/scsi/ufs/ufshci.h                         |   1 +
+ drivers/scsi/ufs/unipro.h                         |  39 ++
+ 14 files changed, 1300 insertions(+), 19 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+ create mode 100644 drivers/scsi/ufs/ufs-dwc-pci.c
+ create mode 100644 drivers/scsi/ufs/ufs-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
+ create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
 
+-- 
+1.8.1.5
