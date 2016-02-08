@@ -1,51 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111381] mvsas 0.8.16 on Marvell 88SE9485 reports timeouts on
- load
-Date: Mon, 08 Feb 2016 17:24:58 +0000
-Message-ID: <bug-111381-11613-t2UaehqXX4@https.bugzilla.kernel.org/>
-References: <bug-111381-11613@https.bugzilla.kernel.org/>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: T10 adds locally assigned UUID designation descriptor
+Date: Mon, 8 Feb 2016 12:33:01 -0500
+Message-ID: <56B8D14D.7020502@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49647 "EHLO mail.kernel.org"
+Received: from smtp.infotech.no ([82.134.31.41]:60941 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751653AbcBHRZB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Feb 2016 12:25:01 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 670C320034
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Feb 2016 17:25:00 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id BCDD7203DF
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Feb 2016 17:24:58 +0000 (UTC)
-In-Reply-To: <bug-111381-11613@https.bugzilla.kernel.org/>
+	id S1753345AbcBHRdI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 12:33:08 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id 3ED1220418F
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Feb 2016 18:33:05 +0100 (CET)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id TMahS1ON-6LN for <linux-scsi@vger.kernel.org>;
+	Mon,  8 Feb 2016 18:33:03 +0100 (CET)
+Received: from [192.168.48.86] (host-45-58-206-50.dyn.295.ca [45.58.206.50])
+	by smtp.infotech.no (Postfix) with ESMTPA id EB8FC2040AD
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Feb 2016 18:33:02 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111381
+Recently, in draft spc5r08, T10 added a locally assigned RFC 4122
+UUID *** designation descriptor. That descriptor can now be
+returned for VPD page 0x83 (device identification) amongst others.
+It can be used anywhere SCSI needs a unique identifier expanding
+the previous set of preferred identifiers: EUI, NAA and SCSI_name
+(iSCSI).
 
---- Comment #4 from Gabriel A. Devenyi <gdevenyi@gmail.com> ---
-After much more research and reading, I believe I've found the root issue
-causing the communication timeouts to the disks. I have not changed any cables
-(other than reseating everything).
+In the soon to be released sg3_utils version 1.42 the new UUID
+designation descriptor is decoded including Hannes' --export
+option found in sg_inq, for example:
 
-I came across several reports of marvell (mvsas) controllers randomly causing
-issues with load, which mentioned SMART.
+# sg_inq --export /dev/sg0
+   ...
+   SCSI_IDENT_LUN_UUID=11223344-5566-7788-aabb-ccddeeffffee
 
-http://www.spinics.net/lists/linux-ide/msg50075.html
-https://bugzilla.kernel.org/show_bug.cgi?id=42679
+Perhaps some udev work is needed to incorporate this new identifier.
 
-So I decided to stop smartd and try my load tests.
+Doug Gilbert
 
-I have now gone through three iterations of high-load zfs scrubs along with
-iotest.sh hammering the array simultaneously with no timeouts or communications
-issues. I believe this indicates some issue with the driver/controller/disks
-handling smart commands during load.
-
-Do you have any recommendations as how I can test this further? Is there any
-debug info I can provide?
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+** see  https://en.wikipedia.org/wiki/Universally_unique_identifier
