@@ -1,90 +1,207 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/23] scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
-Date: Mon,  8 Feb 2016 15:34:41 +0100
-Message-ID: <1454942086-128704-19-git-send-email-hare@suse.de>
+Subject: [PATCH 16/23] scsi_dh_alua: Recheck state on unit attention
+Date: Mon,  8 Feb 2016 15:34:39 +0100
+Message-ID: <1454942086-128704-17-git-send-email-hare@suse.de>
 References: <1454942086-128704-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42714 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42711 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753560AbcBHOey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753540AbcBHOey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 8 Feb 2016 09:34:54 -0500
 In-Reply-To: <1454942086-128704-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Sending a 'REPORT TARGET PORT GROUP' command is a costly operation,
-as the array has to gather information about all ports.
-So instead of using RTPG to poll for a status update when a port
-is in transitioning we should be sending a TEST UNIT READY, and
-wait for the sense code to report success.
+When we receive a unit attention code of 'ALUA state changed'
+we should recheck the state, as it might be due to an implicit
+ALUA state transition. This allows us to return NEEDS_RETRY
+instead of ADD_TO_MLQUEUE, allowing to terminate the retries
+after a certain time.
+At the same time a workqueue item might already be queued, which
+should be started immediately to avoid any delays.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 38 ++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 76 +++++++++++++++++++++++++-----
+ 1 file changed, 64 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index de8e79e..a1db82f 100644
+index f6bb1c0..8a896af 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -466,6 +466,30 @@ static int alua_check_sense(struct scsi_device *sdev,
+@@ -120,7 +120,8 @@ struct alua_queue_data {
+ static void alua_rtpg_work(struct work_struct *work);
+ static void alua_rtpg_queue(struct alua_port_group *pg,
+ 			    struct scsi_device *sdev,
+-			    struct alua_queue_data *qdata);
++			    struct alua_queue_data *qdata, bool force);
++static void alua_check(struct scsi_device *sdev, bool force);
+ 
+ static void release_port_group(struct kref *kref)
+ {
+@@ -368,7 +369,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 	}
+ 	if (sdev->synchronous_alua)
+ 		pg->flags |= ALUA_SYNC_STPG;
+-	alua_rtpg_queue(h->pg, sdev, NULL);
++	alua_rtpg_queue(h->pg, sdev, NULL, true);
+ 	spin_unlock(&h->pg_lock);
+ 
+ 	if (old_pg)
+@@ -404,18 +405,24 @@ static int alua_check_sense(struct scsi_device *sdev,
+ {
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a)
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
+ 			/*
+ 			 * LUN Not Accessible - ALUA state transition
+ 			 */
+-			return ADD_TO_MLQUEUE;
++			alua_check(sdev, false);
++			return NEEDS_RETRY;
++		}
+ 		break;
+ 	case UNIT_ATTENTION:
+-		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
++		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
+ 			/*
+-			 * Power On, Reset, or Bus Device Reset, just retry.
++			 * Power On, Reset, or Bus Device Reset.
++			 * Might have obscured a state transition,
++			 * so schedule a recheck.
+ 			 */
++			alua_check(sdev, true);
+ 			return ADD_TO_MLQUEUE;
++		}
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
+ 			/*
+ 			 * Device internal reset
+@@ -426,16 +433,20 @@ static int alua_check_sense(struct scsi_device *sdev,
+ 			 * Mode Parameters Changed
+ 			 */
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
++		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
+ 			/*
+ 			 * ALUA state changed
+ 			 */
++			alua_check(sdev, true);
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07)
++		}
++		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
+ 			/*
+ 			 * Implicit ALUA state transition failed
+ 			 */
++			alua_check(sdev, true);
+ 			return ADD_TO_MLQUEUE;
++		}
+ 		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
+ 			/*
+ 			 * Inquiry data has changed
+@@ -710,7 +721,7 @@ static void alua_rtpg_work(struct work_struct *work)
+ 		spin_unlock_irqrestore(&pg->lock, flags);
+ 		err = alua_rtpg(sdev, pg);
+ 		spin_lock_irqsave(&pg->lock, flags);
+-		if (err == SCSI_DH_RETRY) {
++		if (err == SCSI_DH_RETRY || pg->flags & ALUA_PG_RUN_RTPG) {
+ 			pg->flags &= ~ALUA_PG_RUNNING;
+ 			pg->flags |= ALUA_PG_RUN_RTPG;
+ 			spin_unlock_irqrestore(&pg->lock, flags);
+@@ -726,7 +737,7 @@ static void alua_rtpg_work(struct work_struct *work)
+ 		spin_unlock_irqrestore(&pg->lock, flags);
+ 		err = alua_stpg(sdev, pg);
+ 		spin_lock_irqsave(&pg->lock, flags);
+-		if (err == SCSI_DH_RETRY) {
++		if (err == SCSI_DH_RETRY || pg->flags & ALUA_PG_RUN_RTPG) {
+ 			pg->flags |= ALUA_PG_RUN_RTPG;
+ 			pg->interval = 0;
+ 			pg->flags &= ~ALUA_PG_RUNNING;
+@@ -756,7 +767,7 @@ static void alua_rtpg_work(struct work_struct *work)
+ 
+ static void alua_rtpg_queue(struct alua_port_group *pg,
+ 			    struct scsi_device *sdev,
+-			    struct alua_queue_data *qdata)
++			    struct alua_queue_data *qdata, bool force)
+ {
+ 	int start_queue = 0;
+ 	unsigned long flags;
+@@ -769,6 +780,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+ 	if (qdata) {
+ 		list_add_tail(&qdata->entry, &pg->rtpg_list);
+ 		pg->flags |= ALUA_PG_RUN_STPG;
++		force = true;
+ 	}
+ 	if (pg->rtpg_sdev == NULL) {
+ 		pg->interval = 0;
+@@ -777,7 +789,15 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+ 		pg->rtpg_sdev = sdev;
+ 		scsi_device_get(sdev);
+ 		start_queue = 1;
++	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force) {
++		pg->flags |= ALUA_PG_RUN_RTPG;
++		/* Do not queue if the worker is already running */
++		if (!(pg->flags & ALUA_PG_RUNNING)) {
++			kref_get(&pg->kref);
++			start_queue = 1;
++		}
+ 	}
++
+ 	if (pg->flags & ALUA_SYNC_STPG)
+ 		alua_wq = kaluad_sync_wq;
+ 	spin_unlock_irqrestore(&pg->lock, flags);
+@@ -892,7 +912,7 @@ static int alua_activate(struct scsi_device *sdev,
+ 	rcu_read_unlock();
+ 	mutex_unlock(&h->init_mutex);
+ 
+-	alua_rtpg_queue(pg, sdev, qdata);
++	alua_rtpg_queue(pg, sdev, qdata, true);
+ 	kref_put(&pg->kref, release_port_group);
+ out:
+ 	if (fn)
+@@ -901,6 +921,38 @@ out:
  }
  
  /*
-+ * alua_tur - Send a TEST UNIT READY
-+ * @sdev: device to which the TEST UNIT READY command should be send
++ * alua_check - check path status
++ * @sdev: device on the path to be checked
 + *
-+ * Send a TEST UNIT READY to @sdev to figure out the device state
-+ * Returns SCSI_DH_RETRY if the sense code is NOT READY/ALUA TRANSITIONING,
-+ * SCSI_DH_OK if no error occurred, and SCSI_DH_IO otherwise.
++ * Check the device status
 + */
-+static int alua_tur(struct scsi_device *sdev)
++static void alua_check(struct scsi_device *sdev, bool force)
 +{
-+	struct scsi_sense_hdr sense_hdr;
-+	int retval;
++	struct alua_dh_data *h = sdev->handler_data;
++	struct alua_port_group *pg;
 +
-+	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
-+				      ALUA_FAILOVER_RETRIES, &sense_hdr);
-+	if (sense_hdr.sense_key == NOT_READY &&
-+	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
-+		return SCSI_DH_RETRY;
-+	else if (retval)
-+		return SCSI_DH_IO;
-+	else
-+		return SCSI_DH_OK;
++	/*
++	 * This is run asynchronously, and might race with
++	 * alua_initialize() which provides the same functionality.
++	 * So skip it if alua_initialize() is running.
++	 */
++	if (!mutex_trylock(&h->init_mutex))
++		return;
++	rcu_read_lock();
++	pg = rcu_dereference(h->pg);
++	if (!pg || !kref_get_unless_zero(&pg->kref)) {
++		rcu_read_unlock();
++		mutex_unlock(&h->init_mutex);
++		return;
++	}
++	rcu_read_unlock();
++	mutex_unlock(&h->init_mutex);
++
++	alua_rtpg_queue(pg, sdev, NULL, force);
++	kref_put(&pg->kref, release_port_group);
 +}
 +
 +/*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
+  * alua_prep_fn - request callback
   *
-@@ -735,8 +759,22 @@ static void alua_rtpg_work(struct work_struct *work)
- 		alua_wq = kaluad_sync_wq;
- 	pg->flags |= ALUA_PG_RUNNING;
- 	if (pg->flags & ALUA_PG_RUN_RTPG) {
-+		int state = pg->state;
-+
- 		pg->flags &= ~ALUA_PG_RUN_RTPG;
- 		spin_unlock_irqrestore(&pg->lock, flags);
-+		if (state == TPGS_STATE_TRANSITIONING) {
-+			if (alua_tur(sdev) == SCSI_DH_RETRY) {
-+				spin_lock_irqsave(&pg->lock, flags);
-+				pg->flags &= ~ALUA_PG_RUNNING;
-+				pg->flags |= ALUA_PG_RUN_RTPG;
-+				spin_unlock_irqrestore(&pg->lock, flags);
-+				queue_delayed_work(alua_wq, &pg->rtpg_work,
-+						   pg->interval * HZ);
-+				return;
-+			}
-+			/* Send RTPG on failure or if TUR indicates SUCCESS */
-+		}
- 		err = alua_rtpg(sdev, pg);
- 		spin_lock_irqsave(&pg->lock, flags);
- 		if (err == SCSI_DH_RETRY || pg->flags & ALUA_PG_RUN_RTPG) {
+  * Fail I/O to all paths not in state
 -- 
 1.8.5.6
 
