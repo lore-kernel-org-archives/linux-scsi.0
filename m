@@ -1,106 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: complete boot failure in 4.5-rc1 caused by nvme: make SG_IO
- support optional
-Date: Mon, 08 Feb 2016 07:23:14 -0800
-Message-ID: <1454944994.2339.1.camel@HansenPartnership.com>
-References: <1454783624.2809.6.camel@HansenPartnership.com>
-	 <20160207092241.GA15331@lst.de>
-	 <1454861040.2329.4.camel@HansenPartnership.com>
-	 <56B7C527.6050300@kernel.dk>
-	 <1454886441.2329.27.camel@HansenPartnership.com> <56B8448A.3000106@suse.de>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH 3/3] add support for DWC UFS Host Controller
+Date: Mon, 8 Feb 2016 15:30:06 +0000
+Message-ID: <20160208153005.GB12536@leverpostej>
+References: <cover.1454498292.git.jpinto@synopsys.com>
+ <2072510.CA47OHQsUN@wuerfel>
+ <56B2164E.5060007@synopsys.com>
+ <2087303.0ORDEBS3hn@wuerfel>
+ <56B222C8.5010509@synopsys.com>
+ <20160204162700.GD17587@leverpostej>
+ <56B8B177.2050000@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56B8448A.3000106@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:33527 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754852AbcBHPag (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 10:30:36 -0500
+Content-Disposition: inline
+In-Reply-To: <56B8B177.2050000@synopsys.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, santosh.sy@samsung.com, h.vinayak@samsung.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
 
-On Mon, 2016-02-08 at 08:32 +0100, Hannes Reinecke wrote:
-> On 02/08/2016 12:07 AM, James Bottomley wrote:
-> > On Sun, 2016-02-07 at 15:28 -0700, Jens Axboe wrote:
-> > > On 02/07/2016 09:04 AM, James Bottomley wrote:
-> > > > On Sun, 2016-02-07 at 10:22 +0100, Christoph Hellwig wrote:
-> > > > > Keith said it should be on by default, and I promised him to
-> > > > > change
-> > > > > it once we run into problems, which I guess this counts as.
-> > > > > 
-> > > > > But just curious:  what distro are you using?  Upstream
-> > > > > systemd
-> > > > > explicitly rejected using scsi_id for NVMe here:
-> > > > > 
-> > > > > 	https://github.com/systemd/systemd/issues/1453
-> > > > > 
-> > > > > and all my test systems don't do this either.
-> > > > 
-> > > > This was SUSE (in my case, openSUSE Leap).  I just checked the
-> > > > source
-> > > > package; they patch the by-id rules back in for NVME:
-> > > > 
-> > > > # PATCH-FIX-SUSE 1101-rules-persistent-device-names-for-NVMe
-> > > > -devices.patch (bsc#944132)
-> > > > Patch1101:      1101-rules-persistent-device-names-for-NVMe
-> > > > -devices.patch
-> > > > 
-> > > > The bugzilla is giving access denied for bug id 944132, so it's
-> > > > likely
-> > > > some proprietary vendor problem.  The patch has no preamble, so
-> > > > it's
-> > > > hard to tell what they were thinking.
-> > > 
-> > > I run root-on-nvme on my laptop, and I haven't observed any
-> > > problems.
-> > 
-> > Me too apparently.  It looks like this problem may be SUSE specific
-> > unless another distro has enabled this.  I can see why they would:
-> > you
-> > do need persistent names for devices, even NVMe ones.
-> > 
-> > > Generally I hate for options to default y unless absolutely 
-> > > necessary, it's a sure fire way to feature creep your kernel
-> > > without 
-> > > noticing. I don't think getting all hot about this issue is fair,
-> > > if 
-> > > the only known case is suse.
-> > 
-> > Well, OK, I'm annoyed because it was a systemd system which means
-> > debugging boot failures are excruciatingly difficult so it took me
-> > a
-> > week and a half to find out what the problem was.  Perhaps I was a
-> > bit
-> > rash to label this as an easily foreseen problem.
-> > 
-> > I opened a bug against SUSE to tell them to turn it on:
-> > 
-> > https://bugzilla.opensuse.org/show_bug.cgi?id=965497
-> > 
-> > The second problem is that there's currently no way to transition
-> > to
-> > using the serial attribute the way the udev 60-persistent
-> > -storage.rules
-> > are written, so if distros have some by-id hack, it will have to be
-> > maintained for a while.  I annotated the already closed bug on this
-> > in
-> > systemd with the rules that work for me.
-> > 
-> Why, but you can.
-> That's precisely what I did with the transition to sg_inq; I've
-> added a new set of rules (55-sg_inq.rules and 59-sg-symlinks.rules)
-> which will override the values from 60-persistent-storage.rules.
+On Mon, Feb 08, 2016 at 03:17:11PM +0000, Joao Pinto wrote:
+> Hi Mark and Arnd,
 > 
-> Do we have defined sysfs attributes for NVMe devices nowadays?
-> If so I'd be willing to create/send some sysfs rules for them.
+> I am planning the v2 of this patch set. I have a doubt in the version
+> compatibility strings... The core driver must support the UFS 2.0 controller and
+> this patch set includes a patch that adds 2.0 capabilities to it.
 
-This is the one I finally settled on (for 60-persistent-storage) for
-SUSE.  It keeps everything working across old and new kernels.
+Ok. It wasn't clear to me that this series added support for features
+specific to 2.0.
 
-# nvme
-SUBSYSTEMS=="nvme", ATTRS{serial}=="?*", PROGRAM="/usr/bin/echo $attr{serial}", ENV{ID_SERIAL}="%c", ENV{ID_BUS}="nvme"
+> The core driver can get from the controller's version and with that
+> use or not a specific 2.0 feature.
 
-I already complained to Keith that the echo is required to strip the
-leading whitespace which I don't think should be in the serial
-attribute.
+It can be detected from the hardware?
 
-James
+> What would be the real added-value of having a compatibility string like
+> "snps,ufshcd-1.1" and "snps,ufshcd-2.0" if the driver can perform as 2.0 if it
+> detects a 2.0 controller?
+
+Generally having specify strings ensure that it's possible to handle
+things in future (e.g. errata workarounds), or if we realise something
+isn't as clear-cut as we thought it was (i.e. 2.0 not being a strict
+superset of 1.1).
+
+It's difficult to predict when you need that, so we err on the side of
+requiring it. At worst it means you have a small redundant few
+characters in a DT, but that's a much better proposition than having too
+little information.
+
+> Are you saying that a user that puts "snps,ufshcd-1.1"
+> in the DT compatibility string disables the UFS 2.0 in the core driver despite
+> the controller is 2.0? Please clarify.
+
+If you can consistently and safely detect that the HW is 2.0, using 2.0
+functionality is fine.
+
+Regardless, you should have a -1.1 compatible string for the 1.1 HW, and
+a -2.0 string for the 2.0 HW, so that DTs are explicit about what the
+hardware is. If 2.0 is intended to be a superset of 1.1, you can have a
+1.1 fallback entry for the 2.0 hardware.
+
+Thanks,
+Mark.
