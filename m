@@ -1,62 +1,150 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/23] scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
-Date: Mon,  8 Feb 2016 15:34:35 +0100
-Message-ID: <1454942086-128704-13-git-send-email-hare@suse.de>
+Subject: [PATCH 02/23] scsi_dh_alua: separate out alua_stpg()
+Date: Mon,  8 Feb 2016 15:34:25 +0100
+Message-ID: <1454942086-128704-3-git-send-email-hare@suse.de>
 References: <1454942086-128704-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42685 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42660 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753524AbcBHOex (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Feb 2016 09:34:53 -0500
+	id S1753405AbcBHOew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 09:34:52 -0500
 In-Reply-To: <1454942086-128704-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-The 'relative port' field is not used, and might get stale when
-the port group changes. So remove the field altogether.
+Separate out SET TARGET PORT GROUP functionality into a separate
+function alua_stpg().
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 95 +++++++++++++++++++-----------
+ 1 file changed, 61 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 64e07d7..4b115f2 100644
+index df71e85..7c66e4a 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -87,7 +87,6 @@ struct alua_port_group {
- struct alua_dh_data {
- 	struct alua_port_group	*pg;
- 	int			group_id;
--	int			rel_port;
- 	struct scsi_device	*sdev;
- 	activate_complete	callback_fn;
- 	void			*callback_data;
-@@ -325,12 +324,10 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
- 			return SCSI_DH_NOMEM;
- 		return SCSI_DH_DEV_UNSUPP;
- 	}
--	h->rel_port = rel_port;
--
- 	sdev_printk(KERN_INFO, sdev,
- 		    "%s: device %s port group %x rel port %x\n",
- 		    ALUA_DH_NAME, h->pg->device_id_str,
--		    h->group_id, h->rel_port);
-+		    h->group_id, rel_port);
- 
- 	return alua_rtpg(sdev, h->pg);
+@@ -579,6 +579,65 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
  }
-@@ -764,7 +761,6 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 	if (!h)
- 		return -ENOMEM;
- 	h->pg = NULL;
--	h->rel_port = -1;
- 	h->sdev = sdev;
  
- 	err = alua_initialize(sdev, h);
+ /*
++ * alua_stpg - Issue a SET TARGET GROUP STATES command
++ *
++ * Issue a SET TARGET GROUP STATES command and evaluate the
++ * response. Returns SCSI_DH_RETRY if the target port group
++ * state is found to be in 'transitioning'.
++ * If SCSI_DH_OK is returned the passed-in 'fn' function
++ * this function will take care of executing 'fn'.
++ * Otherwise 'fn' should be executed by the caller with the
++ * returned error code.
++ */
++static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h,
++			  activate_complete fn, void *data)
++{
++	int err = SCSI_DH_OK;
++	int stpg = 0;
++
++	if (!(h->tpgs & TPGS_MODE_EXPLICIT))
++		/* Only implicit ALUA supported */
++		goto out;
++
++	switch (h->state) {
++	case TPGS_STATE_NONOPTIMIZED:
++		stpg = 1;
++		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
++		    !h->pref &&
++		    (h->tpgs & TPGS_MODE_IMPLICIT))
++			stpg = 0;
++		break;
++	case TPGS_STATE_STANDBY:
++	case TPGS_STATE_UNAVAILABLE:
++		stpg = 1;
++		break;
++	case TPGS_STATE_OFFLINE:
++		err = SCSI_DH_IO;
++		break;
++	case TPGS_STATE_TRANSITIONING:
++		err = SCSI_DH_RETRY;
++		break;
++	default:
++		break;
++	}
++
++	if (stpg) {
++		h->callback_fn = fn;
++		h->callback_data = data;
++		err = submit_stpg(h);
++		if (err != SCSI_DH_OK)
++			h->callback_fn = h->callback_data = NULL;
++		else
++			fn = NULL;
++	}
++out:
++	if (fn)
++		fn(data, err);
++
++	return err;
++}
++
++/*
+  * alua_initialize - Initialize ALUA state
+  * @sdev: the device to be initialized
+  *
+@@ -655,7 +714,6 @@ static int alua_activate(struct scsi_device *sdev,
+ {
+ 	struct alua_dh_data *h = sdev->handler_data;
+ 	int err = SCSI_DH_OK;
+-	int stpg = 0;
+ 
+ 	err = alua_rtpg(sdev, h, 1);
+ 	if (err != SCSI_DH_OK)
+@@ -664,41 +722,10 @@ static int alua_activate(struct scsi_device *sdev,
+ 	if (optimize_stpg)
+ 		h->flags |= ALUA_OPTIMIZE_STPG;
+ 
+-	if (h->tpgs & TPGS_MODE_EXPLICIT) {
+-		switch (h->state) {
+-		case TPGS_STATE_NONOPTIMIZED:
+-			stpg = 1;
+-			if ((h->flags & ALUA_OPTIMIZE_STPG) &&
+-			    (!h->pref) &&
+-			    (h->tpgs & TPGS_MODE_IMPLICIT))
+-				stpg = 0;
+-			break;
+-		case TPGS_STATE_STANDBY:
+-		case TPGS_STATE_UNAVAILABLE:
+-			stpg = 1;
+-			break;
+-		case TPGS_STATE_OFFLINE:
+-			err = SCSI_DH_IO;
+-			break;
+-		case TPGS_STATE_TRANSITIONING:
+-			err = SCSI_DH_RETRY;
+-			break;
+-		default:
+-			break;
+-		}
+-	}
+-
+-	if (stpg) {
+-		h->callback_fn = fn;
+-		h->callback_data = data;
+-		err = submit_stpg(h);
+-		if (err == SCSI_DH_OK)
+-			return 0;
+-		h->callback_fn = h->callback_data = NULL;
+-	}
++	err = alua_stpg(sdev, h, fn, data);
+ 
+ out:
+-	if (fn)
++	if (err != SCSI_DH_OK && fn)
+ 		fn(data, err);
+ 	return 0;
+ }
 -- 
 1.8.5.6
 
