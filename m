@@ -1,76 +1,98 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/23] scsi_dh_alua: Pass buffer as function argument
-Date: Mon,  8 Feb 2016 15:34:24 +0100
-Message-ID: <1454942086-128704-2-git-send-email-hare@suse.de>
+Subject: [PATCH 17/23] scsi_dh_alua: update all port states
+Date: Mon,  8 Feb 2016 15:34:40 +0100
+Message-ID: <1454942086-128704-18-git-send-email-hare@suse.de>
 References: <1454942086-128704-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42590 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42660 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751328AbcBHOeu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Feb 2016 09:34:50 -0500
+	id S1753539AbcBHOey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 09:34:54 -0500
 In-Reply-To: <1454942086-128704-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-Pass in the buffer as a function argument for submit_rtpg().
+When we read in the target port group state we should be
+updating all affected port groups, otherwise we risk
+running out of sync.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 36 ++++++++++++++++++++++--------
+ 1 file changed, 27 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 5a328bf..df71e85 100644
+index 8a896af..de8e79e 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -135,12 +135,13 @@ static struct request *get_alua_req(struct scsi_device *sdev,
-  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-  * @sdev: sdev the command should be sent to
-  */
--static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
-+static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
-+			    int bufflen, unsigned char *sense, int flags)
+@@ -476,11 +476,13 @@ static int alua_check_sense(struct scsi_device *sdev,
+ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  {
- 	struct request *rq;
- 	int err = 0;
+ 	struct scsi_sense_hdr sense_hdr;
++	struct alua_port_group *tmp_pg;
+ 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+-	unsigned char *ucp, *buff;
++	unsigned char *desc, *buff;
+ 	unsigned err, retval;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
++	unsigned long flags;
  
--	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
-+	rq = get_alua_req(sdev, buff, bufflen, READ);
- 	if (!rq) {
- 		err = DRIVER_BUSY << 24;
- 		goto done;
-@@ -148,14 +149,14 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 
- 	/* Prepare the command. */
- 	rq->cmd[0] = MAINTENANCE_IN;
--	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
-+	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
- 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	if (!pg->expiry) {
+ 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
+@@ -582,18 +584,33 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  	else
- 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
--	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
-+	put_unaligned_be32(bufflen, &rq->cmd[6]);
- 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+ 		tpg_desc_tbl_off = 4;
  
--	rq->sense = h->sense;
-+	rq->sense = sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = 0;
+-	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
++	for (k = tpg_desc_tbl_off, desc = buff + tpg_desc_tbl_off;
+ 	     k < len;
+-	     k += off, ucp += off) {
+-
+-		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
+-			pg->state = ucp[0] & 0x0f;
+-			pg->pref = ucp[0] >> 7;
+-			valid_states = ucp[1];
++	     k += off, desc += off) {
++		u16 group_id = get_unaligned_be16(&desc[2]);
++
++		spin_lock_irqsave(&port_group_lock, flags);
++		tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
++					  group_id);
++		spin_unlock_irqrestore(&port_group_lock, flags);
++		if (tmp_pg) {
++			if (spin_trylock_irqsave(&tmp_pg->lock, flags)) {
++				if ((tmp_pg == pg) ||
++				    !(tmp_pg->flags & ALUA_PG_RUNNING)) {
++					tmp_pg->state = desc[0] & 0x0f;
++					tmp_pg->pref = desc[0] >> 7;
++				}
++				if (tmp_pg == pg)
++					valid_states = desc[1];
++				spin_unlock_irqrestore(&tmp_pg->lock, flags);
++			}
++			kref_put(&tmp_pg->kref, release_port_group);
+ 		}
+-		off = 8 + (ucp[7] * 4);
++		spin_unlock_irqrestore(&port_group_lock, flags);
++		off = 8 + (desc[7] * 4);
+ 	}
  
-@@ -446,7 +447,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
- 
-  retry:
--	retval = submit_rtpg(sdev, h);
-+	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
- 	if (retval) {
- 		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
- 					  &sense_hdr)) {
++	spin_lock_irqsave(&pg->lock, flags);
+ 	sdev_printk(KERN_INFO, sdev,
+ 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
+ 		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
+@@ -630,6 +647,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		pg->expiry = 0;
+ 		break;
+ 	}
++	spin_unlock_irqrestore(&pg->lock, flags);
+ 	kfree(buff);
+ 	return err;
+ }
 -- 
 1.8.5.6
 
