@@ -1,62 +1,44 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] target/iblock: Use -EAGAIN/-ENOMEM to propigate SAM
- BUSY/TASK_SET_FULL
-Date: Mon, 8 Feb 2016 08:21:51 +0100
-Message-ID: <56B8420F.8060002@suse.de>
-References: <1454826157-20877-1-git-send-email-nab@daterainc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: complete boot failure in 4.5-rc1 caused by nvme: make SG_IO
+	support optional
+Date: Mon, 8 Feb 2016 08:24:01 +0100
+Message-ID: <20160208072401.GA30007@lst.de>
+References: <1454783624.2809.6.camel@HansenPartnership.com> <20160207092241.GA15331@lst.de> <1454861040.2329.4.camel@HansenPartnership.com> <56B7C527.6050300@kernel.dk> <1454886441.2329.27.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56121 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:60096 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814AbcBHHVy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Feb 2016 02:21:54 -0500
-In-Reply-To: <1454826157-20877-1-git-send-email-nab@daterainc.com>
+	id S1752918AbcBHHYF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 02:24:05 -0500
+Content-Disposition: inline
+In-Reply-To: <1454886441.2329.27.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 02/07/2016 07:22 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> This patch updates target/iblock backend driver code to
-> check for bio completion status of -EAGAIN / -ENOMEM
-> provided by raw block drivers and scsi devices, in order
-> to generate the following SCSI status to initiators:
->=20
->   - SAM_STAT_BUSY
->   - SAM_STAT_TASK_SET_FULL
->=20
-> Note these two SAM status codes are useful to signal to
-> Linux SCSI host side that se_cmd should be retried
-> again, or with TASK_SET_FULL case to attempt to lower
-> our internal host LLD queue_depth and scsi_cmnd retry.
->=20
-> It also updates target_complete_cmd() to parse status
-> when signalling success to target_completion_wq.
->=20
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: Andy Grover <agrover@redhat.com>
-> Cc: Mike Christie <mchristi@redhat.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Sun, Feb 07, 2016 at 03:07:21PM -0800, James Bottomley wrote:
+> > I run root-on-nvme on my laptop, and I haven't observed any problems.
+> 
+> Me too apparently.  It looks like this problem may be SUSE specific
+> unless another distro has enabled this.  I can see why they would: you
+> do need persistent names for devices, even NVMe ones.
 
-Cheers,
+I don't have root on nvme, just my xfstests device, but I still didn't
+see the problem, neither did my various nvme development setups.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I opened a bug against SUSE to tell them to turn it on:
+> 
+> https://bugzilla.opensuse.org/show_bug.cgi?id=965497
+> 
+> The second problem is that there's currently no way to transition to
+> using the serial attribute the way the udev 60-persistent-storage.rules
+> are written, so if distros have some by-id hack, it will have to be
+> maintained for a while.  I annotated the already closed bug on this in
+> systemd with the rules that work for me.
+
+We now expose the NVMe serial and NGUI, out of which the evpd page is
+mangled depending on the NVMe spec version that the device supports as
+sysfs attributes, distros can do the same mangling if they want to
+support their old ids.
