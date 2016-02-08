@@ -1,55 +1,226 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [mpt3sas driver 07/10] mpt3sas: Add support for configurable
- Chain Frame Size
-Date: Mon, 8 Feb 2016 14:55:13 +0100
-Message-ID: <56B89E41.5090500@redhat.com>
-References: <1453963027-19770-1-git-send-email-suganath-prabu.subramani@avagotech.com>
- <1453963027-19770-8-git-send-email-suganath-prabu.subramani@avagotech.com>
- <56B368C2.8080607@redhat.com>
- <CAK=zhgpHxib0kcXXRH7o-dRew0aUwFTdAXsLxOun4RZVgsw+Rw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK=zhgpHxib0kcXXRH7o-dRew0aUwFTdAXsLxOun4RZVgsw+Rw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Suganath prabu Subaramani <suganath-prabu.subramani@avagotech.com>, "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Krishnaraddi Mankani <krishnaraddi.mankani@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chaitra Basappa <chaitra.basappa@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 05/23] scsi_dh_alua: switch to scsi_execute_req_flags()
+Date: Mon,  8 Feb 2016 15:34:28 +0100
+Message-ID: <1454942086-128704-6-git-send-email-hare@suse.de>
+References: <1454942086-128704-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:42626 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753352AbcBHOev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Feb 2016 09:34:51 -0500
+In-Reply-To: <1454942086-128704-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-On 5.2.2016 08:56, Sreekanth Reddy wrote:
-> On Thu, Feb 4, 2016 at 8:35 PM, Tomas Henzl <thenzl@redhat.com> wrote:
->> On 28.1.2016 07:37, Suganath prabu Subaramani wrote:
->>> From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
->>>
->>> Added support for configurable Chain Frame Size. Calculate the
->>> Chain Message Frame size from the IOCMaxChainSegementSize (iocfacts).
->>> Applicable only for mpt3sas/SAS3.0 HBA's.
->>>
->>> Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
->>> Signed-off-by: Chaitra P B <chaitra.basappa@avagotech.com>
->> Is this done in order to prepare for some future patch, or how  does it work?
->> I noticed only changes in allocation of (probably larger) fields, but
->> how is it actually used ?
-> Tomas,
->
-> In this patch set we have added new Intruder and Cutlass (high ports)
-> PCI devices which are based on MPI26 version.
-> In this MPI26 version, Request Frame size is doubled when compared to
-> older MPI version, but their is
-> no change in the Chain buffer size from MPI26 to older versions. In
-> older version Request frame size and
-> chain buffer size were same, so in the drivers previously we used to
-> use Request Frame size reference for
-> Chain buffer size. But we can't use that reference now. So now we are
-> determining the chain buffer size from
-> IOCFact's IOCMaxChainSegementSize field instead of using the Request
-> frame size reference.
->
-> ~Sreekanth
+All commands are issued synchronously, so no need to open-code
+scsi_execute_req_flags() anymore. And we can get rid of the
+static sense code structure element. scsi_execute_req_flags()
+will be setting REQ_QUIET and REQ_PREEMPT, but that is
+perfectly fine as we're evaluating and logging any errors
+ourselves and we really need to send the command even if
+the device is quiesced.
 
-Thanks,
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ewan Milne <emilne@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 125 +++++++++--------------------
+ 1 file changed, 36 insertions(+), 89 deletions(-)
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 78cccad..699456c 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -75,7 +75,6 @@ struct alua_dh_data {
+ 	unsigned char		*buff;
+ 	int			bufflen;
+ 	unsigned char		transition_tmo;
+-	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
+ 	struct scsi_device	*sdev;
+ 	activate_complete	callback_fn;
+ 	void			*callback_data;
+@@ -101,71 +100,30 @@ static int realloc_buffer(struct alua_dh_data *h, unsigned len)
+ 	return 0;
+ }
+ 
+-static struct request *get_alua_req(struct scsi_device *sdev,
+-				    void *buffer, unsigned buflen, int rw)
+-{
+-	struct request *rq;
+-	struct request_queue *q = sdev->request_queue;
+-
+-	rq = blk_get_request(q, rw, GFP_NOIO);
+-
+-	if (IS_ERR(rq)) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: blk_get_request failed\n", __func__);
+-		return NULL;
+-	}
+-	blk_rq_set_block_pc(rq);
+-
+-	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_NOIO)) {
+-		blk_put_request(rq);
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: blk_rq_map_kern failed\n", __func__);
+-		return NULL;
+-	}
+-
+-	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+-			 REQ_FAILFAST_DRIVER;
+-	rq->retries = ALUA_FAILOVER_RETRIES;
+-	rq->timeout = ALUA_FAILOVER_TIMEOUT * HZ;
+-
+-	return rq;
+-}
+-
+ /*
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
+-			    int bufflen, unsigned char *sense, int flags)
++static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
++		       int bufflen, struct scsi_sense_hdr *sshdr, int flags)
+ {
+-	struct request *rq;
+-	int err = 0;
+-
+-	rq = get_alua_req(sdev, buff, bufflen, READ);
+-	if (!rq) {
+-		err = DRIVER_BUSY << 24;
+-		goto done;
+-	}
++	u8 cdb[COMMAND_SIZE(MAINTENANCE_IN)];
++	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++		REQ_FAILFAST_DRIVER;
+ 
+ 	/* Prepare the command. */
+-	rq->cmd[0] = MAINTENANCE_IN;
++	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_IN));
++	cdb[0] = MAINTENANCE_IN;
+ 	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+-		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
++		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+-		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+-	put_unaligned_be32(bufflen, &rq->cmd[6]);
+-	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+-
+-	rq->sense = sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	blk_execute_rq(rq->q, NULL, rq, 1);
+-	if (rq->errors)
+-		err = rq->errors;
+-	blk_put_request(rq);
+-done:
+-	return err;
++		cdb[1] = MI_REPORT_TARGET_PGS;
++	put_unaligned_be32(bufflen, &cdb[6]);
++
++	return scsi_execute_req_flags(sdev, cdb, DMA_FROM_DEVICE,
++				      buff, bufflen, sshdr,
++				      ALUA_FAILOVER_TIMEOUT * HZ,
++				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
+ }
+ 
+ /*
+@@ -175,40 +133,30 @@ done:
+  * to 'active/optimized' and let the array firmware figure out
+  * the states of the remaining groups.
+  */
+-static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
+-			    unsigned char *sense)
++static int submit_stpg(struct scsi_device *sdev, int group_id,
++		       struct scsi_sense_hdr *sshdr)
+ {
+-	struct request *rq;
++	u8 cdb[COMMAND_SIZE(MAINTENANCE_OUT)];
+ 	unsigned char stpg_data[8];
+ 	int stpg_len = 8;
+-	int err = 0;
++	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++		REQ_FAILFAST_DRIVER;
+ 
+ 	/* Prepare the data buffer */
+ 	memset(stpg_data, 0, stpg_len);
+ 	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
+ 	put_unaligned_be16(group_id, &stpg_data[6]);
+ 
+-	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
+-	if (!rq)
+-		return DRIVER_BUSY << 24;
+-
+ 	/* Prepare the command. */
+-	rq->cmd[0] = MAINTENANCE_OUT;
+-	rq->cmd[1] = MO_SET_TARGET_PGS;
+-	put_unaligned_be32(stpg_len, &rq->cmd[6]);
+-	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
+-
+-	rq->sense = sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	blk_execute_rq(rq->q, NULL, rq, 1);
+-	if (rq->errors)
+-		err = rq->errors;
+-
+-	blk_put_request(rq);
+-
+-	return err;
++	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_OUT));
++	cdb[0] = MAINTENANCE_OUT;
++	cdb[1] = MO_SET_TARGET_PGS;
++	put_unaligned_be32(stpg_len, &cdb[6]);
++
++	return scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
++				      stpg_data, stpg_len,
++				      sshdr, ALUA_FAILOVER_TIMEOUT * HZ,
++				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
+ }
+ 
+ /*
+@@ -398,14 +346,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+ 
+  retry:
+-	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
++	retval = submit_rtpg(sdev, h->buff, h->bufflen, &sense_hdr, h->flags);
++
+ 	if (retval) {
+-		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+-					  &sense_hdr)) {
++		if (!scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: rtpg failed, result %d\n",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_BUSY)
++			if (driver_byte(retval) == DRIVER_ERROR)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 			return SCSI_DH_IO;
+ 		}
+@@ -570,15 +518,14 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 		return SCSI_DH_NOSYS;
+ 		break;
+ 	}
+-	retval = submit_stpg(sdev, h->group_id, h->sense);
++	retval = submit_stpg(sdev, h->group_id, &sense_hdr);
+ 
+ 	if (retval) {
+-		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+-					  &sense_hdr)) {
++		if (!scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: stpg failed, result %d",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_BUSY)
++			if (driver_byte(retval) == DRIVER_ERROR)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 		} else {
+ 			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
+-- 
+1.8.5.6
 
-Tomas
