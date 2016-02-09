@@ -1,33 +1,37 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+From: "Shi, Yang" <yang.shi@linaro.org>
 Subject: Re: [PATCH] scsi: fdomain: add missing CONFIG_ to PCMCIA
-Date: Tue, 9 Feb 2016 23:25:10 +0000
-Message-ID: <20160209232510.0c38ff77@lxorguk.ukuu.org.uk>
+Date: Tue, 9 Feb 2016 15:28:31 -0800
+Message-ID: <56BA761F.4000305@linaro.org>
 References: <1455056209-1696-1-git-send-email-yang.shi@linaro.org>
+ <20160209232510.0c38ff77@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:32900 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755914AbcBIXZc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 18:25:32 -0500
-In-Reply-To: <1455056209-1696-1-git-send-email-yang.shi@linaro.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Yang Shi <yang.shi@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160209232510.0c38ff77@lxorguk.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
 Cc: JBottomley@odin.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linaro-kernel@lists.linaro.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue,  9 Feb 2016 14:16:49 -0800
-Yang Shi <yang.shi@linaro.org> wrote:
+On 2/9/2016 3:25 PM, One Thousand Gnomes wrote:
+> On Tue,  9 Feb 2016 14:16:49 -0800
+> Yang Shi <yang.shi@linaro.org> wrote:
+>
+>> There are some "#ifdef PCMCIA" in the driver code, but all of them missed
+>> CONFIG_ prefix. Correct PCMCIA to CONFIG_PCMCIA.
+>>
+>> Signed-off-by: Yang Shi <yang.shi@linaro.org>
+>
+> NAK. This breaks the driver completely
+>
+>
+> Read drivers/scsi/pcmcia/fdomain*
 
-> There are some "#ifdef PCMCIA" in the driver code, but all of them missed
-> CONFIG_ prefix. Correct PCMCIA to CONFIG_PCMCIA.
-> 
-> Signed-off-by: Yang Shi <yang.shi@linaro.org>
+Got it. Thanks for spotting out this. Sorry for the unthought change.
 
-NAK. This breaks the driver completely
+Yang
 
-
-Read drivers/scsi/pcmcia/fdomain*
-
-Alan
+>
+> Alan
+>
