@@ -1,49 +1,55 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v4 0/5] Fix LUN_RESET active I/O + TMR handling
-Date: Mon, 08 Feb 2016 21:25:05 -0800
-Message-ID: <1454995505.10001.153.camel@haakon3.risingtidesystems.com>
-References: <1454815082-15380-1-git-send-email-nab@daterainc.com>
-	 <D2DE6219.D6C44%himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Add DebugFS node for target sess list.
+Date: Mon, 08 Feb 2016 21:49:02 -0800
+Message-ID: <1454996942.10001.170.camel@haakon3.risingtidesystems.com>
+References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
+	 <1454604319-27947-4-git-send-email-himanshu.madhani@qlogic.com>
+	 <1454820035.10001.17.camel@haakon3.risingtidesystems.com>
+	 <D2DE0F32.D6BD5%himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <D2DE6219.D6C44%himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44037 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054AbcBIFtF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 00:49:05 -0500
+In-Reply-To: <D2DE0F32.D6BD5%himanshu.madhani@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
 
-Hi Himanshu,
-
-On Mon, 2016-02-08 at 23:27 +0000, Himanshu Madhani wrote:
+On Mon, 2016-02-08 at 17:43 +0000, Himanshu Madhani wrote:
+> >
+> >So looking at this patch beyond the debugfs part, it does change where
+> >->check_initiator_node_acl() gets call during qlt_create_sess().
+> >
+> >I assume this is related to new debugfs attribute, and these changes
+> >(plus others in qlt_del_sess_work_fn) are not bug-fixes on their own,
+> >correct..?
+> >
+> >Aside from that, I don't have an objection to merge as v4.6 for-next
+> >code if QLogic finds it useful for debugging.
 > 
-> I am testing this series with with 4.5.0-rc2+ kernel and I am seeing issue
-> where trying to trigger
-> sg_reset with option of host/device/bus in loop at 120second interval
-> causes call stack. At this point
-> removing configuration hangs indefinitely. See attached dmesg output from
-> my setup. 
-> 
+> Yes. The changes in this patch are strictly for making information
+> available via debugFS and not bug-fixes on their own.
 
-Thanks alot for testing this.
+Thanks for clarifying.
 
-So It looks like we're still hitting a indefinite schedule() on
-se_cmd->cmd_wait_comp once tcm_qla2xxx session disconnect/reconnect
-occurs, after repeated explicit active I/O remote-port sg_resets.
+> This information has been requested by few customer who
+> finds this information useful for debugging and in addition they use this
+> information in their configuration scripts as well.
 
-Does this trigger on the first tcm_qla2xxx session reconnect after
-explicit remote-port sg_reset..?  Are session reconnects actively being
-triggered during the test..?
+So I've got no particular objection to people adding debugfs
+informational attributes for whatever to aid debugging of their drivers.
 
-To verify the latter for iscsi-target, I've been using a small patch to
-trigger session reset from TMR kthread context in order to simulate the
-I_T disconnects.  Something like that would be useful for verifying with
-tcm_qla2xxx too.
+That said, the same information can too be exposed as a tcm_qla2xxx
+struct se_node_acl->acl_group configfs attribute, and for demo-mode
+sessions via a tcm_qla2xxx provided dynamic_sessions configfs attribute
+handler.
 
-That said, I'll be reproducing with tcm_qla2xxx ports this week, and
-will enable various debug in a WIP branch for testing.
+I'd be happy to add expose this under tcm_qla2xxx configfs for v4.6 code
+if you'd like, otherwise I'm OK with the patch in queue-next as-is if
+you find it useful.
 
-Thank you,
-
---nab
