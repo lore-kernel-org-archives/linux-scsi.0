@@ -1,63 +1,55 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH-v4 0/5] Fix LUN_RESET active I/O + TMR handling
-Date: Tue, 9 Feb 2016 18:03:35 +0000
-Message-ID: <D2DF69D8.D6DC5%himanshu.madhani@qlogic.com>
-References: <1454815082-15380-1-git-send-email-nab@daterainc.com>
- <D2DE6219.D6C44%himanshu.madhani@qlogic.com>
- <1454995505.10001.153.camel@haakon3.risingtidesystems.com>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/6] ibmvscsi: Add and use enums for valid CRQ header
+ values
+Date: Tue, 9 Feb 2016 10:27:12 -0800
+Message-ID: <56BA2F80.8090009@linux.vnet.ibm.com>
+References: <1454542114-1797-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <1454542114-1797-3-git-send-email-tyreld@linux.vnet.ibm.com>
+ <56B3ACC9.60009@linux.vnet.ibm.com> <56B3C1C1.3080804@linux.vnet.ibm.com>
+ <56BA24E1.9090808@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1454995505.10001.153.camel@haakon3.risingtidesystems.com>
-Content-Language: en-US
-Content-ID: <6E75917FDD1BF844A00E01693ED328F0@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56BA24E1.9090808@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: manoj@linux.vnet.ibm.com, JBottomley@odin.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Nic, 
+On 02/09/2016 09:41 AM, Manoj Kumar wrote:
+>> Yeah, I can see how that is confusing. Since, all three possible valid
+>> crq message types have the first bit set I think this was originally a
+>> cute hack to grab anything that was likely valid. Then in
+>> ibmvscsi_handle_crq() we explicitly match the full header value in a
+>> switch statement logging anything that turned out actually invalid.
+>>
+>>>
+>>> If 'valid' will only have one of these four enums defined, would
+>>> this be better written as:
+>>>
+>>> 	if (crq->valid != VIOSRP_CRQ_FREE)
+>>
+>> This definitely would make the logic easier to read and follow. Also,
+>> this would make sure any crq with an invalid header that doesn't have
+>> its first bit set will also be logged by the ibmvscsi_handle_crq()
+>> switch statement default block and not silently ignored.
+>>
+>> -Tyrel
+> 
+> Sounds good, Tyrel. Does this mean I should expect a v2 of this patch
+> series?
+> 
+> - Manoj N. Kumar
 
+Haven't had a chance to clean up and resubmit, but yes there will be a
+v2 coming along soon.
 
-On 2/8/16, 9:25 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+-Tyrel
 
->Hi Himanshu,
->
->On Mon, 2016-02-08 at 23:27 +0000, Himanshu Madhani wrote:
->> 
->> I am testing this series with with 4.5.0-rc2+ kernel and I am seeing
->>issue
->> where trying to trigger
->> sg_reset with option of host/device/bus in loop at 120second interval
->> causes call stack. At this point
->> removing configuration hangs indefinitely. See attached dmesg output
->>from
->> my setup. 
->> 
->
->Thanks alot for testing this.
->
->So It looks like we're still hitting a indefinite schedule() on
->se_cmd->cmd_wait_comp once tcm_qla2xxx session disconnect/reconnect
->occurs, after repeated explicit active I/O remote-port sg_resets.
->
->Does this trigger on the first tcm_qla2xxx session reconnect after
->explicit remote-port sg_reset..?  Are session reconnects actively being
->triggered during the test..?
->
->To verify the latter for iscsi-target, I've been using a small patch to
->trigger session reset from TMR kthread context in order to simulate the
->I_T disconnects.  Something like that would be useful for verifying with
->tcm_qla2xxx too.
->
->That said, I'll be reproducing with tcm_qla2xxx ports this week, and
->will enable various debug in a WIP branch for testing.
-
-Let me know if I can help in any way for testing/validating this series.
-
->
->Thank you,
->
->--nab
->
+> 
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
+> 
