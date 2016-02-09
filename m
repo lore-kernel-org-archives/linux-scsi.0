@@ -1,86 +1,109 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [mpt3sas driver V1 6/10] mpt3sas: Added smp_affinity_enable
- module parameter.
-Date: Tue, 9 Feb 2016 16:58:51 +0100
-Message-ID: <56BA0CBB.3040603@redhat.com>
-References: <1454949819-10985-1-git-send-email-suganath-prabu.subramani@avagotech.com>
+From: Paul Menzel <paul.menzel@giantmonkey.de>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>]
+ sr_runtime_suspend+0xc/0x20 [sr_mod]
+Date: Tue, 09 Feb 2016 17:47:00 +0100
+Message-ID: <1455036420.11996.5.camel@giantmonkey.de>
+References: <1453222373.3588.3.camel@giantmonkey.de>
+	 <Pine.LNX.4.44L0.1601191532210.1312-200000@iolanthe.rowland.org>
+	 <CAM79t8GJvQPzOt1oDikxv3wPZ9xgVMez5EUgXmeVH2zKJCeaAw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-GCYCE4FQiVBiYD78CAyB"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58599 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932607AbcBIP65 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Feb 2016 10:58:57 -0500
-In-Reply-To: <1454949819-10985-1-git-send-email-suganath-prabu.subramani@avagotech.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36655 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755951AbcBIQrU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 11:47:20 -0500
+Received: by mail-wm0-f46.google.com with SMTP id p63so166795293wmp.1
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Feb 2016 08:47:19 -0800 (PST)
+In-Reply-To: <CAM79t8GJvQPzOt1oDikxv3wPZ9xgVMez5EUgXmeVH2zKJCeaAw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suganath prabu Subramani <suganath-prabu.subramani@broadcom.com>, JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, krishnaraddi.mankani@avagotech.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@avagotech.com, chaitra.basappa@avagotech.com, sreekanth.reddy@avagotech.com
-
-On 8.2.2016 17:43, Suganath prabu Subramani wrote:
-> Module parameter to enable/disable configuring
-> affinity hint for msix vector.
-> SMP affinity feature can be enabled/disabled by setting
-> module parameter "smp_affinity_enable" to 1/0.
-> By default this feature is enabled. (smp_affinity_enable = 1 enabled).
->
-> Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
-> Signed-off-by: Chaitra P B <chaitra.basappa@avagotech.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 37 ++++++++++++++++++++++++++-----------
->  1 file changed, 26 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 31838d9a..582ba4b 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -83,6 +83,10 @@ static int msix_disable = -1;
->  module_param(msix_disable, int, 0);
->  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
->  
-> +static int smp_affinity_enable = 1;
-> +module_param(smp_affinity_enable, int, S_IRUGO);
-> +MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Default: enable(1)");
-> +
->  static int max_msix_vectors = -1;
->  module_param(max_msix_vectors, int, 0);
->  MODULE_PARM_DESC(max_msix_vectors,
-> @@ -1812,8 +1816,10 @@ _base_free_irq(struct MPT3SAS_ADAPTER *ioc)
->  
->  	list_for_each_entry_safe(reply_q, next, &ioc->reply_queue_list, list) {
->  		list_del(&reply_q->list);
-> -		irq_set_affinity_hint(reply_q->vector, NULL);
-> -		free_cpumask_var(reply_q->affinity_hint);
-> +		if (smp_affinity_enable) {
-> +			irq_set_affinity_hint(reply_q->vector, NULL);
-> +			free_cpumask_var(reply_q->affinity_hint);
-> +		}
->  		synchronize_irq(reply_q->vector);
->  		free_irq(reply_q->vector, reply_q);
->  		kfree(reply_q);
-> @@ -1844,9 +1850,13 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
->  	reply_q->msix_index = index;
->  	reply_q->vector = vector;
->  
-> -	if (!alloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
-> -		return -ENOMEM;
-> -	cpumask_clear(reply_q->affinity_hint);
-> +	if (smp_affinity_enable) {
-> +		if (!zalloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL)) {
-> +			kfree(reply_q);
-> +			return -ENOMEM;
-> +		}
-> +		cpumask_clear(reply_q->affinity_hint);
-
-I think, that with zalloc_cpumask_var we no more need the cpumask_clear here
-Please remove it in next patchset.
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-
-Tomas
+To: Alexandre Rossi <alexandre.rossi@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org
 
 
+--=-GCYCE4FQiVBiYD78CAyB
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dear Debian and Linux folks,
 
 
+Am Mittwoch, den 20.01.2016, 23:07 +0100 schrieb Alexandre Rossi:
+
+> >> Could you please attach the debugging patch. Hopefully Alexandre, Eric=
+h,
+> >> or I will have some spare time to build an image from it.
+> >
+> > Actually, this patch is an attempt at a fix.  After looking more
+> > carefully at your log pictures, I realized what the problem must be.
+> >
+> > It's too bad nobody was able to capture a log where the error
+> > occurred in sr_runtime_suspend, though -- all the logs in the bug
+> > report show sd_runtime_resume.
+>=20
+> I just tested the patch applied on top of 4.3.3 (4.3.3-6 in Debian).
+>=20
+> It still crashes at boot, but the stacktrace is different : it happens
+> in blk_post_runtime_resume . Maybe I'm bit by a different bug or maybe
+> the I need to try with 4.4.
+>=20
+> I'll post the captured log when I have access to a wired network. I'd
+> be happy to provide the logs of a debugging patch.
+
+I tried Linux 4.3.5-1 [1], which entered Debian Sid/unstable yesterday,
+and I get the same null pointer dereference as Alexandre.
+
+As this is Linux 4.3 and not 4.4, I guess this is a different problem
+though. Alexandre, where you able to capture the stack trace? I=E2=80=99d s=
+ubmit
+a new bug report with this.
+
+
+Thanks,
+
+Paul
+
+
+[1] http://metadata.ftp-master.debian.org/changelogs/main/l/linux/linux_4.3=
+.5-1_changelog
+--=20
+GPG-Schl=C3=BCssel: 33623E9B
+Fingerabdruck =3D 0EB1 649D 4361 D04F 3C70  6F71 4DD7 BF75 3362 3E9B
+
+Giant Monkey Software Engineering GmbH
+
+Brunnenstr. 7D
+10119 Berlin Mitte
+
+Gesch=C3=A4ftsf=C3=BChrer Adrian Fuhrmann, Lion Vollnhals und Paul Menzel
+
+USt-IdNr.: DE281524720
+HRB 139495 B Amtsgericht Charlottenburg
+
+--=-GCYCE4FQiVBiYD78CAyB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJWuhgUAAoJEE3Xv3UzYj6bDdQP/iL9rLNkrRu1coCOKVWEeXX4
++UqhYBPTFvfYcBam3ixTCYY2vDYfBClPW7oWiJjadkBEcMKuZZavHFnR2qc7F73u
+dqxHondhCx1ByH7A0FI0zSb+b30uOMVF/fD/LDE4uyIbV7xqyq9i5LvatuWKBGIP
+/gwaI423Zh0gnc8W8Z25Up00VbClXoAbUg3kp79gPqohT3Y3I5TkXsQeCZxlOEwC
+byw5PtPnubZtk8chUSAegN64QejhRXLQzVi5OwTJb/9J046yZq51GQ4AScOAuO84
+VJlY5V7yGiwo/3iluYYHu6hRGDT7vQ7XGTJgCvMZDvLG5Zz1z6q4UR9lMyb1wMde
+cuSGb1pZWk5QUyvqUi38HWyAKLf2XD3qrpxUx+0vzAIzuCd5EZ9HOVpIb8P6FNJY
+lB3DBz4uO/Ex4E35l3uVpadbBvh7ohoRViaePFCxqb2bYzYrfvRHqfcZzNA1S9pA
+QJoOoQ/vljcvJc+HQT3KdkGkGQpUDW7JugbIyovd4b0s3Px3bTHU9/3/Q0nP9ZwL
+mSM+ki0y9qVW2xco/JkAzSrlumHOw6G/jr/rf7XHjmq0PdB5+RFDY+n4bxljPlFp
+i+VVowI7mmqOmZvhEHi6LeoosRsUR8HqD9Q++7J4XeU+tcd7kvhf4S7tWRLGihq0
+A7qKRE0m8ePlTD+Ci3TR
+=uVYV
+-----END PGP SIGNATURE-----
+
+--=-GCYCE4FQiVBiYD78CAyB--
 
