@@ -1,20 +1,22 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: complete boot failure in 4.5-rc1 caused by nvme: make SG_IO
-	support optional
-Date: Tue, 9 Feb 2016 13:50:11 +0100
-Message-ID: <20160209125011.GC25353@lst.de>
-References: <1454783624.2809.6.camel@HansenPartnership.com> <20160207092241.GA15331@lst.de> <1454861040.2329.4.camel@HansenPartnership.com> <56B7C527.6050300@kernel.dk>
+Subject: Re: [PATCH 13/23] scsi_dh_alua: Use workqueue for RTPG
+Date: Tue, 9 Feb 2016 13:54:43 +0100
+Message-ID: <20160209125443.GA25493@lst.de>
+References: <1454942086-128704-1-git-send-email-hare@suse.de> <1454942086-128704-14-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:37700 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754571AbcBIMyp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Feb 2016 07:54:45 -0500
 Content-Disposition: inline
-In-Reply-To: <56B7C527.6050300@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1454942086-128704-14-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
-Jens,
+Looks fine,
 
-do you want a 'default y' patch or just a better description?  I'd be
-happy to send either one.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
