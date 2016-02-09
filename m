@@ -1,84 +1,195 @@
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: [RFC PATCH v2] blk-mq: Introduce per sw queue time-slice
-Date: Tue, 9 Feb 2016 18:41:56 +0100
-Message-ID: <20160209174156.GA323@x4>
-References: <20151119120235.GA7966@suselix.suse.de>
- <20160201224340.GA16639@suselix.suse.de>
- <20160209171239.GE12437@suselix.suse.de>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Add DebugFS node for target sess list.
+Date: Tue, 9 Feb 2016 18:01:48 +0000
+Message-ID: <D2DF694C.D6DBD%himanshu.madhani@qlogic.com>
+References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1454604319-27947-4-git-send-email-himanshu.madhani@qlogic.com>
+ <1454820035.10001.17.camel@haakon3.risingtidesystems.com>
+ <1454821249.10001.27.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160209171239.GE12437@suselix.suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andreas Herrmann <aherrmann@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Content-Type: multipart/mixed;
+	boundary="_000_D2DF694CD6DBDhimanshumadhaniqlogiccom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:2218 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753661AbcBISBv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 13:01:51 -0500
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u19Hs4hG027145
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Feb 2016 10:01:50 -0800
+Received: from avcashub1.qlogic.com ([198.186.0.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 20wgptkn13-1
+	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 09 Feb 2016 10:01:50 -0800
+In-Reply-To: <1454821249.10001.27.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
 
-On 2016.02.09 at 18:12 +0100, Andreas Herrmann wrote:
-> [CC-ing linux-block and linux-scsi and adding some comments]
-> 
-> On Mon, Feb 01, 2016 at 11:43:40PM +0100, Andreas Herrmann wrote:
-> > This introduces a new blk_mq hw attribute time_slice_us which allows
-> > to specify a time slice in usecs.
-> > 
-> > Fio test results are sent in a separate mail to this.
-> 
-> See http://marc.info/?l=linux-kernel&m=145436682607949&w=2
-> 
-> In short it shows significant performance gains in some tests,
-> e.g. sequential read iops up by >40% with 8 jobs. But it's never on
-> par with CFQ when more than 1 job was used during the test.
-> 
-> > Results for fio improved to some extent with this patch. But in
-> > reality the picture is quite mixed. Performance is highly dependend on
-> > task scheduling. There is no guarantee that the requests originated
-> > from one CPU belong to the same process.
-> > 
-> > I think for rotary devices CFQ is by far the best choice. A simple
-> > illustration is:
-> > 
-> >   Copying two files (750MB in this case) in parallel on a rotary
-> >   device. The elapsed wall clock time (seconds) for this is
-> >                                mean    stdev
-> >    cfq, slice_idle=8           16.18   4.95
-> >    cfq, slice_idle=0           23.74   2.82
-> >    blk-mq, time_slice_usec=0   24.37   2.05
-> >    blk-mq, time_slice_usec=250 25.58   3.16
-> 
-> This illustrates that although their was performance gain with fio
-> tests, the patch can cause higher variance and lower performance in
-> comparison to unmodified blk-mq with other tests. And it underscores
-> superiority of CFQ for rotary disks.
-> 
-> Meanwhile my opinion is that it's not really worth to look further
-> into introduction of I/O scheduling support in blk-mq. I don't see the
-> need for scheduling support (deadline or something else) for fast
-> storage devices. And rotary devices should really avoid usage of blk-mq
-> and stick to CFQ.
-> 
-> Thus I think that introducing some coexistence of blk-mq and the
-> legacy block with CFQ is the best option.
-> 
-> Recently Johannes sent a patch to enable scsi-mq per driver, see
-> http://marc.info/?l=linux-scsi&m=145347009631192&w=2
-> 
-> Probably that is a good solution (at least in the short term) to allow
-> users to switch to blk-mq for some host adapters (with fast storage
-> attached) but to stick to legacy stuff on other host adapters with
-> rotary devices.
+--_000_D2DF694CD6DBDhimanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <34C35CEB9317B0439C24AF021AF89FBB@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-I don't think that Johannes' patch is a good solution.
 
-The best solution for the user would be if blk-mq could be toggled per
-drive (or even automatically enabled if queue/rotational == 0). Is there
-a fundamental reason why this is not feasible?
 
-Your solution is better than nothing, but it requires that the user
-finds out the drive <=> host mapping by hand and then runs something
-like: 
-echo "250" > /sys/devices/pci0000:00/0000:00:11.0/ata2/host1/target1:0:0/1:0:0:0/block/sdb/mq/0/time_slice_us
-during boot for spinning rust drives...
+On 2/6/16, 9:00 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
--- 
-Markus
+>On Sat, 2016-02-06 at 20:40 -0800, Nicholas A. Bellinger wrote:
+>> Hi Himanshu & Quinn,
+>>=20
+>> On Thu, 2016-02-04 at 11:45 -0500, Himanshu Madhani wrote:
+>> > From: Quinn Tran <quinn.tran@qlogic.com>
+>> >=20
+>> >  #cat  /sys/kernel/debug/qla2xxx/qla2xxx_31/tgt_sess
+>> >  qla2xxx_31
+>> >  Port ID   Port Name                Handle
+>> >  ff:fc:01  21:fd:00:05:33:c7:ec:16  0
+>> >  01:0e:00  21:00:00:24:ff:7b:8a:e4  1
+>> >  01:0f:00  21:00:00:24:ff:7b:8a:e5  2
+>> >  ....
+>> >=20
+>> > Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+>> > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+>> > ---
+>> >  drivers/scsi/qla2xxx/qla_def.h    |    1 +
+>> >  drivers/scsi/qla2xxx/qla_dfs.c    |   55
+>>++++++++++++++++++++++++++++++++++++
+>> >  drivers/scsi/qla2xxx/qla_target.c |   56
+>>++++++++++++++++++++++++------------
+>> >  3 files changed, 93 insertions(+), 19 deletions(-)
+>> >=20
+>>=20
+>> So looking at this patch beyond the debugfs part, it does change where
+>> ->check_initiator_node_acl() gets call during qlt_create_sess().
+>>=20
+>> I assume this is related to new debugfs attribute, and these changes
+>> (plus others in qlt_del_sess_work_fn) are not bug-fixes on their own,
+>> correct..?
+>>=20
+>> Aside from that, I don't have an objection to merge as v4.6 for-next
+>> code if QLogic finds it useful for debugging.
+>>=20
+>
+>Btw, this patch has a conflict with target-pending/queue-next wrt to
+>removal of be_sid + loopid from tgt_ops->check_initiator_node_acl(),
+>which is part of the target_alloc_session() conversion for v4.6.
+>
+>Here's the updated version that's been applied to queue-next:
+>
+>https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit
+>/?h=3Dqueue-next&id=3Dcfd527d9db57ceac8a1e211b77c3357259df48cc
+>
+>Please verify that it looks + works as expected.
+>
+
+This Patch looks good. Tested successfully on my setup.
+
+>
+
+
+--_000_D2DF694CD6DBDhimanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+gJYOtyGVLyBqUVBqk6cEZ2mQ/6iAEkAHkBxCc9CkgDphhdH2bKZge/FtpmASAZfASZYPqK8hsxVC
+r4AAAAAfAEIAAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAGUA
+AQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAfAAAAAAAAACBKx+kvqMQGZ1u
+AN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABp
+AG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJd
+AQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAB8A5V8BAAAAQAAAAHMAaQBwADoAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4A
+aQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABN
+AGEAZABoAGEAbgBpAAAAAAAfAB8MAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEA
+bgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwB
+AAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgA
+YQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEA
+bgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAg
+AE0AYQBkAGgAYQBuAGkAAAAAAB8AI0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
+YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5
+PwEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQA
+aABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
+YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAu
+AE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAIq85bq7Fl9C
+lzzqi0idKdYDABcAAQAAAEAAOQAATsvxY2PRAUAACDBaXz3yY2PRAQsAAIAIIAYAAAAAAMAAAAAA
+AABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwA
+YQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAA
+RgAAAAAGhQAAAAAAAB8ANwABAAAAgAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAzAC8ANABdACAA
+cQBsAGEAMgB4AHgAeAA6ACAAQQBkAGQAIABEAGUAYgB1AGcARgBTACAAbgBvAGQAZQAgAGYAbwBy
+ACAAdABhAHIAZwBlAHQAIABzAGUAcwBzACAAbABpAHMAdAAuAAAAHwA9AAEAAAAKAAAAUgBlADoA
+IAAAAAAAAwA2AAAAAAAfAEIQAQAAAHQAAAA8ADEANAA1ADQAOAAyADEAMgA0ADkALgAxADAAMAAw
+ADEALgAyADcALgBjAGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQA
+ZQBzAHkAcwB0AGUAbQBzAC4AYwBvAG0APgAAAAIBcQABAAAAJQAAAAEB0V9xYcuN8gZq1PlLiacT
+WXY0+YufIIqXgIAABaiAgAN4u4AAAAAfAHAAAQAAAHgAAABbAFAAQQBUAEMASAAgADMALwA0AF0A
+IABxAGwAYQAyAHgAeAB4ADoAIABBAGQAZAAgAEQAZQBiAHUAZwBGAFMAIABuAG8AZABlACAAZgBv
+AHIAIAB0AGEAcgBnAGUAdAAgAHMAZQBzAHMAIABsAGkAcwB0AC4AAAAfADUQAQAAAFoAAAA8AEQA
+MgBEAEYANgA5ADQAQwAuAEQANgBEAEIARAAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBu
+AGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAAAB8AORABAAAA6AEAADwAMQA0ADUANAA2ADAA
+NAAzADEAOQAtADIANwA5ADQANwAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBo
+AGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ACAA
+PAAxADQANQA0ADYAMAA0ADMAMQA5AC0AMgA3ADkANAA3AC0ANAAtAGcAaQB0AC0AcwBlAG4AZAAt
+AGUAbQBhAGkAbAAtAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAD4AIAA8ADEANAA1ADQAOAAyADAAMAAzADUALgAxADAAMAAwADEALgAxADcALgBj
+AGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUA
+bQBzAC4AYwBvAG0APgAgADwAMQA0ADUANAA4ADIAMQAyADQAOQAuADEAMAAwADAAMQAuADIANwAu
+AGMAYQBtAGUAbABAAGgAYQBhAGsAbwBuADMALgByAGkAcwBpAG4AZwB0AGkAZABlAHMAeQBzAHQA
+ZQBtAHMALgBjAG8AbQA+AAAAAwDeP59OAABAAAcwIBcv8mNj0QEDACYAAAAAAAIBRwABAAAALwAA
+AGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMtMTYwMjA5MTgwMTQ4Wi0xMzc4MDcAAB8AFRABAAAA
+WAAAADMANABDADMANQBDAEUAQgA5ADMAMQA3AEIAMAA0ADMAOQBDADIANABBAEYAMAAyADEAQQBG
+ADgAOQBGAEIAQgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAAC2AAAAJ7xpME8A
+AAAfAPo/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkA
+YwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgA1AC4AOQAuADEANQAx
+ADEAMQA5AAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQA
+aQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAARgEAAEkASQA9ADAAMQAw
+ADEARAAxADYAMwA2ADMARgAyADcAMQBEAEQAMwBGAEIANQAzAEEANAAzADkAMAA0ADAAQgA0ADcA
+MQBGADAANwAyADEAMQAzADcAOAAwAEQAMAA7AFMAQgBNAEkARAA9ADEAOAA7AFMAMQA9ADwAMQA0
+ADUANAA4ADIAMQAyADQAOQAuADEAMAAwADAAMQAuADIANwAuAGMAYQBtAGUAbABAAGgAYQBhAGsA
+bwBuADMALgByAGkAcwBpAG4AZwB0AGkAZABlAHMAeQBzAHQAZQBtAHMALgBjAG8AbQA+ADsAVgBl
+AHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUAaQBsAGQAIAAyADMA
+NQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAA
+AABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBw
+AAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABG
+AQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAADl
+Pw==
+
+--_000_D2DF694CD6DBDhimanshumadhaniqlogiccom_--
