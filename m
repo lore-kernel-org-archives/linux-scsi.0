@@ -1,55 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/4] qla2xxx: Add DebugFS node for target sess list.
-Date: Mon, 08 Feb 2016 21:49:02 -0800
-Message-ID: <1454996942.10001.170.camel@haakon3.risingtidesystems.com>
-References: <1454604319-27947-1-git-send-email-himanshu.madhani@qlogic.com>
-	 <1454604319-27947-4-git-send-email-himanshu.madhani@qlogic.com>
-	 <1454820035.10001.17.camel@haakon3.risingtidesystems.com>
-	 <D2DE0F32.D6BD5%himanshu.madhani@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [scsi 2/2] scsi: ufs: fix few typos in the comments
+Date: Tue,  9 Feb 2016 10:25:41 +0200
+Message-ID: <1455006341-1260-2-git-send-email-tomas.winkler@intel.com>
+References: <1455006341-1260-1-git-send-email-tomas.winkler@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44037 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbcBIFtF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 00:49:05 -0500
-In-Reply-To: <D2DE0F32.D6BD5%himanshu.madhani@qlogic.com>
+Received: from mga04.intel.com ([192.55.52.120]:63092 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754389AbcBII0y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Feb 2016 03:26:54 -0500
+In-Reply-To: <1455006341-1260-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
+To: James Bottomley <JBottomley@Parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 
-On Mon, 2016-02-08 at 17:43 +0000, Himanshu Madhani wrote:
-> >
-> >So looking at this patch beyond the debugfs part, it does change where
-> >->check_initiator_node_acl() gets call during qlt_create_sess().
-> >
-> >I assume this is related to new debugfs attribute, and these changes
-> >(plus others in qlt_del_sess_work_fn) are not bug-fixes on their own,
-> >correct..?
-> >
-> >Aside from that, I don't have an objection to merge as v4.6 for-next
-> >code if QLogic finds it useful for debugging.
-> 
-> Yes. The changes in this patch are strictly for making information
-> available via debugFS and not bug-fixes on their own.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 4 ++--
+ drivers/scsi/ufs/ufshcd.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks for clarifying.
-
-> This information has been requested by few customer who
-> finds this information useful for debugging and in addition they use this
-> information in their configuration scripts as well.
-
-So I've got no particular objection to people adding debugfs
-informational attributes for whatever to aid debugging of their drivers.
-
-That said, the same information can too be exposed as a tcm_qla2xxx
-struct se_node_acl->acl_group configfs attribute, and for demo-mode
-sessions via a tcm_qla2xxx provided dynamic_sessions configfs attribute
-handler.
-
-I'd be happy to add expose this under tcm_qla2xxx configfs for v4.6 code
-if you'd like, otherwise I'm OK with the patch in queue-next as-is if
-you find it useful.
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a44153401aee..07f1fa438fec 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1476,7 +1476,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+ 	if (!time_left) {
+ 		err = -ETIMEDOUT;
+ 		if (!ufshcd_clear_cmd(hba, lrbp->task_tag))
+-			/* sucessfully cleared the command, retry if needed */
++			/* successfully cleared the command, retry if needed */
+ 			err = -EAGAIN;
+ 	}
+ 
+@@ -2563,7 +2563,7 @@ out:
+  * To bring UFS host controller to operational state,
+  * 1. Enable required interrupts
+  * 2. Configure interrupt aggregation
+- * 3. Program UTRL and UTMRL base addres
++ * 3. Program UTRL and UTMRL base address
+  * 4. Configure run-stop-registers
+  *
+  * Returns 0 on success, non-zero value on failure
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2570d9477b37..18ed160b0ef1 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -177,7 +177,7 @@ struct ufshcd_lrb {
+ };
+ 
+ /**
+- * struct ufs_query - holds relevent data structures for query request
++ * struct ufs_query - holds relevant data structures for query request
+  * @request: request upiu and function
+  * @descriptor: buffer for sending/receiving descriptor
+  * @response: response upiu and response
+-- 
+2.4.3
 
