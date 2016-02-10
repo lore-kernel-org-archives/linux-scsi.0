@@ -1,37 +1,31 @@
-From: "Shi, Yang" <yang.shi@linaro.org>
-Subject: Re: [PATCH] scsi: fdomain: add missing CONFIG_ to PCMCIA
-Date: Tue, 9 Feb 2016 15:28:31 -0800
-Message-ID: <56BA761F.4000305@linaro.org>
-References: <1455056209-1696-1-git-send-email-yang.shi@linaro.org>
- <20160209232510.0c38ff77@lxorguk.ukuu.org.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/2] megaraid_sas: Fix for IO failing post OCR in SRIOV environment
+Date: Tue, 09 Feb 2016 20:48:55 -0500
+Message-ID: <yq1y4atbaig.fsf@sermon.lab.mkp.net>
+References: <1453995866-25097-1-git-send-email-sumit.saxena@avagotech.com>
+	<1453995866-25097-2-git-send-email-sumit.saxena@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160209232510.0c38ff77@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: JBottomley@odin.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linaro-kernel@lists.linaro.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29868 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755406AbcBJBtf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 20:49:35 -0500
+In-Reply-To: <1453995866-25097-2-git-send-email-sumit.saxena@avagotech.com>
+	(Sumit Saxena's message of "Thu, 28 Jan 2016 21:14:25 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@avagotech.com>
+Cc: jbottomley@parallels.com, hch@infradead.org, martin.petersen@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, Uday Lingala <uday.lingala@avagotech.com>
 
-On 2/9/2016 3:25 PM, One Thousand Gnomes wrote:
-> On Tue,  9 Feb 2016 14:16:49 -0800
-> Yang Shi <yang.shi@linaro.org> wrote:
->
->> There are some "#ifdef PCMCIA" in the driver code, but all of them missed
->> CONFIG_ prefix. Correct PCMCIA to CONFIG_PCMCIA.
->>
->> Signed-off-by: Yang Shi <yang.shi@linaro.org>
->
-> NAK. This breaks the driver completely
->
->
-> Read drivers/scsi/pcmcia/fdomain*
+>>>>> "Sumit" == Sumit Saxena <sumit.saxena@avagotech.com> writes:
 
-Got it. Thanks for spotting out this. Sorry for the unthought change.
+Sumit> Driver assumes that VFs always have peers present whenever they
+Sumit> have same LD IDs. But this is not the case.  This patch handles
+Sumit> the above mentioned by explicitly checking for a peer before
+Sumit> making HA/non-HA path decision.
 
-Yang
+Applied to 4.6/scsi-queue.
 
->
-> Alan
->
+-- 
+Martin K. Petersen	Oracle Linux Engineering
