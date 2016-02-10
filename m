@@ -1,43 +1,127 @@
-From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 1/2] fixed typo in ufshcd-pltfrm
-Date: Wed, 10 Feb 2016 15:12:36 +0000
-Message-ID: <981127949e48a093273483e18e1913afd145719e.1455116488.git.jpinto@synopsys.com>
-References: <cover.1455116488.git.jpinto@synopsys.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1455116488.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-In-Reply-To: <cover.1455116488.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-References: <cover.1455116488.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Separate target visibility from reaped state information
+Date: Wed, 10 Feb 2016 07:34:51 -0800
+Message-ID: <1455118491.2341.6.camel@HansenPartnership.com>
+References: <568FE922.9090004@sandisk.com>
+	 <yq1oachqehs.fsf@sermon.lab.mkp.net>
+	 <1453251809.2320.56.camel@HansenPartnership.com>
+	 <56B025E4.9010009@sandisk.com>
+	 <1454413585.2349.11.camel@HansenPartnership.com>
+	 <20160203233816.00004da7@localhost>
+	 <20160210140522.GT27969@c203.arch.suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57210 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751356AbcBJPez (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Feb 2016 10:34:55 -0500
+In-Reply-To: <20160210140522.GT27969@c203.arch.suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Dick Kennedy <dick.kennedy@avagotech.com>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>, Hannes Reinecke <hare@suse.de>
 
-Fixed typo in ufshcd-pltfrm.
+On Wed, 2016-02-10 at 15:05 +0100, Johannes Thumshirn wrote:
+> On Wed, Feb 03, 2016 at 11:38:16PM +0100, Sebastian Herbszt wrote:
+> > James Bottomley wrote:
+> > > On Mon, 2016-02-01 at 19:43 -0800, Bart Van Assche wrote:
+> > > > On 01/19/16 17:03, James Bottomley wrote:
+> > > > > On Tue, 2016-01-19 at 19:30 -0500, Martin K. Petersen wrote:
+> > > > > > > > > > > "Bart" == Bart Van Assche <
+> > > > > > > > > > > bart.vanassche@sandisk.com>
+> > > > > > > > > > > writes:
+> > > > > > 
+> > > > > > Bart> Instead of representing the states "visible in sysfs"
+> > > > > > and
+> > > > > > "has
+> > > > > > Bart> been removed from the target list" by a single state
+> > > > > > variable,
+> > > > > > use
+> > > > > > Bart> two variables to represent this information.
+> > > > > > 
+> > > > > > James: Are you happy with the latest iteration of this?
+> > > > > > Should I
+> > > > > > queue
+> > > > > > it?
+> > > > > 
+> > > > > Well, I'm OK with the patch: it's a simple transformation of
+> > > > > the
+> > > > > enumerated state to a two bit state.  What I can't see is how
+> > > > > it
+> > > > > fixes
+> > > > > any soft lockup.
+> > > > > 
+> > > > > The only change from the current workflow is that the DEL
+> > > > > transition
+> > > > > (now the reaped flag) is done before the spin lock is dropped
+> > > > > which
+> > > > > would fix a tiny window for two threads both trying to remove
+> > > > > the
+> > > > > same
+> > > > > target, but there's nothing that could possibly fix an
+> > > > > iterative
+> > > > > soft
+> > > > > lockup caused by restarting the loop, which is what the
+> > > > > changelog
+> > > > > says.
+> > > > 
+> > > > Hello James,
+> > > > 
+> > > > scsi_remove_target() doesn't lock the scan_mutex which means
+> > > > that 
+> > > > concurrent SCSI scanning activity is not prohibited. Such
+> > > > scanning 
+> > > > activity can postpone the transition of the state of a SCSI
+> > > > target 
+> > > > into STARGET_DEL. I think if the scheduler decides to run the
+> > > > thread 
+> > > > that executes scsi_remove_target() on the same CPU as the
+> > > > scanning 
+> > > > code after the scanning code has obtained a reap ref and before
+> > > > the 
+> > > > scanning code has released the reap ref again that the soft
+> > > > lockup 
+> > > > can be triggered that has been reported by Sebastian Herbszt.
+> > > 
+> > > OK, I finally understand the scenario;  I'm not sure I understand
+> > > how
+> > > we're getting concurrent scanning and removal from a simple rmmod
+> > > ... I
+> > > take it this is insmod rmmod in a tight loop?
+> > 
+> > I am able to trigger the soft lockup with this test case run once:
+> > 
+> > modprobe lpfc
+> > run fio for 10 seconds
+> > rmmod lpfc
+> > 
+> > My test setup involves running qla2xxx in target mode (SCST) and
+> > lpfc as initiator on the same system with one exported volume.
+> > 
+> > Dick, how did you trigger the lockup?
+> > 
+> > Sebastian
+> 
+> Hi James, Bart, Martin
+> 
+> Have you already decided, which of the two patches you favour and 
+> when it'llbe included?
+> 
+> I have several customer reports that hit this lockup and I don't want 
+> to include one of the patches from the list just to find out the 
+> other one's is used in mainline.
 
-Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
----
-Changes v0->v5:
-- Nothing changed (just to keep up with patch set version).
+Well, unless the target allocation bug gets fixed in Bart's, it will
+have to be the last_scan one.  It's more a hack than a fix, but I
+suppose it will do as a bandaid in the meantime.
 
- drivers/scsi/ufs/ufshcd-pltfrm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If you have diagnosed this at customers, I'd still like to know what's
+holding the devices on removal.
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index d2a7b12..0522891 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -353,6 +353,6 @@ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
- 
- MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>");
--MODULE_DESCRIPTION("UFS host controller Pltform bus based glue driver");
-+MODULE_DESCRIPTION("UFS host controller Platform bus based glue driver");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(UFSHCD_DRIVER_VERSION);
--- 
-1.8.1.5
+Thanks,
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
