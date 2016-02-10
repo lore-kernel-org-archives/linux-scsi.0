@@ -1,91 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi: fix soft lockup in scsi_remove_target() on module
- removal
-Date: Wed, 10 Feb 2016 08:03:26 -0800
-Message-ID: <1455120206.2341.8.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57402 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752346AbcBJQD2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Feb 2016 11:03:28 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v6 0/2] add support for DWC UFS Controller
+Date: Wed, 10 Feb 2016 16:06:11 +0000
+Message-ID: <cover.1455120183.git.jpinto@synopsys.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Sebastian Herbszt <herbszt@gmx.de>
 
-This softlockup is currently happening:
+The work consisted of:
+- Fixed typo in ufshcd-pltfrm.c
+- Tweak ufshcd.c for UFS 2.0 support
+- Implement ufshcd-dwc which contains all DWC HW specific code
+- Unipro attributes were added and new registers were added to the driver
+- Implement a ufs-dwc glue platform driver
+- Implement a ufs-dwc-pci glue pci driver
 
-[  444.088002] NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [kworker/1:1:29]
-[  444.088002] Modules linked in: lpfc(-) qla2x00tgt(O) qla2xxx_scst(O) scst_vdisk(O) scsi_transport_fc libcrc32c scst(O) dlm configfs nfsd lockd grace nfs_acl auth_rpcgss sunrpc ed
-d snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device dm_mod iTCO_wdt snd_hda_codec_realtek snd_hda_codec_generic gpio_ich iTCO_vendor_support ppdev snd_hda_intel snd_hda_codec snd_hda
-_core snd_hwdep tg3 snd_pcm snd_timer libphy lpc_ich parport_pc ptp acpi_cpufreq snd pps_core fjes parport i2c_i801 ehci_pci tpm_tis tpm sr_mod cdrom soundcore floppy hwmon sg 8250_
-fintek pcspkr i915 drm_kms_helper uhci_hcd ehci_hcd drm fb_sys_fops sysimgblt sysfillrect syscopyarea i2c_algo_bit usbcore button video usb_common fan ata_generic ata_piix libata th
-ermal
-[  444.088002] CPU: 1 PID: 29 Comm: kworker/1:1 Tainted: G           O    4.4.0-rc5-2.g1e923a3-default #1
-[  444.088002] Hardware name: FUJITSU SIEMENS ESPRIMO E           /D2164-A1, BIOS 5.00 R1.10.2164.A1               05/08/2006
-[  444.088002] Workqueue: fc_wq_4 fc_rport_final_delete [scsi_transport_fc]
-[  444.088002] task: f6266ec0 ti: f6268000 task.ti: f6268000
-[  444.088002] EIP: 0060:[<c07e7044>] EFLAGS: 00000286 CPU: 1
-[  444.088002] EIP is at _raw_spin_unlock_irqrestore+0x14/0x20
-[  444.088002] EAX: 00000286 EBX: f20d3800 ECX: 00000002 EDX: 00000286
-[  444.088002] ESI: f50ba800 EDI: f2146848 EBP: f6269ec8 ESP: f6269ec8
-[  444.088002]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-[  444.088002] CR0: 8005003b CR2: 08f96600 CR3: 363ae000 CR4: 000006d0
-[  444.088002] Stack:
-[  444.088002]  f6269eec c066b0f7 00000286 f2146848 f50ba808 f50ba800 f50ba800 f2146a90
-[  444.088002]  f2146848 f6269f08 f8f0a4ed f3141000 f2146800 f2146a90 f619fa00 00000040
-[  444.088002]  f6269f40 c026cb25 00000001 166c6392 00000061 f6757140 f6136340 00000004
-[  444.088002] Call Trace:
-[  444.088002]  [<c066b0f7>] scsi_remove_target+0x167/0x1c0
-[  444.088002]  [<f8f0a4ed>] fc_rport_final_delete+0x9d/0x1e0 [scsi_transport_fc]
-[  444.088002]  [<c026cb25>] process_one_work+0x155/0x3e0
-[  444.088002]  [<c026cde7>] worker_thread+0x37/0x490
-[  444.088002]  [<c027214b>] kthread+0x9b/0xb0
-[  444.088002]  [<c07e72c1>] ret_from_kernel_thread+0x21/0x40
+Joao Pinto (2):
+  fixed typo in ufshcd-pltfrm
+  add support for DWC UFS Host Controller
 
-What appears to be happening is that something has pinned the target
-so it can't go into STARGET_DEL via final release and the loop in
-scsi_remove_target spins endlessly until that happens.
+ Documentation/devicetree/bindings/ufs/ufs-dwc.txt |  17 +
+ MAINTAINERS                                       |   6 +
+ drivers/scsi/ufs/Kconfig                          |  41 ++
+ drivers/scsi/ufs/Makefile                         |   3 +
+ drivers/scsi/ufs/ufs-dwc-pci.c                    | 180 ++++++
+ drivers/scsi/ufs/ufs-dwc.c                        | 102 +++
+ drivers/scsi/ufs/ufshcd-dwc.c                     | 736 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd-dwc.h                     |  18 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c                  |   2 +-
+ drivers/scsi/ufs/ufshcd.c                         |  50 +-
+ drivers/scsi/ufs/ufshcd.h                         |  13 +
+ drivers/scsi/ufs/ufshci-dwc.h                     |  42 ++
+ drivers/scsi/ufs/ufshci.h                         |   1 +
+ drivers/scsi/ufs/unipro.h                         |  39 ++
+ 14 files changed, 1232 insertions(+), 18 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+ create mode 100644 drivers/scsi/ufs/ufs-dwc-pci.c
+ create mode 100644 drivers/scsi/ufs/ufs-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
+ create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
 
-The fix for this soft lockup is to not keep looping over a device that
-we've called remove on but which hasn't gone into DEL state.  This
-patch will retain a simplistic memory of the last target and not keep
-looping over it.
+-- 
+1.8.1.5
 
-Reported-by: Sebastian Herbszt <herbszt@gmx.de>
-Tested-by: Sebastian Herbszt <herbszt@gmx.de>
-Fixes: 40998193560dab6c3ce8d25f4fa58a23e252ef38
-Cc: stable@vger.kernel.org
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
----
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 4f18a85..00bc721 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1272,16 +1272,18 @@ static void __scsi_remove_target(struct scsi_target *starget)
- void scsi_remove_target(struct device *dev)
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
--	struct scsi_target *starget;
-+	struct scsi_target *starget, *last_target = NULL;
- 	unsigned long flags;
- 
- restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(starget, &shost->__targets, siblings) {
--		if (starget->state == STARGET_DEL)
-+		if (starget->state == STARGET_DEL ||
-+		    starget == last_target)
- 			continue;
- 		if (starget->dev.parent == dev || &starget->dev == dev) {
- 			kref_get(&starget->reap_ref);
-+			last_target = starget;
- 			spin_unlock_irqrestore(shost->host_lock, flags);
- 			__scsi_remove_target(starget);
- 			scsi_target_reap(starget);
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
