@@ -1,35 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] st: Fix MTMKPART to work with newer drives
-Date: Tue, 09 Feb 2016 21:24:06 -0500
-Message-ID: <yq1h9hhb8vt.fsf@sermon.lab.mkp.net>
-References: <alpine.LSU.2.11.1602092146480.4677@xnv.znxvfnen.cevingr>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 112241] New: Under heavy load FC TARGET going to Oops
+Date: Wed, 10 Feb 2016 07:32:13 +0000
+Message-ID: <bug-112241-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38223 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034AbcBJCYW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2016 21:24:22 -0500
-In-Reply-To: <alpine.LSU.2.11.1602092146480.4677@xnv.znxvfnen.cevingr> (Kai
-	Makisara's message of "Tue, 9 Feb 2016 21:56:55 +0200 (EET)")
+Received: from mail.kernel.org ([198.145.29.136]:58325 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751960AbcBJHcU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Feb 2016 02:32:20 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 272C1202EB
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2016 07:32:16 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 8EAD7202C8
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2016 07:32:14 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org, "Seymour, Shane M" <shane.seymour@hpe.com>, Douglas Gilbert <dgilbert@interlog.com>, Laurence Oberman <loberman@redhat.com>, Emmanuel Florac <eflorac@intellique.com>
+To: linux-scsi@vger.kernel.org
 
->>>>> "Kai" == Kai Makisara <Kai.Makisara@kolumbus.fi> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=112241
 
-Kai> Change the MTMKPART operation of the MTIOCTOP ioctl so that it
-Kai> works also with current drives (LTO-5/6, etc.). Send a separate
-Kai> FORMAT MEDIUM command if the partition mode page indicates that
-Kai> this is required. Use LOAD to position the tape at the beginning of
-Kai> tape.
+            Bug ID: 112241
+           Summary: Under heavy load FC TARGET going to Oops
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.3.3
+          Hardware: Intel
+                OS: Linux
+              Tree: Fedora
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: QLOGIC QLA2XXX
+          Assignee: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+          Reporter: anthony.bloodoff@gmail.com
+        Regression: No
 
-Kai> The operation is extended so that if the argument is negative, its
-Kai> absolute value specifies the size of partition 0, which is the
-Kai> physically first partition of the tape.
+Created attachment 203261
+  --> https://bugzilla.kernel.org/attachment.cgi?id=203261&action=edit
+Kernel stacktrace
 
-Applied to 4.6/scsi-queue.
+Storage on Linux Fedora with QLogic Corp. ISP2532-based 8Gb Fibre Channel to
+PCI Express HBA exporting Adaptec RAID6 with bcache on Intel SSD to VMWARE 5
+On heavy load (for example VM migrating from storage) system going to Oops.
+
+
+Stacktrace attached
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+You are receiving this mail because:
+You are watching the assignee of the bug.
