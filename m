@@ -1,26 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: Remove redundant code block in lpfc_scsi_cmd_iocb_cmpl
-Date: Wed, 10 Feb 2016 19:15:07 -0500
-Message-ID: <yq137t09k6s.fsf@sermon.lab.mkp.net>
-References: <1453302520-10499-1-git-send-email-jthumshirn@suse.de>
+Subject: Re: [PATCH v2] megaraid_sas: add an i/o barrier
+Date: Wed, 10 Feb 2016 19:17:37 -0500
+Message-ID: <yq1y4as85i6.fsf@sermon.lab.mkp.net>
+References: <56AF67B4.2010702@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453302520-10499-1-git-send-email-jthumshirn@suse.de> (Johannes
-	Thumshirn's message of "Wed, 20 Jan 2016 16:08:40 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <56AF67B4.2010702@redhat.com> (Tomas Henzl's message of "Mon, 1
+	Feb 2016 15:12:04 +0100")
+Sender: stable-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Sumit.Saxena@avagotech.com" <Sumit.Saxena@avagotech.com>, "Desai, Kashyap" <Kashyap.Desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
 
-Johannes> This removes a redundant code block that will either be
-Johannes> executed if the ENABLE_FCP_RING_POLLING flag is set in
-Johannes> phba->cfg_poll or not. The code is just duplicated in both
-Johannes> cases, hence we unify it again.
-
-Johannes> This probably is a left over from some sort of refactoring.
+Tomas> A barrier should be added to ensure proper ordering of memory
+Tomas> mapped writes.
 
 Applied to 4.6/scsi-queue.
 
