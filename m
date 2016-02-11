@@ -1,32 +1,31 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH RESEND] scsi: sim710: fix build warning
-Date: Thu, 11 Feb 2016 09:46:11 +0100
-Message-ID: <20160211084611.GW27969@c203.arch.suse.de>
-References: <1455166743-3572-1-git-send-email-sudipm.mukherjee@gmail.com>
+Subject: Re: [PATCH v2 2/7] ibmvscsi: Add and use enums for valid CRQ header
+ values
+Date: Thu, 11 Feb 2016 09:51:46 +0100
+Message-ID: <20160211085146.GX27969@c203.arch.suse.de>
+References: <1455154348-3226-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <1455154348-3226-3-git-send-email-tyreld@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1455166743-3572-1-git-send-email-sudipm.mukherjee@gmail.com>
+In-Reply-To: <1455154348-3226-3-git-send-email-tyreld@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, manoj@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 11, 2016 at 10:29:03AM +0530, Sudip Mukherjee wrote:
-> We are getting build warning about:
->  "Section mismatch in reference from the variable sim710_eisa_driver =
-to
->  the function .init.text:sim710_eisa_probe()
->  The variable sim710_eisa_driver references the function __init
->  sim710_eisa_probe()"
+On Wed, Feb 10, 2016 at 07:32:23PM -0600, Tyrel Datwyler wrote:
+> The PAPR defines four valid header values for the first byte of a
+> CRQ message. Namely, an unused/empty message (0x00), a valid
+> command/response entry (0x80), a valid initialization entry (0xC0),
+> and a valid transport event (0xFF). Further, initialization responses
+> have two formats namely initialize (0x01) and initialize complete
+> (0x02). Define these values as enums and use them in the code in
+> place of their magic number equivalents.
 >=20
-> sim710_eisa_probe() was having __init but that was being referenced f=
-rom
-> sim710_eisa_driver.
->=20
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
