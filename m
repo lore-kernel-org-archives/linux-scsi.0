@@ -1,22 +1,23 @@
-From: "Ms. Golan" <g_garcia@muniplibre.gob.pe>
-Subject: Very Urgent!!!!
-Date: Sun, 07 Feb 2016 15:24:13 +0530
-Message-ID: <20160207095455.0809C1A87527@mail.muniplibre.gob.pe>
-Reply-To: goe009@qq.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [scsi 1/2] ufs: fix typo: MAZ to MAX
+Date: Thu, 11 Feb 2016 09:29:52 -0500
+Message-ID: <yq1ziv75nhb.fsf@sermon.lab.mkp.net>
+References: <1455006341-1260-1-git-send-email-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.muniplibre.gob.pe ([201.131.221.122]:54816 "EHLO
-	[201.131.221.122]" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752970AbcBKNJq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2016 08:09:46 -0500
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1455006341-1260-1-git-send-email-tomas.winkler@intel.com> (Tomas
+	Winkler's message of "Tue, 9 Feb 2016 10:25:40 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: James Bottomley <JBottomley@Parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipient <g_garcia@muniplibre.gob.pe>
 
-  I am Ms.Golan I am getting in touch with you regarding an extremely important and urgent matter.If you would oblige me the opportunity,shall provide you with details upon your response
+>>>>> "Tomas" == Tomas Winkler <tomas.winkler@intel.com> writes:
 
-Faithfully,
-Ms. Golan
+Tomas> QUERY_DESC_GEOMETRY_MAZ_SIZE QUERY_DESC_GEOMETRY_MAX_SIZE
+
+Applied to 4.6/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
