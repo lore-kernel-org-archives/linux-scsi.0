@@ -1,37 +1,43 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] target: Fix incorrect unmap_zeroes_data_store return
-Date: Thu, 11 Feb 2016 07:02:26 +0000
-Message-ID: <1455174146-29700-1-git-send-email-nab@daterainc.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/2] qla2xxx: Fixes for target-pending
+Date: Wed, 10 Feb 2016 23:11:35 -0800
+Message-ID: <1455174695.27060.52.camel@haakon3.risingtidesystems.com>
+References: <1455148754-17330-1-git-send-email-himanshu.madhani@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1455148754-17330-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jamie Pocas <jamie.pocas@emc.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: target-devel@vger.kernel.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2016-02-10 at 18:59 -0500, Himanshu Madhani wrote:
+> Hi Nic, 
+> 
+> Here are the patches that addresses review comments from Bart
+> and Christoph. See email threads
+> 
+>  http://www.spinics.net/lists/target-devel/msg11418.html
+>  http://www.spinics.net/lists/target-devel/msg11419.html
+> 
+> Please apply these patches to target-pending.
+> 
+> Thanks,
+> Himanshu
+> 
+> Quinn Tran (2):
+>   target/transport: add flag to indicate CPU Affinity is observed
+>   qla2xxx: use TARGET_SCF_USE_CPUID flag to indiate CPU Affinity
+> 
+>  drivers/scsi/qla2xxx/qla_target.c      |    4 ++--
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    3 +++
+>  drivers/target/target_core_transport.c |   12 +++++++++---
+>  include/target/target_core_base.h      |    2 ++
+>  4 files changed, 16 insertions(+), 5 deletions(-)
+> 
 
-This patch fixes an incorrect return of zero from the new
-unmap_zeroes_data_store() configfs store attribute handler
-introduced in v4.5-rc1, to use the correct 'count' bytes
-return value.
+Applied to target-pending/master.
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_configfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 3327c49..713c63d9 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -898,7 +898,7 @@ static ssize_t unmap_zeroes_data_store(struct config_item *item,
- 	da->unmap_zeroes_data = flag;
- 	pr_debug("dev[%p]: SE Device Thin Provisioning LBPRZ bit: %d\n",
- 		 da->da_dev, flag);
--	return 0;
-+	return count;
- }
- 
- /*
--- 
-1.9.1
+Thanks Himanshu & Quinn!
