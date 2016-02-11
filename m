@@ -1,43 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] qla2xxx: Fixes for target-pending
-Date: Wed, 10 Feb 2016 23:11:35 -0800
-Message-ID: <1455174695.27060.52.camel@haakon3.risingtidesystems.com>
-References: <1455148754-17330-1-git-send-email-himanshu.madhani@qlogic.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH RESEND] scsi: sim710: fix build warning
+Date: Thu, 11 Feb 2016 09:46:11 +0100
+Message-ID: <20160211084611.GW27969@c203.arch.suse.de>
+References: <1455166743-3572-1-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1455148754-17330-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: target-devel@vger.kernel.org, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1455166743-3572-1-git-send-email-sudipm.mukherjee@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2016-02-10 at 18:59 -0500, Himanshu Madhani wrote:
-> Hi Nic, 
-> 
-> Here are the patches that addresses review comments from Bart
-> and Christoph. See email threads
-> 
->  http://www.spinics.net/lists/target-devel/msg11418.html
->  http://www.spinics.net/lists/target-devel/msg11419.html
-> 
-> Please apply these patches to target-pending.
-> 
-> Thanks,
-> Himanshu
-> 
-> Quinn Tran (2):
->   target/transport: add flag to indicate CPU Affinity is observed
->   qla2xxx: use TARGET_SCF_USE_CPUID flag to indiate CPU Affinity
-> 
->  drivers/scsi/qla2xxx/qla_target.c      |    4 ++--
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    3 +++
->  drivers/target/target_core_transport.c |   12 +++++++++---
->  include/target/target_core_base.h      |    2 ++
->  4 files changed, 16 insertions(+), 5 deletions(-)
-> 
+On Thu, Feb 11, 2016 at 10:29:03AM +0530, Sudip Mukherjee wrote:
+> We are getting build warning about:
+>  "Section mismatch in reference from the variable sim710_eisa_driver =
+to
+>  the function .init.text:sim710_eisa_probe()
+>  The variable sim710_eisa_driver references the function __init
+>  sim710_eisa_probe()"
+>=20
+> sim710_eisa_probe() was having __init but that was being referenced f=
+rom
+> sim710_eisa_driver.
+>=20
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
 
-Applied to target-pending/master.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Thanks Himanshu & Quinn!
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
