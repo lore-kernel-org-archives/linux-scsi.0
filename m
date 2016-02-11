@@ -1,38 +1,61 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v7 1/3] fixed typo in ufshcd-pltfrm
-Date: Thu, 11 Feb 2016 12:13:04 +0000
-Message-ID: <22483cd2b1ca1ab41de7d5d8d6dd656baad39aa4.1455192008.git.jpinto@synopsys.com>
-References: <cover.1455192008.git.jpinto@synopsys.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1455192008.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1455192008.git.jpinto@synopsys.com>
-References: <cover.1455192008.git.jpinto@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, arnd@arndb.de, mark.rutland@arm.com
-Cc: gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+From: "Jitendra Bhivare" <jitendra.bhivare@broadcom.com>
+Subject: RE: [PATCH] be2iscsi: Fix memory leak in beiscsi_alloc_mem()
+Date: Thu, 11 Feb 2016 04:59:31 -0800
+Message-ID: <026a01d164cc$0eed1720$2cc74560$@broadcom.com>
+References: <1443689785-13712-1-git-send-email-mlombard@redhat.com> <CAJRCtXfbT9OrVVDrnC=1V1B4iFUm+FHN4fxQV1CUCY3pXRHq2Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36387 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbcBKM7h convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2016 07:59:37 -0500
+Received: by mail-pa0-f46.google.com with SMTP id yy13so28633559pab.3
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2016 04:59:37 -0800 (PST)
+In-Reply-To: <CAJRCtXfbT9OrVVDrnC=1V1B4iFUm+FHN4fxQV1CUCY3pXRHq2Q@mail.gmail.com>
+Content-Language: en-us
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, mlombard@redhat.com
+Cc: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, James.Bottomley@hansenpartnership.com
 
-Fixed typo in ufshcd-pltfrm.
+In case of error, the memory allocated for phwi_ctrlr was not freed.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
-Changes v0->v7:
-- Nothing changed (just to keep up with patch set version).
+ drivers/scsi/be2iscsi/be_main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
- drivers/scsi/ufs/ufshcd-pltfrm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 7a6dbfb..360aa88 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2706,8 +2706,10 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+        phwi_ctrlr->wrb_context = kzalloc(sizeof(struct hwi_wrb_context) *
+                                          phba->params.cxns_per_ctrl,
+                                          GFP_KERNEL);
+-       if (!phwi_ctrlr->wrb_context)
++       if (!phwi_ctrlr->wrb_context) {
++               kfree(phba->phwi_ctrlr);
+                return -ENOMEM;
++       }
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index d2a7b12..0522891 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -353,6 +353,6 @@ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
- 
- MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
--MODULE_DESCRIPTION("UFS host controller Pltform bus based glue driver");
-+MODULE_DESCRIPTION("UFS host controller Platform bus based glue driver");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(UFSHCD_DRIVER_VERSION);
--- 
-1.8.1.5
+        phba->init_mem = kcalloc(SE_MEM_MAX, sizeof(*mem_descr),
+                                 GFP_KERNEL);
+--
+Maurizio Lombardi
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Reviewed-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+
+Thanks,
+
+JB
+
+
