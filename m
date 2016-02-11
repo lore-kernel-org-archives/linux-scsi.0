@@ -1,18 +1,18 @@
-From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
 Subject: Re: [PATCH v6 2/2] add support for DWC UFS Host Controller
-Date: Thu, 11 Feb 2016 10:25:59 +0000
-Message-ID: <56BC61B7.2070507@synopsys.com>
+Date: Thu, 11 Feb 2016 10:26:23 +0000
+Message-ID: <56BC61CF.3010605@synopsys.com>
 References: <cover.1455120183.git.jpinto@synopsys.com>
  <0787e532da876f7f38b4f439ec2e16bfcbaa9cb3.1455120183.git.jpinto@synopsys.com>
  <6667560.LIsUD7xT9u@wuerfel>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <6667560.LIsUD7xT9u@wuerfel>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, mark.rutland@arm.com, martin.petersen@oracle.com, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 2/10/2016 8:50 PM, Arnd Bergmann wrote:
@@ -20,7 +20,7 @@ On 2/10/2016 8:50 PM, Arnd Bergmann wrote:
 >> This patch has the goal to add support for DesignWare UFS Controller
 >> specific operations and to add specific platform and pci drivers.
 >>
->> Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 >>  Documentation/devicetree/bindings/ufs/ufs-dwc.txt |  17 +
 >>  MAINTAINERS                                       |   6 +
 >>  drivers/scsi/ufs/Kconfig                          |  41 ++
@@ -116,6 +116,7 @@ attributes to put controller+Test Chip working together as one.
 > 
 > Please remove the #ifdef here.
 
+I'll check it out.
 
 > 
 >> +
@@ -129,6 +130,7 @@ attributes to put controller+Test Chip working together as one.
 > 
 > Instead, use the macros from include/linux/pm.h
 
+I'll check it out.
 
 > 
 >> +#ifdef CONFIG_SCSI_UFS_DWC_40BIT_RMMI
@@ -178,7 +180,3 @@ IP guys the best way to go.
 > 
 
 Joao
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
