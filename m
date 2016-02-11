@@ -1,63 +1,57 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: lpfc: Modularize and cleanup FDMI code in driver
-Date: Thu, 11 Feb 2016 10:07:33 -0500
-Message-ID: <yq137sz5lqi.fsf@sermon.lab.mkp.net>
-References: <20160201110129.GA24069@mwanda>
+Subject: Re: megaraid_sas: Task management support
+Date: Thu, 11 Feb 2016 10:18:50 -0500
+Message-ID: <yq1y4ar46n9.fsf@sermon.lab.mkp.net>
+References: <20160208182130.GB18802@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47220 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbcBKPHi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2016 10:07:38 -0500
-In-Reply-To: <20160201110129.GA24069@mwanda> (Dan Carpenter's message of "Mon,
-	1 Feb 2016 14:01:29 +0300")
+Received: from userp1040.oracle.com ([156.151.31.81]:22372 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbcBKPTG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2016 10:19:06 -0500
+In-Reply-To: <20160208182130.GB18802@mwanda> (Dan Carpenter's message of "Mon,
+	8 Feb 2016 21:21:30 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, james.smart@broadcom.com, linux-scsi@vger.kernel.org
+To: sumit.saxena@broadcom.com
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Dick,
+Sumit,
 
-Please look into this...
+Please comment.
+
+Thanks!
 
 ---8<---
 
-The patch 4258e98ee386: "lpfc: Modularize and cleanup FDMI code in
-driver" from Dec 16, 2015, leads to the following static checker
-warning:
+Hello Sumit Saxena,
 
-	drivers/scsi/lpfc/lpfc_ct.c:2547 lpfc_fdmi_cmd()
-	error: __memcpy() '&rh->rpl.pe' too small (4 vs 8)
+The patch 31796fa184ee: "megaraid_sas: Task management support" from
+Jan 28, 2016, leads to the following static checker warning:
 
-drivers/scsi/lpfc/lpfc_ct.c
-  2534          /* Next fill in the specific FDMI cmd information */
-  2535          switch (cmdcode) {
-  2536          case SLI_MGMT_RHAT:
-  2537          case SLI_MGMT_RHBA:
-  2538                  rh = (struct lpfc_fdmi_reg_hba *)&CtReq->un.PortID;
-  2539                  /* HBA Identifier */
-  2540                  memcpy(&rh->hi.PortName, &phba->pport->fc_sparam.portName,
-  2541                         sizeof(struct lpfc_name));
-  2542  
-  2543                  if (cmdcode == SLI_MGMT_RHBA) {
-  2544                          /* Registered Port List */
-  2545                          /* One entry (port) per adapter */
-  2546                          rh->rpl.EntryCnt = cpu_to_be32(1);
-  2547                          memcpy(&rh->rpl.pe, &phba->pport->fc_sparam.portName,
-                                       ^^^^^^^^^^^
-.pe is a u32.
+	drivers/scsi/megaraid/megaraid_sas_base.c:1788 megasas_update_sdev_properties()
+	warn: if statement not indented
 
-  2548                                 sizeof(struct lpfc_name));
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^
-lpfc_name is an 8 byte union.
+drivers/scsi/megaraid/megaraid_sas_base.c
+  1781          } else {
+  1782                  device_id = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL)
+  1783                                          + sdev->id;
+  1784                  local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
+  1785                  ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
+  1786                  raid = MR_LdRaidGet(ld, local_map_ptr);
+  1787  
+  1788                  if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER)
+  1789                  blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
 
-  2549  
+It looks like the code is correct but the patch just deleted a tab
+accidentally.
 
-regards,
-dan carpenter
+  1790                  mr_device_priv_data->is_tm_capable =
+  1791                          raid->capability.tmCapable;
+  1792          }
+
 
 ---8<---
 
