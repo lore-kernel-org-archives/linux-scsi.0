@@ -1,28 +1,46 @@
-From: fu.zhongjun@execs.com
-Subject: Good day
-Date: Wed, 10 Feb 2016 17:34:03 +0100
-Message-ID: <TRU-DC2fWXWzRPTNZSt00009988__28217.7699417391$1455162681$gmane$org@TRU-DC2.utu-trust.com>
-Reply-To: fuzhong348@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 71-95-209-123.static.mtpk.ca.charter.com ([71.95.209.123]:22398
-	"HELO TRU-DC2.utu-trust.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1753159AbcBKDuE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Feb 2016 22:50:04 -0500
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: [PATCH RESEND] scsi: sim710: fix build warning
+Date: Thu, 11 Feb 2016 10:29:03 +0530
+Message-ID: <1455166743-3572-1-git-send-email-sudipm.mukherjee@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <fu.zhongjun@execs.com>
 
-Good day,
+We are getting build warning about:
+ "Section mismatch in reference from the variable sim710_eisa_driver to
+ the function .init.text:sim710_eisa_probe()
+ The variable sim710_eisa_driver references the function __init
+ sim710_eisa_probe()"
 
-I need a foreign partner for a proposed mutual business, which refers to the transfer of a large sum of money to an account abroad, as the beneficiary of the funds. Everything about this operation, will be legally done without any bridge financial authority, both in my country and yours.I wil indulge you exercise the utmost discretion in all matters concerning this issue. If you are interested, please reply back through my private email address written down, I'll give you more information about myself with the financial institution I represented and the actual amounts involved about the project so I receive your positive response.
+sim710_eisa_probe() was having __init but that was being referenced from
+sim710_eisa_driver.
 
-Private E-mail: fu.zhong@fuzhongjun.net
+Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+---
 
-Friendly greeting,
+patch first sent on 4th Sept.2015. There is no review or ACK yet.
+warning is still there with next-20160209,
+build log is at:
+https://travis-ci.org/sudipm-mukherjee/parport/jobs/107948115
 
-Executive director.
+ drivers/scsi/sim710.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sim710.c b/drivers/scsi/sim710.c
+index 3b3b56f..82ed998 100644
+--- a/drivers/scsi/sim710.c
++++ b/drivers/scsi/sim710.c
+@@ -176,8 +176,7 @@ static struct eisa_device_id sim710_eisa_ids[] = {
+ };
+ MODULE_DEVICE_TABLE(eisa, sim710_eisa_ids);
+ 
+-static __init int
+-sim710_eisa_probe(struct device *dev)
++static int sim710_eisa_probe(struct device *dev)
+ {
+ 	struct eisa_device *edev = to_eisa_device(dev);
+ 	unsigned long io_addr = edev->base_addr;
+-- 
+1.9.1
