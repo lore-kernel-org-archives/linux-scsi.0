@@ -1,43 +1,31 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 0/2] qla2xxx: Fixes for target-pending
-Date: Wed, 10 Feb 2016 18:59:12 -0500
-Message-ID: <1455148754-17330-1-git-send-email-himanshu.madhani@qlogic.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/7] SCSI bug fixes for 4.6
+Date: Wed, 10 Feb 2016 20:24:21 -0500
+Message-ID: <yq1si1082ey.fsf@sermon.lab.mkp.net>
+References: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:32730 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751210AbcBKAmF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Feb 2016 19:42:05 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:21244 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752114AbcBKBYy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2016 20:24:54 -0500
+In-Reply-To: <1453910247-3447628-1-git-send-email-arnd@arndb.de> (Arnd
+	Bergmann's message of "Wed, 27 Jan 2016 16:57:16 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel@vger.kernel.org, nab@linux-iscsi.org
-Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James.Bottomley@HansenPartnership.com, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 
-Hi Nic, 
+>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 
-Here are the patches that addresses review comments from Bart
-and Christoph. See email threads
+Arnd> Here are a bunch of fixes for harmless bugs I found during ARM
+Arnd> randconfig testing. It would be nice to get them mered in 4.6, but
+Arnd> there is no need to have them in 4.5 as no incorrect behavior
+Arnd> results from the current code, and the warnings are all hard to
+Arnd> trigger.
 
- http://www.spinics.net/lists/target-devel/msg11418.html
- http://www.spinics.net/lists/target-devel/msg11419.html
-
-Please apply these patches to target-pending.
-
-Thanks,
-Himanshu
-
-Quinn Tran (2):
-  target/transport: add flag to indicate CPU Affinity is observed
-  qla2xxx: use TARGET_SCF_USE_CPUID flag to indiate CPU Affinity
-
- drivers/scsi/qla2xxx/qla_target.c      |    4 ++--
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |    3 +++
- drivers/target/target_core_transport.c |   12 +++++++++---
- include/target/target_core_base.h      |    2 ++
- 4 files changed, 16 insertions(+), 5 deletions(-)
+Applied to 4.6/scsi-queue.
 
 -- 
-1.7.7
-
+Martin K. Petersen	Oracle Linux Engineering
