@@ -1,21 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [scsi 1/2] ufs: fix typo: MAZ to MAX
-Date: Thu, 11 Feb 2016 09:29:52 -0500
-Message-ID: <yq1ziv75nhb.fsf@sermon.lab.mkp.net>
-References: <1455006341-1260-1-git-send-email-tomas.winkler@intel.com>
+Subject: Re: [PATCH] be2iscsi: Fix memory leak in beiscsi_alloc_mem()
+Date: Thu, 11 Feb 2016 09:34:29 -0500
+Message-ID: <yq1vb5v5n9m.fsf@sermon.lab.mkp.net>
+References: <1443689785-13712-1-git-send-email-mlombard@redhat.com>
+	<CAJRCtXfbT9OrVVDrnC=1V1B4iFUm+FHN4fxQV1CUCY3pXRHq2Q@mail.gmail.com>
+	<026a01d164cc$0eed1720$2cc74560$@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1455006341-1260-1-git-send-email-tomas.winkler@intel.com> (Tomas
-	Winkler's message of "Tue, 9 Feb 2016 10:25:40 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: James Bottomley <JBottomley@Parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20454 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684AbcBKOen (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2016 09:34:43 -0500
+In-Reply-To: <026a01d164cc$0eed1720$2cc74560$@broadcom.com> (Jitendra
+	Bhivare's message of "Thu, 11 Feb 2016 04:59:31 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, mlombard@redhat.com, jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, James.Bottomley@hansenpartnership.com
 
->>>>> "Tomas" == Tomas Winkler <tomas.winkler@intel.com> writes:
+>>>>> "Jitendra" == Jitendra Bhivare <jitendra.bhivare@broadcom.com> writes:
 
-Tomas> QUERY_DESC_GEOMETRY_MAZ_SIZE QUERY_DESC_GEOMETRY_MAX_SIZE
+Jitendra> In case of error, the memory allocated for phwi_ctrlr was not
+Jitendra> freed.
 
 Applied to 4.6/scsi-queue.
 
