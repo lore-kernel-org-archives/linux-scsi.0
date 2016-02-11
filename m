@@ -1,31 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] SCSI bug fixes for 4.6
-Date: Wed, 10 Feb 2016 20:24:21 -0500
-Message-ID: <yq1si1082ey.fsf@sermon.lab.mkp.net>
-References: <1453910247-3447628-1-git-send-email-arnd@arndb.de>
+Subject: Re: [Resend PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Wed, 10 Feb 2016 20:29:54 -0500
+Message-ID: <yq1oabo825p.fsf@sermon.lab.mkp.net>
+References: <55E83D39.4030107@gmail.com> <mqd37yvbnbo.fsf@c203.arch.suse.de>
+	<56AB4B4C.4050405@gmail.com> <56B333BB.6040603@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21244 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752114AbcBKBYy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Feb 2016 20:24:54 -0500
-In-Reply-To: <1453910247-3447628-1-git-send-email-arnd@arndb.de> (Arnd
-	Bergmann's message of "Wed, 27 Jan 2016 16:57:16 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56B333BB.6040603@gmail.com> (Charles Chiou's message of "Thu, 04
+	Feb 2016 19:19:23 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Charles Chiou <ch1102chiou@gmail.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Oliver Neukum <oneukum@suse.de>, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James.Bottomley@HansenPartnership.com, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Charles" == Charles Chiou <ch1102chiou@gmail.com> writes:
 
-Arnd> Here are a bunch of fixes for harmless bugs I found during ARM
-Arnd> randconfig testing. It would be nice to get them mered in 4.6, but
-Arnd> there is no need to have them in 4.5 as no incorrect behavior
-Arnd> results from the current code, and the warnings are all hard to
-Arnd> trigger.
+Charles,
 
-Applied to 4.6/scsi-queue.
+Charles> Pegasus is a high performace hardware RAID solution designed to
+Charles> unleash the raw power of Thunderbolt technology.
+
+Please address Oliver's concerns about power management.
+
+Also, I was going to merge the first two patches in the series but your
+mailer mangled them and they did not apply. Please use git send-email to
+submit patches.
+
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
