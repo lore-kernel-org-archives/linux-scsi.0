@@ -1,43 +1,76 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] ibmvfc: byteswap scsi_id, wwpn, and node_name prior to
- logging
-Date: Fri, 12 Feb 2016 09:19:28 +0100
-Message-ID: <20160212081928.GO27969@c203.arch.suse.de>
-References: <1455229475-3984-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv6 01/23] scsi_dh_alua: Pass buffer as function argument
+Date: Fri, 12 Feb 2016 09:25:24 +0100
+Message-ID: <1455265546-44470-2-git-send-email-hare@suse.de>
+References: <1455265546-44470-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51676 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52073 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751598AbcBLITc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Feb 2016 03:19:32 -0500
-Content-Disposition: inline
-In-Reply-To: <1455229475-3984-1-git-send-email-tyreld@linux.vnet.ibm.com>
+	id S1751320AbcBLIZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Feb 2016 03:25:52 -0500
+In-Reply-To: <1455265546-44470-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
 
-On Thu, Feb 11, 2016 at 04:24:35PM -0600, Tyrel Datwyler wrote:
-> When logging async events the scsi_id, wwpn, and node_name values
-> are used directly from the CRQ struct which are of type __be64. This
-> can be confusing to someone looking through the log on a LE system.
-> Instead byteswap these values to host endian prior to logging.
->=20
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Pass in the buffer as a function argument for submit_rtpg().
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 5a328bf..df71e85 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -135,12 +135,13 @@ static struct request *get_alua_req(struct scsi_device *sdev,
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
++static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
++			    int bufflen, unsigned char *sense, int flags)
+ {
+ 	struct request *rq;
+ 	int err = 0;
+ 
+-	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
++	rq = get_alua_req(sdev, buff, bufflen, READ);
+ 	if (!rq) {
+ 		err = DRIVER_BUSY << 24;
+ 		goto done;
+@@ -148,14 +149,14 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_IN;
+-	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
++	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+-	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
++	put_unaligned_be32(bufflen, &rq->cmd[6]);
+ 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+ 
+-	rq->sense = h->sense;
++	rq->sense = sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = 0;
+ 
+@@ -446,7 +447,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+ 
+  retry:
+-	retval = submit_rtpg(sdev, h);
++	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
+ 	if (retval) {
+ 		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+ 					  &sense_hdr)) {
+-- 
+1.8.5.6
+
