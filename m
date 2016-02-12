@@ -1,74 +1,120 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv6 11/23] scsi_dh_alua: move optimize_stpg evaluation
-Date: Fri, 12 Feb 2016 09:25:34 +0100
-Message-ID: <1455265546-44470-12-git-send-email-hare@suse.de>
+Subject: [PATCHv6 10/23] revert commit a8e5a2d593cb ("[SCSI] scsi_dh_alua: ALUA handler attach should succeed while TPG is transitioning")
+Date: Fri, 12 Feb 2016 09:25:33 +0100
+Message-ID: <1455265546-44470-11-git-send-email-hare@suse.de>
 References: <1455265546-44470-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52084 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52085 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751372AbcBLIZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751369AbcBLIZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 12 Feb 2016 03:25:52 -0500
 In-Reply-To: <1455265546-44470-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
 
-When the optimize_stpg module option is set we should just set it
-once during port_group allocation. Doing so allows us to override
-it later with device specific settings.
+This reverts commit a8e5a2d593cbfccf530c3382c2c328d2edaa7b66
+
+Obsoleted by the next patch.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Ewan Milne <emilne@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 31 ++++++++++++------------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 61c67e6..0212aee 100644
+index a1bcad3..61c67e6 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -64,6 +64,10 @@
- #define ALUA_OPTIMIZE_STPG		1
- #define ALUA_RTPG_EXT_HDR_UNSUPP	2
+@@ -92,7 +92,7 @@ struct alua_dh_data {
+ #define ALUA_POLICY_SWITCH_CURRENT	0
+ #define ALUA_POLICY_SWITCH_ALL		1
  
-+static uint optimize_stpg;
-+module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than sending a STPG, when implicit TPGS is supported (0=No,1=Yes). Default is 0.");
-+
- static LIST_HEAD(port_group_list);
- static DEFINE_SPINLOCK(port_group_lock);
+-static int alua_rtpg(struct scsi_device *, struct alua_port_group *, int);
++static int alua_rtpg(struct scsi_device *, struct alua_port_group *);
+ static char print_alua_state(int);
  
-@@ -219,6 +223,8 @@ struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
- 	pg->group_id = group_id;
- 	pg->tpgs = tpgs;
- 	pg->state = TPGS_STATE_OPTIMIZED;
-+	if (optimize_stpg)
-+		pg->flags |= ALUA_OPTIMIZE_STPG;
- 	kref_init(&pg->kref);
+ static void release_port_group(struct kref *kref)
+@@ -326,7 +326,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 		    ALUA_DH_NAME, h->pg->device_id_str,
+ 		    h->group_id, h->rel_port);
  
- 	spin_lock(&port_group_lock);
-@@ -680,10 +686,6 @@ static int alua_set_params(struct scsi_device *sdev, const char *params)
- 	return result;
+-	return alua_rtpg(sdev, h->pg, 0);
++	return alua_rtpg(sdev, h->pg);
  }
  
--static uint optimize_stpg;
--module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than sending a STPG, when implicit TPGS is supported (0=No,1=Yes). Default is 0.");
--
+ static char print_alua_state(int state)
+@@ -409,13 +409,12 @@ static int alua_check_sense(struct scsi_device *sdev,
  /*
-  * alua_activate - activate a path
-  * @sdev: device on the path to be activated
-@@ -705,9 +707,6 @@ static int alua_activate(struct scsi_device *sdev,
+  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
+  * @sdev: the device to be evaluated.
+- * @wait_for_transition: if nonzero, wait ALUA_FAILOVER_TIMEOUT seconds for device to exit transitioning state
+  *
+  * Evaluate the Target Port Group State.
+  * Returns SCSI_DH_DEV_OFFLINED if the path is
+  * found to be unusable.
+  */
+-static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
++static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+@@ -506,8 +505,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 	else
+ 		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
  
- 	kref_get(&h->pg->kref);
+-	if (wait_for_transition &&
+-	    (orig_transition_tmo != pg->transition_tmo)) {
++	if (orig_transition_tmo != pg->transition_tmo) {
+ 		sdev_printk(KERN_INFO, sdev,
+ 			    "%s: transition timeout set to %d seconds\n",
+ 			    ALUA_DH_NAME, pg->transition_tmo);
+@@ -545,19 +543,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
  
--	if (optimize_stpg)
--		h->pg->flags |= ALUA_OPTIMIZE_STPG;
+ 	switch (pg->state) {
+ 	case TPGS_STATE_TRANSITIONING:
+-		if (wait_for_transition) {
+-			if (time_before(jiffies, expiry)) {
+-				/* State transition, retry */
+-				interval += 2000;
+-				msleep(interval);
+-				goto retry;
+-			}
+-			err = SCSI_DH_RETRY;
+-		} else {
+-			err = SCSI_DH_OK;
++		if (time_before(jiffies, expiry)) {
++			/* State transition, retry */
++			interval += 2000;
++			msleep(interval);
++			goto retry;
+ 		}
 -
- 	err = alua_rtpg(sdev, h->pg);
+ 		/* Transitioning time exceeded, set port to standby */
++		err = SCSI_DH_RETRY;
+ 		pg->state = TPGS_STATE_STANDBY;
+ 		break;
+ 	case TPGS_STATE_OFFLINE:
+@@ -715,14 +708,14 @@ static int alua_activate(struct scsi_device *sdev,
+ 	if (optimize_stpg)
+ 		h->pg->flags |= ALUA_OPTIMIZE_STPG;
+ 
+-	err = alua_rtpg(sdev, h->pg, 1);
++	err = alua_rtpg(sdev, h->pg);
  	if (err != SCSI_DH_OK) {
  		kref_put(&h->pg->kref, release_port_group);
+ 		goto out;
+ 	}
+ 	err = alua_stpg(sdev, h->pg);
+ 	if (err == SCSI_DH_RETRY)
+-		err = alua_rtpg(sdev, h->pg, 1);
++		err = alua_rtpg(sdev, h->pg);
+ 	kref_put(&h->pg->kref, release_port_group);
+ out:
+ 	if (fn)
 -- 
 1.8.5.6
 
