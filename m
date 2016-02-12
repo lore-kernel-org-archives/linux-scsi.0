@@ -1,42 +1,83 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 3/3] add support for DWC UFS Host Controller
-Date: Fri, 12 Feb 2016 13:36:39 -0600
-Message-ID: <CAL_JsqJ53VgyoJiLi-gYyd5F=7THaWAY0RG2+FO_Md8TzrSCMA@mail.gmail.com>
-References: <cover.1455192008.git.jpinto@synopsys.com> <ee97e9b0ece0d819debe403c752d233c6267e02e.1455192008.git.jpinto@synopsys.com>
- <20160212163636.GA31045@rob-hp-laptop> <56BE1BC8.5020604@synopsys.com>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 3/7] ibmvscsi: Replace magic values in
+ set_adpater_info() with defines
+Date: Fri, 12 Feb 2016 16:06:04 -0600
+Message-ID: <56BE574C.1090603@linux.vnet.ibm.com>
+References: <1455154348-3226-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <1455154348-3226-4-git-send-email-tyreld@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <56BE1BC8.5020604-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: vinayak holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1455154348-3226-4-git-send-email-tyreld@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, jthumshirn@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 12, 2016 at 11:52 AM, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org> wrote:
-> Hi Rob,
->
-> On 2/12/2016 4:36 PM, Rob Herring wrote:
->> On Thu, Feb 11, 2016 at 12:13:06PM +0000, Joao Pinto wrote:
->>> +Required properties:
->>> +- compatible        : compatible string ("snps,ufshcd-1.0", "snps,ufshcd-1.1"
->>> +  or "snps,ufshcd-2.0")
->>
->> History has taught us this needs to have a vendor specific compatible
->> string as well. Don't necessarily have to define it now, but just state
->> a vendor string is needed too.
->
-> The compatibility string already as the "snps" which is the acronym for Synopsys
-> which is the HW Controller vendor. Isn't this enough?
 
-Go look drivers for any licensed IP: DW PCIe, DW GMAC, USB EHCI
-controllers (pretty much all licensed IP), etc. They all have
-variations either from versions of the IP, configuration of the IP,
-"enhancements" by the licensee, integration quirks, or all of the
-above.
+Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
 
-Rob
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+Manoj Kumar
+
+On 2/10/2016 7:32 PM, Tyrel Datwyler wrote:
+> Add defines for mad version and mad os_type, and replace the magic
+> numbers in set_adapter_info() accordingly.
+>
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+> ---
+>   drivers/scsi/ibmvscsi/ibmvscsi.c | 8 ++++----
+>   drivers/scsi/ibmvscsi/viosrp.h   | 3 +++
+>   2 files changed, 7 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index c888ea1..4b09a9b 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -283,8 +283,8 @@ static void set_adapter_info(struct ibmvscsi_host_data *hostdata)
+>   	hostdata->madapter_info.partition_number =
+>   					cpu_to_be32(partition_number);
+>
+> -	hostdata->madapter_info.mad_version = cpu_to_be32(1);
+> -	hostdata->madapter_info.os_type = cpu_to_be32(2);
+> +	hostdata->madapter_info.mad_version = cpu_to_be32(SRP_MAD_VERSION_1);
+> +	hostdata->madapter_info.os_type = cpu_to_be32(SRP_MAD_OS_LINUX);
+>   }
+>
+>   /**
+> @@ -1398,7 +1398,7 @@ static void adapter_info_rsp(struct srp_event_struct *evt_struct)
+>   			hostdata->host->max_sectors =
+>   				be32_to_cpu(hostdata->madapter_info.port_max_txu[0]) >> 9;
+>   		
+> -		if (be32_to_cpu(hostdata->madapter_info.os_type) == 3 &&
+> +		if (be32_to_cpu(hostdata->madapter_info.os_type) == SRP_MAD_OS_AIX &&
+>   		    strcmp(hostdata->madapter_info.srp_version, "1.6a") <= 0) {
+>   			dev_err(hostdata->dev, "host (Ver. %s) doesn't support large transfers\n",
+>   				hostdata->madapter_info.srp_version);
+> @@ -1407,7 +1407,7 @@ static void adapter_info_rsp(struct srp_event_struct *evt_struct)
+>   			hostdata->host->sg_tablesize = MAX_INDIRECT_BUFS;
+>   		}
+>
+> -		if (be32_to_cpu(hostdata->madapter_info.os_type) == 3) {
+> +		if (be32_to_cpu(hostdata->madapter_info.os_type) == SRP_MAD_OS_AIX) {
+>   			enable_fast_fail(hostdata);
+>   			return;
+>   		}
+> diff --git a/drivers/scsi/ibmvscsi/viosrp.h b/drivers/scsi/ibmvscsi/viosrp.h
+> index 3d20851..d0f689b 100644
+> --- a/drivers/scsi/ibmvscsi/viosrp.h
+> +++ b/drivers/scsi/ibmvscsi/viosrp.h
+> @@ -221,7 +221,10 @@ struct mad_adapter_info_data {
+>   	char srp_version[8];
+>   	char partition_name[96];
+>   	__be32 partition_number;
+> +#define SRP_MAD_VERSION_1 1
+>   	__be32 mad_version;
+> +#define SRP_MAD_OS_LINUX 2
+> +#define SRP_MAD_OS_AIX 3
+>   	__be32 os_type;
+>   	__be32 port_max_txu[8];	/* per-port maximum transfer */
+>   };
+>
