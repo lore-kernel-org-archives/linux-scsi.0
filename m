@@ -1,83 +1,108 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] bio: return EINTR if copying to user space got
- interrupted
-Date: Fri, 12 Feb 2016 11:15:13 -0500
-Message-ID: <1455293713.22112.373.camel@localhost.localdomain>
-References: <1455266355-44676-1-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 3/3] add support for DWC UFS Host Controller
+Date: Fri, 12 Feb 2016 10:36:36 -0600
+Message-ID: <20160212163636.GA31045@rob-hp-laptop>
+References: <cover.1455192008.git.jpinto@synopsys.com>
+ <ee97e9b0ece0d819debe403c752d233c6267e02e.1455192008.git.jpinto@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1455266355-44676-1-git-send-email-hare@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org, #@suse.de, v.3.11+@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <ee97e9b0ece0d819debe403c752d233c6267e02e.1455192008.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2016-02-12 at 09:39 +0100, Hannes Reinecke wrote:
-> Commit 35dc248383bbab0a7203fca4d722875bc81ef091 introduced a check for
-> current->mm to see if we have a user space context and only copies data
-> if we do. Now if an IO gets interrupted by a signal data isn't copied
-> into user space any more (as we don't have a user space context) but
-> user space isn't notified about it.
+On Thu, Feb 11, 2016 at 12:13:06PM +0000, Joao Pinto wrote:
+> This patch has the goal to add support for DesignWare UFS Controller
+> specific operations and to add specific platform and pci drivers.
 > 
-> This patch modifies the behaviour to return -EINTR from bio_uncopy_user()
-> to notify userland that a signal has interrupted the syscall, otherwise
-> it could lead to a situation where the caller may get a buffer with
-> no data returned.
-> 
-> This can be reproduced by issuing SG_IO ioctl()s in one thread while
-> constantly sending signals to it.
-
-Well, this is definitely an improvement, since it now indicates to
-the user that there was a problem instead of silently returning with
-no data and no error, but it doesn't completely fix the issue.
-
-For one thing, if the SG_IO is performed to a sequential media device,
-the I/O is actually performed, and the position changes, it is just the
-data that is not copied back.  So e.g. a user program making calls to
-read from a tape device that gets signals and retrying on -EINTR will
-skip blocks.  There is a similar problem already with SG_IO and
--ERESTARTSYS.  I believe that that only way around this is to mask the
-signals.  (This is also problem with non-idempotent commands, such as
-COMPARE AND WRITE.)
-
-I should mention that the patch "sg: Fix user memory corruption when
-SG_IO is interrupted by a signal" broke a 3rd-party kernel module that
-happened to use SG_IO to pass *kernel* addresses for I/O.  Which worked
-for them until the current->mm test was added.  (I don't know why they
-didn't just put I/O on the request queue like everyone else, though.)
-
-This patch should go in, though.
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-> 
-> Fixes: 35dc248 [SCSI] sg: Fix user memory corruption when SG_IO is interrupted by a signal
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Cc: stable@vger.kernel.org # v.3.11+
+> Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
 > ---
->  block/bio.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+> Changes v6->v7 (Arnd Bergmann):
+> - Changed DT node name (to ufs only) and the memory address (to 0xd000000)
+> - Removed CONFIG_PM from the PCI glue driver (pm.h already does this)
+> - No other changes are necessary in ufshcd.c because of the link up notify
+>  function usage (it is simpler now)
+> - Removed the PHY mentioning since the Test Chip is not a real PHY for real
+>  world usage, since it is a test chip for prototyping with a very specific
+>  usage
+> - Added again the Test Chip 20-bit option
+> Changes v5->v6:
+> - Patch bad format fixed
+> Changes v4->v5 (Akinobu Mita):
+> - All functions used only locally in ufshcd-dwc are now declared as static
+> - ufshcd_dwc_configuration() was removed in ufshcd-dwc and a notify
+>  function (ufshcd_dwc_link_startup_notify) was created to deal with the
+>  DWC specific init routines
+> - 20-bit RMMI option was removed from Kconfig. Now if MPHY TC is selected
+>  and 40-bit is not then it assumes a 20-bit config
+> Changes v3->v4 (Arnd Bergmann and Mark Rutland):
+> - SCSI_UFS_DWC_HOOKS is now silent and selected by the SCSI_UFS_DWC_PLAT
+>  or SCSI_UFS_DWC_PCI
+> - Compatibility string has the ufs core version for info purposes since
+>  the driver is capable of getting the controller version from its 
+>  registers
+> - Created ufs-dwc-pci glue driver with specific DWC data
+> - MPHY configuration remains in the ufshcd-dwc since it is unipro
+>  attribute writting only not following the a linux phy framework logic
+> Changes v2->v3 (Julian Calaby):
+> - Implement a common DWC code to be used by the platform and pci glue
+>  drivers
+> - Synopsys ID & Class added to the existing pci driver and specific DWC
+>  was also added to the pci driver
+> Changes v1->v2 (Akinobu Mita):
+> - Implement a platform driver that uses the existing UFS core driver
+> - Add DWC specific code to the existing UFS core driver
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index dbabd48..24e5b69 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -1090,9 +1090,12 @@ int bio_uncopy_user(struct bio *bio)
->  	if (!bio_flagged(bio, BIO_NULL_MAPPED)) {
->  		/*
->  		 * if we're in a workqueue, the request is orphaned, so
-> -		 * don't copy into a random user address space, just free.
-> +		 * don't copy into a random user address space, just free
-> +		 * and return -EINTR so user space doesn't expect any data.
->  		 */
-> -		if (current->mm && bio_data_dir(bio) == READ)
-> +		if (!current->mm)
-> +			ret = -EINTR;
-> +		else if (bio_data_dir(bio) == READ)
->  			ret = bio_copy_to_iter(bio, bmd->iter);
->  		if (bmd->is_our_pages)
->  			bio_free_pages(bio);
+>  Documentation/devicetree/bindings/ufs/ufs-dwc.txt |  17 +
+>  MAINTAINERS                                       |   6 +
+>  drivers/scsi/ufs/Kconfig                          |  51 ++
+>  drivers/scsi/ufs/Makefile                         |   3 +
+>  drivers/scsi/ufs/ufs-dwc-pci.c                    | 172 +++++
+>  drivers/scsi/ufs/ufs-dwc.c                        | 102 +++
+>  drivers/scsi/ufs/ufshcd-dwc.c                     | 739 ++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd-dwc.h                     |  18 +
+>  drivers/scsi/ufs/ufshci-dwc.h                     |  42 ++
+>  drivers/scsi/ufs/unipro.h                         |  39 ++
+>  10 files changed, 1189 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+>  create mode 100644 drivers/scsi/ufs/ufs-dwc-pci.c
+>  create mode 100644 drivers/scsi/ufs/ufs-dwc.c
+>  create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
+>  create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
+>  create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-dwc.txt b/Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+> new file mode 100644
+> index 0000000..3cbfd77
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+> @@ -0,0 +1,17 @@
+> +* Universal Flash Storage (UFS) DesignWare Host Controller
+> +
+> +DWC_UFSHC nodes are defined to describe on-chip UFS host controllers.
+> +Each UFS controller instance should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible string ("snps,ufshcd-1.0", "snps,ufshcd-1.1"
+> +  or "snps,ufshcd-2.0")
+
+History has taught us this needs to have a vendor specific compatible 
+string as well. Don't necessarily have to define it now, but just state 
+a vendor string is needed too.
+
+> +- reg               : <registers mapping>
+> +- interrupts        : <interrupt mapping for UFS host controller IRQ>
+> +
+> +Example:
+> +	ufs@0xd0000000 {
+> +		compatible = "snps,ufshcd-2.0";
+> +		reg = < 0xd0000000 0x10000 >;
+> +		interrupts = < 24 >;
+> +	};
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
