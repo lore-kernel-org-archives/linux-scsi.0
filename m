@@ -1,48 +1,62 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH] Use ida_simple for SCSI iSCSI transport session id
-Date: Fri, 12 Feb 2016 09:54:51 -0800
-Message-ID: <1455299691.2396.45.camel@HansenPartnership.com>
-References: <1455298733-18651-1-git-send-email-lduncan@suse.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCHv6 00/23] ALUA device handler update, part II
+Date: Fri, 12 Feb 2016 11:28:23 -0800
+Message-ID: <56BE3257.9070808@sandisk.com>
+References: <1455265546-44470-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDMOV25X7AMRB3NY7C2QKGQEPX63FMA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1455298733-18651-1-git-send-email-lduncan-IBi9RG/b67k@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2on0062.outbound.protection.outlook.com ([65.55.169.62]:63264
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750852AbcBLT22 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Feb 2016 14:28:28 -0500
+In-Reply-To: <1455265546-44470-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Fri, 2016-02-12 at 09:38 -0800, Lee Duncan wrote:
-> The scsi_transport_iscsi module already uses the ida_simple
-> routines for managing the target ID, if requested to do
-> so. This change replaces an ever-increasing atomic integer
-> that tracks the session ID itself with the ida_simple
-> family of routines. This means that the session ID
-> will be reclaimed and can be reused when the session
-> is freed.
+On 02/12/2016 12:25 AM, Hannes Reinecke wrote:
+> as promised here is now the second part of my ALUA device handler update.
 
-Is reusing session ID's really a good idea?  For sequential sessions it
-means that the ID of the next session will be re-used, i.e. the same as
-the previous sessions, which could lead to target confusion.  I think
-local uniqueness of session IDs is more important than wrap around
-because sessions are short lived entities and the chances of the same
-session being alive by the time we've wrapped is pretty tiny.
+Hello Hannes,
 
-If you can demostrate a multi-target problem, perhaps we should rather
-fix this by making the next session id a target local quantity?
+Thanks for the quick respin. The first lockdep warning I noticed with the
+previous version is gone. But I saw the following with this patch series:
 
-James
+------------[ cut here ]------------
+WARNING: CPU: 7 PID: 43 at kernel/locking/mutex.c:869 mutex_trylock+0x1ad/0x1c0()
+DEBUG_LOCKS_WARN_ON(in_interrupt())
+CPU: 7 PID: 43 Comm: ksoftirqd/7 Tainted: G            E   4.5.0-rc3+ #8
+Call Trace:
+ [<ffffffff81263ba7>] dump_stack+0x6b/0xa4
+ [<ffffffff81057acb>] warn_slowpath_common+0x8b/0xd0
+ [<ffffffff81057bb1>] warn_slowpath_fmt+0x41/0x70
+ [<ffffffff815307bd>] mutex_trylock+0x1ad/0x1c0
+ [<ffffffffa041c731>] alua_check+0x31/0x260 [scsi_dh_alua]
+ [<ffffffffa041c9ce>] alua_check_sense+0x6e/0x90 [scsi_dh_alua]
+ [<ffffffff8136adf1>] scsi_check_sense+0x71/0x270
+ [<ffffffff8136b1ee>] scsi_decide_disposition+0x18e/0x200
+ [<ffffffff81371065>] scsi_softirq_done+0x65/0x150
+ [<ffffffff812495d1>] __blk_mq_complete_request+0x81/0x100
+ [<ffffffff812496e7>] blk_mq_complete_request+0x17/0x20
+ [<ffffffff8136f4d6>] scsi_mq_done+0x16/0x20
+ [<ffffffffa03f112e>] srp_process_rsp+0x13e/0x280 [ib_srp]
+ [<ffffffffa03f4127>] srp_recv_done+0x187/0x380 [ib_srp]
+ [<ffffffffa012f3f3>] __ib_process_cq+0x43/0xc0 [ib_core]
+ [<ffffffffa012f7cd>] ib_poll_handler+0x2d/0x80 [ib_core]
+ [<ffffffff81294c88>] irq_poll_softirq+0xa8/0xf0
+ [<ffffffff8105be66>] __do_softirq+0xf6/0x240
+ [<ffffffff8105bfca>] run_ksoftirqd+0x1a/0x60
+ [<ffffffff8107cf43>] smpboot_thread_fn+0x113/0x1d0
+ [<ffffffff810793e4>] kthread+0xe4/0x100
+ [<ffffffff81534eff>] ret_from_fork+0x3f/0x70
+---[ end trace 34fb3b7c104f6c3d ]---
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Can you also address this warning ?
+
+Thanks,
+
+Bart.
