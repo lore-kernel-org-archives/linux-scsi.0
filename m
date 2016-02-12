@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv6 14/23] scsi_dh_alua: Allow workqueue to run synchronously
-Date: Fri, 12 Feb 2016 09:25:37 +0100
-Message-ID: <1455265546-44470-15-git-send-email-hare@suse.de>
+Subject: [PATCHv6 19/23] scsi_dh: add 'rescan' callback
+Date: Fri, 12 Feb 2016 09:25:42 +0100
+Message-ID: <1455265546-44470-20-git-send-email-hare@suse.de>
 References: <1455265546-44470-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52096 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52126 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751363AbcBLIZx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751456AbcBLIZx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 12 Feb 2016 03:25:53 -0500
 In-Reply-To: <1455265546-44470-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,118 +14,100 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
 
-Some arrays may only capable of handling one STPG at a time,
-so this patch adds a singlethreaded workqueue for STPGs to be
-submitted synchronously.
+If a device needs to be rescanned the device_handler might need
+to be rechecked, too.
+So add a 'rescan' callback to the device handler and call it
+upon scsi_rescan_device(). The rescan callback will be invoked
+from the Unit Attention handling of ASC/ASCQ 3F 03
+(INQUIRY DATA HAS CHANGED).
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++++++
+ drivers/scsi/scsi_lib.c                    | 1 +
+ drivers/scsi/scsi_scan.c                   | 8 +++++++-
+ include/scsi/scsi_dh.h                     | 1 +
+ 4 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index ede850b..43bf6ac 100644
+index 35ad81f..c2841c4 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -64,6 +64,7 @@
- /* device handler flags */
- #define ALUA_OPTIMIZE_STPG		0x01
- #define ALUA_RTPG_EXT_HDR_UNSUPP	0x02
-+#define ALUA_SYNC_STPG			0x04
- /* State machine flags */
- #define ALUA_PG_RUN_RTPG		0x10
- #define ALUA_PG_RUN_STPG		0x20
-@@ -76,6 +77,7 @@ MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than
- static LIST_HEAD(port_group_list);
- static DEFINE_SPINLOCK(port_group_lock);
- static struct workqueue_struct *kaluad_wq;
-+static struct workqueue_struct *kaluad_sync_wq;
+@@ -1037,6 +1037,13 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
  
- struct alua_port_group {
- 	struct kref		kref;
-@@ -688,6 +690,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 	int err = SCSI_DH_OK;
- 	struct alua_queue_data *qdata, *tmp;
- 	unsigned long flags;
-+	struct workqueue_struct *alua_wq = kaluad_wq;
- 
- 	spin_lock_irqsave(&pg->lock, flags);
- 	sdev = pg->rtpg_sdev;
-@@ -697,6 +700,8 @@ static void alua_rtpg_work(struct work_struct *work)
- 		spin_unlock_irqrestore(&pg->lock, flags);
- 		return;
- 	}
-+	if (pg->flags & ALUA_SYNC_STPG)
-+		alua_wq = kaluad_sync_wq;
- 	pg->flags |= ALUA_PG_RUNNING;
- 	if (pg->flags & ALUA_PG_RUN_RTPG) {
- 		pg->flags &= ~ALUA_PG_RUN_RTPG;
-@@ -707,7 +712,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 			pg->flags &= ~ALUA_PG_RUNNING;
- 			pg->flags |= ALUA_PG_RUN_RTPG;
- 			spin_unlock_irqrestore(&pg->lock, flags);
--			queue_delayed_work(kaluad_wq, &pg->rtpg_work,
-+			queue_delayed_work(alua_wq, &pg->rtpg_work,
- 					   pg->interval * HZ);
- 			return;
- 		}
-@@ -724,7 +729,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 			pg->interval = 0;
- 			pg->flags &= ~ALUA_PG_RUNNING;
- 			spin_unlock_irqrestore(&pg->lock, flags);
--			queue_delayed_work(kaluad_wq, &pg->rtpg_work,
-+			queue_delayed_work(alua_wq, &pg->rtpg_work,
- 					   pg->interval * HZ);
- 			return;
- 		}
-@@ -753,6 +758,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- {
- 	int start_queue = 0;
- 	unsigned long flags;
-+	struct workqueue_struct *alua_wq = kaluad_wq;
- 
- 	if (!pg)
- 		return;
-@@ -770,10 +776,12 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		scsi_device_get(sdev);
- 		start_queue = 1;
- 	}
-+	if (pg->flags & ALUA_SYNC_STPG)
-+		alua_wq = kaluad_sync_wq;
- 	spin_unlock_irqrestore(&pg->lock, flags);
- 
- 	if (start_queue &&
--	    !queue_delayed_work(kaluad_wq, &pg->rtpg_work,
-+	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
- 				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
- 		scsi_device_put(sdev);
- 		kref_put(&pg->kref, release_port_group);
-@@ -992,10 +1000,16 @@ static int __init alua_init(void)
- 		/* Temporary failure, bypass */
- 		return SCSI_DH_DEV_TEMP_BUSY;
- 	}
-+	kaluad_sync_wq = create_workqueue("kaluad_sync");
-+	if (!kaluad_sync_wq) {
-+		destroy_workqueue(kaluad_wq);
-+		return SCSI_DH_DEV_TEMP_BUSY;
-+	}
- 	r = scsi_register_device_handler(&alua_dh);
- 	if (r != 0) {
- 		printk(KERN_ERR "%s: Failed to register scsi device handler",
- 			ALUA_DH_NAME);
-+		destroy_workqueue(kaluad_sync_wq);
- 		destroy_workqueue(kaluad_wq);
- 	}
- 	return r;
-@@ -1004,6 +1018,7 @@ static int __init alua_init(void)
- static void __exit alua_exit(void)
- {
- 	scsi_unregister_device_handler(&alua_dh);
-+	destroy_workqueue(kaluad_sync_wq);
- 	destroy_workqueue(kaluad_wq);
  }
  
++static void alua_rescan(struct scsi_device *sdev)
++{
++	struct alua_dh_data *h = sdev->handler_data;
++
++	alua_initialize(sdev, h);
++}
++
+ /*
+  * alua_bus_attach - Attach device handler
+  * @sdev: device to be attached to
+@@ -1097,6 +1104,7 @@ static struct scsi_device_handler alua_dh = {
+ 	.prep_fn = alua_prep_fn,
+ 	.check_sense = alua_check_sense,
+ 	.activate = alua_activate,
++	.rescan = alua_rescan,
+ 	.set_params = alua_set_params,
+ };
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index fa6b2c4..d46193a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2699,6 +2699,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ 		envp[idx++] = "SDEV_MEDIA_CHANGE=1";
+ 		break;
+ 	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
++		scsi_rescan_device(&sdev->sdev_gendev);
+ 		envp[idx++] = "SDEV_UA=INQUIRY_DATA_HAS_CHANGED";
+ 		break;
+ 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 420239c..97074c9 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -43,6 +43,7 @@
+ #include <scsi/scsi_devinfo.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_dh.h>
+ #include <scsi/scsi_eh.h>
+ 
+ #include "scsi_priv.h"
+@@ -1524,9 +1525,14 @@ EXPORT_SYMBOL(scsi_add_device);
+ 
+ void scsi_rescan_device(struct device *dev)
+ {
++	struct scsi_device *sdev = to_scsi_device(dev);
++
+ 	device_lock(dev);
+ 
+-	scsi_attach_vpd(to_scsi_device(dev));
++	scsi_attach_vpd(sdev);
++
++	if (sdev->handler && sdev->handler->rescan)
++		sdev->handler->rescan(sdev);
+ 
+ 	if (dev->driver && try_module_get(dev->driver->owner)) {
+ 		struct scsi_driver *drv = to_scsi_driver(dev->driver);
+diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
+index 7e184c6..c7bba2b 100644
+--- a/include/scsi/scsi_dh.h
++++ b/include/scsi/scsi_dh.h
+@@ -71,6 +71,7 @@ struct scsi_device_handler {
+ 	int (*activate)(struct scsi_device *, activate_complete, void *);
+ 	int (*prep_fn)(struct scsi_device *, struct request *);
+ 	int (*set_params)(struct scsi_device *, const char *);
++	void (*rescan)(struct scsi_device *);
+ };
+ 
+ #ifdef CONFIG_SCSI_DH
 -- 
 1.8.5.6
 
