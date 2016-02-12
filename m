@@ -1,97 +1,53 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv6 17/23] scsi_dh_alua: update all port states
-Date: Fri, 12 Feb 2016 09:25:40 +0100
-Message-ID: <1455265546-44470-18-git-send-email-hare@suse.de>
-References: <1455265546-44470-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52073 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402AbcBLIZx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Feb 2016 03:25:53 -0500
-In-Reply-To: <1455265546-44470-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH] bio: return EINTR if copying to user space got interrupted
+Date: Fri, 12 Feb 2016 09:39:15 +0100
+Message-ID: <1455266355-44676-1-git-send-email-hare@suse.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org, #@suse.de, v.3.11+@suse.de
+List-Id: linux-scsi@vger.kernel.org
 
-When we read in the target port group state we should be
-updating all affected port groups, otherwise we risk
-running out of sync.
+Commit 35dc248383bbab0a7203fca4d722875bc81ef091 introduced a check for
+current->mm to see if we have a user space context and only copies data
+if we do. Now if an IO gets interrupted by a signal data isn't copied
+into user space any more (as we don't have a user space context) but
+user space isn't notified about it.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This patch modifies the behaviour to return -EINTR from bio_uncopy_user()
+to notify userland that a signal has interrupted the syscall, otherwise
+it could lead to a situation where the caller may get a buffer with
+no data returned.
+
+This can be reproduced by issuing SG_IO ioctl()s in one thread while
+constantly sending signals to it.
+
+Fixes: 35dc248 [SCSI] sg: Fix user memory corruption when SG_IO is interrupted by a signal
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: stable@vger.kernel.org # v.3.11+
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 35 ++++++++++++++++++++++--------
- 1 file changed, 26 insertions(+), 9 deletions(-)
+ block/bio.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 08c434a..ed77b7c 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -476,11 +476,13 @@ static int alua_check_sense(struct scsi_device *sdev,
- static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- {
- 	struct scsi_sense_hdr sense_hdr;
-+	struct alua_port_group *tmp_pg;
- 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
--	unsigned char *ucp, *buff;
-+	unsigned char *desc, *buff;
- 	unsigned err, retval;
- 	unsigned int tpg_desc_tbl_off;
- 	unsigned char orig_transition_tmo;
-+	unsigned long flags;
- 
- 	if (!pg->expiry) {
- 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
-@@ -582,18 +584,32 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	else
- 		tpg_desc_tbl_off = 4;
- 
--	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
-+	for (k = tpg_desc_tbl_off, desc = buff + tpg_desc_tbl_off;
- 	     k < len;
--	     k += off, ucp += off) {
--
--		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
--			pg->state = ucp[0] & 0x0f;
--			pg->pref = ucp[0] >> 7;
--			valid_states = ucp[1];
-+	     k += off, desc += off) {
-+		u16 group_id = get_unaligned_be16(&desc[2]);
-+
-+		spin_lock_irqsave(&port_group_lock, flags);
-+		tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
-+					  group_id);
-+		spin_unlock_irqrestore(&port_group_lock, flags);
-+		if (tmp_pg) {
-+			if (spin_trylock_irqsave(&tmp_pg->lock, flags)) {
-+				if ((tmp_pg == pg) ||
-+				    !(tmp_pg->flags & ALUA_PG_RUNNING)) {
-+					tmp_pg->state = desc[0] & 0x0f;
-+					tmp_pg->pref = desc[0] >> 7;
-+				}
-+				if (tmp_pg == pg)
-+					valid_states = desc[1];
-+				spin_unlock_irqrestore(&tmp_pg->lock, flags);
-+			}
-+			kref_put(&tmp_pg->kref, release_port_group);
- 		}
--		off = 8 + (ucp[7] * 4);
-+		off = 8 + (desc[7] * 4);
- 	}
- 
-+	spin_lock_irqsave(&pg->lock, flags);
- 	sdev_printk(KERN_INFO, sdev,
- 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
- 		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-@@ -630,6 +646,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		pg->expiry = 0;
- 		break;
- 	}
-+	spin_unlock_irqrestore(&pg->lock, flags);
- 	kfree(buff);
- 	return err;
- }
+diff --git a/block/bio.c b/block/bio.c
+index dbabd48..24e5b69 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1090,9 +1090,12 @@ int bio_uncopy_user(struct bio *bio)
+ 	if (!bio_flagged(bio, BIO_NULL_MAPPED)) {
+ 		/*
+ 		 * if we're in a workqueue, the request is orphaned, so
+-		 * don't copy into a random user address space, just free.
++		 * don't copy into a random user address space, just free
++		 * and return -EINTR so user space doesn't expect any data.
+ 		 */
+-		if (current->mm && bio_data_dir(bio) == READ)
++		if (!current->mm)
++			ret = -EINTR;
++		else if (bio_data_dir(bio) == READ)
+ 			ret = bio_copy_to_iter(bio, bmd->iter);
+ 		if (bmd->is_our_pages)
+ 			bio_free_pages(bio);
 -- 
 1.8.5.6
-
