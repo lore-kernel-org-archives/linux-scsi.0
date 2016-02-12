@@ -1,64 +1,55 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 1/7] ibmvscsi: Correct values for several
- viosrp_crq_format enums
-Date: Fri, 12 Feb 2016 08:29:39 -0600
-Message-ID: <56BDEC53.3010400@linux.vnet.ibm.com>
-References: <1455154348-3226-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <1455154348-3226-2-git-send-email-tyreld@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
+From: "Herr DITO WEBER " <WEBER0021@jinbao.gdk.mx>
+Subject: Lieber Freund!!!
+Date: Fri, 12 Feb 2016 15:07:05 -0800
+Message-ID: <HK2PR03MB17795849801F9A61028F185CE2A90__45787.2705920183$1455287901$gmane$org@HK2PR03MB1779.apcprd03.prod.outlook.com>
+Reply-To: <herrmartins2@aim.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:50670 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbcBLO3j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2016 09:29:39 -0500
-Received: from localhost
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Fri, 12 Feb 2016 07:29:39 -0700
-In-Reply-To: <1455154348-3226-2-git-send-email-tyreld@linux.vnet.ibm.com>
+Received: from mail-pu1apc01hn0233.outbound.protection.outlook.com ([104.47.126.233]:62112
+	"EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750820AbcBLOhx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2016 09:37:53 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, jthumshirn@suse.de
+To: Recipients <WEBER0021@jinbao.gdk.mx>
+
+Lieber Freund!!!
+
+Ich vermute das diese E-Mail eine =DCberraschung f=FCr Sie sein wird, a=
+ber es ist wahr.Ich bin bei einer routinen =DCberpr=FCfung in meiner Ba=
+nk (Standard Bank von S=FCd Afrika) wo ich arbeite, auf einem Konto ges=
+to=DFen, was nicht in anspruch genommen worden ist, wo derzeit $12,500,=
+000 (zw=F6lfmillionenf=FCnfhundert US Dollar) gutgeschrieben sind.
+
+Dieses Konto geh=F6rte Herrn Peter Hartmann, der ein Kunde in unsere Ba=
+nk war, der leider verstorben ist. Herr Hartmann war ein geb=FCrtiger D=
+eutscher.Damit es mir m=F6glich ist dieses Geld $12,500,000 inanspruch =
+zunehmen, ben=F6tige ich die zusammenarbeit eines Ausl=E4ndischen Partn=
+ers wie Sie,den ich als Verwandter und Erbe des verstorbenen Herrn Hart=
+mann vorstellen kann,damit wir das Geld inanspruch nehmen k=F6nnen.
+
+=46=FCr diese Unterst=FCtzung erhalten Sie 30% der Erbschaftsumme und d=
+ie restlichen 70% teile ich mir mit meinen zwei Arbeitskollegen, die mi=
+ch bei dieser Transaktion ebenfalls unterst=FCtzen.Wenn Sie interessier=
+t sind, k=F6nnen Sie mir bitte eine E-Mail schicken, damit ich Ihnen me=
+hr Details zukommen lassen kann.
+
+Schicken Sie bitte Ihre Antwort auf diese E-Mail Adresse: ( herrmartins=
+2@aim.com ) If you understand english,please  kindly reply with english=
+, Aber wenn Sie nicht Englisch, bitte Antwort in deutschen verstehen  (=
+ herrmartins2@aim.com)
 
 
-Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
 
----
-Manoj Kumar
+Mit freundlichen Gr=FC=DFen
 
-On 2/10/2016 7:32 PM, Tyrel Datwyler wrote:
-> The enum values for VIOSRP_LINUX_FORMAT and VIOSRP_INLINE_FORMAT are
-> off by one. They are currently defined as 0x06 and 0x07 respetively.
-> These values are defined in PAPR correctly as 0x05 and 0x06. This
-> inconsistency has gone unnoticed as neither enum is currently used.
-> The possible future support of PING messages between the VIOS and
-> client adapter relies on VIOSRP_INLINE_FORMAT crq messages.
-> Corrected these enum values to match PAPR definitions.
->
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/ibmvscsi/viosrp.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/ibmvscsi/viosrp.h b/drivers/scsi/ibmvscsi/viosrp.h
-> index 1162430..d1044e9 100644
-> --- a/drivers/scsi/ibmvscsi/viosrp.h
-> +++ b/drivers/scsi/ibmvscsi/viosrp.h
-> @@ -56,8 +56,8 @@ enum viosrp_crq_formats {
->   	VIOSRP_MAD_FORMAT = 0x02,
->   	VIOSRP_OS400_FORMAT = 0x03,
->   	VIOSRP_AIX_FORMAT = 0x04,
-> -	VIOSRP_LINUX_FORMAT = 0x06,
-> -	VIOSRP_INLINE_FORMAT = 0x07
-> +	VIOSRP_LINUX_FORMAT = 0x05,
-> +	VIOSRP_INLINE_FORMAT = 0x06
->   };
->
->   enum viosrp_crq_status {
->
-
+Herr DITO WEBER=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
