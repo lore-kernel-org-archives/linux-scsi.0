@@ -1,43 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 18/23] scsi_dh_alua: Send TEST UNIT READY to poll for
- transitioning
-Date: Fri, 12 Feb 2016 08:12:59 +0100
-Message-ID: <56BD85FB.7060907@suse.de>
+Subject: Re: [PATCH 19/23] scsi_dh: add 'rescan' callback
+Date: Fri, 12 Feb 2016 08:14:55 +0100
+Message-ID: <56BD866F.5010202@suse.de>
 References: <1454942086-128704-1-git-send-email-hare@suse.de>
- <1454942086-128704-19-git-send-email-hare@suse.de>
- <1455222318.22112.330.camel@localhost.localdomain>
+ <1454942086-128704-20-git-send-email-hare@suse.de>
+ <1455222453.22112.332.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48988 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49033 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773AbcBLHNC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Feb 2016 02:13:02 -0500
-In-Reply-To: <1455222318.22112.330.camel@localhost.localdomain>
+	id S1750714AbcBLHO5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Feb 2016 02:14:57 -0500
+In-Reply-To: <1455222453.22112.332.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: emilne@redhat.com
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On 02/11/2016 09:25 PM, Ewan Milne wrote:
+On 02/11/2016 09:27 PM, Ewan Milne wrote:
 > On Mon, 2016-02-08 at 15:34 +0100, Hannes Reinecke wrote:
->> Sending a 'REPORT TARGET PORT GROUP' command is a costly operation,
->> as the array has to gather information about all ports.
->> So instead of using RTPG to poll for a status update when a port
->> is in transitioning we should be sending a TEST UNIT READY, and
->> wait for the sense code to report success.
+>> If a device needs to be rescanned the device_handler might need
+>> to be rechecked, too.
+>> So add a 'rescan' callback to the device handler and call it
+>> upon scsi_rescan_device().
 >=20
-> Note that we may need to add a timeout on this somehow, I have
-> recently seen a bug report where an array stayed in the ALUA
-> transitioning state for an extremely long period of time.
+> This comment should mention that you have also changed the Unit
+> Attention handling of ASC/ASCQ 3F 03 INQUIRY DATA HAS CHANGED
+> to automatically rescan the device (prior to the uevent).
 >=20
-> That problem would occur with either the current or this new
-> ALUA code, the question is whether we want to handle it better.
->=20
-There already is provisioning in the code to set the port to STANDBY
-if the transitioning time is exceeded.
-Not that this code path is well tested, but it's there :-)
+True. I will be updating the comment if I need to resend the patchset.
 
 Cheers,
 
