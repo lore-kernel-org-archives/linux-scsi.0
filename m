@@ -1,177 +1,192 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: aicasm: fix kbuild for separated build directories
-Date: Fri, 12 Feb 2016 14:42:26 -0800
-Message-ID: <1455316946.2396.65.camel@HansenPartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v4 0/5] Fix LUN_RESET active I/O + TMR handling
+Date: Fri, 12 Feb 2016 23:03:04 -0800
+Message-ID: <1455346984.9013.74.camel@haakon3.risingtidesystems.com>
+References: <1454815082-15380-1-git-send-email-nab@daterainc.com>
+	 <D2DE6219.D6C44%himanshu.madhani@qlogic.com>
+	 <1454995505.10001.153.camel@haakon3.risingtidesystems.com>
+	 <D2DF69D8.D6DC5%himanshu.madhani@qlogic.com>
+	 <1455173594.27060.49.camel@haakon3.risingtidesystems.com>
+	 <1455234468.30845.8.camel@haakon3.risingtidesystems.com>
+	 <D2E2AA30.D71E4%himanshu.madhani@qlogic.com>
+	 <1455266895.10977.15.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47686 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750904AbcBLWmd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Feb 2016 17:42:33 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="=-xj4rrDgftrobsiQFQTef"
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1455266895.10977.15.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Michal Marek <mmarek@suse.cz>
 
-I've recently been experimenting with building in emulated architecture
-containers which allow me to build natively on my laptop a kernel for
-any architecture which qemu will emulate.  To do this, I've been
-building into build/$(uname -m) and this caused the aicasm stuff to
-fail to build (using CONFIG_AIC7XXX_BUILD_FIRMWARE=y).  I think this
-patch corrects the problem, but I'm not hugely familiar with the kbuild
-infrastructure so I cc'd an expert for a second opinion.
 
-James
+--=-xj4rrDgftrobsiQFQTef
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
----
+Hi Himanshu & Co,
 
-diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
-index 741d818..c21c922 100644
---- a/drivers/scsi/aic7xxx/Makefile
-+++ b/drivers/scsi/aic7xxx/Makefile
-@@ -5,7 +5,7 @@
- #
+On Fri, 2016-02-12 at 00:48 -0800, Nicholas A. Bellinger wrote:
+> On Fri, 2016-02-12 at 05:30 +0000, Himanshu Madhani wrote:
+
+<SNIP>
+
+> Thanks for the crash dump output.
+> 
+> So it's a t_state = TRANSPORT_WRITE_PENDING descriptor with
+> SAM_STAT_CHECK_CONDITION + cmd_kref.refcount = 0:
+> 
+> struct qla_tgt_cmd {
+>   se_cmd = {
+>     scsi_status = 0x2
+>     se_cmd_flags = 0x80090d,
+> 
+>     <SNIP>
+> 
+>     cmd_kref = {
+>       refcount = {
+>         counter = 0x0
+>       }
+>     }, 
+> }
+> 
+> The se_cmd_flags=0x80090d translation to enum se_cmd_flags_table:
+> 
+> - SCF_TRANSPORT_TASK_SENSE
+> - SCF_EMULATED_TASK_SENSE
+> - SCF_SCSI_DATA_CDB
+> - SCF_SE_LUN_CMD
+> - SCF_SENT_CHECK_CONDITION
+> - SCF_USE_CPUID
+> 
+
+After groking your dump some more:
+
+For SAM_STAT_CHECK_CONDITION with t_state = TRANSPORT_WRITE_PENDING plus
+se_cmd->transport_state = 0x880 bits set, is:
+
+- CMD_T_DEV_ACTIVE
+- CMD_T_FABRIC_STOP
+
+and sense buffer = 0x70 00 0b 00 00 00 00 0a 00 00 00 00 29 03 00,
+which is the following from sense_info_table[]:
+
+      [TCM_CHECK_CONDITION_ABORT_CMD] = {
+                .key = ABORTED_COMMAND,
+                .asc = 0x29, /* BUS DEVICE RESET FUNCTION OCCURRED */
+                .ascq = 0x03,
+        },
+
+The descriptor looks like it did make it to tcm_qla2xxx_complete_free()
+-> transport_generic_free_cmd() with both qla_tgt_cmd->cmd_sent_to_fw=0,
+and qla_tgt_cmd->write_data_transferred=0 set.
+
+The best I can tell, it looks like tcm_qla2xxx_handle_data_work() ->
+transport_generic_request_failure() w/ TCM_CHECK_CONDITION_ABORT_CMD is
+occurring..
+
+So to confirm, this specific bug was not a result of active I/O
+LUN_RESET w/ CMD_T_ABORTED during session disconnect, or otherwise.
+
+> 
+> > I can recreate this issue at will within 5 minute of triggering sg_reset
+> > with following steps
+> > 
+> > 1. Export 4 RAM disk LUNs on each of 2 port adapter. Initiator will see 8
+> > RAM disk targets
+> > 2. Start IO with 4K block size and 8 threads with 80% write 20% read and
+> > 100% dandom. 
+> > (I am using vdbench for generating IO. I can provide setup/config script
+> > if needed)
+> > 3. Start sg_reset for each LUNs with first device, bus and host with 120s
+> > delay. (I¹ve attached
+> > My script that I am using for triggering sg_reset)
+> > 
+> 
+> Thanks, will keep looking and try to reproduce with your script.
+
+So here's my test setup with 3x Intel P3600 NVMe/IBLOCK backends, across
+dual ISP2532 ports:
+
+o- / ......................................................................................... [...]
+  o- backstores .............................................................................. [...]
+  | o- fileio ................................................................... [0 Storage Object]
+  | o- iblock .................................................................. [3 Storage Objects]
+  | | o- nvme0n1 ............................................................ [/dev/nvme0n1, in use]
+  | | o- nvme1n1 ............................................................ [/dev/nvme1n1, in use]
+  | | o- nvme2n1 ............................................................ [/dev/nvme2n1, in use]
+  | o- pscsi .................................................................... [0 Storage Object]
+  | o- rd_mcp ................................................................... [1 Storage Object]
+  |   o- ramdisk ...................................................... [16.0G, ramdisk, not in use]
+  o- qla2xxx ........................................................................... [2 Targets]
+  | o- 21:00:00:24:ff:48:97:7e ........................................................... [enabled]
+  | | o- acls .............................................................................. [1 ACL]
+  | | | o- 21:00:00:24:ff:48:97:7c ................................................. [3 Mapped LUNs]
+  | | |   o- mapped_lun0 ............................................................... [lun0 (rw)]
+  | | |   o- mapped_lun1 ............................................................... [lun1 (rw)]
+  | | |   o- mapped_lun2 ............................................................... [lun2 (rw)]
+  | | o- luns ............................................................................. [3 LUNs]
+  | |   o- lun0 .................................................... [iblock/nvme0n1 (/dev/nvme0n1)]
+  | |   o- lun1 .................................................... [iblock/nvme1n1 (/dev/nvme1n1)]
+  | |   o- lun2 .................................................... [iblock/nvme2n1 (/dev/nvme2n1)]
+  | o- 21:00:00:24:ff:48:97:7f ........................................................... [enabled]
+  |   o- acls .............................................................................. [1 ACL]
+  |   | o- 21:00:00:24:ff:48:97:7d ................................................. [3 Mapped LUNs]
+  |   |   o- mapped_lun0 ............................................................... [lun0 (rw)]
+  |   |   o- mapped_lun1 ............................................................... [lun1 (rw)]
+  |   |   o- mapped_lun2 ............................................................... [lun2 (rw)]
+  |   o- luns ............................................................................. [3 LUNs]
+  |     o- lun0 .................................................... [iblock/nvme0n1 (/dev/nvme0n1)]
+  |     o- lun1 .................................................... [iblock/nvme1n1 (/dev/nvme1n1)]
+  |     o- lun2 .................................................... [iblock/nvme2n1 (/dev/nvme2n1)]
+
+Attached is the fio write-verify workload for reference.
+
+Also, a few changes made to your test script:
  
- # Let kbuild descend into aicasm when cleaning
--subdir-				+= aicasm
-+subdir-				+= aicasm/
- 
- obj-$(CONFIG_SCSI_AIC7XXX)	+= aic7xxx.o
- obj-$(CONFIG_SCSI_AIC79XX)	+= aic79xx.o
-@@ -55,9 +55,9 @@ aicasm-7xxx-opts-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT) := \
- 
- ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
- $(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
--	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic7xxx_reg.h \
-+	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic7xxx_reg.h \
- 			      $(aicasm-7xxx-opts-y) -o $(obj)/aic7xxx_seq.h \
--			      $(src)/aic7xxx.seq
-+			      $(srctree)/$(src)/aic7xxx.seq
- 
- $(aic7xxx-gen-y): $(obj)/aic7xxx_seq.h
- else
-@@ -72,14 +72,14 @@ aicasm-79xx-opts-$(CONFIG_AIC79XX_REG_PRETTY_PRINT) := \
- 
- ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
- $(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
--	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic79xx_reg.h \
--			      $(aicasm-79xx-opts-y) -o $(obj)/aic79xx_seq.h \
--			      $(src)/aic79xx.seq
-+	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic79xx_reg.h \
-+			      $(aicasm-79xx-opts-y) -o $@ \
-+			      $(srctree)/$(src)/aic79xx.seq
- 
- $(aic79xx-gen-y): $(obj)/aic79xx_seq.h
- else
- $(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
- endif
- 
--$(obj)/aicasm/aicasm: $(src)/aicasm/*.[chyl]
--	$(MAKE) -C $(src)/aicasm
-+$(obj)/aicasm/aicasm:
-+	$(Q)$(MAKE) $(build)=drivers/scsi/aic7xxx/aicasm all
-diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
-index b98c5c1..73559f0 100644
---- a/drivers/scsi/aic7xxx/aicasm/Makefile
-+++ b/drivers/scsi/aic7xxx/aicasm/Makefile
-@@ -1,19 +1,22 @@
--PROG=	aicasm
-+PROG=	$(obj)/aicasm
-+
-+all: $(PROG)
- 
- .SUFFIXES= .l .y .c .h
- 
--CSRCS=	aicasm.c aicasm_symbol.c
--YSRCS=	aicasm_gram.y aicasm_macro_gram.y
--LSRCS=	aicasm_scan.l aicasm_macro_scan.l
-+CSRCS=	$(srctree)/$(src)/aicasm.c $(srctree)/$(src)/aicasm_symbol.c
-+YSRCS=	$(src)/aicasm_gram.y $(src)/aicasm_macro_gram.y
-+LSRCS=	$(src)/aicasm_scan.l $(src)/aicasm_macro_scan.l
- 
--GENHDRS=	aicdb.h $(YSRCS:.y=.h)
--GENSRCS=	$(YSRCS:.y=.c) $(LSRCS:.l=.c)
-+GENHDRS=	$(obj)/aicdb.h $(patsubst $(src)/%.y,$(obj)/%.h,$(YSRCS))
-+GENSRCS=	$(patsubst $(src)/%.y,$(obj)/%.c,$(YSRCS)) \
-+		$(patsubst $(src)/%.l,$(obj)/%.c,$(LSRCS))
- 
--SRCS=	${CSRCS} ${GENSRCS}
-+SRCS=	$(CSRCS) $(GENSRCS)
- LIBS=	-ldb
- clean-files:= ${GENSRCS} ${GENHDRS} $(YSRCS:.y=.output) $(PROG)
- # Override default kernel CFLAGS.  This is a userland app.
--AICASM_CFLAGS:= -I/usr/include -I.
-+AICASM_CFLAGS:= -I/usr/include -I. -I$(srctree)/$(src)
- LEX= flex
- YACC= bison
- YFLAGS= -d
-@@ -32,22 +35,23 @@ YFLAGS+= -t -v
- LFLAGS= -d
- endif
- 
--$(PROG):  ${GENHDRS} $(SRCS)
--	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(PROG) $(LIBS)
-+$(PROG): $(GENHDRS) $(SRCS)
-+	echo "SRCS=$(SRCS)"
-+	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $@ $(LIBS)
- 
--aicdb.h:
-+$(obj)/aicdb.h:
- 	@if [ -e "/usr/include/db4/db_185.h" ]; then		\
--		echo "#include <db4/db_185.h>" > aicdb.h;	\
-+		echo "#include <db4/db_185.h>" > $(obj)/aicdb.h;	\
- 	 elif [ -e "/usr/include/db3/db_185.h" ]; then		\
--		echo "#include <db3/db_185.h>" > aicdb.h;	\
-+		echo "#include <db3/db_185.h>" > $(obj)/aicdb.h;	\
- 	 elif [ -e "/usr/include/db2/db_185.h" ]; then		\
--		echo "#include <db2/db_185.h>" > aicdb.h;	\
-+		echo "#include <db2/db_185.h>" > $(obj)/aicdb.h;	\
- 	 elif [ -e "/usr/include/db1/db_185.h" ]; then		\
--		echo "#include <db1/db_185.h>" > aicdb.h;	\
-+		echo "#include <db1/db_185.h>" > $(obj)/aicdb.h;	\
- 	 elif [ -e "/usr/include/db/db_185.h" ]; then		\
--		echo "#include <db/db_185.h>" > aicdb.h;	\
-+		echo "#include <db/db_185.h>" > $(obj)/aicdb.h;	\
- 	 elif [ -e "/usr/include/db_185.h" ]; then		\
--		echo "#include <db_185.h>" > aicdb.h;		\
-+		echo "#include <db_185.h>" > $(obj)/aicdb.h;		\
- 	 else							\
- 		echo "*** Install db development libraries";	\
- 	 fi
-@@ -58,23 +62,21 @@ clean:
- # Create a dependency chain in generated files
- # to avoid concurrent invocations of the single
- # rule that builds them all.
--aicasm_gram.c: aicasm_gram.h
--aicasm_gram.c aicasm_gram.h: aicasm_gram.y
--	$(YACC) $(YFLAGS) -b $(<:.y=) $<
--	mv $(<:.y=).tab.c $(<:.y=.c)
--	mv $(<:.y=).tab.h $(<:.y=.h)
-+$(obj)/aicasm_gram.c $(obj)/aicasm_gram.h: $(src)/aicasm_gram.y
-+	$(YACC) $(YFLAGS) -b $(@:.h=) $<
-+	mv $(@:.h=).tab.c $(@:.h=.c)
-+	mv $(@:.h=).tab.h $(@:.y=.h)
- 
- # Create a dependency chain in generated files
- # to avoid concurrent invocations of the single
- # rule that builds them all.
--aicasm_macro_gram.c: aicasm_macro_gram.h
--aicasm_macro_gram.c aicasm_macro_gram.h: aicasm_macro_gram.y
--	$(YACC) $(YFLAGS) -b $(<:.y=) -p mm $<
--	mv $(<:.y=).tab.c $(<:.y=.c)
--	mv $(<:.y=).tab.h $(<:.y=.h)
-+$(obj)/aicasm_macro_gram.c $(obj)/aicasm_macro_gram.h: $(src)/aicasm_macro_gram.y
-+	$(YACC) $(YFLAGS) -b $(@:.h=) -p mm $<
-+	mv $(@:.h=).tab.c $(@:.h=.c)
-+	mv $(@:.h=).tab.h $(@:.h=.h)
- 
--aicasm_scan.c: aicasm_scan.l
-+$(obj)/aicasm_scan.c: $(src)/aicasm_scan.l
- 	$(LEX) $(LFLAGS) -o$@ $<
- 
--aicasm_macro_scan.c: aicasm_macro_scan.l
-+$(obj)/aicasm_macro_scan.c: $(src)/aicasm_macro_scan.l
- 	$(LEX) $(LFLAGS) -Pmm -o$@ $<
+- Use sg_reset -H (-h is help :) for host reset op
+- Wait sleep 10 between calls instead of 2 mins
+- Limit sg_reset SCSI device list to 3x remote-ports
+
+The last one is to verify with various sg_reset ops across remote-ports
+only, separate from any existing active I/O session disconnect bugs that
+may exist beyond this specific PATCH-v4 series.
+
+To that end, after verifying tonight with 100x iterations of your script
+with the above changes, fio write-verify is still functioning as
+expected with remote-port only sg_reset ops using NVMe/IBLOCK backends.
+
+So that said, I'll be pushing what's in target-pending/master as -rc4
+code, and continue to debug the hung task as a separate active I/O
+shutdown related issue.
+
+Thanks again for your help,
+
+--nab
+
+--=-xj4rrDgftrobsiQFQTef
+Content-Disposition: attachment; filename="fio-nvme.txt"
+Content-Type: text/plain; name="fio-nvme.txt"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+[global]
+thread=1
+blocksize_range=4k-256k
+direct=1
+ioengine=libaio
+verify=crc32c-intel
+verify_interval=512
+iodepth=32
+size=1000G
+loops=100
+numjobs=1
+invalidate=0
+filename=/dev/sdb
+filename=/dev/sdc
+filename=/dev/sdd
+
+[verify]
+rw=randrw
+do_verify=1
+
+--=-xj4rrDgftrobsiQFQTef--
