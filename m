@@ -1,49 +1,47 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 21/34] iscsi-target: release transport driver resources
-Date: Sun, 14 Feb 2016 23:12:15 +0530
-Message-ID: <26d1bde8e55db6d2f77a354b379bec78bb7b7322.1455467089.git.varun@chelsio.com>
-References: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:18604 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751785AbcBNRmx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Feb 2016 12:42:53 -0500
-In-Reply-To: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
+Subject: [RFC 24/34] iscsi-target: validate conn operational parameters
+Date: Sun, 14 Feb 2016 23:15:31 +0530
+Message-ID: <940698fdb1ca47d8c392fa687f971842d215d083.1455467089.git.varun@chelsio.com>
+References: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
 In-Reply-To: <cover.1455467089.git.varun@chelsio.com>
 References: <cover.1455467089.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
+List-Id: linux-scsi@vger.kernel.org
 
-transport driver may allocate resources for an
-iSCSI cmd, to free that resources iscsi target
-must call release function registered by transport
-driver.
-
-ISCSI_TCP_CXGB4 frees DDP resource associated
-with a WRITE cmd in the callback function.
+call validate params function if registered
+by transport driver before starting negotiation,
+so that transport driver can validate and update
+the value of parameters.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/iscsi_target_util.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/target/iscsi/iscsi_target_login.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index 5cab517..71240e4 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -727,6 +727,9 @@ void __iscsit_free_cmd(struct iscsi_cmd *cmd, bool scsi_cmd,
- 		iscsit_remove_cmd_from_immediate_queue(cmd, conn);
- 		iscsit_remove_cmd_from_response_queue(cmd, conn);
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 616ec9e..83c3643 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -1375,6 +1375,16 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
+ 			goto old_sess_out;
  	}
-+
-+	if (conn && conn->conn_transport->iscsit_release_cmd)
-+		conn->conn_transport->iscsit_release_cmd(conn, cmd);
- }
  
- void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
++	if (conn->conn_transport->iscsit_validate_params) {
++		ret = conn->conn_transport->iscsit_validate_params(conn);
++		if (ret < 0) {
++			if (zero_tsih)
++				goto new_sess_out;
++			else
++				goto old_sess_out;
++		}
++	}
++
+ 	ret = iscsi_target_start_negotiation(login, conn);
+ 	if (ret < 0)
+ 		goto new_sess_out;
 -- 
 2.0.2
-
