@@ -1,7 +1,7 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 29/34] cxgbit: add cxgbit_main.c
-Date: Sun, 14 Feb 2016 23:15:36 +0530
-Message-ID: <460f6c70c4f5d9e9d1eb2d23a5b474a18e5bf227.1455467089.git.varun@chelsio.com>
+Subject: [RFC 32/34] cxgbit: add cxgbit_ddp.c
+Date: Sun, 14 Feb 2016 23:15:39 +0530
+Message-ID: <092f672bc73ded67450869f5383352b38c79ae29.1455467089.git.varun@chelsio.com>
 References: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
@@ -12,21 +12,21 @@ To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-This file contains code for registering
-with iscsi target transport and cxgb4 driver.
+This file contains code for
+Direct Data Placement.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/cxgbit/cxgbit_main.c | 719 ++++++++++++++++++++++++++++++
- 1 file changed, 719 insertions(+)
- create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_main.c
+ drivers/target/iscsi/cxgbit/cxgbit_ddp.c | 374 +++++++++++++++++++++++++++++++
+ 1 file changed, 374 insertions(+)
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_ddp.c
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_main.c b/drivers/target/iscsi/cxgbit/cxgbit_main.c
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
 new file mode 100644
-index 0000000..ab79289
+index 0000000..07e2bc8
 --- /dev/null
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_main.c
-@@ -0,0 +1,719 @@
++++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+@@ -0,0 +1,374 @@
 +/*
 + * Copyright (c) 2016 Chelsio Communications, Inc.
 + *
@@ -35,716 +35,371 @@ index 0000000..ab79289
 + * published by the Free Software Foundation.
 + */
 +
-+#define DRV_NAME "cxgbit"
-+#define DRV_VERSION "1.0.0-ko"
-+#define pr_fmt(fmt) DRV_NAME ": " fmt
-+
 +#include "cxgbit.h"
 +
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+#include <net/dcbevent.h>
-+#include "cxgb4_dcb.h"
-+#endif
-+
-+LIST_HEAD(cdev_list_head);
-+/* cdev list lock */
-+DEFINE_MUTEX(cdev_list_lock);
-+
-+void _cxgbit_free_cdev(struct kref *kref)
++/*
++ * functions to program the pagepod in h/w
++ */
++static void ulp_mem_io_set_hdr(struct cxgbit_device *cdev,
++			       struct ulp_mem_io *req,
++			       unsigned int wr_len,
++			       unsigned int dlen,
++			       unsigned int pm_addr,
++			       int tid)
 +{
-+	struct cxgbit_device *cdev;
++	struct ulptx_idata *idata = (struct ulptx_idata *)(req + 1);
 +
-+	cdev = container_of(kref, struct cxgbit_device, kref);
++	INIT_ULPTX_WR(req, wr_len, 0, tid);
++	req->wr.wr_hi = htonl(FW_WR_OP_V(FW_ULPTX_WR) |
++		FW_WR_ATOMIC_V(0));
++	req->cmd = htonl(ULPTX_CMD_V(ULP_TX_MEM_WRITE) |
++		ULP_MEMIO_ORDER_V(0) |
++		T5_ULP_MEMIO_IMM_V(1));
++	req->dlen = htonl(ULP_MEMIO_DATA_LEN_V(dlen >> 5));
++	req->lock_addr = htonl(ULP_MEMIO_ADDR_V(pm_addr >> 5));
++	req->len16 = htonl(DIV_ROUND_UP(wr_len - sizeof(req->wr), 16));
 +
-+	kfree(cdev);
++	idata->cmd_more = htonl(ULPTX_CMD_V(ULP_TX_SC_IMM));
++	idata->len = htonl(dlen);
 +}
 +
-+static void cxgbit_set_mdsl(struct cxgbit_device *cdev)
++static void cxgbit_set_one_ppod(struct cxgbi_pagepod *ppod,
++				struct cxgbi_task_tag_info *ttinfo,
++				struct scatterlist **sg_pp,
++				unsigned int *sg_off)
 +{
-+	struct cxgb4_lld_info *lldi = &cdev->lldi;
-+	u32 mdsl;
-+
-+#define ULP2_MAX_PKT_LEN 16224
-+#define ISCSI_PDU_NONPAYLOAD_LEN 312
-+	mdsl = min_t(u32, lldi->iscsi_iolen - ISCSI_PDU_NONPAYLOAD_LEN,
-+		     ULP2_MAX_PKT_LEN - ISCSI_PDU_NONPAYLOAD_LEN);
-+	mdsl = min_t(u32, mdsl, 8192);
-+	mdsl = min_t(u32, mdsl, (MAX_SKB_FRAGS - 1) * PAGE_SIZE);
-+
-+	cdev->mdsl = mdsl;
-+}
-+
-+static void *cxgbit_uld_add(const struct cxgb4_lld_info *lldi)
-+{
-+	struct cxgbit_device *cdev;
-+
-+	if (is_t4(lldi->adapter_type))
-+		return ERR_PTR(-ENODEV);
-+
-+	cdev = kzalloc(sizeof(*cdev), GFP_KERNEL);
-+	if (!cdev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	kref_init(&cdev->kref);
-+
-+	cdev->lldi = *lldi;
-+
-+	cxgbit_set_mdsl(cdev);
-+
-+	cxgbit_ddp_init(cdev);
-+
-+	if (!test_bit(CDEV_DDP_ENABLE, &cdev->flags))
-+		pr_info("cdev %s ddp init failed\n",
-+			pci_name(lldi->pdev));
-+
-+	if (lldi->fw_vers >= 0x10d2b00)
-+		set_bit(CDEV_ISO_ENABLE, &cdev->flags);
-+
-+	spin_lock_init(&cdev->cskq.lock);
-+	INIT_LIST_HEAD(&cdev->cskq.list);
-+
-+	mutex_lock(&cdev_list_lock);
-+	list_add_tail(&cdev->list, &cdev_list_head);
-+	mutex_unlock(&cdev_list_lock);
-+
-+	pr_info("cdev %s added for iSCSI target transport\n",
-+		pci_name(lldi->pdev));
-+
-+	return cdev;
-+}
-+
-+static void cxgbit_close_conn(struct cxgbit_device *cdev)
-+{
-+	struct cxgbit_sock *csk;
-+	struct sk_buff *skb;
-+	bool wakeup_thread = false;
-+
-+	spin_lock_bh(&cdev->cskq.lock);
-+	list_for_each_entry(csk, &cdev->cskq.list, list) {
-+		skb = alloc_skb(0, GFP_ATOMIC);
-+		if (!skb)
-+			continue;
-+
-+		spin_lock_bh(&csk->rxq.lock);
-+		__skb_queue_tail(&csk->rxq, skb);
-+		if (skb_queue_len(&csk->rxq) == 1)
-+			wakeup_thread = true;
-+		spin_unlock_bh(&csk->rxq.lock);
-+
-+		if (wakeup_thread) {
-+			wake_up(&csk->waitq);
-+			wakeup_thread = false;
-+		}
-+	}
-+	spin_unlock_bh(&cdev->cskq.lock);
-+}
-+
-+static void cxgbit_detach_cdev(struct cxgbit_device *cdev)
-+{
-+	bool free_cdev = false;
-+
-+	spin_lock_bh(&cdev->cskq.lock);
-+	if (list_empty(&cdev->cskq.list))
-+		free_cdev = true;
-+	spin_unlock_bh(&cdev->cskq.lock);
-+
-+	if (free_cdev) {
-+		mutex_lock(&cdev_list_lock);
-+		list_del(&cdev->list);
-+		mutex_unlock(&cdev_list_lock);
-+
-+		cxgbit_put_cdev(cdev);
-+	} else {
-+		cxgbit_close_conn(cdev);
-+	}
-+}
-+
-+static int cxgbit_uld_state_change(void *handle, enum cxgb4_state state)
-+{
-+	struct cxgbit_device *cdev = handle;
-+
-+	switch (state) {
-+	case CXGB4_STATE_UP:
-+		set_bit(CDEV_STATE_UP, &cdev->flags);
-+		pr_info("cdev %s state UP.\n", pci_name(cdev->lldi.pdev));
-+		break;
-+	case CXGB4_STATE_START_RECOVERY:
-+		clear_bit(CDEV_STATE_UP, &cdev->flags);
-+		cxgbit_close_conn(cdev);
-+		pr_info("cdev %s state RECOVERY.\n", pci_name(cdev->lldi.pdev));
-+		break;
-+	case CXGB4_STATE_DOWN:
-+		pr_info("cdev %s state DOWN.\n", pci_name(cdev->lldi.pdev));
-+		break;
-+	case CXGB4_STATE_DETACH:
-+		clear_bit(CDEV_STATE_UP, &cdev->flags);
-+		cxgbit_detach_cdev(cdev);
-+		pr_info("cdev %s state DETACH.\n", pci_name(cdev->lldi.pdev));
-+		break;
-+	default:
-+		pr_info("cdev %s unknown state %d.\n",
-+			pci_name(cdev->lldi.pdev), state);
-+		break;
-+	}
-+	return 0;
-+}
-+
-+static void cxgbit_proc_ddp_status(unsigned int tid,
-+				   struct cpl_rx_data_ddp *cpl,
-+				   struct cxgbit_lro_pdu_cb *pdu_cb)
-+{
-+	unsigned int status = ntohl(cpl->ddpvld);
-+
-+	pdu_cb->flags |= PDUCBF_RX_STATUS;
-+	pdu_cb->ddigest = ntohl(cpl->ulp_crc);
-+	pdu_cb->pdulen = ntohs(cpl->len);
-+
-+	if (status & (1 << CPL_RX_ISCSI_DDP_STATUS_HCRC_SHIFT)) {
-+		pr_info("tid 0x%x, status 0x%x, hcrc bad.\n", tid, status);
-+		pdu_cb->flags |= PDUCBF_RX_HCRC_ERR;
-+	}
-+
-+	if (status & (1 << CPL_RX_ISCSI_DDP_STATUS_DCRC_SHIFT)) {
-+		pr_info("tid 0x%x, status 0x%x, dcrc bad.\n", tid, status);
-+		pdu_cb->flags |= PDUCBF_RX_DCRC_ERR;
-+	}
-+
-+	if (status & (1 << CPL_RX_ISCSI_DDP_STATUS_PAD_SHIFT))
-+		pr_info("tid 0x%x, status 0x%x, pad bad.\n", tid, status);
-+
-+	if ((status & (1 << CPL_RX_ISCSI_DDP_STATUS_DDP_SHIFT)) &&
-+	    (!(pdu_cb->flags & PDUCBF_RX_DATA))) {
-+		pdu_cb->flags |= PDUCBF_RX_DATA_DDPD;
-+	}
-+}
-+
-+static void cxgbit_lro_add_packet_rsp(struct sk_buff *skb, u8 op,
-+				      const __be64 *rsp)
-+{
-+	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
-+	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb,
-+						lro_cb->pdu_cnt);
-+	struct cpl_rx_iscsi_ddp *cpl = (struct cpl_rx_iscsi_ddp *)(rsp + 1);
-+
-+	cxgbit_proc_ddp_status(lro_cb->csk->tid, cpl, pdu_cb);
-+
-+	lro_cb->pdu_totallen += pdu_cb->pdulen;
-+	lro_cb->pdu_cnt++;
-+}
-+
-+static void
-+cxgbit_copy_frags(struct sk_buff *skb, const struct pkt_gl *gl,
-+		  unsigned int offset)
-+{
-+	int skb_frag_index = skb_shinfo(skb)->nr_frags;
++	struct scatterlist *sg = sg_pp ? *sg_pp : NULL;
++	unsigned int offset = sg_off ? *sg_off : 0;
++	dma_addr_t addr = 0UL;
++	unsigned int len = 0;
 +	int i;
 +
-+	/* usually there's just one frag */
-+	__skb_fill_page_desc(skb, skb_frag_index, gl->frags[0].page,
-+			     gl->frags[0].offset + offset,
-+			     gl->frags[0].size - offset);
-+	for (i = 1; i < gl->nfrags; i++)
-+		__skb_fill_page_desc(skb, skb_frag_index + i,
-+				     gl->frags[i].page,
-+				     gl->frags[i].offset,
-+				     gl->frags[i].size);
-+	skb_shinfo(skb)->nr_frags += gl->nfrags;
++	memcpy(ppod, &ttinfo->hdr, sizeof(struct cxgbi_pagepod_hdr));
 +
-+	/* get a reference to the last page, we don't own it */
-+	get_page(gl->frags[gl->nfrags - 1].page);
-+}
-+
-+static void cxgbit_lro_add_packet_gl(struct sk_buff *skb, u8 op,
-+				     const struct pkt_gl *gl)
-+{
-+	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
-+	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb,
-+						lro_cb->pdu_cnt);
-+	unsigned int offset;
-+	unsigned int len;
-+
-+	if (op == CPL_ISCSI_HDR) {
-+		struct cpl_iscsi_hdr *cpl = (struct cpl_iscsi_hdr *)gl->va;
-+
-+		offset = sizeof(struct cpl_iscsi_hdr);
-+		pdu_cb->flags |= PDUCBF_RX_HDR;
-+		pdu_cb->seq = ntohl(cpl->seq);
-+		len = ntohs(cpl->len);
-+		pdu_cb->hdr = gl->va + offset;
-+		pdu_cb->hlen = len;
-+	} else {
-+		struct cpl_iscsi_data *cpl = (struct cpl_iscsi_data *)gl->va;
-+
-+		offset = sizeof(struct cpl_iscsi_data);
-+		pdu_cb->flags |= PDUCBF_RX_DATA;
-+		len = ntohs(cpl->len);
-+		pdu_cb->dlen = len;
-+		pdu_cb->doffset = lro_cb->offset;
-+		pdu_cb->nr_dfrags = gl->nfrags;
-+		pdu_cb->dfrag_index = skb_shinfo(skb)->nr_frags;
++	if (sg) {
++		addr = sg_dma_address(sg);
++		len = sg_dma_len(sg);
 +	}
 +
-+	cxgbit_copy_frags(skb, gl, offset);
++	for (i = 0; i < PPOD_PAGES_MAX; i++) {
++		if (sg) {
++			ppod->addr[i] = cpu_to_be64(addr + offset);
++			offset += PAGE_SIZE;
++			if (offset == (len + sg->offset)) {
++				offset = 0;
++				sg = sg_next(sg);
++				if (sg) {
++					addr = sg_dma_address(sg);
++					len = sg_dma_len(sg);
++				}
++			}
++		} else {
++			ppod->addr[i] = 0ULL;
++		}
++	}
 +
-+	pdu_cb->frags += gl->nfrags;
-+	lro_cb->offset += len;
-+	skb->len += len;
-+	skb->data_len += len;
-+	skb->truesize += len;
++	/*
++	 * the fifth address needs to be repeated in the next ppod, so do
++	 * not move sg
++	 */
++	if (sg_pp) {
++		*sg_pp = sg;
++		*sg_off = offset;
++	}
++
++	if (offset == len) {
++		offset = 0;
++		sg = sg_next(sg);
++		if (sg) {
++			addr = sg_dma_address(sg);
++			len = sg_dma_len(sg);
++		}
++	}
++	ppod->addr[i] = sg ? cpu_to_be64(addr + offset) : 0ULL;
 +}
 +
-+static struct
-+sk_buff *cxgbit_lro_init_skb(struct cxgbit_sock *csk,
-+			     u8 op,
-+			     const struct pkt_gl *gl,
-+			     const __be64 *rsp,
-+			     struct napi_struct *napi)
++static struct sk_buff *cxgbit_ppod_init_idata(struct cxgbit_device *cdev,
++					      struct cxgbi_ppm *ppm,
++					      unsigned int idx,
++					      unsigned int npods,
++					      unsigned int tid)
 +{
-+	struct sk_buff *skb;
-+	struct cxgbit_lro_cb *lro_cb;
++	unsigned int pm_addr = (idx << PPOD_SIZE_SHIFT) + ppm->llimit;
++	unsigned int dlen = npods << PPOD_SIZE_SHIFT;
++	unsigned int wr_len = roundup(sizeof(struct ulp_mem_io) +
++				sizeof(struct ulptx_idata) + dlen, 16);
++	struct sk_buff *skb = alloc_skb(wr_len, GFP_KERNEL);
 +
-+	skb = napi_alloc_skb(napi, LRO_SKB_MAX_HEADROOM);
-+
-+	if (unlikely(!skb))
++	if (!skb)
 +		return NULL;
 +
-+	memset(skb->data, 0, LRO_SKB_MAX_HEADROOM);
-+
-+	lro_cb = cxgbit_skb_lro_cb(skb);
-+
-+	cxgbit_get_csk(csk);
-+
-+	lro_cb->csk = csk;
++	__skb_put(skb, wr_len);
++	ulp_mem_io_set_hdr(cdev, (struct ulp_mem_io *)skb->data, wr_len, dlen,
++			   pm_addr, tid);
 +
 +	return skb;
 +}
 +
-+static void cxgbit_queue_lro_skb(struct cxgbit_sock *csk,
-+				 struct sk_buff *skb)
++static int cxgbit_ppod_write_idata(struct cxgbi_ppm *ppm,
++				   struct cxgbit_sock *csk,
++				   struct cxgbi_task_tag_info *ttinfo,
++				   unsigned int idx, unsigned int npods,
++				   struct scatterlist **sg_pp,
++				   unsigned int *sg_off)
 +{
-+	bool wakeup_thread = false;
++	struct cxgbit_device *cdev = csk->com.cdev;
++	struct sk_buff *skb = cxgbit_ppod_init_idata(cdev, ppm, idx, npods,
++						csk->tid);
++	struct ulp_mem_io *req;
++	struct ulptx_idata *idata;
++	struct cxgbi_pagepod *ppod;
++	int i;
 +
-+	cxgbit_skcb_flags(skb) |= SKCBF_RX_LRO;
++	if (!skb)
++		return -ENOMEM;
 +
-+	spin_lock(&csk->rxq.lock);
-+	__skb_queue_tail(&csk->rxq, skb);
-+	if (skb_queue_len(&csk->rxq) == 1)
-+		wakeup_thread = true;
-+	spin_unlock(&csk->rxq.lock);
++	req = (struct ulp_mem_io *)skb->data;
++	idata = (struct ulptx_idata *)(req + 1);
++	ppod = (struct cxgbi_pagepod *)(idata + 1);
 +
-+	if (wakeup_thread)
-+		wake_up(&csk->waitq);
-+}
++	for (i = 0; i < npods; i++, ppod++)
++		cxgbit_set_one_ppod(ppod, ttinfo, sg_pp, sg_off);
 +
-+static void cxgbit_lro_flush(struct t4_lro_mgr *lro_mgr,
-+			     struct sk_buff *skb)
-+{
-+	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
-+	struct cxgbit_sock *csk = lro_cb->csk;
-+
-+	csk->lro_skb = NULL;
-+
-+	__skb_unlink(skb, &lro_mgr->lroq);
-+	cxgbit_queue_lro_skb(csk, skb);
-+
-+	cxgbit_put_csk(csk);
-+
-+	lro_mgr->lro_pkts++;
-+	lro_mgr->lro_session_cnt--;
-+}
-+
-+static void cxgbit_uld_lro_flush(struct t4_lro_mgr *lro_mgr)
-+{
-+	struct sk_buff *skb;
-+
-+	while ((skb = skb_peek(&lro_mgr->lroq)))
-+		cxgbit_lro_flush(lro_mgr, skb);
-+}
-+
-+static int cxgbit_lro_receive(struct cxgbit_sock *csk, u8 op,
-+			      const __be64 *rsp,
-+			      const struct pkt_gl *gl,
-+			      struct t4_lro_mgr *lro_mgr,
-+			      struct napi_struct *napi)
-+{
-+	struct sk_buff *skb;
-+	struct cxgbit_lro_cb *lro_cb;
-+
-+	if (!csk) {
-+		pr_err("%s: csk NULL, op 0x%x.\n", __func__, op);
-+		goto out;
-+	}
-+
-+	if (csk->lro_skb)
-+		goto add_packet;
-+
-+start_lro:
-+	/* Did we reach the hash size limit */
-+	if (lro_mgr->lro_session_cnt >= MAX_LRO_SESSIONS) {
-+		cxgbit_uld_lro_flush(lro_mgr);
-+		goto start_lro;
-+	}
-+
-+	skb = cxgbit_lro_init_skb(csk, op, gl, rsp, napi);
-+	if (unlikely(!skb))
-+		goto out;
-+
-+	csk->lro_skb = skb;
-+
-+	__skb_queue_tail(&lro_mgr->lroq, skb);
-+	lro_mgr->lro_session_cnt++;
-+
-+	/* continue to add the packet */
-+add_packet:
-+	skb = csk->lro_skb;
-+	lro_cb = cxgbit_skb_lro_cb(skb);
-+
-+	/* Check if this packet can be aggregated */
-+	if ((gl && ((skb_shinfo(skb)->nr_frags + gl->nfrags) >=
-+			MAX_SKB_FRAGS ||
-+			lro_cb->pdu_totallen >= LRO_FLUSH_TOTALLEN_MAX)) ||
-+	    /* lro_cb->pdu_cnt must be less than MAX_SKB_FRAGS */
-+			lro_cb->pdu_cnt >= (MAX_SKB_FRAGS - 1)) {
-+		cxgbit_lro_flush(lro_mgr, skb);
-+		goto start_lro;
-+	}
-+
-+	if (gl)
-+		cxgbit_lro_add_packet_gl(skb, op, gl);
-+	else
-+		cxgbit_lro_add_packet_rsp(skb, op, rsp);
-+	lro_mgr->lro_merged++;
++	__skb_queue_tail(&csk->ppodq, skb);
 +
 +	return 0;
-+
-+out:
-+	return -1;
 +}
 +
-+static int cxgbit_uld_lro_rx_handler(void *hndl, const __be64 *rsp,
-+				     const struct pkt_gl *gl,
-+				     struct t4_lro_mgr *lro_mgr,
-+				     struct napi_struct *napi)
++static int cxgbit_ddp_set_map(struct cxgbi_ppm *ppm, struct cxgbit_sock *csk,
++			      struct cxgbi_task_tag_info *ttinfo)
 +{
-+	struct cxgbit_device *cdev = hndl;
-+	struct cxgb4_lld_info *lldi = &cdev->lldi;
-+	struct cpl_tx_data *rpl = NULL;
-+	struct cxgbit_sock *csk = NULL;
-+	unsigned int tid = 0;
-+	struct sk_buff *skb;
-+	unsigned int op = *(u8 *)rsp;
-+	bool lro_flush = true;
++	unsigned int pidx = ttinfo->idx;
++	unsigned int npods = ttinfo->npods;
++	unsigned int i, cnt;
++	int ret = 0;
++	struct scatterlist *sg = ttinfo->sgl;
++	unsigned int offset = 0;
 +
-+	switch (op) {
-+	case CPL_ISCSI_HDR:
-+	case CPL_ISCSI_DATA:
-+	case CPL_RX_ISCSI_DDP:
-+	case CPL_FW4_ACK:
-+		lro_flush = false;
-+	case CPL_ABORT_RPL_RSS:
-+	case CPL_PASS_ESTABLISH:
-+	case CPL_PEER_CLOSE:
-+	case CPL_CLOSE_CON_RPL:
-+	case CPL_ABORT_REQ_RSS:
-+	case CPL_SET_TCB_RPL:
-+	case CPL_RX_DATA:
-+		/* Get the TID of this connection */
-+		rpl = gl ? (struct cpl_tx_data *)gl->va :
-+			   (struct cpl_tx_data *)(rsp + 1);
-+		tid = GET_TID(rpl);
-+		csk = lookup_tid(lldi->tids, tid);
-+		break;
-+	default:
-+		break;
++	ttinfo->cid = csk->port_id;
++
++	for (i = 0; i < npods; i += cnt, pidx += cnt) {
++		cnt = npods - i;
++
++		if (cnt > ULPMEM_IDATA_MAX_NPPODS)
++			cnt = ULPMEM_IDATA_MAX_NPPODS;
++
++		ret = cxgbit_ppod_write_idata(ppm, csk, ttinfo, pidx, cnt,
++					      &sg, &offset);
++		if (ret < 0)
++			break;
 +	}
++
++	return ret;
++}
++
++static void
++cxgbit_dump_sgl(const char *cap, struct scatterlist *sgl, int nents)
++{
++	struct scatterlist *sg;
++	int i;
++
++	if (cap)
++		pr_info("%s: sgl 0x%p, nents %u.\n", cap, sgl, nents);
++	for_each_sg(sgl, sg, nents, i)
++		pr_info("\t%d/%u, 0x%p: len %u, off %u, pg 0x%p, dma 0x%llx, %u\n",
++			i, nents, sg, sg->length, sg->offset, sg_page(sg),
++			sg_dma_address(sg), sg_dma_len(sg));
++}
++
++static int cxgbit_ddp_sgl_check(struct scatterlist *sgl, int nents)
++{
++	int i;
++	int last_sgidx = nents - 1;
++	struct scatterlist *sg = sgl;
++
++	for (i = 1, sg = sg_next(sgl); i < nents; i++, sg = sg_next(sg)) {
++		if ((i && sg->offset) ||
++		    ((i != last_sgidx) &&
++		     ((sg->length + sg->offset) & ((1 << PAGE_SHIFT) - 1)))) {
++			pr_info("%s: sg %u/%u, %u,%u, not page aligned.\n",
++				__func__, i, nents, sg->offset, sg->length);
++			cxgbit_dump_sgl(NULL, sgl, nents);
++			return -EINVAL;
++		}
++	}
++
++	return 0;
++}
++
++static int cxgbit_ddp_reserve(struct cxgbit_sock *csk,
++			      struct cxgbi_task_tag_info *ttinfo,
++			      unsigned int xferlen)
++{
++	struct cxgbit_device *cdev = csk->com.cdev;
++	struct cxgbi_ppm *ppm = cdev2ppm(cdev);
++	struct scatterlist *sgl = ttinfo->sgl;
++	unsigned int sgcnt = ttinfo->nents;
++	unsigned int sg_offset = sgl->offset;
++	int ret;
++
++	if (!ppm || xferlen < DDP_THRESHOLD || !sgcnt ||
++	    ppm->tformat.pgsz_idx_dflt >= DDP_PGIDX_MAX) {
++		pr_debug("ppm 0x%p, pgidx %u, xfer %u, sgcnt %u, NO ddp.\n",
++			 ppm, ppm ? ppm->tformat.pgsz_idx_dflt :
++			 DDP_PGIDX_MAX,
++			 xferlen, ttinfo->nents);
++		return -EINVAL;
++	}
++
++	/* make sure the buffer is suitable for ddp */
++	if (cxgbit_ddp_sgl_check(sgl, sgcnt) < 0)
++		return -EINVAL;
++
++	ttinfo->nr_pages = (xferlen + sgl->offset +
++			    (1 << PAGE_SHIFT) - 1) >> PAGE_SHIFT;
 +
 +	/*
-+	 * Flush the LROed skb on receiving any cpl other than FW4_ACK and
-+	 * CPL_ISCSI_XXX
++	 * the ddp tag will be used for the ttt in the outgoing r2t pdu
 +	 */
-+	if (csk && csk->lro_skb && lro_flush)
-+		cxgbit_lro_flush(lro_mgr, csk->lro_skb);
++	ret = cxgbi_ppm_ppods_reserve(ppm, ttinfo->nr_pages, 0, &ttinfo->idx,
++				      &ttinfo->tag, 0);
++	if (ret < 0)
++		return ret;
++	ttinfo->npods = ret;
 +
-+	if (!gl) {
-+		unsigned int len;
-+
-+		if (op == CPL_RX_ISCSI_DDP) {
-+			if (!cxgbit_lro_receive(csk, op, rsp, NULL, lro_mgr,
-+						napi))
-+				return 0;
-+		}
-+
-+		len = 64 - sizeof(struct rsp_ctrl) - 8;
-+		skb = napi_alloc_skb(napi, len);
-+		if (!skb)
-+			goto nomem;
-+		__skb_put(skb, len);
-+		skb_copy_to_linear_data(skb, &rsp[1], len);
-+	} else {
-+		if (unlikely(op != *(u8 *)gl->va)) {
-+			pr_info("? FL 0x%p,RSS%#llx,FL %#llx,len %u.\n",
-+				gl->va, be64_to_cpu(*rsp),
-+				be64_to_cpu(*(u64 *)gl->va),
-+				gl->tot_len);
-+			return 0;
-+		}
-+
-+		if (op == CPL_ISCSI_HDR || op == CPL_ISCSI_DATA) {
-+			if (!cxgbit_lro_receive(csk, op, rsp, gl, lro_mgr,
-+						napi))
-+				return 0;
-+		}
-+
-+#define RX_PULL_LEN 128
-+		skb = cxgb4_pktgl_to_skb(gl, RX_PULL_LEN, RX_PULL_LEN);
-+		if (unlikely(!skb))
-+			goto nomem;
++	 /* setup dma from scsi command sgl */
++	sgl->offset = 0;
++	ret = dma_map_sg(&ppm->pdev->dev, sgl, sgcnt, DMA_FROM_DEVICE);
++	sgl->offset = sg_offset;
++	if (!ret) {
++		pr_info("%s: 0x%x, xfer %u, sgl %u dma mapping err.\n",
++			__func__, 0, xferlen, sgcnt);
++		goto rel_ppods;
++	}
++	if (ret != ttinfo->nr_pages) {
++		pr_info("%s: 0x%x, xfer %u, sgl %u, dma count %d.\n",
++			__func__, 0, xferlen, sgcnt, ret);
++		cxgbit_dump_sgl(__func__, sgl, sgcnt);
 +	}
 +
-+	rpl = (struct cpl_tx_data *)skb->data;
-+	op = rpl->ot.opcode;
-+	cxgbit_skcb_rx_opcode(skb) = op;
++	ttinfo->flags |= CXGBI_PPOD_INFO_FLAG_MAPPED;
++	ttinfo->cid = csk->port_id;
 +
-+	pr_debug("cdev %p, opcode 0x%x(0x%x,0x%x), skb %p.\n",
-+		 cdev, op, rpl->ot.opcode_tid,
-+		 ntohl(rpl->ot.opcode_tid), skb);
++	cxgbi_ppm_make_ppod_hdr(ppm, ttinfo->tag, csk->tid, sgl->offset,
++				xferlen, &ttinfo->hdr);
 +
-+	if (op < NUM_CPL_CMDS && cxgbit_cplhandlers[op]) {
-+		cxgbit_cplhandlers[op](cdev, skb);
-+	} else {
-+		pr_err("No handler for opcode 0x%x.\n", op);
-+		__kfree_skb(skb);
-+	}
++	ttinfo->flags |= CXGBI_PPOD_INFO_FLAG_VALID;
++	cxgbit_ddp_set_map(ppm, csk, ttinfo);
++
 +	return 0;
-+nomem:
-+	pr_err("%s OOM bailing out.\n", __func__);
-+	return 1;
++
++rel_ppods:
++	cxgbi_ppm_ppod_release(ppm, ttinfo->idx);
++
++	if (ttinfo->flags & CXGBI_PPOD_INFO_FLAG_MAPPED) {
++		ttinfo->flags &= ~CXGBI_PPOD_INFO_FLAG_MAPPED;
++		dma_unmap_sg(&ppm->pdev->dev, sgl, sgcnt, DMA_FROM_DEVICE);
++	}
++	return -EINVAL;
 +}
 +
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+struct cxgbit_dcb_work {
-+	struct dcb_app_type dcb_app;
-+	struct work_struct work;
-+};
-+
-+static struct cxgbit_device *
-+cxgbit_find_device(struct net_device *ndev, u8 *port_id)
++int cxgbit_reserve_ttt(struct cxgbit_sock *csk, struct iscsi_cmd *cmd)
 +{
-+	struct cxgbit_device *cdev;
-+	u8 i;
++	struct cxgbit_device *cdev = csk->com.cdev;
++	struct cxgbit_cmd *ccmd = iscsit_priv_cmd(cmd);
++	struct cxgbi_task_tag_info *ttinfo = &ccmd->ttinfo;
++	int ret = -EINVAL;
 +
-+	list_for_each_entry(cdev, &cdev_list_head, list) {
-+		struct cxgb4_lld_info *lldi = &cdev->lldi;
++	ttinfo->sgl = cmd->se_cmd.t_data_sg;
++	ttinfo->nents = cmd->se_cmd.t_data_nents;
 +
-+		for (i = 0; i < lldi->nports; i++) {
-+			if (lldi->ports[i] == ndev) {
-+				*port_id = i;
-+				return cdev;
-+			}
-+		}
++	ret = cxgbit_ddp_reserve(csk, ttinfo, cmd->se_cmd.data_length);
++	if (ret < 0) {
++		pr_info("csk 0x%p, cmd 0x%p, xfer len %u, sgcnt %u no ddp.\n",
++			csk, cmd, cmd->se_cmd.data_length, ttinfo->nents);
++
++		ttinfo->sgl = NULL;
++		ttinfo->nents = 0;
++
++		return ret;
 +	}
 +
-+	return NULL;
++	ccmd->release = true;
++
++	pr_debug("cdev 0x%p, cmd 0x%p, tag 0x%x\n", cdev, cmd, ttinfo->tag);
++
++	return 0;
 +}
 +
-+static void cxgbit_update_dcb_priority(struct cxgbit_device *cdev,
-+				       u8 port_id, u8 dcb_priority,
-+				       u16 port_num)
++void cxgbit_release_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
 +{
-+	struct cxgbit_sock *csk;
-+	struct sk_buff *skb;
-+	u16 local_port;
-+	bool wakeup_thread = false;
++	struct cxgbit_cmd *ccmd = iscsit_priv_cmd(cmd);
 +
-+	spin_lock_bh(&cdev->cskq.lock);
-+	list_for_each_entry(csk, &cdev->cskq.list, list) {
-+		if (csk->port_id != port_id)
-+			continue;
++	if (ccmd->release) {
++		struct cxgbi_task_tag_info *ttinfo = &ccmd->ttinfo;
 +
-+		if (csk->com.local_addr.ss_family == AF_INET6) {
-+			struct sockaddr_in6 *sock_in6;
++		if (ttinfo->sgl) {
++			struct cxgbit_sock *csk = conn->context;
++			struct cxgbit_device *cdev = csk->com.cdev;
++			struct cxgbi_ppm *ppm = cdev2ppm(cdev);
 +
-+			sock_in6 = (struct sockaddr_in6 *)&csk->com.local_addr;
-+			local_port = ntohs(sock_in6->sin6_port);
++			cxgbi_ppm_ppod_release(ppm, ttinfo->idx);
++
++			dma_unmap_sg(&ppm->pdev->dev, ttinfo->sgl,
++				     ttinfo->nents, DMA_FROM_DEVICE);
 +		} else {
-+			struct sockaddr_in *sock_in;
-+
-+			sock_in = (struct sockaddr_in *)&csk->com.local_addr;
-+			local_port = ntohs(sock_in->sin_port);
++			put_page(sg_page(&ccmd->sg));
 +		}
 +
-+		if (local_port != port_num)
-+			continue;
-+
-+		if (csk->dcb_priority == dcb_priority)
-+			continue;
-+
-+		skb = alloc_skb(0, GFP_ATOMIC);
-+		if (!skb)
-+			continue;
-+
-+		spin_lock(&csk->rxq.lock);
-+		__skb_queue_tail(&csk->rxq, skb);
-+		if (skb_queue_len(&csk->rxq) == 1)
-+			wakeup_thread = true;
-+		spin_unlock(&csk->rxq.lock);
-+
-+		if (wakeup_thread) {
-+			wake_up(&csk->waitq);
-+			wakeup_thread = false;
-+		}
++		ccmd->release = false;
 +	}
-+	spin_unlock_bh(&cdev->cskq.lock);
 +}
 +
-+static void cxgbit_dcb_workfn(struct work_struct *work)
++static void cxgbit_ddp_ppm_setup(void **ppm_pp, struct cxgbit_device *cdev,
++				 struct cxgbi_tag_format *tformat,
++				 unsigned int ppmax,
++				 unsigned int llimit,
++				 unsigned int start)
 +{
-+	struct cxgbit_dcb_work *dcb_work;
-+	struct net_device *ndev;
-+	struct cxgbit_device *cdev = NULL;
-+	struct dcb_app_type *iscsi_app;
-+	u8 priority, port_id = 0xff;
++	int ret = cxgbi_ppm_init(ppm_pp, cdev->lldi.ports[0], cdev->lldi.pdev,
++				 &cdev->lldi, tformat, ppmax, llimit, start,
++				 2);
 +
-+	dcb_work = container_of(work, struct cxgbit_dcb_work, work);
-+	iscsi_app = &dcb_work->dcb_app;
++	if (ret >= 0) {
++		struct cxgbi_ppm *ppm = (struct cxgbi_ppm *)(*ppm_pp);
 +
-+	if (iscsi_app->dcbx & DCB_CAP_DCBX_VER_IEEE) {
-+		if (iscsi_app->app.selector != IEEE_8021QAZ_APP_SEL_ANY)
-+			goto out;
++		if (ppm->ppmax < 1024 ||
++		    ppm->tformat.pgsz_idx_dflt >= DDP_PGIDX_MAX)
++			return;
 +
-+		priority = iscsi_app->app.priority;
++		set_bit(CDEV_DDP_ENABLE, &cdev->flags);
++	}
++}
 +
-+	} else if (iscsi_app->dcbx & DCB_CAP_DCBX_VER_CEE) {
-+		if (iscsi_app->app.selector != DCB_APP_IDTYPE_PORTNUM)
-+			goto out;
++int cxgbit_ddp_init(struct cxgbit_device *cdev)
++{
++	struct cxgb4_lld_info *lldi = &cdev->lldi;
++	struct net_device *ndev = cdev->lldi.ports[0];
++	struct cxgbi_tag_format tformat;
++	unsigned int ppmax;
++	int i;
 +
-+		if (!iscsi_app->app.priority)
-+			goto out;
-+
-+		priority = ffs(iscsi_app->app.priority) - 1;
-+	} else {
-+		goto out;
++	if (!lldi->vr->iscsi.size) {
++		pr_warn("%s, iscsi NOT enabled, check config!\n", ndev->name);
++		return -EACCES;
 +	}
 +
-+	pr_debug("priority for ifid %d is %u\n",
-+		 iscsi_app->ifindex, priority);
++	ppmax = lldi->vr->iscsi.size >> PPOD_SIZE_SHIFT;
 +
-+	ndev = dev_get_by_index(&init_net, iscsi_app->ifindex);
++	memset(&tformat, 0, sizeof(struct cxgbi_tag_format));
++	for (i = 0; i < 4; i++)
++		tformat.pgsz_order[i] = (lldi->iscsi_pgsz_order >> (i << 3))
++					 & 0xF;
++	cxgbi_tagmask_check(lldi->iscsi_tagmask, &tformat);
 +
-+	if (!ndev)
-+		goto out;
-+
-+	mutex_lock(&cdev_list_lock);
-+	cdev = cxgbit_find_device(ndev, &port_id);
-+
-+	dev_put(ndev);
-+
-+	if (!cdev) {
-+		mutex_unlock(&cdev_list_lock);
-+		goto out;
-+	}
-+
-+	cxgbit_update_dcb_priority(cdev, port_id, priority,
-+				   iscsi_app->app.protocol);
-+	mutex_unlock(&cdev_list_lock);
-+out:
-+	kfree(dcb_work);
-+}
-+
-+static int cxgbit_dcbevent_notify(struct notifier_block *nb,
-+				  unsigned long action, void *data)
-+{
-+	struct cxgbit_dcb_work *dcb_work;
-+	struct dcb_app_type *dcb_app = data;
-+
-+	dcb_work = kzalloc(sizeof(*dcb_work), GFP_ATOMIC);
-+	if (!dcb_work)
-+		return NOTIFY_DONE;
-+
-+	dcb_work->dcb_app = *dcb_app;
-+	INIT_WORK(&dcb_work->work, cxgbit_dcb_workfn);
-+	schedule_work(&dcb_work->work);
-+	return NOTIFY_OK;
-+}
-+#endif
-+
-+static enum target_prot_op cxgbit_get_sup_prot_ops(struct iscsi_conn *conn)
-+{
-+	return TARGET_PROT_NORMAL;
-+}
-+
-+static struct iscsit_transport cxgbit_transport = {
-+	.name			= DRV_NAME,
-+	.transport_type		= ISCSI_TCP_CXGB4,
-+	.priv_size		= sizeof(struct cxgbit_cmd),
-+	.owner			= THIS_MODULE,
-+	.iscsit_setup_np	= cxgbit_setup_np,
-+	.iscsit_accept_np	= cxgbit_accept_np,
-+	.iscsit_free_np		= cxgbit_free_np,
-+	.iscsit_free_conn	= cxgbit_free_conn,
-+	.iscsit_get_login_rx	= cxgbit_get_login_rx,
-+	.iscsit_put_login_tx	= cxgbit_put_login_tx,
-+	.iscsit_immediate_queue	= cxgbit_immediate_queue,
-+	.iscsit_response_queue	= cxgbit_response_queue,
-+	.iscsit_get_dataout	= iscsit_build_r2ts_for_cmd,
-+	.iscsit_queue_data_in	= iscsit_queue_rsp,
-+	.iscsit_queue_status	= iscsit_queue_rsp,
-+	.iscsit_rx_pdu		= cxgbit_rx_pdu,
-+	.iscsit_validate_params	= cxgbit_validate_params,
-+	.iscsit_release_cmd	= cxgbit_release_cmd,
-+	.iscsit_aborted_task	= iscsit_aborted_task,
-+	.iscsit_get_sup_prot_ops = cxgbit_get_sup_prot_ops,
-+};
-+
-+static struct cxgb4_uld_info cxgbit_uld_info = {
-+	.name		= DRV_NAME,
-+	.add		= cxgbit_uld_add,
-+	.state_change	= cxgbit_uld_state_change,
-+	.lro_rx_handler = cxgbit_uld_lro_rx_handler,
-+	.lro_flush	= cxgbit_uld_lro_flush,
-+};
-+
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+static struct notifier_block cxgbit_dcbevent_nb = {
-+		.notifier_call = cxgbit_dcbevent_notify,
-+};
-+#endif
-+
-+static int __init cxgbit_init(void)
-+{
-+	cxgb4_register_uld(CXGB4_ULD_ISCSIT, &cxgbit_uld_info);
-+	iscsit_register_transport(&cxgbit_transport);
-+
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+	pr_info("%s dcb enabled.\n", DRV_NAME);
-+	register_dcbevent_notifier(&cxgbit_dcbevent_nb);
-+#endif
++	cxgbit_ddp_ppm_setup(lldi->iscsi_ppm, cdev, &tformat, ppmax,
++			     lldi->iscsi_llimit, lldi->vr->iscsi.start);
 +	return 0;
 +}
-+
-+static void __exit cxgbit_exit(void)
-+{
-+	struct cxgbit_device *cdev, *tmp;
-+
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+	unregister_dcbevent_notifier(&cxgbit_dcbevent_nb);
-+#endif
-+	mutex_lock(&cdev_list_lock);
-+	list_for_each_entry_safe(cdev, tmp, &cdev_list_head, list) {
-+		list_del(&cdev->list);
-+		cxgbit_put_cdev(cdev);
-+	}
-+	mutex_unlock(&cdev_list_lock);
-+	iscsit_unregister_transport(&cxgbit_transport);
-+	cxgb4_unregister_uld(CXGB4_ULD_ISCSIT);
-+}
-+
-+module_init(cxgbit_init);
-+module_exit(cxgbit_exit);
-+
-+MODULE_DESCRIPTION("Chelsio iSCSI target offload driver");
-+MODULE_AUTHOR("Chelsio Communications");
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
 -- 
 2.0.2
