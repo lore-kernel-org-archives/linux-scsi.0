@@ -1,14 +1,14 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 20/34] iscsi-target: update struct iscsit_transport definition
-Date: Sun, 14 Feb 2016 23:12:14 +0530
-Message-ID: <a7968adffc57ab25f06713890159014b3571bc53.1455467089.git.varun@chelsio.com>
+Subject: [RFC 19/34] iscsi-target: clear tx_thread_active
+Date: Sun, 14 Feb 2016 23:12:13 +0530
+Message-ID: <179da911feeb6481e0e06eb45f18743be02d6e90.1455467089.git.varun@chelsio.com>
 References: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:28512 "EHLO
+Received: from stargate.chelsio.com ([12.32.117.8]:10580 "EHLO
 	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751777AbcBNRms (ORCPT
+	by vger.kernel.org with ESMTP id S1751785AbcBNRmu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Feb 2016 12:42:48 -0500
+	Sun, 14 Feb 2016 12:42:50 -0500
 In-Reply-To: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
 In-Reply-To: <cover.1455467089.git.varun@chelsio.com>
 References: <cover.1455467089.git.varun@chelsio.com>
@@ -17,43 +17,38 @@ List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
 
-add new function pointers to support ISCSI_TCP_CXGB4
-transport,
-
-1. void (*iscsit_rx_pdu)(struct iscsi_conn *);
-   Rx thread uses this for receiving and processing
-   iSCSI PDU in full feature phase.
-
-2. void (*iscsit_release_cmd)(struct iscsi_conn *,
-   struct iscsi_cmd *);
-   This function pointer is used for releasing
-   transport resources associated with the cmd.
-
-3. int (*iscsit_validate_params)(struct iscsi_conn *);
-   This function is used for checking whether default
-   connection operational parameters are supported by
-   the transport, if not transport driver will set the
-   supported value.
+clear tx_thread_active for ISCSI_TCP_CXGB4
+transport in logout_post_handler functions.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- include/target/iscsi/iscsi_transport.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/target/iscsi/iscsi_target.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/include/target/iscsi/iscsi_transport.h b/include/target/iscsi/iscsi_transport.h
-index a47124b..83228a7 100644
---- a/include/target/iscsi/iscsi_transport.h
-+++ b/include/target/iscsi/iscsi_transport.h
-@@ -22,6 +22,9 @@ struct iscsit_transport {
- 	int (*iscsit_queue_data_in)(struct iscsi_conn *, struct iscsi_cmd *);
- 	int (*iscsit_queue_status)(struct iscsi_conn *, struct iscsi_cmd *);
- 	void (*iscsit_aborted_task)(struct iscsi_conn *, struct iscsi_cmd *);
-+	void (*iscsit_rx_pdu)(struct iscsi_conn *);
-+	void (*iscsit_release_cmd)(struct iscsi_conn *, struct iscsi_cmd *);
-+	int (*iscsit_validate_params)(struct iscsi_conn *);
- 	enum target_prot_op (*iscsit_get_sup_prot_ops)(struct iscsi_conn *);
- };
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 858f6e4..3dd7ba2 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4579,7 +4579,8 @@ static void iscsit_logout_post_handler_closesession(
+ 	 * always sleep waiting for RX/TX thread shutdown to complete
+ 	 * within iscsit_close_connection().
+ 	 */
+-	if (conn->conn_transport->transport_type == ISCSI_TCP)
++	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
++	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
+ 		sleep = cmpxchg(&conn->tx_thread_active, true, false);
  
+ 	atomic_set(&conn->conn_logout_remove, 0);
+@@ -4596,7 +4597,8 @@ static void iscsit_logout_post_handler_samecid(
+ {
+ 	int sleep = 1;
+ 
+-	if (conn->conn_transport->transport_type == ISCSI_TCP)
++	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
++	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
+ 		sleep = cmpxchg(&conn->tx_thread_active, true, false);
+ 
+ 	atomic_set(&conn->conn_logout_remove, 0);
 -- 
 2.0.2
 
