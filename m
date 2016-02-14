@@ -1,52 +1,59 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 18/34] iscsi-target: call complete on conn_logout_comp
-Date: Sun, 14 Feb 2016 23:12:12 +0530
-Message-ID: <f98923031c5958e73ce1ac13a5fc7f68ba19391f.1455467089.git.varun@chelsio.com>
+Subject: [RFC 20/34] iscsi-target: update struct iscsit_transport definition
+Date: Sun, 14 Feb 2016 23:12:14 +0530
+Message-ID: <a7968adffc57ab25f06713890159014b3571bc53.1455467089.git.varun@chelsio.com>
 References: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.32.117.8]:28512 "EHLO
+	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751777AbcBNRms (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Feb 2016 12:42:48 -0500
 In-Reply-To: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
 In-Reply-To: <cover.1455467089.git.varun@chelsio.com>
 References: <cover.1455467089.git.varun@chelsio.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
-List-Id: linux-scsi@vger.kernel.org
 
-ISCSI_TCP_CXGB4 driver waits on conn_logout_comp as
-ISCSI_TCP driver so call complete if transport type
-is ISCSI_TCP_CXGB4.
+add new function pointers to support ISCSI_TCP_CXGB4
+transport,
+
+1. void (*iscsit_rx_pdu)(struct iscsi_conn *);
+   Rx thread uses this for receiving and processing
+   iSCSI PDU in full feature phase.
+
+2. void (*iscsit_release_cmd)(struct iscsi_conn *,
+   struct iscsi_cmd *);
+   This function pointer is used for releasing
+   transport resources associated with the cmd.
+
+3. int (*iscsit_validate_params)(struct iscsi_conn *);
+   This function is used for checking whether default
+   connection operational parameters are supported by
+   the transport, if not transport driver will set the
+   supported value.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/iscsi_target.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ include/target/iscsi/iscsi_transport.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 8bf3cfb..858f6e4 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4265,16 +4265,18 @@ int iscsit_close_connection(
- 	pr_debug("Closing iSCSI connection CID %hu on SID:"
- 		" %u\n", conn->cid, sess->sid);
- 	/*
--	 * Always up conn_logout_comp for the traditional TCP case just in case
--	 * the RX Thread in iscsi_target_rx_opcode() is sleeping and the logout
--	 * response never got sent because the connection failed.
-+	 * Always up conn_logout_comp for the traditional TCP and TCP_CXGB4
-+	 * case just in case the RX Thread in iscsi_target_rx_opcode() is
-+	 * sleeping and the logout response never got sent because the
-+	 * connection failed.
- 	 *
- 	 * However for iser-target, isert_wait4logout() is using conn_logout_comp
- 	 * to signal logout response TX interrupt completion.  Go ahead and skip
- 	 * this for iser since isert_rx_opcode() does not wait on logout failure,
- 	 * and to avoid iscsi_conn pointer dereference in iser-target code.
- 	 */
--	if (conn->conn_transport->transport_type == ISCSI_TCP)
-+	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
-+	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
- 		complete(&conn->conn_logout_comp);
+diff --git a/include/target/iscsi/iscsi_transport.h b/include/target/iscsi/iscsi_transport.h
+index a47124b..83228a7 100644
+--- a/include/target/iscsi/iscsi_transport.h
++++ b/include/target/iscsi/iscsi_transport.h
+@@ -22,6 +22,9 @@ struct iscsit_transport {
+ 	int (*iscsit_queue_data_in)(struct iscsi_conn *, struct iscsi_cmd *);
+ 	int (*iscsit_queue_status)(struct iscsi_conn *, struct iscsi_cmd *);
+ 	void (*iscsit_aborted_task)(struct iscsi_conn *, struct iscsi_cmd *);
++	void (*iscsit_rx_pdu)(struct iscsi_conn *);
++	void (*iscsit_release_cmd)(struct iscsi_conn *, struct iscsi_cmd *);
++	int (*iscsit_validate_params)(struct iscsi_conn *);
+ 	enum target_prot_op (*iscsit_get_sup_prot_ops)(struct iscsi_conn *);
+ };
  
- 	if (!strcmp(current->comm, ISCSI_RX_THREAD_NAME)) {
 -- 
 2.0.2
+
