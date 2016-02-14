@@ -1,7 +1,7 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 33/34] cxgbit: add Kconfig and Makefile
-Date: Sun, 14 Feb 2016 23:15:40 +0530
-Message-ID: <09a09d398b03524da6b382ca7155b2729276236f.1455467089.git.varun@chelsio.com>
+Subject: [RFC 34/34] iscsi-target: update Kconfig and Makefile
+Date: Sun, 14 Feb 2016 23:15:41 +0530
+Message-ID: <0279d54f735556f8e6318b1505eb6d494974da62.1455467089.git.varun@chelsio.com>
 References: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
@@ -12,38 +12,33 @@ To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
+update Makefile and Kconfig for
+compiling cxgbit.ko.
+
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/cxgbit/Kconfig  | 7 +++++++
- drivers/target/iscsi/cxgbit/Makefile | 6 ++++++
- 2 files changed, 13 insertions(+)
- create mode 100644 drivers/target/iscsi/cxgbit/Kconfig
- create mode 100644 drivers/target/iscsi/cxgbit/Makefile
+ drivers/target/iscsi/Kconfig  | 2 ++
+ drivers/target/iscsi/Makefile | 1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/target/iscsi/cxgbit/Kconfig b/drivers/target/iscsi/cxgbit/Kconfig
-new file mode 100644
-index 0000000..cf335b4
---- /dev/null
-+++ b/drivers/target/iscsi/cxgbit/Kconfig
-@@ -0,0 +1,7 @@
-+config ISCSI_TARGET_CXGB4
-+	tristate "Chelsio iSCSI target offload driver"
-+	depends on ISCSI_TARGET && CHELSIO_T4
-+	select CHELSIO_T4_UWIRE
-+	---help---
-+	To compile this driver as module, choose M here: the module
-+	will be called cxgbit.
-diff --git a/drivers/target/iscsi/cxgbit/Makefile b/drivers/target/iscsi/cxgbit/Makefile
-new file mode 100644
-index 0000000..bd56c07
---- /dev/null
-+++ b/drivers/target/iscsi/cxgbit/Makefile
-@@ -0,0 +1,6 @@
-+ccflags-y := -Idrivers/net/ethernet/chelsio/cxgb4
-+ccflags-y += -Idrivers/target/iscsi
+diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
+index 8345fb4..bbdbf9c 100644
+--- a/drivers/target/iscsi/Kconfig
++++ b/drivers/target/iscsi/Kconfig
+@@ -7,3 +7,5 @@ config ISCSI_TARGET
+ 	help
+ 	Say M here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
+ 	Target Mode Stack.
 +
-+obj-$(CONFIG_ISCSI_TARGET_CXGB4)  += cxgbit.o
-+
-+cxgbit-y  := cxgbit_main.o cxgbit_cm.o cxgbit_target.o cxgbit_ddp.o
++source	"drivers/target/iscsi/cxgbit/Kconfig"
+diff --git a/drivers/target/iscsi/Makefile b/drivers/target/iscsi/Makefile
+index 0f43be9..0f18295 100644
+--- a/drivers/target/iscsi/Makefile
++++ b/drivers/target/iscsi/Makefile
+@@ -18,3 +18,4 @@ iscsi_target_mod-y +=		iscsi_target_parameters.o \
+ 				iscsi_target_transport.o
+ 
+ obj-$(CONFIG_ISCSI_TARGET)	+= iscsi_target_mod.o
++obj-$(CONFIG_ISCSI_TARGET_CXGB4) += cxgbit/
 -- 
 2.0.2
