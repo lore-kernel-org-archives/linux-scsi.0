@@ -1,37 +1,32 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 30/34] cxgbit: add cxgbit_cm.c
-Date: Sun, 14 Feb 2016 23:15:37 +0530
-Message-ID: <10a0d4ce8e629fc2c98acf3de532dda89fd6fbba.1455467089.git.varun@chelsio.com>
+Subject: [RFC 31/34] cxgbit: add cxgbit_target.c
+Date: Sun, 14 Feb 2016 23:15:38 +0530
+Message-ID: <fae6d95c875a68a82d0cb74b83d4c30942cdc01e.1455467089.git.varun@chelsio.com>
 References: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:7786 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751719AbcBNRqW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Feb 2016 12:46:22 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
 In-Reply-To: <cover.1455467089.git.varun@chelsio.com>
 References: <cover.1455467089.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
+List-Id: linux-scsi@vger.kernel.org
 
-This file contains code for connection
-management.
+This file contains code for processing
+iSCSI PDU.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/cxgbit/cxgbit_cm.c | 1893 +++++++++++++++++++++++++++++++
- 1 file changed, 1893 insertions(+)
- create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_cm.c
+ drivers/target/iscsi/cxgbit/cxgbit_target.c | 2027 +++++++++++++++++++++++++++
+ 1 file changed, 2027 insertions(+)
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_target.c
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_target.c b/drivers/target/iscsi/cxgbit/cxgbit_target.c
 new file mode 100644
-index 0000000..3288821
+index 0000000..528bd21
 --- /dev/null
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-@@ -0,0 +1,1893 @@
++++ b/drivers/target/iscsi/cxgbit/cxgbit_target.c
+@@ -0,0 +1,2027 @@
 +/*
 + * Copyright (c) 2016 Chelsio Communications, Inc.
 + *
@@ -40,1891 +35,2024 @@ index 0000000..3288821
 + * published by the Free Software Foundation.
 + */
 +
-+#include <linux/module.h>
-+#include <linux/list.h>
 +#include <linux/workqueue.h>
-+#include <linux/skbuff.h>
-+#include <linux/timer.h>
-+#include <linux/notifier.h>
-+#include <linux/inetdevice.h>
-+#include <linux/ip.h>
-+#include <linux/tcp.h>
-+#include <linux/if_vlan.h>
-+
-+#include <net/neighbour.h>
-+#include <net/netevent.h>
-+#include <net/route.h>
-+#include <net/tcp.h>
-+#include <net/ip6_route.h>
-+#include <net/addrconf.h>
-+
++#include <linux/kthread.h>
++#include <asm/unaligned.h>
++#include <target/target_core_base.h>
++#include <target/target_core_fabric.h>
 +#include "cxgbit.h"
-+#include "clip_tbl.h"
 +
-+static void cxgbit_init_wr_wait(struct cxgbit_wr_wait *wr_waitp)
++struct sge_opaque_hdr {
++	void *dev;
++	dma_addr_t addr[MAX_SKB_FRAGS + 1];
++};
++
++static const u8 cxgbit_digest_len[] = {0, 4, 4, 8};
++
++#define TX_HDR_LEN (sizeof(struct sge_opaque_hdr) + \
++		    sizeof(struct fw_ofld_tx_data_wr))
++
++static struct sk_buff *
++__cxgbit_alloc_skb(struct cxgbit_sock *csk, u32 len, bool iso)
 +{
-+	wr_waitp->ret = 0;
-+	reinit_completion(&wr_waitp->completion);
-+}
++	struct sk_buff *skb = NULL;
++	u8 submode = 0;
++	int errcode;
++	static const u32 hdr_len = TX_HDR_LEN + ISCSI_HDR_LEN;
 +
-+static void cxgbit_wake_up(struct cxgbit_wr_wait *wr_waitp,
-+			   const char *func, u8 ret)
-+{
-+	if (ret == CPL_ERR_NONE)
-+		wr_waitp->ret = 0;
-+	else
-+		wr_waitp->ret = -EIO;
++	if (len) {
++		skb = alloc_skb_with_frags(hdr_len, len,
++					   0, &errcode,
++					   GFP_KERNEL);
++		if (!skb)
++			return NULL;
 +
-+	if (wr_waitp->ret)
-+		pr_err("%s: err:%u", func, ret);
++		memset(skb->data, 0, hdr_len);
++		skb_reserve(skb, TX_HDR_LEN);
++		skb_reset_transport_header(skb);
++		skb_put(skb, ISCSI_HDR_LEN);
++		skb->data_len = len;
++		skb->len += len;
++		submode |= (csk->submode & CXGBIT_SUBMODE_DCRC);
 +
-+	complete(&wr_waitp->completion);
-+}
-+
-+static int cxgbit_wait_for_reply(struct cxgbit_device *cdev,
-+				 struct cxgbit_wr_wait *wr_waitp,
-+				 u32 tid, u32 timeout, const char *func)
-+{
-+	int ret;
-+
-+	if (!test_bit(CDEV_STATE_UP, &cdev->flags)) {
-+		wr_waitp->ret = -EIO;
-+		goto out;
-+	}
-+
-+	ret = wait_for_completion_timeout(&wr_waitp->completion, timeout * HZ);
-+	if (!ret) {
-+		pr_info("%s - Device %s not responding tid %u\n",
-+			func, pci_name(cdev->lldi.pdev), tid);
-+		wr_waitp->ret = -ETIMEDOUT;
-+	}
-+out:
-+	if (wr_waitp->ret)
-+		pr_info("%s: FW reply %d tid %u\n",
-+			pci_name(cdev->lldi.pdev), wr_waitp->ret, tid);
-+	return wr_waitp->ret;
-+}
-+
-+/* Returns whether a CPL status conveys negative advice.
-+ */
-+static int is_neg_adv(unsigned int status)
-+{
-+	return status == CPL_ERR_RTX_NEG_ADVICE ||
-+		status == CPL_ERR_PERSIST_NEG_ADVICE ||
-+		status == CPL_ERR_KEEPALV_NEG_ADVICE;
-+}
-+
-+static int np_hashfn(const struct cxgbit_np *cnp)
-+{
-+	return ((unsigned long)cnp >> 10) & (NP_INFO_HASH_SIZE - 1);
-+}
-+
-+static struct np_info *np_hash_add(struct cxgbit_device *cdev,
-+				   struct cxgbit_np *cnp, unsigned int stid)
-+{
-+	struct np_info *p = kzalloc(sizeof(*p), GFP_KERNEL);
-+
-+	if (p) {
-+		int bucket = np_hashfn(cnp);
-+
-+		p->cnp = cnp;
-+		p->stid = stid;
-+		spin_lock(&cdev->np_lock);
-+		p->next = cdev->np_hash_tab[bucket];
-+		cdev->np_hash_tab[bucket] = p;
-+		spin_unlock(&cdev->np_lock);
-+	}
-+
-+	return p;
-+}
-+
-+static int np_hash_find(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
-+{
-+	int stid = -1, bucket = np_hashfn(cnp);
-+	struct np_info *p;
-+
-+	spin_lock(&cdev->np_lock);
-+	for (p = cdev->np_hash_tab[bucket]; p; p = p->next) {
-+		if (p->cnp == cnp) {
-+			stid = p->stid;
-+			break;
-+		}
-+	}
-+	spin_unlock(&cdev->np_lock);
-+
-+	return stid;
-+}
-+
-+static int np_hash_del(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
-+{
-+	int stid = -1, bucket = np_hashfn(cnp);
-+	struct np_info *p, **prev = &cdev->np_hash_tab[bucket];
-+
-+	spin_lock(&cdev->np_lock);
-+	for (p = *prev; p; prev = &p->next, p = p->next) {
-+		if (p->cnp == cnp) {
-+			stid = p->stid;
-+			*prev = p->next;
-+			kfree(p);
-+			break;
-+		}
-+	}
-+	spin_unlock(&cdev->np_lock);
-+
-+	return stid;
-+}
-+
-+void _cxgbit_free_cnp(struct kref *kref)
-+{
-+	struct cxgbit_np *cnp;
-+
-+	cnp = container_of(kref, struct cxgbit_np, kref);
-+	kfree(cnp);
-+}
-+
-+static int cxgbit_create_server6(struct cxgbit_device *cdev,
-+				 unsigned int stid,
-+				 struct cxgbit_np *cnp)
-+{
-+	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)
-+				     &cnp->com.local_addr;
-+	int addr_type = 0;
-+	int ret;
-+
-+	pr_debug("%s: dev = %s; stid = %u; sin6_port = %u\n",
-+		 __func__, cdev->lldi.ports[0]->name, stid, sin6->sin6_port);
-+
-+	cxgbit_get_cnp(cnp);
-+	cxgbit_init_wr_wait(&cnp->com.wr_wait);
-+
-+	ret = cxgb4_create_server6(cdev->lldi.ports[0],
-+				   stid, &sin6->sin6_addr,
-+				   sin6->sin6_port,
-+				   cdev->lldi.rxq_ids[0]);
-+	if (!ret)
-+		ret = cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
-+					    0, 10, __func__);
-+	else if (ret > 0)
-+		ret = net_xmit_errno(ret);
-+	else
-+		cxgbit_put_cnp(cnp);
-+
-+	if (!ret) {
-+		addr_type = ipv6_addr_type((const struct in6_addr *)
-+					   &sin6->sin6_addr);
-+		if (addr_type != IPV6_ADDR_ANY)
-+			cxgb4_clip_get(cdev->lldi.ports[0],
-+				       (const u32 *)&sin6->sin6_addr.s6_addr,
-+					1);
 +	} else {
-+		pr_err("create server6 err %d stid %d laddr %pI6 lport %d\n",
-+		       ret, stid, sin6->sin6_addr.s6_addr,
-+		       ntohs(sin6->sin6_port));
++		u32 iso_len = iso ? sizeof(struct cpl_tx_data_iso) : 0;
++
++		skb = alloc_skb(hdr_len + iso_len, GFP_KERNEL);
++		if (!skb)
++			return NULL;
++
++		memset(skb->data, 0, hdr_len + iso_len);
++		skb_reserve(skb, TX_HDR_LEN + iso_len);
++		skb_reset_transport_header(skb);
++		skb_put(skb, ISCSI_HDR_LEN);
 +	}
 +
-+	return ret;
++	submode |= (csk->submode & CXGBIT_SUBMODE_HCRC);
++	cxgbit_skcb_submode(skb) = submode;
++	cxgbit_skcb_tx_extralen(skb) = cxgbit_digest_len[submode];
++	cxgbit_skcb_flags(skb) |= SKCBF_TX_NEED_HDR;
++	return skb;
 +}
 +
-+static int cxgbit_create_server4(struct cxgbit_device *cdev,
-+				 unsigned int stid,
-+				 struct cxgbit_np *cnp)
++static struct sk_buff *cxgbit_alloc_skb(struct cxgbit_sock *csk, u32 len)
 +{
-+	struct sockaddr_in *sin = (struct sockaddr_in *)
-+				   &cnp->com.local_addr;
-+	int ret;
-+
-+	pr_debug("%s: dev = %s; stid = %u; sin_port = %u\n",
-+		 __func__, cdev->lldi.ports[0]->name, stid, sin->sin_port);
-+
-+	cxgbit_get_cnp(cnp);
-+	cxgbit_init_wr_wait(&cnp->com.wr_wait);
-+
-+	ret = cxgb4_create_server(cdev->lldi.ports[0],
-+				  stid, sin->sin_addr.s_addr,
-+				  sin->sin_port, 0,
-+				  cdev->lldi.rxq_ids[0]);
-+	if (!ret)
-+		ret = cxgbit_wait_for_reply(cdev,
-+					    &cnp->com.wr_wait,
-+					    0, 10, __func__);
-+	else if (ret > 0)
-+		ret = net_xmit_errno(ret);
-+	else
-+		cxgbit_put_cnp(cnp);
-+
-+	if (ret)
-+		pr_err("create server failed err %d stid %d laddr %pI4 lport %d\n",
-+		       ret, stid, &sin->sin_addr, ntohs(sin->sin_port));
-+	return ret;
-+}
-+
-+static int cxgbit_setup_cdev_np(struct cxgbit_np *cnp)
-+{
-+	struct cxgbit_device *cdev;
-+	int stid, ret;
-+	u32 count = 0;
-+	int ss_family = cnp->com.local_addr.ss_family;
-+
-+	mutex_lock(&cdev_list_lock);
-+	list_for_each_entry(cdev, &cdev_list_head, list) {
-+		if (np_hash_find(cdev, cnp) >= 0) {
-+			mutex_unlock(&cdev_list_lock);
-+			return -1;
-+		}
-+	}
-+
-+	list_for_each_entry(cdev, &cdev_list_head, list) {
-+		if (!test_bit(CDEV_STATE_UP, &cdev->flags))
-+			continue;
-+
-+		stid = cxgb4_alloc_stid(cdev->lldi.tids,
-+					ss_family, cnp);
-+		if (stid < 0)
-+			continue;
-+
-+		if (!np_hash_add(cdev, cnp, stid)) {
-+			cxgb4_free_stid(cdev->lldi.tids, stid,
-+					ss_family);
-+			continue;
-+		}
-+
-+		if (ss_family == AF_INET)
-+			ret = cxgbit_create_server4(cdev, stid, cnp);
-+		else
-+			ret = cxgbit_create_server6(cdev, stid, cnp);
-+
-+		if (ret) {
-+			if (ret != -ETIMEDOUT)
-+				cxgb4_free_stid(cdev->lldi.tids, stid,
-+						ss_family);
-+			np_hash_del(cdev, cnp);
-+
-+			if (ret == -ETIMEDOUT)
-+				break;
-+		}
-+
-+		count++;
-+	}
-+
-+	mutex_unlock(&cdev_list_lock);
-+
-+	ret = count ? 0 : -1;
-+	return ret;
-+}
-+
-+int cxgbit_setup_np(struct iscsi_np *np,
-+		    struct sockaddr_storage *ksockaddr)
-+{
-+	struct cxgbit_np *cnp;
-+
-+	cnp = kzalloc(sizeof(*cnp), GFP_KERNEL);
-+	if (!cnp)
-+		return -ENOMEM;
-+
-+	init_waitqueue_head(&cnp->accept_wait);
-+	init_completion(&cnp->com.wr_wait.completion);
-+	init_completion(&cnp->accept_comp);
-+	INIT_LIST_HEAD(&cnp->np_accept_list);
-+	spin_lock_init(&cnp->np_accept_lock);
-+	kref_init(&cnp->kref);
-+	memcpy(&np->np_sockaddr, ksockaddr,
-+	       sizeof(struct sockaddr_storage));
-+	memcpy(&cnp->com.local_addr, &np->np_sockaddr,
-+	       sizeof(cnp->com.local_addr));
-+	cnp->np = np;
-+
-+	if (cxgbit_setup_cdev_np(cnp)) {
-+		cxgbit_put_cnp(cnp);
-+		return -1;
-+	}
-+
-+	np->np_context = cnp;
-+	cnp->com.state = CSK_STATE_LISTEN;
-+	return 0;
-+}
-+
-+static void
-+cxgbit_set_conn_info(struct iscsi_np *np, struct iscsi_conn *conn,
-+		     struct cxgbit_sock *csk)
-+{
-+	conn->login_family = np->np_sockaddr.ss_family;
-+	conn->login_sockaddr = csk->com.remote_addr;
-+	conn->local_sockaddr = csk->com.local_addr;
-+}
-+
-+int cxgbit_accept_np(struct iscsi_np *np, struct iscsi_conn *conn)
-+{
-+	struct cxgbit_np *cnp = np->np_context;
-+	struct cxgbit_sock *csk;
-+	int ret = 0;
-+
-+accept_wait:
-+	ret = wait_for_completion_interruptible(&cnp->accept_comp);
-+	if (ret)
-+		return -ENODEV;
-+
-+	spin_lock_bh(&np->np_thread_lock);
-+	if (np->np_thread_state >= ISCSI_NP_THREAD_RESET) {
-+		spin_unlock_bh(&np->np_thread_lock);
-+		/**
-+		 * No point in stalling here when np_thread
-+		 * is in state RESET/SHUTDOWN/EXIT - bail
-+		 **/
-+		return -ENODEV;
-+	}
-+	spin_unlock_bh(&np->np_thread_lock);
-+
-+	spin_lock_bh(&cnp->np_accept_lock);
-+	if (list_empty(&cnp->np_accept_list)) {
-+		spin_unlock_bh(&cnp->np_accept_lock);
-+		goto accept_wait;
-+	}
-+
-+	csk = list_first_entry(&cnp->np_accept_list,
-+			       struct cxgbit_sock,
-+			       accept_node);
-+
-+	list_del_init(&csk->accept_node);
-+	spin_unlock_bh(&cnp->np_accept_lock);
-+	conn->context = csk;
-+	csk->conn = conn;
-+
-+	cxgbit_set_conn_info(np, conn, csk);
-+	return 0;
-+}
-+
-+void cxgbit_free_np(struct iscsi_np *np)
-+{
-+	struct cxgbit_np *cnp = np->np_context;
-+	struct cxgbit_device *cdev;
-+	int stid, ret = 0;
-+	bool ipv6 = false;
-+
-+	cnp->com.state = CSK_STATE_DEAD;
-+
-+	mutex_lock(&cdev_list_lock);
-+	list_for_each_entry(cdev, &cdev_list_head, list) {
-+		stid = np_hash_del(cdev, cnp);
-+		if (stid < 0)
-+			continue;
-+
-+		if (!test_bit(CDEV_STATE_UP, &cdev->flags))
-+			continue;
-+
-+		if (np->np_sockaddr.ss_family == AF_INET6)
-+			ipv6 = true;
-+
-+		cxgbit_get_cnp(cnp);
-+		cxgbit_init_wr_wait(&cnp->com.wr_wait);
-+		ret = cxgb4_remove_server(cdev->lldi.ports[0], stid,
-+					  cdev->lldi.rxq_ids[0], ipv6);
-+		if (ret) {
-+			cxgbit_put_cnp(cnp);
-+			continue;
-+		}
-+
-+		ret = cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
-+					    0, 10, __func__);
-+
-+		if (ret == -ETIMEDOUT)
-+			continue;
-+
-+		if (ipv6) {
-+			struct sockaddr_in6 *sin6;
-+			int addr_type = 0;
-+
-+			sin6 = (struct sockaddr_in6 *)&cnp->com.local_addr;
-+			addr_type = ipv6_addr_type((const struct in6_addr *)
-+							&sin6->sin6_addr);
-+			if (addr_type != IPV6_ADDR_ANY)
-+				cxgb4_clip_release(cdev->lldi.ports[0],
-+						   (const u32 *)
-+						   &sin6->sin6_addr.s6_addr,
-+						   1);
-+		}
-+
-+		cxgb4_free_stid(cdev->lldi.tids, stid,
-+				cnp->com.local_addr.ss_family);
-+	}
-+
-+	mutex_unlock(&cdev_list_lock);
-+
-+	np->np_context = NULL;
-+	cxgbit_put_cnp(cnp);
-+}
-+
-+static void cxgbit_send_halfclose(struct cxgbit_sock *csk)
-+{
-+	struct sk_buff *skb;
-+	struct cpl_close_con_req *req;
-+	unsigned int len = roundup(sizeof(struct cpl_close_con_req), 16);
-+
-+	skb = alloc_skb(len, GFP_ATOMIC);
-+	if (!skb)
-+		return;
-+
-+	req = (struct cpl_close_con_req *)__skb_put(skb, len);
-+	memset(req, 0, len);
-+
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->txq_idx);
-+	INIT_TP_WR(req, csk->tid);
-+	OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_CLOSE_CON_REQ,
-+						    csk->tid));
-+	req->rsvd = 0;
-+
-+	cxgbit_skcb_flags(skb) |= SKCBF_TX_FLAG_COMPL;
-+	__skb_queue_tail(&csk->txq, skb);
-+	push_tx_frames(csk);
-+}
-+
-+static void arp_failure_discard(void *handle, struct sk_buff *skb)
-+{
-+	pr_debug("%s cxgbit_device %p\n", __func__, handle);
-+	kfree_skb(skb);
-+}
-+
-+static void abort_arp_failure(void *handle, struct sk_buff *skb)
-+{
-+	struct cxgbit_device *cdev = handle;
-+	struct cpl_abort_req *req = cplhdr(skb);
-+
-+	pr_debug("%s cdev %p\n", __func__, cdev);
-+	req->cmd = CPL_ABORT_NO_RST;
-+	cxgbit_ofld_send(cdev, skb);
-+}
-+
-+static int cxgbit_send_abort_req(struct cxgbit_sock *csk)
-+{
-+	struct cpl_abort_req *req;
-+	unsigned int len = roundup(sizeof(*req), 16);
-+	struct sk_buff *skb;
-+
-+	pr_debug("%s: csk %p tid %u; state %d\n",
-+		 __func__, csk, csk->tid, csk->com.state);
-+
-+	__skb_queue_purge(&csk->txq);
-+
-+	if (!test_and_set_bit(CSK_TX_DATA_SENT, &csk->com.flags))
-+		send_tx_flowc_wr(csk);
-+
-+	skb = __skb_dequeue(&csk->skbq);
-+	req = (struct cpl_abort_req *)__skb_put(skb, len);
-+	memset(req, 0, len);
-+
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->txq_idx);
-+	t4_set_arp_err_handler(skb, csk->com.cdev, abort_arp_failure);
-+	INIT_TP_WR(req, csk->tid);
-+	OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_ABORT_REQ,
-+						    csk->tid));
-+	req->cmd = CPL_ABORT_SEND_RST;
-+	return cxgbit_l2t_send(csk->com.cdev, skb, csk->l2t);
-+}
-+
-+void cxgbit_free_conn(struct iscsi_conn *conn)
-+{
-+	struct cxgbit_sock *csk = conn->context;
-+	bool release = false;
-+
-+	pr_debug("%s: state %d\n",
-+		 __func__, csk->com.state);
-+
-+	spin_lock_bh(&csk->lock);
-+	switch (csk->com.state) {
-+	case CSK_STATE_ESTABLISHED:
-+		if (test_bit(CSK_TX_FIN, &csk->com.flags)) {
-+			csk->com.state = CSK_STATE_CLOSING;
-+			cxgbit_send_halfclose(csk);
-+		} else {
-+			csk->com.state = CSK_STATE_ABORTING;
-+			cxgbit_send_abort_req(csk);
-+		}
-+		break;
-+	case CSK_STATE_CLOSING:
-+		csk->com.state = CSK_STATE_MORIBUND;
-+		cxgbit_send_halfclose(csk);
-+		break;
-+	case CSK_STATE_DEAD:
-+		release = true;
-+		break;
-+	default:
-+		pr_err("%s: csk %p; state %d\n",
-+		       __func__, csk, csk->com.state);
-+	}
-+	spin_unlock_bh(&csk->lock);
-+
-+	if (release)
-+		cxgbit_put_csk(csk);
-+}
-+
-+static void set_emss(struct cxgbit_sock *csk, u16 opt)
-+{
-+	csk->emss = csk->com.cdev->lldi.mtus[TCPOPT_MSS_G(opt)] -
-+			((csk->com.remote_addr.ss_family == AF_INET) ?
-+			sizeof(struct iphdr) : sizeof(struct ipv6hdr)) -
-+			sizeof(struct tcphdr);
-+	csk->mss = csk->emss;
-+	if (TCPOPT_TSTAMP_G(opt))
-+		csk->emss -= round_up(TCPOLEN_TIMESTAMP, 4);
-+	if (csk->emss < 128)
-+		csk->emss = 128;
-+	if (csk->emss & 7)
-+		pr_info("Warning: misaligned mtu idx %u mss %u emss=%u\n",
-+			TCPOPT_MSS_G(opt), csk->mss, csk->emss);
-+	pr_debug("%s mss_idx %u mss %u emss=%u\n", __func__, TCPOPT_MSS_G(opt),
-+		 csk->mss, csk->emss);
-+}
-+
-+static void cxgbit_free_skb(struct cxgbit_sock *csk)
-+{
-+	struct sk_buff *skb;
-+
-+	__skb_queue_purge(&csk->txq);
-+	__skb_queue_purge(&csk->rxq);
-+	__skb_queue_purge(&csk->backlogq);
-+	__skb_queue_purge(&csk->ppodq);
-+	__skb_queue_purge(&csk->skbq);
-+
-+	while ((skb = cxgbit_sock_dequeue_wr(csk)))
-+		kfree_skb(skb);
-+
-+	__kfree_skb(csk->lro_skb_hold);
-+}
-+
-+void _cxgbit_free_csk(struct kref *kref)
-+{
-+	struct cxgbit_sock *csk;
-+	struct cxgbit_device *cdev;
-+
-+	csk = container_of(kref, struct cxgbit_sock, kref);
-+
-+	pr_debug("%s csk %p state %d\n", __func__, csk, csk->com.state);
-+
-+	if (csk->com.local_addr.ss_family == AF_INET6) {
-+		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)
-+					     &csk->com.local_addr;
-+		cxgb4_clip_release(csk->com.cdev->lldi.ports[0],
-+				   (const u32 *)
-+				   &sin6->sin6_addr.s6_addr, 1);
-+	}
-+
-+	cxgb4_remove_tid(csk->com.cdev->lldi.tids, 0, csk->tid);
-+	dst_release(csk->dst);
-+	cxgb4_l2t_release(csk->l2t);
-+
-+	cdev = csk->com.cdev;
-+	spin_lock_bh(&cdev->cskq.lock);
-+	list_del(&csk->list);
-+	spin_unlock_bh(&cdev->cskq.lock);
-+
-+	cxgbit_free_skb(csk);
-+	cxgbit_put_cdev(cdev);
-+
-+	kfree(csk);
-+}
-+
-+static void get_tuple_info(struct cpl_pass_accept_req *req, int *iptype,
-+			   __u8 *local_ip, __u8 *peer_ip,
-+			   __be16 *local_port, __be16 *peer_port)
-+{
-+	u32 eth_len = ETH_HDR_LEN_G(be32_to_cpu(req->hdr_len));
-+	u32 ip_len = IP_HDR_LEN_G(be32_to_cpu(req->hdr_len));
-+	struct iphdr *ip = (struct iphdr *)((u8 *)(req + 1) + eth_len);
-+	struct ipv6hdr *ip6 = (struct ipv6hdr *)((u8 *)(req + 1) + eth_len);
-+	struct tcphdr *tcp = (struct tcphdr *)
-+			      ((u8 *)(req + 1) + eth_len + ip_len);
-+
-+	if (ip->version == 4) {
-+		pr_debug("%s saddr 0x%x daddr 0x%x sport %u dport %u\n",
-+			 __func__,
-+			 ntohl(ip->saddr), ntohl(ip->daddr),
-+			 ntohs(tcp->source),
-+			 ntohs(tcp->dest));
-+		*iptype = 4;
-+		memcpy(peer_ip, &ip->saddr, 4);
-+		memcpy(local_ip, &ip->daddr, 4);
-+	} else {
-+		pr_debug("%s saddr %pI6 daddr %pI6 sport %u dport %u\n",
-+			 __func__,
-+			 ip6->saddr.s6_addr, ip6->daddr.s6_addr,
-+			 ntohs(tcp->source),
-+			 ntohs(tcp->dest));
-+		*iptype = 6;
-+		memcpy(peer_ip, ip6->saddr.s6_addr, 16);
-+		memcpy(local_ip, ip6->daddr.s6_addr, 16);
-+	}
-+
-+	*peer_port = tcp->source;
-+	*local_port = tcp->dest;
-+}
-+
-+static struct net_device *get_real_dev(struct net_device *egress_dev)
-+{
-+	return (egress_dev->priv_flags & IFF_802_1Q_VLAN ?
-+		vlan_dev_real_dev(egress_dev) : NULL) ? : egress_dev;
-+}
-+
-+static int our_interface(struct cxgbit_device *cdev,
-+			 struct net_device *egress_dev)
-+{
-+	u8 i;
-+
-+	egress_dev = get_real_dev(egress_dev);
-+	for (i = 0; i < cdev->lldi.nports; i++)
-+		if (cdev->lldi.ports[i] == egress_dev)
-+			return 1;
-+	return 0;
-+}
-+
-+static struct dst_entry *find_route6(struct cxgbit_device *cdev,
-+				     __u8 *local_ip,
-+				     __u8 *peer_ip, __be16 local_port,
-+				     __be16 peer_port, u8 tos,
-+				     __u32 sin6_scope_id)
-+{
-+	struct dst_entry *dst = NULL;
-+
-+	if (IS_ENABLED(CONFIG_IPV6)) {
-+		struct flowi6 fl6;
-+
-+		memset(&fl6, 0, sizeof(fl6));
-+		memcpy(&fl6.daddr, peer_ip, 16);
-+		memcpy(&fl6.saddr, local_ip, 16);
-+		if (ipv6_addr_type(&fl6.daddr) & IPV6_ADDR_LINKLOCAL)
-+			fl6.flowi6_oif = sin6_scope_id;
-+		dst = ip6_route_output(&init_net, NULL, &fl6);
-+		if (!dst)
-+			goto out;
-+		if (!our_interface(cdev, ip6_dst_idev(dst)->dev) &&
-+		    !(ip6_dst_idev(dst)->dev->flags & IFF_LOOPBACK)) {
-+			dst_release(dst);
-+			dst = NULL;
-+		}
-+	}
-+out:
-+	return dst;
-+}
-+
-+static struct dst_entry *find_route(struct cxgbit_device *cdev,
-+				    __be32 local_ip,
-+				    __be32 peer_ip, __be16 local_port,
-+				    __be16 peer_port, u8 tos)
-+{
-+	struct rtable *rt;
-+	struct flowi4 fl4;
-+	struct neighbour *n;
-+
-+	rt = ip_route_output_ports(&init_net, &fl4, NULL, peer_ip,
-+				   local_ip,
-+				   peer_port, local_port, IPPROTO_TCP,
-+				   tos, 0);
-+	if (IS_ERR(rt))
-+		return NULL;
-+	n = dst_neigh_lookup(&rt->dst, &peer_ip);
-+	if (!n)
-+		return NULL;
-+	if (!our_interface(cdev, n->dev) &&
-+	    !(n->dev->flags & IFF_LOOPBACK)) {
-+		neigh_release(n);
-+		dst_release(&rt->dst);
-+		return NULL;
-+	}
-+	neigh_release(n);
-+	return &rt->dst;
-+}
-+
-+static void set_tcp_window(struct cxgbit_sock *csk, struct port_info *pi)
-+{
-+	unsigned int linkspeed;
-+	u8 scale;
-+
-+	linkspeed = pi->link_cfg.speed;
-+	scale = linkspeed / SPEED_10000;
-+
-+#define CXGBIT_10G_RCV_WIN (256 * 1024)
-+	csk->rcv_win = CXGBIT_10G_RCV_WIN;
-+	if (scale)
-+		csk->rcv_win *= scale;
-+
-+#define CXGBIT_10G_SND_WIN (256 * 1024)
-+	csk->snd_win = CXGBIT_10G_SND_WIN;
-+	if (scale)
-+		csk->snd_win *= scale;
-+
-+	pr_debug("%s snd_win %d rcv_win %d\n",
-+		 __func__, csk->snd_win, csk->rcv_win);
-+}
-+
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+static u8 get_iscsi_dcb_state(struct net_device *ndev)
-+{
-+	return ndev->dcbnl_ops->getstate(ndev);
-+}
-+
-+static int select_priority(int pri_mask)
-+{
-+	if (!pri_mask)
-+		return 0;
-+
-+	return (ffs(pri_mask) - 1);
-+}
-+
-+static u8 get_iscsi_dcb_priority(struct net_device *ndev, u16 local_port)
-+{
-+	int ret;
-+	u8 caps;
-+
-+	struct dcb_app iscsi_dcb_app = {
-+		.protocol = local_port
-+	};
-+
-+	ret = (int)ndev->dcbnl_ops->getcap(ndev, DCB_CAP_ATTR_DCBX, &caps);
-+
-+	if (ret)
-+		return 0;
-+
-+	if (caps & DCB_CAP_DCBX_VER_IEEE) {
-+		iscsi_dcb_app.selector = IEEE_8021QAZ_APP_SEL_ANY;
-+
-+		ret = dcb_ieee_getapp_mask(ndev, &iscsi_dcb_app);
-+
-+	} else if (caps & DCB_CAP_DCBX_VER_CEE) {
-+		iscsi_dcb_app.selector = DCB_APP_IDTYPE_PORTNUM;
-+
-+		ret = dcb_getapp(ndev, &iscsi_dcb_app);
-+	}
-+
-+	pr_info("iSCSI priority is set to %u\n", select_priority(ret));
-+
-+	return select_priority(ret);
-+}
-+#endif
-+
-+static int offload_init(struct cxgbit_sock *csk, int iptype, __u8 *peer_ip,
-+			u16 local_port, struct dst_entry *dst,
-+			struct cxgbit_device *cdev)
-+{
-+	struct neighbour *n;
-+	int ret, step;
-+	struct net_device *pdev;
-+	u16 rxq_idx, port_id;
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+	u8 priority = 0;
-+#endif
-+
-+	n = dst_neigh_lookup(dst, peer_ip);
-+	if (!n)
-+		return -ENODEV;
-+
-+	rcu_read_lock();
-+	ret = -ENOMEM;
-+	if (n->dev->flags & IFF_LOOPBACK) {
-+		if (iptype == 4)
-+			pdev = ip_dev_find(&init_net, *(__be32 *)peer_ip);
-+		else if (IS_ENABLED(CONFIG_IPV6))
-+			for_each_netdev(&init_net, pdev) {
-+				if (ipv6_chk_addr(&init_net,
-+						  (struct in6_addr *)
-+						   peer_ip,
-+						   pdev, 1))
-+					break;
-+			}
-+		else
-+			pdev = NULL;
-+
-+		if (!pdev) {
-+			ret = -ENODEV;
-+			goto out;
-+		}
-+		csk->l2t = cxgb4_l2t_get(cdev->lldi.l2t,
-+					 n, pdev, 0);
-+		if (!csk->l2t)
-+			goto out;
-+		csk->mtu = pdev->mtu;
-+		csk->tx_chan = cxgb4_port_chan(pdev);
-+		csk->smac_idx = (cxgb4_port_viid(pdev) & 0x7F) << 1;
-+		step = cdev->lldi.ntxq /
-+			cdev->lldi.nchan;
-+		csk->txq_idx = cxgb4_port_idx(pdev) * step;
-+		step = cdev->lldi.nrxq /
-+			cdev->lldi.nchan;
-+		csk->ctrlq_idx = cxgb4_port_idx(pdev);
-+		csk->rss_qid = cdev->lldi.rxq_ids[
-+				cxgb4_port_idx(pdev) * step];
-+		csk->port_id = cxgb4_port_idx(pdev);
-+		set_tcp_window(csk, (struct port_info *)netdev_priv(pdev));
-+		dev_put(pdev);
-+	} else {
-+		pdev = get_real_dev(n->dev);
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+		if (get_iscsi_dcb_state(pdev))
-+			priority = get_iscsi_dcb_priority(pdev, local_port);
-+
-+		csk->dcb_priority = priority;
-+
-+		csk->l2t = cxgb4_l2t_get(cdev->lldi.l2t, n, pdev, priority);
-+#else
-+		csk->l2t = cxgb4_l2t_get(cdev->lldi.l2t, n, pdev, 0);
-+#endif
-+		if (!csk->l2t)
-+			goto out;
-+		port_id = cxgb4_port_idx(pdev);
-+		csk->mtu = dst_mtu(dst);
-+		csk->tx_chan = cxgb4_port_chan(pdev);
-+		csk->smac_idx = (cxgb4_port_viid(pdev) & 0x7F) << 1;
-+		step = cdev->lldi.ntxq /
-+			cdev->lldi.nports;
-+		csk->txq_idx = (port_id * step) +
-+				(cdev->selectq[port_id][0]++ % step);
-+		csk->ctrlq_idx = cxgb4_port_idx(pdev);
-+		step = cdev->lldi.nrxq /
-+			cdev->lldi.nports;
-+		rxq_idx = (port_id * step) +
-+				(cdev->selectq[port_id][1]++ % step);
-+		csk->rss_qid = cdev->lldi.rxq_ids[rxq_idx];
-+		csk->port_id = port_id;
-+		set_tcp_window(csk, (struct port_info *)netdev_priv(pdev));
-+	}
-+	ret = 0;
-+out:
-+	rcu_read_unlock();
-+	neigh_release(n);
-+	return ret;
-+}
-+
-+int cxgbit_ofld_send(struct cxgbit_device *cdev, struct sk_buff *skb)
-+{
-+	int ret = 0;
-+
-+	if (!test_bit(CDEV_STATE_UP, &cdev->flags)) {
-+		kfree_skb(skb);
-+		pr_err("%s - device not up - dropping\n", __func__);
-+		return -EIO;
-+	}
-+
-+	ret = cxgb4_ofld_send(cdev->lldi.ports[0], skb);
-+	if (ret < 0)
-+		kfree_skb(skb);
-+	return ret < 0 ? ret : 0;
-+}
-+
-+static void cxgbit_release_tid(struct cxgbit_device *cdev, u32 tid)
-+{
-+	struct cpl_tid_release *req;
-+	unsigned int len = roundup(sizeof(*req), 16);
-+	struct sk_buff *skb;
-+
-+	skb = alloc_skb(len, GFP_ATOMIC);
-+	if (!skb)
-+		return;
-+
-+	req = (struct cpl_tid_release *)__skb_put(skb, len);
-+	memset(req, 0, len);
-+
-+	INIT_TP_WR(req, tid);
-+	OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(
-+		   CPL_TID_RELEASE, tid));
-+	set_wr_txq(skb, CPL_PRIORITY_SETUP, 0);
-+	cxgbit_ofld_send(cdev, skb);
-+}
-+
-+int cxgbit_l2t_send(struct cxgbit_device *cdev, struct sk_buff *skb,
-+		    struct l2t_entry *l2e)
-+{
-+	int ret = 0;
-+
-+	if (!test_bit(CDEV_STATE_UP, &cdev->flags)) {
-+		kfree_skb(skb);
-+		pr_err("%s - device not up - dropping\n", __func__);
-+		return -EIO;
-+	}
-+
-+	ret = cxgb4_l2t_send(cdev->lldi.ports[0], skb, l2e);
-+	if (ret < 0)
-+		kfree_skb(skb);
-+	return ret < 0 ? ret : 0;
-+}
-+
-+static void best_mtu(const unsigned short *mtus, unsigned short mtu,
-+		     unsigned int *idx, int use_ts, int ipv6)
-+{
-+	unsigned short hdr_size = (ipv6 ? sizeof(struct ipv6hdr) :
-+				   sizeof(struct iphdr)) +
-+				   sizeof(struct tcphdr) +
-+				   (use_ts ? round_up(TCPOLEN_TIMESTAMP,
-+				    4) : 0);
-+	unsigned short data_size = mtu - hdr_size;
-+
-+	cxgb4_best_aligned_mtu(mtus, hdr_size, data_size, 8, idx);
-+}
-+
-+static void cxgbit_send_rx_credits(struct cxgbit_sock *csk,
-+				   struct sk_buff *skb)
-+{
-+	if (csk->com.state != CSK_STATE_ESTABLISHED) {
-+		__kfree_skb(skb);
-+		return;
-+	}
-+
-+	cxgbit_ofld_send(csk->com.cdev, skb);
++	return __cxgbit_alloc_skb(csk, len, false);
 +}
 +
 +/*
-+ * CPL connection rx data ack: host ->
-+ * Send RX credits through an RX_DATA_ACK CPL message.
-+ * Returns the number of credits sent.
++ * is_ofld_imm - check whether a packet can be sent as immediate data
++ * @skb: the packet
++ *
++ * Returns true if a packet can be sent as an offload WR with immediate
++ * data.  We currently use the same limit as for Ethernet packets.
 + */
-+int cxgbit_rx_data_ack(struct cxgbit_sock *csk)
++static int is_ofld_imm(const struct sk_buff *skb)
 +{
-+	struct sk_buff *skb;
-+	struct cpl_rx_data_ack *req;
-+	unsigned int len = roundup(sizeof(*req), 16);
++	int length = skb->len;
 +
-+	skb = alloc_skb(len, GFP_KERNEL);
-+	if (!skb)
-+		return -1;
++	if (likely(cxgbit_skcb_flags(skb) & SKCBF_TX_NEED_HDR))
++		length += sizeof(struct fw_ofld_tx_data_wr);
 +
-+	req = (struct cpl_rx_data_ack *)__skb_put(skb, len);
-+	memset(req, 0, len);
++	if (likely(cxgbit_skcb_flags(skb) & SKCBF_TX_ISO))
++		length += sizeof(struct cpl_tx_data_iso);
 +
-+	set_wr_txq(skb, CPL_PRIORITY_ACK, csk->ctrlq_idx);
-+	INIT_TP_WR(req, csk->tid);
-+	OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_RX_DATA_ACK,
-+						    csk->tid));
-+	req->credit_dack = cpu_to_be32(RX_DACK_CHANGE_F | RX_DACK_MODE_V(1) |
-+				       RX_CREDITS_V(csk->rx_credits));
++#define MAX_IMM_TX_PKT_LEN	256
++	return length <= MAX_IMM_TX_PKT_LEN;
++}
 +
-+	csk->rx_credits = 0;
++/*
++ * sgl_len - calculates the size of an SGL of the given capacity
++ * @n: the number of SGL entries
++ * Calculates the number of flits needed for a scatter/gather list that
++ * can hold the given number of entries.
++ */
++static inline unsigned int sgl_len(unsigned int n)
++{
++	n--;
++	return (3 * n) / 2 + (n & 1) + 2;
++}
 +
-+	spin_lock_bh(&csk->lock);
-+	if (csk->lock_owner) {
-+		cxgbit_skcb_rx_backlog_fn(skb) = cxgbit_send_rx_credits;
-+		__skb_queue_tail(&csk->backlogq, skb);
-+		spin_unlock_bh(&csk->lock);
-+		return 0;
++/*
++ * calc_tx_flits_ofld - calculate # of flits for an offload packet
++ * @skb: the packet
++ *
++ * Returns the number of flits needed for the given offload packet.
++ * These packets are already fully constructed and no additional headers
++ * will be added.
++ */
++static unsigned int calc_tx_flits_ofld(const struct sk_buff *skb)
++{
++	unsigned int flits, cnt;
++
++	if (is_ofld_imm(skb))
++		return DIV_ROUND_UP(skb->len, 8);
++	flits = skb_transport_offset(skb) / 8;
++	cnt = skb_shinfo(skb)->nr_frags;
++	if (skb_tail_pointer(skb) != skb_transport_header(skb))
++		cnt++;
++	return flits + sgl_len(cnt);
++}
++
++#define CXGBIT_ISO_FSLICE 0x1
++#define CXGBIT_ISO_LSLICE 0x2
++static void make_cpl_tx_data_iso(struct sk_buff *skb,
++				 struct cxgbit_iso_info *iso_info)
++{
++	struct cpl_tx_data_iso *cpl;
++	unsigned int submode = cxgbit_skcb_submode(skb);
++	unsigned int fslice = !!(iso_info->flags & CXGBIT_ISO_FSLICE);
++	unsigned int lslice = !!(iso_info->flags & CXGBIT_ISO_LSLICE);
++
++	cpl = (struct cpl_tx_data_iso *)__skb_push(skb, sizeof(*cpl));
++
++	cpl->op_to_scsi = htonl(CPL_TX_DATA_ISO_OP_V(CPL_TX_DATA_ISO) |
++			CPL_TX_DATA_ISO_FIRST_V(fslice) |
++			CPL_TX_DATA_ISO_LAST_V(lslice) |
++			CPL_TX_DATA_ISO_CPLHDRLEN_V(0) |
++			CPL_TX_DATA_ISO_HDRCRC_V(submode & 1) |
++			CPL_TX_DATA_ISO_PLDCRC_V(((submode >> 1) & 1)) |
++			CPL_TX_DATA_ISO_IMMEDIATE_V(0) |
++			CPL_TX_DATA_ISO_SCSI_V(2));
++
++	cpl->ahs_len = 0;
++	cpl->mpdu = htons(DIV_ROUND_UP(iso_info->mpdu, 4));
++	cpl->burst_size = htonl(DIV_ROUND_UP(iso_info->burst_len, 4));
++	cpl->len = htonl(iso_info->len);
++	cpl->reserved2_seglen_offset = htonl(0);
++	cpl->datasn_offset = htonl(0);
++	cpl->buffer_offset = htonl(0);
++	cpl->reserved3 = 0;
++
++	__skb_pull(skb, sizeof(*cpl));
++}
++
++static void make_tx_data_wr(struct cxgbit_sock *csk,
++			    struct sk_buff *skb, u32 dlen,
++			    u32 len, u32 credits, u32 compl)
++{
++	struct fw_ofld_tx_data_wr *req;
++	u32 submode = cxgbit_skcb_submode(skb);
++	u32 wr_ulp_mode = 0;
++	u32 hdr_size = sizeof(*req);
++	u32 opcode = FW_OFLD_TX_DATA_WR;
++	u32 immlen = 0;
++	u32 force = TX_FORCE_V(!submode);
++
++	if (cxgbit_skcb_flags(skb) & SKCBF_TX_ISO) {
++		opcode = FW_ISCSI_TX_DATA_WR;
++		immlen += sizeof(struct cpl_tx_data_iso);
++		hdr_size += sizeof(struct cpl_tx_data_iso);
++		submode |= 8;
 +	}
 +
-+	cxgbit_send_rx_credits(csk, skb);
++	if (is_ofld_imm(skb))
++		immlen += dlen;
++
++	req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
++							hdr_size);
++	req->op_to_immdlen = cpu_to_be32(FW_WR_OP_V(opcode) |
++					FW_WR_COMPL_V(compl) |
++					FW_WR_IMMDLEN_V(immlen));
++	req->flowid_len16 = cpu_to_be32(FW_WR_FLOWID_V(csk->tid) |
++					FW_WR_LEN16_V(credits));
++	req->plen = htonl(len);
++	wr_ulp_mode = FW_OFLD_TX_DATA_WR_ULPMODE_V(ULP_MODE_ISCSI) |
++				FW_OFLD_TX_DATA_WR_ULPSUBMODE_V(submode);
++
++	req->tunnel_to_proxy = htonl((wr_ulp_mode) | force |
++		 FW_OFLD_TX_DATA_WR_SHOVE_V(skb_peek(&csk->txq) ? 0 : 1));
++}
++
++static void arp_failure_skb_discard(void *handle, struct sk_buff *skb)
++{
++	kfree_skb(skb);
++}
++
++void push_tx_frames(struct cxgbit_sock *csk)
++{
++	struct sk_buff *skb;
++
++	while (csk->wr_cred && ((skb = skb_peek(&csk->txq)) != NULL)) {
++		u32 dlen = skb->len;
++		u32 len = skb->len;
++		u32 credits_needed;
++		u32 compl = 0;
++		u32 flowclen16 = 0;
++		u32 iso_cpl_len = 0;
++
++		if (cxgbit_skcb_flags(skb) & SKCBF_TX_ISO)
++			iso_cpl_len = sizeof(struct cpl_tx_data_iso);
++
++		if (is_ofld_imm(skb))
++			credits_needed = DIV_ROUND_UP(dlen + iso_cpl_len, 16);
++		else
++			credits_needed = DIV_ROUND_UP((8 *
++					calc_tx_flits_ofld(skb)) +
++					iso_cpl_len, 16);
++
++		if (likely(cxgbit_skcb_flags(skb) & SKCBF_TX_NEED_HDR))
++			credits_needed += DIV_ROUND_UP(
++				sizeof(struct fw_ofld_tx_data_wr), 16);
++		/*
++		 * Assumes the initial credits is large enough to support
++		 * fw_flowc_wr plus largest possible first payload
++		 */
++
++		if (!test_and_set_bit(CSK_TX_DATA_SENT, &csk->com.flags)) {
++			flowclen16 = send_tx_flowc_wr(csk);
++			csk->wr_cred -= flowclen16;
++			csk->wr_una_cred += flowclen16;
++		}
++
++		if (csk->wr_cred < credits_needed) {
++			pr_debug("csk 0x%p, skb %u/%u, wr %d < %u.\n",
++				 csk, skb->len, skb->data_len,
++				 credits_needed, csk->wr_cred);
++			break;
++		}
++		__skb_unlink(skb, &csk->txq);
++		set_wr_txq(skb, CPL_PRIORITY_DATA, csk->txq_idx);
++		skb->csum = credits_needed + flowclen16;
++		csk->wr_cred -= credits_needed;
++		csk->wr_una_cred += credits_needed;
++
++		pr_debug("csk 0x%p, skb %u/%u, wr %d, left %u, unack %u.\n",
++			 csk, skb->len, skb->data_len, credits_needed,
++			 csk->wr_cred, csk->wr_una_cred);
++
++		if (likely(cxgbit_skcb_flags(skb) & SKCBF_TX_NEED_HDR)) {
++			len += cxgbit_skcb_tx_extralen(skb);
++
++			if ((csk->wr_una_cred >= (csk->wr_max_cred / 2)) ||
++			    (!before(csk->write_seq,
++				     csk->snd_una + csk->snd_win))) {
++				compl = 1;
++				csk->wr_una_cred = 0;
++			}
++
++			make_tx_data_wr(csk, skb, dlen, len, credits_needed,
++					compl);
++			csk->snd_nxt += len;
++
++		} else if ((cxgbit_skcb_flags(skb) & SKCBF_TX_FLAG_COMPL) ||
++			   (csk->wr_una_cred >= (csk->wr_max_cred / 2))) {
++			struct cpl_close_con_req *req =
++				(struct cpl_close_con_req *)skb->data;
++			req->wr.wr_hi |= htonl(FW_WR_COMPL_F);
++			csk->wr_una_cred = 0;
++		}
++
++		cxgbit_sock_enqueue_wr(csk, skb);
++		t4_set_arp_err_handler(skb, csk, arp_failure_skb_discard);
++
++		pr_debug("csk 0x%p,%u, skb 0x%p, %u.\n",
++			 csk, csk->tid, skb, len);
++
++		cxgbit_l2t_send(csk->com.cdev, skb, csk->l2t);
++	}
++}
++
++static bool cxgbit_lock_sock(struct cxgbit_sock *csk)
++{
++	spin_lock_bh(&csk->lock);
++
++	if (before(csk->write_seq, csk->snd_una + csk->snd_win))
++		csk->lock_owner = true;
++
 +	spin_unlock_bh(&csk->lock);
 +
-+	return 0;
++	return csk->lock_owner;
 +}
 +
-+#define FLOWC_WR_NPARAMS_MIN    9
-+#define FLOWC_WR_NPARAMS_MAX	11
-+static int cxgbit_alloc_csk_skb(struct cxgbit_sock *csk)
++static void cxgbit_unlock_sock(struct cxgbit_sock *csk)
 +{
++	struct sk_buff_head backlogq;
 +	struct sk_buff *skb;
-+	u32 len, flowclen;
-+	u8 i;
++	void (*fn)(struct cxgbit_sock *, struct sk_buff *);
 +
-+	flowclen = offsetof(struct fw_flowc_wr,
-+			    mnemval[FLOWC_WR_NPARAMS_MAX]);
++	skb_queue_head_init(&backlogq);
 +
-+	len = max_t(u32, sizeof(struct cpl_abort_req),
-+		    sizeof(struct cpl_abort_rpl));
++	spin_lock_bh(&csk->lock);
++	while (skb_queue_len(&csk->backlogq)) {
++		skb_queue_splice_init(&csk->backlogq, &backlogq);
++		spin_unlock_bh(&csk->lock);
 +
-+	len = max(len, flowclen);
-+	len = roundup(len, 16);
++		while ((skb = __skb_dequeue(&backlogq))) {
++			fn = cxgbit_skcb_rx_backlog_fn(skb);
++			fn(csk, skb);
++		}
 +
-+	for (i = 0; i < 3; i++) {
-+		skb = alloc_skb(len, GFP_ATOMIC);
-+		if (!skb)
-+			goto out;
-+		__skb_queue_tail(&csk->skbq, skb);
++		spin_lock_bh(&csk->lock);
 +	}
 +
-+	skb = alloc_skb(LRO_SKB_MIN_HEADROOM, GFP_ATOMIC);
-+	if (!skb)
-+		goto out;
-+
-+	memset(skb->data, 0, LRO_SKB_MIN_HEADROOM);
-+	csk->lro_skb_hold = skb;
-+
-+	return 0;
-+out:
-+	__skb_queue_purge(&csk->skbq);
-+	return -ENOMEM;
-+}
-+
-+static u32 compute_wscale(u32 win)
-+{
-+	u32 wscale = 0;
-+
-+	while (wscale < 14 && (65535 << wscale) < win)
-+		wscale++;
-+	return wscale;
-+}
-+
-+static void cxgbit_pass_accept_rpl(struct cxgbit_sock *csk,
-+				   struct cpl_pass_accept_req *req)
-+{
-+	struct sk_buff *skb;
-+	const struct tcphdr *tcph;
-+	struct cpl_t5_pass_accept_rpl *rpl5;
-+	unsigned int len = roundup(sizeof(*rpl5), 16);
-+	unsigned int mtu_idx;
-+	u64 opt0;
-+	u32 opt2, hlen;
-+	u32 wscale;
-+	u32 win;
-+
-+	pr_debug("%s csk %p tid %u\n", __func__, csk, csk->tid);
-+
-+	skb = alloc_skb(len, GFP_ATOMIC);
-+	if (!skb) {
-+		cxgbit_put_csk(csk);
-+		return;
-+	}
-+
-+	rpl5 = (struct cpl_t5_pass_accept_rpl *)__skb_put(skb, len);
-+	memset(rpl5, 0, len);
-+
-+	INIT_TP_WR(rpl5, csk->tid);
-+	OPCODE_TID(rpl5) = cpu_to_be32(MK_OPCODE_TID(CPL_PASS_ACCEPT_RPL,
-+						     csk->tid));
-+	best_mtu(csk->com.cdev->lldi.mtus, csk->mtu, &mtu_idx,
-+		 req->tcpopt.tstamp,
-+		 (csk->com.remote_addr.ss_family == AF_INET) ? 0 : 1);
-+	wscale = compute_wscale(csk->rcv_win);
-+	/*
-+	 * Specify the largest window that will fit in opt0. The
-+	 * remainder will be specified in the rx_data_ack.
-+	 */
-+	win = csk->rcv_win >> 10;
-+	if (win > RCV_BUFSIZ_M)
-+		win = RCV_BUFSIZ_M;
-+	opt0 =  TCAM_BYPASS_F |
-+		WND_SCALE_V(wscale) |
-+		MSS_IDX_V(mtu_idx) |
-+		L2T_IDX_V(csk->l2t->idx) |
-+		TX_CHAN_V(csk->tx_chan) |
-+		SMAC_SEL_V(csk->smac_idx) |
-+		DSCP_V(csk->tos >> 2) |
-+		ULP_MODE_V(ULP_MODE_ISCSI) |
-+		RCV_BUFSIZ_V(win);
-+
-+	opt2 = RX_CHANNEL_V(0) |
-+		RSS_QUEUE_VALID_F | RSS_QUEUE_V(csk->rss_qid);
-+
-+	if (req->tcpopt.tstamp)
-+		opt2 |= TSTAMPS_EN_F;
-+	if (req->tcpopt.sack)
-+		opt2 |= SACK_EN_F;
-+	if (wscale)
-+		opt2 |= WND_SCALE_EN_F;
-+
-+	hlen = ntohl(req->hdr_len);
-+	tcph = (const void *)(req + 1) + ETH_HDR_LEN_G(hlen) +
-+		IP_HDR_LEN_G(hlen);
-+
-+	if (tcph->ece && tcph->cwr)
-+		opt2 |= CCTRL_ECN_V(1);
-+
-+	opt2 |= RX_COALESCE_V(3);
-+	opt2 |= CONG_CNTRL_V(CONG_ALG_NEWRENO);
-+
-+	opt2 |= T5_ISS_F;
-+	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
-+
-+	opt2 |= T5_OPT_2_VALID_F;
-+
-+	rpl5->opt0 = cpu_to_be64(opt0);
-+	rpl5->opt2 = cpu_to_be32(opt2);
-+	set_wr_txq(skb, CPL_PRIORITY_SETUP, csk->ctrlq_idx);
-+	t4_set_arp_err_handler(skb, NULL, arp_failure_discard);
-+	cxgbit_l2t_send(csk->com.cdev, skb, csk->l2t);
-+}
-+
-+static void cxgbit_pass_accept_req(struct cxgbit_device *cdev,
-+				   struct sk_buff *skb)
-+{
-+	struct cxgbit_sock *csk = NULL;
-+	struct cxgbit_np *cnp;
-+	struct cpl_pass_accept_req *req = cplhdr(skb);
-+	unsigned int stid = PASS_OPEN_TID_G(ntohl(req->tos_stid));
-+	struct tid_info *t = cdev->lldi.tids;
-+	unsigned int tid = GET_TID(req);
-+	u16 peer_mss = ntohs(req->tcpopt.mss);
-+	unsigned short hdrs;
-+
-+	struct dst_entry *dst;
-+	__u8 local_ip[16], peer_ip[16];
-+	__be16 local_port, peer_port;
-+	int ret;
-+	int iptype;
-+
-+	pr_debug("%s: cdev = %p; stid = %u; tid = %u\n",
-+		 __func__, cdev, stid, tid);
-+
-+	cnp = lookup_stid(t, stid);
-+	if (!cnp) {
-+		pr_err("%s connect request on invalid stid %d\n",
-+		       __func__, stid);
-+		goto rel_skb;
-+	}
-+
-+	if (cnp->com.state != CSK_STATE_LISTEN) {
-+		pr_err("%s - listening parent not in CSK_STATE_LISTEN\n",
-+		       __func__);
-+		goto reject;
-+	}
-+
-+	csk = lookup_tid(t, tid);
-+	if (csk) {
-+		pr_err("%s csk not null tid %u\n",
-+		       __func__, tid);
-+		goto rel_skb;
-+	}
-+
-+	get_tuple_info(req, &iptype, local_ip, peer_ip,
-+		       &local_port, &peer_port);
-+
-+	/* Find output route */
-+	if (iptype == 4)  {
-+		pr_debug("%s parent sock %p tid %u laddr %pI4 raddr %pI4 "
-+			 "lport %d rport %d peer_mss %d\n"
-+			 , __func__, cnp, tid,
-+			 local_ip, peer_ip, ntohs(local_port),
-+			 ntohs(peer_port), peer_mss);
-+		dst = find_route(cdev, *(__be32 *)local_ip,
-+				 *(__be32 *)peer_ip,
-+				 local_port, peer_port,
-+				 PASS_OPEN_TOS_G(ntohl(req->tos_stid)));
-+	} else {
-+		pr_debug("%s parent sock %p tid %u laddr %pI6 raddr %pI6 "
-+			 "lport %d rport %d peer_mss %d\n"
-+			 , __func__, cnp, tid,
-+			 local_ip, peer_ip, ntohs(local_port),
-+			 ntohs(peer_port), peer_mss);
-+		dst = find_route6(cdev, local_ip, peer_ip,
-+				  local_port, peer_port,
-+				  PASS_OPEN_TOS_G(ntohl(req->tos_stid)),
-+				  ((struct sockaddr_in6 *)
-+				  &cnp->com.local_addr)->sin6_scope_id);
-+	}
-+	if (!dst) {
-+		pr_err("%s - failed to find dst entry!\n",
-+		       __func__);
-+		goto reject;
-+	}
-+
-+	csk = kzalloc(sizeof(*csk), GFP_ATOMIC);
-+	if (!csk) {
-+		dst_release(dst);
-+		goto rel_skb;
-+	}
-+
-+	ret = offload_init(csk, iptype, peer_ip, ntohs(local_port), dst, cdev);
-+	if (ret) {
-+		pr_err("%s - failed to allocate l2t entry!\n",
-+		       __func__);
-+		dst_release(dst);
-+		kfree(csk);
-+		goto reject;
-+	}
-+
-+	kref_init(&csk->kref);
-+	init_completion(&csk->com.wr_wait.completion);
-+
-+	INIT_LIST_HEAD(&csk->accept_node);
-+
-+	hdrs = (iptype == 4 ? sizeof(struct iphdr) : sizeof(struct ipv6hdr)) +
-+		sizeof(struct tcphdr) +	(req->tcpopt.tstamp ? 12 : 0);
-+	if (peer_mss && csk->mtu > (peer_mss + hdrs))
-+		csk->mtu = peer_mss + hdrs;
-+
-+	csk->com.state = CSK_STATE_CONNECTING;
-+	csk->com.cdev = cdev;
-+	csk->cnp = cnp;
-+	csk->tos = PASS_OPEN_TOS_G(ntohl(req->tos_stid));
-+	csk->dst = dst;
-+	csk->tid = tid;
-+	csk->wr_cred = cdev->lldi.wr_cred -
-+			DIV_ROUND_UP(sizeof(struct cpl_abort_req), 16);
-+	csk->wr_max_cred = csk->wr_cred;
-+	csk->wr_una_cred = 0;
-+
-+	if (iptype == 4) {
-+		struct sockaddr_in *sin = (struct sockaddr_in *)
-+					  &csk->com.local_addr;
-+		sin->sin_family = AF_INET;
-+		sin->sin_port = local_port;
-+		sin->sin_addr.s_addr = *(__be32 *)local_ip;
-+
-+		sin = (struct sockaddr_in *)&csk->com.remote_addr;
-+		sin->sin_family = AF_INET;
-+		sin->sin_port = peer_port;
-+		sin->sin_addr.s_addr = *(__be32 *)peer_ip;
-+	} else {
-+		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)
-+					    &csk->com.local_addr;
-+
-+		sin6->sin6_family = PF_INET6;
-+		sin6->sin6_port = local_port;
-+		memcpy(sin6->sin6_addr.s6_addr, local_ip, 16);
-+		cxgb4_clip_get(cdev->lldi.ports[0],
-+			       (const u32 *)&sin6->sin6_addr.s6_addr,
-+			       1);
-+
-+		sin6 = (struct sockaddr_in6 *)&csk->com.remote_addr;
-+		sin6->sin6_family = PF_INET6;
-+		sin6->sin6_port = peer_port;
-+		memcpy(sin6->sin6_addr.s6_addr, peer_ip, 16);
-+	}
-+
-+	skb_queue_head_init(&csk->rxq);
-+	skb_queue_head_init(&csk->txq);
-+	skb_queue_head_init(&csk->ppodq);
-+	skb_queue_head_init(&csk->backlogq);
-+	skb_queue_head_init(&csk->skbq);
-+	cxgbit_sock_reset_wr_list(csk);
-+	spin_lock_init(&csk->lock);
-+	init_waitqueue_head(&csk->waitq);
-+	init_waitqueue_head(&csk->ack_waitq);
 +	csk->lock_owner = false;
++	spin_unlock_bh(&csk->lock);
++}
 +
-+	if (cxgbit_alloc_csk_skb(csk)) {
-+		dst_release(dst);
-+		kfree(csk);
-+		goto rel_skb;
++static int
++cxgbit_queue_skb(struct cxgbit_sock *csk, struct sk_buff *skb)
++{
++	int ret = 0;
++
++	wait_event_interruptible(csk->ack_waitq, cxgbit_lock_sock(csk));
++
++	if (unlikely((csk->com.state != CSK_STATE_ESTABLISHED) ||
++		     signal_pending(current))) {
++		__kfree_skb(skb);
++		ret = -1;
++		spin_lock_bh(&csk->lock);
++		if (csk->lock_owner) {
++			spin_unlock_bh(&csk->lock);
++			goto unlock;
++		}
++		spin_unlock_bh(&csk->lock);
++		return ret;
 +	}
 +
-+	cxgbit_get_cdev(cdev);
++	csk->write_seq += skb->len +
++			  cxgbit_skcb_tx_extralen(skb);
 +
-+	spin_lock(&cdev->cskq.lock);
-+	list_add_tail(&csk->list, &cdev->cskq.list);
-+	spin_unlock(&cdev->cskq.lock);
++	skb_queue_splice_tail_init(&csk->ppodq, &csk->txq);
++	__skb_queue_tail(&csk->txq, skb);
++	push_tx_frames(csk);
 +
-+	cxgb4_insert_tid(t, csk, tid);
-+	cxgbit_pass_accept_rpl(csk, req);
-+	goto rel_skb;
++unlock:
++	cxgbit_unlock_sock(csk);
++	return ret;
++}
++
++static int cxgbit_send_r2t(struct iscsi_cmd *cmd,
++			   struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct cxgbit_cmd *ccmd = iscsit_priv_cmd(cmd);
++	struct sk_buff *skb;
++	struct iscsi_r2t *r2t;
++	struct iscsi_r2t_rsp *hdr;
++
++	r2t = iscsit_get_r2t_from_list(cmd);
++	if (!r2t)
++		return -1;
++
++	skb = cxgbit_alloc_skb(csk, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	if (ccmd->setup_ddp) {
++		if (test_bit(CSK_DDP_ENABLE, &csk->com.flags))
++			cxgbit_reserve_ttt(csk, cmd);
++
++		ccmd->setup_ddp = false;
++	}
++
++	r2t->targ_xfer_tag = ccmd->ttinfo.tag;
++
++	hdr = (struct iscsi_r2t_rsp *)skb->data;
++	iscsit_build_r2t_pdu(cmd, conn, r2t, hdr);
++
++	pr_debug("Built %sR2T, ITT: 0x%08x, TTT: 0x%08x, StatSN:"
++		" 0x%08x, R2TSN: 0x%08x, Offset: %u, DDTL: %u, CID: %hu\n",
++		(!r2t->recovery_r2t) ? "" : "Recovery ", cmd->init_task_tag,
++		r2t->targ_xfer_tag, ntohl(hdr->statsn), r2t->r2t_sn,
++			r2t->offset, r2t->xfer_len, conn->cid);
++
++	spin_lock_bh(&cmd->r2t_lock);
++	r2t->sent_r2t = 1;
++	spin_unlock_bh(&cmd->r2t_lock);
++
++	if (cxgbit_queue_skb(csk, skb)) {
++		skb_queue_purge(&csk->ppodq);
++		return -1;
++	}
++
++	spin_lock_bh(&cmd->dataout_timeout_lock);
++	iscsit_start_dataout_timer(cmd, conn);
++	spin_unlock_bh(&cmd->dataout_timeout_lock);
++
++	return 0;
++}
++
++static int
++cxgbit_send_unsolicited_nopin(struct iscsi_cmd *cmd,
++			      struct iscsi_conn *conn,
++			      bool want_response)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++
++	skb = cxgbit_alloc_skb(csk, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	iscsit_build_nopin_rsp(cmd, conn, (struct iscsi_nopin *)(skb->data),
++			       false);
++
++	if (cxgbit_queue_skb(csk, skb))
++		return -1;
++
++	spin_lock_bh(&cmd->istate_lock);
++	cmd->i_state = want_response ?
++			ISTATE_SENT_NOPIN_WANT_RESPONSE : ISTATE_SENT_STATUS;
++	spin_unlock_bh(&cmd->istate_lock);
++
++	return 0;
++}
++
++static int cxgbit_send_response(struct iscsi_cmd *cmd,
++				struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++	struct iscsi_scsi_rsp *hdr;
++	u32 padding = 0, tx_size = 0;
++	bool inc_stat_sn = (cmd->i_state == ISTATE_SEND_STATUS);
++
++	/*
++	 * Attach SENSE DATA payload to iSCSI Response PDU
++	 */
++	if (cmd->se_cmd.sense_buffer &&
++	    ((cmd->se_cmd.se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
++	    (cmd->se_cmd.se_cmd_flags & SCF_EMULATED_TASK_SENSE))) {
++		put_unaligned_be16(cmd->se_cmd.scsi_sense_length,
++				   cmd->sense_buffer);
++		cmd->se_cmd.scsi_sense_length += sizeof(__be16);
++
++		padding	= -(cmd->se_cmd.scsi_sense_length) & 3;
++		tx_size += cmd->se_cmd.scsi_sense_length;
++
++		if (padding) {
++			memset(cmd->sense_buffer +
++				cmd->se_cmd.scsi_sense_length, 0, padding);
++			tx_size += padding;
++			pr_debug("Adding %u bytes of padding to"
++				" SENSE.\n", padding);
++		}
++
++		pr_debug("Attaching SENSE DATA: %u bytes to iSCSI"
++				" Response PDU\n",
++				cmd->se_cmd.scsi_sense_length);
++	}
++
++	skb = cxgbit_alloc_skb(csk, tx_size);
++	if (!skb)
++		return -ENOMEM;
++
++	hdr = (struct iscsi_scsi_rsp *)(skb->data);
++
++	iscsit_build_rsp_pdu(cmd, conn, inc_stat_sn, hdr);
++
++	if (tx_size) {
++		hton24(hdr->dlength, (u32)cmd->se_cmd.scsi_sense_length);
++		skb_store_bits(skb, ISCSI_HDR_LEN, cmd->sense_buffer, tx_size);
++	}
++
++	return cxgbit_queue_skb(csk, skb);
++}
++
++static int cxgbit_map_skb(struct iscsi_cmd *cmd,
++			  struct sk_buff *skb,
++			  u32 data_offset,
++			  u32 data_length)
++{
++	u32 i = 0, nr_frags = MAX_SKB_FRAGS;
++	u32 padding = ((-data_length) & 3);
++	struct scatterlist *sg;
++	struct page *page;
++	unsigned int page_off;
++
++	if (padding)
++		nr_frags--;
++
++	/*
++	 * We know each entry in t_data_sg contains a page.
++	 */
++	sg = &cmd->se_cmd.t_data_sg[data_offset / PAGE_SIZE];
++	page_off = (data_offset % PAGE_SIZE);
++
++	while (data_length && (i < nr_frags)) {
++		u32 cur_len = min_t(u32, data_length, sg->length - page_off);
++
++		page = sg_page(sg);
++
++		get_page(page);
++		skb_fill_page_desc(skb, i, page, sg->offset + page_off,
++				   cur_len);
++		skb->data_len += cur_len;
++		skb->len += cur_len;
++		skb->truesize += cur_len;
++
++		data_length -= cur_len;
++		page_off = 0;
++		sg = sg_next(sg);
++		i++;
++	}
++
++	if (data_length)
++		return -1;
++
++	if (padding) {
++		page = alloc_page(GFP_KERNEL | __GFP_ZERO);
++		if (!page)
++			return -1;
++		skb_fill_page_desc(skb, i, page, 0, padding);
++		skb->data_len += padding;
++		skb->len += padding;
++		skb->truesize += padding;
++	}
++
++	return 0;
++}
++
++static int cxgbit_tx_datain_iso(struct cxgbit_sock *csk,
++				struct iscsi_cmd *cmd)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct sk_buff *skb;
++	struct iscsi_datain datain;
++	struct cxgbit_iso_info iso_info;
++	u32 data_length = cmd->se_cmd.data_length;
++	u32 mrdsl = conn->conn_ops->MaxRecvDataSegmentLength;
++	u32 num_pdu, plen, tx_data = 0;
++	bool task_sense = !!(cmd->se_cmd.se_cmd_flags &
++		SCF_TRANSPORT_TASK_SENSE);
++	bool set_statsn = false;
++	int ret = -1;
++
++	while (data_length) {
++		num_pdu = (data_length + mrdsl - 1) / mrdsl;
++		if (num_pdu > csk->max_iso_npdu)
++			num_pdu = csk->max_iso_npdu;
++
++		plen = num_pdu * mrdsl;
++		if (plen > data_length)
++			plen = data_length;
++
++		skb = __cxgbit_alloc_skb(csk, 0, true);
++		if (!skb)
++			return -ENOMEM;
++
++		cxgbit_skcb_flags(skb) |= SKCBF_TX_ISO;
++		cxgbit_skcb_submode(skb) |= (csk->submode &
++				CXGBIT_SUBMODE_DCRC);
++		cxgbit_skcb_tx_extralen(skb) = (num_pdu *
++				cxgbit_digest_len[cxgbit_skcb_submode(skb)]) +
++						((num_pdu - 1) * ISCSI_HDR_LEN);
++
++		memset(&datain, 0, sizeof(struct iscsi_datain));
++		memset(&iso_info, 0, sizeof(iso_info));
++
++		if (!tx_data)
++			iso_info.flags |= CXGBIT_ISO_FSLICE;
++
++		if (!(data_length - plen)) {
++			iso_info.flags |= CXGBIT_ISO_LSLICE;
++			if (!task_sense) {
++				datain.flags = ISCSI_FLAG_DATA_STATUS;
++				iscsit_increment_maxcmdsn(cmd, conn->sess);
++				cmd->stat_sn = conn->stat_sn++;
++				set_statsn = true;
++			}
++		}
++
++		iso_info.burst_len = num_pdu * mrdsl;
++		iso_info.mpdu = mrdsl;
++		iso_info.len = ISCSI_HDR_LEN + plen;
++
++		make_cpl_tx_data_iso(skb, &iso_info);
++
++		datain.offset = tx_data;
++		datain.data_sn = cmd->data_sn;
++
++		iscsit_build_datain_pdu(cmd, conn, &datain,
++					(struct iscsi_data_rsp *)skb->data,
++					set_statsn);
++
++		ret = cxgbit_map_skb(cmd, skb, tx_data, plen);
++		if (unlikely(ret)) {
++			__kfree_skb(skb);
++			goto out;
++		}
++
++		ret = cxgbit_queue_skb(csk, skb);
++		if (unlikely(ret))
++			goto out;
++
++		tx_data += plen;
++		data_length -= plen;
++
++		cmd->read_data_done += plen;
++		cmd->data_sn += num_pdu;
++	}
++
++	ret = task_sense ? 2 : 1;
++	return ret;
++
++out:
++	return ret;
++}
++
++static int cxgbit_tx_datain(struct cxgbit_sock *csk, struct iscsi_cmd *cmd)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct sk_buff *skb;
++	struct iscsi_datain datain;
++	struct iscsi_datain_req *dr;
++	int eodr = 0;
++	bool set_statsn = false;
++	int ret = 0;
++
++	memset(&datain, 0, sizeof(struct iscsi_datain));
++
++	dr = iscsit_get_datain_values(cmd, &datain);
++	if (!dr) {
++		pr_err("iscsit_get_datain_values failed for ITT: 0x%08x\n",
++		       cmd->init_task_tag);
++		return -1;
++	}
++
++	/*
++	 * Be paranoid and double check the logic for now.
++	 */
++	if ((datain.offset + datain.length) > cmd->se_cmd.data_length) {
++		pr_err("Command ITT: 0x%08x, datain.offset: %u and"
++			" datain.length: %u exceeds cmd->data_length: %u\n",
++			cmd->init_task_tag, datain.offset, datain.length,
++			cmd->se_cmd.data_length);
++		return -1;
++	}
++
++	atomic_long_add(datain.length, &conn->sess->tx_data_octets);
++	/*
++	 * Special case for successfully execution w/ both DATAIN
++	 * and Sense Data.
++	 */
++	if ((datain.flags & ISCSI_FLAG_DATA_STATUS) &&
++	    (cmd->se_cmd.se_cmd_flags & SCF_TRANSPORT_TASK_SENSE))
++		datain.flags &= ~ISCSI_FLAG_DATA_STATUS;
++	else {
++		if ((dr->dr_complete == DATAIN_COMPLETE_NORMAL) ||
++		    (dr->dr_complete == DATAIN_COMPLETE_CONNECTION_RECOVERY)) {
++			iscsit_increment_maxcmdsn(cmd, conn->sess);
++			cmd->stat_sn = conn->stat_sn++;
++			set_statsn = true;
++		} else if (dr->dr_complete ==
++			   DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY)
++			set_statsn = true;
++	}
++
++	skb = cxgbit_alloc_skb(csk, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	if (datain.length) {
++		cxgbit_skcb_submode(skb) |= (csk->submode &
++				CXGBIT_SUBMODE_DCRC);
++		cxgbit_skcb_tx_extralen(skb) =
++				cxgbit_digest_len[cxgbit_skcb_submode(skb)];
++	}
++
++	iscsit_build_datain_pdu(cmd, conn, &datain,
++				(struct iscsi_data_rsp *)skb->data, set_statsn);
++
++	ret = cxgbit_map_skb(cmd, skb, datain.offset, datain.length);
++	if (ret < 0) {
++		__kfree_skb(skb);
++		return ret;
++	}
++
++	ret = cxgbit_queue_skb(csk, skb);
++	if (ret < 0)
++		return ret;
++
++	if (dr->dr_complete) {
++		eodr = (cmd->se_cmd.se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ?
++				2 : 1;
++		iscsit_free_datain_req(cmd, dr);
++	}
++
++	return eodr;
++}
++
++static int cxgbit_send_datain(struct iscsi_cmd *cmd,
++			      struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	u32 data_length = cmd->se_cmd.data_length;
++	u32 padding = -data_length & 3;
++	u32 mrdsl = conn->conn_ops->MaxRecvDataSegmentLength;
++	struct iscsi_datain_req *dr;
++	int ret = 0;
++
++	dr = iscsit_get_datain_req(cmd);
++	if (!dr) {
++		pr_err("iscsit_get_datain_req failed for ITT: 0x%08x\n",
++		       cmd->init_task_tag);
++		return -1;
++	}
++
++	if ((data_length > mrdsl) && (!dr->recovery) &&
++	    (!padding) && csk->max_iso_npdu) {
++		ret = cxgbit_tx_datain_iso(csk, cmd);
++
++		if (ret > 0)
++			iscsit_free_datain_req(cmd, dr);
++
++		return ret;
++	}
++
++	while (!ret)
++		ret = cxgbit_tx_datain(csk, cmd);
++
++	return ret;
++}
++
++static int
++cxgbit_send_logout_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++	int ret;
++
++	skb = cxgbit_alloc_skb(csk, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	ret = iscsit_build_logout_rsp(cmd, conn,
++				      (struct iscsi_logout_rsp *)skb->data);
++	if (ret < 0)
++		return ret;
++
++	ret = cxgbit_queue_skb(csk, skb);
++	if (!ret)
++		set_bit(CSK_TX_FIN, &csk->com.flags);
++
++	return ret;
++}
++
++static int
++cxgbit_send_conn_drop_async_message(struct iscsi_cmd *cmd,
++				    struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++
++	skb = cxgbit_alloc_skb(csk, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	cmd->iscsi_opcode = ISCSI_OP_ASYNC_EVENT;
++	iscsit_build_conn_drop_async_pdu(cmd, conn,
++					 (struct iscsi_async *)skb->data);
++
++	pr_debug("Sending Connection Dropped Async Message StatSN:"
++		" 0x%08x, for CID: %hu on CID: %hu\n", cmd->stat_sn,
++			cmd->logout_cid, conn->cid);
++
++	return cxgbit_queue_skb(csk, skb);
++}
++
++static int
++cxgbit_send_nopin(struct iscsi_cmd *cmd, struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++	struct iscsi_nopin *hdr = (struct iscsi_nopin *)cmd->pdu;
++	u32 padding;
++
++	iscsit_build_nopin_rsp(cmd, conn, hdr, true);
++
++	padding = (-cmd->buf_ptr_size) & 3;
++	skb = cxgbit_alloc_skb(csk, cmd->buf_ptr_size + padding);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_store_bits(skb, 0, hdr, ISCSI_HDR_LEN);
++	if (cmd->buf_ptr_size) {
++		skb_store_bits(skb, ISCSI_HDR_LEN, cmd->buf_ptr,
++			       cmd->buf_ptr_size);
++		skb_store_bits(skb, ISCSI_HDR_LEN + cmd->buf_ptr_size,
++			       &cmd->pad_bytes, padding);
++	}
++
++	return cxgbit_queue_skb(csk, skb);
++}
++
++static int
++cxgbit_send_task_mgt_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++
++	skb = cxgbit_alloc_skb(csk, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	iscsit_build_task_mgt_rsp(cmd, conn,
++				  (struct iscsi_tm_rsp *)skb->data);
++
++	return cxgbit_queue_skb(csk, skb);
++}
++
++static int
++cxgbit_send_reject(struct iscsi_cmd *cmd, struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++
++	skb = cxgbit_alloc_skb(csk, ISCSI_HDR_LEN);
++	if (!skb)
++		return -ENOMEM;
++
++	iscsit_build_reject(cmd, conn,
++			    (struct iscsi_reject *)skb->data);
++
++	skb_store_bits(skb, ISCSI_HDR_LEN, cmd->buf_ptr, ISCSI_HDR_LEN);
++
++	return cxgbit_queue_skb(csk, skb);
++}
++
++static int
++cxgbit_send_text_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct iscsi_text_rsp *hdr =
++		(struct iscsi_text_rsp *)cmd->pdu;
++	struct sk_buff *skb;
++	u32 text_length;
++	int rc;
++
++	memset(hdr, 0, ISCSI_HDR_LEN);
++	rc = iscsit_build_text_rsp(cmd, conn, hdr, ISCSI_TCP_CXGB4);
++	if (rc < 0)
++		return rc;
++	text_length = rc;
++
++	skb = cxgbit_alloc_skb(csk, text_length);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_store_bits(skb, 0, hdr, ISCSI_HDR_LEN);
++	skb_store_bits(skb, ISCSI_HDR_LEN, cmd->buf_ptr, text_length);
++
++	return cxgbit_queue_skb(csk, skb);
++}
++
++int
++cxgbit_immediate_queue(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
++		       int state)
++{
++	int ret;
++
++	switch (state) {
++	case ISTATE_SEND_R2T:
++		ret = cxgbit_send_r2t(cmd, conn);
++		if (ret < 0)
++			goto err;
++		break;
++	case ISTATE_REMOVE:
++		spin_lock_bh(&conn->cmd_lock);
++		list_del_init(&cmd->i_conn_node);
++		spin_unlock_bh(&conn->cmd_lock);
++		iscsit_free_cmd(cmd, false);
++		break;
++	case ISTATE_SEND_NOPIN_WANT_RESPONSE:
++		iscsit_mod_nopin_response_timer(conn);
++		ret = cxgbit_send_unsolicited_nopin(cmd, conn, true);
++		if (ret < 0)
++			goto err;
++		break;
++	case ISTATE_SEND_NOPIN_NO_RESPONSE:
++		ret = cxgbit_send_unsolicited_nopin(cmd, conn, false);
++		if (ret < 0)
++			goto err;
++		break;
++	default:
++		pr_err("Unknown Opcode: 0x%02x ITT:"
++		       " 0x%08x, i_state: %d on CID: %hu\n",
++				cmd->iscsi_opcode, cmd->init_task_tag, state,
++				conn->cid);
++		goto err;
++	}
++
++	return 0;
++
++err:
++	return -1;
++}
++
++int
++cxgbit_response_queue(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
++		      int state)
++{
++	int ret;
++
++check_rsp_state:
++	switch (state) {
++	case ISTATE_SEND_DATAIN:
++		ret = cxgbit_send_datain(cmd, conn);
++		if (ret < 0) {
++			goto err;
++		} else if (ret == 1) {
++			/* all done */
++			spin_lock_bh(&cmd->istate_lock);
++			cmd->i_state = ISTATE_SENT_STATUS;
++			spin_unlock_bh(&cmd->istate_lock);
++
++			if (atomic_read(&conn->check_immediate_queue))
++				return 1;
++
++			return 0;
++		} else if (ret == 2) {
++			/* Still must send status,
++			 * SCF_TRANSPORT_TASK_SENSE was set
++			 */
++			spin_lock_bh(&cmd->istate_lock);
++			cmd->i_state = ISTATE_SEND_STATUS;
++			spin_unlock_bh(&cmd->istate_lock);
++			state = ISTATE_SEND_STATUS;
++			goto check_rsp_state;
++		}
++
++		break;
++	case ISTATE_SEND_STATUS:
++	case ISTATE_SEND_STATUS_RECOVERY:
++		ret = cxgbit_send_response(cmd, conn);
++		break;
++	case ISTATE_SEND_LOGOUTRSP:
++		ret = cxgbit_send_logout_rsp(cmd, conn);
++		break;
++	case ISTATE_SEND_ASYNCMSG:
++		ret = cxgbit_send_conn_drop_async_message(
++			cmd, conn);
++		break;
++	case ISTATE_SEND_NOPIN:
++		ret = cxgbit_send_nopin(cmd, conn);
++		break;
++	case ISTATE_SEND_REJECT:
++		ret = cxgbit_send_reject(cmd, conn);
++		break;
++	case ISTATE_SEND_TASKMGTRSP:
++		ret = cxgbit_send_task_mgt_rsp(cmd, conn);
++		if (ret != 0)
++			break;
++
++		ret = iscsit_tmr_post_handler(cmd, conn);
++		if (ret != 0)
++			iscsit_fall_back_to_erl0(conn->sess);
++		break;
++	case ISTATE_SEND_TEXTRSP:
++		ret = cxgbit_send_text_rsp(cmd, conn);
++		break;
++	default:
++		pr_err("Unknown Opcode: 0x%02x ITT:"
++		       " 0x%08x, i_state: %d on CID: %hu\n",
++		       cmd->iscsi_opcode, cmd->init_task_tag,
++		       state, conn->cid);
++		goto err;
++	}
++
++	if (ret < 0)
++		goto err;
++
++	switch (state) {
++	case ISTATE_SEND_LOGOUTRSP:
++		if (!iscsit_logout_post_handler(cmd, conn))
++			return -ECONNRESET;
++		/* fall through */
++	case ISTATE_SEND_STATUS:
++	case ISTATE_SEND_ASYNCMSG:
++	case ISTATE_SEND_NOPIN:
++	case ISTATE_SEND_STATUS_RECOVERY:
++	case ISTATE_SEND_TEXTRSP:
++	case ISTATE_SEND_TASKMGTRSP:
++	case ISTATE_SEND_REJECT:
++		spin_lock_bh(&cmd->istate_lock);
++		cmd->i_state = ISTATE_SENT_STATUS;
++		spin_unlock_bh(&cmd->istate_lock);
++		break;
++	default:
++		pr_err("Unknown Opcode: 0x%02x ITT:"
++		       " 0x%08x, i_state: %d on CID: %hu\n",
++		       cmd->iscsi_opcode, cmd->init_task_tag,
++		       cmd->i_state, conn->cid);
++		goto err;
++	}
++
++	if (atomic_read(&conn->check_immediate_queue))
++		return 1;
++
++	return 0;
++err:
++	return -1;
++}
++
++int cxgbit_validate_params(struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct cxgbit_device *cdev = csk->com.cdev;
++	struct iscsi_param *param;
++	u32 max_xmitdsl;
++
++	param = iscsi_find_param_from_key(MAXXMITDATASEGMENTLENGTH,
++					  conn->param_list);
++	if (!param)
++		return -1;
++
++	if (kstrtou32(param->value, 0, &max_xmitdsl) < 0)
++		return -1;
++
++	if (max_xmitdsl > cdev->mdsl) {
++		if (iscsi_change_param_sprintf
++		    (conn, "MaxXmitDataSegmentLength=%u",
++		     cdev->mdsl))
++			return -1;
++	}
++
++	return 0;
++}
++
++static int cxgbit_set_digest(struct cxgbit_sock *csk)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct iscsi_param *param;
++
++	param = iscsi_find_param_from_key(HEADERDIGEST, conn->param_list);
++	if (!param) {
++		pr_err("param not found key %s\n", HEADERDIGEST);
++		return -1;
++	}
++
++	if (!strcmp(param->value, CRC32C))
++		csk->submode |= 1;
++
++	param = iscsi_find_param_from_key(DATADIGEST, conn->param_list);
++	if (!param) {
++		csk->submode = 0;
++		pr_err("param not found key %s\n", DATADIGEST);
++		return -1;
++	}
++
++	if (!strcmp(param->value, CRC32C))
++		csk->submode |= 2;
++
++	if (cxgbit_setup_conn_digest(csk)) {
++		csk->submode = 0;
++		return -1;
++	}
++
++	return 0;
++}
++
++static int cxgbit_set_iso_npdu(struct cxgbit_sock *csk)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct iscsi_conn_ops *conn_ops = conn->conn_ops;
++	struct iscsi_param *param;
++	u32 mrdsl, mbl;
++	u32 max_npdu, max_iso_npdu;
++
++	param = iscsi_find_param_from_key(DATASEQUENCEINORDER,
++					  conn->param_list);
++	if (!param) {
++		pr_err("param not found key %s\n", DATASEQUENCEINORDER);
++		return -1;
++	}
++
++	if (strcmp(param->value, YES))
++		return 0;
++
++	param = iscsi_find_param_from_key(DATAPDUINORDER,
++					  conn->param_list);
++	if (!param) {
++		pr_err("param not found key %s\n", DATAPDUINORDER);
++		return -1;
++	}
++
++	if (strcmp(param->value, YES))
++		return 0;
++
++	param = iscsi_find_param_from_key(MAXBURSTLENGTH,
++					  conn->param_list);
++	if (!param) {
++		pr_err("param not found key %s\n", MAXBURSTLENGTH);
++		return -1;
++	}
++
++	if (kstrtou32(param->value, 0, &mbl) < 0)
++		return -1;
++
++	mrdsl = conn_ops->MaxRecvDataSegmentLength;
++	max_npdu = mbl / mrdsl;
++
++	max_iso_npdu = CXGBIT_MAX_ISO_PAYLOAD /
++			(ISCSI_HDR_LEN + mrdsl +
++			cxgbit_digest_len[csk->submode]);
++
++	csk->max_iso_npdu = min(max_npdu, max_iso_npdu);
++
++	if (csk->max_iso_npdu <= 1)
++		csk->max_iso_npdu = 0;
++
++	return 0;
++}
++
++static int cxgbit_set_params(struct iscsi_conn *conn)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct cxgbit_device *cdev = csk->com.cdev;
++	struct cxgbi_ppm *ppm = *csk->com.cdev->lldi.iscsi_ppm;
++	struct iscsi_conn_ops *conn_ops = conn->conn_ops;
++	struct iscsi_param *param;
++	u8 erl;
++
++	if (conn_ops->MaxRecvDataSegmentLength > cdev->mdsl)
++		conn_ops->MaxRecvDataSegmentLength = cdev->mdsl;
++
++	param = iscsi_find_param_from_key(ERRORRECOVERYLEVEL, conn->param_list);
++	if (!param) {
++		pr_err("param not found key %s\n", ERRORRECOVERYLEVEL);
++		return -1;
++	}
++
++	if (kstrtou8(param->value, 0, &erl) < 0)
++		return -1;
++
++	if (!erl) {
++		if (test_bit(CDEV_ISO_ENABLE, &cdev->flags)) {
++			if (cxgbit_set_iso_npdu(csk))
++				return -1;
++		}
++
++		if (test_bit(CDEV_DDP_ENABLE, &cdev->flags)) {
++			if (cxgbit_setup_conn_pgidx
++			    (csk, ppm->tformat.pgsz_idx_dflt))
++				return -1;
++			set_bit(CSK_DDP_ENABLE, &csk->com.flags);
++		}
++	}
++
++	if (cxgbit_set_digest(csk))
++		return -1;
++
++	return 0;
++}
++
++int cxgbit_put_login_tx(struct iscsi_conn *conn,
++			struct iscsi_login *login,
++			u32 length)
++{
++	struct cxgbit_sock *csk = conn->context;
++	struct sk_buff *skb;
++	u32 padding_buf = 0;
++	u8 padding = (-length) & 3;
++
++	skb = cxgbit_alloc_skb(csk, length + padding);
++	if (!skb)
++		return -ENOMEM;
++	skb_store_bits(skb, 0, login->rsp, ISCSI_HDR_LEN);
++	skb_store_bits(skb, ISCSI_HDR_LEN, login->rsp_buf, length);
++
++	if (padding)
++		skb_store_bits(skb, ISCSI_HDR_LEN + length,
++			       &padding_buf, padding);
++
++	if (login->login_complete) {
++		if (cxgbit_set_params(conn)) {
++			kfree_skb(skb);
++			return -1;
++		}
++
++		set_bit(CSK_LOGIN_DONE, &csk->com.flags);
++	}
++
++	if (cxgbit_queue_skb(csk, skb))
++		return -1;
++
++	if ((!login->login_complete) && (!login->login_failed))
++		schedule_delayed_work(&conn->login_work, 0);
++
++	return 0;
++}
++
++static void skb_copy_to_sg(struct sk_buff *skb, struct scatterlist *sg,
++			   unsigned int nents)
++{
++	struct skb_seq_state st;
++	const u8 *buf;
++	unsigned int consumed = 0, buf_len;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(skb);
++
++	skb_prepare_seq_read(skb, pdu_cb->doffset,
++			     pdu_cb->doffset + pdu_cb->dlen,
++			     &st);
++
++	while (true) {
++		buf_len = skb_seq_read(consumed, &buf, &st);
++		if (!buf_len) {
++			skb_abort_seq_read(&st);
++			break;
++		}
++
++		consumed += sg_pcopy_from_buffer(sg, nents, (void *)buf,
++						 buf_len, consumed);
++	}
++}
++
++static struct iscsi_cmd
++*cxgbit_allocate_cmd(struct cxgbit_sock *csk)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct cxgbi_ppm *ppm = cdev2ppm(csk->com.cdev);
++	struct cxgbit_cmd *ccmd;
++	struct iscsi_cmd *cmd;
++
++	cmd = iscsit_allocate_cmd(conn, TASK_INTERRUPTIBLE);
++	if (!cmd) {
++		pr_err("Unable to allocate iscsi_cmd + cxgbit_cmd\n");
++		return NULL;
++	}
++
++	ccmd = iscsit_priv_cmd(cmd);
++	ccmd->ttinfo.tag = ppm->tformat.no_ddp_mask;
++	ccmd->setup_ddp = true;
++
++	return cmd;
++}
++
++static int cxgbit_handle_immediate_data(struct iscsi_cmd *cmd,
++					struct iscsi_scsi_req *hdr,
++					u32 length)
++{
++	struct iscsi_conn *conn = cmd->conn;
++	struct cxgbit_sock *csk = conn->context;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++
++	if (pdu_cb->flags & PDUCBF_RX_DCRC_ERR) {
++		pr_err("ImmediateData CRC32C DataDigest error\n");
++		if (!conn->sess->sess_ops->ErrorRecoveryLevel) {
++			pr_err("Unable to recover from"
++			       " Immediate Data digest failure while"
++			       " in ERL=0.\n");
++			iscsit_reject_cmd(cmd, ISCSI_REASON_DATA_DIGEST_ERROR,
++					  (unsigned char *)hdr);
++			return IMMEDIATE_DATA_CANNOT_RECOVER;
++		}
++
++		iscsit_reject_cmd(cmd, ISCSI_REASON_DATA_DIGEST_ERROR,
++				  (unsigned char *)hdr);
++		return IMMEDIATE_DATA_ERL1_CRC_FAILURE;
++	}
++
++	if (cmd->se_cmd.se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
++		struct cxgbit_cmd *ccmd = iscsit_priv_cmd(cmd);
++		struct skb_shared_info *ssi = skb_shinfo(csk->skb);
++		skb_frag_t *dfrag = &ssi->frags[pdu_cb->dfrag_index];
++
++		sg_init_table(&ccmd->sg, 1);
++		sg_set_page(&ccmd->sg, dfrag->page.p, skb_frag_size(dfrag),
++			    dfrag->page_offset);
++		get_page(dfrag->page.p);
++
++		cmd->se_cmd.t_data_sg = &ccmd->sg;
++		cmd->se_cmd.t_data_nents = 1;
++
++		ccmd->release = true;
++	} else {
++		struct scatterlist *sg = &cmd->se_cmd.t_data_sg[0];
++		u32 sg_nents = max(1UL, DIV_ROUND_UP(pdu_cb->dlen, PAGE_SIZE));
++
++		skb_copy_to_sg(csk->skb, sg, sg_nents);
++	}
++
++	cmd->write_data_done += pdu_cb->dlen;
++
++	if (cmd->write_data_done == cmd->se_cmd.data_length) {
++		spin_lock_bh(&cmd->istate_lock);
++		cmd->cmd_flags |= ICF_GOT_LAST_DATAOUT;
++		cmd->i_state = ISTATE_RECEIVED_LAST_DATAOUT;
++		spin_unlock_bh(&cmd->istate_lock);
++	}
++
++	return IMMEDIATE_DATA_NORMAL_OPERATION;
++}
++
++static int
++cxgbit_get_immediate_data(struct iscsi_cmd *cmd,
++			  struct iscsi_scsi_req *hdr,
++			  bool dump_payload)
++{
++	struct iscsi_conn *conn = cmd->conn;
++	int cmdsn_ret = 0, immed_ret = IMMEDIATE_DATA_NORMAL_OPERATION;
++	/*
++	 * Special case for Unsupported SAM WRITE Opcodes and ImmediateData=Yes.
++	 */
++	if (dump_payload)
++		goto after_immediate_data;
++
++	immed_ret = cxgbit_handle_immediate_data(cmd, hdr,
++						 cmd->first_burst_len);
++after_immediate_data:
++	if (immed_ret == IMMEDIATE_DATA_NORMAL_OPERATION) {
++		/*
++		 * A PDU/CmdSN carrying Immediate Data passed
++		 * DataCRC, check against ExpCmdSN/MaxCmdSN if
++		 * Immediate Bit is not set.
++		 */
++		cmdsn_ret = iscsit_sequence_cmd(conn, cmd,
++						(unsigned char *)hdr,
++						hdr->cmdsn);
++		if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER)
++			return -1;
++
++		if (cmd->sense_reason || cmdsn_ret == CMDSN_LOWER_THAN_EXP) {
++			target_put_sess_cmd(&cmd->se_cmd);
++			return 0;
++		} else if (cmd->unsolicited_data) {
++			iscsit_set_unsoliticed_dataout(cmd);
++		}
++
++	} else if (immed_ret == IMMEDIATE_DATA_ERL1_CRC_FAILURE) {
++		/*
++		 * Immediate Data failed DataCRC and ERL>=1,
++		 * silently drop this PDU and let the initiator
++		 * plug the CmdSN gap.
++		 *
++		 * FIXME: Send Unsolicited NOPIN with reserved
++		 * TTT here to help the initiator figure out
++		 * the missing CmdSN, although they should be
++		 * intelligent enough to determine the missing
++		 * CmdSN and issue a retry to plug the sequence.
++		 */
++		cmd->i_state = ISTATE_REMOVE;
++		iscsit_add_cmd_to_immediate_queue(cmd, conn, cmd->i_state);
++	} else /* immed_ret == IMMEDIATE_DATA_CANNOT_RECOVER */
++		return -1;
++
++	return 0;
++}
++
++static int
++cxgbit_handle_scsi_cmd(struct cxgbit_sock *csk, struct iscsi_cmd *cmd)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_scsi_req *hdr = (struct iscsi_scsi_req *)pdu_cb->hdr;
++	int rc;
++	bool dump_payload = false;
++
++	rc = iscsit_setup_scsi_cmd(conn, cmd, (unsigned char *)hdr);
++	if (rc < 0)
++		return rc;
++
++	if (pdu_cb->dlen && (pdu_cb->dlen == cmd->se_cmd.data_length) &&
++	    (pdu_cb->nr_dfrags == 1))
++		cmd->se_cmd.se_cmd_flags |= SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
++
++	rc = iscsit_process_scsi_cmd(conn, cmd, hdr);
++	if (rc < 0)
++		return 0;
++	else if (rc > 0)
++		dump_payload = true;
++
++	if (!pdu_cb->dlen)
++		return 0;
++
++	return cxgbit_get_immediate_data(cmd, hdr, dump_payload);
++}
++
++static int
++cxgbit_handle_iscsi_dataout(struct cxgbit_sock *csk)
++{
++	struct scatterlist *sg_start;
++	struct iscsi_conn *conn = csk->conn;
++	struct iscsi_cmd *cmd = NULL;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_data *hdr = (struct iscsi_data *)pdu_cb->hdr;
++	u32 data_offset = be32_to_cpu(hdr->offset);
++	u32 data_len = pdu_cb->dlen;
++	int rc, sg_nents, sg_off;
++	bool dcrc_err = false;
++
++	rc = iscsit_check_dataout_hdr(conn, (unsigned char *)hdr, &cmd);
++	if (rc < 0)
++		return rc;
++	else if (!cmd)
++		return 0;
++
++	if (pdu_cb->flags & PDUCBF_RX_DCRC_ERR) {
++		pr_err("ITT: 0x%08x, Offset: %u, Length: %u,"
++		       " DataSN: 0x%08x\n",
++		       hdr->itt, hdr->offset, data_len,
++		       hdr->datasn);
++
++		dcrc_err = true;
++		goto check_payload;
++	}
++
++	pr_debug("DataOut data_len: %u, "
++		"write_data_done: %u, data_length: %u\n",
++		  data_len,  cmd->write_data_done,
++		  cmd->se_cmd.data_length);
++
++	if (!(pdu_cb->flags & PDUCBF_RX_DATA_DDPD)) {
++		sg_off = data_offset / PAGE_SIZE;
++		sg_start = &cmd->se_cmd.t_data_sg[sg_off];
++		sg_nents = max(1UL, DIV_ROUND_UP(data_len, PAGE_SIZE));
++
++		skb_copy_to_sg(csk->skb, sg_start, sg_nents);
++	}
++
++check_payload:
++
++	rc = iscsit_check_dataout_payload(cmd, hdr, dcrc_err);
++	if (rc < 0)
++		return rc;
++
++	return 0;
++}
++
++static int
++cxgbit_handle_nop_out(struct cxgbit_sock *csk, struct iscsi_cmd *cmd)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_nopout *hdr = (struct iscsi_nopout *)pdu_cb->hdr;
++	unsigned char *ping_data = NULL;
++	u32 payload_length = pdu_cb->dlen;
++	int ret;
++
++	ret = iscsit_setup_nop_out(conn, cmd, hdr);
++	if (ret < 0)
++		return 0;
++
++	if (pdu_cb->flags & PDUCBF_RX_DCRC_ERR) {
++		if (!conn->sess->sess_ops->ErrorRecoveryLevel) {
++			pr_err("Unable to recover from"
++			       " NOPOUT Ping DataCRC failure while in"
++			       " ERL=0.\n");
++			ret = -1;
++			goto out;
++		} else {
++			/*
++			 * drop this PDU and let the
++			 * initiator plug the CmdSN gap.
++			 */
++			pr_info("Dropping NOPOUT"
++				" Command CmdSN: 0x%08x due to"
++				" DataCRC error.\n", hdr->cmdsn);
++			ret = 0;
++			goto out;
++		}
++	}
++
++	/*
++	 * Handle NOP-OUT payload for traditional iSCSI sockets
++	 */
++	if (payload_length && hdr->ttt == cpu_to_be32(0xFFFFFFFF)) {
++		ping_data = kzalloc(payload_length + 1, GFP_KERNEL);
++		if (!ping_data) {
++			pr_err("Unable to allocate memory for"
++				" NOPOUT ping data.\n");
++			ret = -1;
++			goto out;
++		}
++
++		skb_copy_bits(csk->skb, pdu_cb->doffset,
++			      ping_data, payload_length);
++
++		ping_data[payload_length] = '\0';
++		/*
++		 * Attach ping data to struct iscsi_cmd->buf_ptr.
++		 */
++		cmd->buf_ptr = ping_data;
++		cmd->buf_ptr_size = payload_length;
++
++		pr_debug("Got %u bytes of NOPOUT ping"
++			" data.\n", payload_length);
++		pr_debug("Ping Data: \"%s\"\n", ping_data);
++	}
++
++	return iscsit_process_nop_out(conn, cmd, hdr);
++out:
++	if (cmd)
++		iscsit_free_cmd(cmd, false);
++	return ret;
++}
++
++static int
++cxgbit_handle_text_cmd(struct cxgbit_sock *csk, struct iscsi_cmd *cmd)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_text *hdr = (struct iscsi_text *)pdu_cb->hdr;
++	u32 payload_length = pdu_cb->dlen;
++	int rc;
++	unsigned char *text_in = NULL;
++
++	rc = iscsit_setup_text_cmd(conn, cmd, hdr);
++	if (rc < 0)
++		return rc;
++
++	if (pdu_cb->flags & PDUCBF_RX_DCRC_ERR) {
++		if (!conn->sess->sess_ops->ErrorRecoveryLevel) {
++			pr_err("Unable to recover from"
++			       " Text Data digest failure while in"
++			       " ERL=0.\n");
++			goto reject;
++		} else {
++			/*
++			 * drop this PDU and let the
++			 * initiator plug the CmdSN gap.
++			 */
++			pr_info("Dropping Text"
++				" Command CmdSN: 0x%08x due to"
++				" DataCRC error.\n", hdr->cmdsn);
++			return 0;
++		}
++	}
++
++	if (payload_length) {
++		text_in = kzalloc(payload_length, GFP_KERNEL);
++		if (!text_in) {
++			pr_err("Unable to allocate text_in of payload_length: %u\n",
++			       payload_length);
++			return -ENOMEM;
++		}
++		skb_copy_bits(csk->skb, pdu_cb->doffset,
++			      text_in, payload_length);
++
++		text_in[payload_length - 1] = '\0';
++
++		cmd->text_in_ptr = text_in;
++	}
++
++	return iscsit_process_text_cmd(conn, cmd, hdr);
 +
 +reject:
-+	cxgbit_release_tid(cdev, tid);
-+rel_skb:
-+	__kfree_skb(skb);
++	return iscsit_reject_cmd(cmd, ISCSI_REASON_PROTOCOL_ERROR,
++				 pdu_cb->hdr);
 +}
 +
-+static u32 tx_flowc_wr_credits(struct cxgbit_sock *csk,
-+			       u32 *nparamsp, u32 *flowclenp)
++static int
++cxgbit_target_rx_opcode(struct cxgbit_sock *csk)
 +{
-+	u32 nparams, flowclen16, flowclen;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_hdr *hdr = (struct iscsi_hdr *)pdu_cb->hdr;
++	struct iscsi_conn *conn = csk->conn;
++	struct iscsi_cmd *cmd = NULL;
++	u8 opcode = (hdr->opcode & ISCSI_OPCODE_MASK);
++	int ret = -EINVAL;
 +
-+	nparams = FLOWC_WR_NPARAMS_MIN;
++	switch (opcode) {
++	case ISCSI_OP_SCSI_CMD:
++		cmd = cxgbit_allocate_cmd(csk);
++		if (!cmd)
++			goto reject;
 +
-+	if (csk->snd_wscale)
-+		nparams++;
++		ret = cxgbit_handle_scsi_cmd(csk, cmd);
++		break;
++	case ISCSI_OP_SCSI_DATA_OUT:
++		ret = cxgbit_handle_iscsi_dataout(csk);
++		break;
++	case ISCSI_OP_NOOP_OUT:
++		if (hdr->ttt == cpu_to_be32(0xFFFFFFFF)) {
++			cmd = cxgbit_allocate_cmd(csk);
++			if (!cmd)
++				goto reject;
++		}
 +
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+	nparams++;
-+#endif
-+	flowclen = offsetof(struct fw_flowc_wr, mnemval[nparams]);
-+	flowclen16 = DIV_ROUND_UP(flowclen, 16);
-+	flowclen = flowclen16 * 16;
++		ret = cxgbit_handle_nop_out(csk, cmd);
++		break;
++	case ISCSI_OP_SCSI_TMFUNC:
++		cmd = cxgbit_allocate_cmd(csk);
++		if (!cmd)
++			goto reject;
++
++		ret = iscsit_handle_task_mgt_cmd(conn, cmd,
++						 (unsigned char *)hdr);
++		break;
++	case ISCSI_OP_TEXT:
++		if (hdr->ttt != cpu_to_be32(0xFFFFFFFF)) {
++			cmd = iscsit_find_cmd_from_itt(conn, hdr->itt);
++			if (!cmd)
++				goto reject;
++		} else {
++			cmd = cxgbit_allocate_cmd(csk);
++			if (!cmd)
++				goto reject;
++		}
++
++		ret = cxgbit_handle_text_cmd(csk, cmd);
++		break;
++	case ISCSI_OP_LOGOUT:
++		cmd = cxgbit_allocate_cmd(csk);
++		if (!cmd)
++			goto reject;
++
++		ret = iscsit_handle_logout_cmd(conn, cmd, (unsigned char *)hdr);
++		if (ret > 0)
++			wait_for_completion_timeout(&conn->conn_logout_comp,
++						    SECONDS_FOR_LOGOUT_COMP
++						    * HZ);
++		break;
++	case ISCSI_OP_SNACK:
++		ret = iscsit_handle_snack(conn, (unsigned char *)hdr);
++		break;
++	default:
++		pr_err("Got unknown iSCSI OpCode: 0x%02x\n", opcode);
++		dump_stack();
++		break;
++	}
++
++	return ret;
++
++reject:
++	return iscsit_add_reject(conn, ISCSI_REASON_BOOKMARK_NO_RESOURCES,
++				 (unsigned char *)hdr);
++	return ret;
++}
++
++static int cxgbit_rx_opcode(struct cxgbit_sock *csk)
++{
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_conn *conn = csk->conn;
++	struct iscsi_hdr *hdr = pdu_cb->hdr;
++	u8 opcode;
++
++	if (pdu_cb->flags & PDUCBF_RX_HCRC_ERR) {
++		atomic_long_inc(&conn->sess->conn_digest_errors);
++		goto transport_err;
++	}
++
++	if (conn->conn_state == TARG_CONN_STATE_IN_LOGOUT)
++		goto transport_err;
++
++	opcode = hdr->opcode & ISCSI_OPCODE_MASK;
++
++	if (conn->sess->sess_ops->SessionType &&
++	    ((!(opcode & ISCSI_OP_TEXT)) ||
++	     (!(opcode & ISCSI_OP_LOGOUT)))) {
++		pr_err("Received illegal iSCSI Opcode: 0x%02x"
++			" while in Discovery Session, rejecting.\n", opcode);
++		iscsit_add_reject(conn, ISCSI_REASON_PROTOCOL_ERROR,
++				  (unsigned char *)hdr);
++		goto transport_err;
++	}
++
++	if (cxgbit_target_rx_opcode(csk) < 0)
++		goto transport_err;
++
++	return 0;
++
++transport_err:
++	return -1;
++}
++
++static int cxgbit_rx_login_pdu(struct cxgbit_sock *csk)
++{
++	struct iscsi_conn *conn = csk->conn;
++	struct iscsi_login *login = conn->login;
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
++	struct iscsi_login_req *login_req;
++
++	login_req = (struct iscsi_login_req *)login->req;
++	memcpy(login_req, pdu_cb->hdr, sizeof(*login_req));
++
++	pr_debug("Got Login Command, Flags 0x%02x, ITT: 0x%08x,"
++		" CmdSN: 0x%08x, ExpStatSN: 0x%08x, CID: %hu, Length: %u\n",
++		login_req->flags, login_req->itt, login_req->cmdsn,
++		login_req->exp_statsn, login_req->cid, pdu_cb->dlen);
 +	/*
-+	 * Return the number of 16-byte credits used by the flowc request.
-+	 * Pass back the nparams and actual flowc length if requested.
++	 * Setup the initial iscsi_login values from the leading
++	 * login request PDU.
 +	 */
-+	if (nparamsp)
-+		*nparamsp = nparams;
-+	if (flowclenp)
-+		*flowclenp = flowclen;
-+	return flowclen16;
-+}
-+
-+u32 send_tx_flowc_wr(struct cxgbit_sock *csk)
-+{
-+	struct cxgbit_device *cdev = csk->com.cdev;
-+	struct fw_flowc_wr *flowc;
-+	u32 nparams, flowclen16, flowclen;
-+	struct sk_buff *skb;
-+	u8 index;
-+
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+	u16 vlan = ((struct l2t_entry *)csk->l2t)->vlan;
-+#endif
-+
-+	flowclen16 = tx_flowc_wr_credits(csk, &nparams, &flowclen);
-+
-+	skb = __skb_dequeue(&csk->skbq);
-+	flowc = (struct fw_flowc_wr *)__skb_put(skb, flowclen);
-+	memset(flowc, 0, flowclen);
-+
-+	flowc->op_to_nparams = cpu_to_be32(FW_WR_OP_V(FW_FLOWC_WR) |
-+					   FW_FLOWC_WR_NPARAMS_V(nparams));
-+	flowc->flowid_len16 = cpu_to_be32(FW_WR_LEN16_V(flowclen16) |
-+					  FW_WR_FLOWID_V(csk->tid));
-+	flowc->mnemval[0].mnemonic = FW_FLOWC_MNEM_PFNVFN;
-+	flowc->mnemval[0].val = cpu_to_be32(FW_PFVF_CMD_PFN_V
-+					    (csk->com.cdev->lldi.pf));
-+	flowc->mnemval[1].mnemonic = FW_FLOWC_MNEM_CH;
-+	flowc->mnemval[1].val = cpu_to_be32(csk->tx_chan);
-+	flowc->mnemval[2].mnemonic = FW_FLOWC_MNEM_PORT;
-+	flowc->mnemval[2].val = cpu_to_be32(csk->tx_chan);
-+	flowc->mnemval[3].mnemonic = FW_FLOWC_MNEM_IQID;
-+	flowc->mnemval[3].val = cpu_to_be32(csk->rss_qid);
-+	flowc->mnemval[4].mnemonic = FW_FLOWC_MNEM_SNDNXT;
-+	flowc->mnemval[4].val = cpu_to_be32(csk->snd_nxt);
-+	flowc->mnemval[5].mnemonic = FW_FLOWC_MNEM_RCVNXT;
-+	flowc->mnemval[5].val = cpu_to_be32(csk->rcv_nxt);
-+	flowc->mnemval[6].mnemonic = FW_FLOWC_MNEM_SNDBUF;
-+	flowc->mnemval[6].val = cpu_to_be32(csk->snd_win);
-+	flowc->mnemval[7].mnemonic = FW_FLOWC_MNEM_MSS;
-+	flowc->mnemval[7].val = cpu_to_be32(csk->emss);
-+
-+	flowc->mnemval[8].mnemonic = FW_FLOWC_MNEM_TXDATAPLEN_MAX;
-+	if (test_bit(CDEV_ISO_ENABLE, &cdev->flags))
-+		flowc->mnemval[8].val = cpu_to_be32(CXGBIT_MAX_ISO_PAYLOAD);
-+	else
-+		flowc->mnemval[8].val = cpu_to_be32(16384);
-+
-+	index = 9;
-+
-+	if (csk->snd_wscale) {
-+		flowc->mnemval[index].mnemonic = FW_FLOWC_MNEM_RCV_SCALE;
-+		flowc->mnemval[index].val = cpu_to_be32(csk->snd_wscale);
-+		index++;
++	if (login->first_request) {
++		login_req = (struct iscsi_login_req *)login->req;
++		login->leading_connection = (!login_req->tsih) ? 1 : 0;
++		login->current_stage	= ISCSI_LOGIN_CURRENT_STAGE(
++				login_req->flags);
++		login->version_min	= login_req->min_version;
++		login->version_max	= login_req->max_version;
++		memcpy(login->isid, login_req->isid, 6);
++		login->cmd_sn		= be32_to_cpu(login_req->cmdsn);
++		login->init_task_tag	= login_req->itt;
++		login->initial_exp_statsn = be32_to_cpu(login_req->exp_statsn);
++		login->cid		= be16_to_cpu(login_req->cid);
++		login->tsih		= be16_to_cpu(login_req->tsih);
 +	}
 +
-+#ifdef CONFIG_CHELSIO_T4_DCB
-+	flowc->mnemval[index].mnemonic = FW_FLOWC_MNEM_DCBPRIO;
-+	if (vlan == VLAN_NONE) {
-+		pr_warn("csk %u without VLAN Tag on DCB Link\n", csk->tid);
-+		flowc->mnemval[index].val = cpu_to_be32(0);
-+	} else
-+		flowc->mnemval[index].val = cpu_to_be32(
-+				(vlan & VLAN_PRIO_MASK) >> VLAN_PRIO_SHIFT);
-+#endif
-+
-+	pr_debug("%s: csk %p; tx_chan = %u; rss_qid = %u; snd_seq = %u;"
-+		 " rcv_seq = %u; snd_win = %u; emss = %u\n",
-+		 __func__, csk, csk->tx_chan, csk->rss_qid, csk->snd_nxt,
-+		 csk->rcv_nxt, csk->snd_win, csk->emss);
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->txq_idx);
-+	cxgbit_ofld_send(csk->com.cdev, skb);
-+	return flowclen16;
-+}
-+
-+int cxgbit_setup_conn_digest(struct cxgbit_sock *csk)
-+{
-+	struct sk_buff *skb;
-+	struct cpl_set_tcb_field *req;
-+	u8 hcrc = csk->submode & 1;
-+	u8 dcrc = csk->submode & 2;
-+	unsigned int len = roundup(sizeof(*req), 16);
-+	int ret;
-+
-+	skb = alloc_skb(len, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	/*  set up ulp submode */
-+	req = (struct cpl_set_tcb_field *)__skb_put(skb, len);
-+	memset(req, 0, len);
-+
-+	INIT_TP_WR(req, csk->tid);
-+	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_SET_TCB_FIELD, csk->tid));
-+	req->reply_ctrl = htons(NO_REPLY_V(0) | QUEUENO_V(csk->rss_qid));
-+	req->word_cookie = htons(0);
-+	req->mask = cpu_to_be64(0x3 << 4);
-+	req->val = cpu_to_be64(((hcrc ? ULP_CRC_HEADER : 0) |
-+				(dcrc ? ULP_CRC_DATA : 0)) << 4);
-+	set_wr_txq(skb, CPL_PRIORITY_CONTROL, csk->ctrlq_idx);
-+
-+	cxgbit_get_csk(csk);
-+	cxgbit_init_wr_wait(&csk->com.wr_wait);
-+
-+	cxgbit_ofld_send(csk->com.cdev, skb);
-+
-+	ret = cxgbit_wait_for_reply(csk->com.cdev,
-+				    &csk->com.wr_wait,
-+				    csk->tid, 5, __func__);
-+	if (ret)
++	if (iscsi_target_check_login_request(conn, login) < 0)
 +		return -1;
++
++	memset(login->req_buf, 0, MAX_KEY_VALUE_PAIRS);
++	skb_copy_bits(csk->skb, pdu_cb->doffset, login->req_buf, pdu_cb->dlen);
 +
 +	return 0;
 +}
 +
-+int cxgbit_setup_conn_pgidx(struct cxgbit_sock *csk, u32 pg_idx)
++static int cxgbit_process_iscsi_pdu(struct cxgbit_sock *csk,
++				    struct sk_buff *skb,
++				    int idx)
 +{
-+	struct sk_buff *skb;
-+	struct cpl_set_tcb_field *req;
-+	unsigned int len = roundup(sizeof(*req), 16);
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb, idx);
 +	int ret;
 +
-+	skb = alloc_skb(len, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
++	cxgbit_rx_pdu_cb(skb) = pdu_cb;
 +
-+	req = (struct cpl_set_tcb_field *)__skb_put(skb, len);
-+	memset(req, 0, len);
++	csk->skb = skb;
 +
-+	INIT_TP_WR(req, csk->tid);
-+	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_SET_TCB_FIELD, csk->tid));
-+	req->reply_ctrl = htons(NO_REPLY_V(0) | QUEUENO_V(csk->rss_qid));
-+	req->word_cookie = htons(0);
-+	req->mask = cpu_to_be64(0x3 << 8);
-+	req->val = cpu_to_be64(pg_idx << 8);
-+	set_wr_txq(skb, CPL_PRIORITY_CONTROL, csk->ctrlq_idx);
-+
-+	cxgbit_get_csk(csk);
-+	cxgbit_init_wr_wait(&csk->com.wr_wait);
-+
-+	cxgbit_ofld_send(csk->com.cdev, skb);
-+
-+	ret = cxgbit_wait_for_reply(csk->com.cdev,
-+				    &csk->com.wr_wait,
-+				    csk->tid, 5, __func__);
-+	if (ret)
-+		return -1;
-+
-+	return 0;
-+}
-+
-+static void cxgbit_pass_open_rpl(struct cxgbit_device *cdev,
-+				 struct sk_buff *skb)
-+{
-+	struct cpl_pass_open_rpl *rpl = cplhdr(skb);
-+	struct tid_info *t = cdev->lldi.tids;
-+	unsigned int stid = GET_TID(rpl);
-+	struct cxgbit_np *cnp = lookup_stid(t, stid);
-+
-+	pr_debug("%s: cnp = %p; stid = %u; status = %d\n",
-+		 __func__, cnp, stid, rpl->status);
-+
-+	if (!cnp) {
-+		pr_info("%s stid %d lookup failure\n", __func__, stid);
-+		return;
++	if (!test_bit(CSK_LOGIN_DONE, &csk->com.flags)) {
++		ret = cxgbit_rx_login_pdu(csk);
++		set_bit(CSK_LOGIN_PDU_DONE, &csk->com.flags);
++	} else {
++		ret = cxgbit_rx_opcode(csk);
 +	}
 +
-+	cxgbit_wake_up(&cnp->com.wr_wait, __func__, rpl->status);
-+	cxgbit_put_cnp(cnp);
++	return ret;
 +}
 +
-+static void cxgbit_close_listsrv_rpl(struct cxgbit_device *cdev,
-+				     struct sk_buff *skb)
++static void cxgbit_lro_skb_dump(struct sk_buff *skb)
 +{
-+	struct cpl_close_listsvr_rpl *rpl = cplhdr(skb);
-+	struct tid_info *t = cdev->lldi.tids;
-+	unsigned int stid = GET_TID(rpl);
-+	struct cxgbit_np *cnp = lookup_stid(t, stid);
++	struct skb_shared_info *ssi = skb_shinfo(skb);
++	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb, 0);
++	int i;
 +
-+	pr_debug("%s: cnp = %p; stid = %u; status = %d\n",
-+		 __func__, cnp, stid, rpl->status);
++	pr_info("skb 0x%p, head 0x%p, 0x%p, len %u,%u, frags %u.\n",
++		skb, skb->head, skb->data, skb->len, skb->data_len,
++		ssi->nr_frags);
++	pr_info("skb 0x%p, lro_cb, csk 0x%p, pdu %u, %u.\n",
++		skb, lro_cb->csk, lro_cb->pdu_cnt, lro_cb->pdu_totallen);
 +
-+	if (!cnp) {
-+		pr_info("%s stid %d lookup failure\n", __func__, stid);
-+		return;
++	for (i = 0; i < lro_cb->pdu_cnt; i++, pdu_cb++)
++		pr_info("skb 0x%p, pdu %d, %u, f 0x%x, seq 0x%x, dcrc 0x%x, "
++			"frags %u.\n",
++			skb, i, pdu_cb->pdulen, pdu_cb->flags, pdu_cb->seq,
++			pdu_cb->ddigest, pdu_cb->frags);
++	for (i = 0; i < ssi->nr_frags; i++)
++		pr_info("skb 0x%p, frag %d, off %u, sz %u.\n",
++			skb, i, ssi->frags[i].page_offset, ssi->frags[i].size);
++}
++
++static void cxgbit_lro_skb_hold_done(struct cxgbit_sock *csk)
++{
++	struct sk_buff *skb = csk->lro_skb_hold;
++	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
++
++	if (lro_cb->release) {
++		struct skb_shared_info *ssi = skb_shinfo(skb);
++		int i;
++
++		memset(skb->data, 0, LRO_SKB_MIN_HEADROOM);
++		for (i = 0; i < ssi->nr_frags; i++)
++			put_page(skb_frag_page(&ssi->frags[i]));
++		ssi->nr_frags = 0;
++	}
++}
++
++static void cxgbit_lro_skb_merge(struct cxgbit_sock *csk,
++				 struct sk_buff *skb,
++				 int pdu_idx)
++{
++	struct sk_buff *hskb = csk->lro_skb_hold;
++	struct skb_shared_info *hssi = skb_shinfo(hskb);
++	struct cxgbit_lro_cb *hlro_cb = cxgbit_skb_lro_cb(hskb);
++	struct cxgbit_lro_pdu_cb *hpdu_cb = cxgbit_skb_lro_pdu_cb(hskb, 0);
++	struct skb_shared_info *ssi = skb_shinfo(skb);
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb, pdu_idx);
++	int frag_idx = 0;
++	int hfrag_idx = 0;
++
++	/* either 1st or last */
++	if (pdu_idx)
++		frag_idx = ssi->nr_frags - pdu_cb->frags;
++
++	if (pdu_cb->flags & PDUCBF_RX_HDR) {
++		unsigned int len = 0;
++
++		cxgbit_lro_skb_hold_done(csk);
++
++		hlro_cb->csk = csk;
++		hlro_cb->pdu_cnt = 1;
++		hlro_cb->release = true;
++
++		hpdu_cb->flags = pdu_cb->flags;
++		hpdu_cb->seq = pdu_cb->seq;
++		hpdu_cb->hdr = pdu_cb->hdr;
++		hpdu_cb->hlen = pdu_cb->hlen;
++
++		memcpy(&hssi->frags[hfrag_idx], &ssi->frags[frag_idx],
++		       sizeof(skb_frag_t));
++		get_page(skb_frag_page(&hssi->frags[hfrag_idx]));
++		frag_idx++;
++		hfrag_idx++;
++		hssi->nr_frags = 1;
++		hpdu_cb->frags = 1;
++
++		len = hssi->frags[0].size;
++		hskb->len = len;
++		hskb->data_len = len;
++		hskb->truesize = len;
 +	}
 +
-+	cxgbit_wake_up(&cnp->com.wr_wait, __func__, rpl->status);
-+	cxgbit_put_cnp(cnp);
++	if (pdu_cb->flags & PDUCBF_RX_DATA) {
++		unsigned int len = 0;
++		int i, n;
++
++		hpdu_cb->flags |= pdu_cb->flags;
++
++		for (i = 1, n = hfrag_idx; n < pdu_cb->frags;
++				i++, frag_idx++, n++) {
++			memcpy(&hssi->frags[i], &ssi->frags[frag_idx],
++			       sizeof(skb_frag_t));
++			get_page(skb_frag_page(&hssi->frags[i]));
++			len += hssi->frags[i].size;
++
++			hssi->nr_frags++;
++			hpdu_cb->frags++;
++		}
++
++		hpdu_cb->dlen = pdu_cb->dlen;
++		hpdu_cb->doffset = hpdu_cb->hlen;
++		hpdu_cb->nr_dfrags = pdu_cb->nr_dfrags;
++		hpdu_cb->dfrag_index = 1;
++		hskb->len += len;
++		hskb->data_len += len;
++		hskb->truesize += len;
++	}
++
++	if (pdu_cb->flags & PDUCBF_RX_STATUS) {
++		hpdu_cb->flags |= pdu_cb->flags;
++		hpdu_cb->ddigest = pdu_cb->ddigest;
++		hpdu_cb->pdulen = pdu_cb->pdulen;
++		hlro_cb->pdu_totallen = pdu_cb->pdulen;
++	}
 +}
 +
-+static void cxgbit_pass_establish(struct cxgbit_device *cdev,
++static int cxgbit_process_lro_skb(struct cxgbit_sock *csk,
 +				  struct sk_buff *skb)
 +{
-+	struct cpl_pass_establish *req = cplhdr(skb);
-+	struct tid_info *t = cdev->lldi.tids;
-+	unsigned int tid = GET_TID(req);
-+	struct cxgbit_sock *csk;
-+	struct cxgbit_np *cnp;
-+	u16 tcp_opt = be16_to_cpu(req->tcp_opt);
-+	u32 snd_isn = be32_to_cpu(req->snd_isn);
-+	u32 rcv_isn = be32_to_cpu(req->rcv_isn);
++	struct sk_buff *hskb = csk->lro_skb_hold;
++	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb, 0);
++	int last = lro_cb->pdu_cnt - 1;
++	int i = 0;
++	int err = 0;
++	unsigned int offset = 0;
 +
-+	csk = lookup_tid(t, tid);
-+	if (unlikely(!csk)) {
-+		pr_err("can't find connection for tid %u.\n", tid);
-+		goto rel_skb;
++	if (!(pdu_cb->flags & PDUCBF_RX_HDR)) {
++		cxgbit_lro_skb_merge(csk, skb, 0);
++
++		if (pdu_cb->flags & PDUCBF_RX_STATUS) {
++			err = cxgbit_process_iscsi_pdu(csk, hskb, 0);
++			if (err < 0)
++				goto done;
++
++			if (pdu_cb->frags) {
++				struct skb_shared_info *ssi = skb_shinfo(skb);
++				int k;
++
++				for (k = 0; k < pdu_cb->frags; k++)
++					offset += ssi->frags[k].size;
++			}
++		}
++		i = 1;
 +	}
-+	cnp = csk->cnp;
 +
-+	pr_debug("%s: csk %p; tid %u; cnp %p\n",
-+		 __func__, csk, tid, cnp);
++	for (; i < last; i++, pdu_cb++) {
++		err = cxgbit_process_iscsi_pdu(csk, skb, i);
++		if (err < 0)
++			goto done;
++	}
 +
-+	csk->write_seq = snd_isn;
-+	csk->snd_una = snd_isn;
-+	csk->snd_nxt = snd_isn;
++	if (i == last) {
++		pdu_cb = cxgbit_skb_lro_pdu_cb(skb, last);
++		if (!(pdu_cb->flags & PDUCBF_RX_STATUS)) {
++			cxgbit_lro_skb_merge(csk, skb, last);
++		} else {
++			err = cxgbit_process_iscsi_pdu(csk, skb, last);
++			if (err < 0)
++				goto done;
++		}
++	}
 +
-+	csk->rcv_nxt = rcv_isn;
-+
-+	if (csk->rcv_win > (RCV_BUFSIZ_M << 10))
-+		csk->rx_credits = (csk->rcv_win - (RCV_BUFSIZ_M << 10));
-+
-+	csk->snd_wscale = TCPOPT_SND_WSCALE_G(tcp_opt);
-+	set_emss(csk, tcp_opt);
-+	dst_confirm(csk->dst);
-+	csk->com.state = CSK_STATE_ESTABLISHED;
-+	spin_lock_bh(&cnp->np_accept_lock);
-+	list_add_tail(&csk->accept_node, &cnp->np_accept_list);
-+	spin_unlock_bh(&cnp->np_accept_lock);
-+	complete(&cnp->accept_comp);
-+rel_skb:
-+	__kfree_skb(skb);
++done:
++	return err;
 +}
 +
-+static void cxgbit_queue_rx_skb(struct cxgbit_sock *csk,
-+				struct sk_buff *skb)
++static int cxgbit_rx_lro_skb(struct cxgbit_sock *csk, struct sk_buff *skb)
 +{
-+	cxgbit_skcb_flags(skb) = 0;
++	struct cxgbit_lro_cb *lro_cb = cxgbit_skb_lro_cb(skb);
++	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_skb_lro_pdu_cb(skb, 0);
++	int ret = -1;
++
++	if ((pdu_cb->flags & PDUCBF_RX_HDR) &&
++	    (pdu_cb->seq != csk->rcv_nxt)) {
++		pr_info("csk 0x%p, tid 0x%x, seq 0x%x != 0x%x.\n",
++			csk, csk->tid, pdu_cb->seq, csk->rcv_nxt);
++		cxgbit_lro_skb_dump(skb);
++		return ret;
++	}
++
++	/* partial pdus */
++	if (!lro_cb->pdu_cnt) {
++		lro_cb->pdu_cnt = 1;
++	} else {
++		pdu_cb = cxgbit_skb_lro_pdu_cb(skb, lro_cb->pdu_cnt);
++
++		if ((!(pdu_cb->flags & PDUCBF_RX_STATUS)) &&
++		    pdu_cb->frags)
++			lro_cb->pdu_cnt++;
++	}
++
++	csk->rcv_nxt += lro_cb->pdu_totallen;
++
++	skb_reset_transport_header(skb);
++	ret = cxgbit_process_lro_skb(csk, skb);
++
++	csk->rx_credits += lro_cb->pdu_totallen;
++
++	if (csk->rx_credits >= (csk->rcv_win / 4))
++		cxgbit_rx_data_ack(csk);
++
++	return ret;
++}
++
++static int
++cxgbit_rx_skb(struct cxgbit_sock *csk, struct sk_buff *skb)
++{
++	int ret = -1;
++
++	if (likely(cxgbit_skcb_flags(skb) & SKCBF_RX_LRO))
++		ret = cxgbit_rx_lro_skb(csk, skb);
++
++	__kfree_skb(skb);
++	return ret;
++}
++
++static bool cxgbit_rxq_len(struct cxgbit_sock *csk,
++			   struct sk_buff_head *rxq)
++{
 +	spin_lock_bh(&csk->rxq.lock);
-+	__skb_queue_tail(&csk->rxq, skb);
++	if (skb_queue_len(&csk->rxq)) {
++		skb_queue_splice_init(&csk->rxq, rxq);
++		spin_unlock_bh(&csk->rxq.lock);
++		return true;
++	}
 +	spin_unlock_bh(&csk->rxq.lock);
-+	wake_up(&csk->waitq);
-+}
-+
-+static void cxgbit_peer_close(struct cxgbit_sock *csk,
-+			      struct sk_buff *skb)
-+{
-+	pr_debug("%s: csk %p; tid %u; state %d\n",
-+		 __func__, csk, csk->tid, csk->com.state);
-+
-+	switch (csk->com.state) {
-+	case CSK_STATE_ESTABLISHED:
-+		csk->com.state = CSK_STATE_CLOSING;
-+		cxgbit_queue_rx_skb(csk, skb);
-+		return;
-+	case CSK_STATE_CLOSING:
-+		/* simultaneous close */
-+		csk->com.state = CSK_STATE_MORIBUND;
-+		break;
-+	case CSK_STATE_MORIBUND:
-+		csk->com.state = CSK_STATE_DEAD;
-+		cxgbit_put_csk(csk);
-+		break;
-+	case CSK_STATE_ABORTING:
-+		break;
-+	default:
-+		pr_info("%s: cpl_peer_close in bad state %d\n",
-+			__func__, csk->com.state);
-+	}
-+
-+	__kfree_skb(skb);
-+}
-+
-+static void cxgbit_close_con_rpl(struct cxgbit_sock *csk,
-+				 struct sk_buff *skb)
-+{
-+	pr_debug("%s: csk %p; tid %u; state %d\n",
-+		 __func__, csk, csk->tid, csk->com.state);
-+
-+	switch (csk->com.state) {
-+	case CSK_STATE_CLOSING:
-+		csk->com.state = CSK_STATE_MORIBUND;
-+		break;
-+	case CSK_STATE_MORIBUND:
-+		csk->com.state = CSK_STATE_DEAD;
-+		cxgbit_put_csk(csk);
-+		break;
-+	case CSK_STATE_ABORTING:
-+	case CSK_STATE_DEAD:
-+		break;
-+	default:
-+		pr_info("%s: cpl_close_con_rpl in bad state %d\n",
-+			__func__, csk->com.state);
-+	}
-+
-+	__kfree_skb(skb);
-+}
-+
-+static void cxgbit_abort_req_rss(struct cxgbit_sock *csk,
-+				 struct sk_buff *skb)
-+{
-+	struct cpl_abort_req_rss *hdr = cplhdr(skb);
-+	unsigned int tid = GET_TID(hdr);
-+	struct cpl_abort_rpl *rpl;
-+	struct sk_buff *rpl_skb;
-+	bool release = false;
-+	bool wakeup_thread = false;
-+	unsigned int len = roundup(sizeof(*rpl), 16);
-+
-+	pr_debug("%s: csk %p; tid %u; state %d\n",
-+		 __func__, csk, tid, csk->com.state);
-+
-+	if (is_neg_adv(hdr->status)) {
-+		pr_err("%s: got neg advise %d on tid %u\n",
-+		       __func__, hdr->status, tid);
-+		goto rel_skb;
-+	}
-+
-+	switch (csk->com.state) {
-+	case CSK_STATE_CONNECTING:
-+	case CSK_STATE_MORIBUND:
-+		csk->com.state = CSK_STATE_DEAD;
-+		release = true;
-+		break;
-+	case CSK_STATE_ESTABLISHED:
-+		csk->com.state = CSK_STATE_DEAD;
-+		wakeup_thread = true;
-+		break;
-+	case CSK_STATE_CLOSING:
-+		csk->com.state = CSK_STATE_DEAD;
-+		if (!csk->conn)
-+			release = true;
-+		break;
-+	case CSK_STATE_ABORTING:
-+		break;
-+	default:
-+		pr_info("%s: cpl_abort_req_rss in bad state %d\n",
-+			__func__, csk->com.state);
-+		csk->com.state = CSK_STATE_DEAD;
-+	}
-+
-+	__skb_queue_purge(&csk->txq);
-+
-+	if (!test_and_set_bit(CSK_TX_DATA_SENT, &csk->com.flags))
-+		send_tx_flowc_wr(csk);
-+
-+	rpl_skb = __skb_dequeue(&csk->skbq);
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->txq_idx);
-+
-+	rpl = (struct cpl_abort_rpl *)__skb_put(rpl_skb, len);
-+	memset(rpl, 0, len);
-+
-+	INIT_TP_WR(rpl, csk->tid);
-+	OPCODE_TID(rpl) = cpu_to_be32(MK_OPCODE_TID(CPL_ABORT_RPL, tid));
-+	rpl->cmd = CPL_ABORT_NO_RST;
-+	cxgbit_ofld_send(csk->com.cdev, rpl_skb);
-+
-+	if (wakeup_thread) {
-+		cxgbit_queue_rx_skb(csk, skb);
-+		return;
-+	}
-+
-+	if (release)
-+		cxgbit_put_csk(csk);
-+rel_skb:
-+	__kfree_skb(skb);
-+}
-+
-+static void cxgbit_abort_rpl_rss(struct cxgbit_sock *csk,
-+				 struct sk_buff *skb)
-+{
-+	pr_debug("%s: csk %p; tid %u; state %d\n",
-+		 __func__, csk, csk->tid, csk->com.state);
-+
-+	switch (csk->com.state) {
-+	case CSK_STATE_ABORTING:
-+		csk->com.state = CSK_STATE_DEAD;
-+		cxgbit_put_csk(csk);
-+		break;
-+	default:
-+		pr_info("%s: cpl_abort_rpl_rss in state %d\n",
-+			__func__, csk->com.state);
-+	}
-+
-+	__kfree_skb(skb);
-+}
-+
-+static bool cxgbit_credit_err(const struct cxgbit_sock *csk)
-+{
-+	const struct sk_buff *skb = csk->wr_pending_head;
-+	u32 credit = 0;
-+
-+	if (unlikely(csk->wr_cred > csk->wr_max_cred)) {
-+		pr_err("csk 0x%p, tid %u, credit %u > %u\n",
-+		       csk, csk->tid, csk->wr_cred, csk->wr_max_cred);
-+		return true;
-+	}
-+
-+	while (skb) {
-+		credit += skb->csum;
-+		skb = cxgbit_skcb_tx_wr_next(skb);
-+	}
-+
-+	if (unlikely((csk->wr_cred + credit) != csk->wr_max_cred)) {
-+		pr_err("csk 0x%p, tid %u, credit %u + %u != %u.\n",
-+		       csk, csk->tid, csk->wr_cred,
-+		       credit, csk->wr_max_cred);
-+
-+		return true;
-+	}
-+
 +	return false;
 +}
 +
-+static void cxgbit_fw4_ack(struct cxgbit_sock *csk, struct sk_buff *skb)
++static int cxgbit_wait_rxq(struct cxgbit_sock *csk)
 +{
-+	struct cpl_fw4_ack *rpl = (struct cpl_fw4_ack *)cplhdr(skb);
-+	u32 credits = rpl->credits;
-+	u32 snd_una = ntohl(rpl->snd_una);
++	struct sk_buff *skb;
++	struct sk_buff_head rxq;
 +
-+	csk->wr_cred += credits;
-+	if (csk->wr_una_cred > (csk->wr_max_cred - csk->wr_cred))
-+		csk->wr_una_cred = csk->wr_max_cred - csk->wr_cred;
++	skb_queue_head_init(&rxq);
 +
-+	while (credits) {
-+		struct sk_buff *p = cxgbit_sock_peek_wr(csk);
++	wait_event_interruptible(csk->waitq, cxgbit_rxq_len(csk, &rxq));
 +
-+		if (unlikely(!p)) {
-+			pr_err("csk 0x%p,%u, cr %u,%u+%u, empty.\n",
-+			       csk, csk->tid, credits,
-+			       csk->wr_cred, csk->wr_una_cred);
-+			break;
-+		}
++	if (signal_pending(current))
++		goto out;
 +
-+		if (unlikely(credits < p->csum)) {
-+			pr_warn("csk 0x%p,%u, cr %u,%u+%u, < %u.\n",
-+				csk,  csk->tid,
-+				credits, csk->wr_cred, csk->wr_una_cred,
-+				p->csum);
-+			p->csum -= credits;
-+			break;
-+		}
-+
-+		cxgbit_sock_dequeue_wr(csk);
-+		credits -= p->csum;
-+		kfree_skb(p);
++	while ((skb = __skb_dequeue(&rxq))) {
++		if (cxgbit_rx_skb(csk, skb))
++			goto out;
 +	}
 +
-+	if (unlikely(cxgbit_credit_err(csk))) {
-+		cxgbit_queue_rx_skb(csk, skb);
-+		return;
-+	}
++	return 0;
++out:
++	__skb_queue_purge(&rxq);
++	return -1;
++}
 +
-+	if (rpl->seq_vld & CPL_FW4_ACK_FLAGS_SEQVAL) {
-+		if (unlikely(before(snd_una, csk->snd_una))) {
-+			pr_warn("csk 0x%p,%u, snd_una %u/%u.",
-+				csk, csk->tid, snd_una,
-+				csk->snd_una);
-+			goto rel_skb;
-+		}
++int cxgbit_get_login_rx(struct iscsi_conn *conn,
++			struct iscsi_login *login)
++{
++	struct cxgbit_sock *csk = conn->context;
++	int ret = -1;
 +
-+		if (csk->snd_una != snd_una) {
-+			csk->snd_una = snd_una;
-+			dst_confirm(csk->dst);
-+			wake_up(&csk->ack_waitq);
++	while (!test_and_clear_bit(CSK_LOGIN_PDU_DONE, &csk->com.flags)) {
++		ret = cxgbit_wait_rxq(csk);
++		if (ret) {
++			clear_bit(CSK_LOGIN_PDU_DONE, &csk->com.flags);
++			break;
 +		}
 +	}
 +
-+	if (skb_queue_len(&csk->txq))
-+		push_tx_frames(csk);
-+
-+rel_skb:
-+	__kfree_skb(skb);
++	return ret;
 +}
 +
-+static void cxgbit_set_tcb_rpl(struct cxgbit_device *cdev,
-+			       struct sk_buff *skb)
++void cxgbit_rx_pdu(struct iscsi_conn *conn)
 +{
-+	struct cxgbit_sock *csk;
-+	struct cpl_set_tcb_rpl *rpl = (struct cpl_set_tcb_rpl *)skb->data;
-+	unsigned int tid = GET_TID(rpl);
-+	struct cxgb4_lld_info *lldi = &cdev->lldi;
-+	struct tid_info *t = lldi->tids;
++	struct cxgbit_sock *csk = conn->context;
 +
-+	csk = lookup_tid(t, tid);
-+	if (unlikely(!csk))
-+		pr_err("can't find connection for tid %u.\n", tid);
-+	else
-+		cxgbit_wake_up(&csk->com.wr_wait, __func__, rpl->status);
-+
-+	cxgbit_put_csk(csk);
-+}
-+
-+static void cxgbit_rx_data(struct cxgbit_device *cdev, struct sk_buff *skb)
-+{
-+	struct cxgbit_sock *csk;
-+	struct cpl_rx_data *cpl = cplhdr(skb);
-+	unsigned int tid = GET_TID(cpl);
-+	struct cxgb4_lld_info *lldi = &cdev->lldi;
-+	struct tid_info *t = lldi->tids;
-+
-+	csk = lookup_tid(t, tid);
-+	if (unlikely(!csk)) {
-+		pr_err("can't find conn. for tid %u.\n", tid);
-+		goto rel_skb;
++	while (!kthread_should_stop()) {
++		iscsit_thread_check_cpumask(conn, current, 0);
++		if (cxgbit_wait_rxq(csk))
++			return;
 +	}
-+
-+	cxgbit_queue_rx_skb(csk, skb);
-+	return;
-+rel_skb:
-+	__kfree_skb(skb);
 +}
-+
-+static void __cxgbit_process_rx_cpl(struct cxgbit_sock *csk,
-+				    struct sk_buff *skb)
-+{
-+	spin_lock(&csk->lock);
-+	if (csk->lock_owner) {
-+		__skb_queue_tail(&csk->backlogq, skb);
-+		spin_unlock(&csk->lock);
-+		return;
-+	}
-+
-+	cxgbit_skcb_rx_backlog_fn(skb)(csk, skb);
-+	spin_unlock(&csk->lock);
-+}
-+
-+static void cxgbit_process_rx_cpl(struct cxgbit_sock *csk,
-+				  struct sk_buff *skb)
-+{
-+	cxgbit_get_csk(csk);
-+	__cxgbit_process_rx_cpl(csk, skb);
-+	cxgbit_put_csk(csk);
-+}
-+
-+static void cxgbit_rx_cpl(struct cxgbit_device *cdev, struct sk_buff *skb)
-+{
-+	struct cxgbit_sock *csk;
-+	struct cpl_tx_data *cpl = cplhdr(skb);
-+	struct cxgb4_lld_info *lldi = &cdev->lldi;
-+	struct tid_info *t = lldi->tids;
-+	unsigned int tid = GET_TID(cpl);
-+	u8 opcode = cxgbit_skcb_rx_opcode(skb);
-+	bool ref = true;
-+
-+	switch (opcode) {
-+	case CPL_FW4_ACK:
-+			cxgbit_skcb_rx_backlog_fn(skb) = cxgbit_fw4_ack;
-+			ref = false;
-+			break;
-+	case CPL_PEER_CLOSE:
-+			cxgbit_skcb_rx_backlog_fn(skb) = cxgbit_peer_close;
-+			break;
-+	case CPL_CLOSE_CON_RPL:
-+			cxgbit_skcb_rx_backlog_fn(skb) = cxgbit_close_con_rpl;
-+			break;
-+	case CPL_ABORT_REQ_RSS:
-+			cxgbit_skcb_rx_backlog_fn(skb) = cxgbit_abort_req_rss;
-+			break;
-+	case CPL_ABORT_RPL_RSS:
-+			cxgbit_skcb_rx_backlog_fn(skb) = cxgbit_abort_rpl_rss;
-+			break;
-+	default:
-+		goto rel_skb;
-+	}
-+
-+	csk = lookup_tid(t, tid);
-+	if (unlikely(!csk)) {
-+		pr_err("can't find conn. for tid %u.\n", tid);
-+		goto rel_skb;
-+	}
-+
-+	if (ref)
-+		cxgbit_process_rx_cpl(csk, skb);
-+	else
-+		__cxgbit_process_rx_cpl(csk, skb);
-+
-+	return;
-+rel_skb:
-+	__kfree_skb(skb);
-+}
-+
-+cxgbit_cplhandler_func cxgbit_cplhandlers[NUM_CPL_CMDS] = {
-+	[CPL_PASS_OPEN_RPL]	= cxgbit_pass_open_rpl,
-+	[CPL_CLOSE_LISTSRV_RPL] = cxgbit_close_listsrv_rpl,
-+	[CPL_PASS_ACCEPT_REQ]	= cxgbit_pass_accept_req,
-+	[CPL_PASS_ESTABLISH]	= cxgbit_pass_establish,
-+	[CPL_SET_TCB_RPL]	= cxgbit_set_tcb_rpl,
-+	[CPL_RX_DATA]		= cxgbit_rx_data,
-+	[CPL_FW4_ACK]		= cxgbit_rx_cpl,
-+	[CPL_PEER_CLOSE]	= cxgbit_rx_cpl,
-+	[CPL_CLOSE_CON_RPL]	= cxgbit_rx_cpl,
-+	[CPL_ABORT_REQ_RSS]	= cxgbit_rx_cpl,
-+	[CPL_ABORT_RPL_RSS]	= cxgbit_rx_cpl,
-+};
 -- 
 2.0.2
-
