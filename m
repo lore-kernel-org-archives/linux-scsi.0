@@ -1,213 +1,70 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [RFC 04/34] cxgb4, iw_cxgb4: move definitions to common header file
-Date: Sun, 14 Feb 2016 23:04:08 +0530
-Message-ID: <b490e05c0a2faf601ec885276fcbc068a0eb9281.1455467089.git.varun@chelsio.com>
+Subject: [RFC 06/34] cxgb4, cxgb4i: move struct cpl_rx_data_ddp definition
+Date: Sun, 14 Feb 2016 23:07:37 +0530
+Message-ID: <2e4101f9c306049896ffff513b575e3ba61f93d9.1455467089.git.varun@chelsio.com>
 References: <cover.1455467089.git.varun@chelsio.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <cover.1455467089.git.varun@chelsio.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: nab@linux-iscsi.org, roland@kernel.org, davem@davemloft.net, dledford@redhat.com, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
+Cc: nab@linux-iscsi.org, roland@kernel.org, davem@davemloft.net, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-move struct tcp_options, struct cpl_pass_accept_req,
-enum defining congestion control algorithms
-and associated macros to common header file t4_msg.h
+move struct cpl_rx_data_ddp definition to
+common header file t4_msg.h.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/infiniband/hw/cxgb4/t4fw_ri_api.h   | 81 -----------------------------
- drivers/net/ethernet/chelsio/cxgb4/t4_msg.h | 81 +++++++++++++++++++++++++++++
- 2 files changed, 81 insertions(+), 81 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb4/t4_msg.h | 15 +++++++++++++++
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.h          | 12 ------------
+ 2 files changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h b/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h
-index 343e8daf..5b66da3 100644
---- a/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h
-+++ b/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h
-@@ -753,71 +753,6 @@ struct fw_ri_wr {
- #define FW_RI_WR_P2PTYPE_G(x)	\
- 	(((x) >> FW_RI_WR_P2PTYPE_S) & FW_RI_WR_P2PTYPE_M)
- 
--struct tcp_options {
--	__be16 mss;
--	__u8 wsf;
--#if defined(__LITTLE_ENDIAN_BITFIELD)
--	__u8:4;
--	__u8 unknown:1;
--	__u8:1;
--	__u8 sack:1;
--	__u8 tstamp:1;
--#else
--	__u8 tstamp:1;
--	__u8 sack:1;
--	__u8:1;
--	__u8 unknown:1;
--	__u8:4;
--#endif
--};
--
--struct cpl_pass_accept_req {
--	union opcode_tid ot;
--	__be16 rsvd;
--	__be16 len;
--	__be32 hdr_len;
--	__be16 vlan;
--	__be16 l2info;
--	__be32 tos_stid;
--	struct tcp_options tcpopt;
--};
--
--/* cpl_pass_accept_req.hdr_len fields */
--#define SYN_RX_CHAN_S    0
--#define SYN_RX_CHAN_M    0xF
--#define SYN_RX_CHAN_V(x) ((x) << SYN_RX_CHAN_S)
--#define SYN_RX_CHAN_G(x) (((x) >> SYN_RX_CHAN_S) & SYN_RX_CHAN_M)
--
--#define TCP_HDR_LEN_S    10
--#define TCP_HDR_LEN_M    0x3F
--#define TCP_HDR_LEN_V(x) ((x) << TCP_HDR_LEN_S)
--#define TCP_HDR_LEN_G(x) (((x) >> TCP_HDR_LEN_S) & TCP_HDR_LEN_M)
--
--#define IP_HDR_LEN_S    16
--#define IP_HDR_LEN_M    0x3FF
--#define IP_HDR_LEN_V(x) ((x) << IP_HDR_LEN_S)
--#define IP_HDR_LEN_G(x) (((x) >> IP_HDR_LEN_S) & IP_HDR_LEN_M)
--
--#define ETH_HDR_LEN_S    26
--#define ETH_HDR_LEN_M    0x1F
--#define ETH_HDR_LEN_V(x) ((x) << ETH_HDR_LEN_S)
--#define ETH_HDR_LEN_G(x) (((x) >> ETH_HDR_LEN_S) & ETH_HDR_LEN_M)
--
--/* cpl_pass_accept_req.l2info fields */
--#define SYN_MAC_IDX_S    0
--#define SYN_MAC_IDX_M    0x1FF
--#define SYN_MAC_IDX_V(x) ((x) << SYN_MAC_IDX_S)
--#define SYN_MAC_IDX_G(x) (((x) >> SYN_MAC_IDX_S) & SYN_MAC_IDX_M)
--
--#define SYN_XACT_MATCH_S    9
--#define SYN_XACT_MATCH_V(x) ((x) << SYN_XACT_MATCH_S)
--#define SYN_XACT_MATCH_F    SYN_XACT_MATCH_V(1U)
--
--#define SYN_INTF_S    12
--#define SYN_INTF_M    0xF
--#define SYN_INTF_V(x) ((x) << SYN_INTF_S)
--#define SYN_INTF_G(x) (((x) >> SYN_INTF_S) & SYN_INTF_M)
--
- struct ulptx_idata {
- 	__be32 cmd_more;
- 	__be32 len;
-@@ -836,20 +771,4 @@ struct ulptx_idata {
- #define RX_DACK_CHANGE_V(x) ((x) << RX_DACK_CHANGE_S)
- #define RX_DACK_CHANGE_F    RX_DACK_CHANGE_V(1U)
- 
--enum {                     /* TCP congestion control algorithms */
--	CONG_ALG_RENO,
--	CONG_ALG_TAHOE,
--	CONG_ALG_NEWRENO,
--	CONG_ALG_HIGHSPEED
--};
--
--#define CONG_CNTRL_S    14
--#define CONG_CNTRL_M    0x3
--#define CONG_CNTRL_V(x) ((x) << CONG_CNTRL_S)
--#define CONG_CNTRL_G(x) (((x) >> CONG_CNTRL_S) & CONG_CNTRL_M)
--
--#define T5_ISS_S    18
--#define T5_ISS_V(x) ((x) << T5_ISS_S)
--#define T5_ISS_F    T5_ISS_V(1U)
--
- #endif /* _T4FW_RI_API_H_ */
 diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-index a072d34..5753bd4 100644
+index 8cfc6a8..7279245 100644
 --- a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
 +++ b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-@@ -344,6 +344,87 @@ struct cpl_pass_open_rpl {
- 	u8 status;
- };
+@@ -899,6 +899,21 @@ struct cpl_iscsi_hdr {
+ #define ISCSI_DDP_V(x) ((x) << ISCSI_DDP_S)
+ #define ISCSI_DDP_F    ISCSI_DDP_V(1U)
  
-+struct tcp_options {
-+	__be16 mss;
-+	__u8 wsf;
-+#if defined(__LITTLE_ENDIAN_BITFIELD)
-+	__u8:4;
-+	__u8 unknown:1;
-+	__u8:1;
-+	__u8 sack:1;
-+	__u8 tstamp:1;
-+#else
-+	__u8 tstamp:1;
-+	__u8 sack:1;
-+	__u8:1;
-+	__u8 unknown:1;
-+	__u8:4;
-+#endif
-+};
-+
-+struct cpl_pass_accept_req {
++struct cpl_rx_data_ddp {
 +	union opcode_tid ot;
-+	__be16 rsvd;
++	__be16 urg;
 +	__be16 len;
-+	__be32 hdr_len;
-+	__be16 vlan;
-+	__be16 l2info;
-+	__be32 tos_stid;
-+	struct tcp_options tcpopt;
++	__be32 seq;
++	union {
++		__be32 nxt_seq;
++		__be32 ddp_report;
++	};
++	__be32 ulp_crc;
++	__be32 ddpvld;
 +};
 +
-+/* cpl_pass_accept_req.hdr_len fields */
-+#define SYN_RX_CHAN_S    0
-+#define SYN_RX_CHAN_M    0xF
-+#define SYN_RX_CHAN_V(x) ((x) << SYN_RX_CHAN_S)
-+#define SYN_RX_CHAN_G(x) (((x) >> SYN_RX_CHAN_S) & SYN_RX_CHAN_M)
++#define cpl_rx_iscsi_ddp cpl_rx_data_ddp
 +
-+#define TCP_HDR_LEN_S    10
-+#define TCP_HDR_LEN_M    0x3F
-+#define TCP_HDR_LEN_V(x) ((x) << TCP_HDR_LEN_S)
-+#define TCP_HDR_LEN_G(x) (((x) >> TCP_HDR_LEN_S) & TCP_HDR_LEN_M)
-+
-+#define IP_HDR_LEN_S    16
-+#define IP_HDR_LEN_M    0x3FF
-+#define IP_HDR_LEN_V(x) ((x) << IP_HDR_LEN_S)
-+#define IP_HDR_LEN_G(x) (((x) >> IP_HDR_LEN_S) & IP_HDR_LEN_M)
-+
-+#define ETH_HDR_LEN_S    26
-+#define ETH_HDR_LEN_M    0x1F
-+#define ETH_HDR_LEN_V(x) ((x) << ETH_HDR_LEN_S)
-+#define ETH_HDR_LEN_G(x) (((x) >> ETH_HDR_LEN_S) & ETH_HDR_LEN_M)
-+
-+/* cpl_pass_accept_req.l2info fields */
-+#define SYN_MAC_IDX_S    0
-+#define SYN_MAC_IDX_M    0x1FF
-+#define SYN_MAC_IDX_V(x) ((x) << SYN_MAC_IDX_S)
-+#define SYN_MAC_IDX_G(x) (((x) >> SYN_MAC_IDX_S) & SYN_MAC_IDX_M)
-+
-+#define SYN_XACT_MATCH_S    9
-+#define SYN_XACT_MATCH_V(x) ((x) << SYN_XACT_MATCH_S)
-+#define SYN_XACT_MATCH_F    SYN_XACT_MATCH_V(1U)
-+
-+#define SYN_INTF_S    12
-+#define SYN_INTF_M    0xF
-+#define SYN_INTF_V(x) ((x) << SYN_INTF_S)
-+#define SYN_INTF_G(x) (((x) >> SYN_INTF_S) & SYN_INTF_M)
-+
-+enum {                     /* TCP congestion control algorithms */
-+	CONG_ALG_RENO,
-+	CONG_ALG_TAHOE,
-+	CONG_ALG_NEWRENO,
-+	CONG_ALG_HIGHSPEED
-+};
-+
-+#define CONG_CNTRL_S    14
-+#define CONG_CNTRL_M    0x3
-+#define CONG_CNTRL_V(x) ((x) << CONG_CNTRL_S)
-+#define CONG_CNTRL_G(x) (((x) >> CONG_CNTRL_S) & CONG_CNTRL_M)
-+
-+#define T5_ISS_S    18
-+#define T5_ISS_V(x) ((x) << T5_ISS_S)
-+#define T5_ISS_F    T5_ISS_V(1U)
-+
- struct cpl_pass_accept_rpl {
- 	WR_HDR;
+ struct cpl_rx_data {
  	union opcode_tid ot;
+ 	__be16 rsvd;
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h
+index e5f8f65..2fd9c76 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h
+@@ -25,16 +25,4 @@
+ 
+ #define T5_ISS_VALID		(1 << 18)
+ 
+-struct cpl_rx_data_ddp {
+-	union opcode_tid ot;
+-	__be16 urg;
+-	__be16 len;
+-	__be32 seq;
+-	union {
+-		__be32 nxt_seq;
+-		__be32 ddp_report;
+-	};
+-	__be32 ulp_crc;
+-	__be32 ddpvld;
+-};
+ #endif	/* __CXGB4I_H__ */
 -- 
 2.0.2
