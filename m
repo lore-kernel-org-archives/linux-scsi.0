@@ -1,93 +1,116 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.5-rc4
-Date: Sat, 13 Feb 2016 13:47:36 -0800
-Message-ID: <1455400056.32243.19.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+From: Varun Prakash <varun@chelsio.com>
+Subject: [RFC 00/34] Chelsio iSCSI target offload driver
+Date: Sun, 14 Feb 2016 23:00:35 +0530
+Message-ID: <cover.1455467089.git.varun@chelsio.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: nab@linux-iscsi.org, roland@kernel.org, davem@davemloft.net, dledford@redhat.com, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+This RFC series is for Chelsio iSCSI target offload
+driver(cxgbit.ko).
 
-Here are the target-pending bug-fixes for v4.5-rc4.
+cxgbit.ko registers with iSCSI target transport
+and offloads multiple CPU intensive tasks to
+Chelsio T5 adapters.
 
-Please go ahead and pull from:
+Chelsio T5 adapter series has following offload
+features for iSCSI -
+-TCP/IP offload.
+-iSCSI PDU recovery by reassembling TCP segments.
+-Header and Data Digest offload.
+-iSCSI segmentation offload(ISO).
+-Direct Data Placement(DDP).
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+Please review this series.
 
-This includes the long awaited series to address a set of bugs around
-active I/O remote-port LUN_RESET, as well as properly handling this same
-case with concurrent fabric driver session disconnect -> reconnect.
+Thanks
 
-Note this set of LUN_RESET bug-fixes has been surviving extended testing
-on both v4.5-rc1 and v3.14.y code over the last weeks, and is CC'ed for
-stable as it's something folks using multiple ESX connected hosts with
-slow backends can certainly trigger.
+Varun Prakash (34):
+  cxgb4: add new ULD type CXGB4_ULD_ISCSIT
+  cxgb4: allocate resources for CXGB4_ULD_ISCSIT
+  cxgb4: large receive offload support
+  cxgb4, iw_cxgb4: move definitions to common header file
+  cxgb4, iw_cxgb4, cxgb4i: remove duplicate definitions
+  cxgb4, cxgb4i: move struct cpl_rx_data_ddp definition
+  cxgb4: add definitions for iSCSI target ULD
+  cxgb4: update struct cxgb4_lld_info definition
+  cxgb4: move VLAN_NONE macro definition
+  cxgb4, iw_cxgb4: move delayed ack macro definitions
+  cxgb4: add iSCSI DDP page pod manager
+  cxgb4: update Kconfig and Makefile
+  iscsi-target: add new transport type
+  iscsi-target: export symbols
+  iscsi-target: export symbols from iscsi_target.c
+  iscsi-target: split iscsit_send_r2t()
+  iscsi-target: split iscsit_send_conn_drop_async_message()
+  iscsi-target: call complete on conn_logout_comp
+  iscsi-target: clear tx_thread_active
+  iscsi-target: update struct iscsit_transport definition
+  iscsi-target: release transport driver resources
+  iscsi-target: call Rx thread function
+  iscsi-target: split iscsi_target_rx_thread()
+  iscsi-target: validate conn operational parameters
+  iscsi-target: move iscsit_thread_check_cpumask()
+  iscsi-target: fix seq_end_offset calculation
+  cxgbit: add cxgbit.h
+  cxgbit: add cxgbit_lro.h
+  cxgbit: add cxgbit_main.c
+  cxgbit: add cxgbit_cm.c
+  cxgbit: add cxgbit_target.c
+  cxgbit: add cxgbit_ddp.c
+  cxgbit: add Kconfig and Makefile
+  iscsi-target: update Kconfig and Makefile
 
-The highlights also include:
+ drivers/infiniband/hw/cxgb4/t4fw_ri_api.h          |   99 -
+ drivers/infiniband/ulp/isert/ib_isert.c            |   10 +
+ drivers/net/ethernet/chelsio/Kconfig               |   11 +
+ drivers/net/ethernet/chelsio/cxgb4/Makefile        |    1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |   27 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c |   34 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    |   97 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_ppm.c     |  464 +++++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_ppm.h     |  310 +++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h     |   11 +
+ drivers/net/ethernet/chelsio/cxgb4/l2t.c           |    2 -
+ drivers/net/ethernet/chelsio/cxgb4/l2t.h           |    2 +
+ drivers/net/ethernet/chelsio/cxgb4/sge.c           |   13 +-
+ drivers/net/ethernet/chelsio/cxgb4/t4_msg.h        |  217 +++
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h      |    7 +
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.h                 |   17 -
+ drivers/target/iscsi/Kconfig                       |    2 +
+ drivers/target/iscsi/Makefile                      |    1 +
+ drivers/target/iscsi/cxgbit/Kconfig                |    7 +
+ drivers/target/iscsi/cxgbit/Makefile               |    6 +
+ drivers/target/iscsi/cxgbit/cxgbit.h               |  363 ++++
+ drivers/target/iscsi/cxgbit/cxgbit_cm.c            | 1893 ++++++++++++++++++
+ drivers/target/iscsi/cxgbit/cxgbit_ddp.c           |  374 ++++
+ drivers/target/iscsi/cxgbit/cxgbit_lro.h           |   70 +
+ drivers/target/iscsi/cxgbit/cxgbit_main.c          |  719 +++++++
+ drivers/target/iscsi/cxgbit/cxgbit_target.c        | 2027 ++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target.c                |  184 +-
+ drivers/target/iscsi/iscsi_target_configfs.c       |   79 +
+ drivers/target/iscsi/iscsi_target_datain_values.c  |    3 +
+ drivers/target/iscsi/iscsi_target_erl0.c           |    7 +-
+ drivers/target/iscsi/iscsi_target_erl1.c           |    1 +
+ drivers/target/iscsi/iscsi_target_login.c          |   13 +-
+ drivers/target/iscsi/iscsi_target_nego.c           |    1 +
+ drivers/target/iscsi/iscsi_target_parameters.c     |    1 +
+ drivers/target/iscsi/iscsi_target_util.c           |    7 +
+ include/target/iscsi/iscsi_target_core.h           |   27 +
+ include/target/iscsi/iscsi_transport.h             |   52 +
+ 37 files changed, 6928 insertions(+), 231 deletions(-)
+ create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_ppm.c
+ create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_ppm.h
+ create mode 100644 drivers/target/iscsi/cxgbit/Kconfig
+ create mode 100644 drivers/target/iscsi/cxgbit/Makefile
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit.h
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_cm.c
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_lro.h
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_main.c
+ create mode 100644 drivers/target/iscsi/cxgbit/cxgbit_target.c
 
-  - Fix WRITE_SAME/DISCARD emulation 4k sector conversion in target/iblock
-    (Mike Christie)
-  - Fix TMR abort interaction and AIO type TMR response in qla2xxx target
-    (Quinn Tran + Swapnil Nagle)
-  - Fix >= v3.17 stale descriptor pointer regression in qla2xxx target
-    (Quinn Tran)
-  - Fix >= v4.5-rc1 return regression with unmap_zeros_data_store
-    new configfs store handler (nab)
-  - Add CPU affinity flag + convert qla2xxx to use bit
-    (Quinn + HCH + Bart)
-
-Thank you,
-
---nab
-
-Arnd Bergmann (1):
-  target/user: Fix cast from pointer to phys_addr_t
-
-Himanshu Madhani (1):
-  qla2xxx: Fix warning reported by static checker
-
-Mike Christie (1):
-  target: Fix WRITE_SAME/DISCARD conversion to linux 512b sectors
-
-Nicholas Bellinger (7):
-  target: Fix LUN_RESET active I/O handling for ACK_KREF
-  target: Fix LUN_RESET active TMR descriptor handling
-  target: Fix TAS handling for multi-session se_node_acls
-  target: Fix remote-port TMR ABORT + se_cmd fabric stop
-  target: Fix race with SCF_SEND_DELAYED_TAS handling
-  target: Drop legacy se_cmd->task_stop_comp + REQUEST_STOP usage
-  target: Fix incorrect unmap_zeroes_data_store return
-
-Quinn Tran (4):
-  qla2xxx: Fix TMR ABORT interaction issue between qla2xxx and TCM
-  qla2xxx: Fix stale pointer access.
-  target/transport: add flag to indicate CPU Affinity is observed
-  qla2xxx: use TARGET_SCF_USE_CPUID flag to indiate CPU Affinity
-
-Swapnil Nagle (1):
-  qla2xxx: Use ATIO type to send correct tmr response
-
- drivers/scsi/qla2xxx/qla_init.c        |  10 +-
- drivers/scsi/qla2xxx/qla_isr.c         |   4 +-
- drivers/scsi/qla2xxx/qla_mid.c         |   4 +-
- drivers/scsi/qla2xxx/qla_os.c          |   6 +
- drivers/scsi/qla2xxx/qla_target.c      |  68 ++++---
- drivers/scsi/qla2xxx/qla_target.h      |  59 +++---
- drivers/scsi/qla2xxx/qla_tmpl.c        |  16 ++
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  76 +++++++-
- drivers/target/target_core_configfs.c  |   2 +-
- drivers/target/target_core_device.c    |  44 +++++
- drivers/target/target_core_file.c      |  29 +--
- drivers/target/target_core_iblock.c    |  58 ++----
- drivers/target/target_core_internal.h  |   1 -
- drivers/target/target_core_tmr.c       | 139 ++++++++++----
- drivers/target/target_core_transport.c | 327 ++++++++++++++++++++-------------
- drivers/target/target_core_user.c      |   2 +-
- include/target/target_core_backend.h   |   3 +
- include/target/target_core_base.h      |   9 +-
- 18 files changed, 567 insertions(+), 290 deletions(-)
+-- 
+2.0.2
