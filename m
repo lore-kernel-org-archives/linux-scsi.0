@@ -1,105 +1,194 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv7 00/23] ALUA device handler update, part II
-Date: Mon, 15 Feb 2016 09:24:27 +0100
-Message-ID: <1455524690-121073-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45974 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752085AbcBOIYy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:24:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v7 3/3] add support for DWC UFS Host Controller
+Date: Mon, 15 Feb 2016 11:16:26 +0000
+Message-ID: <56C1B38A.6070901@synopsys.com>
+References: <cover.1455192008.git.jpinto@synopsys.com>
+ <ee97e9b0ece0d819debe403c752d233c6267e02e.1455192008.git.jpinto@synopsys.com>
+ <CAC5umyh6VGfsD+CzuimiMCum=E4UrA0rGj7pgPaRLO_aVen-gQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAC5umyh6VGfsD+CzuimiMCum=E4UrA0rGj7pgPaRLO_aVen-gQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Cc: vinayak holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Julian Calaby <julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:OPEN FIRMWARE AND..." <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
 
-as promised here is now the second part of my ALUA device handler update.
-This contains a major rework of the ALUA device handler as execution is
-moved onto a workqueue. This has the advantage that we avoid having to
-do multiple calls to the same LUN (as happens frequently when failing
-over a LUN with several paths) and finally retries are handled correctly.
-As some arrays are only capable of handling one STPG at a time I've added
-a blacklist flag which then uses a singlethreaded workqueue, thereby
-effectively synchronize STPG handling.
-Thanks to Bart for this suggestion.
+Hi Akinobu,
 
-The entire patchset can be found at:
-git.kernel.org:/hare/scsi-devel/h/alua-2.v7
+On 2/13/2016 1:27 PM, Akinobu Mita wrote:
+> Hi Joao,
+> 
+> 2016-02-11 21:13 GMT+09:00 Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>:
+>> +static int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
+>> +{
+>> +       int ret = 0;
+>> +
+>> +       /* Local side Configuration */
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(N_DEVICEID), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(N_DEVICEID_VALID), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERDEVICEID), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERCPORTID), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_TRAFFICCLASS), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CPORTFLAGS), 0x6);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CPORTMODE), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +
+>> +       /* Peer side Configuration */
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(N_DEVICEID), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(N_DEVICEID_VALID), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_PEERDEVICEID), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_PEERCPORTID), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_TRAFFICCLASS), 0);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CPORTFLAGS), 0x6);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CPORTMODE), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 1);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +out:
+>> +       return ret;
+>> +}
+> 
+> This looks a bit redundant.  The most part of the functions in this file is
+> doing ufshcd_dme_set() or ufshcd_dme_peer_set(), so should we
+> introduce ufshcd_dme_set_attrs() like below?  It will also increase
+> readability.
 
-As usual, comments and reviews are welcome.
+We can do that, it would make the function body lighter and more easy to read I
+agree with you!
 
-Changes to v6:
-- Fixup mutex lockdep issue noticed by Bart
-- Reshuffle locks in alua_check_vpd
+> 
+> struct ufshcd_dme_attr_val {
+>         u32 attr_sel;
+>         u32 mib_val;
+>         u8 peer;
+> };
+> 
+> int ufshcd_dme_set_attrs(struct ufs_hba *hba,
+>                         const struct ufshcd_dme_attr_val *v, int n)
+> {
+>         for (i = 0; i < n; i++) {
+>                 int ret = ufshcd_dme_set_attr(hba, v[i].attr_sel, ...);
+> 
+>                 if (ret)
+>                         return ret;
+>         }
+>         return 0;
+> }
+> 
+> static int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
+> {
+>         const struct ufshcd_dme_attr setup_attrs[] = {
+>                 { UIC_ARG_MIB(T_CONNECTIONSTATE), 0, DME_LOCAL },
+>                 { UIC_ARG_MIB(T_DEVICEID), 0, DME_LOCAL },
+>                 ...
+>         };
+> 
+>         return ufshcd_dme_set_attrs(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
+> }
+> 
+>> +static int ufshcd_dwc_setup_tc(struct ufs_hba *hba)
+>> +{
+>> +       int ret = 0;
+>> +
+>> +#ifdef CONFIG_SCSI_UFS_DWC_40BIT_RMMI
+>> +       dev_info(hba->dev, "Configuring Test Chip 40-bit RMMI");
+>> +       ret = ufshcd_dwc_setup_40bit_rmmi(hba);
+>> +       if (ret) {
+>> +               dev_err(hba->dev, "Configuration failed");
+> 
+> Please add \n in the end of message.
+> (and there are same issues in this file)
+> 
+>> +
+>> +/* Clock Divider Values: Hex equivalent of frequency in MHz */
+>> +enum clk_div_values {
+>> +       UFSHCD_CLK_DIV_62_5     = 0x3e,
+>> +       UFSHCD_CLK_DIV_125      = 0x7d,
+>> +       UFSHCD_CLK_DIV_200      = 0xc8,
+>> +};
+> 
+> This is used as register value for DWC_UFS_REG_HCLKDIV.  So should they
+> have similar prefix (DWC_UFS_REG_HCLKDIV_*)?
 
-Changes to v5:
-- Fixup lock imbalance noticed by Bart
-- use #define instead of enum for access_state as suggested by Ewan
-- Updated patch description as suggested by Ewan
-- Changed occurrences to 'SET TARGET PORT GROUP' as suggested by Bart
+I agree with you, they should have since they are DWC specific.
 
-Changes to v4:
-- use kfree_rcu() as suggested by hch
-- Use 'IS_ERR' instead of 'PTR_ERR' when checking for validity
-  of a pointer
-- Simplify pg assignment as suggested by hch
-- Use separate WARN_ON statements a suggested by hch
-- Fixes to avoid I/O stall on failover
+> 
+>> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> 
+> ...
+> 
+>> +/*Other attributes*/
+>> +#define VS_MPHYCFGUPDT         0xD085
+>> +#define VS_DEBUGOMC            0xD09E
+>> +#define VS_POWERSTATE          0xD083
+> 
+> Are these vendor specific attributes?  If so, please move them to
+> ufshci-dwc.h.
 
-Changes to v3:
-- Use scsi_device flag for blacklisting as suggested by hch
-- Add Arrays for synchronous ALUA handling
-- Move synchronize_rcu() into release_port_group()
-- Add remaining reviewed tags
+These are not DWC specific, that's why I added them to the common unipro.h
 
-Changes to v2:
-- Use a SCSI blacklist flag instead of a hardware handler parameter
-  for switching to synchronous ALUA handling
-- Move scsi_get_device_flags{,_keyed} to scsi_devinfo.h
-- Move flush_delayed_work() into release_port_group()
-- Rename alua_lookup_pg() into alua_find_get_pg()
-- Add __rcu annotations to keep sparse happy
+> 
 
-Changes to v1:
-- Include reviews from hch
-- Switch to hardware handler parameter instead of module option
+Thanks.
 
-Hannes Reinecke (23):
-  scsi_dh_alua: Pass buffer as function argument
-  scsi_dh_alua: separate out alua_stpg()
-  scsi_dh_alua: Make stpg synchronous
-  scsi_dh_alua: call alua_rtpg() if stpg fails
-  scsi_dh_alua: switch to scsi_execute_req_flags()
-  scsi_dh_alua: allocate RTPG buffer separately
-  scsi_dh_alua: Use separate alua_port_group structure
-  scsi_dh_alua: use unique device id
-  scsi_dh_alua: simplify alua_initialize()
-  revert commit a8e5a2d593cb ("[SCSI] scsi_dh_alua: ALUA handler attach
-    should succeed while TPG is transitioning")
-  scsi_dh_alua: move optimize_stpg evaluation
-  scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
-  scsi_dh_alua: Use workqueue for RTPG
-  scsi_dh_alua: Allow workqueue to run synchronously
-  scsi_dh_alua: Add new blacklist flag 'BLIST_SYNC_ALUA'
-  scsi_dh_alua: Recheck state on unit attention
-  scsi_dh_alua: update all port states
-  scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
-  scsi_dh: add 'rescan' callback
-  scsi: Add 'access_state' attribute
-  scsi_dh_alua: use common definitions for ALUA state
-  scsi_dh_alua: update 'access_state' field
-  scsi_dh_alua: Update version to 2.0
 
- drivers/scsi/device_handler/scsi_dh_alua.c | 981 ++++++++++++++++++++---------
- drivers/scsi/scsi_devinfo.c                |   2 +
- drivers/scsi/scsi_lib.c                    |   1 +
- drivers/scsi/scsi_scan.c                   |  12 +-
- drivers/scsi/scsi_sysfs.c                  |  49 ++
- include/scsi/scsi_device.h                 |   2 +
- include/scsi/scsi_devinfo.h                |   1 +
- include/scsi/scsi_dh.h                     |   2 +
- include/scsi/scsi_proto.h                  |  12 +
- 9 files changed, 755 insertions(+), 307 deletions(-)
-
--- 
-1.8.5.6
-
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
