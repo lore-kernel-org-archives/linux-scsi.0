@@ -1,226 +1,96 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv7 05/23] scsi_dh_alua: switch to scsi_execute_req_flags()
-Date: Mon, 15 Feb 2016 09:24:32 +0100
-Message-ID: <1455524690-121073-6-git-send-email-hare@suse.de>
+Subject: [PATCHv7 15/23] scsi_dh_alua: Add new blacklist flag 'BLIST_SYNC_ALUA'
+Date: Mon, 15 Feb 2016 09:24:42 +0100
+Message-ID: <1455524690-121073-16-git-send-email-hare@suse.de>
 References: <1455524690-121073-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45984 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46028 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752114AbcBOIYy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:24:54 -0500
+	id S1752353AbcBOIY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2016 03:24:57 -0500
 In-Reply-To: <1455524690-121073-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-All commands are issued synchronously, so no need to open-code
-scsi_execute_req_flags() anymore. And we can get rid of the
-static sense code structure element. scsi_execute_req_flags()
-will be setting REQ_QUIET and REQ_PREEMPT, but that is
-perfectly fine as we're evaluating and logging any errors
-ourselves and we really need to send the command even if
-the device is quiesced.
+Add a new blacklist flag BLIST_SYNC_ALUA to instruct the
+alua device handler to use synchronous command submission
+for ALUA commands.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 125 +++++++++--------------------
- 1 file changed, 36 insertions(+), 89 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 ++
+ drivers/scsi/scsi_devinfo.c                | 2 ++
+ drivers/scsi/scsi_scan.c                   | 3 +++
+ include/scsi/scsi_device.h                 | 1 +
+ include/scsi/scsi_devinfo.h                | 1 +
+ 5 files changed, 9 insertions(+)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 77e23a4..2101518 100644
+index 43bf6ac..9d5a861 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -75,7 +75,6 @@ struct alua_dh_data {
- 	unsigned char		*buff;
- 	int			bufflen;
- 	unsigned char		transition_tmo;
--	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
- 	struct scsi_device	*sdev;
- 	activate_complete	callback_fn;
- 	void			*callback_data;
-@@ -101,71 +100,30 @@ static int realloc_buffer(struct alua_dh_data *h, unsigned len)
- 	return 0;
- }
- 
--static struct request *get_alua_req(struct scsi_device *sdev,
--				    void *buffer, unsigned buflen, int rw)
--{
--	struct request *rq;
--	struct request_queue *q = sdev->request_queue;
--
--	rq = blk_get_request(q, rw, GFP_NOIO);
--
--	if (IS_ERR(rq)) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: blk_get_request failed\n", __func__);
--		return NULL;
--	}
--	blk_rq_set_block_pc(rq);
--
--	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_NOIO)) {
--		blk_put_request(rq);
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: blk_rq_map_kern failed\n", __func__);
--		return NULL;
--	}
--
--	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
--			 REQ_FAILFAST_DRIVER;
--	rq->retries = ALUA_FAILOVER_RETRIES;
--	rq->timeout = ALUA_FAILOVER_TIMEOUT * HZ;
--
--	return rq;
--}
--
- /*
-  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-  * @sdev: sdev the command should be sent to
-  */
--static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
--			    int bufflen, unsigned char *sense, int flags)
-+static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
-+		       int bufflen, struct scsi_sense_hdr *sshdr, int flags)
- {
--	struct request *rq;
--	int err = 0;
--
--	rq = get_alua_req(sdev, buff, bufflen, READ);
--	if (!rq) {
--		err = DRIVER_BUSY << 24;
--		goto done;
--	}
-+	u8 cdb[COMMAND_SIZE(MAINTENANCE_IN)];
-+	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-+		REQ_FAILFAST_DRIVER;
- 
- 	/* Prepare the command. */
--	rq->cmd[0] = MAINTENANCE_IN;
-+	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_IN));
-+	cdb[0] = MAINTENANCE_IN;
- 	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
--		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-+		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
- 	else
--		rq->cmd[1] = MI_REPORT_TARGET_PGS;
--	put_unaligned_be32(bufflen, &rq->cmd[6]);
--	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
--
--	rq->sense = sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = 0;
--
--	blk_execute_rq(rq->q, NULL, rq, 1);
--	if (rq->errors)
--		err = rq->errors;
--	blk_put_request(rq);
--done:
--	return err;
-+		cdb[1] = MI_REPORT_TARGET_PGS;
-+	put_unaligned_be32(bufflen, &cdb[6]);
-+
-+	return scsi_execute_req_flags(sdev, cdb, DMA_FROM_DEVICE,
-+				      buff, bufflen, sshdr,
-+				      ALUA_FAILOVER_TIMEOUT * HZ,
-+				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
- }
- 
- /*
-@@ -175,40 +133,30 @@ done:
-  * to 'active/optimized' and let the array firmware figure out
-  * the states of the remaining groups.
-  */
--static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
--			    unsigned char *sense)
-+static int submit_stpg(struct scsi_device *sdev, int group_id,
-+		       struct scsi_sense_hdr *sshdr)
- {
--	struct request *rq;
-+	u8 cdb[COMMAND_SIZE(MAINTENANCE_OUT)];
- 	unsigned char stpg_data[8];
- 	int stpg_len = 8;
--	int err = 0;
-+	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-+		REQ_FAILFAST_DRIVER;
- 
- 	/* Prepare the data buffer */
- 	memset(stpg_data, 0, stpg_len);
- 	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
- 	put_unaligned_be16(group_id, &stpg_data[6]);
- 
--	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
--	if (!rq)
--		return DRIVER_BUSY << 24;
--
- 	/* Prepare the command. */
--	rq->cmd[0] = MAINTENANCE_OUT;
--	rq->cmd[1] = MO_SET_TARGET_PGS;
--	put_unaligned_be32(stpg_len, &rq->cmd[6]);
--	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
--
--	rq->sense = sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = 0;
--
--	blk_execute_rq(rq->q, NULL, rq, 1);
--	if (rq->errors)
--		err = rq->errors;
--
--	blk_put_request(rq);
--
--	return err;
-+	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_OUT));
-+	cdb[0] = MAINTENANCE_OUT;
-+	cdb[1] = MO_SET_TARGET_PGS;
-+	put_unaligned_be32(stpg_len, &cdb[6]);
-+
-+	return scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
-+				      stpg_data, stpg_len,
-+				      sshdr, ALUA_FAILOVER_TIMEOUT * HZ,
-+				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
- }
- 
- /*
-@@ -398,14 +346,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
- 
-  retry:
--	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
-+	retval = submit_rtpg(sdev, h->buff, h->bufflen, &sense_hdr, h->flags);
-+
- 	if (retval) {
--		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
--					  &sense_hdr)) {
-+		if (!scsi_sense_valid(&sense_hdr)) {
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: rtpg failed, result %d\n",
- 				    ALUA_DH_NAME, retval);
--			if (driver_byte(retval) == DRIVER_BUSY)
-+			if (driver_byte(retval) == DRIVER_ERROR)
- 				return SCSI_DH_DEV_TEMP_BUSY;
- 			return SCSI_DH_IO;
- 		}
-@@ -570,15 +518,14 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 		return SCSI_DH_NOSYS;
- 		break;
+@@ -366,6 +366,8 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 		/* port group has changed. Update to new port group */
+ 		rcu_assign_pointer(h->pg, pg);
  	}
--	retval = submit_stpg(sdev, h->group_id, h->sense);
-+	retval = submit_stpg(sdev, h->group_id, &sense_hdr);
++	if (sdev->synchronous_alua)
++		pg->flags |= ALUA_SYNC_STPG;
+ 	alua_rtpg_queue(h->pg, sdev, NULL);
+ 	spin_unlock(&h->pg_lock);
  
- 	if (retval) {
--		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
--					  &sense_hdr)) {
-+		if (!scsi_sense_valid(&sense_hdr)) {
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: stpg failed, result %d",
- 				    ALUA_DH_NAME, retval);
--			if (driver_byte(retval) == DRIVER_BUSY)
-+			if (driver_byte(retval) == DRIVER_ERROR)
- 				return SCSI_DH_DEV_TEMP_BUSY;
- 		} else {
- 			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 47b9d13..b4ef0c6 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -218,6 +218,8 @@ static struct {
+ 	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
++	{"NETAPP", "LUN C-Mode", NULL, BLIST_SYNC_ALUA},
++	{"NETAPP", "INF-01-00", NULL, BLIST_SYNC_ALUA},
+ 	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 1f02e84..420239c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -964,6 +964,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_NO_DIF)
+ 		sdev->no_dif = 1;
+ 
++	if (*bflags & BLIST_SYNC_ALUA)
++		sdev->synchronous_alua = 1;
++
+ 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
+ 
+ 	if (*bflags & BLIST_TRY_VPD_PAGES)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9173ab5a..4af2b24 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -176,6 +176,7 @@ struct scsi_device {
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
++	unsigned synchronous_alua:1;	/* Synchronous ALUA commands */
+ 
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 96e3f56..9f750cb 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -37,5 +37,6 @@
+ #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
+ #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
+ #define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
++#define BLIST_SYNC_ALUA		0x80000000 /* Synchronous ALUA commands */
+ 
+ #endif
 -- 
 1.8.5.6
 
