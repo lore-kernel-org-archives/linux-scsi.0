@@ -1,41 +1,31 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [RFC 19/34] iscsi-target: clear tx_thread_active
-Date: Mon, 15 Feb 2016 19:07:46 +0200
-Message-ID: <56C205E2.1000404@dev.mellanox.co.il>
+Subject: Re: [RFC 20/34] iscsi-target: update struct iscsit_transport
+ definition
+Date: Mon, 15 Feb 2016 19:09:55 +0200
+Message-ID: <56C20663.8010405@dev.mellanox.co.il>
 References: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
- <179da911feeb6481e0e06eb45f18743be02d6e90.1455467089.git.varun@chelsio.com>
+ <a7968adffc57ab25f06713890159014b3571bc53.1455467089.git.varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <179da911feeb6481e0e06eb45f18743be02d6e90.1455467089.git.varun@chelsio.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34542 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753098AbcBORJ7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Feb 2016 12:09:59 -0500
+Received: by mail-wm0-f46.google.com with SMTP id b205so76054950wmb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Feb 2016 09:09:58 -0800 (PST)
+In-Reply-To: <a7968adffc57ab25f06713890159014b3571bc53.1455467089.git.varun@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Varun Prakash <varun@chelsio.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
-List-Id: linux-scsi@vger.kernel.org
 
 
+> 1. void (*iscsit_rx_pdu)(struct iscsi_conn *);
+>     Rx thread uses this for receiving and processing
+>     iSCSI PDU in full feature phase.
 
-On 14/02/2016 19:42, Varun Prakash wrote:
-> clear tx_thread_active for ISCSI_TCP_CXGB4
-> transport in logout_post_handler functions.
->
-> Signed-off-by: Varun Prakash <varun@chelsio.com>
-> ---
->   drivers/target/iscsi/iscsi_target.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index 858f6e4..3dd7ba2 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -4579,7 +4579,8 @@ static void iscsit_logout_post_handler_closesession(
->   	 * always sleep waiting for RX/TX thread shutdown to complete
->   	 * within iscsit_close_connection().
->   	 */
-> -	if (conn->conn_transport->transport_type == ISCSI_TCP)
-> +	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
-> +	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
->   		sleep = cmpxchg(&conn->tx_thread_active, true, false);
-
-Again, this is not the right way to make progress...
+Is iscsit_rx_pdu the best name for this? it sounds like
+a function that would handle A pdu, but it's actually the
+thread function dequeuing pdus correct?
