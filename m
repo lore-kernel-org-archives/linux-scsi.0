@@ -1,51 +1,38 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: Re: [PATCH] Use ida_simple for SCSI iSCSI transport session id
-Date: Mon, 15 Feb 2016 10:26:53 -0800
-Message-ID: <20160215182653.pvo6crry2wqwgjso@straylight.hirudinean.org>
-References: <1455298733-18651-1-git-send-email-lduncan@suse.com>
- <1455299691.2396.45.camel@HansenPartnership.com>
+From: Alan <gnomes@lxorguk.ukuu.org.uk>
+Subject: [PATCH] aic7xxx: Fix queue depth handling
+Date: Mon, 15 Feb 2016 18:53:15 +0000
+Message-ID: <20160215185301.27731.20754.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1455299691.2396.45.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:44796 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbcBOSx1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Feb 2016 13:53:27 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hare@suse.com, linux-scsi@vger.kernel.org
 
-On Fri, Feb 12, 2016 at 09:54:51AM -0800, James Bottomley wrote:
-> On Fri, 2016-02-12 at 09:38 -0800, Lee Duncan wrote:
-> > The scsi_transport_iscsi module already uses the ida_simple
-> > routines for managing the target ID, if requested to do
-> > so. This change replaces an ever-increasing atomic integer
-> > that tracks the session ID itself with the ida_simple
-> > family of routines. This means that the session ID
-> > will be reclaimed and can be reused when the session
-> > is freed.
-> 
-> Is reusing session ID's really a good idea?  For sequential sessions it
-> means that the ID of the next session will be re-used, i.e. the same as
-> the previous sessions, which could lead to target confusion.  I think
-> local uniqueness of session IDs is more important than wrap around
-> because sessions are short lived entities and the chances of the same
-> session being alive by the time we've wrapped is pretty tiny.
+We were setting the queue depth correctly, then setting it back to two. If
+you hit this as a bisection point then please send me an email as it would
+imply we've been hiding other bugs with this one.
 
-I've got a few complaints about target resources being tied up because
-we don't reuse session IDs.  The ISID becomes a component in the
-I_T nexus identifier, so changing it invalidates persistent reservations.
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+---
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> If you can demostrate a multi-target problem, perhaps we should rather
-> fix this by making the next session id a target local quantity?
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index b846a46..fc6a831 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -1336,6 +1336,7 @@ ahc_platform_set_tags(struct ahc_softc *ahc, struct scsi_device *sdev,
+ 	case AHC_DEV_Q_TAGGED:
+ 		scsi_change_queue_depth(sdev,
+ 				dev->openings + dev->active);
++		break;
+ 	default:
+ 		/*
+ 		 * We allow the OS to queue 2 untagged transactions to
 
-Mike's got a good point that we don't really need to base the ISID off
-of our local session identifier (kobject name).  I think getting reuse
-right may be a bit trickier than being a target local value, because it
-needs to be unique across target portal groups.  Which probably furthers
-the argument that we should deal with that in the userspace tools.
-
-If we plan to split the protocol ISID cleanly from the kobject name,
-I guess the question is if aggressive reuse of the local identifier is
-better than dealing with the unlikely collision on rollover?
-
-- Chris
