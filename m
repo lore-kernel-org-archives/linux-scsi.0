@@ -1,90 +1,76 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv7 18/23] scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
-Date: Mon, 15 Feb 2016 09:24:45 +0100
-Message-ID: <1455524690-121073-19-git-send-email-hare@suse.de>
+Subject: [PATCHv7 01/23] scsi_dh_alua: Pass buffer as function argument
+Date: Mon, 15 Feb 2016 09:24:28 +0100
+Message-ID: <1455524690-121073-2-git-send-email-hare@suse.de>
 References: <1455524690-121073-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46074 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46033 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752401AbcBOIY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:24:57 -0500
+	id S1752321AbcBOIY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2016 03:24:56 -0500
 In-Reply-To: <1455524690-121073-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
 
-Sending a 'REPORT TARGET PORT GROUP' command is a costly operation,
-as the array has to gather information about all ports.
-So instead of using RTPG to poll for a status update when a port
-is in transitioning we should be sending a TEST UNIT READY, and
-wait for the sense code to report success.
+Pass in the buffer as a function argument for submit_rtpg().
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 38 ++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 6de9261..e3d7ba7 100644
+index 5a328bf..df71e85 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -466,6 +466,30 @@ static int alua_check_sense(struct scsi_device *sdev,
- }
+@@ -135,12 +135,13 @@ static struct request *get_alua_req(struct scsi_device *sdev,
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
++static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
++			    int bufflen, unsigned char *sense, int flags)
+ {
+ 	struct request *rq;
+ 	int err = 0;
  
- /*
-+ * alua_tur - Send a TEST UNIT READY
-+ * @sdev: device to which the TEST UNIT READY command should be send
-+ *
-+ * Send a TEST UNIT READY to @sdev to figure out the device state
-+ * Returns SCSI_DH_RETRY if the sense code is NOT READY/ALUA TRANSITIONING,
-+ * SCSI_DH_OK if no error occurred, and SCSI_DH_IO otherwise.
-+ */
-+static int alua_tur(struct scsi_device *sdev)
-+{
-+	struct scsi_sense_hdr sense_hdr;
-+	int retval;
-+
-+	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
-+				      ALUA_FAILOVER_RETRIES, &sense_hdr);
-+	if (sense_hdr.sense_key == NOT_READY &&
-+	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
-+		return SCSI_DH_RETRY;
-+	else if (retval)
-+		return SCSI_DH_IO;
-+	else
-+		return SCSI_DH_OK;
-+}
-+
-+/*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-  *
-@@ -734,8 +758,22 @@ static void alua_rtpg_work(struct work_struct *work)
- 		alua_wq = kaluad_sync_wq;
- 	pg->flags |= ALUA_PG_RUNNING;
- 	if (pg->flags & ALUA_PG_RUN_RTPG) {
-+		int state = pg->state;
-+
- 		pg->flags &= ~ALUA_PG_RUN_RTPG;
- 		spin_unlock_irqrestore(&pg->lock, flags);
-+		if (state == TPGS_STATE_TRANSITIONING) {
-+			if (alua_tur(sdev) == SCSI_DH_RETRY) {
-+				spin_lock_irqsave(&pg->lock, flags);
-+				pg->flags &= ~ALUA_PG_RUNNING;
-+				pg->flags |= ALUA_PG_RUN_RTPG;
-+				spin_unlock_irqrestore(&pg->lock, flags);
-+				queue_delayed_work(alua_wq, &pg->rtpg_work,
-+						   pg->interval * HZ);
-+				return;
-+			}
-+			/* Send RTPG on failure or if TUR indicates SUCCESS */
-+		}
- 		err = alua_rtpg(sdev, pg);
- 		spin_lock_irqsave(&pg->lock, flags);
- 		if (err == SCSI_DH_RETRY || pg->flags & ALUA_PG_RUN_RTPG) {
+-	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
++	rq = get_alua_req(sdev, buff, bufflen, READ);
+ 	if (!rq) {
+ 		err = DRIVER_BUSY << 24;
+ 		goto done;
+@@ -148,14 +149,14 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_IN;
+-	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
++	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+-	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
++	put_unaligned_be32(bufflen, &rq->cmd[6]);
+ 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+ 
+-	rq->sense = h->sense;
++	rq->sense = sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = 0;
+ 
+@@ -446,7 +447,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+ 
+  retry:
+-	retval = submit_rtpg(sdev, h);
++	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
+ 	if (retval) {
+ 		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+ 					  &sense_hdr)) {
 -- 
 1.8.5.6
 
