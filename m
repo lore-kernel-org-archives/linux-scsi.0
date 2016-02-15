@@ -1,97 +1,62 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv7 17/23] scsi_dh_alua: update all port states
-Date: Mon, 15 Feb 2016 09:24:44 +0100
-Message-ID: <1455524690-121073-18-git-send-email-hare@suse.de>
+Subject: [PATCHv7 12/23] scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
+Date: Mon, 15 Feb 2016 09:24:39 +0100
+Message-ID: <1455524690-121073-13-git-send-email-hare@suse.de>
 References: <1455524690-121073-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46026 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46034 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752363AbcBOIY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:24:57 -0500
+	id S1752311AbcBOIY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2016 03:24:56 -0500
 In-Reply-To: <1455524690-121073-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When we read in the target port group state we should be
-updating all affected port groups, otherwise we risk
-running out of sync.
+The 'relative port' field is not used, and might get stale when
+the port group changes. So remove the field altogether.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 35 ++++++++++++++++++++++--------
- 1 file changed, 26 insertions(+), 9 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index c09a523..6de9261 100644
+index 0212aee..78e6fa9 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -476,11 +476,13 @@ static int alua_check_sense(struct scsi_device *sdev,
- static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- {
- 	struct scsi_sense_hdr sense_hdr;
-+	struct alua_port_group *tmp_pg;
- 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
--	unsigned char *ucp, *buff;
-+	unsigned char *desc, *buff;
- 	unsigned err, retval;
- 	unsigned int tpg_desc_tbl_off;
- 	unsigned char orig_transition_tmo;
-+	unsigned long flags;
- 
- 	if (!pg->expiry) {
- 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
-@@ -582,18 +584,32 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	else
- 		tpg_desc_tbl_off = 4;
- 
--	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
-+	for (k = tpg_desc_tbl_off, desc = buff + tpg_desc_tbl_off;
- 	     k < len;
--	     k += off, ucp += off) {
+@@ -87,7 +87,6 @@ struct alua_port_group {
+ struct alua_dh_data {
+ 	struct alua_port_group	*pg;
+ 	int			group_id;
+-	int			rel_port;
+ 	struct scsi_device	*sdev;
+ 	activate_complete	callback_fn;
+ 	void			*callback_data;
+@@ -325,12 +324,10 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 			return SCSI_DH_NOMEM;
+ 		return SCSI_DH_DEV_UNSUPP;
+ 	}
+-	h->rel_port = rel_port;
 -
--		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
--			pg->state = ucp[0] & 0x0f;
--			pg->pref = ucp[0] >> 7;
--			valid_states = ucp[1];
-+	     k += off, desc += off) {
-+		u16 group_id = get_unaligned_be16(&desc[2]);
-+
-+		spin_lock_irqsave(&port_group_lock, flags);
-+		tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
-+					  group_id);
-+		spin_unlock_irqrestore(&port_group_lock, flags);
-+		if (tmp_pg) {
-+			if (spin_trylock_irqsave(&tmp_pg->lock, flags)) {
-+				if ((tmp_pg == pg) ||
-+				    !(tmp_pg->flags & ALUA_PG_RUNNING)) {
-+					tmp_pg->state = desc[0] & 0x0f;
-+					tmp_pg->pref = desc[0] >> 7;
-+				}
-+				if (tmp_pg == pg)
-+					valid_states = desc[1];
-+				spin_unlock_irqrestore(&tmp_pg->lock, flags);
-+			}
-+			kref_put(&tmp_pg->kref, release_port_group);
- 		}
--		off = 8 + (ucp[7] * 4);
-+		off = 8 + (desc[7] * 4);
- 	}
- 
-+	spin_lock_irqsave(&pg->lock, flags);
  	sdev_printk(KERN_INFO, sdev,
- 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
- 		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-@@ -630,6 +646,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		pg->expiry = 0;
- 		break;
- 	}
-+	spin_unlock_irqrestore(&pg->lock, flags);
- 	kfree(buff);
- 	return err;
+ 		    "%s: device %s port group %x rel port %x\n",
+ 		    ALUA_DH_NAME, h->pg->device_id_str,
+-		    h->group_id, h->rel_port);
++		    h->group_id, rel_port);
+ 
+ 	return alua_rtpg(sdev, h->pg);
  }
+@@ -764,7 +761,6 @@ static int alua_bus_attach(struct scsi_device *sdev)
+ 	if (!h)
+ 		return -ENOMEM;
+ 	h->pg = NULL;
+-	h->rel_port = -1;
+ 	h->sdev = sdev;
+ 
+ 	err = alua_initialize(sdev, h);
 -- 
 1.8.5.6
 
