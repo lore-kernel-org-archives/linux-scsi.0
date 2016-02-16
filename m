@@ -1,60 +1,64 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] aic7xxx: Fix queue depth handling
-Date: Tue, 16 Feb 2016 07:51:47 +0100
-Message-ID: <56C2C703.7080803@suse.com>
-References: <20160215185301.27731.20754.stgit@localhost.localdomain>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] lpfc: fix missing zero termination in debugfs
+Date: Tue, 16 Feb 2016 07:52:36 +0100
+Message-ID: <20160216065236.GF18134@c203.arch.suse.de>
+References: <20160215191142.19028.9220.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38638 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38663 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753615AbcBPGvt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Feb 2016 01:51:49 -0500
-In-Reply-To: <20160215185301.27731.20754.stgit@localhost.localdomain>
+	id S1753615AbcBPGwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Feb 2016 01:52:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20160215191142.19028.9220.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan <gnomes@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
+To: Alan <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-scsi@vger.kernel.org
 
-On 02/15/2016 07:53 PM, Alan wrote:
-> We were setting the queue depth correctly, then setting it back to tw=
-o. If
-> you hit this as a bisection point then please send me an email as it =
-would
-> imply we've been hiding other bugs with this one.
+On Mon, Feb 15, 2016 at 07:11:56PM +0000, Alan wrote:
+> If you feed 32 bytes in then the kstrtoull() doesn't receive a termin=
+ated
+> string so will run off the end.
 >=20
 > Signed-off-by: Alan Cox <alan@linux.intel.com>
 > ---
->  drivers/scsi/aic7xxx/aic7xxx_osm.c |    1 +
->  1 file changed, 1 insertion(+)
+>  drivers/scsi/lpfc/lpfc_debugfs.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xx=
-x/aic7xxx_osm.c
-> index b846a46..fc6a831 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> @@ -1336,6 +1336,7 @@ ahc_platform_set_tags(struct ahc_softc *ahc, st=
-ruct scsi_device *sdev,
->  	case AHC_DEV_Q_TAGGED:
->  		scsi_change_queue_depth(sdev,
->  				dev->openings + dev->active);
-> +		break;
->  	default:
->  		/*
->  		 * We allow the OS to queue 2 untagged transactions to
+> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpf=
+c_debugfs.c
+> index 25aa9b9..a63542b 100644
+> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
+> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+> @@ -1054,11 +1054,11 @@ lpfc_debugfs_dif_err_write(struct file *file,=
+ const char __user *buf,
+>  {
+>  	struct dentry *dent =3D file->f_path.dentry;
+>  	struct lpfc_hba *phba =3D file->private_data;
+> -	char dstbuf[32];
+> +	char dstbuf[33];
+>  	uint64_t tmp =3D 0;
+>  	int size;
+> =20
+> -	memset(dstbuf, 0, 32);
+> +	memset(dstbuf, 0, 33);
+>  	size =3D (nbytes < 32) ? nbytes : 32;
+>  	if (copy_from_user(dstbuf, buf, size))
+>  		return 0;
 >=20
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Hannes
 --=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
