@@ -1,38 +1,38 @@
-From: Insu Yun <wuninsu@gmail.com>
-Subject: [PATCH] fusion-mptbase: handle failed allocation for workqueue
-Date: Mon, 15 Feb 2016 21:50:41 -0500
-Message-ID: <1455591041-8667-1-git-send-email-wuninsu@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111341] Firmware loader
+Date: Tue, 16 Feb 2016 02:53:32 +0000
+Message-ID: <bug-111341-11613-nluXWLm4FX@https.bugzilla.kernel.org/>
+References: <bug-111341-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:46789 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752859AbcBPCxf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2016 21:53:35 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 88DA8202FE
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 02:53:34 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id C2AEF20219
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 02:53:32 +0000 (UTC)
+In-Reply-To: <bug-111341-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-the failure of ioc->reset_work_q is checked,
-but not ioc->fw_event_q.
+https://bugzilla.kernel.org/show_bug.cgi?id=111341
 
-Signed-off-by: Insu Yun <wuninsu@gmail.com>
----
- drivers/message/fusion/mptbase.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+--- Comment #4 from walter59 <walter.moeller@moeller-it.net> ---
+sorry --- bug is always on -- only on the one board with c600 intel it works,
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5dcc031..d4907a1 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1996,6 +1996,13 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id);
- 	ioc->fw_event_q = create_singlethread_workqueue(ioc->fw_event_q_name);
- 
-+	if (!ioc->fw_event_q) {
-+		destroy_workqueue(ioc->reset_work_q);
-+		pci_release_selected_regions(pdev, ioc->bars);
-+		kfree(ioc);
-+		return -ENOMEM;
-+	}
-+
- 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
- 	    CAN_SLEEP)) != 0){
- 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
+five other boards doesnt .  all asus boards x79 / 2011 Intel.
+
+in next days me look for differenz between bios and so on !
+
+regards
+
 -- 
-1.9.1
+You are receiving this mail because:
+You are watching the assignee of the bug.
