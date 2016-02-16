@@ -1,61 +1,79 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/6] hisi_sas: add TMF_RESP_FUNC_SUCC check
-Date: Tue, 16 Feb 2016 20:22:26 +0800
-Message-ID: <1455625351-165881-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 4/6] hisi_sas: use slot abort in v2 hw
+Date: Tue, 16 Feb 2016 20:22:29 +0800
+Message-ID: <1455625351-165881-5-git-send-email-john.garry@huawei.com>
 References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:24081 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983AbcBPMGG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2016 07:06:06 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@odin.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
-When a tmf is issued, various response codes can be
-returned from the target. For a query tmf the
-response may be TMF_RESP_FUNC_COMPLETE or
-TMF_RESP_FUNC_SUCC.
-Add a condition for TMF_RESP_FUNC_SUCC.
-Also, check for SAM_STAT_GOOD is replaced with
-TMF_RESP_FUNC_COMPLETE, which is a genuine tmf
-response code. SAM_STAT_GOOD and
-TMF_RESP_FUNC_COMPLETE have the same value, so
-this is why it worked before.
+When TRANS_TX_ERR_FRAME_TXED error occurs for
+a command, the command should be re-attempted.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 2194917..c600f5e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -661,12 +661,18 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
- 		}
- 
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		    task->task_status.stat == SAM_STAT_GOOD) {
-+		     task->task_status.stat == TMF_RESP_FUNC_COMPLETE) {
- 			res = TMF_RESP_FUNC_COMPLETE;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 58e1956..2bf93079b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1190,7 +1190,8 @@ static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+ /* by default, task resp is complete */
+ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			   struct sas_task *task,
+-			   struct hisi_sas_slot *slot)
++			   struct hisi_sas_slot *slot,
++			   int *abort_slot)
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+ 	struct hisi_sas_err_record_v2 *err_record = slot->status_buffer;
+@@ -1299,6 +1300,13 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			ts->stat = SAS_DATA_UNDERRUN;
  			break;
  		}
- 
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-+		    task->task_status.stat == TMF_RESP_FUNC_SUCC) {
-+			res = TMF_RESP_FUNC_SUCC;
++		case TRANS_TX_ERR_FRAME_TXED:
++		{
++			/* This will request a retry */
++			ts->stat = SAS_QUEUE_FULL;
++			++(*abort_slot);
 +			break;
 +		}
-+
-+		if (task->task_status.resp == SAS_TASK_COMPLETE &&
- 		      task->task_status.stat == SAS_DATA_UNDERRUN) {
- 			/* no error, but return the number of bytes of
- 			 * underrun
+ 		case TRANS_TX_OPEN_FAIL_WITH_IT_NEXUS_LOSS:
+ 		case TRANS_TX_ERR_PHY_NOT_ENABLE:
+ 		case TRANS_TX_OPEN_CNX_ERR_BY_OTHER:
+@@ -1491,11 +1499,17 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
+ 
+ 	if ((complete_hdr->dw0 & CMPLT_HDR_ERX_MSK) &&
+ 		(!(complete_hdr->dw0 & CMPLT_HDR_RSPNS_XFRD_MSK))) {
++		int abort_slot = 0;
+ 		dev_dbg(dev, "%s slot %d has error info 0x%x\n",
+ 			__func__, slot->cmplt_queue_slot,
+ 			complete_hdr->dw0 & CMPLT_HDR_ERX_MSK);
+ 
+-		slot_err_v2_hw(hisi_hba, task, slot);
++		slot_err_v2_hw(hisi_hba, task, slot, &abort_slot);
++		if (unlikely(abort_slot)) {
++			queue_work(hisi_hba->wq, &slot->abort_slot);
++			sts = ts->stat;
++			goto out_1;
++		}
+ 		goto out;
+ 	}
+ 
+@@ -1555,6 +1569,7 @@ out:
+ 
+ 	if (task->task_done)
+ 		task->task_done(task);
++out_1:
+ 
+ 	return sts;
+ }
 -- 
 1.9.1
-
