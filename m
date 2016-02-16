@@ -1,34 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111341] Firmware loader
-Date: Tue, 16 Feb 2016 00:43:01 +0000
-Message-ID: <bug-111341-11613-UReNxFLWKh@https.bugzilla.kernel.org/>
-References: <bug-111341-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40670 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016AbcBPAnF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Feb 2016 19:43:05 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E31AB203C3
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 00:43:03 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 46613203A5
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 00:43:02 +0000 (UTC)
-In-Reply-To: <bug-111341-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Insu Yun <wuninsu@gmail.com>
+Subject: [PATCH] fusion-mptbase: handle failed allocation for workqueue
+Date: Mon, 15 Feb 2016 21:50:41 -0500
+Message-ID: <1455591041-8667-1-git-send-email-wuninsu@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111341
+the failure of ioc->reset_work_q is checked,
+but not ioc->fw_event_q.
 
---- Comment #3 from walter59 <walter.moeller@moeller-it.net> ---
-fine --- changes in kernel 4.5-rc4 ---- ahci for c600 intel id 1d02 now ok !
+Signed-off-by: Insu Yun <wuninsu@gmail.com>
+---
+ drivers/message/fusion/mptbase.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-thanks to all !
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 5dcc031..d4907a1 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1996,6 +1996,13 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id);
+ 	ioc->fw_event_q = create_singlethread_workqueue(ioc->fw_event_q_name);
+ 
++	if (!ioc->fw_event_q) {
++		destroy_workqueue(ioc->reset_work_q);
++		pci_release_selected_regions(pdev, ioc->bars);
++		kfree(ioc);
++		return -ENOMEM;
++	}
++
+ 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
+ 	    CAN_SLEEP)) != 0){
+ 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.9.1
