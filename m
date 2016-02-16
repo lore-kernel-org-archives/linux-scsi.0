@@ -1,109 +1,89 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/6] hisi_sas: add hisi_sas_slot_abort()
-Date: Tue, 16 Feb 2016 20:22:27 +0800
-Message-ID: <1455625351-165881-3-git-send-email-john.garry@huawei.com>
-References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
+From: jiangyiwen <jiangyiwen@huawei.com>
+Subject: Re: [PATCH] block/sd: Return -EREMOTEIO when WRITE SAME and DISCARD
+ are disabled
+Date: Tue, 16 Feb 2016 20:14:13 +0800
+Message-ID: <56C31295.2020309@huawei.com>
+References: <20160204042528.GA15599@redhat.com>
+ <1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
+ <56B316EA.9090803@huawei.com> <yq14mdnhmry.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:50957 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755174AbcBPMO3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2016 07:14:29 -0500
+In-Reply-To: <yq14mdnhmry.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, snitzer@redhat.com, James Bottomley <james.bottomley@hansenpartnership.com>
 
-Add a function to abort a slot (task) in the device
-(if it is in the task set) and then cleanup and
-complete the task.
-The function is called from work queue context as
-it cannot be called from the context where it is
-triggered (interrupt).
+On 2016/2/5 11:13, Martin K. Petersen wrote:
+>>>>>> "Yiwen" == jiangyiwen  <jiangyiwen@huawei.com> writes:
+> 
+> Yiwen,
+> 
+> Yiwen> First, I don't understand why blk_peek_request() return
+> Yiwen> EREMOTEIO, as I know, in this situation we only prepare scsi
+> Yiwen> command without sending to device, and I think EREMOTEIO should
+> Yiwen> be returned only when IO has already sent to device, maybe I
+> Yiwen> don't understand definition of EREMOTEIO.  So, Why don't return
+> Yiwen> the errno with EOPNOTSUPP?
+> 
+> DM currently has special handling for EREMOTEIO failures (because that's
+> what we'd return when a device responds with ILLEGAL REQUEST).
+> 
+> I am not opposed to returning EOPNOTSUPP but it would require more
+> changes and since this is a bugfix for stable I want to keep it as small
+> as possible.
+> 
+> Yiwen> In addition, I still worried with whether there has other
+> Yiwen> situations which will return EIO or other error. In this way,
+> Yiwen> MD/DM still can happen this type of problem, so I think may be in
+> Yiwen> multipath we still needs a protection to avoid it.
+> 
+> There are various error scenarios where we can end up bailing with a
+> BLKPREP_KILL. But the general rule of thumb is that these conditions all
+> demand a retry. The optional commands like WRITE SAME and UNMAP are
+> special in that they are irrecoverable.
+> 
+> Yiwen> At last, I have a additional problem, I remember that you
+> Yiwen> previously send a series of patches about XCOPY, why don't have
+> Yiwen> any news latter later? I very much expect that I can see these
+> Yiwen> patches which are merged into kernel.
+> 
+> I am working on a refresh of the series that includes token-based copy
+> offload support in addition to EXTENDED COPY. The patches depend on Mike
+> Christie's request flag patch series which has yet to be merged.
+> 
+Hi Martin,
+I tested this code, but found a problem.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+When called scsi_prep_fn return BLKPREP_INVALID, we should
+use the same code with BLKPREP_KILL in scsi_prep_return. This
+patch should add a line of code as follows:
+
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 43 +++++++++++++++++++++++++++++++++++
- 2 files changed, 44 insertions(+)
+ drivers/scsi/scsi_lib.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 02da7e4..a05ce71 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -120,6 +120,7 @@ struct hisi_sas_slot {
- 	dma_addr_t command_table_dma;
- 	struct hisi_sas_sge_page *sge_page;
- 	dma_addr_t sge_page_dma;
-+	struct work_struct abort_slot;
- };
- 
- struct hisi_sas_tmf_task {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index c600f5e..65509eb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -15,6 +15,9 @@
- #define DEV_IS_GONE(dev) \
- 	((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
- 
-+static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
-+				u8 *lun, struct hisi_sas_tmf_task *tmf);
-+
- static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
- {
- 	return device->port->ha->lldd_ha;
-@@ -113,6 +116,45 @@ static int hisi_sas_task_prep_ata(struct hisi_hba *hisi_hba,
- 	return hisi_hba->hw->prep_stp(hisi_hba, slot);
- }
- 
-+/*
-+ * This function will issue an abort TMF if a task is still in
-+ * the target. Then it will do the task complete cleanup and
-+ * callbacks.
-+ */
-+static void hisi_sas_slot_abort(struct work_struct *work)
-+{
-+	struct hisi_sas_slot *abort_slot =
-+		container_of(work, struct hisi_sas_slot, abort_slot);
-+	struct sas_task *task = abort_slot->task;
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
-+	struct scsi_cmnd *cmnd = task->uldd_task;
-+	struct hisi_sas_tmf_task tmf_task;
-+	struct domain_device *device = task->dev;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct scsi_lun lun;
-+	int tag = abort_slot->idx, rc;
-+
-+	int_to_scsilun(cmnd->device->lun, &lun);
-+	tmf_task.tmf = TMF_QUERY_TASK;
-+	tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
-+
-+	rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun, &tmf_task);
-+
-+	/* TMF_RESP_FUNC_SUCC means task is present in the task set */
-+	if (rc != TMF_RESP_FUNC_SUCC)
-+		goto out;
-+	tmf_task.tmf = TMF_ABORT_TASK;
-+	tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
-+
-+	rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun, &tmf_task);
-+out:
-+	hisi_sas_slot_task_free(hisi_hba, task, abort_slot);
-+	if (task->task_done)
-+		task->task_done(task);
-+	if (sas_dev && sas_dev->running_req)
-+		sas_dev->running_req--;
-+}
-+
- static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
- 			      int is_tmf, struct hisi_sas_tmf_task *tmf,
- 			      int *pass)
-@@ -206,6 +248,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
- 	slot->task = task;
- 	slot->port = port;
- 	task->lldd_task = slot;
-+	INIT_WORK(&slot->abort_slot, hisi_sas_slot_abort);
- 
- 	slot->status_buffer = dma_pool_alloc(hisi_hba->status_buffer_pool,
- 					     GFP_ATOMIC,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index dd8ad2a..d8d2198 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1343,6 +1343,7 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
+
+ 	switch (ret) {
+ 	case BLKPREP_KILL:
++	case BLKPREP_INVALID:
+ 		req->errors = DID_NO_CONNECT << 16;
+ 		/* release the command and kill it */
+ 		if (req->special) {
 -- 
-1.9.1
+1.8.4.3
+
+Thanks,
+Yiwen Jiang.
+
