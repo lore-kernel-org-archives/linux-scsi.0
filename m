@@ -1,43 +1,34 @@
-From: Alan <gnomes@lxorguk.ukuu.org.uk>
-Subject: [PATCH] lpfc: fix missing zero termination in debugfs
-Date: Mon, 15 Feb 2016 19:11:56 +0000
-Message-ID: <20160215191142.19028.9220.stgit@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111341] Firmware loader
+Date: Tue, 16 Feb 2016 00:43:01 +0000
+Message-ID: <bug-111341-11613-UReNxFLWKh@https.bugzilla.kernel.org/>
+References: <bug-111341-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:44938 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753025AbcBOTMF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Feb 2016 14:12:05 -0500
+Received: from mail.kernel.org ([198.145.29.136]:40670 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbcBPAnF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2016 19:43:05 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id E31AB203C3
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 00:43:03 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 46613203A5
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 00:43:02 +0000 (UTC)
+In-Reply-To: <bug-111341-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jthumshirn@suse.de
+To: linux-scsi@vger.kernel.org
 
-If you feed 32 bytes in then the kstrtoull() doesn't receive a terminated
-string so will run off the end.
+https://bugzilla.kernel.org/show_bug.cgi?id=111341
 
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
- drivers/scsi/lpfc/lpfc_debugfs.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+--- Comment #3 from walter59 <walter.moeller@moeller-it.net> ---
+fine --- changes in kernel 4.5-rc4 ---- ahci for c600 intel id 1d02 now ok !
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 25aa9b9..a63542b 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -1054,11 +1054,11 @@ lpfc_debugfs_dif_err_write(struct file *file, const char __user *buf,
- {
- 	struct dentry *dent = file->f_path.dentry;
- 	struct lpfc_hba *phba = file->private_data;
--	char dstbuf[32];
-+	char dstbuf[33];
- 	uint64_t tmp = 0;
- 	int size;
- 
--	memset(dstbuf, 0, 32);
-+	memset(dstbuf, 0, 33);
- 	size = (nbytes < 32) ? nbytes : 32;
- 	if (copy_from_user(dstbuf, buf, size))
- 		return 0;
+thanks to all !
 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
