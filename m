@@ -1,169 +1,173 @@
-From: Hannes Reinecke <mail@hannes-reinecke.de>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-Date: Tue, 16 Feb 2016 20:08:34 +0100
-Message-ID: <56C373B2.2010200@hannes-reinecke.de>
-References: <bug-111441-11613@https.bugzilla.kernel.org/>
- <56AAC605.1080707@cs.wisc.edu>
- <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
- <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
- <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
- <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
- <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
- <56ABBCFF.9060003@cs.wisc.edu>
- <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
- <56ABF6A6.8070506@cs.wisc.edu>
- <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
- <56AF8DEC.5000002@cs.wisc.edu>
- <1454453785.25549.20.camel@haakon3.risingtidesystems.com>
- <1454918501.10001.117.camel@haakon3.risingtidesystems.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] fusion-mptbase: handle failed allocation for workqueue
+Date: Tue, 16 Feb 2016 15:52:20 -0500
+Message-ID: <1455655940.22112.429.camel@localhost.localdomain>
+References: <1455591041-8667-1-git-send-email-wuninsu@gmail.com>
+	 <1455646709.22112.412.camel@localhost.localdomain>
+	 <CAGoFzNfFtxHRYz_UF1qS-wWhwNapffBx9xrMA2Lu51FGeTmo7w@mail.gmail.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:64536 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932948AbcBPTJR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2016 14:09:17 -0500
-In-Reply-To: <1454918501.10001.117.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGoFzNfFtxHRYz_UF1qS-wWhwNapffBx9xrMA2Lu51FGeTmo7w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Insu Yun <wuninsu@gmail.com>
+Cc: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Taesoo Kim <taesoo@gatech.edu>, Yeongjin Jang <yeongjin.jang@gatech.edu>, "Yun, Insu" <insu@gatech.edu>, Changwoo Min <changwoo@gatech.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
 
-On 02/08/2016 09:01 AM, Nicholas A. Bellinger wrote:
-> On Tue, 2016-02-02 at 14:56 -0800, Nicholas A. Bellinger wrote:
->> On Mon, 2016-02-01 at 10:55 -0600, Mike Christie wrote:
->>> On 01/30/2016 01:38 AM, Nicholas A. Bellinger wrote:
->>>> On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
->>>>> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
->>>>>> HI Mike,
->>>>>>
->>>>>> I tried your patch and it is has eliminated first traceback but =
-I still do not see my remote targets.
->>>>>>
->>>>>
->>>>> That is sort of expected. Your target is not setup for ALUA prope=
-rly. It
->>>>> says it supports ALUA, but when scsi_dh_alua asks about the ports=
- it is
->>>>> reporting there are none. Ccing the people that made the patch th=
-at
->>>>> added the issue and own the code.
->>>>>
->>>>> Hey Christoph and Hannes,
->>>>>
->>>>> The dh/alua changes that added this:
->>>>>
->>>>>          error =3D scsi_dh_add_device(sdev);
->>>>>          if (error) {
->>>>>                  sdev_printk(KERN_INFO, sdev,
->>>>>                                  "failed to add device handler: %=
-d\n",
->>>>> error);
->>>>>                  return error;
->>>>>          }
->>>>>
->>>>> to scsi_sysfs_add_sdev are adding a regression.
->>>>>
->>>>> 1. If that fails, then we forget to do device_del before doing th=
-e
->>>>> return. My patch in this thread added that back, so we do not see=
- the
->>>>> sysfs oopses anymore. But.....
->>>>>
->>>>> 2. It looks like in older kernels, we would allow misconfigured t=
-argets
->>>>> like this one to still setup devices. Do we want that old behavio=
-r back?
->>>>> Should we just ignore the return value from scsi_dh_add_device ab=
-ove?
->>>>> Note that in this case, it is LIO so it can be easily fixed on th=
-e
->>>>> target side by just setting it up properly. I do not think other =
-targets
->>>>> would hit this type of issue.
->>>>>
->>>>
->>>> Btw, what does misconfigured mean here wrt target ALUA..?
->>>
->>> [   25.833195] sd 6:0:0:4: alua: supports implicit and explicit TPG=
-S
->>> [   25.833360] sd 6:0:0:4: alua: No target port descriptors found
->>> [   25.833363] sd 6:0:0:4: alua: Attach failed (-22)
->>> [   25.833365] sd 6:0:0:4: failed to add device handler: -22
->>>
->>
->> Strange, this hasn't changed in forever on the target side..
->>
->>> He has LIO configured to report it supports implicit/explicit ALUA,=
- but
->>> the ports do not seem to be configured.
->>>
->>> For the LIO config side, are his LUNs just not in a the default_lu_=
-gp or
->>> any other group?
->>
->> So every non-PSCSI backend device becomes part of default_lu_gp +
->> default_tg_pt_gp and automatically shows up in EVPD=3D0x83, without =
-user
->> needing to do any additional configuration.
->>
->> Here's what the output looks like:
->>
->> root@haakon3:/usr/src/target-pending.git# sg_inq -Hi /dev/sdb
->> VPD INQUIRY: Device Identification page
->>    <SNIP>
->>    Designation descriptor number 3, descriptor length: 8
->>      transport: Serial Attached SCSI Protocol (SPL-2)
->>      designator_type: Relative target port,  code_set: Binary
->>      associated with the target port
->>      designator header(hex): 61 94 00 04
->>      designator:
->>   00     00 00 00 02                                         ....
->>    Designation descriptor number 4, descriptor length: 8
->>      transport: Serial Attached SCSI Protocol (SPL-2)
->>      designator_type: Target port group,  code_set: Binary
->>      associated with the target port
->>      designator header(hex): 61 95 00 04
->>      designator:
->>   00     00 00 00 00                                         ....
->>    Designation descriptor number 5, descriptor length: 8
->>      designator_type: Logical unit group,  code_set: Binary
->>      associated with the addressed logical unit
->>      designator header(hex): 01 06 00 04
->>      designator:
->>   00     00 00 00 00                                         ....
->>   <SNIP>
->>
->> So AFAICT, the relative target port, target port group, and logical =
-unit
->> group being returned from target on v4.5-rc1 code looks correct.
->>
->> Serguei, can you confirm with 'sg_inq -Hi /dev/sdX' output on your s=
-ide
->> with the v3.10 based target..?
->>
->> AFAICT the parsing in scsi_vpd_tpg_id() from commit a8aa3978 looks
->> correct too.
->>
->> Hannes, any ideas..?
->
-> Ping.
->
-Please try with my latest scsi_dh_alua patchset posted to linux-scsi.
-That should solve the error attaching devices.
+On Tue, 2016-02-16 at 13:33 -0500, Insu Yun wrote:
+> 
+> 
+> On Tue, Feb 16, 2016 at 1:18 PM, Ewan Milne <emilne@redhat.com> wrote:
+>         On Mon, 2016-02-15 at 21:50 -0500, Insu Yun wrote:
+>         > the failure of ioc->reset_work_q is checked,
+>         > but not ioc->fw_event_q.
+>         >
+>         > Signed-off-by: Insu Yun <wuninsu@gmail.com>
+>         > ---
+>         >  drivers/message/fusion/mptbase.c | 7 +++++++
+>         >  1 file changed, 7 insertions(+)
+>         >
+>         > diff --git a/drivers/message/fusion/mptbase.c
+>         b/drivers/message/fusion/mptbase.c
+>         > index 5dcc031..d4907a1 100644
+>         > --- a/drivers/message/fusion/mptbase.c
+>         > +++ b/drivers/message/fusion/mptbase.c
+>         > @@ -1996,6 +1996,13 @@ mpt_attach(struct pci_dev *pdev,
+>         const struct pci_device_id *id)
+>         >       snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN,
+>         "mpt/%d", ioc->id);
+>         >       ioc->fw_event_q =
+>         create_singlethread_workqueue(ioc->fw_event_q_name);
+>         >
+>         > +     if (!ioc->fw_event_q) {
+>         > +             destroy_workqueue(ioc->reset_work_q);
+>         > +             pci_release_selected_regions(pdev, ioc->bars);
+>         > +             kfree(ioc);
+>         > +             return -ENOMEM;
+>         > +     }
+>         > +
+>         >       if ((r = mpt_do_ioc_recovery(ioc,
+>         MPT_HOSTEVENT_IOC_BRINGUP,
+>         >           CAN_SLEEP)) != 0){
+>         >               printk(MYIOC_s_ERR_FMT "didn't initialize
+>         properly! (%d)\n",
+>         
+>         This does not look correct to me.  The error path for the call
+>         to
+>         mpt_do_ioc_recovery() after create_singlethread_workqueue()
+>         for
+>         ioc->fw_event_q does other cleanup, including:
+>         
+>                         list_del(&ioc->list);
+>                         if (ioc->alt_ioc)
+>                                 ioc->alt_ioc->alt_ioc = NULL;
+>                         iounmap(ioc->memmap);
+>         
+>         and
+>         
+>                         kfree(ioc);
+>                         pci_set_drvdata(pdev, NULL);
+> 
+> 
+> Oh yes. Right. 
+> I just copied from above error handling code.
+> 
+> 
+>  
+>         
+>         Here I think you are kfree()ing ioc while it is still on the
+>         &ioc_list,
+>         which will cause a crash.
+>         
+>         Note to Avago:  this code could use a symbolic return code
+>         identifier:
+>         
+>                         if (r != -5)
+>                                 pci_release_selected_regions(pdev,
+>         ioc->bars);
+> 
+> 
+> What is -5? it seems strange for me.
+> 
+> Is it error code? then it is better to use macro.
 
-Cheers,
+The comments above mpt_do_ioc_recovery() say:
 
-Hannes
---=20
-Dr. Hannes Reinecke
-Kirchenweg 47
-D-90419 N=C3=BCrnberg
-Tel.: 0911 - 3 77 76 10
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ *      Returns:                                                                                                                                                                                                   
+ *               0 for success                                                                                                                                                                                     
+ *              -1 if failed to get board READY                                                                                                                                                                    
+ *              -2 if READY but IOCFacts Failed                                                                                                                                                                    
+ *              -3 if READY but PrimeIOCFifos Failed                                                                                                                                                               
+ *              -4 if READY but IOCInit Failed                                                                                                                                                                     
+ *              -5 if failed to enable_device and/or request_selected_regions                                                                                                                                      
+ *              -6 if failed to upload firmware
+
+and yes, it would be better to use a macro (symbolic value) hence my
+comment to Avago.                                                                                                                                                      
+> 
+> 
+>         
+>         In general, with sequential allocation of resources like this,
+>         error
+>         handling can be performed using a series of goto's to labels
+>         at the
+>         end of the function that release the resources in reverse
+>         order.  This
+>         avoids the duplication of code within the function, and
+>         reduces the
+>         chance for errors when the function is later modified.  See
+>         init_sd
+>         in drivers/scsi/sd.c for an example.
+>         
+>         Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+>         
+>         
+> 
+> 
+> Then in summary, after failing allocation, I need to call
+> 
+> 
+> list_del(&ioc->list);
+> if (ioc->alt_ioc)
+>   ioc->alt_ioc->alt_ioc = NULL;
+> iounmap(ioc->memmap);
+> kfree(ioc);
+> pci_set_drvdata(pdev, NULL);
+> 
+> 
+> right?
+
+I think you also need this:
+
+                if (r != -5)
+                        pci_release_selected_regions(pdev, ioc->bars);
+
+                destroy_workqueue(ioc->reset_work_q);
+                ioc->reset_work_q = NULL;
+
+prior to your kfree(ioc) call.
+
+Alternatively it looks like the code to create the ioc->fw_event_q could
+be moved up to be right after the code to create the ioc->reset_work_q,
+that might simplify the code a little bit as the ioc has not been added
+to the &ioc_list and pci_set_drvdata() has not yet been called.
+
+Note however that a failed call to mpt_do_ioc_recovery() still needs to
+perform all the recovery actions, including destroying both work queues,
+so consider putting the error handling code at the end of the function
+as I mentioned above.  Otherwise, you should add:
+
+                destroy_workqueue(ioc->fw_event_q);
+                ioc->fw_event_q = NULL;
+
+prior to the call to destroy_workqueue(ioc->reset_work_q) in that path.
+
+-Ewan
+
+> 
+> 
+> -- 
+> Regards
+> Insu Yun
