@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/6] hisi_sas: use slot abort in v2 hw
-Date: Tue, 16 Feb 2016 20:22:29 +0800
-Message-ID: <1455625351-165881-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 6/6] hisi_sas: update driver version to 1.3
+Date: Tue, 16 Feb 2016 20:22:31 +0800
+Message-ID: <1455625351-165881-7-git-send-email-john.garry@huawei.com>
 References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,68 +12,23 @@ To: JBottomley@odin.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When TRANS_TX_ERR_FRAME_TXED error occurs for
-a command, the command should be re-attempted.
-
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 58e1956..2bf93079b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1190,7 +1190,8 @@ static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
- /* by default, task resp is complete */
- static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 			   struct sas_task *task,
--			   struct hisi_sas_slot *slot)
-+			   struct hisi_sas_slot *slot,
-+			   int *abort_slot)
- {
- 	struct task_status_struct *ts = &task->task_status;
- 	struct hisi_sas_err_record_v2 *err_record = slot->status_buffer;
-@@ -1299,6 +1300,13 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 			ts->stat = SAS_DATA_UNDERRUN;
- 			break;
- 		}
-+		case TRANS_TX_ERR_FRAME_TXED:
-+		{
-+			/* This will request a retry */
-+			ts->stat = SAS_QUEUE_FULL;
-+			++(*abort_slot);
-+			break;
-+		}
- 		case TRANS_TX_OPEN_FAIL_WITH_IT_NEXUS_LOSS:
- 		case TRANS_TX_ERR_PHY_NOT_ENABLE:
- 		case TRANS_TX_OPEN_CNX_ERR_BY_OTHER:
-@@ -1491,11 +1499,17 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index a05ce71..beb7318 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -23,7 +23,7 @@
+ #include <scsi/sas_ata.h>
+ #include <scsi/libsas.h>
  
- 	if ((complete_hdr->dw0 & CMPLT_HDR_ERX_MSK) &&
- 		(!(complete_hdr->dw0 & CMPLT_HDR_RSPNS_XFRD_MSK))) {
-+		int abort_slot = 0;
- 		dev_dbg(dev, "%s slot %d has error info 0x%x\n",
- 			__func__, slot->cmplt_queue_slot,
- 			complete_hdr->dw0 & CMPLT_HDR_ERX_MSK);
+-#define DRV_VERSION "v1.2"
++#define DRV_VERSION "v1.3"
  
--		slot_err_v2_hw(hisi_hba, task, slot);
-+		slot_err_v2_hw(hisi_hba, task, slot, &abort_slot);
-+		if (unlikely(abort_slot)) {
-+			queue_work(hisi_hba->wq, &slot->abort_slot);
-+			sts = ts->stat;
-+			goto out_1;
-+		}
- 		goto out;
- 	}
- 
-@@ -1555,6 +1569,7 @@ out:
- 
- 	if (task->task_done)
- 		task->task_done(task);
-+out_1:
- 
- 	return sts;
- }
+ #define HISI_SAS_MAX_PHYS	9
+ #define HISI_SAS_MAX_QUEUES	32
 -- 
 1.9.1
