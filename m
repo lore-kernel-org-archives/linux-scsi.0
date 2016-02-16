@@ -1,54 +1,62 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] lpfc: fix missing zero termination in debugfs
-Date: Tue, 16 Feb 2016 07:52:36 +0100
-Message-ID: <20160216065236.GF18134@c203.arch.suse.de>
-References: <20160215191142.19028.9220.stgit@localhost.localdomain>
+Subject: Re: [PATCH] esas2r: Fix array overrun
+Date: Tue, 16 Feb 2016 08:02:51 +0100
+Message-ID: <20160216070251.GG18134@c203.arch.suse.de>
+References: <20160215190123.11294.22634.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38663 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39023 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753615AbcBPGwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Feb 2016 01:52:38 -0500
+	id S1753552AbcBPHCy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Feb 2016 02:02:54 -0500
 Content-Disposition: inline
-In-Reply-To: <20160215191142.19028.9220.stgit@localhost.localdomain>
+In-Reply-To: <20160215190123.11294.22634.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan <gnomes@lxorguk.ukuu.org.uk>
-Cc: linux-scsi@vger.kernel.org
+Cc: thenzl@redhat.com, linux-scsi@vger.kernel.org
 
-On Mon, Feb 15, 2016 at 07:11:56PM +0000, Alan wrote:
-> If you feed 32 bytes in then the kstrtoull() doesn't receive a termin=
-ated
-> string so will run off the end.
+On Mon, Feb 15, 2016 at 07:01:29PM +0000, Alan wrote:
+> Check the array size *before* dereferencing it with a user provided o=
+ffset
 >=20
 > Signed-off-by: Alan Cox <alan@linux.intel.com>
 > ---
->  drivers/scsi/lpfc/lpfc_debugfs.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/esas2r/esas2r_ioctl.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpf=
-c_debugfs.c
-> index 25aa9b9..a63542b 100644
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-> @@ -1054,11 +1054,11 @@ lpfc_debugfs_dif_err_write(struct file *file,=
- const char __user *buf,
->  {
->  	struct dentry *dent =3D file->f_path.dentry;
->  	struct lpfc_hba *phba =3D file->private_data;
-> -	char dstbuf[32];
-> +	char dstbuf[33];
->  	uint64_t tmp =3D 0;
->  	int size;
+> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r=
+/esas2r_ioctl.c
+> index baf9130..3e84834 100644
+> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
+> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+> @@ -1360,14 +1360,15 @@ int esas2r_ioctl_handler(void *hostdata, int =
+cmd, void __user *arg)
+>  	if (ioctl->header.channel =3D=3D 0xFF) {
+>  		a =3D (struct esas2r_adapter *)hostdata;
+>  	} else {
+> -		a =3D esas2r_adapters[ioctl->header.channel];
+> -		if (ioctl->header.channel >=3D MAX_ADAPTERS || (a =3D=3D NULL)) {
+> +		if (ioctl->header.channel >=3D MAX_ADAPTERS ||
+> +			esas2r_adapters[ioctl->header.channel] =3D=3D NULL) {
+>  			ioctl->header.return_code =3D IOCTL_BAD_CHANNEL;
+>  			esas2r_log(ESAS2R_LOG_WARN, "bad channel value");
+>  			kfree(ioctl);
 > =20
-> -	memset(dstbuf, 0, 32);
-> +	memset(dstbuf, 0, 33);
->  	size =3D (nbytes < 32) ? nbytes : 32;
->  	if (copy_from_user(dstbuf, buf, size))
->  		return 0;
+>  			return -ENOTSUPP;
+>  		}
+> +		a =3D esas2r_adapters[ioctl->header.channel];
+>  	}
+> =20
+>  	switch (cmd) {
 >=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
