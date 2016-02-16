@@ -1,27 +1,19 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] esas2r: Fix array overrun
-Date: Tue, 16 Feb 2016 13:24:35 +0100
-Message-ID: <56C31503.9060805@redhat.com>
-References: <20160215190123.11294.22634.stgit@localhost.localdomain>
+From: MF <damene.dj@univ-ouargla.dz>
+Subject: Cash|Deposit
+Date: Tue, 16 Feb 2016 14:59:44 +0100 (CET)
+Message-ID: <827995416.349383.1455631184450.JavaMail.zimbra@univ-ouargla.dz>
+Reply-To: MF <ferr@nutel.96.lt>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39978 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754764AbcBPMYh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Feb 2016 07:24:37 -0500
-In-Reply-To: <20160215190123.11294.22634.stgit@localhost.localdomain>
+Received: from mail.univ-ouargla.dz ([193.194.92.3]:60139 "HELO
+	mail.univ-ouargla.dz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932168AbcBPNXL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2016 08:23:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan <gnomes@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
 
-On 15.2.2016 20:01, Alan wrote:
-> Check the array size *before* dereferencing it with a user provided offset
->
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Tomas
-
+US3.82Million cash for you. Write for info.
