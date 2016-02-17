@@ -1,60 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 3/7] ibmvscsi: Replace magic values in
- set_adpater_info() with defines
-Date: Wed, 17 Feb 2016 09:05:36 +0100
-Message-ID: <20160217080536.GJ18134@c203.arch.suse.de>
-References: <1455154348-3226-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <1455154348-3226-4-git-send-email-tyreld@linux.vnet.ibm.com>
- <1455295395.2396.22.camel@HansenPartnership.com>
- <56BE0D7D.3050703@linux.vnet.ibm.com>
- <yq1k2m4xclf.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1k2m4xclf.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, manoj@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+From: Chaitra P B <chaitra.basappa@broadcom.com>
+Subject: [PATCH 0/2] mpt3sas driver fix and updated MAINTAINERS list:
+Date: Wed, 17 Feb 2016 16:55:24 +0530
+Message-ID: <1455708326-7584-1-git-send-email-chaitra.basappa@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34305 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161157AbcBQLZx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2016 06:25:53 -0500
+Received: by mail-pf0-f181.google.com with SMTP id x65so10074801pfb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Feb 2016 03:25:53 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, krishnaraddi.mankani@avagotech.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 
-On Tue, Feb 16, 2016 at 10:03:24PM -0500, Martin K. Petersen wrote:
-> >>>>> "Tyrel" =3D=3D Tyrel Datwyler <tyreld@linux.vnet.ibm.com> write=
-s:
->=20
-> >> Is there some reason you didn't carry the review tag over from thi=
-s:
-> >>=20
-> >> http://mid.gmane.org/20160204084459.GW27969@c203.arch.suse.de
-> >>=20
-> >> ?
-> >>=20
-> >> James
->=20
-> Tyrel> The patch is slightly changed from v1. A define for AIX os typ=
-e
-> Tyrel> was added as mentioned in the cover letter v2 changes, and I
-> Tyrel> moved the defines to the mad_adapter_info_data structure aroun=
-d
-> Tyrel> the fields they apply.
->=20
-> Johannes: Mind checking this out?
+Here is the change list:
+Posting 2 patches for mpt3sas driver fix and updated MAINTAINERS list.
+ * Deallocates resources before reallocating of the same in retry_allocation
+   path of _base_allocate_memory_pools().
+ * Updated MAINTAINERS list for MPT FUSION DRIVERS.
 
-I'm sorry I though I already did.
+Chaitra P B (2):
+  mpt3sas: Deallocate resources before trying reallocation of the
+  same in _base_allocate_memory_pools().
+  Modified Maintainers list for MPT FUSION DRIVERS.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+ MAINTAINERS                         | 7 +++----
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 7 +++++--
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
->=20
-> https://patchwork.kernel.org/patch/8276101/
->=20
-> --=20
-> Martin K. Petersen	Oracle Linux Engineering
+-- 
+1.8.3.1
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
