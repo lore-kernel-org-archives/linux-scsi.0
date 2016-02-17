@@ -1,37 +1,65 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Why does sd "assume write through" instead of "write back"?
-Date: Wed, 17 Feb 2016 08:53:58 +0800
-Message-ID: <CAGnHSEk2+EmV1rct9OpqpnJ5=sC_5FO__+vh_h9x7dyE+WLdBA@mail.gmail.com>
+Subject: ses: wrongly error out for Simple Subenclosures
+Date: Wed, 17 Feb 2016 09:44:16 +0800
+Message-ID: <CAGnHSEmX=8vcg4Os5GpS9CPXMxXA+ePwJVx9YdYymYQbGpmkcw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:35845 "EHLO
-	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933513AbcBQAx7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2016 19:53:59 -0500
-Received: by mail-yw0-f181.google.com with SMTP id e63so1190864ywc.3
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 16:53:59 -0800 (PST)
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:33758 "EHLO
+	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964907AbcBQBvJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2016 20:51:09 -0500
+Received: by mail-yw0-f178.google.com with SMTP id u200so2184824ywf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2016 17:51:09 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Currently the scsi disk driver would "assume write through" (i.e. no
-writeback cache on the disk) when the disk fail to report the
-availablity of writeback cache (e.g. no caching mode page), then spam
-an error through kernel messages.
+I have a WD My Passport that has a SES device with it:
 
-Although there is a switch to change that "assumption", but it's only
-available as a quirk for USB disks.
+[tom@localhost ~]$ lsscsi -g
+...
+[7:0:0:0]    disk    WD       My Passport 083A 1065  /dev/sdc   /dev/sg3
+[7:0:0:1]    enclosu WD       SES Device       1065  -          /dev/sg4
 
-So why shouldn't we make "assume write back" as the general default
-instead? Apparently all it triggers are SYNCHRONIZE CACHE commands,
-which I don't suppose to be dangerous on any disks, no matter it
-actually has writeback cache available/enabled or not? Probably not
-even performance impact?
+which is a Simple Subenclosure, as documented in SES-3 (Rev. 11a) Section 4.3.3.
 
-In case there are any drives that are "allegic" to SYNCHRONIZE CACHE
-(I mean serious issue like the drive will be frozen once it receive
-that command, not something like invalid opcode), shouldn't there be
-quirk written for them, instead of generally falling back to what we
-consider "dangerous" and spam error for every drives that doesn't have
-a caching mode page (which are pretty common)?
+Currently the kernel spam the following error for it:
+
+scsi 7:0:0:1: Wrong diagnostic page; asked for 1 got 0
+scsi 7:0:0:1: Failed to get diagnostic page 0xffffffea
+scsi 7:0:0:1: Failed to bind enclosure -19
+
+However, according to the the aforementioned documentation, Simple
+Subenclosure is a device that does NOT support any SES diagnostic
+page, except the Short Enclosure Status diagnostic page.
+
+And my device is doing pretty much exactly the right thing:
+
+[tom@localhost ~]$ sudo sg_ses /dev/sg4
+  WD        SES Device        1065
+Supported diagnostic pages:
+  Supported Diagnostic Pages [sdp] [0x0]
+  Short Enclosure Status (SES) [ses] [0x8]
+  <unknown> [0x80]
+  <unknown> [0x83]
+  <unknown> [0x84]
+  <unknown> [0x85]
+
+[tom@localhost ~]$ sudo sg_ses -p 0x8 -vvv /dev/sg4
+open /dev/sg4 with flags=0x802
+    inquiry cdb: 12 00 00 00 24 00
+      duration=0 ms
+  WD        SES Device        1065
+    enclosure services device
+    Receive diagnostic results cmd for Short Enclosure Status (SES) page
+    Receive diagnostic results cmd: 1c 01 08 ff fc 00
+      duration=0 ms
+    receive diagnostic results: pass-through requested 65532 bytes
+(data-in) but got 4 bytes
+    receive diagnostic results: response
+08 00 00 00
+Short enclosure status diagnostic page, status=0x0
+
+The content of the Short Enclosure Status page (08 00 00 00) is
+correct as documented in SES-3 (Rev. 11a) Section 6.1.11 too.
