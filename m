@@ -1,34 +1,32 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v8 2/3] added UFS 2.0 capabilities
-Date: Thu, 18 Feb 2016 08:38:37 -0600
-Message-ID: <20160218143837.GD9654@rob-hp-laptop>
-References: <cover.1455549221.git.jpinto@synopsys.com>
- <4e48beb48bc4c67c335de45218e2b49aa51dd4d9.1455549222.git.jpinto@synopsys.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/7] ahci: Convert driver to use modern PM hooks
+Date: Thu, 18 Feb 2016 06:41:24 -0800
+Message-ID: <20160218144124.GA8145@infradead.org>
+References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
+ <CAHp75Vc0F=-5Whiw_CO+_YeL=HsN=GiGprKRd2q9vx_kqT02HA@mail.gmail.com>
+ <20160218131246.GF6479@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4e48beb48bc4c67c335de45218e2b49aa51dd4d9.1455549222.git.jpinto@synopsys.com>
+In-Reply-To: <20160218131246.GF6479@mtj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, arnd@arndb.de, mark.rutland@arm.com, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 15, 2016 at 03:25:12PM +0000, Joao Pinto wrote:
-> Adding UFS 2.0 support to the UFS core driver.
+On Thu, Feb 18, 2016 at 08:12:46AM -0500, Tejun Heo wrote:
+> On Thu, Feb 18, 2016 at 12:45:05PM +0200, Andy Shevchenko wrote:
+> > > +       .driver.pm              = &ahci_pci_pm_ops,
+> > 
+> > Please, do this in several assignments, since to support older compilers.
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
-> Changes v7->v8:
-> - Added "jedec, ufs-2.0" to the ufschd-platform compatibility strings
-> Changes v0->v7:
-> - Nothing changed (just to keep up with patch set version).
-> 
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 +--
+> Can you please elaborate?  That's a single assignment.  Are there
+> compilers which can't do that?
 
-Acked-by: Rob Herring <robh@kernel.org>
+Old gcc (I think 4.4 is the last one) needs:
 
->  drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++++++---
->  drivers/scsi/ufs/ufshci.h                          |  1 +
->  3 files changed, 28 insertions(+), 6 deletions(-)
-> 
+	.driver = {
+		.pm		= &ahci_pci_pm_ops,
+	},
