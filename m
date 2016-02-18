@@ -1,75 +1,130 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.42 available
-Date: Wed, 17 Feb 2016 23:59:06 -0500
-Message-ID: <56C54F9A.80902@interlog.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Alison Schofield <amsfield22@gmail.com>
+Subject: [RESEND PATCH v2] scsi: gdth: replace struct timeval with ktime_get_real_seconds()
+Date: Wed, 17 Feb 2016 21:29:34 -0800
+Message-ID: <1455773374-2863-1-git-send-email-amsfield22@gmail.com>
+References: <20151119214304.GA16713@d830.WORKGROUP>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151119214304.GA16713@d830.WORKGROUP>
 Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Martin Pitt <mpitt@debian.org>, David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: achim_leubner@pmc-sierra.com, martin.petersen@oracle.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the Linux 4, 3, 2.6 and 2.4 kernel series. It has ports to
-FreeBSD, Tru64, Solaris, and Windows (cygwin and MinGW).
+struct timeval will overflow on 32-bit systems in y2038 and is being
+removed from the kernel. Replace the use of struct timeval and
+do_gettimeofday() with ktime_get_real_seconds() which provides a 64-bit
+seconds value and is y2038 safe.
 
-There are two new utilities (sg_read_attr and sg_timestamp)
-and additions to many others, see the ChangeLog below. This
-version tracks various changes made by www.t10.org since May
-2015 until January 2016.
+gdth driver requires changes in two areas:
 
-Changelog for sg3_utils-1.42 [20160217] [svn: r663]
-   - sg_timestamp: new, to report or set timestamp
-   - sg_read_attr: new, supported by tape drives
-   - sg_stpg: fix truncation of target port field
-   - sg_inq: cope with unicode strings, udev fixes
-     - update version descriptor list to 20160125
-     - '--export': new entries for UUID descriptor
-   - sg_ses: add more field acronyms (ses3r11)
-   - sg_logs: add Utilization lpage (sbc4r07)
-     - add Background operation lpage
-     - add Pending defects lpage
-     - add LPS misalignment lpage (sbc4r10)
-     - document '--All' ('-A') option
-     - rework lto tape vendor lpages
-   - sg_vpd: add Block limits extension VPD page
-     - add Device constituents VPD page
-     - add LB Protection VPD page (ssc 15-296r1)
-     - LB provisioning VPD page: expand LBPRZ, add
-       Minimum and Threshold percentage fields
-     - rework lto tape vendor VPD pages
-   - sg_inq+sg_vpd+sg_xcopy: add support for locally
-     assigned UUIDs in VPD page 0x83 (spc5r08)
-   - sg_sanitize: add --znr option (sbc4r07)
-   - sg_rep_zones: add --partial option (zbc-r04)
-   - sg_format: add ffmt option (sbc4r10)
-     - add support for FORMAT MEDIUM (for tape)
-   - sg_raw: document length relationships
-   - rescan-scsi-bus.sh: updates from Suse
-   - sg_lib_data: sync asc/ascq codes with T10 20151126
-   - sg_lib: add 'sense' categories for SCSI statuses:
-     condition met, busy, task set full, ACA active and
-     task aborted
-     - add pr2serr() extern
-     - change sg_get_sense_str() and dStrHexStr(), return
-       chars written (returned void previously)
-     - add sg_get_sense_descriptors_str() function
-     - add sg_get_designation_descriptor_str() function
-     - sg_get_desig_type_str()+sg_get_desig_assoc_str()
-       and sg_get_desig_code_set_str() added
-     - sg_get_opcode_sa_name() break out zoning in/out,
-       read attribute and read position service actions
-   - sg_cmds_extra: add sg_ll_format_unit2() for FFMT
-   - sg_pr2serr.h: new, to shorten fprintf(stderr, ...)
-   - sg_io_linux, sg_pt_linux: drop SUGGEST_* decoding
-   - sg_unaligned.h: add 48 bit support and gets for
-     variable length unsigned integers
+1) gdth_store_event() loads two u32 timestamp fields for ioctl GDTIOCTL_EVENT
 
-Changelog for sg3_utils-1.41 [20150511] [svn: r644]
-...
+   These timestamp fields are part of struct gdth_evt_str used for passing
+   event data to userspace. At the first instance of an event we do
+   (first_stamp=last_stamp="current time"). If that same event repeats,
+   we do (last_stamp="current time") AND increment same_count to indicate
+   how many times the event has repeated since first_stamp.
 
-Doug Gilbert
+   This patch replaces the use of timeval and do_gettimeofday() with
+   ktime_get_real_seconds() cast to u32 to extend the timestamp fields
+   to y2106.
+
+   Beyond y2106, the userspace tools (ie. RAID controller monitors) can
+   work around the time rollover and this driver would still not need to
+   change.
+
+   Alternative: The alternative approach is to introduce a new ioctl in gdth
+   with the u32 time fields defined as u64.  This would require userspace
+   changes now, but not in y2106.
+
+2)  gdth_show_info() calculates elapsed time using u32 first_stamp
+
+    It is adding events with timestamps to a seq_file.  Timestamps are
+    calculated as the "current time" minus the first_stamp.
+
+    This patch replaces the use of timeval and do_gettimeofday() with
+    ktime_get_real_seconds() cast to u32 to calculate the timestamp.
+
+    This elapsed time calculation is safe even when the time wraps (beyond
+    y2106) due to how unsigned subtraction works. A comment has been added
+    to the code to indicate this safety.
+
+    Alternative: This piece itself doesn't warrant an alternative, but
+    if we do introduce a new structure & ioctl with u64 timestamps, this
+    would change accordingly.
+
+Signed-off-by: Alison Schofield <amsfield22@gmail.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+Changes in v2:
+- remove unnecessary ktime.h includes
+- add comment in code to explain elapsed time calculation
+- add detail and alternatives to changelog
+
+
+ drivers/scsi/gdth.c      |  7 ++-----
+ drivers/scsi/gdth_proc.c | 11 ++++++++---
+ 2 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 71e1380..0a76774 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -2838,7 +2838,6 @@ static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
+                                       u16 idx, gdth_evt_data *evt)
+ {
+     gdth_evt_str *e;
+-    struct timeval tv;
+ 
+     /* no GDTH_LOCK_HA() ! */
+     TRACE2(("gdth_store_event() source %d idx %d\n", source, idx));
+@@ -2854,8 +2853,7 @@ static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
+             !strcmp((char *)&ebuffer[elastidx].event_data.event_string,
+             (char *)&evt->event_string)))) { 
+         e = &ebuffer[elastidx];
+-        do_gettimeofday(&tv);
+-        e->last_stamp = tv.tv_sec;
++	e->last_stamp = (u32)ktime_get_real_seconds();
+         ++e->same_count;
+     } else {
+         if (ebuffer[elastidx].event_source != 0) {  /* entry not free ? */
+@@ -2871,8 +2869,7 @@ static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
+         e = &ebuffer[elastidx];
+         e->event_source = source;
+         e->event_idx = idx;
+-        do_gettimeofday(&tv);
+-        e->first_stamp = e->last_stamp = tv.tv_sec;
++	e->first_stamp = e->last_stamp = (u32)ktime_get_real_seconds();
+         e->same_count = 1;
+         e->event_data = *evt;
+         e->application = 0;
+diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
+index e66e997..be609db 100644
+--- a/drivers/scsi/gdth_proc.c
++++ b/drivers/scsi/gdth_proc.c
+@@ -148,7 +148,6 @@ int gdth_show_info(struct seq_file *m, struct Scsi_Host *host)
+     gdth_cmd_str *gdtcmd;
+     gdth_evt_str *estr;
+     char hrec[161];
+-    struct timeval tv;
+ 
+     char *buf;
+     gdth_dskstat_str *pds;
+@@ -540,8 +539,14 @@ int gdth_show_info(struct seq_file *m, struct Scsi_Host *host)
+         if (estr->event_data.eu.driver.ionode == ha->hanum &&
+             estr->event_source == ES_ASYNC) { 
+             gdth_log_event(&estr->event_data, hrec);
+-            do_gettimeofday(&tv);
+-            sec = (int)(tv.tv_sec - estr->first_stamp);
++
++	    /*
++	     * Elapsed seconds subtraction with unsigned operands is
++	     * safe from wrap around in year 2106.  Executes as:
++	     * operand a + (2's complement operand b) + 1
++	     */
++
++	    sec = (int)((u32)ktime_get_real_seconds() - estr->first_stamp);
+             if (sec < 0) sec = 0;
+             seq_printf(m," date- %02d:%02d:%02d\t%s\n",
+                            sec/3600, sec%3600/60, sec%60, hrec);
+-- 
+2.1.4
