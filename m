@@ -1,75 +1,89 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 5/6] hisi_sas: add hisi_sas_slave_configure()
-Date: Thu, 18 Feb 2016 08:40:26 +0100
-Message-ID: <56C5756A.9060700@suse.de>
-References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
- <1455625351-165881-6-git-send-email-john.garry@huawei.com>
- <56C34163.70606@suse.de> <56C354A5.6080503@huawei.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2] [SCSI] dpt_i2o: use proper pci driver
+Date: Thu, 18 Feb 2016 09:19:30 +0100
+Message-ID: <20160218081930.GM18134@c203.arch.suse.de>
+References: <1455711614-5185-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <20160217142732.6dcad24c@lxorguk.ukuu.org.uk>
+ <56C496AB.2070200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56C354A5.6080503@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, JBottomley@odin.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:39684 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1424759AbcBRITe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2016 03:19:34 -0500
+Content-Disposition: inline
+In-Reply-To: <56C496AB.2070200@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 02/16/2016 05:56 PM, John Garry wrote:
-> On 16/02/2016 15:33, Hannes Reinecke wrote:
->> On 02/16/2016 01:22 PM, John Garry wrote:
->>> In high-datarate aging tests, it is found that
->>> the SCSI framework can periodically
->>> issue lu resets to the device. This is because scsi
->>> commands begin to timeout. It is found that TASK SET
->>> FULL may be returned many times for the same command,
->>> causing the timeouts.
->>> To overcome this, the queue depth for the device needs
->>> to be reduced to 64 (from 256, set in
->>> sas_slave_configure()).
->>>
->> Hmm. TASK SET FULL should cause the queue depth to be reduced
->> automatically, no?
->>
->> Cheers,
->>
->> Hannes
->>
+On Wed, Feb 17, 2016 at 09:20:03PM +0530, Sudip Mukherjee wrote:
+> On Wednesday 17 February 2016 07:57 PM, One Thousand Gnomes wrote:
+> >On Wed, 17 Feb 2016 17:50:14 +0530
+> >Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
+> >
+> >>This is a pci device but was not done in the usual way a pci driver=
+ is
+> >>done. Convert the driver into a proper pci driver.
+> >
+> >This looks completely wrong. Please read the I2O 1.5 specification
+> >document before playing with that code. You can't simply convert it =
+to a
+> >standard PCI driver as all the IOPs are supposed to be detected and =
+then
+> >the correct initialization sequence executed across the set of IOPs.=
+ IOPs
+> >are allowed to talk to one another and the system table binds it all
+> >together.
 >=20
-> I need to double-check if Task set full reduces the depth, I don't
-> think it does.
+> Yes, thanks for letting me know about the spec. It is saying
+> "The host locates each IOP, adds it
+> to the system configuration table, and initializes the IOP=E2=80=99s =
+outbound
+> message queue. The host then
+> provides each IOP with a list of all IOPs and the physical location o=
+f their
+> inbound message queue."
 >=20
-> Regardless I found we were getting a combination of commands being
-> retried due to Task Set Full and also SAS_QUEUE_FULL errors. For
-> sure the SAS_QUEUE_FULL task errors reduce the queue depth in
-> scsi_track_queue_full(). However I found it to be very slow in
-> tracking, and we were getting commands timing out before the queue
-> depth fell enough.
+> >
+> >If you do hot plug then you need to follow the specification and do
+> >all the extra notifications. Unless you've got multiple FC909/FC920
+> >fibechannel cards or similar to test with I would just leave this we=
+ll
+> >alone.
 >=20
-> It would be nice to change default queue depth in
-> sas_slave_configure() to a lower value so we can avoid this patch,
-> but I am not sure if other vendor's HBA performance would be
-> affected. From looking at the history of sas_slave_configure(), it
-> would seem the value of 256 was inherited from mpt2sas driver, so
-> I'm not sure.
+> point noted.
 >=20
-Well, the classical thing would be to associate each request tag
-with a SAS task; or, in your case, associate each slot index with a
-request tag.
-You probably would need to reserve some slots for TMFs, ie you'd
-need to decrease the resulting ->can_queue variable by that.
-But once you've done that you shouldn't hit any QUEUE_FULL issues,
-as the block layer will ensure that no tags will be reused while the
-command is in flight.
-Plus this is something you really need to be doing if you ever
-consider moving to scsi-mq ...
+> >Your original simple patch is *MUCH* safer in this specific case.
+>=20
+> The original patch is already having NACK from Johannes. So i better =
+leave
+> this code here.
 
-Cheers,
+Nah, wasn't a hard NACK. I'm OK with the original code, just was reluct=
+ant to
+the #ifdefs. I agree I didn't know the I2O specifics and thought a "nor=
+mal"
+PCI driver fitting nicely in the driver model would be the way to go.
 
-Hannes
+Please resend your v1 with my Reviewed-by
+
+>=20
+> regards
+> sudip
+
 --=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
