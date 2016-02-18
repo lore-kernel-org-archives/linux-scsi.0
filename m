@@ -1,35 +1,93 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] block/sd: Return -EREMOTEIO when WRITE SAME and DISCARD are disabled
-Date: Wed, 17 Feb 2016 19:22:11 -0500
-Message-ID: <yq1k2m2sw98.fsf@sermon.lab.mkp.net>
-References: <20160204042528.GA15599@redhat.com>
-	<1454568483-11298-1-git-send-email-martin.petersen@oracle.com>
-	<56B316EA.9090803@huawei.com> <yq14mdnhmry.fsf@sermon.lab.mkp.net>
-	<56C31295.2020309@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48357 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161199AbcBRAWa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2016 19:22:30 -0500
-In-Reply-To: <56C31295.2020309@huawei.com> (jiangyiwen@huawei.com's message of
-	"Tue, 16 Feb 2016 20:14:13 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Insu Yun <wuninsu@gmail.com>
+Subject: [PATCH v2] fusion-mptbase: handle failed allocation for workqueue
+Date: Wed, 17 Feb 2016 23:40:59 -0500
+Message-ID: <1455770459-905-1-git-send-email-wuninsu@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jiangyiwen <jiangyiwen@huawei.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, snitzer@redhat.com, James Bottomley <james.bottomley@hansenpartnership.com>
 
->>>>> "Yiwen" == jiangyiwen  <jiangyiwen@huawei.com> writes:
+the failure of ioc->reset_work_q is checked,
+but not ioc->fw_event_q.
 
-Yiwen,
+Signed-off-by: Insu Yun <wuninsu@gmail.com>
+---
+ drivers/message/fusion/mptbase.c | 44 ++++++++++++++++++++++++----------------
+ 1 file changed, 27 insertions(+), 17 deletions(-)
 
-Yiwen> When called scsi_prep_fn return BLKPREP_INVALID, we should use
-Yiwen> the same code with BLKPREP_KILL in scsi_prep_return.
-
-You are right!
-
-Applied to 4.5/scsi-fixes.
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 5dcc031..53a5015 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1871,9 +1871,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!ioc->reset_work_q) {
+ 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
+ 		    ioc->name);
+-		pci_release_selected_regions(pdev, ioc->bars);
+-		kfree(ioc);
+-		return -ENOMEM;
++		r = -ENOMEM;
++		goto err3;
+ 	}
+ 
+ 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
+@@ -1996,24 +1995,16 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id);
+ 	ioc->fw_event_q = create_singlethread_workqueue(ioc->fw_event_q_name);
+ 
++	if (!ioc->fw_event_q) {
++		r = -ENOMEM;
++		goto err2;
++	}
++
+ 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
+ 	    CAN_SLEEP)) != 0){
+ 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
+ 		    ioc->name, r);
+-
+-		list_del(&ioc->list);
+-		if (ioc->alt_ioc)
+-			ioc->alt_ioc->alt_ioc = NULL;
+-		iounmap(ioc->memmap);
+-		if (r != -5)
+-			pci_release_selected_regions(pdev, ioc->bars);
+-
+-		destroy_workqueue(ioc->reset_work_q);
+-		ioc->reset_work_q = NULL;
+-
+-		kfree(ioc);
+-		pci_set_drvdata(pdev, NULL);
+-		return r;
++		goto err1;
+ 	}
+ 
+ 	/* call per device driver probe entry point */
+@@ -2040,6 +2031,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 			msecs_to_jiffies(MPT_POLLING_INTERVAL));
+ 
+ 	return 0;
++
++err1:
++		destroy_workqueue(ioc->fw_event_q);
++		ioc->fw_event_q = NULL;
++err2::
++		destroy_workqueue(ioc->reset_work_q);
++		ioc->reset_work_q = NULL;
++
++		list_del(&ioc->list);
++		if (ioc->alt_ioc)
++			ioc->alt_ioc->alt_ioc = NULL;
++		iounmap(ioc->memmap);
++		pci_set_drvdata(pdev, NULL);
++err3:
++		if (r != -5)
++			pci_release_selected_regions(pdev, ioc->bars);
++		kfree(ioc);
++		return r;
++
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.9.1
