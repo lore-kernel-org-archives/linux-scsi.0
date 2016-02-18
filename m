@@ -1,168 +1,64 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH v2] fusion-mptbase: handle failed allocation for
- workqueue
-Date: Thu, 18 Feb 2016 11:55:15 -0500
-Message-ID: <1455814515.22112.476.camel@localhost.localdomain>
-References: <1455770459-905-1-git-send-email-wuninsu@gmail.com>
-	 <20160218090043.GQ18134@c203.arch.suse.de>
-	 <1455813615.22112.473.camel@localhost.localdomain>
-Reply-To: emilne@redhat.com
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-multipath test scripts
+Date: Thu, 18 Feb 2016 12:17:45 -0500
+Message-ID: <20160218171745.GA15071@redhat.com>
+References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-+wvKbEVkWqRTfzafqJdu"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1455813615.22112.473.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: thenzl@redhat.com, Insu Yun <wuninsu@gmail.com>, nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40801 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946487AbcBRRRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2016 12:17:46 -0500
+Content-Disposition: inline
+In-Reply-To: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Wed, Oct 07 2015 at  1:39am -0400,
+Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
 
---=-+wvKbEVkWqRTfzafqJdu
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-On Thu, 2016-02-18 at 11:40 -0500, Ewan Milne wrote:
-> It also appears to me upon further inspection that the existing code has
-> other problems.  In particular, once mpt_mapresources() has returned
-> with a nonzero error code, it looks like iounmap() should be called, but
-> it is not in the case of a failed allocation of reset_work_q.  I'm also
-> not sure why pci_release_selected_regions() is only called for the case
-> of mpt_do_ioc_recovery() returning != -5 when it is called whenever
-> there is a failed allocation of reset_work_q.
+> This is a set of scripts for kernel-side dm-multipath testing. Current
+> set of scripts are stress testing of extreme situation and its coverage
+> is limited. But recently found dm-mpath regressions should be detectable
+> with this. I hope this helps people working on dm-multipath related code
+> as a regression test set.
 > 
-> Consider the attached patch (untested, because I don't have hardware):
-> It shows what I would do for labels & error handling.  If the rc != -5
-> case of return from mpt_do_ioc_recovery() could be eliminated, then
-> another label "out_free_fw_event_q:" could be added prior to the other
-> error cases at the end, and all the code after the printk() in that path
-> could be replaced by "goto out_free_fw_event_q;"
+> Though this is created as a patch for linux kernel source, it's just for
+> convenience of kernel developers (I don't have a place to host this kind
+> of scripts). If there are better place to contribute this, please let me know.
 > 
-> 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
-> 	    CAN_SLEEP)) != 0){
-> 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
-> 		    ioc->name, r);
-> 		goto out_free_fw_event_q;
-> 	}
-> ...
-> 
-> out_free_fw_event_q:
-> 	destroy_workqueue(ioc->fw_event_q);
-> 	ioc->fw_event_q = NULL;
-> 
-> out_remove_ioc:
-> ...
-> 
-> However I do not know if that change is legitimate.
-> 
-> -Ewan
+> Please check README for how-to-run and possible improvements you could
+> contribute in future.
 
-There is an error in the patch attached in my previous mail.
-Please refer to the attached PATCH v2 RFC.
+I finally got around to trying these scripts.  Thanks for making them
+available.
 
--Ewan
+But unfortunately I cannot get either the scsidebug or tcmloop mode to
+run against v4.5-rc4
 
+For tcmloop, targetcli fails with:
+"Could not create ISCSIFabricModule in configFS."
+(fixed by enabling CONFIG_ISCSI_TARGET under TARGET_CORE)
 
---=-+wvKbEVkWqRTfzafqJdu
-Content-Disposition: attachment; filename="0001-mptbase-fixup-error-handling-paths-in-mpt_attach.patch"
-Content-Type: text/x-patch; name="0001-mptbase-fixup-error-handling-paths-in-mpt_attach.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+I'm seeing all tests fail due to fio verification failure.  I'll need to
+inspect this further..
 
->From 79fd59c66c3afb339cf9fdd1fda65e78e32831a4 Mon Sep 17 00:00:00 2001
-From: "Ewan D. Milne" <emilne@redhat.com>
-Date: Thu, 18 Feb 2016 11:49:37 -0500
-Subject: [PATCH v2 RFC] mptbase: fixup error handling paths in mpt_attach()
+But the most problematic test is ./tests/test_03_dm_failpath -- it seems
+to actively break _any_ v4.5-rc kernel I try (with a never-ending flood
+of messages like "device-mapper: multipath: Failing path 8:192."); I
+haven't tried older kernels.
 
-mpt_attach() was not checking for the failure to create fw_event_q.
-Also, iounmap() was not being called in all error cases after ioremap()
-had been called by mpt_mapresources().
----
- drivers/message/fusion/mptbase.c | 37 +++++++++++++++++++++++++++++++------
- 1 file changed, 31 insertions(+), 6 deletions(-)
+What is the last kernel version that your scripts have worked on?
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5dcc031..a4f362b 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1801,8 +1801,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	ioc->pcidev = pdev;
- 	if (mpt_mapresources(ioc)) {
--		kfree(ioc);
--		return r;
-+		goto out_free_ioc;
- 	}
- 
- 	/*
-@@ -1871,9 +1870,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (!ioc->reset_work_q) {
- 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
- 		    ioc->name);
--		pci_release_selected_regions(pdev, ioc->bars);
--		kfree(ioc);
--		return -ENOMEM;
-+		r = -ENOMEM;
-+		goto out_unmap_resources;
- 	}
- 
- 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
-@@ -1995,12 +1993,21 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	spin_lock_init(&ioc->fw_event_lock);
- 	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id);
- 	ioc->fw_event_q = create_singlethread_workqueue(ioc->fw_event_q_name);
-+	if (!ioc->fw_event_q) {
-+		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
-+		    ioc->name);
-+		r = -ENOMEM;
-+		goto out_remove_ioc;
-+	}
- 
- 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
- 	    CAN_SLEEP)) != 0){
- 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
- 		    ioc->name, r);
- 
-+		destroy_workqueue(ioc->fw_event_q);
-+		ioc->fw_event_q = NULL;
-+
- 		list_del(&ioc->list);
- 		if (ioc->alt_ioc)
- 			ioc->alt_ioc->alt_ioc = NULL;
-@@ -2040,6 +2047,24 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 			msecs_to_jiffies(MPT_POLLING_INTERVAL));
- 
- 	return 0;
-+
-+out_remove_ioc:
-+	list_del(&ioc->list);
-+	if (ioc->alt_ioc)
-+		ioc->alt_ioc->alt_ioc = NULL;
-+	pci_set_drvdata(ioc->pcidev, NULL);
-+
-+	destroy_workqueue(ioc->reset_work_q);
-+	ioc->reset_work_q = NULL;
-+
-+out_unmap_resources:
-+	iounmap(ioc->memmap);
-+	pci_release_selected_regions(pdev, ioc->bars);
-+
-+out_free_ioc:
-+	kfree(ioc);
-+
-+	return r;
- }
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-@@ -6229,7 +6254,7 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
- 	memcpy(ioc->board_assembly, pbuf->BoardAssembly, sizeof(ioc->board_assembly));
- 	memcpy(ioc->board_tracer, pbuf->BoardTracerNumber, sizeof(ioc->board_tracer));
- 
--	out:
-+out:
- 
- 	if (pbuf)
- 		pci_free_consistent(ioc->pcidev, hdr.PageLength * 4, pbuf, buf_dma);
--- 
-2.1.0
+Taking a step back:
+These scripts don't belong in Documentation/device-mapper/mptest/ (or
+anywhere in the kernel tree for that matter).
 
+I'd really prefer it if we could port your scripts over to the
+device-mapper-test-suite, see:
+https://github.com/jthornber/device-mapper-test-suite
 
---=-+wvKbEVkWqRTfzafqJdu--
+Mike
