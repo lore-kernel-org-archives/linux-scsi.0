@@ -1,64 +1,78 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-multipath test scripts
-Date: Thu, 18 Feb 2016 12:17:45 -0500
-Message-ID: <20160218171745.GA15071@redhat.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.5-rc4
+Date: Thu, 18 Feb 2016 09:31:45 -0800
+Message-ID: <1455816705.2852.21.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40801 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946487AbcBRRRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Feb 2016 12:17:46 -0500
-Content-Disposition: inline
-In-Reply-To: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 07 2015 at  1:39am -0400,
-Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
+Two simple fixes.  One prevents a soft lockup on some target removal
+scenarios and the other prevents us trying to probe the marvell console
+device, which causes it to time out and need the bus resetting.
 
-> This is a set of scripts for kernel-side dm-multipath testing. Current
-> set of scripts are stress testing of extreme situation and its coverage
-> is limited. But recently found dm-mpath regressions should be detectable
-> with this. I hope this helps people working on dm-multipath related code
-> as a regression test set.
-> 
-> Though this is created as a patch for linux kernel source, it's just for
-> convenience of kernel developers (I don't have a place to host this kind
-> of scripts). If there are better place to contribute this, please let me know.
-> 
-> Please check README for how-to-run and possible improvements you could
-> contribute in future.
+The patch is available here:
 
-I finally got around to trying these scripts.  Thanks for making them
-available.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-But unfortunately I cannot get either the scsidebug or tcmloop mode to
-run against v4.5-rc4
+The short changelog is:
 
-For tcmloop, targetcli fails with:
-"Could not create ISCSIFabricModule in configFS."
-(fixed by enabling CONFIG_ISCSI_TARGET under TARGET_CORE)
+James Bottomley (1):
+      scsi: fix soft lockup in scsi_remove_target() on module removal
 
-I'm seeing all tests fail due to fio verification failure.  I'll need to
-inspect this further..
+Todd Fujinaka (1):
+      SCSI: Add Marvell configuration device to VPD blacklist
 
-But the most problematic test is ./tests/test_03_dm_failpath -- it seems
-to actively break _any_ v4.5-rc kernel I try (with a never-ending flood
-of messages like "device-mapper: multipath: Failing path 8:192."); I
-haven't tried older kernels.
+And the diffstat:
 
-What is the last kernel version that your scripts have worked on?
+ drivers/scsi/scsi_devinfo.c | 1 +
+ drivers/scsi/scsi_sysfs.c   | 6 ++++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Taking a step back:
-These scripts don't belong in Documentation/device-mapper/mptest/ (or
-anywhere in the kernel tree for that matter).
+With the full diff below.
 
-I'd really prefer it if we could port your scripts over to the
-device-mapper-test-suite, see:
-https://github.com/jthornber/device-mapper-test-suite
+James
 
-Mike
+---
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index da2e068..bbfbfd9 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -206,6 +206,7 @@ static struct {
+ 	{"iRiver", "iFP Mass Driver", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
+ 	{"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
++	{"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
+ 	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 4f18a85..00bc721 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1272,16 +1272,18 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ void scsi_remove_target(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	struct scsi_target *starget;
++	struct scsi_target *starget, *last_target = NULL;
+ 	unsigned long flags;
+ 
+ restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+-		if (starget->state == STARGET_DEL)
++		if (starget->state == STARGET_DEL ||
++		    starget == last_target)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
++			last_target = starget;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+ 			scsi_target_reap(starget);
