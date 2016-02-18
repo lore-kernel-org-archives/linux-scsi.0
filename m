@@ -1,93 +1,75 @@
-From: Insu Yun <wuninsu@gmail.com>
-Subject: [PATCH v2] fusion-mptbase: handle failed allocation for workqueue
-Date: Wed, 17 Feb 2016 23:40:59 -0500
-Message-ID: <1455770459-905-1-git-send-email-wuninsu@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.42 available
+Date: Wed, 17 Feb 2016 23:59:06 -0500
+Message-ID: <56C54F9A.80902@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Martin Pitt <mpitt@debian.org>, David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-the failure of ioc->reset_work_q is checked,
-but not ioc->fw_event_q.
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the Linux 4, 3, 2.6 and 2.4 kernel series. It has ports to
+FreeBSD, Tru64, Solaris, and Windows (cygwin and MinGW).
 
-Signed-off-by: Insu Yun <wuninsu@gmail.com>
----
- drivers/message/fusion/mptbase.c | 44 ++++++++++++++++++++++++----------------
- 1 file changed, 27 insertions(+), 17 deletions(-)
+There are two new utilities (sg_read_attr and sg_timestamp)
+and additions to many others, see the ChangeLog below. This
+version tracks various changes made by www.t10.org since May
+2015 until January 2016.
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5dcc031..53a5015 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1871,9 +1871,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (!ioc->reset_work_q) {
- 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
- 		    ioc->name);
--		pci_release_selected_regions(pdev, ioc->bars);
--		kfree(ioc);
--		return -ENOMEM;
-+		r = -ENOMEM;
-+		goto err3;
- 	}
- 
- 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
-@@ -1996,24 +1995,16 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id);
- 	ioc->fw_event_q = create_singlethread_workqueue(ioc->fw_event_q_name);
- 
-+	if (!ioc->fw_event_q) {
-+		r = -ENOMEM;
-+		goto err2;
-+	}
-+
- 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
- 	    CAN_SLEEP)) != 0){
- 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
- 		    ioc->name, r);
--
--		list_del(&ioc->list);
--		if (ioc->alt_ioc)
--			ioc->alt_ioc->alt_ioc = NULL;
--		iounmap(ioc->memmap);
--		if (r != -5)
--			pci_release_selected_regions(pdev, ioc->bars);
--
--		destroy_workqueue(ioc->reset_work_q);
--		ioc->reset_work_q = NULL;
--
--		kfree(ioc);
--		pci_set_drvdata(pdev, NULL);
--		return r;
-+		goto err1;
- 	}
- 
- 	/* call per device driver probe entry point */
-@@ -2040,6 +2031,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 			msecs_to_jiffies(MPT_POLLING_INTERVAL));
- 
- 	return 0;
-+
-+err1:
-+		destroy_workqueue(ioc->fw_event_q);
-+		ioc->fw_event_q = NULL;
-+err2::
-+		destroy_workqueue(ioc->reset_work_q);
-+		ioc->reset_work_q = NULL;
-+
-+		list_del(&ioc->list);
-+		if (ioc->alt_ioc)
-+			ioc->alt_ioc->alt_ioc = NULL;
-+		iounmap(ioc->memmap);
-+		pci_set_drvdata(pdev, NULL);
-+err3:
-+		if (r != -5)
-+			pci_release_selected_regions(pdev, ioc->bars);
-+		kfree(ioc);
-+		return r;
-+
- }
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
--- 
-1.9.1
+Changelog for sg3_utils-1.42 [20160217] [svn: r663]
+   - sg_timestamp: new, to report or set timestamp
+   - sg_read_attr: new, supported by tape drives
+   - sg_stpg: fix truncation of target port field
+   - sg_inq: cope with unicode strings, udev fixes
+     - update version descriptor list to 20160125
+     - '--export': new entries for UUID descriptor
+   - sg_ses: add more field acronyms (ses3r11)
+   - sg_logs: add Utilization lpage (sbc4r07)
+     - add Background operation lpage
+     - add Pending defects lpage
+     - add LPS misalignment lpage (sbc4r10)
+     - document '--All' ('-A') option
+     - rework lto tape vendor lpages
+   - sg_vpd: add Block limits extension VPD page
+     - add Device constituents VPD page
+     - add LB Protection VPD page (ssc 15-296r1)
+     - LB provisioning VPD page: expand LBPRZ, add
+       Minimum and Threshold percentage fields
+     - rework lto tape vendor VPD pages
+   - sg_inq+sg_vpd+sg_xcopy: add support for locally
+     assigned UUIDs in VPD page 0x83 (spc5r08)
+   - sg_sanitize: add --znr option (sbc4r07)
+   - sg_rep_zones: add --partial option (zbc-r04)
+   - sg_format: add ffmt option (sbc4r10)
+     - add support for FORMAT MEDIUM (for tape)
+   - sg_raw: document length relationships
+   - rescan-scsi-bus.sh: updates from Suse
+   - sg_lib_data: sync asc/ascq codes with T10 20151126
+   - sg_lib: add 'sense' categories for SCSI statuses:
+     condition met, busy, task set full, ACA active and
+     task aborted
+     - add pr2serr() extern
+     - change sg_get_sense_str() and dStrHexStr(), return
+       chars written (returned void previously)
+     - add sg_get_sense_descriptors_str() function
+     - add sg_get_designation_descriptor_str() function
+     - sg_get_desig_type_str()+sg_get_desig_assoc_str()
+       and sg_get_desig_code_set_str() added
+     - sg_get_opcode_sa_name() break out zoning in/out,
+       read attribute and read position service actions
+   - sg_cmds_extra: add sg_ll_format_unit2() for FFMT
+   - sg_pr2serr.h: new, to shorten fprintf(stderr, ...)
+   - sg_io_linux, sg_pt_linux: drop SUGGEST_* decoding
+   - sg_unaligned.h: add 48 bit support and gets for
+     variable length unsigned integers
+
+Changelog for sg3_utils-1.41 [20150511] [svn: r644]
+...
+
+Doug Gilbert
