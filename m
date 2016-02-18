@@ -1,131 +1,147 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2] fusion-mptbase: handle failed allocation for workqueue
-Date: Thu, 18 Feb 2016 10:00:43 +0100
-Message-ID: <20160218090043.GQ18134@c203.arch.suse.de>
-References: <1455770459-905-1-git-send-email-wuninsu@gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 2/6] hisi_sas: add hisi_sas_slot_abort()
+Date: Thu, 18 Feb 2016 09:30:56 +0000
+Message-ID: <56C58F50.5000903@huawei.com>
+References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
+ <1455625351-165881-3-git-send-email-john.garry@huawei.com>
+ <56C33EC2.3020005@suse.de> <56C34342.9050605@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1455770459-905-1-git-send-email-wuninsu@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Insu Yun <wuninsu@gmail.com>
-Cc: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:59414 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425542AbcBRJbn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2016 04:31:43 -0500
+In-Reply-To: <56C34342.9050605@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, JBottomley@odin.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, john.garry2@mail.dcu.ie, linux-kernel@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org
 
-On Wed, Feb 17, 2016 at 11:40:59PM -0500, Insu Yun wrote:
-> the failure of ioc->reset_work_q is checked,
-> but not ioc->fw_event_q.
->=20
-> Signed-off-by: Insu Yun <wuninsu@gmail.com>
-> ---
->  drivers/message/fusion/mptbase.c | 44 ++++++++++++++++++++++++------=
-----------
->  1 file changed, 27 insertions(+), 17 deletions(-)
->=20
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusio=
-n/mptbase.c
-> index 5dcc031..53a5015 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -1871,9 +1871,8 @@ mpt_attach(struct pci_dev *pdev, const struct p=
-ci_device_id *id)
->  	if (!ioc->reset_work_q) {
->  		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
->  		    ioc->name);
-> -		pci_release_selected_regions(pdev, ioc->bars);
-> -		kfree(ioc);
-> -		return -ENOMEM;
-> +		r =3D -ENOMEM;
-> +		goto err3;
->  	}
-> =20
->  	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %=
-p\n",
-> @@ -1996,24 +1995,16 @@ mpt_attach(struct pci_dev *pdev, const struct=
- pci_device_id *id)
->  	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id=
-);
->  	ioc->fw_event_q =3D create_singlethread_workqueue(ioc->fw_event_q_n=
-ame);
-> =20
-> +	if (!ioc->fw_event_q) {
-> +		r =3D -ENOMEM;
-> +		goto err2;
-> +	}
-> +
->  	if ((r =3D mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
->  	    CAN_SLEEP)) !=3D 0){
->  		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
->  		    ioc->name, r);
-> -
-> -		list_del(&ioc->list);
-> -		if (ioc->alt_ioc)
-> -			ioc->alt_ioc->alt_ioc =3D NULL;
-> -		iounmap(ioc->memmap);
-> -		if (r !=3D -5)
-> -			pci_release_selected_regions(pdev, ioc->bars);
-> -
-> -		destroy_workqueue(ioc->reset_work_q);
-> -		ioc->reset_work_q =3D NULL;
-> -
-> -		kfree(ioc);
-> -		pci_set_drvdata(pdev, NULL);
-> -		return r;
-> +		goto err1;
->  	}
-> =20
->  	/* call per device driver probe entry point */
-> @@ -2040,6 +2031,25 @@ mpt_attach(struct pci_dev *pdev, const struct =
-pci_device_id *id)
->  			msecs_to_jiffies(MPT_POLLING_INTERVAL));
-> =20
->  	return 0;
-> +
-> +err1:
-> +		destroy_workqueue(ioc->fw_event_q);
-> +		ioc->fw_event_q =3D NULL;
-> +err2::
-> +		destroy_workqueue(ioc->reset_work_q);
-> +		ioc->reset_work_q =3D NULL;
-> +
-> +		list_del(&ioc->list);
-> +		if (ioc->alt_ioc)
-> +			ioc->alt_ioc->alt_ioc =3D NULL;
-> +		iounmap(ioc->memmap);
-> +		pci_set_drvdata(pdev, NULL);
-> +err3:
-> +		if (r !=3D -5)
-> +			pci_release_selected_regions(pdev, ioc->bars);
-> +		kfree(ioc);
-> +		return r;
-> +
->  }
+On 16/02/2016 15:41, John Garry wrote:
+> On 16/02/2016 15:22, Hannes Reinecke wrote:
+>> On 02/16/2016 01:22 PM, John Garry wrote:
+>>> Add a function to abort a slot (task) in the device
+>>> (if it is in the task set) and then cleanup and
+>>> complete the task.
+>>> The function is called from work queue context as
+>>> it cannot be called from the context where it is
+>>> triggered (interrupt).
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>> ---
+>>>   drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
+>>>   drivers/scsi/hisi_sas/hisi_sas_main.c | 43
+>>> +++++++++++++++++++++++++++++++++++
+>>>   2 files changed, 44 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h
+>>> b/drivers/scsi/hisi_sas/hisi_sas.h
+>>> index 02da7e4..a05ce71 100644
+>>> --- a/drivers/scsi/hisi_sas/hisi_sas.h
+>>> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
+>>> @@ -120,6 +120,7 @@ struct hisi_sas_slot {
+>>>       dma_addr_t command_table_dma;
+>>>       struct hisi_sas_sge_page *sge_page;
+>>>       dma_addr_t sge_page_dma;
+>>> +    struct work_struct abort_slot;
+>>>   };
+>>>
+>>>   struct hisi_sas_tmf_task {
+>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> index c600f5e..65509eb 100644
+>>> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> @@ -15,6 +15,9 @@
+>>>   #define DEV_IS_GONE(dev) \
+>>>       ((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
+>>>
+>>> +static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
+>>> +                u8 *lun, struct hisi_sas_tmf_task *tmf);
+>>> +
+>>>   static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
+>>>   {
+>>>       return device->port->ha->lldd_ha;
+>>> @@ -113,6 +116,45 @@ static int hisi_sas_task_prep_ata(struct
+>>> hisi_hba *hisi_hba,
+>>>       return hisi_hba->hw->prep_stp(hisi_hba, slot);
+>>>   }
+>>>
+>>> +/*
+>>> + * This function will issue an abort TMF if a task is still in
+>>> + * the target. Then it will do the task complete cleanup and
+>>> + * callbacks.
+>>> + */
+>>> +static void hisi_sas_slot_abort(struct work_struct *work)
+>>> +{
+>>> +    struct hisi_sas_slot *abort_slot =
+>>> +        container_of(work, struct hisi_sas_slot, abort_slot);
+>>> +    struct sas_task *task = abort_slot->task;
+>>> +    struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
+>>> +    struct scsi_cmnd *cmnd = task->uldd_task;
+>>> +    struct hisi_sas_tmf_task tmf_task;
+>>> +    struct domain_device *device = task->dev;
+>>> +    struct hisi_sas_device *sas_dev = device->lldd_dev;
+>>> +    struct scsi_lun lun;
+>>> +    int tag = abort_slot->idx, rc;
+>>> +
+>>> +    int_to_scsilun(cmnd->device->lun, &lun);
+>>> +    tmf_task.tmf = TMF_QUERY_TASK;
+>>> +    tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
+>>> +
+>>> +    rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun,
+>>> &tmf_task);
+>>> +
+>>> +    /* TMF_RESP_FUNC_SUCC means task is present in the task set */
+>>> +    if (rc != TMF_RESP_FUNC_SUCC)
+>>> +        goto out;
+>>> +    tmf_task.tmf = TMF_ABORT_TASK;
+>>> +    tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
+>>> +
+>>> +    rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun,
+>>> &tmf_task);
+>>> +out:
+>>> +    hisi_sas_slot_task_free(hisi_hba, task, abort_slot);
+>>> +    if (task->task_done)
+>>> +        task->task_done(task);
+>>> +    if (sas_dev && sas_dev->running_req)
+>>> +        sas_dev->running_req--;
+>>> +}
+>>> +
+>>>   static int hisi_sas_task_prep(struct sas_task *task, struct
+>>> hisi_hba *hisi_hba,
+>>>                     int is_tmf, struct hisi_sas_tmf_task *tmf,
+>>>                     int *pass)
+>> Do you really need to query the task first?
+>> As per SAM a successful return from an ABORT TASK TMF has this meaning:
+>>
+>> A response of FUNCTION COMPLETE shall indicate that the task was
+>> aborted or was not in the task set.
+>>
+>> Ie it doesn't matter if the task was present or not.
+>>
+>> Cheers,
+>>
+>> Hannes
+>>
+>
+> I think that it should be ok to the abort without first querying. I'll
+> just test this to double-check. (This would make the first patch in the
+> series superflous)
+>
+> Cheers,
+> John
+>
+>
+> _______________________________________________
+> linuxarm mailing list
+> linuxarm@huawei.com
+> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
 
-Please no. Not err1, err2 and err3.
+As suggested, it is ok to remove the query tmf.
 
-err1 could be "goto destroy_fw_event_q", err2 "destroy_reset_workq", er=
-r3
-goto "free_ioc".
+Thanks,
+John
 
-> =20
->  /*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D*/
-> --=20
-> 1.9.1
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
