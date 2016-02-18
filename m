@@ -1,32 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/7] ahci: Convert driver to use modern PM hooks
-Date: Thu, 18 Feb 2016 06:41:24 -0800
-Message-ID: <20160218144124.GA8145@infradead.org>
-References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
- <1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
- <CAHp75Vc0F=-5Whiw_CO+_YeL=HsN=GiGprKRd2q9vx_kqT02HA@mail.gmail.com>
- <20160218131246.GF6479@mtj.duckdns.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
+ [sr_mod]
+Date: Thu, 18 Feb 2016 11:27:13 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1602181121010.1280-100000@iolanthe.rowland.org>
+References: <CAM79t8HzYT+s0BrqzZ0-Cv7khzn6CvpE5bfnJ6H9xYCx4RkS8g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160218131246.GF6479@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35554 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1946877AbcBRQ1O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2016 11:27:14 -0500
+In-Reply-To: <CAM79t8HzYT+s0BrqzZ0-Cv7khzn6CvpE5bfnJ6H9xYCx4RkS8g@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexandre Rossi <alexandre.rossi@gmail.com>
+Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org
 
-On Thu, Feb 18, 2016 at 08:12:46AM -0500, Tejun Heo wrote:
-> On Thu, Feb 18, 2016 at 12:45:05PM +0200, Andy Shevchenko wrote:
-> > > +       .driver.pm              = &ahci_pci_pm_ops,
-> > 
-> > Please, do this in several assignments, since to support older compilers.
-> 
-> Can you please elaborate?  That's a single assignment.  Are there
-> compilers which can't do that?
+On Tue, 9 Feb 2016, Alexandre Rossi wrote:
 
-Old gcc (I think 4.4 is the last one) needs:
+> Hi,
+>=20
+> netconsole does not seem to work so early in the boot process this ti=
+me.
+>=20
+> > As this is Linux 4.3 and not 4.4, I guess this is a different probl=
+em
+> > though. Alexandre, where you able to capture the stack trace? I=E2=80=
+=99d submit
+> > a new bug report with this.
+>=20
+> Here is a photo. Please ping me if you need to test some debugging pa=
+tches.
 
-	.driver = {
-		.pm		= &ahci_pci_pm_ops,
-	},
+It looks like the problem occurs in blk_post_runtime_resume().  Since=20
+there have been recent changes to this routine, it's hard to tell=20
+whether you're using the most up-to-date code.
+
+In particular, the first few lines of blk_post_runtime_resume() in=20
+block/blk-core.c should look like this:
+
+void blk_post_runtime_resume(struct request_queue *q, int err)
+{
+	if (!q->dev)
+		return;
+
+The test was introduced by commit 4fd41a8552af ("SCSI: Fix NULL pointer
+dereference in runtime PM"), which was added to the mainline kernel
+between 4.3 and 4.4.  I don't know what the commit ID would be for a
+=2Estable kernel.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
