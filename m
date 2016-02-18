@@ -1,30 +1,47 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [RFC 20/34] iscsi-target: update struct iscsit_transport
- definition
-Date: Thu, 18 Feb 2016 18:06:29 +0530
-Message-ID: <20160218123627.GA1679@ubuntuvm>
-References: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
- <a7968adffc57ab25f06713890159014b3571bc53.1455467089.git.varun@chelsio.com>
- <56C20663.8010405@dev.mellanox.co.il>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 1/2] mpt3sas: Free memory pools before retrying to
+ allocate with different value.
+Date: Thu, 18 Feb 2016 13:54:02 +0100
+Message-ID: <56C5BEEA.7030004@redhat.com>
+References: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56C20663.8010405@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "roland@kernel.org" <roland@kernel.org>, SWise OGC <swise@opengridcomputing.com>, Indranil Choudhury <indranil@chelsio.com>, Karen Xie <kxie@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51866 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1425294AbcBRMyH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2016 07:54:07 -0500
+In-Reply-To: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
 
-On Mon, Feb 15, 2016 at 10:39:55PM +0530, Sagi Grimberg wrote:
-> 
-> > 1. void (*iscsit_rx_pdu)(struct iscsi_conn *);
-> >     Rx thread uses this for receiving and processing
-> >     iSCSI PDU in full feature phase.
-> 
-> Is iscsit_rx_pdu the best name for this? it sounds like
-> a function that would handle A pdu, but it's actually the
-> thread function dequeuing pdus correct?
+On 18.2.2016 09:39, Suganath Prabu Subramani wrote:
+> From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+>
+> Deallocate resources before reallocating of the same in retry_allocation
+> path of _base_allocate_memory_pools()
+>
+> Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+> Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index afdb13a..5bbbbf2 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -3414,6 +3414,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+>  			goto out;
+>  		retry_sz = 64;
+>  		ioc->hba_queue_depth -= retry_sz;
+> +		_base_release_memory_pools(ioc);
+>  		goto retry_allocation;
+>  	}
+>  
 
-iscsit_rx_pdu is for both dequeuing and processing iscsi pdus,
-I will rename it to iscsit_get_rx_pdu in the next revision.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
