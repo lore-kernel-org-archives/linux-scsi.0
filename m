@@ -1,144 +1,78 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 5/7] ahci: Convert driver to use modern PM hooks
-Date: Thu, 18 Feb 2016 12:45:05 +0200
-Message-ID: <CAHp75Vc0F=-5Whiw_CO+_YeL=HsN=GiGprKRd2q9vx_kqT02HA@mail.gmail.com>
-References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 5/6] hisi_sas: add hisi_sas_slave_configure()
+Date: Thu, 18 Feb 2016 10:57:42 +0000
+Message-ID: <56C5A3A6.1090100@huawei.com>
+References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
+ <1455625351-165881-6-git-send-email-john.garry@huawei.com>
+ <56C34163.70606@suse.de> <56C354A5.6080503@huawei.com>
+ <56C5756A.9060700@suse.de> <56C59922.6070600@huawei.com>
+ <56C59D47.30500@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <56C59D47.30500@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, JBottomley@odin.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 18, 2016 at 10:54 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> In order to add support for runtime PM to the ahci driver we first need to
-> convert the driver to use modern non-legacy system suspend hooks. There
-> should be no functional changes.
+On 18/02/2016 10:30, Hannes Reinecke wrote:
+> On 02/18/2016 11:12 AM, John Garry wrote:
+>> On 18/02/2016 07:40, Hannes Reinecke wrote:
+> [ .. ]
+>>> Well, the classical thing would be to associate each request tag
+>>> with a SAS task; or, in your case, associate each slot index with a
+>>> request tag.
+>>> You probably would need to reserve some slots for TMFs, ie you'd
+>>> need to decrease the resulting ->can_queue variable by that.
+>>> But once you've done that you shouldn't hit any QUEUE_FULL issues,
+>>> as the block layer will ensure that no tags will be reused while the
+>>> command is in flight.
+>>> Plus this is something you really need to be doing if you ever
+>>> consider moving to scsi-mq ...
+>>>
+>>> Cheers,
+>>>
+>>> Hannes
+>>>
+>> Hi,
+>>
+>> So would you recommend this method under the assumption that the
+>> can_queue value for the host is similar to the queue depth for the
+>> device?
+>>
+> That depends.
+> Typically the can_queue setting reflects the number of commands the
+> _host_ can queue internally (due to hardware limitations etc).
+> They do not necessarily reflect the queue depth for the device
+> (unless you have a single device, of course).
+> So if the host has a hardware limit on the number of commands it can
+> queue, it should set the 'can_queue' variable to the appropriate
+> number; a host-wide shared tag map is always assumed with recent
+> kernels.
+>
+> The queue_depth of an individual device is controlled by the
+> 'cmd_per_lun' setting, and of course capped by can_queue.
+>
+> But yes, I definitely recommend this method.
+> Is saves one _so much_ time trying to figure out which command slot
+> to use. Drawback is that you have to have some sort of fixed order
+> on them slots to do an efficient lookup.
+>
+> Cheers,
+>
+> Hannes
 >
 
-One comment below, otherwise:
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+I would like to make a point on cmd_per_lun before considering tagging 
+slots: For our host the can_queue is considerably greater than 
+cmd_per_lun (even though we initially set the same in the host template, 
+which would be incorrect). Regardless I find the host cmd_per_lun is 
+effectively ignored for the slave device queue depth as it is reset in 
+sas_slave_configure() to 256 [if this function is used and tagging 
+enabled]. So if we we choose a reasonable cmd_per_lun for our host, it 
+is ignored, right? Or am I missing something?
 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/ata/ahci.c | 49 ++++++++++++++++++++++---------------------------
->  1 file changed, 22 insertions(+), 27 deletions(-)
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 546a3692774f..44f9d1c09bbe 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -93,9 +93,9 @@ static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
->  static bool is_mcp89_apple(struct pci_dev *pdev);
->  static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
->                                 unsigned long deadline);
-> -#ifdef CONFIG_PM
-> -static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
-> -static int ahci_pci_device_resume(struct pci_dev *pdev);
-> +#ifdef CONFIG_PM_SLEEP
-> +static int ahci_pci_device_suspend(struct device *dev);
-> +static int ahci_pci_device_resume(struct device *dev);
->  #endif
->
->  static struct scsi_host_template ahci_sht = {
-> @@ -557,16 +557,16 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->         { }     /* terminate list */
->  };
->
-> +static const struct dev_pm_ops ahci_pci_pm_ops = {
-> +       SET_SYSTEM_SLEEP_PM_OPS(ahci_pci_device_suspend, ahci_pci_device_resume)
-> +};
->
->  static struct pci_driver ahci_pci_driver = {
->         .name                   = DRV_NAME,
->         .id_table               = ahci_pci_tbl,
->         .probe                  = ahci_init_one,
->         .remove                 = ata_pci_remove_one,
-> -#ifdef CONFIG_PM
-> -       .suspend                = ahci_pci_device_suspend,
-> -       .resume                 = ahci_pci_device_resume,
-> -#endif
-> +       .driver.pm              = &ahci_pci_pm_ops,
-
-Please, do this in several assignments, since to support older compilers.
-
->  };
->
->  #if defined(CONFIG_PATA_MARVELL) || defined(CONFIG_PATA_MARVELL_MODULE)
-> @@ -794,44 +794,39 @@ static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
->  }
->
->
-> -#ifdef CONFIG_PM
-> -static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
-> +#ifdef CONFIG_PM_SLEEP
-> +static int ahci_pci_device_suspend(struct device *dev)
->  {
-> +       struct pci_dev *pdev = to_pci_dev(dev);
->         struct ata_host *host = pci_get_drvdata(pdev);
->         struct ahci_host_priv *hpriv = host->private_data;
->         void __iomem *mmio = hpriv->mmio;
->         u32 ctl;
->
-> -       if (mesg.event & PM_EVENT_SUSPEND &&
-> -           hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
-> +       if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
->                 dev_err(&pdev->dev,
->                         "BIOS update required for suspend/resume\n");
->                 return -EIO;
->         }
->
-> -       if (mesg.event & PM_EVENT_SLEEP) {
-> -               /* AHCI spec rev1.1 section 8.3.3:
-> -                * Software must disable interrupts prior to requesting a
-> -                * transition of the HBA to D3 state.
-> -                */
-> -               ctl = readl(mmio + HOST_CTL);
-> -               ctl &= ~HOST_IRQ_EN;
-> -               writel(ctl, mmio + HOST_CTL);
-> -               readl(mmio + HOST_CTL); /* flush */
-> -       }
-> +       /* AHCI spec rev1.1 section 8.3.3:
-> +        * Software must disable interrupts prior to requesting a
-> +        * transition of the HBA to D3 state.
-> +        */
-> +       ctl = readl(mmio + HOST_CTL);
-> +       ctl &= ~HOST_IRQ_EN;
-> +       writel(ctl, mmio + HOST_CTL);
-> +       readl(mmio + HOST_CTL); /* flush */
->
-> -       return ata_pci_device_suspend(pdev, mesg);
-> +       return ata_host_suspend(host, PMSG_SUSPEND);
->  }
->
-> -static int ahci_pci_device_resume(struct pci_dev *pdev)
-> +static int ahci_pci_device_resume(struct device *dev)
->  {
-> +       struct pci_dev *pdev = to_pci_dev(dev);
->         struct ata_host *host = pci_get_drvdata(pdev);
->         int rc;
->
-> -       rc = ata_pci_device_do_resume(pdev);
-> -       if (rc)
-> -               return rc;
-> -
->         /* Apple BIOS helpfully mangles the registers on resume */
->         if (is_mcp89_apple(pdev))
->                 ahci_mcp89_apple_enable(pdev);
-> --
-> 2.7.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-With Best Regards,
-Andy Shevchenko
+Thanks,
+John
