@@ -1,130 +1,163 @@
-From: Alison Schofield <amsfield22@gmail.com>
-Subject: [RESEND PATCH v2] scsi: gdth: replace struct timeval with ktime_get_real_seconds()
-Date: Wed, 17 Feb 2016 21:29:34 -0800
-Message-ID: <1455773374-2863-1-git-send-email-amsfield22@gmail.com>
-References: <20151119214304.GA16713@d830.WORKGROUP>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/6] hisi_sas: use slot abort in v1 hw
+Date: Thu, 18 Feb 2016 08:16:43 +0100
+Message-ID: <56C56FDB.5050802@suse.de>
+References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
+ <1455625351-165881-4-git-send-email-john.garry@huawei.com>
+ <56C340E9.1030503@suse.de> <56C34AA9.8080604@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151119214304.GA16713@d830.WORKGROUP>
+In-Reply-To: <56C34AA9.8080604@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: achim_leubner@pmc-sierra.com, martin.petersen@oracle.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
+To: John Garry <john.garry@huawei.com>, JBottomley@odin.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-struct timeval will overflow on 32-bit systems in y2038 and is being
-removed from the kernel. Replace the use of struct timeval and
-do_gettimeofday() with ktime_get_real_seconds() which provides a 64-bit
-seconds value and is y2038 safe.
+On 02/16/2016 05:13 PM, John Garry wrote:
+> On 16/02/2016 15:31, Hannes Reinecke wrote:
+>> On 02/16/2016 01:22 PM, John Garry wrote:
+>>> When TRANS_TX_CREDIT_TIMEOUT_ERR or
+>>> TRANS_TX_CLOSE_NORMAL_ERR errors occur for a
+>>> command, the command should be re-attempted.
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>> ---
+>>>   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 22 ++++++++++++++++++---=
+-
+>>>   1 file changed, 18 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+>>> b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+>>> index ce5f65d..34f71a1c 100644
+>>> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+>>> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+>>> @@ -1118,9 +1118,8 @@ static int prep_ssp_v1_hw(struct hisi_hba
+>>> *hisi_hba,
+>>>   }
+>>>
+>>>   /* by default, task resp is complete */
+>>> -static void slot_err_v1_hw(struct hisi_hba *hisi_hba,
+>>> -               struct sas_task *task,
+>>> -               struct hisi_sas_slot *slot)
+>>> +static void slot_err_v1_hw(struct hisi_hba *hisi_hba, struct
+>>> sas_task *task,
+>>> +               struct hisi_sas_slot *slot, int *abort_slot)
+>>>   {
+>>>       struct task_status_struct *ts =3D &task->task_status;
+>>>       struct hisi_sas_err_record_v1 *err_record =3D
+>>> slot->status_buffer;
+>>> @@ -1212,6 +1211,14 @@ static void slot_err_v1_hw(struct hisi_hba
+>>> *hisi_hba,
+>>>               ts->stat =3D SAS_NAK_R_ERR;
+>>>               break;
+>>>           }
+>>> +        case TRANS_TX_CREDIT_TIMEOUT_ERR:
+>>> +        case TRANS_TX_CLOSE_NORMAL_ERR:
+>>> +        {
+>>> +            /* This will request a retry */
+>>> +            ts->stat =3D SAS_QUEUE_FULL;
+>>> +            ++(*abort_slot);
+>>> +            break;
+>>> +        }
+>>>           default:
+>>>           {
+>>>               ts->stat =3D SAM_STAT_CHECK_CONDITION;
+>>> @@ -1317,8 +1324,14 @@ static int slot_complete_v1_hw(struct
+>>> hisi_hba *hisi_hba,
+>>>
+>>>       if (cmplt_hdr_data & CMPLT_HDR_ERR_RCRD_XFRD_MSK &&
+>>>           !(cmplt_hdr_data & CMPLT_HDR_RSPNS_XFRD_MSK)) {
+>>> +        int abort_slot =3D 0;
+>>>
+>>> -        slot_err_v1_hw(hisi_hba, task, slot);
+>>> +        slot_err_v1_hw(hisi_hba, task, slot,  &abort_slot);
+>>> +        if (unlikely(abort_slot)) {
+>>> +            queue_work(hisi_hba->wq, &slot->abort_slot);
+>>> +            sts =3D ts->stat;
+>>> +            goto out_1;
+>>> +        }
+>>>           goto out;
+>>>       }
+>>>
+>> What is the 'abort_slot' variable for?
+>> Currently it's just a counter, no?
+>> So why the weird pointer passing?
+>>
+>> And it does feel weird. Apparently the driver does get a message,
+>> but still has to abort the command. Why?
+>> Isn't the message an indicator that the command has been aborted?
+>>
+>> Cheers,
+>>
+>> Hannes
+>>
+>=20
+> I'll paste some more code for convenience and to help clarify:
+>=20
+> static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+>                    struct hisi_sas_slot *slot, int abort)
+> {
+> ...
+>=20
+>     if (cmplt_hdr_data & CMPLT_HDR_ERR_RCRD_XFRD_MSK &&
+>         !(cmplt_hdr_data & CMPLT_HDR_RSPNS_XFRD_MSK)) {
+>         int abort_slot =3D 0;
+>=20
+>         slot_err_v1_hw(hisi_hba, task, slot,  &abort_slot);
+>         if (unlikely(abort_slot)) { /* check if we need to abort the
+> task */
+>             queue_work(hisi_hba->wq, &slot->abort_slot);
+>             sts =3D ts->stat;
+>             goto out_1;
+>         }
+>         goto out;
+>     }
+>=20
+>  ...
+>=20
+> out:
+>     if (sas_dev && sas_dev->running_req)
+>         sas_dev->running_req--;
+>=20
+>     hisi_sas_slot_task_free(hisi_hba, task, slot);
+>     sts =3D ts->stat;
+>=20
+>     if (task->task_done)
+>         task->task_done(task);
+> out_1:
+>=20
+>     return sts;
+> }
+>=20
+> Variable abort_slot is really a boolean flag which can be set in
+> slot_err_v1_hw(). When error TRANS_TX_CREDIT_TIMEOUT_ERR or
+> TRANS_TX_CLOSE_NORMAL_ERR occurs in the slot, abort_slot is set. In
+> this case we don't immediately complete the task (goto out and call
+> hisi_sas_slot_task_free() and task->task_done()), but instead queue
+> the task to be aborted in the device before completing (call
+> queue_work() and then goto out_1).
+So why not make slot_err_vi_hw() a boolean and have abort_slot as
+the return value?
 
-gdth driver requires changes in two areas:
+> When hisi_sas_slot_abort() [patch #2] runs in the workqueue for the
+> task, it first aborts the task in the device with a TMF, and then
+> completes the task. Finally the status (SAS_QUEUE_FULL) is passed
+> back to SCSI framework, which will request a retry for the scsi
+> command.
+>=20
+> This is the method our hw people recommended to handle these types
+> of errors.
+>=20
+Ok, sure, that does explain it.
 
-1) gdth_store_event() loads two u32 timestamp fields for ioctl GDTIOCTL_EVENT
+Cheers,
 
-   These timestamp fields are part of struct gdth_evt_str used for passing
-   event data to userspace. At the first instance of an event we do
-   (first_stamp=last_stamp="current time"). If that same event repeats,
-   we do (last_stamp="current time") AND increment same_count to indicate
-   how many times the event has repeated since first_stamp.
-
-   This patch replaces the use of timeval and do_gettimeofday() with
-   ktime_get_real_seconds() cast to u32 to extend the timestamp fields
-   to y2106.
-
-   Beyond y2106, the userspace tools (ie. RAID controller monitors) can
-   work around the time rollover and this driver would still not need to
-   change.
-
-   Alternative: The alternative approach is to introduce a new ioctl in gdth
-   with the u32 time fields defined as u64.  This would require userspace
-   changes now, but not in y2106.
-
-2)  gdth_show_info() calculates elapsed time using u32 first_stamp
-
-    It is adding events with timestamps to a seq_file.  Timestamps are
-    calculated as the "current time" minus the first_stamp.
-
-    This patch replaces the use of timeval and do_gettimeofday() with
-    ktime_get_real_seconds() cast to u32 to calculate the timestamp.
-
-    This elapsed time calculation is safe even when the time wraps (beyond
-    y2106) due to how unsigned subtraction works. A comment has been added
-    to the code to indicate this safety.
-
-    Alternative: This piece itself doesn't warrant an alternative, but
-    if we do introduce a new structure & ioctl with u64 timestamps, this
-    would change accordingly.
-
-Signed-off-by: Alison Schofield <amsfield22@gmail.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
-Changes in v2:
-- remove unnecessary ktime.h includes
-- add comment in code to explain elapsed time calculation
-- add detail and alternatives to changelog
-
-
- drivers/scsi/gdth.c      |  7 ++-----
- drivers/scsi/gdth_proc.c | 11 ++++++++---
- 2 files changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 71e1380..0a76774 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -2838,7 +2838,6 @@ static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
-                                       u16 idx, gdth_evt_data *evt)
- {
-     gdth_evt_str *e;
--    struct timeval tv;
- 
-     /* no GDTH_LOCK_HA() ! */
-     TRACE2(("gdth_store_event() source %d idx %d\n", source, idx));
-@@ -2854,8 +2853,7 @@ static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
-             !strcmp((char *)&ebuffer[elastidx].event_data.event_string,
-             (char *)&evt->event_string)))) { 
-         e = &ebuffer[elastidx];
--        do_gettimeofday(&tv);
--        e->last_stamp = tv.tv_sec;
-+	e->last_stamp = (u32)ktime_get_real_seconds();
-         ++e->same_count;
-     } else {
-         if (ebuffer[elastidx].event_source != 0) {  /* entry not free ? */
-@@ -2871,8 +2869,7 @@ static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
-         e = &ebuffer[elastidx];
-         e->event_source = source;
-         e->event_idx = idx;
--        do_gettimeofday(&tv);
--        e->first_stamp = e->last_stamp = tv.tv_sec;
-+	e->first_stamp = e->last_stamp = (u32)ktime_get_real_seconds();
-         e->same_count = 1;
-         e->event_data = *evt;
-         e->application = 0;
-diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
-index e66e997..be609db 100644
---- a/drivers/scsi/gdth_proc.c
-+++ b/drivers/scsi/gdth_proc.c
-@@ -148,7 +148,6 @@ int gdth_show_info(struct seq_file *m, struct Scsi_Host *host)
-     gdth_cmd_str *gdtcmd;
-     gdth_evt_str *estr;
-     char hrec[161];
--    struct timeval tv;
- 
-     char *buf;
-     gdth_dskstat_str *pds;
-@@ -540,8 +539,14 @@ int gdth_show_info(struct seq_file *m, struct Scsi_Host *host)
-         if (estr->event_data.eu.driver.ionode == ha->hanum &&
-             estr->event_source == ES_ASYNC) { 
-             gdth_log_event(&estr->event_data, hrec);
--            do_gettimeofday(&tv);
--            sec = (int)(tv.tv_sec - estr->first_stamp);
-+
-+	    /*
-+	     * Elapsed seconds subtraction with unsigned operands is
-+	     * safe from wrap around in year 2106.  Executes as:
-+	     * operand a + (2's complement operand b) + 1
-+	     */
-+
-+	    sec = (int)((u32)ktime_get_real_seconds() - estr->first_stamp);
-             if (sec < 0) sec = 0;
-             seq_printf(m," date- %02d:%02d:%02d\t%s\n",
-                            sec/3600, sec%3600/60, sec%60, hrec);
--- 
-2.1.4
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
