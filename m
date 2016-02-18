@@ -1,48 +1,86 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v2 2/2] Updating maintainers list for MPT FUSION DRIVERS.
-Date: Thu, 18 Feb 2016 14:09:46 +0530
-Message-ID: <1455784786-19086-2-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 1/7] block: Add blk_set_runtime_active()
+Date: Thu, 18 Feb 2016 10:54:11 +0200
+Message-ID: <1455785657-22924-2-git-send-email-mika.westerberg@linux.intel.com>
+References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+If block device is left runtime suspended during system suspend, resume
+hook of the driver typically corrects runtime PM status of the device back
+to "active" after it is resumed. However, this is not enough as queue's
+runtime PM status is still "suspended". As long as it is in this state
+blk_pm_peek_request() returns NULL and thus prevents new requests to be
+processed.
 
-Updating maintainers list for MPT FUSION DRIVERS,
-broadcom support link and email id.
+Add new function blk_set_runtime_active() that can be used to force the
+queue status back to "active" as needed.
 
-Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
-Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- MAINTAINERS | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ block/blk-core.c       | 24 ++++++++++++++++++++++++
+ include/linux/blkdev.h |  2 ++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 30aca4a..003eef4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6675,13 +6675,12 @@ S:	Maintained
- F:	arch/arm/mach-lpc32xx/
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b83d29755b5a..d0c6f4c92cb6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -3529,6 +3529,30 @@ void blk_post_runtime_resume(struct request_queue *q, int err)
+ 	spin_unlock_irq(q->queue_lock);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
++
++/**
++ * blk_set_runtime_active - Force runtime status of the queue to be active
++ * @q: the queue of the device
++ *
++ * If the device is left runtime suspended during system suspend the resume
++ * hook typically resumes the device and corrects runtime status
++ * accordingly. However, that does not affect the queue runtime PM status
++ * which is still "suspended". This prevents processing requests from the
++ * queue.
++ *
++ * This function can be used in driver's resume hook to correct queue
++ * runtime PM status and re-enable peeking requests from the queue. It
++ * should be called before first request is added to the queue.
++ */
++void blk_set_runtime_active(struct request_queue *q)
++{
++	spin_lock_irq(q->queue_lock);
++	q->rpm_status = RPM_ACTIVE;
++	pm_runtime_mark_last_busy(q->dev);
++	pm_request_autosuspend(q->dev);
++	spin_unlock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL(blk_set_runtime_active);
+ #endif
  
- LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
--M:	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
--M:	Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
--M:	Sreekanth Reddy <sreekanth.reddy@avagotech.com>
--M:	Abhijit Mahajan <abhijit.mahajan@avagotech.com>
--L:	MPT-FusionLinux.pdl@avagotech.com
-+M:	Sathya Prakash <sathya.prakash@broadcom.com>
-+M:	Chaitra P B <chaitra.basappa@broadcom.com>
-+M:	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-+L:	MPT-FusionLinux.pdl@broadcom.com
- L:	linux-scsi@vger.kernel.org
--W:	http://www.lsilogic.com/support
-+W:	http://www.avagotech.com/support/
- S:	Supported
- F:	drivers/message/fusion/
- F:	drivers/scsi/mpt2sas/
+ int __init blk_dev_init(void)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4571ef1a12a9..40c0241a6f28 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1029,6 +1029,7 @@ extern int blk_pre_runtime_suspend(struct request_queue *q);
+ extern void blk_post_runtime_suspend(struct request_queue *q, int err);
+ extern void blk_pre_runtime_resume(struct request_queue *q);
+ extern void blk_post_runtime_resume(struct request_queue *q, int err);
++extern void blk_set_runtime_active(struct request_queue *q);
+ #else
+ static inline void blk_pm_runtime_init(struct request_queue *q,
+ 	struct device *dev) {}
+@@ -1039,6 +1040,7 @@ static inline int blk_pre_runtime_suspend(struct request_queue *q)
+ static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
+ static inline void blk_pre_runtime_resume(struct request_queue *q) {}
+ static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
++extern inline void blk_set_runtime_active(struct request_queue *q) {}
+ #endif
+ 
+ /*
 -- 
-1.8.3.1
+2.7.0
+
