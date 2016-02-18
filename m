@@ -1,47 +1,42 @@
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH RESEND] dpt_i2o: fix build warning
-Date: Thu, 18 Feb 2016 13:59:13 +0530
-Message-ID: <1455784153-9615-1-git-send-email-sudipm.mukherjee@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v2 1/2] mpt3sas: Free memory pools before retrying to allocate with different value.
+Date: Thu, 18 Feb 2016 14:09:45 +0530
+Message-ID: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:34020 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030341AbcBRIkp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2016 03:40:45 -0500
+Received: by mail-pa0-f43.google.com with SMTP id fy10so27074095pac.1
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Feb 2016 00:40:45 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
 
-We were getting build warning about:
-drivers/scsi/dpt_i2o.c:183:29: warning: 'dptids' defined but not used
+From: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
 
-dptids[] is only used in the MODULE_DEVICE_TABLE so when MODULE is not
-defined then dptids[] becomes unused.
+Deallocate resources before reallocating of the same in retry_allocation
+path of _base_allocate_memory_pools()
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+Signed-off-by: Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
+Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 ---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Resending v1 as v2 had a NACK from Alan about the spec not maintained
-while converting to pci driver.
-
- drivers/scsi/dpt_i2o.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index d4cda5e..21c8d21 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -180,11 +180,14 @@ static u8 adpt_read_blink_led(adpt_hba* host)
-  *============================================================================
-  */
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index afdb13a..5bbbbf2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3414,6 +3414,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+ 			goto out;
+ 		retry_sz = 64;
+ 		ioc->hba_queue_depth -= retry_sz;
++		_base_release_memory_pools(ioc);
+ 		goto retry_allocation;
+ 	}
  
-+#ifdef MODULE
- static struct pci_device_id dptids[] = {
- 	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
- 	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
- 	{ 0, }
- };
-+#endif
-+
- MODULE_DEVICE_TABLE(pci,dptids);
- 
- static int adpt_detect(struct scsi_host_template* sht)
 -- 
-1.9.1
+1.8.3.1
+
