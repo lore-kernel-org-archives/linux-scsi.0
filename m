@@ -1,132 +1,111 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv8 08/23] scsi_dh_alua: use unique device id
-Date: Fri, 19 Feb 2016 09:17:05 +0100
-Message-ID: <1455869840-122786-9-git-send-email-hare@suse.de>
-References: <1455869840-122786-1-git-send-email-hare@suse.de>
+Subject: [PATCHv8 00/23] ALUA device handler update, part II
+Date: Fri, 19 Feb 2016 09:16:57 +0100
+Message-ID: <1455869840-122786-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38691 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38690 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1426703AbcBSIRo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1424220AbcBSIRo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 19 Feb 2016 03:17:44 -0500
-In-Reply-To: <1455869840-122786-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Use scsi_vpd_lun_id() to assign a unique device identification
-to the alua port group structure.
+As promised here is now the second part of my ALUA device handler update.
+This contains a major rework of the ALUA device handler as execution is
+moved onto a workqueue. This has the advantage that we avoid having to
+do multiple calls to the same LUN (as happens frequently when failing
+over a LUN with several paths) and finally retries are handled correctly.
+As some arrays are only capable of handling one STPG at a time I've added
+a blacklist flag which then uses a singlethreaded workqueue, thereby
+effectively synchronize STPG handling.
+Thanks to Bart for this suggestion.
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 55 +++++++++++++++++++++++++++---
- 1 file changed, 50 insertions(+), 5 deletions(-)
+The entire patchset can be found at:
+git.kernel.org:/hare/scsi-devel/h/alua-2.v8
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index e9fb760..0bcd901 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -70,6 +70,8 @@ static DEFINE_SPINLOCK(port_group_lock);
- struct alua_port_group {
- 	struct kref		kref;
- 	struct list_head	node;
-+	unsigned char		device_id_str[256];
-+	int			device_id_len;
- 	int			group_id;
- 	int			tpgs;
- 	int			state;
-@@ -162,6 +164,26 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
- 				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
- }
- 
-+struct alua_port_group *alua_find_get_pg(char *id_str, size_t id_size,
-+					 int group_id)
-+{
-+	struct alua_port_group *pg;
-+
-+	list_for_each_entry(pg, &port_group_list, node) {
-+		if (pg->group_id != group_id)
-+			continue;
-+		if (pg->device_id_len != id_size)
-+			continue;
-+		if (strncmp(pg->device_id_str, id_str, id_size))
-+			continue;
-+		if (!kref_get_unless_zero(&pg->kref))
-+			continue;
-+		return pg;
-+	}
-+
-+	return NULL;
-+}
-+
- /*
-  * alua_alloc_pg - Allocate a new port_group structure
-  * @sdev: scsi device
-@@ -174,17 +196,39 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
- struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
- 				      int group_id, int tpgs)
- {
--	struct alua_port_group *pg;
-+	struct alua_port_group *pg, *tmp_pg;
- 
- 	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
- 	if (!pg)
--		return NULL;
-+		return ERR_PTR(-ENOMEM);
- 
-+	pg->device_id_len = scsi_vpd_lun_id(sdev, pg->device_id_str,
-+					    sizeof(pg->device_id_str));
-+	if (pg->device_id_len <= 0) {
-+		/*
-+		 * Internal error: TPGS supported but no device
-+		 * identifcation found. Disable ALUA support.
-+		 */
-+		kfree(pg);
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: No device descriptors found\n",
-+			    ALUA_DH_NAME);
-+		return ERR_PTR(-ENXIO);
-+	}
- 	pg->group_id = group_id;
- 	pg->tpgs = tpgs;
- 	pg->state = TPGS_STATE_OPTIMIZED;
- 	kref_init(&pg->kref);
-+
- 	spin_lock(&port_group_lock);
-+	tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
-+				  group_id);
-+	if (tmp_pg) {
-+		spin_unlock(&port_group_lock);
-+		kfree(pg);
-+		return tmp_pg;
-+	}
-+
- 	list_add(&pg->node, &port_group_list);
- 	spin_unlock(&port_group_lock);
- 
-@@ -269,7 +313,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 	h->group_id = group_id;
- 
- 	sdev_printk(KERN_INFO, sdev,
--		    "%s: port group %02x rel port %02x\n",
-+		    "%s: port group %x rel port %x\n",
- 		    ALUA_DH_NAME, h->group_id, h->rel_port);
- 
- 	return 0;
-@@ -597,8 +641,9 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
- 		goto out;
- 
- 	h->pg = alua_alloc_pg(sdev, h->group_id, tpgs);
--	if (!h->pg) {
--		err = SCSI_DH_NOMEM;
-+	if (IS_ERR(h->pg)) {
-+		if (PTR_ERR(h->pg) == -ENOMEM)
-+			err = SCSI_DH_NOMEM;
- 		goto out;
- 	}
- 	kref_get(&h->pg->kref);
+As usual, comments and reviews are welcome.
+
+Changes to v7:
+- Remove SCSI_ACCESS_STATE_UNKNOWN as suggested by Bart
+- Fixup typo in pg->flags as suggested by Bart
+- Return -EINVAL when reading from access_state and no
+  device handler is attached.
+
+Changes to v6:
+- Fixup mutex lockdep issue noticed by Bart
+- Reshuffle locks in alua_check_vpd
+
+Changes to v5:
+- Fixup lock imbalance noticed by Bart
+- use #define instead of enum for access_state as suggested by Ewan
+- Updated patch description as suggested by Ewan
+- Changed occurrences to 'SET TARGET PORT GROUP' as suggested by Bart
+
+Changes to v4:
+- use kfree_rcu() as suggested by hch
+- Use 'IS_ERR' instead of 'PTR_ERR' when checking for validity
+  of a pointer
+- Simplify pg assignment as suggested by hch
+- Use separate WARN_ON statements a suggested by hch
+- Fixes to avoid I/O stall on failover
+
+Changes to v3:
+- Use scsi_device flag for blacklisting as suggested by hch
+- Add Arrays for synchronous ALUA handling
+- Move synchronize_rcu() into release_port_group()
+- Add remaining reviewed tags
+
+Changes to v2:
+- Use a SCSI blacklist flag instead of a hardware handler parameter
+  for switching to synchronous ALUA handling
+- Move scsi_get_device_flags{,_keyed} to scsi_devinfo.h
+- Move flush_delayed_work() into release_port_group()
+- Rename alua_lookup_pg() into alua_find_get_pg()
+- Add __rcu annotations to keep sparse happy
+
+Changes to v1:
+- Include reviews from hch
+- Switch to hardware handler parameter instead of module option
+
+Hannes Reinecke (23):
+  scsi_dh_alua: Pass buffer as function argument
+  scsi_dh_alua: separate out alua_stpg()
+  scsi_dh_alua: Make stpg synchronous
+  scsi_dh_alua: call alua_rtpg() if stpg fails
+  scsi_dh_alua: switch to scsi_execute_req_flags()
+  scsi_dh_alua: allocate RTPG buffer separately
+  scsi_dh_alua: Use separate alua_port_group structure
+  scsi_dh_alua: use unique device id
+  scsi_dh_alua: simplify alua_initialize()
+  revert commit a8e5a2d593cb ("[SCSI] scsi_dh_alua: ALUA handler attach
+    should succeed while TPG is transitioning")
+  scsi_dh_alua: move optimize_stpg evaluation
+  scsi_dh_alua: remove 'rel_port' from alua_dh_data structure
+  scsi_dh_alua: Use workqueue for RTPG
+  scsi_dh_alua: Allow workqueue to run synchronously
+  scsi_dh_alua: Add new blacklist flag 'BLIST_SYNC_ALUA'
+  scsi_dh_alua: Recheck state on unit attention
+  scsi_dh_alua: update all port states
+  scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
+  scsi_dh: add 'rescan' callback
+  scsi: Add 'access_state' attribute
+  scsi_dh_alua: use common definitions for ALUA state
+  scsi_dh_alua: update 'access_state' field
+  scsi_dh_alua: Update version to 2.0
+
+ drivers/scsi/device_handler/scsi_dh_alua.c | 979 ++++++++++++++++++++---------
+ drivers/scsi/scsi_devinfo.c                |   2 +
+ drivers/scsi/scsi_lib.c                    |   1 +
+ drivers/scsi/scsi_scan.c                   |  11 +-
+ drivers/scsi/scsi_sysfs.c                  |  53 ++
+ include/scsi/scsi_device.h                 |   2 +
+ include/scsi/scsi_devinfo.h                |   1 +
+ include/scsi/scsi_dh.h                     |   2 +
+ include/scsi/scsi_proto.h                  |  12 +
+ 9 files changed, 756 insertions(+), 307 deletions(-)
+
 -- 
 1.8.5.6
 
