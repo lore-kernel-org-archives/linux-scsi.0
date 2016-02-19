@@ -1,255 +1,97 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv8 03/23] scsi_dh_alua: Make stpg synchronous
-Date: Fri, 19 Feb 2016 09:17:00 +0100
-Message-ID: <1455869840-122786-4-git-send-email-hare@suse.de>
+Subject: [PATCHv8 15/23] scsi_dh_alua: Add new blacklist flag 'BLIST_SYNC_ALUA'
+Date: Fri, 19 Feb 2016 09:17:12 +0100
+Message-ID: <1455869840-122786-16-git-send-email-hare@suse.de>
 References: <1455869840-122786-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38706 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38769 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1427009AbcBSIRo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2016 03:17:44 -0500
+	id S1427054AbcBSIRt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2016 03:17:49 -0500
 In-Reply-To: <1455869840-122786-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The 'activate_complete' function needs to be executed after
-stpg has finished, so we can as well execute stpg synchronously
-and call the function directly.
+Add a new blacklist flag BLIST_SYNC_ALUA to instruct the
+alua device handler to use synchronous command submission
+for ALUA commands.
 
 Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 158 ++++++++++-------------------
- 1 file changed, 54 insertions(+), 104 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 ++
+ drivers/scsi/scsi_devinfo.c                | 2 ++
+ drivers/scsi/scsi_scan.c                   | 3 +++
+ include/scsi/scsi_device.h                 | 1 +
+ include/scsi/scsi_devinfo.h                | 1 +
+ 5 files changed, 9 insertions(+)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 136bc76..467c2cf 100644
+index a3cb069..fbbe85e 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -169,81 +169,28 @@ done:
- }
- 
- /*
-- * stpg_endio - Evaluate SET TARGET GROUP STATES
-- * @sdev: the device to be evaluated
-- * @state: the new target group state
-- *
-- * Evaluate a SET TARGET GROUP STATES command response.
-- */
--static void stpg_endio(struct request *req, int error)
--{
--	struct alua_dh_data *h = req->end_io_data;
--	struct scsi_sense_hdr sense_hdr;
--	unsigned err = SCSI_DH_OK;
--
--	if (host_byte(req->errors) != DID_OK ||
--	    msg_byte(req->errors) != COMMAND_COMPLETE) {
--		err = SCSI_DH_IO;
--		goto done;
--	}
--
--	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
--				 &sense_hdr)) {
--		if (sense_hdr.sense_key == NOT_READY &&
--		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a) {
--			/* ALUA state transition already in progress */
--			err = SCSI_DH_OK;
--			goto done;
--		}
--		if (sense_hdr.sense_key == UNIT_ATTENTION) {
--			err = SCSI_DH_RETRY;
--			goto done;
--		}
--		sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
--			    ALUA_DH_NAME);
--		scsi_print_sense_hdr(h->sdev, ALUA_DH_NAME, &sense_hdr);
--		err = SCSI_DH_IO;
--	} else if (error)
--		err = SCSI_DH_IO;
--
--	if (err == SCSI_DH_OK) {
--		h->state = TPGS_STATE_OPTIMIZED;
--		sdev_printk(KERN_INFO, h->sdev,
--			    "%s: port group %02x switched to state %c\n",
--			    ALUA_DH_NAME, h->group_id,
--			    print_alua_state(h->state));
--	}
--done:
--	req->end_io_data = NULL;
--	__blk_put_request(req->q, req);
--	if (h->callback_fn) {
--		h->callback_fn(h->callback_data, err);
--		h->callback_fn = h->callback_data = NULL;
--	}
--	return;
--}
--
--/*
-- * submit_stpg - Issue a SET TARGET GROUP STATES command
-+ * submit_stpg - Issue a SET TARGET PORT GROUP command
-  *
-  * Currently we're only setting the current target port group state
-  * to 'active/optimized' and let the array firmware figure out
-  * the states of the remaining groups.
-  */
--static unsigned submit_stpg(struct alua_dh_data *h)
-+static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
-+			    unsigned char *sense)
- {
- 	struct request *rq;
-+	unsigned char stpg_data[8];
- 	int stpg_len = 8;
--	struct scsi_device *sdev = h->sdev;
-+	int err = 0;
- 
- 	/* Prepare the data buffer */
--	memset(h->buff, 0, stpg_len);
--	h->buff[4] = TPGS_STATE_OPTIMIZED & 0x0f;
--	put_unaligned_be16(h->group_id, &h->buff[6]);
-+	memset(stpg_data, 0, stpg_len);
-+	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
-+	put_unaligned_be16(group_id, &stpg_data[6]);
- 
--	rq = get_alua_req(sdev, h->buff, stpg_len, WRITE);
-+	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
- 	if (!rq)
--		return SCSI_DH_RES_TEMP_UNAVAIL;
-+		return DRIVER_BUSY << 24;
- 
- 	/* Prepare the command. */
- 	rq->cmd[0] = MAINTENANCE_OUT;
-@@ -251,13 +198,17 @@ static unsigned submit_stpg(struct alua_dh_data *h)
- 	put_unaligned_be32(stpg_len, &rq->cmd[6]);
- 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
- 
--	rq->sense = h->sense;
-+	rq->sense = sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = 0;
--	rq->end_io_data = h;
- 
--	blk_execute_rq_nowait(rq->q, NULL, rq, 1, stpg_endio);
--	return SCSI_DH_OK;
-+	blk_execute_rq(rq->q, NULL, rq, 1);
-+	if (rq->errors)
-+		err = rq->errors;
-+
-+	blk_put_request(rq);
-+
-+	return err;
- }
- 
- /*
-@@ -582,59 +533,59 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
-  * alua_stpg - Issue a SET TARGET PORT GROUP command
-  *
-  * Issue a SET TARGET PORT GROUP command and evaluate the
-- * response. Returns SCSI_DH_RETRY if the target port group
-- * state is found to be in 'transitioning'.
-- * If SCSI_DH_OK is returned the passed-in 'fn' function
-- * this function will take care of executing 'fn'.
-- * Otherwise 'fn' should be executed by the caller with the
-- * returned error code.
-+ * response. Returns SCSI_DH_RETRY per default to trigger
-+ * a re-evaluation of the target group state or SCSI_DH_OK
-+ * if no further action needs to be taken.
-  */
--static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h,
--			  activate_complete fn, void *data)
-+static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
- {
--	int err = SCSI_DH_OK;
--	int stpg = 0;
--
--	if (!(h->tpgs & TPGS_MODE_EXPLICIT))
--		/* Only implicit ALUA supported */
--		goto out;
-+	int retval;
-+	struct scsi_sense_hdr sense_hdr;
- 
-+	if (!(h->tpgs & TPGS_MODE_EXPLICIT)) {
-+		/* Only implicit ALUA supported, retry */
-+		return SCSI_DH_RETRY;
-+	}
- 	switch (h->state) {
-+	case TPGS_STATE_OPTIMIZED:
-+		return SCSI_DH_OK;
- 	case TPGS_STATE_NONOPTIMIZED:
--		stpg = 1;
- 		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
- 		    !h->pref &&
- 		    (h->tpgs & TPGS_MODE_IMPLICIT))
--			stpg = 0;
-+			return SCSI_DH_OK;
- 		break;
- 	case TPGS_STATE_STANDBY:
- 	case TPGS_STATE_UNAVAILABLE:
--		stpg = 1;
- 		break;
- 	case TPGS_STATE_OFFLINE:
--		err = SCSI_DH_IO;
--		break;
-+		return SCSI_DH_IO;
- 	case TPGS_STATE_TRANSITIONING:
--		err = SCSI_DH_RETRY;
- 		break;
- 	default:
--		break;
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: stpg failed, unhandled TPGS state %d",
-+			    ALUA_DH_NAME, h->state);
-+		return SCSI_DH_NOSYS;
+@@ -366,6 +366,8 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ 		/* port group has changed. Update to new port group */
+ 		rcu_assign_pointer(h->pg, pg);
  	}
-+	retval = submit_stpg(sdev, h->group_id, h->sense);
++	if (sdev->synchronous_alua)
++		pg->flags |= ALUA_SYNC_STPG;
+ 	alua_rtpg_queue(h->pg, sdev, NULL);
+ 	spin_unlock(&h->pg_lock);
  
--	if (stpg) {
--		h->callback_fn = fn;
--		h->callback_data = data;
--		err = submit_stpg(h);
--		if (err != SCSI_DH_OK)
--			h->callback_fn = h->callback_data = NULL;
--		else
--			fn = NULL;
-+	if (retval) {
-+		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-+					  &sense_hdr)) {
-+			sdev_printk(KERN_INFO, sdev,
-+				    "%s: stpg failed, result %d",
-+				    ALUA_DH_NAME, retval);
-+			if (driver_byte(retval) == DRIVER_BUSY)
-+				return SCSI_DH_DEV_TEMP_BUSY;
-+		} else {
-+			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
-+				    ALUA_DH_NAME);
-+			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-+		}
- 	}
--out:
--	if (fn)
--		fn(data, err);
--
--	return err;
-+	/* Retry RTPG */
-+	return SCSI_DH_RETRY;
- }
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 47b9d13..b4ef0c6 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -218,6 +218,8 @@ static struct {
+ 	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
++	{"NETAPP", "LUN C-Mode", NULL, BLIST_SYNC_ALUA},
++	{"NETAPP", "INF-01-00", NULL, BLIST_SYNC_ALUA},
+ 	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 1f02e84..420239c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -964,6 +964,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_NO_DIF)
+ 		sdev->no_dif = 1;
  
- /*
-@@ -722,10 +673,9 @@ static int alua_activate(struct scsi_device *sdev,
- 	if (optimize_stpg)
- 		h->flags |= ALUA_OPTIMIZE_STPG;
++	if (*bflags & BLIST_SYNC_ALUA)
++		sdev->synchronous_alua = 1;
++
+ 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
  
--	err = alua_stpg(sdev, h, fn, data);
--
-+	err = alua_stpg(sdev, h);
- out:
--	if (err != SCSI_DH_OK && fn)
-+	if (fn)
- 		fn(data, err);
- 	return 0;
- }
+ 	if (*bflags & BLIST_TRY_VPD_PAGES)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9173ab5a..4af2b24 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -176,6 +176,7 @@ struct scsi_device {
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
++	unsigned synchronous_alua:1;	/* Synchronous ALUA commands */
+ 
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 96e3f56..9f750cb 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -37,5 +37,6 @@
+ #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
+ #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
+ #define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
++#define BLIST_SYNC_ALUA		0x80000000 /* Synchronous ALUA commands */
+ 
+ #endif
 -- 
 1.8.5.6
 
