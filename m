@@ -1,76 +1,71 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv8 01/23] scsi_dh_alua: Pass buffer as function argument
-Date: Fri, 19 Feb 2016 09:16:58 +0100
-Message-ID: <1455869840-122786-2-git-send-email-hare@suse.de>
-References: <1455869840-122786-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38789 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1427039AbcBSIRr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2016 03:17:47 -0500
-In-Reply-To: <1455869840-122786-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 3/7] scsi: Drop runtime PM usage count after host is added
+Date: Fri, 19 Feb 2016 10:18:04 +0200
+Message-ID: <20160219081804.GC1491@lahna.fi.intel.com>
+References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1455785657-22924-4-git-send-email-mika.westerberg@linux.intel.com>
+ <CAGRGNgUzUDWQ3jDfUuaf8x4G_zsZYe1p2=e_kDR4FkcMp5bUvg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGRGNgUzUDWQ3jDfUuaf8x4G_zsZYe1p2=e_kDR4FkcMp5bUvg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Pass in the buffer as a function argument for submit_rtpg().
+On Fri, Feb 19, 2016 at 09:50:50AM +1100, Julian Calaby wrote:
+> Hi Mika,
+> 
+> On Thu, Feb 18, 2016 at 7:54 PM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > Runtime PM of the SCSI host is already handled by calls to
+> > scsi_autopm_get_host() and scsi_autopm_put_host() from appropriate places
+> > whenever the host needs to be powered on. This works fine when there is
+> > device connected to the host as once it runtime suspends the host will too.
+> >
+> > However, if there is no device connected the host is never runtime
+> > suspended (the usage counter is always 0).
+> >
+> > Allow runtime suspend of host even if it has no devices connected by
+> > calling scsi_autopm_put_host() at the end of scsi_add_host_with_dma(). We
+> > temporarily increase runtime PM usage counter first so call to
+> > scsi_autopm_put_host() will result idle request to be scheduled for the
+> > device.
+> >
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/scsi/hosts.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> >
+> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> > index 82ac1cd818ac..e46bf4d152a0 100644
+> > --- a/drivers/scsi/hosts.c
+> > +++ b/drivers/scsi/hosts.c
+> > @@ -250,6 +250,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+> >         if (error)
+> >                 goto out_destroy_freelist;
+> >
+> > +       /*
+> > +        * Increase usage count temporarily here so that calling
+> > +        * scsi_autopm_put_host() will trigger runtime idle if there is
+> > +        * nothing else preventing suspending the device.
+> > +        */
+> > +       pm_runtime_get_noresume(&shost->shost_gendev);
+> >         pm_runtime_set_active(&shost->shost_gendev);
+> >         pm_runtime_enable(&shost->shost_gendev);
+> >         device_enable_async_suspend(&shost->shost_gendev);
+> > @@ -290,6 +296,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+> >                 goto out_destroy_host;
+> >
+> >         scsi_proc_host_add(shost);
+> > +       scsi_autopm_put_host(shost);
+> 
+> Would it be cleaner to export the code that runs when the usage
+> counter decrements and call it here?
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 5a328bf..df71e85 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -135,12 +135,13 @@ static struct request *get_alua_req(struct scsi_device *sdev,
-  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-  * @sdev: sdev the command should be sent to
-  */
--static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
-+static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
-+			    int bufflen, unsigned char *sense, int flags)
- {
- 	struct request *rq;
- 	int err = 0;
- 
--	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
-+	rq = get_alua_req(sdev, buff, bufflen, READ);
- 	if (!rq) {
- 		err = DRIVER_BUSY << 24;
- 		goto done;
-@@ -148,14 +149,14 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 
- 	/* Prepare the command. */
- 	rq->cmd[0] = MAINTENANCE_IN;
--	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
-+	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
- 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
- 	else
- 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
--	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
-+	put_unaligned_be32(bufflen, &rq->cmd[6]);
- 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
- 
--	rq->sense = h->sense;
-+	rq->sense = sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = 0;
- 
-@@ -446,7 +447,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
- 
-  retry:
--	retval = submit_rtpg(sdev, h);
-+	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
- 	if (retval) {
- 		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
- 					  &sense_hdr)) {
--- 
-1.8.5.6
-
+There actually is no code to run. This just ensures that the device
+runtime_idle gets called which allows the parent device to runtime
+suspend (as it returns 0). Alternative way would be just to call
+pm_request_idle() directly here.
