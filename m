@@ -1,49 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv7 20/23] scsi: Add 'access_state' attribute
-Date: Fri, 19 Feb 2016 07:49:24 +0100
-Message-ID: <56C6BAF4.9000100@suse.de>
+Subject: Re: [PATCHv7 21/23] scsi_dh_alua: use common definitions for ALUA
+ state
+Date: Fri, 19 Feb 2016 07:50:43 +0100
+Message-ID: <56C6BB43.4040003@suse.de>
 References: <1455524690-121073-1-git-send-email-hare@suse.de>
- <1455524690-121073-21-git-send-email-hare@suse.de>
- <56C63DB8.6020306@sandisk.com>
+ <1455524690-121073-22-git-send-email-hare@suse.de>
+ <56C640F9.4060402@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34199 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34254 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757404AbcBSGt0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2016 01:49:26 -0500
-In-Reply-To: <56C63DB8.6020306@sandisk.com>
+	id S1423088AbcBSGup (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2016 01:50:45 -0500
+In-Reply-To: <56C640F9.4060402@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On 02/18/2016 10:55 PM, Bart Van Assche wrote:
+On 02/18/2016 11:08 PM, Bart Van Assche wrote:
 > On 02/15/2016 12:24 AM, Hannes Reinecke wrote:
->> Add an 'access_state' attribute to struct scsi_device to
->> display the asymmetric LUN access state.
+>> @@ -180,7 +172,7 @@ static int submit_stpg(struct scsi_device
+>> *sdev, int group_id,
+>>
+>>       /* Prepare the data buffer */
+>>       memset(stpg_data, 0, stpg_len);
+>> -    stpg_data[4] =3D TPGS_STATE_OPTIMIZED & 0x0f;
+>> +    stpg_data[4] =3D SCSI_ACCESS_STATE_OPTIMAL & 0x0f;
+>>       put_unaligned_be16(group_id, &stpg_data[6]);
+>>
 >=20
-> Do we really need to add this attribute to SCSI devices that do not
-> support ALUA, e.g. ATA devices ? From a system on which this patch
-> series has been installed:
+> In the previous patch a symbolic name for the ALUA state mask has
+> been introduced (SCSI_ACCESS_STATE_MASK). Hence please either leave
+> out "& 0x0f" from the above code or use that constant.
 >=20
-> [root ~]# lsscsi | grep 0:0:0:0
-> [0:0:0:0] disk ATA ST1000NM0033-9ZM GA67 /dev/sda
-> [root ~]# cat /sys/class/scsi_device/0:0:0:0/device/access_state
-> active/optimized
->=20
-Well.
-
-I've hit the same issue with my patches exposing vpd pages to sysfs.
-
-Thing is, the sysfs entries are created during scsi_alloc_sdev().
-But we only know if the have these entries during scsi_add_lun(), ie
-way beyond that point. So ATM we don't have a chance of selectively
-enabling them.
-
-Any change here would require a modification to the core sysfs
-behaviour, which might not that easy.
+Ok.
 
 Cheers,
 
