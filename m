@@ -1,105 +1,101 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 5/6] hisi_sas: add hisi_sas_slave_configure()
-Date: Fri, 19 Feb 2016 10:46:35 +0000
-Message-ID: <56C6F28B.9090000@huawei.com>
-References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
- <1455625351-165881-6-git-send-email-john.garry@huawei.com>
- <56C34163.70606@suse.de> <56C354A5.6080503@huawei.com>
- <56C5756A.9060700@suse.de> <56C59922.6070600@huawei.com>
- <56C59D47.30500@suse.de> <56C5A3A6.1090100@huawei.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2] fusion-mptbase: handle failed allocation for workqueue
+Date: Fri, 19 Feb 2016 14:46:25 +0100
+Message-ID: <56C71CB1.9040500@redhat.com>
+References: <1455770459-905-1-git-send-email-wuninsu@gmail.com>
+ <20160218090043.GQ18134@c203.arch.suse.de>
+ <1455813615.22112.473.camel@localhost.localdomain>
+ <1455814515.22112.476.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53300 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992819AbcBSKr0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2016 05:47:26 -0500
-In-Reply-To: <56C5A3A6.1090100@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1455814515.22112.476.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: emilne@redhat.com, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Insu Yun <wuninsu@gmail.com>, nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, JBottomley@odin.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, john.garry2@mail.dcu.ie, linux-kernel@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org
 
-On 18/02/2016 10:57, John Garry wrote:
-> On 18/02/2016 10:30, Hannes Reinecke wrote:
->> On 02/18/2016 11:12 AM, John Garry wrote:
->>> On 18/02/2016 07:40, Hannes Reinecke wrote:
->> [ .. ]
->>>> Well, the classical thing would be to associate each request tag
->>>> with a SAS task; or, in your case, associate each slot index with a
->>>> request tag.
->>>> You probably would need to reserve some slots for TMFs, ie you'd
->>>> need to decrease the resulting ->can_queue variable by that.
->>>> But once you've done that you shouldn't hit any QUEUE_FULL issues,
->>>> as the block layer will ensure that no tags will be reused while the
->>>> command is in flight.
->>>> Plus this is something you really need to be doing if you ever
->>>> consider moving to scsi-mq ...
->>>>
->>>> Cheers,
->>>>
->>>> Hannes
->>>>
->>> Hi,
->>>
->>> So would you recommend this method under the assumption that the
->>> can_queue value for the host is similar to the queue depth for the
->>> device?
->>>
->> That depends.
->> Typically the can_queue setting reflects the number of commands the
->> _host_ can queue internally (due to hardware limitations etc).
->> They do not necessarily reflect the queue depth for the device
->> (unless you have a single device, of course).
->> So if the host has a hardware limit on the number of commands it can
->> queue, it should set the 'can_queue' variable to the appropriate
->> number; a host-wide shared tag map is always assumed with recent
->> kernels.
+On 18.2.2016 17:55, Ewan Milne wrote:
+> On Thu, 2016-02-18 at 11:40 -0500, Ewan Milne wrote:
+>> It also appears to me upon further inspection that the existing code has
+>> other problems.  In particular, once mpt_mapresources() has returned
+>> with a nonzero error code, it looks like iounmap() should be called, but
+>> it is not in the case of a failed allocation of reset_work_q.  I'm also
+>> not sure why pci_release_selected_regions() is only called for the case
+>> of mpt_do_ioc_recovery() returning != -5 when it is called whenever
+>> there is a failed allocation of reset_work_q.
 >>
->> The queue_depth of an individual device is controlled by the
->> 'cmd_per_lun' setting, and of course capped by can_queue.
+>> Consider the attached patch (untested, because I don't have hardware):
+>> It shows what I would do for labels & error handling.  If the rc != -5
+>> case of return from mpt_do_ioc_recovery() could be eliminated, then
+>> another label "out_free_fw_event_q:" could be added prior to the other
+>> error cases at the end, and all the code after the printk() in that path
+>> could be replaced by "goto out_free_fw_event_q;"
 >>
->> But yes, I definitely recommend this method.
->> Is saves one _so much_ time trying to figure out which command slot
->> to use. Drawback is that you have to have some sort of fixed order
->> on them slots to do an efficient lookup.
+>> 	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
+>> 	    CAN_SLEEP)) != 0){
+>> 		printk(MYIOC_s_ERR_FMT "didn't initialize properly! (%d)\n",
+>> 		    ioc->name, r);
+>> 		goto out_free_fw_event_q;
+>> 	}
+>> ...
 >>
->> Cheers,
+>> out_free_fw_event_q:
+>> 	destroy_workqueue(ioc->fw_event_q);
+>> 	ioc->fw_event_q = NULL;
 >>
->> Hannes
+>> out_remove_ioc:
+>> ...
 >>
+>> However I do not know if that change is legitimate.
+>>
+>> -Ewan
+> There is an error in the patch attached in my previous mail.
+> Please refer to the attached PATCH v2 RFC.
+
+Looks fine to me, do you we could add this change to your patch ?
+
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index a4f362b3b4..4a42c1534c 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -2012,6 +2012,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+                if (ioc->alt_ioc)
+                        ioc->alt_ioc->alt_ioc = NULL;
+                iounmap(ioc->memmap);
++               if (pci_is_enabled(pdev)
++                       pci_disable_device(pdev);
+                if (r != -5)
+                        pci_release_selected_regions(pdev, ioc->bars);
+
+@@ -2019,7 +2021,6 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+                ioc->reset_work_q = NULL;
+
+                kfree(ioc);
+-               pci_set_drvdata(pdev, NULL);
+                return r;
+        }
+
+@@ -2052,13 +2053,13 @@ out_remove_ioc:
+        list_del(&ioc->list);
+        if (ioc->alt_ioc)
+                ioc->alt_ioc->alt_ioc = NULL;
+-       pci_set_drvdata(ioc->pcidev, NULL);
+
+        destroy_workqueue(ioc->reset_work_q);
+        ioc->reset_work_q = NULL;
+
+ out_unmap_resources:
+        iounmap(ioc->memmap);
++       pci_disable_device(pdev);
+        pci_release_selected_regions(pdev, ioc->bars);
+
+ out_free_ioc:
+
+-tomash
+
 >
-> I would like to make a point on cmd_per_lun before considering tagging
-> slots: For our host the can_queue is considerably greater than
-> cmd_per_lun (even though we initially set the same in the host template,
-> which would be incorrect). Regardless I find the host cmd_per_lun is
-> effectively ignored for the slave device queue depth as it is reset in
-> sas_slave_configure() to 256 [if this function is used and tagging
-> enabled]. So if we we choose a reasonable cmd_per_lun for our host, it
-> is ignored, right? Or am I missing something?
+> -Ewan
 >
-> Thanks,
-> John
->
->
-
-I would like to make another point about why I am making this change in 
-case it is not clear. The queue full events are form 
-TRANS_TX_CREDIT_TIMEOUT_ERR and TRANS_TX_CLOSE_NORMAL_ERR errors in the 
-slot: I want the slot retried when this occurs, so I set status as 
-SAS_QUEUE_FULL just so we will report DID_SOFT_ERR to SCSI midlayer so 
-we get a retry. I could use SAS_OPEN_REJECT alternatively as the error 
-which would have the same affect.
-The queue full are not from all slots being consumed in the HBA.
-
-thanks again,
-John
-
-
-> _______________________________________________
-> linuxarm mailing list
-> linuxarm@huawei.com
-> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
-
-
