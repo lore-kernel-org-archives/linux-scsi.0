@@ -1,86 +1,52 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: dm-multipath test scripts
-Date: Fri, 19 Feb 2016 00:33:54 +0000
-Message-ID: <56C662F1.8070407@ce.jp.nec.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <20160218171745.GA15071@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv7 07/23] scsi_dh_alua: Use separate alua_port_group
+ structure
+Date: Fri, 19 Feb 2016 07:42:57 +0100
+Message-ID: <56C6B971.1000505@suse.de>
+References: <1455524690-121073-1-git-send-email-hare@suse.de>
+ <1455524690-121073-8-git-send-email-hare@suse.de>
+ <56C61E7B.9050509@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO200.gate.nec.co.jp ([210.143.35.50]:52703 "EHLO
-	tyo200.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946981AbcBSAfT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2016 19:35:19 -0500
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id u1J0ZITN016324
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2016 09:35:18 +0900 (JST)
-In-Reply-To: <20160218171745.GA15071@redhat.com>
-Content-Language: ja-JP
-Content-ID: <4FBB0F237767E446B758976CFCFCB7D2@gisp.nec.co.jp>
+Received: from mx2.suse.de ([195.135.220.15]:33916 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161414AbcBSGnA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2016 01:43:00 -0500
+In-Reply-To: <56C61E7B.9050509@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Hi Mike,
+On 02/18/2016 08:41 PM, Bart Van Assche wrote:
+> On 02/15/2016 12:24 AM, Hannes Reinecke wrote:
+>>       if (optimize)
+>> -        h->flags |=3D ALUA_OPTIMIZE_STPG;
+>> +        pg->flags |=3D ALUA_OPTIMIZE_STPG;
+>>       else
+>> -        h->flags &=3D ~ALUA_OPTIMIZE_STPG;
+>> +        pg->flags |=3D ~ALUA_OPTIMIZE_STPG;
+>=20
+> The above looks weird to me. Why has "&=3D" been changed into "|=3D" =
+?
+>=20
+Bah. Of course.
 
-On 02/19/16 02:17, Mike Snitzer wrote:
-> But unfortunately I cannot get either the scsidebug or tcmloop mode to
-> run against v4.5-rc4
-> 
-> For tcmloop, targetcli fails with:
-> "Could not create ISCSIFabricModule in configFS."
+Will be fixing it up.
 
-Hmm, it sounds like there's unnecessary dependency in targetcli.
+Cheers,
 
-> (fixed by enabling CONFIG_ISCSI_TARGET under TARGET_CORE)
-
-OK.
-
-> I'm seeing all tests fail due to fio verification failure.  I'll need to
-> inspect this further..
-> 
-> But the most problematic test is ./tests/test_03_dm_failpath -- it seems
-> to actively break _any_ v4.5-rc kernel I try (with a never-ending flood
-> of messages like "device-mapper: multipath: Failing path 8:192."); I
-> haven't tried older kernels.
-
-It seems fail/recover cycle runs too fast for I/O to make any progress.
-I hit similar case and had to slow down the stress with attached patch.
-Please try this. Sorry for the inconvenience.
-
-> What is the last kernel version that your scripts have worked on?
-
-v4.4 worked fine. I'll check with v4.5-rc4 when I get a machine.
-
-> Taking a step back:
-> These scripts don't belong in Documentation/device-mapper/mptest/ (or
-> anywhere in the kernel tree for that matter).
-> 
-> I'd really prefer it if we could port your scripts over to the
-> device-mapper-test-suite, see:
-> https://github.com/jthornber/device-mapper-test-suite
-
-Yes, I agree such a project is better place for this to live.
-
--- 
-Jun'ichi Nomura, NEC Corporation
-
-diff --git a/lib/failpath_dm_message b/lib/failpath_dm_message
-index 1a3bcf8..5b8f28a 100755
---- a/lib/failpath_dm_message
-+++ b/lib/failpath_dm_message
-@@ -30,9 +30,11 @@ start_failpath_dm_message () {
- 		for m in $majs; do
- 			dmsetup message $MPNAME 0 "fail_path $m"
- 		done
-+		sleep 1
- 		for m in $majs; do
- 			dmsetup message $MPNAME 0 "reinstate_path $m"
- 		done
-+		sleep 1
- 	done &
- }
- 
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
