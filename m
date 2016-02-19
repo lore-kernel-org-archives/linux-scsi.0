@@ -1,121 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv8 10/23] revert commit a8e5a2d593cb ("[SCSI] scsi_dh_alua: ALUA handler attach should succeed while TPG is transitioning")
-Date: Fri, 19 Feb 2016 09:17:07 +0100
-Message-ID: <1455869840-122786-11-git-send-email-hare@suse.de>
-References: <1455869840-122786-1-git-send-email-hare@suse.de>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: dm-multipath test scripts
+Date: Fri, 19 Feb 2016 08:37:46 +0000
+Message-ID: <56C6D45A.6060407@ce.jp.nec.com>
+References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+ <20160218171745.GA15071@redhat.com> <56C662F1.8070407@ce.jp.nec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38796 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1424220AbcBSIRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2016 03:17:48 -0500
-In-Reply-To: <1455869840-122786-1-git-send-email-hare@suse.de>
+Received: from TYO202.gate.nec.co.jp ([210.143.35.52]:52239 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946472AbcBSIiW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2016 03:38:22 -0500
+In-Reply-To: <56C662F1.8070407@ce.jp.nec.com>
+Content-Language: ja-JP
+Content-ID: <A12F6279FB0BD14D8E7A85DA5B22E73D@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This reverts commit a8e5a2d593cbfccf530c3382c2c328d2edaa7b66
+On 02/19/16 09:33, Nomura Junichi wrote:
+> On 02/19/16 02:17, Mike Snitzer wrote:
+>> What is the last kernel version that your scripts have worked on?
+> 
+> v4.4 worked fine. I'll check with v4.5-rc4 when I get a machine.
 
-Obsoleted by the next patch.
+v4.5-rc4 works fine, too.
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 31 ++++++++++++------------------
- 1 file changed, 12 insertions(+), 19 deletions(-)
+So if all tests fail for you, it might be due to difference in
+environment or kernel config.
+I'm running tests on RHEL7.2 and kernel config is based on RHEL7 kernel.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index a6fe3ae..0ae2536 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -92,7 +92,7 @@ struct alua_dh_data {
- #define ALUA_POLICY_SWITCH_CURRENT	0
- #define ALUA_POLICY_SWITCH_ALL		1
- 
--static int alua_rtpg(struct scsi_device *, struct alua_port_group *, int);
-+static int alua_rtpg(struct scsi_device *, struct alua_port_group *);
- static char print_alua_state(int);
- 
- static void release_port_group(struct kref *kref)
-@@ -326,7 +326,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
- 		    ALUA_DH_NAME, h->pg->device_id_str,
- 		    h->group_id, h->rel_port);
- 
--	return alua_rtpg(sdev, h->pg, 0);
-+	return alua_rtpg(sdev, h->pg);
- }
- 
- static char print_alua_state(int state)
-@@ -409,13 +409,12 @@ static int alua_check_sense(struct scsi_device *sdev,
- /*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-- * @wait_for_transition: if nonzero, wait ALUA_FAILOVER_TIMEOUT seconds for device to exit transitioning state
-  *
-  * Evaluate the Target Port Group State.
-  * Returns SCSI_DH_DEV_OFFLINED if the path is
-  * found to be unusable.
-  */
--static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
-+static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- {
- 	struct scsi_sense_hdr sense_hdr;
- 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
-@@ -506,8 +505,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 	else
- 		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
- 
--	if (wait_for_transition &&
--	    (orig_transition_tmo != pg->transition_tmo)) {
-+	if (orig_transition_tmo != pg->transition_tmo) {
- 		sdev_printk(KERN_INFO, sdev,
- 			    "%s: transition timeout set to %d seconds\n",
- 			    ALUA_DH_NAME, pg->transition_tmo);
-@@ -545,19 +543,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 
- 	switch (pg->state) {
- 	case TPGS_STATE_TRANSITIONING:
--		if (wait_for_transition) {
--			if (time_before(jiffies, expiry)) {
--				/* State transition, retry */
--				interval += 2000;
--				msleep(interval);
--				goto retry;
--			}
--			err = SCSI_DH_RETRY;
--		} else {
--			err = SCSI_DH_OK;
-+		if (time_before(jiffies, expiry)) {
-+			/* State transition, retry */
-+			interval += 2000;
-+			msleep(interval);
-+			goto retry;
- 		}
--
- 		/* Transitioning time exceeded, set port to standby */
-+		err = SCSI_DH_RETRY;
- 		pg->state = TPGS_STATE_STANDBY;
- 		break;
- 	case TPGS_STATE_OFFLINE:
-@@ -713,14 +706,14 @@ static int alua_activate(struct scsi_device *sdev,
- 	if (optimize_stpg)
- 		h->pg->flags |= ALUA_OPTIMIZE_STPG;
- 
--	err = alua_rtpg(sdev, h->pg, 1);
-+	err = alua_rtpg(sdev, h->pg);
- 	if (err != SCSI_DH_OK) {
- 		kref_put(&h->pg->kref, release_port_group);
- 		goto out;
- 	}
- 	err = alua_stpg(sdev, h->pg);
- 	if (err == SCSI_DH_RETRY)
--		err = alua_rtpg(sdev, h->pg, 1);
-+		err = alua_rtpg(sdev, h->pg);
- 	kref_put(&h->pg->kref, release_port_group);
- out:
- 	if (fn)
+# rpm -q targetcli
+targetcli-2.1.fb41-3.el7.noarch
+# cp /boot/config-3.10.0-327.el7.x86_64 .config
+# make olddefconfig
+...
+
 -- 
-1.8.5.6
-
+Jun'ichi Nomura, NEC Corporation
