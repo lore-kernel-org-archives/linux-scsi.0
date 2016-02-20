@@ -1,55 +1,96 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-multipath test scripts
-Date: Sat, 20 Feb 2016 01:12:47 -0500
-Message-ID: <20160220061247.GA23333@redhat.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <20160218171745.GA15071@redhat.com>
- <56C662F1.8070407@ce.jp.nec.com>
- <56C6D45A.6060407@ce.jp.nec.com>
- <20160219194216.GB21133@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv8 20/23] scsi: Add 'access_state' attribute
+Date: Sat, 20 Feb 2016 09:03:01 +0100
+Message-ID: <56C81DB5.7070102@suse.de>
+References: <1455869840-122786-1-git-send-email-hare@suse.de>
+ <1455869840-122786-21-git-send-email-hare@suse.de>
+ <56C7688A.2050608@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45402 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:38891 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757941AbcBTGMt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Feb 2016 01:12:49 -0500
-Content-Disposition: inline
-In-Reply-To: <20160219194216.GB21133@redhat.com>
+	id S1424530AbcBTIDF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Feb 2016 03:03:05 -0500
+In-Reply-To: <56C7688A.2050608@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Fri, Feb 19 2016 at  2:42pm -0500,
-Mike Snitzer <snitzer@redhat.com> wrote:
+On 02/19/2016 08:10 PM, Bart Van Assche wrote:
+> On 02/19/2016 12:17 AM, Hannes Reinecke wrote:
+>> +static ssize_t
+>> +sdev_show_access_state(struct device *dev,
+>> +		       struct device_attribute *attr,
+>> +		       char *buf)
+>> +{
+>> +	struct scsi_device *sdev =3D to_scsi_device(dev);
+>> +	unsigned char access_state;
+>> +	const char *access_state_name;
+>> +	bool pref =3D false;
+>> +
+>> +	if (!sdev->handler)
+>> +		return -EINVAL;
+>> +
+>> +	if (sdev->access_state & SCSI_ACCESS_STATE_PREFERRED)
+>> +		pref =3D true;
+>> +
+>> +	access_state =3D (sdev->access_state & SCSI_ACCESS_STATE_MASK);
+>> +	access_state_name =3D scsi_access_state_name(access_state);
+>> +
+>> +	return snprintf(buf, 32, "%s%s\n",
+>> +			access_state_name ? access_state_name : "unknown",
+>> +			pref ? " preferred" : "");
+>> +}
+>
+> Hello Hannes,
+>
+> What is inelegant about the above approach is that the access_state a=
+ttribute
+> is added to all SCSI devices, whether or not a device handler has bee=
+n attached,
+> and that reading that attribute doesn't fail for devices to which ano=
+ther handler
+> than the ALUA handler has been attached. How about the patch below, w=
+hich moves
+> the access_state show handler to the scsi_dh_alua.c source file, wher=
+e it belongs?
+>
+Actually, this was my first approach, but hch suggested moving it to
+the generic code :-(
 
-> On Fri, Feb 19 2016 at  3:37am -0500,
-> Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
-> 
-> > On 02/19/16 09:33, Nomura Junichi wrote:
-> > > On 02/19/16 02:17, Mike Snitzer wrote:
-> > >> What is the last kernel version that your scripts have worked on?
-> > > 
-> > > v4.4 worked fine. I'll check with v4.5-rc4 when I get a machine.
-> > 
-> > v4.5-rc4 works fine, too.
-> 
-> Have you been running with blk-mq?
-> Either by setting CONFIG_DM_MQ_DEFAULT or:
-> echo Y > /sys/module/dm_mod/parameters/use_blk_mq
-> 
-> I'm seeing test_02_sdev_delete fail with blk-mq enabled.
+Also when using your suggestion the 'access_state' attribute will only=20
+be created _after_ the 'ADD' uevent, making it impossible to use it fro=
+m=20
+udev events.
 
-I only see failure if I stack dm-mq ontop of old non-mq scsi devices with:
+However, I'm currently working on using the 'is_visible' callback for=20
+SCSI sysfs attributes for this; in theory it should be possible to
+use 'sysfs_update_groups()' during scsi_add_lun() to blank out the
+unsupported attributes.
 
-echo N > /sys/module/scsi_mod/parameters/use_blk_mq
-echo Y > /sys/module/dm_mod/parameters/use_blk_mq
+Which I think might be the best approach here.
 
-If I use scsi-mq for the underlying devices all works fine (been testing
-the latest dm-4.6 branch though, I'll go back and try stock 4.5-rc4 just
-to double check).
+But probably not for this patch series; I'd rather have the alua update=
+=20
+in first as it took long enough.
 
-But this makes me think the novelty of having dm-mq support stacking on
-non-blk-mq devices was misplaced.  It is a senseless config.  I'll
-probably remove support for such stacking soon (next week). 
+If you're absolutely against it we can drop the 'access_state' patches
+(ie patch 20-22) and have them folded into a separate patchset.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
