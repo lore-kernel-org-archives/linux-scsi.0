@@ -1,101 +1,72 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-multipath test scripts
-Date: Sat, 20 Feb 2016 11:34:49 -0500
-Message-ID: <20160220163449.GA26384@redhat.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <20160218171745.GA15071@redhat.com>
- <56C662F1.8070407@ce.jp.nec.com>
- <56C6D45A.6060407@ce.jp.nec.com>
- <20160219194216.GB21133@redhat.com>
- <20160220061247.GA23333@redhat.com>
- <56C834F8.8050604@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv8 20/23] scsi: Add 'access_state' attribute
+Date: Sun, 21 Feb 2016 09:27:55 +0100
+Message-ID: <56C9750B.9010200@suse.de>
+References: <1455869840-122786-1-git-send-email-hare@suse.de>
+ <1455869840-122786-21-git-send-email-hare@suse.de>
+ <56C7688A.2050608@sandisk.com> <56C81DB5.7070102@suse.de>
+ <56C8834F.50304@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51075 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:49597 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750987AbcBTQev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Feb 2016 11:34:51 -0500
-Content-Disposition: inline
-In-Reply-To: <56C834F8.8050604@suse.de>
+	id S1752905AbcBURXm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Feb 2016 12:23:42 -0500
+In-Reply-To: <56C8834F.50304@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Junichi Nomura <j-nomura@ce.jp.nec.com>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, Feb 20 2016 at  4:42am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
+On 02/20/2016 04:16 PM, Bart Van Assche wrote:
+> On 02/20/16 00:03, Hannes Reinecke wrote:
+>> Also when using your suggestion the 'access_state' attribute will on=
+ly
+>> be created _after_ the 'ADD' uevent, making it impossible to use it =
+from
+>> udev events.
+>
+> Can you give an example in which it would be useful to read the ALUA
+> state from a udev handler ? I'm not sure such an example exists.
+>
+When evaluating the 'access_state' from an uevent we can avoid sending=20
+I/O if the path is unavailable; eg if the path is in 'transitioning' I/=
+O=20
+will be queued until that path becomes available again.
+Which means that the uevent will be delayed during udev processing, so=20
+that the event will never be read by multipathing (as it's being invoke=
+d
+only after udev event processing has finished).
+And in extreme cases (like OnTap takeover/giveback) it will even drop=20
+the event completely due to a timeout.
 
-> On 02/20/2016 07:12 AM, Mike Snitzer wrote:
-> >On Fri, Feb 19 2016 at  2:42pm -0500,
-> >Mike Snitzer <snitzer@redhat.com> wrote:
-> >
-> >>On Fri, Feb 19 2016 at  3:37am -0500,
-> >>Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
-> >>
-> >>>On 02/19/16 09:33, Nomura Junichi wrote:
-> >>>>On 02/19/16 02:17, Mike Snitzer wrote:
-> >>>>>What is the last kernel version that your scripts have worked on?
-> >>>>
-> >>>>v4.4 worked fine. I'll check with v4.5-rc4 when I get a machine.
-> >>>
-> >>>v4.5-rc4 works fine, too.
-> >>
-> >>Have you been running with blk-mq?
-> >>Either by setting CONFIG_DM_MQ_DEFAULT or:
-> >>echo Y > /sys/module/dm_mod/parameters/use_blk_mq
-> >>
-> >>I'm seeing test_02_sdev_delete fail with blk-mq enabled.
-> >
-> >I only see failure if I stack dm-mq ontop of old non-mq scsi devices with:
-> >
-> >echo N > /sys/module/scsi_mod/parameters/use_blk_mq
-> >echo Y > /sys/module/dm_mod/parameters/use_blk_mq
-> >
-> >If I use scsi-mq for the underlying devices all works fine (been testing
-> >the latest dm-4.6 branch though, I'll go back and try stock 4.5-rc4 just
-> >to double check).
-> >
-> >But this makes me think the novelty of having dm-mq support stacking on
-> >non-blk-mq devices was misplaced.  It is a senseless config.  I'll
-> >probably remove support for such stacking soon (next week).
-> 
-> Hmm. I must admit I really, really don't like these 'once-and-for-all'
-> parameter.
-> 
-> ATM the only SCSI driver to support SCSI-mq properly are lpfc,
-> virtio, and fnic. None of the other driver have been modified, and I
-> suspect the performance might be less than stellar.
-> 
-> So there will be configurations where one might want to run scsi-mq
-> alongside non-mq HBAs.
+>> If you're absolutely against it we can drop the 'access_state' patch=
+es
+>> (ie patch 20-22) and have them folded into a separate patchset.
+>
+> That sounds like a good idea to me.
+>
+Ok, let's do this.
 
-dm-mq already disallows such a mix though.  From dm_table_set_type():
+Martin, can you please ignore patches 20-22 when pulling the patchset?
+I'll be resubmitting a new patchset with them once these issues are=20
+sorted out.
+Or do you need a new patch submission?
 
-        if (use_blk_mq) {
-                /* verify _all_ devices in the table are blk-mq devices */
-                list_for_each_entry(dd, devices, list)
-                        if (!bdev_get_queue(dd->dm_dev->bdev)->mq_ops) {
-                                DMERR("table load rejected: not all devices"
-                                      " are blk-mq request-stackable");
-                                return -EINVAL;
-                        }
-                t->type = DM_TYPE_MQ_REQUEST_BASED;
+Cheers,
 
-        }
-
-But I was talking about removing support for dm-mq stacked on _all_ old
-.request_fn devices.
-
-> I would really love to see to make that more granular so that these
-> configurations can run efficiently.
-> I know Christoph is violently against it, but I don't really see any
-> solution presenting itself at the moment.
-
-I'm with Christoph on this.  Supporting such elaborate mixing is too
-fragile.  Time would be much better spent converting drivers to properly
-support scsi-mq and/or fixing scsi-mq to perform better.
-
-> Maybe a good topic for LSF ...
-
-Unlikely.. but don't let me stop you! ;)
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
