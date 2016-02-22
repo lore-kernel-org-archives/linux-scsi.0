@@ -1,35 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111441] iscsi fails to attach to targets
-Date: Mon, 22 Feb 2016 00:45:09 +0000
-Message-ID: <bug-111441-11613-jgzH9tXlCR@https.bugzilla.kernel.org/>
+From: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>
+Subject: RE: [Bug 111441] New: iscsi fails to attach to targets
+Date: Mon, 22 Feb 2016 00:45:01 +0000
+Message-ID: <8f6cc8ca33274ddaa9faf17f00caefdf@XCH-ALN-006.cisco.com>
 References: <bug-111441-11613@https.bugzilla.kernel.org/>
+ <56AAC605.1080707@cs.wisc.edu>
+ <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
+ <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+ <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
+ <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
+ <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+ <56ABBCFF.9060003@cs.wisc.edu>
+ <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
+ <56ABF6A6.8070506@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38387 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbcBVApQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Feb 2016 19:45:16 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C1B50203AA
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2016 00:45:14 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 6B9E4203AC
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2016 00:45:10 +0000 (UTC)
-In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
+Received: from rcdn-iport-5.cisco.com ([173.37.86.76]:14588 "EHLO
+	rcdn-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434AbcBVApG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Feb 2016 19:45:06 -0500
+In-Reply-To: <56ABF6A6.8070506@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D111441
-
---- Comment #16 from Serguei Bezverkhi <sbezverk@cisco.com> ---
 Hi Mike,
 
 I just wanted to follow up with you to see if the patch got committed t=
-o an
-upstream kernel if yes, please let me into which version it went.
+o an upstream kernel if yes, please let me into which version it went.
 
 Thank you
 
@@ -40,8 +41,8 @@ Serguei Bezverkhi,
 TECHNICAL LEADER.SERVICES
 Global SP Services
 sbezverk@cisco.com
-Phone:=C2=A0+1 416 306 7312
-Mobile:=C2=A0+1 514 234 7374
+Phone:=A0+1 416 306 7312
+Mobile:=A0+1 514 234 7374
 
 CCIE (R&S,SP,Sec) - #9527
 
@@ -49,17 +50,13 @@ Cisco.com
 
 
 
-=C2=A0Think before you print.
+=A0Think before you print.
 This email may contain confidential and privileged material for the sol=
-e use of
-the intended recipient. Any review, use, distribution or disclosure by =
-others
-is strictly prohibited. If you are not the intended recipient (or autho=
-rized to
-receive for the recipient), please contact the sender by reply email an=
-d delete
-all copies of this message.
-Please=C2=A0click here=C2=A0for Company Registration Information.
+e use of the intended recipient. Any review, use, distribution or discl=
+osure by others is strictly prohibited. If you are not the intended rec=
+ipient (or authorized to receive for the recipient), please contact the=
+ sender by reply email and delete all copies of this message.
+Please=A0click here=A0for Company Registration Information.
 
 
 
@@ -68,8 +65,7 @@ Please=C2=A0click here=C2=A0for Company Registration Information.
 Sent: Friday, January 29, 2016 6:33 PM
 To: Serguei Bezverkhi (sbezverk) <sbezverk@cisco.com>
 Cc: bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org; Ch=
-ristoph
-Hellwig <hch@infradead.org>; Hannes Reinecke <hare@suse.de>
+ristoph Hellwig <hch@infradead.org>; Hannes Reinecke <hare@suse.de>
 Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
 
 On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
@@ -80,12 +76,9 @@ ll do not see my remote targets.
 >=20
 
 That is sort of expected. Your target is not setup for ALUA properly. I=
-t says
-it supports ALUA, but when scsi_dh_alua asks about the ports it is repo=
-rting
-there are none. Ccing the people that made the patch that added the iss=
-ue and
-own the code.
+t says it supports ALUA, but when scsi_dh_alua asks about the ports it =
+is reporting there are none. Ccing the people that made the patch that =
+added the issue and own the code.
 
 Hey Christoph and Hannes,
 
@@ -102,19 +95,16 @@ rror);
 to scsi_sysfs_add_sdev are adding a regression.
 
 1. If that fails, then we forget to do device_del before doing the retu=
-rn. My
-patch in this thread added that back, so we do not see the sysfs oopses
-anymore. But.....
+rn. My patch in this thread added that back, so we do not see the sysfs=
+ oopses anymore. But.....
 
 2. It looks like in older kernels, we would allow misconfigured targets=
- like
-this one to still setup devices. Do we want that old behavior back?
+ like this one to still setup devices. Do we want that old behavior bac=
+k?
 Should we just ignore the return value from scsi_dh_add_device above?
 Note that in this case, it is LIO so it can be easily fixed on the targ=
-et side
-by just setting it up properly. I do not think other targets would hit =
-this
-type of issue.
+et side by just setting it up properly. I do not think other targets wo=
+uld hit this type of issue.
 
 
 
@@ -357,11 +347,9 @@ pm?
 =20
 > in the body of a message to majordomo@vger.kernel.org More majordomo=20
 > info at  http://vger.kernel.org/majordomo-info.html
->
+>=20
 
---=20
-You are receiving this mail because:
-You are the assignee for the bug.--
+--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
