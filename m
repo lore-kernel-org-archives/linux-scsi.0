@@ -1,272 +1,121 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 4/6] ncr5380: Forget aborted commands
-Date: Tue, 23 Feb 2016 10:07:07 +1100
-Message-ID: <20160222230705.004684812@telegraphics.com.au>
+Subject: [PATCH 2/6] ncr5380: Dont release lock for PIO transfer
+Date: Tue, 23 Feb 2016 10:07:05 +1100
+Message-ID: <20160222230704.504641476@telegraphics.com.au>
 References: <20160222230703.994951661@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-always-forget-aborted-commands
+Content-Disposition: inline; filename=ncr5380-transfer_pio-locking
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The list structures and related logic used in the NCR5380 driver mean that
-a command cannot be queued twice (i.e. can't appear on more than one queue
-and can't appear on the same queue more than once).
+The calls to NCR5380_transfer_pio() for DATA IN and DATA OUT phases will
+modify cmd->SCp.this_residual, cmd->SCp.ptr and cmd->SCp.buffer. That
+works as long as EH does not intervene, which became possible in
+atari_NCR5380.c when I changed the locking to bring it closer to
+NCR5380.c.
 
-The abort handler must forget the command so that the mid-layer can re-use
-it. E.g. the ML may send it back to the LLD via via scsi_eh_get_sense().
+If error recovery aborts the command, the scsi_cmnd in question and its
+buffer will be returned to the mid-layer. So the transfer has to cease,
+but it can't be stopped by the initiator because the target controls the
+bus phase.
 
-Fix this and also fix two error paths, so that commands get forgotten iff
-completed.
+The problem does not arise if the lock is not released. That was fine for
+atari_scsi, because it implements DMA. For the other drivers, we have to
+release the lock and re-enable interrupts for long PIO data transfers.
 
-Fixes: 8b00c3d5d40d ("ncr5380: Implement new eh_abort_handler")
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+The solution is to split the transfer into small chunks. In between chunks
+the main loop releases the lock and re-enables interrupts. Thus interrupts
+can be serviced and eh_bus_reset_handler can intervene if need be.
+
+This fixes an oops in NCR5380_transfer_pio() that can happen when the EH
+abort handler is invoked during DATA IN or DATA OUT phase.
+
+Fixes: 11d2f63b9cf5 ("ncr5380: Change instance->host_lock to hostdata->lock")
+Reported-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   62 +++++++++++--------------------------------
- drivers/scsi/atari_NCR5380.c |   62 +++++++++++--------------------------------
- 2 files changed, 34 insertions(+), 90 deletions(-)
+ drivers/scsi/NCR5380.c       |   16 +++++++++-------
+ drivers/scsi/atari_NCR5380.c |   16 +++++++++-------
+ 2 files changed, 18 insertions(+), 14 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:06:58.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:07:00.000000000 +1100
-@@ -1796,6 +1796,7 @@ static void NCR5380_information_transfer
- 				do_abort(instance);
- 				cmd->result = DID_ERROR << 16;
- 				complete_cmd(instance, cmd);
-+				hostdata->connected = NULL;
- 				return;
- #endif
- 			case PHASE_DATAIN:
-@@ -1845,7 +1846,6 @@ static void NCR5380_information_transfer
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
--						complete_cmd(instance, cmd);
- 						/* XXX - need to source or sink data here, as appropriate */
- 					} else
- 						cmd->SCp.this_residual -= transfersize - len;
-@@ -2294,14 +2294,14 @@ static bool list_del_cmd(struct list_hea
-  * [disconnected -> connected ->]...
-  * [autosense -> connected ->] done
-  *
-- * If cmd is unissued then just remove it.
-- * If cmd is disconnected, try to select the target.
-- * If cmd is connected, try to send an abort message.
-- * If cmd is waiting for autosense, give it a chance to complete but check
-- * that it isn't left connected.
-  * If cmd was not found at all then presumably it has already been completed,
-  * in which case return SUCCESS to try to avoid further EH measures.
-+ *
-  * If the command has not completed yet, we must not fail to find it.
-+ * We have no option but to forget the aborted command (even if it still
-+ * lacks sense data). The mid-layer may re-issue a command that is in error
-+ * recovery (see scsi_send_eh_cmnd), but the logic and data structures in
-+ * this driver are such that a command can appear on one queue only.
-  *
-  * The lock protects driver data structures, but EH handlers also use it
-  * to serialize their own execution and prevent their own re-entry.
-@@ -2327,6 +2327,7 @@ static int NCR5380_abort(struct scsi_cmn
- 		         "abort: removed %p from issue queue\n", cmd);
- 		cmd->result = DID_ABORT << 16;
- 		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
-+		goto out;
- 	}
- 
- 	if (hostdata->selecting == cmd) {
-@@ -2344,6 +2345,8 @@ static int NCR5380_abort(struct scsi_cmn
- 		/* Can't call NCR5380_select() and send ABORT because that
- 		 * means releasing the lock. Need a bus reset.
- 		 */
-+		set_host_byte(cmd, DID_ERROR);
-+		complete_cmd(instance, cmd);
- 		result = FAILED;
- 		goto out;
- 	}
-@@ -2351,45 +2354,9 @@ static int NCR5380_abort(struct scsi_cmn
- 	if (hostdata->connected == cmd) {
- 		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
- 		hostdata->connected = NULL;
--		if (do_abort(instance)) {
--			set_host_byte(cmd, DID_ERROR);
--			complete_cmd(instance, cmd);
--			result = FAILED;
--			goto out;
--		}
--		set_host_byte(cmd, DID_ABORT);
- #ifdef REAL_DMA
- 		hostdata->dma_len = 0;
- #endif
--		if (cmd->cmnd[0] == REQUEST_SENSE)
--			complete_cmd(instance, cmd);
--		else {
--			struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
--
--			/* Perform autosense for this command */
--			list_add(&ncmd->list, &hostdata->autosense);
--		}
--	}
--
--	if (list_find_cmd(&hostdata->autosense, cmd)) {
--		dsprintk(NDEBUG_ABORT, instance,
--		         "abort: found %p on sense queue\n", cmd);
--		spin_unlock_irqrestore(&hostdata->lock, flags);
--		queue_work(hostdata->work_q, &hostdata->main_task);
--		msleep(1000);
--		spin_lock_irqsave(&hostdata->lock, flags);
--		if (list_del_cmd(&hostdata->autosense, cmd)) {
--			dsprintk(NDEBUG_ABORT, instance,
--			         "abort: removed %p from sense queue\n", cmd);
--			set_host_byte(cmd, DID_ABORT);
--			complete_cmd(instance, cmd);
--			goto out;
--		}
--	}
--
--	if (hostdata->connected == cmd) {
--		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
--		hostdata->connected = NULL;
- 		if (do_abort(instance)) {
- 			set_host_byte(cmd, DID_ERROR);
- 			complete_cmd(instance, cmd);
-@@ -2397,9 +2364,14 @@ static int NCR5380_abort(struct scsi_cmn
- 			goto out;
- 		}
- 		set_host_byte(cmd, DID_ABORT);
--#ifdef REAL_DMA
--		hostdata->dma_len = 0;
+--- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:06:56.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:06:57.000000000 +1100
+@@ -1759,9 +1759,7 @@ static void NCR5380_information_transfer
+ 	unsigned char msgout = NOP;
+ 	int sink = 0;
+ 	int len;
+-#if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
+ 	int transfersize;
 -#endif
-+		complete_cmd(instance, cmd);
-+		goto out;
-+	}
-+
-+	if (list_del_cmd(&hostdata->autosense, cmd)) {
-+		dsprintk(NDEBUG_ABORT, instance,
-+		         "abort: removed %p from sense queue\n", cmd);
-+		set_host_byte(cmd, DID_ERROR);
- 		complete_cmd(instance, cmd);
- 	}
- 
+ 	unsigned char *data;
+ 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
+ 	struct scsi_cmnd *cmd;
+@@ -1854,13 +1852,17 @@ static void NCR5380_information_transfer
+ 				} else
+ #endif				/* defined(PSEUDO_DMA) || defined(REAL_DMA_POLL) */
+ 				{
+-					spin_unlock_irq(&hostdata->lock);
+-					NCR5380_transfer_pio(instance, &phase,
+-					                     (int *)&cmd->SCp.this_residual,
++					/* Break up transfer into 3 ms chunks,
++					 * presuming 6 accesses per handshake.
++					 */
++					transfersize = min((unsigned long)cmd->SCp.this_residual,
++					                   hostdata->accesses_per_ms / 2);
++					len = transfersize;
++					NCR5380_transfer_pio(instance, &phase, &len,
+ 					                     (unsigned char **)&cmd->SCp.ptr);
+-					spin_lock_irq(&hostdata->lock);
++					cmd->SCp.this_residual -= transfersize - len;
+ 				}
+-				break;
++				return;
+ 			case PHASE_MSGIN:
+ 				len = 1;
+ 				data = &tmp;
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:58.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:07:00.000000000 +1100
-@@ -1907,6 +1907,7 @@ static void NCR5380_information_transfer
- 				do_abort(instance);
- 				cmd->result = DID_ERROR << 16;
- 				complete_cmd(instance, cmd);
-+				hostdata->connected = NULL;
- 				return;
- #endif
- 			case PHASE_DATAIN:
-@@ -1964,7 +1965,6 @@ static void NCR5380_information_transfer
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
--						complete_cmd(instance, cmd);
- 						/* XXX - need to source or sink data here, as appropriate */
- 					} else {
- #ifdef REAL_DMA
-@@ -2489,14 +2489,14 @@ static bool list_del_cmd(struct list_hea
-  * [disconnected -> connected ->]...
-  * [autosense -> connected ->] done
-  *
-- * If cmd is unissued then just remove it.
-- * If cmd is disconnected, try to select the target.
-- * If cmd is connected, try to send an abort message.
-- * If cmd is waiting for autosense, give it a chance to complete but check
-- * that it isn't left connected.
-  * If cmd was not found at all then presumably it has already been completed,
-  * in which case return SUCCESS to try to avoid further EH measures.
-+ *
-  * If the command has not completed yet, we must not fail to find it.
-+ * We have no option but to forget the aborted command (even if it still
-+ * lacks sense data). The mid-layer may re-issue a command that is in error
-+ * recovery (see scsi_send_eh_cmnd), but the logic and data structures in
-+ * this driver are such that a command can appear on one queue only.
-  *
-  * The lock protects driver data structures, but EH handlers also use it
-  * to serialize their own execution and prevent their own re-entry.
-@@ -2522,6 +2522,7 @@ static int NCR5380_abort(struct scsi_cmn
- 		         "abort: removed %p from issue queue\n", cmd);
- 		cmd->result = DID_ABORT << 16;
- 		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
-+		goto out;
- 	}
- 
- 	if (hostdata->selecting == cmd) {
-@@ -2539,6 +2540,8 @@ static int NCR5380_abort(struct scsi_cmn
- 		/* Can't call NCR5380_select() and send ABORT because that
- 		 * means releasing the lock. Need a bus reset.
- 		 */
-+		set_host_byte(cmd, DID_ERROR);
-+		complete_cmd(instance, cmd);
- 		result = FAILED;
- 		goto out;
- 	}
-@@ -2546,45 +2549,9 @@ static int NCR5380_abort(struct scsi_cmn
- 	if (hostdata->connected == cmd) {
- 		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
- 		hostdata->connected = NULL;
--		if (do_abort(instance)) {
--			set_host_byte(cmd, DID_ERROR);
--			complete_cmd(instance, cmd);
--			result = FAILED;
--			goto out;
--		}
--		set_host_byte(cmd, DID_ABORT);
- #ifdef REAL_DMA
- 		hostdata->dma_len = 0;
- #endif
--		if (cmd->cmnd[0] == REQUEST_SENSE)
--			complete_cmd(instance, cmd);
--		else {
--			struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
--
--			/* Perform autosense for this command */
--			list_add(&ncmd->list, &hostdata->autosense);
--		}
--	}
--
--	if (list_find_cmd(&hostdata->autosense, cmd)) {
--		dsprintk(NDEBUG_ABORT, instance,
--		         "abort: found %p on sense queue\n", cmd);
--		spin_unlock_irqrestore(&hostdata->lock, flags);
--		queue_work(hostdata->work_q, &hostdata->main_task);
--		msleep(1000);
--		spin_lock_irqsave(&hostdata->lock, flags);
--		if (list_del_cmd(&hostdata->autosense, cmd)) {
--			dsprintk(NDEBUG_ABORT, instance,
--			         "abort: removed %p from sense queue\n", cmd);
--			set_host_byte(cmd, DID_ABORT);
--			complete_cmd(instance, cmd);
--			goto out;
--		}
--	}
--
--	if (hostdata->connected == cmd) {
--		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
--		hostdata->connected = NULL;
- 		if (do_abort(instance)) {
- 			set_host_byte(cmd, DID_ERROR);
- 			complete_cmd(instance, cmd);
-@@ -2592,9 +2559,14 @@ static int NCR5380_abort(struct scsi_cmn
- 			goto out;
- 		}
- 		set_host_byte(cmd, DID_ABORT);
--#ifdef REAL_DMA
--		hostdata->dma_len = 0;
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:56.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:57.000000000 +1100
+@@ -1838,9 +1838,7 @@ static void NCR5380_information_transfer
+ 	unsigned char msgout = NOP;
+ 	int sink = 0;
+ 	int len;
+-#if defined(REAL_DMA)
+ 	int transfersize;
 -#endif
-+		complete_cmd(instance, cmd);
-+		goto out;
-+	}
-+
-+	if (list_del_cmd(&hostdata->autosense, cmd)) {
-+		dsprintk(NDEBUG_ABORT, instance,
-+		         "abort: removed %p from sense queue\n", cmd);
-+		set_host_byte(cmd, DID_ERROR);
- 		complete_cmd(instance, cmd);
- 	}
- 
+ 	unsigned char *data;
+ 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
+ 	struct scsi_cmnd *cmd;
+@@ -1983,18 +1981,22 @@ static void NCR5380_information_transfer
+ 				} else
+ #endif /* defined(REAL_DMA) */
+ 				{
+-					spin_unlock_irq(&hostdata->lock);
+-					NCR5380_transfer_pio(instance, &phase,
+-					                     (int *)&cmd->SCp.this_residual,
++					/* Break up transfer into 3 ms chunks,
++					 * presuming 6 accesses per handshake.
++					 */
++					transfersize = min((unsigned long)cmd->SCp.this_residual,
++					                   hostdata->accesses_per_ms / 2);
++					len = transfersize;
++					NCR5380_transfer_pio(instance, &phase, &len,
+ 					                     (unsigned char **)&cmd->SCp.ptr);
+-					spin_lock_irq(&hostdata->lock);
++					cmd->SCp.this_residual -= transfersize - len;
+ 				}
+ #if defined(CONFIG_SUN3) && defined(REAL_DMA)
+ 				/* if we had intended to dma that command clear it */
+ 				if (sun3_dma_setup_done == cmd)
+ 					sun3_dma_setup_done = NULL;
+ #endif
+-				break;
++				return;
+ 			case PHASE_MSGIN:
+ 				len = 1;
+ 				data = &tmp;
