@@ -1,139 +1,93 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 1/6] ncr5380: Correctly clear command pointers and lists after bus reset
-Date: Tue, 23 Feb 2016 10:07:04 +1100
-Message-ID: <20160222230704.264671784@telegraphics.com.au>
+Subject: [PATCH 3/6] ncr5380: Dont re-enter NCR5380_select()
+Date: Tue, 23 Feb 2016 10:07:06 +1100
+Message-ID: <20160222230704.754680814@telegraphics.com.au>
 References: <20160222230703.994951661@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-null-pointer-deref-in-bus_reset-handler
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-dont-reenter-NCR5380_select
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commands subject to exception handling are to be returned to the scsi
-mid-layer. Make sure that the various command pointers and command lists
-in the low-level driver are correctly cleansed of affected commands.
+Calling NCR5380_select() from the abort handler causes various problems.
+Firstly, it means potentially re-entering NCR5380_select(). Secondly, it
+means that the lock is released, which permits the EH handlers to be
+re-entered. The combination results in crashes. Don't do it.
 
-This fixes some bugs that I accidentally introduced in v4.5-rc1 including
-the removal of INIT_LIST_HEAD for the 'autosense' and 'disconnected'
-command lists, and the possible NULL pointer dereference in
-NCR5380_bus_reset() that was reported by Dan Carpenter.
-
-hostdata->sensing may also point to an affected command so this pointer
-also has to be cleared. The abort handler calls complete_cmd() to take
-care of this; let's have the bus reset handler do the same.
-
-The issue queue may also contain an affected command. If so, remove it.
-This also follows the abort handler logic.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Fixes: 62717f537e1b ("ncr5380: Implement new eh_bus_reset_handler")
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Fixes: 8b00c3d5d40d ("ncr5380: Implement new eh_abort_handler")
+Reported-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   19 ++++++++++++-------
- drivers/scsi/atari_NCR5380.c |   19 ++++++++++++-------
- 2 files changed, 24 insertions(+), 14 deletions(-)
+ drivers/scsi/NCR5380.c       |   16 ++++++++--------
+ drivers/scsi/atari_NCR5380.c |   16 ++++++++--------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:06:56.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:06:56.000000000 +1100
-@@ -2450,7 +2450,16 @@ static int NCR5380_bus_reset(struct scsi
- 	 * commands!
- 	 */
+--- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:06:57.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:06:58.000000000 +1100
+@@ -2302,6 +2302,9 @@ static bool list_del_cmd(struct list_hea
+  * If cmd was not found at all then presumably it has already been completed,
+  * in which case return SUCCESS to try to avoid further EH measures.
+  * If the command has not completed yet, we must not fail to find it.
++ *
++ * The lock protects driver data structures, but EH handlers also use it
++ * to serialize their own execution and prevent their own re-entry.
+  */
  
--	hostdata->selecting = NULL;
-+	if (list_del_cmd(&hostdata->unissued, cmd)) {
-+		cmd->result = DID_RESET << 16;
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	if (hostdata->selecting) {
-+		hostdata->selecting->result = DID_RESET << 16;
-+		complete_cmd(instance, hostdata->selecting);
-+		hostdata->selecting = NULL;
-+	}
- 
- 	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
- 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-@@ -2458,6 +2467,7 @@ static int NCR5380_bus_reset(struct scsi
- 		set_host_byte(cmd, DID_RESET);
- 		cmd->scsi_done(cmd);
- 	}
-+	INIT_LIST_HEAD(&hostdata->disconnected);
- 
- 	list_for_each_entry(ncmd, &hostdata->autosense, list) {
- 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-@@ -2465,6 +2475,7 @@ static int NCR5380_bus_reset(struct scsi
- 		set_host_byte(cmd, DID_RESET);
- 		cmd->scsi_done(cmd);
- 	}
-+	INIT_LIST_HEAD(&hostdata->autosense);
- 
- 	if (hostdata->connected) {
- 		set_host_byte(hostdata->connected, DID_RESET);
-@@ -2472,12 +2483,6 @@ static int NCR5380_bus_reset(struct scsi
- 		hostdata->connected = NULL;
+ static int NCR5380_abort(struct scsi_cmnd *cmd)
+@@ -2338,14 +2341,11 @@ static int NCR5380_abort(struct scsi_cmn
+ 	if (list_del_cmd(&hostdata->disconnected, cmd)) {
+ 		dsprintk(NDEBUG_ABORT, instance,
+ 		         "abort: removed %p from disconnected list\n", cmd);
+-		cmd->result = DID_ERROR << 16;
+-		if (!hostdata->connected)
+-			NCR5380_select(instance, cmd);
+-		if (hostdata->connected != cmd) {
+-			complete_cmd(instance, cmd);
+-			result = FAILED;
+-			goto out;
+-		}
++		/* Can't call NCR5380_select() and send ABORT because that
++		 * means releasing the lock. Need a bus reset.
++		 */
++		result = FAILED;
++		goto out;
  	}
  
--	if (hostdata->sensing) {
--		set_host_byte(hostdata->connected, DID_RESET);
--		complete_cmd(instance, hostdata->sensing);
--		hostdata->sensing = NULL;
--	}
--
- 	for (i = 0; i < 8; ++i)
- 		hostdata->busy[i] = 0;
- #ifdef REAL_DMA
+ 	if (hostdata->connected == cmd) {
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:56.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:56.000000000 +1100
-@@ -2646,7 +2646,16 @@ static int NCR5380_bus_reset(struct scsi
- 	 * commands!
- 	 */
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:57.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:58.000000000 +1100
+@@ -2497,6 +2497,9 @@ static bool list_del_cmd(struct list_hea
+  * If cmd was not found at all then presumably it has already been completed,
+  * in which case return SUCCESS to try to avoid further EH measures.
+  * If the command has not completed yet, we must not fail to find it.
++ *
++ * The lock protects driver data structures, but EH handlers also use it
++ * to serialize their own execution and prevent their own re-entry.
+  */
  
--	hostdata->selecting = NULL;
-+	if (list_del_cmd(&hostdata->unissued, cmd)) {
-+		cmd->result = DID_RESET << 16;
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	if (hostdata->selecting) {
-+		hostdata->selecting->result = DID_RESET << 16;
-+		complete_cmd(instance, hostdata->selecting);
-+		hostdata->selecting = NULL;
-+	}
- 
- 	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
- 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-@@ -2654,6 +2663,7 @@ static int NCR5380_bus_reset(struct scsi
- 		set_host_byte(cmd, DID_RESET);
- 		cmd->scsi_done(cmd);
- 	}
-+	INIT_LIST_HEAD(&hostdata->disconnected);
- 
- 	list_for_each_entry(ncmd, &hostdata->autosense, list) {
- 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-@@ -2661,6 +2671,7 @@ static int NCR5380_bus_reset(struct scsi
- 		set_host_byte(cmd, DID_RESET);
- 		cmd->scsi_done(cmd);
- 	}
-+	INIT_LIST_HEAD(&hostdata->autosense);
- 
- 	if (hostdata->connected) {
- 		set_host_byte(hostdata->connected, DID_RESET);
-@@ -2668,12 +2679,6 @@ static int NCR5380_bus_reset(struct scsi
- 		hostdata->connected = NULL;
+ static int NCR5380_abort(struct scsi_cmnd *cmd)
+@@ -2533,14 +2536,11 @@ static int NCR5380_abort(struct scsi_cmn
+ 	if (list_del_cmd(&hostdata->disconnected, cmd)) {
+ 		dsprintk(NDEBUG_ABORT, instance,
+ 		         "abort: removed %p from disconnected list\n", cmd);
+-		cmd->result = DID_ERROR << 16;
+-		if (!hostdata->connected)
+-			NCR5380_select(instance, cmd);
+-		if (hostdata->connected != cmd) {
+-			complete_cmd(instance, cmd);
+-			result = FAILED;
+-			goto out;
+-		}
++		/* Can't call NCR5380_select() and send ABORT because that
++		 * means releasing the lock. Need a bus reset.
++		 */
++		result = FAILED;
++		goto out;
  	}
  
--	if (hostdata->sensing) {
--		set_host_byte(hostdata->connected, DID_RESET);
--		complete_cmd(instance, hostdata->sensing);
--		hostdata->sensing = NULL;
--	}
--
- #ifdef SUPPORT_TAGS
- 	free_all_tags(hostdata);
- #endif
+ 	if (hostdata->connected == cmd) {
