@@ -1,111 +1,128 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv8 20/23] scsi: Add 'access_state' attribute
-Date: Mon, 22 Feb 2016 07:59:48 +0100
-Message-ID: <56CAB1E4.9060809@suse.de>
-References: <1455869840-122786-1-git-send-email-hare@suse.de>
- <1455869840-122786-21-git-send-email-hare@suse.de>
- <56C7688A.2050608@sandisk.com> <56C81DB5.7070102@suse.de>
- <56C8834F.50304@sandisk.com> <56C9750B.9010200@suse.de>
- <56CA9252.8030007@sandisk.com>
+Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
+Date: Mon, 22 Feb 2016 08:08:20 +0100
+Message-ID: <56CAB3E4.4030902@suse.de>
+References: <bug-111441-11613@https.bugzilla.kernel.org/>
+ <56AAC605.1080707@cs.wisc.edu>
+ <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
+ <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
+ <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
+ <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
+ <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
+ <56ABBCFF.9060003@cs.wisc.edu>
+ <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
+ <56ABF6A6.8070506@cs.wisc.edu>
+ <8f6cc8ca33274ddaa9faf17f00caefdf@XCH-ALN-006.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46002 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46569 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbcBVG7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Feb 2016 01:59:52 -0500
-In-Reply-To: <56CA9252.8030007@sandisk.com>
+	id S1751129AbcBVHIX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Feb 2016 02:08:23 -0500
+In-Reply-To: <8f6cc8ca33274ddaa9faf17f00caefdf@XCH-ALN-006.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On 02/22/2016 05:45 AM, Bart Van Assche wrote:
-> On 02/21/16 00:27, Hannes Reinecke wrote:
->> On 02/20/2016 04:16 PM, Bart Van Assche wrote:
->>> On 02/20/16 00:03, Hannes Reinecke wrote:
->>>> Also when using your suggestion the 'access_state' attribute will =
-only
->>>> be created _after_ the 'ADD' uevent, making it impossible to use i=
+On 02/22/2016 01:45 AM, Serguei Bezverkhi (sbezverk) wrote:
+> Hi Mike,
+>=20
+> I just wanted to follow up with you to see if the patch got committed=
+ to an upstream kernel if yes, please let me into which version it went=
+=2E
+>=20
+> Thank you
+>=20
+> Serguei
+>=20
+>=20
+> Serguei Bezverkhi,
+> TECHNICAL LEADER.SERVICES
+> Global SP Services
+> sbezverk@cisco.com
+> Phone: +1 416 306 7312
+> Mobile: +1 514 234 7374
+>=20
+> CCIE (R&S,SP,Sec) - #9527
+>=20
+> Cisco.com
+>=20
+>=20
+>=20
+>  Think before you print.
+> This email may contain confidential and privileged material for the s=
+ole use of the intended recipient. Any review, use, distribution or dis=
+closure by others is strictly prohibited. If you are not the intended r=
+ecipient (or authorized to receive for the recipient), please contact t=
+he sender by reply email and delete all copies of this message.
+> Please click here for Company Registration Information.
+>=20
+>=20
+>=20
+> -----Original Message-----
+> From: Mike Christie [mailto:michaelc@cs.wisc.edu]=20
+> Sent: Friday, January 29, 2016 6:33 PM
+> To: Serguei Bezverkhi (sbezverk) <sbezverk@cisco.com>
+> Cc: bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org; =
+Christoph Hellwig <hch@infradead.org>; Hannes Reinecke <hare@suse.de>
+> Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
+>=20
+> On 01/29/2016 04:21 PM, Serguei Bezverkhi (sbezverk) wrote:
+>> HI Mike,
+>>
+>> I tried your patch and it is has eliminated first traceback but I st=
+ill do not see my remote targets.
+>>
+>=20
+> That is sort of expected. Your target is not setup for ALUA properly.=
+ It says it supports ALUA, but when scsi_dh_alua asks about the ports i=
+t is reporting there are none. Ccing the people that made the patch tha=
+t added the issue and own the code.
+>=20
+> Hey Christoph and Hannes,
+>=20
+> The dh/alua changes that added this:
+>=20
+>         error =3D scsi_dh_add_device(sdev);
+>         if (error) {
+>                 sdev_printk(KERN_INFO, sdev,
+>                                 "failed to add device handler: %d\n",=
+ error);
+>                 return error;
+>         }
+>=20
+> to scsi_sysfs_add_sdev are adding a regression.
+>=20
+> 1. If that fails, then we forget to do device_del before doing the re=
+turn. My patch in this thread added that back, so we do not see the sys=
+fs oopses anymore. But.....
+>=20
+> 2. It looks like in older kernels, we would allow misconfigured targe=
+ts like this one to still setup devices. Do we want that old behavior b=
+ack?
+> Should we just ignore the return value from scsi_dh_add_device above?
+> Note that in this case, it is LIO so it can be easily fixed on the ta=
+rget side by just setting it up properly. I do not think other targets =
+would hit this type of issue.
+>=20
+>=20
+This has been fixed up with my patchset to update the ALUA handler, mos=
 t
->>>> from
->>>> udev events.
->>>
->>> Can you give an example in which it would be useful to read the ALU=
-A
->>> state from a udev handler ? I'm not sure such an example exists.
->>>
->> When evaluating the 'access_state' from an uevent we can avoid sendi=
-ng
->> I/O if the path is unavailable; eg if the path is in 'transitioning'=
- I/O
->> will be queued until that path becomes available again.
->> Which means that the uevent will be delayed during udev processing, =
-so
->> that the event will never be read by multipathing (as it's being inv=
-oked
->> only after udev event processing has finished).
->> And in extreme cases (like OnTap takeover/giveback) it will even dro=
-p
->> the event completely due to a timeout.
->=20
-> Hello Hannes,
->=20
-> Thanks for the feedback.
->=20
-> Please split the access_state attribute in two sysfs attributes - one
-> for the ALUA state and one for the "preferred" state. This will make =
-it
-> easier for shell scripts to process these sysfs attributes.
->=20
-Okay, agreed.
+notably the commit 'scsi: ignore errors from scsi_dh_add_device()' whic=
+h
+was included in 4.5.
 
-> I agree with using the 'is_visible' callback. But since using that
-> callback will cause the ALUA sysfs attributes to become only visible
-> after the ALUA handler has been attached I don't see why not to move =
-the
-> implementation of the ALUA sysfs attributes into the ALUA device hand=
-ler
-> source file.
->=20
-Thing is, there are others (like the vpg_pg attributes) which will
-benefit from using the 'is_visible' callback. And move the
-'access_state' attribute into the generic functions makes the footprint
-smaller, as the required infrastructure is already present.
-Plus I would really like to have the 'access_state' variable part of th=
-e
-scsi_device, to avoid the intrinsics of having to look it up from the
-device_handler data.
-
-> BTW, since the ALUA state can change at any time after the access_sta=
-te
-> sysfs attribute has been read and before I/O is submitted my preferen=
-ce
-> is to avoid triggering any SCSI commands from a udev rule that depend=
- on
-> the ALUA state.
->=20
-Yes, I thought about it some more, too.
-The main reason why I need the 'access_state' attribute is to decouple
-the multipath daemon; at the moment the multipath daemon has to issue
-REPORT TARGET PORT GROUPS frequently to figure out the status, which is
-causing quite some load on the target. When using the 'access_state'
-attribute we would avoid doing I/O for that and have a consistent view,
-both on the kernel and the multipath daemon side.
-
-But it's actually a good thing to have the 'access_state' patch in a
-different series; I've got some more patches converting the remaining
-device_handler to also supply the 'access_state' values.
 Cheers,
 
 Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
