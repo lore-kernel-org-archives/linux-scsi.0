@@ -1,121 +1,68 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 2/6] ncr5380: Dont release lock for PIO transfer
-Date: Tue, 23 Feb 2016 10:07:05 +1100
-Message-ID: <20160222230704.504641476@telegraphics.com.au>
-References: <20160222230703.994951661@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-transfer_pio-locking
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Alexandre Rossi <alexandre.rossi@gmail.com>
+Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
+ [sr_mod]
+Date: Tue, 23 Feb 2016 00:15:53 +0100
+Message-ID: <CAM79t8ErGXsDb+8Vsn77gKOe7JPJJLNpjOEzkZktHEJvOXoZWQ@mail.gmail.com>
+References: <CAM79t8HzYT+s0BrqzZ0-Cv7khzn6CvpE5bfnJ6H9xYCx4RkS8g@mail.gmail.com>
+	<Pine.LNX.4.44L0.1602181121010.1280-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:34885 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932248AbcBVXPy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 18:15:54 -0500
+Received: by mail-io0-f181.google.com with SMTP id g203so194873205iof.2
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2016 15:15:54 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.44L0.1602181121010.1280-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org
 
-The calls to NCR5380_transfer_pio() for DATA IN and DATA OUT phases will
-modify cmd->SCp.this_residual, cmd->SCp.ptr and cmd->SCp.buffer. That
-works as long as EH does not intervene, which became possible in
-atari_NCR5380.c when I changed the locking to bring it closer to
-NCR5380.c.
+Hello,
 
-If error recovery aborts the command, the scsi_cmnd in question and its
-buffer will be returned to the mid-layer. So the transfer has to cease,
-but it can't be stopped by the initiator because the target controls the
-bus phase.
+>> > As this is Linux 4.3 and not 4.4, I guess this is a different prob=
+lem
+>> > though. Alexandre, where you able to capture the stack trace? I=E2=
+=80=99d submit
+>> > a new bug report with this.
+>>
+>> Here is a photo. Please ping me if you need to test some debugging p=
+atches.
+>
+> It looks like the problem occurs in blk_post_runtime_resume().  Since
+> there have been recent changes to this routine, it's hard to tell
+> whether you're using the most up-to-date code.
+>
+> In particular, the first few lines of blk_post_runtime_resume() in
+> block/blk-core.c should look like this:
+>
+> void blk_post_runtime_resume(struct request_queue *q, int err)
+> {
+>         if (!q->dev)
+>                 return;
+>
+> The test was introduced by commit 4fd41a8552af ("SCSI: Fix NULL point=
+er
+> dereference in runtime PM"), which was added to the mainline kernel
+> between 4.3 and 4.4.  I don't know what the commit ID would be for a
+> .stable kernel.
 
-The problem does not arise if the lock is not released. That was fine for
-atari_scsi, because it implements DMA. For the other drivers, we have to
-release the lock and re-enable interrupts for long PIO data transfers.
+Okay now I've tried with 4.4. The oops does not occur. So this is
+fixed for me in 4.4.
 
-The solution is to split the transfer into small chunks. In between chunks
-the main loop releases the lock and re-enables interrupts. Thus interrupts
-can be serviced and eh_bus_reset_handler can intervene if need be.
+If there is interest in backporting to 4.3, 13b438914341 ("SCSI: fix
+crashes in sd and sr runtime PM") is not enough to backport. Something
+in 4.4, most probably 4fd41a8552af ("SCSI: Fix NULL pointer
+dereference in runtime PM") is also needed.
 
-This fixes an oops in NCR5380_transfer_pio() that can happen when the EH
-abort handler is invoked during DATA IN or DATA OUT phase.
+Thanks a lot,
 
-Fixes: 11d2f63b9cf5 ("ncr5380: Change instance->host_lock to hostdata->lock")
-Reported-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
- drivers/scsi/NCR5380.c       |   16 +++++++++-------
- drivers/scsi/atari_NCR5380.c |   16 +++++++++-------
- 2 files changed, 18 insertions(+), 14 deletions(-)
-
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:06:56.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:06:57.000000000 +1100
-@@ -1759,9 +1759,7 @@ static void NCR5380_information_transfer
- 	unsigned char msgout = NOP;
- 	int sink = 0;
- 	int len;
--#if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
- 	int transfersize;
--#endif
- 	unsigned char *data;
- 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
- 	struct scsi_cmnd *cmd;
-@@ -1854,13 +1852,17 @@ static void NCR5380_information_transfer
- 				} else
- #endif				/* defined(PSEUDO_DMA) || defined(REAL_DMA_POLL) */
- 				{
--					spin_unlock_irq(&hostdata->lock);
--					NCR5380_transfer_pio(instance, &phase,
--					                     (int *)&cmd->SCp.this_residual,
-+					/* Break up transfer into 3 ms chunks,
-+					 * presuming 6 accesses per handshake.
-+					 */
-+					transfersize = min((unsigned long)cmd->SCp.this_residual,
-+					                   hostdata->accesses_per_ms / 2);
-+					len = transfersize;
-+					NCR5380_transfer_pio(instance, &phase, &len,
- 					                     (unsigned char **)&cmd->SCp.ptr);
--					spin_lock_irq(&hostdata->lock);
-+					cmd->SCp.this_residual -= transfersize - len;
- 				}
--				break;
-+				return;
- 			case PHASE_MSGIN:
- 				len = 1;
- 				data = &tmp;
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:56.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:57.000000000 +1100
-@@ -1838,9 +1838,7 @@ static void NCR5380_information_transfer
- 	unsigned char msgout = NOP;
- 	int sink = 0;
- 	int len;
--#if defined(REAL_DMA)
- 	int transfersize;
--#endif
- 	unsigned char *data;
- 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
- 	struct scsi_cmnd *cmd;
-@@ -1983,18 +1981,22 @@ static void NCR5380_information_transfer
- 				} else
- #endif /* defined(REAL_DMA) */
- 				{
--					spin_unlock_irq(&hostdata->lock);
--					NCR5380_transfer_pio(instance, &phase,
--					                     (int *)&cmd->SCp.this_residual,
-+					/* Break up transfer into 3 ms chunks,
-+					 * presuming 6 accesses per handshake.
-+					 */
-+					transfersize = min((unsigned long)cmd->SCp.this_residual,
-+					                   hostdata->accesses_per_ms / 2);
-+					len = transfersize;
-+					NCR5380_transfer_pio(instance, &phase, &len,
- 					                     (unsigned char **)&cmd->SCp.ptr);
--					spin_lock_irq(&hostdata->lock);
-+					cmd->SCp.this_residual -= transfersize - len;
- 				}
- #if defined(CONFIG_SUN3) && defined(REAL_DMA)
- 				/* if we had intended to dma that command clear it */
- 				if (sun3_dma_setup_done == cmd)
- 					sun3_dma_setup_done = NULL;
- #endif
--				break;
-+				return;
- 			case PHASE_MSGIN:
- 				len = 1;
- 				data = &tmp;
+Alex
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
