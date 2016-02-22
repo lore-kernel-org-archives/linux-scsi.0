@@ -1,80 +1,139 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 6/6] ncr5380: Call scsi_eh_prep_cmnd() and scsi_eh_restore_cmnd() as and when appropriate
-Date: Tue, 23 Feb 2016 10:07:09 +1100
-Message-ID: <20160222230705.504653698@telegraphics.com.au>
+Subject: [PATCH 1/6] ncr5380: Correctly clear command pointers and lists after bus reset
+Date: Tue, 23 Feb 2016 10:07:04 +1100
+Message-ID: <20160222230704.264671784@telegraphics.com.au>
 References: <20160222230703.994951661@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:58223 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756365AbcBVXNQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 18:13:16 -0500
-Content-Disposition: inline; filename=ncr5380-autosense-command
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-null-pointer-deref-in-bus_reset-handler
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-This bug causes the wrong command to have its sense pointer overwritten,
-which sometimes leads to a NULL pointer deref. Fix this by checking which
-command is being requeued before restoring the scsi_eh_save data.
+Commands subject to exception handling are to be returned to the scsi
+mid-layer. Make sure that the various command pointers and command lists
+in the low-level driver are correctly cleansed of affected commands.
 
-It turns out that some targets will disconnect a REQUEST SENSE command.
-The autosense algorithm doesn't anticipate this. Hence multiple commands
-can end up undergoing autosense simultaneously, and they will all try to
-use the same scsi_eh_save struct, which won't work. Defer autosense when
-the scsi_eh_save storage is in use by another command.
+This fixes some bugs that I accidentally introduced in v4.5-rc1 including
+the removal of INIT_LIST_HEAD for the 'autosense' and 'disconnected'
+command lists, and the possible NULL pointer dereference in
+NCR5380_bus_reset() that was reported by Dan Carpenter.
 
-Fixes: f27db8eb98a1 ("ncr5380: Fix autosense bugs")
-Reported-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
+hostdata->sensing may also point to an affected command so this pointer
+also has to be cleared. The abort handler calls complete_cmd() to take
+care of this; let's have the bus reset handler do the same.
+
+The issue queue may also contain an affected command. If so, remove it.
+This also follows the abort handler logic.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Fixes: 62717f537e1b ("ncr5380: Implement new eh_bus_reset_handler")
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |    4 ++--
- drivers/scsi/atari_NCR5380.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/NCR5380.c       |   19 ++++++++++++-------
+ drivers/scsi/atari_NCR5380.c |   19 ++++++++++++-------
+ 2 files changed, 24 insertions(+), 14 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:07:01.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:07:02.000000000 +1100
-@@ -760,7 +760,7 @@ static struct scsi_cmnd *dequeue_next_cm
- 	struct NCR5380_cmd *ncmd;
- 	struct scsi_cmnd *cmd;
+--- linux.orig/drivers/scsi/NCR5380.c	2016-02-23 10:06:56.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-02-23 10:06:56.000000000 +1100
+@@ -2450,7 +2450,16 @@ static int NCR5380_bus_reset(struct scsi
+ 	 * commands!
+ 	 */
  
--	if (list_empty(&hostdata->autosense)) {
-+	if (hostdata->sensing || list_empty(&hostdata->autosense)) {
- 		list_for_each_entry(ncmd, &hostdata->unissued, list) {
- 			cmd = NCR5380_to_scmd(ncmd);
- 			dsprintk(NDEBUG_QUEUES, instance, "dequeue: cmd=%p target=%d busy=0x%02x lun=%llu\n",
-@@ -793,7 +793,7 @@ static void requeue_cmd(struct Scsi_Host
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
+-	hostdata->selecting = NULL;
++	if (list_del_cmd(&hostdata->unissued, cmd)) {
++		cmd->result = DID_RESET << 16;
++		cmd->scsi_done(cmd);
++	}
++
++	if (hostdata->selecting) {
++		hostdata->selecting->result = DID_RESET << 16;
++		complete_cmd(instance, hostdata->selecting);
++		hostdata->selecting = NULL;
++	}
+ 
+ 	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
+ 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
+@@ -2458,6 +2467,7 @@ static int NCR5380_bus_reset(struct scsi
+ 		set_host_byte(cmd, DID_RESET);
+ 		cmd->scsi_done(cmd);
+ 	}
++	INIT_LIST_HEAD(&hostdata->disconnected);
+ 
+ 	list_for_each_entry(ncmd, &hostdata->autosense, list) {
+ 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
+@@ -2465,6 +2475,7 @@ static int NCR5380_bus_reset(struct scsi
+ 		set_host_byte(cmd, DID_RESET);
+ 		cmd->scsi_done(cmd);
+ 	}
++	INIT_LIST_HEAD(&hostdata->autosense);
+ 
+ 	if (hostdata->connected) {
+ 		set_host_byte(hostdata->connected, DID_RESET);
+@@ -2472,12 +2483,6 @@ static int NCR5380_bus_reset(struct scsi
+ 		hostdata->connected = NULL;
+ 	}
  
 -	if (hostdata->sensing) {
-+	if (hostdata->sensing == cmd) {
- 		scsi_eh_restore_cmnd(cmd, &hostdata->ses);
- 		list_add(&ncmd->list, &hostdata->autosense);
- 		hostdata->sensing = NULL;
+-		set_host_byte(hostdata->connected, DID_RESET);
+-		complete_cmd(instance, hostdata->sensing);
+-		hostdata->sensing = NULL;
+-	}
+-
+ 	for (i = 0; i < 8; ++i)
+ 		hostdata->busy[i] = 0;
+ #ifdef REAL_DMA
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:07:01.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:07:02.000000000 +1100
-@@ -862,7 +862,7 @@ static struct scsi_cmnd *dequeue_next_cm
- 	struct NCR5380_cmd *ncmd;
- 	struct scsi_cmnd *cmd;
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:56.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-02-23 10:06:56.000000000 +1100
+@@ -2646,7 +2646,16 @@ static int NCR5380_bus_reset(struct scsi
+ 	 * commands!
+ 	 */
  
--	if (list_empty(&hostdata->autosense)) {
-+	if (hostdata->sensing || list_empty(&hostdata->autosense)) {
- 		list_for_each_entry(ncmd, &hostdata->unissued, list) {
- 			cmd = NCR5380_to_scmd(ncmd);
- 			dsprintk(NDEBUG_QUEUES, instance, "dequeue: cmd=%p target=%d busy=0x%02x lun=%llu\n",
-@@ -901,7 +901,7 @@ static void requeue_cmd(struct Scsi_Host
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
+-	hostdata->selecting = NULL;
++	if (list_del_cmd(&hostdata->unissued, cmd)) {
++		cmd->result = DID_RESET << 16;
++		cmd->scsi_done(cmd);
++	}
++
++	if (hostdata->selecting) {
++		hostdata->selecting->result = DID_RESET << 16;
++		complete_cmd(instance, hostdata->selecting);
++		hostdata->selecting = NULL;
++	}
+ 
+ 	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
+ 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
+@@ -2654,6 +2663,7 @@ static int NCR5380_bus_reset(struct scsi
+ 		set_host_byte(cmd, DID_RESET);
+ 		cmd->scsi_done(cmd);
+ 	}
++	INIT_LIST_HEAD(&hostdata->disconnected);
+ 
+ 	list_for_each_entry(ncmd, &hostdata->autosense, list) {
+ 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
+@@ -2661,6 +2671,7 @@ static int NCR5380_bus_reset(struct scsi
+ 		set_host_byte(cmd, DID_RESET);
+ 		cmd->scsi_done(cmd);
+ 	}
++	INIT_LIST_HEAD(&hostdata->autosense);
+ 
+ 	if (hostdata->connected) {
+ 		set_host_byte(hostdata->connected, DID_RESET);
+@@ -2668,12 +2679,6 @@ static int NCR5380_bus_reset(struct scsi
+ 		hostdata->connected = NULL;
+ 	}
  
 -	if (hostdata->sensing) {
-+	if (hostdata->sensing == cmd) {
- 		scsi_eh_restore_cmnd(cmd, &hostdata->ses);
- 		list_add(&ncmd->list, &hostdata->autosense);
- 		hostdata->sensing = NULL;
-
-
+-		set_host_byte(hostdata->connected, DID_RESET);
+-		complete_cmd(instance, hostdata->sensing);
+-		hostdata->sensing = NULL;
+-	}
+-
+ #ifdef SUPPORT_TAGS
+ 	free_all_tags(hostdata);
+ #endif
