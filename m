@@ -1,61 +1,36 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH] ncr5380: Don't re-enter NCR5380_select() when aborting
- a command
-Date: Tue, 23 Feb 2016 10:01:41 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1602230959560.24636@nippy.intranet>
-References: <20160126023113.571639451@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20160126023113.571639451@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 0/6] ncr5380: Exception handling fixes for v4.5
+Date: Tue, 23 Feb 2016 10:07:03 +1100
+Message-ID: <20160222230703.994951661@telegraphics.com.au>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Please ignore this patch. It isn't sufficient to fix the problem. I'll 
-send another patch that does fix it.
+These patches fix some exception handling and autosense bugs that I
+accidentally introduced in v4.5-rc1.
 
-On Tue, 26 Jan 2016, Finn Thain wrote:
+The error recovery and autosense code in these drivers has been unstable
+for a long time. Despite that, v4.5-rc1 shows a regression in as much as
+it exposes a bug in the aranym emulator. This leads to error recovery,
+which can crash.
 
-> Fixes: 707d62b37fbb ("ncr5380: Fix EH during arbitration and selection")
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> 
-> ---
->  drivers/scsi/NCR5380.c       |    2 +-
->  drivers/scsi/atari_NCR5380.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> Index: linux/drivers/scsi/NCR5380.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/NCR5380.c	2016-01-26 13:31:10.000000000 +1100
-> +++ linux/drivers/scsi/NCR5380.c	2016-01-26 13:31:10.000000000 +1100
-> @@ -2337,7 +2337,7 @@ static int NCR5380_abort(struct scsi_cmn
->  		dsprintk(NDEBUG_ABORT, instance,
->  		         "abort: removed %p from disconnected list\n", cmd);
->  		cmd->result = DID_ERROR << 16;
-> -		if (!hostdata->connected)
-> +		if (!hostdata->connected && !hostdata->selecting)
->  			NCR5380_select(instance, cmd);
->  		if (hostdata->connected != cmd) {
->  			complete_cmd(instance, cmd);
-> Index: linux/drivers/scsi/atari_NCR5380.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/atari_NCR5380.c	2016-01-26 13:31:10.000000000 +1100
-> +++ linux/drivers/scsi/atari_NCR5380.c	2016-01-26 13:31:10.000000000 +1100
-> @@ -2532,7 +2532,7 @@ static int NCR5380_abort(struct scsi_cmn
->  		dsprintk(NDEBUG_ABORT, instance,
->  		         "abort: removed %p from disconnected list\n", cmd);
->  		cmd->result = DID_ERROR << 16;
-> -		if (!hostdata->connected)
-> +		if (!hostdata->connected && !hostdata->selecting)
->  			NCR5380_select(instance, cmd);
->  		if (hostdata->connected != cmd) {
->  			complete_cmd(instance, cmd);
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Also, Michael Schmitz reported some crashes involving abort handling
+for a certain target device. And Dan Carpenter found a NULL pointer deref
+in the new bus reset code.
+
+Error recovery and autosense are stable with these patches.
+
+I tested them using a Domex 3191D PCI card. Errors during IO were
+simulated by sending bus resets and unplugging/replugging the SCSI
+cables. Some of these patches fix bugs that only affect more capable
+hardware (like Atari). Thanks to Michael Schmitz for patiently testing
+those.
+
+Please review this series for v4.5.
+
+---
+ drivers/scsi/NCR5380.c       |  133 +++++++++++++++++++------------------------
+ drivers/scsi/atari_NCR5380.c |  133 +++++++++++++++++++------------------------
+ 2 files changed, 118 insertions(+), 148 deletions(-)
