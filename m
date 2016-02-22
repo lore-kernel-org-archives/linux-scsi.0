@@ -1,87 +1,48 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: dm-multipath test scripts
-Date: Mon, 22 Feb 2016 09:51:28 +0000
-Message-ID: <56CADA20.7050209@ce.jp.nec.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <20160218171745.GA15071@redhat.com> <56C662F1.8070407@ce.jp.nec.com>
- <56C6D45A.6060407@ce.jp.nec.com> <20160219194216.GB21133@redhat.com>
- <20160220061247.GA23333@redhat.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 5/6] hisi_sas: add hisi_sas_slave_configure()
+Date: Mon, 22 Feb 2016 10:02:16 +0000
+Message-ID: <56CADCA8.8030206@huawei.com>
+References: <1455625351-165881-1-git-send-email-john.garry@huawei.com>
+ <1455625351-165881-6-git-send-email-john.garry@huawei.com>
+ <56C34163.70606@suse.de> <56C354A5.6080503@huawei.com>
+ <56C5756A.9060700@suse.de> <56C59922.6070600@huawei.com>
+ <56C59D47.30500@suse.de> <56C5A3A6.1090100@huawei.com>
+ <56C6F28B.9090000@huawei.com> <56C72747.5070909@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO202.gate.nec.co.jp ([210.143.35.52]:55879 "EHLO
-	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037AbcBVJxU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 04:53:20 -0500
-In-Reply-To: <20160220061247.GA23333@redhat.com>
-Content-Language: ja-JP
-Content-ID: <E6053B34216AF94181D53C47BCA874BE@gisp.nec.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56C72747.5070909@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, JBottomley@odin.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, john.garry2@mail.dcu.ie, linux-kernel@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On 02/20/16 15:12, Mike Snitzer wrote:
-> On Fri, Feb 19 2016 at  2:42pm -0500, Mike Snitzer <snitzer@redhat.com> wrote:
->> Have you been running with blk-mq?
->> Either by setting CONFIG_DM_MQ_DEFAULT or:
->> echo Y > /sys/module/dm_mod/parameters/use_blk_mq
+
+>> I would like to make another point about why I am making this change
+>> in case it is not clear. The queue full events are form
+>> TRANS_TX_CREDIT_TIMEOUT_ERR and TRANS_TX_CLOSE_NORMAL_ERR errors in
+>> the slot: I want the slot retried when this occurs, so I set status
+>> as SAS_QUEUE_FULL just so we will report DID_SOFT_ERR to SCSI
+>> midlayer so we get a retry. I could use SAS_OPEN_REJECT
+>> alternatively as the error which would have the same affect.
+>> The queue full are not from all slots being consumed in the HBA.
 >>
->> I'm seeing test_02_sdev_delete fail with blk-mq enabled.
-> 
-> I only see failure if I stack dm-mq ontop of old non-mq scsi devices with:
-> 
-> echo N > /sys/module/scsi_mod/parameters/use_blk_mq
-> echo Y > /sys/module/dm_mod/parameters/use_blk_mq
+> Ah, right. So you might be getting those errors even with some free
+> slots on the HBA. As such they are roughly equivalent to a
+> QUEUE_FULL SCSI statue, right?
+> So after reading SPL I guess you are right here; using tags wouldn't
+> help for this situation.
+>
 
-Ah, I didn't test that combination. I can see the failure, too.
+Yes, I think we have 90% of slots free in the host when this occurs for 
+one particular test - Our v2 hw has 2K slots, which is >> cmd_per_lun. 
+The errors are equivalent to queue full for the device.
 
-> But this makes me think the novelty of having dm-mq support stacking on
-> non-blk-mq devices was misplaced.  It is a senseless config.  I'll
-> probably remove support for such stacking soon (next week). 
+Thanks,
+John
 
-Looking at the failure, I suspect it could be a common issue of dm-mq
-regardless of underlying device type.
-
-When requeueing, following calls happen in dm-mq:
-  dm_requeue_original_request() {
-    ..
-    blk_mq_requeue_request(rq);
-    blk_mq_kick_requeue_list(rq->q);
-
-then from block workqueue:
-  blk_mq_requeue_work() {
-    ..
-    blk_mq_start_hw_queue(q);
-
-and blk_mq_start_hw_queue() re-starts the queue even if DM has
-stopped it for suspending. As a result, dm-mq ends up repeating
-submit-error-requeue forever and suspend never completes. Or,
-suspend somehow proceeds to clear DMF_NOFLUSH_SUSPENDING and
-I/O error may directly be returned to submitter.
-
-Attached patch fixes the problem for DM. But given the code comment,
-there should be call sites which depend on 'start-if-stopped' behavior
-of blk_mq_requeue_work and we may need other solution.
-
--- 
-Jun'ichi Nomura, NEC Corporation
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 56c0a72..bbfe936 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -481,11 +481,7 @@ static void blk_mq_requeue_work(struct work_struct *work)
- 		blk_mq_insert_request(rq, false, false, false);
- 	}
- 
--	/*
--	 * Use the start variant of queue running here, so that running
--	 * the requeue work will kick stopped queues.
--	 */
--	blk_mq_start_hw_queues(q);
-+	blk_mq_run_hw_queues(q, false);
- }
- 
- void blk_mq_add_to_requeue_list(struct request *rq, bool at_head)
+> Cheers,
+>
+> Hannes
+>
