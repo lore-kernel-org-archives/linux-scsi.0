@@ -1,70 +1,92 @@
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-Subject: RE: [PATCH 0/2][RESEND] scsi_transport_fc: LUN masking
-Date: Mon, 22 Feb 2016 11:39:28 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB44535951@G4W3219.americas.hpqcorp.net>
-References: <1456127462-2817-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:53106 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199AbcBVLjm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 06:39:42 -0500
-In-Reply-To: <1456127462-2817-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [v2 PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Mon, 22 Feb 2016 20:02:02 +0800
+Message-ID: <1456142522-25277-1-git-send-email-ch1102chiou@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, martin.petersen@oracle.com, jthumshirn@suse.de, hch@infradead.org, oneukum@suse.de, linus.chen@tw.promise.com, grace.chang@tw.promise.com, victor.p@promise.com, eva.cheng@tw.promise.com, charles.chiou@tw.promise.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Hannes,
+From: Charles <charles.chiou@tw.promise.com>
 
-How do you know that a request for an async scan is complete (I'm assuming that you get add or change udev events)? Assuming that someone has manually started a scan on something (e.g. some newly presented devices after boot) and all scans are going to be async how do you when it is complete rather than waiting in a work queue? An example may be a sysfs file that contains unscanned, pending, scanning, scanned so you know when it's complete at the appropriate level in sysfs (the hba and the rports) so you know when can continue if you're polling the status (e.g. checking as part of system admin work with newly presented rports so you can then do something with them).
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
 
-Thanks
-Shane
+1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
+   It should support backward compatibility.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Monday, February 22, 2016 6:51 PM
-> To: Martin K . Petersen
-> Cc: Christoph Hellwig; James Bottomley; Johannes Thumshirn; linux-
-> scsi@vger.kernel.org; Hannes Reinecke
-> Subject: [PATCH 0/2][RESEND] scsi_transport_fc: LUN masking
-> 
-> Hi all,
-> 
-> having been subjected to the pain of trying to bootstrap a really large
-> machine with systemd I decided to implement LUN masking in
-> scsi_transport_fc.
-> The principle is simple: disallow the automated LUN scanning when
-> discovering a rport, and create udev rules which selectively enable individual
-> LUNs by echoing the relevant values in the 'scan'
-> attribute of the SCSI host.
-> With that I'm able to boot an arbitrary large machine without running into any
-> udev or systemd imposed timeout.
-> To _disable_ LUN masking and restoring the original behaviour I've noticed
-> that the 'scan' sysfs attribute is actually synchronous, ie the calling process
-> will be blocked until the entire LUN scan is completed.
-> So I've added another module parameter 'async_user_scan' to move the
-> scanning onto the existing scan workqueue, and unblock the calling process.
-> 
-> As usual, comments and reviews are welcome.
-> 
-> Hannes Reinecke (2):
->   scsi_transport_fc: implement 'disable_target_scan' module parameter
->   scsi_transport_fc: Implement 'async_user_scan' module parameter
-> 
->  drivers/scsi/scsi_transport_fc.c | 47
-> +++++++++++++++++++++++++++++++++++++---
->  1 file changed, 44 insertions(+), 3 deletions(-)
-> 
-> --
-> 2.6.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+2. Change the driver version.
+
+Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
+ 1 file changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 2de28d7..495d632 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1,7 +1,7 @@
+ /*
+  * SuperTrak EX Series Storage Controller driver for Linux
+  *
+- *	Copyright (C) 2005-2009 Promise Technology Inc.
++ *	Copyright (C) 2005-2015 Promise Technology Inc.
+  *
+  *	This program is free software; you can redistribute it and/or
+  *	modify it under the terms of the GNU General Public License
+@@ -38,11 +38,11 @@
+ #include <scsi/scsi_eh.h>
+ 
+ #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR		4
+-#define ST_VER_MINOR		6
+-#define ST_OEM			0
+-#define ST_BUILD_VER		4
++#define ST_DRIVER_VERSION	"5.00.0000.01"
++#define ST_VER_MAJOR		5
++#define ST_VER_MINOR		00
++#define ST_OEM				0000
++#define ST_BUILD_VER		01
+ 
+ enum {
+ 	/* MU register offset */
+@@ -328,6 +328,7 @@ struct st_hba {
+ 	u16 rq_count;
+ 	u16 rq_size;
+ 	u16 sts_count;
++	u8  supports_pm;
+ };
+ 
+ struct st_card_info {
+@@ -1560,6 +1561,25 @@ static int stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	hba->cardtype = (unsigned int) id->driver_data;
+ 	ci = &stex_card_info[hba->cardtype];
++	switch (id->subdevice) {
++	case 0x4221:
++	case 0x4222:
++	case 0x4223:
++	case 0x4224:
++	case 0x4225:
++	case 0x4226:
++	case 0x4227:
++	case 0x4261:
++	case 0x4262:
++	case 0x4263:
++	case 0x4264:
++	case 0x4265:
++		break;
++	default:
++		if (hba->cardtype == st_yel)
++			hba->supports_pm = 1;
++	}
++
+ 	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+ 	if (hba->cardtype == st_yel)
+ 		sts_offset += (ci->sts_count+1) * sizeof(u32);
+-- 
+1.9.1
