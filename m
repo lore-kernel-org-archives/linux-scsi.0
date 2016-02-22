@@ -1,159 +1,122 @@
-From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: [v2 PATCH 3/3] scsi:stex.c Add S3/S4 support
-Date: Mon, 22 Feb 2016 20:07:09 +0800
-Message-ID: <1456142829-25375-1-git-send-email-ch1102chiou@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: why is blk-mq requeue foricbly kicking stopped queues? [was: Re:
+ dm-multipath test scripts]
+Date: Mon, 22 Feb 2016 10:09:01 -0500
+Message-ID: <20160222150901.GA5043@redhat.com>
+References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+ <20160218171745.GA15071@redhat.com>
+ <56C662F1.8070407@ce.jp.nec.com>
+ <56C6D45A.6060407@ce.jp.nec.com>
+ <20160219194216.GB21133@redhat.com>
+ <20160220061247.GA23333@redhat.com>
+ <56CADA20.7050209@ce.jp.nec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36188 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbcBVMHQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 07:07:16 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:38590 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751217AbcBVPJD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Feb 2016 10:09:03 -0500
+Content-Disposition: inline
+In-Reply-To: <56CADA20.7050209@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, martin.petersen@oracle.com, jthumshirn@suse.de, hch@infradead.org, oneukum@suse.de, linus.chen@tw.promise.com, grace.chang@tw.promise.com, victor.p@promise.com, eva.cheng@tw.promise.com, charles.chiou@tw.promise.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Junichi Nomura <j-nomura@ce.jp.nec.com>, axboe@kernel.dk
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
 
-From: Charles <charles.chiou@tw.promise.com>
+On Mon, Feb 22 2016 at  4:51am -0500,
+Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
 
-Add S3/S4 support, add .suspend and .resume function in pci_driver.
-In .suspend handler, driver send S3/S4 signal to the device.
+> On 02/20/16 15:12, Mike Snitzer wrote:
+> > On Fri, Feb 19 2016 at  2:42pm -0500, Mike Snitzer <snitzer@redhat.com> wrote:
+> >> Have you been running with blk-mq?
+> >> Either by setting CONFIG_DM_MQ_DEFAULT or:
+> >> echo Y > /sys/module/dm_mod/parameters/use_blk_mq
+> >>
+> >> I'm seeing test_02_sdev_delete fail with blk-mq enabled.
+> > 
+> > I only see failure if I stack dm-mq ontop of old non-mq scsi devices with:
+> > 
+> > echo N > /sys/module/scsi_mod/parameters/use_blk_mq
+> > echo Y > /sys/module/dm_mod/parameters/use_blk_mq
+> 
+> Ah, I didn't test that combination. I can see the failure, too.
+> 
+> > But this makes me think the novelty of having dm-mq support stacking on
+> > non-blk-mq devices was misplaced.  It is a senseless config.  I'll
+> > probably remove support for such stacking soon (next week). 
+> 
+> Looking at the failure, I suspect it could be a common issue of dm-mq
+> regardless of underlying device type.
 
-Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/stex.c | 68 ++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 65 insertions(+), 3 deletions(-)
+In practice I'm not seeing any issues with dm-mq on scsi-mq.
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 1994603..5b23175 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -167,6 +167,14 @@ enum {
- 
- 	ST_ADDITIONAL_MEM			= 0x200000,
- 	ST_ADDITIONAL_MEM_MIN			= 0x80000,
-+	PMIC_SHUTDOWN				= 0x0D,
-+	PMIC_REUMSE					= 0x10,
-+	ST_IGNORED					= -1,
-+	ST_NOTHANDLED				= 7,
-+	ST_S3						= 3,
-+	ST_S4						= 4,
-+	ST_S5						= 5,
-+	ST_S6						= 6,
- };
- 
- struct st_sgitem {
-@@ -1718,7 +1726,7 @@ out_disable:
- 	return err;
- }
- 
--static void stex_hba_stop(struct st_hba *hba)
-+static void stex_hba_stop(struct st_hba *hba, int st_sleep_mic)
- {
- 	struct req_msg *req;
- 	struct st_msg_header *msg_h;
-@@ -1727,6 +1735,15 @@ static void stex_hba_stop(struct st_hba *hba)
- 	u16 tag = 0;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-+
-+	if (hba->cardtype == st_yel && hba->supports_pm == 1)
-+	{
-+		if(st_sleep_mic == ST_NOTHANDLED)
-+		{
-+			spin_unlock_irqrestore(hba->host->host_lock, flags);
-+			return;
-+		}
-+	}
- 	req = hba->alloc_rq(hba);
- 	if (hba->cardtype == st_yel) {
- 		msg_h = (struct st_msg_header *)req - 1;
-@@ -1734,11 +1751,18 @@ static void stex_hba_stop(struct st_hba *hba)
- 	} else
- 		memset(req, 0, hba->rq_size);
- 
--	if (hba->cardtype == st_yosemite || hba->cardtype == st_yel) {
-+	if ((hba->cardtype == st_yosemite || hba->cardtype == st_yel)
-+		&& st_sleep_mic == ST_IGNORED) {
- 		req->cdb[0] = MGT_CMD;
- 		req->cdb[1] = MGT_CMD_SIGNATURE;
- 		req->cdb[2] = CTLR_CONFIG_CMD;
- 		req->cdb[3] = CTLR_SHUTDOWN;
-+	} else if (hba->cardtype == st_yel && st_sleep_mic != ST_IGNORED) {
-+		req->cdb[0] = MGT_CMD;
-+		req->cdb[1] = MGT_CMD_SIGNATURE;
-+		req->cdb[2] = CTLR_CONFIG_CMD;
-+		req->cdb[3] = PMIC_SHUTDOWN;
-+		req->cdb[4] = st_sleep_mic;
- 	} else {
- 		req->cdb[0] = CONTROLLER_CMD;
- 		req->cdb[1] = CTLR_POWER_STATE_CHANGE;
-@@ -1758,10 +1782,12 @@ static void stex_hba_stop(struct st_hba *hba)
- 	while (hba->ccb[tag].req_type & PASSTHRU_REQ_TYPE) {
- 		if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
- 			hba->ccb[tag].req_type = 0;
-+			hba->mu_status = MU_STATE_STOP;
- 			return;
- 		}
- 		msleep(1);
- 	}
-+	hba->mu_status = MU_STATE_STOP;
- }
- 
- static void stex_hba_free(struct st_hba *hba)
-@@ -1801,9 +1827,43 @@ static void stex_shutdown(struct pci_dev *pdev)
- {
- 	struct st_hba *hba = pci_get_drvdata(pdev);
- 
--	stex_hba_stop(hba);
-+	if (hba->supports_pm == 0)
-+		stex_hba_stop(hba, ST_IGNORED);
-+	else
-+		stex_hba_stop(hba, ST_S5);
-+}
-+
-+static int stex_choice_sleep_mic(pm_message_t state)
-+{
-+	switch (state.event) {
-+	case PM_EVENT_SUSPEND:
-+		return ST_S3;
-+	case PM_EVENT_HIBERNATE:
-+		return ST_S4;
-+	default:
-+		return ST_NOTHANDLED;
-+	}
- }
- 
-+static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	struct st_hba *hba = pci_get_drvdata(pdev);
-+
-+	if (hba->cardtype == st_yel && hba->supports_pm == 1)
-+		stex_hba_stop(hba, stex_choice_sleep_mic(state));
-+	else
-+		stex_hba_stop(hba, ST_IGNORED);
-+	return 0;
-+}
-+
-+static int stex_resume(struct pci_dev *pdev)
-+{
-+	struct st_hba *hba = pci_get_drvdata(pdev);
-+
-+	hba->mu_status = MU_STATE_STARTING;
-+	stex_handshake(hba);
-+	return 0;
-+}
- MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
- 
- static struct pci_driver stex_pci_driver = {
-@@ -1812,6 +1872,8 @@ static struct pci_driver stex_pci_driver = {
- 	.probe		= stex_probe,
- 	.remove		= stex_remove,
- 	.shutdown	= stex_shutdown,
-+	.suspend	= stex_suspend,
-+	.resume		= stex_resume,
- };
- 
- static int __init stex_init(void)
--- 
-1.9.1
+> When requeueing, following calls happen in dm-mq:
+>   dm_requeue_original_request() {
+>     ..
+>     blk_mq_requeue_request(rq);
+>     blk_mq_kick_requeue_list(rq->q);
+> 
+> then from block workqueue:
+>   blk_mq_requeue_work() {
+>     ..
+>     blk_mq_start_hw_queue(q);
+> 
+> and blk_mq_start_hw_queue() re-starts the queue even if DM has
+> stopped it for suspending. As a result, dm-mq ends up repeating
+> submit-error-requeue forever and suspend never completes. Or,
+> suspend somehow proceeds to clear DMF_NOFLUSH_SUSPENDING and
+> I/O error may directly be returned to submitter.
 
+I should note that I applied this patch for 4.6:
+https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.6&id=7db905b3d4294e5db4c2938fb7d0e5ba4bd798d6
+
+(but it was purely a fallout of code-review, and looking at the nvme's
+use of blk_mq_requeue_request, I did't consider it to be a critical fix
+or anything)
+
+> Attached patch fixes the problem for DM. But given the code comment,
+> there should be call sites which depend on 'start-if-stopped' behavior
+> of blk_mq_requeue_work and we may need other solution.
+
+Nice catch, it certainly does seem like the blk-mq requeue code is
+undo-ing steps DM took to protect dm-mpath during suspend.  It likely
+doesn't bite dm-mq on scsi-mq because in general blk-mq takes the
+rq->q->queue_lock much less frequently.  But when stacking blk-mq on
+.request_fn queues it causes live-lock you detailed above.
+
+I'm not sure what the right fix is, but it would seem we need
+something.  I cannot speak to why blk_mq_start_hw_queues() was used to
+begin with (or why it is important for blk-mq to forcibly kicked stopped
+queues on requeue).  Jens?
+
+I see commit 8b95741569ea ("blk-mq: use blk_mq_start_hw_queues() when
+running requeue work") but I'm still missing why the upper-layer driver
+of the blk-mq queue (dm-mq in this case) isn't free to keep the queue
+stopped.  This is pretty important for DM's suspend functionality.
+
+> -- 
+> Jun'ichi Nomura, NEC Corporation
+> 
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 56c0a72..bbfe936 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -481,11 +481,7 @@ static void blk_mq_requeue_work(struct work_struct *work)
+>  		blk_mq_insert_request(rq, false, false, false);
+>  	}
+>  
+> -	/*
+> -	 * Use the start variant of queue running here, so that running
+> -	 * the requeue work will kick stopped queues.
+> -	 */
+> -	blk_mq_start_hw_queues(q);
+> +	blk_mq_run_hw_queues(q, false);
+>  }
+>  
+>  void blk_mq_add_to_requeue_list(struct request *rq, bool at_head)
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
