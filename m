@@ -1,74 +1,46 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCHv8 20/23] scsi: Add 'access_state' attribute
-Date: Tue, 23 Feb 2016 09:12:32 -0500
-Message-ID: <1456236752.16707.12.camel@localhost.localdomain>
-References: <1455869840-122786-1-git-send-email-hare@suse.de>
-	 <1455869840-122786-21-git-send-email-hare@suse.de>
-	 <56C7688A.2050608@sandisk.com> <56C81DB5.7070102@suse.de>
-	 <56C8834F.50304@sandisk.com> <56C9750B.9010200@suse.de>
-	 <56CA9252.8030007@sandisk.com> <56CAB1E4.9060809@suse.de>
-	 <56CB2AA2.9090505@sandisk.com>  <56CC341F.2000407@suse.de>
-Reply-To: emilne@redhat.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3] mptbase: fixup error handling paths in mpt_attach()
+Date: Tue, 23 Feb 2016 15:29:14 +0100
+Message-ID: <20160223142914.GB7128@c203.arch.suse.de>
+References: <1456236012-27300-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37135 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:58747 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752139AbcBWOMf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Feb 2016 09:12:35 -0500
-In-Reply-To: <56CC341F.2000407@suse.de>
+	id S1750936AbcBWO3S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Feb 2016 09:29:18 -0500
+Content-Disposition: inline
+In-Reply-To: <1456236012-27300-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wuninsu@gmail.com, thenzl@redhat.com, sreekanth.reddy@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu
 
-On Tue, 2016-02-23 at 18:27 +0800, Hannes Reinecke wrote:
-> On 02/22/2016 11:34 PM, Bart Van Assche wrote:
-> > On 02/21/16 22:59, Hannes Reinecke wrote:
-> >> The main reason why I need the 'access_state' attribute is to decouple
-> >> the multipath daemon; at the moment the multipath daemon has to issue
-> >> REPORT TARGET PORT GROUPS frequently to figure out the status, which is
-> >> causing quite some load on the target. When using the 'access_state'
-> >> attribute we would avoid doing I/O for that and have a consistent view,
-> >> both on the kernel and the multipath daemon side.
-> >>
-> >> But it's actually a good thing to have the 'access_state' patch in a
-> >> different series; I've got some more patches converting the remaining
-> >> device_handler to also supply the 'access_state' values.
-> > 
-> > Hello Hannes,
-> > 
-> > The above sounds very interesting to me. Will multipathd recognize at
-> > run-time whether or not the kernel supports the sysfs ALUA state
-> > attribute ?
-> That was the plan.
-> (Not that I've got any idea _how_ to do this ATM :-)
-> 
-> > Will ALUA state changes be reported through udev or will
-> > multipathd poll the sysfs ALUA state attributes ? 
-> Polling. udev events will be too unreliable here, as each uevent
-> potentially causes I/O during uevent processing which might stall as the
-> path might be down.
-> So we might never get events for failed/transitioning paths, however,
-> these are precisely the cases which we're interested in ...
+On Tue, Feb 23, 2016 at 09:00:12AM -0500, Ewan D. Milne wrote:
+> From: "Ewan D. Milne" <emilne@redhat.com>
+>=20
+> mpt_attach() was not checking for the failure to create fw_event_q.
+> Also, iounmap() was not being called in all error cases after ioremap=
+()
+> had been called by mpt_mapresources().
+>=20
+> Reported-by: Insu Yun <wuninsu@gmail.com>
+> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 
-And, in fact, if paths go down due to e.g. an FC switch failure, it is
-common for a large number of paths to go down at once, causing a large
-number of uevents to be queued.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-> 
-> > And if the netlink
-> > buffer that is used in multipathd to receive udev events overflows
-> > (ENOBUFS), will multipathd resynchronize its state ? As far as I can see
-> > in source file libmultipath/uevent.c today multipathd ignores netlink
-> > buffer overflows.
-> > 
-> Which, thankfully, doesn't apply as multipathd will be polling the sysfs
-> attribute directly :-)
-> 
-> Cheers,
-> 
-> Hannes
-
-
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
