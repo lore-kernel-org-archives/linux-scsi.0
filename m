@@ -1,54 +1,92 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: why is blk-mq requeue foricbly kicking stopped queues? [was:
- Re: dm-multipath test scripts]
-Date: Tue, 23 Feb 2016 01:34:37 +0000
-Message-ID: <56CBB72C.20309@ce.jp.nec.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <20160218171745.GA15071@redhat.com> <56C662F1.8070407@ce.jp.nec.com>
- <56C6D45A.6060407@ce.jp.nec.com> <20160219194216.GB21133@redhat.com>
- <20160220061247.GA23333@redhat.com> <56CADA20.7050209@ce.jp.nec.com>
- <20160222150901.GA5043@redhat.com>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: [LSF/MM ATTEND] Online Logical Head Depop and SMR disks chunked
+ writepages
+Date: Tue, 23 Feb 2016 02:56:34 +0000
+Message-ID: <05353ADC-601C-412D-80E2-1F1972324A37@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:34206 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755986AbcBWBgJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 20:36:09 -0500
-In-Reply-To: <20160222150901.GA5043@redhat.com>
-Content-Language: ja-JP
-Content-ID: <8B2DC5F4CBC8834494EE62AFBE142630@gisp.nec.co.jp>
+Received: from sjc00mx1.hgst.com ([199.255.44.36]:10064 "EHLO
+	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756879AbcBWC4w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 21:56:52 -0500
+Content-Language: en-US
+Content-ID: <82E5AFF8201DDC42955C730A21E08949@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 02/23/16 00:09, Mike Snitzer wrote:
-> I should note that I applied this patch for 4.6:
-> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.6&id=7db905b3d4294e5db4c2938fb7d0e5ba4bd798d6
-> 
-> (but it was purely a fallout of code-review, and looking at the nvme's
-> use of blk_mq_requeue_request, I did't consider it to be a critical fix
-> or anything)
+DQpIZWxsbywNCg0KSSB3b3VsZCBsaWtlIHRvIGF0dGVuZCBMU0YvTU0gMjAxNiB0byBkaXNjdXNz
+IHRoZSBmb2xsb3dpbmcgdG9waWNzLg0KDQoxKSBPbmxpbmUgTG9naWNhbCBIZWFkIERlcG9wDQoN
+ClNvbWUgZGlzayBkcml2ZXMgYXZhaWxhYmxlIG9uIHRoZSBtYXJrZXQgYWxyZWFkeSBwcm92aWRl
+IGEgImxvZ2ljYWwNCmRlcG9wIiBmdW5jdGlvbiB3aGljaCBhbGxvd3MgYSBzeXN0ZW0gdG8gZGVj
+b21taXNzaW9uIGEgZGVmZWN0aXZlDQpkaXNrIGhlYWQsIHJlZm9ybWF0IHRoZSBkaXNrIGFuZCBj
+b250aW51ZSB1c2luZyB0aGlzIHNhbWUgZGlzayB3aXRoDQphIHJlZHVjZWQgY2FwYWNpdHkuIFN1
+Y2ggZmVhdHVyZSBjYW4gYWxsb3cgcmVkdWNlZCBvcGVyYXRpb24gY29zdHMNCihkZWxheWVkIEhE
+RCByZXBsYWNlbWVudCkgYnV0IGhhcyB0aGUgZHJhd2JhY2sgb2YgYSBkYXRhIGxvc3MgKGRhdGEN
+CnVuZGVyIHRoZSByZW1haW5pbmcgdmFsaWQgaGVhZHMpIGFuZCBkaXNrIGRvd250aW1lIGR1cmlu
+ZyByZS1mb3JtYXRpbmcuDQoNCk9ubGluZSBsb2dpY2FsIGhlYWQgZGVwb3AgaXMgYSBwcm9wb3Nl
+ZCBuZXcgZmVhdHVyZSBhbGxvd2luZyByZXRhaW5pbmcNCnRoZSBkaXNrIHZhbGlkIGRhdGEgYW5k
+IGVsaW1pbmF0aW5nIHRoZSBuZWVkIGZvciBhIGRpc2sgcmUtZm9ybWF0Lg0KVGhlIGJhc2ljIGlk
+ZWEgaXMgdG8gaW50cm9kdWNlIG5ldyBjb21tYW5kcyBmb3IgdGhlIGhvc3QgdG8gZGlzY292ZXIN
+CnRoZSByYW5nZXMgb2YgTEJBcyBpbXBhY3RlZCBieSBhIGRlZmVjdGl2ZSBoZWFkLiBVc2luZyB0
+aGlzIGluZm9ybWF0aW9uLA0KdGhlIGhvc3QgY2FuIHRha2UgYWN0aW9ucyB3aGVuIGEgZGlzayBo
+ZWFkIGZhaWx1cmUgZXZlbnQgaXMgc3VzcGVjdGVkDQpvciByZXBvcnRlZDoNCihhKSBUaGUgaW1w
+YWN0ZWQgTEJBcyBjYW4gYmUgZGVwb3B1bGF0ZWQsIHJlc3VsdGluZyBpbiB0aGUgZGlzaw0Kb3Bl
+cmF0aW5nIGFzIGEg4oCcdGhpbiBwcm92aXNpb25lZOKAnSBkZXZpY2UuDQooYikgVGhlIGltcGFj
+dGVkIExCQXMgY2FuIGJlIGFtcHV0YXRlZCwgcmVzdWx0aW5nIGluIGVycm9yIGZvciBhbGwNCnN1
+YnNlcXVlbnQgYWNjZXNzZXMgdG8gdGhlIExCQXMgdW5kZXIgdGhlIGRlZmVjdGl2ZSBoZWFkLg0K
+KGMpIE9wdGlvbmFsbHksIGEgaG9zdCBtYXkgZGVjaWRlIHRvIHJlZm9ybWF0IChjb21wYWN0KSB0
+aGUgZGlzayB0bw0KcmVzdG9yZSBvcGVyYXRpb24gYXMgYSBmdWxseS1wcm92aXNpb25lZCBkZXZp
+Y2Ugd2l0aCBhIGxvd2VyIGNhcGFjaXR5Lg0KDQpUaGUgZ29hbCBvZiB0aGUgZGlzY3Vzc2lvbiB3
+b3VsZCBiZSB0byBnYXRoZXIgdGhlIG9waW5pb24gb2YgdGhlDQpkZXZlbG9wZXJzIGZvciBkcmFm
+dGluZyBhIGNvbW1hbmQgc3RhbmRhcmQgbWluaW1pemluZyB0aGUgaW1wYWN0IG9mIHRoaXMNCmZl
+YXR1cmUgb24gdGhlIGJsb2NrIEkvTyBzdGFjayBhcyB3ZWxsIGFzIGFsbG93aW5nIGEgc2ltcGxl
+IHVzZSBvZiB0aGlzDQpmZWF0dXJlIGJ5IGZpbGUgc3lzdGVtcyBhbmQgZGV2aWNlIG1hcHBlciBk
+cml2ZXJzIChpbmNsdWRpbmcgbG9naWNhbA0Kdm9sdW1lIG1hbmFnZXIpLg0KDQoNCjIpIFdyaXRl
+IGJhY2sgb2YgZGlydHkgcGFnZXMgdG8gU01SIGJsb2NrIGRldmljZXM6DQoNCkRpcnR5IHBhZ2Vz
+IG9mIGEgYmxvY2sgZGV2aWNlIGlub2RlIGFyZSBjdXJyZW50bHkgcHJvY2Vzc2VkIHVzaW5nIHRo
+ZQ0KZ2VuZXJpY193cml0ZXBhZ2VzIGZ1bmN0aW9uLCB3aGljaCBjYW4gYmUgZXhlY3V0ZWQgc2lt
+dWx0YW5lb3VzbHkNCmJ5IG11bHRpcGxlIGNvbnRleHRzIChlLmcgc3luYywgZnN5bmMsIG1zeW5j
+LCBzeW5jX2ZpbGVfcmFuZ2UsIGV0YykuDQpNdXR1YWwgZXhjbHVzaW9uIG9mIHRoZSBkaXJ0eSBw
+YWdlIHByb2Nlc3NpbmcgYmVpbmcgYWNoaWV2ZWQgb25seSBhdA0KdGhlIHBhZ2UgbGV2ZWwgKHBh
+Z2UgbG9jayAmIHBhZ2Ugd3JpdGViYWNrIGZsYWcpLCBtdWx0aXBsZSBwcm9jZXNzZXMNCmV4ZWN1
+dGluZyBhICJzeW5jIiBvZiBvdmVybGFwcGluZyBibG9jayByYW5nZXMgb3ZlciB0aGUgc2FtZSB6
+b25lIG9mDQphbiBTTVIgZGlzayBjYW4gY2F1c2UgYW4gb3V0LW9mLUxCQS1vcmRlciBzZXF1ZW5j
+ZSBvZiB3cml0ZSByZXF1ZXN0cw0KYmVpbmcgc2VudCB0byB0aGUgdW5kZXJseWluZyBkZXZpY2Uu
+IE9uIGEgaG9zdCBtYW5hZ2VkIFNNUiBkaXNrLCB3aGVyZQ0Kc2VxdWVudGlhbCB3cml0ZSB0byBk
+aXNrIHpvbmVzIGlzIG1hbmRhdG9yeSwgdGhpcyByZXN1bHQgaW4gZXJyb3JzIGFuZA0KdGhlIGlt
+cG9zc2liaWxpdHkgZm9yIGFuIGFwcGxpY2F0aW9uIHVzaW5nIHJhdyBzZXF1ZW50aWFsIGRpc2sg
+d3JpdGUNCmFjY2Vzc2VzIHRvIGJlIGd1YXJhbnRlZWQgc3VjY2Vzc2Z1bCBjb21wbGV0aW9uIG9m
+IGl0cyB3cml0ZSBvciBmc3luYw0KcmVxdWVzdHMuDQoNClVzaW5nIHRoZSB6b25lIGluZm9ybWF0
+aW9uIGF0dGFjaGVkIHRvIHRoZSBTTVIgYmxvY2sgZGV2aWNlIHF1ZXVlDQooaW50cm9kdWNlZCBi
+eSBIYW5uZXMpLCBjYWxscyB0byB0aGUgZ2VuZXJpY193cml0ZXBhZ2VzIGZ1bmN0aW9uIGNhbg0K
+YmUgbWFkZSBtdXR1YWxseSBleGNsdXNpdmUgb24gYSBwZXIgem9uZSBiYXNpcyBieSBsb2NraW5n
+IHRoZSB6b25lcy4NClRoaXMgZ3VhcmFudGVlcyBzZXF1ZW50aWFsIHJlcXVlc3QgZ2VuZXJhdGlv
+biBmb3IgZWFjaCB6b25lIGFuZCBhdm9pZA0Kd3JpdGUgZXJyb3JzIHdpdGhvdXQgYW55IG1vZGlm
+aWNhdGlvbiB0byB0aGUgZ2VuZXJpYyBjb2RlIGltcGxlbWVudGluZw0KZ2VuZXJpY193cml0ZXBh
+Z2VzLg0KDQpUaGlzIGlzIGJ1dCBvbmUgcG9zc2libGUgc29sdXRpb24gZm9yIHN1cHBvcnRpbmcg
+U01SIGhvc3QtbWFuYWdlZA0KZGV2aWNlcyB3aXRob3V0IGFueSBtYWpvciByZXdyaXRlIG9mIHBh
+Z2UgY2FjaGUgbWFuYWdlbWVudCBhbmQNCndyaXRlLWJhY2sgcHJvY2Vzc2luZy4gVGhlIG9waW5p
+b24gb2YgdGhlIGF1ZGllbmNlIHJlZ2FyZGluZyB0aGlzDQpzb2x1dGlvbiBhbmQgZGlzY3Vzc2lu
+ZyBvdGhlciBwb3RlbnRpYWwgc29sdXRpb25zIHdvdWxkIGJlIGdyZWF0bHkNCmFwcHJlY2lhdGVk
+Lg0KDQpUaGFuayB5b3UuDQoNCkJlc3QgcmVnYXJkcy4NCg0KDQotLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0NCkRhbWllbiBMZSBNb2FsLCBQaC5ELg0KU3IuIE1hbmFnZXIsIFN5c3RlbSBTb2Z0d2Fy
+ZSBHcm91cCwgSEdTVCBSZXNlYXJjaCwNCkhHU1QsIGEgV2VzdGVybiBEaWdpdGFsIGNvbXBhbnkN
+CkRhbWllbi5MZU1vYWxAaGdzdC5jb20NCigrODEpIDA0NjYtOTgtMzU5MyAoZXh0LiA1MTM1OTMp
+DQoxIGtpcmloYXJhLWNobywgRnVqaXNhd2EsIA0KS2FuYWdhd2EsIDI1Mi0wODg4IEphcGFuDQp3
+d3cuaGdzdC5jb20gDQpXZXN0ZXJuIERpZ2l0YWwgQ29ycG9yYXRpb24gKGFuZCBpdHMgc3Vic2lk
+aWFyaWVzKSBFLW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAmIERpc2NsYWltZXI6CgpUaGlz
+IGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgbWF5IGNvbnRhaW4gY29u
+ZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBvZiBXREMgYW5kL29y
+IGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVkIHNvbGVseSBmb3IgdGhlIHVzZSBvZiB0
+aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2ggdGhleSBhcmUgYWRkcmVzc2VkLiBJZiB5
+b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBhbnkgZGlzY2xvc3VyZSwgY29weWlu
+ZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFrZW4gb3Igb21pdHRlZCB0byBiZSB0YWtl
+biBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRlZC4gSWYgeW91IGhhdmUgcmVjZWl2ZWQg
+dGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBpbW1lZGlhdGVs
+eSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVudGlyZXR5IGZyb20geW91ciBzeXN0ZW0u
+Cg==
 
-The patch above contains following change:
-
-> +static void dm_mq_requeue_request(struct request *rq)
-> +{
-> +	struct request_queue *q = rq->q;
-> +	unsigned long flags;
-> +
-> +	blk_mq_requeue_request(rq);
-> +	spin_lock_irqsave(q->queue_lock, flags);
-> +	if (!blk_queue_stopped(q))
-> +		blk_mq_kick_requeue_list(q);
-> +	spin_unlock_irqrestore(q->queue_lock, flags);
-> +}
-
-If you make it conditional to call blk_mq_kick_requeue_list() here,
-I think we have to call the function from start_queue(), too,
-otherwise requeued requests might stay forever in q->requeue_list.
-
--- 
-Jun'ichi Nomura, NEC Corporation
