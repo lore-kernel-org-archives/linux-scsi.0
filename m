@@ -1,71 +1,128 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
 Subject: Re: [LSF/MM ATTEND] Online Logical Head Depop and SMR disks chunked
  writepages
-Date: Mon, 22 Feb 2016 19:56:40 -0800
-Message-ID: <56CBD878.4070600@sandisk.com>
+Date: Tue, 23 Feb 2016 05:31:13 +0000
+Message-ID: <20F4EEF6-8F58-42A0-99E9-E932B51D0387@hgst.com>
 References: <05353ADC-601C-412D-80E2-1F1972324A37@hgst.com>
+ <56CBD878.4070600@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0081.outbound.protection.outlook.com ([65.55.169.81]:17201
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756890AbcBWD5F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Feb 2016 22:57:05 -0500
-In-Reply-To: <05353ADC-601C-412D-80E2-1F1972324A37@hgst.com>
+Received: from sjc00mx1.hitachigst.com ([199.255.44.36]:42313 "EHLO
+	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752657AbcBWFbR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2016 00:31:17 -0500
+In-Reply-To: <56CBD878.4070600@sandisk.com>
+Content-Language: en-US
+Content-ID: <6F4F716A583A74429823D701C64430D0@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>, "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
 Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matias Bjorling <m@bjorling.me>
 
-On 02/22/16 18:56, Damien Le Moal wrote:
-> 2) Write back of dirty pages to SMR block devices:
->
-> Dirty pages of a block device inode are currently processed using the
-> generic_writepages function, which can be executed simultaneously
-> by multiple contexts (e.g sync, fsync, msync, sync_file_range, etc).
-> Mutual exclusion of the dirty page processing being achieved only at
-> the page level (page lock & page writeback flag), multiple processes
-> executing a "sync" of overlapping block ranges over the same zone of
-> an SMR disk can cause an out-of-LBA-order sequence of write requests
-> being sent to the underlying device. On a host managed SMR disk, where
-> sequential write to disk zones is mandatory, this result in errors and
-> the impossibility for an application using raw sequential disk write
-> accesses to be guaranteed successful completion of its write or fsync
-> requests.
->
-> Using the zone information attached to the SMR block device queue
-> (introduced by Hannes), calls to the generic_writepages function can
-> be made mutually exclusive on a per zone basis by locking the zones.
-> This guarantees sequential request generation for each zone and avoid
-> write errors without any modification to the generic code implementing
-> generic_writepages.
->
-> This is but one possible solution for supporting SMR host-managed
-> devices without any major rewrite of page cache management and
-> write-back processing. The opinion of the audience regarding this
-> solution and discussing other potential solutions would be greatly
-> appreciated.
+DQo+T24gMDIvMjIvMTYgMTg6NTYsIERhbWllbiBMZSBNb2FsIHdyb3RlOg0KPj4gMikgV3JpdGUg
+YmFjayBvZiBkaXJ0eSBwYWdlcyB0byBTTVIgYmxvY2sgZGV2aWNlczoNCj4+DQo+PiBEaXJ0eSBw
+YWdlcyBvZiBhIGJsb2NrIGRldmljZSBpbm9kZSBhcmUgY3VycmVudGx5IHByb2Nlc3NlZCB1c2lu
+ZyB0aGUNCj4+IGdlbmVyaWNfd3JpdGVwYWdlcyBmdW5jdGlvbiwgd2hpY2ggY2FuIGJlIGV4ZWN1
+dGVkIHNpbXVsdGFuZW91c2x5DQo+PiBieSBtdWx0aXBsZSBjb250ZXh0cyAoZS5nIHN5bmMsIGZz
+eW5jLCBtc3luYywgc3luY19maWxlX3JhbmdlLCBldGMpLg0KPj4gTXV0dWFsIGV4Y2x1c2lvbiBv
+ZiB0aGUgZGlydHkgcGFnZSBwcm9jZXNzaW5nIGJlaW5nIGFjaGlldmVkIG9ubHkgYXQNCj4+IHRo
+ZSBwYWdlIGxldmVsIChwYWdlIGxvY2sgJiBwYWdlIHdyaXRlYmFjayBmbGFnKSwgbXVsdGlwbGUg
+cHJvY2Vzc2VzDQo+PiBleGVjdXRpbmcgYSAic3luYyIgb2Ygb3ZlcmxhcHBpbmcgYmxvY2sgcmFu
+Z2VzIG92ZXIgdGhlIHNhbWUgem9uZSBvZg0KPj4gYW4gU01SIGRpc2sgY2FuIGNhdXNlIGFuIG91
+dC1vZi1MQkEtb3JkZXIgc2VxdWVuY2Ugb2Ygd3JpdGUgcmVxdWVzdHMNCj4+IGJlaW5nIHNlbnQg
+dG8gdGhlIHVuZGVybHlpbmcgZGV2aWNlLiBPbiBhIGhvc3QgbWFuYWdlZCBTTVIgZGlzaywgd2hl
+cmUNCj4+IHNlcXVlbnRpYWwgd3JpdGUgdG8gZGlzayB6b25lcyBpcyBtYW5kYXRvcnksIHRoaXMg
+cmVzdWx0IGluIGVycm9ycyBhbmQNCj4+IHRoZSBpbXBvc3NpYmlsaXR5IGZvciBhbiBhcHBsaWNh
+dGlvbiB1c2luZyByYXcgc2VxdWVudGlhbCBkaXNrIHdyaXRlDQo+PiBhY2Nlc3NlcyB0byBiZSBn
+dWFyYW50ZWVkIHN1Y2Nlc3NmdWwgY29tcGxldGlvbiBvZiBpdHMgd3JpdGUgb3IgZnN5bmMNCj4+
+IHJlcXVlc3RzLg0KPj4NCj4+IFVzaW5nIHRoZSB6b25lIGluZm9ybWF0aW9uIGF0dGFjaGVkIHRv
+IHRoZSBTTVIgYmxvY2sgZGV2aWNlIHF1ZXVlDQo+PiAoaW50cm9kdWNlZCBieSBIYW5uZXMpLCBj
+YWxscyB0byB0aGUgZ2VuZXJpY193cml0ZXBhZ2VzIGZ1bmN0aW9uIGNhbg0KPj4gYmUgbWFkZSBt
+dXR1YWxseSBleGNsdXNpdmUgb24gYSBwZXIgem9uZSBiYXNpcyBieSBsb2NraW5nIHRoZSB6b25l
+cy4NCj4+IFRoaXMgZ3VhcmFudGVlcyBzZXF1ZW50aWFsIHJlcXVlc3QgZ2VuZXJhdGlvbiBmb3Ig
+ZWFjaCB6b25lIGFuZCBhdm9pZA0KPj4gd3JpdGUgZXJyb3JzIHdpdGhvdXQgYW55IG1vZGlmaWNh
+dGlvbiB0byB0aGUgZ2VuZXJpYyBjb2RlIGltcGxlbWVudGluZw0KPj4gZ2VuZXJpY193cml0ZXBh
+Z2VzLg0KPj4NCj4+IFRoaXMgaXMgYnV0IG9uZSBwb3NzaWJsZSBzb2x1dGlvbiBmb3Igc3VwcG9y
+dGluZyBTTVIgaG9zdC1tYW5hZ2VkDQo+PiBkZXZpY2VzIHdpdGhvdXQgYW55IG1ham9yIHJld3Jp
+dGUgb2YgcGFnZSBjYWNoZSBtYW5hZ2VtZW50IGFuZA0KPj4gd3JpdGUtYmFjayBwcm9jZXNzaW5n
+LiBUaGUgb3BpbmlvbiBvZiB0aGUgYXVkaWVuY2UgcmVnYXJkaW5nIHRoaXMNCj4+IHNvbHV0aW9u
+IGFuZCBkaXNjdXNzaW5nIG90aGVyIHBvdGVudGlhbCBzb2x1dGlvbnMgd291bGQgYmUgZ3JlYXRs
+eQ0KPj4gYXBwcmVjaWF0ZWQuDQo+DQo+SGVsbG8gRGFtaWVuLA0KPg0KPklzIGl0IHN1ZmZpY2ll
+bnQgdG8gc3VwcG9ydCBmaWxlc3lzdGVtcyBsaWtlIEJUUkZTIG9uIHRvcCBvZiBTTVIgZHJpdmVz
+IA0KPm9yIHdvdWxkIHlvdSBhbHNvIGxpa2UgdG8gc2VlIHRoYXQgZmlsZXN5c3RlbXMgbGlrZSBl
+eHQ0IGNhbiB1c2UgU01SIA0KPmRyaXZlcyA/IEluIHRoZSBsYXR0ZXIgY2FzZTogdGhlIGJlaGF2
+aW9yIG9mIFNNUiBkcml2ZXMgZGlmZmVycyBzbyANCj5zaWduaWZpY2FudGx5IGZyb20gdGhhdCBv
+ZiBvdGhlciBibG9jayBkZXZpY2VzIHRoYXQgSSdtIG5vdCBzdXJlIHRoYXQgd2UgDQo+c2hvdWxk
+IHRyeSB0byBzdXBwb3J0IHRoZXNlIGRpcmVjdGx5IGZyb20gaW5mcmFzdHJ1Y3R1cmUgbGlrZSB0
+aGUgcGFnZSANCj5jYWNoZS4gSWYgd2UgbG9vayBlLmcuIGF0IE5BTkQgU1NEcyB0aGVuIHdlIHNl
+ZSB0aGF0IHRoZSBjaGFyYWN0ZXJpc3RpY3MgDQo+b2YgTkFORCBkbyBub3QgbWF0Y2ggd2hhdCBm
+aWxlc3lzdGVtcyBleHBlY3QgKGUuZy4gbGFyZ2UgZXJhc2UgYmxvY2tzKS4gDQo+VGhhdCBpcyB3
+aHkgZXZlcnkgU1NEIHZlbmRvciBwcm92aWRlcyBhbiBGVEwgKEZsYXNoIFRyYW5zbGF0aW9uIExh
+eWVyKSwgDQo+ZWl0aGVyIGluc2lkZSB0aGUgU1NEIG9yIGFzIGEgc2VwYXJhdGUgc29mdHdhcmUg
+ZHJpdmVyLiBBbiBGVEwgDQo+aW1wbGVtZW50cyBhIHNvLWNhbGxlZCBMRlMgKGxvZy1zdHJ1Y3R1
+cmVkIGZpbGVzeXN0ZW0pLiBXaXRoIHdoYXQgSSBrbm93IA0KPmFib3V0IFNNUiB0aGlzIHRlY2hu
+b2xvZ3kgbG9va3MgYWxzbyBzdWl0YWJsZSBmb3IgaW1wbGVtZW50YXRpb24gb2YgYSANCj5MRlMu
+IEhhcyBpdCBhbHJlYWR5IGJlZW4gY29uc2lkZXJlZCB0byBpbXBsZW1lbnQgYW4gTEZTIGRyaXZl
+ciBmb3IgU01SIA0KPmRyaXZlcyA/IFRoYXQgd291bGQgbWFrZSBpdCBwb3NzaWJsZSBmb3IgYW55
+IGZpbGVzeXN0ZW0gdG8gYWNjZXNzIGFuIFNNUiANCj5kcml2ZSBhcyBhbnkgb3RoZXIgYmxvY2sg
+ZGV2aWNlLiBJJ20gbm90IHN1cmUgb2YgdGhpcyBidXQgbWF5YmUgaXQgd2lsbCANCj5iZSBwb3Nz
+aWJsZSB0byBzaGFyZSBzb21lIGluZnJhc3RydWN0dXJlIHdpdGggdGhlIExpZ2h0TlZNIGRyaXZl
+ciANCj4oZGlyZWN0b3J5IGRyaXZlcnMvbGlnaHRudm0gaW4gdGhlIExpbnV4IGtlcm5lbCB0cmVl
+KS4gVGhpcyBkcml2ZXIgDQo+bmFtZWx5IGltcGxlbWVudHMgYW4gRlRMLg0KDQpIZWxsbyBCYXJ0
+LA0KDQoNClRoYW5rIHlvdSBmb3IgeW91ciBjb21tZW50cy4NCg0KSSB0b3RhbGx5IGFncmVlIHdp
+dGggeW91IHRoYXQgdHJ5aW5nIHRvIHN1cHBvcnQgU01SIGRpc2tzIGJ5IG9ubHkgbW9kaWZ5aW5n
+DQp0aGUgcGFnZSBjYWNoZSBzbyB0aGF0IHVubW9kaWZpZWQgc3RhbmRhcmQgZmlsZSBzeXN0ZW1z
+IGxpa2UgQlRSRlMgb3IgZXh0NA0KcmVtYWluIG9wZXJhdGlvbmFsIGlzIG5vdCByZWFsaXN0aWMg
+YXQgYmVzdCwgYW5kIG1vcmUgbGlrZWx5IHNpbXBseSBpbXBvc3NpYmxlLg0KRm9yIHRoaXMga2lu
+ZCBvZiB1c2UgY2FzZSwgYXMgeW91IHNhaWQsIGFuIEZUTCBvciBhIGRldmljZSBtYXBwZXIgZHJp
+dmVyIGFyZQ0KbXVjaCBtb3JlIHN1aXRhYmxlLg0KDQpUaGUgY2FzZSBJIGFtIGNvbnNpZGVyaW5n
+IGZvciB0aGlzIGRpc2N1c3Npb24gaXMgZm9yIHJhdyBibG9jayBkZXZpY2UgYWNjZXNzZXMNCmJ5
+IGFuIGFwcGxpY2F0aW9uICh3cml0ZXMgZnJvbSB1c2VyIHNwYWNlIHRvIC9kZXYvc2R4eCkuIFRo
+aXMgaXMgYSB2ZXJ5IGxpa2VseQ0KdXNlIGNhc2Ugc2NlbmFyaW8gZm9yIGhpZ2ggY2FwYWNpdHkg
+U01SIGRpc2tzIHdpdGggYXBwbGljYXRpb25zIGxpa2UgZGlzdHJpYnV0ZWQNCm9iamVjdCBzdG9y
+ZXMgLyBrZXkgdmFsdWUgc3RvcmVzLg0KDQpJbiB0aGlzIGNhc2UsIHdyaXRlLWJhY2sgb2YgZGly
+dHkgcGFnZXMgaW4gdGhlIGJsb2NrIGRldmljZSBmaWxlIGlub2RlIG1hcHBpbmcNCmlzIGhhbmRs
+ZWQgaW4gZnMvYmxvY2tfZGV2LmMgdXNpbmcgdGhlIGdlbmVyaWMgaGVscGVyIGZ1bmN0aW9uIGdl
+bmVyaWNfd3JpdGVwYWdlcy4NClRoaXMgZG9lcyBub3QgZ3VhcmFudGVlIHRoZSBnZW5lcmF0aW9u
+IG9mIHRoZSByZXF1aXJlZCBzZXF1ZW50aWFsIHdyaXRlIHBhdHRlcm4NCnBlciB6b25lIG5lY2Vz
+c2FyeSBmb3IgaG9zdC1tYW5hZ2VkIGRpc2tzLiBBcyBJIGV4cGxhaW5lZCwgYWxpZ25pbmcgY2Fs
+bHMgb2YgdGhpcw0KZnVuY3Rpb24gdG8gem9uZSBib3VuZGFyaWVzIHdoaWxlIGxvY2tpbmcgdGhl
+IHpvbmVzIHVuZGVyIHdyaXRlLWJhY2sgc29sdmVzDQpzaW1wbHkgdGhlIHByb2JsZW0gKGltcGxl
+bWVudGVkIGFuZCB0ZXN0ZWQpLiBUaGlzIGlzIG9mIGNvdXJzZSBvbmx5IG9uZSBwb3NzaWJsZQ0K
+c29sdXRpb24uIFB1c2hpbmcgbW9kaWZpY2F0aW9ucyBkZWVwZXIgaW4gdGhlIGNvZGUgb3IgcHJv
+dmlkaW5nIGENCiJnZW5lcmljX3NlcXVlbnRpYWxfd3JpdGVwYWdlcyIgaGVscGVyIGZ1bmN0aW9u
+IGFyZSBvdGhlciBwb3RlbnRpYWwgc29sdXRpb25zDQp0aGF0IGluIG15IG9waW5pb24gYXJlIHdv
+cnRoIGRpc2N1c3NpbmcgYXMgb3RoZXIgdHlwZXMgb2YgZGV2aWNlcyBtYXkgYmVuZWZpdCBhbHNv
+DQppbiB0ZXJtcyBvZiBwZXJmb3JtYW5jZSAoZS5nLiByZWd1bGFyIGRpc2sgZHJpdmVzIHByZWZl
+ciBzZXF1ZW50aWFsIHdyaXRlcywgYW5kDQpTU0RzIGFzIHdlbGwpIGFuZC9vciBsaWdodGVuIHRo
+ZSBvdmVyaGVhZCBvbiBhbiB1bmRlcmx5aW5nIEZUTCBvciBkZXZpY2UgbWFwcGVyDQpkcml2ZXIu
+DQoNCkZvciBhIGZpbGUgc3lzdGVtLCBhbiBTTVIgY29tcGxpYW50IGltcGxlbWVudGF0aW9uIG9m
+IGEgZmlsZSBpbm9kZSBtYXBwaW5nDQp3cml0ZXBhZ2VzIG1ldGhvZCBzaG91bGQgYmUgcHJvdmlk
+ZWQgYnkgdGhlIGZpbGUgc3lzdGVtIGl0c2VsZiBhcyB0aGUgc2VxdWVudGlhbGl0eQ0Kb2YgdGhl
+IHdyaXRlIHBhdHRlcm4gZGVwZW5kcyBmdXJ0aGVyIG9uIHRoZSBibG9jayBhbGxvY2F0aW9uIG1l
+Y2hhbmlzbSBvZiB0aGUgZmlsZQ0Kc3lzdGVtLg0KDQpOb3RlIHRoYXQgdGhlIGdvYWwgaGVyZSBp
+cyBub3QgdG8gaGlkZSB0byBhcHBsaWNhdGlvbnMgdGhlIHNlcXVlbnRpYWwgd3JpdGUNCmNvbnN0
+cmFpbnQgb2YgU01SIGRpc2tzLiBUaGUgcGFnZSBjYWNoZSBpdHNlbGYgKHRoZSBtYXBwaW5nIG9m
+IHRoZSBibG9jaw0KZGV2aWNlIGlub2RlKSByZW1haW5zIHVuY2hhbmdlZC4gQnV0IHRoZSBtb2Rp
+ZmljYXRpb24gcHJvcG9zZWQgZ3VhcmFudGVlcyB0aGF0DQphIHdlbGwgYmVoYXZlZCBhcHBsaWNh
+dGlvbiB3cml0aW5nIHNlcXVlbnRpYWxseSB0byB6b25lcyB0aHJvdWdoIHRoZSBwYWdlIGNhY2hl
+DQp3aWxsIHNlZSBzdWNjZXNzZnVsIHN5bmMgb3BlcmF0aW9ucy4NCg0KQmVzdCByZWdhcmRzLg0K
+DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkRhbWllbiBMZSBNb2FsLCBQaC5ELg0KU3IuIE1h
+bmFnZXIsIFN5c3RlbSBTb2Z0d2FyZSBHcm91cCwgSEdTVCBSZXNlYXJjaCwNCkhHU1QsIGEgV2Vz
+dGVybiBEaWdpdGFsIGNvbXBhbnkNCkRhbWllbi5MZU1vYWxAaGdzdC5jb20NCigrODEpIDA0NjYt
+OTgtMzU5MyAoZXh0LiA1MTM1OTMpDQoxIGtpcmloYXJhLWNobywgRnVqaXNhd2EsIA0KS2FuYWdh
+d2EsIDI1Mi0wODg4IEphcGFuDQp3d3cuaGdzdC5jb20NCldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3Jh
+dGlvbiAoYW5kIGl0cyBzdWJzaWRpYXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNl
+ICYgRGlzY2xhaW1lcjoKClRoaXMgZS1tYWlsIGFuZCBhbnkgZmlsZXMgdHJhbnNtaXR0ZWQgd2l0
+aCBpdCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9y
+bWF0aW9uIG9mIFdEQyBhbmQvb3IgaXRzIGFmZmlsaWF0ZXMsIGFuZCBhcmUgaW50ZW5kZWQgc29s
+ZWx5IGZvciB0aGUgdXNlIG9mIHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCB0aGV5
+IGFyZSBhZGRyZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIGFu
+eSBkaXNjbG9zdXJlLCBjb3B5aW5nLCBkaXN0cmlidXRpb24gb3IgYW55IGFjdGlvbiB0YWtlbiBv
+ciBvbWl0dGVkIHRvIGJlIHRha2VuIGluIHJlbGlhbmNlIG9uIGl0LCBpcyBwcm9oaWJpdGVkLiBJ
+ZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0
+aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGFuZCBkZWxldGUgdGhlIGUtbWFpbCBpbiBpdHMgZW50aXJl
+dHkgZnJvbSB5b3VyIHN5c3RlbS4K
 
-Hello Damien,
-
-Is it sufficient to support filesystems like BTRFS on top of SMR drives 
-or would you also like to see that filesystems like ext4 can use SMR 
-drives ? In the latter case: the behavior of SMR drives differs so 
-significantly from that of other block devices that I'm not sure that we 
-should try to support these directly from infrastructure like the page 
-cache. If we look e.g. at NAND SSDs then we see that the characteristics 
-of NAND do not match what filesystems expect (e.g. large erase blocks). 
-That is why every SSD vendor provides an FTL (Flash Translation Layer), 
-either inside the SSD or as a separate software driver. An FTL 
-implements a so-called LFS (log-structured filesystem). With what I know 
-about SMR this technology looks also suitable for implementation of a 
-LFS. Has it already been considered to implement an LFS driver for SMR 
-drives ? That would make it possible for any filesystem to access an SMR 
-drive as any other block device. I'm not sure of this but maybe it will 
-be possible to share some infrastructure with the LightNVM driver 
-(directory drivers/lightnvm in the Linux kernel tree). This driver 
-namely implements an FTL.
-
-Bart.
