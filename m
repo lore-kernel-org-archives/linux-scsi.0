@@ -1,34 +1,34 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/7] hpsa: do not get enclosure info for external devices
-Date: Tue, 23 Feb 2016 17:17:42 -0600
-Message-ID: <B1E584F2-3345-428D-8993-D6AB2E9D1A50@linux.vnet.ibm.com>
-References: <20160223210957.5968.6998.stgit@brunhilda> <20160223211609.5968.35948.stgit@brunhilda>
+Subject: Re: [PATCH 2/7] hpsa: add SMR drive support
+Date: Tue, 23 Feb 2016 17:21:32 -0600
+Message-ID: <C21BFCA0-85DC-4101-B9E1-F6BFB819E423@linux.vnet.ibm.com>
+References: <20160223210957.5968.6998.stgit@brunhilda> <20160223211615.5968.99389.stgit@brunhilda>
 Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:54426 "EHLO
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:54775 "EHLO
 	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384AbcBWXRt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2016 18:17:49 -0500
+	with ESMTP id S1750763AbcBWXVi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2016 18:21:38 -0500
 Received: from localhost
 	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Tue, 23 Feb 2016 18:17:48 -0500
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 59BF36E8041
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2016 18:04:37 -0500 (EST)
+	Tue, 23 Feb 2016 18:21:38 -0500
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 96A9338C804F
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2016 18:21:35 -0500 (EST)
 Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1NNHjPI24051806
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2016 23:17:45 GMT
+	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1NNLZtr23658520
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2016 23:21:35 GMT
 Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1NNHifn004763
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2016 18:17:45 -0500
-In-Reply-To: <20160223211609.5968.35948.stgit@brunhilda>
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1NNLYbM021683
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2016 18:21:34 -0500
+In-Reply-To: <20160223211615.5968.99389.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
-Cc: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, Christoph Hellwig <hch@infradead.org>, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi <linux-scsi@vger.kernel.org>
 
 Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
