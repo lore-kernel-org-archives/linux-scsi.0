@@ -1,26 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] dpt_i2o: fix build warning
-Date: Tue, 23 Feb 2016 17:44:58 -0500
-Message-ID: <yq1r3g3jbbp.fsf@sermon.lab.mkp.net>
-References: <1455784153-9615-1-git-send-email-sudipm.mukherjee@gmail.com>
+Subject: Re: [PATCH v3] mptbase: fixup error handling paths in mpt_attach()
+Date: Tue, 23 Feb 2016 17:47:15 -0500
+Message-ID: <yq1mvqrjb7w.fsf@sermon.lab.mkp.net>
+References: <1456236012-27300-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1455784153-9615-1-git-send-email-sudipm.mukherjee@gmail.com>
-	(Sudip Mukherjee's message of "Thu, 18 Feb 2016 13:59:13 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50618 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755563AbcBWWr2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2016 17:47:28 -0500
+In-Reply-To: <1456236012-27300-1-git-send-email-emilne@redhat.com> (Ewan
+	D. Milne's message of "Tue, 23 Feb 2016 09:00:12 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wuninsu@gmail.com, thenzl@redhat.com, sreekanth.reddy@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu
 
->>>>> "Sudip" == Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+>>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
 
-Sudip> We were getting build warning about:
-Sudip> drivers/scsi/dpt_i2o.c:183:29: warning: 'dptids' defined but not
-Sudip> used
-
-Sudip> dptids[] is only used in the MODULE_DEVICE_TABLE so when MODULE
-Sudip> is not defined then dptids[] becomes unused.
+Ewan> mpt_attach() was not checking for the failure to create
+Ewan> fw_event_q.  Also, iounmap() was not being called in all error
+Ewan> cases after ioremap() had been called by mpt_mapresources().
 
 Applied to 4.6/scsi-queue.
 
