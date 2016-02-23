@@ -1,68 +1,56 @@
-From: Alexandre Rossi <alexandre.rossi@gmail.com>
-Subject: Re: NULL pointer dereference: IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20
- [sr_mod]
-Date: Tue, 23 Feb 2016 00:15:53 +0100
-Message-ID: <CAM79t8ErGXsDb+8Vsn77gKOe7JPJJLNpjOEzkZktHEJvOXoZWQ@mail.gmail.com>
-References: <CAM79t8HzYT+s0BrqzZ0-Cv7khzn6CvpE5bfnJ6H9xYCx4RkS8g@mail.gmail.com>
-	<Pine.LNX.4.44L0.1602181121010.1280-100000@iolanthe.rowland.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [Announce] sg3_utils-1.42 available
+Date: Mon, 22 Feb 2016 17:05:44 -0800
+Message-ID: <56CBB068.5060106@sandisk.com>
+References: <56C54F9A.80902@interlog.com> <56C620E8.4040708@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:34885 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932248AbcBVXPy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2016 18:15:54 -0500
-Received: by mail-io0-f181.google.com with SMTP id g203so194873205iof.2
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2016 15:15:54 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.44L0.1602181121010.1280-100000@iolanthe.rowland.org>
+Received: from mail-bn1bon0054.outbound.protection.outlook.com ([157.56.111.54]:34240
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756652AbcBWBGg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Feb 2016 20:06:36 -0500
+In-Reply-To: <56C620E8.4040708@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Paul Menzel <paul.menzel@giantmonkey.de>, Erich Schubert <erich@debian.org>, Ben Hutchings <ben@decadent.org.uk>, SCSI development list <linux-scsi@vger.kernel.org>, 801925@bugs.debian.org
+To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Martin Pitt <mpitt@debian.org>, David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Hello,
-
->> > As this is Linux 4.3 and not 4.4, I guess this is a different prob=
-lem
->> > though. Alexandre, where you able to capture the stack trace? I=E2=
-=80=99d submit
->> > a new bug report with this.
+On 02/18/2016 11:52 AM, Douglas Gilbert wrote:
+> On 16-02-17 11:59 PM, Douglas Gilbert wrote:
+>> sg3_utils is a package of command line utilities for sending
+>> SCSI and some ATA commands to devices. This package targets
+>> the Linux 4, 3, 2.6 and 2.4 kernel series. It has ports to
+>> FreeBSD, Tru64, Solaris, and Windows (cygwin and MinGW).
 >>
->> Here is a photo. Please ping me if you need to test some debugging p=
-atches.
+>> There are two new utilities (sg_read_attr and sg_timestamp)
+>> and additions to many others, see the ChangeLog below. This
+>> version tracks various changes made by www.t10.org since May
+>> 2015 until January 2016.
 >
-> It looks like the problem occurs in blk_post_runtime_resume().  Since
-> there have been recent changes to this routine, it's hard to tell
-> whether you're using the most up-to-date code.
->
-> In particular, the first few lines of blk_post_runtime_resume() in
-> block/blk-core.c should look like this:
->
-> void blk_post_runtime_resume(struct request_queue *q, int err)
-> {
->         if (!q->dev)
->                 return;
->
-> The test was introduced by commit 4fd41a8552af ("SCSI: Fix NULL point=
-er
-> dereference in runtime PM"), which was added to the mainline kernel
-> between 4.3 and 4.4.  I don't know what the commit ID would be for a
-> .stable kernel.
+> Missed the links:
+> For an overview of sg3_utils and downloads see this page:
+>      http://sg.danny.cz/sg/sg3_utils.html
+> The sg_ses utility (for enclosure devices) is discussed at:
+>      http://sg.danny.cz/sg/sg_ses.html
+> A full changelog can be found at:
+>      http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-Okay now I've tried with 4.4. The oops does not occur. So this is
-fixed for me in 4.4.
+Hi Doug,
 
-If there is interest in backporting to 4.3, 13b438914341 ("SCSI: fix
-crashes in sd and sr runtime PM") is not enough to backport. Something
-in 4.4, most probably 4fd41a8552af ("SCSI: Fix NULL pointer
-dereference in runtime PM") is also needed.
+Thanks for all the work you have done for maintaining sg3_utils and also 
+for having prepared a new release. I have already downloaded version 
+v1.42 and started using that version. The detailed changelog is helpful. 
+However, I think for sg3_utils contributors it would be convenient to 
+have access to the sg3_utils source code repository such that we can see 
+all the patches that went in. Is such a repository publicly available, 
+and if not, do you have any plans to make such a repository available ? 
+Since I have a few patches ready that I would like to contribute to the 
+sg3_utils package, is there a mailing list that I should CC when sending 
+these patches to you ?
 
-Thanks a lot,
+Thanks,
 
-Alex
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
