@@ -1,38 +1,25 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH] hpsa: update MAINTAINERS with new e-mail
-Date: Tue, 23 Feb 2016 15:21:44 -0600
-Message-ID: <20160223212144.6138.55171.stgit@brunhilda>
-References: <20160223212056.6138.54238.stgit@brunhilda>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 1/2] mpt3sas: Free memory pools before retrying to allocate with different value.
+Date: Tue, 23 Feb 2016 17:38:11 -0500
+Message-ID: <yq1vb5fjbn0.fsf@sermon.lab.mkp.net>
+References: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160223212056.6138.54238.stgit@brunhilda>
+In-Reply-To: <1455784786-19086-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+	(Suganath Prabu Subramani's message of "Thu, 18 Feb 2016 14:09:45
+	+0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, Viswas.G@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, Mahesh.Rajashekhara@pmcs.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Suganath prabu Subramani <suganath-prabu.subramani@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Reviewed-by: Justin Lindley <justin.lindley@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- MAINTAINERS |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>> "Suganath" == Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com> writes:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 4978dc1..b639c26 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4985,9 +4985,9 @@ F:	Documentation/blockdev/cpqarray.txt
- F:	drivers/block/cpqarray.*
- 
- HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)
--M:	Don Brace <don.brace@pmcs.com>
-+M:	Don Brace <don.brace@microsemi.com>
- L:	iss_storagedev@hp.com
--L:	storagedev@pmcs.com
-+L:	esc.storagedev@microsemi.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	Documentation/scsi/hpsa.txt
+Suganath> Deallocate resources before reallocating of the same in
+Suganath> retry_allocation path of _base_allocate_memory_pools()
+
+Both patches applied to 4.6/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
