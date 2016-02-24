@@ -1,734 +1,369 @@
 From: mchristi@redhat.com
-Subject: [PATCH 23/35] md/raid: set bi_op to REQ_OP
-Date: Wed, 24 Feb 2016 13:48:00 -0600
-Message-ID: <1456343292-14535-24-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 28/35] blktrace: get op from req->op/bio->bi_op
+Date: Wed, 24 Feb 2016 13:48:05 -0600
+Message-ID: <1456343292-14535-29-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has md/raid set the bio bi_op to a REQ_OP, and
-rq_flag_bits to bi_rw.
+The bio and request struct now store the operation in
+bio->bi_op/request->op. This patch has blktrace not
+check bi_rw/cmd_flags.
 
-This patch is compile tested only.
+This patch is only compile tested.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/md/bitmap.c      |  2 +-
- drivers/md/dm-raid.c     |  5 +++--
- drivers/md/md.c          | 11 +++++++----
- drivers/md/md.h          |  3 ++-
- drivers/md/raid1.c       | 34 ++++++++++++++++----------------
- drivers/md/raid10.c      | 50 ++++++++++++++++++++++++++----------------------
- drivers/md/raid5-cache.c | 25 +++++++++++++++---------
- drivers/md/raid5.c       | 48 ++++++++++++++++++++++++++--------------------
- 8 files changed, 101 insertions(+), 77 deletions(-)
+ include/linux/blktrace_api.h  |  2 +-
+ include/trace/events/bcache.h | 12 ++++++----
+ include/trace/events/block.h  | 31 +++++++++++++++++---------
+ kernel/trace/blktrace.c       | 52 +++++++++++++++++++++++--------------------
+ 4 files changed, 57 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index c8e4124..6c241f8 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -160,7 +160,7 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
- 
- 		if (sync_page_io(rdev, target,
- 				 roundup(size, bdev_logical_block_size(rdev->bdev)),
--				 page, READ, true)) {
-+				 page, REQ_OP_READ, 0, true)) {
- 			page->index = index;
- 			return 0;
- 		}
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index a090121..43a749c 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -792,7 +792,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
- 	if (rdev->sb_loaded)
- 		return 0;
- 
--	if (!sync_page_io(rdev, 0, size, rdev->sb_page, READ, 1)) {
-+	if (!sync_page_io(rdev, 0, size, rdev->sb_page, REQ_OP_READ, 0, 1)) {
- 		DMERR("Failed to read superblock of device at position %d",
- 		      rdev->raid_disk);
- 		md_error(rdev->mddev, rdev);
-@@ -1646,7 +1646,8 @@ static void attempt_restore_of_faulty_devices(struct raid_set *rs)
- 	for (i = 0; i < rs->md.raid_disks; i++) {
- 		r = &rs->dev[i].rdev;
- 		if (test_bit(Faulty, &r->flags) && r->sb_page &&
--		    sync_page_io(r, 0, r->sb_size, r->sb_page, READ, 1)) {
-+		    sync_page_io(r, 0, r->sb_size, r->sb_page, REQ_OP_READ, 0,
-+				 1)) {
- 			DMINFO("Faulty %s device #%d has readable super block."
- 			       "  Attempting to revive it.",
- 			       rs->raid_type->name, i);
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6f6102e..8cdd37f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -391,6 +391,7 @@ static void submit_flushes(struct work_struct *ws)
- 			bi->bi_end_io = md_end_flush;
- 			bi->bi_private = rdev;
- 			bi->bi_bdev = rdev->bdev;
-+			bi->bi_op = REQ_OP_WRITE;
- 			bi->bi_rw = WRITE_FLUSH;
- 			atomic_inc(&mddev->flush_pending);
- 			submit_bio(bi);
-@@ -737,6 +738,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	bio_add_page(bio, page, size, 0);
- 	bio->bi_private = rdev;
- 	bio->bi_end_io = super_written;
-+	bio->bi_op = REQ_OP_WRITE;
- 	bio->bi_rw = WRITE_FLUSH_FUA;
- 
- 	atomic_inc(&mddev->pending_writes);
-@@ -750,14 +752,15 @@ void md_super_wait(struct mddev *mddev)
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index afc1343..ee25ba4 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -109,7 +109,7 @@ static inline int blk_cmd_buf_len(struct request *rq)
  }
  
- int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
--		 struct page *page, int rw, bool metadata_op)
-+		 struct page *page, int op, int op_flags, bool metadata_op)
+ extern void blk_dump_cmd(char *buf, struct request *rq);
+-extern void blk_fill_rwbs(char *rwbs, u32 rw, int bytes);
++extern void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes);
+ 
+ #endif /* CONFIG_EVENT_TRACING && CONFIG_BLOCK */
+ 
+diff --git a/include/trace/events/bcache.h b/include/trace/events/bcache.h
+index 981acf7..8abe564 100644
+--- a/include/trace/events/bcache.h
++++ b/include/trace/events/bcache.h
+@@ -27,7 +27,8 @@ DECLARE_EVENT_CLASS(bcache_request,
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->orig_sector	= bio->bi_iter.bi_sector - 16;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u (from %d,%d @ %llu)",
+@@ -101,7 +102,8 @@ DECLARE_EVENT_CLASS(bcache_bio,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d  %s %llu + %u",
+@@ -136,7 +138,8 @@ TRACE_EVENT(bcache_read,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		__entry->cache_hit = hit;
+ 		__entry->bypass = bypass;
+ 	),
+@@ -167,7 +170,8 @@ TRACE_EVENT(bcache_write,
+ 		__entry->inode		= inode;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		__entry->writeback = writeback;
+ 		__entry->bypass = bypass;
+ 	),
+diff --git a/include/trace/events/block.h b/include/trace/events/block.h
+index e8a5eca..4416dcd 100644
+--- a/include/trace/events/block.h
++++ b/include/trace/events/block.h
+@@ -84,7 +84,8 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
+ 					0 : blk_rq_sectors(rq);
+ 		__entry->errors    = rq->errors;
+ 
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 	),
+ 
+@@ -162,7 +163,7 @@ TRACE_EVENT(block_rq_complete,
+ 		__entry->nr_sector = nr_bytes >> 9;
+ 		__entry->errors    = rq->errors;
+ 
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, nr_bytes);
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags, nr_bytes);
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 	),
+ 
+@@ -198,7 +199,8 @@ DECLARE_EVENT_CLASS(block_rq,
+ 		__entry->bytes     = (rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
+ 					blk_rq_bytes(rq) : 0;
+ 
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+@@ -272,7 +274,8 @@ TRACE_EVENT(block_bio_bounce,
+ 					  bio->bi_bdev->bd_dev : 0;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -310,7 +313,8 @@ TRACE_EVENT(block_bio_complete,
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+ 		__entry->error		= error;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u [%d]",
+@@ -337,7 +341,8 @@ DECLARE_EVENT_CLASS(block_bio_merge,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -404,7 +409,8 @@ TRACE_EVENT(block_bio_queue,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -432,7 +438,7 @@ DECLARE_EVENT_CLASS(block_get_rq,
+ 		__entry->dev		= bio ? bio->bi_bdev->bd_dev : 0;
+ 		__entry->sector		= bio ? bio->bi_iter.bi_sector : 0;
+ 		__entry->nr_sector	= bio ? bio_sectors(bio) : 0;
+-		blk_fill_rwbs(__entry->rwbs,
++		blk_fill_rwbs(__entry->rwbs, bio ? bio->bi_op : 0,
+ 			      bio ? bio->bi_rw : 0, __entry->nr_sector);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+         ),
+@@ -567,7 +573,8 @@ TRACE_EVENT(block_split,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->new_sector	= new_sector;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -610,7 +617,8 @@ TRACE_EVENT(block_bio_remap,
+ 		__entry->nr_sector	= bio_sectors(bio);
+ 		__entry->old_dev	= dev;
+ 		__entry->old_sector	= from;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu",
+@@ -656,7 +664,8 @@ TRACE_EVENT(block_rq_remap,
+ 		__entry->old_dev	= dev;
+ 		__entry->old_sector	= from;
+ 		__entry->nr_bios	= blk_rq_count_bios(rq);
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu %u",
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 2aeb6ff..4a9ac83 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -199,7 +199,8 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
+  * blk_io_trace structure and places it in a per-cpu subbuffer.
+  */
+ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+-		     int rw, u32 what, int error, int pdu_len, void *pdu_data)
++		     int op, int op_flags, u32 what, int error, int pdu_len,
++		     void *pdu_data)
  {
- 	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, rdev->mddev);
- 	int ret;
+ 	struct task_struct *tsk = current;
+ 	struct ring_buffer_event *event = NULL;
+@@ -214,13 +215,14 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
+ 		return;
  
- 	bio->bi_bdev = (metadata_op && rdev->meta_bdev) ?
- 		rdev->meta_bdev : rdev->bdev;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	if (metadata_op)
- 		bio->bi_iter.bi_sector = sector + rdev->sb_start;
- 	else if (rdev->mddev->reshape_position != MaxSector &&
-@@ -783,7 +786,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
- 	if (rdev->sb_loaded)
- 		return 0;
+-	what |= ddir_act[rw & WRITE];
+-	what |= MASK_TC_BIT(rw, SYNC);
+-	what |= MASK_TC_BIT(rw, RAHEAD);
+-	what |= MASK_TC_BIT(rw, META);
+-	what |= MASK_TC_BIT(rw, DISCARD);
+-	what |= MASK_TC_BIT(rw, FLUSH);
+-	what |= MASK_TC_BIT(rw, FUA);
++	what |= ddir_act[op_is_write(op) ? WRITE : READ];
++	what |= MASK_TC_BIT(op_flags, SYNC);
++	what |= MASK_TC_BIT(op_flags, RAHEAD);
++	what |= MASK_TC_BIT(op_flags, META);
++	what |= MASK_TC_BIT(op_flags, FLUSH);
++	what |= MASK_TC_BIT(op_flags, FUA);
++	if (op == REQ_OP_DISCARD)
++		what |= BLK_TC_ACT(BLK_TC_DISCARD);
  
--	if (!sync_page_io(rdev, 0, size, rdev->sb_page, READ, true))
-+	if (!sync_page_io(rdev, 0, size, rdev->sb_page, REQ_OP_READ, 0, true))
- 		goto fail;
- 	rdev->sb_loaded = 1;
- 	return 0;
-@@ -1469,7 +1472,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 			return -EINVAL;
- 		bb_sector = (long long)offset;
- 		if (!sync_page_io(rdev, bb_sector, sectors << 9,
--				  rdev->bb_page, READ, true))
-+				  rdev->bb_page, REQ_OP_READ, 0, true))
- 			return -EIO;
- 		bbp = (u64 *)page_address(rdev->bb_page);
- 		rdev->badblocks.shift = sb->bblog_shift;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b5c4be7..2e0918f 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -618,7 +618,8 @@ extern void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 			   sector_t sector, int size, struct page *page);
- extern void md_super_wait(struct mddev *mddev);
- extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
--			struct page *page, int rw, bool metadata_op);
-+			struct page *page, int op, int op_flags,
-+			bool metadata_op);
- extern void md_do_sync(struct md_thread *thread);
- extern void md_new_event(struct mddev *mddev);
- extern int md_allow_write(struct mddev *mddev);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f2d9c01..150df76 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -759,7 +759,7 @@ static void flush_pending_writes(struct r1conf *conf)
- 		while (bio) { /* submit pending writes */
- 			struct bio *next = bio->bi_next;
- 			bio->bi_next = NULL;
--			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
-+			if (unlikely((bio->bi_op == REQ_OP_DISCARD) &&
- 			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 				/* Just ignore it */
- 				bio_endio(bio);
-@@ -1033,7 +1033,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 	while (bio) { /* submit pending writes */
- 		struct bio *next = bio->bi_next;
- 		bio->bi_next = NULL;
--		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
-+		if (unlikely((bio->bi_op == REQ_OP_DISCARD) &&
- 		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 			/* Just ignore it */
- 			bio_endio(bio);
-@@ -1053,12 +1053,11 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
- 	int i, disks;
- 	struct bitmap *bitmap;
- 	unsigned long flags;
-+	const int op = bio->bi_op;
- 	const int rw = bio_data_dir(bio);
- 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
- 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
--	const unsigned long do_discard = (bio->bi_rw
--					  & (REQ_DISCARD | REQ_SECURE));
--	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
-+	const unsigned long do_sec = (bio->bi_rw & REQ_SECURE);
- 	struct md_rdev *blocked_rdev;
- 	struct blk_plug_cb *cb;
- 	struct raid1_plug_cb *plug = NULL;
-@@ -1166,7 +1165,8 @@ read_again:
- 			mirror->rdev->data_offset;
- 		read_bio->bi_bdev = mirror->rdev->bdev;
- 		read_bio->bi_end_io = raid1_end_read_request;
--		read_bio->bi_rw = READ | do_sync;
-+		read_bio->bi_op = op;
-+		read_bio->bi_rw = do_sync;
- 		read_bio->bi_private = r1_bio;
+ 	pid = tsk->pid;
+ 	if (act_log_check(bt, what, sector, pid))
+@@ -708,11 +710,11 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
  
- 		if (max_sectors < r1_bio->sectors) {
-@@ -1376,8 +1376,9 @@ read_again:
- 				   conf->mirrors[i].rdev->data_offset);
- 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
- 		mbio->bi_end_io	= raid1_end_write_request;
-+		mbio->bi_op = op;
- 		mbio->bi_rw =
--			WRITE | do_flush_fua | do_sync | do_discard | do_same;
-+			do_flush_fua | do_sync | do_sec;
- 		mbio->bi_private = r1_bio;
- 
- 		atomic_inc(&r1_bio->remaining);
-@@ -1771,7 +1772,7 @@ static void end_sync_write(struct bio *bio)
- static int r1_sync_page_io(struct md_rdev *rdev, sector_t sector,
- 			    int sectors, struct page *page, int rw)
- {
--	if (sync_page_io(rdev, sector, sectors << 9, page, rw, false))
-+	if (sync_page_io(rdev, sector, sectors << 9, page, rw, 0, false))
- 		/* success */
- 		return 1;
- 	if (rw == WRITE) {
-@@ -1825,7 +1826,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 				rdev = conf->mirrors[d].rdev;
- 				if (sync_page_io(rdev, sect, s<<9,
- 						 bio->bi_io_vec[idx].bv_page,
--						 READ, false)) {
-+						 REQ_OP_READ, 0, false)) {
- 					success = 1;
- 					break;
- 				}
-@@ -2030,7 +2031,7 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
- 		      !test_bit(MD_RECOVERY_SYNC, &mddev->recovery))))
- 			continue;
- 
--		wbio->bi_rw = WRITE;
-+		wbio->bi_op = REQ_OP_WRITE;
- 		wbio->bi_end_io = end_sync_write;
- 		atomic_inc(&r1_bio->remaining);
- 		md_sync_acct(conf->mirrors[i].rdev->bdev, bio_sectors(wbio));
-@@ -2090,7 +2091,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
- 			    is_badblock(rdev, sect, s,
- 					&first_bad, &bad_sectors) == 0 &&
- 			    sync_page_io(rdev, sect, s<<9,
--					 conf->tmppage, READ, false))
-+					 conf->tmppage, REQ_OP_READ, 0, false))
- 				success = 1;
- 			else {
- 				d++;
-@@ -2201,7 +2202,7 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
- 			wbio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
- 		}
- 
--		wbio->bi_rw = WRITE;
-+		wbio->bi_op = REQ_OP_WRITE;
- 		wbio->bi_iter.bi_sector = r1_bio->sector;
- 		wbio->bi_iter.bi_size = r1_bio->sectors << 9;
- 
-@@ -2343,7 +2344,8 @@ read_more:
- 		bio->bi_iter.bi_sector = r1_bio->sector + rdev->data_offset;
- 		bio->bi_bdev = rdev->bdev;
- 		bio->bi_end_io = raid1_end_read_request;
--		bio->bi_rw = READ | do_sync;
-+		bio->bi_op = REQ_OP_READ;
-+		bio->bi_rw = do_sync;
- 		bio->bi_private = r1_bio;
- 		if (max_sectors < r1_bio->sectors) {
- 			/* Drat - have to split this up more */
-@@ -2569,7 +2571,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			if (i < conf->raid_disks)
- 				still_degraded = 1;
- 		} else if (!test_bit(In_sync, &rdev->flags)) {
--			bio->bi_rw = WRITE;
-+			bio->bi_op = REQ_OP_WRITE;
- 			bio->bi_end_io = end_sync_write;
- 			write_targets ++;
- 		} else {
-@@ -2596,7 +2598,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 					if (disk < 0)
- 						disk = i;
- 				}
--				bio->bi_rw = READ;
-+				bio->bi_op = REQ_OP_READ;
- 				bio->bi_end_io = end_sync_read;
- 				read_targets++;
- 			} else if (!test_bit(WriteErrorSeen, &rdev->flags) &&
-@@ -2608,7 +2610,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				 * if we are doing resync or repair. Otherwise, leave
- 				 * this device alone for this sync request.
- 				 */
--				bio->bi_rw = WRITE;
-+				bio->bi_op = REQ_OP_WRITE;
- 				bio->bi_end_io = end_sync_write;
- 				write_targets++;
- 			}
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index d0d84f3..871edf6 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -865,7 +865,7 @@ static void flush_pending_writes(struct r10conf *conf)
- 		while (bio) { /* submit pending writes */
- 			struct bio *next = bio->bi_next;
- 			bio->bi_next = NULL;
--			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
-+			if (unlikely((bio->bi_op ==  REQ_OP_DISCARD) &&
- 			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 				/* Just ignore it */
- 				bio_endio(bio);
-@@ -1041,7 +1041,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 	while (bio) { /* submit pending writes */
- 		struct bio *next = bio->bi_next;
- 		bio->bi_next = NULL;
--		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
-+		if (unlikely((bio->bi_op ==  REQ_OP_DISCARD) &&
- 		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 			/* Just ignore it */
- 			bio_endio(bio);
-@@ -1058,12 +1058,11 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 	struct r10bio *r10_bio;
- 	struct bio *read_bio;
- 	int i;
-+	const int op = bio->bi_op;
- 	const int rw = bio_data_dir(bio);
- 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
- 	const unsigned long do_fua = (bio->bi_rw & REQ_FUA);
--	const unsigned long do_discard = (bio->bi_rw
--					  & (REQ_DISCARD | REQ_SECURE));
--	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
-+	const unsigned long do_sec = (bio->bi_rw & REQ_SECURE);
- 	unsigned long flags;
- 	struct md_rdev *blocked_rdev;
- 	struct blk_plug_cb *cb;
-@@ -1156,7 +1155,8 @@ read_again:
- 			choose_data_offset(r10_bio, rdev);
- 		read_bio->bi_bdev = rdev->bdev;
- 		read_bio->bi_end_io = raid10_end_read_request;
--		read_bio->bi_rw = READ | do_sync;
-+		read_bio->bi_op = op;
-+		read_bio->bi_rw = do_sync;
- 		read_bio->bi_private = r10_bio;
- 
- 		if (max_sectors < r10_bio->sectors) {
-@@ -1363,8 +1363,9 @@ retry_write:
- 							      rdev));
- 			mbio->bi_bdev = rdev->bdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
-+			mbio->bi_op = op;
- 			mbio->bi_rw =
--				WRITE | do_sync | do_fua | do_discard | do_same;
-+				do_sync | do_fua | do_sec;
- 			mbio->bi_private = r10_bio;
- 
- 			atomic_inc(&r10_bio->remaining);
-@@ -1406,8 +1407,9 @@ retry_write:
- 						   r10_bio, rdev));
- 			mbio->bi_bdev = rdev->bdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
-+			mbio->bi_op = op;
- 			mbio->bi_rw =
--				WRITE | do_sync | do_fua | do_discard | do_same;
-+				do_sync | do_fua | do_sec;
- 			mbio->bi_private = r10_bio;
- 
- 			atomic_inc(&r10_bio->remaining);
-@@ -1992,7 +1994,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 
- 		tbio->bi_vcnt = vcnt;
- 		tbio->bi_iter.bi_size = fbio->bi_iter.bi_size;
--		tbio->bi_rw = WRITE;
-+		tbio->bi_op = REQ_OP_WRITE;
- 		tbio->bi_private = r10_bio;
- 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
- 		tbio->bi_end_io = end_sync_write;
-@@ -2078,7 +2080,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
- 				  addr,
- 				  s << 9,
- 				  bio->bi_io_vec[idx].bv_page,
--				  READ, false);
-+				  REQ_OP_READ, 0, false);
- 		if (ok) {
- 			rdev = conf->mirrors[dw].rdev;
- 			addr = r10_bio->devs[1].addr + sect;
-@@ -2086,7 +2088,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
- 					  addr,
- 					  s << 9,
- 					  bio->bi_io_vec[idx].bv_page,
--					  WRITE, false);
-+					  REQ_OP_WRITE, 0, false);
- 			if (!ok) {
- 				set_bit(WriteErrorSeen, &rdev->flags);
- 				if (!test_and_set_bit(WantReplacement,
-@@ -2213,7 +2215,7 @@ static int r10_sync_page_io(struct md_rdev *rdev, sector_t sector,
- 	if (is_badblock(rdev, sector, sectors, &first_bad, &bad_sectors)
- 	    && (rw == READ || test_bit(WriteErrorSeen, &rdev->flags)))
- 		return -1;
--	if (sync_page_io(rdev, sector, sectors << 9, page, rw, false))
-+	if (sync_page_io(rdev, sector, sectors << 9, page, rw, 0, false))
- 		/* success */
- 		return 1;
- 	if (rw == WRITE) {
-@@ -2299,7 +2301,8 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
- 						       r10_bio->devs[sl].addr +
- 						       sect,
- 						       s<<9,
--						       conf->tmppage, READ, false);
-+						       conf->tmppage,
-+						       REQ_OP_READ, 0, false);
- 				rdev_dec_pending(rdev, mddev);
- 				rcu_read_lock();
- 				if (success)
-@@ -2474,7 +2477,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
- 				   choose_data_offset(r10_bio, rdev) +
- 				   (sector - r10_bio->sector));
- 		wbio->bi_bdev = rdev->bdev;
--		wbio->bi_rw = WRITE;
-+		wbio->bi_op = REQ_OP_WRITE;
- 
- 		if (submit_bio_wait(wbio) < 0)
- 			/* Failure! */
-@@ -2550,7 +2553,8 @@ read_more:
- 	bio->bi_iter.bi_sector = r10_bio->devs[slot].addr
- 		+ choose_data_offset(r10_bio, rdev);
- 	bio->bi_bdev = rdev->bdev;
--	bio->bi_rw = READ | do_sync;
-+	bio->bi_op = REQ_OP_READ;
-+	bio->bi_rw = do_sync;
- 	bio->bi_private = r10_bio;
- 	bio->bi_end_io = raid10_end_read_request;
- 	if (max_sectors < r10_bio->sectors) {
-@@ -3037,7 +3041,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				biolist = bio;
- 				bio->bi_private = r10_bio;
- 				bio->bi_end_io = end_sync_read;
--				bio->bi_rw = READ;
-+				bio->bi_op = REQ_OP_READ;
- 				from_addr = r10_bio->devs[j].addr;
- 				bio->bi_iter.bi_sector = from_addr +
- 					rdev->data_offset;
-@@ -3063,7 +3067,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 					biolist = bio;
- 					bio->bi_private = r10_bio;
- 					bio->bi_end_io = end_sync_write;
--					bio->bi_rw = WRITE;
-+					bio->bi_op = REQ_OP_WRITE;
- 					bio->bi_iter.bi_sector = to_addr
- 						+ rdev->data_offset;
- 					bio->bi_bdev = rdev->bdev;
-@@ -3092,7 +3096,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				biolist = bio;
- 				bio->bi_private = r10_bio;
- 				bio->bi_end_io = end_sync_write;
--				bio->bi_rw = WRITE;
-+				bio->bi_op = REQ_OP_WRITE;
- 				bio->bi_iter.bi_sector = to_addr +
- 					rdev->data_offset;
- 				bio->bi_bdev = rdev->bdev;
-@@ -3212,7 +3216,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			biolist = bio;
- 			bio->bi_private = r10_bio;
- 			bio->bi_end_io = end_sync_read;
--			bio->bi_rw = READ;
-+			bio->bi_op = REQ_OP_READ;
- 			bio->bi_iter.bi_sector = sector +
- 				conf->mirrors[d].rdev->data_offset;
- 			bio->bi_bdev = conf->mirrors[d].rdev->bdev;
-@@ -3234,7 +3238,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			biolist = bio;
- 			bio->bi_private = r10_bio;
- 			bio->bi_end_io = end_sync_write;
--			bio->bi_rw = WRITE;
-+			bio->bi_op = REQ_OP_WRITE;
- 			bio->bi_iter.bi_sector = sector +
- 				conf->mirrors[d].replacement->data_offset;
- 			bio->bi_bdev = conf->mirrors[d].replacement->bdev;
-@@ -4317,7 +4321,7 @@ read_more:
- 			       + rdev->data_offset);
- 	read_bio->bi_private = r10_bio;
- 	read_bio->bi_end_io = end_sync_read;
--	read_bio->bi_rw = READ;
-+	read_bio->bi_op = REQ_OP_READ;
- 	read_bio->bi_flags &= (~0UL << BIO_RESET_BITS);
- 	read_bio->bi_error = 0;
- 	read_bio->bi_vcnt = 0;
-@@ -4351,7 +4355,7 @@ read_more:
- 			rdev2->new_data_offset;
- 		b->bi_private = r10_bio;
- 		b->bi_end_io = end_reshape_write;
--		b->bi_rw = WRITE;
-+		b->bi_op = REQ_OP_WRITE;
- 		b->bi_next = blist;
- 		blist = b;
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		what |= BLK_TC_ACT(BLK_TC_PC);
+-		__blk_add_trace(bt, 0, nr_bytes, rq->cmd_flags,
++		__blk_add_trace(bt, 0, nr_bytes, rq->op, rq->cmd_flags,
+ 				what, rq->errors, rq->cmd_len, rq->cmd);
+ 	} else  {
+ 		what |= BLK_TC_ACT(BLK_TC_FS);
+-		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes,
++		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes, rq->op,
+ 				rq->cmd_flags, what, rq->errors, 0, NULL);
  	}
-@@ -4519,7 +4523,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
- 					       addr,
- 					       s << 9,
- 					       bvec[idx].bv_page,
--					       READ, false);
-+					       REQ_OP_READ, 0, false);
- 			if (success)
- 				break;
- 		failed:
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 2d56fdc..da07670 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -261,7 +261,7 @@ static struct bio *r5l_bio_alloc(struct r5l_log *log)
- {
- 	struct bio *bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, log->bs);
- 
--	bio->bi_rw = WRITE;
-+	bio->bi_op = REQ_OP_WRITE;
- 	bio->bi_bdev = log->rdev->bdev;
- 	bio->bi_iter.bi_sector = log->rdev->data_offset + log->log_start;
- 
-@@ -686,6 +686,7 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
- 	bio_reset(&log->flush_bio);
- 	log->flush_bio.bi_bdev = log->rdev->bdev;
- 	log->flush_bio.bi_end_io = r5l_log_flush_endio;
-+	log->flush_bio.bi_op = REQ_OP_WRITE;
- 	log->flush_bio.bi_rw = WRITE_FLUSH;
- 	submit_bio(&log->flush_bio);
  }
-@@ -882,7 +883,8 @@ static int r5l_read_meta_block(struct r5l_log *log,
- 	struct r5l_meta_block *mb;
- 	u32 crc, stored_crc;
- 
--	if (!sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page, READ, false))
-+	if (!sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page, REQ_OP_READ, 0,
-+			  false))
- 		return -EIO;
- 
- 	mb = page_address(page);
-@@ -927,7 +929,8 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 					     &disk_index, sh);
- 
- 			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
--				     sh->dev[disk_index].page, READ, false);
-+				     sh->dev[disk_index].page, REQ_OP_READ, 0,
-+				     false);
- 			sh->dev[disk_index].log_checksum =
- 				le32_to_cpu(payload->checksum[0]);
- 			set_bit(R5_Wantwrite, &sh->dev[disk_index].flags);
-@@ -935,7 +938,8 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 		} else {
- 			disk_index = sh->pd_idx;
- 			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
--				     sh->dev[disk_index].page, READ, false);
-+				     sh->dev[disk_index].page, REQ_OP_READ, 0,
-+				     false);
- 			sh->dev[disk_index].log_checksum =
- 				le32_to_cpu(payload->checksum[0]);
- 			set_bit(R5_Wantwrite, &sh->dev[disk_index].flags);
-@@ -945,7 +949,7 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 				sync_page_io(log->rdev,
- 					     r5l_ring_add(log, *log_offset, BLOCK_SECTORS),
- 					     PAGE_SIZE, sh->dev[disk_index].page,
--					     READ, false);
-+					     REQ_OP_READ, 0, false);
- 				sh->dev[disk_index].log_checksum =
- 					le32_to_cpu(payload->checksum[1]);
- 				set_bit(R5_Wantwrite,
-@@ -987,11 +991,13 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 		rdev = rcu_dereference(conf->disks[disk_index].rdev);
- 		if (rdev)
- 			sync_page_io(rdev, stripe_sect, PAGE_SIZE,
--				     sh->dev[disk_index].page, WRITE, false);
-+				     sh->dev[disk_index].page, REQ_OP_WRITE, 0,
-+				     false);
- 		rrdev = rcu_dereference(conf->disks[disk_index].replacement);
- 		if (rrdev)
- 			sync_page_io(rrdev, stripe_sect, PAGE_SIZE,
--				     sh->dev[disk_index].page, WRITE, false);
-+				     sh->dev[disk_index].page, REQ_OP_WRITE, 0,
-+				     false);
- 	}
- 	raid5_release_stripe(sh);
- 	return 0;
-@@ -1063,7 +1069,8 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
- 	crc = crc32c_le(log->uuid_checksum, mb, PAGE_SIZE);
- 	mb->checksum = cpu_to_le32(crc);
- 
--	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, WRITE_FUA, false)) {
-+	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, REQ_OP_WRITE,
-+			  WRITE_FUA, false)) {
- 		__free_page(page);
- 		return -EIO;
- 	}
-@@ -1138,7 +1145,7 @@ static int r5l_load_log(struct r5l_log *log)
- 	if (!page)
- 		return -ENOMEM;
- 
--	if (!sync_page_io(rdev, cp, PAGE_SIZE, page, READ, false)) {
-+	if (!sync_page_io(rdev, cp, PAGE_SIZE, page, REQ_OP_READ, 0, false)) {
- 		ret = -EIO;
- 		goto ioerr;
- 	}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7f770b0..0c53ca2 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -815,7 +815,8 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 	dd_idx = 0;
- 	while (dd_idx == sh->pd_idx || dd_idx == sh->qd_idx)
- 		dd_idx++;
--	if (head->dev[dd_idx].towrite->bi_rw != sh->dev[dd_idx].towrite->bi_rw)
-+	if (head->dev[dd_idx].towrite->bi_rw != sh->dev[dd_idx].towrite->bi_rw ||
-+	    head->dev[dd_idx].towrite->bi_op != sh->dev[dd_idx].towrite->bi_op)
- 		goto unlock_out;
- 
- 	if (head->batch_head) {
-@@ -900,29 +901,32 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 	if (r5l_write_stripe(conf->log, sh) == 0)
+@@ -770,7 +772,7 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
  		return;
- 	for (i = disks; i--; ) {
--		int rw;
-+		int op;
-+		int op_flags = 0;
- 		int replace_only = 0;
- 		struct bio *bi, *rbi;
- 		struct md_rdev *rdev, *rrdev = NULL;
  
- 		sh = head_sh;
- 		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags)) {
--			if (test_and_clear_bit(R5_WantFUA, &sh->dev[i].flags))
--				rw = WRITE_FUA;
--			else
--				rw = WRITE;
-+			if (test_and_clear_bit(R5_WantFUA, &sh->dev[i].flags)) {
-+				op = REQ_OP_WRITE;
-+				op_flags = WRITE_FUA;
-+			} else {
-+				op = REQ_OP_WRITE;
-+			}
- 			if (test_bit(R5_Discard, &sh->dev[i].flags))
--				rw |= REQ_DISCARD;
-+				op = REQ_OP_DISCARD;
- 		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
--			rw = READ;
-+			op = REQ_OP_READ;
- 		else if (test_and_clear_bit(R5_WantReplace,
- 					    &sh->dev[i].flags)) {
--			rw = WRITE;
-+			op = REQ_OP_WRITE;
- 			replace_only = 1;
- 		} else
- 			continue;
- 		if (test_and_clear_bit(R5_SyncIO, &sh->dev[i].flags))
--			rw |= REQ_SYNC;
-+			op_flags |= REQ_SYNC;
+ 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio->bi_rw, what, error, 0, NULL);
++			bio->bi_op, bio->bi_rw, what, error, 0, NULL);
+ }
  
- again:
- 		bi = &sh->dev[i].req;
-@@ -936,7 +940,7 @@ again:
- 			rdev = rrdev;
- 			rrdev = NULL;
- 		}
--		if (rw & WRITE) {
-+		if (op_is_write(op)) {
- 			if (replace_only)
- 				rdev = NULL;
- 			if (rdev == rrdev)
-@@ -962,7 +966,7 @@ again:
- 		 * need to check for writes.  We never accept write errors
- 		 * on the replacement, so we don't to check rrdev.
- 		 */
--		while ((rw & WRITE) && rdev &&
-+		while (op_is_write(op) && rdev &&
- 		       test_bit(WriteErrorSeen, &rdev->flags)) {
- 			sector_t first_bad;
- 			int bad_sectors;
-@@ -1004,8 +1008,9 @@ again:
+ static void blk_add_trace_bio_bounce(void *ignore,
+@@ -818,7 +820,8 @@ static void blk_add_trace_getrq(void *ignore,
+ 		struct blk_trace *bt = q->blk_trace;
  
- 			bio_reset(bi);
- 			bi->bi_bdev = rdev->bdev;
--			bi->bi_rw = rw;
--			bi->bi_end_io = (rw & WRITE)
-+			bi->bi_op = op;
-+			bi->bi_rw = op_flags;
-+			bi->bi_end_io = op_is_write(op)
- 				? raid5_end_write_request
- 				: raid5_end_read_request;
- 			bi->bi_private = sh;
-@@ -1036,7 +1041,7 @@ again:
- 			 * If this is discard request, set bi_vcnt 0. We don't
- 			 * want to confuse SCSI because SCSI will replace payload
- 			 */
--			if (rw & REQ_DISCARD)
-+			if (op == REQ_OP_DISCARD)
- 				bi->bi_vcnt = 0;
- 			if (rrdev)
- 				set_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags);
-@@ -1056,8 +1061,9 @@ again:
- 
- 			bio_reset(rbi);
- 			rbi->bi_bdev = rrdev->bdev;
--			rbi->bi_rw = rw;
--			BUG_ON(!(rw & WRITE));
-+			rbi->bi_op = op;
-+			rbi->bi_rw = op_flags;
-+			BUG_ON(!op_is_write(op));
- 			rbi->bi_end_io = raid5_end_write_request;
- 			rbi->bi_private = sh;
- 
-@@ -1085,7 +1091,7 @@ again:
- 			 * If this is discard request, set bi_vcnt 0. We don't
- 			 * want to confuse SCSI because SCSI will replace payload
- 			 */
--			if (rw & REQ_DISCARD)
-+			if (op == REQ_OP_DISCARD)
- 				rbi->bi_vcnt = 0;
- 			if (conf->mddev->gendisk)
- 				trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
-@@ -1094,7 +1100,7 @@ again:
- 			generic_make_request(rbi);
- 		}
- 		if (!rdev && !rrdev) {
--			if (rw & WRITE)
-+			if (op_is_write(op))
- 				set_bit(STRIPE_DEGRADED, &sh->state);
- 			pr_debug("skip op %ld on disc %d for sector %llu\n",
- 				bi->bi_rw, i, (unsigned long long)sh->sector);
-@@ -1632,7 +1638,7 @@ again:
- 					set_bit(R5_WantFUA, &dev->flags);
- 				if (wbi->bi_rw & REQ_SYNC)
- 					set_bit(R5_SyncIO, &dev->flags);
--				if (wbi->bi_rw & REQ_DISCARD)
-+				if (wbi->bi_op == REQ_OP_DISCARD)
- 					set_bit(R5_Discard, &dev->flags);
- 				else {
- 					tx = async_copy_data(1, wbi, &dev->page,
-@@ -5173,7 +5179,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			return;
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, BLK_TA_GETRQ, 0, 0, NULL);
++			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_GETRQ, 0, 0,
++					NULL);
  	}
+ }
  
--	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
-+	if (unlikely(bi->bi_op == REQ_OP_DISCARD)) {
- 		make_discard_request(mddev, bi);
+@@ -833,7 +836,7 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 		struct blk_trace *bt = q->blk_trace;
+ 
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, BLK_TA_SLEEPRQ,
++			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+ 					0, 0, NULL);
+ 	}
+ }
+@@ -843,7 +846,7 @@ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
+ 	struct blk_trace *bt = q->blk_trace;
+ 
+ 	if (bt)
+-		__blk_add_trace(bt, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
++		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
+ }
+ 
+ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+@@ -860,7 +863,7 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 		else
+ 			what = BLK_TA_UNPLUG_TIMER;
+ 
+-		__blk_add_trace(bt, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
++		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
+ 	}
+ }
+ 
+@@ -874,8 +877,9 @@ static void blk_add_trace_split(void *ignore,
+ 		__be64 rpdu = cpu_to_be64(pdu);
+ 
+ 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
+-				bio->bi_iter.bi_size, bio->bi_rw, BLK_TA_SPLIT,
+-				bio->bi_error, sizeof(rpdu), &rpdu);
++				bio->bi_iter.bi_size, bio->bi_op, bio->bi_rw,
++				BLK_TA_SPLIT, bio->bi_error, sizeof(rpdu),
++				&rpdu);
+ 	}
+ }
+ 
+@@ -907,7 +911,7 @@ static void blk_add_trace_bio_remap(void *ignore,
+ 	r.sector_from = cpu_to_be64(from);
+ 
+ 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
++			bio->bi_op, bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
+ 			sizeof(r), &r);
+ }
+ 
+@@ -940,7 +944,7 @@ static void blk_add_trace_rq_remap(void *ignore,
+ 	r.sector_from = cpu_to_be64(from);
+ 
+ 	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
+-			rq_data_dir(rq), BLK_TA_REMAP, !!rq->errors,
++			rq_data_dir(rq), 0, BLK_TA_REMAP, !!rq->errors,
+ 			sizeof(r), &r);
+ }
+ 
+@@ -965,10 +969,10 @@ void blk_add_driver_data(struct request_queue *q,
  		return;
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC)
+-		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0,
++		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0, 0,
+ 				BLK_TA_DRV_DATA, rq->errors, len, data);
+ 	else
+-		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0,
++		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0, 0,
+ 				BLK_TA_DRV_DATA, rq->errors, len, data);
+ }
+ EXPORT_SYMBOL_GPL(blk_add_driver_data);
+@@ -1767,16 +1771,16 @@ void blk_dump_cmd(char *buf, struct request *rq)
  	}
+ }
+ 
+-void blk_fill_rwbs(char *rwbs, u32 rw, int bytes)
++void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes)
+ {
+ 	int i = 0;
+ 
+ 	if (rw & REQ_FLUSH)
+ 		rwbs[i++] = 'F';
+ 
+-	if (rw & WRITE)
++	if (op == REQ_OP_WRITE)
+ 		rwbs[i++] = 'W';
+-	else if (rw & REQ_DISCARD)
++	else if (op == REQ_OP_DISCARD)
+ 		rwbs[i++] = 'D';
+ 	else if (bytes)
+ 		rwbs[i++] = 'R';
 -- 
 1.8.3.1
