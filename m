@@ -1,172 +1,219 @@
-From: Helge Deller <deller@gmx.de>
-Subject: Re: [BUG] "block: make generic_make_request handle arbitrarily sized
- bios" breaks boot on parisc-linux
-Date: Wed, 24 Feb 2016 22:36:38 +0100
-Message-ID: <56CE2266.6010909@gmx.de>
-References: <227C05EC-5A1C-4FAF-89D8-4A45AF600EC4@bell.net>
- <CACVXFVOnff1sFfMH+zsoypuYwM4PokJkHeKhbxJYDDH6ZtVScg@mail.gmail.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 26/35] block: set op to REQ_OP
+Date: Thu, 25 Feb 2016 06:10:33 +0800
+Message-ID: <201602250636.ppkpGx7r%fengguang.wu@intel.com>
+References: <1456343292-14535-27-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVOnff1sFfMH+zsoypuYwM4PokJkHeKhbxJYDDH6ZtVScg@mail.gmail.com>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>, John David Anglin <dave.anglin@bell.net>
-Cc: linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-parisc List <linux-parisc@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
+Content-Type: multipart/mixed; boundary="gBBFr7Ir9EOA20Yy"
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1456343292-14535-27-git-send-email-mchristi@redhat.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, Mike Christie <mchristi@redhat.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, kbuild-all@01.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Ming Lei,
 
-On 24.02.2016 08:59, Ming Lei wrote:
-> On Wed, Feb 24, 2016 at 10:28 AM, John David Anglin
-> <dave.anglin@bell.net> wrote:
->> The following block change breaks boot on parisc-linux:
->>
->> commit 54efd50bfd873e2dbf784e0b21a8027ba4299a3e
->> Author: Kent Overstreet <kent.overstreet@gmail.com>
->> Date:   Thu Apr 23 22:37:18 2015 -0700
->>
->>    block: make generic_make_request handle arbitrarily sized bios
->>
->>    The way the block layer is currently written, it goes to great lengths
->>    to avoid having to split bios; upper layer code (such as bio_add_page())
->>    checks what the underlying device can handle and tries to always create
->>    bios that don't need to be split.
->>
->>    But this approach becomes unwieldy and eventually breaks down with
->>    stacked devices and devices with dynamic limits, and it adds a lot of
->>    complexity. If the block layer could split bios as needed, we could
->>    eliminate a lot of complexity elsewhere - particularly in stacked
->>    drivers. Code that creates bios can then create whatever size bios are
->>    convenient, and more importantly stacked drivers don't have to deal with
->>    both their own bio size limitations and the limitations of the
->>    (potentially multiple) devices underneath them.  In the future this will
->>    let us delete merge_bvec_fn and a bunch of other code.
->>
->>    We do this by adding calls to blk_queue_split() to the various
->>    make_request functions that need it - a few can already handle arbitrary
->>    size bios. Note that we add the call _after_ any call to
->>    blk_queue_bounce(); this means that blk_queue_split() and
->>    blk_recalc_rq_segments() don't need to be concerned with bouncing
->>    affecting segment merging.
->>
->>    Some make_request_fn() callbacks were simple enough to audit and verify
->>    they don't need blk_queue_split() calls. The skipped ones are:
->>
->>     * nfhd_make_request (arch/m68k/emu/nfblock.c)
->>     * axon_ram_make_request (arch/powerpc/sysdev/axonram.c)
->>     * simdisk_make_request (arch/xtensa/platforms/iss/simdisk.c)
->>     * brd_make_request (ramdisk - drivers/block/brd.c)
->>     * mtip_submit_request (drivers/block/mtip32xx/mtip32xx.c)
->>     * loop_make_request
->>     * null_queue_bio
->>     * bcache's make_request fns
->>
->>    Some others are almost certainly safe to remove now, but will be left
->>    for future patches.
->>
->>    Cc: Jens Axboe <axboe@kernel.dk>
->>    Cc: Christoph Hellwig <hch@infradead.org>
->>    Cc: Al Viro <viro@zeniv.linux.org.uk>
->>    Cc: Ming Lei <ming.lei@canonical.com>
->>    Cc: Neil Brown <neilb@suse.de>
->>    Cc: Alasdair Kergon <agk@redhat.com>
->>    Cc: Mike Snitzer <snitzer@redhat.com>
->>    Cc: dm-devel@redhat.com
->>    Cc: Lars Ellenberg <drbd-dev@lists.linbit.com>
->>    Cc: drbd-user@lists.linbit.com
->>    Cc: Jiri Kosina <jkosina@suse.cz>
->>    Cc: Geoff Levand <geoff@infradead.org>
->>    Cc: Jim Paris <jim@jtan.com>
->>    Cc: Philip Kelleher <pjk1939@linux.vnet.ibm.com>
->>    Cc: Minchan Kim <minchan@kernel.org>
->>    Cc: Nitin Gupta <ngupta@vflare.org>
->>    Cc: Oleg Drokin <oleg.drokin@intel.com>
->>    Cc: Andreas Dilger <andreas.dilger@intel.com>
->>    Acked-by: NeilBrown <neilb@suse.de> (for the 'md/md.c' bits)
->>    Acked-by: Mike Snitzer <snitzer@redhat.com>
->>    Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
->>    Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
->>    [dpark: skip more mq-based drivers, resolve merge conflicts, etc.]
->>    Signed-off-by: Dongsu Park <dpark@posteo.net>
->>    Signed-off-by: Ming Lin <ming.l@ssi.samsung.com>
->>    Signed-off-by: Jens Axboe <axboe@fb.com>
->>
->> This thread on the linux-parisc has most of the discussion and analysis:
->> http://www.spinics.net/lists/linux-parisc/msg06710.html
->>
->> Essentially, the SCSI layer underestimates the number of sg segments needed and we run off the end of the sg list and crash.
->> This happens because the protect bit is ignored.  As a result 4.3 and later kernels fail to boot.  This includes the current Debian
->> kernel for hppa.
->>
->> Hopefully, the block group can help resolve this issue.  We can help with testing if needed.
->>
-> 
-> We fixed several similar bugs, but maybe there is another one, :-(
+--gBBFr7Ir9EOA20Yy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks for your help!
+Hi Mike,
 
-> Could you apply the attached debug patch and post the log after the issue is
-> triggered?
+[auto build test WARNING on next-20160224]
+[cannot apply to dm/for-next v4.5-rc5 v4.5-rc4 v4.5-rc3 v4.5-rc5]
+[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
-Sadly I was not yet able to produce the requested output for you.
-It seems we have - probably triggered due to the block splitting itself - some kind of memory/stack
-corruption in here as well. Note, the stack grows upwards(!) on parisc, so maybe local variables
-get overwritten somehow...?
+url:    https://github.com/0day-ci/linux/commits/mchristi-redhat-com/separate-operations-from-flags-in-the-bio-request-structs/20160225-041726
+reproduce: make htmldocs
 
-First I applied your patch as is. 
-Here is the system log so far:
+All warnings (new ones prefixed by >>):
 
-[   24.940000] cdrom: Uniform CD-ROM driver Revision: 3.20
-[   25.000000] sd 3:0:6:0: [sdb] 71132960 512-byte logical blocks: (36.4 GB/33.9 GiB)
-[   25.092000] sd 3:0:5:0: [sda] Write Protect is off
-[   25.152000] sd 3:0:5:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   25.268000] sd 3:0:6:0: [sdb] Write Protect is off
-[   25.328000] sd 3:0:6:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[   25.452000]  sda: sda1 sda2 sda3 < sda5 sda6 >
-[   25.508000]  sdb: sdb1 sdb2 sdb3 < sdb5 sdb6 >
-[   25.584000] scsi_id(112): unaligned access to 0x00000000facac009 at ip=0x000000004100390b
-[   25.688000] sd 3:0:6:0: [sdb] Attached SCSI disk
-[   25.752000] sd 3:0:5:0: [sda] Attached SCSI disk
-[   25.840000] scsi_id(113): unaligned access to 0x00000000fa799009 at ip=0x000000004100390b
-[   25.972000] random: nonblocking pool is initialized
-[   26.064000] ------------[ cut here ]------------
-[   26.120000] WARNING: at /build/linux-4.4/linux-4.4.2/block/blk-merge.c:484
-[   26.200000] Modules linked in: sd_mod sr_mod cdrom ata_generic ohci_pci ehci_pci ohci_hcd ehci_hcd pata_ns87415 libata sym53c8xx scsi_transport_spi usbcore usb_common scsi_mod tulip
-[   26.396000] CPU: 0 PID: 67 Comm: systemd-udevd Not tainted 4.4.0-1-parisc64-smp #7 Debian 4.4.2-2
-[   26.504000] task: 00000000bbe96b18 ti: 00000000bbf00000 task.ti: 00000000bbf00000
-[   26.592000]
-[   26.608000]      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-[   26.664000] PSW: 00001000000001001111111100001110 Not tainted
-[   26.736000] r00-03  000000ff0804ff0e 00000000409e9280 00000000404f22a4 00000000bbf011e0
+   lib/crc32.c:148: warning: No description found for parameter 'tab)[256]'
+   lib/crc32.c:148: warning: Excess function parameter 'tab' description in 'crc32_le_generic'
+   lib/crc32.c:293: warning: No description found for parameter 'tab)[256]'
+   lib/crc32.c:293: warning: Excess function parameter 'tab' description in 'crc32_be_generic'
+   lib/crc32.c:1: warning: no structured comments found
+>> block/blk-core.c:1248: warning: No description found for parameter 'op'
+>> block/blk-core.c:1248: warning: No description found for parameter 'op'
 
-Here it stops. Usually you would see a stack backtrace now, but as I mentioned above
-maybe the stack got corrupted and as such your tracing code is not being executed.
+vim +/op +1248 block/blk-core.c
 
-Then I moved the WARN_ON behind you tracing code. With that I got:
+da8303c6 block/blk-core.c          Tejun Heo      2011-10-19  1232   * @q: request_queue to allocate request from
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1233   * op: REQ_OP_READ/REQ_OP_WRITE
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1234   * @op_flags: rq_flag_bits
+da8303c6 block/blk-core.c          Tejun Heo      2011-10-19  1235   * @bio: bio to allocate request for (can be %NULL)
+a06e05e6 block/blk-core.c          Tejun Heo      2012-06-04  1236   * @gfp_mask: allocation mask
+da8303c6 block/blk-core.c          Tejun Heo      2011-10-19  1237   *
+d0164adc block/blk-core.c          Mel Gorman     2015-11-06  1238   * Get a free request from @q.  If %__GFP_DIRECT_RECLAIM is set in @gfp_mask,
+d0164adc block/blk-core.c          Mel Gorman     2015-11-06  1239   * this function keeps retrying under memory pressure and fails iff @q is dead.
+d6344532 drivers/block/ll_rw_blk.c Nick Piggin    2005-06-28  1240   *
+da3dae54 block/blk-core.c          Masanari Iida  2014-09-09  1241   * Must be called with @q->queue_lock held and,
+a492f075 block/blk-core.c          Joe Lawrence   2014-08-28  1242   * Returns ERR_PTR on failure, with @q->queue_lock held.
+a492f075 block/blk-core.c          Joe Lawrence   2014-08-28  1243   * Returns request pointer on success, with @q->queue_lock *not held*.
+^1da177e drivers/block/ll_rw_blk.c Linus Torvalds 2005-04-16  1244   */
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1245  static struct request *get_request(struct request_queue *q, int op,
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1246  				   int op_flags, struct bio *bio,
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1247  				   gfp_t gfp_mask)
+^1da177e drivers/block/ll_rw_blk.c Linus Torvalds 2005-04-16 @1248  {
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1249  	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+450991bc drivers/block/ll_rw_blk.c Nick Piggin    2005-06-28  1250  	DEFINE_WAIT(wait);
+a051661c block/blk-core.c          Tejun Heo      2012-06-26  1251  	struct request_list *rl;
+a06e05e6 block/blk-core.c          Tejun Heo      2012-06-04  1252  	struct request *rq;
+a051661c block/blk-core.c          Tejun Heo      2012-06-26  1253  
+a051661c block/blk-core.c          Tejun Heo      2012-06-26  1254  	rl = blk_get_rl(q, bio);	/* transferred to @rq on success */
+a06e05e6 block/blk-core.c          Tejun Heo      2012-06-04  1255  retry:
+3cbf3506 block/blk-core.c          Mike Christie  2016-02-24  1256  	rq = __get_request(rl, op, op_flags, bio, gfp_mask);
 
-[   25.352000] cdrom: Uniform CD-ROM driver Revision: 3.20
-[   25.444000]  sda: sda1 sda2 sda3 < sda5 sda6 >
-[   25.496000]  sdb: sdb1 sdb2 sdb3 < sdb5 sdb6 >
-[   25.568000] sd 3:0:5:0: [sda] Attached SCSI disk
-[   25.644000] scsi_id(112): unaligned access to 0x00000000fae80009 at ip=0x000000004100390b
-[   25.752000] sd 3:0:6:0: [sdb] Attached SCSI disk
-[   25.836000] scsi_id(113): unaligned access to 0x00000000fac76009 at ip=0x000000004100390b
-[   25.988000] random: nonblocking pool is initialized
-[   26.048000] ------------[ cut here ]------------
-[   26.104000] kernel BUG at /build/linux-4.4/linux-4.4.2/include/linux/scatterlist.h:92!
-[   26.196000] CPU: 0 PID: 68 Comm: systemd-udevd Not tainted 4.4.0-1-parisc64-smp #8 Debian 4.4.2-2
-[   26.304000] task: 00000000bbeb40f8 ti: 00000000bbf08000 task.ti: 00000000bbf08000
-[   26.392000] 
-[   26.412000]      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-[   26.468000] PSW: 00001000000001001111111100001110 Not tainted
-[   26.536000] r00-03  000000ff0804ff0e 00000000bbf091e0 00000000404f228c 00000000bbf091e0
-[   26.632000] r04-07  00000000409b3a80 0000000000005000 0000000000000000 0000000000001000
-[   26.728000] r08-11  000000000000001b 00000000000001b0 00000000bfd6e0f0 00000000bbe15a60
-[   26.824000] r12-15  0000000000000000 0000000000000000 0000000000000003 000000007fa95178
+:::::: The code at line 1248 was first introduced by commit
+:::::: 1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 Linux-2.6.12-rc2
 
-Again, no stack backtrace.
+:::::: TO: Linus Torvalds <torvalds@ppc970.osdl.org>
+:::::: CC: Linus Torvalds <torvalds@ppc970.osdl.org>
 
-Maybe Dave has more luck, otherwise I'll continue to try to get some info.
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-Helge
+--gBBFr7Ir9EOA20Yy
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+H4sICIonzlYAAy5jb25maWcAjDzbcts4su/7FazMeZipOrnZjjdTp/wAgaCIEUkwBCnJfmFp
+ZDpRjS15dZlJ/v50A6R4ayi7VVMboxsg0Oh7N/TLv37x2Om4e1kdN+vV8/MP72u1rfarY/Xo
+PW2eq//zfOUlKveEL/N3gBxttqfv7zfXn2+9m3ef3n14u19/8mbVfls9e3y3fdp8PcHszW77
+r18Am6skkNPy9mYic29z8La7o3eojv+qx5efb8vrq7sfnb/bP2Si86zguVRJ6QuufJG1QFXk
+aZGXgcpilt+9qZ6frq/e4q7eNBgs4yHMC+yfd29W+/W3998/375fm10ezBnKx+rJ/n2eFyk+
+80Va6iJNVZa3n9Q547M8Y1yMYXFctH+YL8cxS8ss8Us4uS5jmdx9vgRny7uPtzQCV3HK8p+u
+00PrLZcI4Zd6WvoxKyORTPOw3etUJCKTvJSaIXwMCBdCTsN8eDp2X4ZsLsqUl4HPW2i20CIu
+lzycMt8vWTRVmczDeLwuZ5GcZCwXcEcRux+sHzJd8rQoM4AtKRjjoSgjmcBdyAfRYphNaZEX
+aZmKzKzBMtE5lyFGAxLxBP4KZKbzkodFMnPgpWwqaDS7IzkRWcIMp6ZKazmJxABFFzoVcEsO
+8IIleRkW8JU0hrsKYc8UhiEeiwxmHk1G3zBcqUuV5jIGsvggQ0AjmUxdmL6YFFNzPBYB4/ck
+ESSzjNjDfTnVw/Nanih5EDEAvnn7hKrj7WH1d/X4tlp/9/oDj9/f0F8v0kxNRGf1QC5LwbLo
+Hv4uY9Fhm3SaMyAb8O9cRPruqhk/CzgwgwZF8P558+f7l93j6bk6vP+fImGxQCYSTIv37waS
+LrMv5UJlnducFDLygXaiFEv7PW3F3CizqdGMz6jATq8w0kzK1EwkJexYx2lXfcm8FMkczoyb
+i2V+d33eNs+AD4zISuCFN29aVVmPlbnQlMaES2LRXGQaeK03rwsoWZErYrIRjhmwqojK6YNM
+B2JTQyYAuaJB0UNXRXQhywfXDOUC3LSA/p7OZ+puqHucIQJu6xJ8+XB5troMviFICXzHighk
+Vukcmezuza/b3bb6rXMj+l7PZcrJte39A4er7L5kOViWkMQLQpb4kSBhhRagQl3XbCSNFWC1
+YR/AGlHDxcD13uH05+HH4Vi9tFx8NgQgFEYsCRsBIB2qRYfHYQRMMAdNk4egZv2eqtEpy7RA
+pHaMo3nVqoA5oNJyHvpqqJy6KD7LGT15DvbDR/MRMdTK9zwidmxEed4SYGiDcD1QKEmuLwLR
+7JbM/6PQOYEXK9RkuJeGxPnmpdofKCqHD2hTpPIl7zJ6ohAiXTdtwCQkBD0M+k2bk2a6i2P9
+r7R4n68Of3lH2JK32j56h+PqePBW6/XutD1utl/bveWSz6zB5FwVSW7v8vwpvGtDzxY8+lzG
+C0+PTw249yXAusvBn6BkgRiUltMD5JzpmcYpJBFwKXDOogiVZ6wSEinPhDCYxoNzroNbApkR
+5USpnMQyNgLcrOSKFm05s/9wCWYBbq01LeDC+JbNumfl00wVqabVRij4LFUSXAG49Fxl9EHs
+ymgEzFr0YdHrog8YzUC9zY0By3x6H/zsY6D8Gx+MOC9LwBbJBDx3PTAChfQ/dlx9lNA8AuJz
+kRovylzSYE7KdTrLyjRiObr9LdSyUZeGMahmCfoxo8kDzlMMHFXWioFGuteBvogxA4C+j+mb
+aoAlm2gVFcBQsEcQLhI5zeBGZw5um9JT+sSg54LTUwaFY/sBbGpJQkSqXESR04RFAc0URgU5
+YEaPOmCTNLh8EyHYSRLCJG25mT+XcPR6UfqCkDuMCXfsCr45YVkm+zzUHAfjBl/4Qw6FJcuz
+PTEasY6M02r/tNu/rLbryhN/V1tQwQyUMUclDKaiVZX9Jc67qf10BMLGy3ls3HVy4/PYzi+N
+lh4YhZ6bidFiRrOdjhjlWeiomHS3pSM1cUlPDnEgmu8SnFIZSG7CIwf7q0BGA3vSpauyGB2F
+0IyUSSwt43W39UcRp+AXTATNUHXYQRtU/J5JV0DwCtyOepRzobVrbyKAs0mkNwQbvRkDtwbv
+DW0HGMNyohds6H1L0OYYy8Pm8gFoNoyT7GgmchIAqpmeYEcxUgkoBQu0HIyYjRvUUKnZAIjp
+BPg7l9NCFYQDBdGQcWlq15CIZyH+vAfnGR01o45NumfwlUxMQYlC5GzSLzVpS5YOt4q7gVEr
+KQNYuABGF8xazgEslku4sRaszReH5gqUBYznRZaAM5YDO3dzUUPZJwhpoMTCjURn9fH8Ih7y
+haFWy9GjZIi9uFKzQIAvmmLqZbhCzZaWvibaH2DU82wQ6YD5qnDkLSDIKa2r3wSmxAm04Khz
+IMSP8hHxwJ8w50feFxz8mp5DNAQSojjCgWtKxMVV8DqKiNEuwhgbiKfcGopwjh2ilGBUJOps
+T/8qYuUXEcgnagoRIb+Mb1tbCAiEiseJr3Fm8VJWss0k2ktQ6X0tq2UedWaCi5qA7gJyLFjm
+dwAKHGFwCerc1vUIwEzy9pw+4Wr+9s/VoXr0/rJW8XW/e9o894KQ8zERu2y0fC96M5ttlIxV
+QqFAknbyOOj5aDSSdx87Jt3Sl7jDhvImSIhA1RW9PMQEfXRimsmuwYdSUOlFgkj9YLeGG4pa
++CUYOXeRYTDimNwF9mf382wsV6hks3gxwEBO+1KIApUDHMKE126UbNEgtE4kEOyh7yKZu073
+u3V1OOz23vHHqw08n6rV8bSvDt26wAMylu9I3oD9IMcxNRkIBsoYNB+LHYbcYGFqoEHFhBqN
+OgV2DaSmMzC4jljmwN+YD77kbtcpU5lJ+jM2KoObgD1lmJc09sYRo4T3YBrAiwXNMy3oVGCi
+TJBq06Qtk998vqUd2k8XALmmnUmExfGSEplbU6tpMUEFQMwVS0kvdAZfhtOkbaA3NHTmONjs
+347xz/Q4zwqt6JA6Nn6ecHiw8UImPAQ76NhIDb52hRoRc6w7FRA8T5cfL0DLiI7iYn6fyaWT
+3nPJ+HVJp1UN0EE7Dm6qYxaqGadk1ArbUQQ0goCJgrqyo0MZ5HefuijRxwGst3wKpgJEPeFU
+HgIRUI8ZJJND0UUnf4BgEID+QO323N4Mh9W8PxLLRMZFbDJnATiz0X1/38Yh5XkU655XA1tB
+TxY9CxGBi0E5NbAi6HBDnI79a4bN/fbKpw2ExT6BDiLEimwMME5JLCBSo9YqYm7HW9WUitzG
+XORl+7GklJUppGkwx+fzCxGn+chPa8bnKgI/imV0jqrGcnIbEiGVtE4zl+ZIARpGE+C43EMc
+7dCXTkCugDUntDGTn+lAGz+YCdTjgVy60n5gvIFbQDrc59H0ZRiWTQtJK55EYf54kF1pbtlC
+bno54Hrw9oZyhOexTiMwbte9Ke0oxqUOglqUKzrV1YJ/usJHal+meKuCQIv87sN3/sH+b3DO
+gdcTgKGH0VIkjKjlmmDHDTby3BR3wLXsCq+MkL2ixvZjGaMQd+fdXJzbbCpmSWHCtNa1OO/I
+wggq1JP7q5VG5dp5nbizXQ6CoFx2NKMNmUU86fujveF60e6CthdDag7xQ3d6P+1SezOg7wJl
+FqEyUOae09x8yGiUm0FSi7vzTOE9+MK+n5W5syOl8UiRPNP2XuYyA50HDlfRc39nmhKdpjZo
+gi1bOvKzu5sPv992yxHjSJBSm90uhFnP0eORYImxiHQE6/CqH1Kl6LTYw6Sg1cSDHqcbG9e5
+DsNM0b5JYbmbDQKRZf1EhKky9EphmbkDfXa6nXWvNHfrQ2PkIchVWGTPsiIdMkVP/WpwtTHu
+W9zddrgpzjNaqZpT2RDcuQEgmTt6MQYdnFracaszJfS5H8qPHz5Q6vqhvPr0oSdSD+V1H3Ww
+Cr3MHSwzjFnCDGuDdJ1DLIWrxM10aBJalE4GUZQc9CAomAzV8sdaK3frU4ozUym7NN/ktmD+
+1WB6nd+e+5ouEfDYNyH0xCUNoHtlcF9Gfk4VJ7qcYI1Ao7NDlaeRyUDaQHj3T7X3Xlbb1dfq
+pdoeTSjMeCq93St2yfXC4TqRQisvmtd00PO2mqKvF+yr/5yq7fqHd1iv6hRLe3h0VTPxhZwp
+H5+rIbKzMm0IgEpKn/Gw7pBGfbk1601Oh+bQ3q8pl151XL/7rfspHCSyLLY1rc75th6VdqQN
+ODIDCVKRox0DuIiWxUTknz59oMOvlKM5c2uAex1MRkQQ36v16bj687ky7ZWeqQodD957T7yc
+nlcjlpiAMYxzTPrRtTML1jyTKWXObFZQFT0VW0/C4UuLxtKRFMAQ0CHX9ns23SSVtQVdYo7o
+4Vd/b9aV5+83f9s6WNtptVnXw54ai0pha1yhiFJXHCLmeZwGjlxMDuqbYV7TFV6Y5QOZxQsw
+0rboT6IGCzAczHdsAu3mwlTTKaINynt+JufOwxgEMc8c6S7gtk7OiE5zNQ0rIKiwkuRkKrSL
+hR0ETS9QJ75jtkHRB6oEAZH8Q0F/NPfau7I4pymoAmIbNlttugybPlPwluqm2/ae7NBoB/Hm
+sKa2ABcQ32OmlNyISHikNOYK0SEY0qcldcZoXcyvyM0IATSMvcPp9XW3P3a3YyHl79d8eTua
+llffVwdPbg/H/enFVIwP31b76tE77lfbAy7lgV6vvEc46+YV/9lID3s+VvuVF6RTBkpm//IP
+TPMed/9sn3erR882Rza4cnusnj0QV3NrVt4amOYyIIbnKiVG24XC3eHoBPLV/pH6jBN/93pO
+Jevj6lh5cWtLf+VKx78NlQfu77xcS2seOjyBZWTqBU5g3QcI5seJIkToUobSP7eFaa5lzZUd
+bjibLS3R6eiFdTjmSo/HjIMfqdDHMnpj3Pwlt6+n4/iDrQVN0mLMriHckOEY+V55OKXvomD3
+2n8nrwa1e5wpiwUpIRwYe7UGpqVkNs/pFBCoMFdfCIBmLphMY1narkpH5n1xybdP5i7pT/nn
+f1/ffi+nqaMrJdHcDYQdTW3Q4s6s5Rz+c/iBEFDwYZXKMsEVJ+/e0b2mHVyu05gGhHrsgKap
+pr6ZpmMexbH6xcnOtEw2syw0T73182791xAgtsaFgjAAW2DRpwbnAnu5MTIwJAQLH6fYU3Lc
+wdcq7/it8laPjxv0JFbPdtXDu0Hh0ZSzlQkWIbbAy4Lleyxsh0hKLBxuolpgeR+C4MiRyzQI
+GIXS7piFs7mjYWXh7HgMRRYzOrppWm+pDIuedF8pWM21227WB09vnjfr3dabrNZ/vT6vtr04
+AeYRq004uAvD5SZ7METr3Yt3eK3Wmydw9Fg8YT23d5C+sFb99HzcPJ22a7zDRq89npV/qxkD
+37hbtNpEYKZ06Qhbwxw9DQgur53TZyJOHd4gguP89vp3R/UEwDp2BRRssvz04cPlrWMs6ipC
+ATiXJYuvrz8tsaDBfEdRDxFjhyKyXRG5w4eMhS9Zk9EZXdB0v3r9hoxCCL/fr5paR4Wn7jdj
+MAELGSUiDScG+9VL5f15enoCm+GPbUZASyi2METGRkXcp07RJpSnDFOfjvZaVfSD9CYmAclR
+IZdlJPMcAmEI5SXrNMMgfPRyDAfPTQ8h79n/Qo8DSBwzzt9j3+vB8fTbjwO+4vOi1Q80pmPR
+wK+BhqTtk0oNfMmFnJMYCJ0yf+pQVMWCJnscO/hQxNqZWEoEBFbCp5We7QKTEwmUviduQviM
+N2EoxMZF56WUAbW30PqHME6slIE6GNgAHOIR0/TWwF0jgqt258XSlzp19V4XDqk0+WeXnzff
+7EF4qOvGaVLBBfSXrWOk9X532D0dvfDHa7V/O/e+nirw3AnZBVGYDtoze6mOpi2CCitbPzmE
+WEecccfHODue+nWzNUZ/wOLcDOrdad/T+8360UxnvJSfrz51OpFgVMxzYnQS+efR9nbyGDz9
+VNL8Da62cc5KHv8EIc4LukZ+xshjuhVcxDUCSIbD7ZfRRNHZKqniuHBq56x62R0rDKcoVtG5
+MPWmuMywND2e/fpy+Dq8EQ2Iv2rz2sNTW/DjN6+/tUZ9EJfp1cvhtP1qJtl1SF4rkqV0x9gw
+uXRQJjX8N8xrtpRd5k7LaVK3NEkdApkuqMoPAxmYgs6J2bJMsm7vmUyxvXNS0LJhnD/TTJup
+yBWYBPH4VlCXdx/cjJI9LmWPbnK6ZOXV5yRGH57W0D0s0P40U4OzVs7AYzYY7i+iG8sdVZGY
+jy1dt2f+BRxQCBAohsnYWJWw7eN+t3nsokFIlylXHdwZSercEUWaCk4ejr5ski49nwbuZ7Rn
+gzWa2qRq/LF0Ct+RfWwSlHAAV8XJF1FUZhNa3/jcnzBXW5yaRuL8CWK/EIFZzuuoYd826UAs
+1umDb/erMRiQSwA5XqVguycGsi57E2jTgO3ICVyASQsrnc+CAnZh9pdC5XQexkB4Th8HM6iB
+vikdaegAu5IcMAW2HtyEAdgyxWr9beDw6lEl2MrQoTo97kypob2pViRB0bs+b2A8lJGfCVpr
+Yl7MlV7Hx1N0eGVfrl+GlsNqeOtEmP8DLnIsgDULw0P2AQqNlERjktbvdL5BZNt/FGl+70Fm
+X8xT947jaGa97jfb418m//D4UoF9bIt6Z9OiNZa5I5SlOeiMujng7qa+yt3LK1zOW/M+E251
+/dfBLLe243uqTGiLAdglQRs6W48EmcXfzUgzwSGQcTzLqkuXhflhA0E2OdteVVzt7uOHq5uu
+bsxkWjIdl85XcNjdbL7ANK1HiwQkAKPaeKIcD7Vs+84iuVgZCahSRiiwLqPtycavqbSwvy0C
+PBNjOoTm5AGSJatKIirsaHNIvQbfQcf0z1p/6xMp80RasFnT/+FwB9HfAG7v1zR6S9kEdsOz
+MbiB+x8QNf95+vp1UBg2tDaNF9rVRDP4xQj3lcERtUpcatwuoyZ/AH2db6vq7YNti4AO4xts
+IBe+YJ/VFNqlUCzW3JVHNkAIogpHHs1i1KV/bGW5gHWh1649rNkvqv4gMg/tqeM0YNdKhg2R
+NiPGPw9eolg4qI/VdVpgFy+CAOz0ajVUuNp+7akltNpFCquMX+l0PoFA0POJfdRNJye/kPnJ
+DnslwPMglEqlFO/04MMOOwvEGAur4qNWF6dWtWDLTvhDLj8jI35hJkRKPZNHMrYC6P16qAPe
+w/96L6dj9b2Cf2BzxLt+e0R9P/VDjUv8iE97HWG4xVgsLBK+4FykLKeVn8U1rXYXhD1T88su
+m1kA02kXPtIkayIg2U/2Ap8xL/20iAL3ow7zUWDD89sPh3/f/KbThY/OrJq6tC3pWL/WlvJn
+GPqSlmxeHF66UJ4JH99IMMK3wd9NoNW9uTrXzyrUP9+Bv4pwyVz9lMZmAXzneBHjv1rmJ7/d
+8KX+QaNLjF//YEmZuW1qQ+9SZJnKQCX8IdxNpbbVk8TpegWY3W1UOMTluX30aZ7c2QcJlK4n
+EYkvtA9IHT9PZsxCUCS8/XGF4RPMM3SasTT8r3CC1NzW8CFu/aSXfGLcB5YLmYfUs9gaHJu3
+lIDAIZocoNRNeXaj9uXu8FFpPdGu0gJxBuoQIgkcjBjMChD+VAr453l1OA5ECAlghNv8UhSd
+HmnvBd9uuhl8Yp4fOuFWRd7enBUfLY64oVD8fx/XstwgDAN/pZ+QNJdesYHUDQUGTCbkwrSd
+HHLqDNMc8veVZGIwkXxMVjwS25Isa/ck9hqRAc6tcj+1T/F+hewOYGiFaiMZkHQF35tGuDJW
+qksQ3sDCeJe6PJ3USlrptgnkcgKut3zvLhU1TiAPkmNC8lnzNNFFdrVPgzMB/Bxb+p1qkxLu
+DBkiaqY4Puu8C0I07jmO1BjfuoayLOwScX4i0g+BNXrIGVXVuiZ7QRLGNXFHxEio1m9xZsmH
+lLNNxAs3FSpD8AZEMyevGsuuCpUXnUDZnMrgsJpk2QY8EhGcpamcJOFg+zobNqe3zZw9rjEY
+iS2Puck3C9WFKLGedk8YPWzZ4zoDwg7eW0Qmu7cpV/2O/i+dgtjyFZepsa6TyFrzSkAPscHI
+uEGKIhTaPVUOwoqgktOhoh56weeXcQcMl5/beP27czWTQ9YLpapMd42xPTiVrKVKPC2nqC1b
+bXj8i/MNkwVxZo2Gmn9NX0cE+44B72PajpqzLKiiTJk0PeOb3e7j+j1+jfeX8fcG0eyyKFZ5
+5Q7blBoSjhy7EzG5YMQ9wKTISgHNTfmQ1VSG0UyrtfHtwStI/JqRQiB+N2k91YUJJWB0owet
+jeUHEtAtz+HD6+x2kxo+piFsLCSiErrjj0gA4TtCCqPoKolDoXmqMgCQCGQSyYd0/yY1PUeE
+YOi3c+JB7W6713hicTqjCm8EGpT+YOdwi4O6pJ65r9DrhjQxCnVLhUk/0j73weeYnA4RrDmG
+Ch+Q6wm/ME35vQuJHYpiVxPbLBaYWzzXTkzJvDJGmIGCFID/lLLC2GdZAAA=
+
+--gBBFr7Ir9EOA20Yy
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--gBBFr7Ir9EOA20Yy--
