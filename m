@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 27/35] drivers: set request op to REQ_OP
-Date: Wed, 24 Feb 2016 13:48:04 -0600
-Message-ID: <1456343292-14535-28-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 24/35] xen: set bi_op to REQ_OP
+Date: Wed, 24 Feb 2016 13:48:01 -0600
+Message-ID: <1456343292-14535-25-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,355 +23,127 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the block drivers use the request->op for REQ_OP
-operations and cmd_flags for rq_flag_bits.
+This patch has xen set the bio bi_op to a REQ_OP, and rq_flag_bits
+to bi_rw.
 
-I have only tested scsi and rbd.
+This patch is compile tested only.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/block/loop.c              |  6 +++---
- drivers/block/mtip32xx/mtip32xx.c |  2 +-
- drivers/block/nbd.c               |  2 +-
- drivers/block/rbd.c               |  2 +-
- drivers/block/skd_main.c          | 11 ++++-------
- drivers/block/xen-blkfront.c      |  8 +++++---
- drivers/md/dm.c                   |  2 +-
- drivers/mmc/card/block.c          |  7 +++----
- drivers/mmc/card/queue.c          |  6 ++----
- drivers/mmc/card/queue.h          |  5 ++++-
- drivers/mtd/mtd_blkdevs.c         |  2 +-
- drivers/nvme/host/pci.c           |  4 ++--
- drivers/scsi/sd.c                 | 25 ++++++++++++++++---------
- 13 files changed, 44 insertions(+), 38 deletions(-)
+ drivers/block/xen-blkback/blkback.c | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 423f4ca..e771bab 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -538,7 +538,7 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
- 	if (rq->cmd_flags & REQ_WRITE) {
- 		if (rq->cmd_flags & REQ_FLUSH)
- 			ret = lo_req_flush(lo, rq);
--		else if (rq->cmd_flags & REQ_DISCARD)
-+		else if (rq->op == REQ_OP_DISCARD)
- 			ret = lo_discard(lo, rq, pos);
- 		else if (lo->transfer)
- 			ret = lo_write_transfer(lo, rq, pos);
-@@ -1653,8 +1653,8 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (lo->lo_state != Lo_bound)
- 		return -EIO;
+diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
+index 79fe493..854ecca 100644
+--- a/drivers/block/xen-blkback/blkback.c
++++ b/drivers/block/xen-blkback/blkback.c
+@@ -501,7 +501,7 @@ static int xen_vbd_translate(struct phys_req *req, struct xen_blkif *blkif,
+ 	struct xen_vbd *vbd = &blkif->vbd;
+ 	int rc = -EACCES;
  
--	if (lo->use_dio && !(cmd->rq->cmd_flags & (REQ_FLUSH |
--					REQ_DISCARD)))
-+	if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
-+	     cmd->rq->op == REQ_OP_DISCARD))
- 		cmd->use_aio = true;
- 	else
- 		cmd->use_aio = false;
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 9b180db..3995a9e 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -3670,7 +3670,7 @@ static int mtip_submit_request(struct blk_mq_hw_ctx *hctx, struct request *rq)
- 			return -ENXIO;
- 	}
- 
--	if (rq->cmd_flags & REQ_DISCARD) {
-+	if (rq->op == REQ_OP_DISCARD) {
- 		int err;
- 
- 		err = mtip_send_trim(dd, blk_rq_pos(rq), blk_rq_sectors(rq));
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index e4c5cc1..dd8f3e9 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -242,7 +242,7 @@ static int nbd_send_req(struct nbd_device *nbd, struct request *req)
- 
- 	if (req->cmd_type == REQ_TYPE_DRV_PRIV)
- 		type = NBD_CMD_DISC;
--	else if (req->cmd_flags & REQ_DISCARD)
-+	else if (req->op == REQ_OP_DISCARD)
- 		type = NBD_CMD_TRIM;
- 	else if (req->cmd_flags & REQ_FLUSH)
- 		type = NBD_CMD_FLUSH;
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index 4a87678..1d0f464 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -3373,7 +3373,7 @@ static void rbd_queue_workfn(struct work_struct *work)
- 		goto err;
- 	}
- 
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->op == REQ_OP_DISCARD)
- 		op_type = OBJ_OP_DISCARD;
- 	else if (rq->cmd_flags & REQ_WRITE)
- 		op_type = OBJ_OP_WRITE;
-diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
-index 586f916..f89a0c8 100644
---- a/drivers/block/skd_main.c
-+++ b/drivers/block/skd_main.c
-@@ -576,7 +576,6 @@ static void skd_request_fn(struct request_queue *q)
- 	struct request *req = NULL;
- 	struct skd_scsi_request *scsi_req;
- 	struct page *page;
--	unsigned long io_flags;
- 	int error;
- 	u32 lba;
- 	u32 count;
-@@ -624,12 +623,11 @@ static void skd_request_fn(struct request_queue *q)
- 		lba = (u32)blk_rq_pos(req);
- 		count = blk_rq_sectors(req);
- 		data_dir = rq_data_dir(req);
--		io_flags = req->cmd_flags;
- 
--		if (io_flags & REQ_FLUSH)
-+		if (req->cmd_flags & REQ_FLUSH)
- 			flush++;
- 
--		if (io_flags & REQ_FUA)
-+		if (req->cmd_flags & REQ_FUA)
- 			fua++;
- 
- 		pr_debug("%s:%s:%d new req=%p lba=%u(0x%x) "
-@@ -735,7 +733,7 @@ static void skd_request_fn(struct request_queue *q)
- 		else
- 			skreq->sg_data_dir = SKD_DATA_DIR_HOST_TO_CARD;
- 
--		if (io_flags & REQ_DISCARD) {
-+		if (req->op == REQ_OP_DISCARD) {
- 			page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
- 			if (!page) {
- 				pr_err("request_fn:Page allocation failed.\n");
-@@ -852,9 +850,8 @@ static void skd_end_request(struct skd_device *skdev,
- 			    struct skd_request_context *skreq, int error)
- {
- 	struct request *req = skreq->req;
--	unsigned int io_flags = req->cmd_flags;
- 
--	if ((io_flags & REQ_DISCARD) &&
-+	if ((req->op == REQ_OP_DISCARD) &&
- 		(skreq->discard_page == 1)) {
- 		pr_debug("%s:%s:%d, free the page!",
- 			 skdev->name, __func__, __LINE__);
-diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-index 7ba2ed1..34e8f1a 100644
---- a/drivers/block/xen-blkfront.c
-+++ b/drivers/block/xen-blkfront.c
-@@ -842,7 +842,8 @@ static int blkif_queue_request(struct request *req, struct blkfront_ring_info *r
- 	if (unlikely(rinfo->dev_info->connected != BLKIF_STATE_CONNECTED))
- 		return 1;
- 
--	if (unlikely(req->cmd_flags & (REQ_DISCARD | REQ_SECURE)))
-+	if (unlikely(req->op == REQ_OP_DISCARD ||
-+		     req->cmd_flags & REQ_SECURE))
- 		return blkif_queue_discard_req(req, rinfo);
- 	else
- 		return blkif_queue_rw_req(req, rinfo);
-@@ -2051,8 +2052,9 @@ static int blkif_recover(struct blkfront_info *info)
- 			/*
- 			 * Get the bios in the request so we can re-queue them.
- 			 */
--			if (copy[i].request->cmd_flags &
--			    (REQ_FLUSH | REQ_FUA | REQ_DISCARD | REQ_SECURE)) {
-+			if (copy[i].request->cmd_flags & REQ_FLUSH ||
-+			    copy[i].request->op == REQ_OP_DISCARD ||
-+			    copy[i].request->cmd_flags & (REQ_FUA | REQ_SECURE)) {
- 				/*
- 				 * Flush operations don't contain bios, so
- 				 * we need to requeue the whole request
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 38c7d93..53f7b1e 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1322,7 +1322,7 @@ static void dm_done(struct request *clone, int error, bool mapped)
- 			r = rq_end_io(tio->ti, clone, error, &tio->info);
- 	}
- 
--	if (unlikely(r == -EREMOTEIO && (clone->cmd_flags & REQ_WRITE_SAME) &&
-+	if (unlikely(r == -EREMOTEIO && (clone->op == REQ_OP_WRITE_SAME) &&
- 		     !clone->q->limits.max_write_same_sectors))
- 		disable_write_same(tio->md);
- 
-diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
-index 47bc87d..1f84a44 100644
---- a/drivers/mmc/card/block.c
-+++ b/drivers/mmc/card/block.c
-@@ -1690,8 +1690,7 @@ static u8 mmc_blk_prep_packed_list(struct mmc_queue *mq, struct request *req)
- 		    !IS_ALIGNED(blk_rq_sectors(next), 8))
- 			break;
- 
--		if (next->cmd_flags & REQ_DISCARD ||
--		    next->cmd_flags & REQ_FLUSH)
-+		if (next->op == REQ_OP_DISCARD || next->cmd_flags & REQ_FLUSH)
- 			break;
- 
- 		if (rq_data_dir(cur) != rq_data_dir(next))
-@@ -2132,7 +2131,7 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
- 	}
- 
- 	mq->flags &= ~MMC_QUEUE_NEW_REQUEST;
--	if (cmd_flags & REQ_DISCARD) {
-+	if (req && req->op == REQ_OP_DISCARD) {
- 		/* complete ongoing async transfer before issuing discard */
- 		if (card->host->areq)
- 			mmc_blk_issue_rw_rq(mq, NULL);
-@@ -2156,7 +2155,7 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
- 
- out:
- 	if ((!req && !(mq->flags & MMC_QUEUE_NEW_REQUEST)) ||
--	     (cmd_flags & MMC_REQ_SPECIAL_MASK))
-+	    mmc_req_is_special(req))
- 		/*
- 		 * Release host when there are no more requests
- 		 * and after special request(discard, flush) is done.
-diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
-index 6f4323c..9fb8d21 100644
---- a/drivers/mmc/card/queue.c
-+++ b/drivers/mmc/card/queue.c
-@@ -33,7 +33,7 @@ static int mmc_prep_request(struct request_queue *q, struct request *req)
- 	/*
- 	 * We only like normal block requests and discards.
- 	 */
--	if (req->cmd_type != REQ_TYPE_FS && !(req->cmd_flags & REQ_DISCARD)) {
-+	if (req->cmd_type != REQ_TYPE_FS && req->op != REQ_OP_DISCARD) {
- 		blk_dump_rq_flags(req, "MMC bad request");
- 		return BLKPREP_KILL;
- 	}
-@@ -56,7 +56,6 @@ static int mmc_queue_thread(void *d)
- 	down(&mq->thread_sem);
- 	do {
- 		struct request *req = NULL;
--		unsigned int cmd_flags = 0;
- 
- 		spin_lock_irq(q->queue_lock);
- 		set_current_state(TASK_INTERRUPTIBLE);
-@@ -66,7 +65,6 @@ static int mmc_queue_thread(void *d)
- 
- 		if (req || mq->mqrq_prev->req) {
- 			set_current_state(TASK_RUNNING);
--			cmd_flags = req ? req->cmd_flags : 0;
- 			mq->issue_fn(mq, req);
- 			cond_resched();
- 			if (mq->flags & MMC_QUEUE_NEW_REQUEST) {
-@@ -81,7 +79,7 @@ static int mmc_queue_thread(void *d)
- 			 * has been finished. Do not assign it to previous
- 			 * request.
- 			 */
--			if (cmd_flags & MMC_REQ_SPECIAL_MASK)
-+			if (mmc_req_is_special(req))
- 				mq->mqrq_cur->req = NULL;
- 
- 			mq->mqrq_prev->brq.mrq.data = NULL;
-diff --git a/drivers/mmc/card/queue.h b/drivers/mmc/card/queue.h
-index 36cddab..f166e5b 100644
---- a/drivers/mmc/card/queue.h
-+++ b/drivers/mmc/card/queue.h
-@@ -1,7 +1,10 @@
- #ifndef MMC_QUEUE_H
- #define MMC_QUEUE_H
- 
--#define MMC_REQ_SPECIAL_MASK	(REQ_DISCARD | REQ_FLUSH)
-+static inline bool mmc_req_is_special(struct request *req)
-+{
-+	return req && (req->cmd_flags & REQ_FLUSH || req->op == REQ_OP_DISCARD);
-+}
- 
- struct request;
- struct task_struct;
-diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
-index f470118..b2e0bce 100644
---- a/drivers/mtd/mtd_blkdevs.c
-+++ b/drivers/mtd/mtd_blkdevs.c
-@@ -94,7 +94,7 @@ static int do_blktrans_request(struct mtd_blktrans_ops *tr,
- 	    get_capacity(req->rq_disk))
- 		return -EIO;
- 
--	if (req->cmd_flags & REQ_DISCARD)
-+	if (req->op == REQ_OP_DISCARD)
- 		return tr->discard(dev, block, nsect);
- 
- 	if (rq_data_dir(req) == READ) {
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 720a523..da32c93 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -330,7 +330,7 @@ static int nvme_init_iod(struct request *rq, struct nvme_dev *dev)
- 	int nseg = rq->nr_phys_segments;
- 	unsigned size;
- 
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->op == REQ_OP_DISCARD)
- 		size = sizeof(struct nvme_dsm_range);
- 	else
- 		size = blk_rq_bytes(rq);
-@@ -646,7 +646,7 @@ static int nvme_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (ret)
- 		return ret;
- 
--	if (req->cmd_flags & REQ_DISCARD) {
-+	if (req->op == REQ_OP_DISCARD) {
- 		ret = nvme_setup_discard(nvmeq, ns, req, &cmnd);
- 	} else {
- 		if (req->cmd_type == REQ_TYPE_DRV_PRIV)
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d749da7..e8fbd0f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1012,7 +1012,8 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_6;
- 	} else {
--		scmd_printk(KERN_ERR, SCpnt, "Unknown command %llx\n", (unsigned long long) rq->cmd_flags);
-+		scmd_printk(KERN_ERR, SCpnt, "Unknown command %d,%llx\n",
-+			    rq->op, (unsigned long long) rq->cmd_flags);
+-	if ((operation != READ) && vbd->readonly)
++	if ((operation != REQ_OP_READ) && vbd->readonly)
  		goto out;
+ 
+ 	if (likely(req->nr_sects)) {
+@@ -1014,7 +1014,7 @@ static int dispatch_discard_io(struct xen_blkif_ring *ring,
+ 	preq.sector_number = req->u.discard.sector_number;
+ 	preq.nr_sects      = req->u.discard.nr_sectors;
+ 
+-	err = xen_vbd_translate(&preq, blkif, WRITE);
++	err = xen_vbd_translate(&preq, blkif, REQ_OP_WRITE);
+ 	if (err) {
+ 		pr_warn("access denied: DISCARD [%llu->%llu] on dev=%04x\n",
+ 			preq.sector_number,
+@@ -1229,6 +1229,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 	struct bio **biolist = pending_req->biolist;
+ 	int i, nbio = 0;
+ 	int operation;
++	int operation_flags = 0;
+ 	struct blk_plug plug;
+ 	bool drain = false;
+ 	struct grant_page **pages = pending_req->segments;
+@@ -1247,17 +1248,19 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 	switch (req_operation) {
+ 	case BLKIF_OP_READ:
+ 		ring->st_rd_req++;
+-		operation = READ;
++		operation = REQ_OP_READ;
+ 		break;
+ 	case BLKIF_OP_WRITE:
+ 		ring->st_wr_req++;
+-		operation = WRITE_ODIRECT;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_ODIRECT;
+ 		break;
+ 	case BLKIF_OP_WRITE_BARRIER:
+ 		drain = true;
+ 	case BLKIF_OP_FLUSH_DISKCACHE:
+ 		ring->st_f_req++;
+-		operation = WRITE_FLUSH;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_FLUSH;
+ 		break;
+ 	default:
+ 		operation = 0; /* make gcc happy */
+@@ -1269,7 +1272,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 	nseg = req->operation == BLKIF_OP_INDIRECT ?
+ 	       req->u.indirect.nr_segments : req->u.rw.nr_segments;
+ 
+-	if (unlikely(nseg == 0 && operation != WRITE_FLUSH) ||
++	if (unlikely(nseg == 0 && operation_flags != WRITE_FLUSH) ||
+ 	    unlikely((req->operation != BLKIF_OP_INDIRECT) &&
+ 		     (nseg > BLKIF_MAX_SEGMENTS_PER_REQUEST)) ||
+ 	    unlikely((req->operation == BLKIF_OP_INDIRECT) &&
+@@ -1310,7 +1313,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 
+ 	if (xen_vbd_translate(&preq, ring->blkif, operation) != 0) {
+ 		pr_debug("access denied: %s of [%llu,%llu] on dev=%04x\n",
+-			 operation == READ ? "read" : "write",
++			 operation == REQ_OP_READ ? "read" : "write",
+ 			 preq.sector_number,
+ 			 preq.sector_number + preq.nr_sects,
+ 			 ring->blkif->vbd.pdevice);
+@@ -1369,7 +1372,8 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 			bio->bi_private = pending_req;
+ 			bio->bi_end_io  = end_block_io_op;
+ 			bio->bi_iter.bi_sector  = preq.sector_number;
+-			bio->bi_rw	= operation;
++			bio->bi_op	= operation;
++			bio->bi_rw	= operation_flags;
+ 		}
+ 
+ 		preq.sector_number += seg[i].nsec;
+@@ -1377,7 +1381,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 
+ 	/* This will be hit if the operation was a flush or discard. */
+ 	if (!bio) {
+-		BUG_ON(operation != WRITE_FLUSH);
++		BUG_ON(operation_flags != WRITE_FLUSH);
+ 
+ 		bio = bio_alloc(GFP_KERNEL, 0);
+ 		if (unlikely(bio == NULL))
+@@ -1387,7 +1391,8 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 		bio->bi_bdev    = preq.bdev;
+ 		bio->bi_private = pending_req;
+ 		bio->bi_end_io  = end_block_io_op;
+-		bio->bi_rw	= operation;
++		bio->bi_op	= operation;
++		bio->bi_rw	= operation_flags;
  	}
  
-@@ -1137,21 +1138,27 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = cmd->request;
+ 	atomic_set(&pending_req->pendcnt, nbio);
+@@ -1399,9 +1404,9 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+ 	/* Let the I/Os go.. */
+ 	blk_finish_plug(&plug);
  
--	if (rq->cmd_flags & REQ_DISCARD)
-+	switch (rq->op) {
-+	case REQ_OP_DISCARD:
- 		return sd_setup_discard_cmnd(cmd);
--	else if (rq->cmd_flags & REQ_WRITE_SAME)
-+	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
--	else if (rq->cmd_flags & REQ_FLUSH)
--		return sd_setup_flush_cmnd(cmd);
--	else
--		return sd_setup_read_write_cmnd(cmd);
-+	case REQ_OP_READ:
-+	case REQ_OP_WRITE:
-+		if (rq->cmd_flags & REQ_FLUSH)
-+			return sd_setup_flush_cmnd(cmd);
-+		else
-+			return sd_setup_read_write_cmnd(cmd);
-+	default:
-+		BUG();
-+	}
- }
+-	if (operation == READ)
++	if (operation == REQ_OP_READ)
+ 		ring->st_rd_sect += preq.nr_sects;
+-	else if (operation & WRITE)
++	else if (operation == REQ_OP_WRITE)
+ 		ring->st_wr_sect += preq.nr_sects;
  
- static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- {
- 	struct request *rq = SCpnt->request;
- 
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->op == REQ_OP_DISCARD)
- 		__free_page(rq->completion_data);
- 
- 	if (SCpnt->cmnd != rq->cmd) {
-@@ -1768,7 +1775,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	unsigned char op = SCpnt->cmnd[0];
- 	unsigned char unmap = SCpnt->cmnd[1] & 8;
- 
--	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
-+	if (req->op == REQ_OP_DISCARD || req->op == REQ_OP_WRITE_SAME) {
- 		if (!result) {
- 			good_bytes = blk_rq_bytes(req);
- 			scsi_set_resid(SCpnt, 0);
+ 	return 0;
 -- 
 1.8.3.1
