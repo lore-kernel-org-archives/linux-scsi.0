@@ -1,133 +1,132 @@
 From: mchristi@redhat.com
-Subject: [PATCH 18/35] pm: set bi_op to REQ_OP
-Date: Wed, 24 Feb 2016 13:47:55 -0600
-Message-ID: <1456343292-14535-19-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 13/35] xfs: set bi_op to REQ_OP
+Date: Wed, 24 Feb 2016 13:47:50 -0600
+Message-ID: <1456343292-14535-14-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the pm swap code set the bio bi_op to a REQ_OP, and
+This patch has xfs set the bio bi_op to a REQ_OP, and
 rq_flag_bits to bi_rw.
 
-This patch is compile tested only.
-
 Signed-off-by: Mike Christie <mchristi@redhat.com>
----
- kernel/power/swap.c | 31 +++++++++++++++++++------------
- 1 file changed, 19 insertions(+), 12 deletions(-)
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
-diff --git a/kernel/power/swap.c b/kernel/power/swap.c
-index 4d050eb..adbcb1b 100644
---- a/kernel/power/swap.c
-+++ b/kernel/power/swap.c
-@@ -250,7 +250,7 @@ static void hib_end_io(struct bio *bio)
- 	bio_put(bio);
+---
+ fs/xfs/xfs_aops.c |  3 ++-
+ fs/xfs/xfs_buf.c  | 27 +++++++++++++++------------
+ 2 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 9cd38d1..21867fc 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -393,7 +393,8 @@ xfs_submit_ioend_bio(
+ 	atomic_inc(&ioend->io_remaining);
+ 	bio->bi_private = ioend;
+ 	bio->bi_end_io = xfs_end_bio;
+-	bio->bi_rw = (wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE);
++	bio->bi_op = REQ_OP_WRITE;
++	bio->bi_rw = WB_SYNC_ALL ? WRITE_SYNC : 0;
+ 	submit_bio(bio);
  }
  
--static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
-+static int hib_submit_io(int op, int op_flags, pgoff_t page_off, void *addr,
- 		struct hib_bio_batch *hb)
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 079bb77..917774e 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1131,7 +1131,8 @@ xfs_buf_ioapply_map(
+ 	int		map,
+ 	int		*buf_offset,
+ 	int		*count,
+-	int		rw)
++	int		op,
++	int		op_flags)
  {
- 	struct page *page = virt_to_page(addr);
-@@ -260,7 +260,8 @@ static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
- 	bio = bio_alloc(__GFP_RECLAIM | __GFP_HIGH, 1);
- 	bio->bi_iter.bi_sector = page_off * (PAGE_SIZE >> 9);
- 	bio->bi_bdev = hib_resume_bdev;
+ 	int		page_index;
+ 	int		total_nr_pages = bp->b_page_count;
+@@ -1170,7 +1171,8 @@ next_chunk:
+ 	bio->bi_iter.bi_sector = sector;
+ 	bio->bi_end_io = xfs_buf_bio_end_io;
+ 	bio->bi_private = bp;
 -	bio->bi_rw = rw;
 +	bio->bi_op = op;
 +	bio->bi_rw = op_flags;
  
- 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
- 		printk(KERN_ERR "PM: Adding page to bio failed at %llu\n",
-@@ -296,7 +297,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
+ 	for (; size && nr_pages; nr_pages--, page_index++) {
+ 		int	rbytes, nbytes = PAGE_SIZE - offset;
+@@ -1214,7 +1216,8 @@ _xfs_buf_ioapply(
+ 	struct xfs_buf	*bp)
  {
- 	int error;
+ 	struct blk_plug	plug;
+-	int		rw;
++	int		op;
++	int		op_flags = 0;
+ 	int		offset;
+ 	int		size;
+ 	int		i;
+@@ -1233,14 +1236,13 @@ _xfs_buf_ioapply(
+ 		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
  
--	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
-+	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
-+		      swsusp_header, NULL);
- 	if (!memcmp("SWAP-SPACE",swsusp_header->sig, 10) ||
- 	    !memcmp("SWAPSPACE2",swsusp_header->sig, 10)) {
- 		memcpy(swsusp_header->orig_sig,swsusp_header->sig, 10);
-@@ -305,8 +307,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
- 		swsusp_header->flags = flags;
- 		if (flags & SF_CRC32_MODE)
- 			swsusp_header->crc32 = handle->crc32;
--		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
--					swsusp_header, NULL);
-+		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+				      swsusp_resume_block, swsusp_header, NULL);
- 	} else {
- 		printk(KERN_ERR "PM: Swap header not found!\n");
- 		error = -ENODEV;
-@@ -379,7 +381,7 @@ static int write_page(void *buf, sector_t offset, struct hib_bio_batch *hb)
- 	} else {
- 		src = buf;
- 	}
--	return hib_submit_io(WRITE_SYNC, offset, src, hb);
-+	return hib_submit_io(REQ_OP_WRITE, WRITE_SYNC, offset, src, hb);
- }
+ 	if (bp->b_flags & XBF_WRITE) {
++		op = REQ_OP_WRITE;
+ 		if (bp->b_flags & XBF_SYNCIO)
+-			rw = WRITE_SYNC;
+-		else
+-			rw = WRITE;
++			op_flags = WRITE_SYNC;
+ 		if (bp->b_flags & XBF_FUA)
+-			rw |= REQ_FUA;
++			op_flags |= REQ_FUA;
+ 		if (bp->b_flags & XBF_FLUSH)
+-			rw |= REQ_FLUSH;
++			op_flags |= REQ_FLUSH;
  
- static void release_swap_writer(struct swap_map_handle *handle)
-@@ -982,7 +984,8 @@ static int get_swap_reader(struct swap_map_handle *handle,
- 			return -ENOMEM;
+ 		/*
+ 		 * Run the write verifier callback function if it exists. If
+@@ -1270,13 +1272,14 @@ _xfs_buf_ioapply(
+ 			}
  		}
- 
--		error = hib_submit_io(READ_SYNC, offset, tmp->map, NULL);
-+		error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset,
-+				      tmp->map, NULL);
- 		if (error) {
- 			release_swap_reader(handle);
- 			return error;
-@@ -1006,7 +1009,7 @@ static int swap_read_page(struct swap_map_handle *handle, void *buf,
- 	offset = handle->cur->entries[handle->k];
- 	if (!offset)
- 		return -EFAULT;
--	error = hib_submit_io(READ_SYNC, offset, buf, hb);
-+	error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset, buf, hb);
- 	if (error)
- 		return error;
- 	if (++handle->k >= MAP_PAGE_ENTRIES) {
-@@ -1508,7 +1511,8 @@ int swsusp_check(void)
- 	if (!IS_ERR(hib_resume_bdev)) {
- 		set_blocksize(hib_resume_bdev, PAGE_SIZE);
- 		clear_page(swsusp_header);
--		error = hib_submit_io(READ_SYNC, swsusp_resume_block,
-+		error = hib_submit_io(REQ_OP_READ, READ_SYNC,
-+					swsusp_resume_block,
- 					swsusp_header, NULL);
- 		if (error)
- 			goto put;
-@@ -1516,7 +1520,8 @@ int swsusp_check(void)
- 		if (!memcmp(HIBERNATE_SIG, swsusp_header->sig, 10)) {
- 			memcpy(swsusp_header->sig, swsusp_header->orig_sig, 10);
- 			/* Reset swap signature now */
--			error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
-+			error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+						swsusp_resume_block,
- 						swsusp_header, NULL);
- 		} else {
- 			error = -EINVAL;
-@@ -1560,10 +1565,12 @@ int swsusp_unmark(void)
- {
- 	int error;
- 
--	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
-+	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
-+		      swsusp_header, NULL);
- 	if (!memcmp(HIBERNATE_SIG,swsusp_header->sig, 10)) {
- 		memcpy(swsusp_header->sig,swsusp_header->orig_sig, 10);
--		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
-+		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+					swsusp_resume_block,
- 					swsusp_header, NULL);
+ 	} else if (bp->b_flags & XBF_READ_AHEAD) {
+-		rw = READA;
++		op = REQ_OP_READ;
++		op_flags = REQ_RAHEAD;
  	} else {
- 		printk(KERN_ERR "PM: Cannot find swsusp signature!\n");
+-		rw = READ;
++		op = REQ_OP_READ;
+ 	}
+ 
+ 	/* we only use the buffer cache for meta-data */
+-	rw |= REQ_META;
++	op_flags |= REQ_META;
+ 
+ 	/*
+ 	 * Walk all the vectors issuing IO on them. Set up the initial offset
+@@ -1288,7 +1291,7 @@ _xfs_buf_ioapply(
+ 	size = BBTOB(bp->b_io_length);
+ 	blk_start_plug(&plug);
+ 	for (i = 0; i < bp->b_map_count; i++) {
+-		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
++		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
+ 		if (bp->b_error)
+ 			break;
+ 		if (size <= 0)
 -- 
 1.8.3.1
