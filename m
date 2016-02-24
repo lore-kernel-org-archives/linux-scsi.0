@@ -1,150 +1,213 @@
 From: mchristi@redhat.com
-Subject: [PATCH 31/35] block, fs: remove old REQ definitions.
-Date: Wed, 24 Feb 2016 13:48:08 -0600
-Message-ID: <1456343292-14535-32-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 06/35] direct-io: set bi_op to REQ_OP
+Date: Wed, 24 Feb 2016 13:47:43 -0600
+Message-ID: <1456343292-14535-7-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-We no longer use REQ_WRITE. REQ_WRITE_SAME and REQ_DISCARD,
-so this patch removes them.
+This patch has the dio code set the bio bi_op to a REQ_OP.
+
+It also begins to convert btrfs's dio_submit_t related code,
+because of the submit_io callout use. In the btrfs_submit_direct
+change, I OR'd the op and flag back together. It is only temporary.
+The next patch will completely convert all the btrfs code paths.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- include/linux/blk_types.h   | 21 ++++++---------------
- include/linux/fs.h          | 21 +++++++++++----------
- include/trace/events/f2fs.h |  1 -
- 3 files changed, 17 insertions(+), 26 deletions(-)
+ fs/btrfs/inode.c   |  9 +++++----
+ fs/direct-io.c     | 35 +++++++++++++++++++++--------------
+ include/linux/fs.h |  2 +-
+ 3 files changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 6e49c91..b4251ed 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -151,7 +151,6 @@ struct bio {
-  */
- enum rq_flag_bits {
- 	/* common flags */
--	__REQ_WRITE,		/* not set, read. set, write */
- 	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
- 	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
- 	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
-@@ -159,9 +158,7 @@ enum rq_flag_bits {
- 	__REQ_SYNC,		/* request is sync (sync write or read) */
- 	__REQ_META,		/* metadata io request */
- 	__REQ_PRIO,		/* boost priority in cfq */
--	__REQ_DISCARD,		/* request to discard sectors */
--	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
--	__REQ_WRITE_SAME,	/* write same block many times */
-+	__REQ_SECURE,		/* secure discard (used with REQ_OP_DISCARD) */
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 25dcff7..3a7fe66 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8380,14 +8380,14 @@ out_err:
+ 	return 0;
+ }
  
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
- 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
-@@ -197,28 +194,22 @@ enum rq_flag_bits {
- 	__REQ_NR_BITS,		/* stops here */
- };
+-static void btrfs_submit_direct(int rw, struct bio *dio_bio,
+-				struct inode *inode, loff_t file_offset)
++static void btrfs_submit_direct(struct bio *dio_bio, struct inode *inode,
++				loff_t file_offset)
+ {
+ 	struct btrfs_dio_private *dip = NULL;
+ 	struct bio *io_bio = NULL;
+ 	struct btrfs_io_bio *btrfs_bio;
+ 	int skip_sum;
+-	int write = rw & REQ_WRITE;
++	bool write = (dio_bio->bi_op == REQ_OP_WRITE);
+ 	int ret = 0;
  
--#define REQ_WRITE		(1ULL << __REQ_WRITE)
- #define REQ_FAILFAST_DEV	(1ULL << __REQ_FAILFAST_DEV)
- #define REQ_FAILFAST_TRANSPORT	(1ULL << __REQ_FAILFAST_TRANSPORT)
- #define REQ_FAILFAST_DRIVER	(1ULL << __REQ_FAILFAST_DRIVER)
- #define REQ_SYNC		(1ULL << __REQ_SYNC)
- #define REQ_META		(1ULL << __REQ_META)
- #define REQ_PRIO		(1ULL << __REQ_PRIO)
--#define REQ_DISCARD		(1ULL << __REQ_DISCARD)
--#define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
- #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
+ 	skip_sum = BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM;
+@@ -8438,7 +8438,8 @@ static void btrfs_submit_direct(int rw, struct bio *dio_bio,
+ 			dio_data->unsubmitted_oe_range_end;
+ 	}
  
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
--	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
--	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
--	 REQ_SECURE | REQ_INTEGRITY)
-+	(REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | REQ_NOIDLE | \
-+	 REQ_FLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
+-	ret = btrfs_submit_direct_hook(rw, dip, skip_sum);
++	ret = btrfs_submit_direct_hook(dio_bio->bi_op | dio_bio->bi_rw, dip,
++				       skip_sum);
+ 	if (!ret)
+ 		return;
  
--#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
--
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
- 	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
-@@ -250,9 +241,9 @@ enum rq_flag_bits {
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 1bce5c3..7cabf74 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -108,7 +108,8 @@ struct dio_submit {
+ /* dio_state communicated between submission path and end_io */
+ struct dio {
+ 	int flags;			/* doesn't change */
+-	int rw;
++	int op;
++	int op_flags;
+ 	blk_qc_t bio_cookie;
+ 	struct block_device *bio_bdev;
+ 	struct inode *inode;
+@@ -163,7 +164,7 @@ static inline int dio_refill_pages(struct dio *dio, struct dio_submit *sdio)
+ 	ret = iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
+ 				&sdio->from);
  
- enum req_op {
- 	REQ_OP_READ,
--	REQ_OP_WRITE		= REQ_WRITE,
--	REQ_OP_DISCARD		= REQ_DISCARD,
--	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
-+	REQ_OP_WRITE,
-+	REQ_OP_DISCARD,		/* request to discard sectors */
-+	REQ_OP_WRITE_SAME,	/* write same block many times */
- };
+-	if (ret < 0 && sdio->blocks_available && (dio->rw & WRITE)) {
++	if (ret < 0 && sdio->blocks_available && (dio->op == REQ_OP_WRITE)) {
+ 		struct page *page = ZERO_PAGE(0);
+ 		/*
+ 		 * A memory fault, but the filesystem has some outstanding
+@@ -242,7 +243,8 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
+ 		transferred = dio->result;
  
- typedef unsigned int blk_qc_t;
+ 		/* Check for short read case */
+-		if ((dio->rw == READ) && ((offset + transferred) > dio->i_size))
++		if ((dio->op == REQ_OP_READ) &&
++		    ((offset + transferred) > dio->i_size))
+ 			transferred = dio->i_size - offset;
+ 	}
+ 
+@@ -265,7 +267,7 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
+ 		inode_dio_end(dio->inode);
+ 
+ 	if (is_async) {
+-		if (dio->rw & WRITE) {
++		if (dio->op == REQ_OP_WRITE) {
+ 			int err;
+ 
+ 			err = generic_write_sync(dio->iocb->ki_filp, offset,
+@@ -374,7 +376,8 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
+ 
+ 	bio->bi_bdev = bdev;
+ 	bio->bi_iter.bi_sector = first_sector;
+-	bio->bi_rw = dio->rw;
++	bio->bi_op = dio->op;
++	bio->bi_rw = dio->op_flags;
+ 	if (dio->is_async)
+ 		bio->bi_end_io = dio_bio_end_aio;
+ 	else
+@@ -402,14 +405,13 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
+ 	dio->refcount++;
+ 	spin_unlock_irqrestore(&dio->bio_lock, flags);
+ 
+-	if (dio->is_async && dio->rw == READ && dio->should_dirty)
++	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty)
+ 		bio_set_pages_dirty(bio);
+ 
+ 	dio->bio_bdev = bio->bi_bdev;
+ 
+ 	if (sdio->submit_io) {
+-		sdio->submit_io(dio->rw, bio, dio->inode,
+-			       sdio->logical_offset_in_bio);
++		sdio->submit_io(bio, dio->inode, sdio->logical_offset_in_bio);
+ 		dio->bio_cookie = BLK_QC_T_NONE;
+ 	} else
+ 		dio->bio_cookie = submit_bio(bio);
+@@ -477,14 +479,14 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 	if (bio->bi_error)
+ 		dio->io_error = -EIO;
+ 
+-	if (dio->is_async && dio->rw == READ && dio->should_dirty) {
++	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
+ 		err = bio->bi_error;
+ 		bio_check_pages_dirty(bio);	/* transfers ownership */
+ 	} else {
+ 		bio_for_each_segment_all(bvec, bio, i) {
+ 			struct page *page = bvec->bv_page;
+ 
+-			if (dio->rw == READ && !PageCompound(page) &&
++			if (dio->op == REQ_OP_READ && !PageCompound(page) &&
+ 					dio->should_dirty)
+ 				set_page_dirty_lock(page);
+ 			page_cache_release(page);
+@@ -637,7 +639,7 @@ static int get_more_blocks(struct dio *dio, struct dio_submit *sdio,
+ 		 * which may decide to handle it or also return an unmapped
+ 		 * buffer head.
+ 		 */
+-		create = dio->rw & WRITE;
++		create = dio->op == REQ_OP_WRITE;
+ 		if (dio->flags & DIO_SKIP_HOLES) {
+ 			if (sdio->block_in_file < (i_size_read(dio->inode) >>
+ 							sdio->blkbits))
+@@ -787,7 +789,7 @@ submit_page_section(struct dio *dio, struct dio_submit *sdio, struct page *page,
+ {
+ 	int ret = 0;
+ 
+-	if (dio->rw & WRITE) {
++	if (dio->op == REQ_OP_WRITE) {
+ 		/*
+ 		 * Read accounting is performed in submit_bio()
+ 		 */
+@@ -987,7 +989,7 @@ do_holes:
+ 				loff_t i_size_aligned;
+ 
+ 				/* AKPM: eargh, -ENOTBLK is a hack */
+-				if (dio->rw & WRITE) {
++				if (dio->op == REQ_OP_WRITE) {
+ 					page_cache_release(page);
+ 					return -ENOTBLK;
+ 				}
+@@ -1200,7 +1202,12 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 		dio->is_async = true;
+ 
+ 	dio->inode = inode;
+-	dio->rw = iov_iter_rw(iter) == WRITE ? WRITE_ODIRECT : READ;
++	if (iov_iter_rw(iter) == WRITE) {
++		dio->op = REQ_OP_WRITE;
++		dio->op_flags = WRITE_ODIRECT;
++	} else {
++		dio->op = REQ_OP_READ;
++	}
+ 
+ 	/*
+ 	 * For AIO O_(D)SYNC writes we need to defer completions to a workqueue
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0a10de0..7b57bb3 100644
+index 399b22b..beabae8 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -153,9 +153,10 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
- #define CHECK_IOVEC_ONLY -1
+@@ -2774,7 +2774,7 @@ extern int generic_file_open(struct inode * inode, struct file * filp);
+ extern int nonseekable_open(struct inode * inode, struct file * filp);
  
- /*
-- * The below are the various read and write types that we support. Some of
-+ * The below are the various read and write flags that we support. Some of
-  * them include behavioral modifiers that send information down to the
-- * block layer and IO scheduler. Terminology:
-+ * block layer and IO scheduler. They should be used along with a req_op.
-+ * Terminology:
-  *
-  *	The block layer uses device plugging to defer IO a little bit, in
-  *	the hope that we will see more IO very shortly. This increases
-@@ -194,19 +195,19 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
-  *			non-volatile media on completion.
-  *
-  */
--#define RW_MASK			REQ_WRITE
-+#define RW_MASK			REQ_OP_WRITE
- #define RWA_MASK		REQ_RAHEAD
+ #ifdef CONFIG_BLOCK
+-typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
++typedef void (dio_submit_t)(struct bio *bio, struct inode *inode,
+ 			    loff_t file_offset);
  
--#define READ			0
-+#define READ			REQ_OP_READ
- #define WRITE			RW_MASK
- #define READA			RWA_MASK
- 
--#define READ_SYNC		(READ | REQ_SYNC)
--#define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE)
--#define WRITE_ODIRECT		(WRITE | REQ_SYNC)
--#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
--#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FUA)
--#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
-+#define READ_SYNC		REQ_SYNC
-+#define WRITE_SYNC		(REQ_SYNC | REQ_NOIDLE)
-+#define WRITE_ODIRECT		REQ_SYNC
-+#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
-+#define WRITE_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FUA)
-+#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
- 
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index db75d69..20f708e 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -31,7 +31,6 @@ TRACE_DEFINE_ENUM(BG_GC);
- TRACE_DEFINE_ENUM(LFS);
- TRACE_DEFINE_ENUM(SSR);
- TRACE_DEFINE_ENUM(__REQ_RAHEAD);
--TRACE_DEFINE_ENUM(__REQ_WRITE);
- TRACE_DEFINE_ENUM(__REQ_SYNC);
- TRACE_DEFINE_ENUM(__REQ_NOIDLE);
- TRACE_DEFINE_ENUM(__REQ_FLUSH);
+ enum {
 -- 
 1.8.3.1
