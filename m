@@ -1,316 +1,348 @@
 From: mchristi@redhat.com
-Subject: [PATCH 21/35] bcache: set bi_op to REQ_OP
-Date: Wed, 24 Feb 2016 13:47:58 -0600
-Message-ID: <1456343292-14535-22-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 07/35] btrfs: have submit_one_bio users setup bio
+	bi_op
+Date: Wed, 24 Feb 2016 13:47:44 -0600
+Message-ID: <1456343292-14535-8-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has bcache set the bio bi_op to a REQ_OP, and rq_flag_bits
-to bi_rw.
+This patch has btrfs's submit_one_bio callers set
+the bio->bi_op to a REQ_OP and the bi_rw to rq_flag_bits.
 
-This patch is compile tested only
+The next patches will continue to convert btrfs,
+so submit_bio_hook and merge_bio_hook
+related code will be modified to take only the bio. I did
+not do it in this patch to try and keep it smaller.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/md/bcache/btree.c     |  2 ++
- drivers/md/bcache/debug.c     |  2 ++
- drivers/md/bcache/io.c        |  2 +-
- drivers/md/bcache/journal.c   |  7 ++++---
- drivers/md/bcache/movinggc.c  |  2 +-
- drivers/md/bcache/request.c   |  9 +++++----
- drivers/md/bcache/super.c     | 26 +++++++++++++++-----------
- drivers/md/bcache/writeback.c |  4 ++--
- 8 files changed, 32 insertions(+), 22 deletions(-)
+ fs/btrfs/extent_io.c | 88 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 45 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-index 22b9e34..752a44f 100644
---- a/drivers/md/bcache/btree.c
-+++ b/drivers/md/bcache/btree.c
-@@ -295,6 +295,7 @@ static void bch_btree_node_read(struct btree *b)
- 	closure_init_stack(&cl);
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index 454100e..4472d69 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -2377,7 +2377,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
+ 	int read_mode;
+ 	int ret;
  
- 	bio = bch_bbio_alloc(b->c);
-+	bio->bi_op	= REQ_OP_READ;
- 	bio->bi_rw	= REQ_META|READ_SYNC;
- 	bio->bi_iter.bi_size = KEY_SIZE(&b->key) << 9;
- 	bio->bi_end_io	= btree_node_read_endio;
-@@ -397,6 +398,7 @@ static void do_btree_node_write(struct btree *b)
+-	BUG_ON(failed_bio->bi_rw & REQ_WRITE);
++	BUG_ON(failed_bio->bi_op == REQ_OP_WRITE);
  
- 	b->bio->bi_end_io	= btree_node_write_endio;
- 	b->bio->bi_private	= cl;
-+	b->bio->bi_op		= REQ_OP_WRITE;
- 	b->bio->bi_rw		= REQ_META|WRITE_SYNC|REQ_FUA;
- 	b->bio->bi_iter.bi_size	= roundup(set_bytes(i), block_bytes(b->c));
- 	bch_bio_map(b->bio, i);
-diff --git a/drivers/md/bcache/debug.c b/drivers/md/bcache/debug.c
-index 52b6bcf..8df9e66 100644
---- a/drivers/md/bcache/debug.c
-+++ b/drivers/md/bcache/debug.c
-@@ -52,6 +52,7 @@ void bch_btree_verify(struct btree *b)
- 	bio->bi_bdev		= PTR_CACHE(b->c, &b->key, 0)->bdev;
- 	bio->bi_iter.bi_sector	= PTR_OFFSET(&b->key, 0);
- 	bio->bi_iter.bi_size	= KEY_SIZE(&v->key) << 9;
-+	bio->bi_op		= REQ_OP_READ;
- 	bio->bi_rw		= REQ_META|READ_SYNC;
- 	bch_bio_map(bio, sorted);
+ 	ret = btrfs_get_io_failure_record(inode, start, end, &failrec);
+ 	if (ret)
+@@ -2403,6 +2403,8 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
+ 		free_io_failure(inode, failrec);
+ 		return -EIO;
+ 	}
++	bio->bi_op = REQ_OP_READ;
++	bio->bi_rw = read_mode;
  
-@@ -114,6 +115,7 @@ void bch_data_verify(struct cached_dev *dc, struct bio *bio)
- 	check = bio_clone(bio, GFP_NOIO);
- 	if (!check)
- 		return;
-+	check->bi_op = REQ_OP_READ;
- 	check->bi_rw |= READ_SYNC;
- 
- 	if (bio_alloc_pages(check, GFP_NOIO))
-diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
-index 86a0bb8..f10a9a0 100644
---- a/drivers/md/bcache/io.c
-+++ b/drivers/md/bcache/io.c
-@@ -111,7 +111,7 @@ void bch_bbio_count_io_errors(struct cache_set *c, struct bio *bio,
- 	struct bbio *b = container_of(bio, struct bbio, bio);
- 	struct cache *ca = PTR_CACHE(c, &b->key, 0);
- 
--	unsigned threshold = bio->bi_rw & REQ_WRITE
-+	unsigned threshold = op_is_write(bio->bi_op)
- 		? c->congested_write_threshold_us
- 		: c->congested_read_threshold_us;
- 
-diff --git a/drivers/md/bcache/journal.c b/drivers/md/bcache/journal.c
-index af3f9f7..68fa0f0 100644
---- a/drivers/md/bcache/journal.c
-+++ b/drivers/md/bcache/journal.c
-@@ -54,7 +54,7 @@ reread:		left = ca->sb.bucket_size - offset;
- 		bio_reset(bio);
- 		bio->bi_iter.bi_sector	= bucket + offset;
- 		bio->bi_bdev	= ca->bdev;
--		bio->bi_rw	= READ;
-+		bio->bi_op	= REQ_OP_READ;
- 		bio->bi_iter.bi_size	= len << 9;
- 
- 		bio->bi_end_io	= journal_read_endio;
-@@ -452,7 +452,7 @@ static void do_journal_discard(struct cache *ca)
- 		bio->bi_iter.bi_sector	= bucket_to_sector(ca->set,
- 						ca->sb.d[ja->discard_idx]);
- 		bio->bi_bdev		= ca->bdev;
--		bio->bi_rw		= REQ_WRITE|REQ_DISCARD;
-+		bio->bi_op		= REQ_OP_DISCARD;
- 		bio->bi_max_vecs	= 1;
- 		bio->bi_io_vec		= bio->bi_inline_vecs;
- 		bio->bi_iter.bi_size	= bucket_bytes(ca);
-@@ -626,7 +626,8 @@ static void journal_write_unlocked(struct closure *cl)
- 		bio_reset(bio);
- 		bio->bi_iter.bi_sector	= PTR_OFFSET(k, i);
- 		bio->bi_bdev	= ca->bdev;
--		bio->bi_rw	= REQ_WRITE|REQ_SYNC|REQ_META|REQ_FLUSH|REQ_FUA;
-+		bio->bi_op	= REQ_OP_WRITE;
-+		bio->bi_rw	= REQ_SYNC|REQ_META|REQ_FLUSH|REQ_FUA;
- 		bio->bi_iter.bi_size = sectors << 9;
- 
- 		bio->bi_end_io	= journal_write_endio;
-diff --git a/drivers/md/bcache/movinggc.c b/drivers/md/bcache/movinggc.c
-index b929fc9..f33860a 100644
---- a/drivers/md/bcache/movinggc.c
-+++ b/drivers/md/bcache/movinggc.c
-@@ -163,7 +163,7 @@ static void read_moving(struct cache_set *c)
- 		moving_init(io);
- 		bio = &io->bio.bio;
- 
--		bio->bi_rw	= READ;
-+		bio->bi_op	= REQ_OP_READ;
- 		bio->bi_end_io	= read_moving_endio;
- 
- 		if (bio_alloc_pages(bio, GFP_KERNEL))
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 25fa844..cd6837c 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -253,7 +253,7 @@ static void bch_data_insert_start(struct closure *cl)
- 		trace_bcache_cache_insert(k);
- 		bch_keylist_push(&op->insert_keys);
- 
--		n->bi_rw |= REQ_WRITE;
-+		n->bi_op = REQ_OP_WRITE;
- 		bch_submit_bbio(n, op->c, k, 0);
- 	} while (n != bio);
- 
-@@ -383,7 +383,7 @@ static bool check_should_bypass(struct cached_dev *dc, struct bio *bio)
- 
- 	if (mode == CACHE_MODE_NONE ||
- 	    (mode == CACHE_MODE_WRITEAROUND &&
--	     (bio->bi_rw & REQ_WRITE)))
-+	     op_is_write(bio->bi_op)))
- 		goto skip;
- 
- 	if (bio->bi_iter.bi_sector & (c->sb.block_size - 1) ||
-@@ -404,7 +404,7 @@ static bool check_should_bypass(struct cached_dev *dc, struct bio *bio)
- 
- 	if (!congested &&
- 	    mode == CACHE_MODE_WRITEBACK &&
--	    (bio->bi_rw & REQ_WRITE) &&
-+	    op_is_write(bio->bi_op) &&
- 	    (bio->bi_rw & REQ_SYNC))
- 		goto rescale;
- 
-@@ -657,7 +657,7 @@ static inline struct search *search_alloc(struct bio *bio,
- 	s->cache_miss		= NULL;
- 	s->d			= d;
- 	s->recoverable		= 1;
--	s->write		= (bio->bi_rw & REQ_WRITE) != 0;
-+	s->write		= op_is_write(bio->bi_op);
- 	s->read_dirty_data	= 0;
- 	s->start_time		= jiffies;
- 
-@@ -925,6 +925,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
- 			struct bio *flush = bio_alloc_bioset(GFP_NOIO, 0,
- 							     dc->disk.bio_split);
- 
-+			flush->bi_op	= REQ_OP_WRITE;
- 			flush->bi_rw	= WRITE_FLUSH;
- 			flush->bi_bdev	= bio->bi_bdev;
- 			flush->bi_end_io = request_endio;
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 9e2eac8..b11f7f4 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -212,7 +212,8 @@ static void __write_super(struct cache_sb *sb, struct bio *bio)
- 	unsigned i;
- 
- 	bio->bi_iter.bi_sector	= SB_SECTOR;
--	bio->bi_rw		= REQ_WRITE|REQ_SYNC|REQ_META;
-+	bio->bi_op		= REQ_OP_WRITE;
-+	bio->bi_rw		= REQ_SYNC|REQ_META;
- 	bio->bi_iter.bi_size	= SB_SIZE;
- 	bch_bio_map(bio, NULL);
- 
-@@ -333,7 +334,7 @@ static void uuid_io_unlock(struct closure *cl)
- 	up(&c->uuid_write_mutex);
+ 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
+ 		 read_mode, failrec->this_mirror, failrec->in_validation);
+@@ -2714,8 +2716,8 @@ struct bio *btrfs_io_bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
  }
  
--static void uuid_io(struct cache_set *c, unsigned long rw,
-+static void uuid_io(struct cache_set *c, int op, unsigned long op_flags,
- 		    struct bkey *k, struct closure *parent)
+ 
+-static int __must_check submit_one_bio(int rw, struct bio *bio,
+-				       int mirror_num, unsigned long bio_flags)
++static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
++				       unsigned long bio_flags)
  {
- 	struct closure *cl = &c->uuid_write;
-@@ -348,7 +349,8 @@ static void uuid_io(struct cache_set *c, unsigned long rw,
- 	for (i = 0; i < KEY_PTRS(k); i++) {
- 		struct bio *bio = bch_bbio_alloc(c);
+ 	int ret = 0;
+ 	struct bio_vec *bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
+@@ -2726,12 +2728,12 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
+ 	start = page_offset(page) + bvec->bv_offset;
  
--		bio->bi_rw	= REQ_SYNC|REQ_META|rw;
-+		bio->bi_op	= op;
-+		bio->bi_rw	= REQ_SYNC|REQ_META|op_flags;
- 		bio->bi_iter.bi_size = KEY_SIZE(k) << 9;
+ 	bio->bi_private = NULL;
+-	bio->bi_rw = rw;
+ 	bio_get(bio);
  
- 		bio->bi_end_io	= uuid_endio;
-@@ -357,12 +359,12 @@ static void uuid_io(struct cache_set *c, unsigned long rw,
+ 	if (tree->ops && tree->ops->submit_bio_hook)
+-		ret = tree->ops->submit_bio_hook(page->mapping->host, rw, bio,
+-					   mirror_num, bio_flags, start);
++		ret = tree->ops->submit_bio_hook(page->mapping->host,
++						 bio->bi_rw, bio, mirror_num,
++						 bio_flags, start);
+ 	else
+ 		btrfsic_submit_bio(bio);
  
- 		bch_submit_bbio(bio, c, k, i);
+@@ -2739,20 +2741,20 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
+ 	return ret;
+ }
  
--		if (!(rw & WRITE))
-+		if (op != REQ_OP_WRITE)
- 			break;
+-static int merge_bio(int rw, struct extent_io_tree *tree, struct page *page,
++static int merge_bio(struct extent_io_tree *tree, struct page *page,
+ 		     unsigned long offset, size_t size, struct bio *bio,
+ 		     unsigned long bio_flags)
+ {
+ 	int ret = 0;
+ 	if (tree->ops && tree->ops->merge_bio_hook)
+-		ret = tree->ops->merge_bio_hook(rw, page, offset, size, bio,
+-						bio_flags);
++		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
++						bio, bio_flags);
+ 	BUG_ON(ret < 0);
+ 	return ret;
+ 
+ }
+ 
+-static int submit_extent_page(int rw, struct extent_io_tree *tree,
++static int submit_extent_page(int op, int op_flags, struct extent_io_tree *tree,
+ 			      struct writeback_control *wbc,
+ 			      struct page *page, sector_t sector,
+ 			      size_t size, unsigned long offset,
+@@ -2780,10 +2782,9 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
+ 
+ 		if (prev_bio_flags != bio_flags || !contig ||
+ 		    force_bio_submit ||
+-		    merge_bio(rw, tree, page, offset, page_size, bio, bio_flags) ||
++		    merge_bio(tree, page, offset, page_size, bio, bio_flags) ||
+ 		    bio_add_page(bio, page, page_size, offset) < page_size) {
+-			ret = submit_one_bio(rw, bio, mirror_num,
+-					     prev_bio_flags);
++			ret = submit_one_bio(bio, mirror_num, prev_bio_flags);
+ 			if (ret < 0) {
+ 				*bio_ret = NULL;
+ 				return ret;
+@@ -2804,6 +2805,8 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
+ 	bio_add_page(bio, page, page_size, offset);
+ 	bio->bi_end_io = end_io_func;
+ 	bio->bi_private = tree;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
+ 	if (wbc) {
+ 		wbc_init_bio(wbc, bio);
+ 		wbc_account_io(wbc, page, page_size);
+@@ -2812,7 +2815,7 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
+ 	if (bio_ret)
+ 		*bio_ret = bio;
+ 	else
+-		ret = submit_one_bio(rw, bio, mirror_num, bio_flags);
++		ret = submit_one_bio(bio, mirror_num, bio_flags);
+ 
+ 	return ret;
+ }
+@@ -2876,7 +2879,7 @@ static int __do_readpage(struct extent_io_tree *tree,
+ 			 get_extent_t *get_extent,
+ 			 struct extent_map **em_cached,
+ 			 struct bio **bio, int mirror_num,
+-			 unsigned long *bio_flags, int rw,
++			 unsigned long *bio_flags, int read_flags,
+ 			 u64 *prev_em_start)
+ {
+ 	struct inode *inode = page->mapping->host;
+@@ -3059,8 +3062,8 @@ static int __do_readpage(struct extent_io_tree *tree,
+ 		}
+ 
+ 		pnr -= page->index;
+-		ret = submit_extent_page(rw, tree, NULL, page,
+-					 sector, disk_io_size, pg_offset,
++		ret = submit_extent_page(REQ_OP_READ, read_flags, tree, NULL,
++					 page, sector, disk_io_size, pg_offset,
+ 					 bdev, bio, pnr,
+ 					 end_bio_extent_readpage, mirror_num,
+ 					 *bio_flags,
+@@ -3091,7 +3094,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
+ 					     get_extent_t *get_extent,
+ 					     struct extent_map **em_cached,
+ 					     struct bio **bio, int mirror_num,
+-					     unsigned long *bio_flags, int rw,
++					     unsigned long *bio_flags,
+ 					     u64 *prev_em_start)
+ {
+ 	struct inode *inode;
+@@ -3112,7 +3115,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
+ 
+ 	for (index = 0; index < nr_pages; index++) {
+ 		__do_readpage(tree, pages[index], get_extent, em_cached, bio,
+-			      mirror_num, bio_flags, rw, prev_em_start);
++			      mirror_num, bio_flags, 0, prev_em_start);
+ 		page_cache_release(pages[index]);
+ 	}
+ }
+@@ -3122,7 +3125,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
+ 			       int nr_pages, get_extent_t *get_extent,
+ 			       struct extent_map **em_cached,
+ 			       struct bio **bio, int mirror_num,
+-			       unsigned long *bio_flags, int rw,
++			       unsigned long *bio_flags,
+ 			       u64 *prev_em_start)
+ {
+ 	u64 start = 0;
+@@ -3144,7 +3147,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
+ 						  index - first_index, start,
+ 						  end, get_extent, em_cached,
+ 						  bio, mirror_num, bio_flags,
+-						  rw, prev_em_start);
++						  prev_em_start);
+ 			start = page_start;
+ 			end = start + PAGE_CACHE_SIZE - 1;
+ 			first_index = index;
+@@ -3155,7 +3158,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
+ 		__do_contiguous_readpages(tree, &pages[first_index],
+ 					  index - first_index, start,
+ 					  end, get_extent, em_cached, bio,
+-					  mirror_num, bio_flags, rw,
++					  mirror_num, bio_flags,
+ 					  prev_em_start);
+ }
+ 
+@@ -3163,7 +3166,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
+ 				   struct page *page,
+ 				   get_extent_t *get_extent,
+ 				   struct bio **bio, int mirror_num,
+-				   unsigned long *bio_flags, int rw)
++				   unsigned long *bio_flags, int read_flags)
+ {
+ 	struct inode *inode = page->mapping->host;
+ 	struct btrfs_ordered_extent *ordered;
+@@ -3183,7 +3186,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
  	}
  
- 	bch_extent_to_text(buf, sizeof(buf), k);
--	pr_debug("%s UUIDs at %s", rw & REQ_WRITE ? "wrote" : "read", buf);
-+	pr_debug("%s UUIDs at %s", op == REQ_OP_WRITE ? "wrote" : "read", buf);
- 
- 	for (u = c->uuids; u < c->uuids + c->nr_uuids; u++)
- 		if (!bch_is_zero(u->uuid, 16))
-@@ -381,7 +383,7 @@ static char *uuid_read(struct cache_set *c, struct jset *j, struct closure *cl)
- 		return "bad uuid pointer";
- 
- 	bkey_copy(&c->uuid_bucket, k);
--	uuid_io(c, READ_SYNC, k, cl);
-+	uuid_io(c, REQ_OP_READ, READ_SYNC, k, cl);
- 
- 	if (j->version < BCACHE_JSET_VERSION_UUIDv1) {
- 		struct uuid_entry_v0	*u0 = (void *) c->uuids;
-@@ -426,7 +428,7 @@ static int __uuid_write(struct cache_set *c)
- 		return 1;
- 
- 	SET_KEY_SIZE(&k.key, c->sb.bucket_size);
--	uuid_io(c, REQ_WRITE, &k.key, &cl);
-+	uuid_io(c, REQ_OP_WRITE, 0, &k.key, &cl);
- 	closure_sync(&cl);
- 
- 	bkey_copy(&c->uuid_bucket, &k.key);
-@@ -498,7 +500,8 @@ static void prio_endio(struct bio *bio)
- 	closure_put(&ca->prio);
+ 	ret = __do_readpage(tree, page, get_extent, NULL, bio, mirror_num,
+-			    bio_flags, rw, NULL);
++			    bio_flags, read_flags, NULL);
+ 	return ret;
  }
  
--static void prio_io(struct cache *ca, uint64_t bucket, unsigned long rw)
-+static void prio_io(struct cache *ca, uint64_t bucket, int op,
-+		    unsigned long op_flags)
+@@ -3195,9 +3198,9 @@ int extent_read_full_page(struct extent_io_tree *tree, struct page *page,
+ 	int ret;
+ 
+ 	ret = __extent_read_full_page(tree, page, get_extent, &bio, mirror_num,
+-				      &bio_flags, READ);
++				      &bio_flags, 0);
+ 	if (bio)
+-		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
++		ret = submit_one_bio(bio, mirror_num, bio_flags);
+ 	return ret;
+ }
+ 
+@@ -3444,7 +3447,8 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
+ 				       page->index, cur, end);
+ 			}
+ 
+-			ret = submit_extent_page(write_flags, tree, wbc, page,
++			ret = submit_extent_page(REQ_OP_WRITE, write_flags,
++						 tree, wbc, page,
+ 						 sector, iosize, pg_offset,
+ 						 bdev, &epd->bio, max_nr,
+ 						 end_bio_extent_writepage,
+@@ -3484,13 +3488,11 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
+ 	size_t pg_offset = 0;
+ 	loff_t i_size = i_size_read(inode);
+ 	unsigned long end_index = i_size >> PAGE_CACHE_SHIFT;
+-	int write_flags;
++	int write_flags = 0;
+ 	unsigned long nr_written = 0;
+ 
+ 	if (wbc->sync_mode == WB_SYNC_ALL)
+ 		write_flags = WRITE_SYNC;
+-	else
+-		write_flags = WRITE;
+ 
+ 	trace___extent_writepage(page, inode, wbc);
+ 
+@@ -3734,7 +3736,7 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
+ 	u64 offset = eb->start;
+ 	unsigned long i, num_pages;
+ 	unsigned long bio_flags = 0;
+-	int rw = (epd->sync_io ? WRITE_SYNC : WRITE) | REQ_META;
++	int write_flags = (epd->sync_io ? WRITE_SYNC : 0) | REQ_META;
+ 	int ret = 0;
+ 
+ 	clear_bit(EXTENT_BUFFER_WRITE_ERR, &eb->bflags);
+@@ -3748,9 +3750,10 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
+ 
+ 		clear_page_dirty_for_io(p);
+ 		set_page_writeback(p);
+-		ret = submit_extent_page(rw, tree, wbc, p, offset >> 9,
+-					 PAGE_CACHE_SIZE, 0, bdev, &epd->bio,
+-					 -1, end_bio_extent_buffer_writepage,
++		ret = submit_extent_page(REQ_OP_WRITE, write_flags, tree, wbc,
++					 p, offset >> 9, PAGE_CACHE_SIZE, 0,
++					 bdev, &epd->bio, -1,
++					 end_bio_extent_buffer_writepage,
+ 					 0, epd->bio_flags, bio_flags, false);
+ 		epd->bio_flags = bio_flags;
+ 		if (ret) {
+@@ -4039,13 +4042,13 @@ retry:
+ static void flush_epd_write_bio(struct extent_page_data *epd)
  {
- 	struct closure *cl = &ca->prio;
- 	struct bio *bio = bch_bbio_alloc(ca->set);
-@@ -507,7 +510,8 @@ static void prio_io(struct cache *ca, uint64_t bucket, unsigned long rw)
+ 	if (epd->bio) {
+-		int rw = WRITE;
+ 		int ret;
  
- 	bio->bi_iter.bi_sector	= bucket * ca->sb.bucket_size;
- 	bio->bi_bdev		= ca->bdev;
--	bio->bi_rw		= REQ_SYNC|REQ_META|rw;
-+	bio->bi_op		= op;
-+	bio->bi_rw		= REQ_SYNC|REQ_META|op_flags;
- 	bio->bi_iter.bi_size	= bucket_bytes(ca);
++		epd->bio->bi_op = REQ_OP_WRITE;
+ 		if (epd->sync_io)
+-			rw = WRITE_SYNC;
++			epd->bio->bi_rw = WRITE_SYNC;
  
- 	bio->bi_end_io	= prio_endio;
-@@ -557,7 +561,7 @@ void bch_prio_write(struct cache *ca)
- 		BUG_ON(bucket == -1);
+-		ret = submit_one_bio(rw, epd->bio, 0, epd->bio_flags);
++		ret = submit_one_bio(epd->bio, 0, epd->bio_flags);
+ 		BUG_ON(ret < 0); /* -ENOMEM */
+ 		epd->bio = NULL;
+ 	}
+@@ -4172,19 +4175,19 @@ int extent_readpages(struct extent_io_tree *tree,
+ 		if (nr < ARRAY_SIZE(pagepool))
+ 			continue;
+ 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
+-				   &bio, 0, &bio_flags, READ, &prev_em_start);
++				   &bio, 0, &bio_flags, &prev_em_start);
+ 		nr = 0;
+ 	}
+ 	if (nr)
+ 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
+-				   &bio, 0, &bio_flags, READ, &prev_em_start);
++				   &bio, 0, &bio_flags, &prev_em_start);
  
- 		mutex_unlock(&ca->set->bucket_lock);
--		prio_io(ca, bucket, REQ_WRITE);
-+		prio_io(ca, bucket, REQ_OP_WRITE, 0);
- 		mutex_lock(&ca->set->bucket_lock);
+ 	if (em_cached)
+ 		free_extent_map(em_cached);
  
- 		ca->prio_buckets[i] = bucket;
-@@ -599,7 +603,7 @@ static void prio_read(struct cache *ca, uint64_t bucket)
- 			ca->prio_last_buckets[bucket_nr] = bucket;
- 			bucket_nr++;
+ 	BUG_ON(!list_empty(pages));
+ 	if (bio)
+-		return submit_one_bio(READ, bio, 0, bio_flags);
++		return submit_one_bio(bio, 0, bio_flags);
+ 	return 0;
+ }
  
--			prio_io(ca, bucket, READ_SYNC);
-+			prio_io(ca, bucket, REQ_OP_READ, READ_SYNC);
+@@ -5206,7 +5209,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
+ 			err = __extent_read_full_page(tree, page,
+ 						      get_extent, &bio,
+ 						      mirror_num, &bio_flags,
+-						      READ | REQ_META);
++						      REQ_META);
+ 			if (err)
+ 				ret = err;
+ 		} else {
+@@ -5215,8 +5218,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
+ 	}
  
- 			if (p->csum != bch_crc64(&p->magic, bucket_bytes(ca) - 8))
- 				pr_warn("bad csum reading priorities");
-diff --git a/drivers/md/bcache/writeback.c b/drivers/md/bcache/writeback.c
-index b9346cd..96ddf28 100644
---- a/drivers/md/bcache/writeback.c
-+++ b/drivers/md/bcache/writeback.c
-@@ -183,7 +183,7 @@ static void write_dirty(struct closure *cl)
- 	struct keybuf_key *w = io->bio.bi_private;
- 
- 	dirty_init(w);
--	io->bio.bi_rw		= WRITE;
-+	io->bio.bi_op		= REQ_OP_WRITE;
- 	io->bio.bi_iter.bi_sector = KEY_START(&w->key);
- 	io->bio.bi_bdev		= io->dc->bdev;
- 	io->bio.bi_end_io	= dirty_endio;
-@@ -256,7 +256,7 @@ static void read_dirty(struct cached_dev *dc)
- 		io->bio.bi_iter.bi_sector = PTR_OFFSET(&w->key, 0);
- 		io->bio.bi_bdev		= PTR_CACHE(dc->disk.c,
- 						    &w->key, 0)->bdev;
--		io->bio.bi_rw		= READ;
-+		io->bio.bi_op		= REQ_OP_READ;
- 		io->bio.bi_end_io	= read_dirty_endio;
- 
- 		if (bio_alloc_pages(&io->bio, GFP_KERNEL))
+ 	if (bio) {
+-		err = submit_one_bio(READ | REQ_META, bio, mirror_num,
+-				     bio_flags);
++		err = submit_one_bio(bio, mirror_num, bio_flags);
+ 		if (err)
+ 			return err;
+ 	}
 -- 
 1.8.3.1
