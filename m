@@ -1,48 +1,50 @@
-From: Boaz Harrosh <ooo@electrozaur.com>
-Subject: Re: [PATCH v2] osd: remove deadcode
-Date: Wed, 24 Feb 2016 16:58:51 +0200
-Message-ID: <56CDC52B.1040407@electrozaur.com>
-References: <1456312888-22074-1-git-send-email-sudipm.mukherjee@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-multipath test scripts
+Date: Wed, 24 Feb 2016 14:37:08 -0500
+Message-ID: <20160224193707.GA16062@redhat.com>
+References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+ <20160218171745.GA15071@redhat.com>
+ <56C662F1.8070407@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1456312888-22074-1-git-send-email-sudipm.mukherjee@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, Benny Halevy <bhalevy@primarydata.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49545 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751845AbcBXThJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Feb 2016 14:37:09 -0500
+Content-Disposition: inline
+In-Reply-To: <56C662F1.8070407@ce.jp.nec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 02/24/2016 01:21 PM, Sudip Mukherjee wrote:
-> The variable is_ver1 is always true and so OSD_CAP_LEN can never be
-> used.
-> Reported by Coverity.
-> 
-> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+On Thu, Feb 18 2016 at  7:33pm -0500,
+Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
 
-ACK-by: Boaz harrosh <ooo@elecrozaur.com>
+> Hi Mike,
+> 
+> On 02/19/16 02:17, Mike Snitzer wrote:
+> 
+> > Taking a step back:
+> > These scripts don't belong in Documentation/device-mapper/mptest/ (or
+> > anywhere in the kernel tree for that matter).
+> > 
+> > I'd really prefer it if we could port your scripts over to the
+> > device-mapper-test-suite, see:
+> > https://github.com/jthornber/device-mapper-test-suite
+> 
+> Yes, I agree such a project is better place for this to live.
 
-Thanks
-> ---
-> 
-> v2: Joe Perches asked to mention the tool used in the commit log.
-> 
->  drivers/scsi/osd/osd_initiator.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-> index d8a2b51..3b11aad 100644
-> --- a/drivers/scsi/osd/osd_initiator.c
-> +++ b/drivers/scsi/osd/osd_initiator.c
-> @@ -2006,9 +2006,8 @@ EXPORT_SYMBOL(osd_sec_init_nosec_doall_caps);
->   */
->  void osd_set_caps(struct osd_cdb *cdb, const void *caps)
->  {
-> -	bool is_ver1 = true;
->  	/* NOTE: They start at same address */
-> -	memcpy(&cdb->v1.caps, caps, is_ver1 ? OSDv1_CAP_LEN : OSD_CAP_LEN);
-> +	memcpy(&cdb->v1.caps, caps, OSDv1_CAP_LEN);
->  }
->  
->  bool osd_is_sec_alldata(struct osd_security_parameters *sec_parms __unused)
-> 
+I was going to attempt porting your scripts to device-mapper-test-suite
+but I'll have to come back to that (I have more important tasks at this
+time).
+
+So I've created a guthub repo for your scripts:
+https://github.com/snitm/mptest
+
+I'll let you know once I've ported to device-mapper-test-suite.  But in
+the meantime I'll take any changes you or others have to 'mptest'.
+
+Thanks,
+Mike
