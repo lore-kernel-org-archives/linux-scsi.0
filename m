@@ -1,150 +1,193 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [BUG] "block: make generic_make_request handle arbitrarily sized
- bios" breaks boot on parisc-linux
-Date: Wed, 24 Feb 2016 15:59:22 +0800
-Message-ID: <CACVXFVOnff1sFfMH+zsoypuYwM4PokJkHeKhbxJYDDH6ZtVScg@mail.gmail.com>
-References: <227C05EC-5A1C-4FAF-89D8-4A45AF600EC4@bell.net>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [Lsf-pc] [LSF/MM ATTEND] Online Logical Head Depop and SMR disks
+ chunked writepages
+Date: Wed, 24 Feb 2016 09:47:46 +0100
+Message-ID: <20160224084746.GD10096@quack.suse.cz>
+References: <05353ADC-601C-412D-80E2-1F1972324A37@hgst.com>
+ <56CBD878.4070600@sandisk.com>
+ <20F4EEF6-8F58-42A0-99E9-E932B51D0387@hgst.com>
+ <20160223084042.GA24086@quack.suse.cz>
+ <4E5FED9C-0FE5-4C31-B3C2-7C6225AB8C62@hgst.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=94eb2c0327209ec937052c7f712c
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <227C05EC-5A1C-4FAF-89D8-4A45AF600EC4@bell.net>
-Sender: linux-parisc-owner@vger.kernel.org
-To: John David Anglin <dave.anglin@bell.net>
-Cc: linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Helge Deller <deller@gmx.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-parisc List <linux-parisc@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35493 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755959AbcBXIr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Feb 2016 03:47:26 -0500
+Content-Disposition: inline
+In-Reply-To: <4E5FED9C-0FE5-4C31-B3C2-7C6225AB8C62@hgst.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <Damien.LeMoal@hgst.com>
+Cc: Jan Kara <jack@suse.cz>, Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Matias Bjorling <m@bjorling.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---94eb2c0327209ec937052c7f712c
-Content-Type: text/plain; charset=UTF-8
+On Wed 24-02-16 01:53:24, Damien Le Moal wrote:
+> 
+> >On Tue 23-02-16 05:31:13, Damien Le Moal wrote:
+> >> 
+> >> >On 02/22/16 18:56, Damien Le Moal wrote:
+> >> >> 2) Write back of dirty pages to SMR block devices:
+> >> >>
+> >> >> Dirty pages of a block device inode are currently processed using the
+> >> >> generic_writepages function, which can be executed simultaneously
+> >> >> by multiple contexts (e.g sync, fsync, msync, sync_file_range, etc).
+> >> >> Mutual exclusion of the dirty page processing being achieved only at
+> >> >> the page level (page lock & page writeback flag), multiple processes
+> >> >> executing a "sync" of overlapping block ranges over the same zone of
+> >> >> an SMR disk can cause an out-of-LBA-order sequence of write requests
+> >> >> being sent to the underlying device. On a host managed SMR disk, where
+> >> >> sequential write to disk zones is mandatory, this result in errors and
+> >> >> the impossibility for an application using raw sequential disk write
+> >> >> accesses to be guaranteed successful completion of its write or fsync
+> >> >> requests.
+> >> >>
+> >> >> Using the zone information attached to the SMR block device queue
+> >> >> (introduced by Hannes), calls to the generic_writepages function can
+> >> >> be made mutually exclusive on a per zone basis by locking the zones.
+> >> >> This guarantees sequential request generation for each zone and avoid
+> >> >> write errors without any modification to the generic code implementing
+> >> >> generic_writepages.
+> >> >>
+> >> >> This is but one possible solution for supporting SMR host-managed
+> >> >> devices without any major rewrite of page cache management and
+> >> >> write-back processing. The opinion of the audience regarding this
+> >> >> solution and discussing other potential solutions would be greatly
+> >> >> appreciated.
+> >> >
+> >> >Hello Damien,
+> >> >
+> >> >Is it sufficient to support filesystems like BTRFS on top of SMR drives 
+> >> >or would you also like to see that filesystems like ext4 can use SMR 
+> >> >drives ? In the latter case: the behavior of SMR drives differs so 
+> >> >significantly from that of other block devices that I'm not sure that we 
+> >> >should try to support these directly from infrastructure like the page 
+> >> >cache. If we look e.g. at NAND SSDs then we see that the characteristics 
+> >> >of NAND do not match what filesystems expect (e.g. large erase blocks). 
+> >> >That is why every SSD vendor provides an FTL (Flash Translation Layer), 
+> >> >either inside the SSD or as a separate software driver. An FTL 
+> >> >implements a so-called LFS (log-structured filesystem). With what I know 
+> >> >about SMR this technology looks also suitable for implementation of a 
+> >> >LFS. Has it already been considered to implement an LFS driver for SMR 
+> >> >drives ? That would make it possible for any filesystem to access an SMR 
+> >> >drive as any other block device. I'm not sure of this but maybe it will 
+> >> >be possible to share some infrastructure with the LightNVM driver 
+> >> >(directory drivers/lightnvm in the Linux kernel tree). This driver 
+> >> >namely implements an FTL.
+> >> 
+> >> I totally agree with you that trying to support SMR disks by only modifying
+> >> the page cache so that unmodified standard file systems like BTRFS or ext4
+> >> remain operational is not realistic at best, and more likely simply impossible.
+> >> For this kind of use case, as you said, an FTL or a device mapper driver are
+> >> much more suitable.
+> >> 
+> >> The case I am considering for this discussion is for raw block device accesses
+> >> by an application (writes from user space to /dev/sdxx). This is a very likely
+> >> use case scenario for high capacity SMR disks with applications like distributed
+> >> object stores / key value stores.
+> >> 
+> >> In this case, write-back of dirty pages in the block device file inode mapping
+> >> is handled in fs/block_dev.c using the generic helper function generic_writepages.
+> >> This does not guarantee the generation of the required sequential write pattern
+> >> per zone necessary for host-managed disks. As I explained, aligning calls of this
+> >> function to zone boundaries while locking the zones under write-back solves
+> >> simply the problem (implemented and tested). This is of course only one possible
+> >> solution. Pushing modifications deeper in the code or providing a
+> >> "generic_sequential_writepages" helper function are other potential solutions
+> >> that in my opinion are worth discussing as other types of devices may benefit also
+> >> in terms of performance (e.g. regular disk drives prefer sequential writes, and
+> >> SSDs as well) and/or lighten the overhead on an underlying FTL or device mapper
+> >> driver.
+> >> 
+> >> For a file system, an SMR compliant implementation of a file inode mapping
+> >> writepages method should be provided by the file system itself as the sequentiality
+> >> of the write pattern depends further on the block allocation mechanism of the file
+> >> system.
+> >> 
+> >> Note that the goal here is not to hide to applications the sequential write
+> >> constraint of SMR disks. The page cache itself (the mapping of the block
+> >> device inode) remains unchanged. But the modification proposed guarantees that
+> >> a well behaved application writing sequentially to zones through the page cache
+> >> will see successful sync operations.
+> >
+> >So the easiest solution for the OS, when the application is already aware
+> >of the storage constraints, would be for an application to use direct IO.
+> >Because when using page-cache and writeback there are all sorts of
+> >unexpected things that can happen (e.g. writeback decides to skip a page
+> >because someone else locked it temporarily). So it will work in 99.9% of
+> >cases but sometimes things will be out of order for hard-to-track down
+> >reasons. And for ordinary drives this is not an issue because we just slow
+> >down writeback a bit but rareness of this makes it non-issue. But for host
+> >managed SMR the IO fails and that is something the application does not
+> >expect.
+> >
+> >So I would really say just avoid using page-cache when you are using SMR
+> >drives directly without a translation layer. For writes your throughput
+> >won't suffer anyway since you have to do big sequential writes. Using
+> >page-cache for reads may still be beneficial and if you are careful enough
+> >not to do direct IO writes to the same range as you do buffered reads, this
+> >will work fine.
+> >
+> >Thinking some more - if you want to make it foolproof, you could implement
+> >something like read-only page cache for block devices. Any write will be in
+> >fact direct IO write, writeable mmaps will be disallowed, reads will honor
+> >O_DIRECT flag.
+> 
+> Hi Jan,
+> 
+> Indeed, using O_DIRECT for raw block device write is an obvious solution to
+> guarantee the application successful sequential writes within a zone. However,
+> host-managed SMR disks (and to a lesser extent host-aware drives too) already
+> put on applications the constraint of ensuring sequential writes. Adding to this
+> further mandatory rewrite to support direct I/Os is in my opinion asking a lot,
+> if not too much.
 
-On Wed, Feb 24, 2016 at 10:28 AM, John David Anglin
-<dave.anglin@bell.net> wrote:
-> The following block change breaks boot on parisc-linux:
->
-> commit 54efd50bfd873e2dbf784e0b21a8027ba4299a3e
-> Author: Kent Overstreet <kent.overstreet@gmail.com>
-> Date:   Thu Apr 23 22:37:18 2015 -0700
->
->    block: make generic_make_request handle arbitrarily sized bios
->
->    The way the block layer is currently written, it goes to great lengths
->    to avoid having to split bios; upper layer code (such as bio_add_page())
->    checks what the underlying device can handle and tries to always create
->    bios that don't need to be split.
->
->    But this approach becomes unwieldy and eventually breaks down with
->    stacked devices and devices with dynamic limits, and it adds a lot of
->    complexity. If the block layer could split bios as needed, we could
->    eliminate a lot of complexity elsewhere - particularly in stacked
->    drivers. Code that creates bios can then create whatever size bios are
->    convenient, and more importantly stacked drivers don't have to deal with
->    both their own bio size limitations and the limitations of the
->    (potentially multiple) devices underneath them.  In the future this will
->    let us delete merge_bvec_fn and a bunch of other code.
->
->    We do this by adding calls to blk_queue_split() to the various
->    make_request functions that need it - a few can already handle arbitrary
->    size bios. Note that we add the call _after_ any call to
->    blk_queue_bounce(); this means that blk_queue_split() and
->    blk_recalc_rq_segments() don't need to be concerned with bouncing
->    affecting segment merging.
->
->    Some make_request_fn() callbacks were simple enough to audit and verify
->    they don't need blk_queue_split() calls. The skipped ones are:
->
->     * nfhd_make_request (arch/m68k/emu/nfblock.c)
->     * axon_ram_make_request (arch/powerpc/sysdev/axonram.c)
->     * simdisk_make_request (arch/xtensa/platforms/iss/simdisk.c)
->     * brd_make_request (ramdisk - drivers/block/brd.c)
->     * mtip_submit_request (drivers/block/mtip32xx/mtip32xx.c)
->     * loop_make_request
->     * null_queue_bio
->     * bcache's make_request fns
->
->    Some others are almost certainly safe to remove now, but will be left
->    for future patches.
->
->    Cc: Jens Axboe <axboe@kernel.dk>
->    Cc: Christoph Hellwig <hch@infradead.org>
->    Cc: Al Viro <viro@zeniv.linux.org.uk>
->    Cc: Ming Lei <ming.lei@canonical.com>
->    Cc: Neil Brown <neilb@suse.de>
->    Cc: Alasdair Kergon <agk@redhat.com>
->    Cc: Mike Snitzer <snitzer@redhat.com>
->    Cc: dm-devel@redhat.com
->    Cc: Lars Ellenberg <drbd-dev@lists.linbit.com>
->    Cc: drbd-user@lists.linbit.com
->    Cc: Jiri Kosina <jkosina@suse.cz>
->    Cc: Geoff Levand <geoff@infradead.org>
->    Cc: Jim Paris <jim@jtan.com>
->    Cc: Philip Kelleher <pjk1939@linux.vnet.ibm.com>
->    Cc: Minchan Kim <minchan@kernel.org>
->    Cc: Nitin Gupta <ngupta@vflare.org>
->    Cc: Oleg Drokin <oleg.drokin@intel.com>
->    Cc: Andreas Dilger <andreas.dilger@intel.com>
->    Acked-by: NeilBrown <neilb@suse.de> (for the 'md/md.c' bits)
->    Acked-by: Mike Snitzer <snitzer@redhat.com>
->    Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
->    Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
->    [dpark: skip more mq-based drivers, resolve merge conflicts, etc.]
->    Signed-off-by: Dongsu Park <dpark@posteo.net>
->    Signed-off-by: Ming Lin <ming.l@ssi.samsung.com>
->    Signed-off-by: Jens Axboe <axboe@fb.com>
->
-> This thread on the linux-parisc has most of the discussion and analysis:
-> http://www.spinics.net/lists/linux-parisc/msg06710.html
->
-> Essentially, the SCSI layer underestimates the number of sg segments needed and we run off the end of the sg list and crash.
-> This happens because the protect bit is ignored.  As a result 4.3 and later kernels fail to boot.  This includes the current Debian
-> kernel for hppa.
->
-> Hopefully, the block group can help resolve this issue.  We can help with testing if needed.
->
+So I don't think adding O_DIRECT to open flags is such a burden -
+sequential writes are IMO much harder to do :). And furthermore this could
+happen magically inside the kernel in which case app needn't be aware about
+this at all (similarly to how we handle writes to persistent memory).
+ 
+> The example you mention above of writeback skipping a locked page and resulting
+> in I/O errors is precisely what the proposed patch avoids by first locking the
+> zone the page belongs to. In the same spirit as the writeback page locking, if
+> the zone is already locked, it is skipped. That is, zones are treated in a sense
+> as gigantic pages, ensuring that the actual dirty pages within each one are
+> processed in one go, sequentially.
 
-We fixed several similar bugs, but maybe there is another one, :-(
+But you cannot rule out mm subsystem locking a page to do something (e.g.
+migrate the page to help with compaction of large order pages). These other
+places accessing and locking pages are what I'm worried about. Furthermore
+kswapd can decide to writeback particular page under memory pressure and
+that will just make SMR disk freak out.
 
-Could you apply the attached debug patch and post the log after the issue is
-triggered?
+> This allows preserving all possible application level accesses (buffered,
+> direct or mmapped). The only constraint is the one the disk imposes:
+> writes must be sequential.
+> 
+> Granted, this view may be too simplistic and may be overlooking some hard
+> to track page locking paths which will compete with this. But I think
+> that this can be easily solved by forcing the zone-aligned
+> generic_writepages calls to not skip any page (a flag in struct
+> writeback_control would do the trick). And no modification is necessary
+> on the read side (i.e. page locking only is enough) since reading an SMR
+> disks blocks after a zone write-pointer position does not make sense (in
+> Hannes code, this is possible, but the request does not go to the disk
+> and returns garbage data).
+> 
+> Bottom line: no fundamental change to the page caching mechanism, only
+> how it is being used/controlled for writeback makes this work.
+> Considering the benefits on the application side, it is in my opinion a
+> valid modification to have.
 
-Thanks,
-Ming Lei
+See above, there are quite a few places which will break your assumptions.
+And I don't think changing them all to handle SMR is worth it. IMO caching
+sequential writes to SMR disks has low effect (if any) anyway so I would
+just avoid that. We can talk about how to make this as seamless to
+applications as possible. The only thing which I don't think is reasonably
+doable without dirtying pagecache are writeable mmaps of an SMR device so
+applications would have to avoid that.
 
---94eb2c0327209ec937052c7f712c
-Content-Type: text/x-patch; charset=US-ASCII; name="blk-merge_check-bvec.patch"
-Content-Disposition: attachment; filename="blk-merge_check-bvec.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_il0jursq0
-
-ZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1tZXJnZS5jIGIvYmxvY2svYmxrLW1lcmdlLmMKaW5kZXgg
-MjYxMzUzMS4uMWE3M2ViNiAxMDA2NDQKLS0tIGEvYmxvY2svYmxrLW1lcmdlLmMKKysrIGIvYmxv
-Y2svYmxrLW1lcmdlLmMKQEAgLTQxNiw2ICs0MTYsMjQgQEAgc2luZ2xlX3NlZ21lbnQ6CiAJcmV0
-dXJuIG5zZWdzOwogfQogCitzdGF0aWMgdm9pZCBjaGVja19idmVjKHN0cnVjdCByZXF1ZXN0ICpy
-ZXEpCit7CisJc3RydWN0IGJpb192ZWMgYnZlYzsKKwlzdHJ1Y3QgcmVxX2l0ZXJhdG9yIGl0ZXI7
-CisJaW50IGkgPSAwOworCisJcHJpbnRrKCIlczogZHVtcCBidmVjIGZvciAlcChmOiVsbHgsIHQ6
-JWQpXG4iLAorCQkJX19mdW5jX18sIHJlcSwgcmVxLT5jbWRfZmxhZ3MsCisJCQlyZXEtPmNtZF90
-eXBlKTsKKwlycV9mb3JfZWFjaF9zZWdtZW50KGJ2ZWMsIHJlcSwgaXRlcikgeworCQlwcmludGso
-Ilx0ICU0ZDogJXUgJXUgJWx1ICVwXG4iLAorCQkJICAgICBpLCBidmVjLmJ2X29mZnNldCwgYnZl
-Yy5idl9sZW4sCisJCQkgICAgICh1bnNpZ25lZCBsb25nKXBhZ2VfdG9fcGZuKGJ2ZWMuYnZfcGFn
-ZSksCisJCQkgICAgIGl0ZXIuYmlvKTsKKwkJaSsrOworCX0KK30KKwogLyoKICAqIG1hcCBhIHJl
-cXVlc3QgdG8gc2NhdHRlcmxpc3QsIHJldHVybiBudW1iZXIgb2Ygc2cgZW50cmllcyBzZXR1cC4g
-Q2FsbGVyCiAgKiBtdXN0IG1ha2Ugc3VyZSBzZyBjYW4gaG9sZCBycS0+bnJfcGh5c19zZWdtZW50
-cyBlbnRyaWVzCkBAIC00MjUsNiArNDQzLDcgQEAgaW50IGJsa19ycV9tYXBfc2coc3RydWN0IHJl
-cXVlc3RfcXVldWUgKnEsIHN0cnVjdCByZXF1ZXN0ICpycSwKIHsKIAlzdHJ1Y3Qgc2NhdHRlcmxp
-c3QgKnNnID0gTlVMTDsKIAlpbnQgbnNlZ3MgPSAwOworCWJvb2wgZXh0cmFfbGVuID0gZmFsc2Us
-IGRtYV9kcmFpbiA9IGZhbHNlOwogCiAJaWYgKHJxLT5iaW8pCiAJCW5zZWdzID0gX19ibGtfYmlv
-c19tYXBfc2cocSwgcnEtPmJpbywgc2dsaXN0LCAmc2cpOwpAQCAtNDM2LDYgKzQ1NSw3IEBAIGlu
-dCBibGtfcnFfbWFwX3NnKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBzdHJ1Y3QgcmVxdWVzdCAq
-cnEsCiAKIAkJc2ctPmxlbmd0aCArPSBwYWRfbGVuOwogCQlycS0+ZXh0cmFfbGVuICs9IHBhZF9s
-ZW47CisJCWV4dHJhX2xlbiA9IHRydWU7CiAJfQogCiAJaWYgKHEtPmRtYV9kcmFpbl9zaXplICYm
-IHEtPmRtYV9kcmFpbl9uZWVkZWQocnEpKSB7CkBAIC00NTAsNiArNDcwLDcgQEAgaW50IGJsa19y
-cV9tYXBfc2coc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0cnVjdCByZXF1ZXN0ICpycSwKIAkJ
-CSAgICAoUEFHRV9TSVpFIC0gMSkpOwogCQluc2VncysrOwogCQlycS0+ZXh0cmFfbGVuICs9IHEt
-PmRtYV9kcmFpbl9zaXplOworCQlkbWFfZHJhaW4gPSB0cnVlOwogCX0KIAogCWlmIChzZykKQEAg
-LTQ2MCw2ICs0ODEsMTIgQEAgaW50IGJsa19ycV9tYXBfc2coc3RydWN0IHJlcXVlc3RfcXVldWUg
-KnEsIHN0cnVjdCByZXF1ZXN0ICpycSwKIAkgKiBzZWdtZW50IGlzIGJpZ2dlciB0aGFuIG51bWJl
-ciBvZiByZXEncyBwaHlzaWNhbCBzZWdtZW50cwogCSAqLwogCVdBUk5fT04obnNlZ3MgPiBycS0+
-bnJfcGh5c19zZWdtZW50cyk7CisJaWYgKG5zZWdzID4gcnEtPm5yX3BoeXNfc2VnbWVudHMpIHsK
-KwkJcHJpbnRrKCIlczogbWVyZ2UgYnVnOiAlZCAlZCwgZXh0cmFfbGVuICVkLCBkbWFfZHJhaW4g
-JWRcbiIsCisJCQlfX2Z1bmNfXywgbnNlZ3MsIHJxLT5ucl9waHlzX3NlZ21lbnRzLAorCQkJZXh0
-cmFfbGVuLCBkbWFfZHJhaW4pOworCQljaGVja19idmVjKHJxKTsKKwl9CiAKIAlyZXR1cm4gbnNl
-Z3M7CiB9Cg==
---94eb2c0327209ec937052c7f712c--
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
