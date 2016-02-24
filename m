@@ -1,183 +1,142 @@
 From: mchristi@redhat.com
-Subject: [PATCH 15/35] mpage: set bi_op to REQ_OP
-Date: Wed, 24 Feb 2016 13:47:52 -0600
-Message-ID: <1456343292-14535-16-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 25/35] target: set bi_op to REQ_OP
+Date: Wed, 24 Feb 2016 13:48:02 -0600
+Message-ID: <1456343292-14535-26-git-send-email-mchristi@redhat.com>
 References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the mpage.c code set the bio bi_op to a REQ_OP, and
+This patch has the target modules set the bio bi_op to a REQ_OP, and
 rq_flag_bits to bi_rw.
 
-I have run xfstest with xfs, but I am not sure
-if I have stressed these code paths well.
+This patch is compile tested only.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- fs/mpage.c | 41 +++++++++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+ drivers/target/target_core_iblock.c | 38 ++++++++++++++++++++++---------------
+ drivers/target/target_core_pscsi.c  |  2 +-
+ 2 files changed, 24 insertions(+), 16 deletions(-)
 
-diff --git a/fs/mpage.c b/fs/mpage.c
-index 9479e73..f92df71 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -56,11 +56,12 @@ static void mpage_end_io(struct bio *bio)
- 	bio_put(bio);
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index c352a64..8d3d197 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -312,7 +312,8 @@ static void iblock_bio_done(struct bio *bio)
  }
  
--static struct bio *mpage_bio_submit(int rw, struct bio *bio)
-+static struct bio *mpage_bio_submit(int op, int op_flags, struct bio *bio)
+ static struct bio *
+-iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
++iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
++	       int op_flags)
  {
- 	bio->bi_end_io = mpage_end_io;
+ 	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
+ 	struct bio *bio;
+@@ -334,7 +335,8 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
+ 	bio->bi_private = cmd;
+ 	bio->bi_end_io = &iblock_bio_done;
+ 	bio->bi_iter.bi_sector = lba;
 -	bio->bi_rw = rw;
--	guard_bio_eod(rw, bio);
 +	bio->bi_op = op;
 +	bio->bi_rw = op_flags;
-+	guard_bio_eod(op, bio);
- 	submit_bio(bio);
- 	return NULL;
+ 
+ 	return bio;
  }
-@@ -270,7 +271,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && (*last_block_in_bio != blocks[0] - 1))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+@@ -446,7 +448,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		goto fail;
+ 	cmd->priv = ibr;
  
- alloc_new:
- 	if (bio == NULL) {
-@@ -287,7 +288,7 @@ alloc_new:
+-	bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
++	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE, 0);
+ 	if (!bio)
+ 		goto fail_free_ibr;
  
- 	length = first_hole << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 		goto alloc_new;
- 	}
+@@ -459,7 +461,8 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+ 				!= sg->length) {
  
-@@ -295,7 +296,7 @@ alloc_new:
- 	nblocks = map_bh->b_size >> blkbits;
- 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
- 	    (first_hole != blocks_per_page))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	else
- 		*last_block_in_bio = blocks[blocks_per_page - 1];
- out:
-@@ -303,7 +304,7 @@ out:
+-			bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
++			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE,
++					     0);
+ 			if (!bio)
+ 				goto fail_put_bios;
  
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	if (!PageUptodate(page))
- 	        block_read_full_page(page, get_block);
- 	else
-@@ -385,7 +386,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
- 	}
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
- }
- EXPORT_SYMBOL(mpage_readpages);
-@@ -406,7 +407,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
- 	bio = do_mpage_readpage(bio, page, 1, &last_block_in_bio,
- 			&map_bh, &first_logical_block, get_block, gfp);
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
- }
- EXPORT_SYMBOL(mpage_readpage);
-@@ -487,7 +488,7 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
- 	struct buffer_head map_bh;
- 	loff_t i_size = i_size_read(inode);
- 	int ret = 0;
--	int wr = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
-+	int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : 0);
+@@ -645,7 +648,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	struct scatterlist *sg;
+ 	u32 sg_num = sgl_nents;
+ 	unsigned bio_cnt;
+-	int rw = 0;
++	int op_flags = 0;
++	int op = 0;
+ 	int i;
  
- 	if (page_has_buffers(page)) {
- 		struct buffer_head *head = page_buffers(page);
-@@ -596,7 +597,7 @@ page_is_mapped:
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- alloc_new:
- 	if (bio == NULL) {
-@@ -623,7 +624,7 @@ alloc_new:
- 	wbc_account_io(wbc, page, PAGE_SIZE);
- 	length = first_unmapped << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		goto alloc_new;
- 	}
- 
-@@ -633,7 +634,7 @@ alloc_new:
- 	set_page_writeback(page);
- 	unlock_page(page);
- 	if (boundary || (first_unmapped != blocks_per_page)) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		if (boundary_block) {
- 			write_boundary_block(boundary_bdev,
- 					boundary_block, 1 << blkbits);
-@@ -645,7 +646,7 @@ alloc_new:
- 
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- 	if (mpd->use_writepage) {
- 		ret = mapping->a_ops->writepage(page, wbc);
-@@ -702,9 +703,9 @@ mpage_writepages(struct address_space *mapping,
- 
- 		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
- 		if (mpd.bio) {
--			int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--				  WRITE_SYNC : WRITE);
--			mpage_bio_submit(wr, mpd.bio);
-+			int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+				  WRITE_SYNC : 0);
-+			mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+ 	if (data_direction == DMA_TO_DEVICE) {
+@@ -656,17 +660,20 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		 * is not enabled, or if initiator set the Force Unit Access bit.
+ 		 */
+ 		if (q->flush_flags & REQ_FUA) {
+-			if (cmd->se_cmd_flags & SCF_FUA)
+-				rw = WRITE_FUA;
+-			else if (!(q->flush_flags & REQ_FLUSH))
+-				rw = WRITE_FUA;
+-			else
+-				rw = WRITE;
++			if (cmd->se_cmd_flags & SCF_FUA) {
++				op = REQ_OP_WRITE;
++				op_flags = WRITE_FUA;
++			} else if (!(q->flush_flags & REQ_FLUSH)) {
++				op = REQ_OP_WRITE;
++				op_flags = WRITE_FUA;
++			} else {
++				op = REQ_OP_WRITE;
++			}
+ 		} else {
+-			rw = WRITE;
++			op = REQ_OP_WRITE;
  		}
+ 	} else {
+-		rw = READ;
++		op = REQ_OP_READ;
  	}
- 	blk_finish_plug(&plug);
-@@ -723,9 +724,9 @@ int mpage_writepage(struct page *page, get_block_t get_block,
- 	};
- 	int ret = __mpage_writepage(page, wbc, &mpd);
- 	if (mpd.bio) {
--		int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--			  WRITE_SYNC : WRITE);
--		mpage_bio_submit(wr, mpd.bio);
-+		int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+			  WRITE_SYNC : 0);
-+		mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+ 
+ 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+@@ -680,7 +687,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		return 0;
  	}
- 	return ret;
- }
+ 
+-	bio = iblock_get_bio(cmd, block_lba, sgl_nents, rw);
++	bio = iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
+ 	if (!bio)
+ 		goto fail_free_ibr;
+ 
+@@ -704,7 +711,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 				bio_cnt = 0;
+ 			}
+ 
+-			bio = iblock_get_bio(cmd, block_lba, sg_num, rw);
++			bio = iblock_get_bio(cmd, block_lba, sg_num, op,
++					     op_flags);
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index de18790..2cf915c 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -922,7 +922,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 					goto fail;
+ 
+ 				if (rw)
+-					bio->bi_rw |= REQ_WRITE;
++					bio->bi_op = REQ_OP_WRITE;
+ 
+ 				pr_debug("PSCSI: Allocated bio: %p,"
+ 					" dir: %s nr_vecs: %d\n", bio,
 -- 
 1.8.3.1
