@@ -1,50 +1,46 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-multipath test scripts
-Date: Wed, 24 Feb 2016 14:37:08 -0500
-Message-ID: <20160224193707.GA16062@redhat.com>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <20160218171745.GA15071@redhat.com>
- <56C662F1.8070407@ce.jp.nec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49545 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751845AbcBXThJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:37:09 -0500
-Content-Disposition: inline
-In-Reply-To: <56C662F1.8070407@ce.jp.nec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: mchristi@redhat.com
+Subject: [PATCH 00/35 v4] separate operations from flags in the bio/request structs
+Date: Wed, 24 Feb 2016 13:47:37 -0600
+Message-ID: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Feb 18 2016 at  7:33pm -0500,
-Junichi Nomura <j-nomura@ce.jp.nec.com> wrote:
+The following patches begin to cleanup the request->cmd_flags and
+bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+attributes and state of the request. For bi_rw we use it for similar
+info and also the priority but then also have another bi_flags field
+for state. At some point, we abused them so much we just made cmd_flags
+64 bits, so we could add more.
 
-> Hi Mike,
-> 
-> On 02/19/16 02:17, Mike Snitzer wrote:
-> 
-> > Taking a step back:
-> > These scripts don't belong in Documentation/device-mapper/mptest/ (or
-> > anywhere in the kernel tree for that matter).
-> > 
-> > I'd really prefer it if we could port your scripts over to the
-> > device-mapper-test-suite, see:
-> > https://github.com/jthornber/device-mapper-test-suite
-> 
-> Yes, I agree such a project is better place for this to live.
+The following patches seperate the operation (read, write discard,
+flush, etc) from cmd_flags/bi_rw.
 
-I was going to attempt porting your scripts to device-mapper-test-suite
-but I'll have to come back to that (I have more important tasks at this
-time).
+This patchset was made against linux-next from today Feb 24 2016
+(git tag next-20160224).
 
-So I've created a guthub repo for your scripts:
-https://github.com/snitm/mptest
+I put a git tree here:
+https://github.com/mikechristie/linux-kernel.git
 
-I'll let you know once I've ported to device-mapper-test-suite.  But in
-the meantime I'll take any changes you or others have to 'mptest'.
+v4:
+1. Rebased to current linux-next tree.
 
-Thanks,
-Mike
+v3:
+
+1. Used "=" instead of "|="  to setup bio bi_rw.
+2. Removed __get_request cmd_flags compat code.
+3. Merged initial dm related changes requested by Mike Snitzer.
+4. Fixed ubd kbuild errors in flush related patches.
+5. Fix 80 char col issues in several patches.
+6. Fix issue with one of the btrfs patches where it looks like I reverted
+a patch when trying to fix a merge error.
+
+v2
+
+1. Dropped arguments from submit_bio, and had callers setup
+bio.
+2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
+to REQ_PREFLUSH for make_request_fn users.
+3. Dropped bio/rq_data_dir functions, and added a op_is_write
+function instead.
