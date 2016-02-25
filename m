@@ -1,18 +1,18 @@
 From: Derek Basehore <dbasehore@chromium.org>
-Subject: [PATCH v1 1/3] PM / sleep: Check legacy pm callbacks for direct complete
-Date: Wed, 24 Feb 2016 16:11:27 -0800
-Message-ID: <1456359089-19807-1-git-send-email-dbasehore@chromium.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v2 1/3] PM / sleep: Check legacy pm callbacks for direct complete
+Date: Wed, 24 Feb 2016 16:22:26 -0800
+Message-ID: <1456359748-22838-1-git-send-email-dbasehore@chromium.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
+Sender: linux-pm-owner@vger.kernel.org
 To: linux-pm@vger.kernel.org
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Derek Basehore <dbasehore@chromium.org>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Derek Basehore <dbasehore@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
 This adds checks for legacy pm callbacks when setting no_pm_callbacks.
 This fixes an issue where these suspend/resume callbacks were
 incorrectly ignored during suspend/resume with direct complete.
 
-Fixes: 4534d9d881f9 "PM / sleep: Go direct_complete if driver has..."
+Fixes: aa8e54b55947 "PM / sleep: Go direct_complete if driver has..."
 Signed-off-by: Derek Basehore <dbasehore@chromium.org>
 ---
  drivers/base/power/main.c | 6 ++++--
@@ -37,3 +37,4 @@ index 6e7c3cc..e0017d9 100644
  		(!dev->driver || pm_ops_is_empty(dev->driver->pm));
 -- 
 2.7.0.rc3.207.g0ac5344
+
