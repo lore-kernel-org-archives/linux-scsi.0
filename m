@@ -1,82 +1,68 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 2/2] iscsi_ibft: Always display netmask
-Date: Thu, 25 Feb 2016 08:49:19 -0800
-Message-ID: <56CF308F.1040905@suse.com>
-References: <cover.1453419653.git.lduncan@suse.com>
- <71c84546d99332f77d1f462d735ec1e38aa1e7ba.1453419653.git.lduncan@suse.com>
- <56B0508B.9020003@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Subject: [PATCH] ipr: Fix regression when loading firmware
+Date: Thu, 25 Feb 2016 13:54:20 -0300
+Message-ID: <1456419260-14916-1-git-send-email-krisman@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53318 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760375AbcBYQwm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Feb 2016 11:52:42 -0500
-In-Reply-To: <56B0508B.9020003@cs.wisc.edu>
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:38715 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760708AbcBYQyd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2016 11:54:33 -0500
+Received: from localhost
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
+	Thu, 25 Feb 2016 13:54:31 -0300
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 5C749352006E
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2016 11:54:20 -0500 (EST)
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1PFsjQt60096732
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2016 12:54:45 -0300
+Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
+	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1PGsSFS003296
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2016 13:54:28 -0300
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
-Cc: hare@suse.com, konrad@kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Insu Yun <wuninsu@gmail.com>
 
-On 02/01/2016 10:45 PM, Mike Christie wrote:
-> On 01/22/2016 01:49 PM, Lee Duncan wrote:
->> From: Hannes Reinecke <hare@suse.de>
->>
->> Some older user-space code might rely on the netmask attribute
->> being present, so we should always display it.
->> This fixes a regression introduced by commit
->> 0b2eb3c4060a16f3ec11a4d6d4c934e7e5d5334f.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> Signed-off-by: Lee Duncan <lduncan@suse.com>
->> ---
->>  drivers/firmware/iscsi_ibft.c | 8 +-------
->>  1 file changed, 1 insertion(+), 7 deletions(-)
->>
->> diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
->> index 2dd1fbb8cccc..81037e5fe301 100644
->> --- a/drivers/firmware/iscsi_ibft.c
->> +++ b/drivers/firmware/iscsi_ibft.c
->> @@ -464,14 +464,8 @@ static umode_t ibft_check_nic_for(void *data, int type)
->>  			rc = S_IRUGO;
->>  		break;
->>  	case ISCSI_BOOT_ETH_PREFIX_LEN:
->> -		if (nic->subnet_mask_prefix)
->> -			rc = S_IRUGO;
->> -		break;
->>  	case ISCSI_BOOT_ETH_SUBNET_MASK:
->> -		if (!memcmp(nic->ip_addr, nulls, 10) &&
->> -		    (nic->ip_addr[10] == 0xff) &&
->> -		    (nic->ip_addr[11] == 0xff) &&
->> -		    nic->subnet_mask_prefix)
->> +		if (nic->subnet_mask_prefix)
->>  			rc = S_IRUGO;
->>  		break;
->>  	case ISCSI_BOOT_ETH_ORIGIN:
->>
-> 
-> Sorry. I thought I sent this mail already.
-> 
-> Is the commit id above supposed to be referencing the first patch? I
-> could not match it to anything. If so, then shouldn't this patch just be
-> combined with the second patch and some comment about us always
-> displaying it for compat reasons added to the code?
-> 
-> Also, you should normally cc Konrad for iscsi_ibft.c patches, because he
-> is actually the maintainer.
+Commit d63c7dd5bcb9 ("ipr: Fix out-of-bounds null overwrite") removed the
+end of line handling when storing the update_fw sysfs attribute.  This
+changed the userpace API because it started refusing writes terminated
+by a line feed, which broke the update tools we already have.
 
-Hi Mike:
+This patch re-adds that handling, so both a write terminated by a line
+feed or not can make it through with the update.
 
-I'm sorry I didn't reply sooner. I let this get buried in a side folder
-and missed it.
+Fixes: d63c7dd5bcb9 ("ipr: Fix out-of-bounds null overwrite")
+Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: Insu Yun <wuninsu@gmail.com>
+---
+ drivers/scsi/ipr.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-The commit ID in Patch 2 was from the SUSE repository. The bottom line
-is that I think you are correct, these two patches could easily be
-combined. I will resubmit them as one combined patch.
-
-I submitted them as two because I was just feeding patching that Hannes
-had done upstream, but I should have noticed they could be combined.
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 3b3e099..d6a691e 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4002,6 +4002,7 @@ static ssize_t ipr_store_update_fw(struct device *dev,
+ 	struct ipr_sglist *sglist;
+ 	char fname[100];
+ 	char *src;
++	char *endline;
+ 	int result, dnld_size;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -4009,6 +4010,10 @@ static ssize_t ipr_store_update_fw(struct device *dev,
+ 
+ 	snprintf(fname, sizeof(fname), "%s", buf);
+ 
++	endline = strchr(fname, '\n');
++	if (endline)
++		*endline = '\0';
++
+ 	if (request_firmware(&fw_entry, fname, &ioa_cfg->pdev->dev)) {
+ 		dev_err(&ioa_cfg->pdev->dev, "Firmware file %s not found\n", fname);
+ 		return -EIO;
 -- 
-Lee Duncan
-SUSE Labs
+2.1.0
+
