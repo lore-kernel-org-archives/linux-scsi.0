@@ -1,39 +1,24 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] snic: correctly check for array overrun on overly long version number
-Date: Thu, 25 Feb 2016 22:58:25 +0000
-Message-ID: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] imm: check parport_claim
+Date: Thu, 25 Feb 2016 21:11:18 -0500
+Message-ID: <yq1oab4gr09.fsf@sermon.lab.mkp.net>
+References: <1456311431-18521-1-git-send-email-sudipm.mukherjee@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1456311431-18521-1-git-send-email-sudipm.mukherjee@gmail.com>
+	(Sudip Mukherjee's message of "Wed, 24 Feb 2016 16:27:11 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+>>>>> "Sudip" == Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
 
-The snic version number is expected to be 4 decimals in the form like
-a netmask string with each number stored in an element in array v.
-However, there is an off-by-one check on the number of elements in v
-allowing one to pass a 5 decimal version number causing v[4] to be
-referenced, causing a buffer overrun.  Fix the off-by-one error by
-comparing to i > 3 rather than 4.
+Sudip> parport_claim() can fail and we should be checking if we were
+Sudip> able to claim the port.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/snic/snic_ctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to 4.6/scsi-queue.
 
-diff --git a/drivers/scsi/snic/snic_ctl.c b/drivers/scsi/snic/snic_ctl.c
-index aebe753..ab0e06b 100644
---- a/drivers/scsi/snic/snic_ctl.c
-+++ b/drivers/scsi/snic/snic_ctl.c
-@@ -75,7 +75,7 @@ snic_ver_enc(const char *s)
- 			continue;
- 		}
- 
--		if (i > 4 || !isdigit(c))
-+		if (i > 3 || !isdigit(c))
- 			goto end;
- 
- 		v[i] = v[i] * 10 + (c - '0');
 -- 
-2.7.0
+Martin K. Petersen	Oracle Linux Engineering
