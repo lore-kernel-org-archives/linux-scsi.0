@@ -1,56 +1,97 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 1/1] sd: add missing scenario for sd_config_write_same
-Date: Fri, 26 Feb 2016 17:12:36 -0500
-Message-ID: <yq1ziunf7e3.fsf@sermon.lab.mkp.net>
-References: <56d0c09d.5a46620a.e4c6.0855@mx.google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
+ test robot
+Date: Fri, 26 Feb 2016 14:25:21 -0800
+Message-ID: <1456525521.2369.54.camel@HansenPartnership.com>
+References: <1456530314-22250-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18671 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825AbcBZWMv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 17:12:51 -0500
-In-Reply-To: <56d0c09d.5a46620a.e4c6.0855@mx.google.com> (tom's message of
-	"Sat, 27 Feb 2016 05:16:06 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1456530314-22250-1-git-send-email-kys@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, martin.petersen@oracle.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: linux-scsi@vger.kernel.org
 
->>>>> "tom" == tom ty89 <tom.ty89@gmail.com> writes:
+On Fri, 2016-02-26 at 15:45 -0800, K. Y. Srinivasan wrote:
+> tree:   https://na01.safelinks.protection.outlook.com/?url=https%3a%2
+> f%2fgit.kernel.org%2fpub%2fscm%2flinux%2fkernel%2fgit%2ftorvalds%2fli
+> nux.git&data=01%7c01%7ckys%40microsoft.com%7ce2e0622715844b79ad7108d3
+> 2796ec3c%7c72f988bf86f141af91ab2d7cd011db47%7c1&sdata=ubr4GbBaNS%2ftO
+> z%2buJBk0CL9N0UNG9x2TidLgy6Yovg4%3d master
+> head:   03c21cb775a313f1ff19be59c5d02df3e3526471
+> commit: dac582417bc449b1f7f572d3f1dd9d23eec15cc9 storvsc: Properly
+> support Fibre Channel devices
+> date:   3 weeks ago
+> config: x86_64-randconfig-s3-01281016 (attached as .config)
+> reproduce:
+>         git checkout dac582417bc449b1f7f572d3f1dd9d23eec15cc9
+>         # save the attached .config to linux build tree
+>         make ARCH=x86_64
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    drivers/built-in.o: In function `storvsc_remove':
+> > > storvsc_drv.c:(.text+0x213af7): undefined reference to
+> > > `fc_remove_host'
+>    drivers/built-in.o: In function `storvsc_drv_init':
+> > > storvsc_drv.c:(.init.text+0xcbcc): undefined reference to
+> > > `fc_attach_transport'
+> > > storvsc_drv.c:(.init.text+0xcc06): undefined reference to
+> > > `fc_release_transport'
+>    drivers/built-in.o: In function `storvsc_drv_exit':
+> > > storvsc_drv.c:(.exit.text+0x123c): undefined reference to
+> > > `fc_release_transport'
+> 
+> With this commit, the storvsc driver depends on FC atttributes. Make
+> this
+> dependency explicit.
+> 
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+> ---
+>  drivers/scsi/Kconfig |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 64eed87..24365c3 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -594,6 +594,7 @@ config XEN_SCSI_FRONTEND
+>  config HYPERV_STORAGE
+>  	tristate "Microsoft Hyper-V virtual storage driver"
+>  	depends on SCSI && HYPERV
+> +	depends on SCSI_FC_ATTRS
 
-Tom,
+Well, I suppose continually sending the wrong patch until I get annoyed
+enough to send the right one is one way of doing it.  This patch is
+wrong. what you want is below.
 
-tom> [root@localhost ~]# sg_opcodes /dev/sdb > /dev/null Report
-tom> supported operation codes: Illegal request, invalid opcode
+You want HYPERV_STORAGE to be built in if the FC attributes are,
+otherwise you don't care because if they're N the FC code will be
+compiled out.
 
-tom> [root@localhost ~]# sg_vpd -p bl /dev/sdb | grep 'write same'
-tom> Maximum write same length: 0x0 blocks
+James
 
-"A MAXIMUM WRITE SAME LENGTH field set to zero indicates that the device
-server does not report a limit on the number of logical blocks that it
-allows to be unmapped or written in a single WRITE SAME command."
+---
 
-I.e. that parameter says nothing about whether WRITE SAME is supported
-or not.
-
-tom> [root@localhost ~]# cat /sys/block/sdb/queue/write_same_max_bytes
-tom> 33553920
-
-That's correct behavior. Unless otherwise noted we default to issuing 32
-MB WRITE SAME commands and will subsequently turn it off if the drive
-returns a failure.
-
-WRITE SAME support on storage devices predates RSOC, most of the common
-VPD pages, etc. So there is no reliable value we can key off of to
-determine whether a drive supports the command. And because a block
-count of 0 is interpreted as "the entire device" we can't issue a
-non-destructive WRITE SAME to determine whether device supports it or
-not. Consequently we are stuck with assuming it works unless RSOC is
-supported or the device sits behind a SATL.
-
-Do you have a particular drive that is causing problems? We could quirk
-it or add additional heuristics in addition to the ATA Information VPD.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index e2f31c9..5ecabdb 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -596,6 +596,7 @@ config XEN_SCSI_FRONTEND
+ config HYPERV_STORAGE
+ 	tristate "Microsoft Hyper-V virtual storage driver"
+ 	depends on SCSI && HYPERV
++	depends on m || SCSI_FC_ATTRS
+ 	default HYPERV
+ 	help
+ 	  Select this option to enable the Hyper-V virtual storage driver.
