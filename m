@@ -1,36 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111341] Firmware loader
-Date: Fri, 26 Feb 2016 07:43:49 +0000
-Message-ID: <bug-111341-11613-guoE2UKZEI@https.bugzilla.kernel.org/>
-References: <bug-111341-11613@https.bugzilla.kernel.org/>
+From: Andreas Herrmann <aherrmann@suse.com>
+Subject: [LSF/MM TOPIC][LSF/MM ATTEND] blk-mq and I/O scheduling
+Date: Fri, 26 Feb 2016 17:10:52 +0100
+Message-ID: <20160226161052.GA4089@suselix.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37477 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752155AbcBZHnx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Feb 2016 02:43:53 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 42A8220395
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Feb 2016 07:43:52 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id D5A762039D
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Feb 2016 07:43:49 +0000 (UTC)
-In-Reply-To: <bug-111341-11613@https.bugzilla.kernel.org/>
+Received: from smtp.nue.novell.com ([195.135.221.5]:32998 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896AbcBZQLX (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Fri, 26 Feb 2016 11:11:23 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: lsf-pc@lists.linuxfoundation.org
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111341
+Hi,
 
---- Comment #5 from walter59 <walter.moeller@moeller-it.net> ---
-hello,
+I'd like to participate in LSF/MM and would like to present/discuss
+ideas for introducing I/O scheduling support to blk-mq.
 
-bug is still alive on most boards --- changes has has no resolved problems.
+Motiviation for this is to be able use scsi-mq even on systems that
+have slow (spinning) devices attached to the SCSI stack.
 
-regards
+I think the presentation/discussion should consist of the following
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+(1) short overview how blk-mq currently performs with spinning devices
+    (in comparison to CFQ)
+
+(2) information about my attempt to introduce per sw queue time-slice
+    to blk-mq to mitigate the performance degradation with spinning
+    devices (in comparison to CFQ)
+
+(3) hopefully I can share information about working code for another
+    approach to introduce I/O scheduling for blk-mq (which I am
+    currently looking into)
+
+(4) other ideas (e.g. toggle blk-mq per host and/or why we won't look
+    into it)
+
+
+Thanks,
+
+Andreas
