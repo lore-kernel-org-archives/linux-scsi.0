@@ -1,35 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ipr: Fix regression when loading firmware
-Date: Fri, 26 Feb 2016 17:26:45 -0500
-Message-ID: <yq1vb5bf6qi.fsf@sermon.lab.mkp.net>
-References: <1456419260-14916-1-git-send-email-krisman@linux.vnet.ibm.com>
+Subject: Re: [Bug 111341] Firmware loader
+Date: Fri, 26 Feb 2016 17:29:09 -0500
+Message-ID: <yq1r3fzf6mi.fsf@sermon.lab.mkp.net>
+References: <bug-111341-11613@https.bugzilla.kernel.org/>
+	<bug-111341-11613-guoE2UKZEI@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30429 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:31949 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755605AbcBZW0z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 17:26:55 -0500
-In-Reply-To: <1456419260-14916-1-git-send-email-krisman@linux.vnet.ibm.com>
-	(Gabriel Krisman Bertazi's message of "Thu, 25 Feb 2016 13:54:20
-	-0300")
+	with ESMTP id S1423248AbcBZWaQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 17:30:16 -0500
+In-Reply-To: <bug-111341-11613-guoE2UKZEI@https.bugzilla.kernel.org/>
+	(bugzilla-daemon@bugzilla.kernel.org's message of "Fri, 26 Feb 2016
+	07:43:49 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, Insu Yun <wuninsu@gmail.com>
+To: walter.moeller@moeller-it.net
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Gabriel" == Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com> writes:
+>>>>> "Walter" == bugzilla-daemon  <bugzilla-daemon@bugzilla.kernel.org> writes:
 
-Gabriel> Commit d63c7dd5bcb9 ("ipr: Fix out-of-bounds null overwrite")
-Gabriel> removed the end of line handling when storing the update_fw
-Gabriel> sysfs attribute.  This changed the userpace API because it
-Gabriel> started refusing writes terminated by a line feed, which broke
-Gabriel> the update tools we already have.
+Walter> https://bugzilla.kernel.org/show_bug.cgi?id=111341 --- Comment
+Walter> #5 from walter59 <walter.moeller@moeller-it.net> --- hello,
 
-Gabriel> This patch re-adds that handling, so both a write terminated by
-Gabriel> a line feed or not can make it through with the update.
+Walter> bug is still alive on most boards --- changes has has no
+Walter> resolved problems.
 
-Applied to 4.5/scsi-fixes.
+Please report ahci issues to linux-ide@vger.kernel.org.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
