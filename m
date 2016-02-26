@@ -1,24 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] osd: remove deadcode
-Date: Thu, 25 Feb 2016 21:12:29 -0500
-Message-ID: <yq1k2lsgqya.fsf@sermon.lab.mkp.net>
-References: <1456312888-22074-1-git-send-email-sudipm.mukherjee@gmail.com>
+Subject: Re: [RESEND PATCH v2] scsi: gdth: replace struct timeval
+	with ktime_get_real_seconds()
+Date: Thu, 25 Feb 2016 21:17:35 -0500
+Message-ID: <yq1fuwggqps.fsf@sermon.lab.mkp.net>
+References: <20151119214304.GA16713@d830.WORKGROUP>
+ <1455773374-2863-1-git-send-email-amsfield22@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1456312888-22074-1-git-send-email-sudipm.mukherjee@gmail.com>
-	(Sudip Mukherjee's message of "Wed, 24 Feb 2016 16:51:28 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Boaz Harrosh <ooo@electrozaur.com>, Benny Halevy <bhalevy@primarydata.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <1455773374-2863-1-git-send-email-amsfield22@gmail.com> (Alison
+ Schofield's message of "Wed, 17 Feb 2016 21:29:34 -0800")
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: Alison Schofield <amsfield22@gmail.com>
+Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, achim_leubner@pmc-sierra.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sudip" == Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
-
-Sudip> The variable is_ver1 is always true and so OSD_CAP_LEN can never
-Sudip> be used.  Reported by Coverity.
-
-Applied to 4.6/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Pj4+Pj4gIkFsaXNvbiIgPT0gQWxpc29uIFNjaG9maWVsZCA8YW1zZmllbGQyMkBnbWFpbC5jb20+
+IHdyaXRlczoKCkFsaXNvbj4gc3RydWN0IHRpbWV2YWwgd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQg
+c3lzdGVtcyBpbiB5MjAzOCBhbmQgaXMKQWxpc29uPiBiZWluZyByZW1vdmVkIGZyb20gdGhlIGtl
+cm5lbC4gUmVwbGFjZSB0aGUgdXNlIG9mIHN0cnVjdCB0aW1ldmFsCkFsaXNvbj4gYW5kIGRvX2dl
+dHRpbWVvZmRheSgpIHdpdGgga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIHdoaWNoCkFsaXNvbj4g
+cHJvdmlkZXMgYSA2NC1iaXQgc2Vjb25kcyB2YWx1ZSBhbmQgaXMgeTIwMzggc2FmZS4KCkFwcGxp
+ZWQgdG8gNC42L3Njc2ktcXVldWUuCgotLSAKTWFydGluIEsuIFBldGVyc2VuCU9yYWNsZSBMaW51
+eCBFbmdpbmVlcmluZwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhAbGlzdHMubGluYXJvLm9yZwpodHRwczovL2xp
+c3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5mby95MjAzOAo=
