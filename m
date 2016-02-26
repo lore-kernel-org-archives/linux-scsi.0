@@ -1,41 +1,47 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH 2/2] sd: disable write same for SAT as per the comment
-Date: Sat, 27 Feb 2016 05:07:18 +0800
-Message-ID: <CAGnHSE=U88=B2KGAAe0V_7S=gs=H+dZ9WSicsxCZpQj0mfE=RQ@mail.gmail.com>
-References: <56d0b08c.e99c420a.dbca1.0415@mx.google.com>
-	<1456517794.2369.43.camel@HansenPartnership.com>
-	<CAGnHSE=8d2=b3nN=0f14t_5Nf_GLsb0HXYeajZtz5As8SophsA@mail.gmail.com>
-	<1456520250.2369.45.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: tom.ty89@gmail.com
+Subject: [PATCH v2 1/1] sd: add missing scenario for sd_config_write_same
+Date: Sat, 27 Feb 2016 05:16:06 +0800
+Message-ID: <56d0c09d.5a46620a.e4c6.0855@mx.google.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:34120 "EHLO
-	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbcBZVHT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 16:07:19 -0500
-Received: by mail-yw0-f193.google.com with SMTP id f6so4762757ywa.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Feb 2016 13:07:19 -0800 (PST)
-In-Reply-To: <1456520250.2369.45.camel@HansenPartnership.com>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34985 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbcBZVQO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 16:16:14 -0500
+Received: by mail-pa0-f66.google.com with SMTP id fl4so5030552pad.2
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Feb 2016 13:16:14 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Tom Yan <tom.ty89@gmail.com>
 
-No I mean I no longer thinks that this condition needs to be inverted.
-I just THOUGHT that !scsi_get_vpd_page is true if it DIDN'T get the
-page.
+From: Tom Yan <tom.ty89@gmail.com>
 
-On 27 February 2016 at 04:57, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Sat, 2016-02-27 at 04:32 +0800, Tom Yan wrote:
->> Oh I made a mistake on this one then.
->>
->> Since I send it with another patch, should I resend that alone?
->
-> Yes, that's fine. but you need to explain as part of the changelog why
-> this condition needs inverting because your Subject just says "as per
-> the comment" which makes no sense if you're changing the comment.
->
-> James
->
->
+Example:
+
+[root@localhost ~]# sg_opcodes /dev/sdb > /dev/null
+Report supported operation codes: Illegal request, invalid opcode
+
+[root@localhost ~]# sg_vpd -p bl /dev/sdb | grep 'write same'
+  Maximum write same length: 0x0 blocks
+
+[root@localhost ~]# cat /sys/block/sdb/queue/write_same_max_bytes
+33553920
+
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d749da7..1179ec1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -807,6 +807,8 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 	if (sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS)
+ 		sdkp->max_ws_blocks = min_not_zero(sdkp->max_ws_blocks,
+ 						   (u32)SD_MAX_WS16_BLOCKS);
++	else if (sdkp->max_ws_blocks == 0 && sdkp->device->no_report_opcodes)
++		sdkp->device->no_write_same = 1;
+ 	else if (sdkp->ws16 || sdkp->ws10 || sdkp->device->no_report_opcodes)
+ 		sdkp->max_ws_blocks = min_not_zero(sdkp->max_ws_blocks,
+ 						   (u32)SD_MAX_WS10_BLOCKS);
+-- 
+2.7.1
+
