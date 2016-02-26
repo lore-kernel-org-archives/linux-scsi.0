@@ -1,36 +1,66 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND PATCH v2] scsi: gdth: replace struct timeval
-	with ktime_get_real_seconds()
-Date: Thu, 25 Feb 2016 21:17:35 -0500
-Message-ID: <yq1fuwggqps.fsf@sermon.lab.mkp.net>
-References: <20151119214304.GA16713@d830.WORKGROUP>
- <1455773374-2863-1-git-send-email-amsfield22@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 00/34] Chelsio iSCSI target offload driver
+Date: Thu, 25 Feb 2016 23:29:37 -0800
+Message-ID: <1456471777.32369.91.camel@haakon3.risingtidesystems.com>
+References: <cover.1455467089.git.varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <1455773374-2863-1-git-send-email-amsfield22@gmail.com> (Alison
- Schofield's message of "Wed, 17 Feb 2016 21:29:34 -0800")
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Alison Schofield <amsfield22@gmail.com>
-Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, achim_leubner@pmc-sierra.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45517 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753319AbcBZH3k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 02:29:40 -0500
+In-Reply-To: <cover.1455467089.git.varun@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, roland@kernel.org, davem@davemloft.net, dledford@redhat.com, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
 
-Pj4+Pj4gIkFsaXNvbiIgPT0gQWxpc29uIFNjaG9maWVsZCA8YW1zZmllbGQyMkBnbWFpbC5jb20+
-IHdyaXRlczoKCkFsaXNvbj4gc3RydWN0IHRpbWV2YWwgd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQg
-c3lzdGVtcyBpbiB5MjAzOCBhbmQgaXMKQWxpc29uPiBiZWluZyByZW1vdmVkIGZyb20gdGhlIGtl
-cm5lbC4gUmVwbGFjZSB0aGUgdXNlIG9mIHN0cnVjdCB0aW1ldmFsCkFsaXNvbj4gYW5kIGRvX2dl
-dHRpbWVvZmRheSgpIHdpdGgga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIHdoaWNoCkFsaXNvbj4g
-cHJvdmlkZXMgYSA2NC1iaXQgc2Vjb25kcyB2YWx1ZSBhbmQgaXMgeTIwMzggc2FmZS4KCkFwcGxp
-ZWQgdG8gNC42L3Njc2ktcXVldWUuCgotLSAKTWFydGluIEsuIFBldGVyc2VuCU9yYWNsZSBMaW51
-eCBFbmdpbmVlcmluZwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhAbGlzdHMubGluYXJvLm9yZwpodHRwczovL2xp
-c3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5mby95MjAzOAo=
+Hi Varun & Co,
+
+Apologies for the delayed follow up here.
+
+On Sun, 2016-02-14 at 23:00 +0530, Varun Prakash wrote:
+> This RFC series is for Chelsio iSCSI target offload
+> driver(cxgbit.ko).
+> 
+> cxgbit.ko registers with iSCSI target transport
+> and offloads multiple CPU intensive tasks to
+> Chelsio T5 adapters.
+> 
+> Chelsio T5 adapter series has following offload
+> features for iSCSI -
+> -TCP/IP offload.
+> -iSCSI PDU recovery by reassembling TCP segments.
+> -Header and Data Digest offload.
+> -iSCSI segmentation offload(ISO).
+> -Direct Data Placement(DDP).
+> 
+> Please review this series.
+> 
+
+After spending time over the last weeks to understand how cxgbit.ko
+offloads work in patches #27-34, I think overall the new driver is in
+very good shape.
+
+Wrt to the patches to existing iscsi-target code in patches #13-26, I
+need more time over the next days to consider the changes and/or better
+alternatives, along with Sagi's earlier comments.  AFAICT it's mostly
+smaller items, but it would be worth the discussion to see if/where some
+larger improvements to existing iscsi-target code can be made beyond the
+initial merge.
+
+That said, this series has been added as-is to
+target-pending/for-next-merge, to be picked up for the first round of
+linux-next integration for drivers/net/ethernet/chelsio/ vs. DaveM's net
+tree, and 0-day build testing.
+
+Let's plan a RFC-v2 follow up sometime next week to address individual
+comments, and to git squash patches #27-34 into a single merge-able
+commit.
+
+Thank you,
+
+--nab
+
