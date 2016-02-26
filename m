@@ -1,33 +1,102 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [Bug 111341] Firmware loader
-Date: Fri, 26 Feb 2016 17:29:09 -0500
-Message-ID: <yq1r3fzf6mi.fsf@sermon.lab.mkp.net>
-References: <bug-111341-11613@https.bugzilla.kernel.org/>
-	<bug-111341-11613-guoE2UKZEI@https.bugzilla.kernel.org/>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: storvsc: Fix a build issue reported by kbuild
+ test robot
+Date: Fri, 26 Feb 2016 23:22:17 +0000
+Message-ID: <BY2PR0301MB16542D44D55A88410C0C5699A0A70@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1456530314-22250-1-git-send-email-kys@microsoft.com>
+ <1456525521.2369.54.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31949 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423248AbcBZWaQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2016 17:30:16 -0500
-In-Reply-To: <bug-111341-11613-guoE2UKZEI@https.bugzilla.kernel.org/>
-	(bugzilla-daemon@bugzilla.kernel.org's message of "Fri, 26 Feb 2016
-	07:43:49 +0000")
+Received: from mail-bn1bn0108.outbound.protection.outlook.com ([157.56.110.108]:52437
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752176AbcBZXWV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Feb 2016 18:22:21 -0500
+In-Reply-To: <1456525521.2369.54.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: walter.moeller@moeller-it.net
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
 
->>>>> "Walter" == bugzilla-daemon  <bugzilla-daemon@bugzilla.kernel.org> writes:
-
-Walter> https://bugzilla.kernel.org/show_bug.cgi?id=111341 --- Comment
-Walter> #5 from walter59 <walter.moeller@moeller-it.net> --- hello,
-
-Walter> bug is still alive on most boards --- changes has has no
-Walter> resolved problems.
-
-Please report ahci issues to linux-ide@vger.kernel.org.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+RnJpZGF5LCBGZWJydWFyeSAyNiwgMjAxNiAyOjI1IFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuIDxr
+eXNAbWljcm9zb2Z0LmNvbT47IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGRldmVs
+QGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207DQo+IGpib3R0b21sZXlA
+cGFyYWxsZWxzLmNvbTsgaGNoQGluZnJhZGVhZC5vcmc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwu
+b3JnOw0KPiBhcHdAY2Fub25pY2FsLmNvbTsgdmt1em5ldHNAcmVkaGF0LmNvbTsgamFzb3dhbmdA
+cmVkaGF0LmNvbTsNCj4gbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207IGhhcmVAc3VzZS5kZQ0K
+PiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gc2NzaTogc3RvcnZzYzogRml4IGEgYnVpbGQgaXNz
+dWUgcmVwb3J0ZWQgYnkga2J1aWxkIHRlc3QNCj4gcm9ib3QNCj4gDQo+IE9uIEZyaSwgMjAxNi0w
+Mi0yNiBhdCAxNTo0NSAtMDgwMCwgSy4gWS4gU3Jpbml2YXNhbiB3cm90ZToNCj4gPiB0cmVlOiAg
+IGh0dHBzOi8vbmEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsb29rLmNvbS8/dXJsPWh0dHBz
+JTNhJTINCj4gPiBmJTJmZ2l0Lmtlcm5lbC5vcmclMmZwdWIlMmZzY20lMmZsaW51eCUyZmtlcm5l
+bCUyZmdpdCUyZnRvcnZhbGRzJTJmbGkNCj4gPg0KPiBudXguZ2l0JmRhdGE9MDElN2MwMSU3Y2t5
+cyU0MG1pY3Jvc29mdC5jb20lN2NlMmUwNjIyNzE1ODQ0Yjc5YWQ3MQ0KPiAwOGQzDQo+ID4NCj4g
+Mjc5NmVjM2MlN2M3MmY5ODhiZjg2ZjE0MWFmOTFhYjJkN2NkMDExZGI0NyU3YzEmc2RhdGE9dWJy
+NEdiQmFOUw0KPiAlMmZ0Tw0KPiA+IHolMmJ1SkJrMENMOU4wVU5HOXgyVGlkTGd5Nllvdmc0JTNk
+IG1hc3Rlcg0KPiA+IGhlYWQ6ICAgMDNjMjFjYjc3NWEzMTNmMWZmMTliZTU5YzVkMDJkZjNlMzUy
+NjQ3MQ0KPiA+IGNvbW1pdDogZGFjNTgyNDE3YmM0NDliMWY3ZjU3MmQzZjFkZDlkMjNlZWMxNWNj
+OSBzdG9ydnNjOiBQcm9wZXJseQ0KPiA+IHN1cHBvcnQgRmlicmUgQ2hhbm5lbCBkZXZpY2VzDQo+
+ID4gZGF0ZTogICAzIHdlZWtzIGFnbw0KPiA+IGNvbmZpZzogeDg2XzY0LXJhbmRjb25maWctczMt
+MDEyODEwMTYgKGF0dGFjaGVkIGFzIC5jb25maWcpDQo+ID4gcmVwcm9kdWNlOg0KPiA+ICAgICAg
+ICAgZ2l0IGNoZWNrb3V0IGRhYzU4MjQxN2JjNDQ5YjFmN2Y1NzJkM2YxZGQ5ZDIzZWVjMTVjYzkN
+Cj4gPiAgICAgICAgICMgc2F2ZSB0aGUgYXR0YWNoZWQgLmNvbmZpZyB0byBsaW51eCBidWlsZCB0
+cmVlDQo+ID4gICAgICAgICBtYWtlIEFSQ0g9eDg2XzY0DQo+ID4NCj4gPiBBbGwgZXJyb3JzIChu
+ZXcgb25lcyBwcmVmaXhlZCBieSA+Pik6DQo+ID4NCj4gPiAgICBkcml2ZXJzL2J1aWx0LWluLm86
+IEluIGZ1bmN0aW9uIGBzdG9ydnNjX3JlbW92ZSc6DQo+ID4gPiA+IHN0b3J2c2NfZHJ2LmM6KC50
+ZXh0KzB4MjEzYWY3KTogdW5kZWZpbmVkIHJlZmVyZW5jZSB0bw0KPiA+ID4gPiBgZmNfcmVtb3Zl
+X2hvc3QnDQo+ID4gICAgZHJpdmVycy9idWlsdC1pbi5vOiBJbiBmdW5jdGlvbiBgc3RvcnZzY19k
+cnZfaW5pdCc6DQo+ID4gPiA+IHN0b3J2c2NfZHJ2LmM6KC5pbml0LnRleHQrMHhjYmNjKTogdW5k
+ZWZpbmVkIHJlZmVyZW5jZSB0bw0KPiA+ID4gPiBgZmNfYXR0YWNoX3RyYW5zcG9ydCcNCj4gPiA+
+ID4gc3RvcnZzY19kcnYuYzooLmluaXQudGV4dCsweGNjMDYpOiB1bmRlZmluZWQgcmVmZXJlbmNl
+IHRvDQo+ID4gPiA+IGBmY19yZWxlYXNlX3RyYW5zcG9ydCcNCj4gPiAgICBkcml2ZXJzL2J1aWx0
+LWluLm86IEluIGZ1bmN0aW9uIGBzdG9ydnNjX2Rydl9leGl0JzoNCj4gPiA+ID4gc3RvcnZzY19k
+cnYuYzooLmV4aXQudGV4dCsweDEyM2MpOiB1bmRlZmluZWQgcmVmZXJlbmNlIHRvDQo+ID4gPiA+
+IGBmY19yZWxlYXNlX3RyYW5zcG9ydCcNCj4gPg0KPiA+IFdpdGggdGhpcyBjb21taXQsIHRoZSBz
+dG9ydnNjIGRyaXZlciBkZXBlbmRzIG9uIEZDIGF0dHRyaWJ1dGVzLiBNYWtlDQo+ID4gdGhpcw0K
+PiA+IGRlcGVuZGVuY3kgZXhwbGljaXQuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLLiBZLiBT
+cmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4gPiBSZXBvcnRlZC1ieTogRmVuZ2d1YW5n
+IFd1IDxmZW5nZ3Vhbmcud3VAaW50ZWwuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kv
+S2NvbmZpZyB8ICAgIDEgKw0KPiA+ICAxIGZpbGVzIGNoYW5nZWQsIDEgaW5zZXJ0aW9ucygrKSwg
+MCBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvS2NvbmZp
+ZyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnDQo+ID4gaW5kZXggNjRlZWQ4Ny4uMjQzNjVjMyAxMDA2
+NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvS2NvbmZpZw0KPiA+ICsrKyBiL2RyaXZlcnMvc2Nz
+aS9LY29uZmlnDQo+ID4gQEAgLTU5NCw2ICs1OTQsNyBAQCBjb25maWcgWEVOX1NDU0lfRlJPTlRF
+TkQNCj4gPiAgY29uZmlnIEhZUEVSVl9TVE9SQUdFDQo+ID4gIAl0cmlzdGF0ZSAiTWljcm9zb2Z0
+IEh5cGVyLVYgdmlydHVhbCBzdG9yYWdlIGRyaXZlciINCj4gPiAgCWRlcGVuZHMgb24gU0NTSSAm
+JiBIWVBFUlYNCj4gPiArCWRlcGVuZHMgb24gU0NTSV9GQ19BVFRSUw0KPiANCj4gV2VsbCwgSSBz
+dXBwb3NlIGNvbnRpbnVhbGx5IHNlbmRpbmcgdGhlIHdyb25nIHBhdGNoIHVudGlsIEkgZ2V0IGFu
+bm95ZWQNCj4gZW5vdWdoIHRvIHNlbmQgdGhlIHJpZ2h0IG9uZSBpcyBvbmUgd2F5IG9mIGRvaW5n
+IGl0LiAgVGhpcyBwYXRjaCBpcw0KPiB3cm9uZy4gd2hhdCB5b3Ugd2FudCBpcyBiZWxvdy4NCg0K
+SmFtZXMsIHRoYXQgd2FzIG5vdCBteSBpbnRlbnQ7IGFsdGhvdWdoIGl0IGlzIGEgdGVtcHRpbmcg
+c3RyYXRlZ3khDQpIZXJlIGlzIGFuIGV4Y2VycHQgb2YgeW91ciBjb21tZW50cyBvbiB2MiBvZiB0
+aGlzIHBhdGNoOg0KKGRhdGVkIEphbiAyOSBvZiB0aGlzIHllYXIpOg0KDQoiTm8gLi4uIGlmIHlv
+dSB3YW50IHRvIGRlcGVuZCBvbiB0aGUgRkNfQVRUUlMgdGhlbiBhIHNpbXBsZSBkZXBlbmQNCndv
+cmtzLiAgSWYgeW91IHdhbnQgdG8gYmUgYWJsZSB0byBidWlsZCB3aXRob3V0IHRoZW0gb3Igd2l0
+aCB0aGVtLCB0aGVuDQp0aGF0IGxpbmUgbXVzdCByZWFkDQoNCmRlcGVuZHMgb24gbSB8fCBTQ1NJ
+X0ZDX0FUVFJTICE9IG0iDQoNClNpbmNlIGFsbCBJIHdhbnRlZCB3YXMgdG8gZGVwZW5kIG9uIEZD
+X0FUVFJTIEkgY2hvc2UgdG8gZ28gd2l0aCB5b3VyIHJlY29tbWVuZGF0aW9uIC0NCndoaWNoIGFs
+c28gaGFwcGVuZWQgdG8gYmUgd2hhdCBJIGhhZCBpbml0aWFsbHkgc2VudCAodjEgb2YgdGhpcyBw
+YXRjaCkuDQoNCj4gDQo+IFlvdSB3YW50IEhZUEVSVl9TVE9SQUdFIHRvIGJlIGJ1aWx0IGluIGlm
+IHRoZSBGQyBhdHRyaWJ1dGVzIGFyZSwNCj4gb3RoZXJ3aXNlIHlvdSBkb24ndCBjYXJlIGJlY2F1
+c2UgaWYgdGhleSdyZSBOIHRoZSBGQyBjb2RlIHdpbGwgYmUNCj4gY29tcGlsZWQgb3V0Lg0KDQpJ
+ZiBGQyBhdHRyaWJ1dGVzIGFyZSBidWlsdCBpbiwgSSBoYXZlIG5vIGlzc3VlIC0gSSB3YW50IHRv
+IGJlIGFibGUgdG8gYnVpbGQgdGhlIHN0b3J2c2MNCmRyaXZlciBib3RoIGFzIGEgbW9kdWxlIGFz
+IHdlbGwgYXMgYnVpbHQgaW4uIEhvd2V2ZXIsIGlmIHN0b3J2c2MgaXMgYnVpbHQgYXMgcGFydCBv
+ZiB0aGUga2VybmVsLA0KSSB3YW50IHRvIG1ha2Ugc3VyZSB0aGF0IEZDIGF0dHJpYnV0ZXMgYXJl
+IGFsc28gYnVpbHQgYXMgcGFydCBvZiB0aGUga2VybmVsLiBUaGUgYnVpbGQgdGVzdCBmYWlsdXJl
+DQp0aGF0IHdhcyByZXBvcnRlZCB3YXMgdGhpcyBjYXNlLiBXaXRoIHRoaXMgcGF0Y2gsIHRoZSBi
+dWlsZCBpc3N1ZSByZXBvcnRlZCBieSBrYnVpbGQgY2Fubm90DQpoYXBwZW4gc2luY2UgaWYgdGhl
+IEZDX0FUVFJTIGFyZSBidWlsdCBhcyBhIG1vZHVsZSwgc3RvcnZzYyBjYW5ub3QgYmUgYnVpbHRp
+bi4NCg0KUmVnYXJkcywNCg0KSy4gWSANCj4gDQo+IEphbWVzDQo+IA0KPiAtLS0NCj4gDQo+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvS2NvbmZpZyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnDQo+
+IGluZGV4IGUyZjMxYzkuLjVlY2FiZGIgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9LY29u
+ZmlnDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnDQo+IEBAIC01OTYsNiArNTk2LDcgQEAg
+Y29uZmlnIFhFTl9TQ1NJX0ZST05URU5EDQo+ICBjb25maWcgSFlQRVJWX1NUT1JBR0UNCj4gIAl0
+cmlzdGF0ZSAiTWljcm9zb2Z0IEh5cGVyLVYgdmlydHVhbCBzdG9yYWdlIGRyaXZlciINCj4gIAlk
+ZXBlbmRzIG9uIFNDU0kgJiYgSFlQRVJWDQo+ICsJZGVwZW5kcyBvbiBtIHx8IFNDU0lfRkNfQVRU
+UlMNCj4gIAlkZWZhdWx0IEhZUEVSVg0KPiAgCWhlbHANCj4gIAkgIFNlbGVjdCB0aGlzIG9wdGlv
+biB0byBlbmFibGUgdGhlIEh5cGVyLVYgdmlydHVhbCBzdG9yYWdlIGRyaXZlci4NCg==
