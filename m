@@ -1,36 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Bug 111441] New: iscsi fails to attach to targets
-Date: Sat, 27 Feb 2016 14:15:39 -0800
-Message-ID: <1456611339.1750.41.camel@haakon3.risingtidesystems.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111441] iscsi fails to attach to targets
+Date: Sat, 27 Feb 2016 22:15:43 +0000
+Message-ID: <bug-111441-11613-UsDdAHVPHu@https.bugzilla.kernel.org/>
 References: <bug-111441-11613@https.bugzilla.kernel.org/>
-	 <56AAC605.1080707@cs.wisc.edu>
-	 <9cf7d536fcc44d9d8f35d81503543497@XCH-ALN-006.cisco.com>
-	 <36266784-E570-406E-8C3A-56D0F728768B@cs.wisc.edu>
-	 <a331d83963b64d7da77352b01c1d10da@XCH-ALN-006.cisco.com>
-	 <01C3BBA0-3D1A-461A-9EEF-512A57707325@cs.wisc.edu>
-	 <4c4653b259cd4f1887505dfc61d500a8@XCH-ALN-006.cisco.com>
-	 <56ABBCFF.9060003@cs.wisc.edu>
-	 <26376c0ade5645cfac5cc248a97528ba@XCH-ALN-006.cisco.com>
-	 <56ABF6A6.8070506@cs.wisc.edu>
-	 <1454139533.12686.3.camel@haakon3.risingtidesystems.com>
-	 <56AF8DEC.5000002@cs.wisc.edu>
-	 <1454453785.25549.20.camel@haakon3.risingtidesystems.com>
-	 <1454918501.10001.117.camel@haakon3.risingtidesystems.com>
-	 <56C373B2.2010200@hannes-reinecke.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55843 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755900AbcB0WPl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Feb 2016 17:15:41 -0500
-In-Reply-To: <56C373B2.2010200@hannes-reinecke.de>
+Received: from mail.kernel.org ([198.145.29.136]:56989 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755900AbcB0WPr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Feb 2016 17:15:47 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DF688203E5
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Feb 2016 22:15:45 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 2223F203DA
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Feb 2016 22:15:44 +0000 (UTC)
+In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <mail@hannes-reinecke.de>
-Cc: "Serguei Bezverkhi (sbezverk)" <sbezverk@cisco.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=111441
+
+--- Comment #19 from nab <nab@linux-iscsi.org> ---
 Hey Hannes,
 
 On Tue, 2016-02-16 at 20:08 +0100, Hannes Reinecke wrote:
@@ -114,3 +108,6 @@ for stable, assuming you're entire patchset won't be in 4.4.y code.  ;)
 Are you OK with Mike's original patch, or do you have something better
 to submit to Greg-KH..?
 
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
