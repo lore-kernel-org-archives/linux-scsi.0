@@ -1,26 +1,29 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 1/6] hisi_sas: change tmf func complete check
-Date: Sat, 27 Feb 2016 19:56:58 +0800
-Message-ID: <56D18F0A.30400@suse.de>
+Subject: Re: [PATCH v2 2/6] hisi_sas: add hisi_sas_slot_abort()
+Date: Sat, 27 Feb 2016 19:57:46 +0800
+Message-ID: <56D18F3A.1060401@suse.de>
 References: <1456393335-38294-1-git-send-email-john.garry@huawei.com>
- <1456393335-38294-2-git-send-email-john.garry@huawei.com>
+ <1456393335-38294-3-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1456393335-38294-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1456393335-38294-3-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: John Garry <john.garry@huawei.com>, JBottomley@odin.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 02/25/2016 05:42 PM, John Garry wrote:
-> In hisi_sas_exec_internal_tmf_task(), the check for
-> SAM_STAT_GOOD is replaced with
-> TMF_RESP_FUNC_COMPLETE, which is a genuine tmf
-> response code.
-> SAM_STAT_GOOD and TMF_RESP_FUNC_COMPLETE have the
-> same value, so this is why it worked before.
+> Add a function to abort a slot (task) in the target
+> device and then cleanup and complete the task.
+> The function is called from work queue context as
+> it cannot be called from the context where it is
+> triggered (interrupt).
+> Flag hisi_sas_slot.abort is added as the flag used
+> in the slot error handler to indicate whether the
+> slot needs to be aborted in the sdev prior to
+> cleanup and finish.
 >=20
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
