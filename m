@@ -1,33 +1,29 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 2/6] hisi_sas: add hisi_sas_slot_abort()
-Date: Sat, 27 Feb 2016 19:57:46 +0800
-Message-ID: <56D18F3A.1060401@suse.de>
+Subject: Re: [PATCH v2 3/6] hisi_sas: use slot abort in v1 hw
+Date: Sat, 27 Feb 2016 19:58:31 +0800
+Message-ID: <56D18F67.4080707@suse.de>
 References: <1456393335-38294-1-git-send-email-john.garry@huawei.com>
- <1456393335-38294-3-git-send-email-john.garry@huawei.com>
+ <1456393335-38294-4-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1456393335-38294-3-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1456393335-38294-4-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: John Garry <john.garry@huawei.com>, JBottomley@odin.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 02/25/2016 05:42 PM, John Garry wrote:
-> Add a function to abort a slot (task) in the target
-> device and then cleanup and complete the task.
-> The function is called from work queue context as
-> it cannot be called from the context where it is
-> triggered (interrupt).
-> Flag hisi_sas_slot.abort is added as the flag used
-> in the slot error handler to indicate whether the
-> slot needs to be aborted in the sdev prior to
-> cleanup and finish.
+> When TRANS_TX_CREDIT_TIMEOUT_ERR or
+> TRANS_TX_CLOSE_NORMAL_ERR error occur in
+> a slot, the command should be re-attempted.
+> This error is equivalent to meaning that the queue
+> is full in the sdev (and not the host).
 >=20
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
