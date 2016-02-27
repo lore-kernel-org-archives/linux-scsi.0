@@ -1,113 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 111441] iscsi fails to attach to targets
-Date: Sat, 27 Feb 2016 22:15:43 +0000
-Message-ID: <bug-111441-11613-UsDdAHVPHu@https.bugzilla.kernel.org/>
-References: <bug-111441-11613@https.bugzilla.kernel.org/>
+From: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: =?utf-8?Q?=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0?=
+	=?utf-8?Q?=9A=D0=98=D0=95_=D0=91=D0=90=D0=97=D0=AB!_=D0?=
+	=?utf-8?Q?=A2=D0=B5=D0=BB=5CViber=5CWhatsapp=3A_+79133913?=
+	=?utf-8?Q?837_Email=3A_vavdeev17=40gmail=2Ecom_Skype=3A_p?=
+	=?utf-8?Q?rodawez389?=
+Date: Sun, 28 Feb 2016 03:39:19 +0600
+Message-ID: <18E357884E9AB576AAAFE659ADE27507@vger.kernel.org>
+Reply-To: "linux-scsi@vger.kernel.org" <vavdeev17@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56989 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755900AbcB0WPr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Feb 2016 17:15:47 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DF688203E5
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Feb 2016 22:15:45 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 2223F203DA
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Feb 2016 22:15:44 +0000 (UTC)
-In-Reply-To: <bug-111441-11613@https.bugzilla.kernel.org/>
+Received: from instagram.kuncoro.id ([103.43.44.13]:44293 "EHLO
+	instagram.kuncoro.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992719AbcB1BKt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Feb 2016 20:10:49 -0500
+Received: from 103.43.44.13 (localhost [127.0.0.1])
+	by instagram.kuncoro.id (Postfix) with SMTP id 26B7F3E534E
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Feb 2016 04:39:20 +0700 (WIB)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=111441
+=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0=9A=D0=98=D0=95 =D0=91=D0=90=
+=D0=97=D0=AB!
 
---- Comment #19 from nab <nab@linux-iscsi.org> ---
-Hey Hannes,
-
-On Tue, 2016-02-16 at 20:08 +0100, Hannes Reinecke wrote:
-> On 02/08/2016 09:01 AM, Nicholas A. Bellinger wrote:
-> > On Tue, 2016-02-02 at 14:56 -0800, Nicholas A. Bellinger wrote:
-> >> On Mon, 2016-02-01 at 10:55 -0600, Mike Christie wrote:
-> >>> On 01/30/2016 01:38 AM, Nicholas A. Bellinger wrote:
-> >>>> On Fri, 2016-01-29 at 17:32 -0600, Mike Christie wrote:
-
-<SNIP>
-
-> >>>> Btw, what does misconfigured mean here wrt target ALUA..?
-> >>>
-> >>> [   25.833195] sd 6:0:0:4: alua: supports implicit and explicit TPGS
-> >>> [   25.833360] sd 6:0:0:4: alua: No target port descriptors found
-> >>> [   25.833363] sd 6:0:0:4: alua: Attach failed (-22)
-> >>> [   25.833365] sd 6:0:0:4: failed to add device handler: -22
-> >>>
-> >>
-> >> Strange, this hasn't changed in forever on the target side..
-> >>
-> >>> He has LIO configured to report it supports implicit/explicit ALUA, but
-> >>> the ports do not seem to be configured.
-> >>>
-> >>> For the LIO config side, are his LUNs just not in a the default_lu_gp or
-> >>> any other group?
-> >>
-> >> So every non-PSCSI backend device becomes part of default_lu_gp +
-> >> default_tg_pt_gp and automatically shows up in EVPD=0x83, without user
-> >> needing to do any additional configuration.
-> >>
-> >> Here's what the output looks like:
-> >>
-> >> root@haakon3:/usr/src/target-pending.git# sg_inq -Hi /dev/sdb
-> >> VPD INQUIRY: Device Identification page
-> >>    <SNIP>
-> >>    Designation descriptor number 3, descriptor length: 8
-> >>      transport: Serial Attached SCSI Protocol (SPL-2)
-> >>      designator_type: Relative target port,  code_set: Binary
-> >>      associated with the target port
-> >>      designator header(hex): 61 94 00 04
-> >>      designator:
-> >>   00     00 00 00 02                                         ....
-> >>    Designation descriptor number 4, descriptor length: 8
-> >>      transport: Serial Attached SCSI Protocol (SPL-2)
-> >>      designator_type: Target port group,  code_set: Binary
-> >>      associated with the target port
-> >>      designator header(hex): 61 95 00 04
-> >>      designator:
-> >>   00     00 00 00 00                                         ....
-> >>    Designation descriptor number 5, descriptor length: 8
-> >>      designator_type: Logical unit group,  code_set: Binary
-> >>      associated with the addressed logical unit
-> >>      designator header(hex): 01 06 00 04
-> >>      designator:
-> >>   00     00 00 00 00                                         ....
-> >>   <SNIP>
-> >>
-> >> So AFAICT, the relative target port, target port group, and logical unit
-> >> group being returned from target on v4.5-rc1 code looks correct.
-> >>
-> >> Serguei, can you confirm with 'sg_inq -Hi /dev/sdX' output on your side
-> >> with the v3.10 based target..?
-> >>
-> >> AFAICT the parsing in scsi_vpd_tpg_id() from commit a8aa3978 looks
-> >> correct too.
-> >>
-> >> Hannes, any ideas..?
-> >
-> > Ping.
-> >
-> Please try with my latest scsi_dh_alua patchset posted to linux-scsi.
-> That should solve the error attaching devices.
-> 
-
-Just to confirm, this was not a target side issue, right..?
-
-Also, since Serguei is seeing this on v4.4 we'll still need some hack
-for stable, assuming you're entire patchset won't be in 4.4.y code.  ;)
-
-Are you OK with Mike's original patch, or do you have something better
-to submit to Greg-KH..?
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+=D0=A1=D0=BE=D0=B1=D0=B5=D1=80=D0=B5=D0=BC =D0=B4=D0=BB=D1=8F =D0=92=D0=
+=B0=D1=81 =D0=BF=D0=BE =D0=B8=D0=BD=D1=82=D0=B5=D1=80=D0=BD=D0=B5=D1=82=
+ =D0=B1=D0=B0=D0=B7=D1=83 =D0=B4=D0=B0=D0=BD=D0=BD=D1=8B=D1=85 =D0=BF=D0=
+=BE=D1=82=D0=B5=D0=BD=D1=86=D0=B8=D0=B0=D0=BB=D1=8C=D0=BD=D1=8B=D1=85 =D0=
+=BA=D0=BB=D0=B8=D0=B5=D0=BD=D1=82=D0=BE=D0=B2=20
+=D0=B4=D0=BB=D1=8F =D0=92=D0=B0=D1=88=D0=B5=D0=B3=D0=BE =D0=91=D0=B8=D0=
+=B7=D0=BD=D0=B5=D1=81=D0=B0!
+=D0=9C=D0=BD=D0=BE=D0=B3=D0=BE! =D0=91=D1=8B=D1=81=D1=82=D1=80=D0=BE! =D0=
+=9D=D0=B5=D0=B4=D0=BE=D1=80=D0=BE=D0=B3=D0=BE!=20
+=D0=A3=D0=B7=D0=BD=D0=B0=D0=B9=D1=82=D0=B5 =D0=BE=D0=B1 =D1=8D=D1=82=D0=
+=BE=D0=BC =D0=BF=D0=BE=D0=B4=D1=80=D0=BE=D0=B1=D0=BD=D0=B5=D0=B5 =D0=BF=
+=D0=BE=20
+=D0=A2=D0=B5=D0=BB: +79133913837
+Viber: +79133913837
+Whatsapp: +79133913837
+Skype: prodawez389
+Email: vavdeev17@gmail.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
