@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 04/15] scsi: ufs: verify hba controller hce reg value
-Date: Sun, 28 Feb 2016 15:32:36 +0200
-Message-ID: <1456666367-11418-5-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 05/15] scsi: ufs: add support to read device and string descriptors
+Date: Sun, 28 Feb 2016 15:32:37 +0200
+Message-ID: <1456666367-11418-6-git-send-email-ygardi@codeaurora.org>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
@@ -10,170 +10,162 @@ To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Sometimes due to hw issues it takes some time to the
-host controller register to update. In order to verify the register
-has updated, a polling is done until its value is set.
+This change adds support to read device descriptor and string descriptor
+from a UFS device
 
-In addition the functions ufshcd_hba_stop() and
-ufshcd_wait_for_register() was updated with an additional input
-parameter, indicating the timeout between reads will
-be done by sleeping or spinning the cpu.
-
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h | 12 +++--------
- 2 files changed, 35 insertions(+), 30 deletions(-)
+ drivers/scsi/ufs/ufs.h    |  1 +
+ drivers/scsi/ufs/ufshcd.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  7 ++++
+ 3 files changed, 95 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 54a16ce..aacb235 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -43,6 +43,7 @@
+ #define GENERAL_UPIU_REQUEST_SIZE 32
+ #define QUERY_DESC_MAX_SIZE       255
+ #define QUERY_DESC_MIN_SIZE       2
++#define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+ 					(sizeof(struct utp_upiu_header)))
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3400ceb..80031e6 100644
+index 80031e6..e2ed415 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
-  * @val - wait condition
-  * @interval_us - polling interval in microsecs
-  * @timeout_ms - timeout in millisecs
-+ * @can_sleep - perform sleep or just spin
-  *
-  * Returns -ETIMEDOUT on error, zero on success
-  */
--static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
--		u32 val, unsigned long interval_us, unsigned long timeout_ms)
-+int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+				u32 val, unsigned long interval_us,
-+				unsigned long timeout_ms, bool can_sleep)
- {
- 	int err = 0;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
-@@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
- 	val = val & mask;
+@@ -39,7 +39,7 @@
  
- 	while ((ufshcd_readl(hba, reg) & mask) != val) {
--		/* wakeup within 50us of expiry */
--		usleep_range(interval_us, interval_us + 50);
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
 -
-+		if (can_sleep)
-+			usleep_range(interval_us, interval_us + 50);
-+		else
-+			udelay(interval_us);
- 		if (time_after(jiffies, timeout)) {
- 			if ((ufshcd_readl(hba, reg) & mask) != val)
- 				err = -ETIMEDOUT;
-@@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
- 	 */
- 	err = ufshcd_wait_for_register(hba,
- 			REG_UTP_TRANSFER_REQ_DOOR_BELL,
--			mask, ~mask, 1000, 1000);
-+			mask, ~mask, 1000, 1000, true);
- 
- 	return err;
- }
-@@ -2815,6 +2818,23 @@ out:
++#include <linux/nls.h>
+ #include <linux/of.h>
+ #include "ufshcd.h"
+ #include "unipro.h"
+@@ -232,6 +232,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
  }
  
- /**
-+ * ufshcd_hba_stop - Send controller to reset state
-+ * @hba: per adapter instance
-+ * @can_sleep: perform sleep or just spin
-+ */
-+static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
++/* replace non-printable or non-ASCII characters with spaces */
++static inline void ufshcd_remove_non_printable(char *val)
 +{
-+	int err;
++	if (!val)
++		return;
 +
-+	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
-+	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
-+					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
-+					10, 1, can_sleep);
-+	if (err)
-+		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
++	if (*val < 0x20 || *val > 0x7e)
++		*val = ' ';
 +}
 +
-+/**
-  * ufshcd_hba_enable - initialize the controller
-  * @hba: per adapter instance
-  *
-@@ -2834,18 +2854,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	 * development and testing of this driver. msleep can be changed to
- 	 * mdelay and retry count can be reduced based on the controller.
- 	 */
--	if (!ufshcd_is_hba_active(hba)) {
--
-+	if (!ufshcd_is_hba_active(hba))
- 		/* change controller state to "reset state" */
--		ufshcd_hba_stop(hba);
--
--		/*
--		 * This delay is based on the testing done with UFS host
--		 * controller FPGA. The delay can be changed based on the
--		 * host controller used.
--		 */
--		msleep(5);
--	}
-+		ufshcd_hba_stop(hba, true);
- 
- 	/* UniPro link is disabled at this point */
- 	ufshcd_set_link_off(hba);
-@@ -3898,7 +3909,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- 	/* poll for max. 1 sec to clear door bell register by h/w */
- 	err = ufshcd_wait_for_register(hba,
- 			REG_UTP_TASK_REQ_DOOR_BELL,
--			mask, 0, 1000, 1000);
-+			mask, 0, 1000, 1000, true);
- out:
- 	return err;
+ /*
+  * ufshcd_wait_for_register - wait for register value to change
+  * @hba - per-adapter interface
+@@ -2021,6 +2031,82 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
+ 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
  }
-@@ -4180,7 +4191,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
  
- 	/* Reset the host controller */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_hba_stop(hba);
-+	ufshcd_hba_stop(hba, false);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	err = ufshcd_hba_enable(hba);
-@@ -5133,7 +5144,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 		 * Change controller state to "reset state" which
- 		 * should also put the link in off/reset state
- 		 */
--		ufshcd_hba_stop(hba);
-+		ufshcd_hba_stop(hba, true);
- 		/*
- 		 * TODO: Check if we need any delay to make sure that
- 		 * controller is reset
-@@ -5609,7 +5620,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	scsi_remove_host(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
--	ufshcd_hba_stop(hba);
-+	ufshcd_hba_stop(hba, true);
- 
- 	scsi_host_put(hba->host);
- 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
++{
++	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
++}
++EXPORT_SYMBOL(ufshcd_read_device_desc);
++
++/**
++ * ufshcd_read_string_desc - read string descriptor
++ * @hba: pointer to adapter instance
++ * @desc_index: descriptor index
++ * @buf: pointer to buffer where descriptor would be read
++ * @size: size of buf
++ * @ascii: if true convert from unicode to ascii characters
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii)
++{
++	int err = 0;
++
++	err = ufshcd_read_desc(hba,
++				QUERY_DESC_IDN_STRING, desc_index, buf, size);
++
++	if (err) {
++		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
++			__func__, QUERY_REQ_RETRIES, err);
++		goto out;
++	}
++
++	if (ascii) {
++		int desc_len;
++		int ascii_len;
++		int i;
++		char *buff_ascii;
++
++		desc_len = buf[0];
++		/* remove header and divide by 2 to move from UTF16 to UTF8 */
++		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
++		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
++			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
++					__func__);
++			err = -ENOMEM;
++			goto out;
++		}
++
++		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
++		if (!buff_ascii) {
++			err = -ENOMEM;
++			goto out_free_buff;
++		}
++
++		/*
++		 * the descriptor contains string in UTF16 format
++		 * we need to convert to utf-8 so it can be displayed
++		 */
++		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
++				desc_len - QUERY_DESC_HDR_SIZE,
++				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
++
++		/* replace non-printable or non-ASCII characters with spaces */
++		for (i = 0; i < ascii_len; i++)
++			ufshcd_remove_non_printable(&buff_ascii[i]);
++
++		memset(buf + QUERY_DESC_HDR_SIZE, 0,
++				size - QUERY_DESC_HDR_SIZE);
++		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
++		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
++out_free_buff:
++		kfree(buff_ascii);
++	}
++out:
++	return err;
++}
++EXPORT_SYMBOL(ufshcd_read_string_desc);
++
+ /**
+  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
+  * @hba: Pointer to adapter instance
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 9ae7f85..a6d3572 100644
+index a6d3572..54e13cc 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -590,15 +590,9 @@ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- void ufshcd_dealloc_host(struct ufs_hba *);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
--
--/**
-- * ufshcd_hba_stop - Send controller to reset state
-- * @hba: per adapter instance
-- */
--static inline void ufshcd_hba_stop(struct ufs_hba *hba)
--{
--	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
--}
-+int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+				u32 val, unsigned long interval_us,
-+				unsigned long timeout_ms, bool can_sleep);
+@@ -678,6 +678,13 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+ }
  
- static inline void check_upiu_size(void)
- {
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
++
++#define ASCII_STD true
++
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii);
++
+ /* Expose Query-Request API */
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
 -- 
 1.8.5.2
 
