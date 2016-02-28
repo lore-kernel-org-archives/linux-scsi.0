@@ -1,184 +1,179 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 01/15] scsi: ufs-qcom: add number of lanes per direction
-Date: Sun, 28 Feb 2016 15:32:33 +0200
-Message-ID: <1456666367-11418-2-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 04/15] scsi: ufs: verify hba controller hce reg value
+Date: Sun, 28 Feb 2016 15:32:36 +0200
+Message-ID: <1456666367-11418-5-git-send-email-ygardi@codeaurora.org>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "open list:OPEN FIRMWARE AND FLATTENED
-	DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Different platform may have different number of lanes
-for the UFS link.
-Add parameter to device tree specifying how many lanes
-should be configured for the UFS link.
+Sometimes due to hw issues it takes some time to the
+host controller register to update. In order to verify the register
+has updated, a polling is done until its value is set.
 
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+In addition the functions ufshcd_hba_stop() and
+ufshcd_wait_for_register() was updated with an additional input
+parameter, indicating the timeout between reads will
+be done by sleeping or spinning the cpu.
+
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  3 ++
- drivers/scsi/ufs/ufs-qcom.c                        | 39 ++++++++++++----------
- drivers/scsi/ufs/ufshcd-pltfrm.c                   | 19 +++++++++++
- drivers/scsi/ufs/ufshcd.c                          |  1 +
- drivers/scsi/ufs/ufshcd.h                          |  2 ++
- 5 files changed, 47 insertions(+), 17 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h | 12 +++--------
+ 2 files changed, 35 insertions(+), 30 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index 03c0e98..66f6adf 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -38,6 +38,9 @@ Optional properties:
- 			  defined or a value in the array is "0" then it is assumed
- 			  that the frequency is set by the parent clock or a
- 			  fixed rate clock source.
-+-lanes-per-direction	: number of lanes available per direction - either 1 or 2.
-+			  Note that it is assume same number of lanes is used both
-+			  directions at once. If not specified, default is 2 lanes per direction.
- 
- Note: If above properties are not defined it can be assumed that the supply
- regulators or clocks are always on.
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 4f38d00..ed57729 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
-+ * Copyright (c) 2013-2016, Linux Foundation. All rights reserved.
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 3400ceb..80031e6 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+  * @val - wait condition
+  * @interval_us - polling interval in microsecs
+  * @timeout_ms - timeout in millisecs
++ * @can_sleep - perform sleep or just spin
   *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 and
-@@ -132,21 +132,24 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto disable_rx_l0;
+  * Returns -ETIMEDOUT on error, zero on success
+  */
+-static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+-		u32 val, unsigned long interval_us, unsigned long timeout_ms)
++int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
++				u32 val, unsigned long interval_us,
++				unsigned long timeout_ms, bool can_sleep)
+ {
+ 	int err = 0;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+@@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+ 	val = val & mask;
  
--	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
--		host->rx_l1_sync_clk);
--	if (err)
--		goto disable_tx_l0;
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
-+			host->rx_l1_sync_clk);
-+		if (err)
-+			goto disable_tx_l0;
- 
--	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
--		host->tx_l1_sync_clk);
--	if (err)
--		goto disable_rx_l1;
-+		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-+			host->tx_l1_sync_clk);
-+		if (err)
-+			goto disable_rx_l1;
-+	}
- 
- 	host->is_lane_clks_enabled = true;
- 	goto out;
- 
- disable_rx_l1:
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- disable_tx_l0:
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
- disable_rx_l0:
-@@ -170,14 +173,16 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto out;
- 
--	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
--		&host->rx_l1_sync_clk);
--	if (err)
--		goto out;
+ 	while ((ufshcd_readl(hba, reg) & mask) != val) {
+-		/* wakeup within 50us of expiry */
+-		usleep_range(interval_us, interval_us + 50);
 -
--	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
--		&host->tx_l1_sync_clk);
-+	/* In case of single lane per direction, don't read lane1 clocks */
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
-+			&host->rx_l1_sync_clk);
-+		if (err)
-+			goto out;
++		if (can_sleep)
++			usleep_range(interval_us, interval_us + 50);
++		else
++			udelay(interval_us);
+ 		if (time_after(jiffies, timeout)) {
+ 			if ((ufshcd_readl(hba, reg) & mask) != val)
+ 				err = -ETIMEDOUT;
+@@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
+ 	 */
+ 	err = ufshcd_wait_for_register(hba,
+ 			REG_UTP_TRANSFER_REQ_DOOR_BELL,
+-			mask, ~mask, 1000, 1000);
++			mask, ~mask, 1000, 1000, true);
  
-+		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-+			&host->tx_l1_sync_clk);
-+	}
+ 	return err;
+ }
+@@ -2815,6 +2818,23 @@ out:
+ }
+ 
+ /**
++ * ufshcd_hba_stop - Send controller to reset state
++ * @hba: per adapter instance
++ * @can_sleep: perform sleep or just spin
++ */
++static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
++{
++	int err;
++
++	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
++	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
++					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
++					10, 1, can_sleep);
++	if (err)
++		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
++}
++
++/**
+  * ufshcd_hba_enable - initialize the controller
+  * @hba: per adapter instance
+  *
+@@ -2834,18 +2854,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+ 	 * development and testing of this driver. msleep can be changed to
+ 	 * mdelay and retry count can be reduced based on the controller.
+ 	 */
+-	if (!ufshcd_is_hba_active(hba)) {
+-
++	if (!ufshcd_is_hba_active(hba))
+ 		/* change controller state to "reset state" */
+-		ufshcd_hba_stop(hba);
+-
+-		/*
+-		 * This delay is based on the testing done with UFS host
+-		 * controller FPGA. The delay can be changed based on the
+-		 * host controller used.
+-		 */
+-		msleep(5);
+-	}
++		ufshcd_hba_stop(hba, true);
+ 
+ 	/* UniPro link is disabled at this point */
+ 	ufshcd_set_link_off(hba);
+@@ -3898,7 +3909,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+ 	/* poll for max. 1 sec to clear door bell register by h/w */
+ 	err = ufshcd_wait_for_register(hba,
+ 			REG_UTP_TASK_REQ_DOOR_BELL,
+-			mask, 0, 1000, 1000);
++			mask, 0, 1000, 1000, true);
  out:
  	return err;
  }
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index d2a7b12..718f12e 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -40,6 +40,8 @@
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
+@@ -4180,7 +4191,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
  
-+#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
-+
- static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- {
- 	int ret = 0;
-@@ -277,6 +279,21 @@ void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
- }
- EXPORT_SYMBOL_GPL(ufshcd_pltfrm_shutdown);
+ 	/* Reset the host controller */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ufshcd_hba_stop(hba);
++	ufshcd_hba_stop(hba, false);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
  
-+static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
-+{
-+	struct device *dev = hba->dev;
-+	int ret;
-+
-+	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
-+		&hba->lanes_per_direction);
-+	if (ret) {
-+		dev_dbg(hba->dev,
-+			"%s: failed to read lanes-per-direction, ret=%d\n",
-+			__func__, ret);
-+		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
-+	}
-+}
-+
- /**
-  * ufshcd_pltfrm_init - probe routine of the driver
-  * @pdev: pointer to Platform device handle
-@@ -331,6 +348,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 	pm_runtime_set_active(&pdev->dev);
- 	pm_runtime_enable(&pdev->dev);
+ 	err = ufshcd_hba_enable(hba);
+@@ -5133,7 +5144,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
+ 		 * Change controller state to "reset state" which
+ 		 * should also put the link in off/reset state
+ 		 */
+-		ufshcd_hba_stop(hba);
++		ufshcd_hba_stop(hba, true);
+ 		/*
+ 		 * TODO: Check if we need any delay to make sure that
+ 		 * controller is reset
+@@ -5609,7 +5620,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	scsi_remove_host(hba->host);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+-	ufshcd_hba_stop(hba);
++	ufshcd_hba_stop(hba, true);
  
-+	ufshcd_init_lanes_per_dir(hba);
-+
- 	err = ufshcd_init(hba, mmio_base, irq);
- 	if (err) {
- 		dev_err(dev, "Initialization failed\n");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9c1b94b..a8e42df 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -40,6 +40,7 @@
- #include <linux/async.h>
- #include <linux/devfreq.h>
- 
-+#include <linux/of.h>
- #include "ufshcd.h"
- #include "unipro.h"
+ 	scsi_host_put(hba->host);
  
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e3931d0..9ae7f85 100644
+index 9ae7f85..a6d3572 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -509,6 +509,8 @@ struct ufs_hba {
+@@ -590,15 +590,9 @@ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+ void ufshcd_dealloc_host(struct ufs_hba *);
+ int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+ void ufshcd_remove(struct ufs_hba *);
+-
+-/**
+- * ufshcd_hba_stop - Send controller to reset state
+- * @hba: per adapter instance
+- */
+-static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+-{
+-	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+-}
++int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
++				u32 val, unsigned long interval_us,
++				unsigned long timeout_ms, bool can_sleep);
  
- 	bool wlun_dev_clr_ua;
- 
-+	/* Number of lanes available (1 or 2) for Rx/Tx */
-+	u32 lanes_per_direction;
- 	struct ufs_pa_layer_attr pwr_info;
- 	struct ufs_pwr_mode_info max_pwr_info;
- 
+ static inline void check_upiu_size(void)
+ {
 -- 
 1.8.5.2
 
