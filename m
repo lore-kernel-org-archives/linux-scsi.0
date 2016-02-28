@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 09/15] scsi: ufs: add error recovery after DL NAC error
-Date: Sun, 28 Feb 2016 15:32:41 +0200
-Message-ID: <1456666367-11418-10-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 07/15] scsi: ufs: disable vccq if it's not needed by UFS device
+Date: Sun, 28 Feb 2016 15:32:39 +0200
+Message-ID: <1456666367-11418-8-git-send-email-ygardi@codeaurora.org>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
@@ -10,176 +10,141 @@ To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some vendor's UFS device sends back to back NACs for the DL data frames
-causing the host controller to raise the DFES error status. Sometimes
-such UFS devices send back to back NAC without waiting for new
-retransmitted DL frame from the host and in such cases it might be
-possible the Host UniPro goes into bad state without raising the DFES
-error interrupt. If this happens then all the pending commands would
-timeout only after respective SW command (which is generally too
-large).
-
-This change workarounds such device behaviour like this:
-- As soon as SW sees the DL NAC error, it would schedule the error
-  handler
-- Error handler would sleep for 50ms to see if there any fatal errors
-  raised by UFS controller.
-   - If there are fatal errors then SW does normal error recovery.
-   - If there are no fatal errors then SW sends the NOP command to
-     device to check if link is alive.
-       - If NOP command times out, SW does normal error recovery
-       - If NOP command succeed, skip the error handling.
-
-If DL NAC error is seen multiple times with some vendor's UFS devices
-then enable this quirk to initiate quick error recovery and also
-silence related error logs to reduce spamming of kernel logs.
+Some UFS devices don't require VCCQ rail for device operations hence
+this change adds support to recognize such devices and remove vote for
+the unused VCCQ rail.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshci.h |  2 +
- 2 files changed, 95 insertions(+)
+ drivers/scsi/ufs/ufs.h    |  1 +
+ drivers/scsi/ufs/ufshcd.c | 60 +++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 57 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 8ec6356..b291fa6 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -501,6 +501,7 @@ struct ufs_vreg {
+ 	struct regulator *reg;
+ 	const char *name;
+ 	bool enabled;
++	bool unused;
+ 	int min_uV;
+ 	int max_uV;
+ 	int min_uA;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index dc096f1..e9c7c91 100644
+index 91a341b..987cf27 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3795,6 +3795,79 @@ static void ufshcd_complete_requests(struct ufs_hba *hba)
+@@ -195,6 +195,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 bool skip_ref_clk);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
++static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
+ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+@@ -4593,6 +4594,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 		goto out;
+ 
+ 	ufs_advertise_fixup_device(hba);
++
++	ret = ufshcd_set_vccq_rail_unused(hba,
++		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
++	if (ret)
++		goto out;
++
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+@@ -4743,13 +4750,24 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+ static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
++	if (!vreg)
++		return 0;
++	else if (vreg->unused)
++		return 0;
++	else
++		return ufshcd_config_vreg_load(hba->dev, vreg,
++					       UFS_VREG_LPM_LOAD_UA);
  }
  
- /**
-+ * ufshcd_quirk_dl_nac_errors - This function checks if error handling is
-+ *				to recover from the DL NAC errors or not.
-+ * @hba: per-adapter instance
-+ *
-+ * Returns true if error handling is required, false otherwise
-+ */
-+static bool ufshcd_quirk_dl_nac_errors(struct ufs_hba *hba)
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
++	if (!vreg)
++		return 0;
++	else if (vreg->unused)
++		return 0;
++	else
++		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+ }
+ 
+ static int ufshcd_config_vreg(struct device *dev,
+@@ -4784,7 +4802,9 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg || vreg->enabled)
++	if (!vreg)
++		goto out;
++	else if (vreg->enabled || vreg->unused)
+ 		goto out;
+ 
+ 	ret = ufshcd_config_vreg(dev, vreg, true);
+@@ -4804,7 +4824,9 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg || !vreg->enabled)
++	if (!vreg)
++		goto out;
++	else if (!vreg->enabled || vreg->unused)
+ 		goto out;
+ 
+ 	ret = regulator_disable(vreg->reg);
+@@ -4910,6 +4932,36 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
++static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
 +{
-+	unsigned long flags;
-+	bool err_handling = true;
++	int ret = 0;
++	struct ufs_vreg_info *info = &hba->vreg_info;
 +
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/*
-+	 * UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS only workaround the
-+	 * device fatal error and/or DL NAC & REPLAY timeout errors.
-+	 */
-+	if (hba->saved_err & (CONTROLLER_FATAL_ERROR | SYSTEM_BUS_FATAL_ERROR))
++	if (!info)
++		goto out;
++	else if (!info->vccq)
 +		goto out;
 +
-+	if ((hba->saved_err & DEVICE_FATAL_ERROR) ||
-+	    ((hba->saved_err & UIC_ERROR) &&
-+	     (hba->saved_uic_err & UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))
-+		goto out;
-+
-+	if ((hba->saved_err & UIC_ERROR) &&
-+	    (hba->saved_uic_err & UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)) {
-+		int err;
++	if (unused) {
++		/* shut off the rail here */
++		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
 +		/*
-+		 * wait for 50ms to see if we can get any other errors or not.
++		 * Mark this rail as no longer used, so it doesn't get enabled
++		 * later by mistake
 +		 */
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		msleep(50);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+
++		if (!ret)
++			info->vccq->unused = true;
++	} else {
 +		/*
-+		 * now check if we have got any other severe errors other than
-+		 * DL NAC error?
++		 * rail should have been already enabled hence just make sure
++		 * that unused flag is cleared.
 +		 */
-+		if ((hba->saved_err & INT_FATAL_ERRORS) ||
-+		    ((hba->saved_err & UIC_ERROR) &&
-+		    (hba->saved_uic_err & ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)))
-+			goto out;
-+
-+		/*
-+		 * As DL NAC is the only error received so far, send out NOP
-+		 * command to confirm if link is still active or not.
-+		 *   - If we don't get any response then do error recovery.
-+		 *   - If we get response then clear the DL NAC error bit.
-+		 */
-+
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		err = ufshcd_verify_dev_init(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+
-+		if (err)
-+			goto out;
-+
-+		/* Link seems to be alive hence ignore the DL NAC errors */
-+		if (hba->saved_uic_err == UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)
-+			hba->saved_err &= ~UIC_ERROR;
-+		/* clear NAC error */
-+		hba->saved_uic_err &= ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
-+		if (!hba->saved_uic_err) {
-+			err_handling = false;
-+			goto out;
-+		}
++		info->vccq->unused = false;
 +	}
 +out:
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	return err_handling;
++	return ret;
 +}
 +
-+/**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-  */
-@@ -3822,6 +3895,17 @@ static void ufshcd_err_handler(struct work_struct *work)
- 
- 	/* Complete requests that have door-bell cleared by h/w */
- 	ufshcd_complete_requests(hba);
-+
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
-+		bool ret;
-+
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
-+		ret = ufshcd_quirk_dl_nac_errors(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		if (!ret)
-+			goto skip_err_handling;
-+	}
- 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
- 	    ((hba->saved_err & UIC_ERROR) &&
- 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
-@@ -3897,6 +3981,7 @@ skip_pending_xfer_clear:
- 		hba->saved_uic_err = 0;
- 	}
- 
-+skip_err_handling:
- 	if (!needs_reset) {
- 		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 		if (hba->saved_err || hba->saved_uic_err)
-@@ -3925,6 +4010,14 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
- 	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
- 		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
-+	else if (hba->dev_quirks &
-+		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
-+		if (reg & UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED)
-+			hba->uic_error |=
-+				UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
-+		else if (reg & UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT)
-+			hba->uic_error |= UFSHCD_UIC_DL_TCx_REPLAY_ERROR;
-+	}
- 
- 	/* UIC NL/TL/DME errors needs software retry */
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 0ae0967..2b05bfb 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -170,6 +170,8 @@ enum {
- #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
- #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
- #define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
-+#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
-+#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
- 
- /* UECN - Host UIC Error Code Network Layer 40h */
- #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 					bool skip_ref_clk)
+ {
 -- 
 1.8.5.2
 
