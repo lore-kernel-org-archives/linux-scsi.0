@@ -1,59 +1,70 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2 2/3] PM / sleep: try to runtime suspend for direct complete
-Date: Sun, 28 Feb 2016 02:31:11 +0100
-Message-ID: <3183435.BG93qPHVgS@vostro.rjw.lan>
-References: <1456359748-22838-1-git-send-email-dbasehore@chromium.org> <1456359748-22838-2-git-send-email-dbasehore@chromium.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1456359748-22838-2-git-send-email-dbasehore@chromium.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Derek Basehore <dbasehore@chromium.org>
-Cc: linux-pm@vger.kernel.org, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v5 00/15] add fixes, device quirks, error recovery,
+Date: Sun, 28 Feb 2016 15:32:32 +0200
+Message-ID: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wednesday, February 24, 2016 04:22:27 PM Derek Basehore wrote:
-> This tries to runtime suspend devices that are still active for direct
-> complete. This is for cases such as autosuspend delays which leaves
-> devices able to runtime suspend but still active. It's beneficial in
-> this case to runtime suspend the device to take advantage of direct
-> complete when possible.
-> 
-> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
-> Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
-> ---
->  drivers/base/power/main.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-> index e0017d9..9693032 100644
-> --- a/drivers/base/power/main.c
-> +++ b/drivers/base/power/main.c
-> @@ -1380,7 +1380,12 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
->  		goto Complete;
->  
->  	if (dev->power.direct_complete) {
-> -		if (pm_runtime_status_suspended(dev)) {
-> +		/*
-> +		 * Check if we're runtime suspended. If not, try to runtime
-> +		 * suspend for autosuspend cases.
-> +		 */
-> +		if (pm_runtime_status_suspended(dev) ||
-> +		    !pm_runtime_suspend(dev)) {
->  			pm_runtime_disable(dev);
->  			if (pm_runtime_status_suspended(dev))
->  				goto Complete;
-> 
+V5:
+as per comment, patch 05/14 in V4, was divided into 2 patches in V5
 
-This can be done somewhat simpler, because pm_runtime_suspend() will check
-if the device has already been suspended:
+V4:
+fixed DOS EOL symbols in 2 new files
 
-	ret = pm_runtime_suspend(dev);
-	if (ret >= 0) {
+V3:
+Due to comments in V2
+Removed change 02/17 of V2 
+Removed change 03/17 of V2
+Removed change 17/17 of V2
 
-and you don't need the extra pm_runtime_status_suspended(dev) check.
+V2:
+This series should be pushed on top of 15 patches series:
+"Big fixes, retries, handle a race condition"
+fixed and few comments.
 
-Thanks,
-Rafael
+V1:
+This series should be pushed on top of 15 patches series:
+"Big fixes, retries, handle a race condition"
 
+
+Yaniv Gardi (15):
+  scsi: ufs-qcom: add number of lanes per direction
+  scsi: ufs: avoid spurious UFS host controller interrupts
+  scsi: ufs: implement scsi host timeout handler
+  scsi: ufs: verify hba controller hce reg value
+  scsi: ufs: add support to read device and string descriptors
+  scsi: ufs: separate device and host quirks
+  scsi: ufs: disable vccq if it's not needed by UFS device
+  scsi: ufs: make error handling bit faster
+  scsi: ufs: add error recovery after DL NAC error
+  scsi: ufs: add retry for query descriptors
+  scsi: ufs: handle non spec compliant bkops behaviour by device
+  scsi: ufs: tune UniPro parameters to optimize hibern8 exit time
+  scsi: ufs: fix leakage during link off state
+  scsi: ufs: add device quirk delay before putting UFS rails in LPM
+  scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
+
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   3 +
+ drivers/scsi/ufs/Makefile                          |   2 +-
+ drivers/scsi/ufs/ufs-qcom.c                        | 155 ++++-
+ drivers/scsi/ufs/ufs-qcom.h                        |   9 +
+ drivers/scsi/ufs/ufs.h                             |  33 +
+ drivers/scsi/ufs/ufs_quirks.c                      | 104 +++
+ drivers/scsi/ufs/ufs_quirks.h                      | 133 ++++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  19 +
+ drivers/scsi/ufs/ufshcd.c                          | 749 ++++++++++++++++++---
+ drivers/scsi/ufs/ufshcd.h                          |  40 +-
+ drivers/scsi/ufs/ufshci.h                          |   4 +
+ drivers/scsi/ufs/unipro.h                          |  22 +
+ 12 files changed, 1145 insertions(+), 128 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.c
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.h
+
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
