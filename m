@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 14/15] scsi: ufs: add device quirk delay before putting UFS rails in LPM
-Date: Sun, 28 Feb 2016 15:32:46 +0200
-Message-ID: <1456666367-11418-15-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 11/15] scsi: ufs: handle non spec compliant bkops behaviour by device
+Date: Sun, 28 Feb 2016 15:32:43 +0200
+Message-ID: <1456666367-11418-12-git-send-email-ygardi@codeaurora.org>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
@@ -10,94 +10,128 @@ To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-We put the UFS device in sleep state & UFS link in hibern8 state during
-runtime suspaned. After this we put all the UFS rails in low power
-modes immediately but it seems some devices may still draw more than
-sleep current from UFS rails (especially from VCCQ rail) atleast for
-500us.
-To avoid this situation, this change adds 2ms delay before putting
-these UFS rails in LPM mode.
+We are seeing that some devices are raising the urgent bkops exception
+events even when BKOPS status doesn't indicate performace impacted or
+critical. Handle these device by determining their urgent bkops status
+at runtime.
 
-Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs_quirks.c |  4 ++++
- drivers/scsi/ufs/ufs_quirks.h | 11 ++++++++++-
- drivers/scsi/ufs/ufshcd.c     | 10 ++++++++++
- 3 files changed, 24 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 52 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs_quirks.c b/drivers/scsi/ufs/ufs_quirks.c
-index 476ed01..af68007 100644
---- a/drivers/scsi/ufs/ufs_quirks.c
-+++ b/drivers/scsi/ufs/ufs_quirks.c
-@@ -16,11 +16,15 @@
- 
- static struct ufs_dev_fix ufs_fixups[] = {
- 	/* UFS cards deviations table */
-+	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
-+		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
- 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
- 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
- 		UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS),
- 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
- 		UFS_DEVICE_NO_FASTAUTO),
-+	UFS_FIX(UFS_VENDOR_TOSHIBA, UFS_ANY_MODEL,
-+		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
- 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9C8KBADG",
- 		UFS_DEVICE_QUIRK_PA_TACTIVATE),
- 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9D8KBADG",
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index 01ab166..ffed0da 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -18,7 +18,7 @@
- /* return true if s1 is a prefix of s2 */
- #define STR_PRFX_EQUAL(s1, s2) !strncmp(s1, s2, strlen(s1))
- 
--#define UFS_ANY_VENDOR -1
-+#define UFS_ANY_VENDOR 0xFFFF
- #define UFS_ANY_MODEL  "ANY_MODEL"
- 
- #define MAX_MODEL_LEN 16
-@@ -119,6 +119,15 @@ struct ufs_dev_fix {
-  */
- #define UFS_DEVICE_NO_FASTAUTO		(1 << 5)
- 
-+/*
-+ * It seems some UFS devices may keep drawing more than sleep current
-+ * (atleast for 500us) from UFS rails (especially from VCCQ rail).
-+ * To avoid this situation, add 2ms delay before putting these UFS
-+ * rails in LPM mode.
-+ */
-+#define UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM	(1 << 6)
-+
-+
- struct ufs_hba;
- void ufs_advertise_fixup_device(struct ufs_hba *hba);
- #endif /* UFS_QUIRKS_H_ */
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f108a0b..da882cf 100644
+index 394054e..d28c629 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5647,6 +5647,16 @@ out:
- static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+@@ -3763,7 +3763,7 @@ out:
+  */
+ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
  {
- 	/*
-+	 * It seems some UFS devices may keep drawing more than sleep current
-+	 * (atleast for 500us) from UFS rails (especially from VCCQ rail).
-+	 * To avoid this situation, add 2ms delay before putting these UFS
-+	 * rails in LPM mode.
-+	 */
-+	if (!ufshcd_is_link_active(hba) &&
-+	    hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM)
-+		usleep_range(2000, 2100);
+-	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
++	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
+ }
+ 
+ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+@@ -3772,6 +3772,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+ 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+ }
+ 
++static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
++{
++	int err;
++	u32 curr_status = 0;
++
++	if (hba->is_urgent_bkops_lvl_checked)
++		goto enable_auto_bkops;
++
++	err = ufshcd_get_bkops_status(hba, &curr_status);
++	if (err) {
++		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
++				__func__, err);
++		goto out;
++	}
 +
 +	/*
- 	 * If UFS device is either in UFS_Sleep turn off VCC rail to save some
- 	 * power.
- 	 *
++	 * We are seeing that some devices are raising the urgent bkops
++	 * exception events even when BKOPS status doesn't indicate performace
++	 * impacted or critical. Handle these device by determining their urgent
++	 * bkops status at runtime.
++	 */
++	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
++		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
++				__func__, curr_status);
++		/* update the current status as the urgent bkops level */
++		hba->urgent_bkops_lvl = curr_status;
++		hba->is_urgent_bkops_lvl_checked = true;
++	}
++
++enable_auto_bkops:
++	err = ufshcd_enable_auto_bkops(hba);
++out:
++	if (err < 0)
++		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
++				__func__, err);
++}
++
+ /**
+  * ufshcd_exception_event_handler - handle exceptions raised by device
+  * @work: pointer to work data
+@@ -3795,12 +3832,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 	}
+ 
+ 	status &= hba->ee_ctrl_mask;
+-	if (status & MASK_EE_URGENT_BKOPS) {
+-		err = ufshcd_urgent_bkops(hba);
+-		if (err < 0)
+-			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
+-					__func__, err);
+-	}
++
++	if (status & MASK_EE_URGENT_BKOPS)
++		ufshcd_bkops_exception_event_handler(hba);
++
+ out:
+ 	pm_runtime_put_sync(hba->dev);
+ 	return;
+@@ -4763,6 +4798,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 	ufshcd_init_pwr_info(hba);
+ 
++	/* set the default level for urgent bkops */
++	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
++	hba->is_urgent_bkops_lvl_checked = false;
++
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 77e79c0..65f29aa 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
+  * @clk_list_head: UFS host controller clocks list node head
+  * @pwr_info: holds current power mode
+  * @max_pwr_info: keeps the device max valid pwm
++ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
++ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
++ *  device is known or not.
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -538,6 +541,9 @@ struct ufs_hba {
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+ 	bool is_sys_suspended;
++
++	enum bkops_status urgent_bkops_lvl;
++	bool is_urgent_bkops_lvl_checked;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
 -- 
 1.8.5.2
 
