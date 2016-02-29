@@ -1,53 +1,56 @@
-From: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Subject: Re: [PATCHv2] iscsi_ibft: Add prefix-len attr and display netmask
-Date: Mon, 29 Feb 2016 16:04:38 -0500
-Message-ID: <CACJDEmr6FRHGNGtSRFt=v-ufS0NEs6M_qs-bmssytDsH+-fESA@mail.gmail.com>
-References: <cover.1456423714.git.lduncan@suse.com>
-	<21ae62f67edf39ab09f6c5aa842b89fd7d6e1dc6.1456423714.git.lduncan@suse.com>
-	<56D491BE.5010705@cs.wisc.edu>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] LIO Target Synchronization with
+ sysfs [resend]
+Date: Mon, 29 Feb 2016 13:02:41 -0800
+Message-ID: <56D4B1F1.6040600@suse.com>
+References: <56D1CC7C.7050609@suse.com>
+ <1456610092.1750.34.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:32977 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbcB2VEj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 16:04:39 -0500
-Received: by mail-io0-f176.google.com with SMTP id z135so201580733iof.0
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Feb 2016 13:04:38 -0800 (PST)
-In-Reply-To: <56D491BE.5010705@cs.wisc.edu>
+Received: from mx2.suse.de ([195.135.220.15]:58390 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750819AbcB2VHt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Feb 2016 16:07:49 -0500
+In-Reply-To: <1456610092.1750.34.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org, hare@suse.de
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-On Mon, Feb 29, 2016 at 1:45 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
-> On 02/25/2016 12:15 PM, Lee Duncan wrote:
->> From: Hannes Reinecke <hare@suse.de>
+On 02/27/2016 01:54 PM, Nicholas A. Bellinger wrote:
+> On Sat, 2016-02-27 at 08:19 -0800, Lee Duncan wrote:
+>> [Apologies for the resend.]
 >>
->> The iBFT table only specifies a prefix length, not a netmask.
->> And the netmask is pretty much pointless for IPv6.
->> So introduce a new attribute 'prefix-len' and display the
->> netmask attribute only for IPv4 addresses.
->
-> The code looks ok to me, but I think this ipv4 comment was left over
-> from the last posting since it conflicts with the comment below about
-> always displaying it. Maybe it can just be edited when the patch is
-> merged to avoid having to resend again. If so,
->
-> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
->
+>> I would like to attend LSF/MM this year. I would like to discuss
+>> problems I've had dealing with LIO targets and their inherent
+>> asynchronicity in sysfs. I believe that with judicious use of kernel
+>> events we can help user space handle target changes more cleanly.
+>>
+> 
+> I assume you mean configfs, and not sysfs.  ;)
 
-Cool. Let me roll it up and send the git pull to Linus.
+Apologies. Yes.
 
-This does not seem be super-urgent so it can wait for the upcoming merge window?
+> 
+>> As for other topics:
+>>
+>> As one of the maintainers of LIO at SUSE, I'd dearly love to see our
+>> iSCSI targets merged.
+>>
+> 
+> You're talking about Mike's (CC'ed) original target_core_rbd.c driver,
+> right..?
+> 
+> He's been working on porting the PR related changes to a generic
+> interface that can be consumed by multiple backend using
+> target_core_iblock.c.
+> 
 
->
->>
->> Some older user-space code might rely on the netmask attribute
->> being present, so we should always display it.
->>
->> Changes from v1:
->>  - Combined two patches into one
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> Signed-off-by: Lee Duncan <lduncan@suse.com>
+Actually, no. I'm aware of that work because one of the groups I'm in is
+working in that area. And that is of interest to me to.
+
+But I meant the scst/lio merge, one of the proposed LSF/MM topics.
+-- 
+Lee Duncan
