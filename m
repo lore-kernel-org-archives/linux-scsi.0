@@ -1,366 +1,294 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
 Subject: Re: [Lsf-pc] [LSF/MM ATTEND] Online Logical Head Depop and SMR disks
  chunked writepages
-Date: Mon, 29 Feb 2016 11:06:32 +0800
-Message-ID: <56D3B5B8.5030601@suse.de>
+Date: Mon, 29 Feb 2016 05:54:13 +0000
+Message-ID: <26CEA2F6-C7AF-4CFD-B24D-A8D938C0E792@hgst.com>
 References: <05353ADC-601C-412D-80E2-1F1972324A37@hgst.com>
  <56CBD878.4070600@sandisk.com>
  <20F4EEF6-8F58-42A0-99E9-E932B51D0387@hgst.com>
  <20160223084042.GA24086@quack.suse.cz>
  <4E5FED9C-0FE5-4C31-B3C2-7C6225AB8C62@hgst.com>
  <20160224084746.GD10096@quack.suse.cz>
- <1A7F5162-E47D-4E95-8004-8100C6CA231D@hgst.com>
+ <1A7F5162-E47D-4E95-8004-8100C6CA231D@hgst.com> <56D3B5B8.5030601@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50241 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753140AbcB2DHI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Feb 2016 22:07:08 -0500
-In-Reply-To: <1A7F5162-E47D-4E95-8004-8100C6CA231D@hgst.com>
+Received: from sjc00mx1.hgst.com ([199.255.44.36]:64650 "EHLO
+	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709AbcB2FyQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 00:54:16 -0500
+In-Reply-To: <56D3B5B8.5030601@suse.de>
+Content-Language: en-US
+Content-ID: <0D3783A20232814FAD225E6075886E0C@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>, Jan Kara <jack@suse.cz>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Matias Bjorling <m@bjorling.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, Jan Kara <jack@suse.cz>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 02/29/2016 10:02 AM, Damien Le Moal wrote:
->=20
->> On Wed 24-02-16 01:53:24, Damien Le Moal wrote:
->>>
->>>> On Tue 23-02-16 05:31:13, Damien Le Moal wrote:
->>>>>
->>>>>> On 02/22/16 18:56, Damien Le Moal wrote:
->>>>>>> 2) Write back of dirty pages to SMR block devices:
->>>>>>>
->>>>>>> Dirty pages of a block device inode are currently processed usi=
-ng the
->>>>>>> generic_writepages function, which can be executed simultaneous=
-ly
->>>>>>> by multiple contexts (e.g sync, fsync, msync, sync_file_range, =
-etc).
->>>>>>> Mutual exclusion of the dirty page processing being achieved on=
-ly at
->>>>>>> the page level (page lock & page writeback flag), multiple proc=
-esses
->>>>>>> executing a "sync" of overlapping block ranges over the same zo=
-ne of
->>>>>>> an SMR disk can cause an out-of-LBA-order sequence of write req=
-uests
->>>>>>> being sent to the underlying device. On a host managed SMR disk=
-, where
->>>>>>> sequential write to disk zones is mandatory, this result in err=
-ors and
->>>>>>> the impossibility for an application using raw sequential disk =
-write
->>>>>>> accesses to be guaranteed successful completion of its write or=
- fsync
->>>>>>> requests.
->>>>>>>
->>>>>>> Using the zone information attached to the SMR block device que=
-ue
->>>>>>> (introduced by Hannes), calls to the generic_writepages functio=
-n can
->>>>>>> be made mutually exclusive on a per zone basis by locking the z=
-ones.
->>>>>>> This guarantees sequential request generation for each zone and=
- avoid
->>>>>>> write errors without any modification to the generic code imple=
-menting
->>>>>>> generic_writepages.
->>>>>>>
->>>>>>> This is but one possible solution for supporting SMR host-manag=
-ed
->>>>>>> devices without any major rewrite of page cache management and
->>>>>>> write-back processing. The opinion of the audience regarding th=
-is
->>>>>>> solution and discussing other potential solutions would be grea=
-tly
->>>>>>> appreciated.
->>>>>>
->>>>>> Hello Damien,
->>>>>>
->>>>>> Is it sufficient to support filesystems like BTRFS on top of SMR=
- drives=20
->>>>>> or would you also like to see that filesystems like ext4 can use=
- SMR=20
->>>>>> drives ? In the latter case: the behavior of SMR drives differs =
-so=20
->>>>>> significantly from that of other block devices that I'm not sure=
- that we=20
->>>>>> should try to support these directly from infrastructure like th=
-e page=20
->>>>>> cache. If we look e.g. at NAND SSDs then we see that the charact=
-eristics=20
->>>>>> of NAND do not match what filesystems expect (e.g. large erase b=
-locks).=20
->>>>>> That is why every SSD vendor provides an FTL (Flash Translation =
-Layer),=20
->>>>>> either inside the SSD or as a separate software driver. An FTL=20
->>>>>> implements a so-called LFS (log-structured filesystem). With wha=
-t I know=20
->>>>>> about SMR this technology looks also suitable for implementation=
- of a=20
->>>>>> LFS. Has it already been considered to implement an LFS driver f=
-or SMR=20
->>>>>> drives ? That would make it possible for any filesystem to acces=
-s an SMR=20
->>>>>> drive as any other block device. I'm not sure of this but maybe =
-it will=20
->>>>>> be possible to share some infrastructure with the LightNVM drive=
-r=20
->>>>>> (directory drivers/lightnvm in the Linux kernel tree). This driv=
-er=20
->>>>>> namely implements an FTL.
->>>>>
->>>>> I totally agree with you that trying to support SMR disks by only=
- modifying
->>>>> the page cache so that unmodified standard file systems like BTRF=
-S or ext4
->>>>> remain operational is not realistic at best, and more likely simp=
-ly impossible.
->>>>> For this kind of use case, as you said, an FTL or a device mapper=
- driver are
->>>>> much more suitable.
->>>>>
->>>>> The case I am considering for this discussion is for raw block de=
-vice accesses
->>>>> by an application (writes from user space to /dev/sdxx). This is =
-a very likely
->>>>> use case scenario for high capacity SMR disks with applications l=
-ike distributed
->>>>> object stores / key value stores.
->>>>>
->>>>> In this case, write-back of dirty pages in the block device file =
-inode mapping
->>>>> is handled in fs/block_dev.c using the generic helper function ge=
-neric_writepages.
->>>>> This does not guarantee the generation of the required sequential=
- write pattern
->>>>> per zone necessary for host-managed disks. As I explained, aligni=
-ng calls of this
->>>>> function to zone boundaries while locking the zones under write-b=
-ack solves
->>>>> simply the problem (implemented and tested). This is of course on=
-ly one possible
->>>>> solution. Pushing modifications deeper in the code or providing a
->>>>> "generic_sequential_writepages" helper function are other potenti=
-al solutions
->>>>> that in my opinion are worth discussing as other types of devices=
- may benefit also
->>>>> in terms of performance (e.g. regular disk drives prefer sequenti=
-al writes, and
->>>>> SSDs as well) and/or lighten the overhead on an underlying FTL or=
- device mapper
->>>>> driver.
->>>>>
->>>>> For a file system, an SMR compliant implementation of a file inod=
-e mapping
->>>>> writepages method should be provided by the file system itself as=
- the sequentiality
->>>>> of the write pattern depends further on the block allocation mech=
-anism of the file
->>>>> system.
->>>>>
->>>>> Note that the goal here is not to hide to applications the sequen=
-tial write
->>>>> constraint of SMR disks. The page cache itself (the mapping of th=
-e block
->>>>> device inode) remains unchanged. But the modification proposed gu=
-arantees that
->>>>> a well behaved application writing sequentially to zones through =
-the page cache
->>>>> will see successful sync operations.
->>>>
->>>> So the easiest solution for the OS, when the application is alread=
-y aware
->>>> of the storage constraints, would be for an application to use dir=
-ect IO.
->>>> Because when using page-cache and writeback there are all sorts of
->>>> unexpected things that can happen (e.g. writeback decides to skip =
-a page
->>>> because someone else locked it temporarily). So it will work in 99=
-=2E9% of
->>>> cases but sometimes things will be out of order for hard-to-track =
-down
->>>> reasons. And for ordinary drives this is not an issue because we j=
-ust slow
->>>> down writeback a bit but rareness of this makes it non-issue. But =
-for host
->>>> managed SMR the IO fails and that is something the application doe=
-s not
->>>> expect.
->>>>
->>>> So I would really say just avoid using page-cache when you are usi=
-ng SMR
->>>> drives directly without a translation layer. For writes your throu=
-ghput
->>>> won't suffer anyway since you have to do big sequential writes. Us=
-ing
->>>> page-cache for reads may still be beneficial and if you are carefu=
-l enough
->>>> not to do direct IO writes to the same range as you do buffered re=
-ads, this
->>>> will work fine.
->>>>
->>>> Thinking some more - if you want to make it foolproof, you could i=
-mplement
->>>> something like read-only page cache for block devices. Any write w=
-ill be in
->>>> fact direct IO write, writeable mmaps will be disallowed, reads wi=
-ll honor
->>>> O_DIRECT flag.
->>>
->>> Hi Jan,
->>>
->>> Indeed, using O_DIRECT for raw block device write is an obvious sol=
-ution to
->>> guarantee the application successful sequential writes within a zon=
-e. However,
->>> host-managed SMR disks (and to a lesser extent host-aware drives to=
-o) already
->>> put on applications the constraint of ensuring sequential writes. A=
-dding to this
->>> further mandatory rewrite to support direct I/Os is in my opinion a=
-sking a lot,
->>> if not too much.
->>
->> So I don't think adding O_DIRECT to open flags is such a burden -
->> sequential writes are IMO much harder to do :). And furthermore this=
- could
->> happen magically inside the kernel in which case app needn't be awar=
-e about
->> this at all (similarly to how we handle writes to persistent memory)=
-=2E
->>
->>> The example you mention above of writeback skipping a locked page a=
-nd resulting
->>> in I/O errors is precisely what the proposed patch avoids by first =
-locking the
->>> zone the page belongs to. In the same spirit as the writeback page =
-locking, if
->>> the zone is already locked, it is skipped. That is, zones are treat=
-ed in a sense
->>> as gigantic pages, ensuring that the actual dirty pages within each=
- one are
->>> processed in one go, sequentially.
->>
->> But you cannot rule out mm subsystem locking a page to do something =
-(e.g.
->> migrate the page to help with compaction of large order pages). Thes=
-e other
->> places accessing and locking pages are what I'm worried about. Furth=
-ermore
->> kswapd can decide to writeback particular page under memory pressure=
- and
->> that will just make SMR disk freak out.
->>
->>> This allows preserving all possible application level accesses (buf=
-fered,
->>> direct or mmapped). The only constraint is the one the disk imposes=
-:
->>> writes must be sequential.
->>>
->>> Granted, this view may be too simplistic and may be overlooking som=
-e hard
->>> to track page locking paths which will compete with this. But I thi=
-nk
->>> that this can be easily solved by forcing the zone-aligned
->>> generic_writepages calls to not skip any page (a flag in struct
->>> writeback_control would do the trick). And no modification is neces=
-sary
->>> on the read side (i.e. page locking only is enough) since reading a=
-n SMR
->>> disks blocks after a zone write-pointer position does not make sens=
-e (in
->>> Hannes code, this is possible, but the request does not go to the d=
-isk
->>> and returns garbage data).
->>>
->>> Bottom line: no fundamental change to the page caching mechanism, o=
-nly
->>> how it is being used/controlled for writeback makes this work.
->>> Considering the benefits on the application side, it is in my opini=
-on a
->>> valid modification to have.
->>
->> See above, there are quite a few places which will break your assump=
-tions.
->> And I don't think changing them all to handle SMR is worth it. IMO c=
-aching
->> sequential writes to SMR disks has low effect (if any) anyway so I w=
-ould
->> just avoid that. We can talk about how to make this as seamless to
->> applications as possible. The only thing which I don't think is reas=
-onably
->> doable without dirtying pagecache are writeable mmaps of an SMR devi=
-ce so
->> applications would have to avoid that.
->=20
-> Jan,
->=20
-> Thank you for your insight.
-> These "few places" breaking sequential write sequences are indeed pro=
-blematic
-> for SMR drives. At the same time, I wonder how these paths would reac=
-t to an I/O
-> error generated by the check "write at write pointer" in the request =
-submission
-> path at the SCSI level. Could these be ignored in the case of an "una=
-ligned write
-> error" ? That is, the page is left dirty and hopefully the regular wr=
-iteback path
-> catches them later in the proper sequence. This may however be danger=
-ous as there
-> is no way to determine if the unaligned error is due to kswapd or oth=
-er kernel
-> threads trying to write back the "wrong" page, or the application hav=
-ing submitted
-> an out of sequence write.
->=20
-> Until now, the discussion has focused on avoiding unaligned write err=
-ors for cached
-> writes. But this happens only on host-managed SMR disks. Another aspe=
-ct of the SMR
-> support should also be to avoid random write to zones on host-aware d=
-isks. These will
-> not return an error on unaligned writes and silently process them as =
-a regular disk.
-> However, this can over time degrade performance as the disk FW has to=
- handle more and
-> more internal zone defragmentation.
->=20
-To chime in here, we _might_ be able to fix this via a totally differen=
-t
-route.
-If we were allow to pass _linked_ bios to ->make_request_fn (ie bios
-where the ->bi_next field was already populated) we would have an easy
-marker for merging those requests. At the same time we would be able to
-process these linked bios as a single unit, allowing other bios only to
-be added to the front or the back of these linked bios.
-That would guarantee in-order delivery for SMR, and at the same time
-allow us to get merging running for block-mq.
+DQo+T24gMDIvMjkvMjAxNiAxMDowMiBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+PiANCj4+
+PiBPbiBXZWQgMjQtMDItMTYgMDE6NTM6MjQsIERhbWllbiBMZSBNb2FsIHdyb3RlOg0KPj4+Pg0K
+Pj4+Pj4gT24gVHVlIDIzLTAyLTE2IDA1OjMxOjEzLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToNCj4+
+Pj4+Pg0KPj4+Pj4+PiBPbiAwMi8yMi8xNiAxODo1NiwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+
+Pj4+Pj4+PiAyKSBXcml0ZSBiYWNrIG9mIGRpcnR5IHBhZ2VzIHRvIFNNUiBibG9jayBkZXZpY2Vz
+Og0KPj4+Pj4+Pj4NCj4+Pj4+Pj4+IERpcnR5IHBhZ2VzIG9mIGEgYmxvY2sgZGV2aWNlIGlub2Rl
+IGFyZSBjdXJyZW50bHkgcHJvY2Vzc2VkIHVzaW5nIHRoZQ0KPj4+Pj4+Pj4gZ2VuZXJpY193cml0
+ZXBhZ2VzIGZ1bmN0aW9uLCB3aGljaCBjYW4gYmUgZXhlY3V0ZWQgc2ltdWx0YW5lb3VzbHkNCj4+
+Pj4+Pj4+IGJ5IG11bHRpcGxlIGNvbnRleHRzIChlLmcgc3luYywgZnN5bmMsIG1zeW5jLCBzeW5j
+X2ZpbGVfcmFuZ2UsIGV0YykuDQo+Pj4+Pj4+PiBNdXR1YWwgZXhjbHVzaW9uIG9mIHRoZSBkaXJ0
+eSBwYWdlIHByb2Nlc3NpbmcgYmVpbmcgYWNoaWV2ZWQgb25seSBhdA0KPj4+Pj4+Pj4gdGhlIHBh
+Z2UgbGV2ZWwgKHBhZ2UgbG9jayAmIHBhZ2Ugd3JpdGViYWNrIGZsYWcpLCBtdWx0aXBsZSBwcm9j
+ZXNzZXMNCj4+Pj4+Pj4+IGV4ZWN1dGluZyBhICJzeW5jIiBvZiBvdmVybGFwcGluZyBibG9jayBy
+YW5nZXMgb3ZlciB0aGUgc2FtZSB6b25lIG9mDQo+Pj4+Pj4+PiBhbiBTTVIgZGlzayBjYW4gY2F1
+c2UgYW4gb3V0LW9mLUxCQS1vcmRlciBzZXF1ZW5jZSBvZiB3cml0ZSByZXF1ZXN0cw0KPj4+Pj4+
+Pj4gYmVpbmcgc2VudCB0byB0aGUgdW5kZXJseWluZyBkZXZpY2UuIE9uIGEgaG9zdCBtYW5hZ2Vk
+IFNNUiBkaXNrLCB3aGVyZQ0KPj4+Pj4+Pj4gc2VxdWVudGlhbCB3cml0ZSB0byBkaXNrIHpvbmVz
+IGlzIG1hbmRhdG9yeSwgdGhpcyByZXN1bHQgaW4gZXJyb3JzIGFuZA0KPj4+Pj4+Pj4gdGhlIGlt
+cG9zc2liaWxpdHkgZm9yIGFuIGFwcGxpY2F0aW9uIHVzaW5nIHJhdyBzZXF1ZW50aWFsIGRpc2sg
+d3JpdGUNCj4+Pj4+Pj4+IGFjY2Vzc2VzIHRvIGJlIGd1YXJhbnRlZWQgc3VjY2Vzc2Z1bCBjb21w
+bGV0aW9uIG9mIGl0cyB3cml0ZSBvciBmc3luYw0KPj4+Pj4+Pj4gcmVxdWVzdHMuDQo+Pj4+Pj4+
+Pg0KPj4+Pj4+Pj4gVXNpbmcgdGhlIHpvbmUgaW5mb3JtYXRpb24gYXR0YWNoZWQgdG8gdGhlIFNN
+UiBibG9jayBkZXZpY2UgcXVldWUNCj4+Pj4+Pj4+IChpbnRyb2R1Y2VkIGJ5IEhhbm5lcyksIGNh
+bGxzIHRvIHRoZSBnZW5lcmljX3dyaXRlcGFnZXMgZnVuY3Rpb24gY2FuDQo+Pj4+Pj4+PiBiZSBt
+YWRlIG11dHVhbGx5IGV4Y2x1c2l2ZSBvbiBhIHBlciB6b25lIGJhc2lzIGJ5IGxvY2tpbmcgdGhl
+IHpvbmVzLg0KPj4+Pj4+Pj4gVGhpcyBndWFyYW50ZWVzIHNlcXVlbnRpYWwgcmVxdWVzdCBnZW5l
+cmF0aW9uIGZvciBlYWNoIHpvbmUgYW5kIGF2b2lkDQo+Pj4+Pj4+PiB3cml0ZSBlcnJvcnMgd2l0
+aG91dCBhbnkgbW9kaWZpY2F0aW9uIHRvIHRoZSBnZW5lcmljIGNvZGUgaW1wbGVtZW50aW5nDQo+
+Pj4+Pj4+PiBnZW5lcmljX3dyaXRlcGFnZXMuDQo+Pj4+Pj4+Pg0KPj4+Pj4+Pj4gVGhpcyBpcyBi
+dXQgb25lIHBvc3NpYmxlIHNvbHV0aW9uIGZvciBzdXBwb3J0aW5nIFNNUiBob3N0LW1hbmFnZWQN
+Cj4+Pj4+Pj4+IGRldmljZXMgd2l0aG91dCBhbnkgbWFqb3IgcmV3cml0ZSBvZiBwYWdlIGNhY2hl
+IG1hbmFnZW1lbnQgYW5kDQo+Pj4+Pj4+PiB3cml0ZS1iYWNrIHByb2Nlc3NpbmcuIFRoZSBvcGlu
+aW9uIG9mIHRoZSBhdWRpZW5jZSByZWdhcmRpbmcgdGhpcw0KPj4+Pj4+Pj4gc29sdXRpb24gYW5k
+IGRpc2N1c3Npbmcgb3RoZXIgcG90ZW50aWFsIHNvbHV0aW9ucyB3b3VsZCBiZSBncmVhdGx5DQo+
+Pj4+Pj4+PiBhcHByZWNpYXRlZC4NCj4+Pj4+Pj4NCj4+Pj4+Pj4gSGVsbG8gRGFtaWVuLA0KPj4+
+Pj4+Pg0KPj4+Pj4+PiBJcyBpdCBzdWZmaWNpZW50IHRvIHN1cHBvcnQgZmlsZXN5c3RlbXMgbGlr
+ZSBCVFJGUyBvbiB0b3Agb2YgU01SIGRyaXZlcyANCj4+Pj4+Pj4gb3Igd291bGQgeW91IGFsc28g
+bGlrZSB0byBzZWUgdGhhdCBmaWxlc3lzdGVtcyBsaWtlIGV4dDQgY2FuIHVzZSBTTVIgDQo+Pj4+
+Pj4+IGRyaXZlcyA/IEluIHRoZSBsYXR0ZXIgY2FzZTogdGhlIGJlaGF2aW9yIG9mIFNNUiBkcml2
+ZXMgZGlmZmVycyBzbyANCj4+Pj4+Pj4gc2lnbmlmaWNhbnRseSBmcm9tIHRoYXQgb2Ygb3RoZXIg
+YmxvY2sgZGV2aWNlcyB0aGF0IEknbSBub3Qgc3VyZSB0aGF0IHdlIA0KPj4+Pj4+PiBzaG91bGQg
+dHJ5IHRvIHN1cHBvcnQgdGhlc2UgZGlyZWN0bHkgZnJvbSBpbmZyYXN0cnVjdHVyZSBsaWtlIHRo
+ZSBwYWdlIA0KPj4+Pj4+PiBjYWNoZS4gSWYgd2UgbG9vayBlLmcuIGF0IE5BTkQgU1NEcyB0aGVu
+IHdlIHNlZSB0aGF0IHRoZSBjaGFyYWN0ZXJpc3RpY3MgDQo+Pj4+Pj4+IG9mIE5BTkQgZG8gbm90
+IG1hdGNoIHdoYXQgZmlsZXN5c3RlbXMgZXhwZWN0IChlLmcuIGxhcmdlIGVyYXNlIGJsb2Nrcyku
+IA0KPj4+Pj4+PiBUaGF0IGlzIHdoeSBldmVyeSBTU0QgdmVuZG9yIHByb3ZpZGVzIGFuIEZUTCAo
+Rmxhc2ggVHJhbnNsYXRpb24gTGF5ZXIpLCANCj4+Pj4+Pj4gZWl0aGVyIGluc2lkZSB0aGUgU1NE
+IG9yIGFzIGEgc2VwYXJhdGUgc29mdHdhcmUgZHJpdmVyLiBBbiBGVEwgDQo+Pj4+Pj4+IGltcGxl
+bWVudHMgYSBzby1jYWxsZWQgTEZTIChsb2ctc3RydWN0dXJlZCBmaWxlc3lzdGVtKS4gV2l0aCB3
+aGF0IEkga25vdyANCj4+Pj4+Pj4gYWJvdXQgU01SIHRoaXMgdGVjaG5vbG9neSBsb29rcyBhbHNv
+IHN1aXRhYmxlIGZvciBpbXBsZW1lbnRhdGlvbiBvZiBhIA0KPj4+Pj4+PiBMRlMuIEhhcyBpdCBh
+bHJlYWR5IGJlZW4gY29uc2lkZXJlZCB0byBpbXBsZW1lbnQgYW4gTEZTIGRyaXZlciBmb3IgU01S
+IA0KPj4+Pj4+PiBkcml2ZXMgPyBUaGF0IHdvdWxkIG1ha2UgaXQgcG9zc2libGUgZm9yIGFueSBm
+aWxlc3lzdGVtIHRvIGFjY2VzcyBhbiBTTVIgDQo+Pj4+Pj4+IGRyaXZlIGFzIGFueSBvdGhlciBi
+bG9jayBkZXZpY2UuIEknbSBub3Qgc3VyZSBvZiB0aGlzIGJ1dCBtYXliZSBpdCB3aWxsIA0KPj4+
+Pj4+PiBiZSBwb3NzaWJsZSB0byBzaGFyZSBzb21lIGluZnJhc3RydWN0dXJlIHdpdGggdGhlIExp
+Z2h0TlZNIGRyaXZlciANCj4+Pj4+Pj4gKGRpcmVjdG9yeSBkcml2ZXJzL2xpZ2h0bnZtIGluIHRo
+ZSBMaW51eCBrZXJuZWwgdHJlZSkuIFRoaXMgZHJpdmVyIA0KPj4+Pj4+PiBuYW1lbHkgaW1wbGVt
+ZW50cyBhbiBGVEwuDQo+Pj4+Pj4NCj4+Pj4+PiBJIHRvdGFsbHkgYWdyZWUgd2l0aCB5b3UgdGhh
+dCB0cnlpbmcgdG8gc3VwcG9ydCBTTVIgZGlza3MgYnkgb25seSBtb2RpZnlpbmcNCj4+Pj4+PiB0
+aGUgcGFnZSBjYWNoZSBzbyB0aGF0IHVubW9kaWZpZWQgc3RhbmRhcmQgZmlsZSBzeXN0ZW1zIGxp
+a2UgQlRSRlMgb3IgZXh0NA0KPj4+Pj4+IHJlbWFpbiBvcGVyYXRpb25hbCBpcyBub3QgcmVhbGlz
+dGljIGF0IGJlc3QsIGFuZCBtb3JlIGxpa2VseSBzaW1wbHkgaW1wb3NzaWJsZS4NCj4+Pj4+PiBG
+b3IgdGhpcyBraW5kIG9mIHVzZSBjYXNlLCBhcyB5b3Ugc2FpZCwgYW4gRlRMIG9yIGEgZGV2aWNl
+IG1hcHBlciBkcml2ZXIgYXJlDQo+Pj4+Pj4gbXVjaCBtb3JlIHN1aXRhYmxlLg0KPj4+Pj4+DQo+
+Pj4+Pj4gVGhlIGNhc2UgSSBhbSBjb25zaWRlcmluZyBmb3IgdGhpcyBkaXNjdXNzaW9uIGlzIGZv
+ciByYXcgYmxvY2sgZGV2aWNlIGFjY2Vzc2VzDQo+Pj4+Pj4gYnkgYW4gYXBwbGljYXRpb24gKHdy
+aXRlcyBmcm9tIHVzZXIgc3BhY2UgdG8gL2Rldi9zZHh4KS4gVGhpcyBpcyBhIHZlcnkgbGlrZWx5
+DQo+Pj4+Pj4gdXNlIGNhc2Ugc2NlbmFyaW8gZm9yIGhpZ2ggY2FwYWNpdHkgU01SIGRpc2tzIHdp
+dGggYXBwbGljYXRpb25zIGxpa2UgZGlzdHJpYnV0ZWQNCj4+Pj4+PiBvYmplY3Qgc3RvcmVzIC8g
+a2V5IHZhbHVlIHN0b3Jlcy4NCj4+Pj4+Pg0KPj4+Pj4+IEluIHRoaXMgY2FzZSwgd3JpdGUtYmFj
+ayBvZiBkaXJ0eSBwYWdlcyBpbiB0aGUgYmxvY2sgZGV2aWNlIGZpbGUgaW5vZGUgbWFwcGluZw0K
+Pj4+Pj4+IGlzIGhhbmRsZWQgaW4gZnMvYmxvY2tfZGV2LmMgdXNpbmcgdGhlIGdlbmVyaWMgaGVs
+cGVyIGZ1bmN0aW9uIGdlbmVyaWNfd3JpdGVwYWdlcy4NCj4+Pj4+PiBUaGlzIGRvZXMgbm90IGd1
+YXJhbnRlZSB0aGUgZ2VuZXJhdGlvbiBvZiB0aGUgcmVxdWlyZWQgc2VxdWVudGlhbCB3cml0ZSBw
+YXR0ZXJuDQo+Pj4+Pj4gcGVyIHpvbmUgbmVjZXNzYXJ5IGZvciBob3N0LW1hbmFnZWQgZGlza3Mu
+IEFzIEkgZXhwbGFpbmVkLCBhbGlnbmluZyBjYWxscyBvZiB0aGlzDQo+Pj4+Pj4gZnVuY3Rpb24g
+dG8gem9uZSBib3VuZGFyaWVzIHdoaWxlIGxvY2tpbmcgdGhlIHpvbmVzIHVuZGVyIHdyaXRlLWJh
+Y2sgc29sdmVzDQo+Pj4+Pj4gc2ltcGx5IHRoZSBwcm9ibGVtIChpbXBsZW1lbnRlZCBhbmQgdGVz
+dGVkKS4gVGhpcyBpcyBvZiBjb3Vyc2Ugb25seSBvbmUgcG9zc2libGUNCj4+Pj4+PiBzb2x1dGlv
+bi4gUHVzaGluZyBtb2RpZmljYXRpb25zIGRlZXBlciBpbiB0aGUgY29kZSBvciBwcm92aWRpbmcg
+YQ0KPj4+Pj4+ICJnZW5lcmljX3NlcXVlbnRpYWxfd3JpdGVwYWdlcyIgaGVscGVyIGZ1bmN0aW9u
+IGFyZSBvdGhlciBwb3RlbnRpYWwgc29sdXRpb25zDQo+Pj4+Pj4gdGhhdCBpbiBteSBvcGluaW9u
+IGFyZSB3b3J0aCBkaXNjdXNzaW5nIGFzIG90aGVyIHR5cGVzIG9mIGRldmljZXMgbWF5IGJlbmVm
+aXQgYWxzbw0KPj4+Pj4+IGluIHRlcm1zIG9mIHBlcmZvcm1hbmNlIChlLmcuIHJlZ3VsYXIgZGlz
+ayBkcml2ZXMgcHJlZmVyIHNlcXVlbnRpYWwgd3JpdGVzLCBhbmQNCj4+Pj4+PiBTU0RzIGFzIHdl
+bGwpIGFuZC9vciBsaWdodGVuIHRoZSBvdmVyaGVhZCBvbiBhbiB1bmRlcmx5aW5nIEZUTCBvciBk
+ZXZpY2UgbWFwcGVyDQo+Pj4+Pj4gZHJpdmVyLg0KPj4+Pj4+DQo+Pj4+Pj4gRm9yIGEgZmlsZSBz
+eXN0ZW0sIGFuIFNNUiBjb21wbGlhbnQgaW1wbGVtZW50YXRpb24gb2YgYSBmaWxlIGlub2RlIG1h
+cHBpbmcNCj4+Pj4+PiB3cml0ZXBhZ2VzIG1ldGhvZCBzaG91bGQgYmUgcHJvdmlkZWQgYnkgdGhl
+IGZpbGUgc3lzdGVtIGl0c2VsZiBhcyB0aGUgc2VxdWVudGlhbGl0eQ0KPj4+Pj4+IG9mIHRoZSB3
+cml0ZSBwYXR0ZXJuIGRlcGVuZHMgZnVydGhlciBvbiB0aGUgYmxvY2sgYWxsb2NhdGlvbiBtZWNo
+YW5pc20gb2YgdGhlIGZpbGUNCj4+Pj4+PiBzeXN0ZW0uDQo+Pj4+Pj4NCj4+Pj4+PiBOb3RlIHRo
+YXQgdGhlIGdvYWwgaGVyZSBpcyBub3QgdG8gaGlkZSB0byBhcHBsaWNhdGlvbnMgdGhlIHNlcXVl
+bnRpYWwgd3JpdGUNCj4+Pj4+PiBjb25zdHJhaW50IG9mIFNNUiBkaXNrcy4gVGhlIHBhZ2UgY2Fj
+aGUgaXRzZWxmICh0aGUgbWFwcGluZyBvZiB0aGUgYmxvY2sNCj4+Pj4+PiBkZXZpY2UgaW5vZGUp
+IHJlbWFpbnMgdW5jaGFuZ2VkLiBCdXQgdGhlIG1vZGlmaWNhdGlvbiBwcm9wb3NlZCBndWFyYW50
+ZWVzIHRoYXQNCj4+Pj4+PiBhIHdlbGwgYmVoYXZlZCBhcHBsaWNhdGlvbiB3cml0aW5nIHNlcXVl
+bnRpYWxseSB0byB6b25lcyB0aHJvdWdoIHRoZSBwYWdlIGNhY2hlDQo+Pj4+Pj4gd2lsbCBzZWUg
+c3VjY2Vzc2Z1bCBzeW5jIG9wZXJhdGlvbnMuDQo+Pj4+Pg0KPj4+Pj4gU28gdGhlIGVhc2llc3Qg
+c29sdXRpb24gZm9yIHRoZSBPUywgd2hlbiB0aGUgYXBwbGljYXRpb24gaXMgYWxyZWFkeSBhd2Fy
+ZQ0KPj4+Pj4gb2YgdGhlIHN0b3JhZ2UgY29uc3RyYWludHMsIHdvdWxkIGJlIGZvciBhbiBhcHBs
+aWNhdGlvbiB0byB1c2UgZGlyZWN0IElPLg0KPj4+Pj4gQmVjYXVzZSB3aGVuIHVzaW5nIHBhZ2Ut
+Y2FjaGUgYW5kIHdyaXRlYmFjayB0aGVyZSBhcmUgYWxsIHNvcnRzIG9mDQo+Pj4+PiB1bmV4cGVj
+dGVkIHRoaW5ncyB0aGF0IGNhbiBoYXBwZW4gKGUuZy4gd3JpdGViYWNrIGRlY2lkZXMgdG8gc2tp
+cCBhIHBhZ2UNCj4+Pj4+IGJlY2F1c2Ugc29tZW9uZSBlbHNlIGxvY2tlZCBpdCB0ZW1wb3Jhcmls
+eSkuIFNvIGl0IHdpbGwgd29yayBpbiA5OS45JSBvZg0KPj4+Pj4gY2FzZXMgYnV0IHNvbWV0aW1l
+cyB0aGluZ3Mgd2lsbCBiZSBvdXQgb2Ygb3JkZXIgZm9yIGhhcmQtdG8tdHJhY2sgZG93bg0KPj4+
+Pj4gcmVhc29ucy4gQW5kIGZvciBvcmRpbmFyeSBkcml2ZXMgdGhpcyBpcyBub3QgYW4gaXNzdWUg
+YmVjYXVzZSB3ZSBqdXN0IHNsb3cNCj4+Pj4+IGRvd24gd3JpdGViYWNrIGEgYml0IGJ1dCByYXJl
+bmVzcyBvZiB0aGlzIG1ha2VzIGl0IG5vbi1pc3N1ZS4gQnV0IGZvciBob3N0DQo+Pj4+PiBtYW5h
+Z2VkIFNNUiB0aGUgSU8gZmFpbHMgYW5kIHRoYXQgaXMgc29tZXRoaW5nIHRoZSBhcHBsaWNhdGlv
+biBkb2VzIG5vdA0KPj4+Pj4gZXhwZWN0Lg0KPj4+Pj4NCj4+Pj4+IFNvIEkgd291bGQgcmVhbGx5
+IHNheSBqdXN0IGF2b2lkIHVzaW5nIHBhZ2UtY2FjaGUgd2hlbiB5b3UgYXJlIHVzaW5nIFNNUg0K
+Pj4+Pj4gZHJpdmVzIGRpcmVjdGx5IHdpdGhvdXQgYSB0cmFuc2xhdGlvbiBsYXllci4gRm9yIHdy
+aXRlcyB5b3VyIHRocm91Z2hwdXQNCj4+Pj4+IHdvbid0IHN1ZmZlciBhbnl3YXkgc2luY2UgeW91
+IGhhdmUgdG8gZG8gYmlnIHNlcXVlbnRpYWwgd3JpdGVzLiBVc2luZw0KPj4+Pj4gcGFnZS1jYWNo
+ZSBmb3IgcmVhZHMgbWF5IHN0aWxsIGJlIGJlbmVmaWNpYWwgYW5kIGlmIHlvdSBhcmUgY2FyZWZ1
+bCBlbm91Z2gNCj4+Pj4+IG5vdCB0byBkbyBkaXJlY3QgSU8gd3JpdGVzIHRvIHRoZSBzYW1lIHJh
+bmdlIGFzIHlvdSBkbyBidWZmZXJlZCByZWFkcywgdGhpcw0KPj4+Pj4gd2lsbCB3b3JrIGZpbmUu
+DQo+Pj4+Pg0KPj4+Pj4gVGhpbmtpbmcgc29tZSBtb3JlIC0gaWYgeW91IHdhbnQgdG8gbWFrZSBp
+dCBmb29scHJvb2YsIHlvdSBjb3VsZCBpbXBsZW1lbnQNCj4+Pj4+IHNvbWV0aGluZyBsaWtlIHJl
+YWQtb25seSBwYWdlIGNhY2hlIGZvciBibG9jayBkZXZpY2VzLiBBbnkgd3JpdGUgd2lsbCBiZSBp
+bg0KPj4+Pj4gZmFjdCBkaXJlY3QgSU8gd3JpdGUsIHdyaXRlYWJsZSBtbWFwcyB3aWxsIGJlIGRp
+c2FsbG93ZWQsIHJlYWRzIHdpbGwgaG9ub3INCj4+Pj4+IE9fRElSRUNUIGZsYWcuDQo+Pj4+DQo+
+Pj4+IEhpIEphbiwNCj4+Pj4NCj4+Pj4gSW5kZWVkLCB1c2luZyBPX0RJUkVDVCBmb3IgcmF3IGJs
+b2NrIGRldmljZSB3cml0ZSBpcyBhbiBvYnZpb3VzIHNvbHV0aW9uIHRvDQo+Pj4+IGd1YXJhbnRl
+ZSB0aGUgYXBwbGljYXRpb24gc3VjY2Vzc2Z1bCBzZXF1ZW50aWFsIHdyaXRlcyB3aXRoaW4gYSB6
+b25lLiBIb3dldmVyLA0KPj4+PiBob3N0LW1hbmFnZWQgU01SIGRpc2tzIChhbmQgdG8gYSBsZXNz
+ZXIgZXh0ZW50IGhvc3QtYXdhcmUgZHJpdmVzIHRvbykgYWxyZWFkeQ0KPj4+PiBwdXQgb24gYXBw
+bGljYXRpb25zIHRoZSBjb25zdHJhaW50IG9mIGVuc3VyaW5nIHNlcXVlbnRpYWwgd3JpdGVzLiBB
+ZGRpbmcgdG8gdGhpcw0KPj4+PiBmdXJ0aGVyIG1hbmRhdG9yeSByZXdyaXRlIHRvIHN1cHBvcnQg
+ZGlyZWN0IEkvT3MgaXMgaW4gbXkgb3BpbmlvbiBhc2tpbmcgYSBsb3QsDQo+Pj4+IGlmIG5vdCB0
+b28gbXVjaC4NCj4+Pg0KPj4+IFNvIEkgZG9uJ3QgdGhpbmsgYWRkaW5nIE9fRElSRUNUIHRvIG9w
+ZW4gZmxhZ3MgaXMgc3VjaCBhIGJ1cmRlbiAtDQo+Pj4gc2VxdWVudGlhbCB3cml0ZXMgYXJlIElN
+TyBtdWNoIGhhcmRlciB0byBkbyA6KS4gQW5kIGZ1cnRoZXJtb3JlIHRoaXMgY291bGQNCj4+PiBo
+YXBwZW4gbWFnaWNhbGx5IGluc2lkZSB0aGUga2VybmVsIGluIHdoaWNoIGNhc2UgYXBwIG5lZWRu
+J3QgYmUgYXdhcmUgYWJvdXQNCj4+PiB0aGlzIGF0IGFsbCAoc2ltaWxhcmx5IHRvIGhvdyB3ZSBo
+YW5kbGUgd3JpdGVzIHRvIHBlcnNpc3RlbnQgbWVtb3J5KS4NCj4+Pg0KPj4+PiBUaGUgZXhhbXBs
+ZSB5b3UgbWVudGlvbiBhYm92ZSBvZiB3cml0ZWJhY2sgc2tpcHBpbmcgYSBsb2NrZWQgcGFnZSBh
+bmQgcmVzdWx0aW5nDQo+Pj4+IGluIEkvTyBlcnJvcnMgaXMgcHJlY2lzZWx5IHdoYXQgdGhlIHBy
+b3Bvc2VkIHBhdGNoIGF2b2lkcyBieSBmaXJzdCBsb2NraW5nIHRoZQ0KPj4+PiB6b25lIHRoZSBw
+YWdlIGJlbG9uZ3MgdG8uIEluIHRoZSBzYW1lIHNwaXJpdCBhcyB0aGUgd3JpdGViYWNrIHBhZ2Ug
+bG9ja2luZywgaWYNCj4+Pj4gdGhlIHpvbmUgaXMgYWxyZWFkeSBsb2NrZWQsIGl0IGlzIHNraXBw
+ZWQuIFRoYXQgaXMsIHpvbmVzIGFyZSB0cmVhdGVkIGluIGEgc2Vuc2UNCj4+Pj4gYXMgZ2lnYW50
+aWMgcGFnZXMsIGVuc3VyaW5nIHRoYXQgdGhlIGFjdHVhbCBkaXJ0eSBwYWdlcyB3aXRoaW4gZWFj
+aCBvbmUgYXJlDQo+Pj4+IHByb2Nlc3NlZCBpbiBvbmUgZ28sIHNlcXVlbnRpYWxseS4NCj4+Pg0K
+Pj4+IEJ1dCB5b3UgY2Fubm90IHJ1bGUgb3V0IG1tIHN1YnN5c3RlbSBsb2NraW5nIGEgcGFnZSB0
+byBkbyBzb21ldGhpbmcgKGUuZy4NCj4+PiBtaWdyYXRlIHRoZSBwYWdlIHRvIGhlbHAgd2l0aCBj
+b21wYWN0aW9uIG9mIGxhcmdlIG9yZGVyIHBhZ2VzKS4gVGhlc2Ugb3RoZXINCj4+PiBwbGFjZXMg
+YWNjZXNzaW5nIGFuZCBsb2NraW5nIHBhZ2VzIGFyZSB3aGF0IEknbSB3b3JyaWVkIGFib3V0LiBG
+dXJ0aGVybW9yZQ0KPj4+IGtzd2FwZCBjYW4gZGVjaWRlIHRvIHdyaXRlYmFjayBwYXJ0aWN1bGFy
+IHBhZ2UgdW5kZXIgbWVtb3J5IHByZXNzdXJlIGFuZA0KPj4+IHRoYXQgd2lsbCBqdXN0IG1ha2Ug
+U01SIGRpc2sgZnJlYWsgb3V0Lg0KPj4+DQo+Pj4+IFRoaXMgYWxsb3dzIHByZXNlcnZpbmcgYWxs
+IHBvc3NpYmxlIGFwcGxpY2F0aW9uIGxldmVsIGFjY2Vzc2VzIChidWZmZXJlZCwNCj4+Pj4gZGly
+ZWN0IG9yIG1tYXBwZWQpLiBUaGUgb25seSBjb25zdHJhaW50IGlzIHRoZSBvbmUgdGhlIGRpc2sg
+aW1wb3NlczoNCj4+Pj4gd3JpdGVzIG11c3QgYmUgc2VxdWVudGlhbC4NCj4+Pj4NCj4+Pj4gR3Jh
+bnRlZCwgdGhpcyB2aWV3IG1heSBiZSB0b28gc2ltcGxpc3RpYyBhbmQgbWF5IGJlIG92ZXJsb29r
+aW5nIHNvbWUgaGFyZA0KPj4+PiB0byB0cmFjayBwYWdlIGxvY2tpbmcgcGF0aHMgd2hpY2ggd2ls
+bCBjb21wZXRlIHdpdGggdGhpcy4gQnV0IEkgdGhpbmsNCj4+Pj4gdGhhdCB0aGlzIGNhbiBiZSBl
+YXNpbHkgc29sdmVkIGJ5IGZvcmNpbmcgdGhlIHpvbmUtYWxpZ25lZA0KPj4+PiBnZW5lcmljX3dy
+aXRlcGFnZXMgY2FsbHMgdG8gbm90IHNraXAgYW55IHBhZ2UgKGEgZmxhZyBpbiBzdHJ1Y3QNCj4+
+Pj4gd3JpdGViYWNrX2NvbnRyb2wgd291bGQgZG8gdGhlIHRyaWNrKS4gQW5kIG5vIG1vZGlmaWNh
+dGlvbiBpcyBuZWNlc3NhcnkNCj4+Pj4gb24gdGhlIHJlYWQgc2lkZSAoaS5lLiBwYWdlIGxvY2tp
+bmcgb25seSBpcyBlbm91Z2gpIHNpbmNlIHJlYWRpbmcgYW4gU01SDQo+Pj4+IGRpc2tzIGJsb2Nr
+cyBhZnRlciBhIHpvbmUgd3JpdGUtcG9pbnRlciBwb3NpdGlvbiBkb2VzIG5vdCBtYWtlIHNlbnNl
+IChpbg0KPj4+PiBIYW5uZXMgY29kZSwgdGhpcyBpcyBwb3NzaWJsZSwgYnV0IHRoZSByZXF1ZXN0
+IGRvZXMgbm90IGdvIHRvIHRoZSBkaXNrDQo+Pj4+IGFuZCByZXR1cm5zIGdhcmJhZ2UgZGF0YSku
+DQo+Pj4+DQo+Pj4+IEJvdHRvbSBsaW5lOiBubyBmdW5kYW1lbnRhbCBjaGFuZ2UgdG8gdGhlIHBh
+Z2UgY2FjaGluZyBtZWNoYW5pc20sIG9ubHkNCj4+Pj4gaG93IGl0IGlzIGJlaW5nIHVzZWQvY29u
+dHJvbGxlZCBmb3Igd3JpdGViYWNrIG1ha2VzIHRoaXMgd29yay4NCj4+Pj4gQ29uc2lkZXJpbmcg
+dGhlIGJlbmVmaXRzIG9uIHRoZSBhcHBsaWNhdGlvbiBzaWRlLCBpdCBpcyBpbiBteSBvcGluaW9u
+IGENCj4+Pj4gdmFsaWQgbW9kaWZpY2F0aW9uIHRvIGhhdmUuDQo+Pj4NCj4+PiBTZWUgYWJvdmUs
+IHRoZXJlIGFyZSBxdWl0ZSBhIGZldyBwbGFjZXMgd2hpY2ggd2lsbCBicmVhayB5b3VyIGFzc3Vt
+cHRpb25zLg0KPj4+IEFuZCBJIGRvbid0IHRoaW5rIGNoYW5naW5nIHRoZW0gYWxsIHRvIGhhbmRs
+ZSBTTVIgaXMgd29ydGggaXQuIElNTyBjYWNoaW5nDQo+Pj4gc2VxdWVudGlhbCB3cml0ZXMgdG8g
+U01SIGRpc2tzIGhhcyBsb3cgZWZmZWN0IChpZiBhbnkpIGFueXdheSBzbyBJIHdvdWxkDQo+Pj4g
+anVzdCBhdm9pZCB0aGF0LiBXZSBjYW4gdGFsayBhYm91dCBob3cgdG8gbWFrZSB0aGlzIGFzIHNl
+YW1sZXNzIHRvDQo+Pj4gYXBwbGljYXRpb25zIGFzIHBvc3NpYmxlLiBUaGUgb25seSB0aGluZyB3
+aGljaCBJIGRvbid0IHRoaW5rIGlzIHJlYXNvbmFibHkNCj4+PiBkb2FibGUgd2l0aG91dCBkaXJ0
+eWluZyBwYWdlY2FjaGUgYXJlIHdyaXRlYWJsZSBtbWFwcyBvZiBhbiBTTVIgZGV2aWNlIHNvDQo+
+Pj4gYXBwbGljYXRpb25zIHdvdWxkIGhhdmUgdG8gYXZvaWQgdGhhdC4NCj4+IA0KPj4gSmFuLA0K
+Pj4gDQo+PiBUaGFuayB5b3UgZm9yIHlvdXIgaW5zaWdodC4NCj4+IFRoZXNlICJmZXcgcGxhY2Vz
+IiBicmVha2luZyBzZXF1ZW50aWFsIHdyaXRlIHNlcXVlbmNlcyBhcmUgaW5kZWVkIHByb2JsZW1h
+dGljDQo+PiBmb3IgU01SIGRyaXZlcy4gQXQgdGhlIHNhbWUgdGltZSwgSSB3b25kZXIgaG93IHRo
+ZXNlIHBhdGhzIHdvdWxkIHJlYWN0IHRvIGFuIEkvTw0KPj4gZXJyb3IgZ2VuZXJhdGVkIGJ5IHRo
+ZSBjaGVjayAid3JpdGUgYXQgd3JpdGUgcG9pbnRlciIgaW4gdGhlIHJlcXVlc3Qgc3VibWlzc2lv
+bg0KPj4gcGF0aCBhdCB0aGUgU0NTSSBsZXZlbC4gQ291bGQgdGhlc2UgYmUgaWdub3JlZCBpbiB0
+aGUgY2FzZSBvZiBhbiAidW5hbGlnbmVkIHdyaXRlDQo+PiBlcnJvciIgPyBUaGF0IGlzLCB0aGUg
+cGFnZSBpcyBsZWZ0IGRpcnR5IGFuZCBob3BlZnVsbHkgdGhlIHJlZ3VsYXIgd3JpdGViYWNrIHBh
+dGgNCj4+IGNhdGNoZXMgdGhlbSBsYXRlciBpbiB0aGUgcHJvcGVyIHNlcXVlbmNlLiBUaGlzIG1h
+eSBob3dldmVyIGJlIGRhbmdlcm91cyBhcyB0aGVyZQ0KPj4gaXMgbm8gd2F5IHRvIGRldGVybWlu
+ZSBpZiB0aGUgdW5hbGlnbmVkIGVycm9yIGlzIGR1ZSB0byBrc3dhcGQgb3Igb3RoZXIga2VybmVs
+DQo+PiB0aHJlYWRzIHRyeWluZyB0byB3cml0ZSBiYWNrIHRoZSAid3JvbmciIHBhZ2UsIG9yIHRo
+ZSBhcHBsaWNhdGlvbiBoYXZpbmcgc3VibWl0dGVkDQo+PiBhbiBvdXQgb2Ygc2VxdWVuY2Ugd3Jp
+dGUuDQo+PiANCj4+IFVudGlsIG5vdywgdGhlIGRpc2N1c3Npb24gaGFzIGZvY3VzZWQgb24gYXZv
+aWRpbmcgdW5hbGlnbmVkIHdyaXRlIGVycm9ycyBmb3IgY2FjaGVkDQo+PiB3cml0ZXMuIEJ1dCB0
+aGlzIGhhcHBlbnMgb25seSBvbiBob3N0LW1hbmFnZWQgU01SIGRpc2tzLiBBbm90aGVyIGFzcGVj
+dCBvZiB0aGUgU01SDQo+PiBzdXBwb3J0IHNob3VsZCBhbHNvIGJlIHRvIGF2b2lkIHJhbmRvbSB3
+cml0ZSB0byB6b25lcyBvbiBob3N0LWF3YXJlIGRpc2tzLiBUaGVzZSB3aWxsDQo+PiBub3QgcmV0
+dXJuIGFuIGVycm9yIG9uIHVuYWxpZ25lZCB3cml0ZXMgYW5kIHNpbGVudGx5IHByb2Nlc3MgdGhl
+bSBhcyBhIHJlZ3VsYXIgZGlzay4NCj4+IEhvd2V2ZXIsIHRoaXMgY2FuIG92ZXIgdGltZSBkZWdy
+YWRlIHBlcmZvcm1hbmNlIGFzIHRoZSBkaXNrIEZXIGhhcyB0byBoYW5kbGUgbW9yZSBhbmQNCj4+
+IG1vcmUgaW50ZXJuYWwgem9uZSBkZWZyYWdtZW50YXRpb24uDQo+PiANCj5UbyBjaGltZSBpbiBo
+ZXJlLCB3ZSBfbWlnaHRfIGJlIGFibGUgdG8gZml4IHRoaXMgdmlhIGEgdG90YWxseSBkaWZmZXJl
+bnQNCj5yb3V0ZS4NCj5JZiB3ZSB3ZXJlIGFsbG93IHRvIHBhc3MgX2xpbmtlZF8gYmlvcyB0byAt
+Pm1ha2VfcmVxdWVzdF9mbiAoaWUgYmlvcw0KPndoZXJlIHRoZSAtPmJpX25leHQgZmllbGQgd2Fz
+IGFscmVhZHkgcG9wdWxhdGVkKSB3ZSB3b3VsZCBoYXZlIGFuIGVhc3kNCj5tYXJrZXIgZm9yIG1l
+cmdpbmcgdGhvc2UgcmVxdWVzdHMuIEF0IHRoZSBzYW1lIHRpbWUgd2Ugd291bGQgYmUgYWJsZSB0
+bw0KPnByb2Nlc3MgdGhlc2UgbGlua2VkIGJpb3MgYXMgYSBzaW5nbGUgdW5pdCwgYWxsb3dpbmcg
+b3RoZXIgYmlvcyBvbmx5IHRvDQo+YmUgYWRkZWQgdG8gdGhlIGZyb250IG9yIHRoZSBiYWNrIG9m
+IHRoZXNlIGxpbmtlZCBiaW9zLg0KPlRoYXQgd291bGQgZ3VhcmFudGVlIGluLW9yZGVyIGRlbGl2
+ZXJ5IGZvciBTTVIsIGFuZCBhdCB0aGUgc2FtZSB0aW1lDQo+YWxsb3cgdXMgdG8gZ2V0IG1lcmdp
+bmcgcnVubmluZyBmb3IgYmxvY2stbXEuDQo+DQo+QWx0ZXJuYXRpdmVseSBvbmUgY291bGQgdHJ5
+IHRvIHVzZSBwbHVnZ2luZyBoZXJlLCBidXQgSSdtIG5vdCBzdXJlIGlmDQo+dGhhdCB3b3VsZCBi
+ZSBzdWZmaWNpZW50OyB3aWxsIG5lZWQgdG8gdGVzdC4NCg0KSGFubmVzLA0KDQpJIGxpa2UgYWxz
+byB0aGUgaWRlYSBvZiBsaW5rZWQgQklPcyBhcyBpdCBtYXkgc2ltcGxpZnkgZml4aW5nIGEgbG90
+IG9mIHRoZSBvcmRlcmluZw0KcHJvYmxlbXMgd2UgaGF2ZSB0aHJvdWdob3V0IHRoZSBzdGFjay4g
+SG93ZXZlciwgaW4gdGhlIGNhc2Ugb2Ygd3JpdGViYWNrIG9mDQpidWZmZXJlZCB3cml0ZXMsIGFz
+IEphbiBwb2ludGVkIG91dCwgdGhlIHByb2JsZW0gZmlyc3QgY29tZXMgZnJvbSBwb3RlbnRpYWwg
+b3V0LW9mLW9yZGVyDQpkaXJ0eSBwYWdlIHdyaXRlYmFjayBmcm9tIGRpZmZlcmVudCBwYXRocywg
+d2hpY2ggZ2VuZXJhdGVzIGEgbm9uLXNlcXVlbnRpYWwgQklPIG9yZGVyaW5nLg0KSSBkbyBub3Qg
+c2VlIGhvdyBsaW5raW5nIEJJT3MgY2FuIGNvdmVyIGFsbCBwb3NzaWJsZSBjYXNlcy4NCk9yIGFy
+ZSB5b3Ugc3VnZ2VzdGluZyB0byBiYXNpY2FsbHkgbW92ZSB0aGUgIndyaXRlIHBvaW50ZXIgcG9z
+aXRpb24gY2hlY2siIHVwd2FyZCBpbg0KdGhlIHN0YWNrIHRvIHdpdGhpbiB0aGUgLT5tYWtlX3Jl
+cXVlc3RfZm4gZnVuY3Rpb24gPyBUaGlzIGluZGVlZCB3b3VsZCBlbnN1cmUgdGhhdA0Kb3V0LW9m
+LW9yZGVyIHBhZ2Ugd3JpdGViYWNrIHNlbGVjdGlvbiBmYWlscyBlYXJseSwgYWx3YXlzIHdpdGhp
+biB0aGUgd3JpdGViYWNrIEJJTw0KaXNzdWluZyBjb250ZXh0LiBJZiBzbywgSSBhbSBhZnJhaWQg
+aG93ZXZlciB0aGF0IGVycm9yIGhhbmRsaW5nIG1heSBiZSB0cmlja3kgYXMgc29tZQ0KZmFpbGVk
+IEJJTyBzdWJtaXNzaW9uIGNvdWxkIGJlIHJldHJpZWQgYnV0IG5vdCBvdGhlcnMgKGUuZy4gdGhv
+c2UgdGhhdCBjb3JyZXNwb25kIHRvIGENCm5vbiBzZXF1ZW50aWFsIHNlbGVjdGlvbiBvZiBhIGRp
+cnR5IHBhZ2Ugd2l0aGluIGEgY29ycmVjdCBzZXF1ZW5jZSBjYW4gYmUsIHNlbGVjdGlvbiBvZg0K
+YSBjb21wbGV0ZWx5IHJhbmRvbWx5IHdyaXR0ZW4gcGFnZSBjYW5ub3QpLg0KDQo+PiBJZiBwb3Nz
+aWJsZSwgSSBsb29rIGZvcndhcmQgdG8gbW9yZSBkaXNjdXNzaW9ucyBhYm91dCB0aGlzIGF0IExT
+Ri9NTS4NCj4+IA0KPlNhbWUgaGVyZS4NCj5CdHcsIEkgZG8gbGlrZSB0aGUgaWRlYSBvZiBPbmxp
+bmUgbG9naWNhbCBoZWFkIGRlcG9wLg0KPk5vIGlkZWEgaG93IHdlIGNvdWxkIGltcGxlbWVudCB0
+aGF0LCBidXQgdGhlIGlkZWEgaXMgbmljZS4NCg0KUmlnaHQgbm93LCBJIGFtIGV4cGxvcmluZyBl
+eHRlbmRpbmcgdGhlIFNNUiB6b25lIG1hbmFnZW1lbnQgY29kZSwgcmV1c2luZw0KdGhlIHpvbmUg
+Y29uZGl0aW9uL3N0YXRlIHRvIHJlZmxlY3QgdGhlIHN0YXRlIG9mIExCQXMgb2YgYSBkaXNrICh0
+aGUgZGlzayBpcw0KImNodW5rZWQiIHNvIHRoYXQgcmVndWxhcmx5IHNpemVkIExCQSByYW5nZXMg
+Y29ycmVzcG9uZCB0byBsb2dpY2FsIHpvbmVzKS4NCkZvciBpbnN0YW5jZSwgdGhlIFpCQyBkZWZp
+bmVkICJyZWFkLW9ubHkiIGFuZCAib2ZmbGluZSIgem9uZSBjb25kaXRpb25zIGZvcg0KTEJBcyBy
+ZXNwZWN0aXZlbHkgdW5kZXIgYSBiYWQgaGVhZCBhbmQgdW5kZXIgYSBkZXBvcHBlZCBoZWFkLiBO
+ZXcgY29uZGl0aW9ucw0KY2FuIGJlIGFkZGVkIGZvciBvdGhlciBzdGF0ZXMgYXMgcmVxdWlyZWQu
+DQpGU2VzIGNhbiBhY2Nlc3MgdGhhdCBpbmZvcm1hdGlvbiB0aHJvdWdoIHRoZSB6b25lIG1hbmFn
+ZW1lbnQgZnVuY3Rpb25zLCBidXQNCmludGVyZmFjaW5nIGFsbCB0aGlzIHdpdGggYXBwbGljYXRp
+b25zIG1heSBiZSB2ZXJ5IHRyaWNreS4NCkFsbCB2ZXJ5IGZ1enp5IGZvciBub3cuIEkgd291bGQg
+bGlrZSB0byBzdGFydCBhIGRpc2N1c3Npb24gYXQgTFNGL01NLCBpbmNsdWRpbmcNCg0KYWxzbyBz
+dGFuZGFyZCBhc3BlY3RzIG9mIHRoZSBmZWF0dXJlLg0KDQpCZXN0IHJlZ2FyZHMuDQoNCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQ0KRGFtaWVuIExlIE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwg
+U3lzdGVtIFNvZnR3YXJlIEdyb3VwLCBIR1NUIFJlc2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERp
+Z2l0YWwgY29tcGFueQ0KRGFtaWVuLkxlTW9hbEBoZ3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkz
+IChleHQuIDUxMzU5MykNCjEga2lyaWhhcmEtY2hvLCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUy
+LTA4ODggSmFwYW4NCnd3dy5oZ3N0LmNvbQ0KV2VzdGVybiBEaWdpdGFsIENvcnBvcmF0aW9uIChh
+bmQgaXRzIHN1YnNpZGlhcmllcykgRS1tYWlsIENvbmZpZGVudGlhbGl0eSBOb3RpY2UgJiBEaXNj
+bGFpbWVyOgoKVGhpcyBlLW1haWwgYW5kIGFueSBmaWxlcyB0cmFuc21pdHRlZCB3aXRoIGl0IG1h
+eSBjb250YWluIGNvbmZpZGVudGlhbCBvciBsZWdhbGx5IHByaXZpbGVnZWQgaW5mb3JtYXRpb24g
+b2YgV0RDIGFuZC9vciBpdHMgYWZmaWxpYXRlcywgYW5kIGFyZSBpbnRlbmRlZCBzb2xlbHkgZm9y
+IHRoZSB1c2Ugb2YgdGhlIGluZGl2aWR1YWwgb3IgZW50aXR5IHRvIHdoaWNoIHRoZXkgYXJlIGFk
+ZHJlc3NlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgYW55IGRpc2Ns
+b3N1cmUsIGNvcHlpbmcsIGRpc3RyaWJ1dGlvbiBvciBhbnkgYWN0aW9uIHRha2VuIG9yIG9taXR0
+ZWQgdG8gYmUgdGFrZW4gaW4gcmVsaWFuY2Ugb24gaXQsIGlzIHByb2hpYml0ZWQuIElmIHlvdSBo
+YXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGluIGVycm9yLCBwbGVhc2Ugbm90aWZ5IHRoZSBzZW5k
+ZXIgaW1tZWRpYXRlbHkgYW5kIGRlbGV0ZSB0aGUgZS1tYWlsIGluIGl0cyBlbnRpcmV0eSBmcm9t
+IHlvdXIgc3lzdGVtLgo=
 
-Alternatively one could try to use plugging here, but I'm not sure if
-that would be sufficient; will need to test.
-
-> If possible, I look forward to more discussions about this at LSF/MM.
->=20
-Same here.
-Btw, I do like the idea of Online logical head depop.
-No idea how we could implement that, but the idea is nice.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
