@@ -1,57 +1,53 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [Open-FCoE] [PATCH] fcoe: fix reset of fip selection time.
-Date: Mon, 29 Feb 2016 15:16:27 -0500
-Message-ID: <20160229201627.GA11220@hmsreliant.think-freely.org>
-References: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com>
+From: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Subject: Re: [PATCHv2] iscsi_ibft: Add prefix-len attr and display netmask
+Date: Mon, 29 Feb 2016 16:04:38 -0500
+Message-ID: <CACJDEmr6FRHGNGtSRFt=v-ufS0NEs6M_qs-bmssytDsH+-fESA@mail.gmail.com>
+References: <cover.1456423714.git.lduncan@suse.com>
+	<21ae62f67edf39ab09f6c5aa842b89fd7d6e1dc6.1456423714.git.lduncan@suse.com>
+	<56D491BE.5010705@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39060 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbcB2UQm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 15:16:42 -0500
-Content-Disposition: inline
-In-Reply-To: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com>
+Received: from mail-io0-f176.google.com ([209.85.223.176]:32977 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbcB2VEj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 16:04:39 -0500
+Received: by mail-io0-f176.google.com with SMTP id z135so201580733iof.0
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Feb 2016 13:04:38 -0800 (PST)
+In-Reply-To: <56D491BE.5010705@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Usha Ketineni <usha.k.ketineni@intel.com>
-Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org, hare@suse.de
 
-On Mon, Feb 29, 2016 at 03:36:52AM -0800, Usha Ketineni wrote:
-> Do not reset fip selection time for every advertisement
-> in fcoe_ctlr_recv_adv() but set it only once for the first
-> validated FCF. Otherwise FCF selection won't happen when the
-> advertisements consistently arrive with sub FCOE_CTLR_START_DELAY
-> periodicity.
-> 
-> Tested-by: Narendra K <narendra_k@dell.com>
-> Acked-by: Neil Horman <nhorman@tuxdriver.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Acked-by: Vasu Dev <vasu.dev@intel.com>
-> Signed-off-by: Usha Ketineni <usha.k.ketineni@intel.com>
-> ---
->  drivers/scsi/fcoe/fcoe_ctlr.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-> index d68d572..0c85ef6 100644
-> --- a/drivers/scsi/fcoe/fcoe_ctlr.c
-> +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-> @@ -1079,7 +1079,8 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
->  	 * If this is the first validated FCF, note the time and
->  	 * set a timer to trigger selection.
->  	 */
-> -	if (mtu_valid && !fip->sel_fcf && fcoe_ctlr_fcf_usable(fcf)) {
-> +	if (mtu_valid && !fip->sel_fcf && !fip->sel_time &&
-> +	    fcoe_ctlr_fcf_usable(fcf)) {
->  		fip->sel_time = jiffies +
->  			msecs_to_jiffies(FCOE_CTLR_START_DELAY);
->  		if (!timer_pending(&fip->timer) ||
-> 
-> _______________________________________________
-> fcoe-devel mailing list
-> fcoe-devel@open-fcoe.org
-> http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel
-> 
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
+On Mon, Feb 29, 2016 at 1:45 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
+> On 02/25/2016 12:15 PM, Lee Duncan wrote:
+>> From: Hannes Reinecke <hare@suse.de>
+>>
+>> The iBFT table only specifies a prefix length, not a netmask.
+>> And the netmask is pretty much pointless for IPv6.
+>> So introduce a new attribute 'prefix-len' and display the
+>> netmask attribute only for IPv4 addresses.
+>
+> The code looks ok to me, but I think this ipv4 comment was left over
+> from the last posting since it conflicts with the comment below about
+> always displaying it. Maybe it can just be edited when the patch is
+> merged to avoid having to resend again. If so,
+>
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+>
 
+Cool. Let me roll it up and send the git pull to Linus.
+
+This does not seem be super-urgent so it can wait for the upcoming merge window?
+
+>
+>>
+>> Some older user-space code might rely on the netmask attribute
+>> being present, so we should always display it.
+>>
+>> Changes from v1:
+>>  - Combined two patches into one
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> Signed-off-by: Lee Duncan <lduncan@suse.com>
