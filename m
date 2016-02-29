@@ -1,36 +1,47 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 00/35 v4] separate operations from flags in the
-	bio/request structs
-Date: Mon, 29 Feb 2016 11:30:22 -0600
-Message-ID: <56D4802E.3090507@cs.wisc.edu>
-References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-	<20160229171339.GA17755@infradead.org>
+From: Usha Ketineni <usha.k.ketineni@intel.com>
+Subject: [PATCH] fcoe: fix reset of fip selection time.
+Date: Mon, 29 Feb 2016 03:36:52 -0800
+Message-ID: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <20160229171339.GA17755@infradead.org>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, mchristi@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:6152 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751298AbcB2S1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Feb 2016 13:27:09 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: fcoe-devel@open-fcoe.org
 
-On 02/29/2016 11:13 AM, Christoph Hellwig wrote:
-> Any reason you've dropped my ACK for the previous version?
+Do not reset fip selection time for every advertisement
+in fcoe_ctlr_recv_adv() but set it only once for the first
+validated FCF. Otherwise FCF selection won't happen when the
+advertisements consistently arrive with sub FCOE_CTLR_START_DELAY
+periodicity.
 
-Sorry. I think I accidentally dropped it when I rebased back over to
-linux-next. It looks like it only got stuck on the first patch. I will
-fix that up on the resend for those kbuild errors.
+Tested-by: Narendra K <narendra_k@dell.com>
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Acked-by: Vasu Dev <vasu.dev@intel.com>
+Signed-off-by: Usha Ketineni <usha.k.ketineni@intel.com>
+---
+ drivers/scsi/fcoe/fcoe_ctlr.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index d68d572..0c85ef6 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -1079,7 +1079,8 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	 * If this is the first validated FCF, note the time and
+ 	 * set a timer to trigger selection.
+ 	 */
+-	if (mtu_valid && !fip->sel_fcf && fcoe_ctlr_fcf_usable(fcf)) {
++	if (mtu_valid && !fip->sel_fcf && !fip->sel_time &&
++	    fcoe_ctlr_fcf_usable(fcf)) {
+ 		fip->sel_time = jiffies +
+ 			msecs_to_jiffies(FCOE_CTLR_START_DELAY);
+ 		if (!timer_pending(&fip->timer) ||
+
