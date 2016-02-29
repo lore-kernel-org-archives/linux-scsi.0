@@ -1,39 +1,26 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] target/cxgbit: add INET dependency
-Date: Mon, 29 Feb 2016 12:14:50 +0100
-Message-ID: <1456744504-3011977-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: =?UTF-8?Q?Toralf_F=c3=b6rster?= <toralf.foerster@gmx.de>
+Subject: small diff in reported GiB size of an SSD
+Date: Mon, 29 Feb 2016 13:31:44 +0000
+Message-ID: <56D44840.5080405@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.17.20]:57358 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755133AbcB2Nbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Feb 2016 08:31:50 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-The newly added cxgbit driver directly calls functions of the
-IPv4 network stack, which fails if that is disabled:
+I'm just curious about this diff in dmesg output between 4.3.2 and 4.3.3 at a 64 bit Gentoo hardened system:
 
-ERROR: "ip_route_output_flow" [drivers/target/iscsi/cxgbit/cxgbit.ko] undefined!
-ERROR: "__ip_dev_find" [drivers/target/iscsi/cxgbit/cxgbit.ko] undefined!
+$ diff dmesg-4.4.[23]-hardened | grep logical
+< sd 0:0:0:0: [sda] 468862128 512-byte logical blocks: (240 GB/223 GiB)
+> sd 0:0:0:0: [sda] 468862128 512-byte logical blocks: (240 GB/224 GiB)
 
-This adds a Kconfig dependency to ensure we can't enable this
-driver without the complete network stack it needs.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: b7ca3321e114 ("cxgbit: add Kconfig and Makefile")
----
- drivers/target/iscsi/cxgbit/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/target/iscsi/cxgbit/Kconfig b/drivers/target/iscsi/cxgbit/Kconfig
-index cf335b4dbb4e..ce6f5cca315d 100644
---- a/drivers/target/iscsi/cxgbit/Kconfig
-+++ b/drivers/target/iscsi/cxgbit/Kconfig
-@@ -1,6 +1,7 @@
- config ISCSI_TARGET_CXGB4
- 	tristate "Chelsio iSCSI target offload driver"
- 	depends on ISCSI_TARGET && CHELSIO_T4
-+	depends on INET
- 	select CHELSIO_T4_UWIRE
- 	---help---
- 	To compile this driver as module, choose M here: the module
 -- 
-2.7.0
+Toralf
+PGP: C4EACDDE 0076E94E, OTR: 420E74C8 30246EE7
