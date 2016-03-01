@@ -1,26 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 21/34] iscsi-target: release transport driver resources
-Date: Tue, 1 Mar 2016 06:59:53 -0800
-Message-ID: <20160301145953.GG9738@infradead.org>
+Subject: Re: [RFC 22/34] iscsi-target: call Rx thread function
+Date: Tue, 1 Mar 2016 07:01:37 -0800
+Message-ID: <20160301150137.GH9738@infradead.org>
 References: <cover.1455467089.git.varun@chelsio.com>
- <26d1bde8e55db6d2f77a354b379bec78bb7b7322.1455467089.git.varun@chelsio.com>
+ <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <26d1bde8e55db6d2f77a354b379bec78bb7b7322.1455467089.git.varun@chelsio.com>
+In-Reply-To: <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Varun Prakash <varun@chelsio.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Feb 14, 2016 at 11:12:15PM +0530, Varun Prakash wrote:
-> transport driver may allocate resources for an
-> iSCSI cmd, to free that resources iscsi target
-> must call release function registered by transport
-> driver.
+On Sun, Feb 14, 2016 at 11:15:29PM +0530, Varun Prakash wrote:
+> call Rx thread function if registered
+> by transport driver, so that transport
+> drivers can use iscsi-target Rx thread
+> for Rx processing.
 > 
-> ISCSI_TCP_CXGB4 frees DDP resource associated
-> with a WRITE cmd in the callback function.
+> update iSER target driver to use this
+> interface.
 
-This should go with the patch introducing the method.
+Not related to your new driver, but what's the point of even starting a
+RX thread for iSER?
