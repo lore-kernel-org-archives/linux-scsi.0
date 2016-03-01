@@ -1,55 +1,65 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 0/6] ncr5380: Exception handling fixes for v4.5
-Date: Tue, 1 Mar 2016 14:32:23 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1603011431300.3734@nippy.intranet>
-References: <20160222230703.994951661@telegraphics.com.au> <yq1d1rfc4iw.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <yq1d1rfc4iw.fsf@sermon.lab.mkp.net>
-Sender: linux-m68k-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/8] scsi_sysfs: add 'is_bin_visible' callback
+Date: Tue,  1 Mar 2016 05:51:12 +0100
+Message-ID: <1456807872-88797-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49280 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789AbcCAEvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Feb 2016 23:51:19 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
+Add 'is_bin_visible' callback to blank out unsupported vpd pages.
 
-On Mon, 29 Feb 2016, Martin K. Petersen wrote:
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_sysfs.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-> >>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
-> 
-> Finn> These patches fix some exception handling and autosense bugs that
-> Finn> I accidentally introduced in v4.5-rc1.
-> 
-> Finn> drivers/scsi/NCR5380.c       |  133 +++++++++++++++++++------------------------
-> Finn> drivers/scsi/atari_NCR5380.c |  133 +++++++++++++++++++------------------------
-> Finn> 2 files changed, 118 insertions(+), 148 deletions(-)
-> 
-> This is a pretty big lump of changes for a 4.5 bug fix!
-
-I'm sure this is a lot of rework when compared to the high standard set by 
-well-funded corporate contributions.
-
-However, I don't have anyone paying me to write and execute thorough test 
-plans for error paths on a wide variety of different hardware platforms.
-
-Nonetheless, these error paths have now been thoroughly tested on several 
-platforms.
-
-Please keep in mind that these fixes are all rework of the changes I made 
-in -rc1. So this submission is
-   2 files changed, 118 insertions(+), 148 deletions(-)
-which is all rework of the previous submission, which was
-   18 files changed, 2940 insertions(+), 3688 deletions(-)
-
-Better than 5% rate of rework. Bugs-per-line-of-code should drop quite 
-quickly at that rate, presuming fixes get merged.
-
-> 
-> Given the limited exposure based on the nature of the affected hardware 
-> I have queued them for 4.6.
-> 
-
-The affected hardware doesn't matter (though it is likely outside of any 
-commercial support contract). It's the affected users that interest me.
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 00bc721..d8b275b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1023,6 +1023,28 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
+ 	return attr->mode;
+ }
+ 
++static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
++					     struct bin_attribute *attr, int i)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++
++	rcu_read_lock();
++	if (attr == &dev_attr_vpd_pg80 &&
++	    !rcu_dereference(sdev->vpd_pg80)) {
++		rcu_read_unlock();
++		return 0;
++	}
++	if (attr == &dev_attr_vpd_pg83 &&
++	    !rcu_dereference(sdev->vpd_pg83)) {
++		rcu_read_unlock();
++		return 0;
++	}
++	rcu_read_unlock();
++	return S_IRUGO;
++}
++
+ /* Default template for device attributes.  May NOT be modified */
+ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_device_blocked.attr,
+@@ -1068,6 +1090,7 @@ static struct attribute_group scsi_sdev_attr_group = {
+ 	.attrs =	scsi_sdev_attrs,
+ 	.bin_attrs =	scsi_sdev_bin_attrs,
+ 	.is_visible =	scsi_sdev_attr_is_visible,
++	.is_bin_visible = scsi_sdev_bin_attr_is_visible,
+ };
+ 
+ static const struct attribute_group *scsi_sdev_attr_groups[] = {
 -- 
+2.6.2
+
