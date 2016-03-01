@@ -1,38 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 1/1] sd: add missing scenario for sd_config_write_same
-Date: Mon, 29 Feb 2016 20:34:22 -0500
-Message-ID: <yq11t7vdlr5.fsf@sermon.lab.mkp.net>
-References: <56d0c09d.5a46620a.e4c6.0855@mx.google.com>
-	<yq1ziunf7e3.fsf@sermon.lab.mkp.net>
-	<CAGnHSE=3gkawOPpHWfxwZ64U8pjLLzVDr3-kWN0c_d7TJDA2WA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] hisi_sas: add abort and retry feature
+Date: Mon, 29 Feb 2016 21:00:48 -0500
+Message-ID: <yq1si0bc5yn.fsf@sermon.lab.mkp.net>
+References: <1456393335-38294-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48371 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:20568 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750717AbcCABed (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 20:34:33 -0500
-In-Reply-To: <CAGnHSE=3gkawOPpHWfxwZ64U8pjLLzVDr3-kWN0c_d7TJDA2WA@mail.gmail.com>
-	(Tom Yan's message of "Sat, 27 Feb 2016 09:46:06 +0800")
+	with ESMTP id S1750725AbcCACBO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 21:01:14 -0500
+In-Reply-To: <1456393335-38294-1-git-send-email-john.garry@huawei.com> (John
+	Garry's message of "Thu, 25 Feb 2016 17:42:09 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: JBottomley@odin.com, martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+>>>>> "John" == John Garry <john.garry@huawei.com> writes:
 
-Tom> Since you've mentioned it, why do we disable write same for all
-Tom> devices with a ATA Information VPD?
+John> This patchset introduces support to abort certain commands which
+John> have failed and retry.  Certain errors require that the command be
+John> retried, like TRANS_TX_CREDIT_TIMEOUT_ERR in v1 hw.  However, when
+John> these errors occur the IO may still be in the device, so the IO
+John> must first be aborted, and then retried. The HiSilicon SAS
+John> controller has no FW to do this work, so it needs to be done
+John> manually.
 
-Generally speaking, SAS controllers that properly translate SCSI WRITE
-SAME to ATA ditto also support modern features such as the REPORT
-SUPPORTED OPERATION CODES command.
-
-For the SAS controllers that do not support RSOC we check for the ATA
-Information VPD page to determine whether we are talking to a SAS or
-SATA device. If it's a SATA device we skip WRITE SAME because in most
-cases either the controller's SATL or the drive itself will fail
-miserably.
+Applied to 4.6/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
