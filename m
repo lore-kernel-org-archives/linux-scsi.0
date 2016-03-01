@@ -1,31 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 0/6] hisi_sas: add abort and retry feature
-Date: Mon, 29 Feb 2016 21:00:48 -0500
-Message-ID: <yq1si0bc5yn.fsf@sermon.lab.mkp.net>
-References: <1456393335-38294-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] fcoe: fix reset of fip selection time.
+Date: Mon, 29 Feb 2016 21:02:37 -0500
+Message-ID: <yq1oaazc5vm.fsf@sermon.lab.mkp.net>
+References: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20568 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725AbcCACBO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 21:01:14 -0500
-In-Reply-To: <1456393335-38294-1-git-send-email-john.garry@huawei.com> (John
-	Garry's message of "Thu, 25 Feb 2016 17:42:09 +0800")
+Received: from aserp1040.oracle.com ([141.146.126.69]:16682 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbcCACCs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 21:02:48 -0500
+In-Reply-To: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com> (Usha
+	Ketineni's message of "Mon, 29 Feb 2016 03:36:52 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: JBottomley@odin.com, martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Usha Ketineni <usha.k.ketineni@intel.com>
+Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Usha" == Usha Ketineni <usha.k.ketineni@intel.com> writes:
 
-John> This patchset introduces support to abort certain commands which
-John> have failed and retry.  Certain errors require that the command be
-John> retried, like TRANS_TX_CREDIT_TIMEOUT_ERR in v1 hw.  However, when
-John> these errors occur the IO may still be in the device, so the IO
-John> must first be aborted, and then retried. The HiSilicon SAS
-John> controller has no FW to do this work, so it needs to be done
-John> manually.
+Usha> Do not reset fip selection time for every advertisement in
+Usha> fcoe_ctlr_recv_adv() but set it only once for the first validated
+Usha> FCF. Otherwise FCF selection won't happen when the advertisements
+Usha> consistently arrive with sub FCOE_CTLR_START_DELAY periodicity.
 
 Applied to 4.6/scsi-queue.
 
