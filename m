@@ -1,83 +1,56 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 112241] Under heavy load FC TARGET going to Oops
-Date: Tue, 01 Mar 2016 05:16:10 +0000
-Message-ID: <bug-112241-11613-1OvpsUMp0v@https.bugzilla.kernel.org/>
-References: <bug-112241-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target/cxgbit: add INET dependency
+Date: Mon, 29 Feb 2016 21:28:28 -0800
+Message-ID: <1456810108.19657.187.camel@haakon3.risingtidesystems.com>
+References: <1456744504-3011977-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52187 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777AbcCAFQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2016 00:16:14 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 29F492034C
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2016 05:16:13 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 75D562034E
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2016 05:16:10 +0000 (UTC)
-In-Reply-To: <bug-112241-11613@https.bugzilla.kernel.org/>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33790 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781AbcCAF2b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2016 00:28:31 -0500
+In-Reply-To: <1456744504-3011977-1-git-send-email-arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=112241
+Hi Arnd,
 
---- Comment #3 from nab <nab@linux-iscsi.org> ---
-Hi Anthony,
-
-On Mon, 2016-02-29 at 02:26 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=112241
+On Mon, 2016-02-29 at 12:14 +0100, Arnd Bergmann wrote:
+> The newly added cxgbit driver directly calls functions of the
+> IPv4 network stack, which fails if that is disabled:
 > 
-> Anthony <anthony.bloodoff@gmail.com> changed:
+> ERROR: "ip_route_output_flow" [drivers/target/iscsi/cxgbit/cxgbit.ko] undefined!
+> ERROR: "__ip_dev_find" [drivers/target/iscsi/cxgbit/cxgbit.ko] undefined!
 > 
->            What    |Removed                     |Added
-> ----------------------------------------------------------------------------
->      Kernel Version|4.3.3                       |4.5.0
+> This adds a Kconfig dependency to ensure we can't enable this
+> driver without the complete network stack it needs.
 > 
-> --- Comment #2 from Anthony <anthony.bloodoff@gmail.com> ---
-> With kernel 4.5.0 on target, system hang after clients connects to target.
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: b7ca3321e114 ("cxgbit: add Kconfig and Makefile")
+> ---
+>  drivers/target/iscsi/cxgbit/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
 > 
+> diff --git a/drivers/target/iscsi/cxgbit/Kconfig b/drivers/target/iscsi/cxgbit/Kconfig
+> index cf335b4dbb4e..ce6f5cca315d 100644
+> --- a/drivers/target/iscsi/cxgbit/Kconfig
+> +++ b/drivers/target/iscsi/cxgbit/Kconfig
+> @@ -1,6 +1,7 @@
+>  config ISCSI_TARGET_CXGB4
+>  	tristate "Chelsio iSCSI target offload driver"
+>  	depends on ISCSI_TARGET && CHELSIO_T4
+> +	depends on INET
+>  	select CHELSIO_T4_UWIRE
+>  	---help---
+>  	To compile this driver as module, choose M here: the module
 
-So there are two things going on here.
+Odd, ISCSI_TARGET already depends on NET, but I guess that's not enough
+for cxgbit..  ;)
 
-First, the BUG_ON your ESX <-> LIO FC setup triggered has been addressed
-recently in v4.5-rc4 and later kernels with the following series:
+Varun, please pick this up and fold it into the original commit, with
+proper credit to Arnd for finding this in the commit log.
 
-http://www.spinics.net/lists/target-devel/msg11822.html
-
-Note these patches will be making it back to earlier stable kernels over
-the next weeks.
-
-However, this specific bug is a final consequence of larger ESX v5.5u2+
-host side issue of AtomicTestandSet (ATS) heartbeat being enabled (by
-default) for all VMFS5 mounts:
-
-https://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=2113956
-
-Other folks have been hitting this recently, here's some extra
-background:
-
-http://permalink.gmane.org/gmane.linux.scsi.target.devel/11574
-http://www.spinics.net/lists/target-devel/msg12124.html
-
-Note this effects all targets w/ VAAI ATS (including EMC, IBM, 3PAR,
-SolidFire, etc) and the current solution for ESX v5.5u2+ is to either:
-
-  - Explicitly disable ATS heartbeat usage on all VMFS5 mounts as 
-    described in the VMWare -kb article, or:
-  - Explicitly disable all ATS logic completely from LIO using 
-    emulate_caw=0 on all backends connected to ESX v5.5u2+ hosts
-    with VMFS5.
-
-You can google for 'esx ats heartbeat bug' to see the gory details.
-
-Thanks for reporting!
-
---nab
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
