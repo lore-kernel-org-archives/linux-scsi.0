@@ -1,79 +1,30 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] qlogicpti: Return correct error code
-Date: Tue, 1 Mar 2016 19:59:17 +0800
-Message-ID: <56D58415.5090407@suse.de>
-References: <20160217133254.GA31334@amitoj-Inspiron-3542>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Lsf-pc] [LSF/MM ATTEND] Online Logical Head Depop and SMR disks
+ chunked writepages
+Date: Tue, 1 Mar 2016 04:00:46 -0800
+Message-ID: <20160301120046.GA26133@infradead.org>
+References: <05353ADC-601C-412D-80E2-1F1972324A37@hgst.com>
+ <56CBD878.4070600@sandisk.com>
+ <20F4EEF6-8F58-42A0-99E9-E932B51D0387@hgst.com>
+ <20160223084042.GA24086@quack.suse.cz>
+ <4E5FED9C-0FE5-4C31-B3C2-7C6225AB8C62@hgst.com>
+ <20160224084746.GD10096@quack.suse.cz>
+ <1A7F5162-E47D-4E95-8004-8100C6CA231D@hgst.com>
+ <20160229134050.GB6174@quack.suse.cz>
+ <933883A4-AF7A-4A45-B779-1F53F12F317D@hgst.com>
+ <20160301092713.GB27666@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160217133254.GA31334@amitoj-Inspiron-3542>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Amitoj Kaur Chawla <amitoj1606@gmail.com>, JBottomley@odin.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: julia.lawall@lip6.fr
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:56664 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995AbcCAMAt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2016 07:00:49 -0500
+Content-Disposition: inline
+In-Reply-To: <20160301092713.GB27666@quack.suse.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Damien Le Moal <Damien.LeMoal@hgst.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Matias Bjorling <m@bjorling.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
 
-On 02/17/2016 09:32 PM, Amitoj Kaur Chawla wrote:
-> The return value of of_ioremap on failure should be -ENODEV and not
-> -1.
->=20
-> Found using Coccinelle. A simplified version of the semantic patch
-> used is:
->=20
-> //<smpl>
-> @@
-> expression *e;
-> @@
->=20
-> e =3D of_ioremap(...);
-> if (e =3D=3D NULL) {
-> ...
-> return
-> - -1
-> + -ENODEV
-> ;
-> }
-> //</smpl>
->=20
-> The single call site only checks that the return value is less than 0=
-,
-> hence no change is required at the call site.
->=20
-> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-> ---
->  drivers/scsi/qlogicpti.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-> index 676385f..69bfc0a 100644
-> --- a/drivers/scsi/qlogicpti.c
-> +++ b/drivers/scsi/qlogicpti.c
-> @@ -710,7 +710,7 @@ static int qpti_map_regs(struct qlogicpti *qpti)
->  				 "PTI Qlogic/ISP");
->  	if (!qpti->qregs) {
->  		printk("PTI: Qlogic/ISP registers are unmappable\n");
-> -		return -1;
-> +		return -ENODEV;
->  	}
->  	if (qpti->is_pti) {
->  		qpti->sreg =3D of_ioremap(&op->resource[0], (16 * 4096),
-> @@ -718,7 +718,7 @@ static int qpti_map_regs(struct qlogicpti *qpti)
->  					"PTI Qlogic/ISP statreg");
->  		if (!qpti->sreg) {
->  			printk("PTI: Qlogic/ISP status register is unmappable\n");
-> -			return -1;
-> +			return -ENODEV;
->  		}
->  	}
->  	return 0;
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Any chance the two of you could occasionally trim the mails your quoting?
