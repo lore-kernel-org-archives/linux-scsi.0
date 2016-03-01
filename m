@@ -1,28 +1,67 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] snic: correctly check for array overrun on overly long version number
-Date: Tue, 01 Mar 2016 20:09:44 -0500
-Message-ID: <yq1povdbs87.fsf@sermon.lab.mkp.net>
-References: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
+From: Laison Computech Inc <7sales@laiisoncomputech.com>
+Subject: CISCO AND AVAYA IP Phones
+Date: Wed, 02 Mar 2016 03:10:35 +0700
+Message-ID: <20160301210942.70B54574BBB__19214.1199288473$1456883517$gmane$org@srv-mta.gcmillenium.com.br>
+Reply-To: sales@laiisoncomputech.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
-	(Colin King's message of "Thu, 25 Feb 2016 22:58:25 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv-mta.gcmillenium.com.br ([177.125.218.132]:55045 "EHLO
+	srv-mta.gcmillenium.com.br" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754918AbcCAXxk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2016 18:53:40 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <7sales@laiisoncomputech.com>
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+Hi,
 
-Colin> The snic version number is expected to be 4 decimals in the form
-Colin> like a netmask string with each number stored in an element in
-Colin> array v.  However, there is an off-by-one check on the number of
-Colin> elements in v allowing one to pass a 5 decimal version number
-Colin> causing v[4] to be referenced, causing a buffer overrun.  Fix the
-Colin> off-by-one error by comparing to i > 3 rather than 4.
+Clean tested working pulls CPUs and QTYs in stock.
 
-Applied to 4.6/scsi-queue.
+115 X X5650
+65 X E5410
+75 X X5660
+145 X E5530
+100 X E5645
+40 X X5680
+75 X X5690
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Brand new sealed IP phones and QTYs in stock.
+
+55 x CP-7937G
+77 x CP-7942G
+54 x CP-7945G
+75 x CP-7962G
+=2E.....
+45 x Avaya 9630
+65 x Avaya 9641
+55 x Avaya 9640=20
+
+USED IT HARDWARE FROM:
+
+=46UJITSU       IBM         SUN        HP
+QUANTUM   DELL       HDS        STK
+NETAPP      SGI         Oracle      EMC=B2
+
+3Com, ADVA, Alcatel, Brocade, Cisco,
+Cabletron, Enterasys, Extreme Networks,
+Huawei, Marconi, Nortel, Qlogic, Avaya
+
+Let me know if you're interested. We are very open to offers and willin=
+g to work with you to make sure that we have a deal.
+
+Sincerely
+Barbara Johnson
+Laison Computech Inc
+Tel: +1-657-205-7860
+=46ax: +1-347-214-0478
+Email: sales@laiisoncomputech.com
+Web: www.laisoncomputech.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
