@@ -1,40 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] ncr5380: Exception handling fixes for v4.5
-Date: Tue, 01 Mar 2016 08:00:22 -0500
-Message-ID: <yq17fhmcpzt.fsf@sermon.lab.mkp.net>
-References: <20160222230703.994951661@telegraphics.com.au>
-	<yq1d1rfc4iw.fsf@sermon.lab.mkp.net>
-	<alpine.LNX.2.00.1603011431300.3734@nippy.intranet>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
+Date: Tue, 1 Mar 2016 14:04:48 +0100
+Message-ID: <20160301130448.GB7616@lst.de>
+References: <1456807945-88857-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1603011431300.3734@nippy.intranet> (Finn Thain's
-	message of "Tue, 1 Mar 2016 14:32:23 +1100 (AEDT)")
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:40391 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750827AbcCANEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2016 08:04:50 -0500
+Content-Disposition: inline
+In-Reply-To: <1456807945-88857-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
->>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+On Tue, Mar 01, 2016 at 05:52:25AM +0100, Hannes Reinecke wrote:
+> +	struct device *dev = container_of(kobj, struct device, kobj);
+> +	struct scsi_device *sdev = to_scsi_device(dev);
+> +
+> +
+> +	rcu_read_lock();
+> +	if (attr == &dev_attr_vpd_pg80 &&
+> +	    !rcu_dereference(sdev->vpd_pg80)) {
+> +		rcu_read_unlock();
+> +		return 0;
+> +	}
+> +	if (attr == &dev_attr_vpd_pg83 &&
+> +	    !rcu_dereference(sdev->vpd_pg83)) {
+> +		rcu_read_unlock();
+> +		return 0;
+> +	}
+> +	rcu_read_unlock();
 
-Finn,
+We are only checking the pointers for being non-zero.  No need for the
+rcu_read_lock() or rcu_dereference() here.
 
->> This is a pretty big lump of changes for a 4.5 bug fix!
-
-Finn> Please keep in mind that these fixes are all rework of the changes
-Finn> I made in -rc1. So this submission is 2 files changed, 118
-Finn> insertions(+), 148 deletions(-) which is all rework of the
-Finn> previous submission, which was 18 files changed, 2940
-Finn> insertions(+), 3688 deletions(-)
-
-I am well aware of and appreciate the huge amount of work you have done.
-
-My concern is merely that Linus is going to get pretty upset with such a
-big delta this late in the 4.5 cycle. By comparison, our other fixes at
-this time are in the 1-5 line bucket!
-
-I think putting the fixes into 4.6 and tagging them for stable is a
-better (less emperor penguin wrath-inducing) approach.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Otherwise this looks fine to me.
