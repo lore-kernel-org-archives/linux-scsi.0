@@ -1,41 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 14/15] scsi: ufs: add device quirk delay before putting
- UFS rails in LPM
-Date: Tue, 1 Mar 2016 15:57:19 +0800
-Message-ID: <56D54B5F.9070204@suse.de>
+Subject: Re: [PATCH v5 15/15] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable
+ before link startup
+Date: Tue, 1 Mar 2016 15:58:58 +0800
+Message-ID: <56D54BC2.70902@suse.de>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
- <1456666367-11418-15-git-send-email-ygardi@codeaurora.org>
+ <1456666367-11418-16-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1456666367-11418-15-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36860 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751881AbcCAH7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2016 02:59:16 -0500
+In-Reply-To: <1456666367-11418-16-git-send-email-ygardi@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>, James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
-> We put the UFS device in sleep state & UFS link in hibern8 state duri=
-ng
-> runtime suspaned. After this we put all the UFS rails in low power
-> modes immediately but it seems some devices may still draw more than
-> sleep current from UFS rails (especially from VCCQ rail) atleast for
-> 500us.
-> To avoid this situation, this change adds 2ms delay before putting
-> these UFS rails in LPM mode.
+> Some UFS devices (and may be host) have issues if LCC is
+> enabled. So we are setting PA_Local_TX_LCC_Enable to 0
+> before link startup which will make sure that both host
+> and device TX LCC are disabled once link startup is
+> completed.
 >=20
-> Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+> This change also:
+> - enables the device ref clock before changing to HS mode
+>   and disables it if entered to PWM mode
+> - adds printouts of testbus debug registers
 >=20
-> ---
->  drivers/scsi/ufs/ufs_quirks.c |  4 ++++
->  drivers/scsi/ufs/ufs_quirks.h | 11 ++++++++++-
->  drivers/scsi/ufs/ufshcd.c     | 10 ++++++++++
->  3 files changed, 24 insertions(+), 1 deletion(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Please make that in two patches; these issues are unrelated and will
+just confuse users if one ever need to dig through the git log.
 
 Cheers,
 
@@ -45,3 +42,8 @@ Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
