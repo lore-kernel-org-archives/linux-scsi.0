@@ -1,62 +1,63 @@
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [PATCH] eata: Convert eata driver as normal PCI and platform
- device drivers
-Date: Wed, 2 Mar 2016 08:06:26 +1030
-Message-ID: <56D60B5A.3080209@internode.on.net>
-References: <1456801344-3318-1-git-send-email-jiang.liu@linux.intel.com>
- <20160301065247.GA6670@infradead.org> <56D5D0F4.4060301@internode.on.net>
+From: "dbasehore ." <dbasehore@chromium.org>
+Subject: Re: [PATCH v2 2/3] PM / sleep: try to runtime suspend for direct complete
+Date: Tue, 1 Mar 2016 13:48:06 -0800
+Message-ID: <CAGAzgsrO6k0L8zeKhhWF+A6uFsWfW2bbb5poLOzy_NGinvs3hQ@mail.gmail.com>
+References: <1456359748-22838-1-git-send-email-dbasehore@chromium.org>
+	<1456359748-22838-2-git-send-email-dbasehore@chromium.org>
+	<3183435.BG93qPHVgS@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56D5D0F4.4060301@internode.on.net>
+In-Reply-To: <3183435.BG93qPHVgS@vostro.rjw.lan>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "Ballabio, Dario" <dario.ballabio@emc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux-pm mailing list <linux-pm@vger.kernel.org>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-Arthur Marsh wrote on 02/03/16 03:57:
->
->
-> Christoph Hellwig wrote on 01/03/16 17:22:
->> Hi Jiang.
+On Sat, Feb 27, 2016 at 5:31 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, February 24, 2016 04:22:27 PM Derek Basehore wrote:
+>> This tries to runtime suspend devices that are still active for direct
+>> complete. This is for cases such as autosuspend delays which leaves
+>> devices able to runtime suspend but still active. It's beneficial in
+>> this case to runtime suspend the device to take advantage of direct
+>> complete when possible.
 >>
->> I'd love to see this patch in and abuse of the old PCI API gone.
+>> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
+>> Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
+>> ---
+>>  drivers/base/power/main.c | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
 >>
->> Did you resolve the problems Arthur saw with the previous iteratons
->> of the patch?
+>> diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
+>> index e0017d9..9693032 100644
+>> --- a/drivers/base/power/main.c
+>> +++ b/drivers/base/power/main.c
+>> @@ -1380,7 +1380,12 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
+>>               goto Complete;
+>>
+>>       if (dev->power.direct_complete) {
+>> -             if (pm_runtime_status_suspended(dev)) {
+>> +             /*
+>> +              * Check if we're runtime suspended. If not, try to runtime
+>> +              * suspend for autosuspend cases.
+>> +              */
+>> +             if (pm_runtime_status_suspended(dev) ||
+>> +                 !pm_runtime_suspend(dev)) {
+>>                       pm_runtime_disable(dev);
+>>                       if (pm_runtime_status_suspended(dev))
+>>                               goto Complete;
 >>
 >
-> I applied Jiang Liu's patch of 1st March 2016 to a clean kernel
-> 4.5.0-rc6 source, removed my workaround of removing and re-adding the
-> eata module before mounting file-systems that are on disks attached to
-> the DPT SCSI card using the eata driver, and was able to kexec from the
-> new kernel successfully.
+> This can be done somewhat simpler, because pm_runtime_suspend() will check
+> if the device has already been suspended:
 >
-> Arthur.
+>         ret = pm_runtime_suspend(dev);
+>         if (ret >= 0) {
+>
+> and you don't need the extra pm_runtime_status_suspended(dev) check.
+>
+> Thanks,
+> Rafael
+>
 
-I spoke too soon, without removing and re-inserting the eata module 
-before any filesystems on disks attached to the DPT controller were 
-mounted, I'd get the following messages, similar to ones previously 
-reported:
-
-sd 0:0:6:0: tag#0 abort, mbox 1.
-EATA0: abort, mbox 1 is in use.
-sd 0:0:6:0: tag#0 reset, enter.
-EATA0: reset, mbox 1 in reset.
-EATA0: reset, board reset done, enabling interrupts.
-EATA0: reset, interrupts disabled, loops 100415.
-EATA0, reset, mbox 1 locked, DID_RESET, done.
-EATA0: reset, exit, done.
-
-
-and so on, finally hanging after printing "kexec_core: Starting new 
-kernel" (I have a photo of the messages if they're needed).
-
-So I'm still using the new patch but have to continue to remove and 
-reinsert eata at start-up before any attempts to mount disks attatched 
-to the DPT SCSI controller.
-
-Arthur.
+I'll look into simplifying it for the next patch set.
