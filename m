@@ -1,302 +1,219 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 08/15] scsi: ufs: make error handling bit faster
-Date: Tue, 1 Mar 2016 18:02:54 +0800
-Message-ID: <56D568CE.9020104@suse.de>
+Subject: Re: [PATCH v5 05/15] scsi: ufs: add support to read device and string
+ descriptors
+Date: Tue, 1 Mar 2016 18:03:42 +0800
+Message-ID: <56D568FE.1040108@suse.de>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
- <1456666367-11418-9-git-send-email-ygardi@codeaurora.org>
- <56D549CD.70104@suse.de>
- <187f423aa64d09d32c6c136e28c51fc2.squirrel@us.codeaurora.org>
+ <1456666367-11418-6-git-send-email-ygardi@codeaurora.org>
+ <56D5463A.5040602@suse.de>
+ <23b456731105bb2e5dc2fcff7e3370a9.squirrel@us.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <187f423aa64d09d32c6c136e28c51fc2.squirrel@us.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <23b456731105bb2e5dc2fcff7e3370a9.squirrel@us.codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: ygardi@codeaurora.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/01/2016 05:56 PM, ygardi@codeaurora.org wrote:
+On 03/01/2016 06:01 PM, ygardi@codeaurora.org wrote:
 >> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
->>> UFS driver's error handler forcefully tries to clear all the pendin=
-g
->>> requests. For each pending request in the queue, it waits 1 sec for=
- it
->>> to get cleared. If we have multiple requests in the queue then it's
->>> possible that we might end up waiting for those many seconds before
->>> resetting the host. But note that resetting host would any way clea=
-r
->>> all the pending requests from the hardware. Hence this change skips
->>> the forceful clear of the pending requests if we are anyway going t=
-o
->>> reset the host (for fatal errors).
+>>> This change adds support to read device descriptor and string descr=
+iptor
+>>> from a UFS device
 >>>
->>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>>> Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+>>> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 >>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >>>
 >>> ---
->>>  drivers/scsi/ufs/ufshcd.c | 155
->>> +++++++++++++++++++++++++++++++++-------------
->>>  1 file changed, 112 insertions(+), 43 deletions(-)
+>>>  drivers/scsi/ufs/ufs.h    |  1 +
+>>>  drivers/scsi/ufs/ufshcd.c | 88
+>>> ++++++++++++++++++++++++++++++++++++++++++++++-
+>>>  drivers/scsi/ufs/ufshcd.h |  7 ++++
+>>>  3 files changed, 95 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+>>> index 54a16ce..aacb235 100644
+>>> --- a/drivers/scsi/ufs/ufs.h
+>>> +++ b/drivers/scsi/ufs/ufs.h
+>>> @@ -43,6 +43,7 @@
+>>>  #define GENERAL_UPIU_REQUEST_SIZE 32
+>>>  #define QUERY_DESC_MAX_SIZE       255
+>>>  #define QUERY_DESC_MIN_SIZE       2
+>>> +#define QUERY_DESC_HDR_SIZE       2
+>>>  #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+>>>  					(sizeof(struct utp_upiu_header)))
 >>>
 >>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 987cf27..dc096f1 100644
+>>> index 80031e6..e2ed415 100644
 >>> --- a/drivers/scsi/ufs/ufshcd.c
 >>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -133,9 +133,11 @@ enum {
->>>  /* UFSHCD UIC layer error flags */
->>>  enum {
->>>  	UFSHCD_UIC_DL_PA_INIT_ERROR =3D (1 << 0), /* Data link layer erro=
-r */
->>> -	UFSHCD_UIC_NL_ERROR =3D (1 << 1), /* Network layer error */
->>> -	UFSHCD_UIC_TL_ERROR =3D (1 << 2), /* Transport Layer error */
->>> -	UFSHCD_UIC_DME_ERROR =3D (1 << 3), /* DME error */
->>> +	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR =3D (1 << 1), /* Data link layer=
- error
->>> */
->>> +	UFSHCD_UIC_DL_TCx_REPLAY_ERROR =3D (1 << 2), /* Data link layer e=
-rror */
->>> +	UFSHCD_UIC_NL_ERROR =3D (1 << 3), /* Network layer error */
->>> +	UFSHCD_UIC_TL_ERROR =3D (1 << 4), /* Transport Layer error */
->>> +	UFSHCD_UIC_DME_ERROR =3D (1 << 5), /* DME error */
->>>  };
+>>> @@ -39,7 +39,7 @@
 >>>
->>>  /* Interrupt configuration options */
->>> @@ -3465,31 +3467,18 @@ static void ufshcd_uic_cmd_compl(struct ufs=
-_hba
->>> *hba, u32 intr_status)
->>>  }
->>>
->>>  /**
->>> - * ufshcd_transfer_req_compl - handle SCSI and query command compl=
-etion
->>> + * __ufshcd_transfer_req_compl - handle SCSI and query command
->>> completion
->>>   * @hba: per adapter instance
->>> + * @completed_reqs: requests to complete
->>>   */
->>> -static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->>> +static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
->>> +					unsigned long completed_reqs)
->>>  {
->>>  	struct ufshcd_lrb *lrbp;
->>>  	struct scsi_cmnd *cmd;
->>> -	unsigned long completed_reqs;
->>> -	u32 tr_doorbell;
->>>  	int result;
->>>  	int index;
->>>
->>> -	/* Resetting interrupt aggregation counters first and reading the
->>> -	 * DOOR_BELL afterward allows us to handle all the completed requ=
-ests.
->>> -	 * In order to prevent other interrupts starvation the DB is read=
- once
->>> -	 * after reset. The down side of this solution is the possibility=
- of
->>> -	 * false interrupt if device completes another request after rese=
-tting
->>> -	 * aggregation and before reading the DB.
->>> -	 */
->>> -	if (ufshcd_is_intr_aggr_allowed(hba))
->>> -		ufshcd_reset_intr_aggr(hba);
+>>>  #include <linux/async.h>
+>>>  #include <linux/devfreq.h>
 >>> -
->>> -	tr_doorbell =3D ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL)=
-;
->>> -	completed_reqs =3D tr_doorbell ^ hba->outstanding_reqs;
->>> -
->>>  	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
->>>  		lrbp =3D &hba->lrb[index];
->>>  		cmd =3D lrbp->cmd;
->>> @@ -3519,6 +3508,31 @@ static void ufshcd_transfer_req_compl(struct
+>>> +#include <linux/nls.h>
+>>>  #include <linux/of.h>
+>>>  #include "ufshcd.h"
+>>>  #include "unipro.h"
+>>> @@ -232,6 +232,16 @@ static inline void ufshcd_disable_irq(struct
 >>> ufs_hba *hba)
+>>>  	}
 >>>  }
 >>>
->>>  /**
->>> + * ufshcd_transfer_req_compl - handle SCSI and query command compl=
-etion
->>> + * @hba: per adapter instance
->>> + */
->>> +static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>>> +/* replace non-printable or non-ASCII characters with spaces */
+>>> +static inline void ufshcd_remove_non_printable(char *val)
 >>> +{
->>> +	unsigned long completed_reqs;
->>> +	u32 tr_doorbell;
+>>> +	if (!val)
+>>> +		return;
 >>> +
->>> +	/* Resetting interrupt aggregation counters first and reading the
->>> +	 * DOOR_BELL afterward allows us to handle all the completed requ=
-ests.
->>> +	 * In order to prevent other interrupts starvation the DB is read=
- once
->>> +	 * after reset. The down side of this solution is the possibility=
- of
->>> +	 * false interrupt if device completes another request after rese=
-tting
->>> +	 * aggregation and before reading the DB.
->>> +	 */
->>> +	if (ufshcd_is_intr_aggr_allowed(hba))
->>> +		ufshcd_reset_intr_aggr(hba);
->>> +
->>> +	tr_doorbell =3D ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL)=
-;
->>> +	completed_reqs =3D tr_doorbell ^ hba->outstanding_reqs;
->>> +
->>> +	__ufshcd_transfer_req_compl(hba, completed_reqs);
+>>> +	if (*val < 0x20 || *val > 0x7e)
+>>> +		*val =3D ' ';
 >>> +}
+>>> +
+>>>  /*
+>>>   * ufshcd_wait_for_register - wait for register value to change
+>>>   * @hba - per-adapter interface
+>>> @@ -2021,6 +2031,82 @@ static inline int ufshcd_read_power_desc(str=
+uct
+>>> ufs_hba *hba,
+>>>  	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+>>>  }
+>>>
+>>> +int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size=
+)
+>>> +{
+>>> +	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size)=
+;
+>>> +}
+>>> +EXPORT_SYMBOL(ufshcd_read_device_desc);
 >>> +
 >>> +/**
->>>   * ufshcd_disable_ee - disable exception event
->>>   * @hba: per-adapter instance
->>>   * @mask: exception event to disable
->>> @@ -3773,6 +3787,13 @@ out:
->>>  	return;
->>>  }
->>>
->>> +/* Complete requests that have door-bell cleared */
->>> +static void ufshcd_complete_requests(struct ufs_hba *hba)
+>>> + * ufshcd_read_string_desc - read string descriptor
+>>> + * @hba: pointer to adapter instance
+>>> + * @desc_index: descriptor index
+>>> + * @buf: pointer to buffer where descriptor would be read
+>>> + * @size: size of buf
+>>> + * @ascii: if true convert from unicode to ascii characters
+>>> + *
+>>> + * Return 0 in case of success, non-zero otherwise
+>>> + */
+>>> +int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u=
+8
+>>> *buf,
+>>> +				u32 size, bool ascii)
 >>> +{
->>> +	ufshcd_transfer_req_compl(hba);
->>> +	ufshcd_tmc_handler(hba);
->>> +}
+>>> +	int err =3D 0;
 >>> +
->>>  /**
->>>   * ufshcd_err_handler - handle UFS errors that require s/w attenti=
-on
->>>   * @work: pointer to work structure
->>> @@ -3785,6 +3806,7 @@ static void ufshcd_err_handler(struct work_st=
-ruct
->>> *work)
->>>  	u32 err_tm =3D 0;
->>>  	int err =3D 0;
->>>  	int tag;
->>> +	bool needs_reset =3D false;
->>>
->>>  	hba =3D container_of(work, struct ufs_hba, eh_work);
->>>
->>> @@ -3792,40 +3814,75 @@ static void ufshcd_err_handler(struct
->>> work_struct *work)
->>>  	ufshcd_hold(hba, false);
->>>
->>>  	spin_lock_irqsave(hba->host->host_lock, flags);
->>> -	if (hba->ufshcd_state =3D=3D UFSHCD_STATE_RESET) {
->>> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
->>> +	if (hba->ufshcd_state =3D=3D UFSHCD_STATE_RESET)
->>>  		goto out;
->>> -	}
->>>
->>>  	hba->ufshcd_state =3D UFSHCD_STATE_RESET;
->>>  	ufshcd_set_eh_in_progress(hba);
->>>
->>>  	/* Complete requests that have door-bell cleared by h/w */
->>> -	ufshcd_transfer_req_compl(hba);
->>> -	ufshcd_tmc_handler(hba);
->>> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>> +	ufshcd_complete_requests(hba);
->>> +	if ((hba->saved_err & INT_FATAL_ERRORS) ||
->>> +	    ((hba->saved_err & UIC_ERROR) &&
->>> +	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
->>> +				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
->>> +				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
->>> +		needs_reset =3D true;
->>>
->>> +	/*
->>> +	 * if host reset is required then skip clearing the pending
->>> +	 * transfers forcefully because they will automatically get
->>> +	 * cleared after link startup.
->>> +	 */
->>> +	if (needs_reset)
->>> +		goto skip_pending_xfer_clear;
+>>> +	err =3D ufshcd_read_desc(hba,
+>>> +				QUERY_DESC_IDN_STRING, desc_index, buf, size);
 >>> +
->>> +	/* release lock as clear command might sleep */
->>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>  	/* Clear pending transfer requests */
->>> -	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
->>> -		if (ufshcd_clear_cmd(hba, tag))
->>> -			err_xfer |=3D 1 << tag;
->>> +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
->>> +		if (ufshcd_clear_cmd(hba, tag)) {
->>> +			err_xfer =3D true;
->>> +			goto lock_skip_pending_xfer_clear;
->>> +		}
+>>> +	if (err) {
+>>> +		dev_err(hba->dev, "%s: reading String Desc failed after %d retri=
+es.
+>>> err =3D %d\n",
+>>> +			__func__, QUERY_REQ_RETRIES, err);
+>>> +		goto out;
 >>> +	}
->>>
->>>  	/* Clear pending task management requests */
->>> -	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
->>> -		if (ufshcd_clear_tm_cmd(hba, tag))
->>> -			err_tm |=3D 1 << tag;
->>> +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
->>> +		if (ufshcd_clear_tm_cmd(hba, tag)) {
->>> +			err_tm =3D true;
->>> +			goto lock_skip_pending_xfer_clear;
+>>> +
+>>> +	if (ascii) {
+>>> +		int desc_len;
+>>> +		int ascii_len;
+>>> +		int i;
+>>> +		char *buff_ascii;
+>>> +
+>>> +		desc_len =3D buf[0];
+>>> +		/* remove header and divide by 2 to move from UTF16 to UTF8 */
+>>> +		ascii_len =3D (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
+>>> +		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
+>>> +			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
+>>> +					__func__);
+>>> +			err =3D -ENOMEM;
+>>> +			goto out;
 >>> +		}
->>> +	}
->>>
->>> -	/* Complete the requests that are cleared by s/w */
->>> +lock_skip_pending_xfer_clear:
->>>  	spin_lock_irqsave(hba->host->host_lock, flags);
->>> -	ufshcd_transfer_req_compl(hba);
->>> -	ufshcd_tmc_handler(hba);
->>> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>
->>> +	/* Complete the requests that are cleared by s/w */
->>> +	ufshcd_complete_requests(hba);
 >>> +
->>> +	if (err_xfer || err_tm)
->>> +		needs_reset =3D true;
->>> +
->>> +skip_pending_xfer_clear:
->>>  	/* Fatal errors need reset */
->>> -	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
->>> -			((hba->saved_err & UIC_ERROR) &&
->>> -			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
->>> +	if (needs_reset) {
->>> +		unsigned long max_doorbells =3D (1UL << hba->nutrs) - 1;
+>>> +		buff_ascii =3D kmalloc(ascii_len, GFP_KERNEL);
+>>> +		if (!buff_ascii) {
+>>> +			err =3D -ENOMEM;
+>>> +			goto out_free_buff;
+>>> +		}
 >>> +
 >>> +		/*
->>> +		 * ufshcd_reset_and_restore() does the link reinitialization
->>> +		 * which will need atleast one empty doorbell slot to send the
->>> +		 * device management commands (NOP and query commands).
->>> +		 * If there is no slot empty at this moment then free up last
->>> +		 * slot forcefully.
+>>> +		 * the descriptor contains string in UTF16 format
+>>> +		 * we need to convert to utf-8 so it can be displayed
 >>> +		 */
->>> +		if (hba->outstanding_reqs =3D=3D max_doorbells)
->>> +			__ufshcd_transfer_req_compl(hba,
->>> +						    (1UL << (hba->nutrs - 1)));
+>>> +		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
+>>> +				desc_len - QUERY_DESC_HDR_SIZE,
+>>> +				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
 >>> +
->>> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>  		err =3D ufshcd_reset_and_restore(hba);
->>> +		spin_lock_irqsave(hba->host->host_lock, flags);
->>>  		if (err) {
->>>  			dev_err(hba->dev, "%s: reset and restore failed\n",
->>>  					__func__);
->> Why don't you reserve a command slot for this case (ie reduce the nu=
-mber
->> of tags by one)?
->> That way you would always have at least one slot free, wouldn't you?
+>>> +		/* replace non-printable or non-ASCII characters with spaces */
+>>> +		for (i =3D 0; i < ascii_len; i++)
+>>> +			ufshcd_remove_non_printable(&buff_ascii[i]);
+>>> +
+>>> +		memset(buf + QUERY_DESC_HDR_SIZE, 0,
+>>> +				size - QUERY_DESC_HDR_SIZE);
+>>> +		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
+>>> +		buf[QUERY_DESC_LENGTH_OFFSET] =3D ascii_len + QUERY_DESC_HDR_SIZ=
+E;
+>>> +out_free_buff:
+>>> +		kfree(buff_ascii);
+>>> +	}
+>>> +out:
+>>> +	return err;
+>>> +}
+>>> +EXPORT_SYMBOL(ufshcd_read_string_desc);
+>>> +
+>>>  /**
+>>>   * ufshcd_read_unit_desc_param - read the specified unit descripto=
+r
+>>> parameter
+>>>   * @hba: Pointer to adapter instance
+>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>>> index a6d3572..54e13cc 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.h
+>>> +++ b/drivers/scsi/ufs/ufshcd.h
+>>> @@ -678,6 +678,13 @@ static inline int ufshcd_dme_peer_get(struct
+>>> ufs_hba *hba,
+>>>  	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+>>>  }
+>>>
+>>> +int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size=
+);
+>>> +
+>>> +#define ASCII_STD true
+>>> +
+>>> +int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u=
+8
+>>> *buf,
+>>> +				u32 size, bool ascii);
+>>> +
+>>>  /* Expose Query-Request API */
+>>>  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcod=
+e,
+>>>  	enum flag_idn idn, bool *flag_res);
+>>>
 >>
+>> Probably shows my ignorance, but _where_ is this function actually u=
+sed?
+>>
+>> Cheers,
+>> Hannes
+>=20
 >=20
 > Hello Hannes,
+> I was asked by reviewer Tomas Winkler, to seperate a patch (v4) into =
+2
+> patches in v5.
+> so, this is part I of the seperation, and the functions here, are bei=
+ng
+> called by the next patch v5 06/15 - in the quirk.c file in
+> ufs_get_device_info() routine.
+> hope that helps.
 >=20
-> We are discussing here, a very-very rare scenario where 2 conditions =
-must
-> co-exist:
-> 1. a fatal error that requires the controller to be reset.
-> 2. all slots are taken.
->=20
-> This 2 conditions, very rarely should happen together.
-> At that point, it would be better to free the last slot, than to save=
- one
-> slot for this scenario.
-> Also, we should remember that reducing the queue-depth for the entire
-> usual operation, might be a performance hit at some point, where, for
-> example, a LUN has only 8 slots, will now have 7, which is a hit of 1=
-2.5%
-> of the potential parallelism. So, i would recommend to stick with the
-> above proposal that not only makes more sense when you estimate the
-> probability of the conditions to co-exist, but also was tested and pr=
-oven
-> to be safe with no performance hit.
->=20
-Okay, good point. I didn't know how many slots there are.
-But if you only got 8 you surely don't want to waste one.
+Okay; but you should've put that into the patch description.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
