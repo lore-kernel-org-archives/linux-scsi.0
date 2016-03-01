@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/8] scsi_sysfs: add 'is_bin_visible' callback
-Date: Tue,  1 Mar 2016 05:51:12 +0100
-Message-ID: <1456807872-88797-1-git-send-email-hare@suse.de>
+Subject: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
+Date: Tue,  1 Mar 2016 05:52:25 +0100
+Message-ID: <1456807945-88857-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49280 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49312 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789AbcCAEvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Feb 2016 23:51:19 -0500
+	id S1750862AbcCAEwc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Feb 2016 23:52:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
