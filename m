@@ -1,36 +1,53 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 18/34] iscsi-target: call complete on conn_logout_comp
-Date: Tue, 1 Mar 2016 06:52:14 -0800
-Message-ID: <20160301145214.GE9738@infradead.org>
-References: <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
- <f98923031c5958e73ce1ac13a5fc7f68ba19391f.1455467089.git.varun@chelsio.com>
- <56C205C7.9000503@dev.mellanox.co.il>
+Subject: Re: [RFC 19/34] iscsi-target: clear tx_thread_active
+Date: Tue, 1 Mar 2016 06:59:05 -0800
+Message-ID: <20160301145905.GF9738@infradead.org>
+References: <cover.1455467089.git.varun@chelsio.com>
+ <179da911feeb6481e0e06eb45f18743be02d6e90.1455467089.git.varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <56C205C7.9000503@dev.mellanox.co.il>
+In-Reply-To: <179da911feeb6481e0e06eb45f18743be02d6e90.1455467089.git.varun@chelsio.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Varun Prakash <varun@chelsio.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
+To: Varun Prakash <varun@chelsio.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 15, 2016 at 07:07:19PM +0200, Sagi Grimberg wrote:
-> >+	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
-> >+	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
-> >  		complete(&conn->conn_logout_comp);
+On Sun, Feb 14, 2016 at 11:12:13PM +0530, Varun Prakash wrote:
+> clear tx_thread_active for ISCSI_TCP_CXGB4
+> transport in logout_post_handler functions.
 > 
-> IMO, this is an indication that this condition is a bandage in the first
-> place...
+> Signed-off-by: Varun Prakash <varun@chelsio.com>
+> ---
+>  drivers/target/iscsi/iscsi_target.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index 858f6e4..3dd7ba2 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -4579,7 +4579,8 @@ static void iscsit_logout_post_handler_closesession(
+>  	 * always sleep waiting for RX/TX thread shutdown to complete
+>  	 * within iscsit_close_connection().
+>  	 */
+> -	if (conn->conn_transport->transport_type == ISCSI_TCP)
+> +	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
+> +	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
+>  		sleep = cmpxchg(&conn->tx_thread_active, true, false);
 
-Agreed.  Nevermind the fact that a spurious complete() is perfectly
-harmless..
+Just move the call to iscsit_response_queue, and this is handled much
+saner.
 
-> While this is unrelated to the patch set, we should look into the iscsi
-> termination sequences more closely and look if we can dispatch some
-> logic to the drivers in places they defer. It will make the code much
-> less complicated.
+>  
+>  	atomic_set(&conn->conn_logout_remove, 0);
+> @@ -4596,7 +4597,8 @@ static void iscsit_logout_post_handler_samecid(
+>  {
+>  	int sleep = 1;
+>  
+> -	if (conn->conn_transport->transport_type == ISCSI_TCP)
+> +	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
+> +	    (conn->conn_transport->transport_type == ISCSI_TCP_CXGB4))
+>  		sleep = cmpxchg(&conn->tx_thread_active, true, false);
 
-Yes, all I've seen in this series so far suggest that the integration
-is a complete mess.  I think this really needs to go back to the drawing
-board.
+Same here.
