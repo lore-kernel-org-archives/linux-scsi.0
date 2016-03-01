@@ -1,154 +1,27 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v5 04/15] scsi: ufs: verify hba controller hce reg value
-Date: Tue, 1 Mar 2016 13:32:30 -0000
-Message-ID: <f4f33c609f5e2577c1e91c97c68a1542.squirrel@us.codeaurora.org>
-References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
-    <1456666367-11418-5-git-send-email-ygardi@codeaurora.org>
-    <56D545AB.1030606@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC 12/34] cxgb4: update Kconfig and Makefile
+Date: Tue, 1 Mar 2016 06:47:06 -0800
+Message-ID: <20160301144706.GA9738@infradead.org>
+References: <cover.1455467089.git.varun@chelsio.com>
+ <3047de46b89ddbe92b6125f773e8149bde59f8a1.1455467089.git.varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56D545AB.1030606@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3047de46b89ddbe92b6125f773e8149bde59f8a1.1455467089.git.varun@chelsio.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, roland@kernel.org, davem@davemloft.net, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
->> Sometimes due to hw issues it takes some time to the
->> host controller register to update. In order to verify the register
->> has updated, a polling is done until its value is set.
->>
->> In addition the functions ufshcd_hba_stop() and
->> ufshcd_wait_for_register() was updated with an additional input
->> parameter, indicating the timeout between reads will
->> be done by sleeping or spinning the cpu.
->>
->> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
->> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 53
->> ++++++++++++++++++++++++++++-------------------
->>  drivers/scsi/ufs/ufshcd.h | 12 +++--------
->>  2 files changed, 35 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 3400ceb..80031e6 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct
->> ufs_hba *hba)
->>   * @val - wait condition
->>   * @interval_us - polling interval in microsecs
->>   * @timeout_ms - timeout in millisecs
->> + * @can_sleep - perform sleep or just spin
->>   *
->>   * Returns -ETIMEDOUT on error, zero on success
->>   */
->> -static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u=
-32
->> mask,
->> -		u32 val, unsigned long interval_us, unsigned long timeout_ms)
->> +int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask=
-,
->> +				u32 val, unsigned long interval_us,
->> +				unsigned long timeout_ms, bool can_sleep)
->>  {
->>  	int err =3D 0;
->>  	unsigned long timeout =3D jiffies + msecs_to_jiffies(timeout_ms);
->> @@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs_=
-hba
->> *hba, u32 reg, u32 mask,
->>  	val =3D val & mask;
->>
->>  	while ((ufshcd_readl(hba, reg) & mask) !=3D val) {
->> -		/* wakeup within 50us of expiry */
->> -		usleep_range(interval_us, interval_us + 50);
->> -
->> +		if (can_sleep)
->> +			usleep_range(interval_us, interval_us + 50);
->> +		else
->> +			udelay(interval_us);
->>  		if (time_after(jiffies, timeout)) {
->>  			if ((ufshcd_readl(hba, reg) & mask) !=3D val)
->>  				err =3D -ETIMEDOUT;
->> @@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
->>  	 */
->>  	err =3D ufshcd_wait_for_register(hba,
->>  			REG_UTP_TRANSFER_REQ_DOOR_BELL,
->> -			mask, ~mask, 1000, 1000);
->> +			mask, ~mask, 1000, 1000, true);
->>
->>  	return err;
->>  }
->> @@ -2815,6 +2818,23 @@ out:
->>  }
->>
->>  /**
->> + * ufshcd_hba_stop - Send controller to reset state
->> + * @hba: per adapter instance
->> + * @can_sleep: perform sleep or just spin
->> + */
->> +static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sl=
-eep)
->> +{
->> +	int err;
->> +
->> +	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
->> +	err =3D ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
->> +					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
->> +					10, 1, can_sleep);
->> +	if (err)
->> +		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
->> +}
->> +
-> Shouldn't you return an error here?
-> If the controller disable failed you probably need a hard reset or
-> something, otherwise I would assume that every other command from tha=
-t
-> point on will not work as expected.
->
-> Cheers,
->
-> Hannes
+> +config CHELSIO_T4_UWIRE
+> +	bool "Unified Wire Support for Chelsio T5 cards"
+> +	default n
+> +	depends on CHELSIO_T4
+> +	---help---
+> +	  Enable unified-wire offload features.
+> +	  Say Y here if you want to enable unified-wire over Ethernet
+> +	  in the driver.
 
-
-Hello Hannes,
-The original routine signature is:
-void ufshcd_hba_stop(struct ufs_hba *hba);
-
-as you can see, no return value, the reason is simple - there is nothin=
-g
-we can do if writing to the register fails.
-
-all we wanted to do here, was to add a graceful time to change the
-register value. also, we decided to add error msg in case the value is =
-not
-change within this timeout.
-We can not do anything else, not to say, return error, as there is no
-error handling in such case.
-
-So, as far as i see it, we only improved the already exists logic, by
-adding some graceful time to the register change, and also, by adding a=
-n
-error message that was absent before.
-
-thanks,
-Yaniv
-
-
-
-
-> --
-> Dr. Hannes Reinecke		      zSeries & Storage
-> hare@suse.de			      +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+And what the hell is "unified-wire over Ethernet".  A little more
+explanation would be very helpful for the user facing this question.
