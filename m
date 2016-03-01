@@ -1,28 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] fcoe: fix reset of fip selection time.
-Date: Mon, 29 Feb 2016 21:02:37 -0500
-Message-ID: <yq1oaazc5vm.fsf@sermon.lab.mkp.net>
-References: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com>
+Subject: Re: [PATCH] be2iscsi:Add missing error check in beiscsi_eeh_resume
+Date: Mon, 29 Feb 2016 21:09:03 -0500
+Message-ID: <yq1k2lnc5kw.fsf@sermon.lab.mkp.net>
+References: <1456595005-13281-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16682 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbcCACCs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 21:02:48 -0500
-In-Reply-To: <20160229113652.2680.73280.stgit@ukketine.jf.intel.com> (Usha
-	Ketineni's message of "Mon, 29 Feb 2016 03:36:52 -0800")
+Received: from userp1040.oracle.com ([156.151.31.81]:22703 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbcCACJR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Feb 2016 21:09:17 -0500
+In-Reply-To: <1456595005-13281-1-git-send-email-xerofoify@gmail.com> (Nicholas
+	Krause's message of "Sat, 27 Feb 2016 12:43:25 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Usha Ketineni <usha.k.ketineni@intel.com>
-Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: jayamohan.kallickal@avagotech.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Usha" == Usha Ketineni <usha.k.ketineni@intel.com> writes:
+>>>>> "Nicholas" == Nicholas Krause <xerofoify@gmail.com> writes:
 
-Usha> Do not reset fip selection time for every advertisement in
-Usha> fcoe_ctlr_recv_adv() but set it only once for the first validated
-Usha> FCF. Otherwise FCF selection won't happen when the advertisements
-Usha> consistently arrive with sub FCOE_CTLR_START_DELAY periodicity.
+Nicholas> This adds the missing error check and path for if the call to
+Nicholas> the function hwi_init_controller fails as this error path was
+Nicholas> clearly missed when writing beiscsi_eeh_resume and thus we
+Nicholas> must add it now in order to be able to handle this
+Nicholas> nonrecoverable failing function call gracefully in
+Nicholas> beiscsi_eeh_resume.
 
 Applied to 4.6/scsi-queue.
 
