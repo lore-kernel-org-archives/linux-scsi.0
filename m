@@ -1,28 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 23/34] iscsi-target: split iscsi_target_rx_thread()
-Date: Tue, 1 Mar 2016 07:02:57 -0800
-Message-ID: <20160301150257.GI9738@infradead.org>
+Subject: Re: [RFC 24/34] iscsi-target: validate conn operational parameters
+Date: Tue, 1 Mar 2016 07:03:18 -0800
+Message-ID: <20160301150318.GJ9738@infradead.org>
 References: <cover.1455467089.git.varun@chelsio.com>
- <494c1253bad50c0173f7869a2a8ede5dbe5ed7a5.1455467089.git.varun@chelsio.com>
+ <940698fdb1ca47d8c392fa687f971842d215d083.1455467089.git.varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:47452 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859AbcCAPDT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2016 10:03:19 -0500
 Content-Disposition: inline
-In-Reply-To: <494c1253bad50c0173f7869a2a8ede5dbe5ed7a5.1455467089.git.varun@chelsio.com>
-Sender: target-devel-owner@vger.kernel.org
+In-Reply-To: <940698fdb1ca47d8c392fa687f971842d215d083.1455467089.git.varun@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Varun Prakash <varun@chelsio.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
-List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Feb 14, 2016 at 11:15:30PM +0530, Varun Prakash wrote:
-> split iscsi_target_rx_thread() into two parts,
-> 1. iscsi_target_rx_thread() is common to all
->    transport drivers, it will call Rx function
->    registered by transport driver.
-> 
-> 2. iscsit_rx_pdu() is Rx function for
->    ISCSI_TCP transport.
+On Sun, Feb 14, 2016 at 11:15:31PM +0530, Varun Prakash wrote:
+> call validate params function if registered
+> by transport driver before starting negotiation,
+> so that transport driver can validate and update
+> the value of parameters.
 
-It seems like the cleaner approach would be to have thread management
-in the driver (or preferably workqueues!) and export a few helpers
-for common code.
+Should go together with the introduction of the method.
