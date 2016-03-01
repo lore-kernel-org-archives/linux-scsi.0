@@ -1,216 +1,310 @@
-From: Yves-Alexis Perez <corsac-vD43ovf/fd+sTnJN9+BGXg@public.gmane.org>
-Subject: Page allocation failure (order 7) in UAS code
-Date: Tue, 01 Mar 2016 10:42:41 +0100
-Message-ID: <1456825361.17330.9.camel@corsac.net>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v5 08/15] scsi: ufs: make error handling bit faster
+Date: Tue, 1 Mar 2016 09:56:40 -0000
+Message-ID: <187f423aa64d09d32c6c136e28c51fc2.squirrel@us.codeaurora.org>
+References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
+    <1456666367-11418-9-git-send-email-ygardi@codeaurora.org>
+    <56D549CD.70104@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-XvCZw6A1adpmOvkHyHfM"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <56D549CD.70104@suse.de>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
+> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
+>> UFS driver's error handler forcefully tries to clear all the pending
+>> requests. For each pending request in the queue, it waits 1 sec for =
+it
+>> to get cleared. If we have multiple requests in the queue then it's
+>> possible that we might end up waiting for those many seconds before
+>> resetting the host. But note that resetting host would any way clear
+>> all the pending requests from the hardware. Hence this change skips
+>> the forceful clear of the pending requests if we are anyway going to
+>> reset the host (for fatal errors).
+>>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c | 155
+>> +++++++++++++++++++++++++++++++++-------------
+>>  1 file changed, 112 insertions(+), 43 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 987cf27..dc096f1 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -133,9 +133,11 @@ enum {
+>>  /* UFSHCD UIC layer error flags */
+>>  enum {
+>>  	UFSHCD_UIC_DL_PA_INIT_ERROR =3D (1 << 0), /* Data link layer error=
+ */
+>> -	UFSHCD_UIC_NL_ERROR =3D (1 << 1), /* Network layer error */
+>> -	UFSHCD_UIC_TL_ERROR =3D (1 << 2), /* Transport Layer error */
+>> -	UFSHCD_UIC_DME_ERROR =3D (1 << 3), /* DME error */
+>> +	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR =3D (1 << 1), /* Data link layer =
+error
+>> */
+>> +	UFSHCD_UIC_DL_TCx_REPLAY_ERROR =3D (1 << 2), /* Data link layer er=
+ror */
+>> +	UFSHCD_UIC_NL_ERROR =3D (1 << 3), /* Network layer error */
+>> +	UFSHCD_UIC_TL_ERROR =3D (1 << 4), /* Transport Layer error */
+>> +	UFSHCD_UIC_DME_ERROR =3D (1 << 5), /* DME error */
+>>  };
+>>
+>>  /* Interrupt configuration options */
+>> @@ -3465,31 +3467,18 @@ static void ufshcd_uic_cmd_compl(struct ufs_=
+hba
+>> *hba, u32 intr_status)
+>>  }
+>>
+>>  /**
+>> - * ufshcd_transfer_req_compl - handle SCSI and query command comple=
+tion
+>> + * __ufshcd_transfer_req_compl - handle SCSI and query command
+>> completion
+>>   * @hba: per adapter instance
+>> + * @completed_reqs: requests to complete
+>>   */
+>> -static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>> +static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+>> +					unsigned long completed_reqs)
+>>  {
+>>  	struct ufshcd_lrb *lrbp;
+>>  	struct scsi_cmnd *cmd;
+>> -	unsigned long completed_reqs;
+>> -	u32 tr_doorbell;
+>>  	int result;
+>>  	int index;
+>>
+>> -	/* Resetting interrupt aggregation counters first and reading the
+>> -	 * DOOR_BELL afterward allows us to handle all the completed reque=
+sts.
+>> -	 * In order to prevent other interrupts starvation the DB is read =
+once
+>> -	 * after reset. The down side of this solution is the possibility =
+of
+>> -	 * false interrupt if device completes another request after reset=
+ting
+>> -	 * aggregation and before reading the DB.
+>> -	 */
+>> -	if (ufshcd_is_intr_aggr_allowed(hba))
+>> -		ufshcd_reset_intr_aggr(hba);
+>> -
+>> -	tr_doorbell =3D ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> -	completed_reqs =3D tr_doorbell ^ hba->outstanding_reqs;
+>> -
+>>  	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+>>  		lrbp =3D &hba->lrb[index];
+>>  		cmd =3D lrbp->cmd;
+>> @@ -3519,6 +3508,31 @@ static void ufshcd_transfer_req_compl(struct
+>> ufs_hba *hba)
+>>  }
+>>
+>>  /**
+>> + * ufshcd_transfer_req_compl - handle SCSI and query command comple=
+tion
+>> + * @hba: per adapter instance
+>> + */
+>> +static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>> +{
+>> +	unsigned long completed_reqs;
+>> +	u32 tr_doorbell;
+>> +
+>> +	/* Resetting interrupt aggregation counters first and reading the
+>> +	 * DOOR_BELL afterward allows us to handle all the completed reque=
+sts.
+>> +	 * In order to prevent other interrupts starvation the DB is read =
+once
+>> +	 * after reset. The down side of this solution is the possibility =
+of
+>> +	 * false interrupt if device completes another request after reset=
+ting
+>> +	 * aggregation and before reading the DB.
+>> +	 */
+>> +	if (ufshcd_is_intr_aggr_allowed(hba))
+>> +		ufshcd_reset_intr_aggr(hba);
+>> +
+>> +	tr_doorbell =3D ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> +	completed_reqs =3D tr_doorbell ^ hba->outstanding_reqs;
+>> +
+>> +	__ufshcd_transfer_req_compl(hba, completed_reqs);
+>> +}
+>> +
+>> +/**
+>>   * ufshcd_disable_ee - disable exception event
+>>   * @hba: per-adapter instance
+>>   * @mask: exception event to disable
+>> @@ -3773,6 +3787,13 @@ out:
+>>  	return;
+>>  }
+>>
+>> +/* Complete requests that have door-bell cleared */
+>> +static void ufshcd_complete_requests(struct ufs_hba *hba)
+>> +{
+>> +	ufshcd_transfer_req_compl(hba);
+>> +	ufshcd_tmc_handler(hba);
+>> +}
+>> +
+>>  /**
+>>   * ufshcd_err_handler - handle UFS errors that require s/w attentio=
+n
+>>   * @work: pointer to work structure
+>> @@ -3785,6 +3806,7 @@ static void ufshcd_err_handler(struct work_str=
+uct
+>> *work)
+>>  	u32 err_tm =3D 0;
+>>  	int err =3D 0;
+>>  	int tag;
+>> +	bool needs_reset =3D false;
+>>
+>>  	hba =3D container_of(work, struct ufs_hba, eh_work);
+>>
+>> @@ -3792,40 +3814,75 @@ static void ufshcd_err_handler(struct
+>> work_struct *work)
+>>  	ufshcd_hold(hba, false);
+>>
+>>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>> -	if (hba->ufshcd_state =3D=3D UFSHCD_STATE_RESET) {
+>> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +	if (hba->ufshcd_state =3D=3D UFSHCD_STATE_RESET)
+>>  		goto out;
+>> -	}
+>>
+>>  	hba->ufshcd_state =3D UFSHCD_STATE_RESET;
+>>  	ufshcd_set_eh_in_progress(hba);
+>>
+>>  	/* Complete requests that have door-bell cleared by h/w */
+>> -	ufshcd_transfer_req_compl(hba);
+>> -	ufshcd_tmc_handler(hba);
+>> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +	ufshcd_complete_requests(hba);
+>> +	if ((hba->saved_err & INT_FATAL_ERRORS) ||
+>> +	    ((hba->saved_err & UIC_ERROR) &&
+>> +	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
+>> +				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
+>> +				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
+>> +		needs_reset =3D true;
+>>
+>> +	/*
+>> +	 * if host reset is required then skip clearing the pending
+>> +	 * transfers forcefully because they will automatically get
+>> +	 * cleared after link startup.
+>> +	 */
+>> +	if (needs_reset)
+>> +		goto skip_pending_xfer_clear;
+>> +
+>> +	/* release lock as clear command might sleep */
+>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>  	/* Clear pending transfer requests */
+>> -	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
+>> -		if (ufshcd_clear_cmd(hba, tag))
+>> -			err_xfer |=3D 1 << tag;
+>> +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
+>> +		if (ufshcd_clear_cmd(hba, tag)) {
+>> +			err_xfer =3D true;
+>> +			goto lock_skip_pending_xfer_clear;
+>> +		}
+>> +	}
+>>
+>>  	/* Clear pending task management requests */
+>> -	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
+>> -		if (ufshcd_clear_tm_cmd(hba, tag))
+>> -			err_tm |=3D 1 << tag;
+>> +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
+>> +		if (ufshcd_clear_tm_cmd(hba, tag)) {
+>> +			err_tm =3D true;
+>> +			goto lock_skip_pending_xfer_clear;
+>> +		}
+>> +	}
+>>
+>> -	/* Complete the requests that are cleared by s/w */
+>> +lock_skip_pending_xfer_clear:
+>>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>> -	ufshcd_transfer_req_compl(hba);
+>> -	ufshcd_tmc_handler(hba);
+>> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>
+>> +	/* Complete the requests that are cleared by s/w */
+>> +	ufshcd_complete_requests(hba);
+>> +
+>> +	if (err_xfer || err_tm)
+>> +		needs_reset =3D true;
+>> +
+>> +skip_pending_xfer_clear:
+>>  	/* Fatal errors need reset */
+>> -	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
+>> -			((hba->saved_err & UIC_ERROR) &&
+>> -			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
+>> +	if (needs_reset) {
+>> +		unsigned long max_doorbells =3D (1UL << hba->nutrs) - 1;
+>> +
+>> +		/*
+>> +		 * ufshcd_reset_and_restore() does the link reinitialization
+>> +		 * which will need atleast one empty doorbell slot to send the
+>> +		 * device management commands (NOP and query commands).
+>> +		 * If there is no slot empty at this moment then free up last
+>> +		 * slot forcefully.
+>> +		 */
+>> +		if (hba->outstanding_reqs =3D=3D max_doorbells)
+>> +			__ufshcd_transfer_req_compl(hba,
+>> +						    (1UL << (hba->nutrs - 1)));
+>> +
+>> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>  		err =3D ufshcd_reset_and_restore(hba);
+>> +		spin_lock_irqsave(hba->host->host_lock, flags);
+>>  		if (err) {
+>>  			dev_err(hba->dev, "%s: reset and restore failed\n",
+>>  					__func__);
+> Why don't you reserve a command slot for this case (ie reduce the num=
+ber
+> of tags by one)?
+> That way you would always have at least one slot free, wouldn't you?
+>
 
---=-XvCZw6A1adpmOvkHyHfM
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hello Hannes,
 
-Hi,
+We are discussing here, a very-very rare scenario where 2 conditions mu=
+st
+co-exist:
+1. a fatal error that requires the controller to be reset.
+2. all slots are taken.
 
-[sorry if this is not the right point for reporting bugs, I took the email
-addresses from MAINTAINERS but please point me to the correct place if need=
-ed]
-
-I have an external USB drive (Samsung M3), which apparently uses the UAS co=
-de.
-Starting with 4.4 (from Debian sid, I could retry with vanilla if needed), =
-I
-can't mount the drive anymore after a while (few hours/days uptime). Just
-plugging the disk, I get page allocation failure in kernel logs:
-
-Feb 22 10:57:56 scapa kernel: [26557.268872] usb 2-2: new SuperSpeed USB de=
-vice number 3 using xhci_hcd
-Feb 22 10:57:56 scapa kernel: [26557.285884] usb 2-2: New USB device found,=
- idVendor=3D04e8, idProduct=3D61b6
-Feb 22 10:57:56 scapa kernel: [26557.285888] usb 2-2: New USB device string=
-s: Mfr=3D1, Product=3D2, SerialNumber=3D3
-Feb 22 10:57:56 scapa kernel: [26557.285891] usb 2-2: Product: Samsung M3 P=
-ortable
-Feb 22 10:57:56 scapa kernel: [26557.285893] usb 2-2: Manufacturer: Samsung=
- M3 Portable
-Feb 22 10:57:56 scapa kernel: [26557.285895] usb 2-2: SerialNumber: 826C7DF=
-B13000067
-Feb 22 10:57:56 scapa kernel: [26557.293693] scsi host4: uas
-Feb 22 10:57:56 scapa kernel: [26557.293707] kworker/0:0: page allocation f=
-ailure: order:7, mode:0x2204020
-Feb 22 10:57:56 scapa kernel: [26557.293711] CPU: 0 PID: 11015 Comm: kworke=
-r/0:0 Tainted: G=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0W=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A04.4.0-1-amd64 #1 Debian 4.4.2-3~a.test
-Feb 22 10:57:56 scapa kernel: [26557.293713] Hardware name: LENOVO 20CMCTO1=
-WW/20CMCTO1WW, BIOS N10ET41W (1.20 ) 01/19/2016
-Feb 22 10:57:56 scapa kernel: [26557.293724] Workqueue: usb_hub_wq hub_even=
-t [usbcore]
-Feb 22 10:57:56 scapa kernel: [26557.293727]=C2=A0=C2=A00000000000000000 00=
-000000c0207f69 ffffffff812e7679 0000000002204020
-Feb 22 10:57:56 scapa kernel: [26557.293730]=C2=A0=C2=A0ffffffff8116b23a 00=
-000001c0207f69 0000000000000000 ffff88024dffbb20
-Feb 22 10:57:56 scapa kernel: [26557.293733]=C2=A0=C2=A0ffffffff810b475e 00=
-000001020c8220 00000000c0207f69 0000000000000046
-Feb 22 10:57:56 scapa kernel: [26557.293736] Call Trace:
-Feb 22 10:57:56 scapa kernel: [26557.293741]=C2=A0=C2=A0[<ffffffff812e7679>=
-] ? dump_stack+0x40/0x57
-Feb 22 10:57:56 scapa kernel: [26557.293745]=C2=A0=C2=A0[<ffffffff8116b23a>=
-] ? warn_alloc_failed+0xfa/0x150
-Feb 22 10:57:56 scapa kernel: [26557.293749]=C2=A0=C2=A0[<ffffffff810b475e>=
-] ? __wake_up_common+0x4e/0x90
-Feb 22 10:57:56 scapa kernel: [26557.293752]=C2=A0=C2=A0[<ffffffff8116e7d6>=
-] ? __alloc_pages_nodemask+0x306/0xb70
-Feb 22 10:57:56 scapa kernel: [26557.293757]=C2=A0=C2=A0[<ffffffff811ba191>=
-] ? kmem_getpages+0x51/0xf0
-Feb 22 10:57:56 scapa kernel: [26557.293759]=C2=A0=C2=A0[<ffffffff811bbe05>=
-] ? fallback_alloc+0x145/0x1f0
-Feb 22 10:57:56 scapa kernel: [26557.293765]=C2=A0=C2=A0[<ffffffff812bd908>=
-] ? init_tag_map+0x38/0xb0
-Feb 22 10:57:56 scapa kernel: [26557.293768]=C2=A0=C2=A0[<ffffffff811bd29f>=
-] ? __kmalloc+0x17f/0x1c0
-Feb 22 10:57:56 scapa kernel: [26557.293771]=C2=A0=C2=A0[<ffffffff812bd908>=
-] ? init_tag_map+0x38/0xb0
-Feb 22 10:57:56 scapa kernel: [26557.293774]=C2=A0=C2=A0[<ffffffff812bd9c0>=
-] ? __blk_queue_init_tags+0x40/0x80
-Feb 22 10:57:56 scapa kernel: [26557.293781]=C2=A0=C2=A0[<ffffffffa013445b>=
-] ? scsi_add_host_with_dma+0x7b/0x2f0 [scsi_mod]
-Feb 22 10:57:56 scapa kernel: [26557.293785]=C2=A0=C2=A0[<ffffffffa08783ba>=
-] ? uas_probe+0x41a/0x560 [uas]
-Feb 22 10:57:56 scapa kernel: [26557.293796]=C2=A0=C2=A0[<ffffffffa00d3c03>=
-] ? usb_probe_interface+0x1b3/0x300 [usbcore]
-Feb 22 10:57:56 scapa kernel: [26557.293801]=C2=A0=C2=A0[<ffffffff8140dbc2>=
-] ? driver_probe_device+0x212/0x480
-Feb 22 10:57:56 scapa kernel: [26557.293803]=C2=A0=C2=A0[<ffffffff8140deb0>=
-] ? __driver_attach+0x80/0x80
-Feb 22 10:57:56 scapa kernel: [26557.293806]=C2=A0=C2=A0[<ffffffff8140b8c2>=
-] ? bus_for_each_drv+0x62/0xb0
-Feb 22 10:57:56 scapa kernel: [26557.293809]=C2=A0=C2=A0[<ffffffff8140d8c8>=
-] ? __device_attach+0xd8/0x160
-Feb 22 10:57:56 scapa kernel: [26557.293811]=C2=A0=C2=A0[<ffffffff8140cbc7>=
-] ? bus_probe_device+0x87/0xa0
-Feb 22 10:57:56 scapa kernel: [26557.293814]=C2=A0=C2=A0[<ffffffff8140a8e5>=
-] ? device_add+0x3f5/0x660
-Feb 22 10:57:56 scapa kernel: [26557.293823]=C2=A0=C2=A0[<ffffffffa00d1c2b>=
-] ? usb_set_configuration+0x51b/0x8f0 [usbcore]
-Feb 22 10:57:56 scapa kernel: [26557.293835]=C2=A0=C2=A0[<ffffffffa00dbfa8>=
-] ? generic_probe+0x28/0x80 [usbcore]
-Feb 22 10:57:56 scapa kernel: [26557.293838]=C2=A0=C2=A0[<ffffffff8140dbc2>=
-] ? driver_probe_device+0x212/0x480
-Feb 22 10:57:56 scapa kernel: [26557.293840]=C2=A0=C2=A0[<ffffffff8140deb0>=
-] ? __driver_attach+0x80/0x80
-Feb 22 10:57:56 scapa kernel: [26557.293842]=C2=A0=C2=A0[<ffffffff8140b8c2>=
-] ? bus_for_each_drv+0x62/0xb0
-Feb 22 10:57:56 scapa kernel: [26557.293845]=C2=A0=C2=A0[<ffffffff8140d8c8>=
-] ? __device_attach+0xd8/0x160
-Feb 22 10:57:56 scapa kernel: [26557.293847]=C2=A0=C2=A0[<ffffffff8140cbc7>=
-] ? bus_probe_device+0x87/0xa0
-Feb 22 10:57:56 scapa kernel: [26557.293850]=C2=A0=C2=A0[<ffffffff8140a8e5>=
-] ? device_add+0x3f5/0x660
-Feb 22 10:57:56 scapa kernel: [26557.293857]=C2=A0=C2=A0[<ffffffffa00c7545>=
-] ? usb_new_device+0x265/0x490 [usbcore]
-Feb 22 10:57:56 scapa kernel: [26557.293864]=C2=A0=C2=A0[<ffffffffa00c96e3>=
-] ? hub_event+0xfb3/0x14f0 [usbcore]
-Feb 22 10:57:56 scapa kernel: [26557.293868]=C2=A0=C2=A0[<ffffffff8108d84f>=
-] ? process_one_work+0x19f/0x3d0
-Feb 22 10:57:56 scapa kernel: [26557.293871]=C2=A0=C2=A0[<ffffffff8108dacd>=
-] ? worker_thread+0x4d/0x450
-Feb 22 10:57:56 scapa kernel: [26557.293873]=C2=A0=C2=A0[<ffffffff8108da80>=
-] ? process_one_work+0x3d0/0x3d0
-Feb 22 10:57:56 scapa kernel: [26557.293876]=C2=A0=C2=A0[<ffffffff8109385d>=
-] ? kthread+0xcd/0xf0
-Feb 22 10:57:56 scapa kernel: [26557.293879]=C2=A0=C2=A0[<ffffffff81093790>=
-] ? kthread_create_on_node+0x190/0x190
-Feb 22 10:57:56 scapa kernel: [26557.293883]=C2=A0=C2=A0[<ffffffff81589c0f>=
-] ? ret_from_fork+0x3f/0x70
-Feb 22 10:57:56 scapa kernel: [26557.293886]=C2=A0=C2=A0[<ffffffff81093790>=
-] ? kthread_create_on_node+0x190/0x190
-Feb 22 10:57:56 scapa kernel: [26557.293888] Mem-Info:
-Feb 22 10:57:56 scapa kernel: [26557.293892] active_anon:1100571 inactive_a=
-non:668265 isolated_anon:0
-Feb 22 10:57:56 scapa kernel: [26557.293892]=C2=A0=C2=A0active_file:76007 i=
-nactive_file:57114 isolated_file:0
-Feb 22 10:57:56 scapa kernel: [26557.293892]=C2=A0=C2=A0unevictable:22 dirt=
-y:7 writeback:0 unstable:0
-Feb 22 10:57:56 scapa kernel: [26557.293892]=C2=A0=C2=A0slab_reclaimable:37=
-128 slab_unreclaimable:28425
-Feb 22 10:57:56 scapa kernel: [26557.293892]=C2=A0=C2=A0mapped:51000 shmem:=
-993293 pagetables:11591 bounce:0
-Feb 22 10:57:56 scapa kernel: [26557.293892]=C2=A0=C2=A0free:40735 free_pcp=
-:706 free_cma:0
-Feb 22 10:57:56 scapa kernel: [26557.293898] Node 0 DMA32 free:64580kB min:=
-3908kB low:4884kB high:5860kB active_anon:1473104kB inactive_anon:957504kB =
-active_file:105844kB inactive_file:80920kB unevictable:88kB isolated(anon):=
-0kB isolated(file):0kB present:2814324kB managed:2803768kB mlocked:88kB dir=
-ty:12kB writeback:0kB mapped:72980kB shmem:1357128kB slab_reclaimable:50220=
-kB slab_unreclaimable:37872kB kernel_stack:3040kB pagetables:16520kB unstab=
-le:0kB bounce:0kB free_pcp:1256kB local_pcp:236kB free_cma:0kB writeback_tm=
-p:0kB pages_scanned:0 all_unreclaimable? no
-Feb 22 10:57:56 scapa kernel: [26557.293904] lowmem_reserve[]: 0 5214 5214 =
-5214
-Feb 22 10:57:56 scapa kernel: [26557.293908] Node 0 Normal free:98360kB min=
-:7452kB low:9312kB high:11176kB active_anon:2929180kB inactive_anon:1715556=
-kB active_file:198184kB inactive_file:147536kB unevictable:0kB isolated(ano=
-n):0kB isolated(file):0kB present:5472256kB managed:5339884kB mlocked:34359=
-738368kB dirty:16kB writeback:0kB mapped:131020kB shmem:2616044kB slab_recl=
-aimable:98292kB slab_unreclaimable:75828kB kernel_stack:5600kB pagetables:2=
-9844kB unstable:0kB bounce:0kB free_pcp:1568kB local_pcp:240kB free_cma:0kB=
- writeback_tmp:0kB pages_scanned:0 all_unreclaimable? no
-Feb 22 10:57:56 scapa kernel: [26557.293914] lowmem_reserve[]: 0 0 0 0
-Feb 22 10:57:56 scapa kernel: [26557.293917] Node 0 DMA32: 6976*4kB (UE) 37=
-58*8kB (UME) 358*16kB (UME) 16*32kB (UME) 0*64kB 0*128kB 0*256kB 0*512kB 0*=
-1024kB 0*2048kB 0*4096kB =3D 64208kB
-Feb 22 10:57:56 scapa kernel: [26557.293928] Node 0 Normal: 13439*4kB (UME)=
- 5329*8kB (UME) 100*16kB (UE) 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024k=
-B 0*2048kB 0*4096kB =3D 97988kB
-Feb 22 10:57:56 scapa kernel: [26557.293938] Node 0 hugepages_total=3D0 hug=
-epages_free=3D0 hugepages_surp=3D0 hugepages_size=3D2048kB
-Feb 22 10:57:56 scapa kernel: [26557.293940] 1127321 total pagecache pages
-Feb 22 10:57:56 scapa kernel: [26557.293942] 830 pages in swap cache
-Feb 22 10:57:56 scapa kernel: [26557.293944] Swap cache stats: add 35025, d=
-elete 34195, find 288/383
-Feb 22 10:57:56 scapa kernel: [26557.293945] Free swap=C2=A0=C2=A0=3D 30079=
-72kB
-Feb 22 10:57:56 scapa kernel: [26557.293946] Total swap =3D 3145724kB
-Feb 22 10:57:56 scapa kernel: [26557.293948] 2071645 pages RAM
-Feb 22 10:57:56 scapa kernel: [26557.293949] 0 pages HighMem/MovableOnly
-Feb 22 10:57:56 scapa kernel: [26557.293950] 35732 pages reserved
-Feb 22 10:57:56 scapa kernel: [26557.293951] 0 pages hwpoisoned
-Feb 22 10:57:56 scapa kernel: [26557.295059] uas: probe of 2-2:1.0 failed w=
-ith error -12
-
-order 7 seems like a lot to allocate, let alone atomically.
-
-If you need anything more, please ask.
+This 2 conditions, very rarely should happen together.
+At that point, it would be better to free the last slot, than to save o=
+ne
+slot for this scenario.
+Also, we should remember that reducing the queue-depth for the entire
+usual operation, might be a performance hit at some point, where, for
+example, a LUN has only 8 slots, will now have 7, which is a hit of 12.=
+5%
+of the potential parallelism. So, i would recommend to stick with the
+above proposal that not only makes more sense when you estimate the
+probability of the conditions to co-exist, but also was tested and prov=
+en
+to be safe with no performance hit.
 
 Regards,
---=20
-Yves-Alexis
+Yaniv
 
 
---=-XvCZw6A1adpmOvkHyHfM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
 
-iQEcBAABCAAGBQJW1WQRAAoJEG3bU/KmdcClAaYIAKomPROwVUyGMY93inM1Bs5g
-7yIIuf/BVxzbzxUe3SukpwBd5vi49ifu1LjCHHj6iC5PK7InYN0OtMo7arh29+WB
-ae+fQY2p1Wkrnnm2QjsAv4gAfnEEXUjdowD1CsBoUGzRJ44xJiLnDotCqpAlqUaX
-HmG1W6rChBbaFPh5JbA1FVIZ+iW5EaZQ/5ciRtMRYPr8x6E74yM/zMf/bBJa1TV9
-D+U3uRpSDVjSfbA7m837zG2KVzM++whChDABymVS5qgT8bzMNyjyOqig09fMlCOY
-4CytsEufkqTwbc3R5G30frPtO47gPJ3OD2LM6Xblf4nHbsr/fLjB99EqpLvdqtg=
-=HCE1
------END PGP SIGNATURE-----
-
---=-XvCZw6A1adpmOvkHyHfM--
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke		      zSeries & Storage
+> hare@suse.de			      +49 911 74053 688
+> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
