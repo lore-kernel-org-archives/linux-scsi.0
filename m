@@ -1,33 +1,27 @@
-From: Johannes Thumshirn <jthumshirn@suse.com>
-Subject: Re: [PATCH 2/2] scsi_transport_fc: Implement 'async_user_scan'
- module parameter
-Date: Tue, 1 Mar 2016 10:07:17 +0100
-Message-ID: <20160301090717.GF4181@c203.arch.suse.de>
-References: <1456127462-2817-1-git-send-email-hare@suse.de>
- <1456127462-2817-3-git-send-email-hare@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
+Date: Tue, 1 Mar 2016 10:08:41 +0100
+Message-ID: <20160301090841.GG4181@c203.arch.suse.de>
+References: <1456807945-88857-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43660 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43841 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750894AbcCAJHT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2016 04:07:19 -0500
+	id S1750913AbcCAJIp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2016 04:08:45 -0500
 Content-Disposition: inline
-In-Reply-To: <1456127462-2817-3-git-send-email-hare@suse.de>
+In-Reply-To: <1456807945-88857-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, Feb 22, 2016 at 08:51:02AM +0100, Hannes Reinecke wrote:
-> When invoking a scan via the sysfs 'scan' attribute the process
-> will be blocked until the scan is completed, which can take a
-> very long time on large installations.
-> Enabling the 'async_user_scan' parameter moves the actual
-> LUN scanning to a workqueue, thereby unblocking the process.
+On Tue, Mar 01, 2016 at 05:52:25AM +0100, Hannes Reinecke wrote:
+> Add 'is_bin_visible' callback to blank out unsupported vpd pages.
 >=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
