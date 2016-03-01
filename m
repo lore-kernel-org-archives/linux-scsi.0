@@ -1,19 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Bug 112241] Under heavy load FC TARGET going to Oops
-Date: Mon, 29 Feb 2016 21:16:04 -0800
-Message-ID: <1456809364.19657.184.camel@haakon3.risingtidesystems.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 112241] Under heavy load FC TARGET going to Oops
+Date: Tue, 01 Mar 2016 05:16:10 +0000
+Message-ID: <bug-112241-11613-1OvpsUMp0v@https.bugzilla.kernel.org/>
 References: <bug-112241-11613@https.bugzilla.kernel.org/>
-	 <bug-112241-11613-ZpqrUiCAaU@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <bug-112241-11613-ZpqrUiCAaU@https.bugzilla.kernel.org/>
-Sender: target-devel-owner@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52187 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777AbcCAFQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2016 00:16:14 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 29F492034C
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2016 05:16:13 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 75D562034E
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2016 05:16:10 +0000 (UTC)
+In-Reply-To: <bug-112241-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=112241
+
+--- Comment #3 from nab <nab@linux-iscsi.org> ---
 Hi Anthony,
 
 On Mon, 2016-02-29 at 02:26 +0000, bugzilla-daemon@bugzilla.kernel.org
@@ -66,3 +77,7 @@ You can google for 'esx ats heartbeat bug' to see the gory details.
 Thanks for reporting!
 
 --nab
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
