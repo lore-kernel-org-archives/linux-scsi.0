@@ -1,27 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 24/34] iscsi-target: validate conn operational parameters
-Date: Tue, 1 Mar 2016 07:03:18 -0800
-Message-ID: <20160301150318.GJ9738@infradead.org>
-References: <cover.1455467089.git.varun@chelsio.com>
- <940698fdb1ca47d8c392fa687f971842d215d083.1455467089.git.varun@chelsio.com>
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: [PATCH] eata: Convert eata driver as normal PCI and platform
+ device drivers
+Date: Wed, 2 Mar 2016 03:57:16 +1030
+Message-ID: <56D5D0F4.4060301@internode.on.net>
+References: <1456801344-3318-1-git-send-email-jiang.liu@linux.intel.com>
+ <20160301065247.GA6670@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:47452 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753859AbcCAPDT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2016 10:03:19 -0500
-Content-Disposition: inline
-In-Reply-To: <940698fdb1ca47d8c392fa687f971842d215d083.1455467089.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160301065247.GA6670@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "Ballabio, Dario" <dario.ballabio@emc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
 
-On Sun, Feb 14, 2016 at 11:15:31PM +0530, Varun Prakash wrote:
-> call validate params function if registered
-> by transport driver before starting negotiation,
-> so that transport driver can validate and update
-> the value of parameters.
 
-Should go together with the introduction of the method.
+
+Christoph Hellwig wrote on 01/03/16 17:22:
+> Hi Jiang.
+>
+> I'd love to see this patch in and abuse of the old PCI API gone.
+>
+> Did you resolve the problems Arthur saw with the previous iteratons
+> of the patch?
+>
+
+I applied Jiang Liu's patch of 1st March 2016 to a clean kernel 
+4.5.0-rc6 source, removed my workaround of removing and re-adding the 
+eata module before mounting file-systems that are on disks attached to 
+the DPT SCSI card using the eata driver, and was able to kexec from the 
+new kernel successfully.
+
+Arthur.
