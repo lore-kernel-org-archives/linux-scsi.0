@@ -1,44 +1,64 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 6/6] scsi_sysfs: call 'device_add' after attaching device
- handler
-Date: Tue, 1 Mar 2016 10:51:49 -0800
-Message-ID: <56D5E4C5.3050004@sandisk.com>
-References: <1456808143-88932-1-git-send-email-hare@suse.de>
- <1456808143-88932-7-git-send-email-hare@suse.de>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 0/2][RESEND] scsi_transport_fc: LUN masking
+Date: Tue, 01 Mar 2016 14:54:47 -0500
+Message-ID: <1456862087.16707.50.camel@localhost.localdomain>
+References: <1456127462-2817-1-git-send-email-hare@suse.de>
+	 <DDB9C85B850785449757F9914A034FCB44535951@G4W3219.americas.hpqcorp.net>
+	 <56CC3298.2080001@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0092.outbound.protection.outlook.com ([157.56.111.92]:57216
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750940AbcCASvx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2016 13:51:53 -0500
-In-Reply-To: <1456808143-88932-7-git-send-email-hare@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:44464 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753102AbcCATyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2016 14:54:51 -0500
+In-Reply-To: <56CC3298.2080001@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Seymour, Shane M" <shane.seymour@hpe.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 02/29/2016 08:55 PM, Hannes Reinecke wrote:
-> @@ -1241,6 +1234,13 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->   		sdev_printk(KERN_INFO, sdev,
->   				"failed to add device handler: %d\n", error);
->
-> +	error = device_add(&sdev->sdev_gendev);
-> +	if (error) {
-> +		sdev_printk(KERN_INFO, sdev,
-> +				"failed to add device: %d\n", error);
-> +		return error;
-> +	}
-> +
->   	device_enable_async_suspend(&sdev->sdev_dev);
->   	error = device_add(&sdev->sdev_dev);
->   	if (error) {
+On Tue, 2016-02-23 at 18:21 +0800, Hannes Reinecke wrote:
+> On 02/22/2016 07:39 PM, Seymour, Shane M wrote:
+> > Hi Hannes,
+> > 
+> > How do you know that a request for an async scan is complete (I'm assuming that you get
+> > add or change udev events)? Assuming that someone has manually started a scan on something
+> > (e.g. some newly presented devices after boot) and all scans are going
+> to be async how
+> > do you when it is complete rather than waiting in a work queue? An
+> example may be a sysfs
+> > file that contains unscanned, pending, scanning, scanned so you know
+> when it's complete
+> > at the appropriate level in sysfs (the hba and the rports) so you know
+> when can continue
+> > if you're polling the status (e.g. checking as part of system admin
+> work with newly
+> > presented rports so you can then do something with them).
+> >
+> Thing is, I don't.
+> 
+> We have had a similar discussion with the IBM zfcp folks, that it would
+> be desirable to have a marker in sysfs telling us that the rport is
+> stable (ie no scanning in progress).
+> However, this cannot be at the rport level (as the rport itself might be
+> going away), but rather at some higher level (eg fc_host).
 
-Hello Hannes,
+I am not sure this really helps.  If another process initiates a scan
+then sysfs might report that the scanning was still in progress.  If
+scans are initiated often enough, you might never observe a stable state.
 
-I think that scsi_dh_remove_device() should be called before returning 
-if device_add() fails.
+> 
+> But this has nothing to do with the patchset, right?
+> We're just disabling the (existing) scan callback, and retrigger it once
+> the sysfs attribute has been cleared.
+> 
+> We don't change the behaviour during scanning with this patchset.
+> 
+> Cheers,
+> 
+> Hannes
 
-Bart.
+
