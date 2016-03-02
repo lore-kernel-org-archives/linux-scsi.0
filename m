@@ -1,77 +1,67 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/2] scsi_transport_fc: implement 'disable_target_scan'
- module parameter
-Date: Wed, 2 Mar 2016 13:59:39 +0800
-Message-ID: <56D6814B.9020302@suse.de>
+Subject: Re: [PATCH 0/2][RESEND] scsi_transport_fc: LUN masking
+Date: Wed, 2 Mar 2016 14:35:11 +0800
+Message-ID: <56D6899F.9020905@suse.de>
 References: <1456127462-2817-1-git-send-email-hare@suse.de>
- <1456127462-2817-2-git-send-email-hare@suse.de>
- <20160301131252.GA7786@lst.de>
+ <DDB9C85B850785449757F9914A034FCB44535951@G4W3219.americas.hpqcorp.net>
+ <56CC3298.2080001@suse.de> <1456862087.16707.50.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48956 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50314 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750738AbcCBF7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2016 00:59:53 -0500
-In-Reply-To: <20160301131252.GA7786@lst.de>
+	id S1750785AbcCBGfY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2016 01:35:24 -0500
+In-Reply-To: <1456862087.16707.50.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.com>, linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: "Seymour, Shane M" <shane.seymour@hpe.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/01/2016 09:12 PM, Christoph Hellwig wrote:
-> On Mon, Feb 22, 2016 at 08:51:01AM +0100, Hannes Reinecke wrote:
->>  /*
->> + * disable_target_scan: Disable target scan per default
->> + *   useful on larger installations where only a small
->> + *   number of LUNs are required for booting.
->> + */
->> +static bool fc_disable_target_scan;
->> +
->> +module_param_named(disable_target_scan, fc_disable_target_scan,
->> +		   bool, S_IRUGO|S_IWUSR);
->> +MODULE_PARM_DESC(disable_target_scan,
->> +		 "Disable target scan on remote ports (default=3D0)");
->> +
->> +/*
->>   * Redefine so that we can have same named attributes in the
->>   * sdev/starget/host objects.
->>   */
->> @@ -3272,10 +3284,14 @@ fc_scsi_scan_rport(struct work_struct *work)
->>  	struct Scsi_Host *shost =3D rport_to_shost(rport);
->>  	struct fc_internal *i =3D to_fc_internal(shost->transportt);
->>  	unsigned long flags;
->> +	bool disable_target_scan;
->> +
->> +	disable_target_scan =3D fc_disable_target_scan ?
->> +		fc_disable_target_scan : i->f->disable_target_scan;
->> =20
->>  	if ((rport->port_state =3D=3D FC_PORTSTATE_ONLINE) &&
->>  	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
->> -	    !(i->f->disable_target_scan)) {
->> +	    !disable_target_scan) {
+On 03/02/2016 03:54 AM, Ewan Milne wrote:
+> On Tue, 2016-02-23 at 18:21 +0800, Hannes Reinecke wrote:
+>> On 02/22/2016 07:39 PM, Seymour, Shane M wrote:
+>>> Hi Hannes,
+>>>
+>>> How do you know that a request for an async scan is complete (I'm a=
+ssuming
+>>> that you get add or change udev events)? Assuming that someone has
+manually
+>>> started a scan on something (e.g. some newly presented devices afte=
+r
+boot)
+>>> and all scans are going to be async how do you know when it is comp=
+lete
+>>> rather than waiting in a work queue? An example may be a sysfs
+>>> file that contains unscanned, pending, scanning, scanned so you kno=
+w
+>>> when it's complete at the appropriate level in sysfs (the hba and t=
+he rports)
+>>> so you know when can continue if you're polling the status (e.g.
+checking
+>>> as part of system admin work with newly
+>>> presented rports so you can then do something with them).
+>>>
+>> Thing is, I don't.
+>>
+>> We have had a similar discussion with the IBM zfcp folks, that it wo=
+uld
+>> be desirable to have a marker in sysfs telling us that the rport is
+>> stable (ie no scanning in progress).
+>> However, this cannot be at the rport level (as the rport itself migh=
+t be
+>> going away), but rather at some higher level (eg fc_host).
 >=20
-> Wouldn't this be simpler by just writing:
+> I am not sure this really helps.  If another process initiates a scan
+> then sysfs might report that the scanning was still in progress.  If
+> scans are initiated often enough, you might never observe a stable st=
+ate.
 >=20
-> if ((rport->port_state =3D=3D FC_PORTSTATE_ONLINE) &&
->     (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
->     !i->f->disable_target_scan && !disable_target_scan) {
->=20
-> that being said I don't understand why we need this in the FC transpo=
-rt
-> class.  What is so special about FC that we do it here and not global=
-ly?
->=20
-Main reasons being that
-a) it's most commonly on FC where you end up having thousands of LUNs;
-SAS domains are of finite size and you'd need to string quite a few SAS
-expanders together to achieve a similar setup. And iSCSI is ... well.
-b) FC already has the required infrastructure in place where you easily
-can suppress a target scan, making the patch really trivial.
+True.
 
-So rather than trying to come up with a generic solution and an overly
-complicated patch I opted for the simpler version :-)
+Which is one of the reasons why this particular item hasn't made any
+progress yet.
 
 Cheers,
 
@@ -79,8 +69,9 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
