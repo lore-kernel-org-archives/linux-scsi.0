@@ -1,82 +1,88 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] eata: Convert eata driver as normal PCI and platform
- device drivers
-Date: Wed, 2 Mar 2016 11:20:22 +0800
-Message-ID: <56D65BF6.1050905@linux.intel.com>
-References: <1456801344-3318-1-git-send-email-jiang.liu@linux.intel.com>
- <20160301065247.GA6670@infradead.org> <56D5D0F4.4060301@internode.on.net>
- <56D60B5A.3080209@internode.on.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: implement 'disable_target_scan'
+ module parameter
+Date: Wed, 2 Mar 2016 13:59:39 +0800
+Message-ID: <56D6814B.9020302@suse.de>
+References: <1456127462-2817-1-git-send-email-hare@suse.de>
+ <1456127462-2817-2-git-send-email-hare@suse.de>
+ <20160301131252.GA7786@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:56870 "EHLO mga04.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:48956 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751097AbcCBDU1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2016 22:20:27 -0500
-In-Reply-To: <56D60B5A.3080209@internode.on.net>
+	id S1750738AbcCBF7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2016 00:59:53 -0500
+In-Reply-To: <20160301131252.GA7786@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arthur Marsh <arthur.marsh@internode.on.net>, Christoph Hellwig <hch@infradead.org>
-Cc: Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "Ballabio, Dario" <dario.ballabio@emc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.com>, linux-scsi@vger.kernel.org
 
-On 2016/3/2 5:36, Arthur Marsh wrote:
-> 
-> 
-> Arthur Marsh wrote on 02/03/16 03:57:
->>
->>
->> Christoph Hellwig wrote on 01/03/16 17:22:
->>> Hi Jiang.
->>>
->>> I'd love to see this patch in and abuse of the old PCI API gone.
->>>
->>> Did you resolve the problems Arthur saw with the previous iteratons
->>> of the patch?
->>>
->>
->> I applied Jiang Liu's patch of 1st March 2016 to a clean kernel
->> 4.5.0-rc6 source, removed my workaround of removing and re-adding the
->> eata module before mounting file-systems that are on disks attached to
->> the DPT SCSI card using the eata driver, and was able to kexec from the
->> new kernel successfully.
->>
->> Arthur.
-> 
-> I spoke too soon, without removing and re-inserting the eata module
-> before any filesystems on disks attached to the DPT controller were
-> mounted, I'd get the following messages, similar to ones previously
-> reported:
-> 
-> sd 0:0:6:0: tag#0 abort, mbox 1.
-> EATA0: abort, mbox 1 is in use.
-> sd 0:0:6:0: tag#0 reset, enter.
-> EATA0: reset, mbox 1 in reset.
-> EATA0: reset, board reset done, enabling interrupts.
-> EATA0: reset, interrupts disabled, loops 100415.
-> EATA0, reset, mbox 1 locked, DID_RESET, done.
-> EATA0: reset, exit, done.
-> 
-> 
-> and so on, finally hanging after printing "kexec_core: Starting new
-> kernel" (I have a photo of the messages if they're needed).
-> 
-> So I'm still using the new patch but have to continue to remove and
-> reinsert eata at start-up before any attempts to mount disks attatched
-> to the DPT SCSI controller.
-Hi Authur,
-	Thanks for testing. So current situation is that we have
-a working driver for normal case, but still have issues during kexec.
-Per my understanding, we need to implement a PCI device driver shutdown
-callback to reset the RAID controller. I have once tried to implement
-the shutdown callback, but it doesn't work. And I have no deep
-understanding of the RAID controller and have no hardware for
-experiment too, so have no idea about next step.
-	Maybe one acceptable way is to merge this patch first, so
-we get a basic working driver, and then ask help from expert to
-solve the kexec issue.
-Thanks!
-Gerry
+On 03/01/2016 09:12 PM, Christoph Hellwig wrote:
+> On Mon, Feb 22, 2016 at 08:51:01AM +0100, Hannes Reinecke wrote:
+>>  /*
+>> + * disable_target_scan: Disable target scan per default
+>> + *   useful on larger installations where only a small
+>> + *   number of LUNs are required for booting.
+>> + */
+>> +static bool fc_disable_target_scan;
+>> +
+>> +module_param_named(disable_target_scan, fc_disable_target_scan,
+>> +		   bool, S_IRUGO|S_IWUSR);
+>> +MODULE_PARM_DESC(disable_target_scan,
+>> +		 "Disable target scan on remote ports (default=3D0)");
+>> +
+>> +/*
+>>   * Redefine so that we can have same named attributes in the
+>>   * sdev/starget/host objects.
+>>   */
+>> @@ -3272,10 +3284,14 @@ fc_scsi_scan_rport(struct work_struct *work)
+>>  	struct Scsi_Host *shost =3D rport_to_shost(rport);
+>>  	struct fc_internal *i =3D to_fc_internal(shost->transportt);
+>>  	unsigned long flags;
+>> +	bool disable_target_scan;
+>> +
+>> +	disable_target_scan =3D fc_disable_target_scan ?
+>> +		fc_disable_target_scan : i->f->disable_target_scan;
+>> =20
+>>  	if ((rport->port_state =3D=3D FC_PORTSTATE_ONLINE) &&
+>>  	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
+>> -	    !(i->f->disable_target_scan)) {
+>> +	    !disable_target_scan) {
+>=20
+> Wouldn't this be simpler by just writing:
+>=20
+> if ((rport->port_state =3D=3D FC_PORTSTATE_ONLINE) &&
+>     (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
+>     !i->f->disable_target_scan && !disable_target_scan) {
+>=20
+> that being said I don't understand why we need this in the FC transpo=
+rt
+> class.  What is so special about FC that we do it here and not global=
+ly?
+>=20
+Main reasons being that
+a) it's most commonly on FC where you end up having thousands of LUNs;
+SAS domains are of finite size and you'd need to string quite a few SAS
+expanders together to achieve a similar setup. And iSCSI is ... well.
+b) FC already has the required infrastructure in place where you easily
+can suppress a target scan, making the patch really trivial.
 
-> 
-> Arthur.
+So rather than trying to come up with a generic solution and an overly
+complicated patch I opted for the simpler version :-)
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
