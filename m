@@ -1,70 +1,63 @@
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [PATCH] eata: Convert eata driver as normal PCI and platform
- device drivers
-Date: Wed, 2 Mar 2016 17:22:26 +1030
-Message-ID: <56D68DAA.5000206@internode.on.net>
-References: <1456801344-3318-1-git-send-email-jiang.liu@linux.intel.com>
- <20160301065247.GA6670@infradead.org> <56D5D0F4.4060301@internode.on.net>
- <56D60B5A.3080209@internode.on.net> <56D65BF6.1050905@linux.intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
+Date: Wed, 2 Mar 2016 15:33:14 +0800
+Message-ID: <56D6973A.4070901@suse.de>
+References: <1456807945-88857-1-git-send-email-hare@suse.de>
+ <20160301130448.GB7616@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56D65BF6.1050905@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiang Liu <jiang.liu@linux.intel.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "Ballabio, Dario" <dario.ballabio@emc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:53738 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751171AbcCBHd2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:33:28 -0500
+In-Reply-To: <20160301130448.GB7616@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
+On 03/01/2016 09:04 PM, Christoph Hellwig wrote:
+> On Tue, Mar 01, 2016 at 05:52:25AM +0100, Hannes Reinecke wrote:
+>> +	struct device *dev =3D container_of(kobj, struct device, kobj);
+>> +	struct scsi_device *sdev =3D to_scsi_device(dev);
+>> +
+>> +
+>> +	rcu_read_lock();
+>> +	if (attr =3D=3D &dev_attr_vpd_pg80 &&
+>> +	    !rcu_dereference(sdev->vpd_pg80)) {
+>> +		rcu_read_unlock();
+>> +		return 0;
+>> +	}
+>> +	if (attr =3D=3D &dev_attr_vpd_pg83 &&
+>> +	    !rcu_dereference(sdev->vpd_pg83)) {
+>> +		rcu_read_unlock();
+>> +		return 0;
+>> +	}
+>> +	rcu_read_unlock();
+>=20
+> We are only checking the pointers for being non-zero.  No need for th=
+e
+> rcu_read_lock() or rcu_dereference() here.
+>=20
+Better to be same than sorry; some overly clever code analysis tool
+might trip over it otherwise.
 
+> Otherwise this looks fine to me.
 
-Jiang Liu wrote on 02/03/16 13:50:
+Reviewed-by: ?
 
->> I spoke too soon, without removing and re-inserting the eata module
->> before any filesystems on disks attached to the DPT controller were
->> mounted, I'd get the following messages, similar to ones previously
->> reported:
->>
->> sd 0:0:6:0: tag#0 abort, mbox 1.
->> EATA0: abort, mbox 1 is in use.
->> sd 0:0:6:0: tag#0 reset, enter.
->> EATA0: reset, mbox 1 in reset.
->> EATA0: reset, board reset done, enabling interrupts.
->> EATA0: reset, interrupts disabled, loops 100415.
->> EATA0, reset, mbox 1 locked, DID_RESET, done.
->> EATA0: reset, exit, done.
->>
->>
->> and so on, finally hanging after printing "kexec_core: Starting new
->> kernel" (I have a photo of the messages if they're needed).
->>
->> So I'm still using the new patch but have to continue to remove and
->> reinsert eata at start-up before any attempts to mount disks attatched
->> to the DPT SCSI controller.
-> Hi Authur,
-> 	Thanks for testing. So current situation is that we have
-> a working driver for normal case, but still have issues during kexec.
-> Per my understanding, we need to implement a PCI device driver shutdown
-> callback to reset the RAID controller. I have once tried to implement
-> the shutdown callback, but it doesn't work. And I have no deep
-> understanding of the RAID controller and have no hardware for
-> experiment too, so have no idea about next step.
-> 	Maybe one acceptable way is to merge this patch first, so
-> we get a basic working driver, and then ask help from expert to
-> solve the kexec issue.
-> Thanks!
-> Gerry
+Cheers,
 
-My controller is a DPT2044W, it does not provide any hardware RAID 
-capabilities.
-
-I'm not sure where responsibility lies in driver development but I'm 
-still using the DPT2044W controller which worked on the 4.2.0 kernels 
-and earlier and this problem has been around for nearly 5 months now.
-
-I can do builds and tests of any patches that people can provide, but am 
-not a C programmer, much less a Linux driver developer.
-
-Regards,
-
-Arthur.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
