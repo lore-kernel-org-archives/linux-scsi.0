@@ -1,47 +1,59 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
-Date: Wed, 2 Mar 2016 10:19:16 +0100
-Message-ID: <20160302091916.GE1308@lst.de>
-References: <1456807945-88857-1-git-send-email-hare@suse.de> <20160301130448.GB7616@lst.de> <56D6973A.4070901@suse.de>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH v1 2/3] PM / sleep: try to runtime suspend for direct complete
+Date: Wed, 2 Mar 2016 10:26:44 +0100
+Message-ID: <CAPDyKFqPpZ18ZJ27GU9O4aLH54C5L4Tudkx_bgjULvjRe32RuA@mail.gmail.com>
+References: <1456359089-19807-1-git-send-email-dbasehore@chromium.org>
+	<1456359089-19807-2-git-send-email-dbasehore@chromium.org>
+	<CAPDyKFqjLuy63fsZQGE7DSR818dUt4Z+rTLPOG_gbsrQ0-htHw@mail.gmail.com>
+	<CAGAzgsocODbT9+sKE0tR1W5V=68FkX=O6_mvSwhzu7Lq9E7NtQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45065 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751240AbcCBJTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2016 04:19:18 -0500
-Content-Disposition: inline
-In-Reply-To: <56D6973A.4070901@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGAzgsocODbT9+sKE0tR1W5V=68FkX=O6_mvSwhzu7Lq9E7NtQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "dbasehore ." <dbasehore@chromium.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Len Brown <len.brown@intel.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Wed, Mar 02, 2016 at 03:33:14PM +0800, Hannes Reinecke wrote:
-> >> +	rcu_read_lock();
-> >> +	if (attr == &dev_attr_vpd_pg80 &&
-> >> +	    !rcu_dereference(sdev->vpd_pg80)) {
-> >> +		rcu_read_unlock();
-> >> +		return 0;
-> >> +	}
-> >> +	if (attr == &dev_attr_vpd_pg83 &&
-> >> +	    !rcu_dereference(sdev->vpd_pg83)) {
-> >> +		rcu_read_unlock();
-> >> +		return 0;
-> >> +	}
-> >> +	rcu_read_unlock();
-> > 
-> > We are only checking the pointers for being non-zero.  No need for the
-> > rcu_read_lock() or rcu_dereference() here.
-> > 
-> Better to be same than sorry; some overly clever code analysis tool
-> might trip over it otherwise.
+On 2 March 2016 at 09:31, dbasehore . <dbasehore@chromium.org> wrote:
+>
+> On Mar 1, 2016 12:41, "Ulf Hansson" <ulf.hansson@linaro.org> wrote:
+>>
+>> On 25 February 2016 at 01:11, Derek Basehore <dbasehore@chromium.org>
+>> wrote:
+>> > This tries to runtime suspend devices that are still active for direct
+>> > complete. This is for cases such as autosuspend delays which leaves
+>> > devices able to runtime suspend but still active. It's beneficial in
+>> > this case to runtime suspend the device to take advantage of direct
+>> > complete when possible.
+>>
+>> Unfortunate this doesn't work. In the device_prepare() phase the PM
+>> core prevents runtime suspend via a call to pm_runtime_get_noresume().
+>>
+>> Kind regards
+>> Uffe
+>>
+>
+> A call to pm_runtime_put_sync_suspend should work. We can't do this
+> earlier, because we don't know if the device will actually use
+> direct_complete due to its children. Calling pm_runtime_put_noidle may
+> allow another pm_runtime_put to runtime suspend the device, but we're
+> trying to do that anyways. Also, we can't just call ...put_sync since that
+> might not suspend due to autosuspend delays.
+>
+> We just need to balance the call with another get_noresume after. Am I
+> missing anything?
 
-It shouldn't.  There is no dereference going on here.
+Yes.
 
-> 
-> > Otherwise this looks fine to me.
-> 
-> Reviewed-by: ?
+The important part that you need to take into consideration is the
+sysfs intererface for runtime PM of devices. It allows userspace to
+prevent runtime PM suspend (pm_runtime_forbid()). Therefore, you
+simply can not rely on the regular runtime PM APIs to put a device
+into low power state during system PM.
 
-Only without the cargo culted rcu magic.
+In cases of a runtime PM centric subsystem/driver, it can instead use
+pm_runtime_force_suspend().
+
+Kind regards
+Uffe
