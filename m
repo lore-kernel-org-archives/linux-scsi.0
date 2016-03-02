@@ -1,63 +1,24 @@
-From: "dbasehore ." <dbasehore@chromium.org>
-Subject: Re: [PATCH v2 2/3] PM / sleep: try to runtime suspend for direct complete
-Date: Tue, 1 Mar 2016 13:48:06 -0800
-Message-ID: <CAGAzgsrO6k0L8zeKhhWF+A6uFsWfW2bbb5poLOzy_NGinvs3hQ@mail.gmail.com>
-References: <1456359748-22838-1-git-send-email-dbasehore@chromium.org>
-	<1456359748-22838-2-git-send-email-dbasehore@chromium.org>
-	<3183435.BG93qPHVgS@vostro.rjw.lan>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] qlogicpti: Return correct error code
+Date: Tue, 01 Mar 2016 20:08:13 -0500
+Message-ID: <yq1twkpbsaq.fsf@sermon.lab.mkp.net>
+References: <20160217133254.GA31334@amitoj-Inspiron-3542>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3183435.BG93qPHVgS@vostro.rjw.lan>
+In-Reply-To: <20160217133254.GA31334@amitoj-Inspiron-3542> (Amitoj Kaur
+	Chawla's message of "Wed, 17 Feb 2016 19:02:54 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux-pm mailing list <linux-pm@vger.kernel.org>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, Shane M Seymour <shane.seymour@hpe.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Feb 27, 2016 at 5:31 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Wednesday, February 24, 2016 04:22:27 PM Derek Basehore wrote:
->> This tries to runtime suspend devices that are still active for direct
->> complete. This is for cases such as autosuspend delays which leaves
->> devices able to runtime suspend but still active. It's beneficial in
->> this case to runtime suspend the device to take advantage of direct
->> complete when possible.
->>
->> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
->> Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
->> ---
->>  drivers/base/power/main.c | 7 ++++++-
->>  1 file changed, 6 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
->> index e0017d9..9693032 100644
->> --- a/drivers/base/power/main.c
->> +++ b/drivers/base/power/main.c
->> @@ -1380,7 +1380,12 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
->>               goto Complete;
->>
->>       if (dev->power.direct_complete) {
->> -             if (pm_runtime_status_suspended(dev)) {
->> +             /*
->> +              * Check if we're runtime suspended. If not, try to runtime
->> +              * suspend for autosuspend cases.
->> +              */
->> +             if (pm_runtime_status_suspended(dev) ||
->> +                 !pm_runtime_suspend(dev)) {
->>                       pm_runtime_disable(dev);
->>                       if (pm_runtime_status_suspended(dev))
->>                               goto Complete;
->>
->
-> This can be done somewhat simpler, because pm_runtime_suspend() will check
-> if the device has already been suspended:
->
->         ret = pm_runtime_suspend(dev);
->         if (ret >= 0) {
->
-> and you don't need the extra pm_runtime_status_suspended(dev) check.
->
-> Thanks,
-> Rafael
->
+>>>>> "Amitoj" == Amitoj Kaur Chawla <amitoj1606@gmail.com> writes:
 
-I'll look into simplifying it for the next patch set.
+Amitoj> The return value of of_ioremap on failure should be -ENODEV and
+Amitoj> not -1.
+
+Applied to 4.6/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
