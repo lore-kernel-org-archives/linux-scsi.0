@@ -1,197 +1,207 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v9 3/3] add support for DWC UFS Host Controller
-Date: Wed, 02 Mar 2016 20:55:28 +0100
-Message-ID: <5606371.ipFvUUmgV9@wuerfel>
-References: <cover.1455549221.git.jpinto@synopsys.com> <2698029.eKNCoG3LWy@wuerfel> <56D718F7.9060200@synopsys.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56D718F7.9060200@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, mark.rutland@arm.com, robh@kernel.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+From: Sasha Levin <sasha.levin@oracle.com>
+Subject: [added to the 4.1 stable tree] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed,  2 Mar 2016 15:13:41 -0500
+Message-ID: <1456949673-25036-34-git-send-email-sasha.levin@oracle.com>
+References: <1456949673-25036-1-git-send-email-sasha.levin@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:29140 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756335AbcCBUPL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2016 15:15:11 -0500
+In-Reply-To: <1456949673-25036-1-git-send-email-sasha.levin@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stable@vger.kernel.org, stable-commits@vger.kernel.org
+Cc: Quinn Tran <quinn.tran@qlogic.com>, Alexander Gordeev <agordeev@redhat.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Sasha Levin <sasha.levin@oracle.com>
 
-On Wednesday 02 March 2016 16:46:47 Joao Pinto wrote:
-> On 2/19/2016 3:03 PM, Arnd Bergmann wrote:
-> > On Thursday 18 February 2016 17:20:27 Joao Pinto wrote:
-> >> diff --git a/Documentation/devicetree/bindings/ufs/ufs-dwc.txt b/Documentation/devicetree/bindings/ufs/ufs-dwc.txt
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-> > Please for the last time (!) add a proper version number of the
-> > specific IP block to the compatible strings so you can identify
-> > what hardware you are talking to.
-> > 
-> > You earlier confused the version number of the UFS standard with
-> > the version number of the controller, and that has been clarified
-> > now, but you really still need to use a version for the hardware
-> > as well.
-> 
-> Ok, we can have a "snps,ufshcd-dwc-1.1" and a "snps,ufshcd-dwc-2.0". Agree?
+This patch has been added to the 4.1 stable tree. If you have any
+objections, please let us know.
 
-I have no idea what versions of the dwc hardware block exist, but
-I find it highly suspicious that the numbers happen to be the
-same as the UFS protocol numbers, so I'd say that is probably
-not the version of the IP block.
+===============
 
-There are a few things you could try to find out the actual
-version:
+[ Upstream commit 84e32a06f4f8756ce9ec3c8dc7e97896575f0771 ]
 
-* If you are able to contact the team that worked on the test chip,
-  please ask them what hardware revision you have.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-* if you have some form of documentation of the hardware, look
-  on the first few pages of the manual that describes the registers
-  to see if the document has a revision history.
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
 
-* If you have access to the hardware design files, look at the
-  file names.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 10 +++++-----
+ drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
+ drivers/scsi/qla2xxx/qla_mid.c  |  4 ++--
+ drivers/scsi/qla2xxx/qla_os.c   |  6 ++++++
+ drivers/scsi/qla2xxx/qla_tmpl.c | 16 ++++++++++++++++
+ 5 files changed, 31 insertions(+), 9 deletions(-)
 
-On https://www.synopsys.com/dw/ipdir.php?ds=ufs, I see a
-version "1.30a" listed, which follows the typical numbering
-scheme that your employer uses, a single digit followed by
-a dot and a two-digit number and then a letter.
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index b323ad0..60f9651 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2194,7 +2194,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 	/* Clear outstanding commands array. */
+ 	for (que = 0; que < ha->max_req_queues; que++) {
+ 		req = ha->req_q_map[que];
+-		if (!req)
++		if (!req || !test_bit(que, ha->req_qid_map))
+ 			continue;
+ 		req->out_ptr = (void *)(req->ring + req->length);
+ 		*req->out_ptr = 0;
+@@ -2211,7 +2211,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 
+ 	for (que = 0; que < ha->max_rsp_queues; que++) {
+ 		rsp = ha->rsp_q_map[que];
+-		if (!rsp)
++		if (!rsp || !test_bit(que, ha->rsp_qid_map))
+ 			continue;
+ 		rsp->in_ptr = (void *)(rsp->ring + rsp->length);
+ 		*rsp->in_ptr = 0;
+@@ -4957,7 +4957,7 @@ qla25xx_init_queues(struct qla_hw_data *ha)
+ 
+ 	for (i = 1; i < ha->max_rsp_queues; i++) {
+ 		rsp = ha->rsp_q_map[i];
+-		if (rsp) {
++		if (rsp && test_bit(i, ha->rsp_qid_map)) {
+ 			rsp->options &= ~BIT_0;
+ 			ret = qla25xx_init_rsp_que(base_vha, rsp);
+ 			if (ret != QLA_SUCCESS)
+@@ -4972,8 +4972,8 @@ qla25xx_init_queues(struct qla_hw_data *ha)
+ 	}
+ 	for (i = 1; i < ha->max_req_queues; i++) {
+ 		req = ha->req_q_map[i];
+-		if (req) {
+-		/* Clear outstanding commands array. */
++		if (req && test_bit(i, ha->req_qid_map)) {
++			/* Clear outstanding commands array. */
+ 			req->options &= ~BIT_0;
+ 			ret = qla25xx_init_req_que(base_vha, req);
+ 			if (ret != QLA_SUCCESS)
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 6dc14cd..1f3991b 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2992,9 +2992,9 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
++		ha->msix_count = ret;
++		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
+-	ha->msix_count = ret;
+-	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index cc94192..63abed1 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -601,7 +601,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
+ 	/* Delete request queues */
+ 	for (cnt = 1; cnt < ha->max_req_queues; cnt++) {
+ 		req = ha->req_q_map[cnt];
+-		if (req) {
++		if (req && test_bit(cnt, ha->req_qid_map)) {
+ 			ret = qla25xx_delete_req_que(vha, req);
+ 			if (ret != QLA_SUCCESS) {
+ 				ql_log(ql_log_warn, vha, 0x00ea,
+@@ -615,7 +615,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
+ 	/* Delete response queues */
+ 	for (cnt = 1; cnt < ha->max_rsp_queues; cnt++) {
+ 		rsp = ha->rsp_q_map[cnt];
+-		if (rsp) {
++		if (rsp && test_bit(cnt, ha->rsp_qid_map)) {
+ 			ret = qla25xx_delete_rsp_que(vha, rsp);
+ 			if (ret != QLA_SUCCESS) {
+ 				ql_log(ql_log_warn, vha, 0x00eb,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index e7a97a57..d007255 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -398,6 +398,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
+ 	int cnt;
+ 
+ 	for (cnt = 0; cnt < ha->max_req_queues; cnt++) {
++		if (!test_bit(cnt, ha->req_qid_map))
++			continue;
++
+ 		req = ha->req_q_map[cnt];
+ 		qla2x00_free_req_que(ha, req);
+ 	}
+@@ -405,6 +408,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
+ 	ha->req_q_map = NULL;
+ 
+ 	for (cnt = 0; cnt < ha->max_rsp_queues; cnt++) {
++		if (!test_bit(cnt, ha->rsp_qid_map))
++			continue;
++
+ 		rsp = ha->rsp_q_map[cnt];
+ 		qla2x00_free_rsp_que(ha, rsp);
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 962cb89..af806fd 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -395,6 +395,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 	if (ent->t263.queue_type == T263_QUEUE_TYPE_REQ) {
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
++
++			if (!test_bit(i, vha->hw->req_qid_map))
++				continue;
++
+ 			if (req || !buf) {
+ 				length = req ?
+ 				    req->length : REQUEST_ENTRY_CNT_24XX;
+@@ -408,6 +412,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 	} else if (ent->t263.queue_type == T263_QUEUE_TYPE_RSP) {
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
++
++			if (!test_bit(i, vha->hw->rsp_qid_map))
++				continue;
++
+ 			if (rsp || !buf) {
+ 				length = rsp ?
+ 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
+@@ -634,6 +642,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 	if (ent->t274.queue_type == T274_QUEUE_TYPE_REQ_SHAD) {
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
++
++			if (!test_bit(i, vha->hw->req_qid_map))
++				continue;
++
+ 			if (req || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
+@@ -645,6 +657,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_RSP_SHAD) {
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
++
++			if (!test_bit(i, vha->hw->rsp_qid_map))
++				continue;
++
+ 			if (rsp || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
+-- 
+2.5.0
 
-There is also a test chip with version 1.10a listed on the
-same page, and that follows the same numbering system.
-
-See if you can find a version number that fits into that scheme
-in the documents you have available.
-
-> >> +config SCSI_UFS_DWC_TC
-> >> +	bool "Support for the Synopsys Test Chip"
-> >> +	depends on SCSI_UFS_DWC_HOOKS && (SCSI_UFSHCD_PCI || SCSI_UFS_DWC_PLAT)
-> >> +	---help---
-> >> +	  Synopsys Test Chip is a Phy for prototyping purposes.
-> >> +	  This selects the support for the Synopsys Test Chip.
-> >> +
-> >> +	  Select this if you have a Synopsys Test Chip.
-> >> +	  If unsure, say N.
-> >> +
-> >> +config SCSI_UFS_DWC_20BIT_RMMI
-> >> +	bool "20-bit RMMI support"
-> >> +	depends on SCSI_UFS_DWC_TC
-> >> +	---help---
-> >> +	  This specifies that the Synopsys Test Chip supports 20-bit RMMI.
-> >> +
-> >> +	  Select this if you are using a 20-bit RMMI Synopsys Test Chip.
-> >> +	  If unsure, say N.
-> >> +
-> >> +config SCSI_UFS_DWC_40BIT_RMMI
-> >> +	bool "40-bit RMMI support"
-> >> +	depends on SCSI_UFS_DWC_TC
-> >> +	---help---
-> >> +	  Synopsys Test Chip is a Phy for prototyping purposes.
-> >> +
-> >> +	  Select this if you are using a 40-bit RMMI Synopsys Test Chip.
-> >> +	  If unsure, say N.
-> > 
-> > I think it would be better to remove the SCSI_UFS_DWC_20BIT_RMMI
-> > and SCSI_UFS_DWC_40BIT_RMMI configuration options now, and always
-> > support both. There is not really much need for the options
-> > as this is just a test chip, and nobody is going to care much
-> > about saving a few bytes of object code.
-> 
-> We need to know if we are dealing with a 20-bit test chip or a 40-bit test chip
-> because the initialization is different. That can be made in the device tree as
-> you say bellow, but we can also use a setup in which the host is a PC (so no
-> device tree) connected by pci bus to an fpga containing the UFS controller.
-> Having this, I think that the only way is to choose the 20/40bit stuff in the
-> menuconfig.
-
-NAK.
-
-Mutually exclusive compile-time configuration options are always wrong.
-
-If the PCI hosts both have the same PCI device ID and there is no other
-identification register that lets you find out which one you have,
-maybe you can use a module parameter that defaults to invalid and that
-has to be set explicitly when loading the PCI driver?
-
-Are both test chips the same way? I see that the driver supports two
-distinct PCI device IDs, so please check of they both come in variations
-for the two PHYs, or if at least one of them always uses the same PHY
-so you don't need the module parameter for that.
-
-> >> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> >> index 8303bcc..bab8c05 100644
-> >> --- a/drivers/scsi/ufs/Makefile
-> >> +++ b/drivers/scsi/ufs/Makefile
-> >> @@ -1,4 +1,7 @@
-> >>  # UFSHCD makefile
-> >> +obj-$(CONFIG_SCSI_UFS_DWC_HOOKS) += ufshcd-dwc.o
-> >> +obj-$(CONFIG_SCSI_UFS_DWC_PLAT) += ufs-dwc.o
-> >> +obj-$(CONFIG_SCSI_UFS_DWC_PCI) += ufs-dwc-pci.o
-> >>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
-> >>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
-> >>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-> > 
-> > However, please split out the SCSI_UFS_DWC_TC specific bits into
-> > a separate file, and put the module_platform_driver() bits into
-> > that file, to get the right abstraction where the most specific
-> > driver calls into the next driver, like
-> > 
-> > dwc-test-chip -> dwc-platform -> dwc -> ufs
-> 
-> I think that it is a good idea and we isolate the test chip logic. If in the
-> future anyone uses DWC core with a real PHY then they can have a phy driver
-> calling dwc-platform. Agree?
-
-Yes, that would be good. It's likely that such a system would use
-some licensed IP block for the PHY, which can then have a separate
-PHY driver.
-
-> > It's possible you can leave out the dwc-platform level here, as there
-> > are no other users for now, we can add others later as needed.
-> > 
-> >> +/**
-> >> + * ufshcd_dwc_setup_tc()
-> >> + * This function configures Local (host) Synopsys TC specific attributes
-> >> + *
-> >> + * @hba: Pointer to drivers structure
-> >> + *
-> >> + * Returns 0 on success non-zero value on failure
-> >> + */
-> >> +static int ufshcd_dwc_setup_tc(struct ufs_hba *hba)
-> >> +{
-> >> +	int ret = 0;
-> >> +
-> >> +#ifdef CONFIG_SCSI_UFS_DWC_40BIT_RMMI
-> >> +	dev_info(hba->dev, "Configuring Test Chip 40-bit RMMI\n");
-> >> +	ret = ufshcd_dwc_setup_40bit_rmmi(hba);
-> >> +	if (ret) {
-> >> +		dev_err(hba->dev, "Configuration failed\n");
-> >> +		goto out;
-> >> +	}
-> >> +#endif
-> >> +
-> >> +#ifdef CONFIG_SCSI_UFS_DWC_20BIT_RMMI
-> >> +	dev_info(hba->dev, "Configuring Test Chip 20-bit RMMI\n");
-> >> +	ret = ufshcd_dwc_setup_20bit_rmmi(hba);
-> >> +	if (ret) {
-> >> +		dev_err(hba->dev, "Configuration failed\n");
-> >> +		goto out;
-> >> +	}
-> >> +#endif
-> > 
-> > You have changed the #if/#else into two #if sections, but this
-> > still seems broken when both are enabled, it just cannot work
-> > unless you have some runtime detection in place.
-> > 
-> 
-> Please check my comments upstream.
-> 
-> > Depending on whether this is actually the same hardware with
-> > different settings, or different variants of the test chip,
-> > please use either a boolean DT property to determine which
-> > one you need, or use a separate "compatible" string in DT
-> > for each version of the test chip.
-> 
-> As I say upstream, we can have a setup with the kernel running in a PC connected
-> to the UFS controller by PCI, so the DT scenario is no good.
-
-The DT scenario can work out of the box, that is fine, you just
-need a hack in the PCI driver to work around the lack of identification
-there.
-
-	Arnd
