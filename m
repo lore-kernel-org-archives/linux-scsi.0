@@ -1,27 +1,51 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [RFC 24/34] iscsi-target: validate conn operational parameters
-Date: Wed, 2 Mar 2016 17:48:19 +0530
-Message-ID: <20160302121818.GB1795@chelsio.com>
-References: <cover.1455467089.git.varun@chelsio.com>
- <940698fdb1ca47d8c392fa687f971842d215d083.1455467089.git.varun@chelsio.com>
- <20160301150318.GJ9738@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160301150318.GJ9738@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "roland@kernel.org" <roland@kernel.org>, SWise OGC <swise@opengridcomputing.com>, Indranil Choudhury <indranil@chelsio.com>, Karen Xie <kxie@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 08/14] scsi: mvumi: use __maybe_unused to hide pm functions
+Date: Wed,  2 Mar 2016 16:59:00 +0100
+Message-ID: <1456934350-1389172-9-git-send-email-arnd@arndb.de>
+References: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 01, 2016 at 08:33:18PM +0530, Christoph Hellwig wrote:
-> On Sun, Feb 14, 2016 at 11:15:31PM +0530, Varun Prakash wrote:
-> > call validate params function if registered
-> > by transport driver before starting negotiation,
-> > so that transport driver can validate and update
-> > the value of parameters.
-> 
-> Should go together with the introduction of the method.
+The mvumi scsi hides the references to its suspend/resume functions
+in an #ifdef but does not hide the implementation the same way:
 
-Ok, I will update it in v2 series. 
+drivers/scsi/mvumi.c:2632:12: error: 'mvumi_suspend' defined but not used [-Werror=unused-function]
+drivers/scsi/mvumi.c:2651:12: error: 'mvumi_resume' defined but not used [-Werror=unused-function]
+
+This adds __maybe_unused annotations so the compiler knows
+it can silently drop them instead of warning, while avoiding
+the addition of another #ifdef.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/mvumi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 02360de6b7e0..39285070f3b5 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2629,7 +2629,7 @@ static void mvumi_shutdown(struct pci_dev *pdev)
+ 	mvumi_flush_cache(mhba);
+ }
+ 
+-static int mvumi_suspend(struct pci_dev *pdev, pm_message_t state)
++static int __maybe_unused mvumi_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct mvumi_hba *mhba = NULL;
+ 
+@@ -2648,7 +2648,7 @@ static int mvumi_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	return 0;
+ }
+ 
+-static int mvumi_resume(struct pci_dev *pdev)
++static int __maybe_unused mvumi_resume(struct pci_dev *pdev)
+ {
+ 	int ret;
+ 	struct mvumi_hba *mhba = NULL;
+-- 
+2.7.0
