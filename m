@@ -1,34 +1,47 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] scsi_transport_fc: implement 'disable_target_scan'
-	module parameter
-Date: Wed, 2 Mar 2016 10:18:42 +0100
-Message-ID: <20160302091842.GD1308@lst.de>
-References: <1456127462-2817-1-git-send-email-hare@suse.de> <1456127462-2817-2-git-send-email-hare@suse.de> <20160301131252.GA7786@lst.de> <56D6814B.9020302@suse.de>
+Subject: Re: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
+Date: Wed, 2 Mar 2016 10:19:16 +0100
+Message-ID: <20160302091916.GE1308@lst.de>
+References: <1456807945-88857-1-git-send-email-hare@suse.de> <20160301130448.GB7616@lst.de> <56D6973A.4070901@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45056 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:45065 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754123AbcCBJSo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2016 04:18:44 -0500
+	id S1751240AbcCBJTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2016 04:19:18 -0500
 Content-Disposition: inline
-In-Reply-To: <56D6814B.9020302@suse.de>
+In-Reply-To: <56D6973A.4070901@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.com>, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Wed, Mar 02, 2016 at 01:59:39PM +0800, Hannes Reinecke wrote:
-> Main reasons being that
-> a) it's most commonly on FC where you end up having thousands of LUNs;
-> SAS domains are of finite size and you'd need to string quite a few SAS
-> expanders together to achieve a similar setup. And iSCSI is ... well.
-> b) FC already has the required infrastructure in place where you easily
-> can suppress a target scan, making the patch really trivial.
+On Wed, Mar 02, 2016 at 03:33:14PM +0800, Hannes Reinecke wrote:
+> >> +	rcu_read_lock();
+> >> +	if (attr == &dev_attr_vpd_pg80 &&
+> >> +	    !rcu_dereference(sdev->vpd_pg80)) {
+> >> +		rcu_read_unlock();
+> >> +		return 0;
+> >> +	}
+> >> +	if (attr == &dev_attr_vpd_pg83 &&
+> >> +	    !rcu_dereference(sdev->vpd_pg83)) {
+> >> +		rcu_read_unlock();
+> >> +		return 0;
+> >> +	}
+> >> +	rcu_read_unlock();
+> > 
+> > We are only checking the pointers for being non-zero.  No need for the
+> > rcu_read_lock() or rcu_dereference() here.
+> > 
+> Better to be same than sorry; some overly clever code analysis tool
+> might trip over it otherwise.
+
+It shouldn't.  There is no dereference going on here.
+
 > 
-> So rather than trying to come up with a generic solution and an overly
-> complicated patch I opted for the simpler version :-)
+> > Otherwise this looks fine to me.
+> 
+> Reviewed-by: ?
 
-Having a global disable just for all FC is still odd.  Either you
-do it for all devices and always initiate a manual scan, or you
-need to do it on a per-host basis somehow.
+Only without the cargo culted rcu magic.
