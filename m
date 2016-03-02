@@ -1,63 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH][RESEND] scsi_sysfs: add 'is_bin_visible' callback
-Date: Wed, 2 Mar 2016 15:33:14 +0800
-Message-ID: <56D6973A.4070901@suse.de>
-References: <1456807945-88857-1-git-send-email-hare@suse.de>
- <20160301130448.GB7616@lst.de>
+From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
+Subject: Re: [PATCH] snic: correctly check for array overrun on overly long
+ version number
+Date: Wed, 2 Mar 2016 08:54:10 +0000
+Message-ID: <D2FCA618.3E99E%nmusini@cisco.com>
+References: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53738 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751171AbcCBHd2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:33:28 -0500
-In-Reply-To: <20160301130448.GB7616@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
+Content-Language: en-US
+Content-ID: <0F4D391E12F35643BC45F41274BA689A@emea.cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 03/01/2016 09:04 PM, Christoph Hellwig wrote:
-> On Tue, Mar 01, 2016 at 05:52:25AM +0100, Hannes Reinecke wrote:
->> +	struct device *dev =3D container_of(kobj, struct device, kobj);
->> +	struct scsi_device *sdev =3D to_scsi_device(dev);
->> +
->> +
->> +	rcu_read_lock();
->> +	if (attr =3D=3D &dev_attr_vpd_pg80 &&
->> +	    !rcu_dereference(sdev->vpd_pg80)) {
->> +		rcu_read_unlock();
->> +		return 0;
->> +	}
->> +	if (attr =3D=3D &dev_attr_vpd_pg83 &&
->> +	    !rcu_dereference(sdev->vpd_pg83)) {
->> +		rcu_read_unlock();
->> +		return 0;
->> +	}
->> +	rcu_read_unlock();
->=20
-> We are only checking the pointers for being non-zero.  No need for th=
-e
-> rcu_read_lock() or rcu_dereference() here.
->=20
-Better to be same than sorry; some overly clever code analysis tool
-might trip over it otherwise.
+On 26/02/16 4:28 am, "Colin King" <colin.king@canonical.com> wrote:
 
-> Otherwise this looks fine to me.
+>From: Colin Ian King <colin.king@canonical.com>
+>
+>The snic version number is expected to be 4 decimals in the form like
+>a netmask string with each number stored in an element in array v.
+>However, there is an off-by-one check on the number of elements in v
+>allowing one to pass a 5 decimal version number causing v[4] to be
+>referenced, causing a buffer overrun.  Fix the off-by-one error by
+>comparing to i > 3 rather than 4.
+Acked-by: Narsimhulu Musini <nmusini@cisco.com>
 
-Reviewed-by: ?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>---
+> drivers/scsi/snic/snic_ctl.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/scsi/snic/snic_ctl.c b/drivers/scsi/snic/snic_ctl.c
+>index aebe753..ab0e06b 100644
+>--- a/drivers/scsi/snic/snic_ctl.c
+>+++ b/drivers/scsi/snic/snic_ctl.c
+>@@ -75,7 +75,7 @@ snic_ver_enc(const char *s)
+> 			continue;
+> 		}
+> 
+>-		if (i > 4 || !isdigit(c))
+>+		if (i > 3 || !isdigit(c))
+> 			goto end;
+> 
+> 		v[i] = v[i] * 10 + (c - '0');
+>-- 
+>2.7.0
+>
