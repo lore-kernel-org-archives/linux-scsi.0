@@ -1,22 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qlogicpti: Return correct error code
-Date: Tue, 01 Mar 2016 20:08:13 -0500
-Message-ID: <yq1twkpbsaq.fsf@sermon.lab.mkp.net>
-References: <20160217133254.GA31334@amitoj-Inspiron-3542>
+Subject: Re: [PATCH] snic: correctly check for array overrun on overly long version number
+Date: Tue, 01 Mar 2016 20:09:44 -0500
+Message-ID: <yq1povdbs87.fsf@sermon.lab.mkp.net>
+References: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160217133254.GA31334@amitoj-Inspiron-3542> (Amitoj Kaur
-	Chawla's message of "Wed, 17 Feb 2016 19:02:54 +0530")
+In-Reply-To: <1456441105-19042-1-git-send-email-colin.king@canonical.com>
+	(Colin King's message of "Thu, 25 Feb 2016 22:58:25 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, Shane M Seymour <shane.seymour@hpe.com>, Hannes Reinecke <hare@suse.de>
+To: Colin King <colin.king@canonical.com>
+Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Amitoj" == Amitoj Kaur Chawla <amitoj1606@gmail.com> writes:
+>>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
 
-Amitoj> The return value of of_ioremap on failure should be -ENODEV and
-Amitoj> not -1.
+Colin> The snic version number is expected to be 4 decimals in the form
+Colin> like a netmask string with each number stored in an element in
+Colin> array v.  However, there is an off-by-one check on the number of
+Colin> elements in v allowing one to pass a 5 decimal version number
+Colin> causing v[4] to be referenced, causing a buffer overrun.  Fix the
+Colin> off-by-one error by comparing to i > 3 rather than 4.
 
 Applied to 4.6/scsi-queue.
 
