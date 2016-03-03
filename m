@@ -1,124 +1,168 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v9 3/3] add support for DWC UFS Host Controller
-Date: Thu, 03 Mar 2016 13:04:40 +0100
-Message-ID: <10452689.JXS9XIs74z@wuerfel>
-References: <cover.1455549221.git.jpinto@synopsys.com> <5606371.ipFvUUmgV9@wuerfel> <56D82259.3020907@synopsys.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v5 03/15] scsi: ufs: implement scsi host timeout handler
+Date: Thu, 3 Mar 2016 20:53:06 +0800
+Message-ID: <56D833B2.6030104@suse.de>
+References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
+ <1456666367-11418-4-git-send-email-ygardi@codeaurora.org>
+ <56D544E6.8040005@suse.de>
+ <2b8282aad0b3edfaf873628edf03513d.squirrel@us.codeaurora.org>
+ <56D7E652.90401@suse.de>
+ <a995c225314021e9d5bcaf7edb1dd26a.squirrel@us.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <56D82259.3020907-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <a995c225314021e9d5bcaf7edb1dd26a.squirrel@us.codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: ygardi@codeaurora.org
+Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thursday 03 March 2016 11:39:05 Joao Pinto wrote:
-> Hi Arnd,
-> 
-> On 3/2/2016 7:55 PM, Arnd Bergmann wrote:
-> > On Wednesday 02 March 2016 16:46:47 Joao Pinto wrote:
-> >> On 2/19/2016 3:03 PM, Arnd Bergmann wrote:
-> >>> On Thursday 18 February 2016 17:20:27 Joao Pinto wrote:
-> 
-> Facts:
-> 
-> - Test Chip type are currently not detectable in runtime through the controller
-> - In the future the Test Chip version will be available in the controller
-> - Test Chip initialization is different for each type
-> - The IP Core version is 1.40a
-> - Test Chip version is 6.00
-> - Teh UFS version is 2.0
+On 03/03/2016 05:10 PM, ygardi@codeaurora.org wrote:
+>> On 03/01/2016 09:25 PM, ygardi@codeaurora.org wrote:
+>>>> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
+>>>>> A race condition exists between request requeueing and scsi layer
+>>>>> error handling:
+>>>>> When UFS driver queuecommand returns a busy status for a request,
+>>>>> it will be requeued and its tag will be freed and set to -1.
+>>>>> At the same time it is possible that the request will timeout and
+>>>>> scsi layer will start error handling for it. The scsi layer reuse=
+s
+>>>>> the request and its tag to send error related commands to the dev=
+ice,
+>>>>> however its tag is no longer valid.
+>>>> Hmm. How can the host return a 'busy' status for a request?
+>>>> From my understanding we have three possibilities:
+>>>>
+>>>> 1) queuecommand returns busy; however, that means that the command=
+ has
+>>>> never been send and this issue shouldn't occur
+>>>> 2) The command returns with BUSY status. But in this case it has
+>>>> already
+>>>> been returned, so there cannot be any timeout coming in.
+>>>> 3) The host receives a command with a tag which is already in-use.
+>>>> However, that should have been prevented by the block-layer, which
+>>>> really should ensure that this situation never happens.
+>>>>
+>>>> So either way I look at it, it really looks like a bug and adding =
+a
+>>>> timeout handler will just paper over it.
+>>>> (Not that a timeout handler is a bad idea, in fact I'm convinced t=
+hat
+>>>> you need one. Just not for this purpose.)
+>>>>
+>>>> So can you elaborate how this 'busy' status comes about?
+>>>> Is the command sent to the device?
+>>>>
+>>>> Cheers,
+>>>>
+>>>> Hannes
+>>>
+>>>
+>>> Hi Hannes,
+>>>
+>>> it's going to be a bit long :)
+>>> I think you are missing the point.
+>>> I will describe a race condition happened to us a while ago, that w=
+as
+>>> quite difficult to understand and fix.
+>>> So, this patch is not about the "busy" returning to the scsi dispat=
+ch
+>>> routine. it's about the abort triggered after 30 seconds.
+>>>
+>>> imagine a request being queued and sent to the scsi, and then to th=
+e
+>>> ufs.
+>>> a timer, initialized to 30 seconds start ticking.
+>>> but the request is never sent to the ufs device, as queuecommand()
+>>> returns
+>>> with "SCSI_MLQUEUE_HOST_BUSY"
+>>> by looking at the code, this could happen, for example:
+>>> 	err =3D ufshcd_hold(hba, true);
+>>> 	if (err) {
+>>> 		err =3D SCSI_MLQUEUE_HOST_BUSY;
+>>> 		goto out;
+>>> 	}
+>>>
+>> Uuhhh.
+>> You probably should not have pointed me to that piece of code ...
+>> open-coding loops in ufshcd_hold() ... shudder.
+>> (Did I ever review that one? Must've ...)
+>> _Anyway_: sleeping in queuecommand is always a bad idea, as then
+>> precisely those issues you've just described will happen.
+>>
+>> Couldn't you just call
+>> ufshcd_hold(hba, false)
+>> instead of
+>> ufshcd_hold(hba, true)
+>> ?
+>> The request will be requeued more-or-less immediately, avoiding the
+>> issue with timeout handler kicking in.
+>> And the queue will remain blocked until the ungate work item returns=
+, at
+>> which point I/O submission will continue.
+>> As the request will be requeued to the head of the queue there won't=
+ be
+>> other I/O competing with tags, so it shouldn't have any adverse effe=
+cts.
+>>
+>> Wouldn't that work?
+>>
+>> Cheers,
+>>
+>> Hannes
+>=20
+> Hi Hannes
+>=20
+> This is a bug, and it should be fixed.
+Oh, definitely agreed. The question is _where_.
 
-Ok.
 
-> Suggested driver architecture:
-> 
-> Platform setup:
->  tc-dwc-g210-pltfrm --> tc-dwc-g210 --> ufshcd-dwc-pltfrm --> ufshcd-dwc --> ufs
-> 
-> The test chip platform driver could be called through 2 compatibility strings.
-> indicating the chip's version and bit type:
->  "snps, g210-tc-6.00-20bit"
->  "snps, g210-tc-6.00-40bit"
+> if you choose to bypass it, by calling ufshcd_hold(hba, false), not o=
+nly
+> the race condition is still there, and can pop-out at any other point=
+ in
+> the future, but also, not sure what are the consequences of
+> ufshcd_hold(hba, false) unstead of "true".
+Well ... seeing it's your driver, I would've thought _you_ should know =
+=2E..
 
-Yes, this sounds good. We can probably skip one of the middle layers,
-but basically that is what I was looking for.
+> so, changing the already tested and working code, (not to return BUSY=
+ from
+> queuecommand) is not a fix.
+Hey, I did _not_ suggest not to retury BUSY from queuecommand.
 
-> The device tree node would have additional info compatibility strings as the DWC
-> IP core version and UFS version:
->  "snps, dwc-ufshcd-1.40a"
->  "jedec, ufs-2.0"
-> 
-> PCI based setup:
->  tc-dwc-g210-pci --> tc-dwc-g210 --> ufshcd-dwc-pci --> ufshcd-dwc --> ufs
+I was suggesting this patch:
 
-The tc-dwc-g210 portion probably shouldn't depend on both
-ufshcd-dwc-pltfrm and ufshcd-dwc-pci here, so how about leaving
-those two out?
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9c1b94b..b9295ad 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1388,7 +1388,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
+*host, struct scsi_cmnd *cmd)
+                goto out;
+        }
 
+-       err =3D ufshcd_hold(hba, true);
++       err =3D ufshcd_hold(hba, false);
+        if (err) {
+                err =3D SCSI_MLQUEUE_HOST_BUSY;
+                clear_bit_unlock(tag, &hba->lrb_in_use);
 
-Then it becomes
+which, by reading the code, should be avoiding this issue.
+I was just asking you if you could give this patch a spin and see if it
+works. If not (for whatever reason) I'm happy to accept your patch.
+But first I would like to have an explanation why the above would _not_
+work.
 
-   tc-dwc-g210-pci ---> tc-dwc-g210 --> ufshcd-dwc --> ufs
-tc-dwc-g210-pltfrm --/
+Unfortunately I don't have the hardware otherwise I'd be running the
+tests myself.
 
-> The test chip type would be configured by a parameter to be passed in the kernel
-> boot args: tc_type = 20 (20-bit) or tc_type = 40 (40-bit)
+Cheers,
 
-Right. With module_param() helper, this will be either a boot command
-line option, or a module load option, depending on whether the driver
-is built-on or not.
-
-modprobe tc-dwc-g210-pci tc_type=20
-
-command line: tc-dwc-g210-pci.tc_type=20
- 
-> Having this in mind the KConfig would be:
-> 
-> "config SCSI_UFS_DWC_HOOKS
-> 	bool
-
-I think we can now remove the config option for the hooks as well.
-
-> config SCSI_UFS_DWC_PLAT
-> 	tristate "DesignWare UFS controller platform glue driver"
-> 	depends on SCSI_UFSHCD_PLATFORM
-> 	select SCSI_UFS_DWC_HOOKS
-> 	help
-> 	  This selects the DesignWare UFS host controller platform glue driver.
-> 
-> 	  Select this if you have a DesignWare UFS controller on Platform bus.
-> 	  If unsure, say N.
-> 
-> config SCSI_UFS_DWC_PCI
-> 	tristate "DesignWare UFS controller pci glue driver"
-> 	depends on SCSI_UFSHCD_PCI
-> 	select SCSI_UFS_DWC_HOOKS
-> 	help
-> 	  This selects the DesignWare UFS host controller pci glue driver.
-> 
-> 	  Select this if you have a DesignWare UFS controller on pci bus.
-> 	  If unsure, say N.
-> 
-> config SCSI_UFS_DWC_TC
-> 	bool "Support for the Synopsys Test Chip"
-> 	depends on SCSI_UFS_DWC_HOOKS && (SCSI_UFSHCD_PCI || SCSI_UFS_DWC_PLAT)
-> 	---help---
-> 	  Synopsys Test Chip is a Phy for prototyping purposes.
-> 	  This selects the support for the Synopsys Test Chip.
-> 
-> 	  Select this if you have a Synopsys Test Chip.
-> 	  If unsure, say N."
-> 
-> Agree with the approach?
-
-This would work, but I think it's better to define the options in terms
-of the top-level drivers, i.e. SCSI_UFS_DWC_TC_PCI and SCSI_UFS_DWC_TC_PLATFORM,
-and then make the other options hidden and implicitly turned out by them.
-
-	Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
