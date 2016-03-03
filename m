@@ -1,129 +1,109 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 4/6] scsi_dh_rdac: update 'access_state' field
-Date: Thu,  3 Mar 2016 07:54:10 +0100
-Message-ID: <1456988052-78791-5-git-send-email-hare@suse.de>
-References: <1456988052-78791-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35198 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226AbcCCGy2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Mar 2016 01:54:28 -0500
-In-Reply-To: <1456988052-78791-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [PATCH v5 03/15] scsi: ufs: implement scsi host timeout handler
+Date: Thu, 3 Mar 2016 15:22:58 +0800
+Message-ID: <56D7E652.90401@suse.de>
+References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
+ <1456666367-11418-4-git-send-email-ygardi@codeaurora.org>
+ <56D544E6.8040005@suse.de>
+ <2b8282aad0b3edfaf873628edf03513d.squirrel@us.codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <2b8282aad0b3edfaf873628edf03513d.squirrel@us.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: ygardi@codeaurora.org
+Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Track attached SCSI devices and update the 'access_state'
-whenever the path state of the device changes.
+On 03/01/2016 09:25 PM, ygardi@codeaurora.org wrote:
+>> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
+>>> A race condition exists between request requeueing and scsi layer
+>>> error handling:
+>>> When UFS driver queuecommand returns a busy status for a request,
+>>> it will be requeued and its tag will be freed and set to -1.
+>>> At the same time it is possible that the request will timeout and
+>>> scsi layer will start error handling for it. The scsi layer reuses
+>>> the request and its tag to send error related commands to the devic=
+e,
+>>> however its tag is no longer valid.
+>> Hmm. How can the host return a 'busy' status for a request?
+>> From my understanding we have three possibilities:
+>>
+>> 1) queuecommand returns busy; however, that means that the command h=
+as
+>> never been send and this issue shouldn't occur
+>> 2) The command returns with BUSY status. But in this case it has alr=
+eady
+>> been returned, so there cannot be any timeout coming in.
+>> 3) The host receives a command with a tag which is already in-use.
+>> However, that should have been prevented by the block-layer, which
+>> really should ensure that this situation never happens.
+>>
+>> So either way I look at it, it really looks like a bug and adding a
+>> timeout handler will just paper over it.
+>> (Not that a timeout handler is a bad idea, in fact I'm convinced tha=
+t
+>> you need one. Just not for this purpose.)
+>>
+>> So can you elaborate how this 'busy' status comes about?
+>> Is the command sent to the device?
+>>
+>> Cheers,
+>>
+>> Hannes
+>=20
+>=20
+> Hi Hannes,
+>=20
+> it's going to be a bit long :)
+> I think you are missing the point.
+> I will describe a race condition happened to us a while ago, that was
+> quite difficult to understand and fix.
+> So, this patch is not about the "busy" returning to the scsi dispatch
+> routine. it's about the abort triggered after 30 seconds.
+>=20
+> imagine a request being queued and sent to the scsi, and then to the =
+ufs.
+> a timer, initialized to 30 seconds start ticking.
+> but the request is never sent to the ufs device, as queuecommand() re=
+turns
+> with "SCSI_MLQUEUE_HOST_BUSY"
+> by looking at the code, this could happen, for example:
+> 	err =3D ufshcd_hold(hba, true);
+> 	if (err) {
+> 		err =3D SCSI_MLQUEUE_HOST_BUSY;
+> 		goto out;
+> 	}
+>=20
+Uuhhh.
+You probably should not have pointed me to that piece of code ...
+open-coding loops in ufshcd_hold() ... shudder.
+(Did I ever review that one? Must've ...)
+_Anyway_: sleeping in queuecommand is always a bad idea, as then
+precisely those issues you've just described will happen.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/device_handler/scsi_dh_rdac.c | 38 ++++++++++++++++++++++++------
- 1 file changed, 31 insertions(+), 7 deletions(-)
+Couldn't you just call
+ufshcd_hold(hba, false)
+instead of
+ufshcd_hold(hba, true)
+?
+The request will be requeued more-or-less immediately, avoiding the
+issue with timeout handler kicking in.
+And the queue will remain blocked until the ungate work item returns, a=
+t
+which point I/O submission will continue.
+As the request will be requeued to the head of the queue there won't be
+other I/O competing with tags, so it shouldn't have any adverse effects=
+=2E
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 93880ed..06fbd0b 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -165,6 +165,7 @@ struct rdac_controller {
- 	struct work_struct	ms_work;
- 	struct scsi_device	*ms_sdev;
- 	struct list_head	ms_head;
-+	struct list_head	dh_list;
- };
- 
- struct c2_inquiry {
-@@ -181,7 +182,9 @@ struct c2_inquiry {
- };
- 
- struct rdac_dh_data {
-+	struct list_head	node;
- 	struct rdac_controller	*ctlr;
-+	struct scsi_device	*sdev;
- #define UNINITIALIZED_LUN	(1 << 8)
- 	unsigned		lun;
- 
-@@ -392,6 +395,7 @@ static struct rdac_controller *get_controller(int index, char *array_name,
- 	INIT_WORK(&ctlr->ms_work, send_mode_select);
- 	INIT_LIST_HEAD(&ctlr->ms_head);
- 	list_add(&ctlr->node, &ctlr_list);
-+	INIT_LIST_HEAD(&ctlr->dh_list);
- 
- 	return ctlr;
- }
-@@ -455,7 +459,8 @@ static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
- 
- static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
- {
--	int err;
-+	int err, access_state;
-+	struct rdac_dh_data *tmp;
- 	struct c9_inquiry *inqp;
- 
- 	h->state = RDAC_STATE_ACTIVE;
-@@ -471,19 +476,31 @@ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
- 			h->mode = RDAC_MODE; /* LUN in RDAC mode */
- 
- 		/* Update ownership */
--		if (inqp->avte_cvp & 0x1)
-+		if (inqp->avte_cvp & 0x1) {
- 			h->lun_state = RDAC_LUN_OWNED;
--		else {
-+			access_state = SCSI_ACCESS_STATE_OPTIMAL;
-+		} else {
- 			h->lun_state = RDAC_LUN_UNOWNED;
--			if (h->mode == RDAC_MODE)
-+			if (h->mode == RDAC_MODE) {
- 				h->state = RDAC_STATE_PASSIVE;
-+				access_state = SCSI_ACCESS_STATE_STANDBY;
-+			} else
-+				access_state = SCSI_ACCESS_STATE_ACTIVE;
- 		}
- 
- 		/* Update path prio*/
--		if (inqp->path_prio & 0x1)
-+		if (inqp->path_prio & 0x1) {
- 			h->preferred = RDAC_PREFERRED;
--		else
-+			access_state |= SCSI_ACCESS_STATE_PREFERRED;
-+		} else
- 			h->preferred = RDAC_NON_PREFERRED;
-+		rcu_read_lock();
-+		list_for_each_entry_rcu(tmp, &h->ctlr->dh_list, node) {
-+			/* h->sdev should always be valid */
-+			BUG_ON(!tmp->sdev);
-+			tmp->sdev->access_state = access_state;
-+		}
-+		rcu_read_unlock();
- 	}
- 
- 	return err;
-@@ -508,6 +525,10 @@ static int initialize_controller(struct scsi_device *sdev,
- 		h->ctlr = get_controller(index, array_name, array_id, sdev);
- 		if (!h->ctlr)
- 			err = SCSI_DH_RES_TEMP_UNAVAIL;
-+		else {
-+			list_add_rcu(&h->node, &h->ctlr->dh_list);
-+			h->sdev = sdev;
-+		}
- 		spin_unlock(&list_lock);
- 	}
- 	return err;
-@@ -829,8 +850,11 @@ static void rdac_bus_detach( struct scsi_device *sdev )
- 		flush_workqueue(kmpath_rdacd);
- 
- 	spin_lock(&list_lock);
--	if (h->ctlr)
-+	if (h->ctlr) {
-+		list_del_rcu(&h->node);
-+		h->sdev = NULL;
- 		kref_put(&h->ctlr->kref, release_controller);
-+	}
- 	spin_unlock(&list_lock);
- 	sdev->handler_data = NULL;
- 	kfree(h);
--- 
-1.8.5.6
+Wouldn't that work?
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
