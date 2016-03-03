@@ -1,152 +1,89 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 04/15] scsi: ufs: verify hba controller hce reg value
-Date: Thu, 3 Mar 2016 15:24:15 +0800
-Message-ID: <56D7E69F.4070200@suse.de>
-References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
- <1456666367-11418-5-git-send-email-ygardi@codeaurora.org>
- <56D545AB.1030606@suse.de>
- <f4f33c609f5e2577c1e91c97c68a1542.squirrel@us.codeaurora.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [LSF/MM TOPIC] multiqueue and interrupt assignment
+Date: Thu, 3 Mar 2016 15:59:27 +0800
+Message-ID: <CACVXFVN=wo3xxJ0i1WR02i2udm9DL5HgQ-=GaPw+PbenK_uT=g@mail.gmail.com>
+References: <56B0D9CF.1080001@suse.de>
+	<56B0F41B.8010706@sandisk.com>
+	<56B1F951.5010001@dev.mellanox.co.il>
+	<56B1FCFC.2010104@suse.de>
+	<56B20173.10006@dev.mellanox.co.il>
+	<56B216B7.309@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f4f33c609f5e2577c1e91c97c68a1542.squirrel@us.codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: ygardi@codeaurora.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:36552 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbcCCH72 convert rfc822-to-8bit (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Thu, 3 Mar 2016 02:59:28 -0500
+In-Reply-To: <56B216B7.309@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On 03/01/2016 09:32 PM, ygardi@codeaurora.org wrote:
->> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
->>> Sometimes due to hw issues it takes some time to the
->>> host controller register to update. In order to verify the register
->>> has updated, a polling is done until its value is set.
->>>
->>> In addition the functions ufshcd_hba_stop() and
->>> ufshcd_wait_for_register() was updated with an additional input
->>> parameter, indicating the timeout between reads will
->>> be done by sleeping or spinning the cpu.
->>>
->>> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
->>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>>
->>> ---
->>>  drivers/scsi/ufs/ufshcd.c | 53
->>> ++++++++++++++++++++++++++++-------------------
->>>  drivers/scsi/ufs/ufshcd.h | 12 +++--------
->>>  2 files changed, 35 insertions(+), 30 deletions(-)
->>>
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 3400ceb..80031e6 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct
->>> ufs_hba *hba)
->>>   * @val - wait condition
->>>   * @interval_us - polling interval in microsecs
->>>   * @timeout_ms - timeout in millisecs
->>> + * @can_sleep - perform sleep or just spin
->>>   *
->>>   * Returns -ETIMEDOUT on error, zero on success
->>>   */
->>> -static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, =
-u32
->>> mask,
->>> -		u32 val, unsigned long interval_us, unsigned long timeout_ms)
->>> +int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mas=
-k,
->>> +				u32 val, unsigned long interval_us,
->>> +				unsigned long timeout_ms, bool can_sleep)
->>>  {
->>>  	int err =3D 0;
->>>  	unsigned long timeout =3D jiffies + msecs_to_jiffies(timeout_ms);
->>> @@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs=
-_hba
->>> *hba, u32 reg, u32 mask,
->>>  	val =3D val & mask;
->>>
->>>  	while ((ufshcd_readl(hba, reg) & mask) !=3D val) {
->>> -		/* wakeup within 50us of expiry */
->>> -		usleep_range(interval_us, interval_us + 50);
->>> -
->>> +		if (can_sleep)
->>> +			usleep_range(interval_us, interval_us + 50);
->>> +		else
->>> +			udelay(interval_us);
->>>  		if (time_after(jiffies, timeout)) {
->>>  			if ((ufshcd_readl(hba, reg) & mask) !=3D val)
->>>  				err =3D -ETIMEDOUT;
->>> @@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag=
-)
->>>  	 */
->>>  	err =3D ufshcd_wait_for_register(hba,
->>>  			REG_UTP_TRANSFER_REQ_DOOR_BELL,
->>> -			mask, ~mask, 1000, 1000);
->>> +			mask, ~mask, 1000, 1000, true);
->>>
->>>  	return err;
->>>  }
->>> @@ -2815,6 +2818,23 @@ out:
->>>  }
->>>
->>>  /**
->>> + * ufshcd_hba_stop - Send controller to reset state
->>> + * @hba: per adapter instance
->>> + * @can_sleep: perform sleep or just spin
->>> + */
->>> +static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_s=
-leep)
->>> +{
->>> +	int err;
->>> +
->>> +	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
->>> +	err =3D ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
->>> +					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
->>> +					10, 1, can_sleep);
->>> +	if (err)
->>> +		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
->>> +}
->>> +
->> Shouldn't you return an error here?
->> If the controller disable failed you probably need a hard reset or
->> something, otherwise I would assume that every other command from th=
-at
->> point on will not work as expected.
+On Wed, Feb 3, 2016 at 11:03 PM, Hannes Reinecke <hare@suse.de> wrote:
+> On 02/03/2016 02:32 PM, Sagi Grimberg wrote:
 >>
->> Cheers,
+>>> Indeed, something like this.
+>>> Quite some issues would be solved if we could push a hctx mapping
+>>> into blk-mq, instead of having it assign its own made-up one.
 >>
->> Hannes
->=20
->=20
-> Hello Hannes,
-> The original routine signature is:
-> void ufshcd_hba_stop(struct ufs_hba *hba);
->=20
-> as you can see, no return value, the reason is simple - there is noth=
-ing
-> we can do if writing to the register fails.
->=20
-> all we wanted to do here, was to add a graceful time to change the
-> register value. also, we decided to add error msg in case the value i=
-s not
-> change within this timeout.
-> We can not do anything else, not to say, return error, as there is no
-> error handling in such case.
->=20
-> So, as far as i see it, we only improved the already exists logic, by
-> adding some graceful time to the register change, and also, by adding=
- an
-> error message that was absent before.
->=20
-Thanks for the explanation.
+>> For that you can provide your own .map_queue in blk_mq_ops I think
+>> (no one does that at the moment). This requires every driver to
+>> implement it's own routine (probably with a similar logic) though...
+>
+> And at the same time direct interrupt assigment from the driver is
+> frowned upon ... feels a bit stupid, having to setup a cpu-to-queue
+> assigment (which typically is identical to the cpu-to-msix
+> assignment), then pass this information to blk-mq, which then passed
+> it to user-space, which then uses the information to setup a
+> cpu-to-msix assignment.
+> There is room for improvement there ...
+>
+> Are there any plans addressing this in blk-mq?
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Last year, I sent a patchset to address the issue[1], but
+it wasn't good enough for merge, and I am happy to discuss
+the issue further.
 
-Cheers,
+[1] http://marc.info/?t=3D144349691100002&r=3D1&w=3D2
 
-Hannes
+> What does NVMe and virtio do?
+
+virtio just takes the default irq affinity setting,  which means
+the irq for one vq is only handled by the 1st CPU when it is
+set to route to a group of CPU.
+
+=46or NVMe, I remembered that the irq affinity setting is still
+fixed after setting up the queue, and it should be better to
+adjust it after hw/sw queue mapping is changed.
+
+Thanks,
+Ming
+
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                Teamlead Storage & Networking
+> hare@suse.de                                   +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=C3=BCrnberg)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-block=
+" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Ming Lei
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
