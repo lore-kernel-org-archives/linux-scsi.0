@@ -1,89 +1,42 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [LSF/MM TOPIC] multiqueue and interrupt assignment
-Date: Thu, 3 Mar 2016 15:59:27 +0800
-Message-ID: <CACVXFVN=wo3xxJ0i1WR02i2udm9DL5HgQ-=GaPw+PbenK_uT=g@mail.gmail.com>
-References: <56B0D9CF.1080001@suse.de>
-	<56B0F41B.8010706@sandisk.com>
-	<56B1F951.5010001@dev.mellanox.co.il>
-	<56B1FCFC.2010104@suse.de>
-	<56B20173.10006@dev.mellanox.co.il>
-	<56B216B7.309@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 08/14] scsi: mvumi: use __maybe_unused to hide pm
+ functions
+Date: Thu, 3 Mar 2016 09:30:12 +0100
+Message-ID: <20160303083012.GE25301@c203.arch.suse.de>
+References: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
+ <1456934350-1389172-9-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:36552 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbcCCH72 convert rfc822-to-8bit (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Thu, 3 Mar 2016 02:59:28 -0500
-In-Reply-To: <56B216B7.309@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1456934350-1389172-9-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On Wed, Feb 3, 2016 at 11:03 PM, Hannes Reinecke <hare@suse.de> wrote:
-> On 02/03/2016 02:32 PM, Sagi Grimberg wrote:
->>
->>> Indeed, something like this.
->>> Quite some issues would be solved if we could push a hctx mapping
->>> into blk-mq, instead of having it assign its own made-up one.
->>
->> For that you can provide your own .map_queue in blk_mq_ops I think
->> (no one does that at the moment). This requires every driver to
->> implement it's own routine (probably with a similar logic) though...
->
-> And at the same time direct interrupt assigment from the driver is
-> frowned upon ... feels a bit stupid, having to setup a cpu-to-queue
-> assigment (which typically is identical to the cpu-to-msix
-> assignment), then pass this information to blk-mq, which then passed
-> it to user-space, which then uses the information to setup a
-> cpu-to-msix assignment.
-> There is room for improvement there ...
->
-> Are there any plans addressing this in blk-mq?
+On Wed, Mar 02, 2016 at 04:59:00PM +0100, Arnd Bergmann wrote:
+> The mvumi scsi hides the references to its suspend/resume functions
+> in an #ifdef but does not hide the implementation the same way:
+>=20
+> drivers/scsi/mvumi.c:2632:12: error: 'mvumi_suspend' defined but not =
+used [-Werror=3Dunused-function]
+> drivers/scsi/mvumi.c:2651:12: error: 'mvumi_resume' defined but not u=
+sed [-Werror=3Dunused-function]
+>=20
+> This adds __maybe_unused annotations so the compiler knows
+> it can silently drop them instead of warning, while avoiding
+> the addition of another #ifdef.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Last year, I sent a patchset to address the issue[1], but
-it wasn't good enough for merge, and I am happy to discuss
-the issue further.
-
-[1] http://marc.info/?t=3D144349691100002&r=3D1&w=3D2
-
-> What does NVMe and virtio do?
-
-virtio just takes the default irq affinity setting,  which means
-the irq for one vq is only handled by the 1st CPU when it is
-set to route to a group of CPU.
-
-=46or NVMe, I remembered that the irq affinity setting is still
-fixed after setting up the queue, and it should be better to
-adjust it after hw/sw queue mapping is changed.
-
-Thanks,
-Ming
-
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                Teamlead Storage & Networking
-> hare@suse.de                                   +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-> HRB 21284 (AG N=C3=BCrnberg)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block=
-" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 --=20
-Ming Lei
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
