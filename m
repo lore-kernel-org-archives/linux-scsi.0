@@ -1,171 +1,129 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 1/6] scsi: Add 'access_state' and 'preferred_path' attribute
-Date: Thu,  3 Mar 2016 07:54:07 +0100
-Message-ID: <1456988052-78791-2-git-send-email-hare@suse.de>
+Subject: [PATCHv2 4/6] scsi_dh_rdac: update 'access_state' field
+Date: Thu,  3 Mar 2016 07:54:10 +0100
+Message-ID: <1456988052-78791-5-git-send-email-hare@suse.de>
 References: <1456988052-78791-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35194 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35198 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751010AbcCCGy1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Mar 2016 01:54:27 -0500
+	id S1751226AbcCCGy2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Mar 2016 01:54:28 -0500
 In-Reply-To: <1456988052-78791-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Add an 'access_state' field to struct scsi_device
-and display them in sysfs as 'access_state' and
-'preferred_path' attribute.
+Track attached SCSI devices and update the 'access_state'
+whenever the path state of the device changes.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_sysfs.c  | 74 ++++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h |  1 +
- include/scsi/scsi_proto.h  | 12 ++++++++
- 3 files changed, 87 insertions(+)
+ drivers/scsi/device_handler/scsi_dh_rdac.c | 38 ++++++++++++++++++++++++------
+ 1 file changed, 31 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 7e57800..c5ac171 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -81,6 +81,33 @@ const char *scsi_host_state_name(enum scsi_host_state state)
- 	return name;
- }
- 
-+static const struct {
-+	unsigned char	value;
-+	char		*name;
-+} sdev_access_states[] = {
-+	{ SCSI_ACCESS_STATE_OPTIMAL, "active/optimized" },
-+	{ SCSI_ACCESS_STATE_ACTIVE, "active/non-optimized" },
-+	{ SCSI_ACCESS_STATE_STANDBY, "standby" },
-+	{ SCSI_ACCESS_STATE_UNAVAILABLE, "unavailable" },
-+	{ SCSI_ACCESS_STATE_LBA, "lba-dependent" },
-+	{ SCSI_ACCESS_STATE_OFFLINE, "offline" },
-+	{ SCSI_ACCESS_STATE_TRANSITIONING, "transitioning" },
-+};
-+
-+const char *scsi_access_state_name(unsigned char state)
-+{
-+	int i;
-+	char *name = NULL;
-+
-+	for (i = 0; i < ARRAY_SIZE(sdev_access_states); i++) {
-+		if (sdev_access_states[i].value == state) {
-+			name = sdev_access_states[i].name;
-+			break;
-+		}
-+	}
-+	return name;
-+}
-+
- static int check_set(unsigned long long *val, char *src)
- {
- 	char *last;
-@@ -973,6 +1000,43 @@ sdev_store_dh_state(struct device *dev, struct device_attribute *attr,
- 
- static DEVICE_ATTR(dh_state, S_IRUGO | S_IWUSR, sdev_show_dh_state,
- 		   sdev_store_dh_state);
-+
-+static ssize_t
-+sdev_show_access_state(struct device *dev,
-+		       struct device_attribute *attr,
-+		       char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	unsigned char access_state;
-+	const char *access_state_name;
-+
-+	if (!sdev->handler)
-+		return -EINVAL;
-+
-+	access_state = (sdev->access_state & SCSI_ACCESS_STATE_MASK);
-+	access_state_name = scsi_access_state_name(access_state);
-+
-+	return sprintf(buf, "%s\n",
-+		       access_state_name ? access_state_name : "unknown");
-+}
-+static DEVICE_ATTR(access_state, S_IRUGO, sdev_show_access_state, NULL);
-+
-+static ssize_t
-+sdev_show_preferred_path(struct device *dev,
-+			 struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	if (!sdev->handler)
-+		return -EINVAL;
-+
-+	if (sdev->access_state & SCSI_ACCESS_STATE_PREFERRED)
-+		return sprintf(buf, "1\n");
-+	else
-+		return sprintf(buf, "0\n");
-+}
-+static DEVICE_ATTR(preferred_path, S_IRUGO, sdev_show_preferred_path, NULL);
- #endif
- 
- static ssize_t
-@@ -1020,6 +1084,14 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
- 	    !sdev->host->hostt->change_queue_depth)
- 		return 0;
- 
-+#ifdef CONFIG_SCSI_DH
-+	if (attr == &dev_attr_access_state.attr &&
-+	    !sdev->handler)
-+		return 0;
-+	if (attr == &dev_attr_preferred_path.attr &&
-+	    !sdev->handler)
-+		return 0;
-+#endif
- 	return attr->mode;
- }
- 
-@@ -1063,6 +1135,8 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_wwid.attr,
- #ifdef CONFIG_SCSI_DH
- 	&dev_attr_dh_state.attr,
-+	&dev_attr_access_state.attr,
-+	&dev_attr_preferred_path.attr,
- #endif
- 	&dev_attr_queue_ramp_up_period.attr,
- 	REF_EVT(media_change),
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 4af2b24..c067019 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -201,6 +201,7 @@ struct scsi_device {
- 	struct scsi_device_handler *handler;
- 	void			*handler_data;
- 
-+	unsigned char		access_state;
- 	enum scsi_device_state sdev_state;
- 	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index a9fbf1b..c2ae21c 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -277,5 +277,17 @@ struct scsi_lun {
- 	__u8 scsi_lun[8];
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 93880ed..06fbd0b 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -165,6 +165,7 @@ struct rdac_controller {
+ 	struct work_struct	ms_work;
+ 	struct scsi_device	*ms_sdev;
+ 	struct list_head	ms_head;
++	struct list_head	dh_list;
  };
  
-+/* SPC asymmetric access states */
-+#define SCSI_ACCESS_STATE_OPTIMAL     0x00
-+#define SCSI_ACCESS_STATE_ACTIVE      0x01
-+#define SCSI_ACCESS_STATE_STANDBY     0x02
-+#define SCSI_ACCESS_STATE_UNAVAILABLE 0x03
-+#define SCSI_ACCESS_STATE_LBA         0x04
-+#define SCSI_ACCESS_STATE_OFFLINE     0x0e
-+#define SCSI_ACCESS_STATE_TRANSITIONING 0x0f
-+
-+/* Values for REPORT TARGET GROUP STATES */
-+#define SCSI_ACCESS_STATE_MASK        0x0f
-+#define SCSI_ACCESS_STATE_PREFERRED   0x80
+ struct c2_inquiry {
+@@ -181,7 +182,9 @@ struct c2_inquiry {
+ };
  
- #endif /* _SCSI_PROTO_H_ */
+ struct rdac_dh_data {
++	struct list_head	node;
+ 	struct rdac_controller	*ctlr;
++	struct scsi_device	*sdev;
+ #define UNINITIALIZED_LUN	(1 << 8)
+ 	unsigned		lun;
+ 
+@@ -392,6 +395,7 @@ static struct rdac_controller *get_controller(int index, char *array_name,
+ 	INIT_WORK(&ctlr->ms_work, send_mode_select);
+ 	INIT_LIST_HEAD(&ctlr->ms_head);
+ 	list_add(&ctlr->node, &ctlr_list);
++	INIT_LIST_HEAD(&ctlr->dh_list);
+ 
+ 	return ctlr;
+ }
+@@ -455,7 +459,8 @@ static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
+ 
+ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
+ {
+-	int err;
++	int err, access_state;
++	struct rdac_dh_data *tmp;
+ 	struct c9_inquiry *inqp;
+ 
+ 	h->state = RDAC_STATE_ACTIVE;
+@@ -471,19 +476,31 @@ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
+ 			h->mode = RDAC_MODE; /* LUN in RDAC mode */
+ 
+ 		/* Update ownership */
+-		if (inqp->avte_cvp & 0x1)
++		if (inqp->avte_cvp & 0x1) {
+ 			h->lun_state = RDAC_LUN_OWNED;
+-		else {
++			access_state = SCSI_ACCESS_STATE_OPTIMAL;
++		} else {
+ 			h->lun_state = RDAC_LUN_UNOWNED;
+-			if (h->mode == RDAC_MODE)
++			if (h->mode == RDAC_MODE) {
+ 				h->state = RDAC_STATE_PASSIVE;
++				access_state = SCSI_ACCESS_STATE_STANDBY;
++			} else
++				access_state = SCSI_ACCESS_STATE_ACTIVE;
+ 		}
+ 
+ 		/* Update path prio*/
+-		if (inqp->path_prio & 0x1)
++		if (inqp->path_prio & 0x1) {
+ 			h->preferred = RDAC_PREFERRED;
+-		else
++			access_state |= SCSI_ACCESS_STATE_PREFERRED;
++		} else
+ 			h->preferred = RDAC_NON_PREFERRED;
++		rcu_read_lock();
++		list_for_each_entry_rcu(tmp, &h->ctlr->dh_list, node) {
++			/* h->sdev should always be valid */
++			BUG_ON(!tmp->sdev);
++			tmp->sdev->access_state = access_state;
++		}
++		rcu_read_unlock();
+ 	}
+ 
+ 	return err;
+@@ -508,6 +525,10 @@ static int initialize_controller(struct scsi_device *sdev,
+ 		h->ctlr = get_controller(index, array_name, array_id, sdev);
+ 		if (!h->ctlr)
+ 			err = SCSI_DH_RES_TEMP_UNAVAIL;
++		else {
++			list_add_rcu(&h->node, &h->ctlr->dh_list);
++			h->sdev = sdev;
++		}
+ 		spin_unlock(&list_lock);
+ 	}
+ 	return err;
+@@ -829,8 +850,11 @@ static void rdac_bus_detach( struct scsi_device *sdev )
+ 		flush_workqueue(kmpath_rdacd);
+ 
+ 	spin_lock(&list_lock);
+-	if (h->ctlr)
++	if (h->ctlr) {
++		list_del_rcu(&h->node);
++		h->sdev = NULL;
+ 		kref_put(&h->ctlr->kref, release_controller);
++	}
+ 	spin_unlock(&list_lock);
+ 	sdev->handler_data = NULL;
+ 	kfree(h);
 -- 
 1.8.5.6
 
