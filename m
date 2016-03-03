@@ -1,30 +1,30 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCHv2 4/6] scsi_dh_rdac: update 'access_state' field
-Date: Thu, 3 Mar 2016 09:55:32 +0100
-Message-ID: <20160303085532.GI25301@c203.arch.suse.de>
+Subject: Re: [PATCHv2 5/6] scsi_dh_emc: update 'access_state' field
+Date: Thu, 3 Mar 2016 09:56:07 +0100
+Message-ID: <20160303085607.GJ25301@c203.arch.suse.de>
 References: <1456988052-78791-1-git-send-email-hare@suse.de>
- <1456988052-78791-5-git-send-email-hare@suse.de>
+ <1456988052-78791-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43176 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43238 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756691AbcCCIzf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Mar 2016 03:55:35 -0500
+	id S1757230AbcCCI4K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Mar 2016 03:56:10 -0500
 Content-Disposition: inline
-In-Reply-To: <1456988052-78791-5-git-send-email-hare@suse.de>
+In-Reply-To: <1456988052-78791-6-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Thu, Mar 03, 2016 at 07:54:10AM +0100, Hannes Reinecke wrote:
-> Track attached SCSI devices and update the 'access_state'
-> whenever the path state of the device changes.
+On Thu, Mar 03, 2016 at 07:54:11AM +0100, Hannes Reinecke wrote:
+> Update the 'access_state' field of the SCSI device whenever
+> the path state changes.
 >=20
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
