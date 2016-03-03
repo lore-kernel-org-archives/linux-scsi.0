@@ -1,103 +1,146 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 03/15] scsi: ufs: implement scsi host timeout handler
-Date: Thu, 3 Mar 2016 15:22:58 +0800
-Message-ID: <56D7E652.90401@suse.de>
+Subject: Re: [PATCH v5 04/15] scsi: ufs: verify hba controller hce reg value
+Date: Thu, 3 Mar 2016 15:24:15 +0800
+Message-ID: <56D7E69F.4070200@suse.de>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
- <1456666367-11418-4-git-send-email-ygardi@codeaurora.org>
- <56D544E6.8040005@suse.de>
- <2b8282aad0b3edfaf873628edf03513d.squirrel@us.codeaurora.org>
+ <1456666367-11418-5-git-send-email-ygardi@codeaurora.org>
+ <56D545AB.1030606@suse.de>
+ <f4f33c609f5e2577c1e91c97c68a1542.squirrel@us.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <2b8282aad0b3edfaf873628edf03513d.squirrel@us.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f4f33c609f5e2577c1e91c97c68a1542.squirrel@us.codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: ygardi@codeaurora.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/01/2016 09:25 PM, ygardi@codeaurora.org wrote:
+On 03/01/2016 09:32 PM, ygardi@codeaurora.org wrote:
 >> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
->>> A race condition exists between request requeueing and scsi layer
->>> error handling:
->>> When UFS driver queuecommand returns a busy status for a request,
->>> it will be requeued and its tag will be freed and set to -1.
->>> At the same time it is possible that the request will timeout and
->>> scsi layer will start error handling for it. The scsi layer reuses
->>> the request and its tag to send error related commands to the devic=
-e,
->>> however its tag is no longer valid.
->> Hmm. How can the host return a 'busy' status for a request?
->> From my understanding we have three possibilities:
->>
->> 1) queuecommand returns busy; however, that means that the command h=
-as
->> never been send and this issue shouldn't occur
->> 2) The command returns with BUSY status. But in this case it has alr=
-eady
->> been returned, so there cannot be any timeout coming in.
->> 3) The host receives a command with a tag which is already in-use.
->> However, that should have been prevented by the block-layer, which
->> really should ensure that this situation never happens.
->>
->> So either way I look at it, it really looks like a bug and adding a
->> timeout handler will just paper over it.
->> (Not that a timeout handler is a bad idea, in fact I'm convinced tha=
-t
->> you need one. Just not for this purpose.)
->>
->> So can you elaborate how this 'busy' status comes about?
->> Is the command sent to the device?
+>>> Sometimes due to hw issues it takes some time to the
+>>> host controller register to update. In order to verify the register
+>>> has updated, a polling is done until its value is set.
+>>>
+>>> In addition the functions ufshcd_hba_stop() and
+>>> ufshcd_wait_for_register() was updated with an additional input
+>>> parameter, indicating the timeout between reads will
+>>> be done by sleeping or spinning the cpu.
+>>>
+>>> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>>
+>>> ---
+>>>  drivers/scsi/ufs/ufshcd.c | 53
+>>> ++++++++++++++++++++++++++++-------------------
+>>>  drivers/scsi/ufs/ufshcd.h | 12 +++--------
+>>>  2 files changed, 35 insertions(+), 30 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index 3400ceb..80031e6 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct
+>>> ufs_hba *hba)
+>>>   * @val - wait condition
+>>>   * @interval_us - polling interval in microsecs
+>>>   * @timeout_ms - timeout in millisecs
+>>> + * @can_sleep - perform sleep or just spin
+>>>   *
+>>>   * Returns -ETIMEDOUT on error, zero on success
+>>>   */
+>>> -static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, =
+u32
+>>> mask,
+>>> -		u32 val, unsigned long interval_us, unsigned long timeout_ms)
+>>> +int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mas=
+k,
+>>> +				u32 val, unsigned long interval_us,
+>>> +				unsigned long timeout_ms, bool can_sleep)
+>>>  {
+>>>  	int err =3D 0;
+>>>  	unsigned long timeout =3D jiffies + msecs_to_jiffies(timeout_ms);
+>>> @@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs=
+_hba
+>>> *hba, u32 reg, u32 mask,
+>>>  	val =3D val & mask;
+>>>
+>>>  	while ((ufshcd_readl(hba, reg) & mask) !=3D val) {
+>>> -		/* wakeup within 50us of expiry */
+>>> -		usleep_range(interval_us, interval_us + 50);
+>>> -
+>>> +		if (can_sleep)
+>>> +			usleep_range(interval_us, interval_us + 50);
+>>> +		else
+>>> +			udelay(interval_us);
+>>>  		if (time_after(jiffies, timeout)) {
+>>>  			if ((ufshcd_readl(hba, reg) & mask) !=3D val)
+>>>  				err =3D -ETIMEDOUT;
+>>> @@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag=
+)
+>>>  	 */
+>>>  	err =3D ufshcd_wait_for_register(hba,
+>>>  			REG_UTP_TRANSFER_REQ_DOOR_BELL,
+>>> -			mask, ~mask, 1000, 1000);
+>>> +			mask, ~mask, 1000, 1000, true);
+>>>
+>>>  	return err;
+>>>  }
+>>> @@ -2815,6 +2818,23 @@ out:
+>>>  }
+>>>
+>>>  /**
+>>> + * ufshcd_hba_stop - Send controller to reset state
+>>> + * @hba: per adapter instance
+>>> + * @can_sleep: perform sleep or just spin
+>>> + */
+>>> +static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_s=
+leep)
+>>> +{
+>>> +	int err;
+>>> +
+>>> +	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+>>> +	err =3D ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
+>>> +					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
+>>> +					10, 1, can_sleep);
+>>> +	if (err)
+>>> +		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
+>>> +}
+>>> +
+>> Shouldn't you return an error here?
+>> If the controller disable failed you probably need a hard reset or
+>> something, otherwise I would assume that every other command from th=
+at
+>> point on will not work as expected.
 >>
 >> Cheers,
 >>
 >> Hannes
 >=20
 >=20
-> Hi Hannes,
+> Hello Hannes,
+> The original routine signature is:
+> void ufshcd_hba_stop(struct ufs_hba *hba);
 >=20
-> it's going to be a bit long :)
-> I think you are missing the point.
-> I will describe a race condition happened to us a while ago, that was
-> quite difficult to understand and fix.
-> So, this patch is not about the "busy" returning to the scsi dispatch
-> routine. it's about the abort triggered after 30 seconds.
+> as you can see, no return value, the reason is simple - there is noth=
+ing
+> we can do if writing to the register fails.
 >=20
-> imagine a request being queued and sent to the scsi, and then to the =
-ufs.
-> a timer, initialized to 30 seconds start ticking.
-> but the request is never sent to the ufs device, as queuecommand() re=
-turns
-> with "SCSI_MLQUEUE_HOST_BUSY"
-> by looking at the code, this could happen, for example:
-> 	err =3D ufshcd_hold(hba, true);
-> 	if (err) {
-> 		err =3D SCSI_MLQUEUE_HOST_BUSY;
-> 		goto out;
-> 	}
+> all we wanted to do here, was to add a graceful time to change the
+> register value. also, we decided to add error msg in case the value i=
+s not
+> change within this timeout.
+> We can not do anything else, not to say, return error, as there is no
+> error handling in such case.
 >=20
-Uuhhh.
-You probably should not have pointed me to that piece of code ...
-open-coding loops in ufshcd_hold() ... shudder.
-(Did I ever review that one? Must've ...)
-_Anyway_: sleeping in queuecommand is always a bad idea, as then
-precisely those issues you've just described will happen.
+> So, as far as i see it, we only improved the already exists logic, by
+> adding some graceful time to the register change, and also, by adding=
+ an
+> error message that was absent before.
+>=20
+Thanks for the explanation.
 
-Couldn't you just call
-ufshcd_hold(hba, false)
-instead of
-ufshcd_hold(hba, true)
-?
-The request will be requeued more-or-less immediately, avoiding the
-issue with timeout handler kicking in.
-And the queue will remain blocked until the ungate work item returns, a=
-t
-which point I/O submission will continue.
-As the request will be requeued to the head of the queue there won't be
-other I/O competing with tags, so it shouldn't have any adverse effects=
-=2E
-
-Wouldn't that work?
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
