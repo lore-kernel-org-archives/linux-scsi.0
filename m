@@ -1,59 +1,36 @@
-From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v9 3/3] add support for DWC UFS Host Controller
-Date: Thu, 3 Mar 2016 14:17:28 +0000
-Message-ID: <56D84778.50509@synopsys.com>
-References: <cover.1455549221.git.jpinto@synopsys.com>
- <10452689.JXS9XIs74z@wuerfel> <56D841A7.7050008@synopsys.com>
- <12939431.liKZREJb7L@wuerfel>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v5 01/15] scsi: ufs-qcom: add number of lanes per
+ direction
+Date: Thu, 3 Mar 2016 16:18:36 -0600
+Message-ID: <20160303221836.GA3510@rob-hp-laptop>
+References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
+ <1456666367-11418-2-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <12939431.liKZREJb7L@wuerfel>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1456666367-11418-2-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-On 3/3/2016 2:12 PM, Arnd Bergmann wrote:
-> On Thursday 03 March 2016 13:52:39 Joao Pinto wrote:
->>
->> config SCSI_UFS_DWC
->>         bool
->>
->> config SCSI_UFS_DWC_TC_PLATFORM
->>         tristate "DesignWare platform support using a G210 Test Chip"
->>         depends on SCSI_UFSHCD_PLATFORM
->>         select SCSI_UFS_DWC
->>         ---help---
->>           Synopsys Test Chip is a PHY for prototyping purposes.
->>
->>           If unsure, say N."
->>
->> config SCSI_UFS_DWC_TC_PCI
->>         tristate "DesignWare pci support using a G210 Test Chip"
->>         depends on SCSI_UFSHCD_PCI
->>         select SCSI_UFS_DWC
->>         ---help---
->>           Synopsys Test Chip is a PHY for prototyping purposes.
->>
->>           If unsure, say N."
->>
->> I would keep SCSI_UFS_DWC to avoid building DWC specific source everytime.
->>
->> Agree?
->>
+On Sun, Feb 28, 2016 at 03:32:33PM +0200, Yaniv Gardi wrote:
+> Different platform may have different number of lanes
+> for the UFS link.
+> Add parameter to device tree specifying how many lanes
+> should be configured for the UFS link.
 > 
-> Yes, looks good to me.
+> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 > 
-> 	Arnd
-> 
+> ---
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  3 ++
 
-Nice! Thanks for the inputs. I'm going to implement the changes and send a v10 soon.
+Acked-by: Rob Herring <robh@kernel.org>
 
-Joao
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/scsi/ufs/ufs-qcom.c                        | 39 ++++++++++++----------
+>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 19 +++++++++++
+>  drivers/scsi/ufs/ufshcd.c                          |  1 +
+>  drivers/scsi/ufs/ufshcd.h                          |  2 ++
+>  5 files changed, 47 insertions(+), 17 deletions(-)
