@@ -1,97 +1,81 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 7/7] cxlflash: Increase cmd_per_lun for better throughput
-Date: Fri,  4 Mar 2016 15:55:20 -0600
-Message-ID: <1457128520-53056-7-git-send-email-ukrishn@linux.vnet.ibm.com>
-References: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1457128520-53056-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e17.ny.us.ibm.com ([129.33.205.207]:43190 "EHLO
-	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759976AbcCDV6o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 16:58:44 -0500
-Received: from localhost
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-	Fri, 4 Mar 2016 16:58:43 -0500
-Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id C9C8CC90043
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Mar 2016 16:58:38 -0500 (EST)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u24LwfEM31654092
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2016 21:58:41 GMT
-Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u24LsKFc031537
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2016 16:54:24 -0500
-In-Reply-To: <1457128520-53056-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.5-rc6
+Date: Fri, 04 Mar 2016 15:30:39 -0800
+Message-ID: <1457134239.2419.121.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-From: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Two fairly simple fixes.  One is a regression with ipr firmware loading
+caused by one of the trivial patches in the last merge window which
+failed to strip the \n from the file name string, so now the firmware
+loader no longer works leading to a lot of unhappy ipr users; fix by
+stripping the \n.  The second is a memory leak within SCSI: the
+BLK_PREP_INVALID state was introduced a recent fix but we forgot to
+account for it correctly when freeing state, resulting in memory
+leakage.  Add the correct state freeing in scsi_prep_return().
 
-With the current value of cmd_per_lun at 16, the throughput
-over a single adapter is limited to around 150kIOPS.
+The patch is available here:
 
-Increase the value of cmd_per_lun to 256 to improve
-throughput. With this change a single adapter is able to
-attain close to the maximum throughput (380kIOPS).
-Also change the number of RRQ entries that can be queued.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+The short changelog is:
+
+Gabriel Krisman Bertazi (1):
+      ipr: Fix regression when loading firmware
+
+jiangyiwen (1):
+      SCSI: Free resources when we return BLKPREP_INVALID
+
+And the diffstat:
+
+ drivers/scsi/ipr.c      | 5 +++++
+ drivers/scsi/scsi_lib.c | 1 +
+ 2 files changed, 6 insertions(+)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/cxlflash/common.h | 8 +++++---
- drivers/scsi/cxlflash/main.c   | 2 +-
- 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 5ada926..a8ac4c0 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -34,7 +34,6 @@ extern const struct file_operations cxlflash_cxl_fops;
- 								   sectors
- 								*/
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 3b3e099..d6a691e 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4002,6 +4002,7 @@ static ssize_t ipr_store_update_fw(struct device *dev,
+ 	struct ipr_sglist *sglist;
+ 	char fname[100];
+ 	char *src;
++	char *endline;
+ 	int result, dnld_size;
  
--#define NUM_RRQ_ENTRY    16     /* for master issued cmds */
- #define MAX_RHT_PER_CONTEXT (PAGE_SIZE / sizeof(struct sisl_rht_entry))
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -4009,6 +4010,10 @@ static ssize_t ipr_store_update_fw(struct device *dev,
  
- /* AFU command retry limit */
-@@ -48,9 +47,12 @@ extern const struct file_operations cxlflash_cxl_fops;
- 							   index derivation
- 							 */
+ 	snprintf(fname, sizeof(fname), "%s", buf);
  
--#define CXLFLASH_MAX_CMDS               16
-+#define CXLFLASH_MAX_CMDS               256
- #define CXLFLASH_MAX_CMDS_PER_LUN       CXLFLASH_MAX_CMDS
- 
-+/* RRQ for master issued cmds */
-+#define NUM_RRQ_ENTRY                   CXLFLASH_MAX_CMDS
++	endline = strchr(fname, '\n');
++	if (endline)
++		*endline = '\0';
 +
+ 	if (request_firmware(&fw_entry, fname, &ioa_cfg->pdev->dev)) {
+ 		dev_err(&ioa_cfg->pdev->dev, "Firmware file %s not found\n", fname);
+ 		return -EIO;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index fa6b2c4..8c6e318 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1344,6 +1344,7 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
  
- static inline void check_sizes(void)
- {
-@@ -149,7 +151,7 @@ struct afu_cmd {
- struct afu {
- 	/* Stuff requiring alignment go first. */
- 
--	u64 rrq_entry[NUM_RRQ_ENTRY];	/* 128B RRQ */
-+	u64 rrq_entry[NUM_RRQ_ENTRY];	/* 2K RRQ */
- 	/*
- 	 * Command & data for AFU commands.
- 	 */
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 0f062a4..3879b46 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -2253,7 +2253,7 @@ static struct scsi_host_template driver_template = {
- 	.eh_device_reset_handler = cxlflash_eh_device_reset_handler,
- 	.eh_host_reset_handler = cxlflash_eh_host_reset_handler,
- 	.change_queue_depth = cxlflash_change_queue_depth,
--	.cmd_per_lun = 16,
-+	.cmd_per_lun = CXLFLASH_MAX_CMDS_PER_LUN,
- 	.can_queue = CXLFLASH_MAX_CMDS,
- 	.this_id = -1,
- 	.sg_tablesize = SG_NONE,	/* No scatter gather support */
--- 
-2.1.0
-
+ 	switch (ret) {
+ 	case BLKPREP_KILL:
++	case BLKPREP_INVALID:
+ 		req->errors = DID_NO_CONNECT << 16;
+ 		/* release the command and kill it */
+ 		if (req->special) {
