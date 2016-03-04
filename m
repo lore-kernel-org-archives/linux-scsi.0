@@ -1,12 +1,14 @@
 From: Lars-Peter Clausen <lars@metafoo.de>
-Subject: [PATCH resend 1/2] be2iscsi: Remove unnecessary synchronize_irq() before free_irq()
-Date: Fri,  4 Mar 2016 11:15:06 +0100
-Message-ID: <1457086507-5937-1-git-send-email-lars@metafoo.de>
+Subject: [PATCH resend 2/2] mpt3sas: Remove unnecessary synchronize_irq() before free_irq()
+Date: Fri,  4 Mar 2016 11:15:07 +0100
+Message-ID: <1457086507-5937-2-git-send-email-lars@metafoo.de>
+References: <1457086507-5937-1-git-send-email-lars@metafoo.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out-012.synserver.de ([212.40.185.12]:1043 "EHLO
+Received: from smtp-out-012.synserver.de ([212.40.185.12]:1090 "EHLO
 	smtp-out-012.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbcCDKP3 (ORCPT
+	with ESMTP id S1755698AbcCDKP3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 05:15:29 -0500
+In-Reply-To: <1457086507-5937-1-git-send-email-lars@metafoo.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,30 +30,21 @@ expression irq;
 
 Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
 ---
- drivers/scsi/be2iscsi/be_main.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index b51e726..e89a0f8d 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5303,15 +5303,12 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
- 	if (phba->msix_enabled) {
- 		for (i = 0; i <= phba->num_cpus; i++) {
- 			msix_vec = phba->msix_entries[i].vector;
--			synchronize_irq(msix_vec);
- 			free_irq(msix_vec, &phwi_context->be_eq[i]);
- 			kfree(phba->msi_name[i]);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 5bbbbf2..e4db5fb 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1820,7 +1820,6 @@ _base_free_irq(struct MPT3SAS_ADAPTER *ioc)
+ 			irq_set_affinity_hint(reply_q->vector, NULL);
+ 			free_cpumask_var(reply_q->affinity_hint);
  		}
- 	} else
--		if (phba->pcidev->irq) {
--			synchronize_irq(phba->pcidev->irq);
-+		if (phba->pcidev->irq)
- 			free_irq(phba->pcidev->irq, phba);
--		}
- 	pci_disable_msix(phba->pcidev);
- 	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
- 
+-		synchronize_irq(reply_q->vector);
+ 		free_irq(reply_q->vector, reply_q);
+ 		kfree(reply_q);
+ 	}
 -- 
 2.1.4
 
