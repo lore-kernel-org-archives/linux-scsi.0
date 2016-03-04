@@ -1,38 +1,57 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] be2iscsi: set the boot_kset pointer to NULL in case of failure
-Date: Fri,  4 Mar 2016 10:41:49 +0100
-Message-ID: <1457084509-7368-1-git-send-email-mlombard@redhat.com>
+From: Lars-Peter Clausen <lars@metafoo.de>
+Subject: [PATCH resend 1/2] be2iscsi: Remove unnecessary synchronize_irq() before free_irq()
+Date: Fri,  4 Mar 2016 11:15:06 +0100
+Message-ID: <1457086507-5937-1-git-send-email-lars@metafoo.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57264 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758951AbcCDJlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Mar 2016 04:41:52 -0500
+Received: from smtp-out-012.synserver.de ([212.40.185.12]:1043 "EHLO
+	smtp-out-012.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbcCDKP3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 05:15:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jayamohan.kallickal@avagotech.com
-Cc: ketan.mukadam@avagotech.com, sony.john@avagotech.com, linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, Lars-Peter Clausen <lars@metafoo.de>
 
-In beiscsi_setup_boot_info(), the boot_kset pointer should be set
-to NULL in case of failure otherwise an invalid pointer dereference
-may occur later.
+Calling synchronize_irq() right before free_irq() is quite useless. On one
+hand the IRQ can easily fire again before free_irq() is entered, on the
+other hand free_irq() itself calls synchronize_irq() internally (in a race
+condition free way), before any state associated with the IRQ is freed.
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Patch was generated using the following semantic patch:
+// <smpl>
+@@
+expression irq;
+@@
+-synchronize_irq(irq);
+ free_irq(irq, ...);
+// </smpl>
+
+Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
 ---
- drivers/scsi/be2iscsi/be_main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/be2iscsi/be_main.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index cb9072a..069e5c5 100644
+index b51e726..e89a0f8d 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4468,6 +4468,7 @@ put_shost:
- 	scsi_host_put(phba->shost);
- free_kset:
- 	iscsi_boot_destroy_kset(phba->boot_kset);
-+	phba->boot_kset = NULL;
- 	return -ENOMEM;
- }
+@@ -5303,15 +5303,12 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
+ 	if (phba->msix_enabled) {
+ 		for (i = 0; i <= phba->num_cpus; i++) {
+ 			msix_vec = phba->msix_entries[i].vector;
+-			synchronize_irq(msix_vec);
+ 			free_irq(msix_vec, &phwi_context->be_eq[i]);
+ 			kfree(phba->msi_name[i]);
+ 		}
+ 	} else
+-		if (phba->pcidev->irq) {
+-			synchronize_irq(phba->pcidev->irq);
++		if (phba->pcidev->irq)
+ 			free_irq(phba->pcidev->irq, phba);
+-		}
+ 	pci_disable_msix(phba->pcidev);
+ 	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
  
 -- 
-Maurizio Lombardi
+2.1.4
 
