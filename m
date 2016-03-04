@@ -1,40 +1,122 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi-debug regression with 4.5-rc?
-Date: Fri, 4 Mar 2016 10:24:09 -0500
-Message-ID: <20160304152409.GA31358@redhat.com>
-References: <1453303051.22112.110.camel@localhost.localdomain>
- <yq1powwp7l4.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v6 19/20] cxlflash: Use new cxl_pci_read_adapter_vpd() API
+Date: Fri, 4 Mar 2016 10:32:20 -0600
+Message-ID: <E46D4E73-A65C-49F8-A74E-DF4837F9B4E6@linux.vnet.ibm.com>
+References: <1457090804-9719-1-git-send-email-fbarrat@linux.vnet.ibm.com> <1457090804-9719-20-git-send-email-fbarrat@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43137 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759020AbcCDPYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Mar 2016 10:24:10 -0500
-Content-Disposition: inline
-In-Reply-To: <yq1powwp7l4.fsf@sermon.lab.mkp.net>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:38209 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759286AbcCDQc1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 11:32:27 -0500
+Received: from localhost
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 4 Mar 2016 09:32:26 -0700
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 714581FF004F
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Mar 2016 09:20:32 -0700 (MST)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u24GWN4J39321632
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2016 09:32:23 -0700
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u24GWMm3004923
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2016 09:32:22 -0700
+In-Reply-To: <1457090804-9719-20-git-send-email-fbarrat@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Zdenek Kabelac <zkabelac@redhat.com>, Alasdair G Kergon <agk@redhat.com>, dm-devel@redhat.com
+To: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
+Cc: Ian Munsie <imunsie@au1.ibm.com>, Michael Neuling <michael.neuling@au1.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Jan 20 2016 at 10:57am -0500,
-Martin K. Petersen <martin.petersen@oracle.com> wrote:
+This patch should have also been sent to the SCSI list (included now).
 
-> >>>>> "Ewan" == Ewan Milne <emilne@redhat.com> writes:
+Changes look fine.
+
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+
+> On Mar 4, 2016, at 5:26 AM, Frederic Barrat <fbarrat@linux.vnet.ibm.com> wrote:
 > 
-> Ewan> So I have a report from our test people that the optimal_io_size
-> Ewan> sysfs value is now different by a factor of 512 from what it used
-> Ewan> to be...
+> To read the adapter VPD, drivers can't rely on pci config APIs, as it
+> wouldn't work on powerVM. cxl introduced a new kernel API especially
+> for this, so start using it.
 > 
-> Yes, just prepared a patch this morning. I messed up sectors vs. bytes.
+> Co-authored-by: Christophe Lombard <clombard@linux.vnet.ibm.com>
+> Signed-off-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
+> Signed-off-by: Christophe Lombard <clombard@linux.vnet.ibm.com>
+> ---
+> drivers/scsi/cxlflash/common.h |  1 -
+> drivers/scsi/cxlflash/main.c   | 18 ++----------------
+> 2 files changed, 2 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+> index 5ada926..580f370 100644
+> --- a/drivers/scsi/cxlflash/common.h
+> +++ b/drivers/scsi/cxlflash/common.h
+> @@ -106,7 +106,6 @@ struct cxlflash_cfg {
+> 	atomic_t scan_host_needed;
+> 
+> 	struct cxl_afu *cxl_afu;
+> -	struct pci_dev *parent_dev;
+> 
+> 	atomic_t recovery_threads;
+> 	struct mutex ctx_recovery_mutex;
+> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+> index f6d90ce..e04aae7 100644
+> --- a/drivers/scsi/cxlflash/main.c
+> +++ b/drivers/scsi/cxlflash/main.c
+> @@ -1407,7 +1407,7 @@ static int start_context(struct cxlflash_cfg *cfg)
+>  */
+> static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+> {
+> -	struct pci_dev *dev = cfg->parent_dev;
+> +	struct pci_dev *dev = cfg->dev;
+> 	int rc = 0;
+> 	int ro_start, ro_size, i, j, k;
+> 	ssize_t vpd_size;
+> @@ -1416,7 +1416,7 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+> 	char *wwpn_vpd_tags[NUM_FC_PORTS] = { "V5", "V6" };
+> 
+> 	/* Get the VPD data from the device */
+> -	vpd_size = pci_read_vpd(dev, 0, sizeof(vpd_data), vpd_data);
+> +	vpd_size = cxl_read_adapter_vpd(dev, vpd_data, sizeof(vpd_data));
+> 	if (unlikely(vpd_size <= 0)) {
+> 		dev_err(&dev->dev, "%s: Unable to read VPD (size = %ld)\n",
+> 		       __func__, vpd_size);
+> @@ -2392,7 +2392,6 @@ static int cxlflash_probe(struct pci_dev *pdev,
+> {
+> 	struct Scsi_Host *host;
+> 	struct cxlflash_cfg *cfg = NULL;
+> -	struct device *phys_dev;
+> 	struct dev_dependent_vals *ddv;
+> 	int rc = 0;
+> 
+> @@ -2458,19 +2457,6 @@ static int cxlflash_probe(struct pci_dev *pdev,
+> 
+> 	pci_set_drvdata(pdev, cfg);
+> 
+> -	/*
+> -	 * Use the special service provided to look up the physical
+> -	 * PCI device, since we are called on the probe of the virtual
+> -	 * PCI host bus (vphb)
+> -	 */
+> -	phys_dev = cxl_get_phys_dev(pdev);
+> -	if (!dev_is_pci(phys_dev)) {
+> -		dev_err(&pdev->dev, "%s: not a pci dev\n", __func__);
+> -		rc = -ENODEV;
+> -		goto out_remove;
+> -	}
+> -	cfg->parent_dev = to_pci_dev(phys_dev);
+> -
+> 	cfg->cxl_afu = cxl_pci_to_afu(pdev);
+> 
+> 	rc = init_pci(cfg);
+> -- 
+> 1.9.1
+> 
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
 
-Would your fix (commit d0eb20a863ba7dc) address this BZ too?
-https://bugzilla.redhat.com/show_bug.cgi?id=1314687
-
-Seems not, I think that BZ may be due to the LBPRZ clause in commit
-397737223 ("sd: Make discard granularity match logical block size when LBPRZ=1") ?
-
-should be: q->limits.discard_granularity = 1 * logical_block_size;
-
-Mike
