@@ -1,37 +1,41 @@
-From: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
-Subject: Re: [PATCH net-next v3 4/4] ethtool.h: define INT_MAX for userland
-Date: Fri, 4 Mar 2016 14:10:12 +0100
-Message-ID: <56D98934.4050409@cumulusnetworks.com>
-References: <20160303.170804.2300821465150459193.davem@davemloft.net>
- <1457088739-1065-1-git-send-email-nicolas.dichtel@6wind.com>
- <1457088739-1065-5-git-send-email-nicolas.dichtel@6wind.com>
+From: Yves-Alexis Perez <corsac@corsac.net>
+Subject: Re: Page allocation failure (order 7) in UAS code
+Date: Fri, 04 Mar 2016 14:28:11 +0100
+Message-ID: <1457098091.23913.6.camel@corsac.net>
+References: <1456825361.17330.9.camel@corsac.net>
+	 <56D573CF.1000600@redhat.com> <1457075638.23913.4.camel@corsac.net>
+	 <56D936A8.208@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1457088739-1065-5-git-send-email-nicolas.dichtel@6wind.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicolas Dichtel <nicolas.dichtel@6wind.com>, davem@davemloft.net
-Cc: netdev@vger.kernel.org, ben@decadent.org.uk, Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pic75-3-78-194-244-226.fbxo.proxad.net ([78.194.244.226]:34878
+	"EHLO molly.corsac.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbcCDN23 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 08:28:29 -0500
+Received: from corsac.net (unknown [IPv6:2a01:e34:ec2f:4e20:6af7:28ff:fe8d:2119])
+	by molly.corsac.net (Postfix) with ESMTPS id 98C8470
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Mar 2016 14:28:11 +0100 (CET)
+In-Reply-To: <56D936A8.208@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Gerd Hoffmann <kraxel@redhat.com>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 03/04/2016 11:52 AM, Nicolas Dichtel wrote:
-> INT_MAX needs limits.h in userland.
-> When ethtool.h is included by a userland app, we got the following error:
+On ven., 2016-03-04 at 08:18 +0100, Hans de Goede wrote:
+> Thanks for testing, there shouldn't be any side-effects, I'll turn this into
+> a proper patch, add a:
 > 
-> .../usr/include/linux/ethtool.h: In function 'ethtool_validate_speed':
-> .../usr/include/linux/ethtool.h:1471:18: error: 'INT_MAX' undeclared (first use in this function)
->   return speed <= INT_MAX || speed == SPEED_UNKNOWN
->                   ^
+> Reported-and-tested-by: Yves-Alexis Perez <corsac@corsac.net>
 > 
-> Fixes: e02564ee334a ("ethtool: make validate_speed accept all speeds between 0 and INT_MAX")
-> CC: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
-> Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-> ---
->  include/uapi/linux/ethtool.h | 4 ++++
->  1 file changed, 4 insertions(+)
+> line to the comit msg and submit this upstream.
 > 
+> 
+Thanks,
 
-Thanks!
+I guess it can also be CC: stable@ since it started in 4.4.
 
-Acked-by: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
+Regards,
+-- 
+Yves-Alexis
+
