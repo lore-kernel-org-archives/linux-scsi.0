@@ -1,65 +1,129 @@
-From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v10 0/6] add support for DWC UFS Controller
-Date: Fri,  4 Mar 2016 17:22:13 +0000
-Message-ID: <cover.1457111366.git.jpinto@synopsys.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org
-Cc: gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v10 2/6] added UFS 2.0 capabilities
+Date: Fri,  4 Mar 2016 17:22:15 +0000
+Message-ID: <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto@synopsys.com>
+References: <cover.1457111366.git.jpinto@synopsys.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1457111366.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1457111366.git.jpinto@synopsys.com>
+References: <cover.1457111366.git.jpinto@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, arnd@arndb.de, mark.rutland@arm.com
+Cc: gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The work consisted of:
-- Fixed typo in ufshcd-pltfrm.c
-- Tweak ufshcd.c for UFS 2.0 support
-- Implement ufshcd-dwc which contains all DWC HW specific code
-- Unipro attributes were added and new registers were added to the driver
-- Implement a tc-dwc-g210 containing G210 MPHY specific code
-- Implement a tc-dwc-g210 glue platform driver
-- Implement a tc-dwc-g210 glue pci driver
-- Documentation update
+Adding UFS 2.0 support to the UFS core driver.
 
-Remark: The individual patches are not atomic, depending on other patches of
-the set. The patch set was made like this to improve readability.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+Changes v8->v10:
+- Nothing changed (just to keep up with patch set version).
+Changes v7->v8:
+- Added "jedec, ufs-2.0" to the ufschd-platform compatibility strings
+Changes v0->v7:
+- Nothing changed (just to keep up with patch set version).
 
-Joao Pinto (6):
-  fixed typo in ufshcd-pltfrm
-  added UFS 2.0 capabilities
-  added support for DesignWare Controller
-  added support for Synopsys G210 Test Chip
-  add TC G210 platform driver
-  add TC G210 pci driver
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 +--
+ drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++++++---
+ drivers/scsi/ufs/ufshci.h                          |  1 +
+ 3 files changed, 28 insertions(+), 6 deletions(-)
 
- .../devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt |  26 ++
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   4 +-
- MAINTAINERS                                        |   6 +
- drivers/scsi/ufs/Kconfig                           |  25 ++
- drivers/scsi/ufs/Makefile                          |   4 +
- drivers/scsi/ufs/tc-dwc-g210-pci.c                 | 178 ++++++++++++
- drivers/scsi/ufs/tc-dwc-g210-pltfrm.c              | 109 +++++++
- drivers/scsi/ufs/tc-dwc-g210.c                     | 315 +++++++++++++++++++++
- drivers/scsi/ufs/tc-dwc-g210.h                     |  19 ++
- drivers/scsi/ufs/ufshcd-dwc.c                      | 150 ++++++++++
- drivers/scsi/ufs/ufshcd-dwc.h                      |  26 ++
- drivers/scsi/ufs/ufshcd-pltfrm.c                   |   2 +-
- drivers/scsi/ufs/ufshcd.c                          |  29 +-
- drivers/scsi/ufs/ufshcd.h                          |   2 +
- drivers/scsi/ufs/ufshci-dwc.h                      |  42 +++
- drivers/scsi/ufs/ufshci.h                          |   1 +
- drivers/scsi/ufs/unipro.h                          |  39 +++
- 17 files changed, 970 insertions(+), 7 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pci.c
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210.c
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210.h
- create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
- create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
- create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
-
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 03c0e98..8d9a9d2 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -4,8 +4,8 @@ UFSHC nodes are defined to describe on-chip UFS host controllers.
+ Each UFS controller instance should have its own node.
+ 
+ Required properties:
+-- compatible		: must contain "jedec,ufs-1.1", may also list one or more
+-					  of the following:
++- compatible		: must contain "jedec,ufs-1.1" or "jedec,ufs-2.0", may
++			  also list one or more of the following:
+ 					  "qcom,msm8994-ufshc"
+ 					  "qcom,msm8996-ufshc"
+ 					  "qcom,ufshc"
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 85cd256..2b5f2bf 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1223,6 +1223,7 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 			ret = -EINVAL;
+ 		}
+ 		break;
++	case UTP_CMD_TYPE_UFS_STORAGE:
+ 	case UTP_CMD_TYPE_DEV_MANAGE:
+ 		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
+ 		if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
+@@ -1287,6 +1288,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	struct ufshcd_lrb *lrbp;
+ 	struct ufs_hba *hba;
+ 	unsigned long flags;
++	u32 upiu_flags;
+ 	int tag;
+ 	int err = 0;
+ 
+@@ -1343,10 +1345,23 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+ 	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+-	lrbp->command_type = UTP_CMD_TYPE_SCSI;
++
++	if (hba->ufs_version == UFSHCI_VERSION_20)
++		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
++	else
++		lrbp->command_type = UTP_CMD_TYPE_SCSI;
+ 
+ 	/* form UPIU before issuing the command */
+-	ufshcd_compose_upiu(hba, lrbp);
++	if (hba->ufs_version == UFSHCI_VERSION_20) {
++		if (likely(lrbp->cmd)) {
++			ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
++					lrbp->cmd->sc_data_direction);
++			ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
++		} else
++			err = -EINVAL;
++	} else
++		ufshcd_compose_upiu(hba, lrbp);
++
+ 	err = ufshcd_map_sg(lrbp);
+ 	if (err) {
+ 		lrbp->cmd = NULL;
+@@ -1371,7 +1386,12 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+ 	lrbp->sense_buffer = NULL;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = 0; /* device management cmd is not specific to any LUN */
+-	lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++
++	if (hba->ufs_version == UFSHCI_VERSION_20)
++		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
++	else
++		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
+ 	hba->dev_cmd.type = cmd_type;
+ 
+@@ -3187,7 +3207,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 			/* Do not touch lrbp after scsi done */
+ 			cmd->scsi_done(cmd);
+ 			__ufshcd_release(hba);
+-		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE) {
++		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
++			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+ 			if (hba->dev_cmd.complete)
+ 				complete(hba->dev_cmd.complete);
+ 		}
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 0ae0967..8dba0e7 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -273,6 +273,7 @@ enum {
+ 	UTP_CMD_TYPE_SCSI		= 0x0,
+ 	UTP_CMD_TYPE_UFS		= 0x1,
+ 	UTP_CMD_TYPE_DEV_MANAGE		= 0x2,
++	UTP_CMD_TYPE_UFS_STORAGE	= 0x11,
+ };
+ 
+ enum {
 -- 
 1.8.1.5
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
