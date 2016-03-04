@@ -1,33 +1,26 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCHv2 6/6] scsi_sysfs: call 'device_add' after attaching
- device handler
-Date: Fri, 4 Mar 2016 09:34:54 -0800
-Message-ID: <56D9C73E.7020703@sandisk.com>
-References: <1456988052-78791-1-git-send-email-hare@suse.de>
- <1456988052-78791-7-git-send-email-hare@suse.de>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [PATCH v10 2/6] added UFS 2.0 capabilities
+Date: Fri, 04 Mar 2016 22:08:36 +0100
+Message-ID: <3661195.pSzeM24VcH@wuerfel>
+References: <cover.1457111366.git.jpinto@synopsys.com> <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0061.outbound.protection.outlook.com ([207.46.100.61]:27678
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759535AbcCDRuA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Mar 2016 12:50:00 -0500
-In-Reply-To: <1456988052-78791-7-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On 03/02/2016 10:54 PM, Hannes Reinecke wrote:
-> 'device_add' will be evaluating the 'is_visible' callback
-> when creating the sysfs attributes. As by this time the
-> device handler has not been attached the 'access_state'
-> attribute will never be visible.
->
-> This patch moves the code around so that the device handler
-> is present by the time 'is_visible' is evaluated to
-> correctly display the 'access_state' attribute.
+On Friday 04 March 2016 17:22:15 Joao Pinto wrote:
+> Adding UFS 2.0 support to the UFS core driver.
+> 
+> Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+> 
 
-Reviewed-by: Bart van Assche <bart.vanassche@sandisk.com>
+Acked-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
