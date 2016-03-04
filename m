@@ -1,51 +1,64 @@
-From: Emil Velikov <emil.l.velikov@gmail.com>
-Subject: Re: [PATCH net-next v3 3/4] drm/vmwgfx: remove userland definition of
- DIV_ROUND_UP
-Date: Fri, 4 Mar 2016 21:36:25 +0000
-Message-ID: <CACvgo53Hc9OztHKSn=PNjd019M9ba_Qz1SvmJ4OBQG-p5q1o7A@mail.gmail.com>
-References: <20160303.170804.2300821465150459193.davem@davemloft.net>
- <1457088739-1065-1-git-send-email-nicolas.dichtel@6wind.com>
- <1457088739-1065-4-git-send-email-nicolas.dichtel@6wind.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <1457088739-1065-4-git-send-email-nicolas.dichtel@6wind.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Nicolas Dichtel <nicolas.dichtel@6wind.com>, Thomas Hellstrom <thellstrom@vmware.com>
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>, ML dri-devel <dri-devel@lists.freedesktop.org>, Karen Xie <kxie@chelsio.com>, ben@decadent.org.uk, "David S. Miller" <davem@davemloft.net>
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 0/7] Miscellaneous patches to support cxlflash in PowerVM
+Date: Fri,  4 Mar 2016 15:53:44 -0600
+Message-ID: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:52111 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760201AbcCDVzr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 16:55:47 -0500
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+	Fri, 4 Mar 2016 16:55:46 -0500
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 5EE0B6E8041
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Mar 2016 16:42:33 -0500 (EST)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u24Ltg0935913858
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2016 21:55:42 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u24Ltf7x030482
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Mar 2016 16:55:41 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-SGkgTmljb2xhcywKCk9uIDQgTWFyY2ggMjAxNiBhdCAxMDo1MiwgTmljb2xhcyBEaWNodGVsIDxu
-aWNvbGFzLmRpY2h0ZWxANndpbmQuY29tPiB3cm90ZToKPiBMZXQncyB1c2UgX19LRVJORUxfRElW
-X1JPVU5EX1VQLCB3aGljaCBpcyBkZWZpbmVkIGluIHVhcGkvbGludXgva2VybmVsLmguCj4KPiBT
-aWduZWQtb2ZmLWJ5OiBOaWNvbGFzIERpY2h0ZWwgPG5pY29sYXMuZGljaHRlbEA2d2luZC5jb20+
-Cj4gLS0tCj4gIC4uLi9kcm0vdm13Z2Z4L2RldmljZV9pbmNsdWRlL3N2Z2EzZF9zdXJmYWNlZGVm
-cy5oICAgfCAyMCArKysrKysrKysrKy0tLS0tLS0tLQo+ICAxIGZpbGUgY2hhbmdlZCwgMTEgaW5z
-ZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKPgo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9k
-cm0vdm13Z2Z4L2RldmljZV9pbmNsdWRlL3N2Z2EzZF9zdXJmYWNlZGVmcy5oIGIvZHJpdmVycy9n
-cHUvZHJtL3Ztd2dmeC9kZXZpY2VfaW5jbHVkZS9zdmdhM2Rfc3VyZmFjZWRlZnMuaAo+IGluZGV4
-IDU4NzA0ZjBhNDYwNy4uNTMxZDIyMDI1ZmVjIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvZ3B1L2Ry
-bS92bXdnZngvZGV2aWNlX2luY2x1ZGUvc3ZnYTNkX3N1cmZhY2VkZWZzLmgKPiArKysgYi9kcml2
-ZXJzL2dwdS9kcm0vdm13Z2Z4L2RldmljZV9pbmNsdWRlL3N2Z2EzZF9zdXJmYWNlZGVmcy5oCj4g
-QEAgLTI1LDYgKzI1LDggQEAKPiAgICoKPiAgICoqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqLwo+Cj4gKyNpbmNs
-dWRlIDxsaW51eC9rZXJuZWwuaD4KPiArCkZpbGVzIGZyb20gRFJNIG1vZHVsZXMgdGVuZCB0byBi
-ZSB1c2VkIGluIHZhcmlvdXMgKGNyYXp5KSB3YXlzLiBCZQp0aGF0IGluIGxpbnV4IGFuZC9vciBv
-dGhlciB1c2VyIHNwYWNlLgoKRmFpcmx5IGNlcnRhaW4gdGhhdCBldmVyeXRoaW5nIGlzIGZpbmUg
-aGVyZSwganVzdCBhZGRpbmcgb25lIG9mIHRoZQpjb3JlIHZtd2dmeCBkZXZlbG9wZXJzLgoKVGhv
-bWFzLCB0aGlzIHdvbid0IGNhdXNlIGFueSBpc3N1ZXMgd291bGQgaXQgPwoKQ2FuIHlvdSBndXlz
-IHBsZWFzZSBhZGQgYW4gZW50cnkgZm9yIHZtd2dmeCB0byBNQUlOVEFJTkVSUywgc28gdGhhdApw
-ZW9wbGUgY2FuIENDIHlvdSBndXlzIG9uIHBhdGNoZXMgdGhhdCB0b3VjaCB0aGUgZHJpdmVyID8K
-ClRoYW5rcwpFbWlsCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9y
-ZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZl
-bAo=
+The first 5 patches of this series contain fixes to support
+the cxlflash driver in a PowerVM guest. For the cxlflash driver
+to be functional in a PowerVM guest, a corresponding set of cxl
+patches (currently being upstreamed) is required. Note that this
+cxlflash patch series does not have any build dependencies on
+the new cxl code.
+
+The sixth patch in the series is a fix to dynamically swap between
+the AFU's internal LUN and an actual LUN detected on the fabric.
+
+The last patch in the series is a performance enhancement to
+improve throughput with cxlflash driver.
+
+This series is intended for 4.6 and is bisectable.
+
+Manoj N. Kumar (3):
+  cxlflash: Simplify PCI registration
+  cxlflash: Fix to avoid unnecessary scan with internal LUNs
+  cxlflash: Increase cmd_per_lun for better throughput
+
+Matthew R. Ochs (2):
+  cxlflash: Split out context initialization
+  cxlflash: Simplify attach path error cleanup
+
+Uma Krishnan (2):
+  cxlflash: Unmap problem state area before detaching master context
+  cxlflash: Reorder user context initialization
+
+ drivers/scsi/cxlflash/common.h    |   8 +-
+ drivers/scsi/cxlflash/main.c      |  72 +++-----------
+ drivers/scsi/cxlflash/superpipe.c | 195 +++++++++++++++++++++-----------------
+ drivers/scsi/cxlflash/superpipe.h |   1 +
+ 4 files changed, 131 insertions(+), 145 deletions(-)
+
+-- 
+2.1.0
+
