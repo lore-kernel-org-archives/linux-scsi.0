@@ -1,26 +1,29 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v10 4/6] added support for Synopsys G210 Test Chip
-Date: Fri, 04 Mar 2016 22:10:31 +0100
-Message-ID: <8468191.K7paZJPBy3@wuerfel>
-References: <cover.1457111366.git.jpinto@synopsys.com> <abbb0e8ee4eb17c9736c2f3bfeab51ff623b1381.1457111366.git.jpinto@synopsys.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next v3 0/4] uapi: consolidate DIV_ROUND_UP
+ definition
+Date: Fri, 04 Mar 2016 16:10:59 -0500 (EST)
+Message-ID: <20160304.161059.1504063385320881771.davem@davemloft.net>
+References: <20160303.170804.2300821465150459193.davem@davemloft.net>
+	<1457088739-1065-1-git-send-email-nicolas.dichtel@6wind.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <abbb0e8ee4eb17c9736c2f3bfeab51ff623b1381.1457111366.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1457088739-1065-1-git-send-email-nicolas.dichtel@6wind.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nicolas.dichtel@6wind.com
+Cc: netdev@vger.kernel.org, ben@decadent.org.uk, kxie@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, airlied@linux.ie, dri-devel@lists.freedesktop.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 04 March 2016 17:22:17 Joao Pinto wrote:
-> This patch adds support for Synopsys G210 Test Chip.
-> 
-> Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-> 
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Date: Fri,  4 Mar 2016 11:52:15 +0100
 
-Acked-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The inital goal was to consolidate ethtool.h uapi header. But I took the
+> opportunity to remove all duplicate definitions of DIV_ROUND_UP.
+> 
+> v3: add patch #2 and #3
+> 
+> v2: split the patch
+>     define DIV_ROUND_UP in uapi
+
+Series applied, thanks for so thoroughly taking care of this.
