@@ -1,56 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 2/2] target/iblock: Use -EAGAIN/-ENOMEM to propigate
- SAM BUSY/TASK_SET_FULL
-Date: Sat, 05 Mar 2016 14:51:27 -0800
-Message-ID: <1457218287.28660.70.camel@haakon3.risingtidesystems.com>
-References: <1457161634-15756-1-git-send-email-nab@daterainc.com>
-	 <1457161634-15756-2-git-send-email-nab@daterainc.com>
-	 <20160305210108.GA16337@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160305210108.GA16337@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Andy Grover <agrover@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] sd: Fix discard granularity when LBPRZ=1
+Date: Sat,  5 Mar 2016 18:10:21 -0500
+Message-ID: <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
+References: <20160304152409.GA31358@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35107 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbcCEXKe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Mar 2016 18:10:34 -0500
+In-Reply-To: <20160304152409.GA31358@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: snitzer@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org#4.4+
 
-On Sat, 2016-03-05 at 22:01 +0100, Christoph Hellwig wrote:
-> > -	if (atomic_read(&ibr->ib_bio_err_cnt))
-> > -		status = SAM_STAT_CHECK_CONDITION;
-> > -	else
-> > +	/*
-> > +	 * Propigate use these two bio completion values from raw block
-> > +	 * drivers to signal up BUSY and TASK_SET_FULL status to the
-> > +	 * host side initiator.  The latter for Linux/iSCSI initiators
-> > +	 * means the Linux/SCSI LLD will begin to reduce it's internal
-> > +	 * per session queue_depth.
-> > +	 */
-> > +	if (atomic_read(&ibr->ib_bio_err_cnt)) {
-> > +		switch (ibr->ib_bio_retry) {
-> > +		case -EAGAIN:
-> > +			status = SAM_STAT_BUSY;
-> > +			break;
-> > +		case -ENOMEM:
-> > +			status = SAM_STAT_TASK_SET_FULL;
-> > +			break;
-> > +		default:
-> > +			status = SAM_STAT_CHECK_CONDITION;
-> > +			break;
-> > +		}
-> > +	} else {
-> >  		status = SAM_STAT_GOOD;
-> > +	}
-> 
-> I think you;d be much better off killing ib_bio_err_cnt and having
-> an ib_error that gets set to the last / most server error.
+Commit 397737223c59 ("sd: Make discard granularity match logical block
+size when LBPRZ=1") accidentally set the granularity to one byte instead
+of one logical block on devices that provide determistic zeroes after
+UNMAP.
 
-That's what I was originally thinking too..
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reported-by: Mike Snitzer <snitzer@redhat.com>
+Fixes: 397737223c59e89dca7305feb6528caef8fbef84
+Cc: <stable@vger.kernel.org> # 4.4+
+---
+ drivers/scsi/sd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-However, that means if one bio completed successfully and another got
--EAGAIN / -ENOMEM for the same se_cmd, IBLOCK would still complete
-se_cmd with GOOD status.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d749da765df1..5a5457ac9cdb 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -648,7 +648,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	 */
+ 	if (sdkp->lbprz) {
+ 		q->limits.discard_alignment = 0;
+-		q->limits.discard_granularity = 1;
++		q->limits.discard_granularity = logical_block_size;
+ 	} else {
+ 		q->limits.discard_alignment = sdkp->unmap_alignment *
+ 			logical_block_size;
+-- 
+2.7.0
 
-I don't see how completing se_cmd with GOOD status, when one bio in the
-set requested retry depending on completion order is a good idea.
