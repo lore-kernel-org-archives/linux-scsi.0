@@ -1,46 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] tcm_loop: use after free on error
-Date: Fri, 04 Mar 2016 23:21:15 -0800
-Message-ID: <1457162475.19657.278.camel@haakon3.risingtidesystems.com>
-References: <20160302100941.GE5533@mwanda>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH-v2 2/2] target/iblock: Use -EAGAIN/-ENOMEM to propigate
+	SAM BUSY/TASK_SET_FULL
+Date: Sat, 5 Mar 2016 22:01:08 +0100
+Message-ID: <20160305210108.GA16337@lst.de>
+References: <1457161634-15756-1-git-send-email-nab@daterainc.com> <1457161634-15756-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160302100941.GE5533@mwanda>
+Content-Disposition: inline
+In-Reply-To: <1457161634-15756-2-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Sheng Yang <sheng@yasker.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2016-03-02 at 13:09 +0300, Dan Carpenter wrote:
-> We dereference "tl_nexus" to get the error code.
-> 
-> Fixes: 1b418a8fcbc0 ('target: Convert demo-mode only drivers to target_alloc_session')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-> index 0216c75..e0ffb03 100644
-> --- a/drivers/target/loopback/tcm_loop.c
-> +++ b/drivers/target/loopback/tcm_loop.c
-> @@ -808,6 +808,7 @@ static int tcm_loop_make_nexus(
->  {
->  	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
->  	struct tcm_loop_nexus *tl_nexus;
-> +	int ret;
->  
->  	if (tl_tpg->tl_nexus) {
->  		pr_debug("tl_tpg->tl_nexus already exists\n");
-> @@ -824,8 +825,9 @@ static int tcm_loop_make_nexus(
->  					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
->  					name, tl_nexus, NULL);
->  	if (IS_ERR(tl_nexus->se_sess)) {
-> +		ret = PTR_ERR(tl_nexus->se_sess);
->  		kfree(tl_nexus);
-> -		return PTR_ERR(tl_nexus->se_sess);
-> +		return ret;
->  	}
->  
->  	tl_tpg->tl_nexus = tl_nexus;
+> -	if (atomic_read(&ibr->ib_bio_err_cnt))
+> -		status = SAM_STAT_CHECK_CONDITION;
+> -	else
+> +	/*
+> +	 * Propigate use these two bio completion values from raw block
+> +	 * drivers to signal up BUSY and TASK_SET_FULL status to the
+> +	 * host side initiator.  The latter for Linux/iSCSI initiators
+> +	 * means the Linux/SCSI LLD will begin to reduce it's internal
+> +	 * per session queue_depth.
+> +	 */
+> +	if (atomic_read(&ibr->ib_bio_err_cnt)) {
+> +		switch (ibr->ib_bio_retry) {
+> +		case -EAGAIN:
+> +			status = SAM_STAT_BUSY;
+> +			break;
+> +		case -ENOMEM:
+> +			status = SAM_STAT_TASK_SET_FULL;
+> +			break;
+> +		default:
+> +			status = SAM_STAT_CHECK_CONDITION;
+> +			break;
+> +		}
+> +	} else {
+>  		status = SAM_STAT_GOOD;
+> +	}
 
-Also fixed + squashed into HCH's original patch.
+I think you;d be much better off killing ib_bio_err_cnt and having
+an ib_error that gets set to the last / most server error.
