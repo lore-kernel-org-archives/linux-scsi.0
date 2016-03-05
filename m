@@ -1,81 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.5-rc6
-Date: Fri, 04 Mar 2016 15:30:39 -0800
-Message-ID: <1457134239.2419.121.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] cxgbit: fix dma_addr_t printk format
+Date: Sat,  5 Mar 2016 01:04:41 +0100
+Message-ID: <1457136294-2229829-1-git-send-email-arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.13]:51056 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760491AbcCEAFF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2016 19:05:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Two fairly simple fixes.  One is a regression with ipr firmware loading
-caused by one of the trivial patches in the last merge window which
-failed to strip the \n from the file name string, so now the firmware
-loader no longer works leading to a lot of unhappy ipr users; fix by
-stripping the \n.  The second is a memory leak within SCSI: the
-BLK_PREP_INVALID state was introduced a recent fix but we forgot to
-account for it correctly when freeing state, resulting in memory
-leakage.  Add the correct state freeing in scsi_prep_return().
+The newly added driver prints a dma_addr_t using the %llx format string,
+but that is wrong on most 32-bit architectures:
 
-The patch is available here:
+drivers/target/iscsi/cxgbit/cxgbit_ddp.c: In function 'cxgbit_dump_sgl':
+drivers/target/iscsi/cxgbit/cxgbit_ddp.c:180:10: error: format '%llx' expects argument of type 'long long unsigned int', but argument 8 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+   pr_info("\t%d/%u, 0x%p: len %u, off %u, pg 0x%p, dma 0x%llx, %u\n",
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Unfortunately, we can't use the %pad format string here because
+we are not printing an lvalue, so we have to add a cast to u64, which
+matches the format string on all architectures.
 
-The short changelog is:
-
-Gabriel Krisman Bertazi (1):
-      ipr: Fix regression when loading firmware
-
-jiangyiwen (1):
-      SCSI: Free resources when we return BLKPREP_INVALID
-
-And the diffstat:
-
- drivers/scsi/ipr.c      | 5 +++++
- drivers/scsi/scsi_lib.c | 1 +
- 2 files changed, 6 insertions(+)
-
-With full diff below.
-
-James
-
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: c49aa56e556d ("cxgbit: add cxgbit_ddp.c")
 ---
+ drivers/target/iscsi/cxgbit/cxgbit_ddp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 3b3e099..d6a691e 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4002,6 +4002,7 @@ static ssize_t ipr_store_update_fw(struct device *dev,
- 	struct ipr_sglist *sglist;
- 	char fname[100];
- 	char *src;
-+	char *endline;
- 	int result, dnld_size;
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+index 07e2bc86d0df..d667bc88e21d 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+@@ -179,7 +179,7 @@ cxgbit_dump_sgl(const char *cap, struct scatterlist *sgl, int nents)
+ 	for_each_sg(sgl, sg, nents, i)
+ 		pr_info("\t%d/%u, 0x%p: len %u, off %u, pg 0x%p, dma 0x%llx, %u\n",
+ 			i, nents, sg, sg->length, sg->offset, sg_page(sg),
+-			sg_dma_address(sg), sg_dma_len(sg));
++			(u64)sg_dma_address(sg), sg_dma_len(sg));
+ }
  
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -4009,6 +4010,10 @@ static ssize_t ipr_store_update_fw(struct device *dev,
- 
- 	snprintf(fname, sizeof(fname), "%s", buf);
- 
-+	endline = strchr(fname, '\n');
-+	if (endline)
-+		*endline = '\0';
-+
- 	if (request_firmware(&fw_entry, fname, &ioa_cfg->pdev->dev)) {
- 		dev_err(&ioa_cfg->pdev->dev, "Firmware file %s not found\n", fname);
- 		return -EIO;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fa6b2c4..8c6e318 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1344,6 +1344,7 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- 
- 	switch (ret) {
- 	case BLKPREP_KILL:
-+	case BLKPREP_INVALID:
- 		req->errors = DID_NO_CONNECT << 16;
- 		/* release the command and kill it */
- 		if (req->special) {
+ static int cxgbit_ddp_sgl_check(struct scatterlist *sgl, int nents)
+-- 
+2.7.0
+
