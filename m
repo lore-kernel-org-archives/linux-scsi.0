@@ -1,53 +1,85 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] cxgbit: fix dma_addr_t printk format
-Date: Fri, 04 Mar 2016 18:20:25 -0800
-Message-ID: <1457144425.4044.147.camel@perches.com>
-References: <1457136294-2229829-1-git-send-email-arnd@arndb.de>
-	 <1457137507.4044.143.camel@perches.com> <1512908.OAtrKYf46L@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1512908.OAtrKYf46L@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2 1/2] target: Avoid DataIN transfers for non-GOOD SAM status
+Date: Sat,  5 Mar 2016 07:07:13 +0000
+Message-ID: <1457161634-15756-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:35486 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbcCEHLT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Mar 2016 02:11:19 -0500
+Received: by mail-ob0-f178.google.com with SMTP id xx9so68525029obc.2
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Mar 2016 23:11:18 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>
 
-On Sat, 2016-03-05 at 01:34 +0100, Arnd Bergmann wrote:
-> On Friday 04 March 2016 16:25:07 Joe Perches wrote:
-> > > diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/t=
-arget/iscsi/cxgbit/cxgbit_ddp.c
-[]
-> > > @@ -179,7 +179,7 @@ cxgbit_dump_sgl(const char *cap, struct scatt=
-erlist *sgl, int nents)
-> > > =A0=A0=A0=A0=A0=A0for_each_sg(sgl, sg, nents, i)
-> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0pr_info("\t%d/%u, 0x%p:=
- len %u, off %u, pg 0x%p, dma 0x%llx, %u\n",
-> > > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-i, nents, sg, sg->length, sg->offset, sg_page(sg),
-> > > -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0s=
-g_dma_address(sg), sg_dma_len(sg));
-> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0(=
-u64)sg_dma_address(sg), sg_dma_len(sg));
-[]
-> > You could create a temporary:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
+This patch modifies existing transport_complete_*() code
+to avoid invoking target_core_fabric_ops->queue_data_in()
+driver callbacks for I/O READs with non-GOOD SAM status.
 
-=A0=A0=A0=A0=A0=A0=A0=A0for_each_sg(sgl, sg, nents, i) {
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0dma_addr_t addr =3D sg_=
-dma_address(sg);
+Some initiators expect GOOD status when a DATA-IN payload
+transfer is involved, so to be safe go ahead and always
+invoke target_core_fabric_ops->queue_status() to generate
+fabric responses instead.
 
+Note this is a prerequisite for IBLOCK supporting retriable
+status, so SAM_STAT_BUSY + SAM_STAT_TASK_SET_FULL always
+generates fabric driver responses instead of initiating
+DataIN payload transfer when non-GOOD status is present
 
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0pr_info("\t%d/%u, 0x%p:=
- len %u, off %u, pg 0x%p, dma %pad, %u\n",
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-i, nents, sg, sg->length, sg->offset, sg_page(sg),
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-&addr, sg_dma_len(sg));
-=A0=A0=A0=A0=A0=A0=A0=A0}
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Sure, but the cast seemed nicer in this case, the result is the same.
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index f5ad9e0..784dd22 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1997,6 +1997,9 @@ static void transport_complete_qf(struct se_cmd *cmd)
+ 
+ 	switch (cmd->data_direction) {
+ 	case DMA_FROM_DEVICE:
++		if (cmd->scsi_status)
++			goto queue_status;
++
+ 		trace_target_cmd_complete(cmd);
+ 		ret = cmd->se_tfo->queue_data_in(cmd);
+ 		break;
+@@ -2007,6 +2010,7 @@ static void transport_complete_qf(struct se_cmd *cmd)
+ 		}
+ 		/* Fall through for DMA_TO_DEVICE */
+ 	case DMA_NONE:
++queue_status:
+ 		trace_target_cmd_complete(cmd);
+ 		ret = cmd->se_tfo->queue_status(cmd);
+ 		break;
+@@ -2128,6 +2132,9 @@ static void target_complete_ok_work(struct work_struct *work)
+ queue_rsp:
+ 	switch (cmd->data_direction) {
+ 	case DMA_FROM_DEVICE:
++		if (cmd->scsi_status)
++			goto queue_status;
++
+ 		atomic_long_add(cmd->data_length,
+ 				&cmd->se_lun->lun_stats.tx_data_octets);
+ 		/*
+@@ -2167,6 +2174,7 @@ queue_rsp:
+ 		}
+ 		/* Fall through for DMA_TO_DEVICE */
+ 	case DMA_NONE:
++queue_status:
+ 		trace_target_cmd_complete(cmd);
+ 		ret = cmd->se_tfo->queue_status(cmd);
+ 		if (ret == -EAGAIN || ret == -ENOMEM)
+-- 
+1.9.1
 
-Not quite as 0x%llx isn't always the same width and doesn't
-have leading 0's like %pad
