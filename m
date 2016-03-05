@@ -1,45 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Fix discard granularity when LBPRZ=1
-Date: Sat,  5 Mar 2016 18:10:21 -0500
-Message-ID: <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
-References: <20160304152409.GA31358@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35107 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbcCEXKe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Mar 2016 18:10:34 -0500
-In-Reply-To: <20160304152409.GA31358@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 22/34] iscsi-target: call Rx thread function
+Date: Sat, 05 Mar 2016 15:16:23 -0800
+Message-ID: <1457219783.28660.86.camel@haakon3.risingtidesystems.com>
+References: <cover.1455467089.git.varun@chelsio.com>
+	 <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
+	 <20160301150137.GH9738@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20160301150137.GH9738@infradead.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Varun Prakash <varun@chelsio.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: snitzer@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org#4.4+
 
-Commit 397737223c59 ("sd: Make discard granularity match logical block
-size when LBPRZ=1") accidentally set the granularity to one byte instead
-of one logical block on devices that provide determistic zeroes after
-UNMAP.
+On Tue, 2016-03-01 at 07:01 -0800, Christoph Hellwig wrote:
+> On Sun, Feb 14, 2016 at 11:15:29PM +0530, Varun Prakash wrote:
+> > call Rx thread function if registered
+> > by transport driver, so that transport
+> > drivers can use iscsi-target Rx thread
+> > for Rx processing.
+> > 
+> > update iSER target driver to use this
+> > interface.
+> 
+> Not related to your new driver, but what's the point of even starting a
+> RX thread for iSER?
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reported-by: Mike Snitzer <snitzer@redhat.com>
-Fixes: 397737223c59e89dca7305feb6528caef8fbef84
-Cc: <stable@vger.kernel.org> # 4.4+
----
- drivers/scsi/sd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Originally, this was added to avoid having multiple connection shutdown
+special cases in now defunct iscsi_target_tq.c code.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d749da765df1..5a5457ac9cdb 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -648,7 +648,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	 */
- 	if (sdkp->lbprz) {
- 		q->limits.discard_alignment = 0;
--		q->limits.discard_granularity = 1;
-+		q->limits.discard_granularity = logical_block_size;
- 	} else {
- 		q->limits.discard_alignment = sdkp->unmap_alignment *
- 			logical_block_size;
--- 
-2.7.0
-
+With that part out of the way, it's should be straight-forward to avoid
+starting conn->rx_thread all-together for iser-target.
