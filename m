@@ -1,32 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 1/1] scsi: storvsc: Fix a build issue reported by
- kbuild test robot
-Date: Sat, 05 Mar 2016 17:02:32 -0500
-Message-ID: <yq1bn6s4m87.fsf@sermon.lab.mkp.net>
-References: <1456537738-26773-1-git-send-email-kys@microsoft.com>
+Subject: Re: [PATCH 08/14] scsi: mvumi: use __maybe_unused to hide pm functions
+Date: Sat, 05 Mar 2016 17:08:49 -0500
+Message-ID: <yq17fhg4lxq.fsf@sermon.lab.mkp.net>
+References: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
+	<1456934350-1389172-9-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1456537738-26773-1-git-send-email-kys@microsoft.com>
- (K. Y. Srinivasan's message of "Fri, 26 Feb 2016 17:48:58 -0800")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jasowang@redhat.com, linux-kernel@vger.kernel.org, jbottomley@parallels.com, ohering@suse.com, hch@infradead.org, hare@suse.de, apw@canonical.com, devel@linuxdriverproject.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:50867 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbcCEWJX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Mar 2016 17:09:23 -0500
+In-Reply-To: <1456934350-1389172-9-git-send-email-arnd@arndb.de> (Arnd
+	Bergmann's message of "Wed, 2 Mar 2016 16:59:00 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
->>>>> "kys" == K Y Srinivasan <kys@microsoft.com> writes:
+>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 
-kys> With this commit, the storvsc driver depends on FC
-kys> atttributes. Make this dependency explicit.
+Arnd> The mvumi scsi hides the references to its suspend/resume
+Arnd> functions in an #ifdef but does not hide the implementation the
+Arnd> same way:
 
 Applied to 4.6/scsi-queue.
 
