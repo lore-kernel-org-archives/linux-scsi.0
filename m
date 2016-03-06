@@ -1,108 +1,137 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v6 15/17] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
-Date: Sun,  6 Mar 2016 13:55:56 +0200
-Message-ID: <1457265358-31635-16-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v6 11/17] scsi: ufs: handle non spec compliant bkops behaviour by device
+Date: Sun,  6 Mar 2016 13:55:52 +0200
+Message-ID: <1457265358-31635-12-git-send-email-ygardi@codeaurora.org>
 References: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some UFS devices (and may be host) have issues if LCC is
-enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-before link startup which will make sure that both host
-and device TX LCC are disabled once link startup is
-completed.
+We are seeing that some devices are raising the urgent bkops exception
+events even when BKOPS status doesn't indicate performace impacted or
+critical. Handle these device by determining their urgent bkops status
+at runtime.
 
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs-qcom.c | 27 ++++++++++++++++++++-------
- drivers/scsi/ufs/unipro.h   |  1 +
- 2 files changed, 21 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 52 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index ed57729..966bacf 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -16,8 +16,8 @@
- #include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
--
- #include <linux/phy/phy-qcom-ufs.h>
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 394054e..d28c629 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3763,7 +3763,7 @@ out:
+  */
+ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+ {
+-	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
++	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
+ }
+ 
+ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+@@ -3772,6 +3772,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+ 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+ }
+ 
++static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
++{
++	int err;
++	u32 curr_status = 0;
 +
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
- #include "unipro.h"
-@@ -106,9 +106,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
- 	if (!host->is_lane_clks_enabled)
- 		return;
- 
--	clk_disable_unprepare(host->tx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->tx_l1_sync_clk);
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- 	clk_disable_unprepare(host->rx_l0_sync_clk);
- 
- 	host->is_lane_clks_enabled = false;
-@@ -272,9 +274,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
- 
- 	if (ret) {
--		dev_err(hba->dev,
--		"%s: ufs_qcom_phy_calibrate_phy()failed, ret = %d\n",
--		__func__, ret);
-+		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = %d\n",
-+			__func__, ret);
- 		goto out;
++	if (hba->is_urgent_bkops_lvl_checked)
++		goto enable_auto_bkops;
++
++	err = ufshcd_get_bkops_status(hba, &curr_status);
++	if (err) {
++		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
++				__func__, err);
++		goto out;
++	}
++
++	/*
++	 * We are seeing that some devices are raising the urgent bkops
++	 * exception events even when BKOPS status doesn't indicate performace
++	 * impacted or critical. Handle these device by determining their urgent
++	 * bkops status at runtime.
++	 */
++	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
++		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
++				__func__, curr_status);
++		/* update the current status as the urgent bkops level */
++		hba->urgent_bkops_lvl = curr_status;
++		hba->is_urgent_bkops_lvl_checked = true;
++	}
++
++enable_auto_bkops:
++	err = ufshcd_enable_auto_bkops(hba);
++out:
++	if (err < 0)
++		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
++				__func__, err);
++}
++
+ /**
+  * ufshcd_exception_event_handler - handle exceptions raised by device
+  * @work: pointer to work data
+@@ -3795,12 +3832,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
  	}
  
-@@ -524,6 +525,18 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
- 									  150);
- 
-+		/*
-+		 * Some UFS devices (and may be host) have issues if LCC is
-+		 * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-+		 * before link startup which will make sure that both host
-+		 * and device TX LCC are disabled once link startup is
-+		 * completed.
-+		 */
-+		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
-+			err = ufshcd_dme_set(hba,
-+					UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
-+					0);
+ 	status &= hba->ee_ctrl_mask;
+-	if (status & MASK_EE_URGENT_BKOPS) {
+-		err = ufshcd_urgent_bkops(hba);
+-		if (err < 0)
+-			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
+-					__func__, err);
+-	}
 +
- 		break;
- 	case POST_CHANGE:
- 		ufs_qcom_link_startup_post_change(hba);
-@@ -1542,7 +1555,7 @@ static int ufs_qcom_probe(struct platform_device *pdev)
-  * ufs_qcom_remove - set driver_data of the device to NULL
-  * @pdev: pointer to platform device handle
-  *
-- * Always return 0
-+ * Always returns 0
++	if (status & MASK_EE_URGENT_BKOPS)
++		ufshcd_bkops_exception_event_handler(hba);
++
+ out:
+ 	pm_runtime_put_sync(hba->dev);
+ 	return;
+@@ -4763,6 +4798,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 	ufshcd_init_pwr_info(hba);
+ 
++	/* set the default level for urgent bkops */
++	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
++	hba->is_urgent_bkops_lvl_checked = false;
++
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 77e79c0..65f29aa 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
+  * @clk_list_head: UFS host controller clocks list node head
+  * @pwr_info: holds current power mode
+  * @max_pwr_info: keeps the device max valid pwm
++ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
++ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
++ *  device is known or not.
   */
- static int ufs_qcom_remove(struct platform_device *pdev)
- {
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 8082020..e2854e4 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -75,6 +75,7 @@
- #define PA_MAXRXSPEEDFAST	0x1541
- #define PA_MAXRXSPEEDSLOW	0x1542
- #define PA_TXLINKSTARTUPHS	0x1544
-+#define PA_LOCAL_TX_LCC_ENABLE	0x155E
- #define PA_TXSPEEDFAST		0x1565
- #define PA_TXSPEEDSLOW		0x1566
- #define PA_REMOTEVERINFO	0x15A0
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -538,6 +541,9 @@ struct ufs_hba {
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+ 	bool is_sys_suspended;
++
++	enum bkops_status urgent_bkops_lvl;
++	bool is_urgent_bkops_lvl_checked;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
 -- 
 1.8.5.2
 
