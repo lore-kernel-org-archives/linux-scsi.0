@@ -1,137 +1,189 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v6 11/17] scsi: ufs: handle non spec compliant bkops behaviour by device
-Date: Sun,  6 Mar 2016 13:55:52 +0200
-Message-ID: <1457265358-31635-12-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v6 09/17] scsi: ufs: add error recovery after DL NAC error
+Date: Sun,  6 Mar 2016 13:55:50 +0200
+Message-ID: <1457265358-31635-10-git-send-email-ygardi@codeaurora.org>
 References: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33511 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581AbcCFL4p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2016 06:56:45 -0500
 In-Reply-To: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-List-Id: linux-scsi@vger.kernel.org
 
-We are seeing that some devices are raising the urgent bkops exception
-events even when BKOPS status doesn't indicate performace impacted or
-critical. Handle these device by determining their urgent bkops status
-at runtime.
+Some vendor's UFS device sends back to back NACs for the DL data frames
+causing the host controller to raise the DFES error status. Sometimes
+such UFS devices send back to back NAC without waiting for new
+retransmitted DL frame from the host and in such cases it might be
+possible the Host UniPro goes into bad state without raising the DFES
+error interrupt. If this happens then all the pending commands would
+timeout only after respective SW command (which is generally too
+large).
+
+This change workarounds such device behaviour like this:
+- As soon as SW sees the DL NAC error, it would schedule the error
+  handler
+- Error handler would sleep for 50ms to see if there any fatal errors
+  raised by UFS controller.
+   - If there are fatal errors then SW does normal error recovery.
+   - If there are no fatal errors then SW sends the NOP command to
+     device to check if link is alive.
+       - If NOP command times out, SW does normal error recovery
+       - If NOP command succeed, skip the error handling.
+
+If DL NAC error is seen multiple times with some vendor's UFS devices
+then enable this quirk to initiate quick error recovery and also
+silence related error logs to reduce spamming of kernel logs.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
- drivers/scsi/ufs/ufshcd.h |  6 ++++++
- 2 files changed, 52 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshci.h |  2 +
+ 2 files changed, 95 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 394054e..d28c629 100644
+index dc096f1..e9c7c91 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3763,7 +3763,7 @@ out:
-  */
- static int ufshcd_urgent_bkops(struct ufs_hba *hba)
- {
--	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
-+	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
+@@ -3795,6 +3795,79 @@ static void ufshcd_complete_requests(struct ufs_hba *hba)
  }
  
- static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
-@@ -3772,6 +3772,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
- 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
- }
- 
-+static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
+ /**
++ * ufshcd_quirk_dl_nac_errors - This function checks if error handling is
++ *				to recover from the DL NAC errors or not.
++ * @hba: per-adapter instance
++ *
++ * Returns true if error handling is required, false otherwise
++ */
++static bool ufshcd_quirk_dl_nac_errors(struct ufs_hba *hba)
 +{
-+	int err;
-+	u32 curr_status = 0;
++	unsigned long flags;
++	bool err_handling = true;
 +
-+	if (hba->is_urgent_bkops_lvl_checked)
-+		goto enable_auto_bkops;
-+
-+	err = ufshcd_get_bkops_status(hba, &curr_status);
-+	if (err) {
-+		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
-+				__func__, err);
-+		goto out;
-+	}
-+
++	spin_lock_irqsave(hba->host->host_lock, flags);
 +	/*
-+	 * We are seeing that some devices are raising the urgent bkops
-+	 * exception events even when BKOPS status doesn't indicate performace
-+	 * impacted or critical. Handle these device by determining their urgent
-+	 * bkops status at runtime.
++	 * UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS only workaround the
++	 * device fatal error and/or DL NAC & REPLAY timeout errors.
 +	 */
-+	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
-+		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
-+				__func__, curr_status);
-+		/* update the current status as the urgent bkops level */
-+		hba->urgent_bkops_lvl = curr_status;
-+		hba->is_urgent_bkops_lvl_checked = true;
-+	}
++	if (hba->saved_err & (CONTROLLER_FATAL_ERROR | SYSTEM_BUS_FATAL_ERROR))
++		goto out;
 +
-+enable_auto_bkops:
-+	err = ufshcd_enable_auto_bkops(hba);
++	if ((hba->saved_err & DEVICE_FATAL_ERROR) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	     (hba->saved_uic_err & UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))
++		goto out;
++
++	if ((hba->saved_err & UIC_ERROR) &&
++	    (hba->saved_uic_err & UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)) {
++		int err;
++		/*
++		 * wait for 50ms to see if we can get any other errors or not.
++		 */
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		msleep(50);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++
++		/*
++		 * now check if we have got any other severe errors other than
++		 * DL NAC error?
++		 */
++		if ((hba->saved_err & INT_FATAL_ERRORS) ||
++		    ((hba->saved_err & UIC_ERROR) &&
++		    (hba->saved_uic_err & ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)))
++			goto out;
++
++		/*
++		 * As DL NAC is the only error received so far, send out NOP
++		 * command to confirm if link is still active or not.
++		 *   - If we don't get any response then do error recovery.
++		 *   - If we get response then clear the DL NAC error bit.
++		 */
++
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		err = ufshcd_verify_dev_init(hba);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++
++		if (err)
++			goto out;
++
++		/* Link seems to be alive hence ignore the DL NAC errors */
++		if (hba->saved_uic_err == UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)
++			hba->saved_err &= ~UIC_ERROR;
++		/* clear NAC error */
++		hba->saved_uic_err &= ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
++		if (!hba->saved_uic_err) {
++			err_handling = false;
++			goto out;
++		}
++	}
 +out:
-+	if (err < 0)
-+		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
-+				__func__, err);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	return err_handling;
 +}
 +
- /**
-  * ufshcd_exception_event_handler - handle exceptions raised by device
-  * @work: pointer to work data
-@@ -3795,12 +3832,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
++/**
+  * ufshcd_err_handler - handle UFS errors that require s/w attention
+  * @work: pointer to work structure
+  */
+@@ -3822,6 +3895,17 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 
+ 	/* Complete requests that have door-bell cleared by h/w */
+ 	ufshcd_complete_requests(hba);
++
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
++		bool ret;
++
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
++		ret = ufshcd_quirk_dl_nac_errors(hba);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		if (!ret)
++			goto skip_err_handling;
++	}
+ 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
+ 	    ((hba->saved_err & UIC_ERROR) &&
+ 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
+@@ -3897,6 +3981,7 @@ skip_pending_xfer_clear:
+ 		hba->saved_uic_err = 0;
  	}
  
- 	status &= hba->ee_ctrl_mask;
--	if (status & MASK_EE_URGENT_BKOPS) {
--		err = ufshcd_urgent_bkops(hba);
--		if (err < 0)
--			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
--					__func__, err);
--	}
-+
-+	if (status & MASK_EE_URGENT_BKOPS)
-+		ufshcd_bkops_exception_event_handler(hba);
-+
- out:
- 	pm_runtime_put_sync(hba->dev);
- 	return;
-@@ -4763,6 +4798,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
++skip_err_handling:
+ 	if (!needs_reset) {
+ 		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 		if (hba->saved_err || hba->saved_uic_err)
+@@ -3925,6 +4010,14 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+ 	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+ 		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
++	else if (hba->dev_quirks &
++		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
++		if (reg & UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED)
++			hba->uic_error |=
++				UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
++		else if (reg & UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT)
++			hba->uic_error |= UFSHCD_UIC_DL_TCx_REPLAY_ERROR;
++	}
  
- 	ufshcd_init_pwr_info(hba);
+ 	/* UIC NL/TL/DME errors needs software retry */
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 0ae0967..2b05bfb 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -170,6 +170,8 @@ enum {
+ #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
+ #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
+ #define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
++#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
++#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
  
-+	/* set the default level for urgent bkops */
-+	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
-+	hba->is_urgent_bkops_lvl_checked = false;
-+
- 	/* UniPro link is active now */
- 	ufshcd_set_link_active(hba);
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 77e79c0..65f29aa 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
-  * @clk_list_head: UFS host controller clocks list node head
-  * @pwr_info: holds current power mode
-  * @max_pwr_info: keeps the device max valid pwm
-+ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
-+ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-+ *  device is known or not.
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -538,6 +541,9 @@ struct ufs_hba {
- 	struct devfreq *devfreq;
- 	struct ufs_clk_scaling clk_scaling;
- 	bool is_sys_suspended;
-+
-+	enum bkops_status urgent_bkops_lvl;
-+	bool is_urgent_bkops_lvl_checked;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
+ /* UECN - Host UIC Error Code Network Layer 40h */
+ #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
 -- 
 1.8.5.2
 
