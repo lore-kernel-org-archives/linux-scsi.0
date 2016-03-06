@@ -1,67 +1,110 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v5 15/15] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable
- before link startup
-Date: Sun, 6 Mar 2016 11:57:34 -0000
-Message-ID: <b608d17438fc7372cb2617e208be5e6d.squirrel@us.codeaurora.org>
-References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
-    <1456666367-11418-16-git-send-email-ygardi@codeaurora.org>
-    <56D54BC2.70902@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33801 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660AbcCFL5h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2016 06:57:37 -0500
-In-Reply-To: <56D54BC2.70902@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v6 15/17] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
+Date: Sun,  6 Mar 2016 13:55:56 +0200
+Message-ID: <1457265358-31635-16-git-send-email-ygardi@codeaurora.org>
+References: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
->> Some UFS devices (and may be host) have issues if LCC is
->> enabled. So we are setting PA_Local_TX_LCC_Enable to 0
->> before link startup which will make sure that both host
->> and device TX LCC are disabled once link startup is
->> completed.
->>
->> This change also:
->> - enables the device ref clock before changing to HS mode
->>   and disables it if entered to PWM mode
->> - adds printouts of testbus debug registers
->>
-> Please make that in two patches; these issues are unrelated and will
-> just confuse users if one ever need to dig through the git log.
->
+Some UFS devices (and may be host) have issues if LCC is
+enabled. So we are setting PA_Local_TX_LCC_Enable to 0
+before link startup which will make sure that both host
+and device TX LCC are disabled once link startup is
+completed.
 
-done. in V6 this patch will be divided into 3 patches.
-1. LX_LCC
-2. device ref clock
-3. debug printouts
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-thanks,
-Yaniv
+---
+ drivers/scsi/ufs/ufs-qcom.c | 27 ++++++++++++++++++++-------
+ drivers/scsi/ufs/unipro.h   |  1 +
+ 2 files changed, 21 insertions(+), 7 deletions(-)
 
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke		      zSeries & Storage
-> hare@suse.de			      +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index ed57729..966bacf 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -16,8 +16,8 @@
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+ #include <linux/phy/phy.h>
+-
+ #include <linux/phy/phy-qcom-ufs.h>
++
+ #include "ufshcd.h"
+ #include "ufshcd-pltfrm.h"
+ #include "unipro.h"
+@@ -106,9 +106,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	clk_disable_unprepare(host->tx_l1_sync_clk);
++	if (host->hba->lanes_per_direction > 1)
++		clk_disable_unprepare(host->tx_l1_sync_clk);
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+-	clk_disable_unprepare(host->rx_l1_sync_clk);
++	if (host->hba->lanes_per_direction > 1)
++		clk_disable_unprepare(host->rx_l1_sync_clk);
+ 	clk_disable_unprepare(host->rx_l0_sync_clk);
+ 
+ 	host->is_lane_clks_enabled = false;
+@@ -272,9 +274,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ 	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
+ 
+ 	if (ret) {
+-		dev_err(hba->dev,
+-		"%s: ufs_qcom_phy_calibrate_phy()failed, ret = %d\n",
+-		__func__, ret);
++		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = %d\n",
++			__func__, ret);
+ 		goto out;
+ 	}
+ 
+@@ -524,6 +525,18 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+ 			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
+ 									  150);
+ 
++		/*
++		 * Some UFS devices (and may be host) have issues if LCC is
++		 * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
++		 * before link startup which will make sure that both host
++		 * and device TX LCC are disabled once link startup is
++		 * completed.
++		 */
++		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
++			err = ufshcd_dme_set(hba,
++					UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
++					0);
++
+ 		break;
+ 	case POST_CHANGE:
+ 		ufs_qcom_link_startup_post_change(hba);
+@@ -1542,7 +1555,7 @@ static int ufs_qcom_probe(struct platform_device *pdev)
+  * ufs_qcom_remove - set driver_data of the device to NULL
+  * @pdev: pointer to platform device handle
+  *
+- * Always return 0
++ * Always returns 0
+  */
+ static int ufs_qcom_remove(struct platform_device *pdev)
+ {
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+index 8082020..e2854e4 100644
+--- a/drivers/scsi/ufs/unipro.h
++++ b/drivers/scsi/ufs/unipro.h
+@@ -75,6 +75,7 @@
+ #define PA_MAXRXSPEEDFAST	0x1541
+ #define PA_MAXRXSPEEDSLOW	0x1542
+ #define PA_TXLINKSTARTUPHS	0x1544
++#define PA_LOCAL_TX_LCC_ENABLE	0x155E
+ #define PA_TXSPEEDFAST		0x1565
+ #define PA_TXSPEEDSLOW		0x1566
+ #define PA_REMOTEVERINFO	0x15A0
+-- 
+1.8.5.2
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
