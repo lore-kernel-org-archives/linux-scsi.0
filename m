@@ -1,35 +1,52 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 22/34] iscsi-target: call Rx thread function
-Date: Sat, 05 Mar 2016 15:16:23 -0800
-Message-ID: <1457219783.28660.86.camel@haakon3.risingtidesystems.com>
-References: <cover.1455467089.git.varun@chelsio.com>
-	 <19973d4150937cdaffec583caa35b5d8c9a64fbb.1455467089.git.varun@chelsio.com>
-	 <20160301150137.GH9738@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] target: Drop incorrect ABORT_TASK put for completed commands
+Date: Sun,  6 Mar 2016 04:19:24 +0000
+Message-ID: <1457237964-3536-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160301150137.GH9738@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Varun Prakash <varun@chelsio.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2016-03-01 at 07:01 -0800, Christoph Hellwig wrote:
-> On Sun, Feb 14, 2016 at 11:15:29PM +0530, Varun Prakash wrote:
-> > call Rx thread function if registered
-> > by transport driver, so that transport
-> > drivers can use iscsi-target Rx thread
-> > for Rx processing.
-> > 
-> > update iSER target driver to use this
-> > interface.
-> 
-> Not related to your new driver, but what's the point of even starting a
-> RX thread for iSER?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Originally, this was added to avoid having multiple connection shutdown
-special cases in now defunct iscsi_target_tq.c code.
+This patch fixes a recent ABORT_TASK regression associated
+with commit febe562c, where a left-over target_put_sess_cmd()
+would still be called when __target_check_io_state() detected
+a command has already been completed, and explicit ABORT must
+be avoided.
 
-With that part out of the way, it's should be straight-forward to avoid
-starting conn->rx_thread all-together for iser-target.
+Note commit febe562c dropped the local kref_get_unless_zero()
+check in core_tmr_abort_task(), but did not drop this extra
+corresponding target_put_sess_cmd() in the failure path.
+
+So go ahead and drop this now bogus target_put_sess_cmd(),
+and avoid this potential use-after-free.
+
+Reported-by: Dan Lane <dracodan@gmail.com>
+Cc: Quinn Tran <quinn.tran@qlogic.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_tmr.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 82a663b..4f229e7 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -177,7 +177,6 @@ void core_tmr_abort_task(
+ 
+ 		if (!__target_check_io_state(se_cmd, se_sess, 0)) {
+ 			spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+-			target_put_sess_cmd(se_cmd);
+ 			goto out;
+ 		}
+ 		list_del_init(&se_cmd->se_cmd_list);
+-- 
+1.9.1
