@@ -1,52 +1,36 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] target: Drop incorrect ABORT_TASK put for completed commands
-Date: Sun,  6 Mar 2016 04:19:24 +0000
-Message-ID: <1457237964-3536-1-git-send-email-nab@daterainc.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH-v2 2/2] target/iblock: Use -EAGAIN/-ENOMEM to propigate
+ SAM BUSY/TASK_SET_FULL
+Date: Sat, 5 Mar 2016 22:19:10 -0800
+Message-ID: <20160306061910.GA1116@infradead.org>
+References: <1457161634-15756-1-git-send-email-nab@daterainc.com>
+ <1457161634-15756-2-git-send-email-nab@daterainc.com>
+ <20160305210108.GA16337@lst.de>
+ <1457218287.28660.70.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1457218287.28660.70.camel@haakon3.risingtidesystems.com>
 Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Mike Christie <mchristi@redhat.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Andy Grover <agrover@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Sat, Mar 05, 2016 at 02:51:27PM -0800, Nicholas A. Bellinger wrote:
+> > I think you;d be much better off killing ib_bio_err_cnt and having
+> > an ib_error that gets set to the last / most server error.
+> 
+> That's what I was originally thinking too..
+> 
+> However, that means if one bio completed successfully and another got
+> -EAGAIN / -ENOMEM for the same se_cmd, IBLOCK would still complete
+> se_cmd with GOOD status.
+> 
+> I don't see how completing se_cmd with GOOD status, when one bio in the
+> set requested retry depending on completion order is a good idea.
 
-This patch fixes a recent ABORT_TASK regression associated
-with commit febe562c, where a left-over target_put_sess_cmd()
-would still be called when __target_check_io_state() detected
-a command has already been completed, and explicit ABORT must
-be avoided.
-
-Note commit febe562c dropped the local kref_get_unless_zero()
-check in core_tmr_abort_task(), but did not drop this extra
-corresponding target_put_sess_cmd() in the failure path.
-
-So go ahead and drop this now bogus target_put_sess_cmd(),
-and avoid this potential use-after-free.
-
-Reported-by: Dan Lane <dracodan@gmail.com>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Andy Grover <agrover@redhat.com>
-Cc: Mike Christie <mchristi@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_tmr.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 82a663b..4f229e7 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -177,7 +177,6 @@ void core_tmr_abort_task(
- 
- 		if (!__target_check_io_state(se_cmd, se_sess, 0)) {
- 			spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
--			target_put_sess_cmd(se_cmd);
- 			goto out;
- 		}
- 		list_del_init(&se_cmd->se_cmd_list);
--- 
-1.9.1
+Oh, I took a look at the patch again and it looks bogus - block drivers
+should never return EAGAIN or ENOMEM from ->bi_end_io.  Those are errors
+that should happen before submission if at all.  Which driver ever returns
+these?
