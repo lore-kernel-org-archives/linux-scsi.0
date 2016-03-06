@@ -1,59 +1,175 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v6 02/17] scsi: ufs: avoid spurious UFS host controller interrupts
-Date: Sun,  6 Mar 2016 13:55:43 +0200
-Message-ID: <1457265358-31635-3-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v6 05/17] scsi: ufs: add support to read device and string descriptors
+Date: Sun,  6 Mar 2016 13:55:46 +0200
+Message-ID: <1457265358-31635-6-git-send-email-ygardi@codeaurora.org>
 References: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33319 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33389 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbcCFL4T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2016 06:56:19 -0500
+	with ESMTP id S1751494AbcCFL40 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2016 06:56:26 -0500
 In-Reply-To: <1457265358-31635-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-When control reaches to Linux UFS driver during UFS boot mode, UFS host
-controller interrupt status/enable registers may have left over
-settings.
-In order to avoid any spurious interrupts due to these left overs,
-it's important to clear these interrupt status/enable registers before
-enabling UFS interrupt handling.
+This change adds support to read device descriptor and string descriptor
+from a UFS device
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/scsi/ufs/ufs.h    |  1 +
+ drivers/scsi/ufs/ufshcd.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  7 ++++
+ 3 files changed, 95 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 54a16ce..aacb235 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -43,6 +43,7 @@
+ #define GENERAL_UPIU_REQUEST_SIZE 32
+ #define QUERY_DESC_MAX_SIZE       255
+ #define QUERY_DESC_MIN_SIZE       2
++#define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+ 					(sizeof(struct utp_upiu_header)))
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a8e42df..de7280c 100644
+index 80031e6..e2ed415 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5837,6 +5837,21 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	init_waitqueue_head(&hba->dev_cmd.tag_wq);
+@@ -39,7 +39,7 @@
  
- 	ufshcd_init_clk_gating(hba);
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
+-
++#include <linux/nls.h>
+ #include <linux/of.h>
+ #include "ufshcd.h"
+ #include "unipro.h"
+@@ -232,6 +232,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
+ }
+ 
++/* replace non-printable or non-ASCII characters with spaces */
++static inline void ufshcd_remove_non_printable(char *val)
++{
++	if (!val)
++		return;
 +
-+	/*
-+	 * In order to avoid any spurious interrupt immediately after
-+	 * registering UFS controller interrupt handler, clear any pending UFS
-+	 * interrupt status and disable all the UFS interrupts.
-+	 */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS),
-+		      REG_INTERRUPT_STATUS);
-+	ufshcd_writel(hba, 0, REG_INTERRUPT_ENABLE);
-+	/*
-+	 * Make sure that UFS interrupts are disabled and any pending interrupt
-+	 * status is cleared before registering UFS interrupt handler.
-+	 */
-+	mb();
++	if (*val < 0x20 || *val > 0x7e)
++		*val = ' ';
++}
 +
- 	/* IRQ registration */
- 	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
- 	if (err) {
+ /*
+  * ufshcd_wait_for_register - wait for register value to change
+  * @hba - per-adapter interface
+@@ -2021,6 +2031,82 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
+ 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+ }
+ 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
++{
++	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
++}
++EXPORT_SYMBOL(ufshcd_read_device_desc);
++
++/**
++ * ufshcd_read_string_desc - read string descriptor
++ * @hba: pointer to adapter instance
++ * @desc_index: descriptor index
++ * @buf: pointer to buffer where descriptor would be read
++ * @size: size of buf
++ * @ascii: if true convert from unicode to ascii characters
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii)
++{
++	int err = 0;
++
++	err = ufshcd_read_desc(hba,
++				QUERY_DESC_IDN_STRING, desc_index, buf, size);
++
++	if (err) {
++		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
++			__func__, QUERY_REQ_RETRIES, err);
++		goto out;
++	}
++
++	if (ascii) {
++		int desc_len;
++		int ascii_len;
++		int i;
++		char *buff_ascii;
++
++		desc_len = buf[0];
++		/* remove header and divide by 2 to move from UTF16 to UTF8 */
++		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
++		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
++			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
++					__func__);
++			err = -ENOMEM;
++			goto out;
++		}
++
++		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
++		if (!buff_ascii) {
++			err = -ENOMEM;
++			goto out_free_buff;
++		}
++
++		/*
++		 * the descriptor contains string in UTF16 format
++		 * we need to convert to utf-8 so it can be displayed
++		 */
++		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
++				desc_len - QUERY_DESC_HDR_SIZE,
++				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
++
++		/* replace non-printable or non-ASCII characters with spaces */
++		for (i = 0; i < ascii_len; i++)
++			ufshcd_remove_non_printable(&buff_ascii[i]);
++
++		memset(buf + QUERY_DESC_HDR_SIZE, 0,
++				size - QUERY_DESC_HDR_SIZE);
++		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
++		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
++out_free_buff:
++		kfree(buff_ascii);
++	}
++out:
++	return err;
++}
++EXPORT_SYMBOL(ufshcd_read_string_desc);
++
+ /**
+  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
+  * @hba: Pointer to adapter instance
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index a6d3572..54e13cc 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -678,6 +678,13 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+ }
+ 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
++
++#define ASCII_STD true
++
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii);
++
+ /* Expose Query-Request API */
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
 -- 
 1.8.5.2
 
