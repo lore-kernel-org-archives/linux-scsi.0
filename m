@@ -1,44 +1,52 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [RFC 13/34] iscsi-target: add new transport type
-Date: Mon, 7 Mar 2016 20:25:16 +0530
-Message-ID: <20160307145515.GA2015@chelsio.com>
-References: <cover.1455467089.git.varun@chelsio.com>
- <767baf547e8db884caddee17a62da36c4023f8f7.1455467089.git.varun@chelsio.com>
- <20160301144848.GB9738@infradead.org>
- <1457213338.28660.47.camel@haakon3.risingtidesystems.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] sd: Fix discard granularity when LBPRZ=1
+Date: Mon, 07 Mar 2016 10:42:08 -0500
+Message-ID: <1457365328.16707.65.camel@localhost.localdomain>
+References: <20160304152409.GA31358@redhat.com>
+	 <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:59251 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401AbcCGO4K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2016 09:56:10 -0500
-Content-Disposition: inline
-In-Reply-To: <1457213338.28660.47.camel@haakon3.risingtidesystems.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45158 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751146AbcCGPmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Mar 2016 10:42:10 -0500
+In-Reply-To: <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, roland@kernel.org, swise@opengridcomputing.com, indranil@chelsio.com, kxie@chelsio.com, hariprasad@chelsio.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, snitzer@redhat.com, stable@vger.kernel.org#4.4+
 
-On Sat, Mar 05, 2016 at 01:28:58PM -0800, Nicholas A. Bellinger wrote:
-> On Tue, 2016-03-01 at 06:48 -0800, Christoph Hellwig wrote:
-> > This really looks like an odd interface.  I think everyone will
-> > be much happpier in the long run if you do a generic offload interface
-> > instead of special casing each possible driver.
+On Sat, 2016-03-05 at 18:10 -0500, Martin K. Petersen wrote:
+> Commit 397737223c59 ("sd: Make discard granularity match logical block
+> size when LBPRZ=1") accidentally set the granularity to one byte instead
+> of one logical block on devices that provide determistic zeroes after
+> UNMAP.
 > 
-> Yes, I think iscsit_transport_type should to be replaced with an enum
-> defining three types:
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reported-by: Mike Snitzer <snitzer@redhat.com>
+> Fixes: 397737223c59e89dca7305feb6528caef8fbef84
+> Cc: <stable@vger.kernel.org> # 4.4+
+> ---
+>  drivers/scsi/sd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
->   - TCP using Linux/NET + stateless hw offload
->   - TCP using hw iscsi + network offload
->   - RDMA using iser-target offload
-> 
-> iscsit_transport_type was originally introduced to support TCP and SCTP
-> network portal (which is still there btw), and since nobody cares about
-> SCTP anymore, we can just drop it.
-> 
-> Varun, let's go in this direction for -v2 code, and use this new enum
-> for existing special cases that -v1 touches.
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index d749da765df1..5a5457ac9cdb 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -648,7 +648,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+>  	 */
+>  	if (sdkp->lbprz) {
+>  		q->limits.discard_alignment = 0;
+> -		q->limits.discard_granularity = 1;
+> +		q->limits.discard_granularity = logical_block_size;
+>  	} else {
+>  		q->limits.discard_alignment = sdkp->unmap_alignment *
+>  			logical_block_size;
 
-Should we allow registration of multiple same transport type
-offload drivers with iscsi-target?
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+
+
