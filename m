@@ -1,52 +1,59 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] sd: Fix discard granularity when LBPRZ=1
-Date: Mon, 07 Mar 2016 10:42:08 -0500
-Message-ID: <1457365328.16707.65.camel@localhost.localdomain>
-References: <20160304152409.GA31358@redhat.com>
-	 <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
-Reply-To: emilne@redhat.com
+From: Christoph Hellwig <hch@lst.de>
+Subject: -EAGAIN and -ENOMEM from ->bi_end_io, was Re: [PATCH-v2 2/2]
+	target/iblock: Use -EAGAIN/-ENOMEM to propigate SAM
+	BUSY/TASK_SET_FULL
+Date: Mon, 7 Mar 2016 17:18:54 +0100
+Message-ID: <20160307161854.GA25341@lst.de>
+References: <1457161634-15756-1-git-send-email-nab@daterainc.com> <1457161634-15756-2-git-send-email-nab@daterainc.com> <20160305210108.GA16337@lst.de> <1457218287.28660.70.camel@haakon3.risingtidesystems.com> <20160306061910.GA1116@infradead.org> <1457301315.32532.12.camel@haakon3.risingtidesystems.com> <20160307075548.GB13884@lst.de> <1457337836.10643.2.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45158 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751146AbcCGPmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Mar 2016 10:42:10 -0500
-In-Reply-To: <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1457337836.10643.2.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Andy Grover <agrover@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>, axboe@kernel.dk, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, snitzer@redhat.com, stable@vger.kernel.org#4.4+
 
-On Sat, 2016-03-05 at 18:10 -0500, Martin K. Petersen wrote:
-> Commit 397737223c59 ("sd: Make discard granularity match logical block
-> size when LBPRZ=1") accidentally set the granularity to one byte instead
-> of one logical block on devices that provide determistic zeroes after
-> UNMAP.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reported-by: Mike Snitzer <snitzer@redhat.com>
-> Fixes: 397737223c59e89dca7305feb6528caef8fbef84
-> Cc: <stable@vger.kernel.org> # 4.4+
-> ---
->  drivers/scsi/sd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index d749da765df1..5a5457ac9cdb 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -648,7 +648,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
->  	 */
->  	if (sdkp->lbprz) {
->  		q->limits.discard_alignment = 0;
-> -		q->limits.discard_granularity = 1;
-> +		q->limits.discard_granularity = logical_block_size;
->  	} else {
->  		q->limits.discard_alignment = sdkp->unmap_alignment *
->  			logical_block_size;
+On Mon, Mar 07, 2016 at 12:03:56AM -0800, Nicholas A. Bellinger wrote:
+> > On Sun, Mar 06, 2016 at 01:55:15PM -0800, Nicholas A. Bellinger wro=
+te:
+> > > The intended use is for any make_request_fn() based driver that i=
+nvokes
+> > > bio_endio() completion directly, and sets bi_error !=3D 0 to sign=
+al
+> > > non GOOD status to target/iblock.
+> >=20
+> > But -EAGAIN and -ENOMEM are not valid drivers for bio_endio,
+>=20
+> Why..?
+>=20
+> >  and as far as I can tell no driver every returns them.
+>=20
+> Correct, it's a new capability for make_request_fn() based drivers us=
+ing
+> target/iblock export.
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Please only use it once drivers, filesystem and the block layer
+can deal with it.
 
+Right now -EAGAIN and -ENOMEM are treated as an unknown error by all
+consumers of bios, so you will get a hard error and file system shutdow=
+n.
 
+What is your driver that is going to return this, and how does it know
+it's =D1=95afe to do so?
+
+> >  So as-is this might be well intended but either useless or broken.
+> > --
+>=20
+> No, it useful for hosts that have an aggressive SCSI timeout, and it
+> works as expected with Linux/SCSI hosts that either retry on BUSY
+> status, or retry + reduce queue_depth on TASK_SET_FULL status.
+
+I explicitly wrote "as-is".  We need a way to opt into this behavior,
+and we also somehow need to communicate the timeout.  I think allowing
+timeouts for bios is useful, but it needs a lot more work than this
+quick hack, which seems to still be missing a driver to actually
+generate these errors.
