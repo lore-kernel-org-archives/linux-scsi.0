@@ -1,46 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH-v2 2/2] target/iblock: Use -EAGAIN/-ENOMEM to propigate
- SAM BUSY/TASK_SET_FULL
-Date: Mon, 07 Mar 2016 11:40:06 -0500
-Message-ID: <1457368806.632.18.camel@HansenPartnership.com>
-References: <1457161634-15756-1-git-send-email-nab@daterainc.com>
-	 <1457161634-15756-2-git-send-email-nab@daterainc.com>
-	 <20160305210108.GA16337@lst.de>
-	 <1457218287.28660.70.camel@haakon3.risingtidesystems.com>
-	 <20160306061910.GA1116@infradead.org>
-	 <1457301315.32532.12.camel@haakon3.risingtidesystems.com>
-	 <20160307075548.GB13884@lst.de>
-	 <1457337836.10643.2.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1457337836.10643.2.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Andy Grover <agrover@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/7] cxlflash: Simplify PCI registration
+Date: Mon, 7 Mar 2016 12:30:01 -0600
+Message-ID: <00C55C63-2A27-4F3D-AECB-B5D677BE90B5@linux.vnet.ibm.com>
+References: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1457128520-53056-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:40129 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607AbcCGSaQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2016 13:30:16 -0500
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Mon, 7 Mar 2016 11:30:15 -0700
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id EBA5DC40003
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2016 11:18:21 -0700 (MST)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u27IUC4523199860
+	for <linux-scsi@vger.kernel.org>; Mon, 7 Mar 2016 11:30:12 -0700
+Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u27IU5Tk029039
+	for <linux-scsi@vger.kernel.org>; Mon, 7 Mar 2016 11:30:11 -0700
+In-Reply-To: <1457128520-53056-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Mon, 2016-03-07 at 00:03 -0800, Nicholas A. Bellinger wrote:
-> On Mon, 2016-03-07 at 08:55 +0100, Christoph Hellwig wrote:
-> > On Sun, Mar 06, 2016 at 01:55:15PM -0800, Nicholas A. Bellinger
-
-> >  So as-is this might be well intended but either useless or broken.
-> > --
+> On Mar 4, 2016, at 3:55 PM, Uma Krishnan <ukrishn@linux.vnet.ibm.com> wrote:
 > 
-> No, it useful for hosts that have an aggressive SCSI timeout, and it
-> works as expected with Linux/SCSI hosts that either retry on BUSY
-> status, or retry + reduce queue_depth on TASK_SET_FULL status.
+> From: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+> 
+> The calls to pci_request_regions(), pci_resource_start(),
+> pci_set_dma_mask(), pci_set_master() and pci_save_state() are all
+> unnecessary for the IBM CXL flash adapter since data buffers
+> are not required to be mapped to the device's memory.
+> 
+> The use of services such as pci_set_dma_mask() are problematic on
+> hypervisor managed systems as the IBM CXL flash adapter is operating
+> under a virtual PCI Host Bridge (virtual PHB) which does not support
+> these services.
+> 
+> cxlflash 0001:00:00.0: init_pci: Failed to set PCI DMA mask rc=-5
+> 
+> The resolution is to simplify init_pci(), to a point where it does the
+> bare minimum (pci_enable_device). Similarly, remove the call the
+> pci_release_regions() from cxlflash_remove().
+> 
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-I'm with Christoph on this: BUSY and QUEUE_FULL are already handled
-generically in SCSI.  All drivers should use the generics: to handle
-separately, the driver has to intercept the error code, which I thought
-I checked that none did (although it was a while ago).  Additionally,
-the timeout on these operations is retries * command timeout.  So for
-the default 5 retries and 30 seconds, you actually get to tolerate
-BUSY/QUEUE_FULL for 2.5 minutes before you get an error.  If this is a
-problem, you can bump up the timer in
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-/sys/class/scsi_device/<id>/device/timeout
-
-James
