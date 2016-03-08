@@ -1,50 +1,53 @@
-From: ludvig@fpharm.uniba.sk
-Subject: guter Tag
-Date: Tue, 08 Mar 2016 07:36:32 -0500
-Message-ID: <FAFSTW21OWhMnU5JzUI00004d67@fpharm.uniba.sk>
-Reply-To: credituni.unicredit@gmail.com
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] sd: Fix discard granularity when LBPRZ=1
+Date: Tue, 8 Mar 2016 09:02:58 -0800
+Message-ID: <56DF05C2.8000901@sandisk.com>
+References: <20160304152409.GA31358@redhat.com>
+ <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailcheck.uniba.sk ([158.195.6.90]:41892 "EHLO
-	mailcheck.uniba.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbcCHPBO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 10:01:14 -0500
-Content-Description: Mail message body
+Received: from mail-bn1bon0062.outbound.protection.outlook.com ([157.56.111.62]:11584
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933200AbcCHRDF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Mar 2016 12:03:05 -0500
+In-Reply-To: <1457219421-836-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <ludvig@fpharm.uniba.sk>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: snitzer@redhat.com
 
-guter Tag
+On 03/05/2016 03:10 PM, Martin K. Petersen wrote:
+> Commit 397737223c59 ("sd: Make discard granularity match logical block
+> size when LBPRZ=1") accidentally set the granularity to one byte instead
+> of one logical block on devices that provide determistic zeroes after
+> UNMAP.
+>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reported-by: Mike Snitzer <snitzer@redhat.com>
+> Fixes: 397737223c59e89dca7305feb6528caef8fbef84
+> Cc: <stable@vger.kernel.org> # 4.4+
+> ---
+>   drivers/scsi/sd.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index d749da765df1..5a5457ac9cdb 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -648,7 +648,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+>   	 */
+>   	if (sdkp->lbprz) {
+>   		q->limits.discard_alignment = 0;
+> -		q->limits.discard_granularity = 1;
+> +		q->limits.discard_granularity = logical_block_size;
+>   	} else {
+>   		q->limits.discard_alignment = sdkp->unmap_alignment *
+>   			logical_block_size;
 
-Sie ben=F6tigen eine zuverl=E4ssige und kosteng=FCnstige Darlehen zu ei=
-nem Zinssatz von 3%
-Refinanzierung und Ihr Unternehmen / Investitionen verbessern?
+Please fix the spelling of "deterministic" in the patch description. 
+With or without that change:
 
-UniCredit bietet eine zuverl=E4ssige und vertrauensw=FCrdige Darlehen D=
-ienstleistungen. wenn Sie =FCberhaupt interessant uns, kontaktieren Sie=
- uns bitte durch die folgenden Informationen f=FCr eine schnelle Bearbe=
-itung Ihrer Kreditantrag ausf=FCllen:
-
-=46=FCr weitere Informationen, f=FCllen Sie bitte das Kreditantrag=20
-
-Name des Antragstellers:
-Darlehensbetrag :
-L=E4nge des Darlehens:
-Der Zweck des Darlehens:
-Telefon:
-
-
-
-
-E-mail: credituni.unicredit@gmail.com
-
-Antonio Jefferson
-
-Credit Manager
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
