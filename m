@@ -1,55 +1,217 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] be2iscsi: set the boot_kset pointer to NULL in case of
- failure
-Date: Tue, 8 Mar 2016 11:28:13 +0100
-Message-ID: <56DEA93D.30206@redhat.com>
-References: <1457084509-7368-1-git-send-email-mlombard@redhat.com>
- <yq137s1zpwz.fsf@sermon.lab.mkp.net>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v5 03/15] scsi: ufs: implement scsi host timeout handler
+Date: Tue, 8 Mar 2016 11:48:20 -0000
+Message-ID: <54991bccbeeca7612ab56ade8d0a81f8.squirrel@us.codeaurora.org>
+References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
+    <1456666367-11418-4-git-send-email-ygardi@codeaurora.org>
+    <56D544E6.8040005@suse.de>
+    <2b8282aad0b3edfaf873628edf03513d.squirrel@us.codeaurora.org>
+    <56D7E652.90401@suse.de>
+    <a995c225314021e9d5bcaf7edb1dd26a.squirrel@us.codeaurora.org>
+    <56D833B2.6030104@suse.de>
+    <6554458b5f4af5799e68b915626db85f.squirrel@us.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59200 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932261AbcCHK2W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Mar 2016 05:28:22 -0500
-In-Reply-To: <yq137s1zpwz.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <6554458b5f4af5799e68b915626db85f.squirrel@us.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, ygardi@codeaurora.org, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jayamohan.kallickal@avagotech.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, linux-scsi@vger.kernel.org
 
+Hello, Hannes,
 
+Re-sending
 
-On 03/08/2016 03:03 AM, Martin K. Petersen wrote:
->>>>>> "Maurizio" == Maurizio Lombardi <mlombard@redhat.com> writes:
-> 
-> Maurizio,
-> 
-> Maurizio> In beiscsi_setup_boot_info(), the boot_kset pointer should be
-> Maurizio> set to NULL in case of failure otherwise an invalid pointer
-> Maurizio> dereference may occur later.
-> 
-> iscsi_boot_destroy_kset() checks before deref and the other use location
-> just checks to see whether it's NULL. Are there places in the core iSCSI
-> code that use this without checking?
+thanks,
+Yaniv
 
-1) At the beginning of the beiscsi_setup_boot_info() function there is
-the following check:
-
-----------
-/* it has been created previously */
-if (phba->boot_kset)
-        return 0;
-----------
-
-If the function fails and the boot_kset pointer is not set to NULL,
-subsequent calls to beiscsi_setup_boot_info() will incorrectly return
-success because it assumes that the boot_kset pointer is valid.
-
-2) it is true that iscsi_boot_destroy_kset() checks whether the pointer is NULL
-or not, but it the kset has been already destroyed and the pointer is not set to
-NULL, then it will dereference an invalid pointer.
-
-Regards,
-Maurizio
+>> On 03/03/2016 05:10 PM, ygardi@codeaurora.org wrote:
+>>>> On 03/01/2016 09:25 PM, ygardi@codeaurora.org wrote:
+>>>>>> On 02/28/2016 09:32 PM, Yaniv Gardi wrote:
+>>>>>>> A race condition exists between request requeueing and scsi lay=
+er
+>>>>>>> error handling:
+>>>>>>> When UFS driver queuecommand returns a busy status for a reques=
+t,
+>>>>>>> it will be requeued and its tag will be freed and set to -1.
+>>>>>>> At the same time it is possible that the request will timeout a=
+nd
+>>>>>>> scsi layer will start error handling for it. The scsi layer reu=
+ses
+>>>>>>> the request and its tag to send error related commands to the
+>>>>>>> device,
+>>>>>>> however its tag is no longer valid.
+>>>>>> Hmm. How can the host return a 'busy' status for a request?
+>>>>>> From my understanding we have three possibilities:
+>>>>>>
+>>>>>> 1) queuecommand returns busy; however, that means that the comma=
+nd
+>>>>>> has
+>>>>>> never been send and this issue shouldn't occur
+>>>>>> 2) The command returns with BUSY status. But in this case it has
+>>>>>> already
+>>>>>> been returned, so there cannot be any timeout coming in.
+>>>>>> 3) The host receives a command with a tag which is already in-us=
+e.
+>>>>>> However, that should have been prevented by the block-layer, whi=
+ch
+>>>>>> really should ensure that this situation never happens.
+>>>>>>
+>>>>>> So either way I look at it, it really looks like a bug and addin=
+g a
+>>>>>> timeout handler will just paper over it.
+>>>>>> (Not that a timeout handler is a bad idea, in fact I'm convinced
+>>>>>> that
+>>>>>> you need one. Just not for this purpose.)
+>>>>>>
+>>>>>> So can you elaborate how this 'busy' status comes about?
+>>>>>> Is the command sent to the device?
+>>>>>>
+>>>>>> Cheers,
+>>>>>>
+>>>>>> Hannes
+>>>>>
+>>>>>
+>>>>> Hi Hannes,
+>>>>>
+>>>>> it's going to be a bit long :)
+>>>>> I think you are missing the point.
+>>>>> I will describe a race condition happened to us a while ago, that=
+ was
+>>>>> quite difficult to understand and fix.
+>>>>> So, this patch is not about the "busy" returning to the scsi disp=
+atch
+>>>>> routine. it's about the abort triggered after 30 seconds.
+>>>>>
+>>>>> imagine a request being queued and sent to the scsi, and then to =
+the
+>>>>> ufs.
+>>>>> a timer, initialized to 30 seconds start ticking.
+>>>>> but the request is never sent to the ufs device, as queuecommand(=
+)
+>>>>> returns
+>>>>> with "SCSI_MLQUEUE_HOST_BUSY"
+>>>>> by looking at the code, this could happen, for example:
+>>>>> 	err =3D ufshcd_hold(hba, true);
+>>>>> 	if (err) {
+>>>>> 		err =3D SCSI_MLQUEUE_HOST_BUSY;
+>>>>> 		goto out;
+>>>>> 	}
+>>>>>
+>>>> Uuhhh.
+>>>> You probably should not have pointed me to that piece of code ...
+>>>> open-coding loops in ufshcd_hold() ... shudder.
+>>>> (Did I ever review that one? Must've ...)
+>>>> _Anyway_: sleeping in queuecommand is always a bad idea, as then
+>>>> precisely those issues you've just described will happen.
+>>>>
+>>>> Couldn't you just call
+>>>> ufshcd_hold(hba, false)
+>>>> instead of
+>>>> ufshcd_hold(hba, true)
+>>>> ?
+>>>> The request will be requeued more-or-less immediately, avoiding th=
+e
+>>>> issue with timeout handler kicking in.
+>>>> And the queue will remain blocked until the ungate work item retur=
+ns,
+>>>> at
+>>>> which point I/O submission will continue.
+>>>> As the request will be requeued to the head of the queue there won=
+'t
+>>>> be
+>>>> other I/O competing with tags, so it shouldn't have any adverse
+>>>> effects.
+>>>>
+>>>> Wouldn't that work?
+>>>>
+>>>> Cheers,
+>>>>
+>>>> Hannes
+>>>
+>>> Hi Hannes
+>>>
+>>> This is a bug, and it should be fixed.
+>> Oh, definitely agreed. The question is _where_.
+>>
+>>
+>>> if you choose to bypass it, by calling ufshcd_hold(hba, false), not
+>>> only
+>>> the race condition is still there, and can pop-out at any other poi=
+nt
+>>> in
+>>> the future, but also, not sure what are the consequences of
+>>> ufshcd_hold(hba, false) unstead of "true".
+>> Well ... seeing it's your driver, I would've thought _you_ should kn=
+ow
+>> ...
+>>
+>>> so, changing the already tested and working code, (not to return BU=
+SY
+>>> from
+>>> queuecommand) is not a fix.
+>> Hey, I did _not_ suggest not to retury BUSY from queuecommand.
+>>
+>> I was suggesting this patch:
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 9c1b94b..b9295ad 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -1388,7 +1388,7 @@ static int ufshcd_queuecommand(struct Scsi_Hos=
+t
+>> *host, struct scsi_cmnd *cmd)
+>>                 goto out;
+>>         }
+>>
+>> -       err =3D ufshcd_hold(hba, true);
+>> +       err =3D ufshcd_hold(hba, false);
+>>         if (err) {
+>>                 err =3D SCSI_MLQUEUE_HOST_BUSY;
+>>                 clear_bit_unlock(tag, &hba->lrb_in_use);
+>>
+>> which, by reading the code, should be avoiding this issue.
+>
+>
+> Hannes,
+> we are not trying to avoid returning BUSY from queuecommand().
+> On the contrary. By returning BUSY we actually re-queuing the request
+> which is exactly what we need to do.
+> your patch doesn't fix the race condition.
+>
+> thanks,
+> Yaniv
+>
+>> I was just asking you if you could give this patch a spin and see if=
+ it
+>> works. If not (for whatever reason) I'm happy to accept your patch.
+>> But first I would like to have an explanation why the above would _n=
+ot_
+>> work.
+>>
+>> Unfortunately I don't have the hardware otherwise I'd be running the
+>> tests myself.
+>>
+>> Cheers,
+>>
+>> Hannes
+>> --
+>> Dr. Hannes Reinecke		      zSeries & Storage
+>> hare@suse.de			      +49 911 74053 688
+>> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+>> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
