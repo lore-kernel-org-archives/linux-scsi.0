@@ -1,39 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] Use ida_simple for SCSI iSCSI transport session id
-Date: Mon, 07 Mar 2016 21:15:28 -0500
-Message-ID: <yq1pov5yatb.fsf@sermon.lab.mkp.net>
-References: <1455298733-18651-1-git-send-email-lduncan@suse.com>
-	<1455299691.2396.45.camel@HansenPartnership.com>
-	<56DE24A8.2060305@suse.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sg: fix dxferp in from_to case
+Date: Mon, 07 Mar 2016 21:18:08 -0500
+Message-ID: <yq1lh5tyaov.fsf@sermon.lab.mkp.net>
+References: <56D7CC31.3070800@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBSXL7C3AKGQEYLKTQTA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <56DE24A8.2060305-IBi9RG/b67k@public.gmane.org> (Lee Duncan's message of "Mon, 7 Mar
-	2016 17:02:32 -0800")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22345 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932185AbcCHCSU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2016 21:18:20 -0500
+In-Reply-To: <56D7CC31.3070800@interlog.com> (Douglas Gilbert's message of
+	"Thu, 3 Mar 2016 00:31:29 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, dvyukov@google.com
 
->>>>> "Lee" == Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org> writes:
+>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
 
-Lee> It looks like Mike and Chris are good with it.
+Doug> This patch is in response to this report:
+Doug> http://www.spinics.net/lists/linux-scsi/msg93456.html
 
-However, it received no formal reviews or acked-bys...
+Doug> One of the strange things that the original sg driver did was let
+Doug> the user provide both a data-out buffer (it followed the
+Doug> sg_header+cdb) _and_ specify a reply length greater than
+Doug> zero. What happened was that the user data-out buffer was copied
+Doug> into some kernel buffers and then the mid level was told a read
+Doug> type operation would take place with the data from the device
+Doug> overwriting the same kernel buffers. The user would then read
+Doug> those kernel buffers back into the user space.
+
+Doug> From what I can tell, the above action was broken by a change in
+Doug> 2008 and syzkaller found that out recently.
+
+Doug>    ChangeLog: make sure that a user space pointer is passed
+Doug> through when data follows the sg_header structure and command.
+Doug> Fix the abnormal case when a non-zero reply_len is also given.
+
+Somebody please review.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
