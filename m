@@ -1,36 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] be2iscsi: set the boot_kset pointer to NULL in case of failure
-Date: Mon, 07 Mar 2016 21:03:56 -0500
-Message-ID: <yq137s1zpwz.fsf@sermon.lab.mkp.net>
-References: <1457084509-7368-1-git-send-email-mlombard@redhat.com>
+Subject: Re: [PATCH resend 2/2] mpt3sas: Remove unnecessary synchronize_irq() before free_irq()
+Date: Mon, 07 Mar 2016 21:05:36 -0500
+Message-ID: <yq1y49tyb9r.fsf@sermon.lab.mkp.net>
+References: <1457086507-5937-1-git-send-email-lars@metafoo.de>
+	<1457086507-5937-2-git-send-email-lars@metafoo.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23792 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:24317 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbcCHCEH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2016 21:04:07 -0500
-In-Reply-To: <1457084509-7368-1-git-send-email-mlombard@redhat.com> (Maurizio
-	Lombardi's message of "Fri, 4 Mar 2016 10:41:49 +0100")
+	with ESMTP id S932167AbcCHCFt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2016 21:05:49 -0500
+In-Reply-To: <1457086507-5937-2-git-send-email-lars@metafoo.de> (Lars-Peter
+	Clausen's message of "Fri, 4 Mar 2016 11:15:07 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: jayamohan.kallickal@avagotech.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, linux-scsi@vger.kernel.org
+To: Lars-Peter Clausen <lars@metafoo.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
 
->>>>> "Maurizio" == Maurizio Lombardi <mlombard@redhat.com> writes:
+>>>>> "Lars-Peter" == Lars-Peter Clausen <lars@metafoo.de> writes:
 
-Maurizio,
+Lars-Peter> Calling synchronize_irq() right before free_irq() is quite
+Lars-Peter> useless. On one hand the IRQ can easily fire again before
+Lars-Peter> free_irq() is entered, on the other hand free_irq() itself
+Lars-Peter> calls synchronize_irq() internally (in a race condition free
+Lars-Peter> way), before any state associated with the IRQ is freed.
 
-Maurizio> In beiscsi_setup_boot_info(), the boot_kset pointer should be
-Maurizio> set to NULL in case of failure otherwise an invalid pointer
-Maurizio> dereference may occur later.
-
-iscsi_boot_destroy_kset() checks before deref and the other use location
-just checks to see whether it's NULL. Are there places in the core iSCSI
-code that use this without checking?
-
-No particular problem with your patch. Just trying to decide whether
-it's 4.5 material or not...
+Applied to 4.6/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
