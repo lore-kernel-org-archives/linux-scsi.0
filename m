@@ -1,172 +1,186 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 05/17] scsi: ufs: add support to read device and string descriptors
-Date: Tue,  8 Mar 2016 14:35:56 +0200
-Message-ID: <1457440568-13084-6-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 01/17] scsi: ufs-qcom: add number of lanes per direction
+Date: Tue,  8 Mar 2016 14:35:52 +0200
+Message-ID: <1457440568-13084-2-git-send-email-ygardi@codeaurora.org>
 References: <1457440568-13084-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1457440568-13084-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "open list:OPEN FIRMWARE AND FLATTENED
+	DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This change adds support to read device descriptor and string descriptor
-from a UFS device
+Different platform may have different number of lanes
+for the UFS link.
+Add parameter to device tree specifying how many lanes
+should be configured for the UFS link.
 
-Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs.h    |  1 +
- drivers/scsi/ufs/ufshcd.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd.h |  7 ++++
- 3 files changed, 95 insertions(+), 1 deletion(-)
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  3 ++
+ drivers/scsi/ufs/ufs-qcom.c                        | 39 ++++++++++++----------
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 19 +++++++++++
+ drivers/scsi/ufs/ufshcd.c                          |  1 +
+ drivers/scsi/ufs/ufshcd.h                          |  2 ++
+ 5 files changed, 47 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 54a16ce..aacb235 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -43,6 +43,7 @@
- #define GENERAL_UPIU_REQUEST_SIZE 32
- #define QUERY_DESC_MAX_SIZE       255
- #define QUERY_DESC_MIN_SIZE       2
-+#define QUERY_DESC_HDR_SIZE       2
- #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
- 					(sizeof(struct utp_upiu_header)))
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 03c0e98..66f6adf 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -38,6 +38,9 @@ Optional properties:
+ 			  defined or a value in the array is "0" then it is assumed
+ 			  that the frequency is set by the parent clock or a
+ 			  fixed rate clock source.
++-lanes-per-direction	: number of lanes available per direction - either 1 or 2.
++			  Note that it is assume same number of lanes is used both
++			  directions at once. If not specified, default is 2 lanes per direction.
  
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 80031e6..e2ed415 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -39,7 +39,7 @@
- 
- #include <linux/async.h>
- #include <linux/devfreq.h>
--
-+#include <linux/nls.h>
- #include <linux/of.h>
- #include "ufshcd.h"
- #include "unipro.h"
-@@ -232,6 +232,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
- 	}
- }
- 
-+/* replace non-printable or non-ASCII characters with spaces */
-+static inline void ufshcd_remove_non_printable(char *val)
-+{
-+	if (!val)
-+		return;
-+
-+	if (*val < 0x20 || *val > 0x7e)
-+		*val = ' ';
-+}
-+
+ Note: If above properties are not defined it can be assumed that the supply
+ regulators or clocks are always on.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 4f38d00..ed57729 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1,5 +1,5 @@
  /*
-  * ufshcd_wait_for_register - wait for register value to change
-  * @hba - per-adapter interface
-@@ -2021,6 +2031,82 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
- 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
- }
+- * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
++ * Copyright (c) 2013-2016, Linux Foundation. All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 and
+@@ -132,21 +132,24 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto disable_rx_l0;
  
-+int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
-+{
-+	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
-+}
-+EXPORT_SYMBOL(ufshcd_read_device_desc);
-+
-+/**
-+ * ufshcd_read_string_desc - read string descriptor
-+ * @hba: pointer to adapter instance
-+ * @desc_index: descriptor index
-+ * @buf: pointer to buffer where descriptor would be read
-+ * @size: size of buf
-+ * @ascii: if true convert from unicode to ascii characters
-+ *
-+ * Return 0 in case of success, non-zero otherwise
-+ */
-+int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
-+				u32 size, bool ascii)
-+{
-+	int err = 0;
-+
-+	err = ufshcd_read_desc(hba,
-+				QUERY_DESC_IDN_STRING, desc_index, buf, size);
-+
-+	if (err) {
-+		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
-+			__func__, QUERY_REQ_RETRIES, err);
-+		goto out;
+-	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+-		host->rx_l1_sync_clk);
+-	if (err)
+-		goto disable_tx_l0;
++	if (host->hba->lanes_per_direction > 1) {
++		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
++			host->rx_l1_sync_clk);
++		if (err)
++			goto disable_tx_l0;
+ 
+-	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+-		host->tx_l1_sync_clk);
+-	if (err)
+-		goto disable_rx_l1;
++		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
++			host->tx_l1_sync_clk);
++		if (err)
++			goto disable_rx_l1;
 +	}
-+
-+	if (ascii) {
-+		int desc_len;
-+		int ascii_len;
-+		int i;
-+		char *buff_ascii;
-+
-+		desc_len = buf[0];
-+		/* remove header and divide by 2 to move from UTF16 to UTF8 */
-+		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
-+		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
-+			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
-+					__func__);
-+			err = -ENOMEM;
+ 
+ 	host->is_lane_clks_enabled = true;
+ 	goto out;
+ 
+ disable_rx_l1:
+-	clk_disable_unprepare(host->rx_l1_sync_clk);
++	if (host->hba->lanes_per_direction > 1)
++		clk_disable_unprepare(host->rx_l1_sync_clk);
+ disable_tx_l0:
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+ disable_rx_l0:
+@@ -170,14 +173,16 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
+-		&host->rx_l1_sync_clk);
+-	if (err)
+-		goto out;
+-
+-	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+-		&host->tx_l1_sync_clk);
++	/* In case of single lane per direction, don't read lane1 clocks */
++	if (host->hba->lanes_per_direction > 1) {
++		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
++			&host->rx_l1_sync_clk);
++		if (err)
 +			goto out;
-+		}
-+
-+		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
-+		if (!buff_ascii) {
-+			err = -ENOMEM;
-+			goto out_free_buff;
-+		}
-+
-+		/*
-+		 * the descriptor contains string in UTF16 format
-+		 * we need to convert to utf-8 so it can be displayed
-+		 */
-+		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
-+				desc_len - QUERY_DESC_HDR_SIZE,
-+				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
-+
-+		/* replace non-printable or non-ASCII characters with spaces */
-+		for (i = 0; i < ascii_len; i++)
-+			ufshcd_remove_non_printable(&buff_ascii[i]);
-+
-+		memset(buf + QUERY_DESC_HDR_SIZE, 0,
-+				size - QUERY_DESC_HDR_SIZE);
-+		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
-+		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
-+out_free_buff:
-+		kfree(buff_ascii);
+ 
++		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
++			&host->tx_l1_sync_clk);
 +	}
-+out:
-+	return err;
+ out:
+ 	return err;
+ }
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index d2a7b12..718f12e 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -40,6 +40,8 @@
+ #include "ufshcd.h"
+ #include "ufshcd-pltfrm.h"
+ 
++#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
++
+ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+@@ -277,6 +279,21 @@ void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_shutdown);
+ 
++static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
++{
++	struct device *dev = hba->dev;
++	int ret;
++
++	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
++		&hba->lanes_per_direction);
++	if (ret) {
++		dev_dbg(hba->dev,
++			"%s: failed to read lanes-per-direction, ret=%d\n",
++			__func__, ret);
++		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
++	}
 +}
-+EXPORT_SYMBOL(ufshcd_read_string_desc);
 +
  /**
-  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
-  * @hba: Pointer to adapter instance
+  * ufshcd_pltfrm_init - probe routine of the driver
+  * @pdev: pointer to Platform device handle
+@@ -331,6 +348,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	pm_runtime_set_active(&pdev->dev);
+ 	pm_runtime_enable(&pdev->dev);
+ 
++	ufshcd_init_lanes_per_dir(hba);
++
+ 	err = ufshcd_init(hba, mmio_base, irq);
+ 	if (err) {
+ 		dev_err(dev, "Initialization failed\n");
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9c1b94b..a8e42df 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -40,6 +40,7 @@
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
+ 
++#include <linux/of.h>
+ #include "ufshcd.h"
+ #include "unipro.h"
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index a6d3572..54e13cc 100644
+index e3931d0..9ae7f85 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -678,6 +678,13 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
- }
+@@ -509,6 +509,8 @@ struct ufs_hba {
  
-+int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
-+
-+#define ASCII_STD true
-+
-+int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
-+				u32 size, bool ascii);
-+
- /* Expose Query-Request API */
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
+ 	bool wlun_dev_clr_ua;
+ 
++	/* Number of lanes available (1 or 2) for Rx/Tx */
++	u32 lanes_per_direction;
+ 	struct ufs_pa_layer_attr pwr_info;
+ 	struct ufs_pwr_mode_info max_pwr_info;
+ 
 -- 
 1.8.5.2
 
