@@ -1,7 +1,7 @@
 From: ygardi@codeaurora.org
 Subject: Re: [PATCH v5 03/15] scsi: ufs: implement scsi host timeout handler
-Date: Tue, 8 Mar 2016 11:48:20 -0000
-Message-ID: <54991bccbeeca7612ab56ade8d0a81f8.squirrel@us.codeaurora.org>
+Date: Tue, 8 Mar 2016 11:48:22 -0000
+Message-ID: <8f204a77c853df2c10aeff847f64f1c0.squirrel@us.codeaurora.org>
 References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
     <1456666367-11418-4-git-send-email-ygardi@codeaurora.org>
     <56D544E6.8040005@suse.de>
@@ -13,11 +13,15 @@ References: <1456666367-11418-1-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46399 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932243AbcCHLsY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 06:48:24 -0500
 In-Reply-To: <6554458b5f4af5799e68b915626db85f.squirrel@us.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, ygardi@codeaurora.org, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, draviv@codeaurora.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, ygardi@codeaurora.org, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, draviv@codeaurora.org
 
 Hello, Hannes,
 
@@ -215,3 +219,10 @@ ot_
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
