@@ -1,111 +1,138 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 10/17] scsi: ufs: add retry for query descriptors
-Date: Tue,  8 Mar 2016 14:36:01 +0200
-Message-ID: <1457440568-13084-11-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 11/17] scsi: ufs: handle non spec compliant bkops behaviour by device
+Date: Tue,  8 Mar 2016 14:36:02 +0200
+Message-ID: <1457440568-13084-12-git-send-email-ygardi@codeaurora.org>
 References: <1457440568-13084-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48757 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753470AbcCHMhM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 07:37:12 -0500
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1457440568-13084-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Query commands have 100ms timeout and it may timeout if they are
-issued in parallel to ongoing read/write SCSI commands, this change
-adds the retry (max: 10) in case command timeouts.
+We are seeing that some devices are raising the urgent bkops exception
+events even when BKOPS status doesn't indicate performace impacted or
+critical. Handle these device by determining their urgent bkops status
+at runtime.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 55 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 37 insertions(+), 18 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 52 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e9c7c91..394054e 100644
+index 394054e..d28c629 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1875,21 +1875,7 @@ static int ufshcd_query_attr_retry(struct ufs_hba *hba,
- 	return ret;
- }
- 
--/**
-- * ufshcd_query_descriptor - API function for sending descriptor requests
-- * hba: per-adapter instance
-- * opcode: attribute opcode
-- * idn: attribute idn to access
-- * index: index field
-- * selector: selector field
-- * desc_buf: the buffer that contains the descriptor
-- * buf_len: length parameter passed to the device
-- *
-- * Returns 0 for success, non-zero in case of failure.
-- * The buf_len parameter will contain, on return, the length parameter
-- * received on the response.
-- */
--static int ufshcd_query_descriptor(struct ufs_hba *hba,
-+static int __ufshcd_query_descriptor(struct ufs_hba *hba,
- 			enum query_opcode opcode, enum desc_idn idn, u8 index,
- 			u8 selector, u8 *desc_buf, int *buf_len)
+@@ -3763,7 +3763,7 @@ out:
+  */
+ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
  {
-@@ -1954,6 +1940,39 @@ out:
+-	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
++	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
  }
  
- /**
-+ * ufshcd_query_descriptor_retry - API function for sending descriptor
-+ * requests
-+ * hba: per-adapter instance
-+ * opcode: attribute opcode
-+ * idn: attribute idn to access
-+ * index: index field
-+ * selector: selector field
-+ * desc_buf: the buffer that contains the descriptor
-+ * buf_len: length parameter passed to the device
-+ *
-+ * Returns 0 for success, non-zero in case of failure.
-+ * The buf_len parameter will contain, on return, the length parameter
-+ * received on the response.
-+ */
-+int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
-+			enum query_opcode opcode, enum desc_idn idn, u8 index,
-+			u8 selector, u8 *desc_buf, int *buf_len)
+ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+@@ -3772,6 +3772,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+ 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+ }
+ 
++static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
 +{
 +	int err;
-+	int retries;
++	u32 curr_status = 0;
 +
-+	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
-+		err = __ufshcd_query_descriptor(hba, opcode, idn, index,
-+						selector, desc_buf, buf_len);
-+		if (!err || err == -EINVAL)
-+			break;
++	if (hba->is_urgent_bkops_lvl_checked)
++		goto enable_auto_bkops;
++
++	err = ufshcd_get_bkops_status(hba, &curr_status);
++	if (err) {
++		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
++				__func__, err);
++		goto out;
 +	}
 +
-+	return err;
-+}
-+EXPORT_SYMBOL(ufshcd_query_descriptor_retry);
++	/*
++	 * We are seeing that some devices are raising the urgent bkops
++	 * exception events even when BKOPS status doesn't indicate performace
++	 * impacted or critical. Handle these device by determining their urgent
++	 * bkops status at runtime.
++	 */
++	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
++		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
++				__func__, curr_status);
++		/* update the current status as the urgent bkops level */
++		hba->urgent_bkops_lvl = curr_status;
++		hba->is_urgent_bkops_lvl_checked = true;
++	}
 +
-+/**
-  * ufshcd_read_desc_param - read the specified descriptor parameter
-  * @hba: Pointer to adapter instance
-  * @desc_id: descriptor idn value
-@@ -1995,9 +2014,9 @@ static int ufshcd_read_desc_param(struct ufs_hba *hba,
- 			return -ENOMEM;
++enable_auto_bkops:
++	err = ufshcd_enable_auto_bkops(hba);
++out:
++	if (err < 0)
++		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
++				__func__, err);
++}
++
+ /**
+  * ufshcd_exception_event_handler - handle exceptions raised by device
+  * @work: pointer to work data
+@@ -3795,12 +3832,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
  	}
  
--	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
--				      desc_id, desc_index, 0, desc_buf,
--				      &buff_len);
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+					desc_id, desc_index, 0, desc_buf,
-+					&buff_len);
+ 	status &= hba->ee_ctrl_mask;
+-	if (status & MASK_EE_URGENT_BKOPS) {
+-		err = ufshcd_urgent_bkops(hba);
+-		if (err < 0)
+-			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
+-					__func__, err);
+-	}
++
++	if (status & MASK_EE_URGENT_BKOPS)
++		ufshcd_bkops_exception_event_handler(hba);
++
+ out:
+ 	pm_runtime_put_sync(hba->dev);
+ 	return;
+@@ -4763,6 +4798,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
  
- 	if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
- 	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
+ 	ufshcd_init_pwr_info(hba);
+ 
++	/* set the default level for urgent bkops */
++	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
++	hba->is_urgent_bkops_lvl_checked = false;
++
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 77e79c0..65f29aa 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
+  * @clk_list_head: UFS host controller clocks list node head
+  * @pwr_info: holds current power mode
+  * @max_pwr_info: keeps the device max valid pwm
++ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
++ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
++ *  device is known or not.
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -538,6 +541,9 @@ struct ufs_hba {
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+ 	bool is_sys_suspended;
++
++	enum bkops_status urgent_bkops_lvl;
++	bool is_urgent_bkops_lvl_checked;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
 -- 
 1.8.5.2
 
