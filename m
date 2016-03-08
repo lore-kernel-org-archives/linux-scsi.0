@@ -1,46 +1,56 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] Use ida_simple for SCSI iSCSI transport session id
-Date: Tue, 8 Mar 2016 09:21:08 -0800
-Message-ID: <20160308172108.zkw32e5uzoau7oth@straylight.hirudinean.org>
-References: <1455298733-18651-1-git-send-email-lduncan@suse.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/7] cxlflash: Simplify PCI registration
+Date: Tue, 8 Mar 2016 11:54:46 -0600
+Message-ID: <56DF11E6.2010907@linux.vnet.ibm.com>
+References: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1457128520-53056-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBB4U7S3AKGQEOYO6V3Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1455298733-18651-1-git-send-email-lduncan-IBi9RG/b67k@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:41949 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbcCHRyt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 12:54:49 -0500
+Received: from localhost
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+	Tue, 8 Mar 2016 10:54:48 -0700
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 5DE413E40052
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2016 10:54:46 -0700 (MST)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u28HskTT45940956
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Mar 2016 10:54:46 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u28HsiVY016999
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Mar 2016 10:54:46 -0700
+In-Reply-To: <1457128520-53056-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Fri, Feb 12, 2016 at 09:38:53AM -0800, Lee Duncan wrote:
-> The scsi_transport_iscsi module already uses the ida_simple
-> routines for managing the target ID, if requested to do
-> so. This change replaces an ever-increasing atomic integer
-> that tracks the session ID itself with the ida_simple
-> family of routines. This means that the session ID
-> will be reclaimed and can be reused when the session
-> is freed.
-> 
-> Note that no maximum is placed on this value, though
-> user-space currently only seems to use the lower 24-bits.
-> It seems better to handle this in user space, though,
-> than to limit the value range for the session ID here.
-> 
-> Signed-off-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+On 3/4/2016 3:55 PM, Uma Krishnan wrote:
+> From: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+>
+> The calls to pci_request_regions(), pci_resource_start(),
+> pci_set_dma_mask(), pci_set_master() and pci_save_state() are all
+> unnecessary for the IBM CXL flash adapter since data buffers
+> are not required to be mapped to the device's memory.
+>
+> The use of services such as pci_set_dma_mask() are problematic on
+> hypervisor managed systems as the IBM CXL flash adapter is operating
+> under a virtual PCI Host Bridge (virtual PHB) which does not support
+> these services.
+>
+> cxlflash 0001:00:00.0: init_pci: Failed to set PCI DMA mask rc=-5
+>
+> The resolution is to simplify init_pci(), to a point where it does the
+> bare minimum (pci_enable_device). Similarly, remove the call the
+> pci_release_regions() from cxlflash_remove().
+>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-Acked-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
