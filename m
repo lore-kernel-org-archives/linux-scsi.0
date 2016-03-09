@@ -1,37 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: storvsc: fix SRB_STATUS_ABORTED handling
-Date: Tue, 08 Mar 2016 20:59:30 -0500
-Message-ID: <yq1oaaowgvx.fsf@sermon.lab.mkp.net>
-References: <1457348384-11869-1-git-send-email-vkuznets@redhat.com>
+Subject: Re: [PATCH 0/7] Miscellaneous patches to support cxlflash in PowerVM
+Date: Tue, 08 Mar 2016 21:21:08 -0500
+Message-ID: <yq1bn6owfvv.fsf@sermon.lab.mkp.net>
+References: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1457348384-11869-1-git-send-email-vkuznets@redhat.com> (Vitaly
- Kuznetsov's message of "Mon, 7 Mar 2016 11:59:44 +0100")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, Cathy Avery <cavery@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35403 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbcCICVb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 21:21:31 -0500
+In-Reply-To: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+	(Uma Krishnan's message of "Fri, 4 Mar 2016 15:53:44 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
->>>>> "Vitaly" == Vitaly Kuznetsov <vkuznets@redhat.com> writes:
+>>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
 
-Vitaly> Commit 3209f9d780d1 ("scsi: storvsc: Fix a bug in the handling
-Vitaly> of SRB status flags") filtered SRB_STATUS_AUTOSENSE_VALID out
-Vitaly> effectively making the (SRB_STATUS_ABORTED |
-Vitaly> SRB_STATUS_AUTOSENSE_VALID) case a dead code. The logic from
-Vitaly> this branch (e.g. storvsc_device_scan() call) is still required,
-Vitaly> fix the check.
+Uma> The first 5 patches of this series contain fixes to support the
+Uma> cxlflash driver in a PowerVM guest. For the cxlflash driver to be
+Uma> functional in a PowerVM guest, a corresponding set of cxl patches
+Uma> (currently being upstreamed) is required. Note that this cxlflash
+Uma> patch series does not have any build dependencies on the new cxl
+Uma> code.
 
-Applied to 4.5/scsi-fixes.
+Uma> The sixth patch in the series is a fix to dynamically swap between
+Uma> the AFU's internal LUN and an actual LUN detected on the fabric.
+
+Uma> The last patch in the series is a performance enhancement to
+Uma> improve throughput with cxlflash driver.
+
+Applied to 4.6/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
