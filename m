@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/4] brd: thin provisioning support
-Date: Wed,  9 Mar 2016 14:16:32 +0100
-Message-ID: <1457529392-53970-5-git-send-email-hare@suse.de>
+Subject: [PATCH 3/4] dm-thin: enable low water mark disk event
+Date: Wed,  9 Mar 2016 14:16:31 +0100
+Message-ID: <1457529392-53970-4-git-send-email-hare@suse.de>
 References: <1457529392-53970-1-git-send-email-hare@suse.de>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1457529392-53970-1-git-send-email-hare@suse.de>
@@ -10,149 +10,116 @@ To: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Mahoney <jeffm@suse.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Implement module parameter 'rd_mem_size' to restrict the overall
-allocated memory size and 'rd_lowat_thresh' to add a low water mark
-signalling.
+Enable sending of a 'low water mark' disk event and add
+supporting infrastructure to the DM core.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/brd.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+ drivers/md/dm-thin.c |  2 ++
+ drivers/md/dm.c      | 27 +++++++++++++++++++++++++++
+ drivers/md/dm.h      |  3 ++-
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index cb27190..a8848c3 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -30,6 +30,13 @@
- #define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
- 
- /*
-+ * Thin provisioning support
-+ */
-+static unsigned int rd_total_pages;
-+static int rd_mem_size = CONFIG_BLK_DEV_RAM_SIZE * CONFIG_BLK_DEV_RAM_COUNT;
-+static int rd_lowat_thresh = CONFIG_BLK_DEV_RAM_SIZE * CONFIG_BLK_DEV_RAM_COUNT;
-+
-+/*
-  * Each block ramdisk device has a radix_tree brd_pages of pages that stores
-  * the pages containing the block device's contents. A brd page's ->index is
-  * its offset in PAGE_SIZE units. This is similar to, but in no way connected
-@@ -44,6 +51,12 @@ struct brd_device {
- 	struct list_head	brd_list;
- 
- 	/*
-+	 * Thin provisioning support
-+	 */
-+	unsigned int		disk_events;
-+	unsigned int		pending_events;
-+
-+	/*
- 	 * Backing store of pages and lock to protect it. This is the contents
- 	 * of the block device.
- 	 */
-@@ -91,11 +104,23 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
- 	pgoff_t idx;
- 	struct page *page;
- 	gfp_t gfp_flags;
-+	unsigned int rd_max_pages = rd_mem_size >> (PAGE_CACHE_SHIFT - 10);
-+	unsigned int rd_lowat_pages = rd_lowat_thresh >> (PAGE_CACHE_SHIFT - 10);
- 
- 	page = brd_lookup_page(brd, sector);
- 	if (page)
- 		return page;
- 
-+	if (rd_total_pages >= rd_max_pages)
-+		return NULL;
-+
-+	if (rd_total_pages >= rd_lowat_pages &&
-+	    !(brd->disk_events & DISK_EVENT_LOWAT)) {
-+		brd->pending_events |= DISK_EVENT_LOWAT;
-+		brd->disk_events |= DISK_EVENT_LOWAT;
-+		disk_clear_events(brd->brd_disk, DISK_EVENT_LOWAT);
-+	}
-+
- 	/*
- 	 * Must use NOIO because we don't want to recurse back into the
- 	 * block or filesystem layers from page reclaim.
-@@ -127,6 +152,7 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
- 		BUG_ON(!page);
- 		BUG_ON(page->index != idx);
+diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+index 72d91f4..c191839 100644
+--- a/drivers/md/dm-thin.c
++++ b/drivers/md/dm-thin.c
+@@ -1345,6 +1345,7 @@ static void check_low_water_mark(struct pool *pool, dm_block_t free_blocks)
+ 		spin_lock_irqsave(&pool->lock, flags);
+ 		pool->low_water_triggered = true;
+ 		spin_unlock_irqrestore(&pool->lock, flags);
++		dm_set_disk_event(pool->pool_md, DISK_EVENT_LOWAT);
+ 		dm_table_event(pool->ti->table);
  	}
-+	rd_total_pages++;
- 	spin_unlock(&brd->brd_lock);
+ }
+@@ -4058,6 +4059,7 @@ static int thin_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 		goto bad;
+ 	}
+ 	atomic_set(&tc->refcount, 1);
++	dm_enable_disk_event(pool_md, DISK_EVENT_LOWAT);
+ 	init_completion(&tc->can_destroy);
+ 	list_add_tail_rcu(&tc->list, &tc->pool->active_thins);
+ 	spin_unlock_irqrestore(&tc->pool->lock, flags);
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 5df4048..8d22c40 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -198,6 +198,7 @@ struct mapped_device {
+ 	wait_queue_head_t eventq;
+ 	atomic_t uevent_seq;
+ 	struct list_head uevent_list;
++	unsigned int disk_events;
+ 	spinlock_t uevent_lock; /* Protect access to uevent_list */
  
- 	radix_tree_preload_end();
-@@ -138,10 +164,16 @@ static void brd_free_page(struct brd_device *brd, sector_t sector)
- {
- 	struct page *page;
- 	pgoff_t idx;
-+	unsigned int rd_lowat_pages = rd_lowat_thresh >> (PAGE_CACHE_SHIFT - 10);
- 
- 	spin_lock(&brd->brd_lock);
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	page = radix_tree_delete(&brd->brd_pages, idx);
-+	rd_total_pages--;
-+	if (rd_total_pages < rd_lowat_pages) {
-+		brd->disk_events &= ~DISK_EVENT_LOWAT;
-+		brd->pending_events &= ~DISK_EVENT_LOWAT;
-+	}
- 	spin_unlock(&brd->brd_lock);
- 	if (page)
- 		__free_page(page);
-@@ -434,11 +466,22 @@ static int brd_ioctl(struct block_device *bdev, fmode_t mode,
- 	return error;
+ 	/*
+@@ -556,6 +557,16 @@ static int dm_blk_getgeo(struct block_device *bdev, struct hd_geometry *geo)
+ 	return dm_get_geometry(md, geo);
  }
  
-+static unsigned int brd_check_events(struct gendisk *disk, unsigned int mask)
++static unsigned int dm_check_events(struct gendisk *disk, unsigned int mask)
 +{
-+	struct brd_device *brd = disk->private_data;
-+	unsigned int pending_events = brd->pending_events & mask;
++	struct mapped_device *md = disk->private_data;
++	unsigned int pending = md->disk_events & mask;
 +
-+	brd->pending_events &= ~mask;
++	md->disk_events &= ~mask;
 +
-+	return pending_events;
++	return pending;
 +}
 +
- static const struct block_device_operations brd_fops = {
- 	.owner =		THIS_MODULE,
- 	.rw_page =		brd_rw_page,
- 	.ioctl =		brd_ioctl,
- 	.direct_access =	brd_direct_access,
-+	.check_events =		brd_check_events,
+ static int dm_get_live_table_for_ioctl(struct mapped_device *md,
+ 		struct dm_target **tgt, struct block_device **bdev,
+ 		fmode_t *mode, int *srcu_idx)
+@@ -2457,6 +2468,8 @@ static void event_callback(void *context)
+ 
+ 	dm_send_uevents(&uevents, &disk_to_dev(md->disk)->kobj);
+ 
++	disk_clear_events(md->disk, md->disk_events);
++
+ 	atomic_inc(&md->event_nr);
+ 	wake_up(&md->eventq);
+ }
+@@ -3423,6 +3436,19 @@ void dm_uevent_add(struct mapped_device *md, struct list_head *elist)
+ 	spin_unlock_irqrestore(&md->uevent_lock, flags);
+ }
+ 
++void dm_set_disk_event(struct mapped_device *md, unsigned int evt)
++{
++	md->disk_events |= evt;
++}
++EXPORT_SYMBOL_GPL(dm_set_disk_event);
++
++void dm_enable_disk_event(struct mapped_device *md, unsigned int evt)
++{
++	md->disk->events |= evt;
++	md->disk->async_events |= evt;
++}
++EXPORT_SYMBOL_GPL(dm_enable_disk_event);
++
+ /*
+  * The gendisk is only valid as long as you have a reference
+  * count on 'md'.
+@@ -3678,6 +3704,7 @@ static const struct block_device_operations dm_blk_dops = {
+ 	.ioctl = dm_blk_ioctl,
+ 	.getgeo = dm_blk_getgeo,
+ 	.pr_ops = &dm_pr_ops,
++	.check_events = dm_check_events,
+ 	.owner = THIS_MODULE
  };
  
+diff --git a/drivers/md/dm.h b/drivers/md/dm.h
+index 7edcf97..fa3dc10 100644
+--- a/drivers/md/dm.h
++++ b/drivers/md/dm.h
+@@ -83,7 +83,8 @@ void dm_unlock_md_type(struct mapped_device *md);
+ void dm_set_md_type(struct mapped_device *md, unsigned type);
+ unsigned dm_get_md_type(struct mapped_device *md);
+ struct target_type *dm_get_immutable_target_type(struct mapped_device *md);
+-
++void dm_set_disk_event(struct mapped_device *md, unsigned int evt);
++void dm_enable_disk_event(struct mapped_device *md, unsigned int evt);
+ int dm_setup_md_queue(struct mapped_device *md);
+ 
  /*
-@@ -456,6 +499,12 @@ static int max_part = 1;
- module_param(max_part, int, S_IRUGO);
- MODULE_PARM_DESC(max_part, "Num Minors to reserve between devices");
- 
-+module_param(rd_mem_size, int, S_IRUGO);
-+MODULE_PARM_DESC(rd_mem_size, "Maximal memory size in kbytes to allocate");
-+
-+module_param(rd_lowat_thresh, int, S_IRUGO);
-+MODULE_PARM_DESC(rd_lowat_thresh, "Low water mark in kbytes for memory allocation");
-+
- MODULE_LICENSE("GPL");
- MODULE_ALIAS_BLOCKDEV_MAJOR(RAMDISK_MAJOR);
- MODULE_ALIAS("rd");
-@@ -519,6 +568,8 @@ static struct brd_device *brd_alloc(int i)
- 	disk->private_data	= brd;
- 	disk->queue		= brd->brd_queue;
- 	disk->flags		= GENHD_FL_EXT_DEVT;
-+	disk->events		= DISK_EVENT_LOWAT;
-+	disk->async_events	= DISK_EVENT_LOWAT;
- 	sprintf(disk->disk_name, "ram%d", i);
- 	set_capacity(disk, rd_size * 2);
- 
-@@ -607,6 +658,8 @@ static int __init brd_init(void)
- 	if (register_blkdev(RAMDISK_MAJOR, "ramdisk"))
- 		return -EIO;
- 
-+	rd_total_pages = 0;
-+
- 	if (unlikely(!max_part))
- 		max_part = 1;
- 
 -- 
 1.8.5.6
 
