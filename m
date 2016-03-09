@@ -1,57 +1,138 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH] Use ida_simple for SCSI iSCSI transport session id
-Date: Wed, 9 Mar 2016 09:43:53 +0100
-Message-ID: <20160309084353.GF3464@c203.arch.suse.de>
-References: <1455298733-18651-1-git-send-email-lduncan@suse.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] "block: make generic_make_request handle arbitrarily
+ sized bios" breaks boot on parisc-linux
+Date: Wed, 09 Mar 2016 07:55:11 -0500
+Message-ID: <1457528111.2693.4.camel@HansenPartnership.com>
+References: <227C05EC-5A1C-4FAF-89D8-4A45AF600EC4@bell.net>
+	 <CACVXFVOnff1sFfMH+zsoypuYwM4PokJkHeKhbxJYDDH6ZtVScg@mail.gmail.com>
+	 <56CE2266.6010909@gmx.de> <FC3214D0-6247-449F-8372-14BC4D0C3887@bell.net>
+	 <CACVXFVM5nLDFGcoo173sK4E3TC4k7c+=Fvin0eAxStAdwx8yXA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBDVNRMMDUUIBBS6E763AKGQEPVCHOXQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1455298733-18651-1-git-send-email-lduncan-IBi9RG/b67k@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60700 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753536AbcCIMzO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2016 07:55:14 -0500
+In-Reply-To: <CACVXFVM5nLDFGcoo173sK4E3TC4k7c+=Fvin0eAxStAdwx8yXA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>, John David Anglin <dave.anglin@bell.net>
+Cc: Helge Deller <deller@gmx.de>, linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-parisc List <linux-parisc@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
 
-On Fri, Feb 12, 2016 at 09:38:53AM -0800, Lee Duncan wrote:
-> The scsi_transport_iscsi module already uses the ida_simple
-> routines for managing the target ID, if requested to do
-> so. This change replaces an ever-increasing atomic integer
-> that tracks the session ID itself with the ida_simple
-> family of routines. This means that the session ID
-> will be reclaimed and can be reused when the session
-> is freed.
->=20
-> Note that no maximum is placed on this value, though
-> user-space currently only seems to use the lower 24-bits.
-> It seems better to handle this in user space, though,
-> than to limit the value range for the session ID here.
->=20
-> Signed-off-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+On Thu, 2016-02-25 at 11:38 +0800, Ming Lei wrote:
+> On Thu, Feb 25, 2016 at 7:28 AM, John David Anglin <
+> dave.anglin@bell.net> wrote:
+> > On 2016-02-24, at 4:36 PM, Helge Deller wrote:
+> > 
+> > > Maybe Dave has more luck, otherwise I'll continue to try to get
+> > > some info.
+> > 
+> > I tried your patch on the commit in linux-block which first failed
+> > to boot.  As with Helge, the
+> > system crashed and no useful data was output on console.  I then
+> > applied following patch
+> > to give some extra segments and tired again:
+> > 
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index b1a2631..b421f03 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -595,6 +595,11 @@ static int scsi_alloc_sgtable(struct
+> > scsi_data_buffer *sdb, int nents, bool mq)
+> > 
+> >         BUG_ON(!nents);
+> > 
+> > +       /* Provide extra entries in case of split.  */
+> > +       nents += 8;
+> > +       if (nents > SCSI_MAX_SG_SEGMENTS)
+> > +               nents = SCSI_MAX_SG_SEGMENTS;
+> > +
+> 
+> Yeah, this is needed for sake of safety.
+> 
+> >         if (mq) {
+> >                 if (nents <= SCSI_MAX_SG_SEGMENTS) {
+> >                         sdb->table.nents = nents;
+> > 
+> > The attached file shows the crash in first boot.  The second boot
+> > was successful and various output
+> > was generated by your check code.
+> 
+> From the following log(just select one simple, and looks all are
+> similar) in
+> 2nd boot, the bi_phys_segments is figured out as one by block core
+> , which is wrong because the max segment size is 64k according to
+> your investigation in the below link, but the whole req/bio is
+> 192k(4k*48).
+> 
+>     http://www.spinics.net/lists/linux-parisc/msg06749.html
+> 
+> Looks weird, it shouldn't have happened because
+> blk_bio_segment_split()
+> does respect the max segment size limit.
+> 
+> BTW, what is the scsi driver for the device?
+> 
+> blk_rq_map_sg: merge bug: 3 1, extra_len 0, dma_drain 0
+> check_bvec: dump bvec for 000000007e53c5f0(f:24490000, t:1)
+>             0: 0 4096 245852 000000007e2c4c40
+>             1: 0 4096 245853 000000007e2c4c40
+>             2: 0 4096 245854 000000007e2c4c40
+>             3: 0 4096 245855 000000007e2c4c40
+>             4: 0 4096 245856 000000007e2c4c40
+>             5: 0 4096 245857 000000007e2c4c40
+>             6: 0 4096 245858 000000007e2c4c40
+>             7: 0 4096 245859 000000007e2c4c40
+>             8: 0 4096 245860 000000007e2c4c40
+>             9: 0 4096 245861 000000007e2c4c40
+>            10: 0 4096 245862 000000007e2c4c40
+>            11: 0 4096 245863 000000007e2c4c40
+>            12: 0 4096 245864 000000007e2c4c40
+>            13: 0 4096 245865 000000007e2c4c40
+>            14: 0 4096 245866 000000007e2c4c40
+>            15: 0 4096 245867 000000007e2c4c40
+>            16: 0 4096 245868 000000007e2c4c40
+>            17: 0 4096 245869 000000007e2c4c40
+>            18: 0 4096 245870 000000007e2c4c40
+>            19: 0 4096 245871 000000007e2c4c40
+>            20: 0 4096 245872 000000007e2c4c40
+>            21: 0 4096 245873 000000007e2c4c40
+>            22: 0 4096 245874 000000007e2c4c40
+>            23: 0 4096 245875 000000007e2c4c40
+>            24: 0 4096 245876 000000007e2c4c40
+>            25: 0 4096 245877 000000007e2c4c40
+>            26: 0 4096 245878 000000007e2c4c40
+>            27: 0 4096 245879 000000007e2c4c40
+>            28: 0 4096 245880 000000007e2c4c40
+>            29: 0 4096 245881 000000007e2c4c40
+>            30: 0 4096 245882 000000007e2c4c40
+>            31: 0 4096 245883 000000007e2c4c40
+>            32: 0 4096 245884 000000007e2c4c40
+>            33: 0 4096 245885 000000007e2c4c40
+>            34: 0 4096 245886 000000007e2c4c40
+>            35: 0 4096 245887 000000007e2c4c40
+>            36: 0 4096 245888 000000007e2c4c40
+>            37: 0 4096 245889 000000007e2c4c40
+>            38: 0 4096 245890 000000007e2c4c40
+>            39: 0 4096 245891 000000007e2c4c40
+>            40: 0 4096 245892 000000007e2c4c40
+>            41: 0 4096 245893 000000007e2c4c40
+>            42: 0 4096 245894 000000007e2c4c40
+>            43: 0 4096 245895 000000007e2c4c40
+>            44: 0 4096 245896 000000007e2c4c40
+>            45: 0 4096 245897 000000007e2c4c40
+>            46: 0 4096 245898 000000007e2c4c40
+>            47: 0 4096 245899 000000007e2c4c40
 
-Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+We've provided all the information you asked for, what's the next step
+on this, or do we have to unwind the bio splitting code with reverts
+until it starts working?
 
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Thanks,
+
+James
+
+
