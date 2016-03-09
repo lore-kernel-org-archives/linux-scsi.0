@@ -1,38 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] Miscellaneous patches to support cxlflash in PowerVM
-Date: Tue, 08 Mar 2016 21:21:08 -0500
-Message-ID: <yq1bn6owfvv.fsf@sermon.lab.mkp.net>
-References: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: tom.ty89@gmail.com
+Subject: [PATCH 1/1] sd: do not let LBPME bit stop the VPDs speak
+Date: Wed,  9 Mar 2016 11:26:16 +0800
+Message-ID: <56df97e0.d08d420a.58e8f.3162@mx.google.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35403 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbcCICVb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 21:21:31 -0500
-In-Reply-To: <1457128424-53017-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-	(Uma Krishnan's message of "Fri, 4 Mar 2016 15:53:44 -0600")
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34264 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbcCID0a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 22:26:30 -0500
+Received: by mail-pf0-f193.google.com with SMTP id 184so2516041pff.1
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2016 19:26:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: Tom Yan <tom.ty89@gmail.com>
 
->>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+From: Tom Yan <tom.ty89@gmail.com>
 
-Uma> The first 5 patches of this series contain fixes to support the
-Uma> cxlflash driver in a PowerVM guest. For the cxlflash driver to be
-Uma> functional in a PowerVM guest, a corresponding set of cxl patches
-Uma> (currently being upstreamed) is required. Note that this cxlflash
-Uma> patch series does not have any build dependencies on the new cxl
-Uma> code.
+Some devices have details of their support on unmapping on the
+Block Limits and/or Logical Block Provisioning VPDs while they
+do not set the LBPME bit to 1. Though this is required by the
+SCSI standards, the VPDs are giving even more concrete details
+about the support, so they should be used even when the bit
+is set to 0.
 
-Uma> The sixth patch in the series is a fix to dynamically swap between
-Uma> the AFU's internal LUN and an actual LUN detected on the fabric.
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-Uma> The last patch in the series is a performance enhancement to
-Uma> improve throughput with cxlflash driver.
-
-Applied to 4.6/scsi-queue.
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d749da7..a0d7c73 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2670,9 +2670,6 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 
+ 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&buffer[36]);
+ 
+-		if (!sdkp->lbpme)
+-			goto out;
+-
+ 		lba_count = get_unaligned_be32(&buffer[20]);
+ 		desc_count = get_unaligned_be32(&buffer[24]);
+ 
+@@ -2747,9 +2744,6 @@ static void sd_read_block_provisioning(struct scsi_disk *sdkp)
+ 	unsigned char *buffer;
+ 	const int vpd_len = 8;
+ 
+-	if (sdkp->lbpme == 0)
+-		return;
+-
+ 	buffer = kmalloc(vpd_len, GFP_KERNEL);
+ 
+ 	if (!buffer || scsi_get_vpd_page(sdkp->device, 0xb2, buffer, vpd_len))
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.2
+
