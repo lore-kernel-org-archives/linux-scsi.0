@@ -1,31 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: "scsi: use host wide tags by default" causes uas regression
-Date: Wed, 9 Mar 2016 10:31:10 -0800
-Message-ID: <20160309183110.GA8415@infradead.org>
-References: <56E06458.7040101@redhat.com>
- <20160309182603.GA29246@infradead.org>
- <56E06B36.4010204@redhat.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
+Date: Wed, 9 Mar 2016 19:09:46 -0000
+Message-ID: <046fc2d00e51f331a6bbc00553cc1f9c.squirrel@us.codeaurora.org>
+References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
+    <20160309162943.GC21181@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33004 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933836AbcCISbL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2016 13:31:11 -0500
-Content-Disposition: inline
-In-Reply-To: <56E06B36.4010204@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160309162943.GC21181@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, funnybutton@mailinator.com
 
-On Wed, Mar 09, 2016 at 07:28:06PM +0100, Hans de Goede wrote:
-> >By setting ->can_queue in the Scsi_Host structure to the maximum number
-> >of command you want outstanding for this host.
-> 
-> Can I lower this after calling scsi_host_alloc(), or do I need to make
-> my template "dynamic" ?
+> On Wed, Mar 09, 2016 at 04:11:33PM +0200, Yaniv Gardi wrote:
+>> This patch exposes the ioctl interface for UFS driver via SCSI device
+>> ioctl interface. As of now UFS driver would provide the ioctl for query
+>> interface to connected UFS device.
+>>
+>> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+>> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> What tool is going to use this ioctl?  Why does userspcae want to do
+> something "special" with UFS devices?  Shouldn't they just be treated
+> like any other normal block device?
+>
 
-You don't need to set in the host template, you can set it directly
-in the Scsi_Host structure. It needs to be set before scsi_add_host,
-though.
+Any userspace application can be a tool.
+We already implemented and used a user space application, that sent
+queries to the UFS devices in order to get information and descriptors.
+Not only ioctl interface is a useful way to interact with the device,
+we used it, and found it very helpful in varies cases.
+hence, this patch.
+This patch has been already addressed all comments of Arnd Bergman from 5
+months ago, and now, re-uploaded again.
+
+thanks,
+Yaniv
+
+> thanks,
+>
+> greg k-h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
