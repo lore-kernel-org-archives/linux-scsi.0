@@ -1,51 +1,36 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] sg: fix dxferp in from_to case
-Date: Wed, 09 Mar 2016 11:09:21 -0500
-Message-ID: <1457539761.16707.81.camel@localhost.localdomain>
-References: <56D7CC31.3070800@interlog.com>
-Reply-To: emilne@redhat.com
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
+Date: Wed, 9 Mar 2016 08:29:43 -0800
+Message-ID: <20160309162943.GC21181@kroah.com>
+References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40075 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753663AbcCIQJW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2016 11:09:22 -0500
-In-Reply-To: <56D7CC31.3070800@interlog.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58423 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933141AbcCIQ3t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2016 11:29:49 -0500
+Content-Disposition: inline
+In-Reply-To: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, dvyukov@google.com
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
 
-On Thu, 2016-03-03 at 00:31 -0500, Douglas Gilbert wrote:
-> This patch is in response to this report:
->     http://www.spinics.net/lists/linux-scsi/msg93456.html
+On Wed, Mar 09, 2016 at 04:11:33PM +0200, Yaniv Gardi wrote:
+> This patch exposes the ioctl interface for UFS driver via SCSI device
+> ioctl interface. As of now UFS driver would provide the ioctl for query
+> interface to connected UFS device.
 > 
-> One of the strange things that the original sg driver did was let
-> the user provide both a data-out buffer (it followed the
-> sg_header+cdb) _and_ specify a reply length greater than zero. What
-> happened was that the user data-out buffer was copied into some
-> kernel buffers and then the mid level was told a read type operation
-> would take place with the data from the device overwriting the same
-> kernel buffers. The user would then read those kernel buffers back
-> into the user space.
-> 
->  From what I can tell, the above action was broken by a change in
-> 2008 and syzkaller found that out recently.
-> 
->     ChangeLog:
->        make sure that a user space pointer is passed through
->        when data follows the sg_header structure and command.
->        Fix the abnormal case when a non-zero reply_len is also
->        given.
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-This looks correct to me.  hp->dxferp used to be set unconditionally,
-but commit fad7f01e changed it to only be set in the SG_DXFER_TO_DEV
-case.
+What tool is going to use this ioctl?  Why does userspcae want to do
+something "special" with UFS devices?  Shouldn't they just be treated
+like any other normal block device?
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+thanks,
 
-
+greg k-h
