@@ -1,32 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH resend 2/2] mpt3sas: Remove unnecessary synchronize_irq() before free_irq()
-Date: Tue, 08 Mar 2016 20:52:57 -0500
-Message-ID: <yq1si00wh6u.fsf@sermon.lab.mkp.net>
-References: <1457086507-5937-1-git-send-email-lars@metafoo.de>
-	<1457086507-5937-2-git-send-email-lars@metafoo.de>
+Subject: Re: [PATCH] scsi: storvsc: fix SRB_STATUS_ABORTED handling
+Date: Tue, 08 Mar 2016 20:59:30 -0500
+Message-ID: <yq1oaaowgvx.fsf@sermon.lab.mkp.net>
+References: <1457348384-11869-1-git-send-email-vkuznets@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20848 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbcCIBxT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2016 20:53:19 -0500
-In-Reply-To: <1457086507-5937-2-git-send-email-lars@metafoo.de> (Lars-Peter
-	Clausen's message of "Fri, 4 Mar 2016 11:15:07 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1457348384-11869-1-git-send-email-vkuznets@redhat.com> (Vitaly
+ Kuznetsov's message of "Mon, 7 Mar 2016 11:59:44 +0100")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, Cathy Avery <cavery@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Lars-Peter Clausen <lars@metafoo.de>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
 
->>>>> "Lars-Peter" == Lars-Peter Clausen <lars@metafoo.de> writes:
+>>>>> "Vitaly" == Vitaly Kuznetsov <vkuznets@redhat.com> writes:
 
-Lars-Peter> Calling synchronize_irq() right before free_irq() is quite
-Lars-Peter> useless. On one hand the IRQ can easily fire again before
-Lars-Peter> free_irq() is entered, on the other hand free_irq() itself
-Lars-Peter> calls synchronize_irq() internally (in a race condition free
-Lars-Peter> way), before any state associated with the IRQ is freed.
+Vitaly> Commit 3209f9d780d1 ("scsi: storvsc: Fix a bug in the handling
+Vitaly> of SRB status flags") filtered SRB_STATUS_AUTOSENSE_VALID out
+Vitaly> effectively making the (SRB_STATUS_ABORTED |
+Vitaly> SRB_STATUS_AUTOSENSE_VALID) case a dead code. The logic from
+Vitaly> this branch (e.g. storvsc_device_scan() call) is still required,
+Vitaly> fix the check.
 
-Broadcom folks, please review.
+Applied to 4.5/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
