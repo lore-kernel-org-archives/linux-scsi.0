@@ -1,49 +1,62 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
-Date: Wed, 9 Mar 2016 12:18:08 -0800
-Message-ID: <20160309201808.GA24568@kroah.com>
-References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
- <20160309162943.GC21181@kroah.com>
- <43117fbc4f3a305acd0f4975a633934a.squirrel@us.codeaurora.org>
+From: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
+Subject: Re: [PATCH] mvsas:Fix possible NULL pointer deference in mvs_dev_found_notify
+Date: Wed, 9 Mar 2016 22:33:47 +0200
+Message-ID: <CAOE4rSzh_ipuuWP1=5Kfu1=9-OqH9Nedko3tscJrC4F-GAG0nQ@mail.gmail.com>
+References: <1457531917-568-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43117fbc4f3a305acd0f4975a633934a.squirrel@us.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: ygardi@codeaurora.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f179.google.com ([209.85.223.179]:34408 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896AbcCIUds (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2016 15:33:48 -0500
+In-Reply-To: <1457531917-568-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.de>, luisbg@osg.samsung.com, Wilfried.Weissmann@gmx.at, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Wed, Mar 09, 2016 at 07:09:49PM -0000, ygardi@codeaurora.org wrote:
-> > On Wed, Mar 09, 2016 at 04:11:33PM +0200, Yaniv Gardi wrote:
-> >> This patch exposes the ioctl interface for UFS driver via SCSI device
-> >> ioctl interface. As of now UFS driver would provide the ioctl for query
-> >> interface to connected UFS device.
-> >>
-> >> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> >> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> >> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-> >> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
-> >
-> > What tool is going to use this ioctl?  Why does userspcae want to do
-> > something "special" with UFS devices?  Shouldn't they just be treated
-> > like any other normal block device?
-> >
-> 
-> Any userspace application can be a tool.
-> We already implemented and used a user space application, that sent
-> queries to the UFS devices in order to get information and descriptors.
+2016-03-09 15:58 GMT+02:00 Nicholas Krause <xerofoify@gmail.com>:
+> This adds properly checking after the call to mvs_find_dev_mvi
+> due to this function being able to return a NULL pointer and if
+> this does arise we will deference it in mvs_alloc_dev due to
+> this function never checking if a NULL pointer is given as
+> it's input argument.
+>
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>  drivers/scsi/mvsas/mv_sas.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+> index 83cd3ea..7afb248 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -1191,6 +1191,10 @@ int mvs_dev_found_notify(struct domain_device *dev, int lock)
+>         struct mvs_device *mvi_device;
+>
+>         mvi = mvs_find_dev_mvi(dev);
+> +       if (!mvi) {
+> +               res = -1;
+> +               goto found_out;
+> +       }
+>
+>         if (lock)
+>                 spin_lock_irqsave(&mvi->lock, flags);
+> --
+> 2.5.0
+>
 
-But do you want to do with that information?  Why does userspace care?
+It doesn't look right,
+if mvi will be NULL and lock will be set then at
 
-> Not only ioctl interface is a useful way to interact with the device,
-> we used it, and found it very helpful in varies cases.
+found_out:
+    if (lock)
+        spin_unlock_irqrestore(&mvi->lock, flags);
 
-In what case was it helpful?  Why does userspace care about ufs
-specifics, it should just treat it like any other block device and not
-care at all.
+there will be mvi dereference, besides spin_lock_irqsave wasn't even called.
+And without this patch dereference would happen on mvi->lock which is
+before use in mvs_alloc_dev
 
-thanks,
-
-greg k-h
+About whether mvs_find_dev_mvi can return NULL it looks like it's possible,
+but I'm not sure if it practically happens. I guess it did hence patch.
