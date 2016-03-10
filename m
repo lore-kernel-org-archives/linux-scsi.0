@@ -1,98 +1,95 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 03/17] scsi: ufs: implement scsi host timeout handler
-Date: Thu, 10 Mar 2016 17:37:07 +0200
-Message-ID: <1457624241-20525-4-git-send-email-ygardi@codeaurora.org>
-References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
+Date: Thu, 10 Mar 2016 15:52:54 -0000
+Message-ID: <5da84d4088cfc5db4e620d884e1c2920.squirrel@us.codeaurora.org>
+References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
+    <20160309162943.GC21181@kroah.com>
+    <43117fbc4f3a305acd0f4975a633934a.squirrel@us.codeaurora.org>
+    <20160309201808.GA24568@kroah.com>
+    <551d9d1ae5418dd2dfa91aa6db69deb9.squirrel@us.codeaurora.org>
+    <20160309224716.GA30523@kroah.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51397 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:52724 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753279AbcCJPhn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:37:43 -0500
-In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
+	with ESMTP id S1750907AbcCJPwz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:52:55 -0500
+In-Reply-To: <20160309224716.GA30523@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: ygardi@codeaurora.org, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
 
-A race condition exists between request requeueing and scsi layer
-error handling:
-When UFS driver queuecommand returns a busy status for a request,
-it will be requeued and its tag will be freed and set to -1.
-At the same time it is possible that the request will timeout and
-scsi layer will start error handling for it. The scsi layer reuses
-the request and its tag to send error related commands to the device,
-however its tag is no longer valid.
-As this request was never really sent to the device, there is no
-point to start error handling with the device.
-Implement the scsi error handling timeout callback and bypass SCSI
-error handling for request that were not actually sent to the device.
-For such requests simply reset the block layer timer. Otherwise, let
-SCSI layer perform the usual error handling.
+> On Wed, Mar 09, 2016 at 08:52:59PM -0000, ygardi@codeaurora.org wrote:
+>> > On Wed, Mar 09, 2016 at 07:09:49PM -0000, ygardi@codeaurora.org wrote:
+>> >> > On Wed, Mar 09, 2016 at 04:11:33PM +0200, Yaniv Gardi wrote:
+>> >> >> This patch exposes the ioctl interface for UFS driver via SCSI
+>> device
+>> >> >> ioctl interface. As of now UFS driver would provide the ioctl for
+>> >> query
+>> >> >> interface to connected UFS device.
+>> >> >>
+>> >> >> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> >> >> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+>> >> >> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+>> >> >> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>> >> >
+>> >> > What tool is going to use this ioctl?  Why does userspcae want to
+>> do
+>> >> > something "special" with UFS devices?  Shouldn't they just be
+>> treated
+>> >> > like any other normal block device?
+>> >> >
+>> >>
+>> >> Any userspace application can be a tool.
+>> >> We already implemented and used a user space application, that sent
+>> >> queries to the UFS devices in order to get information and
+>> descriptors.
+>> >
+>> > But do you want to do with that information?  Why does userspace care?
+>> >
+>>
+>> i don't really understand the subtext of your question -
+>> as ANY ioctl cb, we decided to implement the ioctl callback of this scsi
+>> device in order to get information like UNIT DESC, DEVICE DESC, FLAGs,
+>> ATTRIBUTES.
+>> When dealing with UFS devices, one should be able to read the
+>> characteristics of the device. why ? well, why not ?
+>
+> Why aren't those characteristics just exported as sysfs attributes under
+> control by the UFS controller driver?  Why do you need/want an ioctl for
+> this?
+>
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Hi greg k-h,
 
----
- drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+in our code, we used the IOCTL during runtime, in order to determine some
+information about the RPMB well known lun.
+with the rpmb lun ID we could then go to /dev/sgX and issue
+UFS_IOCTL_QUERY to this lun and get the data -
+reading the QUERY_DESC_IDN_GEOMETRY descriptor and reading the
+QUERY_DESC_IDN_UNIT descriptor.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index de7280c..3400ceb 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4568,6 +4568,41 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	ufshcd_probe_hba(hba);
- }
- 
-+static enum blk_eh_timer_return ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
-+{
-+	unsigned long flags;
-+	struct Scsi_Host *host;
-+	struct ufs_hba *hba;
-+	int index;
-+	bool found = false;
-+
-+	if (!scmd || !scmd->device || !scmd->device->host)
-+		return BLK_EH_NOT_HANDLED;
-+
-+	host = scmd->device->host;
-+	hba = shost_priv(host);
-+	if (!hba)
-+		return BLK_EH_NOT_HANDLED;
-+
-+	spin_lock_irqsave(host->host_lock, flags);
-+
-+	for_each_set_bit(index, &hba->outstanding_reqs, hba->nutrs) {
-+		if (hba->lrb[index].cmd == scmd) {
-+			found = true;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+
-+	/*
-+	 * Bypass SCSI error handling and reset the block layer timer if this
-+	 * SCSI command was not actually dispatched to UFS driver, otherwise
-+	 * let SCSI layer handle the error as usual.
-+	 */
-+	return found ? BLK_EH_NOT_HANDLED : BLK_EH_RESET_TIMER;
-+}
-+
- static struct scsi_host_template ufshcd_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= UFSHCD,
-@@ -4580,6 +4615,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.eh_abort_handler	= ufshcd_abort,
- 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
- 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
-+	.eh_timed_out		= ufshcd_eh_timed_out,
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
--- 
-1.8.5.2
+this was crucial to the work we do in RPMB.
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+thanks,
+Yaniv
+
+>> during development of this driver, it was useful in many cases to be
+>> able
+>> to communicate with the device, by simple IOCTL command, rather than
+>> implementing ad-hock.
+>
+> Do other storage busses have these types of "custom" ioctls for their
+> bus-type alone?  For simple attributes like this, shouldn't you be using
+> sysfs instead so that it is much easier for userspace tools to get
+> access to them?
+>
+> thanks,
+>
+> greg k-h
+>
+
+
