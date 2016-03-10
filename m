@@ -1,162 +1,59 @@
-From: Greg KH <gregkh@linuxfoundation.org>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
 Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
-Date: Thu, 10 Mar 2016 10:58:48 -0800
-Message-ID: <20160310185848.GA3456@kroah.com>
-References: <20160309162943.GC21181@kroah.com>
- <43117fbc4f3a305acd0f4975a633934a.squirrel@us.codeaurora.org>
- <20160309201808.GA24568@kroah.com>
- <551d9d1ae5418dd2dfa91aa6db69deb9.squirrel@us.codeaurora.org>
- <20160309224716.GA30523@kroah.com>
- <5da84d4088cfc5db4e620d884e1c2920.squirrel@us.codeaurora.org>
- <20160310162429.GA29242@kroah.com>
- <3164792fec2d8f37f48f6224a145fc1e.squirrel@us.codeaurora.org>
- <20160310163910.GA30247@kroah.com>
- <da1a5ccfb94345403fc4c19d0674e3d1.squirrel@us.codeaurora.org>
+Date: Thu, 10 Mar 2016 20:19:32 +0100
+Message-ID: <201603102019.32467.arnd@arndb.de>
+References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org> <046fc2d00e51f331a6bbc00553cc1f9c.squirrel@us.codeaurora.org> <201603101818.33826.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51882 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193AbcCJS6t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 13:58:49 -0500
-Content-Disposition: inline
-In-Reply-To: <da1a5ccfb94345403fc4c19d0674e3d1.squirrel@us.codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <201603101818.33826.arnd-r2nGTMty4D4@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+Cc: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jbottomley-wo1vFcy6AUs@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Michael Neuling <mikey-/owAOxkjmzZAfugRpC6u6w@public.gmane.org>, "Matthew R. Ochs" <mrochs-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Wen Xiong <wenxiong-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "open list:ABI/API" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: ygardi@codeaurora.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
 
-On Thu, Mar 10, 2016 at 06:48:54PM -0000, ygardi@codeaurora.org wrote:
-> > On Thu, Mar 10, 2016 at 04:29:55PM -0000, ygardi@codeaurora.org wrote:
-> >> > On Thu, Mar 10, 2016 at 03:52:54PM -0000, ygardi@codeaurora.org wrote:
-> >> >> > On Wed, Mar 09, 2016 at 08:52:59PM -0000, ygardi@codeaurora.org
-> >> wrote:
-> >> >> >> > On Wed, Mar 09, 2016 at 07:09:49PM -0000, ygardi@codeaurora.org
-> >> >> wrote:
-> >> >> >> >> > On Wed, Mar 09, 2016 at 04:11:33PM +0200, Yaniv Gardi wrote:
-> >> >> >> >> >> This patch exposes the ioctl interface for UFS driver via
-> >> SCSI
-> >> >> >> device
-> >> >> >> >> >> ioctl interface. As of now UFS driver would provide the
-> >> ioctl
-> >> >> for
-> >> >> >> >> query
-> >> >> >> >> >> interface to connected UFS device.
-> >> >> >> >> >>
-> >> >> >> >> >> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> >> >> >> >> >> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> >> >> >> >> >> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-> >> >> >> >> >> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
-> >> >> >> >> >
-> >> >> >> >> > What tool is going to use this ioctl?  Why does userspcae
-> >> want
-> >> >> to
-> >> >> >> do
-> >> >> >> >> > something "special" with UFS devices?  Shouldn't they just be
-> >> >> >> treated
-> >> >> >> >> > like any other normal block device?
-> >> >> >> >> >
-> >> >> >> >>
-> >> >> >> >> Any userspace application can be a tool.
-> >> >> >> >> We already implemented and used a user space application, that
-> >> >> sent
-> >> >> >> >> queries to the UFS devices in order to get information and
-> >> >> >> descriptors.
-> >> >> >> >
-> >> >> >> > But do you want to do with that information?  Why does userspace
-> >> >> care?
-> >> >> >> >
-> >> >> >>
-> >> >> >> i don't really understand the subtext of your question -
-> >> >> >> as ANY ioctl cb, we decided to implement the ioctl callback of
-> >> this
-> >> >> scsi
-> >> >> >> device in order to get information like UNIT DESC, DEVICE DESC,
-> >> >> FLAGs,
-> >> >> >> ATTRIBUTES.
-> >> >> >> When dealing with UFS devices, one should be able to read the
-> >> >> >> characteristics of the device. why ? well, why not ?
-> >> >> >
-> >> >> > Why aren't those characteristics just exported as sysfs attributes
-> >> >> under
-> >> >> > control by the UFS controller driver?  Why do you need/want an
-> >> ioctl
-> >> >> for
-> >> >> > this?
-> >> >> >
-> >> >>
-> >> >> Hi greg k-h,
-> >> >>
-> >> >> in our code, we used the IOCTL during runtime, in order to determine
-> >> >> some
-> >> >> information about the RPMB well known lun.
-> >> >> with the rpmb lun ID we could then go to /dev/sgX and issue
-> >> >> UFS_IOCTL_QUERY to this lun and get the data -
-> >> >> reading the QUERY_DESC_IDN_GEOMETRY descriptor and reading the
-> >> >> QUERY_DESC_IDN_UNIT descriptor.
-> >> >>
-> >> >> this was crucial to the work we do in RPMB.
-> >> >
-> >> > What is RPMB?
-> >> >
-> >> > And again, why not just use sysfs attributes on your host controller
-> >> > device?  Why does this have to be a custom ioctl?
-> >> >
-> >> > greg k-h
-> >> >
-> >>
-> >> RPMB is spcial Logical Unit in the UFS device. you can read about it in
-> >> the UFS spec. Greg, you are insisting on sysfs, but i can't implement it
-> >> now, as i don't have the Hardware anymore, or the time.
-> >
-> > If you don't have the hardware, how are you testing this patch?
+On Thursday 10 March 2016, Arnd Bergmann wrote:
+> On Wednesday 09 March 2016, ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org wrote:
+> > Any userspace application can be a tool.
+> > We already implemented and used a user space application, that sent
+> > queries to the UFS devices in order to get information and descriptors.
+> > Not only ioctl interface is a useful way to interact with the device,
+> > we used it, and found it very helpful in varies cases.
+> > hence, this patch.
+> > This patch has been already addressed all comments of Arnd Bergman from 5
+> > months ago, and now, re-uploaded again.
 > 
-> This patch is already tested and verified, and also was much helpful
-> during development.
-> Also, this patch is a few months old and was tested when previous version
-> were uploaded.
-> Currently HW is not available.
-> >
-> > And if you don't have the hardware I guess you don't need this change :)
-> >
-> >> This is a tested and verified code that was accepted and reviewed
-> >> already,
-> >> so i'm not sure what is wrong with this solution, not to say, it's
-> >> already
-> >> implemented, tested and verified.
-> >> hope you are help us push it.
-> >
-> > That's a horrible reason to merge a patch that someone else is going to
-> > have to support for 20+ years with an api that doesn't make much sense.
-> >
-> > If you don't have the hardware, then this isn't needed.  But if you do,
-> 
-> Even if currently HW is not available it doesn't mean this is not needed
-> in the future again.
+> Do you have a pointer to that review? It's been a long while, so I
+> have completely forgotten what issues I raised and how it got resolved.
 
-Great, if in the future, you need this again, please resubmit it.
-Adding code to the kernel for no real user is a maintaince burden on
-others.  Please don't do that.  Especially for an API that is now
-required to be supported for forever.
+I got your link in private message and read up on it again now.
 
-> > then please look into using sysfs for this, as I think that should be
-> > the correct interface here, again, not some random ioctl.
-> >
-> 
-> Why sysfs makes more sense than this one ?
+To clarify: I commented on the formal API definition, and you indeed addressed
+all my concerns, so this is now an ioctl command that follows our usual
+calling conventions.
 
-Why doesn't it?  Why would an ioctl make sense to get simple attributes
-from a host controller?  Why not use the interface that makes it trivial
-to use from userspace that other drivers already use in this type of
-situation.
+However, this is orthogonal to the question of whether it is a good idea
+to have this interface implemented as an ioctl as asked by Greg, and who
+is actually using it. 
 
-In other words, why do you have to have this ioctl?  What requires this
-to be the way the API works?
+I'm lacking the detailed subsystem knowledge to answer this, but
+I note that other block drivers have similar passthrough interfaces.
 
-But again, as you don't need this code, let's just drop it.  Feel free
-to revisit it sometime in the future if you ever get hardware and need
-this again.
+Looking through what other drivers do, I've found a couple of patterns
+now. n particular, most use the SG_IO ioctl to pass down commands
+from user space into a device specific command queue. Have you looked
+at that interface in the past to see if it would fit your use case?
 
-thanks,
+There is also a 'bsg' API that some drivers implement, which I think
+would be another alternative.
 
-greg k-h
+Could any of the SCSI experts comment on what they expect a driver
+to use out of those three alternatives (if any): 
+
+* private ioctl
+* bsg
+* sg_io
+
+	Arnd
