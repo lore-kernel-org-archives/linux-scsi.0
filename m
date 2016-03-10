@@ -1,36 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH 1/1] sd: do not let LBPME bit stop the VPDs speak
-Date: Wed, 09 Mar 2016 21:24:29 -0500
-Message-ID: <yq1mvq7qdcy.fsf@sermon.lab.mkp.net>
+Date: Wed, 09 Mar 2016 21:32:01 -0500
+Message-ID: <yq1io0vqd0e.fsf@sermon.lab.mkp.net>
 References: <56df97e0.d08d420a.58e8f.3162@mx.google.com>
+	<CAGnHSEnLA+WRMuPCLHc=U5m6M5XG-CGbP4gcmh4WJ9QeWwDm0A@mail.gmail.com>
+	<CAGnHSE=Ct7vFas3K-DDwU68W+R=ADx7Tx36LBBk3gxeDFZG3Ow@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30628 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:33101 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262AbcCJCYg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2016 21:24:36 -0500
-In-Reply-To: <56df97e0.d08d420a.58e8f.3162@mx.google.com> (tom's message of
-	"Wed, 9 Mar 2016 11:26:16 +0800")
+	with ESMTP id S1752285AbcCJCcJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2016 21:32:09 -0500
+In-Reply-To: <CAGnHSE=Ct7vFas3K-DDwU68W+R=ADx7Tx36LBBk3gxeDFZG3Ow@mail.gmail.com>
+	(Tom Yan's message of "Wed, 9 Mar 2016 11:38:15 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tom.ty89@gmail.com
+To: Tom Yan <tom.ty89@gmail.com>
 Cc: linux-scsi@vger.kernel.org
 
->>>>> "Tom" == tom ty89 <tom.ty89@gmail.com> writes:
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-Tom,
+Tom> Btw, why SD_MAX_WS16_BLOCKS (which is used for both SD_LBP_WS16 and
+Tom> SD_LBP_UNMAP) is set to 0x7fffff (23-bit) instead of 0xffffffff
+Tom> (32-bit, 4-byte)?
 
-Tom> Some devices have details of their support on unmapping on the
-Tom> Block Limits and/or Logical Block Provisioning VPDs while they do
-Tom> not set the LBPME bit to 1. Though this is required by the SCSI
-Tom> standards, the VPDs are giving even more concrete details about the
-Tom> support, so they should be used even when the bit is set to 0.
-
-I am not going to enable an already brittle feature if a device can't
-report the right thing.
-
-Does the bridge report LBPME=1 if you plug in an SSD?
+This limit represents the largest block range we can describe using a
+single bio.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
