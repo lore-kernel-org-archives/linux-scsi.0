@@ -1,172 +1,96 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 05/17] scsi: ufs: add support to read device and string descriptors
-Date: Thu, 10 Mar 2016 17:37:09 +0200
-Message-ID: <1457624241-20525-6-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 03/17] scsi: ufs: implement scsi host timeout handler
+Date: Thu, 10 Mar 2016 17:37:07 +0200
+Message-ID: <1457624241-20525-4-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51397 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279AbcCJPhn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:37:43 -0500
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-This change adds support to read device descriptor and string descriptor
-from a UFS device
+A race condition exists between request requeueing and scsi layer
+error handling:
+When UFS driver queuecommand returns a busy status for a request,
+it will be requeued and its tag will be freed and set to -1.
+At the same time it is possible that the request will timeout and
+scsi layer will start error handling for it. The scsi layer reuses
+the request and its tag to send error related commands to the device,
+however its tag is no longer valid.
+As this request was never really sent to the device, there is no
+point to start error handling with the device.
+Implement the scsi error handling timeout callback and bypass SCSI
+error handling for request that were not actually sent to the device.
+For such requests simply reset the block layer timer. Otherwise, let
+SCSI layer perform the usual error handling.
 
-Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs.h    |  1 +
- drivers/scsi/ufs/ufshcd.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd.h |  7 ++++
- 3 files changed, 95 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 54a16ce..aacb235 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -43,6 +43,7 @@
- #define GENERAL_UPIU_REQUEST_SIZE 32
- #define QUERY_DESC_MAX_SIZE       255
- #define QUERY_DESC_MIN_SIZE       2
-+#define QUERY_DESC_HDR_SIZE       2
- #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
- 					(sizeof(struct utp_upiu_header)))
- 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 80031e6..e2ed415 100644
+index de7280c..3400ceb 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -39,7 +39,7 @@
- 
- #include <linux/async.h>
- #include <linux/devfreq.h>
--
-+#include <linux/nls.h>
- #include <linux/of.h>
- #include "ufshcd.h"
- #include "unipro.h"
-@@ -232,6 +232,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
- 	}
+@@ -4568,6 +4568,41 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	ufshcd_probe_hba(hba);
  }
  
-+/* replace non-printable or non-ASCII characters with spaces */
-+static inline void ufshcd_remove_non_printable(char *val)
++static enum blk_eh_timer_return ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
 +{
-+	if (!val)
-+		return;
++	unsigned long flags;
++	struct Scsi_Host *host;
++	struct ufs_hba *hba;
++	int index;
++	bool found = false;
 +
-+	if (*val < 0x20 || *val > 0x7e)
-+		*val = ' ';
-+}
++	if (!scmd || !scmd->device || !scmd->device->host)
++		return BLK_EH_NOT_HANDLED;
 +
- /*
-  * ufshcd_wait_for_register - wait for register value to change
-  * @hba - per-adapter interface
-@@ -2021,6 +2031,82 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
- 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
- }
- 
-+int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
-+{
-+	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
-+}
-+EXPORT_SYMBOL(ufshcd_read_device_desc);
++	host = scmd->device->host;
++	hba = shost_priv(host);
++	if (!hba)
++		return BLK_EH_NOT_HANDLED;
 +
-+/**
-+ * ufshcd_read_string_desc - read string descriptor
-+ * @hba: pointer to adapter instance
-+ * @desc_index: descriptor index
-+ * @buf: pointer to buffer where descriptor would be read
-+ * @size: size of buf
-+ * @ascii: if true convert from unicode to ascii characters
-+ *
-+ * Return 0 in case of success, non-zero otherwise
-+ */
-+int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
-+				u32 size, bool ascii)
-+{
-+	int err = 0;
++	spin_lock_irqsave(host->host_lock, flags);
 +
-+	err = ufshcd_read_desc(hba,
-+				QUERY_DESC_IDN_STRING, desc_index, buf, size);
-+
-+	if (err) {
-+		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
-+			__func__, QUERY_REQ_RETRIES, err);
-+		goto out;
++	for_each_set_bit(index, &hba->outstanding_reqs, hba->nutrs) {
++		if (hba->lrb[index].cmd == scmd) {
++			found = true;
++			break;
++		}
 +	}
 +
-+	if (ascii) {
-+		int desc_len;
-+		int ascii_len;
-+		int i;
-+		char *buff_ascii;
++	spin_unlock_irqrestore(host->host_lock, flags);
 +
-+		desc_len = buf[0];
-+		/* remove header and divide by 2 to move from UTF16 to UTF8 */
-+		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
-+		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
-+			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
-+					__func__);
-+			err = -ENOMEM;
-+			goto out;
-+		}
-+
-+		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
-+		if (!buff_ascii) {
-+			err = -ENOMEM;
-+			goto out_free_buff;
-+		}
-+
-+		/*
-+		 * the descriptor contains string in UTF16 format
-+		 * we need to convert to utf-8 so it can be displayed
-+		 */
-+		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
-+				desc_len - QUERY_DESC_HDR_SIZE,
-+				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
-+
-+		/* replace non-printable or non-ASCII characters with spaces */
-+		for (i = 0; i < ascii_len; i++)
-+			ufshcd_remove_non_printable(&buff_ascii[i]);
-+
-+		memset(buf + QUERY_DESC_HDR_SIZE, 0,
-+				size - QUERY_DESC_HDR_SIZE);
-+		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
-+		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
-+out_free_buff:
-+		kfree(buff_ascii);
-+	}
-+out:
-+	return err;
++	/*
++	 * Bypass SCSI error handling and reset the block layer timer if this
++	 * SCSI command was not actually dispatched to UFS driver, otherwise
++	 * let SCSI layer handle the error as usual.
++	 */
++	return found ? BLK_EH_NOT_HANDLED : BLK_EH_RESET_TIMER;
 +}
-+EXPORT_SYMBOL(ufshcd_read_string_desc);
 +
- /**
-  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
-  * @hba: Pointer to adapter instance
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index a6d3572..54e13cc 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -678,6 +678,13 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
- }
- 
-+int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
-+
-+#define ASCII_STD true
-+
-+int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
-+				u32 size, bool ascii);
-+
- /* Expose Query-Request API */
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
+ static struct scsi_host_template ufshcd_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+@@ -4580,6 +4615,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.eh_abort_handler	= ufshcd_abort,
+ 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
+ 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
++	.eh_timed_out		= ufshcd_eh_timed_out,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
 -- 
 1.8.5.2
 
