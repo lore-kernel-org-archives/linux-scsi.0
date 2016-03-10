@@ -1,282 +1,334 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 08/17] scsi: ufs: make error handling bit faster
-Date: Thu, 10 Mar 2016 17:37:12 +0200
-Message-ID: <1457624241-20525-9-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 06/17] scsi: ufs: separate device and host quirks
+Date: Thu, 10 Mar 2016 17:37:10 +0200
+Message-ID: <1457624241-20525-7-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51541 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51468 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbcCJPiB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:38:01 -0500
+	with ESMTP id S1753349AbcCJPhy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:37:54 -0500
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-UFS driver's error handler forcefully tries to clear all the pending
-requests. For each pending request in the queue, it waits 1 sec for it
-to get cleared. If we have multiple requests in the queue then it's
-possible that we might end up waiting for those many seconds before
-resetting the host. But note that resetting host would any way clear
-all the pending requests from the hardware. Hence this change skips
-the forceful clear of the pending requests if we are anyway going to
-reset the host (for fatal errors).
+Currently we use the host quirks mechanism in order to
+handle both device and host controller quirks.
+In order to support various of UFS devices we should separate
+handling the device quirks from the host controller's.
 
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 155 +++++++++++++++++++++++++++++++++-------------
- 1 file changed, 112 insertions(+), 43 deletions(-)
+ drivers/scsi/ufs/ufs.h        |  31 ++++++++++
+ drivers/scsi/ufs/ufs_quirks.h | 139 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c     |  71 +++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h     |   3 +
+ 4 files changed, 244 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.h
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8ed7d4b..adaae34 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -133,9 +133,11 @@ enum {
- /* UFSHCD UIC layer error flags */
- enum {
- 	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
--	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
--	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
--	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
-+	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR = (1 << 1), /* Data link layer error */
-+	UFSHCD_UIC_DL_TCx_REPLAY_ERROR = (1 << 2), /* Data link layer error */
-+	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
-+	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
-+	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index aacb235..8ec6356 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -196,6 +196,37 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
  };
  
- /* Interrupt configuration options */
-@@ -3465,31 +3467,18 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- }
- 
- /**
-- * ufshcd_transfer_req_compl - handle SCSI and query command completion
-+ * __ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-+ * @completed_reqs: requests to complete
-  */
--static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
-+static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
-+					unsigned long completed_reqs)
- {
- 	struct ufshcd_lrb *lrbp;
- 	struct scsi_cmnd *cmd;
--	unsigned long completed_reqs;
--	u32 tr_doorbell;
- 	int result;
- 	int index;
- 
--	/* Resetting interrupt aggregation counters first and reading the
--	 * DOOR_BELL afterward allows us to handle all the completed requests.
--	 * In order to prevent other interrupts starvation the DB is read once
--	 * after reset. The down side of this solution is the possibility of
--	 * false interrupt if device completes another request after resetting
--	 * aggregation and before reading the DB.
--	 */
--	if (ufshcd_is_intr_aggr_allowed(hba))
--		ufshcd_reset_intr_aggr(hba);
--
--	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
--
- 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
- 		lrbp = &hba->lrb[index];
- 		cmd = lrbp->cmd;
-@@ -3519,6 +3508,31 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- }
- 
- /**
-+ * ufshcd_transfer_req_compl - handle SCSI and query command completion
-+ * @hba: per adapter instance
++/* Device descriptor parameters offsets in bytes*/
++enum device_desc_param {
++	DEVICE_DESC_PARAM_LEN			= 0x0,
++	DEVICE_DESC_PARAM_TYPE			= 0x1,
++	DEVICE_DESC_PARAM_DEVICE_TYPE		= 0x2,
++	DEVICE_DESC_PARAM_DEVICE_CLASS		= 0x3,
++	DEVICE_DESC_PARAM_DEVICE_SUB_CLASS	= 0x4,
++	DEVICE_DESC_PARAM_PRTCL			= 0x5,
++	DEVICE_DESC_PARAM_NUM_LU		= 0x6,
++	DEVICE_DESC_PARAM_NUM_WLU		= 0x7,
++	DEVICE_DESC_PARAM_BOOT_ENBL		= 0x8,
++	DEVICE_DESC_PARAM_DESC_ACCSS_ENBL	= 0x9,
++	DEVICE_DESC_PARAM_INIT_PWR_MODE		= 0xA,
++	DEVICE_DESC_PARAM_HIGH_PR_LUN		= 0xB,
++	DEVICE_DESC_PARAM_SEC_RMV_TYPE		= 0xC,
++	DEVICE_DESC_PARAM_SEC_LU		= 0xD,
++	DEVICE_DESC_PARAM_BKOP_TERM_LT		= 0xE,
++	DEVICE_DESC_PARAM_ACTVE_ICC_LVL		= 0xF,
++	DEVICE_DESC_PARAM_SPEC_VER		= 0x10,
++	DEVICE_DESC_PARAM_MANF_DATE		= 0x12,
++	DEVICE_DESC_PARAM_MANF_NAME		= 0x14,
++	DEVICE_DESC_PARAM_PRDCT_NAME		= 0x15,
++	DEVICE_DESC_PARAM_SN			= 0x16,
++	DEVICE_DESC_PARAM_OEM_ID		= 0x17,
++	DEVICE_DESC_PARAM_MANF_ID		= 0x18,
++	DEVICE_DESC_PARAM_UD_OFFSET		= 0x1A,
++	DEVICE_DESC_PARAM_UD_LEN		= 0x1B,
++	DEVICE_DESC_PARAM_RTT_CAP		= 0x1C,
++	DEVICE_DESC_PARAM_FRQ_RTC		= 0x1D,
++};
++
+ /*
+  * Logical Unit Write Protect
+  * 00h: LU not write protected
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+new file mode 100644
+index 0000000..62ebd89
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -0,0 +1,139 @@
++/*
++ * Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
 + */
-+static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
-+{
-+	unsigned long completed_reqs;
-+	u32 tr_doorbell;
 +
-+	/* Resetting interrupt aggregation counters first and reading the
-+	 * DOOR_BELL afterward allows us to handle all the completed requests.
-+	 * In order to prevent other interrupts starvation the DB is read once
-+	 * after reset. The down side of this solution is the possibility of
-+	 * false interrupt if device completes another request after resetting
-+	 * aggregation and before reading the DB.
-+	 */
-+	if (ufshcd_is_intr_aggr_allowed(hba))
-+		ufshcd_reset_intr_aggr(hba);
++#ifndef _UFS_QUIRKS_H_
++#define _UFS_QUIRKS_H_
 +
-+	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
++/* return true if s1 is a prefix of s2 */
++#define STR_PRFX_EQUAL(s1, s2) !strncmp(s1, s2, strlen(s1))
 +
-+	__ufshcd_transfer_req_compl(hba, completed_reqs);
-+}
++#define UFS_ANY_VENDOR -1
++#define UFS_ANY_MODEL  "ANY_MODEL"
++
++#define MAX_MODEL_LEN 16
++
++#define UFS_VENDOR_TOSHIBA     0x198
++#define UFS_VENDOR_SAMSUNG     0x1CE
 +
 +/**
-  * ufshcd_disable_ee - disable exception event
-  * @hba: per-adapter instance
-  * @mask: exception event to disable
-@@ -3773,6 +3787,13 @@ out:
- 	return;
++ * ufs_device_info - ufs device details
++ * @wmanufacturerid: card details
++ * @model: card model
++ */
++struct ufs_device_info {
++	u16 wmanufacturerid;
++	char model[MAX_MODEL_LEN + 1];
++};
++
++/**
++ * ufs_dev_fix - ufs device quirk info
++ * @card: ufs card details
++ * @quirk: device quirk
++ */
++struct ufs_dev_fix {
++	struct ufs_device_info card;
++	unsigned int quirk;
++};
++
++#define END_FIX { { 0 }, 0 }
++
++/* add specific device quirk */
++#define UFS_FIX(_vendor, _model, _quirk) \
++		{					  \
++			.card.wmanufacturerid = (_vendor),\
++			.card.model = (_model),		  \
++			.quirk = (_quirk),		  \
++		}
++
++/*
++ * If UFS device is having issue in processing LCC (Line Control
++ * Command) coming from UFS host controller then enable this quirk.
++ * When this quirk is enabled, host controller driver should disable
++ * the LCC transmission on UFS host controller (by clearing
++ * TX_LCC_ENABLE attribute of host to 0).
++ */
++#define UFS_DEVICE_QUIRK_BROKEN_LCC (1 << 0)
++
++/*
++ * Some UFS devices don't need VCCQ rail for device operations. Enabling this
++ * quirk for such devices will make sure that VCCQ rail is not voted.
++ */
++#define UFS_DEVICE_NO_VCCQ (1 << 1)
++
++/*
++ * Some vendor's UFS device sends back to back NACs for the DL data frames
++ * causing the host controller to raise the DFES error status. Sometimes
++ * such UFS devices send back to back NAC without waiting for new
++ * retransmitted DL frame from the host and in such cases it might be possible
++ * the Host UniPro goes into bad state without raising the DFES error
++ * interrupt. If this happens then all the pending commands would timeout
++ * only after respective SW command (which is generally too large).
++ *
++ * We can workaround such device behaviour like this:
++ * - As soon as SW sees the DL NAC error, it should schedule the error handler
++ * - Error handler would sleep for 50ms to see if there are any fatal errors
++ *   raised by UFS controller.
++ *    - If there are fatal errors then SW does normal error recovery.
++ *    - If there are no fatal errors then SW sends the NOP command to device
++ *      to check if link is alive.
++ *        - If NOP command times out, SW does normal error recovery
++ *        - If NOP command succeed, skip the error handling.
++ *
++ * If DL NAC error is seen multiple times with some vendor's UFS devices then
++ * enable this quirk to initiate quick error recovery and also silence related
++ * error logs to reduce spamming of kernel logs.
++ */
++#define UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS (1 << 2)
++
++/*
++ * Some UFS devices may not work properly after resume if the link was kept
++ * in off state during suspend. Enabling this quirk will not allow the
++ * link to be kept in off state during suspend.
++ */
++#define UFS_DEVICE_QUIRK_NO_LINK_OFF	(1 << 3)
++
++/*
++ * Few Toshiba UFS device models advertise RX_MIN_ACTIVATETIME_CAPABILITY as
++ * 600us which may not be enough for reliable hibern8 exit hardware sequence
++ * from UFS device.
++ * To workaround this issue, host should set its PA_TACTIVATE time to 1ms even
++ * if device advertises RX_MIN_ACTIVATETIME_CAPABILITY less than 1ms.
++ */
++#define UFS_DEVICE_QUIRK_PA_TACTIVATE	(1 << 4)
++
++/*
++ * Some UFS memory devices may have really low read/write throughput in
++ * FAST AUTO mode, enable this quirk to make sure that FAST AUTO mode is
++ * never enabled for such devices.
++ */
++#define UFS_DEVICE_NO_FASTAUTO		(1 << 5)
++
++struct ufs_hba;
++void ufs_advertise_fixup_device(struct ufs_hba *hba);
++
++static struct ufs_dev_fix ufs_fixups[] = {
++	/* UFS cards deviations table */
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
++		UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS),
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
++		UFS_DEVICE_NO_FASTAUTO),
++	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9C8KBADG",
++		UFS_DEVICE_QUIRK_PA_TACTIVATE),
++	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9D8KBADG",
++		UFS_DEVICE_QUIRK_PA_TACTIVATE),
++
++	END_FIX
++};
++#endif /* UFS_QUIRKS_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e2ed415..f8b458f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -42,6 +42,7 @@
+ #include <linux/nls.h>
+ #include <linux/of.h>
+ #include "ufshcd.h"
++#include "ufs_quirks.h"
+ #include "unipro.h"
+ 
+ #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
+@@ -4564,6 +4565,75 @@ out:
+ 	return ret;
  }
  
-+/* Complete requests that have door-bell cleared */
-+static void ufshcd_complete_requests(struct ufs_hba *hba)
++static int ufs_get_device_info(struct ufs_hba *hba,
++				struct ufs_device_info *card_data)
 +{
-+	ufshcd_transfer_req_compl(hba);
-+	ufshcd_tmc_handler(hba);
++	int err;
++	u8 model_index;
++	u8 str_desc_buf[QUERY_DESC_STRING_MAX_SIZE + 1] = {0};
++	u8 desc_buf[QUERY_DESC_DEVICE_MAX_SIZE];
++
++	err = ufshcd_read_device_desc(hba, desc_buf,
++					QUERY_DESC_DEVICE_MAX_SIZE);
++	if (err) {
++		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	/*
++	 * getting vendor (manufacturerID) and Bank Index in big endian
++	 * format
++	 */
++	card_data->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
++				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
++
++	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
++
++	err = ufshcd_read_string_desc(hba, model_index, str_desc_buf,
++					QUERY_DESC_STRING_MAX_SIZE, ASCII_STD);
++	if (err) {
++		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	str_desc_buf[QUERY_DESC_STRING_MAX_SIZE] = '\0';
++	strlcpy(card_data->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
++		min_t(u8, str_desc_buf[QUERY_DESC_LENGTH_OFFSET],
++		      MAX_MODEL_LEN));
++
++	/* Null terminate the model string */
++	card_data->model[MAX_MODEL_LEN] = '\0';
++
++out:
++	return err;
++}
++
++void ufs_advertise_fixup_device(struct ufs_hba *hba)
++{
++	int err;
++	struct ufs_dev_fix *f;
++	struct ufs_device_info card_data;
++
++	card_data.wmanufacturerid = 0;
++
++	err = ufs_get_device_info(hba, &card_data);
++	if (err) {
++		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
++			__func__, err);
++		return;
++	}
++
++	for (f = ufs_fixups; f->quirk; f++) {
++		if (((f->card.wmanufacturerid == card_data.wmanufacturerid) ||
++		    (f->card.wmanufacturerid == UFS_ANY_VENDOR)) &&
++		    (STR_PRFX_EQUAL(f->card.model, card_data.model) ||
++		     !strcmp(f->card.model, UFS_ANY_MODEL)))
++			hba->dev_quirks |= f->quirk;
++	}
 +}
 +
  /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -3785,6 +3806,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	u32 err_tm = 0;
- 	int err = 0;
- 	int tag;
-+	bool needs_reset = false;
- 
- 	hba = container_of(work, struct ufs_hba, eh_work);
- 
-@@ -3792,40 +3814,75 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	ufshcd_hold(hba, false);
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
+@@ -4591,6 +4661,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	if (ret)
  		goto out;
--	}
  
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 	ufshcd_set_eh_in_progress(hba);
++	ufs_advertise_fixup_device(hba);
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 54e13cc..77e79c0 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -470,6 +470,9 @@ struct ufs_hba {
  
- 	/* Complete requests that have door-bell cleared by h/w */
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	ufshcd_complete_requests(hba);
-+	if ((hba->saved_err & INT_FATAL_ERRORS) ||
-+	    ((hba->saved_err & UIC_ERROR) &&
-+	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
-+				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-+				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
-+		needs_reset = true;
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
  
-+	/*
-+	 * if host reset is required then skip clearing the pending
-+	 * transfers forcefully because they will automatically get
-+	 * cleared after link startup.
-+	 */
-+	if (needs_reset)
-+		goto skip_pending_xfer_clear;
++	/* Device deviations from standard UFS device spec. */
++	unsigned int dev_quirks;
 +
-+	/* release lock as clear command might sleep */
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	/* Clear pending transfer requests */
--	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
--		if (ufshcd_clear_cmd(hba, tag))
--			err_xfer |= 1 << tag;
-+	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-+		if (ufshcd_clear_cmd(hba, tag)) {
-+			err_xfer = true;
-+			goto lock_skip_pending_xfer_clear;
-+		}
-+	}
- 
- 	/* Clear pending task management requests */
--	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
--		if (ufshcd_clear_tm_cmd(hba, tag))
--			err_tm |= 1 << tag;
-+	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-+		if (ufshcd_clear_tm_cmd(hba, tag)) {
-+			err_tm = true;
-+			goto lock_skip_pending_xfer_clear;
-+		}
-+	}
- 
--	/* Complete the requests that are cleared by s/w */
-+lock_skip_pending_xfer_clear:
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	/* Complete the requests that are cleared by s/w */
-+	ufshcd_complete_requests(hba);
-+
-+	if (err_xfer || err_tm)
-+		needs_reset = true;
-+
-+skip_pending_xfer_clear:
- 	/* Fatal errors need reset */
--	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
--			((hba->saved_err & UIC_ERROR) &&
--			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
-+	if (needs_reset) {
-+		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
-+
-+		/*
-+		 * ufshcd_reset_and_restore() does the link reinitialization
-+		 * which will need atleast one empty doorbell slot to send the
-+		 * device management commands (NOP and query commands).
-+		 * If there is no slot empty at this moment then free up last
-+		 * slot forcefully.
-+		 */
-+		if (hba->outstanding_reqs == max_doorbells)
-+			__ufshcd_transfer_req_compl(hba,
-+						    (1UL << (hba->nutrs - 1)));
-+
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		err = ufshcd_reset_and_restore(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 		if (err) {
- 			dev_err(hba->dev, "%s: reset and restore failed\n",
- 					__func__);
-@@ -3839,9 +3896,18 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		hba->saved_err = 0;
- 		hba->saved_uic_err = 0;
- 	}
-+
-+	if (!needs_reset) {
-+		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+		if (hba->saved_err || hba->saved_uic_err)
-+			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
-+			    __func__, hba->saved_err, hba->saved_uic_err);
-+	}
-+
- 	ufshcd_clear_eh_in_progress(hba);
- 
- out:
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	scsi_unblock_requests(hba->host);
- 	ufshcd_release(hba);
- 	pm_runtime_put_sync(hba->dev);
-@@ -3896,15 +3962,18 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 	}
- 
- 	if (queue_eh_work) {
-+		/*
-+		 * update the transfer error masks to sticky bits, let's do this
-+		 * irrespective of current ufshcd_state.
-+		 */
-+		hba->saved_err |= hba->errors;
-+		hba->saved_uic_err |= hba->uic_error;
-+
- 		/* handle fatal errors only when link is functional */
- 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
- 			/* block commands from scsi mid-layer */
- 			scsi_block_requests(hba->host);
- 
--			/* transfer error masks to sticky bits */
--			hba->saved_err |= hba->errors;
--			hba->saved_uic_err |= hba->uic_error;
--
- 			hba->ufshcd_state = UFSHCD_STATE_ERROR;
- 			schedule_work(&hba->eh_work);
- 		}
+ 	wait_queue_head_t tm_wq;
+ 	wait_queue_head_t tm_tag_wq;
+ 	unsigned long tm_condition;
 -- 
 1.8.5.2
 
