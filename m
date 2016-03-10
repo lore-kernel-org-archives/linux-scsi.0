@@ -1,180 +1,138 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 04/17] scsi: ufs: verify hba controller hce reg value
-Date: Thu, 10 Mar 2016 17:37:08 +0200
-Message-ID: <1457624241-20525-5-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 11/17] scsi: ufs: handle non spec compliant bkops behaviour by device
+Date: Thu, 10 Mar 2016 17:37:15 +0200
+Message-ID: <1457624241-20525-12-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Sometimes due to hw issues it takes some time to the
-host controller register to update. In order to verify the register
-has updated, a polling is done until its value is set.
+We are seeing that some devices are raising the urgent bkops exception
+events even when BKOPS status doesn't indicate performace impacted or
+critical. Handle these device by determining their urgent bkops status
+at runtime.
 
-In addition the functions ufshcd_hba_stop() and
-ufshcd_wait_for_register() was updated with an additional input
-parameter, indicating the timeout between reads will
-be done by sleeping or spinning the cpu.
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h | 12 +++--------
- 2 files changed, 35 insertions(+), 30 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 52 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3400ceb..80031e6 100644
+index b429a57..82a4b1c 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -240,11 +240,13 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
-  * @val - wait condition
-  * @interval_us - polling interval in microsecs
-  * @timeout_ms - timeout in millisecs
-+ * @can_sleep - perform sleep or just spin
-  *
-  * Returns -ETIMEDOUT on error, zero on success
+@@ -3763,7 +3763,7 @@ out:
   */
--static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
--		u32 val, unsigned long interval_us, unsigned long timeout_ms)
-+int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+				u32 val, unsigned long interval_us,
-+				unsigned long timeout_ms, bool can_sleep)
+ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
  {
- 	int err = 0;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
-@@ -253,9 +255,10 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
- 	val = val & mask;
- 
- 	while ((ufshcd_readl(hba, reg) & mask) != val) {
--		/* wakeup within 50us of expiry */
--		usleep_range(interval_us, interval_us + 50);
--
-+		if (can_sleep)
-+			usleep_range(interval_us, interval_us + 50);
-+		else
-+			udelay(interval_us);
- 		if (time_after(jiffies, timeout)) {
- 			if ((ufshcd_readl(hba, reg) & mask) != val)
- 				err = -ETIMEDOUT;
-@@ -1459,7 +1462,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
- 	 */
- 	err = ufshcd_wait_for_register(hba,
- 			REG_UTP_TRANSFER_REQ_DOOR_BELL,
--			mask, ~mask, 1000, 1000);
-+			mask, ~mask, 1000, 1000, true);
- 
- 	return err;
- }
-@@ -2815,6 +2818,23 @@ out:
+-	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
++	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
  }
  
- /**
-+ * ufshcd_hba_stop - Send controller to reset state
-+ * @hba: per adapter instance
-+ * @can_sleep: perform sleep or just spin
-+ */
-+static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
+ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+@@ -3772,6 +3772,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+ 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+ }
+ 
++static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
 +{
 +	int err;
++	u32 curr_status = 0;
 +
-+	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
-+	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
-+					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
-+					10, 1, can_sleep);
-+	if (err)
-+		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
++	if (hba->is_urgent_bkops_lvl_checked)
++		goto enable_auto_bkops;
++
++	err = ufshcd_get_bkops_status(hba, &curr_status);
++	if (err) {
++		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
++				__func__, err);
++		goto out;
++	}
++
++	/*
++	 * We are seeing that some devices are raising the urgent bkops
++	 * exception events even when BKOPS status doesn't indicate performace
++	 * impacted or critical. Handle these device by determining their urgent
++	 * bkops status at runtime.
++	 */
++	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
++		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
++				__func__, curr_status);
++		/* update the current status as the urgent bkops level */
++		hba->urgent_bkops_lvl = curr_status;
++		hba->is_urgent_bkops_lvl_checked = true;
++	}
++
++enable_auto_bkops:
++	err = ufshcd_enable_auto_bkops(hba);
++out:
++	if (err < 0)
++		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
++				__func__, err);
 +}
 +
-+/**
-  * ufshcd_hba_enable - initialize the controller
-  * @hba: per adapter instance
-  *
-@@ -2834,18 +2854,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	 * development and testing of this driver. msleep can be changed to
- 	 * mdelay and retry count can be reduced based on the controller.
- 	 */
--	if (!ufshcd_is_hba_active(hba)) {
--
-+	if (!ufshcd_is_hba_active(hba))
- 		/* change controller state to "reset state" */
--		ufshcd_hba_stop(hba);
--
--		/*
--		 * This delay is based on the testing done with UFS host
--		 * controller FPGA. The delay can be changed based on the
--		 * host controller used.
--		 */
--		msleep(5);
+ /**
+  * ufshcd_exception_event_handler - handle exceptions raised by device
+  * @work: pointer to work data
+@@ -3795,12 +3832,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 	}
+ 
+ 	status &= hba->ee_ctrl_mask;
+-	if (status & MASK_EE_URGENT_BKOPS) {
+-		err = ufshcd_urgent_bkops(hba);
+-		if (err < 0)
+-			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
+-					__func__, err);
 -	}
-+		ufshcd_hba_stop(hba, true);
- 
- 	/* UniPro link is disabled at this point */
- 	ufshcd_set_link_off(hba);
-@@ -3898,7 +3909,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- 	/* poll for max. 1 sec to clear door bell register by h/w */
- 	err = ufshcd_wait_for_register(hba,
- 			REG_UTP_TASK_REQ_DOOR_BELL,
--			mask, 0, 1000, 1000);
-+			mask, 0, 1000, 1000, true);
++
++	if (status & MASK_EE_URGENT_BKOPS)
++		ufshcd_bkops_exception_event_handler(hba);
++
  out:
- 	return err;
- }
-@@ -4180,7 +4191,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 	pm_runtime_put_sync(hba->dev);
+ 	return;
+@@ -4832,6 +4867,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
  
- 	/* Reset the host controller */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_hba_stop(hba);
-+	ufshcd_hba_stop(hba, false);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_init_pwr_info(hba);
  
- 	err = ufshcd_hba_enable(hba);
-@@ -5133,7 +5144,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 		 * Change controller state to "reset state" which
- 		 * should also put the link in off/reset state
- 		 */
--		ufshcd_hba_stop(hba);
-+		ufshcd_hba_stop(hba, true);
- 		/*
- 		 * TODO: Check if we need any delay to make sure that
- 		 * controller is reset
-@@ -5609,7 +5620,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	scsi_remove_host(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
--	ufshcd_hba_stop(hba);
-+	ufshcd_hba_stop(hba, true);
- 
- 	scsi_host_put(hba->host);
++	/* set the default level for urgent bkops */
++	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
++	hba->is_urgent_bkops_lvl_checked = false;
++
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
  
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 9ae7f85..a6d3572 100644
+index 77e79c0..65f29aa 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -590,15 +590,9 @@ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- void ufshcd_dealloc_host(struct ufs_hba *);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
--
--/**
-- * ufshcd_hba_stop - Send controller to reset state
-- * @hba: per adapter instance
-- */
--static inline void ufshcd_hba_stop(struct ufs_hba *hba)
--{
--	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
--}
-+int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+				u32 val, unsigned long interval_us,
-+				unsigned long timeout_ms, bool can_sleep);
+@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
+  * @clk_list_head: UFS host controller clocks list node head
+  * @pwr_info: holds current power mode
+  * @max_pwr_info: keeps the device max valid pwm
++ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
++ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
++ *  device is known or not.
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -538,6 +541,9 @@ struct ufs_hba {
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+ 	bool is_sys_suspended;
++
++	enum bkops_status urgent_bkops_lvl;
++	bool is_urgent_bkops_lvl_checked;
+ };
  
- static inline void check_upiu_size(void)
- {
+ /* Returns true if clocks can be gated. Otherwise false */
 -- 
 1.8.5.2
 
