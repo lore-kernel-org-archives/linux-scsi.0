@@ -1,59 +1,41 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
-Date: Thu, 10 Mar 2016 20:19:32 +0100
-Message-ID: <201603102019.32467.arnd@arndb.de>
-References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org> <046fc2d00e51f331a6bbc00553cc1f9c.squirrel@us.codeaurora.org> <201603101818.33826.arnd@arndb.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] megaraid_sas: Don't issue kill adapter for MFI
+ controllers in case of PD list DCMD failure
+Date: Thu, 10 Mar 2016 22:35:26 +0100
+Message-ID: <56E1E89E.5000306@redhat.com>
+References: <1457604877-5280-1-git-send-email-sumit.saxena@broadcom.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <201603101818.33826.arnd-r2nGTMty4D4@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Cc: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jbottomley-wo1vFcy6AUs@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Michael Neuling <mikey-/owAOxkjmzZAfugRpC6u6w@public.gmane.org>, "Matthew R. Ochs" <mrochs-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Wen Xiong <wenxiong-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "open list:ABI/API" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54817 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932180AbcCJVfa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2016 16:35:30 -0500
+In-Reply-To: <1457604877-5280-1-git-send-email-sumit.saxena@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@broadcom.com>, jbottomley@parallels.com, martin.petersen@oracle.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com
 
-On Thursday 10 March 2016, Arnd Bergmann wrote:
-> On Wednesday 09 March 2016, ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org wrote:
-> > Any userspace application can be a tool.
-> > We already implemented and used a user space application, that sent
-> > queries to the UFS devices in order to get information and descriptors.
-> > Not only ioctl interface is a useful way to interact with the device,
-> > we used it, and found it very helpful in varies cases.
-> > hence, this patch.
-> > This patch has been already addressed all comments of Arnd Bergman from 5
-> > months ago, and now, re-uploaded again.
-> 
-> Do you have a pointer to that review? It's been a long while, so I
-> have completely forgotten what issues I raised and how it got resolved.
+On 10.3.2016 11:14, Sumit Saxena wrote:
+> There are few MFI adapters which do not support MR_DCMD_PD_LIST_QUERY so
+> if MFI adapters fail this DCMD, it should not be considered as FATAL and
+> driver should not issue kill adapter and set per controller's instance
+> variable- pd_list_not_supported so that same variable can be used inside
+> functions- slave_alloc and slave_configure to allow firmware scan.
+>
+> Killing adapter because of DCMD failure when this DCMD is not supported
+> causes driver's probe getting failed. This issue got introduced because
+> of below commit when MFI IO timeout handling was introduced-
+>
+> 6d40afb megaraid_sas: MFI IO timeout handling
+>
+> Killing adapter in case of this DCMD failure should be limited to Fusion
+> adapters only. Per controller's instance variable allow_fw_scan is removed
+> as pd_list_not_supported better reflect the purpose.
+>
+> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-I got your link in private message and read up on it again now.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-To clarify: I commented on the formal API definition, and you indeed addressed
-all my concerns, so this is now an ioctl command that follows our usual
-calling conventions.
-
-However, this is orthogonal to the question of whether it is a good idea
-to have this interface implemented as an ioctl as asked by Greg, and who
-is actually using it. 
-
-I'm lacking the detailed subsystem knowledge to answer this, but
-I note that other block drivers have similar passthrough interfaces.
-
-Looking through what other drivers do, I've found a couple of patterns
-now. n particular, most use the SG_IO ioctl to pass down commands
-from user space into a device specific command queue. Have you looked
-at that interface in the past to see if it would fit your use case?
-
-There is also a 'bsg' API that some drivers implement, which I think
-would be another alternative.
-
-Could any of the SCSI experts comment on what they expect a driver
-to use out of those three alternatives (if any): 
-
-* private ioctl
-* bsg
-* sg_io
-
-	Arnd
