@@ -1,47 +1,67 @@
-From: Rolf Eike Beer <eike@sf-mail.de>
-Subject: Re: [BUG] "block: make generic_make_request handle arbitrarily sized bios" breaks boot on parisc-linux
-Date: Thu, 10 Mar 2016 08:04:51 +0100
-Message-ID: <4070811.QJ02MzEnrO@caliban.sf-tec.de>
-References: <227C05EC-5A1C-4FAF-89D8-4A45AF600EC4@bell.net> <56E03E2A.5020208@bell.net> <56E093B6.4040206@gmx.de>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Fwd: [PATCH 1/1] sd: do not let LBPME bit stop the VPDs speak
+Date: Thu, 10 Mar 2016 16:15:34 +0800
+Message-ID: <CAGnHSE=X2Yd3p75D85jcgSUScKxKYZsueLdqMMiaJ_uBqb+XMw@mail.gmail.com>
+References: <56df97e0.d08d420a.58e8f.3162@mx.google.com>
+	<yq1mvq7qdcy.fsf@sermon.lab.mkp.net>
+	<CAGnHSEnHG5i3EvwmcGZU5BXobUCQa7P+j+KKNrUyoS86s7d8Gg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2709909.azQZ8q3AFL"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <56E093B6.4040206@gmx.de>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Helge Deller <deller@gmx.de>
-Cc: John David Anglin <dave.anglin@bell.net>, Ming Lei <tom.leiming@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-parisc List <linux-parisc@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:34870 "EHLO
+	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751711AbcCJIPf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 03:15:35 -0500
+Received: by mail-yw0-f196.google.com with SMTP id s188so3942617ywe.2
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2016 00:15:35 -0800 (PST)
+In-Reply-To: <CAGnHSEnHG5i3EvwmcGZU5BXobUCQa7P+j+KKNrUyoS86s7d8Gg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---nextPart2709909.azQZ8q3AFL
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+The outputs were made with an SSD that supports TRIM plugged in:
 
-> Right.
-> I just succeeded in reproducing the bug with moving blk_bio_segment_split()
-> into an own file (and with "extern" instead of "static" in blk-merge.c).
-> When compiled with -O2 it still crashes. So, next step is to analyze what
-> gcc does wrong when compiling this function. It should get easier now to
-> find the reason, since we have a smaller reproducer now.
+[tom@localhost ~]$ sudo smartctl --identify=wb /dev/sdc | grep -i trim
+  69     14          1   Deterministic data after trim supported
+  69      5          1   Trimmed LBA range(s) returning zeroed data supported
+ 169      0          1   Trim bit in DATA SET MANAGEMENT command supported
 
-I have a ton of compilers here on my C8000 and a few even on my C3600 which 
-drive nightly CMake dashboards. Could you send the testcase so I can pass it 
-through the list and see what breaks?
+[tom@localhost ~]$ sudo smartctl --identify=wb /dev/sdc | grep -i 'ds m'
+ 105      -     0x0008   Max blocks of LBA Range Entries per DS MANAGEMENT cmd
 
-Greetings,
+Both `blkdiscard` with a patched kernel and `sg_unmap` appeared to
+have gone well (checked with `hexdump`).
 
-Eike
---nextPart2709909.azQZ8q3AFL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+I just couldn't think of a case that the LBPME bit would actually
+indicates that the VPDs should not be used. It's merely bad
+implementation of Read Capacity (16), which doesn't practically stops
+the device from supporting unmap (even if a similar device is has
+broken unmap support, it doesn't mean that the vendor set the LBPME
+bit to 0 because they want to tell you it's broken, it's just they
+have broken unmap support IN ADDITION to a bad Read Capacity (16)
+implementation).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Also, doesn't the kernel ASSUME that the device support Write Same
+(16) with Unmap bit set when the LBPME bit is 1 even if it has no
+Block Limits and Logical Block Provisioning VPDs? Isn't that even more
+lenient than what I am proposing?
 
-iEYEABECAAYFAlbhHJkACgkQXKSJPmm5/E7HNACfRi2PViWGjXY+EeBNwwR1fe1m
-Bv4AnjzQq/DCYQipxboH8Bd5Ahr0rnTo
-=LsIb
------END PGP SIGNATURE-----
-
---nextPart2709909.azQZ8q3AFL--
-
+On 10 March 2016 at 10:24, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Tom" == tom ty89 <tom.ty89@gmail.com> writes:
+>
+> Tom,
+>
+> Tom> Some devices have details of their support on unmapping on the
+> Tom> Block Limits and/or Logical Block Provisioning VPDs while they do
+> Tom> not set the LBPME bit to 1. Though this is required by the SCSI
+> Tom> standards, the VPDs are giving even more concrete details about the
+> Tom> support, so they should be used even when the bit is set to 0.
+>
+> I am not going to enable an already brittle feature if a device can't
+> report the right thing.
+>
+> Does the bridge report LBPME=1 if you plug in an SSD?
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
