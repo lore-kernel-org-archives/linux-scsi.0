@@ -1,186 +1,282 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 09/17] scsi: ufs: add error recovery after DL NAC error
-Date: Thu, 10 Mar 2016 17:37:13 +0200
-Message-ID: <1457624241-20525-10-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 08/17] scsi: ufs: make error handling bit faster
+Date: Thu, 10 Mar 2016 17:37:12 +0200
+Message-ID: <1457624241-20525-9-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51541 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbcCJPiB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:38:01 -0500
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Some vendor's UFS device sends back to back NACs for the DL data frames
-causing the host controller to raise the DFES error status. Sometimes
-such UFS devices send back to back NAC without waiting for new
-retransmitted DL frame from the host and in such cases it might be
-possible the Host UniPro goes into bad state without raising the DFES
-error interrupt. If this happens then all the pending commands would
-timeout only after respective SW command (which is generally too
-large).
-
-This change workarounds such device behaviour like this:
-- As soon as SW sees the DL NAC error, it would schedule the error
-  handler
-- Error handler would sleep for 50ms to see if there any fatal errors
-  raised by UFS controller.
-   - If there are fatal errors then SW does normal error recovery.
-   - If there are no fatal errors then SW sends the NOP command to
-     device to check if link is alive.
-       - If NOP command times out, SW does normal error recovery
-       - If NOP command succeed, skip the error handling.
-
-If DL NAC error is seen multiple times with some vendor's UFS devices
-then enable this quirk to initiate quick error recovery and also
-silence related error logs to reduce spamming of kernel logs.
+UFS driver's error handler forcefully tries to clear all the pending
+requests. For each pending request in the queue, it waits 1 sec for it
+to get cleared. If we have multiple requests in the queue then it's
+possible that we might end up waiting for those many seconds before
+resetting the host. But note that resetting host would any way clear
+all the pending requests from the hardware. Hence this change skips
+the forceful clear of the pending requests if we are anyway going to
+reset the host (for fatal errors).
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshci.h |  2 +
- 2 files changed, 95 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 155 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 112 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index adaae34..4eedb7f 100644
+index 8ed7d4b..adaae34 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3795,6 +3795,79 @@ static void ufshcd_complete_requests(struct ufs_hba *hba)
+@@ -133,9 +133,11 @@ enum {
+ /* UFSHCD UIC layer error flags */
+ enum {
+ 	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
+-	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
+-	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
+-	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
++	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR = (1 << 1), /* Data link layer error */
++	UFSHCD_UIC_DL_TCx_REPLAY_ERROR = (1 << 2), /* Data link layer error */
++	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
++	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
++	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
+ };
+ 
+ /* Interrupt configuration options */
+@@ -3465,31 +3467,18 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
  }
  
  /**
-+ * ufshcd_quirk_dl_nac_errors - This function checks if error handling is
-+ *				to recover from the DL NAC errors or not.
-+ * @hba: per-adapter instance
-+ *
-+ * Returns true if error handling is required, false otherwise
+- * ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * __ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
++ * @completed_reqs: requests to complete
+  */
+-static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
++static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
++					unsigned long completed_reqs)
+ {
+ 	struct ufshcd_lrb *lrbp;
+ 	struct scsi_cmnd *cmd;
+-	unsigned long completed_reqs;
+-	u32 tr_doorbell;
+ 	int result;
+ 	int index;
+ 
+-	/* Resetting interrupt aggregation counters first and reading the
+-	 * DOOR_BELL afterward allows us to handle all the completed requests.
+-	 * In order to prevent other interrupts starvation the DB is read once
+-	 * after reset. The down side of this solution is the possibility of
+-	 * false interrupt if device completes another request after resetting
+-	 * aggregation and before reading the DB.
+-	 */
+-	if (ufshcd_is_intr_aggr_allowed(hba))
+-		ufshcd_reset_intr_aggr(hba);
+-
+-	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
+-
+ 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+ 		lrbp = &hba->lrb[index];
+ 		cmd = lrbp->cmd;
+@@ -3519,6 +3508,31 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ }
+ 
+ /**
++ * ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * @hba: per adapter instance
 + */
-+static bool ufshcd_quirk_dl_nac_errors(struct ufs_hba *hba)
++static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
 +{
-+	unsigned long flags;
-+	bool err_handling = true;
++	unsigned long completed_reqs;
++	u32 tr_doorbell;
 +
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/*
-+	 * UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS only workaround the
-+	 * device fatal error and/or DL NAC & REPLAY timeout errors.
++	/* Resetting interrupt aggregation counters first and reading the
++	 * DOOR_BELL afterward allows us to handle all the completed requests.
++	 * In order to prevent other interrupts starvation the DB is read once
++	 * after reset. The down side of this solution is the possibility of
++	 * false interrupt if device completes another request after resetting
++	 * aggregation and before reading the DB.
 +	 */
-+	if (hba->saved_err & (CONTROLLER_FATAL_ERROR | SYSTEM_BUS_FATAL_ERROR))
-+		goto out;
++	if (ufshcd_is_intr_aggr_allowed(hba))
++		ufshcd_reset_intr_aggr(hba);
 +
-+	if ((hba->saved_err & DEVICE_FATAL_ERROR) ||
-+	    ((hba->saved_err & UIC_ERROR) &&
-+	     (hba->saved_uic_err & UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))
-+		goto out;
++	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
 +
-+	if ((hba->saved_err & UIC_ERROR) &&
-+	    (hba->saved_uic_err & UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)) {
-+		int err;
-+		/*
-+		 * wait for 50ms to see if we can get any other errors or not.
-+		 */
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		msleep(50);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+
-+		/*
-+		 * now check if we have got any other severe errors other than
-+		 * DL NAC error?
-+		 */
-+		if ((hba->saved_err & INT_FATAL_ERRORS) ||
-+		    ((hba->saved_err & UIC_ERROR) &&
-+		    (hba->saved_uic_err & ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)))
-+			goto out;
-+
-+		/*
-+		 * As DL NAC is the only error received so far, send out NOP
-+		 * command to confirm if link is still active or not.
-+		 *   - If we don't get any response then do error recovery.
-+		 *   - If we get response then clear the DL NAC error bit.
-+		 */
-+
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		err = ufshcd_verify_dev_init(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+
-+		if (err)
-+			goto out;
-+
-+		/* Link seems to be alive hence ignore the DL NAC errors */
-+		if (hba->saved_uic_err == UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)
-+			hba->saved_err &= ~UIC_ERROR;
-+		/* clear NAC error */
-+		hba->saved_uic_err &= ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
-+		if (!hba->saved_uic_err) {
-+			err_handling = false;
-+			goto out;
-+		}
-+	}
-+out:
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	return err_handling;
++	__ufshcd_transfer_req_compl(hba, completed_reqs);
 +}
 +
 +/**
+  * ufshcd_disable_ee - disable exception event
+  * @hba: per-adapter instance
+  * @mask: exception event to disable
+@@ -3773,6 +3787,13 @@ out:
+ 	return;
+ }
+ 
++/* Complete requests that have door-bell cleared */
++static void ufshcd_complete_requests(struct ufs_hba *hba)
++{
++	ufshcd_transfer_req_compl(hba);
++	ufshcd_tmc_handler(hba);
++}
++
+ /**
   * ufshcd_err_handler - handle UFS errors that require s/w attention
   * @work: pointer to work structure
-  */
-@@ -3822,6 +3895,17 @@ static void ufshcd_err_handler(struct work_struct *work)
+@@ -3785,6 +3806,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	u32 err_tm = 0;
+ 	int err = 0;
+ 	int tag;
++	bool needs_reset = false;
+ 
+ 	hba = container_of(work, struct ufs_hba, eh_work);
+ 
+@@ -3792,40 +3814,75 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	ufshcd_hold(hba, false);
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+ 		goto out;
+-	}
+ 
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 	ufshcd_set_eh_in_progress(hba);
  
  	/* Complete requests that have door-bell cleared by h/w */
- 	ufshcd_complete_requests(hba);
+-	ufshcd_transfer_req_compl(hba);
+-	ufshcd_tmc_handler(hba);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ufshcd_complete_requests(hba);
++	if ((hba->saved_err & INT_FATAL_ERRORS) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
++				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
++				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
++		needs_reset = true;
+ 
++	/*
++	 * if host reset is required then skip clearing the pending
++	 * transfers forcefully because they will automatically get
++	 * cleared after link startup.
++	 */
++	if (needs_reset)
++		goto skip_pending_xfer_clear;
 +
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
-+		bool ret;
++	/* release lock as clear command might sleep */
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	/* Clear pending transfer requests */
+-	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
+-		if (ufshcd_clear_cmd(hba, tag))
+-			err_xfer |= 1 << tag;
++	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
++		if (ufshcd_clear_cmd(hba, tag)) {
++			err_xfer = true;
++			goto lock_skip_pending_xfer_clear;
++		}
++	}
+ 
+ 	/* Clear pending task management requests */
+-	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
+-		if (ufshcd_clear_tm_cmd(hba, tag))
+-			err_tm |= 1 << tag;
++	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
++		if (ufshcd_clear_tm_cmd(hba, tag)) {
++			err_tm = true;
++			goto lock_skip_pending_xfer_clear;
++		}
++	}
+ 
+-	/* Complete the requests that are cleared by s/w */
++lock_skip_pending_xfer_clear:
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ufshcd_transfer_req_compl(hba);
+-	ufshcd_tmc_handler(hba);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
++	/* Complete the requests that are cleared by s/w */
++	ufshcd_complete_requests(hba);
++
++	if (err_xfer || err_tm)
++		needs_reset = true;
++
++skip_pending_xfer_clear:
+ 	/* Fatal errors need reset */
+-	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
+-			((hba->saved_err & UIC_ERROR) &&
+-			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
++	if (needs_reset) {
++		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
++
++		/*
++		 * ufshcd_reset_and_restore() does the link reinitialization
++		 * which will need atleast one empty doorbell slot to send the
++		 * device management commands (NOP and query commands).
++		 * If there is no slot empty at this moment then free up last
++		 * slot forcefully.
++		 */
++		if (hba->outstanding_reqs == max_doorbells)
++			__ufshcd_transfer_req_compl(hba,
++						    (1UL << (hba->nutrs - 1)));
 +
 +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
-+		ret = ufshcd_quirk_dl_nac_errors(hba);
+ 		err = ufshcd_reset_and_restore(hba);
 +		spin_lock_irqsave(hba->host->host_lock, flags);
-+		if (!ret)
-+			goto skip_err_handling;
-+	}
- 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
- 	    ((hba->saved_err & UIC_ERROR) &&
- 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
-@@ -3897,6 +3981,7 @@ skip_pending_xfer_clear:
+ 		if (err) {
+ 			dev_err(hba->dev, "%s: reset and restore failed\n",
+ 					__func__);
+@@ -3839,9 +3896,18 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		hba->saved_err = 0;
  		hba->saved_uic_err = 0;
  	}
- 
-+skip_err_handling:
- 	if (!needs_reset) {
- 		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 		if (hba->saved_err || hba->saved_uic_err)
-@@ -3925,6 +4010,14 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
- 	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
- 		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
-+	else if (hba->dev_quirks &
-+		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
-+		if (reg & UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED)
-+			hba->uic_error |=
-+				UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
-+		else if (reg & UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT)
-+			hba->uic_error |= UFSHCD_UIC_DL_TCx_REPLAY_ERROR;
++
++	if (!needs_reset) {
++		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
++		if (hba->saved_err || hba->saved_uic_err)
++			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
++			    __func__, hba->saved_err, hba->saved_uic_err);
 +	}
++
+ 	ufshcd_clear_eh_in_progress(hba);
  
- 	/* UIC NL/TL/DME errors needs software retry */
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 0ae0967..2b05bfb 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -170,6 +170,8 @@ enum {
- #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
- #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
- #define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
-+#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
-+#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
+ out:
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	scsi_unblock_requests(hba->host);
+ 	ufshcd_release(hba);
+ 	pm_runtime_put_sync(hba->dev);
+@@ -3896,15 +3962,18 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
+ 	}
  
- /* UECN - Host UIC Error Code Network Layer 40h */
- #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
+ 	if (queue_eh_work) {
++		/*
++		 * update the transfer error masks to sticky bits, let's do this
++		 * irrespective of current ufshcd_state.
++		 */
++		hba->saved_err |= hba->errors;
++		hba->saved_uic_err |= hba->uic_error;
++
+ 		/* handle fatal errors only when link is functional */
+ 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
+ 			/* block commands from scsi mid-layer */
+ 			scsi_block_requests(hba->host);
+ 
+-			/* transfer error masks to sticky bits */
+-			hba->saved_err |= hba->errors;
+-			hba->saved_uic_err |= hba->uic_error;
+-
+ 			hba->ufshcd_state = UFSHCD_STATE_ERROR;
+ 			schedule_work(&hba->eh_work);
+ 		}
 -- 
 1.8.5.2
 
