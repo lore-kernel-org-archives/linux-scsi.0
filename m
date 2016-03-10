@@ -1,109 +1,62 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] megaraid_sas: Don't issue kill adapter for MFI
- controllers in case of PD list DCMD failure
-Date: Thu, 10 Mar 2016 10:28:30 -0500
-Message-ID: <1457623710.16707.85.camel@localhost.localdomain>
-References: <1457604877-5280-1-git-send-email-sumit.saxena@broadcom.com>
-Reply-To: emilne@redhat.com
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH] scsi_sysfs: Fix typo in is_bin_visible()
+Date: Thu, 10 Mar 2016 10:28:53 -0500 (EST)
+Message-ID: <438482616.20934560.1457623733123.JavaMail.zimbra@redhat.com>
+References: <1457605526-112163-1-git-send-email-hare@suse.de> <1457623508.16707.83.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60116 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752211AbcCJP2c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2016 10:28:32 -0500
-In-Reply-To: <1457604877-5280-1-git-send-email-sumit.saxena@broadcom.com>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:34391 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211AbcCJP3D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:29:03 -0500
+In-Reply-To: <1457623508.16707.83.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: thenzl@redhat.com, jbottomley@parallels.com, martin.petersen@oracle.com, hch@infradead.org, linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com
+To: emilne@redhat.com
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Thu, 2016-03-10 at 02:14 -0800, Sumit Saxena wrote:
-> There are few MFI adapters which do not support MR_DCMD_PD_LIST_QUERY so
-> if MFI adapters fail this DCMD, it should not be considered as FATAL and
-> driver should not issue kill adapter and set per controller's instance
-> variable- pd_list_not_supported so that same variable can be used inside
-> functions- slave_alloc and slave_configure to allow firmware scan.
+Reviewed-by:Laurence Oberman loberman@redhat.com>
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Ewan Milne" <emilne@redhat.com>
+To: "Hannes Reinecke" <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Christoph Hellwig" <hch@lst.de>, "Johannes Thumshirn" <jthumshirn@suse.com>, "James Bottomley" <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Hannes Reinecke" <hare@suse.com>
+Sent: Thursday, March 10, 2016 10:25:08 AM
+Subject: Re: [PATCH] scsi_sysfs: Fix typo in is_bin_visible()
+
+On Thu, 2016-03-10 at 11:25 +0100, Hannes Reinecke wrote:
+> The test for the existence vpd_pg83 is inverted.
 > 
-> Killing adapter because of DCMD failure when this DCMD is not supported
-> causes driver's probe getting failed. This issue got introduced because
-> of below commit when MFI IO timeout handling was introduced-
-> 
-> 6d40afb megaraid_sas: MFI IO timeout handling
-> 
-> Killing adapter in case of this DCMD failure should be limited to Fusion
-> adapters only. Per controller's instance variable allow_fw_scan is removed
-> as pd_list_not_supported better reflect the purpose.
-> 
-> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> Fixes: 7e47976bcff ("scsi_sysfs: add 'is_bin_visible' callback")
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas.h      |  2 +-
->  drivers/scsi/megaraid/megaraid_sas_base.c | 14 ++++++++++----
->  2 files changed, 11 insertions(+), 5 deletions(-)
+>  drivers/scsi/scsi_sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index 4484e63..fce414a 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -2097,7 +2097,7 @@ struct megasas_instance {
->  	u8 UnevenSpanSupport;
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 58ac9c1..d805d55 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1105,7 +1105,7 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+>  	if (attr == &dev_attr_vpd_pg80 && !sdev->vpd_pg80)
+>  		return 0;
 >  
->  	u8 supportmax256vd;
-> -	u8 allow_fw_scan;
-> +	u8 pd_list_not_supported;
->  	u16 fw_supported_vd_count;
->  	u16 fw_supported_pd_count;
+> -	if (attr == &dev_attr_vpd_pg83 && sdev->vpd_pg83)
+> +	if (attr == &dev_attr_vpd_pg83 && !sdev->vpd_pg83)
+>  		return 0;
 >  
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 5c08568..69d375b 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -1838,7 +1838,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
->  	struct megasas_instance *instance;
->  
->  	instance = megasas_lookup_instance(sdev->host->host_no);
-> -	if (instance->allow_fw_scan) {
-> +	if (instance->pd_list_not_supported) {
->  		if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
->  			sdev->type == TYPE_DISK) {
->  			pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
-> @@ -1874,7 +1874,8 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
->  		pd_index =
->  			(sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
->  			sdev->id;
-> -		if ((instance->allow_fw_scan || instance->pd_list[pd_index].driveState ==
-> +		if ((instance->pd_list_not_supported ||
-> +			instance->pd_list[pd_index].driveState ==
->  			MR_PD_STATE_SYSTEM)) {
->  			goto scan_target;
->  		}
-> @@ -4087,7 +4088,13 @@ megasas_get_pd_list(struct megasas_instance *instance)
->  
->  	switch (ret) {
->  	case DCMD_FAILED:
-> -		megaraid_sas_kill_hba(instance);
-> +		dev_info(&instance->pdev->dev, "MR_DCMD_PD_LIST_QUERY "
-> +			"failed/not supported by firmware\n");
-> +
-> +		if (instance->ctrl_context)
-> +			megaraid_sas_kill_hba(instance);
-> +		else
-> +			instance->pd_list_not_supported = 1;
->  		break;
->  	case DCMD_TIMEOUT:
->  
-> @@ -5034,7 +5041,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
->  	case PCI_DEVICE_ID_DELL_PERC5:
->  	default:
->  		instance->instancet = &megasas_instance_template_xscale;
-> -		instance->allow_fw_scan = 1;
->  		break;
->  	}
->  
-
-Note the comment "fixes 6d40afb megaraid_sas: MFI IO timeout handling"
+>  	return S_IRUGO;
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
