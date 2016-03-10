@@ -1,109 +1,160 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 15/17] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
-Date: Thu, 10 Mar 2016 17:37:19 +0200
-Message-ID: <1457624241-20525-16-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 17/17] scsi: ufs-qcom: add printouts of testbus debug registers
+Date: Thu, 10 Mar 2016 17:37:21 +0200
+Message-ID: <1457624241-20525-18-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51829 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428AbcCJPia (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:38:30 -0500
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Some UFS devices (and may be host) have issues if LCC is
-enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-before link startup which will make sure that both host
-and device TX LCC are disabled once link startup is
-completed.
+This change adds printouts of testbus and debug registers.
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs-qcom.c | 27 ++++++++++++++++++++-------
- drivers/scsi/ufs/unipro.h   |  1 +
- 2 files changed, 21 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufs-qcom.c | 77 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.h |  9 ++++++
+ 2 files changed, 86 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index ed57729..966bacf 100644
+index 849fcf3..3aedf73 100644
 --- a/drivers/scsi/ufs/ufs-qcom.c
 +++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -16,8 +16,8 @@
- #include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
--
- #include <linux/phy/phy-qcom-ufs.h>
+@@ -58,6 +58,12 @@ static void ufs_qcom_dump_regs(struct ufs_hba *hba, int offset, int len,
+ 			len * 4, false);
+ }
+ 
++static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
++		char *prefix, void *priv)
++{
++	ufs_qcom_dump_regs(hba, offset, len, prefix);
++}
 +
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
- #include "unipro.h"
-@@ -106,9 +106,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
- 	if (!host->is_lane_clks_enabled)
- 		return;
- 
--	clk_disable_unprepare(host->tx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->tx_l1_sync_clk);
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- 	clk_disable_unprepare(host->rx_l0_sync_clk);
- 
- 	host->is_lane_clks_enabled = false;
-@@ -272,9 +274,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
- 
- 	if (ret) {
--		dev_err(hba->dev,
--		"%s: ufs_qcom_phy_calibrate_phy()failed, ret = %d\n",
--		__func__, ret);
-+		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = %d\n",
-+			__func__, ret);
- 		goto out;
- 	}
- 
-@@ -524,6 +525,18 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
- 									  150);
- 
-+		/*
-+		 * Some UFS devices (and may be host) have issues if LCC is
-+		 * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-+		 * before link startup which will make sure that both host
-+		 * and device TX LCC are disabled once link startup is
-+		 * completed.
-+		 */
-+		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
-+			err = ufshcd_dme_set(hba,
-+					UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
-+					0);
-+
- 		break;
- 	case POST_CHANGE:
- 		ufs_qcom_link_startup_post_change(hba);
-@@ -1542,7 +1555,7 @@ static int ufs_qcom_probe(struct platform_device *pdev)
-  * ufs_qcom_remove - set driver_data of the device to NULL
-  * @pdev: pointer to platform device handle
-  *
-- * Always return 0
-+ * Always returns 0
-  */
- static int ufs_qcom_remove(struct platform_device *pdev)
+ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
  {
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 8082020..e2854e4 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -75,6 +75,7 @@
- #define PA_MAXRXSPEEDFAST	0x1541
- #define PA_MAXRXSPEEDSLOW	0x1542
- #define PA_TXLINKSTARTUPHS	0x1544
-+#define PA_LOCAL_TX_LCC_ENABLE	0x155E
- #define PA_TXSPEEDFAST		0x1565
- #define PA_TXSPEEDSLOW		0x1566
- #define PA_REMOTEVERINFO	0x15A0
+ 	int err = 0;
+@@ -1397,6 +1403,74 @@ out:
+ 	return err;
+ }
+ 
++static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
++		void *priv, void (*print_fn)(struct ufs_hba *hba,
++		int offset, int num_regs, char *str, void *priv))
++{
++	u32 reg;
++	struct ufs_qcom_host *host;
++
++	if (unlikely(!hba)) {
++		pr_err("%s: hba is NULL\n", __func__);
++		return;
++	}
++	if (unlikely(!print_fn)) {
++		dev_err(hba->dev, "%s: print_fn is NULL\n", __func__);
++		return;
++	}
++
++	host = ufshcd_get_variant(hba);
++	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
++		return;
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
++	print_fn(hba, reg, 44, "UFS_UFS_DBG_RD_REG_OCSC ", priv);
++
++	reg = ufshcd_readl(hba, REG_UFS_CFG1);
++	reg |= UFS_BIT(17);
++	ufshcd_writel(hba, reg, REG_UFS_CFG1);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_EDTL_RAM);
++	print_fn(hba, reg, 32, "UFS_UFS_DBG_RD_EDTL_RAM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_DESC_RAM);
++	print_fn(hba, reg, 128, "UFS_UFS_DBG_RD_DESC_RAM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_PRDT_RAM);
++	print_fn(hba, reg, 64, "UFS_UFS_DBG_RD_PRDT_RAM ", priv);
++
++	ufshcd_writel(hba, (reg & ~UFS_BIT(17)), REG_UFS_CFG1);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UAWM);
++	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UAWM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UARM);
++	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UARM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TXUC);
++	print_fn(hba, reg, 48, "UFS_DBG_RD_REG_TXUC ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_RXUC);
++	print_fn(hba, reg, 27, "UFS_DBG_RD_REG_RXUC ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_DFC);
++	print_fn(hba, reg, 19, "UFS_DBG_RD_REG_DFC ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TRLUT);
++	print_fn(hba, reg, 34, "UFS_DBG_RD_REG_TRLUT ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TMRLUT);
++	print_fn(hba, reg, 9, "UFS_DBG_RD_REG_TMRLUT ", priv);
++}
++
++static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
++{
++	if (host->dbg_print_en & UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
++		ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
++	else
++		ufshcd_rmwl(host->hba, TEST_BUS_EN, 0, REG_UFS_CFG1);
++}
++
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host)
+ {
+ 	/* provide a legal default configuration */
+@@ -1505,6 +1579,7 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 	ufshcd_rmwl(host->hba, mask,
+ 		    (u32)host->testbus.select_minor << offset,
+ 		    reg);
++	ufs_qcom_enable_test_bus(host);
+ 	ufshcd_release(host->hba);
+ 	pm_runtime_put_sync(host->hba->dev);
+ 
+@@ -1521,8 +1596,10 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ 	ufs_qcom_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16,
+ 			"HCI Vendor Specific Registers ");
+ 
++	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+ 	ufs_qcom_testbus_read(hba);
+ }
++
+ /**
+  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+  *
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 36249b3..a19307a 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -241,6 +241,15 @@ struct ufs_qcom_host {
+ 	struct ufs_qcom_testbus testbus;
+ };
+ 
++static inline u32
++ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
++{
++	if (host->hw_ver.major <= 0x02)
++		return UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(reg);
++
++	return UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(reg);
++};
++
+ #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
+ #define ufs_qcom_is_link_active(hba) ufshcd_is_link_active(hba)
+ #define ufs_qcom_is_link_hibern8(hba) ufshcd_is_link_hibern8(hba)
 -- 
 1.8.5.2
 
