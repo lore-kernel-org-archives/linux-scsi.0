@@ -1,155 +1,172 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 07/17] scsi: ufs: disable vccq if it's not needed by UFS device
-Date: Thu, 10 Mar 2016 17:37:11 +0200
-Message-ID: <1457624241-20525-8-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 05/17] scsi: ufs: add support to read device and string descriptors
+Date: Thu, 10 Mar 2016 17:37:09 +0200
+Message-ID: <1457624241-20525-6-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51492 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753396AbcCJPh5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 10:37:57 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Some UFS devices don't require VCCQ rail for device operations hence
-this change adds support to recognize such devices and remove vote for
-the unused VCCQ rail.
+This change adds support to read device descriptor and string descriptor
+from a UFS device
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
  drivers/scsi/ufs/ufs.h    |  1 +
- drivers/scsi/ufs/ufshcd.c | 60 +++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 57 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  7 ++++
+ 3 files changed, 95 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 8ec6356..b291fa6 100644
+index 54a16ce..aacb235 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -501,6 +501,7 @@ struct ufs_vreg {
- 	struct regulator *reg;
- 	const char *name;
- 	bool enabled;
-+	bool unused;
- 	int min_uV;
- 	int max_uV;
- 	int min_uA;
+@@ -43,6 +43,7 @@
+ #define GENERAL_UPIU_REQUEST_SIZE 32
+ #define QUERY_DESC_MAX_SIZE       255
+ #define QUERY_DESC_MIN_SIZE       2
++#define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+ 					(sizeof(struct utp_upiu_header)))
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f8b458f..8ed7d4b 100644
+index 80031e6..e2ed415 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -195,6 +195,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 				 bool skip_ref_clk);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
-+static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
- static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
- static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
-@@ -4662,6 +4663,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		goto out;
+@@ -39,7 +39,7 @@
  
- 	ufs_advertise_fixup_device(hba);
-+
-+	ret = ufshcd_set_vccq_rail_unused(hba,
-+		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
-+	if (ret)
-+		goto out;
-+
- 	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
-@@ -4812,13 +4819,24 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
-+	if (!vreg)
-+		return 0;
-+	else if (vreg->unused)
-+		return 0;
-+	else
-+		return ufshcd_config_vreg_load(hba->dev, vreg,
-+					       UFS_VREG_LPM_LOAD_UA);
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
+-
++#include <linux/nls.h>
+ #include <linux/of.h>
+ #include "ufshcd.h"
+ #include "unipro.h"
+@@ -232,6 +232,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
  }
  
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
-+	if (!vreg)
-+		return 0;
-+	else if (vreg->unused)
-+		return 0;
-+	else
-+		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
- }
- 
- static int ufshcd_config_vreg(struct device *dev,
-@@ -4853,7 +4871,9 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
- 
--	if (!vreg || vreg->enabled)
-+	if (!vreg)
-+		goto out;
-+	else if (vreg->enabled || vreg->unused)
- 		goto out;
- 
- 	ret = ufshcd_config_vreg(dev, vreg, true);
-@@ -4873,7 +4893,9 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
- 
--	if (!vreg || !vreg->enabled)
-+	if (!vreg)
-+		goto out;
-+	else if (!vreg->enabled || vreg->unused)
- 		goto out;
- 
- 	ret = regulator_disable(vreg->reg);
-@@ -4979,6 +5001,36 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
- 	return 0;
- }
- 
-+static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
++/* replace non-printable or non-ASCII characters with spaces */
++static inline void ufshcd_remove_non_printable(char *val)
 +{
-+	int ret = 0;
-+	struct ufs_vreg_info *info = &hba->vreg_info;
++	if (!val)
++		return;
 +
-+	if (!info)
-+		goto out;
-+	else if (!info->vccq)
-+		goto out;
-+
-+	if (unused) {
-+		/* shut off the rail here */
-+		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
-+		/*
-+		 * Mark this rail as no longer used, so it doesn't get enabled
-+		 * later by mistake
-+		 */
-+		if (!ret)
-+			info->vccq->unused = true;
-+	} else {
-+		/*
-+		 * rail should have been already enabled hence just make sure
-+		 * that unused flag is cleared.
-+		 */
-+		info->vccq->unused = false;
-+	}
-+out:
-+	return ret;
++	if (*val < 0x20 || *val > 0x7e)
++		*val = ' ';
 +}
 +
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 					bool skip_ref_clk)
- {
+ /*
+  * ufshcd_wait_for_register - wait for register value to change
+  * @hba - per-adapter interface
+@@ -2021,6 +2031,82 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
+ 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+ }
+ 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
++{
++	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
++}
++EXPORT_SYMBOL(ufshcd_read_device_desc);
++
++/**
++ * ufshcd_read_string_desc - read string descriptor
++ * @hba: pointer to adapter instance
++ * @desc_index: descriptor index
++ * @buf: pointer to buffer where descriptor would be read
++ * @size: size of buf
++ * @ascii: if true convert from unicode to ascii characters
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii)
++{
++	int err = 0;
++
++	err = ufshcd_read_desc(hba,
++				QUERY_DESC_IDN_STRING, desc_index, buf, size);
++
++	if (err) {
++		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
++			__func__, QUERY_REQ_RETRIES, err);
++		goto out;
++	}
++
++	if (ascii) {
++		int desc_len;
++		int ascii_len;
++		int i;
++		char *buff_ascii;
++
++		desc_len = buf[0];
++		/* remove header and divide by 2 to move from UTF16 to UTF8 */
++		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
++		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
++			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
++					__func__);
++			err = -ENOMEM;
++			goto out;
++		}
++
++		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
++		if (!buff_ascii) {
++			err = -ENOMEM;
++			goto out_free_buff;
++		}
++
++		/*
++		 * the descriptor contains string in UTF16 format
++		 * we need to convert to utf-8 so it can be displayed
++		 */
++		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
++				desc_len - QUERY_DESC_HDR_SIZE,
++				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
++
++		/* replace non-printable or non-ASCII characters with spaces */
++		for (i = 0; i < ascii_len; i++)
++			ufshcd_remove_non_printable(&buff_ascii[i]);
++
++		memset(buf + QUERY_DESC_HDR_SIZE, 0,
++				size - QUERY_DESC_HDR_SIZE);
++		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
++		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
++out_free_buff:
++		kfree(buff_ascii);
++	}
++out:
++	return err;
++}
++EXPORT_SYMBOL(ufshcd_read_string_desc);
++
+ /**
+  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
+  * @hba: Pointer to adapter instance
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index a6d3572..54e13cc 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -678,6 +678,13 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+ }
+ 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
++
++#define ASCII_STD true
++
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii);
++
+ /* Expose Query-Request API */
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
 -- 
 1.8.5.2
 
