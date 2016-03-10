@@ -1,90 +1,96 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 16/17] scsi: ufs-qcom: enable/disable the device ref clock
-Date: Thu, 10 Mar 2016 17:37:20 +0200
-Message-ID: <1457624241-20525-17-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 14/17] scsi: ufs: add device quirk delay before putting UFS rails in LPM
+Date: Thu, 10 Mar 2016 17:37:18 +0200
+Message-ID: <1457624241-20525-15-git-send-email-ygardi@codeaurora.org>
 References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This change enables the device ref clock before changing to HS mode
-and disables it if entered to PWM mode.
+We put the UFS device in sleep state & UFS link in hibern8 state during
+runtime suspend. After this we put all the UFS rails in low power
+modes immediately but it seems some devices may still draw more than
+sleep current from UFS rails (especially from VCCQ rail) at-least for
+500us.
+To avoid this situation, this change adds 2ms delay before putting
+these UFS rails in LPM mode.
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs-qcom.c | 12 ++++++++++++
- drivers/scsi/ufs/ufshcd.h   |  9 +++++++++
- 2 files changed, 21 insertions(+)
+ drivers/scsi/ufs/ufs_quirks.h | 14 +++++++++++++-
+ drivers/scsi/ufs/ufshcd.c     | 10 ++++++++++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 966bacf..849fcf3 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -980,6 +980,10 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 			goto out;
- 		}
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 62ebd89..ee4ab85 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -18,7 +18,7 @@
+ /* return true if s1 is a prefix of s2 */
+ #define STR_PRFX_EQUAL(s1, s2) !strncmp(s1, s2, strlen(s1))
  
-+		/* enable the device ref clock before changing to HS mode */
-+		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
-+			ufshcd_is_hs_mode(dev_req_params))
-+			ufs_qcom_dev_ref_clk_ctrl(host, true);
- 		break;
- 	case POST_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
-@@ -1007,6 +1011,11 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 		memcpy(&host->dev_req_params,
- 				dev_req_params, sizeof(*dev_req_params));
- 		ufs_qcom_update_bus_bw_vote(host);
+-#define UFS_ANY_VENDOR -1
++#define UFS_ANY_VENDOR 0xFFFF
+ #define UFS_ANY_MODEL  "ANY_MODEL"
+ 
+ #define MAX_MODEL_LEN 16
+@@ -119,16 +119,28 @@ struct ufs_dev_fix {
+  */
+ #define UFS_DEVICE_NO_FASTAUTO		(1 << 5)
+ 
++/*
++ * It seems some UFS devices may keep drawing more than sleep current
++ * (atleast for 500us) from UFS rails (especially from VCCQ rail).
++ * To avoid this situation, add 2ms delay before putting these UFS
++ * rails in LPM mode.
++ */
++#define UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM	(1 << 6)
 +
-+		/* disable the device ref clock if entered PWM mode */
-+		if (ufshcd_is_hs_mode(&hba->pwr_info) &&
-+			!ufshcd_is_hs_mode(dev_req_params))
-+			ufs_qcom_dev_ref_clk_ctrl(host, false);
- 		break;
- 	default:
- 		ret = -EINVAL;
-@@ -1108,6 +1117,9 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
- 			goto out;
- 		}
-+		/* enable the device ref clock for HS mode*/
-+		if (ufshcd_is_hs_mode(&hba->pwr_info))
-+			ufs_qcom_dev_ref_clk_ctrl(host, true);
- 		vote = host->bus_vote.saved_vote;
- 		if (vote == host->bus_vote.min_bw_vote)
- 			ufs_qcom_update_bus_bw_vote(host);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 41d9bfd..4bb6566 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -54,6 +54,7 @@
- #include <linux/clk.h>
- #include <linux/completion.h>
- #include <linux/regulator/consumer.h>
-+#include "unipro.h"
+ struct ufs_hba;
+ void ufs_advertise_fixup_device(struct ufs_hba *hba);
  
- #include <asm/irq.h>
- #include <asm/byteorder.h>
-@@ -689,6 +690,14 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 
- int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
- 
-+static inline bool ufshcd_is_hs_mode(struct ufs_pa_layer_attr *pwr_info)
-+{
-+	return (pwr_info->pwr_rx == FAST_MODE ||
-+		pwr_info->pwr_rx == FASTAUTO_MODE) &&
-+		(pwr_info->pwr_tx == FAST_MODE ||
-+		pwr_info->pwr_tx == FASTAUTO_MODE);
-+}
+ static struct ufs_dev_fix ufs_fixups[] = {
+ 	/* UFS cards deviations table */
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
++		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
+ 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
+ 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS),
+ 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
+ 		UFS_DEVICE_NO_FASTAUTO),
++	UFS_FIX(UFS_VENDOR_TOSHIBA, UFS_ANY_MODEL,
++		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
+ 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9C8KBADG",
+ 		UFS_DEVICE_QUIRK_PA_TACTIVATE),
+ 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9D8KBADG",
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 93cc02f..f8fa72c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5716,6 +5716,16 @@ out:
+ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+ {
+ 	/*
++	 * It seems some UFS devices may keep drawing more than sleep current
++	 * (atleast for 500us) from UFS rails (especially from VCCQ rail).
++	 * To avoid this situation, add 2ms delay before putting these UFS
++	 * rails in LPM mode.
++	 */
++	if (!ufshcd_is_link_active(hba) &&
++	    hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM)
++		usleep_range(2000, 2100);
 +
- #define ASCII_STD true
- 
- int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++	/*
+ 	 * If UFS device is either in UFS_Sleep turn off VCC rail to save some
+ 	 * power.
+ 	 *
 -- 
 1.8.5.2
 
