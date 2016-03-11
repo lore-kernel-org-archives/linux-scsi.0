@@ -1,231 +1,128 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 09/14] usb-gadget/tcm: Conversion to percpu_ida tag pre-allocation
-Date: Fri, 11 Mar 2016 06:30:05 +0000
-Message-ID: <1457677810-2478-10-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v4 08/14] sbp-target: Convert to TARGET_SCF_ACK_KREF I/O krefs
+Date: Fri, 11 Mar 2016 06:30:04 +0000
+Message-ID: <1457677810-2478-9-git-send-email-nab@daterainc.com>
 References: <1457677810-2478-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:33901 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932612AbcCKGep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 01:34:45 -0500
+Received: by mail-oi0-f52.google.com with SMTP id m82so78982705oif.1
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2016 22:34:45 -0800 (PST)
 In-Reply-To: <1457677810-2478-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Felipe Balbi <felipe.balbi@linux.intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts usb-gadget target to use percpu_ida tag
-pre-allocation for struct usbg_cmd descriptor, in order to
-avoid fast-path struct usbg_cmd memory allocations.
+This patch converts sbp-target to modern TARGET_SCF_ACK_KREF
+usage for sbp_send_status() callback path, and drops the now
+obsolete sbp_free_request() failure path calls.
 
-Note by default this is currently hardcoded to 128.
-
-Tested-by: Andrzej Pietrasiewicz <andrzej.p@samsung.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Felipe Balbi <felipe.balbi@linux.intel.com>
+Acked-by: Chris Boot <bootc@bootc.net>
+Tested-by: Chris Boot <bootc@bootc.net>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/usb/gadget/function/f_tcm.c | 97 ++++++++++++++++++++++---------------
- drivers/usb/gadget/function/tcm.h   |  2 +
- 2 files changed, 60 insertions(+), 39 deletions(-)
+ drivers/target/sbp/sbp_target.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index e803724..cd2ef37 100644
---- a/drivers/usb/gadget/function/f_tcm.c
-+++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -1073,39 +1073,66 @@ out:
- 	usbg_cleanup_cmd(cmd);
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index 627044f2..c57e788 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -893,7 +893,6 @@ static void tgt_agent_process_work(struct work_struct *work)
+ 					STATUS_BLOCK_SBP_STATUS(
+ 						SBP_STATUS_REQ_TYPE_NOTSUPP));
+ 			sbp_send_status(req);
+-			sbp_free_request(req);
+ 			return;
+ 		case 3: /* Dummy ORB */
+ 			req->status.status |= cpu_to_be32(
+@@ -904,7 +903,6 @@ static void tgt_agent_process_work(struct work_struct *work)
+ 					STATUS_BLOCK_SBP_STATUS(
+ 						SBP_STATUS_DUMMY_ORB_COMPLETE));
+ 			sbp_send_status(req);
+-			sbp_free_request(req);
+ 			return;
+ 		default:
+ 			BUG();
+@@ -989,7 +987,6 @@ static void tgt_agent_fetch_work(struct work_struct *work)
+ 			spin_unlock_bh(&agent->lock);
+ 
+ 			sbp_send_status(req);
+-			sbp_free_request(req);
+ 			return;
+ 		}
+ 
+@@ -1236,7 +1233,7 @@ static void sbp_handle_command(struct sbp_target_request *req)
+ 	req->se_cmd.tag = req->orb_pointer;
+ 	if (target_submit_cmd(&req->se_cmd, sess->se_sess, req->cmd_buf,
+ 			      req->sense_buf, unpacked_lun, data_length,
+-			      TCM_SIMPLE_TAG, data_dir, 0))
++			      TCM_SIMPLE_TAG, data_dir, TARGET_SCF_ACK_KREF))
+ 		goto err;
+ 
+ 	return;
+@@ -1248,7 +1245,6 @@ err:
+ 		STATUS_BLOCK_LEN(1) |
+ 		STATUS_BLOCK_SBP_STATUS(SBP_STATUS_UNSPECIFIED_ERROR));
+ 	sbp_send_status(req);
+-	sbp_free_request(req);
  }
  
-+static struct usbg_cmd *usbg_get_cmd(struct f_uas *fu,
-+		struct tcm_usbg_nexus *tv_nexus, u32 scsi_tag)
-+{
-+	struct se_session *se_sess = tv_nexus->tvn_se_sess;
-+	struct usbg_cmd *cmd;
-+	int tag;
-+
-+	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, GFP_ATOMIC);
-+	if (tag < 0)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = &((struct usbg_cmd *)se_sess->sess_cmd_map)[tag];
-+	memset(cmd, 0, sizeof(*cmd));
-+	cmd->se_cmd.map_tag = tag;
-+	cmd->se_cmd.tag = cmd->tag = scsi_tag;
-+	cmd->fu = fu;
-+
-+	return cmd;
-+}
-+
-+static void usbg_release_cmd(struct se_cmd *);
-+
- static int usbg_submit_command(struct f_uas *fu,
- 		void *cmdbuf, unsigned int len)
- {
- 	struct command_iu *cmd_iu = cmdbuf;
- 	struct usbg_cmd *cmd;
--	struct usbg_tpg *tpg;
--	struct tcm_usbg_nexus *tv_nexus;
-+	struct usbg_tpg *tpg = fu->tpg;
-+	struct tcm_usbg_nexus *tv_nexus = tpg->tpg_nexus;
- 	u32 cmd_len;
-+	u16 scsi_tag;
+ /*
+@@ -1347,22 +1343,29 @@ static int sbp_rw_data(struct sbp_target_request *req)
  
- 	if (cmd_iu->iu_id != IU_ID_COMMAND) {
- 		pr_err("Unsupported type %d\n", cmd_iu->iu_id);
- 		return -EINVAL;
+ static int sbp_send_status(struct sbp_target_request *req)
+ {
+-	int ret, length;
++	int rc, ret = 0, length;
+ 	struct sbp_login_descriptor *login = req->login;
+ 
+ 	length = (((be32_to_cpu(req->status.status) >> 24) & 0x07) + 1) * 4;
+ 
+-	ret = sbp_run_request_transaction(req, TCODE_WRITE_BLOCK_REQUEST,
++	rc = sbp_run_request_transaction(req, TCODE_WRITE_BLOCK_REQUEST,
+ 			login->status_fifo_addr, &req->status, length);
+-	if (ret != RCODE_COMPLETE) {
+-		pr_debug("sbp_send_status: write failed: 0x%x\n", ret);
+-		return -EIO;
++	if (rc != RCODE_COMPLETE) {
++		pr_debug("sbp_send_status: write failed: 0x%x\n", rc);
++		ret = -EIO;
++		goto put_ref;
  	}
  
--	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
--	if (!cmd)
--		return -ENOMEM;
-+	tv_nexus = tpg->tpg_nexus;
-+	if (!tv_nexus) {
-+		pr_err("Missing nexus, ignoring command\n");
-+		return -EINVAL;
-+	}
- 
--	cmd->fu = fu;
-+	cmd_len = (cmd_iu->len & ~0x3) + 16;
-+	if (cmd_len > USBG_MAX_CMD)
-+		return -EINVAL;
-+
-+	scsi_tag = be16_to_cpup(&cmd_iu->tag);
-+	cmd = usbg_get_cmd(fu, tv_nexus, scsi_tag);
-+	if (IS_ERR(cmd)) {
-+		pr_err("usbg_get_cmd failed\n");
-+		return -ENOMEM;
-+	}
- 
- 	/* XXX until I figure out why I can't free in on complete */
- 	kref_init(&cmd->ref);
- 	kref_get(&cmd->ref);
- 
--	tpg = fu->tpg;
--	cmd_len = (cmd_iu->len & ~0x3) + 16;
--	if (cmd_len > USBG_MAX_CMD)
--		goto err;
+ 	pr_debug("sbp_send_status: status write complete for ORB: 0x%llx\n",
+ 			req->orb_pointer);
 -
- 	memcpy(cmd->cmd_buf, cmd_iu->cdb, cmd_len);
- 
--	cmd->tag = be16_to_cpup(&cmd_iu->tag);
--	cmd->se_cmd.tag = cmd->tag;
- 	if (fu->flags & USBG_USE_STREAMS) {
- 		if (cmd->tag > UASP_SS_EP_COMP_NUM_STREAMS)
- 			goto err;
-@@ -1117,12 +1144,6 @@ static int usbg_submit_command(struct f_uas *fu,
- 		cmd->stream = &fu->stream[0];
- 	}
- 
--	tv_nexus = tpg->tpg_nexus;
--	if (!tv_nexus) {
--		pr_err("Missing nexus, ignoring command\n");
--		goto err;
--	}
--
- 	switch (cmd_iu->prio_attr & 0x7) {
- 	case UAS_HEAD_TAG:
- 		cmd->prio_attr = TCM_HEAD_TAG;
-@@ -1148,7 +1169,7 @@ static int usbg_submit_command(struct f_uas *fu,
- 
- 	return 0;
- err:
--	kfree(cmd);
-+	usbg_release_cmd(&cmd->se_cmd);
- 	return -EINVAL;
+-	return 0;
++	/*
++	 * Drop the extra ACK_KREF reference taken by target_submit_cmd()
++	 * ahead of sbp_check_stop_free() -> transport_generic_free_cmd()
++	 * final se_cmd->cmd_kref put.
++	 */
++put_ref:
++	target_put_sess_cmd(&req->se_cmd);
++	return ret;
  }
  
-@@ -1190,7 +1211,7 @@ static int bot_submit_command(struct f_uas *fu,
- {
- 	struct bulk_cb_wrap *cbw = cmdbuf;
- 	struct usbg_cmd *cmd;
--	struct usbg_tpg *tpg;
-+	struct usbg_tpg *tpg = fu->tpg;
- 	struct tcm_usbg_nexus *tv_nexus;
- 	u32 cmd_len;
+ static void sbp_sense_mangle(struct sbp_target_request *req)
+@@ -1822,8 +1825,7 @@ static int sbp_check_stop_free(struct se_cmd *se_cmd)
+ 	struct sbp_target_request *req = container_of(se_cmd,
+ 			struct sbp_target_request, se_cmd);
  
-@@ -1207,28 +1228,25 @@ static int bot_submit_command(struct f_uas *fu,
- 	if (cmd_len < 1 || cmd_len > 16)
- 		return -EINVAL;
- 
--	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
--	if (!cmd)
--		return -ENOMEM;
-+	tv_nexus = tpg->tpg_nexus;
-+	if (!tv_nexus) {
-+		pr_err("Missing nexus, ignoring command\n");
-+		return -ENODEV;
-+	}
- 
--	cmd->fu = fu;
-+	cmd = usbg_get_cmd(fu, tv_nexus, cbw->Tag);
-+	if (IS_ERR(cmd)) {
-+		pr_err("usbg_get_cmd failed\n");
-+		return -ENOMEM;
-+	}
- 
- 	/* XXX until I figure out why I can't free in on complete */
- 	kref_init(&cmd->ref);
- 	kref_get(&cmd->ref);
- 
--	tpg = fu->tpg;
--
- 	memcpy(cmd->cmd_buf, cbw->CDB, cmd_len);
- 
- 	cmd->bot_tag = cbw->Tag;
--
--	tv_nexus = tpg->tpg_nexus;
--	if (!tv_nexus) {
--		pr_err("Missing nexus, ignoring command\n");
--		goto err;
--	}
--
- 	cmd->prio_attr = TCM_SIMPLE_TAG;
- 	cmd->unpacked_lun = cbw->Lun;
- 	cmd->is_read = cbw->Flags & US_BULK_FLAG_IN ? 1 : 0;
-@@ -1239,9 +1257,6 @@ static int bot_submit_command(struct f_uas *fu,
- 	queue_work(tpg->workqueue, &cmd->work);
- 
- 	return 0;
--err:
--	kfree(cmd);
--	return -EINVAL;
+-	transport_generic_free_cmd(&req->se_cmd, 0);
+-	return 1;
++	return transport_generic_free_cmd(&req->se_cmd, 0);
  }
  
- /* Start fabric.c code */
-@@ -1294,8 +1309,10 @@ static void usbg_release_cmd(struct se_cmd *se_cmd)
- {
- 	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd,
- 			se_cmd);
-+	struct se_session *se_sess = se_cmd->se_sess;
-+
- 	kfree(cmd->data_buf);
--	kfree(cmd);
-+	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
- }
- 
- static int usbg_shutdown_session(struct se_session *se_sess)
-@@ -1607,7 +1624,9 @@ static int tcm_usbg_make_nexus(struct usbg_tpg *tpg, char *name)
- 		goto out_unlock;
- 	}
- 
--	tv_nexus->tvn_se_sess = target_alloc_session(&tpg->se_tpg, 0, 0,
-+	tv_nexus->tvn_se_sess = target_alloc_session(&tpg->se_tpg,
-+						     USB_G_DEFAULT_SESSION_TAGS,
-+						     sizeof(struct usbg_cmd),
- 						     TARGET_PROT_NORMAL, name,
- 						     tv_nexus, usbg_alloc_sess_cb);
- 	if (IS_ERR(tv_nexus->tvn_se_sess)) {
-diff --git a/drivers/usb/gadget/function/tcm.h b/drivers/usb/gadget/function/tcm.h
-index b75c6f3..a27e6e3 100644
---- a/drivers/usb/gadget/function/tcm.h
-+++ b/drivers/usb/gadget/function/tcm.h
-@@ -23,6 +23,8 @@ enum {
- #define USB_G_ALT_INT_BBB       0
- #define USB_G_ALT_INT_UAS       1
- 
-+#define USB_G_DEFAULT_SESSION_TAGS	128
-+
- struct tcm_usbg_nexus {
- 	struct se_session *tvn_se_sess;
- };
+ static int sbp_count_se_tpg_luns(struct se_portal_group *tpg)
 -- 
 1.9.1
+
