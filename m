@@ -1,15 +1,15 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 08/14] sbp-target: Convert to TARGET_SCF_ACK_KREF I/O krefs
-Date: Fri, 11 Mar 2016 06:30:04 +0000
-Message-ID: <1457677810-2478-9-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v4 10/14] usb-gadget/tcm: Convert to TARGET_SCF_ACK_KREF I/O krefs
+Date: Fri, 11 Mar 2016 06:30:06 +0000
+Message-ID: <1457677810-2478-11-git-send-email-nab@daterainc.com>
 References: <1457677810-2478-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:33901 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932612AbcCKGep (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 01:34:45 -0500
-Received: by mail-oi0-f52.google.com with SMTP id m82so78982705oif.1
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2016 22:34:45 -0800 (PST)
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:35208 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932659AbcCKGet (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 01:34:49 -0500
+Received: by mail-oi0-f54.google.com with SMTP id c203so78906926oia.2
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2016 22:34:49 -0800 (PST)
 In-Reply-To: <1457677810-2478-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,111 +18,163 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Han
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts sbp-target to modern TARGET_SCF_ACK_KREF
-usage for sbp_send_status() callback path, and drops the now
-obsolete sbp_free_request() failure path calls.
+This patch drops struct usbg_cmd->kref internal kref-erence
+usage, for proper TARGET_SCF_ACK_KREF conversion.
 
-Acked-by: Chris Boot <bootc@bootc.net>
-Tested-by: Chris Boot <bootc@bootc.net>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
+Tested-by: Andrzej Pietrasiewicz <andrzej.p@samsung.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Felipe Balbi <felipe.balbi@linux.intel.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/sbp/sbp_target.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+ drivers/usb/gadget/function/f_tcm.c | 51 ++++++++-----------------------------
+ 1 file changed, 11 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index 627044f2..c57e788 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -893,7 +893,6 @@ static void tgt_agent_process_work(struct work_struct *work)
- 					STATUS_BLOCK_SBP_STATUS(
- 						SBP_STATUS_REQ_TYPE_NOTSUPP));
- 			sbp_send_status(req);
--			sbp_free_request(req);
- 			return;
- 		case 3: /* Dummy ORB */
- 			req->status.status |= cpu_to_be32(
-@@ -904,7 +903,6 @@ static void tgt_agent_process_work(struct work_struct *work)
- 					STATUS_BLOCK_SBP_STATUS(
- 						SBP_STATUS_DUMMY_ORB_COMPLETE));
- 			sbp_send_status(req);
--			sbp_free_request(req);
- 			return;
- 		default:
- 			BUG();
-@@ -989,7 +987,6 @@ static void tgt_agent_fetch_work(struct work_struct *work)
- 			spin_unlock_bh(&agent->lock);
- 
- 			sbp_send_status(req);
--			sbp_free_request(req);
- 			return;
- 		}
- 
-@@ -1236,7 +1233,7 @@ static void sbp_handle_command(struct sbp_target_request *req)
- 	req->se_cmd.tag = req->orb_pointer;
- 	if (target_submit_cmd(&req->se_cmd, sess->se_sess, req->cmd_buf,
- 			      req->sense_buf, unpacked_lun, data_length,
--			      TCM_SIMPLE_TAG, data_dir, 0))
-+			      TCM_SIMPLE_TAG, data_dir, TARGET_SCF_ACK_KREF))
- 		goto err;
- 
- 	return;
-@@ -1248,7 +1245,6 @@ err:
- 		STATUS_BLOCK_LEN(1) |
- 		STATUS_BLOCK_SBP_STATUS(SBP_STATUS_UNSPECIFIED_ERROR));
- 	sbp_send_status(req);
--	sbp_free_request(req);
+diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+index cd2ef37..7e7227b 100644
+--- a/drivers/usb/gadget/function/f_tcm.c
++++ b/drivers/usb/gadget/function/f_tcm.c
+@@ -41,13 +41,6 @@ static inline struct f_uas *to_f_uas(struct usb_function *f)
+ 	return container_of(f, struct f_uas, function);
  }
  
- /*
-@@ -1347,22 +1343,29 @@ static int sbp_rw_data(struct sbp_target_request *req)
+-static void usbg_cmd_release(struct kref *);
+-
+-static inline void usbg_cleanup_cmd(struct usbg_cmd *cmd)
+-{
+-	kref_put(&cmd->ref, usbg_cmd_release);
+-}
+-
+ /* Start bot.c code */
  
- static int sbp_send_status(struct sbp_target_request *req)
- {
--	int ret, length;
-+	int rc, ret = 0, length;
- 	struct sbp_login_descriptor *login = req->login;
+ static int bot_enqueue_cmd_cbw(struct f_uas *fu)
+@@ -68,7 +61,7 @@ static void bot_status_complete(struct usb_ep *ep, struct usb_request *req)
+ 	struct usbg_cmd *cmd = req->context;
+ 	struct f_uas *fu = cmd->fu;
  
- 	length = (((be32_to_cpu(req->status.status) >> 24) & 0x07) + 1) * 4;
+-	usbg_cleanup_cmd(cmd);
++	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ 	if (req->status < 0) {
+ 		pr_err("ERR %s(%d)\n", __func__, __LINE__);
+ 		return;
+@@ -605,7 +598,7 @@ static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
+ 		break;
  
--	ret = sbp_run_request_transaction(req, TCODE_WRITE_BLOCK_REQUEST,
-+	rc = sbp_run_request_transaction(req, TCODE_WRITE_BLOCK_REQUEST,
- 			login->status_fifo_addr, &req->status, length);
--	if (ret != RCODE_COMPLETE) {
--		pr_debug("sbp_send_status: write failed: 0x%x\n", ret);
--		return -EIO;
-+	if (rc != RCODE_COMPLETE) {
-+		pr_debug("sbp_send_status: write failed: 0x%x\n", rc);
-+		ret = -EIO;
-+		goto put_ref;
+ 	case UASP_QUEUE_COMMAND:
+-		usbg_cleanup_cmd(cmd);
++		transport_generic_free_cmd(&cmd->se_cmd, 0);
+ 		usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
+ 		break;
+ 
+@@ -615,7 +608,7 @@ static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
+ 	return;
+ 
+ cleanup:
+-	usbg_cleanup_cmd(cmd);
++	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ }
+ 
+ static int uasp_send_status_response(struct usbg_cmd *cmd)
+@@ -977,7 +970,7 @@ static void usbg_data_write_cmpl(struct usb_ep *ep, struct usb_request *req)
+ 	return;
+ 
+ cleanup:
+-	usbg_cleanup_cmd(cmd);
++	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ }
+ 
+ static int usbg_prepare_w_request(struct usbg_cmd *cmd, struct usb_request *req)
+@@ -1046,7 +1039,7 @@ static void usbg_cmd_work(struct work_struct *work)
+ 	struct se_cmd *se_cmd;
+ 	struct tcm_usbg_nexus *tv_nexus;
+ 	struct usbg_tpg *tpg;
+-	int dir;
++	int dir, flags = (TARGET_SCF_UNKNOWN_SIZE | TARGET_SCF_ACK_KREF);
+ 
+ 	se_cmd = &cmd->se_cmd;
+ 	tpg = cmd->fu->tpg;
+@@ -1060,9 +1053,9 @@ static void usbg_cmd_work(struct work_struct *work)
+ 		goto out;
  	}
  
- 	pr_debug("sbp_send_status: status write complete for ORB: 0x%llx\n",
- 			req->orb_pointer);
+-	if (target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess,
+-			cmd->cmd_buf, cmd->sense_iu.sense, cmd->unpacked_lun,
+-			0, cmd->prio_attr, dir, TARGET_SCF_UNKNOWN_SIZE) < 0)
++	if (target_submit_cmd(se_cmd, tv_nexus->tvn_se_sess, cmd->cmd_buf,
++			      cmd->sense_iu.sense, cmd->unpacked_lun, 0,
++			      cmd->prio_attr, dir, flags) < 0)
+ 		goto out;
+ 
+ 	return;
+@@ -1070,7 +1063,7 @@ static void usbg_cmd_work(struct work_struct *work)
+ out:
+ 	transport_send_check_condition_and_sense(se_cmd,
+ 			TCM_UNSUPPORTED_SCSI_OPCODE, 1);
+-	usbg_cleanup_cmd(cmd);
++	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ }
+ 
+ static struct usbg_cmd *usbg_get_cmd(struct f_uas *fu,
+@@ -1126,11 +1119,6 @@ static int usbg_submit_command(struct f_uas *fu,
+ 		pr_err("usbg_get_cmd failed\n");
+ 		return -ENOMEM;
+ 	}
 -
--	return 0;
-+	/*
-+	 * Drop the extra ACK_KREF reference taken by target_submit_cmd()
-+	 * ahead of sbp_check_stop_free() -> transport_generic_free_cmd()
-+	 * final se_cmd->cmd_kref put.
-+	 */
-+put_ref:
-+	target_put_sess_cmd(&req->se_cmd);
-+	return ret;
+-	/* XXX until I figure out why I can't free in on complete */
+-	kref_init(&cmd->ref);
+-	kref_get(&cmd->ref);
+-
+ 	memcpy(cmd->cmd_buf, cmd_iu->cdb, cmd_len);
+ 
+ 	if (fu->flags & USBG_USE_STREAMS) {
+@@ -1203,7 +1191,7 @@ static void bot_cmd_work(struct work_struct *work)
+ out:
+ 	transport_send_check_condition_and_sense(se_cmd,
+ 				TCM_UNSUPPORTED_SCSI_OPCODE, 1);
+-	usbg_cleanup_cmd(cmd);
++	transport_generic_free_cmd(&cmd->se_cmd, 0);
  }
  
- static void sbp_sense_mangle(struct sbp_target_request *req)
-@@ -1822,8 +1825,7 @@ static int sbp_check_stop_free(struct se_cmd *se_cmd)
- 	struct sbp_target_request *req = container_of(se_cmd,
- 			struct sbp_target_request, se_cmd);
+ static int bot_submit_command(struct f_uas *fu,
+@@ -1239,11 +1227,6 @@ static int bot_submit_command(struct f_uas *fu,
+ 		pr_err("usbg_get_cmd failed\n");
+ 		return -ENOMEM;
+ 	}
+-
+-	/* XXX until I figure out why I can't free in on complete */
+-	kref_init(&cmd->ref);
+-	kref_get(&cmd->ref);
+-
+ 	memcpy(cmd->cmd_buf, cbw->CDB, cmd_len);
  
--	transport_generic_free_cmd(&req->se_cmd, 0);
+ 	cmd->bot_tag = cbw->Tag;
+@@ -1297,14 +1280,6 @@ static u32 usbg_tpg_get_inst_index(struct se_portal_group *se_tpg)
+ 	return 1;
+ }
+ 
+-static void usbg_cmd_release(struct kref *ref)
+-{
+-	struct usbg_cmd *cmd = container_of(ref, struct usbg_cmd,
+-			ref);
+-
+-	transport_generic_free_cmd(&cmd->se_cmd, 0);
+-}
+-
+ static void usbg_release_cmd(struct se_cmd *se_cmd)
+ {
+ 	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd,
+@@ -1745,11 +1720,7 @@ static void usbg_port_unlink(struct se_portal_group *se_tpg,
+ 
+ static int usbg_check_stop_free(struct se_cmd *se_cmd)
+ {
+-	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd,
+-			se_cmd);
+-
+-	kref_put(&cmd->ref, usbg_cmd_release);
 -	return 1;
-+	return transport_generic_free_cmd(&req->se_cmd, 0);
++	return target_put_sess_cmd(se_cmd);
  }
  
- static int sbp_count_se_tpg_luns(struct se_portal_group *tpg)
+ static const struct target_core_fabric_ops usbg_ops = {
 -- 
 1.9.1
 
