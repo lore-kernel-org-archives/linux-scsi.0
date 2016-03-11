@@ -1,75 +1,59 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 02/11] scsi/fcoe: remove CONFIG_SMP in fcoe_percpu_thread_destroy()
-Date: Fri, 11 Mar 2016 16:28:54 +0100
-Message-ID: <1457710143-29182-3-git-send-email-bigeasy@linutronix.de>
-References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_transport_sas: add 'scsi_target_id' sysfs attribute
+Date: Fri, 11 Mar 2016 16:33:21 +0100
+Message-ID: <1457710401-37716-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:37958 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932567AbcCKP3a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 10:29:30 -0500
-In-Reply-To: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
+Received: from mx2.suse.de ([195.135.220.15]:36141 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932403AbcCKPdf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2016 10:33:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rt@linutronix.de, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Vasu Dev <vasu.dev@intel.com>, Christoph Hellwig <hch@lst.de>, fcoe-devel@open-fcoe.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-There is only a marginal win in code size if the !SMP code is ifdeffed
-out. The compiler should be able to optimize almost everything out.
+There is no way to detect the scsi_target_id for any given SAS
+remote port, so add a new sysfs attribute 'scsi_target_id'.
 
-Remove the ifdeffery for readability sake.
-
-Cc: Vasu Dev <vasu.dev@intel.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: fcoe-devel@open-fcoe.org
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/fcoe/fcoe.c | 13 -------------
- 1 file changed, 13 deletions(-)
+ drivers/scsi/scsi_sas_internal.h  | 2 +-
+ drivers/scsi/scsi_transport_sas.c | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 2b0d207f4b2b..efbc8a1438ef 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1284,10 +1284,8 @@ static void fcoe_percpu_thread_destroy(unsigned int cpu)
- 	struct task_struct *thread;
- 	struct page *crc_eof;
- 	struct sk_buff *skb;
--#ifdef CONFIG_SMP
- 	struct fcoe_percpu_s *p0;
- 	unsigned targ_cpu = get_cpu();
--#endif /* CONFIG_SMP */
+diff --git a/drivers/scsi/scsi_sas_internal.h b/drivers/scsi/scsi_sas_internal.h
+index 6266a5d..e659912 100644
+--- a/drivers/scsi/scsi_sas_internal.h
++++ b/drivers/scsi/scsi_sas_internal.h
+@@ -4,7 +4,7 @@
+ #define SAS_HOST_ATTRS		0
+ #define SAS_PHY_ATTRS		17
+ #define SAS_PORT_ATTRS		1
+-#define SAS_RPORT_ATTRS		7
++#define SAS_RPORT_ATTRS		8
+ #define SAS_END_DEV_ATTRS	5
+ #define SAS_EXPANDER_ATTRS	7
  
- 	FCOE_DBG("Destroying receive thread for CPU %d\n", cpu);
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 80520e2..deb3fde 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1286,6 +1286,7 @@ sas_rphy_protocol_attr(identify.target_port_protocols, target_port_protocols);
+ sas_rphy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
+ 		unsigned long long);
+ sas_rphy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
++sas_rphy_simple_attr(scsi_target_id, scsi_target_id, "%d\n", u8);
  
-@@ -1301,7 +1299,6 @@ static void fcoe_percpu_thread_destroy(unsigned int cpu)
- 	p->crc_eof_offset = 0;
- 	spin_unlock_bh(&p->fcoe_rx_list.lock);
- 
--#ifdef CONFIG_SMP
- 	/*
- 	 * Don't bother moving the skb's if this context is running
- 	 * on the same CPU that is having its thread destroyed. This
-@@ -1343,16 +1340,6 @@ static void fcoe_percpu_thread_destroy(unsigned int cpu)
- 		spin_unlock_bh(&p->fcoe_rx_list.lock);
- 	}
- 	put_cpu();
--#else
--	/*
--	 * This a non-SMP scenario where the singular Rx thread is
--	 * being removed. Free all skbs and stop the thread.
--	 */
--	spin_lock_bh(&p->fcoe_rx_list.lock);
--	while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
--		kfree_skb(skb);
--	spin_unlock_bh(&p->fcoe_rx_list.lock);
--#endif
- 
- 	if (thread)
- 		kthread_stop(thread);
+ /* only need 8 bytes of data plus header (4 or 8) */
+ #define BUF_SIZE 64
+@@ -1886,6 +1887,7 @@ sas_attach_transport(struct sas_function_template *ft)
+ 	SETUP_RPORT_ATTRIBUTE(rphy_device_type);
+ 	SETUP_RPORT_ATTRIBUTE(rphy_sas_address);
+ 	SETUP_RPORT_ATTRIBUTE(rphy_phy_identifier);
++	SETUP_RPORT_ATTRIBUTE(rphy_scsi_target_id);
+ 	SETUP_OPTIONAL_RPORT_ATTRIBUTE(rphy_enclosure_identifier,
+ 				       get_enclosure_identifier);
+ 	SETUP_OPTIONAL_RPORT_ATTRIBUTE(rphy_bay_identifier,
 -- 
-2.7.0
+1.8.5.6
 
