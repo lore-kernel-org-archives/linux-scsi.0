@@ -1,49 +1,73 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v7] scsi: ufs: add ioctl interface for query request
-Date: Thu, 10 Mar 2016 20:43:55 -0500
-Message-ID: <yq1io0tn604.fsf@sermon.lab.mkp.net>
-References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
-	<046fc2d00e51f331a6bbc00553cc1f9c.squirrel@us.codeaurora.org>
-	<201603101818.33826.arnd@arndb.de> <201603102019.32467.arnd@arndb.de>
+Subject: Re: Fwd: [PATCH 1/1] sd: do not let LBPME bit stop the VPDs speak
+Date: Thu, 10 Mar 2016 21:02:14 -0500
+Message-ID: <yq1egbhn55l.fsf@sermon.lab.mkp.net>
+References: <56df97e0.d08d420a.58e8f.3162@mx.google.com>
+	<yq1mvq7qdcy.fsf@sermon.lab.mkp.net>
+	<CAGnHSEnHG5i3EvwmcGZU5BXobUCQa7P+j+KKNrUyoS86s7d8Gg@mail.gmail.com>
+	<CAGnHSE=X2Yd3p75D85jcgSUScKxKYZsueLdqMMiaJ_uBqb+XMw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <201603102019.32467.arnd@arndb.de> (Arnd Bergmann's message of
-	"Thu, 10 Mar 2016 20:19:32 +0100")
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: ygardi@codeaurora.org, Greg KH <gregkh@linuxfoundation.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:22301 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933259AbcCKCCV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 21:02:21 -0500
+In-Reply-To: <CAGnHSE=X2Yd3p75D85jcgSUScKxKYZsueLdqMMiaJ_uBqb+XMw@mail.gmail.com>
+	(Tom Yan's message of "Thu, 10 Mar 2016 16:15:34 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-Arnd> Looking through what other drivers do, I've found a couple of
-Arnd> patterns now. n particular, most use the SG_IO ioctl to pass down
-Arnd> commands from user space into a device specific command
-Arnd> queue. Have you looked at that interface in the past to see if it
-Arnd> would fit your use case?
+Tom,
 
-Arnd> There is also a 'bsg' API that some drivers implement, which I
-Arnd> think would be another alternative.
+Tom> I just couldn't think of a case that the LBPME bit would actually
+Tom> indicates that the VPDs should not be used. It's merely bad
+Tom> implementation of Read Capacity (16), which doesn't practically
+Tom> stops the device from supporting unmap (even if a similar device is
+Tom> has broken unmap support, it doesn't mean that the vendor set the
+Tom> LBPME bit to 0 because they want to tell you it's broken, it's just
+Tom> they have broken unmap support IN ADDITION to a bad Read Capacity
+Tom> (16) implementation).
 
-Arnd> Could any of the SCSI experts comment on what they expect a driver
-Arnd> to use out of those three alternatives (if any):
+We don't skip the entire VPD page if LBPME=1, just the parts that are
+related to the logical block provisioning.
 
-My preference is that if you want to expose any information that a user
-or admin would care about, put it in sysfs where it is easily accessible
-and can be scripted.
+The reason we read those values in the first place is so that we can set
+up discard. If the device signals that it does not support discard we
+have had no reason to read them or parse them.
 
-For things that need to directly send commands to the hardware (to
-configure vendor specific settings or inspect parameters for development
-purposes) use the sg or bsg interfaces like we do for both ATA and
-SCSI. bsg is newer and supports more features like bidirectional
-commands. But for this particular use case I don't think it offers any
-particular advantages over SG_IO. Both interfaces take the same
-descriptors so it really doesn't matter much.
+Since there are a plethora of USB-SATA devices out there that get this
+incredibly wrong (including discarding blocks *outside* of the specified
+block range), I am not going to blindly enable this feature.
 
-See:
+If you want to tinker with your own setup that's fine. And you are
+clearly capable of doing so.
 
-	http://sg.danny.cz/sg/
+I, however, have to be extremely cautious not to enable something that
+might inadvertently cause data corruption for users out there. That's
+all I care about.
+
+If the device manufacturer had intended to support discards then they
+would presumably have set the LBPME flag per the spec. And if they
+intended to support it but messed up setting the single bit flag that
+enables the feature, then I would not trust their implementation.
+
+Tom> Also, doesn't the kernel ASSUME that the device support Write Same
+Tom> (16) with Unmap bit set when the LBPME bit is 1 even if it has no
+Tom> Block Limits and Logical Block Provisioning VPDs?
+
+Yes, because there are many devices out there whose logical block
+provisioning support predates the LBP VPD being added to the spec.
+
+Tom> Isn't that even more lenient than what I am proposing?
+
+If we were to entertain enabling discard on your device it would be by
+way of quirking it. I am not going to change the heuristics to
+accommodate a device that gets trivial things wrong.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
