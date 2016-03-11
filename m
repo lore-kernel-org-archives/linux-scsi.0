@@ -1,115 +1,100 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 07/14] sbp-target: Conversion to percpu_ida tag pre-allocation
-Date: Fri, 11 Mar 2016 06:30:03 +0000
-Message-ID: <1457677810-2478-8-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v4 05/14] tcm_fc: Convert to target_alloc_session usage
+Date: Fri, 11 Mar 2016 06:30:01 +0000
+Message-ID: <1457677810-2478-6-git-send-email-nab@daterainc.com>
 References: <1457677810-2478-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:33883 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932612AbcCKGem (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 01:34:42 -0500
-Received: by mail-oi0-f50.google.com with SMTP id m82so78982116oif.1
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2016 22:34:42 -0800 (PST)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1457677810-2478-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Felipe Balbi <felipe.balbi@linux.intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Felipe Balbi <felipe.balbi@linux.intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Vasu Dev <vasu.dev@linux.intel.com>, Mark Rustad <mark.d.rustad@intel.com>, Robert Love <robert.w.love@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts sbp-target to use struct sbp_target_request
-descriptor tag pre-allocation using percpu_ida.
+This patch converts tcm_fc target mode addition of tf_sess->hash to
+port_id hlist_head using the new alloc_session callback().
 
-(Fix sbp_mgt_get_req() IS_ERR failure checking - Dan Carpenter)
-(Add missing sbp_target_request tag memset - Chris Boot)
-
-Acked-by: Chris Boot <bootc@bootc.net>
-Tested-by: Chris Boot <bootc@bootc.net>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
+Cc: Vasu Dev <vasu.dev@linux.intel.com>
+Cc: Mark Rustad <mark.d.rustad@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/sbp/sbp_target.c | 36 ++++++++++++++++++++++++++++++------
- 1 file changed, 30 insertions(+), 6 deletions(-)
+ drivers/target/tcm_fc/tfc_sess.c | 44 ++++++++++++++++++++--------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index ddd3398..627044f2 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -209,8 +209,10 @@ static struct sbp_session *sbp_session_create(
- 	INIT_DELAYED_WORK(&sess->maint_work, session_maintenance_work);
- 	sess->guid = guid;
- 
--	sess->se_sess = target_alloc_session(&tpg->se_tpg, 0, 0, TARGET_PROT_NORMAL,
--					     guid_str, sess, NULL);
-+	sess->se_sess = target_alloc_session(&tpg->se_tpg, 128,
-+					     sizeof(struct sbp_target_request),
-+					     TARGET_PROT_NORMAL, guid_str,
-+					     sess, NULL);
- 	if (IS_ERR(sess->se_sess)) {
- 		pr_err("failed to init se_session\n");
- 		ret = PTR_ERR(sess->se_sess);
-@@ -921,6 +923,25 @@ static inline bool tgt_agent_check_active(struct sbp_target_agent *agent)
- 	return active;
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index e19f4c5..d0c3e18 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -186,6 +186,20 @@ out:
+ 	return NULL;
  }
  
-+static struct sbp_target_request *sbp_mgt_get_req(struct sbp_session *sess,
-+	struct fw_card *card, u64 next_orb)
++static int ft_sess_alloc_cb(struct se_portal_group *se_tpg,
++			    struct se_session *se_sess, void *p)
 +{
-+	struct se_session *se_sess = sess->se_sess;
-+	struct sbp_target_request *req;
-+	int tag;
++	struct ft_sess *sess = p;
++	struct ft_tport *tport = sess->tport;
++	struct hlist_head *head = &tport->hash[ft_sess_hash(sess->port_id)];
 +
-+	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, GFP_ATOMIC);
-+	if (tag < 0)
-+		return ERR_PTR(-ENOMEM);
++	pr_debug("port_id %x sess %p\n", sess->port_id, sess);
++	hlist_add_head_rcu(&sess->hash, head);
++	tport->sess_count++;
 +
-+	req = &((struct sbp_target_request *)se_sess->sess_cmd_map)[tag];
-+	memset(req, 0, sizeof(*req));
-+	req->se_cmd.map_tag = tag;
-+	req->se_cmd.tag = next_orb;
-+
-+	return req;
++	return 0;
 +}
 +
- static void tgt_agent_fetch_work(struct work_struct *work)
+ /*
+  * Allocate session and enter it in the hash for the local port.
+  * Caller holds ft_lport_lock.
+@@ -194,7 +208,6 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 				      struct fc_rport_priv *rdata)
  {
- 	struct sbp_target_agent *agent =
-@@ -932,8 +953,8 @@ static void tgt_agent_fetch_work(struct work_struct *work)
- 	u64 next_orb = agent->orb_pointer;
+ 	struct se_portal_group *se_tpg = &tport->tpg->se_tpg;
+-	struct se_node_acl *se_acl;
+ 	struct ft_sess *sess;
+ 	struct hlist_head *head;
+ 	unsigned char initiatorname[TRANSPORT_IQN_LEN];
+@@ -210,31 +223,18 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	if (!sess)
+ 		return NULL;
  
- 	while (next_orb && tgt_agent_check_active(agent)) {
--		req = kzalloc(sizeof(*req), GFP_KERNEL);
--		if (!req) {
-+		req = sbp_mgt_get_req(sess, sess->card, next_orb);
-+		if (IS_ERR(req)) {
- 			spin_lock_bh(&agent->lock);
- 			agent->state = AGENT_STATE_DEAD;
- 			spin_unlock_bh(&agent->lock);
-@@ -1430,9 +1451,13 @@ static int sbp_send_sense(struct sbp_target_request *req)
+-	sess->se_sess = transport_init_session_tags(TCM_FC_DEFAULT_TAGS,
+-						    sizeof(struct ft_cmd),
+-						    TARGET_PROT_NORMAL);
+-	if (IS_ERR(sess->se_sess)) {
+-		kfree(sess);
+-		return NULL;
+-	}
++	kref_init(&sess->kref); /* ref for table entry */
++	sess->tport = tport;
++	sess->port_id = port_id;
  
- static void sbp_free_request(struct sbp_target_request *req)
- {
-+	struct se_cmd *se_cmd = &req->se_cmd;
-+	struct se_session *se_sess = se_cmd->se_sess;
-+
- 	kfree(req->pg_tbl);
- 	kfree(req->cmd_buf);
--	kfree(req);
-+
-+	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
+-	se_acl = core_tpg_get_initiator_node_acl(se_tpg, &initiatorname[0]);
+-	if (!se_acl) {
+-		transport_free_session(sess->se_sess);
++	sess->se_sess = target_alloc_session(se_tpg, TCM_FC_DEFAULT_TAGS,
++					     sizeof(struct ft_cmd),
++					     TARGET_PROT_NORMAL, &initiatorname[0],
++					     sess, ft_sess_alloc_cb);
++	if (IS_ERR(sess->se_sess)) {
+ 		kfree(sess);
+ 		return NULL;
+ 	}
+-	sess->se_sess->se_node_acl = se_acl;
+-	sess->tport = tport;
+-	sess->port_id = port_id;
+-	kref_init(&sess->kref);	/* ref for table entry */
+-	hlist_add_head_rcu(&sess->hash, head);
+-	tport->sess_count++;
+-
+-	pr_debug("port_id %x sess %p\n", port_id, sess);
+-
+-	transport_register_session(&tport->tpg->se_tpg, se_acl,
+-				   sess->se_sess, sess);
+ 	return sess;
  }
  
- static void sbp_mgt_agent_process(struct work_struct *work)
-@@ -1592,7 +1617,6 @@ static void sbp_mgt_agent_rw(struct fw_card *card,
- 			rcode = RCODE_CONFLICT_ERROR;
- 			goto out;
- 		}
--
- 		req = kzalloc(sizeof(*req), GFP_ATOMIC);
- 		if (!req) {
- 			rcode = RCODE_CONFLICT_ERROR;
 -- 
 1.9.1
-
