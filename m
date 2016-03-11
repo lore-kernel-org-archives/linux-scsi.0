@@ -1,40 +1,46 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: QoS for iSCSI target?
-Date: Thu, 10 Mar 2016 23:45:41 -0800
-Message-ID: <1457682341.4062.74.camel@haakon3.risingtidesystems.com>
-References: <56E1F419.5070005@windriver.com>
-	 <20160311073018.GA23379@infradead.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] bfa: Brocade BFA FC SCSI driver
+Date: Fri, 11 Mar 2016 11:25:37 +0300
+Message-ID: <20160311082537.GA28779@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160311073018.GA23379@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chris Friesen <chris.friesen@windriver.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41820 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934717AbcCKIZp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 03:25:45 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: huangj@brocade.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2016-03-10 at 23:30 -0800, Christoph Hellwig wrote:
-> On Thu, Mar 10, 2016 at 04:24:25PM -0600, Chris Friesen wrote:
-> > Hi,
-> > 
-> > I'm looking for information on whether the iSCSI target in the kernel offers
-> > any way to do QoS between traffic driven by different initiators.
-> > 
-> > I'm trying to make sure that one initiator can't do a denial-of-service
-> > attack against others.
-> > 
-> > Does the kernel target have this sort of thing built-in, or do I need to
-> > look at network traffic-shaping to achieve this?
-> 
-> It doesn't right now, but it shouldn't be hard to integrate it with
-> blk cgroups.
+Hello Jing Huang,
 
-For iscsi-target application QoS, the per session command sequence
-number window depth (CmdSN) exists to enforce per InitiatorName limits
-via TPG default_cmdsn_depth + se_node_acl->queue_depth configfs
-attributes.
+The patch 7725ccfda597: "[SCSI] bfa: Brocade BFA FC SCSI driver" from
+Sep 23, 2009, leads to the following static checker warning:
 
-Note these values can be changed on the fly for iscsi-target using
-explicit se_node_acl->acl_group, but currently require a se_session
-reinstatement event for updated ExpCmdSN + MaxCmdSN to take effect.
+	drivers/scsi/bfa/bfa_fcs_fcpim.c:596 bfa_fcs_itnim_create()
+	error: potentially using uninitialized 'itnim'.
+
+drivers/scsi/bfa/bfa_fcs_fcpim.c
+   588          struct bfa_fcs_lport_s *port = rport->port;
+   589          struct bfa_fcs_itnim_s *itnim;
+                                        ^^^^^
+   590          struct bfad_itnim_s   *itnim_drv;
+   591  
+   592          /*
+   593           * call bfad to allocate the itnim
+   594           */
+   595          bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
+                                                      ^^^^^
+This function should probably return negative error codes on failure.
+
+   596          if (itnim == NULL) {
+                    ^^^^^^^^^^^^^
+   597                  bfa_trc(port->fcs, rport->pwwn);
+   598                  return NULL;
+   599          }
+
+regards,
+dan carpenter
