@@ -1,129 +1,87 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 01/14] target: Add target_alloc_session() helper function
-Date: Fri, 11 Mar 2016 06:29:57 +0000
-Message-ID: <1457677810-2478-2-git-send-email-nab@daterainc.com>
-References: <1457677810-2478-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:36123 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368AbcCKGea (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 01:34:30 -0500
-Received: by mail-ob0-f170.google.com with SMTP id m7so104023317obh.3
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2016 22:34:29 -0800 (PST)
-In-Reply-To: <1457677810-2478-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH-v4 00/14] target: alloc_session w/ percpu_ida+ACK_KREF conversions
+Date: Fri, 11 Mar 2016 06:29:56 +0000
+Message-ID: <1457677810-2478-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <mchristi@redhat.com>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Juergen Gross <jgross@suse.com>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Chris Boot <bootc@bootc.net>, Felipe Balbi <felipe.balbi@linux.intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Based on HCH's original patch, this adds a full version to
-support percpu-ida tag pre-allocation and callback function
-pointer into fabric driver code to complete session setup.
+Here is -v4 series code to add target_alloc_session() helper
+support using existing percpu-ida tag pre-allocation logic,
+along with a new (*callback)() for allowing fabric driver
+code to finish setup ahead of transport_register_session()
+I_T nexus creation completion.
 
-Reported-by: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c | 56 ++++++++++++++++++++++++++++++++++
- include/target/target_core_fabric.h    |  6 ++++
- 2 files changed, 62 insertions(+)
+This includes a tree-wide fabric driver conversion to use
+target_alloc_session() + associated (*callback)() within
+common code.  It updates lookback, vhost/iscsi, tcm_qla2xxx,
+tcm_fc, usb-gadget, ib_srpt, sbp-target, and xen-scsiback
+to use the new alloc_session callback for internal nexus
+related assignments.
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 867bc6d..f5ad9e0 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -281,6 +281,17 @@ struct se_session *transport_init_session_tags(unsigned int tag_num,
- 	struct se_session *se_sess;
- 	int rc;
+As per HCH, it also updates sbp-target, usb-gadget, ib_srpt
+and xen-scsiback to support modern percpu_ida pre-allocation
+ot se_cmd tags, along with TARGET_SCF_ACK_KREF conversions
+of tcm_fc, sbp-target, usb-gadget, and xen-scsiback for
+v4.6-rc1 code.
+
+v4 changes:
+
+  - usb-gadget: Add alloc_session callback for fabric nexus assignment
+    (Andrzej Pietrasiewicz)
+  - usb-gadget: Add USB_G_DEFAULT_SESSION_TAGS=128
+  - usb-gadget: Fix missing percpu_ida tag memset
+    (Andrzej Pietrasiewicz + nab)
+  - sbp-target: Add missing percpu_ida tag memset (Chris Boot)
+  - sbp-target: Drop debug from mgmt request alloc (Chris Boot)
+  - loopback: Convert nexus assignments to alloc_session callback
+  - usb-gadget: Convert nexus assignments to alloc_session callback
+    (Andrzej Pietrasiewicz)
+  - xen-scsiback: Convert nexus assignments to alloc_session callback
+  - xen-scsiback: Add VSCSI_DEFAULT_SESSION_TAGS=128 
  
-+	if (tag_num != 0 && !tag_size) {
-+		pr_err("init_session_tags called with percpu-ida tag_num:"
-+		       " %u, but zero tag_size\n", tag_num);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	if (!tag_num && tag_size) {
-+		pr_err("init_session_tags called with percpu-ida tag_size:"
-+		       " %u, but zero tag_num\n", tag_size);
-+		return ERR_PTR(-EINVAL);
-+	}
-+
- 	se_sess = transport_init_session(sup_prot_ops);
- 	if (IS_ERR(se_sess))
- 		return se_sess;
-@@ -374,6 +385,51 @@ void transport_register_session(
- }
- EXPORT_SYMBOL(transport_register_session);
- 
-+struct se_session *
-+target_alloc_session(struct se_portal_group *tpg,
-+		     unsigned int tag_num, unsigned int tag_size,
-+		     enum target_prot_op prot_op,
-+		     const char *initiatorname, void *private,
-+		     int (*callback)(struct se_portal_group *,
-+				     struct se_session *, void *))
-+{
-+	struct se_session *sess;
-+
-+	/*
-+	 * If the fabric driver is using percpu-ida based pre allocation
-+	 * of I/O descriptor tags, go ahead and perform that setup now..
-+	 */
-+	if (tag_num != 0)
-+		sess = transport_init_session_tags(tag_num, tag_size, prot_op);
-+	else
-+		sess = transport_init_session(prot_op);
-+
-+	if (IS_ERR(sess))
-+		return sess;
-+
-+	sess->se_node_acl = core_tpg_check_initiator_node_acl(tpg,
-+					(unsigned char *)initiatorname);
-+	if (!sess->se_node_acl) {
-+		transport_free_session(sess);
-+		return ERR_PTR(-EACCES);
-+	}
-+	/*
-+	 * Go ahead and perform any remaining fabric setup that is
-+	 * required before transport_register_session().
-+	 */
-+	if (callback != NULL) {
-+		int rc = callback(tpg, sess, private);
-+		if (rc) {
-+			transport_free_session(sess);
-+			return ERR_PTR(rc);
-+		}
-+	}
-+
-+	transport_register_session(tpg, sess->se_node_acl, sess, private);
-+	return sess;
-+}
-+EXPORT_SYMBOL(target_alloc_session);
-+
- static void target_release_session(struct kref *kref)
- {
- 	struct se_session *se_sess = container_of(kref,
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index 5665340..685a51a 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -108,6 +108,12 @@ void target_unregister_template(const struct target_core_fabric_ops *fo);
- int target_depend_item(struct config_item *item);
- void target_undepend_item(struct config_item *item);
- 
-+struct se_session *target_alloc_session(struct se_portal_group *,
-+		unsigned int, unsigned int, enum target_prot_op prot_op,
-+		const char *, void *,
-+		int (*callback)(struct se_portal_group *,
-+				struct se_session *, void *));
-+
- struct se_session *transport_init_session(enum target_prot_op);
- int transport_alloc_session_tags(struct se_session *, unsigned int,
- 		unsigned int);
+Thank you,
+
+--nab
+
+Christoph Hellwig (1):
+  target: Convert demo-mode only drivers to target_alloc_session
+
+Nicholas Bellinger (13):
+  target: Add target_alloc_session() helper function
+  vhost/scsi: Convert to target_alloc_session usage
+  tcm_qla2xxx: Convert to target_alloc_session usage
+  tcm_fc: Convert to target_alloc_session usage
+  ib_srpt: Convert to target_alloc_session usage
+  sbp-target: Conversion to percpu_ida tag pre-allocation
+  sbp-target: Convert to TARGET_SCF_ACK_KREF I/O krefs
+  usb-gadget/tcm: Conversion to percpu_ida tag pre-allocation
+  usb-gadget/tcm: Convert to TARGET_SCF_ACK_KREF I/O krefs
+  xen-scsiback: Convert to percpu_ida tag allocation
+  xen-scsiback: Convert to TARGET_SCF_ACK_KREF I/O krefs
+  tcm_fc: Convert to TARGET_SCF_ACK_KREF I/O + TMR krefs
+  ib_srpt: Convert to percpu_ida tag allocation
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c  |  76 +++------
+ drivers/infiniband/ulp/srpt/ib_srpt.h  |   2 -
+ drivers/scsi/qla2xxx/qla_target.c      |   8 +-
+ drivers/scsi/qla2xxx/qla_target.h      |   2 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  79 ++++-----
+ drivers/target/loopback/tcm_loop.c     |  46 +++---
+ drivers/target/sbp/sbp_target.c        |  95 ++++++-----
+ drivers/target/target_core_transport.c |  56 +++++++
+ drivers/target/tcm_fc/tfc_cmd.c        |  20 ++-
+ drivers/target/tcm_fc/tfc_sess.c       |  44 +++---
+ drivers/usb/gadget/function/f_tcm.c    | 193 ++++++++++------------
+ drivers/usb/gadget/function/tcm.h      |   2 +
+ drivers/vhost/scsi.c                   |  99 +++++-------
+ drivers/xen/xen-scsiback.c             | 281 ++++++++++++++++-----------------
+ include/target/target_core_fabric.h    |   6 +
+ 15 files changed, 504 insertions(+), 505 deletions(-)
+
 -- 
 1.9.1
-
