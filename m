@@ -1,85 +1,66 @@
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 10/11] scsi: bnx2fc: fix hotplug race in bnx2fc_process_new_cqes()
-Date: Fri, 11 Mar 2016 16:29:02 +0100
-Message-ID: <1457710143-29182-11-git-send-email-bigeasy@linutronix.de>
+Subject: [PATCH 01/11] scsi/fcoe: lock online CPUs in fcoe_percpu_clean()
+Date: Fri, 11 Mar 2016 16:28:53 +0100
+Message-ID: <1457710143-29182-2-git-send-email-bigeasy@linutronix.de>
 References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:37923 "EHLO
+Received: from www.linutronix.de ([62.245.132.108]:37929 "EHLO
 	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932567AbcCKP3Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 10:29:25 -0500
+	with ESMTP id S932424AbcCKP30 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 10:29:26 -0500
 In-Reply-To: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rt@linutronix.de, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, QLogic-Storage-Upstream@qlogic.com, Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rt@linutronix.de, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Vasu Dev <vasu.dev@intel.com>, Christoph Hellwig <hch@lst.de>, fcoe-devel@open-fcoe.org
 
-The ->iothread is accessed without holding the lock. Take this:
+for_each_possible_cpu() with a cpu_online() + `thread' check possibly does
+the job. But there is a tiny race: Say CPU5 is reported online but is
+going down. And after fcoe_percpu_clean() saw that CPU5 is online it
+decided to enqueue a packet. After dev_alloc_skb() returned a skb
+that CPU is offline (or say the notifier destroyed the kthread). So we
+would OOps because `thread' is NULL.
+An alternative would be to lock the CPUs during our loop (so no CPU is
+going away) and then we iterate over the online mask.
 
- CPU A                                  CPU B
--------                                -------
-bnx2fc_process_new_cqes()               bnx2fc_percpu_thread_destroy()
- spin_lock_bh(fp_work_lock);
- fps->iothread != NULL
- list_add_tail(work)
- spin_unlock_bh(&fps->fp_work_lock);     spin_lock_bh(&fps->fp_work_lock);
-                                         fps->iothread = NULL
- if (fps->iothread && work)
-	...
- else
-  bnx2fc_process_cq_compl(work)          bnx2fc_process_cq_compl(work);
-
-CPU A will process wqe despite having it added to the work list of CPU
-B which will at the same time clean up the queued wqe.
-
-The fix is to add the item to the list and wakeup the thread while still
-holding the lock. If the item was not added to the list then the
-`process' variable is still true in which case we have to do manually.
-
-Cc: QLogic-Storage-Upstream@qlogic.com
+Cc: Vasu Dev <vasu.dev@intel.com>
 Cc: "James E.J. Bottomley" <JBottomley@odin.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: fcoe-devel@open-fcoe.org
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/fcoe/fcoe.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 28c671b609b2..1427062e86f0 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1045,6 +1045,7 @@ int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
- 			struct bnx2fc_work *work = NULL;
- 			struct bnx2fc_percpu_s *fps = NULL;
- 			unsigned int cpu = wqe % num_possible_cpus();
-+			bool process = true;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 0efe7112fc1f..2b0d207f4b2b 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2461,12 +2461,10 @@ static void fcoe_percpu_clean(struct fc_lport *lport)
+ 	struct sk_buff *skb;
+ 	unsigned int cpu;
  
- 			fps = &per_cpu(bnx2fc_percpu, cpu);
- 			spin_lock_bh(&fps->fp_work_lock);
-@@ -1052,16 +1053,16 @@ int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
- 				goto unlock;
+-	for_each_possible_cpu(cpu) {
++	get_online_cpus();
++	for_each_online_cpu(cpu) {
+ 		pp = &per_cpu(fcoe_percpu, cpu);
  
- 			work = bnx2fc_alloc_work(tgt, wqe);
--			if (work)
-+			if (work) {
- 				list_add_tail(&work->list,
- 					      &fps->work_list);
-+				wake_up_process(fps->iothread);
-+				process = false;
-+			}
- unlock:
- 			spin_unlock_bh(&fps->fp_work_lock);
+-		if (!pp->thread || !cpu_online(cpu))
+-			continue;
+-
+ 		skb = dev_alloc_skb(0);
+ 		if (!skb)
+ 			continue;
+@@ -2481,6 +2479,7 @@ static void fcoe_percpu_clean(struct fc_lport *lport)
  
--			/* Pending work request completion */
--			if (fps->iothread && work)
--				wake_up_process(fps->iothread);
--			else
-+			if (process)
- 				bnx2fc_process_cq_compl(tgt, wqe);
- 			num_free_sqes++;
- 		}
+ 		wait_for_completion(&fcoe_flush_completion);
+ 	}
++	put_online_cpus();
+ }
+ 
+ /**
 -- 
 2.7.0
 
