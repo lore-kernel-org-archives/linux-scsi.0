@@ -1,31 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: Don't issue kill adapter for MFI controllers in case of PD list DCMD failure
-Date: Thu, 10 Mar 2016 20:29:15 -0500
-Message-ID: <yq1r3fhn6ok.fsf@sermon.lab.mkp.net>
-References: <1457604877-5280-1-git-send-email-sumit.saxena@broadcom.com>
+Subject: Re: [PATCH] scsi_sysfs: Fix typo in is_bin_visible()
+Date: Thu, 10 Mar 2016 20:30:54 -0500
+Message-ID: <yq1mvq5n6lt.fsf@sermon.lab.mkp.net>
+References: <1457605526-112163-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48503 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933051AbcCKBaB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 20:30:01 -0500
-In-Reply-To: <1457604877-5280-1-git-send-email-sumit.saxena@broadcom.com>
-	(Sumit Saxena's message of "Thu, 10 Mar 2016 02:14:37 -0800")
+Received: from aserp1040.oracle.com ([141.146.126.69]:39023 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933051AbcCKBbG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2016 20:31:06 -0500
+In-Reply-To: <1457605526-112163-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Thu, 10 Mar 2016 11:25:26 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: thenzl@redhat.com, jbottomley@parallels.com, martin.petersen@oracle.com, hch@infradead.org, linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
->>>>> "Sumit" == Sumit Saxena <sumit.saxena@broadcom.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Sumit> There are few MFI adapters which do not support
-Sumit> MR_DCMD_PD_LIST_QUERY so if MFI adapters fail this DCMD, it
-Sumit> should not be considered as FATAL and driver should not issue
-Sumit> kill adapter and set per controller's instance variable-
-Sumit> pd_list_not_supported so that same variable can be used inside
-Sumit> functions- slave_alloc and slave_configure to allow firmware
-Sumit> scan.
+Hannes> The test for the existence vpd_pg83 is inverted.
 
 Applied to 4.6/scsi-queue.
 
