@@ -1,49 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v8 00/17] add fixes, device quirks, error recovery,
-Date: Fri, 11 Mar 2016 09:51:15 +0100
-Message-ID: <56E28703.4090702@suse.de>
-References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
- <yq1k2l9lozl.fsf@sermon.lab.mkp.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] scsi_dh_alua: uninitialized variable in alua_check_vpd()
+Date: Fri, 11 Mar 2016 13:17:56 +0300
+Message-ID: <20160311101756.GA9384@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <yq1k2l9lozl.fsf@sermon.lab.mkp.net>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/11/2016 03:36 AM, Martin K. Petersen wrote:
->>>>>> "Yaniv" =3D=3D Yaniv Gardi <ygardi@codeaurora.org> writes:
->=20
-> Yaniv> V8: fixed cyclic dependency by removing ufs_quirk.c that was
-> Yaniv> previously added in V7 06/17, and moving its code into ufshcd.=
-c
->=20
-> Patch 6 is now different yet it retains Reviewed-by: tags from the
-> previous version. These should have been removed.
->=20
-> But if Hannes is OK with the changed version you don't need to
-> resend. Hannes, if you would be so kind to take a second look?
->=20
-As indicated, I'm still not happy with the timeout handler, it
-really should be sending real command aborts and not just extending
-the timeout.
-But it's better then nothing, and having this patchset in leaves us
-with more time to discuss other matters.
-EG ioctl interfaces ;-)
+The pg_updated variable is support to be set to zero at the start but
+it is uninitialized.
 
-So:
+Fixes: cb0a168cb6b8 ('scsi_dh_alua: update 'access_state' field')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 5bcdf8d..e4f6174 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -332,7 +332,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
+ {
+ 	int rel_port = -1, group_id;
+ 	struct alua_port_group *pg, *old_pg = NULL;
+-	bool pg_updated;
++	bool pg_updated = 0;
+ 	unsigned long flags;
+ 
+ 	group_id = scsi_vpd_tpg_id(sdev, &rel_port);
