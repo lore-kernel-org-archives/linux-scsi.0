@@ -1,35 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] sd: fix lbprz discard granularity as expected
-Date: Fri, 11 Mar 2016 16:41:54 -0500
-Message-ID: <yq1vb4sk7z1.fsf@sermon.lab.mkp.net>
-References: <56e12d57.4b43620a.4c8c0.ffff9bc5@mx.google.com>
-	<CAGnHSEkGybgU0KXGYg_RLvgbnKvAth4dyHuxMPsKzF7cQs7qgQ@mail.gmail.com>
-	<yq11t7hn4i3.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn39bHTikNgvJUpoJBFVUFmX=bAuUe9ber9D0EUSgf8NQ@mail.gmail.com>
-	<yq1bn6lkx71.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn-5=nzryFJ6wZU+f82kHqf6LJLfi6LbWCyq+qd+E1TWQ@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v4.5
+Date: Fri, 11 Mar 2016 19:51:51 -0800
+Message-ID: <1457754711.4062.95.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30772 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353AbcCKVmB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2016 16:42:01 -0500
-In-Reply-To: <CAGnHSEn-5=nzryFJ6wZU+f82kHqf6LJLfi6LbWCyq+qd+E1TWQ@mail.gmail.com>
-	(Tom Yan's message of "Fri, 11 Mar 2016 22:55:30 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+Hi Linus,
 
-Tom,
+Here is the outstanding target-core bug-fix for v4.5 code.
 
-Tom> Would min_not_zero() be more proper than max()?
+Please go ahead and pull from:
 
-That would effectively set discard_granularity to physical_block_size
-regardless of whether unmap_granularity was provided or not.
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+This patch addresses a recent Task Management (TMR) regression related
+to larger set of multi-port LUN_RESET bug-fixes in v4.5-rc5.
+
+It drops a left-over target_put_sess_cmd() of se_cmd->cmd_kref within
+ABORT_TASK failure path, once a se_cmd descriptor has already completed
+posting response to fabric driver logic, and must be skipped during
+normal ABORT_TASK se_cmd->tag lookup.
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (1):
+  target: Drop incorrect ABORT_TASK put for completed commands
+
+ drivers/target/target_core_tmr.c | 1 -
+ 1 file changed, 1 deletion(-)
