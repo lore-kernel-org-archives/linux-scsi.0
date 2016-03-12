@@ -1,67 +1,58 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH 1/1] sd: fix lbprz discard granularity as expected
-Date: Sat, 12 Mar 2016 13:43:02 +0800
-Message-ID: <CAGnHSE=0qB2NyMxRu3Y+8VjJ-Ee7a3_O3qjprCEtfGg69dPnOg@mail.gmail.com>
-References: <56e12d57.4b43620a.4c8c0.ffff9bc5@mx.google.com>
-	<CAGnHSEkGybgU0KXGYg_RLvgbnKvAth4dyHuxMPsKzF7cQs7qgQ@mail.gmail.com>
-	<yq11t7hn4i3.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn39bHTikNgvJUpoJBFVUFmX=bAuUe9ber9D0EUSgf8NQ@mail.gmail.com>
-	<yq1bn6lkx71.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn-5=nzryFJ6wZU+f82kHqf6LJLfi6LbWCyq+qd+E1TWQ@mail.gmail.com>
-	<yq1vb4sk7z1.fsf@sermon.lab.mkp.net>
-	<CAGnHSEkOpGGsecC8hL4Sbygrz1Cg+tR3EhZ7dOJcwp82+XgEDg@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 14/34] iscsi-target: export symbols
+Date: Fri, 11 Mar 2016 22:28:33 -0800
+Message-ID: <1457764113.4062.169.camel@haakon3.risingtidesystems.com>
+References: <cover.1455467089.git.varun@chelsio.com>
+	 <4e5a7630ec492ff510404fb1ad0f011634518d04.1455467089.git.varun@chelsio.com>
+	 <20160301144921.GC9738@infradead.org> <20160302120044.GB1755@chelsio.com>
+	 <1457214847.28660.64.camel@haakon3.risingtidesystems.com>
+	 <1457392974.30747.45.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:33038 "EHLO
-	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbcCLFnE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Mar 2016 00:43:04 -0500
-Received: by mail-yw0-f193.google.com with SMTP id g6so7380647ywb.0
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2016 21:43:03 -0800 (PST)
-In-Reply-To: <CAGnHSEkOpGGsecC8hL4Sbygrz1Cg+tR3EhZ7dOJcwp82+XgEDg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1457392974.30747.45.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "roland@kernel.org" <roland@kernel.org>, SWise OGC <swise@opengridcomputing.com>, Indranil Choudhury <indranil@chelsio.com>, Karen Xie <kxie@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
 
-But yeah if it has unmap granularity reported to be, for example, 16,
-then it will not be correctly set with min_not_zero().
+Hi Varun & Co,
 
-Wait, shouldn't it be:
+On Mon, 2016-03-07 at 15:22 -0800, Nicholas A. Bellinger wrote:
 
-max(sdkp->logical_block_size,
-   sdkp->unmap_granularity * logical_block_size);
+<SNIP>
 
-then?
+> So obviously this is going to take longer to sort out, and likely not
+> end up being v4.6-rc1 material.  That is OK, as the end result will be
+> better code.  :)
+> 
+> That said, it would make sense do the initial merge of the
+> drivers/net/ethernet/chelsio/cxgb4/ + PPM prerequisites changes for
+> v4.6, and as many basic prerequisites for iscsi-target for ISO as
+> possible in the short time we have.
+> 
+> Wrt to drivers/net/ethernet/chelsio/cxgb4/ changes, please have person
+> from Chelsio give their 'Reviewed-by' and 'Signed-off-by' to this
+> initial series, and make sure they get posted as stand-alone patches
+> ASAP to net-dev w/ DaveM in the loop.
+> 
+> I'm still happy to push these via target-pending/for-next-merge to get
+> the ball rolling for post v4.6 development, as long as they have the
+> extra reviews + signed-off-by from Chelsio folks, and DaveM doesn't have
+> any objections.
+> 
 
+The drivers/net/ethernet/chelsio/cxgb4/ prerequisites for supporting
+iscsi segment offload (ISO) + page pod manager (PPM) are in
+target-pending/for-next-merge, and patches #13+ have been dropped
+for initial v4.6-rc1 merge.
 
-On 12 March 2016 at 13:37, Tom Yan <tom.ty89@gmail.com> wrote:
-> Suppose a device has logical block size of 512 bytes and physical
-> block size of 4096 bytes ("AF 512e").
->
-> If it has unmap granularity reported to be 1, then its discard
-> granularity should be 1 * 512 = 512 bytes. However, with max() it is
-> set to 4096 bytes instead. With min_not_zero(), it is CORRECTLY set to
-> 512 bytes.
->
-> If it does not has unmap granularity reported, then with max() its
-> discard granularity is set to 4096 bytes. But with min_not_zero(), it
-> will ALSO be set to 4096 bytes.
->
-> Therefore, I don't see why max() should be used instead according to
-> your previous mails.
->
-> On 12 March 2016 at 05:41, Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
->>>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
->>
->> Tom,
->>
->> Tom> Would min_not_zero() be more proper than max()?
->>
->> That would effectively set discard_granularity to physical_block_size
->> regardless of whether unmap_granularity was provided or not.
->>
->> --
->> Martin K. Petersen      Oracle Linux Engineering
+Also, there haven't been any further linux-next subsystem merge failures
+beyond the initial t4fw_api.h conflict as reported by SFR.
+
+https://lkml.org/lkml/2016/2/29/34
+
+So please go ahead and post stand-alone cxgb4 driver changes for
+initial ISO + PPM to net-dev + target-devel, and Hariprasad should
+review + ack these ASAP.
