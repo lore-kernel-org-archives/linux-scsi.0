@@ -1,123 +1,68 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 02/22] ncr5380: Remove FLAG_NO_PSEUDO_DMA where possible
-Date: Mon, 14 Mar 2016 15:27:02 +1100
-Message-ID: <20160314042701.115991238@telegraphics.com.au>
-References: <20160314042700.596192247@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-FLAG_NO_PSEUDO_DMA
-Sender: linux-m68k-owner@vger.kernel.org
+Subject: [PATCH 00/22] ncr5380: Eliminate macros, reduce code duplication, fix bugs etc
+Date: Mon, 14 Mar 2016 15:27:00 +1100
+Message-ID: <20160314042700.596192247@telegraphics.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52647 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754667AbcCNEmN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 00:42:13 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
-List-Id: linux-scsi@vger.kernel.org
 
-Drivers that define PSEUDO_DMA also define NCR5380_dma_xfer_len.
-The core driver must call NCR5380_dma_xfer_len which means
-FLAG_NO_PSEUDO_DMA can be eradicated from the core driver.
 
-dmx3191d doesn't define PSEUDO_DMA and has no use for FLAG_NO_PSEUDO_DMA,
-so remove it there also.
+This patch series has more macro elimination and some tweaks to the
+DMA hooks so that all the wrapper drivers can share the same core
+DMA algorithm. This resolves the major discrepancies between the two
+core drivers, which relate to code conditional on the REAL_DMA and
+PSEUDO_DMA macros.
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+After all the wrapper drivers agree on the DMA hook api, the core driver
+fork gets resolved. NCR5380.c is adopted by atari_scsi and sun3_scsi and
+atari_NCR5380.c is then deleted.
+
+Historically, the 5380 drivers suffered from over-use of conditional
+compilation, which caused the compile-time configuration space to explode,
+leading to core driver code that was practically untestable, unmaintainable
+and difficult to reason about. It also prevented driver modules from
+sharing object code.
+
+Along with REAL_DMA, REAL_DMA_POLL and PSEUDO_DMA, most of the remaining
+macros are also eradicated, such as CONFIG_SCSI_GENERIC_NCR53C400,
+SUPPORT_TAGS, DONT_USE_INTR, AUTOPROBE_IRQ and BIOSPARAM.
+
+Also in this patch series, some duplicated documentation is removed and
+the PDMA implementation in mac_scsi finally gets fixed.
+
+This patch series was tested by exercising the dmx3191d and mac_scsi modules
+on suitable hardware. Help with driver testing on ISA and Atari hardware
+is sought as I don't have any (likewise RiscPC ecards and Sun 3 hardware).
 
 ---
- drivers/scsi/NCR5380.c   |    3 +--
- drivers/scsi/dmx3191d.c  |    2 +-
- drivers/scsi/g_NCR5380.c |    7 ++++++-
- drivers/scsi/g_NCR5380.h |    2 +-
- drivers/scsi/mac_scsi.c  |   15 ++++++++++++++-
- 5 files changed, 23 insertions(+), 6 deletions(-)
+ Documentation/scsi/g_NCR5380.txt       |   17 
+ Documentation/scsi/scsi-parameters.txt |   11 
+ drivers/scsi/Kconfig                   |   11 
+ drivers/scsi/NCR5380.c                 |  661 ++++----
+ drivers/scsi/NCR5380.h                 |  145 -
+ drivers/scsi/arm/cumana_1.c            |   25 
+ drivers/scsi/arm/oak.c                 |   22 
+ drivers/scsi/atari_NCR5380.c           | 2676 ---------------------------------
+ drivers/scsi/atari_scsi.c              |  142 -
+ drivers/scsi/dmx3191d.c                |   10 
+ drivers/scsi/dtc.c                     |   27 
+ drivers/scsi/dtc.h                     |    7 
+ drivers/scsi/g_NCR5380.c               |  143 -
+ drivers/scsi/g_NCR5380.h               |   26 
+ drivers/scsi/mac_scsi.c                |  239 +-
+ drivers/scsi/pas16.c                   |   27 
+ drivers/scsi/pas16.h                   |    5 
+ drivers/scsi/sun3_scsi.c               |   48 
+ drivers/scsi/t128.c                    |   19 
+ drivers/scsi/t128.h                    |    7 
+ 20 files changed, 636 insertions(+), 3632 deletions(-)
 
-Index: linux/drivers/scsi/dmx3191d.c
-===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2016-03-14 15:17:25.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2016-03-14 15:26:22.000000000 +1100
-@@ -93,7 +93,7 @@ static int dmx3191d_probe_one(struct pci
- 	 */
- 	shost->irq = NO_IRQ;
- 
--	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
-+	error = NCR5380_init(shost, 0);
- 	if (error)
- 		goto out_host_put;
- 
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2016-03-14 15:17:25.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2016-03-14 15:26:22.000000000 +1100
-@@ -37,7 +37,9 @@
- 
- #define NCR5380_pread                   macscsi_pread
- #define NCR5380_pwrite                  macscsi_pwrite
--#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
-+#define NCR5380_dma_xfer_len(instance, cmd, phase) \
-+        macscsi_dma_xfer_len(instance, cmd)
- 
- #define NCR5380_intr                    macscsi_intr
- #define NCR5380_queue_command           macscsi_queue_command
-@@ -303,6 +305,17 @@ static int macscsi_pwrite(struct Scsi_Ho
- }
- #endif
- 
-+static int macscsi_dma_xfer_len(struct Scsi_Host *instance,
-+                                struct scsi_cmnd *cmd)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+		return 0;
-+
-+	return cmd->transfersize;
-+}
-+
- #include "NCR5380.c"
- 
- #define DRV_MODULE_NAME         "mac_scsi"
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-14 15:26:20.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-03-14 15:26:22.000000000 +1100
-@@ -712,10 +712,15 @@ static inline int NCR5380_pwrite(struct
- 	return 0;
- }
- 
--static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
-+static int generic_NCR5380_dma_xfer_len(struct Scsi_Host *instance,
-+                                        struct scsi_cmnd *cmd)
- {
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int transfersize = cmd->transfersize;
- 
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+		return 0;
-+
- 	/* Limit transfers to 32K, for xx400 & xx406
- 	 * pseudoDMA that transfers in 128 bytes blocks.
- 	 */
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:20.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:22.000000000 +1100
-@@ -1833,8 +1833,7 @@ static void NCR5380_information_transfer
- 
- #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
- 				transfersize = 0;
--				if (!cmd->device->borken &&
--				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
-+				if (!cmd->device->borken)
- 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
- 
- 				if (transfersize) {
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-14 15:26:20.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-03-14 15:26:22.000000000 +1100
-@@ -61,7 +61,7 @@
- #endif
- 
- #define NCR5380_dma_xfer_len(instance, cmd, phase) \
--        generic_NCR5380_dma_xfer_len(cmd)
-+        generic_NCR5380_dma_xfer_len(instance, cmd)
- 
- #define NCR5380_intr generic_NCR5380_intr
- #define NCR5380_queue_command generic_NCR5380_queue_command
+
+
+
