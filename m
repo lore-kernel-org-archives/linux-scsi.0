@@ -1,113 +1,119 @@
 From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH 1/5] Fix to cleanup aborted IO to avoid device being offlined by mid-layer
-Date: Mon, 14 Mar 2016 11:14:18 -0700
-Message-ID: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
+Subject: [PATCH 2/5] Cleanup the I/O that has timed out and is used to issue LUN reset
+Date: Mon, 14 Mar 2016 11:14:19 -0700
+Message-ID: <1457979262-26571-2-git-send-email-satishkh@cisco.com>
+References: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-5.cisco.com ([173.37.86.76]:57496 "EHLO
-	rcdn-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755001AbcCNSYD (ORCPT
+Received: from rcdn-iport-2.cisco.com ([173.37.86.73]:46809 "EHLO
+	rcdn-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbcCNSYD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 14:24:03 -0400
+In-Reply-To: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: satishkh@cisco.com, linux-scsi@vger.kernel.org
 
-If an I/O times out and an abort issued by host, if the abort is
-successful we need to set scsi status as DID_ABORT. Or else the
-mid-layer error handler which looks for this error code, will
-offline the device. Also if the original I/O is not found in fnic
-firmware, we will consider the abort as successful.
-Fnic driver version changed from 1.6.0.17a to 1.6.0.19,
-version 1.6.0.18 has been skipped
+In case of LUN reset, the device reset command is issued with one of
+the I/Os that has timed out on that LUN. The change is to also return
+this I/O with error status set to DID_RESET.
+Fnic driver version changed from 1.6.0.19 to 1.6.0.20
 
 Signed-off-by: Satish Kharat <satishkh@cisco.com>
 ---
  drivers/scsi/fnic/fnic.h      |  2 +-
- drivers/scsi/fnic/fnic_scsi.c | 32 +++++++++++++++++++++++++++-----
- 2 files changed, 28 insertions(+), 6 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c | 35 +++++++++++++++++++++++++++--------
+ 2 files changed, 28 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index ce129e5..52a53f8 100644
+index 52a53f8..1023eae 100644
 --- a/drivers/scsi/fnic/fnic.h
 +++ b/drivers/scsi/fnic/fnic.h
 @@ -39,7 +39,7 @@
  
  #define DRV_NAME		"fnic"
  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.17a"
-+#define DRV_VERSION		"1.6.0.19"
+-#define DRV_VERSION		"1.6.0.19"
++#define DRV_VERSION		"1.6.0.20"
  #define PFX			DRV_NAME ": "
  #define DFX                     DRV_NAME "%d: "
  
 diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 266b909..b9732b1 100644
+index b9732b1..a3e0f69 100644
 --- a/drivers/scsi/fnic/fnic_scsi.c
 +++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -1092,6 +1092,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 				atomic64_inc(
- 					&term_stats->terminate_fw_timeouts);
- 			break;
-+		case FCPIO_ITMF_REJECTED:
-+			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-+				"abort reject recd. id %d\n",
-+				(int)(id & FNIC_TAG_MASK));
-+			break;
- 		case FCPIO_IO_NOT_FOUND:
- 			if (CMD_FLAGS(sc) & FNIC_IO_ABTS_ISSUED)
- 				atomic64_inc(&abts_stats->abort_io_not_found);
-@@ -1112,9 +1117,14 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+@@ -2041,7 +2041,9 @@ lr_io_req_end:
+  * successfully aborted, 1 otherwise
+  */
+ static int fnic_clean_pending_aborts(struct fnic *fnic,
+-				     struct scsi_cmnd *lr_sc)
++				     struct scsi_cmnd *lr_sc,
++					 bool new_sc)
++
+ {
+ 	int tag, abt_tag;
+ 	struct fnic_io_req *io_req;
+@@ -2059,10 +2061,10 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+ 		spin_lock_irqsave(io_lock, flags);
+ 		sc = scsi_host_find_tag(fnic->lport->host, tag);
+ 		/*
+-		 * ignore this lun reset cmd or cmds that do not belong to
+-		 * this lun
++		 * ignore this lun reset cmd if issued using new SC
++		 * or cmds that do not belong to this lun
+ 		 */
+-		if (!sc || sc == lr_sc || sc->device != lun_dev) {
++		if (!sc || ((sc == lr_sc) && new_sc) || sc->device != lun_dev) {
  			spin_unlock_irqrestore(io_lock, flags);
- 			return;
+ 			continue;
  		}
+@@ -2168,11 +2170,27 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+ 			goto clean_pending_aborts_end;
+ 		}
+ 		CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
+-		CMD_SP(sc) = NULL;
 +
- 		CMD_ABTS_STATUS(sc) = hdr_status;
- 		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
++		/* original sc used for lr is handled by dev reset code */
++		if (sc != lr_sc)
++			CMD_SP(sc) = NULL;
+ 		spin_unlock_irqrestore(io_lock, flags);
  
-+		/* If the status is IO not found consider it as success */
-+		if (hdr_status == FCPIO_IO_NOT_FOUND)
-+			CMD_ABTS_STATUS(sc) = FCPIO_SUCCESS;
+-		fnic_release_ioreq_buf(fnic, io_req, sc);
+-		mempool_free(io_req, fnic->io_req_pool);
++		/* original sc used for lr is handled by dev reset code */
++		if (sc != lr_sc) {
++			fnic_release_ioreq_buf(fnic, io_req, sc);
++			mempool_free(io_req, fnic->io_req_pool);
++		}
 +
- 		atomic64_dec(&fnic_stats->io_stats.active_ios);
- 		if (atomic64_read(&fnic->io_cmpl_skip))
- 			atomic64_dec(&fnic->io_cmpl_skip);
-@@ -1927,21 +1937,33 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
++		/*
++		 * Any IO is returned during reset, it needs to call scsi_done
++		 * to return the scsi_cmnd to upper layer.
++		 */
++		if (sc->scsi_done) {
++			/* Set result to let upper SCSI layer retry */
++			sc->result = DID_RESET << 16;
++			sc->scsi_done(sc);
++		}
+ 	}
  
- 	CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
+ 	schedule_timeout(msecs_to_jiffies(2 * fnic->config.ed_tov));
+@@ -2266,6 +2284,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 	int tag = 0;
+ 	DECLARE_COMPLETION_ONSTACK(tm_done);
+ 	int tag_gen_flag = 0;   /*to track tags allocated by fnic driver*/
++	bool new_sc = 0;
  
-+	start_time = io_req->start_time;
- 	/*
- 	 * firmware completed the abort, check the status,
--	 * free the io_req irrespective of failure or success
-+	 * free the io_req if successful. If abort fails,
-+	 * Device reset will clean the I/O.
+ 	/* Wait for rport to unblock */
+ 	fc_block_scsi_eh(sc);
+@@ -2452,7 +2471,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 	 * the lun reset cmd. If all cmds get cleaned, the lun reset
+ 	 * succeeds
  	 */
--	if (CMD_ABTS_STATUS(sc) != FCPIO_SUCCESS)
-+	if (CMD_ABTS_STATUS(sc) == FCPIO_SUCCESS) {
-+		CMD_SP(sc) = NULL;
-+	}
-+	else
-+	{
- 		ret = FAILED;
--
--	CMD_SP(sc) = NULL;
-+		spin_unlock_irqrestore(io_lock, flags);
-+		goto fnic_abort_cmd_end;
-+	}
- 
- 	spin_unlock_irqrestore(io_lock, flags);
- 
--	start_time = io_req->start_time;
- 	fnic_release_ioreq_buf(fnic, io_req, sc);
- 	mempool_free(io_req, fnic->io_req_pool);
- 
-+	if (sc->scsi_done) {
-+	/* Call SCSI completion function to complete the IO */
-+		sc->result = (DID_ABORT << 16);
-+		sc->scsi_done(sc);
-+	}
-+
- fnic_abort_cmd_end:
- 	FNIC_TRACE(fnic_abort_cmd, sc->device->host->host_no,
- 		  sc->request->tag, sc,
+-	if (fnic_clean_pending_aborts(fnic, sc)) {
++	if (fnic_clean_pending_aborts(fnic, sc, new_sc)) {
+ 		spin_lock_irqsave(io_lock, flags);
+ 		io_req = (struct fnic_io_req *)CMD_SP(sc);
+ 		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
 -- 
 2.4.3
 
