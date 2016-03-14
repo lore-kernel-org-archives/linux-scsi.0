@@ -1,42 +1,32 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH 2/3] lpfc: fix misleading indentation
-Date: Mon, 14 Mar 2016 23:27:31 +0100
-Message-ID: <20160314232731.0000404d@localhost>
-References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
-	<1457965789-3373916-3-git-send-email-arnd@arndb.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: vpd pages are mandatory for SPC-2
+Date: Mon, 14 Mar 2016 19:37:12 -0400
+Message-ID: <yq137rshbrr.fsf@sermon.lab.mkp.net>
+References: <1457703965-71028-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1457965789-3373916-3-git-send-email-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Sebastian Herbszt <herbszt@gmx.de>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:45668 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbcCNXh0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 19:37:26 -0400
+In-Reply-To: <1457703965-71028-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Fri, 11 Mar 2016 14:46:05 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.com>
 
-Arnd Bergmann wrote:
-> gcc-6 complains about the indentation of the lpfc_destroy_vport_work_array()
-> call in lpfc_online(), which clearly doesn't look right:
-> 
-> drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_online':
-> drivers/scsi/lpfc/lpfc_init.c:2880:3: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
->    lpfc_destroy_vport_work_array(phba, vports);
->    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/lpfc/lpfc_init.c:2863:2: note: ...this 'if' clause, but it is not
->   if (vports != NULL)
->   ^~
-> 
-> Looking at the patch that introduced this code, it's clear that the
-> behavior is correct and the indentation is wrong.
-> 
-> This fixes the indentation and adds curly braces around the previous
-> if() block for clarity, as that is most likely what caused the code
-> to be misindented in the first place.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 549e55cd2a1b ("[SCSI] lpfc 8.2.2 : Fix locking around HBA's port_list")
-> ---
->  drivers/scsi/lpfc/lpfc_init.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
+Hannes,
+
+Hannes> VPD pages 0x0 and 0x83 are mandatory even for SPC-2, so we
+Hannes> should be lowering the restriction to avoid having to whitelist
+Hannes> every SPC-2 compliant device.
+
+I wonder how many non-compliant devices we would have to blacklist as a
+result of this change...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
