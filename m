@@ -1,105 +1,63 @@
 From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 3/5] Using rport->dd_data to check rport online instead
- of rport_lookup.
-Date: Mon, 14 Mar 2016 16:15:48 -0400
-Message-ID: <1457986548.4188.30.camel@localhost.localdomain>
+Subject: Re: [PATCH 4/5] Setting scsi host template to indicate that fnic
+ does not support multiqueue
+Date: Mon, 14 Mar 2016 16:16:17 -0400
+Message-ID: <1457986577.4188.31.camel@localhost.localdomain>
 References: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
-	 <1457979262-26571-3-git-send-email-satishkh@cisco.com>
+	 <1457979262-26571-4-git-send-email-satishkh@cisco.com>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43819 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49931 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753187AbcCNUPt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2016 16:15:49 -0400
-In-Reply-To: <1457979262-26571-3-git-send-email-satishkh@cisco.com>
+	id S1753187AbcCNUQS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2016 16:16:18 -0400
+In-Reply-To: <1457979262-26571-4-git-send-email-satishkh@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Satish Kharat <satishkh@cisco.com>
 Cc: linux-scsi@vger.kernel.org
 
 On Mon, 2016-03-14 at 11:14 -0700, Satish Kharat wrote:
-> When issuing I/O we check if rport is online through libfc
-> rport_lookup() function which needs to be protected by mutex lock
-> that cannot acquired in I/O context. The change is to use midlayer
-> remote port=E2=80=99s dd_data which is preserved until its devloss ti=
-meout
-> and no protection is required.
->=20
-> Fnic driver version changed from 1.6.0.20 to 1.6.0.21
->=20
+> Fnic does not support mutiqueue. Setting the scsi_host_template in
+> fnic_host_template to indicate that.
+> 
+> Changing fnic_version from 1.6.0.21 to 1.6.0.22
+> 
 > Signed-off-by: Satish Kharat <satishkh@cisco.com>
 > ---
->  drivers/scsi/fnic/fnic.h      |  2 +-
->  drivers/scsi/fnic/fnic_scsi.c | 20 +++++++++++---------
->  2 files changed, 12 insertions(+), 10 deletions(-)
->=20
+>  drivers/scsi/fnic/fnic.h      | 2 +-
+>  drivers/scsi/fnic/fnic_main.c | 1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
 > diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-> index 1023eae..9ddc920 100644
+> index 9ddc920..35264c7 100644
 > --- a/drivers/scsi/fnic/fnic.h
 > +++ b/drivers/scsi/fnic/fnic.h
 > @@ -39,7 +39,7 @@
-> =20
+>  
 >  #define DRV_NAME		"fnic"
 >  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
-> -#define DRV_VERSION		"1.6.0.20"
-> +#define DRV_VERSION		"1.6.0.21"
+> -#define DRV_VERSION		"1.6.0.21"
+> +#define DRV_VERSION		"1.6.0.22"
 >  #define PFX			DRV_NAME ": "
 >  #define DFX                     DRV_NAME "%d: "
-> =20
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_s=
-csi.c
-> index a3e0f69..8492143 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -439,7 +439,6 @@ static int fnic_queuecommand_lck(struct scsi_cmnd=
- *sc, void (*done)(struct scsi_
->  	int sg_count =3D 0;
->  	unsigned long flags =3D 0;
->  	unsigned long ptr;
-> -	struct fc_rport_priv *rdata;
->  	spinlock_t *io_lock =3D NULL;
->  	int io_lock_acquired =3D 0;
-> =20
-> @@ -455,14 +454,17 @@ static int fnic_queuecommand_lck(struct scsi_cm=
-nd *sc, void (*done)(struct scsi_
->  		return 0;
->  	}
-> =20
-> -	rdata =3D lp->tt.rport_lookup(lp, rport->port_id);
-> -	if (!rdata || (rdata->rp_state =3D=3D RPORT_ST_DELETE)) {
-> -		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-> -			"returning IO as rport is removed\n");
-> -		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
-> -		sc->result =3D DID_NO_CONNECT;
-
-You fixed this in patch 5/5 to << 16, might as well just do it right
-in the first patch here and eliminate that one.
-
-> -		done(sc);
-> -		return 0;
-> +	if (rport) {
-> +		struct fc_rport_libfc_priv *rp =3D rport->dd_data;
-> +
-> +		if (!rp || rp->rp_state !=3D RPORT_ST_READY) {
-> +			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-> +				"returning DID_NO_CONNECT for IO as rport is removed\n");
-> +			atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
-> +			sc->result =3D DID_NO_CONNECT;
-> +			done(sc);
-> +			return 0;
-> +		}
->  	}
-> =20
->  	if (lp->state !=3D LPORT_ST_READY || !(lp->link_up))
+>  
+> diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+> index 58ce902..fa8a121 100644
+> --- a/drivers/scsi/fnic/fnic_main.c
+> +++ b/drivers/scsi/fnic/fnic_main.c
+> @@ -119,6 +119,7 @@ static struct scsi_host_template fnic_host_template = {
+>  	.max_sectors = 0xffff,
+>  	.shost_attrs = fnic_attrs,
+>  	.track_queue_depth = 1,
+> +	.disable_blk_mq = 1,
+>  };
+>  
+>  static void
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
