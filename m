@@ -1,67 +1,78 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Avoid that long log lines are truncated
-Date: Mon, 14 Mar 2016 15:45:32 +0100
-Message-ID: <56E6CE8C.5020600@suse.de>
-References: <56E6C88B.6010201@sandisk.com>
- <1457966320.4188.17.camel@localhost.localdomain>
+Subject: Re: [PATCH 2/3] lpfc: fix misleading indentation
+Date: Mon, 14 Mar 2016 16:19:58 +0100
+Message-ID: <56E6D69E.1050008@suse.de>
+References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
+ <1457965789-3373916-3-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56383 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934283AbcCNOpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2016 10:45:34 -0400
-In-Reply-To: <1457966320.4188.17.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1457965789-3373916-3-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Sebastian Herbszt <herbszt@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Robert Elliott <Elliott@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/14/2016 03:38 PM, Ewan Milne wrote:
-> On Mon, 2016-03-14 at 07:19 -0700, Bart Van Assche wrote:
->> While testing the latest version of the SRP initiator and target
->> drivers I encountered the following message in the kernel log:
->>
->> sd 16:0:0:0: Warning! Received an indication that the LUN assignment=
-s on this target have changed. The Linux SCSI layer does not automatica=
-l
->>
->> This is a truncated message. Avoid that such truncation happens
->> by increasing the SCSI_LOG_BUFSIZE constant.
->>
->> Fixes: ded85c193a39 (scsi: Implement per-cpu logging buffer)
->> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
->> Cc: Hannes Reinecke <hare@suse.de>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: Robert Elliott <elliott@hp.com>
->> Cc: Ewan D. Milne <emilne@redhat.com>
->> Cc: <stable@vger.kernel.org> # v4.0+
->> ---
->>  include/scsi/scsi_dbg.h | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
->> index 56710e0..05d36eb 100644
->> --- a/include/scsi/scsi_dbg.h
->> +++ b/include/scsi/scsi_dbg.h
->> @@ -5,7 +5,7 @@ struct scsi_cmnd;
->>  struct scsi_device;
->>  struct scsi_sense_hdr;
->> =20
->> -#define SCSI_LOG_BUFSIZE 128
->> +#define SCSI_LOG_BUFSIZE 256
->> =20
->>  extern void scsi_print_command(struct scsi_cmnd *);
->>  extern size_t __scsi_format_command(char *, size_t,
+On 03/14/2016 03:29 PM, Arnd Bergmann wrote:
+> gcc-6 complains about the indentation of the lpfc_destroy_vport_work_=
+array()
+> call in lpfc_online(), which clearly doesn't look right:
 >=20
-> Hmm.  Perhaps we should make the message less verbose instead?
-> It looks like if we increase SCSI_LOG_BUFSIZE then we get fewer
-> per-message buffers unless we also increase SCSI_LOG_SPOOLSIZE.
+> drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_online':
+> drivers/scsi/lpfc/lpfc_init.c:2880:3: warning: statement is indented =
+as if it were guarded by... [-Wmisleading-indentation]
+>    lpfc_destroy_vport_work_array(phba, vports);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/lpfc/lpfc_init.c:2863:2: note: ...this 'if' clause, but =
+it is not
+>   if (vports !=3D NULL)
+>   ^~
 >=20
-Or just shorten the message itself.
-It's really annoying having these really long messages showing up in
-the system log ...
+> Looking at the patch that introduced this code, it's clear that the
+> behavior is correct and the indentation is wrong.
+>=20
+> This fixes the indentation and adds curly braces around the previous
+> if() block for clarity, as that is most likely what caused the code
+> to be misindented in the first place.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 549e55cd2a1b ("[SCSI] lpfc 8.2.2 : Fix locking around HBA's po=
+rt_list")
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
+nit.c
+> index a544366a367e..f57d02c3b6cf 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -2860,7 +2860,7 @@ lpfc_online(struct lpfc_hba *phba)
+>  	}
+> =20
+>  	vports =3D lpfc_create_vport_work_array(phba);
+> -	if (vports !=3D NULL)
+> +	if (vports !=3D NULL) {
+>  		for (i =3D 0; i <=3D phba->max_vports && vports[i] !=3D NULL; i++)=
+ {
+>  			struct Scsi_Host *shost;
+>  			shost =3D lpfc_shost_from_vport(vports[i]);
+> @@ -2877,7 +2877,8 @@ lpfc_online(struct lpfc_hba *phba)
+>  			}
+>  			spin_unlock_irq(shost->host_lock);
+>  		}
+> -		lpfc_destroy_vport_work_array(phba, vports);
+> +	}
+> +	lpfc_destroy_vport_work_array(phba, vports);
+> =20
+>  	lpfc_unblock_mgmt_io(phba);
+>  	return 0;
+>=20
+Nope.
+
+vports is only valid from within the indentation block, so it should
+be moved into it.
 
 Cheers,
 
@@ -69,11 +80,6 @@ Hannes
 --=20
 Dr. Hannes Reinecke		   Teamlead Storage & Networking
 hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
