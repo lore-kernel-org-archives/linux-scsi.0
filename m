@@ -1,73 +1,123 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v7] scsi: ufs: add ioctl interface for query request
-Date: Sun, 13 Mar 2016 12:45:14 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B5419B0B4@hasmsx108.ger.corp.intel.com>
-References: <1457532699-11487-1-git-send-email-ygardi@codeaurora.org>
- <046fc2d00e51f331a6bbc00553cc1f9c.squirrel@us.codeaurora.org>
- <201603101818.33826.arnd@arndb.de> <201603102019.32467.arnd@arndb.de>
- <yq1io0tn604.fsf@sermon.lab.mkp.net> <56E285AC.1030803@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <56E285AC.1030803@suse.de>
-Content-Language: en-US
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: "ygardi@codeaurora.org" <ygardi@codeaurora.org>, Greg KH <gregkh@linuxfoundation.org>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "santoshsy@gmail.com" <santoshsy@gmail.com>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 02/22] ncr5380: Remove FLAG_NO_PSEUDO_DMA where possible
+Date: Mon, 14 Mar 2016 15:27:02 +1100
+Message-ID: <20160314042701.115991238@telegraphics.com.au>
+References: <20160314042700.596192247@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-FLAG_NO_PSEUDO_DMA
+Sender: linux-m68k-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 List-Id: linux-scsi@vger.kernel.org
 
-> 
-> On 03/11/2016 02:43 AM, Martin K. Petersen wrote:
-> >>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
-> >
-> > Arnd> Looking through what other drivers do, I've found a couple of
-> > Arnd> patterns now. n particular, most use the SG_IO ioctl to pass down
-> > Arnd> commands from user space into a device specific command
-> > Arnd> queue. Have you looked at that interface in the past to see if it
-> > Arnd> would fit your use case?
-> >
-> > Arnd> There is also a 'bsg' API that some drivers implement, which I
-> > Arnd> think would be another alternative.
-> >
-> > Arnd> Could any of the SCSI experts comment on what they expect a driver
-> > Arnd> to use out of those three alternatives (if any):
-> >
-> > My preference is that if you want to expose any information that a user
-> > or admin would care about, put it in sysfs where it is easily accessible
-> > and can be scripted.
-> >
-> > For things that need to directly send commands to the hardware (to
-> > configure vendor specific settings or inspect parameters for development
-> > purposes) use the sg or bsg interfaces like we do for both ATA and
-> > SCSI. bsg is newer and supports more features like bidirectional
-> > commands. But for this particular use case I don't think it offers any
-> > particular advantages over SG_IO. Both interfaces take the same
-> > descriptors so it really doesn't matter much.
-> >
-> > See:
-> >
-> > 	http://sg.danny.cz/sg/
-> >
-> And indeed I would expose this 'special' UFS RPMB as a 'generic'
-> SCSI device and add the required fields in sysfs, much like Greg KH
-> suggested.
-> Plus adding a 'bsg' interface for sending 'raw' UFS commands sounds
-> much more appealing; that's what we do for SAS and FC, too.
-> 
-> But then, none of the above can be done if there is no hardware
-> available. At the same time, you wouldn't be able to test any
-> proposed fixes to the original ioctl patch.
-> So I guess you'll have to retract this patch or get hold of the
-> hardware to actually _test_ something there.
-> 
-> Or send me some, I'll be happy to help out here :-)
-> 
+Drivers that define PSEUDO_DMA also define NCR5380_dma_xfer_len.
+The core driver must call NCR5380_dma_xfer_len which means
+FLAG_NO_PSEUDO_DMA can be eradicated from the core driver.
 
-I will submit proposal or new RPMB layer for both UFS and EMMC 
-It also sports IOCTL interface, similar and replacing to mmc_ioc_cmd which is also used to access RPMB partition on emmc.
-Blocks  of 512 bytes has to be transferred back and force so sysfs API is not good enough.  RPMB partition is not suitable to be accessed via block layer.  I've tried going via SICSI generic layers, it is a bit awkward as the protocol is very UFS specific.  
-Currently I have working solution for both EMMC and UFS2.0.
+dmx3191d doesn't define PSEUDO_DMA and has no use for FLAG_NO_PSEUDO_DMA,
+so remove it there also.
 
-Thanks
-Tomas 
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+
+---
+ drivers/scsi/NCR5380.c   |    3 +--
+ drivers/scsi/dmx3191d.c  |    2 +-
+ drivers/scsi/g_NCR5380.c |    7 ++++++-
+ drivers/scsi/g_NCR5380.h |    2 +-
+ drivers/scsi/mac_scsi.c  |   15 ++++++++++++++-
+ 5 files changed, 23 insertions(+), 6 deletions(-)
+
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-03-14 15:26:22.000000000 +1100
+@@ -93,7 +93,7 @@ static int dmx3191d_probe_one(struct pci
+ 	 */
+ 	shost->irq = NO_IRQ;
+ 
+-	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
++	error = NCR5380_init(shost, 0);
+ 	if (error)
+ 		goto out_host_put;
+ 
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2016-03-14 15:26:22.000000000 +1100
+@@ -37,7 +37,9 @@
+ 
+ #define NCR5380_pread                   macscsi_pread
+ #define NCR5380_pwrite                  macscsi_pwrite
+-#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        macscsi_dma_xfer_len(instance, cmd)
+ 
+ #define NCR5380_intr                    macscsi_intr
+ #define NCR5380_queue_command           macscsi_queue_command
+@@ -303,6 +305,17 @@ static int macscsi_pwrite(struct Scsi_Ho
+ }
+ #endif
+ 
++static int macscsi_dma_xfer_len(struct Scsi_Host *instance,
++                                struct scsi_cmnd *cmd)
++{
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
++		return 0;
++
++	return cmd->transfersize;
++}
++
+ #include "NCR5380.c"
+ 
+ #define DRV_MODULE_NAME         "mac_scsi"
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-14 15:26:20.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-14 15:26:22.000000000 +1100
+@@ -712,10 +712,15 @@ static inline int NCR5380_pwrite(struct
+ 	return 0;
+ }
+ 
+-static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
++static int generic_NCR5380_dma_xfer_len(struct Scsi_Host *instance,
++                                        struct scsi_cmnd *cmd)
+ {
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	int transfersize = cmd->transfersize;
+ 
++	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
++		return 0;
++
+ 	/* Limit transfers to 32K, for xx400 & xx406
+ 	 * pseudoDMA that transfers in 128 bytes blocks.
+ 	 */
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:20.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:22.000000000 +1100
+@@ -1833,8 +1833,7 @@ static void NCR5380_information_transfer
+ 
+ #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
+ 				transfersize = 0;
+-				if (!cmd->device->borken &&
+-				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
++				if (!cmd->device->borken)
+ 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+ 
+ 				if (transfersize) {
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-14 15:26:20.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2016-03-14 15:26:22.000000000 +1100
+@@ -61,7 +61,7 @@
+ #endif
+ 
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+-        generic_NCR5380_dma_xfer_len(cmd)
++        generic_NCR5380_dma_xfer_len(instance, cmd)
+ 
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
