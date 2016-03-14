@@ -1,146 +1,52 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 11/22] atari_scsi: Adopt NCR5380.c core driver
-Date: Mon, 14 Mar 2016 15:27:11 +1100
-Message-ID: <20160314042703.476012300@telegraphics.com.au>
+Subject: [PATCH 14/22] ncr5380: Add MAX_LUN limit
+Date: Mon, 14 Mar 2016 15:27:14 +1100
+Message-ID: <20160314042704.285983735@telegraphics.com.au>
 References: <20160314042700.596192247@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_scsi-adopt-NCR5380-c
+Content-Disposition: inline; filename=ncr5380-MAX_LUN
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for the Atari ST DMA chip to the NCR5380.c core driver.
-This code is copied from atari_NCR5380.c.
+The driver has a limit of eight LUs because of the byte-sized bitfield
+that is used for busy flags. Reject commands with LUN > 7.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c    |   32 ++++++++++++++++++++++++++++++++
- drivers/scsi/atari_scsi.c |    6 +++---
- 2 files changed, 35 insertions(+), 3 deletions(-)
+ drivers/scsi/NCR5380.c |    6 ++++++
+ drivers/scsi/NCR5380.h |    2 ++
+ 2 files changed, 8 insertions(+)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:39.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:42.000000000 +1100
-@@ -29,6 +29,8 @@
-  * Ronald van Cuijlenborg, Alan Cox and others.
-  */
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:45.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:48.000000000 +1100
+@@ -661,6 +661,12 @@ static int NCR5380_queue_command(struct
+ 	}
+ #endif /* (NDEBUG & NDEBUG_NO_WRITE) */
  
-+/* Ported to Atari by Roman Hodek and others. */
++	if (cmd->device->lun > MAX_LUN) {
++		cmd->result = DID_NO_CONNECT << 16;
++		cmd->scsi_done(cmd);
++		return 0;
++	}
 +
- /*
-  * Further development / testing that should be done :
-  *
-@@ -141,6 +143,14 @@
- #define NCR5380_io_delay(x)
- #endif
- 
-+#ifndef NCR5380_acquire_dma_irq
-+#define NCR5380_acquire_dma_irq(x)	(1)
-+#endif
-+
-+#ifndef NCR5380_release_dma_irq
-+#define NCR5380_release_dma_irq(x)
-+#endif
-+
- static int do_abort(struct Scsi_Host *);
- static void do_reset(struct Scsi_Host *);
- 
-@@ -658,6 +668,9 @@ static int NCR5380_queue_command(struct
- 
  	cmd->result = 0;
  
-+	if (!NCR5380_acquire_dma_irq(instance))
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
- 	spin_lock_irqsave(&hostdata->lock, flags);
- 
- 	/*
-@@ -682,6 +695,19 @@ static int NCR5380_queue_command(struct
- 	return 0;
- }
- 
-+static inline void maybe_release_dma_irq(struct Scsi_Host *instance)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	/* Caller does the locking needed to set & test these data atomically */
-+	if (list_empty(&hostdata->disconnected) &&
-+	    list_empty(&hostdata->unissued) &&
-+	    list_empty(&hostdata->autosense) &&
-+	    !hostdata->connected &&
-+	    !hostdata->selecting)
-+		NCR5380_release_dma_irq(instance);
-+}
-+
- /**
-  * dequeue_next_cmd - dequeue a command for processing
-  * @instance: the scsi host instance
-@@ -783,6 +809,7 @@ static void NCR5380_main(struct work_str
- 
- 			if (!NCR5380_select(instance, cmd)) {
- 				dsprintk(NDEBUG_MAIN, instance, "main: select complete\n");
-+				maybe_release_dma_irq(instance);
- 			} else {
- 				dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES, instance,
- 				         "main: select failed, returning %p to queue\n", cmd);
-@@ -1828,6 +1855,8 @@ static void NCR5380_information_transfer
- 
- 					/* Enable reselect interrupts */
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-+
-+					maybe_release_dma_irq(instance);
- 					return;
- 				case MESSAGE_REJECT:
- 					/* Accept message by clearing ACK */
-@@ -1963,6 +1992,7 @@ static void NCR5380_information_transfer
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
- 					complete_cmd(instance, cmd);
-+					maybe_release_dma_irq(instance);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				}
-@@ -2256,6 +2286,7 @@ out:
- 		dsprintk(NDEBUG_ABORT, instance, "abort: successfully aborted %p\n", cmd);
- 
- 	queue_work(hostdata->work_q, &hostdata->main_task);
-+	maybe_release_dma_irq(instance);
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
- 	return result;
-@@ -2336,6 +2367,7 @@ static int NCR5380_bus_reset(struct scsi
- 	hostdata->dma_len = 0;
- 
- 	queue_work(hostdata->work_q, &hostdata->main_task);
-+	maybe_release_dma_irq(instance);
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
- 	return SUCCESS;
-Index: linux/drivers/scsi/atari_scsi.c
+ 	if (!NCR5380_acquire_dma_irq(instance))
+Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2016-03-14 15:26:37.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2016-03-14 15:26:42.000000000 +1100
-@@ -97,9 +97,9 @@
- #define NCR5380_abort                   atari_scsi_abort
- #define NCR5380_info                    atari_scsi_info
+--- linux.orig/drivers/scsi/NCR5380.h	2016-03-14 15:26:45.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-03-14 15:26:48.000000000 +1100
+@@ -244,6 +244,8 @@ struct NCR5380_hostdata {
  
--#define NCR5380_dma_read_setup(instance, data, count) \
-+#define NCR5380_dma_recv_setup(instance, data, count) \
-         atari_scsi_dma_setup(instance, data, count, 0)
--#define NCR5380_dma_write_setup(instance, data, count) \
-+#define NCR5380_dma_send_setup(instance, data, count) \
-         atari_scsi_dma_setup(instance, data, count, 1)
- #define NCR5380_dma_residual(instance) \
-         atari_scsi_dma_residual(instance)
-@@ -713,7 +713,7 @@ static void atari_scsi_falcon_reg_write(
- }
+ #ifdef __KERNEL__
  
- 
--#include "atari_NCR5380.c"
-+#include "NCR5380.c"
- 
- static int atari_scsi_bus_reset(struct scsi_cmnd *cmd)
- {
++#define MAX_LUN	7
++
+ struct NCR5380_cmd {
+ 	struct list_head list;
+ };
