@@ -1,22 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v8 00/17] add fixes, device quirks, error recovery,
-Date: Mon, 14 Mar 2016 15:59:27 -0400
-Message-ID: <yq1mvq0j0f4.fsf@sermon.lab.mkp.net>
-References: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org>
+Subject: Re: [patch v2] scsi_dh_alua: uninitialized variable in alua_check_vpd()
+Date: Mon, 14 Mar 2016 16:02:04 -0400
+Message-ID: <yq1io0oj0ar.fsf@sermon.lab.mkp.net>
+References: <20160311111903.GA12332@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1457624241-20525-1-git-send-email-ygardi@codeaurora.org> (Yaniv
-	Gardi's message of "Thu, 10 Mar 2016 17:37:04 +0200")
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20160311111903.GA12332@mwanda> (Dan Carpenter's message of "Fri,
+	11 Mar 2016 14:19:03 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Yaniv" == Yaniv Gardi <ygardi@codeaurora.org> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Yaniv> V8: fixed cyclic dependency by removing ufs_quirk.c that was
-Yaniv> previously added in V7 06/17, and moving its code into ufshcd.c
+Dan> The pg_updated variable is support to be set to false at the start
+Dan> but it is uninitialized.
 
 Applied to 4.6/scsi-queue.
 
