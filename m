@@ -1,66 +1,56 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 2/3] lpfc: fix misleading indentation
-Date: Mon, 14 Mar 2016 15:29:44 +0100
-Message-ID: <1457965789-3373916-3-git-send-email-arnd@arndb.de>
+Subject: [PATCH 3/3] megaraid_sas: add missing curly braces in ioctl handler
+Date: Mon, 14 Mar 2016 15:29:45 +0100
+Message-ID: <1457965789-3373916-4-git-send-email-arnd@arndb.de>
 References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:61907 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932864AbcCNOap (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 10:30:45 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Tomas Henzl <thenzl@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>, megaraidlinux.pdl@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-gcc-6 complains about the indentation of the lpfc_destroy_vport_work_array()
-call in lpfc_online(), which clearly doesn't look right:
+gcc-6 found a dubious indentation in the megasas_mgmt_fw_ioctl
+function:
 
-drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_online':
-drivers/scsi/lpfc/lpfc_init.c:2880:3: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
-   lpfc_destroy_vport_work_array(phba, vports);
-   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/lpfc/lpfc_init.c:2863:2: note: ...this 'if' clause, but it is not
-  if (vports != NULL)
-  ^~
+drivers/scsi/megaraid/megaraid_sas_base.c: In function 'megasas_mgmt_fw_ioctl':
+drivers/scsi/megaraid/megaraid_sas_base.c:6658:4: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
+    kbuff_arr[i] = NULL;
+    ^~~~~~~~~
+drivers/scsi/megaraid/megaraid_sas_base.c:6653:3: note: ...this 'if' clause, but it is not
+   if (kbuff_arr[i])
+   ^~
 
-Looking at the patch that introduced this code, it's clear that the
-behavior is correct and the indentation is wrong.
+The code is actually correct, as there is no downside in clearing a NULL
+pointer again.
 
-This fixes the indentation and adds curly braces around the previous
-if() block for clarity, as that is most likely what caused the code
-to be misindented in the first place.
+This clarifies the code and avoids the warning by adding extra curly
+braces.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 549e55cd2a1b ("[SCSI] lpfc 8.2.2 : Fix locking around HBA's port_list")
+Fixes: 90dc9d98f01b ("megaraid_sas : MFI MPT linked list corruption fix")
 ---
- drivers/scsi/lpfc/lpfc_init.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a544366a367e..f57d02c3b6cf 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2860,7 +2860,7 @@ lpfc_online(struct lpfc_hba *phba)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 5c08568ccfbf..2627200d4f82 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -6650,12 +6650,13 @@ out:
  	}
  
- 	vports = lpfc_create_vport_work_array(phba);
--	if (vports != NULL)
-+	if (vports != NULL) {
- 		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
- 			struct Scsi_Host *shost;
- 			shost = lpfc_shost_from_vport(vports[i]);
-@@ -2877,7 +2877,8 @@ lpfc_online(struct lpfc_hba *phba)
- 			}
- 			spin_unlock_irq(shost->host_lock);
- 		}
--		lpfc_destroy_vport_work_array(phba, vports);
-+	}
-+	lpfc_destroy_vport_work_array(phba, vports);
+ 	for (i = 0; i < ioc->sge_count; i++) {
+-		if (kbuff_arr[i])
++		if (kbuff_arr[i]) {
+ 			dma_free_coherent(&instance->pdev->dev,
+ 					  le32_to_cpu(kern_sge32[i].length),
+ 					  kbuff_arr[i],
+ 					  le32_to_cpu(kern_sge32[i].phys_addr));
+ 			kbuff_arr[i] = NULL;
++		}
+ 	}
  
- 	lpfc_unblock_mgmt_io(phba);
- 	return 0;
+ 	megasas_return_cmd(instance, cmd);
 -- 
 2.7.0
-
