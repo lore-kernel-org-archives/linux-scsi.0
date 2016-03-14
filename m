@@ -1,68 +1,137 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 00/22] ncr5380: Eliminate macros, reduce code duplication, fix bugs etc
-Date: Mon, 14 Mar 2016 15:27:00 +1100
-Message-ID: <20160314042700.596192247@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52647 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754667AbcCNEmN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 00:42:13 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 21/22] atari_scsi: Allow can_queue to be increased for Falcon
+Date: Mon, 14 Mar 2016 15:27:21 +1100
+Message-ID: <20160314042706.096009019@telegraphics.com.au>
+References: <20160314042700.596192247@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=atari_scsi-can_queue
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+List-Id: linux-scsi@vger.kernel.org
 
+The benefit of limiting can_queue to 1 is that atari_scsi shares the
+ST DMA chip more fairly with other drivers (e.g. falcon-ide).
 
-This patch series has more macro elimination and some tweaks to the
-DMA hooks so that all the wrapper drivers can share the same core
-DMA algorithm. This resolves the major discrepancies between the two
-core drivers, which relate to code conditional on the REAL_DMA and
-PSEUDO_DMA macros.
+Unfortunately, this can limit SCSI bus utilization. On systems without
+IDE, atari_scsi should issue SCSI commands whenever it can arbitrate for
+the bus. Make that possible by making can_queue configurable.
 
-After all the wrapper drivers agree on the DMA hook api, the core driver
-fork gets resolved. NCR5380.c is adopted by atari_scsi and sun3_scsi and
-atari_NCR5380.c is then deleted.
-
-Historically, the 5380 drivers suffered from over-use of conditional
-compilation, which caused the compile-time configuration space to explode,
-leading to core driver code that was practically untestable, unmaintainable
-and difficult to reason about. It also prevented driver modules from
-sharing object code.
-
-Along with REAL_DMA, REAL_DMA_POLL and PSEUDO_DMA, most of the remaining
-macros are also eradicated, such as CONFIG_SCSI_GENERIC_NCR53C400,
-SUPPORT_TAGS, DONT_USE_INTR, AUTOPROBE_IRQ and BIOSPARAM.
-
-Also in this patch series, some duplicated documentation is removed and
-the PDMA implementation in mac_scsi finally gets fixed.
-
-This patch series was tested by exercising the dmx3191d and mac_scsi modules
-on suitable hardware. Help with driver testing on ISA and Atari hardware
-is sought as I don't have any (likewise RiscPC ecards and Sun 3 hardware).
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- Documentation/scsi/g_NCR5380.txt       |   17 
- Documentation/scsi/scsi-parameters.txt |   11 
- drivers/scsi/Kconfig                   |   11 
- drivers/scsi/NCR5380.c                 |  661 ++++----
- drivers/scsi/NCR5380.h                 |  145 -
- drivers/scsi/arm/cumana_1.c            |   25 
- drivers/scsi/arm/oak.c                 |   22 
- drivers/scsi/atari_NCR5380.c           | 2676 ---------------------------------
- drivers/scsi/atari_scsi.c              |  142 -
- drivers/scsi/dmx3191d.c                |   10 
- drivers/scsi/dtc.c                     |   27 
- drivers/scsi/dtc.h                     |    7 
- drivers/scsi/g_NCR5380.c               |  143 -
- drivers/scsi/g_NCR5380.h               |   26 
- drivers/scsi/mac_scsi.c                |  239 +-
- drivers/scsi/pas16.c                   |   27 
- drivers/scsi/pas16.h                   |    5 
- drivers/scsi/sun3_scsi.c               |   48 
- drivers/scsi/t128.c                    |   19 
- drivers/scsi/t128.h                    |    7 
- 20 files changed, 636 insertions(+), 3632 deletions(-)
+ drivers/scsi/atari_scsi.c |   83 ++++++++++++----------------------------------
+ 1 file changed, 22 insertions(+), 61 deletions(-)
 
-
-
-
+Index: linux/drivers/scsi/atari_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_scsi.c	2016-03-14 15:26:55.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2016-03-14 15:26:56.000000000 +1100
+@@ -14,55 +14,23 @@
+  *
+  */
+ 
+-
+-/**************************************************************************/
+-/*                                                                        */
+-/* Notes for Falcon SCSI:                                                 */
+-/* ----------------------                                                 */
+-/*                                                                        */
+-/* Since the Falcon SCSI uses the ST-DMA chip, that is shared among       */
+-/* several device drivers, locking and unlocking the access to this       */
+-/* chip is required. But locking is not possible from an interrupt,       */
+-/* since it puts the process to sleep if the lock is not available.       */
+-/* This prevents "late" locking of the DMA chip, i.e. locking it just     */
+-/* before using it, since in case of disconnection-reconnection           */
+-/* commands, the DMA is started from the reselection interrupt.           */
+-/*                                                                        */
+-/* Two possible schemes for ST-DMA-locking would be:                      */
+-/*  1) The lock is taken for each command separately and disconnecting    */
+-/*     is forbidden (i.e. can_queue = 1).                                 */
+-/*  2) The DMA chip is locked when the first command comes in and         */
+-/*     released when the last command is finished and all queues are      */
+-/*     empty.                                                             */
+-/* The first alternative would result in bad performance, since the       */
+-/* interleaving of commands would not be used. The second is unfair to    */
+-/* other drivers using the ST-DMA, because the queues will seldom be      */
+-/* totally empty if there is a lot of disk traffic.                       */
+-/*                                                                        */
+-/* For this reasons I decided to employ a more elaborate scheme:          */
+-/*  - First, we give up the lock every time we can (for fairness), this    */
+-/*    means every time a command finishes and there are no other commands */
+-/*    on the disconnected queue.                                          */
+-/*  - If there are others waiting to lock the DMA chip, we stop           */
+-/*    issuing commands, i.e. moving them onto the issue queue.           */
+-/*    Because of that, the disconnected queue will run empty in a         */
+-/*    while. Instead we go to sleep on a 'fairness_queue'.                */
+-/*  - If the lock is released, all processes waiting on the fairness      */
+-/*    queue will be woken. The first of them tries to re-lock the DMA,     */
+-/*    the others wait for the first to finish this task. After that,      */
+-/*    they can all run on and do their commands...                        */
+-/* This sounds complicated (and it is it :-(), but it seems to be a       */
+-/* good compromise between fairness and performance: As long as no one     */
+-/* else wants to work with the ST-DMA chip, SCSI can go along as          */
+-/* usual. If now someone else comes, this behaviour is changed to a       */
+-/* "fairness mode": just already initiated commands are finished and      */
+-/* then the lock is released. The other one waiting will probably win     */
+-/* the race for locking the DMA, since it was waiting for longer. And     */
+-/* after it has finished, SCSI can go ahead again. Finally: I hope I      */
+-/* have not produced any deadlock possibilities!                          */
+-/*                                                                        */
+-/**************************************************************************/
+-
++/*
++ * Notes for Falcon SCSI DMA
++ *
++ * The 5380 device is one of several that all share the DMA chip. Hence
++ * "locking" and "unlocking" access to this chip is required.
++ *
++ * Two possible schemes for ST DMA acquisition by atari_scsi are:
++ * 1) The lock is taken for each command separately (i.e. can_queue == 1).
++ * 2) The lock is taken when the first command arrives and released
++ * when the last command is finished (i.e. can_queue > 1).
++ *
++ * The first alternative limits SCSI bus utilization, since interleaving
++ * commands is not possible. The second gives better performance but is
++ * unfair to other drivers needing to use the ST DMA chip. In order to
++ * allow the IDE and floppy drivers equal access to the ST DMA chip
++ * the default is can_queue == 1.
++ */
+ 
+ #include <linux/module.h>
+ #include <linux/types.h>
+@@ -441,6 +409,10 @@ static int falcon_get_lock(struct Scsi_H
+ 	if (IS_A_TT())
+ 		return 1;
+ 
++	if (stdma_is_locked_by(scsi_falcon_intr) &&
++	    instance->hostt->can_queue > 1)
++		return 1;
++
+ 	if (in_interrupt())
+ 		return stdma_try_lock(scsi_falcon_intr, instance);
+ 
+@@ -774,22 +746,11 @@ static int __init atari_scsi_probe(struc
+ 		atari_scsi_reg_write = atari_scsi_falcon_reg_write;
+ 	}
+ 
+-	/* The values for CMD_PER_LUN and CAN_QUEUE are somehow arbitrary.
+-	 * Higher values should work, too; try it!
+-	 * (But cmd_per_lun costs memory!)
+-	 *
+-	 * But there seems to be a bug somewhere that requires CAN_QUEUE to be
+-	 * 2*CMD_PER_LUN. At least on a TT, no spurious timeouts seen since
+-	 * changed CMD_PER_LUN...
+-	 *
+-	 * Note: The Falcon currently uses 8/1 setting due to unsolved problems
+-	 * with cmd_per_lun != 1
+-	 */
+ 	if (ATARIHW_PRESENT(TT_SCSI)) {
+ 		atari_scsi_template.can_queue    = 16;
+ 		atari_scsi_template.sg_tablesize = SG_ALL;
+ 	} else {
+-		atari_scsi_template.can_queue    = 8;
++		atari_scsi_template.can_queue    = 1;
+ 		atari_scsi_template.sg_tablesize = SG_NONE;
+ 	}
+ 
