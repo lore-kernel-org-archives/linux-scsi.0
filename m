@@ -1,13 +1,14 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 09/22] ncr5380: Adopt uniform DMA setup convention
-Date: Mon, 14 Mar 2016 15:27:09 +1100
-Message-ID: <20160314042702.976019738@telegraphics.com.au>
+Subject: [PATCH 05/22] ncr5380: Disable the DMA errata workaround flag by
+ default
+Date: Mon, 14 Mar 2016 15:27:05 +1100
+Message-ID: <20160314042701.956017683@telegraphics.com.au>
 References: <20160314042700.596192247@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline; filename=ncr5380-dma-setup-api
+Content-Disposition: inline; filename=ncr5380-FLAG_DMA_FIXUP
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,169 +22,180 @@ To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. P
 Cc: Sam Creasey <sammy@sammy.net>, Ondrej Zary <linux@rainbow-software.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Standardize the DMA setup hooks so that the DMA implementation in
-atari_NCR5380.c can be reconciled with pseudo DMA implementation in
-NCR5380.c.
+The only chip that needs the workarounds enabled is an early NMOS
+device. That means that the common case is to disable them.
 
-Calls to NCR5380_dma_recv_setup() and NCR5380_dma_send_setup() return
-a negative value on failure, zero on PDMA transfer success and a positive
-byte count for DMA setup success.
+Unfortunately the sense of the flag is such that it has to be set
+for the common case.
 
-This convention is not entirely new, but is now applied consistently.
+Rename the flag so that zero can be used to mean "no errata workarounds
+needed". This simplifies the code.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c      |   21 ++++++++++-----------
- drivers/scsi/arm/cumana_1.c |   10 ++++++++--
- drivers/scsi/arm/oak.c      |    4 ++--
- drivers/scsi/atari_scsi.c   |    3 ---
- 4 files changed, 20 insertions(+), 18 deletions(-)
+ drivers/scsi/NCR5380.c      |   14 +++++++-------
+ drivers/scsi/NCR5380.h      |    2 +-
+ drivers/scsi/arm/cumana_1.c |    2 +-
+ drivers/scsi/arm/oak.c      |    2 +-
+ drivers/scsi/dtc.c          |    2 +-
+ drivers/scsi/g_NCR5380.c    |    8 +-------
+ drivers/scsi/pas16.c        |    2 +-
+ drivers/scsi/t128.c         |    2 +-
+ 8 files changed, 14 insertions(+), 20 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:34.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:37.000000000 +1100
-@@ -1431,7 +1431,7 @@ static int NCR5380_transfer_dma(struct S
- 	register unsigned char p = *phase;
- 	register unsigned char *d = *data;
- 	unsigned char tmp;
--	int foo;
-+	int result;
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:27.000000000 +1100
+@@ -457,7 +457,7 @@ static void prepare_info(struct Scsi_Hos
+ 	         instance->base, instance->irq,
+ 	         instance->can_queue, instance->cmd_per_lun,
+ 	         instance->sg_tablesize, instance->this_id,
+-	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
++	         hostdata->flags & FLAG_DMA_FIXUP     ? "DMA_FIXUP "     : "",
+ 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
+ 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
+ #ifdef AUTOPROBE_IRQ
+@@ -1480,11 +1480,11 @@ static int NCR5380_transfer_dma(struct S
+ 	 * before the setting of DMA mode to after transfer of the last byte.
+ 	 */
  
- 	if ((tmp = (NCR5380_read(STATUS_REG) & PHASE_MASK)) != p) {
- 		*phase = tmp;
-@@ -1505,9 +1505,9 @@ static int NCR5380_transfer_dma(struct S
-  */
+-	if (hostdata->flags & FLAG_NO_DMA_FIXUP)
++	if (hostdata->flags & FLAG_DMA_FIXUP)
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY);
++	else
+ 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
+ 		                        MR_ENABLE_EOP_INTR);
+-	else
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY);
+ 
+ 	dprintk(NDEBUG_DMA, "scsi%d : mode reg = 0x%X\n", instance->host_no, NCR5380_read(MODE_REG));
+ 
+@@ -1540,8 +1540,8 @@ static int NCR5380_transfer_dma(struct S
  
  	if (p & SR_IO) {
--		foo = NCR5380_dma_recv_setup(instance, d,
-+		result = NCR5380_dma_recv_setup(instance, d,
- 			hostdata->flags & FLAG_DMA_FIXUP ? c - 1 : c);
--		if (!foo && (hostdata->flags & FLAG_DMA_FIXUP)) {
-+		if (!result && (hostdata->flags & FLAG_DMA_FIXUP)) {
+ 		foo = NCR5380_pread(instance, d,
+-			hostdata->flags & FLAG_NO_DMA_FIXUP ? c : c - 1);
+-		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
++			hostdata->flags & FLAG_DMA_FIXUP ? c - 1 : c);
++		if (!foo && (hostdata->flags & FLAG_DMA_FIXUP)) {
  			/*
  			 * The workaround was to transfer fewer bytes than we
  			 * intended to with the pseudo-DMA read function, wait for
-@@ -1525,19 +1525,19 @@ static int NCR5380_transfer_dma(struct S
- 
- 			if (NCR5380_poll_politely(instance, BUS_AND_STATUS_REG,
- 			                          BASR_DRQ, BASR_DRQ, HZ) < 0) {
--				foo = -1;
-+				result = -1;
- 				shost_printk(KERN_ERR, instance, "PDMA read: DRQ timeout\n");
- 			}
- 			if (NCR5380_poll_politely(instance, STATUS_REG,
- 			                          SR_REQ, 0, HZ) < 0) {
--				foo = -1;
-+				result = -1;
- 				shost_printk(KERN_ERR, instance, "PDMA read: !REQ timeout\n");
- 			}
- 			d[c - 1] = NCR5380_read(INPUT_DATA_REG);
+@@ -1571,7 +1571,7 @@ static int NCR5380_transfer_dma(struct S
  		}
  	} else {
--		foo = NCR5380_dma_send_setup(instance, d, c);
--		if (!foo && (hostdata->flags & FLAG_DMA_FIXUP)) {
-+		result = NCR5380_dma_send_setup(instance, d, c);
-+		if (!result && (hostdata->flags & FLAG_DMA_FIXUP)) {
+ 		foo = NCR5380_pwrite(instance, d, c);
+-		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
++		if (!foo && (hostdata->flags & FLAG_DMA_FIXUP)) {
  			/*
  			 * Wait for the last byte to be sent.  If REQ is being asserted for
  			 * the byte we're interested, we'll ACK it and it will go false.
-@@ -1545,7 +1545,7 @@ static int NCR5380_transfer_dma(struct S
- 			if (NCR5380_poll_politely2(instance,
- 			     BUS_AND_STATUS_REG, BASR_DRQ, BASR_DRQ,
- 			     BUS_AND_STATUS_REG, BASR_PHASE_MATCH, 0, HZ) < 0) {
--				foo = -1;
-+				result = -1;
- 				shost_printk(KERN_ERR, instance, "PDMA write: DRQ and phase timeout\n");
- 			}
- 		}
-@@ -1555,8 +1555,7 @@ static int NCR5380_transfer_dma(struct S
- 	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
- 	*data = d + c;
- 	*count = 0;
--	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
--	return foo;
-+	return result;
- }
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-03-14 15:26:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-03-14 15:26:27.000000000 +1100
+@@ -220,7 +220,7 @@
+ #define NO_IRQ		0
+ #endif
  
- /*
-@@ -1652,7 +1651,7 @@ static void NCR5380_information_transfer
- 				if (!cmd->device->borken)
- 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+-#define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
++#define FLAG_DMA_FIXUP			1	/* Use DMA errata workarounds */
+ #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
+ #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
+ #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2016-03-14 15:26:27.000000000 +1100
+@@ -229,7 +229,7 @@ found:
+ 		instance->base = addr;
+ 		((struct NCR5380_hostdata *)(instance)->hostdata)->base = base;
  
--				if (transfersize) {
-+				if (transfersize > 0) {
- 					len = transfersize;
- 					if (NCR5380_transfer_dma(instance, &phase,
- 					    &len, (unsigned char **)&cmd->SCp.ptr)) {
+-		if (NCR5380_init(instance, FLAG_NO_DMA_FIXUP))
++		if (NCR5380_init(instance, 0))
+ 			goto out_unregister;
+ 
+ 		NCR5380_maybe_reset_bus(instance);
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-14 15:26:22.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-14 15:26:27.000000000 +1100
+@@ -348,23 +348,17 @@ static int __init generic_NCR5380_detect
+ 		flags = 0;
+ 		switch (overrides[current_override].board) {
+ 		case BOARD_NCR5380:
+-			flags = FLAG_NO_PSEUDO_DMA;
+-			break;
+-		case BOARD_NCR53C400:
+-			flags = FLAG_NO_DMA_FIXUP;
++			flags = FLAG_NO_PSEUDO_DMA | FLAG_DMA_FIXUP;
+ 			break;
+ 		case BOARD_NCR53C400A:
+-			flags = FLAG_NO_DMA_FIXUP;
+ 			ports = ncr_53c400a_ports;
+ 			magic = ncr_53c400a_magic;
+ 			break;
+ 		case BOARD_HP_C2502:
+-			flags = FLAG_NO_DMA_FIXUP;
+ 			ports = ncr_53c400a_ports;
+ 			magic = hp_c2502_magic;
+ 			break;
+ 		case BOARD_DTC3181E:
+-			flags = FLAG_NO_DMA_FIXUP;
+ 			ports = dtc_3181e_ports;
+ 			magic = ncr_53c400a_magic;
+ 			break;
 Index: linux/drivers/scsi/arm/cumana_1.c
 ===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2016-03-14 15:26:34.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2016-03-14 15:26:37.000000000 +1100
-@@ -101,7 +101,10 @@ static inline int cumanascsi_pwrite(stru
-   }
- end:
-   writeb(priv(host)->ctrl | 0x40, priv(host)->base + CTRL);
--  return len;
-+
-+	if (len)
-+		return -1;
-+	return 0;
- }
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2016-03-14 15:26:27.000000000 +1100
+@@ -239,7 +239,7 @@ static int cumanascsi1_probe(struct expa
  
- static inline int cumanascsi_pread(struct Scsi_Host *host,
-@@ -163,7 +166,10 @@ static inline int cumanascsi_pread(struc
-   }
- end:
-   writeb(priv(host)->ctrl | 0x40, priv(host)->base + CTRL);
--  return len;
-+
-+	if (len)
-+		return -1;
-+	return 0;
- }
+ 	host->irq = ec->irq;
  
- static unsigned char cumanascsi_read(struct Scsi_Host *host, unsigned int reg)
+-	ret = NCR5380_init(host, 0);
++	ret = NCR5380_init(host, FLAG_DMA_FIXUP);
+ 	if (ret)
+ 		goto out_unmap;
+ 
 Index: linux/drivers/scsi/arm/oak.c
 ===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2016-03-14 15:26:34.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2016-03-14 15:26:37.000000000 +1100
-@@ -47,13 +47,13 @@ static inline int oakscsi_pwrite(struct
-   void __iomem *base = priv(instance)->base;
+--- linux.orig/drivers/scsi/arm/oak.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2016-03-14 15:26:27.000000000 +1100
+@@ -143,7 +143,7 @@ static int oakscsi_probe(struct expansio
+ 	host->irq = NO_IRQ;
+ 	host->n_io_port = 255;
  
- printk("writing %p len %d\n",addr, len);
--  if(!len) return -1;
+-	ret = NCR5380_init(host, 0);
++	ret = NCR5380_init(host, FLAG_DMA_FIXUP);
+ 	if (ret)
+ 		goto out_unmap;
  
-   while(1)
-   {
-     int status;
-     while (((status = readw(base + STAT)) & 0x100)==0);
-   }
-+  return 0;
- }
- 
- static inline int oakscsi_pread(struct Scsi_Host *instance,
-@@ -74,7 +74,7 @@ printk("reading %p len %d\n", addr, len)
-       if(status & 0x200 || !timeout)
-       {
-         printk("status = %08X\n", status);
--        return 1;
-+        return -1;
-       }
-     }
- 
-Index: linux/drivers/scsi/atari_scsi.c
+Index: linux/drivers/scsi/pas16.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2016-03-14 15:26:26.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2016-03-14 15:26:37.000000000 +1100
-@@ -525,9 +525,6 @@ static unsigned long atari_scsi_dma_setu
- 	 */
- 	dma_cache_maintenance(addr, count, dir);
+--- linux.orig/drivers/scsi/pas16.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2016-03-14 15:26:27.000000000 +1100
+@@ -377,7 +377,7 @@ static int __init pas16_detect(struct sc
+ 		
+ 	instance->io_port = io_port;
  
--	if (count == 0)
--		printk(KERN_NOTICE "SCSI warning: DMA programmed for 0 bytes !\n");
--
- 	if (IS_A_TT()) {
- 		tt_scsi_dma.dma_ctrl = dir;
- 		SCSI_DMA_WRITE_P(dma_addr, addr);
+-	if (NCR5380_init(instance, 0))
++	if (NCR5380_init(instance, FLAG_DMA_FIXUP))
+ 		goto out_unregister;
+ 
+ 	NCR5380_maybe_reset_bus(instance);
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2016-03-14 15:17:25.000000000 +1100
++++ linux/drivers/scsi/t128.c	2016-03-14 15:26:27.000000000 +1100
+@@ -210,7 +210,7 @@ found:
+ 	instance->base = base;
+ 	((struct NCR5380_hostdata *)instance->hostdata)->base = p;
+ 
+-	if (NCR5380_init(instance, 0))
++	if (NCR5380_init(instance, FLAG_DMA_FIXUP))
+ 		goto out_unregister;
+ 
+ 	NCR5380_maybe_reset_bus(instance);
