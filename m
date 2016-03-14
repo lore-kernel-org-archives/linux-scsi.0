@@ -1,65 +1,42 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: MAINTAINERS: use new email address for James Bottomley
-Date: Mon, 14 Mar 2016 15:39:42 -0500
-Message-ID: <56E7218E.7000903@linux.vnet.ibm.com>
-References: <1457984547.2374.50.camel@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH 2/3] lpfc: fix misleading indentation
+Date: Mon, 14 Mar 2016 23:27:31 +0100
+Message-ID: <20160314232731.0000404d@localhost>
+References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
+	<1457965789-3373916-3-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:45158 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754554AbcCNUjB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 16:39:01 -0400
-Received: from localhost
-	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Mon, 14 Mar 2016 14:39:00 -0600
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id EC5171FF0021
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2016 14:27:05 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2EKcudE39125236
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2016 13:38:56 -0700
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2EKcu5J006158
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2016 14:38:56 -0600
-In-Reply-To: <1457984547.2374.50.camel@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1457965789-3373916-3-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Sebastian Herbszt <herbszt@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
-
----
-Manoj Kumar
-
-On 3/14/2016 2:42 PM, James Bottomley wrote:
-> The @odin.com one has been bouncing for a while now, so replace with
-> new Employer email.
->
-> Signed-off-by: James Bottomley <jejb@linux.vnet.ibm.com>
->
+Arnd Bergmann wrote:
+> gcc-6 complains about the indentation of the lpfc_destroy_vport_work_array()
+> call in lpfc_online(), which clearly doesn't look right:
+> 
+> drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_online':
+> drivers/scsi/lpfc/lpfc_init.c:2880:3: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
+>    lpfc_destroy_vport_work_array(phba, vports);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/lpfc/lpfc_init.c:2863:2: note: ...this 'if' clause, but it is not
+>   if (vports != NULL)
+>   ^~
+> 
+> Looking at the patch that introduced this code, it's clear that the
+> behavior is correct and the indentation is wrong.
+> 
+> This fixes the indentation and adds curly braces around the previous
+> if() block for clarity, as that is most likely what caused the code
+> to be misindented in the first place.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 549e55cd2a1b ("[SCSI] lpfc 8.2.2 : Fix locking around HBA's port_list")
 > ---
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a7c4466..59f12c8 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9644,7 +9644,7 @@ F:	drivers/scsi/sg.c
->   F:	include/scsi/sg.h
->
->   SCSI SUBSYSTEM
-> -M:	"James E.J. Bottomley" <JBottomley@odin.com>
-> +M:	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
->   M:	"Martin K. Petersen" <martin.petersen@oracle.com>
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>  drivers/scsi/lpfc/lpfc_init.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 
+Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
