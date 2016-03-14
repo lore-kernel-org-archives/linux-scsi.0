@@ -1,63 +1,65 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 5/5] Leftshift returned scsi_cmnd error code 16 bits
-Date: Mon, 14 Mar 2016 16:17:09 -0400
-Message-ID: <1457986629.4188.32.camel@localhost.localdomain>
-References: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
-	 <1457979262-26571-5-git-send-email-satishkh@cisco.com>
-Reply-To: emilne@redhat.com
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: MAINTAINERS: use new email address for James Bottomley
+Date: Mon, 14 Mar 2016 15:39:42 -0500
+Message-ID: <56E7218E.7000903@linux.vnet.ibm.com>
+References: <1457984547.2374.50.camel@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47309 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932171AbcCNURK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2016 16:17:10 -0400
-In-Reply-To: <1457979262-26571-5-git-send-email-satishkh@cisco.com>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:45158 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754554AbcCNUjB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 16:39:01 -0400
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
+	Mon, 14 Mar 2016 14:39:00 -0600
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id EC5171FF0021
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2016 14:27:05 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2EKcudE39125236
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2016 13:38:56 -0700
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2EKcu5J006158
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2016 14:38:56 -0600
+In-Reply-To: <1457984547.2374.50.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2016-03-14 at 11:14 -0700, Satish Kharat wrote:
-> The the scsi_cmnd error code is expected to be in the left 16 bits
-> of the result field. Change is to correct this.
-> 
-> Signed-off-by: Satish Kharat <satishkh@cisco.com>
+Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
+
+---
+Manoj Kumar
+
+On 3/14/2016 2:42 PM, James Bottomley wrote:
+> The @odin.com one has been bouncing for a while now, so replace with
+> new Employer email.
+>
+> Signed-off-by: James Bottomley <jejb@linux.vnet.ibm.com>
+>
 > ---
->  drivers/scsi/fnic/fnic.h      | 2 +-
->  drivers/scsi/fnic/fnic_scsi.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-> index 35264c7..e4e22f1 100644
-> --- a/drivers/scsi/fnic/fnic.h
-> +++ b/drivers/scsi/fnic/fnic.h
-> @@ -39,7 +39,7 @@
->  
->  #define DRV_NAME		"fnic"
->  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
-> -#define DRV_VERSION		"1.6.0.22"
-> +#define DRV_VERSION		"1.6.0.24"
->  #define PFX			DRV_NAME ": "
->  #define DFX                     DRV_NAME "%d: "
->  
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-> index 8492143..92a4ca3 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -461,7 +461,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
->  			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
->  				"returning DID_NO_CONNECT for IO as rport is removed\n");
->  			atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
-> -			sc->result = DID_NO_CONNECT;
-> +			sc->result = DID_NO_CONNECT<<16;
->  			done(sc);
->  			return 0;
->  		}
-
-Should just fix patch 3/5 instead.
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index a7c4466..59f12c8 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9644,7 +9644,7 @@ F:	drivers/scsi/sg.c
+>   F:	include/scsi/sg.h
+>
+>   SCSI SUBSYSTEM
+> -M:	"James E.J. Bottomley" <JBottomley@odin.com>
+> +M:	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+>   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
+>   M:	"Martin K. Petersen" <martin.petersen@oracle.com>
+>   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
