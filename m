@@ -1,47 +1,59 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: disable automatic target scan
-Date: Mon, 14 Mar 2016 09:08:27 +0100
-Message-ID: <20160314080827.GO16624@c203.arch.suse.de>
-References: <1457710420-37769-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2] scsi_transport_sas: add 'scsi_target_id' sysfs attribute
+Date: Mon, 14 Mar 2016 10:43:08 +0100
+Message-ID: <1457948588-14558-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58115 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41730 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933735AbcCNII3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2016 04:08:29 -0400
-Content-Disposition: inline
-In-Reply-To: <1457710420-37769-1-git-send-email-hare@suse.de>
+	id S1750976AbcCNJnO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2016 05:43:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Manoj Kumar <manoj@linux.vnet.ibm.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Fri, Mar 11, 2016 at 04:33:40PM +0100, Hannes Reinecke wrote:
-> On larger installations it is useful to disable automatic LUN
-> scanning, and only add the required LUNs via udev rules.
-> This can speed up bootup dramatically.
->=20
-> This patch introduces a scan_type 'disabled', which work like
-> 'none', but can be overriden by setting the 'rescan' value
-> from scsi_scan_target to '2'.
-> And it updates all relevant callers to set the 'rescan' value
-> to '2' if invoked via the 'scan' option in sysfs.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+There is no way to detect the scsi_target_id for any given SAS
+remote port, so add a new sysfs attribute 'scsi_target_id'.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_sas_internal.h  | 2 +-
+ drivers/scsi/scsi_transport_sas.c | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_sas_internal.h b/drivers/scsi/scsi_sas_internal.h
+index 6266a5d..e659912 100644
+--- a/drivers/scsi/scsi_sas_internal.h
++++ b/drivers/scsi/scsi_sas_internal.h
+@@ -4,7 +4,7 @@
+ #define SAS_HOST_ATTRS		0
+ #define SAS_PHY_ATTRS		17
+ #define SAS_PORT_ATTRS		1
+-#define SAS_RPORT_ATTRS		7
++#define SAS_RPORT_ATTRS		8
+ #define SAS_END_DEV_ATTRS	5
+ #define SAS_EXPANDER_ATTRS	7
+ 
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 80520e2..b6f958193 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1286,6 +1286,7 @@ sas_rphy_protocol_attr(identify.target_port_protocols, target_port_protocols);
+ sas_rphy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
+ 		unsigned long long);
+ sas_rphy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
++sas_rphy_simple_attr(scsi_target_id, scsi_target_id, "%d\n", u32);
+ 
+ /* only need 8 bytes of data plus header (4 or 8) */
+ #define BUF_SIZE 64
+@@ -1886,6 +1887,7 @@ sas_attach_transport(struct sas_function_template *ft)
+ 	SETUP_RPORT_ATTRIBUTE(rphy_device_type);
+ 	SETUP_RPORT_ATTRIBUTE(rphy_sas_address);
+ 	SETUP_RPORT_ATTRIBUTE(rphy_phy_identifier);
++	SETUP_RPORT_ATTRIBUTE(rphy_scsi_target_id);
+ 	SETUP_OPTIONAL_RPORT_ATTRIBUTE(rphy_enclosure_identifier,
+ 				       get_enclosure_identifier);
+ 	SETUP_OPTIONAL_RPORT_ATTRIBUTE(rphy_bay_identifier,
+-- 
+1.8.5.6
+
