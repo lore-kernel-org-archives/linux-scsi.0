@@ -1,114 +1,138 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 07/22] ncr5380: Remove BOARD_REQUIRES_NO_DELAY macro
-Date: Mon, 14 Mar 2016 15:27:07 +1100
-Message-ID: <20160314042702.466021574@telegraphics.com.au>
+Subject: [PATCH 04/22] atari_NCR5380: Remove DMA_MIN_SIZE macro
+Date: Mon, 14 Mar 2016 15:27:04 +1100
+Message-ID: <20160314042701.626031027@telegraphics.com.au>
 References: <20160314042700.596192247@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-io_recovery_delay
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52648 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754663AbcCNEmN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2016 00:42:13 -0400
+Content-Disposition: inline; filename=atari_NCR5380-remove-DMA_MIN_SIZE-macro
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
-List-Id: linux-scsi@vger.kernel.org
 
-The io_recovery_delay macro is intended to insert a microsecond delay
-between the chip register accesses that begin a DMA operation. This
-is reportedly needed for some ISA boards.
+Only the atari_scsi and sun3_scsi drivers define DMA_MIN_SIZE.
+Both drivers also define NCR5380_dma_xfer_len, which means
+DMA_MIN_SIZE is redundant.
 
-Reverse the sense of the macro test so that in the common case,
-where no delay is required, drivers need not define the macro.
+This removes another discrepancy between the two core drivers.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c   |   18 ++++++++----------
- drivers/scsi/dtc.h       |    2 ++
- drivers/scsi/g_NCR5380.h |    2 ++
- drivers/scsi/t128.h      |    2 ++
- 4 files changed, 14 insertions(+), 10 deletions(-)
+ drivers/scsi/atari_NCR5380.c |   16 ++++++++--------
+ drivers/scsi/atari_scsi.c    |    4 +++-
+ drivers/scsi/sun3_scsi.c     |   16 ++++++----------
+ 3 files changed, 17 insertions(+), 19 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-14 15:26:29.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-14 15:26:32.000000000 +1100
-@@ -39,12 +39,6 @@
-  * tagged queueing)
-  */
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-03-14 15:26:23.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-03-14 15:26:26.000000000 +1100
+@@ -1857,12 +1857,11 @@ static void NCR5380_information_transfer
+ 					d = cmd->SCp.ptr;
+ 				}
+ 				/* this command setup for dma yet? */
+-				if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != cmd)) {
+-					if (cmd->request->cmd_type == REQ_TYPE_FS) {
+-						sun3scsi_dma_setup(instance, d, count,
+-						                   rq_data_dir(cmd->request));
+-						sun3_dma_setup_done = cmd;
+-					}
++				if (sun3_dma_setup_done != cmd &&
++				    sun3scsi_dma_xfer_len(count, cmd) > 0) {
++					sun3scsi_dma_setup(instance, d, count,
++					                   rq_data_dir(cmd->request));
++					sun3_dma_setup_done = cmd;
+ 				}
+ #ifdef SUN3_SCSI_VME
+ 				dregs->csr |= CSR_INTR;
+@@ -1927,7 +1926,7 @@ static void NCR5380_information_transfer
+ #endif
+ 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
  
--#ifdef BOARD_REQUIRES_NO_DELAY
--#define io_recovery_delay(x)
--#else
--#define io_recovery_delay(x)	udelay(x)
--#endif
+-				if (transfersize >= DMA_MIN_SIZE) {
++				if (transfersize > 0) {
+ 					len = transfersize;
+ 					cmd->SCp.phase = phase;
+ 					if (NCR5380_transfer_dma(instance, &phase,
+@@ -2366,7 +2365,8 @@ static void NCR5380_reselect(struct Scsi
+ 			d = tmp->SCp.ptr;
+ 		}
+ 		/* setup this command for dma if not already */
+-		if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != tmp)) {
++		if (sun3_dma_setup_done != tmp &&
++		    sun3scsi_dma_xfer_len(count, tmp) > 0) {
+ 			sun3scsi_dma_setup(instance, d, count,
+ 			                   rq_data_dir(tmp->request));
+ 			sun3_dma_setup_done = tmp;
+Index: linux/drivers/scsi/atari_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_scsi.c	2016-03-14 15:26:23.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2016-03-14 15:26:26.000000000 +1100
+@@ -87,7 +87,6 @@
+ 
+ #define SUPPORT_TAGS
+ #define MAX_TAGS                        32
+-#define DMA_MIN_SIZE                    32
+ 
+ #define NCR5380_implementation_fields   /* none */
+ 
+@@ -605,6 +604,9 @@ static unsigned long atari_dma_xfer_len(
+ {
+ 	unsigned long	possible_len, limit;
+ 
++	if (wanted_len < 32)
++		return 0;
++
+ 	if (IS_A_TT())
+ 		/* TT SCSI DMA can transfer arbitrary #bytes */
+ 		return wanted_len;
+Index: linux/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.c	2016-03-14 15:26:23.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2016-03-14 15:26:26.000000000 +1100
+@@ -39,9 +39,6 @@
+ /* Definitions for the core NCR5380 driver. */
+ 
+ /* #define SUPPORT_TAGS */
+-/* minimum number of bytes to do dma on */
+-#define DMA_MIN_SIZE                    129
 -
- /*
-  * Design
-  *
-@@ -150,6 +144,10 @@
-  * possible) function may be used.
-  */
+ /* #define MAX_TAGS                     32 */
  
-+#ifndef NCR5380_io_delay
-+#define NCR5380_io_delay(x)
-+#endif
+ #define NCR5380_implementation_fields   /* none */
+@@ -61,7 +58,7 @@
+ #define NCR5380_dma_residual(instance) \
+         sun3scsi_dma_residual(instance)
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+-        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
++        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd)
+ 
+ #define NCR5380_acquire_dma_irq(instance)    (1)
+ #define NCR5380_release_dma_irq(instance)
+@@ -262,14 +259,13 @@ static inline unsigned long sun3scsi_dma
+ 	return last_residual;
+ }
+ 
+-static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted,
+-						  struct scsi_cmnd *cmd,
+-						  int write_flag)
++static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted_len,
++                                                  struct scsi_cmnd *cmd)
+ {
+-	if (cmd->request->cmd_type == REQ_TYPE_FS)
+- 		return wanted;
+-	else
++	if (wanted_len < 129 || cmd->request->cmd_type != REQ_TYPE_FS)
+ 		return 0;
 +
- static int do_abort(struct Scsi_Host *);
- static void do_reset(struct Scsi_Host *);
++	return wanted_len;
+ }
  
-@@ -1468,14 +1466,14 @@ static int NCR5380_transfer_dma(struct S
- 	 */
- 
- 	if (p & SR_IO) {
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 		NCR5380_write(START_DMA_INITIATOR_RECEIVE_REG, 0);
- 	} else {
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 		NCR5380_write(START_DMA_SEND_REG, 0);
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 	}
- 
- /*
-Index: linux/drivers/scsi/dtc.h
-===================================================================
---- linux.orig/drivers/scsi/dtc.h	2016-03-14 15:26:29.000000000 +1100
-+++ linux/drivers/scsi/dtc.h	2016-03-14 15:26:32.000000000 +1100
-@@ -28,6 +28,8 @@
- #define NCR5380_bus_reset		dtc_bus_reset
- #define NCR5380_info			dtc_info
- 
-+#define NCR5380_io_delay(x)		udelay(x)
-+
- /* 15 12 11 10
-    1001 1100 0000 0000 */
- 
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-14 15:26:29.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-03-14 15:26:32.000000000 +1100
-@@ -71,6 +71,8 @@
- #define NCR5380_pwrite generic_NCR5380_pwrite
- #define NCR5380_info generic_NCR5380_info
- 
-+#define NCR5380_io_delay(x)		udelay(x)
-+
- #define BOARD_NCR5380	0
- #define BOARD_NCR53C400	1
- #define BOARD_NCR53C400A 2
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2016-03-14 15:26:29.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2016-03-14 15:26:32.000000000 +1100
-@@ -84,6 +84,8 @@
- #define NCR5380_bus_reset t128_bus_reset
- #define NCR5380_info t128_info
- 
-+#define NCR5380_io_delay(x)		udelay(x)
-+
- /* 15 14 12 10 7 5 3
-    1101 0100 1010 1000 */
- 
+ static inline int sun3scsi_dma_start(unsigned long count, unsigned char *data)
+
+
