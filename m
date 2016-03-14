@@ -1,54 +1,47 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/3] aacraid: add missing curly braces
-Date: Mon, 14 Mar 2016 15:29:43 +0100
-Message-ID: <1457965789-3373916-2-git-send-email-arnd@arndb.de>
-References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Johannes Thumshirn <jthumshirn@suse.de>, Tomas Henzl <thenzl@redhat.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>, Fengguang Wu <fengguang.wu@intel.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] Avoid that long log lines are truncated
+Date: Mon, 14 Mar 2016 15:32:36 +0100
+Message-ID: <20160314143236.GC14621@c203.arch.suse.de>
+References: <56E6C88B.6010201@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52154 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932705AbcCNOck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2016 10:32:40 -0400
+Content-Disposition: inline
+In-Reply-To: <56E6C88B.6010201@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Robert Elliott <Elliott@hp.com>, "Ewan D. Milne" <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-gcc-6 warns about obviously wrong indentation for newly added
-code in aac_slave_configure():
+On Mon, Mar 14, 2016 at 07:19:55AM -0700, Bart Van Assche wrote:
+> While testing the latest version of the SRP initiator and target
+> drivers I encountered the following message in the kernel log:
+>=20
+> sd 16:0:0:0: Warning! Received an indication that the LUN assignments=
+ on this target have changed. The Linux SCSI layer does not automatical
+>=20
+> This is a truncated message. Avoid that such truncation happens
+> by increasing the SCSI_LOG_BUFSIZE constant.
+>=20
+> Fixes: ded85c193a39 (scsi: Implement per-cpu logging buffer)
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 
-drivers/scsi/aacraid/linit.c: In function 'aac_slave_configure':
-drivers/scsi/aacraid/linit.c:458:3: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
-   sdev->tagged_supported = 1;
-   ^~~~
-drivers/scsi/aacraid/linit.c:455:4: note: ...this 'else' clause, but it is not
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-gcc is correct, and evidently this was meant to be within the curly
-braces that should have been there to start with. This patch adds
-them, which avoids the warning and makes it clear what was intended
-here.
-
-Nothing changes in behavior because in the 'if' block, the
-sdev->tagged_supported flag is known to be set already.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 6bf3b630d0a7 ("aacraid: SCSI blk tag support")
----
- drivers/scsi/aacraid/linit.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 21a67ed047e8..ff6caab8cc8b 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -452,10 +452,11 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 		else if (depth < 2)
- 			depth = 2;
- 		scsi_change_queue_depth(sdev, depth);
--	} else
-+	} else {
- 		scsi_change_queue_depth(sdev, 1);
- 
- 		sdev->tagged_supported = 1;
-+	}
- 
- 	return 0;
- }
--- 
-2.7.0
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
