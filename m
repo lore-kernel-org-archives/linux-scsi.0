@@ -1,25 +1,28 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] Cleanup the I/O that has timed out and is used to
- issue LUN reset
-Date: Tue, 15 Mar 2016 02:53:27 -0700
-Message-ID: <20160315095327.GB1957@infradead.org>
-References: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
- <1457979262-26571-2-git-send-email-satishkh@cisco.com>
+From: Ariel Elior <Ariel.Elior@qlogic.com>
+Subject: RE: bnx2x: bnx2fc: FC-NPIV table with bad length
+Date: Tue, 15 Mar 2016 10:03:21 +0000
+Message-ID: <CY1PR11MB082841455328A977001427598A890@CY1PR11MB0828.namprd11.prod.outlook.com>
+References: <56E7746D.6030606@hpe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.137.202.9] ([198.137.202.9]:54953 "EHLO
-	bombadil.infradead.org" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S965454AbcCOJyQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2016 05:54:16 -0400
-Content-Disposition: inline
-In-Reply-To: <1457979262-26571-2-git-send-email-satishkh@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56E7746D.6030606@hpe.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Patterson <andrew.patterson@hpe.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>
-Cc: linux-scsi@vger.kernel.org
 
-
-The right fix is to get rid of fnic_clean_pending_aborts entirely.
-It's not the low level drivers business to clean up pending commands.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmRyZXcgUGF0dGVyc29uIFtt
+YWlsdG86YW5kcmV3LnBhdHRlcnNvbkBocGUuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBNYXJjaCAx
+NSwgMjAxNiA0OjMzIEFNDQo+IFRvOiBBcmllbCBFbGlvciA8QXJpZWwuRWxpb3JAcWxvZ2ljLmNv
+bT4NCj4gQ2M6IGxpbnV4LXNjc2kgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgbGludXgt
+a2VybmVsIDxsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZz4NCj4gU3ViamVjdDogYm54
+Mng6IGJueDJmYzogRkMtTlBJViB0YWJsZSB3aXRoIGJhZCBsZW5ndGgNCj4gDQo+IA0KPiBJIHNl
+ZSB0aGUgZm9sbG93aW5nIGVycm9yIHdoZW4gYm9vdGluZyBhIDQuNC4xIGtlcm5lbCBmcm9tIHRo
+ZQ0KPiBibngyeC9ibngyZmMgZHJpdmVyczoNCj4gDQo+IGJueDJ4OiBbYm54MnhfZ2V0X2ZjX25w
+aXY6MTQ4NDMoZXRoMildRkMtTlBJViB0YWJsZSB3aXRoIGJhZCBsZW5ndGggMHgwODAwMDA0MA0K
+PiANCg0KSGkgQW5kcmV3LA0KVGhhbmtzIGZvciB5b3VyIHJlcG9ydC4NCldlIGFyZSBhd2FyZSBv
+ZiB0aGlzIGlzc3VlIGFuZCBhIGZpeCBpcyBwbGFubmVkIHRvIGJlIHNlbnQgdXBzdHJlYW0gaW4g
+dGhlIG5leHQgZmV3IGRheXMuDQpUaGFua3MsDQpBcmllbA0K
