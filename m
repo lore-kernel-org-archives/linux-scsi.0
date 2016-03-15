@@ -1,84 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 20/22] atari_scsi: Set a reasonable default for
- cmd_per_lun
-Date: Tue, 15 Mar 2016 07:34:01 -0700
-Message-ID: <1458052441.2375.18.camel@HansenPartnership.com>
-References: <20160314042700.596192247@telegraphics.com.au>
-	 <20160314042705.846189331@telegraphics.com.au> <56E66CF5.2070200@suse.de>
-	 <alpine.LNX.2.00.1603151403150.20294@nippy.intranet>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi: vpd pages are mandatory for SPC-2
+Date: Tue, 15 Mar 2016 18:19:21 +0100
+Message-ID: <56E84419.3040109@interlog.com>
+References: <1457703965-71028-1-git-send-email-hare@suse.de>
+ <yq137rshbrr.fsf@sermon.lab.mkp.net> <56E7B9AA.3020302@suse.de>
+ <20160315074232.GA10944@lst.de>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43452 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750874AbcCOOeF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2016 10:34:05 -0400
-In-Reply-To: <alpine.LNX.2.00.1603151403150.20294@nippy.intranet>
+Received: from smtp.infotech.no ([82.134.31.41]:45046 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934740AbcCORT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2016 13:19:26 -0400
+In-Reply-To: <20160315074232.GA10944@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+To: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.com>
 
-On Tue, 2016-03-15 at 14:27 +1100, Finn Thain wrote:
-> On Mon, 14 Mar 2016, Hannes Reinecke wrote:
-> 
-> > On 03/14/2016 05:27 AM, Finn Thain wrote:
-> > > This setting does not need to be conditional on Atari ST or TT.
-> > > 
-> > > Without TCQ support, cmd_per_lun == 2 is probably reasonable...
-> > > 
-> > > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> > > 
-> > > ---
-> > >  drivers/scsi/atari_scsi.c |    3 +--
-> > >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > > 
-> > > Index: linux/drivers/scsi/atari_scsi.c
-> > >
-> ===================================================================
-> > > --- linux.orig/drivers/scsi/atari_scsi.c    2016-03-14
-> 15:26:45.000000000 +1100
-> > > +++ linux/drivers/scsi/atari_scsi.c 2016-03-14 15:26:55.000000000
-> +1100
-> > > @@ -750,6 +750,7 @@ static struct scsi_host_template atari_s
-> > >     .eh_abort_handler       = atari_scsi_abort,
-> > >     .eh_bus_reset_handler   = atari_scsi_bus_reset,
-> > >     .this_id                = 7,
-> > > +   .cmd_per_lun            = 2,
-> > >     .use_clustering         = DISABLE_CLUSTERING,
-> > >     .cmd_size               = NCR5380_CMD_SIZE,
-> > >  };
-> > _2_ ? Are you being overly cheeky here?
-> > I sincerely doubt the driver is capable of submitting two
-> > simultaneous commands ...
-> 
-> Right. The LLD has LU busy flags to prevent a LU from being issued 
-> more than one command.
-> 
-> > Care to explain?
-> 
-> It seemed harmless and it is consistent with the all of the other 
-> 5380 drivers.
-> 
-> I don't know why it was done that way. Perhaps it was done to create 
-> a pipeline. That is, to keep a small number of commands in the LLD
-> issue queue so that the NCR5380_main() work item does not have to 
-> terminate and then get requeued needlessly.
+On 16-03-15 08:42 AM, Christoph Hellwig wrote:
+> On Tue, Mar 15, 2016 at 08:28:42AM +0100, Hannes Reinecke wrote:
+>> But it feels even sillier having to whitelist every
+>> standards-conformant device here; I certainly was when I figured
+>> that EMC Clariion won't work properly without this patch.
+>>
+>> And the idea was to mark off _misbehaving_ drives, not the other way
+>> round.
+>
+> It's the idea, but it has to prove workable as well in the end.
+>
+> That being said I'd prefer to allow Hannes patch in and see what
+> the fallout is.
 
-You youngsters nowadays have no grasp of history.
+I don't have many drafts archived for SPC-2 but the two that I do have:
+    spc2r18.pdf [20000521]
+    spc2r20.pdf [20010718]
 
-It was done this way so that a fully prepared command was waiting on
-the queue rather than having to prepare it in what was then
-elv_next_request().  The theory was it was a sort of NAPI because as
-soon as the driver called the done() function, block would send us the
-next request and we could poke it into the card with the minimum CPU
-expenditure (it was all done at softirq level).
+indicate that those two VPD pages were made mandatory right at the
+end of the draft cycle for SPC-2. spc2r20.pdf was the last draft
+prior to the standard and it does show them as mandatory in table 185
+on page 218. The corresponding table in spc2r18.pdf does not have
+a column indicating whether the listed VPD pages are mandatory or
+not (or words that I can find in the description of VPD pages 0x0
+and 0x83 to suggest they are mandatory).
 
-Of course, block doesn't function remotely like this today, but
-historically that's why most old SCSI drivers set this parameter to one
-more than the number of commands they can take.
-
-James
-
+Doug Gilbert
