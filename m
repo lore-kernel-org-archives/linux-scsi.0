@@ -1,31 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: vpd pages are mandatory for SPC-2
-Date: Tue, 15 Mar 2016 08:42:32 +0100
-Message-ID: <20160315074232.GA10944@lst.de>
-References: <1457703965-71028-1-git-send-email-hare@suse.de> <yq137rshbrr.fsf@sermon.lab.mkp.net> <56E7B9AA.3020302@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/11] scsi/fcoe: lock online CPUs in fcoe_percpu_clean()
+Date: Tue, 15 Mar 2016 01:19:40 -0700
+Message-ID: <20160315081940.GB9136@infradead.org>
+References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
+ <1457710143-29182-2-git-send-email-bigeasy@linutronix.de>
+ <20160311161704.GA5083@infradead.org>
+ <56E2F30F.5030108@linutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44896 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934114AbcCOHmf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2016 03:42:35 -0400
+Received: from [198.137.202.9] ([198.137.202.9]:59270 "EHLO
+	bombadil.infradead.org" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S932686AbcCOIU3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2016 04:20:29 -0400
 Content-Disposition: inline
-In-Reply-To: <56E7B9AA.3020302@suse.de>
+In-Reply-To: <56E2F30F.5030108@linutronix.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rt@linutronix.de, Vasu Dev <vasu.dev@intel.com>, fcoe-devel@open-fcoe.org
 
-On Tue, Mar 15, 2016 at 08:28:42AM +0100, Hannes Reinecke wrote:
-> But it feels even sillier having to whitelist every
-> standards-conformant device here; I certainly was when I figured
-> that EMC Clariion won't work properly without this patch.
-> 
-> And the idea was to mark off _misbehaving_ drives, not the other way
-> round.
+On Fri, Mar 11, 2016 at 05:32:15PM +0100, Sebastian Andrzej Siewior wrote:
+> alloc_workqueue() in setup and then queue_work_on(cpu, , item)? item
+> should be struct work_struct but all I have is a skb. Is there an easy
+> way to get this attached?
 
-It's the idea, but it has to prove workable as well in the end.
-
-That being said I'd prefer to allow Hannes patch in and see what
-the fallout is. 
+Good question.  There is skb->cb, but it looks like it doesn't have
+space for an additional work_item in the fcoe case.  Maybe have
+a per-cpu work_struct and keep all the list handling as-is for now?
