@@ -1,49 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi: vpd pages are mandatory for SPC-2
-Date: Tue, 15 Mar 2016 18:19:21 +0100
-Message-ID: <56E84419.3040109@interlog.com>
-References: <1457703965-71028-1-git-send-email-hare@suse.de>
- <yq137rshbrr.fsf@sermon.lab.mkp.net> <56E7B9AA.3020302@suse.de>
- <20160315074232.GA10944@lst.de>
-Reply-To: dgilbert@interlog.com
+From: Yuval Mintz <Yuval.Mintz@qlogic.com>
+Subject: [PATCH net] bnx2x: Prevent false warning for lack of FC NPIV
+Date: Tue, 15 Mar 2016 19:52:04 +0200
+Message-ID: <1458064324-16487-1-git-send-email-Yuval.Mintz@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:45046 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934740AbcCORT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2016 13:19:26 -0400
-In-Reply-To: <20160315074232.GA10944@lst.de>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:16506 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932212AbcCORw1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2016 13:52:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.com>
+To: davem@davemloft.net, netdev@vger.kernel.org
+Cc: Ariel.Elior@qlogic.com, linux-scsi@vger.kernel.org, andrew.patterson@hpe.com, Yuval Mintz <Yuval.Mintz@qlogic.com>
 
-On 16-03-15 08:42 AM, Christoph Hellwig wrote:
-> On Tue, Mar 15, 2016 at 08:28:42AM +0100, Hannes Reinecke wrote:
->> But it feels even sillier having to whitelist every
->> standards-conformant device here; I certainly was when I figured
->> that EMC Clariion won't work properly without this patch.
->>
->> And the idea was to mark off _misbehaving_ drives, not the other way
->> round.
->
-> It's the idea, but it has to prove workable as well in the end.
->
-> That being said I'd prefer to allow Hannes patch in and see what
-> the fallout is.
+Not all adapters have FC-NPIV configured. If bnx2fc is used with such an
+adapter, driver would read irrelevant data from the the nvram and log
+"FC-NPIV table with bad length..." In system logs.
 
-I don't have many drafts archived for SPC-2 but the two that I do have:
-    spc2r18.pdf [20000521]
-    spc2r20.pdf [20010718]
+Simply accept that reading '0' as the feature offset in nvram indicates
+the feature isn't there and return.
 
-indicate that those two VPD pages were made mandatory right at the
-end of the draft cycle for SPC-2. spc2r20.pdf was the last draft
-prior to the standard and it does show them as mandatory in table 185
-on page 218. The corresponding table in spc2r18.pdf does not have
-a column indicating whether the listed VPD pages are mandatory or
-not (or words that I can find in the description of VPD pages 0x0
-and 0x83 to suggest they are mandatory).
+Reported-by: Andrew Patterson <andrew.patterson@hpe.com>
+Signed-off-by: Yuval Mintz <Yuval.Mintz@qlogic.com>
+---
+Hi Dave,
 
-Doug Gilbert
+Please consider applying this to `net'.
+
+Thanks,
+Yuval
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index 2bf9c87..32652ad 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -14814,6 +14814,10 @@ static int bnx2x_get_fc_npiv(struct net_device *dev,
+ 	}
+ 
+ 	offset = SHMEM2_RD(bp, fc_npiv_nvram_tbl_addr[BP_PORT(bp)]);
++	if (!offset) {
++		DP(BNX2X_MSG_MCP, "No FC-NPIV in NVRAM\n");
++		goto out;
++	}
+ 	DP(BNX2X_MSG_MCP, "Offset of FC-NPIV in NVRAM: %08x\n", offset);
+ 
+ 	/* Read the table contents from nvram */
+-- 
+1.9.3
+
