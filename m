@@ -1,55 +1,40 @@
-From: Yuval Mintz <Yuval.Mintz@qlogic.com>
-Subject: [PATCH net] bnx2x: Prevent false warning for lack of FC NPIV
-Date: Tue, 15 Mar 2016 19:52:04 +0200
-Message-ID: <1458064324-16487-1-git-send-email-Yuval.Mintz@qlogic.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Support manual scan of FC hosts on
+ Hyper-V
+Date: Tue, 15 Mar 2016 17:25:02 -0400
+Message-ID: <yq1twk7e8nl.fsf@sermon.lab.mkp.net>
+References: <1457819568-6586-1-git-send-email-kys@microsoft.com>
+ <20160315134009.GA3595@infradead.org>
+ <SN2PR03MB21423A42522A21C145896431A0890@SN2PR03MB2142.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:16506 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932212AbcCORw1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2016 13:52:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <SN2PR03MB21423A42522A21C145896431A0890@SN2PR03MB2142.namprd03.prod.outlook.com>
+ (KY Srinivasan's message of "Tue, 15 Mar 2016 14:27:53 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: davem@davemloft.net, netdev@vger.kernel.org
-Cc: Ariel.Elior@qlogic.com, linux-scsi@vger.kernel.org, andrew.patterson@hpe.com, Yuval Mintz <Yuval.Mintz@qlogic.com>
 
-Not all adapters have FC-NPIV configured. If bnx2fc is used with such an
-adapter, driver would read irrelevant data from the the nvram and log
-"FC-NPIV table with bad length..." In system logs.
+>>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
 
-Simply accept that reading '0' as the feature offset in nvram indicates
-the feature isn't there and return.
+KY> Till recently I had not. However, we do support publishing wwn in
+KY> the guest and some customers wanted this. That is the reason I am
+KY> attaching FC transport and working through the issues. With this
+KY> change, I now have wwn names published in the guest and I can also
+KY> issue manual scan.
 
-Reported-by: Andrew Patterson <andrew.patterson@hpe.com>
-Signed-off-by: Yuval Mintz <Yuval.Mintz@qlogic.com>
----
-Hi Dave,
+Why does it have to look like FC? Will a device identification VPD page
+not do the trick?
 
-Please consider applying this to `net'.
-
-Thanks,
-Yuval
----
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-index 2bf9c87..32652ad 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-@@ -14814,6 +14814,10 @@ static int bnx2x_get_fc_npiv(struct net_device *dev,
- 	}
- 
- 	offset = SHMEM2_RD(bp, fc_npiv_nvram_tbl_addr[BP_PORT(bp)]);
-+	if (!offset) {
-+		DP(BNX2X_MSG_MCP, "No FC-NPIV in NVRAM\n");
-+		goto out;
-+	}
- 	DP(BNX2X_MSG_MCP, "Offset of FC-NPIV in NVRAM: %08x\n", offset);
- 
- 	/* Read the table contents from nvram */
 -- 
-1.9.3
-
+Martin K. Petersen	Oracle Linux Engineering
