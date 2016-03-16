@@ -1,149 +1,167 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 04/22] atari_NCR5380: Remove DMA_MIN_SIZE macro
-Date: Wed, 16 Mar 2016 14:18:45 +1100
-Message-ID: <20160316031842.931690641@telegraphics.com.au>
+Subject: [PATCH v2 19/22] ncr5380: Update usage documentation
+Date: Wed, 16 Mar 2016 14:19:00 +1100
+Message-ID: <20160316031846.711733201@telegraphics.com.au>
 References: <20160316031841.911913894@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-remove-DMA_MIN_SIZE-macro
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:36493 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965223AbcCPDax (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2016 23:30:53 -0400
+Content-Disposition: inline; filename=ncr5380-update-documentation
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
+Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 
-Only the atari_scsi and sun3_scsi drivers define DMA_MIN_SIZE.
-Both drivers also define NCR5380_dma_xfer_len, which means
-DMA_MIN_SIZE can be removed from the core driver.
-
-This removes another discrepancy between the two core drivers.
+Update kernel parameter documentation for atari_scsi, mac_scsi and
+g_NCR5380 drivers. Remove duplication.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
+ Documentation/scsi/g_NCR5380.txt       |   17 ++++++---------
+ Documentation/scsi/scsi-parameters.txt |   11 +++++++---
+ drivers/scsi/g_NCR5380.c               |   36 ---------------------------------
+ 3 files changed, 16 insertions(+), 48 deletions(-)
 
-Changes since v1:
-- Retain MIN_DMA_SIZE macro in wrapper drivers.
-
----
- drivers/scsi/atari_NCR5380.c |   16 ++++++++--------
- drivers/scsi/atari_scsi.c    |    6 +++++-
- drivers/scsi/sun3_scsi.c     |   19 +++++++++----------
- 3 files changed, 22 insertions(+), 19 deletions(-)
-
-Index: linux/drivers/scsi/atari_NCR5380.c
+Index: linux/Documentation/scsi/scsi-parameters.txt
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2016-03-16 14:18:05.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2016-03-16 14:18:07.000000000 +1100
-@@ -1857,12 +1857,11 @@ static void NCR5380_information_transfer
- 					d = cmd->SCp.ptr;
- 				}
- 				/* this command setup for dma yet? */
--				if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != cmd)) {
--					if (cmd->request->cmd_type == REQ_TYPE_FS) {
--						sun3scsi_dma_setup(instance, d, count,
--						                   rq_data_dir(cmd->request));
--						sun3_dma_setup_done = cmd;
--					}
-+				if (sun3_dma_setup_done != cmd &&
-+				    sun3scsi_dma_xfer_len(count, cmd) > 0) {
-+					sun3scsi_dma_setup(instance, d, count,
-+					                   rq_data_dir(cmd->request));
-+					sun3_dma_setup_done = cmd;
- 				}
- #ifdef SUN3_SCSI_VME
- 				dregs->csr |= CSR_INTR;
-@@ -1927,7 +1926,7 @@ static void NCR5380_information_transfer
- #endif
- 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+--- linux.orig/Documentation/scsi/scsi-parameters.txt	2016-03-16 14:16:56.000000000 +1100
++++ linux/Documentation/scsi/scsi-parameters.txt	2016-03-16 14:18:35.000000000 +1100
+@@ -27,13 +27,15 @@ parameters may be changed at runtime by
+ 	aic79xx=	[HW,SCSI]
+ 			See Documentation/scsi/aic79xx.txt.
  
--				if (transfersize >= DMA_MIN_SIZE) {
-+				if (transfersize > 0) {
- 					len = transfersize;
- 					cmd->SCp.phase = phase;
- 					if (NCR5380_transfer_dma(instance, &phase,
-@@ -2366,7 +2365,8 @@ static void NCR5380_reselect(struct Scsi
- 			d = tmp->SCp.ptr;
- 		}
- 		/* setup this command for dma if not already */
--		if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != tmp)) {
-+		if (sun3_dma_setup_done != tmp &&
-+		    sun3scsi_dma_xfer_len(count, tmp) > 0) {
- 			sun3scsi_dma_setup(instance, d, count,
- 			                   rq_data_dir(tmp->request));
- 			sun3_dma_setup_done = tmp;
-Index: linux/drivers/scsi/atari_scsi.c
+-	atascsi=	[HW,SCSI] Atari SCSI
++	atascsi=	[HW,SCSI]
++			See drivers/scsi/atari_scsi.c.
+ 
+ 	BusLogic=	[HW,SCSI]
+ 			See drivers/scsi/BusLogic.c, comment before function
+ 			BusLogic_ParseDriverOptions().
+ 
+ 	dtc3181e=	[HW,SCSI]
++			See Documentation/scsi/g_NCR5380.txt.
+ 
+ 	eata=		[HW,SCSI]
+ 
+@@ -51,8 +53,8 @@ parameters may be changed at runtime by
+ 	ips=		[HW,SCSI] Adaptec / IBM ServeRAID controller
+ 			See header of drivers/scsi/ips.c.
+ 
+-	mac5380=	[HW,SCSI] Format:
+-			<can_queue>,<cmd_per_lun>,<sg_tablesize>,<hostid>,<use_tags>
++	mac5380=	[HW,SCSI]
++			See drivers/scsi/mac_scsi.c.
+ 
+ 	max_luns=	[SCSI] Maximum number of LUNs to probe.
+ 			Should be between 1 and 2^32-1.
+@@ -65,10 +67,13 @@ parameters may be changed at runtime by
+ 			See header of drivers/scsi/NCR_D700.c.
+ 
+ 	ncr5380=	[HW,SCSI]
++			See Documentation/scsi/g_NCR5380.txt.
+ 
+ 	ncr53c400=	[HW,SCSI]
++			See Documentation/scsi/g_NCR5380.txt.
+ 
+ 	ncr53c400a=	[HW,SCSI]
++			See Documentation/scsi/g_NCR5380.txt.
+ 
+ 	ncr53c406a=	[HW,SCSI]
+ 
+Index: linux/Documentation/scsi/g_NCR5380.txt
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2016-03-16 14:18:05.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2016-03-16 14:18:07.000000000 +1100
-@@ -83,11 +83,12 @@
+--- linux.orig/Documentation/scsi/g_NCR5380.txt	2016-03-16 14:16:56.000000000 +1100
++++ linux/Documentation/scsi/g_NCR5380.txt	2016-03-16 14:18:35.000000000 +1100
+@@ -23,11 +23,10 @@ supported by the driver.
  
- #include <scsi/scsi_host.h>
+ If the default configuration does not work for you, you can use the kernel
+ command lines (eg using the lilo append command):
+-	ncr5380=port,irq,dma
+-	ncr53c400=port,irq
+-or
+-	ncr5380=base,irq,dma
+-	ncr53c400=base,irq
++	ncr5380=addr,irq
++	ncr53c400=addr,irq
++	ncr53c400a=addr,irq
++	dtc3181e=addr,irq
  
-+#define DMA_MIN_SIZE                    32
-+
- /* Definitions for the core NCR5380 driver. */
+ The driver does not probe for any addresses or ports other than those in
+ the OVERRIDE or given to the kernel as above.
+@@ -36,19 +35,17 @@ This driver provides some information on
+ /proc/scsi/g_NCR5380/x where x is the scsi card number as detected at boot
+ time. More info to come in the future.
  
- #define SUPPORT_TAGS
- #define MAX_TAGS                        32
--#define DMA_MIN_SIZE                    32
- 
- #define NCR5380_implementation_fields   /* none */
- 
-@@ -605,6 +606,9 @@ static unsigned long atari_dma_xfer_len(
- {
- 	unsigned long	possible_len, limit;
- 
-+	if (wanted_len < DMA_MIN_SIZE)
-+		return 0;
-+
- 	if (IS_A_TT())
- 		/* TT SCSI DMA can transfer arbitrary #bytes */
- 		return wanted_len;
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2016-03-16 14:18:05.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2016-03-16 14:18:07.000000000 +1100
-@@ -36,12 +36,12 @@
- #include <scsi/scsi_host.h>
- #include "sun3_scsi.h"
- 
--/* Definitions for the core NCR5380 driver. */
+-When NCR53c400 support is compiled in, BIOS parameters will be returned by
+-the driver (the raw 5380 driver does not and I don't plan to fiddle with
+-it!).
 -
--/* #define SUPPORT_TAGS */
- /* minimum number of bytes to do dma on */
- #define DMA_MIN_SIZE                    129
+ This driver works as a module.
+ When included as a module, parameters can be passed on the insmod/modprobe
+ command line:
+   ncr_irq=xx   the interrupt
+   ncr_addr=xx  the port or base address (for port or memory
+                mapped, resp.)
+-  ncr_dma=xx   the DMA
+   ncr_5380=1   to set up for a NCR5380 board
+   ncr_53c400=1 to set up for a NCR53C400 board
++  ncr_53c400a=1 to set up for a NCR53C400A board
++  dtc_3181e=1  to set up for a Domex Technology Corp 3181E board
++  hp_c2502=1   to set up for a Hewlett Packard C2502 board
+ e.g.
+ modprobe g_NCR5380 ncr_irq=5 ncr_addr=0x350 ncr_5380=1
+   for a port mapped NCR5380 board or
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-16 14:18:33.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-16 14:18:35.000000000 +1100
+@@ -18,42 +18,8 @@
+  *
+  * Added ISAPNP support for DTC436 adapters,
+  * Thomas Sailer, sailer@ife.ee.ethz.ch
+- */
+-
+-/* 
+- * TODO : flesh out DMA support, find some one actually using this (I have
+- * 	a memory mapped Trantor board that works fine)
+- */
+-
+-/*
+- * The card is detected and initialized in one of several ways : 
+- * 1.  With command line overrides - NCR5380=port,irq may be 
+- *     used on the LILO command line to override the defaults.
+- *
+- * 2.  With the GENERIC_NCR5380_OVERRIDE compile time define.  This is 
+- *     specified as an array of address, irq, dma, board tuples.  Ie, for
+- *     one board at 0x350, IRQ5, no dma, I could say  
+- *     -DGENERIC_NCR5380_OVERRIDE={{0xcc000, 5, DMA_NONE, BOARD_NCR5380}}
+- * 
+- * -1 should be specified for no or DMA interrupt, -2 to autoprobe for an 
+- * 	IRQ line if overridden on the command line.
+  *
+- * 3.  When included as a module, with arguments passed on the command line:
+- *         ncr_irq=xx	the interrupt
+- *         ncr_addr=xx  the port or base address (for port or memory
+- *              	mapped, resp.)
+- *         ncr_dma=xx	the DMA
+- *         ncr_5380=1	to set up for a NCR5380 board
+- *         ncr_53c400=1	to set up for a NCR53C400 board
+- *     e.g.
+- *     modprobe g_NCR5380 ncr_irq=5 ncr_addr=0x350 ncr_5380=1
+- *       for a port mapped NCR5380 board or
+- *     modprobe g_NCR5380 ncr_irq=255 ncr_addr=0xc8000 ncr_53c400=1
+- *       for a memory mapped NCR53C400 board with interrupts disabled.
+- * 
+- * 255 should be specified for no or DMA interrupt, 254 to autoprobe for an 
+- * 	IRQ line if overridden on the command line.
+- *     
++ * See Documentation/scsi/g_NCR5380.txt for more info.
+  */
  
-+/* Definitions for the core NCR5380 driver. */
-+
-+/* #define SUPPORT_TAGS */
- /* #define MAX_TAGS                     32 */
- 
- #define NCR5380_implementation_fields   /* none */
-@@ -61,7 +61,7 @@
- #define NCR5380_dma_residual(instance) \
-         sun3scsi_dma_residual(instance)
- #define NCR5380_dma_xfer_len(instance, cmd, phase) \
--        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
-+        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd)
- 
- #define NCR5380_acquire_dma_irq(instance)    (1)
- #define NCR5380_release_dma_irq(instance)
-@@ -262,14 +262,13 @@ static inline unsigned long sun3scsi_dma
- 	return last_residual;
- }
- 
--static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted,
--						  struct scsi_cmnd *cmd,
--						  int write_flag)
-+static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted_len,
-+                                                  struct scsi_cmnd *cmd)
- {
--	if (cmd->request->cmd_type == REQ_TYPE_FS)
-- 		return wanted;
--	else
-+	if (wanted_len < DMA_MIN_SIZE || cmd->request->cmd_type != REQ_TYPE_FS)
- 		return 0;
-+
-+	return wanted_len;
- }
- 
- static inline int sun3scsi_dma_start(unsigned long count, unsigned char *data)
+ #include <asm/io.h>
+
+
