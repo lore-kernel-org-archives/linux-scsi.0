@@ -1,124 +1,50 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] fnic: move printk()s outside of the critical code
- section.
-Date: Wed, 16 Mar 2016 10:23:15 -0400 (EDT)
-Message-ID: <142209827.22313268.1458138195969.JavaMail.zimbra@redhat.com>
-References: <1458135848-7770-1-git-send-email-mlombard@redhat.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] qla2xxx: avoid maybe_uninitialized warning
+Date: Wed, 16 Mar 2016 07:24:22 -0700
+Message-ID: <1458138262.2421.8.camel@linux.vnet.ibm.com>
+References: <1458078051-529344-1-git-send-email-arnd@arndb.de>
+	 <1458078554.2375.97.camel@linux.vnet.ibm.com> <2808565.5VeioJTJAb@wuerfel>
+	 <D30EB4C2.DE792%himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx6-phx2.redhat.com ([209.132.183.39]:33601 "EHLO
-	mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966806AbcCPOXV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2016 10:23:21 -0400
-In-Reply-To: <1458135848-7770-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <D30EB4C2.DE792%himanshu.madhani@qlogic.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Quinn Tran <quinn.tran@qlogic.com>, Alexei Potashnik <alexei@purestorage.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Swapnil Nagle <swapnil.nagle@purestorage.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: linux-scsi@vger.kernel.org, hiralpat@cisco.com, sramars@cisco.com, buchino@cisco.com, jejb@linux.vnet.ibm.com
 
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+On Wed, 2016-03-16 at 14:05 +0000, Himanshu Madhani wrote:
+> 
+> On 3/16/16, 5:59 AM, "Arnd Bergmann" <arnd@arndb.de> wrote:
+> 
+> > On Tuesday 15 March 2016 14:49:14 James Bottomley wrote:
+> > > On Tue, 2016-03-15 at 22:40 +0100, Arnd Bergmann wrote:
+> > > > 
+> > > > This slightly rearranges the code to move the second if() block
+> > > > into the first one, to avoid the warning while retaining the
+> > > > behavior of the code.
+> > > 
+> > > I thought our usual policy was to ask someone to fix the compiler 
+> > > when it emitted a spurious warning.
+> > 
+> > No, the rule is that we shouldn't blindly add initializations to
+> > the variables when the compiler should have figured it out.
+> > 
+> > In this case, I wouldn't expect the compiler to ever see through
+> > the unlikely() macro, and I'm not adding a potentially 
+> > counterproductive initialization, so I see no reason not to apply
+> > the patch.
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+OK, as long as there's a good reason why the compiler can never be
+fixed to sort out this case.
 
------ Original Message -----
-From: "Maurizio Lombardi" <mlombard@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: hiralpat@cisco.com, sramars@cisco.com, buchino@cisco.com, jejb@linux.vnet.ibm.com
-Sent: Wednesday, March 16, 2016 9:44:08 AM
-Subject: [PATCH] fnic: move printk()s outside of the critical code section.
+> I would like to keep unlikely() macro in the code. This patch looks
+> good.
+> 
+> Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
 
-This patch moves a printk() outside of the code section where
-interrupt are disabled. In some cases a flood of error messages may
-cause a kernel panic.
-It also removes one of the printk()s because the same error
-message was printed twice.
+Well, OK that's good enough for me.
 
-[709686.317197] Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 12
-[709686.317200] CPU: 12 PID: 1963 Comm: systemd-journal Tainted: GF          O--------------   3.10.0-229.el7.x86_64 #1
-[709686.317201] Hardware name: Cisco Systems Inc UCSB-B200-M3/UCSB-B200-M3, BIOS B200M3.2.2.3.6.030620151309 03/06/2015
-[709686.317206]  ffffffff8182b2e8 00000000392722ba ffff88046fcc5c48 ffffffff81603f36
-[709686.317209]  ffff88046fcc5cc8 ffffffff815fd7da 0000000000000010 ffff88046fcc5cd8
-[709686.317211]  ffff88046fcc5c78 00000000392722ba ffff88046fcc5c88 000000000000000c
-[709686.317212] Call Trace:
-[709686.317221]  <NMI>  [<ffffffff81603f36>] dump_stack+0x19/0x1b
-[709686.317223]  [<ffffffff815fd7da>] panic+0xd8/0x1e7
-[709686.317227]  [<ffffffff8110a760>] ? watchdog_enable_all_cpus.part.2+0x40/0x40
-[709686.317229]  [<ffffffff8110a822>] watchdog_overflow_callback+0xc2/0xd0
-[709686.317233]  [<ffffffff8114c901>] __perf_event_overflow+0xa1/0x250
-[709686.317235]  [<ffffffff8114d404>] perf_event_overflow+0x14/0x20
-[709686.317239]  [<ffffffff810301fd>] intel_pmu_handle_irq+0x1fd/0x410
-[709686.317242]  [<ffffffff811908d1>] ? unmap_kernel_range_noflush+0x11/0x20
-[709686.317246]  [<ffffffff81373574>] ? ghes_copy_tofrom_phys+0x124/0x210
-[709686.317249]  [<ffffffff8160cfcb>] perf_event_nmi_handler+0x2b/0x50
-[709686.317251]  [<ffffffff8160c719>] nmi_handle.isra.0+0x69/0xb0
-[709686.317252]  [<ffffffff8160c830>] do_nmi+0xd0/0x340
-[709686.317256]  [<ffffffff8160bb71>] end_repeat_nmi+0x1e/0x2e
-[709686.317260]  [<ffffffff812e24fd>] ? memcpy+0xd/0x110
-[709686.317263]  [<ffffffff812e24fd>] ? memcpy+0xd/0x110
-[709686.317265]  [<ffffffff812e24fd>] ? memcpy+0xd/0x110
-[709686.317269]  <<EOE>>  [<ffffffff8132c297>] ? vgacon_scroll+0x2d7/0x330
-[709686.317273]  [<ffffffff813a086c>] scrup+0xfc/0x110
-[709686.317275]  [<ffffffff813a0920>] lf+0xa0/0xb0
-[709686.317278]  [<ffffffff813a1b32>] vt_console_print+0x2d2/0x420
-[709686.317283]  [<ffffffff8106f4a1>] call_console_drivers.constprop.15+0x91/0xf0
-[709686.317287]  [<ffffffff8107069f>] console_unlock+0x3bf/0x400
-[709686.317291]  [<ffffffff81070996>] vprintk_emit+0x2b6/0x530
-[709686.317294]  [<ffffffff815fd961>] printk_emit+0x44/0x5b
-[709686.317297]  [<ffffffff81070d98>] devkmsg_writev+0x158/0x1d0
-[709686.317303]  [<ffffffff811c5ef9>] do_sync_readv_writev+0x79/0xd0
-[709686.317307]  [<ffffffff811c73ee>] do_readv_writev+0xce/0x260
-[709686.317310]  [<ffffffff811c8d18>] ? __sb_start_write+0x58/0x110
-[709686.317314]  [<ffffffff811c7615>] vfs_writev+0x35/0x60
-[709686.317318]  [<ffffffff811c776c>] SyS_writev+0x5c/0xd0
-[709686.317322]  [<ffffffff81613da9>] system_call_fastpath+0x16/0x1b
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/fnic/fnic_scsi.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 266b909..f3032ca 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -958,23 +958,22 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 	case FCPIO_INVALID_PARAM:    /* some parameter in request invalid */
- 	case FCPIO_REQ_NOT_SUPPORTED:/* request type is not supported */
- 	default:
--		shost_printk(KERN_ERR, fnic->lport->host, "hdr status = %s\n",
--			     fnic_fcpio_status_to_str(hdr_status));
- 		sc->result = (DID_ERROR << 16) | icmnd_cmpl->scsi_status;
- 		break;
- 	}
- 
--	if (hdr_status != FCPIO_SUCCESS) {
--		atomic64_inc(&fnic_stats->io_stats.io_failures);
--		shost_printk(KERN_ERR, fnic->lport->host, "hdr status = %s\n",
--			     fnic_fcpio_status_to_str(hdr_status));
--	}
- 	/* Break link with the SCSI command */
- 	CMD_SP(sc) = NULL;
- 	CMD_FLAGS(sc) |= FNIC_IO_DONE;
- 
- 	spin_unlock_irqrestore(io_lock, flags);
- 
-+	if (hdr_status != FCPIO_SUCCESS) {
-+		atomic64_inc(&fnic_stats->io_stats.io_failures);
-+		shost_printk(KERN_ERR, fnic->lport->host, "hdr status = %s\n",
-+			     fnic_fcpio_status_to_str(hdr_status));
-+	}
-+
- 	fnic_release_ioreq_buf(fnic, io_req, sc);
- 
- 	mempool_free(io_req, fnic->io_req_pool);
--- 
-Maurizio Lombardi
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
