@@ -1,93 +1,79 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] qla2xxx: avoid maybe_uninitialized warning
-Date: Wed, 16 Mar 2016 11:47:26 -0400
-Message-ID: <1458143246.17965.10.camel@localhost.localdomain>
-References: <1458078051-529344-1-git-send-email-arnd@arndb.de>
-	 <56E975B8.6040807@redhat.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: fc: use get/put_unaligned64 for wwn access
+Date: Wed, 16 Mar 2016 17:39:17 +0100
+Message-ID: <1458146385-278589-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56E975B8.6040807@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Alexei Potashnik <alexei@purestorage.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Swapnil Nagle <swapnil.nagle@purestorage.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, James Bottomley <JBottomley@Odin.com>, Hannes Reinecke <hare@suse.de>, James Smart <james.smart@emulex.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2016-03-16 at 16:03 +0100, Tomas Henzl wrote:
-> On 15.3.2016 22:40, Arnd Bergmann wrote:
-> > The qlt_check_reserve_free_req() function produces an incorrect warning
-> > when CONFIG_PROFILE_ANNOTATED_BRANCHES is set:
-> >
-> > drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_check_reserve_free_req':
-> > drivers/scsi/qla2xxx/qla_target.c:1887:3: error: 'cnt_in' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> >    ql_dbg(ql_dbg_io, vha, 0x305a,
-> >    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >        "qla_target(%d): There is no room in the request ring: vha->req->ring_index=%d, vha->req->cnt=%d, req_cnt=%d Req-out=%d Req-in=%d Req-Length=%d\n",
-> >        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >        vha->vp_idx, vha->req->ring_index,
-> >        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >        vha->req->cnt, req_cnt, cnt, cnt_in, vha->req->length);
-> >        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > drivers/scsi/qla2xxx/qla_target.c:1887:3: error: 'cnt' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> >
-> > The problem is that gcc fails to track the state of the condition across
-> > an annotated branch.
-> >
-> > This slightly rearranges the code to move the second if() block
-> > into the first one, to avoid the warning while retaining the
-> > behavior of the code.
-> 
-> When the first 'if' is true the vha->req->ring_index gets a new value 
-> assigned - so it could be possible that the second 'if' wont be true any more.
-> The code should not be merged into that single 'if', or am I missing something?
-> 
-> tomash
+A bug in the gcc-6.0 prerelease version caused at least one
+driver (lpfc) to have excessive stack usage when dealing with
+wwn data, on the ARM architecture.
 
-If the first "if" is false, the second "if" will be false also, because
-the vha->req->cnt value has not changed.  If the first "if" is true, the
-nested second "if" will retest the condition.
+lpfc_scsi.c: In function 'lpfc_find_next_oas_lun':
+lpfc_scsi.c:117:1: warning: the frame size of 1152 bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
-The compiler is not at fault, because vha->req->cnt can't be tracked as
-it could be modified by another thread/process.  It isn't, it's protected
-by the ->hardware_lock, but the compiler doesn't know that.
+I have reported this as a gcc regression in
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70232
 
--Ewan
+However, using a better implementation of wwn_to_u64() not only
+helps with the particular gcc problem but also leads to better
+object code for any version or architecture.
 
-> >
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > ---
-> >  drivers/scsi/qla2xxx/qla_target.c | 16 +++++++++-------
-> >  1 file changed, 9 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> > index 985231900aca..8a44d1541eb4 100644
-> > --- a/drivers/scsi/qla2xxx/qla_target.c
-> > +++ b/drivers/scsi/qla2xxx/qla_target.c
-> > @@ -1881,15 +1881,17 @@ static int qlt_check_reserve_free_req(struct scsi_qla_host *vha,
-> >  		else
-> >  			vha->req->cnt = vha->req->length -
-> >  			    (vha->req->ring_index - cnt);
-> > -	}
-> >  
-> > -	if (unlikely(vha->req->cnt < (req_cnt + 2))) {
-> > -		ql_dbg(ql_dbg_io, vha, 0x305a,
-> > -		    "qla_target(%d): There is no room in the request ring: vha->req->ring_index=%d, vha->req->cnt=%d, req_cnt=%d Req-out=%d Req-in=%d Req-Length=%d\n",
-> > -		    vha->vp_idx, vha->req->ring_index,
-> > -		    vha->req->cnt, req_cnt, cnt, cnt_in, vha->req->length);
-> > -		return -EAGAIN;
-> > +		if (unlikely(vha->req->cnt < (req_cnt + 2))) {
-> > +			ql_dbg(ql_dbg_io, vha, 0x305a,
-> > +			    "qla_target(%d): There is no room in the request ring: vha->req->ring_index=%d, vha->req->cnt=%d, req_cnt=%d Req-out=%d Req-in=%d Req-Length=%d\n",
-> > +			    vha->vp_idx, vha->req->ring_index,
-> > +			    vha->req->cnt, req_cnt, cnt, cnt_in,
-> > +			    vha->req->length);
-> > +			return -EAGAIN;
-> > +		}
-> >  	}
-> > +
-> >  	vha->req->cnt -= req_cnt;
-> >  
-> >  	return 0;
-> 
+The kernel already provides get_unaligned_be64() and
+put_unaligned_be64() helper functions that provide an
+optimized implementation with the desired semantics.
+
+The lpfc_find_next_oas_lun() function in the example that
+grew from 1146 bytes to 5144 bytes when moving from gcc-5.3
+to gcc-6.0 is now 804 bytes, as the optimized
+get_unaligned_be64() load can be done in three instructions.
+The stack usage is now down to 28 bytes from 128 bytes with
+gcc-5.3 before.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/scsi/scsi_transport_fc.h | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 784bc2c0929f..bf66ea6bed2b 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -28,6 +28,7 @@
+ #define SCSI_TRANSPORT_FC_H
+ 
+ #include <linux/sched.h>
++#include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_netlink.h>
+ 
+@@ -797,22 +798,12 @@ fc_remote_port_chkready(struct fc_rport *rport)
+ 
+ static inline u64 wwn_to_u64(u8 *wwn)
+ {
+-	return (u64)wwn[0] << 56 | (u64)wwn[1] << 48 |
+-	    (u64)wwn[2] << 40 | (u64)wwn[3] << 32 |
+-	    (u64)wwn[4] << 24 | (u64)wwn[5] << 16 |
+-	    (u64)wwn[6] <<  8 | (u64)wwn[7];
++	return get_unaligned_be64(wwn);
+ }
+ 
+ static inline void u64_to_wwn(u64 inm, u8 *wwn)
+ {
+-	wwn[0] = (inm >> 56) & 0xff;
+-	wwn[1] = (inm >> 48) & 0xff;
+-	wwn[2] = (inm >> 40) & 0xff;
+-	wwn[3] = (inm >> 32) & 0xff;
+-	wwn[4] = (inm >> 24) & 0xff;
+-	wwn[5] = (inm >> 16) & 0xff;
+-	wwn[6] = (inm >> 8) & 0xff;
+-	wwn[7] = inm & 0xff;
++	put_unaligned_be64(inm, wwn);
+ }
+ 
+ /**
+-- 
+2.7.0
