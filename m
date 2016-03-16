@@ -1,124 +1,110 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 02/22] ncr5380: Remove FLAG_NO_PSEUDO_DMA where possible
-Date: Wed, 16 Mar 2016 14:18:43 +1100
-Message-ID: <20160316031842.421691430@telegraphics.com.au>
+Subject: [PATCH v2 16/22] ncr5380: Fix register decoding for debugging
+Date: Wed, 16 Mar 2016 14:18:57 +1100
+Message-ID: <20160316031845.961679930@telegraphics.com.au>
 References: <20160316031841.911913894@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-FLAG_NO_PSEUDO_DMA
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:36480 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965185AbcCPDaw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2016 23:30:52 -0400
+Content-Disposition: inline; filename=ncr5380-basr-decoding-dprint
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
-List-Id: linux-scsi@vger.kernel.org
 
-Drivers that define PSEUDO_DMA also define NCR5380_dma_xfer_len.
-The core driver must call NCR5380_dma_xfer_len which means
-FLAG_NO_PSEUDO_DMA can be eradicated from the core driver.
-
-dmx3191d doesn't define PSEUDO_DMA and has no use for FLAG_NO_PSEUDO_DMA,
-so remove it there also.
+Decode all bits in the chip registers. They are all useful at times.
+Fix printk severity so that this output can be suppressed along with
+the other debugging output.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c   |    3 +--
- drivers/scsi/dmx3191d.c  |    2 +-
- drivers/scsi/g_NCR5380.c |    7 ++++++-
- drivers/scsi/g_NCR5380.h |    2 +-
- drivers/scsi/mac_scsi.c  |   15 ++++++++++++++-
- 5 files changed, 23 insertions(+), 6 deletions(-)
+ drivers/scsi/NCR5380.c |   42 +++++++++++++++++++++++++-----------------
+ 1 file changed, 25 insertions(+), 17 deletions(-)
 
-Index: linux/drivers/scsi/dmx3191d.c
-===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2016-03-16 14:16:56.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2016-03-16 14:18:03.000000000 +1100
-@@ -93,7 +93,7 @@ static int dmx3191d_probe_one(struct pci
- 	 */
- 	shost->irq = NO_IRQ;
- 
--	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
-+	error = NCR5380_init(shost, 0);
- 	if (error)
- 		goto out_host_put;
- 
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2016-03-16 14:16:56.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2016-03-16 14:18:03.000000000 +1100
-@@ -37,7 +37,9 @@
- 
- #define NCR5380_pread                   macscsi_pread
- #define NCR5380_pwrite                  macscsi_pwrite
--#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
-+#define NCR5380_dma_xfer_len(instance, cmd, phase) \
-+        macscsi_dma_xfer_len(instance, cmd)
- 
- #define NCR5380_intr                    macscsi_intr
- #define NCR5380_queue_command           macscsi_queue_command
-@@ -303,6 +305,17 @@ static int macscsi_pwrite(struct Scsi_Ho
- }
- #endif
- 
-+static int macscsi_dma_xfer_len(struct Scsi_Host *instance,
-+                                struct scsi_cmnd *cmd)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+		return 0;
-+
-+	return cmd->transfersize;
-+}
-+
- #include "NCR5380.c"
- 
- #define DRV_MODULE_NAME         "mac_scsi"
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-16 14:18:01.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-03-16 14:18:03.000000000 +1100
-@@ -712,10 +712,15 @@ static inline int NCR5380_pwrite(struct
- 	return 0;
- }
- 
--static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
-+static int generic_NCR5380_dma_xfer_len(struct Scsi_Host *instance,
-+                                        struct scsi_cmnd *cmd)
- {
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int transfersize = cmd->transfersize;
- 
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+		return 0;
-+
- 	/* Limit transfers to 32K, for xx400 & xx406
- 	 * pseudoDMA that transfers in 128 bytes blocks.
- 	 */
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-16 14:18:01.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-16 14:18:03.000000000 +1100
-@@ -1833,8 +1833,7 @@ static void NCR5380_information_transfer
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-16 14:18:29.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-16 14:18:31.000000000 +1100
+@@ -256,12 +256,20 @@ static struct {
+ 	{0, NULL}
+ },
+ basrs[] = {
++	{BASR_END_DMA_TRANSFER, "END OF DMA"},
++	{BASR_DRQ, "DRQ"},
++	{BASR_PARITY_ERROR, "PARITY ERROR"},
++	{BASR_IRQ, "IRQ"},
++	{BASR_PHASE_MATCH, "PHASE MATCH"},
++	{BASR_BUSY_ERROR, "BUSY ERROR"},
+ 	{BASR_ATN, "ATN"},
+ 	{BASR_ACK, "ACK"},
+ 	{0, NULL}
+ },
+ icrs[] = {
+ 	{ICR_ASSERT_RST, "ASSERT RST"},
++	{ICR_ARBITRATION_PROGRESS, "ARB. IN PROGRESS"},
++	{ICR_ARBITRATION_LOST, "LOST ARB."},
+ 	{ICR_ASSERT_ACK, "ASSERT ACK"},
+ 	{ICR_ASSERT_BSY, "ASSERT BSY"},
+ 	{ICR_ASSERT_SEL, "ASSERT SEL"},
+@@ -270,14 +278,14 @@ icrs[] = {
+ 	{0, NULL}
+ },
+ mrs[] = {
+-	{MR_BLOCK_DMA_MODE, "MODE BLOCK DMA"},
+-	{MR_TARGET, "MODE TARGET"},
+-	{MR_ENABLE_PAR_CHECK, "MODE PARITY CHECK"},
+-	{MR_ENABLE_PAR_INTR, "MODE PARITY INTR"},
+-	{MR_ENABLE_EOP_INTR, "MODE EOP INTR"},
+-	{MR_MONITOR_BSY, "MODE MONITOR BSY"},
+-	{MR_DMA_MODE, "MODE DMA"},
+-	{MR_ARBITRATE, "MODE ARBITRATION"},
++	{MR_BLOCK_DMA_MODE, "BLOCK DMA MODE"},
++	{MR_TARGET, "TARGET"},
++	{MR_ENABLE_PAR_CHECK, "PARITY CHECK"},
++	{MR_ENABLE_PAR_INTR, "PARITY INTR"},
++	{MR_ENABLE_EOP_INTR, "EOP INTR"},
++	{MR_MONITOR_BSY, "MONITOR BSY"},
++	{MR_DMA_MODE, "DMA MODE"},
++	{MR_ARBITRATE, "ARBITRATE"},
+ 	{0, NULL}
+ };
  
- #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
- 				transfersize = 0;
--				if (!cmd->device->borken &&
--				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
-+				if (!cmd->device->borken)
- 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+@@ -298,23 +306,23 @@ static void NCR5380_print(struct Scsi_Ho
+ 	icr = NCR5380_read(INITIATOR_COMMAND_REG);
+ 	basr = NCR5380_read(BUS_AND_STATUS_REG);
  
- 				if (transfersize) {
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-16 14:18:01.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-03-16 14:18:03.000000000 +1100
-@@ -61,7 +61,7 @@
- #endif
+-	printk("STATUS_REG: %02x ", status);
++	printk(KERN_DEBUG "SR =   0x%02x : ", status);
+ 	for (i = 0; signals[i].mask; ++i)
+ 		if (status & signals[i].mask)
+-			printk(",%s", signals[i].name);
+-	printk("\nBASR: %02x ", basr);
++			printk(KERN_CONT "%s, ", signals[i].name);
++	printk(KERN_CONT "\nBASR = 0x%02x : ", basr);
+ 	for (i = 0; basrs[i].mask; ++i)
+ 		if (basr & basrs[i].mask)
+-			printk(",%s", basrs[i].name);
+-	printk("\nICR: %02x ", icr);
++			printk(KERN_CONT "%s, ", basrs[i].name);
++	printk(KERN_CONT "\nICR =  0x%02x : ", icr);
+ 	for (i = 0; icrs[i].mask; ++i)
+ 		if (icr & icrs[i].mask)
+-			printk(",%s", icrs[i].name);
+-	printk("\nMODE: %02x ", mr);
++			printk(KERN_CONT "%s, ", icrs[i].name);
++	printk(KERN_CONT "\nMR =   0x%02x : ", mr);
+ 	for (i = 0; mrs[i].mask; ++i)
+ 		if (mr & mrs[i].mask)
+-			printk(",%s", mrs[i].name);
+-	printk("\n");
++			printk(KERN_CONT "%s, ", mrs[i].name);
++	printk(KERN_CONT "\n");
+ }
  
- #define NCR5380_dma_xfer_len(instance, cmd, phase) \
--        generic_NCR5380_dma_xfer_len(cmd)
-+        generic_NCR5380_dma_xfer_len(instance, cmd)
- 
- #define NCR5380_intr generic_NCR5380_intr
- #define NCR5380_queue_command generic_NCR5380_queue_command
+ static struct {
+
+
