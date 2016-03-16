@@ -1,39 +1,42 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH RFC 0/2] mempool based chained scatterlist alloc/free
-	api api
-Date: Wed, 16 Mar 2016 09:26:31 +0100
-Message-ID: <20160316082631.GB6203@lst.de>
-References: <1458081569-30953-1-git-send-email-mlin@kernel.org> <1458083523.2375.120.camel@HansenPartnership.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] qla2xxx: avoid maybe_uninitialized warning
+Date: Wed, 16 Mar 2016 13:59:49 +0100
+Message-ID: <2808565.5VeioJTJAb@wuerfel>
+References: <1458078051-529344-1-git-send-email-arnd@arndb.de> <1458078554.2375.97.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1458083523.2375.120.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ming Lin <mlin@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.134]:62473 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221AbcCPNFk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2016 09:05:40 -0400
+In-Reply-To: <1458078554.2375.97.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: qla2xxx-upstream@qlogic.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Alexei Potashnik <alexei@purestorage.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Swapnil Nagle <swapnil.nagle@purestorage.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 15, 2016 at 04:12:03PM -0700, James Bottomley wrote:
-> motion.  If you add in one patch and remove in another the code motion
-> trackers don't see it.
+On Tuesday 15 March 2016 14:49:14 James Bottomley wrote:
+> On Tue, 2016-03-15 at 22:40 +0100, Arnd Bergmann wrote:
+> > 
+> > This slightly rearranges the code to move the second if() block
+> > into the first one, to avoid the warning while retaining the
+> > behavior of the code.
+> 
+> I thought our usual policy was to ask someone to fix the compiler when
+> it emitted a spurious warning.
 
-Agreed, having the move in a single patch would be nice.
+No, the rule is that we shouldn't blindly add initializations to
+the variables when the compiler should have figured it out.
 
-> Thirdly, are you sure the pool structure for NVMe should be the same as
-> for SCSI?  We don't do buddy pools for 1,2 or 4 entry transactions in
-> SCSI just basically because of heuristics, but the packetised io
-> characteristics of NVMe make single entry lists more likely for it,
-> don't they?
+In this case, I wouldn't expect the compiler to ever see through
+the unlikely() macro, and I'm not adding a potentially counterproductive
+initialization, so I see no reason not to apply the patch.
 
-Not really.  NVMe doesn't really do packetized I/O.  And while people
-were setting all kinds of nomerge flags early on we're getting rid
-of them and are seeing similar I/O patterns to fast SCSI devices
-now.
+Making it easier for the compiler to figure out what is going
+on should also lead to slightly better object code. If you think
+my patch makes it less readable, an alternative would be to remove
+the 'unlikely', which also gets rid of the warning.
 
-NVMe over PCIe still uses the crazy PRPs by default, which aren't
-very suitable for this allocator (someone will have to come up
-with a good mempool for it eventually, though), but we're developing
-a set of new drivers transporting NVMe command which use SGLs very
-similar to most SCSI controllers, so using the same SGL allocator
-is a very natural choice.
+	Arnd
