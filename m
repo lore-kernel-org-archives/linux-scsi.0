@@ -1,72 +1,38 @@
-From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH 4/8] snic: target cleanup in driver unload path
-Date: Thu, 17 Mar 2016 00:51:13 -0700
-Message-ID: <1458201077-10211-4-git-send-email-nmusini@cisco.com>
-References: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-8.cisco.com ([173.37.142.95]:11617 "EHLO
-	alln-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932663AbcCQH5i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2016 03:57:38 -0400
-In-Reply-To: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v10 2/6] added UFS 2.0 capabilities
+Date: Thu, 17 Mar 2016 06:52:41 -0500
+Message-ID: <20160317115241.GB18144@rob-hp-laptop>
+References: <cover.1457111366.git.jpinto@synopsys.com>
+ <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto@synopsys.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de
-Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-Fix deletes the snic targets synchronously prior to deletion of host.
+On Fri, Mar 04, 2016 at 05:22:15PM +0000, Joao Pinto wrote:
+> Adding UFS 2.0 support to the UFS core driver.
+> 
+> Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+> ---
+> Changes v8->v10:
+> - Nothing changed (just to keep up with patch set version).
+> Changes v7->v8:
+> - Added "jedec, ufs-2.0" to the ufschd-platform compatibility strings
+> Changes v0->v7:
+> - Nothing changed (just to keep up with patch set version).
+> 
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 +--
+>  drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++++++---
+>  drivers/scsi/ufs/ufshci.h                          |  1 +
+>  3 files changed, 28 insertions(+), 6 deletions(-)
 
-Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
- drivers/scsi/snic/snic_disc.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
-index 5f63217..c46960c 100644
---- a/drivers/scsi/snic/snic_disc.c
-+++ b/drivers/scsi/snic/snic_disc.c
-@@ -480,10 +480,21 @@ int
- snic_disc_start(struct snic *snic)
- {
- 	struct snic_disc *disc = &snic->disc;
-+	unsigned long flags;
- 	int ret = 0;
- 
- 	SNIC_SCSI_DBG(snic->shost, "Discovery Start.\n");
- 
-+	spin_lock_irqsave(&snic->snic_lock, flags);
-+	if (snic->in_remove) {
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+		SNIC_ERR("snic driver removal in progress ...\n");
-+		ret = 0;
-+
-+		return ret;
-+	}
-+	spin_unlock_irqrestore(&snic->snic_lock, flags);
-+
- 	mutex_lock(&disc->mutex);
- 	if (disc->state == SNIC_DISC_PENDING) {
- 		disc->req_cnt++;
-@@ -533,6 +544,8 @@ snic_tgt_del_all(struct snic *snic)
- 	struct list_head *cur, *nxt;
- 	unsigned long flags;
- 
-+	scsi_flush_work(snic->shost);
-+
- 	mutex_lock(&snic->disc.mutex);
- 	spin_lock_irqsave(snic->shost->host_lock, flags);
- 
-@@ -545,7 +558,7 @@ snic_tgt_del_all(struct snic *snic)
- 		tgt = NULL;
- 	}
- 	spin_unlock_irqrestore(snic->shost->host_lock, flags);
--
--	scsi_flush_work(snic->shost);
- 	mutex_unlock(&snic->disc.mutex);
-+
-+	flush_workqueue(snic_glob->event_q);
- } /* end of snic_tgt_del_all */
--- 
-1.8.5.4
-
+Acked-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
