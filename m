@@ -1,12 +1,12 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH 7/8] snic: add scsi host after determining max IOs.
-Date: Thu, 17 Mar 2016 00:51:16 -0700
-Message-ID: <1458201077-10211-7-git-send-email-nmusini@cisco.com>
+Subject: [PATCH 4/8] snic: target cleanup in driver unload path
+Date: Thu, 17 Mar 2016 00:51:13 -0700
+Message-ID: <1458201077-10211-4-git-send-email-nmusini@cisco.com>
 References: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-6.cisco.com ([173.37.142.93]:27530 "EHLO
-	alln-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932664AbcCQH5i (ORCPT
+Received: from alln-iport-8.cisco.com ([173.37.142.95]:11617 "EHLO
+	alln-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932663AbcCQH5i (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2016 03:57:38 -0400
 In-Reply-To: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,88 +14,59 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de
 Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-scsi host is added after negotiating the max number of IOs with Firmware.
+Fix deletes the snic targets synchronously prior to deletion of host.
 
 Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
- drivers/scsi/snic/snic_main.c | 35 +++++++++++++++++------------------
- 1 file changed, 17 insertions(+), 18 deletions(-)
+ drivers/scsi/snic/snic_disc.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 37ec507..396b32d 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -631,19 +631,6 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_free_tmreq_pool;
- 	}
+diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
+index 5f63217..c46960c 100644
+--- a/drivers/scsi/snic/snic_disc.c
++++ b/drivers/scsi/snic/snic_disc.c
+@@ -480,10 +480,21 @@ int
+ snic_disc_start(struct snic *snic)
+ {
+ 	struct snic_disc *disc = &snic->disc;
++	unsigned long flags;
+ 	int ret = 0;
  
--	/*
--	 * Initialization done with PCI system, hardware, firmware.
--	 * Add shost to SCSI
--	 */
--	ret = snic_add_host(shost, pdev);
--	if (ret) {
--		SNIC_HOST_ERR(shost,
--			      "Adding scsi host Failed ... exiting. %d\n",
--			      ret);
--
--		goto err_notify_unset;
--	}
--
- 	spin_lock_irqsave(&snic_glob->snic_list_lock, flags);
- 	list_add_tail(&snic->list, &snic_glob->snic_list);
- 	spin_unlock_irqrestore(&snic_glob->snic_list_lock, flags);
-@@ -676,8 +663,6 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	for (i = 0; i < snic->intr_count; i++)
- 		svnic_intr_unmask(&snic->intr[i]);
+ 	SNIC_SCSI_DBG(snic->shost, "Discovery Start.\n");
  
--	snic_set_state(snic, SNIC_ONLINE);
--
- 	/* Get snic params */
- 	ret = snic_get_conf(snic);
- 	if (ret) {
-@@ -688,6 +673,21 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_get_conf;
- 	}
- 
-+	/*
-+	 * Initialization done with PCI system, hardware, firmware.
-+	 * Add shost to SCSI
-+	 */
-+	ret = snic_add_host(shost, pdev);
-+	if (ret) {
-+		SNIC_HOST_ERR(shost,
-+			      "Adding scsi host Failed ... exiting. %d\n",
-+			      ret);
++	spin_lock_irqsave(&snic->snic_lock, flags);
++	if (snic->in_remove) {
++		spin_unlock_irqrestore(&snic->snic_lock, flags);
++		SNIC_ERR("snic driver removal in progress ...\n");
++		ret = 0;
 +
-+		goto err_get_conf;
++		return ret;
 +	}
++	spin_unlock_irqrestore(&snic->snic_lock, flags);
 +
-+	snic_set_state(snic, SNIC_ONLINE);
-+
- 	ret = snic_disc_start(snic);
- 	if (ret) {
- 		SNIC_HOST_ERR(shost, "snic_probe:Discovery Failed w err = %d\n",
-@@ -712,6 +712,8 @@ err_req_intr:
- 	svnic_dev_disable(snic->vdev);
+ 	mutex_lock(&disc->mutex);
+ 	if (disc->state == SNIC_DISC_PENDING) {
+ 		disc->req_cnt++;
+@@ -533,6 +544,8 @@ snic_tgt_del_all(struct snic *snic)
+ 	struct list_head *cur, *nxt;
+ 	unsigned long flags;
  
- err_vdev_enable:
-+	svnic_dev_notify_unset(snic->vdev);
++	scsi_flush_work(snic->shost);
 +
- 	for (i = 0; i < snic->wq_count; i++) {
- 		int rc = 0;
+ 	mutex_lock(&snic->disc.mutex);
+ 	spin_lock_irqsave(snic->shost->host_lock, flags);
  
-@@ -725,9 +727,6 @@ err_vdev_enable:
+@@ -545,7 +558,7 @@ snic_tgt_del_all(struct snic *snic)
+ 		tgt = NULL;
  	}
- 	snic_del_host(snic->shost);
- 
--err_notify_unset:
--	svnic_dev_notify_unset(snic->vdev);
+ 	spin_unlock_irqrestore(snic->shost->host_lock, flags);
 -
- err_free_tmreq_pool:
- 	mempool_destroy(snic->req_pool[SNIC_REQ_TM_CACHE]);
- 
+-	scsi_flush_work(snic->shost);
+ 	mutex_unlock(&snic->disc.mutex);
++
++	flush_workqueue(snic_glob->event_q);
+ } /* end of snic_tgt_del_all */
 -- 
 1.8.5.4
 
