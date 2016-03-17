@@ -1,67 +1,75 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: fc: use get/put_unaligned64 for wwn access
-Date: Thu, 17 Mar 2016 13:57:51 +0100
-Message-ID: <56EAA9CF.4000309@suse.de>
-References: <1458146385-278589-1-git-send-email-arnd@arndb.de>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v11 5/6] add TC G210 platform driver
+Date: Thu, 17 Mar 2016 09:55:51 -0500
+Message-ID: <20160317145551.GA22021@rob-hp-laptop>
+References: <f12dcbcb9b83881a5f71460e2d6e1ab0f1e326d8.1457352207.git.jpinto@synopsys.com>
+ <09d60ef0a991150a2eba77f627f292f3c2c827fd.1457352207.git.jpinto@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34237 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030651AbcCQM5z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2016 08:57:55 -0400
-In-Reply-To: <1458146385-278589-1-git-send-email-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <09d60ef0a991150a2eba77f627f292f3c2c827fd.1457352207.git.jpinto@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, arnd@arndb.de, mark.rutland@arm.com, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <JBottomley@Odin.com>, James Smart <james.smart@emulex.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/16/2016 05:39 PM, Arnd Bergmann wrote:
-> A bug in the gcc-6.0 prerelease version caused at least one
-> driver (lpfc) to have excessive stack usage when dealing with
-> wwn data, on the ARM architecture.
->=20
-> lpfc_scsi.c: In function 'lpfc_find_next_oas_lun':
-> lpfc_scsi.c:117:1: warning: the frame size of 1152 bytes is larger th=
-an 1024 bytes [-Wframe-larger-than=3D]
->=20
-> I have reported this as a gcc regression in
-> https://gcc.gnu.org/bugzilla/show_bug.cgi?id=3D70232
->=20
-> However, using a better implementation of wwn_to_u64() not only
-> helps with the particular gcc problem but also leads to better
-> object code for any version or architecture.
->=20
-> The kernel already provides get_unaligned_be64() and
-> put_unaligned_be64() helper functions that provide an
-> optimized implementation with the desired semantics.
->=20
-> The lpfc_find_next_oas_lun() function in the example that
-> grew from 1146 bytes to 5144 bytes when moving from gcc-5.3
-> to gcc-6.0 is now 804 bytes, as the optimized
-> get_unaligned_be64() load can be done in three instructions.
-> The stack usage is now down to 28 bytes from 128 bytes with
-> gcc-5.3 before.
->=20
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Mon, Mar 07, 2016 at 12:09:20PM +0000, Joao Pinto wrote:
+> This patch adds a glue platform driver for the Synopsys G210 Test Chip.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 > ---
->  include/scsi/scsi_transport_fc.h | 15 +++------------
->  1 file changed, 3 insertions(+), 12 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Changes v10->v11 (Arnd Bergmann):
+> - vops structs are now passed in .data
+> Changes v0->v10:
+> - This patch only appeared in v10
+> 
+>  .../devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt |  26 +++++
+>  drivers/scsi/ufs/Kconfig                           |   9 ++
+>  drivers/scsi/ufs/Makefile                          |   1 +
+>  drivers/scsi/ufs/tc-dwc-g210-pltfrm.c              | 113 +++++++++++++++++++++
+>  4 files changed, 149 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+>  create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+> new file mode 100644
+> index 0000000..6ec9647
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+> @@ -0,0 +1,26 @@
+> +* Universal Flash Storage (UFS) DesignWare Host Controller
+> +
+> +DWC_UFS nodes are defined to describe on-chip UFS host controllers and MPHY.
+> +Each UFS controller instance should have its own node.
+> +
+> +Required properties:
+> +- compatible	: compatible list must contain the PHY type & version:
+> +			"snps, g210-tc-6.00-20bit"
+> +			"snps, g210-tc-6.00-40bit"
+drop the spaces               ^
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +		  complemented with the Controller IP version:
+> +			"snps, dwc-ufshcd-1.40a"
+
+ditto
+
+> +		  complemented with the JEDEC version:
+> +			"jedec,ufs-1.1"
+> +			"jedec,ufs-2.0"
+> +
+> +- reg		: <registers mapping>
+> +- interrupts	: <interrupt mapping for UFS host controller IRQ>
+> +
+> +Example for a setup using a 1.40a DWC Controller with a 6.00 G210 40-bit TC:
+> +	dwc_ufs@d0000000 {
+> +		compatible = "snps, g210-tc-6.00-40bit",
+> +			     "snps, dwc-ufshcd-1.40a",
+
+ditto
+
+> +			     "jedec,ufs-2.0";
+> +		reg = < 0xd0000000 0x10000 >;
+> +		interrupts = < 24 >;
+> +	};
