@@ -1,75 +1,261 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v11 5/6] add TC G210 platform driver
-Date: Thu, 17 Mar 2016 09:55:51 -0500
-Message-ID: <20160317145551.GA22021@rob-hp-laptop>
-References: <f12dcbcb9b83881a5f71460e2d6e1ab0f1e326d8.1457352207.git.jpinto@synopsys.com>
- <09d60ef0a991150a2eba77f627f292f3c2c827fd.1457352207.git.jpinto@synopsys.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH 1/5] Fix to cleanup aborted IO to avoid device being
+ offlined by mid-layer
+Date: Thu, 17 Mar 2016 13:51:35 -0400
+Message-ID: <1458237095.17965.16.camel@localhost.localdomain>
+References: <1457979262-26571-1-git-send-email-satishkh@cisco.com>
+	 ,<1457985548.4188.26.camel@localhost.localdomain>
+	 <1458167903098.91502@cisco.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <09d60ef0a991150a2eba77f627f292f3c2c827fd.1457352207.git.jpinto@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, arnd@arndb.de, mark.rutland@arm.com, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59499 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031130AbcCQRvg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Mar 2016 13:51:36 -0400
+In-Reply-To: <1458167903098.91502@cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Satish Kharat (satishkh)" <satishkh@cisco.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 07, 2016 at 12:09:20PM +0000, Joao Pinto wrote:
-> This patch adds a glue platform driver for the Synopsys G210 Test Chip.
+On Wed, 2016-03-16 at 22:38 +0000, Satish Kharat (satishkh) wrote:
+> Thanks for the review comments. I incorporated the comments, below is the updated patch: 
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> 
+> If an I/O times out and an abort issued by host, if the abort is
+> successful we need to set scsi status as DID_ABORT. Or else the
+> mid-layer error handler which looks for this error code, will
+> offline the device. Also if the original I/O is not found in fnic
+> firmware, we will consider the abort as successful.
+> The start_time assignment is moved because of the new goto.
+> Fnic driver version changed from 1.6.0.17a to 1.6.0.19,
+> version 1.6.0.18 has been skipped
+> 
+> Signed-off-by: Satish Kharat <satishkh@cisco.com>
 > ---
-> Changes v10->v11 (Arnd Bergmann):
-> - vops structs are now passed in .data
-> Changes v0->v10:
-> - This patch only appeared in v10
+>  drivers/scsi/fnic/fnic.h      |  2 +-
+>  drivers/scsi/fnic/fnic_scsi.c | 35 +++++++++++++++++++++++++++++------
+>  2 files changed, 30 insertions(+), 7 deletions(-)
 > 
->  .../devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt |  26 +++++
->  drivers/scsi/ufs/Kconfig                           |   9 ++
->  drivers/scsi/ufs/Makefile                          |   1 +
->  drivers/scsi/ufs/tc-dwc-g210-pltfrm.c              | 113 +++++++++++++++++++++
->  4 files changed, 149 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
->  create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> index ce129e5..52a53f8 100644
+> --- a/drivers/scsi/fnic/fnic.h
+> +++ b/drivers/scsi/fnic/fnic.h
+> @@ -39,7 +39,7 @@
+>  
+>  #define DRV_NAME		"fnic"
+>  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+> -#define DRV_VERSION		"1.6.0.17a"
+> +#define DRV_VERSION		"1.6.0.19"
+>  #define PFX			DRV_NAME ": "
+>  #define DFX                     DRV_NAME "%d: "
+>  
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> index 266b909..b732fa3 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -1092,6 +1092,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+>  				atomic64_inc(
+>  					&term_stats->terminate_fw_timeouts);
+>  			break;
+> +		case FCPIO_ITMF_REJECTED:
+> +			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
+> +				"abort reject recd. id %d\n",
+> +				(int)(id & FNIC_TAG_MASK));
+> +			break;
+>  		case FCPIO_IO_NOT_FOUND:
+>  			if (CMD_FLAGS(sc) & FNIC_IO_ABTS_ISSUED)
+>  				atomic64_inc(&abts_stats->abort_io_not_found);
+> @@ -1112,9 +1117,15 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+>  			spin_unlock_irqrestore(io_lock, flags);
+>  			return;
+>  		}
+> -		CMD_ABTS_STATUS(sc) = hdr_status;
+> +
+>  		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
+>  
+> +		/* If the status is IO not found consider it as success */
+> +		if (hdr_status == FCPIO_IO_NOT_FOUND)
+> +			CMD_ABTS_STATUS(sc) = FCPIO_SUCCESS;
+> +		else
+> +			CMD_ABTS_STATUS(sc) = hdr_status;
+> +
+>  		atomic64_dec(&fnic_stats->io_stats.active_ios);
+>  		if (atomic64_read(&fnic->io_cmpl_skip))
+>  			atomic64_dec(&fnic->io_cmpl_skip);
+> @@ -1927,21 +1938,33 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+>  
+>  	CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
+>  
+> +	start_time = io_req->start_time;
+>  	/*
+>  	 * firmware completed the abort, check the status,
+> -	 * free the io_req irrespective of failure or success
+> +	 * free the io_req if successful. If abort fails,
+> +	 * Device reset will clean the I/O.
+>  	 */
+> -	if (CMD_ABTS_STATUS(sc) != FCPIO_SUCCESS)
+> +	if (CMD_ABTS_STATUS(sc) == FCPIO_SUCCESS) {
+> +		CMD_SP(sc) = NULL;
+> +	}
+> +	else
+> +	{
+>  		ret = FAILED;
+> -
+> -	CMD_SP(sc) = NULL;
+> +		spin_unlock_irqrestore(io_lock, flags);
+> +		goto fnic_abort_cmd_end;
+> +	}
+>  
+>  	spin_unlock_irqrestore(io_lock, flags);
+>  
+> -	start_time = io_req->start_time;
+>  	fnic_release_ioreq_buf(fnic, io_req, sc);
+>  	mempool_free(io_req, fnic->io_req_pool);
+>  
+> +	if (sc->scsi_done) {
+> +	/* Call SCSI completion function to complete the IO */
+> +		sc->result = (DID_ABORT << 16);
+> +		sc->scsi_done(sc);
+> +	}
+> +
+>  fnic_abort_cmd_end:
+>  	FNIC_TRACE(fnic_abort_cmd, sc->device->host->host_no,
+>  		  sc->request->tag, sc,
+> -- 
+> 2.4.3
+
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
-> new file mode 100644
-> index 0000000..6ec9647
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
-> @@ -0,0 +1,26 @@
-> +* Universal Flash Storage (UFS) DesignWare Host Controller
-> +
-> +DWC_UFS nodes are defined to describe on-chip UFS host controllers and MPHY.
-> +Each UFS controller instance should have its own node.
-> +
-> +Required properties:
-> +- compatible	: compatible list must contain the PHY type & version:
-> +			"snps, g210-tc-6.00-20bit"
-> +			"snps, g210-tc-6.00-40bit"
-drop the spaces               ^
+> ________________________________________
+> From: Ewan Milne <emilne@redhat.com>
+> Sent: Monday, March 14, 2016 12:59 PM
+> To: Satish Kharat (satishkh)
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/5] Fix to cleanup aborted IO to avoid device being offlined by mid-layer
+> 
+> On Mon, 2016-03-14 at 11:14 -0700, Satish Kharat wrote:
+> > If an I/O times out and an abort issued by host, if the abort is
+> > successful we need to set scsi status as DID_ABORT. Or else the
+> > mid-layer error handler which looks for this error code, will
+> > offline the device. Also if the original I/O is not found in fnic
+> > firmware, we will consider the abort as successful.
+> > Fnic driver version changed from 1.6.0.17a to 1.6.0.19,
+> > version 1.6.0.18 has been skipped
+> >
+> > Signed-off-by: Satish Kharat <satishkh@cisco.com>
+> > ---
+> >  drivers/scsi/fnic/fnic.h      |  2 +-
+> >  drivers/scsi/fnic/fnic_scsi.c | 32 +++++++++++++++++++++++++++-----
+> >  2 files changed, 28 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> > index ce129e5..52a53f8 100644
+> > --- a/drivers/scsi/fnic/fnic.h
+> > +++ b/drivers/scsi/fnic/fnic.h
+> > @@ -39,7 +39,7 @@
+> >
+> >  #define DRV_NAME             "fnic"
+> >  #define DRV_DESCRIPTION              "Cisco FCoE HBA Driver"
+> > -#define DRV_VERSION          "1.6.0.17a"
+> > +#define DRV_VERSION          "1.6.0.19"
+> >  #define PFX                  DRV_NAME ": "
+> >  #define DFX                     DRV_NAME "%d: "
+> >
+> > diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> > index 266b909..b9732b1 100644
+> > --- a/drivers/scsi/fnic/fnic_scsi.c
+> > +++ b/drivers/scsi/fnic/fnic_scsi.c
+> > @@ -1092,6 +1092,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+> >                               atomic64_inc(
+> >                                       &term_stats->terminate_fw_timeouts);
+> >                       break;
+> > +             case FCPIO_ITMF_REJECTED:
+> > +                     FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
+> > +                             "abort reject recd. id %d\n",
+> > +                             (int)(id & FNIC_TAG_MASK));
+> > +                     break;
+> >               case FCPIO_IO_NOT_FOUND:
+> >                       if (CMD_FLAGS(sc) & FNIC_IO_ABTS_ISSUED)
+> >                               atomic64_inc(&abts_stats->abort_io_not_found);
+> > @@ -1112,9 +1117,14 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+> >                       spin_unlock_irqrestore(io_lock, flags);
+> >                       return;
+> >               }
+> > +
+> >               CMD_ABTS_STATUS(sc) = hdr_status;
+> >               CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
+> >
+> > +             /* If the status is IO not found consider it as success */
+> > +             if (hdr_status == FCPIO_IO_NOT_FOUND)
+> > +                     CMD_ABTS_STATUS(sc) = FCPIO_SUCCESS;
+> > +
+> 
+> Minor nitpick:  I would have done:
+> 
+>                 if (hdr_status == FCP_IO_NOT_FOUND)
+>                         CMD_ABTS_STATUS(sc) = FCPIO_SUCCESS;
+>                 else
+>                         CMD_ABTS_STATUS(sc) = hdr_status;
+> 
+> rather than overwriting the assignment made several lines above, it is
+> more explicit and less prone to errors if the code is later changed.
+> 
+> >               atomic64_dec(&fnic_stats->io_stats.active_ios);
+> >               if (atomic64_read(&fnic->io_cmpl_skip))
+> >                       atomic64_dec(&fnic->io_cmpl_skip);
+> > @@ -1927,21 +1937,33 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+> >
+> >       CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
+> >
+> > +     start_time = io_req->start_time;
+> >       /*
+> >        * firmware completed the abort, check the status,
+> > -      * free the io_req irrespective of failure or success
+> > +      * free the io_req if successful. If abort fails,
+> > +      * Device reset will clean the I/O.
+> >        */
+> > -     if (CMD_ABTS_STATUS(sc) != FCPIO_SUCCESS)
+> > +     if (CMD_ABTS_STATUS(sc) == FCPIO_SUCCESS) {
+> > +             CMD_SP(sc) = NULL;
+> > +     }
+> > +     else
+> > +     {
+> >               ret = FAILED;
+> > -
+> > -     CMD_SP(sc) = NULL;
+> > +             spin_unlock_irqrestore(io_lock, flags);
+> > +             goto fnic_abort_cmd_end;
+> > +     }
+> >
+> >       spin_unlock_irqrestore(io_lock, flags);
+> >
+> > -     start_time = io_req->start_time;
+> 
+> What was the point of moving the assignment of start_time?
+> Other places in the code still set it just before the call to
+> fnic_release_ioreq_buf().
+> 
+> >       fnic_release_ioreq_buf(fnic, io_req, sc);
+> >       mempool_free(io_req, fnic->io_req_pool);
+> >
+> > +     if (sc->scsi_done) {
+> > +     /* Call SCSI completion function to complete the IO */
+> > +             sc->result = (DID_ABORT << 16);
+> > +             sc->scsi_done(sc);
+> > +     }
+> > +
+> >  fnic_abort_cmd_end:
+> >       FNIC_TRACE(fnic_abort_cmd, sc->device->host->host_no,
+> >                 sc->request->tag, sc,
+> 
+> Despite the above comments, I guess this looks OK.
+> 
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+> 
 
 
-> +		  complemented with the Controller IP version:
-> +			"snps, dwc-ufshcd-1.40a"
-
-ditto
-
-> +		  complemented with the JEDEC version:
-> +			"jedec,ufs-1.1"
-> +			"jedec,ufs-2.0"
-> +
-> +- reg		: <registers mapping>
-> +- interrupts	: <interrupt mapping for UFS host controller IRQ>
-> +
-> +Example for a setup using a 1.40a DWC Controller with a 6.00 G210 40-bit TC:
-> +	dwc_ufs@d0000000 {
-> +		compatible = "snps, g210-tc-6.00-40bit",
-> +			     "snps, dwc-ufshcd-1.40a",
-
-ditto
-
-> +			     "jedec,ufs-2.0";
-> +		reg = < 0xd0000000 0x10000 >;
-> +		interrupts = < 24 >;
-> +	};
