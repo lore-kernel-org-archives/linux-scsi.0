@@ -1,111 +1,76 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH 3/8] snic: Handling control path queue issues
-Date: Thu, 17 Mar 2016 00:51:12 -0700
-Message-ID: <1458201077-10211-3-git-send-email-nmusini@cisco.com>
+Subject: [PATCH 2/8] snic: LUN goes offline due to scsi cmd timeouts
+Date: Thu, 17 Mar 2016 00:51:11 -0700
+Message-ID: <1458201077-10211-2-git-send-email-nmusini@cisco.com>
 References: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-2.cisco.com ([173.37.142.89]:21738 "EHLO
-	alln-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932645AbcCQH5h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2016 03:57:37 -0400
+Received: from alln-iport-6.cisco.com ([173.37.142.93]:27530 "EHLO
+	alln-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932365AbcCQH5g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2016 03:57:36 -0400
 In-Reply-To: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de
 Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-Fix handles control path queue issues such as queue full, and
-sudden removal of hardware.
+- LUN goes offline, if there are atleast two scsi command timeouts
+  Completing the IO with scsi_done() fixes the issue.
 
 Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
- drivers/scsi/snic/vnic_dev.c | 44 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 30 insertions(+), 14 deletions(-)
+ drivers/scsi/snic/snic_scsi.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_dev.c
-index e0b5549..dad5fc6 100644
---- a/drivers/scsi/snic/vnic_dev.c
-+++ b/drivers/scsi/snic/vnic_dev.c
-@@ -263,12 +263,20 @@ static int _svnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
- 	int wait)
- {
- 	struct devcmd2_controller *dc2c = vdev->devcmd2;
--	struct devcmd2_result *result = dc2c->result + dc2c->next_result;
-+	struct devcmd2_result *result = NULL;
- 	unsigned int i;
- 	int delay;
- 	int err;
- 	u32 posted;
-+	u32 fetch_idx;
- 	u32 new_posted;
-+	u8 color;
-+
-+	fetch_idx = ioread32(&dc2c->wq_ctrl->fetch_index);
-+	if (fetch_idx == 0xFFFFFFFF) { /* check for hardware gone  */
-+		/* Hardware surprise removal: return error */
-+		return -ENODEV;
-+	}
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index e423eaa..5a709eb 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -1465,11 +1465,19 @@ snic_abort_finish(struct snic *snic, struct scsi_cmnd *sc)
+ 	case SNIC_STAT_IO_SUCCESS:
+ 	case SNIC_STAT_IO_NOT_FOUND:
+ 		ret = SUCCESS;
++		/*
++		 * If abort path doesn't call scsi_done(),
++		 * the # IO timeouts == 2, will cause the LUN offline.
++		 * Call scsi_done to complete the IO.
++		 */
++		sc->result = (DID_ERROR << 16);
++		sc->scsi_done(sc);
+ 		break;
  
- 	posted = ioread32(&dc2c->wq_ctrl->posted_index);
- 
-@@ -278,6 +286,13 @@ static int _svnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
+ 	default:
+ 		/* Firmware completed abort with error */
+ 		ret = FAILED;
++		rqi = NULL;
+ 		break;
  	}
  
- 	new_posted = (posted + 1) % DEVCMD2_RING_SIZE;
-+	if (new_posted == fetch_idx) {
-+		pr_err("%s: wq is full while issuing devcmd2 command %d, fetch index: %u, posted index: %u\n",
-+			pci_name(vdev->pdev), _CMD_N(cmd), fetch_idx, posted);
-+
-+		return -EBUSY;
-+	}
-+
- 	dc2c->cmd_ring[posted].cmd = cmd;
- 	dc2c->cmd_ring[posted].flags = 0;
+@@ -1842,6 +1850,9 @@ snic_dr_clean_single_req(struct snic *snic,
  
-@@ -299,14 +314,22 @@ static int _svnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
- 	if (dc2c->cmd_ring[posted].flags & DEVCMD2_FNORESULT)
- 		return 0;
+ 	snic_release_req_buf(snic, rqi, sc);
  
-+	result = dc2c->result + dc2c->next_result;
-+	color = dc2c->color;
++	sc->result = (DID_ERROR << 16);
++	sc->scsi_done(sc);
 +
+ 	ret = 0;
+ 
+ 	return ret;
+@@ -2396,6 +2407,13 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
+ 		      "Completing Pending TM Req sc %p, state %s flags 0x%llx\n",
+ 		      sc, snic_io_status_to_str(CMD_STATE(sc)), CMD_FLAGS(sc));
+ 
 +	/*
-+	 * Increment next_result, after posting the devcmd, irrespective of
-+	 * devcmd result, and it should be done only once.
++	 * CASE : FW didn't post itmf completion due to PCIe Errors.
++	 * Marking the abort status as Success to call scsi completion
++	 * in snic_abort_finish()
 +	 */
-+	dc2c->next_result++;
-+	if (dc2c->next_result == dc2c->result_size) {
-+		dc2c->next_result = 0;
-+		dc2c->color = dc2c->color ? 0 : 1;
-+	}
++	CMD_ABTS_STATUS(sc) = SNIC_STAT_IO_SUCCESS;
 +
- 	for (delay = 0; delay < wait; delay++) {
- 		udelay(100);
--		if (result->color == dc2c->color) {
--			dc2c->next_result++;
--			if (dc2c->next_result == dc2c->result_size) {
--				dc2c->next_result = 0;
--				dc2c->color = dc2c->color ? 0 : 1;
--			}
-+		if (result->color == color) {
- 			if (result->error) {
- 				err = (int) result->error;
- 				if (err != ERR_ECMDUNKNOWN ||
-@@ -317,13 +340,6 @@ static int _svnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
- 				return err;
- 			}
- 			if (_CMD_DIR(cmd) & _CMD_DIR_READ) {
--				/*
--				 * Adding the rmb() prevents the compiler
--				 * and/or CPU from reordering the reads which
--				 * would potentially result in reading stale
--				 * values.
--				 */
--				rmb();
- 				for (i = 0; i < VNIC_DEVCMD_NARGS; i++)
- 					vdev->args[i] = result->results[i];
- 			}
+ 	rqi = (struct snic_req_info *) CMD_SP(sc);
+ 	if (!rqi)
+ 		return;
 -- 
 1.8.5.4
 
