@@ -1,34 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 91711] 3w-9xxx: DMA-API: device driver tries to free DMA memory
- it has not allocated
-Date: Thu, 17 Mar 2016 21:29:00 +0000
-Message-ID: <bug-91711-11613-KRQVlNcRv7@https.bugzilla.kernel.org/>
-References: <bug-91711-11613@https.bugzilla.kernel.org/>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
+Date: Fri, 18 Mar 2016 04:49:07 +0000
+Message-ID: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55122 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935087AbcCQV3D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2016 17:29:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 39B1B2034A
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Mar 2016 21:29:02 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 6061120328
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Mar 2016 21:29:01 +0000 (UTC)
-In-Reply-To: <bug-91711-11613@https.bugzilla.kernel.org/>
+Received: from sjc00mx2.hgst.com ([199.255.44.37]:17461 "EHLO
+	sjc00mx2.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752247AbcCREtM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 00:49:12 -0400
+Content-Language: en-US
+Content-ID: <F87DF72114DB52488A2128D3CEC567A4@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=91711
+DQpsaWJhdGE6IFNldCBsb25nZXIgdGltZW91dCBmb3IgU0VURkVBVFVSRVNfU1BJTlVQDQogICAg
+DQpGb3IgU0FUQSBkcml2ZXMgd2l0aCBwb3dlci11cCBpbiBzdGFuZGJ5IChQVUlTKSBmZWF0dXJl
+IHNldCwNClNFVEZFQVRVUkVTX1NQSU5VUCBleGVjdXRpb24gbWF5IGJlIHJlcXVpcmVkIHRvIGdl
+dA0KY29tcGxldGUgSURFTlRJRlkgZGF0YS4gSG93ZXZlciwgdGhlIHRpbWVvdXQgdXNlZCBmb3Ig
+aXRzDQpleGVjdXRpb24gaXMgdGhlIHNhbWUgYXMgZm9yIGFsbCBvdGhlciBTRVRGRUFUVVJFUyBj
+b21tYW5kcywNCnRoYXQgaXMsIDUgc2Vjb25kcy4gVGhpcyBpcyB0b28gc2hvcnQgZm9yIHNvbWUg
+ZGlza3MgdG8gY29tcGxldGUNCnRpbWVvdXQgYW5kIGFsbG93IElERU5USUZZIHRvIHJldHVybiBj
+b21wbGV0ZSBkYXRhIChlLmcuDQpkaXNrcyB3aXRoIGxhcmdlIGluZGlyZWN0aW9uIHRhYmxlcyBz
+dG9yZWQgb24gbWVkaWEpLCByZXN1bHRpbmcNCmluIGF0YV9kZXZfcmVhZF9pZCB0byBmYWlsLiBG
+b3IgdGhpcyBmZWF0dXJlLCBhbGxvdyBhIGxhcmdlcg0KdGltZW91dCBvZiAzMCBzZWNvbmRzLg0K
+DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYyBiL2RyaXZlcnMvYXRhL2xp
+YmF0YS1jb3JlLmMNCmluZGV4IGU4M2ZjM2QuLmVjYmJlZTIgMTAwNjQ0DQotLS0gYS9kcml2ZXJz
+L2F0YS9saWJhdGEtY29yZS5jDQorKysgYi9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jDQpAQCAt
+NDUzNyw3ICs0NTM3LDggQEAgdW5zaWduZWQgaW50IGF0YV9kZXZfc2V0X2ZlYXR1cmUoc3RydWN0
+IGF0YV9kZXZpY2UgKmRldiwgdTggZW5hYmxlLCB1OCBmZWF0dXJlKQ0KIAl0Zi5wcm90b2NvbCA9
+IEFUQV9QUk9UX05PREFUQTsNCiAJdGYubnNlY3QgPSBmZWF0dXJlOw0KIA0KLQllcnJfbWFzayA9
+IGF0YV9leGVjX2ludGVybmFsKGRldiwgJnRmLCBOVUxMLCBETUFfTk9ORSwgTlVMTCwgMCwgMCk7
+DQorCWVycl9tYXNrID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCAmdGYsIE5VTEwsIERNQV9OT05F
+LCBOVUxMLCAwLA0KKwkJCQkgICAgIGVuYWJsZSA9PSBTRVRGRUFUVVJFU19TUElOVVAgPyBTRVRG
+RUFUVVJFU19TUElOVVBfVElNRU9VVCA6IDApOw0KIA0KIAlEUFJJTlRLKCJFWElULCBlcnJfbWFz
+az0leFxuIiwgZXJyX21hc2spOw0KIAlyZXR1cm4gZXJyX21hc2s7DQpkaWZmIC0tZ2l0IGEvaW5j
+bHVkZS9saW51eC9hdGEuaCBiL2luY2x1ZGUvbGludXgvYXRhLmgNCmluZGV4IGZlZDM2NDEuLmUz
+YTlhYjYgMTAwNjQ0DQotLS0gYS9pbmNsdWRlL2xpbnV4L2F0YS5oDQorKysgYi9pbmNsdWRlL2xp
+bnV4L2F0YS5oDQpAQCAtMzcxLDYgKzM3MSw3IEBAIGVudW0gew0KIAlTRVRGRUFUVVJFU19BQU1f
+T0ZGCT0gMHhDMiwNCiANCiAJU0VURkVBVFVSRVNfU1BJTlVQCT0gMHgwNywgLyogU3Bpbi11cCBk
+cml2ZSAqLw0KKwlTRVRGRUFUVVJFU19TUElOVVBfVElNRU9VVAk9IDMwMDAwLA0KIA0KIAlTRVRG
+RUFUVVJFU19TQVRBX0VOQUJMRSA9IDB4MTAsIC8qIEVuYWJsZSB1c2Ugb2YgU0FUQSBmZWF0dXJl
+ICovDQogCVNFVEZFQVRVUkVTX1NBVEFfRElTQUJMRSA9IDB4OTAsIC8qIERpc2FibGUgdXNlIG9m
+IFNBVEEgZmVhdHVyZSAqLw0KDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KRGFtaWVuIExl
+IE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lzdGVtIFNvZnR3YXJlIEdyb3VwLCBIR1NUIFJl
+c2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0YWwgY29tcGFueQ0KRGFtaWVuLkxlTW9hbEBo
+Z3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChleHQuIDUxMzU5MykNCjEga2lyaWhhcmEtY2hv
+LCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4ODggSmFwYW4NCnd3dy5oZ3N0LmNvbSANCldl
+c3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAoYW5kIGl0cyBzdWJzaWRpYXJpZXMpIEUtbWFpbCBD
+b25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlzY2xhaW1lcjoKClRoaXMgZS1tYWlsIGFuZCBhbnkg
+ZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3IgbGVn
+YWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIG9mIFdEQyBhbmQvb3IgaXRzIGFmZmlsaWF0ZXMs
+IGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0aGUgdXNlIG9mIHRoZSBpbmRpdmlkdWFsIG9y
+IGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBhZGRyZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBp
+bnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNjbG9zdXJlLCBjb3B5aW5nLCBkaXN0cmlidXRpb24g
+b3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0dGVkIHRvIGJlIHRha2VuIGluIHJlbGlhbmNlIG9u
+IGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBl
+cnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGFuZCBkZWxldGUgdGhl
+IGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJvbSB5b3VyIHN5c3RlbS4K
 
---- Comment #3 from Orion <admin@e-blokos.com> ---
-Seems to work now thank you very much.
-do you think your patch will be included on 4.x kernels?
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
