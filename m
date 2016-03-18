@@ -1,22 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: avoid maybe_uninitialized warning
-Date: Fri, 18 Mar 2016 15:26:13 -0400
-Message-ID: <yq1zitv8u5m.fsf@sermon.lab.mkp.net>
-References: <1458078051-529344-1-git-send-email-arnd@arndb.de>
+Subject: Re: [PATCH] fnic: move printk()s outside of the critical code section.
+Date: Fri, 18 Mar 2016 15:28:51 -0400
+Message-ID: <yq1vb4j8u18.fsf@sermon.lab.mkp.net>
+References: <1458135848-7770-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1458078051-529344-1-git-send-email-arnd@arndb.de> (Arnd
-	Bergmann's message of "Tue, 15 Mar 2016 22:40:31 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Alexei Potashnik <alexei@purestorage.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Swapnil Nagle <swapnil.nagle@purestorage.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51391 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937AbcCRT27 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 15:28:59 -0400
+In-Reply-To: <1458135848-7770-1-git-send-email-mlombard@redhat.com> (Maurizio
+	Lombardi's message of "Wed, 16 Mar 2016 14:44:08 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: linux-scsi@vger.kernel.org, hiralpat@cisco.com, sramars@cisco.com, buchino@cisco.com, jejb@linux.vnet.ibm.com
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Maurizio" == Maurizio Lombardi <mlombard@redhat.com> writes:
 
-Arnd> The qlt_check_reserve_free_req() function produces an incorrect
-Arnd> warning when CONFIG_PROFILE_ANNOTATED_BRANCHES is set:
+Maurizio> This patch moves a printk() outside of the code section where
+Maurizio> interrupt are disabled. In some cases a flood of error
+Maurizio> messages may cause a kernel panic.  It also removes one of the
+Maurizio> printk()s because the same error message was printed twice.
 
 Applied to 4.6/scsi-fixes.
 
