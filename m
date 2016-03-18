@@ -1,122 +1,83 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH] mpt3sas: Don't overreach ioc->reply_post[] during initialization
-Date: Fri, 18 Mar 2016 12:45:42 -0700
-Message-ID: <df80b371ec5e56ecd65be161acdc34c0f2964d2e.1458327050.git.calvinowens@fb.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: RE: [PATCH 1/3] aacraid: add missing curly braces
+Date: Fri, 18 Mar 2016 20:50:30 +0000
+Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D218372@BBYEXM01.pmc-sierra.internal>
+References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
+ <1457965789-3373916-2-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Calvin Owens <calvinowens@fb.com>
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:37812 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751546AbcCRUub convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2016 16:50:31 -0400
+In-Reply-To: <1457965789-3373916-2-git-send-email-arnd@arndb.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Tomas Henzl <thenzl@redhat.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Fengguang Wu <fengguang.wu@intel.com>
 
-In _base_make_ioc_operational(), we walk ioc->reply_queue_list and pull
-a pointer out of successive elements of ioc->reply_post[] for each entry
-in that list if RDPQ is enabled.
 
-Since the code pulls the pointer for the next iteration at the bottom of
-the loop, it triggers the a KASAN dump on the final iteration:
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Monday, March 14, 2016 7:30 AM
+> To: martin.petersen@oracle.com;
+> James.Bottomley@HansenPartnership.com; Adaptec OEM Raid Solutions;
+> James E.J. Bottomley
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Arnd
+> Bergmann; Johannes Thumshirn; Tomas Henzl; Mahesh Rajashekhara;
+> Raghava Aditya Renukunta; Fengguang Wu
+> Subject: [PATCH 1/3] aacraid: add missing curly braces
+> 
+> gcc-6 warns about obviously wrong indentation for newly added
+> code in aac_slave_configure():
+> 
+> drivers/scsi/aacraid/linit.c: In function 'aac_slave_configure':
+> drivers/scsi/aacraid/linit.c:458:3: warning: statement is indented as if it were
+> guarded by... [-Wmisleading-indentation]
+>    sdev->tagged_supported = 1;
+>    ^~~~
+> drivers/scsi/aacraid/linit.c:455:4: note: ...this 'else' clause, but it is not
+> 
+> gcc is correct, and evidently this was meant to be within the curly
+> braces that should have been there to start with. This patch adds
+> them, which avoids the warning and makes it clear what was intended
+> here.
+> 
+> Nothing changes in behavior because in the 'if' block, the
+> sdev->tagged_supported flag is known to be set already.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 6bf3b630d0a7 ("aacraid: SCSI blk tag support")
+> ---
+>  drivers/scsi/aacraid/linit.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index 21a67ed047e8..ff6caab8cc8b 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -452,10 +452,11 @@ static int aac_slave_configure(struct scsi_device
+> *sdev)
+>  		else if (depth < 2)
+>  			depth = 2;
+>  		scsi_change_queue_depth(sdev, depth);
+> -	} else
+> +	} else {
+>  		scsi_change_queue_depth(sdev, 1);
+>  		sdev->tagged_supported = 1;
+> +	}
+> 
+>  	return 0;
+>  }
+> --
+> 2.7.0
 
-    BUG: KASAN: slab-out-of-bounds in _base_make_ioc_operational+0x47b7/0x47e0 [mpt3sas] at addr ffff880754816ab0
-    Read of size 8 by task modprobe/305
-    <snip>
-    Call Trace:
-     [<ffffffff81dfc591>] dump_stack+0x4d/0x6c
-     [<ffffffff814c9689>] print_trailer+0xf9/0x150
-     [<ffffffff814ceda4>] object_err+0x34/0x40
-     [<ffffffff814d1231>] kasan_report_error+0x221/0x530
-     [<ffffffff814d1673>] __asan_report_load8_noabort+0x43/0x50
-     [<ffffffffa0043637>] _base_make_ioc_operational+0x47b7/0x47e0 [mpt3sas]
-     [<ffffffffa0049a51>] mpt3sas_base_attach+0x1991/0x2120 [mpt3sas]
-     [<ffffffffa0053c93>] _scsih_probe+0xeb3/0x16b0 [mpt3sas]
-     [<ffffffff81ebd047>] local_pci_probe+0xc7/0x170
-     [<ffffffff81ebf2cf>] pci_device_probe+0x20f/0x290
-     [<ffffffff820d50cd>] really_probe+0x17d/0x600
-     [<ffffffff820d56a3>] __driver_attach+0x153/0x190
-     [<ffffffff820cffac>] bus_for_each_dev+0x11c/0x1a0
-     [<ffffffff820d421d>] driver_attach+0x3d/0x50
-     [<ffffffff820d378a>] bus_add_driver+0x44a/0x5f0
-     [<ffffffff820d666c>] driver_register+0x18c/0x3b0
-     [<ffffffff81ebcb76>] __pci_register_driver+0x156/0x200
-     [<ffffffffa00c8135>] _mpt3sas_init+0x135/0x1000 [mpt3sas]
-     [<ffffffff81000423>] do_one_initcall+0x113/0x2b0
-     [<ffffffff813caa5a>] do_init_module+0x1d0/0x4d8
-     [<ffffffff81273909>] load_module+0x6729/0x8dc0
-     [<ffffffff81276123>] SYSC_init_module+0x183/0x1a0
-     [<ffffffff8127625e>] SyS_init_module+0xe/0x10
-     [<ffffffff828fe7d7>] entry_SYSCALL_64_fastpath+0x12/0x6a
+Reviewed-by: Raghava Aditya Renukunta < raghavaaditya.renukunta@pmcs.com >
 
-Fix this by pulling the value at the beginning of the loop.
+Regards,
+Raghava Aditya
 
-Signed-off-by: Calvin Owens <calvinowens@fb.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 33 ++++++++++++++++-----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index e4db5fb..8c44b9c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5030,7 +5030,7 @@ _base_make_ioc_ready(struct MPT3SAS_ADAPTER *ioc, int sleep_flag,
- static int
- _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- {
--	int r, i;
-+	int r, i, index;
- 	unsigned long	flags;
- 	u32 reply_address;
- 	u16 smid;
-@@ -5039,8 +5039,7 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	struct _event_ack_list *delayed_event_ack, *delayed_event_ack_next;
- 	u8 hide_flag;
- 	struct adapter_reply_queue *reply_q;
--	long reply_post_free;
--	u32 reply_post_free_sz, index = 0;
-+	Mpi2ReplyDescriptorsUnion_t *reply_post_free_contig;
- 
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 	    __func__));
-@@ -5124,27 +5123,27 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 		_base_assign_reply_queues(ioc);
- 
- 	/* initialize Reply Post Free Queue */
--	reply_post_free_sz = ioc->reply_post_queue_depth *
--	    sizeof(Mpi2DefaultReplyDescriptor_t);
--	reply_post_free = (long)ioc->reply_post[index].reply_post_free;
-+	index = 0;
-+	reply_post_free_contig = ioc->reply_post[0].reply_post_free;
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-+		/*
-+		 * If RDPQ is enabled, switch to the next allocation.
-+		 * Otherwise advance within the contiguous region.
-+		 */
-+		if (ioc->rdpq_array_enable) {
-+			reply_q->reply_post_free =
-+				ioc->reply_post[index++].reply_post_free;
-+		} else {
-+			reply_q->reply_post_free = reply_post_free_contig;
-+			reply_post_free_contig += ioc->reply_post_queue_depth;
-+		}
-+
- 		reply_q->reply_post_host_index = 0;
--		reply_q->reply_post_free = (Mpi2ReplyDescriptorsUnion_t *)
--		    reply_post_free;
- 		for (i = 0; i < ioc->reply_post_queue_depth; i++)
- 			reply_q->reply_post_free[i].Words =
- 			    cpu_to_le64(ULLONG_MAX);
- 		if (!_base_is_controller_msix_enabled(ioc))
- 			goto skip_init_reply_post_free_queue;
--		/*
--		 * If RDPQ is enabled, switch to the next allocation.
--		 * Otherwise advance within the contiguous region.
--		 */
--		if (ioc->rdpq_array_enable)
--			reply_post_free = (long)
--			    ioc->reply_post[++index].reply_post_free;
--		else
--			reply_post_free += reply_post_free_sz;
- 	}
-  skip_init_reply_post_free_queue:
- 
--- 
-2.8.0.rc2
