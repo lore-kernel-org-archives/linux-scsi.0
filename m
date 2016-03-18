@@ -1,76 +1,39 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 00/22] ncr5380: Eliminate macros, reduce code duplication,
- fix bugs etc
-Date: Fri, 18 Mar 2016 20:03:00 +1300
-Message-ID: <56EBA824.2040205@gmail.com>
-References: <20160314042700.596192247@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20160314042700.596192247@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_common: do not clobber fixed sense information
+Date: Fri, 18 Mar 2016 09:01:35 +0100
+Message-ID: <1458288095-126497-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60566 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751828AbcCRIB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2016 04:01:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Finn,
+For fixed sense the information field is 32 bits, to we need
+to truncate the information field to avoid clobbering the
+sense code.
 
-tested successfully on Atari Falcon, so:
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+index c126966..3459009 100644
+--- a/drivers/scsi/scsi_common.c
++++ b/drivers/scsi/scsi_common.c
+@@ -279,7 +279,7 @@ int scsi_set_sense_information(u8 *buf, int buf_len, u64 info)
+ 		put_unaligned_be64(info, &ucp[4]);
+ 	} else if ((buf[0] & 0x7f) == 0x70) {
+ 		buf[0] |= 0x80;
+-		put_unaligned_be64(info, &buf[3]);
++		put_unaligned_be32((u32)info, &buf[3]);
+ 	}
+ 
+ 	return 0;
+-- 
+1.8.5.6
 
-Am 14.03.2016 um 17:27 schrieb Finn Thain:
-> This patch series has more macro elimination and some tweaks to the
-> DMA hooks so that all the wrapper drivers can share the same core
-> DMA algorithm. This resolves the major discrepancies between the two
-> core drivers, which relate to code conditional on the REAL_DMA and
-> PSEUDO_DMA macros.
-> 
-> After all the wrapper drivers agree on the DMA hook api, the core driver
-> fork gets resolved. NCR5380.c is adopted by atari_scsi and sun3_scsi and
-> atari_NCR5380.c is then deleted.
-> 
-> Historically, the 5380 drivers suffered from over-use of conditional
-> compilation, which caused the compile-time configuration space to explode,
-> leading to core driver code that was practically untestable, unmaintainable
-> and difficult to reason about. It also prevented driver modules from
-> sharing object code.
-> 
-> Along with REAL_DMA, REAL_DMA_POLL and PSEUDO_DMA, most of the remaining
-> macros are also eradicated, such as CONFIG_SCSI_GENERIC_NCR53C400,
-> SUPPORT_TAGS, DONT_USE_INTR, AUTOPROBE_IRQ and BIOSPARAM.
-> 
-> Also in this patch series, some duplicated documentation is removed and
-> the PDMA implementation in mac_scsi finally gets fixed.
-> 
-> This patch series was tested by exercising the dmx3191d and mac_scsi modules
-> on suitable hardware. Help with driver testing on ISA and Atari hardware
-> is sought as I don't have any (likewise RiscPC ecards and Sun 3 hardware).
-> 
-> ---
->  Documentation/scsi/g_NCR5380.txt       |   17 
->  Documentation/scsi/scsi-parameters.txt |   11 
->  drivers/scsi/Kconfig                   |   11 
->  drivers/scsi/NCR5380.c                 |  661 ++++----
->  drivers/scsi/NCR5380.h                 |  145 -
->  drivers/scsi/arm/cumana_1.c            |   25 
->  drivers/scsi/arm/oak.c                 |   22 
->  drivers/scsi/atari_NCR5380.c           | 2676 ---------------------------------
->  drivers/scsi/atari_scsi.c              |  142 -
->  drivers/scsi/dmx3191d.c                |   10 
->  drivers/scsi/dtc.c                     |   27 
->  drivers/scsi/dtc.h                     |    7 
->  drivers/scsi/g_NCR5380.c               |  143 -
->  drivers/scsi/g_NCR5380.h               |   26 
->  drivers/scsi/mac_scsi.c                |  239 +-
->  drivers/scsi/pas16.c                   |   27 
->  drivers/scsi/pas16.h                   |    5 
->  drivers/scsi/sun3_scsi.c               |   48 
->  drivers/scsi/t128.c                    |   19 
->  drivers/scsi/t128.h                    |    7 
->  20 files changed, 636 insertions(+), 3632 deletions(-)
-> 
-> 
-> 
-> 
