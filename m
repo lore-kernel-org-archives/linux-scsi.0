@@ -1,39 +1,82 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi_common: do not clobber fixed sense information
-Date: Fri, 18 Mar 2016 09:01:35 +0100
-Message-ID: <1458288095-126497-1-git-send-email-hare@suse.de>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: Re: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
+Date: Fri, 18 Mar 2016 08:24:14 +0000
+Message-ID: <7B4ED661-DFD7-4347-B652-574E3B180957@hgst.com>
+References: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
+ <56EBA755.3080603@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60566 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751828AbcCRIB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2016 04:01:56 -0400
+Received: from sjc00mx1.hgst.com ([199.255.44.36]:21486 "EHLO
+	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbcCRIYU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 04:24:20 -0400
+In-Reply-To: <56EBA755.3080603@suse.de>
+Content-Language: en-US
+Content-ID: <A809934468164244BC0D9F6E76257B23@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-For fixed sense the information field is 32 bits, to we need
-to truncate the information field to avoid clobbering the
-sense code.
-
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-index c126966..3459009 100644
---- a/drivers/scsi/scsi_common.c
-+++ b/drivers/scsi/scsi_common.c
-@@ -279,7 +279,7 @@ int scsi_set_sense_information(u8 *buf, int buf_len, u64 info)
- 		put_unaligned_be64(info, &ucp[4]);
- 	} else if ((buf[0] & 0x7f) == 0x70) {
- 		buf[0] |= 0x80;
--		put_unaligned_be64(info, &buf[3]);
-+		put_unaligned_be32((u32)info, &buf[3]);
- 	}
- 
- 	return 0;
--- 
-1.8.5.6
+DQo+T24gMDMvMTgvMjAxNiAwNTo0OSBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+PiANCj4+
+IGxpYmF0YTogU2V0IGxvbmdlciB0aW1lb3V0IGZvciBTRVRGRUFUVVJFU19TUElOVVANCj4+ICAg
+ICANCj4+IEZvciBTQVRBIGRyaXZlcyB3aXRoIHBvd2VyLXVwIGluIHN0YW5kYnkgKFBVSVMpIGZl
+YXR1cmUgc2V0LA0KPj4gU0VURkVBVFVSRVNfU1BJTlVQIGV4ZWN1dGlvbiBtYXkgYmUgcmVxdWly
+ZWQgdG8gZ2V0DQo+PiBjb21wbGV0ZSBJREVOVElGWSBkYXRhLiBIb3dldmVyLCB0aGUgdGltZW91
+dCB1c2VkIGZvciBpdHMNCj4+IGV4ZWN1dGlvbiBpcyB0aGUgc2FtZSBhcyBmb3IgYWxsIG90aGVy
+IFNFVEZFQVRVUkVTIGNvbW1hbmRzLA0KPj4gdGhhdCBpcywgNSBzZWNvbmRzLiBUaGlzIGlzIHRv
+byBzaG9ydCBmb3Igc29tZSBkaXNrcyB0byBjb21wbGV0ZQ0KPj4gdGltZW91dCBhbmQgYWxsb3cg
+SURFTlRJRlkgdG8gcmV0dXJuIGNvbXBsZXRlIGRhdGEgKGUuZy4NCj4+IGRpc2tzIHdpdGggbGFy
+Z2UgaW5kaXJlY3Rpb24gdGFibGVzIHN0b3JlZCBvbiBtZWRpYSksIHJlc3VsdGluZw0KPj4gaW4g
+YXRhX2Rldl9yZWFkX2lkIHRvIGZhaWwuIEZvciB0aGlzIGZlYXR1cmUsIGFsbG93IGEgbGFyZ2Vy
+DQo+PiB0aW1lb3V0IG9mIDMwIHNlY29uZHMuDQo+PiANCj5SZXZpZXdlZC1ieTogSGFubmVzIFJl
+aW5lY2tlIDxoYXJlQHN1c2UuY29tPg0KPg0KPihCVFcsIHlvdSBtaWdodCB3YW50IHRvIGFkZCB5
+b3VyIFNpZ25lZC1vZmYtYnk6LCB0b28gOi0pDQoNCkhhbm5lcywNCg0KU29ycnkgYWJvdXQgdGhp
+cy4gSGVyZSBpdCBpcy4uLg0KDQpsaWJhdGE6IFNldCBsb25nZXIgdGltZW91dCBmb3IgU0VURkVB
+VFVSRVNfU1BJTlVQDQogICAgDQpGb3IgU0FUQSBkcml2ZXMgd2l0aCBwb3dlci11cCBpbiBzdGFu
+ZGJ5IChQVUlTKSBmZWF0dXJlIHNldCwNClNFVEZFQVRVUkVTX1NQSU5VUCBleGVjdXRpb24gbWF5
+IGJlIHJlcXVpcmVkIHRvIGdldA0KY29tcGxldGUgSURFTlRJRlkgZGF0YS4gSG93ZXZlciwgdGhl
+IHRpbWVvdXQgdXNlZCBmb3IgaXRzDQpleGVjdXRpb24gaXMgdGhlIHNhbWUgYXMgZm9yIGFsbCBv
+dGhlciBTRVRGRUFUVVJFUyBjb21tYW5kcywNCnRoYXQgaXMsIDUgc2Vjb25kcy4gVGhpcyBpcyB0
+b28gc2hvcnQgZm9yIHNvbWUgZGlza3MgdG8gY29tcGxldGUNCnNwaW51cCBhbmQgYWxsb3cgSURF
+TlRJRlkgdG8gcmV0dXJuIGNvbXBsZXRlIGRhdGEgKGUuZy4NCmRpc2tzIHdpdGggbGFyZ2UgaW5k
+aXJlY3Rpb24gdGFibGVzIHN0b3JlZCBvbiBtZWRpYSksIHJlc3VsdGluZw0KaW4gYXRhX2Rldl9y
+ZWFkX2lkIHRvIGZhaWwuIEZvciB0aGlzIGZlYXR1cmUsIGFsbG93IGEgbGFyZ2VyDQp0aW1lb3V0
+IG9mIDMwIHNlY29uZHMuDQoNClNpZ25lZC1vZmYtYnk6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4u
+bGVtb2FsQGhnc3QuY29tPg0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUu
+YyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCmluZGV4IGU4M2ZjM2QuLmVjYmJlZTIgMTAw
+NjQ0DQotLS0gYS9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jDQorKysgYi9kcml2ZXJzL2F0YS9s
+aWJhdGEtY29yZS5jDQpAQCAtNDUzNyw3ICs0NTM3LDggQEAgdW5zaWduZWQgaW50IGF0YV9kZXZf
+c2V0X2ZlYXR1cmUoc3RydWN0IGF0YV9kZXZpY2UgKmRldiwgdTggZW5hYmxlLCB1OCBmZWF0dXJl
+KQ0KIAl0Zi5wcm90b2NvbCA9IEFUQV9QUk9UX05PREFUQTsNCiAJdGYubnNlY3QgPSBmZWF0dXJl
+Ow0KIA0KLQllcnJfbWFzayA9IGF0YV9leGVjX2ludGVybmFsKGRldiwgJnRmLCBOVUxMLCBETUFf
+Tk9ORSwgTlVMTCwgMCwgMCk7DQorCWVycl9tYXNrID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCAm
+dGYsIE5VTEwsIERNQV9OT05FLCBOVUxMLCAwLA0KKwkJCQkgICAgIGVuYWJsZSA9PSBTRVRGRUFU
+VVJFU19TUElOVVAgPyBTRVRGRUFUVVJFU19TUElOVVBfVElNRU9VVCA6IDApOw0KIA0KIAlEUFJJ
+TlRLKCJFWElULCBlcnJfbWFzaz0leFxuIiwgZXJyX21hc2spOw0KIAlyZXR1cm4gZXJyX21hc2s7
+DQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9hdGEuaCBiL2luY2x1ZGUvbGludXgvYXRhLmgN
+CmluZGV4IGZlZDM2NDEuLmUzYTlhYjYgMTAwNjQ0DQotLS0gYS9pbmNsdWRlL2xpbnV4L2F0YS5o
+DQorKysgYi9pbmNsdWRlL2xpbnV4L2F0YS5oDQpAQCAtMzcxLDYgKzM3MSw3IEBAIGVudW0gew0K
+IAlTRVRGRUFUVVJFU19BQU1fT0ZGCT0gMHhDMiwNCiANCiAJU0VURkVBVFVSRVNfU1BJTlVQCT0g
+MHgwNywgLyogU3Bpbi11cCBkcml2ZSAqLw0KKwlTRVRGRUFUVVJFU19TUElOVVBfVElNRU9VVAk9
+IDMwMDAwLA0KIA0KIAlTRVRGRUFUVVJFU19TQVRBX0VOQUJMRSA9IDB4MTAsIC8qIEVuYWJsZSB1
+c2Ugb2YgU0FUQSBmZWF0dXJlICovDQogCVNFVEZFQVRVUkVTX1NBVEFfRElTQUJMRSA9IDB4OTAs
+IC8qIERpc2FibGUgdXNlIG9mIFNBVEEgZmVhdHVyZSAqLw0KDQoNCi0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLQ0KRGFtaWVuIExlIE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lzdGVtIFNvZnR3
+YXJlIEdyb3VwLCBIR1NUIFJlc2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0YWwgY29tcGFu
+eQ0KRGFtaWVuLkxlTW9hbEBoZ3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChleHQuIDUxMzU5
+MykNCjEga2lyaWhhcmEtY2hvLCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4ODggSmFwYW4N
+Cnd3dy5oZ3N0LmNvbQ0KDQpXZXN0ZXJuIERpZ2l0YWwgQ29ycG9yYXRpb24gKGFuZCBpdHMgc3Vi
+c2lkaWFyaWVzKSBFLW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAmIERpc2NsYWltZXI6CgpU
+aGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgbWF5IGNvbnRhaW4g
+Y29uZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBvZiBXREMgYW5k
+L29yIGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVkIHNvbGVseSBmb3IgdGhlIHVzZSBv
+ZiB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2ggdGhleSBhcmUgYWRkcmVzc2VkLiBJ
+ZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBhbnkgZGlzY2xvc3VyZSwgY29w
+eWluZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFrZW4gb3Igb21pdHRlZCB0byBiZSB0
+YWtlbiBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRlZC4gSWYgeW91IGhhdmUgcmVjZWl2
+ZWQgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBpbW1lZGlh
+dGVseSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVudGlyZXR5IGZyb20geW91ciBzeXN0
+ZW0uCg==
 
