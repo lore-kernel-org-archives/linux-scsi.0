@@ -1,141 +1,46 @@
-From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH v1 2/3] Cleanup the I/O pending with fw and has timed out and is used to issue LUN reset
-Date: Fri, 18 Mar 2016 11:22:49 -0700
-Message-ID: <1458325370-25615-2-git-send-email-satishkh@cisco.com>
-References: <1458325370-25615-1-git-send-email-satishkh@cisco.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 91711] 3w-9xxx: DMA-API: device driver tries to free DMA memory
+ it has not allocated
+Date: Fri, 18 Mar 2016 18:24:03 +0000
+Message-ID: <bug-91711-11613-kxAMvzdvKO@https.bugzilla.kernel.org/>
+References: <bug-91711-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-3.cisco.com ([173.37.142.90]:51296 "EHLO
-	alln-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753404AbcCRSXZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 14:23:25 -0400
-In-Reply-To: <1458325370-25615-1-git-send-email-satishkh@cisco.com>
+Received: from mail.kernel.org ([198.145.29.136]:48294 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751405AbcCRSYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2016 14:24:07 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 4AC45201F5
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2016 18:24:06 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 7B8A52034F
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2016 18:24:03 +0000 (UTC)
+In-Reply-To: <bug-91711-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: satishkh@cisco.com, linux-scsi@vger.kernel.org
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
+To: linux-scsi@vger.kernel.org
 
-In case of LUN reset, the device reset command is issued with one of
-the I/Os that has timed out on that LUN. The change is to also return
-this I/O with error status set to DID_RESET. In case when the reset
-is issued using the sg_reset tool (from sg3_utils) it is a new command
-and new_sc is set to 1.
-Fnic driver version changed from 1.6.0.19 to 1.6.0.20
+https://bugzilla.kernel.org/show_bug.cgi?id=91711
 
-Signed-off-by: Satish Kharat <satishkh@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
- * v1
- - new_sc is set to 1 in cases like lunreset from sg_reset
----
- drivers/scsi/fnic/fnic.h      |  2 +-
- drivers/scsi/fnic/fnic_scsi.c | 38 ++++++++++++++++++++++++++++----------
- 2 files changed, 29 insertions(+), 11 deletions(-)
+Adam Radford <aradford@gmail.com> changed:
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 52a53f8..1023eae 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -39,7 +39,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.19"
-+#define DRV_VERSION		"1.6.0.20"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index b732fa3..026b93d 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -2042,7 +2042,9 @@ lr_io_req_end:
-  * successfully aborted, 1 otherwise
-  */
- static int fnic_clean_pending_aborts(struct fnic *fnic,
--				     struct scsi_cmnd *lr_sc)
-+				     struct scsi_cmnd *lr_sc,
-+					 bool new_sc)
-+
- {
- 	int tag, abt_tag;
- 	struct fnic_io_req *io_req;
-@@ -2060,10 +2062,10 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 		spin_lock_irqsave(io_lock, flags);
- 		sc = scsi_host_find_tag(fnic->lport->host, tag);
- 		/*
--		 * ignore this lun reset cmd or cmds that do not belong to
--		 * this lun
-+		 * ignore this lun reset cmd if issued using new SC
-+		 * or cmds that do not belong to this lun
- 		 */
--		if (!sc || sc == lr_sc || sc->device != lun_dev) {
-+		if (!sc || ((sc == lr_sc) && new_sc) || sc->device != lun_dev) {
- 			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
- 		}
-@@ -2169,11 +2171,27 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 			goto clean_pending_aborts_end;
- 		}
- 		CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
--		CMD_SP(sc) = NULL;
-+
-+		/* original sc used for lr is handled by dev reset code */
-+		if (sc != lr_sc)
-+			CMD_SP(sc) = NULL;
- 		spin_unlock_irqrestore(io_lock, flags);
- 
--		fnic_release_ioreq_buf(fnic, io_req, sc);
--		mempool_free(io_req, fnic->io_req_pool);
-+		/* original sc used for lr is handled by dev reset code */
-+		if (sc != lr_sc) {
-+			fnic_release_ioreq_buf(fnic, io_req, sc);
-+			mempool_free(io_req, fnic->io_req_pool);
-+		}
-+
-+		/*
-+		 * Any IO is returned during reset, it needs to call scsi_done
-+		 * to return the scsi_cmnd to upper layer.
-+		 */
-+		if (sc->scsi_done) {
-+			/* Set result to let upper SCSI layer retry */
-+			sc->result = DID_RESET << 16;
-+			sc->scsi_done(sc);
-+		}
- 	}
- 
- 	schedule_timeout(msecs_to_jiffies(2 * fnic->config.ed_tov));
-@@ -2267,6 +2285,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 	int tag = 0;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
- 	int tag_gen_flag = 0;   /*to track tags allocated by fnic driver*/
-+	bool new_sc = 0;
- 
- 	/* Wait for rport to unblock */
- 	fc_block_scsi_eh(sc);
-@@ -2312,13 +2331,12 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 		 * fix the way the EH ioctls work for real, but until
- 		 * that happens we fail these explicit requests here.
- 		 */
--		if (shost_use_blk_mq(sc->device->host))
--			goto fnic_device_reset_end;
- 
- 		tag = fnic_scsi_host_start_tag(fnic, sc);
- 		if (unlikely(tag == SCSI_NO_TAG))
- 			goto fnic_device_reset_end;
- 		tag_gen_flag = 1;
-+		new_sc=1;
- 	}
- 	io_lock = fnic_io_lock_hash(fnic, sc);
- 	spin_lock_irqsave(io_lock, flags);
-@@ -2453,7 +2471,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 	 * the lun reset cmd. If all cmds get cleaned, the lun reset
- 	 * succeeds
- 	 */
--	if (fnic_clean_pending_aborts(fnic, sc)) {
-+	if (fnic_clean_pending_aborts(fnic, sc, new_sc)) {
- 		spin_lock_irqsave(io_lock, flags);
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |aradford@gmail.com
+
+--- Comment #17 from Adam Radford <aradford@gmail.com> ---
+I think Christoph Hellwig already fixed this issue in the upstream kernel, with
+these 2 upstream patches:
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=118c855b5623f3e2e6204f02623d88c09e0c34de
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=15e3d5a285ab9283136dba34bbf72886d9146706
+
+I would apply the above 2 patches to your kernel and try to reproduce.
+
 -- 
-2.4.3
-
+You are receiving this mail because:
+You are the assignee for the bug.
