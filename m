@@ -1,18 +1,20 @@
 From: Joao Pinto <Joao.Pinto@synopsys.com>
 Subject: UFS V11 patch-set
-Date: Fri, 18 Mar 2016 12:49:42 +0000
-Message-ID: <56EBF966.8040907@synopsys.com>
+Date: Fri, 18 Mar 2016 12:52:13 +0000
+Message-ID: <56EBF9FD.9080906@synopsys.com>
+References: <56EBF966.8040907@synopsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:60490 "EHLO
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:60536 "EHLO
 	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbcCRMtt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 08:49:49 -0400
+	with ESMTP id S1751925AbcCRMwT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 08:52:19 -0400
+In-Reply-To: <56EBF966.8040907@synopsys.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinayak holikatti <vinholikatti@gmail.com>, JBottomley@odin.com, rafael.j.wysocki@intel.com, hch@lst.de
+To: vinayak holikatti <vinholikatti@gmail.com>, JBottomley@Parallels.com, rafael.j.wysocki@intel.com, hch@lst.de
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
 
 Hi!
@@ -45,3 +47,5 @@ Thank you very much!
 
 Regards,
 Joao
+
+PS: Changed JBottomley e-mail address.
