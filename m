@@ -1,56 +1,35 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] scsi_common: do not clobber fixed sense information
-Date: Fri, 18 Mar 2016 08:57:43 -0400
-Message-ID: <1458305863.17965.24.camel@localhost.localdomain>
-References: <1458288095-126497-1-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 91711] 3w-9xxx: DMA-API: device driver tries to free DMA memory
+ it has not allocated
+Date: Fri, 18 Mar 2016 13:34:36 +0000
+Message-ID: <bug-91711-11613-5AAOAoHitQ@https.bugzilla.kernel.org/>
+References: <bug-91711-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34723 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:51200 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753418AbcCRM5p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2016 08:57:45 -0400
-In-Reply-To: <1458288095-126497-1-git-send-email-hare@suse.de>
+	id S1751158AbcCRNel (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2016 09:34:41 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 73D1B2037F
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2016 13:34:38 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id B86C620392
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2016 13:34:37 +0000 (UTC)
+In-Reply-To: <bug-91711-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2016-03-18 at 09:01 +0100, Hannes Reinecke wrote:
-> For fixed sense the information field is 32 bits, to we need
-> to truncate the information field to avoid clobbering the
-> sense code.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/scsi_common.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-> index c126966..3459009 100644
-> --- a/drivers/scsi/scsi_common.c
-> +++ b/drivers/scsi/scsi_common.c
-> @@ -279,7 +279,7 @@ int scsi_set_sense_information(u8 *buf, int buf_len, u64 info)
->  		put_unaligned_be64(info, &ucp[4]);
->  	} else if ((buf[0] & 0x7f) == 0x70) {
->  		buf[0] |= 0x80;
-> -		put_unaligned_be64(info, &buf[3]);
-> +		put_unaligned_be32((u32)info, &buf[3]);
->  	}
->  
->  	return 0;
+https://bugzilla.kernel.org/show_bug.cgi?id=91711
 
-Well, not clobbering the ADDITIONAL SENSE LENGTH field is good,
-however according to SPC-5 what we are really supposed to do here
-is not set the VALID bit (buf[0] |= 0x80) if the value to be
-returned can't be represented in 32 bits (and set the INFORMATION
-field to a "vendor specific" value, whatever that means).
+--- Comment #4 from nickkrause@sympatico.ca ---
+Created attachment 209781
+  --> https://bugzilla.kernel.org/attachment.cgi?id=209781&action=edit
+Test Patch
 
-I'm not a T10 member so I don't have immediate access to what the
-earlier SPC revisions say.
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
