@@ -1,34 +1,29 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 91711] 3w-9xxx: DMA-API: device driver tries to free DMA memory
- it has not allocated
-Date: Fri, 18 Mar 2016 18:59:59 +0000
-Message-ID: <bug-91711-11613-RzruC0zLVN@https.bugzilla.kernel.org/>
-References: <bug-91711-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] aacraid: add missing curly braces
+Date: Fri, 18 Mar 2016 15:20:06 -0400
+Message-ID: <yq1d1qra909.fsf@sermon.lab.mkp.net>
+References: <1457965789-3373916-1-git-send-email-arnd@arndb.de>
+	<1457965789-3373916-2-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49898 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820AbcCRTAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2016 15:00:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 456B220382
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2016 19:00:01 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 9A99A20361
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2016 18:59:59 +0000 (UTC)
-In-Reply-To: <bug-91711-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1457965789-3373916-2-git-send-email-arnd@arndb.de> (Arnd
+	Bergmann's message of "Mon, 14 Mar 2016 15:29:43 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Tomas Henzl <thenzl@redhat.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=91711
+>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 
---- Comment #19 from Orion <admin@e-blokos.com> ---
-Unfortunately for now my DC blocked all ssh access and I'm afraid it's for a
-long time...
+Raghava,
+
+Please review.
+
+Arnd> gcc-6 warns about obviously wrong indentation for newly added code
+Arnd> in aac_slave_configure():
+
+https://patchwork.kernel.org/patch/8579681/
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Martin K. Petersen	Oracle Linux Engineering
