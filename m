@@ -1,63 +1,50 @@
-From: Damien Le Moal <Damien.LeMoal@hgst.com>
-Subject: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
-Date: Fri, 18 Mar 2016 04:49:07 +0000
-Message-ID: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
+Date: Fri, 18 Mar 2016 07:59:33 +0100
+Message-ID: <56EBA755.3080603@suse.de>
+References: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sjc00mx2.hgst.com ([199.255.44.37]:17461 "EHLO
-	sjc00mx2.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752247AbcCREtM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 00:49:12 -0400
-Content-Language: en-US
-Content-ID: <F87DF72114DB52488A2128D3CEC567A4@namprd04.prod.outlook.com>
+Received: from mx2.suse.de ([195.135.220.15]:58608 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750818AbcCRG7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2016 02:59:37 -0400
+In-Reply-To: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: Damien Le Moal <Damien.LeMoal@hgst.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQpsaWJhdGE6IFNldCBsb25nZXIgdGltZW91dCBmb3IgU0VURkVBVFVSRVNfU1BJTlVQDQogICAg
-DQpGb3IgU0FUQSBkcml2ZXMgd2l0aCBwb3dlci11cCBpbiBzdGFuZGJ5IChQVUlTKSBmZWF0dXJl
-IHNldCwNClNFVEZFQVRVUkVTX1NQSU5VUCBleGVjdXRpb24gbWF5IGJlIHJlcXVpcmVkIHRvIGdl
-dA0KY29tcGxldGUgSURFTlRJRlkgZGF0YS4gSG93ZXZlciwgdGhlIHRpbWVvdXQgdXNlZCBmb3Ig
-aXRzDQpleGVjdXRpb24gaXMgdGhlIHNhbWUgYXMgZm9yIGFsbCBvdGhlciBTRVRGRUFUVVJFUyBj
-b21tYW5kcywNCnRoYXQgaXMsIDUgc2Vjb25kcy4gVGhpcyBpcyB0b28gc2hvcnQgZm9yIHNvbWUg
-ZGlza3MgdG8gY29tcGxldGUNCnRpbWVvdXQgYW5kIGFsbG93IElERU5USUZZIHRvIHJldHVybiBj
-b21wbGV0ZSBkYXRhIChlLmcuDQpkaXNrcyB3aXRoIGxhcmdlIGluZGlyZWN0aW9uIHRhYmxlcyBz
-dG9yZWQgb24gbWVkaWEpLCByZXN1bHRpbmcNCmluIGF0YV9kZXZfcmVhZF9pZCB0byBmYWlsLiBG
-b3IgdGhpcyBmZWF0dXJlLCBhbGxvdyBhIGxhcmdlcg0KdGltZW91dCBvZiAzMCBzZWNvbmRzLg0K
-DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYyBiL2RyaXZlcnMvYXRhL2xp
-YmF0YS1jb3JlLmMNCmluZGV4IGU4M2ZjM2QuLmVjYmJlZTIgMTAwNjQ0DQotLS0gYS9kcml2ZXJz
-L2F0YS9saWJhdGEtY29yZS5jDQorKysgYi9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jDQpAQCAt
-NDUzNyw3ICs0NTM3LDggQEAgdW5zaWduZWQgaW50IGF0YV9kZXZfc2V0X2ZlYXR1cmUoc3RydWN0
-IGF0YV9kZXZpY2UgKmRldiwgdTggZW5hYmxlLCB1OCBmZWF0dXJlKQ0KIAl0Zi5wcm90b2NvbCA9
-IEFUQV9QUk9UX05PREFUQTsNCiAJdGYubnNlY3QgPSBmZWF0dXJlOw0KIA0KLQllcnJfbWFzayA9
-IGF0YV9leGVjX2ludGVybmFsKGRldiwgJnRmLCBOVUxMLCBETUFfTk9ORSwgTlVMTCwgMCwgMCk7
-DQorCWVycl9tYXNrID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCAmdGYsIE5VTEwsIERNQV9OT05F
-LCBOVUxMLCAwLA0KKwkJCQkgICAgIGVuYWJsZSA9PSBTRVRGRUFUVVJFU19TUElOVVAgPyBTRVRG
-RUFUVVJFU19TUElOVVBfVElNRU9VVCA6IDApOw0KIA0KIAlEUFJJTlRLKCJFWElULCBlcnJfbWFz
-az0leFxuIiwgZXJyX21hc2spOw0KIAlyZXR1cm4gZXJyX21hc2s7DQpkaWZmIC0tZ2l0IGEvaW5j
-bHVkZS9saW51eC9hdGEuaCBiL2luY2x1ZGUvbGludXgvYXRhLmgNCmluZGV4IGZlZDM2NDEuLmUz
-YTlhYjYgMTAwNjQ0DQotLS0gYS9pbmNsdWRlL2xpbnV4L2F0YS5oDQorKysgYi9pbmNsdWRlL2xp
-bnV4L2F0YS5oDQpAQCAtMzcxLDYgKzM3MSw3IEBAIGVudW0gew0KIAlTRVRGRUFUVVJFU19BQU1f
-T0ZGCT0gMHhDMiwNCiANCiAJU0VURkVBVFVSRVNfU1BJTlVQCT0gMHgwNywgLyogU3Bpbi11cCBk
-cml2ZSAqLw0KKwlTRVRGRUFUVVJFU19TUElOVVBfVElNRU9VVAk9IDMwMDAwLA0KIA0KIAlTRVRG
-RUFUVVJFU19TQVRBX0VOQUJMRSA9IDB4MTAsIC8qIEVuYWJsZSB1c2Ugb2YgU0FUQSBmZWF0dXJl
-ICovDQogCVNFVEZFQVRVUkVTX1NBVEFfRElTQUJMRSA9IDB4OTAsIC8qIERpc2FibGUgdXNlIG9m
-IFNBVEEgZmVhdHVyZSAqLw0KDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KRGFtaWVuIExl
-IE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lzdGVtIFNvZnR3YXJlIEdyb3VwLCBIR1NUIFJl
-c2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0YWwgY29tcGFueQ0KRGFtaWVuLkxlTW9hbEBo
-Z3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChleHQuIDUxMzU5MykNCjEga2lyaWhhcmEtY2hv
-LCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4ODggSmFwYW4NCnd3dy5oZ3N0LmNvbSANCldl
-c3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAoYW5kIGl0cyBzdWJzaWRpYXJpZXMpIEUtbWFpbCBD
-b25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlzY2xhaW1lcjoKClRoaXMgZS1tYWlsIGFuZCBhbnkg
-ZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3IgbGVn
-YWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIG9mIFdEQyBhbmQvb3IgaXRzIGFmZmlsaWF0ZXMs
-IGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0aGUgdXNlIG9mIHRoZSBpbmRpdmlkdWFsIG9y
-IGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBhZGRyZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBp
-bnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNjbG9zdXJlLCBjb3B5aW5nLCBkaXN0cmlidXRpb24g
-b3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0dGVkIHRvIGJlIHRha2VuIGluIHJlbGlhbmNlIG9u
-IGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBl
-cnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGFuZCBkZWxldGUgdGhl
-IGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJvbSB5b3VyIHN5c3RlbS4K
+On 03/18/2016 05:49 AM, Damien Le Moal wrote:
+>=20
+> libata: Set longer timeout for SETFEATURES_SPINUP
+>    =20
+> For SATA drives with power-up in standby (PUIS) feature set,
+> SETFEATURES_SPINUP execution may be required to get
+> complete IDENTIFY data. However, the timeout used for its
+> execution is the same as for all other SETFEATURES commands,
+> that is, 5 seconds. This is too short for some disks to complete
+> timeout and allow IDENTIFY to return complete data (e.g.
+> disks with large indirection tables stored on media), resulting
+> in ata_dev_read_id to fail. For this feature, allow a larger
+> timeout of 30 seconds.
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
+(BTW, you might want to add your Signed-off-by:, too :-)
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
