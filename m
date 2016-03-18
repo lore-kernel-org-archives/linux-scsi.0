@@ -1,50 +1,76 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
-Date: Fri, 18 Mar 2016 07:59:33 +0100
-Message-ID: <56EBA755.3080603@suse.de>
-References: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 00/22] ncr5380: Eliminate macros, reduce code duplication,
+ fix bugs etc
+Date: Fri, 18 Mar 2016 20:03:00 +1300
+Message-ID: <56EBA824.2040205@gmail.com>
+References: <20160314042700.596192247@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58608 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750818AbcCRG7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2016 02:59:37 -0400
-In-Reply-To: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20160314042700.596192247@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/18/2016 05:49 AM, Damien Le Moal wrote:
->=20
-> libata: Set longer timeout for SETFEATURES_SPINUP
->    =20
-> For SATA drives with power-up in standby (PUIS) feature set,
-> SETFEATURES_SPINUP execution may be required to get
-> complete IDENTIFY data. However, the timeout used for its
-> execution is the same as for all other SETFEATURES commands,
-> that is, 5 seconds. This is too short for some disks to complete
-> timeout and allow IDENTIFY to return complete data (e.g.
-> disks with large indirection tables stored on media), resulting
-> in ata_dev_read_id to fail. For this feature, allow a larger
-> timeout of 30 seconds.
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Finn,
 
-(BTW, you might want to add your Signed-off-by:, too :-)
+tested successfully on Atari Falcon, so:
 
-Cheers,
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Am 14.03.2016 um 17:27 schrieb Finn Thain:
+> This patch series has more macro elimination and some tweaks to the
+> DMA hooks so that all the wrapper drivers can share the same core
+> DMA algorithm. This resolves the major discrepancies between the two
+> core drivers, which relate to code conditional on the REAL_DMA and
+> PSEUDO_DMA macros.
+> 
+> After all the wrapper drivers agree on the DMA hook api, the core driver
+> fork gets resolved. NCR5380.c is adopted by atari_scsi and sun3_scsi and
+> atari_NCR5380.c is then deleted.
+> 
+> Historically, the 5380 drivers suffered from over-use of conditional
+> compilation, which caused the compile-time configuration space to explode,
+> leading to core driver code that was practically untestable, unmaintainable
+> and difficult to reason about. It also prevented driver modules from
+> sharing object code.
+> 
+> Along with REAL_DMA, REAL_DMA_POLL and PSEUDO_DMA, most of the remaining
+> macros are also eradicated, such as CONFIG_SCSI_GENERIC_NCR53C400,
+> SUPPORT_TAGS, DONT_USE_INTR, AUTOPROBE_IRQ and BIOSPARAM.
+> 
+> Also in this patch series, some duplicated documentation is removed and
+> the PDMA implementation in mac_scsi finally gets fixed.
+> 
+> This patch series was tested by exercising the dmx3191d and mac_scsi modules
+> on suitable hardware. Help with driver testing on ISA and Atari hardware
+> is sought as I don't have any (likewise RiscPC ecards and Sun 3 hardware).
+> 
+> ---
+>  Documentation/scsi/g_NCR5380.txt       |   17 
+>  Documentation/scsi/scsi-parameters.txt |   11 
+>  drivers/scsi/Kconfig                   |   11 
+>  drivers/scsi/NCR5380.c                 |  661 ++++----
+>  drivers/scsi/NCR5380.h                 |  145 -
+>  drivers/scsi/arm/cumana_1.c            |   25 
+>  drivers/scsi/arm/oak.c                 |   22 
+>  drivers/scsi/atari_NCR5380.c           | 2676 ---------------------------------
+>  drivers/scsi/atari_scsi.c              |  142 -
+>  drivers/scsi/dmx3191d.c                |   10 
+>  drivers/scsi/dtc.c                     |   27 
+>  drivers/scsi/dtc.h                     |    7 
+>  drivers/scsi/g_NCR5380.c               |  143 -
+>  drivers/scsi/g_NCR5380.h               |   26 
+>  drivers/scsi/mac_scsi.c                |  239 +-
+>  drivers/scsi/pas16.c                   |   27 
+>  drivers/scsi/pas16.h                   |    5 
+>  drivers/scsi/sun3_scsi.c               |   48 
+>  drivers/scsi/t128.c                    |   19 
+>  drivers/scsi/t128.h                    |    7 
+>  20 files changed, 636 insertions(+), 3632 deletions(-)
+> 
+> 
+> 
+> 
