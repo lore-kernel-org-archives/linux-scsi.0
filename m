@@ -1,42 +1,29 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: UFS V11 patch-set
-Date: Fri, 18 Mar 2016 14:53:41 +0000
-Message-ID: <56EC1675.2050002@synopsys.com>
-References: <56EBF966.8040907@synopsys.com> <56EBF9FD.9080906@synopsys.com>
- <4014649.ENvamPh3sb@wuerfel>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
+Date: Fri, 18 Mar 2016 11:02:25 -0400
+Message-ID: <yq160wjbzi6.fsf@sermon.lab.mkp.net>
+References: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:34911 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638AbcCROxs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 10:53:48 -0400
-In-Reply-To: <4014649.ENvamPh3sb@wuerfel>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27179 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755819AbcCRPCo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 11:02:44 -0400
+In-Reply-To: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com> (Damien Le Moal's
+	message of "Fri, 18 Mar 2016 04:49:07 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: vinayak holikatti <vinholikatti@gmail.com>, JBottomley@parallels.com, rafael.j.wysocki@intel.com, hch@lst.de, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
+To: Damien Le Moal <Damien.LeMoal@hgst.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-Hi!
+>>>>> "Damien" == Damien Le Moal <Damien.LeMoal@hgst.com> writes:
 
-On 3/18/2016 2:49 PM, Arnd Bergmann wrote:
-> On Friday 18 March 2016 12:52:13 Joao Pinto wrote:
->> Hi!
->>
->> Could you please check the following patch-set in order to evaluate if it is
->> ready for v4.6?
->>
-> 
-> I think the code is ok now, but the timing apparently didn't work for 4.6.
-> I'd suggest you resend as soon as 4.6-rc1 is out so it can get merged into 4.7.
+Damien,
 
-Isn't it possible to be merged into a ufs-dwc branch in the SCSI Git tree that
-could be pulled later, like Bjorn did in the PCIe RC?
+Damien> libata: Set longer timeout for SETFEATURES_SPINUP
+    
+Please submit to linux-ide@vger.kernel.org.
 
-> 
-> 	Arnd
-> 
-
-Joao
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
