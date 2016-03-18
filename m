@@ -1,29 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
-Date: Fri, 18 Mar 2016 11:02:25 -0400
-Message-ID: <yq160wjbzi6.fsf@sermon.lab.mkp.net>
-References: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH] scsi_common: do not clobber fixed sense information
+Date: Fri, 18 Mar 2016 09:02:12 -0700
+Message-ID: <56EC2684.1080006@suse.com>
+References: <1458288095-126497-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27179 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755819AbcCRPCo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 11:02:44 -0400
-In-Reply-To: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com> (Damien Le Moal's
-	message of "Fri, 18 Mar 2016 04:49:07 +0000")
+Received: from mx2.suse.de ([195.135.220.15]:57463 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbcCRQGL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2016 12:06:11 -0400
+In-Reply-To: <1458288095-126497-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
->>>>> "Damien" == Damien Le Moal <Damien.LeMoal@hgst.com> writes:
+On 03/18/2016 01:01 AM, Hannes Reinecke wrote:
+> For fixed sense the information field is 32 bits, to we need
+> to truncate the information field to avoid clobbering the
+> sense code.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_common.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+> index c126966..3459009 100644
+> --- a/drivers/scsi/scsi_common.c
+> +++ b/drivers/scsi/scsi_common.c
+> @@ -279,7 +279,7 @@ int scsi_set_sense_information(u8 *buf, int buf_len, u64 info)
+>  		put_unaligned_be64(info, &ucp[4]);
+>  	} else if ((buf[0] & 0x7f) == 0x70) {
+>  		buf[0] |= 0x80;
+> -		put_unaligned_be64(info, &buf[3]);
+> +		put_unaligned_be32((u32)info, &buf[3]);
+>  	}
+>  
+>  	return 0;
+> 
 
-Damien,
-
-Damien> libata: Set longer timeout for SETFEATURES_SPINUP
-    
-Please submit to linux-ide@vger.kernel.org.
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Lee
