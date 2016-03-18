@@ -1,82 +1,47 @@
-From: Damien Le Moal <Damien.LeMoal@hgst.com>
-Subject: Re: [PATCH] libata: Set longer timeout for SETFEATURES_SPINUP
-Date: Fri, 18 Mar 2016 08:24:14 +0000
-Message-ID: <7B4ED661-DFD7-4347-B652-574E3B180957@hgst.com>
-References: <0810B2A7-DEA9-417D-8CCF-6A62BEFD9783@hgst.com>
- <56EBA755.3080603@suse.de>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: UFS V11 patch-set
+Date: Fri, 18 Mar 2016 12:49:42 +0000
+Message-ID: <56EBF966.8040907@synopsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sjc00mx1.hgst.com ([199.255.44.36]:21486 "EHLO
-	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbcCRIYU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 04:24:20 -0400
-In-Reply-To: <56EBA755.3080603@suse.de>
-Content-Language: en-US
-Content-ID: <A809934468164244BC0D9F6E76257B23@namprd04.prod.outlook.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:60490 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbcCRMtt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2016 08:49:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: vinayak holikatti <vinholikatti@gmail.com>, JBottomley@odin.com, rafael.j.wysocki@intel.com, hch@lst.de
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
 
-DQo+T24gMDMvMTgvMjAxNiAwNTo0OSBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+PiANCj4+
-IGxpYmF0YTogU2V0IGxvbmdlciB0aW1lb3V0IGZvciBTRVRGRUFUVVJFU19TUElOVVANCj4+ICAg
-ICANCj4+IEZvciBTQVRBIGRyaXZlcyB3aXRoIHBvd2VyLXVwIGluIHN0YW5kYnkgKFBVSVMpIGZl
-YXR1cmUgc2V0LA0KPj4gU0VURkVBVFVSRVNfU1BJTlVQIGV4ZWN1dGlvbiBtYXkgYmUgcmVxdWly
-ZWQgdG8gZ2V0DQo+PiBjb21wbGV0ZSBJREVOVElGWSBkYXRhLiBIb3dldmVyLCB0aGUgdGltZW91
-dCB1c2VkIGZvciBpdHMNCj4+IGV4ZWN1dGlvbiBpcyB0aGUgc2FtZSBhcyBmb3IgYWxsIG90aGVy
-IFNFVEZFQVRVUkVTIGNvbW1hbmRzLA0KPj4gdGhhdCBpcywgNSBzZWNvbmRzLiBUaGlzIGlzIHRv
-byBzaG9ydCBmb3Igc29tZSBkaXNrcyB0byBjb21wbGV0ZQ0KPj4gdGltZW91dCBhbmQgYWxsb3cg
-SURFTlRJRlkgdG8gcmV0dXJuIGNvbXBsZXRlIGRhdGEgKGUuZy4NCj4+IGRpc2tzIHdpdGggbGFy
-Z2UgaW5kaXJlY3Rpb24gdGFibGVzIHN0b3JlZCBvbiBtZWRpYSksIHJlc3VsdGluZw0KPj4gaW4g
-YXRhX2Rldl9yZWFkX2lkIHRvIGZhaWwuIEZvciB0aGlzIGZlYXR1cmUsIGFsbG93IGEgbGFyZ2Vy
-DQo+PiB0aW1lb3V0IG9mIDMwIHNlY29uZHMuDQo+PiANCj5SZXZpZXdlZC1ieTogSGFubmVzIFJl
-aW5lY2tlIDxoYXJlQHN1c2UuY29tPg0KPg0KPihCVFcsIHlvdSBtaWdodCB3YW50IHRvIGFkZCB5
-b3VyIFNpZ25lZC1vZmYtYnk6LCB0b28gOi0pDQoNCkhhbm5lcywNCg0KU29ycnkgYWJvdXQgdGhp
-cy4gSGVyZSBpdCBpcy4uLg0KDQpsaWJhdGE6IFNldCBsb25nZXIgdGltZW91dCBmb3IgU0VURkVB
-VFVSRVNfU1BJTlVQDQogICAgDQpGb3IgU0FUQSBkcml2ZXMgd2l0aCBwb3dlci11cCBpbiBzdGFu
-ZGJ5IChQVUlTKSBmZWF0dXJlIHNldCwNClNFVEZFQVRVUkVTX1NQSU5VUCBleGVjdXRpb24gbWF5
-IGJlIHJlcXVpcmVkIHRvIGdldA0KY29tcGxldGUgSURFTlRJRlkgZGF0YS4gSG93ZXZlciwgdGhl
-IHRpbWVvdXQgdXNlZCBmb3IgaXRzDQpleGVjdXRpb24gaXMgdGhlIHNhbWUgYXMgZm9yIGFsbCBv
-dGhlciBTRVRGRUFUVVJFUyBjb21tYW5kcywNCnRoYXQgaXMsIDUgc2Vjb25kcy4gVGhpcyBpcyB0
-b28gc2hvcnQgZm9yIHNvbWUgZGlza3MgdG8gY29tcGxldGUNCnNwaW51cCBhbmQgYWxsb3cgSURF
-TlRJRlkgdG8gcmV0dXJuIGNvbXBsZXRlIGRhdGEgKGUuZy4NCmRpc2tzIHdpdGggbGFyZ2UgaW5k
-aXJlY3Rpb24gdGFibGVzIHN0b3JlZCBvbiBtZWRpYSksIHJlc3VsdGluZw0KaW4gYXRhX2Rldl9y
-ZWFkX2lkIHRvIGZhaWwuIEZvciB0aGlzIGZlYXR1cmUsIGFsbG93IGEgbGFyZ2VyDQp0aW1lb3V0
-IG9mIDMwIHNlY29uZHMuDQoNClNpZ25lZC1vZmYtYnk6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4u
-bGVtb2FsQGhnc3QuY29tPg0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUu
-YyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCmluZGV4IGU4M2ZjM2QuLmVjYmJlZTIgMTAw
-NjQ0DQotLS0gYS9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jDQorKysgYi9kcml2ZXJzL2F0YS9s
-aWJhdGEtY29yZS5jDQpAQCAtNDUzNyw3ICs0NTM3LDggQEAgdW5zaWduZWQgaW50IGF0YV9kZXZf
-c2V0X2ZlYXR1cmUoc3RydWN0IGF0YV9kZXZpY2UgKmRldiwgdTggZW5hYmxlLCB1OCBmZWF0dXJl
-KQ0KIAl0Zi5wcm90b2NvbCA9IEFUQV9QUk9UX05PREFUQTsNCiAJdGYubnNlY3QgPSBmZWF0dXJl
-Ow0KIA0KLQllcnJfbWFzayA9IGF0YV9leGVjX2ludGVybmFsKGRldiwgJnRmLCBOVUxMLCBETUFf
-Tk9ORSwgTlVMTCwgMCwgMCk7DQorCWVycl9tYXNrID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCAm
-dGYsIE5VTEwsIERNQV9OT05FLCBOVUxMLCAwLA0KKwkJCQkgICAgIGVuYWJsZSA9PSBTRVRGRUFU
-VVJFU19TUElOVVAgPyBTRVRGRUFUVVJFU19TUElOVVBfVElNRU9VVCA6IDApOw0KIA0KIAlEUFJJ
-TlRLKCJFWElULCBlcnJfbWFzaz0leFxuIiwgZXJyX21hc2spOw0KIAlyZXR1cm4gZXJyX21hc2s7
-DQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9hdGEuaCBiL2luY2x1ZGUvbGludXgvYXRhLmgN
-CmluZGV4IGZlZDM2NDEuLmUzYTlhYjYgMTAwNjQ0DQotLS0gYS9pbmNsdWRlL2xpbnV4L2F0YS5o
-DQorKysgYi9pbmNsdWRlL2xpbnV4L2F0YS5oDQpAQCAtMzcxLDYgKzM3MSw3IEBAIGVudW0gew0K
-IAlTRVRGRUFUVVJFU19BQU1fT0ZGCT0gMHhDMiwNCiANCiAJU0VURkVBVFVSRVNfU1BJTlVQCT0g
-MHgwNywgLyogU3Bpbi11cCBkcml2ZSAqLw0KKwlTRVRGRUFUVVJFU19TUElOVVBfVElNRU9VVAk9
-IDMwMDAwLA0KIA0KIAlTRVRGRUFUVVJFU19TQVRBX0VOQUJMRSA9IDB4MTAsIC8qIEVuYWJsZSB1
-c2Ugb2YgU0FUQSBmZWF0dXJlICovDQogCVNFVEZFQVRVUkVTX1NBVEFfRElTQUJMRSA9IDB4OTAs
-IC8qIERpc2FibGUgdXNlIG9mIFNBVEEgZmVhdHVyZSAqLw0KDQoNCi0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLQ0KRGFtaWVuIExlIE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lzdGVtIFNvZnR3
-YXJlIEdyb3VwLCBIR1NUIFJlc2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0YWwgY29tcGFu
-eQ0KRGFtaWVuLkxlTW9hbEBoZ3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChleHQuIDUxMzU5
-MykNCjEga2lyaWhhcmEtY2hvLCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4ODggSmFwYW4N
-Cnd3dy5oZ3N0LmNvbQ0KDQpXZXN0ZXJuIERpZ2l0YWwgQ29ycG9yYXRpb24gKGFuZCBpdHMgc3Vi
-c2lkaWFyaWVzKSBFLW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAmIERpc2NsYWltZXI6CgpU
-aGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgbWF5IGNvbnRhaW4g
-Y29uZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBvZiBXREMgYW5k
-L29yIGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVkIHNvbGVseSBmb3IgdGhlIHVzZSBv
-ZiB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2ggdGhleSBhcmUgYWRkcmVzc2VkLiBJ
-ZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBhbnkgZGlzY2xvc3VyZSwgY29w
-eWluZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFrZW4gb3Igb21pdHRlZCB0byBiZSB0
-YWtlbiBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRlZC4gSWYgeW91IGhhdmUgcmVjZWl2
-ZWQgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBpbW1lZGlh
-dGVseSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVudGlyZXR5IGZyb20geW91ciBzeXN0
-ZW0uCg==
+Hi!
 
+Could you please check the following patch-set in order to evaluate if it is
+ready for v4.6?
+
+[PATCH v11 0/6] add support for DWC UFS Controller
+http://www.gossamer-threads.com/lists/linux/kernel/2396797?#2396797
+
+[PATCH v11 1/6] fixed typo in ufshcd-pltfrm
+http://www.gossamer-threads.com/lists/linux/kernel/2396790?#2396790
+
+[PATCH v11 2/6] added UFS 2.0 capabilities
+http://www.gossamer-threads.com/lists/linux/kernel/2396791?#2396791
+
+[PATCH v11 3/6] added support for DesignWare Controller
+http://www.gossamer-threads.com/lists/linux/kernel/2396795?#2396795
+
+[PATCH v11 4/6] added support for Synopsys G210 Test Chip
+http://www.gossamer-threads.com/lists/linux/kernel/2396792?#2396792
+
+[PATCH v11 5/6] add TC G210 platform driver
+http://www.gossamer-threads.com/lists/linux/kernel/2396794?#2396794
+
+[PATCH v11 6/6] add-TC-G210-pci-driver
+http://www.gossamer-threads.com/lists/linux/kernel/2396793?#2396793
+
+Thank you very much!
+
+Regards,
+Joao
