@@ -1,30 +1,22 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] uas: Limit qdepth at the scsi-host level
-Date: Sat, 19 Mar 2016 10:06:16 -0700
-Message-ID: <1458407176.2288.5.camel@HansenPartnership.com>
-References: <1458377952-12567-1-git-send-email-hdegoede@redhat.com>
+From: Jones <instituto.memoria@al.mt.gov.br>
+Subject: I hope this email meets you well in good health condition
+Date: Sat, 19 Mar 2016 07:47:07 -0400 (AMT)
+Message-ID: <647249589.90053.1458388027706.JavaMail.zimbra@al.mt.gov.br>
+Reply-To: Jones <1214178231@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1458377952-12567-1-git-send-email-hdegoede@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gerd Hoffmann <kraxel@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from serv09.al.mt.gov.br ([200.252.51.198]:21854 "EHLO
+	serv09.al.mt.gov.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754901AbcCSS3d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2016 14:29:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2016-03-19 at 09:59 +0100, Hans de Goede wrote:
-> Commit 64d513ac31bd ("scsi: use host wide tags by default") causes
-> the scsi-core to queue more cmnds then we can handle on devices with
-> multiple LUNs, limit the qdepth at the scsi-host level instead of
-> per slave to fix this.
+My name is Jones, from the US. I'm in Syria right now fighting IS. I want to get to know you better, if I may be so bold. I consider myself an easy-going man, and I am currently looking for a relationship in which I feel loved. Please tell me more about yourself, if you don't mind.
 
-Help me understand this bug a bit more.  Are you saying that the commit
-you identify is causing the block layer to queue more commands than
-you've set the per-lun limit to?  In which case we have a serious
-problem for more than just UAS.  Or are you saying that UAS always had
-a global command limit, but it just didn't get set correctly; however,
-it mostly worked until the above commit exposed the problem?
+Hope to hear from you soon.
 
-
-James
+Regards,
+Jones
