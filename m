@@ -1,22 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: [PATCHv3] scsi: disable automatic target scan
-Date: Sat, 19 Mar 2016 16:18:09 +0100
-Message-ID: <56ED6DB1.1050202@suse.de>
-References: <1458200385-32088-1-git-send-email-hare@suse.de>
- <56EC797A.8000104@sandisk.com>
+Date: Sat, 19 Mar 2016 11:29:39 -0400 (EDT)
+Message-ID: <1540990467.23211617.1458401379690.JavaMail.zimbra@redhat.com>
+References: <1458200385-32088-1-git-send-email-hare@suse.de> <56EC797A.8000104@sandisk.com> <56ED6DB1.1050202@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34818 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754118AbcCSPSP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2016 11:18:15 -0400
-In-Reply-To: <56EC797A.8000104@sandisk.com>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:49097 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754049AbcCSP3w convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2016 11:29:52 -0400
+In-Reply-To: <56ED6DB1.1050202@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+
+Hi Hannes,
+
+Please share those dracut patches because I want to test this patch ser=
+ies.
+Which kernel is the diff against for the scan patches.
+
+Thanks=20
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Hannes Reinecke" <hare@suse.de>
+To: "Bart Van Assche" <bart.vanassche@sandisk.com>, "Martin K. Petersen=
+" <martin.petersen@oracle.com>
+Cc: "Christoph Hellwig" <hch@lst.de>, "James Bottomley" <james.bottomle=
+y@hansenpartnership.com>, linux-scsi@vger.kernel.org
+Sent: Saturday, March 19, 2016 11:18:09 AM
+Subject: Re: [PATCHv3] scsi: disable automatic target scan
 
 On 03/18/2016 10:56 PM, Bart Van Assche wrote:
 > On 03/17/2016 12:39 AM, Hannes Reinecke wrote:
@@ -54,8 +74,14 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
