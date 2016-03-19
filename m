@@ -1,89 +1,60 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCHv3] scsi: disable automatic target scan
-Date: Sat, 19 Mar 2016 11:29:39 -0400 (EDT)
-Message-ID: <1540990467.23211617.1458401379690.JavaMail.zimbra@redhat.com>
-References: <1458200385-32088-1-git-send-email-hare@suse.de> <56EC797A.8000104@sandisk.com> <56ED6DB1.1050202@suse.de>
+From: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH] uas: Limit qdepth at the scsi-host level
+Date: Sat, 19 Mar 2016 18:52:40 +0300
+Message-ID: <56ED75C8.8000005@cogentembedded.com>
+References: <1458377952-12567-1-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:49097 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754049AbcCSP3w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2016 11:29:52 -0400
-In-Reply-To: <56ED6DB1.1050202@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1458377952-12567-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-Hi Hannes,
+Hello.
 
-Please share those dracut patches because I want to test this patch ser=
-ies.
-Which kernel is the diff against for the scan patches.
+On 3/19/2016 11:59 AM, Hans de Goede wrote:
 
-Thanks=20
+> Commit 64d513ac31bd ("scsi: use host wide tags by default") causes
+> the scsi-core to queue more cmnds then we can handle on devices with
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+    SCSI core? Commands?
 
------ Original Message -----
-=46rom: "Hannes Reinecke" <hare@suse.de>
-To: "Bart Van Assche" <bart.vanassche@sandisk.com>, "Martin K. Petersen=
-" <martin.petersen@oracle.com>
-Cc: "Christoph Hellwig" <hch@lst.de>, "James Bottomley" <james.bottomle=
-y@hansenpartnership.com>, linux-scsi@vger.kernel.org
-Sent: Saturday, March 19, 2016 11:18:09 AM
-Subject: Re: [PATCHv3] scsi: disable automatic target scan
+> multiple LUNs, limit the qdepth at the scsi-host level instead of
 
-On 03/18/2016 10:56 PM, Bart Van Assche wrote:
-> On 03/17/2016 12:39 AM, Hannes Reinecke wrote:
->> On larger installations it is useful to disable automatic LUN
->> scanning, and only add the required LUNs via udev rules.
->> This can speed up bootup dramatically.
->>
->> This patch introduces a new scan module parameter value 'manual',
->> which works like 'none', but can be overriden by setting the 'rescan=
-'
->> value from scsi_scan_target to 'SCSI_SCAN_MANUAL'.
->> And it updates all relevant callers to set the 'rescan' value
->> to 'SCSI_SCAN_MANUAL' if invoked via the 'scan' option in sysfs.
->=20
-> Hello Hannes,
->=20
-> Will setting scsi_scan_type to 'manual' allow a system to boot from a
-> SCSI disk? If not, are there alternatives to this approach? Would it =
-be
-> a valid alternative to e.g. introduce a new threshold parameter such
-> that only LUN numbers below this threshold are scanned during boot?
->=20
-I have a patch for dracut, which will generate udev rules for all
-devices required for mounting the root fs.
-Once the system is booted properly I've got another patch for systemd
-which switches back to 'normal' scanning (ie by writing 'sync' into
-/sys/modules/scsi_mod/parameters/scan) and rescan all scsi hosts.
+    Queue depth?
 
-With that there's no need to have any arbitrary limits; only the
-necessary devices are enabled during boot.
+> per slave to fix this.
+>
+> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1315013
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 4.4.x and 4.5.x
+> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   drivers/usb/storage/uas.c | 7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index c90a7e4..b5cb7ab 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+[...]
+> @@ -932,6 +931,12 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+>   	if (result)
+>   		goto set_alt0;
+>
+> +	/*
+> +	 * 1 tag is reserved for untagged commands +
+> +	 * 1 tag to avoid of by one errors in some bridge firmwares
 
-Cheers,
+    Off by one.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+[...]
+
+MBR, Sergei
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
