@@ -1,245 +1,96 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: storvsc: Support manual scan of FC hosts on
- Hyper-V
-Date: Sun, 20 Mar 2016 18:58:31 +0000
-Message-ID: <SN2PR03MB2142285335E45FD5273F257DA08E0@SN2PR03MB2142.namprd03.prod.outlook.com>
-References: <1457819568-6586-1-git-send-email-kys@microsoft.com>
- <20160315134009.GA3595@infradead.org>
- <SN2PR03MB21423A42522A21C145896431A0890@SN2PR03MB2142.namprd03.prod.outlook.com>
- <yq1twk7e8nl.fsf@sermon.lab.mkp.net>
- <SN2PR03MB21425F84DAC997491DD4C2ACA0890@SN2PR03MB2142.namprd03.prod.outlook.com>
- <yq14mc6dpbu.fsf@sermon.lab.mkp.net>
- <1458169666.4793.62.camel@HansenPartnership.com>
- <SN2PR03MB2142B8D8C2B1831522F6EB1AA08A0@SN2PR03MB2142.namprd03.prod.outlook.com>
- <1458171653.4793.68.camel@HansenPartnership.com>
- <SN2PR03MB2142C30620CAC6F633AAFB52A08B0@SN2PR03MB2142.namprd03.prod.outlook.com>
- <1458340866.2892.7.camel@HansenPartnership.com>
+From: Matthias Prager <linux@matthiasprager.de>
+Subject: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
+Date: Sun, 20 Mar 2016 21:14:23 +0100
+Message-ID: <56EF049F.6050809@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1458340866.2892.7.camel@HansenPartnership.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dd15408.kasserver.com ([85.13.136.168]:40146 "EHLO
+	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbcCTUWZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Mar 2016 16:22:25 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Matthias Prager <linux@matthiasprager.de>
+
+Hello,
+
+I don't know what's the correct procedure, whether I should file a bug or first report this issue on the kernel mailing-list. So please feel free to tell me to open a ticket in the bugtracker (bugzilla.kernel.org?).
+
+But first let me present the issue I encounter:
+
+Kernels >= 4.2 (4.2.1 was the first on I tried, but also 4.3, 4.4 and 4.5) fail to load the mpt2sas driver on most (but not all) boots. Kernels <= 4.1.x work fine every single time (4.1.19 was the latest I tried, also 3.18.29).
+
+Here is the dmesg output for a failed driver init with Kernel 4.5.0:
+> [    2.068313] mpt3sas version 09.102.00.00 loaded
+> [    2.069412] mpt2sas_cm0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (3074748 kB)
+> [    2.125260] mpt2sas_cm0: MSI-X vectors supported: 1, no of cores: 4, max_msix_vectors: -1
+> [    2.125996] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 58
+> [    2.126199] mpt2sas_cm0: iomem(0x00000000fd4fc000), mapped(0xffffc900000d0000), size(16384)
+> [    2.126430] mpt2sas_cm0: ioport(0x0000000000004000), size(256)
+> [    2.216371] mpt2sas_cm0: Allocated physical memory: size(4964 kB)
+> [    2.216600] mpt2sas_cm0: Current Controller Queue Depth(3307),Max Controller Queue Depth(3432)
+> [    2.217004] mpt2sas_cm0: Scatter Gather Elements per IO(128)
+> [    5.086959] floppy0: no floppy controllers found
+> [   32.256720] mpt2sas_cm0: _base_event_notification: timeout
+> [   32.256940] mf:
+> 
+> [   32.257106] 07000000
+> [   32.257302] 00000000
+> [   32.257337] 00000000
+> [   32.257533] 00000000
+> [   32.257568] 00000000
+> [   32.257764] 0f2f7fff
+> [   32.257800] ffffff7c
+> [   32.257995] ffffffff
+> [   32.258031]
+> 
+> [   32.258352] ffffffff
+> [   32.258387] 00000000
+> [   32.258582] 00000000
+> 
+> [   32.258950] mpt2sas_cm0: sending message unit reset !!
+> [   32.260688] mpt2sas_cm0: message unit reset: SUCCESS
+> [   32.325956] mpt2sas_cm0: failure at drivers/scsi/mpt3sas/mpt3sas_scsih.c:8592/_scsih_probe()!
+
+For comparison here is a dmesg output for a successful boot on Kernel 4.1.15:
+> [    2.035568] mpt2sas version 20.100.00.00 loaded
+> [    2.037243] mpt2sas0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (2046352 kB)
+> [    2.755374] mpt2sas0: MSI-X vectors supported: 1, no of cores: 3, max_msix_vectors: 8
+> [    2.756377] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 58
+> [    2.756708] mpt2sas0: iomem(0x00000000fd5fc000), mapped(0xffffc900000d0000), size(16384)
+> [    2.757083] mpt2sas0: ioport(0x0000000000004000), size(256)
+> [    3.842944] mpt2sas0: Allocated physical memory: size(4964 kB)
+> [    3.843303] mpt2sas0: Current Controller Queue Depth(3307), Max Controller Queue Depth(3432)
+> [    3.843717] mpt2sas0: Scatter Gather Elements per IO(128)
+> [    4.415980] mpt2sas0: LSISAS2008: FWVersion(20.00.04.00), ChipRevision(0x03), BiosVersion(07.39.00.00)
+> [    4.416618] mpt2sas0: Protocol=(Initiator,Target), Capabilities=(TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set Full,NCQ)
+> [    4.417846] scsi host0: Fusion MPT SAS Host
+> [    4.436865] mpt2sas0: sending port enable !!
+> [    4.440460] mpt2sas0: host_add: handle(0x0001), sas_addr(0xxxxxxxxxxxxxxxxx), phys(8)
+> 
+> ...
+> [    4.444045] scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDS5C302 A800 PQ: 0 ANSI: 6
+> [    4.444338] scsi 0:0:0:0: SATA: handle(0x0009), sas_addr(0xxxxxxxxxxxxxxxxx), phy(1), device_name(0xxxxxxxxxxxxxxxxx)
+> [    4.444823] scsi 0:0:0:0: SATA: enclosure_logical_id(0xxxxxxxxxxxxxxxxx), slot(2)
+> [    4.445197] scsi 0:0:0:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
+> ... (n times for n drives)
+> 
+> [    4.515443] mpt2sas0: port enable: SUCCESS
 
 
+The Controller(s) are all Avego/LSI 9211-8i running the latest version of IT firmware (v20.00.04.00). These are passed through to a gentoo-linux VM on an ESXi 5.1 host (latest patchlevel). I have two of these systems (one production one testing) with nearly identical hardware (Supermicro X8DTi-F boards with 2x Intel Westmere CPUs). I also have an older set of systems running the same software config (Intel S3200SHLC boards with single Core2Quad) which exhibit the same buggy behavior.
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Friday, March 18, 2016 3:41 PM
-> To: KY Srinivasan <kys@microsoft.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@infradead.org>; gregkh@linuxfoundation.org;
-> linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> ohering@suse.com; jbottomley@parallels.com; linux-scsi@vger.kernel.org;
-> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
-> hare@suse.de
-> Subject: Re: [PATCH 1/1] scsi: storvsc: Support manual scan of FC hosts on
-> Hyper-V
-> 
-> On Thu, 2016-03-17 at 00:01 +0000, KY Srinivasan wrote:
-> > The only attributes I would be interested are:
-> > 1) node name
-> > 2) port name
-> >
-> > Ideally, if this can show under /sys/class/fc_host/hostx/port_name
-> > and node_name,
-> > it will be ideal since all user scripts can work.
-> 
-> OK, like this?
+The 'uname -a' line on the current testing system looks like this:
+> Linux pserver2 4.1.19-gentoo #4 SMP Thu Mar 17 16:02:48 CET 2016 x86_64 Intel(R) Xeon(R) CPU E5506 @ 2.13GHz GenuineIntel GNU/Linux
+p
 
-Yes; thank you very much James. Looking at the patch though, it may be an 
-overkill considering how much of the code is duplicated. The current fc transport
-class does give us the flexibility to control the attributes we want to surface
-(fc_function_template). In any case I will test this code and get back to you soon.
+There seem to be other people with similar issues:
+<https://bbs.archlinux.org/viewtopic.php?id=209495>
 
-Regards,
+Any thoughts?
 
-K. Y
-
- 
-> 
-> From 7af7c428e7e04ddcc87fda12d6571e3dff8ae024 Mon Sep 17 00:00:00
-> 2001
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Fri, 18 Mar 2016 15:35:45 -0700
-> Subject: scsi_transport_fc: introduce lightweight class for virtualization
->  systems
-> 
-> The FC transport class is very heavily tilted towards helping things
-> which operate a fabric (as it should be).  However, there seems to be
-> a need for a lightweight version for use in virtual systems that
-> simply want to show pass through FC information without making any use
-> of the heavyweight functions.  This is an attempt to give them what
-> they want: the lightweight class has no vports or rports and only two
-> host attributes.  Essentially, it's designed for the HV storvsc
-> driver, but if other virtualizataion systems have similar problems, we
-> can add more attributes.
-> 
-> Signed-off-by: James Bottomley <jejb@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/scsi_transport_fc.c | 94
-> ++++++++++++++++++++++++++++++++++++++++
->  include/scsi/scsi_transport_fc.h |  3 ++
->  2 files changed, 97 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 8a88226..a9fcb4d 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -351,6 +351,27 @@ struct fc_internal {
-> 
->  #define to_fc_internal(tmpl)	container_of(tmpl, struct fc_internal, t)
-> 
-> +#define FC_LW_HOST_NUM_ATTRS 	2
-> +struct fc_lw_internal {
-> +	struct scsi_transport_template t;
-> +	struct fc_function_template *f;
-> +
-> +	/*
-> +	 * For attributes : each object has :
-> +	 *   An array of the actual attributes structures
-> +	 *   An array of null-terminated pointers to the attribute
-> +	 *     structures - used for mid-layer interaction.
-> +	 *
-> +	 * The attribute containers for the starget and host are are
-> +	 * part of the midlayer. As the remote port is specific to the
-> +	 * fc transport, we must provide the attribute container.
-> +	 */
-> +	struct device_attribute
-> private_host_attrs[FC_LW_HOST_NUM_ATTRS];
-> +	struct device_attribute *host_attrs[FC_LW_HOST_NUM_ATTRS + 1];
-> +};
-> +
-> +#define to_fc_lw_internal(tmpl)	container_of(tmpl, struct
-> fc_lw_internal, t)
-> +
->  static int fc_target_setup(struct transport_container *tc, struct device *dev,
->  			   struct device *cdev)
->  {
-> @@ -472,6 +493,12 @@ static int fc_host_remove(struct transport_container
-> *tc, struct device *dev,
->  	return 0;
->  }
-> 
-> +static DECLARE_TRANSPORT_CLASS(fc_lw_host_class,
-> +			       "fc_host",
-> +			       NULL,
-> +			       NULL,
-> +			       NULL);
-> +
->  static DECLARE_TRANSPORT_CLASS(fc_host_class,
->  			       "fc_host",
->  			       fc_host_setup,
-> @@ -1968,6 +1995,25 @@ static int fc_host_match(struct
-> attribute_container *cont,
->  	return &i->t.host_attrs.ac == cont;
->  }
-> 
-> +static int fc_lw_host_match(struct attribute_container *cont,
-> +			  struct device *dev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct fc_lw_internal *i;
-> +
-> +	if (!scsi_is_host_device(dev))
-> +		return 0;
-> +
-> +	shost = dev_to_shost(dev);
-> +	if (!shost->transportt  || shost->transportt->host_attrs.ac.class
-> +	    != &fc_lw_host_class.class)
-> +		return 0;
-> +
-> +	i = to_fc_lw_internal(shost->transportt);
-> +
-> +	return &i->t.host_attrs.ac == cont;
-> +}
-> +
->  static int fc_target_match(struct attribute_container *cont,
->  			    struct device *dev)
->  {
-> @@ -2171,6 +2217,54 @@ static int fc_it_nexus_response(struct Scsi_Host
-> *shost, u64 nexus, int result)
->  	return i->f->it_nexus_response(shost, nexus, result);
->  }
-> 
-> +/**
-> + * fc_attach_lw_transport - light weight attach function
-> + * @ft:		function template for optional attributes
-> + *
-> + * This attach function is to be used only for virtual FC emulators
-> + * which do not have a physical fabric underneath them and thus only
-> + * need a few attributes and no helper functions
-> + */
-> +struct scsi_transport_template *
-> +fc_lw_attach_transport(struct fc_function_template *ft)
-> +{
-> +	int count;
-> +	struct fc_lw_internal *i = kzalloc(sizeof(struct fc_lw_internal),
-> +					   GFP_KERNEL);
-> +
-> +	if (unlikely(!i))
-> +		return NULL;
-> +
-> +	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
-> +	i->t.host_attrs.ac.class = &fc_lw_host_class.class;
-> +	i->t.host_attrs.ac.match = fc_lw_host_match;
-> +	i->t.host_size = sizeof(struct fc_host_attrs);
-> +	transport_container_register(&i->t.host_attrs);
-> +
-> +	i->f = ft;
-> +
-> +	count = 0;
-> +	SETUP_HOST_ATTRIBUTE_RD(node_name);
-> +	SETUP_HOST_ATTRIBUTE_RD(port_name);
-> +
-> +	BUG_ON(count > FC_HOST_NUM_ATTRS);
-> +
-> +	i->host_attrs[count] = NULL;
-> +
-> +	return &i->t;
-> +}
-> +EXPORT_SYMBOL(fc_lw_attach_transport);
-> +
-> +void fc_lw_release_transport(struct scsi_transport_template *t)
-> +{
-> +	struct fc_lw_internal *i = to_fc_lw_internal(t);
-> +
-> +	transport_container_unregister(&i->t.host_attrs);
-> +
-> +	kfree(i);
-> +}
-> +EXPORT_SYMBOL(fc_lw_release_transport);
-> +
->  struct scsi_transport_template *
->  fc_attach_transport(struct fc_function_template *ft)
->  {
-> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-> index 784bc2c..b0a9a64 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -835,6 +835,9 @@ fc_vport_set_state(struct fc_vport *vport, enum
-> fc_vport_state new_state)
->  	vport->vport_state = new_state;
->  }
-> 
-> +struct scsi_transport_template *fc_lw_attach_transport(
-> +			struct fc_function_template *);
-> +void fc_lw_release_transport(struct scsi_transport_template *);
->  struct scsi_transport_template *fc_attach_transport(
->  			struct fc_function_template *);
->  void fc_release_transport(struct scsi_transport_template *);
-> --
-> 2.6.2
+---
+Matthias
