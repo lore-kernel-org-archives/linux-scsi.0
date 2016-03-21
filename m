@@ -1,125 +1,156 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 02/23] ncr5380: Remove FLAG_NO_PSEUDO_DMA where possible
-Date: Mon, 21 Mar 2016 13:31:51 +1100
-Message-ID: <20160321023150.143987737@telegraphics.com.au>
+Subject: [PATCH v3 04/23] atari_NCR5380: Remove DMA_MIN_SIZE macro
+Date: Mon, 21 Mar 2016 13:31:53 +1100
+Message-ID: <20160321023150.654436098@telegraphics.com.au>
 References: <20160321023149.604138431@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-FLAG_NO_PSEUDO_DMA
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52784 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbcCUEF1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2016 00:05:27 -0400
+Content-Disposition: inline; filename=atari_NCR5380-remove-DMA_MIN_SIZE-macro
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
-List-Id: linux-scsi@vger.kernel.org
 
-Drivers that define PSEUDO_DMA also define NCR5380_dma_xfer_len.
-The core driver must call NCR5380_dma_xfer_len which means
-FLAG_NO_PSEUDO_DMA can be eradicated from the core driver.
+Only the atari_scsi and sun3_scsi drivers define DMA_MIN_SIZE.
+Both drivers also define NCR5380_dma_xfer_len, which means
+DMA_MIN_SIZE can be removed from the core driver.
 
-dmx3191d doesn't define PSEUDO_DMA and has no use for FLAG_NO_PSEUDO_DMA,
-so remove it there also.
+This removes another discrepancy between the two core drivers.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c   |    3 +--
- drivers/scsi/dmx3191d.c  |    2 +-
- drivers/scsi/g_NCR5380.c |    7 ++++++-
- drivers/scsi/g_NCR5380.h |    2 +-
- drivers/scsi/mac_scsi.c  |   15 ++++++++++++++-
- 5 files changed, 23 insertions(+), 6 deletions(-)
 
-Index: linux/drivers/scsi/dmx3191d.c
+Changes since v1:
+- Retain MIN_DMA_SIZE macro in wrapper drivers.
+
+---
+ drivers/scsi/atari_NCR5380.c |   16 ++++++++--------
+ drivers/scsi/atari_scsi.c    |    6 +++++-
+ drivers/scsi/sun3_scsi.c     |   19 +++++++++----------
+ 3 files changed, 22 insertions(+), 19 deletions(-)
+
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2016-03-21 13:31:07.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2016-03-21 13:31:09.000000000 +1100
-@@ -93,7 +93,7 @@ static int dmx3191d_probe_one(struct pci
- 	 */
- 	shost->irq = NO_IRQ;
- 
--	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
-+	error = NCR5380_init(shost, 0);
- 	if (error)
- 		goto out_host_put;
- 
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2016-03-21 13:31:07.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2016-03-21 13:31:09.000000000 +1100
-@@ -37,7 +37,9 @@
- 
- #define NCR5380_pread                   macscsi_pread
- #define NCR5380_pwrite                  macscsi_pwrite
--#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
-+
-+#define NCR5380_dma_xfer_len(instance, cmd, phase) \
-+        macscsi_dma_xfer_len(instance, cmd)
- 
- #define NCR5380_intr                    macscsi_intr
- #define NCR5380_queue_command           macscsi_queue_command
-@@ -303,6 +305,17 @@ static int macscsi_pwrite(struct Scsi_Ho
- }
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2016-03-21 13:31:10.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2016-03-21 13:31:13.000000000 +1100
+@@ -1857,12 +1857,11 @@ static void NCR5380_information_transfer
+ 					d = cmd->SCp.ptr;
+ 				}
+ 				/* this command setup for dma yet? */
+-				if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != cmd)) {
+-					if (cmd->request->cmd_type == REQ_TYPE_FS) {
+-						sun3scsi_dma_setup(instance, d, count,
+-						                   rq_data_dir(cmd->request));
+-						sun3_dma_setup_done = cmd;
+-					}
++				if (sun3_dma_setup_done != cmd &&
++				    sun3scsi_dma_xfer_len(count, cmd) > 0) {
++					sun3scsi_dma_setup(instance, d, count,
++					                   rq_data_dir(cmd->request));
++					sun3_dma_setup_done = cmd;
+ 				}
+ #ifdef SUN3_SCSI_VME
+ 				dregs->csr |= CSR_INTR;
+@@ -1927,7 +1926,7 @@ static void NCR5380_information_transfer
  #endif
- 
-+static int macscsi_dma_xfer_len(struct Scsi_Host *instance,
-+                                struct scsi_cmnd *cmd)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+		return 0;
-+
-+	return cmd->transfersize;
-+}
-+
- #include "NCR5380.c"
- 
- #define DRV_MODULE_NAME         "mac_scsi"
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:07.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:09.000000000 +1100
-@@ -712,10 +712,15 @@ static inline int NCR5380_pwrite(struct
- 	return 0;
- }
- 
--static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
-+static int generic_NCR5380_dma_xfer_len(struct Scsi_Host *instance,
-+                                        struct scsi_cmnd *cmd)
- {
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int transfersize = cmd->transfersize;
- 
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+		return 0;
-+
- 	/* Limit transfers to 32K, for xx400 & xx406
- 	 * pseudoDMA that transfers in 128 bytes blocks.
- 	 */
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:07.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:09.000000000 +1100
-@@ -1833,8 +1833,7 @@ static void NCR5380_information_transfer
- 
- #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
- 				transfersize = 0;
--				if (!cmd->device->borken &&
--				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
-+				if (!cmd->device->borken)
  					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
  
- 				if (transfersize) {
-Index: linux/drivers/scsi/g_NCR5380.h
+-				if (transfersize >= DMA_MIN_SIZE) {
++				if (transfersize > 0) {
+ 					len = transfersize;
+ 					cmd->SCp.phase = phase;
+ 					if (NCR5380_transfer_dma(instance, &phase,
+@@ -2366,7 +2365,8 @@ static void NCR5380_reselect(struct Scsi
+ 			d = tmp->SCp.ptr;
+ 		}
+ 		/* setup this command for dma if not already */
+-		if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != tmp)) {
++		if (sun3_dma_setup_done != tmp &&
++		    sun3scsi_dma_xfer_len(count, tmp) > 0) {
+ 			sun3scsi_dma_setup(instance, d, count,
+ 			                   rq_data_dir(tmp->request));
+ 			sun3_dma_setup_done = tmp;
+Index: linux/drivers/scsi/atari_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:07.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:09.000000000 +1100
+--- linux.orig/drivers/scsi/atari_scsi.c	2016-03-21 13:31:10.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2016-03-21 13:31:13.000000000 +1100
+@@ -83,11 +83,12 @@
+ 
+ #include <scsi/scsi_host.h>
+ 
++#define DMA_MIN_SIZE                    32
++
+ /* Definitions for the core NCR5380 driver. */
+ 
+ #define SUPPORT_TAGS
+ #define MAX_TAGS                        32
+-#define DMA_MIN_SIZE                    32
+ 
+ #define NCR5380_implementation_fields   /* none */
+ 
+@@ -605,6 +606,9 @@ static unsigned long atari_dma_xfer_len(
+ {
+ 	unsigned long	possible_len, limit;
+ 
++	if (wanted_len < DMA_MIN_SIZE)
++		return 0;
++
+ 	if (IS_A_TT())
+ 		/* TT SCSI DMA can transfer arbitrary #bytes */
+ 		return wanted_len;
+Index: linux/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.c	2016-03-21 13:31:10.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2016-03-21 13:31:13.000000000 +1100
+@@ -36,12 +36,12 @@
+ #include <scsi/scsi_host.h>
+ #include "sun3_scsi.h"
+ 
+-/* Definitions for the core NCR5380 driver. */
+-
+-/* #define SUPPORT_TAGS */
+ /* minimum number of bytes to do dma on */
+ #define DMA_MIN_SIZE                    129
+ 
++/* Definitions for the core NCR5380 driver. */
++
++/* #define SUPPORT_TAGS */
+ /* #define MAX_TAGS                     32 */
+ 
+ #define NCR5380_implementation_fields   /* none */
 @@ -61,7 +61,7 @@
- #endif
- 
+ #define NCR5380_dma_residual(instance) \
+         sun3scsi_dma_residual(instance)
  #define NCR5380_dma_xfer_len(instance, cmd, phase) \
--        generic_NCR5380_dma_xfer_len(cmd)
-+        generic_NCR5380_dma_xfer_len(instance, cmd)
+-        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
++        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd)
  
- #define NCR5380_intr generic_NCR5380_intr
- #define NCR5380_queue_command generic_NCR5380_queue_command
+ #define NCR5380_acquire_dma_irq(instance)    (1)
+ #define NCR5380_release_dma_irq(instance)
+@@ -262,14 +262,13 @@ static inline unsigned long sun3scsi_dma
+ 	return last_residual;
+ }
+ 
+-static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted,
+-						  struct scsi_cmnd *cmd,
+-						  int write_flag)
++static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted_len,
++                                                  struct scsi_cmnd *cmd)
+ {
+-	if (cmd->request->cmd_type == REQ_TYPE_FS)
+- 		return wanted;
+-	else
++	if (wanted_len < DMA_MIN_SIZE || cmd->request->cmd_type != REQ_TYPE_FS)
+ 		return 0;
++
++	return wanted_len;
+ }
+ 
+ static inline int sun3scsi_dma_start(unsigned long count, unsigned char *data)
+
+
