@@ -1,105 +1,211 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 16/23] ncr5380: Fix register decoding for debugging
-Date: Mon, 21 Mar 2016 13:32:05 +1100
-Message-ID: <20160321023153.833965143@telegraphics.com.au>
+Subject: [PATCH v3 18/23] ncr5380: Remove DONT_USE_INTR and AUTOPROBE_IRQ macros
+Date: Mon, 21 Mar 2016 13:32:07 +1100
+Message-ID: <20160321023154.334009038@telegraphics.com.au>
 References: <20160321023149.604138431@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-basr-decoding-dprint
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52808 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752114AbcCUEFc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2016 00:05:32 -0400
+Content-Disposition: inline; filename=ncr5380-remove-DONT_USE_INTR-and-AUTOPROBE_IRQ-macros
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Decode all bits in the chip registers. They are all useful at times.
-Fix printk severity so that this output can be suppressed along with
-the other debugging output.
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c |   42 +++++++++++++++++++++++++-----------------
- 1 file changed, 25 insertions(+), 17 deletions(-)
+ drivers/scsi/NCR5380.c   |   12 +-----------
+ drivers/scsi/NCR5380.h   |    4 ----
+ drivers/scsi/arm/oak.c   |    2 --
+ drivers/scsi/dmx3191d.c  |    2 --
+ drivers/scsi/dtc.c       |   12 +++---------
+ drivers/scsi/g_NCR5380.c |    2 --
+ drivers/scsi/pas16.c     |    1 -
+ drivers/scsi/t128.c      |    1 -
+ 8 files changed, 4 insertions(+), 32 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:36.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:38.000000000 +1100
-@@ -256,12 +256,20 @@ static struct {
- 	{0, NULL}
- },
- basrs[] = {
-+	{BASR_END_DMA_TRANSFER, "END OF DMA"},
-+	{BASR_DRQ, "DRQ"},
-+	{BASR_PARITY_ERROR, "PARITY ERROR"},
-+	{BASR_IRQ, "IRQ"},
-+	{BASR_PHASE_MATCH, "PHASE MATCH"},
-+	{BASR_BUSY_ERROR, "BUSY ERROR"},
- 	{BASR_ATN, "ATN"},
- 	{BASR_ACK, "ACK"},
- 	{0, NULL}
- },
- icrs[] = {
- 	{ICR_ASSERT_RST, "ASSERT RST"},
-+	{ICR_ARBITRATION_PROGRESS, "ARB. IN PROGRESS"},
-+	{ICR_ARBITRATION_LOST, "LOST ARB."},
- 	{ICR_ASSERT_ACK, "ASSERT ACK"},
- 	{ICR_ASSERT_BSY, "ASSERT BSY"},
- 	{ICR_ASSERT_SEL, "ASSERT SEL"},
-@@ -270,14 +278,14 @@ icrs[] = {
- 	{0, NULL}
- },
- mrs[] = {
--	{MR_BLOCK_DMA_MODE, "MODE BLOCK DMA"},
--	{MR_TARGET, "MODE TARGET"},
--	{MR_ENABLE_PAR_CHECK, "MODE PARITY CHECK"},
--	{MR_ENABLE_PAR_INTR, "MODE PARITY INTR"},
--	{MR_ENABLE_EOP_INTR, "MODE EOP INTR"},
--	{MR_MONITOR_BSY, "MODE MONITOR BSY"},
--	{MR_DMA_MODE, "MODE DMA"},
--	{MR_ARBITRATE, "MODE ARBITRATION"},
-+	{MR_BLOCK_DMA_MODE, "BLOCK DMA MODE"},
-+	{MR_TARGET, "TARGET"},
-+	{MR_ENABLE_PAR_CHECK, "PARITY CHECK"},
-+	{MR_ENABLE_PAR_INTR, "PARITY INTR"},
-+	{MR_ENABLE_EOP_INTR, "EOP INTR"},
-+	{MR_MONITOR_BSY, "MONITOR BSY"},
-+	{MR_DMA_MODE, "DMA MODE"},
-+	{MR_ARBITRATE, "ARBITRATE"},
- 	{0, NULL}
- };
- 
-@@ -298,23 +306,23 @@ static void NCR5380_print(struct Scsi_Ho
- 	icr = NCR5380_read(INITIATOR_COMMAND_REG);
- 	basr = NCR5380_read(BUS_AND_STATUS_REG);
- 
--	printk("STATUS_REG: %02x ", status);
-+	printk(KERN_DEBUG "SR =   0x%02x : ", status);
- 	for (i = 0; signals[i].mask; ++i)
- 		if (status & signals[i].mask)
--			printk(",%s", signals[i].name);
--	printk("\nBASR: %02x ", basr);
-+			printk(KERN_CONT "%s, ", signals[i].name);
-+	printk(KERN_CONT "\nBASR = 0x%02x : ", basr);
- 	for (i = 0; basrs[i].mask; ++i)
- 		if (basr & basrs[i].mask)
--			printk(",%s", basrs[i].name);
--	printk("\nICR: %02x ", icr);
-+			printk(KERN_CONT "%s, ", basrs[i].name);
-+	printk(KERN_CONT "\nICR =  0x%02x : ", icr);
- 	for (i = 0; icrs[i].mask; ++i)
- 		if (icr & icrs[i].mask)
--			printk(",%s", icrs[i].name);
--	printk("\nMODE: %02x ", mr);
-+			printk(KERN_CONT "%s, ", icrs[i].name);
-+	printk(KERN_CONT "\nMR =   0x%02x : ", mr);
- 	for (i = 0; mrs[i].mask; ++i)
- 		if (mr & mrs[i].mask)
--			printk(",%s", mrs[i].name);
--	printk("\n");
-+			printk(KERN_CONT "%s, ", mrs[i].name);
-+	printk(KERN_CONT "\n");
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:39.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:40.000000000 +1100
+@@ -106,9 +106,6 @@
+  * DIFFERENTIAL - if defined, NCR53c81 chips will use external differential
+  * transceivers.
+  *
+- * DONT_USE_INTR - if defined, never use interrupts, even if we probe or
+- * override-configure an IRQ.
+- *
+  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
+  *
+  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
+@@ -464,9 +461,6 @@ static void prepare_info(struct Scsi_Hos
+ 	         hostdata->flags & FLAG_DMA_FIXUP     ? "DMA_FIXUP "     : "",
+ 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
+ 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
+-#ifdef AUTOPROBE_IRQ
+-	         "AUTOPROBE_IRQ "
+-#endif
+ #ifdef DIFFERENTIAL
+ 	         "DIFFERENTIAL "
+ #endif
+@@ -915,8 +909,6 @@ static void NCR5380_dma_complete(struct
+ 	}
  }
  
- static struct {
+-#ifndef DONT_USE_INTR
+-
+ /**
+  * NCR5380_intr - generic NCR5380 irq handler
+  * @irq: interrupt number
+@@ -951,7 +943,7 @@ static void NCR5380_dma_complete(struct
+  * the Busy Monitor interrupt is enabled together with DMA Mode.
+  */
+ 
+-static irqreturn_t NCR5380_intr(int irq, void *dev_id)
++static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
+ {
+ 	struct Scsi_Host *instance = dev_id;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+@@ -1020,8 +1012,6 @@ static irqreturn_t NCR5380_intr(int irq,
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+-#endif
+-
+ /*
+  * Function : int NCR5380_select(struct Scsi_Host *instance,
+  * struct scsi_cmnd *cmd)
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-03-21 13:31:33.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-03-21 13:31:40.000000000 +1100
+@@ -280,16 +280,12 @@ static void NCR5380_print(struct Scsi_Ho
+ #define NCR5380_dprint_phase(flg, arg) do {} while (0)
+ #endif
+ 
+-#if defined(AUTOPROBE_IRQ)
+ static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
+-#endif
+ static int NCR5380_init(struct Scsi_Host *instance, int flags);
+ static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
+ static void NCR5380_exit(struct Scsi_Host *instance);
+ static void NCR5380_information_transfer(struct Scsi_Host *instance);
+-#ifndef DONT_USE_INTR
+ static irqreturn_t NCR5380_intr(int irq, void *dev_id);
+-#endif
+ static void NCR5380_main(struct work_struct *work);
+ static const char *NCR5380_info(struct Scsi_Host *instance);
+ static void NCR5380_reselect(struct Scsi_Host *instance);
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2016-03-21 13:31:27.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2016-03-21 13:31:40.000000000 +1100
+@@ -14,8 +14,6 @@
+ 
+ #include <scsi/scsi_host.h>
+ 
+-#define DONT_USE_INTR
+-
+ #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
+ 
+ #define NCR5380_read(reg) \
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-03-21 13:31:37.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-03-21 13:31:40.000000000 +1100
+@@ -34,8 +34,6 @@
+  * Definitions for the generic 5380 driver.
+  */
+ 
+-#define DONT_USE_INTR
+-
+ #define NCR5380_read(reg)		inb(instance->io_port + reg)
+ #define NCR5380_write(reg, value)	outb(value, instance->io_port + reg)
+ 
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2016-03-21 13:31:27.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2016-03-21 13:31:40.000000000 +1100
+@@ -1,5 +1,3 @@
+-#define DONT_USE_INTR
+-
+ /*
+  * DTC 3180/3280 driver, by
+  *	Ray Van Tassle	rayvt@comm.mot.com
+@@ -53,7 +51,6 @@
+ #include <scsi/scsi_host.h>
+ 
+ #include "dtc.h"
+-#define AUTOPROBE_IRQ
+ #include "NCR5380.h"
+ 
+ /*
+@@ -243,9 +240,10 @@ found:
+ 		if (instance->irq == 255)
+ 			instance->irq = NO_IRQ;
+ 
+-#ifndef DONT_USE_INTR
+ 		/* With interrupts enabled, it will sometimes hang when doing heavy
+ 		 * reads. So better not enable them until I finger it out. */
++		instance->irq = NO_IRQ;
++
+ 		if (instance->irq != NO_IRQ)
+ 			if (request_irq(instance->irq, dtc_intr, 0,
+ 					"dtc", instance)) {
+@@ -257,11 +255,7 @@ found:
+ 			printk(KERN_WARNING "scsi%d : interrupts not enabled. for better interactive performance,\n", instance->host_no);
+ 			printk(KERN_WARNING "scsi%d : please jumper the board for a free IRQ.\n", instance->host_no);
+ 		}
+-#else
+-		if (instance->irq != NO_IRQ)
+-			printk(KERN_WARNING "scsi%d : interrupts not used. Might as well not jumper it.\n", instance->host_no);
+-		instance->irq = NO_IRQ;
+-#endif
++
+ 		dprintk(NDEBUG_INIT, "scsi%d : irq = %d\n",
+ 		        instance->host_no, instance->irq);
+ 
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:27.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:40.000000000 +1100
+@@ -56,8 +56,6 @@
+  *     
+  */
+ 
+-#define AUTOPROBE_IRQ
+-
+ #include <asm/io.h>
+ #include <linux/blkdev.h>
+ #include <linux/module.h>
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2016-03-21 13:31:27.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2016-03-21 13:31:40.000000000 +1100
+@@ -75,7 +75,6 @@
+ 
+ #include <scsi/scsi_host.h>
+ #include "pas16.h"
+-#define AUTOPROBE_IRQ
+ #include "NCR5380.h"
+ 
+ 
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2016-03-21 13:31:27.000000000 +1100
++++ linux/drivers/scsi/t128.c	2016-03-21 13:31:40.000000000 +1100
+@@ -74,7 +74,6 @@
+ 
+ #include <scsi/scsi_host.h>
+ #include "t128.h"
+-#define AUTOPROBE_IRQ
+ #include "NCR5380.h"
+ 
+ static struct override {
+
+
