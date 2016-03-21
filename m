@@ -1,79 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3] scsi: disable automatic target scan
-Date: Mon, 21 Mar 2016 08:15:10 +0100
-Message-ID: <56EF9F7E.2010300@suse.de>
-References: <1458200385-32088-1-git-send-email-hare@suse.de>
- <56EC797A.8000104@sandisk.com> <56ED6DB1.1050202@suse.de>
- <56EF4D4A.6050000@sandisk.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] mpt3sas: Don't overreach ioc->reply_post[] during initialization
+Date: Mon, 21 Mar 2016 09:25:41 +0100
+Message-ID: <2254143.89zXHNL1JB@c203>
+References: <df80b371ec5e56ecd65be161acdc34c0f2964d2e.1458327050.git.calvinowens@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47486 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51405 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751349AbcCUHPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2016 03:15:12 -0400
-In-Reply-To: <56EF4D4A.6050000@sandisk.com>
+	id S1751730AbcCUIZp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2016 04:25:45 -0400
+In-Reply-To: <df80b371ec5e56ecd65be161acdc34c0f2964d2e.1458327050.git.calvinowens@fb.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 03/21/2016 02:24 AM, Bart Van Assche wrote:
-> On 03/19/16 08:18, Hannes Reinecke wrote:
->> On 03/18/2016 10:56 PM, Bart Van Assche wrote:
->>> On 03/17/2016 12:39 AM, Hannes Reinecke wrote:
->>>> On larger installations it is useful to disable automatic LUN
->>>> scanning, and only add the required LUNs via udev rules.
->>>> This can speed up bootup dramatically.
->>>>
->>>> This patch introduces a new scan module parameter value 'manual',
->>>> which works like 'none', but can be overriden by setting the
->>>> 'rescan'
->>>> value from scsi_scan_target to 'SCSI_SCAN_MANUAL'.
->>>> And it updates all relevant callers to set the 'rescan' value
->>>> to 'SCSI_SCAN_MANUAL' if invoked via the 'scan' option in sysfs.
->>>
->>> Hello Hannes,
->>>
->>> Will setting scsi_scan_type to 'manual' allow a system to boot
->>> from a
->>> SCSI disk? If not, are there alternatives to this approach? Would
->>> it be
->>> a valid alternative to e.g. introduce a new threshold parameter suc=
-h
->>> that only LUN numbers below this threshold are scanned during boot?
->>>
->> I have a patch for dracut, which will generate udev rules for all
->> devices required for mounting the root fs.
->> Once the system is booted properly I've got another patch for system=
-d
->> which switches back to 'normal' scanning (ie by writing 'sync' into
->> /sys/modules/scsi_mod/parameters/scan) and rescan all scsi hosts.
->>
->> With that there's no need to have any arbitrary limits; only the
->> necessary devices are enabled during boot.
+On Freitag, 18. M=E4rz 2016 12:45:42 CET Calvin Owens wrote:
+> In _base_make_ioc_operational(), we walk ioc->reply_queue_list and pu=
+ll
+> a pointer out of successive elements of ioc->reply_post[] for each en=
+try
+> in that list if RDPQ is enabled.
 >=20
-> Hello Hannes,
+> Since the code pulls the pointer for the next iteration at the bottom=
+ of
+> the loop, it triggers the a KASAN dump on the final iteration:
 >=20
-> That sounds like a really interesting approach. Will this approach
-> also work if the SCSI host and/or LUN numbers change during a reboot?
+>     BUG: KASAN: slab-out-of-bounds in
+> _base_make_ioc_operational+0x47b7/0x47e0 [mpt3sas] at addr ffff880754=
+816ab0
+> Read of size 8 by task modprobe/305
+>     <snip>
+>     Call Trace:
+>      [<ffffffff81dfc591>] dump_stack+0x4d/0x6c
+>      [<ffffffff814c9689>] print_trailer+0xf9/0x150
+>      [<ffffffff814ceda4>] object_err+0x34/0x40
+>      [<ffffffff814d1231>] kasan_report_error+0x221/0x530
+>      [<ffffffff814d1673>] __asan_report_load8_noabort+0x43/0x50
+>      [<ffffffffa0043637>] _base_make_ioc_operational+0x47b7/0x47e0 [m=
+pt3sas]
+> [<ffffffffa0049a51>] mpt3sas_base_attach+0x1991/0x2120 [mpt3sas]
+> [<ffffffffa0053c93>] _scsih_probe+0xeb3/0x16b0 [mpt3sas]
+>      [<ffffffff81ebd047>] local_pci_probe+0xc7/0x170
+>      [<ffffffff81ebf2cf>] pci_device_probe+0x20f/0x290
+>      [<ffffffff820d50cd>] really_probe+0x17d/0x600
+>      [<ffffffff820d56a3>] __driver_attach+0x153/0x190
+>      [<ffffffff820cffac>] bus_for_each_dev+0x11c/0x1a0
+>      [<ffffffff820d421d>] driver_attach+0x3d/0x50
+>      [<ffffffff820d378a>] bus_add_driver+0x44a/0x5f0
+>      [<ffffffff820d666c>] driver_register+0x18c/0x3b0
+>      [<ffffffff81ebcb76>] __pci_register_driver+0x156/0x200
+>      [<ffffffffa00c8135>] _mpt3sas_init+0x135/0x1000 [mpt3sas]
+>      [<ffffffff81000423>] do_one_initcall+0x113/0x2b0
+>      [<ffffffff813caa5a>] do_init_module+0x1d0/0x4d8
+>      [<ffffffff81273909>] load_module+0x6729/0x8dc0
+>      [<ffffffff81276123>] SYSC_init_module+0x183/0x1a0
+>      [<ffffffff8127625e>] SyS_init_module+0xe/0x10
+>      [<ffffffff828fe7d7>] entry_SYSCALL_64_fastpath+0x12/0x6a
 >=20
-It's independent on the SCSI host as it just looks for the rport ID
-(FC WWPN, SAS ID, or iSCSI target name). The LUN number, however, is
-fixed; the whole point of this exercise is that you want to blank
-out individual LUNs behind a given target.
-Hence you need to able to address the LUNs in the first place.
+> Fix this by pulling the value at the beginning of the loop.
+>=20
+> Signed-off-by: Calvin Owens <calvinowens@fb.com>
 
-Cheers,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Hannes
 --=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
 HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
