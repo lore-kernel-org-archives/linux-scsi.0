@@ -1,297 +1,409 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 12/23] sun3_scsi: Adopt NCR5380.c core driver
-Date: Mon, 21 Mar 2016 13:32:01 +1100
-Message-ID: <20160321023152.803971245@telegraphics.com.au>
+Subject: [PATCH v3 08/23] ncr5380: Use DMA hooks for PDMA
+Date: Mon, 21 Mar 2016 13:31:57 +1100
+Message-ID: <20160321023151.743984915@telegraphics.com.au>
 References: <20160321023149.604138431@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=sun3_scsi-adopt-NCR5380-c
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline; filename=ncr5380-rename-pread-and-pwrite
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Cc: Sam Creasey <sammy@sammy.net>, Ondrej Zary <linux@rainbow-software.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for the custom Sun 3 DMA logic to the NCR5380.c core driver.
-This code is copied from atari_NCR5380.c.
+Those wrapper drivers which use DMA define the REAL_DMA macro and
+those which use pseudo DMA define PSEUDO_DMA. These macros need to be
+removed for a number of reasons, not least of which is to have drivers
+share more code.
+
+Redefine the PDMA send and receive hooks as DMA setup hooks, so that the
+DMA code can be shared by all 5380 wrapper drivers. This will help to
+reunify the forked core driver.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
+ drivers/scsi/NCR5380.c      |   10 ++--------
+ drivers/scsi/arm/cumana_1.c |   10 ++++++----
+ drivers/scsi/arm/oak.c      |   10 ++++++----
+ drivers/scsi/dmx3191d.c     |    4 ++--
+ drivers/scsi/dtc.c          |    6 ++++--
+ drivers/scsi/dtc.h          |    2 ++
+ drivers/scsi/g_NCR5380.c    |   10 ++++++----
+ drivers/scsi/g_NCR5380.h    |    4 ++--
+ drivers/scsi/mac_scsi.c     |    5 ++---
+ drivers/scsi/pas16.c        |   14 ++++++++------
+ drivers/scsi/pas16.h        |    2 ++
+ drivers/scsi/t128.c         |   12 ++++++------
+ drivers/scsi/t128.h         |    2 ++
+ 13 files changed, 50 insertions(+), 41 deletions(-)
 
-The Sun 3 DMA code is still configured by macros. I have simplified things
-slightly but I have avoided more ambitious refactoring. It's not clear to
-me what that should look like and I can't test sun3_scsi anyway. At least
-this permits the removal of atari_NCR5380.c.
-
----
- drivers/scsi/NCR5380.c   |  131 +++++++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/sun3_scsi.c |    8 +-
- 2 files changed, 124 insertions(+), 15 deletions(-)
-
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2016-03-21 13:31:13.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2016-03-21 13:31:32.000000000 +1100
-@@ -54,10 +54,8 @@
- #define NCR5380_abort                   sun3scsi_abort
- #define NCR5380_info                    sun3scsi_info
- 
--#define NCR5380_dma_read_setup(instance, data, count) \
--        sun3scsi_dma_setup(instance, data, count, 0)
--#define NCR5380_dma_write_setup(instance, data, count) \
--        sun3scsi_dma_setup(instance, data, count, 1)
-+#define NCR5380_dma_recv_setup(instance, data, count) (count)
-+#define NCR5380_dma_send_setup(instance, data, count) (count)
- #define NCR5380_dma_residual(instance) \
-         sun3scsi_dma_residual(instance)
- #define NCR5380_dma_xfer_len(instance, cmd, phase) \
-@@ -406,7 +404,7 @@ static int sun3scsi_dma_finish(int write
- 
- }
- 	
--#include "atari_NCR5380.c"
-+#include "NCR5380.c"
- 
- #ifdef SUN3_SCSI_VME
- #define SUN3_SCSI_NAME          "Sun3 NCR5380 VME SCSI"
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:31.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:32.000000000 +1100
-@@ -31,6 +31,8 @@
- 
- /* Ported to Atari by Roman Hodek and others. */
- 
-+/* Adapted for the Sun 3 by Sam Creasey. */
-+
- /*
-  * Further development / testing that should be done :
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:20.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:21.000000000 +1100
+@@ -127,17 +127,11 @@
+  * specific implementation of the NCR5380
   *
-@@ -858,6 +860,23 @@ static void NCR5380_dma_complete(struct
- 		}
- 	}
- 
-+#ifdef CONFIG_SUN3
-+	if ((sun3scsi_dma_finish(rq_data_dir(hostdata->connected->request)))) {
-+		pr_err("scsi%d: overrun in UDC counter -- not prepared to deal with this!\n",
-+		       instance->host_no);
-+		BUG();
-+	}
-+
-+	if ((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) ==
-+	    (BASR_PHASE_MATCH | BASR_ACK)) {
-+		pr_err("scsi%d: BASR %02x\n", instance->host_no,
-+		       NCR5380_read(BUS_AND_STATUS_REG));
-+		pr_err("scsi%d: bus stuck in data phase -- probably a single byte overrun!\n",
-+		       instance->host_no);
-+		BUG();
-+	}
-+#endif
-+
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-@@ -981,10 +1000,16 @@ static irqreturn_t NCR5380_intr(int irq,
- 			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
- 
- 			dsprintk(NDEBUG_INTR, instance, "unknown interrupt\n");
-+#ifdef SUN3_SCSI_VME
-+			dregs->csr |= CSR_DMA_ENABLE;
-+#endif
- 		}
- 		handled = 1;
- 	} else {
- 		shost_printk(KERN_NOTICE, instance, "interrupt without IRQ bit\n");
-+#ifdef SUN3_SCSI_VME
-+		dregs->csr |= CSR_DMA_ENABLE;
-+#endif
- 	}
- 
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
-@@ -1274,6 +1299,10 @@ static struct scsi_cmnd *NCR5380_select(
- 	hostdata->connected = cmd;
- 	hostdata->busy[cmd->device->id] |= 1 << cmd->device->lun;
- 
-+#ifdef SUN3_SCSI_VME
-+	dregs->csr |= CSR_INTR;
-+#endif
-+
- 	initialize_SCp(cmd);
- 
- 	cmd = NULL;
-@@ -1557,6 +1586,11 @@ static int NCR5380_transfer_dma(struct S
- 	dsprintk(NDEBUG_DMA, instance, "initializing DMA %s: length %d, address %p\n",
- 	         (p & SR_IO) ? "receive" : "send", c, d);
- 
-+#ifdef CONFIG_SUN3
-+	/* send start chain */
-+	sun3scsi_dma_start(c, *data);
-+#endif
-+
- 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(p));
- 	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
- 	                        MR_ENABLE_EOP_INTR);
-@@ -1577,6 +1611,7 @@ static int NCR5380_transfer_dma(struct S
- 	 */
+  * Either real DMA *or* pseudo DMA may be implemented
+- * Note that the DMA setup functions should return the number of bytes
+- * that they were able to program the controller for.
+  *
+  * NCR5380_dma_write_setup(instance, src, count) - initialize
+  * NCR5380_dma_read_setup(instance, dst, count) - initialize
+  * NCR5380_dma_residual(instance); - residual count
+  *
+- * PSEUDO functions :
+- * NCR5380_pwrite(instance, src, count)
+- * NCR5380_pread(instance, dst, count);
+- *
+  * The generic driver is initialized by calling NCR5380_init(instance),
+  * after setting the appropriate host specific fields and ID.  If the
+  * driver wishes to autoprobe for an IRQ line, the NCR5380_probe_irq(instance,
+@@ -1511,7 +1505,7 @@ static int NCR5380_transfer_dma(struct S
+  */
  
  	if (p & SR_IO) {
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		NCR5380_io_delay(1);
- 		NCR5380_write(START_DMA_INITIATOR_RECEIVE_REG, 0);
+-		foo = NCR5380_pread(instance, d,
++		foo = NCR5380_dma_recv_setup(instance, d,
+ 			hostdata->flags & FLAG_DMA_FIXUP ? c - 1 : c);
+ 		if (!foo && (hostdata->flags & FLAG_DMA_FIXUP)) {
+ 			/*
+@@ -1542,7 +1536,7 @@ static int NCR5380_transfer_dma(struct S
+ 			d[c - 1] = NCR5380_read(INPUT_DATA_REG);
+ 		}
  	} else {
-@@ -1587,6 +1622,13 @@ static int NCR5380_transfer_dma(struct S
- 		NCR5380_io_delay(1);
- 	}
+-		foo = NCR5380_pwrite(instance, d, c);
++		foo = NCR5380_dma_send_setup(instance, d, c);
+ 		if (!foo && (hostdata->flags & FLAG_DMA_FIXUP)) {
+ 			/*
+ 			 * Wait for the last byte to be sent.  If REQ is being asserted for
+Index: linux/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2016-03-21 13:31:21.000000000 +1100
+@@ -18,6 +18,8 @@
+ #define NCR5380_write(reg, value)	cumanascsi_write(instance, reg, value)
  
-+#ifdef CONFIG_SUN3
-+#ifdef SUN3_SCSI_VME
-+	dregs->csr |= CSR_DMA_ENABLE;
-+#endif
-+	sun3_dma_active = 1;
-+#endif
-+
- 	if (hostdata->flags & FLAG_LATE_DMA_SETUP) {
- 		/* On the Falcon, the DMA setup must be done after the last
- 		 * NCR access, else the DMA setup gets trashed!
-@@ -1718,6 +1760,10 @@ static void NCR5380_information_transfer
- 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
- 	struct scsi_cmnd *cmd;
+ #define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++#define NCR5380_dma_recv_setup		cumanascsi_pread
++#define NCR5380_dma_send_setup		cumanascsi_pwrite
  
-+#ifdef SUN3_SCSI_VME
-+	dregs->csr |= CSR_INTR;
-+#endif
-+
- 	while ((cmd = hostdata->connected)) {
- 		struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
+ #define NCR5380_intr			cumanascsi_intr
+ #define NCR5380_queue_command		cumanascsi_queue_command
+@@ -39,8 +41,8 @@ void cumanascsi_setup(char *str, int *in
+ #define L(v)	(((v)<<16)|((v) & 0x0000ffff))
+ #define H(v)	(((v)>>16)|((v) & 0xffff0000))
  
-@@ -1729,6 +1775,31 @@ static void NCR5380_information_transfer
- 				old_phase = phase;
- 				NCR5380_dprint_phase(NDEBUG_INFORMATION, instance);
- 			}
-+#ifdef CONFIG_SUN3
-+			if (phase == PHASE_CMDOUT) {
-+				void *d;
-+				unsigned long count;
-+
-+				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
-+					count = cmd->SCp.buffer->length;
-+					d = sg_virt(cmd->SCp.buffer);
-+				} else {
-+					count = cmd->SCp.this_residual;
-+					d = cmd->SCp.ptr;
-+				}
-+
-+				if (sun3_dma_setup_done != cmd &&
-+				    sun3scsi_dma_xfer_len(count, cmd) > 0) {
-+					sun3scsi_dma_setup(instance, d, count,
-+					                   rq_data_dir(cmd->request));
-+					sun3_dma_setup_done = cmd;
-+				}
-+#ifdef SUN3_SCSI_VME
-+				dregs->csr |= CSR_INTR;
-+#endif
-+			}
-+#endif /* CONFIG_SUN3 */
-+
- 			if (sink && (phase != PHASE_MSGOUT)) {
- 				NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
+-static inline int
+-NCR5380_pwrite(struct Scsi_Host *host, unsigned char *addr, int len)
++static inline int cumanascsi_pwrite(struct Scsi_Host *host,
++                                    unsigned char *addr, int len)
+ {
+   unsigned long *laddr;
+   void __iomem *dma = priv(host)->dma + 0x2000;
+@@ -102,8 +104,8 @@ end:
+   return len;
+ }
  
-@@ -1811,6 +1882,10 @@ static void NCR5380_information_transfer
- 					                     (unsigned char **)&cmd->SCp.ptr);
- 					cmd->SCp.this_residual -= transfersize - len;
- 				}
-+#ifdef CONFIG_SUN3
-+				if (sun3_dma_setup_done == cmd)
-+					sun3_dma_setup_done = NULL;
-+#endif
- 				return;
- 			case PHASE_MSGIN:
- 				len = 1;
-@@ -1889,6 +1964,9 @@ static void NCR5380_information_transfer
+-static inline int
+-NCR5380_pread(struct Scsi_Host *host, unsigned char *addr, int len)
++static inline int cumanascsi_pread(struct Scsi_Host *host,
++                                   unsigned char *addr, int len)
+ {
+   unsigned long *laddr;
+   void __iomem *dma = priv(host)->dma + 0x2000;
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2016-03-21 13:31:21.000000000 +1100
+@@ -24,6 +24,8 @@
+ 	writeb(value, priv(instance)->base + ((reg) << 2))
  
- 					/* Enable reselect interrupts */
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-+#ifdef SUN3_SCSI_VME
-+					dregs->csr |= CSR_DMA_ENABLE;
-+#endif
- 					return;
- 					/*
- 					 * The SCSI data pointer is *IMPLICITLY* saved on a disconnect
-@@ -2040,10 +2118,8 @@ static void NCR5380_reselect(struct Scsi
+ #define NCR5380_dma_xfer_len(instance, cmd, phase)	(0)
++#define NCR5380_dma_recv_setup		oakscsi_pread
++#define NCR5380_dma_send_setup		oakscsi_pwrite
+ 
+ #define NCR5380_queue_command		oakscsi_queue_command
+ #define NCR5380_info			oakscsi_info
+@@ -39,8 +41,8 @@
+ #define STAT	((128 + 16) << 2)
+ #define DATA	((128 + 8) << 2)
+ 
+-static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *addr,
+-              int len)
++static inline int oakscsi_pwrite(struct Scsi_Host *instance,
++                                 unsigned char *addr, int len)
+ {
+   void __iomem *base = priv(instance)->base;
+ 
+@@ -54,8 +56,8 @@ printk("writing %p len %d\n",addr, len);
+   }
+ }
+ 
+-static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *addr,
+-              int len)
++static inline int oakscsi_pread(struct Scsi_Host *instance,
++                                unsigned char *addr, int len)
+ {
+   void __iomem *base = priv(instance)->base;
+ printk("reading %p len %d\n", addr, len);
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2016-03-21 13:31:21.000000000 +1100
+@@ -322,7 +322,8 @@ static int dtc_biosparam(struct scsi_dev
+  * 	timeout.
+ */
+ 
+-static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst, int len)
++static inline int dtc_pread(struct Scsi_Host *instance,
++                            unsigned char *dst, int len)
+ {
+ 	unsigned char *d = dst;
+ 	int i;			/* For counting time spent in the poll-loop */
+@@ -367,7 +368,8 @@ static inline int NCR5380_pread(struct S
+  * 	timeout.
+ */
+ 
+-static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src, int len)
++static inline int dtc_pwrite(struct Scsi_Host *instance,
++                             unsigned char *src, int len)
+ {
+ 	int i;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+Index: linux/drivers/scsi/dtc.h
+===================================================================
+--- linux.orig/drivers/scsi/dtc.h	2016-03-21 13:31:20.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2016-03-21 13:31:21.000000000 +1100
+@@ -21,6 +21,8 @@
+ 
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+         dtc_dma_xfer_len(cmd)
++#define NCR5380_dma_recv_setup		dtc_pread
++#define NCR5380_dma_send_setup		dtc_pwrite
+ 
+ #define NCR5380_intr			dtc_intr
+ #define NCR5380_queue_command		dtc_queue_command
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:21.000000000 +1100
+@@ -551,7 +551,7 @@ static int generic_NCR5380_release_resou
+ }
+ 
+ /**
+- *	NCR5380_pread		-	pseudo DMA read
++ *	generic_NCR5380_pread - pseudo DMA read
+  *	@instance: adapter to read from
+  *	@dst: buffer to read into
+  *	@len: buffer length
+@@ -560,7 +560,8 @@ static int generic_NCR5380_release_resou
+  *	controller
+  */
+  
+-static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst, int len)
++static inline int generic_NCR5380_pread(struct Scsi_Host *instance,
++                                        unsigned char *dst, int len)
  {
  	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char target_mask;
--	unsigned char lun, phase;
--	int len;
-+	unsigned char lun;
- 	unsigned char msg[3];
--	unsigned char *data;
- 	struct NCR5380_cmd *ncmd;
- 	struct scsi_cmnd *tmp;
+ 	int blocks = len / 128;
+@@ -628,7 +629,7 @@ static inline int NCR5380_pread(struct S
+ }
  
-@@ -2085,15 +2161,26 @@ static void NCR5380_reselect(struct Scsi
- 		return;
- 	}
+ /**
+- *	NCR5380_write		-	pseudo DMA write
++ *	generic_NCR5380_pwrite - pseudo DMA write
+  *	@instance: adapter to read from
+  *	@dst: buffer to read into
+  *	@len: buffer length
+@@ -637,7 +638,8 @@ static inline int NCR5380_pread(struct S
+  *	controller
+  */
  
--	len = 1;
--	data = msg;
--	phase = PHASE_MSGIN;
--	NCR5380_transfer_pio(instance, &phase, &len, &data);
-+#ifdef CONFIG_SUN3
-+	/* acknowledge toggle to MSGIN */
-+	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(PHASE_MSGIN));
-+
-+	/* peek at the byte without really hitting the bus */
-+	msg[0] = NCR5380_read(CURRENT_SCSI_DATA_REG);
-+#else
-+	{
-+		int len = 1;
-+		unsigned char *data = msg;
-+		unsigned char phase = PHASE_MSGIN;
+-static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src, int len)
++static inline int generic_NCR5380_pwrite(struct Scsi_Host *instance,
++                                         unsigned char *src, int len)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	int blocks = len / 128;
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:20.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:21.000000000 +1100
+@@ -62,13 +62,13 @@
  
--	if (len) {
--		do_abort(instance);
--		return;
-+		NCR5380_transfer_pio(instance, &phase, &len, &data);
-+
-+		if (len) {
-+			do_abort(instance);
-+			return;
-+		}
- 	}
-+#endif /* CONFIG_SUN3 */
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+         generic_NCR5380_dma_xfer_len(instance, cmd)
++#define NCR5380_dma_recv_setup		generic_NCR5380_pread
++#define NCR5380_dma_send_setup		generic_NCR5380_pwrite
  
- 	if (!(msg[0] & 0x80)) {
- 		shost_printk(KERN_ERR, instance, "expecting IDENTIFY message, got ");
-@@ -2141,6 +2228,30 @@ static void NCR5380_reselect(struct Scsi
- 		return;
- 	}
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
+ #define NCR5380_abort generic_NCR5380_abort
+ #define NCR5380_bus_reset generic_NCR5380_bus_reset
+-#define NCR5380_pread generic_NCR5380_pread
+-#define NCR5380_pwrite generic_NCR5380_pwrite
+ #define NCR5380_info generic_NCR5380_info
  
-+#ifdef CONFIG_SUN3
-+	{
-+		void *d;
-+		unsigned long count;
-+
-+		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
-+			count = tmp->SCp.buffer->length;
-+			d = sg_virt(tmp->SCp.buffer);
-+		} else {
-+			count = tmp->SCp.this_residual;
-+			d = tmp->SCp.ptr;
-+		}
-+
-+		if (sun3_dma_setup_done != tmp &&
-+		    sun3scsi_dma_xfer_len(count, tmp) > 0) {
-+			sun3scsi_dma_setup(instance, d, count,
-+			                   rq_data_dir(tmp->request));
-+			sun3_dma_setup_done = tmp;
-+		}
-+	}
-+
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ACK);
-+#endif /* CONFIG_SUN3 */
-+
- 	/* Accept message by clearing ACK */
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ #define NCR5380_io_delay(x)		udelay(x)
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2016-03-21 13:31:21.000000000 +1100
+@@ -33,11 +33,10 @@
+ #define NCR5380_read(reg)               macscsi_read(instance, reg)
+ #define NCR5380_write(reg, value)       macscsi_write(instance, reg, value)
  
+-#define NCR5380_pread                   macscsi_pread
+-#define NCR5380_pwrite                  macscsi_pwrite
+-
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+         macscsi_dma_xfer_len(instance, cmd)
++#define NCR5380_dma_recv_setup          macscsi_pread
++#define NCR5380_dma_send_setup          macscsi_pwrite
+ 
+ #define NCR5380_intr                    macscsi_intr
+ #define NCR5380_queue_command           macscsi_queue_command
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2016-03-21 13:31:21.000000000 +1100
+@@ -458,7 +458,7 @@ static int pas16_biosparam(struct scsi_d
+ }
+ 
+ /*
+- * Function : int NCR5380_pread (struct Scsi_Host *instance, 
++ * Function : int pas16_pread (struct Scsi_Host *instance,
+  *	unsigned char *dst, int len)
+  *
+  * Purpose : Fast 5380 pseudo-dma read function, transfers len bytes to 
+@@ -470,8 +470,9 @@ static int pas16_biosparam(struct scsi_d
+  * 	timeout.
+  */
+ 
+-static inline int NCR5380_pread (struct Scsi_Host *instance, unsigned char *dst,
+-    int len) {
++static inline int pas16_pread(struct Scsi_Host *instance,
++                              unsigned char *dst, int len)
++{
+     register unsigned char  *d = dst;
+     register unsigned short reg = (unsigned short) (instance->io_port + 
+ 	P_DATA_REG_OFFSET);
+@@ -493,7 +494,7 @@ static inline int NCR5380_pread (struct
+ }
+ 
+ /*
+- * Function : int NCR5380_pwrite (struct Scsi_Host *instance, 
++ * Function : int pas16_pwrite (struct Scsi_Host *instance,
+  *	unsigned char *src, int len)
+  *
+  * Purpose : Fast 5380 pseudo-dma write function, transfers len bytes from
+@@ -505,8 +506,9 @@ static inline int NCR5380_pread (struct
+  * 	timeout.
+  */
+ 
+-static inline int NCR5380_pwrite (struct Scsi_Host *instance, unsigned char *src,
+-    int len) {
++static inline int pas16_pwrite(struct Scsi_Host *instance,
++                               unsigned char *src, int len)
++{
+     register unsigned char *s = src;
+     register unsigned short reg = (instance->io_port + P_DATA_REG_OFFSET);
+     register int i = len;
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2016-03-21 13:31:21.000000000 +1100
+@@ -103,6 +103,8 @@
+ #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
+ 
+ #define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++#define NCR5380_dma_recv_setup		pas16_pread
++#define NCR5380_dma_send_setup		pas16_pwrite
+ 
+ #define NCR5380_intr pas16_intr
+ #define NCR5380_queue_command pas16_queue_command
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/t128.c	2016-03-21 13:31:21.000000000 +1100
+@@ -292,7 +292,7 @@ static int t128_biosparam(struct scsi_de
+ }
+ 
+ /*
+- * Function : int NCR5380_pread (struct Scsi_Host *instance, 
++ * Function : int t128_pread (struct Scsi_Host *instance,
+  *	unsigned char *dst, int len)
+  *
+  * Purpose : Fast 5380 pseudo-dma read function, transfers len bytes to 
+@@ -304,8 +304,8 @@ static int t128_biosparam(struct scsi_de
+  * 	timeout.
+  */
+ 
+-static inline int
+-NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst, int len)
++static inline int t128_pread(struct Scsi_Host *instance,
++                             unsigned char *dst, int len)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	void __iomem *reg, *base = hostdata->base;
+@@ -338,7 +338,7 @@ NCR5380_pread(struct Scsi_Host *instance
+ }
+ 
+ /*
+- * Function : int NCR5380_pwrite (struct Scsi_Host *instance, 
++ * Function : int t128_pwrite (struct Scsi_Host *instance,
+  *	unsigned char *src, int len)
+  *
+  * Purpose : Fast 5380 pseudo-dma write function, transfers len bytes from
+@@ -350,8 +350,8 @@ NCR5380_pread(struct Scsi_Host *instance
+  * 	timeout.
+  */
+ 
+-static inline int
+-NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src, int len)
++static inline int t128_pwrite(struct Scsi_Host *instance,
++                              unsigned char *src, int len)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	void __iomem *reg, *base = hostdata->base;
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2016-03-21 13:31:20.000000000 +1100
++++ linux/drivers/scsi/t128.h	2016-03-21 13:31:21.000000000 +1100
+@@ -77,6 +77,8 @@
+ #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+ 
+ #define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++#define NCR5380_dma_recv_setup		t128_pread
++#define NCR5380_dma_send_setup		t128_pwrite
+ 
+ #define NCR5380_intr t128_intr
+ #define NCR5380_queue_command t128_queue_command
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-03-21 13:31:21.000000000 +1100
+@@ -40,8 +40,8 @@
+ #define NCR5380_write(reg, value)	outb(value, instance->io_port + reg)
+ 
+ #define NCR5380_dma_xfer_len(instance, cmd, phase)	(0)
+-#define NCR5380_pread(instance, dst, len)		(0)
+-#define NCR5380_pwrite(instance, src, len)		(0)
++#define NCR5380_dma_recv_setup(instance, dst, len)	(0)
++#define NCR5380_dma_send_setup(instance, src, len)	(0)
+ 
+ #define NCR5380_implementation_fields	/* none */
