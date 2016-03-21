@@ -1,58 +1,125 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCHv3] scsi: disable automatic target scan
-Date: Sun, 20 Mar 2016 18:24:26 -0700
-Message-ID: <56EF4D4A.6050000@sandisk.com>
-References: <1458200385-32088-1-git-send-email-hare@suse.de>
- <56EC797A.8000104@sandisk.com> <56ED6DB1.1050202@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0092.outbound.protection.outlook.com ([207.46.100.92]:14496
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751155AbcCUBYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Mar 2016 21:24:32 -0400
-In-Reply-To: <56ED6DB1.1050202@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v3 02/23] ncr5380: Remove FLAG_NO_PSEUDO_DMA where possible
+Date: Mon, 21 Mar 2016 13:31:51 +1100
+Message-ID: <20160321023150.143987737@telegraphics.com.au>
+References: <20160321023149.604138431@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-FLAG_NO_PSEUDO_DMA
+Sender: linux-m68k-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On 03/19/16 08:18, Hannes Reinecke wrote:
-> On 03/18/2016 10:56 PM, Bart Van Assche wrote:
->> On 03/17/2016 12:39 AM, Hannes Reinecke wrote:
->>> On larger installations it is useful to disable automatic LUN
->>> scanning, and only add the required LUNs via udev rules.
->>> This can speed up bootup dramatically.
->>>
->>> This patch introduces a new scan module parameter value 'manual',
->>> which works like 'none', but can be overriden by setting the 'rescan'
->>> value from scsi_scan_target to 'SCSI_SCAN_MANUAL'.
->>> And it updates all relevant callers to set the 'rescan' value
->>> to 'SCSI_SCAN_MANUAL' if invoked via the 'scan' option in sysfs.
->>
->> Hello Hannes,
->>
->> Will setting scsi_scan_type to 'manual' allow a system to boot from a
->> SCSI disk? If not, are there alternatives to this approach? Would it be
->> a valid alternative to e.g. introduce a new threshold parameter such
->> that only LUN numbers below this threshold are scanned during boot?
->>
-> I have a patch for dracut, which will generate udev rules for all
-> devices required for mounting the root fs.
-> Once the system is booted properly I've got another patch for systemd
-> which switches back to 'normal' scanning (ie by writing 'sync' into
-> /sys/modules/scsi_mod/parameters/scan) and rescan all scsi hosts.
->
-> With that there's no need to have any arbitrary limits; only the
-> necessary devices are enabled during boot.
+Drivers that define PSEUDO_DMA also define NCR5380_dma_xfer_len.
+The core driver must call NCR5380_dma_xfer_len which means
+FLAG_NO_PSEUDO_DMA can be eradicated from the core driver.
 
-Hello Hannes,
+dmx3191d doesn't define PSEUDO_DMA and has no use for FLAG_NO_PSEUDO_DMA,
+so remove it there also.
 
-That sounds like a really interesting approach. Will this approach also 
-work if the SCSI host and/or LUN numbers change during a reboot?
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
-Thanks,
+---
+ drivers/scsi/NCR5380.c   |    3 +--
+ drivers/scsi/dmx3191d.c  |    2 +-
+ drivers/scsi/g_NCR5380.c |    7 ++++++-
+ drivers/scsi/g_NCR5380.h |    2 +-
+ drivers/scsi/mac_scsi.c  |   15 ++++++++++++++-
+ 5 files changed, 23 insertions(+), 6 deletions(-)
 
-Bart.
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-03-21 13:31:09.000000000 +1100
+@@ -93,7 +93,7 @@ static int dmx3191d_probe_one(struct pci
+ 	 */
+ 	shost->irq = NO_IRQ;
+ 
+-	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
++	error = NCR5380_init(shost, 0);
+ 	if (error)
+ 		goto out_host_put;
+ 
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2016-03-21 13:31:09.000000000 +1100
+@@ -37,7 +37,9 @@
+ 
+ #define NCR5380_pread                   macscsi_pread
+ #define NCR5380_pwrite                  macscsi_pwrite
+-#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        macscsi_dma_xfer_len(instance, cmd)
+ 
+ #define NCR5380_intr                    macscsi_intr
+ #define NCR5380_queue_command           macscsi_queue_command
+@@ -303,6 +305,17 @@ static int macscsi_pwrite(struct Scsi_Ho
+ }
+ #endif
+ 
++static int macscsi_dma_xfer_len(struct Scsi_Host *instance,
++                                struct scsi_cmnd *cmd)
++{
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
++		return 0;
++
++	return cmd->transfersize;
++}
++
+ #include "NCR5380.c"
+ 
+ #define DRV_MODULE_NAME         "mac_scsi"
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:09.000000000 +1100
+@@ -712,10 +712,15 @@ static inline int NCR5380_pwrite(struct
+ 	return 0;
+ }
+ 
+-static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
++static int generic_NCR5380_dma_xfer_len(struct Scsi_Host *instance,
++                                        struct scsi_cmnd *cmd)
+ {
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	int transfersize = cmd->transfersize;
+ 
++	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
++		return 0;
++
+ 	/* Limit transfers to 32K, for xx400 & xx406
+ 	 * pseudoDMA that transfers in 128 bytes blocks.
+ 	 */
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:09.000000000 +1100
+@@ -1833,8 +1833,7 @@ static void NCR5380_information_transfer
+ 
+ #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
+ 				transfersize = 0;
+-				if (!cmd->device->borken &&
+-				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
++				if (!cmd->device->borken)
+ 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+ 
+ 				if (transfersize) {
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:09.000000000 +1100
+@@ -61,7 +61,7 @@
+ #endif
+ 
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+-        generic_NCR5380_dma_xfer_len(cmd)
++        generic_NCR5380_dma_xfer_len(instance, cmd)
+ 
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
