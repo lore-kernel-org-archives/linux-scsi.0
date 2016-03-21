@@ -1,34 +1,32 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] sd: fixup capacity calculation for 4k drives
-Date: Mon, 21 Mar 2016 15:31:30 +0100
-Message-ID: <20160321143130.GA12542@lst.de>
-References: <1458563249-91200-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH] uas: Limit qdepth at the scsi-host level
+Date: Mon, 21 Mar 2016 15:36:03 +0100
+Message-ID: <20160321143603.GB12654@lst.de>
+References: <1458377952-12567-1-git-send-email-hdegoede@redhat.com> <1458407176.2288.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47058 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756055AbcCUObd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2016 10:31:33 -0400
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1458563249-91200-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1458407176.2288.5.camel@HansenPartnership.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gerd Hoffmann <kraxel@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Mon, Mar 21, 2016 at 01:27:29PM +0100, Hannes Reinecke wrote:
-> in sd_read_capacity() the sdkp->capacity field changes its meaning:
-> after the call to read_capacity_XX() it carries the _unscaled_ values,
-> making the comparison between the original value and the new value
-> always false for drives with a sector size != 512.
-> So introduce a 'new_capacity' carrying the new, scaled, capacity.
+On Sat, Mar 19, 2016 at 10:06:16AM -0700, James Bottomley wrote:
+> Help me understand this bug a bit more.  Are you saying that the commit
+> you identify is causing the block layer to queue more commands than
+> you've set the per-lun limit to?  In which case we have a serious
+> problem for more than just UAS.  Or are you saying that UAS always had
+> a global command limit, but it just didn't get set correctly; however,
+> it mostly worked until the above commit exposed the problem?
 
-While this fixes a bug and adds a comment to clarify things I think
-the whole function is still a mess.  And the way how your first
-calculate new_capacity but then keep the duplicated scaling on
-sdkp->capacity a littler later isn't really helpful either.
+I did mishandle uas in my patch to make the host wide tags the default
+and didn't notice that uas set a different limit for the host wide
+tag limit and ->can_queue.  With the old code we'd apply the lower
+of the two limits, which was the host wide tag limit, but my patch
+removed that one and now purely relies on can_queue.
 
-Is there any chance to rewrite it so that the unscaled capacity has its
-own local variable, and sdkp->capacity is always either the correct
-old or new capacity?
+Now most uas devices only have a single lun, and the per-lun limit
+was set to what the global limit should be as well, so most users
+didn't really notice this.
