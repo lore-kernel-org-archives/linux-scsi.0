@@ -1,148 +1,122 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 11/23] atari_scsi: Adopt NCR5380.c core driver
-Date: Mon, 21 Mar 2016 13:32:00 +1100
-Message-ID: <20160321023152.534059128@telegraphics.com.au>
+Subject: [PATCH v3 07/23] ncr5380: Remove BOARD_REQUIRES_NO_DELAY macro
+Date: Mon, 21 Mar 2016 13:31:56 +1100
+Message-ID: <20160321023151.493990834@telegraphics.com.au>
 References: <20160321023149.604138431@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_scsi-adopt-NCR5380-c
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52815 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbcCUEF3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2016 00:05:29 -0400
+Content-Disposition: inline; filename=ncr5380-io_recovery_delay
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
-List-Id: linux-scsi@vger.kernel.org
 
-Add support for the Atari ST DMA chip to the NCR5380.c core driver.
-This code is copied from atari_NCR5380.c.
+The io_recovery_delay macro is intended to insert a microsecond delay
+between the chip register accesses that begin a DMA operation. This
+is reportedly needed for some ISA boards.
+
+Reverse the sense of the macro test so that in the common case,
+where no delay is required, drivers need not define the macro.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c    |   32 ++++++++++++++++++++++++++++++++
- drivers/scsi/atari_scsi.c |    6 +++---
- 2 files changed, 35 insertions(+), 3 deletions(-)
+ drivers/scsi/NCR5380.c   |   18 ++++++++----------
+ drivers/scsi/dtc.h       |    2 ++
+ drivers/scsi/g_NCR5380.h |    2 ++
+ drivers/scsi/t128.h      |    2 ++
+ 4 files changed, 14 insertions(+), 10 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:27.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:31.000000000 +1100
-@@ -29,6 +29,8 @@
-  * Ronald van Cuijlenborg, Alan Cox and others.
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:20.000000000 +1100
+@@ -39,12 +39,6 @@
+  * tagged queueing)
   */
  
-+/* Ported to Atari by Roman Hodek and others. */
-+
+-#ifdef BOARD_REQUIRES_NO_DELAY
+-#define io_recovery_delay(x)
+-#else
+-#define io_recovery_delay(x)	udelay(x)
+-#endif
+-
  /*
-  * Further development / testing that should be done :
+  * Design
   *
-@@ -141,6 +143,14 @@
- #define NCR5380_io_delay(x)
- #endif
+@@ -150,6 +144,10 @@
+  * possible) function may be used.
+  */
  
-+#ifndef NCR5380_acquire_dma_irq
-+#define NCR5380_acquire_dma_irq(x)	(1)
-+#endif
-+
-+#ifndef NCR5380_release_dma_irq
-+#define NCR5380_release_dma_irq(x)
++#ifndef NCR5380_io_delay
++#define NCR5380_io_delay(x)
 +#endif
 +
  static int do_abort(struct Scsi_Host *);
  static void do_reset(struct Scsi_Host *);
  
-@@ -658,6 +668,9 @@ static int NCR5380_queue_command(struct
+@@ -1468,14 +1466,14 @@ static int NCR5380_transfer_dma(struct S
+ 	 */
  
- 	cmd->result = 0;
+ 	if (p & SR_IO) {
+-		io_recovery_delay(1);
++		NCR5380_io_delay(1);
+ 		NCR5380_write(START_DMA_INITIATOR_RECEIVE_REG, 0);
+ 	} else {
+-		io_recovery_delay(1);
++		NCR5380_io_delay(1);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
+-		io_recovery_delay(1);
++		NCR5380_io_delay(1);
+ 		NCR5380_write(START_DMA_SEND_REG, 0);
+-		io_recovery_delay(1);
++		NCR5380_io_delay(1);
+ 	}
  
-+	if (!NCR5380_acquire_dma_irq(instance))
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
- 	spin_lock_irqsave(&hostdata->lock, flags);
- 
- 	/*
-@@ -682,6 +695,19 @@ static int NCR5380_queue_command(struct
- 	return 0;
- }
- 
-+static inline void maybe_release_dma_irq(struct Scsi_Host *instance)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	/* Caller does the locking needed to set & test these data atomically */
-+	if (list_empty(&hostdata->disconnected) &&
-+	    list_empty(&hostdata->unissued) &&
-+	    list_empty(&hostdata->autosense) &&
-+	    !hostdata->connected &&
-+	    !hostdata->selecting)
-+		NCR5380_release_dma_irq(instance);
-+}
-+
- /**
-  * dequeue_next_cmd - dequeue a command for processing
-  * @instance: the scsi host instance
-@@ -783,6 +809,7 @@ static void NCR5380_main(struct work_str
- 
- 			if (!NCR5380_select(instance, cmd)) {
- 				dsprintk(NDEBUG_MAIN, instance, "main: select complete\n");
-+				maybe_release_dma_irq(instance);
- 			} else {
- 				dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES, instance,
- 				         "main: select failed, returning %p to queue\n", cmd);
-@@ -1828,6 +1855,8 @@ static void NCR5380_information_transfer
- 
- 					/* Enable reselect interrupts */
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-+
-+					maybe_release_dma_irq(instance);
- 					return;
- 				case MESSAGE_REJECT:
- 					/* Accept message by clearing ACK */
-@@ -1963,6 +1992,7 @@ static void NCR5380_information_transfer
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
- 					complete_cmd(instance, cmd);
-+					maybe_release_dma_irq(instance);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				}
-@@ -2256,6 +2286,7 @@ out:
- 		dsprintk(NDEBUG_ABORT, instance, "abort: successfully aborted %p\n", cmd);
- 
- 	queue_work(hostdata->work_q, &hostdata->main_task);
-+	maybe_release_dma_irq(instance);
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
- 	return result;
-@@ -2336,6 +2367,7 @@ static int NCR5380_bus_reset(struct scsi
- 	hostdata->dma_len = 0;
- 
- 	queue_work(hostdata->work_q, &hostdata->main_task);
-+	maybe_release_dma_irq(instance);
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
- 	return SUCCESS;
-Index: linux/drivers/scsi/atari_scsi.c
+ /*
+Index: linux/drivers/scsi/dtc.h
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2016-03-21 13:31:25.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2016-03-21 13:31:31.000000000 +1100
-@@ -99,9 +99,9 @@
- #define NCR5380_abort                   atari_scsi_abort
- #define NCR5380_info                    atari_scsi_info
+--- linux.orig/drivers/scsi/dtc.h	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2016-03-21 13:31:20.000000000 +1100
+@@ -28,6 +28,8 @@
+ #define NCR5380_bus_reset		dtc_bus_reset
+ #define NCR5380_info			dtc_info
  
--#define NCR5380_dma_read_setup(instance, data, count) \
-+#define NCR5380_dma_recv_setup(instance, data, count) \
-         atari_scsi_dma_setup(instance, data, count, 0)
--#define NCR5380_dma_write_setup(instance, data, count) \
-+#define NCR5380_dma_send_setup(instance, data, count) \
-         atari_scsi_dma_setup(instance, data, count, 1)
- #define NCR5380_dma_residual(instance) \
-         atari_scsi_dma_residual(instance)
-@@ -715,7 +715,7 @@ static void atari_scsi_falcon_reg_write(
- }
++#define NCR5380_io_delay(x)		udelay(x)
++
+ /* 15 12 11 10
+    1001 1100 0000 0000 */
  
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:20.000000000 +1100
+@@ -71,6 +71,8 @@
+ #define NCR5380_pwrite generic_NCR5380_pwrite
+ #define NCR5380_info generic_NCR5380_info
  
--#include "atari_NCR5380.c"
-+#include "NCR5380.c"
++#define NCR5380_io_delay(x)		udelay(x)
++
+ #define BOARD_NCR5380	0
+ #define BOARD_NCR53C400	1
+ #define BOARD_NCR53C400A 2
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2016-03-21 13:31:16.000000000 +1100
++++ linux/drivers/scsi/t128.h	2016-03-21 13:31:20.000000000 +1100
+@@ -84,6 +84,8 @@
+ #define NCR5380_bus_reset t128_bus_reset
+ #define NCR5380_info t128_info
  
- static int atari_scsi_bus_reset(struct scsi_cmnd *cmd)
- {
++#define NCR5380_io_delay(x)		udelay(x)
++
+ /* 15 14 12 10 7 5 3
+    1101 0100 1010 1000 */
+ 
+
+
