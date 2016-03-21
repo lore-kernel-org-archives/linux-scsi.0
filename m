@@ -1,122 +1,328 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 07/23] ncr5380: Remove BOARD_REQUIRES_NO_DELAY macro
-Date: Mon, 21 Mar 2016 13:31:56 +1100
-Message-ID: <20160321023151.493990834@telegraphics.com.au>
+Subject: [PATCH v3 01/23] g_ncr5380: Remove CONFIG_SCSI_GENERIC_NCR53C400
+Date: Mon, 21 Mar 2016 13:31:50 +1100
+Message-ID: <20160321023149.883967311@telegraphics.com.au>
 References: <20160321023149.604138431@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52815 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbcCUEF3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2016 00:05:29 -0400
-Content-Disposition: inline; filename=ncr5380-io_recovery_delay
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=g_NCR5380-remove-CONFIG_SCSI_GENERIC_NCR53C400
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+List-Id: linux-scsi@vger.kernel.org
 
-The io_recovery_delay macro is intended to insert a microsecond delay
-between the chip register accesses that begin a DMA operation. This
-is reportedly needed for some ISA boards.
+This change brings a number of improvements: fewer macros, better test
+coverage, simpler code and sane Kconfig options. The downside is a small
+chance of incompatibility (which seems unavoidable).
 
-Reverse the sense of the macro test so that in the common case,
-where no delay is required, drivers need not define the macro.
+CONFIG_SCSI_GENERIC_NCR53C400 exists to enable or inhibit pseudo DMA
+transfers when the driver is used with 53C400-compatible cards. Thanks to
+Ondrej Zary's patches, PDMA now works which means it can be enabled
+unconditionally.
+
+Due to bad design, CONFIG_SCSI_GENERIC_NCR53C400 ties together unrelated
+functionality as it sets both PSEUDO_DMA and BIOSPARAM macros. This patch
+effectively enables PSEUDO_DMA and disables BIOSPARAM.
+
+The defconfigs and the Kconfig default leave CONFIG_SCSI_GENERIC_NCR53C400
+undefined. Red Hat 9 and CentOS 2.1 were the same. This leaves both
+PSEUDO_DMA and BIOSPARAM disabled. The effect of this patch should be
+better performance from enabling PSEUDO_DMA.
+
+On the other hand, Debian 4 and SLES 10 had CONFIG_SCSI_GENERIC_NCR53C400
+enabled, so both PSEUDO_DMA and BIOSPARAM were enabled. This patch might
+affect configurations like this by disabling BIOSPARAM. My best guess is
+that this could be a problem only in the vanishingly rare case that
+1) the CHS values stored in the boot device partition table are wrong and
+2) a 5380 card is in use (because PDMA on 53C400 used to be broken).
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c   |   18 ++++++++----------
- drivers/scsi/dtc.h       |    2 ++
- drivers/scsi/g_NCR5380.h |    2 ++
- drivers/scsi/t128.h      |    2 ++
- 4 files changed, 14 insertions(+), 10 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Here are the distro kernel versions I looked at:
+
+CentOS 2.1:
+
+$ strings kernel-2.4.9-e.40.i686/lib/modules/2.4.9-e.40/kernel/drivers/scsi/g_NCR5380.o | grep extension
+NO NCR53C400 driver extensions
+
+
+Red Hat 7:
+
+$ strings kernel-2.4.18-3.i386/lib/modules/2.4.18-3/kernel/drivers/scsi/g_NCR5380.o | grep extension
+NO NCR53C400 driver extensions
+
+
+Red Hat 9:
+
+$ strings kernel-2.4.20-8.i586/lib/modules/2.4.20-8/kernel/drivers/scsi/g_NCR5380.o | grep extension
+NO NCR53C400 driver extensions
+
+
+Debian 4:
+
+$ strings linux-image-2.6.24-etchnhalf.1-486_2.6.24-6-etchnhalf.9etch3_i386/lib/modules/2.6.24-etchnhalf.1-486/kernel/drivers/scsi/g_NCR5380_mmio.ko | grep extension
+NCR53C400 extension version %d
+$ strings kernel-image-2.6.8-2-386_2.6.8-13_i386/lib/modules/2.6.8-2-386/kernel/drivers/scsi/g_NCR5380_mmio.ko | grep extension
+NCR53C400 extension version %d
+
+
+SLES 10.2:
+
+$ strings kernel-default-2.6.18.2-34.i586/lib/modules/2.6.18.2-34-default/kernel/drivers/scsi/g_NCR5380_mmio.ko | grep extension
+NCR53C400 extension version %d
+
+---
+ drivers/scsi/Kconfig     |   11 ------
+ drivers/scsi/g_NCR5380.c |   75 ++++++++++++++---------------------------------
+ drivers/scsi/g_NCR5380.h |   16 +---------
+ 3 files changed, 25 insertions(+), 77 deletions(-)
+
+Index: linux/drivers/scsi/Kconfig
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-03-21 13:31:16.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2016-03-21 13:31:20.000000000 +1100
-@@ -39,12 +39,6 @@
-  * tagged queueing)
+--- linux.orig/drivers/scsi/Kconfig	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/Kconfig	2016-03-21 13:31:07.000000000 +1100
+@@ -812,17 +812,6 @@ config SCSI_GENERIC_NCR5380_MMIO
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called g_NCR5380_mmio.
+ 
+-config SCSI_GENERIC_NCR53C400
+-	bool "Enable NCR53c400 extensions"
+-	depends on SCSI_GENERIC_NCR5380
+-	help
+-	  This enables certain optimizations for the NCR53c400 SCSI cards.
+-	  You might as well try it out.  Note that this driver will only probe
+-	  for the Trantor T130B in its default configuration; you might have
+-	  to pass a command line option to the kernel at boot time if it does
+-	  not detect your card.  See the file
+-	  <file:Documentation/scsi/g_NCR5380.txt> for details.
+-
+ config SCSI_IPS
+ 	tristate "IBM ServeRAID support"
+ 	depends on PCI && SCSI
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-21 13:31:07.000000000 +1100
+@@ -57,10 +57,7 @@
   */
  
--#ifdef BOARD_REQUIRES_NO_DELAY
--#define io_recovery_delay(x)
--#else
--#define io_recovery_delay(x)	udelay(x)
+ #define AUTOPROBE_IRQ
+-
+-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+ #define PSEUDO_DMA
+-#endif
+ 
+ #include <asm/io.h>
+ #include <linux/blkdev.h>
+@@ -270,7 +267,7 @@ static int __init generic_NCR5380_detect
+ #ifndef SCSI_G_NCR5380_MEM
+ 	int i;
+ 	int port_idx = -1;
+-	unsigned long region_size = 16;
++	unsigned long region_size;
+ #endif
+ 	static unsigned int __initdata ncr_53c400a_ports[] = {
+ 		0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
+@@ -290,6 +287,7 @@ static int __init generic_NCR5380_detect
+ #ifdef SCSI_G_NCR5380_MEM
+ 	unsigned long base;
+ 	void __iomem *iomem;
++	resource_size_t iomem_size;
+ #endif
+ 
+ 	if (ncr_irq)
+@@ -353,9 +351,7 @@ static int __init generic_NCR5380_detect
+ 			flags = FLAG_NO_PSEUDO_DMA;
+ 			break;
+ 		case BOARD_NCR53C400:
+-#ifdef PSEUDO_DMA
+ 			flags = FLAG_NO_DMA_FIXUP;
+-#endif
+ 			break;
+ 		case BOARD_NCR53C400A:
+ 			flags = FLAG_NO_DMA_FIXUP;
+@@ -381,20 +377,22 @@ static int __init generic_NCR5380_detect
+ 			/* Disable the adapter and look for a free io port */
+ 			magic_configure(-1, 0, magic);
+ 
++			region_size = 16;
++
+ 			if (overrides[current_override].NCR5380_map_name != PORT_AUTO)
+ 				for (i = 0; ports[i]; i++) {
+-					if (!request_region(ports[i],  16, "ncr53c80"))
++					if (!request_region(ports[i], region_size, "ncr53c80"))
+ 						continue;
+ 					if (overrides[current_override].NCR5380_map_name == ports[i])
+ 						break;
+-					release_region(ports[i], 16);
++					release_region(ports[i], region_size);
+ 			} else
+ 				for (i = 0; ports[i]; i++) {
+-					if (!request_region(ports[i],  16, "ncr53c80"))
++					if (!request_region(ports[i], region_size, "ncr53c80"))
+ 						continue;
+ 					if (inb(ports[i]) == 0xff)
+ 						break;
+-					release_region(ports[i], 16);
++					release_region(ports[i], region_size);
+ 				}
+ 			if (ports[i]) {
+ 				/* At this point we have our region reserved */
+@@ -410,17 +408,19 @@ static int __init generic_NCR5380_detect
+ 		else
+ 		{
+ 			/* Not a 53C400A style setup - just grab */
+-			if(!(request_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size, "ncr5380")))
++			region_size = 8;
++			if (!request_region(overrides[current_override].NCR5380_map_name,
++			                    region_size, "ncr5380"))
+ 				continue;
+-			region_size = NCR5380_region_size;
+ 		}
+ #else
+ 		base = overrides[current_override].NCR5380_map_name;
+-		if (!request_mem_region(base, NCR5380_region_size, "ncr5380"))
++		iomem_size = NCR53C400_region_size;
++		if (!request_mem_region(base, iomem_size, "ncr5380"))
+ 			continue;
+-		iomem = ioremap(base, NCR5380_region_size);
++		iomem = ioremap(base, iomem_size);
+ 		if (!iomem) {
+-			release_mem_region(base, NCR5380_region_size);
++			release_mem_region(base, iomem_size);
+ 			continue;
+ 		}
+ #endif
+@@ -458,6 +458,7 @@ static int __init generic_NCR5380_detect
+ #else
+ 		instance->base = overrides[current_override].NCR5380_map_name;
+ 		hostdata->iomem = iomem;
++		hostdata->iomem_size = iomem_size;
+ 		switch (overrides[current_override].board) {
+ 		case BOARD_NCR53C400:
+ 			hostdata->c400_ctl_status = 0x100;
+@@ -524,7 +525,7 @@ out_release:
+ 	release_region(overrides[current_override].NCR5380_map_name, region_size);
+ #else
+ 	iounmap(iomem);
+-	release_mem_region(base, NCR5380_region_size);
++	release_mem_region(base, iomem_size);
+ #endif
+ 	return count;
+ }
+@@ -546,42 +547,15 @@ static int generic_NCR5380_release_resou
+ #ifndef SCSI_G_NCR5380_MEM
+ 	release_region(instance->io_port, instance->n_io_port);
+ #else
+-	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
+-	release_mem_region(instance->base, NCR5380_region_size);
+-#endif
+-	return 0;
+-}
++	{
++		struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 
+-#ifdef BIOSPARAM
+-/**
+- *	generic_NCR5380_biosparam
+- *	@disk: disk to compute geometry for
+- *	@dev: device identifier for this disk
+- *	@ip: sizes to fill in
+- *
+- *	Generates a BIOS / DOS compatible H-C-S mapping for the specified 
+- *	device / size.
+- * 
+- * 	XXX Most SCSI boards use this mapping, I could be incorrect.  Someone
+- *	using hard disks on a trantor should verify that this mapping
+- *	corresponds to that used by the BIOS / ASPI driver by running the linux
+- *	fdisk program and matching the H_C_S coordinates to what DOS uses.
+- *
+- *	Locks: none
+- */
+-
+-static int
+-generic_NCR5380_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+-			  sector_t capacity, int *ip)
+-{
+-	ip[0] = 64;
+-	ip[1] = 32;
+-	ip[2] = capacity >> 11;
++		iounmap(hostdata->iomem);
++		release_mem_region(instance->base, hostdata->iomem_size);
++	}
++#endif
+ 	return 0;
+ }
 -#endif
 -
+-#ifdef PSEUDO_DMA
+ 
+ /**
+  *	NCR5380_pread		-	pseudo DMA read
+@@ -756,8 +730,6 @@ static int generic_NCR5380_dma_xfer_len(
+ 	return transfersize;
+ }
+ 
+-#endif /* PSEUDO_DMA */
+-
  /*
-  * Design
-  *
-@@ -150,6 +144,10 @@
-  * possible) function may be used.
+  *	Include the NCR5380 core code that we build our driver around	
   */
- 
-+#ifndef NCR5380_io_delay
-+#define NCR5380_io_delay(x)
-+#endif
-+
- static int do_abort(struct Scsi_Host *);
- static void do_reset(struct Scsi_Host *);
- 
-@@ -1468,14 +1466,14 @@ static int NCR5380_transfer_dma(struct S
- 	 */
- 
- 	if (p & SR_IO) {
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 		NCR5380_write(START_DMA_INITIATOR_RECEIVE_REG, 0);
- 	} else {
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 		NCR5380_write(START_DMA_SEND_REG, 0);
--		io_recovery_delay(1);
-+		NCR5380_io_delay(1);
- 	}
- 
- /*
-Index: linux/drivers/scsi/dtc.h
-===================================================================
---- linux.orig/drivers/scsi/dtc.h	2016-03-21 13:31:16.000000000 +1100
-+++ linux/drivers/scsi/dtc.h	2016-03-21 13:31:20.000000000 +1100
-@@ -28,6 +28,8 @@
- #define NCR5380_bus_reset		dtc_bus_reset
- #define NCR5380_info			dtc_info
- 
-+#define NCR5380_io_delay(x)		udelay(x)
-+
- /* 15 12 11 10
-    1001 1100 0000 0000 */
- 
+@@ -773,7 +745,6 @@ static struct scsi_host_template driver_
+ 	.queuecommand		= generic_NCR5380_queue_command,
+ 	.eh_abort_handler	= generic_NCR5380_abort,
+ 	.eh_bus_reset_handler	= generic_NCR5380_bus_reset,
+-	.bios_param		= NCR5380_BIOSPARAM,
+ 	.can_queue		= 16,
+ 	.this_id		= 7,
+ 	.sg_tablesize		= SG_ALL,
 Index: linux/drivers/scsi/g_NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:16.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:20.000000000 +1100
-@@ -71,6 +71,8 @@
- #define NCR5380_pwrite generic_NCR5380_pwrite
- #define NCR5380_info generic_NCR5380_info
+--- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:07.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2016-03-21 13:31:07.000000000 +1100
+@@ -14,13 +14,6 @@
+ #ifndef GENERIC_NCR5380_H
+ #define GENERIC_NCR5380_H
  
-+#define NCR5380_io_delay(x)		udelay(x)
-+
- #define BOARD_NCR5380	0
- #define BOARD_NCR53C400	1
- #define BOARD_NCR53C400A 2
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2016-03-21 13:31:16.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2016-03-21 13:31:20.000000000 +1100
-@@ -84,6 +84,8 @@
- #define NCR5380_bus_reset t128_bus_reset
- #define NCR5380_info t128_info
+-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+-#define BIOSPARAM
+-#define NCR5380_BIOSPARAM generic_NCR5380_biosparam
+-#else
+-#define NCR5380_BIOSPARAM NULL
+-#endif
+-
+ #define __STRVAL(x) #x
+ #define STRVAL(x) __STRVAL(x)
  
-+#define NCR5380_io_delay(x)		udelay(x)
-+
- /* 15 14 12 10 7 5 3
-    1101 0100 1010 1000 */
+@@ -30,12 +23,6 @@
+ #define NCR5380_map_type int
+ #define NCR5380_map_name port
  
-
-
+-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+-#define NCR5380_region_size 16
+-#else
+-#define NCR5380_region_size 8
+-#endif
+-
+ #define NCR5380_read(reg) \
+ 	inb(instance->io_port + (reg))
+ #define NCR5380_write(reg, value) \
+@@ -55,7 +42,7 @@
+ #define NCR5380_map_name base
+ #define NCR53C400_mem_base 0x3880
+ #define NCR53C400_host_buffer 0x3900
+-#define NCR5380_region_size 0x3a00
++#define NCR53C400_region_size 0x3a00
+ 
+ #define NCR5380_read(reg) \
+ 	readb(((struct NCR5380_hostdata *)shost_priv(instance))->iomem + \
+@@ -66,6 +53,7 @@
+ 
+ #define NCR5380_implementation_fields \
+ 	void __iomem *iomem; \
++	resource_size_t iomem_size; \
+ 	int c400_ctl_status; \
+ 	int c400_blk_cnt; \
+ 	int c400_host_buf;
