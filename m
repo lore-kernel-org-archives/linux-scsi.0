@@ -1,58 +1,79 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: Re: [PATCH RFC 1/2] scatterlist: add mempool based chained SG
- alloc/free api
-Date: Sun, 20 Mar 2016 23:55:17 -0700
-Message-ID: <1458543317.4550.1.camel@kernel.org>
-References: <1458081569-30953-1-git-send-email-mlin@kernel.org>
-	 <1458081569-30953-2-git-send-email-mlin@kernel.org>
-	 <20160316082339.GA6203@lst.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv3] scsi: disable automatic target scan
+Date: Mon, 21 Mar 2016 08:15:10 +0100
+Message-ID: <56EF9F7E.2010300@suse.de>
+References: <1458200385-32088-1-git-send-email-hare@suse.de>
+ <56EC797A.8000104@sandisk.com> <56ED6DB1.1050202@suse.de>
+ <56EF4D4A.6050000@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40088 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:47486 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751435AbcCUGzU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2016 02:55:20 -0400
-In-Reply-To: <20160316082339.GA6203@lst.de>
+	id S1751349AbcCUHPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2016 03:15:12 -0400
+In-Reply-To: <56EF4D4A.6050000@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2016-03-16 at 09:23 +0100, Christoph Hellwig wrote:
-> >=C2=A0
-> We can defintively kill this one.
-
-We want to support different size of pools.
-How can we kill this one?
-
-Or did you mean we just create a single pool with size SG_CHUNK_SIZE?
-
+On 03/21/2016 02:24 AM, Bart Van Assche wrote:
+> On 03/19/16 08:18, Hannes Reinecke wrote:
+>> On 03/18/2016 10:56 PM, Bart Van Assche wrote:
+>>> On 03/17/2016 12:39 AM, Hannes Reinecke wrote:
+>>>> On larger installations it is useful to disable automatic LUN
+>>>> scanning, and only add the required LUNs via udev rules.
+>>>> This can speed up bootup dramatically.
+>>>>
+>>>> This patch introduces a new scan module parameter value 'manual',
+>>>> which works like 'none', but can be overriden by setting the
+>>>> 'rescan'
+>>>> value from scsi_scan_target to 'SCSI_SCAN_MANUAL'.
+>>>> And it updates all relevant callers to set the 'rescan' value
+>>>> to 'SCSI_SCAN_MANUAL' if invoked via the 'scan' option in sysfs.
+>>>
+>>> Hello Hannes,
+>>>
+>>> Will setting scsi_scan_type to 'manual' allow a system to boot
+>>> from a
+>>> SCSI disk? If not, are there alternatives to this approach? Would
+>>> it be
+>>> a valid alternative to e.g. introduce a new threshold parameter suc=
+h
+>>> that only LUN numbers below this threshold are scanned during boot?
+>>>
+>> I have a patch for dracut, which will generate udev rules for all
+>> devices required for mounting the root fs.
+>> Once the system is booted properly I've got another patch for system=
+d
+>> which switches back to 'normal' scanning (ie by writing 'sync' into
+>> /sys/modules/scsi_mod/parameters/scan) and rescan all scsi hosts.
+>>
+>> With that there's no need to have any arbitrary limits; only the
+>> necessary devices are enabled during boot.
 >=20
-> > +static __init int sg_mempool_init(void)
-> > +{
-> > +	int i;
-> > +
-> > +	for (i =3D 0; i < SG_MEMPOOL_NR; i++) {
-> > +		struct sg_mempool *sgp =3D sg_pools + i;
-> > +		int size =3D sgp->size * sizeof(struct scatterlist);
-> > +
-> > +		sgp->slab =3D kmem_cache_create(sgp->name, size, 0,
-> > +				SLAB_HWCACHE_ALIGN, NULL);
+> Hello Hannes,
 >=20
-> Having these mempoools around in every kernel will make some embedded
-> developers rather unhappy.=C2=A0=C2=A0We could either not create them=
- at
-> runtime, which would require either a check in the fast path, or
-> an init call in every driver, or just move the functions you
-> added into a separe file, which will be compiled only based on a
-> Kconfig
-> symbol, and could even be potentially modular.=C2=A0=C2=A0I think tha=
-t
-> second option might be easier.
+> That sounds like a really interesting approach. Will this approach
+> also work if the SCSI host and/or LUN numbers change during a reboot?
+>=20
+It's independent on the SCSI host as it just looks for the rport ID
+(FC WWPN, SAS ID, or iSCSI target name). The LUN number, however, is
+fixed; the whole point of this exercise is that you want to blank
+out individual LUNs behind a given target.
+Hence you need to able to address the LUNs in the first place.
 
-I created lib/sg_pool.c with CONFIG_SG_POOL.
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
