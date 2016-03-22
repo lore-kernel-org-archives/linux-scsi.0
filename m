@@ -1,73 +1,69 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] scsi: ufs: select CONFIG_NLS
-Date: Tue, 22 Mar 2016 15:18:27 +0100
-Message-ID: <6292485.RzKll8UR2a@wuerfel>
-References: <1458217819-2802119-1-git-send-email-arnd@arndb.de> <1458646999.2408.3.camel@linux.vnet.ibm.com>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH] mpt3sas: Don't overreach ioc->reply_post[] during
+ initialization
+Date: Tue, 22 Mar 2016 10:48:30 -0600
+Message-ID: <56F1775E.3020500@fb.com>
+References: <df80b371ec5e56ecd65be161acdc34c0f2964d2e.1458327050.git.calvinowens@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:60670 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758735AbcCVOSz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2016 10:18:55 -0400
-In-Reply-To: <1458646999.2408.3.camel@linux.vnet.ibm.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:9090 "EHLO
+	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751242AbcCVQsu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2016 12:48:50 -0400
+In-Reply-To: <df80b371ec5e56ecd65be161acdc34c0f2964d2e.1458327050.git.calvinowens@fb.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Yaniv Gardi <ygardi@codeaurora.org>, Stephen Boyd <sboyd@codeaurora.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tuesday 22 March 2016 07:43:19 James Bottomley wrote:
-> > diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> > index 5f4530744e0a..097894a1fab5 100644
-> > --- a/drivers/scsi/ufs/Kconfig
-> > +++ b/drivers/scsi/ufs/Kconfig
-> > @@ -37,6 +37,7 @@ config SCSI_UFSHCD
-> >       depends on SCSI && SCSI_DMA
-> >       select PM_DEVFREQ
-> >       select DEVFREQ_GOV_SIMPLE_ONDEMAND
-> > +     select NLS
-> 
-> This looks like a bad solution: CONFIG_NLS is nothing more than a menu
-> selector for the NLS subsystem.
+On 03/18/2016 01:45 PM, Calvin Owens wrote:
+> In _base_make_ioc_operational(), we walk ioc->reply_queue_list and pull
+> a pointer out of successive elements of ioc->reply_post[] for each entry
+> in that list if RDPQ is enabled.
+>
+> Since the code pulls the pointer for the next iteration at the bottom of
+> the loop, it triggers the a KASAN dump on the final iteration:
+>
+>      BUG: KASAN: slab-out-of-bounds in _base_make_ioc_operational+0x47b7/0x47e0 [mpt3sas] at addr ffff880754816ab0
+>      Read of size 8 by task modprobe/305
+>      <snip>
+>      Call Trace:
+>       [<ffffffff81dfc591>] dump_stack+0x4d/0x6c
+>       [<ffffffff814c9689>] print_trailer+0xf9/0x150
+>       [<ffffffff814ceda4>] object_err+0x34/0x40
+>       [<ffffffff814d1231>] kasan_report_error+0x221/0x530
+>       [<ffffffff814d1673>] __asan_report_load8_noabort+0x43/0x50
+>       [<ffffffffa0043637>] _base_make_ioc_operational+0x47b7/0x47e0 [mpt3sas]
+>       [<ffffffffa0049a51>] mpt3sas_base_attach+0x1991/0x2120 [mpt3sas]
+>       [<ffffffffa0053c93>] _scsih_probe+0xeb3/0x16b0 [mpt3sas]
+>       [<ffffffff81ebd047>] local_pci_probe+0xc7/0x170
+>       [<ffffffff81ebf2cf>] pci_device_probe+0x20f/0x290
+>       [<ffffffff820d50cd>] really_probe+0x17d/0x600
+>       [<ffffffff820d56a3>] __driver_attach+0x153/0x190
+>       [<ffffffff820cffac>] bus_for_each_dev+0x11c/0x1a0
+>       [<ffffffff820d421d>] driver_attach+0x3d/0x50
+>       [<ffffffff820d378a>] bus_add_driver+0x44a/0x5f0
+>       [<ffffffff820d666c>] driver_register+0x18c/0x3b0
+>       [<ffffffff81ebcb76>] __pci_register_driver+0x156/0x200
+>       [<ffffffffa00c8135>] _mpt3sas_init+0x135/0x1000 [mpt3sas]
+>       [<ffffffff81000423>] do_one_initcall+0x113/0x2b0
+>       [<ffffffff813caa5a>] do_init_module+0x1d0/0x4d8
+>       [<ffffffff81273909>] load_module+0x6729/0x8dc0
+>       [<ffffffff81276123>] SYSC_init_module+0x183/0x1a0
+>       [<ffffffff8127625e>] SyS_init_module+0xe/0x10
+>       [<ffffffff828fe7d7>] entry_SYSCALL_64_fastpath+0x12/0x6a
+>
+> Fix this by pulling the value at the beginning of the loop.
+>
+> Signed-off-by: Calvin Owens <calvinowens@fb.com>
 
-It's a bit of both: CONFIG_NLS by itself controls the compilation of
-the fs/nls/nls_base.c file, which has the definition of the utf16s_to_utf8s
-function called by this driver. The same file also contains the
-NLS subsystem with the register_nls/unregister_nls/unload_nls/load_nls
-APIs that are used by the other files.
+Looks good to me.
 
->  The problem is that selecting it will
-> allow a kernel to be build with NLS and without NLS_DEFAULT which is
-> going to cause all sorts of interesting problems on boot.  I think you
-> really mean depends on NLS here.
+Reviewed-by: Jens Axboe <axboe@fb.com>
 
-I agree that 'depends on NLS' makes more sense here, however I was
-just following what all other users of the API are doing. Mixing
-'select' and 'depends on' can easily lead to circular dependencies,
-and I was trying to avoid that.
+-- 
+Jens Axboe
 
-A cleaner solution is probably to split out the utf16 access functions
-from the NLS subsystem, and have all these files that currently
-'select NLS' pick that other interface (or both, if necessary) instead:
-
-drivers/acpi/device_sysfs.c
-drivers/hid/hid-cp2112.c
-drivers/hv/hv_fcopy.c
-drivers/hv/hv_kvp.c
-drivers/net/fjes/fjes_main.c
-drivers/net/hyperv/rndis_filter.c
-drivers/pci/pci-label.c
-drivers/scsi/ufs/ufshcd.c
-drivers/usb/core/message.c
-drivers/usb/gadget/configfs.c
-drivers/usb/gadget/u_os_desc.h
-drivers/usb/gadget/usbstring.c
-fs/cifs/cifs_unicode.c
-fs/fat/dir.c
-fs/fat/namei_vfat.c
-fs/isofs/joliet.c
-
-Not sure if that's worth the work though.
-
-	Arnd
