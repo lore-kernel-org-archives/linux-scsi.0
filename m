@@ -1,59 +1,76 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: ufs: select CONFIG_NLS
-Date: Tue, 22 Mar 2016 07:43:19 -0400
-Message-ID: <1458646999.2408.3.camel@linux.vnet.ibm.com>
-References: <1458217819-2802119-1-git-send-email-arnd@arndb.de>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] sd: fixup capacity calculation for 4k drives
+Date: Tue, 22 Mar 2016 10:16:57 -0400
+Message-ID: <1458656217.17965.48.camel@localhost.localdomain>
+References: <1458563249-91200-1-git-send-email-hare@suse.de>
+	 <yq1a8lr5n2y.fsf@sermon.lab.mkp.net>  <56F0F0E8.6060302@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:37703 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758683AbcCVLn3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2016 07:43:29 -0400
-Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-	Tue, 22 Mar 2016 05:43:27 -0600
-In-Reply-To: <1458217819-2802119-1-git-send-email-arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:39159 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758771AbcCVOQ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2016 10:16:59 -0400
+In-Reply-To: <56F0F0E8.6060302@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Stephen Boyd <sboyd@codeaurora.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2016-03-17 at 13:29 +0100, Arnd Bergmann wrote:
-> A recent change to ufshcd introduced a call to utf16s_to_utf8s,
-> a function that is provided by the NLS module, so we get a link
-> error when that is not present:
+On Tue, 2016-03-22 at 08:14 +0100, Hannes Reinecke wrote:
+> On 03/22/2016 02:16 AM, Martin K. Petersen wrote:
+> >>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+> > 
+> > Hannes> in sd_read_capacity() the sdkp->capacity field changes its
+> > Hannes> meaning: after the call to read_capacity_XX() it carries the
+> > Hannes> _unscaled_ values, making the comparison between the original
+> > Hannes> value and the new value always false for drives with a sector
+> > Hannes> size != 512.  So introduce a 'new_capacity' carrying the new,
+> > Hannes> scaled, capacity.
+> > 
+> > I agree with Christoph.
+> > 
+> > How about something like this instead?
+> > 
+> I've coded it somewhat different, but this one works as well.
+> But please modify the description in sd.h, as with this patch
+> 'sdkp->capacity' is the _unscaled_ value.
+> Might lead to confusion otherwise.
 > 
-> drivers/scsi/built-in.o: In function `ufshcd_read_string_desc':
-> :(.text+0x124d0): undefined reference to `utf16s_to_utf8s'
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 5f2a84a..5ed7434 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -65,7 +65,7 @@ struct scsi_disk {
+>         struct device   dev;
+>         struct gendisk  *disk;
+>         atomic_t        openers;
+> -       sector_t        capacity;       /* size in 512-byte sectors */
+> +       sector_t        capacity;       /* size in logical sectors */
+>         u32             max_xfer_blocks;
+>         u32             opt_xfer_blocks;
+>         u32             max_ws_blocks;
 > 
-> This adds a Kconfig 'select' statement to avoid the build error.
+> (Apologies for the mangled patch)
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: b573d484e4ff ("scsi: ufs: add support to read device and
-> string descriptors")
-> ---
->  drivers/scsi/ufs/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
+> Cheers,
 > 
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index 5f4530744e0a..097894a1fab5 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -37,6 +37,7 @@ config SCSI_UFSHCD
->  	depends on SCSI && SCSI_DMA
->  	select PM_DEVFREQ
->  	select DEVFREQ_GOV_SIMPLE_ONDEMAND
-> +	select NLS
+> Hannes
 
-This looks like a bad solution: CONFIG_NLS is nothing more than a menu
-selector for the NLS subsystem.  The problem is that selecting it will
-allow a kernel to be build with NLS and without NLS_DEFAULT which is
-going to cause all sorts of interesting problems on boot.  I think you
-really mean depends on NLS here.
+If we change the meaning of the scsi_disk->capacity field to be logical
+sectors, we also have to change sd_getgeo() in sd.c, do we not?
 
-James
+The ->capacity field is also accessed by last_sector_hacks() in
+drivers/usb/storage/transport.c, although it kind of looks like
+that code might not have been correct for 4K sectors with the
+scaled value.
+
+-Ewan
+
+
+
+
 
 
