@@ -1,32 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: fix missing { }, nullify kbuff_arr[i] only when necessary
-Date: Wed, 23 Mar 2016 16:44:27 -0400
-Message-ID: <yq1vb4c2ac4.fsf@sermon.lab.mkp.net>
-References: <1458493412-17103-1-git-send-email-colin.king@canonical.com>
+Subject: Re: [PATCH v3 0/3] scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
+Date: Wed, 23 Mar 2016 16:50:56 -0400
+Message-ID: <yq1r3f02a1b.fsf@sermon.lab.mkp.net>
+References: <20160322075405.GA20141@infradead.org>
+	<1458675126-19265-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27500 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbcCWUon (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 16:44:43 -0400
-In-Reply-To: <1458493412-17103-1-git-send-email-colin.king@canonical.com>
-	(Colin King's message of "Sun, 20 Mar 2016 17:03:32 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1458675126-19265-1-git-send-email-linux@rasmusvillemoes.dk>
+	(Rasmus Villemoes's message of "Tue, 22 Mar 2016 20:32:02 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, James Bottomley <jbottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+>>>>> "Rasmus" == Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
 
-Colin,
+Rasmus> This is mostly identical to v2 sent in November, rebased
+Rasmus> (cleanly) to current mainline. The only change is that I've this
+Rasmus> time also updated the Kconfig help text in 3/3, since the 75 KB
+Rasmus> was a bit exaggerated. After these patches are applied, the
+Rasmus> impact of choosing CONFIG_SCSI_CONSTANTS=y is about 36 KB, while
+Rasmus> it was about 44 KB before. I took the liberty of including
+Rasmus> Hannes' Reviewed-by and Douglas' Tested-by despite that
+Rasmus> addition.
 
-Colin> Fix missing { } on if statement, this change will nullify
-Colin> kbuff_arr[i] only where necessary as the code intended.
+Applied to 4.7/scsi-queue.
 
-Arnd beat you to it. We already have a patch for this.
-
-Thanks!
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
