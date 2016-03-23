@@ -1,76 +1,106 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 00/23] ncr5380: Eliminate macros, reduce code duplication, fix bugs etc
-Date: Wed, 23 Mar 2016 21:10:09 +1100
-Message-ID: <20160323101009.341929635@telegraphics.com.au>
+Subject: [PATCH v4 16/23] ncr5380: Fix register decoding for debugging
+Date: Wed, 23 Mar 2016 21:10:25 +1100
+Message-ID: <20160323101013.421733359@telegraphics.com.au>
+References: <20160323101009.341929635@telegraphics.com.au>
 Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-basr-decoding-dprint
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 List-Id: linux-scsi@vger.kernel.org
 
+Decode all bits in the chip registers. They are all useful at times.
+Fix printk severity so that this output can be suppressed along with
+the other debugging output.
 
-This patch series has more macro elimination and some tweaks to the
-DMA hooks so that all the wrapper drivers can share the same core
-DMA algorithm. This resolves the major discrepancies between the two
-core drivers, which relate to code conditional on the REAL_DMA and
-PSEUDO_DMA macros.
-
-After all the wrapper drivers agree on the DMA hook api, the core driver
-fork gets resolved. NCR5380.c is adopted by atari_scsi and sun3_scsi and
-atari_NCR5380.c is then deleted.
-
-Historically, the 5380 drivers suffered from over-use of conditional
-compilation, which caused the compile-time configuration space to explode,
-leading to core driver code that was practically untestable, unmaintainable
-and difficult to reason about. It also prevented driver modules from
-sharing object code.
-
-Along with REAL_DMA, REAL_DMA_POLL and PSEUDO_DMA, most of the remaining
-macros are also eradicated, such as CONFIG_SCSI_GENERIC_NCR53C400,
-SUPPORT_TAGS, DONT_USE_INTR, AUTOPROBE_IRQ and BIOSPARAM.
-
-Also in this patch series, some duplicated documentation is removed and
-the PDMA implementation in mac_scsi finally gets fixed.
-
-This patch series has been tested on several platforms. I tested the
-dmx3191d and mac_scsi modules on suitable hardware, Michael tested
-atari_scsi on an Atari Falcon and Ondrej has tested g_NCR5380 and
-g_NCR5380_mmio on various ISA cards.
-
-Changes since v1:
-- Patch 4: don't remove MIN_DMA_SIZE macro from wrapper drivers.
-- Patch 9: improve commit log entry and add 'Reviewed-by' tag.
-- Patch 14: reduce shost->max_lun limit instead of adding MAX_LUN limit.
-- Patches 20 and 22: set the default cmd_per_lun to 4.
-- For the rest: add 'Reviewed-by' tag.
-
-Changes since v2:
-- Patches 20 and 22: revert the default cmd_per_lun to 2, like the v1 patch
-series.
-- Add patch 23 to fix a theoretical bus reset/autosense issue.
-
-Changes since v3:
-- Added 'Tested-by' tags from Ondrej and 'Reviewed-by' tags from Hannes.
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Tested-by: Ondrej Zary <linux@rainbow-software.org>
 
 ---
- Documentation/scsi/g_NCR5380.txt       |   17 
- Documentation/scsi/scsi-parameters.txt |   11 
- drivers/scsi/Kconfig                   |   11 
- drivers/scsi/NCR5380.c                 |  659 ++++----
- drivers/scsi/NCR5380.h                 |  143 -
- drivers/scsi/arm/cumana_1.c            |   25 
- drivers/scsi/arm/oak.c                 |   22 
- drivers/scsi/atari_NCR5380.c           | 2676 ---------------------------------
- drivers/scsi/atari_scsi.c              |  144 -
- drivers/scsi/dmx3191d.c                |   10 
- drivers/scsi/dtc.c                     |   27 
- drivers/scsi/dtc.h                     |    7 
- drivers/scsi/g_NCR5380.c               |  143 -
- drivers/scsi/g_NCR5380.h               |   26 
- drivers/scsi/mac_scsi.c                |  239 +-
- drivers/scsi/pas16.c                   |   27 
- drivers/scsi/pas16.h                   |    5 
- drivers/scsi/sun3_scsi.c               |   47 
- drivers/scsi/t128.c                    |   19 
- drivers/scsi/t128.h                    |    7 
- 20 files changed, 634 insertions(+), 3631 deletions(-)
+ drivers/scsi/NCR5380.c |   42 +++++++++++++++++++++++++-----------------
+ 1 file changed, 25 insertions(+), 17 deletions(-)
+
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-23 21:09:56.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-23 21:09:57.000000000 +1100
+@@ -256,12 +256,20 @@ static struct {
+ 	{0, NULL}
+ },
+ basrs[] = {
++	{BASR_END_DMA_TRANSFER, "END OF DMA"},
++	{BASR_DRQ, "DRQ"},
++	{BASR_PARITY_ERROR, "PARITY ERROR"},
++	{BASR_IRQ, "IRQ"},
++	{BASR_PHASE_MATCH, "PHASE MATCH"},
++	{BASR_BUSY_ERROR, "BUSY ERROR"},
+ 	{BASR_ATN, "ATN"},
+ 	{BASR_ACK, "ACK"},
+ 	{0, NULL}
+ },
+ icrs[] = {
+ 	{ICR_ASSERT_RST, "ASSERT RST"},
++	{ICR_ARBITRATION_PROGRESS, "ARB. IN PROGRESS"},
++	{ICR_ARBITRATION_LOST, "LOST ARB."},
+ 	{ICR_ASSERT_ACK, "ASSERT ACK"},
+ 	{ICR_ASSERT_BSY, "ASSERT BSY"},
+ 	{ICR_ASSERT_SEL, "ASSERT SEL"},
+@@ -270,14 +278,14 @@ icrs[] = {
+ 	{0, NULL}
+ },
+ mrs[] = {
+-	{MR_BLOCK_DMA_MODE, "MODE BLOCK DMA"},
+-	{MR_TARGET, "MODE TARGET"},
+-	{MR_ENABLE_PAR_CHECK, "MODE PARITY CHECK"},
+-	{MR_ENABLE_PAR_INTR, "MODE PARITY INTR"},
+-	{MR_ENABLE_EOP_INTR, "MODE EOP INTR"},
+-	{MR_MONITOR_BSY, "MODE MONITOR BSY"},
+-	{MR_DMA_MODE, "MODE DMA"},
+-	{MR_ARBITRATE, "MODE ARBITRATION"},
++	{MR_BLOCK_DMA_MODE, "BLOCK DMA MODE"},
++	{MR_TARGET, "TARGET"},
++	{MR_ENABLE_PAR_CHECK, "PARITY CHECK"},
++	{MR_ENABLE_PAR_INTR, "PARITY INTR"},
++	{MR_ENABLE_EOP_INTR, "EOP INTR"},
++	{MR_MONITOR_BSY, "MONITOR BSY"},
++	{MR_DMA_MODE, "DMA MODE"},
++	{MR_ARBITRATE, "ARBITRATE"},
+ 	{0, NULL}
+ };
+ 
+@@ -298,23 +306,23 @@ static void NCR5380_print(struct Scsi_Ho
+ 	icr = NCR5380_read(INITIATOR_COMMAND_REG);
+ 	basr = NCR5380_read(BUS_AND_STATUS_REG);
+ 
+-	printk("STATUS_REG: %02x ", status);
++	printk(KERN_DEBUG "SR =   0x%02x : ", status);
+ 	for (i = 0; signals[i].mask; ++i)
+ 		if (status & signals[i].mask)
+-			printk(",%s", signals[i].name);
+-	printk("\nBASR: %02x ", basr);
++			printk(KERN_CONT "%s, ", signals[i].name);
++	printk(KERN_CONT "\nBASR = 0x%02x : ", basr);
+ 	for (i = 0; basrs[i].mask; ++i)
+ 		if (basr & basrs[i].mask)
+-			printk(",%s", basrs[i].name);
+-	printk("\nICR: %02x ", icr);
++			printk(KERN_CONT "%s, ", basrs[i].name);
++	printk(KERN_CONT "\nICR =  0x%02x : ", icr);
+ 	for (i = 0; icrs[i].mask; ++i)
+ 		if (icr & icrs[i].mask)
+-			printk(",%s", icrs[i].name);
+-	printk("\nMODE: %02x ", mr);
++			printk(KERN_CONT "%s, ", icrs[i].name);
++	printk(KERN_CONT "\nMR =   0x%02x : ", mr);
+ 	for (i = 0; mrs[i].mask; ++i)
+ 		if (mr & mrs[i].mask)
+-			printk(",%s", mrs[i].name);
+-	printk("\n");
++			printk(KERN_CONT "%s, ", mrs[i].name);
++	printk(KERN_CONT "\n");
+ }
+ 
+ static struct {
