@@ -1,329 +1,437 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 01/23] g_ncr5380: Remove CONFIG_SCSI_GENERIC_NCR53C400
-Date: Wed, 23 Mar 2016 21:10:10 +1100
-Message-ID: <20160323101009.611766114@telegraphics.com.au>
-References: <20160323101009.341929635@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=g_NCR5380-remove-CONFIG_SCSI_GENERIC_NCR53C400
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [linux-next:master 13412/13590] drivers/scsi/qla2xxx/qla_attr.o:
+ warning: objtool: qla2x00_get_fc_host_stats()+0x0: duplicate frame pointer
+ save
+Date: Wed, 23 Mar 2016 10:32:05 -0400
+Message-ID: <201603231856.BKcYUs5O%fengguang.wu@intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="jRHKVT23PllUwdXP"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35494 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753574AbcCWOcJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2016 10:32:09 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: kbuild-all@01.org
 
-This change brings a number of improvements: fewer macros, better test
-coverage, simpler code and sane Kconfig options. The downside is a small
-chance of incompatibility (which seems unavoidable).
 
-CONFIG_SCSI_GENERIC_NCR53C400 exists to enable or inhibit pseudo DMA
-transfers when the driver is used with 53C400-compatible cards. Thanks to
-Ondrej Zary's patches, PDMA now works which means it can be enabled
-unconditionally.
+--jRHKVT23PllUwdXP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Due to bad design, CONFIG_SCSI_GENERIC_NCR53C400 ties together unrelated
-functionality as it sets both PSEUDO_DMA and BIOSPARAM macros. This patch
-effectively enables PSEUDO_DMA and disables BIOSPARAM.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git=
+ master
+head:   288a3fcc138e8e1a1ad7eb8c0cd9bd5944d366ff
+commit: fabd593b4d211fd8a21af7b2f928385e803a05e7 [13412/13590] Merge remote=
+-tracking branch 'scsi/for-next'
+config: x86_64-randconfig-s5-03231738 (attached as .config)
+reproduce:
+        git checkout fabd593b4d211fd8a21af7b2f928385e803a05e7
+        # save the attached .config to linux build tree
+        make ARCH=3Dx86_64=20
 
-The defconfigs and the Kconfig default leave CONFIG_SCSI_GENERIC_NCR53C400
-undefined. Red Hat 9 and CentOS 2.1 were the same. This leaves both
-PSEUDO_DMA and BIOSPARAM disabled. The effect of this patch should be
-better performance from enabling PSEUDO_DMA.
+All warnings (new ones prefixed by >>):
 
-On the other hand, Debian 4 and SLES 10 had CONFIG_SCSI_GENERIC_NCR53C400
-enabled, so both PSEUDO_DMA and BIOSPARAM were enabled. This patch might
-affect configurations like this by disabling BIOSPARAM. My best guess is
-that this could be a problem only in the vanishingly rare case that
-1) the CHS values stored in the boot device partition table are wrong and
-2) a 5380 card is in use (because PDMA on 53C400 used to be broken).
-
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Ondrej Zary <linux@rainbow-software.org>
+>> drivers/scsi/qla2xxx/qla_attr.o: warning: objtool: qla2x00_get_fc_host_s=
+tats()+0x0: duplicate frame pointer save
+>> drivers/scsi/qla2xxx/qla_attr.o: warning: objtool: qla2x00_get_fc_host_s=
+tats()+0x0: frame pointer state mismatch
 
 ---
+0-DAY kernel test infrastructure                Open Source Technology Cent=
+er
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporati=
+on
+=0D
+--jRHKVT23PllUwdXP
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
-Here are the distro kernel versions I looked at:
+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
 
-CentOS 2.1:
-
-$ strings kernel-2.4.9-e.40.i686/lib/modules/2.4.9-e.40/kernel/drivers/scsi/g_NCR5380.o | grep extension
-NO NCR53C400 driver extensions
+--jRHKVT23PllUwdXP--
 
 
-Red Hat 7:
-
-$ strings kernel-2.4.18-3.i386/lib/modules/2.4.18-3/kernel/drivers/scsi/g_NCR5380.o | grep extension
-NO NCR53C400 driver extensions
-
-
-Red Hat 9:
-
-$ strings kernel-2.4.20-8.i586/lib/modules/2.4.20-8/kernel/drivers/scsi/g_NCR5380.o | grep extension
-NO NCR53C400 driver extensions
-
-
-Debian 4:
-
-$ strings linux-image-2.6.24-etchnhalf.1-486_2.6.24-6-etchnhalf.9etch3_i386/lib/modules/2.6.24-etchnhalf.1-486/kernel/drivers/scsi/g_NCR5380_mmio.ko | grep extension
-NCR53C400 extension version %d
-$ strings kernel-image-2.6.8-2-386_2.6.8-13_i386/lib/modules/2.6.8-2-386/kernel/drivers/scsi/g_NCR5380_mmio.ko | grep extension
-NCR53C400 extension version %d
-
-
-SLES 10.2:
-
-$ strings kernel-default-2.6.18.2-34.i586/lib/modules/2.6.18.2-34-default/kernel/drivers/scsi/g_NCR5380_mmio.ko | grep extension
-NCR53C400 extension version %d
-
----
- drivers/scsi/Kconfig     |   11 ------
- drivers/scsi/g_NCR5380.c |   75 ++++++++++++++---------------------------------
- drivers/scsi/g_NCR5380.h |   16 +---------
- 3 files changed, 25 insertions(+), 77 deletions(-)
-
-Index: linux/drivers/scsi/Kconfig
-===================================================================
---- linux.orig/drivers/scsi/Kconfig	2016-03-23 21:05:16.000000000 +1100
-+++ linux/drivers/scsi/Kconfig	2016-03-23 21:09:19.000000000 +1100
-@@ -812,17 +812,6 @@ config SCSI_GENERIC_NCR5380_MMIO
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called g_NCR5380_mmio.
- 
--config SCSI_GENERIC_NCR53C400
--	bool "Enable NCR53c400 extensions"
--	depends on SCSI_GENERIC_NCR5380
--	help
--	  This enables certain optimizations for the NCR53c400 SCSI cards.
--	  You might as well try it out.  Note that this driver will only probe
--	  for the Trantor T130B in its default configuration; you might have
--	  to pass a command line option to the kernel at boot time if it does
--	  not detect your card.  See the file
--	  <file:Documentation/scsi/g_NCR5380.txt> for details.
--
- config SCSI_IPS
- 	tristate "IBM ServeRAID support"
- 	depends on PCI && SCSI
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-23 21:05:16.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2016-03-23 21:09:19.000000000 +1100
-@@ -57,10 +57,7 @@
-  */
- 
- #define AUTOPROBE_IRQ
--
--#ifdef CONFIG_SCSI_GENERIC_NCR53C400
- #define PSEUDO_DMA
--#endif
- 
- #include <asm/io.h>
- #include <linux/blkdev.h>
-@@ -270,7 +267,7 @@ static int __init generic_NCR5380_detect
- #ifndef SCSI_G_NCR5380_MEM
- 	int i;
- 	int port_idx = -1;
--	unsigned long region_size = 16;
-+	unsigned long region_size;
- #endif
- 	static unsigned int __initdata ncr_53c400a_ports[] = {
- 		0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
-@@ -290,6 +287,7 @@ static int __init generic_NCR5380_detect
- #ifdef SCSI_G_NCR5380_MEM
- 	unsigned long base;
- 	void __iomem *iomem;
-+	resource_size_t iomem_size;
- #endif
- 
- 	if (ncr_irq)
-@@ -353,9 +351,7 @@ static int __init generic_NCR5380_detect
- 			flags = FLAG_NO_PSEUDO_DMA;
- 			break;
- 		case BOARD_NCR53C400:
--#ifdef PSEUDO_DMA
- 			flags = FLAG_NO_DMA_FIXUP;
--#endif
- 			break;
- 		case BOARD_NCR53C400A:
- 			flags = FLAG_NO_DMA_FIXUP;
-@@ -381,20 +377,22 @@ static int __init generic_NCR5380_detect
- 			/* Disable the adapter and look for a free io port */
- 			magic_configure(-1, 0, magic);
- 
-+			region_size = 16;
-+
- 			if (overrides[current_override].NCR5380_map_name != PORT_AUTO)
- 				for (i = 0; ports[i]; i++) {
--					if (!request_region(ports[i],  16, "ncr53c80"))
-+					if (!request_region(ports[i], region_size, "ncr53c80"))
- 						continue;
- 					if (overrides[current_override].NCR5380_map_name == ports[i])
- 						break;
--					release_region(ports[i], 16);
-+					release_region(ports[i], region_size);
- 			} else
- 				for (i = 0; ports[i]; i++) {
--					if (!request_region(ports[i],  16, "ncr53c80"))
-+					if (!request_region(ports[i], region_size, "ncr53c80"))
- 						continue;
- 					if (inb(ports[i]) == 0xff)
- 						break;
--					release_region(ports[i], 16);
-+					release_region(ports[i], region_size);
- 				}
- 			if (ports[i]) {
- 				/* At this point we have our region reserved */
-@@ -410,17 +408,19 @@ static int __init generic_NCR5380_detect
- 		else
- 		{
- 			/* Not a 53C400A style setup - just grab */
--			if(!(request_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size, "ncr5380")))
-+			region_size = 8;
-+			if (!request_region(overrides[current_override].NCR5380_map_name,
-+			                    region_size, "ncr5380"))
- 				continue;
--			region_size = NCR5380_region_size;
- 		}
- #else
- 		base = overrides[current_override].NCR5380_map_name;
--		if (!request_mem_region(base, NCR5380_region_size, "ncr5380"))
-+		iomem_size = NCR53C400_region_size;
-+		if (!request_mem_region(base, iomem_size, "ncr5380"))
- 			continue;
--		iomem = ioremap(base, NCR5380_region_size);
-+		iomem = ioremap(base, iomem_size);
- 		if (!iomem) {
--			release_mem_region(base, NCR5380_region_size);
-+			release_mem_region(base, iomem_size);
- 			continue;
- 		}
- #endif
-@@ -458,6 +458,7 @@ static int __init generic_NCR5380_detect
- #else
- 		instance->base = overrides[current_override].NCR5380_map_name;
- 		hostdata->iomem = iomem;
-+		hostdata->iomem_size = iomem_size;
- 		switch (overrides[current_override].board) {
- 		case BOARD_NCR53C400:
- 			hostdata->c400_ctl_status = 0x100;
-@@ -524,7 +525,7 @@ out_release:
- 	release_region(overrides[current_override].NCR5380_map_name, region_size);
- #else
- 	iounmap(iomem);
--	release_mem_region(base, NCR5380_region_size);
-+	release_mem_region(base, iomem_size);
- #endif
- 	return count;
- }
-@@ -546,42 +547,15 @@ static int generic_NCR5380_release_resou
- #ifndef SCSI_G_NCR5380_MEM
- 	release_region(instance->io_port, instance->n_io_port);
- #else
--	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
--	release_mem_region(instance->base, NCR5380_region_size);
--#endif
--	return 0;
--}
-+	{
-+		struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
--#ifdef BIOSPARAM
--/**
-- *	generic_NCR5380_biosparam
-- *	@disk: disk to compute geometry for
-- *	@dev: device identifier for this disk
-- *	@ip: sizes to fill in
-- *
-- *	Generates a BIOS / DOS compatible H-C-S mapping for the specified 
-- *	device / size.
-- * 
-- * 	XXX Most SCSI boards use this mapping, I could be incorrect.  Someone
-- *	using hard disks on a trantor should verify that this mapping
-- *	corresponds to that used by the BIOS / ASPI driver by running the linux
-- *	fdisk program and matching the H_C_S coordinates to what DOS uses.
-- *
-- *	Locks: none
-- */
--
--static int
--generic_NCR5380_biosparam(struct scsi_device *sdev, struct block_device *bdev,
--			  sector_t capacity, int *ip)
--{
--	ip[0] = 64;
--	ip[1] = 32;
--	ip[2] = capacity >> 11;
-+		iounmap(hostdata->iomem);
-+		release_mem_region(instance->base, hostdata->iomem_size);
-+	}
-+#endif
- 	return 0;
- }
--#endif
--
--#ifdef PSEUDO_DMA
- 
- /**
-  *	NCR5380_pread		-	pseudo DMA read
-@@ -756,8 +730,6 @@ static int generic_NCR5380_dma_xfer_len(
- 	return transfersize;
- }
- 
--#endif /* PSEUDO_DMA */
--
- /*
-  *	Include the NCR5380 core code that we build our driver around	
-  */
-@@ -773,7 +745,6 @@ static struct scsi_host_template driver_
- 	.queuecommand		= generic_NCR5380_queue_command,
- 	.eh_abort_handler	= generic_NCR5380_abort,
- 	.eh_bus_reset_handler	= generic_NCR5380_bus_reset,
--	.bios_param		= NCR5380_BIOSPARAM,
- 	.can_queue		= 16,
- 	.this_id		= 7,
- 	.sg_tablesize		= SG_ALL,
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-23 21:05:16.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2016-03-23 21:09:19.000000000 +1100
-@@ -14,13 +14,6 @@
- #ifndef GENERIC_NCR5380_H
- #define GENERIC_NCR5380_H
- 
--#ifdef CONFIG_SCSI_GENERIC_NCR53C400
--#define BIOSPARAM
--#define NCR5380_BIOSPARAM generic_NCR5380_biosparam
--#else
--#define NCR5380_BIOSPARAM NULL
--#endif
--
- #define __STRVAL(x) #x
- #define STRVAL(x) __STRVAL(x)
- 
-@@ -30,12 +23,6 @@
- #define NCR5380_map_type int
- #define NCR5380_map_name port
- 
--#ifdef CONFIG_SCSI_GENERIC_NCR53C400
--#define NCR5380_region_size 16
--#else
--#define NCR5380_region_size 8
--#endif
--
- #define NCR5380_read(reg) \
- 	inb(instance->io_port + (reg))
- #define NCR5380_write(reg, value) \
-@@ -55,7 +42,7 @@
- #define NCR5380_map_name base
- #define NCR53C400_mem_base 0x3880
- #define NCR53C400_host_buffer 0x3900
--#define NCR5380_region_size 0x3a00
-+#define NCR53C400_region_size 0x3a00
- 
- #define NCR5380_read(reg) \
- 	readb(((struct NCR5380_hostdata *)shost_priv(instance))->iomem + \
-@@ -66,6 +53,7 @@
- 
- #define NCR5380_implementation_fields \
- 	void __iomem *iomem; \
-+	resource_size_t iomem_size; \
- 	int c400_ctl_status; \
- 	int c400_blk_cnt; \
- 	int c400_host_buf;
