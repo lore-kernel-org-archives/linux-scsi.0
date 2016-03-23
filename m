@@ -1,55 +1,86 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/2] cxlflash: Move to exponential back-off when cmd_room is not available
-Date: Wed, 23 Mar 2016 16:24:41 -0500
-Message-ID: <B3487E74-E14C-41AA-A3D7-80599D5912F0@linux.vnet.ibm.com>
-References: <1458762572-44316-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1458762636-44422-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Laison@seymour.toledo.br, Computech@seymour.toledo.br,
+	"Inc <support"@ensuretech.com
+Subject: CISCO IP PHONES AND CPU's
+Date: Thu, 24 Mar 2016 02:12:05 +0700
+Message-ID: <20160323203604.5CDB3A7B4E__22443.3043077171$1458768365$gmane$org@seymour.toledo.br>
+Reply-To: sales@laisoncomputertech.us
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:43706 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756913AbcCWVYs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 17:24:48 -0400
-Received: from localhost
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 23 Mar 2016 15:24:47 -0600
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 0493A19D8040
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2016 15:12:38 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2NLOiMR32243942
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2016 14:24:44 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2NLOhc0010822
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2016 15:24:43 -0600
-In-Reply-To: <1458762636-44422-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from seymour.toledo.br ([200.148.142.55]:47429 "EHLO
+	seymour.toledo.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757309AbcCWVYx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 17:24:53 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@us.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: Recipients <support@ensuretech.com>
 
-> On Mar 23, 2016, at 2:50 PM, Uma Krishnan <ukrishn@linux.vnet.ibm.com> wrote:
-> 
-> From: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
-> 
-> While profiling the cxlflash_queuecommand() path under a heavy load it
-> was found that number of retries to find cmd_room was fairly high.
-> 
-> There are two problems with the current back-off:
-> a) It starts with a udelay of 0
-> b) It backs-off linearly
-> 
-> Tried several approaches (a higher multiple 10*n, 100*n, as well as n^2,
-> 2^n) and found that the exponential back-off(2^n) approach had the least
-> overall cost. Cost as being defined as overall time spent waiting.
-> 
-> The fix is to change the linear back-off to an exponential back-off.
-> This solution also takes care of the problem with the initial
-> delay (starts with 1 usec).
-> 
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+Hi,
 
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Our Stock list.
 
+Brand NEW
+96 x Cisco 7900 IP Phone
+87 x Unified IP Phone 6900
+12 x Unified IP Phone 8900
+76 x Unified IP Phone 9900
+55 x Unified IP Phone 8800
+67 x Cisco 1921
+67 x Cisco 1941
+56 x Cisco CP-7961G 7961G
+34 x Cisco CP-7971G-GE 7971G
+19 x Cisco Unified IP Conference Station 7937G Model: 7937 CP-7937G
+20 x Cisco CP-7975G 7975G
+
+Brand New Sealed :
+
+23 x  CISCO1921-SEC/K9
+Conditions: Brand New Sealed
+Description: CISCO 1921 Security Bundle w/SEC license PAK
+
+45 x CISCO1921/K9
+Conditions: Brand New Sealed
+Description: CISCO 1921 Modular Router, 2 GE, 2 EHWIC slots, 512DRAM, IP Base
+
+(1)  WS-C4500X-16SFP+
+Serial number:  JAE183501L3
+US&#36;2600
+
+(1)  WS-C3850-48PW-S
+Serial number:  FCW1823C0EW
+US&#36;2650
+
+(1)  WS-X6908-10G-2T
+Serial number:  SAL1620CKUB
+US&#36;3650
+
+(1)  ASR1000-ESP10
+Serial number:  JAE181306C3
+US&#36;3800
+
+(1)  AIR-CT5508-250-K9   (this is new but box is open!)
+Serial number:  FCW1521L038
+US&#36;4000
+
+CPUs part number below
+
+89 x  X5650
+
+975 x  X5660
+
+150 x  X5680
+
+265 x  X5690
+
+Kindly make your price offers.
+
+Sincerely
+Barbara Johnson
+Laison Computech
+210 N Scoring Ave,
+Rialto California, 92376
+Tel: +1-657-232-7047
+Fax: +1-347-214-0478
+Email: sales@laisoncomputertech.us
