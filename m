@@ -1,21 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 0/3] scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
-Date: Wed, 23 Mar 2016 00:39:41 -0700
-Message-ID: <20160323073941.GA8030@infradead.org>
-References: <20160322075405.GA20141@infradead.org>
- <1458675126-19265-1-git-send-email-linux@rasmusvillemoes.dk>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 0/5] mempool based chained scatterlist alloc/free api
+Date: Wed, 23 Mar 2016 08:40:12 +0100
+Message-ID: <20160323074012.GA17929@lst.de>
+References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1458675126-19265-1-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <1458684196-15923-1-git-send-email-mlin@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+To: Ming Lin <mlin@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Rasmus,
+On Tue, Mar 22, 2016 at 03:03:11PM -0700, Ming Lin wrote:
+> From: Ming Lin <ming.l@ssi.samsung.com>
+>=20
+> The fist 4 patches make the SG related definitions/structs/functions
+> in SCSI code generic and the last patch move it to lib/sg_pool.c.
+>=20
+> I still keep the macro "SG_MEMPOOL_NR" since it's used in 3 places.
 
-the whole series looks good to me:
+I don't =D1=95ee the point, but I'm not going to block the series over
+it either.
+
+The new series looks really nice to me!
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
