@@ -1,31 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/23] ncr5380: Eliminate macros, reduce code duplication, fix bugs etc
-Date: Wed, 23 Mar 2016 16:54:26 -0400
-Message-ID: <yq1mvpo29vh.fsf@sermon.lab.mkp.net>
-References: <20160323101009.341929635@telegraphics.com.au>
+Subject: Re: [PATCH] scsi: vpd pages are mandatory for SPC-2
+Date: Wed, 23 Mar 2016 17:02:50 -0400
+Message-ID: <yq1io0c29hh.fsf@sermon.lab.mkp.net>
+References: <1457703965-71028-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20160323101009.341929635@telegraphics.com.au> (Finn Thain's
-	message of "Wed, 23 Mar 2016 21:10:09 +1100")
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19905 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbcCWVDE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 17:03:04 -0400
+In-Reply-To: <1457703965-71028-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Fri, 11 Mar 2016 14:46:05 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.com>
 
->>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Finn,
+Hannes> VPD pages 0x0 and 0x83 are mandatory even for SPC-2, so we
+Hannes> should be lowering the restriction to avoid having to whitelist
+Hannes> every SPC-2 compliant device.
 
-Finn> This patch series has been tested on several platforms. I tested
-Finn> the dmx3191d and mac_scsi modules on suitable hardware, Michael
-Finn> tested atari_scsi on an Atari Falcon and Ondrej has tested
-Finn> g_NCR5380 and g_NCR5380_mmio on various ISA cards.
+You forgot to properly submit the patch that moves the vpd heuristic to
+scsi_device.h (I think you originally sent that as an inline RFC).
 
-Applied to 4.7/scsi-queue.
+In any case. This patch depends on it. Please resend these two as a
+series.
 
-And thanks for re-posting with all the relevant tags applied. Much
-appreciated!
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
