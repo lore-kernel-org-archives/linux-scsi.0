@@ -1,362 +1,417 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 22/23] mac_scsi: Fix pseudo DMA implementation
-Date: Wed, 23 Mar 2016 21:10:31 +1100
-Message-ID: <20160323101014.931733618@telegraphics.com.au>
+Subject: [PATCH v4 06/23] ncr5380: Remove PSEUDO_DMA macro
+Date: Wed, 23 Mar 2016 21:10:15 +1100
+Message-ID: <20160323101010.881737875@telegraphics.com.au>
 References: <20160323101009.341929635@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:43690 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754134AbcCWKPX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 06:15:23 -0400
-Content-Disposition: inline; filename=mac_scsi-pdma-fixes
-Sender: linux-scsi-owner@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline; filename=ncr5380-remove-PSEUDO_DMA-macro
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Cc: Sam Creasey <sammy@sammy.net>, Ondrej Zary <linux@rainbow-software.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>
 
-Fix various issues: Comments about bus errors are incorrect. The
-PDMA asm must return the size of the memory access that faulted so the
-transfer count can be adjusted accordingly. A phase change may cause a
-bus error but should not be treated as failure. A bus error does not
-always imply a phase change and generally the transfer may continue.
-Scatter/gather doesn't seem to work with PDMA due to overruns. This is
-a pity because peak throughput seems to double with SG_ALL.
-Tested on a Mac LC III and a PowerBook 520.
+For those wrapper drivers which only implement Programmed IO, have
+NCR5380_dma_xfer_len() evaluate to zero. That allows PDMA to be easily
+disabled at run-time and so the PSEUDO_DMA macro is no longer needed.
+
+Also remove the spin counters used for debugging pseudo DMA drivers.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Tested-by: Ondrej Zary <linux@rainbow-software.org>
 
 ---
+ drivers/scsi/NCR5380.c      |   32 +-------------------------------
+ drivers/scsi/NCR5380.h      |    4 ----
+ drivers/scsi/arm/cumana_1.c |    2 --
+ drivers/scsi/arm/oak.c      |    3 +--
+ drivers/scsi/dmx3191d.c     |    4 ++++
+ drivers/scsi/dtc.c          |    7 -------
+ drivers/scsi/dtc.h          |    2 --
+ drivers/scsi/g_NCR5380.c    |    1 -
+ drivers/scsi/g_NCR5380.h    |    1 -
+ drivers/scsi/mac_scsi.c     |   10 ----------
+ drivers/scsi/pas16.c        |   10 ----------
+ drivers/scsi/pas16.h        |    2 --
+ drivers/scsi/t128.c         |    4 ----
+ drivers/scsi/t128.h         |    2 --
+ 14 files changed, 6 insertions(+), 78 deletions(-)
 
-Changed since v1:
-- Set the default cmd_per_lun to 4 based on test results.
-
-Changed since v2:
-- Revert the default cmd_per_lun to 2, like in the v1 patch, because
-a uniform default across all ten 5380 wrapper drivers is worth more
-than a tiny improvement in one particular microbenchmark on one system.
-- Add 'reviewed-by' tag.
-
----
- drivers/scsi/NCR5380.h  |    2 
- drivers/scsi/mac_scsi.c |  210 ++++++++++++++++++++++++++----------------------
- 2 files changed, 118 insertions(+), 94 deletions(-)
-
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2016-03-23 21:09:28.000000000 +1100
+@@ -469,34 +469,9 @@ static void prepare_info(struct Scsi_Hos
+ #ifdef PARITY
+ 	         "PARITY "
+ #endif
+-#ifdef PSEUDO_DMA
+-	         "PSEUDO_DMA "
+-#endif
+ 	         "");
+ }
+ 
+-#ifdef PSEUDO_DMA
+-static int __maybe_unused NCR5380_write_info(struct Scsi_Host *instance,
+-	char *buffer, int length)
+-{
+-	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-
+-	hostdata->spin_max_r = 0;
+-	hostdata->spin_max_w = 0;
+-	return 0;
+-}
+-
+-static int __maybe_unused NCR5380_show_info(struct seq_file *m,
+-                                            struct Scsi_Host *instance)
+-{
+-	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-
+-	seq_printf(m, "Highwater I/O busy spin counts: write %d, read %d\n",
+-	        hostdata->spin_max_w, hostdata->spin_max_r);
+-	return 0;
+-}
+-#endif
+-
+ /**
+  * NCR5380_init - initialise an NCR5380
+  * @instance: adapter to configure
+@@ -1436,7 +1411,6 @@ timeout:
+ 	return -1;
+ }
+ 
+-#if defined(PSEUDO_DMA)
+ /*
+  * Function : int NCR5380_transfer_dma (struct Scsi_Host *instance,
+  * unsigned char *phase, int *count, unsigned char **data)
+@@ -1592,7 +1566,6 @@ static int NCR5380_transfer_dma(struct S
+ 	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
+ 	return foo;
+ }
+-#endif /* PSEUDO_DMA */
+ 
+ /*
+  * Function : NCR5380_information_transfer (struct Scsi_Host *instance)
+@@ -1683,7 +1656,6 @@ static void NCR5380_information_transfer
+ 				 * in an unconditional loop.
+ 				 */
+ 
+-#if defined(PSEUDO_DMA)
+ 				transfersize = 0;
+ 				if (!cmd->device->borken)
+ 					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+@@ -1706,9 +1678,7 @@ static void NCR5380_information_transfer
+ 						/* XXX - need to source or sink data here, as appropriate */
+ 					} else
+ 						cmd->SCp.this_residual -= transfersize - len;
+-				} else
+-#endif /* PSEUDO_DMA */
+-				{
++				} else {
+ 					/* Break up transfer into 3 ms chunks,
+ 					 * presuming 6 accesses per handshake.
+ 					 */
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2016-03-23 21:09:28.000000000 +1100
+@@ -257,10 +257,6 @@ struct NCR5380_hostdata {
+ #ifdef SUPPORT_TAGS
+ 	struct tag_alloc TagAlloc[8][8];	/* 8 targets and 8 LUNs */
+ #endif
+-#ifdef PSEUDO_DMA
+-	unsigned spin_max_r;
+-	unsigned spin_max_w;
+-#endif
+ 	struct workqueue_struct *work_q;
+ 	unsigned long accesses_per_ms;	/* chip register accesses per ms */
+ };
+Index: linux/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2016-03-23 21:09:28.000000000 +1100
+@@ -13,8 +13,6 @@
+ 
+ #include <scsi/scsi_host.h>
+ 
+-#define PSEUDO_DMA
+-
+ #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
+ #define NCR5380_read(reg)		cumanascsi_read(instance, reg)
+ #define NCR5380_write(reg, value)	cumanascsi_write(instance, reg, value)
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2016-03-23 21:09:28.000000000 +1100
+@@ -14,7 +14,6 @@
+ 
+ #include <scsi/scsi_host.h>
+ 
+-/*#define PSEUDO_DMA*/
+ #define DONT_USE_INTR
+ 
+ #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
+@@ -24,7 +23,7 @@
+ #define NCR5380_write(reg, value) \
+ 	writeb(value, priv(instance)->base + ((reg) << 2))
+ 
+-#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(0)
+ 
+ #define NCR5380_queue_command		oakscsi_queue_command
+ #define NCR5380_info			oakscsi_info
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2016-03-23 21:09:28.000000000 +1100
+@@ -1,4 +1,3 @@
+-#define PSEUDO_DMA
+ #define DONT_USE_INTR
+ 
+ /*
+@@ -352,8 +351,6 @@ static inline int NCR5380_pread(struct S
+ 	while (!(NCR5380_read(DTC_CONTROL_REG) & D_CR_ACCESS))
+ 		++i;
+ 	rtrc(0);
+-	if (i > hostdata->spin_max_r)
+-		hostdata->spin_max_r = i;
+ 	return (0);
+ }
+ 
+@@ -400,8 +397,6 @@ static inline int NCR5380_pwrite(struct
+ 	rtrc(7);
+ 	/* Check for parity error here. fixme. */
+ 	rtrc(0);
+-	if (i > hostdata->spin_max_w)
+-		hostdata->spin_max_w = i;
+ 	return (0);
+ }
+ 
+@@ -440,8 +435,6 @@ static struct scsi_host_template driver_
+ 	.detect			= dtc_detect,
+ 	.release		= dtc_release,
+ 	.proc_name		= "dtc3x80",
+-	.show_info		= dtc_show_info,
+-	.write_info		= dtc_write_info,
+ 	.info			= dtc_info,
+ 	.queuecommand		= dtc_queue_command,
+ 	.eh_abort_handler	= dtc_abort,
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2016-03-23 21:09:28.000000000 +1100
+@@ -57,7 +57,6 @@
+  */
+ 
+ #define AUTOPROBE_IRQ
+-#define PSEUDO_DMA
+ 
+ #include <asm/io.h>
+ #include <linux/blkdev.h>
 Index: linux/drivers/scsi/mac_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2016-03-23 21:09:53.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2016-03-23 21:10:05.000000000 +1100
-@@ -28,7 +28,8 @@
+--- linux.orig/drivers/scsi/mac_scsi.c	2016-03-23 21:09:20.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2016-03-23 21:09:28.000000000 +1100
+@@ -28,8 +28,6 @@
  
  /* Definitions for the core NCR5380 driver. */
  
--#define NCR5380_implementation_fields   unsigned char *pdma_base
-+#define NCR5380_implementation_fields   unsigned char *pdma_base; \
-+                                        int pdma_residual
+-#define PSEUDO_DMA
+-
+ #define NCR5380_implementation_fields   unsigned char *pdma_base
  
  #define NCR5380_read(reg)               macscsi_read(instance, reg)
- #define NCR5380_write(reg, value)       macscsi_write(instance, reg, value)
-@@ -37,7 +38,7 @@
-         macscsi_dma_xfer_len(instance, cmd)
- #define NCR5380_dma_recv_setup          macscsi_pread
- #define NCR5380_dma_send_setup          macscsi_pwrite
--#define NCR5380_dma_residual(instance)  (0)
-+#define NCR5380_dma_residual(instance)  (hostdata->pdma_residual)
+@@ -46,8 +44,6 @@
+ #define NCR5380_abort                   macscsi_abort
+ #define NCR5380_bus_reset               macscsi_bus_reset
+ #define NCR5380_info                    macscsi_info
+-#define NCR5380_show_info               macscsi_show_info
+-#define NCR5380_write_info              macscsi_write_info
  
- #define NCR5380_intr                    macscsi_intr
- #define NCR5380_queue_command           macscsi_queue_command
-@@ -104,18 +105,9 @@ static int __init mac_scsi_setup(char *s
+ #include "NCR5380.h"
+ 
+@@ -111,7 +107,6 @@ static int __init mac_scsi_setup(char *s
  __setup("mac5380=", mac_scsi_setup);
  #endif /* !MODULE */
  
--/* 
--   Pseudo-DMA: (Ove Edlund)
--   The code attempts to catch bus errors that occur if one for example
--   "trips over the cable".
--   XXX: Since bus errors in the PDMA routines never happen on my 
--   computer, the bus error code is untested. 
--   If the code works as intended, a bus error results in Pseudo-DMA 
--   being disabled, meaning that the driver switches to slow handshake.
--   If bus errors are NOT extremely rare, this has to be changed. 
--*/
-+/* Pseudo DMA asm originally by Ove Edlund */
+-#ifdef PSEUDO_DMA
+ /* 
+    Pseudo-DMA: (Ove Edlund)
+    The code attempts to catch bus errors that occur if one for example
+@@ -303,7 +298,6 @@ static int macscsi_pwrite(struct Scsi_Ho
  
--#define CP_IO_TO_MEM(s,d,len)				\
-+#define CP_IO_TO_MEM(s,d,n)				\
- __asm__ __volatile__					\
-     ("    cmp.w  #4,%2\n"				\
-      "    bls    8f\n"					\
-@@ -152,61 +144,73 @@ __asm__ __volatile__					\
-      " 9: \n"						\
-      ".section .fixup,\"ax\"\n"				\
-      "    .even\n"					\
--     "90: moveq.l #1, %2\n"				\
-+     "91: moveq.l #1, %2\n"				\
-+     "    jra 9b\n"					\
-+     "94: moveq.l #4, %2\n"				\
-      "    jra 9b\n"					\
-      ".previous\n"					\
-      ".section __ex_table,\"a\"\n"			\
-      "   .align 4\n"					\
--     "   .long  1b,90b\n"				\
--     "   .long  3b,90b\n"				\
--     "   .long 31b,90b\n"				\
--     "   .long 32b,90b\n"				\
--     "   .long 33b,90b\n"				\
--     "   .long 34b,90b\n"				\
--     "   .long 35b,90b\n"				\
--     "   .long 36b,90b\n"				\
--     "   .long 37b,90b\n"				\
--     "   .long  5b,90b\n"				\
--     "   .long  7b,90b\n"				\
-+     "   .long  1b,91b\n"				\
-+     "   .long  3b,94b\n"				\
-+     "   .long 31b,94b\n"				\
-+     "   .long 32b,94b\n"				\
-+     "   .long 33b,94b\n"				\
-+     "   .long 34b,94b\n"				\
-+     "   .long 35b,94b\n"				\
-+     "   .long 36b,94b\n"				\
-+     "   .long 37b,94b\n"				\
-+     "   .long  5b,94b\n"				\
-+     "   .long  7b,91b\n"				\
-      ".previous"					\
--     : "=a"(s), "=a"(d), "=d"(len)			\
--     : "0"(s), "1"(d), "2"(len)				\
-+     : "=a"(s), "=a"(d), "=d"(n)			\
-+     : "0"(s), "1"(d), "2"(n)				\
-      : "d0")
- 
- static int macscsi_pread(struct Scsi_Host *instance,
-                          unsigned char *dst, int len)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	unsigned char *d;
--	unsigned char *s;
--
--	s = hostdata->pdma_base + (INPUT_DATA_REG << 4);
--	d = dst;
--
--	/* These conditions are derived from MacOS */
--
--	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
--	       !(NCR5380_read(STATUS_REG) & SR_REQ))
--		;
--
--	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
--	    (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
--		pr_err("Error in macscsi_pread\n");
--		return -1;
--	}
--
--	CP_IO_TO_MEM(s, d, len);
--
--	if (len != 0) {
--		pr_notice("Bus error in macscsi_pread\n");
--		return -1;
-+	unsigned char *s = hostdata->pdma_base + (INPUT_DATA_REG << 4);
-+	unsigned char *d = dst;
-+	int n = len;
-+	int transferred;
-+
-+	while (!NCR5380_poll_politely(instance, BUS_AND_STATUS_REG,
-+	                              BASR_DRQ | BASR_PHASE_MATCH,
-+	                              BASR_DRQ | BASR_PHASE_MATCH, HZ / 64)) {
-+		CP_IO_TO_MEM(s, d, n);
-+
-+		transferred = d - dst - n;
-+		hostdata->pdma_residual = len - transferred;
-+
-+		/* No bus error. */
-+		if (n == 0)
-+			return 0;
-+
-+		/* Target changed phase early? */
-+		if (NCR5380_poll_politely2(instance, STATUS_REG, SR_REQ, SR_REQ,
-+		                           BUS_AND_STATUS_REG, BASR_ACK, BASR_ACK, HZ / 64) < 0)
-+			scmd_printk(KERN_ERR, hostdata->connected,
-+			            "%s: !REQ and !ACK\n", __func__);
-+		if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))
-+			return 0;
-+
-+		dsprintk(NDEBUG_PSEUDO_DMA, instance,
-+		         "%s: bus error (%d/%d)\n", __func__, transferred, len);
-+		NCR5380_dprint(NDEBUG_PSEUDO_DMA, instance);
-+		d = dst + transferred;
-+		n = len - transferred;
- 	}
- 
--	return 0;
-+	scmd_printk(KERN_ERR, hostdata->connected,
-+	            "%s: phase mismatch or !DRQ\n", __func__);
-+	NCR5380_dprint(NDEBUG_PSEUDO_DMA, instance);
-+	return -1;
+ 	return 0;
  }
- 
- 
--#define CP_MEM_TO_IO(s,d,len)				\
-+#define CP_MEM_TO_IO(s,d,n)				\
- __asm__ __volatile__					\
-     ("    cmp.w  #4,%2\n"				\
-      "    bls    8f\n"					\
-@@ -243,57 +247,76 @@ __asm__ __volatile__					\
-      " 9: \n"						\
-      ".section .fixup,\"ax\"\n"				\
-      "    .even\n"					\
--     "90: moveq.l #1, %2\n"				\
-+     "91: moveq.l #1, %2\n"				\
-+     "    jra 9b\n"					\
-+     "94: moveq.l #4, %2\n"				\
-      "    jra 9b\n"					\
-      ".previous\n"					\
-      ".section __ex_table,\"a\"\n"			\
-      "   .align 4\n"					\
--     "   .long  1b,90b\n"				\
--     "   .long  3b,90b\n"				\
--     "   .long 31b,90b\n"				\
--     "   .long 32b,90b\n"				\
--     "   .long 33b,90b\n"				\
--     "   .long 34b,90b\n"				\
--     "   .long 35b,90b\n"				\
--     "   .long 36b,90b\n"				\
--     "   .long 37b,90b\n"				\
--     "   .long  5b,90b\n"				\
--     "   .long  7b,90b\n"				\
-+     "   .long  1b,91b\n"				\
-+     "   .long  3b,94b\n"				\
-+     "   .long 31b,94b\n"				\
-+     "   .long 32b,94b\n"				\
-+     "   .long 33b,94b\n"				\
-+     "   .long 34b,94b\n"				\
-+     "   .long 35b,94b\n"				\
-+     "   .long 36b,94b\n"				\
-+     "   .long 37b,94b\n"				\
-+     "   .long  5b,94b\n"				\
-+     "   .long  7b,91b\n"				\
-      ".previous"					\
--     : "=a"(s), "=a"(d), "=d"(len)			\
--     : "0"(s), "1"(d), "2"(len)				\
-+     : "=a"(s), "=a"(d), "=d"(n)			\
-+     : "0"(s), "1"(d), "2"(n)				\
-      : "d0")
- 
- static int macscsi_pwrite(struct Scsi_Host *instance,
-                           unsigned char *src, int len)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	unsigned char *s;
--	unsigned char *d;
--
--	s = src;
--	d = hostdata->pdma_base + (OUTPUT_DATA_REG << 4);
--
--	/* These conditions are derived from MacOS */
--
--	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
--	       (!(NCR5380_read(STATUS_REG) & SR_REQ) ||
--	        (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)))
--		;
--
--	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ)) {
--		pr_err("Error in macscsi_pwrite\n");
--		return -1;
-+	unsigned char *s = src;
-+	unsigned char *d = hostdata->pdma_base + (OUTPUT_DATA_REG << 4);
-+	int n = len;
-+	int transferred;
-+
-+	while (!NCR5380_poll_politely(instance, BUS_AND_STATUS_REG,
-+	                              BASR_DRQ | BASR_PHASE_MATCH,
-+	                              BASR_DRQ | BASR_PHASE_MATCH, HZ / 64)) {
-+		CP_MEM_TO_IO(s, d, n);
-+
-+		transferred = s - src - n;
-+		hostdata->pdma_residual = len - transferred;
-+
-+		/* Target changed phase early? */
-+		if (NCR5380_poll_politely2(instance, STATUS_REG, SR_REQ, SR_REQ,
-+		                           BUS_AND_STATUS_REG, BASR_ACK, BASR_ACK, HZ / 64) < 0)
-+			scmd_printk(KERN_ERR, hostdata->connected,
-+			            "%s: !REQ and !ACK\n", __func__);
-+		if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))
-+			return 0;
-+
-+		/* No bus error. */
-+		if (n == 0) {
-+			if (NCR5380_poll_politely(instance, TARGET_COMMAND_REG,
-+			                          TCR_LAST_BYTE_SENT,
-+			                          TCR_LAST_BYTE_SENT, HZ / 64) < 0)
-+				scmd_printk(KERN_ERR, hostdata->connected,
-+				            "%s: Last Byte Sent timeout\n", __func__);
-+			return 0;
-+		}
-+
-+		dsprintk(NDEBUG_PSEUDO_DMA, instance,
-+		         "%s: bus error (%d/%d)\n", __func__, transferred, len);
-+		NCR5380_dprint(NDEBUG_PSEUDO_DMA, instance);
-+		s = src + transferred;
-+		n = len - transferred;
- 	}
- 
--	CP_MEM_TO_IO(s, d, len);
--
--	if (len != 0) {
--		pr_notice("Bus error in macscsi_pwrite\n");
--		return -1;
--	}
-+	scmd_printk(KERN_ERR, hostdata->connected,
-+	            "%s: phase mismatch or !DRQ\n", __func__);
-+	NCR5380_dprint(NDEBUG_PSEUDO_DMA, instance);
- 
--	return 0;
-+	return -1;
- }
+-#endif
  
  static int macscsi_dma_xfer_len(struct Scsi_Host *instance,
-@@ -301,10 +324,11 @@ static int macscsi_dma_xfer_len(struct S
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+                                 struct scsi_cmnd *cmd)
+@@ -324,8 +318,6 @@ static int macscsi_dma_xfer_len(struct S
+ static struct scsi_host_template mac_scsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= DRV_MODULE_NAME,
+-	.show_info		= macscsi_show_info,
+-	.write_info		= macscsi_write_info,
+ 	.name			= "Macintosh NCR5380 SCSI",
+ 	.info			= macscsi_info,
+ 	.queuecommand		= macscsi_queue_command,
+@@ -351,9 +343,7 @@ static int __init mac_scsi_probe(struct
+ 	if (!pio_mem)
+ 		return -ENODEV;
  
--	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
-+	if (hostdata->flags & FLAG_NO_PSEUDO_DMA ||
-+	    cmd->SCp.this_residual < 16)
- 		return 0;
+-#ifdef PSEUDO_DMA
+ 	pdma_mem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-#endif
  
--	return cmd->transfersize;
-+	return cmd->SCp.this_residual;
+ 	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+ 
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2016-03-23 21:09:28.000000000 +1100
+@@ -1,5 +1,3 @@
+-#define PSEUDO_DMA
+-
+ /*
+  * This driver adapted from Drew Eckhardt's Trantor T128 driver
+  *
+@@ -479,7 +477,6 @@ static inline int NCR5380_pread (struct
+ 	P_DATA_REG_OFFSET);
+     register int i = len;
+     int ii = 0;
+-    struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 
+     while ( !(inb(instance->io_port + P_STATUS_REG_OFFSET) & P_ST_RDY) )
+ 	 ++ii;
+@@ -492,8 +489,6 @@ static inline int NCR5380_pread (struct
+ 	    instance->host_no);
+ 	return -1;
+     }
+-    if (ii > hostdata->spin_max_r)
+-        hostdata->spin_max_r = ii;
+     return 0;
  }
  
- #include "NCR5380.c"
-@@ -322,7 +346,7 @@ static struct scsi_host_template mac_scs
- 	.eh_bus_reset_handler	= macscsi_bus_reset,
- 	.can_queue		= 16,
- 	.this_id		= 7,
--	.sg_tablesize		= SG_ALL,
-+	.sg_tablesize		= 1,
- 	.cmd_per_lun		= 2,
- 	.use_clustering		= DISABLE_CLUSTERING,
- 	.cmd_size		= NCR5380_CMD_SIZE,
-@@ -358,8 +382,6 @@ static int __init mac_scsi_probe(struct
- 		mac_scsi_template.sg_tablesize = setup_sg_tablesize;
- 	if (setup_hostid >= 0)
- 		mac_scsi_template.this_id = setup_hostid & 7;
--	if (setup_use_pdma < 0)
--		setup_use_pdma = 0;
+@@ -516,7 +511,6 @@ static inline int NCR5380_pwrite (struct
+     register unsigned short reg = (instance->io_port + P_DATA_REG_OFFSET);
+     register int i = len;
+     int ii = 0;
+-    struct NCR5380_hostdata *hostdata = shost_priv(instance);
  
- 	instance = scsi_host_alloc(&mac_scsi_template,
- 	                           sizeof(struct NCR5380_hostdata));
-Index: linux/drivers/scsi/NCR5380.h
+     while ( !((inb(instance->io_port + P_STATUS_REG_OFFSET)) & P_ST_RDY) )
+ 	 ++ii;
+@@ -529,8 +523,6 @@ static inline int NCR5380_pwrite (struct
+ 	    instance->host_no);
+ 	return -1;
+     }
+-    if (ii > hostdata->spin_max_w)
+-        hostdata->spin_max_w = ii;
+     return 0;
+ }
+ 
+@@ -550,8 +542,6 @@ static struct scsi_host_template driver_
+ 	.detect			= pas16_detect,
+ 	.release		= pas16_release,
+ 	.proc_name		= "pas16",
+-	.show_info		= pas16_show_info,
+-	.write_info		= pas16_write_info,
+ 	.info			= pas16_info,
+ 	.queuecommand		= pas16_queue_command,
+ 	.eh_abort_handler	= pas16_abort,
+Index: linux/drivers/scsi/t128.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2016-03-23 21:10:00.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2016-03-23 21:10:05.000000000 +1100
-@@ -292,6 +292,8 @@ static void NCR5380_reselect(struct Scsi
- static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *, struct scsi_cmnd *);
- static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
- static int NCR5380_transfer_pio(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
-+static int NCR5380_poll_politely(struct Scsi_Host *, int, int, int, int);
-+static int NCR5380_poll_politely2(struct Scsi_Host *, int, int, int, int, int, int, int);
+--- linux.orig/drivers/scsi/t128.c	2016-03-23 21:09:26.000000000 +1100
++++ linux/drivers/scsi/t128.c	2016-03-23 21:09:28.000000000 +1100
+@@ -1,5 +1,3 @@
+-#define PSEUDO_DMA
+-
+ /*
+  * Trantor T128/T128F/T228 driver
+  *	Note : architecturally, the T100 and T130 are different and won't 
+@@ -394,8 +392,6 @@ static struct scsi_host_template driver_
+ 	.detect			= t128_detect,
+ 	.release		= t128_release,
+ 	.proc_name		= "t128",
+-	.show_info		= t128_show_info,
+-	.write_info		= t128_write_info,
+ 	.info			= t128_info,
+ 	.queuecommand		= t128_queue_command,
+ 	.eh_abort_handler	= t128_abort,
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2016-03-23 21:09:20.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2016-03-23 21:09:28.000000000 +1100
+@@ -39,6 +39,10 @@
+ #define NCR5380_read(reg)		inb(instance->io_port + reg)
+ #define NCR5380_write(reg, value)	outb(value, instance->io_port + reg)
  
- #endif				/* __KERNEL__ */
- #endif				/* NCR5380_H */
-
-
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(0)
++#define NCR5380_pread(instance, dst, len)		(0)
++#define NCR5380_pwrite(instance, src, len)		(0)
++
+ #define NCR5380_implementation_fields	/* none */
+ 
+ #include "NCR5380.h"
+Index: linux/drivers/scsi/dtc.h
+===================================================================
+--- linux.orig/drivers/scsi/dtc.h	2016-03-23 21:05:15.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2016-03-23 21:09:28.000000000 +1100
+@@ -27,8 +27,6 @@
+ #define NCR5380_abort			dtc_abort
+ #define NCR5380_bus_reset		dtc_bus_reset
+ #define NCR5380_info			dtc_info
+-#define NCR5380_show_info		dtc_show_info 
+-#define NCR5380_write_info		dtc_write_info 
+ 
+ /* 15 12 11 10
+    1001 1100 0000 0000 */
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2016-03-23 21:09:20.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2016-03-23 21:09:28.000000000 +1100
+@@ -70,7 +70,6 @@
+ #define NCR5380_pread generic_NCR5380_pread
+ #define NCR5380_pwrite generic_NCR5380_pwrite
+ #define NCR5380_info generic_NCR5380_info
+-#define NCR5380_show_info generic_NCR5380_show_info
+ 
+ #define BOARD_NCR5380	0
+ #define BOARD_NCR53C400	1
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2016-03-23 21:05:15.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2016-03-23 21:09:28.000000000 +1100
+@@ -109,8 +109,6 @@
+ #define NCR5380_abort pas16_abort
+ #define NCR5380_bus_reset pas16_bus_reset
+ #define NCR5380_info pas16_info
+-#define NCR5380_show_info pas16_show_info
+-#define NCR5380_write_info pas16_write_info
+ 
+ /* 15 14 12 10 7 5 3 
+    1101 0100 1010 1000 */
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2016-03-23 21:05:15.000000000 +1100
++++ linux/drivers/scsi/t128.h	2016-03-23 21:09:28.000000000 +1100
+@@ -83,8 +83,6 @@
+ #define NCR5380_abort t128_abort
+ #define NCR5380_bus_reset t128_bus_reset
+ #define NCR5380_info t128_info
+-#define NCR5380_show_info t128_show_info
+-#define NCR5380_write_info t128_write_info
+ 
+ /* 15 14 12 10 7 5 3
+    1101 0100 1010 1000 */
