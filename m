@@ -1,64 +1,156 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 0/5] mempool based chained scatterlist alloc/free api
-Date: Thu, 24 Mar 2016 11:46:00 -0400
-Message-ID: <1458834360.2544.12.camel@HansenPartnership.com>
-References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
-	 <20160323074012.GA17929@lst.de>
-	 <CAF1ivSaxn7KbiLt0ByHoC-EyP-Q0ah33YGNv0rLoO-=sOvia5w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv3 3/3] scsi-trace: define ZBC_IN and ZBC_OUT
+Date: Thu, 24 Mar 2016 17:23:56 +0100
+Message-ID: <1458836636-36844-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43240 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755727AbcCXPqF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2016 11:46:05 -0400
-In-Reply-To: <CAF1ivSaxn7KbiLt0ByHoC-EyP-Q0ah33YGNv0rLoO-=sOvia5w@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:53166 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754205AbcCXQX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Mar 2016 12:23:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Thu, 2016-03-24 at 08:09 -0700, Ming Lin wrote:
-> On Wed, Mar 23, 2016 at 12:40 AM, Christoph Hellwig <hch@lst.de>
-> wrote:
-> > On Tue, Mar 22, 2016 at 03:03:11PM -0700, Ming Lin wrote:
-> > > From: Ming Lin <ming.l@ssi.samsung.com>
-> > >=20
-> > > The fist 4 patches make the SG related
-> > > definitions/structs/functions
-> > > in SCSI code generic and the last patch move it to lib/sg_pool.c.
-> > >=20
-> > > I still keep the macro "SG_MEMPOOL_NR" since it's used in 3
-> > > places.
-> >=20
-> > I don't =D1=95ee the point, but I'm not going to block the series o=
-ver
-> > it either.
-> >=20
-> > The new series looks really nice to me!
-> >=20
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
->=20
-> Hi James,
->=20
-> This series touches several sub-systems.
-> What's the best way to merge it?
+Add new trace functions for ZBC_IN and ZBC_OUT.
 
-It has a minor intrusion into=20
+Reviewed-by: Doug Gilbert <dgilbert@interlog.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_trace.c   | 70 +++++++++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_proto.h   |  9 ++++++
+ include/trace/events/scsi.h |  2 ++
+ 3 files changed, 81 insertions(+)
 
- drivers/ata/pata_icside.c           |   2 +-
- drivers/infiniband/ulp/srp/ib_srp.c |   4 +-
- drivers/usb/storage/scsiglue.c      |   2 +-
+diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+index 1d43888..d9777aa 100644
+--- a/drivers/scsi/scsi_trace.c
++++ b/drivers/scsi/scsi_trace.c
+@@ -318,6 +318,72 @@ out:
+ }
+ 
+ static const char *
++scsi_trace_zbc_in(struct trace_seq *p, unsigned char *cdb, int len)
++{
++	const char *ret = trace_seq_buffer_ptr(p), *cmd;
++	u64 zone_id;
++	u32 alloc_len;
++	u8 options;
++
++	switch (SERVICE_ACTION16(cdb)) {
++	case ZI_REPORT_ZONES:
++		cmd = "REPORT_ZONES";
++		break;
++	default:
++		trace_seq_puts(p, "UNKNOWN");
++		goto out;
++	}
++
++	zone_id = get_unaligned_be64(&cdb[2]);
++	alloc_len = get_unaligned_be32(&cdb[10]);
++	options = cdb[14] & 0x3f;
++
++	trace_seq_printf(p, "%s zone=%llu alloc_len=%u options=%u partial=%u",
++			 cmd, (unsigned long long)zone_id, alloc_len,
++			 options, (cdb[14] >> 7) & 1);
++
++out:
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++
++static const char *
++scsi_trace_zbc_out(struct trace_seq *p, unsigned char *cdb, int len)
++{
++	const char *ret = trace_seq_buffer_ptr(p), *cmd;
++	u64 zone_id;
++
++	switch (SERVICE_ACTION16(cdb)) {
++	case ZO_CLOSE_ZONE:
++		cmd = "CLOSE_ZONE";
++		break;
++	case ZO_FINISH_ZONE:
++		cmd = "FINISH_ZONE";
++		break;
++	case ZO_OPEN_ZONE:
++		cmd = "OPEN_ZONE";
++		break;
++	case ZO_RESET_WRITE_POINTER:
++		cmd = "RESET_WRITE_POINTER";
++		break;
++	default:
++		trace_seq_puts(p, "UNKNOWN");
++		goto out;
++	}
++
++	zone_id = get_unaligned_be64(&cdb[2]);
++
++	trace_seq_printf(p, "%s zone=%llu all=%u", cmd,
++			 (unsigned long long)zone_id, cdb[14] & 1);
++
++out:
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++
++static const char *
+ scsi_trace_varlen(struct trace_seq *p, unsigned char *cdb, int len)
+ {
+ 	switch (SERVICE_ACTION32(cdb)) {
+@@ -373,6 +439,10 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
+ 		return scsi_trace_maintenance_in(p, cdb, len);
+ 	case MAINTENANCE_OUT:
+ 		return scsi_trace_maintenance_out(p, cdb, len);
++	case ZBC_IN:
++		return scsi_trace_zbc_in(p, cdb, len);
++	case ZBC_OUT:
++		return scsi_trace_zbc_out(p, cdb, len);
+ 	default:
+ 		return scsi_trace_misc(p, cdb, len);
+ 	}
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index c2ae21c..d1defd1 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -115,6 +115,8 @@
+ #define VERIFY_16	      0x8f
+ #define SYNCHRONIZE_CACHE_16  0x91
+ #define WRITE_SAME_16	      0x93
++#define ZBC_OUT		      0x94
++#define ZBC_IN		      0x95
+ #define SERVICE_ACTION_BIDIRECTIONAL 0x9d
+ #define SERVICE_ACTION_IN_16  0x9e
+ #define SERVICE_ACTION_OUT_16 0x9f
+@@ -143,6 +145,13 @@
+ #define MO_SET_PRIORITY       0x0e
+ #define MO_SET_TIMESTAMP      0x0f
+ #define MO_MANAGEMENT_PROTOCOL_OUT 0x10
++/* values for ZBC_IN */
++#define ZI_REPORT_ZONES	      0x00
++/* values for ZBC_OUT */
++#define ZO_CLOSE_ZONE	      0x01
++#define ZO_FINISH_ZONE	      0x02
++#define ZO_OPEN_ZONE	      0x03
++#define ZO_RESET_WRITE_POINTER 0x04
+ /* values for variable length command */
+ #define XDREAD_32	      0x03
+ #define XDWRITE_32	      0x04
+diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+index 5c0d91f..9a9b3e2 100644
+--- a/include/trace/events/scsi.h
++++ b/include/trace/events/scsi.h
+@@ -94,6 +94,8 @@
+ 		scsi_opcode_name(WRITE_16),			\
+ 		scsi_opcode_name(VERIFY_16),			\
+ 		scsi_opcode_name(WRITE_SAME_16),		\
++		scsi_opcode_name(ZBC_OUT),			\
++		scsi_opcode_name(ZBC_IN),			\
+ 		scsi_opcode_name(SERVICE_ACTION_IN_16),		\
+ 		scsi_opcode_name(READ_32),			\
+ 		scsi_opcode_name(WRITE_32),			\
+-- 
+1.8.5.6
 
-Apart from that, it's all SCSI, so the SCSI tree would seem to be the
-best one.
-
-James
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
