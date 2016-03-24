@@ -1,52 +1,70 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
-Date: Thu, 24 Mar 2016 10:08:05 +0100
-Message-ID: <56F3AE75.3030403@matthiasprager.de>
-References: <56EF049F.6050809@matthiasprager.de>
- <CAK=zhgqYjocyKkXAiJTxGkxTgX_jWb3Vr_V6oMxprJgbkdpE2A@mail.gmail.com>
- <56EFBC55.9070209@matthiasprager.de>
- <CAK=zhgof7owM8bVKx2PJtVpUcYMvszvjfc12DwbPJgkEYPC4yw@mail.gmail.com>
- <56F018A0.7070307@matthiasprager.de> <56F021B9.9080305@matthiasprager.de>
- <CAK=zhgoaseek=+qP1r6uVA9s06Yfaz+7m957seiWf1v2CKkQfw@mail.gmail.com>
- <56F1B2E5.1070605@matthiasprager.de> <56F34BB5.3090007@matthiasprager.de>
- <alpine.DEB.2.11.1603240701270.3978@nanos>
+From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Subject: Re: sd: Resize-fsync() race fails IO
+Date: Thu, 24 Mar 2016 10:46:08 +0100
+Message-ID: <56F3B760.2060309@profitbricks.com>
+References: <56EBEFAA.9040501@profitbricks.com>
+ <56F011BE.9030403@profitbricks.com> <56F20A8C.4010202@vlnb.net>
+ <56F25C8F.9040801@profitbricks.com> <56F368EA.1010607@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:50382 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752990AbcCXJIN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2016 05:08:13 -0400
-In-Reply-To: <alpine.DEB.2.11.1603240701270.3978@nanos>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:35398 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754686AbcCXJqK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2016 05:46:10 -0400
+Received: by mail-wm0-f42.google.com with SMTP id l68so229259650wml.0
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Mar 2016 02:46:09 -0700 (PDT)
+In-Reply-To: <56F368EA.1010607@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jason Taylor <jason.taylor@simplivity.com>, LKML <linux-kernel@vger.kernel.org>, x86@kernel.org, Matthias Prager <linux@matthiasprager.de>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Scst-devel <Scst-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Am 24.03.2016 um 07:06 schrieb Thomas Gleixner:
-> On Thu, 24 Mar 2016, Matthias Prager wrote:
->> The timeout happens reliably after two warm boots with a 'bad' kernel
->> after coming from a 'good' kernel, and also after one cold boot with a
->> 'bad' kernel (meaning cold booting a 'bad' kernel leads directly to the
->> timeout and warm booting needs a second run to produce the timeout). I
->> haven't tested bare metal yet - I can do that tomorrow if necessary.
+On 24.03.2016 05:11, Vladislav Bolkhovitin wrote:
+[snip]
+>>>> +CC: linux-scsi, hch
+>>>>
+>>>> Hi SCSI developers,
+>>>>
+>>>> I've debugged this further with a v4.5 kernel and full SCSI command
+>>>> logging enabled on the initiator side. It seems to be a SCSI issue. SCSI
+>>>> commands succeed but result 8000002 is reported to the upper driver
+>>>> which seems to fail IO.
+>>>>
+>>>> What does result 8000002 mean?
+>>>
+>>> It is driver_byte() DID_RESET and status_byte() CHECK_CONDITION (see the corresponding
+>>> kernel's functions). It sounds like you have timeouts and resets somewhere.
+>>
+>> Thanks for the hint! But it is definitely not DID_RESET. It is
+>> DRIVER_SENSE and CHECK_CONDITION then. The host byte is DID_OK.
+>>
+>> If Unit Attention and "Capacity data has changed" is part of a read or a
+>> write, then the result is the same but this is handled correctly and IO
+>> is not failed. But with a zero bytes fsync()/flush resulting in
+>> SYNCHRONIZE_CACHE_16, it fails IO as the sd driver doesn't handle this
+>> correctly it seems.
 > 
-> That's on VMWare, right? Jason has seen the same issue:
-Correct ESXi 5.1 patchlevel 3070626 (the two controllers are passed
-through to the VM).
+> I'm not sure, what is not handled correctly? Zero length SYNCHRONIZE_CACHE is perfectly
+> legal, and vdisk_fsync() should never see data_len 0.
 
-> 
->  http://marc.info/?l=linux-kernel&m=145280623530135&w=2
->  http://marc.info/?l=linux-kernel&m=145523785705624&w=2
-> 
->  "Works fine on real hardware and KVM. Filed an issue with VMware and the fix
->   is in the works."
-> 
-> Jason, what's the state of this?
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+The issue is located in the SCSI stack. I think the problem is located
+in the sd driver. It can't handle zero length SYNCHRONIZE_CACHE together
+with UA and "Capacity data changed". The race exists to which SCSI
+command UA is put to.
+
+> There should be no race around virt_dev->file_size, because assignments to 64-bit
+> integers are atomic, the compiler supposed to align it to 64-bit boundaries and it's
+> never assigned to any invalid value. At worst, accesses to it should be covered by
+> ACCESS_ONCE(), but I'm not sure it is really needed, so would prefer to keep it away
+> from the fast path. Although, probably, vdisk_synchronize_cache() is not too fast path.
+
+SCST is fine. I couldn't break it with my tests. It succeeds the
+commands but the sd driver fails IO because of the sense data.
+
+So discussion should be moved to the linux-scsi list again.
+I've changed the prefix in the subject from "scst_vdisk" to "sd".
+
+[snip]
 
