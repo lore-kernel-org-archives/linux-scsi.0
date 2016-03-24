@@ -1,1075 +1,368 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
-Date: Thu, 24 Mar 2016 03:06:45 +0100
-Message-ID: <56F34BB5.3090007@matthiasprager.de>
-References: <56EF049F.6050809@matthiasprager.de>
- <CAK=zhgqYjocyKkXAiJTxGkxTgX_jWb3Vr_V6oMxprJgbkdpE2A@mail.gmail.com>
- <56EFBC55.9070209@matthiasprager.de>
- <CAK=zhgof7owM8bVKx2PJtVpUcYMvszvjfc12DwbPJgkEYPC4yw@mail.gmail.com>
- <56F018A0.7070307@matthiasprager.de> <56F021B9.9080305@matthiasprager.de>
- <CAK=zhgoaseek=+qP1r6uVA9s06Yfaz+7m957seiWf1v2CKkQfw@mail.gmail.com>
- <56F1B2E5.1070605@matthiasprager.de>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCHv3] scsi: disable automatic target scan
+Date: Wed, 23 Mar 2016 22:35:05 -0400 (EDT)
+Message-ID: <502004640.24939720.1458786905087.JavaMail.zimbra@redhat.com>
+References: <1458200385-32088-1-git-send-email-hare@suse.de> <56EC797A.8000104@sandisk.com> <56ED6DB1.1050202@suse.de> <56EF4D4A.6050000@sandisk.com> <56EF9F7E.2010300@suse.de> <1709049972.24310562.1458592857261.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:46837 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117AbcCXCGy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 22:06:54 -0400
-In-Reply-To: <56F1B2E5.1070605@matthiasprager.de>
+Received: from mx6-phx2.redhat.com ([209.132.183.39]:59706 "EHLO
+	mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193AbcCXCfQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 22:35:16 -0400
+In-Reply-To: <1709049972.24310562.1458592857261.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Matthias Prager <linux@matthiasprager.de>, Jiang Liu <jiang.liu@linux.intel.com>, Thomas Gleixner <tglx@linutronix.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-Hi Sreekanth,
+Hello
 
-I have bisected the issue down to commit
-<https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=52f518a3a7c2f80551a38d38be28bc9f335e713c>
-"x86/MSI: Use hierarchical irqdomains to manage MSI interrupts".
+Tested Hannes's scan disable patch (subject above) with hpsa module pat=
+ch below.
+Because of the way the hpsa works I created a module that will force th=
+e scan when all scans are manual.
+I also tested Hannes's patch with boot-from-san via F/C and validated t=
+he patch in subject using Hannes's original dracut lunmask patch.
 
-The timeout happens reliably after two warm boots with a 'bad' kernel
-after coming from a 'good' kernel, and also after one cold boot with a
-'bad' kernel (meaning cold booting a 'bad' kernel leads directly to the
-timeout and warm booting needs a second run to produce the timeout). I
-haven't tested bare metal yet - I can do that tomorrow if necessary.
+=46or Hannes's scan disable patch=20
+Tested-by: Laurence Oberman <loberman@redhat.com>
 
-Here is the bisect log:
-> Bisecting: a merge base must be tested
-> [b953c0d234bc72e8489d3bf51a276c5c4ec85345] Linux 4.1
-> Bisecting: 7475 revisions left to test after this (roughly 13 steps)
-> [c11d716218910c3aa2bac1bb641e6086ad649555] Merge tag 'armsoc-cleanup' of git://git.kernel.org/pub/scm/linux/kernel/git/arm/arm-soc
-> Bisecting: 4008 revisions left to test after this (roughly 12 steps)
-> [8a8c35fadfaf55629a37ef1a8ead1b8fb32581d2] mm: kmemleak_alloc_percpu() should follow the gfp from per_alloc()
-> Bisecting: 1680 revisions left to test after this (roughly 11 steps)
-> [10b4b096d0c7e9f1b5f84c2a0658b2963e1e6ed0] Merge tag 'gpio-v4.2-1' of git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-gpio
-> Bisecting: 793 revisions left to test after this (roughly 10 steps)
-> [e75c73ad64478c12b3a44b86a3e7f62a4f65b93e] Merge branch 'x86-fpu-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> Bisecting: 380 revisions left to test after this (roughly 9 steps)
-> [407a2c720556e8e340e06f6a7174f5d6d80cf9ea] Merge branch 'irq-core-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> Bisecting: 210 revisions left to test after this (roughly 8 steps)
-> [539f5113650068ba221197f190267ab727296ef5] x86/asm/entry/64: Disentangle error_entry/exit gsbase/ebx/usermode code
-> Bisecting: 98 revisions left to test after this (roughly 7 steps)
-> [191a66353b22fad8ac89404ab4c929cbe7b0afb2] Merge branch 'x86/asm' into x86/apic, to resolve a conflict
-> Bisecting: 51 revisions left to test after this (roughly 6 steps)
-> [099c5c03487f6bca30c628e14e666788dd61fb33] irq_remapping/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
-> Bisecting: 25 revisions left to test after this (roughly 5 steps)
-> [90d84fe95dd6b418383aa0e0e5cace8f1b1e7e30] x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
-> Bisecting: 12 revisions left to test after this (roughly 4 steps)
-> [3cb96f0c97330834929abe9bd2ca3c252a83def0] x86/hpet: Enhance HPET IRQ to support hierarchical irqdomains
-> Bisecting: 6 revisions left to test after this (roughly 3 steps)
-> [b1855c752e67d1125d41fadb499014b49a245db8] x86/MSI: Clean up unused MSI related code and interfaces
-> Bisecting: 2 revisions left to test after this (roughly 2 steps)
-> [2b43817e481da9f5118adb56aef46b3f0298c685] irq_remapping/vt-d: Clean up unused MSI related code
-> Bisecting: 0 revisions left to test after this (roughly 1 step)
-> [80aa283364a17998dceb577bd185e3380b927544] x86/irq: Directly call native_compose_msi_msg() for DMAR IRQ
-> Bisecting: 0 revisions left to test after this (roughly 0 steps)
-> [52f518a3a7c2f80551a38d38be28bc9f335e713c] x86/MSI: Use hierarchical irqdomains to manage MSI interrupts
-> 52f518a3a7c2f80551a38d38be28bc9f335e713c is the first bad commit
-> commit 52f518a3a7c2f80551a38d38be28bc9f335e713c
-> Author: Jiang Liu <jiang.liu@linux.intel.com>
-> Date:   Mon Apr 13 14:11:35 2015 +0800
-> 
->     x86/MSI: Use hierarchical irqdomains to manage MSI interrupts
->     
->     Enhance MSI code to support hierarchical irqdomains, it helps to make
->     the architecture more clear.
->     
->     Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->     Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->     Cc: David Cohen <david.a.cohen@linux.intel.com>
->     Cc: Sander Eikelenboom <linux@eikelenboom.it>
->     Cc: David Vrabel <david.vrabel@citrix.com>
->     Cc: Tony Luck <tony.luck@intel.com>
->     Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->     Cc: iommu@lists.linux-foundation.org
->     Cc: Joerg Roedel <jroedel@suse.de>
->     Cc: Bjorn Helgaas <bhelgaas@google.com>
->     Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->     Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
->     Cc: Randy Dunlap <rdunlap@infradead.org>
->     Cc: Yinghai Lu <yinghai@kernel.org>
->     Cc: Borislav Petkov <bp@alien8.de>
->     Cc: Dimitri Sivanich <sivanich@sgi.com>
->     Cc: Joerg Roedel <joro@8bytes.org>
->     Link: http://lkml.kernel.org/r/1428905519-23704-14-git-send-email-jiang.liu@linux.intel.com
->     Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> 
-> :040000 040000 786bcad9a3fad413e0b744e2cfa20da7ff402db6 22618cac66dee85a7752bb3af81169fff3a242d8 M	arch
-> :040000 040000 acee54015803d4cd52d582a9e5e93aa56ad08482 40d2c7a02c0f8677e596c98c936404b2211336a3 M	drivers 
+linux16 /vmlinuz-4.4.5scan root=3D/dev/mapper/rhel-root ro crashkernel=3D=
+512M@64M rd.lvm.lv=3Drhel/root rd.lvm.lv=3Drhel/swap console=3DttyS0,11=
+5200n8 scsi_mod.scan=3Dmanual rd.hpsa=3D0 rdloaddriver=3Dhpsa
 
----
-Matthias
+Additional HPSA module for dracut, needs to be cleaned up and reviewed =
+internally here at Red Hat for a separate submission later.
+Included for others who want to test this.
+We need this for hpsa as this is by far the most popular boot controlle=
+r we face.
+
+diff -Nurp modules.d.orig/06hpsa/hpsa.sh modules.d/06hpsa/hpsa.sh
+--- modules.d.orig/06hpsa/hpsa.sh	1969-12-31 19:00:00.000000000 -0500
++++ modules.d/06hpsa/hpsa.sh	2016-03-23 21:38:33.157233465 -0400
+@@ -0,0 +1,6 @@
++#!/bin/sh
++### hpsa.sh: Called by the parse-hpsa.sh script to create the scan scr=
+ipt ###
++### Laurence Oberman loberman@redhat.com
++. /lib/dracut-lib.sh
++### The actual script that scans the hpsa for LUNS=20
++/bin/sh /sbin/hpsa_scan.sh
+diff -Nurp modules.d.orig/06hpsa/module-setup.sh modules.d/06hpsa/modul=
+e-setup.sh
+--- modules.d.orig/06hpsa/module-setup.sh	1969-12-31 19:00:00.000000000=
+ -0500
++++ modules.d/06hpsa/module-setup.sh	2016-03-23 21:40:36.994767642 -040=
+0
+@@ -0,0 +1,14 @@
++#!/bin/sh
++#### Test the hpsa driver load with scan #####
++#### Laurence Oberman loberman@redhat.com=20
++### module-setup.sh - Required for every module
++### Standard script invocations required
++check() {
++	return 0
++}
++
++### Install the hpsa.sh in the module directory
++install() {
++	inst_hook cmdline 20 "$moddir/parse-hpsa.sh"
++	inst_simple "$moddir/hpsa.sh" /sbin/hpsa.sh
++}
+diff -Nurp modules.d.orig/06hpsa/parse-hpsa.sh modules.d/06hpsa/parse-h=
+psa.sh
+--- modules.d.orig/06hpsa/parse-hpsa.sh	1969-12-31 19:00:00.000000000 -=
+0500
++++ modules.d/06hpsa/parse-hpsa.sh	2016-03-23 21:42:28.141856121 -0400
+@@ -0,0 +1,18 @@
++#!/bin.bash
++### Laurence Oberman loberman@redhat.com
++### parse-hpsa.sh=20
++### Parses the rd.hpsa=3Dx tp get the host number
++### Using rdloaddriver=3Dhpsa will enforce hpsa becoming scsi0
++
++for p in $(getargs rd.hpsa=3D); do
++(
++     echo "echo 1 > /sys/class/scsi_host/host$p/rescan" > /sbin/hpsa_s=
+can.sh
++    _do_hpsa=3D1
++)
++done
++
++### Standard way to call the script from udev
++/sbin/initqueue --settled --unique --onetime /bin/sh /sbin/hpsa.sh
++#/bin/sh /sbin/hpsa.sh
++unset _do_hpsa
++
 
 
+Test log
+--------
 
-Am 22.03.2016 um 22:02 schrieb Matthias Prager:
-> Hi Sreekanth,
-> 
-> Am 22.03.2016 um 11:52 schrieb Sreekanth Reddy:
->> Hi Matthias,
->>
->> Thanks for providing detail explanation.
->>
->> Currently I am trying to reproduce this issue locally. I have used the
->> same HBA card but still I am not able to reproduce this issue on 4.5
->> kernel.
->>
->> I will try for few more times and I will also try to get the diff
->> between 4.1 to 4.5 kernels w.r.t msix vectors support.
-> I will try to bisect this tomorrow. And I will try to reproduce this
-> outside the VM environment on bare metal.
-> 
->>
->> Meanwhile can you please provide me the output of "lspci -vvv" command
->> for LSI SAS2 HBA's and also hexdump of config sysfs parameter for SAS2
->> pci device. I need this data to be collected before "timeout" print is
->> observed, or in the mpt3sas_base.c file and in the
->> mpt3sas_base_attach(). return from mpt3sas_base_attach() function if
->> return value of mpt3sas_base_map_resources() is non zero instead of
->> freeing the resources, as shown below
->>
->> ---------------------------------------------------------------------------
->> r = mpt3sas_base_map_resources(ioc);
->>         if (r)
->> -                 goto out_free_resources;
->> +                return r;
->> -----------------------------------------------------------------------------
-> I will get you this data tomorrow too.
-> 
->>
->> Also are you sure that this issue won't occur on less than 4.1 kernel?
-> Yes definitely - I never observed these timeouts with any kernel
-> <=4.1.20, and I started seeing them from kernel 4.2.1 onward (I haven't
-> actually tested 4.2.0 yet).
-> 
->>
->> Thanks,
->> Sreekanth
->>
->> On Mon, Mar 21, 2016 at 10:00 PM, Matthias Prager
->> <linux@matthiasprager.de> wrote:
->>> Am 21.03.2016 um 16:52 schrieb Matthias Prager:
->>>> Hi Sreekanth,
+[    5.591817] HP HPSA Driver (v 3.4.14-0)
+[    5.593799] hpsa 0000:05:00.0: can't disable ASPM; OS doesn't have A=
+SPM control
+[    5.597423] hpsa 0000:05:00.0: MSI-X capable controller
+[    5.600181] hpsa 0000:05:00.0: only 16 MSI-X vectors available
+[    5.602995] hpsa 0000:05:00.0: Logical aborts not supported
+[    5.606011] hpsa 0000:05:00.0: HP SSD Smart Path aborts not supporte=
+d
+[    5.631300] scsi host0: hpsa
+
+[  OK  ] Started dracut pre-udev hook.
+         Starting udev Kernel Device Manager...
+[  OK  ] Started udev Kernel Device Manager.
+         Starting udev Coldplug all Devices...
+[    5.676569] clocksource: Switched to clocksource tsc
+         Mounting Configuration File System...
+[  OK  ] Mounted Configuration File System.
+[  OK  ] Started udev Coldplug all Devices.
+         Starting dracut initqueue hook...
+         Starting Show Plymouth Boot Screen...
+[  OK  ] Reached target System Initialization.
+[    5.708890] bnx2: QLogic bnx2 Gigabit Ethernet Driver v2.2.6 (Januar=
+y 29, 2014)
+[  OK  ] Started Show Plymouth Boot Screen.
+[    5.749275] bnx2 0000:03:00.0 eth0: Broadcom NetXtreme II BCM5709 10=
+00Base-T (C0) PCI Express found at mem f4000000, IRQ 16, node addr e4:1=
+1:5b:b8:ea:6a
+[  OK  ] Reached target Paths.
+[  OK  ] Reached target Basic System.
+[    5.828145] bnx2 0000:03:00.1 eth1: Broadcom NetXtreme II BCM5709 10=
+00Base-T (C0) PCI Express found at mem f2000000, IRQ 17, node addr e4:1=
+1:5b:b8:ea:6c
+[    5.905874] bnx2 0000:04:00.0 eth2: Broadcom NetXtreme II BCM5709 10=
+00Base-T (C0) PCI Express found at mem f8000000, IRQ 18, node addr e4:1=
+1:5b:b8:ea:6e
+[    5.906632] bnx2 0000:04:00.1 eth3: Broadcom NetXtreme II BCM5709 10=
+00Base-T (C0) PCI Express found at mem f6000000, IRQ 19, node addr e4:1=
+1:5b:b8:ea:70
+[    6.061847] bnx2 0000:04:00.1 enp4s0f1: renamed from eth3
+[    6.098914] mlx5_core 0000:08:00.0: firmware version: 12.14.2036
+[    6.147046] Emulex LightPulse Fibre Channel SCSI driver 11.0.0.0.
+[    6.147054] [drm] Initialized drm 1.1.0 20060810
+[    6.147148] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA =
+Driver: 8.07.00.26-k.
+[    6.147278] qla2xxx [0000:0e:00.0]-001d: : Found an ISP2432 irq 27 i=
+obase 0xffffc900192b8000.
+[    6.147618] qla2xxx [0000:0e:00.0]-0034:1: MSI-X: Unsupported ISP 24=
+32 SSVID/SSDID (0x103C,0x7041).
+[    6.352283] Copyright(c) 2004-2015 Emulex.  All rights reserved.
+[    6.387626] scsi host2: Emulex LPe1150 PCIe Fibre Channel Adapter on=
+ PCI bus 0b device 00 irq 44
+[    6.439004] bnx2 0000:04:00.0 enp4s0f0: renamed from eth2
+[    6.470541] scsi host1: qla2xxx
+[    6.488476] qla2xxx [0000:0e:00.0]-00fb:1: QLogic HPAE312A - PCI-Exp=
+ress Dual Port 4Gb Fibre Channel HBA.
+[    6.540692] qla2xxx [0000:0e:00.0]-00fc:1: ISP2432: PCIe (2.5GT/s x4=
+) @ 0000:0e:00.0 hdma+ host#=3D1 fw=3D7.03.00 (9496).
+[    6.600102] qla2xxx [0000:0e:00.1]-001d: : Found an ISP2432 irq 45 i=
+obase 0xffffc9001929c000.
+[    6.648749] qla2xxx [0000:0e:00.1]-0034:3: MSI-X: Unsupported ISP 24=
+32 SSVID/SSDID (0x103C,0x7041).
+[    6.666651] mlx5_core 0000:08:00.1: firmware version: 12.14.2036
+[    6.772560] bnx2 0000:03:00.0 enp3s0f0: renamed from eth0
+[    7.056571] scsi host3: qla2xxx
+[    7.074626] qla2xxx [0000:0e:00.1]-00fb:3: QLogic HPAE312A - PCI-Exp=
+ress Dual Port 4Gb Fibre Channel HBA.
+[    7.112413] qla2xxx [0000:0e:00.0]-500a:1: LOOP UP detected (4 Gbps)=
+=2E
+[    7.164549] qla2xxx [0000:0e:00.1]-00fc:3: ISP2432: PCIe (2.5GT/s x4=
+) @ 0000:0e:00.1 hdma+ host#=3D3 fw=3D7.03.00 (9496).
+[    7.225561] bnx2 0000:03:00.1 enp3s0f1: renamed from eth1
+[    7.263344] [drm] radeon kernel modesetting enabled.
+[    7.292316] [drm] initializing kernel modesetting (RV100 0x1002:0x51=
+5E 0x103C:0x31FB).
+[    7.337153] [drm] register mmio base: 0xF1CF0000
+[    7.363142] [drm] register mmio size: 65536
+[    7.387189] radeon 0000:01:03.0: VRAM: 128M 0x00000000E0000000 - 0x0=
+0000000E7FFFFFF (64M used)
+[    7.434215] radeon 0000:01:03.0: GTT: 512M 0x00000000C0000000 - 0x00=
+000000DFFFFFFF
+[    7.477250] [drm] Detected VRAM RAM=3D128M, BAR=3D128M
+[    7.503412] [drm] RAM width 16bits DDR
+[    7.524062] [TTM] Zone  kernel: Available graphics memory: 74007530 =
+kiB
+[    7.559905] [TTM] Zone   dma32: Available graphics memory: 2097152 k=
+iB
+[    7.595353] [TTM] Initializing pool allocator
+[    7.619344] [TTM] Initializing DMA pool allocator
+[    7.645975] [drm] radeon: 64M of VRAM memory ready
+[    7.672908] [drm] radeon: 512M of GTT memory ready.
+[    7.673258] mlx5_ib: Mellanox Connect-IB Infiniband driver v2.2-1 (F=
+eb 2014)
+[    7.699187] qla2xxx [0000:0e:00.1]-500a:3: LOOP UP detected (4 Gbps)=
+=2E
+[    7.776438] [drm] GART: num cpu pages 131072, num gpu pages 131072
+[    7.832626] [drm] PCI GART of 512M enabled (table at 0x0000000031200=
+000).
+[    7.870378] radeon 0000:01:03.0: WB disabled
+[    7.893537] radeon 0000:01:03.0: fence driver on ring 0 use gpu addr=
+ 0x00000000c0000000 and cpu addr 0xffff880031070000
+[    7.953875] [drm] Supports vblank timestamp caching Rev 2 (21.10.201=
+3).
+[    7.990946] [drm] Driver supports precise vblank timestamp query.
+[    7.997365] random: nonblocking pool is initialized
+[    8.055710] [drm] radeon: irq initialized.
+[    8.078772] [drm] Loading R100 Microcode
+[    8.101197] [drm] radeon: ring at 0x00000000C0001000
+[    8.129891] [drm] ring test succeeded in 1 usecs
+[    8.655299] [drm] ib test succeeded in 0 usecs
+[    8.678602] [drm] No TV DAC info found in BIOS
+[    8.702772] [drm] Radeon Display Connectors
+[    8.726801] [drm] Connector 0:
+[    8.744275] [drm]   VGA-1
+[    8.759047] [drm]   DDC: 0x60 0x60 0x60 0x60 0x60 0x60 0x60 0x60
+[    8.793773] [drm]   Encoders:
+[    8.811874] [drm]     CRT1: INTERNAL_DAC1
+[    8.834626] [drm] Connector 1:
+[    8.851683] [drm]   VGA-2
+[    8.866289] [drm]   DDC: 0x6c 0x6c 0x6c 0x6c 0x6c 0x6c 0x6c 0x6c
+[    8.899111] [drm]   Encoders:
+[    8.914856] [drm]     CRT2: INTERNAL_DAC2
+[    8.973015] [drm] fb mappable at 0xE0040000
+[    8.996545] [drm] vram apper at 0xE0000000
+[    9.019109] [drm] size 786432
+[    9.035977] [drm] fb depth is 8
+[    9.053620] [drm]    pitch is 1024
+[    9.072966] fbcon: radeondrmfb (fb0) is primary device
+[    9.228858] Console: switching to colour frame buffer device 128x48
+[    9.300257] radeon 0000:01:03.0: fb0: radeondrmfb frame buffer devic=
+e
+[    9.349479] [drm] Initialized radeon 2.43.0 20080528 for 0000:01:03.=
+0 on minor 0
+[   10.032430] hpsa 0000:05:00.0: scsi 0:3:0:0: added RAID             =
+ HP       P410i            controller SSDSmartPathCap- En- Exp=3D1
+[   10.098586] hpsa 0000:05:00.0: scsi 0:0:0:0: masked Direct-Access   =
+  HP       DG146BB976       PHYS DRV SSDSmartPathCap- En- Exp=3D0
+[   10.166547] hpsa 0000:05:00.0: scsi 0:1:0:0: added Direct-Access    =
+ HP       LOGICAL VOLUME   RAID-0 SSDSmartPathCap- En- Exp=3D1
+[   10.233884] scsi 0:1:0:0: Direct-Access     HP       LOGICAL VOLUME =
+  6.40 PQ: 0 ANSI: 5
+[   10.294476] sd 0:1:0:0: [sda] 286677120 512-byte logical blocks: (14=
+7 GB/137 GiB)
+[   10.337955] sd 0:1:0:0: [sda] Write Protect is off
+[   10.365772] sd 0:1:0:0: [sda] Write cache: disabled, read cache: ena=
+bled, doesn't support DPO or FUA
+[   10.387947] lpfc 0000:0b:00.0: 0:1303 Link Up Event x1 received Data=
+: x1 xf7 x10 x0 x0 x0 0
+[   10.464599]  sda: sda1 sda2
+[   10.481480] sd 0:1:0:0: [sda] Attached SCSI disk
+[  OK  ] Found device /dev/mapper/rhel-root.
+         Starting File System Check on /dev/mapper/rhel-root...
+[  OK  ] Started File System Check on /dev/mapper/rhel-root.
+=2E.
+,,
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Laurence Oberman" <loberman@redhat.com>
+To: "Hannes Reinecke" <hare@suse.de>
+Cc: "Bart Van Assche" <bart.vanassche@sandisk.com>, "Martin K. Petersen=
+" <martin.petersen@oracle.com>, "Christoph Hellwig" <hch@lst.de>, "Jame=
+s Bottomley" <james.bottomley@hansenpartnership.com>, linux-scsi@vger.k=
+ernel.org
+Sent: Monday, March 21, 2016 4:40:57 PM
+Subject: Re: [PATCHv3] scsi: disable automatic target scan
+
+Hello Hannes
+
+Please share latest scripts and an example of how you are using them.
+I have some scripts from last November, that you posted but I am sure t=
+hey have changed.
+If not then I will modify them as appropriate, just let me know.
+
+I have added the patches and booted the system set to async, so before =
+I boot with scsi_mod.scan=3Dmanual want to prepare my test system.
+This feature may be a very useful feature we would want to include in R=
+HEL as we struggle with large LUN boot configurations all the time.
+When you have time and thanks
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Hannes Reinecke" <hare@suse.de>
+To: "Bart Van Assche" <bart.vanassche@sandisk.com>, "Martin K. Petersen=
+" <martin.petersen@oracle.com>
+Cc: "Christoph Hellwig" <hch@lst.de>, "James Bottomley" <james.bottomle=
+y@hansenpartnership.com>, linux-scsi@vger.kernel.org
+Sent: Monday, March 21, 2016 3:15:10 AM
+Subject: Re: [PATCHv3] scsi: disable automatic target scan
+
+On 03/21/2016 02:24 AM, Bart Van Assche wrote:
+> On 03/19/16 08:18, Hannes Reinecke wrote:
+>> On 03/18/2016 10:56 PM, Bart Van Assche wrote:
+>>> On 03/17/2016 12:39 AM, Hannes Reinecke wrote:
+>>>> On larger installations it is useful to disable automatic LUN
+>>>> scanning, and only add the required LUNs via udev rules.
+>>>> This can speed up bootup dramatically.
 >>>>
->>>> thanks for digging into this issue. Regarding the 4.5.0 after 4.1.20
->>>> boot statement, I will try to express myself better:
->>>>
->>>> I first started the system with the 4.1.20 kernel. Then I issued an
->>>> 'init 6' warm-reboot and chose to boot the 4.5.0 kernel. This procedure
->>>> often works (i.e. I'm able to boot the newer kernels (>=4.2) this way
->>>> with mpt2sas initializing just fine).
->>> One small addition: warm-rebooting kernel 4.5.0 from kernel 4.5.0
->>> reliably leads to this issue manifesting (mpt2sas driver not initializing).
+>>>> This patch introduces a new scan module parameter value 'manual',
+>>>> which works like 'none', but can be overriden by setting the
+>>>> 'rescan'
+>>>> value from scsi_scan_target to 'SCSI_SCAN_MANUAL'.
+>>>> And it updates all relevant callers to set the 'rescan' value
+>>>> to 'SCSI_SCAN_MANUAL' if invoked via the 'scan' option in sysfs.
 >>>
->>>>
->>>> I will try the msix_disable parameter and report back. Maybe kernel
->>>> version 4.2 broke interrupt handling somehow?
->>> With the msix_disable parameter set kernels 4.5.0, 4.4.5, 4.3.3 and
->>> 4.2.1 boot without the mpt2sas init issue. I also tried the pci=nomsi
->>> paremeter instead, which also works fine.
+>>> Hello Hannes,
 >>>
->>> The igb ethernet-driver issue I mentioned as possibly related has not
->>> changed with pci=nomsi. So I'm assuming it is not the same issue, but
->>> possibly related, since it also occurs on kernels >=4.2.
+>>> Will setting scsi_scan_type to 'manual' allow a system to boot
+>>> from a
+>>> SCSI disk? If not, are there alternatives to this approach? Would
+>>> it be
+>>> a valid alternative to e.g. introduce a new threshold parameter suc=
+h
+>>> that only LUN numbers below this threshold are scanned during boot?
 >>>
->>>>
->>>> ---
->>>> Matthias
->>>>
->>>>
->>>> Am 21.03.2016 um 14:59 schrieb Sreekanth Reddy:
->>>>> Hi Matthias,
->>>>>
->>>>> Thanks for providing the logs. In these logs, I am not observing any
->>>>> such a prints which should be suspected for this issue.
->>>>>
->>>>> Can you please try once by setting mpt3sas driver's "msix_disable"
->>>>> module parameter to one.
->>>>>
->>>>> Also, can you please elaborate below statement for me, I am not able
->>>>> understand this statement
->>>>>  "I managed to boot the same 4.5.0 kernel successfully after warm
->>>>> rebooting from 4.1.20"
->>>>>
->>>>> Thanks,
->>>>> Sreekanth
->>>>>
->>>>> On Mon, Mar 21, 2016 at 2:48 PM, Matthias Prager
->>>>> <linux@matthiasprager.de> wrote:
->>>>>> Hi Sreekanth,
->>>>>>
->>>>>> thank you for replying so quickly. Here are the logs you requested
->>>>>> (kernel 4.5.0):
->>>>>>
->>>>>>> [    2.083177] mpt3sas version 09.102.00.00 loaded
->>>>>>> [    2.083757] mpt2sas_cm0: mpt3sas_base_attach
->>>>>>> [    2.083956] mpt2sas_cm0: mpt3sas_base_map_resources
->>>>>>> [    2.084708] mpt2sas_cm0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (3074748 kB)
->>>>>>> [    2.084964] mpt2sas_cm0: _base_get_ioc_facts
->>>>>>> [    2.085154] mpt2sas_cm0: _base_wait_for_iocstate
->>>>>>> [    2.140893]        offset:data
->>>>>>> [    2.141082]        [0x00]:03100200
->>>>>>> [    2.141257]        [0x04]:00002300
->>>>>>> [    2.141432]        [0x08]:00000000
->>>>>>> [    2.141606]        [0x0c]:00000000
->>>>>>> [    2.141780]        [0x10]:00000000
->>>>>>> [    2.141955]        [0x14]:00010480
->>>>>>> [    2.142129]        [0x18]:22130d68
->>>>>>> [    2.142303]        [0x1c]:0001285c
->>>>>>> [    2.142477]        [0x20]:14000400
->>>>>>> [    2.142651]        [0x24]:00000020
->>>>>>> [    2.142825]        [0x28]:0100000f
->>>>>>> [    2.143000]        [0x2c]:000c000b
->>>>>>> [    2.143174]        [0x30]:003c0003
->>>>>>> [    2.143349]        [0x34]:0020ffe0
->>>>>>> [    2.143544]        [0x38]:00800122
->>>>>>> [    2.143719]        [0x3c]:00000009
->>>>>>> [    2.143895] mpt2sas_cm0: hba queue depth(3432), max chains per io(128)
->>>>>>> [    2.144106] mpt2sas_cm0: request frame size(128), reply frame size(128)
->>>>>>> [    2.144397] mpt2sas_cm0: msix is supported, vector_count(1)
->>>>>>> [    2.144600] mpt2sas_cm0: MSI-X vectors supported: 1, no of cores: 4, max_msix_vectors: -1
->>>>>>> [    2.145161] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 58
->>>>>>> [    2.145361] mpt2sas_cm0: iomem(0x00000000fd4fc000), mapped(0xffffc900000d0000), size(16384)
->>>>>>> [    2.145591] mpt2sas_cm0: ioport(0x0000000000004000), size(256)
->>>>>>> [    2.146206] mpt2sas_cm0: _base_get_ioc_facts
->>>>>>> [    2.146397] mpt2sas_cm0: _base_wait_for_iocstate
->>>>>>> [    2.202087]        offset:data
->>>>>>> [    2.202281]        [0x00]:03100200
->>>>>>> [    2.202456]        [0x04]:00002300
->>>>>>> [    2.202631]        [0x08]:00000000
->>>>>>> [    2.202805]        [0x0c]:00000000
->>>>>>> [    2.202980]        [0x10]:00000000
->>>>>>> [    2.203154]        [0x14]:00010480
->>>>>>> [    2.203328]        [0x18]:22130d68
->>>>>>> [    2.203521]        [0x1c]:0001285c
->>>>>>> [    2.203695]        [0x20]:14000400
->>>>>>> [    2.203870]        [0x24]:00000020
->>>>>>> [    2.204044]        [0x28]:0100000f
->>>>>>> [    2.204219]        [0x2c]:000c000b
->>>>>>> [    2.204394]        [0x30]:003c0003
->>>>>>> [    2.204571]        [0x34]:0020ffe0
->>>>>>> [    2.204746]        [0x38]:00800122
->>>>>>> [    2.204926]        [0x3c]:00000009
->>>>>>> [    2.205102] mpt2sas_cm0: hba queue depth(3432), max chains per io(128)
->>>>>>> [    2.205314] mpt2sas_cm0: request frame size(128), reply frame size(128)
->>>>>>> [    2.205528] mpt2sas_cm0: _base_make_ioc_ready
->>>>>>> [    2.205719] mpt2sas_cm0: _base_get_port_facts
->>>>>>> [    2.234205]        offset:data
->>>>>>> [    2.234397]        [0x00]:05070000
->>>>>>> [    2.234573]        [0x04]:00000000
->>>>>>> [    2.234748]        [0x08]:00000000
->>>>>>> [    2.234928]        [0x0c]:00000000
->>>>>>> [    2.235103]        [0x10]:00000000
->>>>>>> [    2.235278]        [0x14]:00003000
->>>>>>> [    2.235453]        [0x18]:00000078
->>>>>>> [    2.235629] mpt2sas_cm0: _base_allocate_memory_pools
->>>>>>> [    2.235826] mpt2sas_cm0: scatter gather: sge_in_main_msg(3), sge_per_chain(15), sge_per_io(128), chains_per_io(9)
->>>>>>> [    2.236227] mpt2sas_cm0: reply post free pool (0xffff8800bb380000): depth(6944),element_size(8), pool_size(54 kB)
->>>>>>> [    2.236611] mpt2sas_cm0: reply_post_free_dma = (0xbb380000)
->>>>>>> [    2.236813] mpt2sas_cm0: scsi host: can_queue depth (3307)
->>>>>>> [    2.237086] mpt2sas_cm0: request pool(0xffff8800ba880000): depth(3432), frame_size(128), pool_size(429 kB)
->>>>>>> [    2.238580] mpt2sas_cm0: request pool: dma(0xba880000)
->>>>>>> [    2.238781] mpt2sas_cm0: scsiio(0xffff8800ba880000): depth(3307)
->>>>>>> [    2.243644] mpt2sas_cm0: chain pool depth(29763), frame_size(128), pool_size(3720 kB)
->>>>>>> [    2.243887] mpt2sas_cm0: hi_priority(0xffff8800ba8e7600): depth(60), start smid(3308)
->>>>>>> [    2.244113] mpt2sas_cm0: internal(0xffff8800ba8e9400): depth(65), start smid(3368)
->>>>>>> [    2.244390] mpt2sas_cm0: sense pool(0xffff8800ba480000): depth(3307), element_size(96), pool_size(310 kB)
->>>>>>> [    2.244774] mpt2sas_cm0: sense_dma(0xba480000)
->>>>>>> [    2.245038] mpt2sas_cm0: reply pool(0xffff8800ba500000): depth(3496), frame_size(128), pool_size(437 kB)
->>>>>>> [    2.245413] mpt2sas_cm0: reply_dma(0xba500000)
->>>>>>> [    2.245608] mpt2sas_cm0: reply_free pool(0xffff8800ba430000): depth(3496), element_size(4), pool_size(13 kB)
->>>>>>> [    2.245985] mpt2sas_cm0: reply_free_dma (0xba430000)
->>>>>>> [    2.246181] mpt2sas_cm0: config page(0xffff8800ba429000): size(512)
->>>>>>> [    2.246389] mpt2sas_cm0: config_page_dma(0xba429000)
->>>>>>> [    2.246584] mpt2sas_cm0: Allocated physical memory: size(4964 kB)
->>>>>>> [    2.246791] mpt2sas_cm0: Current Controller Queue Depth(3307),Max Controller Queue Depth(3432)
->>>>>>> [    2.247155] mpt2sas_cm0: Scatter Gather Elements per IO(128)
->>>>>>> [    2.247361] mpt2sas_cm0: _base_make_ioc_operational
->>>>>>> [    2.247962] mpt2sas_cm0: _base_send_ioc_init
->>>>>>> [    2.248154]        offset:data
->>>>>>> [    2.248325]        [0x00]:02000004
->>>>>>> [    2.248499]        [0x04]:00000000
->>>>>>> [    2.248673]        [0x08]:00000000
->>>>>>> [    2.248848]        [0x0c]:23000200
->>>>>>> [    2.249023]        [0x10]:00000000
->>>>>>> [    2.249197]        [0x14]:00000000
->>>>>>> [    2.249372]        [0x18]:00200000
->>>>>>> [    2.249546]        [0x1c]:0da81b20
->>>>>>> [    2.249720]        [0x20]:00000000
->>>>>>> [    2.249894]        [0x24]:00000000
->>>>>>> [    2.250068]        [0x28]:ba880000
->>>>>>> [    2.250242]        [0x2c]:00000000
->>>>>>> [    2.250416]        [0x30]:bb380000
->>>>>>> [    2.250589]        [0x34]:00000000
->>>>>>> [    2.250768]        [0x38]:ba430000
->>>>>>> [    2.250941]        [0x3c]:00000000
->>>>>>> [    2.251115]        [0x40]:983eb686
->>>>>>> [    2.251288]        [0x44]:00000153
->>>>>>> [    2.296610]        offset:data
->>>>>>> [    2.296795]        [0x00]:02050004
->>>>>>> [    2.296969]        [0x04]:00000000
->>>>>>> [    2.297143]        [0x08]:00000000
->>>>>>> [    2.297318]        [0x0c]:00000000
->>>>>>> [    2.297493]        [0x10]:00000000
->>>>>>> [    2.297668] mpt2sas_cm0: _base_event_notification
->>>>>>> [    5.093707] floppy0: no floppy controllers found
->>>>>>> [   32.293619] mpt2sas_cm0: _base_event_notification: timeout
->>>>>>> [   32.293909] mf:
->>>>>>>
->>>>>>> [   32.294132] 07000000
->>>>>>> [   32.294397] 00000000
->>>>>>> [   32.294445] 00000000
->>>>>>> [   32.294719] 00000000
->>>>>>> [   32.294767] 00000000
->>>>>>> [   32.295031] 0f2f7fff
->>>>>>> [   32.295078] ffffff7c
->>>>>>> [   32.295342] ffffffff
->>>>>>> [   32.295389]
->>>>>>>
->>>>>>> [   32.295823] ffffffff
->>>>>>> [   32.295871] 00000000
->>>>>>> [   32.296134] 00000000
->>>>>>>
->>>>>>> [   32.296615] mpt2sas_cm0: mpt3sas_base_free_resources
->>>>>>> [   32.296880] mpt2sas_cm0: _base_make_ioc_ready
->>>>>>> [   32.297135] mpt2sas_cm0: sending message unit reset !!
->>>>>>> [   32.298941] mpt2sas_cm0: message unit reset: SUCCESS
->>>>>>> [   32.299212] mpt2sas_cm0: mpt3sas_base_unmap_resources
->>>>>>> [   32.300381] mpt2sas_cm0: _base_release_memory_pools
->>>>>>> [   32.300654] mpt2sas_cm0: request_pool(0xffff8800ba880000): free
->>>>>>> [   32.300934] mpt2sas_cm0: sense_pool(0xffff8800ba480000): free
->>>>>>> [   32.301211] mpt2sas_cm0: reply_pool(0xffff8800ba500000): free
->>>>>>> [   32.301485] mpt2sas_cm0: reply_free_pool(0xffff8800ba430000): free
->>>>>>> [   32.301774] mpt2sas_cm0: reply_post_free_pool(0xffff8800bb380000): free
->>>>>>> [   32.302061] mpt2sas_cm0: config_page(0xffff8800ba429000): free
->>>>>>> [   32.371097] mpt2sas_cm0: failure at drivers/scsi/mpt3sas/mpt3sas_scsih.c:8592/_scsih_probe()!
->>>>>>> [   32.371958] mpt2sas_cm1: mpt3sas_base_attach
->>>>>>> [   32.372154] mpt2sas_cm1: mpt3sas_base_map_resources
->>>>>>> [   32.372950] mpt2sas_cm1: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (3074748 kB)
->>>>>>> [   32.373201] mpt2sas_cm1: _base_get_ioc_facts
->>>>>>> [   32.375261] mpt2sas_cm1: _base_wait_for_iocstate
->>>>>>> [   32.432012]        offset:data
->>>>>>> [   32.432262]        [0x00]:03100200
->>>>>>> [   32.432499]        [0x04]:00002300
->>>>>>> [   32.432735]        [0x08]:00000000
->>>>>>> [   32.432971]        [0x0c]:00000000
->>>>>>> [   32.433206]        [0x10]:00000000
->>>>>>> [   32.433443]        [0x14]:00010480
->>>>>>> [   32.433701]        [0x18]:22130d68
->>>>>>> [   32.433937]        [0x1c]:0001285c
->>>>>>> [   32.435434]        [0x20]:14000400
->>>>>>> [   32.435674]        [0x24]:00000020
->>>>>>> [   32.435909]        [0x28]:0100000f
->>>>>>> [   32.436144]        [0x2c]:000c000b
->>>>>>> [   32.436379]        [0x30]:003c0003
->>>>>>> [   32.436615]        [0x34]:0020ffe0
->>>>>>> [   32.436850]        [0x38]:00800122
->>>>>>> [   32.437085]        [0x3c]:00000009
->>>>>>> [   32.437322] mpt2sas_cm1: hba queue depth(3432), max chains per io(128)
->>>>>>> [   32.437607] mpt2sas_cm1: request frame size(128), reply frame size(128)
->>>>>>> [   32.438014] mpt2sas_cm1: msix is supported, vector_count(1)
->>>>>>> [   32.438288] mpt2sas_cm1: MSI-X vectors supported: 1, no of cores: 4, max_msix_vectors: 8
->>>>>>> [   32.439101] mpt2sas1-msix0: PCI-MSI-X enabled: IRQ 58
->>>>>>> [   32.439373] mpt2sas_cm1: iomem(0x00000000fd1fc000), mapped(0xffffc900000d8000), size(16384)
->>>>>>> [   32.439682] mpt2sas_cm1: ioport(0x0000000000007000), size(256)
->>>>>>> [   32.440504] mpt2sas_cm1: _base_get_ioc_facts
->>>>>>> [   32.440765] mpt2sas_cm1: _base_wait_for_iocstate
->>>>>>> [   32.499305]        offset:data
->>>>>>> [   32.499557]        [0x00]:03100200
->>>>>>> [   32.499794]        [0x04]:00002300
->>>>>>> [   32.500031]        [0x08]:00000000
->>>>>>> [   32.500267]        [0x0c]:00000000
->>>>>>> [   32.500504]        [0x10]:00000000
->>>>>>> [   32.500740]        [0x14]:00010480
->>>>>>> [   32.500974]        [0x18]:22130d68
->>>>>>> [   32.501209]        [0x1c]:0001285c
->>>>>>> [   32.501444]        [0x20]:14000400
->>>>>>> [   32.501687]        [0x24]:00000020
->>>>>>> [   32.501922]        [0x28]:0100000f
->>>>>>> [   32.502157]        [0x2c]:000c000b
->>>>>>> [   32.502391]        [0x30]:003c0003
->>>>>>> [   32.502626]        [0x34]:0020ffe0
->>>>>>> [   32.502862]        [0x38]:00800122
->>>>>>> [   32.503098]        [0x3c]:00000009
->>>>>>> [   32.503336] mpt2sas_cm1: hba queue depth(3432), max chains per io(128)
->>>>>>> [   32.503644] mpt2sas_cm1: request frame size(128), reply frame size(128)
->>>>>>> [   32.503933] mpt2sas_cm1: _base_make_ioc_ready
->>>>>>> [   32.504191] mpt2sas_cm1: _base_get_port_facts
->>>>>>> [   32.534282]        offset:data
->>>>>>> [   32.534537]        [0x00]:05070000
->>>>>>> [   32.534782]        [0x04]:00000000
->>>>>>> [   32.535058]        [0x08]:00000000
->>>>>>> [   32.536473]        [0x0c]:00000000
->>>>>>> [   32.536710]        [0x10]:00000000
->>>>>>> [   32.536946]        [0x14]:00003000
->>>>>>> [   32.537183]        [0x18]:00000078
->>>>>>> [   32.537420] mpt2sas_cm1: _base_allocate_memory_pools
->>>>>>> [   32.537686] mpt2sas_cm1: scatter gather: sge_in_main_msg(3), sge_per_chain(15), sge_per_io(128), chains_per_io(9)
->>>>>>> [   32.538232] mpt2sas_cm1: reply post free pool (0xffff8800bb3d0000): depth(6944),element_size(8), pool_size(54 kB)
->>>>>>> [   32.538758] mpt2sas_cm1: reply_post_free_dma = (0xbb3d0000)
->>>>>>> [   32.539030] mpt2sas_cm1: scsi host: can_queue depth (3307)
->>>>>>> [   32.539378] mpt2sas_cm1: request pool(0xffff8800ba480000): depth(3432), frame_size(128), pool_size(429 kB)
->>>>>>> [   32.539882] mpt2sas_cm1: request pool: dma(0xba480000)
->>>>>>> [   32.540149] mpt2sas_cm1: scsiio(0xffff8800ba480000): depth(3307)
->>>>>>> [   32.545893] mpt2sas_cm1: chain pool depth(29763), frame_size(128), pool_size(3720 kB)
->>>>>>> [   32.546137] mpt2sas_cm1: hi_priority(0xffff8800ba4e7600): depth(60), start smid(3308)
->>>>>>> [   32.546365] mpt2sas_cm1: internal(0xffff8800ba4e9400): depth(65), start smid(3368)
->>>>>>> [   32.546651] mpt2sas_cm1: sense pool(0xffff8800ba880000): depth(3307), element_size(96), pool_size(310 kB)
->>>>>>> [   32.547030] mpt2sas_cm1: sense_dma(0xba880000)
->>>>>>> [   32.547537] mpt2sas_cm1: reply pool(0xffff880000100000): depth(3496), frame_size(128), pool_size(437 kB)
->>>>>>> [   32.547921] mpt2sas_cm1: reply_dma(0x100000)
->>>>>>> [   32.548117] mpt2sas_cm1: reply_free pool(0xffff8800ba964000): depth(3496), element_size(4), pool_size(13 kB)
->>>>>>> [   32.548500] mpt2sas_cm1: reply_free_dma (0xba964000)
->>>>>>> [   32.548698] mpt2sas_cm1: config page(0xffff8800ba960000): size(512)
->>>>>>> [   32.548908] mpt2sas_cm1: config_page_dma(0xba960000)
->>>>>>> [   32.549105] mpt2sas_cm1: Allocated physical memory: size(4964 kB)
->>>>>>> [   32.549314] mpt2sas_cm1: Current Controller Queue Depth(3307),Max Controller Queue Depth(3432)
->>>>>>> [   32.550950] mpt2sas_cm1: Scatter Gather Elements per IO(128)
->>>>>>> [   32.551160] mpt2sas_cm1: _base_make_ioc_operational
->>>>>>> [   32.551855] mpt2sas_cm1: _base_send_ioc_init
->>>>>>> [   32.552051]        offset:data
->>>>>>> [   32.552224]        [0x00]:02000004
->>>>>>> [   32.552400]        [0x04]:00000000
->>>>>>> [   32.552576]        [0x08]:00000000
->>>>>>> [   32.552761]        [0x0c]:23000200
->>>>>>> [   32.552937]        [0x10]:00000000
->>>>>>> [   32.553114]        [0x14]:00000000
->>>>>>> [   32.553291]        [0x18]:00200000
->>>>>>> [   32.553468]        [0x1c]:0da81b20
->>>>>>> [   32.553685]        [0x20]:00000000
->>>>>>> [   32.553862]        [0x24]:00000000
->>>>>>> [   32.554038]        [0x28]:ba480000
->>>>>>> [   32.554215]        [0x2c]:00000000
->>>>>>> [   32.554393]        [0x30]:bb3d0000
->>>>>>> [   32.554569]        [0x34]:00000000
->>>>>>> [   32.554752]        [0x38]:ba964000
->>>>>>> [   32.554929]        [0x3c]:00000000
->>>>>>> [   32.555106]        [0x40]:983f2ce6
->>>>>>> [   32.555283]        [0x44]:00000153
->>>>>>> [   32.601516]        offset:data
->>>>>>> [   32.601768]        [0x00]:02050004
->>>>>>> [   32.602003]        [0x04]:00000000
->>>>>>> [   32.602239]        [0x08]:00000000
->>>>>>> [   32.602474]        [0x0c]:00000000
->>>>>>> [   32.602709]        [0x10]:00000000
->>>>>>> [   32.602945] mpt2sas_cm1: _base_event_notification
->>>>>>> [   62.593604] mpt2sas_cm1: _base_event_notification: timeout
->>>>>>> [   62.593906] mf:
->>>>>>>
->>>>>>> [   62.594127] 07000000
->>>>>>> [   62.594390] 00000000
->>>>>>> [   62.594438] 00000000
->>>>>>> [   62.594709] 00000000
->>>>>>> [   62.594757] 00000000
->>>>>>> [   62.595019] 0f2f7fff
->>>>>>> [   62.595067] ffffff7c
->>>>>>> [   62.595330] ffffffff
->>>>>>> [   62.595377]
->>>>>>>
->>>>>>> [   62.595808] ffffffff
->>>>>>> [   62.595855] 00000000
->>>>>>> [   62.596117] 00000000
->>>>>>>
->>>>>>> [   62.596601] mpt2sas_cm1: mpt3sas_base_free_resources
->>>>>>> [   62.596871] mpt2sas_cm1: _base_make_ioc_ready
->>>>>>> [   62.597125] mpt2sas_cm1: sending message unit reset !!
->>>>>>> [   62.599013] mpt2sas_cm1: message unit reset: SUCCESS
->>>>>>> [   62.599283] mpt2sas_cm1: mpt3sas_base_unmap_resources
->>>>>>> [   62.600443] mpt2sas_cm1: _base_release_memory_pools
->>>>>>> [   62.600721] mpt2sas_cm1: request_pool(0xffff8800ba480000): free
->>>>>>> [   62.601002] mpt2sas_cm1: sense_pool(0xffff8800ba880000): free
->>>>>>> [   62.601280] mpt2sas_cm1: reply_pool(0xffff880000100000): free
->>>>>>> [   62.601560] mpt2sas_cm1: reply_free_pool(0xffff8800ba964000): free
->>>>>>> [   62.601845] mpt2sas_cm1: reply_post_free_pool(0xffff8800bb3d0000): free
->>>>>>> [   62.602133] mpt2sas_cm1: config_page(0xffff8800ba960000): free
->>>>>>> [   62.673591] mpt2sas_cm1: failure at drivers/scsi/mpt3sas/mpt3sas_scsih.c:8592/_scsih_probe()!
->>>>>>
->>>>>> These are for two controllers, I don't know whether the output from the
->>>>>> second is helpful at all - I added it anyway.
->>>>>>
->>>>>>
->>>>>> I managed to boot the same 4.5.0 kernel successfully after warm
->>>>>> rebooting from 4.1.20. That gave me this dmesg output (for comparison):
->>>>>>
->>>>>>> [    2.057685] mpt3sas version 09.102.00.00 loaded
->>>>>>> [    2.058371] mpt2sas_cm0: mpt3sas_base_attach
->>>>>>> [    2.058632] mpt2sas_cm0: mpt3sas_base_map_resources
->>>>>>> [    2.059583] mpt2sas_cm0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (3074748 kB)
->>>>>>> [    2.059911] mpt2sas_cm0: _base_get_ioc_facts
->>>>>>> [    2.060166] mpt2sas_cm0: _base_wait_for_iocstate
->>>>>>> [    2.116337]        offset:data
->>>>>>> [    2.116576]        [0x00]:03100200
->>>>>>> [    2.116817]        [0x04]:00002300
->>>>>>> [    2.117051]        [0x08]:00000000
->>>>>>> [    2.117285]        [0x0c]:00000000
->>>>>>> [    2.117518]        [0x10]:00000000
->>>>>>> [    2.117752]        [0x14]:00010480
->>>>>>> [    2.117986]        [0x18]:22130d68
->>>>>>> [    2.118220]        [0x1c]:0001285c
->>>>>>> [    2.119624]        [0x20]:14000400
->>>>>>> [    2.119858]        [0x24]:00000020
->>>>>>> [    2.120093]        [0x28]:0100000f
->>>>>>> [    2.120351]        [0x2c]:000c000b
->>>>>>> [    2.120586]        [0x30]:003c0003
->>>>>>> [    2.120820]        [0x34]:0020ffe0
->>>>>>> [    2.121055]        [0x38]:00800122
->>>>>>> [    2.121288]        [0x3c]:00000009
->>>>>>> [    2.121524] mpt2sas_cm0: hba queue depth(3432), max chains per io(128)
->>>>>>> [    2.121808] mpt2sas_cm0: request frame size(128), reply frame size(128)
->>>>>>> [    2.122195] mpt2sas_cm0: msix is supported, vector_count(1)
->>>>>>> [    2.122468] mpt2sas_cm0: MSI-X vectors supported: 1, no of cores: 4, max_msix_vectors: -1
->>>>>>> [    2.123239] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 58
->>>>>>> [    2.123507] mpt2sas_cm0: iomem(0x00000000fd4fc000), mapped(0xffffc900000d0000), size(16384)
->>>>>>> [    2.123816] mpt2sas_cm0: ioport(0x0000000000004000), size(256)
->>>>>>> [    2.124623] mpt2sas_cm0: _base_get_ioc_facts
->>>>>>> [    2.124878] mpt2sas_cm0: _base_wait_for_iocstate
->>>>>>> [    2.180907]        offset:data
->>>>>>> [    2.181145]        [0x00]:03100200
->>>>>>> [    2.181379]        [0x04]:00002300
->>>>>>> [    2.181613]        [0x08]:00000000
->>>>>>> [    2.181847]        [0x0c]:00000000
->>>>>>> [    2.182081]        [0x10]:00000000
->>>>>>> [    2.182315]        [0x14]:00010480
->>>>>>> [    2.182547]        [0x18]:22130d68
->>>>>>> [    2.182781]        [0x1c]:0001285c
->>>>>>> [    2.183014]        [0x20]:14000400
->>>>>>> [    2.183248]        [0x24]:00000020
->>>>>>> [    2.183481]        [0x28]:0100000f
->>>>>>> [    2.183720]        [0x2c]:000c000b
->>>>>>> [    2.183954]        [0x30]:003c0003
->>>>>>> [    2.184190]        [0x34]:0020ffe0
->>>>>>> [    2.184424]        [0x38]:00800122
->>>>>>> [    2.184658]        [0x3c]:00000009
->>>>>>> [    2.184893] mpt2sas_cm0: hba queue depth(3432), max chains per io(128)
->>>>>>> [    2.185177] mpt2sas_cm0: request frame size(128), reply frame size(128)
->>>>>>> [    2.185462] mpt2sas_cm0: _base_make_ioc_ready
->>>>>>> [    2.185717] mpt2sas_cm0: _base_get_port_facts
->>>>>>> [    2.214057]        offset:data
->>>>>>> [    2.214295]        [0x00]:05070000
->>>>>>> [    2.214529]        [0x04]:00000000
->>>>>>> [    2.214762]        [0x08]:00000000
->>>>>>> [    2.214997]        [0x0c]:00000000
->>>>>>> [    2.215230]        [0x10]:00000000
->>>>>>> [    2.215464]        [0x14]:00003000
->>>>>>> [    2.215697]        [0x18]:00000078
->>>>>>> [    2.215931] mpt2sas_cm0: _base_allocate_memory_pools
->>>>>>> [    2.216194] mpt2sas_cm0: scatter gather: sge_in_main_msg(3), sge_per_chain(15), sge_per_io(128), chains_per_io(9)
->>>>>>> [    2.216734] mpt2sas_cm0: reply post free pool (0xffff8800bafc0000): depth(6944),element_size(8), pool_size(54 kB)
->>>>>>> [    2.217244] mpt2sas_cm0: reply_post_free_dma = (0xbafc0000)
->>>>>>> [    2.217514] mpt2sas_cm0: scsi host: can_queue depth (3307)
->>>>>>> [    2.217866] mpt2sas_cm0: request pool(0xffff8800ba800000): depth(3432), frame_size(128), pool_size(429 kB)
->>>>>>> [    2.218369] mpt2sas_cm0: request pool: dma(0xba800000)
->>>>>>> [    2.218637] mpt2sas_cm0: scsiio(0xffff8800ba800000): depth(3307)
->>>>>>> [    2.224773] mpt2sas_cm0: chain pool depth(29763), frame_size(128), pool_size(3720 kB)
->>>>>>> [    2.225092] mpt2sas_cm0: hi_priority(0xffff8800ba867600): depth(60), start smid(3308)
->>>>>>> [    2.225395] mpt2sas_cm0: internal(0xffff8800ba869400): depth(65), start smid(3368)
->>>>>>> [    2.225958] mpt2sas_cm0: sense pool(0xffff8800ba480000): depth(3307), element_size(96), pool_size(310 kB)
->>>>>>> [    2.226457] mpt2sas_cm0: sense_dma(0xba480000)
->>>>>>> [    2.227039] mpt2sas_cm0: reply pool(0xffff8800ba500000): depth(3496), frame_size(128), pool_size(437 kB)
->>>>>>> [    2.227413] mpt2sas_cm0: reply_dma(0xba500000)
->>>>>>> [    2.227616] mpt2sas_cm0: reply_free pool(0xffff8800ba450000): depth(3496), element_size(4), pool_size(13 kB)
->>>>>>> [    2.227992] mpt2sas_cm0: reply_free_dma (0xba450000)
->>>>>>> [    2.228192] mpt2sas_cm0: config page(0xffff8800ba43b000): size(512)
->>>>>>> [    2.228402] mpt2sas_cm0: config_page_dma(0xba43b000)
->>>>>>> [    2.228598] mpt2sas_cm0: Allocated physical memory: size(4964 kB)
->>>>>>> [    2.228806] mpt2sas_cm0: Current Controller Queue Depth(3307),Max Controller Queue Depth(3432)
->>>>>>> [    2.229171] mpt2sas_cm0: Scatter Gather Elements per IO(128)
->>>>>>> [    2.229378] mpt2sas_cm0: _base_make_ioc_operational
->>>>>>> [    2.229959] mpt2sas_cm0: _base_send_ioc_init
->>>>>>> [    2.230151]        offset:data
->>>>>>> [    2.230323]        [0x00]:02000004
->>>>>>> [    2.230499]        [0x04]:00000000
->>>>>>> [    2.230675]        [0x08]:00000000
->>>>>>> [    2.230851]        [0x0c]:23000200
->>>>>>> [    2.231026]        [0x10]:00000000
->>>>>>> [    2.231201]        [0x14]:00000000
->>>>>>> [    2.231376]        [0x18]:00200000
->>>>>>> [    2.231551]        [0x1c]:0da81b20
->>>>>>> [    2.231726]        [0x20]:00000000
->>>>>>> [    2.231900]        [0x24]:00000000
->>>>>>> [    2.232075]        [0x28]:ba800000
->>>>>>> [    2.232250]        [0x2c]:00000000
->>>>>>> [    2.232423]        [0x30]:bafc0000
->>>>>>> [    2.232597]        [0x34]:00000000
->>>>>>> [    2.232775]        [0x38]:ba450000
->>>>>>> [    2.232950]        [0x3c]:00000000
->>>>>>> [    2.233125]        [0x40]:98596e4f
->>>>>>> [    2.233299]        [0x44]:00000153
->>>>>>> [    2.278752]        offset:data
->>>>>>> [    2.278988]        [0x00]:02050004
->>>>>>> [    2.279220]        [0x04]:00000000
->>>>>>> [    2.279453]        [0x08]:00000000
->>>>>>> [    2.279685]        [0x0c]:00000000
->>>>>>> [    2.279918]        [0x10]:00000000
->>>>>>> [    2.280151] mpt2sas_cm0: _base_event_notification
->>>>>>> [    2.280537] mpt2sas_cm0: _base_event_notification: complete
->>>>>>> [    2.281694] mpt2sas_cm0: LSISAS2008: FWVersion(20.00.04.00), ChipRevision(0x03), BiosVersion(07.39.00.00)
->>>>>>> [    2.282196] mpt2sas_cm0: Protocol=(
->>>>>>> [    2.282261] Initiator
->>>>>>> [    2.282522] ,Target
->>>>>>> [    2.282567] ),
->>>>>>> [    2.282824] Capabilities=(
->>>>>>> [    2.282877] TLR
->>>>>>> [    2.283132] ,EEDP
->>>>>>> [    2.283175] ,Snapshot Buffer
->>>>>>> [    2.283444] ,Diag Trace Buffer
->>>>>>> [    2.283502] ,Task Set Full
->>>>>>> [    2.283774] ,NCQ
->>>>>>> [    2.283816] )
->>>>>>> [    2.284350] scsi host0: Fusion MPT SAS Host
->>>>>>> [    2.299028] mpt2sas_cm0: sending port enable !!
->>>>>>> [    2.299540] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.299972] mpt2sas_cm0: SAS Enclosure Device Status Change
->>>>>>> [    2.299984] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.300554] mpt2sas_cm0: SAS Topology Change List
->>>>>>> [    2.300759] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.301146] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.301535] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.301927] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.302316] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.302707] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.304908] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.305297] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.306776] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.307166] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.307559] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.307948] mpt2sas_cm0: Discovery: (start)
->>>>>>>
->>>>>>> [    2.308336] mpt2sas_cm0: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.311738] mpt2sas_cm0: host_add: handle(0x0001), sas_addr(0x500605b003683dd0), phys(8)
->>>>>>> [    2.312097] mpt2sas_cm0: enclosure status change: (enclosure add)
->>>>>>>                       handle(0x0001), enclosure logical id(0x500605b003683dd0) number slots(0)
->>>>>>> [    2.312551] mpt2sas_cm0: sas topology change: (responding)
->>>>>>> [    2.312768]        handle(0x0000), enclosure_handle(0x0001) start_phy(00), count(8)
->>>>>>> [    2.313003]        phy(01), attached_handle(0x0009): target add: link rate: new(0x0a), old(0x00)
->>>>>>> [    2.313250]        phy(02), attached_handle(0x000a): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.313498]        phy(03), attached_handle(0x000b): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.313745]        phy(04), attached_handle(0x000c): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.313992]        phy(05), attached_handle(0x000d): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.314248]        phy(06), attached_handle(0x000e): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.314495]        phy(07), attached_handle(0x000f): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.314747] mpt2sas_cm0: updating handles for sas_host(0x500605b003683dd0)
->>>>>>> [    2.316041] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x0009), sas_addr(0x4433221101000000)
->>>>>>> [    2.316465] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 2)
->>>>>>> [    2.317200] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x000a), sas_addr(0x4433221102000000)
->>>>>>> [    2.317669] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 1)
->>>>>>> [    2.318431] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x000b), sas_addr(0x4433221103000000)
->>>>>>> [    2.318900] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 0)
->>>>>>> [    2.319366] mpt2sas_cm0: _scsih_determine_boot_device: current_boot_device(0x4433221103000000)
->>>>>>> [    2.320151] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x000c), sas_addr(0x4433221104000000)
->>>>>>> [    2.321371] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 7)
->>>>>>> [    2.322137] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x000d), sas_addr(0x4433221105000000)
->>>>>>> [    2.322606] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 6)
->>>>>>> [    2.323367] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x000e), sas_addr(0x4433221106000000)
->>>>>>> [    2.323834] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 5)
->>>>>>> [    2.324602] mpt2sas_cm0: _scsih_sas_device_init_add: handle(0x000f), sas_addr(0x4433221107000000)
->>>>>>> [    2.325071] mpt2sas_cm0: _scsih_sas_device_init_add: enclosure logical id(0x500605b003683dd0), slot( 4)
->>>>>>> [    2.325541] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.326017] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.326492] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.326975] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.327450] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.327923] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.328396] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.328868] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.329340] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.329816] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.330316] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.330797] mpt2sas_cm0: discovery event: (start)
->>>>>>>
->>>>>>> [    2.331269] mpt2sas_cm0: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.331740] mpt2sas_cm0: port enable: complete from worker thread
->>>>>>> [    2.350236] mpt2sas_cm0: port enable: SUCCESS
->>>>>>> [    2.356432] scsi 0:0:0:0: Direct-Access     ATA      ST3750330NS      SN06 PQ: 0 ANSI: 6
->>>>>>> [    2.356683] scsi 0:0:0:0: SATA: handle(0x000b), sas_addr(0x4433221103000000), phy(3), device_name(0x5000c5000267c9f8)
->>>>>>> [    2.357080] scsi 0:0:0:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(0)
->>>>>>> [    2.357405] scsi 0:0:0:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.383043] scsi 0:0:1:0: Direct-Access     ATA      Hitachi HDS5C302 A800 PQ: 0 ANSI: 6
->>>>>>> [    2.383296] scsi 0:0:1:0: SATA: handle(0x0009), sas_addr(0x4433221101000000), phy(1), device_name(0x5000cca369cdd311)
->>>>>>> [    2.383684] scsi 0:0:1:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(2)
->>>>>>> [    2.384028] scsi 0:0:1:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.405088] scsi 0:0:2:0: Direct-Access     ATA      ST3750330NS      SN06 PQ: 0 ANSI: 6
->>>>>>> [    2.405346] scsi 0:0:2:0: SATA: handle(0x000a), sas_addr(0x4433221102000000), phy(2), device_name(0x5000c5000ccfbd32)
->>>>>>> [    2.405735] scsi 0:0:2:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(1)
->>>>>>> [    2.406082] scsi 0:0:2:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.424125] scsi 0:0:3:0: Direct-Access     ATA      ST3750330NS      SN06 PQ: 0 ANSI: 6
->>>>>>> [    2.424373] scsi 0:0:3:0: SATA: handle(0x000c), sas_addr(0x4433221104000000), phy(4), device_name(0x5000c5000267abee)
->>>>>>> [    2.424763] scsi 0:0:3:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(7)
->>>>>>> [    2.425108] scsi 0:0:3:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.444834] scsi 0:0:4:0: Direct-Access     ATA      ST3750330NS      SN06 PQ: 0 ANSI: 6
->>>>>>> [    2.445086] scsi 0:0:4:0: SATA: handle(0x000d), sas_addr(0x4433221105000000), phy(5), device_name(0x5000c50009c0e5e6)
->>>>>>> [    2.445478] scsi 0:0:4:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(6)
->>>>>>> [    2.445803] scsi 0:0:4:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.464065] scsi 0:0:5:0: Direct-Access     ATA      ST3750330NS      SN16 PQ: 0 ANSI: 6
->>>>>>> [    2.464312] scsi 0:0:5:0: SATA: handle(0x000e), sas_addr(0x4433221106000000), phy(6), device_name(0x5000c5003cb9ac10)
->>>>>>> [    2.464699] scsi 0:0:5:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(5)
->>>>>>> [    2.465048] scsi 0:0:5:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.484016] scsi 0:0:6:0: Direct-Access     ATA      ST3750330NS      SN06 PQ: 0 ANSI: 6
->>>>>>> [    2.484266] scsi 0:0:6:0: SATA: handle(0x000f), sas_addr(0x4433221107000000), phy(7), device_name(0x5000c5000839b69e)
->>>>>>> [    2.484655] scsi 0:0:6:0: SATA: enclosure_logical_id(0x500605b003683dd0), slot(4)
->>>>>>> [    2.485001] scsi 0:0:6:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.500660] mpt2sas_cm1: mpt3sas_base_attach
->>>>>>> [    2.500861] mpt2sas_cm1: mpt3sas_base_map_resources
->>>>>>> [    2.501599] mpt2sas_cm1: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (3074748 kB)
->>>>>>> [    2.501847] mpt2sas_cm1: _base_get_ioc_facts
->>>>>>> [    2.502036] mpt2sas_cm1: _base_wait_for_iocstate
->>>>>>> [    2.559080]        offset:data
->>>>>>> [    2.559318]        [0x00]:03100200
->>>>>>> [    2.559552]        [0x04]:00002300
->>>>>>> [    2.559785]        [0x08]:00000000
->>>>>>> [    2.560020]        [0x0c]:00000000
->>>>>>> [    2.560277]        [0x10]:00000000
->>>>>>> [    2.560511]        [0x14]:00010480
->>>>>>> [    2.560745]        [0x18]:22130d68
->>>>>>> [    2.560978]        [0x1c]:0001285c
->>>>>>> [    2.561210]        [0x20]:14000400
->>>>>>> [    2.561443]        [0x24]:00000020
->>>>>>> [    2.561675]        [0x28]:0100000f
->>>>>>> [    2.561907]        [0x2c]:000c000b
->>>>>>> [    2.562139]        [0x30]:003c0003
->>>>>>> [    2.562371]        [0x34]:0020ffe0
->>>>>>> [    2.562602]        [0x38]:00800122
->>>>>>> [    2.562839]        [0x3c]:00000009
->>>>>>> [    2.563073] mpt2sas_cm1: hba queue depth(3432), max chains per io(128)
->>>>>>> [    2.563355] mpt2sas_cm1: request frame size(128), reply frame size(128)
->>>>>>> [    2.563745] mpt2sas_cm1: msix is supported, vector_count(1)
->>>>>>> [    2.564016] mpt2sas_cm1: MSI-X vectors supported: 1, no of cores: 4, max_msix_vectors: 8
->>>>>>> [    2.564918] mpt2sas1-msix0: PCI-MSI-X enabled: IRQ 59
->>>>>>> [    2.566189] mpt2sas_cm1: iomem(0x00000000fd1fc000), mapped(0xffffc900000d8000), size(16384)
->>>>>>> [    2.566498] mpt2sas_cm1: ioport(0x0000000000007000), size(256)
->>>>>>> [    2.567328] mpt2sas_cm1: _base_get_ioc_facts
->>>>>>> [    2.567583] mpt2sas_cm1: _base_wait_for_iocstate
->>>>>>> [    2.625125]        offset:data
->>>>>>> [    2.625364]        [0x00]:03100200
->>>>>>> [    2.625597]        [0x04]:00002300
->>>>>>> [    2.625830]        [0x08]:00000000
->>>>>>> [    2.626064]        [0x0c]:00000000
->>>>>>> [    2.626296]        [0x10]:00000000
->>>>>>> [    2.626529]        [0x14]:00010480
->>>>>>> [    2.626769]        [0x18]:22130d68
->>>>>>> [    2.627002]        [0x1c]:0001285c
->>>>>>> [    2.627235]        [0x20]:14000400
->>>>>>> [    2.627467]        [0x24]:00000020
->>>>>>> [    2.627702]        [0x28]:0100000f
->>>>>>> [    2.627936]        [0x2c]:000c000b
->>>>>>> [    2.628170]        [0x30]:003c0003
->>>>>>> [    2.628403]        [0x34]:0020ffe0
->>>>>>> [    2.628638]        [0x38]:00800122
->>>>>>> [    2.628872]        [0x3c]:00000009
->>>>>>> [    2.629107] mpt2sas_cm1: hba queue depth(3432), max chains per io(128)
->>>>>>> [    2.629388] mpt2sas_cm1: request frame size(128), reply frame size(128)
->>>>>>> [    2.629671] mpt2sas_cm1: _base_make_ioc_ready
->>>>>>> [    2.629928] mpt2sas_cm1: _base_get_port_facts
->>>>>>> [    2.660127]        offset:data
->>>>>>> [    2.660389]        [0x00]:05070000
->>>>>>> [    2.660623]        [0x04]:00000000
->>>>>>> [    2.660858]        [0x08]:00000000
->>>>>>> [    2.661093]        [0x0c]:00000000
->>>>>>> [    2.661326]        [0x10]:00000000
->>>>>>> [    2.661562]        [0x14]:00003000
->>>>>>> [    2.661796]        [0x18]:00000078
->>>>>>> [    2.664346] mpt2sas_cm1: _base_allocate_memory_pools
->>>>>>> [    2.664608] mpt2sas_cm1: scatter gather: sge_in_main_msg(3), sge_per_chain(15), sge_per_io(128), chains_per_io(9)
->>>>>>> [    2.665142] mpt2sas_cm1: reply post free pool (0xffff8800b8b10000): depth(6944),element_size(8), pool_size(54 kB)
->>>>>>> [    2.666671] mpt2sas_cm1: reply_post_free_dma = (0xb8b10000)
->>>>>>> [    2.666954] mpt2sas_cm1: scsi host: can_queue depth (3307)
->>>>>>> [    2.667311] mpt2sas_cm1: request pool(0xffff8800b8b80000): depth(3432), frame_size(128), pool_size(429 kB)
->>>>>>> [    2.667813] mpt2sas_cm1: request pool: dma(0xb8b80000)
->>>>>>> [    2.668080] mpt2sas_cm1: scsiio(0xffff8800b8b80000): depth(3307)
->>>>>>> [    2.674131] mpt2sas_cm1: chain pool depth(29763), frame_size(128), pool_size(3720 kB)
->>>>>>> [    2.674448] mpt2sas_cm1: hi_priority(0xffff8800b8be7600): depth(60), start smid(3308)
->>>>>>> [    2.674750] mpt2sas_cm1: internal(0xffff8800b8be9400): depth(65), start smid(3368)
->>>>>>> [    2.675105] mpt2sas_cm1: sense pool(0xffff8800b8100000): depth(3307), element_size(96), pool_size(310 kB)
->>>>>>> [    2.675605] mpt2sas_cm1: sense_dma(0xb8100000)
->>>>>>> [    2.675944] mpt2sas_cm1: reply pool(0xffff8800b8180000): depth(3496), frame_size(128), pool_size(437 kB)
->>>>>>> [    2.676443] mpt2sas_cm1: reply_dma(0xb8180000)
->>>>>>> [    2.676702] mpt2sas_cm1: reply_free pool(0xffff8800b80a0000): depth(3496), element_size(4), pool_size(13 kB)
->>>>>>> [    2.677124] mpt2sas_cm1: reply_free_dma (0xb80a0000)
->>>>>>> [    2.677322] mpt2sas_cm1: config page(0xffff8800b807f000): size(512)
->>>>>>> [    2.677532] mpt2sas_cm1: config_page_dma(0xb807f000)
->>>>>>> [    2.677728] mpt2sas_cm1: Allocated physical memory: size(4964 kB)
->>>>>>> [    2.677936] mpt2sas_cm1: Current Controller Queue Depth(3307),Max Controller Queue Depth(3432)
->>>>>>> [    2.678304] mpt2sas_cm1: Scatter Gather Elements per IO(128)
->>>>>>> [    2.678514] mpt2sas_cm1: _base_make_ioc_operational
->>>>>>> [    2.679081] mpt2sas_cm1: _base_send_ioc_init
->>>>>>> [    2.679275]        offset:data
->>>>>>> [    2.679448]        [0x00]:02000004
->>>>>>> [    2.679625]        [0x04]:00000000
->>>>>>> [    2.679805]        [0x08]:00000000
->>>>>>> [    2.681200]        [0x0c]:23000200
->>>>>>> [    2.681377]        [0x10]:00000000
->>>>>>> [    2.681554]        [0x14]:00000000
->>>>>>> [    2.681729]        [0x18]:00200000
->>>>>>> [    2.681906]        [0x1c]:0da81b20
->>>>>>> [    2.682082]        [0x20]:00000000
->>>>>>> [    2.682259]        [0x24]:00000000
->>>>>>> [    2.682435]        [0x28]:b8b80000
->>>>>>> [    2.682611]        [0x2c]:00000000
->>>>>>> [    2.682787]        [0x30]:b8b10000
->>>>>>> [    2.682963]        [0x34]:00000000
->>>>>>> [    2.683139]        [0x38]:b80a0000
->>>>>>> [    2.683314]        [0x3c]:00000000
->>>>>>> [    2.683489]        [0x40]:98597011
->>>>>>> [    2.683665]        [0x44]:00000153
->>>>>>> [    2.729849]        offset:data
->>>>>>> [    2.730089]        [0x00]:02050004
->>>>>>> [    2.730349]        [0x04]:00000000
->>>>>>> [    2.730586]        [0x08]:00000000
->>>>>>> [    2.730822]        [0x0c]:00000000
->>>>>>> [    2.731058]        [0x10]:00000000
->>>>>>> [    2.731295] mpt2sas_cm1: _base_event_notification
->>>>>>> [    2.731606] mpt2sas_cm1: _base_event_notification: complete
->>>>>>> [    2.732501] mpt2sas_cm1: LSISAS2008: FWVersion(20.00.04.00), ChipRevision(0x02), BiosVersion(07.39.00.00)
->>>>>>> [    2.733010] mpt2sas_cm1: Protocol=(
->>>>>>> [    2.733074] Initiator
->>>>>>> [    2.733339] ,Target
->>>>>>> [    2.733384] ),
->>>>>>> [    2.733642] Capabilities=(
->>>>>>> [    2.733696] TLR
->>>>>>> [    2.733952] ,EEDP
->>>>>>> [    2.733995] ,Snapshot Buffer
->>>>>>> [    2.734268] ,Diag Trace Buffer
->>>>>>> [    2.734326] ,Task Set Full
->>>>>>> [    2.734595] ,NCQ
->>>>>>> [    2.734637] )
->>>>>>> [    2.735155] scsi host1: Fusion MPT SAS Host
->>>>>>> [    2.749047] mpt2sas_cm1: sending port enable !!
->>>>>>> [    2.749563] mpt2sas_cm1: Discovery: (start)
->>>>>>>
->>>>>>> [    2.749989] mpt2sas_cm1: SAS Enclosure Device Status Change
->>>>>>> [    2.750001] mpt2sas_cm1: discovery event: (start)
->>>>>>>
->>>>>>> [    2.750578] mpt2sas_cm1: SAS Topology Change List
->>>>>>> [    2.750788] mpt2sas_cm1: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.751181] mpt2sas_cm1: Discovery: (start)
->>>>>>>
->>>>>>> [    2.751571] mpt2sas_cm1: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.752002] mpt2sas_cm1: Discovery: (start)
->>>>>>>
->>>>>>> [    2.752391] mpt2sas_cm1: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.752779] mpt2sas_cm1: Discovery: (start)
->>>>>>>
->>>>>>> [    2.754205] mpt2sas_cm1: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.754593] mpt2sas_cm1: Discovery: (start)
->>>>>>>
->>>>>>> [    2.754983] mpt2sas_cm1: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.755371] mpt2sas_cm1: Discovery: (start)
->>>>>>>
->>>>>>> [    2.755762] mpt2sas_cm1: Discovery: (stop)
->>>>>>>
->>>>>>> [    2.759602] mpt2sas_cm1: host_add: handle(0x0001), sas_addr(0x500605b0026f79b0), phys(8)
->>>>>>> [    2.759969] mpt2sas_cm1: enclosure status change: (enclosure add)
->>>>>>>                       handle(0x0001), enclosure logical id(0x500605b0026f79b0) number slots(0)
->>>>>>> [    2.760407] mpt2sas_cm1: sas topology change: (responding)
->>>>>>> [    2.760612]        handle(0x0000), enclosure_handle(0x0001) start_phy(00), count(8)
->>>>>>> [    2.760834]        phy(02), attached_handle(0x000e): target add: link rate: new(0x0a), old(0x00)
->>>>>>> [    2.761066]        phy(03), attached_handle(0x000b): target add: link rate: new(0x0a), old(0x00)
->>>>>>> [    2.761304]        phy(04), attached_handle(0x000d): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.761538]        phy(05), attached_handle(0x0009): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.761771]        phy(06), attached_handle(0x000a): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.762002]        phy(07), attached_handle(0x000c): target add: link rate: new(0x09), old(0x00)
->>>>>>> [    2.762235] mpt2sas_cm1: updating handles for sas_host(0x500605b0026f79b0)
->>>>>>> [    2.763653] mpt2sas_cm1: _scsih_sas_device_init_add: handle(0x000e), sas_addr(0x4433221102000000)
->>>>>>> [    2.764036] mpt2sas_cm1: _scsih_sas_device_init_add: enclosure logical id(0x500605b0026f79b0), slot( 1)
->>>>>>> [    2.764772] mpt2sas_cm1: _scsih_sas_device_init_add: handle(0x000b), sas_addr(0x4433221103000000)
->>>>>>> [    2.765147] mpt2sas_cm1: _scsih_sas_device_init_add: enclosure logical id(0x500605b0026f79b0), slot( 0)
->>>>>>> [    2.765891] mpt2sas_cm1: _scsih_sas_device_init_add: handle(0x000d), sas_addr(0x4433221104000000)
->>>>>>> [    2.767250] mpt2sas_cm1: _scsih_sas_device_init_add: enclosure logical id(0x500605b0026f79b0), slot( 7)
->>>>>>> [    2.768009] mpt2sas_cm1: _scsih_sas_device_init_add: handle(0x0009), sas_addr(0x4433221105000000)
->>>>>>> [    2.768394] mpt2sas_cm1: _scsih_sas_device_init_add: enclosure logical id(0x500605b0026f79b0), slot( 6)
->>>>>>> [    2.769136] mpt2sas_cm1: _scsih_sas_device_init_add: handle(0x000a), sas_addr(0x4433221106000000)
->>>>>>> [    2.769510] mpt2sas_cm1: _scsih_sas_device_init_add: enclosure logical id(0x500605b0026f79b0), slot( 5)
->>>>>>> [    2.769888] mpt2sas_cm1: _scsih_determine_boot_device: current_boot_device(0x4433221106000000)
->>>>>>> [    2.770641] mpt2sas_cm1: _scsih_sas_device_init_add: handle(0x000c), sas_addr(0x4433221107000000)
->>>>>>> [    2.771025] mpt2sas_cm1: _scsih_sas_device_init_add: enclosure logical id(0x500605b0026f79b0), slot( 4)
->>>>>>> [    2.771405] mpt2sas_cm1: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.771788] mpt2sas_cm1: discovery event: (start)
->>>>>>>
->>>>>>> [    2.772172] mpt2sas_cm1: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.772554] mpt2sas_cm1: discovery event: (start)
->>>>>>>
->>>>>>> [    2.772942] mpt2sas_cm1: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.773326] mpt2sas_cm1: discovery event: (start)
->>>>>>>
->>>>>>> [    2.773709] mpt2sas_cm1: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.774090] mpt2sas_cm1: discovery event: (start)
->>>>>>>
->>>>>>> [    2.774474] mpt2sas_cm1: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.774855] mpt2sas_cm1: discovery event: (start)
->>>>>>>
->>>>>>> [    2.775237] mpt2sas_cm1: discovery event: (stop)
->>>>>>>
->>>>>>> [    2.775619] mpt2sas_cm1: port enable: complete from worker thread
->>>>>>> [    2.780192] mpt2sas_cm1: port enable: SUCCESS
->>>>>>> [    2.782404] scsi 1:0:0:0: Direct-Access     ATA      Hitachi HDP72505 A5BA PQ: 0 ANSI: 6
->>>>>>> [    2.782651] scsi 1:0:0:0: SATA: handle(0x000a), sas_addr(0x4433221106000000), phy(6), device_name(0x5000cca34dc05584)
->>>>>>> [    2.783039] scsi 1:0:0:0: SATA: enclosure_logical_id(0x500605b0026f79b0), slot(5)
->>>>>>> [    2.783390] scsi 1:0:0:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.803032] scsi 1:0:1:0: Direct-Access     ATA      ST8000AS0002-1NA AR15 PQ: 0 ANSI: 6
->>>>>>> [    2.803272] scsi 1:0:1:0: SATA: handle(0x000e), sas_addr(0x4433221102000000), phy(2), device_name(0x5000c500908f1d05)
->>>>>>> [    2.803660] scsi 1:0:1:0: SATA: enclosure_logical_id(0x500605b0026f79b0), slot(1)
->>>>>>> [    2.803981] scsi 1:0:1:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.821712] scsi 1:0:2:0: Direct-Access     ATA      ST3000DM001-1CH1 CC43 PQ: 0 ANSI: 6
->>>>>>> [    2.821963] scsi 1:0:2:0: SATA: handle(0x000b), sas_addr(0x4433221103000000), phy(3), device_name(0x5000c5004dfd2a8a)
->>>>>>> [    2.822352] scsi 1:0:2:0: SATA: enclosure_logical_id(0x500605b0026f79b0), slot(0)
->>>>>>> [    2.822694] scsi 1:0:2:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.844233] scsi 1:0:3:0: Direct-Access     ATA      ST3500320NS      SN16 PQ: 0 ANSI: 6
->>>>>>> [    2.844483] scsi 1:0:3:0: SATA: handle(0x000d), sas_addr(0x4433221104000000), phy(4), device_name(0x5000c50009dca65b)
->>>>>>> [    2.844870] scsi 1:0:3:0: SATA: enclosure_logical_id(0x500605b0026f79b0), slot(7)
->>>>>>> [    2.845216] scsi 1:0:3:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.868963] scsi 1:0:4:0: Direct-Access     ATA      SAMSUNG HD401LJ  0-15 PQ: 0 ANSI: 6
->>>>>>> [    2.870994] scsi 1:0:4:0: SATA: handle(0x0009), sas_addr(0x4433221105000000), phy(5), device_name(0x695d550daf678093)
->>>>>>> [    2.871382] scsi 1:0:4:0: SATA: enclosure_logical_id(0x500605b0026f79b0), slot(6)
->>>>>>> [    2.871728] scsi 1:0:4:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>> [    2.894004] scsi 1:0:5:0: Direct-Access     ATA      ST3750330NS      SN06 PQ: 0 ANSI: 6
->>>>>>> [    2.894257] scsi 1:0:5:0: SATA: handle(0x000c), sas_addr(0x4433221107000000), phy(7), device_name(0x5000c5000266bb02)
->>>>>>> [    2.894646] scsi 1:0:5:0: SATA: enclosure_logical_id(0x500605b0026f79b0), slot(4)
->>>>>>> [    2.894972] scsi 1:0:5:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>
->>>>>> I don't see a clear pattern yet, but I suspect warm rebooting >=4.2
->>>>>> after having run 4.1.x leads to sucessful driver inits. But I also
->>>>>> remember having had cold boots, with kernels >=4.2 that worked fine
->>>>>> (obviously not all of the time). <=4.1.20 kernels on the other hand boot
->>>>>> fine every single time.
->>>>>>
->>>>>> Interestingly the igb driver (ethernet) seems to be acting up at least
->>>>>> with 4.5.0 on exactly the same boots when mpt2sas init fails. I don't
->>>>>> know whether this could be connected or not (I just became aware of this
->>>>>> coincidence).
->>>>>>
->>>>>>
->>>>>> ---
->>>>>> Matthias
->>>>>>
->>>>>>
->>>>>> Am 21.03.2016 um 05:53 schrieb Sreekanth Reddy:
->>>>>>> Hi Matthias,
->>>>>>>
->>>>>>> Can you please share us the driver logs with driver logging_level set
->>>>>>> to 0x3f8. So that we can get more info from this log.
->>>>>>>
->>>>>>> Thanks,
->>>>>>> Sreekanth
->>>>>>>
->>>>>>> On Mon, Mar 21, 2016 at 1:44 AM, Matthias Prager
->>>>>>> <linux@matthiasprager.de> wrote:
->>>>>>>> Hello,
->>>>>>>>
->>>>>>>> I don't know what's the correct procedure, whether I should file a bug or first report this issue on the kernel mailing-list. So please feel free to tell me to open a ticket in the bugtracker (bugzilla.kernel.org?).
->>>>>>>>
->>>>>>>> But first let me present the issue I encounter:
->>>>>>>>
->>>>>>>> Kernels >= 4.2 (4.2.1 was the first on I tried, but also 4.3, 4.4 and 4.5) fail to load the mpt2sas driver on most (but not all) boots. Kernels <= 4.1.x work fine every single time (4.1.19 was the latest I tried, also 3.18.29).
->>>>>>>>
->>>>>>>> Here is the dmesg output for a failed driver init with Kernel 4.5.0:
->>>>>>>>> [    2.068313] mpt3sas version 09.102.00.00 loaded
->>>>>>>>> [    2.069412] mpt2sas_cm0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (3074748 kB)
->>>>>>>>> [    2.125260] mpt2sas_cm0: MSI-X vectors supported: 1, no of cores: 4, max_msix_vectors: -1
->>>>>>>>> [    2.125996] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 58
->>>>>>>>> [    2.126199] mpt2sas_cm0: iomem(0x00000000fd4fc000), mapped(0xffffc900000d0000), size(16384)
->>>>>>>>> [    2.126430] mpt2sas_cm0: ioport(0x0000000000004000), size(256)
->>>>>>>>> [    2.216371] mpt2sas_cm0: Allocated physical memory: size(4964 kB)
->>>>>>>>> [    2.216600] mpt2sas_cm0: Current Controller Queue Depth(3307),Max Controller Queue Depth(3432)
->>>>>>>>> [    2.217004] mpt2sas_cm0: Scatter Gather Elements per IO(128)
->>>>>>>>> [    5.086959] floppy0: no floppy controllers found
->>>>>>>>> [   32.256720] mpt2sas_cm0: _base_event_notification: timeout
->>>>>>>>> [   32.256940] mf:
->>>>>>>>>
->>>>>>>>> [   32.257106] 07000000
->>>>>>>>> [   32.257302] 00000000
->>>>>>>>> [   32.257337] 00000000
->>>>>>>>> [   32.257533] 00000000
->>>>>>>>> [   32.257568] 00000000
->>>>>>>>> [   32.257764] 0f2f7fff
->>>>>>>>> [   32.257800] ffffff7c
->>>>>>>>> [   32.257995] ffffffff
->>>>>>>>> [   32.258031]
->>>>>>>>>
->>>>>>>>> [   32.258352] ffffffff
->>>>>>>>> [   32.258387] 00000000
->>>>>>>>> [   32.258582] 00000000
->>>>>>>>>
->>>>>>>>> [   32.258950] mpt2sas_cm0: sending message unit reset !!
->>>>>>>>> [   32.260688] mpt2sas_cm0: message unit reset: SUCCESS
->>>>>>>>> [   32.325956] mpt2sas_cm0: failure at drivers/scsi/mpt3sas/mpt3sas_scsih.c:8592/_scsih_probe()!
->>>>>>>>
->>>>>>>> For comparison here is a dmesg output for a successful boot on Kernel 4.1.15:
->>>>>>>>> [    2.035568] mpt2sas version 20.100.00.00 loaded
->>>>>>>>> [    2.037243] mpt2sas0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (2046352 kB)
->>>>>>>>> [    2.755374] mpt2sas0: MSI-X vectors supported: 1, no of cores: 3, max_msix_vectors: 8
->>>>>>>>> [    2.756377] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 58
->>>>>>>>> [    2.756708] mpt2sas0: iomem(0x00000000fd5fc000), mapped(0xffffc900000d0000), size(16384)
->>>>>>>>> [    2.757083] mpt2sas0: ioport(0x0000000000004000), size(256)
->>>>>>>>> [    3.842944] mpt2sas0: Allocated physical memory: size(4964 kB)
->>>>>>>>> [    3.843303] mpt2sas0: Current Controller Queue Depth(3307), Max Controller Queue Depth(3432)
->>>>>>>>> [    3.843717] mpt2sas0: Scatter Gather Elements per IO(128)
->>>>>>>>> [    4.415980] mpt2sas0: LSISAS2008: FWVersion(20.00.04.00), ChipRevision(0x03), BiosVersion(07.39.00.00)
->>>>>>>>> [    4.416618] mpt2sas0: Protocol=(Initiator,Target), Capabilities=(TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set Full,NCQ)
->>>>>>>>> [    4.417846] scsi host0: Fusion MPT SAS Host
->>>>>>>>> [    4.436865] mpt2sas0: sending port enable !!
->>>>>>>>> [    4.440460] mpt2sas0: host_add: handle(0x0001), sas_addr(0xxxxxxxxxxxxxxxxx), phys(8)
->>>>>>>>>
->>>>>>>>> ...
->>>>>>>>> [    4.444045] scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDS5C302 A800 PQ: 0 ANSI: 6
->>>>>>>>> [    4.444338] scsi 0:0:0:0: SATA: handle(0x0009), sas_addr(0xxxxxxxxxxxxxxxxx), phy(1), device_name(0xxxxxxxxxxxxxxxxx)
->>>>>>>>> [    4.444823] scsi 0:0:0:0: SATA: enclosure_logical_id(0xxxxxxxxxxxxxxxxx), slot(2)
->>>>>>>>> [    4.445197] scsi 0:0:0:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
->>>>>>>>> ... (n times for n drives)
->>>>>>>>>
->>>>>>>>> [    4.515443] mpt2sas0: port enable: SUCCESS
->>>>>>>>
->>>>>>>>
->>>>>>>> The Controller(s) are all Avego/LSI 9211-8i running the latest version of IT firmware (v20.00.04.00). These are passed through to a gentoo-linux VM on an ESXi 5.1 host (latest patchlevel). I have two of these systems (one production one testing) with nearly identical hardware (Supermicro X8DTi-F boards with 2x Intel Westmere CPUs). I also have an older set of systems running the same software config (Intel S3200SHLC boards with single Core2Quad) which exhibit the same buggy behavior.
->>>>>>>>
->>>>>>>> The 'uname -a' line on the current testing system looks like this:
->>>>>>>>> Linux pserver2 4.1.19-gentoo #4 SMP Thu Mar 17 16:02:48 CET 2016 x86_64 Intel(R) Xeon(R) CPU E5506 @ 2.13GHz GenuineIntel GNU/Linux
->>>>>>>> p
->>>>>>>>
->>>>>>>> There seem to be other people with similar issues:
->>>>>>>> <https://bbs.archlinux.org/viewtopic.php?id=209495>
->>>>>>>>
->>>>>>>> Any thoughts?
->>>>>>>>
->>>>>>>> ---
->>>>>>>> Matthias
->>>>>>
->>>
+>> I have a patch for dracut, which will generate udev rules for all
+>> devices required for mounting the root fs.
+>> Once the system is booted properly I've got another patch for system=
+d
+>> which switches back to 'normal' scanning (ie by writing 'sync' into
+>> /sys/modules/scsi_mod/parameters/scan) and rescan all scsi hosts.
+>>
+>> With that there's no need to have any arbitrary limits; only the
+>> necessary devices are enabled during boot.
+>=20
+> Hello Hannes,
+>=20
+> That sounds like a really interesting approach. Will this approach
+> also work if the SCSI host and/or LUN numbers change during a reboot?
+>=20
+It's independent on the SCSI host as it just looks for the rport ID
+(FC WWPN, SAS ID, or iSCSI target name). The LUN number, however, is
+fixed; the whole point of this exercise is that you want to blank
+out individual LUNs behind a given target.
+Hence you need to able to address the LUNs in the first place.
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
