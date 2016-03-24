@@ -1,75 +1,35 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
-Date: Thu, 24 Mar 2016 10:56:13 +0100
-Message-ID: <1458813373-7477-1-git-send-email-jthumshirn@suse.de>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: UFS V11 patch-set
+Date: Thu, 24 Mar 2016 10:16:18 +0000
+Message-ID: <56F3BE72.6000109@synopsys.com>
+References: <56EBF966.8040907@synopsys.com> <56EBF9FD.9080906@synopsys.com>
+ <4014649.ENvamPh3sb@wuerfel> <56EC1675.2050002@synopsys.com>
+ <yq1egb028u8.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1egb028u8.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, vinayak holikatti <vinholikatti@gmail.com>, JBottomley@parallels.com, rafael.j.wysocki@intel.com, hch@lst.de, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The target state machine only knows 'STARGET_DEL', which is set once
-scsi_target_destroy() is called.
-However, by that time the structure is still part of the __stargets
-list of the SCSI host, so any concurrent invocation will see this as
-a valid target, causing an access to freed memory.
+On 3/23/2016 9:16 PM, Martin K. Petersen wrote:
+>>>>>> "Joao" == Joao Pinto <Joao.Pinto@synopsys.com> writes:
+> 
+> Joao,
+> 
+> Joao> Isn't it possible to be merged into a ufs-dwc branch in the SCSI
+> Joao> Git tree that could be pulled later, like Bjorn did in the PCIe
+> Joao> RC?
+> 
+> I just started 4.7/scsi-queue so now is a good time to resubmit.
+> 
+> Thanks!
+> 
 
-This patch adds an intermediate state 'STARGET_REMOVE', which is set
-as soon as the target is scheduled to be removed.
-With this any concurrent invocation will be able to skip these
-targets and avoid the above scenario.
+Hi Martin!
+Thanks, I will do that in a minute.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Fixes: 90a88d6ef 'scsi: fix soft lockup in scsi_remove_target() on module removal'
-Cc: stable@vger.kernel.org
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_scan.c   | 1 +
- drivers/scsi/scsi_sysfs.c  | 2 ++
- include/scsi/scsi_device.h | 1 +
- 3 files changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 6a82066..37459dfa 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -315,6 +315,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
- 	unsigned long flags;
- 
-+	BUG_ON(starget->state != STARGET_REMOVE);
- 	starget->state = STARGET_DEL;
- 	transport_destroy_device(dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 00bc721..0df82e8 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1279,11 +1279,13 @@ restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(starget, &shost->__targets, siblings) {
- 		if (starget->state == STARGET_DEL ||
-+		    starget->state == STARGET_REMOVE ||
- 		    starget == last_target)
- 			continue;
- 		if (starget->dev.parent == dev || &starget->dev == dev) {
- 			kref_get(&starget->reap_ref);
- 			last_target = starget;
-+			starget->state = STARGET_REMOVE;
- 			spin_unlock_irqrestore(shost->host_lock, flags);
- 			__scsi_remove_target(starget);
- 			scsi_target_reap(starget);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f63a167..2bffaa6 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -240,6 +240,7 @@ scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
- enum scsi_target_state {
- 	STARGET_CREATED = 1,
- 	STARGET_RUNNING,
-+	STARGET_REMOVE,
- 	STARGET_DEL,
- };
- 
--- 
-1.8.5.6
+Joao
