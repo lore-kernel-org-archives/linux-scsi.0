@@ -1,86 +1,279 @@
-From: Laison@seymour.toledo.br, Computech@seymour.toledo.br,
-	"Inc <support"@ensuretech.com
-Subject: CISCO IP PHONES AND CPU's
-Date: Thu, 24 Mar 2016 02:12:05 +0700
-Message-ID: <20160323203604.5CDB3A7B4E__22443.3043077171$1458768365$gmane$org@seymour.toledo.br>
-Reply-To: sales@laisoncomputertech.us
+From: David Bond <dbond@suse.com>
+Subject: [PATCH] ibft: Expose iBFT acpi header via sysfs
+Date: Wed, 23 Mar 2016 21:49:26 -0400
+Message-ID: <1458784166.31722.21.camel@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from seymour.toledo.br ([200.148.142.55]:47429 "EHLO
-	seymour.toledo.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757309AbcCWVYx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 17:24:53 -0400
-Content-Description: Mail message body
+Received: from smtp.nue.novell.com ([195.135.221.5]:57500 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614AbcCXBtm (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Wed, 23 Mar 2016 21:49:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <support@ensuretech.com>
+To: pjones@redhat.com, konrad@kernel.org, michaelc@cs.wisc.edu, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dbond@suse.com, lduncan@suse.com, hare@suse.de
+Cc: linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-Hi,
 
-Our Stock list.
+Some ethernet adapter vendors are supplying products which support optional
+(payed license) features. On some adapters this includes a hardware iscsi
+initiator.  The same adapters in a normal (no extra licenses) mode of
+operation can be used as a software iscsi initiator.  In addition, software
+iscsi boot initiators are becoming a standard part of many vendors uefi
+implementations.  This is creating difficulties during early boot/install
+determining the proper configuration method for these adapters when they
+are used as a boot device.
 
-Brand NEW
-96 x Cisco 7900 IP Phone
-87 x Unified IP Phone 6900
-12 x Unified IP Phone 8900
-76 x Unified IP Phone 9900
-55 x Unified IP Phone 8800
-67 x Cisco 1921
-67 x Cisco 1941
-56 x Cisco CP-7961G 7961G
-34 x Cisco CP-7971G-GE 7971G
-19 x Cisco Unified IP Conference Station 7937G Model: 7937 CP-7937G
-20 x Cisco CP-7975G 7975G
+The attached patch creates sysfs entries to expose information from the
+acpi header of the ibft table.  This information allows for a method to
+easily determining if an ibft table was created by a ethernet card's
+firmware or the system uefi/bios.  In the case of a hardware initiator this
+information in combination with the pci vendor and device id can be used
+to ascertain any vendor specific behaviors that need to be accommodated.
 
-Brand New Sealed :
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: David Bond <dbond@suse.com>
+---
+ Documentation/ABI/testing/sysfs-ibft | 10 ++++++
+ drivers/firmware/iscsi_ibft.c        | 64 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/iscsi_boot_sysfs.c      | 62 ++++++++++++++++++++++++++++++++++
+ include/linux/iscsi_boot_sysfs.h     | 13 ++++++++
+ 4 files changed, 148 insertions(+), 1 deletion(-)
 
-23 x  CISCO1921-SEC/K9
-Conditions: Brand New Sealed
-Description: CISCO 1921 Security Bundle w/SEC license PAK
+diff --git a/Documentation/ABI/testing/sysfs-ibft b/Documentation/ABI/testing/sysfs-ibft
+index cac3930..7d6725f 100644
+--- a/Documentation/ABI/testing/sysfs-ibft
++++ b/Documentation/ABI/testing/sysfs-ibft
+@@ -21,3 +21,13 @@ Contact:	Konrad Rzeszutek <ketuzsezr@darnok.org>
+ Description:	The /sys/firmware/ibft/ethernetX directory will contain
+ 		files that expose the iSCSI Boot Firmware Table NIC data.
+ 		Usually this contains the IP address, MAC, and gateway of the NIC.
++
++What:		/sys/firmware/ibft/acpi_header
++Date:		March 2016
++Contact:	David Bond <dbond@suse.com>
++Description:	The /sys/firmware/ibft/acpi_header directory will contain files
++		that expose the SIGNATURE, OEM_ID, and OEM_TABLE_ID fields of the
++		acpi table header of the iBFT structure.  This will allow for
++		identification of the creator of the table which is useful in
++		determining quirks associated with some adapters when used in
++		hardware vs software iscsi initiator mode.
+diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index 81037e5..2b1900b 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -418,6 +418,31 @@ static ssize_t ibft_attr_show_target(void *data, int type, char *buf)
+ 	return str - buf;
+ }
+ 
++static ssize_t ibft_attr_show_acpitbl(void *data, int type, char *buf)
++{
++	struct ibft_kobject *entry = data;
++	char *str = buf;
++
++	switch (type) {
++	case ISCSI_BOOT_ACPITBL_SIGNATURE:
++		str += sprintf_string(str, ACPI_NAME_SIZE,
++				      entry->header->header.signature);
++		break;
++	case ISCSI_BOOT_ACPITBL_OEM_ID:
++		str += sprintf_string(str, ACPI_OEM_ID_SIZE,
++				      entry->header->header.oem_id);
++		break;
++	case ISCSI_BOOT_ACPITBL_OEM_TABLE_ID:
++		str += sprintf_string(str, ACPI_OEM_TABLE_ID_SIZE,
++				      entry->header->header.oem_table_id);
++		break;
++	default:
++		break;
++	}
++
++	return str - buf;
++}
++
+ static int __init ibft_check_device(void)
+ {
+ 	int len;
+@@ -576,6 +601,24 @@ static umode_t __init ibft_check_initiator_for(void *data, int type)
+ 	return rc;
+ }
+ 
++static umode_t __init ibft_check_acpitbl_for(void *data, int type)
++{
++
++	umode_t rc = 0;
++
++	switch (type) {
++	case ISCSI_BOOT_ACPITBL_SIGNATURE:
++	case ISCSI_BOOT_ACPITBL_OEM_ID:
++	case ISCSI_BOOT_ACPITBL_OEM_TABLE_ID:
++		rc = S_IRUGO;
++		break;
++	default:
++		break;
++	}
++
++	return rc;
++}
++
+ static void ibft_kobj_release(void *data)
+ {
+ 	kfree(data);
+@@ -699,6 +742,8 @@ free_ibft_obj:
+ static int __init ibft_register_kobjects(struct acpi_table_ibft *header)
+ {
+ 	struct ibft_control *control = NULL;
++	struct iscsi_boot_kobj *boot_kobj;
++	struct ibft_kobject *ibft_kobj;
+ 	void *ptr, *end;
+ 	int rc = 0;
+ 	u16 offset;
+@@ -727,6 +772,23 @@ static int __init ibft_register_kobjects(struct acpi_table_ibft *header)
+ 		}
+ 	}
+ 
++	ibft_kobj = kzalloc(sizeof(*ibft_kobj), GFP_KERNEL);
++	if (!ibft_kobj)
++		return -ENOMEM;
++
++	ibft_kobj->header = header;
++	ibft_kobj->hdr = NULL; /*for ibft_unregister*/
++
++	boot_kobj = iscsi_boot_create_acpitbl(boot_kset, 0,
++					ibft_kobj,
++					ibft_attr_show_acpitbl,
++					ibft_check_acpitbl_for,
++					ibft_kobj_release);
++	if (!boot_kobj)  {
++		kfree(ibft_kobj);
++		rc = -ENOMEM;
++	}
++
+ 	return rc;
+ }
+ 
+@@ -738,7 +800,7 @@ static void ibft_unregister(void)
+ 	list_for_each_entry_safe(boot_kobj, tmp_kobj,
+ 				 &boot_kset->kobj_list, list) {
+ 		ibft_kobj = boot_kobj->data;
+-		if (ibft_kobj->hdr->id == id_nic)
++		if (ibft_kobj->hdr && ibft_kobj->hdr->id == id_nic)
+ 			sysfs_remove_link(&boot_kobj->kobj, "device");
+ 	};
+ }
+diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
+index 8f0ea97..b472f56 100644
+--- a/drivers/scsi/iscsi_boot_sysfs.c
++++ b/drivers/scsi/iscsi_boot_sysfs.c
+@@ -306,6 +306,42 @@ static struct attribute_group iscsi_boot_initiator_attr_group = {
+ 	.is_visible = iscsi_boot_ini_attr_is_visible,
+ };
+ 
++/* iBFT ACPI Table attributes */
++iscsi_boot_rd_attr(acpitbl_signature, signature, ISCSI_BOOT_ACPITBL_SIGNATURE);
++iscsi_boot_rd_attr(acpitbl_oem_id, oem_id, ISCSI_BOOT_ACPITBL_OEM_ID);
++iscsi_boot_rd_attr(acpitbl_oem_table_id, oem_table_id,
++		   ISCSI_BOOT_ACPITBL_OEM_TABLE_ID);
++
++static struct attribute *acpitbl_attrs[] = {
++	&iscsi_boot_attr_acpitbl_signature.attr,
++	&iscsi_boot_attr_acpitbl_oem_id.attr,
++	&iscsi_boot_attr_acpitbl_oem_table_id.attr,
++	NULL
++};
++
++static umode_t iscsi_boot_acpitbl_attr_is_visible(struct kobject *kobj,
++					     struct attribute *attr, int i)
++{
++	struct iscsi_boot_kobj *boot_kobj =
++			container_of(kobj, struct iscsi_boot_kobj, kobj);
++
++	if (attr ==  &iscsi_boot_attr_acpitbl_signature.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_ACPITBL_SIGNATURE);
++	if (attr ==  &iscsi_boot_attr_acpitbl_oem_id.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_ACPITBL_OEM_ID);
++	if (attr ==  &iscsi_boot_attr_acpitbl_oem_table_id.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_ACPITBL_OEM_TABLE_ID);
++	return 0;
++}
++
++static struct attribute_group iscsi_boot_acpitbl_attr_group = {
++	.attrs = acpitbl_attrs,
++	.is_visible = iscsi_boot_acpitbl_attr_is_visible,
++};
++
+ static struct iscsi_boot_kobj *
+ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
+ 		       struct attribute_group *attr_group,
+@@ -436,6 +472,32 @@ iscsi_boot_create_ethernet(struct iscsi_boot_kset *boot_kset, int index,
+ EXPORT_SYMBOL_GPL(iscsi_boot_create_ethernet);
+ 
+ /**
++ * iscsi_boot_create_acpitbl() - create boot acpi table sysfs dir
++ * @boot_kset: boot kset
++ * @index: not used
++ * @data: driver specific data
++ * @show: attr show function
++ * @is_visible: attr visibility function
++ * @release: release function
++ *
++ * Note: The boot sysfs lib will free the data passed in for the caller
++ * when all refs to the acpitbl kobject have been released.
++ */
++struct iscsi_boot_kobj *
++iscsi_boot_create_acpitbl(struct iscsi_boot_kset *boot_kset, int index,
++			   void *data,
++			   ssize_t (*show)(void *data, int type, char *buf),
++			   umode_t (*is_visible)(void *data, int type),
++			   void (*release)(void *data))
++{
++	return iscsi_boot_create_kobj(boot_kset,
++				      &iscsi_boot_acpitbl_attr_group,
++				      "acpi_header", index, data, show,
++				      is_visible, release);
++}
++EXPORT_SYMBOL_GPL(iscsi_boot_create_acpitbl);
++
++/**
+  * iscsi_boot_create_kset() - creates root sysfs tree
+  * @set_name: name of root dir
+  */
+diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
+index 548d553..10923d7 100644
+--- a/include/linux/iscsi_boot_sysfs.h
++++ b/include/linux/iscsi_boot_sysfs.h
+@@ -64,6 +64,12 @@ enum iscsi_boot_initiator_properties_enum {
+ 	ISCSI_BOOT_INI_END_MARKER,
+ };
+ 
++enum iscsi_boot_acpitbl_properties_enum {
++	ISCSI_BOOT_ACPITBL_SIGNATURE,
++	ISCSI_BOOT_ACPITBL_OEM_ID,
++	ISCSI_BOOT_ACPITBL_OEM_TABLE_ID,
++};
++
+ struct attribute_group;
+ 
+ struct iscsi_boot_kobj {
+@@ -127,6 +133,13 @@ iscsi_boot_create_target(struct iscsi_boot_kset *boot_kset, int index,
+ 			 umode_t (*is_visible) (void *data, int type),
+ 			 void (*release) (void *data));
+ 
++struct iscsi_boot_kobj *
++iscsi_boot_create_acpitbl(struct iscsi_boot_kset *boot_kset, int index,
++			  void *data,
++			  ssize_t (*show)(void *data, int type, char *buf),
++			  umode_t (*is_visible)(void *data, int type),
++			  void (*release)(void *data));
++
+ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name);
+ struct iscsi_boot_kset *iscsi_boot_create_host_kset(unsigned int hostno);
+ void iscsi_boot_destroy_kset(struct iscsi_boot_kset *boot_kset);
+-- 
+2.6.2
 
-45 x CISCO1921/K9
-Conditions: Brand New Sealed
-Description: CISCO 1921 Modular Router, 2 GE, 2 EHWIC slots, 512DRAM, IP Base
-
-(1)  WS-C4500X-16SFP+
-Serial number:  JAE183501L3
-US&#36;2600
-
-(1)  WS-C3850-48PW-S
-Serial number:  FCW1823C0EW
-US&#36;2650
-
-(1)  WS-X6908-10G-2T
-Serial number:  SAL1620CKUB
-US&#36;3650
-
-(1)  ASR1000-ESP10
-Serial number:  JAE181306C3
-US&#36;3800
-
-(1)  AIR-CT5508-250-K9   (this is new but box is open!)
-Serial number:  FCW1521L038
-US&#36;4000
-
-CPUs part number below
-
-89 x  X5650
-
-975 x  X5660
-
-150 x  X5680
-
-265 x  X5690
-
-Kindly make your price offers.
-
-Sincerely
-Barbara Johnson
-Laison Computech
-210 N Scoring Ave,
-Rialto California, 92376
-Tel: +1-657-232-7047
-Fax: +1-347-214-0478
-Email: sales@laisoncomputertech.us
