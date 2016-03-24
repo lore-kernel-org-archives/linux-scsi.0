@@ -1,70 +1,75 @@
-From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: Re: sd: Resize-fsync() race fails IO
-Date: Thu, 24 Mar 2016 10:46:08 +0100
-Message-ID: <56F3B760.2060309@profitbricks.com>
-References: <56EBEFAA.9040501@profitbricks.com>
- <56F011BE.9030403@profitbricks.com> <56F20A8C.4010202@vlnb.net>
- <56F25C8F.9040801@profitbricks.com> <56F368EA.1010607@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:35398 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754686AbcCXJqK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2016 05:46:10 -0400
-Received: by mail-wm0-f42.google.com with SMTP id l68so229259650wml.0
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Mar 2016 02:46:09 -0700 (PDT)
-In-Reply-To: <56F368EA.1010607@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
+Date: Thu, 24 Mar 2016 10:56:13 +0100
+Message-ID: <1458813373-7477-1-git-send-email-jthumshirn@suse.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Scst-devel <Scst-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 24.03.2016 05:11, Vladislav Bolkhovitin wrote:
-[snip]
->>>> +CC: linux-scsi, hch
->>>>
->>>> Hi SCSI developers,
->>>>
->>>> I've debugged this further with a v4.5 kernel and full SCSI command
->>>> logging enabled on the initiator side. It seems to be a SCSI issue. SCSI
->>>> commands succeed but result 8000002 is reported to the upper driver
->>>> which seems to fail IO.
->>>>
->>>> What does result 8000002 mean?
->>>
->>> It is driver_byte() DID_RESET and status_byte() CHECK_CONDITION (see the corresponding
->>> kernel's functions). It sounds like you have timeouts and resets somewhere.
->>
->> Thanks for the hint! But it is definitely not DID_RESET. It is
->> DRIVER_SENSE and CHECK_CONDITION then. The host byte is DID_OK.
->>
->> If Unit Attention and "Capacity data has changed" is part of a read or a
->> write, then the result is the same but this is handled correctly and IO
->> is not failed. But with a zero bytes fsync()/flush resulting in
->> SYNCHRONIZE_CACHE_16, it fails IO as the sd driver doesn't handle this
->> correctly it seems.
-> 
-> I'm not sure, what is not handled correctly? Zero length SYNCHRONIZE_CACHE is perfectly
-> legal, and vdisk_fsync() should never see data_len 0.
+The target state machine only knows 'STARGET_DEL', which is set once
+scsi_target_destroy() is called.
+However, by that time the structure is still part of the __stargets
+list of the SCSI host, so any concurrent invocation will see this as
+a valid target, causing an access to freed memory.
 
-The issue is located in the SCSI stack. I think the problem is located
-in the sd driver. It can't handle zero length SYNCHRONIZE_CACHE together
-with UA and "Capacity data changed". The race exists to which SCSI
-command UA is put to.
+This patch adds an intermediate state 'STARGET_REMOVE', which is set
+as soon as the target is scheduled to be removed.
+With this any concurrent invocation will be able to skip these
+targets and avoid the above scenario.
 
-> There should be no race around virt_dev->file_size, because assignments to 64-bit
-> integers are atomic, the compiler supposed to align it to 64-bit boundaries and it's
-> never assigned to any invalid value. At worst, accesses to it should be covered by
-> ACCESS_ONCE(), but I'm not sure it is really needed, so would prefer to keep it away
-> from the fast path. Although, probably, vdisk_synchronize_cache() is not too fast path.
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Fixes: 90a88d6ef 'scsi: fix soft lockup in scsi_remove_target() on module removal'
+Cc: stable@vger.kernel.org
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_scan.c   | 1 +
+ drivers/scsi/scsi_sysfs.c  | 2 ++
+ include/scsi/scsi_device.h | 1 +
+ 3 files changed, 4 insertions(+)
 
-SCST is fine. I couldn't break it with my tests. It succeeds the
-commands but the sd driver fails IO because of the sense data.
-
-So discussion should be moved to the linux-scsi list again.
-I've changed the prefix in the subject from "scst_vdisk" to "sd".
-
-[snip]
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6a82066..37459dfa 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -315,6 +315,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+ 	unsigned long flags;
+ 
++	BUG_ON(starget->state != STARGET_REMOVE);
+ 	starget->state = STARGET_DEL;
+ 	transport_destroy_device(dev);
+ 	spin_lock_irqsave(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 00bc721..0df82e8 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1279,11 +1279,13 @@ restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL ||
++		    starget->state == STARGET_REMOVE ||
+ 		    starget == last_target)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
+ 			last_target = starget;
++			starget->state = STARGET_REMOVE;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+ 			scsi_target_reap(starget);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f63a167..2bffaa6 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -240,6 +240,7 @@ scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
+ enum scsi_target_state {
+ 	STARGET_CREATED = 1,
+ 	STARGET_RUNNING,
++	STARGET_REMOVE,
+ 	STARGET_DEL,
+ };
+ 
+-- 
+1.8.5.6
