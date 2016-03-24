@@ -1,56 +1,49 @@
-From: Jason Taylor <jason.taylor@simplivity.com>
-Subject: RE: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
-Date: Thu, 24 Mar 2016 11:02:39 +0000
-Message-ID: <99405e4d4b454ff59d81026597c7fd5a@WB-SVT-EXBE03.simplivity.com>
-References: <56EF049F.6050809@matthiasprager.de>
- <CAK=zhgqYjocyKkXAiJTxGkxTgX_jWb3Vr_V6oMxprJgbkdpE2A@mail.gmail.com>
- <56EFBC55.9070209@matthiasprager.de>
- <CAK=zhgof7owM8bVKx2PJtVpUcYMvszvjfc12DwbPJgkEYPC4yw@mail.gmail.com>
- <56F018A0.7070307@matthiasprager.de> <56F021B9.9080305@matthiasprager.de>
- <CAK=zhgoaseek=+qP1r6uVA9s06Yfaz+7m957seiWf1v2CKkQfw@mail.gmail.com>
- <56F1B2E5.1070605@matthiasprager.de> <56F34BB5.3090007@matthiasprager.de>
- <alpine.DEB.2.11.1603240701270.3978@nanos>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH 1/3] scsi-trace: remove service action definitions
+Date: Thu, 24 Mar 2016 09:03:24 -0400
+Message-ID: <1458824604.17965.69.camel@localhost.localdomain>
+References: <1458815011-9054-1-git-send-email-hare@suse.de>
+	 <1458815011-9054-2-git-send-email-hare@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.11.1603240701270.3978@nanos>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>, Matthias Prager <linux@matthiasprager.de>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55617 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753255AbcCXND1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Mar 2016 09:03:27 -0400
+In-Reply-To: <1458815011-9054-2-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-The last update we have from VMware is that the fix will be in 6.0p3/5.5p8 - both of which are targeted for a mid year release.
+On Thu, 2016-03-24 at 11:23 +0100, Hannes Reinecke wrote:
+> scsi_opcode_name() is displaying the opcode, not the service
+> action.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  include/trace/events/scsi.h | 4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+> index 079bd10..5c0d91f 100644
+> --- a/include/trace/events/scsi.h
+> +++ b/include/trace/events/scsi.h
+> @@ -95,10 +95,6 @@
+>  		scsi_opcode_name(VERIFY_16),			\
+>  		scsi_opcode_name(WRITE_SAME_16),		\
+>  		scsi_opcode_name(SERVICE_ACTION_IN_16),		\
+> -		scsi_opcode_name(SAI_READ_CAPACITY_16),		\
+> -		scsi_opcode_name(SAI_GET_LBA_STATUS),		\
+> -		scsi_opcode_name(MI_REPORT_TARGET_PGS),		\
+> -		scsi_opcode_name(MO_SET_TARGET_PGS),		\
+>  		scsi_opcode_name(READ_32),			\
+>  		scsi_opcode_name(WRITE_32),			\
+>  		scsi_opcode_name(WRITE_SAME_32),		\
 
------Original Message-----
-From: Thomas Gleixner [mailto:tglx@linutronix.de] 
-Sent: Thursday, March 24, 2016 2:06 AM
-To: Matthias Prager <linux@matthiasprager.de>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>; linux-scsi <linux-scsi@vger.kernel.org>; Jason Taylor <jason.taylor@simplivity.com>; LKML <linux-kernel@vger.kernel.org>; x86@kernel.org
-Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-On Thu, 24 Mar 2016, Matthias Prager wrote:
-> The timeout happens reliably after two warm boots with a 'bad' kernel 
-> after coming from a 'good' kernel, and also after one cold boot with a 
-> 'bad' kernel (meaning cold booting a 'bad' kernel leads directly to 
-> the timeout and warm booting needs a second run to produce the 
-> timeout). I haven't tested bare metal yet - I can do that tomorrow if necessary.
 
-That's on VMWare, right? Jason has seen the same issue:
-
- http://marc.info/?l=linux-kernel&m=145280623530135&w=2
- http://marc.info/?l=linux-kernel&m=145523785705624&w=2
-
- "Works fine on real hardware and KVM. Filed an issue with VMware and the fix
-  is in the works."
-
-Jason, what's the state of this?
-
-Thanks,
-
-	tglx
----------------------------------------------------------------------------------------
-PRIVACY STATEMENT:
-This message is a PRIVATE communication.  This message and all attachments are a private communication sent by SimpliVity and are considered to be confidential or protected by privilege. If you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or use of the information contained in or attached to this message is strictly prohibited.  Please notify the sender of the delivery error by replying to this message, and then delete it from your system.
----------------------------------------------------------------------------------------
