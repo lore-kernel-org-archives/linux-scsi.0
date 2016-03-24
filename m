@@ -1,87 +1,64 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: Add intermediate STARGET_REMOVE state to
- scsi_target_state
-Date: Thu, 24 Mar 2016 11:42:44 -0400
-Message-ID: <1458834164.17965.74.camel@localhost.localdomain>
-References: <1458813373-7477-1-git-send-email-jthumshirn@suse.de>
-Reply-To: emilne@redhat.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 0/5] mempool based chained scatterlist alloc/free api
+Date: Thu, 24 Mar 2016 11:46:00 -0400
+Message-ID: <1458834360.2544.12.camel@HansenPartnership.com>
+References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
+	 <20160323074012.GA17929@lst.de>
+	 <CAF1ivSaxn7KbiLt0ByHoC-EyP-Q0ah33YGNv0rLoO-=sOvia5w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1458813373-7477-1-git-send-email-jthumshirn@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43240 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755727AbcCXPqF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Mar 2016 11:46:05 -0400
+In-Reply-To: <CAF1ivSaxn7KbiLt0ByHoC-EyP-Q0ah33YGNv0rLoO-=sOvia5w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2016-03-24 at 10:56 +0100, Johannes Thumshirn wrote:
-> The target state machine only knows 'STARGET_DEL', which is set once
-> scsi_target_destroy() is called.
-> However, by that time the structure is still part of the __stargets
-> list of the SCSI host, so any concurrent invocation will see this as
-> a valid target, causing an access to freed memory.
-> 
-> This patch adds an intermediate state 'STARGET_REMOVE', which is set
-> as soon as the target is scheduled to be removed.
-> With this any concurrent invocation will be able to skip these
-> targets and avoid the above scenario.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Fixes: 90a88d6ef 'scsi: fix soft lockup in scsi_remove_target() on module removal'
-> Cc: stable@vger.kernel.org
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/scsi_scan.c   | 1 +
->  drivers/scsi/scsi_sysfs.c  | 2 ++
->  include/scsi/scsi_device.h | 1 +
->  3 files changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 6a82066..37459dfa 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -315,6 +315,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
->  	struct Scsi_Host *shost = dev_to_shost(dev->parent);
->  	unsigned long flags;
->  
-> +	BUG_ON(starget->state != STARGET_REMOVE);
->  	starget->state = STARGET_DEL;
->  	transport_destroy_device(dev);
->  	spin_lock_irqsave(shost->host_lock, flags);
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 00bc721..0df82e8 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1279,11 +1279,13 @@ restart:
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	list_for_each_entry(starget, &shost->__targets, siblings) {
->  		if (starget->state == STARGET_DEL ||
-> +		    starget->state == STARGET_REMOVE ||
->  		    starget == last_target)
->  			continue;
->  		if (starget->dev.parent == dev || &starget->dev == dev) {
->  			kref_get(&starget->reap_ref);
->  			last_target = starget;
-> +			starget->state = STARGET_REMOVE;
->  			spin_unlock_irqrestore(shost->host_lock, flags);
->  			__scsi_remove_target(starget);
->  			scsi_target_reap(starget);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index f63a167..2bffaa6 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -240,6 +240,7 @@ scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
->  enum scsi_target_state {
->  	STARGET_CREATED = 1,
->  	STARGET_RUNNING,
-> +	STARGET_REMOVE,
->  	STARGET_DEL,
->  };
->  
+On Thu, 2016-03-24 at 08:09 -0700, Ming Lin wrote:
+> On Wed, Mar 23, 2016 at 12:40 AM, Christoph Hellwig <hch@lst.de>
+> wrote:
+> > On Tue, Mar 22, 2016 at 03:03:11PM -0700, Ming Lin wrote:
+> > > From: Ming Lin <ming.l@ssi.samsung.com>
+> > >=20
+> > > The fist 4 patches make the SG related
+> > > definitions/structs/functions
+> > > in SCSI code generic and the last patch move it to lib/sg_pool.c.
+> > >=20
+> > > I still keep the macro "SG_MEMPOOL_NR" since it's used in 3
+> > > places.
+> >=20
+> > I don't =D1=95ee the point, but I'm not going to block the series o=
+ver
+> > it either.
+> >=20
+> > The new series looks really nice to me!
+> >=20
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+>=20
+> Hi James,
+>=20
+> This series touches several sub-systems.
+> What's the best way to merge it?
 
-This looks fine.  Do we still need 90a88d6ef (scsi: fix soft lockup in
-scsi_remove_target() on module removal) or can that be reverted now,
-since the STARGET_REMOVE state will allow the iteration to continue?
+It has a minor intrusion into=20
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+ drivers/ata/pata_icside.c           |   2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c |   4 +-
+ drivers/usb/storage/scsiglue.c      |   2 +-
+
+Apart from that, it's all SCSI, so the SCSI tree would seem to be the
+best one.
+
+James
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
