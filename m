@@ -1,86 +1,36 @@
-From: Laison@seymour.toledo.br, Computech@seymour.toledo.br,
-	"Inc <support"@ensuretech.com
-Subject: CISCO IP PHONES AND CPU's
-Date: Thu, 24 Mar 2016 05:43:22 +0700
-Message-ID: <20160324000722.9ACA2C2852@seymour.toledo.br>
-Reply-To: sales@laisoncomputech.com
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i
+ IT
+Date: Thu, 24 Mar 2016 07:06:12 +0100 (CET)
+Message-ID: <alpine.DEB.2.11.1603240701270.3978@nanos>
+References: <56EF049F.6050809@matthiasprager.de> <CAK=zhgqYjocyKkXAiJTxGkxTgX_jWb3Vr_V6oMxprJgbkdpE2A@mail.gmail.com> <56EFBC55.9070209@matthiasprager.de> <CAK=zhgof7owM8bVKx2PJtVpUcYMvszvjfc12DwbPJgkEYPC4yw@mail.gmail.com> <56F018A0.7070307@matthiasprager.de>
+ <56F021B9.9080305@matthiasprager.de> <CAK=zhgoaseek=+qP1r6uVA9s06Yfaz+7m957seiWf1v2CKkQfw@mail.gmail.com> <56F1B2E5.1070605@matthiasprager.de> <56F34BB5.3090007@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from seymour.toledo.br ([200.148.142.55]:49090 "EHLO
-	seymour.toledo.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753842AbcCXC5i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2016 22:57:38 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56F34BB5.3090007@matthiasprager.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthias Prager <linux@matthiasprager.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jason Taylor <jason.taylor@simplivity.com>, LKML <linux-kernel@vger.kernel.org>, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <support@ensuretech.com>
 
-Hi,
+On Thu, 24 Mar 2016, Matthias Prager wrote:
+> The timeout happens reliably after two warm boots with a 'bad' kernel
+> after coming from a 'good' kernel, and also after one cold boot with a
+> 'bad' kernel (meaning cold booting a 'bad' kernel leads directly to the
+> timeout and warm booting needs a second run to produce the timeout). I
+> haven't tested bare metal yet - I can do that tomorrow if necessary.
 
-Our Stock list.
+That's on VMWare, right? Jason has seen the same issue:
 
-Brand NEW
-96 x Cisco 7900 IP Phone
-87 x Unified IP Phone 6900
-12 x Unified IP Phone 8900
-76 x Unified IP Phone 9900
-55 x Unified IP Phone 8800
-67 x Cisco 1921
-67 x Cisco 1941
-56 x Cisco CP-7961G 7961G
-34 x Cisco CP-7971G-GE 7971G
-19 x Cisco Unified IP Conference Station 7937G Model: 7937 CP-7937G
-20 x Cisco CP-7975G 7975G
+ http://marc.info/?l=linux-kernel&m=145280623530135&w=2
+ http://marc.info/?l=linux-kernel&m=145523785705624&w=2
 
-Brand New Sealed :
+ "Works fine on real hardware and KVM. Filed an issue with VMware and the fix
+  is in the works."
 
-23 x  CISCO1921-SEC/K9
-Conditions: Brand New Sealed
-Description: CISCO 1921 Security Bundle w/SEC license PAK
+Jason, what's the state of this?
 
-45 x CISCO1921/K9
-Conditions: Brand New Sealed
-Description: CISCO 1921 Modular Router, 2 GE, 2 EHWIC slots, 512DRAM, IP Base
+Thanks,
 
-(1)  WS-C4500X-16SFP+
-Serial number:  JAE183501L3
-US&#36;2600
-
-(1)  WS-C3850-48PW-S
-Serial number:  FCW1823C0EW
-US&#36;2650
-
-(1)  WS-X6908-10G-2T
-Serial number:  SAL1620CKUB
-US&#36;3650
-
-(1)  ASR1000-ESP10
-Serial number:  JAE181306C3
-US&#36;3800
-
-(1)  AIR-CT5508-250-K9   (this is new but box is open!)
-Serial number:  FCW1521L038
-US&#36;4000
-
-CPUs part number below
-
-89 x  X5650
-
-975 x  X5660
-
-150 x  X5680
-
-265 x  X5690
-
-Kindly make your price offers.
-
-Sincerely
-Barbara Johnson
-Laison Computech
-210 N Scoring Ave,
-Rialto California, 92376
-Tel: +1-657-232-7047
-Fax: +1-347-214-0478
-Email: sales@laisoncomputech.com
+	tglx
