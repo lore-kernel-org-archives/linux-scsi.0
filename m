@@ -1,156 +1,24 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 3/3] scsi-trace: define ZBC_IN and ZBC_OUT
-Date: Thu, 24 Mar 2016 17:23:56 +0100
-Message-ID: <1458836636-36844-1-git-send-email-hare@suse.de>
+From: "Andris Parz" <h.zambrano@gmx.com>
+Subject: WROK TOGETHER
+Date: Fri, 25 Mar 2016 10:42:55 +0100
+Message-ID: <20160325094238.4E80EA50EB2@mail.inap.gob.gt>
+Reply-To: andris.parazin@aim.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53166 "EHLO mx2.suse.de"
+Received: from mail.inap.gob.gt ([190.115.9.213]:45255 "EHLO mail.inap.gob.gt"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754205AbcCXQX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2016 12:23:59 -0400
+	id S1750797AbcCYKSO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Mar 2016 06:18:14 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Recipients <h.zambrano@gmx.com>
 
-Add new trace functions for ZBC_IN and ZBC_OUT.
+Hi, 
 
-Reviewed-by: Doug Gilbert <dgilbert@interlog.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_trace.c   | 70 +++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_proto.h   |  9 ++++++
- include/trace/events/scsi.h |  2 ++
- 3 files changed, 81 insertions(+)
+Can we work together LEGALLY FOR BENEFIT ? .If yes answer the questions below and reply to ( andris.parazin@aim.com )
 
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index 1d43888..d9777aa 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -318,6 +318,72 @@ out:
- }
- 
- static const char *
-+scsi_trace_zbc_in(struct trace_seq *p, unsigned char *cdb, int len)
-+{
-+	const char *ret = trace_seq_buffer_ptr(p), *cmd;
-+	u64 zone_id;
-+	u32 alloc_len;
-+	u8 options;
-+
-+	switch (SERVICE_ACTION16(cdb)) {
-+	case ZI_REPORT_ZONES:
-+		cmd = "REPORT_ZONES";
-+		break;
-+	default:
-+		trace_seq_puts(p, "UNKNOWN");
-+		goto out;
-+	}
-+
-+	zone_id = get_unaligned_be64(&cdb[2]);
-+	alloc_len = get_unaligned_be32(&cdb[10]);
-+	options = cdb[14] & 0x3f;
-+
-+	trace_seq_printf(p, "%s zone=%llu alloc_len=%u options=%u partial=%u",
-+			 cmd, (unsigned long long)zone_id, alloc_len,
-+			 options, (cdb[14] >> 7) & 1);
-+
-+out:
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
-+}
-+
-+static const char *
-+scsi_trace_zbc_out(struct trace_seq *p, unsigned char *cdb, int len)
-+{
-+	const char *ret = trace_seq_buffer_ptr(p), *cmd;
-+	u64 zone_id;
-+
-+	switch (SERVICE_ACTION16(cdb)) {
-+	case ZO_CLOSE_ZONE:
-+		cmd = "CLOSE_ZONE";
-+		break;
-+	case ZO_FINISH_ZONE:
-+		cmd = "FINISH_ZONE";
-+		break;
-+	case ZO_OPEN_ZONE:
-+		cmd = "OPEN_ZONE";
-+		break;
-+	case ZO_RESET_WRITE_POINTER:
-+		cmd = "RESET_WRITE_POINTER";
-+		break;
-+	default:
-+		trace_seq_puts(p, "UNKNOWN");
-+		goto out;
-+	}
-+
-+	zone_id = get_unaligned_be64(&cdb[2]);
-+
-+	trace_seq_printf(p, "%s zone=%llu all=%u", cmd,
-+			 (unsigned long long)zone_id, cdb[14] & 1);
-+
-+out:
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
-+}
-+
-+static const char *
- scsi_trace_varlen(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	switch (SERVICE_ACTION32(cdb)) {
-@@ -373,6 +439,10 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
- 		return scsi_trace_maintenance_in(p, cdb, len);
- 	case MAINTENANCE_OUT:
- 		return scsi_trace_maintenance_out(p, cdb, len);
-+	case ZBC_IN:
-+		return scsi_trace_zbc_in(p, cdb, len);
-+	case ZBC_OUT:
-+		return scsi_trace_zbc_out(p, cdb, len);
- 	default:
- 		return scsi_trace_misc(p, cdb, len);
- 	}
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index c2ae21c..d1defd1 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -115,6 +115,8 @@
- #define VERIFY_16	      0x8f
- #define SYNCHRONIZE_CACHE_16  0x91
- #define WRITE_SAME_16	      0x93
-+#define ZBC_OUT		      0x94
-+#define ZBC_IN		      0x95
- #define SERVICE_ACTION_BIDIRECTIONAL 0x9d
- #define SERVICE_ACTION_IN_16  0x9e
- #define SERVICE_ACTION_OUT_16 0x9f
-@@ -143,6 +145,13 @@
- #define MO_SET_PRIORITY       0x0e
- #define MO_SET_TIMESTAMP      0x0f
- #define MO_MANAGEMENT_PROTOCOL_OUT 0x10
-+/* values for ZBC_IN */
-+#define ZI_REPORT_ZONES	      0x00
-+/* values for ZBC_OUT */
-+#define ZO_CLOSE_ZONE	      0x01
-+#define ZO_FINISH_ZONE	      0x02
-+#define ZO_OPEN_ZONE	      0x03
-+#define ZO_RESET_WRITE_POINTER 0x04
- /* values for variable length command */
- #define XDREAD_32	      0x03
- #define XDWRITE_32	      0x04
-diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-index 5c0d91f..9a9b3e2 100644
---- a/include/trace/events/scsi.h
-+++ b/include/trace/events/scsi.h
-@@ -94,6 +94,8 @@
- 		scsi_opcode_name(WRITE_16),			\
- 		scsi_opcode_name(VERIFY_16),			\
- 		scsi_opcode_name(WRITE_SAME_16),		\
-+		scsi_opcode_name(ZBC_OUT),			\
-+		scsi_opcode_name(ZBC_IN),			\
- 		scsi_opcode_name(SERVICE_ACTION_IN_16),		\
- 		scsi_opcode_name(READ_32),			\
- 		scsi_opcode_name(WRITE_32),			\
--- 
-1.8.5.6
-
+Rdg,
+Andris
