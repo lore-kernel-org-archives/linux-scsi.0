@@ -1,176 +1,53 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v1 2/2] genirq: support multiple IRQ notifier.
-Date: Sat, 26 Mar 2016 02:58:52 +0800
-Message-ID: <201603260205.XVCrXhXd%fengguang.wu@intel.com>
-References: <150f84b627280fa9d4397e6a4cdb5d096bef70bd.1458920770.git.weongyo.linux@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="sm4nu43k4a2Rpi4c"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <150f84b627280fa9d4397e6a4cdb5d096bef70bd.1458920770.git.weongyo.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Weongyo Jeong <weongyo.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Mike Marciniszyn <infinipath-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 0/2] Fix regression and performance issue in cxlflash
+Date: Fri, 25 Mar 2016 14:25:20 -0500
+Message-ID: <1458933920-28788-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:50165 "EHLO
+	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753882AbcCYT2F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Mar 2016 15:28:05 -0400
+Received: from localhost
+	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+	Fri, 25 Mar 2016 15:28:04 -0400
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2B9AB6E803F
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Mar 2016 15:14:52 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2PJS2hC33751188
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Mar 2016 19:28:02 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2PJS0ov012087
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Mar 2016 15:28:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
+This series has a couple of patches in cxlflash.
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The first patch is critical as it fixes a regression that was introduced
+by Commit 6ded8b3cbd9a ("cxlflash: Unmap problem state area before
+detaching master context") as part of the first SCSI push for v4.6.
 
-Hi Weongyo,
+The second patch addresses a performance issue.
 
-[auto build test ERROR on tip/irq/core]
-[also build test ERROR on v4.5 next-20160324]
-[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+This series is intended for v4.6 and is bisectable. We would like to see
+these included in the second merge window push for v4.6 (if there is one).
+Otherwise these can be a candidate for v4.6-rc2.
 
-url:    https://github.com/0day-ci/linux/commits/Weongyo-Jeong/genirq-support-multiple-IRQ-notifier/20160325-235708
-config: arm64-allnoconfig (attached as .config)
-reproduce:
-        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=arm64 
+v2 Changes:
+- Added the ack/review tags including one which was sent privately.
 
-All errors (new ones prefixed by >>):
+Manoj N. Kumar (2):
+  cxlflash: Fix regression issue with re-ordering patch
+  cxlflash: Move to exponential back-off when cmd_room is not available
 
-   kernel/irq/manage.c: In function 'free_irq':
->> kernel/irq/manage.c:1581:3: error: implicit declaration of function '__WARN' [-Werror=implicit-function-declaration]
-      __WARN();
-      ^
-   cc1: some warnings being treated as errors
+ drivers/scsi/cxlflash/main.c | 138 +++++++++++++++++++++++++++++--------------
+ drivers/scsi/cxlflash/main.h |   5 +-
+ 2 files changed, 97 insertions(+), 46 deletions(-)
 
-vim +/__WARN +1581 kernel/irq/manage.c
+-- 
+2.1.0
 
-  1575	
-  1576	#ifdef CONFIG_SMP
-  1577		list_for_each_entry_safe(notify, notifytmp, &desc->affinity_notify_list,
-  1578					 list) {
-  1579			if (notify->irq != irq)
-  1580				continue;
-> 1581			__WARN();
-  1582			list_del(&notify->list);
-  1583		}
-  1584	#endif
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
---sm4nu43k4a2Rpi4c
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-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
-
---sm4nu43k4a2Rpi4c--
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
