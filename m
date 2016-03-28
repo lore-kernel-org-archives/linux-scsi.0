@@ -1,22 +1,30 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [Bug 115351] New: redundant pointless messages
-Date: Sun, 27 Mar 2016 20:49:47 -0400
-Message-ID: <56F87FAB.1040907@interlog.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 115351] redundant pointless messages
+Date: Mon, 28 Mar 2016 00:55:48 +0000
+Message-ID: <bug-115351-11613-0T9m3cFyC4@https.bugzilla.kernel.org/>
 References: <bug-115351-11613@https.bugzilla.kernel.org/>
-Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55844 "EHLO smtp.infotech.no"
+Received: from mail.kernel.org ([198.145.29.136]:39305 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752441AbcC1At5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Mar 2016 20:49:57 -0400
+	id S1752508AbcC1Azw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Mar 2016 20:55:52 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9C8C12025A
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2016 00:55:50 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 2F99E20251
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2016 00:55:49 +0000 (UTC)
 In-Reply-To: <bug-115351-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=115351
+
+--- Comment #1 from d gilbert <dgilbert@interlog.com> ---
 On 16-03-27 03:48 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=115351
 >
@@ -71,3 +79,6 @@ Request: find out why sd_try_rc16_first() returns zero.
 
 Doug Gilbert
 
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
