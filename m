@@ -1,161 +1,77 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH 2/2] scsi_dh_alua: Fix a recently introduced deadlock
-Date: Mon, 28 Mar 2016 14:21:04 -0400 (EDT)
-Message-ID: <933006845.25395115.1459189264684.JavaMail.zimbra@redhat.com>
-References: <56F9740A.4060100@sandisk.com> <56F9746C.40101@sandisk.com>
+From: Richard Sharpe <realrichardsharpe@gmail.com>
+Subject: Patch: Make the iscsi lld create a WQ_HIGHPRI workqueue itself
+Date: Mon, 28 Mar 2016 13:46:05 -0700
+Message-ID: <CACyXjPxwz4znmt7g9ptYdpzkfF1Ok7KKJa2ceyKxg00buSfmcA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=001a1143798a6abfea052f22000a
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:40043 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbcC1SVl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2016 14:21:41 -0400
-In-Reply-To: <56F9746C.40101@sandisk.com>
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:36800 "EHLO
+	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593AbcC1UqH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2016 16:46:07 -0400
+Received: by mail-qk0-f177.google.com with SMTP id i4so90249393qkc.3
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2016 13:46:06 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-In similar testing last month with mlx4_ib I was able to generate the same lockup so this patch will help.
-If I get a chance will add a Tested-by this week.
+--001a1143798a6abfea052f22000a
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Hi folks,
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+We noticed recently while testing with large numbers of iSCSI
+connections that iscsid was going to heroic lengths to change the nice
+value of the iSCSI work queue to -20. It becomes very expensive with
+hundreds of connections.
 
------ Original Message -----
-From: "Bart Van Assche" <bart.vanassche@sandisk.com>
-To: "James Bottomley" <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Hannes Reinecke" <hare@suse.de>, "Christoph Hellwig" <hch@infradead.org>, linux-scsi@vger.kernel.org
-Sent: Monday, March 28, 2016 2:14:04 PM
-Subject: [PATCH 2/2] scsi_dh_alua: Fix a recently introduced deadlock
+This small patch has the LLD do the work,
 
-While retesting the SRP initiator I ran the command "rmmod mlx4_ib"
-while I/O was in progress. That command triggers SCSI device removal
-indirectly. Avoid that this action triggers the following deadlock:
+Feedback welcome.
 
-=================================
-[ INFO: inconsistent lock state ]
-4.6.0-rc0-dbg+ #2 Tainted: G           O
----------------------------------
-inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
-multipathd/484 [HC0[0]:SC0[0]:HE1:SE1] takes:
- (&(&pg->lock)->rlock){+.?...}, at: [<ffffffffa04f50a2>] alua_bus_detach+0x52/0xa0 [scsi_dh_alua]
-{IN-SOFTIRQ-W} state was registered at:
-  [<ffffffff810a64a9>] __lock_acquire+0x7e9/0x1ad0
-  [<ffffffff810a7fd0>] lock_acquire+0x60/0x80
-  [<ffffffff8159910e>] _raw_spin_lock_irqsave+0x3e/0x60
-  [<ffffffffa04f5131>] alua_rtpg_queue+0x41/0x1d0 [scsi_dh_alua]
-  [<ffffffffa04f5531>] alua_check+0xe1/0x220 [scsi_dh_alua]
-  [<ffffffffa04f5709>] alua_check_sense+0x99/0xb0 [scsi_dh_alua]
-  [<ffffffff813f0d01>] scsi_check_sense+0x71/0x3f0
-  [<ffffffff813f2f8b>] scsi_decide_disposition+0x18b/0x1d0
-  [<ffffffff813f6e52>] scsi_softirq_done+0x52/0x140
-  [<ffffffff812a26f2>] blk_done_softirq+0x52/0x90
-  [<ffffffff8105bc1f>] __do_softirq+0x10f/0x230
-  [<ffffffff8105bec8>] irq_exit+0xa8/0xb0
-  [<ffffffff8101a675>] do_IRQ+0x65/0x110
-  [<ffffffff8159a2c9>] ret_from_intr+0x0/0x19
-  [<ffffffff811732f1>] kmem_cache_alloc+0x151/0x190
-  [<ffffffff8118e534>] create_object+0x34/0x2d0
-  [<ffffffff8158eaa6>] kmemleak_alloc_percpu+0x56/0xd0
-  [<ffffffff8113ab0d>] pcpu_alloc+0x38d/0x660
-  [<ffffffff8113aded>] __alloc_percpu_gfp+0xd/0x10
-  [<ffffffff812e56a5>] __percpu_counter_init+0x55/0xb0
-  [<ffffffff812b4989>] blkg_alloc+0x79/0x230
-  [<ffffffff812b6756>] blkcg_init_queue+0x26/0x1d0
-  [<ffffffff81297eed>] blk_alloc_queue_node+0x27d/0x2e0
-  [<ffffffffa017766c>] dm_create+0x20c/0x570 [dm_mod]
-  [<ffffffffa017e356>] dev_create+0x56/0x2c0 [dm_mod]
-  [<ffffffffa017dcae>] ctl_ioctl+0x26e/0x520 [dm_mod]
-  [<ffffffffa017df6e>] dm_ctl_ioctl+0xe/0x20 [dm_mod]
-  [<ffffffff811aa8ee>] do_vfs_ioctl+0x8e/0x660
-  [<ffffffff811aaefc>] SyS_ioctl+0x3c/0x70
-  [<ffffffff81599929>] entry_SYSCALL_64_fastpath+0x1c/0xac
-irq event stamp: 4290931
-hardirqs last  enabled at (4290931): [ 1662.892772]
-[<ffffffff81599341>] _raw_spin_unlock_irqrestore+0x31/0x50
-hardirqs last disabled at (4290930): [<ffffffff815990e7>] _raw_spin_lock_irqsave+0x17/0x60
-softirqs last  enabled at (4290774): [<ffffffff8105bcdb>] __do_softirq+0x1cb/0x230
-softirqs last disabled at (4289831): [<ffffffff8105bec8>] irq_exit+0xa8/0xb0
+A small patch will be needed for the user-space tools as well. I will
+send one in if someone else does not do so.
 
-other info that might help us debug this:
- Possible unsafe locking scenario:
+--=20
+Regards,
+Richard Sharpe
+(=E4=BD=95=E4=BB=A5=E8=A7=A3=E6=86=82=EF=BC=9F=E5=94=AF=E6=9C=89=E6=9D=9C=
+=E5=BA=B7=E3=80=82--=E6=9B=B9=E6=93=8D)
 
-       CPU0
-       ----
-  lock(&(&pg->lock)->rlock);
-  <Interrupt>
-    lock(&(&pg->lock)->rlock);
+--001a1143798a6abfea052f22000a
+Content-Type: application/octet-stream;
+	name="0001-Make-the-iscsi-lld-create-a-WQ_HIGHPRI-workqueue.patch"
+Content-Disposition: attachment;
+	filename="0001-Make-the-iscsi-lld-create-a-WQ_HIGHPRI-workqueue.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_imcgrdiz0
 
- *** DEADLOCK ***
-
-2 locks held by multipathd/484:
- #0:  (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff811d1cc3>] __blkdev_put+0x33/0x360
- #1:  (sd_ref_mutex){+.+...}, at: [<ffffffff81400afc>] scsi_disk_put+0x1c/0x40
-
-stack backtrace:
-CPU: 6 PID: 484 Comm: multipathd Tainted: G           O    4.6.0-rc0-dbg+ #2
-Call Trace:
- [<ffffffff812bd115>] dump_stack+0x67/0x92
- [<ffffffff810a5175>] print_usage_bug+0x215/0x240
- [<ffffffff810a56ea>] mark_lock+0x54a/0x610
- [<ffffffff810a6505>] __lock_acquire+0x845/0x1ad0
- [<ffffffff810a7fd0>] lock_acquire+0x60/0x80
- [<ffffffff81598f23>] _raw_spin_lock+0x33/0x50
- [<ffffffffa04f50a2>] alua_bus_detach+0x52/0xa0 [scsi_dh_alua]
- [<ffffffff813ff6f7>] scsi_dh_release_device+0x17/0x50
- [<ffffffff813fb8da>] scsi_device_dev_release_usercontext+0x2a/0x120
- [<ffffffff810701f0>] execute_in_process_context+0x80/0x90
- [<ffffffff813fb8a7>] scsi_device_dev_release+0x17/0x20
- [<ffffffff813c8cfd>] device_release+0x2d/0x90
- [<ffffffff812bfa8a>] kobject_release+0x7a/0x190
- [<ffffffff812bf946>] kobject_put+0x26/0x50
- [<ffffffff813c8ee2>] put_device+0x12/0x20
- [<ffffffff813edc86>] scsi_device_put+0x26/0x30
- [<ffffffff81400b0d>] scsi_disk_put+0x2d/0x40
- [<ffffffff81400b68>] sd_release+0x48/0xb0
- [<ffffffff811d1f2e>] __blkdev_put+0x29e/0x360
- [<ffffffff811d24b9>] blkdev_put+0x49/0x170
- [<ffffffff811d2600>] blkdev_close+0x20/0x30
- [<ffffffff81198f48>] __fput+0xe8/0x1f0
- [<ffffffff81199089>] ____fput+0x9/0x10
- [<ffffffff81075d9e>] task_work_run+0x6e/0xa0
- [<ffffffff81001119>] exit_to_usermode_loop+0xa9/0xb0
- [<ffffffff81001590>] syscall_return_slowpath+0xb0/0xc0
- [<ffffffff815999b7>] entry_SYSCALL_64_fastpath+0xaa/0xac
-
-Fixes: cb0a168cb6b8 (scsi_dh_alua: update 'access_state' field)
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index a404a41..8eaed05 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1112,9 +1112,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
- 	h->sdev = NULL;
- 	spin_unlock(&h->pg_lock);
- 	if (pg) {
--		spin_lock(&pg->lock);
-+		spin_lock_irq(&pg->lock);
- 		list_del_rcu(&h->node);
--		spin_unlock(&pg->lock);
-+		spin_unlock_irq(&pg->lock);
- 		kref_put(&pg->kref, release_port_group);
- 	}
- 	sdev->handler_data = NULL;
--- 
-2.7.3
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+RnJvbSBjMGYwNGE2NmIyOWE5MTkwMTA5NzQwYzAzZWU5ZTY1YmI2MmFmZTI4IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBSaWNoYXJkIFNoYXJwZSA8cnNoYXJwZUBudXRhbml4LmNvbT4K
+RGF0ZTogTW9uLCAyOCBNYXIgMjAxNiAxMzozNjoxOCAtMDcwMApTdWJqZWN0OiBbUEFUQ0hdIE1h
+a2UgdGhlIGlzY3NpIGxsZCBjcmVhdGUgYSBXUV9ISUdIUFJJIHdvcmtxdWV1ZS4KClRoZSBvcGVu
+LWlzY3NpIHRvb2xzIGdvIHRvIGhlcm9pYyBlZmZvcnRzIHRvIGNoYW5nZSB0aGUgbmljZSB2YWx1
+ZSBvZgp0aGUgaXNjc2kgd29ya3F1ZXVlIHRvIC0yMC4gSXQgc2NhbnMgYWxsIHByb2Nlc3NlcyBp
+biAvcHJvYyBhbmQKd2hlbiBpdCBmaW5kcyB0aGUgb25lIGl0IGlzIGludGVyZXN0ZWQgaW4gY2Fs
+bHMgc2V0cHJpb3JpdHkuCgpXaGVuIHlvdSBhcmUgY29ubmVjdGluZyB0byBhIHJlYXNvbmFibGUg
+bnVtYmVyIG9mIGlTQ1NJIHRhcmdldHMgdGhpcwpjYW4gYmUgY29zdGx5LgoKVGhpcyBzbWFsbCBw
+YXRjaCBoYXMgdGhlIGlzY3NpIExMRCBkbyB0aGUgd29yayBpdHNlbGYuIEl0IHNlZW1zIGxpa2UK
+dGhlIGxlYXN0IGludHJ1c2l2ZSB3YXkgdG8gYWNoZWl2ZSB0aGUgcmVzdWx0LgoKQSBzbWFsbCBw
+YXRjaCB3aWxsIGJlIG5lZWRlZCBpbiB0aGUgb3Blbi1pc2NzaSB1c2Vyc3BhY2UgdG9vbHMKYXMg
+d2VsbC4KClNpZ25lZC1vZmYtYnk6IFJpY2hhcmQgU2hhcnBlIDxyZWFscmljaGFyZHNoYXJwZUBn
+bWFpbC5jb20+Ci0tLQogZHJpdmVycy9zY3NpL2xpYmlzY3NpLmMgfCAgICA0ICsrKy0KIDEgZmls
+ZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvc2NzaS9saWJpc2NzaS5jIGIvZHJpdmVycy9zY3NpL2xpYmlzY3NpLmMKaW5kZXgg
+NmJmZmQ5MS4uYWJhZWZlMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL2xpYmlzY3NpLmMKKysr
+IGIvZHJpdmVycy9zY3NpL2xpYmlzY3NpLmMKQEAgLTI2MTUsOSArMjYxNSwxMSBAQCBzdHJ1Y3Qg
+U2NzaV9Ib3N0ICppc2NzaV9ob3N0X2FsbG9jKHN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgKnNo
+dCwKIAlpaG9zdCA9IHNob3N0X3ByaXYoc2hvc3QpOwogCiAJaWYgKHhtaXRfY2FuX3NsZWVwKSB7
+CisJCWludCB3cV9mbGFncyA9IF9fV1FfTEVHQUNZIHwgV1FfTUVNX1JFQ0xBSU0gfCBXUV9ISUdI
+UFJJOwogCQlzbnByaW50ZihpaG9zdC0+d29ya3FfbmFtZSwgc2l6ZW9mKGlob3N0LT53b3JrcV9u
+YW1lKSwKIAkJCSJpc2NzaV9xXyVkIiwgc2hvc3QtPmhvc3Rfbm8pOwotCQlpaG9zdC0+d29ya3Eg
+PSBjcmVhdGVfc2luZ2xldGhyZWFkX3dvcmtxdWV1ZShpaG9zdC0+d29ya3FfbmFtZSk7CisJCWlo
+b3N0LT53b3JrcSA9IGFsbG9jX29yZGVyZWRfd29ya3F1ZXVlKCIlcyIsIHdxX2ZsYWdzLAorCQkJ
+CQkJaWhvc3QtPndvcmtxX25hbWUpOwogCQlpZiAoIWlob3N0LT53b3JrcSkKIAkJCWdvdG8gZnJl
+ZV9ob3N0OwogCX0KLS0gCjEuNy4xCgo=
+--001a1143798a6abfea052f22000a--
