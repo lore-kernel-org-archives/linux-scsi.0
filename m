@@ -1,150 +1,132 @@
-From: "Winkler, Tomas" <tomas.winkler-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [RESEND] [PATCH v11 3/6] added support for DesignWare Controller
-Date: Tue, 29 Mar 2016 12:15:17 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B541CD517@hasmsx108.ger.corp.intel.com>
-References: <cover.1457111366.git.jpinto@synopsys.com>
- <a2f0601b03aad273819e7a8da2a65664759e2889.1457111366.git.jpinto@synopsys.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH v1 1/3] Fix to cleanup aborted IO to avoid device being
+ offlined by mid-layer
+Date: Tue, 29 Mar 2016 10:06:05 -0400
+Message-ID: <1459260365.30035.1.camel@localhost.localdomain>
+References: <1458325370-25615-1-git-send-email-satishkh@cisco.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <a2f0601b03aad273819e7a8da2a65664759e2889.1457111366.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Content-Language: en-US
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, "vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "arnd-r2nGTMty4D4@public.gmane.org" <arnd-r2nGTMty4D4@public.gmane.org>, "mark.rutland-5wv7dgnIgG8@public.gmane.org" <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, "ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org" <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50809 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752046AbcC2OGI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Mar 2016 10:06:08 -0400
+In-Reply-To: <1458325370-25615-1-git-send-email-satishkh@cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>
 
+On Fri, 2016-03-18 at 11:22 -0700, Satish Kharat wrote:
+> If an I/O times out and an abort issued by host, if the abort is
+> successful we need to set scsi status as DID_ABORT. Or else the
+> mid-layer error handler which looks for this error code, will
+> offline the device. Also if the original I/O is not found in fnic
+> firmware, we will consider the abort as successful.
+> The start_time assignment is moved because of the new goto.
+> Fnic driver version changed from 1.6.0.17a to 1.6.0.19,
+> version 1.6.0.18 has been skipped
+> 
+> Signed-off-by: Satish Kharat <satishkh@cisco.com>
+> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+> ---
+>  * v1
+>  - Moved CMD_ABTS_STATUS assignment to else when not FCPIO_SUCCESS
+> 
+>  drivers/scsi/fnic/fnic.h      |  2 +-
+>  drivers/scsi/fnic/fnic_scsi.c | 35 +++++++++++++++++++++++++++++------
+>  2 files changed, 30 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> index ce129e5..52a53f8 100644
+> --- a/drivers/scsi/fnic/fnic.h
+> +++ b/drivers/scsi/fnic/fnic.h
+> @@ -39,7 +39,7 @@
+>  
+>  #define DRV_NAME		"fnic"
+>  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+> -#define DRV_VERSION		"1.6.0.17a"
+> +#define DRV_VERSION		"1.6.0.19"
+>  #define PFX			DRV_NAME ": "
+>  #define DFX                     DRV_NAME "%d: "
+>  
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> index 266b909..b732fa3 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -1092,6 +1092,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+>  				atomic64_inc(
+>  					&term_stats->terminate_fw_timeouts);
+>  			break;
+> +		case FCPIO_ITMF_REJECTED:
+> +			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
+> +				"abort reject recd. id %d\n",
+> +				(int)(id & FNIC_TAG_MASK));
+> +			break;
+>  		case FCPIO_IO_NOT_FOUND:
+>  			if (CMD_FLAGS(sc) & FNIC_IO_ABTS_ISSUED)
+>  				atomic64_inc(&abts_stats->abort_io_not_found);
+> @@ -1112,9 +1117,15 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+>  			spin_unlock_irqrestore(io_lock, flags);
+>  			return;
+>  		}
+> -		CMD_ABTS_STATUS(sc) = hdr_status;
+> +
+>  		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
+>  
+> +		/* If the status is IO not found consider it as success */
+> +		if (hdr_status == FCPIO_IO_NOT_FOUND)
+> +			CMD_ABTS_STATUS(sc) = FCPIO_SUCCESS;
+> +		else
+> +			CMD_ABTS_STATUS(sc) = hdr_status;
+> +
+>  		atomic64_dec(&fnic_stats->io_stats.active_ios);
+>  		if (atomic64_read(&fnic->io_cmpl_skip))
+>  			atomic64_dec(&fnic->io_cmpl_skip);
+> @@ -1927,21 +1938,33 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+>  
+>  	CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
+>  
+> +	start_time = io_req->start_time;
+>  	/*
+>  	 * firmware completed the abort, check the status,
+> -	 * free the io_req irrespective of failure or success
+> +	 * free the io_req if successful. If abort fails,
+> +	 * Device reset will clean the I/O.
+>  	 */
+> -	if (CMD_ABTS_STATUS(sc) != FCPIO_SUCCESS)
+> +	if (CMD_ABTS_STATUS(sc) == FCPIO_SUCCESS) {
+> +		CMD_SP(sc) = NULL;
+> +	}
+> +	else
+> +	{
+>  		ret = FAILED;
+> -
+> -	CMD_SP(sc) = NULL;
+> +		spin_unlock_irqrestore(io_lock, flags);
+> +		goto fnic_abort_cmd_end;
+> +	}
+>  
+>  	spin_unlock_irqrestore(io_lock, flags);
+>  
+> -	start_time = io_req->start_time;
+>  	fnic_release_ioreq_buf(fnic, io_req, sc);
+>  	mempool_free(io_req, fnic->io_req_pool);
+>  
+> +	if (sc->scsi_done) {
+> +	/* Call SCSI completion function to complete the IO */
+> +		sc->result = (DID_ABORT << 16);
+> +		sc->scsi_done(sc);
+> +	}
+> +
+>  fnic_abort_cmd_end:
+>  	FNIC_TRACE(fnic_abort_cmd, sc->device->host->host_no,
+>  		  sc->request->tag, sc,
 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index 2570d94..8b0cdf0 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -262,6 +262,7 @@ struct ufs_pwr_mode_info {
-  * @suspend: called during host controller PM callback
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-+ * @custom_phy_initialization: used to initialize phys in DWC Cores
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -283,6 +284,7 @@ struct ufs_hba_variant_ops {
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
-+	int	(*custom_phy_initialization)(struct ufs_hba *);
- };
-I think just drop custom_ prefix these handlers are for customization so this doesn't add any information 
-Also here, I prefer that infrastructure changes will be in separate patches and not mangled with a specific device patch.
+For v1:
 
- 
- /* clock gating state  */
-diff --git a/drivers/scsi/ufs/ufshci-dwc.h b/drivers/scsi/ufs/ufshci-dwc.h new file mode 100644 index 0000000..947a75c
---- /dev/null
-+++ b/drivers/scsi/ufs/ufshci-dwc.h
-@@ -0,0 +1,42 @@
-+/*
-+ * UFS Host driver for Synopsys Designware Core
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef _UFSHCI_DWC_H
-+#define _UFSHCI_DWC_H
-+
-+/* DWC HC UFSHCI specific Registers */
-+enum dwc_specific_registers {
-+	DWC_UFS_REG_HCLKDIV	= 0xFC,
-+};
-+
-+/* Link Status*/
-+enum link_status {
-+	UFSHCD_LINK_IS_DOWN	= 1,
-+	UFSHCD_LINK_IS_UP	= 2,
-+};
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-Is is designware specific ? Then should probably be DWC_ prefixed, if  not then shouldn't be defined here.
-
-+#endif /* End of Header */
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h index 816a8a4..da16254 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-
-Should also go to a separate  patch ?
- 
-@@ -35,6 +35,10 @@
- #define TX_LCC_SEQUENCER			0x0032
- #define TX_MIN_ACTIVATETIME			0x0033
- #define TX_PWM_G6_G7_SYNC_LENGTH		0x0034
-+#define TX_REFCLKFREQ				0x00EB
-+#define TX_CFGCLKFREQVAL			0x00EC
-+#define	CFGEXTRATTR				0x00F0
-+#define DITHERCTRL2				0x00F1
- 
- /*
-  * M-RX Configuration Attributes
-@@ -48,8 +52,38 @@
- #define RX_ENTER_HIBERN8			0x00A7
- #define RX_BYPASS_8B10B_ENABLE			0x00A8
- #define RX_TERMINATION_FORCE_ENABLE		0x0089
-+#define RX_REFCLKFREQ				0x00EB
-+#define	RX_CFGCLKFREQVAL			0x00EC
-+#define CFGWIDEINLN				0x00F0
-+#define CFGRXCDR8				0x00BA
-+#define ENARXDIRECTCFG4				0x00F2
-+#define CFGRXOVR8				0x00BD
-+#define RXDIRECTCTRL2				0x00C7
-+#define ENARXDIRECTCFG3				0x00F3
-+#define RXCALCTRL				0x00B4
-+#define ENARXDIRECTCFG2				0x00F4
-+#define CFGRXOVR4				0x00E9
-+#define RXSQCTRL				0x00B5
-+#define CFGRXOVR6				0x00BF
- 
- #define is_mphy_tx_attr(attr)			(attr < RX_MODE)
-+
-+/*
-+ * Common Block Attributes
-+ */
-+#define TX_GLOBALHIBERNATE			UNIPRO_CB_OFFSET(0x002B)
-+#define REFCLKMODE				UNIPRO_CB_OFFSET(0x00BF)
-+#define DIRECTCTRL19				UNIPRO_CB_OFFSET(0x00CD)
-+#define DIRECTCTRL10				UNIPRO_CB_OFFSET(0x00E6)
-+#define CDIRECTCTRL6				UNIPRO_CB_OFFSET(0x00EA)
-+#define RTOBSERVESELECT				UNIPRO_CB_OFFSET(0x00F0)
-+#define CBDIVFACTOR				UNIPRO_CB_OFFSET(0x00F1)
-+#define CBDCOCTRL5				UNIPRO_CB_OFFSET(0x00F3)
-+#define CBPRGPLL2				UNIPRO_CB_OFFSET(0x00F8)
-+#define CBPRGTUNING				UNIPRO_CB_OFFSET(0x00FB)
-+
-+#define UNIPRO_CB_OFFSET(x)			(0x8000 | x)
-+
- /*
-  * PHY Adpater attributes
-  */
-@@ -110,6 +144,11 @@
- #define PA_STALLNOCONFIGTIME	0x15A3
- #define PA_SAVECONFIGTIME	0x15A4
- 
-+/*Other attributes*/
-+#define VS_MPHYCFGUPDT		0xD085
-+#define VS_DEBUGOMC		0xD09E
-+#define VS_POWERSTATE		0xD083
-+
- /* PA power modes */
- enum {
- 	FAST_MODE	= 1,
---
-1.8.1.5
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
