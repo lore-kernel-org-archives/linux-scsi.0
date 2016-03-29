@@ -1,60 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
- recognized correctly
-Date: Tue, 29 Mar 2016 03:34:09 +0000
-Message-ID: <bug-98171-11613-qJngAYW6nD@https.bugzilla.kernel.org/>
-References: <bug-98171-11613@https.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/2] Declare local symbols static
+Date: Tue, 29 Mar 2016 08:41:41 +0200
+Message-ID: <56FA23A5.3080609@suse.de>
+References: <56F9740A.4060100@sandisk.com> <56F9743C.8040301@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42295 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:38740 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751697AbcC2DeN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2016 23:34:13 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E7F5720263
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2016 03:34:11 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 2219A2026F
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2016 03:34:11 +0000 (UTC)
-In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
+	id S1751117AbcC2Gln (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Mar 2016 02:41:43 -0400
+In-Reply-To: <56F9743C.8040301@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=98171
+On 03/28/2016 08:13 PM, Bart Van Assche wrote:
+> Avoid that building with W=3D1 causes gcc to report warnings about
+> symbols that have not been declared.
+>=20
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi_sysfs.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-amalea0@yahoo.com changed:
+Cheers,
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |amalea0@yahoo.com
-
---- Comment #8 from amalea0@yahoo.com ---
-I am seeing the same error on my Xubuntu 15.10 system at every boot.
-
-[    1.707400] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    1.707518] ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
-[    1.707679] ata14.00: configured for UDMA/66
-[    1.934951] ata14.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
-[    1.934998] ata14.00: irq_stat 0x40000001
-[    1.935040] ata14.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 1 dma
-16640 in Inquiry 12 01 00 00 ff 00res 00/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x3 (HSM violation)
-[    1.935089] ata14: hard resetting link
-[    2.262449] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    2.262751] ata14.00: configured for UDMA/66
-[    2.262825] ata14: EH complete
-
-SATA controller: Marvell Technology Group Ltd. 88SE9123 PCIe SATA 6.0 Gb/s
-controller (rev 11)
-Kernel: 4.2.0-34-generic #39-Ubuntu SMP Thu Mar 10 22:13:01 UTC 2016 x86_64
-x86_64 x86_64 GNU/Linux (Xubuntu 15.10)
-Motherboard: Gigabyte Technology Co., Ltd. GA-970A-UD3P
-
-Hoping to see this issue addressed shortly.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
