@@ -1,117 +1,144 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: tcm_qla2xxx Add SCSI command jammer/discard capabilty to the
- tcm_qla2xxx module - revision3
-Date: Tue, 29 Mar 2016 10:42:38 -0400 (EDT)
-Message-ID: <2025450295.25603731.1459262558755.JavaMail.zimbra@redhat.com>
-References: <1094927874.25583811.1459257571936.JavaMail.zimbra@redhat.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH 2/2] scsi_dh_alua: Fix a recently introduced deadlock
+Date: Tue, 29 Mar 2016 10:55:55 -0400
+Message-ID: <1459263355.30035.16.camel@localhost.localdomain>
+References: <56F9740A.4060100@sandisk.com>  <56F9746C.40101@sandisk.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:49292 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756204AbcC2Omm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2016 10:42:42 -0400
-In-Reply-To: <1094927874.25583811.1459257571936.JavaMail.zimbra@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60128 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752622AbcC2Oz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Mar 2016 10:55:57 -0400
+In-Reply-To: <56F9746C.40101@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello Bart,
+On Mon, 2016-03-28 at 11:14 -0700, Bart Van Assche wrote:
+> While retesting the SRP initiator I ran the command "rmmod mlx4_ib"
+> while I/O was in progress. That command triggers SCSI device removal
+> indirectly. Avoid that this action triggers the following deadlock:
+> 
+> =================================
+> [ INFO: inconsistent lock state ]
+> 4.6.0-rc0-dbg+ #2 Tainted: G           O
+> ---------------------------------
+> inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
+> multipathd/484 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>  (&(&pg->lock)->rlock){+.?...}, at: [<ffffffffa04f50a2>] alua_bus_detach+0x52/0xa0 [scsi_dh_alua]
+> {IN-SOFTIRQ-W} state was registered at:
+>   [<ffffffff810a64a9>] __lock_acquire+0x7e9/0x1ad0
+>   [<ffffffff810a7fd0>] lock_acquire+0x60/0x80
+>   [<ffffffff8159910e>] _raw_spin_lock_irqsave+0x3e/0x60
+>   [<ffffffffa04f5131>] alua_rtpg_queue+0x41/0x1d0 [scsi_dh_alua]
+>   [<ffffffffa04f5531>] alua_check+0xe1/0x220 [scsi_dh_alua]
+>   [<ffffffffa04f5709>] alua_check_sense+0x99/0xb0 [scsi_dh_alua]
+>   [<ffffffff813f0d01>] scsi_check_sense+0x71/0x3f0
+>   [<ffffffff813f2f8b>] scsi_decide_disposition+0x18b/0x1d0
+>   [<ffffffff813f6e52>] scsi_softirq_done+0x52/0x140
+>   [<ffffffff812a26f2>] blk_done_softirq+0x52/0x90
+>   [<ffffffff8105bc1f>] __do_softirq+0x10f/0x230
+>   [<ffffffff8105bec8>] irq_exit+0xa8/0xb0
+>   [<ffffffff8101a675>] do_IRQ+0x65/0x110
+>   [<ffffffff8159a2c9>] ret_from_intr+0x0/0x19
+>   [<ffffffff811732f1>] kmem_cache_alloc+0x151/0x190
+>   [<ffffffff8118e534>] create_object+0x34/0x2d0
+>   [<ffffffff8158eaa6>] kmemleak_alloc_percpu+0x56/0xd0
+>   [<ffffffff8113ab0d>] pcpu_alloc+0x38d/0x660
+>   [<ffffffff8113aded>] __alloc_percpu_gfp+0xd/0x10
+>   [<ffffffff812e56a5>] __percpu_counter_init+0x55/0xb0
+>   [<ffffffff812b4989>] blkg_alloc+0x79/0x230
+>   [<ffffffff812b6756>] blkcg_init_queue+0x26/0x1d0
+>   [<ffffffff81297eed>] blk_alloc_queue_node+0x27d/0x2e0
+>   [<ffffffffa017766c>] dm_create+0x20c/0x570 [dm_mod]
+>   [<ffffffffa017e356>] dev_create+0x56/0x2c0 [dm_mod]
+>   [<ffffffffa017dcae>] ctl_ioctl+0x26e/0x520 [dm_mod]
+>   [<ffffffffa017df6e>] dm_ctl_ioctl+0xe/0x20 [dm_mod]
+>   [<ffffffff811aa8ee>] do_vfs_ioctl+0x8e/0x660
+>   [<ffffffff811aaefc>] SyS_ioctl+0x3c/0x70
+>   [<ffffffff81599929>] entry_SYSCALL_64_fastpath+0x1c/0xac
+> irq event stamp: 4290931
+> hardirqs last  enabled at (4290931): [ 1662.892772]
+> [<ffffffff81599341>] _raw_spin_unlock_irqrestore+0x31/0x50
+> hardirqs last disabled at (4290930): [<ffffffff815990e7>] _raw_spin_lock_irqsave+0x17/0x60
+> softirqs last  enabled at (4290774): [<ffffffff8105bcdb>] __do_softirq+0x1cb/0x230
+> softirqs last disabled at (4289831): [<ffffffff8105bec8>] irq_exit+0xa8/0xb0
+> 
+> other info that might help us debug this:
+>  Possible unsafe locking scenario:
+> 
+>        CPU0
+>        ----
+>   lock(&(&pg->lock)->rlock);
+>   <Interrupt>
+>     lock(&(&pg->lock)->rlock);
+> 
+>  *** DEADLOCK ***
+> 
+> 2 locks held by multipathd/484:
+>  #0:  (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff811d1cc3>] __blkdev_put+0x33/0x360
+>  #1:  (sd_ref_mutex){+.+...}, at: [<ffffffff81400afc>] scsi_disk_put+0x1c/0x40
+> 
+> stack backtrace:
+> CPU: 6 PID: 484 Comm: multipathd Tainted: G           O    4.6.0-rc0-dbg+ #2
+> Call Trace:
+>  [<ffffffff812bd115>] dump_stack+0x67/0x92
+>  [<ffffffff810a5175>] print_usage_bug+0x215/0x240
+>  [<ffffffff810a56ea>] mark_lock+0x54a/0x610
+>  [<ffffffff810a6505>] __lock_acquire+0x845/0x1ad0
+>  [<ffffffff810a7fd0>] lock_acquire+0x60/0x80
+>  [<ffffffff81598f23>] _raw_spin_lock+0x33/0x50
+>  [<ffffffffa04f50a2>] alua_bus_detach+0x52/0xa0 [scsi_dh_alua]
+>  [<ffffffff813ff6f7>] scsi_dh_release_device+0x17/0x50
+>  [<ffffffff813fb8da>] scsi_device_dev_release_usercontext+0x2a/0x120
+>  [<ffffffff810701f0>] execute_in_process_context+0x80/0x90
+>  [<ffffffff813fb8a7>] scsi_device_dev_release+0x17/0x20
+>  [<ffffffff813c8cfd>] device_release+0x2d/0x90
+>  [<ffffffff812bfa8a>] kobject_release+0x7a/0x190
+>  [<ffffffff812bf946>] kobject_put+0x26/0x50
+>  [<ffffffff813c8ee2>] put_device+0x12/0x20
+>  [<ffffffff813edc86>] scsi_device_put+0x26/0x30
+>  [<ffffffff81400b0d>] scsi_disk_put+0x2d/0x40
+>  [<ffffffff81400b68>] sd_release+0x48/0xb0
+>  [<ffffffff811d1f2e>] __blkdev_put+0x29e/0x360
+>  [<ffffffff811d24b9>] blkdev_put+0x49/0x170
+>  [<ffffffff811d2600>] blkdev_close+0x20/0x30
+>  [<ffffffff81198f48>] __fput+0xe8/0x1f0
+>  [<ffffffff81199089>] ____fput+0x9/0x10
+>  [<ffffffff81075d9e>] task_work_run+0x6e/0xa0
+>  [<ffffffff81001119>] exit_to_usermode_loop+0xa9/0xb0
+>  [<ffffffff81001590>] syscall_return_slowpath+0xb0/0xc0
+>  [<ffffffff815999b7>] entry_SYSCALL_64_fastpath+0xaa/0xac
+> 
+> Fixes: cb0a168cb6b8 (scsi_dh_alua: update 'access_state' field)
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index a404a41..8eaed05 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -1112,9 +1112,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
+>  	h->sdev = NULL;
+>  	spin_unlock(&h->pg_lock);
+>  	if (pg) {
+> -		spin_lock(&pg->lock);
+> +		spin_lock_irq(&pg->lock);
+>  		list_del_rcu(&h->node);
+> -		spin_unlock(&pg->lock);
+> +		spin_unlock_irq(&pg->lock);
+>  		kref_put(&pg->kref, release_port_group);
+>  	}
+>  	sdev->handler_data = NULL;
 
-I have been using this jammer functionality to continue testing the SCSI F/C drivers and recovery for over a year now.
-Any chance you would agree to ack this so I can get it in now.
-I last posted to the list last March and it was not picked up.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-I did look into moving this to upper layers but I find I use it primarily for fiber channel target testing.
-Attempting to add this functionality to upper layers led to complexities and this is very solid.
-
-This Patch diff against 4.5
-
-I use target LIO for all my storage array test targets and customer problem resolution here at Red Hat.
-This patch resulted from a requirement to mimic behavior of an expensive hardware jammer for a customer.
-I have used this for some time with good success to simulate and reproduce latency and slow drain fabric issues and
-for testing and validating error handling behavior
- in the Emulex, Qlogic and other F/C drivers.
-
-Works by checking new parameter jam_host if its >= 0 and matches vha->host_no , jamming is enabled when jam_host >=0
-If parameter set to -1 (default) no jamming is enabled. 
-
-Tested by: Laurence Oberman <loberman@redhat.com>
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
-
-diff -Nurp linux-4.5.orig/Documentation/scsi/tcm_qla2xxx.txt linux-4.5/Documentation/scsi/tcm_qla2xxx.txt
---- linux-4.5.orig/Documentation/scsi/tcm_qla2xxx.txt	1969-12-31 19:00:00.000000000 -0500
-+++ linux-4.5/Documentation/scsi/tcm_qla2xxx.txt	2016-03-29 10:08:57.455761389 -0400
-@@ -0,0 +1,31 @@
-+tcm_qla2xxx jammer parameter usage
-+----------------------------------
-+There is now a new module parameter added to the tcm_qla2xx module
-+parm:           jam_host:Host to jam >=0 Enable jammer (int)
-+
-+Use this parameter to control the discarding of SCSI commands to a selected
-+host.
-+This may be useful for testing error handling and simulating slow drain
-+and other fabric issues.
-+
-+Any value >=0 that matches a fc_host # will discard the commands for that host.
-+Reset back to -1 to stop the jamming.
-+
-+Enable host 6 to be jammed
-+echo 6 > /sys/module/tcm_qla2xxx/parameters/jam_host
-+
-+Disable jamming on host 6
-+echo -1 > /sys/module/tcm_qla2xxx/parameters/jam_host
-+
-+Usage example script:
-+
-+#!/bin/bash
-+sleep_time=120  ### Time to jam for
-+echo 6 >  /sys/module/tcm_qla2xxx/parameters/jam_host
-+host=`cat /sys/module/tcm_qla2xxx/parameters/jam_host`
-+echo "We start to discard commands on SCSI host $host"
-+logger "Jammer started"
-+sleep $sleep_time
-+echo -1 >  /sys/module/tcm_qla2xxx/parameters/jam_host
-+echo "We stopped the jammer"
-+logger "Jammer stopped"
-diff -Nurp linux-4.5.orig/drivers/scsi/qla2xxx/tcm_qla2xxx.c linux-4.5/drivers/scsi/qla2xxx/tcm_qla2xxx.c
---- linux-4.5.orig/drivers/scsi/qla2xxx/tcm_qla2xxx.c	2016-03-14 00:28:54.000000000 -0400
-+++ linux-4.5/drivers/scsi/qla2xxx/tcm_qla2xxx.c	2016-03-29 10:10:09.677298099 -0400
-@@ -48,6 +48,10 @@
- #include "qla_target.h"
- #include "tcm_qla2xxx.h"
- 
-+int jam_host = -1;
-+module_param(jam_host, int, 0644);
-+MODULE_PARM_DESC(jam_host, "Host to jam >=0 Enable jammer");
-+
- static struct workqueue_struct *tcm_qla2xxx_free_wq;
- static struct workqueue_struct *tcm_qla2xxx_cmd_wq;
- 
-@@ -477,6 +481,11 @@ static int tcm_qla2xxx_handle_cmd(scsi_q
- 		return -EINVAL;
- 	}
- 
-+	if (unlikely(vha->host_no == jam_host)) {
-+		/* return, and dont run target_submit_cmd,discarding command */
-+		return 0;
-+	}
-+
- 	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
- 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
- 				cmd->unpacked_lun, data_length, fcp_task_attr,
-@@ -1967,6 +1976,7 @@ static void tcm_qla2xxx_deregister_confi
- static int __init tcm_qla2xxx_init(void)
- {
- 	int ret;
-+	jam_host = -1;
- 
- 	ret = tcm_qla2xxx_register_configfs();
- 	if (ret < 0)
-
-
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
 
