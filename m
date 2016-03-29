@@ -1,63 +1,140 @@
-From: Rameshwar Prasad Sahu <rsahu@apm.com>
-Subject: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
- controller DTS node
-Date: Tue, 29 Mar 2016 15:24:54 +0530
-Message-ID: <1459245294-22678-1-git-send-email-rsahu@apm.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [RESEND] [PATCH v11 2/6] added UFS 2.0 capabilities
+Date: Tue, 29 Mar 2016 10:41:37 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B541CD26F@hasmsx108.ger.corp.intel.com>
+References: <cover.1457111366.git.jpinto@synopsys.com>
+ <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto@synopsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, ddutile@redhat.com, linux-arm-kernel@lists.infradead.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto@synopsys.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "robh@kernel.org" <robh@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Fix X-Gene SATA controller compatible string for Merlin board.
 
-Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
-Acked-by: Suman Tripathi <stripathi@apm.com>
+Adding UFS 2.0 support to the UFS core driver.
+
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Changes v8->v11:
+- Nothing changed (just to keep up with patch set version).
+Changes v7->v8:
+- Added "jedec, ufs-2.0" to the ufschd-platform compatibility strings Changes v0->v7:
+- Nothing changed (just to keep up with patch set version).
 
-diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-index 5d87a3d..74d971e 100644
---- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-@@ -524,7 +524,7 @@
- 		};
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 +--
+ drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++++++---
+ drivers/scsi/ufs/ufshci.h                          |  1 +
+ 3 files changed, 28 insertions(+), 6 deletions(-)
 
- 		sata1: sata@1a000000 {
--			compatible = "apm,xgene-ahci";
-+			compatible = "apm,xgene-ahci-v2";
- 			reg = <0x0 0x1a000000 0x0 0x1000>,
- 			      <0x0 0x1f200000 0x0 0x1000>,
- 			      <0x0 0x1f20d000 0x0 0x1000>,
-@@ -534,7 +534,7 @@
- 		};
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 03c0e98..8d9a9d2 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -4,8 +4,8 @@ UFSHC nodes are defined to describe on-chip UFS host controllers.
+ Each UFS controller instance should have its own node.
+ 
+ Required properties:
+-- compatible		: must contain "jedec,ufs-1.1", may also list one or more
+-					  of the following:
++- compatible		: must contain "jedec,ufs-1.1" or "jedec,ufs-2.0", may
++			  also list one or more of the following:
+ 					  "qcom,msm8994-ufshc"
+ 					  "qcom,msm8996-ufshc"
+ 					  "qcom,ufshc"
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index 85cd256..2b5f2bf 100644
 
- 		sata2: sata@1a200000 {
--			compatible = "apm,xgene-ahci";
-+			compatible = "apm,xgene-ahci-v2";
- 			reg = <0x0 0x1a200000 0x0 0x1000>,
- 			      <0x0 0x1f210000 0x0 0x1000>,
- 			      <0x0 0x1f21d000 0x0 0x1000>,
-@@ -544,7 +544,7 @@
- 		};
+I think this should go in separate patch 
 
- 		sata3: sata@1a400000 {
--			compatible = "apm,xgene-ahci";
-+			compatible = "apm,xgene-ahci-v2";
- 			reg = <0x0 0x1a400000 0x0 0x1000>,
- 			      <0x0 0x1f220000 0x0 0x1000>,
- 			      <0x0 0x1f22d000 0x0 0x1000>,
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1223,6 +1223,7 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 			ret = -EINVAL;
+ 		}
+ 		break;
++	case UTP_CMD_TYPE_UFS_STORAGE:
+ 	case UTP_CMD_TYPE_DEV_MANAGE:
+ 		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
+ 		if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY) @@ -1287,6 +1288,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	struct ufshcd_lrb *lrbp;
+ 	struct ufs_hba *hba;
+ 	unsigned long flags;
++	u32 upiu_flags;
+ 	int tag;
+ 	int err = 0;
+ 
+@@ -1343,10 +1345,23 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+ 	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+-	lrbp->command_type = UTP_CMD_TYPE_SCSI;
++
++	if (hba->ufs_version == UFSHCI_VERSION_20)
++		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
++	else
++		lrbp->command_type = UTP_CMD_TYPE_SCSI;
+This translation can be pushed to prepare_req_desc_hdr and you end up with  ~oneliner fix 
+
+ 
+ 	/* form UPIU before issuing the command */
+-	ufshcd_compose_upiu(hba, lrbp);
++	if (hba->ufs_version == UFSHCI_VERSION_20) {
++		if (likely(lrbp->cmd)) {
+How this can be possible NULL, the code above will crash or I'm missing something ? 
++			ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
++					lrbp->cmd->sc_data_direction);
++			ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
+What is different her from the code in ufshcd_compose_upiu ?
++		} else
++			err = -EINVAL;
++	} else
++		ufshcd_compose_upiu(hba, lrbp);
++
+ 	err = ufshcd_map_sg(lrbp);
+ 	if (err) {
+ 		lrbp->cmd = NULL;
+@@ -1371,7 +1386,12 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+ 	lrbp->sense_buffer = NULL;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = 0; /* device management cmd is not specific to any LUN */
+-	lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++
++	if (hba->ufs_version == UFSHCI_VERSION_20)
++		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
++	else
++		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++
+This translation can be pushed to prepare_req_desc_hdr and you end up with ~ oneliner fix
+
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
+ 	hba->dev_cmd.type = cmd_type;
+ 
+@@ -3187,7 +3207,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 			/* Do not touch lrbp after scsi done */
+ 			cmd->scsi_done(cmd);
+ 			__ufshcd_release(hba);
+-		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE) {
++		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
++			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+ 			if (hba->dev_cmd.complete)
+ 				complete(hba->dev_cmd.complete);
+ 		}
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h index 0ae0967..8dba0e7 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -273,6 +273,7 @@ enum {
+ 	UTP_CMD_TYPE_SCSI		= 0x0,
+ 	UTP_CMD_TYPE_UFS		= 0x1,
+ 	UTP_CMD_TYPE_DEV_MANAGE		= 0x2,
++	UTP_CMD_TYPE_UFS_STORAGE	= 0x11,
+ };
+ 
+ enum {
 --
-1.7.1
+1.8.1.5
