@@ -1,26 +1,26 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] scsi_dh_alua: Fix a recently introduced deadlock
-Date: Tue, 29 Mar 2016 00:34:19 -0700
-Message-ID: <20160329073419.GB8568@infradead.org>
-References: <56F9740A.4060100@sandisk.com>
- <56F9746C.40101@sandisk.com>
+Subject: Re: [PATCH] scsi: Add intermediate STARGET_REMOVE state to
+ scsi_target_state
+Date: Tue, 29 Mar 2016 00:45:35 -0700
+Message-ID: <20160329074535.GA30098@infradead.org>
+References: <1458813373-7477-1-git-send-email-jthumshirn@suse.de>
+ <1458834164.17965.74.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40542 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbcC2HeW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2016 03:34:22 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <56F9746C.40101@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1458834164.17965.74.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This indeed looks like the only place where we took pg->lock without
-disabling irqs.
+On Thu, Mar 24, 2016 at 11:42:44AM -0400, Ewan D. Milne wrote:
+> This looks fine.  Do we still need 90a88d6ef (scsi: fix soft lockup in
+> scsi_remove_target() on module removal) or can that be reverted now,
+> since the STARGET_REMOVE state will allow the iteration to continue?
 
-Looks fine,
+Yes, that stale pointer check is something I'd really, really prefer
+not to have around in the long run.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Otherwise the patch looks like the right direction to me.
