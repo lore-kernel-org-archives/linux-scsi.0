@@ -1,53 +1,141 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: fixup capacity calculation for 4k drives
-Date: Mon, 28 Mar 2016 21:14:24 -0400
-Message-ID: <yq1io06t79r.fsf@sermon.lab.mkp.net>
-References: <1458563249-91200-1-git-send-email-hare@suse.de>
-	<yq1a8lr5n2y.fsf@sermon.lab.mkp.net> <56F0F0E8.6060302@suse.de>
-	<1458656217.17965.48.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH v2] sd: Fix excessive capacity printing on devices with blocks bigger than 512 bytes
+Date: Mon, 28 Mar 2016 21:18:56 -0400
+Message-ID: <1459214336-12668-1-git-send-email-martin.petersen@oracle.com>
+References: <1458656217.17965.48.camel@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36520 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbcC2BOh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2016 21:14:37 -0400
-In-Reply-To: <1458656217.17965.48.camel@localhost.localdomain> (Ewan
-	D. Milne's message of "Tue, 22 Mar 2016 10:16:57 -0400")
+Received: from userp1040.oracle.com ([156.151.31.81]:20975 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753373AbcC2BTW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2016 21:19:22 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u2T1JK0j013846
+	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2016 01:19:21 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+	by userv0021.oracle.com (8.13.8/8.13.8) with ESMTP id u2T1JKCT009806
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2016 01:19:20 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+	by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id u2T1JKGm024049
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2016 01:19:20 GMT
+In-Reply-To: <1458656217.17965.48.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
+During revalidate we check whether device capacity has changed before we
+decide whether to output disk information or not.
 
-Ewan/Hannes,
+The check for old capacity failed to take into account that we scaled
+sdkp->capacity based on the reported logical block size. And therefore
+the capacity test would always fail for devices with sectors bigger than
+512 bytes and we would print several copies of the same discovery
+information.
 
-Sorry I dropped the ball on this. My eyes started bleeding.
+Avoid scaling sdkp->capacity and instead adjust the value on the fly
+when setting the block device capacity and generating fake C/H/S
+geometry.
 
-Ewan> If we change the meaning of the scsi_disk->capacity field to be
-Ewan> logical sectors, we also have to change sd_getgeo() in sd.c, do we
-Ewan> not?
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reported-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/sd.c | 28 ++++++++--------------------
+ drivers/scsi/sd.h |  7 ++++++-
+ 2 files changed, 14 insertions(+), 21 deletions(-)
 
-I did consider that before sending the original patch but didn't see a
-problem. In looking closer, however, it does appear that we'd
-inadvertently change the reported geometry for 4Kn devices that are
-sufficiently small. So I fixed that up.
-
-Ewan> The ->capacity field is also accessed by last_sector_hacks() in
-Ewan> drivers/usb/storage/transport.c, although it kind of looks like
-Ewan> that code might not have been correct for 4K sectors with the
-Ewan> scaled value.
-
-That case I had missed. Ew, gross! But yes, that was broken to begin
-with.
-
-I have to admit I was going back and forth how to fix this. But in the
-end I find it really ugly that capacity suddenly changes from logical
-blocks to block layer sectors. And I prefer to make that conversion
-explicit when it is necessary.
-
-Amended patch follows...
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5a5457ac9cdb..8401697ff6aa 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1275,18 +1275,19 @@ static int sd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
+ 	struct scsi_disk *sdkp = scsi_disk(bdev->bd_disk);
+ 	struct scsi_device *sdp = sdkp->device;
+ 	struct Scsi_Host *host = sdp->host;
++	sector_t capacity = logical_to_sectors(sdp, sdkp->capacity);
+ 	int diskinfo[4];
+ 
+ 	/* default to most commonly used values */
+-        diskinfo[0] = 0x40;	/* 1 << 6 */
+-       	diskinfo[1] = 0x20;	/* 1 << 5 */
+-       	diskinfo[2] = sdkp->capacity >> 11;
+-	
++	diskinfo[0] = 0x40;	/* 1 << 6 */
++	diskinfo[1] = 0x20;	/* 1 << 5 */
++	diskinfo[2] = capacity >> 11;
++
+ 	/* override with calculated, extended default, or driver values */
+ 	if (host->hostt->bios_param)
+-		host->hostt->bios_param(sdp, bdev, sdkp->capacity, diskinfo);
++		host->hostt->bios_param(sdp, bdev, capacity, diskinfo);
+ 	else
+-		scsicam_bios_param(bdev, sdkp->capacity, diskinfo);
++		scsicam_bios_param(bdev, capacity, diskinfo);
+ 
+ 	geo->heads = diskinfo[0];
+ 	geo->sectors = diskinfo[1];
+@@ -2337,14 +2338,6 @@ got_data:
+ 	if (sdkp->capacity > 0xffffffff)
+ 		sdp->use_16_for_rw = 1;
+ 
+-	/* Rescale capacity to 512-byte units */
+-	if (sector_size == 4096)
+-		sdkp->capacity <<= 3;
+-	else if (sector_size == 2048)
+-		sdkp->capacity <<= 2;
+-	else if (sector_size == 1024)
+-		sdkp->capacity <<= 1;
+-
+ 	blk_queue_physical_block_size(sdp->request_queue,
+ 				      sdkp->physical_block_size);
+ 	sdkp->device->sector_size = sector_size;
+@@ -2812,11 +2805,6 @@ static int sd_try_extended_inquiry(struct scsi_device *sdp)
+ 	return 0;
+ }
+ 
+-static inline u32 logical_to_sectors(struct scsi_device *sdev, u32 blocks)
+-{
+-	return blocks << (ilog2(sdev->sector_size) - 9);
+-}
+-
+ /**
+  *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+@@ -2900,7 +2888,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	/* Combine with controller limits */
+ 	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
+ 
+-	set_capacity(disk, sdkp->capacity);
++	set_capacity(disk, logical_to_sectors(sdp, sdkp->capacity));
+ 	sd_config_write_same(sdkp);
+ 	kfree(buffer);
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5f2a84aff29f..654630bb7d0e 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -65,7 +65,7 @@ struct scsi_disk {
+ 	struct device	dev;
+ 	struct gendisk	*disk;
+ 	atomic_t	openers;
+-	sector_t	capacity;	/* size in 512-byte sectors */
++	sector_t	capacity;	/* size in logical blocks */
+ 	u32		max_xfer_blocks;
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+@@ -146,6 +146,11 @@ static inline int scsi_medium_access_command(struct scsi_cmnd *scmd)
+ 	return 0;
+ }
+ 
++static inline sector_t logical_to_sectors(struct scsi_device *sdev, sector_t blocks)
++{
++	return blocks << (ilog2(sdev->sector_size) - 9);
++}
++
+ /*
+  * A DIF-capable target device can be formatted with different
+  * protection schemes.  Currently 0 through 3 are defined:
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.4
+
