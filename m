@@ -1,23 +1,21 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [RESEND] [PATCH v11 2/6] added UFS 2.0 capabilities
-Date: Tue, 29 Mar 2016 12:08:15 +0100
-Message-ID: <56FA621F.7050104@synopsys.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [RESEND] [PATCH v11 2/6] added UFS 2.0 capabilities
+Date: Tue, 29 Mar 2016 11:33:25 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B541CD330@hasmsx108.ger.corp.intel.com>
 References: <cover.1457111366.git.jpinto@synopsys.com>
  <fcc0aa6a294a02dcab590d56f7f43bcb2f9f18db.1457111366.git.jpinto@synopsys.com>
  <5B8DA87D05A7694D9FA63FD143655C1B541CD26F@hasmsx108.ger.corp.intel.com>
+ <56FA621F.7050104@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:42867 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbcC2LIW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2016 07:08:22 -0400
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B541CD26F@hasmsx108.ger.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: "Winkler, Tomas" <tomas.winkler@intel.com>, Joao Pinto <Joao.Pinto@synopsys.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56FA621F.7050104@synopsys.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "robh@kernel.org" <robh@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Hi Thomas,
 
@@ -40,7 +38,8 @@ On 3/29/2016 11:41 AM, Winkler, Tomas wrote:
 >  drivers/scsi/ufs/ufshci.h                          |  1 +
 >  3 files changed, 28 insertions(+), 6 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt 
+> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
 > index 03c0e98..8d9a9d2 100644
 > --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
 > +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
@@ -55,14 +54,14 @@ On 3/29/2016 11:41 AM, Winkler, Tomas wrote:
 >  					  "qcom,msm8994-ufshc"
 >  					  "qcom,msm8996-ufshc"
 >  					  "qcom,ufshc"
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index 85cd256..2b5f2bf 100644
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c 
+> index 85cd256..2b5f2bf 100644
 > 
 > I think this should go in separate patch
 
-In my opinion it only makes sense to add 2.0 to the device-tree binding if the
-driver actually supports it, that was why I added to the same patch, but of
-course it can be separated if more people agree with the approach.
+In my opinion it only makes sense to add 2.0 to the device-tree binding if the driver actually supports it, that was why I added to the same patch, but of course it can be separated if more people agree with the approach.
 
+Yes, we have ufshcd-pci device that needs that so I think this should go separately 
 > 
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
@@ -91,11 +90,15 @@ course it can be separated if more people agree with the approach.
 > +		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
 > +	else
 > +		lrbp->command_type = UTP_CMD_TYPE_SCSI;
-> This translation can be pushed to prepare_req_desc_hdr and you end up with  ~oneliner fix 
+> This translation can be pushed to prepare_req_desc_hdr and you end up 
+> with  ~oneliner fix
 
-I think your suggestion is good! We have to check the 2.0 version in 2 places
-and with your approach we would only check it in prepare_req_desc_hdr() once.
+I think your suggestion is good! We have to check the 2.0 version in 2 places and with your approach we would only check it in prepare_req_desc_hdr() once.
 I will do that update!
+
+Okay I think you can alter ufshcd_lrb structure and push the information there,
+Add ufs version there as hba is not available in req_desc_hdr, I think both command_type and ufs_version can be u8 so the structure won't grow. 
+
 
 > 
 >  
@@ -114,13 +117,19 @@ I will do that update!
 > +		ufshcd_compose_upiu(hba, lrbp);
 
 If you check ufshcd_compose_upiu() you will see that it contains 2 scopes:
-cmd_upiu and query_req_upiu. Before 2.0 this single function approach that had
-both scopes worked well, but now with 2.0 we must use the same command_type
-(UTP_CMD_TYPE_UFS_STORAGE) which causes incompatibility. This was why I put the
-same code from cmd_upiu in the outside.
+cmd_upiu and query_req_upiu. Before 2.0 this single function approach that had both scopes worked well, but now with 2.0 we must use the same command_type
+(UTP_CMD_TYPE_UFS_STORAGE) which causes incompatibility. This was why I put the same code from cmd_upiu in the outside.
 
-Of course we can break ufshcd_compose_upiu() in 2: ufshcd_compose_cmd_upiu() and
-ufshcd_compose_query_upiu(). What do you think?
+Of course we can break ufshcd_compose_upiu() in 2: ufshcd_compose_cmd_upiu() and ufshcd_compose_query_upiu(). What do you think?
+If you use ufs_version only in req_desc_hdr then you don't need this
+
+If (ufs_version == 2.0)
+   cmd_type = UFS_STORAGE 
+else 
+    cmd_type = lrb->command_type 
+
+... 
+I think with this change 
 
 > +
 >  	err = ufshcd_map_sg(lrbp);
@@ -137,7 +146,8 @@ ufshcd_compose_query_upiu(). What do you think?
 > +	else
 > +		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
 > +
-> This translation can be pushed to prepare_req_desc_hdr and you end up with ~ oneliner fix
+> This translation can be pushed to prepare_req_desc_hdr and you end up 
+> with ~ oneliner fix
 > 
 >  	lrbp->intr_cmd = true; /* No interrupt aggregation */
 >  	hba->dev_cmd.type = cmd_type;
@@ -152,7 +162,8 @@ ufshcd_compose_query_upiu(). What do you think?
 >  			if (hba->dev_cmd.complete)
 >  				complete(hba->dev_cmd.complete);
 >  		}
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h index 0ae0967..8dba0e7 100644
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h 
+> index 0ae0967..8dba0e7 100644
 > --- a/drivers/scsi/ufs/ufshci.h
 > +++ b/drivers/scsi/ufs/ufshci.h
 > @@ -273,6 +273,7 @@ enum {
@@ -160,17 +171,7 @@ ufshcd_compose_query_upiu(). What do you think?
 >  	UTP_CMD_TYPE_UFS		= 0x1,
 >  	UTP_CMD_TYPE_DEV_MANAGE		= 0x2,
 > +	UTP_CMD_TYPE_UFS_STORAGE	= 0x11,
->  };
->  
->  enum {
-> --
-> 1.8.1.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Why 0x11? 
 
-Thanks,
-Joao
-
-
+Thanks
+Tomas 
