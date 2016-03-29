@@ -1,213 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] sd: fixup capacity calculation for 4k drives
-Date: Tue, 29 Mar 2016 10:06:55 +0200
-Message-ID: <1459238815-15053-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45828 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441AbcC2IG7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Mar 2016 04:06:59 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rameshwar Prasad Sahu <rsahu@apm.com>
+Subject: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
+ controller DTS node
+Date: Tue, 29 Mar 2016 15:24:54 +0530
+Message-ID: <1459245294-22678-1-git-send-email-rsahu@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, ddutile@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-in sd_read_capacity() the sdkp->capacity field changes its meaning:
-after the call to read_capacity_XX() it carries the _unscaled_ values,
-making the comparison between the original value and the new value
-always false for drives with a sector size != 512.
+Fix X-Gene SATA controller compatible string for Merlin board.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+Acked-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/scsi/sd.c | 69 +++++++++++++++++++++++++++++++------------------------
- 1 file changed, 39 insertions(+), 30 deletions(-)
+ arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5a5457a..0afe113 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2046,7 +2046,7 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
- #define READ_CAPACITY_RETRIES_ON_RESET	10
- 
- static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
--						unsigned char *buffer)
-+			    unsigned char *buffer, u64 *capacity)
- {
- 	unsigned char cmd[16];
- 	struct scsi_sense_hdr sshdr;
-@@ -2054,8 +2054,8 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	int the_result;
- 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
- 	unsigned int alignment;
--	unsigned long long lba;
--	unsigned sector_size;
-+	u64 lba;
-+	u32 sector_size;
- 
- 	if (sdp->no_read_capacity_16)
- 		return -EINVAL;
-@@ -2114,7 +2114,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
- 			"kernel compiled with support for large block "
- 			"devices.\n");
--		sdkp->capacity = 0;
-+		*capacity = 0;
- 		return -EOVERFLOW;
- 	}
- 
-@@ -2137,20 +2137,20 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		sd_config_discard(sdkp, SD_LBP_WS16);
- 	}
- 
--	sdkp->capacity = lba + 1;
-+	*capacity = lba + 1;
- 	return sector_size;
- }
- 
- static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
--						unsigned char *buffer)
-+			    unsigned char *buffer, u64 *capacity)
- {
- 	unsigned char cmd[16];
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
- 	int the_result;
- 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
--	sector_t lba;
--	unsigned sector_size;
-+	u32 lba;
-+	u32 sector_size;
- 
- 	do {
- 		cmd[0] = READ_CAPACITY;
-@@ -2191,7 +2191,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		/* Some buggy (usb cardreader) devices return an lba of
- 		   0xffffffff when the want to report a size of 0 (with
- 		   which they really mean no media is present) */
--		sdkp->capacity = 0;
-+		*capacity = 0;
- 		sdkp->physical_block_size = sector_size;
- 		return sector_size;
- 	}
-@@ -2200,11 +2200,11 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
- 			"kernel compiled with support for large block "
- 			"devices.\n");
--		sdkp->capacity = 0;
-+		*capacity = 0;
- 		return -EOVERFLOW;
- 	}
- 
--	sdkp->capacity = lba + 1;
-+	*capacity = (u64)lba + 1;
- 	sdkp->physical_block_size = sector_size;
- 	return sector_size;
- }
-@@ -2230,34 +2230,38 @@ sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	int sector_size;
- 	struct scsi_device *sdp = sdkp->device;
--	sector_t old_capacity = sdkp->capacity;
-+	u64 old_capacity = sdkp->capacity, new_capacity;
- 
- 	if (sd_try_rc16_first(sdp)) {
--		sector_size = read_capacity_16(sdkp, sdp, buffer);
-+		sector_size = read_capacity_16(sdkp, sdp, buffer,
-+					       &new_capacity);
- 		if (sector_size == -EOVERFLOW)
- 			goto got_data;
- 		if (sector_size == -ENODEV)
- 			return;
- 		if (sector_size < 0)
--			sector_size = read_capacity_10(sdkp, sdp, buffer);
-+			sector_size = read_capacity_10(sdkp, sdp, buffer,
-+						       &new_capacity);
- 		if (sector_size < 0)
- 			return;
- 	} else {
--		sector_size = read_capacity_10(sdkp, sdp, buffer);
-+		sector_size = read_capacity_10(sdkp, sdp, buffer,
-+					       &new_capacity);
- 		if (sector_size == -EOVERFLOW)
- 			goto got_data;
- 		if (sector_size < 0)
- 			return;
- 		if ((sizeof(sdkp->capacity) > 4) &&
--		    (sdkp->capacity > 0xffffffffULL)) {
-+		    (new_capacity > 0xffffffffULL)) {
- 			int old_sector_size = sector_size;
- 			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
- 					"Trying to use READ CAPACITY(16).\n");
--			sector_size = read_capacity_16(sdkp, sdp, buffer);
-+			sector_size = read_capacity_16(sdkp, sdp, buffer,
-+						       &new_capacity);
- 			if (sector_size < 0) {
- 				sd_printk(KERN_NOTICE, sdkp,
- 					"Using 0xffffffff as device size\n");
--				sdkp->capacity = 1 + (sector_t) 0xffffffff;
-+				new_capacity = 1 + (u64) 0xffffffff;
- 				sector_size = old_sector_size;
- 				goto got_data;
- 			}
-@@ -2275,11 +2279,11 @@ sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
- 	 * the capacity.
- 	 */
- 	if (sdp->fix_capacity ||
--	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
-+	    (sdp->guess_capacity && (new_capacity & 0x01))) {
- 		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
- 				"from its reported value: %llu\n",
--				(unsigned long long) sdkp->capacity);
--		--sdkp->capacity;
-+				(unsigned long long) new_capacity);
-+		--new_capacity;
- 	}
- 
- got_data:
-@@ -2301,7 +2305,7 @@ got_data:
- 		 * would be relatively trivial to set the thing up.
- 		 * For this reason, we leave the thing in the table.
- 		 */
--		sdkp->capacity = 0;
-+		new_capacity = 0;
- 		/*
- 		 * set a bogus sector size so the normal read/write
- 		 * logic in the block layer will eventually refuse any
-@@ -2312,6 +2316,19 @@ got_data:
- 	}
- 	blk_queue_logical_block_size(sdp->request_queue, sector_size);
- 
-+	/*
-+	 * Note: up to this point new_capacity carries the
-+	 * _unscaled_ capacity. So rescale capacity to 512-byte units.
-+	 */
-+	if (sector_size == 4096)
-+		sdkp->capacity = new_capacity << 3;
-+	else if (sector_size == 2048)
-+		sdkp->capacity = new_capacity << 2;
-+	else if (sector_size == 1024)
-+		sdkp->capacity = new_capacity << 1;
-+	else
-+		sdkp->capacity = new_capacity;
-+
- 	{
- 		char cap_str_2[10], cap_str_10[10];
- 
-@@ -2337,14 +2354,6 @@ got_data:
- 	if (sdkp->capacity > 0xffffffff)
- 		sdp->use_16_for_rw = 1;
- 
--	/* Rescale capacity to 512-byte units */
--	if (sector_size == 4096)
--		sdkp->capacity <<= 3;
--	else if (sector_size == 2048)
--		sdkp->capacity <<= 2;
--	else if (sector_size == 1024)
--		sdkp->capacity <<= 1;
--
- 	blk_queue_physical_block_size(sdp->request_queue,
- 				      sdkp->physical_block_size);
- 	sdkp->device->sector_size = sector_size;
--- 
-1.8.5.6
+diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+index 5d87a3d..74d971e 100644
+--- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+@@ -524,7 +524,7 @@
+ 		};
 
+ 		sata1: sata@1a000000 {
+-			compatible = "apm,xgene-ahci";
++			compatible = "apm,xgene-ahci-v2";
+ 			reg = <0x0 0x1a000000 0x0 0x1000>,
+ 			      <0x0 0x1f200000 0x0 0x1000>,
+ 			      <0x0 0x1f20d000 0x0 0x1000>,
+@@ -534,7 +534,7 @@
+ 		};
+
+ 		sata2: sata@1a200000 {
+-			compatible = "apm,xgene-ahci";
++			compatible = "apm,xgene-ahci-v2";
+ 			reg = <0x0 0x1a200000 0x0 0x1000>,
+ 			      <0x0 0x1f210000 0x0 0x1000>,
+ 			      <0x0 0x1f21d000 0x0 0x1000>,
+@@ -544,7 +544,7 @@
+ 		};
+
+ 		sata3: sata@1a400000 {
+-			compatible = "apm,xgene-ahci";
++			compatible = "apm,xgene-ahci-v2";
+ 			reg = <0x0 0x1a400000 0x0 0x1000>,
+ 			      <0x0 0x1f220000 0x0 0x1000>,
+ 			      <0x0 0x1f22d000 0x0 0x1000>,
+--
+1.7.1
