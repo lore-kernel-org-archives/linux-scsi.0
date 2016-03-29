@@ -1,17 +1,17 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv3] scsi: disable automatic target scan
-Date: Mon, 28 Mar 2016 20:27:48 -0400
-Message-ID: <yq1y492t9ff.fsf@sermon.lab.mkp.net>
-References: <1458200385-32088-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCHv2 0/3] scsi trace updates
+Date: Mon, 28 Mar 2016 20:32:01 -0400
+Message-ID: <yq1twjqt98e.fsf@sermon.lab.mkp.net>
+References: <1458829280-12518-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23743 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:24995 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755576AbcC2A2D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2016 20:28:03 -0400
-In-Reply-To: <1458200385-32088-1-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Thu, 17 Mar 2016 08:39:45 +0100")
+	with ESMTP id S1752033AbcC2AcL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2016 20:32:11 -0400
+In-Reply-To: <1458829280-12518-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Thu, 24 Mar 2016 15:21:17 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
@@ -19,16 +19,9 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@ls
 
 >>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Hannes> On larger installations it is useful to disable automatic LUN
-Hannes> scanning, and only add the required LUNs via udev rules.  This
-Hannes> can speed up bootup dramatically.
-
-Hannes> This patch introduces a new scan module parameter value
-Hannes> 'manual', which works like 'none', but can be overriden by
-Hannes> setting the 'rescan' value from scsi_scan_target to
-Hannes> 'SCSI_SCAN_MANUAL'.  And it updates all relevant callers to set
-Hannes> the 'rescan' value to 'SCSI_SCAN_MANUAL' if invoked via the
-Hannes> 'scan' option in sysfs.
+Hannes> here are some some small updates to scsi tracing; it fixes the
+Hannes> decoding for MAINTENANCE_IN and MAINTENANCE_OUT and adds
+Hannes> definitions for the new ZBC_IN and ZBC_OUT commands.
 
 Applied to 4.7/scsi-queue.
 
