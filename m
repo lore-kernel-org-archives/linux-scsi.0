@@ -1,64 +1,29 @@
-From: Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
- controller DTS node
-Date: Tue, 29 Mar 2016 12:11:21 -0700
-Message-ID: <CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA@mail.gmail.com>
-References: <1459245294-22678-1-git-send-email-rsahu@apm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/2] scsi_dh_alua fixes for kernel v4.6
+Date: Tue, 29 Mar 2016 20:33:37 -0400
+Message-ID: <yq1poucst26.fsf@sermon.lab.mkp.net>
+References: <56F9740A.4060100@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1459245294-22678-1-git-send-email-rsahu@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Rameshwar Prasad Sahu <rsahu@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, tj@kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Devicetree List <devicetree@vger.kernel.org>, linux-arm <linux-arm-kernel@lists.infradead.org>, ddutile@redhat.com, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:43935 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751780AbcC3AeR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2016 20:34:17 -0400
+In-Reply-To: <56F9740A.4060100@sandisk.com> (Bart Van Assche's message of
+	"Mon, 28 Mar 2016 11:12:26 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 2:54 AM, Rameshwar Prasad Sahu <rsahu@apm.com> wrote:
-> Fix X-Gene SATA controller compatible string for Merlin board.
->
-> Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
-> Acked-by: Suman Tripathi <stripathi@apm.com>
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-I will queue this patch into xgene-next tree.
+Bart> Please consider the two patches in this series for inclusion in
+Bart> kernel v4.6. These patches are what I came up with while retesting
+Bart> the v4.6-rc1 scsi_dh_alua handler. The actual patches are:
 
-> ---
->  arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> index 5d87a3d..74d971e 100644
-> --- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> +++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> @@ -524,7 +524,7 @@
->                 };
->
->                 sata1: sata@1a000000 {
-> -                       compatible = "apm,xgene-ahci";
-> +                       compatible = "apm,xgene-ahci-v2";
->                         reg = <0x0 0x1a000000 0x0 0x1000>,
->                               <0x0 0x1f200000 0x0 0x1000>,
->                               <0x0 0x1f20d000 0x0 0x1000>,
-> @@ -534,7 +534,7 @@
->                 };
->
->                 sata2: sata@1a200000 {
-> -                       compatible = "apm,xgene-ahci";
-> +                       compatible = "apm,xgene-ahci-v2";
->                         reg = <0x0 0x1a200000 0x0 0x1000>,
->                               <0x0 0x1f210000 0x0 0x1000>,
->                               <0x0 0x1f21d000 0x0 0x1000>,
-> @@ -544,7 +544,7 @@
->                 };
->
->                 sata3: sata@1a400000 {
-> -                       compatible = "apm,xgene-ahci";
-> +                       compatible = "apm,xgene-ahci-v2";
->                         reg = <0x0 0x1a400000 0x0 0x1000>,
->                               <0x0 0x1f220000 0x0 0x1000>,
->                               <0x0 0x1f22d000 0x0 0x1000>,
-> --
-> 1.7.1
->
+Applied to 4.6/scsi-fixes.
 
-Regards,
-Duc Dang.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
