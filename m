@@ -1,17 +1,17 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 2/5] libiscsi: Remove set-but-not-used variables
-Date: Wed, 30 Mar 2016 11:27:08 -0700
-Message-ID: <56FC1A7C.1020501@sandisk.com>
+Subject: [PATCH 3/5] scsi_transport_iscsi: Remove set-but-not-used variables
+Date: Wed, 30 Mar 2016 11:27:27 -0700
+Message-ID: <56FC1A8F.1030504@sandisk.com>
 References: <56FC1A3B.4040704@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0098.outbound.protection.outlook.com ([157.56.111.98]:15316
+Received: from mail-bn1bon0093.outbound.protection.outlook.com ([157.56.111.93]:55648
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754440AbcC3S1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Mar 2016 14:27:13 -0400
+	id S1751367AbcC3S1b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2016 14:27:31 -0400
 In-Reply-To: <56FC1A3B.4040704@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,34 +24,27 @@ set-but-not-used variables.
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 120150a..c051694 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2127,7 +2127,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	struct iscsi_conn *conn;
- 	struct iscsi_task *task;
- 	struct iscsi_tm *hdr;
--	int rc, age;
-+	int age;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 4414816..446781d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2067,13 +2067,10 @@ EXPORT_SYMBOL_GPL(iscsi_alloc_session);
  
- 	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
-@@ -2188,10 +2188,8 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	hdr = &conn->tmhdr;
- 	iscsi_prep_abort_task_pdu(task, hdr);
+ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
+ {
+-	struct Scsi_Host *shost = iscsi_session_to_shost(session);
+-	struct iscsi_cls_host *ihost;
+ 	unsigned long flags;
+ 	int id = 0;
+ 	int err;
  
--	if (iscsi_exec_task_mgmt_fn(conn, hdr, age, session->abort_timeout)) {
--		rc = FAILED;
-+	if (iscsi_exec_task_mgmt_fn(conn, hdr, age, session->abort_timeout))
- 		goto failed;
--	}
+-	ihost = shost->shost_data;
+ 	session->sid = atomic_add_return(1, &iscsi_session_nr);
  
- 	switch (conn->tmf_state) {
- 	case TMF_SUCCESS:
+ 	if (target_id == ISCSI_MAX_TARGET) {
 -- 
 2.7.3
 
