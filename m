@@ -1,41 +1,33 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [RESEND PATCH v2 2/2] scsi: Add intermediate STARGET_REMOVE
- state to scsi_target_state
-Date: Wed, 30 Mar 2016 23:44:56 +0200
-Message-ID: <20160330234456.00004733@localhost>
-References: <cover.1459249252.git.jthumshirn@suse.de>
-	<108843b606da2c793bd830af42d5907bf8776d13.1459249252.git.jthumshirn__45300.0338202857$1459322118$gmane$org@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 0/3] qla2xxx: Patches for kernel v4.7
+Date: Wed, 30 Mar 2016 16:24:57 -0700
+Message-ID: <56FC6049.3090303@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <108843b606da2c793bd830af42d5907bf8776d13.1459249252.git.jthumshirn__45300.0338202857$1459322118$gmane$org@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Sebastian Herbszt <herbszt@gmx.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0066.outbound.protection.outlook.com ([157.56.110.66]:20352
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751816AbcC3XZD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2016 19:25:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Johannes Thumshirn wrote:
-> Add intermediate STARGET_REMOVE state to scsi_target_state to avoid running
-> into the BUG_ON() in scsi_target_reap().
-> 
-> This intermediate state is only valid in the path from scsi_remove_target() to
-> scsi_target_destroy() indicating this target is going to be removed.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Fixes: 40998193560dab6c3ce8d25f4fa58a23e252ef38
-> Cc: stable@vger.kernel.org
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-> ---
-> 
-> Changes from v1:
-> * The state transition from STARGET_CREATED to STARGET_DEL is legitimate,
->   so don't BUG() on it. Found by the 0-Day Bot.
+Hello James and Martin,
 
-This is yet another attempt to fix 40998193560d. Can you please explain how
-it is "superior" to the one proposed by Bart before [1] ?
+The following three patches are what I came up with after having 
+analyzed the output of a static source code analysis tool (sparse) for 
+the QLogic qla2xxx driver:
 
-[1] http://marc.info/?l=linux-scsi&m=145227191917602&w=2
+0001-qla2xxx-Indicate-out-of-memory-with-ENOMEM.patch
+0002-qla2xxx-Remove-set-but-not-used-variables.patch
+0003-qla2xxx-Assign-names-to-the-flags-in-cmd_flags.patch
 
-Sebastian
+Please consider these patches for inclusion in kernel v4.7.
+
+Thanks,
+
+Bart.
