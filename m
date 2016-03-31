@@ -1,119 +1,73 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] uas: Add a new NO_REPORT_LUNS quirk
-Date: Thu, 31 Mar 2016 14:22:51 +0200
-Message-ID: <1459426971-11927-1-git-send-email-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gerd Hoffmann <kraxel@redhat.com>
-Cc: David Webb <djw@noc.ac.uk>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v3 1/2] scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
+Date: Thu, 31 Mar 2016 14:53:18 +0200
+Message-ID: <95ae7ee32dca23bb7f3ab432046fb7016b341049.1459428540.git.jthumshirn@suse.de>
+References: <cover.1459428540.git.jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1459428540.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1459428540.git.jthumshirn@suse.de>
+References: <cover.1459428540.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add a new NO_REPORT_LUNS quirk and set it for Seagate drives with
-an usb-id of: 0bc2:331a, as these will fail to respond to a
-REPORT_LUNS command.
+Add intermediate STARGET_REMOVE state to scsi_target_state to avoid running
+into the BUG_ON() in scsi_target_reap().
 
-Cc: stable@vger.kernel.org
-Reported-and-tested-by: David Webb <djw@noc.ac.uk>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+This intermediate state is only valid in the path from scsi_remove_target() to
+scsi_target_destroy() indicating this target is going to be removed.
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Fixes: 40998193560dab6c3ce8d25f4fa58a23e252ef38
 ---
- drivers/usb/storage/uas.c         | 14 +++++++++++++-
- drivers/usb/storage/unusual_uas.h |  7 +++++++
- drivers/usb/storage/usb.c         |  5 ++++-
- include/linux/usb_usual.h         |  2 ++
- 4 files changed, 26 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_scan.c   | 2 ++
+ drivers/scsi/scsi_sysfs.c  | 2 ++
+ include/scsi/scsi_device.h | 1 +
+ 3 files changed, 5 insertions(+)
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index c68e724147..5e15ed03 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -2,7 +2,7 @@
-  * USB Attached SCSI
-  * Note that this is not the same as the USB Mass Storage driver
-  *
-- * Copyright Hans de Goede <hdegoede@redhat.com> for Red Hat, Inc. 2013 - 2014
-+ * Copyright Hans de Goede <hdegoede@redhat.com> for Red Hat, Inc. 2013 - 2016
-  * Copyright Matthew Wilcox for Intel Corp, 2010
-  * Copyright Sarah Sharp for Intel Corp, 2010
-  *
-@@ -781,6 +781,17 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
- 	return SUCCESS;
- }
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6a82066..63b8bca 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -315,6 +315,8 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+ 	unsigned long flags;
  
-+static int uas_target_alloc(struct scsi_target *starget)
-+{
-+	struct uas_dev_info *devinfo = (struct uas_dev_info *)
-+			dev_to_shost(starget->dev.parent)->hostdata;
-+
-+	if (devinfo->flags & US_FL_NO_REPORT_LUNS)
-+		starget->no_report_luns = 1;
-+
-+	return 0;
-+}
-+
- static int uas_slave_alloc(struct scsi_device *sdev)
- {
- 	struct uas_dev_info *devinfo =
-@@ -831,6 +842,7 @@ static struct scsi_host_template uas_host_template = {
- 	.module = THIS_MODULE,
- 	.name = "uas",
- 	.queuecommand = uas_queuecommand,
-+	.target_alloc = uas_target_alloc,
- 	.slave_alloc = uas_slave_alloc,
- 	.slave_configure = uas_slave_configure,
- 	.eh_abort_handler = uas_eh_abort_handler,
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index ccc113e..53341a7 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -64,6 +64,13 @@ UNUSUAL_DEV(0x0bc2, 0x3312, 0x0000, 0x9999,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_ATA_1X),
++	BUG_ON(starget->state != STARGET_REMOVE &&
++	       starget->state != STARGET_CREATED);
+ 	starget->state = STARGET_DEL;
+ 	transport_destroy_device(dev);
+ 	spin_lock_irqsave(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 00bc721..0df82e8 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1279,11 +1279,13 @@ restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL ||
++		    starget->state == STARGET_REMOVE ||
+ 		    starget == last_target)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
+ 			last_target = starget;
++			starget->state = STARGET_REMOVE;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+ 			scsi_target_reap(starget);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f63a167..2bffaa6 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -240,6 +240,7 @@ scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
+ enum scsi_target_state {
+ 	STARGET_CREATED = 1,
+ 	STARGET_RUNNING,
++	STARGET_REMOVE,
+ 	STARGET_DEL,
+ };
  
-+/* Reported-by: David Webb <djw@noc.ac.uk> */
-+UNUSUAL_DEV(0x0bc2, 0x331a, 0x0000, 0x9999,
-+		"Seagate",
-+		"Expansion Desk",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_NO_REPORT_LUNS),
-+
- /* Reported-by: Hans de Goede <hdegoede@redhat.com> */
- UNUSUAL_DEV(0x0bc2, 0x3320, 0x0000, 0x9999,
- 		"Seagate",
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index 43576ed..9de988a 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -482,7 +482,7 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
- 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
- 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
--			US_FL_MAX_SECTORS_240);
-+			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -532,6 +532,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 		case 'i':
- 			f |= US_FL_IGNORE_DEVICE;
- 			break;
-+		case 'j':
-+			f |= US_FL_NO_REPORT_LUNS;
-+			break;
- 		case 'l':
- 			f |= US_FL_NOT_LOCKABLE;
- 			break;
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index 7f5f78b..245f57d 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -79,6 +79,8 @@
- 		/* Cannot handle MI_REPORT_SUPPORTED_OPERATION_CODES */	\
- 	US_FLAG(MAX_SECTORS_240,	0x08000000)		\
- 		/* Sets max_sectors to 240 */			\
-+	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
-+		/* Cannot handle REPORT_LUNS */			\
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
 -- 
-2.7.3
+1.8.5.6
