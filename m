@@ -1,86 +1,46 @@
-From: Richard Sharpe <realrichardsharpe@gmail.com>
-Subject: Re: Patch: Make the iscsi lld create a WQ_HIGHPRI workqueue itself
-Date: Thu, 31 Mar 2016 09:46:51 -0700
-Message-ID: <CACyXjPx=0hYnc2NwYi_6xAC2t6qG70EcT3S5QefHV3_iigqQzQ@mail.gmail.com>
-References: <CACyXjPxwz4znmt7g9ptYdpzkfF1Ok7KKJa2ceyKxg00buSfmcA@mail.gmail.com>
-	<56F9C3ED.8080704@redhat.com>
-	<CACyXjPzkQowe3Fu3S63kBrNuf3J5ewX67+uVXY5KRj_RapK5Kw@mail.gmail.com>
+From: David Webb <djw-8SE8IwxHpK9aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH] uas: Add a new NO_REPORT_LUNS quirk
+Date: Thu, 31 Mar 2016 18:35:48 +0100
+Message-ID: <7977162.W24Fksp8b7@ok64>
+References: <1459426971-11927-1-git-send-email-hdegoede@redhat.com> <1459437073.2958.29.camel@HansenPartnership.com> <56FD40FE.3030302@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:34783 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756150AbcCaQqw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2016 12:46:52 -0400
-Received: by mail-yw0-f172.google.com with SMTP id h129so104687336ywb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2016 09:46:52 -0700 (PDT)
-In-Reply-To: <CACyXjPzkQowe3Fu3S63kBrNuf3J5ewX67+uVXY5KRj_RapK5Kw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <56FD40FE.3030302-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 30, 2016 at 9:04 AM, Richard Sharpe
-<realrichardsharpe@gmail.com> wrote:
-> On Mon, Mar 28, 2016 at 4:53 PM, Mike Christie <mchristi@redhat.com> =
-wrote:
->> On 03/28/2016 03:46 PM, Richard Sharpe wrote:
->>> Hi folks,
->>>
->>> We noticed recently while testing with large numbers of iSCSI
->>> connections that iscsid was going to heroic lengths to change the n=
-ice
->>> value of the iSCSI work queue to -20. It becomes very expensive wit=
-h
->>> hundreds of connections.
->>>
->>> This small patch has the LLD do the work,
->>>
->>> Feedback welcome.
->
-> [...]
->
->>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->>> index 6bffd91..abaefe1 100644
->>> --- a/drivers/scsi/libiscsi.c
->>> +++ b/drivers/scsi/libiscsi.c
->>> @@ -2615,9 +2615,11 @@ struct Scsi_Host *iscsi_host_alloc(struct sc=
-si_host_template *sht,
->>>       ihost =3D shost_priv(shost);
->>>
->>>       if (xmit_can_sleep) {
->>> +             int wq_flags =3D __WQ_LEGACY | WQ_MEM_RECLAIM | WQ_HI=
-GHPRI;
->>
->>
->> I do not think we need to or are supposed to be setting __WQ_LEGACY.=
- It
->> looks like it was only to catch the case here
->
-> Attached is a patch the removes that flag and also WQ_MEM_RECLAIM
-> because none of the work items placed on the queue do allocations wit=
-h
-> GPF_KERNEL, as far as I can tell.
+Hi,
 
-It turns out that my second patch is also wrong because we do need
-WQ_MEM_RECLAIM on the workqueue.
+> Actually it does support REPORT LUNS, some of the time. When you first
+> boot the computer with uas blacklisted for this device, so initialize
+> it once with usb-storage, and then reboot with out the blacklist
+> (and without removing power to the drive) uas will work with REPORT LUNS
+> bit cold-booting directly into uas mode and then doing a REPORT LUNS
+> upsets the drive / disk enclosure (this has all been observed by
+> David Webb, I do not own such a drive).
 
-However, the fact that no one has noticed this problem for a long time
-(probably since the workqueue model was changed) suggests that it does
-not matter that the iSCSI workqueue is not WG_HIGHPRI.
+Just to confirm what Hans has reported.  After power has been removed the 
+Seagate Expansion usb disk always produces faults unless it has been 
+blacklisted in some way.  Once the disk is working the computer can be powered 
+off and restarted without the blacklist and, as long as its power has not been 
+removed, the disk can be reconnected many times without any error.
 
-Internally, we are doing some measurements to see if it makes any diffe=
-rence.
+With Hans's changes the disk mounts correctly with the uas module every time.
 
-I will report back with the results, probably in a few days.
+My guess is that one of the interface registers is not or cannot be 
+initialized correctly.  If after a failure I try unplugging and reinserting 
+the usb connector many times it has sometimes connected correctly - which to 
+me means that some random bit eventually has the right value. 
 
---=20
 Regards,
-Richard Sharpe
-(=E4=BD=95=E4=BB=A5=E8=A7=A3=E6=86=82=EF=BC=9F=E5=94=AF=E6=9C=89=E6=9D=9C=
-=E5=BA=B7=E3=80=82--=E6=9B=B9=E6=93=8D)
+
+David Webb.
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
