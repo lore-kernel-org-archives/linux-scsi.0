@@ -1,131 +1,378 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: Re: [PATCH v12 3/9] added UFS 2.0 capabilities
-Date: Thu, 31 Mar 2016 20:27:25 +0000
-Message-ID: <1459455981.23778.31.camel@intel.com>
-References: <cover.1459448160.git.jpinto@synopsys.com>
-	 <40585ae835f02d3b5550a32553b2189754e365b6.1459448160.git.jpinto@synopsys.com>
+From: james.smart@broadcom.com (James Smart)
+Subject: [PATCH 4/9] lpfc: Utilize embedded CDB logic to minimize IO
+ latency
+Date: Thu, 31 Mar 2016 14:12:30 -0700
+Message-ID: <56fd92be.Qxlfv4sdz+2Qgmw4%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <40585ae835f02d3b5550a32553b2189754e365b6.1459448160.git.jpinto@synopsys.com>
-Content-Language: en-US
-Content-ID: <05B79027DDE0C2408C1A983F7F7B2206@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
-Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "akinobu.mita@gmail.com" <akinobu.mita@gmail.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "gbroner@codeaurora.org" <gbroner@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "julian.calaby@gmail.com" <julian.calaby@gmail.com>, "arnd@arndb.de" <arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:36627 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932686AbcCaVMe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2016 17:12:34 -0400
+Received: by mail-pa0-f43.google.com with SMTP id tt10so74175645pab.3
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2016 14:12:34 -0700 (PDT)
+Received: from flash (cm-wififw.emulex.com. [138.239.220.50])
+        by smtp.gmail.com with ESMTPSA id w20sm15505654pfi.31.2016.03.31.14.12.31
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 31 Mar 2016 14:12:32 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE2LTAzLTMxIGF0IDE5OjU3ICswMTAwLCBKb2FvIFBpbnRvIHdyb3RlOg0KPiBB
-ZGRpbmcgVUZTIDIuMCBzdXBwb3J0IHRvIHRoZSBVRlMgY29yZSBkcml2ZXIuDQo+IA0KPiBTaWdu
-ZWQtb2ZmLWJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMuY29tPg0KDQpMb29rcyBnb29k
-IHRvIG1lLCB0aG91Z2ggbm90IHRlc3RlZCB5ZXQNClRvbWFzDQoNCj4gLS0tDQo+IENoYW5nZXMg
-djExLT52MTIgKFRvbWFzIFdpbmtsZXIpOg0KPiAtIGRldmljZXRyZWUgYmluZGluZyB0d2VhayB3
-YXMgbW92ZWQgdG8gYSBzZXBhcmF0ZWQgcGF0Y2gNCj4gLSB1bmlwcm8gdHdlYWtzIHdlcmUgbW92
-ZWQgdG8gYSBzZXBhcmF0ZWQgcGF0Y2gNCj4gLSB1ZnNoY2RfY29tcG9zZV91cGl1IHdhcyBkZWNv
-bXBvc2VkIGluIDIgZnVuY3Rpb25zDQo+IC0gVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdFIGlzIG5v
-dyAweDEgKHByZXZpb3VzbHkgd2FzIDB4MTEpDQo+IENoYW5nZXMgdjgtPnYxMToNCj4gLSBOb3Ro
-aW5nIGNoYW5nZWQgKGp1c3QgdG8ga2VlcCB1cCB3aXRoIHBhdGNoIHNldCB2ZXJzaW9uKS4NCj4g
-Q2hhbmdlcyB2Ny0+djg6DQo+IC0gQWRkZWQgImplZGVjLCB1ZnMtMi4wIiB0byB0aGUgdWZzY2hk
-LXBsYXRmb3JtIGNvbXBhdGliaWxpdHkgc3RyaW5ncw0KPiBDaGFuZ2VzIHYwLT52NzoNCj4gLSBO
-b3RoaW5nIGNoYW5nZWQgKGp1c3QgdG8ga2VlcCB1cCB3aXRoIHBhdGNoIHNldCB2ZXJzaW9uKS4N
-Cj4gDQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIHwgOTAgKysrKysrKysrKysrKysrKysr
-KysrKysrKystLS0tLS0tLS0tLQ0KPiAtLS0tLS0tLS0tDQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vm
-c2hjaS5oIHwgIDUgKysrDQo+ICAyIGZpbGVzIGNoYW5nZWQsIDU0IGluc2VydGlvbnMoKyksIDQx
-IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNk
-LmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+IGluZGV4IDljMWI5NGIuLmE2OWQ2Mzcg
-MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gKysrIGIvZHJpdmVy
-cy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiBAQCAtMTEyNyw3ICsxMTI3LDcgQEAgc3RhdGljIHZvaWQg
-dWZzaGNkX2Rpc2FibGVfaW50cihzdHJ1Y3QgdWZzX2hiYQ0KPiAqaGJhLCB1MzIgaW50cnMpDQo+
-ICAgKiBAY21kX2RpcjogcmVxdWVzdHMgZGF0YSBkaXJlY3Rpb24NCj4gICAqLw0KPiAgc3RhdGlj
-IHZvaWQgdWZzaGNkX3ByZXBhcmVfcmVxX2Rlc2NfaGRyKHN0cnVjdCB1ZnNoY2RfbHJiICpscmJw
-LA0KPiAtCQl1MzIgKnVwaXVfZmxhZ3MsIGVudW0gZG1hX2RhdGFfZGlyZWN0aW9uIGNtZF9kaXIp
-DQo+ICsJCQl1MzIgKnVwaXVfZmxhZ3MsIGVudW0gZG1hX2RhdGFfZGlyZWN0aW9uDQo+IGNtZF9k
-aXIpDQo+ICB7DQo+ICAJc3RydWN0IHV0cF90cmFuc2Zlcl9yZXFfZGVzYyAqcmVxX2Rlc2MgPSBs
-cmJwDQo+IC0+dXRyX2Rlc2NyaXB0b3JfcHRyOw0KPiAgCXUzMiBkYXRhX2RpcmVjdGlvbjsNCj4g
-QEAgLTEyNTMsNDcgKzEyNTMsNTUgQEAgc3RhdGljIGlubGluZSB2b2lkDQo+IHVmc2hjZF9wcmVw
-YXJlX3V0cF9ub3BfdXBpdShzdHJ1Y3QgdWZzaGNkX2xyYiAqbHJicCkNCj4gIH0NCj4gIA0KPiAg
-LyoqDQo+IC0gKiB1ZnNoY2RfY29tcG9zZV91cGl1IC0gZm9ybSBVRlMgUHJvdG9jb2wgSW5mb3Jt
-YXRpb24gVW5pdChVUElVKQ0KPiArICogdWZzaGNkX2NvbXBfZGV2bWFuX3VwaXUgLSBVRlMgUHJv
-dG9jb2wgSW5mb3JtYXRpb24gVW5pdChVUElVKSANCj4gKyAqCQkJICAgICBmb3IgRGV2aWNlIE1h
-bmFnZW1lbnQgUHVycG9zZXMNCj4gICAqIEBoYmEgLSBwZXIgYWRhcHRlciBpbnN0YW5jZQ0KPiAg
-ICogQGxyYiAtIHBvaW50ZXIgdG8gbG9jYWwgcmVmZXJlbmNlIGJsb2NrDQo+ICAgKi8NCj4gLXN0
-YXRpYyBpbnQgdWZzaGNkX2NvbXBvc2VfdXBpdShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBzdHJ1Y3QN
-Cj4gdWZzaGNkX2xyYiAqbHJicCkNCj4gK3N0YXRpYyBpbnQgdWZzaGNkX2NvbXBfZGV2bWFuX3Vw
-aXUoc3RydWN0IHVmc19oYmEgKmhiYSwgc3RydWN0DQo+IHVmc2hjZF9scmIgKmxyYnApDQo+ICB7
-DQo+ICAJdTMyIHVwaXVfZmxhZ3M7DQo+ICAJaW50IHJldCA9IDA7DQo+ICANCj4gLQlzd2l0Y2gg
-KGxyYnAtPmNvbW1hbmRfdHlwZSkgew0KPiAtCWNhc2UgVVRQX0NNRF9UWVBFX1NDU0k6DQo+IC0J
-CWlmIChsaWtlbHkobHJicC0+Y21kKSkgew0KPiAtCQkJdWZzaGNkX3ByZXBhcmVfcmVxX2Rlc2Nf
-aGRyKGxyYnAsDQo+ICZ1cGl1X2ZsYWdzLA0KPiAtCQkJCQlscmJwLT5jbWQNCj4gLT5zY19kYXRh
-X2RpcmVjdGlvbik7DQo+IC0JCQl1ZnNoY2RfcHJlcGFyZV91dHBfc2NzaV9jbWRfdXBpdShscmJw
-LA0KPiB1cGl1X2ZsYWdzKTsNCj4gLQkJfSBlbHNlIHsNCj4gLQkJCXJldCA9IC1FSU5WQUw7DQo+
-IC0JCX0NCj4gLQkJYnJlYWs7DQo+IC0JY2FzZSBVVFBfQ01EX1RZUEVfREVWX01BTkFHRToNCj4g
-LQkJdWZzaGNkX3ByZXBhcmVfcmVxX2Rlc2NfaGRyKGxyYnAsICZ1cGl1X2ZsYWdzLA0KPiBETUFf
-Tk9ORSk7DQo+IC0JCWlmIChoYmEtPmRldl9jbWQudHlwZSA9PSBERVZfQ01EX1RZUEVfUVVFUlkp
-DQo+IC0JCQl1ZnNoY2RfcHJlcGFyZV91dHBfcXVlcnlfcmVxX3VwaXUoDQo+IC0JCQkJCWhiYSwg
-bHJicCwgdXBpdV9mbGFncyk7DQo+IC0JCWVsc2UgaWYgKGhiYS0+ZGV2X2NtZC50eXBlID09IERF
-Vl9DTURfVFlQRV9OT1ApDQo+IC0JCQl1ZnNoY2RfcHJlcGFyZV91dHBfbm9wX3VwaXUobHJicCk7
-DQo+IC0JCWVsc2UNCj4gLQkJCXJldCA9IC1FSU5WQUw7DQo+IC0JCWJyZWFrOw0KPiAtCWNhc2Ug
-VVRQX0NNRF9UWVBFX1VGUzoNCj4gLQkJLyogRm9yIFVGUyBuYXRpdmUgY29tbWFuZCBpbXBsZW1l
-bnRhdGlvbiAqLw0KPiAtCQlyZXQgPSAtRU5PVFNVUFA7DQo+IC0JCWRldl9lcnIoaGJhLT5kZXYs
-ICIlczogVUZTIG5hdGl2ZSBjb21tYW5kIGFyZSBub3QNCj4gc3VwcG9ydGVkXG4iLA0KPiAtCQkJ
-X19mdW5jX18pOw0KPiAtCQlicmVhazsNCj4gLQlkZWZhdWx0Og0KPiAtCQlyZXQgPSAtRU5PVFNV
-UFA7DQo+IC0JCWRldl9lcnIoaGJhLT5kZXYsICIlczogdW5rbm93biBjb21tYW5kIHR5cGU6DQo+
-IDB4JXhcbiIsDQo+IC0JCQkJX19mdW5jX18sIGxyYnAtPmNvbW1hbmRfdHlwZSk7DQo+IC0JCWJy
-ZWFrOw0KPiAtCX0gLyogZW5kIG9mIHN3aXRjaCAqLw0KPiArCWlmIChoYmEtPnVmc192ZXJzaW9u
-ID09IFVGU0hDSV9WRVJTSU9OXzIwKQ0KPiArCQlscmJwLT5jb21tYW5kX3R5cGUgPSBVVFBfQ01E
-X1RZUEVfVUZTX1NUT1JBR0U7DQo+ICsJZWxzZQ0KPiArCQlscmJwLT5jb21tYW5kX3R5cGUgPSBV
-VFBfQ01EX1RZUEVfREVWX01BTkFHRTsNCj4gKw0KPiArCXVmc2hjZF9wcmVwYXJlX3JlcV9kZXNj
-X2hkcihscmJwLCAmdXBpdV9mbGFncywgRE1BX05PTkUpOw0KPiArCWlmIChoYmEtPmRldl9jbWQu
-dHlwZSA9PSBERVZfQ01EX1RZUEVfUVVFUlkpDQo+ICsJCXVmc2hjZF9wcmVwYXJlX3V0cF9xdWVy
-eV9yZXFfdXBpdShoYmEsIGxyYnAsDQo+IHVwaXVfZmxhZ3MpOw0KPiArCWVsc2UgaWYgKGhiYS0+
-ZGV2X2NtZC50eXBlID09IERFVl9DTURfVFlQRV9OT1ApDQo+ICsJCXVmc2hjZF9wcmVwYXJlX3V0
-cF9ub3BfdXBpdShscmJwKTsNCj4gKwllbHNlDQo+ICsJCXJldCA9IC1FSU5WQUw7DQo+ICsNCj4g
-KwlyZXR1cm4gcmV0Ow0KPiArfQ0KPiArDQo+ICsvKioNCj4gKyAqIHVmc2hjZF9jb21wX3Njc2lf
-dXBpdSAtIFVGUyBQcm90b2NvbCBJbmZvcm1hdGlvbiBVbml0KFVQSVUpIA0KPiArICoJCQkgICBm
-b3IgU0NTSSBQdXJwb3Nlcw0KPiArICogQGhiYSAtIHBlciBhZGFwdGVyIGluc3RhbmNlDQo+ICsg
-KiBAbHJiIC0gcG9pbnRlciB0byBsb2NhbCByZWZlcmVuY2UgYmxvY2sNCj4gKyAqLw0KPiArc3Rh
-dGljIGludCB1ZnNoY2RfY29tcF9zY3NpX3VwaXUoc3RydWN0IHVmc19oYmEgKmhiYSwgc3RydWN0
-DQo+IHVmc2hjZF9scmIgKmxyYnApDQo+ICt7DQo+ICsJdTMyIHVwaXVfZmxhZ3M7DQo+ICsJaW50
-IHJldCA9IDA7DQo+ICsNCj4gKwlpZiAoaGJhLT51ZnNfdmVyc2lvbiA9PSBVRlNIQ0lfVkVSU0lP
-Tl8yMCkNCj4gKwkJbHJicC0+Y29tbWFuZF90eXBlID0gVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdF
-Ow0KPiArCWVsc2UNCj4gKwkJbHJicC0+Y29tbWFuZF90eXBlID0gVVRQX0NNRF9UWVBFX1NDU0k7
-DQo+ICsNCj4gKwlpZiAobGlrZWx5KGxyYnAtPmNtZCkpIHsNCj4gKwkJdWZzaGNkX3ByZXBhcmVf
-cmVxX2Rlc2NfaGRyKGxyYnAsICZ1cGl1X2ZsYWdzLA0KPiArCQkJCQkJbHJicC0+Y21kDQo+IC0+
-c2NfZGF0YV9kaXJlY3Rpb24pOw0KPiArCQl1ZnNoY2RfcHJlcGFyZV91dHBfc2NzaV9jbWRfdXBp
-dShscmJwLCB1cGl1X2ZsYWdzKTsNCj4gKwl9IGVsc2Ugew0KPiArCQlyZXQgPSAtRUlOVkFMOw0K
-PiArCX0NCj4gIA0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+IEBAIC0xNDA1LDEwICsxNDE0LDkg
-QEAgc3RhdGljIGludCB1ZnNoY2RfcXVldWVjb21tYW5kKHN0cnVjdA0KPiBTY3NpX0hvc3QgKmhv
-c3QsIHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gIAlscmJwLT50YXNrX3RhZyA9IHRhZzsNCj4g
-IAlscmJwLT5sdW4gPSB1ZnNoY2Rfc2NzaV90b191cGl1X2x1bihjbWQtPmRldmljZS0+bHVuKTsN
-Cj4gIAlscmJwLT5pbnRyX2NtZCA9ICF1ZnNoY2RfaXNfaW50cl9hZ2dyX2FsbG93ZWQoaGJhKSA/
-IHRydWUgOg0KPiBmYWxzZTsNCj4gLQlscmJwLT5jb21tYW5kX3R5cGUgPSBVVFBfQ01EX1RZUEVf
-U0NTSTsNCj4gIA0KPiAtCS8qIGZvcm0gVVBJVSBiZWZvcmUgaXNzdWluZyB0aGUgY29tbWFuZCAq
-Lw0KPiAtCXVmc2hjZF9jb21wb3NlX3VwaXUoaGJhLCBscmJwKTsNCj4gKwl1ZnNoY2RfY29tcF9z
-Y3NpX3VwaXUoaGJhLCBscmJwKTsNCj4gKw0KPiAgCWVyciA9IHVmc2hjZF9tYXBfc2cobHJicCk7
-DQo+ICAJaWYgKGVycikgew0KPiAgCQlscmJwLT5jbWQgPSBOVUxMOw0KPiBAQCAtMTQzMywxMSAr
-MTQ0MSwxMCBAQCBzdGF0aWMgaW50IHVmc2hjZF9jb21wb3NlX2Rldl9jbWQoc3RydWN0DQo+IHVm
-c19oYmEgKmhiYSwNCj4gIAlscmJwLT5zZW5zZV9idWZmZXIgPSBOVUxMOw0KPiAgCWxyYnAtPnRh
-c2tfdGFnID0gdGFnOw0KPiAgCWxyYnAtPmx1biA9IDA7IC8qIGRldmljZSBtYW5hZ2VtZW50IGNt
-ZCBpcyBub3Qgc3BlY2lmaWMgdG8NCj4gYW55IExVTiAqLw0KPiAtCWxyYnAtPmNvbW1hbmRfdHlw
-ZSA9IFVUUF9DTURfVFlQRV9ERVZfTUFOQUdFOw0KPiAgCWxyYnAtPmludHJfY21kID0gdHJ1ZTsg
-LyogTm8gaW50ZXJydXB0IGFnZ3JlZ2F0aW9uICovDQo+ICAJaGJhLT5kZXZfY21kLnR5cGUgPSBj
-bWRfdHlwZTsNCj4gIA0KPiAtCXJldHVybiB1ZnNoY2RfY29tcG9zZV91cGl1KGhiYSwgbHJicCk7
-DQo+ICsJcmV0dXJuIHVmc2hjZF9jb21wX2Rldm1hbl91cGl1KGhiYSwgbHJicCk7DQo+ICB9DQo+
-ICANCj4gIHN0YXRpYyBpbnQNCj4gQEAgLTM0MDMsNyArMzQxMCw4IEBAIHN0YXRpYyB2b2lkIHVm
-c2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoc3RydWN0DQo+IHVmc19oYmEgKmhiYSkNCj4gIAkJCS8q
-IERvIG5vdCB0b3VjaCBscmJwIGFmdGVyIHNjc2kgZG9uZSAqLw0KPiAgCQkJY21kLT5zY3NpX2Rv
-bmUoY21kKTsNCj4gIAkJCV9fdWZzaGNkX3JlbGVhc2UoaGJhKTsNCj4gLQkJfSBlbHNlIGlmIChs
-cmJwLT5jb21tYW5kX3R5cGUgPT0NCj4gVVRQX0NNRF9UWVBFX0RFVl9NQU5BR0UpIHsNCj4gKwkJ
-fSBlbHNlIGlmIChscmJwLT5jb21tYW5kX3R5cGUgPT0NCj4gVVRQX0NNRF9UWVBFX0RFVl9NQU5B
-R0UgfHwNCj4gKwkJCWxyYnAtPmNvbW1hbmRfdHlwZSA9PQ0KPiBVVFBfQ01EX1RZUEVfVUZTX1NU
-T1JBR0UpIHsNCj4gIAkJCWlmIChoYmEtPmRldl9jbWQuY29tcGxldGUpDQo+ICAJCQkJY29tcGxl
-dGUoaGJhLT5kZXZfY21kLmNvbXBsZXRlKTsNCj4gIAkJfQ0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9zY3NpL3Vmcy91ZnNoY2kuaCBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNpLmgNCj4gaW5kZXgg
-MGFlMDk2Ny4uMjBlY2UxOCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2ku
-aA0KPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjaS5oDQo+IEBAIC0yNzUsNiArMjc1LDEx
-IEBAIGVudW0gew0KPiAgCVVUUF9DTURfVFlQRV9ERVZfTUFOQUdFCQk9IDB4MiwNCj4gIH07DQo+
-ICANCj4gKy8qIFRvIGFjY29tb2RhdGUgVUZTMi4wIHJlcXVpcmVkIENvbW1hbmQgdHlwZSAqLw0K
-PiArZW51bSB7DQo+ICsJVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdFCT0gMHgxLA0KPiArfTsNCj4g
-Kw0KPiAgZW51bSB7DQo+ICAJVVRQX1NDU0lfQ09NTUFORAkJPSAweDAwMDAwMDAwLA0KPiAgCVVU
-UF9OQVRJVkVfVUZTX0NPTU1BTkQJCT0gMHgxMDAwMDAwMCw=
+
+Utilize embedded CDB logic to minimize IO latency
+
+Pass cmd iu payloads inline to adapter job structure rather than as
+separate dma buffers.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
+Signed-off-by: James Smart <james.smart@avagotech.com>
+---
+ drivers/scsi/lpfc/lpfc.h      |   1 +
+ drivers/scsi/lpfc/lpfc_attr.c |   1 -
+ drivers/scsi/lpfc/lpfc_hw4.h  |   6 ++
+ drivers/scsi/lpfc/lpfc_init.c |  20 ++++++-
+ drivers/scsi/lpfc/lpfc_sli.c  | 128 ++++++++++++++++++++++++++++++++++++------
+ 5 files changed, 136 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 90a3ca5..da237d9 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -694,6 +694,7 @@ struct lpfc_hba {
+ 	uint8_t  wwnn[8];
+ 	uint8_t  wwpn[8];
+ 	uint32_t RandomData[7];
++	uint32_t fcp_embed_io;
+ 
+ 	/* HBA Config Parameters */
+ 	uint32_t cfg_ack0;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 343ae94..d4559a6 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -5150,7 +5150,6 @@ lpfc_free_sysfs_attr(struct lpfc_vport *vport)
+ 	sysfs_remove_bin_file(&shost->shost_dev.kobj, &sysfs_ctlreg_attr);
+ }
+ 
+-
+ /*
+  * Dynamic FC Host Attributes Support
+  */
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 608f941..aea00f8 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -2865,6 +2865,9 @@ struct lpfc_sli4_parameters {
+ 	uint32_t word17;
+ 	uint32_t word18;
+ 	uint32_t word19;
++#define cfg_ext_embed_cb_SHIFT			0
++#define cfg_ext_embed_cb_MASK			0x00000001
++#define cfg_ext_embed_cb_WORD			word19
+ };
+ 
+ struct lpfc_mbx_get_sli4_parameters {
+@@ -3919,6 +3922,9 @@ union lpfc_wqe {
+ union lpfc_wqe128 {
+ 	uint32_t words[32];
+ 	struct lpfc_wqe_generic generic;
++	struct fcp_icmnd64_wqe fcp_icmd;
++	struct fcp_iread64_wqe fcp_iread;
++	struct fcp_iwrite64_wqe fcp_iwrite;
+ 	struct xmit_seq64_wqe xmit_sequence;
+ 	struct gen_req64_wqe gen_req;
+ };
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f57d02c..f0d0852 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7264,8 +7264,15 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 		phba->sli4_hba.fcp_cq[idx] = qdesc;
+ 
+ 		/* Create Fast Path FCP WQs */
+-		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.wq_esize,
+-					      phba->sli4_hba.wq_ecount);
++		if (phba->fcp_embed_io) {
++			qdesc = lpfc_sli4_queue_alloc(phba,
++						      LPFC_WQE128_SIZE,
++						      LPFC_WQE128_DEF_COUNT);
++		} else {
++			qdesc = lpfc_sli4_queue_alloc(phba,
++						      phba->sli4_hba.wq_esize,
++						      phba->sli4_hba.wq_ecount);
++		}
+ 		if (!qdesc) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0503 Failed allocate fast-path FCP "
+@@ -9510,6 +9517,15 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 	if (sli4_params->sge_supp_len > LPFC_MAX_SGE_SIZE)
+ 		sli4_params->sge_supp_len = LPFC_MAX_SGE_SIZE;
+ 
++	/*
++	 * Issue IOs with CDB embedded in WQE to minimized the number
++	 * of DMAs the firmware has to do. Setting this to 1 also forces
++	 * the driver to use 128 bytes WQEs for FCP IOs.
++	 */
++	if (bf_get(cfg_ext_embed_cb, mbx_sli4_parameters))
++		phba->fcp_embed_io = 1;
++	else
++		phba->fcp_embed_io = 0;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 035105a..9c8368a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4689,6 +4689,7 @@ lpfc_sli_hba_setup(struct lpfc_hba *phba)
+ 
+ 		break;
+ 	}
++	phba->fcp_embed_io = 0;	/* SLI4 FC support only */
+ 
+ 	rc = lpfc_sli_config_port(phba, mode);
+ 
+@@ -6321,10 +6322,12 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 
+ 	mqe = &mboxq->u.mqe;
+ 	phba->sli_rev = bf_get(lpfc_mbx_rd_rev_sli_lvl, &mqe->un.read_rev);
+-	if (bf_get(lpfc_mbx_rd_rev_fcoe, &mqe->un.read_rev))
++	if (bf_get(lpfc_mbx_rd_rev_fcoe, &mqe->un.read_rev)) {
+ 		phba->hba_flag |= HBA_FCOE_MODE;
+-	else
++		phba->fcp_embed_io = 0;	/* SLI4 FC support only */
++	} else {
+ 		phba->hba_flag &= ~HBA_FCOE_MODE;
++	}
+ 
+ 	if (bf_get(lpfc_mbx_rd_rev_cee_ver, &mqe->un.read_rev) ==
+ 		LPFC_DCBX_CEE_MODE)
+@@ -8219,12 +8222,15 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 	else
+ 		command_type = ELS_COMMAND_NON_FIP;
+ 
++	if (phba->fcp_embed_io)
++		memset(wqe, 0, sizeof(union lpfc_wqe128));
+ 	/* Some of the fields are in the right position already */
+ 	memcpy(wqe, &iocbq->iocb, sizeof(union lpfc_wqe));
+-	abort_tag = (uint32_t) iocbq->iotag;
+-	xritag = iocbq->sli4_xritag;
+ 	wqe->generic.wqe_com.word7 = 0; /* The ct field has moved so reset */
+ 	wqe->generic.wqe_com.word10 = 0;
++
++	abort_tag = (uint32_t) iocbq->iotag;
++	xritag = iocbq->sli4_xritag;
+ 	/* words0-2 bpl convert bde */
+ 	if (iocbq->iocb.un.genreq64.bdl.bdeFlags == BUFF_TYPE_BLP_64) {
+ 		numBdes = iocbq->iocb.un.genreq64.bdl.bdeSize /
+@@ -8373,11 +8379,9 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 		       iocbq->iocb.ulpFCP2Rcvy);
+ 		bf_set(wqe_lnk, &wqe->fcp_iwrite.wqe_com, iocbq->iocb.ulpXS);
+ 		/* Always open the exchange */
+-		bf_set(wqe_xc, &wqe->fcp_iwrite.wqe_com, 0);
+ 		bf_set(wqe_iod, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_IOD_WRITE);
+ 		bf_set(wqe_lenloc, &wqe->fcp_iwrite.wqe_com,
+ 		       LPFC_WQE_LENLOC_WORD4);
+-		bf_set(wqe_ebde_cnt, &wqe->fcp_iwrite.wqe_com, 0);
+ 		bf_set(wqe_pu, &wqe->fcp_iwrite.wqe_com, iocbq->iocb.ulpPU);
+ 		bf_set(wqe_dbde, &wqe->fcp_iwrite.wqe_com, 1);
+ 		if (iocbq->iocb_flag & LPFC_IO_OAS) {
+@@ -8388,6 +8392,35 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 				       (phba->cfg_XLanePriority << 1));
+ 			}
+ 		}
++		/* Note, word 10 is already initialized to 0 */
++
++		if (phba->fcp_embed_io) {
++			struct lpfc_scsi_buf *lpfc_cmd;
++			struct sli4_sge *sgl;
++			union lpfc_wqe128 *wqe128;
++			struct fcp_cmnd *fcp_cmnd;
++			uint32_t *ptr;
++
++			/* 128 byte wqe support here */
++			wqe128 = (union lpfc_wqe128 *)wqe;
++
++			lpfc_cmd = iocbq->context1;
++			sgl = (struct sli4_sge *)lpfc_cmd->fcp_bpl;
++			fcp_cmnd = lpfc_cmd->fcp_cmnd;
++
++			/* Word 0-2 - FCP_CMND */
++			wqe128->generic.bde.tus.f.bdeFlags =
++				BUFF_TYPE_BDE_IMMED;
++			wqe128->generic.bde.tus.f.bdeSize = sgl->sge_len;
++			wqe128->generic.bde.addrHigh = 0;
++			wqe128->generic.bde.addrLow =  88;  /* Word 22 */
++
++			bf_set(wqe_wqes, &wqe128->fcp_iwrite.wqe_com, 1);
++
++			/* Word 22-29  FCP CMND Payload */
++			ptr = &wqe128->words[22];
++			memcpy(ptr, fcp_cmnd, sizeof(struct fcp_cmnd));
++		}
+ 		break;
+ 	case CMD_FCP_IREAD64_CR:
+ 		/* word3 iocb=iotag wqe=payload_offset_len */
+@@ -8402,11 +8435,9 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 		       iocbq->iocb.ulpFCP2Rcvy);
+ 		bf_set(wqe_lnk, &wqe->fcp_iread.wqe_com, iocbq->iocb.ulpXS);
+ 		/* Always open the exchange */
+-		bf_set(wqe_xc, &wqe->fcp_iread.wqe_com, 0);
+ 		bf_set(wqe_iod, &wqe->fcp_iread.wqe_com, LPFC_WQE_IOD_READ);
+ 		bf_set(wqe_lenloc, &wqe->fcp_iread.wqe_com,
+ 		       LPFC_WQE_LENLOC_WORD4);
+-		bf_set(wqe_ebde_cnt, &wqe->fcp_iread.wqe_com, 0);
+ 		bf_set(wqe_pu, &wqe->fcp_iread.wqe_com, iocbq->iocb.ulpPU);
+ 		bf_set(wqe_dbde, &wqe->fcp_iread.wqe_com, 1);
+ 		if (iocbq->iocb_flag & LPFC_IO_OAS) {
+@@ -8417,6 +8448,35 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 				       (phba->cfg_XLanePriority << 1));
+ 			}
+ 		}
++		/* Note, word 10 is already initialized to 0 */
++
++		if (phba->fcp_embed_io) {
++			struct lpfc_scsi_buf *lpfc_cmd;
++			struct sli4_sge *sgl;
++			union lpfc_wqe128 *wqe128;
++			struct fcp_cmnd *fcp_cmnd;
++			uint32_t *ptr;
++
++			/* 128 byte wqe support here */
++			wqe128 = (union lpfc_wqe128 *)wqe;
++
++			lpfc_cmd = iocbq->context1;
++			sgl = (struct sli4_sge *)lpfc_cmd->fcp_bpl;
++			fcp_cmnd = lpfc_cmd->fcp_cmnd;
++
++			/* Word 0-2 - FCP_CMND */
++			wqe128->generic.bde.tus.f.bdeFlags =
++				BUFF_TYPE_BDE_IMMED;
++			wqe128->generic.bde.tus.f.bdeSize = sgl->sge_len;
++			wqe128->generic.bde.addrHigh = 0;
++			wqe128->generic.bde.addrLow =  88;  /* Word 22 */
++
++			bf_set(wqe_wqes, &wqe128->fcp_iread.wqe_com, 1);
++
++			/* Word 22-29  FCP CMND Payload */
++			ptr = &wqe128->words[22];
++			memcpy(ptr, fcp_cmnd, sizeof(struct fcp_cmnd));
++		}
+ 		break;
+ 	case CMD_FCP_ICMND64_CR:
+ 		/* word3 iocb=iotag wqe=payload_offset_len */
+@@ -8428,13 +8488,11 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 		/* word3 iocb=IO_TAG wqe=reserved */
+ 		bf_set(wqe_pu, &wqe->fcp_icmd.wqe_com, 0);
+ 		/* Always open the exchange */
+-		bf_set(wqe_xc, &wqe->fcp_icmd.wqe_com, 0);
+ 		bf_set(wqe_dbde, &wqe->fcp_icmd.wqe_com, 1);
+ 		bf_set(wqe_iod, &wqe->fcp_icmd.wqe_com, LPFC_WQE_IOD_WRITE);
+ 		bf_set(wqe_qosd, &wqe->fcp_icmd.wqe_com, 1);
+ 		bf_set(wqe_lenloc, &wqe->fcp_icmd.wqe_com,
+ 		       LPFC_WQE_LENLOC_NONE);
+-		bf_set(wqe_ebde_cnt, &wqe->fcp_icmd.wqe_com, 0);
+ 		bf_set(wqe_erp, &wqe->fcp_icmd.wqe_com,
+ 		       iocbq->iocb.ulpFCP2Rcvy);
+ 		if (iocbq->iocb_flag & LPFC_IO_OAS) {
+@@ -8445,6 +8503,35 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 				       (phba->cfg_XLanePriority << 1));
+ 			}
+ 		}
++		/* Note, word 10 is already initialized to 0 */
++
++		if (phba->fcp_embed_io) {
++			struct lpfc_scsi_buf *lpfc_cmd;
++			struct sli4_sge *sgl;
++			union lpfc_wqe128 *wqe128;
++			struct fcp_cmnd *fcp_cmnd;
++			uint32_t *ptr;
++
++			/* 128 byte wqe support here */
++			wqe128 = (union lpfc_wqe128 *)wqe;
++
++			lpfc_cmd = iocbq->context1;
++			sgl = (struct sli4_sge *)lpfc_cmd->fcp_bpl;
++			fcp_cmnd = lpfc_cmd->fcp_cmnd;
++
++			/* Word 0-2 - FCP_CMND */
++			wqe128->generic.bde.tus.f.bdeFlags =
++				BUFF_TYPE_BDE_IMMED;
++			wqe128->generic.bde.tus.f.bdeSize = sgl->sge_len;
++			wqe128->generic.bde.addrHigh = 0;
++			wqe128->generic.bde.addrLow =  88;  /* Word 22 */
++
++			bf_set(wqe_wqes, &wqe128->fcp_icmd.wqe_com, 1);
++
++			/* Word 22-29  FCP CMND Payload */
++			ptr = &wqe128->words[22];
++			memcpy(ptr, fcp_cmnd, sizeof(struct fcp_cmnd));
++		}
+ 		break;
+ 	case CMD_GEN_REQUEST64_CR:
+ 		/* For this command calculate the xmit length of the
+@@ -8676,12 +8763,19 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 			 struct lpfc_iocbq *piocb, uint32_t flag)
+ {
+ 	struct lpfc_sglq *sglq;
+-	union lpfc_wqe wqe;
++	union lpfc_wqe *wqe;
++	union lpfc_wqe128 wqe128;
+ 	struct lpfc_queue *wq;
+ 	struct lpfc_sli_ring *pring = &phba->sli.ring[ring_number];
+ 
+ 	lockdep_assert_held(&phba->hbalock);
+ 
++	/*
++	 * The WQE can be either 64 or 128 bytes,
++	 * so allocate space on the stack assuming the largest.
++	 */
++	wqe = (union lpfc_wqe *)&wqe128;
++
+ 	if (piocb->sli4_xritag == NO_XRI) {
+ 		if (piocb->iocb.ulpCommand == CMD_ABORT_XRI_CN ||
+ 		    piocb->iocb.ulpCommand == CMD_CLOSE_XRI_CN)
+@@ -8728,7 +8822,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 			return IOCB_ERROR;
+ 	}
+ 
+-	if (lpfc_sli4_iocb2wqe(phba, piocb, &wqe))
++	if (lpfc_sli4_iocb2wqe(phba, piocb, wqe))
+ 		return IOCB_ERROR;
+ 
+ 	if ((piocb->iocb_flag & LPFC_IO_FCP) ||
+@@ -8738,12 +8832,12 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 		} else {
+ 			wq = phba->sli4_hba.oas_wq;
+ 		}
+-		if (lpfc_sli4_wq_put(wq, &wqe))
++		if (lpfc_sli4_wq_put(wq, wqe))
+ 			return IOCB_ERROR;
+ 	} else {
+ 		if (unlikely(!phba->sli4_hba.els_wq))
+ 			return IOCB_ERROR;
+-		if (lpfc_sli4_wq_put(phba->sli4_hba.els_wq, &wqe))
++		if (lpfc_sli4_wq_put(phba->sli4_hba.els_wq, wqe))
+ 			return IOCB_ERROR;
+ 	}
+ 	lpfc_sli_ringtxcmpl_put(phba, pring, piocb);
+@@ -8758,9 +8852,9 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+  * pointer from the lpfc_hba struct.
+  *
+  * Return codes:
+- * 	IOCB_ERROR - Error
+- * 	IOCB_SUCCESS - Success
+- * 	IOCB_BUSY - Busy
++ * IOCB_ERROR - Error
++ * IOCB_SUCCESS - Success
++ * IOCB_BUSY - Busy
+  **/
+ int
+ __lpfc_sli_issue_iocb(struct lpfc_hba *phba, uint32_t ring_number,
+-- 
+2.5.0
+
