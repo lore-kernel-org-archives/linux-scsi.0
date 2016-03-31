@@ -1,36 +1,40 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v3 0/2] Update SCSI target removal path
-Date: Thu, 31 Mar 2016 14:53:17 +0200
-Message-ID: <cover.1459428540.git.jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH] uas: Add a new NO_REPORT_LUNS quirk
+Date: Thu, 31 Mar 2016 10:17:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1603311014480.2252-100000@iolanthe.rowland.org>
+References: <1459426971-11927-1-git-send-email-hdegoede@redhat.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1459426971-11927-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Webb <djw-8SE8IwxHpK9aa/9Udqfwiw@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is a follow up to "scsi: Add intermediate STARGET_REMOVE state to 
-scsi_target_state".
+On Thu, 31 Mar 2016, Hans de Goede wrote:
 
-If anyone has an idea how to create a regression test suite for the target
-removal path I'd be all ears, given the fact that this is the 3rd or 4th patch
-targeting it.
+> Add a new NO_REPORT_LUNS quirk and set it for Seagate drives with
+> an usb-id of: 0bc2:331a, as these will fail to respond to a
+> REPORT_LUNS command.
 
-Changes to v2:
-* Reverse the order of patches as pointed out by James
+> @@ -532,6 +532,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+>  		case 'i':
+>  			f |= US_FL_IGNORE_DEVICE;
+>  			break;
+> +		case 'j':
+> +			f |= US_FL_NO_REPORT_LUNS;
+> +			break;
+>  		case 'l':
+>  			f |= US_FL_NOT_LOCKABLE;
+>  			break;
 
-Changes to v1:
-* Fix error (hit BUG_ON()) discovered by the 0-Day bot.
-* Revert "scsi: fix soft lockup in scsi_remove_target() on module removal"
+You forgot to document this new module parameter flag in 
+Documentation/kernel-parameters.txt.
 
-Johannes Thumshirn (2):
-  scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
-  Revert "scsi: fix soft lockup in scsi_remove_target() on module
-    removal"
+Alan Stern
 
- drivers/scsi/scsi_scan.c   | 2 ++
- drivers/scsi/scsi_sysfs.c  | 6 +++---
- include/scsi/scsi_device.h | 1 +
- 3 files changed, 6 insertions(+), 3 deletions(-)
-
--- 
-1.8.5.6
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
