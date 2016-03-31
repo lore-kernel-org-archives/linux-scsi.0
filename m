@@ -1,48 +1,41 @@
-From: Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v12 5/9] added link status to ufshci
-Date: Thu, 31 Mar 2016 19:57:18 +0100
-Message-ID: <12c35f3487e9fa1e52264ce69362c623a2ee556e.1459448160.git.jpinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v12 2/9] add UFS 2.0 to ufshcd-pltfrm bindings
+Date: Thu, 31 Mar 2016 19:57:15 +0100
+Message-ID: <7bb21c8336102f6fff9a49132ff0a21055955d94.1459448160.git.jpinto@synopsys.com>
 References: <cover.1459448160.git.jpinto@synopsys.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1459448160.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-In-Reply-To: <cover.1459448160.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-References: <cover.1459448160.git.jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: tomas.winkler-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
-Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, julian.calaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, CARLOS.PALMINHA-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1459448160.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1459448160.git.jpinto@synopsys.com>
+References: <cover.1459448160.git.jpinto@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tomas.winkler@intel.com
+Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, arnd@arndb.de, mark.rutland@arm.com, Joao Pinto <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Added link status to ufshci.
+Add UFS 2.0 to the ufshcd-pltfrm devicetree binding.
 
-Signed-off-by: Joao Pinto <jpinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
 Changes v0->v12 (Tomas Winkler):
 - This patch only appeared in v12
 
- drivers/scsi/ufs/ufshci.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 20ece18..169363e 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -216,6 +216,12 @@ enum {
- #define UIC_ARG_ATTR_TYPE(t)		(((t) & 0xFF) << 16)
- #define UIC_GET_ATTR_ID(v)		(((v) >> 16) & 0xFFFF)
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 03c0e98..8d9a9d2 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -4,8 +4,8 @@ UFSHC nodes are defined to describe on-chip UFS host controllers.
+ Each UFS controller instance should have its own node.
  
-+/* Link Status*/
-+enum link_status {
-+	UFSHCD_LINK_IS_DOWN	= 1,
-+	UFSHCD_LINK_IS_UP	= 2,
-+};
-+
- /* UIC Commands */
- enum uic_cmd_dme {
- 	UIC_CMD_DME_GET			= 0x01,
+ Required properties:
+-- compatible		: must contain "jedec,ufs-1.1", may also list one or more
+-					  of the following:
++- compatible		: must contain "jedec,ufs-1.1" or "jedec,ufs-2.0", may
++			  also list one or more of the following:
+ 					  "qcom,msm8994-ufshc"
+ 					  "qcom,msm8996-ufshc"
+ 					  "qcom,ufshc"
 -- 
 1.8.1.5
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
