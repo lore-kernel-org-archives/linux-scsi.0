@@ -1,53 +1,35 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH 1/3] qla2xxx: Indicate out-of-memory with -ENOMEM
-Date: Thu, 31 Mar 2016 15:21:33 +0000
-Message-ID: <DC126296-F9AB-4C2C-946E-A18DC46C3B8F@qlogic.com>
-References: <56FC6049.3090303@sandisk.com> <56FC6061.80403@sandisk.com>
- <749c8a5ae53c4e76f0c4853c53518360@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 3/3] qla2xxx: Assign names to the flags in cmd_flags
+Date: Thu, 31 Mar 2016 08:22:29 -0700
+Message-ID: <56FD40B5.4090707@sandisk.com>
+References: <56FC6049.3090303@sandisk.com> <56FC6096.30507@sandisk.com>
+ <E8740ECF-B45F-4999-83AF-3EA27E4F55DF@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0120.outbound.protection.outlook.com ([207.46.100.120]:23142
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0081.outbound.protection.outlook.com ([157.56.110.81]:61628
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751609AbcCaPVg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2016 11:21:36 -0400
-In-Reply-To: <749c8a5ae53c4e76f0c4853c53518360@suse.de>
-Content-Language: en-US
-Content-ID: <EF829A2A77D2B947875E72819E67B89C@namprd11.prod.outlook.com>
+	id S1755940AbcCaPWf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 11:22:35 -0400
+In-Reply-To: <E8740ECF-B45F-4999-83AF-3EA27E4F55DF@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>
+To: Quinn Tran <quinn.tran@qlogic.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-DQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBUaHVt
-c2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4NCkRhdGU6IFRodXJzZGF5LCBNYXJjaCAzMSwgMjAx
-NiBhdCAxMjozMCBBTQ0KVG86IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAc2FuZGlz
-ay5jb20+DQpDYzogSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4sICJN
-YXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4sIEhpbWFuc2h1
-IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIFF1aW5uIFRyYW4gPHF1aW5u
-LnRyYW5AcWxvZ2ljLmNvbT4sIENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPiwgbGludXgt
-c2NzaSA8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+LCAibGludXgtc2NzaS1vd25lckB2Z2Vy
-Lmtlcm5lbC5vcmciIDxsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZz4NClN1YmplY3Q6
-IFJlOiBbUEFUQ0ggMS8zXSBxbGEyeHh4OiBJbmRpY2F0ZSBvdXQtb2YtbWVtb3J5IHdpdGggLUVO
-T01FTQ0KDQo+T24gMjAxNi0wMy0zMSAwMToyNSwgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPj4g
-SW4gdGhlIExpbnV4IGtlcm5lbCBpdCBpcyBwcmVmZXJyZWQgdG8gcmV0dXJuIGEgbWVhbmluZ2Z1
-bCBlcnJvciBjb2RlDQo+PiBpbnN0ZWFkIG9mIC0xLiBUaGlzIHBhdGNoIGRvZXMgbm90IGNoYW5n
-ZSB0aGUgYmVoYXZpb3Igb2YgdGhlIGNhbGxlciBvZg0KPj4gcWxhODJ4eF9waW5pdF9mcm9tX3Jv
-bSgpLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNz
-Y2hlQHNhbmRpc2suY29tPg0KPj4gQ2M6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNv
-bT4NCj4+IENjOiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQHFsb2dpYy5jb20+
-DQo+PiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+PiAtLS0NCj4+ICBkcml2
-ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbnguYyB8IDIgKy0NCj4+ICAxIGZpbGUgY2hhbmdlZCwgMSBp
-bnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-c2NzaS9xbGEyeHh4L3FsYV9ueC5jIA0KPj4gYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbngu
-Yw0KPj4gaW5kZXggYjZiNGNmZC4uNTQzODBiNCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2Nz
-aS9xbGEyeHh4L3FsYV9ueC5jDQo+PiArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbngu
-Yw0KPj4gQEAgLTEyMjksNyArMTIyOSw3IEBAIHFsYTgyeHhfcGluaXRfZnJvbV9yb20oc2NzaV9x
-bGFfaG9zdF90ICp2aGEpDQo+PiAgCWlmIChidWYgPT0gTlVMTCkgew0KPj4gIAkJcWxfbG9nKHFs
-X2xvZ19mYXRhbCwgdmhhLCAweDAxMGMsDQo+PiAgCQkgICAgIlVuYWJsZSB0byBhbGxvY2F0ZSBt
-ZW1vcnkuXG4iKTsNCj4+IC0JCXJldHVybiAtMTsNCj4+ICsJCXJldHVybiAtRU5PTUVNOw0KPj4g
-IAl9DQo+PiANCj4+ICAJZm9yIChpID0gMDsgaSA8IG47IGkrKykgew0KPg0KPkxvb2tzIGdvb2Qs
-DQo+UmV2aWV3ZWQtYnk6IEpvaGFubmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPg0K
-DQpBQ0suDQo+DQo=
+On 03/31/16 08:16, Quinn Tran wrote:
+> We use these flags for debugging purpose in crash cases.
+
+Hello Quinn,
+
+It must be inconvenient to have to look up the meaning of the individual 
+bits of the cmd_flags variable when analyzing a kernel crash. How about 
+preserving all these flags and to assign a meaningful name to each flag 
+instead of using bit numbers?
+
+Thanks,
+
+Bart.
+
