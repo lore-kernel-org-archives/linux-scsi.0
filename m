@@ -1,18 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/5] libiscsi: Remove set-but-not-used variables
-Date: Thu, 31 Mar 2016 09:59:33 +0200
-Message-ID: <4623e5d03607a9a81fb0cec74084332a@suse.de>
-References: <56FC1A3B.4040704@sandisk.com> <56FC1A7C.1020501@sandisk.com>
+Subject: Re: [PATCH 3/5] scsi_transport_iscsi: Remove set-but-not-used
+ variables
+Date: Thu, 31 Mar 2016 10:01:29 +0200
+Message-ID: <d8da8f5f56d7b51c605700ec9676caf1@suse.de>
+References: <56FC1A3B.4040704@sandisk.com> <56FC1A8F.1030504@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37465 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37559 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751418AbcCaH7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2016 03:59:34 -0400
-In-Reply-To: <56FC1A7C.1020501@sandisk.com>
+	id S1752337AbcCaIBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 04:01:31 -0400
+In-Reply-To: <56FC1A8F.1030504@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>
@@ -25,35 +26,29 @@ On 2016-03-30 20:27, Bart Van Assche wrote:
 > Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 > Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 > ---
->  drivers/scsi/libiscsi.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+>  drivers/scsi/scsi_transport_iscsi.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 120150a..c051694 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -2127,7 +2127,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
->  	struct iscsi_conn *conn;
->  	struct iscsi_task *task;
->  	struct iscsi_tm *hdr;
-> -	int rc, age;
-> +	int age;
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c
+> b/drivers/scsi/scsi_transport_iscsi.c
+> index 4414816..446781d 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -2067,13 +2067,10 @@ EXPORT_SYMBOL_GPL(iscsi_alloc_session);
 > 
->  	cls_session = starget_to_session(scsi_target(sc->device));
->  	session = cls_session->dd_data;
-> @@ -2188,10 +2188,8 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
->  	hdr = &conn->tmhdr;
->  	iscsi_prep_abort_task_pdu(task, hdr);
+>  int iscsi_add_session(struct iscsi_cls_session *session, unsigned int
+> target_id)
+>  {
+> -	struct Scsi_Host *shost = iscsi_session_to_shost(session);
+> -	struct iscsi_cls_host *ihost;
+>  	unsigned long flags;
+>  	int id = 0;
+>  	int err;
 > 
-> -	if (iscsi_exec_task_mgmt_fn(conn, hdr, age, session->abort_timeout)) 
-> {
-> -		rc = FAILED;
-> +	if (iscsi_exec_task_mgmt_fn(conn, hdr, age, session->abort_timeout))
->  		goto failed;
-> -	}
+> -	ihost = shost->shost_data;
+>  	session->sid = atomic_add_return(1, &iscsi_session_nr);
 > 
->  	switch (conn->tmf_state) {
->  	case TMF_SUCCESS:
+>  	if (target_id == ISCSI_MAX_TARGET) {
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
