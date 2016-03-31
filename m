@@ -1,395 +1,131 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RFC PATCH 4/4] dm mpath: eliminate use of spinlock in IO fast-paths
-Date: Thu, 31 Mar 2016 16:04:26 -0400
-Message-ID: <1459454666-76428-5-git-send-email-snitzer@redhat.com>
-References: <1459454666-76428-1-git-send-email-snitzer@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60428 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757862AbcCaUEb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2016 16:04:31 -0400
-In-Reply-To: <1459454666-76428-1-git-send-email-snitzer@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: Re: [PATCH v12 3/9] added UFS 2.0 capabilities
+Date: Thu, 31 Mar 2016 20:27:25 +0000
+Message-ID: <1459455981.23778.31.camel@intel.com>
+References: <cover.1459448160.git.jpinto@synopsys.com>
+	 <40585ae835f02d3b5550a32553b2189754e365b6.1459448160.git.jpinto@synopsys.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <40585ae835f02d3b5550a32553b2189754e365b6.1459448160.git.jpinto@synopsys.com>
+Content-Language: en-US
+Content-ID: <05B79027DDE0C2408C1A983F7F7B2206@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "akinobu.mita@gmail.com" <akinobu.mita@gmail.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "gbroner@codeaurora.org" <gbroner@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "julian.calaby@gmail.com" <julian.calaby@gmail.com>, "arnd@arndb.de" <arnd@arndb.de>
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com
-Cc: jmoyer@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, j-nomura@ce.jp.nec.com, hare@suse.de, sagig@dev.mellanox.co.il, Mike Snitzer <snitzer@redhat.com>
 
-The primary motivation of this commit is to improve the scalability of
-DM multipath on large NUMA systems where m->lock spinlock contention has
-been proven to be a serious bottleneck on really fast storage.
-
-The ability to atomically read a pointer, using lockless_dereference(),
-is leveraged in this commit.  But all pointer writes are still protected
-by the m->lock spinlock (which is fine since these all now occur in the
-slow-path).
-
-The following functions no longer require the m->lock spinlock in their
-fast-path: multipath_busy(), __multipath_map(), and do_end_io()
-
-And choose_pgpath() is modified to _not_ update m->current_pgpath unless
-it also switches the path-group.  This is done to avoid needing to take
-the m->lock everytime __multipath_map() calls choose_pgpath().
-But m->current_pgpath will be reset if it is failed via fail_path().
-
-Suggested-by: Jeff Moyer <jmoyer@redhat.com>
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/md/dm-mpath.c | 170 +++++++++++++++++++++++++++-----------------------
- 1 file changed, 93 insertions(+), 77 deletions(-)
-
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 54daf96..52baf8a 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -305,9 +305,21 @@ static int __pg_init_all_paths(struct multipath *m)
- 	return atomic_read(&m->pg_init_in_progress);
- }
- 
--static void __switch_pg(struct multipath *m, struct pgpath *pgpath)
-+static int pg_init_all_paths(struct multipath *m)
- {
--	m->current_pg = pgpath->pg;
-+	int r;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&m->lock, flags);
-+	r = __pg_init_all_paths(m);
-+	spin_unlock_irqrestore(&m->lock, flags);
-+
-+	return r;
-+}
-+
-+static void __switch_pg(struct multipath *m, struct priority_group *pg)
-+{
-+	m->current_pg = pg;
- 
- 	/* Must we initialise the PG first, and queue I/O till it's ready? */
- 	if (m->hw_handler_name) {
-@@ -321,26 +333,36 @@ static void __switch_pg(struct multipath *m, struct pgpath *pgpath)
- 	atomic_set(&m->pg_init_count, 0);
- }
- 
--static int __choose_path_in_pg(struct multipath *m, struct priority_group *pg,
--			       size_t nr_bytes)
-+static struct pgpath *choose_path_in_pg(struct multipath *m,
-+					struct priority_group *pg,
-+					size_t nr_bytes)
- {
-+	unsigned long flags;
- 	struct dm_path *path;
-+	struct pgpath *pgpath;
- 
- 	path = pg->ps.type->select_path(&pg->ps, nr_bytes);
- 	if (!path)
--		return -ENXIO;
-+		return ERR_PTR(-ENXIO);
- 
--	m->current_pgpath = path_to_pgpath(path);
-+	pgpath = path_to_pgpath(path);
- 
--	if (m->current_pg != pg)
--		__switch_pg(m, m->current_pgpath);
-+	if (unlikely(lockless_dereference(m->current_pg) != pg)) {
-+		/* Only update current_pgpath if pg changed */
-+		spin_lock_irqsave(&m->lock, flags);
-+		m->current_pgpath = pgpath;
-+		__switch_pg(m, pg);
-+		spin_unlock_irqrestore(&m->lock, flags);
-+	}
- 
--	return 0;
-+	return pgpath;
- }
- 
--static void __choose_pgpath(struct multipath *m, size_t nr_bytes)
-+static struct pgpath *choose_pgpath(struct multipath *m, size_t nr_bytes)
- {
-+	unsigned long flags;
- 	struct priority_group *pg;
-+	struct pgpath *pgpath;
- 	bool bypassed = true;
- 
- 	if (!atomic_read(&m->nr_valid_paths)) {
-@@ -349,16 +371,28 @@ static void __choose_pgpath(struct multipath *m, size_t nr_bytes)
- 	}
- 
- 	/* Were we instructed to switch PG? */
--	if (m->next_pg) {
-+	if (lockless_dereference(m->next_pg)) {
-+		spin_lock_irqsave(&m->lock, flags);
- 		pg = m->next_pg;
-+		if (!pg) {
-+			spin_unlock_irqrestore(&m->lock, flags);
-+			goto check_current_pg;
-+		}
- 		m->next_pg = NULL;
--		if (!__choose_path_in_pg(m, pg, nr_bytes))
--			return;
-+		spin_unlock_irqrestore(&m->lock, flags);
-+		pgpath = choose_path_in_pg(m, pg, nr_bytes);
-+		if (!IS_ERR_OR_NULL(pgpath))
-+			return pgpath;
- 	}
- 
- 	/* Don't change PG until it has no remaining paths */
--	if (m->current_pg && !__choose_path_in_pg(m, m->current_pg, nr_bytes))
--		return;
-+check_current_pg:
-+	pg = lockless_dereference(m->current_pg);
-+	if (pg) {
-+		pgpath = choose_path_in_pg(m, pg, nr_bytes);
-+		if (!IS_ERR_OR_NULL(pgpath))
-+			return pgpath;
-+	}
- 
- 	/*
- 	 * Loop through priority groups until we find a valid path.
-@@ -370,31 +404,34 @@ static void __choose_pgpath(struct multipath *m, size_t nr_bytes)
- 		list_for_each_entry(pg, &m->priority_groups, list) {
- 			if (pg->bypassed == bypassed)
- 				continue;
--			if (!__choose_path_in_pg(m, pg, nr_bytes)) {
-+			pgpath = choose_path_in_pg(m, pg, nr_bytes);
-+			if (!IS_ERR_OR_NULL(pgpath)) {
- 				if (!bypassed)
- 					set_bit(MPATHF_PG_INIT_DELAY_RETRY, &m->flags);
--				return;
-+				return pgpath;
- 			}
- 		}
- 	} while (bypassed--);
- 
- failed:
-+	spin_lock_irqsave(&m->lock, flags);
- 	m->current_pgpath = NULL;
- 	m->current_pg = NULL;
-+	spin_unlock_irqrestore(&m->lock, flags);
-+
-+	return NULL;
- }
- 
- /*
-  * Check whether bios must be queued in the device-mapper core rather
-  * than here in the target.
-  *
-- * m->lock must be held on entry.
-- *
-  * If m->queue_if_no_path and m->saved_queue_if_no_path hold the
-  * same value then we are not between multipath_presuspend()
-  * and multipath_resume() calls and we have no need to check
-  * for the DMF_NOFLUSH_SUSPENDING flag.
-  */
--static int __must_push_back(struct multipath *m)
-+static int must_push_back(struct multipath *m)
- {
- 	return (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
- 		((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
-@@ -416,36 +453,31 @@ static int __multipath_map(struct dm_target *ti, struct request *clone,
- 	struct block_device *bdev;
- 	struct dm_mpath_io *mpio;
- 
--	spin_lock_irq(&m->lock);
--
- 	/* Do we need to select a new pgpath? */
--	if (!m->current_pgpath || !test_bit(MPATHF_QUEUE_IO, &m->flags))
--		__choose_pgpath(m, nr_bytes);
--
--	pgpath = m->current_pgpath;
-+	pgpath = lockless_dereference(m->current_pgpath);
-+	if (!pgpath || !test_bit(MPATHF_QUEUE_IO, &m->flags))
-+		pgpath = choose_pgpath(m, nr_bytes);
- 
- 	if (!pgpath) {
--		if (!__must_push_back(m))
-+		if (!must_push_back(m))
- 			r = -EIO;	/* Failed */
--		goto out_unlock;
-+		return r;
- 	} else if (test_bit(MPATHF_QUEUE_IO, &m->flags) ||
- 		   test_bit(MPATHF_PG_INIT_REQUIRED, &m->flags)) {
--		__pg_init_all_paths(m);
--		goto out_unlock;
-+		pg_init_all_paths(m);
-+		return r;
- 	}
- 
- 	mpio = set_mpio(m, map_context);
- 	if (!mpio)
- 		/* ENOMEM, requeue */
--		goto out_unlock;
-+		return r;
- 
- 	mpio->pgpath = pgpath;
- 	mpio->nr_bytes = nr_bytes;
- 
- 	bdev = pgpath->path.dev->bdev;
- 
--	spin_unlock_irq(&m->lock);
--
- 	if (clone) {
- 		/*
- 		 * Old request-based interface: allocated clone is passed in.
-@@ -477,11 +509,6 @@ static int __multipath_map(struct dm_target *ti, struct request *clone,
- 					      &pgpath->path,
- 					      nr_bytes);
- 	return DM_MAPIO_REMAPPED;
--
--out_unlock:
--	spin_unlock_irq(&m->lock);
--
--	return r;
- }
- 
- static int multipath_map(struct dm_target *ti, struct request *clone,
-@@ -1308,7 +1335,6 @@ static int do_end_io(struct multipath *m, struct request *clone,
- 	 * clone bios for it and resubmit it later.
- 	 */
- 	int r = DM_ENDIO_REQUEUE;
--	unsigned long flags;
- 
- 	if (!error && !clone->errors)
- 		return 0;	/* I/O complete */
-@@ -1319,17 +1345,15 @@ static int do_end_io(struct multipath *m, struct request *clone,
- 	if (mpio->pgpath)
- 		fail_path(mpio->pgpath);
- 
--	spin_lock_irqsave(&m->lock, flags);
- 	if (!atomic_read(&m->nr_valid_paths)) {
- 		if (!test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags)) {
--			if (!__must_push_back(m))
-+			if (!must_push_back(m))
- 				r = -EIO;
- 		} else {
- 			if (error == -EBADE)
- 				r = error;
- 		}
- 	}
--	spin_unlock_irqrestore(&m->lock, flags);
- 
- 	return r;
- }
-@@ -1586,18 +1610,17 @@ static int multipath_prepare_ioctl(struct dm_target *ti,
- 		struct block_device **bdev, fmode_t *mode)
- {
- 	struct multipath *m = ti->private;
--	unsigned long flags;
-+	struct pgpath *current_pgpath;
- 	int r;
- 
--	spin_lock_irqsave(&m->lock, flags);
--
--	if (!m->current_pgpath)
--		__choose_pgpath(m, 0);
-+	current_pgpath = lockless_dereference(m->current_pgpath);
-+	if (!current_pgpath)
-+		current_pgpath = choose_pgpath(m, 0);
- 
--	if (m->current_pgpath) {
-+	if (current_pgpath) {
- 		if (!test_bit(MPATHF_QUEUE_IO, &m->flags)) {
--			*bdev = m->current_pgpath->path.dev->bdev;
--			*mode = m->current_pgpath->path.dev->mode;
-+			*bdev = current_pgpath->path.dev->bdev;
-+			*mode = current_pgpath->path.dev->mode;
- 			r = 0;
- 		} else {
- 			/* pg_init has not started or completed */
-@@ -1611,17 +1634,13 @@ static int multipath_prepare_ioctl(struct dm_target *ti,
- 			r = -EIO;
- 	}
- 
--	spin_unlock_irqrestore(&m->lock, flags);
--
- 	if (r == -ENOTCONN) {
--		spin_lock_irqsave(&m->lock, flags);
--		if (!m->current_pg) {
-+		if (!lockless_dereference(m->current_pg)) {
- 			/* Path status changed, redo selection */
--			__choose_pgpath(m, 0);
-+			(void) choose_pgpath(m, 0);
- 		}
- 		if (test_bit(MPATHF_PG_INIT_REQUIRED, &m->flags))
--			__pg_init_all_paths(m);
--		spin_unlock_irqrestore(&m->lock, flags);
-+			pg_init_all_paths(m);
- 		dm_table_run_md_queue_async(m->ti->table);
- 	}
- 
-@@ -1672,39 +1691,37 @@ static int multipath_busy(struct dm_target *ti)
- {
- 	bool busy = false, has_active = false;
- 	struct multipath *m = ti->private;
--	struct priority_group *pg;
-+	struct priority_group *pg, *next_pg;
- 	struct pgpath *pgpath;
--	unsigned long flags;
--
--	spin_lock_irqsave(&m->lock, flags);
- 
- 	/* pg_init in progress or no paths available */
- 	if (atomic_read(&m->pg_init_in_progress) ||
--	    (!atomic_read(&m->nr_valid_paths) && test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags))) {
--		busy = true;
--		goto out;
--	}
-+	    (!atomic_read(&m->nr_valid_paths) && test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags)))
-+		return true;
-+
- 	/* Guess which priority_group will be used at next mapping time */
--	if (unlikely(!m->current_pgpath && m->next_pg))
--		pg = m->next_pg;
--	else if (likely(m->current_pg))
--		pg = m->current_pg;
--	else
-+	pg = lockless_dereference(m->current_pg);
-+	next_pg = lockless_dereference(m->next_pg);
-+	if (unlikely(!lockless_dereference(m->current_pgpath) && next_pg))
-+		pg = next_pg;
-+
-+	if (!pg) {
- 		/*
- 		 * We don't know which pg will be used at next mapping time.
--		 * We don't call __choose_pgpath() here to avoid to trigger
-+		 * We don't call choose_pgpath() here to avoid to trigger
- 		 * pg_init just by busy checking.
- 		 * So we don't know whether underlying devices we will be using
- 		 * at next mapping time are busy or not. Just try mapping.
- 		 */
--		goto out;
-+		return busy;
-+	}
- 
- 	/*
- 	 * If there is one non-busy active path at least, the path selector
- 	 * will be able to select it. So we consider such a pg as not busy.
- 	 */
- 	busy = true;
--	list_for_each_entry(pgpath, &pg->pgpaths, list)
-+	list_for_each_entry(pgpath, &pg->pgpaths, list) {
- 		if (pgpath->is_active) {
- 			has_active = true;
- 			if (!pgpath_busy(pgpath)) {
-@@ -1712,17 +1729,16 @@ static int multipath_busy(struct dm_target *ti)
- 				break;
- 			}
- 		}
-+	}
- 
--	if (!has_active)
-+	if (!has_active) {
- 		/*
- 		 * No active path in this pg, so this pg won't be used and
- 		 * the current_pg will be changed at next mapping time.
- 		 * We need to try mapping to determine it.
- 		 */
- 		busy = false;
--
--out:
--	spin_unlock_irqrestore(&m->lock, flags);
-+	}
- 
- 	return busy;
- }
--- 
-2.6.4 (Apple Git-63)
-
+T24gVGh1LCAyMDE2LTAzLTMxIGF0IDE5OjU3ICswMTAwLCBKb2FvIFBpbnRvIHdyb3RlOg0KPiBB
+ZGRpbmcgVUZTIDIuMCBzdXBwb3J0IHRvIHRoZSBVRlMgY29yZSBkcml2ZXIuDQo+IA0KPiBTaWdu
+ZWQtb2ZmLWJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMuY29tPg0KDQpMb29rcyBnb29k
+IHRvIG1lLCB0aG91Z2ggbm90IHRlc3RlZCB5ZXQNClRvbWFzDQoNCj4gLS0tDQo+IENoYW5nZXMg
+djExLT52MTIgKFRvbWFzIFdpbmtsZXIpOg0KPiAtIGRldmljZXRyZWUgYmluZGluZyB0d2VhayB3
+YXMgbW92ZWQgdG8gYSBzZXBhcmF0ZWQgcGF0Y2gNCj4gLSB1bmlwcm8gdHdlYWtzIHdlcmUgbW92
+ZWQgdG8gYSBzZXBhcmF0ZWQgcGF0Y2gNCj4gLSB1ZnNoY2RfY29tcG9zZV91cGl1IHdhcyBkZWNv
+bXBvc2VkIGluIDIgZnVuY3Rpb25zDQo+IC0gVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdFIGlzIG5v
+dyAweDEgKHByZXZpb3VzbHkgd2FzIDB4MTEpDQo+IENoYW5nZXMgdjgtPnYxMToNCj4gLSBOb3Ro
+aW5nIGNoYW5nZWQgKGp1c3QgdG8ga2VlcCB1cCB3aXRoIHBhdGNoIHNldCB2ZXJzaW9uKS4NCj4g
+Q2hhbmdlcyB2Ny0+djg6DQo+IC0gQWRkZWQgImplZGVjLCB1ZnMtMi4wIiB0byB0aGUgdWZzY2hk
+LXBsYXRmb3JtIGNvbXBhdGliaWxpdHkgc3RyaW5ncw0KPiBDaGFuZ2VzIHYwLT52NzoNCj4gLSBO
+b3RoaW5nIGNoYW5nZWQgKGp1c3QgdG8ga2VlcCB1cCB3aXRoIHBhdGNoIHNldCB2ZXJzaW9uKS4N
+Cj4gDQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIHwgOTAgKysrKysrKysrKysrKysrKysr
+KysrKysrKystLS0tLS0tLS0tLQ0KPiAtLS0tLS0tLS0tDQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vm
+c2hjaS5oIHwgIDUgKysrDQo+ICAyIGZpbGVzIGNoYW5nZWQsIDU0IGluc2VydGlvbnMoKyksIDQx
+IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNk
+LmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+IGluZGV4IDljMWI5NGIuLmE2OWQ2Mzcg
+MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gKysrIGIvZHJpdmVy
+cy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiBAQCAtMTEyNyw3ICsxMTI3LDcgQEAgc3RhdGljIHZvaWQg
+dWZzaGNkX2Rpc2FibGVfaW50cihzdHJ1Y3QgdWZzX2hiYQ0KPiAqaGJhLCB1MzIgaW50cnMpDQo+
+ICAgKiBAY21kX2RpcjogcmVxdWVzdHMgZGF0YSBkaXJlY3Rpb24NCj4gICAqLw0KPiAgc3RhdGlj
+IHZvaWQgdWZzaGNkX3ByZXBhcmVfcmVxX2Rlc2NfaGRyKHN0cnVjdCB1ZnNoY2RfbHJiICpscmJw
+LA0KPiAtCQl1MzIgKnVwaXVfZmxhZ3MsIGVudW0gZG1hX2RhdGFfZGlyZWN0aW9uIGNtZF9kaXIp
+DQo+ICsJCQl1MzIgKnVwaXVfZmxhZ3MsIGVudW0gZG1hX2RhdGFfZGlyZWN0aW9uDQo+IGNtZF9k
+aXIpDQo+ICB7DQo+ICAJc3RydWN0IHV0cF90cmFuc2Zlcl9yZXFfZGVzYyAqcmVxX2Rlc2MgPSBs
+cmJwDQo+IC0+dXRyX2Rlc2NyaXB0b3JfcHRyOw0KPiAgCXUzMiBkYXRhX2RpcmVjdGlvbjsNCj4g
+QEAgLTEyNTMsNDcgKzEyNTMsNTUgQEAgc3RhdGljIGlubGluZSB2b2lkDQo+IHVmc2hjZF9wcmVw
+YXJlX3V0cF9ub3BfdXBpdShzdHJ1Y3QgdWZzaGNkX2xyYiAqbHJicCkNCj4gIH0NCj4gIA0KPiAg
+LyoqDQo+IC0gKiB1ZnNoY2RfY29tcG9zZV91cGl1IC0gZm9ybSBVRlMgUHJvdG9jb2wgSW5mb3Jt
+YXRpb24gVW5pdChVUElVKQ0KPiArICogdWZzaGNkX2NvbXBfZGV2bWFuX3VwaXUgLSBVRlMgUHJv
+dG9jb2wgSW5mb3JtYXRpb24gVW5pdChVUElVKSANCj4gKyAqCQkJICAgICBmb3IgRGV2aWNlIE1h
+bmFnZW1lbnQgUHVycG9zZXMNCj4gICAqIEBoYmEgLSBwZXIgYWRhcHRlciBpbnN0YW5jZQ0KPiAg
+ICogQGxyYiAtIHBvaW50ZXIgdG8gbG9jYWwgcmVmZXJlbmNlIGJsb2NrDQo+ICAgKi8NCj4gLXN0
+YXRpYyBpbnQgdWZzaGNkX2NvbXBvc2VfdXBpdShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBzdHJ1Y3QN
+Cj4gdWZzaGNkX2xyYiAqbHJicCkNCj4gK3N0YXRpYyBpbnQgdWZzaGNkX2NvbXBfZGV2bWFuX3Vw
+aXUoc3RydWN0IHVmc19oYmEgKmhiYSwgc3RydWN0DQo+IHVmc2hjZF9scmIgKmxyYnApDQo+ICB7
+DQo+ICAJdTMyIHVwaXVfZmxhZ3M7DQo+ICAJaW50IHJldCA9IDA7DQo+ICANCj4gLQlzd2l0Y2gg
+KGxyYnAtPmNvbW1hbmRfdHlwZSkgew0KPiAtCWNhc2UgVVRQX0NNRF9UWVBFX1NDU0k6DQo+IC0J
+CWlmIChsaWtlbHkobHJicC0+Y21kKSkgew0KPiAtCQkJdWZzaGNkX3ByZXBhcmVfcmVxX2Rlc2Nf
+aGRyKGxyYnAsDQo+ICZ1cGl1X2ZsYWdzLA0KPiAtCQkJCQlscmJwLT5jbWQNCj4gLT5zY19kYXRh
+X2RpcmVjdGlvbik7DQo+IC0JCQl1ZnNoY2RfcHJlcGFyZV91dHBfc2NzaV9jbWRfdXBpdShscmJw
+LA0KPiB1cGl1X2ZsYWdzKTsNCj4gLQkJfSBlbHNlIHsNCj4gLQkJCXJldCA9IC1FSU5WQUw7DQo+
+IC0JCX0NCj4gLQkJYnJlYWs7DQo+IC0JY2FzZSBVVFBfQ01EX1RZUEVfREVWX01BTkFHRToNCj4g
+LQkJdWZzaGNkX3ByZXBhcmVfcmVxX2Rlc2NfaGRyKGxyYnAsICZ1cGl1X2ZsYWdzLA0KPiBETUFf
+Tk9ORSk7DQo+IC0JCWlmIChoYmEtPmRldl9jbWQudHlwZSA9PSBERVZfQ01EX1RZUEVfUVVFUlkp
+DQo+IC0JCQl1ZnNoY2RfcHJlcGFyZV91dHBfcXVlcnlfcmVxX3VwaXUoDQo+IC0JCQkJCWhiYSwg
+bHJicCwgdXBpdV9mbGFncyk7DQo+IC0JCWVsc2UgaWYgKGhiYS0+ZGV2X2NtZC50eXBlID09IERF
+Vl9DTURfVFlQRV9OT1ApDQo+IC0JCQl1ZnNoY2RfcHJlcGFyZV91dHBfbm9wX3VwaXUobHJicCk7
+DQo+IC0JCWVsc2UNCj4gLQkJCXJldCA9IC1FSU5WQUw7DQo+IC0JCWJyZWFrOw0KPiAtCWNhc2Ug
+VVRQX0NNRF9UWVBFX1VGUzoNCj4gLQkJLyogRm9yIFVGUyBuYXRpdmUgY29tbWFuZCBpbXBsZW1l
+bnRhdGlvbiAqLw0KPiAtCQlyZXQgPSAtRU5PVFNVUFA7DQo+IC0JCWRldl9lcnIoaGJhLT5kZXYs
+ICIlczogVUZTIG5hdGl2ZSBjb21tYW5kIGFyZSBub3QNCj4gc3VwcG9ydGVkXG4iLA0KPiAtCQkJ
+X19mdW5jX18pOw0KPiAtCQlicmVhazsNCj4gLQlkZWZhdWx0Og0KPiAtCQlyZXQgPSAtRU5PVFNV
+UFA7DQo+IC0JCWRldl9lcnIoaGJhLT5kZXYsICIlczogdW5rbm93biBjb21tYW5kIHR5cGU6DQo+
+IDB4JXhcbiIsDQo+IC0JCQkJX19mdW5jX18sIGxyYnAtPmNvbW1hbmRfdHlwZSk7DQo+IC0JCWJy
+ZWFrOw0KPiAtCX0gLyogZW5kIG9mIHN3aXRjaCAqLw0KPiArCWlmIChoYmEtPnVmc192ZXJzaW9u
+ID09IFVGU0hDSV9WRVJTSU9OXzIwKQ0KPiArCQlscmJwLT5jb21tYW5kX3R5cGUgPSBVVFBfQ01E
+X1RZUEVfVUZTX1NUT1JBR0U7DQo+ICsJZWxzZQ0KPiArCQlscmJwLT5jb21tYW5kX3R5cGUgPSBV
+VFBfQ01EX1RZUEVfREVWX01BTkFHRTsNCj4gKw0KPiArCXVmc2hjZF9wcmVwYXJlX3JlcV9kZXNj
+X2hkcihscmJwLCAmdXBpdV9mbGFncywgRE1BX05PTkUpOw0KPiArCWlmIChoYmEtPmRldl9jbWQu
+dHlwZSA9PSBERVZfQ01EX1RZUEVfUVVFUlkpDQo+ICsJCXVmc2hjZF9wcmVwYXJlX3V0cF9xdWVy
+eV9yZXFfdXBpdShoYmEsIGxyYnAsDQo+IHVwaXVfZmxhZ3MpOw0KPiArCWVsc2UgaWYgKGhiYS0+
+ZGV2X2NtZC50eXBlID09IERFVl9DTURfVFlQRV9OT1ApDQo+ICsJCXVmc2hjZF9wcmVwYXJlX3V0
+cF9ub3BfdXBpdShscmJwKTsNCj4gKwllbHNlDQo+ICsJCXJldCA9IC1FSU5WQUw7DQo+ICsNCj4g
+KwlyZXR1cm4gcmV0Ow0KPiArfQ0KPiArDQo+ICsvKioNCj4gKyAqIHVmc2hjZF9jb21wX3Njc2lf
+dXBpdSAtIFVGUyBQcm90b2NvbCBJbmZvcm1hdGlvbiBVbml0KFVQSVUpIA0KPiArICoJCQkgICBm
+b3IgU0NTSSBQdXJwb3Nlcw0KPiArICogQGhiYSAtIHBlciBhZGFwdGVyIGluc3RhbmNlDQo+ICsg
+KiBAbHJiIC0gcG9pbnRlciB0byBsb2NhbCByZWZlcmVuY2UgYmxvY2sNCj4gKyAqLw0KPiArc3Rh
+dGljIGludCB1ZnNoY2RfY29tcF9zY3NpX3VwaXUoc3RydWN0IHVmc19oYmEgKmhiYSwgc3RydWN0
+DQo+IHVmc2hjZF9scmIgKmxyYnApDQo+ICt7DQo+ICsJdTMyIHVwaXVfZmxhZ3M7DQo+ICsJaW50
+IHJldCA9IDA7DQo+ICsNCj4gKwlpZiAoaGJhLT51ZnNfdmVyc2lvbiA9PSBVRlNIQ0lfVkVSU0lP
+Tl8yMCkNCj4gKwkJbHJicC0+Y29tbWFuZF90eXBlID0gVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdF
+Ow0KPiArCWVsc2UNCj4gKwkJbHJicC0+Y29tbWFuZF90eXBlID0gVVRQX0NNRF9UWVBFX1NDU0k7
+DQo+ICsNCj4gKwlpZiAobGlrZWx5KGxyYnAtPmNtZCkpIHsNCj4gKwkJdWZzaGNkX3ByZXBhcmVf
+cmVxX2Rlc2NfaGRyKGxyYnAsICZ1cGl1X2ZsYWdzLA0KPiArCQkJCQkJbHJicC0+Y21kDQo+IC0+
+c2NfZGF0YV9kaXJlY3Rpb24pOw0KPiArCQl1ZnNoY2RfcHJlcGFyZV91dHBfc2NzaV9jbWRfdXBp
+dShscmJwLCB1cGl1X2ZsYWdzKTsNCj4gKwl9IGVsc2Ugew0KPiArCQlyZXQgPSAtRUlOVkFMOw0K
+PiArCX0NCj4gIA0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+IEBAIC0xNDA1LDEwICsxNDE0LDkg
+QEAgc3RhdGljIGludCB1ZnNoY2RfcXVldWVjb21tYW5kKHN0cnVjdA0KPiBTY3NpX0hvc3QgKmhv
+c3QsIHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gIAlscmJwLT50YXNrX3RhZyA9IHRhZzsNCj4g
+IAlscmJwLT5sdW4gPSB1ZnNoY2Rfc2NzaV90b191cGl1X2x1bihjbWQtPmRldmljZS0+bHVuKTsN
+Cj4gIAlscmJwLT5pbnRyX2NtZCA9ICF1ZnNoY2RfaXNfaW50cl9hZ2dyX2FsbG93ZWQoaGJhKSA/
+IHRydWUgOg0KPiBmYWxzZTsNCj4gLQlscmJwLT5jb21tYW5kX3R5cGUgPSBVVFBfQ01EX1RZUEVf
+U0NTSTsNCj4gIA0KPiAtCS8qIGZvcm0gVVBJVSBiZWZvcmUgaXNzdWluZyB0aGUgY29tbWFuZCAq
+Lw0KPiAtCXVmc2hjZF9jb21wb3NlX3VwaXUoaGJhLCBscmJwKTsNCj4gKwl1ZnNoY2RfY29tcF9z
+Y3NpX3VwaXUoaGJhLCBscmJwKTsNCj4gKw0KPiAgCWVyciA9IHVmc2hjZF9tYXBfc2cobHJicCk7
+DQo+ICAJaWYgKGVycikgew0KPiAgCQlscmJwLT5jbWQgPSBOVUxMOw0KPiBAQCAtMTQzMywxMSAr
+MTQ0MSwxMCBAQCBzdGF0aWMgaW50IHVmc2hjZF9jb21wb3NlX2Rldl9jbWQoc3RydWN0DQo+IHVm
+c19oYmEgKmhiYSwNCj4gIAlscmJwLT5zZW5zZV9idWZmZXIgPSBOVUxMOw0KPiAgCWxyYnAtPnRh
+c2tfdGFnID0gdGFnOw0KPiAgCWxyYnAtPmx1biA9IDA7IC8qIGRldmljZSBtYW5hZ2VtZW50IGNt
+ZCBpcyBub3Qgc3BlY2lmaWMgdG8NCj4gYW55IExVTiAqLw0KPiAtCWxyYnAtPmNvbW1hbmRfdHlw
+ZSA9IFVUUF9DTURfVFlQRV9ERVZfTUFOQUdFOw0KPiAgCWxyYnAtPmludHJfY21kID0gdHJ1ZTsg
+LyogTm8gaW50ZXJydXB0IGFnZ3JlZ2F0aW9uICovDQo+ICAJaGJhLT5kZXZfY21kLnR5cGUgPSBj
+bWRfdHlwZTsNCj4gIA0KPiAtCXJldHVybiB1ZnNoY2RfY29tcG9zZV91cGl1KGhiYSwgbHJicCk7
+DQo+ICsJcmV0dXJuIHVmc2hjZF9jb21wX2Rldm1hbl91cGl1KGhiYSwgbHJicCk7DQo+ICB9DQo+
+ICANCj4gIHN0YXRpYyBpbnQNCj4gQEAgLTM0MDMsNyArMzQxMCw4IEBAIHN0YXRpYyB2b2lkIHVm
+c2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoc3RydWN0DQo+IHVmc19oYmEgKmhiYSkNCj4gIAkJCS8q
+IERvIG5vdCB0b3VjaCBscmJwIGFmdGVyIHNjc2kgZG9uZSAqLw0KPiAgCQkJY21kLT5zY3NpX2Rv
+bmUoY21kKTsNCj4gIAkJCV9fdWZzaGNkX3JlbGVhc2UoaGJhKTsNCj4gLQkJfSBlbHNlIGlmIChs
+cmJwLT5jb21tYW5kX3R5cGUgPT0NCj4gVVRQX0NNRF9UWVBFX0RFVl9NQU5BR0UpIHsNCj4gKwkJ
+fSBlbHNlIGlmIChscmJwLT5jb21tYW5kX3R5cGUgPT0NCj4gVVRQX0NNRF9UWVBFX0RFVl9NQU5B
+R0UgfHwNCj4gKwkJCWxyYnAtPmNvbW1hbmRfdHlwZSA9PQ0KPiBVVFBfQ01EX1RZUEVfVUZTX1NU
+T1JBR0UpIHsNCj4gIAkJCWlmIChoYmEtPmRldl9jbWQuY29tcGxldGUpDQo+ICAJCQkJY29tcGxl
+dGUoaGJhLT5kZXZfY21kLmNvbXBsZXRlKTsNCj4gIAkJfQ0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9zY3NpL3Vmcy91ZnNoY2kuaCBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNpLmgNCj4gaW5kZXgg
+MGFlMDk2Ny4uMjBlY2UxOCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2ku
+aA0KPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjaS5oDQo+IEBAIC0yNzUsNiArMjc1LDEx
+IEBAIGVudW0gew0KPiAgCVVUUF9DTURfVFlQRV9ERVZfTUFOQUdFCQk9IDB4MiwNCj4gIH07DQo+
+ICANCj4gKy8qIFRvIGFjY29tb2RhdGUgVUZTMi4wIHJlcXVpcmVkIENvbW1hbmQgdHlwZSAqLw0K
+PiArZW51bSB7DQo+ICsJVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdFCT0gMHgxLA0KPiArfTsNCj4g
+Kw0KPiAgZW51bSB7DQo+ICAJVVRQX1NDU0lfQ09NTUFORAkJPSAweDAwMDAwMDAwLA0KPiAgCVVU
+UF9OQVRJVkVfVUZTX0NPTU1BTkQJCT0gMHgxMDAwMDAwMCw=
