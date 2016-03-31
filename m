@@ -1,100 +1,63 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
 Subject: Re: [PATCH 2/3] qla2xxx: Remove set-but-not-used variables
-Date: Thu, 31 Mar 2016 15:24:00 +0000
-Message-ID: <10CF97DD-4A2C-45A7-9A20-6FA66479C17F@qlogic.com>
+Date: Thu, 31 Mar 2016 08:57:26 -0700
+Message-ID: <56FD48E6.2050109@sandisk.com>
 References: <56FC6049.3090303@sandisk.com> <56FC6076.2030900@sandisk.com>
  <082453e484e89dd27b877373bf51ad0e@suse.de>
+ <10CF97DD-4A2C-45A7-9A20-6FA66479C17F@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0105.outbound.protection.outlook.com ([207.46.100.105]:22433
+Received: from mail-by2on0058.outbound.protection.outlook.com ([207.46.100.58]:48432
 	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756882AbcCaP4n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2016 11:56:43 -0400
-In-Reply-To: <082453e484e89dd27b877373bf51ad0e@suse.de>
-Content-Language: en-US
-Content-ID: <186AFBA01794B9448B4B99B613EA2BA2@namprd11.prod.outlook.com>
+	id S1751243AbcCaP5b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 11:57:31 -0400
+In-Reply-To: <10CF97DD-4A2C-45A7-9A20-6FA66479C17F@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: Quinn Tran <quinn.tran@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>
 Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>
 
-DQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBUaHVt
-c2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4NCkRhdGU6IFRodXJzZGF5LCBNYXJjaCAzMSwgMjAx
-NiBhdCAxMjozNyBBTQ0KVG86IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAc2FuZGlz
-ay5jb20+DQpDYzogSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4sICJN
-YXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4sIEhpbWFuc2h1
-IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIFF1aW5uIFRyYW4gPHF1aW5u
-LnRyYW5AcWxvZ2ljLmNvbT4sIENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPiwgbGludXgt
-c2NzaSA8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+LCAibGludXgtc2NzaS1vd25lckB2Z2Vy
-Lmtlcm5lbC5vcmciIDxsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZz4NClN1YmplY3Q6
-IFJlOiBbUEFUQ0ggMi8zXSBxbGEyeHh4OiBSZW1vdmUgc2V0LWJ1dC1ub3QtdXNlZCB2YXJpYWJs
-ZXMNCg0KPk9uIDIwMTYtMDMtMzEgMDE6MjUsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4+IERl
-dGVjdGVkIHRoZXNlIHZhcmlhYmxlcyBieSBidWlsZGluZyB0aGUgcWxhMnh4eCBkcml2ZXIgd2l0
-aCBXPTEuDQo+PiBOb3RlOiByZW1vdmluZyB0aGUgY29kZSB0aGF0IHNldHMgQklUXzE0IGlzIGZp
-bmUgc2luY2UgdGhhdCBiaXQgaXMNCj4+IG5ldmVyIHRlc3RlZC4gVGhlIG91dHB1dCBvZiBnaXQg
-Z3JlcCAtbkggLS0gJy0+Y21kX2ZsYWdzXHMqJicNCj4+IGRyaXZlcnMvc2NzaS9xbGEyeHh4DQo+
-PiBpcyBhcyBmb2xsb3dzOg0KPj4gDQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4
-eC5jOjI4NToJV0FSTl9PTihjbWQtPmNtZF9mbGFncyAmICANCj4+IEJJVF8xNik7DQo+PiBkcml2
-ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jOjMwMjoJQlVHX09OKGNtZC0+Y21kX2ZsYWdz
-ICYgDQo+PiBCSVRfMjApOw0KPj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvdGNtX3FsYTJ4eHguYzo2
-Mjc6CWlmIChjbWQtPmNtZF9mbGFncyAmICBCSVRfNSkgew0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5
-OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPg0KPj4gQ2M6IFF1
-aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj4+IENjOiBIaW1hbnNodSBNYWRoYW5p
-IDxoaW1hbnNodS5tYWRoYW5pQHFsb2dpYy5jb20+DQo+PiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcg
-PGhjaEBsc3QuZGU+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfYXR0ci5j
-ICAgIHwgMyArLS0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMgICAgIHwgMiAt
-LQ0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMgfCA3IC0tLS0tLS0NCj4+
-ICAzIGZpbGVzIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxMSBkZWxldGlvbnMoLSkNCj4+IA0K
-Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9hdHRyLmMgDQo+PiBiL2Ry
-aXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9hdHRyLmMNCj4+IGluZGV4IDRkYzA2YTEzLi5kYjg1YzVj
-IDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2F0dHIuYw0KPj4gKysr
-IGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2F0dHIuYw0KPj4gQEAgLTgzOSw3ICs4MzksNiBA
-QCBxbGEyeDAwX2lzc3VlX2xvZ28oc3RydWN0IGZpbGUgKmZpbHAsIHN0cnVjdCANCj4+IGtvYmpl
-Y3QgKmtvYmosDQo+PiAgCXN0cnVjdCBzY3NpX3FsYV9ob3N0ICp2aGEgPSANCj4+IHNob3N0X3By
-aXYoZGV2X3RvX3Nob3N0KGNvbnRhaW5lcl9vZihrb2JqLA0KPj4gIAkgICAgc3RydWN0IGRldmlj
-ZSwga29iaikpKTsNCj4+ICAJaW50IHR5cGU7DQo+PiAtCWludCBydmFsID0gMDsNCj4+ICAJcG9y
-dF9pZF90IGRpZDsNCj4+IA0KPj4gIAl0eXBlID0gc2ltcGxlX3N0cnRvbChidWYsIE5VTEwsIDEw
-KTsNCj4+IEBAIC04NTMsNyArODUyLDcgQEAgcWxhMngwMF9pc3N1ZV9sb2dvKHN0cnVjdCBmaWxl
-ICpmaWxwLCBzdHJ1Y3QgDQo+PiBrb2JqZWN0ICprb2JqLA0KPj4gDQo+PiAgCXFsX2xvZyhxbF9s
-b2dfaW5mbywgdmhhLCAweDcwZTQsICIlczogJWRcbiIsIF9fZnVuY19fLCB0eXBlKTsNCj4+IA0K
-Pj4gLQlydmFsID0gcWxhMjR4eF9lbHNfZGNtZF9pb2NiKHZoYSwgRUxTX0RDTURfTE9HTywgZGlk
-KTsNCj4+ICsJcWxhMjR4eF9lbHNfZGNtZF9pb2NiKHZoYSwgRUxTX0RDTURfTE9HTywgZGlkKTsN
-Cj4+ICAJcmV0dXJuIGNvdW50Ow0KPj4gIH0NCj4+IA0KPg0KPk9LLCBxbGEyNHh4X2Vsc19kY21k
-X2lvY2IoKSBpcyBhIGJpdCBzY2FyeS4gSXQgY2FuIHJldHVybiAtRU5PTUVNLCBidXQgDQo+bm8g
-Y2FsbGVyIGNoZWNrcyBpdCAodGhlIDJuZCBjYWxsZXIgX29ubHlfIGNoZWNrcyB0aGUgcmV0dXJu
-IHZhbHVlIGluIGEgDQo+ZGVidWcgbWVzc2FnZSkuIE1heWJlIHdlIHNob3VsZCB0aGluayBhYm91
-dCB0aGF0Lg0KPg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tYngu
-YyANCj4+IGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jDQo+PiBpbmRleCA5NjhiODQ2
-Li5iZjJkMzU3IDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5j
-DQo+PiArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMNCj4+IEBAIC02MDcsNyAr
-NjA3LDYgQEAgcWxhX3NldF9leGxvZ2luX21lbV9jZmcoc2NzaV9xbGFfaG9zdF90ICp2aGEsDQo+
-PiBkbWFfYWRkcl90IHBoeXNfYWRkcikNCj4+ICAJbWJ4X2NtZF90CW1jOw0KPj4gIAltYnhfY21k
-X3QJKm1jcCA9ICZtYzsNCj4+ICAJc3RydWN0IHFsYV9od19kYXRhICpoYSA9IHZoYS0+aHc7DQo+
-PiAtCWludCBjb25maWd1cmVkX2NvdW50Ow0KPj4gDQo+PiAgCXFsX2RiZyhxbF9kYmdfbWJ4ICsg
-cWxfZGJnX3ZlcmJvc2UsIHZoYSwgMHgxMTFhLA0KPj4gIAkgICAgIkVudGVyZWQgJXMuXG4iLCBf
-X2Z1bmNfXyk7DQo+PiBAQCAtNjMwLDcgKzYyOSw2IEBAIHFsYV9zZXRfZXhsb2dpbl9tZW1fY2Zn
-KHNjc2lfcWxhX2hvc3RfdCAqdmhhLA0KPj4gZG1hX2FkZHJfdCBwaHlzX2FkZHIpDQo+PiAgCQkv
-KkVNUFRZKi8NCj4+ICAJCXFsX2RiZyhxbF9kYmdfbWJ4LCB2aGEsIDB4MTExYiwgIkZhaWxlZD0l
-eC5cbiIsIHJ2YWwpOw0KPj4gIAl9IGVsc2Ugew0KPj4gLQkJY29uZmlndXJlZF9jb3VudCA9IG1j
-cC0+bWJbMTFdOw0KPj4gIAkJcWxfZGJnKHFsX2RiZ19tYnggKyBxbF9kYmdfdmVyYm9zZSwgdmhh
-LCAweDExOGMsDQo+PiAgCQkgICAgIkRvbmUgJXMuXG4iLCBfX2Z1bmNfXyk7DQo+PiAgCX0NCj4+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jDQo+PiBiL2Ry
-aXZlcnMvc2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMNCj4+IGluZGV4IGMxNDYxZDIuLjk3ZmNi
-ZjIgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jDQo+
-PiArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jDQo+PiBAQCAtMzExLDEz
-ICszMTEsNiBAQCBzdGF0aWMgdm9pZCB0Y21fcWxhMnh4eF9mcmVlX2NtZChzdHJ1Y3QgDQo+PiBx
-bGFfdGd0X2NtZCAqY21kKQ0KPj4gICAqLw0KPj4gIHN0YXRpYyBpbnQgdGNtX3FsYTJ4eHhfY2hl
-Y2tfc3RvcF9mcmVlKHN0cnVjdCBzZV9jbWQgKnNlX2NtZCkNCj4+ICB7DQo+PiAtCXN0cnVjdCBx
-bGFfdGd0X2NtZCAqY21kOw0KPj4gLQ0KPj4gLQlpZiAoKHNlX2NtZC0+c2VfY21kX2ZsYWdzICYg
-U0NGX1NDU0lfVE1SX0NEQikgPT0gMCkgew0KPj4gLQkJY21kID0gY29udGFpbmVyX29mKHNlX2Nt
-ZCwgc3RydWN0IHFsYV90Z3RfY21kLCBzZV9jbWQpOw0KPj4gLQkJY21kLT5jbWRfZmxhZ3MgfD0g
-QklUXzE0Ow0KPj4gLQl9DQo+PiAtDQo+PiAgCXJldHVybiB0YXJnZXRfcHV0X3Nlc3NfY21kKHNl
-X2NtZCk7DQo+PiAgfQ0KPg0KPkFwYXJ0IGZyb20gdGhlIHFsYTI0eHhfZWxzX2RjbWRfaW9jYigp
-IHRoaW5neSAod2hpY2ggaGFzIG5vdGhpbmcgdG8gZG8gDQo+d2l0aCB5b3VyIHBhdGNoKQ0KPlJl
-dmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4NCg0KUVQ6
-IFdlIHVzZSB0aGUgY21kX2ZsYWdzIHBvcnRpb24gZm9yIGRlYnVnZ2luZyBjcmFzaGVzLiAgSXTi
-gJlzIG91ciBmb3JtIG9mIHRyYWNpbmcuIFBsZWFzZSBkbyBub3QgZGVsZXRlLiBUaGFua3MuDQoN
-Cg0KPg0K
+On 03/31/16 08:24, Quinn Tran wrote:
+>>> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>>> b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>>> index c1461d2..97fcbf2 100644
+>>> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>>> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>>> @@ -311,13 +311,6 @@ static void tcm_qla2xxx_free_cmd(struct
+>>> qla_tgt_cmd *cmd)
+>>>    */
+>>>   static int tcm_qla2xxx_check_stop_free(struct se_cmd *se_cmd)
+>>>   {
+>>> -	struct qla_tgt_cmd *cmd;
+>>> -
+>>> -	if ((se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) =3D=3D 0) {
+>>> -		cmd =3D container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
+>>> -		cmd->cmd_flags |=3D BIT_14;
+>>> -	}
+>>> -
+>>>   	return target_put_sess_cmd(se_cmd);
+>>>   }
+>>
+>> Apart from the qla24xx_els_dcmd_iocb() thingy (which has nothing to =
+do
+>> with your patch)
+>> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+>
+> QT: We use the cmd_flags portion for debugging crashes.  It=E2=80=99s=
+ our form of tracing. Please do not delete. Thanks.
+
+Hello Quinn,
+
+OK, I will restore that code.
+
+Bart.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
