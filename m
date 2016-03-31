@@ -1,35 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 2/2] Revert "scsi: fix soft lockup in
- scsi_remove_target() on module removal"
-Date: Thu, 31 Mar 2016 18:18:01 +0200
-Message-ID: <56FD4DB9.7050501@suse.de>
-References: <cover.1459428540.git.jthumshirn@suse.de>
- <6fd7396e87d983aa307be2228d364dbe4f34f892.1459428540.git.jthumshirn@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH v2 0/3] qla2xxx: Patches for kernel v4.7
+Date: Thu, 31 Mar 2016 09:28:54 -0700
+Message-ID: <56FD5046.7000509@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6fd7396e87d983aa307be2228d364dbe4f34f892.1459428540.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0071.outbound.protection.outlook.com ([157.56.110.71]:21271
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755379AbcCaQ3A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 12:29:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/31/2016 02:53 PM, Johannes Thumshirn wrote:
-> This reverts commit 90a88d6ef88edcfc4f644dddc7eef4ea41bccf8b.
->=20
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/scsi_sysfs.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hello James and Martin,
 
-Cheers,
+The following three patches are what I came up with after having 
+analyzed the output of gcc and of a static source code analysis tool 
+(sparse) for the QLogic qla2xxx driver:
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+0001-qla2xxx-Indicate-out-of-memory-with-ENOMEM.patch
+0002-qla2xxx-Remove-set-but-not-used-variables.patch
+0003-qla2xxx-Fix-a-compiler-warning.patch
+
+Please consider these patches for inclusion in kernel v4.7.
+
+The changes compared to v1 of this patch series are:
+* Restored the code in patch 2/3 that sets BIT_14.
+* Dropped the patch that removes the code for setting flags that are
+   not checked.
+* Added a patch that fixes a compiler warning.
+
+Thanks,
+
+Bart.
