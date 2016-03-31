@@ -1,40 +1,33 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] uas: Add a new NO_REPORT_LUNS quirk
-Date: Thu, 31 Mar 2016 10:17:36 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1603311014480.2252-100000@iolanthe.rowland.org>
+Date: Thu, 31 Mar 2016 07:48:02 -0700
+Message-ID: <1459435682.2958.19.camel@HansenPartnership.com>
 References: <1459426971-11927-1-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1459426971-11927-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Webb <djw-8SE8IwxHpK9aa/9Udqfwiw@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54948 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753530AbcCaOsF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 10:48:05 -0400
+In-Reply-To: <1459426971-11927-1-git-send-email-hdegoede@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gerd Hoffmann <kraxel@redhat.com>
+Cc: David Webb <djw@noc.ac.uk>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-On Thu, 31 Mar 2016, Hans de Goede wrote:
-
+On Thu, 2016-03-31 at 14:22 +0200, Hans de Goede wrote:
 > Add a new NO_REPORT_LUNS quirk and set it for Seagate drives with
 > an usb-id of: 0bc2:331a, as these will fail to respond to a
 > REPORT_LUNS command.
 
-> @@ -532,6 +532,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
->  		case 'i':
->  			f |= US_FL_IGNORE_DEVICE;
->  			break;
-> +		case 'j':
-> +			f |= US_FL_NO_REPORT_LUNS;
-> +			break;
->  		case 'l':
->  			f |= US_FL_NOT_LOCKABLE;
->  			break;
+Actually, if we're sending them a report luns command, they must be
+reporting in at SCSI-3 SPC or higher.  Should we be quirking them down
+to SCSI-2 instead because it reduces the risk of running into something
+else they're not doing from the SPC command set?
 
-You forgot to document this new module parameter flag in 
-Documentation/kernel-parameters.txt.
+James
 
-Alan Stern
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
