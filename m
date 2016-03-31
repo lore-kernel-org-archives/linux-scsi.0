@@ -1,60 +1,53 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH] uas: Add a new NO_REPORT_LUNS quirk
-Date: Thu, 31 Mar 2016 08:11:13 -0700
-Message-ID: <1459437073.2958.29.camel@HansenPartnership.com>
-References: <1459426971-11927-1-git-send-email-hdegoede@redhat.com>
-	 <1459435682.2958.19.camel@HansenPartnership.com>
-	 <56FD3C27.2050708@redhat.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 1/3] qla2xxx: Indicate out-of-memory with -ENOMEM
+Date: Thu, 31 Mar 2016 15:21:33 +0000
+Message-ID: <DC126296-F9AB-4C2C-946E-A18DC46C3B8F@qlogic.com>
+References: <56FC6049.3090303@sandisk.com> <56FC6061.80403@sandisk.com>
+ <749c8a5ae53c4e76f0c4853c53518360@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <56FD3C27.2050708-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: David Webb <djw-8SE8IwxHpK9aa/9Udqfwiw@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2on0120.outbound.protection.outlook.com ([207.46.100.120]:23142
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751609AbcCaPVg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 11:21:36 -0400
+In-Reply-To: <749c8a5ae53c4e76f0c4853c53518360@suse.de>
+Content-Language: en-US
+Content-ID: <EF829A2A77D2B947875E72819E67B89C@namprd11.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>
 
-On Thu, 2016-03-31 at 17:03 +0200, Hans de Goede wrote:
-> Hi,
-> 
-> On 31-03-16 16:48, James Bottomley wrote:
-> > On Thu, 2016-03-31 at 14:22 +0200, Hans de Goede wrote:
-> > > Add a new NO_REPORT_LUNS quirk and set it for Seagate drives with
-> > > an usb-id of: 0bc2:331a, as these will fail to respond to a
-> > > REPORT_LUNS command.
-> > 
-> > Actually, if we're sending them a report luns command, they must be
-> > reporting in at SCSI-3 SPC or higher.  Should we be quirking them 
-> > down to SCSI-2 instead because it reduces the risk of running into
-> > something else they're not doing from the SPC command set?
-> 
-> These are fairly new devices, so they should really be scsi3, but the
-> usb <-> sata bridge (presumably) used does not seem to like
-> report_luns.
-
-That's what I'm questioning: REPORT LUNS is one of the big SCSI-3
-changes, if they don't support that, it really looks like someone
-picked up an old engine and just fuzzed the inquiry data to return SCSI
--3.  In which case we should put it back to SCSI-2 where it belongs.
-
-Also, if it's USB<->SCSI bridge, that isn't really UAS, is it?
-
-> Note that usb-storage simple sets no_report_luns conditionally for 
-> all usb-storage devices. The scsi people have repeatedly asked me to 
-> not do this kinda blanket blacklisting for uas devices, because they 
-> hope that uas will allow them to more or less do proper scsi over 
-> usb, so we end up with blacklisting specific commands every now and 
-> then to get devices to work.
-
-Well, we were hoping that with UAS the USB device creators would
-actually learn what a standard was when it bit them, yes.  The fact
-that Seagate can release a SCSI-3 UAS device that doesn't do REPORT
-LUNS kind of dashes that hope.
-
-James
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBUaHVt
+c2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4NCkRhdGU6IFRodXJzZGF5LCBNYXJjaCAzMSwgMjAx
+NiBhdCAxMjozMCBBTQ0KVG86IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAc2FuZGlz
+ay5jb20+DQpDYzogSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4sICJN
+YXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4sIEhpbWFuc2h1
+IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIFF1aW5uIFRyYW4gPHF1aW5u
+LnRyYW5AcWxvZ2ljLmNvbT4sIENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPiwgbGludXgt
+c2NzaSA8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+LCAibGludXgtc2NzaS1vd25lckB2Z2Vy
+Lmtlcm5lbC5vcmciIDxsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZz4NClN1YmplY3Q6
+IFJlOiBbUEFUQ0ggMS8zXSBxbGEyeHh4OiBJbmRpY2F0ZSBvdXQtb2YtbWVtb3J5IHdpdGggLUVO
+T01FTQ0KDQo+T24gMjAxNi0wMy0zMSAwMToyNSwgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPj4g
+SW4gdGhlIExpbnV4IGtlcm5lbCBpdCBpcyBwcmVmZXJyZWQgdG8gcmV0dXJuIGEgbWVhbmluZ2Z1
+bCBlcnJvciBjb2RlDQo+PiBpbnN0ZWFkIG9mIC0xLiBUaGlzIHBhdGNoIGRvZXMgbm90IGNoYW5n
+ZSB0aGUgYmVoYXZpb3Igb2YgdGhlIGNhbGxlciBvZg0KPj4gcWxhODJ4eF9waW5pdF9mcm9tX3Jv
+bSgpLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNz
+Y2hlQHNhbmRpc2suY29tPg0KPj4gQ2M6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNv
+bT4NCj4+IENjOiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQHFsb2dpYy5jb20+
+DQo+PiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+PiAtLS0NCj4+ICBkcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbnguYyB8IDIgKy0NCj4+ICAxIGZpbGUgY2hhbmdlZCwgMSBp
+bnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+c2NzaS9xbGEyeHh4L3FsYV9ueC5jIA0KPj4gYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbngu
+Yw0KPj4gaW5kZXggYjZiNGNmZC4uNTQzODBiNCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2Nz
+aS9xbGEyeHh4L3FsYV9ueC5jDQo+PiArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbngu
+Yw0KPj4gQEAgLTEyMjksNyArMTIyOSw3IEBAIHFsYTgyeHhfcGluaXRfZnJvbV9yb20oc2NzaV9x
+bGFfaG9zdF90ICp2aGEpDQo+PiAgCWlmIChidWYgPT0gTlVMTCkgew0KPj4gIAkJcWxfbG9nKHFs
+X2xvZ19mYXRhbCwgdmhhLCAweDAxMGMsDQo+PiAgCQkgICAgIlVuYWJsZSB0byBhbGxvY2F0ZSBt
+ZW1vcnkuXG4iKTsNCj4+IC0JCXJldHVybiAtMTsNCj4+ICsJCXJldHVybiAtRU5PTUVNOw0KPj4g
+IAl9DQo+PiANCj4+ICAJZm9yIChpID0gMDsgaSA8IG47IGkrKykgew0KPg0KPkxvb2tzIGdvb2Qs
+DQo+UmV2aWV3ZWQtYnk6IEpvaGFubmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPg0K
+DQpBQ0suDQo+DQo=
