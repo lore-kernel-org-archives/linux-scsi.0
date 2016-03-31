@@ -1,7 +1,7 @@
 From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v12 6/9] added support for DesignWare Controller
-Date: Thu, 31 Mar 2016 19:57:19 +0100
-Message-ID: <75cb43b16231f67d1e94e174a45ad6ffc68e1df6.1459448160.git.jpinto@synopsys.com>
+Subject: [PATCH v12 7/9] added support for Synopsys G210 Test Chip
+Date: Thu, 31 Mar 2016 19:57:20 +0100
+Message-ID: <bfd211159c401dc7b80560163a4afee71b68ea73.1459448160.git.jpinto@synopsys.com>
 References: <cover.1459448160.git.jpinto@synopsys.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1459448160.git.jpinto@synopsys.com>
@@ -12,122 +12,54 @@ To: tomas.winkler@intel.com
 Cc: vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, arnd@arndb.de, mark.rutland@arm.com, Joao Pinto <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch has the goal to add support for DesignWare UFS Controller
-specific operations.
+This patch adds support for Synopsys G210 Test Chip.
 
 Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
-Changes v11->v12 (Tomas Winkler):
-- custom_phy_initialization is now phy_initialization
-- ufshcd_is_intr_aggr_allowed() has now a DWC tweak
-- link status was now moved to a separated patch
-Changes v10->v11:
+Changes v10->v12:
 - Nothing changed (just to keep up with patch set version).
-Changes v9->v10 (Arnd Bergmann):
-- Patch now only has DWC controller specific code
-- Added custom_phy_initialization callback for PHY specific code
-Changes v8->v9 (Robert Herring):
-- drop 0x in the node declaration
-- most specific compatibility string declared first
-Changes v7->v8 (Akinobu Mita):
-- DME sets were simplified for easier reading
-- CLK DIV default values definitions names were changed to match the
- register's name
-- New line added to dev_err and dev_info statements
-Changes v6->v7 (Arnd Bergmann):
-- Changed DT node name (to ufs only) and the memory address (to 0xd000000)
-- Removed CONFIG_PM from the PCI glue driver (pm.h already does this)
-- No other changes are necessary in ufshcd.c because of the link up notify
- function usage (it is simpler now)
-- Removed the PHY mentioning since the Test Chip is not a real PHY for real
- world usage, since it is a test chip for prototyping with a very specific
- usage
-- Added again the Test Chip 20-bit option
-Changes v5->v6:
-- Patch bad format fixed
-Changes v4->v5 (Akinobu Mita):
-- All functions used only locally in ufshcd-dwc are now declared as static
-- ufshcd_dwc_configuration() was removed in ufshcd-dwc and a notify
- function (ufshcd_dwc_link_startup_notify) was created to deal with the
- DWC specific init routines
-- 20-bit RMMI option was removed from Kconfig. Now if MPHY TC is selected
- and 40-bit is not then it assumes a 20-bit config
-Changes v3->v4 (Arnd Bergmann and Mark Rutland):
-- SCSI_UFS_DWC_HOOKS is now silent and selected by the SCSI_UFS_DWC_PLAT
- or SCSI_UFS_DWC_PCI
-- Compatibility string has the ufs core version for info purposes since
- the driver is capable of getting the controller version from its 
- registers
-- Created ufs-dwc-pci glue driver with specific DWC data
-- MPHY configuration remains in the ufshcd-dwc since it is unipro
- attribute writting only not following the a linux phy framework logic
-Changes v2->v3 (Julian Calaby):
-- Implement a common DWC code to be used by the platform and pci glue
- drivers
-- Synopsys ID & Class added to the existing pci driver and specific DWC
- was also added to the pci driver
-Changes v1->v2 (Akinobu Mita):
-- Implement a platform driver that uses the existing UFS core driver
-- Add DWC specific code to the existing UFS core driver
+Changes v0->v10:
+- This patch only appeared in v10
 
- MAINTAINERS                   |   6 ++
- drivers/scsi/ufs/Kconfig      |   3 +
- drivers/scsi/ufs/Makefile     |   1 +
- drivers/scsi/ufs/ufshcd-dwc.c | 150 ++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd-dwc.h |  26 ++++++++
- drivers/scsi/ufs/ufshcd.h     |   7 ++
- drivers/scsi/ufs/ufshci-dwc.h |  36 ++++++++++
- 7 files changed, 229 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
- create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
- create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
+ drivers/scsi/ufs/Kconfig       |   4 +
+ drivers/scsi/ufs/Makefile      |   1 +
+ drivers/scsi/ufs/tc-dwc-g210.c | 315 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/tc-dwc-g210.h |  19 +++
+ 4 files changed, 339 insertions(+)
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210.c
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210.h
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 32bafda..7fc2730 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11408,6 +11408,12 @@ S:	Supported
- F:	Documentation/scsi/ufs.txt
- F:	drivers/scsi/ufs/
- 
-+UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
-+M:	Joao Pinto <Joao.Pinto@synopsys.com>
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+F:	drivers/scsi/ufs/*dwc*
-+
- UNSORTED BLOCK IMAGES (UBI)
- M:	Artem Bityutskiy <dedekind1@gmail.com>
- M:	Richard Weinberger <richard@nod.at>
 diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 5f45307..647c324 100644
+index 647c324..9d218f9 100644
 --- a/drivers/scsi/ufs/Kconfig
 +++ b/drivers/scsi/ufs/Kconfig
-@@ -83,3 +83,6 @@ config SCSI_UFS_QCOM
+@@ -86,3 +86,7 @@ config SCSI_UFS_QCOM
  
- 	  Select this if you have UFS controller on QCOM chipset.
- 	  If unsure, say N.
+ config SCSI_UFS_DWC
+ 	bool
 +
-+config SCSI_UFS_DWC
++config SCSI_UFS_DWC_TC
 +	bool
++	select SCSI_UFS_DWC
 diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index 8303bcc..ccbad53 100644
+index ccbad53..9468d7b 100644
 --- a/drivers/scsi/ufs/Makefile
 +++ b/drivers/scsi/ufs/Makefile
-@@ -1,4 +1,5 @@
+@@ -1,5 +1,6 @@
  # UFSHCD makefile
-+obj-$(CONFIG_SCSI_UFS_DWC) += ufshcd-dwc.o
+ obj-$(CONFIG_SCSI_UFS_DWC) += ufshcd-dwc.o
++obj-$(CONFIG_SCSI_UFS_DWC_TC) += tc-dwc-g210.o
  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-diff --git a/drivers/scsi/ufs/ufshcd-dwc.c b/drivers/scsi/ufs/ufshcd-dwc.c
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
 new file mode 100644
-index 0000000..9b3ca7f
+index 0000000..181f208
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-dwc.c
-@@ -0,0 +1,150 @@
++++ b/drivers/scsi/ufs/tc-dwc-g210.c
+@@ -0,0 +1,315 @@
 +/*
-+ * UFS Host driver for Synopsys Designware Core
++ * Synopsys G210 Test Chip driver
 + *
 + * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
 + *
@@ -144,146 +76,311 @@ index 0000000..9b3ca7f
 +#include "ufshcd-dwc.h"
 +#include "ufshci-dwc.h"
 +
-+int ufshcd_dwc_dme_set_attrs(struct ufs_hba *hba,
-+				const struct ufshcd_dme_attr_val *v, int n)
-+{
-+	int ret = 0;
-+	int attr_node = 0;
-+
-+	for (attr_node = 0; attr_node < n; attr_node++) {
-+		ret = ufshcd_dme_set_attr(hba, v[attr_node].attr_sel,
-+			ATTR_SET_NOR, v[attr_node].mib_val, v[attr_node].peer);
-+
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(ufshcd_dwc_dme_set_attrs);
-+
 +/**
-+ * ufshcd_dwc_program_clk_div()
-+ * This function programs the clk divider value. This value is needed to
-+ * provide 1 microsecond tick to unipro layer.
-+ * @hba: Private Structure pointer
-+ * @divider_val: clock divider value to be programmed
++ * tc_dwc_g210_setup_40bit_rmmi()
++ * This function configures Synopsys TC specific atributes (40-bit RMMI)
++ * @hba: Pointer to drivers structure
 + *
++ * Returns 0 on success or non-zero value on failure
 + */
-+static void ufshcd_dwc_program_clk_div(struct ufs_hba *hba, u32 divider_val)
-+{
-+	ufshcd_writel(hba, divider_val, DWC_UFS_REG_HCLKDIV);
-+}
-+
-+/**
-+ * ufshcd_dwc_link_is_up()
-+ * Check if link is up
-+ * @hba: private structure poitner
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_dwc_link_is_up(struct ufs_hba *hba)
-+{
-+	int dme_result = 0;
-+
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(VS_POWERSTATE), &dme_result);
-+
-+	if (dme_result == UFSHCD_LINK_IS_UP) {
-+		ufshcd_set_link_active(hba);
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+/**
-+ * ufshcd_dwc_connection_setup()
-+ * This function configures both the local side (host) and the peer side
-+ * (device) unipro attributes to establish the connection to application/
-+ * cport.
-+ * This function is not required if the hardware is properly configured to
-+ * have this connection setup on reset. But invoking this function does no
-+ * harm and should be fine even working with any ufs device.
-+ *
-+ * @hba: pointer to drivers private data
-+ *
-+ * Returns 0 on success non-zero value on failure
-+ */
-+static int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
++static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
 +{
 +	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 0, DME_LOCAL },
-+		{ UIC_ARG_MIB(N_DEVICEID), 0, DME_LOCAL },
-+		{ UIC_ARG_MIB(N_DEVICEID_VALID), 0, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_PEERDEVICEID), 1, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_PEERCPORTID), 0, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_TRAFFICCLASS), 0, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_CPORTFLAGS), 0x6, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_CPORTMODE), 1, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 1, DME_LOCAL },
-+		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 0, DME_PEER },
-+		{ UIC_ARG_MIB(N_DEVICEID), 1, DME_PEER },
-+		{ UIC_ARG_MIB(N_DEVICEID_VALID), 1, DME_PEER },
-+		{ UIC_ARG_MIB(T_PEERDEVICEID), 1, DME_PEER },
-+		{ UIC_ARG_MIB(T_PEERCPORTID), 0, DME_PEER },
-+		{ UIC_ARG_MIB(T_TRAFFICCLASS), 0, DME_PEER },
-+		{ UIC_ARG_MIB(T_CPORTFLAGS), 0x6, DME_PEER },
-+		{ UIC_ARG_MIB(T_CPORTMODE), 1, DME_PEER },
-+		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 1, DME_PEER }
++		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
++		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
++		{ UIC_ARG_MIB(CDIRECTCTRL6), 0x80, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDIVFACTOR), 0x08, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDCOCTRL5), 0x64, DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGTUNING), 0x09, DME_LOCAL },
++		{ UIC_ARG_MIB(RTOBSERVESELECT), 0x00, DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN0_TX), 0x14,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN0_RX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN0_RX), 4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL10), 0x04, DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL19), 0x02, DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN0_RX), 0x03,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN0_RX), 0x16,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN0_RX), 0x42,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN0_RX), 0xa4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN0_RX), 0x28,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN0_RX), 0x1E,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGPLL2), 0x00, DME_LOCAL },
 +	};
 +
-+	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
++	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
++						ARRAY_SIZE(setup_attrs));
 +}
 +
 +/**
-+ * ufshcd_dwc_link_startup_notify()
-+ * UFS Host DWC specific link startup sequence
-+ * @hba: private structure poitner
-+ * @status: Callback notify status
++ * tc_dwc_g210_setup_20bit_rmmi_lane0()
++ * This function configures Synopsys TC 20-bit RMMI Lane 0
++ * @hba: Pointer to drivers structure
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * Returns 0 on success or non-zero value on failure
 + */
-+int ufshcd_dwc_link_startup_notify(struct ufs_hba *hba,
-+					enum ufs_notify_change_status status)
++static int tc_dwc_g210_setup_20bit_rmmi_lane0(struct ufs_hba *hba)
 +{
-+	int err = 0;
++	const struct ufshcd_dme_attr_val setup_attrs[] = {
++		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN0_RX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN0_TX), 0x12,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN0_RX), 2,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL10), 0x04, DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL19), 0x02, DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN0_RX), 0x03,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN0_RX), 0x16,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN0_RX), 0x42,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN0_RX), 0xa4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN0_RX), 0x28,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN0_RX), 0x1E,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGPLL2), 0x00, DME_LOCAL },
++	};
 +
-+	if (status == PRE_CHANGE) {
-+		ufshcd_dwc_program_clk_div(hba, DWC_UFS_REG_HCLKDIV_DIV_125);
++	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
++						ARRAY_SIZE(setup_attrs));
++}
 +
-+		if (hba->vops->phy_initialization) {
-+			err = hba->vops->phy_initialization(hba);
-+			if (err) {
-+				dev_err(hba->dev, "Phy setup failed (%d)\n",
-+									err);
-+				goto out;
-+			}
-+		}
-+	} else { /* POST_CHANGE */
-+		err = ufshcd_dwc_link_is_up(hba);
-+		if (err) {
-+			dev_err(hba->dev, "Link is not up\n");
++/**
++ * tc_dwc_g210_setup_20bit_rmmi_lane1()
++ * This function configures Synopsys TC 20-bit RMMI Lane 1
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success or non-zero value on failure
++ */
++static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
++{
++	int connected_rx_lanes = 0;
++	int connected_tx_lanes = 0;
++	int ret = 0;
++
++	const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
++		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN1_TX), 0x0d,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN1_TX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN1_TX), 0x12,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
++								DME_LOCAL },
++	};
++
++	const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
++		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN1_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN1_RX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN1_RX), 2,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN1_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN1_RX), 0x03,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN1_RX), 0x16,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN1_RX), 0x42,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN1_RX), 0xa4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN1_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN1_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN1_RX), 0x28,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN1_RX), 0x1E,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN1_RX), 0x2f,
++								DME_LOCAL },
++	};
++
++	/* Get the available lane count */
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
++			&connected_rx_lanes);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
++			&connected_tx_lanes);
++
++	if (connected_tx_lanes == 2) {
++
++		ret = ufshcd_dwc_dme_set_attrs(hba, setup_tx_attrs,
++						ARRAY_SIZE(setup_tx_attrs));
++
++		if (ret)
 +			goto out;
-+		}
++	}
 +
-+		err = ufshcd_dwc_connection_setup(hba);
-+		if (err)
-+			dev_err(hba->dev, "Connection setup failed (%d)\n",
-+									err);
++	if (connected_rx_lanes == 2) {
++		ret = ufshcd_dwc_dme_set_attrs(hba, setup_rx_attrs,
++						ARRAY_SIZE(setup_rx_attrs));
 +	}
 +
 +out:
-+	return err;
++	return ret;
 +}
-+EXPORT_SYMBOL(ufshcd_dwc_link_startup_notify);
-diff --git a/drivers/scsi/ufs/ufshcd-dwc.h b/drivers/scsi/ufs/ufshcd-dwc.h
++
++/**
++ * tc_dwc_g210_setup_20bit_rmmi()
++ * This function configures Synopsys TC specific atributes (20-bit RMMI)
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success or non-zero value on failure
++ */
++static int tc_dwc_g210_setup_20bit_rmmi(struct ufs_hba *hba)
++{
++	int ret = 0;
++
++	const struct ufshcd_dme_attr_val setup_attrs[] = {
++		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
++		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
++		{ UIC_ARG_MIB(CDIRECTCTRL6), 0xc0, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDIVFACTOR), 0x44, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDCOCTRL5), 0x64, DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGTUNING), 0x09, DME_LOCAL },
++		{ UIC_ARG_MIB(RTOBSERVESELECT), 0x00, DME_LOCAL },
++	};
++
++	ret = ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
++						ARRAY_SIZE(setup_attrs));
++	if (ret)
++		goto out;
++
++	/* Lane 0 configuration*/
++	ret = tc_dwc_g210_setup_20bit_rmmi_lane0(hba);
++	if (ret)
++		goto out;
++
++	/* Lane 1 configuration*/
++	ret = tc_dwc_g210_setup_20bit_rmmi_lane1(hba);
++	if (ret)
++		goto out;
++
++out:
++	return ret;
++}
++
++/**
++ * tc_dwc_g210_config_40_bit()
++ * This function configures Local (host) Synopsys 40-bit TC specific attributes
++ *
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success non-zero value on failure
++ */
++int tc_dwc_g210_config_40_bit(struct ufs_hba *hba)
++{
++	int ret = 0;
++
++	dev_info(hba->dev, "Configuring Test Chip 40-bit RMMI\n");
++	ret = tc_dwc_g210_setup_40bit_rmmi(hba);
++	if (ret) {
++		dev_err(hba->dev, "Configuration failed\n");
++		goto out;
++	}
++
++	/* To write Shadow register bank to effective configuration block */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
++	if (ret)
++		goto out;
++
++	/* To configure Debug OMC */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
++
++out:
++	return ret;
++}
++EXPORT_SYMBOL(tc_dwc_g210_config_40_bit);
++
++/**
++ * tc_dwc_g210_config_20_bit()
++ * This function configures Local (host) Synopsys 20-bit TC specific attributes
++ *
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success non-zero value on failure
++ */
++int tc_dwc_g210_config_20_bit(struct ufs_hba *hba)
++{
++	int ret = 0;
++
++	dev_info(hba->dev, "Configuring Test Chip 20-bit RMMI\n");
++	ret = tc_dwc_g210_setup_20bit_rmmi(hba);
++	if (ret) {
++		dev_err(hba->dev, "Configuration failed\n");
++		goto out;
++	}
++
++	/* To write Shadow register bank to effective configuration block */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
++	if (ret)
++		goto out;
++
++	/* To configure Debug OMC */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
++
++out:
++	return ret;
++}
++EXPORT_SYMBOL(tc_dwc_g210_config_20_bit);
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.h b/drivers/scsi/ufs/tc-dwc-g210.h
 new file mode 100644
-index 0000000..c8be295
+index 0000000..fb177db
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-dwc.h
-@@ -0,0 +1,26 @@
++++ b/drivers/scsi/ufs/tc-dwc-g210.h
+@@ -0,0 +1,19 @@
 +/*
-+ * UFS Host driver for Synopsys Designware Core
++ * Synopsys G210 Test Chip driver
 + *
 + * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
 + *
@@ -294,97 +391,11 @@ index 0000000..c8be295
 + * published by the Free Software Foundation.
 + */
 +
-+#ifndef _UFSHCD_DWC_H
-+#define _UFSHCD_DWC_H
++#ifndef _TC_DWC_G210_H
++#define _TC_DWC_G210_H
 +
-+struct ufshcd_dme_attr_val {
-+	u32 attr_sel;
-+	u32 mib_val;
-+	u8 peer;
-+};
-+
-+int ufshcd_dwc_link_startup_notify(struct ufs_hba *hba,
-+					enum ufs_notify_change_status status);
-+int ufshcd_dwc_dme_set_attrs(struct ufs_hba *hba,
-+				const struct ufshcd_dme_attr_val *v, int n);
-+#endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e3931d0..c780d14 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -263,6 +263,7 @@ struct ufs_pwr_mode_info {
-  * @suspend: called during host controller PM callback
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-+ * @phy_initialization: used to initialize phys
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -284,6 +285,7 @@ struct ufs_hba_variant_ops {
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
-+	int	(*phy_initialization)(struct ufs_hba *);
- };
- 
- /* clock gating state  */
-@@ -555,11 +557,16 @@ static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
- 
- static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
- {
-+/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
-+#ifndef CONFIG_SCSI_UFS_DWC
- 	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
- 	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
- 		return true;
- 	else
- 		return false;
-+#else
-+return true;
-+#endif
- }
- 
- #define ufshcd_writel(hba, val, reg)	\
-diff --git a/drivers/scsi/ufs/ufshci-dwc.h b/drivers/scsi/ufs/ufshci-dwc.h
-new file mode 100644
-index 0000000..ca341fe
---- /dev/null
-+++ b/drivers/scsi/ufs/ufshci-dwc.h
-@@ -0,0 +1,36 @@
-+/*
-+ * UFS Host driver for Synopsys Designware Core
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef _UFSHCI_DWC_H
-+#define _UFSHCI_DWC_H
-+
-+/* DWC HC UFSHCI specific Registers */
-+enum dwc_specific_registers {
-+	DWC_UFS_REG_HCLKDIV	= 0xFC,
-+};
-+
-+/* Clock Divider Values: Hex equivalent of frequency in MHz */
-+enum clk_div_values {
-+	DWC_UFS_REG_HCLKDIV_DIV_62_5	= 0x3e,
-+	DWC_UFS_REG_HCLKDIV_DIV_125	= 0x7d,
-+	DWC_UFS_REG_HCLKDIV_DIV_200	= 0xc8,
-+};
-+
-+/* Selector Index */
-+enum selector_index {
-+	SELIND_LN0_TX		= 0x00,
-+	SELIND_LN1_TX		= 0x01,
-+	SELIND_LN0_RX		= 0x04,
-+	SELIND_LN1_RX		= 0x05,
-+};
++int tc_dwc_g210_config_40_bit(struct ufs_hba *hba);
++int tc_dwc_g210_config_20_bit(struct ufs_hba *hba);
 +
 +#endif /* End of Header */
 -- 
