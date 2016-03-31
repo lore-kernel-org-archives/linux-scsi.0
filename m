@@ -1,83 +1,50 @@
-From: jthumshirn <jthumshirn@suse.de>
-Subject: Re: [RESEND PATCH v2 2/2] scsi: Add intermediate STARGET_REMOVE state
- to scsi_target_state
-Date: Thu, 31 Mar 2016 09:24:19 +0200
-Message-ID: <489e694e1f1913205f7e3a8fabd26ee6@suse.de>
-References: <cover.1459249252.git.jthumshirn@suse.de>
- <108843b606da2c793bd830af42d5907bf8776d13.1459249252.git.jthumshirn__45300.0338202857$1459322118$gmane$org@suse.de>
- <20160330234456.00004733@localhost>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/3] qla2xxx: Indicate out-of-memory with -ENOMEM
+Date: Thu, 31 Mar 2016 09:30:41 +0200
+Message-ID: <749c8a5ae53c4e76f0c4853c53518360@suse.de>
+References: <56FC6049.3090303@sandisk.com> <56FC6061.80403@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20160330234456.00004733@localhost>
-Sender: stable-owner@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36167 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750941AbcCaHam (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2016 03:30:42 -0400
+In-Reply-To: <56FC6061.80403@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-Hi Sebastian,
-
-On 2016-03-30 23:44, Sebastian Herbszt wrote:
-> Johannes Thumshirn wrote:
->> Add intermediate STARGET_REMOVE state to scsi_target_state to avoid 
->> running
->> into the BUG_ON() in scsi_target_reap().
->> 
->> This intermediate state is only valid in the path from 
->> scsi_remove_target() to
->> scsi_target_destroy() indicating this target is going to be removed.
->> 
->> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
->> Fixes: 40998193560dab6c3ce8d25f4fa58a23e252ef38
->> Cc: stable@vger.kernel.org
->> Reviewed-by: Hannes Reinecke <hare@suse.com>
->> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
->> ---
->> 
->> Changes from v1:
->> * The state transition from STARGET_CREATED to STARGET_DEL is 
->> legitimate,
->>   so don't BUG() on it. Found by the 0-Day Bot.
+On 2016-03-31 01:25, Bart Van Assche wrote:
+> In the Linux kernel it is preferred to return a meaningful error code
+> instead of -1. This patch does not change the behavior of the caller of
+> qla82xx_pinit_from_rom().
 > 
-> This is yet another attempt to fix 40998193560d. Can you please explain 
-> how
-> it is "superior" to the one proposed by Bart before [1] ?
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Quinn Tran <quinn.tran@qlogic.com>
+> Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/qla2xxx/qla_nx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> [1] http://marc.info/?l=linux-scsi&m=145227191917602&w=2
+> diff --git a/drivers/scsi/qla2xxx/qla_nx.c 
+> b/drivers/scsi/qla2xxx/qla_nx.c
+> index b6b4cfd..54380b4 100644
+> --- a/drivers/scsi/qla2xxx/qla_nx.c
+> +++ b/drivers/scsi/qla2xxx/qla_nx.c
+> @@ -1229,7 +1229,7 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
+>  	if (buf == NULL) {
+>  		ql_log(ql_log_fatal, vha, 0x010c,
+>  		    "Unable to allocate memory.\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	for (i = 0; i < n; i++) {
 
-First of all I didn't oppose Bart's patch.
-But let me try explaining mine (in contrast to Bart's).
-
-The patch above expands the current SCSI target state machine, whereas 
-Bart's patch removed the target state machine and tied the target states 
-to their sysfs representaion, like his patch description explains
-
-[quote]
-Instead of representing the states "visible in sysfs" and
-"has been removed from the target list" by a single state
-variable, use two variables to represent this information.
-[/quote]
-
-It is actually the other way round to my patch. The above expands the 
-target state machine from (simplified)
-
-CREATED -> RUNNING -> DEL
-         \_____________^
-
-to:
-CREATED -> RUNNING -> REMOVE -> DEL
-         \_______________________^
-
-This intermediate step ensures that scsi_target_reap() is not called 
-with a target in the STARGET_DEL state (which causes the BUG_ON() to 
-trigger).
-
-As said above, both patches do the same (eliminate the race in the 
-target removal path) but differently.
-
-I hope I could answer your questions.
-
-Byte,
-     Johannes
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
