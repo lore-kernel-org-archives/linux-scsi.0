@@ -1,65 +1,83 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: QoS for iSCSI target?
-Date: Thu, 31 Mar 2016 00:05:29 -0700
-Message-ID: <1459407929.31390.89.camel@haakon3.risingtidesystems.com>
-References: <56E1F419.5070005@windriver.com>
-	 <20160311073018.GA23379@infradead.org>
-	 <1457682341.4062.74.camel@haakon3.risingtidesystems.com>
-	 <56E98E5F.9030107@windriver.com>
+From: jthumshirn <jthumshirn@suse.de>
+Subject: Re: [RESEND PATCH v2 2/2] scsi: Add intermediate STARGET_REMOVE state
+ to scsi_target_state
+Date: Thu, 31 Mar 2016 09:24:19 +0200
+Message-ID: <489e694e1f1913205f7e3a8fabd26ee6@suse.de>
+References: <cover.1459249252.git.jthumshirn@suse.de>
+ <108843b606da2c793bd830af42d5907bf8776d13.1459249252.git.jthumshirn__45300.0338202857$1459322118$gmane$org@suse.de>
+ <20160330234456.00004733@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38711 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbcCaHFb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2016 03:05:31 -0400
-In-Reply-To: <56E98E5F.9030107@windriver.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20160330234456.00004733@localhost>
+Sender: stable-owner@vger.kernel.org
+To: Sebastian Herbszt <herbszt@gmx.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Friesen <chris.friesen@windriver.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-On Wed, 2016-03-16 at 10:48 -0600, Chris Friesen wrote:
-> On 03/11/2016 01:45 AM, Nicholas A. Bellinger wrote:
-> > On Thu, 2016-03-10 at 23:30 -0800, Christoph Hellwig wrote:
-> >> On Thu, Mar 10, 2016 at 04:24:25PM -0600, Chris Friesen wrote:
-> >>> Hi,
-> >>>
-> >>> I'm looking for information on whether the iSCSI target in the kernel offers
-> >>> any way to do QoS between traffic driven by different initiators.
-> >>>
-> >>> I'm trying to make sure that one initiator can't do a denial-of-service
-> >>> attack against others.
-> >>>
-> >>> Does the kernel target have this sort of thing built-in, or do I need to
-> >>> look at network traffic-shaping to achieve this?
-> >>
-> >> It doesn't right now, but it shouldn't be hard to integrate it with
-> >> blk cgroups.
-> >
-> > For iscsi-target application QoS, the per session command sequence
-> > number window depth (CmdSN) exists to enforce per InitiatorName limits
-> > via TPG default_cmdsn_depth + se_node_acl->queue_depth configfs
-> > attributes.
-> >
-> > Note these values can be changed on the fly for iscsi-target using
-> > explicit se_node_acl->acl_group, but currently require a se_session
-> > reinstatement event for updated ExpCmdSN + MaxCmdSN to take effect.
+Hi Sebastian,
+
+On 2016-03-30 23:44, Sebastian Herbszt wrote:
+> Johannes Thumshirn wrote:
+>> Add intermediate STARGET_REMOVE state to scsi_target_state to avoid 
+>> running
+>> into the BUG_ON() in scsi_target_reap().
+>> 
+>> This intermediate state is only valid in the path from 
+>> scsi_remove_target() to
+>> scsi_target_destroy() indicating this target is going to be removed.
+>> 
+>> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+>> Fixes: 40998193560dab6c3ce8d25f4fa58a23e252ef38
+>> Cc: stable@vger.kernel.org
+>> Reviewed-by: Hannes Reinecke <hare@suse.com>
+>> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+>> ---
+>> 
+>> Changes from v1:
+>> * The state transition from STARGET_CREATED to STARGET_DEL is 
+>> legitimate,
+>>   so don't BUG() on it. Found by the 0-Day Bot.
 > 
-> On a slightly different note, is there any way to throttle or limit the overall 
-> bandwidth consumed by the iSCSI target in the kernel?  I'd like to ensure that 
-> the iSCSI traffic doesn't completely swamp the host accesses to the same block 
-> device.
+> This is yet another attempt to fix 40998193560d. Can you please explain 
+> how
+> it is "superior" to the one proposed by Bart before [1] ?
 > 
-> I suppose I could do networking-based traffic shaping, but are there any 
-> controls in the block IO subsystem?
-> 
+> [1] http://marc.info/?l=linux-scsi&m=145227191917602&w=2
 
-On a individual block_device backend basis, block cgroups is the
-preferred method for doing this.
+First of all I didn't oppose Bart's patch.
+But let me try explaining mine (in contrast to Bart's).
 
-Note that any rate limiting imposed by block cgroups is subject to the
-current se_node_acl->queue_depth enforced across all LUNs within a given
-iscsi session.
+The patch above expands the current SCSI target state machine, whereas 
+Bart's patch removed the target state machine and tied the target states 
+to their sysfs representaion, like his patch description explains
 
+[quote]
+Instead of representing the states "visible in sysfs" and
+"has been removed from the target list" by a single state
+variable, use two variables to represent this information.
+[/quote]
+
+It is actually the other way round to my patch. The above expands the 
+target state machine from (simplified)
+
+CREATED -> RUNNING -> DEL
+         \_____________^
+
+to:
+CREATED -> RUNNING -> REMOVE -> DEL
+         \_______________________^
+
+This intermediate step ensures that scsi_target_reap() is not called 
+with a target in the STARGET_DEL state (which causes the BUG_ON() to 
+trigger).
+
+As said above, both patches do the same (eliminate the race in the 
+target removal path) but differently.
+
+I hope I could answer your questions.
+
+Byte,
+     Johannes
