@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/2] scsi: vpd pages are mandatory for SPC-2
-Date: Fri,  1 Apr 2016 08:57:37 +0200
-Message-ID: <1459493857-4724-3-git-send-email-hare@suse.de>
+Subject: [PATCH 1/2] scsi: Do not attach VPD to devices that don't support it
+Date: Fri,  1 Apr 2016 08:57:36 +0200
+Message-ID: <1459493857-4724-2-git-send-email-hare@suse.de>
 References: <1459493857-4724-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33555 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33557 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752813AbcDAG5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752844AbcDAG5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 1 Apr 2016 02:57:41 -0400
 In-Reply-To: <1459493857-4724-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,31 +14,111 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-VPD pages 0x0 and 0x83 are mandatory even for SPC-2, so we should
-be lowering the restriction to avoid having to whitelist every
-SPC-2 compliant device.
+The patch "scsi: rescan VPD attributes" introduced a regression in which
+devices that don't support VPD were being scanned for VPD attributes
+anyway.  This could cause issues for this parts and should be avoided so
+the check for scsi_level has been moved out of scsi_add_lun and into
+scsi_attach_vpd so that all callers will not scan VPD for devices that
+don't support it.
 
+Fixes: 09e2b0b14690 ("scsi: rescan VPD attributes")
+
+Suggested-by: Alexander Duyck <aduyck@mirantis.com>
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- include/scsi/scsi_device.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi.c        |  3 ++-
+ drivers/scsi/sd.c          | 19 +------------------
+ include/scsi/scsi_device.h | 25 +++++++++++++++++++++++++
+ 3 files changed, 28 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index b1bf42b..1deb6ad 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -784,8 +784,9 @@ void scsi_attach_vpd(struct scsi_device *sdev)
+ 	int pg83_supported = 0;
+ 	unsigned char __rcu *vpd_buf, *orig_vpd_buf = NULL;
+ 
+-	if (sdev->skip_vpd_pages)
++	if (!scsi_device_supports_vpd(sdev))
+ 		return;
++
+ retry_pg0:
+ 	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
+ 	if (!vpd_buf)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5a5457a..70042f2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2795,23 +2795,6 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		sdkp->ws10 = 1;
+ }
+ 
+-static int sd_try_extended_inquiry(struct scsi_device *sdp)
+-{
+-	/* Attempt VPD inquiry if the device blacklist explicitly calls
+-	 * for it.
+-	 */
+-	if (sdp->try_vpd_pages)
+-		return 1;
+-	/*
+-	 * Although VPD inquiries can go to SCSI-2 type devices,
+-	 * some USB ones crash on receiving them, and the pages
+-	 * we currently ask for are for SPC-3 and beyond
+-	 */
+-	if (sdp->scsi_level > SCSI_SPC_2 && !sdp->skip_vpd_pages)
+-		return 1;
+-	return 0;
+-}
+-
+ static inline u32 logical_to_sectors(struct scsi_device *sdev, u32 blocks)
+ {
+ 	return blocks << (ilog2(sdev->sector_size) - 9);
+@@ -2856,7 +2839,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	if (sdkp->media_present) {
+ 		sd_read_capacity(sdkp, buffer);
+ 
+-		if (sd_try_extended_inquiry(sdp)) {
++		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+ 			sd_read_block_limits(sdkp);
+ 			sd_read_block_characteristics(sdkp);
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 1d4a329..40a789f 100644
+index 61341d3..1d4a329 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -541,9 +541,9 @@ static inline int scsi_device_supports_vpd(struct scsi_device *sdev)
- 	/*
- 	 * Although VPD inquiries can go to SCSI-2 type devices,
- 	 * some USB ones crash on receiving them, and the pages
--	 * we currently ask for are for SPC-3 and beyond
-+	 * we currently ask for are mandatory for SPC-2 and beyond
- 	 */
--	if (sdev->scsi_level > SCSI_SPC_2 && !sdev->skip_vpd_pages)
-+	if (sdev->scsi_level >= SCSI_SPC_2 && !sdev->skip_vpd_pages)
- 		return 1;
- 	return 0;
+@@ -523,6 +523,31 @@ static inline int scsi_device_tpgs(struct scsi_device *sdev)
+ 	return sdev->inquiry ? (sdev->inquiry[5] >> 4) & 0x3 : 0;
  }
+ 
++/**
++ * scsi_device_supports_vpd - test if a device supports VPD pages
++ * @sdev: the &struct scsi_device to test
++ *
++ * If the 'try_vpd_pages' flag is set it takes precedence.
++ * Otherwise we will assume VPD pages are supported if the
++ * SCSI level is at least SPC-3 and 'skip_vpd_pages' is not set.
++ */
++static inline int scsi_device_supports_vpd(struct scsi_device *sdev)
++{
++	/* Attempt VPD inquiry if the device blacklist explicitly calls
++	 * for it.
++	 */
++	if (sdev->try_vpd_pages)
++		return 1;
++	/*
++	 * Although VPD inquiries can go to SCSI-2 type devices,
++	 * some USB ones crash on receiving them, and the pages
++	 * we currently ask for are for SPC-3 and beyond
++	 */
++	if (sdev->scsi_level > SCSI_SPC_2 && !sdev->skip_vpd_pages)
++		return 1;
++	return 0;
++}
++
+ #define MODULE_ALIAS_SCSI_DEVICE(type) \
+ 	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
+ #define SCSI_DEVICE_MODALIAS_FMT "scsi:t-0x%02x"
 -- 
 2.6.2
 
