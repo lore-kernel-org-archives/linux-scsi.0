@@ -1,19 +1,36 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
-Date: Fri, 1 Apr 2016 13:56:29 -0400
-Message-ID: <1459533389-19648-1-git-send-email-joe.lawrence@stratus.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
+Date: Fri, 1 Apr 2016 14:04:31 -0400 (EDT)
+Message-ID: <38412222.26431428.1459533871879.JavaMail.zimbra@redhat.com>
+References: <1459533389-19648-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:33328
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751732AbcDAR4l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2016 13:56:41 -0400
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:50075 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149AbcDASEj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2016 14:04:39 -0400
+In-Reply-To: <1459533389-19648-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Calvin Owens <calvinowens@fb.com>
+
+Looks fine to me.
+
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Joe Lawrence" <joe.lawrence@stratus.com>
 To: linux-scsi@vger.kernel.org
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Calvin Owens <calvinowens@fb.com>, Joe Lawrence <joe.lawrence@stratus.com>
+Cc: "Sathya Prakash" <sathya.prakash@broadcom.com>, "Chaitra P B" <chaitra.basappa@broadcom.com>, "Suganath Prabu Subramani" <suganath-prabu.subramani@broadcom.com>, "Calvin Owens" <calvinowens@fb.com>, "Joe Lawrence" <joe.lawrence@stratus.com>
+Sent: Friday, April 1, 2016 1:56:29 PM
+Subject: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
 
 The driver's fw events are queued up using the the fw_event_work's
 struct work, not its delayed_work member.  The latter appears to be
@@ -62,3 +79,7 @@ index e0e4920d0fa6..67643602efbc 100644
 -- 
 1.8.3.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
