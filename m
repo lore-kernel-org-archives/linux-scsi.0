@@ -1,29 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/3] qla2xxx: Indicate out-of-memory with -ENOMEM
-Date: Thu, 31 Mar 2016 20:37:55 -0400
-Message-ID: <yq1vb42noyk.fsf@sermon.lab.mkp.net>
-References: <56FC6049.3090303@sandisk.com> <56FC6061.80403@sandisk.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: tcm_qla2xxx Add SCSI command jammer/discard capabilty to the
+ tcm_qla2xxx module - revision3
+Date: Fri, 1 Apr 2016 00:20:56 +0000
+Message-ID: <3F517A19-EDA5-4B16-B103-C3F38242F8D8@qlogic.com>
+References: <2025450295.25603731.1459262558755.JavaMail.zimbra@redhat.com>
+ <56FB5E98.9010103@sandisk.com>
+ <1459402453.31390.45.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29410 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbcDAAiJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2016 20:38:09 -0400
-In-Reply-To: <56FC6061.80403@sandisk.com> (Bart Van Assche's message of "Wed,
-	30 Mar 2016 16:25:21 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1459402453.31390.45.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
+Content-ID: <484CEF6C825ABD49817A85C9250EF4C6@namprd11.prod.outlook.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Laurence Oberman <loberman@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
-
-Bart> In the Linux kernel it is preferred to return a meaningful error
-Bart> code instead of -1. This patch does not change the behavior of the
-Bart> caller of qla82xx_pinit_from_rom().
-
-Applied to 4.7/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+SGkgTmljLCBMYXVyZW5jZSwgDQoNCg0KDQpPbiAzLzMwLzE2LCAxMDozNCBQTSwgIk5pY2hvbGFz
+IEEuIEJlbGxpbmdlciIgPG5hYkBsaW51eC1pc2NzaS5vcmc+IHdyb3RlOg0KDQo+KEFkZGluZyB0
+YXJnZXQtZGV2ZWwgKyBRbG9naWMgdGFyZ2V0IGZvbGtzKQ0KPg0KPk9uIFR1ZSwgMjAxNi0wMy0y
+OSBhdCAyMjowNSAtMDcwMCwgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPj4gT24gMDMvMjkvMTYg
+MDc6NDIsIExhdXJlbmNlIE9iZXJtYW4gd3JvdGU6DQo+PiA+IEkgaGF2ZSBiZWVuIHVzaW5nIHRo
+aXMgamFtbWVyIGZ1bmN0aW9uYWxpdHkgdG8gY29udGludWUgdGVzdGluZyB0aGUgU0NTSSBGL0Mg
+ZHJpdmVycyBhbmQgcmVjb3ZlcnkgZm9yIG92ZXIgYSB5ZWFyIG5vdy4NCj4+ID4gQW55IGNoYW5j
+ZSB5b3Ugd291bGQgYWdyZWUgdG8gYWNrIHRoaXMgc28gSSBjYW4gZ2V0IGl0IGluIG5vdy4NCj4+
+ID4gSSBsYXN0IHBvc3RlZCB0byB0aGUgbGlzdCBsYXN0IE1hcmNoIGFuZCBpdCB3YXMgbm90IHBp
+Y2tlZCB1cC4NCj4+ID4NCj4+ID4gSSBkaWQgbG9vayBpbnRvIG1vdmluZyB0aGlzIHRvIHVwcGVy
+IGxheWVycyBidXQgSSBmaW5kIEkgdXNlIGl0IHByaW1hcmlseSBmb3IgZmliZXIgY2hhbm5lbCB0
+YXJnZXQgdGVzdGluZy4NCj4+ID4gQXR0ZW1wdGluZyB0byBhZGQgdGhpcyBmdW5jdGlvbmFsaXR5
+IHRvIHVwcGVyIGxheWVycyBsZWQgdG8gY29tcGxleGl0aWVzIGFuZCB0aGlzIGlzIHZlcnkgc29s
+aWQuDQo+PiA+DQo+PiA+IFRoaXMgUGF0Y2ggZGlmZiBhZ2FpbnN0IDQuNQ0KPj4gPg0KPj4gPiBJ
+IHVzZSB0YXJnZXQgTElPIGZvciBhbGwgbXkgc3RvcmFnZSBhcnJheSB0ZXN0IHRhcmdldHMgYW5k
+IGN1c3RvbWVyIHByb2JsZW0gcmVzb2x1dGlvbiBoZXJlIGF0IFJlZCBIYXQuDQo+PiA+IFRoaXMg
+cGF0Y2ggcmVzdWx0ZWQgZnJvbSBhIHJlcXVpcmVtZW50IHRvIG1pbWljIGJlaGF2aW9yIG9mIGFu
+IGV4cGVuc2l2ZSBoYXJkd2FyZSBqYW1tZXIgZm9yIGEgY3VzdG9tZXIuDQo+PiA+IEkgaGF2ZSB1
+c2VkIHRoaXMgZm9yIHNvbWUgdGltZSB3aXRoIGdvb2Qgc3VjY2VzcyB0byBzaW11bGF0ZSBhbmQg
+cmVwcm9kdWNlIGxhdGVuY3kgYW5kIHNsb3cgZHJhaW4gZmFicmljIGlzc3VlcyBhbmQNCj4+ID4g
+Zm9yIHRlc3RpbmcgYW5kIHZhbGlkYXRpbmcgZXJyb3IgaGFuZGxpbmcgYmVoYXZpb3INCj4+ID4g
+ICBpbiB0aGUgRW11bGV4LCBRbG9naWMgYW5kIG90aGVyIEYvQyBkcml2ZXJzLg0KPj4gPg0KPj4g
+PiBXb3JrcyBieSBjaGVja2luZyBuZXcgcGFyYW1ldGVyIGphbV9ob3N0IGlmIGl0cyA+PSAwIGFu
+ZCBtYXRjaGVzIHZoYS0+aG9zdF9ubyAsIGphbW1pbmcgaXMgZW5hYmxlZCB3aGVuIGphbV9ob3N0
+ID49MA0KPj4gPiBJZiBwYXJhbWV0ZXIgc2V0IHRvIC0xIChkZWZhdWx0KSBubyBqYW1taW5nIGlz
+IGVuYWJsZWQuDQo+PiANCj4+IEhlbGxvIExhdXJlbmNlLA0KPj4gDQo+PiBOaWMgQmVsbGluZ2Vy
+IGlzIHRoZSBtYWludGFpbmVyIG9mIExJTyBzbyBteSByZWNvbW1lbmRhdGlvbiBpcyB0byBhc2sg
+DQo+PiBOaWMgZmlyc3QgYWJvdXQgaGlzIG9waW5pb24gKEkgaGF2ZSBDQydkIE5pYykuIEknbSBu
+b3Qgc3VyZSB3aGF0IE5pYyANCj4+IHRoaW5rcyBhYm91dCB0aGlzIGJ1dCBpbiBteSBvcGluaW9u
+IHN1Y2ggZnVuY3Rpb25hbGl0eSBiZWxvbmdzIGluIHRoZSANCj4+IHRhcmdldCBjb3JlIGluc3Rl
+YWQgb2YgaW4gYSB0YXJnZXQgZHJpdmVyLiBCdXQgcGxlYXNlIHdhaXQgdW50aWwgTmljIGhhcyAN
+Cj4+IHByb3ZpZGVkIGhpcyBvcGluaW9uIGJlZm9yZSBzcGVuZGluZyBtb3JlIHRpbWUgb24gdGhp
+cy4gVGhlIG1haWxpbmcgbGlzdCANCj4+IGZvciBTQ1NJIHRhcmdldCBwYXRjaGVzIGlzIHRhcmdl
+dC1kZXZlbEB2Z2VyLmtlcm5lbC5vcmcuDQo+PiANCj4NCj5TbyByZWFsbHkgaXQncyBIaW1hbnNo
+dSdzICsgUXVpbm4ncyBjYWxsIGlmIHRoZXkgd291bGQgbGlrZSB0byBpbmNsdWRlDQo+c29tZXRo
+aW5nIGxpa2UgdGhpcyBpbiBtYWlubGluZS4NCj4NCj5JZiBzbywgdGhlbiBJJ2QgcHJlZmVyIHRv
+IGRvIGl0IHdpdGggYSBwZXIgdGNtX3FsYTJ4eHhfdHBnIGVuZHBvaW50DQo+YXR0cmlidXRlIGlu
+c3RlYWQgYSBuZXcgbW9kdWxlIHBhcmFtZXRlciwgYW5kIGFkZCBhIG5ldyBrZXJuZWwgY29uZmln
+DQo+b3B0aW9uIChDT05GSUdfVENNX1FMQTJYWFhfREVCVUcpIHRvIGRpc2FibGUgKGJ5IGRlZmF1
+bHQpIHNvIGVuZCB1c2Vycw0KPmRvbid0IGluYWR2ZXJ0ZW50bHkgcGxheSB3aXRoIGl0IHZpYSB0
+YXJnZXRjbGkgKyBmcmllbmRzLg0KPg0KDQpJIGFncmVlIGhlcmUgd2l0aCBOaWMuIFRoZSBwYXRj
+aCBkb2VzIHByb3ZpZGVzIGJlbmVmaXQgYW5kIGlzIGdvb2QgYWRkaXRpb24sDQpidXQgd2UgZG9u
+4oCZdCB3YW50IHRvIGVuYWJsZSBpdCBieSBkZWZhdWx0Lg0KDQpMYXVyZW5jZSwgDQoNCldvdWxk
+IHlvdSBiZSBraW5kIHRvIHJld29yayBwYXRjaCB3aXRoIHN1Z2dlc3RlZCBjaGFuZ2VzIGZyb20g
+TmljIGFuZCBwb3N0IGl0LiANCg0KVGhhbmtzLCANCkhpbWFuc2h1DQo=
