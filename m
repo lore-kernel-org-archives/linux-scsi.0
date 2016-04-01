@@ -1,74 +1,29 @@
-From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 1/9] lpfc: Correct LOGO handling during login
-Date: Thu, 31 Mar 2016 14:12:27 -0700
-Message-ID: <56fd92bb.f1iGbo3Q4TLsfnF0%james.smart@broadcom.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] qla2xxx: Indicate out-of-memory with -ENOMEM
+Date: Thu, 31 Mar 2016 20:37:55 -0400
+Message-ID: <yq1vb42noyk.fsf@sermon.lab.mkp.net>
+References: <56FC6049.3090303@sandisk.com> <56FC6061.80403@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:34737 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932908AbcCaVMb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2016 17:12:31 -0400
-Received: by mail-pf0-f169.google.com with SMTP id x3so77741235pfb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2016 14:12:31 -0700 (PDT)
-Received: from flash (cm-wififw.emulex.com. [138.239.220.50])
-        by smtp.gmail.com with ESMTPSA id l14sm15508672pfi.23.2016.03.31.14.12.29
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 31 Mar 2016 14:12:29 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:29410 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750720AbcDAAiJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2016 20:38:09 -0400
+In-Reply-To: <56FC6061.80403@sandisk.com> (Bart Van Assche's message of "Wed,
+	30 Mar 2016 16:25:21 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Correct LOGO handling during login
+Bart> In the Linux kernel it is preferred to return a meaningful error
+Bart> code instead of -1. This patch does not change the behavior of the
+Bart> caller of qla82xx_pinit_from_rom().
 
-After a link bounce, when a remote port issues a LOGO while a REGLOGIN is
-pending on that port, the driver does not clean up the ndlp structure. May
-result in stack traces in the console log.
+Applied to 4.7/scsi-queue.
 
-Fix: Clear the NLP_REG_LOGIN_SEND flag on the ndlp in the routine
-
-Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
-Signed-off-by: James Smart <james.smart@avagotech.com>
----
- drivers/scsi/lpfc/lpfc_nportdisc.c | 2 ++
- drivers/scsi/lpfc/lpfc_sli.c       | 1 +
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 193733e..9b539e2 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1512,6 +1512,7 @@ lpfc_rcv_logo_reglogin_issue(struct lpfc_vport *vport,
- 	if ((mb = phba->sli.mbox_active)) {
- 		if ((mb->u.mb.mbxCommand == MBX_REG_LOGIN64) &&
- 		   (ndlp == (struct lpfc_nodelist *) mb->context2)) {
-+			ndlp->nlp_flag &= ~NLP_REG_LOGIN_SEND;
- 			lpfc_nlp_put(ndlp);
- 			mb->context2 = NULL;
- 			mb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-@@ -1527,6 +1528,7 @@ lpfc_rcv_logo_reglogin_issue(struct lpfc_vport *vport,
- 				__lpfc_mbuf_free(phba, mp->virt, mp->phys);
- 				kfree(mp);
- 			}
-+			ndlp->nlp_flag &= ~NLP_REG_LOGIN_SEND;
- 			lpfc_nlp_put(ndlp);
- 			list_del(&mb->list);
- 			phba->sli.mboxq_cnt--;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 2207726..035105a 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2211,6 +2211,7 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 		rpi = pmb->u.mb.un.varWords[0];
- 		vpi = pmb->u.mb.un.varRegLogin.vpi;
- 		lpfc_unreg_login(phba, vpi, rpi, pmb);
-+		pmb->vport = vport;
- 		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
- 		rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
- 		if (rc != MBX_NOT_FINISHED)
 -- 
-2.5.0
-
+Martin K. Petersen	Oracle Linux Engineering
