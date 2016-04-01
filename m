@@ -1,110 +1,64 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC PATCH 0/4] dm mpath: vastly improve blk-mq IO performance
-Date: Fri, 1 Apr 2016 10:14:56 -0400
-Message-ID: <20160401141456.GB24355@redhat.com>
-References: <1459454666-76428-1-git-send-email-snitzer@redhat.com>
- <6c6623e7f92e31daf1586d266fa03e1d@suse.de>
- <20160401132219.GA24355@redhat.com>
- <cddb09e2c2af7f7ea0337cf76657c896@suse.de>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
+Date: Fri, 1 Apr 2016 13:56:29 -0400
+Message-ID: <1459533389-19648-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37561 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453AbcDAOO6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2016 10:14:58 -0400
-Content-Disposition: inline
-In-Reply-To: <cddb09e2c2af7f7ea0337cf76657c896@suse.de>
+Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:33328
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751732AbcDAR4l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2016 13:56:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, sagig@dev.mellanox.co.il, linux-block@vger.kernel.org, jmoyer@redhat.com, j-nomura@ce.jp.nec.com, hare@suse.de
+To: linux-scsi@vger.kernel.org
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Calvin Owens <calvinowens@fb.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-On Fri, Apr 01 2016 at  9:37am -0400,
-Johannes Thumshirn <jthumshirn@suse.de> wrote:
+The driver's fw events are queued up using the the fw_event_work's
+struct work, not its delayed_work member.  The latter appears to be
+unused and may provoke CONFIG_DEBUG_OBJECTS_TIMERS "assert_init not
+available" false warnings in _scsih_fw_event_cleanup_queue.  Remove it
+and update _scsih_fw_event_cleanup_queue accordingly.
 
-> [ +Cc Hannes ]
-> 
-> On 2016-04-01 15:22, Mike Snitzer wrote:
-> >On Fri, Apr 01 2016 at  4:12am -0400,
-> >Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> >
-> >>On 2016-03-31 22:04, Mike Snitzer wrote:
-> >>>I developed these changes some weeks ago but have since focused on
-> >>>regression and performance testing on larger NUMA systems.
-> >>>
-> >>>For regression testing I've been using mptest:
-> >>>https://github.com/snitm/mptest
-> >>>
-> >>>For performance testing I've been using a null_blk device (with
-> >>>various configuration permutations, e.g. pinning memory to a
-> >>>particular NUMA node, and varied number of submit_queues).
-> >>>
-> >>>By eliminating multipath's heavy use of the m->lock spinlock in the
-> >>>fast IO paths serious performance improvements are realized.
-> >>
-> >>Hi Mike,
-> >>
-> >>Are this the patches you pointed Hannes to?
-> >>
-> >>If yes, please add my Tested-by: Johannes Thumshirn
-> >><jthumshirn@suse.de>
-> >
-> >No they are not.
-> >
-> >Hannes seems to have last pulled in my DM mpath changes that
-> >(ab)used RCU.
-> >I ended up dropping those changes and this patchset is the replacement.
-> 
-> Now that you're saying it I can remember some inspiring RCU usage in
-> the patches.
-> 
-> >So please retest with this patchset (I know you guys have a large setup
-> >that these changes are very relevant for).  If you could actually share
-> >_how_ yo've tested that'd help me understand how these changes are
-> >holding up.  So far all looks good for me...
-> 
-> The test itself is actually quite simple, we're testing with fio
-> against a fiber channel array (all SSDs but I was very careful to
-> only write into the cache)
-> 
-> Here's my fio job file:
-> [mq-test]
-> iodepth=128
-> numjobs=40
-> group_reporting
-> direct=1
-> ioengine=libaio
-> size=3G
-> filename=/dev/dm-0
-> filename=/dev/dm-1
-> filename=/dev/dm-2
-> filename=/dev/dm-3
-> filename=/dev/dm-4
-> filename=/dev/dm-5
-> filename=/dev/dm-6
-> filename=/dev/dm-7
-> name="MQ Test"
-> 
-> and the test runner:
-> #!/bin/sh
-> 
-> for rw in 'randread' 'randwrite' 'read' 'write'; do
->         for bs in '4k' '8k' '16k' '32k' '64k'; do
->                 fio mq-test.fio --bs="${bs}" --rw="${rw}"
-> --output="fio-${bs}-${rw}.txt"
->         done
-> done
-> 
-> The initiator has 40 CPUs on 4 NUMA nodes (no HT) and 64GB RAM. I'm
-> not sure how much in term of numbers I can share from the old
-> patchset (will ask Hannes on Monday), but I'm aware I'll have to
-> when I retested with your new patches and we want to compare the
-> results.
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
 
-OK, yes please share as much as you can.  Having shared code that seems
-to perform well it'd be nice to see some results from your testbed.
-It'll help build my confidence in the code actually landing upstream.
+I think this goes all the way back to the introduction of the mpt3sas
+driver.  The previous generation mpt2sas driver uses delayed_work, so
+perhaps it was simply copied and pasted into the mpt3sas but never
+updated.
 
-Thanks,
-Mike
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index e0e4920d0fa6..67643602efbc 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -189,7 +189,6 @@ struct fw_event_work {
+ 	struct list_head	list;
+ 	struct work_struct	work;
+ 	u8			cancel_pending_work;
+-	struct delayed_work	delayed_work;
+ 
+ 	struct MPT3SAS_ADAPTER *ioc;
+ 	u16			device_handle;
+@@ -2804,12 +2803,12 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		/*
+ 		 * Wait on the fw_event to complete. If this returns 1, then
+ 		 * the event was never executed, and we need a put for the
+-		 * reference the delayed_work had on the fw_event.
++		 * reference the work had on the fw_event.
+ 		 *
+ 		 * If it did execute, we wait for it to finish, and the put will
+ 		 * happen from _firmware_event_work()
+ 		 */
+-		if (cancel_delayed_work_sync(&fw_event->delayed_work))
++		if (cancel_work_sync(&fw_event->work))
+ 			fw_event_work_put(fw_event);
+ 
+ 		fw_event_work_put(fw_event);
+-- 
+1.8.3.1
+
