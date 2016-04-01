@@ -1,102 +1,143 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [RFC PATCH 0/4] dm mpath: vastly improve blk-mq IO performance
-Date: Fri, 01 Apr 2016 15:37:36 +0200
-Message-ID: <cddb09e2c2af7f7ea0337cf76657c896@suse.de>
-References: <1459454666-76428-1-git-send-email-snitzer@redhat.com>
- <6c6623e7f92e31daf1586d266fa03e1d@suse.de>
- <20160401132219.GA24355@redhat.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [PATCH 1/5] bnx2fc: Add driver tunables.
+Date: Fri, 1 Apr 2016 09:10:19 -0400
+Message-ID: <1459516223-32106-2-git-send-email-chad.dupuis@qlogic.com>
+References: <1459516223-32106-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60694 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752761AbcDANhk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2016 09:37:40 -0400
-In-Reply-To: <20160401132219.GA24355@redhat.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:37534 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755484AbcDANvf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2016 09:51:35 -0400
+In-Reply-To: <1459516223-32106-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, sagig@dev.mellanox.co.il, linux-block@vger.kernel.org, jmoyer@redhat.com, j-nomura@ce.jp.nec.com, hare@suse.de
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chad.dupuis@qlogic.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.org
 
-[ +Cc Hannes ]
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-On 2016-04-01 15:22, Mike Snitzer wrote:
-> On Fri, Apr 01 2016 at  4:12am -0400,
-> Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> 
->> On 2016-03-31 22:04, Mike Snitzer wrote:
->> >I developed these changes some weeks ago but have since focused on
->> >regression and performance testing on larger NUMA systems.
->> >
->> >For regression testing I've been using mptest:
->> >https://github.com/snitm/mptest
->> >
->> >For performance testing I've been using a null_blk device (with
->> >various configuration permutations, e.g. pinning memory to a
->> >particular NUMA node, and varied number of submit_queues).
->> >
->> >By eliminating multipath's heavy use of the m->lock spinlock in the
->> >fast IO paths serious performance improvements are realized.
->> 
->> Hi Mike,
->> 
->> Are this the patches you pointed Hannes to?
->> 
->> If yes, please add my Tested-by: Johannes Thumshirn 
->> <jthumshirn@suse.de>
-> 
-> No they are not.
-> 
-> Hannes seems to have last pulled in my DM mpath changes that (ab)used 
-> RCU.
-> I ended up dropping those changes and this patchset is the replacement.
+Per customer request, add the following driver tunables:
 
-Now that you're saying it I can remember some inspiring RCU usage in the 
-patches.
+o devloss_tmo
+o max_luns
+o queue_depth
+o tm_timeout
 
-> So please retest with this patchset (I know you guys have a large setup
-> that these changes are very relevant for).  If you could actually share
-> _how_ yo've tested that'd help me understand how these changes are
-> holding up.  So far all looks good for me...
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 38 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bnx2fc/bnx2fc_io.c   |  4 +++-
+ 2 files changed, 40 insertions(+), 2 deletions(-)
 
-The test itself is actually quite simple, we're testing with fio against 
-a fiber channel array (all SSDs but I was very careful to only write 
-into the cache)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index d7029ea..600c29d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -107,6 +107,26 @@ MODULE_PARM_DESC(debug_logging,
+ 		"\t\t0x10 - fcoe L2 fame related logs.\n"
+ 		"\t\t0xff - LOG all messages.");
+ 
++uint bnx2fc_devloss_tmo;
++module_param_named(devloss_tmo, bnx2fc_devloss_tmo, uint, S_IRUGO);
++MODULE_PARM_DESC(devloss_tmo, " Change devloss_tmo for the remote ports "
++	"attached via bnx2fc.");
++
++uint bnx2fc_max_luns = BNX2FC_MAX_LUN;
++module_param_named(max_luns, bnx2fc_max_luns, uint, S_IRUGO);
++MODULE_PARM_DESC(max_luns, " Change the default max_lun per SCSI host. Default "
++	"0xffff.");
++
++uint bnx2fc_queue_depth;
++module_param_named(queue_depth, bnx2fc_queue_depth, uint, S_IRUGO);
++MODULE_PARM_DESC(queue_depth, " Change the default queue depth of SCSI devices "
++	"attached via bnx2fc.");
++
++uint bnx2fc_tm_timeout = BNX2FC_TM_TIMEOUT;
++module_param_named(tm_timeout, bnx2fc_tm_timeout, uint, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(tm_timeout, " Change the default timeout for "
++	"task management commands. Default 60 seconds.");
++
+ static int bnx2fc_cpu_callback(struct notifier_block *nfb,
+ 			     unsigned long action, void *hcpu);
+ /* notification function for CPU hotplug events */
+@@ -692,7 +712,7 @@ static int bnx2fc_shost_config(struct fc_lport *lport, struct device *dev)
+ 	int rc = 0;
+ 
+ 	shost->max_cmd_len = BNX2FC_MAX_CMD_LEN;
+-	shost->max_lun = BNX2FC_MAX_LUN;
++	shost->max_lun = bnx2fc_max_luns;
+ 	shost->max_id = BNX2FC_MAX_FCP_TGT;
+ 	shost->max_channel = 0;
+ 	if (lport->vport)
+@@ -1102,6 +1122,9 @@ static int bnx2fc_vport_create(struct fc_vport *vport, bool disabled)
+ 		return -EIO;
+ 	}
+ 
++	if (bnx2fc_devloss_tmo)
++		fc_host_dev_loss_tmo(vn_port->host) = bnx2fc_devloss_tmo;
++
+ 	if (disabled) {
+ 		fc_vport_set_state(vport, FC_VPORT_DISABLED);
+ 	} else {
+@@ -1495,6 +1518,9 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 	}
+ 	fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
+ 
++	if (bnx2fc_devloss_tmo)
++		fc_host_dev_loss_tmo(shost) = bnx2fc_devloss_tmo;
++
+ 	/* Allocate exchange manager */
+ 	if (!npiv)
+ 		rc = bnx2fc_em_config(lport, hba);
+@@ -2612,6 +2638,15 @@ static int bnx2fc_cpu_callback(struct notifier_block *nfb,
+ 	return NOTIFY_OK;
+ }
+ 
++static int bnx2fc_slave_configure(struct scsi_device *sdev)
++{
++	if (!bnx2fc_queue_depth)
++		return 0;
++
++	scsi_change_queue_depth(sdev, bnx2fc_queue_depth);
++	return 0;
++}
++
+ /**
+  * bnx2fc_mod_init - module init entry point
+  *
+@@ -2877,6 +2912,7 @@ static struct scsi_host_template bnx2fc_shost_template = {
+ 	.sg_tablesize		= BNX2FC_MAX_BDS_PER_CMD,
+ 	.max_sectors		= 1024,
+ 	.track_queue_depth	= 1,
++	.slave_configure = bnx2fc_slave_configure,
+ };
+ 
+ static struct libfc_function_template bnx2fc_libfc_fcn_templ = {
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 0002caf..0f60e22 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -15,6 +15,8 @@
+ 
+ #define RESERVE_FREE_LIST_INDEX num_possible_cpus()
+ 
++extern uint bnx2fc_tm_timeout;
++
+ static int bnx2fc_split_bd(struct bnx2fc_cmd *io_req, u64 addr, int sg_len,
+ 			   int bd_index);
+ static int bnx2fc_map_sg(struct bnx2fc_cmd *io_req);
+@@ -770,7 +772,7 @@ retry_tmf:
+ 	spin_unlock_bh(&tgt->tgt_lock);
+ 
+ 	rc = wait_for_completion_timeout(&io_req->tm_done,
+-					 BNX2FC_TM_TIMEOUT * HZ);
++					 bnx2fc_tm_timeout * HZ);
+ 	spin_lock_bh(&tgt->tgt_lock);
+ 
+ 	io_req->wait_for_comp = 0;
+-- 
+2.0.0.rc0.26.g779792a
 
-Here's my fio job file:
-[mq-test]
-iodepth=128
-numjobs=40
-group_reporting
-direct=1
-ioengine=libaio
-size=3G
-filename=/dev/dm-0
-filename=/dev/dm-1
-filename=/dev/dm-2
-filename=/dev/dm-3
-filename=/dev/dm-4
-filename=/dev/dm-5
-filename=/dev/dm-6
-filename=/dev/dm-7
-name="MQ Test"
-
-and the test runner:
-#!/bin/sh
-
-for rw in 'randread' 'randwrite' 'read' 'write'; do
-         for bs in '4k' '8k' '16k' '32k' '64k'; do
-                 fio mq-test.fio --bs="${bs}" --rw="${rw}" 
---output="fio-${bs}-${rw}.txt"
-         done
-done
-
-The initiator has 40 CPUs on 4 NUMA nodes (no HT) and 64GB RAM. I'm not 
-sure how much in term of numbers I can share from the old patchset (will 
-ask Hannes on Monday), but I'm aware I'll have to when I retested with 
-your new patches and we want to compare the results.
-
-Byte,
-    Johannes
