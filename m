@@ -1,14 +1,14 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 4/5] bnx2fc: Check sc_cmd device and host pointer before returning the command to the mid-layer.
-Date: Fri, 1 Apr 2016 09:10:22 -0400
-Message-ID: <1459516223-32106-5-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 5/5] bnx2fc: Update version number to 2.10.3.
+Date: Fri, 1 Apr 2016 09:10:23 -0400
+Message-ID: <1459516223-32106-6-git-send-email-chad.dupuis@qlogic.com>
 References: <1459516223-32106-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:23566 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:23707 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753517AbcDANvf (ORCPT
+	by vger.kernel.org with ESMTP id S1757203AbcDANvf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2016 09:51:35 -0400
 In-Reply-To: <1459516223-32106-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,51 +16,24 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: chad.dupuis@qlogic.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.org
 
-When we are in connection recovery and the internal command timer on a request
-pops, either the scsi_cmnd->device or scsi_cmnd->device->host back pointers may
-be NULL as the device that the command that the request was submitted on may
-have been subsequently reaped due to the connection recovery. This can cause
-one or both of the pointers above to be NULL and cause a system crash if we try
-to return the command to the midlayer.
-
-Instead, double check the pointers before the return to the midlayer so as to
-prevent the crash and let the upper layers finish the session recovery and
-rediscover the device.
-
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/scsi/bnx2fc/bnx2fc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 0f60e22..33e519d 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -181,12 +181,24 @@ static void bnx2fc_scsi_done(struct bnx2fc_cmd *io_req, int err_code)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 499e369..9ce361a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -65,7 +65,7 @@
+ #include "bnx2fc_constants.h"
  
- 	bnx2fc_unmap_sg_list(io_req);
- 	io_req->sc_cmd = NULL;
-+
-+	/* Sanity checks before returning command to mid-layer */
- 	if (!sc_cmd) {
- 		printk(KERN_ERR PFX "scsi_done - sc_cmd NULL. "
- 				    "IO(0x%x) already cleaned up\n",
- 		       io_req->xid);
- 		return;
- 	}
-+	if (!sc_cmd->device) {
-+		pr_err(PFX "0x%x: sc_cmd->device is NULL.\n", io_req->xid);
-+		return;
-+	}
-+	if (!sc_cmd->device->host) {
-+		pr_err(PFX "0x%x: sc_cmd->device->host is NULL.\n",
-+		    io_req->xid);
-+		return;
-+	}
-+
- 	sc_cmd->result = err_code << 16;
+ #define BNX2FC_NAME		"bnx2fc"
+-#define BNX2FC_VERSION		"2.9.6"
++#define BNX2FC_VERSION		"2.10.3"
  
- 	BNX2FC_IO_DBG(io_req, "sc=%p, result=0x%x, retries=%d, allowed=%d\n",
+ #define PFX			"bnx2fc: "
+ 
 -- 
 2.0.0.rc0.26.g779792a
 
