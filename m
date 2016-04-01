@@ -1,29 +1,41 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
-Date: Fri, 01 Apr 2016 16:04:18 -0400
-Message-ID: <1459541058.30035.126.camel@localhost.localdomain>
+From: Sathya Prakash <sathya.prakash@broadcom.com>
+Subject: RE: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
+Date: Fri, 1 Apr 2016 14:14:51 -0600
+Message-ID: <38b26e94d10098596fb11cf9bafcb7c0@mail.gmail.com>
 References: <1459533389-19648-1-git-send-email-joe.lawrence@stratus.com>
-	 <1459536717.30035.113.camel@localhost.localdomain>
-	 <56FEC864.5050008@stratus.com>
-Reply-To: emilne@redhat.com
+	 <1459536717.30035.113.camel@localhost.localdomain>	 <56FEC864.5050008@stratus.com>
+ <1459541058.30035.126.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33666 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751364AbcDAUEV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2016 16:04:21 -0400
-In-Reply-To: <56FEC864.5050008@stratus.com>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:35875 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970AbcDAUOx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2016 16:14:53 -0400
+Received: by mail-io0-f177.google.com with SMTP id q128so161739247iof.3
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Apr 2016 13:14:52 -0700 (PDT)
+In-Reply-To: <1459541058.30035.126.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Calvin Owens <calvinowens@fb.com>
+To: emilne@redhat.com, Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Calvin Owens <calvinowens@fb.com>
+
+We will look into this early next week and provide a detailed response.  On
+the first look this is ACK from Broadcom, will reconfirm.
+
+-----Original Message-----
+From: Ewan D. Milne [mailto:emilne@redhat.com]
+Sent: Friday, April 01, 2016 2:04 PM
+To: Joe Lawrence
+Cc: linux-scsi@vger.kernel.org; Sathya Prakash; Chaitra P B; Suganath Prabu
+Subramani; Calvin Owens
+Subject: Re: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
 
 On Fri, 2016-04-01 at 15:13 -0400, Joe Lawrence wrote:
 > On 04/01/2016 02:51 PM, Ewan D. Milne wrote:
 > > On Fri, 2016-04-01 at 13:56 -0400, Joe Lawrence wrote:
-> >> @@ -2804,12 +2803,12 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+> >> @@ -2804,12 +2803,12 @@ _scsih_fw_event_cleanup_queue(struct
+> >> MPT3SAS_ADAPTER *ioc)
 > >>  		/*
 > >>  		 * Wait on the fw_event to complete. If this returns 1, then
 > >>  		 * the event was never executed, and we need a put for the
@@ -36,65 +48,72 @@ On Fri, 2016-04-01 at 15:13 -0400, Joe Lawrence wrote:
 > >> -		if (cancel_delayed_work_sync(&fw_event->delayed_work))
 > >> +		if (cancel_work_sync(&fw_event->work))
 > >>  			fw_event_work_put(fw_event);
-> >>  
+> >>
 > >>  		fw_event_work_put(fw_event);
-> > 
-> > Hmm... Fixes: 146b16c8 (mpt3sas: Refcount fw_events and fix unsafe list usage)
-> 
-> This could technically go back to f92363d12359 (mpt3sas: add new driver
-> supporting 12GB SAS) ...  but will probably only apply cleanly to
-> _scsih_fw_event_cleanup_queue after 146b16c8 (mpt3sas: Refcount
+> >
+> > Hmm... Fixes: 146b16c8 (mpt3sas: Refcount fw_events and fix unsafe
+> > list usage)
+>
+> This could technically go back to f92363d12359 (mpt3sas: add new
+> driver supporting 12GB SAS) ...  but will probably only apply cleanly
+> to _scsih_fw_event_cleanup_queue after 146b16c8 (mpt3sas: Refcount
 > fw_events and fix unsafe list usage), so you're right.
-> 
-> > Since mpt3sas uses ->work instead of _delayed_work this would seem to be
-> > correct, however the deprecated mpt2sas driver had a commit that changed
-> > the firmware event work mechanism to use ->delayed_work instead of ->work:
-> > 
+>
+> > Since mpt3sas uses ->work instead of _delayed_work this would seem
+> > to be correct, however the deprecated mpt2sas driver had a commit
+> > that changed the firmware event work mechanism to use ->delayed_work
+> > instead of ->work:
+> >
 > > commit f1c35e6aea579d5bdb6dc02dfa99c67c7c3b3f67
 > > Author: Kashyap, Desai <kashyap.desai@lsi.com>
 > > Date:   Tue Mar 9 16:31:43 2010 +0530
-> 
+>
 > Okay, so this is pre-mpt3sas split.
-> 
+>
 > >     [SCSI] mpt2sas: RESCAN Barrier work is added in case of HBA reset.
-> >     
-> >     Add the cancel_pending_work flag from the fw_event_work structure, and then to
-> >     set the flag during host reset, check the flag later from work threads
+> >
+> >     Add the cancel_pending_work flag from the fw_event_work structure,
+> > and then to
+> >     set the flag during host reset, check the flag later from work
+> > threads
 > >     context and if cancel_pending_work_flag is set ingore those events.
-> 
+>
 > More unused mpt2 vestiges in the mpt3 version?
-> 
+>
 > % cd drivers/scsi/mpt3sas/
 > % grep 'cancel_pending_work' *.{c,h}
 > mpt3sas_scsih.c: * @cancel_pending_work: flag set during reset handling
 > mpt3sas_scsih.c:        u8                      cancel_pending_work;
-> 
+>
 > >     Now Rescan after host reset is changed.
-> >     Added special task MPT2SAS_RESCAN_AFTER_HOST_RESET. This task will be queued
-> >     at the time of HBA reset. this task is treated as barrier. All work after
-> >     MPT2SAS_RESCAN_AFTER_HOST_RESET will be treated as new work and will be
-> >     server by callback handle. If host_recovery is going on while running RESCAN
-> >     task, it will wait for shos_recovery_done completion which will be called
+> >     Added special task MPT2SAS_RESCAN_AFTER_HOST_RESET. This task will
+> > be queued
+> >     at the time of HBA reset. this task is treated as barrier. All work
+> > after
+> >     MPT2SAS_RESCAN_AFTER_HOST_RESET will be treated as new work and will
+> > be
+> >     server by callback handle. If host_recovery is going on while
+> > running RESCAN
+> >     task, it will wait for shos_recovery_done completion which will be
+> > called
 > >     from HBA reset DONE context.
-> 
+>
 > FWIW, I don't see anything like this in today's mpt3sas driver.
 
-Well, that's the question.  Is there some functionality missing?  Were
-the changes abandoned/replaced?  mpt2sas used delayed_work for something
-else, so maybe that's why the firmware event changes initially used it
-(albeit with a 0 delay) but it's hard to know...
+Well, that's the question.  Is there some functionality missing?  Were the
+changes abandoned/replaced?  mpt2sas used delayed_work for something else,
+so maybe that's why the firmware event changes initially used it (albeit
+with a 0 delay) but it's hard to know...
 
-cancel_delayed_work() will call del_timer() on delayed_work->timer, but
-it looks like kzalloc is used to allocate the fw_event_work objects so
-perhaps nothing bad will happen.  I was wondering, though, because I
-have seen dumps of hung systems with requests that should have timed out
-but are not on any timer list.
+cancel_delayed_work() will call del_timer() on delayed_work->timer, but it
+looks like kzalloc is used to allocate the fw_event_work objects so perhaps
+nothing bad will happen.  I was wondering, though, because I have seen dumps
+of hung systems with requests that should have timed out but are not on any
+timer list.
 
 -Ewan
 
-> 
+>
 > Regards,
-> 
+>
 > -- Joe
-
-
