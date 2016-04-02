@@ -1,297 +1,300 @@
-From: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Subject: Re: [PATCH] ibft: Expose iBFT acpi header via sysfs
-Date: Fri, 1 Apr 2016 20:53:24 -0400
-Message-ID: <20160402005322.GA22294@localhost.localdomain>
-References: <1458784166.31722.21.camel@suse.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: tcm_qla2xxx Add SCSI command jammer/discard capabilty to the
+ tcm_qla2xxx module - revision4
+Date: Sat, 2 Apr 2016 12:04:54 -0400 (EDT)
+Message-ID: <1615130599.26684873.1459613094650.JavaMail.zimbra@redhat.com>
+References: <2025450295.25603731.1459262558755.JavaMail.zimbra@redhat.com> <56FB5E98.9010103@sandisk.com> <1459402453.31390.45.camel@haakon3.risingtidesystems.com> <3F517A19-EDA5-4B16-B103-C3F38242F8D8@qlogic.com> <1049122887.26432420.1459534525185.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34097 "EHLO
-	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752504AbcDBAxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2016 20:53:32 -0400
-Content-Disposition: inline
-In-Reply-To: <1458784166.31722.21.camel@suse.com>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:45397 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbcDBQFB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Apr 2016 12:05:01 -0400
+In-Reply-To: <1049122887.26432420.1459534525185.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Bond <dbond@suse.com>
-Cc: pjones@redhat.com, michaelc@cs.wisc.edu, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, lduncan@suse.com, hare@suse.de, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
 
-On Wed, Mar 23, 2016 at 09:49:26PM -0400, David Bond wrote:
-> 
-> Some ethernet adapter vendors are supplying products which support optional
-> (payed license) features. On some adapters this includes a hardware iscsi
-> initiator.  The same adapters in a normal (no extra licenses) mode of
-> operation can be used as a software iscsi initiator.  In addition, software
-> iscsi boot initiators are becoming a standard part of many vendors uefi
-> implementations.  This is creating difficulties during early boot/install
-> determining the proper configuration method for these adapters when they
-> are used as a boot device.
-> 
-> The attached patch creates sysfs entries to expose information from the
-> acpi header of the ibft table.  This information allows for a method to
-> easily determining if an ibft table was created by a ethernet card's
-> firmware or the system uefi/bios.  In the case of a hardware initiator this
-> information in combination with the pci vendor and device id can be used
-> to ascertain any vendor specific behaviors that need to be accommodated.
+Hello Himanshu
 
-Heya!
+This patch was reworked to only include the jammer code if the paramete=
+r TCM_QLA2XXX_DEBUG=3DY is set.
+The default is to not provide this functionality at all.
+I looked at using attributes but this code is in the fastpath and the o=
+verhead or fetching the attribute
+each time is not a good idea.=20
+Control of this needs to be dynamic and the module parameter allows a s=
+imple compare in the fastpath.
 
-Is there an patch in iscsiadm for this as well? Or is this 
-> 
-> Reviewed-by: Lee Duncan <lduncan@suse.com>
-> Signed-off-by: David Bond <dbond@suse.com>
-> ---
->  Documentation/ABI/testing/sysfs-ibft | 10 ++++++
->  drivers/firmware/iscsi_ibft.c        | 64 +++++++++++++++++++++++++++++++++++-
->  drivers/scsi/iscsi_boot_sysfs.c      | 62 ++++++++++++++++++++++++++++++++++
->  include/linux/iscsi_boot_sysfs.h     | 13 ++++++++
->  4 files changed, 148 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-ibft b/Documentation/ABI/testing/sysfs-ibft
-> index cac3930..7d6725f 100644
-> --- a/Documentation/ABI/testing/sysfs-ibft
-> +++ b/Documentation/ABI/testing/sysfs-ibft
-> @@ -21,3 +21,13 @@ Contact:	Konrad Rzeszutek <ketuzsezr@darnok.org>
->  Description:	The /sys/firmware/ibft/ethernetX directory will contain
->  		files that expose the iSCSI Boot Firmware Table NIC data.
->  		Usually this contains the IP address, MAC, and gateway of the NIC.
-> +
-> +What:		/sys/firmware/ibft/acpi_header
-> +Date:		March 2016
-> +Contact:	David Bond <dbond@suse.com>
-> +Description:	The /sys/firmware/ibft/acpi_header directory will contain files
-> +		that expose the SIGNATURE, OEM_ID, and OEM_TABLE_ID fields of the
-> +		acpi table header of the iBFT structure.  This will allow for
-> +		identification of the creator of the table which is useful in
-> +		determining quirks associated with some adapters when used in
-> +		hardware vs software iscsi initiator mode.
-> diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-> index 81037e5..2b1900b 100644
-> --- a/drivers/firmware/iscsi_ibft.c
-> +++ b/drivers/firmware/iscsi_ibft.c
-> @@ -418,6 +418,31 @@ static ssize_t ibft_attr_show_target(void *data, int type, char *buf)
->  	return str - buf;
->  }
->  
-> +static ssize_t ibft_attr_show_acpitbl(void *data, int type, char *buf)
-> +{
-> +	struct ibft_kobject *entry = data;
-> +	char *str = buf;
-> +
-> +	switch (type) {
-> +	case ISCSI_BOOT_ACPITBL_SIGNATURE:
-> +		str += sprintf_string(str, ACPI_NAME_SIZE,
-> +				      entry->header->header.signature);
-> +		break;
-> +	case ISCSI_BOOT_ACPITBL_OEM_ID:
-> +		str += sprintf_string(str, ACPI_OEM_ID_SIZE,
-> +				      entry->header->header.oem_id);
-> +		break;
-> +	case ISCSI_BOOT_ACPITBL_OEM_TABLE_ID:
-> +		str += sprintf_string(str, ACPI_OEM_TABLE_ID_SIZE,
-> +				      entry->header->header.oem_table_id);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	return str - buf;
-> +}
-> +
->  static int __init ibft_check_device(void)
->  {
->  	int len;
-> @@ -576,6 +601,24 @@ static umode_t __init ibft_check_initiator_for(void *data, int type)
->  	return rc;
->  }
->  
-> +static umode_t __init ibft_check_acpitbl_for(void *data, int type)
-> +{
-> +
-> +	umode_t rc = 0;
-> +
-> +	switch (type) {
-> +	case ISCSI_BOOT_ACPITBL_SIGNATURE:
-> +	case ISCSI_BOOT_ACPITBL_OEM_ID:
-> +	case ISCSI_BOOT_ACPITBL_OEM_TABLE_ID:
-> +		rc = S_IRUGO;
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	return rc;
-> +}
-> +
->  static void ibft_kobj_release(void *data)
->  {
->  	kfree(data);
-> @@ -699,6 +742,8 @@ free_ibft_obj:
->  static int __init ibft_register_kobjects(struct acpi_table_ibft *header)
->  {
->  	struct ibft_control *control = NULL;
-> +	struct iscsi_boot_kobj *boot_kobj;
-> +	struct ibft_kobject *ibft_kobj;
->  	void *ptr, *end;
->  	int rc = 0;
->  	u16 offset;
-> @@ -727,6 +772,23 @@ static int __init ibft_register_kobjects(struct acpi_table_ibft *header)
->  		}
->  	}
->  
+Patch notes
+------------
+I use target LIO for all my storage array test targets and customer pro=
+blem resolution here at Red Hat.
+This patch resulted from a requirement to mimic behavior of an expensiv=
+e hardware jammer for a customer.
+I have used this for some time with good success to simulate and reprod=
+uce latency and slow drain fabric issues and
+for testing and validating error handling behavior  in the Emulex, Qlog=
+ic and other F/C drivers.
 
-What about the rc earlier (from the loop)? You end up ignoring it.
-Should we have:
+Works by checking new parameter jam_host if its >=3D 0 and matches vha-=
+>host_no , jamming is enabled when jam_host >=3D0
+If parameter set to -1 (default) no jamming is enabled.=20
 
-if (rc)
-	return rc;
+Tested by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
 
-?
-> +	ibft_kobj = kzalloc(sizeof(*ibft_kobj), GFP_KERNEL);
-> +	if (!ibft_kobj)
-> +		return -ENOMEM;
-> +
-> +	ibft_kobj->header = header;
-> +	ibft_kobj->hdr = NULL; /*for ibft_unregister*/
-> +
-> +	boot_kobj = iscsi_boot_create_acpitbl(boot_kset, 0,
-> +					ibft_kobj,
-> +					ibft_attr_show_acpitbl,
-> +					ibft_check_acpitbl_for,
-> +					ibft_kobj_release);
+diff -Nurp linux-4.5/Documentation/scsi/tcm_qla2xxx.txt linux-4.5.new/D=
+ocumentation/scsi/tcm_qla2xxx.txt
+--- linux-4.5/Documentation/scsi/tcm_qla2xxx.txt	1969-12-31 19:00:00.00=
+0000000 -0500
++++ linux-4.5.new/Documentation/scsi/tcm_qla2xxx.txt	2016-04-02 11:36:4=
+2.693081232 -0400
+@@ -0,0 +1,34 @@
++tcm_qla2xxx jammer parameter usage
++----------------------------------
++There is now a new module parameter added to the tcm_qla2xx module
++parm:           jam_host:Host to jam >=3D0 Enable jammer (int)
++This parameter and accompanying code is only included if the=20
++Kconfig parameter TCM_QLA2XXX_DEBUG is set to Y
++By default this jammer code and functionality is disabled
++
++Use this parameter to control the discarding of SCSI commands to a sel=
+ected
++host.
++This may be useful for testing error handling and simulating slow drai=
+n
++and other fabric issues.
++
++Any value >=3D0 that matches a fc_host # will discard the commands for=
+ that host.
++Reset back to -1 to stop the jamming.
++
++Enable host 6 to be jammed
++echo 6 > /sys/module/tcm_qla2xxx/parameters/jam_host
++
++Disable jamming on host 6
++echo -1 > /sys/module/tcm_qla2xxx/parameters/jam_host
++
++Usage example script:
++
++#!/bin/bash
++sleep_time=3D120  ### Time to jam for
++echo 6 >  /sys/module/tcm_qla2xxx/parameters/jam_host
++host=3D`cat /sys/module/tcm_qla2xxx/parameters/jam_host`
++echo "We start to discard commands on SCSI host $host"
++logger "Jammer started"
++sleep $sleep_time
++echo -1 >  /sys/module/tcm_qla2xxx/parameters/jam_host
++echo "We stopped the jammer"
++logger "Jammer stopped"
+diff -Nurp linux-4.5/drivers/scsi/qla2xxx/Kconfig linux-4.5.new/drivers=
+/scsi/qla2xxx/Kconfig
+--- linux-4.5/drivers/scsi/qla2xxx/Kconfig	2016-03-14 00:28:54.00000000=
+0 -0400
++++ linux-4.5.new/drivers/scsi/qla2xxx/Kconfig	2016-04-02 11:31:15.3025=
+16676 -0400
+@@ -36,3 +36,13 @@ config TCM_QLA2XXX
+ 	default n
+ 	---help---
+ 	Say Y here to enable the TCM_QLA2XXX fabric module for QLogic 24xx+ s=
+eries target mode HBAs
++
++config TCM_QLA2XXX_DEBUG
++	bool "TCM_QLA2XXX fabric module DEBUG mode for QLogic 24xx+ series ta=
+rget mode HBAs"
++	depends on SCSI_QLA_FC && TARGET_CORE
++	depends on LIBFC
++	select BTREE
++	default n
++	---help---
++	Say Y here to enable the TCM_QLA2XXX fabric module DEBUG for QLogic 2=
+4xx+ series target mode HBAs
++	This will include code to enable the SCSI command jammer
+diff -Nurp linux-4.5/drivers/scsi/qla2xxx/tcm_qla2xxx.c linux-4.5.new/d=
+rivers/scsi/qla2xxx/tcm_qla2xxx.c
+--- linux-4.5/drivers/scsi/qla2xxx/tcm_qla2xxx.c	2016-03-14 00:28:54.00=
+0000000 -0400
++++ linux-4.5.new/drivers/scsi/qla2xxx/tcm_qla2xxx.c	2016-04-02 11:32:3=
+5.317410249 -0400
+@@ -48,6 +48,12 @@
+ #include "qla_target.h"
+ #include "tcm_qla2xxx.h"
+=20
++#ifdef TCM_QLA2XXX_DEBUG
++int jam_host =3D -1;
++module_param(jam_host, int, 0644);
++MODULE_PARM_DESC(jam_host, "Host to jam >=3D0 Enable jammer");
++#endif
++
+ static struct workqueue_struct *tcm_qla2xxx_free_wq;
+ static struct workqueue_struct *tcm_qla2xxx_cmd_wq;
+=20
+@@ -477,6 +483,13 @@ static int tcm_qla2xxx_handle_cmd(scsi_q
+ 		return -EINVAL;
+ 	}
+=20
++#ifdef TCM_QLA2XXX_DEBUG
++	if (unlikely(vha->host_no =3D=3D jam_host)) {
++		/* return, and dont run target_submit_cmd,discarding command */
++		return 0;
++	}
++#endif
++
+ 	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
+ 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
+ 				cmd->unpacked_lun, data_length, fcp_task_attr,
+@@ -1967,6 +1980,9 @@ static void tcm_qla2xxx_deregister_confi
+ static int __init tcm_qla2xxx_init(void)
+ {
+ 	int ret;
++#ifdef TCM_QLA2XXX_DEBUG
++	jam_host =3D -1;
++#endif
+=20
+ 	ret =3D tcm_qla2xxx_register_configfs();
+ 	if (ret < 0)
 
-There something off with the offset here, but I presume it is just the
-tabs and them not showing up properly in my editor.
 
-> +	if (!boot_kobj)  {
-> +		kfree(ibft_kobj);
-> +		rc = -ENOMEM;
-> +	}
-> +
->  	return rc;
->  }
->  
-> @@ -738,7 +800,7 @@ static void ibft_unregister(void)
->  	list_for_each_entry_safe(boot_kobj, tmp_kobj,
->  				 &boot_kset->kobj_list, list) {
->  		ibft_kobj = boot_kobj->data;
-> -		if (ibft_kobj->hdr->id == id_nic)
-> +		if (ibft_kobj->hdr && ibft_kobj->hdr->id == id_nic)
->  			sysfs_remove_link(&boot_kobj->kobj, "device");
->  	};
->  }
-> diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-> index 8f0ea97..b472f56 100644
-> --- a/drivers/scsi/iscsi_boot_sysfs.c
-> +++ b/drivers/scsi/iscsi_boot_sysfs.c
-> @@ -306,6 +306,42 @@ static struct attribute_group iscsi_boot_initiator_attr_group = {
->  	.is_visible = iscsi_boot_ini_attr_is_visible,
->  };
->  
-> +/* iBFT ACPI Table attributes */
-> +iscsi_boot_rd_attr(acpitbl_signature, signature, ISCSI_BOOT_ACPITBL_SIGNATURE);
-> +iscsi_boot_rd_attr(acpitbl_oem_id, oem_id, ISCSI_BOOT_ACPITBL_OEM_ID);
-> +iscsi_boot_rd_attr(acpitbl_oem_table_id, oem_table_id,
-> +		   ISCSI_BOOT_ACPITBL_OEM_TABLE_ID);
-> +
-> +static struct attribute *acpitbl_attrs[] = {
-> +	&iscsi_boot_attr_acpitbl_signature.attr,
-> +	&iscsi_boot_attr_acpitbl_oem_id.attr,
-> +	&iscsi_boot_attr_acpitbl_oem_table_id.attr,
-> +	NULL
-> +};
-> +
-> +static umode_t iscsi_boot_acpitbl_attr_is_visible(struct kobject *kobj,
-> +					     struct attribute *attr, int i)
-> +{
-> +	struct iscsi_boot_kobj *boot_kobj =
-> +			container_of(kobj, struct iscsi_boot_kobj, kobj);
-> +
-> +	if (attr ==  &iscsi_boot_attr_acpitbl_signature.attr)
-> +		return boot_kobj->is_visible(boot_kobj->data,
-> +					     ISCSI_BOOT_ACPITBL_SIGNATURE);
-> +	if (attr ==  &iscsi_boot_attr_acpitbl_oem_id.attr)
-> +		return boot_kobj->is_visible(boot_kobj->data,
-> +					     ISCSI_BOOT_ACPITBL_OEM_ID);
-> +	if (attr ==  &iscsi_boot_attr_acpitbl_oem_table_id.attr)
-> +		return boot_kobj->is_visible(boot_kobj->data,
-> +					     ISCSI_BOOT_ACPITBL_OEM_TABLE_ID);
-> +	return 0;
-> +}
-> +
-> +static struct attribute_group iscsi_boot_acpitbl_attr_group = {
-> +	.attrs = acpitbl_attrs,
-> +	.is_visible = iscsi_boot_acpitbl_attr_is_visible,
-> +};
-> +
->  static struct iscsi_boot_kobj *
->  iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
->  		       struct attribute_group *attr_group,
-> @@ -436,6 +472,32 @@ iscsi_boot_create_ethernet(struct iscsi_boot_kset *boot_kset, int index,
->  EXPORT_SYMBOL_GPL(iscsi_boot_create_ethernet);
->  
->  /**
-> + * iscsi_boot_create_acpitbl() - create boot acpi table sysfs dir
-> + * @boot_kset: boot kset
-> + * @index: not used
-> + * @data: driver specific data
-> + * @show: attr show function
-> + * @is_visible: attr visibility function
-> + * @release: release function
-> + *
-> + * Note: The boot sysfs lib will free the data passed in for the caller
-> + * when all refs to the acpitbl kobject have been released.
-> + */
-> +struct iscsi_boot_kobj *
-> +iscsi_boot_create_acpitbl(struct iscsi_boot_kset *boot_kset, int index,
-> +			   void *data,
-> +			   ssize_t (*show)(void *data, int type, char *buf),
-> +			   umode_t (*is_visible)(void *data, int type),
-> +			   void (*release)(void *data))
-> +{
-> +	return iscsi_boot_create_kobj(boot_kset,
-> +				      &iscsi_boot_acpitbl_attr_group,
-> +				      "acpi_header", index, data, show,
-> +				      is_visible, release);
-> +}
-> +EXPORT_SYMBOL_GPL(iscsi_boot_create_acpitbl);
-> +
-> +/**
->   * iscsi_boot_create_kset() - creates root sysfs tree
->   * @set_name: name of root dir
->   */
-> diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
-> index 548d553..10923d7 100644
-> --- a/include/linux/iscsi_boot_sysfs.h
-> +++ b/include/linux/iscsi_boot_sysfs.h
-> @@ -64,6 +64,12 @@ enum iscsi_boot_initiator_properties_enum {
->  	ISCSI_BOOT_INI_END_MARKER,
->  };
->  
-> +enum iscsi_boot_acpitbl_properties_enum {
-> +	ISCSI_BOOT_ACPITBL_SIGNATURE,
-> +	ISCSI_BOOT_ACPITBL_OEM_ID,
-> +	ISCSI_BOOT_ACPITBL_OEM_TABLE_ID,
-> +};
-> +
->  struct attribute_group;
->  
->  struct iscsi_boot_kobj {
-> @@ -127,6 +133,13 @@ iscsi_boot_create_target(struct iscsi_boot_kset *boot_kset, int index,
->  			 umode_t (*is_visible) (void *data, int type),
->  			 void (*release) (void *data));
->  
-> +struct iscsi_boot_kobj *
-> +iscsi_boot_create_acpitbl(struct iscsi_boot_kset *boot_kset, int index,
-> +			  void *data,
-> +			  ssize_t (*show)(void *data, int type, char *buf),
-> +			  umode_t (*is_visible)(void *data, int type),
-> +			  void (*release)(void *data));
-> +
->  struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name);
->  struct iscsi_boot_kset *iscsi_boot_create_host_kset(unsigned int hostno);
->  void iscsi_boot_destroy_kset(struct iscsi_boot_kset *boot_kset);
-> -- 
-> 2.6.2
-> 
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Laurence Oberman" <loberman@redhat.com>
+To: "Himanshu Madhani" <himanshu.madhani@qlogic.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Bart Van Assche" <b=
+art.vanassche@sandisk.com>, "linux-scsi" <linux-scsi@vger.kernel.org>, =
+"target-devel" <target-devel@vger.kernel.org>, "Quinn Tran" <quinn.tran=
+@qlogic.com>
+Sent: Friday, April 1, 2016 2:15:25 PM
+Subject: Re: tcm_qla2xxx Add SCSI command jammer/discard capabilty to t=
+he tcm_qla2xxx module - revision3
+
+Himanshu
+
+I looked at using the attribute for this but because of where I have to=
+ discard the command I dont want to have to go fetch the attribute each=
+ time in the same code path.
+Its significant overhead to have to go fetch the attribute value each t=
+ime as I allow for a dynamic on off via the module parameter so I have =
+to check it each command.
+With the module parameter its a simple compare and by having this as a =
+module parameter its globally accessible and imposes virtually no overh=
+ead.
+
+Are you OK with me using #ifdef on the CONFIG_TCM_QLA2XXX_DEBUG .config=
+ parameter I will add here to include the module parameter and code onl=
+y if set to "yes"
+The default unless expicitly set will be no change.
+
+Thanks
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Himanshu Madhani" <himanshu.madhani@qlogic.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Bart Van Assche" <b=
+art.vanassche@sandisk.com>
+Cc: "Laurence Oberman" <loberman@redhat.com>, "linux-scsi" <linux-scsi@=
+vger.kernel.org>, "target-devel" <target-devel@vger.kernel.org>, "Quinn=
+ Tran" <quinn.tran@qlogic.com>
+Sent: Thursday, March 31, 2016 8:20:56 PM
+Subject: Re: tcm_qla2xxx Add SCSI command jammer/discard capabilty to t=
+he tcm_qla2xxx module - revision3
+
+Hi Nic, Laurence,=20
+
+
+
+On 3/30/16, 10:34 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wro=
+te:
+
+>(Adding target-devel + Qlogic target folks)
+>
+>On Tue, 2016-03-29 at 22:05 -0700, Bart Van Assche wrote:
+>> On 03/29/16 07:42, Laurence Oberman wrote:
+>> > I have been using this jammer functionality to continue testing th=
+e SCSI F/C drivers and recovery for over a year now.
+>> > Any chance you would agree to ack this so I can get it in now.
+>> > I last posted to the list last March and it was not picked up.
+>> >
+>> > I did look into moving this to upper layers but I find I use it pr=
+imarily for fiber channel target testing.
+>> > Attempting to add this functionality to upper layers led to comple=
+xities and this is very solid.
+>> >
+>> > This Patch diff against 4.5
+>> >
+>> > I use target LIO for all my storage array test targets and custome=
+r problem resolution here at Red Hat.
+>> > This patch resulted from a requirement to mimic behavior of an exp=
+ensive hardware jammer for a customer.
+>> > I have used this for some time with good success to simulate and r=
+eproduce latency and slow drain fabric issues and
+>> > for testing and validating error handling behavior
+>> >   in the Emulex, Qlogic and other F/C drivers.
+>> >
+>> > Works by checking new parameter jam_host if its >=3D 0 and matches=
+ vha->host_no , jamming is enabled when jam_host >=3D0
+>> > If parameter set to -1 (default) no jamming is enabled.
+>>=20
+>> Hello Laurence,
+>>=20
+>> Nic Bellinger is the maintainer of LIO so my recommendation is to as=
+k=20
+>> Nic first about his opinion (I have CC'd Nic). I'm not sure what Nic=
+=20
+>> thinks about this but in my opinion such functionality belongs in th=
+e=20
+>> target core instead of in a target driver. But please wait until Nic=
+ has=20
+>> provided his opinion before spending more time on this. The mailing =
+list=20
+>> for SCSI target patches is target-devel@vger.kernel.org.
+>>=20
+>
+>So really it's Himanshu's + Quinn's call if they would like to include
+>something like this in mainline.
+>
+>If so, then I'd prefer to do it with a per tcm_qla2xxx_tpg endpoint
+>attribute instead a new module parameter, and add a new kernel config
+>option (CONFIG_TCM_QLA2XXX_DEBUG) to disable (by default) so end users
+>don't inadvertently play with it via targetcli + friends.
+>
+
+I agree here with Nic. The patch does provides benefit and is good addi=
+tion,
+but we don=E2=80=99t want to enable it by default.
+
+Laurence,=20
+
+Would you be kind to rework patch with suggested changes from Nic and p=
+ost it.=20
+
+Thanks,=20
+Himanshu
+N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=BF=
+=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=BF=
+=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=EF=
+=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=CA=87=DA=99=EF=BF=BD,j=EF=BF=BD=EF=
+=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BDz=EF=BF=BD=
+=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDj:+v=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=BD=EF=BF=BD=DD=A2=
+j"=EF=BF=BD=EF=BF=BD
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
