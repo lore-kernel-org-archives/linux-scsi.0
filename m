@@ -1,117 +1,84 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: tcm_qla2xxx Add SCSI command jammer/discard capabilty to the
- tcm_qla2xxx module - revision4
-Date: Sat, 02 Apr 2016 16:39:35 -0700
-Message-ID: <1459640375.13184.14.camel@haakon3.risingtidesystems.com>
-References: <2025450295.25603731.1459262558755.JavaMail.zimbra@redhat.com>
-	 <56FB5E98.9010103@sandisk.com>
-	 <1459402453.31390.45.camel@haakon3.risingtidesystems.com>
-	 <3F517A19-EDA5-4B16-B103-C3F38242F8D8@qlogic.com>
-	 <1049122887.26432420.1459534525185.JavaMail.zimbra@redhat.com>
-	 <1615130599.26684873.1459613094650.JavaMail.zimbra@redhat.com>
-	 <363538615.26701710.1459617008813.JavaMail.zimbra@redhat.com>
+Subject: Re: QoS for iSCSI target?
+Date: Sat, 02 Apr 2016 18:15:52 -0700
+Message-ID: <1459646152.13184.26.camel@haakon3.risingtidesystems.com>
+References: <56E1F419.5070005@windriver.com>
+	 <20160311073018.GA23379@infradead.org>
+	 <1457682341.4062.74.camel@haakon3.risingtidesystems.com>
+	 <56E98E5F.9030107@windriver.com>
+	 <1459407929.31390.89.camel@haakon3.risingtidesystems.com>
+	 <56FEBF82.9050909@windriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <363538615.26701710.1459617008813.JavaMail.zimbra@redhat.com>
+In-Reply-To: <56FEBF82.9050909@windriver.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Quinn Tran <quinn.tran@qlogic.com>
+To: Chris Friesen <chris.friesen@windriver.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Laurence,
-
-On Sat, 2016-04-02 at 13:10 -0400, Laurence Oberman wrote:
-> Hello Himanshu
+On Fri, 2016-04-01 at 12:35 -0600, Chris Friesen wrote:
+> On 03/31/2016 01:05 AM, Nicholas A. Bellinger wrote:
+> > On Wed, 2016-03-16 at 10:48 -0600, Chris Friesen wrote:
+> >> On 03/11/2016 01:45 AM, Nicholas A. Bellinger wrote:
+> >>> On Thu, 2016-03-10 at 23:30 -0800, Christoph Hellwig wrote:
+> >>>> On Thu, Mar 10, 2016 at 04:24:25PM -0600, Chris Friesen wrote:
+> >>>>> Hi,
+> >>>>>
+> >>>>> I'm looking for information on whether the iSCSI target in the kernel offers
+> >>>>> any way to do QoS between traffic driven by different initiators.
+> >>>>>
+> >>>>> I'm trying to make sure that one initiator can't do a denial-of-service
+> >>>>> attack against others.
+> >>>>>
+> >>>>> Does the kernel target have this sort of thing built-in, or do I need to
+> >>>>> look at network traffic-shaping to achieve this?
+> >>>>
+> >>>> It doesn't right now, but it shouldn't be hard to integrate it with
+> >>>> blk cgroups.
+> >>>
+> >>> For iscsi-target application QoS, the per session command sequence
+> >>> number window depth (CmdSN) exists to enforce per InitiatorName limits
+> >>> via TPG default_cmdsn_depth + se_node_acl->queue_depth configfs
+> >>> attributes.
+> >>>
+> >>> Note these values can be changed on the fly for iscsi-target using
+> >>> explicit se_node_acl->acl_group, but currently require a se_session
+> >>> reinstatement event for updated ExpCmdSN + MaxCmdSN to take effect.
+> >>
+> >> On a slightly different note, is there any way to throttle or limit the overall
+> >> bandwidth consumed by the iSCSI target in the kernel?  I'd like to ensure that
+> >> the iSCSI traffic doesn't completely swamp the host accesses to the same block
+> >> device.
+> >>
+> >> I suppose I could do networking-based traffic shaping, but are there any
+> >> controls in the block IO subsystem?
+> >>
+> >
+> > On a individual block_device backend basis, block cgroups is the
+> > preferred method for doing this.
+> >
+> > Note that any rate limiting imposed by block cgroups is subject to the
+> > current se_node_acl->queue_depth enforced across all LUNs within a given
+> > iscsi session.
 > 
-> I noticed a typo in the patch I submitted here is the corrected patch.
-> Please ignore the prior patch
 > 
-> I was missing the full CONFIG name in the #ifdef check 
-> 
-> Corrected Patch
-
-Two quick process related comments:
-
-Please avoid top-posting responses, as it makes the thread more
-difficult for others to follow.
-
-Also, please send out kernel patches for list review using
-git-format-patch + git-send-email tools, instead of responding with new
-versions in the original email thread.
-
-> 
-> [root@localhost home]# linux-4.5/scripts/checkpatch.pl jammer_patch.v4
-> total: 0 errors, 0 warnings, 81 lines checked
-> 
-> jammer_patch.v4 has no obvious style problems and is ready for submission.
-> 
-> 
-> This patch was reworked to only include the jammer code if the parameter TCM_QLA2XXX_DEBUG=Y is set.
-> The default is to not provide this functionality at all.
-> I looked at using attributes but this code is in the fastpath and the overhead or fetching the attribute
-> each time is not a good idea.
-> Control of this needs to be dynamic and the module parameter allows a simple compare in the fastpath.
+> How would I use cgroups with the kernel iSCSI target?  Is there a set of kernel 
+> threads dedicated to the iSCSI target that I can assign to a particular group?
 > 
 
-I don't see how a per tcm_qla2xxx (scsi_qla_host) TPG endpoint attribute
-has any noticeable performance impact with TCM_QLA2XXX_DEBUG=y vs. a
-global module parameter doing scsi_qla_host->host_no comparison.
+block cgroups can set I/O throttling (bandwidth + IOPs) limits for any
+normal struct block_device.
 
-Eg, have you tried something like the following..?
+These values are configured via blkio.throttle.* resource class, and the
+limits are imposed independently of the block_device's association with
+target_core_mod backend driver export.  Namely:
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index c1461d2..3b13a89a 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -477,6 +477,17 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_c
-                return -EINVAL;
-        }
- 
-+#ifdef CONFIG_TCM_QLA2XXX_DEBUG
-+       {
-+       struct se_portal_group *se_tpg = se_sess->se_tpg;
-+       struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
-+                               struct tcm_qla2xxx_tpg, se_tpg);
-+
-+       if (tpg->tpg_attrib.jam_host)
-+               return 0;
-+
-+       }
-+#endif
-        cmd->vha->tgt_counters.qla_core_sbt_cmd++;
-        return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
-                                cmd->unpacked_lun, data_length, fcp_task_attr,
-@@ -845,12 +856,19 @@ DEF_QLA_TPG_ATTRIB(demo_mode_write_protect);
- DEF_QLA_TPG_ATTRIB(prod_mode_write_protect);
- DEF_QLA_TPG_ATTRIB(demo_mode_login_only);
- 
-+#ifdef CONFIG_TCM_QLA2XXX_DEBUG
-+DEF_QLA_TPG_ATTRIB(jam_host);
-+#endif
-+
- static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
-        &tcm_qla2xxx_tpg_attrib_attr_generate_node_acls,
-        &tcm_qla2xxx_tpg_attrib_attr_cache_dynamic_acls,
-        &tcm_qla2xxx_tpg_attrib_attr_demo_mode_write_protect,
-        &tcm_qla2xxx_tpg_attrib_attr_prod_mode_write_protect,
-        &tcm_qla2xxx_tpg_attrib_attr_demo_mode_login_only,
-+#ifdef CONFIG_TCM_QLA2XXX_DEBUG
-+       &tcm_qla2xxx_tpg_attrib_attr_jam_host,
-+#endif
-        NULL,
- };
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-index 3bbf4cb..37e026a 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-@@ -34,6 +34,7 @@ struct tcm_qla2xxx_tpg_attrib {
-        int prod_mode_write_protect;
-        int demo_mode_login_only;
-        int fabric_prot_type;
-+       int jam_host;
- };
- 
- struct tcm_qla2xxx_tpg {
+    blkio.throttle.write_iops_device
+    blkio.throttle.read_iops_device
+    blkio.throttle.write_bps_device
+    blkio.throttle.read_bdp_device
+
+Some examples using these values, plus more blkio.* info is here:
+http://events.linuxfoundation.org/sites/events/files/slides/cgroups_0.pdf.
