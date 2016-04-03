@@ -1,40 +1,61 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] target: make location of /var/target configurable
-Date: Sat, 02 Apr 2016 20:36:24 -0700
-Message-ID: <1459654584.13184.39.camel@haakon3.risingtidesystems.com>
-References: <cover.1459278305.git.lduncan@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <cover.1459278305.git.lduncan@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, hch@infradead.org, lkml@vger.kernel.org, hare@suse.com, Andy Grover <agrover@redhat.com>, Jerome Martin <jxm@netiant.com>
+From: Leonid Moiseichuk <leonid.moiseichuk@gmail.com>
+Subject: [PATCH] [SCSI] mvsas: generalize Marvell 88SE9485 declaration
+Date: Sun,  3 Apr 2016 09:53:38 +0300
+Message-ID: <1459666418-8996-1-git-send-email-leonid.moiseichuk@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38391 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbcDCG7U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2016 02:59:20 -0400
+Received: from home.ru (a88-112-190-76.elisa-laajakaista.fi [88.112.190.76])
+	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id 0AAEA234022
+	for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2016 09:53:44 +0300 (EEST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: yuxiangl@marvell.com, James.Bottomley@suse.de
+Cc: debian-kernel@lists.debian.org, linux-scsi@vger.kernel.org, Leonid Moiseichuk <leonid.moiseichuk@gmail.com>
 
-On Thu, 2016-03-31 at 11:05 -0700, Lee Duncan wrote:
-> These patches make the location of "/var/target" configurable,
-> though it still defauls to "/var/target".
-> 
-> This configuration is accomplished via the configfs
-> top-level target attribute "dbroot", i.e. dumping
-> out "/sys/kernel/config/target/dbroot" will normally
-> return "/var/target". Writing to this attribute
-> changes the loation where the kernel looks for the
-> target database.
-> 
-> ** NOTE/QUESTION: no sanity checks are done on the path passed in,
->    but it seems like *some* should be done. At least checking that
->    it's an abosolute path (i.e. starts with '/')? Opinions?
-> 
+In case of specifying any subvendor has sense to use generic subdevice
+and switch to PCI_VDEVICE() macro.
 
-Wrt to sanity checking db_root at configfs attribute store time, how
-about doing a filp_open() + S_DIR(f_inode->imode) + filp_close() of the
-requested path to verify it's really a directory..?
+My ASUS P9A-I/C2550/SAS/4L publishes 1b4b:9485 as vendor-specific 1043:8635
+and it prevents initialization of mvsas.
 
-Also, it would probably be a good idea to limit when db_root can be
-changed.  Eg, only allow db_root to be changed when no active target
-fabric drivers have been registered (list_empty(g_tf_list)), and require
-userspace to set a different db_root after modprobe target_core_mod
-completes, but before any fabric drivers are loaded.
+Signed-off-by: Leonid Moiseichuk <leonid.moiseichuk@gmail.com>
+---
+ drivers/scsi/mvsas/mv_init.c | 19 +------------------
+ 1 file changed, 1 insertion(+), 18 deletions(-)
+
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index c7c250519c4b..a6a4f09df0be 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -704,24 +704,7 @@ static struct pci_device_id mvs_pci_table[] = {
+ 		.class_mask	= 0,
+ 		.driver_data	= chip_9445,
+ 	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
+-		.device		= 0x9485,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= 0x9480,
+-		.class		= 0,
+-		.class_mask	= 0,
+-		.driver_data	= chip_9485,
+-	},
+-	{
+-		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
+-		.device		= 0x9485,
+-		.subvendor	= PCI_ANY_ID,
+-		.subdevice	= 0x9485,
+-		.class		= 0,
+-		.class_mask	= 0,
+-		.driver_data	= chip_9485,
+-	},
++	{ PCI_VDEVICE(MARVELL_EXT, 0x9485), chip_9485 },
+ 	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
+ 	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact model unknown) */
+ 	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact model unknown) */
+-- 
+2.8.0.rc3
+
