@@ -1,61 +1,82 @@
-From: Leonid Moiseichuk <leonid.moiseichuk@gmail.com>
-Subject: [PATCH] [SCSI] mvsas: generalize Marvell 88SE9485 declaration
-Date: Sun,  3 Apr 2016 09:53:38 +0300
-Message-ID: <1459666418-8996-1-git-send-email-leonid.moiseichuk@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38391 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbcDCG7U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2016 02:59:20 -0400
-Received: from home.ru (a88-112-190-76.elisa-laajakaista.fi [88.112.190.76])
-	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id 0AAEA234022
-	for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2016 09:53:44 +0300 (EEST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 0/8] Replay Protected Memory Block (RPMB) subsystem
+Date: Sun,  3 Apr 2016 12:42:44 +0300
+Message-ID: <1459676572-29921-1-git-send-email-tomas.winkler@intel.com>
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Sender: linux-mmc-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: yuxiangl@marvell.com, James.Bottomley@suse.de
-Cc: debian-kernel@lists.debian.org, linux-scsi@vger.kernel.org, Leonid Moiseichuk <leonid.moiseichuk@gmail.com>
 
-In case of specifying any subvendor has sense to use generic subdevice
-and switch to PCI_VDEVICE() macro.
+Few storage technology such is EMMC, UFS, and NVMe support RPMB
+hardware partition with common protocol and frame layout.
+The RPMB partition cannot be accessed via standard block layer, but
+by a set of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
+PROGRAM_KEY.
+Such a partition provides authenticated and replay protected access,
+hence suitable as a secure storage.
 
-My ASUS P9A-I/C2550/SAS/4L publishes 1b4b:9485 as vendor-specific 1043:8635
-and it prevents initialization of mvsas.
+A storage device registers its RPMB hardware (emmc) partition or
+RPMB W-LUN (ufs) with the RPMB layer providing an implementation for
+send_rpmb_req() handler.
+Tere is as well simulation platform device. This is handy as an RPMB
+key can be programmed only once at storage device lifetime.
 
-Signed-off-by: Leonid Moiseichuk <leonid.moiseichuk@gmail.com>
----
- drivers/scsi/mvsas/mv_init.c | 19 +------------------
- 1 file changed, 1 insertion(+), 18 deletions(-)
+The RPMB layer aims to provide in-kernel API for Trusted Execution
+Environment (TEE) devices that are capable to securely compute block
+frame signature. A TEE driver can claim rpmb interface, for example,
+via  class_interface_register ().
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index c7c250519c4b..a6a4f09df0be 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -704,24 +704,7 @@ static struct pci_device_id mvs_pci_table[] = {
- 		.class_mask	= 0,
- 		.driver_data	= chip_9445,
- 	},
--	{
--		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
--		.device		= 0x9485,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= 0x9480,
--		.class		= 0,
--		.class_mask	= 0,
--		.driver_data	= chip_9485,
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
--		.device		= 0x9485,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= 0x9485,
--		.class		= 0,
--		.class_mask	= 0,
--		.driver_data	= chip_9485,
--	},
-+	{ PCI_VDEVICE(MARVELL_EXT, 0x9485), chip_9485 },
- 	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
- 	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact model unknown) */
- 	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact model unknown) */
+A parallel user space API is provided via /dev/rpmbX character
+device with a single IOCTL command similar to the one provided by
+mmc/ioctl. h
+There is a sample tool under tools/rpmb/ directory that exercises
+this interface.
+
+Tomas Winkler (8):
+  rpmb: add Replay Protected Memory Block (RPMB) subsystem
+  char: rpmb: add sysfs-class ABI documentation
+  char: rpmb: add device attributes
+  char: rpmb: provide user space interface
+  char: rpmb: add RPMB simulation device
+  tools rpmb: add RPBM access tool
+  mmc: block: register rpmb partition with the RPMB subsystem
+  scsi: ufs: connect to RPMB subsystem
+
+ Documentation/ABI/testing/sysfs-class-rpmb |  39 ++
+ Documentation/ioctl/ioctl-number.txt       |   1 +
+ MAINTAINERS                                |  10 +
+ drivers/char/Kconfig                       |   2 +
+ drivers/char/Makefile                      |   1 +
+ drivers/char/rpmb/Kconfig                  |  25 +
+ drivers/char/rpmb/Makefile                 |   6 +
+ drivers/char/rpmb/cdev.c                   | 209 ++++++++
+ drivers/char/rpmb/core.c                   | 408 +++++++++++++++
+ drivers/char/rpmb/rpmb-cdev.h              |  31 ++
+ drivers/char/rpmb/rpmb_sim.c               | 584 +++++++++++++++++++++
+ drivers/mmc/card/block.c                   | 289 +++++++++++
+ drivers/scsi/ufs/ufshcd.c                  | 219 ++++++++
+ drivers/scsi/ufs/ufshcd.h                  |   2 +
+ include/linux/rpmb.h                       | 138 +++++
+ include/uapi/linux/rpmb.h                  | 120 +++++
+ tools/Makefile                             |  16 +-
+ tools/rpmb/.gitignore                      |   2 +
+ tools/rpmb/Makefile                        |  32 ++
+ tools/rpmb/rpmb.c                          | 807 +++++++++++++++++++++++++++++
+ 20 files changed, 2936 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-rpmb
+ create mode 100644 drivers/char/rpmb/Kconfig
+ create mode 100644 drivers/char/rpmb/Makefile
+ create mode 100644 drivers/char/rpmb/cdev.c
+ create mode 100644 drivers/char/rpmb/core.c
+ create mode 100644 drivers/char/rpmb/rpmb-cdev.h
+ create mode 100644 drivers/char/rpmb/rpmb_sim.c
+ create mode 100644 include/linux/rpmb.h
+ create mode 100644 include/uapi/linux/rpmb.h
+ create mode 100644 tools/rpmb/.gitignore
+ create mode 100644 tools/rpmb/Makefile
+ create mode 100644 tools/rpmb/rpmb.c
+
 -- 
-2.8.0.rc3
+2.4.3
 
