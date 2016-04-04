@@ -1,203 +1,193 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 06/12] Add ata pass-through path for ZAC commands.
-Date: Mon,  4 Apr 2016 12:06:10 +0700
-Message-ID: <1459746376-27983-7-git-send-email-shaun@tancheff.com>
+Subject: [PATCH 09/12] RAID 4/5/6: Fine-grained TRIM enable for ZDM
+Date: Mon,  4 Apr 2016 12:06:13 +0700
+Message-ID: <1459746376-27983-10-git-send-email-shaun@tancheff.com>
 References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36450 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752229AbcDDFG7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 01:06:59 -0400
 In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
-List-Id: linux-scsi@vger.kernel.org
 
-The current generation of HBA SAS adapters support connecting SATA
-drives and perform SCSI<->ATA translations in hardware.
-Unfortunately the ZBC commands are not being translate (yet).
+Currently RAID 4/5/6 requires an module parameter to enable
+discard bios.
 
-Currently users of SAS controllers can only send ZAC commands via
-ata pass-through.
+This was done due the to general inadequacies of relying on
+hardware to correctly self identify.
 
-This method overloads the meaning of REQ_META to direct ZBC commands
-to construct ZAC equivalent ATA pass through commands.
-Note also that this approach expects the initiator to deal with the
-little endian result due to bypassing the normal translation layers.
+Since ZDM does not rely on lower level device support to for
+TRIM handling it seems reasonable to allow another method to
+communicate to MD-RAID that enabling discard is safe.
+
+This method is also more targeted. Devices are not expected
+to set this parameter directly. And the kernel module parameter
+which assumes devices are unsafe remains intact.
 
 Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 ---
- block/ioctl.c     | 29 +++++++++++++++++++
- drivers/scsi/sd.c | 84 +++++++++++++++++++++++++++++++++++++++++++++----------
- 2 files changed, 99 insertions(+), 14 deletions(-)
+ block/blk-settings.c   |  1 +
+ block/blk-sysfs.c      | 11 +++++++++++
+ drivers/md/dm-zoned.c  |  4 ++++
+ drivers/md/dm-zoned.h  |  1 +
+ drivers/md/raid5.c     |  4 +++-
+ include/linux/blkdev.h | 22 ++++++++++++++++++----
+ 6 files changed, 38 insertions(+), 5 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 825848f..aa11450 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -285,6 +285,35 @@ static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
- 		return -EFAULT;
- 	}
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index c7bb666..04bd7a4 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -101,6 +101,7 @@ void blk_set_default_limits(struct queue_limits *lim)
+ 	lim->discard_alignment = 0;
+ 	lim->discard_misaligned = 0;
+ 	lim->discard_zeroes_data = 0;
++	lim->raid_discard_safe = 0;
+ 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
+ 	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
+ 	lim->alignment_offset = 0;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index dd93763..c12618a 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -186,6 +186,11 @@ static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *pag
+ 	return queue_var_show(queue_discard_zeroes_data(q), page);
+ }
  
-+	/*
-+	 * When the low bit is set force ATA passthrough try to work around
-+	 * older SAS HBA controllers that don't support ZBC to ZAC translation.
-+	 *
-+	 * When the low bit is clear follow the normal path but also correct
-+	 * for ~0ul LBA means 'for all lbas'.
-+	 *
-+	 * NB: We should do extra checking here to see if the user specified
-+	 *     the entire block device as opposed to a partition of the
-+	 *     device....
-+	 */
-+	if (arg & 1) {
-+		bi_rw |= REQ_META;
-+		if (arg != ~0ul)
-+			arg &= ~1ul; /* ~1 :: 0xFF...FE */
-+	} else {
-+		if (arg == ~1ul)
-+			arg = ~0ul;
-+	}
-+
-+	/*
-+	 * When acting on zones we explicitly disallow using a partition.
-+	 */
-+	if (bdev != bdev->bd_contains) {
-+		pr_err("%s: All zone operations disallowed on this device\n",
-+			__func__);
-+		return -EFAULT;
-+	}
-+
- 	switch (cmd) {
- 	case BLKOPENZONE:
- 		bi_rw |= REQ_OPEN_ZONE;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 379edf6..3cb0200 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -53,6 +53,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/pr.h>
- #include <linux/blkzoned_api.h>
-+#include <linux/ata.h>
- #include <asm/uaccess.h>
- #include <asm/unaligned.h>
- 
-@@ -100,6 +101,16 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
- #define SD_MINORS	0
- #endif
- 
-+static inline void _lba_to_cmd_ata(u8 *cmd, u64 _lba)
++static ssize_t queue_raid_discard_safe_show(struct request_queue *q, char *page)
 +{
-+	cmd[1] =  _lba	      & 0xff;
-+	cmd[3] = (_lba >>  8) & 0xff;
-+	cmd[5] = (_lba >> 16) & 0xff;
-+	cmd[0] = (_lba >> 24) & 0xff;
-+	cmd[2] = (_lba >> 32) & 0xff;
-+	cmd[4] = (_lba >> 40) & 0xff;
++	return queue_var_show(queue_raid_discard_safe(q), page);
 +}
 +
- static void sd_config_discard(struct scsi_disk *, unsigned int);
- static void sd_config_write_same(struct scsi_disk *);
- static int  sd_revalidate_disk(struct gendisk *);
-@@ -1181,11 +1192,26 @@ static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
- 
- 		cmd->cmd_len = 16;
- 		memset(cmd->cmnd, 0, cmd->cmd_len);
--		cmd->cmnd[0] = ZBC_REPORT_ZONES;
--		cmd->cmnd[1] = ZBC_REPORT_OPT;
--		put_unaligned_be64(sector, &cmd->cmnd[2]);
--		put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
--		cmd->cmnd[14] = bio_get_streamid(bio);
-+		if (rq->cmd_flags & REQ_META) {
-+			cmd->cmnd[0] = ATA_16;
-+			cmd->cmnd[1] = (0x6 << 1) | 1;
-+			cmd->cmnd[2] = 0x0e;
-+			cmd->cmnd[3] = bio_get_streamid(bio);
-+			cmd->cmnd[4] = ATA_SUBCMD_REP_ZONES;
-+			cmd->cmnd[5] = ((nr_bytes / 512) >> 8) & 0xff;
-+			cmd->cmnd[6] = (nr_bytes / 512) & 0xff;
-+
-+			_lba_to_cmd_ata(&cmd->cmnd[7], sector);
-+
-+			cmd->cmnd[13] = 1 << 6;
-+			cmd->cmnd[14] = ATA_CMD_ZONE_MAN_IN;
-+		} else {
-+			cmd->cmnd[0] = ZBC_REPORT_ZONES;
-+			cmd->cmnd[1] = ZBC_REPORT_OPT;
-+			put_unaligned_be64(sector, &cmd->cmnd[2]);
-+			put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
-+			cmd->cmnd[14] = bio_get_streamid(bio);
-+		}
- 		cmd->sc_data_direction = DMA_FROM_DEVICE;
- 		cmd->sdb.length = nr_bytes;
- 		cmd->transfersize = sdp->sector_size;
-@@ -1207,14 +1233,28 @@ static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
- 	memset(cmd->cmnd, 0, cmd->cmd_len);
- 	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
- 
--	cmd->cmnd[0] = ZBC_ACTION;
--	cmd->cmnd[1] = ZBC_SA_ZONE_OPEN;
--	if (rq->cmd_flags & REQ_CLOSE_ZONE)
--		cmd->cmnd[1] = ZBC_SA_ZONE_CLOSE;
--	if (rq->cmd_flags & REQ_RESET_ZONE)
--		cmd->cmnd[1] = ZBC_SA_RESET_WP;
--	cmd->cmnd[14] = allbit;
--	put_unaligned_be64(sector, &cmd->cmnd[2]);
-+	if (rq->cmd_flags & REQ_META) {
-+		cmd->cmnd[0] = ATA_16;
-+		cmd->cmnd[1] = (3 << 1) | 1;
-+		cmd->cmnd[3] = allbit;
-+		cmd->cmnd[4] = ATA_SUBCMD_OPEN_ZONES;
-+		if (rq->cmd_flags & REQ_CLOSE_ZONE)
-+			cmd->cmnd[4] = ATA_SUBCMD_CLOSE_ZONES;
-+		if (rq->cmd_flags & REQ_RESET_ZONE)
-+			cmd->cmnd[4] = ATA_SUBCMD_RESET_WP;
-+		_lba_to_cmd_ata(&cmd->cmnd[7], sector);
-+		cmd->cmnd[13] = 1 << 6;
-+		cmd->cmnd[14] = ATA_CMD_ZONE_MAN_OUT;
-+	} else {
-+		cmd->cmnd[0] = ZBC_ACTION;
-+		cmd->cmnd[1] = ZBC_SA_ZONE_OPEN;
-+		if (rq->cmd_flags & REQ_CLOSE_ZONE)
-+			cmd->cmnd[1] = ZBC_SA_ZONE_CLOSE;
-+		if (rq->cmd_flags & REQ_RESET_ZONE)
-+			cmd->cmnd[1] = ZBC_SA_RESET_WP;
-+		cmd->cmnd[14] = allbit;
-+		put_unaligned_be64(sector, &cmd->cmnd[2]);
-+	}
- 	cmd->transfersize = 0;
- 	cmd->underflow = 0;
- 	cmd->allowed = SD_MAX_RETRIES;
-@@ -2812,7 +2852,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ static ssize_t queue_write_same_max_show(struct request_queue *q, char *page)
  {
- 	unsigned char *buffer;
- 	u16 rot;
--	const int vpd_len = 64;
-+	const int vpd_len = 512;
+ 	return sprintf(page, "%llu\n",
+@@ -437,6 +442,11 @@ static struct queue_sysfs_entry queue_discard_zeroes_data_entry = {
+ 	.show = queue_discard_zeroes_data_show,
+ };
  
- 	buffer = kmalloc(vpd_len, GFP_KERNEL);
- 
-@@ -2839,6 +2879,22 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 		 * Any subsequent reads will be zero'd.
- 		 */
- 		sdkp->device->zabc = 1;
-+	} else {
-+		unsigned char cmd[16] = { 0 };
++static struct queue_sysfs_entry queue_raid_discard_safe_entry = {
++	.attr = {.name = "raid_discard_safe", .mode = S_IRUGO },
++	.show = queue_raid_discard_safe_show,
++};
 +
-+		cmd[0] = ATA_16;
-+		cmd[1] = (4 << 1) | 1;
-+		cmd[2] = 0xe;
-+		cmd[6] = 0x1;
-+		cmd[8] = 0x1;
-+		cmd[14] = ATA_CMD_ID_ATA;
-+
-+		if (scsi_execute_req(sdkp->device, cmd, DMA_FROM_DEVICE, buffer,
-+				     vpd_len, NULL, 30 * HZ, 3, NULL))
-+			goto out;
-+
-+		if (ata_drive_zac_ha((u16 *)buffer))
-+			sdkp->device->zabc = 1;
+ static struct queue_sysfs_entry queue_write_same_max_entry = {
+ 	.attr = {.name = "write_same_max_bytes", .mode = S_IRUGO },
+ 	.show = queue_write_same_max_show,
+@@ -496,6 +506,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_discard_max_entry.attr,
+ 	&queue_discard_max_hw_entry.attr,
+ 	&queue_discard_zeroes_data_entry.attr,
++	&queue_raid_discard_safe_entry.attr,
+ 	&queue_write_same_max_entry.attr,
+ 	&queue_nonrot_entry.attr,
+ 	&queue_nomerges_entry.attr,
+diff --git a/drivers/md/dm-zoned.c b/drivers/md/dm-zoned.c
+index 4e04464..6cab33e 100644
+--- a/drivers/md/dm-zoned.c
++++ b/drivers/md/dm-zoned.c
+@@ -663,6 +663,7 @@ static int zoned_ctr(struct dm_target *ti, unsigned argc, char **argv)
  	}
  
-  out:
+ 	znd->trim = 1;
++	znd->raid5_trim = 0;
+ 
+ 	if (argc < 1) {
+ 		ti->error = "Invalid argument count";
+@@ -692,6 +693,8 @@ static int zoned_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 			znd->trim = 1;
+ 		if (!strcasecmp("nodiscard", argv[r]))
+ 			znd->trim = 0;
++		if (!strcasecmp("raid5_trim", argv[r]))
++			znd->raid5_trim = 1;
+ 
+ 		if (!strncasecmp("reserve=", argv[r], 8)) {
+ 			long long mz_resv;
+@@ -2021,6 +2024,7 @@ static void zoned_io_hints(struct dm_target *ti, struct queue_limits *limits)
+ 		limits->max_discard_sectors = 1 << 30;
+ 		limits->max_hw_discard_sectors = 1 << 30;
+ 		limits->discard_zeroes_data = 1;
++		limits->raid_discard_safe = znd->raid5_trim;
+ 	}
+ }
+ 
+diff --git a/drivers/md/dm-zoned.h b/drivers/md/dm-zoned.h
+index c73ddea..67f8190 100644
+--- a/drivers/md/dm-zoned.h
++++ b/drivers/md/dm-zoned.h
+@@ -663,6 +663,7 @@ struct zoned {
+ 	unsigned issue_close_zone:1;
+ 	unsigned is_empty:1;
+ 	unsigned trim:1;
++	unsigned raid5_trim:1;
+ 
+ };
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c96655e..a101399 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7001,12 +7001,14 @@ static int raid5_run(struct mddev *mddev)
+ 			    !bdev_get_queue(rdev->bdev)->
+ 						limits.discard_zeroes_data)
+ 				discard_supported = false;
++
+ 			/* Unfortunately, discard_zeroes_data is not currently
+ 			 * a guarantee - just a hint.  So we only allow DISCARD
+ 			 * if the sysadmin has confirmed that only safe devices
+ 			 * are in use by setting a module parameter.
+ 			 */
+-			if (!devices_handle_discard_safely) {
++			if (!devices_handle_discard_safely &&
++			    !bdev_discard_raid_safe(rdev->bdev)) {
+ 				if (discard_supported) {
+ 					pr_info("md/raid456: discard support disabled due to uncertainty.\n");
+ 					pr_info("Set raid456.devices_handle_discard_safely=Y to override.\n");
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 413c84f..ecd50f5 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -273,11 +273,12 @@ struct queue_limits {
+ 	unsigned short		max_segments;
+ 	unsigned short		max_integrity_segments;
+ 
+-	unsigned char		misaligned;
+-	unsigned char		discard_misaligned;
+-	unsigned char		cluster;
+-	unsigned char		discard_zeroes_data;
+ 	unsigned char		raid_partial_stripes_expensive;
++	unsigned		misaligned:1;
++	unsigned		discard_misaligned:1;
++	unsigned		cluster:1;
++	unsigned		discard_zeroes_data:1;
++	unsigned		raid_discard_safe:1;
+ };
+ 
+ struct request_queue {
+@@ -1320,6 +1321,19 @@ static inline unsigned int bdev_discard_zeroes_data(struct block_device *bdev)
+ 	return queue_discard_zeroes_data(bdev_get_queue(bdev));
+ }
+ 
++static inline unsigned int queue_raid_discard_safe(struct request_queue *q)
++{
++	if (queue_discard_zeroes_data(q) && q->limits.raid_discard_safe)
++		return 1;
++
++	return 0;
++}
++
++static inline unsigned int bdev_discard_raid_safe(struct block_device *bdev)
++{
++	return queue_raid_discard_safe(bdev_get_queue(bdev));
++}
++
+ static inline unsigned int bdev_write_same(struct block_device *bdev)
+ {
+ 	struct request_queue *q = bdev_get_queue(bdev);
 -- 
 1.9.1
 
