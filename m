@@ -1,44 +1,206 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/14] libata-scsi: sanitize ata_gen_ata_sense()
-Date: Mon,  4 Apr 2016 11:43:56 +0200
-Message-ID: <1459763047-125551-4-git-send-email-hare@suse.de>
+Subject: [PATCH 14/14] libata-scsi: Set information sense field for invalid parameter
+Date: Mon,  4 Apr 2016 11:44:07 +0200
+Message-ID: <1459763047-125551-15-git-send-email-hare@suse.de>
 References: <1459763047-125551-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59392 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755110AbcDDJoY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 05:44:24 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1459763047-125551-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
-ata_to_sense_error() is called conditionally, so we should be
-generating a default sense if the condition is not met.
+Whenever the sense key is set to 'invalid parameter' we should
+be filling out the sense-key specific information field in the
+sense buffer.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-scsi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/ata/libata-scsi.c | 79 +++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 59 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 6dc2fad..e331077 100644
+index d72d78d..d29832f 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -1074,6 +1074,12 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
- 		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
- 				   &sb[1], &sb[2], &sb[3], verbose);
- 		sb[1] &= 0x0f;
-+	} else {
-+		/* Could not decode error */
-+		ata_dev_warn(dev, "could not decode error status 0x%x err_mask 0x%x\n",
-+			     tf->command, qc->err_mask);
-+		ata_scsi_set_sense(cmd, ABORTED_COMMAND, 0, 0);
-+		return;
+@@ -309,6 +309,15 @@ static void ata_scsi_set_invalid_field(struct ata_device *dev,
+ 				     field, bit, 1);
+ }
+ 
++static void ata_scsi_set_invalid_parameter(struct ata_device *dev,
++					   struct scsi_cmnd *cmd, u16 field)
++{
++	/* "Invalid field in parameter list" */
++	ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x26, 0x0);
++	scsi_set_sense_field_pointer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
++				     field, 0xff, 0);
++}
++
+ static ssize_t
+ ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
+ 			  const char *buf, size_t count)
+@@ -3313,20 +3322,26 @@ invalid_opcode:
+  *	None.
+  */
+ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+-			       const u8 *buf, int len)
++			       const u8 *buf, int len, u16 *fp)
+ {
+ 	struct ata_taskfile *tf = &qc->tf;
+ 	struct ata_device *dev = qc->dev;
+ 	char mpage[CACHE_MPAGE_LEN];
+ 	u8 wce;
++	int i;
+ 
+ 	/*
+ 	 * The first two bytes of def_cache_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+ 
+-	if (len != CACHE_MPAGE_LEN - 2)
++	if (len != CACHE_MPAGE_LEN - 2) {
++		if (len < CACHE_MPAGE_LEN - 2)
++			*fp = len;
++		else
++			*fp = CACHE_MPAGE_LEN - 2;
+ 		return -EINVAL;
++	}
+ 
+ 	wce = buf[0] & (1 << 2);
+ 
+@@ -3334,10 +3349,14 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 	 * Check that read-only bits are not modified.
+ 	 */
+ 	ata_msense_caching(dev->id, mpage, false);
+-	mpage[2] &= ~(1 << 2);
+-	mpage[2] |= wce;
+-	if (memcmp(mpage + 2, buf, CACHE_MPAGE_LEN - 2) != 0)
+-		return -EINVAL;
++	for (i = 0; i < CACHE_MPAGE_LEN - 2; i++) {
++		if (i == 0)
++			continue;
++		if (mpage[i + 2] != buf[i]) {
++			*fp = i;
++			return -EINVAL;
++		}
++	}
+ 
+ 	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+ 	tf->protocol = ATA_PROT_NODATA;
+@@ -3359,19 +3378,25 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+  *	None.
+  */
+ static int ata_mselect_control(struct ata_queued_cmd *qc,
+-			       const u8 *buf, int len)
++			       const u8 *buf, int len, u16 *fp)
+ {
+ 	struct ata_device *dev = qc->dev;
+ 	char mpage[CONTROL_MPAGE_LEN];
+ 	u8 d_sense;
++	int i;
+ 
+ 	/*
+ 	 * The first two bytes of def_control_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+ 
+-	if (len != CONTROL_MPAGE_LEN - 2)
++	if (len != CONTROL_MPAGE_LEN - 2) {
++		if (len < CONTROL_MPAGE_LEN - 2)
++			*fp = len;
++		else
++			*fp = CONTROL_MPAGE_LEN - 2;
+ 		return -EINVAL;
++	}
+ 
+ 	d_sense = buf[0] & (1 << 2);
+ 
+@@ -3379,10 +3404,14 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 	 * Check that read-only bits are not modified.
+ 	 */
+ 	ata_msense_ctl_mode(dev, mpage, false);
+-	mpage[2] &= ~(1 << 2);
+-	mpage[2] |= d_sense;
+-	if (memcmp(mpage + 2, buf, CONTROL_MPAGE_LEN - 2) != 0)
+-		return -EINVAL;
++	for (i = 0; i < CONTROL_MPAGE_LEN - 2; i++) {
++		if (i == 0)
++			continue;
++		if (mpage[2 + i] != buf[i]) {
++			*fp = i;
++			return -EINVAL;
++		}
++	}
+ 	if (d_sense & (1 << 2))
+ 		dev->flags |= ATA_DFLAG_D_SENSE;
+ 	else
+@@ -3411,8 +3440,8 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+ 	u8 pg, spg;
+ 	unsigned six_byte, pg_len, hdr_len, bd_len;
+ 	int len;
+-	u16 fp;
+-	u8 bp;
++	u16 fp = (u16)-1;
++	u8 bp = 0xff;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+@@ -3461,8 +3490,11 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+ 	p += hdr_len;
+ 	if (len < bd_len)
+ 		goto invalid_param_len;
+-	if (bd_len != 0 && bd_len != 8)
++	if (bd_len != 0 && bd_len != 8) {
++		fp = (six_byte) ? 3 : 6;
++		fp += bd_len + hdr_len;
+ 		goto invalid_param;
++	}
+ 
+ 	len -= bd_len;
+ 	p += bd_len;
+@@ -3493,21 +3525,29 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+ 	 * No mode subpages supported (yet) but asking for _all_
+ 	 * subpages may be valid
+ 	 */
+-	if (spg && (spg != ALL_SUB_MPAGES))
++	if (spg && (spg != ALL_SUB_MPAGES)) {
++		fp = (p[0] & 0x40) ? 1 : 0;
++		fp += hdr_len + bd_len;
+ 		goto invalid_param;
++	}
+ 	if (pg_len > len)
+ 		goto invalid_param_len;
+ 
+ 	switch (pg) {
+ 	case CACHE_MPAGE:
+-		if (ata_mselect_caching(qc, p, pg_len) < 0)
++		if (ata_mselect_caching(qc, p, pg_len, &fp) < 0) {
++			fp += hdr_len + bd_len;
+ 			goto invalid_param;
++		}
+ 		break;
+ 	case CONTROL_MPAGE:
+-		if (ata_mselect_control(qc, p, pg_len) < 0)
++		if (ata_mselect_control(qc, p, pg_len, &fp) < 0) {
++			fp += hdr_len + bd_len;
+ 			goto invalid_param;
++		}
+ 		break;
+ 	default:		/* invalid page code */
++		fp = bd_len + hdr_len;
+ 		goto invalid_param;
  	}
  
- 	block = ata_tf_read_block(&qc->result_tf, dev);
+@@ -3525,8 +3565,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+ 	return 1;
+ 
+  invalid_param:
+-	/* "Invalid field in parameter list" */
+-	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x26, 0x0);
++	ata_scsi_set_invalid_parameter(qc->dev, scmd, fp);
+ 	return 1;
+ 
+  invalid_param_len:
 -- 
 1.8.5.6
 
