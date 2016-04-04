@@ -1,94 +1,74 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: [PATCH v3 2/5] scsi: replace "mq" with "first_chunk" in SG functions
-Date: Mon, 04 Apr 2016 14:48:08 -0700
-Message-ID: <1459806491-16428-3-git-send-email-mlin@kernel.org>
-References: <1459806491-16428-1-git-send-email-mlin@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:58488 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755579AbcDDVsa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 17:48:30 -0400
-In-reply-to: <1459806491-16428-1-git-send-email-mlin@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: QoS for iSCSI target?
+Date: Mon, 04 Apr 2016 15:29:26 -0700
+Message-ID: <1459808966.10124.11.camel@haakon3.risingtidesystems.com>
+References: <56E1F419.5070005@windriver.com>
+	 <20160311073018.GA23379@infradead.org>
+	 <1457682341.4062.74.camel@haakon3.risingtidesystems.com>
+	 <56E98E5F.9030107@windriver.com>
+	 <1459407929.31390.89.camel@haakon3.risingtidesystems.com>
+	 <56FEBF82.9050909@windriver.com>
+	 <1459646152.13184.26.camel@haakon3.risingtidesystems.com>
+	 <57028641.5000100@windriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <57028641.5000100@windriver.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Chris Friesen <chris.friesen@windriver.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
 
-From: Ming Lin <ming.l@ssi.samsung.com>
+On Mon, 2016-04-04 at 09:20 -0600, Chris Friesen wrote:
+> On 04/02/2016 07:15 PM, Nicholas A. Bellinger wrote:
+> > On Fri, 2016-04-01 at 12:35 -0600, Chris Friesen wrote:
+> 
+> >>>> On a slightly different note, is there any way to throttle or limit the overall
+> >>>> bandwidth consumed by the iSCSI target in the kernel?  I'd like to ensure that
+> >>>> the iSCSI traffic doesn't completely swamp the host accesses to the same block
+> >>>> device.
+> >>>>
+> >>>> I suppose I could do networking-based traffic shaping, but are there any
+> >>>> controls in the block IO subsystem?
+> >>>>
+> >>>
+> >>> On a individual block_device backend basis, block cgroups is the
+> >>> preferred method for doing this.
+> >>>
+> >>> Note that any rate limiting imposed by block cgroups is subject to the
+> >>> current se_node_acl->queue_depth enforced across all LUNs within a given
+> >>> iscsi session.
+> >>
+> >>
+> >> How would I use cgroups with the kernel iSCSI target?  Is there a set of kernel
+> >> threads dedicated to the iSCSI target that I can assign to a particular group?
+> >>
+> >
+> > block cgroups can set I/O throttling (bandwidth + IOPs) limits for any
+> > normal struct block_device.
+> >
+> > These values are configured via blkio.throttle.* resource class, and the
+> > limits are imposed independently of the block_device's association with
+> > target_core_mod backend driver export.  Namely:
+> >
+> >      blkio.throttle.write_iops_device
+> >      blkio.throttle.read_iops_device
+> >      blkio.throttle.write_bps_device
+> >      blkio.throttle.read_bdp_device
+> >
+> > Some examples using these values, plus more blkio.* info is here:
+> > http://events.linuxfoundation.org/sites/events/files/slides/cgroups_0.pdf.
+> >
+> 
+> I understand how to set up the cgroups, but don't I need to ensure that the IO 
+> operations happen in the context of a particular cgroup?  If so, how do I ensure 
+> that the in-kernel iSCSI target traffic happens in the context of the specified 
+> group?  Are there a set of kernel threads dedicated to processing iSCSI requests?
+> 
 
-Parameter "bool mq" is block driver specific.
-Change it to "first_chunk" to make it more generic.
+block cgroups does I/O ratelimiting at struct block_device level.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lin <ming.l@ssi.samsung.com>
----
- drivers/scsi/scsi_lib.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4229c18..9675353 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -583,33 +583,32 @@ static struct scatterlist *scsi_sg_alloc(unsigned int nents, gfp_t gfp_mask)
- 	return mempool_alloc(sgp->pool, gfp_mask);
- }
- 
--static void scsi_free_sgtable(struct sg_table *table, bool mq)
-+static void scsi_free_sgtable(struct sg_table *table, bool first_chunk)
- {
--	if (mq && table->orig_nents <= SCSI_MAX_SG_SEGMENTS)
-+	if (first_chunk && table->orig_nents <= SCSI_MAX_SG_SEGMENTS)
- 		return;
--	__sg_free_table(table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
-+	__sg_free_table(table, SCSI_MAX_SG_SEGMENTS, first_chunk, scsi_sg_free);
- }
- 
--static int scsi_alloc_sgtable(struct sg_table *table, int nents, bool mq)
-+static int scsi_alloc_sgtable(struct sg_table *table, int nents,
-+		struct scatterlist *first_chunk)
- {
--	struct scatterlist *first_chunk = NULL;
- 	int ret;
- 
- 	BUG_ON(!nents);
- 
--	if (mq) {
-+	if (first_chunk) {
- 		if (nents <= SCSI_MAX_SG_SEGMENTS) {
- 			table->nents = table->orig_nents = nents;
- 			sg_init_table(table->sgl, nents);
- 			return 0;
- 		}
--		first_chunk = table->sgl;
- 	}
- 
- 	ret = __sg_alloc_table(table, nents, SCSI_MAX_SG_SEGMENTS,
- 			       first_chunk, GFP_ATOMIC, scsi_sg_alloc);
- 	if (unlikely(ret))
--		scsi_free_sgtable(table, mq);
-+		scsi_free_sgtable(table, (bool)first_chunk);
- 	return ret;
- }
- 
-@@ -1091,7 +1090,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
- 	 * If sg table allocation fails, requeue request later.
- 	 */
- 	if (unlikely(scsi_alloc_sgtable(&sdb->table, req->nr_phys_segments,
--					req->mq_ctx != NULL)))
-+					sdb->table.sgl)))
- 		return BLKPREP_DEFER;
- 
- 	/* 
-@@ -1163,7 +1162,8 @@ int scsi_init_io(struct scsi_cmnd *cmd)
- 
- 		ivecs = blk_rq_count_integrity_sg(rq->q, rq->bio);
- 
--		if (scsi_alloc_sgtable(&prot_sdb->table, ivecs, is_mq)) {
-+		if (scsi_alloc_sgtable(&prot_sdb->table, ivecs,
-+				prot_sdb->table.sgl)) {
- 			error = BLKPREP_DEFER;
- 			goto err_exit;
- 		}
--- 
-1.9.1
-
+Eg: The process cgroup (which AFAICT is what your thinking about) is
+separate from block cgroups, and doesn't need to be explicitly enabled
+in order for block cgroup to function.
