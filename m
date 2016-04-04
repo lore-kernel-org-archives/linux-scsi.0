@@ -1,194 +1,126 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 03/12] BUG: Losing bits on request.cmd_flags
-Date: Mon,  4 Apr 2016 12:06:07 +0700
-Message-ID: <1459746376-27983-4-git-send-email-shaun@tancheff.com>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:36069 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbcDDFGl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 01:06:41 -0400
-In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 00/12] Block support for zoned drives
+Date: Mon,  4 Apr 2016 12:06:04 +0700
+Message-ID: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>
+List-Id: linux-scsi@vger.kernel.org
 
-In a few places a temporary value smaller than a cmd_flags
-is used to test for bits and or build up a new cmd_flags.
+As Host Aware drives are becoming available we would like to be able 
+to make use of such drives. This series is also intended to be suitable
+for use by Host Managed drives.
 
-Change to use explicit u64 values where appropriate.
+The following series is hopefully a reasonable start at adding such 
+support.
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
- block/blk-core.c         | 17 ++++++++++-------
- block/blk-merge.c        |  2 +-
- block/blk-mq.c           |  2 +-
- block/cfq-iosched.c      |  2 +-
- block/elevator.c         |  4 ++--
- include/linux/elevator.h |  4 ++--
- 6 files changed, 17 insertions(+), 14 deletions(-)
+ZAC/ZBC drives add new commands. Some of this support is already in
+progress by Hannes Reinecke <hare@suse.de>. This patch finishes up a
+couple of scsi <-> ata translations. These patches will be re-worked 
+or dropped in favor of Hannes' next release.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index e4b1269..3413604 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -959,7 +959,7 @@ static void __freed_request(struct request_list *rl, int sync)
-  * A request has just been released.  Account for it, update the full and
-  * congestion status, wake up any waiters.   Called under q->queue_lock.
-  */
--static void freed_request(struct request_list *rl, unsigned int flags)
-+static void freed_request(struct request_list *rl, u64 flags)
- {
- 	struct request_queue *q = rl->q;
- 	int sync = rw_is_sync(flags);
-@@ -1054,7 +1054,7 @@ static struct io_context *rq_ioc(struct bio *bio)
- /**
-  * __get_request - get a free request
-  * @rl: request list to allocate from
-- * @rw_flags: RW and SYNC flags
-+ * @rw: RW and SYNC flags
-  * @bio: bio to allocate request for (can be %NULL)
-  * @gfp_mask: allocation mask
-  *
-@@ -1065,7 +1065,7 @@ static struct io_context *rq_ioc(struct bio *bio)
-  * Returns ERR_PTR on failure, with @q->queue_lock held.
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
--static struct request *__get_request(struct request_list *rl, int rw_flags,
-+static struct request *__get_request(struct request_list *rl, unsigned long rw,
- 				     struct bio *bio, gfp_t gfp_mask)
- {
- 	struct request_queue *q = rl->q;
-@@ -1073,6 +1073,7 @@ static struct request *__get_request(struct request_list *rl, int rw_flags,
- 	struct elevator_type *et = q->elevator->type;
- 	struct io_context *ioc = rq_ioc(bio);
- 	struct io_cq *icq = NULL;
-+	u64 rw_flags = rw;
- 	const bool is_sync = rw_is_sync(rw_flags) != 0;
- 	int may_queue;
- 
-@@ -1237,7 +1238,8 @@ rq_starved:
-  * Returns ERR_PTR on failure, with @q->queue_lock held.
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
--static struct request *get_request(struct request_queue *q, int rw_flags,
-+static struct request *get_request(struct request_queue *q,
-+				   unsigned long rw_flags,
- 				   struct bio *bio, gfp_t gfp_mask)
- {
- 	const bool is_sync = rw_is_sync(rw_flags) != 0;
-@@ -1490,7 +1492,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 	 * it didn't come out of our reserved rq pools
- 	 */
- 	if (req->cmd_flags & REQ_ALLOCED) {
--		unsigned int flags = req->cmd_flags;
-+		u64 flags = req->cmd_flags;
- 		struct request_list *rl = blk_rq_rl(req);
- 
- 		BUG_ON(!list_empty(&req->queuelist));
-@@ -1711,7 +1713,8 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
- {
- 	const bool sync = !!(bio->bi_rw & REQ_SYNC);
- 	struct blk_plug *plug;
--	int el_ret, rw_flags, where = ELEVATOR_INSERT_SORT;
-+	u64 rw_flags;
-+	int el_ret, where = ELEVATOR_INSERT_SORT;
- 	struct request *req;
- 	unsigned int request_count = 0;
- 
-@@ -2248,7 +2251,7 @@ EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
-  */
- unsigned int blk_rq_err_bytes(const struct request *rq)
- {
--	unsigned int ff = rq->cmd_flags & REQ_FAILFAST_MASK;
-+	u64 ff = rq->cmd_flags & REQ_FAILFAST_MASK;
- 	unsigned int bytes = 0;
- 	struct bio *bio;
- 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 2613531..fec37e1 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -604,7 +604,7 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
-  */
- void blk_rq_set_mixed_merge(struct request *rq)
- {
--	unsigned int ff = rq->cmd_flags & REQ_FAILFAST_MASK;
-+	u64 ff = rq->cmd_flags & REQ_FAILFAST_MASK;
- 	struct bio *bio;
- 
- 	if (rq->cmd_flags & REQ_MIXED_MERGE)
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 56c0a72..8b41ad6 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -159,7 +159,7 @@ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
- EXPORT_SYMBOL(blk_mq_can_queue);
- 
- static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
--			       struct request *rq, unsigned int rw_flags)
-+			       struct request *rq, u64 rw_flags)
- {
- 	if (blk_queue_io_stat(q))
- 		rw_flags |= REQ_IO_STAT;
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 1f9093e..e11a220 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -4262,7 +4262,7 @@ static inline int __cfq_may_queue(struct cfq_queue *cfqq)
- 	return ELV_MQUEUE_MAY;
- }
- 
--static int cfq_may_queue(struct request_queue *q, int rw)
-+static int cfq_may_queue(struct request_queue *q, u64 rw)
- {
- 	struct cfq_data *cfqd = q->elevator->elevator_data;
- 	struct task_struct *tsk = current;
-diff --git a/block/elevator.c b/block/elevator.c
-index c3555c9..7c0a59c 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -511,7 +511,7 @@ void elv_merge_requests(struct request_queue *q, struct request *rq,
- 			     struct request *next)
- {
- 	struct elevator_queue *e = q->elevator;
--	const int next_sorted = next->cmd_flags & REQ_SORTED;
-+	const int next_sorted = !!(next->cmd_flags & REQ_SORTED);
- 
- 	if (next_sorted && e->type->ops.elevator_merge_req_fn)
- 		e->type->ops.elevator_merge_req_fn(q, rq, next);
-@@ -717,7 +717,7 @@ void elv_put_request(struct request_queue *q, struct request *rq)
- 		e->type->ops.elevator_put_req_fn(rq);
- }
- 
--int elv_may_queue(struct request_queue *q, int rw)
-+int elv_may_queue(struct request_queue *q, u64 rw)
- {
- 	struct elevator_queue *e = q->elevator;
- 
-diff --git a/include/linux/elevator.h b/include/linux/elevator.h
-index 638b324..a06cca4 100644
---- a/include/linux/elevator.h
-+++ b/include/linux/elevator.h
-@@ -26,7 +26,7 @@ typedef int (elevator_dispatch_fn) (struct request_queue *, int);
- typedef void (elevator_add_req_fn) (struct request_queue *, struct request *);
- typedef struct request *(elevator_request_list_fn) (struct request_queue *, struct request *);
- typedef void (elevator_completed_req_fn) (struct request_queue *, struct request *);
--typedef int (elevator_may_queue_fn) (struct request_queue *, int);
-+typedef int (elevator_may_queue_fn) (struct request_queue *, u64);
- 
- typedef void (elevator_init_icq_fn) (struct io_cq *);
- typedef void (elevator_exit_icq_fn) (struct io_cq *);
-@@ -134,7 +134,7 @@ extern struct request *elv_former_request(struct request_queue *, struct request
- extern struct request *elv_latter_request(struct request_queue *, struct request *);
- extern int elv_register_queue(struct request_queue *q);
- extern void elv_unregister_queue(struct request_queue *q);
--extern int elv_may_queue(struct request_queue *, int);
-+extern int elv_may_queue(struct request_queue *, u64);
- extern void elv_completed_request(struct request_queue *, struct request *);
- extern int elv_set_request(struct request_queue *q, struct request *rq,
- 			   struct bio *bio, gfp_t gfp_mask);
+With the ZAC support in place adding some additional flags to struct bio 
+to identify the new drive requests (Report zones, Open/Close/Reset zones).
+
+With the bio support in place there are two new users added. The first 
+user is an ioctl the second user is a device mapper target.
+The user space tools for the ioctl is intended to be acceptable for
+inclusion by util-linux. Initial patches for 2.20.1 and 2.21.1
+can be found here:
+https://github.com/Seagate/ZDM-Device-Mapper/tree/master/patches/util-linux
+
+Please consider the new device mapper target, as an RFC.
+
+Patch "Limit bio_endio recursion" is based on an older patch that was 
+not picked up. It is not strictly necessary but it does reduce stack 
+usage, especially for badly behaved DM targets that return
+DM_MAPIO_REQUEUE too frequently.
+
+Patch "Use PID to seed Stream Id" depends on:
+https://lkml.kernel.org/r/1457107853-8689-1-git-send-email-axboe@fb.com
+
+Patch "Block Zoned Control for Userspace" is a hold over for user space
+tools that have not been updated to use the new block ioctl. The patch
+will be dropped when zdm-tools is updated and sd-tools is replaced
+with util-linux.
+
+This series is based on Linus v4.5 kernel.
+
+Code is also available on github here:
+https://github.com/Seagate/ZDM-Device-Mapper
+
+And a fork of Linus kernel with ZDM branches is available here:
+https://github.com/stancheff/linux
+
+Shaun Tancheff (12):
+  Add ZBC <-> ZAC xlat support for report, open, close, reset, finish
+  ata-scsi: Translate ReportZones result to big endian
+  BUG: Losing bits on request.cmd_flags
+  Add bio/request flags for using ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+  Add ata pass-through path for ZAC commands.
+  ZDM: New DM target 'zoned'
+  RAID 4/5/6: Indicate parity blocks as 'META'
+  RAID 4/5/6: Fine-grained TRIM enable for ZDM
+  Limit bio_endio recursion
+  Stream Id: Use PID to seed Stream Id construction.
+  Block Zoned Control for Userspace
+
+ Documentation/device-mapper/zoned.txt |   75 +
+ MAINTAINERS                           |   16 +
+ block/Kconfig                         |   12 +
+ block/Makefile                        |    1 +
+ block/bio.c                           |   57 +-
+ block/blk-core.c                      |   17 +-
+ block/blk-lib.c                       |  120 +
+ block/blk-merge.c                     |    2 +-
+ block/blk-mq.c                        |    2 +-
+ block/blk-settings.c                  |    1 +
+ block/blk-sysfs.c                     |   11 +
+ block/blk-zoned-ctrl.c                |  642 +++
+ block/cfq-iosched.c                   |    2 +-
+ block/elevator.c                      |    4 +-
+ block/ioctl.c                         |  142 +
+ block/scsi_ioctl.c                    |    6 +
+ drivers/ata/libata-eh.c               |    2 +
+ drivers/ata/libata-scsi.c             |  238 ++
+ drivers/md/Kconfig                    |   11 +
+ drivers/md/Makefile                   |    1 +
+ drivers/md/dm-zoned.c                 | 2549 ++++++++++++
+ drivers/md/dm-zoned.h                 |  715 ++++
+ drivers/md/libzoned.c                 | 7149 +++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c                    |    6 +-
+ drivers/scsi/sd.c                     |  186 +-
+ drivers/scsi/sd.h                     |    1 +
+ fs/ext4/file.c                        |    1 +
+ fs/xfs/xfs_aops.c                     |    2 +-
+ fs/xfs/xfs_file.c                     |    1 +
+ include/linux/ata.h                   |   18 +
+ include/linux/blk-zoned-ctrl.h        |   51 +
+ include/linux/blk_types.h             |   23 +-
+ include/linux/blkdev.h                |   22 +-
+ include/linux/blkzoned_api.h          |   25 +
+ include/linux/elevator.h              |    4 +-
+ include/linux/fs.h                    |   10 +-
+ include/scsi/scsi_device.h            |    1 +
+ include/scsi/scsi_proto.h             |   14 +
+ include/trace/events/libata.h         |    2 +
+ include/uapi/linux/Kbuild             |    2 +
+ include/uapi/linux/blk-zoned-ctrl.h   |   70 +
+ include/uapi/linux/blkzoned_api.h     |  221 +
+ include/uapi/linux/fs.h               |    1 +
+ 43 files changed, 12405 insertions(+), 31 deletions(-)
+ create mode 100644 Documentation/device-mapper/zoned.txt
+ create mode 100644 block/blk-zoned-ctrl.c
+ create mode 100644 drivers/md/dm-zoned.c
+ create mode 100644 drivers/md/dm-zoned.h
+ create mode 100644 drivers/md/libzoned.c
+ create mode 100644 include/linux/blk-zoned-ctrl.h
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blk-zoned-ctrl.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
+
 -- 
 1.9.1
 
