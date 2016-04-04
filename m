@@ -1,205 +1,108 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/14] libata: Implement support for sense data reporting
-Date: Mon,  4 Apr 2016 11:43:55 +0200
-Message-ID: <1459763047-125551-3-git-send-email-hare@suse.de>
-References: <1459763047-125551-1-git-send-email-hare@suse.de>
+Subject: [PATCH 3/4] libata: support device-managed ZAC devices
+Date: Mon,  4 Apr 2016 11:47:50 +0200
+Message-ID: <1459763271-125856-4-git-send-email-hare@suse.de>
+References: <1459763271-125856-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59341 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59595 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754957AbcDDJoW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 05:44:22 -0400
-In-Reply-To: <1459763047-125551-1-git-send-email-hare@suse.de>
+	id S1754788AbcDDJr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2016 05:47:56 -0400
+In-Reply-To: <1459763271-125856-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
 
-ACS-4 defines a sense data reporting feature set.
-This patch implements support for it.
+Device-managed ZAC devices just set the zoned capabilities field
+in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
+field in the block device characteristics VPD page.
+As this is only defined in SPC-5/SBC-4 we also need to update
+the supported SCSI version descriptor.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c | 20 +++++++++++++-
- drivers/ata/libata-eh.c   | 67 ++++++++++++++++++++++++++++++++++++++++++++---
- include/linux/ata.h       | 16 +++++++++++
- 3 files changed, 98 insertions(+), 5 deletions(-)
+ drivers/ata/libata-scsi.c | 19 ++++++++++---------
+ include/linux/ata.h       |  5 +++++
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 55e257c..f991f78 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2148,6 +2148,24 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 6db2aaf..ff95ef6 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2076,14 +2076,14 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x00,
+ 		0xA0,	/* SAM-5 (no version claimed) */
+ 
+-		0x04,
+-		0xC0,	/* SBC-3 (no version claimed) */
++		0x06,
++		0x00,	/* SBC-4 (no version claimed) */
+ 
+-		0x04,
+-		0x60,	/* SPC-4 (no version claimed) */
++		0x05,
++		0xC0,	/* SPC-5 (no version claimed) */
+ 
+ 		0x60,
+-		0x20,   /* ZBC (no version claimed) */
++		0x24,   /* ZBC r05 */
+ 	};
+ 
+ 	u8 hdr[] = {
+@@ -2103,10 +2103,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	    (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
+ 		hdr[1] |= (1 << 7);
+ 
+-	if (args->dev->class == ATA_DEV_ZAC) {
++	if (args->dev->class == ATA_DEV_ZAC)
+ 		hdr[0] = TYPE_ZBC;
+-		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
+-	}
+ 
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+@@ -2120,7 +2118,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (rbuf[32] == 0 || rbuf[32] == ' ')
+ 		memcpy(&rbuf[32], "n/a ", 4);
+ 
+-	if (args->dev->class == ATA_DEV_ZAC)
++	if (ata_id_zoned_cap(args->id) || args->dev->class == ATA_DEV_ZAC)
+ 		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
+ 	else
+ 		memcpy(rbuf + 58, versions, sizeof(versions));
+@@ -2316,12 +2314,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	int form_factor = ata_id_form_factor(args->id);
+ 	int media_rotation_rate = ata_id_rotation_rate(args->id);
++	u8 zoned = ata_id_zoned_cap(args->id);
+ 
+ 	rbuf[1] = 0xb1;
+ 	rbuf[3] = 0x3c;
+ 	rbuf[4] = media_rotation_rate >> 8;
+ 	rbuf[5] = media_rotation_rate;
+ 	rbuf[7] = form_factor;
++	if (zoned)
++		rbuf[8] = (zoned << 4);
+ 
  	return 0;
  }
- 
-+static void ata_dev_config_sense_reporting(struct ata_device *dev)
-+{
-+	unsigned int err_mask;
-+
-+	if (!ata_id_has_sense_reporting(dev->id))
-+		return;
-+
-+	if (ata_id_sense_reporting_enabled(dev->id))
-+		return;
-+
-+	err_mask = ata_dev_set_feature(dev, SETFEATURE_SENSE_DATA, 0x1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to enable Sense Data Reporting, Emask 0x%x\n",
-+			    err_mask);
-+	}
-+}
-+
- /**
-  *	ata_dev_configure - Configure the specified ATA/ATAPI device
-  *	@dev: Target device to configure
-@@ -2370,7 +2388,7 @@ int ata_dev_configure(struct ata_device *dev)
- 					dev->devslp_timing[i] = sata_setting[j];
- 				}
- 		}
--
-+		ata_dev_config_sense_reporting(dev);
- 		dev->cdb_len = 16;
- 	}
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 8c8355f..1a009d7 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1638,6 +1638,56 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
- }
- 
- /**
-+ *	ata_eh_request_sense - perform REQUEST_SENSE_DATA_EXT
-+ *	@dev: device to perform REQUEST_SENSE_SENSE_DATA_EXT to
-+ *	@cmd: scsi command for which the sense code should be set
-+ *
-+ *	Perform REQUEST_SENSE_DATA_EXT after the device reported CHECK
-+ *	SENSE.  This function is an EH helper.
-+*
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+static void ata_eh_request_sense(struct ata_queued_cmd *qc,
-+				 struct scsi_cmnd *cmd)
-+{
-+	struct ata_device *dev = qc->dev;
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+
-+	if (qc->ap->pflags & ATA_PFLAG_FROZEN) {
-+		ata_dev_warn(dev, "sense data available but port frozen\n");
-+		return;
-+	}
-+
-+	if (!cmd)
-+		return;
-+
-+	if (!ata_id_sense_reporting_enabled(dev->id)) {
-+		ata_dev_warn(qc->dev, "sense data reporting disabled\n");
-+		return;
-+	}
-+
-+	DPRINTK("ATA request sense\n");
-+
-+	ata_tf_init(dev, &tf);
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.flags |= ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
-+	tf.command = ATA_CMD_REQ_SENSE_DATA;
-+	tf.protocol = ATA_PROT_NODATA;
-+
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	/* Ignore err_mask; ATA_ERR might be set */
-+	if (tf.command & ATA_SENSE) {
-+		ata_scsi_set_sense(cmd, tf.lbah, tf.lbam, tf.lbal);
-+		qc->flags |= ATA_QCFLAG_SENSE_VALID;
-+	} else {
-+		ata_dev_warn(dev, "request sense failed stat %02x emask %x\n",
-+			     tf.command, err_mask);
-+	}
-+}
-+
-+/**
-  *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
-  *	@dev: device to perform REQUEST_SENSE to
-  *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
-@@ -1838,14 +1888,22 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 		return ATA_EH_RESET;
- 	}
- 
--	if (stat & (ATA_ERR | ATA_DF))
-+	if (stat & (ATA_ERR | ATA_DF)) {
- 		qc->err_mask |= AC_ERR_DEV;
--	else
-+		/*
-+		 * Sense data reporting does not work if the
-+		 * device fault bit is set.
-+		 */
-+		if (stat & ATA_DF)
-+			stat &= ~ATA_SENSE;
-+	} else
- 		return 0;
- 
- 	switch (qc->dev->class) {
- 	case ATA_DEV_ATA:
- 	case ATA_DEV_ZAC:
-+		if (stat & ATA_SENSE)
-+			ata_eh_request_sense(qc, qc->scsicmd);
- 		if (err & ATA_ICRC)
- 			qc->err_mask |= AC_ERR_ATA_BUS;
- 		if (err & (ATA_UNC | ATA_AMNF))
-@@ -2581,14 +2639,15 @@ static void ata_eh_link_report(struct ata_link *link)
- 
- #ifdef CONFIG_ATA_VERBOSE_ERROR
- 		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
--				    ATA_ERR)) {
-+				    ATA_SENSE | ATA_ERR)) {
- 			if (res->command & ATA_BUSY)
- 				ata_dev_err(qc->dev, "status: { Busy }\n");
- 			else
--				ata_dev_err(qc->dev, "status: { %s%s%s%s}\n",
-+				ata_dev_err(qc->dev, "status: { %s%s%s%s%s}\n",
- 				  res->command & ATA_DRDY ? "DRDY " : "",
- 				  res->command & ATA_DF ? "DF " : "",
- 				  res->command & ATA_DRQ ? "DRQ " : "",
-+				  res->command & ATA_SENSE ? "SENSE " : "",
- 				  res->command & ATA_ERR ? "ERR " : "");
- 		}
- 
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index e797e1b53..e402cb3 100644
+index eef9d80..4ad7363 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -385,6 +385,8 @@ enum {
- 	SATA_SSP		= 0x06,	/* Software Settings Preservation */
- 	SATA_DEVSLP		= 0x09,	/* Device Sleep */
- 
-+	SETFEATURE_SENSE_DATA = 0xC3, /* Sense Data Reporting feature */
-+
- 	/* feature values for SET_MAX */
- 	ATA_SET_MAX_ADDR	= 0x00,
- 	ATA_SET_MAX_PASSWD	= 0x01,
-@@ -718,6 +720,20 @@ static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
- 	return false;
+@@ -900,6 +900,11 @@ static inline bool ata_id_is_ssd(const u16 *id)
+ 	return id[ATA_ID_ROT_SPEED] == 0x01;
  }
  
-+static inline bool ata_id_has_sense_reporting(const u16 *id)
++static inline u8 ata_id_zoned_cap(const u16 *id)
 +{
-+	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
-+		return false;
-+	return id[ATA_ID_COMMAND_SET_3] & (1 << 6);
++	return (id[ATA_ID_ADDITIONAL_SUPP] & 0x3);
 +}
 +
-+static inline bool ata_id_sense_reporting_enabled(const u16 *id)
-+{
-+	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
-+		return false;
-+	return id[ATA_ID_COMMAND_SET_4] & (1 << 6);
-+}
-+
- /**
-  *	ata_id_major_version	-	get ATA level of drive
-  *	@id: Identify data
+ static inline bool ata_id_pio_need_iordy(const u16 *id, const u8 pio)
+ {
+ 	/* CF spec. r4.1 Table 22 says no IORDY on PIO5 and PIO6. */
 -- 
 1.8.5.6
 
