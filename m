@@ -1,47 +1,32 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH 03/12] BUG: Losing bits on request.cmd_flags
-Date: Mon, 4 Apr 2016 23:06:03 +0700
-Message-ID: <CAJVOszAK5w4qsrKcUot8rm9nZ65hXeUm5YomQU3fT-fARCGXjA@mail.gmail.com>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
- <1459746376-27983-4-git-send-email-shaun@tancheff.com> <x49pou5s6yg.fsf@segfault.boston.devel.redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 03/14] libata-scsi: sanitize ata_gen_ata_sense()
+Date: Mon, 4 Apr 2016 12:22:53 -0400
+Message-ID: <20160404162253.GZ7822@mtj.duckdns.org>
+References: <1459763047-125551-1-git-send-email-hare@suse.de>
+ <1459763047-125551-4-git-send-email-hare@suse.de>
+ <57024F7B.20604@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <x49pou5s6yg.fsf@segfault.boston.devel.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <57024F7B.20604@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Apr 4, 2016 at 10:56 PM, Jeff Moyer <jmoyer@redhat.com> wrote:
-> Shaun Tancheff <shaun@tancheff.com> writes:
->
->> In a few places a temporary value smaller than a cmd_flags
->> is used to test for bits and or build up a new cmd_flags.
->>
->> Change to use explicit u64 values where appropriate.
->
-> This is not a bug fix, so please fix your subject.
+On Mon, Apr 04, 2016 at 02:26:51PM +0300, Sergei Shtylyov wrote:
+> >+	} else {
+> >+		/* Could not decode error */
+> >+		ata_dev_warn(dev, "could not decode error status 0x%x err_mask 0x%x\n",
+> 
+>    "%#x" is equivalent and takes up less space.
 
-Oh, okay. It became an issue in the next patch where some internal cmd_flags
-temporaries where stored in 32 bit values.
+Oops, gmail for some reason put Sergei's messages into spam folder.
+Hannes, can you please generate incremental patches for Sergei's
+comments?
 
-I will fix patch/subject.
-
-Thanks!
-
-> I'm not against cleaning up the mixing of 32 vs 64 bit variables, but if
-> you're going to go down that path, then you might as well fix the mixing
-> of signed vs unsigned use as well.  And now that I look at it,
-> bio->bi_rw is unsigned long whereas req->cmd_flags is u64.  That could
-> make for fun bugs in the future.  We should at least add a comment in
-> the rq_flag_bits enum to the effect of bio flags need to stay in the
-> bottom 32 bits.
->
-> Cheers,
-> Jeff
-
-
+Thanks.
 
 -- 
-Shaun Tancheff
+tejun
