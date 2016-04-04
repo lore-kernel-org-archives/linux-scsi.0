@@ -1,79 +1,72 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v12 8/9] add TC G210 platform driver
-Date: Mon, 4 Apr 2016 00:15:46 -0500
-Message-ID: <20160404051546.GE17806@rob-hp-laptop>
-References: <cover.1459448160.git.jpinto@synopsys.com>
- <aa4c31ba977bc5c07f5706f12c4d9fbb1bb0ec36.1459448160.git.jpinto@synopsys.com>
+From: Ming Lin <mlin@kernel.org>
+Subject: Re: [PATCH v2 0/5] mempool based chained scatterlist alloc/free api
+Date: Sun, 3 Apr 2016 23:07:17 -0700
+Message-ID: <CAF1ivSY-xbhv47a3UCDWmDb9PsUpTSOmXDyRmSAzMactbX_fxA@mail.gmail.com>
+References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
+	<20160323074012.GA17929@lst.de>
+	<CAF1ivSaxn7KbiLt0ByHoC-EyP-Q0ah33YGNv0rLoO-=sOvia5w@mail.gmail.com>
+	<1458834360.2544.12.camel@HansenPartnership.com>
+	<CAF1ivSbvrUUdMp60FAU6LURyCA9pkfaEzia+XB+1nfkDDW1WdQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <aa4c31ba977bc5c07f5706f12c4d9fbb1bb0ec36.1459448160.git.jpinto@synopsys.com>
+In-Reply-To: <CAF1ivSbvrUUdMp60FAU6LURyCA9pkfaEzia+XB+1nfkDDW1WdQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: tomas.winkler@intel.com, vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, arnd@arndb.de, mark.rutland@arm.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 31, 2016 at 07:57:21PM +0100, Joao Pinto wrote:
-> This patch adds a glue platform driver for the Synopsys G210 Test Chip.
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
-> Changes v11->v12 (Tomas Winkler):
-> - custom_phy_initialization replaced by phy_initialization
-> Changes v10->v11 (Arnd Bergmann):
-> - vops structs are now passed in .data
-> Changes v0->v10:
-> - This patch only appeared in v10
-> 
->  .../devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt |  26 +++++
->  drivers/scsi/ufs/Kconfig                           |   9 ++
->  drivers/scsi/ufs/Makefile                          |   1 +
->  drivers/scsi/ufs/tc-dwc-g210-pltfrm.c              | 113 +++++++++++++++++++++
->  4 files changed, 149 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
->  create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
-> new file mode 100644
-> index 0000000..6ec9647
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
-> @@ -0,0 +1,26 @@
-> +* Universal Flash Storage (UFS) DesignWare Host Controller
-> +
-> +DWC_UFS nodes are defined to describe on-chip UFS host controllers and MPHY.
-> +Each UFS controller instance should have its own node.
-> +
-> +Required properties:
-> +- compatible	: compatible list must contain the PHY type & version:
-> +			"snps, g210-tc-6.00-20bit"
-> +			"snps, g210-tc-6.00-40bit"
-Remove the space              ^
+On Mon, Mar 28, 2016 at 7:48 AM, Ming Lin <mlin@kernel.org> wrote:
+> On Thu, Mar 24, 2016 at 8:46 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+>> On Thu, 2016-03-24 at 08:09 -0700, Ming Lin wrote:
+>>> On Wed, Mar 23, 2016 at 12:40 AM, Christoph Hellwig <hch@lst.de>
+>>> wrote:
+>>> > On Tue, Mar 22, 2016 at 03:03:11PM -0700, Ming Lin wrote:
+>>> > > From: Ming Lin <ming.l@ssi.samsung.com>
+>>> > >
+>>> > > The fist 4 patches make the SG related
+>>> > > definitions/structs/functions
+>>> > > in SCSI code generic and the last patch move it to lib/sg_pool.=
+c.
+>>> > >
+>>> > > I still keep the macro "SG_MEMPOOL_NR" since it's used in 3
+>>> > > places.
+>>> >
+>>> > I don't =D1=95ee the point, but I'm not going to block the series=
+ over
+>>> > it either.
+>>> >
+>>> > The new series looks really nice to me!
+>>> >
+>>> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+>>>
+>>> Hi James,
+>>>
+>>> This series touches several sub-systems.
+>>> What's the best way to merge it?
+>>
+>> It has a minor intrusion into
+>>
+>>  drivers/ata/pata_icside.c           |   2 +-
+>>  drivers/infiniband/ulp/srp/ib_srp.c |   4 +-
+>>  drivers/usb/storage/scsiglue.c      |   2 +-
+>>
+>> Apart from that, it's all SCSI, so the SCSI tree would seem to be th=
+e
+>> best one.
+>
+> Are you OK to merge it?
 
-> +		  complemented with the Controller IP version:
-> +			"snps, dwc-ufshcd-1.40a"
+Hi James,
 
-ditto
+Ping ...
 
-Combining the phy and controller compatible strings is a bit strange. 
-Generally, they would be separate nodes using the common phy binding.
+Are you OK to apply this series?
+Or any changes needed?
 
-> +		  complemented with the JEDEC version:
-> +			"jedec,ufs-1.1"
-> +			"jedec,ufs-2.0"
-> +
-> +- reg		: <registers mapping>
-> +- interrupts	: <interrupt mapping for UFS host controller IRQ>
-> +
-> +Example for a setup using a 1.40a DWC Controller with a 6.00 G210 40-bit TC:
-> +	dwc_ufs@d0000000 {
+Thanks.
 
-No underscores please.
-
-> +		compatible = "snps, g210-tc-6.00-40bit",
-> +			     "snps, dwc-ufshcd-1.40a",
-> +			     "jedec,ufs-2.0";
-> +		reg = < 0xd0000000 0x10000 >;
-> +		interrupts = < 24 >;
-> +	};
+>
+> Thanks.
