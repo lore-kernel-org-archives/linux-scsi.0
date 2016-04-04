@@ -1,45 +1,42 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 03/14] libata-scsi: sanitize ata_gen_ata_sense()
-Date: Mon, 4 Apr 2016 20:33:37 +0300
-Message-ID: <5702A571.4060905@cogentembedded.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 00/14] libata: SATL update
+Date: Mon, 4 Apr 2016 21:54:34 +0200
+Message-ID: <5702C67A.4070203@suse.de>
 References: <1459763047-125551-1-git-send-email-hare@suse.de>
- <1459763047-125551-4-git-send-email-hare@suse.de>
- <57024F7B.20604@cogentembedded.com> <20160404162253.GZ7822@mtj.duckdns.org>
+ <20160404154652.GT7822@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:36562 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbcDDRdn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 13:33:43 -0400
-Received: by mail-lb0-f181.google.com with SMTP id qe11so171264333lbc.3
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Apr 2016 10:33:42 -0700 (PDT)
-In-Reply-To: <20160404162253.GZ7822@mtj.duckdns.org>
+Received: from mx2.suse.de ([195.135.220.15]:43947 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754235AbcDDTyk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2016 15:54:40 -0400
+In-Reply-To: <20160404154652.GT7822@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-On 04/04/2016 07:22 PM, Tejun Heo wrote:
+On 04/04/2016 05:46 PM, Tejun Heo wrote:
+> Hello, Hannes.
+>=20
+> Applied the series to libata/for-4.7-zac with cosmetic updates
+> ((s64)-1 -> UINT64_MAX, kbuild warning fixes and other formatting
+> updates).
+>=20
+Tejun, you are my hero :-)
 
->>> +	} else {
->>> +		/* Could not decode error */
->>> +		ata_dev_warn(dev, "could not decode error status 0x%x err_mask 0x%x\n",
->>
->>     "%#x" is equivalent and takes up less space.
+Cheers,
 
-> Oops, gmail for some reason put Sergei's messages into spam folder.
-
-    My (dynamic) IP was even blacklisted by the Freenode's IRC servers not so 
-long ago. :-)
-
-> Hannes, can you please generate incremental patches for Sergei's
-> comments?
-
-    Don't think it's worth it. Perhaps only the comment typos...
-
-> Thanks.
-
-MBR, Sergei
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
