@@ -1,83 +1,86 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH v12 8/9] add TC G210 platform driver
-Date: Mon, 4 Apr 2016 11:48:23 +0100
-Message-ID: <57024677.2060009@synopsys.com>
-References: <cover.1459448160.git.jpinto@synopsys.com>
- <aa4c31ba977bc5c07f5706f12c4d9fbb1bb0ec36.1459448160.git.jpinto@synopsys.com>
- <20160404051546.GE17806@rob-hp-laptop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:46378 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979AbcDDKsb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 06:48:31 -0400
-In-Reply-To: <20160404051546.GE17806@rob-hp-laptop>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 0/8 V2] Replay Protected Memory Block (RPMB) subsystem
+Date: Mon,  4 Apr 2016 14:11:16 +0300
+Message-ID: <1459768284-26997-1-git-send-email-tomas.winkler@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Herring <robh@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: tomas.winkler@intel.com, vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, arnd@arndb.de, mark.rutland@arm.com
+
+Few storage technology such is EMMC, UFS, and NVMe support RPMB
+hardware partition with common protocol and frame layout.
+The RPMB partition cannot be accessed via standard block layer, but
+by a set of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
+PROGRAM_KEY.
+Such a partition provides authenticated and replay protected access,
+hence suitable as a secure storage.
+
+A storage device registers its RPMB hardware (emmc) partition or
+RPMB W-LUN (ufs) with the RPMB layer providing an implementation for
+send_rpmb_req() handler.
+Tere is as well simulation platform device. This is handy as an RPMB
+key can be programmed only once at storage device lifetime.
 
 
-Hi Rob,
+ThePMB layer aims to provide in-kernel API for Trusted Execution
+Environment (TEE) devices that are capable to securely compute block
+frame signature. In case a TEE device wish to store a replay protected
+data, it creates an RPMB frame with requested data and computes HMAC of
+the frame, then it requests the storage device via RPMB layer to store
+the data.
+A TEE driver can claim rpmb interface, for example,
+via  class_interface_register ().
 
-On 4/4/2016 6:15 AM, Rob Herring wrote:
-> On Thu, Mar 31, 2016 at 07:57:21PM +0100, Joao Pinto wrote:
->> This patch adds a glue platform driver for the Synopsys G210 Test Chip.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
+A parallel user space API is provided via /dev/rpmbX character
+device with a single IOCTL command similar to the one provided by
+mmc/ioctl. h
+There is a sample tool under tools/rpmb/ directory that exercises
+this interface.
 
-[snip]
+Tomas Winkler (8):
+  rpmb: add Replay Protected Memory Block (RPMB) subsystem
+  char: rpmb: add sysfs-class ABI documentation
+  char: rpmb: add device attributes
+  char: rpmb: provide user space interface
+  char: rpmb: add RPMB simulation device
+  tools rpmb: add RPBM access tool
+  mmc: block: register rpmb partition with the RPMB subsystem
+  scsi: ufs: connect to RPMB subsystem
 
->> +
->> +Required properties:
->> +- compatible	: compatible list must contain the PHY type & version:
->> +			"snps, g210-tc-6.00-20bit"
->> +			"snps, g210-tc-6.00-40bit"
-> Remove the space              ^
-> 
->> +		  complemented with the Controller IP version:
->> +			"snps, dwc-ufshcd-1.40a"
-> 
-> ditto
+ Documentation/ABI/testing/sysfs-class-rpmb |  39 ++
+ Documentation/ioctl/ioctl-number.txt       |   1 +
+ MAINTAINERS                                |  10 +
+ drivers/char/Kconfig                       |   2 +
+ drivers/char/Makefile                      |   1 +
+ drivers/char/rpmb/Kconfig                  |  25 +
+ drivers/char/rpmb/Makefile                 |   6 +
+ drivers/char/rpmb/cdev.c                   | 209 ++++++++
+ drivers/char/rpmb/core.c                   | 408 +++++++++++++++
+ drivers/char/rpmb/rpmb-cdev.h              |  31 ++
+ drivers/char/rpmb/rpmb_sim.c               | 584 +++++++++++++++++++++
+ drivers/mmc/card/block.c                   | 289 +++++++++++
+ drivers/scsi/ufs/ufshcd.c                  | 219 ++++++++
+ drivers/scsi/ufs/ufshcd.h                  |   2 +
+ include/linux/rpmb.h                       | 138 +++++
+ include/uapi/linux/rpmb.h                  | 120 +++++
+ tools/Makefile                             |  16 +-
+ tools/rpmb/.gitignore                      |   2 +
+ tools/rpmb/Makefile                        |  32 ++
+ tools/rpmb/rpmb.c                          | 807 +++++++++++++++++++++++++++++
+ 20 files changed, 2936 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-rpmb
+ create mode 100644 drivers/char/rpmb/Kconfig
+ create mode 100644 drivers/char/rpmb/Makefile
+ create mode 100644 drivers/char/rpmb/cdev.c
+ create mode 100644 drivers/char/rpmb/core.c
+ create mode 100644 drivers/char/rpmb/rpmb-cdev.h
+ create mode 100644 drivers/char/rpmb/rpmb_sim.c
+ create mode 100644 include/linux/rpmb.h
+ create mode 100644 include/uapi/linux/rpmb.h
+ create mode 100644 tools/rpmb/.gitignore
+ create mode 100644 tools/rpmb/Makefile
+ create mode 100644 tools/rpmb/rpmb.c
 
-Ok, will do that!
-
-> 
-> Combining the phy and controller compatible strings is a bit strange. 
-> Generally, they would be separate nodes using the common phy binding.
-> 
-
-Correct, but in this case is just the compatibility string is just to tell the
-dw ufs host that it has a 40-bit or a 20-bit test chip connected. The Test chip
-is initialized by a unipro command sequence and there is no more ops related to it.
-
->> +		  complemented with the JEDEC version:
->> +			"jedec,ufs-1.1"
->> +			"jedec,ufs-2.0"
->> +
->> +- reg		: <registers mapping>
->> +- interrupts	: <interrupt mapping for UFS host controller IRQ>
->> +
->> +Example for a setup using a 1.40a DWC Controller with a 6.00 G210 40-bit TC:
->> +	dwc_ufs@d0000000 {
-> 
-> No underscores please.
-
-Ok, will update it.
-
-> 
->> +		compatible = "snps, g210-tc-6.00-40bit",
->> +			     "snps, dwc-ufshcd-1.40a",
->> +			     "jedec,ufs-2.0";
->> +		reg = < 0xd0000000 0x10000 >;
->> +		interrupts = < 24 >;
->> +	};
-> 
-
-Will send a v13 with these tweaks.
-
-Thanks.
-
+-- 
+2.4.3
