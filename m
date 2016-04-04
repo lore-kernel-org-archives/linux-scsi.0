@@ -1,99 +1,228 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 6/9] block: Add 'zoned' sysfs queue attribute
-Date: Mon,  4 Apr 2016 12:00:17 +0200
-Message-ID: <1459764020-126038-7-git-send-email-hare@suse.de>
+Subject: [PATCH 5/9] block: Implement support for zoned block devices
+Date: Mon,  4 Apr 2016 12:00:16 +0200
+Message-ID: <1459764020-126038-6-git-send-email-hare@suse.de>
 References: <1459764020-126038-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60413 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60449 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754010AbcDDKAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 06:00:44 -0400
+	id S1754820AbcDDKAq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2016 06:00:46 -0400
 In-Reply-To: <1459764020-126038-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>
 Cc: linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
 
-Add a sysfs queue attribute 'zoned' to display the zone layout
-for zoned devices.
+Implement a RB-Tree holding the zone information and
+add support functions for maintaining the RB-Tree.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- block/blk-sysfs.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ block/Kconfig          |  9 +++++++
+ block/Makefile         |  1 +
+ block/blk-core.c       |  5 ++++
+ block/blk-zoned.c      | 70 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h | 47 +++++++++++++++++++++++++++++++++
+ 5 files changed, 132 insertions(+)
+ create mode 100644 block/blk-zoned.c
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index ff97091..748bb27 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -244,6 +244,43 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
- 	return queue_var_show(max_hw_sectors_kb, (page));
- }
+diff --git a/block/Kconfig b/block/Kconfig
+index 0363cd7..8162312 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -113,6 +113,15 @@ config BLK_DEV_THROTTLING
  
+ 	See Documentation/cgroups/blkio-controller.txt for more information.
+ 
++config BLK_DEV_ZONED
++	bool "Zoned block device support"
++	default n
++	---help---
++	Block layer zoned block device support. This option enables
++	support for zoned block (ZAC/ZBC) devices.
++
++	Say yes here if you have a ZAC or ZBC storage device.
++
+ config BLK_CMDLINE_PARSER
+ 	bool "Block device command line partition parser"
+ 	default n
+diff --git a/block/Makefile b/block/Makefile
+index 9eda232..bc9e62c 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -15,6 +15,7 @@ obj-$(CONFIG_BLK_DEV_BSG)	+= bsg.o
+ obj-$(CONFIG_BLK_DEV_BSGLIB)	+= bsg-lib.o
+ obj-$(CONFIG_BLK_CGROUP)	+= blk-cgroup.o
+ obj-$(CONFIG_BLK_DEV_THROTTLING)	+= blk-throttle.o
++obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
+ obj-$(CONFIG_IOSCHED_NOOP)	+= noop-iosched.o
+ obj-$(CONFIG_IOSCHED_DEADLINE)	+= deadline-iosched.o
+ obj-$(CONFIG_IOSCHED_CFQ)	+= cfq-iosched.o
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 827f8ba..d3d3db9 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -588,6 +588,8 @@ void blk_cleanup_queue(struct request_queue *q)
+ 		blk_mq_free_queue(q);
+ 	percpu_ref_exit(&q->q_usage_counter);
+ 
++	blk_drop_zones(q);
++
+ 	spin_lock_irq(lock);
+ 	if (q->queue_lock != &q->__queue_lock)
+ 		q->queue_lock = &q->__queue_lock;
+@@ -724,6 +726,9 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ #ifdef CONFIG_BLK_CGROUP
+ 	INIT_LIST_HEAD(&q->blkg_list);
+ #endif
 +#ifdef CONFIG_BLK_DEV_ZONED
-+static ssize_t queue_zoned_show(struct request_queue *q, char *page)
++	q->zones = RB_ROOT;
++#endif
+ 	INIT_DELAYED_WORK(&q->delay_work, blk_delay_work);
+ 
+ 	kobject_init(&q->kobj, &blk_queue_ktype);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+new file mode 100644
+index 0000000..975e863
+--- /dev/null
++++ b/block/blk-zoned.c
+@@ -0,0 +1,70 @@
++/*
++ * Zoned block device handling
++ *
++ * Copyright (c) 2015, Hannes Reinecke
++ * Copyright (c) 2015, SUSE Linux GmbH
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/blkdev.h>
++#include <linux/rbtree.h>
++
++struct blk_zone *blk_lookup_zone(struct request_queue *q, sector_t lba)
 +{
-+	struct rb_node *node;
-+	struct blk_zone *zone;
-+	ssize_t offset = 0, end = 0;
-+	size_t size = 0, num = 0;
-+	enum blk_zone_type type = BLK_ZONE_TYPE_UNKNOWN;
++	struct rb_root *root = &q->zones;
++	struct rb_node *node = root->rb_node;
 +
-+	for (node = rb_first(&q->zones); node; node = rb_next(node)) {
-+		zone = rb_entry(node, struct blk_zone, node);
-+		if (zone->type != type ||
-+		    zone->len != size ||
-+		    end != zone->start) {
-+			if (size != 0)
-+				offset += sprintf(page + offset, "%zu\n", num);
-+			/* We can only store one page ... */
-+			if (offset + 42 > PAGE_SIZE) {
-+				offset += sprintf(page + offset, "...\n");
-+				return offset;
-+			}
-+			size = zone->len;
-+			type = zone->type;
-+			offset += sprintf(page + offset, "%zu %zu %d ",
-+					  zone->start, size, type);
-+			num = 0;
-+			end = zone->start + size;
-+		} else
-+			end += zone->len;
-+		num++;
++	while (node) {
++		struct blk_zone *zone = container_of(node, struct blk_zone,
++						     node);
++
++		if (lba < zone->start)
++			node = node->rb_left;
++		else if (lba >= zone->start + zone->len)
++			node = node->rb_right;
++		else
++			return zone;
 +	}
-+	if (num > 0)
-+		offset += sprintf(page + offset, "%zu\n", num);
-+	return offset > 0 ? offset : -EINVAL;
++	return NULL;
 +}
-+#endif
++EXPORT_SYMBOL_GPL(blk_lookup_zone);
 +
- #define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
- static ssize_t								\
- queue_show_##name(struct request_queue *q, char *page)			\
-@@ -468,6 +505,13 @@ static struct queue_sysfs_entry queue_write_same_max_entry = {
- 	.show = queue_write_same_max_show,
- };
++struct blk_zone *blk_insert_zone(struct request_queue *q, struct blk_zone *data)
++{
++	struct rb_root *root = &q->zones;
++	struct rb_node **new = &(root->rb_node), *parent = NULL;
++
++	/* Figure out where to put new node */
++	while (*new) {
++		struct blk_zone *this = container_of(*new, struct blk_zone,
++						     node);
++		parent = *new;
++		if (data->start + data->len <= this->start)
++			new = &((*new)->rb_left);
++		else if (data->start >= this->start + this->len)
++			new = &((*new)->rb_right);
++		else {
++			/* Return existing zone */
++			return this;
++		}
++	}
++	/* Add new node and rebalance tree. */
++	rb_link_node(&data->node, parent, new);
++	rb_insert_color(&data->node, root);
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(blk_insert_zone);
++
++void blk_drop_zones(struct request_queue *q)
++{
++	struct rb_root *root = &q->zones;
++	struct blk_zone *zone, *next;
++
++	rbtree_postorder_for_each_entry_safe(zone, next, root, node) {
++		kfree(zone);
++	}
++	q->zones = RB_ROOT;
++}
++EXPORT_SYMBOL_GPL(blk_drop_zones);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 7e5d7e0..f58bcdc 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -249,6 +249,50 @@ struct blk_queue_tag {
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
  
 +#ifdef CONFIG_BLK_DEV_ZONED
-+static struct queue_sysfs_entry queue_zoned_entry = {
-+	.attr = {.name = "zoned", .mode = S_IRUGO },
-+	.show = queue_zoned_show,
++enum blk_zone_type {
++	BLK_ZONE_TYPE_UNKNOWN,
++	BLK_ZONE_TYPE_CONVENTIONAL,
++	BLK_ZONE_TYPE_SEQWRITE_REQ,
++	BLK_ZONE_TYPE_SEQWRITE_PREF,
++	BLK_ZONE_TYPE_RESERVED,
 +};
++
++enum blk_zone_state {
++	BLK_ZONE_UNKNOWN,
++	BLK_ZONE_NO_WP,
++	BLK_ZONE_OPEN,
++	BLK_ZONE_READONLY,
++	BLK_ZONE_OFFLINE,
++	BLK_ZONE_BUSY,
++};
++
++struct blk_zone {
++	struct rb_node node;
++	spinlock_t lock;
++	sector_t start;
++	size_t len;
++	sector_t wp;
++	enum blk_zone_type type;
++	enum blk_zone_state state;
++	void *private_data;
++};
++
++#define blk_zone_is_smr(z) ((z)->type == BLK_ZONE_TYPE_SEQWRITE_REQ ||	\
++			    (z)->type == BLK_ZONE_TYPE_SEQWRITE_PREF)
++
++#define blk_zone_is_cmr(z) ((z)->type == BLK_ZONE_TYPE_CONVENTIONAL)
++#define blk_zone_is_full(z) ((z)->wp == (z)->start + (z)->len)
++#define blk_zone_is_empty(z) ((z)->wp == (z)->start)
++
++extern struct blk_zone *blk_lookup_zone(struct request_queue *, sector_t);
++extern struct blk_zone *blk_insert_zone(struct request_queue *,
++					struct blk_zone *);
++extern void blk_drop_zones(struct request_queue *);
++#else
++static inline void blk_drop_zones(struct request_queue *q) { };
 +#endif
 +
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_show_nonrot,
-@@ -525,6 +569,9 @@ static struct attribute *default_attrs[] = {
- 	&queue_discard_zeroes_data_entry.attr,
- 	&queue_write_same_max_entry.attr,
- 	&queue_nonrot_entry.attr,
+ struct queue_limits {
+ 	unsigned long		bounce_pfn;
+ 	unsigned long		seg_boundary_mask;
+@@ -421,6 +465,9 @@ struct request_queue {
+ 
+ 	struct queue_limits	limits;
+ 
 +#ifdef CONFIG_BLK_DEV_ZONED
-+	&queue_zoned_entry.attr,
++	struct rb_root		zones;
 +#endif
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
+ 	/*
+ 	 * sg stuff
+ 	 */
 -- 
 1.8.5.6
 
