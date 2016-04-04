@@ -1,47 +1,34 @@
-From: Ming Lin <mlin@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH v2 5/5] lib: scatterlist: move SG pool code from SCSI
- driver to lib/sg_pool.c
-Date: Mon, 4 Apr 2016 13:15:45 -0700
-Message-ID: <CAF1ivSarDagJvHbOTG9yaOpjS9DufE9HLEr==UgE4en47LRuRA@mail.gmail.com>
-References: <1458684196-15923-6-git-send-email-mlin@kernel.org>
-	<201603231036.A8dUuAli%fengguang.wu@intel.com>
+	driver to lib/sg_pool.c
+Date: Mon, 4 Apr 2016 22:17:01 +0200
+Message-ID: <20160404201701.GA5388@lst.de>
+References: <1458684196-15923-6-git-send-email-mlin@kernel.org> <201603231036.A8dUuAli%fengguang.wu@intel.com> <CAF1ivSarDagJvHbOTG9yaOpjS9DufE9HLEr==UgE4en47LRuRA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201603231036.A8dUuAli%fengguang.wu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kbuild test robot <lkp@intel.com>
-Cc: Ming Lin <mlin@kernel.org>, kbuild-all@01.org, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:57206 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756533AbcDDURD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2016 16:17:03 -0400
+Content-Disposition: inline
+In-Reply-To: <CAF1ivSarDagJvHbOTG9yaOpjS9DufE9HLEr==UgE4en47LRuRA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Mar 22, 2016 at 7:38 PM, kbuild test robot <lkp@intel.com> wrote:
-> Hi Ming,
->
-> [auto build test WARNING on scsi/for-next]
-> [also build test WARNING on v4.5 next-20160322]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Ming-Lin/mempool-based-chained-scatterlist-alloc-free-api/20160323-060710
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
->
->
-> coccinelle warnings: (new ones prefixed by >>)
->
->>> lib/sg_pool.c:152:3-18: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
->    lib/sg_pool.c:154:3-21: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
+On Mon, Apr 04, 2016 at 01:15:45PM -0700, Ming Lin wrote:
+> cleanup_sdb:
+>         for (i = 0; i < SG_MEMPOOL_NR; i++) {
+>                 struct sg_pool *sgp = sg_pools + i;
+>                 if (sgp->pool)
+>                         mempool_destroy(sgp->pool);
+>                 if (sgp->slab)
+>                         kmem_cache_destroy(sgp->slab);
+>         }
+> 
+> I'll keep the NULL check if no objection.
 
-mempool_destroy()/kmem_cache_destroy() is OK to accept NULL pointer.
-But the logic is more readable that we do NULL check when cleanup due to error.
-
-cleanup_sdb:
-        for (i = 0; i < SG_MEMPOOL_NR; i++) {
-                struct sg_pool *sgp = sg_pools + i;
-                if (sgp->pool)
-                        mempool_destroy(sgp->pool);
-                if (sgp->slab)
-                        kmem_cache_destroy(sgp->slab);
-        }
-
-I'll keep the NULL check if no objection.
-
-Thanks.
+I don't necessarily, but given that this is a code move I'd prefer
+to keep the code as similar as possible in the actual move patch..
