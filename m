@@ -1,54 +1,105 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v2 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
-Date: Mon, 4 Apr 2016 07:22:03 -0700
-Message-ID: <5702788B.7000509@sandisk.com>
-References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
- <1458684196-15923-5-git-send-email-mlin@kernel.org>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 1/5] bnx2fc: Add driver tunables.
+Date: Mon, 4 Apr 2016 10:23:21 -0400
+Message-ID: <alpine.OSX.2.00.1604041014360.692@administrators-macbook-pro.local>
+References: <1459516223-32106-1-git-send-email-chad.dupuis@qlogic.com>  <1459516223-32106-2-git-send-email-chad.dupuis@qlogic.com>  <c1a2f3b08c8e334a29e82fbee6843f9d@suse.de>  <alpine.OSX.2.00.1604011004150.795@administrators-macbook-pro.local>
+ <1459537052.6640.26.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0095.outbound.protection.outlook.com ([65.55.169.95]:18608
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755719AbcDDOWI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 10:22:08 -0400
-In-Reply-To: <1458684196-15923-5-git-send-email-mlin@kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:18062 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754938AbcDDOab (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 10:30:31 -0400
+In-Reply-To: <1459537052.6640.26.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, martin.petersen@oracle.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-On 03/22/16 15:03, Ming Lin wrote:
-> From: Ming Lin <ming.l@ssi.samsung.com>
->
-> Rename SCSI_MAX_SG_SEGMENTS to SG_CHUNK_SIZE, which means the amount
-> we fit into a single scatterlist chunk.
->
-> Rename SCSI_MAX_SG_CHAIN_SEGMENTS to SG_MAX_SEGMENTS.
->
-> Will move these 2 generic definitions to scatterlist.h later.
->
-> Signed-off-by: Ming Lin <ming.l@ssi.samsung.com>
-> ---
->   drivers/ata/pata_icside.c           |  2 +-
->   drivers/infiniband/ulp/srp/ib_srp.c |  4 ++--
->   drivers/scsi/arm/cumana_2.c         |  2 +-
->   drivers/scsi/arm/eesox.c            |  2 +-
->   drivers/scsi/arm/powertec.c         |  2 +-
->   drivers/scsi/esas2r/esas2r_main.c   |  4 ++--
->   drivers/scsi/hisi_sas/hisi_sas.h    |  2 +-
->   drivers/scsi/mpt3sas/mpt3sas_base.c |  4 ++--
->   drivers/scsi/mpt3sas/mpt3sas_base.h |  2 +-
->   drivers/scsi/scsi_debug.c           |  2 +-
->   drivers/scsi/scsi_lib.c             | 34 +++++++++++++++++-----------------
->   drivers/usb/storage/scsiglue.c      |  2 +-
->   include/scsi/scsi.h                 |  8 ++++----
->   include/scsi/scsi_host.h            |  2 +-
->   14 files changed, 36 insertions(+), 36 deletions(-)
 
-Hello Ming,
+On Fri, 1 Apr 2016, James Bottomley wrote:
 
-The ib_srp changes in this patch look fine to me.
+> On Fri, 2016-04-01 at 10:06 -0400, Chad Dupuis wrote:
+>> On Fri, 1 Apr 2016, Johannes Thumshirn wrote:
+>>
+>>> On 2016-04-01 15:10, Chad Dupuis wrote:
+>>>> From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+>>>>
+>>>> Per customer request, add the following driver tunables:
+>>>>
+>>>> o devloss_tmo
+>>>> o max_luns
+>>>> o queue_depth
+>>>> o tm_timeout
+>>>>
+>>>> Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+>>>> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+>>>> ---
+>>>>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 38
+>>>> +++++++++++++++++++++++++++++++++++++-
+>>>>  drivers/scsi/bnx2fc/bnx2fc_io.c   |  4 +++-
+>>>>  2 files changed, 40 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>>> b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>>> index d7029ea..600c29d 100644
+>>>> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>>> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>>> @@ -107,6 +107,26 @@ MODULE_PARM_DESC(debug_logging,
+>>>>  		"\t\t0x10 - fcoe L2 fame related logs.\n"
+>>>>  		"\t\t0xff - LOG all messages.");
+>>>>
+>>>> +uint bnx2fc_devloss_tmo;
+>>>> +module_param_named(devloss_tmo, bnx2fc_devloss_tmo, uint,
+>>>> S_IRUGO);
+>>>> +MODULE_PARM_DESC(devloss_tmo, " Change devloss_tmo for the
+>>>> remote ports "
+>>>> +	"attached via bnx2fc.");
+>>>> +
+>>>> +uint bnx2fc_max_luns = BNX2FC_MAX_LUN;
+>>>> +module_param_named(max_luns, bnx2fc_max_luns, uint, S_IRUGO);
+>>>> +MODULE_PARM_DESC(max_luns, " Change the default max_lun per SCSI
+>>>> host. Default "
+>>>> +	"0xffff.");
+>>>> +
+>>>> +uint bnx2fc_queue_depth;
+>>>> +module_param_named(queue_depth, bnx2fc_queue_depth, uint,
+>>>> S_IRUGO);
+>>>> +MODULE_PARM_DESC(queue_depth, " Change the default queue depth
+>>>> of
+>>>> SCSI devices "
+>>>> +	"attached via bnx2fc.");
+>>>> +
+>>>> +uint bnx2fc_tm_timeout = BNX2FC_TM_TIMEOUT;
+>>>> +module_param_named(tm_timeout, bnx2fc_tm_timeout, uint,
+>>>> S_IRUGO|S_IWUSR);
+>>>> +MODULE_PARM_DESC(tm_timeout, " Change the default timeout for "
+>>>> +	"task management commands. Default 60 seconds.");
+>>>> +
+>>>
+>>> Just a question, can't this be made dynamically adjustable via
+>>> sysfs instead
+>>> of a module parameter?
+>>>
+>>
+>> I presume you're talking about something like a
+>> /sys/class/scsi_host/hostX/tm_timeout sysfs node?
+>
+> Yes, but there's also the question of whether they should be generic
+> rather than bnx2fc specific.  At least queue_depth, max_luns and
+> possibly tm_timeout would seem to belong to the SCSI host itself.
+> devloss_tmo looks like it should be a host parameter within the fc
+> transport class.
+>
+> James
+>
 
-Bart.
+The use case for this is so that someone can administratively set these 
+parameters on driver load so that all devices discovered via our driver 
+will get these parameters set automatically usually via the 
+slave_configure callback.  So functionally that's what is trying to 
+be accomplished with this patch and what we would be looking for in a 
+generic solution.  Would the scsi_host_template and/or fc_host_template 
+be the appropriate place to set this then so the values could be 
+initialized during scsi_host/fc_host discovery?
