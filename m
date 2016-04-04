@@ -1,33 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] scsi: Do not attach VPD to devices that don't support it
-Date: Mon, 04 Apr 2016 19:12:20 -0400
-Message-ID: <yq1r3elezor.fsf@sermon.lab.mkp.net>
-References: <1459493857-4724-1-git-send-email-hare@suse.de>
-	<1459493857-4724-2-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 0/5] Fix several static checker warnings reported against the iSCSI kernel code
+Date: Mon, 04 Apr 2016 19:23:19 -0400
+Message-ID: <yq1mvp9ez6g.fsf@sermon.lab.mkp.net>
+References: <56FC1A3B.4040704@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24036 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:27919 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbcDDXMd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 19:12:33 -0400
-In-Reply-To: <1459493857-4724-2-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Fri, 1 Apr 2016 08:57:36 +0200")
+	with ESMTP id S1751605AbcDDXXe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 19:23:34 -0400
+In-Reply-To: <56FC1A3B.4040704@sandisk.com> (Bart Van Assche's message of
+	"Wed, 30 Mar 2016 11:26:03 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Hannes> The patch "scsi: rescan VPD attributes" introduced a regression
-Hannes> in which devices that don't support VPD were being scanned for
-Hannes> VPD attributes anyway.  This could cause issues for this parts
-Hannes> and should be avoided so the check for scsi_level has been moved
-Hannes> out of scsi_add_lun and into scsi_attach_vpd so that all callers
-Hannes> will not scan VPD for devices that don't support it.
+Bart> These five patches are what I came up with after analyzing the
+Bart> output of "make M=drivers/scsi W=1 C=2" for the iSCSI initiator
+Bart> kernel code. Please consider these patches for inclusion in kernel
+Bart> v4.7. The actual patches are:
 
-Applied to 4.6/scsi-fixes, CC:stable 4.5+.
+Bart> 0001-libiscsi-Unexport-iscsi_eh_target_reset.patch
+Bart> 0002-libiscsi-Remove-set-but-not-used-variables.patch
+Bart> 0003-scsi_transport_iscsi-Remove-set-but-not-used-variabl.patch
+Bart> 0004-scsi_transport_iscsi-Unexport-iscsi_is_flashnode_con.patch
+Bart> 0005-scsi_transport_iscsi-Declare-local-symbols-static.patch
+
+Applied to 4.7/scsi-queue.
 
 Thanks!
 
