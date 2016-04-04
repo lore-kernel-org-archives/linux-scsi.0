@@ -1,42 +1,289 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/14] libata: SATL update
-Date: Mon, 4 Apr 2016 21:54:34 +0200
-Message-ID: <5702C67A.4070203@suse.de>
-References: <1459763047-125551-1-git-send-email-hare@suse.de>
- <20160404154652.GT7822@mtj.duckdns.org>
+From: David Bond <dbond-IBi9RG/b67k@public.gmane.org>
+Subject: Subject: [PATCH v2] ibft: Expose iBFT acpi header via sysfs
+Date: Mon, 04 Apr 2016 16:09:18 -0400
+Message-ID: <1459800558.19915.3.camel@suse.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43947 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754235AbcDDTyk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 15:54:40 -0400
-In-Reply-To: <20160404154652.GT7822@mtj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCB4RYGNUECRBAEURO4AKGQESRIZQIQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: pjones-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, konrad-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dbond-IBi9RG/b67k@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-On 04/04/2016 05:46 PM, Tejun Heo wrote:
-> Hello, Hannes.
->=20
-> Applied the series to libata/for-4.7-zac with cosmetic updates
-> ((s64)-1 -> UINT64_MAX, kbuild warning fixes and other formatting
-> updates).
->=20
-Tejun, you are my hero :-)
 
-Cheers,
+Some ethernet adapter vendors are supplying products which support optional
+(payed license) features. On some adapters this includes a hardware iscsi
+initiator.  The same adapters in a normal (no extra licenses) mode of
+operation can be used as a software iscsi initiator.  In addition, software
+iscsi boot initiators are becoming a standard part of many vendors uefi
+implementations.  This is creating difficulties during early boot/install
+determining the proper configuration method for these adapters when they
+are used as a boot device.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The attached patch creates sysfs entries to expose information from the
+acpi header of the ibft table.  This information allows for a method to
+easily determining if an ibft table was created by a ethernet card's
+firmware or the system uefi/bios.  In the case of a hardware initiator this
+information in combination with the pci vendor and device id can be used
+to ascertain any vendor specific behaviors that need to be accommodated.
+
+Reviewed-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: David Bond <dbond-IBi9RG/b67k@public.gmane.org>
+---
+ Documentation/ABI/testing/sysfs-ibft | 10 ++++++
+ drivers/firmware/iscsi_ibft.c        | 67 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/iscsi_boot_sysfs.c      | 62 +++++++++++++++++++++++++++++++++
+ include/linux/iscsi_boot_sysfs.h     | 13 +++++++
+ 4 files changed, 151 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-ibft b/Documentation/ABI/testing/sysfs-ibft
+index cac3930..7d6725f 100644
+--- a/Documentation/ABI/testing/sysfs-ibft
++++ b/Documentation/ABI/testing/sysfs-ibft
+@@ -21,3 +21,13 @@ Contact:	Konrad Rzeszutek <ketuzsezr-Gq0aWv8utHQdnm+yROfE0A@public.gmane.org>
+ Description:	The /sys/firmware/ibft/ethernetX directory will contain
+ 		files that expose the iSCSI Boot Firmware Table NIC data.
+ 		Usually this contains the IP address, MAC, and gateway of the NIC.
++
++What:		/sys/firmware/ibft/acpi_header
++Date:		March 2016
++Contact:	David Bond <dbond-IBi9RG/b67k@public.gmane.org>
++Description:	The /sys/firmware/ibft/acpi_header directory will contain files
++		that expose the SIGNATURE, OEM_ID, and OEM_TABLE_ID fields of the
++		acpi table header of the iBFT structure.  This will allow for
++		identification of the creator of the table which is useful in
++		determining quirks associated with some adapters when used in
++		hardware vs software iscsi initiator mode.
+diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index 81037e5..671831d 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -418,6 +418,31 @@ static ssize_t ibft_attr_show_target(void *data, int type, char *buf)
+ 	return str - buf;
+ }
+ 
++static ssize_t ibft_attr_show_acpitbl(void *data, int type, char *buf)
++{
++	struct ibft_kobject *entry = data;
++	char *str = buf;
++
++	switch (type) {
++	case ISCSI_BOOT_ACPITBL_SIGNATURE:
++		str += sprintf_string(str, ACPI_NAME_SIZE,
++				      entry->header->header.signature);
++		break;
++	case ISCSI_BOOT_ACPITBL_OEM_ID:
++		str += sprintf_string(str, ACPI_OEM_ID_SIZE,
++				      entry->header->header.oem_id);
++		break;
++	case ISCSI_BOOT_ACPITBL_OEM_TABLE_ID:
++		str += sprintf_string(str, ACPI_OEM_TABLE_ID_SIZE,
++				      entry->header->header.oem_table_id);
++		break;
++	default:
++		break;
++	}
++
++	return str - buf;
++}
++
+ static int __init ibft_check_device(void)
+ {
+ 	int len;
+@@ -576,6 +601,24 @@ static umode_t __init ibft_check_initiator_for(void *data, int type)
+ 	return rc;
+ }
+ 
++static umode_t __init ibft_check_acpitbl_for(void *data, int type)
++{
++
++	umode_t rc = 0;
++
++	switch (type) {
++	case ISCSI_BOOT_ACPITBL_SIGNATURE:
++	case ISCSI_BOOT_ACPITBL_OEM_ID:
++	case ISCSI_BOOT_ACPITBL_OEM_TABLE_ID:
++		rc = S_IRUGO;
++		break;
++	default:
++		break;
++	}
++
++	return rc;
++}
++
+ static void ibft_kobj_release(void *data)
+ {
+ 	kfree(data);
+@@ -699,6 +742,8 @@ free_ibft_obj:
+ static int __init ibft_register_kobjects(struct acpi_table_ibft *header)
+ {
+ 	struct ibft_control *control = NULL;
++	struct iscsi_boot_kobj *boot_kobj;
++	struct ibft_kobject *ibft_kobj;
+ 	void *ptr, *end;
+ 	int rc = 0;
+ 	u16 offset;
+@@ -727,6 +772,26 @@ static int __init ibft_register_kobjects(struct acpi_table_ibft *header)
+ 		}
+ 	}
+ 
++	if (rc)
++		return rc;
++
++	ibft_kobj = kzalloc(sizeof(*ibft_kobj), GFP_KERNEL);
++	if (!ibft_kobj)
++		return -ENOMEM;
++
++	ibft_kobj->header = header;
++	ibft_kobj->hdr = NULL; /*for ibft_unregister*/
++
++	boot_kobj = iscsi_boot_create_acpitbl(boot_kset, 0,
++					      ibft_kobj,
++					      ibft_attr_show_acpitbl,
++					      ibft_check_acpitbl_for,
++					      ibft_kobj_release);
++	if (!boot_kobj)  {
++		kfree(ibft_kobj);
++		rc = -ENOMEM;
++	}
++
+ 	return rc;
+ }
+ 
+@@ -738,7 +803,7 @@ static void ibft_unregister(void)
+ 	list_for_each_entry_safe(boot_kobj, tmp_kobj,
+ 				 &boot_kset->kobj_list, list) {
+ 		ibft_kobj = boot_kobj->data;
+-		if (ibft_kobj->hdr->id == id_nic)
++		if (ibft_kobj->hdr && ibft_kobj->hdr->id == id_nic)
+ 			sysfs_remove_link(&boot_kobj->kobj, "device");
+ 	};
+ }
+diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
+index 8f0ea97..d453667 100644
+--- a/drivers/scsi/iscsi_boot_sysfs.c
++++ b/drivers/scsi/iscsi_boot_sysfs.c
+@@ -306,6 +306,42 @@ static struct attribute_group iscsi_boot_initiator_attr_group = {
+ 	.is_visible = iscsi_boot_ini_attr_is_visible,
+ };
+ 
++/* iBFT ACPI Table attributes */
++iscsi_boot_rd_attr(acpitbl_signature, signature, ISCSI_BOOT_ACPITBL_SIGNATURE);
++iscsi_boot_rd_attr(acpitbl_oem_id, oem_id, ISCSI_BOOT_ACPITBL_OEM_ID);
++iscsi_boot_rd_attr(acpitbl_oem_table_id, oem_table_id,
++		   ISCSI_BOOT_ACPITBL_OEM_TABLE_ID);
++
++static struct attribute *acpitbl_attrs[] = {
++	&iscsi_boot_attr_acpitbl_signature.attr,
++	&iscsi_boot_attr_acpitbl_oem_id.attr,
++	&iscsi_boot_attr_acpitbl_oem_table_id.attr,
++	NULL
++};
++
++static umode_t iscsi_boot_acpitbl_attr_is_visible(struct kobject *kobj,
++					     struct attribute *attr, int i)
++{
++	struct iscsi_boot_kobj *boot_kobj =
++			container_of(kobj, struct iscsi_boot_kobj, kobj);
++
++	if (attr ==  &iscsi_boot_attr_acpitbl_signature.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_ACPITBL_SIGNATURE);
++	if (attr ==  &iscsi_boot_attr_acpitbl_oem_id.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_ACPITBL_OEM_ID);
++	if (attr ==  &iscsi_boot_attr_acpitbl_oem_table_id.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_ACPITBL_OEM_TABLE_ID);
++	return 0;
++}
++
++static struct attribute_group iscsi_boot_acpitbl_attr_group = {
++	.attrs = acpitbl_attrs,
++	.is_visible = iscsi_boot_acpitbl_attr_is_visible,
++};
++
+ static struct iscsi_boot_kobj *
+ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
+ 		       struct attribute_group *attr_group,
+@@ -436,6 +472,32 @@ iscsi_boot_create_ethernet(struct iscsi_boot_kset *boot_kset, int index,
+ EXPORT_SYMBOL_GPL(iscsi_boot_create_ethernet);
+ 
+ /**
++ * iscsi_boot_create_acpitbl() - create boot acpi table sysfs dir
++ * @boot_kset: boot kset
++ * @index: not used
++ * @data: driver specific data
++ * @show: attr show function
++ * @is_visible: attr visibility function
++ * @release: release function
++ *
++ * Note: The boot sysfs lib will free the data passed in for the caller
++ * when all refs to the acpitbl kobject have been released.
++ */
++struct iscsi_boot_kobj *
++iscsi_boot_create_acpitbl(struct iscsi_boot_kset *boot_kset, int index,
++			   void *data,
++			   ssize_t (*show)(void *data, int type, char *buf),
++			   umode_t (*is_visible)(void *data, int type),
++			   void (*release)(void *data))
++{
++	return iscsi_boot_create_kobj(boot_kset,
++				      &iscsi_boot_acpitbl_attr_group,
++				      "acpi_header", index, data, show,
++				      is_visible, release);
++}
++EXPORT_SYMBOL_GPL(iscsi_boot_create_acpitbl);
++
++/**
+  * iscsi_boot_create_kset() - creates root sysfs tree
+  * @set_name: name of root dir
+  */
+diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
+index 548d553..10923d7 100644
+--- a/include/linux/iscsi_boot_sysfs.h
++++ b/include/linux/iscsi_boot_sysfs.h
+@@ -64,6 +64,12 @@ enum iscsi_boot_initiator_properties_enum {
+ 	ISCSI_BOOT_INI_END_MARKER,
+ };
+ 
++enum iscsi_boot_acpitbl_properties_enum {
++	ISCSI_BOOT_ACPITBL_SIGNATURE,
++	ISCSI_BOOT_ACPITBL_OEM_ID,
++	ISCSI_BOOT_ACPITBL_OEM_TABLE_ID,
++};
++
+ struct attribute_group;
+ 
+ struct iscsi_boot_kobj {
+@@ -127,6 +133,13 @@ iscsi_boot_create_target(struct iscsi_boot_kset *boot_kset, int index,
+ 			 umode_t (*is_visible) (void *data, int type),
+ 			 void (*release) (void *data));
+ 
++struct iscsi_boot_kobj *
++iscsi_boot_create_acpitbl(struct iscsi_boot_kset *boot_kset, int index,
++			  void *data,
++			  ssize_t (*show)(void *data, int type, char *buf),
++			  umode_t (*is_visible)(void *data, int type),
++			  void (*release)(void *data));
++
+ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name);
+ struct iscsi_boot_kset *iscsi_boot_create_host_kset(unsigned int hostno);
+ void iscsi_boot_destroy_kset(struct iscsi_boot_kset *boot_kset);
+-- 
+2.6.2
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
