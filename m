@@ -1,63 +1,27 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH fix for v4.6] scsi: ufs: make ufshcd_query_descriptor_retry static
-Date: Tue,  5 Apr 2016 00:16:31 +0300
-Message-ID: <1459804591-27495-1-git-send-email-tomas.winkler@intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
+Date: Mon, 4 Apr 2016 17:22:10 -0400
+Message-ID: <20160404212210.GF24661@htj.duckdns.org>
+References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
+ <1458684196-15923-5-git-send-email-mlin@kernel.org>
+ <CAF1ivSYt4-1UC0YkPFHqwmKWMrX=aD1VQFvH2PCbRjJ1XbL=Gg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:3836 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752824AbcDDVS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 17:18:28 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAF1ivSYt4-1UC0YkPFHqwmKWMrX=aD1VQFvH2PCbRjJ1XbL=Gg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 
-This function was intended to be exported into the ufshcd
-API but after all it is not used outside ufshcd.c
-Make it static and drop EXPORT_SYMBOL; this can be restored
-when needed.
+On Mon, Apr 04, 2016 at 01:24:52PM -0700, Ming Lin wrote:
+> Could you help to review/ack this ATA part?
+> Thanks.
 
-=46ixes
-warning: no previous prototype for =E2=80=98ufshcd_query_descriptor_ret=
-ry=E2=80=99
-Introduced by
-commit a70e91b8bbaa ("scsi: ufs: add retry for query descriptors")'
+Can you please resend me the patches?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/scsi/ufs/ufshcd.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Thanks.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f8fa72c31a9d..629140c11be6 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1982,7 +1982,7 @@ out:
-  * The buf_len parameter will contain, on return, the length parameter
-  * received on the response.
-  */
--int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
-+static int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
- 			enum query_opcode opcode, enum desc_idn idn, u8 index,
- 			u8 selector, u8 *desc_buf, int *buf_len)
- {
-@@ -1998,7 +1998,6 @@ int ufshcd_query_descriptor_retry(struct ufs_hba =
-*hba,
-=20
- 	return err;
- }
--EXPORT_SYMBOL(ufshcd_query_descriptor_retry);
-=20
- /**
-  * ufshcd_read_desc_param - read the specified descriptor parameter
---=20
-2.4.11
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
