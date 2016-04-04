@@ -1,701 +1,303 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 04/12] Add bio/request flags for using ZBC/ZAC commands
-Date: Mon,  4 Apr 2016 12:06:08 +0700
-Message-ID: <1459746376-27983-5-git-send-email-shaun@tancheff.com>
+Subject: [PATCH 01/12] Add ZBC <-> ZAC xlat support for report, open, close, reset, finish
+Date: Mon,  4 Apr 2016 12:06:05 +0700
+Message-ID: <1459746376-27983-2-git-send-email-shaun@tancheff.com>
 References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36053 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbcDDFGg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 01:06:36 -0400
 In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
-List-Id: linux-scsi@vger.kernel.org
 
-T10 ZBC and T13 ZAC specify operations for Zoned devices.
-
-To be able to access the zone information and open and close zones
-adding flags for the report zones command (REQ_REPORT_ZONES) and for
-Open and Close zone (REQ_OPEN_ZONE and REQ_CLOSE_ZONE) can be added
-for use by struct bio's bi_rw and by struct request's cmd_flags.
-
-To reduce the number of additional flags needed REQ_RESET_ZONE shares
-the same flag as REQ_REPORT_ZONES and is differentiated by direction.
-Report zones is a device read that requires a buffer. Reset is a device
-command (WRITE) that has no associated data transfer.
-
-Originally the intent was to use REQ_DISCARD as a functional analog
-to zone reset, however the number of incompatible special cases
-that need to be visited seems more error-prone than have one of
-the new flags initially dual purposed.
-
-The Finish zone command is intentionally not implimented as there is no
-current use case for that operation.
+Provide SCSI <-> ATA translation layer for ZBC commands:
+  - Report Zones
+  - Open, Close, Reset and Finish zones
 
 Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 ---
- MAINTAINERS                       |   9 ++
- block/blk-lib.c                   | 120 +++++++++++++++++++++
- drivers/scsi/sd.c                 | 109 ++++++++++++++++++-
- drivers/scsi/sd.h                 |   1 +
- include/linux/blk_types.h         |  23 +++-
- include/linux/blkzoned_api.h      |  25 +++++
- include/scsi/scsi_device.h        |   1 +
- include/uapi/linux/Kbuild         |   1 +
- include/uapi/linux/blkzoned_api.h | 215 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/fs.h           |   1 +
- 10 files changed, 500 insertions(+), 5 deletions(-)
- create mode 100644 include/linux/blkzoned_api.h
- create mode 100644 include/uapi/linux/blkzoned_api.h
+ drivers/ata/libata-scsi.c | 167 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/ata.h       |  18 +++++
+ include/scsi/scsi_proto.h |  14 ++++
+ 3 files changed, 199 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6ee06ea..c6ad972 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12157,6 +12157,15 @@ F:	Documentation/networking/z8530drv.txt
- F:	drivers/net/hamradio/*scc.c
- F:	drivers/net/hamradio/z8530.h
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e417e1a..a7c5ec8 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -65,6 +65,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
+ 					const struct scsi_device *scsidev);
+ static struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
+ 					    const struct scsi_device *scsidev);
++static void scsi_16_lba_len(const u8 *cdb, u64 *plba, u32 *plen);
  
-+ZBC AND ZBC BLOCK DEVICES
-+M:	Shaun Tancheff <shaun.tancheff@seagate.com>
-+W:	http://seagate.com
-+W:	https://github.com/Seagate/ZDM-Device-Mapper
-+L:	linux-block@vger.kernel.org
-+S:	Maintained
-+F:	include/linux/blkzoned_api.h
-+F:	include/uapi/linux/blkzoned_api.h
-+
- ZBUD COMPRESSED PAGE ALLOCATOR
- M:	Seth Jennings <sjenning@redhat.com>
- L:	linux-mm@kvack.org
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 9ebf653..39ad3d5 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -6,6 +6,7 @@
- #include <linux/bio.h>
- #include <linux/blkdev.h>
- #include <linux/scatterlist.h>
-+#include <linux/blkzoned_api.h>
- 
- #include "blk.h"
- 
-@@ -299,3 +300,122 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
- }
- EXPORT_SYMBOL(blkdev_issue_zeroout);
-+
-+/**
-+ * blkdev_issue_zone_report - queue a report zones operation
-+ * @bdev:	target blockdev
-+ * @bi_rw:	extra bio rw flags. If unsure, use 0.
-+ * @sector:	start sector
-+ * @page:	one or more contiguous pages.
-+ * @pgsz:	up to size of page in bytes, size of report.
-+ * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ *
-+ * Description:
-+ *    Issue a zone report request for the sectors in question.
-+ */
-+int blkdev_issue_zone_report(struct block_device *bdev, unsigned long bi_rw,
-+			     sector_t sector, u8 opt, struct page *page,
-+			     size_t pgsz, gfp_t gfp_mask)
-+{
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	struct bdev_zone_report *conv = page_address(page);
-+	struct bio_batch bb;
-+	struct bio *bio;
-+	unsigned int nr_iovecs = 1;
-+	int ret = 0;
-+
-+	if (pgsz < (sizeof(struct bdev_zone_report) +
-+		    sizeof(struct bdev_zone_descriptor)))
-+		return -EINVAL;
-+
-+	conv->descriptor_count = 0;
-+	atomic_set(&bb.done, 1);
-+	bb.error = 0;
-+	bb.wait = &wait;
-+
-+	bio = bio_alloc(gfp_mask, nr_iovecs);
-+	if (!bio)
-+		return -ENOMEM;
-+
-+	bio->bi_iter.bi_sector = sector;
-+	bio->bi_end_io = bio_batch_end_io;
-+	bio->bi_bdev = bdev;
-+	bio->bi_private = &bb;
-+	bio->bi_vcnt = 0;
-+	bio->bi_iter.bi_size = 0;
-+	bio_set_streamid(bio, opt);
-+	bio_add_page(bio, page, pgsz, 0);
-+	atomic_inc(&bb.done);
-+	submit_bio(bi_rw | REQ_REPORT_ZONES, bio);
-+
-+	/* Wait for bios in-flight */
-+	if (!atomic_dec_and_test(&bb.done))
-+		wait_for_completion_io(&wait);
-+
-+	/*
-+	 * When our request it nak'd the underlying device maybe conventional
-+	 * so ... report a single conventional zone the size of the device.
-+	 */
-+	if (bb.error == -EIO && conv->descriptor_count) {
-+		/* Adjust the conventional to the size of the partition ... */
-+		__be64 blksz = cpu_to_be64(bdev->bd_part->nr_sects);
-+
-+		conv->maximum_lba = blksz;
-+		conv->descriptors[0].type = ZTYP_CONVENTIONAL;
-+		conv->descriptors[0].flags = ZCOND_CONVENTIONAL << 4;
-+		conv->descriptors[0].length = blksz;
-+		conv->descriptors[0].lba_start = 0;
-+		conv->descriptors[0].lba_wptr = blksz;
-+		return 0;
-+	}
-+	if (bb.error)
-+		return bb.error;
-+	return ret;
-+}
-+EXPORT_SYMBOL(blkdev_issue_zone_report);
-+
-+/**
-+ * blkdev_issue_zone_action - queue a report zones operation
-+ * @bdev:	target blockdev
-+ * @bi_rw:	REQ_OPEN_ZONE or REQ_CLOSE_ZONE.
-+ * @sector:	start sector
-+ * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ *
-+ * Description:
-+ *    Issue a zone report request for the sectors in question.
-+ */
-+int blkdev_issue_zone_action(struct block_device *bdev, unsigned long bi_rw,
-+			     sector_t sector, gfp_t gfp_mask)
-+{
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	struct bio_batch bb;
-+	struct bio *bio;
-+	int ret = 0;
-+
-+	atomic_set(&bb.done, 1);
-+	bb.error = 0;
-+	bb.wait = &wait;
-+
-+	bio = bio_alloc(gfp_mask, 1);
-+	if (!bio)
-+		return -ENOMEM;
-+
-+	bio->bi_iter.bi_sector = sector;
-+	bio->bi_end_io = bio_batch_end_io;
-+	bio->bi_bdev = bdev;
-+	bio->bi_private = &bb;
-+	bio->bi_vcnt = 0;
-+	bio->bi_iter.bi_size = 0;
-+
-+	atomic_inc(&bb.done);
-+	submit_bio(REQ_WRITE | bi_rw, bio);
-+
-+	/* Wait for bios in-flight */
-+	if (!atomic_dec_and_test(&bb.done))
-+		wait_for_completion_io(&wait);
-+
-+	if (bb.error)
-+		return bb.error;
-+	return ret;
-+}
-+EXPORT_SYMBOL(blkdev_issue_zone_action);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d749da7..379edf6 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -52,6 +52,7 @@
- #include <linux/slab.h>
- #include <linux/pm_runtime.h>
- #include <linux/pr.h>
-+#include <linux/blkzoned_api.h>
- #include <asm/uaccess.h>
- #include <asm/unaligned.h>
- 
-@@ -1133,11 +1134,104 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	return ret;
+ #define RW_RECOVERY_MPAGE 0x1
+ #define RW_RECOVERY_MPAGE_LEN 12
+@@ -1442,6 +1443,160 @@ static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc)
  }
  
-+static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
+ /**
++ *	ata_scsi_zone_command_xlat - Translate SCSI Reset Write Pointer command
++ *	@qc: Storage for translated ATA taskfile
++ *
++ *	Sets up an ATA taskfile to issue Reset Write Pointers Ext command.
++ *	May need change when zac specs is available.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++static unsigned int ata_scsi_zone_command_xlat(struct ata_queued_cmd *qc)
 +{
-+	struct request *rq = cmd->request;
-+	struct scsi_device *sdp = cmd->device;
-+	struct bio *bio = rq->bio;
-+	sector_t sector = blk_rq_pos(rq);
-+	struct gendisk *disk = rq->rq_disk;
-+	unsigned int nr_bytes = blk_rq_bytes(rq);
-+	int ret = BLKPREP_KILL;
-+	u8 allbit = 0;
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	struct ata_taskfile *tf = &qc->tf;
++	const u8 *cdb = scmd->cmnd;
++	u8 sa; /* service action */
++	u8 all_bit;
 +
-+	if (rq->cmd_flags & REQ_REPORT_ZONES && rq_data_dir(rq) == READ) {
-+		WARN_ON(nr_bytes == 0);
++	if (scmd->cmd_len < 16)
++		goto invalid_fld;
 +
-+		/*
-+		 * For conventional drives generate a report that shows a
-+		 * large single convetional zone the size of the block device
-+		 */
-+		if (!sdp->zabc) {
-+			void *src;
-+			struct bdev_zone_report *conv;
++	sa = cdb[1] & 0x1f;
 +
-+			if (nr_bytes < sizeof(struct bdev_zone_report))
-+				goto out;
++	if (!(sa == ATA_SUBCMD_CLOSE_ZONES ||
++	      sa == ATA_SUBCMD_FINISH_ZONES ||
++	      sa == ATA_SUBCMD_OPEN_ZONES ||
++	      sa == ATA_SUBCMD_RESET_WP))
++		goto invalid_fld;
 +
-+			src = kmap_atomic(bio->bi_io_vec->bv_page);
-+			conv = src + bio->bi_io_vec->bv_offset;
-+			conv->descriptor_count = cpu_to_be32(1);
-+			conv->same_field = ZS_ALL_SAME;
-+			conv->maximum_lba = cpu_to_be64(disk->part0.nr_sects);
-+			kunmap_atomic(src);
-+			goto out;
++	all_bit = cdb[14] & 0x01;
++	if (!all_bit) {
++		struct ata_device *dev = qc->dev;
++		u64 max_lba = dev->n_sectors;     /* Maximal LBA supported */
++		u64 slba;
++		u32 slen;
++
++		scsi_16_lba_len(cdb, &slba, &slen);
++		if (slba > max_lba) {
++			ata_dev_err(dev,
++				"Zone start LBA %llu > %llu (Max LBA)\n",
++				slba, max_lba);
++			goto out_of_range;
 +		}
 +
-+		ret = scsi_init_io(cmd);
-+		if (ret != BLKPREP_OK)
-+			goto out;
-+
-+		cmd = rq->special;
-+		if (sdp->changed) {
-+			pr_err("SCSI disk has been changed or is not present.");
-+			ret = BLKPREP_KILL;
-+			goto out;
-+		}
-+
-+		cmd->cmd_len = 16;
-+		memset(cmd->cmnd, 0, cmd->cmd_len);
-+		cmd->cmnd[0] = ZBC_REPORT_ZONES;
-+		cmd->cmnd[1] = ZBC_REPORT_OPT;
-+		put_unaligned_be64(sector, &cmd->cmnd[2]);
-+		put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
-+		cmd->cmnd[14] = bio_get_streamid(bio);
-+		cmd->sc_data_direction = DMA_FROM_DEVICE;
-+		cmd->sdb.length = nr_bytes;
-+		cmd->transfersize = sdp->sector_size;
-+		cmd->underflow = 0;
-+		cmd->allowed = SD_MAX_RETRIES;
-+		ret = BLKPREP_OK;
-+		goto out;
++		tf->hob_lbah = (slba >> 40) & 0xff;
++		tf->hob_lbam = (slba >> 32) & 0xff;
++		tf->hob_lbal = (slba >> 24) & 0xff;
++		tf->lbah = (slba >> 16) & 0xff;
++		tf->lbam = (slba >> 8) & 0xff;
++		tf->lbal = slba & 0xff;
 +	}
 +
-+	if (!sdp->zabc)
-+		goto out;
 +
-+	if (sector == ~0ul) {
-+		allbit = 1;
-+		sector = 0;
-+	}
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
++	tf->protocol = ATA_PROT_NODATA;
 +
-+	cmd->cmd_len = 16;
-+	memset(cmd->cmnd, 0, cmd->cmd_len);
-+	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
++	tf->command = ATA_CMD_ZONE_MAN_OUT;
++	tf->feature = sa;
++	tf->hob_feature = all_bit;
 +
-+	cmd->cmnd[0] = ZBC_ACTION;
-+	cmd->cmnd[1] = ZBC_SA_ZONE_OPEN;
-+	if (rq->cmd_flags & REQ_CLOSE_ZONE)
-+		cmd->cmnd[1] = ZBC_SA_ZONE_CLOSE;
-+	if (rq->cmd_flags & REQ_RESET_ZONE)
-+		cmd->cmnd[1] = ZBC_SA_RESET_WP;
-+	cmd->cmnd[14] = allbit;
-+	put_unaligned_be64(sector, &cmd->cmnd[2]);
-+	cmd->transfersize = 0;
-+	cmd->underflow = 0;
-+	cmd->allowed = SD_MAX_RETRIES;
-+	cmd->sc_data_direction = DMA_NONE;
++	return 0;
 +
-+	ret = BLKPREP_OK;
-+ out:
-+	return ret;
++ invalid_fld:
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	/* "Invalid field in cbd" */
++	return 1;
++ out_of_range:
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
++	/* LBA out of range */
++	return 1;
 +}
 +
- static int sd_init_command(struct scsi_cmnd *cmd)
++/**
++ *	ata_scsi_report_zones_xlat - Translate SCSI Report Zones command
++ *	@qc: Storage for translated ATA taskfile
++ *
++ *	Sets up an ATA taskfile to issue Report Zones Ext command.
++ *	May need change when zac specs is updated.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++static unsigned int ata_scsi_report_zones_xlat(struct ata_queued_cmd *qc)
++{
++	struct ata_device *dev = qc->dev;
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	struct ata_taskfile *tf = &qc->tf;
++	const u8 *cdb = scmd->cmnd;
++	u64 max_lba = dev->n_sectors;     /* Maximal LBA supported */
++	u64 slba;       /* Start LBA in scsi command */
++	u32 alloc_len;  /* Alloc length (in bytes) */
++	u8 reporting_option;
++
++	if (scmd->cmd_len < 16) {
++		ata_dev_err(dev, "ZAC Error: Command length is less than 16\n");
++		goto invalid_fld;
++	}
++	if (unlikely(!dev->dma_mode)) {
++		ata_dev_err(dev, "ZAC Error: No DMA mode is set\n");
++		goto invalid_fld;
++	}
++	if (!scsi_sg_count(scmd)) {
++		ata_dev_err(dev, "ZAC Error: SCSI sg count is zero\n");
++		goto invalid_fld;
++	}
++	scsi_16_lba_len(cdb, &slba, &alloc_len);
++	if (slba > max_lba) {
++		ata_dev_err(dev, "Zone start LBA %llu > %llu (Max LBA)\n",
++			    slba, max_lba);
++		goto out_of_range;
++	}
++
++	reporting_option = cdb[14] & 0x3f;
++
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
++	tf->protocol = ATA_PROT_DMA;
++
++	tf->command = ATA_CMD_ZONE_MAN_IN;
++
++	tf->hob_lbah = (slba >> 40) & 0xff;
++	tf->hob_lbam = (slba >> 32) & 0xff;
++	tf->hob_lbal = (slba >> 24) & 0xff;
++	tf->lbah = (slba >> 16) & 0xff;
++	tf->lbam = (slba >> 8) & 0xff;
++	tf->lbal = slba & 0xff;
++
++	tf->feature = 0x00;
++	tf->hob_feature = reporting_option;
++
++	alloc_len    /= 512; /* bytes in scsi, blocks in ata */
++	tf->nsect     = alloc_len & 0xff;
++	tf->hob_nsect = alloc_len >> 8;
++
++	ata_qc_set_pc_nbytes(qc);
++
++	return 0;
++
++ invalid_fld:
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	/* "Invalid field in cbd" */
++	return 1;
++ out_of_range:
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
++	/* LBA out of range */
++	return 1;
++}
++
++
++/**
+  *	scsi_6_lba_len - Get LBA and transfer length
+  *	@cdb: SCSI command to translate
+  *
+@@ -2232,12 +2387,17 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
  {
- 	struct request *rq = cmd->request;
+ 	int form_factor = ata_id_form_factor(args->id);
+ 	int media_rotation_rate = ata_id_rotation_rate(args->id);
++	bool zac_ha = ata_drive_zac_ha(args->id);
  
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->cmd_flags & REQ_ZONED_FLAGS)
-+		return sd_setup_zoned_cmnd(cmd);
-+	else if (rq->cmd_flags & REQ_DISCARD)
- 		return sd_setup_discard_cmnd(cmd);
- 	else if (rq->cmd_flags & REQ_WRITE_SAME)
- 		return sd_setup_write_same_cmnd(cmd);
-@@ -2734,6 +2828,19 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 		queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, sdkp->disk->queue);
+ 	rbuf[1] = 0xb1;
+ 	rbuf[3] = 0x3c;
+ 	rbuf[4] = media_rotation_rate >> 8;
+ 	rbuf[5] = media_rotation_rate;
+ 	rbuf[7] = form_factor;
++	if (zac_ha) {
++		rbuf[8] &= 0xcf;
++		rbuf[8] |= 0x10;  /* SBC4: 0x01 for zoned host aware device */
++	}
+ 
+ 	return 0;
+ }
+@@ -3421,6 +3581,13 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+ 
+ 	case START_STOP:
+ 		return ata_scsi_start_stop_xlat;
++
++	case ZBC_ACTION:
++		return ata_scsi_zone_command_xlat;
++
++	case ZBC_REPORT_ZONES:
++		return ata_scsi_report_zones_xlat;
++	  break;
  	}
  
-+	if (buffer[8] & 0x10) {
-+		/*
-+		 * A Host Aware ZBC device 'reset wp' operation will discard
-+		 * a zone of data. A zone can be very large and need not all
-+		 * be of the same size on a single drive so we will defer
-+		 * all of that to the kernel layer handling the zones geometry
-+		 * and issuing the RESET_ZONE to the device.
-+		 *
-+		 * Any subsequent reads will be zero'd.
-+		 */
-+		sdkp->device->zabc = 1;
-+	}
+ 	return NULL;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index c1a2f34..779b7f2 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -305,6 +305,17 @@ enum {
+ 	/* marked obsolete in the ATA/ATAPI-7 spec */
+ 	ATA_CMD_RESTORE		= 0x10,
+ 
++	/* ZAC commands */
++	ATA_CMD_ZONE_MAN_OUT	= 0x9F,
 +
-  out:
- 	kfree(buffer);
++	ATA_SUBCMD_CLOSE_ZONES	= 0x01,
++	ATA_SUBCMD_FINISH_ZONES	= 0x02,
++	ATA_SUBCMD_OPEN_ZONES	= 0x03,
++	ATA_SUBCMD_RESET_WP	= 0x04,
++
++	ATA_CMD_ZONE_MAN_IN	= 0x4A,
++	ATA_SUBCMD_REP_ZONES	= 0x00,
++
+ 	/* Subcmds for ATA_CMD_FPDMA_SEND */
+ 	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
+ 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
+@@ -899,6 +910,13 @@ static inline bool ata_drive_40wire_relaxed(const u16 *dev_id)
+ 	return true;
  }
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 5f2a84a..cac4018 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -56,6 +56,7 @@ enum {
- 	SD_LBP_WS16,		/* Use WRITE SAME(16) with UNMAP bit */
- 	SD_LBP_WS10,		/* Use WRITE SAME(10) with UNMAP bit */
- 	SD_LBP_ZERO,		/* Use WRITE SAME(10) with zero payload */
-+	SD_LBP_RESET_WP,	/* Use Reset WP */
- 	SD_LBP_DISABLE,		/* Discard disabled due to failed cmd */
- };
  
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index fc63a82..d1cbe03 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -190,6 +190,10 @@ enum rq_flag_bits {
- 	__REQ_FUA,		/* forced unit access */
- 	__REQ_FLUSH,		/* request for cache flush */
++static inline bool ata_drive_zac_ha(const u16 *dev_id)
++{
++	if ((dev_id[69] & 0x0003) == 0x0001)
++		return true;
++	return false;
++}
++
+ static inline int atapi_cdb_len(const u16 *dev_id)
+ {
+ 	u16 tmp = dev_id[ATA_ID_CONFIG] & 0x3;
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index a9fbf1b..dd0e089 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -115,6 +115,10 @@
+ #define VERIFY_16	      0x8f
+ #define SYNCHRONIZE_CACHE_16  0x91
+ #define WRITE_SAME_16	      0x93
++/* Op codes for Zoned Block Commands */
++#define ZBC_ACTION		0x94
++#define ZBC_REPORT_ZONES	0x95
++
+ #define SERVICE_ACTION_BIDIRECTIONAL 0x9d
+ #define SERVICE_ACTION_IN_16  0x9e
+ #define SERVICE_ACTION_OUT_16 0x9f
+@@ -157,6 +161,16 @@
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
  
-+	__REQ_REPORT_ZONES,	/* Zoned device: Report Zones */
-+	__REQ_OPEN_ZONE,	/* Zoned device: Open Zone */
-+	__REQ_CLOSE_ZONE,	/* Zoned device: Close Zone */
++/* ZBC_ACTION: Values for T-10 ZBC sub action */
++#define ZBC_SA_ZONE_CLOSE	0x01
++#define ZBC_SA_ZONE_FINISH	0x02
++#define ZBC_SA_ZONE_OPEN	0x03
++#define ZBC_SA_RESET_WP		0x04
 +
- 	/* bio only flags */
- 	__REQ_RAHEAD,		/* read ahead, can fail anytime */
- 	__REQ_THROTTLED,	/* This bio has already been subjected to
-@@ -231,19 +235,24 @@ enum rq_flag_bits {
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
- #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
++/* ZBC_REPORT_ZONES: Default report option. T-10 ZBC report zones */
++#define ZBC_REPORT_OPT		0x00
++
++
+ /* Vendor specific CDBs start here */
+ #define VENDOR_SPECIFIC_CDB 0xc0
  
-+#define REQ_ZONED_CMDS \
-+	(REQ_OPEN_ZONE | REQ_CLOSE_ZONE | REQ_RESET_ZONE)
-+#define REQ_ZONED_FLAGS		(REQ_ZONED_CMDS|REQ_REPORT_ZONES)
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
- 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
- 	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
--	 REQ_SECURE | REQ_INTEGRITY)
-+	 REQ_SECURE | REQ_INTEGRITY | \
-+	 REQ_REPORT_ZONES | REQ_ZONED_CMDS)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
--
--#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
-+#define BIO_NO_ADVANCE_ITER_MASK \
-+	(REQ_DISCARD | REQ_WRITE_SAME | REQ_ZONED_CMDS)
- 
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
--	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
-+	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | \
-+	 REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ | REQ_ZONED_CMDS)
- 
- #define REQ_RAHEAD		(1ULL << __REQ_RAHEAD)
- #define REQ_THROTTLED		(1ULL << __REQ_THROTTLED)
-@@ -270,6 +279,12 @@ enum rq_flag_bits {
- #define REQ_HASHED		(1ULL << __REQ_HASHED)
- #define REQ_MQ_INFLIGHT		(1ULL << __REQ_MQ_INFLIGHT)
- 
-+#define REQ_REPORT_ZONES	(1ULL << __REQ_REPORT_ZONES)
-+#define REQ_OPEN_ZONE		(1ULL << __REQ_OPEN_ZONE)
-+#define REQ_CLOSE_ZONE		(1ULL << __REQ_CLOSE_ZONE)
-+#define REQ_RESET_ZONE		(REQ_REPORT_ZONES)
-+
-+
- typedef unsigned int blk_qc_t;
- #define BLK_QC_T_NONE	-1U
- #define BLK_QC_T_SHIFT	16
-diff --git a/include/linux/blkzoned_api.h b/include/linux/blkzoned_api.h
-new file mode 100644
-index 0000000..f7b88f9
---- /dev/null
-+++ b/include/linux/blkzoned_api.h
-@@ -0,0 +1,25 @@
-+/*
-+ * Functions for zone based SMR devices.
-+ *
-+ * Copyright (C) 2015 Seagate Technology PLC
-+ *
-+ * Written by:
-+ * Shaun Tancheff <shaun.tancheff@seagate.com>
-+ *
-+ * This file is licensed under  the terms of the GNU General Public
-+ * License version 2. This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+#ifndef _BLKZONED_API_H
-+#define _BLKZONED_API_H
-+
-+#include <uapi/linux/blkzoned_api.h>
-+
-+extern int blkdev_issue_zone_action(struct block_device *, unsigned long bi_rw,
-+				    sector_t, gfp_t);
-+extern int blkdev_issue_zone_report(struct block_device *, unsigned long bi_rw,
-+				    sector_t, u8 opt, struct page *, size_t,
-+				    gfp_t);
-+
-+#endif /* _BLKZONED_API_H */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f63a167..3e4f475 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -176,6 +176,7 @@ struct scsi_device {
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
- 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
-+	unsigned zabc:1;		/* Use Zone Access|Block Commands */
- 
- 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
- 
-diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
-index 7d1540d..52e2d1a 100644
---- a/include/uapi/linux/Kbuild
-+++ b/include/uapi/linux/Kbuild
-@@ -70,6 +70,7 @@ header-y += bfs_fs.h
- header-y += binfmts.h
- header-y += blkpg.h
- header-y += blktrace_api.h
-+header-y += blkzoned_api.h
- header-y += bpf_common.h
- header-y += bpf.h
- header-y += bpqether.h
-diff --git a/include/uapi/linux/blkzoned_api.h b/include/uapi/linux/blkzoned_api.h
-new file mode 100644
-index 0000000..189e925
---- /dev/null
-+++ b/include/uapi/linux/blkzoned_api.h
-@@ -0,0 +1,215 @@
-+/*
-+ * Functions for zone based SMR devices.
-+ *
-+ * Copyright (C) 2015 Seagate Technology PLC
-+ *
-+ * Written by:
-+ * Shaun Tancheff <shaun.tancheff@seagate.com>
-+ *
-+ * This file is licensed under  the terms of the GNU General Public
-+ * License version 2. This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+#ifndef _UAPI_BLKZONED_API_H
-+#define _UAPI_BLKZONED_API_H
-+
-+#include <linux/types.h>
-+
-+/**
-+ * enum zone_report_option - Report Zones types to be included.
-+ *
-+ * @ZOPT_NON_SEQ_AND_RESET: Default (all zones).
-+ * @ZOPT_ZC1_EMPTY: Zones which are empty.
-+ * @ZOPT_ZC2_OPEN_IMPLICIT: Zones open but not explicitly opened
-+ * @ZOPT_ZC3_OPEN_EXPLICIT: Zones opened explicitly
-+ * @ZOPT_ZC4_CLOSED: Zones closed for writing.
-+ * @ZOPT_ZC5_FULL: Zones that are full.
-+ * @ZOPT_ZC6_READ_ONLY: Zones that are read-only
-+ * @ZOPT_ZC7_OFFLINE: Zones that are offline
-+ * @ZOPT_RESET: Zones that are empty
-+ * @ZOPT_NON_SEQ: Zones that have HA media-cache writes pending
-+ * @ZOPT_NON_WP_ZONES: Zones that do not have Write Pointers (conventional)
-+ *
-+ * @ZOPT_USE_ATA_PASS: Flag used in kernel to service command I/O
-+ *
-+ * Used by Report Zones in bdev_zone_get_report: report_option
-+ */
-+enum zone_report_option {
-+	ZOPT_NON_SEQ_AND_RESET   = 0x00,
-+	ZOPT_ZC1_EMPTY,
-+	ZOPT_ZC2_OPEN_IMPLICIT,
-+	ZOPT_ZC3_OPEN_EXPLICIT,
-+	ZOPT_ZC4_CLOSED,
-+	ZOPT_ZC5_FULL,
-+	ZOPT_ZC6_READ_ONLY,
-+	ZOPT_ZC7_OFFLINE,
-+	ZOPT_RESET               = 0x10,
-+	ZOPT_NON_SEQ             = 0x11,
-+	ZOPT_NON_WP_ZONES        = 0x3f,
-+	ZOPT_USE_ATA_PASS        = 0x80,
-+};
-+
-+/**
-+ * enum bdev_zone_type - Type of zone in descriptor
-+ *
-+ * @ZTYP_RESERVED: Reserved
-+ * @ZTYP_CONVENTIONAL: Conventional random write zone (No Write Pointer)
-+ * @ZTYP_SEQ_WRITE_REQUIRED: Non-sequential writes are rejected.
-+ * @ZTYP_SEQ_WRITE_PREFERRED: Non-sequential writes allowed but discouraged.
-+ *
-+ * Returned from Report Zones. See bdev_zone_descriptor* type.
-+ */
-+enum bdev_zone_type {
-+	ZTYP_RESERVED            = 0,
-+	ZTYP_CONVENTIONAL        = 1,
-+	ZTYP_SEQ_WRITE_REQUIRED  = 2,
-+	ZTYP_SEQ_WRITE_PREFERRED = 3,
-+};
-+
-+
-+/**
-+ * enum bdev_zone_condition - Condition of zone in descriptor
-+ *
-+ * @ZCOND_CONVENTIONAL: N/A
-+ * @ZCOND_ZC1_EMPTY: Empty
-+ * @ZCOND_ZC2_OPEN_IMPLICIT: Opened via write to zone.
-+ * @ZCOND_ZC3_OPEN_EXPLICIT: Opened via open zone command.
-+ * @ZCOND_ZC4_CLOSED: Closed
-+ * @ZCOND_ZC6_READ_ONLY:
-+ * @ZCOND_ZC5_FULL: No remaining space in zone.
-+ * @ZCOND_ZC7_OFFLINE: Offline
-+ *
-+ * Returned from Report Zones. See bdev_zone_descriptor* flags.
-+ */
-+enum bdev_zone_condition {
-+	ZCOND_CONVENTIONAL       = 0,
-+	ZCOND_ZC1_EMPTY          = 1,
-+	ZCOND_ZC2_OPEN_IMPLICIT  = 2,
-+	ZCOND_ZC3_OPEN_EXPLICIT  = 3,
-+	ZCOND_ZC4_CLOSED         = 4,
-+	/* 0x5 to 0xC are reserved */
-+	ZCOND_ZC6_READ_ONLY      = 0xd,
-+	ZCOND_ZC5_FULL           = 0xe,
-+	ZCOND_ZC7_OFFLINE        = 0xf,
-+};
-+
-+
-+/**
-+ * enum bdev_zone_same - Report Zones same code.
-+ *
-+ * @ZS_ALL_DIFFERENT: All zones differ in type and size.
-+ * @ZS_ALL_SAME: All zones are the same size and type.
-+ * @ZS_LAST_DIFFERS: All zones are the same size and type except the last zone.
-+ * @ZS_SAME_LEN_DIFF_TYPES: All zones are the same length but types differ.
-+ *
-+ * Returned from Report Zones. See bdev_zone_report* same_field.
-+ */
-+enum bdev_zone_same {
-+	ZS_ALL_DIFFERENT        = 0,
-+	ZS_ALL_SAME             = 1,
-+	ZS_LAST_DIFFERS         = 2,
-+	ZS_SAME_LEN_DIFF_TYPES  = 3,
-+};
-+
-+
-+/**
-+ * struct bdev_zone_get_report - ioctl: Report Zones request
-+ *
-+ * @zone_locator_lba: starting lba for first [reported] zone
-+ * @return_page_count: number of *bytes* allocated for result
-+ * @report_option: see: zone_report_option enum
-+ *
-+ * Used to issue report zones command to connected device
-+ */
-+struct bdev_zone_get_report {
-+	__u64 zone_locator_lba;
-+	__u32 return_page_count;
-+	__u8  report_option;
-+} __packed;
-+
-+/**
-+ * struct bdev_zone_descriptor_le - See: bdev_zone_descriptor
-+ */
-+struct bdev_zone_descriptor_le {
-+	__u8 type;
-+	__u8 flags;
-+	__u8 reserved1[6];
-+	__le64 length;
-+	__le64 lba_start;
-+	__le64 lba_wptr;
-+	__u8 reserved[32];
-+} __packed;
-+
-+
-+/**
-+ * struct bdev_zone_report_le - See: bdev_zone_report
-+ */
-+struct bdev_zone_report_le {
-+	__le32 descriptor_count;
-+	__u8 same_field;
-+	__u8 reserved1[3];
-+	__le64 maximum_lba;
-+	__u8 reserved2[48];
-+	struct bdev_zone_descriptor_le descriptors[0];
-+} __packed;
-+
-+
-+/**
-+ * struct bdev_zone_descriptor - A Zone descriptor entry from report zones
-+ *
-+ * @type: see zone_type enum
-+ * @flags: Bits 0:reset, 1:non-seq, 2-3: resv, 4-7: see zone_condition enum
-+ * @reserved1: padding
-+ * @length: length of zone in sectors
-+ * @lba_start: lba where the zone starts.
-+ * @lba_wptr: lba of the current write pointer.
-+ * @reserved: padding
-+ *
-+ */
-+struct bdev_zone_descriptor {
-+	__u8 type;
-+	__u8 flags;
-+	__u8  reserved1[6];
-+	__be64 length;
-+	__be64 lba_start;
-+	__be64 lba_wptr;
-+	__u8 reserved[32];
-+} __packed;
-+
-+
-+/**
-+ * struct bdev_zone_report - Report Zones result
-+ *
-+ * @descriptor_count: Number of descriptor entries that follow
-+ * @same_field: bits 0-3: enum zone_same (MASK: 0x0F)
-+ * @reserved1: padding
-+ * @maximum_lba: LBA of the last logical sector on the device, inclusive
-+ *               of all logical sectors in all zones.
-+ * @reserved2: padding
-+ * @descriptors: array of descriptors follows.
-+ */
-+struct bdev_zone_report {
-+	__be32 descriptor_count;
-+	__u8 same_field;
-+	__u8 reserved1[3];
-+	__be64 maximum_lba;
-+	__u8 reserved2[48];
-+	struct bdev_zone_descriptor descriptors[0];
-+} __packed;
-+
-+
-+/**
-+ * struct bdev_zone_report_io - Report Zones ioctl argument.
-+ *
-+ * @in: Report Zones inputs
-+ * @out: Report Zones output
-+ */
-+struct bdev_zone_report_io {
-+	union {
-+		struct bdev_zone_get_report in;
-+		struct bdev_zone_report out;
-+	} data;
-+} __packed;
-+
-+#endif /* _UAPI_BLKZONED_API_H */
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 149bec8..d62e48c 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -223,6 +223,7 @@ struct fsxattr {
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
- #define BLKDAXGET _IO(0x12,129)
-+/* A jump here: See blkzoned_api.h, Reserving 130 to 133. */
- 
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
 -- 
 1.9.1
 
