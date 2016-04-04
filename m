@@ -1,126 +1,313 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 00/12] Block support for zoned drives
-Date: Mon,  4 Apr 2016 12:06:04 +0700
-Message-ID: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH 02/12] ata-scsi: Translate ReportZones result to big endian
+Date: Mon,  4 Apr 2016 12:06:06 +0700
+Message-ID: <1459746376-27983-3-git-send-email-shaun@tancheff.com>
+References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:33812 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476AbcDDFGj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 01:06:39 -0400
+In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 
-As Host Aware drives are becoming available we would like to be able 
-to make use of such drives. This series is also intended to be suitable
-for use by Host Managed drives.
+Translate T13 (little endian) output to match T10 (big endian).
 
-The following series is hopefully a reasonable start at adding such 
-support.
+In the common case SATA drives connected via AHCI controllers libata
+translates commands from T10 to T13. On reply the converse should
+also be performed. If the originating command was translate from T10
+to T13 the result should be translated from T13 to T10 format.
 
-ZAC/ZBC drives add new commands. Some of this support is already in
-progress by Hannes Reinecke <hare@suse.de>. This patch finishes up a
-couple of scsi <-> ata translations. These patches will be re-worked 
-or dropped in favor of Hannes' next release.
+Add this T13->T10 translation on the result from Report Zones.
 
-With the ZAC support in place adding some additional flags to struct bio 
-to identify the new drive requests (Report zones, Open/Close/Reset zones).
+Code originially from: Hannes Reinecke <hare@suse.de> with minor
+changes.
 
-With the bio support in place there are two new users added. The first 
-user is an ioctl the second user is a device mapper target.
-The user space tools for the ioctl is intended to be acceptable for
-inclusion by util-linux. Initial patches for 2.20.1 and 2.21.1
-can be found here:
-https://github.com/Seagate/ZDM-Device-Mapper/tree/master/patches/util-linux
+http://kernel.opensuse.org/cgit/kernel-source/commit/?id=6e219225108bf49c59aa69d14f3cbc74708777ae
 
-Please consider the new device mapper target, as an RFC.
+Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+---
+ drivers/ata/libata-eh.c       |   2 +
+ drivers/ata/libata-scsi.c     | 229 +++++++++++++++++++++++++++---------------
+ include/trace/events/libata.h |   2 +
+ 3 files changed, 154 insertions(+), 79 deletions(-)
 
-Patch "Limit bio_endio recursion" is based on an older patch that was 
-not picked up. It is not strictly necessary but it does reduce stack 
-usage, especially for badly behaved DM targets that return
-DM_MAPIO_REQUEUE too frequently.
-
-Patch "Use PID to seed Stream Id" depends on:
-https://lkml.kernel.org/r/1457107853-8689-1-git-send-email-axboe@fb.com
-
-Patch "Block Zoned Control for Userspace" is a hold over for user space
-tools that have not been updated to use the new block ioctl. The patch
-will be dropped when zdm-tools is updated and sd-tools is replaced
-with util-linux.
-
-This series is based on Linus v4.5 kernel.
-
-Code is also available on github here:
-https://github.com/Seagate/ZDM-Device-Mapper
-
-And a fork of Linus kernel with ZDM branches is available here:
-https://github.com/stancheff/linux
-
-Shaun Tancheff (12):
-  Add ZBC <-> ZAC xlat support for report, open, close, reset, finish
-  ata-scsi: Translate ReportZones result to big endian
-  BUG: Losing bits on request.cmd_flags
-  Add bio/request flags for using ZBC/ZAC commands
-  Add ioctl to issue ZBC/ZAC commands via block layer
-  Add ata pass-through path for ZAC commands.
-  ZDM: New DM target 'zoned'
-  RAID 4/5/6: Indicate parity blocks as 'META'
-  RAID 4/5/6: Fine-grained TRIM enable for ZDM
-  Limit bio_endio recursion
-  Stream Id: Use PID to seed Stream Id construction.
-  Block Zoned Control for Userspace
-
- Documentation/device-mapper/zoned.txt |   75 +
- MAINTAINERS                           |   16 +
- block/Kconfig                         |   12 +
- block/Makefile                        |    1 +
- block/bio.c                           |   57 +-
- block/blk-core.c                      |   17 +-
- block/blk-lib.c                       |  120 +
- block/blk-merge.c                     |    2 +-
- block/blk-mq.c                        |    2 +-
- block/blk-settings.c                  |    1 +
- block/blk-sysfs.c                     |   11 +
- block/blk-zoned-ctrl.c                |  642 +++
- block/cfq-iosched.c                   |    2 +-
- block/elevator.c                      |    4 +-
- block/ioctl.c                         |  142 +
- block/scsi_ioctl.c                    |    6 +
- drivers/ata/libata-eh.c               |    2 +
- drivers/ata/libata-scsi.c             |  238 ++
- drivers/md/Kconfig                    |   11 +
- drivers/md/Makefile                   |    1 +
- drivers/md/dm-zoned.c                 | 2549 ++++++++++++
- drivers/md/dm-zoned.h                 |  715 ++++
- drivers/md/libzoned.c                 | 7149 +++++++++++++++++++++++++++++++++
- drivers/md/raid5.c                    |    6 +-
- drivers/scsi/sd.c                     |  186 +-
- drivers/scsi/sd.h                     |    1 +
- fs/ext4/file.c                        |    1 +
- fs/xfs/xfs_aops.c                     |    2 +-
- fs/xfs/xfs_file.c                     |    1 +
- include/linux/ata.h                   |   18 +
- include/linux/blk-zoned-ctrl.h        |   51 +
- include/linux/blk_types.h             |   23 +-
- include/linux/blkdev.h                |   22 +-
- include/linux/blkzoned_api.h          |   25 +
- include/linux/elevator.h              |    4 +-
- include/linux/fs.h                    |   10 +-
- include/scsi/scsi_device.h            |    1 +
- include/scsi/scsi_proto.h             |   14 +
- include/trace/events/libata.h         |    2 +
- include/uapi/linux/Kbuild             |    2 +
- include/uapi/linux/blk-zoned-ctrl.h   |   70 +
- include/uapi/linux/blkzoned_api.h     |  221 +
- include/uapi/linux/fs.h               |    1 +
- 43 files changed, 12405 insertions(+), 31 deletions(-)
- create mode 100644 Documentation/device-mapper/zoned.txt
- create mode 100644 block/blk-zoned-ctrl.c
- create mode 100644 drivers/md/dm-zoned.c
- create mode 100644 drivers/md/dm-zoned.h
- create mode 100644 drivers/md/libzoned.c
- create mode 100644 include/linux/blk-zoned-ctrl.h
- create mode 100644 include/linux/blkzoned_api.h
- create mode 100644 include/uapi/linux/blk-zoned-ctrl.h
- create mode 100644 include/uapi/linux/blkzoned_api.h
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 961acc7..c217471 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2398,6 +2398,8 @@ const char *ata_get_cmd_descript(u8 command)
+ 		{ ATA_CMD_CFA_WRITE_MULT_NE,	"CFA WRITE MULTIPLE WITHOUT ERASE" },
+ 		{ ATA_CMD_REQ_SENSE_DATA,	"REQUEST SENSE DATA EXT" },
+ 		{ ATA_CMD_SANITIZE_DEVICE,	"SANITIZE DEVICE" },
++		{ ATA_CMD_ZONE_MAN_IN,		"ZAC MANAGEMENT IN" },
++		{ ATA_CMD_ZONE_MAN_OUT,		"ZAC MANAGEMENT OUT" },
+ 		{ ATA_CMD_READ_LONG,		"READ LONG (with retries)" },
+ 		{ ATA_CMD_READ_LONG_ONCE,	"READ LONG (without retries)" },
+ 		{ ATA_CMD_WRITE_LONG,		"WRITE LONG (with retries)" },
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a7c5ec8..ea454c4 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1518,85 +1518,6 @@ static unsigned int ata_scsi_zone_command_xlat(struct ata_queued_cmd *qc)
+ }
+ 
+ /**
+- *	ata_scsi_report_zones_xlat - Translate SCSI Report Zones command
+- *	@qc: Storage for translated ATA taskfile
+- *
+- *	Sets up an ATA taskfile to issue Report Zones Ext command.
+- *	May need change when zac specs is updated.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- *
+- *	RETURNS:
+- *	Zero on success, non-zero on error.
+- */
+-static unsigned int ata_scsi_report_zones_xlat(struct ata_queued_cmd *qc)
+-{
+-	struct ata_device *dev = qc->dev;
+-	struct scsi_cmnd *scmd = qc->scsicmd;
+-	struct ata_taskfile *tf = &qc->tf;
+-	const u8 *cdb = scmd->cmnd;
+-	u64 max_lba = dev->n_sectors;     /* Maximal LBA supported */
+-	u64 slba;       /* Start LBA in scsi command */
+-	u32 alloc_len;  /* Alloc length (in bytes) */
+-	u8 reporting_option;
+-
+-	if (scmd->cmd_len < 16) {
+-		ata_dev_err(dev, "ZAC Error: Command length is less than 16\n");
+-		goto invalid_fld;
+-	}
+-	if (unlikely(!dev->dma_mode)) {
+-		ata_dev_err(dev, "ZAC Error: No DMA mode is set\n");
+-		goto invalid_fld;
+-	}
+-	if (!scsi_sg_count(scmd)) {
+-		ata_dev_err(dev, "ZAC Error: SCSI sg count is zero\n");
+-		goto invalid_fld;
+-	}
+-	scsi_16_lba_len(cdb, &slba, &alloc_len);
+-	if (slba > max_lba) {
+-		ata_dev_err(dev, "Zone start LBA %llu > %llu (Max LBA)\n",
+-			    slba, max_lba);
+-		goto out_of_range;
+-	}
+-
+-	reporting_option = cdb[14] & 0x3f;
+-
+-	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
+-	tf->protocol = ATA_PROT_DMA;
+-
+-	tf->command = ATA_CMD_ZONE_MAN_IN;
+-
+-	tf->hob_lbah = (slba >> 40) & 0xff;
+-	tf->hob_lbam = (slba >> 32) & 0xff;
+-	tf->hob_lbal = (slba >> 24) & 0xff;
+-	tf->lbah = (slba >> 16) & 0xff;
+-	tf->lbam = (slba >> 8) & 0xff;
+-	tf->lbal = slba & 0xff;
+-
+-	tf->feature = 0x00;
+-	tf->hob_feature = reporting_option;
+-
+-	alloc_len    /= 512; /* bytes in scsi, blocks in ata */
+-	tf->nsect     = alloc_len & 0xff;
+-	tf->hob_nsect = alloc_len >> 8;
+-
+-	ata_qc_set_pc_nbytes(qc);
+-
+-	return 0;
+-
+- invalid_fld:
+-	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+-	/* "Invalid field in cbd" */
+-	return 1;
+- out_of_range:
+-	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
+-	/* LBA out of range */
+-	return 1;
+-}
+-
+-
+-/**
+  *	scsi_6_lba_len - Get LBA and transfer length
+  *	@cdb: SCSI command to translate
+  *
+@@ -1950,6 +1871,156 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ 	ata_qc_done(qc);
+ }
+ 
++/*
++ * ata_scsi_report_zones_complete
++ *
++ * Convert T-13 little-endian field representation into
++ * T-10 big-endian field representation.
++ */
++static void ata_scsi_report_zones_complete(struct ata_queued_cmd *qc)
++{
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	struct sg_mapping_iter miter;
++	unsigned long flags;
++	unsigned int bytes = 0;
++
++	sg_miter_start(&miter, scsi_sglist(scmd), scsi_sg_count(scmd),
++		       SG_MITER_TO_SG | SG_MITER_ATOMIC);
++
++	local_irq_save(flags);
++	while (sg_miter_next(&miter)) {
++		unsigned int offset = 0;
++
++		if (bytes == 0) {
++			char *hdr;
++			u32 list_length;
++			u64 max_lba, opt_lba;
++			u16 same;
++
++			/* Swizzle header */
++			hdr = miter.addr;
++			list_length = get_unaligned_le32(&hdr[0]);
++			same = get_unaligned_le16(&hdr[4]);
++			max_lba = get_unaligned_le64(&hdr[8]);
++			opt_lba = get_unaligned_le64(&hdr[16]);
++			put_unaligned_be32(list_length, &hdr[0]);
++			hdr[4] = same & 0xf;
++			put_unaligned_be64(max_lba, &hdr[8]);
++			put_unaligned_be64(opt_lba, &hdr[16]);
++			offset += 64;
++			bytes += 64;
++		}
++		while (offset < miter.length) {
++			char *rec;
++			u16 option;
++			u8 cond, type, reset;
++			u64 size, start, wp, checkpoint;
++
++			/* Swizzle zone descriptor */
++			rec = miter.addr + offset;
++			option = get_unaligned_le16(&rec[0]);
++			cond = (option >> 4) & 0xf;
++			type = (option >> 8) & 0xf;
++			reset = (option & 1);
++			size = get_unaligned_le64(&rec[8]);
++			start = get_unaligned_le64(&rec[16]);
++			wp = get_unaligned_le64(&rec[24]);
++			checkpoint = get_unaligned_le64(&rec[32]);
++			put_unaligned_be64(size, &rec[8]);
++			put_unaligned_be64(start, &rec[16]);
++			put_unaligned_be64(wp, &rec[24]);
++			put_unaligned_be64(checkpoint, &rec[32]);
++			WARN_ON(offset + 64 > miter.length);
++			offset += 64;
++			bytes += 64;
++		}
++	}
++	sg_miter_stop(&miter);
++	local_irq_restore(flags);
++
++	ata_scsi_qc_complete(qc);
++}
++
++/**
++ *	ata_scsi_report_zones_xlat - Translate SCSI Report Zones command
++ *	@qc: Storage for translated ATA taskfile
++ *
++ *	Sets up an ATA taskfile to issue Report Zones Ext command.
++ *	May need change when zac specs is updated.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++static unsigned int ata_scsi_report_zones_xlat(struct ata_queued_cmd *qc)
++{
++	struct ata_device *dev = qc->dev;
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	struct ata_taskfile *tf = &qc->tf;
++	const u8 *cdb = scmd->cmnd;
++	u64 max_lba = dev->n_sectors;     /* Maximal LBA supported */
++	u64 slba;       /* Start LBA in scsi command */
++	u32 alloc_len;  /* Alloc length (in bytes) */
++	u8 reporting_option;
++
++	if (scmd->cmd_len < 16) {
++		ata_dev_err(dev, "ZAC Error: Command length is less than 16\n");
++		goto invalid_fld;
++	}
++	if (unlikely(!dev->dma_mode)) {
++		ata_dev_err(dev, "ZAC Error: No DMA mode is set\n");
++		goto invalid_fld;
++	}
++	if (!scsi_sg_count(scmd)) {
++		ata_dev_err(dev, "ZAC Error: SCSI sg count is zero\n");
++		goto invalid_fld;
++	}
++	scsi_16_lba_len(cdb, &slba, &alloc_len);
++	if (slba > max_lba) {
++		ata_dev_err(dev, "Zone start LBA %llu > %llu (Max LBA)\n",
++			    slba, max_lba);
++		goto out_of_range;
++	}
++
++	reporting_option = cdb[14] & 0x3f;
++
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
++	tf->protocol = ATA_PROT_DMA;
++
++	tf->command = ATA_CMD_ZONE_MAN_IN;
++
++	tf->hob_lbah = (slba >> 40) & 0xff;
++	tf->hob_lbam = (slba >> 32) & 0xff;
++	tf->hob_lbal = (slba >> 24) & 0xff;
++	tf->lbah = (slba >> 16) & 0xff;
++	tf->lbam = (slba >> 8) & 0xff;
++	tf->lbal = slba & 0xff;
++
++	tf->feature = 0x00;
++	tf->hob_feature = reporting_option;
++
++	alloc_len    /= 512; /* bytes in scsi, blocks in ata */
++	tf->nsect     = alloc_len & 0xff;
++	tf->hob_nsect = alloc_len >> 8;
++
++	ata_qc_set_pc_nbytes(qc);
++
++	qc->complete_fn = ata_scsi_report_zones_complete;
++
++	return 0;
++
++ invalid_fld:
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	/* "Invalid field in cbd" */
++	return 1;
++ out_of_range:
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
++	/* LBA out of range */
++	return 1;
++}
++
+ /**
+  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
+  *	@dev: ATA device to which the command is addressed
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+index 8b0fbd9..157ca7b 100644
+--- a/include/trace/events/libata.h
++++ b/include/trace/events/libata.h
+@@ -97,6 +97,8 @@
+ 		 ata_opcode_name(ATA_CMD_CFA_WRITE_MULT_NE),	\
+ 		 ata_opcode_name(ATA_CMD_REQ_SENSE_DATA),	\
+ 		 ata_opcode_name(ATA_CMD_SANITIZE_DEVICE),	\
++		 ata_opcode_name(ATA_CMD_ZONE_MAN_IN),		\
++		 ata_opcode_name(ATA_CMD_ZONE_MAN_OUT),		\
+ 		 ata_opcode_name(ATA_CMD_RESTORE),		\
+ 		 ata_opcode_name(ATA_CMD_READ_LONG),		\
+ 		 ata_opcode_name(ATA_CMD_READ_LONG_ONCE),	\
 -- 
 1.9.1
 
