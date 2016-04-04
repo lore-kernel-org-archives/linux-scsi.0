@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/9] block: Implement support for zoned block devices
-Date: Mon,  4 Apr 2016 12:00:16 +0200
-Message-ID: <1459764020-126038-6-git-send-email-hare@suse.de>
+Subject: [PATCH 7/9] block: Introduce BLKPREP_DONE
+Date: Mon,  4 Apr 2016 12:00:18 +0200
+Message-ID: <1459764020-126038-8-git-send-email-hare@suse.de>
 References: <1459764020-126038-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60449 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60451 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754820AbcDDKAq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754846AbcDDKAq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 Apr 2016 06:00:46 -0400
 In-Reply-To: <1459764020-126038-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,215 +14,59 @@ List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>
 Cc: linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
 
-Implement a RB-Tree holding the zone information and
-add support functions for maintaining the RB-Tree.
+Add a new blkprep return code BLKPREP_DONE to signal completion
+without I/O error.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- block/Kconfig          |  9 +++++++
- block/Makefile         |  1 +
- block/blk-core.c       |  5 ++++
- block/blk-zoned.c      | 70 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h | 47 +++++++++++++++++++++++++++++++++
- 5 files changed, 132 insertions(+)
- create mode 100644 block/blk-zoned.c
+ block/blk-core.c        | 6 +++++-
+ drivers/scsi/scsi_lib.c | 1 +
+ include/linux/blkdev.h  | 1 +
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/block/Kconfig b/block/Kconfig
-index 0363cd7..8162312 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -113,6 +113,15 @@ config BLK_DEV_THROTTLING
- 
- 	See Documentation/cgroups/blkio-controller.txt for more information.
- 
-+config BLK_DEV_ZONED
-+	bool "Zoned block device support"
-+	default n
-+	---help---
-+	Block layer zoned block device support. This option enables
-+	support for zoned block (ZAC/ZBC) devices.
-+
-+	Say yes here if you have a ZAC or ZBC storage device.
-+
- config BLK_CMDLINE_PARSER
- 	bool "Block device command line partition parser"
- 	default n
-diff --git a/block/Makefile b/block/Makefile
-index 9eda232..bc9e62c 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -15,6 +15,7 @@ obj-$(CONFIG_BLK_DEV_BSG)	+= bsg.o
- obj-$(CONFIG_BLK_DEV_BSGLIB)	+= bsg-lib.o
- obj-$(CONFIG_BLK_CGROUP)	+= blk-cgroup.o
- obj-$(CONFIG_BLK_DEV_THROTTLING)	+= blk-throttle.o
-+obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
- obj-$(CONFIG_IOSCHED_NOOP)	+= noop-iosched.o
- obj-$(CONFIG_IOSCHED_DEADLINE)	+= deadline-iosched.o
- obj-$(CONFIG_IOSCHED_CFQ)	+= cfq-iosched.o
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 827f8ba..d3d3db9 100644
+index d3d3db9..33ea429 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -588,6 +588,8 @@ void blk_cleanup_queue(struct request_queue *q)
- 		blk_mq_free_queue(q);
- 	percpu_ref_exit(&q->q_usage_counter);
+@@ -2460,9 +2460,13 @@ struct request *blk_peek_request(struct request_queue *q)
  
-+	blk_drop_zones(q);
-+
- 	spin_lock_irq(lock);
- 	if (q->queue_lock != &q->__queue_lock)
- 		q->queue_lock = &q->__queue_lock;
-@@ -724,6 +726,9 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
- #ifdef CONFIG_BLK_CGROUP
- 	INIT_LIST_HEAD(&q->blkg_list);
- #endif
-+#ifdef CONFIG_BLK_DEV_ZONED
-+	q->zones = RB_ROOT;
-+#endif
- 	INIT_DELAYED_WORK(&q->delay_work, blk_delay_work);
+ 			rq = NULL;
+ 			break;
+-		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID) {
++		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID ||
++			   ret == BLKPREP_DONE) {
+ 			int err = (ret == BLKPREP_INVALID) ? -EREMOTEIO : -EIO;
  
- 	kobject_init(&q->kobj, &blk_queue_ktype);
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-new file mode 100644
-index 0000000..975e863
---- /dev/null
-+++ b/block/blk-zoned.c
-@@ -0,0 +1,70 @@
-+/*
-+ * Zoned block device handling
-+ *
-+ * Copyright (c) 2015, Hannes Reinecke
-+ * Copyright (c) 2015, SUSE Linux GmbH
-+ */
++			if (ret == BLKPREP_DONE)
++				err = 0;
 +
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/blkdev.h>
-+#include <linux/rbtree.h>
-+
-+struct blk_zone *blk_lookup_zone(struct request_queue *q, sector_t lba)
-+{
-+	struct rb_root *root = &q->zones;
-+	struct rb_node *node = root->rb_node;
-+
-+	while (node) {
-+		struct blk_zone *zone = container_of(node, struct blk_zone,
-+						     node);
-+
-+		if (lba < zone->start)
-+			node = node->rb_left;
-+		else if (lba >= zone->start + zone->len)
-+			node = node->rb_right;
-+		else
-+			return zone;
-+	}
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(blk_lookup_zone);
-+
-+struct blk_zone *blk_insert_zone(struct request_queue *q, struct blk_zone *data)
-+{
-+	struct rb_root *root = &q->zones;
-+	struct rb_node **new = &(root->rb_node), *parent = NULL;
-+
-+	/* Figure out where to put new node */
-+	while (*new) {
-+		struct blk_zone *this = container_of(*new, struct blk_zone,
-+						     node);
-+		parent = *new;
-+		if (data->start + data->len <= this->start)
-+			new = &((*new)->rb_left);
-+		else if (data->start >= this->start + this->len)
-+			new = &((*new)->rb_right);
-+		else {
-+			/* Return existing zone */
-+			return this;
-+		}
-+	}
-+	/* Add new node and rebalance tree. */
-+	rb_link_node(&data->node, parent, new);
-+	rb_insert_color(&data->node, root);
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(blk_insert_zone);
-+
-+void blk_drop_zones(struct request_queue *q)
-+{
-+	struct rb_root *root = &q->zones;
-+	struct blk_zone *zone, *next;
-+
-+	rbtree_postorder_for_each_entry_safe(zone, next, root, node) {
-+		kfree(zone);
-+	}
-+	q->zones = RB_ROOT;
-+}
-+EXPORT_SYMBOL_GPL(blk_drop_zones);
+ 			rq->cmd_flags |= REQ_QUIET;
+ 			/*
+ 			 * Mark this request as started so we don't trigger
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 8106515..1cc75fb 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1346,6 +1346,7 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
+ 	case BLKPREP_KILL:
+ 	case BLKPREP_INVALID:
+ 		req->errors = DID_NO_CONNECT << 16;
++	case BLKPREP_DONE:
+ 		/* release the command and kill it */
+ 		if (req->special) {
+ 			struct scsi_cmnd *cmd = req->special;
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 7e5d7e0..f58bcdc 100644
+index f58bcdc..0dead8d 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -249,6 +249,50 @@ struct blk_queue_tag {
- #define BLK_SCSI_MAX_CMDS	(256)
- #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+@@ -735,6 +735,7 @@ enum {
+ 	BLKPREP_KILL,		/* fatal error, kill, return -EIO */
+ 	BLKPREP_DEFER,		/* leave on queue */
+ 	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
++	BLKPREP_DONE,		/* complete w/o error */
+ };
  
-+#ifdef CONFIG_BLK_DEV_ZONED
-+enum blk_zone_type {
-+	BLK_ZONE_TYPE_UNKNOWN,
-+	BLK_ZONE_TYPE_CONVENTIONAL,
-+	BLK_ZONE_TYPE_SEQWRITE_REQ,
-+	BLK_ZONE_TYPE_SEQWRITE_PREF,
-+	BLK_ZONE_TYPE_RESERVED,
-+};
-+
-+enum blk_zone_state {
-+	BLK_ZONE_UNKNOWN,
-+	BLK_ZONE_NO_WP,
-+	BLK_ZONE_OPEN,
-+	BLK_ZONE_READONLY,
-+	BLK_ZONE_OFFLINE,
-+	BLK_ZONE_BUSY,
-+};
-+
-+struct blk_zone {
-+	struct rb_node node;
-+	spinlock_t lock;
-+	sector_t start;
-+	size_t len;
-+	sector_t wp;
-+	enum blk_zone_type type;
-+	enum blk_zone_state state;
-+	void *private_data;
-+};
-+
-+#define blk_zone_is_smr(z) ((z)->type == BLK_ZONE_TYPE_SEQWRITE_REQ ||	\
-+			    (z)->type == BLK_ZONE_TYPE_SEQWRITE_PREF)
-+
-+#define blk_zone_is_cmr(z) ((z)->type == BLK_ZONE_TYPE_CONVENTIONAL)
-+#define blk_zone_is_full(z) ((z)->wp == (z)->start + (z)->len)
-+#define blk_zone_is_empty(z) ((z)->wp == (z)->start)
-+
-+extern struct blk_zone *blk_lookup_zone(struct request_queue *, sector_t);
-+extern struct blk_zone *blk_insert_zone(struct request_queue *,
-+					struct blk_zone *);
-+extern void blk_drop_zones(struct request_queue *);
-+#else
-+static inline void blk_drop_zones(struct request_queue *q) { };
-+#endif
-+
- struct queue_limits {
- 	unsigned long		bounce_pfn;
- 	unsigned long		seg_boundary_mask;
-@@ -421,6 +465,9 @@ struct request_queue {
- 
- 	struct queue_limits	limits;
- 
-+#ifdef CONFIG_BLK_DEV_ZONED
-+	struct rb_root		zones;
-+#endif
- 	/*
- 	 * sg stuff
- 	 */
+ extern unsigned long blk_max_low_pfn, blk_max_pfn;
 -- 
 1.8.5.6
 
