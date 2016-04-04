@@ -1,7 +1,7 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 05/12] Add ioctl to issue ZBC/ZAC commands via block layer
-Date: Mon,  4 Apr 2016 12:06:09 +0700
-Message-ID: <1459746376-27983-6-git-send-email-shaun@tancheff.com>
+Subject: [PATCH 06/12] Add ata pass-through path for ZAC commands.
+Date: Mon,  4 Apr 2016 12:06:10 +0700
+Message-ID: <1459746376-27983-7-git-send-email-shaun@tancheff.com>
 References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
@@ -10,113 +10,51 @@ To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org,
 Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add New ioctl types
-    BLKREPORT    - Issue Report Zones to device.
-    BLKOPENZONE  - Issue an Zone Action: Open Zone command.
-    BLKCLOSEZONE - Issue an Zone Action: Close Zone command.
-    BLKRESETZONE - Issue an Zone Action: Reset Zone command.
+The current generation of HBA SAS adapters support connecting SATA
+drives and perform SCSI<->ATA translations in hardware.
+Unfortunately the ZBC commands are not being translate (yet).
+
+Currently users of SAS controllers can only send ZAC commands via
+ata pass-through.
+
+This method overloads the meaning of REQ_META to direct ZBC commands
+to construct ZAC equivalent ATA pass through commands.
+Note also that this approach expects the initiator to deal with the
+little endian result due to bypassing the normal translation layers.
 
 Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 ---
- block/ioctl.c                     | 113 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/blkzoned_api.h |   6 ++
- 2 files changed, 119 insertions(+)
+ block/ioctl.c     | 29 +++++++++++++++++++
+ drivers/scsi/sd.c | 84 +++++++++++++++++++++++++++++++++++++++++++++----------
+ 2 files changed, 99 insertions(+), 14 deletions(-)
 
 diff --git a/block/ioctl.c b/block/ioctl.c
-index d8996bb..825848f 100644
+index 825848f..aa11450 100644
 --- a/block/ioctl.c
 +++ b/block/ioctl.c
-@@ -8,6 +8,7 @@
- #include <linux/backing-dev.h>
- #include <linux/fs.h>
- #include <linux/blktrace_api.h>
-+#include <linux/blkzoned_api.h>
- #include <linux/pr.h>
- #include <asm/uaccess.h>
+@@ -285,6 +285,35 @@ static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
+ 		return -EFAULT;
+ 	}
  
-@@ -195,6 +196,112 @@ int blkdev_reread_part(struct block_device *bdev)
- }
- EXPORT_SYMBOL(blkdev_reread_part);
- 
-+static int blk_zoned_report_ioctl(struct block_device *bdev, fmode_t mode,
-+		void __user *parg)
-+{
-+	int error = -EFAULT;
-+	gfp_t gfp = GFP_KERNEL;
-+	struct bdev_zone_report_io *zone_iodata = NULL;
-+	int order = 0;
-+	struct page *pgs = NULL;
-+	u32 alloc_size = PAGE_SIZE;
-+	unsigned long bi_rw = 0;
-+	u8 opt = 0;
-+
-+	if (!(mode & FMODE_READ))
-+		return -EBADF;
-+
-+	zone_iodata = (void *)get_zeroed_page(gfp);
-+	if (!zone_iodata) {
-+		error = -ENOMEM;
-+		goto report_zones_out;
-+	}
-+	if (copy_from_user(zone_iodata, parg, sizeof(*zone_iodata))) {
-+		error = -EFAULT;
-+		goto report_zones_out;
-+	}
-+	if (zone_iodata->data.in.return_page_count > alloc_size) {
-+		int npages;
-+
-+		alloc_size = zone_iodata->data.in.return_page_count;
-+		npages = (alloc_size + PAGE_SIZE - 1) / PAGE_SIZE;
-+		order =  ilog2(roundup_pow_of_two(npages));
-+		pgs = alloc_pages(gfp, order);
-+		if (pgs) {
-+			void *mem = page_address(pgs);
-+
-+			if (!mem) {
-+				error = -ENOMEM;
-+				goto report_zones_out;
-+			}
-+			memset(mem, 0, alloc_size);
-+			memcpy(mem, zone_iodata, sizeof(*zone_iodata));
-+			free_page((unsigned long)zone_iodata);
-+			zone_iodata = mem;
-+		} else {
-+			/* Result requires DMA capable memory */
-+			pr_err("Not enough memory available for request.\n");
-+			error = -ENOMEM;
-+			goto report_zones_out;
-+		}
-+	}
-+	opt = zone_iodata->data.in.report_option & 0x7F;
-+	if (zone_iodata->data.in.report_option & ZOPT_USE_ATA_PASS)
++	/*
++	 * When the low bit is set force ATA passthrough try to work around
++	 * older SAS HBA controllers that don't support ZBC to ZAC translation.
++	 *
++	 * When the low bit is clear follow the normal path but also correct
++	 * for ~0ul LBA means 'for all lbas'.
++	 *
++	 * NB: We should do extra checking here to see if the user specified
++	 *     the entire block device as opposed to a partition of the
++	 *     device....
++	 */
++	if (arg & 1) {
 +		bi_rw |= REQ_META;
-+
-+	error = blkdev_issue_zone_report(bdev, bi_rw,
-+			zone_iodata->data.in.zone_locator_lba, opt,
-+			pgs ? pgs : virt_to_page(zone_iodata),
-+			alloc_size, GFP_KERNEL);
-+
-+	if (error)
-+		goto report_zones_out;
-+
-+	if (copy_to_user(parg, zone_iodata, alloc_size))
-+		error = -EFAULT;
-+
-+report_zones_out:
-+	if (pgs)
-+		__free_pages(pgs, order);
-+	else if (zone_iodata)
-+		free_page((unsigned long)zone_iodata);
-+	return error;
-+}
-+
-+static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
-+				  unsigned cmd, unsigned long arg)
-+{
-+	unsigned long bi_rw = 0;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
++		if (arg != ~0ul)
++			arg &= ~1ul; /* ~1 :: 0xFF...FE */
++	} else {
++		if (arg == ~1ul)
++			arg = ~0ul;
++	}
 +
 +	/*
 +	 * When acting on zones we explicitly disallow using a partition.
@@ -127,54 +65,139 @@ index d8996bb..825848f 100644
 +		return -EFAULT;
 +	}
 +
-+	switch (cmd) {
-+	case BLKOPENZONE:
-+		bi_rw |= REQ_OPEN_ZONE;
-+		break;
-+	case BLKCLOSEZONE:
-+		bi_rw |= REQ_CLOSE_ZONE;
-+		break;
-+	case BLKRESETZONE:
-+		bi_rw |= REQ_RESET_ZONE;
-+		break;
-+	default:
-+		pr_err("%s: Unknown action: %u\n", __func__, cmd);
-+		WARN_ON(1);
-+	}
-+	return blkdev_issue_zone_action(bdev, bi_rw, arg, GFP_KERNEL);
+ 	switch (cmd) {
+ 	case BLKOPENZONE:
+ 		bi_rw |= REQ_OPEN_ZONE;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 379edf6..3cb0200 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -53,6 +53,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/pr.h>
+ #include <linux/blkzoned_api.h>
++#include <linux/ata.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+ 
+@@ -100,6 +101,16 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ #define SD_MINORS	0
+ #endif
+ 
++static inline void _lba_to_cmd_ata(u8 *cmd, u64 _lba)
++{
++	cmd[1] =  _lba	      & 0xff;
++	cmd[3] = (_lba >>  8) & 0xff;
++	cmd[5] = (_lba >> 16) & 0xff;
++	cmd[0] = (_lba >> 24) & 0xff;
++	cmd[2] = (_lba >> 32) & 0xff;
++	cmd[4] = (_lba >> 40) & 0xff;
 +}
 +
- static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg, unsigned long flags)
- {
-@@ -598,6 +705,12 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKTRACESETUP:
- 	case BLKTRACETEARDOWN:
- 		return blk_trace_ioctl(bdev, cmd, argp);
-+	case BLKREPORT:
-+		return blk_zoned_report_ioctl(bdev, mode, argp);
-+	case BLKOPENZONE:
-+	case BLKCLOSEZONE:
-+	case BLKRESETZONE:
-+		return blk_zoned_action_ioctl(bdev, mode, cmd, arg);
- 	case BLKDAXGET:
- 		return put_int(arg, !!(bdev->bd_inode->i_flags & S_DAX));
- 		break;
-diff --git a/include/uapi/linux/blkzoned_api.h b/include/uapi/linux/blkzoned_api.h
-index 189e925..2007b56 100644
---- a/include/uapi/linux/blkzoned_api.h
-+++ b/include/uapi/linux/blkzoned_api.h
-@@ -212,4 +212,10 @@ struct bdev_zone_report_io {
- 	} data;
- } __packed;
+ static void sd_config_discard(struct scsi_disk *, unsigned int);
+ static void sd_config_write_same(struct scsi_disk *);
+ static int  sd_revalidate_disk(struct gendisk *);
+@@ -1181,11 +1192,26 @@ static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
  
-+/* continuing from uapi/linux/fs.h: */
-+#define BLKREPORT	_IOWR(0x12, 130, struct bdev_zone_report_io)
-+#define BLKOPENZONE	_IO(0x12, 131)
-+#define BLKCLOSEZONE	_IO(0x12, 132)
-+#define BLKRESETZONE	_IO(0x12, 133)
+ 		cmd->cmd_len = 16;
+ 		memset(cmd->cmnd, 0, cmd->cmd_len);
+-		cmd->cmnd[0] = ZBC_REPORT_ZONES;
+-		cmd->cmnd[1] = ZBC_REPORT_OPT;
+-		put_unaligned_be64(sector, &cmd->cmnd[2]);
+-		put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
+-		cmd->cmnd[14] = bio_get_streamid(bio);
++		if (rq->cmd_flags & REQ_META) {
++			cmd->cmnd[0] = ATA_16;
++			cmd->cmnd[1] = (0x6 << 1) | 1;
++			cmd->cmnd[2] = 0x0e;
++			cmd->cmnd[3] = bio_get_streamid(bio);
++			cmd->cmnd[4] = ATA_SUBCMD_REP_ZONES;
++			cmd->cmnd[5] = ((nr_bytes / 512) >> 8) & 0xff;
++			cmd->cmnd[6] = (nr_bytes / 512) & 0xff;
 +
- #endif /* _UAPI_BLKZONED_API_H */
++			_lba_to_cmd_ata(&cmd->cmnd[7], sector);
++
++			cmd->cmnd[13] = 1 << 6;
++			cmd->cmnd[14] = ATA_CMD_ZONE_MAN_IN;
++		} else {
++			cmd->cmnd[0] = ZBC_REPORT_ZONES;
++			cmd->cmnd[1] = ZBC_REPORT_OPT;
++			put_unaligned_be64(sector, &cmd->cmnd[2]);
++			put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
++			cmd->cmnd[14] = bio_get_streamid(bio);
++		}
+ 		cmd->sc_data_direction = DMA_FROM_DEVICE;
+ 		cmd->sdb.length = nr_bytes;
+ 		cmd->transfersize = sdp->sector_size;
+@@ -1207,14 +1233,28 @@ static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
+ 	memset(cmd->cmnd, 0, cmd->cmd_len);
+ 	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
+ 
+-	cmd->cmnd[0] = ZBC_ACTION;
+-	cmd->cmnd[1] = ZBC_SA_ZONE_OPEN;
+-	if (rq->cmd_flags & REQ_CLOSE_ZONE)
+-		cmd->cmnd[1] = ZBC_SA_ZONE_CLOSE;
+-	if (rq->cmd_flags & REQ_RESET_ZONE)
+-		cmd->cmnd[1] = ZBC_SA_RESET_WP;
+-	cmd->cmnd[14] = allbit;
+-	put_unaligned_be64(sector, &cmd->cmnd[2]);
++	if (rq->cmd_flags & REQ_META) {
++		cmd->cmnd[0] = ATA_16;
++		cmd->cmnd[1] = (3 << 1) | 1;
++		cmd->cmnd[3] = allbit;
++		cmd->cmnd[4] = ATA_SUBCMD_OPEN_ZONES;
++		if (rq->cmd_flags & REQ_CLOSE_ZONE)
++			cmd->cmnd[4] = ATA_SUBCMD_CLOSE_ZONES;
++		if (rq->cmd_flags & REQ_RESET_ZONE)
++			cmd->cmnd[4] = ATA_SUBCMD_RESET_WP;
++		_lba_to_cmd_ata(&cmd->cmnd[7], sector);
++		cmd->cmnd[13] = 1 << 6;
++		cmd->cmnd[14] = ATA_CMD_ZONE_MAN_OUT;
++	} else {
++		cmd->cmnd[0] = ZBC_ACTION;
++		cmd->cmnd[1] = ZBC_SA_ZONE_OPEN;
++		if (rq->cmd_flags & REQ_CLOSE_ZONE)
++			cmd->cmnd[1] = ZBC_SA_ZONE_CLOSE;
++		if (rq->cmd_flags & REQ_RESET_ZONE)
++			cmd->cmnd[1] = ZBC_SA_RESET_WP;
++		cmd->cmnd[14] = allbit;
++		put_unaligned_be64(sector, &cmd->cmnd[2]);
++	}
+ 	cmd->transfersize = 0;
+ 	cmd->underflow = 0;
+ 	cmd->allowed = SD_MAX_RETRIES;
+@@ -2812,7 +2852,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ {
+ 	unsigned char *buffer;
+ 	u16 rot;
+-	const int vpd_len = 64;
++	const int vpd_len = 512;
+ 
+ 	buffer = kmalloc(vpd_len, GFP_KERNEL);
+ 
+@@ -2839,6 +2879,22 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 		 * Any subsequent reads will be zero'd.
+ 		 */
+ 		sdkp->device->zabc = 1;
++	} else {
++		unsigned char cmd[16] = { 0 };
++
++		cmd[0] = ATA_16;
++		cmd[1] = (4 << 1) | 1;
++		cmd[2] = 0xe;
++		cmd[6] = 0x1;
++		cmd[8] = 0x1;
++		cmd[14] = ATA_CMD_ID_ATA;
++
++		if (scsi_execute_req(sdkp->device, cmd, DMA_FROM_DEVICE, buffer,
++				     vpd_len, NULL, 30 * HZ, 3, NULL))
++			goto out;
++
++		if (ata_drive_zac_ha((u16 *)buffer))
++			sdkp->device->zabc = 1;
+ 	}
+ 
+  out:
 -- 
 1.9.1
 
