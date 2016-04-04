@@ -1,303 +1,180 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 01/12] Add ZBC <-> ZAC xlat support for report, open, close, reset, finish
-Date: Mon,  4 Apr 2016 12:06:05 +0700
-Message-ID: <1459746376-27983-2-git-send-email-shaun@tancheff.com>
+Subject: [PATCH 05/12] Add ioctl to issue ZBC/ZAC commands via block layer
+Date: Mon,  4 Apr 2016 12:06:09 +0700
+Message-ID: <1459746376-27983-6-git-send-email-shaun@tancheff.com>
 References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:36053 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbcDDFGg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 01:06:36 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Provide SCSI <-> ATA translation layer for ZBC commands:
-  - Report Zones
-  - Open, Close, Reset and Finish zones
+Add New ioctl types
+    BLKREPORT    - Issue Report Zones to device.
+    BLKOPENZONE  - Issue an Zone Action: Open Zone command.
+    BLKCLOSEZONE - Issue an Zone Action: Close Zone command.
+    BLKRESETZONE - Issue an Zone Action: Reset Zone command.
 
 Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 ---
- drivers/ata/libata-scsi.c | 167 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/ata.h       |  18 +++++
- include/scsi/scsi_proto.h |  14 ++++
- 3 files changed, 199 insertions(+)
+ block/ioctl.c                     | 113 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/blkzoned_api.h |   6 ++
+ 2 files changed, 119 insertions(+)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e417e1a..a7c5ec8 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -65,6 +65,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
- 					const struct scsi_device *scsidev);
- static struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
- 					    const struct scsi_device *scsidev);
-+static void scsi_16_lba_len(const u8 *cdb, u64 *plba, u32 *plen);
+diff --git a/block/ioctl.c b/block/ioctl.c
+index d8996bb..825848f 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -8,6 +8,7 @@
+ #include <linux/backing-dev.h>
+ #include <linux/fs.h>
+ #include <linux/blktrace_api.h>
++#include <linux/blkzoned_api.h>
+ #include <linux/pr.h>
+ #include <asm/uaccess.h>
  
- #define RW_RECOVERY_MPAGE 0x1
- #define RW_RECOVERY_MPAGE_LEN 12
-@@ -1442,6 +1443,160 @@ static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc)
+@@ -195,6 +196,112 @@ int blkdev_reread_part(struct block_device *bdev)
  }
+ EXPORT_SYMBOL(blkdev_reread_part);
  
- /**
-+ *	ata_scsi_zone_command_xlat - Translate SCSI Reset Write Pointer command
-+ *	@qc: Storage for translated ATA taskfile
-+ *
-+ *	Sets up an ATA taskfile to issue Reset Write Pointers Ext command.
-+ *	May need change when zac specs is available.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on error.
-+ */
-+static unsigned int ata_scsi_zone_command_xlat(struct ata_queued_cmd *qc)
++static int blk_zoned_report_ioctl(struct block_device *bdev, fmode_t mode,
++		void __user *parg)
 +{
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct ata_taskfile *tf = &qc->tf;
-+	const u8 *cdb = scmd->cmnd;
-+	u8 sa; /* service action */
-+	u8 all_bit;
++	int error = -EFAULT;
++	gfp_t gfp = GFP_KERNEL;
++	struct bdev_zone_report_io *zone_iodata = NULL;
++	int order = 0;
++	struct page *pgs = NULL;
++	u32 alloc_size = PAGE_SIZE;
++	unsigned long bi_rw = 0;
++	u8 opt = 0;
 +
-+	if (scmd->cmd_len < 16)
-+		goto invalid_fld;
++	if (!(mode & FMODE_READ))
++		return -EBADF;
 +
-+	sa = cdb[1] & 0x1f;
++	zone_iodata = (void *)get_zeroed_page(gfp);
++	if (!zone_iodata) {
++		error = -ENOMEM;
++		goto report_zones_out;
++	}
++	if (copy_from_user(zone_iodata, parg, sizeof(*zone_iodata))) {
++		error = -EFAULT;
++		goto report_zones_out;
++	}
++	if (zone_iodata->data.in.return_page_count > alloc_size) {
++		int npages;
 +
-+	if (!(sa == ATA_SUBCMD_CLOSE_ZONES ||
-+	      sa == ATA_SUBCMD_FINISH_ZONES ||
-+	      sa == ATA_SUBCMD_OPEN_ZONES ||
-+	      sa == ATA_SUBCMD_RESET_WP))
-+		goto invalid_fld;
++		alloc_size = zone_iodata->data.in.return_page_count;
++		npages = (alloc_size + PAGE_SIZE - 1) / PAGE_SIZE;
++		order =  ilog2(roundup_pow_of_two(npages));
++		pgs = alloc_pages(gfp, order);
++		if (pgs) {
++			void *mem = page_address(pgs);
 +
-+	all_bit = cdb[14] & 0x01;
-+	if (!all_bit) {
-+		struct ata_device *dev = qc->dev;
-+		u64 max_lba = dev->n_sectors;     /* Maximal LBA supported */
-+		u64 slba;
-+		u32 slen;
-+
-+		scsi_16_lba_len(cdb, &slba, &slen);
-+		if (slba > max_lba) {
-+			ata_dev_err(dev,
-+				"Zone start LBA %llu > %llu (Max LBA)\n",
-+				slba, max_lba);
-+			goto out_of_range;
++			if (!mem) {
++				error = -ENOMEM;
++				goto report_zones_out;
++			}
++			memset(mem, 0, alloc_size);
++			memcpy(mem, zone_iodata, sizeof(*zone_iodata));
++			free_page((unsigned long)zone_iodata);
++			zone_iodata = mem;
++		} else {
++			/* Result requires DMA capable memory */
++			pr_err("Not enough memory available for request.\n");
++			error = -ENOMEM;
++			goto report_zones_out;
 +		}
-+
-+		tf->hob_lbah = (slba >> 40) & 0xff;
-+		tf->hob_lbam = (slba >> 32) & 0xff;
-+		tf->hob_lbal = (slba >> 24) & 0xff;
-+		tf->lbah = (slba >> 16) & 0xff;
-+		tf->lbam = (slba >> 8) & 0xff;
-+		tf->lbal = slba & 0xff;
 +	}
++	opt = zone_iodata->data.in.report_option & 0x7F;
++	if (zone_iodata->data.in.report_option & ZOPT_USE_ATA_PASS)
++		bi_rw |= REQ_META;
 +
++	error = blkdev_issue_zone_report(bdev, bi_rw,
++			zone_iodata->data.in.zone_locator_lba, opt,
++			pgs ? pgs : virt_to_page(zone_iodata),
++			alloc_size, GFP_KERNEL);
 +
-+	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
-+	tf->protocol = ATA_PROT_NODATA;
++	if (error)
++		goto report_zones_out;
 +
-+	tf->command = ATA_CMD_ZONE_MAN_OUT;
-+	tf->feature = sa;
-+	tf->hob_feature = all_bit;
++	if (copy_to_user(parg, zone_iodata, alloc_size))
++		error = -EFAULT;
 +
-+	return 0;
-+
-+ invalid_fld:
-+	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
-+	/* "Invalid field in cbd" */
-+	return 1;
-+ out_of_range:
-+	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
-+	/* LBA out of range */
-+	return 1;
++report_zones_out:
++	if (pgs)
++		__free_pages(pgs, order);
++	else if (zone_iodata)
++		free_page((unsigned long)zone_iodata);
++	return error;
 +}
 +
-+/**
-+ *	ata_scsi_report_zones_xlat - Translate SCSI Report Zones command
-+ *	@qc: Storage for translated ATA taskfile
-+ *
-+ *	Sets up an ATA taskfile to issue Report Zones Ext command.
-+ *	May need change when zac specs is updated.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on error.
-+ */
-+static unsigned int ata_scsi_report_zones_xlat(struct ata_queued_cmd *qc)
++static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
++				  unsigned cmd, unsigned long arg)
 +{
-+	struct ata_device *dev = qc->dev;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct ata_taskfile *tf = &qc->tf;
-+	const u8 *cdb = scmd->cmnd;
-+	u64 max_lba = dev->n_sectors;     /* Maximal LBA supported */
-+	u64 slba;       /* Start LBA in scsi command */
-+	u32 alloc_len;  /* Alloc length (in bytes) */
-+	u8 reporting_option;
++	unsigned long bi_rw = 0;
 +
-+	if (scmd->cmd_len < 16) {
-+		ata_dev_err(dev, "ZAC Error: Command length is less than 16\n");
-+		goto invalid_fld;
-+	}
-+	if (unlikely(!dev->dma_mode)) {
-+		ata_dev_err(dev, "ZAC Error: No DMA mode is set\n");
-+		goto invalid_fld;
-+	}
-+	if (!scsi_sg_count(scmd)) {
-+		ata_dev_err(dev, "ZAC Error: SCSI sg count is zero\n");
-+		goto invalid_fld;
-+	}
-+	scsi_16_lba_len(cdb, &slba, &alloc_len);
-+	if (slba > max_lba) {
-+		ata_dev_err(dev, "Zone start LBA %llu > %llu (Max LBA)\n",
-+			    slba, max_lba);
-+		goto out_of_range;
++	if (!(mode & FMODE_WRITE))
++		return -EBADF;
++
++	/*
++	 * When acting on zones we explicitly disallow using a partition.
++	 */
++	if (bdev != bdev->bd_contains) {
++		pr_err("%s: All zone operations disallowed on this device\n",
++			__func__);
++		return -EFAULT;
 +	}
 +
-+	reporting_option = cdb[14] & 0x3f;
-+
-+	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
-+	tf->protocol = ATA_PROT_DMA;
-+
-+	tf->command = ATA_CMD_ZONE_MAN_IN;
-+
-+	tf->hob_lbah = (slba >> 40) & 0xff;
-+	tf->hob_lbam = (slba >> 32) & 0xff;
-+	tf->hob_lbal = (slba >> 24) & 0xff;
-+	tf->lbah = (slba >> 16) & 0xff;
-+	tf->lbam = (slba >> 8) & 0xff;
-+	tf->lbal = slba & 0xff;
-+
-+	tf->feature = 0x00;
-+	tf->hob_feature = reporting_option;
-+
-+	alloc_len    /= 512; /* bytes in scsi, blocks in ata */
-+	tf->nsect     = alloc_len & 0xff;
-+	tf->hob_nsect = alloc_len >> 8;
-+
-+	ata_qc_set_pc_nbytes(qc);
-+
-+	return 0;
-+
-+ invalid_fld:
-+	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
-+	/* "Invalid field in cbd" */
-+	return 1;
-+ out_of_range:
-+	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
-+	/* LBA out of range */
-+	return 1;
++	switch (cmd) {
++	case BLKOPENZONE:
++		bi_rw |= REQ_OPEN_ZONE;
++		break;
++	case BLKCLOSEZONE:
++		bi_rw |= REQ_CLOSE_ZONE;
++		break;
++	case BLKRESETZONE:
++		bi_rw |= REQ_RESET_ZONE;
++		break;
++	default:
++		pr_err("%s: Unknown action: %u\n", __func__, cmd);
++		WARN_ON(1);
++	}
++	return blkdev_issue_zone_action(bdev, bi_rw, arg, GFP_KERNEL);
 +}
 +
-+
-+/**
-  *	scsi_6_lba_len - Get LBA and transfer length
-  *	@cdb: SCSI command to translate
-  *
-@@ -2232,12 +2387,17 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
+ 		unsigned long arg, unsigned long flags)
  {
- 	int form_factor = ata_id_form_factor(args->id);
- 	int media_rotation_rate = ata_id_rotation_rate(args->id);
-+	bool zac_ha = ata_drive_zac_ha(args->id);
+@@ -598,6 +705,12 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	case BLKTRACESETUP:
+ 	case BLKTRACETEARDOWN:
+ 		return blk_trace_ioctl(bdev, cmd, argp);
++	case BLKREPORT:
++		return blk_zoned_report_ioctl(bdev, mode, argp);
++	case BLKOPENZONE:
++	case BLKCLOSEZONE:
++	case BLKRESETZONE:
++		return blk_zoned_action_ioctl(bdev, mode, cmd, arg);
+ 	case BLKDAXGET:
+ 		return put_int(arg, !!(bdev->bd_inode->i_flags & S_DAX));
+ 		break;
+diff --git a/include/uapi/linux/blkzoned_api.h b/include/uapi/linux/blkzoned_api.h
+index 189e925..2007b56 100644
+--- a/include/uapi/linux/blkzoned_api.h
++++ b/include/uapi/linux/blkzoned_api.h
+@@ -212,4 +212,10 @@ struct bdev_zone_report_io {
+ 	} data;
+ } __packed;
  
- 	rbuf[1] = 0xb1;
- 	rbuf[3] = 0x3c;
- 	rbuf[4] = media_rotation_rate >> 8;
- 	rbuf[5] = media_rotation_rate;
- 	rbuf[7] = form_factor;
-+	if (zac_ha) {
-+		rbuf[8] &= 0xcf;
-+		rbuf[8] |= 0x10;  /* SBC4: 0x01 for zoned host aware device */
-+	}
- 
- 	return 0;
- }
-@@ -3421,6 +3581,13 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 
- 	case START_STOP:
- 		return ata_scsi_start_stop_xlat;
++/* continuing from uapi/linux/fs.h: */
++#define BLKREPORT	_IOWR(0x12, 130, struct bdev_zone_report_io)
++#define BLKOPENZONE	_IO(0x12, 131)
++#define BLKCLOSEZONE	_IO(0x12, 132)
++#define BLKRESETZONE	_IO(0x12, 133)
 +
-+	case ZBC_ACTION:
-+		return ata_scsi_zone_command_xlat;
-+
-+	case ZBC_REPORT_ZONES:
-+		return ata_scsi_report_zones_xlat;
-+	  break;
- 	}
- 
- 	return NULL;
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index c1a2f34..779b7f2 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -305,6 +305,17 @@ enum {
- 	/* marked obsolete in the ATA/ATAPI-7 spec */
- 	ATA_CMD_RESTORE		= 0x10,
- 
-+	/* ZAC commands */
-+	ATA_CMD_ZONE_MAN_OUT	= 0x9F,
-+
-+	ATA_SUBCMD_CLOSE_ZONES	= 0x01,
-+	ATA_SUBCMD_FINISH_ZONES	= 0x02,
-+	ATA_SUBCMD_OPEN_ZONES	= 0x03,
-+	ATA_SUBCMD_RESET_WP	= 0x04,
-+
-+	ATA_CMD_ZONE_MAN_IN	= 0x4A,
-+	ATA_SUBCMD_REP_ZONES	= 0x00,
-+
- 	/* Subcmds for ATA_CMD_FPDMA_SEND */
- 	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
- 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
-@@ -899,6 +910,13 @@ static inline bool ata_drive_40wire_relaxed(const u16 *dev_id)
- 	return true;
- }
- 
-+static inline bool ata_drive_zac_ha(const u16 *dev_id)
-+{
-+	if ((dev_id[69] & 0x0003) == 0x0001)
-+		return true;
-+	return false;
-+}
-+
- static inline int atapi_cdb_len(const u16 *dev_id)
- {
- 	u16 tmp = dev_id[ATA_ID_CONFIG] & 0x3;
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index a9fbf1b..dd0e089 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -115,6 +115,10 @@
- #define VERIFY_16	      0x8f
- #define SYNCHRONIZE_CACHE_16  0x91
- #define WRITE_SAME_16	      0x93
-+/* Op codes for Zoned Block Commands */
-+#define ZBC_ACTION		0x94
-+#define ZBC_REPORT_ZONES	0x95
-+
- #define SERVICE_ACTION_BIDIRECTIONAL 0x9d
- #define SERVICE_ACTION_IN_16  0x9e
- #define SERVICE_ACTION_OUT_16 0x9f
-@@ -157,6 +161,16 @@
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
- #define	ATA_12		      0xa1	/* 12-byte pass-thru */
- 
-+/* ZBC_ACTION: Values for T-10 ZBC sub action */
-+#define ZBC_SA_ZONE_CLOSE	0x01
-+#define ZBC_SA_ZONE_FINISH	0x02
-+#define ZBC_SA_ZONE_OPEN	0x03
-+#define ZBC_SA_RESET_WP		0x04
-+
-+/* ZBC_REPORT_ZONES: Default report option. T-10 ZBC report zones */
-+#define ZBC_REPORT_OPT		0x00
-+
-+
- /* Vendor specific CDBs start here */
- #define VENDOR_SPECIFIC_CDB 0xc0
- 
+ #endif /* _UAPI_BLKZONED_API_H */
 -- 
 1.9.1
 
