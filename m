@@ -1,27 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
-Date: Mon, 4 Apr 2016 17:22:10 -0400
-Message-ID: <20160404212210.GF24661@htj.duckdns.org>
-References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
- <1458684196-15923-5-git-send-email-mlin@kernel.org>
- <CAF1ivSYt4-1UC0YkPFHqwmKWMrX=aD1VQFvH2PCbRjJ1XbL=Gg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ming Lin <mlin@kernel.org>
+Subject: [PATCH v3 0/5] mempool based chained scatterlist alloc/free api
+Date: Mon, 04 Apr 2016 14:48:06 -0700
+Message-ID: <1459806491-16428-1-git-send-email-mlin@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAF1ivSYt4-1UC0YkPFHqwmKWMrX=aD1VQFvH2PCbRjJ1XbL=Gg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Apr 04, 2016 at 01:24:52PM -0700, Ming Lin wrote:
-> Could you help to review/ack this ATA part?
-> Thanks.
+From: Ming Lin <ming.l@ssi.samsung.com>
 
-Can you please resend me the patches?
+The fist 4 patches make the SG related definitions/structs/functions
+in SCSI code generic and the last patch move it to lib/sg_pool.c.
 
-Thanks.
+v3:
+  - Resend for Tejun to review. No code change since v2.
+  - Add review/ack tags
+
+v2:
+  - do modification in scsi code first then move to lib/sg_pool.c
+  - address Christoph's comments
+
+
+Ming Lin (5):
+  scsi: replace "scsi_data_buffer" with "sg_table" in SG functions
+  scsi: replace "mq" with "first_chunk" in SG functions
+  scsi: rename SG related struct and functions
+  scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
+  lib: scatterlist: move SG pool code from SCSI driver to lib/sg_pool.c
+
+ drivers/ata/pata_icside.c           |   2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c |   4 +-
+ drivers/scsi/Kconfig                |   1 +
+ drivers/scsi/arm/cumana_2.c         |   2 +-
+ drivers/scsi/arm/eesox.c            |   2 +-
+ drivers/scsi/arm/powertec.c         |   2 +-
+ drivers/scsi/esas2r/esas2r_main.c   |   4 +-
+ drivers/scsi/hisi_sas/hisi_sas.h    |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c |   4 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h |   2 +-
+ drivers/scsi/scsi_debug.c           |   2 +-
+ drivers/scsi/scsi_lib.c             | 172 +++++-------------------------------
+ drivers/usb/storage/scsiglue.c      |   2 +-
+ include/linux/scatterlist.h         |  25 ++++++
+ include/scsi/scsi.h                 |  19 ----
+ include/scsi/scsi_host.h            |   2 +-
+ lib/Kconfig                         |   7 ++
+ lib/Makefile                        |   1 +
+ lib/sg_pool.c                       | 172 ++++++++++++++++++++++++++++++++++++
+ 19 files changed, 241 insertions(+), 186 deletions(-)
+ create mode 100644 lib/sg_pool.c
 
 -- 
-tejun
+1.9.1
