@@ -1,188 +1,205 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/14] libata-scsi: set bit pointer for sense code information
-Date: Mon,  4 Apr 2016 11:44:06 +0200
-Message-ID: <1459763047-125551-14-git-send-email-hare@suse.de>
+Subject: [PATCH 02/14] libata: Implement support for sense data reporting
+Date: Mon,  4 Apr 2016 11:43:55 +0200
+Message-ID: <1459763047-125551-3-git-send-email-hare@suse.de>
 References: <1459763047-125551-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59378 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59341 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755045AbcDDJoY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Apr 2016 05:44:24 -0400
+	id S1754957AbcDDJoW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2016 05:44:22 -0400
 In-Reply-To: <1459763047-125551-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
 
-When generating a sense code of 'Invalid field in CDB' we
-should be setting the bit pointer where appropriate.
+ACS-4 defines a sense data reporting feature set.
+This patch implements support for it.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-scsi.c | 30 +++++++++++++++++++-----------
- 1 file changed, 19 insertions(+), 11 deletions(-)
+ drivers/ata/libata-core.c | 20 +++++++++++++-
+ drivers/ata/libata-eh.c   | 67 ++++++++++++++++++++++++++++++++++++++++++++---
+ include/linux/ata.h       | 16 +++++++++++
+ 3 files changed, 98 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 30ae9a8..d72d78d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -301,12 +301,12 @@ void ata_scsi_set_sense_information(struct ata_device *dev,
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 55e257c..f991f78 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2148,6 +2148,24 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 	return 0;
  }
  
- static void ata_scsi_set_invalid_field(struct ata_device *dev,
--				       struct scsi_cmnd *cmd, u16 field)
-+				       struct scsi_cmnd *cmd, u16 field, u8 bit)
- {
- 	ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x24, 0x0);
- 	/* "Invalid field in cbd" */
- 	scsi_set_sense_field_pointer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
--				     field, 0xff, 1);
-+				     field, bit, 1);
++static void ata_dev_config_sense_reporting(struct ata_device *dev)
++{
++	unsigned int err_mask;
++
++	if (!ata_id_has_sense_reporting(dev->id))
++		return;
++
++	if (ata_id_sense_reporting_enabled(dev->id))
++		return;
++
++	err_mask = ata_dev_set_feature(dev, SETFEATURE_SENSE_DATA, 0x1);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to enable Sense Data Reporting, Emask 0x%x\n",
++			    err_mask);
++	}
++}
++
+ /**
+  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+  *	@dev: Target device to configure
+@@ -2370,7 +2388,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 					dev->devslp_timing[i] = sata_setting[j];
+ 				}
+ 		}
+-
++		ata_dev_config_sense_reporting(dev);
+ 		dev->cdb_len = 16;
+ 	}
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 8c8355f..1a009d7 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1638,6 +1638,56 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
  }
  
- static ssize_t
-@@ -399,7 +399,7 @@ EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
- static void ata_scsi_invalid_field(struct ata_device *dev,
- 				   struct scsi_cmnd *cmd, u16 field)
- {
--	ata_scsi_set_invalid_field(dev, cmd, field);
-+	ata_scsi_set_invalid_field(dev, cmd, field, 0xff);
- 	cmd->scsi_done(cmd);
+ /**
++ *	ata_eh_request_sense - perform REQUEST_SENSE_DATA_EXT
++ *	@dev: device to perform REQUEST_SENSE_SENSE_DATA_EXT to
++ *	@cmd: scsi command for which the sense code should be set
++ *
++ *	Perform REQUEST_SENSE_DATA_EXT after the device reported CHECK
++ *	SENSE.  This function is an EH helper.
++*
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++static void ata_eh_request_sense(struct ata_queued_cmd *qc,
++				 struct scsi_cmnd *cmd)
++{
++	struct ata_device *dev = qc->dev;
++	struct ata_taskfile tf;
++	unsigned int err_mask;
++
++	if (qc->ap->pflags & ATA_PFLAG_FROZEN) {
++		ata_dev_warn(dev, "sense data available but port frozen\n");
++		return;
++	}
++
++	if (!cmd)
++		return;
++
++	if (!ata_id_sense_reporting_enabled(dev->id)) {
++		ata_dev_warn(qc->dev, "sense data reporting disabled\n");
++		return;
++	}
++
++	DPRINTK("ATA request sense\n");
++
++	ata_tf_init(dev, &tf);
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.flags |= ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
++	tf.command = ATA_CMD_REQ_SENSE_DATA;
++	tf.protocol = ATA_PROT_NODATA;
++
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
++	/* Ignore err_mask; ATA_ERR might be set */
++	if (tf.command & ATA_SENSE) {
++		ata_scsi_set_sense(cmd, tf.lbah, tf.lbam, tf.lbal);
++		qc->flags |= ATA_QCFLAG_SENSE_VALID;
++	} else {
++		ata_dev_warn(dev, "request sense failed stat %02x emask %x\n",
++			     tf.command, err_mask);
++	}
++}
++
++/**
+  *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
+  *	@dev: device to perform REQUEST_SENSE to
+  *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
+@@ -1838,14 +1888,22 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 		return ATA_EH_RESET;
+ 	}
+ 
+-	if (stat & (ATA_ERR | ATA_DF))
++	if (stat & (ATA_ERR | ATA_DF)) {
+ 		qc->err_mask |= AC_ERR_DEV;
+-	else
++		/*
++		 * Sense data reporting does not work if the
++		 * device fault bit is set.
++		 */
++		if (stat & ATA_DF)
++			stat &= ~ATA_SENSE;
++	} else
+ 		return 0;
+ 
+ 	switch (qc->dev->class) {
+ 	case ATA_DEV_ATA:
+ 	case ATA_DEV_ZAC:
++		if (stat & ATA_SENSE)
++			ata_eh_request_sense(qc, qc->scsicmd);
+ 		if (err & ATA_ICRC)
+ 			qc->err_mask |= AC_ERR_ATA_BUS;
+ 		if (err & (ATA_UNC | ATA_AMNF))
+@@ -2581,14 +2639,15 @@ static void ata_eh_link_report(struct ata_link *link)
+ 
+ #ifdef CONFIG_ATA_VERBOSE_ERROR
+ 		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
+-				    ATA_ERR)) {
++				    ATA_SENSE | ATA_ERR)) {
+ 			if (res->command & ATA_BUSY)
+ 				ata_dev_err(qc->dev, "status: { Busy }\n");
+ 			else
+-				ata_dev_err(qc->dev, "status: { %s%s%s%s}\n",
++				ata_dev_err(qc->dev, "status: { %s%s%s%s%s}\n",
+ 				  res->command & ATA_DRDY ? "DRDY " : "",
+ 				  res->command & ATA_DF ? "DF " : "",
+ 				  res->command & ATA_DRQ ? "DRQ " : "",
++				  res->command & ATA_SENSE ? "SENSE " : "",
+ 				  res->command & ATA_ERR ? "ERR " : "");
+ 		}
+ 
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index e797e1b53..e402cb3 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -385,6 +385,8 @@ enum {
+ 	SATA_SSP		= 0x06,	/* Software Settings Preservation */
+ 	SATA_DEVSLP		= 0x09,	/* Device Sleep */
+ 
++	SETFEATURE_SENSE_DATA = 0xC3, /* Sense Data Reporting feature */
++
+ 	/* feature values for SET_MAX */
+ 	ATA_SET_MAX_ADDR	= 0x00,
+ 	ATA_SET_MAX_PASSWD	= 0x01,
+@@ -718,6 +720,20 @@ static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
+ 	return false;
  }
  
-@@ -1395,6 +1395,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
- 	struct ata_taskfile *tf = &qc->tf;
- 	const u8 *cdb = scmd->cmnd;
- 	u16 fp;
-+	u8 bp = 0xff;
- 
- 	if (scmd->cmd_len < 5) {
- 		fp = 4;
-@@ -1408,10 +1409,12 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
- 	}
- 	if (cdb[4] & 0x2) {
- 		fp = 4;
-+		bp = 1;
- 		goto invalid_fld;       /* LOEJ bit set not supported */
- 	}
- 	if (((cdb[4] >> 4) & 0xf) != 0) {
- 		fp = 4;
-+		bp = 3;
- 		goto invalid_fld;       /* power conditions not supported */
- 	}
- 
-@@ -1459,7 +1462,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
- 	return 0;
- 
-  invalid_fld:
--	ata_scsi_set_invalid_field(qc->dev, scmd, fp);
-+	ata_scsi_set_invalid_field(qc->dev, scmd, fp, bp);
- 	return 1;
-  skip:
- 	scmd->result = SAM_STAT_GOOD;
-@@ -1704,7 +1707,7 @@ static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc)
- 	return 0;
- 
- invalid_fld:
--	ata_scsi_set_invalid_field(qc->dev, scmd, fp);
-+	ata_scsi_set_invalid_field(qc->dev, scmd, fp, 0xff);
- 	return 1;
- 
- out_of_range:
-@@ -1813,7 +1816,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 		goto out_of_range;
- 	/* treat all other errors as -EINVAL, fall through */
- invalid_fld:
--	ata_scsi_set_invalid_field(qc->dev, scmd, fp);
-+	ata_scsi_set_invalid_field(qc->dev, scmd, fp, 0xff);
- 	return 1;
- 
- out_of_range:
-@@ -2470,7 +2473,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 	};
- 	u8 pg, spg;
- 	unsigned int ebd, page_control, six_byte;
--	u8 dpofua;
-+	u8 dpofua, bp = 0xff;
- 	u16 fp;
- 
- 	VPRINTK("ENTER\n");
-@@ -2491,6 +2494,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 		goto saving_not_supp;
- 	default:
- 		fp = 2;
-+		bp = 6;
- 		goto invalid_fld;
- 	}
- 
-@@ -2560,7 +2564,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 	return 0;
- 
- invalid_fld:
--	ata_scsi_set_invalid_field(dev, args->cmd, fp);
-+	ata_scsi_set_invalid_field(dev, args->cmd, fp, bp);
- 	return 1;
- 
- saving_not_supp:
-@@ -3214,7 +3218,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	return 0;
- 
-  invalid_fld:
--	ata_scsi_set_invalid_field(dev, scmd, fp);
-+	ata_scsi_set_invalid_field(dev, scmd, fp, 0xff);
- 	return 1;
- }
- 
-@@ -3229,6 +3233,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	u32 size;
- 	void *buf;
- 	u16 fp;
-+	u8 bp = 0xff;
- 
- 	/* we may not issue DMA commands if no DMA mode is set */
- 	if (unlikely(!dev->dma_mode))
-@@ -3243,6 +3248,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	/* for now we only support WRITE SAME with the unmap bit set */
- 	if (unlikely(!(cdb[1] & 0x8))) {
- 		fp = 1;
-+		bp = 3;
- 		goto invalid_fld;
- 	}
- 
-@@ -3283,7 +3289,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	return 0;
- 
- invalid_fld:
--	ata_scsi_set_invalid_field(dev, scmd, fp);
-+	ata_scsi_set_invalid_field(dev, scmd, fp, bp);
- 	return 1;
- invalid_param_len:
- 	/* "Parameter list length error" */
-@@ -3406,6 +3412,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
- 	unsigned six_byte, pg_len, hdr_len, bd_len;
- 	int len;
- 	u16 fp;
-+	u8 bp;
- 
- 	VPRINTK("ENTER\n");
- 
-@@ -3431,6 +3438,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
- 	/* We only support PF=1, SP=0.  */
- 	if ((cdb[1] & 0x11) != 0x10) {
- 		fp = 1;
-+		bp = (cdb[1] & 0x01) ? 1 : 5;
- 		goto invalid_fld;
- 	}
- 
-@@ -3513,7 +3521,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
- 	return 0;
- 
-  invalid_fld:
--	ata_scsi_set_invalid_field(qc->dev, scmd, fp);
-+	ata_scsi_set_invalid_field(qc->dev, scmd, fp, bp);
- 	return 1;
- 
-  invalid_param:
++static inline bool ata_id_has_sense_reporting(const u16 *id)
++{
++	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
++		return false;
++	return id[ATA_ID_COMMAND_SET_3] & (1 << 6);
++}
++
++static inline bool ata_id_sense_reporting_enabled(const u16 *id)
++{
++	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
++		return false;
++	return id[ATA_ID_COMMAND_SET_4] & (1 << 6);
++}
++
+ /**
+  *	ata_id_major_version	-	get ATA level of drive
+  *	@id: Identify data
 -- 
 1.8.5.6
 
