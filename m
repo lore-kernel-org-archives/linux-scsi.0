@@ -1,76 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 0/5] mempool based chained scatterlist alloc/free api
-Date: Mon, 04 Apr 2016 07:01:36 -0700
-Message-ID: <1459778496.2315.1.camel@HansenPartnership.com>
-References: <1458684196-15923-1-git-send-email-mlin@kernel.org>
-	 <20160323074012.GA17929@lst.de>
-	 <CAF1ivSaxn7KbiLt0ByHoC-EyP-Q0ah33YGNv0rLoO-=sOvia5w@mail.gmail.com>
-	 <1458834360.2544.12.camel@HansenPartnership.com>
-	 <CAF1ivSbvrUUdMp60FAU6LURyCA9pkfaEzia+XB+1nfkDDW1WdQ@mail.gmail.com>
-	 <CAF1ivSY-xbhv47a3UCDWmDb9PsUpTSOmXDyRmSAzMactbX_fxA@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/4] libata: support device-managed ZAC devices
+Date: Mon, 4 Apr 2016 16:15:28 +0200
+Message-ID: <57027700.6070107@suse.de>
+References: <1459763271-125856-1-git-send-email-hare@suse.de>
+ <1459763271-125856-4-git-send-email-hare@suse.de>
+ <57024C5D.8070402@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSY-xbhv47a3UCDWmDb9PsUpTSOmXDyRmSAzMactbX_fxA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51926 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754000AbcDDOPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2016 10:15:31 -0400
+In-Reply-To: <57024C5D.8070402@cogentembedded.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-On Sun, 2016-04-03 at 23:07 -0700, Ming Lin wrote:
-> On Mon, Mar 28, 2016 at 7:48 AM, Ming Lin <mlin@kernel.org> wrote:
-> > On Thu, Mar 24, 2016 at 8:46 AM, James Bottomley
-> > <James.Bottomley@hansenpartnership.com> wrote:
-> > > On Thu, 2016-03-24 at 08:09 -0700, Ming Lin wrote:
-> > > > On Wed, Mar 23, 2016 at 12:40 AM, Christoph Hellwig <hch@lst.de
-> > > > >
-> > > > wrote:
-> > > > > On Tue, Mar 22, 2016 at 03:03:11PM -0700, Ming Lin wrote:
-> > > > > > From: Ming Lin <ming.l@ssi.samsung.com>
-> > > > > >=20
-> > > > > > The fist 4 patches make the SG related
-> > > > > > definitions/structs/functions
-> > > > > > in SCSI code generic and the last patch move it to
-> > > > > > lib/sg_pool.c.
-> > > > > >=20
-> > > > > > I still keep the macro "SG_MEMPOOL_NR" since it's used in 3
-> > > > > > places.
-> > > > >=20
-> > > > > I don't =D1=95ee the point, but I'm not going to block the se=
-ries
-> > > > > over
-> > > > > it either.
-> > > > >=20
-> > > > > The new series looks really nice to me!
-> > > > >=20
-> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > >=20
-> > > > Hi James,
-> > > >=20
-> > > > This series touches several sub-systems.
-> > > > What's the best way to merge it?
-> > >=20
-> > > It has a minor intrusion into
-> > >=20
-> > >  drivers/ata/pata_icside.c           |   2 +-
-> > >  drivers/infiniband/ulp/srp/ib_srp.c |   4 +-
-> > >  drivers/usb/storage/scsiglue.c      |   2 +-
-> > >=20
-> > > Apart from that, it's all SCSI, so the SCSI tree would seem to be
-> > > the
-> > > best one.
-> >=20
-> > Are you OK to merge it?
+On 04/04/2016 01:13 PM, Sergei Shtylyov wrote:
+> Hello.
 >=20
-> Hi James,
+> On 4/4/2016 12:47 PM, Hannes Reinecke wrote:
 >=20
-> Ping ...
+>> Device-managed ZAC devices just set the zoned capabilities field
+>> in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
+>> field in the block device characteristics VPD page.
+>> As this is only defined in SPC-5/SBC-4 we also need to update
+>> the supported SCSI version descriptor.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/ata/libata-scsi.c | 19 ++++++++++---------
+>>   include/linux/ata.h       |  5 +++++
+>>   2 files changed, 15 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 6db2aaf..ff95ef6 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+> [...]
+>> @@ -2316,12 +2314,15 @@ static unsigned int
+>> ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+>>   {
+>>       int form_factor =3D ata_id_form_factor(args->id);
+>>       int media_rotation_rate =3D ata_id_rotation_rate(args->id);
+>> +    u8 zoned =3D ata_id_zoned_cap(args->id);
+>>
+>>       rbuf[1] =3D 0xb1;
+>>       rbuf[3] =3D 0x3c;
+>>       rbuf[4] =3D media_rotation_rate >> 8;
+>>       rbuf[5] =3D media_rotation_rate;
+>>       rbuf[7] =3D form_factor;
+>> +    if (zoned)
+>> +        rbuf[8] =3D (zoned << 4);
 >=20
-> Are you OK to apply this series?
-> Or any changes needed?
+>    Parens not needed here.
+>=20
+> [...]
+>=20
+> MBR, Sergei
+>=20
+Thanks, will be fixing it up with the next round of submissions.
 
-It's got the needed reviews, but we need acks from tejun (ATA) and Sagi
-(IB) and a repost fixing the test robot objection to patch 5.
+Cheers,
 
-James
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
