@@ -1,61 +1,82 @@
-From: Bastien Bastien Philbert <bastienphilbert@gmail.com>
-Subject: Re: [PATCH] bnx2fc: Fix locking requirements in bnx2fc_init_tgt
-Date: Tue, 5 Apr 2016 13:50:24 -0400
-Message-ID: <CACJ9a8Rz7wrLtFttHXvNCc-AcvnAahVOcE4=GNdo61F_4MK3QA@mail.gmail.com>
-References: <1459867006-19605-1-git-send-email-bastienphilbert@gmail.com>
-	<alpine.OSX.2.00.1604051341370.1272@administrators-macbook-pro.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:36822 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbcDERuZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2016 13:50:25 -0400
-In-Reply-To: <alpine.OSX.2.00.1604051341370.1272@administrators-macbook-pro.local>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v2 0/3] Block BIO support for zoned devices
+Date: Wed,  6 Apr 2016 02:29:25 +0700
+Message-ID: <1459884568-12091-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Shaun Tancheff <shaun@tancheff.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Apr 5, 2016 at 1:43 PM, Chad Dupuis <chad.dupuis@qlogic.com> wrote:
->
->
-> On Tue, 5 Apr 2016, Bastien Philbert wrote:
->
->> This fixes the locking around the call to bnx2fc_alloc_id to comply
->> with the comments about this particular function's definition about
->> requiring the need to hold the hba mutex before and after calling
->> it.
->> Signed-off-by: Bastien Philbert <bastienphilbert@gmail.com>
->> ---
->> drivers/scsi/bnx2fc/bnx2fc_tgt.c | 6 +++++-
->> 1 file changed, 5 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
->> b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
->> index 08ec318..f2988cd 100644
->> --- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
->> +++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
->> @@ -368,9 +368,13 @@ static int bnx2fc_init_tgt(struct bnx2fc_rport *tgt,
->>                 return -1;
->>         }
->>
->> +       mutex_lock(&hba->hba_mutex);
->>         tgt->fcoe_conn_id = bnx2fc_alloc_conn_id(hba, tgt);
->> -       if (tgt->fcoe_conn_id == -1)
->> +       if (tgt->fcoe_conn_id == -1) {
->> +               mutex_unlock(&hba->hba_mutex);
->>                 return -1;
->> +       }
->> +       mutex_unlock(&hba->hba_mutex);
->>
->>         BNX2FC_TGT_DBG(tgt, "init_tgt - conn_id = 0x%x\n",
->> tgt->fcoe_conn_id);
->>
->>
->
-> Taking the mutex here is not needed as it is already taken in
-> bnx2fc_rport_event_handler() in the call chain
-> bnx2fc_rport_event_handler->bnx2fc_offload_session->bnx2fc_init_tgt->bnx2fc_alloc_conn_id
-Ok thanks and good to known.
-Bastien
+As Host Aware drives are becoming available we would like to be able
+to make use of such drives. This series is also intended to be suitable
+for use by Host Managed drives.
+
+The following series is hopefully a reasonable start at adding such
+support.
+
+ZAC/ZBC drives add new commands. Most of this support is queued for 4.7.
+The first patch is a minor tweak to include open and close zone support
+for compatibility with devices following the Host Managed specification.
+
+With the ZAC support in place adding some additional flags to struct bio
+to identify the new drive requests (Report zones, Open/Close/Reset zones).
+
+With the bio support in place there are two new users added. The first
+user is an ioctl included here.
+
+The second user is a new device mapper target to follow in a separate
+series.
+
+Changes since v1:
+ * Updated to v4.6-rc2
+ 
+ * Re based on  separate operations from flags in the bio/request structs
+    https://lkml.kernel.org/r/1456343292-14535-1-git-send-email-mchristi@redhat.com
+ 
+ * Re based on libata: SATL update: 
+    https://lkml.kernel.org/r/1459763047-125551-1-git-send-email-hare@suse.de
+     
+ * Re based on libata: ZAC support: 
+    https://lkml.kernel.org/r/1459763271-125856-1-git-send-email-hare@suse.de
+ 
+ * Re based on Update version of write stream ID patchset
+    https://lkml.kernel.org/r/1457107853-8689-1-git-send-email-axboe@fb.com
+
+  * Patches covered by the above series have been dropped and the series is
+    split into 2 parts: Block support patches and Device Mapper RFC.
+
+And a fork of Linus kernel with branches off v4.6-rc2 is available here:
+https://github.com/stancheff/linux
+  branch: v4.6-rc2+op
+  branch: v4.6-rc2+op+zbc
+  branch: v4.6-rc2+op+zbc+sid
+  branch: v4.6-rc2+op+zbc+sid+zdm
+
+ZDM code and user space is also available on github here:
+https://github.com/Seagate/ZDM-Device-Mapper
+
+Shaun Tancheff (3):
+  Add ZBC <-> ZAC xlat support for report, open, close, reset, finish
+  Add bio/request flags for using ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+
+ MAINTAINERS                       |   9 ++
+ block/blk-lib.c                   | 125 +++++++++++++++++++++
+ block/ioctl.c                     | 113 +++++++++++++++++++
+ drivers/ata/libata-scsi.c         |   5 +-
+ drivers/scsi/sd.c                 | 107 ++++++++++++++++++
+ drivers/scsi/sd.h                 |   1 +
+ include/linux/blk_types.h         |  17 ++-
+ include/linux/blkzoned_api.h      |  25 +++++
+ include/scsi/scsi_device.h        |   1 +
+ include/uapi/linux/Kbuild         |   1 +
+ include/uapi/linux/blkzoned_api.h | 221 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h           |   1 +
+ 12 files changed, 623 insertions(+), 3 deletions(-)
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
+
+-- 
+1.9.1
+
