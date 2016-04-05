@@ -1,39 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 03/12] BUG: Losing bits on request.cmd_flags
-Date: Mon, 04 Apr 2016 22:08:50 -0400
-Message-ID: <yq1zit8bydp.fsf@sermon.lab.mkp.net>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-	<1459746376-27983-4-git-send-email-shaun@tancheff.com>
-	<x49pou5s6yg.fsf@segfault.boston.devel.redhat.com>
-	<CAJVOszAK5w4qsrKcUot8rm9nZ65hXeUm5YomQU3fT-fARCGXjA@mail.gmail.com>
+Subject: Re: [PATCH 2/8] snic: LUN goes offline due to scsi cmd timeouts
+Date: Mon, 04 Apr 2016 22:05:54 -0400
+Message-ID: <yq18u0sdd31.fsf@sermon.lab.mkp.net>
+References: <1458201077-10211-1-git-send-email-nmusini@cisco.com>
+	<1458201077-10211-2-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <CAJVOszAK5w4qsrKcUot8rm9nZ65hXeUm5YomQU3fT-fARCGXjA@mail.gmail.com>
-	(Shaun Tancheff's message of "Mon, 4 Apr 2016 23:06:03 +0700")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Shaun Tancheff <shaun@tancheff.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38752 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932543AbcDECHG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2016 22:07:06 -0400
+In-Reply-To: <1458201077-10211-2-git-send-email-nmusini@cisco.com> (Narsimhulu
+	Musini's message of "Thu, 17 Mar 2016 00:51:11 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Narsimhulu Musini <nmusini@cisco.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de, Sesidhar Baddela <sebaddel@cisco.com>
 
->>>>> "Shaun" == Shaun Tancheff <shaun.tancheff@seagate.com> writes:
+>>>>> "Narsimhulu" == Narsimhulu Musini <nmusini@cisco.com> writes:
 
-Shaun> Oh, okay. It became an issue in the next patch where some
-Shaun> internal cmd_flags temporaries where stored in 32 bit values.
+Narsimhulu> - LUN goes offline, if there are atleast two scsi command
+Narsimhulu> timeouts Completing the IO with scsi_done() fixes the issue.
 
-Shaun> I will fix patch/subject.
+Narsimhulu> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
+Narsimhulu> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com> ---
+Narsimhulu> drivers/scsi/snic/snic_scsi.c | 18 ++++++++++++++++++ 1 file
+Narsimhulu> changed, 18 insertions(+)
 
-There's a pending patch set from Mike Christie that cleans all this
-up. Please use that as baseline.
+Applied patches 1-8 to to 4.7/scsi-queue.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
