@@ -1,180 +1,40 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH v2 3/3] Add ioctl to issue ZBC/ZAC commands via block layer
-Date: Wed,  6 Apr 2016 02:29:28 +0700
-Message-ID: <1459884568-12091-4-git-send-email-shaun@tancheff.com>
-References: <1459884568-12091-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1459884568-12091-1-git-send-email-shaun@tancheff.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+From: Bastien Philbert <bastienphilbert@gmail.com>
+Subject: [PATCH] csiostor: Fix backwards locking in the function __csio_unreg_rnode
+Date: Tue,  5 Apr 2016 17:19:03 -0400
+Message-ID: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add New ioctl types
-    BLKREPORT    - Issue Report Zones to device.
-    BLKOPENZONE  - Issue an Zone Action: Open Zone command.
-    BLKCLOSEZONE - Issue an Zone Action: Close Zone command.
-    BLKRESETZONE - Issue an Zone Action: Reset Zone command.
+This fixes backwards locking in the function __csio_unreg_rnode to
+properly lock before the call to the function csio_unreg_rnode and
+not unlock with spin_unlock_irq as this would not allow the proper
+protection for concurrent access on the shared csio_hw structure
+pointer hw. In addition switch the locking after the critical region
+function call to properly unlock instead with spin_unlock_irq on
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+Signed-off-by: Bastien Philbert <bastienphilbert@gmail.com>
 ---
- block/ioctl.c                     | 113 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/blkzoned_api.h |   6 ++
- 2 files changed, 119 insertions(+)
+ drivers/scsi/csiostor/csio_rnode.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index d8996bb..67c03d0 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -8,6 +8,7 @@
- #include <linux/backing-dev.h>
- #include <linux/fs.h>
- #include <linux/blktrace_api.h>
-+#include <linux/blkzoned_api.h>
- #include <linux/pr.h>
- #include <asm/uaccess.h>
+diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/csio_rnode.c
+index e9c3b04..029a09e 100644
+--- a/drivers/scsi/csiostor/csio_rnode.c
++++ b/drivers/scsi/csiostor/csio_rnode.c
+@@ -580,9 +580,9 @@ __csio_unreg_rnode(struct csio_rnode *rn)
+ 		ln->last_scan_ntgts--;
+ 	}
  
-@@ -195,6 +196,112 @@ int blkdev_reread_part(struct block_device *bdev)
- }
- EXPORT_SYMBOL(blkdev_reread_part);
+-	spin_unlock_irq(&hw->lock);
+-	csio_unreg_rnode(rn);
+ 	spin_lock_irq(&hw->lock);
++	csio_unreg_rnode(rn);
++	spin_unlock_irq(&hw->lock);
  
-+static int blk_zoned_report_ioctl(struct block_device *bdev, fmode_t mode,
-+		void __user *parg)
-+{
-+	int error = -EFAULT;
-+	gfp_t gfp = GFP_KERNEL;
-+	struct bdev_zone_report_io *zone_iodata = NULL;
-+	int order = 0;
-+	struct page *pgs = NULL;
-+	u32 alloc_size = PAGE_SIZE;
-+	unsigned long bi_rw = 0;
-+	u8 opt = 0;
-+
-+	if (!(mode & FMODE_READ))
-+		return -EBADF;
-+
-+	zone_iodata = (void *)get_zeroed_page(gfp);
-+	if (!zone_iodata) {
-+		error = -ENOMEM;
-+		goto report_zones_out;
-+	}
-+	if (copy_from_user(zone_iodata, parg, sizeof(*zone_iodata))) {
-+		error = -EFAULT;
-+		goto report_zones_out;
-+	}
-+	if (zone_iodata->data.in.return_page_count > alloc_size) {
-+		int npages;
-+
-+		alloc_size = zone_iodata->data.in.return_page_count;
-+		npages = (alloc_size + PAGE_SIZE - 1) / PAGE_SIZE;
-+		order =  ilog2(roundup_pow_of_two(npages));
-+		pgs = alloc_pages(gfp, order);
-+		if (pgs) {
-+			void *mem = page_address(pgs);
-+
-+			if (!mem) {
-+				error = -ENOMEM;
-+				goto report_zones_out;
-+			}
-+			memset(mem, 0, alloc_size);
-+			memcpy(mem, zone_iodata, sizeof(*zone_iodata));
-+			free_page((unsigned long)zone_iodata);
-+			zone_iodata = mem;
-+		} else {
-+			/* Result requires DMA capable memory */
-+			pr_err("Not enough memory available for request.\n");
-+			error = -ENOMEM;
-+			goto report_zones_out;
-+		}
-+	}
-+	opt = zone_iodata->data.in.report_option & 0x7F;
-+	if (zone_iodata->data.in.report_option & ZOPT_USE_ATA_PASS)
-+		bi_rw |= REQ_META;
-+
-+	error = blkdev_issue_zone_report(bdev, bi_rw,
-+			zone_iodata->data.in.zone_locator_lba, opt,
-+			pgs ? pgs : virt_to_page(zone_iodata),
-+			alloc_size, GFP_KERNEL);
-+
-+	if (error)
-+		goto report_zones_out;
-+
-+	if (copy_to_user(parg, zone_iodata, alloc_size))
-+		error = -EFAULT;
-+
-+report_zones_out:
-+	if (pgs)
-+		__free_pages(pgs, order);
-+	else if (zone_iodata)
-+		free_page((unsigned long)zone_iodata);
-+	return error;
-+}
-+
-+static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
-+				  unsigned int cmd, unsigned long arg)
-+{
-+	unsigned long bi_rw = 0;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
-+
-+	/*
-+	 * When acting on zones we explicitly disallow using a partition.
-+	 */
-+	if (bdev != bdev->bd_contains) {
-+		pr_err("%s: All zone operations disallowed on this device\n",
-+			__func__);
-+		return -EFAULT;
-+	}
-+
-+	switch (cmd) {
-+	case BLKOPENZONE:
-+		bi_rw |= REQ_OPEN_ZONE;
-+		break;
-+	case BLKCLOSEZONE:
-+		bi_rw |= REQ_CLOSE_ZONE;
-+		break;
-+	case BLKRESETZONE:
-+		bi_rw |= REQ_RESET_ZONE;
-+		break;
-+	default:
-+		pr_err("%s: Unknown action: %u\n", __func__, cmd);
-+		WARN_ON(1);
-+	}
-+	return blkdev_issue_zone_action(bdev, bi_rw, arg, GFP_KERNEL);
-+}
-+
- static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg, unsigned long flags)
- {
-@@ -598,6 +705,12 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKTRACESETUP:
- 	case BLKTRACETEARDOWN:
- 		return blk_trace_ioctl(bdev, cmd, argp);
-+	case BLKREPORT:
-+		return blk_zoned_report_ioctl(bdev, mode, argp);
-+	case BLKOPENZONE:
-+	case BLKCLOSEZONE:
-+	case BLKRESETZONE:
-+		return blk_zoned_action_ioctl(bdev, mode, cmd, arg);
- 	case BLKDAXGET:
- 		return put_int(arg, !!(bdev->bd_inode->i_flags & S_DAX));
- 		break;
-diff --git a/include/uapi/linux/blkzoned_api.h b/include/uapi/linux/blkzoned_api.h
-index 189e925..2007b56 100644
---- a/include/uapi/linux/blkzoned_api.h
-+++ b/include/uapi/linux/blkzoned_api.h
-@@ -212,4 +212,10 @@ struct bdev_zone_report_io {
- 	} data;
- } __packed;
- 
-+/* continuing from uapi/linux/fs.h: */
-+#define BLKREPORT	_IOWR(0x12, 130, struct bdev_zone_report_io)
-+#define BLKOPENZONE	_IO(0x12, 131)
-+#define BLKCLOSEZONE	_IO(0x12, 132)
-+#define BLKRESETZONE	_IO(0x12, 133)
-+
- #endif /* _UAPI_BLKZONED_API_H */
+ 	/* Cleanup I/Os that were waiting for rnode to unregister */
+ 	if (cmpl)
 -- 
-1.9.1
-
+2.5.0
