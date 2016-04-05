@@ -1,41 +1,59 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH v13 0/9] add support for DWC UFS Controller
-Date: Tue, 5 Apr 2016 10:09:13 +0100
-Message-ID: <570380B9.30800@synopsys.com>
-References: <cover.1459448160.git.jpinto@synopsys.com>
- <yq1inzxeyoe.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1inzxeyoe.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: robh@kernel.org, tomas.winkler@intel.com, vinholikatti@gmail.com, julian.calaby@gmail.com, akinobu.mita@gmail.com, hch@infradead.org, gbroner@codeaurora.org, subhashj@codeaurora.org, CARLOS.PALMINHA@synopsys.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, arnd@arndb.de, mark.rutland@arm.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v4 2/2] Revert "scsi: fix soft lockup in scsi_remove_target() on module removal"
+Date: Tue,  5 Apr 2016 11:50:45 +0200
+Message-ID: <6fd7396e87d983aa307be2228d364dbe4f34f892.1459848136.git.jthumshirn@suse.de>
+References: <cover.1459848136.git.jthumshirn@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52966 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbcDEJut (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2016 05:50:49 -0400
+In-Reply-To: <cover.1459848136.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1459848136.git.jthumshirn@suse.de>
+References: <cover.1459848136.git.jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 
-Hi,
+Now that we've done a more comprehensive fix with the intermediate
+target state we can remove the previous hack introduced with commit
+90a88d6ef88edcfc4f644dddc7eef4ea41bccf8b.
 
-On 4/5/2016 12:34 AM, Martin K. Petersen wrote:
->>>>>> "Joao" == Joao Pinto <Joao.Pinto@synopsys.com> writes:
-> 
-> Joao,
-> 
-> Joao> The work consisted of: - Fixed typo in ufshcd-pltfrm.c - Tweak
-> Joao> ufshcd.c for UFS 2.0 support - Implement ufshcd-dwc which contains
-> Joao> all DWC HW specific code - Unipro attributes were added and new
-> Joao> registers were added to the driver - Implement a tc-dwc-g210
-> Joao> containing G210 MPHY specific code - Implement a tc-dwc-g210 glue
-> Joao> platform driver - Implement a tc-dwc-g210 glue pci driver -
-> Joao> Documentation update
-> 
-> You really need to keep track of which Acked-by: and Reviewed-by: tags
-> you have gotten from people and apply them to patches that you haven't
-> changed. Otherwise we start from scratch every time you resubmit.
-> 
-> Thanks!
-> 
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: stable@vger.kernel.org
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_sysfs.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-It's ok to submit the same v13 with the ACK tags?
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 0df82e8..9e5f893 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1272,19 +1272,17 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ void scsi_remove_target(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	struct scsi_target *starget, *last_target = NULL;
++	struct scsi_target *starget;
+ 	unsigned long flags;
+ 
+ restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL ||
+-		    starget->state == STARGET_REMOVE ||
+-		    starget == last_target)
++		    starget->state == STARGET_REMOVE)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
+-			last_target = starget;
+ 			starget->state = STARGET_REMOVE;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+-- 
+1.8.5.6
 
-Joao
