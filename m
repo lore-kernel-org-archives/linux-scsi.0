@@ -1,59 +1,66 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH] csiostor: Fix backwards locking in the function __csio_unreg_rnode
-Date: Wed, 6 Apr 2016 17:48:44 +1000
-Message-ID: <CAGRGNgXXBZb91xgRfkU_xtAF4rmCFbDFuxq8jRmQzJXU2wHb7Q@mail.gmail.com>
-References: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] libata: implement ZBC IN translation
+Date: Wed, 6 Apr 2016 09:51:26 +0200
+Message-ID: <5704BFFE.4050200@suse.de>
+References: <1459763271-125856-1-git-send-email-hare@suse.de>
+ <1459763271-125856-2-git-send-email-hare@suse.de>
+ <20160404154924.GU7822@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:34340 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830AbcDFHtE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2016 03:49:04 -0400
-In-Reply-To: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:53905 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754810AbcDFHva (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2016 03:51:30 -0400
+In-Reply-To: <20160404154924.GU7822@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bastien Philbert <bastienphilbert@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-Hi Bastien,
+On 04/04/2016 05:49 PM, Tejun Heo wrote:
+> On Mon, Apr 04, 2016 at 11:47:48AM +0200, Hannes Reinecke wrote:
+>> +/*
+>=20
+> /**
+>=20
+>> + * ata_scsi_report_zones_complete
+>> + *
+>> + * Convert T-13 little-endian field representation into
+>> + * T-10 big-endian field representation.
+>> + */
+>> +static void ata_scsi_report_zones_complete(struct ata_queued_cmd *q=
+c)
+>> +{
+>> +	struct scsi_cmnd *scmd =3D qc->scsicmd;
+>> +	struct sg_mapping_iter miter;
+>> +	unsigned long flags;
+>> +	unsigned int bytes =3D 0;
+>> +
+>> +	sg_miter_start(&miter, scsi_sglist(scmd), scsi_sg_count(scmd),
+>> +		       SG_MITER_TO_SG | SG_MITER_ATOMIC);
+>> +
+>> +	local_irq_save(flags);
+>> +	while (sg_miter_next(&miter)) {
+>> +		unsigned int offset =3D 0;
+>=20
+> Not this patch's fault but ugh........  :(
+>=20
+I know. I've been asking the very same questions to T-13.
+But apparently it's by design ... gnaa.
 
-On Wed, Apr 6, 2016 at 7:19 AM, Bastien Philbert
-<bastienphilbert@gmail.com> wrote:
-> This fixes backwards locking in the function __csio_unreg_rnode to
-> properly lock before the call to the function csio_unreg_rnode and
-> not unlock with spin_unlock_irq as this would not allow the proper
-> protection for concurrent access on the shared csio_hw structure
-> pointer hw. In addition switch the locking after the critical region
-> function call to properly unlock instead with spin_unlock_irq on
->
-> Signed-off-by: Bastien Philbert <bastienphilbert@gmail.com>
-> ---
->  drivers/scsi/csiostor/csio_rnode.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/csio_rnode.c
-> index e9c3b04..029a09e 100644
-> --- a/drivers/scsi/csiostor/csio_rnode.c
-> +++ b/drivers/scsi/csiostor/csio_rnode.c
-> @@ -580,9 +580,9 @@ __csio_unreg_rnode(struct csio_rnode *rn)
->                 ln->last_scan_ntgts--;
->         }
->
-> -       spin_unlock_irq(&hw->lock);
-> -       csio_unreg_rnode(rn);
->         spin_lock_irq(&hw->lock);
-> +       csio_unreg_rnode(rn);
-> +       spin_unlock_irq(&hw->lock);
+Cheers,
 
-Are you _certain_ this is correct? This construct usually appears when
-a function has a particular lock held, then needs to unlock it to call
-some other function. Are you _certain_ that this isn't the case?
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
