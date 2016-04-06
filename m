@@ -1,74 +1,59 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] bnx2fc: Fix locking requirements in bnx2fc_init_tgt
-Date: Tue, 05 Apr 2016 21:16:26 -0400
-Message-ID: <1459905386.2315.69.camel@linux.vnet.ibm.com>
-References: <1459867006-19605-1-git-send-email-bastienphilbert@gmail.com>
-	 <alpine.OSX.2.00.1604051341370.1272@administrators-macbook-pro.local>
-	 <CACJ9a8Rz7wrLtFttHXvNCc-AcvnAahVOcE4=GNdo61F_4MK3QA@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] csiostor: Fix backwards locking in the function __csio_unreg_rnode
+Date: Wed, 6 Apr 2016 17:48:44 +1000
+Message-ID: <CAGRGNgXXBZb91xgRfkU_xtAF4rmCFbDFuxq8jRmQzJXU2wHb7Q@mail.gmail.com>
+References: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACJ9a8Rz7wrLtFttHXvNCc-AcvnAahVOcE4=GNdo61F_4MK3QA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bastien Bastien Philbert <bastienphilbert@gmail.com>, Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:34340 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830AbcDFHtE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2016 03:49:04 -0400
+In-Reply-To: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bastien Philbert <bastienphilbert@gmail.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, 2016-04-05 at 13:50 -0400, Bastien Bastien Philbert wrote:
-> On Tue, Apr 5, 2016 at 1:43 PM, Chad Dupuis <chad.dupuis@qlogic.com>
-> wrote:
-> > 
-> > 
-> > On Tue, 5 Apr 2016, Bastien Philbert wrote:
-> > 
-> > > This fixes the locking around the call to bnx2fc_alloc_id to
-> > > comply
-> > > with the comments about this particular function's definition
-> > > about
-> > > requiring the need to hold the hba mutex before and after calling
-> > > it.
-> > > Signed-off-by: Bastien Philbert <bastienphilbert@gmail.com>
-> > > ---
-> > > drivers/scsi/bnx2fc/bnx2fc_tgt.c | 6 +++++-
-> > > 1 file changed, 5 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> > > b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> > > index 08ec318..f2988cd 100644
-> > > --- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> > > +++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> > > @@ -368,9 +368,13 @@ static int bnx2fc_init_tgt(struct
-> > > bnx2fc_rport *tgt,
-> > >                 return -1;
-> > >         }
-> > > 
-> > > +       mutex_lock(&hba->hba_mutex);
-> > >         tgt->fcoe_conn_id = bnx2fc_alloc_conn_id(hba, tgt);
-> > > -       if (tgt->fcoe_conn_id == -1)
-> > > +       if (tgt->fcoe_conn_id == -1) {
-> > > +               mutex_unlock(&hba->hba_mutex);
-> > >                 return -1;
-> > > +       }
-> > > +       mutex_unlock(&hba->hba_mutex);
-> > > 
-> > >         BNX2FC_TGT_DBG(tgt, "init_tgt - conn_id = 0x%x\n",
-> > > tgt->fcoe_conn_id);
-> > > 
-> > > 
-> > 
-> > Taking the mutex here is not needed as it is already taken in
-> > bnx2fc_rport_event_handler() in the call chain
-> > bnx2fc_rport_event_handler->bnx2fc_offload_session->bnx2fc_init_tgt
-> > ->bnx2fc_alloc_conn_id
-> Ok thanks and good to known.
+Hi Bastien,
 
-Since the mutex was already taken, the patch you propose would produce
-an immediate deadlock if applied, meaning you didn't actually test it
-out.  If you're going to propose patches like this, please understand
-the driver you're patching, *test* the patches on actual hardware and
-describe the problem you're solving in the changelog.
+On Wed, Apr 6, 2016 at 7:19 AM, Bastien Philbert
+<bastienphilbert@gmail.com> wrote:
+> This fixes backwards locking in the function __csio_unreg_rnode to
+> properly lock before the call to the function csio_unreg_rnode and
+> not unlock with spin_unlock_irq as this would not allow the proper
+> protection for concurrent access on the shared csio_hw structure
+> pointer hw. In addition switch the locking after the critical region
+> function call to properly unlock instead with spin_unlock_irq on
+>
+> Signed-off-by: Bastien Philbert <bastienphilbert@gmail.com>
+> ---
+>  drivers/scsi/csiostor/csio_rnode.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/csio_rnode.c
+> index e9c3b04..029a09e 100644
+> --- a/drivers/scsi/csiostor/csio_rnode.c
+> +++ b/drivers/scsi/csiostor/csio_rnode.c
+> @@ -580,9 +580,9 @@ __csio_unreg_rnode(struct csio_rnode *rn)
+>                 ln->last_scan_ntgts--;
+>         }
+>
+> -       spin_unlock_irq(&hw->lock);
+> -       csio_unreg_rnode(rn);
+>         spin_lock_irq(&hw->lock);
+> +       csio_unreg_rnode(rn);
+> +       spin_unlock_irq(&hw->lock);
+
+Are you _certain_ this is correct? This construct usually appears when
+a function has a particular lock held, then needs to unlock it to call
+some other function. Are you _certain_ that this isn't the case?
 
 Thanks,
 
-James
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
