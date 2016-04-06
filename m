@@ -1,40 +1,28 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH v2 8/8] scsi: ufs: connect to RPMB subsystem
-Date: Wed, 6 Apr 2016 09:51:23 +0100
-Message-ID: <5704CE0B.2010700@synopsys.com>
-References: <1459768284-26997-1-git-send-email-tomas.winkler@intel.com>
- <1459768284-26997-9-git-send-email-tomas.winkler@intel.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v4 0/2] Update SCSI target removal path
+Date: Wed, 06 Apr 2016 11:06:07 +0200
+Message-ID: <6b11ce221b1aa30fef376069fc96e065@suse.de>
+References: <cover.1459848136.git.jthumshirn@suse.de>
+ <yq1d1q4b8xj.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <1459768284-26997-9-git-send-email-tomas.winkler@intel.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>, gregkh@linuxfoundation.org, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander Usyskin <alexander.usyskin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1d1q4b8xj.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi!
-
-On 4/4/2016 12:11 PM, Tomas Winkler wrote:
-> Register UFS RPMB LUN with the RPMB subsystem and provide
-> implementation for the RPMB access operations. RPMB partition is
-> accessed via a sequence of security protocol in and security protocol
-> out commands with UFS specific parameters. This multi step process is
-> abstracted into 4 basic RPMB commands.
-
-[snip]
-
->  	 * "UFS device" W-LU.
->  	 */
->  	struct scsi_device *sdev_ufs_device;
-> +	struct scsi_device *sdev_ufs_rpmb;
->  
->  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
->  	enum uic_link_state uic_link_state;
+On 2016-04-05 13:18, Martin K. Petersen wrote:
+>>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 > 
+> Johannes> This is a follow up to "scsi: Add intermediate STARGET_REMOVE
+> Johannes> state to scsi_target_state".
+> 
+> James suggested we should let this incubate before hitting stable.
+> 
+> Dropped v3 from 4.6/scsi-fixes and applied v4 to 4.7/scsi-queue.
 
-I have a UFS device emulator that has the RPMB capability. What are the expected
-good results for me to validate?
-
-Thanks.
+Sounds good to me.
