@@ -1,54 +1,64 @@
-From: zengzhaoxiu@163.com
-Subject: [PATCH v2 19/30] scsi: use parity32 in isci's phy
-Date: Wed,  6 Apr 2016 17:47:04 +0800
-Message-ID: <1459936024-7866-1-git-send-email-zengzhaoxiu@163.com>
-References: <57031D9D.801@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <57031D9D.801@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Zhaoxiu Zeng <zhaoxiu.zeng@gmail.com>
+From: Bastien Philbert <bastienphilbert@gmail.com>
+Subject: Re: [PATCH] csiostor: Fix backwards locking in the function
+ __csio_unreg_rnode
+Date: Wed, 6 Apr 2016 09:21:38 -0400
+Message-ID: <57050D62.3090802@gmail.com>
+References: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
+ <CAGRGNgXXBZb91xgRfkU_xtAF4rmCFbDFuxq8jRmQzJXU2wHb7Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:36589 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754338AbcDFNVl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2016 09:21:41 -0400
+In-Reply-To: <CAGRGNgXXBZb91xgRfkU_xtAF4rmCFbDFuxq8jRmQzJXU2wHb7Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: Zhaoxiu Zeng <zhaoxiu.zeng@gmail.com>
 
-Signed-off-by: Zhaoxiu Zeng <zhaoxiu.zeng@gmail.com>
----
- drivers/scsi/isci/phy.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index cb87b2e..a06aff6 100644
---- a/drivers/scsi/isci/phy.c
-+++ b/drivers/scsi/isci/phy.c
-@@ -122,8 +122,6 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 	int phy_idx = iphy->phy_index;
- 	struct sci_phy_cap phy_cap;
- 	u32 phy_configuration;
--	u32 parity_check = 0;
--	u32 parity_count = 0;
- 	u32 llctl, link_rate;
- 	u32 clksm_value = 0;
- 	u32 sp_timeouts = 0;
-@@ -225,18 +223,7 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 	/* The SAS specification indicates that the phy_capabilities that
- 	 * are transmitted shall have an even parity.  Calculate the parity.
- 	 */
--	parity_check = phy_cap.all;
--	while (parity_check != 0) {
--		if (parity_check & 0x1)
--			parity_count++;
--		parity_check >>= 1;
--	}
--
--	/* If parity indicates there are an odd number of bits set, then
--	 * set the parity bit to 1 in the phy capabilities.
--	 */
--	if ((parity_count % 2) != 0)
--		phy_cap.parity = 1;
-+	phy_cap.parity = parity32(phy_cap.all);
- 
- 	writel(phy_cap.all, &llr->phy_capabilities);
- 
--- 
-2.5.0
+On 2016-04-06 03:48 AM, Julian Calaby wrote:
+> Hi Bastien,
+> 
+> On Wed, Apr 6, 2016 at 7:19 AM, Bastien Philbert
+> <bastienphilbert@gmail.com> wrote:
+>> This fixes backwards locking in the function __csio_unreg_rnode to
+>> properly lock before the call to the function csio_unreg_rnode and
+>> not unlock with spin_unlock_irq as this would not allow the proper
+>> protection for concurrent access on the shared csio_hw structure
+>> pointer hw. In addition switch the locking after the critical region
+>> function call to properly unlock instead with spin_unlock_irq on
+>>
+>> Signed-off-by: Bastien Philbert <bastienphilbert@gmail.com>
+>> ---
+>>  drivers/scsi/csiostor/csio_rnode.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/csio_rnode.c
+>> index e9c3b04..029a09e 100644
+>> --- a/drivers/scsi/csiostor/csio_rnode.c
+>> +++ b/drivers/scsi/csiostor/csio_rnode.c
+>> @@ -580,9 +580,9 @@ __csio_unreg_rnode(struct csio_rnode *rn)
+>>                 ln->last_scan_ntgts--;
+>>         }
+>>
+>> -       spin_unlock_irq(&hw->lock);
+>> -       csio_unreg_rnode(rn);
+>>         spin_lock_irq(&hw->lock);
+>> +       csio_unreg_rnode(rn);
+>> +       spin_unlock_irq(&hw->lock);
+> 
+> Are you _certain_ this is correct? This construct usually appears when
+> a function has a particular lock held, then needs to unlock it to call
+> some other function. Are you _certain_ that this isn't the case?
+> 
+> Thanks,
+> 
+Yes I am pretty certain this is correct. I checked the paths that called this function
+and it was weired that none of them gradded the spinlock before hand.
+Cheers,
+Bastien
