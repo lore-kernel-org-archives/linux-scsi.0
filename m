@@ -1,183 +1,57 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] csiostor: Fix backwards locking in the function
- __csio_unreg_rnode
-Date: Wed, 6 Apr 2016 11:41:49 -0700
-Message-ID: <20160406184149.GA6388@kroah.com>
-References: <1459891143-20451-1-git-send-email-bastienphilbert@gmail.com>
- <CAGRGNgXXBZb91xgRfkU_xtAF4rmCFbDFuxq8jRmQzJXU2wHb7Q@mail.gmail.com>
- <57050D62.3090802@gmail.com>
- <1459949907.2372.13.camel@linux.vnet.ibm.com>
- <57051913.4050304@gmail.com>
- <1459952680.2372.25.camel@linux.vnet.ibm.com>
- <57051EF3.2070508@gmail.com>
- <1459962881.2372.40.camel@linux.vnet.ibm.com>
- <5705460C.4090105@gmail.com>
- <1459963704.2372.43.camel@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 114401] crash dump aic94xx
+Date: Wed, 06 Apr 2016 19:26:43 +0000
+Message-ID: <bug-114401-11613-vbdgtkUucG@https.bugzilla.kernel.org/>
+References: <bug-114401-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40491 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254AbcDFSvN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2016 14:51:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1459963704.2372.43.camel@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:41376 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753701AbcDFT1G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2016 15:27:06 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 83DC82020F
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2016 19:26:45 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 9EE67201F2
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2016 19:26:44 +0000 (UTC)
+In-Reply-To: <bug-114401-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Bastien Philbert <bastienphilbert@gmail.com>, Julian Calaby <julian.calaby@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Wed, Apr 06, 2016 at 01:28:24PM -0400, James Bottomley wrote:
-> On Wed, 2016-04-06 at 13:23 -0400, Bastien Philbert wrote:
-> > 
-> > On 2016-04-06 01:14 PM, James Bottomley wrote:
-> > > On Wed, 2016-04-06 at 10:36 -0400, Bastien Philbert wrote:
-> > > > 
-> > > > On 2016-04-06 10:24 AM, James Bottomley wrote:
-> > > > > On Wed, 2016-04-06 at 10:11 -0400, Bastien Philbert wrote:
-> > > > > > 
-> > > > > > On 2016-04-06 09:38 AM, James Bottomley wrote:
-> > > > > > > On Wed, 2016-04-06 at 09:21 -0400, Bastien Philbert wrote:
-> > > > > > > > 
-> > > > > > > > On 2016-04-06 03:48 AM, Julian Calaby wrote:
-> > > > > > > > > Hi Bastien,
-> > > > > > > > > 
-> > > > > > > > > On Wed, Apr 6, 2016 at 7:19 AM, Bastien Philbert
-> > > > > > > > > <bastienphilbert@gmail.com> wrote:
-> > > > > > > > > > This fixes backwards locking in the function
-> > > > > > > > > > __csio_unreg_rnode
-> > > > > > > > > > to
-> > > > > > > > > > properly lock before the call to the function
-> > > > > > > > > > csio_unreg_rnode
-> > > > > > > > > > and
-> > > > > > > > > > not unlock with spin_unlock_irq as this would not
-> > > > > > > > > > allow
-> > > > > > > > > > the
-> > > > > > > > > > proper
-> > > > > > > > > > protection for concurrent access on the shared
-> > > > > > > > > > csio_hw
-> > > > > > > > > > structure
-> > > > > > > > > > pointer hw. In addition switch the locking after the
-> > > > > > > > > > critical
-> > > > > > > > > > region
-> > > > > > > > > > function call to properly unlock instead with
-> > > > > > > > > > spin_unlock_irq
-> > > > > > > > > > on
-> > > > > > > > > > 
-> > > > > > > > > > Signed-off-by: Bastien Philbert <
-> > > > > > > > > > bastienphilbert@gmail.com>
-> > > > > > > > > > ---
-> > > > > > > > > >  drivers/scsi/csiostor/csio_rnode.c | 4 ++--
-> > > > > > > > > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > > > > > > > > 
-> > > > > > > > > > diff --git a/drivers/scsi/csiostor/csio_rnode.c
-> > > > > > > > > > b/drivers/scsi/csiostor/csio_rnode.c
-> > > > > > > > > > index e9c3b04..029a09e 100644
-> > > > > > > > > > --- a/drivers/scsi/csiostor/csio_rnode.c
-> > > > > > > > > > +++ b/drivers/scsi/csiostor/csio_rnode.c
-> > > > > > > > > > @@ -580,9 +580,9 @@ __csio_unreg_rnode(struct
-> > > > > > > > > > csio_rnode
-> > > > > > > > > > *rn)
-> > > > > > > > > >                 ln->last_scan_ntgts--;
-> > > > > > > > > >         }
-> > > > > > > > > > 
-> > > > > > > > > > -       spin_unlock_irq(&hw->lock);
-> > > > > > > > > > -       csio_unreg_rnode(rn);
-> > > > > > > > > >         spin_lock_irq(&hw->lock);
-> > > > > > > > > > +       csio_unreg_rnode(rn);
-> > > > > > > > > > +       spin_unlock_irq(&hw->lock);
-> > > > > > > > > 
-> > > > > > > > > Are you _certain_ this is correct? This construct
-> > > > > > > > > usually
-> > > > > > > > > appears
-> > > > > > > > > when
-> > > > > > > > > a function has a particular lock held, then needs to
-> > > > > > > > > unlock
-> > > > > > > > > it
-> > > > > > > > > to
-> > > > > > > > > call
-> > > > > > > > > some other function. Are you _certain_ that this isn't
-> > > > > > > > > the
-> > > > > > > > > case?
-> > > > > > > > > 
-> > > > > > > > > Thanks,
-> > > > > > > > > 
-> > > > > > > > Yes I am pretty certain this is correct. I checked the
-> > > > > > > > paths
-> > > > > > > > that
-> > > > > > > > called this function
-> > > > > > > > and it was weired that none of them gradded the spinlock
-> > > > > > > > before
-> > > > > > > > hand.
-> > > > > > > 
-> > > > > > > That's not good enough.  If your theory is correct, lockdep
-> > > > > > > should
-> > > > > > > be
-> > > > > > > dropping an already unlocked assertion in this codepath ...
-> > > > > > > do
-> > > > > > > you
-> > > > > > > see
-> > > > > > > this?
-> > > > > > > 
-> > > > > > > James
-> > > > > > > 
-> > > > > > > 
-> > > > > > Yes I do.
-> > > > > 
-> > > > > You mean you don't see the lockdep assert, since you're asking
-> > > > > to 
-> > > > > drop the patch?
-> > > > > 
-> > > > > >  For now just drop the patch but I am still concerned that we
-> > > > > > are
-> > > > > > double unlocking here.
-> > > > > 
-> > > > > Really, no.  The pattern in the code indicates the lock is
-> > > > > expected 
-> > > > > to be held.  This can be wrong (sometimes code moves or people
-> > > > > forget), but if it is wrong we'll get an assert about unlock of
-> > > > > an 
-> > > > > already unlocked lock.  If there's no assert, the lock is held
-> > > > > on 
-> > > > > entry and the code is correct.
-> > > > > 
-> > > > > You're proposing patches based on misunderstandings of the code
-> > > > > which aren't backed up by actual issues and wasting everyone's
-> > > > > time 
-> > > > > to look at them.  Please begin with the hard evidence of a
-> > > > > problem 
-> > > > > first, so post the lockdep assert in the changelog so we know 
-> > > > > there's a real problem.
-> > > > > 
-> > > > > James
-> > > > > 
-> > > > Certainly James. I think I just got carried away with the last
-> > > > few 
-> > > > patches :(.
-> > > 
-> > > Is this Nick Krause?  An email reply that Martin forwarded but the 
-> > > list didn't pick up (because it had a html part) suggests this. 
-> > >  What you're doing is what got you banned from LKML the last time: 
-> > > sending patches without evidence there's a problem or understanding 
-> > > the code you're patching.  Repeating the behaviour under a new 
-> > > identity isn't going to help improve your standing.
-> > > 
-> > > James
-> > > 
-> > No I am not Nick Krause. I am just aware of how he got banned a few 
-> > years ago. That email was a mistake by typo and was hoping nobody 
-> > picked it up as they would then believe I was Nick Krause.
-> 
-> Hm, OK, but currently you are repeating his behaviour ... please don't
-> send any more patches until they're about real problems backed by
-> actual data.
+https://bugzilla.kernel.org/show_bug.cgi?id=114401
 
-He's Nick, look at the email headers for proof.
+bastienphilbert@gmail.com changed:
 
-James, and everyone else, please drop his patches.  I'll go get him
-banned from vger again.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bastienphilbert@gmail.com
 
-Nick, please stop, you have violated the DCO now, a much worse thing
-than before.
+--- Comment #1 from bastienphilbert@gmail.com ---
+out_done:
+         tascb->completion = NULL;
+         if (res == TMF_RESP_FUNC_COMPLETE) {
+                 task->lldd_task = NULL;
+add these line:
+                 list_del_init(&ascb->list);
+                 mb();
+                 asd_ascb_free(tascb);
+         }
+         ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
+         return res;
 
-greg k-h
+  out_free:
+same here:
+         list_del_init(&ascb->list);
+         asd_ascb_free(ascb);
+         ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
+         return res;
+}
+Tell me if this fixes your issue.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
