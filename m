@@ -1,14 +1,14 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH v2 3/5] bnx2fc: Print netdev device name when FCoE is successfully initialized.
-Date: Thu, 7 Apr 2016 09:07:58 -0400
-Message-ID: <1460034480-28512-4-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH v2 2/5] bnx2fc: Print when we send a fip keep alive.
+Date: Thu, 7 Apr 2016 09:07:57 -0400
+Message-ID: <1460034480-28512-3-git-send-email-chad.dupuis@qlogic.com>
 References: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44603 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44601 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752617AbcDGNtX (ORCPT
+	by vger.kernel.org with ESMTP id S1751313AbcDGNtX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2016 09:49:23 -0400
 In-Reply-To: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,22 +18,46 @@ Cc: chad.dupuis@qlogic.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.or
 
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 365101a..a188199 100644
+index b0305b0..365101a 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2039,6 +2039,8 @@ static void bnx2fc_ulp_init(struct cnic_dev *dev)
- 		return;
- 	}
+@@ -122,6 +122,11 @@ module_param_named(queue_depth, bnx2fc_queue_depth, uint, S_IRUGO);
+ MODULE_PARM_DESC(queue_depth, " Change the default queue depth of SCSI devices "
+ 	"attached via bnx2fc.");
  
-+	pr_info(PFX "FCoE initialized for %s.\n", dev->netdev->name);
++uint bnx2fc_log_fka;
++module_param_named(log_fka, bnx2fc_log_fka, uint, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(log_fka, " Print message to kernel log when fcoe is "
++	"initiating a FIP keep alive when debug logging is enabled.");
 +
- 	/* Add HBA to the adapter list */
- 	mutex_lock(&bnx2fc_dev_lock);
- 	list_add_tail(&hba->list, &adapter_list);
+ static int bnx2fc_cpu_callback(struct notifier_block *nfb,
+ 			     unsigned long action, void *hcpu);
+ /* notification function for CPU hotplug events */
+@@ -1076,6 +1081,20 @@ static u8 *bnx2fc_get_src_mac(struct fc_lport *lport)
+  */
+ static void bnx2fc_fip_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ {
++	struct fip_header *fiph;
++	struct ethhdr *eth_hdr;
++	u16 op;
++	u8 sub;
++
++	fiph = (struct fip_header *) ((void *)skb->data + 2 * ETH_ALEN + 2);
++	eth_hdr = (struct ethhdr *)skb_mac_header(skb);
++	op = ntohs(fiph->fip_op);
++	sub = fiph->fip_subcode;
++
++	if (op == FIP_OP_CTRL && sub == FIP_SC_SOL && bnx2fc_log_fka)
++		BNX2FC_MISC_DBG("Sending FKA from %pM to %pM.\n",
++		    eth_hdr->h_source, eth_hdr->h_dest);
++
+ 	skb->dev = bnx2fc_from_ctlr(fip)->netdev;
+ 	dev_queue_xmit(skb);
+ }
 -- 
 2.0.0.rc0.26.g779792a
 
