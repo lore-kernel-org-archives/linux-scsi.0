@@ -1,48 +1,39 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 10/12] Limit bio_endio recursion
-Date: Thu, 7 Apr 2016 14:03:23 +0800
-Message-ID: <CACVXFVNVo-ya9T3rzSiiWtO1r87D-yW1DmZBt2Ryv1U4TPOi8g@mail.gmail.com>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
-	<1459746376-27983-11-git-send-email-shaun@tancheff.com>
-	<CACVXFVNo6+F_OPyiTE882UrECz7BG_wKGj=teukibuiMdxmLHw@mail.gmail.com>
-	<20160407134443.552c2556@tom-T450>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [PATCH v2 3/5] bnx2fc: Print netdev device name when FCoE is successfully initialized.
+Date: Thu, 7 Apr 2016 09:07:58 -0400
+Message-ID: <1460034480-28512-4-git-send-email-chad.dupuis@qlogic.com>
+References: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20160407134443.552c2556@tom-T450>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Christoph Hellwig <hch@infradead.org>, Mikulas Patocka <mpatocka@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44603 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752617AbcDGNtX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2016 09:49:23 -0400
+In-Reply-To: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chad.dupuis@qlogic.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, Apr 7, 2016 at 1:44 PM, Ming Lei <tom.leiming@gmail.com> wrote:
-> On Thu, 7 Apr 2016 11:54:49 +0800
-> Ming Lei <tom.leiming@gmail.com> wrote:
->
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> @@ -1737,6 +1739,46 @@ static inline bool bio_remaining_done(struct bio *bio)
->         return false;
->  }
->
-> +/* disable local irq when manipulating the percpu bio_list */
-> +static void unwind_bio_endio(struct bio *bio)
-> +{
-> +       struct bio_list bl_in_stack;
-> +       struct bio_list *bl;
-> +       unsigned long flags;
-> +       bool clear_list = false;
-> +
-> +       local_irq_save(flags);
-> +
-> +       bl = this_cpu_read(bio_end_list);
-> +       if (!bl) {
-> +               bl = &bl_in_stack;
-> +               bio_list_init(bl);
-> +               clear_list = true;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 365101a..a188199 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2039,6 +2039,8 @@ static void bnx2fc_ulp_init(struct cnic_dev *dev)
+ 		return;
+ 	}
+ 
++	pr_info(PFX "FCoE initialized for %s.\n", dev->netdev->name);
++
+ 	/* Add HBA to the adapter list */
+ 	mutex_lock(&bnx2fc_dev_lock);
+ 	list_add_tail(&hba->list, &adapter_list);
+-- 
+2.0.0.rc0.26.g779792a
 
-oops, forget to write the pointer into the percpu bio_list pointer.
-But it is still working after I fix that by the following line:
-
-             this_cpu_write(bio_end_list, bl);
-
-thanks,
