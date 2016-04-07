@@ -1,38 +1,31 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 5/5] bnx2fc: Update version number to 2.10.3.
-Date: Thu, 07 Apr 2016 16:00:56 +0200
-Message-ID: <17601488.1XeOsa5cCt@c203>
-References: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com> <1460034480-28512-6-git-send-email-chad.dupuis@qlogic.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH RFC 1/2] scatterlist: add mempool based chained SG
+ alloc/free api
+Date: Thu, 7 Apr 2016 07:56:20 -0700
+Message-ID: <57067514.7020700@sandisk.com>
+References: <1458081569-30953-1-git-send-email-mlin@kernel.org>
+ <1458081569-30953-2-git-send-email-mlin@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53855 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755954AbcDGOA6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2016 10:00:58 -0400
-In-Reply-To: <1460034480-28512-6-git-send-email-chad.dupuis@qlogic.com>
+Received: from mail-by2on0088.outbound.protection.outlook.com ([207.46.100.88]:19104
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751089AbcDGO4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Apr 2016 10:56:33 -0400
+In-Reply-To: <1458081569-30953-2-git-send-email-mlin@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 
-On Donnerstag, 7. April 2016 09:08:00 CEST Chad Dupuis wrote:
-> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
-> ---
+On 03/15/16 15:39, Ming Lin wrote:
+> +static void sg_mempoll_free(struct scatterlist *sgl, unsigned int nents)
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Please change mempoll into mempool.
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Thanks,
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
+
