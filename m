@@ -1,14 +1,14 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH v2 2/5] bnx2fc: Print when we send a fip keep alive.
-Date: Thu, 7 Apr 2016 09:07:57 -0400
-Message-ID: <1460034480-28512-3-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH v2 4/5] bnx2fc: Check sc_cmd device and host pointer before returning the command to the mid-layer.
+Date: Thu, 7 Apr 2016 09:07:59 -0400
+Message-ID: <1460034480-28512-5-git-send-email-chad.dupuis@qlogic.com>
 References: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44601 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44602 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751313AbcDGNtX (ORCPT
+	by vger.kernel.org with ESMTP id S1752042AbcDGNtX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2016 09:49:23 -0400
 In-Reply-To: <1460034480-28512-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,48 +16,51 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: chad.dupuis@qlogic.com, saurav.kashyap@qlogic.com, linux-scsi@vger.kernel.org
 
+When we are in connection recovery and the internal command timer on a request
+pops, either the scsi_cmnd->device or scsi_cmnd->device->host back pointers may
+be NULL as the device that the command that the request was submitted on may
+have been subsequently reaped due to the connection recovery. This can cause
+one or both of the pointers above to be NULL and cause a system crash if we try
+to return the command to the midlayer.
+
+Instead, double check the pointers before the return to the midlayer so as to
+prevent the crash and let the upper layers finish the session recovery and
+rediscover the device.
+
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index b0305b0..365101a 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -122,6 +122,11 @@ module_param_named(queue_depth, bnx2fc_queue_depth, uint, S_IRUGO);
- MODULE_PARM_DESC(queue_depth, " Change the default queue depth of SCSI devices "
- 	"attached via bnx2fc.");
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index ac8fb2a..25a1e19 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -179,12 +179,24 @@ static void bnx2fc_scsi_done(struct bnx2fc_cmd *io_req, int err_code)
  
-+uint bnx2fc_log_fka;
-+module_param_named(log_fka, bnx2fc_log_fka, uint, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(log_fka, " Print message to kernel log when fcoe is "
-+	"initiating a FIP keep alive when debug logging is enabled.");
+ 	bnx2fc_unmap_sg_list(io_req);
+ 	io_req->sc_cmd = NULL;
 +
- static int bnx2fc_cpu_callback(struct notifier_block *nfb,
- 			     unsigned long action, void *hcpu);
- /* notification function for CPU hotplug events */
-@@ -1076,6 +1081,20 @@ static u8 *bnx2fc_get_src_mac(struct fc_lport *lport)
-  */
- static void bnx2fc_fip_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
- {
-+	struct fip_header *fiph;
-+	struct ethhdr *eth_hdr;
-+	u16 op;
-+	u8 sub;
++	/* Sanity checks before returning command to mid-layer */
+ 	if (!sc_cmd) {
+ 		printk(KERN_ERR PFX "scsi_done - sc_cmd NULL. "
+ 				    "IO(0x%x) already cleaned up\n",
+ 		       io_req->xid);
+ 		return;
+ 	}
++	if (!sc_cmd->device) {
++		pr_err(PFX "0x%x: sc_cmd->device is NULL.\n", io_req->xid);
++		return;
++	}
++	if (!sc_cmd->device->host) {
++		pr_err(PFX "0x%x: sc_cmd->device->host is NULL.\n",
++		    io_req->xid);
++		return;
++	}
 +
-+	fiph = (struct fip_header *) ((void *)skb->data + 2 * ETH_ALEN + 2);
-+	eth_hdr = (struct ethhdr *)skb_mac_header(skb);
-+	op = ntohs(fiph->fip_op);
-+	sub = fiph->fip_subcode;
-+
-+	if (op == FIP_OP_CTRL && sub == FIP_SC_SOL && bnx2fc_log_fka)
-+		BNX2FC_MISC_DBG("Sending FKA from %pM to %pM.\n",
-+		    eth_hdr->h_source, eth_hdr->h_dest);
-+
- 	skb->dev = bnx2fc_from_ctlr(fip)->netdev;
- 	dev_queue_xmit(skb);
- }
+ 	sc_cmd->result = err_code << 16;
+ 
+ 	BNX2FC_IO_DBG(io_req, "sc=%p, result=0x%x, retries=%d, allowed=%d\n",
 -- 
 2.0.0.rc0.26.g779792a
 
