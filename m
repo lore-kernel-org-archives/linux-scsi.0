@@ -1,34 +1,54 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC PATCH 2/4] dm mpath: use atomic_t for counting members of
+Subject: Re: [RFC PATCH 3/4] dm mpath: move trigger_event member to the end of
  'struct multipath'
-Date: Thu, 7 Apr 2016 17:02:28 +0200
-Message-ID: <57067684.7090307@suse.de>
+Date: Thu, 7 Apr 2016 17:03:06 +0200
+Message-ID: <570676AA.7040204@suse.de>
 References: <1459454666-76428-1-git-send-email-snitzer@redhat.com>
- <1459454666-76428-3-git-send-email-snitzer@redhat.com>
+ <1459454666-76428-4-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33642 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33705 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755861AbcDGPCa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Apr 2016 11:02:30 -0400
-In-Reply-To: <1459454666-76428-3-git-send-email-snitzer@redhat.com>
+	id S1756508AbcDGPDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Apr 2016 11:03:08 -0400
+In-Reply-To: <1459454666-76428-4-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
 Cc: jmoyer@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, j-nomura@ce.jp.nec.com, sagig@dev.mellanox.co.il
 
 On 03/31/2016 10:04 PM, Mike Snitzer wrote:
-> The use of atomic_t for nr_valid_paths, pg_init_in_progress and
-> pg_init_count will allow relaxing the use of the m->lock spinlock.
+> Allows the 'work_mutex' member to no longer cross a cacheline.
 >=20
-> Suggested-by: Hannes Reinecke <hare@suse.de>
 > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 > ---
->  drivers/md/dm-mpath.c | 61 ++++++++++++++++++++++++++++-------------=
-----------
->  1 file changed, 33 insertions(+), 28 deletions(-)
+>  drivers/md/dm-mpath.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index 780e5d0..54daf96 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -89,8 +89,6 @@ struct multipath {
+>  	atomic_t pg_init_in_progress;	/* Only one pg_init allowed at once *=
+/
+>  	atomic_t pg_init_count;		/* Number of times pg_init called */
+> =20
+> -	struct work_struct trigger_event;
+> -
+>  	/*
+>  	 * We must use a mempool of dm_mpath_io structs so that we
+>  	 * can resubmit bios on error.
+> @@ -98,6 +96,7 @@ struct multipath {
+>  	mempool_t *mpio_pool;
+> =20
+>  	struct mutex work_mutex;
+> +	struct work_struct trigger_event;
+>  };
+> =20
+>  /*
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Hannes Reinecke <hare@suse.com>
