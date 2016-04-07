@@ -1,265 +1,115 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 10/12] Limit bio_endio recursion
-Date: Thu, 7 Apr 2016 13:44:43 +0800
-Message-ID: <20160407134443.552c2556@tom-T450>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
- <1459746376-27983-11-git-send-email-shaun@tancheff.com>
- <CACVXFVNo6+F_OPyiTE882UrECz7BG_wKGj=teukibuiMdxmLHw@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 6/9] block: Add 'zoned' sysfs queue attribute
+Date: Thu, 7 Apr 2016 07:57:36 +0200
+Message-ID: <5705F6D0.70604@suse.de>
+References: <1459764020-126038-1-git-send-email-hare@suse.de>
+ <1459764020-126038-7-git-send-email-hare@suse.de>
+ <CC35A7E7-DF48-49F9-ABCF-B93A5B95DC99@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVNo6+F_OPyiTE882UrECz7BG_wKGj=teukibuiMdxmLHw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Christoph Hellwig <hch@infradead.org>, Mikulas Patocka <mpatocka@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46834 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750840AbcDGF5k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Apr 2016 01:57:40 -0400
+In-Reply-To: <CC35A7E7-DF48-49F9-ABCF-B93A5B95DC99@hgst.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <Damien.LeMoal@hgst.com>, Jens Axboe <axboe@fb.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>
 
-On Thu, 7 Apr 2016 11:54:49 +0800
-Ming Lei <tom.leiming@gmail.com> wrote:
+On 04/07/2016 03:56 AM, Damien Le Moal wrote:
+>=20
+> Hannes,
+>=20
+>> Add a sysfs queue attribute 'zoned' to display the zone layout
+>> for zoned devices.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>> block/blk-sysfs.c | 47 +++++++++++++++++++++++++++++++++++++++++++++=
+++
+>> 1 file changed, 47 insertions(+)
+>>
+>> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+>> index ff97091..748bb27 100644
+>> --- a/block/blk-sysfs.c
+>> +++ b/block/blk-sysfs.c
+>> @@ -244,6 +244,43 @@ static ssize_t queue_max_hw_sectors_show(struct=
+ request_queue *q, char *page)
+>> 	return queue_var_show(max_hw_sectors_kb, (page));
+>> }
+>>
+>> +#ifdef CONFIG_BLK_DEV_ZONED
+>> +static ssize_t queue_zoned_show(struct request_queue *q, char *page=
+)
+>> +{
+>> +	struct rb_node *node;
+>> +	struct blk_zone *zone;
+>> +	ssize_t offset =3D 0, end =3D 0;
+>> +	size_t size =3D 0, num =3D 0;
+>> +	enum blk_zone_type type =3D BLK_ZONE_TYPE_UNKNOWN;
+>> +
+>> +	for (node =3D rb_first(&q->zones); node; node =3D rb_next(node)) {
+>> +		zone =3D rb_entry(node, struct blk_zone, node);
+>> +		if (zone->type !=3D type ||
+>> +		    zone->len !=3D size ||
+>> +		    end !=3D zone->start) {
+>> +			if (size !=3D 0)
+>> +				offset +=3D sprintf(page + offset, "%zu\n", num);
+>> +			/* We can only store one page ... */
+>> +			if (offset + 42 > PAGE_SIZE) {
+>> +				offset +=3D sprintf(page + offset, "...\n");
+>> +				return offset;
+>> +			}
+>> +			size =3D zone->len;
+>> +			type =3D zone->type;
+>> +			offset +=3D sprintf(page + offset, "%zu %zu %d ",
+>> +					  zone->start, size, type);
+>> +			num =3D 0;
+>> +			end =3D zone->start + size;
+>> +		} else
+>> +			end +=3D zone->len;
+>> +		num++;
+>> +	}
+>> +	if (num > 0)
+>> +		offset +=3D sprintf(page + offset, "%zu\n", num);
+>> +	return offset > 0 ? offset : -EINVAL;
+>> +}
+>> +#endif
+>=20
+> With this, an application reading the =E2=80=9Czoned=E2=80=9D file fo=
+r a non-SMR disk
+> will get a -EINVAL error. Not really super nice. Could we just have t=
+he
+> zoned files contain a single =E2=80=9C0=E2=80=9D for non-SMR disks ? =
+Or at least have the
+> file empty and read return 0 Bytes. That would allow applications to =
+easily
+> and cleanly detect if they are dealing with a SMR disk (or not) inste=
+ad of
+> assuming that =E2=80=9C-EINVAL=E2=80=9D means =E2=80=9Cnot SMR=E2=80=9D=
+, which seems very ugly to me.
+>=20
+Sure.
 
-> On Mon, Apr 4, 2016 at 1:06 PM, Shaun Tancheff <shaun@tancheff.com> wrote:
-> > Recursive endio calls can exceed 16k stack. Tested with
-> > 32k stack and observed:
-> >
-> >             Depth    Size   Location    (293 entries)
-> >             -----    ----   --------
-> >       0)    21520      16   __module_text_address+0x12/0x60
-> >       1)    21504       8   __module_address+0x5/0x140
-> >       2)    21496      24   __module_text_address+0x12/0x60
-> >       3)    21472      16   is_module_text_address+0xe/0x20
-> >       4)    21456       8   __kernel_text_address+0x50/0x80
-> >       5)    21448     136   print_context_stack+0x5a/0xf0
-> >       6)    21312     144   dump_trace+0x14c/0x300
-> >       7)    21168       8   save_stack_trace+0x2f/0x50
-> >       8)    21160      88   set_track+0x64/0x130
-> >       9)    21072      96   free_debug_processing+0x200/0x290
-> >      10)    20976     176   __slab_free+0x164/0x290
-> >      11)    20800      48   kmem_cache_free+0x1b0/0x1e0
-> >      12)    20752      16   mempool_free_slab+0x17/0x20
-> >      13)    20736      48   mempool_free+0x2f/0x90
-> >      14)    20688      16   bvec_free+0x36/0x40
-> >      15)    20672      32   bio_free+0x3b/0x60
-> >      16)    20640      16   bio_put+0x23/0x30
-> >      17)    20624      64   end_bio_extent_writepage+0xcf/0xe0
-> >      18)    20560      48   bio_endio+0x57/0x90
-> >      19)    20512      48   btrfs_end_bio+0xa8/0x160
-> >      20)    20464      48   bio_endio+0x57/0x90
-> >      21)    20416     112   dec_pending+0x121/0x270
-> >      22)    20304      64   clone_endio+0x7a/0x100
-> >      23)    20240      48   bio_endio+0x57/0x90
-> >     ...
-> >     277)     1264      64   clone_endio+0x7a/0x100
-> >     278)     1200      48   bio_endio+0x57/0x90
-> >     279)     1152     112   dec_pending+0x121/0x270
-> >     280)     1040      64   clone_endio+0x7a/0x100
-> >     281)      976      48   bio_endio+0x57/0x90
-> >     282)      928      80   blk_update_request+0x8f/0x340
-> >     283)      848      80   scsi_end_request+0x33/0x1c0
-> >     284)      768     112   scsi_io_completion+0xb5/0x620
-> >     285)      656      48   scsi_finish_command+0xcf/0x120
-> >     286)      608      48   scsi_softirq_done+0x126/0x150
-> >     287)      560      24   blk_done_softirq+0x78/0x90
-> >     288)      536     136   __do_softirq+0xfd/0x280
-> >     289)      400      16   run_ksoftirqd+0x28/0x50
-> >     290)      384      64   smpboot_thread_fn+0x105/0x160
-> >     291)      320     144   kthread+0xc9/0xe0
-> >     292)      176     176   ret_from_fork+0x3f/0x70
-> >
-> > Based on earlier patch by Mikulas Patocka <mpatocka@redhat.com>.
-> > https://lkml.org/lkml/2008/6/24/18
-> 
-> Looks a empty link, and the following had the discussion too:
-> 
-> http://linux-kernel.2935.n7.nabble.com/PATCH-1-2-Avoid-bio-endio-recursion-td306043.html
-> 
-> >
-> > Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> > ---
-> >  block/bio.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++++---
-> >  1 file changed, 54 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/block/bio.c b/block/bio.c
-> > index d42e69c..4ac19f6 100644
-> > --- a/block/bio.c
-> > +++ b/block/bio.c
-> > @@ -1733,6 +1733,59 @@ static inline bool bio_remaining_done(struct bio *bio)
-> >         return false;
-> >  }
-> >
-> > +static DEFINE_PER_CPU(struct bio **, bio_end_queue) = { NULL };
-> 
-> The idea looks very nice, but this patch can't be applid to current block-next
-> branch.
-> 
-> Looks it might be simpler to implement the approach by using percpu bio_list.
+Actually I was looking in blanking out this attribute entirely like
+I did with the SCSI sysfs attributes, but as the 'queue' sysfs
+directory is a blank kobj it's not easily done.
+But yes, '0' seems like a reasonable value here.
 
-Cc Mikulas & Christoph
+Cheers,
 
-How about the following implementation with bio_list? Looks more readable and
-simpler.
-
-Just run a recent testcase of bcache over raid1(virtio-blk, virtio-blk), looks
-it does work, :-)
-
----
-
-diff --git a/block/bio.c b/block/bio.c
-index f124a0a..b97dfe8 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -68,6 +68,8 @@ static DEFINE_MUTEX(bio_slab_lock);
- static struct bio_slab *bio_slabs;
- static unsigned int bio_slab_nr, bio_slab_max;
- 
-+static DEFINE_PER_CPU(struct bio_list *, bio_end_list) = { NULL };
-+
- static struct kmem_cache *bio_find_or_create_slab(unsigned int extra_size)
- {
- 	unsigned int sz = sizeof(struct bio) + extra_size;
-@@ -1737,6 +1739,46 @@ static inline bool bio_remaining_done(struct bio *bio)
- 	return false;
- }
- 
-+/* disable local irq when manipulating the percpu bio_list */
-+static void unwind_bio_endio(struct bio *bio)
-+{
-+	struct bio_list bl_in_stack;
-+	struct bio_list *bl;
-+	unsigned long flags;
-+	bool clear_list = false;
-+
-+	local_irq_save(flags);
-+
-+	bl = this_cpu_read(bio_end_list);
-+	if (!bl) {
-+		bl = &bl_in_stack;
-+		bio_list_init(bl);
-+		clear_list = true;
-+	}
-+
-+	if (!bio_list_empty(bl)) {
-+		bio_list_add(bl, bio);
-+		goto out;
-+	}
-+
-+	while (1) {
-+		local_irq_restore(flags);
-+
-+		if (!bio)
-+			break;
-+
-+		if (bio->bi_end_io)
-+			bio->bi_end_io(bio);
-+
-+		local_irq_save(flags);
-+		bio = bio_list_pop(bl);
-+	}
-+	if (clear_list)
-+		this_cpu_write(bio_end_list, NULL);
-+ out:
-+	local_irq_restore(flags);
-+}
-+
- /**
-  * bio_endio - end I/O on a bio
-  * @bio:	bio
-@@ -1765,8 +1807,7 @@ again:
- 		goto again;
- 	}
- 
--	if (bio->bi_end_io)
--		bio->bi_end_io(bio);
-+	unwind_bio_endio(bio);
- }
- EXPORT_SYMBOL(bio_endio);
- 
-
-
-> 
-> > +
-> > +static struct bio *unwind_bio_endio(struct bio *bio)
-> > +{
-> > +       struct bio ***bio_end_queue_ptr;
-> > +       struct bio *bio_queue;
-> > +       struct bio *chain_bio = NULL;
-> > +       int error = bio->bi_error;
-> > +       unsigned long flags;
-> > +
-> > +       local_irq_save(flags);
-> 
-> If we may resue current->bio_list for this purpose, disabling irq should have
-> been avoided, but looks it is difficult to do in that way, maybe impossible.
-> Also not realistic to introduce a new per-task variable.
-> 
-> > +       bio_end_queue_ptr = this_cpu_ptr(&bio_end_queue);
-> > +
-> > +       if (*bio_end_queue_ptr) {
-> > +               **bio_end_queue_ptr = bio;
-> > +               *bio_end_queue_ptr = &bio->bi_next;
-> > +               bio->bi_next = NULL;
-> > +       } else {
-> > +               bio_queue = NULL;
-> > +               *bio_end_queue_ptr = &bio_queue;
-> 
-> Suggest to comment that bio_queue is the bottom-most stack variable,
-> otherwise looks a bit tricky to understand.
-> 
-> > +
-> > +next_bio:
-> > +               if (bio->bi_end_io == bio_chain_endio) {
-> > +                       struct bio *parent = bio->bi_private;
-> > +
-> > +                       bio_put(bio);
-> > +                       chain_bio = parent;
-> > +                       goto out;
-> > +               }
-> > +
-> > +               if (bio->bi_end_io) {
-> > +                       if (!bio->bi_error)
-> > +                               bio->bi_error = error;
-> > +                       bio->bi_end_io(bio);
-> > +               }
-> > +
-> > +               if (bio_queue) {
-> > +                       bio = bio_queue;
-> > +                       bio_queue = bio->bi_next;
-> > +                       if (!bio_queue)
-> > +                               *bio_end_queue_ptr = &bio_queue;
-> > +                       goto next_bio;
-> > +               }
-> > +               *bio_end_queue_ptr = NULL;
-> > +       }
-> > +
-> > +out:
-> > +
-> > +       local_irq_restore(flags);
-> > +
-> > +       return chain_bio;
-> > +}
-> > +
-> >  /**
-> >   * bio_endio - end I/O on a bio
-> >   * @bio:       bio
-> > @@ -1762,9 +1815,7 @@ void bio_endio(struct bio *bio)
-> >                         bio_put(bio);
-> >                         bio = parent;
-> >                 } else {
-> > -                       if (bio->bi_end_io)
-> > -                               bio->bi_end_io(bio);
-> > -                       bio = NULL;
-> > +                       bio = unwind_bio_endio(bio);
-> >                 }
-> >         }
-> >  }
-> > --
-> > 1.9.1
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
-
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
