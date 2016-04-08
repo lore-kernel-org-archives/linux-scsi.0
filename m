@@ -1,65 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
-Date: Thu, 07 Apr 2016 23:00:16 -0400
-Message-ID: <yq137qw6bzz.fsf@sermon.lab.mkp.net>
+Date: Thu, 07 Apr 2016 22:30:28 -0700
+Message-ID: <1460093428.13128.5.camel@haakon3.risingtidesystems.com>
 References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <302427900.27942894.1460063713447.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-	(Laurence Oberman's message of "Thu, 7 Apr 2016 17:15:13 -0400 (EDT)")
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-rdma@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Laurence" == Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+Hi Laurence,
 
-Laurence,
-
-The target is reporting inconsistent values here:
-
+On Thu, 2016-04-07 at 17:15 -0400, Laurence Oberman wrote:
+> Hello
+> 
+> I have been testing the SRP initiator code to an LIO array here and
+> part of the testing requires me to set the max_sectors_kb size to get
+> 4k I/O's.
+> This has been due to me having to debug various sg_map issues.
+> 
+> Linux srptest 4.5.0 #2 SMP Thu Apr 7 16:14:38 EDT 2016 x86_64 x86_64
+> x86_64 GNU/Linux
+> This kernel has the scan patch from Hannes, as well as the "[PATCH]
+> IB/mlx5: Expose correct max_sge_rd limit" patch. 
+> However, I also tested with vanilla 4.5.0 as well and its the same
+> issue.
+> 
+> For some reason I cannot change the max_sectors_kb size on 4.5.0 here.
+> 
+> I chatted with Ewan about it as well and he reminded me about Martins
+> changes so wondering if that's playing into this.
+> 
+> Take /dev/sdb as an example
+> 
 > [root@srptest queue]# sg_inq --p 0xb0 /dev/sdb
 > VPD INQUIRY: Block limits page (SBC)
 >   Maximum compare and write length: 1 blocks
 >   Optimal transfer length granularity: 256 blocks
 >   Maximum transfer length: 256 blocks
 >   Optimal transfer length: 768 blocks
+>   Maximum prefetch, xdread, xdwrite transfer length: 0 blocks
+> 
 
-OPTIMAL TRANSFER LENGTH GRANULARITY roughly translates to physical block
-size or RAID chunk size. It's the smallest I/O unit that does not
-require read-modify-write. It would typically be either 1 or 8 blocks
-for a drive and maybe 64, 128 or 256 for a RAID5 array. io_min in
-queue_limits.
+Just curious what target backend this is with..?
 
-OPTIMAL TRANSFER LENGTH indicates the stripe width and is a multiple of
-OPTIMAL TRANSFER LENGTH GRANULARITY. io_opt in queue_limits.
+Specifically the optimal transfer length granularity and optimal
+transfer length may be reported by underlying backend device (eg:
+IBLOCK) in spc_emulate_evpd_b0(). 
 
-MAXIMUM TRANSFER LENGTH indicates the biggest READ/WRITE command the
-device can handle in a single command. In this case 256 blocks so that's
-128K. max_dev_sectors in queue_limits.
-
->From SBC:
-
-"A MAXIMUM TRANSFER LENGTH field set to a non-zero value indicates the
-maximum transfer length in logical blocks that the device server accepts
-for a single command shown in table 250. If a device server receives one
-of these commands with a transfer size greater than this value, then the
-device server shall terminate the command with CHECK CONDITION status
-[...]"
-
-So those reported values are off.
-
-   logical block size <= physical block size <= OTLG <= OTL <= MTL
-
-Or in terms of queue_limits:
-
-   lbs <= pbs <= io_min <= io_opt <=
-       min_not_zero(max_dev_sectors, max_hw_sectors, max_sectors)
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What does 'head /sys/kernel/config/target/core/$HBA/$DEV/attrib/*'
+of the backend device in question look like..?
