@@ -1,62 +1,51 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH v2 8/8] scsi: ufs: connect to RPMB subsystem
-Date: Fri, 8 Apr 2016 12:21:57 +0100
-Message-ID: <57079455.1000608@synopsys.com>
-References: <1459768284-26997-1-git-send-email-tomas.winkler@intel.com>
- <1459768284-26997-9-git-send-email-tomas.winkler@intel.com>
- <5704CE0B.2010700@synopsys.com> <1460063682.4468.7.camel@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM TOPIC] block-mq issues with FC
+Date: Fri, 8 Apr 2016 13:29:26 +0200
+Message-ID: <57079616.4000202@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:60053 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343AbcDHLWG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2016 07:22:06 -0400
-In-Reply-To: <1460063682.4468.7.camel@intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:41072 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756567AbcDHL33 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2016 07:29:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Winkler, Tomas" <tomas.winkler@intel.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "luto@kernel.org" <luto@kernel.org>, "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "ygardi@codeaurora.org" <ygardi@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Usyskin, Alexander" <alexander.usyskin@intel.com>
+To: lsf@lists.linux-foundation.org
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 
-On 4/7/2016 10:15 PM, Winkler, Tomas wrote:
-> On Wed, 2016-04-06 at 09:51 +0100, Joao Pinto wrote:
->> Hi!
->>
->> On 4/4/2016 12:11 PM, Tomas Winkler wrote:
->>> Register UFS RPMB LUN with the RPMB subsystem and provide
->>> implementation for the RPMB access operations. RPMB partition is
->>> accessed via a sequence of security protocol in and security
->>> protocol
->>> out commands with UFS specific parameters. This multi step process
->>> is
->>> abstracted into 4 basic RPMB commands.
->>
->> [snip]
->>
->>>  	 * "UFS device" W-LU.
->>>  	 */
->>>  	struct scsi_device *sdev_ufs_device;
->>> +	struct scsi_device *sdev_ufs_rpmb;
->>>  
->>>  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
->>>  	enum uic_link_state uic_link_state;
->>>
->>
->> I have a UFS device emulator that has the RPMB capability. What are
->> the expected
->> good results for me to validate?
-> 
-> Hi Joao, thanks for that. I'm attaching an archive with few basic
-> samples via user space interface. 
-> You should run the program key first (program-key.sh), just don't do it
-> on a real device it's one in life time operation. 
+Hi all,
 
-Sorry, I have received the attachment. Going to explore it now.
+I'd like to propose a topic on block-mq issues with FC.
+During my performance testing using block/scsi-mq with FC I've hit
+several issues I'd like to discuss:
 
-> 
-> Thanks
-> Tomas
-> 
+- timeout handling:
+Out of necessity the status of any timed out command is undefined.
+So to be absolutely safe HBAs will be using extended timeouts here
+(eg 70secs for lpfc). During that time we _could_ signal I/O timeout
+to the upper layers, but then the tag will be reused, despite the
+HBA still having a reference to it.
+I'd like to discuss how this could be solved best with blk-mq.
 
-Joao
+- Adaption on other HBAs to multiqueue:
+The current block-mq design assumes symmetric send and receive
+queues (in effect queue pairs). Any hardware _not_ providing this
+(like qla2xxx) can not be easily converted to scsi-mq. I'd like to
+discuss how one could approach converting these drivers.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
