@@ -1,29 +1,47 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
+From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
-Date: Fri, 08 Apr 2016 08:39:52 -0400
-Message-ID: <1460119192.25335.40.camel@localhost.localdomain>
-References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
-	 <yq137qw6bzz.fsf@sermon.lab.mkp.net>
-	 <888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com>
-Reply-To: emilne@redhat.com
+Date: Fri, 8 Apr 2016 09:11:19 -0400 (EDT)
+Message-ID: <1975890115.28041373.1460121079252.JavaMail.zimbra@redhat.com>
+References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com> <yq137qw6bzz.fsf@sermon.lab.mkp.net> <888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com> <1460119192.25335.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60937 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757AbcDHMjy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Apr 2016 08:39:54 -0400
-In-Reply-To: <888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1460119192.25335.40.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rdma@vger.kernel.org
+
+Hi Ewan, 
+
+OK, that makes sense.
+I suspected after everybody's responses that RHEL was somehow ignoring the array imposed limit here.
+I actually got lucky because I needed to be able to issue 4MB IO'S to reproduce the failures seen
+at the customer on the initiator side.
+
+Looking at the target-LIO array now its clamped to 1MB I/O sizes which makes sense.
+I really was not focusing on the array at the time expecting it may chop the I/O up as many do.
+
+Knowing what's up now I can continue to test and figure out what patches I need to pull in to SRP on RHEL to make progress.
+
+Thank you to all that responded.
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Ewan D. Milne" <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: "Laurence Oberman" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-scsi" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sent: Friday, April 8, 2016 8:39:52 AM
+Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
 
 The version of RHEL you are using does not have:
 
 commit ca369d51b3e1649be4a72addd6d6a168cfb3f537
-Author: Martin K. Petersen <martin.petersen@oracle.com>
+Author: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Date:   Fri Nov 13 16:46:48 2015 -0500
 
     block/sd: Fix device-imposed transfer length limits
@@ -117,13 +135,13 @@ On Fri, 2016-04-08 at 04:31 -0400, Laurence Oberman wrote:
 > Red Hat Global Support Services
 > 
 > ----- Original Message -----
-> From: "Martin K. Petersen" <martin.petersen@oracle.com>
-> To: "Laurence Oberman" <loberman@redhat.com>
-> Cc: "linux-scsi" <linux-scsi@vger.kernel.org>, linux-rdma@vger.kernel.org
+> From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> To: "Laurence Oberman" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: "linux-scsi" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > Sent: Thursday, April 7, 2016 11:00:16 PM
 > Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
 > 
-> >>>>> "Laurence" == Laurence Oberman <loberman@redhat.com> writes:
+> >>>>> "Laurence" == Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
 > 
 > Laurence,
 > 
@@ -169,3 +187,7 @@ On Fri, 2016-04-08 at 04:31 -0400, Laurence Oberman wrote:
 > 
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
