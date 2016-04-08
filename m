@@ -1,55 +1,66 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH 01/11] scsi/fcoe: lock online CPUs in fcoe_percpu_clean()
-Date: Fri, 8 Apr 2016 20:14:50 +0200
-Message-ID: <5707F51A.8010700@linutronix.de>
-References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
- <1457710143-29182-2-git-send-email-bigeasy@linutronix.de>
- <20160311161704.GA5083@infradead.org> <56E2F30F.5030108@linutronix.de>
- <20160315081940.GB9136@infradead.org> <5707B270.3080006@linutronix.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Lsf] [LSF/MM TOPIC] block-mq issues with FC
+Date: Fri, 08 Apr 2016 11:24:08 -0700
+Message-ID: <1460139848.2340.62.camel@HansenPartnership.com>
+References: <57079616.4000202@suse.de>
+	 <20160408174006.GI2781@linux.intel.com>
+	 <1460138451.2340.60.camel@HansenPartnership.com>
+	 <20160408180832.GA22340@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:52718 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752305AbcDHSPE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2016 14:15:04 -0400
-In-Reply-To: <5707B270.3080006@linutronix.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35188 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753056AbcDHSYL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2016 14:24:11 -0400
+In-Reply-To: <20160408180832.GA22340@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rt@linutronix.de, Vasu Dev <vasu.dev@intel.com>, fcoe-devel@open-fcoe.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, lsf@lists.linux-foundation.org, Hannes Reinecke <hare@suse.de>, Matthew Wilcox <willy@linux.intel.com>
 
-On 04/08/2016 03:30 PM, Sebastian Andrzej Siewior wrote:
-> On 03/15/2016 09:19 AM, Christoph Hellwig wrote:
->> On Fri, Mar 11, 2016 at 05:32:15PM +0100, Sebastian Andrzej Siewior wrote:
->>> alloc_workqueue() in setup and then queue_work_on(cpu, , item)? item
->>> should be struct work_struct but all I have is a skb. Is there an easy
->>> way to get this attached?
->>
->> Good question.  There is skb->cb, but it looks like it doesn't have
->> space for an additional work_item in the fcoe case.  Maybe have
->> a per-cpu work_struct and keep all the list handling as-is for now?
+On Fri, 2016-04-08 at 20:08 +0200, Christoph Hellwig wrote:
+> On Fri, Apr 08, 2016 at 11:00:51AM -0700, James Bottomley wrote:
+> > >  - Inability to use all queues supported by a device.  Intel's
+> > > P3700
+> > >    supports 31 queues, but block-mq insists on assigning an even
+> > > multiple
+> > >    of CPUs to each queue.  So if you have 48 CPUs, it will use 24
+> > > queues.
+> > >    If you have 128 CPUs, it will only use 16 of the queues.
+> > > 
+> > >  - Interrupt steering needs to be controlled by block-mq instead
+> > > of
+> > >    the driver.  It's pointless to have each driver implement its
+> > > own
+> > >    policies on interrupt steering, irqbalanced remains a source
+> > > of
+> > >    end-user frustration, and block-mq can change the queue<->cpu
+> > > mapping
+> > >    without the driver's knowledge.
+> > > 
+> > > (thanks to Keith for his input on the first and suggestion of the
+> > > second).
+> > 
+> > OK, what about two sessions, one for general bitching (the feedback
+> > sessions) and one for concrete proposals for improvements ... so
+> > rather
+> > than just complaining about the problem, if you have concrete ideas
+> > about fixing it, that would go into the second session.
 > 
-> Okay. Let me try this. What about the few fixes from the series (which
-> apply before the rework to smbboot theads)?
+> We already have the blk-mq interrupt assignment session on the
+> schedule,
+> which is about willy's item.  And my work in progress code to address
+> the issue also mostly addresses his item number 1, so I think we can
+> just keep the schedule most as is and just rename "multiqueue
+> interrupt
+> assignment" into "multiqueue interrupt and queue assignment".
+> 
+> No need to blow it up into three slots.
 
-okay kworker. This does not look good. I have it converted what I miss
-flushing work when CPU goes down and ensuring not to queue work while
-the CPU is down.
+Agreed; I made the adjustments.
 
-- cpu_online(x) is racy. In DOWN_PREPARE the worker is deactivated /
-  stopped. However slightly later the bit from the CPU mask is removed.
+James
 
-- Whatever is queued and did not make it before the CPU went down seems
-  to be delayed until the CPU comes back online.
 
-- if the worker keeps running while the CPU is going down the worker
-  continues running on a different CPU.
-
-So I don't see how the former two points can be solved without keeping
-track of CPUs in a CPU notifier. Getting pushed to a different CPU be
-probably less of an issue if we would have a work-item and would not
-need to rely on the per-CPU list.
-
-Sebastian
