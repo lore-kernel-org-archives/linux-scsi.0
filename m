@@ -1,56 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
-Date: Thu, 07 Apr 2016 22:30:28 -0700
-Message-ID: <1460093428.13128.5.camel@haakon3.risingtidesystems.com>
-References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
+From: Ming Lin <mlin@kernel.org>
+Subject: Re: [PATCH RFC 1/2] scatterlist: add mempool based chained SG
+ alloc/free api
+Date: Thu, 7 Apr 2016 22:41:08 -0700
+Message-ID: <CAF1ivSYUyAyKRsBhk5LHJj8_UMKcN0UFzxoH0vz9=VGaqS6W_g@mail.gmail.com>
+References: <1458081569-30953-1-git-send-email-mlin@kernel.org>
+	<1458081569-30953-2-git-send-email-mlin@kernel.org>
+	<57067514.7020700@sandisk.com>
+	<CAF1ivSZPyWJH9xHWARBTd4KSn1r4w7sR_98iH=8aaLPBqDoiog@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-rdma@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36584 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750758AbcDHFlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2016 01:41:12 -0400
+In-Reply-To: <CAF1ivSZPyWJH9xHWARBTd4KSn1r4w7sR_98iH=8aaLPBqDoiog@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-Hi Laurence,
+On Thu, Apr 7, 2016 at 9:43 AM, Ming Lin <mlin@kernel.org> wrote:
+> On Thu, Apr 7, 2016 at 7:56 AM, Bart Van Assche
+> <bart.vanassche@sandisk.com> wrote:
+>> On 03/15/16 15:39, Ming Lin wrote:
+>>>
+>>> +static void sg_mempoll_free(struct scatterlist *sgl, unsigned int nents)
+>>
+>>
+>> Please change mempoll into mempool.
+>
+> Good catch. Thanks Bart!
 
-On Thu, 2016-04-07 at 17:15 -0400, Laurence Oberman wrote:
-> Hello
-> 
-> I have been testing the SRP initiator code to an LIO array here and
-> part of the testing requires me to set the max_sectors_kb size to get
-> 4k I/O's.
-> This has been due to me having to debug various sg_map issues.
-> 
-> Linux srptest 4.5.0 #2 SMP Thu Apr 7 16:14:38 EDT 2016 x86_64 x86_64
-> x86_64 GNU/Linux
-> This kernel has the scan patch from Hannes, as well as the "[PATCH]
-> IB/mlx5: Expose correct max_sge_rd limit" patch. 
-> However, I also tested with vanilla 4.5.0 as well and its the same
-> issue.
-> 
-> For some reason I cannot change the max_sectors_kb size on 4.5.0 here.
-> 
-> I chatted with Ewan about it as well and he reminded me about Martins
-> changes so wondering if that's playing into this.
-> 
-> Take /dev/sdb as an example
-> 
-> [root@srptest queue]# sg_inq --p 0xb0 /dev/sdb
-> VPD INQUIRY: Block limits page (SBC)
->   Maximum compare and write length: 1 blocks
->   Optimal transfer length granularity: 256 blocks
->   Maximum transfer length: 256 blocks
->   Optimal transfer length: 768 blocks
->   Maximum prefetch, xdread, xdwrite transfer length: 0 blocks
-> 
+Hi Bart,
 
-Just curious what target backend this is with..?
+This is actually the previous old RFC patch.
+The v2 and v3 patch series doesn't have this typo.
 
-Specifically the optimal transfer length granularity and optimal
-transfer length may be reported by underlying backend device (eg:
-IBLOCK) in spc_emulate_evpd_b0(). 
-
-What does 'head /sys/kernel/config/target/core/$HBA/$DEV/attrib/*'
-of the backend device in question look like..?
+Thanks.
