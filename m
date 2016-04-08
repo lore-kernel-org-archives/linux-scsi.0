@@ -1,251 +1,171 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [dm-devel] [RFC PATCH 0/4] dm mpath: vastly improve blk-mq IO performance
-Date: Fri, 08 Apr 2016 13:42:16 +0200
-Message-ID: <2760420.6GyDefUaH5@c203>
-References: <1459454666-76428-1-git-send-email-snitzer@redhat.com> <57067597.4080103@suse.de> <20160407153448.GA30510@redhat.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
+Date: Fri, 08 Apr 2016 08:39:52 -0400
+Message-ID: <1460119192.25335.40.camel@localhost.localdomain>
+References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
+	 <yq137qw6bzz.fsf@sermon.lab.mkp.net>
+	 <888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42135 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:60937 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758194AbcDHLmT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2016 07:42:19 -0400
-In-Reply-To: <20160407153448.GA30510@redhat.com>
+	id S1751757AbcDHMjy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2016 08:39:54 -0400
+In-Reply-To: <888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com
-Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, sagig@dev.mellanox.co.il, jmoyer@redhat.com, linux-block@vger.kernel.org, j-nomura@ce.jp.nec.com
+To: Laurence Oberman <loberman@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rdma@vger.kernel.org
 
-Ladies and Gentlemen,
-To show off some numbers from our testing:
+The version of RHEL you are using does not have:
 
-All tests are performed against the cache of the Array, not the disks a=
-s we=20
-wanted to test the Linux stack not the Disk Array.
+commit ca369d51b3e1649be4a72addd6d6a168cfb3f537
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:   Fri Nov 13 16:46:48 2015 -0500
 
-All single queue tests have been performed with the deadline I/O Schedu=
-ler.
+    block/sd: Fix device-imposed transfer length limits
 
-Comments welcome, have fun reading :-)
+(which will be added during the next update).
 
-QLogic 32GBit FC HBA NetApp EF560 Array w/ DM MQ this patchset:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-Random Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 785136 | 3066.1MB/s |
-8k   | 734983 | 5742.6MB/s |
-16k | 398516 | 6226.9MB/s |
-32k | 200589 | 6268.5MB/s |
-64k | 100417 | 6276.2MB/s |
+In the upstream kernel queue_max_sectors_store() does not
+permit you to set a value larger than the device-imposed
+limit.  This value, stored in q->limits.max_dev_sectors,
+is not visible via the block queue sysfs interface.
 
-Sequential Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 788620 | 3080.6MB/s |
-8k   | 736359 | 5752.9MB/s |
-16k | 398597 | 6228.8MB/s |
-32k |  200487| 6265.3MB/s |
-64k | 100402 | 6275.2MB/s |
+The code that sets q->limits.max_sectors and q->limits.io_opt
+in sd.c does not take the device limit into account, but
+the sysfs code to change max_sectors ("max_sectors_kb") does.
 
-Random Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 242105 | 968423KB/s |
-8k   | 222290 | 1736.7MB/s |
-16k | 178191 | 2784.3MB/s |
-32k | 133619 | 4175.7MB/s |
-64k |   97693 | 6105.9MB/s |
+So there are a couple of problems here, one is that RHEL
+is not clamping to the device limit, and the other one is
+that neither RHEL nor upstream kernels take the device limit
+into account when setting q->limits.io_opt.  This only seems
+to be a problem for you because your target is reporting
+an optimal I/O size in VPD page B0 that is *smaller* than
+the reported maximum I/O size.
 
-Sequential Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 134788 | 539155KB/s |
-8k   | 132361 | 1034.8MB/s |
-16k | 129941 | 2030.4MB/s |
-32k | 128288 | 4009.4MB/s |
-64k |   97776 | 6111.0MB/s |
+The target is clearly reporting inconsistent data, the
+question is whether we should change the code to clamp the
+optimal I/O size, or whether we should assume the value
+the target is reporting is wrong.
 
-QLogic 32GBit FC HBA NetApp EF560 Array w/ DM SQ this patchset:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-Random Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 112402 | 449608KB/s |
-8k   | 112818 | 902551KB/s |
-16k | 111885 | 1748.3MB/s |
-32k | 188015 | 5875.6MB/s |
-64k |   99021 |  6188.9MB/s |
+So the question is:  does the target actually process
+requests that are larger than the VPD page B0 reported
+maximum size?  If so, maybe we should just issue a warning
+message rather than reducing the optimal I/O size.
 
-Sequential Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 115046 | 460186KB/s |
-8k   | 113974 | 911799KB/s |
-16k | 113374 | 1771.5MB/s |
-32k | 192932 | 6029.2MB/s |
-64k | 100474 | 6279.7MB/s |
-
-Random Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 114284 | 457138KB/s |
-8k   | 113992 | 911944KB/s |
-16k | 113715 | 1776.9MB/s |
-32k | 130402 | 4075.9MB/s |
-64k |   92243 | 5765.3MB/s |
-
-Sequential Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 115540 | 462162KB/s |
-8k   | 114243 | 913951KB/s |
-16k | 300153 | 4689.1MB/s |
-32k | 141069 | 4408.5MB/s |
-64k |   97620 | 6101.3MB/s |
+-Ewan
 
 
-QLogic 32GBit FC HBA NetApp EF560 Array w/ DM MQ previous patchset:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Random Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 782733 | 3057.6MB/s |
-8k   | 732143 | 5719.9MB/s |
-16k | 398314 | 6223.7MB/s |
-32k | 200538 | 6266.9MB/s |
-64k | 100422 | 6276.5MB/s |
+On Fri, 2016-04-08 at 04:31 -0400, Laurence Oberman wrote:
+> Hello Martin
+> 
+> Yes, Ewan also noticed that.
+> 
+> This started out as me testing the SRP stack on RHEL 7.2 and baselining against upstream.
+> We have a customer that requires 4MB I/O.
+> I bumped into a number of SRP issues including sg_map failures so started reviewing upstream changes to the SRP code and patches.
+> 
+> The RHEL kernel is ignoring this so perhaps we have an issue on our side (RHEL kernel) and upstream is behaving as it should.
+> 
+> What is intersting is that I cannot change the max_sectors_kb at all on the upstream for the SRP LUNS.
+> 
+> Here is an HP SmartArray LUN
+> 
+> [root@srptest ~]#  sg_inq --p 0xb0 /dev/sda
+> VPD INQUIRY: page=0xb0
+>     inquiry: field in cdb illegal (page not supported)   **** Known that its not supported
+> 
+> However
+> 
+> /sys/block/sda/queue
+> 
+> [root@srptest queue]# cat max_hw_sectors_kb max_sectors_kb
+> 4096
+> 1280
+> [root@srptest queue]# echo 4096 > max_sectors_kb
+> [root@srptest queue]# cat max_hw_sectors_kb max_sectors_kb
+> 4096
+> 4096
+> 
+> On the SRP LUNS I am unable to change to a lower value than  max_sectors_kb unless I change it to 128
+> So perhaps the size on the array is the issue here as Nicholas said and the RHEL kernel has a bug and ignores it.
+> 
+> /sys/block/sdc/queue
+> 
+> [root@srptest queue]# cat max_hw_sectors_kb max_sectors_kb
+> 4096
+> 1280
+> 
+> [root@srptest queue]# echo 512 > max_sectors_kb
+> -bash: echo: write error: Invalid argument
+> 
+> [root@srptest queue]# echo 256 > max_sectors_kb
+> -bash: echo: write error: Invalid argument
+> 
+> 128 works
+> [root@srptest queue]# echo 128 > max_sectors_kb
+> 
+> 
+> 
+> 
+> Laurence Oberman
+> Principal Software Maintenance Engineer
+> Red Hat Global Support Services
+> 
+> ----- Original Message -----
+> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+> To: "Laurence Oberman" <loberman@redhat.com>
+> Cc: "linux-scsi" <linux-scsi@vger.kernel.org>, linux-rdma@vger.kernel.org
+> Sent: Thursday, April 7, 2016 11:00:16 PM
+> Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
+> 
+> >>>>> "Laurence" == Laurence Oberman <loberman@redhat.com> writes:
+> 
+> Laurence,
+> 
+> The target is reporting inconsistent values here:
+> 
+> > [root@srptest queue]# sg_inq --p 0xb0 /dev/sdb
+> > VPD INQUIRY: Block limits page (SBC)
+> >   Maximum compare and write length: 1 blocks
+> >   Optimal transfer length granularity: 256 blocks
+> >   Maximum transfer length: 256 blocks
+> >   Optimal transfer length: 768 blocks
+> 
+> OPTIMAL TRANSFER LENGTH GRANULARITY roughly translates to physical block
+> size or RAID chunk size. It's the smallest I/O unit that does not
+> require read-modify-write. It would typically be either 1 or 8 blocks
+> for a drive and maybe 64, 128 or 256 for a RAID5 array. io_min in
+> queue_limits.
+> 
+> OPTIMAL TRANSFER LENGTH indicates the stripe width and is a multiple of
+> OPTIMAL TRANSFER LENGTH GRANULARITY. io_opt in queue_limits.
+> 
+> MAXIMUM TRANSFER LENGTH indicates the biggest READ/WRITE command the
+> device can handle in a single command. In this case 256 blocks so that's
+> 128K. max_dev_sectors in queue_limits.
+> 
+> From SBC:
+> 
+> "A MAXIMUM TRANSFER LENGTH field set to a non-zero value indicates the
+> maximum transfer length in logical blocks that the device server accepts
+> for a single command shown in table 250. If a device server receives one
+> of these commands with a transfer size greater than this value, then the
+> device server shall terminate the command with CHECK CONDITION status
+> [...]"
+> 
+> So those reported values are off.
+> 
+>    logical block size <= physical block size <= OTLG <= OTL <= MTL
+> 
+> Or in terms of queue_limits:
+> 
+>    lbs <= pbs <= io_min <= io_opt <=
+>        min_not_zero(max_dev_sectors, max_hw_sectors, max_sectors)
+> 
 
-Sequential Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 786707 | 3073.8MB/s |
-8k   | 730579 | 5707.7MB/s |
-16k | 398799 | 6231.3MB/s |
-32k | 200518 | 6266.2MB/s |
-64k | 100397 | 6274.9MB/s |
 
-Random Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 242426 | 969707KB/s |
-8k   | 223079 | 1742.9MB/s |
-16k | 177889 | 2779.6MB/s |
-32k | 133637 | 4176.2MB/s |
-64k |   97727 | 6107.1MB/s |
-
-Sequential Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 134360 | 537442KB/s |
-8k   | 129738 | 1013.6MB/s |
-16k | 129746 | 2027.3MB/s |
-32k | 127875 | 3996.1MB/s |
-64k |   97683 | 6105.3MB/s |
-
-Emulex 16GBit FC HBA NetApp EF560 Array w/ DM MQ this patchset :
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-[Beware, this is with Hannes' lockless lpfc patches, which are not upst=
-ream as=20
-they're quite experimental, but are good at showing the capability of t=
-he new=20
-dm-mpath]
-
-Random Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 939752 | 3670.1MB/s |
-8k   | 741462 | 5792.7MB/s |
-16k | 399285 | 6238.9MB/s |
-32k | 196490 | 6140.4MB/s |
-64k | 100325 | 6270.4MB/s |
-
-Sequential Read:
-BS   | IOPS     | BW
-------+------------+-------------------+
-4k   | 926222 | 3618.6MB/s |
-8k   | 750125 | 5860.4MB/s |
-16k | 397770 | 6215.2MB/s |
-32k | 200130 | 6254.8MB/s |=20
-64k | 100397 | 6274.9MB/s |
-
-Random Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 251938 | 984.14MB/s |
-8k   | 226712 | 1771.2MB/s |
-16k | 180739 | 2824.5MB/s |
-32k | 133316 | 4166.2MB/s |
-64k |  98738  | 6171.2MB/s |
-
-Sequential Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 134660 | 538643KB/s |
-8k   | 131585 | 1028.9MB/s |
-16k | 131030 | 2047.4MB/s |
-32k | 126987 | 3968.4MB/s |
-64k |  98882  | 6180.2MB/s |
-
-Emulex 16GBit FC HBA NetApp EF560 Array w/ DM SQ this patchset:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-Random Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 101860 | 407443KB/s |
-8k   | 100242 | 801940KB/s |
-16k |   99774 | 1558.1MB/s |
-32k | 134304 | 4197.8MB/s |
-64k | 100126 | 6257.1MB/s |
-
-Sequential Read:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 285585 | 1115.6MB/s |=20
-8k   | 313619 | 2450.2MB/s |
-16k | 190696 | 2979.7MB/s |
-32k | 200569 | 6267.9MB/s |
-64k | 100366 | 6272.1MB/s |
-
-Random Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   |  98434  | 393738KB/s |
-8k   |  97286  | 778294KB/s |=20
-16k |  97623  | 1525.4MB/s |
-32k | 126999 | 3968.8MB/s |
-64k |  94309  | 5894.4MB/s |
-
-Sequential Write:
-BS   | IOPS     | BW                |
-------+------------+-------------------+
-4k   | 330066 | 1289.4MB/s |
-8k   | 452792 | 3537.5MB/s |
-16k | 334481 | 5226.3MB/s |
-32k | 186916 | 5841.2MB/s |
-64k |  88698  | 5543.7MB/s |
-
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
