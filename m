@@ -1,22 +1,119 @@
-From: =?utf-8?B?0KHQstC10YLQu9Cw0L3QsA==?= <vorontsova.977@mail.ru>
-Subject: =?utf-8?B?0JLRiyDRg9C20LUg0L3QsNGI0LvQuCDQvtGE0LjRgT8=?=
-Date: Fri,  8 Apr 2016 15:17:32 -0400 (EDT)
-Message-ID: <20160408191732.5F12A12E563@bandit.flewid.ca>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/9] block/scsi: Implement SMR drive support
+Date: Sat, 9 Apr 2016 10:01:45 +0200
+Message-ID: <5708B6E9.50400@suse.de>
+References: <1459764020-126038-1-git-send-email-hare@suse.de>
+ <CAJVOszAp_u2JQcDxbVatPKkFN7TKp7kxqauBBvSrmcWjeuSYDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bandit.flewid.ca ([208.88.17.179]:46792 "EHLO bandit.flewid.ca"
+Received: from mx2.suse.de ([195.135.220.15]:39560 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754900AbcDID1A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Apr 2016 23:27:00 -0400
-Subject: =?utf-8?B?0JLRiyDRg9C20LUg0L3QsNGI0LvQuCDQvtGE0LjRgT8=?=
+	id S1751141AbcDIIBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Apr 2016 04:01:49 -0400
+In-Reply-To: <CAJVOszAp_u2JQcDxbVatPKkFN7TKp7kxqauBBvSrmcWjeuSYDg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: karishka_v@kirovnet.ru, kat@mastercad.ru, kovalev@vit-teplo.ru, lsuho@dopr.hersol.ru, konatem@mail.ru, kleopatra487@kleopatra487.ru, kukhmazova@gmail.com, katy@spbsnab.ru, licei10vlz@yandex.ru, larica21viktor@gmail.com, mail@svenprom.ru, kontakt@mobiplus.ru, mail@leonidas-design.ru, lesha@tour.crimea.com, loza-evgenii@vail.ru, linux-scsi@vger.kernel.org, lmmze73@dopr.hersol.ru, kopaev@abuska.ru, maria_south_carolina_2011@gmail.com, laedi69@mail.ru
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
+On 04/08/2016 08:35 PM, Shaun Tancheff wrote:
+> On Mon, Apr 4, 2016 at 5:00 PM, Hannes Reinecke <hare@suse.de> wrote:
+>> Hi all,
+>>
+>> here's a patchset implementing SMR (shingled magnetic recording)
+>> device support for the block and SCSI layer.
+>>
+>> There are two main parts to it:
+>> - mapping the 'RESET WRITE POINTER' command to the 'discard' functio=
+nality.
+>>    The 'RESET WRITE POINTER' operation is pretty close to the existi=
+ng
+>>    'discard' functionality with the 'discard_zeroes_blocks' bit set.
+>>    So I've added a new 'reset_wp' provisioning mode for this.
+>
+> Completely agree with the REQ_OP_DISCARD -> Reset WP translation
+> seems like a good idea. I have tried something similar and ended up
+> essentially adding a 'reset wp' flag instead.
+> Now I am optimistic to see if I can use you patch to get the
+> discard -> reset wp working in my device mapper.
+>
+It works quite well here with my setup, although I've tripped across tw=
+o=20
+caveats:
 
-0JTQvtCx0YDRi9C5INC00LXQvdGMLgoK0JXRgdC70Lgg0LLQvtC/0YDQvtGBINCw0YDQtdC90LTRiyDQv9C+0LzQtdGJ0LXQvdC40Y8g0LXRidC1INCw0LrRgtGD0LDQu9C10L0g0LTQu9GPINCS0LDRgT8KCtCl0L7Rh9GDINC/0YDQtdC00LvQvtC20LjRgtGMINC/0L7QvNC10YnQtdC90LjRjyDQsiDQsNGA0LXQvdC00YM6INC/0LvQvtGJ0LDQtNGM0Y4g0L7RgiAxNiDQnDIg0L/QviDRgNC10LDQu9GM0L3QviDQvdC40LfQutC+0Lkg0LDRgNC10L3QtNC90L7QuSDRgdGC0LDQstC60LUgKNCx0LXQtyDQutC+0LzQuNGB0YHQuNC4KSDQsiDQvdCw0YjQuNGFINCx0LjQt9C90LXRgS3RhtC10L3RgtGA0LDRhSwg0YDRj9C00L7QvCDRgdC+INGB0YLQsNC90YbQuNGP0LzQuCDQvNC10YLRgNC+OgogLSDQmtC40YLQsNC5LdCz0L7RgNC+0LQKIC0g0JvRg9Cx0Y/QvdC60LAKIC0g0J/Qu9C+0YnQsNC00Ywg0YDQtdCy0L7Qu9GO0YbQuNC4CiAtINCd0L7QstGL0LUg0KfQtdGA0LXQvNGD0YjQutC4CiAtINCf0YDQvtGE0YHQvtGO0LfQvdCw0Y8KIC0g0KHQstC40LHQu9C+0LLQvgogLSDQkdC+0YLQsNC90LjRh9C10YHQutC40Lkg0YHQsNC0CiAtINCf0YDQtdC+0LHR
- gNCw0LbQtdC90YHQutCw0Y8g0L/Qu9C+0YnQsNC00YwKIC0g0JHRg9C70YzQstCw0YAg0KDQvtC60L7RgdGB0L7QstGB0LrQvtCz0L4KIC0g0JLQlNCd0KUKCtCd0L7QstGL0Lwg0LDRgNC10L3QtNCw0YLQvtGA0LDQvCDQv9GA0LXQtNC+0YHRgtCw0LLQuNC8IN
- Cw0YDQtdC90LTQvdGL0LUg0LrQsNC90LjQutGD0LvRiywg0Y7RgC4g0LDQtNGA0LXRgSDQuCDQv9Cw0YDQutC+0LLQvtGH0L3Ri9C1INC80LXRgdGC0LAg0LIg0L/QvtC00LDRgNC+0LouCgrQn9C+0LbQsNC70YPQudGB0YLQsCDQvdCw0L/QuNGI0LjRgtC1IC0g0YDRj9C00L7QvCDRgSDQutCw0LrQuNC80Lgg0YHRgtCw0L3RhtC40Y/QvNC4INC80LXRgtGA0L4g0JLQsNC8INC40L3RgtC10YDQtdGB0L3QviDRgNCw0YHRgdC80L7RgtGA0LXRgtGMINCy0L7Qt9C80L7QttC90L7RgdGC0Ywg0LDRgNC10L3QtNGLIC0g0Y8g0L/RgNC40YjQu9GOINCS0LDQvCDQutC+0L3QutGA0LXRgtC90YvQtSDQstCw0YDQuNCw0L3RgtGLINC+0YTQuNGB0L7QsiDQuCDRgdGC0L7QuNC80L7RgdGC0Ywg0LrQsNC20LTQvtCz0L4uCgpDINGD0LLQsNC20LXQvdC40LXQvCwg0KHQstC10YLQu9Cw0L3QsC4=
+- We currently don't handle conventional zones.
+   It would make sense to fallback to normal block zeroing here.
+- Issuing 'RESET WP' is dead slow (at least on the prototypes I've had)
+   Short-circuiting it for empty zones is a _major_ performance win her=
+e;
+   the time for issuing discards for an entire drive is reduced by
+   several orders of magnitude. So you absolutely need an in-kernel
+   zone tree for this.
 
+>> - Adding a 'zone' pointer to the request queue. This pointer holds a=
+n
+>>    RB-tree with the zone information, which can be used by other lay=
+ers
+>>    to access the write pointer.
+>
+> Here is where I have some concerns. Having a common in-kernel
+> shadow of the drive's zone state seems problematic to me.
+>
+Well, this is the general SMR programming model, is it not?
+And as already pointed out above you really want this tree to be presen=
+t=20
+to avoid unnecessary RESET WP calls.
+You also need it to format READ calls correctly for host-managed drives=
+;=20
+from my understanding of the programming model any READ call crossing=20
+the write pointer will be aborted.
+Which you could easily circumvent by splitting the READ call in two=20
+parts, one up to the read pointer and another beyond it. For which agai=
+n=20
+you need the zone tree.
+
+> Also if I am understanding the direction here it is to hold the zone
+> information in an rbtree. Since that comes to just under 30,000
+> entries I think it would be better to shift to an array of
+> write pointer offsets.
+>
+The thing is that using an rbtree might actually be faster than an=20
+array; the rbtree entries easily fit into the processor cache, whereas=20
+the array doesn't. So you might end up having a slower access when usin=
+g=20
+arrays despite being easier to code.
+
+> At the moment my translation layer keeps track of activity and state
+> of all the zones on the drive so that is how I have been handling
+> the zone data up to this point.
+>
+As outlined above: Any driver/filesystem need access to the zone states=
+=20
+as it might need to align its internal structures to the zones.
+But you also need to keep track of the zones in the SCSI layer so as to=
+=20
+format the RESET WP correctly. Which means you basically need a common =
+tree.
+
+As you might've seen I've also programmed my own zoned device-mapper=20
+device, caching individual zones. We should discuss if those two=20
+approached can't be merged, to end up with a common device-mapper targe=
+t.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
