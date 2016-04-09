@@ -1,7 +1,7 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH v2 04/16] iscsi-target: add void (*iscsit_release_cmd)()
-Date: Sat,  9 Apr 2016 18:41:14 +0530
-Message-ID: <1499510260d6358522b4023822022f0add88b687.1460204441.git.varun@chelsio.com>
+Subject: [PATCH v2 05/16] iscsi-target: add void (*iscsit_get_rx_pdu)()
+Date: Sat,  9 Apr 2016 18:41:15 +0530
+Message-ID: <a454b4444bda97b5d36b6ba02fa492f401096036.1460204441.git.varun@chelsio.com>
 References: <cover.1460204441.git.varun@chelsio.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <cover.1460204441.git.varun@chelsio.com>
@@ -12,40 +12,76 @@ To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add void (*iscsit_release_cmd)() to
+Add void (*iscsit_get_rx_pdu)() to
 struct iscsit_transport, iscsi-target
-uses this callback to release transport
-driver resources associated with an iSCSI cmd.
+uses this callback to receive and
+process Rx iSCSI PDUs.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/iscsi_target_util.c | 3 +++
- include/target/iscsi/iscsi_transport.h   | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/infiniband/ulp/isert/ib_isert.c | 10 ++++++++++
+ drivers/target/iscsi/iscsi_target.c     | 10 ++--------
+ include/target/iscsi/iscsi_transport.h  |  1 +
+ 3 files changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index 428b0d9..a533017 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -725,6 +725,9 @@ void __iscsit_free_cmd(struct iscsi_cmd *cmd, bool scsi_cmd,
- 		iscsit_remove_cmd_from_immediate_queue(cmd, conn);
- 		iscsit_remove_cmd_from_response_queue(cmd, conn);
- 	}
-+
-+	if (conn && conn->conn_transport->iscsit_release_cmd)
-+		conn->conn_transport->iscsit_release_cmd(conn, cmd);
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index 411e446..9118d7c 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -3273,6 +3273,15 @@ static void isert_free_conn(struct iscsi_conn *conn)
+ 	isert_put_conn(isert_conn);
  }
  
- void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
++static void isert_get_rx_pdu(struct iscsi_conn *conn)
++{
++	struct completion comp;
++
++	init_completion(&comp);
++
++	wait_for_completion_interruptible(&comp);
++}
++
+ static struct iscsit_transport iser_target_transport = {
+ 	.name			= "IB/iSER",
+ 	.transport_type		= ISCSI_INFINIBAND,
+@@ -3291,6 +3300,7 @@ static struct iscsit_transport iser_target_transport = {
+ 	.iscsit_queue_data_in	= isert_put_datain,
+ 	.iscsit_queue_status	= isert_put_response,
+ 	.iscsit_aborted_task	= isert_aborted_task,
++	.iscsit_get_rx_pdu	= isert_get_rx_pdu,
+ 	.iscsit_get_sup_prot_ops = isert_get_sup_prot_ops,
+ };
+ 
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 9e65e5d..4311636 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -3989,14 +3989,8 @@ int iscsi_target_rx_thread(void *arg)
+ 	if (rc < 0 || iscsi_target_check_conn_state(conn))
+ 		return 0;
+ 
+-	if (conn->conn_transport->transport_type == ISCSI_INFINIBAND) {
+-		struct completion comp;
+-
+-		init_completion(&comp);
+-		rc = wait_for_completion_interruptible(&comp);
+-		if (rc < 0)
+-			goto transport_err;
+-
++	if (conn->conn_transport->iscsit_get_rx_pdu) {
++		conn->conn_transport->iscsit_get_rx_pdu(conn);
+ 		goto transport_err;
+ 	}
+ 
 diff --git a/include/target/iscsi/iscsi_transport.h b/include/target/iscsi/iscsi_transport.h
-index 77ae41e..19cef94 100644
+index 19cef94..1f63d8c 100644
 --- a/include/target/iscsi/iscsi_transport.h
 +++ b/include/target/iscsi/iscsi_transport.h
-@@ -29,6 +29,7 @@ struct iscsit_transport {
- 	int (*iscsit_xmit_datain_pdu)(struct iscsi_conn *, struct iscsi_cmd *,
+@@ -30,6 +30,7 @@ struct iscsit_transport {
  				      struct iscsi_datain_req *,
  				      struct iscsi_datain *);
-+	void (*iscsit_release_cmd)(struct iscsi_conn *, struct iscsi_cmd *);
+ 	void (*iscsit_release_cmd)(struct iscsi_conn *, struct iscsi_cmd *);
++	void (*iscsit_get_rx_pdu)(struct iscsi_conn *);
  	enum target_prot_op (*iscsit_get_sup_prot_ops)(struct iscsi_conn *);
  };
  
