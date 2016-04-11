@@ -1,77 +1,75 @@
-From: Rameshwar Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
-Subject: Re: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
- controller DTS node
-Date: Mon, 11 Apr 2016 14:44:43 +0530
-Message-ID: <CAFd313y-VV1Kk754b=fV0-kToMz=7Y=COqwSJQh=agYaLjUzyw@mail.gmail.com>
-References: <1459245294-22678-1-git-send-email-rsahu@apm.com>
-	<CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA@mail.gmail.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: Re: [PATCH v2 6/8] tools rpmb: add RPBM access tool
+Date: Mon, 11 Apr 2016 10:50:38 +0000
+Message-ID: <1460396988.30275.2.camel@intel.com>
+References: <201604052018.uIYWSrsd%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Duc Dang <dhdang-qTEPVZfXA3Y@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Devicetree List <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, patches <patches-qTEPVZfXA3Y@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201604052018.uIYWSrsd%fengguang.wu@intel.com>
+Content-Language: en-US
+Content-ID: <B8FC2592E825814CB84011915927AAAD@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: lkp <lkp@intel.com>
+Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "kbuild-all@01.org" <kbuild-all@01.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "luto@kernel.org" <luto@kernel.org>, "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "ygardi@codeaurora.org" <ygardi@codeaurora.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Olof,
-
-On Wed, Mar 30, 2016 at 12:41 AM, Duc Dang <dhdang-qTEPVZfXA3Y@public.gmane.org> wrote:
->
-> On Tue, Mar 29, 2016 at 2:54 AM, Rameshwar Prasad Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org> wrote:
-> > Fix X-Gene SATA controller compatible string for Merlin board.
-> >
-> > Signed-off-by: Rameshwar Prasad Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
-> > Acked-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
->
-> I will queue this patch into xgene-next tree.
->
-> > ---
-> >  arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
-> >  1 files changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> > index 5d87a3d..74d971e 100644
-> > --- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> > +++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> > @@ -524,7 +524,7 @@
-> >                 };
-> >
-> >                 sata1: sata@1a000000 {
-> > -                       compatible = "apm,xgene-ahci";
-> > +                       compatible = "apm,xgene-ahci-v2";
-> >                         reg = <0x0 0x1a000000 0x0 0x1000>,
-> >                               <0x0 0x1f200000 0x0 0x1000>,
-> >                               <0x0 0x1f20d000 0x0 0x1000>,
-> > @@ -534,7 +534,7 @@
-> >                 };
-> >
-> >                 sata2: sata@1a200000 {
-> > -                       compatible = "apm,xgene-ahci";
-> > +                       compatible = "apm,xgene-ahci-v2";
-> >                         reg = <0x0 0x1a200000 0x0 0x1000>,
-> >                               <0x0 0x1f210000 0x0 0x1000>,
-> >                               <0x0 0x1f21d000 0x0 0x1000>,
-> > @@ -544,7 +544,7 @@
-> >                 };
-> >
-> >                 sata3: sata@1a400000 {
-> > -                       compatible = "apm,xgene-ahci";
-> > +                       compatible = "apm,xgene-ahci-v2";
-> >                         reg = <0x0 0x1a400000 0x0 0x1000>,
-> >                               <0x0 0x1f220000 0x0 0x1000>,
-> >                               <0x0 0x1f22d000 0x0 0x1000>,
-> > --
-> > 1.7.1
-> >
-
-
-Any comments on this patch ??
->
->
-> Regards,
-> Duc Dang.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gVHVlLCAyMDE2LTA0LTA1IGF0IDIwOjE2ICswODAwLCBrYnVpbGQgdGVzdCByb2JvdCB3cm90
+ZToNCj4gSGkgVG9tYXMsDQo+IA0KPiBbYXV0byBidWlsZCB0ZXN0IEVSUk9SIG9uIGNoYXItbWlz
+Yy9jaGFyLW1pc2MtdGVzdGluZ10NCj4gW2Fsc28gYnVpbGQgdGVzdCBFUlJPUiBvbiB2NC42LXJj
+MiBuZXh0LTIwMTYwNDA1XQ0KPiBbaWYgeW91ciBwYXRjaCBpcyBhcHBsaWVkIHRvIHRoZSB3cm9u
+ZyBnaXQgdHJlZSwgcGxlYXNlIGRyb3AgdXMgYQ0KPiBub3RlIHRvIGhlbHAgaW1wcm92aW5nIHRo
+ZSBzeXN0ZW1dDQo+IA0KPiB1cmw6wqDCoMKgwqBodHRwczovL2dpdGh1Yi5jb20vMGRheS1jaS9s
+aW51eC9jb21taXRzL1RvbWFzLVdpbmtsZXIvUmVwbGF5DQo+IC1Qcm90ZWN0ZWQtTWVtb3J5LUJs
+b2NrLVJQTUItc3Vic3lzdGVtLzIwMTYwNDA0LTE5MjI0Mw0KPiBjb25maWc6IHg4Nl82NC1yYW5k
+Y29uZmlnLXMzLTA0MDUxODU4IChhdHRhY2hlZCBhcyAuY29uZmlnKQ0KPiByZXByb2R1Y2U6DQo+
+IMKgwqDCoMKgwqDCoMKgwqAjIHNhdmUgdGhlIGF0dGFjaGVkIC5jb25maWcgdG8gbGludXggYnVp
+bGQgdHJlZQ0KPiDCoMKgwqDCoMKgwqDCoMKgbWFrZSBBUkNIPXg4Nl82NMKgDQo+IA0KPiBBbGwg
+ZXJyb3JzIChuZXcgb25lcyBwcmVmaXhlZCBieSA+Pik6DQo+IA0KPiDCoMKgwqBtYWtlWzNdOiAq
+KiogTm8gcnVsZSB0byBtYWtlIHRhcmdldCAna2VybmVsL2djb3YvYmFzZS5vJywgbmVlZGVkDQo+
+IGJ5ICdrZXJuZWwvZ2Nvdi9idWlsdC1pbi5vJy4NCj4gwqDCoMKgbWFrZVszXTogKioqIE5vIHJ1
+bGUgdG8gbWFrZSB0YXJnZXQgJ2tlcm5lbC9nY292L2ZzLm8nLCBuZWVkZWQgYnkNCj4gJ2tlcm5l
+bC9nY292L2J1aWx0LWluLm8nLg0KPiA+IA0KPiA+ID4gDQo+ID4gPiBtYWtlWzNdOiAqKiogTm8g
+cnVsZSB0byBtYWtlIHRhcmdldCAna2VybmVsL2djb3YvZ2NjXzNfNC5vJywNCj4gPiA+IG5lZWRl
+ZCBieSAna2VybmVsL2djb3YvYnVpbHQtaW4ubycuDQo+IMKgwqDCoG1ha2VbM106IFRhcmdldCAn
+X19idWlsZCcgbm90IHJlbWFkZSBiZWNhdXNlIG9mIGVycm9ycy4NCj4gLS0NCj4gPiANCj4gPiA+
+IA0KPiA+ID4gbWFrZVszXTogKioqIE5vIHJ1bGUgdG8gbWFrZSB0YXJnZXQgJ3Rvb2xzL29ianRv
+b2wvb2JqdG9vbCcsDQo+ID4gPiBuZWVkZWQgYnkgJ2RyaXZlcnMvbWZkLzg4cG04MDAubycuDQo+
+IMKgwqDCoG1ha2VbM106IFRhcmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBiZWNhdXNlIG9mIGVy
+cm9ycy4NCj4gLS0NCj4gPiANCj4gPiA+IA0KPiA+ID4gbWFrZVs0XTogKioqIE5vIHJ1bGUgdG8g
+bWFrZSB0YXJnZXQgJ3Rvb2xzL29ianRvb2wvb2JqdG9vbCcsDQo+ID4gPiBuZWVkZWQgYnkgJ2Ry
+aXZlcnMvZmlybXdhcmUvZ29vZ2xlL21lbWNvbnNvbGUubycuDQo+IMKgwqDCoG1ha2VbNF06IFRh
+cmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBiZWNhdXNlIG9mIGVycm9ycy4NCj4gLS0NCj4gPiAN
+Cj4gPiA+IA0KPiA+ID4gbWFrZVs0XTogKioqIE5vIHJ1bGUgdG8gbWFrZSB0YXJnZXQgJ3Rvb2xz
+L29ianRvb2wvb2JqdG9vbCcsDQo+ID4gPiBuZWVkZWQgYnkgJ2RyaXZlcnMvaWlvL2RhYy9hZDU2
+MjRyX3NwaS5vJy4NCj4gwqDCoMKgbWFrZVs0XTogVGFyZ2V0ICdfX2J1aWxkJyBub3QgcmVtYWRl
+IGJlY2F1c2Ugb2YgZXJyb3JzLg0KPiAtLQ0KPiA+IA0KPiA+ID4gDQo+ID4gPiBtYWtlWzRdOiAq
+KiogTm8gcnVsZSB0byBtYWtlIHRhcmdldCAndG9vbHMvb2JqdG9vbC9vYmp0b29sJywNCj4gPiA+
+IG5lZWRlZCBieSAnZHJpdmVycy9paW8vdHJpZ2dlci9paW8tdHJpZy1pbnRlcnJ1cHQubycuDQo+
+IMKgwqDCoG1ha2VbNF06IFRhcmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBiZWNhdXNlIG9mIGVy
+cm9ycy4NCj4gLS0NCj4gPiANCj4gPiA+IA0KPiA+ID4gbWFrZVs0XTogKioqIE5vIHJ1bGUgdG8g
+bWFrZSB0YXJnZXQgJ3Rvb2xzL29ianRvb2wvb2JqdG9vbCcsDQo+ID4gPiBuZWVkZWQgYnkgJ2Ry
+aXZlcnMvaW5wdXQvam95c3RpY2svZ2Yyay5vJy4NCj4gwqDCoMKgbWFrZVs0XTogKioqIFtkcml2
+ZXJzL2lucHV0L2pveXN0aWNrL2lmb3JjZV0gRXJyb3IgMg0KPiDCoMKgwqBtYWtlWzRdOiBUYXJn
+ZXQgJ19fYnVpbGQnIG5vdCByZW1hZGUgYmVjYXVzZSBvZiBlcnJvcnMuDQo+IC0tDQo+ID4gDQo+
+ID4gPiANCj4gPiA+IG1ha2VbNF06ICoqKiBObyBydWxlIHRvIG1ha2UgdGFyZ2V0ICd0b29scy9v
+Ymp0b29sL29ianRvb2wnLA0KPiA+ID4gbmVlZGVkIGJ5ICdkcml2ZXJzL21pc2MvZWVwcm9tL21h
+eDY4NzUubycuDQo+IMKgwqDCoG1ha2VbNF06IFRhcmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBi
+ZWNhdXNlIG9mIGVycm9ycy4NCj4gLS0NCj4gPiANCj4gPiA+IA0KPiA+ID4gbWFrZVs0XTogKioq
+IE5vIHJ1bGUgdG8gbWFrZSB0YXJnZXQgJ3Rvb2xzL29ianRvb2wvb2JqdG9vbCcsDQo+ID4gPiBu
+ZWVkZWQgYnkgJ2RyaXZlcnMvbW1jL2NhcmQvbW1jX3Rlc3QubycuDQo+IMKgwqDCoG1ha2VbNF06
+IFRhcmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBiZWNhdXNlIG9mIGVycm9ycy4NCj4gLS0NCj4g
+PiANCj4gPiA+IA0KPiA+ID4gbWFrZVs0XTogKioqIE5vIHJ1bGUgdG8gbWFrZSB0YXJnZXQgJ3Rv
+b2xzL29ianRvb2wvb2JqdG9vbCcsDQo+ID4gPiBuZWVkZWQgYnkgJ2RyaXZlcnMvbW1jL2hvc3Qv
+c2RoY2kubycuDQo+IMKgwqDCoG1ha2VbNF06IFRhcmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBi
+ZWNhdXNlIG9mIGVycm9ycy4NCj4gLS0NCj4gPiANCj4gPiA+IA0KPiA+ID4gbWFrZVs0XTogKioq
+IE5vIHJ1bGUgdG8gbWFrZSB0YXJnZXQgJ3Rvb2xzL29ianRvb2wvb2JqdG9vbCcsDQo+ID4gPiBu
+ZWVkZWQgYnkgJ2RyaXZlcnMvcGluY3RybC9pbnRlbC9waW5jdHJsLWludGVsLm8nLg0KPiDCoMKg
+wqBtYWtlWzRdOiBUYXJnZXQgJ19fYnVpbGQnIG5vdCByZW1hZGUgYmVjYXVzZSBvZiBlcnJvcnMu
+DQo+IC0tDQo+ID4gDQo+ID4gPiANCj4gPiA+IG1ha2VbNF06ICoqKiBObyBydWxlIHRvIG1ha2Ug
+dGFyZ2V0ICd0b29scy9vYmp0b29sL29ianRvb2wnLA0KPiA+ID4gbmVlZGVkIGJ5ICdkcml2ZXJz
+L3BsYXRmb3JtL2Nocm9tZS9jaHJvbWVvc19sYXB0b3AubycuDQo+IMKgwqDCoG1ha2VbNF06IFRh
+cmdldCAnX19idWlsZCcgbm90IHJlbWFkZSBiZWNhdXNlIG9mIGVycm9ycy4NCj4gLi4NCkp1c3Qg
+dG8gcHV0IHRoYXQgc3RyYWlnaHQsIHRob3NlIGFyZSBpc3N1ZXMgaW4gdGhlIHRlc3RpbmcgZW52
+aXJvbm1lbnQNCm5vdCBpbiB0aGUgcGF0Y2hlcy4NCg0KVGhhbmtzDQpUb21hcw0K
