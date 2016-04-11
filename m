@@ -1,34 +1,26 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
-Date: Mon, 11 Apr 2016 17:29:03 -0400
-Message-ID: <yq1vb3n25sw.fsf@sermon.lab.mkp.net>
-References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
-	<yq137qw6bzz.fsf@sermon.lab.mkp.net>
-	<888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com>
-	<1460119192.25335.40.camel@localhost.localdomain>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
+Date: Mon, 11 Apr 2016 17:34:46 -0400
+Message-ID: <yq1r3eb25jd.fsf@sermon.lab.mkp.net>
+References: <1459806491-16428-1-git-send-email-mlin@kernel.org>
+	<1459806491-16428-5-git-send-email-mlin@kernel.org>
+	<20160405145555.GE7822@mtj.duckdns.org>
+	<CAF1ivSZSerbCO0MdELaTLbNUWMbeGBBv32-YO3sjHJZJYMQzrQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1460119192.25335.40.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org> (Ewan
-	D. Milne's message of "Fri, 08 Apr 2016 08:39:52 -0400")
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Ewan D. Milne" <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSZSerbCO0MdELaTLbNUWMbeGBBv32-YO3sjHJZJYMQzrQ@mail.gmail.com>
+	(Ming Lin's message of "Sun, 10 Apr 2016 22:20:06 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, sagi@grimberg.me
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Ewan" == Ewan D Milne <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+>>>>> "Ming" == Ming Lin <mlin@kernel.org> writes:
 
-Ewan> In the upstream kernel queue_max_sectors_store() does not permit
-Ewan> you to set a value larger than the device-imposed limit.  This
-Ewan> value, stored in q->limits.max_dev_sectors, is not visible via the
-Ewan> block queue sysfs interface.
+Ming> Are we ready to merge it?
 
-I should refresh the patch that exposes that. There were a few comments
-and I never got around to rolling those in.
+We're still missing an ack from Sagi.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
