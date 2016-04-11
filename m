@@ -1,41 +1,45 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [Lsf] [LSF/MM TOPIC] block-mq issues with FC
-Date: Sun, 10 Apr 2016 22:02:06 +0300
-Message-ID: <570AA32E.8070709@grimberg.me>
-References: <57079616.4000202@suse.de> <20160408174006.GI2781@linux.intel.com>
+From: Ming Lin <mlin@kernel.org>
+Subject: Re: [PATCH v3 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
+Date: Sun, 10 Apr 2016 22:20:06 -0700
+Message-ID: <CAF1ivSZSerbCO0MdELaTLbNUWMbeGBBv32-YO3sjHJZJYMQzrQ@mail.gmail.com>
+References: <1459806491-16428-1-git-send-email-mlin@kernel.org>
+	<1459806491-16428-5-git-send-email-mlin@kernel.org>
+	<20160405145555.GE7822@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36657 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758908AbcDJTCP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2016 15:02:15 -0400
-In-Reply-To: <20160408174006.GI2781@linux.intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:38021 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750859AbcDKFUK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Apr 2016 01:20:10 -0400
+In-Reply-To: <20160405145555.GE7822@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>, Hannes Reinecke <hare@suse.de>
-Cc: lsf@lists.linux-foundation.org, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-Hey Willy,
+On Tue, Apr 5, 2016 at 7:55 AM, Tejun Heo <tj@kernel.org> wrote:
+> On Mon, Apr 04, 2016 at 02:48:10PM -0700, Ming Lin wrote:
+>> From: Ming Lin <ming.l@ssi.samsung.com>
+>>
+>> Rename SCSI_MAX_SG_SEGMENTS to SG_CHUNK_SIZE, which means the amount
+>> we fit into a single scatterlist chunk.
+>>
+>> Rename SCSI_MAX_SG_CHAIN_SEGMENTS to SG_MAX_SEGMENTS.
+>>
+>> Will move these 2 generic definitions to scatterlist.h later.
+>>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Acked-by: Bart Van Assche <bart.vanassche@sandisk.com> (for ib_srp changes)
+>> Signed-off-by: Ming Lin <ming.l@ssi.samsung.com>
+>
+> For libata,
+>
+> Acked-by: Tejun Heo <tj@kernel.org>
 
->   - Interrupt steering needs to be controlled by block-mq instead of
->     the driver.  It's pointless to have each driver implement its own
->     policies on interrupt steering, irqbalanced remains a source of
->     end-user frustration, and block-mq can change the queue<->cpu mapping
->     without the driver's knowledge.
+Hi James,
 
-I honestly don't think that block-mq is the right place to
-*assign* interrupt steering. Not all HW devices are dedicated
-to storage, take RDMA for example, a RNIC is shared by block
-storage, networking and even user-space workloads so obviously
-block-mq can't understand how a user wants to steer interrupts.
+Are we ready to merge it?
 
-I think that block-mq needs to ask the device driver:
-"what is the optimal queue index for cpu X?" and use it
-while *someone* will be responsible for optimum interrupt
-steering (can be the driver itself or user-space).
-
- From some discussions I had with HCH I think he intends to
-use the cpu reverse-mapping API to try and do what's described
-above (if I'm not mistaken).
+Thanks,
+Ming
