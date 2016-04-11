@@ -1,38 +1,22 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] IB/iser: set max_segment_size
-Date: Mon, 11 Apr 2016 15:47:26 -0700
-Message-ID: <1460414846-29540-3-git-send-email-hch@lst.de>
-References: <1460414846-29540-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:34323 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078AbcDKWrk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 18:47:40 -0400
-In-Reply-To: <1460414846-29540-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: fix large I/O regression with iSER in 4.4+
+Date: Mon, 11 Apr 2016 15:47:24 -0700
+Message-ID: <1460414846-29540-1-git-send-email-hch@lst.de>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
 
-So that we don't overflow the number of MR segments allocated because
-we have to split on SGL segment into multiple MR segments.
+Since iSER was converted to use the generic virt_boundary mechanism
+(which was called something else in 4.4), it didn't handle the case
+where a request is using up the full size of max_hw_segments, but
+not actually aligned to the virt boundary.  This series sets the
+maximum segment size limit to fix this workload (xfs_repair is a good
+reproducer, btw).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/infiniband/ulp/iser/iscsi_iser.c | 1 +
- 1 file changed, 1 insertion(+)
+Should probably go into 4.4 and 4.5-stable.
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 80b6bed..784504a 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -623,6 +623,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 	shost->max_id = 0;
- 	shost->max_channel = 0;
- 	shost->max_cmd_len = 16;
-+	shost->max_segment_size = PAGE_SIZE;
- 
- 	/*
- 	 * older userspace tools (before 2.0-870) did not pass us
--- 
-2.1.4
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
