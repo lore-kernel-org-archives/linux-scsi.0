@@ -1,61 +1,65 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH v2 03/16] iscsi-target: add int
- (*iscsit_xmit_datain_pdu)()
-Date: Mon, 11 Apr 2016 21:42:39 +0530
-Message-ID: <20160411161236.GA2180@chelsio.com>
+Subject: Re: [PATCH v2 04/16] iscsi-target: add void (*iscsit_release_cmd)()
+Date: Mon, 11 Apr 2016 22:46:41 +0530
+Message-ID: <20160411171639.GA1713@chelsio.com>
 References: <cover.1460204441.git.varun@chelsio.com>
- <9cf062fac7d7501001cd9cdf6b29db59314dc086.1460204441.git.varun@chelsio.com>
- <570A8F7B.30701@grimberg.me>
+ <1499510260d6358522b4023822022f0add88b687.1460204441.git.varun@chelsio.com>
+ <570A9094.6010502@grimberg.me>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.32.117.8]:63137 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752686AbcDKRRL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 13:17:11 -0400
 Content-Disposition: inline
-In-Reply-To: <570A8F7B.30701@grimberg.me>
-Sender: target-devel-owner@vger.kernel.org
+In-Reply-To: <570A9094.6010502@grimberg.me>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Sagi Grimberg <sagi@grimberg.me>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com
-List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Apr 10, 2016 at 08:38:03PM +0300, Sagi Grimberg wrote:
+On Sun, Apr 10, 2016 at 08:42:44PM +0300, Sagi Grimberg wrote:
 > 
-> 
-> On 09/04/16 16:11, Varun Prakash wrote:
-> >Add int (*iscsit_xmit_datain_pdu)() to
+> >Add void (*iscsit_release_cmd)() to
 > >struct iscsit_transport, iscsi-target
-> >uses this callback to transmit a DATAIN
-> >iSCSI PDU.
-> >
-> >Signed-off-by: Varun Prakash <varun@chelsio.com>
-> >---
-> >  drivers/target/iscsi/iscsi_target.c    | 143 +++++++++++++++++++--------------
-> >  include/target/iscsi/iscsi_transport.h |   3 +
-> >  2 files changed, 86 insertions(+), 60 deletions(-)
-> >
-> >diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> >index 0e7a481..9e65e5d 100644
-> >--- a/drivers/target/iscsi/iscsi_target.c
-> >+++ b/drivers/target/iscsi/iscsi_target.c
-> >@@ -577,6 +577,84 @@ static int iscsit_xmit_pdu(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
-> >  	return 0;
-> >  }
-> >
-> >+static int iscsit_map_iovec(struct iscsi_cmd *, struct kvec *, u32, u32);
-> >+static void iscsit_unmap_iovec(struct iscsi_cmd *);
-> >+static u32 iscsit_do_crypto_hash_sg(struct ahash_request *, struct iscsi_cmd *,
-> >+				    u32, u32, u32, u8 *);
-> >+static int
-> >+iscsit_xmit_datain_pdu(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
-> >+		       struct iscsi_datain_req *dr, struct iscsi_datain *datain)
+> >uses this callback to release transport
+> >driver resources associated with an iSCSI cmd.
 > 
-> Looks very similar to xmit_pdu(), if we add a datain pointer that
-> can be null for normal pdus would that reduce code duplication?
+> I'd really like to see some reasoning on why you add
+> abstraction callouts. It may have a valid reason but
+> it needs to be documented in the change log...
 
-Yes, we can have a common xmit function for all pdus -
+This is for releasing DDP resource and sg page
+in case of PASSTHROUGH_SG_TO_MEM_NOALLOC.
+I will update commit log in -v3.
 
-int iscsit_xmit_pdu(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
-		    struct iscsi_datain_req *dr, const void *buf, u32 buf_len);
+> 
+> >diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+> >index 428b0d9..a533017 100644
+> >--- a/drivers/target/iscsi/iscsi_target_util.c
+> >+++ b/drivers/target/iscsi/iscsi_target_util.c
+> >@@ -725,6 +725,9 @@ void __iscsit_free_cmd(struct iscsi_cmd *cmd, bool scsi_cmd,
+> >  		iscsit_remove_cmd_from_immediate_queue(cmd, conn);
+> >  		iscsit_remove_cmd_from_response_queue(cmd, conn);
+> >  	}
+> >+
+> >+	if (conn && conn->conn_transport->iscsit_release_cmd)
+> >+		conn->conn_transport->iscsit_release_cmd(conn, cmd);
+> >  }
+> 
+> Did you verify that you get here with conn = NULL (given that you test
+> it)? If so, then can you please document why is it expected for this
+> function to be called twice that we need to make it safe?
+> 
+> If not, then I'd move this check to be a WARN_ON/BUG_ON to hunt
+> down when is this happening.
 
-dr will be NULL for non datain pdus and buf will point to data buffer.
-For datain pdus buf will point to datain(struct iscsi_datain) buffer, buf_len will be zero.
+There is already a check for NULL conn in __iscsit_free_cmd()
 
-I will add this in -v3, thanks.
+	if (conn && check_queues) {
+  		iscsit_remove_cmd_from_immediate_queue(cmd, conn);
+  		iscsit_remove_cmd_from_response_queue(cmd, conn);
+	}
+
+cmd->conn can become NULL in ERL2 error recovery.
