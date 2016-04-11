@@ -1,34 +1,60 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH v2 08/16] iscsi-target: add void (*iscsit_get_r2t_ttt)()
-Date: Mon, 11 Apr 2016 23:38:39 +0530
-Message-ID: <20160411180838.GB1758@chelsio.com>
-References: <cover.1460204441.git.varun@chelsio.com>
- <2f71b7720d07231faa12ffba830681f1d7ac07da.1460204441.git.varun@chelsio.com>
- <570A92B0.9000109@grimberg.me>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [4.5-rc4 Regression] qla2xxx: Add irq affinity notification
+Date: Mon, 11 Apr 2016 17:48:40 +0000
+Message-ID: <32AB2218-5D39-4968-A07F-E527B0557F04@qlogic.com>
+References: <570BDE44.5020301@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:49497 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085AbcDKSJF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 14:09:05 -0400
-Content-Disposition: inline
-In-Reply-To: <570A92B0.9000109@grimberg.me>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <570BDE44.5020301@canonical.com>
+Content-Language: en-US
+Content-ID: <5E7105866354CB4E8EDDA9CF68802873@namprd11.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com
 
-On Sun, Apr 10, 2016 at 08:51:44PM +0300, Sagi Grimberg wrote:
-> 
-> >Add void (*iscsit_get_r2t_ttt)() to
-> >struct iscsit_transport, iscsi-target
-> >uses this callback to get
-> >r2t->targ_xfer_tag.
-> 
-> Your driver allocates ttt's? That looks like bad
-> layering to me. This definitely deserves an explanation...
-
-cxgbit.ko allocates ttt only for r2t pdus to do Direct Data
-Placement of Data Out pdus, adapter uses the ttt value in
-Data Out pdus to place data directly in the host buffers.
+Sm9lLA0KDQpIb3cgZG8gSSBnZXQgYWNjZXNzIHRvIHRoaXMgc3BlY2lmaWMgVWJ1bnR1IGtlcm5l
+bCB3aGVyZSB0aGUgYnVnIGlzIGZvdW5kPyAgSXMgdGhlcmUgc3RhY2sgdHJhY2UvYnVnIHJlcG9y
+dCB0aGF0IHlvdSBjb3VsZCBzaGFyZT8gIEFueSBkYXRhIHdvdWxkIGJlIGhlbHBmdWwuICBUaGFu
+a3MuDQoNCkluIHRoZSBtZWFuIHRpbWUsIEkgd2lsbCBkb3dubG9hZCA0LjUgcmM0IHRvIHJlLXZl
+cmlmeS4NCg0KUmVnYXJkcywNClF1aW5uIFRyYW4NCg0KDQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQpGcm9tOiBKb3NlcGggU2FsaXNidXJ5IDxqb3NlcGguc2FsaXNidXJ5QGNh
+bm9uaWNhbC5jb20+DQpEYXRlOiBNb25kYXksIEFwcmlsIDExLCAyMDE2IGF0IDEwOjI2IEFNDQpU
+bzogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29tPg0KQ2M6IERlcHQtRW5nIFFMQTJ4
+eHggVXBzdHJlYW0gPHFsYTJ4eHgtdXBzdHJlYW1AcWxvZ2ljLmNvbT4sICJqZWpiQGxpbnV4LnZu
+ZXQuaWJtLmNvbSIgPGplamJAbGludXgudm5ldC5pYm0uY29tPiwgIk1hcnRpbiBLLiBQZXRlcnNl
+biIgPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPiwgbGludXgtc2NzaSA8bGludXgtc2NzaUB2
+Z2VyLmtlcm5lbC5vcmc+LCBsaW51eC1rZXJuZWwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5v
+cmc+LCAiaGNoQGxzdC5kZSIgPGhjaEBsc3QuZGU+LCAiYmFydC52YW5hc3NjaGVAc2FuZGlzay5j
+b20iIDxiYXJ0LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4sIEhpbWFuc2h1IE1hZGhhbmkgPGhpbWFu
+c2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIE5pY2hvbGFzIEJlbGxpbmdlciA8bmFiQGxpbnV4LWlz
+Y3NpLm9yZz4NClN1YmplY3Q6IFs0LjUtcmM0IFJlZ3Jlc3Npb25dIHFsYTJ4eHg6IEFkZCBpcnEg
+YWZmaW5pdHkgbm90aWZpY2F0aW9uDQoNCj5IZWxsbyBRdWlubiwNCj4NCj5BIGtlcm5lbCBidWcg
+cmVwb3J0IHdhcyBvcGVuZWQgYWdhaW5zdCBVYnVudHUgWzBdLiAgQWZ0ZXIgYSBrZXJuZWwNCj5i
+aXNlY3QsIGl0IHdhcyBmb3VuZCB0aGF0IHJldmVydGluZyB0aGUgZm9sbG93aW5nIGNvbW1pdCBy
+ZXNvbHZlZCB0aGlzIGJ1ZzoNCj4NCj5jb21taXQgY2RiODk4YzUyZDFkZmFkNGI0ODAwYjgzYTU4
+YjNmZTVkMzUyZWRkZQ0KPkF1dGhvcjogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29t
+Pg0KPkRhdGU6IFRodSBEZWMgMTcgMTQ6NTc6MDUgMjAxNSAtMDUwMA0KPiAgIA0KPiAgICBxbGEy
+eHh4OiBBZGQgaXJxIGFmZmluaXR5IG5vdGlmaWNhdGlvbg0KPg0KPg0KPkhvd2V2ZXIsIHRoZSBw
+cmlvciBjb21taXQgYWxzbyByZXF1aXJlZCB0aGUgZm9sbG93aW5nIHRocmVlIGNvbW1pdHMgdG8N
+Cj5hbHNvIGJlIHJldmVydGVkOg0KPg0KPmNvbW1pdCA1MzI3YzdkYmQxYTdmZDk4MDYwOGY0NDc4
+OTA3NmE2MzZlNWVlNWZjDQo+QXV0aG9yOiBRdWlubiBUcmFuIDxxdWlubi50cmFuQHFsb2dpYy5j
+b20+DQo+RGF0ZTogV2VkIEZlYiAxMCAxODo1OToxNCAyMDE2IC0wNTAwDQo+DQo+ICAgIHFsYTJ4
+eHg6IHVzZSBUQVJHRVRfU0NGX1VTRV9DUFVJRCBmbGFnIHRvIGluZGlhdGUgQ1BVIEFmZmluaXR5
+DQo+DQo+Y29tbWl0IDkwOTVhZGFhYjhjMWQ4MjcwN2U0ZTk5NjFiNmFkNzliNjJmMzM2MWINCj5B
+dXRob3I6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj5EYXRlOiBXZWQgRmVi
+IDEwIDE4OjU5OjEzIDIwMTYgLTA1MDANCj4gICANCj4gICAgdGFyZ2V0L3RyYW5zcG9ydDogYWRk
+IGZsYWcgdG8gaW5kaWNhdGUgQ1BVIEFmZmluaXR5IGlzIG9ic2VydmVkDQo+DQo+Y29tbWl0IGZi
+MzI2OWJhZjRlY2MyY2U2ZDE3ZDRlYjUzNzA4MDAzNWJkZjZkNWINCj5BdXRob3I6IFF1aW5uIFRy
+YW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj5EYXRlOiBUaHUgRGVjIDE3IDE0OjU3OjA2IDIw
+MTUgLTA1MDANCj4gICANCj4gICAgcWxhMnh4eDogQWRkIHNlbGVjdGl2ZSBjb21tYW5kIHF1ZXVp
+bmcNCj4NCj4NCj4NCj5UaGUgcmVncmVzc2lvbiB3YXMgaW50cm9kdWNlZCBhcyBvZiB2NC41LXJj
+NC4NCj4gICAgDQo+SSB3YXMgaG9waW5nIHRvIGdldCB5b3VyIGZlZWRiYWNrLCBzaW5jZSB5b3Ug
+YXJlIHRoZSBwYXRjaCBhdXRob3IuIFRoZQ0KPmRlcGVuZGFudCByZXZlcnRzIGFsbCBsb29rIGxp
+a2UgdGhleSBhcmUgaW1wcm92aW5nIGNwdSBhZmZpbml0eSwgd2hpY2gNCj53b3VsZCBsaWtlbHkg
+aW1wYWN0IHBlcmZvcm1hbmNlLiAgRG8geW91IHRoaW5nIHRoZXJlIGlzIGEgd2F5IGZvcndhcmQN
+Cj5pbnN0ZWFkIG9mIHRoZSByZXZlcnRzLCBvciB3b3VsZCBpdCBiZSBiZXN0IHRvIHN1Ym1pdCBh
+IHJldmVydCByZXF1ZXN0Pw0KPiAgICANCj4gICAgDQo+VGhhbmtzLA0KPiAgICANCj5Kb2UNCj4N
+Cj4NCj5bMF0gaHR0cDovL3BhZC5sdi8xNTU0MDAzDQo+DQo+DQo=
