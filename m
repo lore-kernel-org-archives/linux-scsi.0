@@ -1,51 +1,77 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: [-next] BUG_ON in scsi_target_destroy()
-Date: Mon, 11 Apr 2016 18:01:47 +0900
-Message-ID: <20160411090146.GA537@swordfish>
+From: Rameshwar Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
+Subject: Re: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
+ controller DTS node
+Date: Mon, 11 Apr 2016 14:44:43 +0530
+Message-ID: <CAFd313y-VV1Kk754b=fV0-kToMz=7Y=COqwSJQh=agYaLjUzyw@mail.gmail.com>
+References: <1459245294-22678-1-git-send-email-rsahu@apm.com>
+	<CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:35825 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbcDKJAT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 05:00:19 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Duc Dang <dhdang-qTEPVZfXA3Y@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Devicetree List <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, patches <patches-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-next@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
 
-Hello,
+Hi Olof,
 
-commit 7b106f2de6938c31ce5e9c86bc70ad3904666b96
-Author: Johannes Thumshirn <jthumshirn@suse.de>
-Date:   Tue Apr 5 11:50:44 2016 +0200
+On Wed, Mar 30, 2016 at 12:41 AM, Duc Dang <dhdang-qTEPVZfXA3Y@public.gmane.org> wrote:
+>
+> On Tue, Mar 29, 2016 at 2:54 AM, Rameshwar Prasad Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org> wrote:
+> > Fix X-Gene SATA controller compatible string for Merlin board.
+> >
+> > Signed-off-by: Rameshwar Prasad Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
+> > Acked-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+>
+> I will queue this patch into xgene-next tree.
+>
+> > ---
+> >  arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
+> >  1 files changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+> > index 5d87a3d..74d971e 100644
+> > --- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+> > +++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+> > @@ -524,7 +524,7 @@
+> >                 };
+> >
+> >                 sata1: sata@1a000000 {
+> > -                       compatible = "apm,xgene-ahci";
+> > +                       compatible = "apm,xgene-ahci-v2";
+> >                         reg = <0x0 0x1a000000 0x0 0x1000>,
+> >                               <0x0 0x1f200000 0x0 0x1000>,
+> >                               <0x0 0x1f20d000 0x0 0x1000>,
+> > @@ -534,7 +534,7 @@
+> >                 };
+> >
+> >                 sata2: sata@1a200000 {
+> > -                       compatible = "apm,xgene-ahci";
+> > +                       compatible = "apm,xgene-ahci-v2";
+> >                         reg = <0x0 0x1a200000 0x0 0x1000>,
+> >                               <0x0 0x1f210000 0x0 0x1000>,
+> >                               <0x0 0x1f21d000 0x0 0x1000>,
+> > @@ -544,7 +544,7 @@
+> >                 };
+> >
+> >                 sata3: sata@1a400000 {
+> > -                       compatible = "apm,xgene-ahci";
+> > +                       compatible = "apm,xgene-ahci-v2";
+> >                         reg = <0x0 0x1a400000 0x0 0x1000>,
+> >                               <0x0 0x1f220000 0x0 0x1000>,
+> >                               <0x0 0x1f22d000 0x0 0x1000>,
+> > --
+> > 1.7.1
+> >
 
-    scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
 
-
-BUG_ON()s (next-20160411) each time I remove a usb flash
-
-[   49.561600]  [<ffffffffa0087f42>] scsi_target_destroy+0x5a/0xcb [scsi_mod]
-[   49.561607]  [<ffffffffa0089099>] scsi_target_reap+0x4a/0x4f [scsi_mod]
-[   49.561613]  [<ffffffffa008b453>] __scsi_remove_device+0xc3/0xd0 [scsi_mod]
-[   49.561619]  [<ffffffffa0089d7b>] scsi_forget_host+0x52/0x63 [scsi_mod]
-[   49.561623]  [<ffffffffa0080dbc>] scsi_remove_host+0x8c/0x102 [scsi_mod]
-[   49.561627]  [<ffffffffa015c447>] usb_stor_disconnect+0x6b/0xab [usb_storage]
-[   49.561634]  [<ffffffffa0013f73>] usb_unbind_interface+0x77/0x1ca [usbcore]
-[   49.561636]  [<ffffffff813ae064>] __device_release_driver+0x9d/0x121
-[   49.561638]  [<ffffffff813ae10b>] device_release_driver+0x23/0x30
-[   49.561639]  [<ffffffff813ad2d1>] bus_remove_device+0xfb/0x10e
-[   49.561641]  [<ffffffff813aac05>] device_del+0x164/0x1e6
-[   49.561648]  [<ffffffffa0011b09>] ? remove_intf_ep_devs+0x3b/0x48 [usbcore]
-[   49.561655]  [<ffffffffa001200e>] usb_disable_device+0x84/0x1a5 [usbcore]
-[   49.561661]  [<ffffffffa000ac7b>] usb_disconnect+0x94/0x19f [usbcore]
-[   49.561667]  [<ffffffffa000c2ab>] hub_event+0x5c1/0xdea [usbcore]
-[   49.561670]  [<ffffffff810530b1>] process_one_work+0x1dc/0x37f
-[   49.561672]  [<ffffffff81053dc5>] worker_thread+0x282/0x36d
-[   49.561673]  [<ffffffff81053b43>] ? rescuer_thread+0x2ae/0x2ae
-[   49.561675]  [<ffffffff810580a8>] kthread+0xd2/0xda
-[   49.561678]  [<ffffffff814bbf92>] ret_from_fork+0x22/0x40
-[   49.561679]  [<ffffffff81057fd6>] ? kthread_worker_fn+0x13e/0x13e
-
-	-ss
+Any comments on this patch ??
+>
+>
+> Regards,
+> Duc Dang.
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
