@@ -1,60 +1,100 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 Subject: Re: [4.5-rc4 Regression] qla2xxx: Add irq affinity notification
-Date: Mon, 11 Apr 2016 17:48:40 +0000
-Message-ID: <32AB2218-5D39-4968-A07F-E527B0557F04@qlogic.com>
+Date: Mon, 11 Apr 2016 14:41:37 -0400
+Message-ID: <570BEFE1.6040703@canonical.com>
 References: <570BDE44.5020301@canonical.com>
+ <32AB2218-5D39-4968-A07F-E527B0557F04@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <570BDE44.5020301@canonical.com>
-Content-Language: en-US
-Content-ID: <5E7105866354CB4E8EDDA9CF68802873@namprd11.prod.outlook.com>
+In-Reply-To: <32AB2218-5D39-4968-A07F-E527B0557F04@qlogic.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
+To: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Sm9lLA0KDQpIb3cgZG8gSSBnZXQgYWNjZXNzIHRvIHRoaXMgc3BlY2lmaWMgVWJ1bnR1IGtlcm5l
-bCB3aGVyZSB0aGUgYnVnIGlzIGZvdW5kPyAgSXMgdGhlcmUgc3RhY2sgdHJhY2UvYnVnIHJlcG9y
-dCB0aGF0IHlvdSBjb3VsZCBzaGFyZT8gIEFueSBkYXRhIHdvdWxkIGJlIGhlbHBmdWwuICBUaGFu
-a3MuDQoNCkluIHRoZSBtZWFuIHRpbWUsIEkgd2lsbCBkb3dubG9hZCA0LjUgcmM0IHRvIHJlLXZl
-cmlmeS4NCg0KUmVnYXJkcywNClF1aW5uIFRyYW4NCg0KDQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQpGcm9tOiBKb3NlcGggU2FsaXNidXJ5IDxqb3NlcGguc2FsaXNidXJ5QGNh
-bm9uaWNhbC5jb20+DQpEYXRlOiBNb25kYXksIEFwcmlsIDExLCAyMDE2IGF0IDEwOjI2IEFNDQpU
-bzogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29tPg0KQ2M6IERlcHQtRW5nIFFMQTJ4
-eHggVXBzdHJlYW0gPHFsYTJ4eHgtdXBzdHJlYW1AcWxvZ2ljLmNvbT4sICJqZWpiQGxpbnV4LnZu
-ZXQuaWJtLmNvbSIgPGplamJAbGludXgudm5ldC5pYm0uY29tPiwgIk1hcnRpbiBLLiBQZXRlcnNl
-biIgPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPiwgbGludXgtc2NzaSA8bGludXgtc2NzaUB2
-Z2VyLmtlcm5lbC5vcmc+LCBsaW51eC1rZXJuZWwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5v
-cmc+LCAiaGNoQGxzdC5kZSIgPGhjaEBsc3QuZGU+LCAiYmFydC52YW5hc3NjaGVAc2FuZGlzay5j
-b20iIDxiYXJ0LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4sIEhpbWFuc2h1IE1hZGhhbmkgPGhpbWFu
-c2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIE5pY2hvbGFzIEJlbGxpbmdlciA8bmFiQGxpbnV4LWlz
-Y3NpLm9yZz4NClN1YmplY3Q6IFs0LjUtcmM0IFJlZ3Jlc3Npb25dIHFsYTJ4eHg6IEFkZCBpcnEg
-YWZmaW5pdHkgbm90aWZpY2F0aW9uDQoNCj5IZWxsbyBRdWlubiwNCj4NCj5BIGtlcm5lbCBidWcg
-cmVwb3J0IHdhcyBvcGVuZWQgYWdhaW5zdCBVYnVudHUgWzBdLiAgQWZ0ZXIgYSBrZXJuZWwNCj5i
-aXNlY3QsIGl0IHdhcyBmb3VuZCB0aGF0IHJldmVydGluZyB0aGUgZm9sbG93aW5nIGNvbW1pdCBy
-ZXNvbHZlZCB0aGlzIGJ1ZzoNCj4NCj5jb21taXQgY2RiODk4YzUyZDFkZmFkNGI0ODAwYjgzYTU4
-YjNmZTVkMzUyZWRkZQ0KPkF1dGhvcjogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29t
-Pg0KPkRhdGU6IFRodSBEZWMgMTcgMTQ6NTc6MDUgMjAxNSAtMDUwMA0KPiAgIA0KPiAgICBxbGEy
-eHh4OiBBZGQgaXJxIGFmZmluaXR5IG5vdGlmaWNhdGlvbg0KPg0KPg0KPkhvd2V2ZXIsIHRoZSBw
-cmlvciBjb21taXQgYWxzbyByZXF1aXJlZCB0aGUgZm9sbG93aW5nIHRocmVlIGNvbW1pdHMgdG8N
-Cj5hbHNvIGJlIHJldmVydGVkOg0KPg0KPmNvbW1pdCA1MzI3YzdkYmQxYTdmZDk4MDYwOGY0NDc4
-OTA3NmE2MzZlNWVlNWZjDQo+QXV0aG9yOiBRdWlubiBUcmFuIDxxdWlubi50cmFuQHFsb2dpYy5j
-b20+DQo+RGF0ZTogV2VkIEZlYiAxMCAxODo1OToxNCAyMDE2IC0wNTAwDQo+DQo+ICAgIHFsYTJ4
-eHg6IHVzZSBUQVJHRVRfU0NGX1VTRV9DUFVJRCBmbGFnIHRvIGluZGlhdGUgQ1BVIEFmZmluaXR5
-DQo+DQo+Y29tbWl0IDkwOTVhZGFhYjhjMWQ4MjcwN2U0ZTk5NjFiNmFkNzliNjJmMzM2MWINCj5B
-dXRob3I6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj5EYXRlOiBXZWQgRmVi
-IDEwIDE4OjU5OjEzIDIwMTYgLTA1MDANCj4gICANCj4gICAgdGFyZ2V0L3RyYW5zcG9ydDogYWRk
-IGZsYWcgdG8gaW5kaWNhdGUgQ1BVIEFmZmluaXR5IGlzIG9ic2VydmVkDQo+DQo+Y29tbWl0IGZi
-MzI2OWJhZjRlY2MyY2U2ZDE3ZDRlYjUzNzA4MDAzNWJkZjZkNWINCj5BdXRob3I6IFF1aW5uIFRy
-YW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj5EYXRlOiBUaHUgRGVjIDE3IDE0OjU3OjA2IDIw
-MTUgLTA1MDANCj4gICANCj4gICAgcWxhMnh4eDogQWRkIHNlbGVjdGl2ZSBjb21tYW5kIHF1ZXVp
-bmcNCj4NCj4NCj4NCj5UaGUgcmVncmVzc2lvbiB3YXMgaW50cm9kdWNlZCBhcyBvZiB2NC41LXJj
-NC4NCj4gICAgDQo+SSB3YXMgaG9waW5nIHRvIGdldCB5b3VyIGZlZWRiYWNrLCBzaW5jZSB5b3Ug
-YXJlIHRoZSBwYXRjaCBhdXRob3IuIFRoZQ0KPmRlcGVuZGFudCByZXZlcnRzIGFsbCBsb29rIGxp
-a2UgdGhleSBhcmUgaW1wcm92aW5nIGNwdSBhZmZpbml0eSwgd2hpY2gNCj53b3VsZCBsaWtlbHkg
-aW1wYWN0IHBlcmZvcm1hbmNlLiAgRG8geW91IHRoaW5nIHRoZXJlIGlzIGEgd2F5IGZvcndhcmQN
-Cj5pbnN0ZWFkIG9mIHRoZSByZXZlcnRzLCBvciB3b3VsZCBpdCBiZSBiZXN0IHRvIHN1Ym1pdCBh
-IHJldmVydCByZXF1ZXN0Pw0KPiAgICANCj4gICAgDQo+VGhhbmtzLA0KPiAgICANCj5Kb2UNCj4N
-Cj4NCj5bMF0gaHR0cDovL3BhZC5sdi8xNTU0MDAzDQo+DQo+DQo=
+On 04/11/2016 01:48 PM, Quinn Tran wrote:
+> Joe,
+>
+> How do I get access to this specific Ubuntu kernel where the bug is found?  Is there stack trace/bug report that you could share?  Any data would be helpful.  Thanks.
+The git tree for the specific Ubuntu kernel that exhibits this bug can
+be found here:
+git://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial
+
+The bug can be found here, and has screen shots of the panic as well as
+dmesg under the "Attachments" header:
+http://pad.lv/1554003
+
+Just let me know if additional debug information is needed.
+
+
+>
+> In the mean time, I will download 4.5 rc4 to re-verify.
+>
+> Regards,
+> Quinn Tran
+>
+>
+>
+>
+>
+>
+> -----Original Message-----
+> From: Joseph Salisbury <joseph.salisbury@canonical.com>
+> Date: Monday, April 11, 2016 at 10:26 AM
+> To: Quinn Tran <quinn.tran@qlogic.com>
+> Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+> Subject: [4.5-rc4 Regression] qla2xxx: Add irq affinity notification
+>
+>> Hello Quinn,
+>>
+>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+>> bisect, it was found that reverting the following commit resolved this bug:
+>>
+>> commit cdb898c52d1dfad4b4800b83a58b3fe5d352edde
+>> Author: Quinn Tran <quinn.tran@qlogic.com>
+>> Date: Thu Dec 17 14:57:05 2015 -0500
+>>   
+>>    qla2xxx: Add irq affinity notification
+>>
+>>
+>> However, the prior commit also required the following three commits to
+>> also be reverted:
+>>
+>> commit 5327c7dbd1a7fd980608f44789076a636e5ee5fc
+>> Author: Quinn Tran <quinn.tran@qlogic.com>
+>> Date: Wed Feb 10 18:59:14 2016 -0500
+>>
+>>    qla2xxx: use TARGET_SCF_USE_CPUID flag to indiate CPU Affinity
+>>
+>> commit 9095adaab8c1d82707e4e9961b6ad79b62f3361b
+>> Author: Quinn Tran <quinn.tran@qlogic.com>
+>> Date: Wed Feb 10 18:59:13 2016 -0500
+>>   
+>>    target/transport: add flag to indicate CPU Affinity is observed
+>>
+>> commit fb3269baf4ecc2ce6d17d4eb537080035bdf6d5b
+>> Author: Quinn Tran <quinn.tran@qlogic.com>
+>> Date: Thu Dec 17 14:57:06 2015 -0500
+>>   
+>>    qla2xxx: Add selective command queuing
+>>
+>>
+>>
+>> The regression was introduced as of v4.5-rc4.
+>>    
+>> I was hoping to get your feedback, since you are the patch author. The
+>> dependant reverts all look like they are improving cpu affinity, which
+>> would likely impact performance.  Do you thing there is a way forward
+>> instead of the reverts, or would it be best to submit a revert request?
+>>    
+>>    
+>> Thanks,
+>>    
+>> Joe
+>>
+>>
+>> [0] http://pad.lv/1554003
+>>
+>>
