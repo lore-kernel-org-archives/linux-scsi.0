@@ -1,65 +1,62 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH v2 04/16] iscsi-target: add void (*iscsit_release_cmd)()
-Date: Mon, 11 Apr 2016 22:46:41 +0530
-Message-ID: <20160411171639.GA1713@chelsio.com>
-References: <cover.1460204441.git.varun@chelsio.com>
- <1499510260d6358522b4023822022f0add88b687.1460204441.git.varun@chelsio.com>
- <570A9094.6010502@grimberg.me>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: [4.5-rc4 Regression] qla2xxx: Add irq affinity notification
+Date: Mon, 11 Apr 2016 13:26:28 -0400
+Message-ID: <570BDE44.5020301@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:63137 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686AbcDKRRL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 13:17:11 -0400
-Content-Disposition: inline
-In-Reply-To: <570A9094.6010502@grimberg.me>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: quinn.tran@qlogic.com
+Cc: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, hch@lst.de, bart.vanassche@sandisk.com, himanshu.madhani@qlogic.com, nab@linux-iscsi.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com
 
-On Sun, Apr 10, 2016 at 08:42:44PM +0300, Sagi Grimberg wrote:
-> 
-> >Add void (*iscsit_release_cmd)() to
-> >struct iscsit_transport, iscsi-target
-> >uses this callback to release transport
-> >driver resources associated with an iSCSI cmd.
-> 
-> I'd really like to see some reasoning on why you add
-> abstraction callouts. It may have a valid reason but
-> it needs to be documented in the change log...
+Hello Quinn,
 
-This is for releasing DDP resource and sg page
-in case of PASSTHROUGH_SG_TO_MEM_NOALLOC.
-I will update commit log in -v3.
+A kernel bug report was opened against Ubuntu [0].  After a kernel
+bisect, it was found that reverting the following commit resolved this bug:
 
-> 
-> >diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-> >index 428b0d9..a533017 100644
-> >--- a/drivers/target/iscsi/iscsi_target_util.c
-> >+++ b/drivers/target/iscsi/iscsi_target_util.c
-> >@@ -725,6 +725,9 @@ void __iscsit_free_cmd(struct iscsi_cmd *cmd, bool scsi_cmd,
-> >  		iscsit_remove_cmd_from_immediate_queue(cmd, conn);
-> >  		iscsit_remove_cmd_from_response_queue(cmd, conn);
-> >  	}
-> >+
-> >+	if (conn && conn->conn_transport->iscsit_release_cmd)
-> >+		conn->conn_transport->iscsit_release_cmd(conn, cmd);
-> >  }
-> 
-> Did you verify that you get here with conn = NULL (given that you test
-> it)? If so, then can you please document why is it expected for this
-> function to be called twice that we need to make it safe?
-> 
-> If not, then I'd move this check to be a WARN_ON/BUG_ON to hunt
-> down when is this happening.
+commit cdb898c52d1dfad4b4800b83a58b3fe5d352edde
+Author: Quinn Tran <quinn.tran@qlogic.com>
+Date: Thu Dec 17 14:57:05 2015 -0500
+   
+    qla2xxx: Add irq affinity notification
 
-There is already a check for NULL conn in __iscsit_free_cmd()
 
-	if (conn && check_queues) {
-  		iscsit_remove_cmd_from_immediate_queue(cmd, conn);
-  		iscsit_remove_cmd_from_response_queue(cmd, conn);
-	}
+However, the prior commit also required the following three commits to
+also be reverted:
 
-cmd->conn can become NULL in ERL2 error recovery.
+commit 5327c7dbd1a7fd980608f44789076a636e5ee5fc
+Author: Quinn Tran <quinn.tran@qlogic.com>
+Date: Wed Feb 10 18:59:14 2016 -0500
+
+    qla2xxx: use TARGET_SCF_USE_CPUID flag to indiate CPU Affinity
+
+commit 9095adaab8c1d82707e4e9961b6ad79b62f3361b
+Author: Quinn Tran <quinn.tran@qlogic.com>
+Date: Wed Feb 10 18:59:13 2016 -0500
+   
+    target/transport: add flag to indicate CPU Affinity is observed
+
+commit fb3269baf4ecc2ce6d17d4eb537080035bdf6d5b
+Author: Quinn Tran <quinn.tran@qlogic.com>
+Date: Thu Dec 17 14:57:06 2015 -0500
+   
+    qla2xxx: Add selective command queuing
+
+
+
+The regression was introduced as of v4.5-rc4.
+    
+I was hoping to get your feedback, since you are the patch author. The
+dependant reverts all look like they are improving cpu affinity, which
+would likely impact performance.  Do you thing there is a way forward
+instead of the reverts, or would it be best to submit a revert request?
+    
+    
+Thanks,
+    
+Joe
+
+
+[0] http://pad.lv/1554003
