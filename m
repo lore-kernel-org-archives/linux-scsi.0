@@ -1,59 +1,97 @@
-From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: [PATCH 3/4] scsi: ultrastor: Use correct format identifier for kernel pointer
-Date: Mon, 11 Apr 2016 09:25:53 -0400
-Message-ID: <e3ec50672b8e8fd8279178bdba00edfe9af85cbe.1460379702.git.vilhelm.gray@gmail.com>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:36095 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932637AbcDKN0l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 09:26:41 -0400
-In-Reply-To: <cover.1460379702.git.vilhelm.gray@gmail.com>
-In-Reply-To: <cover.1460379702.git.vilhelm.gray@gmail.com>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Subject: Re: [PATCH v2 6/8] tools rpmb: add RPBM access tool
+Date: Mon, 11 Apr 2016 08:33:14 -0500
+Message-ID: <20160411133314.gzjuqzadhoxf3u3i@treble>
+References: <1459768284-26997-1-git-send-email-tomas.winkler@intel.com>
+ <1459768284-26997-7-git-send-email-tomas.winkler@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1459768284-26997-7-git-send-email-tomas.winkler@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: gregkh@linuxfoundation.org, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, gregkh@linuxfoundation.org
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, William Breathitt Gray <vilhelm.gray@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 
-The 'bios_segment' member of a struct ultrastor_config is passed to the
-sprintf function with a respective %05X format identifier. The
-'bio_segment' member is a kernel pointer, but the %X format identifier
-expects an int data type. A cast to int is correctly used to satisfy the
-format identifier, but this assumes that the int data type is the same
-size as the kernel pointer, which is not the case on several
-architectures such as X86_64. This patch removes the int cast and
-replaces the %05X format identifier with %pK in order to print the
-'bio_segment' member regardless of architecture.
+Hi Tomas,
 
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: William Breathitt Gray <vilhelm.gray@gmail.com>
----
- drivers/scsi/ultrastor.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+On Mon, Apr 04, 2016 at 02:11:22PM +0300, Tomas Winkler wrote:
+> Add simple RPMB host testing tool. It can be used
+> to program key, write and read data block, and retrieve
+> write counter.
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+> V2: resend
+>  MAINTAINERS           |   1 +
+>  tools/Makefile        |  16 +-
+>  tools/rpmb/.gitignore |   2 +
+>  tools/rpmb/Makefile   |  32 ++
+>  tools/rpmb/rpmb.c     | 807 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 853 insertions(+), 5 deletions(-)
+>  create mode 100644 tools/rpmb/.gitignore
+>  create mode 100644 tools/rpmb/Makefile
+>  create mode 100644 tools/rpmb/rpmb.c
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 07bd6f380460..b7966b95c265 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9425,6 +9425,7 @@ F:	drivers/char/rpmb/*
+>  F:	include/uapi/linux/rpmb.h
+>  F:	include/linux/rpmb.h
+>  F:	Documentation/ABI/testing/sysfs-class-rpmb
+> +F:	tools/rpmb/
+>  
+>  RTL2830 MEDIA DRIVER
+>  M:	Antti Palosaari <crope@iki.fi>
+> diff --git a/tools/Makefile b/tools/Makefile
+> index 60c7e6c8ff17..5b37ccd95cab 100644
+> --- a/tools/Makefile
+> +++ b/tools/Makefile
+> @@ -19,6 +19,7 @@ help:
+>  	@echo '  lguest                 - a minimal 32-bit x86 hypervisor'
+>  	@echo '  net                    - misc networking tools'
+>  	@echo '  perf                   - Linux performance measurement and analysis tool'
+> +	@echo '  rpmb                   - Replay protected memory block access tool'
+>  	@echo '  selftests              - various kernel selftests'
+>  	@echo '  spi                    - spi tools'
+>  	@echo '  objtool                - an ELF object analysis tool'
+> @@ -55,7 +56,8 @@ acpi: FORCE
+>  cpupower: FORCE
+>  	$(call descend,power/$@)
+>  
+> -cgroup firewire hv guest spi usb virtio vm net iio gpio objtool: FORCE
+> +cgroup firewire hv guest rpmb spi usb virtio vm net iio gpio objtool: FORCE
+> +cgroup firewire hv guest rpmb spi usb virtio vm net iio: FORCE
 
-diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
-index 14e0c40..2e99f98 100644
---- a/drivers/scsi/ultrastor.c
-+++ b/drivers/scsi/ultrastor.c
-@@ -670,12 +670,12 @@ static const char *ultrastor_info(struct Scsi_Host * shpnt)
-       sprintf(buf, "UltraStor 24F SCSI @ Slot %u IRQ%u",
- 	      config.slot, config.interrupt);
-     else if (config.subversion)
--      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %05X IRQ%u",
--	      config.port_address, (int)config.bios_segment,
-+      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %pK IRQ%u",
-+	      config.port_address, config.bios_segment,
- 	      config.interrupt);
-     else
--      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %05X IRQ%u DMA%u",
--	      config.port_address, (int)config.bios_segment,
-+      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %pK IRQ%u DMA%u",
-+	      config.port_address, config.bios_segment,
- 	      config.interrupt, config.dma_channel);
-     return buf;
- }
+This looks like an artifact from a bad merge resolution.  The second
+line needs to be deleted.  This probably explains the kbuild robot build
+errors, since CONFIG_STACK_VALIDATION requires objtool to be built.
+
+>  	$(call descend,$@)
+>  
+>  liblockdep: FORCE
+> @@ -85,7 +87,7 @@ freefall: FORCE
+>  	$(call descend,laptop/$@)
+>  
+>  all: acpi cgroup cpupower hv firewire lguest \
+> -		perf selftests turbostat usb \
+> +		perf rpmb selftests turbostat usb \
+>  		virtio vm net x86_energy_perf_policy \
+>  		tmon freefall objtool
+>  
+> @@ -95,7 +97,8 @@ acpi_install:
+>  cpupower_install:
+>  	$(call descend,power/$(@:_install=),install)
+>  
+> -cgroup_install firewire_install hv_install lguest_install perf_install usb_install virtio_install vm_install net_install objtool_install:
+> +cgroup_install firewire_install hv_install lguest_install perf_install rpmb_install usb_install virtio_install vm_install net_install objtool_install:
+> +cgroup_install firewire_install hv_install lguest_install perf_install rpmb_install usb_install virtio_install vm_install net_install:
+
+Same here.
+
+
 -- 
-2.7.3
-
+Josh
