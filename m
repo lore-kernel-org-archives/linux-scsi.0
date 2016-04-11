@@ -1,106 +1,34 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [4.5-rc4 Regression] qla2xxx: Add irq affinity notification
-Date: Mon, 11 Apr 2016 21:28:30 +0000
-Message-ID: <44AC3861-DFD2-4420-9ACA-E6AE7A3BDE99@qlogic.com>
-References: <570BDE44.5020301@canonical.com>
- <32AB2218-5D39-4968-A07F-E527B0557F04@qlogic.com>
- <570BEFE1.6040703@canonical.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Cant write to max_sectors_kb on 4.5.0  SRP target
+Date: Mon, 11 Apr 2016 17:29:03 -0400
+Message-ID: <yq1vb3n25sw.fsf@sermon.lab.mkp.net>
+References: <302427900.27942894.1460063713447.JavaMail.zimbra@redhat.com>
+	<yq137qw6bzz.fsf@sermon.lab.mkp.net>
+	<888890380.28014192.1460104289837.JavaMail.zimbra@redhat.com>
+	<1460119192.25335.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bbn0108.outbound.protection.outlook.com ([157.56.111.108]:48878
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752777AbcDKV2e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Apr 2016 17:28:34 -0400
-In-Reply-To: <570BEFE1.6040703@canonical.com>
-Content-Language: en-US
-Content-ID: <1A22D2974E54E14C8CBDC4B2355A5EFD@namprd11.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1460119192.25335.40.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org> (Ewan
+	D. Milne's message of "Fri, 08 Apr 2016 08:39:52 -0400")
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Ewan D. Milne" <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 
-Sm9lLA0KDQpJIHNlZSB0aGUgY3Jhc2ggcG9pbnQuICBXZeKAmXJlIGFjY2Vzc2luZyBOdWxsIHBv
-aW50ZXIuICBUaGUgYWRhcHRlciBpbiB1c2UgaXMgYW4gb2xkZXIgNEcgYWRhcHRlciwgd2hlcmUg
-aXQgZG9lcyBub3QgaGF2ZSBNU0lYIHN1cHBvcnQuICBXZeKAmXJlIHRyaXBwaW5nIG92ZXIgdGhl
-IHNhbWUgc2hhcmVkIGNvZGUgc2VnbWVudC4gIFRoZSBmb2xsb3dpbmcgaXMgdGhlIHByb3Bvc2Ug
-Zml4LiAgTGV0IG1lIGtub3cgaWYgaXQgd29ya3MuICBJ4oCZbGwgd2lsbCBmb2xsb3cgdXAgd2l0
-aCBhIHBhdGNoIGZvciB1cHN0cmVhbSBzdWJtaXNzaW9uLg0KDQpUaGFua3MuDQoNCmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfaXNyLmMNCmluZGV4IDRhZjk1NDcuLjc5NDY5ZGUgMTAwNjQ0DQotLS0gYS9kcml2ZXJz
-L3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9p
-c3IuYw0KQEAgLTI1NTIsNyArMjU1Miw3IEBAIHZvaWQgcWxhMjR4eF9wcm9jZXNzX3Jlc3BvbnNl
-X3F1ZXVlKHN0cnVjdCBzY3NpX3FsYV9ob3N0ICp2aGEsDQogICAgICAgIGlmICghdmhhLT5mbGFn
-cy5vbmxpbmUpDQogICAgICAgICAgICAgICAgcmV0dXJuOw0KIA0KLSAgICAgICBpZiAocnNwLT5t
-c2l4LT5jcHVpZCAhPSBzbXBfcHJvY2Vzc29yX2lkKCkpIHsNCisgICAgICAgaWYgKHJzcC0+bXNp
-eCAmJiAocnNwLT5tc2l4LT5jcHVpZCAhPSBzbXBfcHJvY2Vzc29yX2lkKCkpKSB7DQogICAgICAg
-ICAgICAgICAgLyogaWYga2VybmVsIGRvZXMgbm90IG5vdGlmeSBxbGEgb2YgSVJRJ3MgQ1BVIGNo
-YW5nZSwNCiAgICAgICAgICAgICAgICAgKiB0aGVuIHNldCBpdCBoZXJlLg0KICAgICAgICAgICAg
-ICAgICAqLw0KDQoNCg0KDQpSZWdhcmRzLA0KUXVpbm4gVHJhbg0KDQoNCg0KDQoNCg0KLS0tLS1P
-cmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvc2VwaCBTYWxpc2J1cnkgPGpvc2VwaC5zYWxp
-c2J1cnlAY2Fub25pY2FsLmNvbT4NCkRhdGU6IE1vbmRheSwgQXByaWwgMTEsIDIwMTYgYXQgMTE6
-NDEgQU0NClRvOiBRdWlubiBUcmFuIDxxdWlubi50cmFuQHFsb2dpYy5jb20+DQpDYzogRGVwdC1F
-bmcgUUxBMnh4eCBVcHN0cmVhbSA8cWxhMnh4eC11cHN0cmVhbUBxbG9naWMuY29tPiwgImplamJA
-bGludXgudm5ldC5pYm0uY29tIiA8amVqYkBsaW51eC52bmV0LmlibS5jb20+LCAiTWFydGluIEsu
-IFBldGVyc2VuIiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+LCBsaW51eC1zY3NpIDxsaW51
-eC1zY3NpQHZnZXIua2VybmVsLm9yZz4sIGxpbnV4LWtlcm5lbCA8bGludXgta2VybmVsQHZnZXIu
-a2VybmVsLm9yZz4sICJoY2hAbHN0LmRlIiA8aGNoQGxzdC5kZT4sICJiYXJ0LnZhbmFzc2NoZUBz
-YW5kaXNrLmNvbSIgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPiwgSGltYW5zaHUgTWFkaGFu
-aSA8aGltYW5zaHUubWFkaGFuaUBxbG9naWMuY29tPiwgTmljaG9sYXMgQmVsbGluZ2VyIDxuYWJA
-bGludXgtaXNjc2kub3JnPg0KU3ViamVjdDogUmU6IFs0LjUtcmM0IFJlZ3Jlc3Npb25dIHFsYTJ4
-eHg6IEFkZCBpcnEgYWZmaW5pdHkgbm90aWZpY2F0aW9uDQoNCj5PbiAwNC8xMS8yMDE2IDAxOjQ4
-IFBNLCBRdWlubiBUcmFuIHdyb3RlOg0KPj4gSm9lLA0KPj4NCj4+IEhvdyBkbyBJIGdldCBhY2Nl
-c3MgdG8gdGhpcyBzcGVjaWZpYyBVYnVudHUga2VybmVsIHdoZXJlIHRoZSBidWcgaXMgZm91bmQ/
-ICBJcyB0aGVyZSBzdGFjayB0cmFjZS9idWcgcmVwb3J0IHRoYXQgeW91IGNvdWxkIHNoYXJlPyAg
-QW55IGRhdGEgd291bGQgYmUgaGVscGZ1bC4gIFRoYW5rcy4NCj5UaGUgZ2l0IHRyZWUgZm9yIHRo
-ZSBzcGVjaWZpYyBVYnVudHUga2VybmVsIHRoYXQgZXhoaWJpdHMgdGhpcyBidWcgY2FuDQo+YmUg
-Zm91bmQgaGVyZToNCj5naXQ6Ly9naXQubGF1bmNocGFkLm5ldC9+dWJ1bnR1LWtlcm5lbC91YnVu
-dHUvK3NvdXJjZS9saW51eC8rZ2l0L3hlbmlhbA0KPg0KPlRoZSBidWcgY2FuIGJlIGZvdW5kIGhl
-cmUsIGFuZCBoYXMgc2NyZWVuIHNob3RzIG9mIHRoZSBwYW5pYyBhcyB3ZWxsIGFzDQo+ZG1lc2cg
-dW5kZXIgdGhlICJBdHRhY2htZW50cyIgaGVhZGVyOg0KPmh0dHA6Ly9wYWQubHYvMTU1NDAwMw0K
-Pg0KPkp1c3QgbGV0IG1lIGtub3cgaWYgYWRkaXRpb25hbCBkZWJ1ZyBpbmZvcm1hdGlvbiBpcyBu
-ZWVkZWQuDQo+DQo+DQo+Pg0KPj4gSW4gdGhlIG1lYW4gdGltZSwgSSB3aWxsIGRvd25sb2FkIDQu
-NSByYzQgdG8gcmUtdmVyaWZ5Lg0KPj4NCj4+IFJlZ2FyZHMsDQo+PiBRdWlubiBUcmFuDQo+Pg0K
-Pj4NCj4+DQo+Pg0KPj4NCj4+DQo+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4gRnJv
-bTogSm9zZXBoIFNhbGlzYnVyeSA8am9zZXBoLnNhbGlzYnVyeUBjYW5vbmljYWwuY29tPg0KPj4g
-RGF0ZTogTW9uZGF5LCBBcHJpbCAxMSwgMjAxNiBhdCAxMDoyNiBBTQ0KPj4gVG86IFF1aW5uIFRy
-YW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj4+IENjOiBEZXB0LUVuZyBRTEEyeHh4IFVwc3Ry
-ZWFtIDxxbGEyeHh4LXVwc3RyZWFtQHFsb2dpYy5jb20+LCAiamVqYkBsaW51eC52bmV0LmlibS5j
-b20iIDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4sICJNYXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0
-aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4sIGxpbnV4LXNjc2kgPGxpbnV4LXNjc2lAdmdlci5rZXJu
-ZWwub3JnPiwgbGludXgta2VybmVsIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPiwgImhj
-aEBsc3QuZGUiIDxoY2hAbHN0LmRlPiwgImJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tIiA8YmFy
-dC52YW5hc3NjaGVAc2FuZGlzay5jb20+LCBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRo
-YW5pQHFsb2dpYy5jb20+LCBOaWNob2xhcyBCZWxsaW5nZXIgPG5hYkBsaW51eC1pc2NzaS5vcmc+
-DQo+PiBTdWJqZWN0OiBbNC41LXJjNCBSZWdyZXNzaW9uXSBxbGEyeHh4OiBBZGQgaXJxIGFmZmlu
-aXR5IG5vdGlmaWNhdGlvbg0KPj4NCj4+PiBIZWxsbyBRdWlubiwNCj4+Pg0KPj4+IEEga2VybmVs
-IGJ1ZyByZXBvcnQgd2FzIG9wZW5lZCBhZ2FpbnN0IFVidW50dSBbMF0uICBBZnRlciBhIGtlcm5l
-bA0KPj4+IGJpc2VjdCwgaXQgd2FzIGZvdW5kIHRoYXQgcmV2ZXJ0aW5nIHRoZSBmb2xsb3dpbmcg
-Y29tbWl0IHJlc29sdmVkIHRoaXMgYnVnOg0KPj4+DQo+Pj4gY29tbWl0IGNkYjg5OGM1MmQxZGZh
-ZDRiNDgwMGI4M2E1OGIzZmU1ZDM1MmVkZGUNCj4+PiBBdXRob3I6IFF1aW5uIFRyYW4gPHF1aW5u
-LnRyYW5AcWxvZ2ljLmNvbT4NCj4+PiBEYXRlOiBUaHUgRGVjIDE3IDE0OjU3OjA1IDIwMTUgLTA1
-MDANCj4+PiAgIA0KPj4+ICAgIHFsYTJ4eHg6IEFkZCBpcnEgYWZmaW5pdHkgbm90aWZpY2F0aW9u
-DQo+Pj4NCj4+Pg0KPj4+IEhvd2V2ZXIsIHRoZSBwcmlvciBjb21taXQgYWxzbyByZXF1aXJlZCB0
-aGUgZm9sbG93aW5nIHRocmVlIGNvbW1pdHMgdG8NCj4+PiBhbHNvIGJlIHJldmVydGVkOg0KPj4+
-DQo+Pj4gY29tbWl0IDUzMjdjN2RiZDFhN2ZkOTgwNjA4ZjQ0Nzg5MDc2YTYzNmU1ZWU1ZmMNCj4+
-PiBBdXRob3I6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4NCj4+PiBEYXRlOiBX
-ZWQgRmViIDEwIDE4OjU5OjE0IDIwMTYgLTA1MDANCj4+Pg0KPj4+ICAgIHFsYTJ4eHg6IHVzZSBU
-QVJHRVRfU0NGX1VTRV9DUFVJRCBmbGFnIHRvIGluZGlhdGUgQ1BVIEFmZmluaXR5DQo+Pj4NCj4+
-PiBjb21taXQgOTA5NWFkYWFiOGMxZDgyNzA3ZTRlOTk2MWI2YWQ3OWI2MmYzMzYxYg0KPj4+IEF1
-dGhvcjogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29tPg0KPj4+IERhdGU6IFdlZCBG
-ZWIgMTAgMTg6NTk6MTMgMjAxNiAtMDUwMA0KPj4+ICAgDQo+Pj4gICAgdGFyZ2V0L3RyYW5zcG9y
-dDogYWRkIGZsYWcgdG8gaW5kaWNhdGUgQ1BVIEFmZmluaXR5IGlzIG9ic2VydmVkDQo+Pj4NCj4+
-PiBjb21taXQgZmIzMjY5YmFmNGVjYzJjZTZkMTdkNGViNTM3MDgwMDM1YmRmNmQ1Yg0KPj4+IEF1
-dGhvcjogUXVpbm4gVHJhbiA8cXVpbm4udHJhbkBxbG9naWMuY29tPg0KPj4+IERhdGU6IFRodSBE
-ZWMgMTcgMTQ6NTc6MDYgMjAxNSAtMDUwMA0KPj4+ICAgDQo+Pj4gICAgcWxhMnh4eDogQWRkIHNl
-bGVjdGl2ZSBjb21tYW5kIHF1ZXVpbmcNCj4+Pg0KPj4+DQo+Pj4NCj4+PiBUaGUgcmVncmVzc2lv
-biB3YXMgaW50cm9kdWNlZCBhcyBvZiB2NC41LXJjNC4NCj4+PiAgICANCj4+PiBJIHdhcyBob3Bp
-bmcgdG8gZ2V0IHlvdXIgZmVlZGJhY2ssIHNpbmNlIHlvdSBhcmUgdGhlIHBhdGNoIGF1dGhvci4g
-VGhlDQo+Pj4gZGVwZW5kYW50IHJldmVydHMgYWxsIGxvb2sgbGlrZSB0aGV5IGFyZSBpbXByb3Zp
-bmcgY3B1IGFmZmluaXR5LCB3aGljaA0KPj4+IHdvdWxkIGxpa2VseSBpbXBhY3QgcGVyZm9ybWFu
-Y2UuICBEbyB5b3UgdGhpbmcgdGhlcmUgaXMgYSB3YXkgZm9yd2FyZA0KPj4+IGluc3RlYWQgb2Yg
-dGhlIHJldmVydHMsIG9yIHdvdWxkIGl0IGJlIGJlc3QgdG8gc3VibWl0IGEgcmV2ZXJ0IHJlcXVl
-c3Q/DQo+Pj4gICAgDQo+Pj4gICAgDQo+Pj4gVGhhbmtzLA0KPj4+ICAgIA0KPj4+IEpvZQ0KPj4+
-DQo+Pj4NCj4+PiBbMF0gaHR0cDovL3BhZC5sdi8xNTU0MDAzDQo+Pj4NCj4+Pg0KPg0K
+>>>>> "Ewan" == Ewan D Milne <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+
+Ewan> In the upstream kernel queue_max_sectors_store() does not permit
+Ewan> you to set a value larger than the device-imposed limit.  This
+Ewan> value, stored in q->limits.max_dev_sectors, is not visible via the
+Ewan> block queue sysfs interface.
+
+I should refresh the patch that exposes that. There were a few comments
+and I never got around to rolling those in.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
