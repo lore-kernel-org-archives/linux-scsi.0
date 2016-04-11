@@ -1,45 +1,49 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: Re: [PATCH v3 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
-Date: Sun, 10 Apr 2016 22:20:06 -0700
-Message-ID: <CAF1ivSZSerbCO0MdELaTLbNUWMbeGBBv32-YO3sjHJZJYMQzrQ@mail.gmail.com>
-References: <1459806491-16428-1-git-send-email-mlin@kernel.org>
-	<1459806491-16428-5-git-send-email-mlin@kernel.org>
-	<20160405145555.GE7822@mtj.duckdns.org>
+From: Michel Meyers <steltek@tcnnet.com>
+Subject: [PATCH 1/1] scsi: add Synology DSM 6.0 and higher to 1024 sector
+ blacklist
+Date: Mon, 11 Apr 2016 10:43:36 +0200
+Message-ID: <570B63B8.6080104@tcnnet.com>
+References: <20160114003437.354D28EE1D4@bedivere.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38021 "EHLO mail.kernel.org"
+Received: from smail.vo.lu ([80.90.45.96]:50113 "EHLO smail.vo.lu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750859AbcDKFUK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Apr 2016 01:20:10 -0400
-In-Reply-To: <20160405145555.GE7822@mtj.duckdns.org>
+	id S1753687AbcDKItN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Apr 2016 04:49:13 -0400
+In-Reply-To: <20160114003437.354D28EE1D4@bedivere.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <mchristi@redhat.com>
 
-On Tue, Apr 5, 2016 at 7:55 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Mon, Apr 04, 2016 at 02:48:10PM -0700, Ming Lin wrote:
->> From: Ming Lin <ming.l@ssi.samsung.com>
->>
->> Rename SCSI_MAX_SG_SEGMENTS to SG_CHUNK_SIZE, which means the amount
->> we fit into a single scatterlist chunk.
->>
->> Rename SCSI_MAX_SG_CHAIN_SEGMENTS to SG_MAX_SEGMENTS.
->>
->> Will move these 2 generic definitions to scatterlist.h later.
->>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Acked-by: Bart Van Assche <bart.vanassche@sandisk.com> (for ib_srp changes)
->> Signed-off-by: Ming Lin <ming.l@ssi.samsung.com>
->
-> For libata,
->
-> Acked-by: Tejun Heo <tj@kernel.org>
+From: Michel Meyers <steltek@tcnnet.com>
 
-Hi James,
+SYNOLOGY iSCSI devices do not work with large I/O and SYNOLOGY changed
+the identifier of the devices starting with version 6.0 of their OS
+("DSM"). (The large I/O problem persists in that release.)
 
-Are we ready to merge it?
+This patch adds the new identifier to the 1024 sector blacklist, the old
+one having been added in commit 9055082fb100cc66e20c048251d05159f5f2cfba
+"scsi: add Synology to 1024 sector blacklist".
 
-Thanks,
-Ming
+Reported-by: Michel Meyers <steltek@tcnnet.com>
+Signed-off-by: Michel Meyers <steltek@tcnnet.com>
+
+---
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 3408578..46b5e2e 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -232,6 +232,7 @@ static struct {
+        {"Promise", "", NULL, BLIST_SPARSELUN},
+        {"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024},
+        {"SYNOLOGY", "iSCSI Storage", NULL, BLIST_MAX_1024},
++       {"SYNOLOGY", "IBLOCK", NULL, BLIST_MAX_1024},
+        {"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
+        {"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+        {"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
+
+
