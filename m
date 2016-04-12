@@ -1,50 +1,36 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [Lsf] [LSF/MM TOPIC] block-mq issues with FC
-Date: Tue, 12 Apr 2016 13:16:21 -0600
-Message-ID: <570D4985.9020108@kernel.dk>
-References: <57079616.4000202@suse.de> <20160408174006.GI2781@linux.intel.com>
- <20160408180621.GA6110@localhost.localdomain>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 1/1] scsi: add Synology DSM 6.0 and higher to 1024 sector
+ blacklist
+Date: Tue, 12 Apr 2016 14:18:49 -0500
+Message-ID: <570D4A19.40000@redhat.com>
+References: <20160114003437.354D28EE1D4@bedivere.hansenpartnership.com>
+ <570B63B8.6080104@tcnnet.com> <yq1oa9fzhyi.fsf@sermon.lab.mkp.net>
+ <570CB1C8.5050106@tcnnet.com> <yq17fg2zn1q.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:34093 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933021AbcDLTQY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 15:16:24 -0400
-Received: by mail-ig0-f176.google.com with SMTP id gy3so115797982igb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2016 12:16:24 -0700 (PDT)
-In-Reply-To: <20160408180621.GA6110@localhost.localdomain>
+Received: from mx1.redhat.com ([209.132.183.28]:38805 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933021AbcDLTSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Apr 2016 15:18:52 -0400
+In-Reply-To: <yq17fg2zn1q.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Busch <keith.busch@intel.com>, Matthew Wilcox <willy@linux.intel.com>
-Cc: Hannes Reinecke <hare@suse.de>, lsf@lists.linux-foundation.org, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Michel Meyers <steltek@tcnnet.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 04/08/2016 12:06 PM, Keith Busch wrote:
-> On Fri, Apr 08, 2016 at 01:40:06PM -0400, Matthew Wilcox wrote:
->>   - Inability to use all queues supported by a device.  Intel's P3700
->>     supports 31 queues, but block-mq insists on assigning an even multiple
->>     of CPUs to each queue.  So if you have 48 CPUs, it will use 24 queues.
->>     If you have 128 CPUs, it will only use 16 of the queues.
->
-> While it'd be better to use all the available h/w resources, that's
-> actually not the worst part.
->
-> The real problems occur when there are more physical/unique CPUs than
-> h/w queues since blk-mq does not consider CPU topology beyond thread
-> siblings. With 128 CPUs, blk-mq may use all 31 queues P3700 supports,
-> but many CPU groups won't share a last-level-cache.
->
-> Smarter assignment would reclaim some untapped performance, and we can
-> share such code prior to the session.
+On 04/12/2016 01:42 PM, Martin K. Petersen wrote:
+>>>>>> "Michel" == Michel Meyers <steltek@tcnnet.com> writes:
+> 
+>>> Shouldn't we just quirk SYNOLOGY, then?
+> 
+> Michel> Could be worth it. As far as I can see, they manufacture no
+> Michel> directly attached drives (only NAS devices, which I presume are
+> Michel> all affected by the same problem as mine).
+> 
+> Mike: Any preference?
+> 
 
-There's definitely room for improvement in the cpu mapping code.
-
-However, on the original complaint, it's by design (or, working as 
-intended) - this was done to keep the layout symmetrical. It's been 
-discussed on the mailing lists before. We can have a discussion whether 
-we should change this or not, of course.
-
--- 
-Jens Axboe
-
+I think quirking SYNOLOGY is best. It will be the safest route and work
+for all devices.
