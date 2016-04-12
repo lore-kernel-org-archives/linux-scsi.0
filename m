@@ -1,27 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] drivers/scsi/fnic/fnic_scsi.c: Deinline fnic_queue_abort_io_req, save 1792 bytes
-Date: Mon, 11 Apr 2016 22:16:43 -0400
-Message-ID: <yq1shyrzi44.fsf@sermon.lab.mkp.net>
-References: <1460141926-13069-1-git-send-email-dvlasenk@redhat.com>
-	<1460141926-13069-2-git-send-email-dvlasenk@redhat.com>
+Subject: Re: [PATCH] zfcp: Revert to original scanning behaviour
+Date: Mon, 11 Apr 2016 22:14:22 -0400
+Message-ID: <yq11t6b1sld.fsf@sermon.lab.mkp.net>
+References: <1460096094-126214-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1460141926-13069-2-git-send-email-dvlasenk@redhat.com> (Denys
-	Vlasenko's message of "Fri, 8 Apr 2016 20:58:43 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Satish Kharat <satishkh@cisco.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17826 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755648AbcDLCOn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 22:14:43 -0400
+In-Reply-To: <1460096094-126214-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Fri, 8 Apr 2016 08:14:54 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
->>>>> "Denys" == Denys Vlasenko <dvlasenk@redhat.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Denys> This function compiles to 511 bytes of machine code.  Abort
-Denys> commands are not time-critical at all.
+Hannes> zfcp has its own mechanism for selective scanning, so revert to
+Hannes> the original scanning behaviour to not confuse users.
 
-Satish, please review.
-
-https://patchwork.kernel.org/patch/8785281/
+Benjamin?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
