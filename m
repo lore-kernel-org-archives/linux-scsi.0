@@ -1,72 +1,79 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Re: [PATCH] zfcp: Revert to original scanning behaviour
-Date: Tue, 12 Apr 2016 13:00:14 +0200
-Message-ID: <20160412110014.GA16208@bblock-ThinkPad-W530>
-References: <1460096094-126214-1-git-send-email-hare@suse.de>
- <yq11t6b1sld.fsf@sermon.lab.mkp.net>
+From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct
+ Scsi_Host
+Date: Tue, 12 Apr 2016 08:23:56 -0400 (EDT)
+Message-ID: <1401884753.28447864.1460463836967.JavaMail.zimbra@redhat.com>
+References: <1460414846-29540-1-git-send-email-hch@lst.de> <1460414846-29540-2-git-send-email-hch@lst.de> <570C3400.9080503@sandisk.com> <1317640777.28365032.1460418264272.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp09.uk.ibm.com ([195.75.94.105]:37041 "EHLO
-	e06smtp09.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932651AbcDLLGK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 07:06:10 -0400
-Received: from localhost
-	by e06smtp09.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
-	Tue, 12 Apr 2016 12:06:07 +0100
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-	by d06dlp01.portsmouth.uk.ibm.com (Postfix) with ESMTP id 734D917D80CB
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2016 12:01:00 +0100 (BST)
-Received: from d06av08.portsmouth.uk.ibm.com (d06av08.portsmouth.uk.ibm.com [9.149.37.249])
-	by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u3CB0GKw59637790
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2016 11:00:16 GMT
-Received: from d06av08.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av08.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u3CB0Gqc019730
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2016 05:00:16 -0600
-Received: from bblock-ThinkPad-W530 (dyn-9-152-222-39.boeblingen.de.ibm.com [9.152.222.39])
-	by d06av08.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVin) with ESMTP id u3CB0Gd1019722
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2016 05:00:16 -0600
-Content-Disposition: inline
-In-Reply-To: <yq11t6b1sld.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1317640777.28365032.1460418264272.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 22:14 Mon 11 Apr     , Martin K. Petersen wrote:
-> >>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
->=20
-> Hannes> zfcp has its own mechanism for selective scanning, so revert =
-to
-> Hannes> the original scanning behaviour to not confuse users.
->=20
-> Benjamin?
->=20
+Modified patch to use min_not_zero()
+Ran a number of tests overnight on F/C, SCSI/SAS and SRP (RDMA) and no issues found.
 
-Sry, I meant to quickly test this yesterday but got carried away. As fa=
-r
-as I understand the patch-series this should be good.
+Tested-by: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
 
+----- Original Message -----
+From: "Laurence Oberman" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: "Bart Van Assche" <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: "Christoph Hellwig" <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sent: Monday, April 11, 2016 7:44:24 PM
+Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct Scsi_Host
 
+Thanks Bart
+Good catch, I completely missed it.
 
-                                                    Beste Gr=FC=DFe / B=
-est regards,
-                                                      - Benjamin Block
---=20
-Linux on z Systems Development         /         IBM Systems & Technolo=
-gy Group
-		  IBM Deutschland Research & Development GmbH=20
-Vorsitz. AufsR.: Martina Koederitz     /        Gesch=E4ftsf=FChrung: D=
-irk Wittkopp
-Sitz der Gesellschaft: B=F6blingen / Registergericht: AmtsG Stuttgart, =
-HRB 243294
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
 
+----- Original Message -----
+From: "Bart Van Assche" <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+To: "Christoph Hellwig" <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sent: Monday, April 11, 2016 7:32:16 PM
+Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct Scsi_Host
+
+On 04/11/2016 03:47 PM, Christoph Hellwig wrote:
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 8106515..04c660d 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2120,7 +2120,8 @@ static void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+>   	blk_queue_segment_boundary(q, shost->dma_boundary);
+>   	dma_set_seg_boundary(dev, shost->dma_boundary);
+>
+> -	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+> +	blk_queue_max_segment_size(q,
+> +		min(shost->max_segment_size, dma_get_max_seg_size(dev)));
+>
+>   	if (!shost->use_clustering)
+>   		q->limits.cluster = 0;
+
+Hello Christoph,
+
+Since Scsi_Host.max_segment_size is initialized to zero, shouldn't min() 
+be changed into min_not_zero()?
+
+Bart.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
