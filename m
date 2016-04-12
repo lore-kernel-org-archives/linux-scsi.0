@@ -1,76 +1,104 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 06/14] libata: Check log page directory before accessing pages
-Date: Tue, 12 Apr 2016 08:47:50 +0200
-Message-ID: <1460443678-57934-7-git-send-email-hare@suse.de>
+Subject: [PATCHv2 13/14] libata: support device-managed ZAC devices
+Date: Tue, 12 Apr 2016 08:47:57 +0200
+Message-ID: <1460443678-57934-14-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-When reading the NCQ Send/Recv log it might actually not
-supported, thereby causing irritating messages
-'READ LOG DMA EXT failed'.
-Instead we should be reading the log directory first to
-figure out if the log is actually supported before trying
-to access it.
+Device-managed ZAC devices just set the zoned capabilities field
+in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
+field in the block device characteristics VPD page.
+As this is only defined in SPC-5/SBC-4 we also need to update
+the supported SCSI version descriptor.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c | 17 +++++++++++++++++
- include/linux/ata.h       |  1 +
- 2 files changed, 18 insertions(+)
+ drivers/ata/libata-scsi.c | 19 ++++++++++---------
+ include/linux/ata.h       |  5 +++++
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f48f152..cfde6bc 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -66,6 +66,7 @@
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
- #include <asm/byteorder.h>
-+#include <asm/unaligned.h>
- #include <linux/cdrom.h>
- #include <linux/ratelimit.h>
- #include <linux/pm_runtime.h>
-@@ -2083,7 +2084,23 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
-+	int log_index = ATA_LOG_NCQ_SEND_RECV * 2;
-+	u16 log_pages;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 5f1fc03..a92fbe9 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2082,14 +2082,14 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x00,
+ 		0xA0,	/* SAM-5 (no version claimed) */
  
-+	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
-+				     0, ap->sector_buf, 1, true);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to get Log Directory Emask 0x%x\n",
-+			    err_mask);
-+		return;
-+	}
-+	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
-+	if (!log_pages) {
-+		ata_dev_warn(dev,
-+			     "NCQ Send/Recv Log not supported\n");
-+		return;
-+	}
- 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
- 				     0, ap->sector_buf, 1, true);
- 	if (err_mask) {
+-		0x04,
+-		0xC0,	/* SBC-3 (no version claimed) */
++		0x06,
++		0x00,	/* SBC-4 (no version claimed) */
+ 
+-		0x04,
+-		0x60,	/* SPC-4 (no version claimed) */
++		0x05,
++		0xC0,	/* SPC-5 (no version claimed) */
+ 
+ 		0x60,
+-		0x20,   /* ZBC (no version claimed) */
++		0x24,   /* ZBC r05 */
+ 	};
+ 
+ 	u8 hdr[] = {
+@@ -2109,10 +2109,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	    (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
+ 		hdr[1] |= (1 << 7);
+ 
+-	if (args->dev->class == ATA_DEV_ZAC) {
++	if (args->dev->class == ATA_DEV_ZAC)
+ 		hdr[0] = TYPE_ZBC;
+-		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
+-	}
+ 
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+@@ -2126,7 +2124,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (rbuf[32] == 0 || rbuf[32] == ' ')
+ 		memcpy(&rbuf[32], "n/a ", 4);
+ 
+-	if (args->dev->class == ATA_DEV_ZAC)
++	if (ata_id_zoned_cap(args->id) || args->dev->class == ATA_DEV_ZAC)
+ 		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
+ 	else
+ 		memcpy(rbuf + 58, versions, sizeof(versions));
+@@ -2322,12 +2320,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	int form_factor = ata_id_form_factor(args->id);
+ 	int media_rotation_rate = ata_id_rotation_rate(args->id);
++	u8 zoned = ata_id_zoned_cap(args->id);
+ 
+ 	rbuf[1] = 0xb1;
+ 	rbuf[3] = 0x3c;
+ 	rbuf[4] = media_rotation_rate >> 8;
+ 	rbuf[5] = media_rotation_rate;
+ 	rbuf[7] = form_factor;
++	if (zoned)
++		rbuf[8] = (zoned << 4);
+ 
+ 	return 0;
+ }
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 94ccde5..b5be5e8 100644
+index 3fb2d7d..439be2a 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -314,6 +314,7 @@ enum {
- 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
+@@ -932,6 +932,11 @@ static inline bool ata_id_is_ssd(const u16 *id)
+ 	return id[ATA_ID_ROT_SPEED] == 0x01;
+ }
  
- 	/* READ_LOG_EXT pages */
-+	ATA_LOG_DIRECTORY	= 0x0,
- 	ATA_LOG_SATA_NCQ	= 0x10,
- 	ATA_LOG_NCQ_SEND_RECV	  = 0x13,
- 	ATA_LOG_SATA_ID_DEV_DATA  = 0x30,
++static inline u8 ata_id_zoned_cap(const u16 *id)
++{
++	return (id[ATA_ID_ADDITIONAL_SUPP] & 0x3);
++}
++
+ static inline bool ata_id_pio_need_iordy(const u16 *id, const u8 pio)
+ {
+ 	/* CF spec. r4.1 Table 22 says no IORDY on PIO5 and PIO6. */
 -- 
 1.8.5.6
 
