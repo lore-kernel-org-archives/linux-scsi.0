@@ -1,79 +1,47 @@
-From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct
- Scsi_Host
-Date: Tue, 12 Apr 2016 08:23:56 -0400 (EDT)
-Message-ID: <1401884753.28447864.1460463836967.JavaMail.zimbra@redhat.com>
-References: <1460414846-29540-1-git-send-email-hch@lst.de> <1460414846-29540-2-git-send-email-hch@lst.de> <570C3400.9080503@sandisk.com> <1317640777.28365032.1460418264272.JavaMail.zimbra@redhat.com>
+From: Xinwei Kong <kong.kongxinwei@hisilicon.com>
+Subject: [PATCH 1/1] scsi: usb: fix bug which some usb isn't used
+Date: Tue, 12 Apr 2016 20:35:54 +0800
+Message-ID: <1460464554-14116-1-git-send-email-kong.kongxinwei@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1317640777.28365032.1460418264272.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:62037 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756589AbcDLMer (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 08:34:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linuxraid@lsi.com, James.Bottomley@HansenPartnership.com, hch@lst.de, snitzer@redhat.com
+Cc: martin.petersen@oracle.com, hare@suse.de, JBottomley@Odin.com, linux-scsi@vger.kernel.org, kong.kongxinwei@hisilicon.com
 
-Modified patch to use min_not_zero()
-Ran a number of tests overnight on F/C, SCSI/SAS and SRP (RDMA) and no issues found.
+some usb disk such as Manufacturer Lenovo will have some problem in
+init process.
 
-Tested-by: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+when it run "scsi_dh_find_driver" function, because this parameter of
+"sdev->inquiry[5]" is 115, it will return "alua" in "scsi_dh_find_driver"
+function and will have some error log (alua: Attach failed (-22)). some
+usb init will fail and isn't used.
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+Signed-off-by: Xinwei Kong <kong.kongxinwei@hisilicon.com>
+---
+ drivers/scsi/scsi_dh.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
------ Original Message -----
-From: "Laurence Oberman" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-To: "Bart Van Assche" <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: "Christoph Hellwig" <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Sent: Monday, April 11, 2016 7:44:24 PM
-Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct Scsi_Host
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 54d446c..36b3f354e 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -77,9 +77,6 @@ scsi_dh_find_driver(struct scsi_device *sdev)
+ {
+ 	const struct scsi_dh_blist *b;
+ 
+-	if (scsi_device_tpgs(sdev))
+-		return "alua";
+-
+ 	for (b = scsi_dh_blist; b->vendor; b++) {
+ 		if (!strncmp(sdev->vendor, b->vendor, strlen(b->vendor)) &&
+ 		    !strncmp(sdev->model, b->model, strlen(b->model))) {
+-- 
+2.8.0
 
-Thanks Bart
-Good catch, I completely missed it.
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
-
------ Original Message -----
-From: "Bart Van Assche" <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-To: "Christoph Hellwig" <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Sent: Monday, April 11, 2016 7:32:16 PM
-Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct Scsi_Host
-
-On 04/11/2016 03:47 PM, Christoph Hellwig wrote:
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 8106515..04c660d 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2120,7 +2120,8 @@ static void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
->   	blk_queue_segment_boundary(q, shost->dma_boundary);
->   	dma_set_seg_boundary(dev, shost->dma_boundary);
->
-> -	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
-> +	blk_queue_max_segment_size(q,
-> +		min(shost->max_segment_size, dma_get_max_seg_size(dev)));
->
->   	if (!shost->use_clustering)
->   		q->limits.cluster = 0;
-
-Hello Christoph,
-
-Since Scsi_Host.max_segment_size is initialized to zero, shouldn't min() 
-be changed into min_not_zero()?
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
