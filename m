@@ -1,186 +1,49 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 05/14] libata: NCQ Encapsulation for READ LOG DMA EXT
-Date: Tue, 12 Apr 2016 08:47:49 +0200
-Message-ID: <1460443678-57934-6-git-send-email-hare@suse.de>
+Subject: [PATCHv2 01/14] libata: do not attempt to retrieve sense code twice
+Date: Tue, 12 Apr 2016 08:47:45 +0200
+Message-ID: <1460443678-57934-2-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59630 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754609AbcDLGsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Apr 2016 02:48:18 -0400
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Recent devices can use NCQ encapsulation for READ LOG DMA EXT,
-so we should be using it if available.
+Do not call ata_request_sense() if the sense code is already
+present.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-core.c |  5 ++---
- drivers/ata/libata-eh.c   | 30 +++++++++++++++++++++++++-----
- drivers/ata/libata.h      |  5 +++--
- include/linux/ata.h       |  5 +++++
- include/linux/libata.h    |  7 +++++++
- 5 files changed, 42 insertions(+), 10 deletions(-)
+ drivers/ata/libata-eh.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fa74b57..f48f152 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2085,7 +2085,7 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
- 	unsigned int err_mask;
- 
- 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
--				     0, ap->sector_buf, 1);
-+				     0, ap->sector_buf, 1, true);
- 	if (err_mask) {
- 		ata_dev_dbg(dev,
- 			    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
-@@ -2383,8 +2383,7 @@ int ata_dev_configure(struct ata_device *dev)
- 			err_mask = ata_read_log_page(dev,
- 						     ATA_LOG_SATA_ID_DEV_DATA,
- 						     ATA_LOG_SATA_SETTINGS,
--						     sata_setting,
--						     1);
-+						     sata_setting, 1, true);
- 			if (err_mask)
- 				ata_dev_dbg(dev,
- 					    "failed to get Identify Device Data, Emask 0x%x\n",
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index e816619..dfe8fdc 100644
+index 5b340ce..e816619 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1493,6 +1493,7 @@ static const char *ata_err_string(unsigned int err_mask)
-  *	@page: page to read
-  *	@buf: buffer to store read page
-  *	@sectors: number of sectors to read
-+ *	@fpdma: flag if fpdma should be used
-  *
-  *	Read log page using READ_LOG_EXT command.
-  *
-@@ -1503,7 +1504,8 @@ static const char *ata_err_string(unsigned int err_mask)
-  *	0 on success, AC_ERR_* mask otherwise.
-  */
- unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
--			       u8 page, void *buf, unsigned int sectors)
-+			       u8 page, void *buf, unsigned int sectors,
-+			       bool fpdma)
- {
- 	unsigned long ap_flags = dev->link->ap->flags;
- 	struct ata_taskfile tf;
-@@ -1521,25 +1523,43 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 
- retry:
- 	ata_tf_init(dev, &tf);
--	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
-+	if (fpdma && ata_ncq_enabled(dev) &&
-+	    ata_fpdma_read_log_supported(dev)) {
-+		tf.command = ATA_CMD_FPDMA_RECV;
-+		tf.protocol = ATA_PROT_NCQ;
-+		tf.hob_nsect = ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT & 0x1f;
-+		tf.nsect = ATA_TAG_INTERNAL << 3;
-+		tf.feature = sectors;
-+		tf.hob_feature = sectors >> 8;
-+		dma = true;
-+	} else if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
- 	    !(dev->horkage & ATA_HORKAGE_NO_NCQ_LOG)) {
- 		tf.command = ATA_CMD_READ_LOG_DMA_EXT;
- 		tf.protocol = ATA_PROT_DMA;
-+		tf.nsect = sectors;
-+		tf.hob_nsect = sectors >> 8;
- 		dma = true;
- 	} else {
- 		tf.command = ATA_CMD_READ_LOG_EXT;
- 		tf.protocol = ATA_PROT_PIO;
-+		tf.nsect = sectors;
-+		tf.hob_nsect = sectors >> 8;
- 		dma = false;
+@@ -1660,7 +1660,7 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc,
+ 		return;
  	}
- 	tf.lbal = log;
- 	tf.lbam = page;
--	tf.nsect = sectors;
--	tf.hob_nsect = sectors >> 8;
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
  
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
- 				     buf, sectors * ATA_SECT_SIZE, 0);
+-	if (!cmd)
++	if (!cmd || qc->flags & ATA_QCFLAG_SENSE_VALID)
+ 		return;
  
-+	if (err_mask && fpdma) {
-+		ata_dev_warn(dev,
-+			     "RECEIVE FPDMA failed, trying READ LOG_DMA EXT\n");
-+		dev->ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_RD_LOG_OFFSET] &=
-+		    ~ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED;
-+		goto retry;
-+	}
- 	if (err_mask && dma) {
- 		dev->horkage |= ATA_HORKAGE_NO_NCQ_LOG;
- 		ata_dev_warn(dev, "READ LOG DMA EXT failed, trying unqueued\n");
-@@ -1573,7 +1593,7 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
- 	u8 csum;
- 	int i;
+ 	if (!ata_id_sense_reporting_enabled(dev->id)) {
+@@ -1849,7 +1849,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 	memcpy(&qc->result_tf, &tf, sizeof(tf));
+ 	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
+ 	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
+-	if (qc->result_tf.auxiliary) {
++	if ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary) {
+ 		char sense_key, asc, ascq;
  
--	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1);
-+	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1, false);
- 	if (err_mask)
- 		return -EIO;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 3b301a4..5732f98 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -169,8 +169,9 @@ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 			       unsigned int action);
- extern void ata_eh_done(struct ata_link *link, struct ata_device *dev,
- 			unsigned int action);
--extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
--				      u8 page, void *buf, unsigned int sectors);
-+extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log, u8 page,
-+				      void *buf, unsigned int sectors,
-+				      bool fpdma);
- extern void ata_eh_autopsy(struct ata_port *ap);
- const char *ata_get_cmd_descript(u8 command);
- extern void ata_eh_report(struct ata_port *ap);
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index b84210a..94ccde5 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -306,6 +306,9 @@ enum {
- 	/* marked obsolete in the ATA/ATAPI-7 spec */
- 	ATA_CMD_RESTORE		= 0x10,
- 
-+	/* Subcmds for ATA_CMD_FPDMA_RECV */
-+	ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT = 0x01,
-+
- 	/* Subcmds for ATA_CMD_FPDMA_SEND */
- 	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
- 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
-@@ -329,7 +332,9 @@ enum {
- 	ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET	= 0x04,
- 	ATA_LOG_NCQ_SEND_RECV_DSM_TRIM		= (1 << 0),
- 	ATA_LOG_NCQ_SEND_RECV_RD_LOG_OFFSET	= 0x08,
-+	ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED  = (1 << 0),
- 	ATA_LOG_NCQ_SEND_RECV_WR_LOG_OFFSET	= 0x0C,
-+	ATA_LOG_NCQ_SEND_RECV_WR_LOG_SUPPORTED  = (1 << 0),
- 	ATA_LOG_NCQ_SEND_RECV_SIZE		= 0x10,
- 
- 	/* READ/WRITE LONG (obsolete) */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a418bca..09ddb5a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1642,6 +1642,13 @@ static inline bool ata_fpdma_dsm_supported(struct ata_device *dev)
- 		 ATA_LOG_NCQ_SEND_RECV_DSM_TRIM);
- }
- 
-+static inline bool ata_fpdma_read_log_supported(struct ata_device *dev)
-+{
-+	return (dev->flags & ATA_DFLAG_NCQ_SEND_RECV) &&
-+		(dev->ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_RD_LOG_OFFSET] &
-+		 ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED);
-+}
-+
- static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
- {
- 	qc->tf.ctl |= ATA_NIEN;
+ 		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
 -- 
 1.8.5.6
 
