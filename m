@@ -1,192 +1,189 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 11/14] libata: Implement ZBC OUT translation
-Date: Tue, 12 Apr 2016 08:47:55 +0200
-Message-ID: <1460443678-57934-12-git-send-email-hare@suse.de>
+Subject: [PATCHv2 12/14] libata: NCQ encapsulation for ZAC MANAGEMENT OUT
+Date: Tue, 12 Apr 2016 08:47:56 +0200
+Message-ID: <1460443678-57934-13-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59670 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756044AbcDLGsT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2016 02:48:19 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
-ZAC drives implement a 'ZAC Management Out' command template,
-which maps onto the ZBC OUT command.
+Add NCQ encapsulation for ZAC MANAGEMENT OUT and evaluate
+NCQ Non-Data log pages to figure out if NCQ encapsulation
+is supported.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-eh.c       |  1 +
- drivers/ata/libata-scsi.c     | 67 +++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-trace.c    | 16 +++++++++++
- include/linux/ata.h           |  7 +++++
- include/trace/events/libata.h |  1 +
- 5 files changed, 92 insertions(+)
+ drivers/ata/libata-core.c  | 43 ++++++++++++++++++++++++++++++++++++++++---
+ drivers/ata/libata-scsi.c  | 18 +++++++++++++-----
+ drivers/ata/libata-trace.c |  3 +++
+ include/linux/ata.h        |  7 +++++++
+ include/linux/libata.h     |  7 +++++++
+ 5 files changed, 70 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 4932ce5..4c2bf7f 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2503,6 +2503,7 @@ const char *ata_get_cmd_descript(u8 command)
- 		{ ATA_CMD_REQ_SENSE_DATA,	"REQUEST SENSE DATA EXT" },
- 		{ ATA_CMD_SANITIZE_DEVICE,	"SANITIZE DEVICE" },
- 		{ ATA_CMD_ZAC_MGMT_IN,		"ZAC MANAGEMENT IN" },
-+		{ ATA_CMD_ZAC_MGMT_OUT,		"ZAC MANAGEMENT OUT" },
- 		{ ATA_CMD_READ_LONG,		"READ LONG (with retries)" },
- 		{ ATA_CMD_READ_LONG_ONCE,	"READ LONG (without retries)" },
- 		{ ATA_CMD_WRITE_LONG,		"WRITE LONG (with retries)" },
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3e402a8..ef696a3 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3471,6 +3471,70 @@ invalid_param_len:
- 	return 1;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cfde6bc..4d2e965 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2121,6 +2121,40 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
+ 	}
  }
  
-+static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
++static void ata_dev_config_ncq_non_data(struct ata_device *dev)
 +{
-+	struct ata_taskfile *tf = &qc->tf;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct ata_device *dev = qc->dev;
-+	const u8 *cdb = scmd->cmnd;
-+	u8 reset_all, sa;
-+	u64 block;
-+	u32 n_block;
-+	u16 fp = (u16)-1;
++	struct ata_port *ap = dev->link->ap;
++	unsigned int err_mask;
++	int log_index = ATA_LOG_NCQ_NON_DATA * 2;
++	u16 log_pages;
 +
-+	if (unlikely(scmd->cmd_len < 16)) {
-+		fp = 15;
-+		goto invalid_fld;
++	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
++				     0, ap->sector_buf, 1, true);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to get Log Directory Emask 0x%x\n",
++			    err_mask);
++		return;
 +	}
-+
-+	sa = cdb[1] & 0x1f;
-+	if ((sa != ZO_CLOSE_ZONE) && (sa != ZO_FINISH_ZONE) &&
-+	    (sa != ZO_OPEN_ZONE) && (sa != ZO_RESET_WRITE_POINTER)) {
-+		fp = 1;
-+		goto invalid_fld;
++	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
++	if (!log_pages) {
++		ata_dev_warn(dev,
++			     "NCQ Send/Recv Log not supported\n");
++		return;
 +	}
++	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_NON_DATA,
++				     0, ap->sector_buf, 1, true);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to get NCQ Non-Data Log Emask 0x%x\n",
++			    err_mask);
++	} else {
++		u8 *cmds = dev->ncq_non_data_cmds;
 +
-+	scsi_16_lba_len(cdb, &block, &n_block);
-+	if (n_block) {
-+		/*
-+		 * ZAC MANAGEMENT OUT doesn't define any length
-+		 */
-+		goto invalid_param_len;
++		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_NON_DATA_SIZE);
 +	}
-+	if (block > dev->n_sectors)
-+		goto out_of_range;
-+
-+	reset_all = cdb[14] & 0x1;
-+
-+	tf->protocol = ATA_PROT_NODATA;
-+	tf->command = ATA_CMD_ZAC_MGMT_OUT;
-+	tf->feature = sa;
-+	tf->hob_feature = reset_all & 0x1;
-+
-+	tf->lbah = (block >> 16) & 0xff;
-+	tf->lbam = (block >> 8) & 0xff;
-+	tf->lbal = block & 0xff;
-+	tf->hob_lbah = (block >> 40) & 0xff;
-+	tf->hob_lbam = (block >> 32) & 0xff;
-+	tf->hob_lbal = (block >> 24) & 0xff;
-+	tf->device = ATA_LBA;
-+	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
-+
-+	return 0;
-+
-+ invalid_fld:
-+	ata_scsi_set_invalid_field(qc->dev, scmd, fp, 0xff);
-+	return 1;
-+ out_of_range:
-+	/* "Logical Block Address out of range" */
-+	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x21, 0x00);
-+	return 1;
-+invalid_param_len:
-+	/* "Parameter list length error" */
-+	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
-+	return 1;
 +}
 +
- /**
-  *	ata_mselect_caching - Simulate MODE SELECT for caching info page
-  *	@qc: Storage for translated ATA taskfile
-@@ -3789,6 +3853,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 	case ZBC_IN:
- 		return ata_scsi_zbc_in_xlat;
+ static int ata_dev_config_ncq(struct ata_device *dev,
+ 			       char *desc, size_t desc_sz)
+ {
+@@ -2165,9 +2199,12 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 		snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+ 			ddepth, aa_desc);
  
-+	case ZBC_OUT:
-+		return ata_scsi_zbc_out_xlat;
-+
- 	case START_STOP:
- 		return ata_scsi_start_stop_xlat;
- 	}
+-	if ((ap->flags & ATA_FLAG_FPDMA_AUX) &&
+-	    ata_id_has_ncq_send_and_recv(dev->id))
+-		ata_dev_config_ncq_send_recv(dev);
++	if ((ap->flags & ATA_FLAG_FPDMA_AUX)) {
++		if (ata_id_has_ncq_send_and_recv(dev->id))
++			ata_dev_config_ncq_send_recv(dev);
++		if (ata_id_has_ncq_non_data(dev->id))
++			ata_dev_config_ncq_non_data(dev);
++	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index ef696a3..5f1fc03 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3506,11 +3506,19 @@ static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
+ 
+ 	reset_all = cdb[14] & 0x1;
+ 
+-	tf->protocol = ATA_PROT_NODATA;
+-	tf->command = ATA_CMD_ZAC_MGMT_OUT;
+-	tf->feature = sa;
+-	tf->hob_feature = reset_all & 0x1;
+-
++	if (ata_ncq_enabled(qc->dev) &&
++	    ata_fpdma_zac_mgmt_out_supported(qc->dev)) {
++		tf->protocol = ATA_PROT_NCQ;
++		tf->command = ATA_CMD_NCQ_NON_DATA;
++		tf->hob_nsect = ATA_SUBCMD_NCQ_NON_DATA_ZAC_MGMT_OUT;
++		tf->nsect = qc->tag << 3;
++		tf->auxiliary = sa | (reset_all & 0x1) << 8;
++	} else {
++		tf->protocol = ATA_PROT_NODATA;
++		tf->command = ATA_CMD_ZAC_MGMT_OUT;
++		tf->feature = sa;
++		tf->hob_feature = reset_all & 0x1;
++	}
+ 	tf->lbah = (block >> 16) & 0xff;
+ 	tf->lbam = (block >> 8) & 0xff;
+ 	tf->lbal = block & 0xff;
 diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
-index 9caeabd..1111ba7 100644
+index 1111ba7..f8c550d 100644
 --- a/drivers/ata/libata-trace.c
 +++ b/drivers/ata/libata-trace.c
-@@ -197,6 +197,22 @@ libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
+@@ -188,6 +188,9 @@ libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
+ 		case ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT:
+ 			trace_seq_printf(p, " ZERO_EXT");
  			break;
++		case ATA_SUBCMD_NCQ_NON_DATA_ZAC_MGMT_OUT:
++			trace_seq_printf(p, " ZAC_MGMT_OUT");
++			break;
  		}
  		break;
-+	case ATA_CMD_ZAC_MGMT_OUT:
-+		switch (feature) {
-+		case ATA_SUBCMD_ZAC_MGMT_OUT_CLOSE_ZONE:
-+			trace_seq_printf(p, " CLOSE_ZONE");
-+			break;
-+		case ATA_SUBCMD_ZAC_MGMT_OUT_FINISH_ZONE:
-+			trace_seq_printf(p, " FINISH_ZONE");
-+			break;
-+		case ATA_SUBCMD_ZAC_MGMT_OUT_OPEN_ZONE:
-+			trace_seq_printf(p, " OPEN_ZONE");
-+			break;
-+		case ATA_SUBCMD_ZAC_MGMT_OUT_RESET_WRITE_POINTER:
-+			trace_seq_printf(p, " RESET_WRITE_POINTER");
-+			break;
-+		}
-+		break;
- 	}
- 	trace_seq_putc(p, 0);
- 
+ 	case ATA_CMD_ZAC_MGMT_IN:
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 2f01ba9..e3bf9a3 100644
+index e3bf9a3..3fb2d7d 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -303,6 +303,7 @@ enum {
- 	ATA_CMD_REQ_SENSE_DATA  = 0x0B,
- 	ATA_CMD_SANITIZE_DEVICE = 0xB4,
- 	ATA_CMD_ZAC_MGMT_IN	= 0x4A,
-+	ATA_CMD_ZAC_MGMT_OUT	= 0x9F,
+@@ -320,6 +320,7 @@ enum {
+ 	ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE  = 0x00,
+ 	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
+ 	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
++	ATA_SUBCMD_NCQ_NON_DATA_ZAC_MGMT_OUT = 0x07,
  
- 	/* marked obsolete in the ATA/ATAPI-7 spec */
- 	ATA_CMD_RESTORE		= 0x10,
-@@ -323,6 +324,12 @@ enum {
  	/* Subcmds for ATA_CMD_ZAC_MGMT_IN */
  	ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES = 0x00,
- 
-+	/* Subcmds for ATA_CMD_ZAC_MGMT_OUT */
-+	ATA_SUBCMD_ZAC_MGMT_OUT_CLOSE_ZONE = 0x01,
-+	ATA_SUBCMD_ZAC_MGMT_OUT_FINISH_ZONE = 0x02,
-+	ATA_SUBCMD_ZAC_MGMT_OUT_OPEN_ZONE = 0x03,
-+	ATA_SUBCMD_ZAC_MGMT_OUT_RESET_WRITE_POINTER = 0x04,
-+
+@@ -333,6 +334,7 @@ enum {
  	/* READ_LOG_EXT pages */
  	ATA_LOG_DIRECTORY	= 0x0,
  	ATA_LOG_SATA_NCQ	= 0x10,
-diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index b966417..3032edc 100644
---- a/include/trace/events/libata.h
-+++ b/include/trace/events/libata.h
-@@ -99,6 +99,7 @@
- 		 ata_opcode_name(ATA_CMD_REQ_SENSE_DATA),	\
- 		 ata_opcode_name(ATA_CMD_SANITIZE_DEVICE),	\
- 		 ata_opcode_name(ATA_CMD_ZAC_MGMT_IN),		\
-+		 ata_opcode_name(ATA_CMD_ZAC_MGMT_OUT),		\
- 		 ata_opcode_name(ATA_CMD_RESTORE),		\
- 		 ata_opcode_name(ATA_CMD_READ_LONG),		\
- 		 ata_opcode_name(ATA_CMD_READ_LONG_ONCE),	\
++	ATA_LOG_NCQ_NON_DATA	  = 0x12,
+ 	ATA_LOG_NCQ_SEND_RECV	  = 0x13,
+ 	ATA_LOG_SATA_ID_DEV_DATA  = 0x30,
+ 	ATA_LOG_SATA_SETTINGS	  = 0x08,
+@@ -874,6 +876,11 @@ static inline bool ata_id_has_ncq_send_and_recv(const u16 *id)
+ 	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(6);
+ }
+ 
++static inline bool ata_id_has_ncq_non_data(const u16 *id)
++{
++	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(5);
++}
++
+ static inline bool ata_id_has_trim(const u16 *id)
+ {
+ 	if (ata_id_major_version(id) >= 7 &&
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 92297cd..bb48eb7 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -729,6 +729,7 @@ struct ata_device {
+ 
+ 	/* NCQ send and receive log subcommand support */
+ 	u8			ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_SIZE];
++	u8			ncq_non_data_cmds[ATA_LOG_NCQ_NON_DATA_SIZE];
+ 
+ 	/* error history */
+ 	int			spdn_cnt;
+@@ -1651,6 +1652,12 @@ static inline bool ata_fpdma_read_log_supported(struct ata_device *dev)
+ 		 ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED);
+ }
+ 
++static inline bool ata_fpdma_zac_mgmt_out_supported(struct ata_device *dev)
++{
++	return (dev->ncq_non_data_cmds[ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OFFSET] &
++		ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OUT);
++}
++
+ static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
+ {
+ 	qc->tf.ctl |= ATA_NIEN;
 -- 
 1.8.5.6
 
