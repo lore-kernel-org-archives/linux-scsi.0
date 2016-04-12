@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 07/14] libata-trace: decode subcommands
-Date: Tue, 12 Apr 2016 08:47:51 +0200
-Message-ID: <1460443678-57934-8-git-send-email-hare@suse.de>
+Subject: [PATCHv2 05/14] libata: NCQ Encapsulation for READ LOG DMA EXT
+Date: Tue, 12 Apr 2016 08:47:49 +0200
+Message-ID: <1460443678-57934-6-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
@@ -10,132 +10,177 @@ To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some commands like FPDMA RECEIVE or NCQ NON DATA can encapsulate
-other commands to NCQ transport. So decode the subcmds, too.
+Recent devices can use NCQ encapsulation for READ LOG DMA EXT,
+so we should be using it if available.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-trace.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/ata.h           | 17 +++++++++++++++++
- include/trace/events/libata.h |  8 +++++++-
- 3 files changed, 67 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c |  5 ++---
+ drivers/ata/libata-eh.c   | 30 +++++++++++++++++++++++++-----
+ drivers/ata/libata.h      |  5 +++--
+ include/linux/ata.h       |  5 +++++
+ include/linux/libata.h    |  7 +++++++
+ 5 files changed, 42 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
-index fd30b8c..99ec1e8 100644
---- a/drivers/ata/libata-trace.c
-+++ b/drivers/ata/libata-trace.c
-@@ -149,3 +149,46 @@ libata_trace_parse_qc_flags(struct trace_seq *p, unsigned int qc_flags)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index fa74b57..f48f152 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2085,7 +2085,7 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
+ 	unsigned int err_mask;
  
- 	return ret;
- }
-+
-+const char *
-+libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
-+			  unsigned char feature, unsigned char hob_nsect)
-+{
-+	const char *ret = trace_seq_buffer_ptr(p);
-+
-+	switch (cmd) {
-+	case ATA_CMD_FPDMA_RECV:
-+		switch (hob_nsect & 0x5f) {
-+		case ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT:
-+			trace_seq_printf(p, " READ_LOG_DMA_EXT");
-+			break;
-+		}
-+		break;
-+	case ATA_CMD_FPDMA_SEND:
-+		switch (hob_nsect & 0x5f) {
-+		case ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT:
-+			trace_seq_printf(p, " WRITE_LOG_DMA_EXT");
-+			break;
-+		case ATA_SUBCMD_FPDMA_SEND_DSM:
-+			trace_seq_printf(p, " DATASET_MANAGEMENT");
-+			break;
-+		}
-+		break;
-+	case ATA_CMD_NCQ_NON_DATA:
-+		switch (feature) {
-+		case ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE:
-+			trace_seq_printf(p, " ABORT_QUEUE");
-+			break;
-+		case ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES:
-+			trace_seq_printf(p, " SET_FEATURES");
-+			break;
-+		case ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT:
-+			trace_seq_printf(p, " ZERO_EXT");
-+			break;
-+		}
-+		break;
+ 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
+-				     0, ap->sector_buf, 1);
++				     0, ap->sector_buf, 1, true);
+ 	if (err_mask) {
+ 		ata_dev_dbg(dev,
+ 			    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
+@@ -2383,8 +2383,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 			err_mask = ata_read_log_page(dev,
+ 						     ATA_LOG_SATA_ID_DEV_DATA,
+ 						     ATA_LOG_SATA_SETTINGS,
+-						     sata_setting,
+-						     1);
++						     sata_setting, 1, true);
+ 			if (err_mask)
+ 				ata_dev_dbg(dev,
+ 					    "failed to get Identify Device Data, Emask 0x%x\n",
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index e816619..dfe8fdc 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1493,6 +1493,7 @@ static const char *ata_err_string(unsigned int err_mask)
+  *	@page: page to read
+  *	@buf: buffer to store read page
+  *	@sectors: number of sectors to read
++ *	@fpdma: flag if fpdma should be used
+  *
+  *	Read log page using READ_LOG_EXT command.
+  *
+@@ -1503,7 +1504,8 @@ static const char *ata_err_string(unsigned int err_mask)
+  *	0 on success, AC_ERR_* mask otherwise.
+  */
+ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+-			       u8 page, void *buf, unsigned int sectors)
++			       u8 page, void *buf, unsigned int sectors,
++			       bool fpdma)
+ {
+ 	unsigned long ap_flags = dev->link->ap->flags;
+ 	struct ata_taskfile tf;
+@@ -1521,25 +1523,43 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 
+ retry:
+ 	ata_tf_init(dev, &tf);
+-	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
++	if (fpdma && ata_ncq_enabled(dev) &&
++	    ata_fpdma_read_log_supported(dev)) {
++		tf.command = ATA_CMD_FPDMA_RECV;
++		tf.protocol = ATA_PROT_NCQ;
++		tf.hob_nsect = ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT & 0x1f;
++		tf.nsect = ATA_TAG_INTERNAL << 3;
++		tf.feature = sectors;
++		tf.hob_feature = sectors >> 8;
++		dma = true;
++	} else if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
+ 	    !(dev->horkage & ATA_HORKAGE_NO_NCQ_LOG)) {
+ 		tf.command = ATA_CMD_READ_LOG_DMA_EXT;
+ 		tf.protocol = ATA_PROT_DMA;
++		tf.nsect = sectors;
++		tf.hob_nsect = sectors >> 8;
+ 		dma = true;
+ 	} else {
+ 		tf.command = ATA_CMD_READ_LOG_EXT;
+ 		tf.protocol = ATA_PROT_PIO;
++		tf.nsect = sectors;
++		tf.hob_nsect = sectors >> 8;
+ 		dma = false;
+ 	}
+ 	tf.lbal = log;
+ 	tf.lbam = page;
+-	tf.nsect = sectors;
+-	tf.hob_nsect = sectors >> 8;
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
+ 
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     buf, sectors * ATA_SECT_SIZE, 0);
+ 
++	if (err_mask && fpdma) {
++		ata_dev_warn(dev,
++			     "RECEIVE FPDMA failed, trying READ LOG_DMA EXT\n");
++		dev->ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_RD_LOG_OFFSET] &=
++		    ~ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED;
++		goto retry;
 +	}
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
-+}
+ 	if (err_mask && dma) {
+ 		dev->horkage |= ATA_HORKAGE_NO_NCQ_LOG;
+ 		ata_dev_warn(dev, "READ LOG DMA EXT failed, trying unqueued\n");
+@@ -1573,7 +1593,7 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+ 	u8 csum;
+ 	int i;
+ 
+-	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1);
++	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1, false);
+ 	if (err_mask)
+ 		return -EIO;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 3b301a4..5732f98 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -169,8 +169,9 @@ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 			       unsigned int action);
+ extern void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ 			unsigned int action);
+-extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+-				      u8 page, void *buf, unsigned int sectors);
++extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log, u8 page,
++				      void *buf, unsigned int sectors,
++				      bool fpdma);
+ extern void ata_eh_autopsy(struct ata_port *ap);
+ const char *ata_get_cmd_descript(u8 command);
+ extern void ata_eh_report(struct ata_port *ap);
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index b5be5e8..032bb22 100644
+index b84210a..94ccde5 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -313,6 +313,11 @@ enum {
+@@ -306,6 +306,9 @@ enum {
+ 	/* marked obsolete in the ATA/ATAPI-7 spec */
+ 	ATA_CMD_RESTORE		= 0x10,
+ 
++	/* Subcmds for ATA_CMD_FPDMA_RECV */
++	ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT = 0x01,
++
+ 	/* Subcmds for ATA_CMD_FPDMA_SEND */
  	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
  	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
- 
-+	/* Subcmds for ATA_CMD_NCQ_NON_DATA */
-+	ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE  = 0x00,
-+	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
-+	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
-+
- 	/* READ_LOG_EXT pages */
- 	ATA_LOG_DIRECTORY	= 0x0,
- 	ATA_LOG_SATA_NCQ	= 0x10,
-@@ -338,6 +343,18 @@ enum {
- 	ATA_LOG_NCQ_SEND_RECV_WR_LOG_SUPPORTED  = (1 << 0),
+@@ -329,7 +332,9 @@ enum {
+ 	ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET	= 0x04,
+ 	ATA_LOG_NCQ_SEND_RECV_DSM_TRIM		= (1 << 0),
+ 	ATA_LOG_NCQ_SEND_RECV_RD_LOG_OFFSET	= 0x08,
++	ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED  = (1 << 0),
+ 	ATA_LOG_NCQ_SEND_RECV_WR_LOG_OFFSET	= 0x0C,
++	ATA_LOG_NCQ_SEND_RECV_WR_LOG_SUPPORTED  = (1 << 0),
  	ATA_LOG_NCQ_SEND_RECV_SIZE		= 0x10,
  
-+	/* NCQ Non-Data log */
-+	ATA_LOG_NCQ_NON_DATA_SUBCMDS_OFFSET	= 0x00,
-+	ATA_LOG_NCQ_NON_DATA_ABORT_OFFSET	= 0x00,
-+	ATA_LOG_NCQ_NON_DATA_ABORT_NCQ		= (1 << 0),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_ALL		= (1 << 1),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_STREAMING	= (1 << 2),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_NON_STREAMING = (1 << 3),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_SELECTED	= (1 << 4),
-+	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OFFSET	= 0x1C,
-+	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OUT	= (1 << 0),
-+	ATA_LOG_NCQ_NON_DATA_SIZE		= 0x40,
-+
  	/* READ/WRITE LONG (obsolete) */
- 	ATA_CMD_READ_LONG	= 0x22,
- 	ATA_CMD_READ_LONG_ONCE	= 0x23,
-diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index 0168603..318c04b 100644
---- a/include/trace/events/libata.h
-+++ b/include/trace/events/libata.h
-@@ -140,6 +140,10 @@ const char *libata_trace_parse_eh_err_mask(struct trace_seq *, unsigned int);
- const char *libata_trace_parse_qc_flags(struct trace_seq *, unsigned int);
- #define __parse_qc_flags(f) libata_trace_parse_qc_flags(p, f)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a418bca..09ddb5a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1642,6 +1642,13 @@ static inline bool ata_fpdma_dsm_supported(struct ata_device *dev)
+ 		 ATA_LOG_NCQ_SEND_RECV_DSM_TRIM);
+ }
  
-+const char *libata_trace_parse_subcmd(struct trace_seq *, unsigned char,
-+				      unsigned char, unsigned char);
-+#define __parse_subcmd(c, f, h) libata_trace_parse_subcmd(p, c, f, h)
++static inline bool ata_fpdma_read_log_supported(struct ata_device *dev)
++{
++	return (dev->flags & ATA_DFLAG_NCQ_SEND_RECV) &&
++		(dev->ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_RD_LOG_OFFSET] &
++		 ATA_LOG_NCQ_SEND_RECV_RD_LOG_SUPPORTED);
++}
 +
- TRACE_EVENT(ata_qc_issue,
- 
- 	TP_PROTO(struct ata_queued_cmd *qc),
-@@ -186,11 +190,13 @@ TRACE_EVENT(ata_qc_issue,
- 		__entry->hob_nsect	= qc->tf.hob_nsect;
- 	),
- 
--	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s " \
-+	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s%s " \
- 		  " tf=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
- 		  __entry->ata_port, __entry->ata_dev, __entry->tag,
- 		  show_protocol_name(__entry->proto),
- 		  show_opcode_name(__entry->cmd),
-+		  __parse_subcmd(__entry->cmd, __entry->feature,
-+				 __entry->hob_nsect),
- 		  __entry->cmd, __entry->feature, __entry->nsect,
- 		  __entry->lbal, __entry->lbam, __entry->lbah,
- 		  __entry->hob_feature, __entry->hob_nsect,
+ static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
+ {
+ 	qc->tf.ctl |= ATA_NIEN;
 -- 
 1.8.5.6
 
