@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 02/14] libsas: enable FPDMA SEND/RECEIVE
-Date: Tue, 12 Apr 2016 08:47:46 +0200
-Message-ID: <1460443678-57934-3-git-send-email-hare@suse.de>
+Subject: [PATCHv2 09/14] libata: fixup ZAC device disabling
+Date: Tue, 12 Apr 2016 08:47:53 +0200
+Message-ID: <1460443678-57934-10-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
@@ -10,100 +10,38 @@ To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Update libsas and dependent drivers to handle FPDMA
-SEND/RECEIVE correctly.
+libata device disabling is ... curious. So add the correct
+definitions that we can disable ZAC devices properly.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 ++
- drivers/scsi/isci/request.c            | 4 +++-
- drivers/scsi/libsas/sas_ata.c          | 6 ++++--
- drivers/scsi/mvsas/mv_sas.c            | 4 +++-
- drivers/scsi/pm8001/pm8001_sas.c       | 4 +++-
- 5 files changed, 15 insertions(+), 5 deletions(-)
+ include/linux/libata.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index b733747..fc2e767 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1573,6 +1573,8 @@ static u8 get_ata_protocol(u8 cmd, int direction)
- 	switch (cmd) {
- 	case ATA_CMD_FPDMA_WRITE:
- 	case ATA_CMD_FPDMA_READ:
-+	case ATA_CMD_FPMDA_RECV:
-+	case ATA_CMD_FPDMA_SEND:
- 	return SATA_PROTOCOL_FPDMA;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 09ddb5a..92297cd 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -192,7 +192,8 @@ enum {
+ 	ATA_DEV_SEMB		= 7,	/* SEMB */
+ 	ATA_DEV_SEMB_UNSUP	= 8,	/* SEMB (unsupported) */
+ 	ATA_DEV_ZAC		= 9,	/* ZAC device */
+-	ATA_DEV_NONE		= 10,	/* no device */
++	ATA_DEV_ZAC_UNSUP	= 10,	/* ZAC device (unsupported) */
++	ATA_DEV_NONE		= 11,	/* no device */
  
- 	case ATA_CMD_ID_ATA:
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index cfd0084..29456e0 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -3169,7 +3169,9 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
- 	status = sci_io_request_construct_basic_sata(ireq);
+ 	/* struct ata_link flags */
+ 	ATA_LFLAG_NO_HRST	= (1 << 1), /* avoid hardreset */
+@@ -1524,7 +1525,8 @@ static inline unsigned int ata_class_enabled(unsigned int class)
+ static inline unsigned int ata_class_disabled(unsigned int class)
+ {
+ 	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP ||
+-		class == ATA_DEV_PMP_UNSUP || class == ATA_DEV_SEMB_UNSUP;
++		class == ATA_DEV_PMP_UNSUP || class == ATA_DEV_SEMB_UNSUP ||
++		class == ATA_DEV_ZAC_UNSUP;
+ }
  
- 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--		   qc->tf.command == ATA_CMD_FPDMA_READ)) {
-+		   qc->tf.command == ATA_CMD_FPDMA_READ ||
-+		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
- 		fis->sector_count = qc->tag << 3;
- 		ireq->tc->type.stp.ncq_tag = qc->tag;
- 	}
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 9c706d8..fe1cd26 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -205,7 +205,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 	task->task_done = sas_ata_task_done;
- 
- 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--	    qc->tf.command == ATA_CMD_FPDMA_READ) {
-+	    qc->tf.command == ATA_CMD_FPDMA_READ ||
-+	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
- 		/* Need to zero out the tag libata assigned us */
- 		qc->tf.nsect = 0;
- 	}
-@@ -548,7 +550,7 @@ static struct ata_port_operations sas_sata_ops = {
- 
- static struct ata_port_info sata_port_info = {
- 	.flags = ATA_FLAG_SATA | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ |
--		 ATA_FLAG_SAS_HOST,
-+		 ATA_FLAG_SAS_HOST | ATA_FLAG_FPDMA_AUX,
- 	.pio_mask = ATA_PIO4,
- 	.mwdma_mask = ATA_MWDMA2,
- 	.udma_mask = ATA_UDMA6,
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 83cd3ea..db37149 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -429,7 +429,9 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
- 
- 	if (qc) {
- 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+		    qc->tf.command == ATA_CMD_FPDMA_READ ||
-+		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
- 			*tag = qc->tag;
- 			return 1;
- 		}
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 949198c..62abd98 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -280,7 +280,9 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
- 	struct ata_queued_cmd *qc = task->uldd_task;
- 	if (qc) {
- 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+		    qc->tf.command == ATA_CMD_FPDMA_READ ||
-+		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
- 			*tag = qc->tag;
- 			return 1;
- 		}
+ static inline unsigned int ata_class_absent(unsigned int class)
 -- 
 1.8.5.6
 
