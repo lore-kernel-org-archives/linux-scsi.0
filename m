@@ -1,94 +1,109 @@
-From: Xiong Zhou <jencce.kernel@gmail.com>
-Subject: Re: [PATCH v4 1/2] scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
-Date: Tue, 12 Apr 2016 13:30:17 +0800
-Message-ID: <CADJHv_smja_k+AVn_ex1DubWDngCC3p7MbEk4arSo3O2LBoJmw@mail.gmail.com>
-References: <cover.1459848136.git.jthumshirn@suse.de>
-	<95ae7ee32dca23bb7f3ab432046fb7016b341049.1459848136.git.jthumshirn@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <95ae7ee32dca23bb7f3ab432046fb7016b341049.1459848136.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 02/14] libsas: enable FPDMA SEND/RECEIVE
+Date: Tue, 12 Apr 2016 08:47:46 +0200
+Message-ID: <1460443678-57934-3-git-send-email-hare@suse.de>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Update libsas and dependent drivers to handle FPDMA
+SEND/RECEIVE correctly.
 
-On Tue, Apr 5, 2016 at 5:50 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> Add intermediate STARGET_REMOVE state to scsi_target_state to avoid
-> running into the BUG_ON() in scsi_target_reap(). The STARGET_REMOVE
-> state is only valid in the path from scsi_remove_target() to
-> scsi_target_destroy() indicating this target is going to be removed.
->
-> This re-fixes the problem introduced in commits
-> bc3f02a795d3b4faa99d37390174be2a75d091bd  and
-> 40998193560dab6c3ce8d25f4fa58a23e252ef38 in a more comprehensive way.
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Fixes: 40998193560dab6c3ce8d25f4fa58a23e252ef38
-> Cc: stable@vger.kernel.org
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Reviewed-by: James Bottomley <jejb@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/scsi_scan.c   | 2 ++
->  drivers/scsi/scsi_sysfs.c  | 2 ++
->  include/scsi/scsi_device.h | 1 +
->  3 files changed, 5 insertions(+)
->
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 6a82066..63b8bca 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -315,6 +315,8 @@ static void scsi_target_destroy(struct scsi_target *starget)
->         struct Scsi_Host *shost = dev_to_shost(dev->parent);
->         unsigned long flags;
->
-> +       BUG_ON(starget->state != STARGET_REMOVE &&
-> +              starget->state != STARGET_CREATED);
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 ++
+ drivers/scsi/isci/request.c            | 4 +++-
+ drivers/scsi/libsas/sas_ata.c          | 6 ++++--
+ drivers/scsi/mvsas/mv_sas.c            | 4 +++-
+ drivers/scsi/pm8001/pm8001_sas.c       | 4 +++-
+ 5 files changed, 15 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index b733747..fc2e767 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1573,6 +1573,8 @@ static u8 get_ata_protocol(u8 cmd, int direction)
+ 	switch (cmd) {
+ 	case ATA_CMD_FPDMA_WRITE:
+ 	case ATA_CMD_FPDMA_READ:
++	case ATA_CMD_FPMDA_RECV:
++	case ATA_CMD_FPDMA_SEND:
+ 	return SATA_PROTOCOL_FPDMA;
+ 
+ 	case ATA_CMD_ID_ATA:
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index cfd0084..29456e0 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3169,7 +3169,9 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
+ 	status = sci_io_request_construct_basic_sata(ireq);
+ 
+ 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-		   qc->tf.command == ATA_CMD_FPDMA_READ)) {
++		   qc->tf.command == ATA_CMD_FPDMA_READ ||
++		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
+ 		fis->sector_count = qc->tag << 3;
+ 		ireq->tc->type.stp.ncq_tag = qc->tag;
+ 	}
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 9c706d8..fe1cd26 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -205,7 +205,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	task->task_done = sas_ata_task_done;
+ 
+ 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-	    qc->tf.command == ATA_CMD_FPDMA_READ) {
++	    qc->tf.command == ATA_CMD_FPDMA_READ ||
++	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 		/* Need to zero out the tag libata assigned us */
+ 		qc->tf.nsect = 0;
+ 	}
+@@ -548,7 +550,7 @@ static struct ata_port_operations sas_sata_ops = {
+ 
+ static struct ata_port_info sata_port_info = {
+ 	.flags = ATA_FLAG_SATA | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ |
+-		 ATA_FLAG_SAS_HOST,
++		 ATA_FLAG_SAS_HOST | ATA_FLAG_FPDMA_AUX,
+ 	.pio_mask = ATA_PIO4,
+ 	.mwdma_mask = ATA_MWDMA2,
+ 	.udma_mask = ATA_UDMA6,
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 83cd3ea..db37149 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -429,7 +429,9 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 
+ 	if (qc) {
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
++		    qc->tf.command == ATA_CMD_FPDMA_READ ||
++		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 949198c..62abd98 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -280,7 +280,9 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 	struct ata_queued_cmd *qc = task->uldd_task;
+ 	if (qc) {
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
++		    qc->tf.command == ATA_CMD_FPDMA_READ ||
++		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+-- 
+1.8.5.6
 
-#modprobe scsi_debug
-#modprobe -r scsi_debug
-
-always triggers this BUG_ON in linux-next-20160411
-
-printk says starget->state is _RUNNING
-
->         starget->state = STARGET_DEL;
->         transport_destroy_device(dev);
->         spin_lock_irqsave(shost->host_lock, flags);
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 00bc721..0df82e8 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1279,11 +1279,13 @@ restart:
->         spin_lock_irqsave(shost->host_lock, flags);
->         list_for_each_entry(starget, &shost->__targets, siblings) {
->                 if (starget->state == STARGET_DEL ||
-> +                   starget->state == STARGET_REMOVE ||
->                     starget == last_target)
->                         continue;
->                 if (starget->dev.parent == dev || &starget->dev == dev) {
->                         kref_get(&starget->reap_ref);
->                         last_target = starget;
-> +                       starget->state = STARGET_REMOVE;
->                         spin_unlock_irqrestore(shost->host_lock, flags);
->                         __scsi_remove_target(starget);
->                         scsi_target_reap(starget);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index f63a167..2bffaa6 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -240,6 +240,7 @@ scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
->  enum scsi_target_state {
->         STARGET_CREATED = 1,
->         STARGET_RUNNING,
-> +       STARGET_REMOVE,
->         STARGET_DEL,
->  };
->
-> --
-> 1.8.5.6
->
