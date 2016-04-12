@@ -1,283 +1,141 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 10/14] libata: implement ZBC IN translation
-Date: Tue, 12 Apr 2016 08:47:54 +0200
-Message-ID: <1460443678-57934-11-git-send-email-hare@suse.de>
+Subject: [PATCHv2 07/14] libata-trace: decode subcommands
+Date: Tue, 12 Apr 2016 08:47:51 +0200
+Message-ID: <1460443678-57934-8-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-ZAC drives implement a 'ZAC Management In' command template,
-which maps onto the ZBC IN command.
+Some commands like FPDMA RECEIVE or NCQ NON DATA can encapsulate
+other commands to NCQ transport. So decode the subcmds, too.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-eh.c       |   1 +
- drivers/ata/libata-scsi.c     | 157 ++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-trace.c    |  10 +++
- include/linux/ata.h           |   5 ++
- include/trace/events/libata.h |   1 +
- 5 files changed, 174 insertions(+)
+ drivers/ata/libata-trace.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/ata.h           | 17 +++++++++++++++++
+ include/trace/events/libata.h |  8 +++++++-
+ 3 files changed, 67 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index dfe8fdc..4932ce5 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2502,6 +2502,7 @@ const char *ata_get_cmd_descript(u8 command)
- 		{ ATA_CMD_CFA_WRITE_MULT_NE,	"CFA WRITE MULTIPLE WITHOUT ERASE" },
- 		{ ATA_CMD_REQ_SENSE_DATA,	"REQUEST SENSE DATA EXT" },
- 		{ ATA_CMD_SANITIZE_DEVICE,	"SANITIZE DEVICE" },
-+		{ ATA_CMD_ZAC_MGMT_IN,		"ZAC MANAGEMENT IN" },
- 		{ ATA_CMD_READ_LONG,		"READ LONG (with retries)" },
- 		{ ATA_CMD_READ_LONG_ONCE,	"READ LONG (without retries)" },
- 		{ ATA_CMD_WRITE_LONG,		"WRITE LONG (with retries)" },
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 6d78b4b..3e402a8 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3318,6 +3318,160 @@ invalid_opcode:
- }
- 
- /**
-+ *	ata_scsi_report_zones_complete - convert ATA output
-+ *	@qc: command structure returning the data
-+ *
-+ *	Convert T-13 little-endian field representation into
-+ *	T-10 big-endian field representation.
-+ *	What a mess.
-+ */
-+static void ata_scsi_report_zones_complete(struct ata_queued_cmd *qc)
-+{
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct sg_mapping_iter miter;
-+	unsigned long flags;
-+	unsigned int bytes = 0;
-+
-+	sg_miter_start(&miter, scsi_sglist(scmd), scsi_sg_count(scmd),
-+		       SG_MITER_TO_SG | SG_MITER_ATOMIC);
-+
-+	local_irq_save(flags);
-+	while (sg_miter_next(&miter)) {
-+		unsigned int offset = 0;
-+
-+		if (bytes == 0) {
-+			char *hdr;
-+			u32 list_length;
-+			u64 max_lba, opt_lba;
-+			u16 same;
-+
-+			/* Swizzle header */
-+			hdr = miter.addr;
-+			list_length = get_unaligned_le32(&hdr[0]);
-+			same = get_unaligned_le16(&hdr[4]);
-+			max_lba = get_unaligned_le64(&hdr[8]);
-+			opt_lba = get_unaligned_le64(&hdr[16]);
-+			put_unaligned_be32(list_length, &hdr[0]);
-+			hdr[4] = same & 0xf;
-+			put_unaligned_be64(max_lba, &hdr[8]);
-+			put_unaligned_be64(opt_lba, &hdr[16]);
-+			offset += 64;
-+			bytes += 64;
-+		}
-+		while (offset < miter.length) {
-+			char *rec;
-+			u8 cond, type, non_seq, reset;
-+			u64 size, start, wp;
-+
-+			/* Swizzle zone descriptor */
-+			rec = miter.addr + offset;
-+			type = rec[0] & 0xf;
-+			cond = (rec[1] >> 4) & 0xf;
-+			non_seq = (rec[1] & 2);
-+			reset = (rec[1] & 1);
-+			size = get_unaligned_le64(&rec[8]);
-+			start = get_unaligned_le64(&rec[16]);
-+			wp = get_unaligned_le64(&rec[24]);
-+			rec[0] = type;
-+			rec[1] = (cond << 4) | non_seq | reset;
-+			put_unaligned_be64(size, &rec[8]);
-+			put_unaligned_be64(start, &rec[16]);
-+			put_unaligned_be64(wp, &rec[24]);
-+			WARN_ON(offset + 64 > miter.length);
-+			offset += 64;
-+			bytes += 64;
-+		}
-+	}
-+	sg_miter_stop(&miter);
-+	local_irq_restore(flags);
-+
-+	ata_scsi_qc_complete(qc);
-+}
-+
-+static unsigned int ata_scsi_zbc_in_xlat(struct ata_queued_cmd *qc)
-+{
-+	struct ata_taskfile *tf = &qc->tf;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	const u8 *cdb = scmd->cmnd;
-+	u16 sect, fp = (u16)-1;
-+	u8 sa, options, bp = 0xff;
-+	u64 block;
-+	u32 n_block;
-+
-+	if (unlikely(scmd->cmd_len < 16)) {
-+		ata_dev_warn(qc->dev, "invalid cdb length %d\n",
-+			     scmd->cmd_len);
-+		fp = 15;
-+		goto invalid_fld;
-+	}
-+	scsi_16_lba_len(cdb, &block, &n_block);
-+	if (n_block != scsi_bufflen(scmd)) {
-+		ata_dev_warn(qc->dev, "non-matching transfer count (%d/%d)\n",
-+			     n_block, scsi_bufflen(scmd));
-+		goto invalid_param_len;
-+	}
-+	sa = cdb[1] & 0x1f;
-+	if (sa != ZI_REPORT_ZONES) {
-+		ata_dev_warn(qc->dev, "invalid service action %d\n", sa);
-+		fp = 1;
-+		goto invalid_fld;
-+	}
-+	/*
-+	 * ZAC allows only for transfers in 512 byte blocks,
-+	 * and uses a 16 bit value for the transfer count.
-+	 */
-+	if ((n_block / 512) > 0xffff || n_block < 512 || (n_block % 512)) {
-+		ata_dev_warn(qc->dev, "invalid transfer count %d\n", n_block);
-+		goto invalid_param_len;
-+	}
-+	sect = n_block / 512;
-+	options = cdb[14];
-+
-+	if (ata_ncq_enabled(qc->dev) &&
-+	    (qc->dev->flags & ATA_DFLAG_NCQ_SEND_RECV)) {
-+		tf->protocol = ATA_PROT_NCQ;
-+		tf->command = ATA_CMD_FPDMA_RECV;
-+		tf->hob_nsect = ATA_SUBCMD_FPDMA_RECV_ZAC_MGMT_IN & 0x1f;
-+		tf->nsect = qc->tag << 3;
-+		tf->feature = sect & 0xff;
-+		tf->hob_feature = (sect >> 8) & 0xff;
-+		tf->auxiliary = ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES;
-+	} else {
-+		tf->command = ATA_CMD_ZAC_MGMT_IN;
-+		tf->feature = ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES;
-+		tf->protocol = ATA_PROT_DMA;
-+		tf->hob_feature = options;
-+		tf->hob_nsect = (sect >> 8) & 0xff;
-+		tf->nsect = sect & 0xff;
-+	}
-+	tf->device = ATA_LBA;
-+	tf->lbah = (block >> 16) & 0xff;
-+	tf->lbam = (block >> 8) & 0xff;
-+	tf->lbal = block & 0xff;
-+	tf->hob_lbah = (block >> 40) & 0xff;
-+	tf->hob_lbam = (block >> 32) & 0xff;
-+	tf->hob_lbal = (block >> 24) & 0xff;
-+
-+	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
-+	qc->flags |= ATA_QCFLAG_RESULT_TF;
-+
-+	ata_qc_set_pc_nbytes(qc);
-+
-+	qc->complete_fn = ata_scsi_report_zones_complete;
-+
-+	return 0;
-+
-+invalid_fld:
-+	ata_scsi_set_invalid_field(qc->dev, scmd, fp, bp);
-+	return 1;
-+
-+invalid_param_len:
-+	/* "Parameter list length error" */
-+	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
-+	return 1;
-+}
-+
-+/**
-  *	ata_mselect_caching - Simulate MODE SELECT for caching info page
-  *	@qc: Storage for translated ATA taskfile
-  *	@buf: input buffer
-@@ -3632,6 +3786,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 		return ata_scsi_mode_select_xlat;
- 		break;
- 
-+	case ZBC_IN:
-+		return ata_scsi_zbc_in_xlat;
-+
- 	case START_STOP:
- 		return ata_scsi_start_stop_xlat;
- 	}
 diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
-index 99ec1e8..9caeabd 100644
+index fd30b8c..99ec1e8 100644
 --- a/drivers/ata/libata-trace.c
 +++ b/drivers/ata/libata-trace.c
-@@ -162,6 +162,9 @@ libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
- 		case ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT:
- 			trace_seq_printf(p, " READ_LOG_DMA_EXT");
- 			break;
-+		case ATA_SUBCMD_FPDMA_RECV_ZAC_MGMT_IN:
-+			trace_seq_printf(p, " ZAC_MGMT_IN");
-+			break;
- 		}
- 		break;
- 	case ATA_CMD_FPDMA_SEND:
-@@ -187,6 +190,13 @@ libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
- 			break;
- 		}
- 		break;
-+	case ATA_CMD_ZAC_MGMT_IN:
-+		switch (feature) {
-+		case ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES:
-+			trace_seq_printf(p, " REPORT_ZONES");
+@@ -149,3 +149,46 @@ libata_trace_parse_qc_flags(struct trace_seq *p, unsigned int qc_flags)
+ 
+ 	return ret;
+ }
++
++const char *
++libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
++			  unsigned char feature, unsigned char hob_nsect)
++{
++	const char *ret = trace_seq_buffer_ptr(p);
++
++	switch (cmd) {
++	case ATA_CMD_FPDMA_RECV:
++		switch (hob_nsect & 0x5f) {
++		case ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT:
++			trace_seq_printf(p, " READ_LOG_DMA_EXT");
 +			break;
 +		}
 +		break;
- 	}
- 	trace_seq_putc(p, 0);
- 
++	case ATA_CMD_FPDMA_SEND:
++		switch (hob_nsect & 0x5f) {
++		case ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT:
++			trace_seq_printf(p, " WRITE_LOG_DMA_EXT");
++			break;
++		case ATA_SUBCMD_FPDMA_SEND_DSM:
++			trace_seq_printf(p, " DATASET_MANAGEMENT");
++			break;
++		}
++		break;
++	case ATA_CMD_NCQ_NON_DATA:
++		switch (feature) {
++		case ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE:
++			trace_seq_printf(p, " ABORT_QUEUE");
++			break;
++		case ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES:
++			trace_seq_printf(p, " SET_FEATURES");
++			break;
++		case ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT:
++			trace_seq_printf(p, " ZERO_EXT");
++			break;
++		}
++		break;
++	}
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 032bb22..2f01ba9 100644
+index b5be5e8..032bb22 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -302,12 +302,14 @@ enum {
- 	ATA_CMD_CFA_WRITE_MULT_NE = 0xCD,
- 	ATA_CMD_REQ_SENSE_DATA  = 0x0B,
- 	ATA_CMD_SANITIZE_DEVICE = 0xB4,
-+	ATA_CMD_ZAC_MGMT_IN	= 0x4A,
- 
- 	/* marked obsolete in the ATA/ATAPI-7 spec */
- 	ATA_CMD_RESTORE		= 0x10,
- 
- 	/* Subcmds for ATA_CMD_FPDMA_RECV */
- 	ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT = 0x01,
-+	ATA_SUBCMD_FPDMA_RECV_ZAC_MGMT_IN    = 0x02,
- 
- 	/* Subcmds for ATA_CMD_FPDMA_SEND */
+@@ -313,6 +313,11 @@ enum {
  	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
-@@ -318,6 +320,9 @@ enum {
- 	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
- 	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
+ 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
  
-+	/* Subcmds for ATA_CMD_ZAC_MGMT_IN */
-+	ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES = 0x00,
++	/* Subcmds for ATA_CMD_NCQ_NON_DATA */
++	ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE  = 0x00,
++	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
++	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
 +
  	/* READ_LOG_EXT pages */
  	ATA_LOG_DIRECTORY	= 0x0,
  	ATA_LOG_SATA_NCQ	= 0x10,
+@@ -338,6 +343,18 @@ enum {
+ 	ATA_LOG_NCQ_SEND_RECV_WR_LOG_SUPPORTED  = (1 << 0),
+ 	ATA_LOG_NCQ_SEND_RECV_SIZE		= 0x10,
+ 
++	/* NCQ Non-Data log */
++	ATA_LOG_NCQ_NON_DATA_SUBCMDS_OFFSET	= 0x00,
++	ATA_LOG_NCQ_NON_DATA_ABORT_OFFSET	= 0x00,
++	ATA_LOG_NCQ_NON_DATA_ABORT_NCQ		= (1 << 0),
++	ATA_LOG_NCQ_NON_DATA_ABORT_ALL		= (1 << 1),
++	ATA_LOG_NCQ_NON_DATA_ABORT_STREAMING	= (1 << 2),
++	ATA_LOG_NCQ_NON_DATA_ABORT_NON_STREAMING = (1 << 3),
++	ATA_LOG_NCQ_NON_DATA_ABORT_SELECTED	= (1 << 4),
++	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OFFSET	= 0x1C,
++	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OUT	= (1 << 0),
++	ATA_LOG_NCQ_NON_DATA_SIZE		= 0x40,
++
+ 	/* READ/WRITE LONG (obsolete) */
+ 	ATA_CMD_READ_LONG	= 0x22,
+ 	ATA_CMD_READ_LONG_ONCE	= 0x23,
 diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index 318c04b..b966417 100644
+index 0168603..318c04b 100644
 --- a/include/trace/events/libata.h
 +++ b/include/trace/events/libata.h
-@@ -98,6 +98,7 @@
- 		 ata_opcode_name(ATA_CMD_CFA_WRITE_MULT_NE),	\
- 		 ata_opcode_name(ATA_CMD_REQ_SENSE_DATA),	\
- 		 ata_opcode_name(ATA_CMD_SANITIZE_DEVICE),	\
-+		 ata_opcode_name(ATA_CMD_ZAC_MGMT_IN),		\
- 		 ata_opcode_name(ATA_CMD_RESTORE),		\
- 		 ata_opcode_name(ATA_CMD_READ_LONG),		\
- 		 ata_opcode_name(ATA_CMD_READ_LONG_ONCE),	\
+@@ -140,6 +140,10 @@ const char *libata_trace_parse_eh_err_mask(struct trace_seq *, unsigned int);
+ const char *libata_trace_parse_qc_flags(struct trace_seq *, unsigned int);
+ #define __parse_qc_flags(f) libata_trace_parse_qc_flags(p, f)
+ 
++const char *libata_trace_parse_subcmd(struct trace_seq *, unsigned char,
++				      unsigned char, unsigned char);
++#define __parse_subcmd(c, f, h) libata_trace_parse_subcmd(p, c, f, h)
++
+ TRACE_EVENT(ata_qc_issue,
+ 
+ 	TP_PROTO(struct ata_queued_cmd *qc),
+@@ -186,11 +190,13 @@ TRACE_EVENT(ata_qc_issue,
+ 		__entry->hob_nsect	= qc->tf.hob_nsect;
+ 	),
+ 
+-	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s " \
++	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s%s " \
+ 		  " tf=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
+ 		  __entry->ata_port, __entry->ata_dev, __entry->tag,
+ 		  show_protocol_name(__entry->proto),
+ 		  show_opcode_name(__entry->cmd),
++		  __parse_subcmd(__entry->cmd, __entry->feature,
++				 __entry->hob_nsect),
+ 		  __entry->cmd, __entry->feature, __entry->nsect,
+ 		  __entry->lbal, __entry->lbam, __entry->lbah,
+ 		  __entry->hob_feature, __entry->hob_nsect,
 -- 
 1.8.5.6
 
