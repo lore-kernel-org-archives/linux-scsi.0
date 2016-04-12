@@ -1,39 +1,28 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] IB/iser: set max_segment_size
-Date: Tue, 12 Apr 2016 11:13:52 -0700
-Message-ID: <570D3AE0.4040104@sandisk.com>
-References: <1460470405-11673-1-git-send-email-hch@lst.de>
- <1460470405-11673-3-git-send-email-hch@lst.de> <570D156B.7010206@sandisk.com>
- <20160412165130.GB9568@lst.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] zfcp: Revert to original scanning behaviour
+Date: Tue, 12 Apr 2016 14:39:31 -0400
+Message-ID: <yq1bn5ezn6k.fsf@sermon.lab.mkp.net>
+References: <1460096094-126214-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160412165130.GB9568-jcswGhMUV9g@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39902 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932831AbcDLSjs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 14:39:48 -0400
+In-Reply-To: <1460096094-126214-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Fri, 8 Apr 2016 08:14:54 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 04/12/2016 09:51 AM, Christoph Hellwig wrote:
-> On Tue, Apr 12, 2016 at 08:34:03AM -0700, Bart Van Assche wrote:
->> ib_sg_to_pages() can handle segments that are larger than mr->page_size.
->
-> The interface handles it fine, but we'll still end up using a segment
-> per (MR) page.
->
->> Have you considered to set queue_limits.max_hw_sectors instead of
->> max_segment_size?
->
-> That's what NVMe does, but I don't think it's a good idea.  Because
-> of the unaligned start into the page this means you have to set the limit
-> to one lower than the actual hardware limit.
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-I think this means that there is a mismatch between the current block 
-layer limits and what NVMe / RDMA drivers need ...
+Hannes> zfcp has its own mechanism for selective scanning, so revert to
+Hannes> the original scanning behaviour to not confuse users.
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applied to 4.7/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
