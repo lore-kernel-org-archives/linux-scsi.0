@@ -1,61 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
-Date: Tue, 12 Apr 2016 12:25:46 +0200
-Message-ID: <570CCD2A.6000806@suse.de>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-4-git-send-email-hare@suse.de>
- <570CC7F6.1020607@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <570CC7F6.1020607@huawei.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v2 1/2] USB: uas: Limit qdepth at the scsi-host level
+Date: Tue, 12 Apr 2016 12:27:08 +0200
+Message-ID: <1460456829-20933-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60848 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932898AbcDLK1R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Apr 2016 06:27:17 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Gerd Hoffmann <kraxel@redhat.com>, David Webb <djw@noc.ac.uk>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-On 04/12/2016 12:03 PM, John Garry wrote:
-> On 12/04/2016 07:47, Hannes Reinecke wrote:
->> Define the NCQ NON DATA command and update libsas to handle it
->> correctly.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
->>   drivers/scsi/isci/request.c            | 3 ++-
->>   drivers/scsi/libsas/sas_ata.c          | 3 ++-
->>   drivers/scsi/mvsas/mv_sas.c            | 3 ++-
->>   drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
->>   include/linux/ata.h                    | 1 +
->>   include/trace/events/libata.h          | 1 +
->>   7 files changed, 11 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> index fc2e767..ebaf5ab 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> @@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int
->> direction)
->>       case ATA_CMD_FPDMA_READ:
->>       case ATA_CMD_FPMDA_RECV:
->>       case ATA_CMD_FPDMA_SEND:
->> +    case ATA_CMD_NCQ_NON_DATA:
->>       return SATA_PROTOCOL_FPDMA;
->>
->=20
-> I'm going to double-check this. It may correspond to
-> SATA_PROTOCOL_NONDATA, and not SATA_PROTOCOL_FPDMA.
->=20
-Thanks. The spec is not exactly clear in that regard...
+Commit 64d513ac31bd ("scsi: use host wide tags by default") causes
+the SCSI core to queue more commands then we can handle on devices with
+multiple LUNs, limit the queue depth at the scsi-host level instead of
+per slave to fix this.
 
-Cheers,
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1315013
+Cc: stable@vger.kernel.org # 4.4.x and 4.5.x
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+Changes in v2:
+-Fix some spelling issues in the commit message and in a comment
+---
+ drivers/usb/storage/uas.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 13e4cc3..b1ec749 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -824,7 +824,6 @@ static int uas_slave_configure(struct scsi_device *sdev)
+ 	if (devinfo->flags & US_FL_BROKEN_FUA)
+ 		sdev->broken_fua = 1;
+ 
+-	scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
+ 	return 0;
+ }
+ 
+@@ -956,6 +955,12 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	if (result)
+ 		goto set_alt0;
+ 
++	/*
++	 * 1 tag is reserved for untagged commands +
++	 * 1 tag to avoid off by one errors in some bridge firmwares
++	 */
++	shost->can_queue = devinfo->qdepth - 2;
++
+ 	usb_set_intfdata(intf, shost);
+ 	result = scsi_add_host(shost, &intf->dev);
+ 	if (result)
+-- 
+2.7.3
+
