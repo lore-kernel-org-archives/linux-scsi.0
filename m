@@ -1,24 +1,36 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: fix large I/O regression with iSER in 4.4+ V2
-Date: Tue, 12 Apr 2016 07:13:23 -0700
-Message-ID: <1460470405-11673-1-git-send-email-hch@lst.de>
+Subject: [PATCH 2/2] IB/iser: set max_segment_size
+Date: Tue, 12 Apr 2016 07:13:25 -0700
+Message-ID: <1460470405-11673-3-git-send-email-hch@lst.de>
+References: <1460470405-11673-1-git-send-email-hch@lst.de>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1460470405-11673-1-git-send-email-hch-jcswGhMUV9g@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Since iSER was converted to use the generic virt_boundary mechanism
-(which was called something else in 4.4), it didn't handle the case
-where a request is using up the full size of max_hw_segments, but
-not actually aligned to the virt boundary.  This series sets the
-maximum segment size limit to fix this workload (xfs_repair is a good
-reproducer, btw).
+So that we don't overflow the number of MR segments allocated because
+we have to split on SGL segment into multiple MR segments.
 
-Should probably go into 4.4 and 4.5-stable.
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ drivers/infiniband/ulp/iser/iscsi_iser.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Changes since V1:
- - use min_not_zero
- - use SIZE_4K instead of PAGE_SIZE in iser
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index 80b6bed..dc55950 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -623,6 +623,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
+ 	shost->max_id = 0;
+ 	shost->max_channel = 0;
+ 	shost->max_cmd_len = 16;
++	shost->max_segment_size = SIZE_4K;
+ 
+ 	/*
+ 	 * older userspace tools (before 2.0-870) did not pass us
+-- 
+2.1.4
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
