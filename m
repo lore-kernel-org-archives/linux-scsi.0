@@ -1,51 +1,74 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 2/2] IB/iser: set max_segment_size
-Date: Tue, 12 Apr 2016 08:34:03 -0700
-Message-ID: <570D156B.7010206@sandisk.com>
-References: <1460470405-11673-1-git-send-email-hch@lst.de>
- <1460470405-11673-3-git-send-email-hch@lst.de>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct
+ Scsi_Host
+Date: Tue, 12 Apr 2016 11:37:54 -0400 (EDT)
+Message-ID: <7048403.28486778.1460475474872.JavaMail.zimbra@redhat.com>
+References: <1460470405-11673-1-git-send-email-hch@lst.de> <1460470405-11673-2-git-send-email-hch@lst.de> <570D11F8.1080707@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0067.outbound.protection.outlook.com ([65.55.169.67]:52871
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965045AbcDLPeK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2016 11:34:10 -0400
-In-Reply-To: <1460470405-11673-3-git-send-email-hch@lst.de>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:39728 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965107AbcDLPh7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 11:37:59 -0400
+In-Reply-To: <570D11F8.1080707@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+
+Other than adding the patch and rebuilding the kernel and testing regular stuff, which I had to do anyway, that was the extent of testing.
+I did not see where it was used to be honest other than adding the structure member.
+I wanted to test the simple change because it was in scsi_lib.c which has many dependencies of course.
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+To: "Christoph Hellwig" <hch@lst.de>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+Sent: Tuesday, April 12, 2016 11:19:20 AM
+Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct Scsi_Host
 
 On 04/12/2016 07:13 AM, Christoph Hellwig wrote:
-> So that we don't overflow the number of MR segments allocated because
-> we have to split on SGL segment into multiple MR segments.
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 8106515..ad79372 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2120,7 +2120,8 @@ static void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+>   	blk_queue_segment_boundary(q, shost->dma_boundary);
+>   	dma_set_seg_boundary(dev, shost->dma_boundary);
 >
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/infiniband/ulp/iser/iscsi_iser.c | 1 +
->   1 file changed, 1 insertion(+)
+> -	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+> +	blk_queue_max_segment_size(q, min_not_zero(shost->max_segment_size,
+> +						   dma_get_max_seg_size(dev)));
 >
-> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> index 80b6bed..dc55950 100644
-> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> @@ -623,6 +623,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
->   	shost->max_id = 0;
->   	shost->max_channel = 0;
->   	shost->max_cmd_len = 16;
-> +	shost->max_segment_size = SIZE_4K;
->
+>   	if (!shost->use_clustering)
+>   		q->limits.cluster = 0;
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index fcfa3d7..f11d3fe 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -621,6 +621,7 @@ struct Scsi_Host {
+>   	short unsigned int sg_tablesize;
+>   	short unsigned int sg_prot_tablesize;
+>   	unsigned int max_sectors;
+> +	unsigned int max_segment_size;
+>   	unsigned long dma_boundary;
 >   	/*
->   	 * older userspace tools (before 2.0-870) did not pass us
+>   	 * In scsi-mq mode, the number of hardware queues supported by the LLD.
 
 Hello Christoph,
 
-ib_sg_to_pages() can handle segments that are larger than mr->page_size. 
-Have you considered to set queue_limits.max_hw_sectors instead of 
-max_segment_size?
+The value zero has another meaning for Scsi_Host.max_segment_size than 
+for queue_limits.max_segment_size. Shouldn't that be documented somewhere?
 
 Thanks,
 
 Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
