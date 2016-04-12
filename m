@@ -1,47 +1,63 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 09/14] libata: fixup ZAC device disabling
-Date: Tue, 12 Apr 2016 08:47:53 +0200
-Message-ID: <1460443678-57934-10-git-send-email-hare@suse.de>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 00/14] ZAC support
+Date: Tue, 12 Apr 2016 08:47:44 +0200
+Message-ID: <1460443678-57934-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-libata device disabling is ... curious. So add the correct
-definitions that we can disable ZAC devices properly.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- include/linux/libata.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+here's a patchset implementing ZAC support for libata.
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 09ddb5a..92297cd 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -192,7 +192,8 @@ enum {
- 	ATA_DEV_SEMB		= 7,	/* SEMB */
- 	ATA_DEV_SEMB_UNSUP	= 8,	/* SEMB (unsupported) */
- 	ATA_DEV_ZAC		= 9,	/* ZAC device */
--	ATA_DEV_NONE		= 10,	/* no device */
-+	ATA_DEV_ZAC_UNSUP	= 10,	/* ZAC device (unsupported) */
-+	ATA_DEV_NONE		= 11,	/* no device */
- 
- 	/* struct ata_link flags */
- 	ATA_LFLAG_NO_HRST	= (1 << 1), /* avoid hardreset */
-@@ -1524,7 +1525,8 @@ static inline unsigned int ata_class_enabled(unsigned int class)
- static inline unsigned int ata_class_disabled(unsigned int class)
- {
- 	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP ||
--		class == ATA_DEV_PMP_UNSUP || class == ATA_DEV_SEMB_UNSUP;
-+		class == ATA_DEV_PMP_UNSUP || class == ATA_DEV_SEMB_UNSUP ||
-+		class == ATA_DEV_ZAC_UNSUP;
- }
- 
- static inline unsigned int ata_class_absent(unsigned int class)
+This is the second part of a larger patchset for ZAC/ZBC support;
+it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue and
+the patchset 'libata: SATL update' I've posted earlier.
+The full patchset can be found at:
+
+git.kernel.org/hare/scsi-devel/h/zbc.v5
+
+As usual, comments and reviews are welcome.
+
+Changes to v1:
+- Include reviews from upstream
+- Add NCQ encapsulation for ZAC MANAGEMENT commands
+- Update libata-trace to decode ZAC MANAGEMENT commands
+- Minor fixes accumulated during testing
+
+Hannes Reinecke (14):
+  libata: do not attempt to retrieve sense code twice
+  libsas: enable FPDMA SEND/RECEIVE
+  libsas: Define ATA_CMD_NCQ_NON_DATA
+  libata: Separate out ata_dev_config_ncq_send_recv()
+  libata: NCQ Encapsulation for READ LOG DMA EXT
+  libata: Check log page directory before accessing pages
+  libata-trace: decode subcommands
+  libata-scsi: Generate sense code for disabled devices
+  libata: fixup ZAC device disabling
+  libata: implement ZBC IN translation
+  libata: Implement ZBC OUT translation
+  libata: NCQ encapsulation for ZAC MANAGEMENT OUT
+  libata: support device-managed ZAC devices
+  libata: support host-aware and host-managed ZAC devices
+
+ drivers/ata/libata-core.c              | 172 ++++++++++++++++---
+ drivers/ata/libata-eh.c                |  36 +++-
+ drivers/ata/libata-scsi.c              | 295 +++++++++++++++++++++++++++++++--
+ drivers/ata/libata-trace.c             |  72 ++++++++
+ drivers/ata/libata.h                   |   5 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +
+ drivers/scsi/isci/request.c            |   5 +-
+ drivers/scsi/libsas/sas_ata.c          |   7 +-
+ drivers/scsi/mvsas/mv_sas.c            |   5 +-
+ drivers/scsi/pm8001/pm8001_sas.c       |   5 +-
+ include/linux/ata.h                    |  49 ++++++
+ include/linux/libata.h                 |  27 ++-
+ include/trace/events/libata.h          |  11 +-
+ 13 files changed, 642 insertions(+), 50 deletions(-)
+
 -- 
 1.8.5.6
 
