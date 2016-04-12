@@ -1,53 +1,50 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [Lsf] [LSF/MM TOPIC] block-mq issues with FC
-Date: Tue, 12 Apr 2016 19:04:51 +0000
-Message-ID: <CE169C05-ECDB-4EDD-9E98-BF728F489868@qlogic.com>
+Date: Tue, 12 Apr 2016 13:16:21 -0600
+Message-ID: <570D4985.9020108@kernel.dk>
 References: <57079616.4000202@suse.de> <20160408174006.GI2781@linux.intel.com>
- <570AA32E.8070709@grimberg.me>
+ <20160408180621.GA6110@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0109.outbound.protection.outlook.com ([207.46.100.109]:3424
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964907AbcDLTEy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2016 15:04:54 -0400
-In-Reply-To: <570AA32E.8070709@grimberg.me>
-Content-Language: en-US
-Content-ID: <B75FE951CA76E64A8D5F5BC342F121C1@namprd11.prod.outlook.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:34093 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933021AbcDLTQY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 15:16:24 -0400
+Received: by mail-ig0-f176.google.com with SMTP id gy3so115797982igb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2016 12:16:24 -0700 (PDT)
+In-Reply-To: <20160408180621.GA6110@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>, Matthew Wilcox <willy@linux.intel.com>, Hannes Reinecke <hare@suse.de>
-Cc: "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Keith Busch <keith.busch@intel.com>, Matthew Wilcox <willy@linux.intel.com>
+Cc: Hannes Reinecke <hare@suse.de>, lsf@lists.linux-foundation.org, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-DQo+SGV5IFdpbGx5LA0KPg0KPj4gICAtIEludGVycnVwdCBzdGVlcmluZyBuZWVkcyB0byBiZSBj
-b250cm9sbGVkIGJ5IGJsb2NrLW1xIGluc3RlYWQgb2YNCj4+ICAgICB0aGUgZHJpdmVyLiAgSXQn
-cyBwb2ludGxlc3MgdG8gaGF2ZSBlYWNoIGRyaXZlciBpbXBsZW1lbnQgaXRzIG93bg0KPj4gICAg
-IHBvbGljaWVzIG9uIGludGVycnVwdCBzdGVlcmluZywgaXJxYmFsYW5jZWQgcmVtYWlucyBhIHNv
-dXJjZSBvZg0KPj4gICAgIGVuZC11c2VyIGZydXN0cmF0aW9uLCBhbmQgYmxvY2stbXEgY2FuIGNo
-YW5nZSB0aGUgcXVldWU8LT5jcHUgbWFwcGluZw0KPj4gICAgIHdpdGhvdXQgdGhlIGRyaXZlcidz
-IGtub3dsZWRnZS4NCj4NCj5JIGhvbmVzdGx5IGRvbid0IHRoaW5rIHRoYXQgYmxvY2stbXEgaXMg
-dGhlIHJpZ2h0IHBsYWNlIHRvDQo+KmFzc2lnbiogaW50ZXJydXB0IHN0ZWVyaW5nLiBOb3QgYWxs
-IEhXIGRldmljZXMgYXJlIGRlZGljYXRlZA0KPnRvIHN0b3JhZ2UsIHRha2UgUkRNQSBmb3IgZXhh
-bXBsZSwgYSBSTklDIGlzIHNoYXJlZCBieSBibG9jaw0KPnN0b3JhZ2UsIG5ldHdvcmtpbmcgYW5k
-IGV2ZW4gdXNlci1zcGFjZSB3b3JrbG9hZHMgc28gb2J2aW91c2x5DQo+YmxvY2stbXEgY2FuJ3Qg
-dW5kZXJzdGFuZCBob3cgYSB1c2VyIHdhbnRzIHRvIHN0ZWVyIGludGVycnVwdHMuDQo+DQo+SSB0
-aGluayB0aGF0IGJsb2NrLW1xIG5lZWRzIHRvIGFzayB0aGUgZGV2aWNlIGRyaXZlcjoNCj4id2hh
-dCBpcyB0aGUgb3B0aW1hbCBxdWV1ZSBpbmRleCBmb3IgY3B1IFg/IiBhbmQgdXNlIGl0DQo+d2hp
-bGUgKnNvbWVvbmUqIHdpbGwgYmUgcmVzcG9uc2libGUgZm9yIG9wdGltdW0gaW50ZXJydXB0DQo+
-c3RlZXJpbmcgKGNhbiBiZSB0aGUgZHJpdmVyIGl0c2VsZiBvciB1c2VyLXNwYWNlKS4NCg0KKzAu
-NSBvbiBibG9jay1tcSBhc2tpbmcgbG93ZXIgbGF5ZXIgb24gd2hlcmUgdG8gcGxhY2UgdGhlIHF1
-ZXVlLiAgSG93ZXZlciwgSSB0aGluayBpdCBpcyBiZXR0ZXIgdGhhdCB0aGUgbG93ZXIgbGF5ZXIg
-cHVzaCB1cCB0aGUgZGF0YSByYXRoZXIgdGhlIGJsb2NrLW1xIGFza2luZyBmb3IgaXQuICBVc2Vy
-IGNhbiBjaGFuZ2Ugb3IgaXJxYmFsYW5jZSBjYW4gcmVsb2NhdGUgdGhlIGludGVycnVwdCB2ZWN0
-b3IocykgZHVyaW5nIHJ1bnRpbWUuICANCg0KRm9yIFFsb2dpYyBhZGFwdGVyLCBpdCBjYW4gYWN0
-IGluIGJvdGggSW5pdGlhdG9yICYgVGFyZ2V0IE1vZGVzIGF0IHRoZSBzYW1lIHRpbWUuICBDZXJ0
-YWluIHRhcmdldCB2ZW5kb3IgbWlnaHQgbm90IHdhbnRzIHRoZSBpbml0aWF0b3Igc2lkZSB0byBo
-b2xkaW5nIHRoaXMga25vYi4NCg0KDQoNCg0KPg0KPiBGcm9tIHNvbWUgZGlzY3Vzc2lvbnMgSSBo
-YWQgd2l0aCBIQ0ggSSB0aGluayBoZSBpbnRlbmRzIHRvDQo+dXNlIHRoZSBjcHUgcmV2ZXJzZS1t
-YXBwaW5nIEFQSSB0byB0cnkgYW5kIGRvIHdoYXQncyBkZXNjcmliZWQNCj5hYm92ZSAoaWYgSSdt
-IG5vdCBtaXN0YWtlbikuDQoNCj5fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXw0KPkxzZiBtYWlsaW5nIGxpc3QNCj5Mc2ZAbGlzdHMubGludXgtZm91bmRhdGlv
-bi5vcmcNCj5odHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5m
-by9sc2YNCg==
+On 04/08/2016 12:06 PM, Keith Busch wrote:
+> On Fri, Apr 08, 2016 at 01:40:06PM -0400, Matthew Wilcox wrote:
+>>   - Inability to use all queues supported by a device.  Intel's P3700
+>>     supports 31 queues, but block-mq insists on assigning an even multiple
+>>     of CPUs to each queue.  So if you have 48 CPUs, it will use 24 queues.
+>>     If you have 128 CPUs, it will only use 16 of the queues.
+>
+> While it'd be better to use all the available h/w resources, that's
+> actually not the worst part.
+>
+> The real problems occur when there are more physical/unique CPUs than
+> h/w queues since blk-mq does not consider CPU topology beyond thread
+> siblings. With 128 CPUs, blk-mq may use all 31 queues P3700 supports,
+> but many CPU groups won't share a last-level-cache.
+>
+> Smarter assignment would reclaim some untapped performance, and we can
+> share such code prior to the session.
+
+There's definitely room for improvement in the cpu mapping code.
+
+However, on the original complaint, it's by design (or, working as 
+intended) - this was done to keep the layout symmetrical. It's been 
+discussed on the mailing lists before. We can have a discussion whether 
+we should change this or not, of course.
+
+-- 
+Jens Axboe
+
