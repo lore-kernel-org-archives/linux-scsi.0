@@ -1,87 +1,45 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 04/14] libata: Separate out ata_dev_config_ncq_send_recv()
-Date: Tue, 12 Apr 2016 08:47:48 +0200
-Message-ID: <1460443678-57934-5-git-send-email-hare@suse.de>
+Subject: [PATCHv2 08/14] libata-scsi: Generate sense code for disabled devices
+Date: Tue, 12 Apr 2016 08:47:52 +0200
+Message-ID: <1460443678-57934-9-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59592 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755604AbcDLGsQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Apr 2016 02:48:16 -0400
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Move NCQ SEND/RECEIVE checks into a separate function.
+If a device is disabled after error recovery it doesn't make
+any sense to generate an ATA sense, but we should rather
+return a generic sense code indicating the device is gone.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-core.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+ drivers/ata/libata-scsi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7bdb2c4..fa74b57 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2079,6 +2079,31 @@ static inline u8 ata_dev_knobble(struct ata_device *dev)
- 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
- }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 8b61d63..6d78b4b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1126,6 +1126,12 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
  
-+static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	unsigned int err_mask;
-+
-+	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
-+				     0, ap->sector_buf, 1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
-+			    err_mask);
-+	} else {
-+		u8 *cmds = dev->ncq_send_recv_cmds;
-+
-+		dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
-+		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
-+
-+		if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
-+			ata_dev_dbg(dev, "disabling queued TRIM support\n");
-+			cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
-+				~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
-+		}
+ 	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
+ 
++	if (ata_dev_disabled(dev)) {
++		/* Device disabled after error recovery */
++		/* LOGICAL UNIT NOT READY, HARD RESET REQUIRED */
++		ata_scsi_set_sense(dev, cmd, NOT_READY, 0x04, 0x21);
++		return;
 +	}
-+}
-+
- static int ata_dev_config_ncq(struct ata_device *dev,
- 			       char *desc, size_t desc_sz)
- {
-@@ -2124,26 +2149,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 			ddepth, aa_desc);
- 
- 	if ((ap->flags & ATA_FLAG_FPDMA_AUX) &&
--	    ata_id_has_ncq_send_and_recv(dev->id)) {
--		err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
--					     0, ap->sector_buf, 1);
--		if (err_mask) {
--			ata_dev_dbg(dev,
--				    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
--				    err_mask);
--		} else {
--			u8 *cmds = dev->ncq_send_recv_cmds;
--
--			dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
--			memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
--
--			if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
--				ata_dev_dbg(dev, "disabling queued TRIM support\n");
--				cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
--					~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
--			}
--		}
--	}
-+	    ata_id_has_ncq_send_and_recv(dev->id))
-+		ata_dev_config_ncq_send_recv(dev);
- 
- 	return 0;
- }
+ 	/* Use ata_to_sense_error() to map status register bits
+ 	 * onto sense key, asc & ascq.
+ 	 */
 -- 
 1.8.5.6
 
