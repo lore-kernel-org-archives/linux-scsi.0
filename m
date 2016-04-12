@@ -1,49 +1,121 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 01/14] libata: do not attempt to retrieve sense code twice
-Date: Tue, 12 Apr 2016 08:47:45 +0200
-Message-ID: <1460443678-57934-2-git-send-email-hare@suse.de>
+Subject: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
+Date: Tue, 12 Apr 2016 08:47:47 +0200
+Message-ID: <1460443678-57934-4-git-send-email-hare@suse.de>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59630 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754609AbcDLGsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2016 02:48:18 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Do not call ata_request_sense() if the sense code is already
-present.
+Define the NCQ NON DATA command and update libsas to handle it
+correctly.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-eh.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
+ drivers/scsi/isci/request.c            | 3 ++-
+ drivers/scsi/libsas/sas_ata.c          | 3 ++-
+ drivers/scsi/mvsas/mv_sas.c            | 3 ++-
+ drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
+ include/linux/ata.h                    | 1 +
+ include/trace/events/libata.h          | 1 +
+ 7 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5b340ce..e816619 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1660,7 +1660,7 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc,
- 		return;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index fc2e767..ebaf5ab 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int direction)
+ 	case ATA_CMD_FPDMA_READ:
+ 	case ATA_CMD_FPMDA_RECV:
+ 	case ATA_CMD_FPDMA_SEND:
++	case ATA_CMD_NCQ_NON_DATA:
+ 	return SATA_PROTOCOL_FPDMA;
+ 
+ 	case ATA_CMD_ID_ATA:
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 29456e0..b709d2b 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3171,7 +3171,8 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
+ 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+ 		   qc->tf.command == ATA_CMD_FPDMA_READ ||
+ 		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
+-		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
++		   qc->tf.command == ATA_CMD_FPDMA_SEND ||
++		   qc->tf.command == ATA_CMD_NCQ_NON_DATA)) {
+ 		fis->sector_count = qc->tag << 3;
+ 		ireq->tc->type.stp.ncq_tag = qc->tag;
  	}
- 
--	if (!cmd)
-+	if (!cmd || qc->flags & ATA_QCFLAG_SENSE_VALID)
- 		return;
- 
- 	if (!ata_id_sense_reporting_enabled(dev->id)) {
-@@ -1849,7 +1849,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 	memcpy(&qc->result_tf, &tf, sizeof(tf));
- 	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
- 	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
--	if (qc->result_tf.auxiliary) {
-+	if ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary) {
- 		char sense_key, asc, ascq;
- 
- 		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index fe1cd26..935c430 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -207,7 +207,8 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+ 	    qc->tf.command == ATA_CMD_FPDMA_READ ||
+ 	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
+-	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
++	    qc->tf.command == ATA_CMD_FPDMA_SEND ||
++	    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
+ 		/* Need to zero out the tag libata assigned us */
+ 		qc->tf.nsect = 0;
+ 	}
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index db37149..5b9fcff 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -431,7 +431,8 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+ 		    qc->tf.command == ATA_CMD_FPDMA_READ ||
+ 		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
+-		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
++		    qc->tf.command == ATA_CMD_FPDMA_SEND ||
++		    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 62abd98..dc33dfa 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -282,7 +282,8 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+ 		    qc->tf.command == ATA_CMD_FPDMA_READ ||
+ 		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
+-		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
++		    qc->tf.command == ATA_CMD_FPDMA_SEND ||
++		    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 00aebc4..b84210a 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -243,6 +243,7 @@ enum {
+ 	ATA_CMD_WRITE_QUEUED_FUA_EXT = 0x3E,
+ 	ATA_CMD_FPDMA_READ	= 0x60,
+ 	ATA_CMD_FPDMA_WRITE	= 0x61,
++	ATA_CMD_NCQ_NON_DATA	= 0x63,
+ 	ATA_CMD_FPDMA_SEND	= 0x64,
+ 	ATA_CMD_FPDMA_RECV	= 0x65,
+ 	ATA_CMD_PIO_READ	= 0x20,
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+index 8b0fbd9..0168603 100644
+--- a/include/trace/events/libata.h
++++ b/include/trace/events/libata.h
+@@ -39,6 +39,7 @@
+ 		 ata_opcode_name(ATA_CMD_WRITE_QUEUED_FUA_EXT), \
+ 		 ata_opcode_name(ATA_CMD_FPDMA_READ),		\
+ 		 ata_opcode_name(ATA_CMD_FPDMA_WRITE),		\
++		 ata_opcode_name(ATA_CMD_NCQ_NON_DATA),		\
+ 		 ata_opcode_name(ATA_CMD_FPDMA_SEND),		\
+ 		 ata_opcode_name(ATA_CMD_FPDMA_RECV),		\
+ 		 ata_opcode_name(ATA_CMD_PIO_READ),		\
 -- 
 1.8.5.6
 
