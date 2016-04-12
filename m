@@ -1,63 +1,87 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 00/14] ZAC support
-Date: Tue, 12 Apr 2016 08:47:44 +0200
-Message-ID: <1460443678-57934-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 04/14] libata: Separate out ata_dev_config_ncq_send_recv()
+Date: Tue, 12 Apr 2016 08:47:48 +0200
+Message-ID: <1460443678-57934-5-git-send-email-hare@suse.de>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+Move NCQ SEND/RECEIVE checks into a separate function.
 
-here's a patchset implementing ZAC support for libata.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/ata/libata-core.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
-This is the second part of a larger patchset for ZAC/ZBC support;
-it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue and
-the patchset 'libata: SATL update' I've posted earlier.
-The full patchset can be found at:
-
-git.kernel.org/hare/scsi-devel/h/zbc.v5
-
-As usual, comments and reviews are welcome.
-
-Changes to v1:
-- Include reviews from upstream
-- Add NCQ encapsulation for ZAC MANAGEMENT commands
-- Update libata-trace to decode ZAC MANAGEMENT commands
-- Minor fixes accumulated during testing
-
-Hannes Reinecke (14):
-  libata: do not attempt to retrieve sense code twice
-  libsas: enable FPDMA SEND/RECEIVE
-  libsas: Define ATA_CMD_NCQ_NON_DATA
-  libata: Separate out ata_dev_config_ncq_send_recv()
-  libata: NCQ Encapsulation for READ LOG DMA EXT
-  libata: Check log page directory before accessing pages
-  libata-trace: decode subcommands
-  libata-scsi: Generate sense code for disabled devices
-  libata: fixup ZAC device disabling
-  libata: implement ZBC IN translation
-  libata: Implement ZBC OUT translation
-  libata: NCQ encapsulation for ZAC MANAGEMENT OUT
-  libata: support device-managed ZAC devices
-  libata: support host-aware and host-managed ZAC devices
-
- drivers/ata/libata-core.c              | 172 ++++++++++++++++---
- drivers/ata/libata-eh.c                |  36 +++-
- drivers/ata/libata-scsi.c              | 295 +++++++++++++++++++++++++++++++--
- drivers/ata/libata-trace.c             |  72 ++++++++
- drivers/ata/libata.h                   |   5 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +
- drivers/scsi/isci/request.c            |   5 +-
- drivers/scsi/libsas/sas_ata.c          |   7 +-
- drivers/scsi/mvsas/mv_sas.c            |   5 +-
- drivers/scsi/pm8001/pm8001_sas.c       |   5 +-
- include/linux/ata.h                    |  49 ++++++
- include/linux/libata.h                 |  27 ++-
- include/trace/events/libata.h          |  11 +-
- 13 files changed, 642 insertions(+), 50 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 7bdb2c4..fa74b57 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2079,6 +2079,31 @@ static inline u8 ata_dev_knobble(struct ata_device *dev)
+ 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
+ }
+ 
++static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
++{
++	struct ata_port *ap = dev->link->ap;
++	unsigned int err_mask;
++
++	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
++				     0, ap->sector_buf, 1);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
++			    err_mask);
++	} else {
++		u8 *cmds = dev->ncq_send_recv_cmds;
++
++		dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
++		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
++
++		if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
++			ata_dev_dbg(dev, "disabling queued TRIM support\n");
++			cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
++				~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
++		}
++	}
++}
++
+ static int ata_dev_config_ncq(struct ata_device *dev,
+ 			       char *desc, size_t desc_sz)
+ {
+@@ -2124,26 +2149,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 			ddepth, aa_desc);
+ 
+ 	if ((ap->flags & ATA_FLAG_FPDMA_AUX) &&
+-	    ata_id_has_ncq_send_and_recv(dev->id)) {
+-		err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
+-					     0, ap->sector_buf, 1);
+-		if (err_mask) {
+-			ata_dev_dbg(dev,
+-				    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
+-				    err_mask);
+-		} else {
+-			u8 *cmds = dev->ncq_send_recv_cmds;
+-
+-			dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
+-			memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
+-
+-			if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
+-				ata_dev_dbg(dev, "disabling queued TRIM support\n");
+-				cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
+-					~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
+-			}
+-		}
+-	}
++	    ata_id_has_ncq_send_and_recv(dev->id))
++		ata_dev_config_ncq_send_recv(dev);
+ 
+ 	return 0;
+ }
 -- 
 1.8.5.6
 
