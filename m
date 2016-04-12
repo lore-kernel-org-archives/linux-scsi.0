@@ -1,29 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: add Synology DSM 6.0 and higher to 1024 sector blacklist
-Date: Mon, 11 Apr 2016 22:20:05 -0400
-Message-ID: <yq1oa9fzhyi.fsf@sermon.lab.mkp.net>
-References: <20160114003437.354D28EE1D4@bedivere.hansenpartnership.com>
-	<570B63B8.6080104@tcnnet.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v3 4/5] scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
+Date: Mon, 11 Apr 2016 19:43:26 -0700
+Message-ID: <570C60CE.6000306@sandisk.com>
+References: <1459806491-16428-1-git-send-email-mlin@kernel.org>
+ <1459806491-16428-5-git-send-email-mlin@kernel.org>
+ <20160405145555.GE7822@mtj.duckdns.org>
+ <CAF1ivSZSerbCO0MdELaTLbNUWMbeGBBv32-YO3sjHJZJYMQzrQ@mail.gmail.com>
+ <yq1r3eb25jd.fsf@sermon.lab.mkp.net>
+ <CAF1ivSYPbp_W68JS5CQwyLsTf1=oYa8yRZdbSAPp3LGrN5dq+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19875 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561AbcDLCUS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2016 22:20:18 -0400
-In-Reply-To: <570B63B8.6080104@tcnnet.com> (Michel Meyers's message of "Mon,
-	11 Apr 2016 10:43:36 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSYPbp_W68JS5CQwyLsTf1=oYa8yRZdbSAPp3LGrN5dq+A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, sagi@grimberg.me
 List-Id: linux-scsi@vger.kernel.org
-To: Michel Meyers <steltek@tcnnet.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>
 
->>>>> "Michel" == Michel Meyers <steltek@tcnnet.com> writes:
+On 04/11/16 15:04, Ming Lin wrote:
+> On Mon, Apr 11, 2016 at 2:34 PM, Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>>>>>>> "Ming" == Ming Lin <mlin@kernel.org> writes:
+>>
+>> Ming> Are we ready to merge it?
+>>
+>> We're still missing an ack from Sagi.
+>
+> Thought we already had a ack from Bart.
+> OK, let's get one more from Sagi.
 
-Michel> SYNOLOGY iSCSI devices do not work with large I/O and SYNOLOGY
-Michel> changed the identifier of the devices
+Hmm ... this patch doesn't touch any code for which Sagi is the 
+maintainer so I think my ack for the ib_srp changes is sufficient.
 
-Shouldn't we just quirk SYNOLOGY, then?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
