@@ -1,36 +1,136 @@
-From: Michel Meyers <steltek@tcnnet.com>
-Subject: Re: [PATCH 1/1] scsi: add Synology DSM 6.0 and higher to 1024 sector
- blacklist
-Date: Tue, 12 Apr 2016 10:28:56 +0200
-Message-ID: <570CB1C8.5050106@tcnnet.com>
-References: <20160114003437.354D28EE1D4@bedivere.hansenpartnership.com>
- <570B63B8.6080104@tcnnet.com> <yq1oa9fzhyi.fsf@sermon.lab.mkp.net>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
+Date: Tue, 12 Apr 2016 11:03:34 +0100
+Message-ID: <570CC7F6.1020607@huawei.com>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+ <1460443678-57934-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smail.vo.lu ([80.90.45.96]:64914 "EHLO smail.vo.lu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932167AbcDLI3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2016 04:29:25 -0400
-In-Reply-To: <yq1oa9fzhyi.fsf@sermon.lab.mkp.net>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:43848 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756295AbcDLKEC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 06:04:02 -0400
+In-Reply-To: <1460443678-57934-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>
+To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 2016-04-12 4:20, Martin K. Petersen wrote:
->>>>>> "Michel" == Michel Meyers <steltek@tcnnet.com> writes:
-> 
-> Michel> SYNOLOGY iSCSI devices do not work with large I/O and SYNOLOGY
-> Michel> changed the identifier of the devices
-> 
-> Shouldn't we just quirk SYNOLOGY, then?
+On 12/04/2016 07:47, Hannes Reinecke wrote:
+> Define the NCQ NON DATA command and update libsas to handle it
+> correctly.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
+>   drivers/scsi/isci/request.c            | 3 ++-
+>   drivers/scsi/libsas/sas_ata.c          | 3 ++-
+>   drivers/scsi/mvsas/mv_sas.c            | 3 ++-
+>   drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
+>   include/linux/ata.h                    | 1 +
+>   include/trace/events/libata.h          | 1 +
+>   7 files changed, 11 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> index fc2e767..ebaf5ab 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> @@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int direction)
+>   	case ATA_CMD_FPDMA_READ:
+>   	case ATA_CMD_FPMDA_RECV:
+>   	case ATA_CMD_FPDMA_SEND:
+> +	case ATA_CMD_NCQ_NON_DATA:
+>   	return SATA_PROTOCOL_FPDMA;
+>
 
-Could be worth it. As far as I can see, they manufacture no directly
-attached drives (only NAS devices, which I presume are all affected by
-the same problem as mine).
+I'm going to double-check this. It may correspond to 
+SATA_PROTOCOL_NONDATA, and not SATA_PROTOCOL_FPDMA.
 
---
-Michel Meyers
+Cheers,
+
+>   	case ATA_CMD_ID_ATA:
+> diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+> index 29456e0..b709d2b 100644
+> --- a/drivers/scsi/isci/request.c
+> +++ b/drivers/scsi/isci/request.c
+> @@ -3171,7 +3171,8 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
+>   	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+>   		   qc->tf.command == ATA_CMD_FPDMA_READ ||
+>   		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
+> -		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
+> +		   qc->tf.command == ATA_CMD_FPDMA_SEND ||
+> +		   qc->tf.command == ATA_CMD_NCQ_NON_DATA)) {
+>   		fis->sector_count = qc->tag << 3;
+>   		ireq->tc->type.stp.ncq_tag = qc->tag;
+>   	}
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index fe1cd26..935c430 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -207,7 +207,8 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+>   	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+>   	    qc->tf.command == ATA_CMD_FPDMA_READ ||
+>   	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
+> -	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+> +	    qc->tf.command == ATA_CMD_FPDMA_SEND ||
+> +	    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
+>   		/* Need to zero out the tag libata assigned us */
+>   		qc->tf.nsect = 0;
+>   	}
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+> index db37149..5b9fcff 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -431,7 +431,8 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+>   		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+>   		    qc->tf.command == ATA_CMD_FPDMA_READ ||
+>   		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
+> -		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+> +		    qc->tf.command == ATA_CMD_FPDMA_SEND ||
+> +		    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
+>   			*tag = qc->tag;
+>   			return 1;
+>   		}
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 62abd98..dc33dfa 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -282,7 +282,8 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
+>   		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+>   		    qc->tf.command == ATA_CMD_FPDMA_READ ||
+>   		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
+> -		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+> +		    qc->tf.command == ATA_CMD_FPDMA_SEND ||
+> +		    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
+>   			*tag = qc->tag;
+>   			return 1;
+>   		}
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 00aebc4..b84210a 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -243,6 +243,7 @@ enum {
+>   	ATA_CMD_WRITE_QUEUED_FUA_EXT = 0x3E,
+>   	ATA_CMD_FPDMA_READ	= 0x60,
+>   	ATA_CMD_FPDMA_WRITE	= 0x61,
+> +	ATA_CMD_NCQ_NON_DATA	= 0x63,
+>   	ATA_CMD_FPDMA_SEND	= 0x64,
+>   	ATA_CMD_FPDMA_RECV	= 0x65,
+>   	ATA_CMD_PIO_READ	= 0x20,
+> diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+> index 8b0fbd9..0168603 100644
+> --- a/include/trace/events/libata.h
+> +++ b/include/trace/events/libata.h
+> @@ -39,6 +39,7 @@
+>   		 ata_opcode_name(ATA_CMD_WRITE_QUEUED_FUA_EXT), \
+>   		 ata_opcode_name(ATA_CMD_FPDMA_READ),		\
+>   		 ata_opcode_name(ATA_CMD_FPDMA_WRITE),		\
+> +		 ata_opcode_name(ATA_CMD_NCQ_NON_DATA),		\
+>   		 ata_opcode_name(ATA_CMD_FPDMA_SEND),		\
+>   		 ata_opcode_name(ATA_CMD_FPDMA_RECV),		\
+>   		 ata_opcode_name(ATA_CMD_PIO_READ),		\
+>
+
 
