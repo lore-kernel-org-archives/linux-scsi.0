@@ -1,181 +1,146 @@
 From: mchristi@redhat.com
-Subject: [PATCH 15/42] mpage: set bi_op to REQ_OP
-Date: Wed, 13 Apr 2016 14:36:01 -0500
-Message-ID: <1460576188-5751-16-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 32/42] block: convert is_sync helpers to use
+	REQ_OPs.
+Date: Wed, 13 Apr 2016 14:36:18 -0500
+Message-ID: <1460576188-5751-33-git-send-email-mchristi@redhat.com>
 References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has mpage.c use bio->bi_op for REQ_OPs and rq_flag_bits
-to bio->bi_rw.
+This patch converts the is_sync helpers to use separate variables
+for the operation and flags.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/mpage.c | 41 +++++++++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+ block/blk-core.c       | 6 +++---
+ block/blk-mq.c         | 8 ++++----
+ block/cfq-iosched.c    | 2 +-
+ include/linux/blkdev.h | 6 +++---
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/fs/mpage.c b/fs/mpage.c
-index 2c251ec..89f58f1 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -56,11 +56,12 @@ static void mpage_end_io(struct bio *bio)
- 	bio_put(bio);
- }
- 
--static struct bio *mpage_bio_submit(int rw, struct bio *bio)
-+static struct bio *mpage_bio_submit(int op, int op_flags, struct bio *bio)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5632cd1..a240657 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
+ static void freed_request(struct request_list *rl, int op, unsigned int flags)
  {
- 	bio->bi_end_io = mpage_end_io;
--	bio->bi_rw = rw;
--	guard_bio_eod(rw, bio);
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
-+	guard_bio_eod(op, bio);
- 	submit_bio(bio);
- 	return NULL;
+ 	struct request_queue *q = rl->q;
+-	int sync = rw_is_sync(op | flags);
++	int sync = rw_is_sync(op, flags);
+ 
+ 	q->nr_rqs[sync]--;
+ 	rl->count[sync]--;
+@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+ 	struct elevator_type *et = q->elevator->type;
+ 	struct io_context *ioc = rq_ioc(bio);
+ 	struct io_cq *icq = NULL;
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	int may_queue;
+ 
+ 	if (unlikely(blk_queue_dying(q)))
+@@ -1246,7 +1246,7 @@ static struct request *get_request(struct request_queue *q, int op,
+ 				   int op_flags, struct bio *bio,
+ 				   gfp_t gfp_mask)
+ {
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	DEFINE_WAIT(wait);
+ 	struct request_list *rl;
+ 	struct request *rq;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4843c0b..64d61be 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -206,7 +206,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
+ 	rq->end_io_data = NULL;
+ 	rq->next_rq = NULL;
+ 
+-	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
++	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
  }
-@@ -270,7 +271,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && (*last_block_in_bio != blocks[0] - 1))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
  
- alloc_new:
- 	if (bio == NULL) {
-@@ -287,7 +288,7 @@ alloc_new:
+ static struct request *
+@@ -1181,7 +1181,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
+ 	ctx = blk_mq_get_ctx(q);
+ 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
  
- 	length = first_hole << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 		goto alloc_new;
- 	}
+-	if (rw_is_sync(bio->bi_op | bio->bi_rw))
++	if (rw_is_sync(bio->bi_op, bio->bi_rw))
+ 		op_flags |= REQ_SYNC;
  
-@@ -295,7 +296,7 @@ alloc_new:
- 	nblocks = map_bh->b_size >> blkbits;
- 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
- 	    (first_hole != blocks_per_page))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	else
- 		*last_block_in_bio = blocks[blocks_per_page - 1];
- out:
-@@ -303,7 +304,7 @@ out:
+ 	trace_block_getrq(q, bio, op);
+@@ -1249,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+  */
+ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
++	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_map_ctx data;
+ 	struct request *rq;
+@@ -1346,7 +1346,7 @@ done:
+  */
+ static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
++	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_plug *plug;
+ 	unsigned int request_count = 0;
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 0dfa2dd..2fd5bcf 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
+ 	if (!cic)
+ 		return ELV_MQUEUE_MAY;
  
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	if (!PageUptodate(page))
- 	        block_read_full_page(page, get_block);
- 	else
-@@ -385,7 +386,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
- 	}
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
+-	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
++	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
+ 	if (cfqq) {
+ 		cfq_init_prio_data(cfqq, cic);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 39df8ef..550b371 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -618,14 +618,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
+ /*
+  * We regard a request as sync, if either a read or a sync write
+  */
+-static inline bool rw_is_sync(unsigned int rw_flags)
++static inline bool rw_is_sync(int op, unsigned int rw_flags)
+ {
+-	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
++	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
  }
- EXPORT_SYMBOL(mpage_readpages);
-@@ -406,7 +407,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
- 	bio = do_mpage_readpage(bio, page, 1, &last_block_in_bio,
- 			&map_bh, &first_logical_block, get_block, gfp);
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
+ 
+ static inline bool rq_is_sync(struct request *rq)
+ {
+-	return rw_is_sync(rq->cmd_flags);
++	return rw_is_sync(rq->op, rq->cmd_flags);
  }
- EXPORT_SYMBOL(mpage_readpage);
-@@ -487,7 +488,7 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
- 	struct buffer_head map_bh;
- 	loff_t i_size = i_size_read(inode);
- 	int ret = 0;
--	int wr = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
-+	int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : 0);
  
- 	if (page_has_buffers(page)) {
- 		struct buffer_head *head = page_buffers(page);
-@@ -596,7 +597,7 @@ page_is_mapped:
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- alloc_new:
- 	if (bio == NULL) {
-@@ -623,7 +624,7 @@ alloc_new:
- 	wbc_account_io(wbc, page, PAGE_SIZE);
- 	length = first_unmapped << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		goto alloc_new;
- 	}
- 
-@@ -633,7 +634,7 @@ alloc_new:
- 	set_page_writeback(page);
- 	unlock_page(page);
- 	if (boundary || (first_unmapped != blocks_per_page)) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		if (boundary_block) {
- 			write_boundary_block(boundary_bdev,
- 					boundary_block, 1 << blkbits);
-@@ -645,7 +646,7 @@ alloc_new:
- 
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- 	if (mpd->use_writepage) {
- 		ret = mapping->a_ops->writepage(page, wbc);
-@@ -702,9 +703,9 @@ mpage_writepages(struct address_space *mapping,
- 
- 		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
- 		if (mpd.bio) {
--			int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--				  WRITE_SYNC : WRITE);
--			mpage_bio_submit(wr, mpd.bio);
-+			int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+				  WRITE_SYNC : 0);
-+			mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
- 		}
- 	}
- 	blk_finish_plug(&plug);
-@@ -723,9 +724,9 @@ int mpage_writepage(struct page *page, get_block_t get_block,
- 	};
- 	int ret = __mpage_writepage(page, wbc, &mpd);
- 	if (mpd.bio) {
--		int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--			  WRITE_SYNC : WRITE);
--		mpage_bio_submit(wr, mpd.bio);
-+		int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+			  WRITE_SYNC : 0);
-+		mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
- 	}
- 	return ret;
- }
+ static inline bool blk_rl_full(struct request_list *rl, bool sync)
 -- 
 2.7.2
