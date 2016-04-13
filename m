@@ -1,534 +1,937 @@
 From: mchristi@redhat.com
-Subject: [PATCH 10/42] btrfs: use bio fields for op and flags
-Date: Wed, 13 Apr 2016 14:35:56 -0500
-Message-ID: <1460576188-5751-11-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 04/42] fs: have submit_bh users pass in op and flags separately
+Date: Wed, 13 Apr 2016 14:35:50 -0500
+Message-ID: <1460576188-5751-5-git-send-email-mchristi@redhat.com>
 References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <xfs-bounces@oss.sgi.com>
 In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-The bio bi_op and bi_rw is now setup, so there is no need
-to pass around the rq_flag_bits bits too. btrfs users should should
-access the bio.
-
-v2:
-
-1. Fix merge_bio issue where instead of removing rw/op argument
-I passed it in again to the merge_bio related functions.
+This has submit_bh users pass in the operation and flags separately,
+so submit_bh_wbc can setup bio->bi_op and bio-bi_rw on the bio that
+is submitted.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/btrfs/compression.c | 13 ++++++-------
- fs/btrfs/ctree.h       |  2 +-
- fs/btrfs/disk-io.c     | 30 ++++++++++++------------------
- fs/btrfs/disk-io.h     |  2 +-
- fs/btrfs/extent_io.c   | 12 +++++-------
- fs/btrfs/extent_io.h   |  8 ++++----
- fs/btrfs/inode.c       | 44 ++++++++++++++++++++------------------------
- fs/btrfs/volumes.c     |  6 +++---
- fs/btrfs/volumes.h     |  2 +-
- 9 files changed, 53 insertions(+), 66 deletions(-)
+ drivers/md/bitmap.c         |  4 ++--
+ fs/btrfs/check-integrity.c  | 24 ++++++++++----------
+ fs/btrfs/check-integrity.h  |  2 +-
+ fs/btrfs/disk-io.c          |  4 ++--
+ fs/buffer.c                 | 54 +++++++++++++++++++++++----------------------
+ fs/ext4/balloc.c            |  2 +-
+ fs/ext4/ialloc.c            |  2 +-
+ fs/ext4/inode.c             |  2 +-
+ fs/ext4/mmp.c               |  4 ++--
+ fs/fat/misc.c               |  2 +-
+ fs/gfs2/bmap.c              |  2 +-
+ fs/gfs2/dir.c               |  2 +-
+ fs/gfs2/meta_io.c           |  6 ++---
+ fs/jbd2/commit.c            |  6 ++---
+ fs/jbd2/journal.c           |  8 +++----
+ fs/nilfs2/btnode.c          |  6 ++---
+ fs/nilfs2/btnode.h          |  2 +-
+ fs/nilfs2/btree.c           |  6 +++--
+ fs/nilfs2/gcinode.c         |  5 +++--
+ fs/nilfs2/mdt.c             | 11 ++++-----
+ fs/ntfs/aops.c              |  6 ++---
+ fs/ntfs/compress.c          |  2 +-
+ fs/ntfs/file.c              |  2 +-
+ fs/ntfs/logfile.c           |  2 +-
+ fs/ntfs/mft.c               |  4 ++--
+ fs/ocfs2/buffer_head_io.c   |  8 +++----
+ fs/reiserfs/inode.c         |  4 ++--
+ fs/reiserfs/journal.c       |  6 ++---
+ fs/ufs/util.c               |  2 +-
+ include/linux/buffer_head.h |  9 ++++----
+ 30 files changed, 103 insertions(+), 96 deletions(-)
 
-diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
-index 334a00c..356ac36 100644
---- a/fs/btrfs/compression.c
-+++ b/fs/btrfs/compression.c
-@@ -374,7 +374,7 @@ int btrfs_submit_compressed_write(struct inode *inode, u64 start,
- 		page = compressed_pages[pg_index];
- 		page->mapping = inode->i_mapping;
- 		if (bio->bi_iter.bi_size)
--			ret = io_tree->ops->merge_bio_hook(WRITE, page, 0,
-+			ret = io_tree->ops->merge_bio_hook(page, 0,
- 							   PAGE_SIZE,
- 							   bio, 0);
- 		else
-@@ -402,7 +402,7 @@ int btrfs_submit_compressed_write(struct inode *inode, u64 start,
- 				BUG_ON(ret); /* -ENOMEM */
- 			}
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 3fe86b5..8b2e16f 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -294,7 +294,7 @@ static void write_page(struct bitmap *bitmap, struct page *page, int wait)
+ 			atomic_inc(&bitmap->pending_writes);
+ 			set_buffer_locked(bh);
+ 			set_buffer_mapped(bh);
+-			submit_bh(WRITE | REQ_SYNC, bh);
++			submit_bh(REQ_OP_WRITE, REQ_SYNC, bh);
+ 			bh = bh->b_this_page;
+ 		}
  
--			ret = btrfs_map_bio(root, WRITE, bio, 0, 1);
-+			ret = btrfs_map_bio(root, bio, 0, 1);
- 			BUG_ON(ret); /* -ENOMEM */
+@@ -389,7 +389,7 @@ static int read_page(struct file *file, unsigned long index,
+ 			atomic_inc(&bitmap->pending_writes);
+ 			set_buffer_locked(bh);
+ 			set_buffer_mapped(bh);
+-			submit_bh(READ, bh);
++			submit_bh(REQ_OP_READ, 0, bh);
+ 		}
+ 		block++;
+ 		bh = bh->b_this_page;
+diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
+index 9400acd..f82190f 100644
+--- a/fs/btrfs/check-integrity.c
++++ b/fs/btrfs/check-integrity.c
+@@ -2856,12 +2856,12 @@ static struct btrfsic_dev_state *btrfsic_dev_state_lookup(
+ 	return ds;
+ }
  
- 			bio_put(bio);
-@@ -433,7 +433,7 @@ int btrfs_submit_compressed_write(struct inode *inode, u64 start,
- 		BUG_ON(ret); /* -ENOMEM */
+-int btrfsic_submit_bh(int rw, struct buffer_head *bh)
++int btrfsic_submit_bh(int op, int op_flags, struct buffer_head *bh)
+ {
+ 	struct btrfsic_dev_state *dev_state;
+ 
+ 	if (!btrfsic_is_initialized)
+-		return submit_bh(rw, bh);
++		return submit_bh(op, op_flags, bh);
+ 
+ 	mutex_lock(&btrfsic_mutex);
+ 	/* since btrfsic_submit_bh() might also be called before
+@@ -2870,26 +2870,26 @@ int btrfsic_submit_bh(int rw, struct buffer_head *bh)
+ 
+ 	/* Only called to write the superblock (incl. FLUSH/FUA) */
+ 	if (NULL != dev_state &&
+-	    (rw & WRITE) && bh->b_size > 0) {
++	    (op == REQ_OP_WRITE) && bh->b_size > 0) {
+ 		u64 dev_bytenr;
+ 
+ 		dev_bytenr = 4096 * bh->b_blocknr;
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bh(rw=0x%x, blocknr=%llu (bytenr %llu),"
+-			       " size=%zu, data=%p, bdev=%p)\n",
+-			       rw, (unsigned long long)bh->b_blocknr,
++			       "submit_bh(op=0x%x,0x%x, blocknr=%llu "
++			       "(bytenr %llu), size=%zu, data=%p, bdev=%p)\n",
++			       op, op_flags, (unsigned long long)bh->b_blocknr,
+ 			       dev_bytenr, bh->b_size, bh->b_data, bh->b_bdev);
+ 		btrfsic_process_written_block(dev_state, dev_bytenr,
+ 					      &bh->b_data, 1, NULL,
+-					      NULL, bh, rw);
+-	} else if (NULL != dev_state && (rw & REQ_FLUSH)) {
++					      NULL, bh, op_flags);
++	} else if (NULL != dev_state && (op_flags & REQ_FLUSH)) {
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bh(rw=0x%x FLUSH, bdev=%p)\n",
+-			       rw, bh->b_bdev);
++			       "submit_bh(op=0x%x,0x%x FLUSH, bdev=%p)\n",
++			       op, op_flags, bh->b_bdev);
+ 		if (!dev_state->dummy_block_for_bio_bh_flush.is_iodone) {
+ 			if ((dev_state->state->print_mask &
+ 			     (BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH |
+@@ -2907,7 +2907,7 @@ int btrfsic_submit_bh(int rw, struct buffer_head *bh)
+ 			block->never_written = 0;
+ 			block->iodone_w_error = 0;
+ 			block->flush_gen = dev_state->last_flush_gen + 1;
+-			block->submit_bio_bh_rw = rw;
++			block->submit_bio_bh_rw = op_flags;
+ 			block->orig_bio_bh_private = bh->b_private;
+ 			block->orig_bio_bh_end_io.bh = bh->b_end_io;
+ 			block->next_in_same_bio = NULL;
+@@ -2916,7 +2916,7 @@ int btrfsic_submit_bh(int rw, struct buffer_head *bh)
+ 		}
  	}
+ 	mutex_unlock(&btrfsic_mutex);
+-	return submit_bh(rw, bh);
++	return submit_bh(op, op_flags, bh);
+ }
  
--	ret = btrfs_map_bio(root, WRITE, bio, 0, 1);
-+	ret = btrfs_map_bio(root, bio, 0, 1);
- 	BUG_ON(ret); /* -ENOMEM */
+ static void __btrfsic_submit_bio(struct bio *bio)
+diff --git a/fs/btrfs/check-integrity.h b/fs/btrfs/check-integrity.h
+index c04e249..f78dff1 100644
+--- a/fs/btrfs/check-integrity.h
++++ b/fs/btrfs/check-integrity.h
+@@ -20,7 +20,7 @@
+ #define __BTRFS_CHECK_INTEGRITY__
  
- 	bio_put(bio);
-@@ -659,7 +659,7 @@ int btrfs_submit_compressed_read(struct inode *inode, struct bio *bio,
- 		page->index = em_start >> PAGE_SHIFT;
- 
- 		if (comp_bio->bi_iter.bi_size)
--			ret = tree->ops->merge_bio_hook(READ, page, 0,
-+			ret = tree->ops->merge_bio_hook(page, 0,
- 							PAGE_SIZE,
- 							comp_bio, 0);
- 		else
-@@ -690,8 +690,7 @@ int btrfs_submit_compressed_read(struct inode *inode, struct bio *bio,
- 			sums += DIV_ROUND_UP(comp_bio->bi_iter.bi_size,
- 					     root->sectorsize);
- 
--			ret = btrfs_map_bio(root, READ, comp_bio,
--					    mirror_num, 0);
-+			ret = btrfs_map_bio(root, comp_bio, mirror_num, 0);
- 			if (ret) {
- 				bio->bi_error = ret;
- 				bio_endio(comp_bio);
-@@ -721,7 +720,7 @@ int btrfs_submit_compressed_read(struct inode *inode, struct bio *bio,
- 		BUG_ON(ret); /* -ENOMEM */
- 	}
- 
--	ret = btrfs_map_bio(root, READ, comp_bio, mirror_num, 0);
-+	ret = btrfs_map_bio(root, comp_bio, mirror_num, 0);
- 	if (ret) {
- 		bio->bi_error = ret;
- 		bio_endio(comp_bio);
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index a0c6aca..4e50f59 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -4087,7 +4087,7 @@ int btrfs_create_subvol_root(struct btrfs_trans_handle *trans,
- 			     struct btrfs_root *new_root,
- 			     struct btrfs_root *parent_root,
- 			     u64 new_dirid);
--int btrfs_merge_bio_hook(int rw, struct page *page, unsigned long offset,
-+int btrfs_merge_bio_hook(struct page *page, unsigned long offset,
- 			 size_t size, struct bio *bio,
- 			 unsigned long bio_flags);
- int btrfs_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf);
+ #ifdef CONFIG_BTRFS_FS_CHECK_INTEGRITY
+-int btrfsic_submit_bh(int rw, struct buffer_head *bh);
++int btrfsic_submit_bh(int op, int op_flags, struct buffer_head *bh);
+ void btrfsic_submit_bio(struct bio *bio);
+ int btrfsic_submit_bio_wait(struct bio *bio);
+ #else
 diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index 932268b..bea6df6 100644
+index 0bd25e4..9a13c85 100644
 --- a/fs/btrfs/disk-io.c
 +++ b/fs/btrfs/disk-io.c
-@@ -124,7 +124,6 @@ struct async_submit_bio {
- 	struct list_head list;
- 	extent_submit_bio_hook_t *submit_bio_start;
- 	extent_submit_bio_hook_t *submit_bio_done;
--	int rw;
- 	int mirror_num;
- 	unsigned long bio_flags;
- 	/*
-@@ -797,7 +796,7 @@ static void run_one_async_start(struct btrfs_work *work)
- 	int ret;
- 
- 	async = container_of(work, struct  async_submit_bio, work);
--	ret = async->submit_bio_start(async->inode, async->rw, async->bio,
-+	ret = async->submit_bio_start(async->inode, async->bio,
- 				      async->mirror_num, async->bio_flags,
- 				      async->bio_offset);
- 	if (ret)
-@@ -830,9 +829,8 @@ static void run_one_async_done(struct btrfs_work *work)
- 		return;
- 	}
- 
--	async->submit_bio_done(async->inode, async->rw, async->bio,
--			       async->mirror_num, async->bio_flags,
--			       async->bio_offset);
-+	async->submit_bio_done(async->inode, async->bio, async->mirror_num,
-+			       async->bio_flags, async->bio_offset);
- }
- 
- static void run_one_async_free(struct btrfs_work *work)
-@@ -844,7 +842,7 @@ static void run_one_async_free(struct btrfs_work *work)
- }
- 
- int btrfs_wq_submit_bio(struct btrfs_fs_info *fs_info, struct inode *inode,
--			int rw, struct bio *bio, int mirror_num,
-+			struct bio *bio, int mirror_num,
- 			unsigned long bio_flags,
- 			u64 bio_offset,
- 			extent_submit_bio_hook_t *submit_bio_start,
-@@ -857,7 +855,6 @@ int btrfs_wq_submit_bio(struct btrfs_fs_info *fs_info, struct inode *inode,
- 		return -ENOMEM;
- 
- 	async->inode = inode;
--	async->rw = rw;
- 	async->bio = bio;
- 	async->mirror_num = mirror_num;
- 	async->submit_bio_start = submit_bio_start;
-@@ -903,9 +900,8 @@ static int btree_csum_one_bio(struct bio *bio)
- 	return ret;
- }
- 
--static int __btree_submit_bio_start(struct inode *inode, int rw,
--				    struct bio *bio, int mirror_num,
--				    unsigned long bio_flags,
-+static int __btree_submit_bio_start(struct inode *inode, struct bio *bio,
-+				    int mirror_num, unsigned long bio_flags,
- 				    u64 bio_offset)
- {
- 	/*
-@@ -915,7 +911,7 @@ static int __btree_submit_bio_start(struct inode *inode, int rw,
- 	return btree_csum_one_bio(bio);
- }
- 
--static int __btree_submit_bio_done(struct inode *inode, int rw, struct bio *bio,
-+static int __btree_submit_bio_done(struct inode *inode, struct bio *bio,
- 				 int mirror_num, unsigned long bio_flags,
- 				 u64 bio_offset)
- {
-@@ -925,7 +921,7 @@ static int __btree_submit_bio_done(struct inode *inode, int rw, struct bio *bio,
- 	 * when we're called for a write, we're already in the async
- 	 * submission context.  Just jump into btrfs_map_bio
- 	 */
--	ret = btrfs_map_bio(BTRFS_I(inode)->root, rw, bio, mirror_num, 1);
-+	ret = btrfs_map_bio(BTRFS_I(inode)->root, bio, mirror_num, 1);
- 	if (ret) {
- 		bio->bi_error = ret;
- 		bio_endio(bio);
-@@ -944,7 +940,7 @@ static int check_async_write(struct inode *inode, unsigned long bio_flags)
- 	return 1;
- }
- 
--static int btree_submit_bio_hook(struct inode *inode, int rw, struct bio *bio,
-+static int btree_submit_bio_hook(struct inode *inode, struct bio *bio,
- 				 int mirror_num, unsigned long bio_flags,
- 				 u64 bio_offset)
- {
-@@ -960,21 +956,19 @@ static int btree_submit_bio_hook(struct inode *inode, int rw, struct bio *bio,
- 					  bio, BTRFS_WQ_ENDIO_METADATA);
- 		if (ret)
- 			goto out_w_error;
--		ret = btrfs_map_bio(BTRFS_I(inode)->root, rw, bio,
--				    mirror_num, 0);
-+		ret = btrfs_map_bio(BTRFS_I(inode)->root, bio, mirror_num, 0);
- 	} else if (!async) {
- 		ret = btree_csum_one_bio(bio);
- 		if (ret)
- 			goto out_w_error;
--		ret = btrfs_map_bio(BTRFS_I(inode)->root, rw, bio,
--				    mirror_num, 0);
-+		ret = btrfs_map_bio(BTRFS_I(inode)->root, bio, mirror_num, 0);
- 	} else {
- 		/*
- 		 * kthread helpers are used to submit writes so that
- 		 * checksumming can happen in parallel across all CPUs
+@@ -3410,9 +3410,9 @@ static int write_dev_supers(struct btrfs_device *device,
+ 		 * to go down lazy.
  		 */
- 		ret = btrfs_wq_submit_bio(BTRFS_I(inode)->root->fs_info,
--					  inode, rw, bio, mirror_num, 0,
-+					  inode, bio, mirror_num, 0,
- 					  bio_offset,
- 					  __btree_submit_bio_start,
- 					  __btree_submit_bio_done);
-diff --git a/fs/btrfs/disk-io.h b/fs/btrfs/disk-io.h
-index 8e79d00..73c21a2 100644
---- a/fs/btrfs/disk-io.h
-+++ b/fs/btrfs/disk-io.h
-@@ -122,7 +122,7 @@ void btrfs_csum_final(u32 crc, char *result);
- int btrfs_bio_wq_end_io(struct btrfs_fs_info *info, struct bio *bio,
- 			enum btrfs_wq_endio_type metadata);
- int btrfs_wq_submit_bio(struct btrfs_fs_info *fs_info, struct inode *inode,
--			int rw, struct bio *bio, int mirror_num,
-+			struct bio *bio, int mirror_num,
- 			unsigned long bio_flags, u64 bio_offset,
- 			extent_submit_bio_hook_t *submit_bio_start,
- 			extent_submit_bio_hook_t *submit_bio_done);
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 45fa3be..3bac80d 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2409,8 +2409,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
- 		 read_mode, failrec->this_mirror, failrec->in_validation);
+ 		if (i == 0)
+-			ret = btrfsic_submit_bh(WRITE_FUA, bh);
++			ret = btrfsic_submit_bh(REQ_OP_WRITE, WRITE_FUA, bh);
+ 		else
+-			ret = btrfsic_submit_bh(WRITE_SYNC, bh);
++			ret = btrfsic_submit_bh(REQ_OP_WRITE, WRITE_SYNC, bh);
+ 		if (ret)
+ 			errors++;
+ 	}
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 7ed7869..1e1a474 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -45,7 +45,7 @@
+ #include <trace/events/block.h>
  
--	ret = tree->ops->submit_bio_hook(inode, read_mode, bio,
--					 failrec->this_mirror,
-+	ret = tree->ops->submit_bio_hook(inode, bio, failrec->this_mirror,
- 					 failrec->bio_flags, 0);
- 	if (ret) {
- 		free_io_failure(inode, failrec);
-@@ -2731,9 +2730,8 @@ static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
- 	bio_get(bio);
+ static int fsync_buffers_list(spinlock_t *lock, struct list_head *list);
+-static int submit_bh_wbc(int rw, struct buffer_head *bh,
++static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 			 unsigned long bio_flags,
+ 			 struct writeback_control *wbc);
  
- 	if (tree->ops && tree->ops->submit_bio_hook)
--		ret = tree->ops->submit_bio_hook(page->mapping->host,
--						 bio->bi_rw, bio, mirror_num,
--						 bio_flags, start);
-+		ret = tree->ops->submit_bio_hook(page->mapping->host, bio,
-+					   mirror_num, bio_flags, start);
- 	else
- 		btrfsic_submit_bio(bio);
+@@ -1225,7 +1225,7 @@ static struct buffer_head *__bread_slow(struct buffer_head *bh)
+ 	} else {
+ 		get_bh(bh);
+ 		bh->b_end_io = end_buffer_read_sync;
+-		submit_bh(READ, bh);
++		submit_bh(REQ_OP_READ, 0, bh);
+ 		wait_on_buffer(bh);
+ 		if (buffer_uptodate(bh))
+ 			return bh;
+@@ -1697,7 +1697,7 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
+ 	struct buffer_head *bh, *head;
+ 	unsigned int blocksize, bbits;
+ 	int nr_underway = 0;
+-	int write_op = (wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE);
++	int write_flags = (wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : 0);
  
-@@ -2747,8 +2745,8 @@ static int merge_bio(struct extent_io_tree *tree, struct page *page,
+ 	head = create_page_buffers(page, inode,
+ 					(1 << BH_Dirty)|(1 << BH_Uptodate));
+@@ -1786,7 +1786,7 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
+ 	do {
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+-			submit_bh_wbc(write_op, bh, 0, wbc);
++			submit_bh_wbc(REQ_OP_WRITE, write_flags, bh, 0, wbc);
+ 			nr_underway++;
+ 		}
+ 		bh = next;
+@@ -1840,7 +1840,7 @@ recover:
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+ 			clear_buffer_dirty(bh);
+-			submit_bh_wbc(write_op, bh, 0, wbc);
++			submit_bh_wbc(REQ_OP_WRITE, write_flags, bh, 0, wbc);
+ 			nr_underway++;
+ 		}
+ 		bh = next;
+@@ -2248,7 +2248,7 @@ int block_read_full_page(struct page *page, get_block_t *get_block)
+ 		if (buffer_uptodate(bh))
+ 			end_buffer_async_read(bh, 1);
+ 		else
+-			submit_bh(READ, bh);
++			submit_bh(REQ_OP_READ, 0, bh);
+ 	}
+ 	return 0;
+ }
+@@ -2582,7 +2582,7 @@ int nobh_write_begin(struct address_space *mapping,
+ 		if (block_start < from || block_end > to) {
+ 			lock_buffer(bh);
+ 			bh->b_end_io = end_buffer_read_nobh;
+-			submit_bh(READ, bh);
++			submit_bh(REQ_OP_READ, 0, bh);
+ 			nr_reads++;
+ 		}
+ 	}
+@@ -2949,7 +2949,7 @@ static void end_bio_bh_io_sync(struct bio *bio)
+  * errors, this only handles the "we need to be able to
+  * do IO at the final sector" case.
+  */
+-void guard_bio_eod(int rw, struct bio *bio)
++void guard_bio_eod(int op, struct bio *bio)
+ {
+ 	sector_t maxsector;
+ 	struct bio_vec *bvec = &bio->bi_io_vec[bio->bi_vcnt - 1];
+@@ -2979,13 +2979,13 @@ void guard_bio_eod(int rw, struct bio *bio)
+ 	bvec->bv_len -= truncated_bytes;
+ 
+ 	/* ..and clear the end of the buffer for reads */
+-	if ((rw & RW_MASK) == READ) {
++	if (op == REQ_OP_READ) {
+ 		zero_user(bvec->bv_page, bvec->bv_offset + bvec->bv_len,
+ 				truncated_bytes);
+ 	}
+ }
+ 
+-static int submit_bh_wbc(int rw, struct buffer_head *bh,
++static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 			 unsigned long bio_flags, struct writeback_control *wbc)
+ {
+ 	struct bio *bio;
+@@ -2999,7 +2999,7 @@ static int submit_bh_wbc(int rw, struct buffer_head *bh,
+ 	/*
+ 	 * Only clear out a write error when rewriting
+ 	 */
+-	if (test_set_buffer_req(bh) && (rw & WRITE))
++	if (test_set_buffer_req(bh) && (op == REQ_OP_WRITE))
+ 		clear_buffer_write_io_error(bh);
+ 
+ 	/*
+@@ -3022,29 +3022,31 @@ static int submit_bh_wbc(int rw, struct buffer_head *bh,
+ 	bio->bi_end_io = end_bio_bh_io_sync;
+ 	bio->bi_private = bh;
+ 	bio->bi_flags |= bio_flags;
++	bio->bi_op = op;
+ 
+ 	/* Take care of bh's that straddle the end of the device */
+-	guard_bio_eod(rw, bio);
++	guard_bio_eod(op, bio);
+ 
+ 	if (buffer_meta(bh))
+-		rw |= REQ_META;
++		op_flags |= REQ_META;
+ 	if (buffer_prio(bh))
+-		rw |= REQ_PRIO;
+-	bio->bi_rw = rw;
++		op_flags |= REQ_PRIO;
++	bio->bi_rw = op_flags;
+ 
+ 	submit_bio(bio);
+ 	return 0;
+ }
+ 
+-int _submit_bh(int rw, struct buffer_head *bh, unsigned long bio_flags)
++int _submit_bh(int op, int op_flags, struct buffer_head *bh,
++	       unsigned long bio_flags)
+ {
+-	return submit_bh_wbc(rw, bh, bio_flags, NULL);
++	return submit_bh_wbc(op, op_flags, bh, bio_flags, NULL);
+ }
+ EXPORT_SYMBOL_GPL(_submit_bh);
+ 
+-int submit_bh(int rw, struct buffer_head *bh)
++int submit_bh(int op, int op_flags,  struct buffer_head *bh)
+ {
+-	return submit_bh_wbc(rw, bh, 0, NULL);
++	return submit_bh_wbc(op, op_flags, bh, 0, NULL);
+ }
+ EXPORT_SYMBOL(submit_bh);
+ 
+@@ -3086,14 +3088,14 @@ void ll_rw_block(int rw, int nr, struct buffer_head *bhs[])
+ 			if (test_clear_buffer_dirty(bh)) {
+ 				bh->b_end_io = end_buffer_write_sync;
+ 				get_bh(bh);
+-				submit_bh(WRITE, bh);
++				submit_bh(rw, 0, bh);
+ 				continue;
+ 			}
+ 		} else {
+ 			if (!buffer_uptodate(bh)) {
+ 				bh->b_end_io = end_buffer_read_sync;
+ 				get_bh(bh);
+-				submit_bh(rw, bh);
++				submit_bh(rw, 0, bh);
+ 				continue;
+ 			}
+ 		}
+@@ -3102,7 +3104,7 @@ void ll_rw_block(int rw, int nr, struct buffer_head *bhs[])
+ }
+ EXPORT_SYMBOL(ll_rw_block);
+ 
+-void write_dirty_buffer(struct buffer_head *bh, int rw)
++void write_dirty_buffer(struct buffer_head *bh, int op_flags)
+ {
+ 	lock_buffer(bh);
+ 	if (!test_clear_buffer_dirty(bh)) {
+@@ -3111,7 +3113,7 @@ void write_dirty_buffer(struct buffer_head *bh, int rw)
+ 	}
+ 	bh->b_end_io = end_buffer_write_sync;
+ 	get_bh(bh);
+-	submit_bh(rw, bh);
++	submit_bh(REQ_OP_WRITE, op_flags, bh);
+ }
+ EXPORT_SYMBOL(write_dirty_buffer);
+ 
+@@ -3120,7 +3122,7 @@ EXPORT_SYMBOL(write_dirty_buffer);
+  * and then start new I/O and then wait upon it.  The caller must have a ref on
+  * the buffer_head.
+  */
+-int __sync_dirty_buffer(struct buffer_head *bh, int rw)
++int __sync_dirty_buffer(struct buffer_head *bh, int op_flags)
  {
  	int ret = 0;
- 	if (tree->ops && tree->ops->merge_bio_hook)
--		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
--						bio, bio_flags);
-+		ret = tree->ops->merge_bio_hook(page, offset, size, bio,
-+						bio_flags);
- 	BUG_ON(ret < 0);
- 	return ret;
  
-diff --git a/fs/btrfs/extent_io.h b/fs/btrfs/extent_io.h
-index b5e0ade..f8db2fd 100644
---- a/fs/btrfs/extent_io.h
-+++ b/fs/btrfs/extent_io.h
-@@ -63,9 +63,9 @@ struct btrfs_root;
- struct btrfs_io_bio;
- struct io_failure_record;
+@@ -3129,7 +3131,7 @@ int __sync_dirty_buffer(struct buffer_head *bh, int rw)
+ 	if (test_clear_buffer_dirty(bh)) {
+ 		get_bh(bh);
+ 		bh->b_end_io = end_buffer_write_sync;
+-		ret = submit_bh(rw, bh);
++		ret = submit_bh(REQ_OP_WRITE, op_flags, bh);
+ 		wait_on_buffer(bh);
+ 		if (!ret && !buffer_uptodate(bh))
+ 			ret = -EIO;
+@@ -3392,7 +3394,7 @@ int bh_submit_read(struct buffer_head *bh)
  
--typedef	int (extent_submit_bio_hook_t)(struct inode *inode, int rw,
--				       struct bio *bio, int mirror_num,
--				       unsigned long bio_flags, u64 bio_offset);
-+typedef	int (extent_submit_bio_hook_t)(struct inode *inode, struct bio *bio,
-+				       int mirror_num, unsigned long bio_flags,
-+				       u64 bio_offset);
- struct extent_io_ops {
- 	int (*fill_delalloc)(struct inode *inode, struct page *locked_page,
- 			     u64 start, u64 end, int *page_started,
-@@ -73,7 +73,7 @@ struct extent_io_ops {
- 	int (*writepage_start_hook)(struct page *page, u64 start, u64 end);
- 	int (*writepage_io_hook)(struct page *page, u64 start, u64 end);
- 	extent_submit_bio_hook_t *submit_bio_hook;
--	int (*merge_bio_hook)(int rw, struct page *page, unsigned long offset,
-+	int (*merge_bio_hook)(struct page *page, unsigned long offset,
- 			      size_t size, struct bio *bio,
- 			      unsigned long bio_flags);
- 	int (*readpage_io_failed_hook)(struct page *page, int failed_mirror);
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index c2dc75b..bd214ab 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -1807,7 +1807,7 @@ static void btrfs_clear_bit_hook(struct inode *inode,
-  * extent_io.c merge_bio_hook, this must check the chunk tree to make sure
-  * we don't create bios that span stripes or chunks
-  */
--int btrfs_merge_bio_hook(int rw, struct page *page, unsigned long offset,
-+int btrfs_merge_bio_hook(struct page *page, unsigned long offset,
- 			 size_t size, struct bio *bio,
- 			 unsigned long bio_flags)
- {
-@@ -1822,7 +1822,7 @@ int btrfs_merge_bio_hook(int rw, struct page *page, unsigned long offset,
- 
- 	length = bio->bi_iter.bi_size;
- 	map_length = length;
--	ret = btrfs_map_block(root->fs_info, rw, logical,
-+	ret = btrfs_map_block(root->fs_info, bio->bi_op, logical,
- 			      &map_length, NULL, 0);
- 	/* Will always return 0 with map_multi == NULL */
- 	BUG_ON(ret < 0);
-@@ -1839,9 +1839,8 @@ int btrfs_merge_bio_hook(int rw, struct page *page, unsigned long offset,
-  * At IO completion time the cums attached on the ordered extent record
-  * are inserted into the btree
-  */
--static int __btrfs_submit_bio_start(struct inode *inode, int rw,
--				    struct bio *bio, int mirror_num,
--				    unsigned long bio_flags,
-+static int __btrfs_submit_bio_start(struct inode *inode, struct bio *bio,
-+				    int mirror_num, unsigned long bio_flags,
- 				    u64 bio_offset)
- {
- 	struct btrfs_root *root = BTRFS_I(inode)->root;
-@@ -1860,14 +1859,14 @@ static int __btrfs_submit_bio_start(struct inode *inode, int rw,
-  * At IO completion time the cums attached on the ordered extent record
-  * are inserted into the btree
-  */
--static int __btrfs_submit_bio_done(struct inode *inode, int rw, struct bio *bio,
-+static int __btrfs_submit_bio_done(struct inode *inode, struct bio *bio,
- 			  int mirror_num, unsigned long bio_flags,
- 			  u64 bio_offset)
- {
- 	struct btrfs_root *root = BTRFS_I(inode)->root;
- 	int ret;
- 
--	ret = btrfs_map_bio(root, rw, bio, mirror_num, 1);
-+	ret = btrfs_map_bio(root, bio, mirror_num, 1);
- 	if (ret) {
- 		bio->bi_error = ret;
- 		bio_endio(bio);
-@@ -1879,7 +1878,7 @@ static int __btrfs_submit_bio_done(struct inode *inode, int rw, struct bio *bio,
-  * extent_io.c submission hook. This does the right thing for csum calculation
-  * on write, or reading the csums from the tree before a read
-  */
--static int btrfs_submit_bio_hook(struct inode *inode, int rw, struct bio *bio,
-+static int btrfs_submit_bio_hook(struct inode *inode, struct bio *bio,
- 			  int mirror_num, unsigned long bio_flags,
- 			  u64 bio_offset)
- {
-@@ -1916,7 +1915,7 @@ static int btrfs_submit_bio_hook(struct inode *inode, int rw, struct bio *bio,
- 			goto mapit;
- 		/* we're doing a write, do the async checksumming */
- 		ret = btrfs_wq_submit_bio(BTRFS_I(inode)->root->fs_info,
--				   inode, rw, bio, mirror_num,
-+				   inode, bio, mirror_num,
- 				   bio_flags, bio_offset,
- 				   __btrfs_submit_bio_start,
- 				   __btrfs_submit_bio_done);
-@@ -1928,7 +1927,7 @@ static int btrfs_submit_bio_hook(struct inode *inode, int rw, struct bio *bio,
- 	}
- 
- mapit:
--	ret = btrfs_map_bio(root, rw, bio, mirror_num, 0);
-+	ret = btrfs_map_bio(root, bio, mirror_num, 0);
- 
- out:
- 	if (ret < 0) {
-@@ -7746,7 +7745,7 @@ err:
- }
- 
- static inline int submit_dio_repair_bio(struct inode *inode, struct bio *bio,
--					int rw, int mirror_num)
-+					int mirror_num)
- {
- 	struct btrfs_root *root = BTRFS_I(inode)->root;
- 	int ret;
-@@ -7760,7 +7759,7 @@ static inline int submit_dio_repair_bio(struct inode *inode, struct bio *bio,
- 	if (ret)
- 		goto err;
- 
--	ret = btrfs_map_bio(root, rw, bio, mirror_num, 0);
-+	ret = btrfs_map_bio(root, bio, mirror_num, 0);
- err:
- 	bio_put(bio);
- 	return ret;
-@@ -7846,8 +7845,7 @@ static int dio_read_error(struct inode *inode, struct bio *failed_bio,
- 		    "Repair DIO Read Error: submitting new dio read[%#x] to this_mirror=%d, in_validation=%d\n",
- 		    read_mode, failrec->this_mirror, failrec->in_validation);
- 
--	ret = submit_dio_repair_bio(inode, bio, read_mode,
--				    failrec->this_mirror);
-+	ret = submit_dio_repair_bio(inode, bio, failrec->this_mirror);
- 	if (ret) {
- 		free_io_failure(inode, failrec);
- 		bio_put(bio);
-@@ -8137,7 +8135,7 @@ static void btrfs_endio_direct_write(struct bio *bio)
- 	bio_put(bio);
- }
- 
--static int __btrfs_submit_bio_start_direct_io(struct inode *inode, int rw,
-+static int __btrfs_submit_bio_start_direct_io(struct inode *inode,
- 				    struct bio *bio, int mirror_num,
- 				    unsigned long bio_flags, u64 offset)
- {
-@@ -8230,7 +8228,7 @@ static inline int btrfs_lookup_and_bind_dio_csum(struct btrfs_root *root,
- }
- 
- static inline int __btrfs_submit_dio_bio(struct bio *bio, struct inode *inode,
--					 int rw, u64 file_offset, int skip_sum,
-+					 u64 file_offset, int skip_sum,
- 					 int async_submit)
- {
- 	struct btrfs_dio_private *dip = bio->bi_private;
-@@ -8255,8 +8253,7 @@ static inline int __btrfs_submit_dio_bio(struct bio *bio, struct inode *inode,
- 
- 	if (write && async_submit) {
- 		ret = btrfs_wq_submit_bio(root->fs_info,
--				   inode, rw, bio, 0, 0,
--				   file_offset,
-+				   inode, bio, 0, 0, file_offset,
- 				   __btrfs_submit_bio_start_direct_io,
- 				   __btrfs_submit_bio_done);
- 		goto err;
-@@ -8275,13 +8272,13 @@ static inline int __btrfs_submit_dio_bio(struct bio *bio, struct inode *inode,
- 			goto err;
- 	}
- map:
--	ret = btrfs_map_bio(root, rw, bio, 0, async_submit);
-+	ret = btrfs_map_bio(root, bio, 0, async_submit);
- err:
- 	bio_put(bio);
- 	return ret;
- }
- 
--static int btrfs_submit_direct_hook(int rw, struct btrfs_dio_private *dip,
-+static int btrfs_submit_direct_hook(struct btrfs_dio_private *dip,
- 				    int skip_sum)
- {
- 	struct inode *inode = dip->inode;
-@@ -8342,7 +8339,7 @@ next_block:
- 			 * before we're done setting it up
- 			 */
- 			atomic_inc(&dip->pending_bios);
--			ret = __btrfs_submit_dio_bio(bio, inode, rw,
-+			ret = __btrfs_submit_dio_bio(bio, inode,
- 						     file_offset, skip_sum,
- 						     async_submit);
- 			if (ret) {
-@@ -8387,7 +8384,7 @@ next_block:
- 	}
- 
- submit:
--	ret = __btrfs_submit_dio_bio(bio, inode, rw, file_offset, skip_sum,
-+	ret = __btrfs_submit_dio_bio(bio, inode, file_offset, skip_sum,
- 				     async_submit);
- 	if (!ret)
+ 	get_bh(bh);
+ 	bh->b_end_io = end_buffer_read_sync;
+-	submit_bh(READ, bh);
++	submit_bh(REQ_OP_READ, 0, bh);
+ 	wait_on_buffer(bh);
+ 	if (buffer_uptodate(bh))
  		return 0;
-@@ -8465,8 +8462,7 @@ static void btrfs_submit_direct(struct bio *dio_bio, struct inode *inode,
- 			dio_data->unsubmitted_oe_range_end;
- 	}
+diff --git a/fs/ext4/balloc.c b/fs/ext4/balloc.c
+index fe1f50f..d06823b 100644
+--- a/fs/ext4/balloc.c
++++ b/fs/ext4/balloc.c
+@@ -470,7 +470,7 @@ ext4_read_block_bitmap_nowait(struct super_block *sb, ext4_group_t block_group)
+ 	trace_ext4_read_block_bitmap_load(sb, block_group);
+ 	bh->b_end_io = ext4_end_bitmap_read;
+ 	get_bh(bh);
+-	submit_bh(READ | REQ_META | REQ_PRIO, bh);
++	submit_bh(REQ_OP_READ, REQ_META | REQ_PRIO, bh);
+ 	return bh;
+ verify:
+ 	err = ext4_validate_block_bitmap(sb, desc, block_group, bh);
+diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
+index 69bb343..337ad70 100644
+--- a/fs/ext4/ialloc.c
++++ b/fs/ext4/ialloc.c
+@@ -214,7 +214,7 @@ ext4_read_inode_bitmap(struct super_block *sb, ext4_group_t block_group)
+ 	trace_ext4_load_inode_bitmap(sb, block_group);
+ 	bh->b_end_io = ext4_end_bitmap_read;
+ 	get_bh(bh);
+-	submit_bh(READ | REQ_META | REQ_PRIO, bh);
++	submit_bh(REQ_OP_READ, REQ_META | REQ_PRIO, bh);
+ 	wait_on_buffer(bh);
+ 	if (!buffer_uptodate(bh)) {
+ 		put_bh(bh);
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 8f44605..d15d92e 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -4186,7 +4186,7 @@ make_io:
+ 		trace_ext4_load_inode(inode);
+ 		get_bh(bh);
+ 		bh->b_end_io = end_buffer_read_sync;
+-		submit_bh(READ | REQ_META | REQ_PRIO, bh);
++		submit_bh(REQ_OP_READ, REQ_META | REQ_PRIO, bh);
+ 		wait_on_buffer(bh);
+ 		if (!buffer_uptodate(bh)) {
+ 			EXT4_ERROR_INODE_BLOCK(inode, block,
+diff --git a/fs/ext4/mmp.c b/fs/ext4/mmp.c
+index 2444527..cef1db4 100644
+--- a/fs/ext4/mmp.c
++++ b/fs/ext4/mmp.c
+@@ -52,7 +52,7 @@ static int write_mmp_block(struct super_block *sb, struct buffer_head *bh)
+ 	lock_buffer(bh);
+ 	bh->b_end_io = end_buffer_write_sync;
+ 	get_bh(bh);
+-	submit_bh(WRITE_SYNC | REQ_META | REQ_PRIO, bh);
++	submit_bh(REQ_OP_WRITE, WRITE_SYNC | REQ_META | REQ_PRIO, bh);
+ 	wait_on_buffer(bh);
+ 	sb_end_write(sb);
+ 	if (unlikely(!buffer_uptodate(bh)))
+@@ -88,7 +88,7 @@ static int read_mmp_block(struct super_block *sb, struct buffer_head **bh,
+ 	get_bh(*bh);
+ 	lock_buffer(*bh);
+ 	(*bh)->b_end_io = end_buffer_read_sync;
+-	submit_bh(READ_SYNC | REQ_META | REQ_PRIO, *bh);
++	submit_bh(REQ_OP_READ, READ_SYNC | REQ_META | REQ_PRIO, *bh);
+ 	wait_on_buffer(*bh);
+ 	if (!buffer_uptodate(*bh)) {
+ 		ret = -EIO;
+diff --git a/fs/fat/misc.c b/fs/fat/misc.c
+index c4589e9..8a86981 100644
+--- a/fs/fat/misc.c
++++ b/fs/fat/misc.c
+@@ -267,7 +267,7 @@ int fat_sync_bhs(struct buffer_head **bhs, int nr_bhs)
+ 	int i, err = 0;
  
--	ret = btrfs_submit_direct_hook(dio_bio->bi_op | dio_bio->bi_rw, dip,
--				       skip_sum);
-+	ret = btrfs_submit_direct_hook(dip, skip_sum);
- 	if (!ret)
- 		return;
+ 	for (i = 0; i < nr_bhs; i++)
+-		write_dirty_buffer(bhs[i], WRITE);
++		write_dirty_buffer(bhs[i], 0);
  
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index dc56558..2100514 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -5995,7 +5995,7 @@ static noinline void btrfs_schedule_bio(struct btrfs_root *root,
- 
- static void submit_stripe_bio(struct btrfs_root *root, struct btrfs_bio *bbio,
- 			      struct bio *bio, u64 physical, int dev_nr,
--			      int rw, int async)
-+			      int async)
+ 	for (i = 0; i < nr_bhs; i++) {
+ 		wait_on_buffer(bhs[i]);
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index 24ce1cd..06d79aa 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -285,7 +285,7 @@ static void gfs2_metapath_ra(struct gfs2_glock *gl,
+ 		if (trylock_buffer(rabh)) {
+ 			if (!buffer_uptodate(rabh)) {
+ 				rabh->b_end_io = end_buffer_read_sync;
+-				submit_bh(READA | REQ_META, rabh);
++				submit_bh(REQ_OP_READ, READA | REQ_META, rabh);
+ 				continue;
+ 			}
+ 			unlock_buffer(rabh);
+diff --git a/fs/gfs2/dir.c b/fs/gfs2/dir.c
+index 4a01f30..97a7d47 100644
+--- a/fs/gfs2/dir.c
++++ b/fs/gfs2/dir.c
+@@ -1510,7 +1510,7 @@ static void gfs2_dir_readahead(struct inode *inode, unsigned hsize, u32 index,
+ 				continue;
+ 			}
+ 			bh->b_end_io = end_buffer_read_sync;
+-			submit_bh(READA | REQ_META, bh);
++			submit_bh(REQ_OP_READ, READA | REQ_META, bh);
+ 			continue;
+ 		}
+ 		brelse(bh);
+diff --git a/fs/gfs2/meta_io.c b/fs/gfs2/meta_io.c
+index f8d33e8..3c63087 100644
+--- a/fs/gfs2/meta_io.c
++++ b/fs/gfs2/meta_io.c
+@@ -37,8 +37,8 @@ static int gfs2_aspace_writepage(struct page *page, struct writeback_control *wb
  {
- 	struct btrfs_device *dev = bbio->stripes[dev_nr].dev;
+ 	struct buffer_head *bh, *head;
+ 	int nr_underway = 0;
+-	int write_op = REQ_META | REQ_PRIO |
+-		(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE);
++	int write_flags = REQ_META | REQ_PRIO |
++		(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : 0);
  
-@@ -6040,7 +6040,7 @@ static void bbio_error(struct btrfs_bio *bbio, struct bio *bio, u64 logical)
- 	}
+ 	BUG_ON(!PageLocked(page));
+ 	BUG_ON(!page_has_buffers(page));
+@@ -79,7 +79,7 @@ static int gfs2_aspace_writepage(struct page *page, struct writeback_control *wb
+ 	do {
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+-			submit_bh(write_op, bh);
++			submit_bh(REQ_OP_WRITE, write_flags, bh);
+ 			nr_underway++;
+ 		}
+ 		bh = next;
+diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
+index 2ad98d6..956bcf0 100644
+--- a/fs/jbd2/commit.c
++++ b/fs/jbd2/commit.c
+@@ -155,9 +155,9 @@ static int journal_submit_commit_record(journal_t *journal,
+ 
+ 	if (journal->j_flags & JBD2_BARRIER &&
+ 	    !jbd2_has_feature_async_commit(journal))
+-		ret = submit_bh(WRITE_SYNC | WRITE_FLUSH_FUA, bh);
++		ret = submit_bh(REQ_OP_WRITE, WRITE_SYNC | WRITE_FLUSH_FUA, bh);
+ 	else
+-		ret = submit_bh(WRITE_SYNC, bh);
++		ret = submit_bh(REQ_OP_WRITE, WRITE_SYNC, bh);
+ 
+ 	*cbh = bh;
+ 	return ret;
+@@ -714,7 +714,7 @@ start_journal_io:
+ 				clear_buffer_dirty(bh);
+ 				set_buffer_uptodate(bh);
+ 				bh->b_end_io = journal_end_buffer_io_sync;
+-				submit_bh(WRITE_SYNC, bh);
++				submit_bh(REQ_OP_WRITE, WRITE_SYNC, bh);
+ 			}
+ 			cond_resched();
+ 			stats.run.rs_blocks_logged += bufs;
+diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
+index 435f0b2..6d7e33a 100644
+--- a/fs/jbd2/journal.c
++++ b/fs/jbd2/journal.c
+@@ -1345,15 +1345,15 @@ static int journal_reset(journal_t *journal)
+ 	return jbd2_journal_start_thread(journal);
  }
  
--int btrfs_map_bio(struct btrfs_root *root, int rw, struct bio *bio,
-+int btrfs_map_bio(struct btrfs_root *root, struct bio *bio,
- 		  int mirror_num, int async_submit)
+-static int jbd2_write_superblock(journal_t *journal, int write_op)
++static int jbd2_write_superblock(journal_t *journal, int write_flags)
  {
- 	struct btrfs_device *dev;
-@@ -6107,7 +6107,7 @@ int btrfs_map_bio(struct btrfs_root *root, int rw, struct bio *bio,
- 			bio = first_bio;
+ 	struct buffer_head *bh = journal->j_sb_buffer;
+ 	journal_superblock_t *sb = journal->j_superblock;
+ 	int ret;
  
- 		submit_stripe_bio(root, bbio, bio,
--				  bbio->stripes[dev_nr].physical, dev_nr, rw,
-+				  bbio->stripes[dev_nr].physical, dev_nr,
- 				  async_submit);
+-	trace_jbd2_write_superblock(journal, write_op);
++	trace_jbd2_write_superblock(journal, write_flags);
+ 	if (!(journal->j_flags & JBD2_BARRIER))
+-		write_op &= ~(REQ_FUA | REQ_FLUSH);
++		write_flags &= ~(REQ_FUA | REQ_FLUSH);
+ 	lock_buffer(bh);
+ 	if (buffer_write_io_error(bh)) {
+ 		/*
+@@ -1373,7 +1373,7 @@ static int jbd2_write_superblock(journal_t *journal, int write_op)
+ 	jbd2_superblock_csum_set(journal, sb);
+ 	get_bh(bh);
+ 	bh->b_end_io = end_buffer_write_sync;
+-	ret = submit_bh(write_op, bh);
++	ret = submit_bh(REQ_OP_WRITE, write_flags, bh);
+ 	wait_on_buffer(bh);
+ 	if (buffer_write_io_error(bh)) {
+ 		clear_buffer_write_io_error(bh);
+diff --git a/fs/nilfs2/btnode.c b/fs/nilfs2/btnode.c
+index e0c9daf..87baf87 100644
+--- a/fs/nilfs2/btnode.c
++++ b/fs/nilfs2/btnode.c
+@@ -67,7 +67,7 @@ nilfs_btnode_create_block(struct address_space *btnc, __u64 blocknr)
+ }
+ 
+ int nilfs_btnode_submit_block(struct address_space *btnc, __u64 blocknr,
+-			      sector_t pblocknr, int mode,
++			      sector_t pblocknr, int mode, int mode_flags,
+ 			      struct buffer_head **pbh, sector_t *submit_ptr)
+ {
+ 	struct buffer_head *bh;
+@@ -100,7 +100,7 @@ int nilfs_btnode_submit_block(struct address_space *btnc, __u64 blocknr,
+ 		}
  	}
- 	btrfs_bio_counter_dec(root->fs_info);
-diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
-index c64229e..372974d0 100644
---- a/fs/btrfs/volumes.h
-+++ b/fs/btrfs/volumes.h
-@@ -437,7 +437,7 @@ int btrfs_alloc_chunk(struct btrfs_trans_handle *trans,
- 		      struct btrfs_root *extent_root, u64 type);
- void btrfs_mapping_init(struct btrfs_mapping_tree *tree);
- void btrfs_mapping_tree_free(struct btrfs_mapping_tree *tree);
--int btrfs_map_bio(struct btrfs_root *root, int rw, struct bio *bio,
-+int btrfs_map_bio(struct btrfs_root *root, struct bio *bio,
- 		  int mirror_num, int async_submit);
- int btrfs_open_devices(struct btrfs_fs_devices *fs_devices,
- 		       fmode_t flags, void *holder);
+ 
+-	if (mode == READA) {
++	if (mode_flags & REQ_RAHEAD) {
+ 		if (pblocknr != *submit_ptr + 1 || !trylock_buffer(bh)) {
+ 			err = -EBUSY; /* internal code */
+ 			brelse(bh);
+@@ -119,7 +119,7 @@ int nilfs_btnode_submit_block(struct address_space *btnc, __u64 blocknr,
+ 	bh->b_blocknr = pblocknr; /* set block address for read */
+ 	bh->b_end_io = end_buffer_read_sync;
+ 	get_bh(bh);
+-	submit_bh(mode, bh);
++	submit_bh(mode, mode_flags, bh);
+ 	bh->b_blocknr = blocknr; /* set back to the given block address */
+ 	*submit_ptr = pblocknr;
+ 	err = 0;
+diff --git a/fs/nilfs2/btnode.h b/fs/nilfs2/btnode.h
+index d876b56..3f93197 100644
+--- a/fs/nilfs2/btnode.h
++++ b/fs/nilfs2/btnode.h
+@@ -47,7 +47,7 @@ void nilfs_btnode_cache_clear(struct address_space *);
+ struct buffer_head *nilfs_btnode_create_block(struct address_space *btnc,
+ 					      __u64 blocknr);
+ int nilfs_btnode_submit_block(struct address_space *, __u64, sector_t, int,
+-			      struct buffer_head **, sector_t *);
++			      int, struct buffer_head **, sector_t *);
+ void nilfs_btnode_delete(struct buffer_head *);
+ int nilfs_btnode_prepare_change_key(struct address_space *,
+ 				    struct nilfs_btnode_chkey_ctxt *);
+diff --git a/fs/nilfs2/btree.c b/fs/nilfs2/btree.c
+index 3a3821b..5d6a2c6 100644
+--- a/fs/nilfs2/btree.c
++++ b/fs/nilfs2/btree.c
+@@ -480,7 +480,8 @@ static int __nilfs_btree_get_block(const struct nilfs_bmap *btree, __u64 ptr,
+ 	sector_t submit_ptr = 0;
+ 	int ret;
+ 
+-	ret = nilfs_btnode_submit_block(btnc, ptr, 0, READ, &bh, &submit_ptr);
++	ret = nilfs_btnode_submit_block(btnc, ptr, 0, REQ_OP_READ, 0, &bh,
++					&submit_ptr);
+ 	if (ret) {
+ 		if (ret != -EEXIST)
+ 			return ret;
+@@ -496,7 +497,8 @@ static int __nilfs_btree_get_block(const struct nilfs_bmap *btree, __u64 ptr,
+ 		     n > 0 && i < ra->ncmax; n--, i++) {
+ 			ptr2 = nilfs_btree_node_get_ptr(ra->node, i, ra->ncmax);
+ 
+-			ret = nilfs_btnode_submit_block(btnc, ptr2, 0, READA,
++			ret = nilfs_btnode_submit_block(btnc, ptr2, 0,
++							REQ_OP_READ, REQ_RAHEAD,
+ 							&ra_bh, &submit_ptr);
+ 			if (likely(!ret || ret == -EEXIST))
+ 				brelse(ra_bh);
+diff --git a/fs/nilfs2/gcinode.c b/fs/nilfs2/gcinode.c
+index 0224b78..90be270 100644
+--- a/fs/nilfs2/gcinode.c
++++ b/fs/nilfs2/gcinode.c
+@@ -106,7 +106,7 @@ int nilfs_gccache_submit_read_data(struct inode *inode, sector_t blkoff,
+ 	bh->b_blocknr = pbn;
+ 	bh->b_end_io = end_buffer_read_sync;
+ 	get_bh(bh);
+-	submit_bh(READ, bh);
++	submit_bh(REQ_OP_READ, 0, bh);
+ 	if (vbn)
+ 		bh->b_blocknr = vbn;
+  out:
+@@ -143,7 +143,8 @@ int nilfs_gccache_submit_read_node(struct inode *inode, sector_t pbn,
+ 	int ret;
+ 
+ 	ret = nilfs_btnode_submit_block(&NILFS_I(inode)->i_btnode_cache,
+-					vbn ? : pbn, pbn, READ, out_bh, &pbn);
++					vbn ? : pbn, pbn, REQ_OP_READ, 0,
++					out_bh, &pbn);
+ 	if (ret == -EEXIST) /* internal code (cache hit) */
+ 		ret = 0;
+ 	return ret;
+diff --git a/fs/nilfs2/mdt.c b/fs/nilfs2/mdt.c
+index f6982b9..27aee74 100644
+--- a/fs/nilfs2/mdt.c
++++ b/fs/nilfs2/mdt.c
+@@ -124,7 +124,7 @@ static int nilfs_mdt_create_block(struct inode *inode, unsigned long block,
+ 
+ static int
+ nilfs_mdt_submit_block(struct inode *inode, unsigned long blkoff,
+-		       int mode, struct buffer_head **out_bh)
++		       int mode, int mode_flags, struct buffer_head **out_bh)
+ {
+ 	struct buffer_head *bh;
+ 	__u64 blknum = 0;
+@@ -138,7 +138,7 @@ nilfs_mdt_submit_block(struct inode *inode, unsigned long blkoff,
+ 	if (buffer_uptodate(bh))
+ 		goto out;
+ 
+-	if (mode == READA) {
++	if (mode_flags & REQ_RAHEAD) {
+ 		if (!trylock_buffer(bh)) {
+ 			ret = -EBUSY;
+ 			goto failed_bh;
+@@ -160,7 +160,7 @@ nilfs_mdt_submit_block(struct inode *inode, unsigned long blkoff,
+ 
+ 	bh->b_end_io = end_buffer_read_sync;
+ 	get_bh(bh);
+-	submit_bh(mode, bh);
++	submit_bh(mode, mode_flags, bh);
+ 	ret = 0;
+ 
+ 	trace_nilfs2_mdt_submit_block(inode, inode->i_ino, blkoff, mode);
+@@ -184,7 +184,7 @@ static int nilfs_mdt_read_block(struct inode *inode, unsigned long block,
+ 	int i, nr_ra_blocks = NILFS_MDT_MAX_RA_BLOCKS;
+ 	int err;
+ 
+-	err = nilfs_mdt_submit_block(inode, block, READ, &first_bh);
++	err = nilfs_mdt_submit_block(inode, block, REQ_OP_READ, 0, &first_bh);
+ 	if (err == -EEXIST) /* internal code */
+ 		goto out;
+ 
+@@ -194,7 +194,8 @@ static int nilfs_mdt_read_block(struct inode *inode, unsigned long block,
+ 	if (readahead) {
+ 		blkoff = block + 1;
+ 		for (i = 0; i < nr_ra_blocks; i++, blkoff++) {
+-			err = nilfs_mdt_submit_block(inode, blkoff, READA, &bh);
++			err = nilfs_mdt_submit_block(inode, blkoff, REQ_OP_READ,
++						     REQ_RAHEAD, &bh);
+ 			if (likely(!err || err == -EEXIST))
+ 				brelse(bh);
+ 			else if (err != -EBUSY)
+diff --git a/fs/ntfs/aops.c b/fs/ntfs/aops.c
+index 97768a1..fe251f1 100644
+--- a/fs/ntfs/aops.c
++++ b/fs/ntfs/aops.c
+@@ -362,7 +362,7 @@ handle_zblock:
+ 		for (i = 0; i < nr; i++) {
+ 			tbh = arr[i];
+ 			if (likely(!buffer_uptodate(tbh)))
+-				submit_bh(READ, tbh);
++				submit_bh(REQ_OP_READ, 0, tbh);
+ 			else
+ 				ntfs_end_buffer_async_read(tbh, 1);
+ 		}
+@@ -877,7 +877,7 @@ lock_retry_remap:
+ 	do {
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+-			submit_bh(WRITE, bh);
++			submit_bh(REQ_OP_WRITE, 0, bh);
+ 			need_end_writeback = false;
+ 		}
+ 		bh = next;
+@@ -1202,7 +1202,7 @@ lock_retry_remap:
+ 		BUG_ON(!buffer_mapped(tbh));
+ 		get_bh(tbh);
+ 		tbh->b_end_io = end_buffer_write_sync;
+-		submit_bh(WRITE, tbh);
++		submit_bh(REQ_OP_WRITE, 0, tbh);
+ 	}
+ 	/* Synchronize the mft mirror now if not @sync. */
+ 	if (is_mft && !sync)
+diff --git a/fs/ntfs/compress.c b/fs/ntfs/compress.c
+index f2b5e74..f8eb043 100644
+--- a/fs/ntfs/compress.c
++++ b/fs/ntfs/compress.c
+@@ -670,7 +670,7 @@ lock_retry_remap:
+ 		}
+ 		get_bh(tbh);
+ 		tbh->b_end_io = end_buffer_read_sync;
+-		submit_bh(READ, tbh);
++		submit_bh(REQ_OP_READ, 0, tbh);
+ 	}
+ 
+ 	/* Wait for io completion on all buffer heads. */
+diff --git a/fs/ntfs/file.c b/fs/ntfs/file.c
+index 91117ad..d96f0c1 100644
+--- a/fs/ntfs/file.c
++++ b/fs/ntfs/file.c
+@@ -553,7 +553,7 @@ static inline int ntfs_submit_bh_for_read(struct buffer_head *bh)
+ 	lock_buffer(bh);
+ 	get_bh(bh);
+ 	bh->b_end_io = end_buffer_read_sync;
+-	return submit_bh(READ, bh);
++	return submit_bh(REQ_OP_READ, 0, bh);
+ }
+ 
+ /**
+diff --git a/fs/ntfs/logfile.c b/fs/ntfs/logfile.c
+index 9d71213..761f12f 100644
+--- a/fs/ntfs/logfile.c
++++ b/fs/ntfs/logfile.c
+@@ -821,7 +821,7 @@ map_vcn:
+ 			 * completed ignore errors afterwards as we can assume
+ 			 * that if one buffer worked all of them will work.
+ 			 */
+-			submit_bh(WRITE, bh);
++			submit_bh(REQ_OP_WRITE, 0, bh);
+ 			if (should_wait) {
+ 				should_wait = false;
+ 				wait_on_buffer(bh);
+diff --git a/fs/ntfs/mft.c b/fs/ntfs/mft.c
+index 37b2501..d15d492 100644
+--- a/fs/ntfs/mft.c
++++ b/fs/ntfs/mft.c
+@@ -592,7 +592,7 @@ int ntfs_sync_mft_mirror(ntfs_volume *vol, const unsigned long mft_no,
+ 			clear_buffer_dirty(tbh);
+ 			get_bh(tbh);
+ 			tbh->b_end_io = end_buffer_write_sync;
+-			submit_bh(WRITE, tbh);
++			submit_bh(REQ_OP_WRITE, 0, tbh);
+ 		}
+ 		/* Wait on i/o completion of buffers. */
+ 		for (i_bhs = 0; i_bhs < nr_bhs; i_bhs++) {
+@@ -785,7 +785,7 @@ int write_mft_record_nolock(ntfs_inode *ni, MFT_RECORD *m, int sync)
+ 		clear_buffer_dirty(tbh);
+ 		get_bh(tbh);
+ 		tbh->b_end_io = end_buffer_write_sync;
+-		submit_bh(WRITE, tbh);
++		submit_bh(REQ_OP_WRITE, 0, tbh);
+ 	}
+ 	/* Synchronize the mft mirror now if not @sync. */
+ 	if (!sync && ni->mft_no < vol->mftmirr_size)
+diff --git a/fs/ocfs2/buffer_head_io.c b/fs/ocfs2/buffer_head_io.c
+index fe50ded..fb775c9 100644
+--- a/fs/ocfs2/buffer_head_io.c
++++ b/fs/ocfs2/buffer_head_io.c
+@@ -79,7 +79,7 @@ int ocfs2_write_block(struct ocfs2_super *osb, struct buffer_head *bh,
+ 
+ 	get_bh(bh); /* for end_buffer_write_sync() */
+ 	bh->b_end_io = end_buffer_write_sync;
+-	submit_bh(WRITE, bh);
++	submit_bh(REQ_OP_WRITE, 0, bh);
+ 
+ 	wait_on_buffer(bh);
+ 
+@@ -149,7 +149,7 @@ int ocfs2_read_blocks_sync(struct ocfs2_super *osb, u64 block,
+ 		clear_buffer_uptodate(bh);
+ 		get_bh(bh); /* for end_buffer_read_sync() */
+ 		bh->b_end_io = end_buffer_read_sync;
+-		submit_bh(READ, bh);
++		submit_bh(REQ_OP_READ, 0, bh);
+ 	}
+ 
+ 	for (i = nr; i > 0; i--) {
+@@ -305,7 +305,7 @@ int ocfs2_read_blocks(struct ocfs2_caching_info *ci, u64 block, int nr,
+ 			if (validate)
+ 				set_buffer_needs_validate(bh);
+ 			bh->b_end_io = end_buffer_read_sync;
+-			submit_bh(READ, bh);
++			submit_bh(REQ_OP_READ, 0, bh);
+ 			continue;
+ 		}
+ 	}
+@@ -419,7 +419,7 @@ int ocfs2_write_super_or_backup(struct ocfs2_super *osb,
+ 	get_bh(bh); /* for end_buffer_write_sync() */
+ 	bh->b_end_io = end_buffer_write_sync;
+ 	ocfs2_compute_meta_ecc(osb->sb, bh->b_data, &di->i_check);
+-	submit_bh(WRITE, bh);
++	submit_bh(REQ_OP_WRITE, 0, bh);
+ 
+ 	wait_on_buffer(bh);
+ 
+diff --git a/fs/reiserfs/inode.c b/fs/reiserfs/inode.c
+index d5c2e9c..b72c23a 100644
+--- a/fs/reiserfs/inode.c
++++ b/fs/reiserfs/inode.c
+@@ -2668,7 +2668,7 @@ static int reiserfs_write_full_page(struct page *page,
+ 	do {
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+-			submit_bh(WRITE, bh);
++			submit_bh(REQ_OP_WRITE, 0, bh);
+ 			nr++;
+ 		}
+ 		put_bh(bh);
+@@ -2728,7 +2728,7 @@ fail:
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+ 			clear_buffer_dirty(bh);
+-			submit_bh(WRITE, bh);
++			submit_bh(REQ_OP_WRITE, 0, bh);
+ 			nr++;
+ 		}
+ 		put_bh(bh);
+diff --git a/fs/reiserfs/journal.c b/fs/reiserfs/journal.c
+index 2ace90e..6945e71 100644
+--- a/fs/reiserfs/journal.c
++++ b/fs/reiserfs/journal.c
+@@ -652,7 +652,7 @@ static void submit_logged_buffer(struct buffer_head *bh)
+ 		BUG();
+ 	if (!buffer_uptodate(bh))
+ 		BUG();
+-	submit_bh(WRITE, bh);
++	submit_bh(REQ_OP_WRITE, 0, bh);
+ }
+ 
+ static void submit_ordered_buffer(struct buffer_head *bh)
+@@ -662,7 +662,7 @@ static void submit_ordered_buffer(struct buffer_head *bh)
+ 	clear_buffer_dirty(bh);
+ 	if (!buffer_uptodate(bh))
+ 		BUG();
+-	submit_bh(WRITE, bh);
++	submit_bh(REQ_OP_WRITE, 0, bh);
+ }
+ 
+ #define CHUNK_SIZE 32
+@@ -2269,7 +2269,7 @@ abort_replay:
+ 	/* flush out the real blocks */
+ 	for (i = 0; i < get_desc_trans_len(desc); i++) {
+ 		set_buffer_dirty(real_blocks[i]);
+-		write_dirty_buffer(real_blocks[i], WRITE);
++		write_dirty_buffer(real_blocks[i], 0);
+ 	}
+ 	for (i = 0; i < get_desc_trans_len(desc); i++) {
+ 		wait_on_buffer(real_blocks[i]);
+diff --git a/fs/ufs/util.c b/fs/ufs/util.c
+index a409e3e7..f41ad0a 100644
+--- a/fs/ufs/util.c
++++ b/fs/ufs/util.c
+@@ -118,7 +118,7 @@ void ubh_sync_block(struct ufs_buffer_head *ubh)
+ 		unsigned i;
+ 
+ 		for (i = 0; i < ubh->count; i++)
+-			write_dirty_buffer(ubh->bh[i], WRITE);
++			write_dirty_buffer(ubh->bh[i], 0);
+ 
+ 		for (i = 0; i < ubh->count; i++)
+ 			wait_on_buffer(ubh->bh[i]);
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index d48daa3..bc9a45d 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -189,10 +189,11 @@ void unlock_buffer(struct buffer_head *bh);
+ void __lock_buffer(struct buffer_head *bh);
+ void ll_rw_block(int, int, struct buffer_head * bh[]);
+ int sync_dirty_buffer(struct buffer_head *bh);
+-int __sync_dirty_buffer(struct buffer_head *bh, int rw);
+-void write_dirty_buffer(struct buffer_head *bh, int rw);
+-int _submit_bh(int rw, struct buffer_head *bh, unsigned long bio_flags);
+-int submit_bh(int, struct buffer_head *);
++int __sync_dirty_buffer(struct buffer_head *bh, int op_flags);
++void write_dirty_buffer(struct buffer_head *bh, int op_flags);
++int _submit_bh(int op, int op_flags, struct buffer_head *bh,
++	       unsigned long bio_flags);
++int submit_bh(int, int, struct buffer_head *);
+ void write_boundary_block(struct block_device *bdev,
+ 			sector_t bblock, unsigned blocksize);
+ int bh_uptodate_or_lock(struct buffer_head *bh);
 -- 
 2.7.2
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
