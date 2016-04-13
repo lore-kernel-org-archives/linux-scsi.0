@@ -1,70 +1,82 @@
-From: Xinwei Kong <kong.kongxinwei@hisilicon.com>
-Subject: Re: [PATCH 1/1] scsi: usb: fix bug which some usb isn't used
-Date: Wed, 13 Apr 2016 10:16:14 +0800
-Message-ID: <570DABEE.3000308@hisilicon.com>
-References: <1460464554-14116-1-git-send-email-kong.kongxinwei@hisilicon.com>
- <570CEDCF.8010505@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [dm-devel] [RFC PATCH 0/4] dm mpath: vastly improve blk-mq IO performance
+Date: Wed, 13 Apr 2016 09:03:06 +0200
+Message-ID: <1894861.yMOs7f7bAi@c203>
+References: <1459454666-76428-1-git-send-email-snitzer@redhat.com> <2760420.6GyDefUaH5@c203> <20160408192938.GC8453@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:24467 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932848AbcDMCSt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2016 22:18:49 -0400
-In-Reply-To: <570CEDCF.8010505@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:55412 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933665AbcDMHDK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 03:03:10 -0400
+In-Reply-To: <20160408192938.GC8453@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linuxraid@lsi.com, James.Bottomley@HansenPartnership.com, hch@lst.de, snitzer@redhat.com
-Cc: martin.petersen@oracle.com, JBottomley@Odin.com, linux-scsi@vger.kernel.org, "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+To: dm-devel@redhat.com
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, sagig@dev.mellanox.co.il, jmoyer@redhat.com, linux-block@vger.kernel.org, j-nomura@ce.jp.nec.com
+
+On Freitag, 8. April 2016 15:29:39 CEST Mike Snitzer wrote:
+> On Fri, Apr 08 2016 at  7:42am -0400,
+> Johannes Thumshirn <jthumshirn@suse.de> wrote:
+>=20
+> > Ladies and Gentlemen,
+> > To show off some numbers from our testing:
+> >=20
+> > All tests are performed against the cache of the Array, not the dis=
+ks as we=20
+> > wanted to test the Linux stack not the Disk Array.
+> >=20
+> > All single queue tests have been performed with the deadline I/O Sc=
+heduler.
+> >=20
+> > Comments welcome, have fun reading :-)
+>=20
+> Any chance you collected performance results from DM MQ on this same
+> testbed without any variant of my lockless patches?  The DM SQ result=
+s
+> aren't too interesting a reference point.  Seeing how much better
+> lockless DM MQ (multipath) is than the old m->lock heacy code (still =
+in
+> 4.6) would be more interesting.
+>=20
+> Not a big deal if you don't have it.. but figured I'd check to see.
+
+I'll have to look if there are some of the old logfiles still available=
+, but we
+can't re-test, as the array was just temporarily allocated to us and we=
+'ve
+now lost access to it. But IIRC it's been somewhere around 300K IOPS, b=
+ut=20
+don't quote me on that.
+
+Byte,
+	Joahnnes
+
+=20
+> And thanks for the numbers you've provided.
+> Mike
+>=20
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+>=20
 
 
+--=20
+Johannes Thumshirn                                                     =
+                           Storage
+jthumshirn@suse.de                                                     =
+        +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
 
-On 2016/4/12 20:45, Hannes Reinecke wrote:
-> On 04/12/2016 02:35 PM, Xinwei Kong wrote:
->> some usb disk such as Manufacturer Lenovo will have some problem in
->> init process.
->>
->> when it run "scsi_dh_find_driver" function, because this parameter of
->> "sdev->inquiry[5]" is 115, it will return "alua" in "scsi_dh_find_driver"
->> function and will have some error log (alua: Attach failed (-22)). some
->> usb init will fail and isn't used.
->>
->> Signed-off-by: Xinwei Kong <kong.kongxinwei@hisilicon.com>
->> ---
->>  drivers/scsi/scsi_dh.c | 3 ---
->>  1 file changed, 3 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
->> index 54d446c..36b3f354e 100644
->> --- a/drivers/scsi/scsi_dh.c
->> +++ b/drivers/scsi/scsi_dh.c
->> @@ -77,9 +77,6 @@ scsi_dh_find_driver(struct scsi_device *sdev)
->>  {
->>  	const struct scsi_dh_blist *b;
->>  
->> -	if (scsi_device_tpgs(sdev))
->> -		return "alua";
->> -
->>  	for (b = scsi_dh_blist; b->vendor; b++) {
->>  		if (!strncmp(sdev->vendor, b->vendor, strlen(b->vendor)) &&
->>  		    !strncmp(sdev->model, b->model, strlen(b->model))) {
->>
-> Nack.
-> That will completely disable ALUA support for everybody.
-> 
-> And should've been fixed with commit
-> 221255aee67ec1c752001080aafec0c4e9390d95
-> ("scsi: ignore errors from scsi_dh_add_device()").
-> 
-> Please validate.
-> 
-ok, I slove this bug for using this patch.
-
-thank you
-xinwei
-> Cheers,
-> 
-> Hannes
-> 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
