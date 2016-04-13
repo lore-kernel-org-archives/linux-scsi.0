@@ -1,49 +1,149 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [Lsf] LSF/MM Schedule and improving discard support
-Date: Wed, 13 Apr 2016 09:51:04 -0700
-Message-ID: <1460566264.2322.13.camel@linux.vnet.ibm.com>
-References: <57067F19.3030404@sandisk.com>
-	 <1460044289.2311.5.camel@linux.vnet.ibm.com> <570E6C55.1060003@sandisk.com>
-	 <yq11t69wkcl.fsf@sermon.lab.mkp.net> <570E73D5.3010502@sandisk.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force
+ inlining of some byteswap operations)
+Date: Wed, 13 Apr 2016 09:55:09 -0700
+Message-ID: <1460566509.2322.14.camel@HansenPartnership.com>
+References: <1454615136-32308-1-git-send-email-dvlasenk@redhat.com>
+	 <1454615136-32308-2-git-send-email-dvlasenk@redhat.com>
+	 <20160413033649.7r3msnmo3trtq47z@treble> <570E37A9.2050503@redhat.com>
+	 <20160413123607.3y3v5esq3myto4kc@treble>
+	 <20160413151500.tate3u6trg4agugo@treble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:39414 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbcDMQvK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 12:51:10 -0400
-Received: from localhost
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-	Wed, 13 Apr 2016 10:51:09 -0600
-In-Reply-To: <570E73D5.3010502@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160413151500.tate3u6trg4agugo@treble>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Josh Poimboeuf <jpoimboe@redhat.com>, Denys Vlasenko <dvlasenk@redhat.com>
+Cc: Ingo Molnar <mingo@kernel.org>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jens Axboe <axboe@fb.com>, "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>
 
-On Wed, 2016-04-13 at 09:29 -0700, Bart Van Assche wrote:
-> On 04/13/2016 09:21 AM, Martin K. Petersen wrote:
-> > From a filesystem/ioctl perspective, BLKDISCARD is a hint. We
-> > should not be
-> > rounding off or aligning anything.
+On Wed, 2016-04-13 at 10:15 -0500, Josh Poimboeuf wrote:
+> On Wed, Apr 13, 2016 at 07:36:07AM -0500, Josh Poimboeuf wrote:
+> > On Wed, Apr 13, 2016 at 02:12:25PM +0200, Denys Vlasenko wrote:
+> > > On 04/13/2016 05:36 AM, Josh Poimboeuf wrote:
+> > > > On Thu, Feb 04, 2016 at 08:45:35PM +0100, Denys Vlasenko wrote:
+> > > > > Sometimes gcc mysteriously doesn't inline
+> > > > > very small functions we expect to be inlined. See
+> > > > >     https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66122
+> > > > > 
+> > > > > With this .config:
+> > > > > http://busybox.net/~vda/kernel_config_OPTIMIZE_INLINING_and_O
+> > > > > s,
+> > > > > the following functions get deinlined many times.
+> > > > > Examples of disassembly:
+> > > > > 
+> > > > > <get_unaligned_be16> (12 copies, 51 calls):
+> > > > >        66 8b 07                mov    (%rdi),%ax
+> > > > >        55                      push   %rbp
+> > > > >        48 89 e5                mov    %rsp,%rbp
+> > > > >        86 e0                   xchg   %ah,%al
+> > > > >        5d                      pop    %rbp
+> > > > >        c3                      retq
+> > > ...
+> > > > > This patch fixes this via s/inline/__always_inline/.
+> > > > > Code size decrease after the patch is ~4.5k:
+> > > > > 
+> > > > >     text     data      bss       dec     hex filename
+> > > > > 92202377 20826112 36417536 149446025 8e85d89 vmlinux
+> > > > > 92197848 20826112 36417536 149441496 8e84bd8
+> > > > > vmlinux5_swap_after
+> > > > > 
+> > > > > Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+> > > > > Cc: Ingo Molnar <mingo@kernel.org>
+> > > > > Cc: Thomas Graf <tgraf@suug.ch>
+> > > > > Cc: Peter Zijlstra <peterz@infradead.org>
+> > > > > Cc: David Rientjes <rientjes@google.com>
+> > > > > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > > > > Cc: linux-kernel@vger.kernel.org
+> > > > > ---
+> > > > >  include/uapi/linux/byteorder/big_endian.h    | 24
+> > > > > ++++++++++++------------
+> > > > >  include/uapi/linux/byteorder/little_endian.h | 24
+> > > > > ++++++++++++------------
+> > > > >  include/uapi/linux/swab.h                    | 10 +++++-----
+> > > > >  3 files changed, 29 insertions(+), 29 deletions(-)
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > This patch seems to trigger a gcc bug which can produce corrupt
+> > > > code.  I
+> > > > discovered it when investigating an objtool warning reported by
+> > > > kbuild
+> > > > bot:
+> > > > 
+> > > >   http://www.spinics.net/lists/linux-scsi/msg95481.html
+> > > > 
+> > > > From the disassembly of drivers/scsi/qla2xxx/qla_attr.o:
+> > > > 
+> > > > 0000000000002f53 <qla2x00_get_host_fabric_name>:
+> > > >     2f53:       55                      push   %rbp
+> > > >     2f54:       48 89 e5                mov    %rsp,%rbp
+> > > > 
+> > > > 0000000000002f57 <qla2x00_get_fc_host_stats>:
+> > > >     2f57:       55                      push   %rbp
+> > > >     2f58:       b9 e8 00 00 00          mov    $0xe8,%ecx
+> > > >     2f5d:       48 89 e5                mov    %rsp,%rbp
+> > > > ...
+> > > > 
+> > > > Note that qla2x00_get_host_fabric_name() is inexplicably
+> > > > truncated after
+> > > > setting up the frame pointer.  It falls through to the next
+> > > > function, which is
+> > > > very wrong.
+> > > 
+> > > Wow, that's ... interesting.
+> > > 
+> > > 
+> > > > I can recreate it with either gcc 5.3.1 or gcc 6.0 on
+> > > > linus/master with
+> > > > the .config from the above link.
+> > > > 
+> > > > The call chain which appears to trigger the problem is:
+> > > > 
+> > > > qla2x00_get_host_fabric_name()
+> > > >   wwn_to_u64()
+> > > >     get_unaligned_be64()
+> > > >       be64_to_cpup()
+> > > >         __be64_to_cpup() <- changed to __always_inline by this
+> > > > patch
+> > > > 
+> > > > It occurs with the combination of the following two recent
+> > > > commits:
+> > > > 
+> > > > - bc27fb68aaad ("include/uapi/linux/byteorder, swab: force
+> > > > inlining of some byteswap operations")
+> > > > - ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn
+> > > > access")
+> > > > 
+> > > > I can confirm that reverting either patch makes the problem go
+> > > > away.
+> > > > I'm planning on opening a gcc bug tomorrow.
+> > > 
+> > > 
+> > > Note that if CONFIG_OPTIMIZE_INLINING is not set, _all_ "inline"
+> > > keywords are in fact __always_inline, so the bug must be
+> > > triggering
+> > > even without the patch.
+> > 
+> > Makes sense in theory, but the bug doesn't actually trigger when I
+> > revert the patch and set CONFIG_OPTIMIZE_INLINING=n.
+> > 
+> > Perhaps even more surprising, it doesn't trigger *with* the patch
+> > and
+> > CONFIG_OPTIMIZE_INLINING=n.
 > 
-> Hello Martin,
+> [ Adding James to CC since this bug affects scsi. ]
 > 
-> Today if a BLKDISCARD ioctl passes a non-aligned start and/or end 
-> sector to the kernel then the block layer will submit invalid (non
-> -aligned) REQ_DISCARD requests to the block driver the ioctl applies 
-> to. This is not acceptable. Does the above mean that you are 
-> proposing to fail such BLKDISCARD ioctls with an error code?
+> Here's the gcc bug:
+> 
+>   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+> 
 
-The answer would be of course not.  discard is a hint so malformed
-discard gets ignored by the device and success is returned because you
-can't oblige devices to obey hints (that's why they're called hints).
 
-However, the problem of needing a mandatory discard for scrubbing
-blocks is part of the fallocate discussion, I think.
+Actually, adding me doesn't help, I've added linux-scsi.  The summary
+is that there's a but in gcc-5.3.1 which is miscompiling qla_attr.c ...
+this means we're going to have to ask the compiler version of reported
+crashes.
 
 James
-
-
