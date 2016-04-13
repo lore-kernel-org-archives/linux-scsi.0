@@ -1,179 +1,198 @@
 From: mchristi@redhat.com
-Subject: [PATCH 12/42] gfs2: set bi_op to REQ_OP
-Date: Wed, 13 Apr 2016 14:35:58 -0500
-Message-ID: <1460576188-5751-13-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 39/42] block: shrink bio/request fields
+Date: Wed, 13 Apr 2016 14:36:25 -0500
+Message-ID: <1460576188-5751-40-git-send-email-mchristi@redhat.com>
 References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has gfs2 use bio->bi_op for REQ_OPs and rq_flag_bits to bio->bi_rw.
+bi_op only needed to be a int for temp compat reasons, so
+this patch shrinks it to u8.
+
+There is no need for bi_rw to be so large now, so that is
+reduced to a unsigned int and bi_ioprio is just put in
+its own field.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/gfs2/log.c        |  8 ++++----
- fs/gfs2/lops.c       | 12 +++++++-----
- fs/gfs2/lops.h       |  2 +-
- fs/gfs2/meta_io.c    |  8 +++++---
- fs/gfs2/ops_fstype.c |  1 +
- 5 files changed, 18 insertions(+), 13 deletions(-)
+ block/blk-core.c           |  2 +-
+ drivers/md/dm-flakey.c     |  2 +-
+ drivers/md/raid5.c         | 13 +++++++------
+ fs/btrfs/check-integrity.c |  4 ++--
+ fs/btrfs/inode.c           |  2 +-
+ include/linux/bio.h        | 13 ++-----------
+ include/linux/blk_types.h  | 11 +++--------
+ include/linux/blkdev.h     |  2 +-
+ 8 files changed, 18 insertions(+), 31 deletions(-)
 
-diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
-index 0ff028c..e58ccef0 100644
---- a/fs/gfs2/log.c
-+++ b/fs/gfs2/log.c
-@@ -657,7 +657,7 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
- 	struct gfs2_log_header *lh;
- 	unsigned int tail;
- 	u32 hash;
--	int rw = WRITE_FLUSH_FUA | REQ_META;
-+	int op_flags = WRITE_FLUSH_FUA | REQ_META;
- 	struct page *page = mempool_alloc(gfs2_page_pool, GFP_NOIO);
- 	enum gfs2_freeze_state state = atomic_read(&sdp->sd_freeze_state);
- 	lh = page_address(page);
-@@ -682,12 +682,12 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
- 	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags)) {
- 		gfs2_ordered_wait(sdp);
- 		log_flush_wait(sdp);
--		rw = WRITE_SYNC | REQ_META | REQ_PRIO;
-+		op_flags = WRITE_SYNC | REQ_META | REQ_PRIO;
- 	}
+diff --git a/block/blk-core.c b/block/blk-core.c
+index cee131b..71ba3a9 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1854,7 +1854,7 @@ static void handle_bad_sector(struct bio *bio)
+ 	char b[BDEVNAME_SIZE];
  
- 	sdp->sd_log_idle = (tail == sdp->sd_log_flush_head);
- 	gfs2_log_write_page(sdp, page);
--	gfs2_log_flush_bio(sdp, rw);
-+	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, op_flags);
- 	log_flush_wait(sdp);
+ 	printk(KERN_INFO "attempt to access beyond end of device\n");
+-	printk(KERN_INFO "%s: rw=%d,%ld, want=%Lu, limit=%Lu\n",
++	printk(KERN_INFO "%s: rw=%d,%u, want=%Lu, limit=%Lu\n",
+ 			bdevname(bio->bi_bdev, b),
+ 			bio->bi_op, bio->bi_rw,
+ 			(unsigned long long)bio_end_sector(bio),
+diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
+index b7341de..29b99fb 100644
+--- a/drivers/md/dm-flakey.c
++++ b/drivers/md/dm-flakey.c
+@@ -266,7 +266,7 @@ static void corrupt_bio_data(struct bio *bio, struct flakey_c *fc)
+ 		data[fc->corrupt_bio_byte - 1] = fc->corrupt_bio_value;
  
- 	if (sdp->sd_log_tail != tail)
-@@ -738,7 +738,7 @@ void gfs2_log_flush(struct gfs2_sbd *sdp, struct gfs2_glock *gl,
+ 		DMDEBUG("Corrupting data bio=%p by writing %u to byte %u "
+-			"(rw=%c bi_rw=%lu bi_sector=%llu cur_bytes=%u)\n",
++			"(rw=%c bi_rw=%u bi_sector=%llu cur_bytes=%u)\n",
+ 			bio, fc->corrupt_bio_value, fc->corrupt_bio_byte,
+ 			(bio_data_dir(bio) == WRITE) ? 'w' : 'r', bio->bi_rw,
+ 			(unsigned long long)bio->bi_iter.bi_sector, bio_bytes);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c36b817..7fb693f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1006,9 +1006,9 @@ again:
+ 				: raid5_end_read_request;
+ 			bi->bi_private = sh;
  
- 	gfs2_ordered_write(sdp);
- 	lops_before_commit(sdp, tr);
--	gfs2_log_flush_bio(sdp, WRITE);
-+	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
+-			pr_debug("%s: for %llu schedule op %ld on disc %d\n",
++			pr_debug("%s: for %llu schedule op %d,%u on disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+-				bi->bi_rw, i);
++				bi->bi_op, bi->bi_rw, i);
+ 			atomic_inc(&sh->count);
+ 			if (sh != head_sh)
+ 				atomic_inc(&head_sh->count);
+@@ -1058,10 +1058,10 @@ again:
+ 			rbi->bi_end_io = raid5_end_write_request;
+ 			rbi->bi_private = sh;
  
- 	if (sdp->sd_log_head != sdp->sd_log_flush_head) {
- 		log_flush_wait(sdp);
-diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-index ce28242..c1099b4 100644
---- a/fs/gfs2/lops.c
-+++ b/fs/gfs2/lops.c
-@@ -230,17 +230,19 @@ static void gfs2_end_log_write(struct bio *bio)
- /**
-  * gfs2_log_flush_bio - Submit any pending log bio
-  * @sdp: The superblock
-- * @rw: The rw flags
-+ * @op: REQ_OP
-+ * @op_flags: rq_flag_bits
-  *
-  * Submit any pending part-built or full bio to the block device. If
-  * there is no pending bio, then this is a no-op.
-  */
- 
--void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw)
-+void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags)
- {
- 	if (sdp->sd_log_bio) {
- 		atomic_inc(&sdp->sd_log_in_flight);
--		sdp->sd_log_bio->bi_rw = rw;
-+		sdp->sd_log_bio->bi_op = op;
-+		sdp->sd_log_bio->bi_rw = op_flags;
- 		submit_bio(sdp->sd_log_bio);
- 		sdp->sd_log_bio = NULL;
- 	}
-@@ -300,7 +302,7 @@ static struct bio *gfs2_log_get_bio(struct gfs2_sbd *sdp, u64 blkno)
- 		nblk >>= sdp->sd_fsb2bb_shift;
- 		if (blkno == nblk)
- 			return bio;
--		gfs2_log_flush_bio(sdp, WRITE);
-+		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 	}
- 
- 	return gfs2_log_alloc_bio(sdp, blkno);
-@@ -329,7 +331,7 @@ static void gfs2_log_write(struct gfs2_sbd *sdp, struct page *page,
- 	bio = gfs2_log_get_bio(sdp, blkno);
- 	ret = bio_add_page(bio, page, size, offset);
- 	if (ret == 0) {
--		gfs2_log_flush_bio(sdp, WRITE);
-+		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 		bio = gfs2_log_alloc_bio(sdp, blkno);
- 		ret = bio_add_page(bio, page, size, offset);
- 		WARN_ON(ret == 0);
-diff --git a/fs/gfs2/lops.h b/fs/gfs2/lops.h
-index a65a7ba..e529f53 100644
---- a/fs/gfs2/lops.h
-+++ b/fs/gfs2/lops.h
-@@ -27,7 +27,7 @@ extern const struct gfs2_log_operations gfs2_databuf_lops;
- 
- extern const struct gfs2_log_operations *gfs2_log_ops[];
- extern void gfs2_log_write_page(struct gfs2_sbd *sdp, struct page *page);
--extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw);
-+extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags);
- extern void gfs2_pin(struct gfs2_sbd *sdp, struct buffer_head *bh);
- 
- static inline unsigned int buf_limit(struct gfs2_sbd *sdp)
-diff --git a/fs/gfs2/meta_io.c b/fs/gfs2/meta_io.c
-index f56f3ca..55ae188 100644
---- a/fs/gfs2/meta_io.c
-+++ b/fs/gfs2/meta_io.c
-@@ -213,7 +213,8 @@ static void gfs2_meta_read_endio(struct bio *bio)
-  * Submit several consecutive buffer head I/O requests as a single bio I/O
-  * request.  (See submit_bh_wbc.)
-  */
--static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
-+static void gfs2_submit_bhs(int op, int op_flags, struct buffer_head *bhs[],
-+			    int num)
- {
- 	struct buffer_head *bh = bhs[0];
- 	struct bio *bio;
-@@ -230,7 +231,8 @@ static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
- 		bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
- 	}
- 	bio->bi_end_io = gfs2_meta_read_endio;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	submit_bio(bio);
- }
- 
-@@ -281,7 +283,7 @@ int gfs2_meta_read(struct gfs2_glock *gl, u64 blkno, int flags,
+-			pr_debug("%s: for %llu schedule op %ld on "
++			pr_debug("%s: for %llu schedule op %d,%u on "
+ 				 "replacement disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+-				rbi->bi_rw, i);
++				rbi->bi_op, rbi->bi_rw, i);
+ 			atomic_inc(&sh->count);
+ 			if (sh != head_sh)
+ 				atomic_inc(&head_sh->count);
+@@ -1093,8 +1093,9 @@ again:
+ 		if (!rdev && !rrdev) {
+ 			if (op_is_write(op))
+ 				set_bit(STRIPE_DEGRADED, &sh->state);
+-			pr_debug("skip op %ld on disc %d for sector %llu\n",
+-				bi->bi_rw, i, (unsigned long long)sh->sector);
++			pr_debug("skip op %d,%u on disc %d for sector %llu\n",
++				 bi->bi_op, bi->bi_rw, i,
++				 (unsigned long long)sh->sector);
+ 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
  		}
- 	}
+diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
+index c4a48e8..921a858 100644
+--- a/fs/btrfs/check-integrity.c
++++ b/fs/btrfs/check-integrity.c
+@@ -2943,7 +2943,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bio(rw=%d,0x%lx, bi_vcnt=%u,"
++			       "submit_bio(rw=%d,0x%x, bi_vcnt=%u,"
+ 			       " bi_sector=%llu (bytenr %llu), bi_bdev=%p)\n",
+ 			       bio->bi_op, bio->bi_rw, bio->bi_vcnt,
+ 			       (unsigned long long)bio->bi_iter.bi_sector,
+@@ -2986,7 +2986,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bio(rw=%d,0x%lx FLUSH, bdev=%p)\n",
++			       "submit_bio(rw=%d,0x%x FLUSH, bdev=%p)\n",
+ 			       bio->bi_op, bio->bi_rw, bio->bi_bdev);
+ 		if (!dev_state->dummy_block_for_bio_bh_flush.is_iodone) {
+ 			if ((dev_state->state->print_mask &
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index bd214ab..e2617ba 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8153,7 +8153,7 @@ static void btrfs_end_dio_bio(struct bio *bio)
  
--	gfs2_submit_bhs(READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
-+	gfs2_submit_bhs(REQ_OP_READ, READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
- 	if (!(flags & DIO_WAIT))
- 		return 0;
+ 	if (err)
+ 		btrfs_warn(BTRFS_I(dip->inode)->root->fs_info,
+-			   "direct IO failed ino %llu rw %d,%lu sector %#Lx len %u err no %d",
++			   "direct IO failed ino %llu rw %d,0x%x sector %#Lx len %u err no %d",
+ 			   btrfs_ino(dip->inode), bio->bi_op, bio->bi_rw,
+ 			   (unsigned long long)bio->bi_iter.bi_sector,
+ 			   bio->bi_iter.bi_size, err);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 9e7b18b..5ece950 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -44,18 +44,9 @@
+ #define BIO_MAX_SIZE		(BIO_MAX_PAGES << PAGE_SHIFT)
+ #define BIO_MAX_SECTORS		(BIO_MAX_SIZE >> 9)
  
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index 141b560..fda3e71 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -246,6 +246,7 @@ static int gfs2_read_super(struct gfs2_sbd *sdp, sector_t sector, int silent)
+-/*
+- * upper 16 bits of bi_rw define the io priority of this bio
+- */
+-#define BIO_PRIO_SHIFT	(8 * sizeof(unsigned long) - IOPRIO_BITS)
+-#define bio_prio(bio)	((bio)->bi_rw >> BIO_PRIO_SHIFT)
++#define bio_prio(bio)		(bio)->bi_ioprio
+ #define bio_prio_valid(bio)	ioprio_valid(bio_prio(bio))
+-
+-#define bio_set_prio(bio, prio)		do {			\
+-	WARN_ON(prio >= (1 << IOPRIO_BITS));			\
+-	(bio)->bi_rw &= ((1UL << BIO_PRIO_SHIFT) - 1);		\
+-	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
+-} while (0)
++#define bio_set_prio(bio, prio)	((bio)->bi_ioprio = prio)
  
- 	bio->bi_end_io = end_bio_io_page;
- 	bio->bi_private = page;
-+	bio->bi_op = REQ_OP_READ;
- 	bio->bi_rw = READ_SYNC | REQ_META;
- 	submit_bio(bio);
- 	wait_on_page_locked(page);
+ /*
+  * various member access, note that bio_data should of course not be used
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index b4251ed..498f395 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -48,14 +48,9 @@ struct bio {
+ 	struct block_device	*bi_bdev;
+ 	unsigned int		bi_flags;	/* status, command, etc */
+ 	int			bi_error;
+-	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
+-						 * top bits priority
+-						 */
+-	/*
+-	 * this will be a u8 in the next patches and bi_rw can be shrunk to
+-	 * a u32. For compat in these transistional patches op is a int here.
+-	 */
+-	int			bi_op;		/* REQ_OP */
++	unsigned int		bi_rw;		/* rq_flag_bits */
++	unsigned short		bi_ioprio;
++	u8			bi_op;		/* REQ_OP */
+ 
+ 
+ 	struct bvec_iter	bi_iter;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 25ec7ce..6c300cf 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -96,7 +96,7 @@ struct request {
+ 	struct request_queue *q;
+ 	struct blk_mq_ctx *mq_ctx;
+ 
+-	int op;
++	u8 op;
+ 	u64 cmd_flags;
+ 	unsigned cmd_type;
+ 	unsigned long atomic_flags;
 -- 
 2.7.2
