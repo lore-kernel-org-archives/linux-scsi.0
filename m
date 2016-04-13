@@ -1,65 +1,42 @@
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: [PATCH] mpt3sas: Remove usage of 'struct timeval'
-Date: Wed, 13 Apr 2016 00:01:40 -0700
-Message-ID: <20160413070140.GA35235@localhost>
+From: Zhangfei Gao <zhangfei.gao@gmail.com>
+Subject: Re: [PATCH 0/5] hisi_sas: v2 hw SATA fixes
+Date: Wed, 13 Apr 2016 17:28:54 +0800
+Message-ID: <CAMj5Bki348iVmZPY7UVk=y4wqHymn5kWizDym4CarggWstEbhQ@mail.gmail.com>
+References: <1460107395-24501-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:35219 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934151AbcDMJRr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 05:17:47 -0400
-Content-Disposition: inline
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:35661 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932614AbcDMJ2z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 05:28:55 -0400
+In-Reply-To: <1460107395-24501-1-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: MPT-FusionLinux.pdl@broadcom.com
-Cc: Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-'struct timeval' will have its tv_sec value overflow on 32-bit systems
-in year 2038 and beyond. This patch replaces the use of struct timeval
-for computing mpi_request.TimeStamp, and instead uses ktime_t which provides
-64-bit seconds value. The timestamp computed remains unaffected (milliseconds
-since Unix epoch).
+On Fri, Apr 8, 2016 at 5:23 PM, John Garry <john.garry@huawei.com> wrote:
+> This patchset introduces SATA support fixes for
 
-Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> the HiSilicon v2 hw SAS controller.
+>
+> Fixes include:
+> - attach issue for SATA disk attached through expander
+> - intermittent issue for directly attaching multiple
+> SATA disks
+> - add support for directly attaching SATA disk to phy
+> index 4+
+> - ITCT config issue
+>
+> John Garry (5):
+>   hisi_sas: use device linkrate in MCR for v2 hw
+>   hisi_sas: fix v2 hw multiple SATA disk issue
+>   hisi_sas: add v2 hw support for >4 SATA phys
+>   hisi_sas: for v2 hw only set ITCT qw2 for SAS device
+>   hisi_sas: update driver version to 1.4
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 8c44b9c..326c152 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -57,6 +57,7 @@
- #include <linux/dma-mapping.h>
- #include <linux/io.h>
- #include <linux/time.h>
-+#include <linux/ktime.h>
- #include <linux/kthread.h>
- #include <linux/aer.h>
+For the series,
+Reviewed-by:  Zhangfei Gao <zhangfei.gao@linaro.org>
 
-@@ -4387,7 +4388,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	Mpi2IOCInitRequest_t mpi_request;
- 	Mpi2IOCInitReply_t mpi_reply;
- 	int i, r = 0;
--	struct timeval current_time;
-+	ktime_t current_time;
- 	u16 ioc_status;
- 	u32 reply_post_free_array_sz = 0;
- 	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
-@@ -4449,9 +4450,8 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	/* This time stamp specifies number of milliseconds
- 	 * since epoch ~ midnight January 1, 1970.
- 	 */
--	do_gettimeofday(&current_time);
--	mpi_request.TimeStamp = cpu_to_le64((u64)current_time.tv_sec * 1000 +
--	    (current_time.tv_usec / 1000));
-+	current_time = ktime_get_real();
-+	mpi_request.TimeStamp = cpu_to_le64(ktime_to_ms(current_time));
-
- 	if (ioc->logging_level & MPT_DEBUG_INIT) {
- 		__le32 *mfp;
---
-2.8.0.rc3.226.g39d4020
-
+Thanks
