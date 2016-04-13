@@ -1,14 +1,17 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [SCSI resend] bfa: fix bfa_fcb_itnim_alloc() error handling
-Date: Wed, 13 Apr 2016 13:59:46 +0300
-Message-ID: <20160413105946.GA1895@mwanda>
+Subject: [PATCH resend v2] [SCSI] bfa: fix bfa_fcb_itnim_alloc() error
+ handling
+Date: Wed, 13 Apr 2016 14:14:41 +0300
+Message-ID: <20160413111441.GC4247@mwanda>
+References: <20160413105946.GA1895@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20160413105946.GA1895@mwanda>
 Sender: kernel-janitors-owner@vger.kernel.org
 To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 The caller assumes that "itnim" is NULL on error and non-NULL on
@@ -18,9 +21,7 @@ success and negative on failure.
 
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
-Static checker stuff.  Not tested.
-
-I sent this originally in 2014 but it still seems to apply fine.
+v2: fix up the subject and CC list.
 
 diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
 index 42bcb97..af220e9 100644
