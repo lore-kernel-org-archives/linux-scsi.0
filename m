@@ -1,40 +1,49 @@
-From: David Daney <ddaney.cavm@gmail.com>
-Subject: [PATCH] pm80xx: Remove bogus address masking in pm8001_ioremap()
-Date: Wed, 13 Apr 2016 14:26:56 -0700
-Message-ID: <1460582816-12703-1-git-send-email-ddaney.cavm@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+From: =?iso-8859-1?Q?=22Uplift_mezin=E1rodn=ED_charitativn=ED=22?=
+	<victoria.ruppert@minot.k12.nd.us>
+Subject: Gratulace =?iso-8859-1?Q?v=EDt=ECz.?=
+Date: Wed, 13 Apr 2016 16:53:38 -0500
+Message-ID: <391de70d852f7f6c36337f87188950cd.squirrel__10658.6695569151$1460585080$gmane$org@mail.minot.k12.nd.us>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.minot.k12.nd.us ([165.234.106.29]:60149 "EHLO
+	mail.minot.k12.nd.us" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbcDMWED (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 18:04:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: David Daney <david.daney@cavium.com>
 
-It is unclear what the original intent of the masking was, but it is
-clearly incorrect to truncate a physical address before calling
-ioremap().  On systems where there are valid physical address bits
-above bit-31 (arm64 for example) the result is an eventual OOPs when
-initializing the driver.
+Gratulace v=EDt=ECz.
 
-Remove the bogus code to fix it.
+V=E1=9A emailem adresa pr=E1v=EC vyhr=E1l =80 150,000.00 (sto pades=E1t=
+ tis=EDc eur). V
+Uplift mezin=E1rodn=ED charitativn=ED program. Ref No: Sp / 229/ 0-01 /=
+ 07/5 -
+02 / ES. Lucky No: 9/11/13/24/40.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/scsi/pm8001/pm8001_init.c | 2 --
- 1 file changed, 2 deletions(-)
+Pro v=EDce informac=ED a pohled=E1vky postupu kontaktem;
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 062ab34..6bd7bf4 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -418,8 +418,6 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
- 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
- 			pm8001_ha->io_mem[logicalBar].membase =
- 				pci_resource_start(pdev, bar);
--			pm8001_ha->io_mem[logicalBar].membase &=
--				(u32)PCI_BASE_ADDRESS_MEM_MASK;
- 			pm8001_ha->io_mem[logicalBar].memsize =
- 				pci_resource_len(pdev, bar);
- 			pm8001_ha->io_mem[logicalBar].memvirtaddr =
--- 
-1.8.3.1
+CAPITAL CLAIM AGENCY
+Mr. John Carlos.
+Email: infocapitals@aim.com
+Tel: +34-672-853-656
+
+Cel=E9 jm=E9no, adresa, v=ECk, povol=E1n=ED, telefonn=ED =E8=EDsla
+
+Ode=9Alete odpov=EC=EF na tento email: infocapitals@aim.com
+
+Pozn=E1mka: Jedn=E1 se o mezin=E1rodn=ED program loterie. Tato zpr=E1va=
+ byla
+automaticky p=F8elo=9Een z angli=E8tiny do =E8e=9Atiny.
+
+Gratulujeme !!!
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
