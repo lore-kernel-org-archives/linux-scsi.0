@@ -1,47 +1,87 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH v2 01/16] iscsi-target: add callback to alloc and free PDU
-Date: Wed, 13 Apr 2016 12:56:25 +0300
-Message-ID: <570E17C9.3010204@grimberg.me>
-References: <cover.1460204441.git.varun@chelsio.com>
- <674e8ae2dae3d6274dcb1abe6ddef253f6a71256.1460204441.git.varun@chelsio.com>
- <570A8E81.8010007@grimberg.me> <20160411145446.GA1987@chelsio.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [SCSI resend] bfa: fix bfa_fcb_itnim_alloc() error handling
+Date: Wed, 13 Apr 2016 13:59:46 +0300
+Message-ID: <20160413105946.GA1895@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36495 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030610AbcDMJ4a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 05:56:30 -0400
-In-Reply-To: <20160411145446.GA1987@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com
 
+The caller assumes that "itnim" is NULL on error and non-NULL on
+success but really "itnim" is uninitialized on error.  This
+function should just use normal error handling where it returns zero on
+success and negative on failure.
 
->> On 09/04/16 16:11, Varun Prakash wrote:
->>> Add two callbacks to struct iscsit_transport -
->>>
->>> 1. void *(*iscsit_alloc_pdu)()
->>>     iscsi-target uses this callback for
->>>     iSCSI PDU allocation.
->>>
->>> 2. void (*iscsit_free_pdu)
->>>     iscsi-target uses this callback
->>>     to free an iSCSI PDU which was
->>>     allocated by iscsit_alloc_pdu().
->>
->> Can you please explain why are you adding two different
->> callouts? Who (Chelsio T5) will need it, and why they can't
->> use the in-cmd pdu?
->
-> I am adding these to avoid per PDU 48 bytes(BHS) memcpy from cmd->pdu to
-> transport driver tx buffer, iscsi-target can directly form iscsi hdr
-> in transport driver tx buffer.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Static checker stuff.  Not tested.
 
-Is that what it's for? Looks meaningless to me, do
-you have an indication that this is some sort of bottleneck?
+I sent this originally in 2014 but it still seems to apply fine.
 
-I see you memset in your pdu_alloc, where is the gain
-here anyway?
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 42bcb97..af220e9 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -873,8 +873,8 @@ bfa_status_t bfa_fcb_rport_alloc(struct bfad_s *bfad,
+ /*
+  * itnim callbacks
+  */
+-void bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
+-			 struct bfad_itnim_s **itnim_drv);
++int bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
++			struct bfad_itnim_s **itnim_drv);
+ void bfa_fcb_itnim_free(struct bfad_s *bfad,
+ 			struct bfad_itnim_s *itnim_drv);
+ void bfa_fcb_itnim_online(struct bfad_itnim_s *itnim_drv);
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 7223b00..31426ae 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -413,13 +413,13 @@ bfad_im_slave_destroy(struct scsi_device *sdev)
+  * BFA FCS itnim alloc callback, after successful PRLI
+  * Context: Interrupt
+  */
+-void
++int
+ bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
+ 		    struct bfad_itnim_s **itnim_drv)
+ {
+ 	*itnim_drv = kzalloc(sizeof(struct bfad_itnim_s), GFP_ATOMIC);
+ 	if (*itnim_drv == NULL)
+-		return;
++		return -ENOMEM;
+ 
+ 	(*itnim_drv)->im = bfad->im;
+ 	*itnim = &(*itnim_drv)->fcs_itnim;
+@@ -430,6 +430,7 @@ bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
+ 	 */
+ 	INIT_WORK(&(*itnim_drv)->itnim_work, bfad_im_itnim_work_handler);
+ 	bfad->bfad_flags |= BFAD_RPORT_ONLINE;
++	return 0;
+ }
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_fcs_fcpim.c b/drivers/scsi/bfa/bfa_fcs_fcpim.c
+index 6dc7926..829247e 100644
+--- a/drivers/scsi/bfa/bfa_fcs_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcs_fcpim.c
+@@ -587,12 +587,13 @@ bfa_fcs_itnim_create(struct bfa_fcs_rport_s *rport)
+ 	struct bfa_fcs_lport_s *port = rport->port;
+ 	struct bfa_fcs_itnim_s *itnim;
+ 	struct bfad_itnim_s   *itnim_drv;
++	int ret;
+ 
+ 	/*
+ 	 * call bfad to allocate the itnim
+ 	 */
+-	bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
+-	if (itnim == NULL) {
++	ret = bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
++	if (ret) {
+ 		bfa_trc(port->fcs, rport->pwwn);
+ 		return NULL;
+ 	}
