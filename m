@@ -1,48 +1,51 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the ISA Kconfig
- option
-Date: Wed, 13 Apr 2016 08:18:26 -0700
-Message-ID: <20160413151826.GA13959@kroah.com>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
- <20160413072602.GA7629@gmail.com>
- <20160413121515.GA23870@sophia>
- <20160413143838.GD5867@gmail.com>
- <20160413144842.GA26005@sophia>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: LSF/MM Schedule and improving discard support
+Date: Wed, 13 Apr 2016 08:57:09 -0700
+Message-ID: <570E6C55.1060003@sandisk.com>
+References: <57067F19.3030404@sandisk.com>
+ <1460044289.2311.5.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160413144842.GA26005@sophia>
-Sender: linux-kernel-owner@vger.kernel.org
-To: William Breathitt Gray <vilhelm.gray@gmail.com>
-Cc: Ingo Molnar <mingo@kernel.org>, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0092.outbound.protection.outlook.com ([157.56.111.92]:60288
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753376AbcDMP5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Apr 2016 11:57:22 -0400
+In-Reply-To: <1460044289.2311.5.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@fb.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>
 
-On Wed, Apr 13, 2016 at 10:48:42AM -0400, William Breathitt Gray wrote:
-> On Wed, Apr 13, 2016 at 04:38:38PM +0200, Ingo Molnar wrote:
-> >Ah, ok, so it's for enabling real hardware, not just a cleanup, right? You might 
-> >want to put that info into the boilerplate mail or so.
-> >
-> >I'm perfectly fine with all the patches that touch x86 code:
-> >
-> >  Acked-by: Ingo Molnar <mingo@kernel.org>
-> >
-> >I suppose you'd like to have these in the driver tree, all in one place?
-> >
-> >Thanks,
-> >
-> >	Ingo
-> 
-> Ah yes, in retrospect I should have made it clear that this was for
-> supporting hardware rather than simply code cleanup. That was an
-> oversight on my part not to have made it more explicit.
-> 
-> Introducing everything to the driver tree would be most convenient, thus
-> allowing me to quickly release my subsequent patches which will be
-> rebased on top of these.
+(+ LSF mailing list)
 
-Ok, I can take these.
+On 04/07/2016 08:51 AM, James Bottomley wrote:
+> On Thu, 2016-04-07 at 08:39 -0700, Bart Van Assche wrote:
+>> Some time ago I proposed to discuss how to improve discard support
+>> during the LSF/MM (http://thread.gmane.org/gmane.linux.scsi/110048).
+>> I would appreciate it if this would be added to the LSF/MM agenda
+>> since there has been no progress yet for the patch series I posted in
+>> December 2015.
+>
+> Well, adding a cc to the lsf@ list to interest the attendees might have
+> been a good idea.
+>
+> The basic problem with this topic is that it didn't really garner any
+> interest when you proposed it.  It also really just looks like there's
+> nothing to discuss: you just propose the unifying patch and people
+> discuss and modify that and it either gets accepted or not depending on
+> the level of the objections.
 
-thanks,
+Hello James,
 
-greg k-h
+There is something that should be discussed further, namely what the 
+behavior of the BLKDISCARD and BLKSECDISCARD ioctls should be if the 
+start and/or end sectors are not aligned on a discard boundary. Should 
+such requests fail with an error code, should the non-aligned head and 
+tail be zeroed or should the non-aligned parts be left unmodified?
+
+Thanks,
+
+Bart.
