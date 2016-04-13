@@ -1,30 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv2 09/14] libata: fixup ZAC device disabling
-Date: Wed, 13 Apr 2016 14:09:47 -0400
-Message-ID: <20160413180947.GF3676@htj.duckdns.org>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-10-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:35456 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754905AbcDMSJu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 14:09:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1460443678-57934-10-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: mchristi@redhat.com
+Subject: [PATCH 00/42] v5: separate operations from flags in the bio/request structs
+Date: Wed, 13 Apr 2016 14:35:46 -0500
+Message-ID: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Apr 12, 2016 at 08:47:53AM +0200, Hannes Reinecke wrote:
-> libata device disabling is ... curious. So add the correct
-> definitions that we can disable ZAC devices properly.
+The following patches begin to cleanup the request->cmd_flags and
+bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+attributes and state of the request. For bi_rw we use it for similar
+info and also the priority but then also have another bi_flags field
+for state. At some point, we abused them so much we just made cmd_flags
+64 bits, so we could add more.
 
-Fold into an earlier patch?
+The following patches seperate the operation (read, write discard,
+flush, etc) from cmd_flags/bi_rw.
 
-Thanks.
+This patchset was made against linux-next from today April 13
+(git tag next-20160413).
 
--- 
-tejun
+I put a git tree here:
+https://github.com/mikechristie/linux-kernel.git
+The patches are in the op branch.
+
+v5:
+1. Missed crypto fs submit_bio_wait call.
+2. Change nfs bi_rw check to bi_op.
+3. btrfs. Convert finish_parity_scrub.
+4. Reworked against Jens's QUEUE_FLAG patches so I could drop my similar
+code.
+5. Separated the core block layer change into multiple patches for
+merging, elevator, stats, mq and non mq request allocation to try
+and make it easier to read.
+
+v4:
+1. Rebased to current linux-next tree.
+
+v3:
+
+1. Used "=" instead of "|="  to setup bio bi_rw.
+2. Removed __get_request cmd_flags compat code.
+3. Merged initial dm related changes requested by Mike Snitzer.
+4. Fixed ubd kbuild errors in flush related patches.
+5. Fix 80 char col issues in several patches.
+6. Fix issue with one of the btrfs patches where it looks like I reverted
+a patch when trying to fix a merge error.
+
+v2
+
+1. Dropped arguments from submit_bio, and had callers setup
+bio.
+2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
+to REQ_PREFLUSH for make_request_fn users.
+3. Dropped bio/rq_data_dir functions, and added a op_is_write
+function instead.
