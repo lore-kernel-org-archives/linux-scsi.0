@@ -1,93 +1,63 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] qla2xxx: Enhancements to support ISPFx00.
-Date: Wed, 13 Apr 2016 15:39:33 +0300
-Message-ID: <20160413123933.GA14575@mwanda>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH v14 6/9] added support for DesignWare Controller
+Date: Wed, 13 Apr 2016 13:57:42 +0100
+Message-ID: <570E4246.8040504@synopsys.com>
+References: <cover.1459448160.git.jpinto@synopsys.com>
+ <75cb43b16231f67d1e94e174a45ad6ffc68e1df6.1459448160.git.jpinto@synopsys.com>
+ <CAC5umyiSCeBMMwdxo2SqteVNjOtTPqO6g-KQ-Ebta_QFR0pX2A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43201 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747AbcDMMjn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 08:39:43 -0400
-Content-Disposition: inline
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:56628 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757586AbcDMM6D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 08:58:03 -0400
+In-Reply-To: <CAC5umyiSCeBMMwdxo2SqteVNjOtTPqO6g-KQ-Ebta_QFR0pX2A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello Giridhar Malavali,
 
-The patch 8ae6d9c7eb10: "[SCSI] qla2xxx: Enhancements to support
-ISPFx00." from Mar 28, 2013, leads to the following static checker
-warning:
+Hi Akinobu,
 
-	drivers/scsi/qla2xxx/qla_mr.c:2264 qlafx00_ioctl_iosb_entry()
-	error: uninitialized symbol 'res'.
+On 4/13/2016 1:19 PM, Akinobu Mita wrote:
+> Hi Joao,
+> 
+> 2016-04-13 18:04 GMT+09:00 Joao Pinto <Joao.Pinto@synopsys.com>:
+> 
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index e3931d0..c780d14 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -263,6 +263,7 @@ struct ufs_pwr_mode_info {
+>>   * @suspend: called during host controller PM callback
+>>   * @resume: called during host controller PM callback
+>>   * @dbg_register_dump: used to dump controller debug information
+>> + * @phy_initialization: used to initialize phys
+>>   */
+>>  struct ufs_hba_variant_ops {
+>>         const char *name;
+>> @@ -284,6 +285,7 @@ struct ufs_hba_variant_ops {
+>>         int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+>>         int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+>>         void    (*dbg_register_dump)(struct ufs_hba *hba);
+>> +       int     (*phy_initialization)(struct ufs_hba *);
+>>  };
+> 
+> This vops->phy_initialization is only called from ufs dwc specific
+> source files and not called from ufs core.  So this should not belong
+> to ufs_hba_variant_ops.
 
-drivers/scsi/qla2xxx/qla_mr.c
-  2210          struct srb_iocb *iocb_job;
-  2211          int res;
-                    ^^^
-  2212          struct qla_mt_iocb_rsp_fx00 fstatus;
-  2213          uint8_t *fw_sts_ptr;
-  2214  
-  2215          sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
-  2216          if (!sp)
-  2217                  return;
-  2218  
-  2219          if (sp->type == SRB_FXIOCB_DCMD) {
-  2220                  iocb_job = &sp->u.iocb_cmd;
-  2221                  iocb_job->u.fxiocb.seq_number = pkt->seq_no;
-  2222                  iocb_job->u.fxiocb.fw_flags = pkt->fw_iotcl_flags;
-  2223                  iocb_job->u.fxiocb.result = pkt->status;
-  2224                  if (iocb_job->u.fxiocb.flags & SRB_FXDISC_RSP_DWRD_VALID)
-  2225                          iocb_job->u.fxiocb.req_data =
-  2226                              pkt->dataword_r;
+At this time only DWC specific uses the phy_initialization, but can be used by
+others in the future when the same necessity comes.
 
-res isn't set on this path.
+> 
+> You can use hba->priv to put the controller specific data structure
+> including phy_initialization and you also need to define vops->init
+> callback which allocates and initialize the data structure.
+> 
 
-  2227          } else {
-  2228                  bsg_job = sp->u.bsg_job;
-  2229  
-  2230                  memset(&fstatus, 0, sizeof(struct qla_mt_iocb_rsp_fx00));
-  2231  
-  2232                  fstatus.reserved_1 = pkt->reserved_0;
-  2233                  fstatus.func_type = pkt->comp_func_num;
-  2234                  fstatus.ioctl_flags = pkt->fw_iotcl_flags;
-  2235                  fstatus.ioctl_data = pkt->dataword_r;
-  2236                  fstatus.adapid = pkt->adapid;
-  2237                  fstatus.reserved_2 = pkt->dataword_r_extra;
-  2238                  fstatus.res_count = pkt->residuallen;
-  2239                  fstatus.status = pkt->status;
-  2240                  fstatus.seq_number = pkt->seq_no;
-  2241                  memcpy(fstatus.reserved_3,
-  2242                      pkt->reserved_2, 20 * sizeof(uint8_t));
-  2243  
-  2244                  fw_sts_ptr = ((uint8_t *)bsg_job->req->sense) +
-  2245                      sizeof(struct fc_bsg_reply);
-  2246  
-  2247                  memcpy(fw_sts_ptr, (uint8_t *)&fstatus,
-  2248                      sizeof(struct qla_mt_iocb_rsp_fx00));
-  2249                  bsg_job->reply_len = sizeof(struct fc_bsg_reply) +
-  2250                          sizeof(struct qla_mt_iocb_rsp_fx00) + sizeof(uint8_t);
-  2251  
-  2252                  ql_dump_buffer(ql_dbg_user + ql_dbg_verbose,
-  2253                      sp->fcport->vha, 0x5080,
-  2254                      (uint8_t *)pkt, sizeof(struct ioctl_iocb_entry_fx00));
-  2255  
-  2256                  ql_dump_buffer(ql_dbg_user + ql_dbg_verbose,
-  2257                      sp->fcport->vha, 0x5074,
-  2258                      (uint8_t *)fw_sts_ptr, sizeof(struct qla_mt_iocb_rsp_fx00));
-  2259  
-  2260                  res = bsg_job->reply->result = DID_OK << 16;
-  2261                  bsg_job->reply->reply_payload_rcv_len =
-  2262                      bsg_job->reply_payload.payload_len;
-  2263          }
-  2264          sp->done(vha, sp, res);
-                                  ^^^
-Uninitialized.
+Joao
 
-  2265  }
-
-regards,
-dan carpenter
