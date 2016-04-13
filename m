@@ -1,49 +1,49 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
 Subject: Re: [Lsf] LSF/MM Schedule and improving discard support
-Date: Wed, 13 Apr 2016 12:43:39 -0400
-Message-ID: <yq1twj5v4qs.fsf@sermon.lab.mkp.net>
+Date: Wed, 13 Apr 2016 09:51:04 -0700
+Message-ID: <1460566264.2322.13.camel@linux.vnet.ibm.com>
 References: <57067F19.3030404@sandisk.com>
-	<1460044289.2311.5.camel@linux.vnet.ibm.com>
-	<570E6C55.1060003@sandisk.com> <yq11t69wkcl.fsf@sermon.lab.mkp.net>
-	<570E73D5.3010502@sandisk.com>
+	 <1460044289.2311.5.camel@linux.vnet.ibm.com> <570E6C55.1060003@sandisk.com>
+	 <yq11t69wkcl.fsf@sermon.lab.mkp.net> <570E73D5.3010502@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28735 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbcDMQnv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 12:43:51 -0400
-In-Reply-To: <570E73D5.3010502@sandisk.com> (Bart Van Assche's message of
-	"Wed, 13 Apr 2016 09:29:09 -0700")
+Received: from e35.co.us.ibm.com ([32.97.110.153]:39414 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909AbcDMQvK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 12:51:10 -0400
+Received: from localhost
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+	Wed, 13 Apr 2016 10:51:09 -0600
+In-Reply-To: <570E73D5.3010502@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, James Bottomley <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jens Axboe <axboe@fb.com>, "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jens Axboe <axboe@fb.com>, "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+On Wed, 2016-04-13 at 09:29 -0700, Bart Van Assche wrote:
+> On 04/13/2016 09:21 AM, Martin K. Petersen wrote:
+> > From a filesystem/ioctl perspective, BLKDISCARD is a hint. We
+> > should not be
+> > rounding off or aligning anything.
+> 
+> Hello Martin,
+> 
+> Today if a BLKDISCARD ioctl passes a non-aligned start and/or end 
+> sector to the kernel then the block layer will submit invalid (non
+> -aligned) REQ_DISCARD requests to the block driver the ioctl applies 
+> to. This is not acceptable. Does the above mean that you are 
+> proposing to fail such BLKDISCARD ioctls with an error code?
 
-Bart> Today if a BLKDISCARD ioctl passes a non-aligned start and/or end
-Bart> sector to the kernel then the block layer will submit invalid
-Bart> (non-aligned) REQ_DISCARD requests to the block driver the ioctl
-Bart> applies to.
+The answer would be of course not.  discard is a hint so malformed
+discard gets ignored by the device and success is returned because you
+can't oblige devices to obey hints (that's why they're called hints).
 
-I do not know what you mean by "invalid".
+However, the problem of needing a mandatory discard for scrubbing
+blocks is part of the fallocate discussion, I think.
 
-A device that implements UNMAP can freely ignore any parts of a request
-block range that are not aligned to its internal allocation units.
+James
 
->From SBC: "An unmap request with a number of logical blocks that is not
-a multiple of this value (OPTIMAL UNMAP GRANULARITY) may result in unmap
-operations on fewer LBAs than requested." and "An unmap request with a
-starting LBA that is not optimal may result in unmap operations on fewer
-LBAs than requested."
 
-The same is true for SATA which has no way report granularity and
-alignment at all.
-
-Nowhere does it say that a request that is not an aligned multiple of
-any reported granularity should be considered "invalid" or rejected by
-the storage.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
