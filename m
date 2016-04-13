@@ -1,20 +1,21 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH 2/2] IB/iser: set max_segment_size
-Date: Wed, 13 Apr 2016 12:39:11 +0300
-Message-ID: <570E13BF.1040908@grimberg.me>
+From: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Subject: Re: [PATCH 1/2] scsi: add a max_segment_size limitation to struct
+ Scsi_Host
+Date: Wed, 13 Apr 2016 12:39:21 +0300
+Message-ID: <570E13C9.8090001@grimberg.me>
 References: <1460470405-11673-1-git-send-email-hch@lst.de>
- <1460470405-11673-3-git-send-email-hch@lst.de>
+ <1460470405-11673-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35349 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965747AbcDMJjO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 05:39:14 -0400
-In-Reply-To: <1460470405-11673-3-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1460470405-11673-2-git-send-email-hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Acked-by: Sagi Grimberg <sagi@grimberg.me>
+Reviewed-by: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
