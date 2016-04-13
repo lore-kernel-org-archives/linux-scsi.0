@@ -1,70 +1,41 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v14 6/9] added support for DesignWare Controller
-Date: Wed, 13 Apr 2016 22:30:23 +0900
-Message-ID: <CAC5umyg+rey4XYLJL=LrXEmLLpWOEasuzDT2bazJTCnSdfBAOw@mail.gmail.com>
-References: <cover.1459448160.git.jpinto@synopsys.com>
-	<75cb43b16231f67d1e94e174a45ad6ffc68e1df6.1459448160.git.jpinto@synopsys.com>
-	<CAC5umyiSCeBMMwdxo2SqteVNjOtTPqO6g-KQ-Ebta_QFR0pX2A@mail.gmail.com>
-	<570E4246.8040504@synopsys.com>
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [-next] BUG_ON in scsi_target_destroy()
+Date: Wed, 13 Apr 2016 23:47:04 +0900
+Message-ID: <20160413144704.GA490@swordfish>
+References: <20160411090146.GA537@swordfish>
+ <2201725.I2to9GCRQJ@c203>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:36096 "EHLO
-	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932958AbcDMNaY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 09:30:24 -0400
-Received: by mail-vk0-f47.google.com with SMTP id c4so69130849vkb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2016 06:30:23 -0700 (PDT)
-In-Reply-To: <570E4246.8040504@synopsys.com>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:34883 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965750AbcDMNtW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 09:49:22 -0400
+Content-Disposition: inline
+In-Reply-To: <2201725.I2to9GCRQJ@c203>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-next@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Xiong Zhou <jencce.kernel@gmail.com>
 
-Hi Joao,
+Hi,
 
-2016-04-13 21:57 GMT+09:00 Joao Pinto <Joao.Pinto@synopsys.com>:
->
-> Hi Akinobu,
->
-> On 4/13/2016 1:19 PM, Akinobu Mita wrote:
->> Hi Joao,
->>
->> 2016-04-13 18:04 GMT+09:00 Joao Pinto <Joao.Pinto@synopsys.com>:
->>
->>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->>> index e3931d0..c780d14 100644
->>> --- a/drivers/scsi/ufs/ufshcd.h
->>> +++ b/drivers/scsi/ufs/ufshcd.h
->>> @@ -263,6 +263,7 @@ struct ufs_pwr_mode_info {
->>>   * @suspend: called during host controller PM callback
->>>   * @resume: called during host controller PM callback
->>>   * @dbg_register_dump: used to dump controller debug information
->>> + * @phy_initialization: used to initialize phys
->>>   */
->>>  struct ufs_hba_variant_ops {
->>>         const char *name;
->>> @@ -284,6 +285,7 @@ struct ufs_hba_variant_ops {
->>>         int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
->>>         int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->>>         void    (*dbg_register_dump)(struct ufs_hba *hba);
->>> +       int     (*phy_initialization)(struct ufs_hba *);
->>>  };
->>
->> This vops->phy_initialization is only called from ufs dwc specific
->> source files and not called from ufs core.  So this should not belong
->> to ufs_hba_variant_ops.
->
-> At this time only DWC specific uses the phy_initialization, but can be used by
-> others in the future when the same necessity comes.
+On (04/13/16 10:41), Johannes Thumshirn wrote:
+> Hi Sergey,  Xiong,
+> 
+> Can you try below patch?
 
-But vops->phy_initialization is only called from DWC specific
-vops->link_startup_notify.  So I think there is no point adding
-new callback to vops.
+it panics my system.
+first it warn_on-s in lib/kobject.c:244
 
->> You can use hba->priv to put the controller specific data structure
->> including phy_initialization and you also need to define vops->init
->> callback which allocates and initialize the data structure.
+then NULL dereferences
+do_scan_async
+ __scsi_remove_device
+  scsi_target_reap
+   device_del
+    dpm_sysfs_remove
+     sysfs_unmerge_group
+      kernfs_find_and_get_ns
+       kernfs_find_ns
 
-Or you can create another vops which have different link_startup_notify
-because phy_initialization is only called from link_starup_notify.
+	-ss
