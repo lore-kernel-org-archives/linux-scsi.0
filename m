@@ -1,220 +1,181 @@
 From: mchristi@redhat.com
-Subject: [PATCH 30/42] blkg_rwstat: separate op from flags
-Date: Wed, 13 Apr 2016 14:36:16 -0500
-Message-ID: <1460576188-5751-31-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 15/42] mpage: set bi_op to REQ_OP
+Date: Wed, 13 Apr 2016 14:36:01 -0500
+Message-ID: <1460576188-5751-16-git-send-email-mchristi@redhat.com>
 References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-The bio and request operation and flags are going to be separate definitions,
-so we cannot pass them in as a bitmap. This patch converts the blkg_rwstat
-code and its caller, cfq, to pass in the values separately.
+This patch has mpage.c use bio->bi_op for REQ_OPs and rq_flag_bits
+to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/cfq-iosched.c        | 49 +++++++++++++++++++++++++++-------------------
- include/linux/blk-cgroup.h | 13 ++++++------
- 2 files changed, 36 insertions(+), 26 deletions(-)
+ fs/mpage.c | 41 +++++++++++++++++++++--------------------
+ 1 file changed, 21 insertions(+), 20 deletions(-)
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 3fcc598..0dfa2dd 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -667,9 +667,10 @@ static inline void cfqg_put(struct cfq_group *cfqg)
- } while (0)
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 2c251ec..89f58f1 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -56,11 +56,12 @@ static void mpage_end_io(struct bio *bio)
+ 	bio_put(bio);
+ }
  
- static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
--					    struct cfq_group *curr_cfqg, int rw)
-+					    struct cfq_group *curr_cfqg, int op,
-+					    int op_flags)
+-static struct bio *mpage_bio_submit(int rw, struct bio *bio)
++static struct bio *mpage_bio_submit(int op, int op_flags, struct bio *bio)
  {
--	blkg_rwstat_add(&cfqg->stats.queued, rw, 1);
-+	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, 1);
- 	cfqg_stats_end_empty_time(&cfqg->stats);
- 	cfqg_stats_set_start_group_wait_time(cfqg, curr_cfqg);
+ 	bio->bi_end_io = mpage_end_io;
+-	bio->bi_rw = rw;
+-	guard_bio_eod(rw, bio);
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
++	guard_bio_eod(op, bio);
+ 	submit_bio(bio);
+ 	return NULL;
  }
-@@ -683,26 +684,30 @@ static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
- #endif
- }
+@@ -270,7 +271,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
+ 	 * This page will go to BIO.  Do we need to send this BIO off first?
+ 	 */
+ 	if (bio && (*last_block_in_bio != blocks[0] - 1))
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
  
--static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw)
-+static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
-+					       int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.queued, rw, -1);
-+	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, -1);
- }
+ alloc_new:
+ 	if (bio == NULL) {
+@@ -287,7 +288,7 @@ alloc_new:
  
--static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw)
-+static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
-+					       int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.merged, rw, 1);
-+	blkg_rwstat_add(&cfqg->stats.merged, op, op_flags, 1);
- }
- 
- static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
--			uint64_t start_time, uint64_t io_start_time, int rw)
-+			uint64_t start_time, uint64_t io_start_time, int op,
-+			int op_flags)
- {
- 	struct cfqg_stats *stats = &cfqg->stats;
- 	unsigned long long now = sched_clock();
- 
- 	if (time_after64(now, io_start_time))
--		blkg_rwstat_add(&stats->service_time, rw, now - io_start_time);
-+		blkg_rwstat_add(&stats->service_time, op, op_flags,
-+				now - io_start_time);
- 	if (time_after64(io_start_time, start_time))
--		blkg_rwstat_add(&stats->wait_time, rw,
-+		blkg_rwstat_add(&stats->wait_time, op, op_flags,
- 				io_start_time - start_time);
- }
- 
-@@ -781,13 +786,16 @@ static inline void cfqg_put(struct cfq_group *cfqg) { }
- #define cfq_log_cfqg(cfqd, cfqg, fmt, args...)		do {} while (0)
- 
- static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
--			struct cfq_group *curr_cfqg, int rw) { }
-+			struct cfq_group *curr_cfqg, int op, int op_flags) { }
- static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
- 			unsigned long time, unsigned long unaccounted_time) { }
--static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw) { }
--static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw) { }
-+static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
-+			int op_flags) { }
-+static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
-+			int op_flags) { }
- static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
--			uint64_t start_time, uint64_t io_start_time, int rw) { }
-+			uint64_t start_time, uint64_t io_start_time, int op,
-+			int op_flags) { }
- 
- #endif	/* CONFIG_CFQ_GROUP_IOSCHED */
- 
-@@ -2461,10 +2469,10 @@ static void cfq_reposition_rq_rb(struct cfq_queue *cfqq, struct request *rq)
- {
- 	elv_rb_del(&cfqq->sort_list, rq);
- 	cfqq->queued[rq_is_sync(rq)]--;
--	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
-+	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->op, rq->cmd_flags);
- 	cfq_add_rq_rb(rq);
- 	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqq->cfqd->serving_group,
--				 rq->cmd_flags);
-+				 rq->op, rq->cmd_flags);
- }
- 
- static struct request *
-@@ -2517,7 +2525,7 @@ static void cfq_remove_request(struct request *rq)
- 	cfq_del_rq_rb(rq);
- 
- 	cfqq->cfqd->rq_queued--;
--	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
-+	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->op, rq->cmd_flags);
- 	if (rq->cmd_flags & REQ_PRIO) {
- 		WARN_ON(!cfqq->prio_pending);
- 		cfqq->prio_pending--;
-@@ -2552,7 +2560,7 @@ static void cfq_merged_request(struct request_queue *q, struct request *req,
- static void cfq_bio_merged(struct request_queue *q, struct request *req,
- 				struct bio *bio)
- {
--	cfqg_stats_update_io_merged(RQ_CFQG(req), bio->bi_rw);
-+	cfqg_stats_update_io_merged(RQ_CFQG(req), bio->bi_op, bio->bi_rw);
- }
- 
- static void
-@@ -2575,7 +2583,7 @@ cfq_merged_requests(struct request_queue *q, struct request *rq,
- 	if (cfqq->next_rq == next)
- 		cfqq->next_rq = rq;
- 	cfq_remove_request(next);
--	cfqg_stats_update_io_merged(RQ_CFQG(rq), next->cmd_flags);
-+	cfqg_stats_update_io_merged(RQ_CFQG(rq), next->op, next->cmd_flags);
- 
- 	cfqq = RQ_CFQQ(next);
- 	/*
-@@ -4108,7 +4116,7 @@ static void cfq_insert_request(struct request_queue *q, struct request *rq)
- 	rq->fifo_time = jiffies + cfqd->cfq_fifo_expire[rq_is_sync(rq)];
- 	list_add_tail(&rq->queuelist, &cfqq->fifo);
- 	cfq_add_rq_rb(rq);
--	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group,
-+	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group, rq->op,
- 				 rq->cmd_flags);
- 	cfq_rq_enqueued(cfqd, cfqq, rq);
- }
-@@ -4206,7 +4214,8 @@ static void cfq_completed_request(struct request_queue *q, struct request *rq)
- 	cfqq->dispatched--;
- 	(RQ_CFQG(rq))->dispatched--;
- 	cfqg_stats_update_completion(cfqq->cfqg, rq_start_time_ns(rq),
--				     rq_io_start_time_ns(rq), rq->cmd_flags);
-+				     rq_io_start_time_ns(rq), rq->op,
-+				     rq->cmd_flags);
- 
- 	cfqd->rq_in_flight[cfq_cfqq_sync(cfqq)]--;
- 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index c02e669..9071feb 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -590,25 +590,26 @@ static inline void blkg_rwstat_exit(struct blkg_rwstat *rwstat)
- /**
-  * blkg_rwstat_add - add a value to a blkg_rwstat
-  * @rwstat: target blkg_rwstat
-- * @rw: mask of REQ_{WRITE|SYNC}
-+ * @op: REQ_OP
-+ * @op_flags: rq_flag_bits
-  * @val: value to add
-  *
-  * Add @val to @rwstat.  The counters are chosen according to @rw.  The
-  * caller is responsible for synchronizing calls to this function.
-  */
- static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
--				   int rw, uint64_t val)
-+				   int op, int op_flags, uint64_t val)
- {
- 	struct percpu_counter *cnt;
- 
--	if (rw & REQ_WRITE)
-+	if (op_is_write(op))
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_WRITE];
- 	else
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_READ];
- 
- 	__percpu_counter_add(cnt, val, BLKG_STAT_CPU_BATCH);
- 
--	if (rw & REQ_SYNC)
-+	if (op_flags & REQ_SYNC)
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_SYNC];
- 	else
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_ASYNC];
-@@ -713,9 +714,9 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 
- 	if (!throtl) {
- 		blkg = blkg ?: q->root_blkg;
--		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_rw,
-+		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_op, bio->bi_rw,
- 				bio->bi_iter.bi_size);
--		blkg_rwstat_add(&blkg->stat_ios, bio->bi_rw, 1);
-+		blkg_rwstat_add(&blkg->stat_ios, bio->bi_op, bio->bi_rw, 1);
+ 	length = first_hole << blkbits;
+ 	if (bio_add_page(bio, page, length, 0) < length) {
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 		goto alloc_new;
  	}
  
- 	rcu_read_unlock();
+@@ -295,7 +296,7 @@ alloc_new:
+ 	nblocks = map_bh->b_size >> blkbits;
+ 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
+ 	    (first_hole != blocks_per_page))
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	else
+ 		*last_block_in_bio = blocks[blocks_per_page - 1];
+ out:
+@@ -303,7 +304,7 @@ out:
+ 
+ confused:
+ 	if (bio)
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	if (!PageUptodate(page))
+ 	        block_read_full_page(page, get_block);
+ 	else
+@@ -385,7 +386,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
+ 	}
+ 	BUG_ON(!list_empty(pages));
+ 	if (bio)
+-		mpage_bio_submit(READ, bio);
++		mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(mpage_readpages);
+@@ -406,7 +407,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
+ 	bio = do_mpage_readpage(bio, page, 1, &last_block_in_bio,
+ 			&map_bh, &first_logical_block, get_block, gfp);
+ 	if (bio)
+-		mpage_bio_submit(READ, bio);
++		mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(mpage_readpage);
+@@ -487,7 +488,7 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
+ 	struct buffer_head map_bh;
+ 	loff_t i_size = i_size_read(inode);
+ 	int ret = 0;
+-	int wr = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
++	int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : 0);
+ 
+ 	if (page_has_buffers(page)) {
+ 		struct buffer_head *head = page_buffers(page);
+@@ -596,7 +597,7 @@ page_is_mapped:
+ 	 * This page will go to BIO.  Do we need to send this BIO off first?
+ 	 */
+ 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 
+ alloc_new:
+ 	if (bio == NULL) {
+@@ -623,7 +624,7 @@ alloc_new:
+ 	wbc_account_io(wbc, page, PAGE_SIZE);
+ 	length = first_unmapped << blkbits;
+ 	if (bio_add_page(bio, page, length, 0) < length) {
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 		goto alloc_new;
+ 	}
+ 
+@@ -633,7 +634,7 @@ alloc_new:
+ 	set_page_writeback(page);
+ 	unlock_page(page);
+ 	if (boundary || (first_unmapped != blocks_per_page)) {
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 		if (boundary_block) {
+ 			write_boundary_block(boundary_bdev,
+ 					boundary_block, 1 << blkbits);
+@@ -645,7 +646,7 @@ alloc_new:
+ 
+ confused:
+ 	if (bio)
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 
+ 	if (mpd->use_writepage) {
+ 		ret = mapping->a_ops->writepage(page, wbc);
+@@ -702,9 +703,9 @@ mpage_writepages(struct address_space *mapping,
+ 
+ 		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
+ 		if (mpd.bio) {
+-			int wr = (wbc->sync_mode == WB_SYNC_ALL ?
+-				  WRITE_SYNC : WRITE);
+-			mpage_bio_submit(wr, mpd.bio);
++			int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
++				  WRITE_SYNC : 0);
++			mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+ 		}
+ 	}
+ 	blk_finish_plug(&plug);
+@@ -723,9 +724,9 @@ int mpage_writepage(struct page *page, get_block_t get_block,
+ 	};
+ 	int ret = __mpage_writepage(page, wbc, &mpd);
+ 	if (mpd.bio) {
+-		int wr = (wbc->sync_mode == WB_SYNC_ALL ?
+-			  WRITE_SYNC : WRITE);
+-		mpage_bio_submit(wr, mpd.bio);
++		int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
++			  WRITE_SYNC : 0);
++		mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+ 	}
+ 	return ret;
+ }
 -- 
 2.7.2
