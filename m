@@ -1,46 +1,44 @@
-From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the ISA Kconfig
- option
-Date: Wed, 13 Apr 2016 10:48:42 -0400
-Message-ID: <20160413144842.GA26005@sophia>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
- <20160413072602.GA7629@gmail.com>
- <20160413121515.GA23870@sophia>
- <20160413143838.GD5867@gmail.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Subject: Re: libiscsi: Use scsi helper to set information descriptor
+Date: Wed, 13 Apr 2016 17:53:08 +0300
+Message-ID: <570E5D54.8070303@grimberg.me>
+References: <20160413131425.GA9719@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:36167 "EHLO
-	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759395AbcDMOsu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 10:48:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20160413143838.GD5867@gmail.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35671 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755451AbcDMOxN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 10:53:13 -0400
+Received: by mail-wm0-f66.google.com with SMTP id a140so14693250wma.2
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2016 07:53:12 -0700 (PDT)
+In-Reply-To: <20160413131425.GA9719@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@kernel.org>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, gregkh@linuxfoundation.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-On Wed, Apr 13, 2016 at 04:38:38PM +0200, Ingo Molnar wrote:
->Ah, ok, so it's for enabling real hardware, not just a cleanup, right? You might 
->want to put that info into the boilerplate mail or so.
->
->I'm perfectly fine with all the patches that touch x86 code:
->
->  Acked-by: Ingo Molnar <mingo@kernel.org>
->
->I suppose you'd like to have these in the driver tree, all in one place?
->
->Thanks,
->
->	Ingo
+Hey Dan,
 
-Ah yes, in retrospect I should have made it clear that this was for
-supporting hardware rather than simply code cleanup. That was an
-oversight on my part not to have made it more explicit.
+> Hello Sagi Grimberg,
+>
+> The patch a73c2a2f9123: "libiscsi: Use scsi helper to set information
+> descriptor" from Jul 15, 2015, leads to the following static checker
+> warning:
+>
+> 	drivers/scsi/libiscsi.c:858 iscsi_scsi_cmd_rsp()
+> 	error: XXX uninitialized symbol 'sector'.
+>
+> drivers/scsi/libiscsi.c
+>     850                  ascq = session->tt->check_protection(task, &sector);
+>
+> If "ascq" is 0x1 then there sector might not be initialized.  The
+> documentation is not clear on how that works.  Har dee har har.  The
+> oldest jokes are still the best...  :P
 
-Introducing everything to the driver tree would be most convenient, thus
-allowing me to quickly release my subsequent patches which will be
-rebased on top of these.
+iscsi transports that implement this callout are expected
+to set the sector which is passed by reference.
 
-William Breathitt Gray
+would it make the checker happy if we set sector to 0 before
+calling check_protection (although it's not needed by no means)?
