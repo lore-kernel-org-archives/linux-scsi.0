@@ -1,64 +1,48 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] pm80xx: Phy settings support for motherboard controller.
-Date: Wed, 13 Apr 2016 14:24:54 +0300
-Message-ID: <20160413112454.GA25247@mwanda>
+From: William Breathitt Gray <vilhelm.gray@gmail.com>
+Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the ISA Kconfig
+ option
+Date: Wed, 13 Apr 2016 08:15:15 -0400
+Message-ID: <20160413121515.GA23870@sophia>
+References: <cover.1460379702.git.vilhelm.gray@gmail.com>
+ <20160413072602.GA7629@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31571 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932656AbcDMLZI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 07:25:08 -0400
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:36118 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932197AbcDMMPY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 08:15:24 -0400
 Content-Disposition: inline
+In-Reply-To: <20160413072602.GA7629@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: AnandKumar.Santhanam@pmcs.com
-Cc: pmchba@pmcs.com, linux-scsi@vger.kernel.org
+To: Ingo Molnar <mingo@kernel.org>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, gregkh@linuxfoundation.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
 
-Hello Anand Kumar Santhanam,
+On Wed, Apr 13, 2016 at 09:26:02AM +0200, Ingo Molnar wrote:
+>What's the practical motivation of this? What exact hardware is this for?
+>
+>Thanks,
+>
+>	Ingo
 
-The patch 279094079a44: "[SCSI] pm80xx: Phy settings support for
-motherboard controller." from Sep 18, 2013, leads to the following
-static checker warning:
+The PC/104 bus is equivalent to the ISA bus regarding software
+communication. Many small form factor systems have a PC/104 bus where
+PC/104 cards may be stacked. Nowadays, these systems are commonly
+running 64-bit processors such as the Intel Atom.
 
-	drivers/scsi/pm8001/pm80xx_hwi.c:4554 mpi_set_phy_profile_req()
-	error: uninitialized symbol 'tag'.
+I would like to utilize the ISA bus driver to support these PC/104
+devices (see http://lkml.org/lkml/2016/4/7/418), but the ISA
+configuration option has an arbitrary X86_32 dependency. Decoupling the
+X86_32 dependency from the ISA configuration option will allow these
+PC/104 drivers to build for 64-bit architectures.
 
-drivers/scsi/pm8001/pm80xx_hwi.c
-  4540  void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
-  4541          u32 operation, u32 phyid, u32 length, u32 *buf)
-  4542  {
-  4543          u32 tag , i, j = 0;
-  4544          int rc;
-  4545          struct set_phy_profile_req payload;
-  4546          struct inbound_queue_table *circularQ;
-  4547          u32 opc = OPC_INB_SET_PHY_PROFILE;
-  4548  
-  4549          memset(&payload, 0, sizeof(payload));
-  4550          rc = pm8001_tag_alloc(pm8001_ha, &tag);
-  4551          if (rc)
-  4552                  PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid tag\n"));
-                                                                  ^^^^^^^^^^^^
-Yup.
+The existing kernel drivers which I intend to utilize the ISA bus driver
+in a X86_64 architecture for PC/104 support are the ACCES 104-DIO-48E
+GPIO driver, the ACCES 104-IDI-48 GPIO driver, the ACCES 104-IDIO-16
+GPIO driver, and the Apex Embedded Systems STX104 DAC driver. I have
+several more PC/104 devices for which I wish to write drivers, but I
+would like to resolve this ISA bus driver situation before submitting
+new code.
 
-  4553          circularQ = &pm8001_ha->inbnd_q_tbl[0];
-  4554          payload.tag = cpu_to_le32(tag);
-                                          ^^^
-Using invalid tag.
-
-  4555          payload.ppc_phyid = (((operation & 0xF) << 8) | (phyid  & 0xFF));
-  4556          PM8001_INIT_DBG(pm8001_ha,
-  4557                  pm8001_printk(" phy profile command for phy %x ,length is %d\n",
-  4558                          payload.ppc_phyid, length));
-  4559          for (i = length; i < (length + PHY_DWORD_LENGTH - 1); i++) {
-  4560                  payload.reserved[j] =  cpu_to_le32(*((u32 *)buf + i));
-  4561                  j++;
-  4562          }
-  4563          rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-  4564          if (rc)
-  4565                  pm8001_tag_free(pm8001_ha, tag);
-  4566  }
-
-
-regards,
-dan carpenter
+William Breathitt Gray
