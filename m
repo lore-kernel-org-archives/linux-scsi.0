@@ -1,220 +1,122 @@
 From: mchristi@redhat.com
-Subject: [PATCH 06/42] direct-io: set bi_op to REQ_OP
-Date: Wed, 13 Apr 2016 14:35:52 -0500
-Message-ID: <1460576188-5751-7-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 13/42] xfs: set bi_op to REQ_OP
+Date: Wed, 13 Apr 2016 14:35:59 -0500
+Message-ID: <1460576188-5751-14-git-send-email-mchristi@redhat.com>
 References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the dio code set the bio bi_op to a REQ_OP and bio op_flags
-to rq_flag_bits.
-
-It also begins to convert btrfs's dio_submit_t because of the dio submit_io
-callout use. In the btrfs_submit_direct change, I OR'd the op and flag back
-together. It is only temporary. The next patched will completely convert
-all the btrfs code paths.
+This patch has xfs use bio->bi_op for REQ_OPs and rq_flag_bits to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/btrfs/inode.c   |  9 +++++----
- fs/direct-io.c     | 35 +++++++++++++++++++++--------------
- include/linux/fs.h |  2 +-
- 3 files changed, 27 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_aops.c |  3 +--
+ fs/xfs/xfs_buf.c  | 27 +++++++++++++++------------
+ 2 files changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 9cc2256..d999fdf 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -8401,14 +8401,14 @@ out_err:
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5852c5a..6c20336 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -439,10 +439,9 @@ xfs_submit_ioend(
  
--static void btrfs_submit_direct(int rw, struct bio *dio_bio,
--				struct inode *inode, loff_t file_offset)
-+static void btrfs_submit_direct(struct bio *dio_bio, struct inode *inode,
-+				loff_t file_offset)
+ 	ioend->io_bio->bi_private = ioend;
+ 	ioend->io_bio->bi_end_io = xfs_end_bio;
++	ioend->io_bio->bi_op = REQ_OP_WRITE;
+ 	if (wbc->sync_mode)
+ 		ioend->io_bio->bi_rw = WRITE_SYNC;
+-	else
+-		ioend->io_bio->bi_rw = WRITE;
+ 	/*
+ 	 * If we are failing the IO now, just mark the ioend with an
+ 	 * error and finish it. This will run IO completion immediately
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 079bb77..917774e 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1131,7 +1131,8 @@ xfs_buf_ioapply_map(
+ 	int		map,
+ 	int		*buf_offset,
+ 	int		*count,
+-	int		rw)
++	int		op,
++	int		op_flags)
  {
- 	struct btrfs_dio_private *dip = NULL;
- 	struct bio *io_bio = NULL;
- 	struct btrfs_io_bio *btrfs_bio;
- 	int skip_sum;
--	int write = rw & REQ_WRITE;
-+	bool write = (dio_bio->bi_op == REQ_OP_WRITE);
- 	int ret = 0;
+ 	int		page_index;
+ 	int		total_nr_pages = bp->b_page_count;
+@@ -1170,7 +1171,8 @@ next_chunk:
+ 	bio->bi_iter.bi_sector = sector;
+ 	bio->bi_end_io = xfs_buf_bio_end_io;
+ 	bio->bi_private = bp;
+-	bio->bi_rw = rw;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
  
- 	skip_sum = BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM;
-@@ -8459,7 +8459,8 @@ static void btrfs_submit_direct(int rw, struct bio *dio_bio,
- 			dio_data->unsubmitted_oe_range_end;
- 	}
+ 	for (; size && nr_pages; nr_pages--, page_index++) {
+ 		int	rbytes, nbytes = PAGE_SIZE - offset;
+@@ -1214,7 +1216,8 @@ _xfs_buf_ioapply(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct blk_plug	plug;
+-	int		rw;
++	int		op;
++	int		op_flags = 0;
+ 	int		offset;
+ 	int		size;
+ 	int		i;
+@@ -1233,14 +1236,13 @@ _xfs_buf_ioapply(
+ 		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
  
--	ret = btrfs_submit_direct_hook(rw, dip, skip_sum);
-+	ret = btrfs_submit_direct_hook(dio_bio->bi_op | dio_bio->bi_rw, dip,
-+				       skip_sum);
- 	if (!ret)
- 		return;
+ 	if (bp->b_flags & XBF_WRITE) {
++		op = REQ_OP_WRITE;
+ 		if (bp->b_flags & XBF_SYNCIO)
+-			rw = WRITE_SYNC;
+-		else
+-			rw = WRITE;
++			op_flags = WRITE_SYNC;
+ 		if (bp->b_flags & XBF_FUA)
+-			rw |= REQ_FUA;
++			op_flags |= REQ_FUA;
+ 		if (bp->b_flags & XBF_FLUSH)
+-			rw |= REQ_FLUSH;
++			op_flags |= REQ_FLUSH;
  
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 1890ad2..64bfab0 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -108,7 +108,8 @@ struct dio_submit {
- /* dio_state communicated between submission path and end_io */
- struct dio {
- 	int flags;			/* doesn't change */
--	int rw;
-+	int op;
-+	int op_flags;
- 	blk_qc_t bio_cookie;
- 	struct block_device *bio_bdev;
- 	struct inode *inode;
-@@ -163,7 +164,7 @@ static inline int dio_refill_pages(struct dio *dio, struct dio_submit *sdio)
- 	ret = iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
- 				&sdio->from);
- 
--	if (ret < 0 && sdio->blocks_available && (dio->rw & WRITE)) {
-+	if (ret < 0 && sdio->blocks_available && (dio->op == REQ_OP_WRITE)) {
- 		struct page *page = ZERO_PAGE(0);
  		/*
- 		 * A memory fault, but the filesystem has some outstanding
-@@ -242,7 +243,8 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
- 		transferred = dio->result;
- 
- 		/* Check for short read case */
--		if ((dio->rw == READ) && ((offset + transferred) > dio->i_size))
-+		if ((dio->op == REQ_OP_READ) &&
-+		    ((offset + transferred) > dio->i_size))
- 			transferred = dio->i_size - offset;
- 	}
- 
-@@ -265,7 +267,7 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
- 		inode_dio_end(dio->inode);
- 
- 	if (is_async) {
--		if (dio->rw & WRITE) {
-+		if (dio->op == REQ_OP_WRITE) {
- 			int err;
- 
- 			err = generic_write_sync(dio->iocb->ki_filp, offset,
-@@ -374,7 +376,8 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
- 
- 	bio->bi_bdev = bdev;
- 	bio->bi_iter.bi_sector = first_sector;
--	bio->bi_rw = dio->rw;
-+	bio->bi_op = dio->op;
-+	bio->bi_rw = dio->op_flags;
- 	if (dio->is_async)
- 		bio->bi_end_io = dio_bio_end_aio;
- 	else
-@@ -402,14 +405,13 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
- 	dio->refcount++;
- 	spin_unlock_irqrestore(&dio->bio_lock, flags);
- 
--	if (dio->is_async && dio->rw == READ && dio->should_dirty)
-+	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty)
- 		bio_set_pages_dirty(bio);
- 
- 	dio->bio_bdev = bio->bi_bdev;
- 
- 	if (sdio->submit_io) {
--		sdio->submit_io(dio->rw, bio, dio->inode,
--			       sdio->logical_offset_in_bio);
-+		sdio->submit_io(bio, dio->inode, sdio->logical_offset_in_bio);
- 		dio->bio_cookie = BLK_QC_T_NONE;
- 	} else
- 		dio->bio_cookie = submit_bio(bio);
-@@ -478,14 +480,14 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
- 	if (bio->bi_error)
- 		dio->io_error = -EIO;
- 
--	if (dio->is_async && dio->rw == READ && dio->should_dirty) {
-+	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
- 		err = bio->bi_error;
- 		bio_check_pages_dirty(bio);	/* transfers ownership */
+ 		 * Run the write verifier callback function if it exists. If
+@@ -1270,13 +1272,14 @@ _xfs_buf_ioapply(
+ 			}
+ 		}
+ 	} else if (bp->b_flags & XBF_READ_AHEAD) {
+-		rw = READA;
++		op = REQ_OP_READ;
++		op_flags = REQ_RAHEAD;
  	} else {
- 		bio_for_each_segment_all(bvec, bio, i) {
- 			struct page *page = bvec->bv_page;
+-		rw = READ;
++		op = REQ_OP_READ;
+ 	}
  
--			if (dio->rw == READ && !PageCompound(page) &&
-+			if (dio->op == REQ_OP_READ && !PageCompound(page) &&
- 					dio->should_dirty)
- 				set_page_dirty_lock(page);
- 			put_page(page);
-@@ -638,7 +640,7 @@ static int get_more_blocks(struct dio *dio, struct dio_submit *sdio,
- 		 * which may decide to handle it or also return an unmapped
- 		 * buffer head.
- 		 */
--		create = dio->rw & WRITE;
-+		create = dio->op == REQ_OP_WRITE;
- 		if (dio->flags & DIO_SKIP_HOLES) {
- 			if (sdio->block_in_file < (i_size_read(dio->inode) >>
- 							sdio->blkbits))
-@@ -788,7 +790,7 @@ submit_page_section(struct dio *dio, struct dio_submit *sdio, struct page *page,
- {
- 	int ret = 0;
- 
--	if (dio->rw & WRITE) {
-+	if (dio->op == REQ_OP_WRITE) {
- 		/*
- 		 * Read accounting is performed in submit_bio()
- 		 */
-@@ -988,7 +990,7 @@ do_holes:
- 				loff_t i_size_aligned;
- 
- 				/* AKPM: eargh, -ENOTBLK is a hack */
--				if (dio->rw & WRITE) {
-+				if (dio->op == REQ_OP_WRITE) {
- 					put_page(page);
- 					return -ENOTBLK;
- 				}
-@@ -1201,7 +1203,12 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
- 		dio->is_async = true;
- 
- 	dio->inode = inode;
--	dio->rw = iov_iter_rw(iter) == WRITE ? WRITE_ODIRECT : READ;
-+	if (iov_iter_rw(iter) == WRITE) {
-+		dio->op = REQ_OP_WRITE;
-+		dio->op_flags = WRITE_ODIRECT;
-+	} else {
-+		dio->op = REQ_OP_READ;
-+	}
+ 	/* we only use the buffer cache for meta-data */
+-	rw |= REQ_META;
++	op_flags |= REQ_META;
  
  	/*
- 	 * For AIO O_(D)SYNC writes we need to defer completions to a workqueue
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 96ace0f..f3f2f66 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2792,7 +2792,7 @@ extern int generic_file_open(struct inode * inode, struct file * filp);
- extern int nonseekable_open(struct inode * inode, struct file * filp);
- 
- #ifdef CONFIG_BLOCK
--typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
-+typedef void (dio_submit_t)(struct bio *bio, struct inode *inode,
- 			    loff_t file_offset);
- 
- enum {
+ 	 * Walk all the vectors issuing IO on them. Set up the initial offset
+@@ -1288,7 +1291,7 @@ _xfs_buf_ioapply(
+ 	size = BBTOB(bp->b_io_length);
+ 	blk_start_plug(&plug);
+ 	for (i = 0; i < bp->b_map_count; i++) {
+-		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
++		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
+ 		if (bp->b_error)
+ 			break;
+ 		if (size <= 0)
 -- 
 2.7.2
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
