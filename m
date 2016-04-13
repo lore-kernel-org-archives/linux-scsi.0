@@ -1,50 +1,48 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [-next] BUG_ON in scsi_target_destroy()
-Date: Wed, 13 Apr 2016 15:59:31 +0200
-Message-ID: <1517391.Uqi4c4PsRt@c203>
-References: <20160411090146.GA537@swordfish> <2201725.I2to9GCRQJ@c203> <20160413144704.GA490@swordfish>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 2/2] IB/iser: set max_segment_size
+Date: Wed, 13 Apr 2016 07:07:27 -0700
+Message-ID: <20160413140727.GA5590@infradead.org>
+References: <1460470405-11673-1-git-send-email-hch@lst.de>
+ <1460470405-11673-3-git-send-email-hch@lst.de>
+ <570D156B.7010206@sandisk.com>
+ <20160412165130.GB9568@lst.de>
+ <570D3AE0.4040104@sandisk.com>
+ <20160412184309.GA3333@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20160413144704.GA490@swordfish>
-Sender: linux-next-owner@vger.kernel.org
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-next@vger.kernel.org, Xiong Zhou <jencce.kernel@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160412184309.GA3333-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mittwoch, 13. April 2016 23:47:04 CEST Sergey Senozhatsky wrote:
-> Hi,
->=20
-> On (04/13/16 10:41), Johannes Thumshirn wrote:
-> > Hi Sergey,  Xiong,
-> >=20
-> > Can you try below patch?
->=20
-> it panics my system.
-> first it warn_on-s in lib/kobject.c:244
->=20
-> then NULL dereferences
-> do_scan_async
->  __scsi_remove_device
->   scsi_target_reap
->    device_del
->     dpm_sysfs_remove
->      sysfs_unmerge_group
->       kernfs_find_and_get_ns
->        kernfs_find_ns
->=20
-> 	-ss
->=20
+On Tue, Apr 12, 2016 at 11:43:09AM -0700, Christoph Hellwig wrote:
+> > I think this means that there is a mismatch between the current block layer
+> > limits and what NVMe / RDMA drivers need ...
+> 
+> If we tell the block layer that we can only handle page sized comments
+> using max_segent_size it should do the right thing.
+> 
+> Now one thing that might be useful is to force the max_segent_size
+> when setting the virt boundary, as they seem to be closely related.
 
-Thanks for the update, I'll have a look into the callchain
+I looked into this, and found something that also means the the patches
+in this series unfortunately won't work as expected:
 
---=20
-Johannes Thumshirn                                                     =
-                           Storage
-jthumshirn@suse.de                                                     =
-        +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+blk_queue_max_segment_size checks that we at least set the maximum
+segment size to the systen page size.  This means we can't actually
+set the segment size to the virt boundary for the case where it's fixed
+4k (iSER, NVMe).  So I think we'll have to stick to setting max_sectors
+to
+
+	((max_segments - 1) * page_size) >> 9
+
+for all these drivers.  I'll retract this patch and will send a new
+one implementing this in iSER, and also research if a common helper
+for it makes sense.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
