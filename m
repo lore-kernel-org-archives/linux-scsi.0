@@ -1,70 +1,39 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the ISA Kconfig
- option
-Date: Wed, 13 Apr 2016 09:26:02 +0200
-Message-ID: <20160413072602.GA7629@gmail.com>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
+From: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Subject: Re: [PATCH 2/2] IB/iser: set max_segment_size
+Date: Wed, 13 Apr 2016 11:01:57 +0300
+Message-ID: <570DFCF5.1090501@grimberg.me>
+References: <1460414846-29540-1-git-send-email-hch@lst.de>
+ <1460414846-29540-3-git-send-email-hch@lst.de> <570CD26E.70502@grimberg.me>
+ <1460471256.2338.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34214 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758444AbcDMH0G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 03:26:06 -0400
-Content-Disposition: inline
-In-Reply-To: <cover.1460379702.git.vilhelm.gray@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1460471256.2338.5.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: William Breathitt Gray <vilhelm.gray@gmail.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, gregkh@linuxfoundation.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
 
 
-* William Breathitt Gray <vilhelm.gray@gmail.com> wrote:
+>> In iser we sorta rely on 4k pages so we avoid
+>> PAGE_SIZE but rather set SIZE_4K for these sort
+>> of things (like we did in the virt_boundary).
+>
+> So you still want only 4k segments even on PPC where the PAGE_SIZE is
+> 16k?
 
-> This patchset is based on top of commit 3a3a5fece6f2 ("fs: kernfs: Replace
-> CURRENT_TIME by current_fs_time()") of the driver-core-testing branch of
-> the driver-core repository.
-> 
-> The introduction of the ISA_BUS option in commit b3c1be1b789c
-> ("base: isa: Remove X86_32 dependency") blocks the compilation of ISA
-> drivers on non-x86 platforms. The ISA_BUS configuration option should not
-> be necessary if the X86_32 dependency can be decoupled from the ISA
-> configuration option. This patchset both removes the ISA_BUS configuration
-> option entirely and decouples the X86_32 dependency from the ISA
-> configuration option.
-> 
-> The PNPBIOS driver requires preprocessor defines (located in
-> include/asm/segment.h) only declared if the architecture is set to X86_32.
-> If the architecture is set to X86_64, the PNPBIOS driver will not build
-> properly. The X86 dependecy for the PNPBIOS configuration option is changed
-> to an explicit X86_32 dependency in order to prevent an attempt to build
-> for an unsupported architecture.
-> 
-> Changes to the ISA SSCAPE and SCSI ULTRASTOR drivers are also included. The
-> relevant patches simply fix format string identifier mismatches exposed
-> during an attempted X86_64 compilation after the decoupling of the X86_32
-> dependency from the ISA configuration option. These patches fix compilation
-> warnings rather than errors, but the solutions were so trivial that I
-> decided to include them in this patchset. If it would be inappropriate to
-> include them in this patchset, let me know and I will rebase to remove the
-> relevant patches.
-> 
-> William Breathitt Gray (4):
->   pnp: pnpbios: Add explicit X86_32 dependency to PNPBIOS
->   sound: isa: sscape: Use correct format identifier for size_t
->   scsi: ultrastor: Use correct format identifier for kernel pointer
->   isa: Remove the ISA_BUS Kconfig option
-> 
->  arch/x86/Kconfig            | 10 ++--------
->  drivers/base/Makefile       |  2 +-
->  drivers/pnp/pnpbios/Kconfig |  2 +-
->  drivers/scsi/ultrastor.c    |  8 ++++----
->  include/linux/isa.h         |  2 +-
->  sound/isa/sscape.c          |  2 +-
->  6 files changed, 10 insertions(+), 16 deletions(-)
+Yes, iSER has the "no-gaps" constraint (like nvme) and some
+applications in the past were known to issue vectored IO that doesn't
+necessarily align with the system PAGE_SIZE. These sort of workloads
+resulted in suboptimal performance on ppc, ia64 etc (almost every I/O
+had gaps).
 
-What's the practical motivation of this? What exact hardware is this for?
-
-Thanks,
-
-	Ingo
+Before the block layer was able to enforce scatterlists without gaps,
+iSER used bounce buffering in order to service "gappy" I/O which was
+probably a lot worse than bio splitting like the block layer is doing
+today, but still we felt that having 4k segments even on larger
+PAGE_SIZE systems was a decent compromise.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
