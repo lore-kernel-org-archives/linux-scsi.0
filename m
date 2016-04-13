@@ -1,49 +1,113 @@
-From: =?iso-8859-1?Q?=22Uplift_mezin=E1rodn=ED_charitativn=ED=22?=
-	<victoria.ruppert@minot.k12.nd.us>
-Subject: Gratulace =?iso-8859-1?Q?v=EDt=ECz.?=
-Date: Wed, 13 Apr 2016 16:53:38 -0500
-Message-ID: <391de70d852f7f6c36337f87188950cd.squirrel__10658.6695569151$1460585080$gmane$org@mail.minot.k12.nd.us>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Lsf] LSF/MM Schedule and improving discard support
+Date: Wed, 13 Apr 2016 18:04:51 -0400
+Message-ID: <570EC283.3070605@interlog.com>
+References: <57067F19.3030404@sandisk.com>
+ <1460044289.2311.5.camel@linux.vnet.ibm.com> <570E6C55.1060003@sandisk.com>
+ <yq11t69wkcl.fsf@sermon.lab.mkp.net> <570E73D5.3010502@sandisk.com>
+ <1460566264.2322.13.camel@linux.vnet.ibm.com>
+ <20160413173037.GB14037@birch.djwong.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.minot.k12.nd.us ([165.234.106.29]:60149 "EHLO
-	mail.minot.k12.nd.us" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbcDMWED (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2016 18:04:03 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:43701 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753918AbcDMWE7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Apr 2016 18:04:59 -0400
+In-Reply-To: <20160413173037.GB14037@birch.djwong.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>
 
+On 16-04-13 01:30 PM, Darrick J. Wong wrote:
+> On Wed, Apr 13, 2016 at 09:51:04AM -0700, James Bottomley wrote:
+>> On Wed, 2016-04-13 at 09:29 -0700, Bart Van Assche wrote:
+>>> On 04/13/2016 09:21 AM, Martin K. Petersen wrote:
+>>>>  From a filesystem/ioctl perspective, BLKDISCARD is a hint. We
+>>>> should not be
+>>>> rounding off or aligning anything.
+>>>
+>>> Hello Martin,
+>>>
+>>> Today if a BLKDISCARD ioctl passes a non-aligned start and/or end
+>>> sector to the kernel then the block layer will submit invalid (non
+>>> -aligned) REQ_DISCARD requests to the block driver the ioctl applies
+>>> to. This is not acceptable. Does the above mean that you are
+>>> proposing to fail such BLKDISCARD ioctls with an error code?
+>>
+>> The answer would be of course not.  discard is a hint so malformed
+>> discard gets ignored by the device and success is returned because you
+>> can't oblige devices to obey hints (that's why they're called hints).
+>
+> Agree.  For blockdev FALLOC_FL_PUNCH_HOLE I think we can simply check for
+> logical block size ("lbs") alignment and then pass the request to the
+> device with the understanding that it can do as it pleases.  We asked the
+> device to try to deallocate blocks, and perhaps it cannot.
+>
+> Just to be clear, this only applies to zeroing discard; the "discard and who
+> knows what you can now read back" thing that nobody likes has been temporarily
+> wired up to FALLOC_FL_PUNCH_HOLE | FALLOC_FL_NO_HIDE_STALE. :)
 
-Gratulace v=EDt=ECz.
+In May last year, T10 added another wrinkle when they expanded the LBPRZ
+field from 1 to 3 bits (in the LBP VPD page but _not_ in the READ
+CAPACITY(16) response). The expansion is to allow a new response when
+an unmapped logical block is read: return a "provisioning initialization
+pattern". That new piece of jargon is defined as a "non-zero pattern that
+is the length of one logical block".
 
-V=E1=9A emailem adresa pr=E1v=EC vyhr=E1l =80 150,000.00 (sto pades=E1t=
- tis=EDc eur). V
-Uplift mezin=E1rodn=ED charitativn=ED program. Ref No: Sp / 229/ 0-01 /=
- 07/5 -
-02 / ES. Lucky No: 9/11/13/24/40.
+It seems that the "provisioning initialization pattern" is the same for
+every unmapped logical block and is chosen by the manufacturer. It can
+be read with the new REPORT PROVISIONING INITIALIZATION PATTERN command.
+If LBPRZ=2 and FORMAT UNIT is called with an "initialization pattern"
+equal to the disk's "provisioning initialization pattern" then all
+logical blocks are unmapped. Clear?
 
-Pro v=EDce informac=ED a pohled=E1vky postupu kontaktem;
+Doug Gilbert
 
-CAPITAL CLAIM AGENCY
-Mr. John Carlos.
-Email: infocapitals@aim.com
-Tel: +34-672-853-656
+>> However, the problem of needing a mandatory discard for scrubbing
+>> blocks is part of the fallocate discussion, I think.
+>
+> The third fallocate mode (FALLOC_FL_ZERO_RANGE) doesn't fit with the phrase
+> "mandatory discard for scrubbing blocks", though if one removed "discard" from
+> that phrase then it would.  The only thing that ZERO_RANGE guarantees is that
+> subsequent reads return zeroes.  XFS punches the entire range and reallocates
+> it with unwritten extents; ext4 fills the holes in the range with unwritten
+> extents and converts real extents to unwritten.  Both also write zeroes to any
+> part of the range that doesn't align to an FS block.
+>
+> Yes, I think there are several questions to resolve here for mandatory zeroing
+> with FALLOC_FL_ZERO_RANGE (summarizing the issues I've come up with so far):
+>
+> a) Should blockdev fallocate accept byte-granular offset/length arguments, even
+> if it has to use the page cache to write zeroes to the device?  This is what
+> file fallocate does today.
+>
+> b) If blockdev fallocate does impose alignment requirements, should it return
+> EINVAL to a request that isn't aligned to the logical block size?
+>
+> c) If a device really really prefers that its requests are aligned to
+> min_io_size (which can be much larger than the logical block size), should it
+> reject requests that aren't aligned to min_io?  Or perhaps it should take care
+> of the alignment problems on its own somehow?
+>
+> For allocate mode (the thing Mike Snitzer brought up in another thread
+> yesterday), the alignment problems are much easier because we're allowed to
+> round the start down and the end up to fit whatever alignment we require.
+>
+> Should we promote this to a storage track session at LSF next week?
+>
+> --D
+>
+>>
+>> James
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Cel=E9 jm=E9no, adresa, v=ECk, povol=E1n=ED, telefonn=ED =E8=EDsla
-
-Ode=9Alete odpov=EC=EF na tento email: infocapitals@aim.com
-
-Pozn=E1mka: Jedn=E1 se o mezin=E1rodn=ED program loterie. Tato zpr=E1va=
- byla
-automaticky p=F8elo=9Een z angli=E8tiny do =E8e=9Atiny.
-
-Gratulujeme !!!
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
