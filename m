@@ -1,44 +1,49 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 09/27] target: avoid to access .bi_vcnt directly
-Date: Thu, 14 Apr 2016 20:02:27 +0800
-Message-ID: <1460635375-28282-10-git-send-email-tom.leiming@gmail.com>
-References: <1460635375-28282-1-git-send-email-tom.leiming@gmail.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [PATCH] pm80xx: Remove bogus address masking in pm8001_ioremap()
+Date: Thu, 14 Apr 2016 14:22:44 +0200
+Message-ID: <CAMGffEk=kRZ4QcpNTYsnMw90W0TwFjgwB_GcjOq4pg4DbsfSCg@mail.gmail.com>
+References: <1460582816-12703-1-git-send-email-ddaney.cavm@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1460635375-28282-1-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <1460582816-12703-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: lindar_liu <lindar_liu@usish.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, David Daney <david.daney@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When the bio is full, bio_add_pc_page() will return zero,
-so use this way to handle full bio.
+On Wed, Apr 13, 2016 at 11:26 PM, David Daney <ddaney.cavm@gmail.com> wrote:
+> From: David Daney <david.daney@cavium.com>
+>
+> It is unclear what the original intent of the masking was, but it is
+> clearly incorrect to truncate a physical address before calling
+> ioremap().  On systems where there are valid physical address bits
+> above bit-31 (arm64 for example) the result is an eventual OOPs when
+> initializing the driver.
+>
+> Remove the bogus code to fix it.
+>
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 062ab34..6bd7bf4 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -418,8 +418,6 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
+>                 if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+>                         pm8001_ha->io_mem[logicalBar].membase =
+>                                 pci_resource_start(pdev, bar);
+> -                       pm8001_ha->io_mem[logicalBar].membase &=
+> -                               (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>                         pm8001_ha->io_mem[logicalBar].memsize =
+>                                 pci_resource_len(pdev, bar);
+>                         pm8001_ha->io_mem[logicalBar].memvirtaddr =
+> --
+> 1.8.3.1
+>
 
-Also replace access to .bi_vcnt for pr_debug() with bio_segments().
-
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/target/target_core_pscsi.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index de18790..66320e8 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -945,13 +945,9 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 			rc = bio_add_pc_page(pdv->pdv_sd->request_queue,
- 					bio, page, bytes, off);
--			if (rc != bytes)
--				goto fail;
--
- 			pr_debug("PSCSI: bio->bi_vcnt: %d nr_vecs: %d\n",
--				bio->bi_vcnt, nr_vecs);
--
--			if (bio->bi_vcnt > nr_vecs) {
-+				bio_segments(bio), nr_vecs);
-+			if (rc != bytes) {
- 				pr_debug("PSCSI: Reached bio->bi_vcnt max:"
- 					" %d i: %d bio: %p, allocating another"
- 					" bio\n", bio->bi_vcnt, i, bio);
--- 
-1.9.1
+Thanks, looks good to me.
+Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
