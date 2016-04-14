@@ -1,42 +1,72 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/42] v5: separate operations from flags in the
- bio/request structs
-Date: Thu, 14 Apr 2016 08:09:30 +0200
-Message-ID: <570F341A.2040108@suse.de>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+Subject: Re: [PATCHv2 1/2] target: make target db location configurable
+Date: Thu, 14 Apr 2016 08:10:32 +0200
+Message-ID: <570F3458.8010109@suse.de>
+References: <cover.1460577841.git.lduncan@suse.com>
+ <5f4f1bc2ac2177a37432f0afd22f16ddf65e9e9b.1460577841.git.lduncan@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5f4f1bc2ac2177a37432f0afd22f16ddf65e9e9b.1460577841.git.lduncan@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org, nab@linux-iscsi.org, target-devel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, hch@infradead.org, agrover@redhat.com, jxm@netiant.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/13/2016 09:35 PM, mchristi@redhat.com wrote:
-> The following patches begin to cleanup the request->cmd_flags and
-> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-> attributes and state of the request. For bi_rw we use it for similar
-> info and also the priority but then also have another bi_flags field
-> for state. At some point, we abused them so much we just made cmd_fla=
-gs
-> 64 bits, so we could add more.
+On 04/13/2016 10:25 PM, Lee Duncan wrote:
+> This commit adds the read-write attribute "dbroot",
+> in the top-level CONFIGFS (core) target directory,
+> normally /sys/kernel/config/target. This attribute
+> defaults to "/var/target" but can be changed by
+> writing a new pathname string to it. Changing this
+> attribute is only allowed when no fabric drivers
+> are loaded and the supplied value specifies an
+> existing directory.
 >=20
-> The following patches seperate the operation (read, write discard,
-> flush, etc) from cmd_flags/bi_rw.
+> Target modules that care about the target database
+> root directory will be modified to use this
+> attribute in a future commit.
 >=20
-> This patchset was made against linux-next from today April 13
-> (git tag next-20160413).
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> ---
+>  drivers/target/target_core_configfs.c | 51 +++++++++++++++++++++++++=
+++++++++++
+>  drivers/target/target_core_internal.h |  6 +++++
+>  2 files changed, 57 insertions(+)
 >=20
-> I put a git tree here:
-> https://github.com/mikechristie/linux-kernel.git
-> The patches are in the op branch.
->=20
-A round of applause for you.
-
-=46or the entire series:
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/t=
+arget_core_configfs.c
+> index 713c63d9681b..bfedbd92b77f 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -99,6 +99,56 @@ static ssize_t target_core_item_version_show(struc=
+t config_item *item,
+> =20
+>  CONFIGFS_ATTR_RO(target_core_item_, version);
+> =20
+> +char db_root[DB_ROOT_LEN] =3D DB_ROOT_DEFAULT;
+> +static char db_root_stage[DB_ROOT_LEN];
+> +
+> +static ssize_t target_core_item_dbroot_show(struct config_item *item=
+,
+> +					    char *page)
+> +{
+> +	return sprintf(page, "%s\n", db_root);
+> +}
+> +
+> +static ssize_t target_core_item_dbroot_store(struct config_item *ite=
+m,
+> +					const char *page, size_t count)
+> +{
+> +	ssize_t read_bytes;
+> +	struct file *fp;
+> +
+> +	if (!list_empty(&g_tf_list)) {
+> +		pr_err("db_root: cannot be changed: target drivers registered");
+> +		return -EINVAL;
+> +	}
+Locking?
 
 Cheers,
 
