@@ -1,37 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv2 09/14] libata: fixup ZAC device disabling
-Date: Thu, 14 Apr 2016 11:43:55 -0400
-Message-ID: <20160414154355.GC12583@htj.duckdns.org>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-10-git-send-email-hare@suse.de>
- <20160413180947.GF3676@htj.duckdns.org>
- <570F2F13.2040509@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [patch] scsi_dh_alua: uninitialized variable in alua_rtpg()
+Date: Thu, 14 Apr 2016 08:45:18 -0700
+Message-ID: <570FBB0E.9030902@sandisk.com>
+References: <20160414093917.GA16891@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <570F2F13.2040509@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0056.outbound.protection.outlook.com ([157.56.110.56]:39168
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932799AbcDNPpZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2016 11:45:25 -0400
+In-Reply-To: <20160414093917.GA16891@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, Apr 14, 2016 at 07:48:03AM +0200, Hannes Reinecke wrote:
-> On 04/13/2016 08:09 PM, Tejun Heo wrote:
-> > On Tue, Apr 12, 2016 at 08:47:53AM +0200, Hannes Reinecke wrote:
-> >> libata device disabling is ... curious. So add the correct
-> >> definitions that we can disable ZAC devices properly.
-> > 
-> > Fold into an earlier patch?
-> > 
-> That earlier patch would be commit
-> 9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb
-> ("libata: Implement ATA_DEV_ZAC"), which got merged
-> in 2014 ...
+On 04/14/2016 02:39 AM, Dan Carpenter wrote:
+> It's possible to use "err" without initializing it.  If it happens to be
+> a 2 which is SCSI_DH_RETRY then that could cause a bug.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 8eaed05..f3c994f 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -513,7 +513,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+>   	struct alua_port_group *tmp_pg;
+>   	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+>   	unsigned char *desc, *buff;
+> -	unsigned err, retval;
+> +	unsigned int err = 0;
+> +	unsigned int retval;
+>   	unsigned int tpg_desc_tbl_off;
+>   	unsigned char orig_transition_tmo;
+>   	unsigned long flags;
 
-Ah, right you are.
+Hello Dan,
 
-Thanks.
+The code that uses the 'err' variable occurs in a loop. I think the 
+initialization of 'err' should occur after the "retry:" label.
 
--- 
-tejun
+Bart.
