@@ -1,71 +1,136 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [SCSI] pm80xx: Phy settings support for motherboard controller.
-Date: Thu, 14 Apr 2016 14:52:20 +0200
-Message-ID: <CAD+HZHXt=+z=+9=Uh7etj8aB3M_kk_sSB+ipc633Bc5caQuaQA@mail.gmail.com>
-References: <20160413112454.GA25247@mwanda>
+From: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force inlining
+ of some byteswap operations)
+Date: Thu, 14 Apr 2016 17:29:06 +0200
+Message-ID: <570FB742.2010309@redhat.com>
+References: <1454615136-32308-1-git-send-email-dvlasenk@redhat.com> <1454615136-32308-2-git-send-email-dvlasenk@redhat.com> <20160413033649.7r3msnmo3trtq47z@treble> <570E37A9.2050503@redhat.com> <20160413123607.3y3v5esq3myto4kc@treble> <20160413151500.tate3u6trg4agugo@treble> <1460566509.2322.14.camel@HansenPartnership.com> <20160413171058.24tnvvquvnipnwnd@treble>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=047d7b3a822c6f682a0530715d5b
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35791 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753330AbcDNMwW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2016 08:52:22 -0400
-Received: by mail-lf0-f65.google.com with SMTP id o124so12052661lfb.2
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Apr 2016 05:52:21 -0700 (PDT)
-In-Reply-To: <20160413112454.GA25247@mwanda>
+Received: from mx1.redhat.com ([209.132.183.28]:50674 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932215AbcDNP3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2016 11:29:10 -0400
+In-Reply-To: <20160413171058.24tnvvquvnipnwnd@treble>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, "pmchba@pmcs.com" <pmchba@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Josh Poimboeuf <jpoimboe@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ingo Molnar <mingo@kernel.org>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
---047d7b3a822c6f682a0530715d5b
-Content-Type: text/plain; charset=UTF-8
+On 04/13/2016 07:10 PM, Josh Poimboeuf wrote:
+>>>>>> From the disassembly of drivers/scsi/qla2xxx/qla_attr.o:
+>>>>>>
+>>>>>> 0000000000002f53 <qla2x00_get_host_fabric_name>:
+>>>>>>     2f53:       55                      push   %rbp
+>>>>>>     2f54:       48 89 e5                mov    %rsp,%rbp
+>>>>>>
+>>>>>> 0000000000002f57 <qla2x00_get_fc_host_stats>:
+>>>>>>     2f57:       55                      push   %rbp
+>>>>>>     2f58:       b9 e8 00 00 00          mov    $0xe8,%ecx
+>>>>>>     2f5d:       48 89 e5                mov    %rsp,%rbp
+>>>>>> ...
+>>>>>>
+>>>>>> Note that qla2x00_get_host_fabric_name() is inexplicably
+>>>>>> truncated after
+>>>>>> setting up the frame pointer.  It falls through to the next
+>>>>>> function, which is
+>>>>>> very wrong.
+>>>>>
+>>>>> Wow, that's ... interesting.
+>>>>>
+>>>>>
+>>>>>> I can recreate it with either gcc 5.3.1 or gcc 6.0 on
+>>>>>> linus/master with
+>>>>>> the .config from the above link.
+>>>>>>
+>>>>>> The call chain which appears to trigger the problem is:
+>>>>>>
+>>>>>> qla2x00_get_host_fabric_name()
+>>>>>>   wwn_to_u64()
+>>>>>>     get_unaligned_be64()
+>>>>>>       be64_to_cpup()
+>>>>>>         __be64_to_cpup() <- changed to __always_inline by this
+>>>>>> patch
+>>>>>>
+>>>>>> It occurs with the combination of the following two recent
+>>>>>> commits:
+>>>>>>
+>>>>>> - bc27fb68aaad ("include/uapi/linux/byteorder, swab: force
+>>>>>> inlining of some byteswap operations")
+>>>>>> - ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn
+>>>>>> access")
+>>>>>>
+>>>>>> I can confirm that reverting either patch makes the problem go
+>>>>>> away.
+>>>>>> I'm planning on opening a gcc bug tomorrow.
+>>>>>
+>>>>>
+>>>>> Note that if CONFIG_OPTIMIZE_INLINING is not set, _all_ "inline"
+>>>>> keywords are in fact __always_inline, so the bug must be
+>>>>> triggering
+>>>>> even without the patch.
+>>>>
+>>>> Makes sense in theory, but the bug doesn't actually trigger when I
+>>>> revert the patch and set CONFIG_OPTIMIZE_INLINING=n.
+>>>>
+>>>> Perhaps even more surprising, it doesn't trigger *with* the patch
+>>>> and
+>>>> CONFIG_OPTIMIZE_INLINING=n.
+>>>
+>>> [ Adding James to CC since this bug affects scsi. ]
+>>>
+>>> Here's the gcc bug:
+>>>
+>>>   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+>>>
+>>
+>>
+>> Actually, adding me doesn't help, I've added linux-scsi.  The summary
+>> is that there's a but in gcc-5.3.1 which is miscompiling qla_attr.c ...
+>> this means we're going to have to ask the compiler version of reported
+>> crashes.
+> 
+> The bug isn't specific to a compiler version.  I've seen it with gcc
+> 5.3.1 and gcc 6.0.  I haven't tried any older versions.  And the gcc bug
+> hasn't been resolved (or even investigated) yet.
+> 
+> The bug is triggered by a combination of the above two commits from the
+> 4.6 merge window, so presumably we'd need to revert one of them to avoid
+> crashes in 4.6.
 
-2016-04-13 13:24 GMT+02:00 Dan Carpenter <dan.carpenter@oracle.com>:
-> Hello Anand Kumar Santhanam,
->
-> The patch 279094079a44: "[SCSI] pm80xx: Phy settings support for
-> motherboard controller." from Sep 18, 2013, leads to the following
-> static checker warning:
->
->         drivers/scsi/pm8001/pm80xx_hwi.c:4554 mpi_set_phy_profile_req()
->         error: uninitialized symbol 'tag'.
->
-Thanks for reporting, attached patch should fix the warning.
+The bug is indeed in the compiler. 4.9 and all later versions are affected.
+gcc bugzilla now has a reproducer. In abridged form:
 
---047d7b3a822c6f682a0530715d5b
-Content-Type: text/x-diff; charset=US-ASCII;
-	name="0001-pm80xx-avoid-to-use-invalid-tag.patch"
-Content-Disposition: attachment;
-	filename="0001-pm80xx-avoid-to-use-invalid-tag.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_in0ablxn0
 
-RnJvbSBlMzBhZjgwMWQ5ZWU5OTc5YjJhN2EyYWY4MTVjYjM5NWMyMjU1YTA5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBKYWNrIFdhbmcgPGppbnB1LndhbmdAcHJvZml0YnJpY2tzLmNv
-bT4KRGF0ZTogVGh1LCAxNCBBcHIgMjAxNiAxNDozODo1NyArMDIwMApTdWJqZWN0OiBbUEFUQ0hd
-IHBtODB4eDogYXZvaWQgdG8gdXNlIGludmFsaWQgdGFnCgpGaXggc3RhdGljIGNoZWNrZXIgd2Fy
-bmluZzoKCmRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MHh4X2h3aS5jOjQ1NTQgbXBpX3NldF9waHlf
-cHJvZmlsZV9yZXEoKQplcnJvcjogdW5pbml0aWFsaXplZCBzeW1ib2wgJ3RhZycuCgpSZXBvcnRl
-ZC1ieTogRGFuIENhcnBlbnRlciBkYW4uY2FycGVudGVyQG9yYWNsZS5jb20KU2lnbmVkLW9mZi1i
-eTogSmFjayBXYW5nIDxqaW5wdS53YW5nQHByb2ZpdGJyaWNrcy5jb20+Ci0tLQogZHJpdmVycy9z
-Y3NpL3BtODAwMS9wbTgweHhfaHdpLmMgfCA4ICsrKysrKy0tCiAxIGZpbGUgY2hhbmdlZCwgNiBp
-bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9w
-bTgwMDEvcG04MHh4X2h3aS5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgweHhfaHdpLmMKaW5k
-ZXggZWI0ZmVlNi4uYTNjMWMwOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
-eHhfaHdpLmMKKysrIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgweHhfaHdpLmMKQEAgLTQ1NDgs
-OCArNDU0OCwxMCBAQCB2b2lkIG1waV9zZXRfcGh5X3Byb2ZpbGVfcmVxKHN0cnVjdCBwbTgwMDFf
-aGJhX2luZm8gKnBtODAwMV9oYSwKIAogCW1lbXNldCgmcGF5bG9hZCwgMCwgc2l6ZW9mKHBheWxv
-YWQpKTsKIAlyYyA9IHBtODAwMV90YWdfYWxsb2MocG04MDAxX2hhLCAmdGFnKTsKLQlpZiAocmMp
-CisJaWYgKHJjKSB7CiAJCVBNODAwMV9GQUlMX0RCRyhwbTgwMDFfaGEsIHBtODAwMV9wcmludGso
-IkludmFsaWQgdGFnXG4iKSk7CisJCXJldHVybjsKKwl9CiAJY2lyY3VsYXJRID0gJnBtODAwMV9o
-YS0+aW5ibmRfcV90YmxbMF07CiAJcGF5bG9hZC50YWcgPSBjcHVfdG9fbGUzMih0YWcpOwogCXBh
-eWxvYWQucHBjX3BoeWlkID0gKCgob3BlcmF0aW9uICYgMHhGKSA8PCA4KSB8IChwaHlpZCAgJiAw
-eEZGKSk7CkBAIC00NTkwLDggKzQ1OTIsMTAgQEAgdm9pZCBwbTgwMDFfc2V0X3BoeV9wcm9maWxl
-X3NpbmdsZShzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgwMDFfaGEsCiAJbWVtc2V0KCZwYXls
-b2FkLCAwLCBzaXplb2YocGF5bG9hZCkpOwogCiAJcmMgPSBwbTgwMDFfdGFnX2FsbG9jKHBtODAw
-MV9oYSwgJnRhZyk7Ci0JaWYgKHJjKQorCWlmIChyYykgewogCQlQTTgwMDFfSU5JVF9EQkcocG04
-MDAxX2hhLCBwbTgwMDFfcHJpbnRrKCJJbnZhbGlkIHRhZyIpKTsKKwkJcmV0dXJuOworCX0KIAog
-CWNpcmN1bGFyUSA9ICZwbTgwMDFfaGEtPmluYm5kX3FfdGJsWzBdOwogCW9wYyA9IE9QQ19JTkJf
-U0VUX1BIWV9QUk9GSUxFOwotLSAKMS45LjEKCg==
---047d7b3a822c6f682a0530715d5b--
+static inline __attribute__((always_inline)) u64 __swab64p(const u64 *p)
+{
+ return (__builtin_constant_p((u64)(*p)) ? ((u64)( (((u64)(*p) & (u64)0x00000000000000ffULL) << 56) | (((u64)(*p) & (u64)0x000000000000ff00ULL) << 40) | (((u64)(*p) & (u64)0x0000000000ff0000ULL) << 24) | (((u64)(*p) & (u64)0x00000000ff000000ULL) << 8) | (((u64)(*p) & (u64)0x000000ff00000000ULL) >> 8) | (((u64)(*p) & (u64)0x0000ff0000000000ULL) >> 24) | (((u64)(*p) & (u64)0x00ff000000000000ULL) >> 40) | (((u64)(*p) & (u64)0xff00000000000000ULL) >> 56))) : __builtin_bswap64(*p));
+}
+static inline u64 wwn_to_u64(void *wwn)
+{
+ return __swab64p(wwn);
+}
+static void qla2x00_get_host_fabric_name(struct Scsi_Host *shost)
+{
+ scsi_qla_host_t *vha = shost_priv(shost);
+ u8 node_name[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+ u64 fabric_name = wwn_to_u64(node_name);
+ if (vha->device_flags & 0x1)
+  fabric_name = wwn_to_u64(vha->fabric_node_name);
+ (((struct fc_host_attrs *)(shost)->shost_data)->fabric_name) = fabric_name;
+}
+
+
+Two (or more, there were more before simplification) levels of inlining
+are necessary for bug to trigger in this example (folding to one level
+makes it go away). "__attribute__((always_inline))" is necessary too.
+
+
+Since we have lots of __always_inline anyway, this bug has a potential
+to miscompile kernels regardless of CONFIG_OPTIMIZE_INLINING setting,
+and with or without the patches mentioned above (they just happen
+to create a reliable reproducer).
+
+Since it was not detected for two years since gcc 4.9 release,
+it must be triggering quite rarely.
