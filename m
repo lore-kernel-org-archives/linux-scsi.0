@@ -1,36 +1,34 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target: Silence an uninitialized variable warning
-Date: Thu, 14 Apr 2016 12:33:03 +0300
-Message-ID: <20160414093303.GC16549@mwanda>
+Subject: [patch] scsi: ufs: silence uninitialized variable warning
+Date: Thu, 14 Apr 2016 12:37:03 +0300
+Message-ID: <20160414093703.GI16549@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I'm getting a static checker warning:
-
-    drivers/target/target_core_sbc.c:1150 sbc_parse_cdb()
-    error: uninitialized variable 'size'.
-
-It looks like a possible bug but wouldn't it have shown up in testing?
-Anyway let's just silence it by setting size to zero.
+If ufshcd_dme_get() fails then "tx_lanes" can be uninitialized.  I've
+initialized it to zero so that the rest of the function turns into a
+no-op in that situation.
 
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index a9057aa..0c6e55f 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -828,7 +828,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	unsigned char *cdb = cmd->t_task_cdb;
--	unsigned int size;
-+	unsigned int size = 0;
- 	u32 sectors = 0;
- 	sense_reason_t ret;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index f8fa72c..6741d9e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3038,7 +3038,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
  
+ static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
+ {
+-	int tx_lanes, i, err = 0;
++	int tx_lanes = 0;
++	int err = 0;
++	int i;
+ 
+ 	if (!peer)
+ 		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
