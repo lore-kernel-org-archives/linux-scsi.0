@@ -1,35 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 09/14] libata: fixup ZAC device disabling
-Date: Thu, 14 Apr 2016 07:48:03 +0200
-Message-ID: <570F2F13.2040509@suse.de>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-10-git-send-email-hare@suse.de>
- <20160413180947.GF3676@htj.duckdns.org>
+Subject: Re: [PATCH 00/42] v5: separate operations from flags in the
+ bio/request structs
+Date: Thu, 14 Apr 2016 08:09:30 +0200
+Message-ID: <570F341A.2040108@suse.de>
+References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46149 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752327AbcDNFsF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2016 01:48:05 -0400
-In-Reply-To: <20160413180947.GF3676@htj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 04/13/2016 08:09 PM, Tejun Heo wrote:
-> On Tue, Apr 12, 2016 at 08:47:53AM +0200, Hannes Reinecke wrote:
->> libata device disabling is ... curious. So add the correct
->> definitions that we can disable ZAC devices properly.
+On 04/13/2016 09:35 PM, mchristi@redhat.com wrote:
+> The following patches begin to cleanup the request->cmd_flags and
+> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+> attributes and state of the request. For bi_rw we use it for similar
+> info and also the priority but then also have another bi_flags field
+> for state. At some point, we abused them so much we just made cmd_fla=
+gs
+> 64 bits, so we could add more.
 >=20
-> Fold into an earlier patch?
+> The following patches seperate the operation (read, write discard,
+> flush, etc) from cmd_flags/bi_rw.
 >=20
-That earlier patch would be commit
-9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb
-("libata: Implement ATA_DEV_ZAC"), which got merged
-in 2014 ...
+> This patchset was made against linux-next from today April 13
+> (git tag next-20160413).
+>=20
+> I put a git tree here:
+> https://github.com/mikechristie/linux-kernel.git
+> The patches are in the op branch.
+>=20
+A round of applause for you.
+
+=46or the entire series:
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
@@ -40,8 +47,3 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
