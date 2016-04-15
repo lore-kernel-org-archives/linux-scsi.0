@@ -1,41 +1,37 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 4/4] megaraid_sas: driver version upgrade
-Date: Fri, 15 Apr 2016 00:23:33 -0700
-Message-ID: <1460705013-6482-5-git-send-email-sumit.saxena@broadcom.com>
-References: <1460705013-6482-1-git-send-email-sumit.saxena@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:32948 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417AbcDOHYK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 03:24:10 -0400
-Received: by mail-pf0-f173.google.com with SMTP id 184so54562978pff.0
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2016 00:24:10 -0700 (PDT)
-In-Reply-To: <1460705013-6482-1-git-send-email-sumit.saxena@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/5] hisi_sas: v2 hw SATA fixes
+Date: Fri, 15 Apr 2016 09:04:10 +0100
+Message-ID: <5710A07A.3080104@huawei.com>
+References: <1460107395-24501-1-git-send-email-john.garry@huawei.com>
+ <yq14mb3txym.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq14mb3txym.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, hch@infradead.org, thenzl@redhat.com
-Cc: kashyap.desai@broadcom.com, linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com
 
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 15/04/2016 03:20, Martin K. Petersen wrote:
+>>>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>
+> John> This patchset introduces SATA support fixes for the HiSilicon v2
+> John> hw SAS controller.
+>
+> John> Fixes include: - attach issue for SATA disk attached through
+> John> expander - intermittent issue for directly attaching multiple SATA
+> John> disks - add support for directly attaching SATA disk to phy index
+> John> 4+ - ITCT config issue
+>
+> Applied to 4.7/scsi-queue.
+>
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 1784b09..ca86c88 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -35,8 +35,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"06.810.09.00-rc1"
--#define MEGASAS_RELDATE				"Jan. 28, 2016"
-+#define MEGASAS_VERSION				"06.811.02.00-rc1"
-+#define MEGASAS_RELDATE				"April 12, 2016"
- 
- /*
-  * Device IDs
--- 
-2.4.11
+Hi Martin,
 
+Could these also be applied to 4.6 fixes branch? Maybe I should have 
+explicitly asked.
+
+Thanks,
+John
