@@ -1,58 +1,31 @@
-From: Josh Poimboeuf <jpoimboe@redhat.com>
-Subject: Re: [PATCH] qla2xxx: rewrite code to avoid hitting gcc bug 70646
-Date: Fri, 15 Apr 2016 15:02:35 -0500
-Message-ID: <20160415200235.cqsozl445k6evhok@treble>
-References: <1460716583-15673-1-git-send-email-dvlasenk@redhat.com>
- <1460731203.2331.7.camel@HansenPartnership.com>
- <57113959.8050103@redhat.com>
- <1460747126.2331.28.camel@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/5] hisi_sas: v2 hw SATA fixes
+Date: Fri, 15 Apr 2016 16:15:47 -0400
+Message-ID: <yq14mb2r5l8.fsf@sermon.lab.mkp.net>
+References: <1460107395-24501-1-git-send-email-john.garry@huawei.com>
+	<yq14mb3txym.fsf@sermon.lab.mkp.net> <5710A07A.3080104@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51936 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751040AbcDOUCh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2016 16:02:37 -0400
-Content-Disposition: inline
-In-Reply-To: <1460747126.2331.28.camel@HansenPartnership.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45362 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbcDOUQH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 16:16:07 -0400
+In-Reply-To: <5710A07A.3080104@huawei.com> (John Garry's message of "Fri, 15
+	Apr 2016 09:04:10 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Apr 15, 2016 at 12:05:26PM -0700, James Bottomley wrote:
-> On Fri, 2016-04-15 at 20:56 +0200, Denys Vlasenko wrote:
-> > and now *many* users of qla2x00 and new-ish gcc are going to
-> > very much notice it, as their kernels will start crashing reliably.
-> > 
-> > The commits can be reverted, sure, but they per se do not contain
-> > anything unusual. They, together with not very typical construct
-> > in qla2x00_get_host_fabric_name, one
-> > which boils down to "swab64p(constant_array_of_8_bytes)",
-> > just happen to nudge gcc in a right way to finally trigger the bug.
-> > 
-> > So I came with another idea how to forestall the imminent deluge of
-> > qla2x00 oops reports - this patch.
-> 
-> There are actually a raft of checkers that run the upstream code which
-> aren't seeing any problem; likely because the code is harder to trigger
-> than you think.  So, lets wait until the resolution of the other thread
-> before we panic, especially since we're only at -rc3.
+>>>>> "John" == John Garry <john.garry@huawei.com> writes:
 
-Regardless of the outcome of the gcc bug, it seems kind of silly to
-byteswap a constant value of 0xffffffffffffffff.
+John,
 
-	uint8_t node_name[WWN_SIZE] = { 0xFF, 0xFF, 0xFF, 0xFF, \
-		0xFF, 0xFF, 0xFF, 0xFF};
-	u64 fabric_name = wwn_to_u64(node_name);
+John> Could these also be applied to 4.6 fixes branch? Maybe I should
+John> have explicitly asked.
 
-Similar to what Denys suggested, it can just be:
-
-	u64 fabric_name = -1;
-or
-	u64 fabric_name = 0xffffffffffffffff;
-
-Wouldn't that be an improvement to the code regardless?
+Only taking critical patches for 4.6 at this point.
 
 -- 
-Josh
+Martin K. Petersen	Oracle Linux Engineering
