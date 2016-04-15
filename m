@@ -1,8 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 07/42] btrfs: have submit_one_bio users setup bio
-	bi_op
-Date: Fri, 15 Apr 2016 14:15:42 -0500
-Message-ID: <1460747777-8479-8-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 12/42] gfs2: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 14:15:47 -0500
+Message-ID: <1460747777-8479-13-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -24,327 +23,158 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has btrfs's submit_one_bio callers set the bio->bi_op to a
-REQ_OP and the bi_rw to rq_flag_bits.
-
-The next patches will continue to convert btrfs,
-so submit_bio_hook and merge_bio_hook
-related code will be modified to take only the bio. I did
-not do it in this patch to try and keep it smaller.
+This patch has gfs2 use bio->bi_op for REQ_OPs and rq_flag_bits to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- fs/btrfs/extent_io.c | 88 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 45 insertions(+), 43 deletions(-)
+ fs/gfs2/log.c        |  8 ++++----
+ fs/gfs2/lops.c       | 12 +++++++-----
+ fs/gfs2/lops.h       |  2 +-
+ fs/gfs2/meta_io.c    |  8 +++++---
+ fs/gfs2/ops_fstype.c |  1 +
+ 5 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index fdeb8fa..45fa3be 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2377,7 +2377,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	int read_mode;
- 	int ret;
- 
--	BUG_ON(failed_bio->bi_rw & REQ_WRITE);
-+	BUG_ON(failed_bio->bi_op == REQ_OP_WRITE);
- 
- 	ret = btrfs_get_io_failure_record(inode, start, end, &failrec);
- 	if (ret)
-@@ -2403,6 +2403,8 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 		free_io_failure(inode, failrec);
- 		return -EIO;
+diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
+index 0ff028c..e58ccef0 100644
+--- a/fs/gfs2/log.c
++++ b/fs/gfs2/log.c
+@@ -657,7 +657,7 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
+ 	struct gfs2_log_header *lh;
+ 	unsigned int tail;
+ 	u32 hash;
+-	int rw = WRITE_FLUSH_FUA | REQ_META;
++	int op_flags = WRITE_FLUSH_FUA | REQ_META;
+ 	struct page *page = mempool_alloc(gfs2_page_pool, GFP_NOIO);
+ 	enum gfs2_freeze_state state = atomic_read(&sdp->sd_freeze_state);
+ 	lh = page_address(page);
+@@ -682,12 +682,12 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
+ 	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags)) {
+ 		gfs2_ordered_wait(sdp);
+ 		log_flush_wait(sdp);
+-		rw = WRITE_SYNC | REQ_META | REQ_PRIO;
++		op_flags = WRITE_SYNC | REQ_META | REQ_PRIO;
  	}
-+	bio->bi_op = REQ_OP_READ;
-+	bio->bi_rw = read_mode;
  
- 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
- 		 read_mode, failrec->this_mirror, failrec->in_validation);
-@@ -2714,8 +2716,8 @@ struct bio *btrfs_io_bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
- }
+ 	sdp->sd_log_idle = (tail == sdp->sd_log_flush_head);
+ 	gfs2_log_write_page(sdp, page);
+-	gfs2_log_flush_bio(sdp, rw);
++	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, op_flags);
+ 	log_flush_wait(sdp);
  
+ 	if (sdp->sd_log_tail != tail)
+@@ -738,7 +738,7 @@ void gfs2_log_flush(struct gfs2_sbd *sdp, struct gfs2_glock *gl,
  
--static int __must_check submit_one_bio(int rw, struct bio *bio,
--				       int mirror_num, unsigned long bio_flags)
-+static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
-+				       unsigned long bio_flags)
+ 	gfs2_ordered_write(sdp);
+ 	lops_before_commit(sdp, tr);
+-	gfs2_log_flush_bio(sdp, WRITE);
++	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
+ 
+ 	if (sdp->sd_log_head != sdp->sd_log_flush_head) {
+ 		log_flush_wait(sdp);
+diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
+index ce28242..c1099b4 100644
+--- a/fs/gfs2/lops.c
++++ b/fs/gfs2/lops.c
+@@ -230,17 +230,19 @@ static void gfs2_end_log_write(struct bio *bio)
+ /**
+  * gfs2_log_flush_bio - Submit any pending log bio
+  * @sdp: The superblock
+- * @rw: The rw flags
++ * @op: REQ_OP
++ * @op_flags: rq_flag_bits
+  *
+  * Submit any pending part-built or full bio to the block device. If
+  * there is no pending bio, then this is a no-op.
+  */
+ 
+-void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw)
++void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags)
  {
- 	int ret = 0;
- 	struct bio_vec *bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
-@@ -2726,12 +2728,12 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	start = page_offset(page) + bvec->bv_offset;
+ 	if (sdp->sd_log_bio) {
+ 		atomic_inc(&sdp->sd_log_in_flight);
+-		sdp->sd_log_bio->bi_rw = rw;
++		sdp->sd_log_bio->bi_op = op;
++		sdp->sd_log_bio->bi_rw = op_flags;
+ 		submit_bio(sdp->sd_log_bio);
+ 		sdp->sd_log_bio = NULL;
+ 	}
+@@ -300,7 +302,7 @@ static struct bio *gfs2_log_get_bio(struct gfs2_sbd *sdp, u64 blkno)
+ 		nblk >>= sdp->sd_fsb2bb_shift;
+ 		if (blkno == nblk)
+ 			return bio;
+-		gfs2_log_flush_bio(sdp, WRITE);
++		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
+ 	}
  
- 	bio->bi_private = NULL;
+ 	return gfs2_log_alloc_bio(sdp, blkno);
+@@ -329,7 +331,7 @@ static void gfs2_log_write(struct gfs2_sbd *sdp, struct page *page,
+ 	bio = gfs2_log_get_bio(sdp, blkno);
+ 	ret = bio_add_page(bio, page, size, offset);
+ 	if (ret == 0) {
+-		gfs2_log_flush_bio(sdp, WRITE);
++		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
+ 		bio = gfs2_log_alloc_bio(sdp, blkno);
+ 		ret = bio_add_page(bio, page, size, offset);
+ 		WARN_ON(ret == 0);
+diff --git a/fs/gfs2/lops.h b/fs/gfs2/lops.h
+index a65a7ba..e529f53 100644
+--- a/fs/gfs2/lops.h
++++ b/fs/gfs2/lops.h
+@@ -27,7 +27,7 @@ extern const struct gfs2_log_operations gfs2_databuf_lops;
+ 
+ extern const struct gfs2_log_operations *gfs2_log_ops[];
+ extern void gfs2_log_write_page(struct gfs2_sbd *sdp, struct page *page);
+-extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw);
++extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags);
+ extern void gfs2_pin(struct gfs2_sbd *sdp, struct buffer_head *bh);
+ 
+ static inline unsigned int buf_limit(struct gfs2_sbd *sdp)
+diff --git a/fs/gfs2/meta_io.c b/fs/gfs2/meta_io.c
+index f56f3ca..55ae188 100644
+--- a/fs/gfs2/meta_io.c
++++ b/fs/gfs2/meta_io.c
+@@ -213,7 +213,8 @@ static void gfs2_meta_read_endio(struct bio *bio)
+  * Submit several consecutive buffer head I/O requests as a single bio I/O
+  * request.  (See submit_bh_wbc.)
+  */
+-static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
++static void gfs2_submit_bhs(int op, int op_flags, struct buffer_head *bhs[],
++			    int num)
+ {
+ 	struct buffer_head *bh = bhs[0];
+ 	struct bio *bio;
+@@ -230,7 +231,8 @@ static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
+ 		bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+ 	}
+ 	bio->bi_end_io = gfs2_meta_read_endio;
 -	bio->bi_rw = rw;
- 	bio_get(bio);
- 
- 	if (tree->ops && tree->ops->submit_bio_hook)
--		ret = tree->ops->submit_bio_hook(page->mapping->host, rw, bio,
--					   mirror_num, bio_flags, start);
-+		ret = tree->ops->submit_bio_hook(page->mapping->host,
-+						 bio->bi_rw, bio, mirror_num,
-+						 bio_flags, start);
- 	else
- 		btrfsic_submit_bio(bio);
- 
-@@ -2739,20 +2741,20 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	return ret;
- }
- 
--static int merge_bio(int rw, struct extent_io_tree *tree, struct page *page,
-+static int merge_bio(struct extent_io_tree *tree, struct page *page,
- 		     unsigned long offset, size_t size, struct bio *bio,
- 		     unsigned long bio_flags)
- {
- 	int ret = 0;
- 	if (tree->ops && tree->ops->merge_bio_hook)
--		ret = tree->ops->merge_bio_hook(rw, page, offset, size, bio,
--						bio_flags);
-+		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
-+						bio, bio_flags);
- 	BUG_ON(ret < 0);
- 	return ret;
- 
- }
- 
--static int submit_extent_page(int rw, struct extent_io_tree *tree,
-+static int submit_extent_page(int op, int op_flags, struct extent_io_tree *tree,
- 			      struct writeback_control *wbc,
- 			      struct page *page, sector_t sector,
- 			      size_t size, unsigned long offset,
-@@ -2780,10 +2782,9 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 
- 		if (prev_bio_flags != bio_flags || !contig ||
- 		    force_bio_submit ||
--		    merge_bio(rw, tree, page, offset, page_size, bio, bio_flags) ||
-+		    merge_bio(tree, page, offset, page_size, bio, bio_flags) ||
- 		    bio_add_page(bio, page, page_size, offset) < page_size) {
--			ret = submit_one_bio(rw, bio, mirror_num,
--					     prev_bio_flags);
-+			ret = submit_one_bio(bio, mirror_num, prev_bio_flags);
- 			if (ret < 0) {
- 				*bio_ret = NULL;
- 				return ret;
-@@ -2804,6 +2805,8 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	bio_add_page(bio, page, page_size, offset);
- 	bio->bi_end_io = end_io_func;
- 	bio->bi_private = tree;
 +	bio->bi_op = op;
 +	bio->bi_rw = op_flags;
- 	if (wbc) {
- 		wbc_init_bio(wbc, bio);
- 		wbc_account_io(wbc, page, page_size);
-@@ -2812,7 +2815,7 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	if (bio_ret)
- 		*bio_ret = bio;
- 	else
--		ret = submit_one_bio(rw, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 
- 	return ret;
+ 	submit_bio(bio);
  }
-@@ -2876,7 +2879,7 @@ static int __do_readpage(struct extent_io_tree *tree,
- 			 get_extent_t *get_extent,
- 			 struct extent_map **em_cached,
- 			 struct bio **bio, int mirror_num,
--			 unsigned long *bio_flags, int rw,
-+			 unsigned long *bio_flags, int read_flags,
- 			 u64 *prev_em_start)
- {
- 	struct inode *inode = page->mapping->host;
-@@ -3059,8 +3062,8 @@ static int __do_readpage(struct extent_io_tree *tree,
+ 
+@@ -281,7 +283,7 @@ int gfs2_meta_read(struct gfs2_glock *gl, u64 blkno, int flags,
  		}
- 
- 		pnr -= page->index;
--		ret = submit_extent_page(rw, tree, NULL, page,
--					 sector, disk_io_size, pg_offset,
-+		ret = submit_extent_page(REQ_OP_READ, read_flags, tree, NULL,
-+					 page, sector, disk_io_size, pg_offset,
- 					 bdev, bio, pnr,
- 					 end_bio_extent_readpage, mirror_num,
- 					 *bio_flags,
-@@ -3091,7 +3094,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 					     get_extent_t *get_extent,
- 					     struct extent_map **em_cached,
- 					     struct bio **bio, int mirror_num,
--					     unsigned long *bio_flags, int rw,
-+					     unsigned long *bio_flags,
- 					     u64 *prev_em_start)
- {
- 	struct inode *inode;
-@@ -3112,7 +3115,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 
- 	for (index = 0; index < nr_pages; index++) {
- 		__do_readpage(tree, pages[index], get_extent, em_cached, bio,
--			      mirror_num, bio_flags, rw, prev_em_start);
-+			      mirror_num, bio_flags, 0, prev_em_start);
- 		put_page(pages[index]);
- 	}
- }
-@@ -3122,7 +3125,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 			       int nr_pages, get_extent_t *get_extent,
- 			       struct extent_map **em_cached,
- 			       struct bio **bio, int mirror_num,
--			       unsigned long *bio_flags, int rw,
-+			       unsigned long *bio_flags,
- 			       u64 *prev_em_start)
- {
- 	u64 start = 0;
-@@ -3144,7 +3147,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 						  index - first_index, start,
- 						  end, get_extent, em_cached,
- 						  bio, mirror_num, bio_flags,
--						  rw, prev_em_start);
-+						  prev_em_start);
- 			start = page_start;
- 			end = start + PAGE_SIZE - 1;
- 			first_index = index;
-@@ -3155,7 +3158,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 		__do_contiguous_readpages(tree, &pages[first_index],
- 					  index - first_index, start,
- 					  end, get_extent, em_cached, bio,
--					  mirror_num, bio_flags, rw,
-+					  mirror_num, bio_flags,
- 					  prev_em_start);
- }
- 
-@@ -3163,7 +3166,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
- 				   struct page *page,
- 				   get_extent_t *get_extent,
- 				   struct bio **bio, int mirror_num,
--				   unsigned long *bio_flags, int rw)
-+				   unsigned long *bio_flags, int read_flags)
- {
- 	struct inode *inode = page->mapping->host;
- 	struct btrfs_ordered_extent *ordered;
-@@ -3183,7 +3186,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
  	}
  
- 	ret = __do_readpage(tree, page, get_extent, NULL, bio, mirror_num,
--			    bio_flags, rw, NULL);
-+			    bio_flags, read_flags, NULL);
- 	return ret;
- }
+-	gfs2_submit_bhs(READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
++	gfs2_submit_bhs(REQ_OP_READ, READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
+ 	if (!(flags & DIO_WAIT))
+ 		return 0;
  
-@@ -3195,9 +3198,9 @@ int extent_read_full_page(struct extent_io_tree *tree, struct page *page,
- 	int ret;
+diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
+index 141b560..fda3e71 100644
+--- a/fs/gfs2/ops_fstype.c
++++ b/fs/gfs2/ops_fstype.c
+@@ -246,6 +246,7 @@ static int gfs2_read_super(struct gfs2_sbd *sdp, sector_t sector, int silent)
  
- 	ret = __extent_read_full_page(tree, page, get_extent, &bio, mirror_num,
--				      &bio_flags, READ);
-+				      &bio_flags, 0);
- 	if (bio)
--		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 	return ret;
- }
- 
-@@ -3438,7 +3441,8 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
- 				       page->index, cur, end);
- 			}
- 
--			ret = submit_extent_page(write_flags, tree, wbc, page,
-+			ret = submit_extent_page(REQ_OP_WRITE, write_flags,
-+						 tree, wbc, page,
- 						 sector, iosize, pg_offset,
- 						 bdev, &epd->bio, max_nr,
- 						 end_bio_extent_writepage,
-@@ -3478,13 +3482,11 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
- 	size_t pg_offset = 0;
- 	loff_t i_size = i_size_read(inode);
- 	unsigned long end_index = i_size >> PAGE_SHIFT;
--	int write_flags;
-+	int write_flags = 0;
- 	unsigned long nr_written = 0;
- 
- 	if (wbc->sync_mode == WB_SYNC_ALL)
- 		write_flags = WRITE_SYNC;
--	else
--		write_flags = WRITE;
- 
- 	trace___extent_writepage(page, inode, wbc);
- 
-@@ -3728,7 +3730,7 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 	u64 offset = eb->start;
- 	unsigned long i, num_pages;
- 	unsigned long bio_flags = 0;
--	int rw = (epd->sync_io ? WRITE_SYNC : WRITE) | REQ_META;
-+	int write_flags = (epd->sync_io ? WRITE_SYNC : 0) | REQ_META;
- 	int ret = 0;
- 
- 	clear_bit(EXTENT_BUFFER_WRITE_ERR, &eb->bflags);
-@@ -3742,9 +3744,10 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 
- 		clear_page_dirty_for_io(p);
- 		set_page_writeback(p);
--		ret = submit_extent_page(rw, tree, wbc, p, offset >> 9,
--					 PAGE_SIZE, 0, bdev, &epd->bio,
--					 -1, end_bio_extent_buffer_writepage,
-+		ret = submit_extent_page(REQ_OP_WRITE, write_flags, tree, wbc,
-+					 p, offset >> 9, PAGE_SIZE, 0, bdev,
-+					 &epd->bio, -1,
-+					 end_bio_extent_buffer_writepage,
- 					 0, epd->bio_flags, bio_flags, false);
- 		epd->bio_flags = bio_flags;
- 		if (ret) {
-@@ -4054,13 +4057,13 @@ retry:
- static void flush_epd_write_bio(struct extent_page_data *epd)
- {
- 	if (epd->bio) {
--		int rw = WRITE;
- 		int ret;
- 
-+		epd->bio->bi_op = REQ_OP_WRITE;
- 		if (epd->sync_io)
--			rw = WRITE_SYNC;
-+			epd->bio->bi_rw = WRITE_SYNC;
- 
--		ret = submit_one_bio(rw, epd->bio, 0, epd->bio_flags);
-+		ret = submit_one_bio(epd->bio, 0, epd->bio_flags);
- 		BUG_ON(ret < 0); /* -ENOMEM */
- 		epd->bio = NULL;
- 	}
-@@ -4187,19 +4190,19 @@ int extent_readpages(struct extent_io_tree *tree,
- 		if (nr < ARRAY_SIZE(pagepool))
- 			continue;
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 		nr = 0;
- 	}
- 	if (nr)
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 
- 	if (em_cached)
- 		free_extent_map(em_cached);
- 
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		return submit_one_bio(READ, bio, 0, bio_flags);
-+		return submit_one_bio(bio, 0, bio_flags);
- 	return 0;
- }
- 
-@@ -5221,7 +5224,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 			err = __extent_read_full_page(tree, page,
- 						      get_extent, &bio,
- 						      mirror_num, &bio_flags,
--						      READ | REQ_META);
-+						      REQ_META);
- 			if (err)
- 				ret = err;
- 		} else {
-@@ -5230,8 +5233,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 	}
- 
- 	if (bio) {
--		err = submit_one_bio(READ | REQ_META, bio, mirror_num,
--				     bio_flags);
-+		err = submit_one_bio(bio, mirror_num, bio_flags);
- 		if (err)
- 			return err;
- 	}
+ 	bio->bi_end_io = end_bio_io_page;
+ 	bio->bi_private = page;
++	bio->bi_op = REQ_OP_READ;
+ 	bio->bi_rw = READ_SYNC | REQ_META;
+ 	submit_bio(bio);
+ 	wait_on_page_locked(page);
 -- 
 2.7.2
