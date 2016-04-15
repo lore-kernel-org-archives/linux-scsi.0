@@ -1,158 +1,82 @@
-From: Xiong Zhou <jencce.kernel@gmail.com>
-Subject: Re: [-next] BUG_ON in scsi_target_destroy()
-Date: Fri, 15 Apr 2016 13:53:48 +0800
-Message-ID: <CADJHv_soTBjqXtfpWHUZeCz9r2nsDR-x-U7xVLejUqrq2odCjg@mail.gmail.com>
-References: <20160411090146.GA537@swordfish>
-	<2201725.I2to9GCRQJ@c203>
-	<1460560474.2322.3.camel@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: Declare local functions static
+Date: Fri, 15 Apr 2016 07:58:38 +0200
+Message-ID: <5710830E.8060402@suse.de>
+References: <570FD2F2.90506@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1460560474.2322.3.camel@linux.vnet.ibm.com>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-usb@vger.kernel.org, Linux-Next <linux-next@vger.kernel.org>, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41888 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751448AbcDOF6k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 01:58:40 -0400
+In-Reply-To: <570FD2F2.90506@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi,
-
-On Wed, Apr 13, 2016 at 11:14 PM, James Bottomley
-<jejb@linux.vnet.ibm.com> wrote:
-> On Wed, 2016-04-13 at 10:41 +0200, Johannes Thumshirn wrote:
->> Hi Sergey,  Xiong,
->>
->> Can you try below patch?
->>
->> On Montag, 11. April 2016 18:01:47 CEST Sergey Senozhatsky wrote:
->> > Hello,
->> >
->> > commit 7b106f2de6938c31ce5e9c86bc70ad3904666b96
->> > Author: Johannes Thumshirn <jthumshirn@suse.de>
->> > Date:   Tue Apr 5 11:50:44 2016 +0200
->> >
->> >     scsi: Add intermediate STARGET_REMOVE state to
->> > scsi_target_state
->> >
->> >
->> > BUG_ON()s (next-20160411) each time I remove a usb flash
->> >
->> > [   49.561600]  [<ffffffffa0087f42>] scsi_target_destroy+0x5a/0xcb
->> > [scsi_mod]
->> > [   49.561607]  [<ffffffffa0089099>] scsi_target_reap+0x4a/0x4f
->> > [scsi_mod]
->> > [   49.561613]  [<ffffffffa008b453>] __scsi_remove_device+0xc3/0xd0
->> > [scsi_mod]
->> > [   49.561619]  [<ffffffffa0089d7b>] scsi_forget_host+0x52/0x63
->> > [scsi_mod]
->> > [   49.561623]  [<ffffffffa0080dbc>] scsi_remove_host+0x8c/0x102
->> > [scsi_mod]
->> > [   49.561627]  [<ffffffffa015c447>] usb_stor_disconnect+0x6b/0xab
->> > [usb_storage]
->> > [   49.561634]  [<ffffffffa0013f73>]
->> > usb_unbind_interface+0x77/0x1ca [usbcore]
->> > [   49.561636]  [<ffffffff813ae064>]
->> > __device_release_driver+0x9d/0x121
->> > [   49.561638]  [<ffffffff813ae10b>]
->> > device_release_driver+0x23/0x30
->> > [   49.561639]  [<ffffffff813ad2d1>] bus_remove_device+0xfb/0x10e
->> > [   49.561641]  [<ffffffff813aac05>] device_del+0x164/0x1e6
->> > [   49.561648]  [<ffffffffa0011b09>] ?
->> > remove_intf_ep_devs+0x3b/0x48 [usbcore]
->> > [   49.561655]  [<ffffffffa001200e>] usb_disable_device+0x84/0x1a5
->> > [usbcore]
->> > [   49.561661]  [<ffffffffa000ac7b>] usb_disconnect+0x94/0x19f
->> > [usbcore]
->> > [   49.561667]  [<ffffffffa000c2ab>] hub_event+0x5c1/0xdea
->> > [usbcore]
->> > [   49.561670]  [<ffffffff810530b1>] process_one_work+0x1dc/0x37f
->> > [   49.561672]  [<ffffffff81053dc5>] worker_thread+0x282/0x36d
->> > [   49.561673]  [<ffffffff81053b43>] ? rescuer_thread+0x2ae/0x2ae
->> > [   49.561675]  [<ffffffff810580a8>] kthread+0xd2/0xda
->> > [   49.561678]  [<ffffffff814bbf92>] ret_from_fork+0x22/0x40
->> > [   49.561679]  [<ffffffff81057fd6>] ?
->> > kthread_worker_fn+0x13e/0x13e
->> >
->> >     -ss
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux
->> > -scsi" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >
->>
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->> index 0734927..0c00928 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -1276,6 +1276,7 @@ int scsi_sysfs_add_sdev(struct scsi_device
->> *sdev)
->>  void __scsi_remove_device(struct scsi_device *sdev)
->>  {
->>       struct device *dev = &sdev->sdev_gendev;
->> +     struct scsi_target *starget;
->>
->>       /*
->>        * This cleanup path is not reentrant and while it is
->> impossible
->> @@ -1315,7 +1316,9 @@ void __scsi_remove_device(struct scsi_device
->> *sdev)
->>        * remoed sysfs visibility from the device, so make the
->> target
->>        * invisible if this was the last device underneath it.
->>        */
->> -     scsi_target_reap(scsi_target(sdev));
->> +     starget = scsi_target(sdev);
->> +     starget->state = STARGET_REMOVE;
->> +     scsi_target_reap(starget);
->
-> How about good grief no!  A device with multiple targets will get it's
-> lists screwed with this
->
-> The STARGET_REMOVE state you added only applies to the case we're
-> trying to kill a target.  In the natural operation case, which is what
-> everyone else is running into, we will try to remove a running target
-> when it has no more scsi devices left on it.  So the correct patch
-> should be to make the BUG_ON see this:
->
-> James
->
+On 04/14/2016 07:27 PM, Bart Van Assche wrote:
+> This patch avoids that building with W=3D1 causes gcc to report the
+> following type of warning:
+>=20
+>     no previous prototype for ... [-Wmissing-prototypes]
+>=20
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ewan Milne <emilne@redhat.com>
 > ---
->
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 27df7e7..e0a78f5 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -319,8 +319,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
->         struct Scsi_Host *shost = dev_to_shost(dev->parent);
->         unsigned long flags;
->
-> -       BUG_ON(starget->state != STARGET_REMOVE &&
-> -              starget->state != STARGET_CREATED);
-> +       BUG_ON(starget->state == STARGET_DEL);
->         starget->state = STARGET_DEL;
->         transport_destroy_device(dev);
->         spin_lock_irqsave(shost->host_lock, flags);
->
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scs=
+i/device_handler/scsi_dh_alua.c
+> index 8eaed05..e034f12 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -190,8 +190,8 @@ static int submit_stpg(struct scsi_device *sdev, =
+int group_id,
+>  				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
+>  }
+> =20
+> -struct alua_port_group *alua_find_get_pg(char *id_str, size_t id_siz=
+e,
+> -					 int group_id)
+> +static struct alua_port_group *alua_find_get_pg(char *id_str, size_t=
+ id_size,
+> +						int group_id)
+>  {
+>  	struct alua_port_group *pg;
+> =20
+> @@ -219,8 +219,8 @@ struct alua_port_group *alua_find_get_pg(char *id=
+_str, size_t id_size,
+>   * Allocate a new port_group structure for a given
+>   * device.
+>   */
+> -struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
+> -				      int group_id, int tpgs)
+> +static struct alua_port_group *alua_alloc_pg(struct scsi_device *sde=
+v,
+> +					     int group_id, int tpgs)
+>  {
+>  	struct alua_port_group *pg, *tmp_pg;
+> =20
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
+Cheers,
 
-This will survive modprobe -r scsi_debug ..
-
-Just to make sure, is this _REMOVE state able to do the latter thing what it was
-trying to do, in this way ?
-
-
-commit 7b106f2de6938c31ce5e9c86bc70ad3904666b96
-Author: Johannes Thumshirn <jthumshirn@suse.de>
-Date:   Tue Apr 5 11:50:44 2016 +0200
-
-    scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
-
-    Add intermediate STARGET_REMOVE state to scsi_target_state to avoid
-    running into the BUG_ON() in scsi_target_reap(). The STARGET_REMOVE
-    state is only valid in the path from scsi_remove_target() to
-    scsi_target_destroy() indicating this target is going to be removed.
-
-    This re-fixes the problem introduced in commits bc3f02a795d3 ("[SCSI]
-    scsi_remove_target: fix softlockup regression on hot remove") and
-    40998193560d ("scsi: restart list search after unlock in
-    scsi_remove_target") in a more comprehensive way.
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
