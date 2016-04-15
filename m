@@ -1,25 +1,64 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] qla2xxx: rewrite code to avoid hitting gcc bug 70646
-Date: Fri, 15 Apr 2016 14:15:58 -0700
-Message-ID: <1460754958.2331.43.camel@HansenPartnership.com>
+Date: Fri, 15 Apr 2016 14:25:05 -0700
+Message-ID: <1460755505.2331.47.camel@HansenPartnership.com>
 References: <1460716583-15673-1-git-send-email-dvlasenk@redhat.com>
-	 <1460731203.2331.7.camel@HansenPartnership.com>
-	 <57113959.8050103@redhat.com>
+		 <1460731203.2331.7.camel@HansenPartnership.com>
+		 <57113959.8050103@redhat.com>
 	 <1460747126.2331.28.camel@HansenPartnership.com>
-	 <20160415200235.cqsozl445k6evhok@treble>
+	 <571158A4.8020500@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160415200235.cqsozl445k6evhok@treble>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39952 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751468AbcDOVZI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 17:25:08 -0400
+In-Reply-To: <571158A4.8020500@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: qla2xxx-upstream@qlogic.com, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2016-04-15 at 15:02 -0500, Josh Poimboeuf wrote:
-> On Fri, Apr 15, 2016 at 12:05:26PM -0700, James Bottomley wrote:
+On Fri, 2016-04-15 at 23:09 +0200, Denys Vlasenko wrote:
+> On 04/15/2016 09:05 PM, James Bottomley wrote:
 > > On Fri, 2016-04-15 at 20:56 +0200, Denys Vlasenko wrote:
+> > > On 04/15/2016 04:40 PM, James Bottomley wrote:
+> > > > On Fri, 2016-04-15 at 12:36 +0200, Denys Vlasenko wrote:
+> > > > > More info here:
+> > > > > https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+> > > > 
+> > > > This bug is under investigation, so I'd rather not alter code
+> > > > for a
+> > > > gcc
+> > > > bug until we know if we can supply options to fix it rather
+> > > > than
+> > > > changing code.
+> > > 
+> > > 
+> > > Background. The bug exists in gcc for 2 years, but it is rather
+> > > hard to trigger, so nobody noticed.
+> > 
+> > We know this ... linux-scsi is on the cc for the other thread on
+> > this.
+> > 
+> > > Unfortunately for kernel, these two commits landed in Linus tree
+> > > in March 16 and 17:
+> > > 
+> > > 
+> > > On 04/13/2016 05:36 AM, Josh Poimboeuf wrote:
+> > > > It occurs with the combination of the following two recent
+> > > > commits:
+> > > > 
+> > > > - bc27fb68aaad ("include/uapi/linux/byteorder, swab: force
+> > > > inlining
+> > > > of some byteswap operations")
+> > > > - ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn
+> > > > access")
+> > > 
+> > > 
 > > > and now *many* users of qla2x00 and new-ish gcc are going to
 > > > very much notice it, as their kernels will start crashing
 > > > reliably.
@@ -43,23 +82,25 @@ On Fri, 2016-04-15 at 15:02 -0500, Josh Poimboeuf wrote:
 > > thread
 > > before we panic, especially since we're only at -rc3.
 > 
-> Regardless of the outcome of the gcc bug, it seems kind of silly to
-> byteswap a constant value of 0xffffffffffffffff.
+> I'm not panicking, James.
 > 
-> 	uint8_t node_name[WWN_SIZE] = { 0xFF, 0xFF, 0xFF, 0xFF, \
-> 		0xFF, 0xFF, 0xFF, 0xFF};
-> 	u64 fabric_name = wwn_to_u64(node_name);
-> 
-> Similar to what Denys suggested, it can just be:
-> 
-> 	u64 fabric_name = -1;
-> or
-> 	u64 fabric_name = 0xffffffffffffffff;
-> 
-> Wouldn't that be an improvement to the code regardless?
+> By sending a workaround, I just want to make sure that *other people*
+> won't be forced to fix up a problem which surfaced because of *my* 
+> patch.
 
-"Improvement" would be in the eye of the beholder.  Semantically it
-would be wrong because we're initialising a CPU local representation of
-a big endian structure, so we *should* use the conversion.
+Look, if gcc really proves to be intractable, I think what should
+happen is revert the triggering patch, which is
+
+commit e3bde9568d992c5f985e6e30731a5f9f9bef7b13
+Author: Denys Vlasenko <dvlasenk@redhat.com>
+Date:   Thu Mar 17 14:22:47 2016 -0700
+
+    include/linux/unaligned: force inlining of byteswap operations
+
+But, as I've said a couple of times now, there are no bug reports from
+the testers about qla2xxx (yet) so we can afford to wait a bit and see
+if there's some other resolution that doesn't involve changing kernel
+code to work around a local gcc bug.
 
 James
+
