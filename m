@@ -1,83 +1,50 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 5/9] block: Implement support for zoned block devices
-Date: Fri, 15 Apr 2016 10:37:28 -0700
-Message-ID: <571126D8.2090807@sandisk.com>
-References: <1459764020-126038-1-git-send-email-hare@suse.de>
- <1459764020-126038-6-git-send-email-hare@suse.de>
+From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Subject: RE: [PATCH] mpt3sas: Remove usage of 'struct timeval'
+Date: Fri, 15 Apr 2016 11:43:10 -0600
+Message-ID: <624c2d8b5746488ce5587db59b613c51@mail.gmail.com>
+References: <20160413070140.GA35235@localhost> <yq1inzjsi2v.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0080.outbound.protection.outlook.com ([65.55.169.80]:62059
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751846AbcDORhg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2016 13:37:36 -0400
-In-Reply-To: <1459764020-126038-6-git-send-email-hare@suse.de>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:37883 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846AbcDORnM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 13:43:12 -0400
+Received: by mail-ig0-f175.google.com with SMTP id g8so29286426igr.0
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2016 10:43:12 -0700 (PDT)
+In-Reply-To: <yq1inzjsi2v.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Tina Ruchandani <ruchandani.tina@gmail.com>
+Cc: PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, suganath-prabu.subramani@avagotech.com, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 
-On 04/04/2016 03:00 AM, Hannes Reinecke wrote:
-> +struct blk_zone *blk_lookup_zone(struct request_queue *q, sector_t lba)
+Hi,
+Please consider this patch as Ack-by: Sathya Prakash
+<sathya.prakash@broadcom.com>
 
-A similar comment applies to this function: does this function expect a 
-sector_t or an LBA as its second argument?
+Thanks,
+Sathya
 
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 7e5d7e0..f58bcdc 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -249,6 +249,50 @@ struct blk_queue_tag {
->   #define BLK_SCSI_MAX_CMDS	(256)
->   #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
->
-> +#ifdef CONFIG_BLK_DEV_ZONED
-> +enum blk_zone_type {
-> +	BLK_ZONE_TYPE_UNKNOWN,
-> +	BLK_ZONE_TYPE_CONVENTIONAL,
-> +	BLK_ZONE_TYPE_SEQWRITE_REQ,
-> +	BLK_ZONE_TYPE_SEQWRITE_PREF,
-> +	BLK_ZONE_TYPE_RESERVED,
-> +};
-> +
-> +enum blk_zone_state {
-> +	BLK_ZONE_UNKNOWN,
-> +	BLK_ZONE_NO_WP,
-> +	BLK_ZONE_OPEN,
-> +	BLK_ZONE_READONLY,
-> +	BLK_ZONE_OFFLINE,
-> +	BLK_ZONE_BUSY,
-> +};
-> +
-> +struct blk_zone {
-> +	struct rb_node node;
-> +	spinlock_t lock;
-> +	sector_t start;
-> +	size_t len;
-> +	sector_t wp;
-> +	enum blk_zone_type type;
-> +	enum blk_zone_state state;
-> +	void *private_data;
-> +};
-> +
-> +#define blk_zone_is_smr(z) ((z)->type == BLK_ZONE_TYPE_SEQWRITE_REQ ||	\
-> +			    (z)->type == BLK_ZONE_TYPE_SEQWRITE_PREF)
-> +
-> +#define blk_zone_is_cmr(z) ((z)->type == BLK_ZONE_TYPE_CONVENTIONAL)
-> +#define blk_zone_is_full(z) ((z)->wp == (z)->start + (z)->len)
-> +#define blk_zone_is_empty(z) ((z)->wp == (z)->start)
-> +
-> +extern struct blk_zone *blk_lookup_zone(struct request_queue *, sector_t);
-> +extern struct blk_zone *blk_insert_zone(struct request_queue *,
-> +					struct blk_zone *);
-> +extern void blk_drop_zones(struct request_queue *);
-> +#else
-> +static inline void blk_drop_zones(struct request_queue *q) { };
-> +#endif
+-----Original Message-----
+From: mpt-fusionlinux.pdl@broadcom.com
+[mailto:mpt-fusionlinux.pdl@broadcom.com] On Behalf Of Martin K. Petersen
+Sent: Thursday, April 14, 2016 8:48 PM
+To: Tina Ruchandani
+Cc: MPT-FusionLinux.pdl@broadcom.com; Arnd Bergmann;
+y2038@lists.linaro.org; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org; jejb@linux.vnet.ibm.com;
+suganath-prabu.subramani@avagotech.com; Chaitra P B; Sreekanth Reddy
+Subject: Re: [PATCH] mpt3sas: Remove usage of 'struct timeval'
 
-Have you considered to create a new header file for these definitions 
-instead of adding these to <linux/blkdev.h>?
+>>>>> "Tina" == Tina Ruchandani <ruchandani.tina@gmail.com> writes:
 
-Bart.
+Tina> 'struct timeval' will have its tv_sec value overflow on 32-bit
+Tina> systems in year 2038 and beyond. This patch replaces the use of
+Tina> struct timeval for computing mpi_request.TimeStamp, and instead
+Tina> uses ktime_t which provides 64-bit seconds value. The timestamp
+Tina> computed remains unaffected (milliseconds since Unix epoch).
+
+Broadcom folks, please review.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
