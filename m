@@ -1,190 +1,205 @@
 From: mchristi@redhat.com
-Subject: [PATCH 02/42] block: add REQ_OP definitions and bi_op/op fields
-Date: Fri, 15 Apr 2016 14:15:37 -0500
-Message-ID: <1460747777-8479-3-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 06/42] direct-io: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 14:15:41 -0500
+Message-ID: <1460747777-8479-7-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-The following patches separate the operation (write, read, discard,
-etc) from the rq_flag_bits flags. This patch adds definitions for
-request/bio operations, adds fields to the request/bio to set them, and
-some temporary compat code so the kernel/modules can use either one. In
-the final patches this compat code will be removed when everything is converted.
+This patch has the dio code set the bio bi_op to a REQ_OP and bio op_flags
+to rq_flag_bits.
 
-In this patch the REQ_OPs match the REQ rq_flag_bits ones
-for compat reasons while all the code is converted in this set. In the
-last patches that will abe removed and the bi_op field will be
-shrunk.
+It also begins to convert btrfs's dio_submit_t because of the dio submit_io
+callout use. In the btrfs_submit_direct change, I OR'd the op and flag back
+together. It is only temporary. The next patched will completely convert
+all the btrfs code paths.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-core.c          | 19 ++++++++++++++++---
- include/linux/blk_types.h | 15 ++++++++++++++-
- include/linux/blkdev.h    |  1 +
- include/linux/fs.h        | 37 +++++++++++++++++++++++++++++++++++--
- 4 files changed, 66 insertions(+), 6 deletions(-)
+ fs/btrfs/inode.c   |  9 +++++----
+ fs/direct-io.c     | 35 +++++++++++++++++++++--------------
+ include/linux/fs.h |  2 +-
+ 3 files changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index e953407..3b238ef 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1698,7 +1698,8 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 9cc2256..d999fdf 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8401,14 +8401,14 @@ out_err:
+ 	return 0;
+ }
+ 
+-static void btrfs_submit_direct(int rw, struct bio *dio_bio,
+-				struct inode *inode, loff_t file_offset)
++static void btrfs_submit_direct(struct bio *dio_bio, struct inode *inode,
++				loff_t file_offset)
  {
- 	req->cmd_type = REQ_TYPE_FS;
+ 	struct btrfs_dio_private *dip = NULL;
+ 	struct bio *io_bio = NULL;
+ 	struct btrfs_io_bio *btrfs_bio;
+ 	int skip_sum;
+-	int write = rw & REQ_WRITE;
++	bool write = (dio_bio->bi_op == REQ_OP_WRITE);
+ 	int ret = 0;
  
--	req->cmd_flags |= bio->bi_rw & REQ_COMMON_MASK;
-+	/* tmp compat. Allow users to set bi_op or bi_rw */
-+	req->cmd_flags |= (bio->bi_rw | bio->bi_op) & REQ_COMMON_MASK;
- 	if (bio->bi_rw & REQ_RAHEAD)
- 		req->cmd_flags |= REQ_FAILFAST_MASK;
+ 	skip_sum = BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM;
+@@ -8459,7 +8459,8 @@ static void btrfs_submit_direct(int rw, struct bio *dio_bio,
+ 			dio_data->unsubmitted_oe_range_end;
+ 	}
  
-@@ -2034,6 +2035,12 @@ blk_qc_t generic_make_request(struct bio *bio)
- 	struct bio_list bio_list_on_stack;
- 	blk_qc_t ret = BLK_QC_T_NONE;
+-	ret = btrfs_submit_direct_hook(rw, dip, skip_sum);
++	ret = btrfs_submit_direct_hook(dio_bio->bi_op | dio_bio->bi_rw, dip,
++				       skip_sum);
+ 	if (!ret)
+ 		return;
  
-+	/* tmp compat. Allow users to set either one or both.
-+	 * This will be removed when we have converted
-+	 * everyone in the next patches.
-+	 */
-+	bio->bi_rw |= bio->bi_op;
-+
- 	if (!generic_make_request_checks(bio))
- 		goto out;
- 
-@@ -2103,6 +2110,12 @@ EXPORT_SYMBOL(generic_make_request);
-  */
- blk_qc_t submit_bio(struct bio *bio)
- {
-+	/* tmp compat. Allow users to set either one or both.
-+	 * This will be removed when we have converted
-+	 * everyone in the next patches.
-+	 */
-+	bio->bi_rw |= bio->bi_op;
-+
- 	/*
- 	 * If it's a regular read/write or a barrier with data attached,
- 	 * go through the normal accounting stuff before submission.
-@@ -2976,8 +2989,8 @@ EXPORT_SYMBOL_GPL(__blk_end_request_err);
- void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
- 		     struct bio *bio)
- {
--	/* Bit 0 (R/W) is identical in rq->cmd_flags and bio->bi_rw */
--	rq->cmd_flags |= bio->bi_rw & REQ_WRITE;
-+	/* tmp compat. Allow users to set bi_op or bi_rw */
-+	rq->cmd_flags |= bio_data_dir(bio);
- 
- 	if (bio_has_data(bio))
- 		rq->nr_phys_segments = bio_phys_segments(q, bio);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 86a38ea..6e49c91 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -48,9 +48,15 @@ struct bio {
- 	struct block_device	*bi_bdev;
- 	unsigned int		bi_flags;	/* status, command, etc */
- 	int			bi_error;
--	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
-+	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
- 						 * top bits priority
- 						 */
-+	/*
-+	 * this will be a u8 in the next patches and bi_rw can be shrunk to
-+	 * a u32. For compat in these transistional patches op is a int here.
-+	 */
-+	int			bi_op;		/* REQ_OP */
-+
- 
- 	struct bvec_iter	bi_iter;
- 
-@@ -242,6 +248,13 @@ enum rq_flag_bits {
- #define REQ_HASHED		(1ULL << __REQ_HASHED)
- #define REQ_MQ_INFLIGHT		(1ULL << __REQ_MQ_INFLIGHT)
- 
-+enum req_op {
-+	REQ_OP_READ,
-+	REQ_OP_WRITE		= REQ_WRITE,
-+	REQ_OP_DISCARD		= REQ_DISCARD,
-+	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
-+};
-+
- typedef unsigned int blk_qc_t;
- #define BLK_QC_T_NONE	-1U
- #define BLK_QC_T_SHIFT	16
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 57c0859..bce32e2 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -96,6 +96,7 @@ struct request {
- 	struct request_queue *q;
- 	struct blk_mq_ctx *mq_ctx;
- 
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 1890ad2..64bfab0 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -108,7 +108,8 @@ struct dio_submit {
+ /* dio_state communicated between submission path and end_io */
+ struct dio {
+ 	int flags;			/* doesn't change */
+-	int rw;
 +	int op;
- 	u64 cmd_flags;
- 	unsigned cmd_type;
- 	unsigned long atomic_flags;
++	int op_flags;
+ 	blk_qc_t bio_cookie;
+ 	struct block_device *bio_bdev;
+ 	struct inode *inode;
+@@ -163,7 +164,7 @@ static inline int dio_refill_pages(struct dio *dio, struct dio_submit *sdio)
+ 	ret = iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
+ 				&sdio->from);
+ 
+-	if (ret < 0 && sdio->blocks_available && (dio->rw & WRITE)) {
++	if (ret < 0 && sdio->blocks_available && (dio->op == REQ_OP_WRITE)) {
+ 		struct page *page = ZERO_PAGE(0);
+ 		/*
+ 		 * A memory fault, but the filesystem has some outstanding
+@@ -242,7 +243,8 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
+ 		transferred = dio->result;
+ 
+ 		/* Check for short read case */
+-		if ((dio->rw == READ) && ((offset + transferred) > dio->i_size))
++		if ((dio->op == REQ_OP_READ) &&
++		    ((offset + transferred) > dio->i_size))
+ 			transferred = dio->i_size - offset;
+ 	}
+ 
+@@ -265,7 +267,7 @@ static ssize_t dio_complete(struct dio *dio, loff_t offset, ssize_t ret,
+ 		inode_dio_end(dio->inode);
+ 
+ 	if (is_async) {
+-		if (dio->rw & WRITE) {
++		if (dio->op == REQ_OP_WRITE) {
+ 			int err;
+ 
+ 			err = generic_write_sync(dio->iocb->ki_filp, offset,
+@@ -374,7 +376,8 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
+ 
+ 	bio->bi_bdev = bdev;
+ 	bio->bi_iter.bi_sector = first_sector;
+-	bio->bi_rw = dio->rw;
++	bio->bi_op = dio->op;
++	bio->bi_rw = dio->op_flags;
+ 	if (dio->is_async)
+ 		bio->bi_end_io = dio_bio_end_aio;
+ 	else
+@@ -402,14 +405,13 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
+ 	dio->refcount++;
+ 	spin_unlock_irqrestore(&dio->bio_lock, flags);
+ 
+-	if (dio->is_async && dio->rw == READ && dio->should_dirty)
++	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty)
+ 		bio_set_pages_dirty(bio);
+ 
+ 	dio->bio_bdev = bio->bi_bdev;
+ 
+ 	if (sdio->submit_io) {
+-		sdio->submit_io(dio->rw, bio, dio->inode,
+-			       sdio->logical_offset_in_bio);
++		sdio->submit_io(bio, dio->inode, sdio->logical_offset_in_bio);
+ 		dio->bio_cookie = BLK_QC_T_NONE;
+ 	} else
+ 		dio->bio_cookie = submit_bio(bio);
+@@ -478,14 +480,14 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 	if (bio->bi_error)
+ 		dio->io_error = -EIO;
+ 
+-	if (dio->is_async && dio->rw == READ && dio->should_dirty) {
++	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
+ 		err = bio->bi_error;
+ 		bio_check_pages_dirty(bio);	/* transfers ownership */
+ 	} else {
+ 		bio_for_each_segment_all(bvec, bio, i) {
+ 			struct page *page = bvec->bv_page;
+ 
+-			if (dio->rw == READ && !PageCompound(page) &&
++			if (dio->op == REQ_OP_READ && !PageCompound(page) &&
+ 					dio->should_dirty)
+ 				set_page_dirty_lock(page);
+ 			put_page(page);
+@@ -638,7 +640,7 @@ static int get_more_blocks(struct dio *dio, struct dio_submit *sdio,
+ 		 * which may decide to handle it or also return an unmapped
+ 		 * buffer head.
+ 		 */
+-		create = dio->rw & WRITE;
++		create = dio->op == REQ_OP_WRITE;
+ 		if (dio->flags & DIO_SKIP_HOLES) {
+ 			if (sdio->block_in_file < (i_size_read(dio->inode) >>
+ 							sdio->blkbits))
+@@ -788,7 +790,7 @@ submit_page_section(struct dio *dio, struct dio_submit *sdio, struct page *page,
+ {
+ 	int ret = 0;
+ 
+-	if (dio->rw & WRITE) {
++	if (dio->op == REQ_OP_WRITE) {
+ 		/*
+ 		 * Read accounting is performed in submit_bio()
+ 		 */
+@@ -988,7 +990,7 @@ do_holes:
+ 				loff_t i_size_aligned;
+ 
+ 				/* AKPM: eargh, -ENOTBLK is a hack */
+-				if (dio->rw & WRITE) {
++				if (dio->op == REQ_OP_WRITE) {
+ 					put_page(page);
+ 					return -ENOTBLK;
+ 				}
+@@ -1201,7 +1203,12 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 		dio->is_async = true;
+ 
+ 	dio->inode = inode;
+-	dio->rw = iov_iter_rw(iter) == WRITE ? WRITE_ODIRECT : READ;
++	if (iov_iter_rw(iter) == WRITE) {
++		dio->op = REQ_OP_WRITE;
++		dio->op_flags = WRITE_ODIRECT;
++	} else {
++		dio->op = REQ_OP_READ;
++	}
+ 
+ 	/*
+ 	 * For AIO O_(D)SYNC writes we need to defer completions to a workqueue
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 69bdd03..96ace0f 100644
+index 96ace0f..f3f2f66 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2452,15 +2452,48 @@ extern void make_bad_inode(struct inode *);
- extern bool is_bad_inode(struct inode *);
+@@ -2792,7 +2792,7 @@ extern int generic_file_open(struct inode * inode, struct file * filp);
+ extern int nonseekable_open(struct inode * inode, struct file * filp);
  
  #ifdef CONFIG_BLOCK
-+
-+static inline bool op_is_write(int op)
-+{
-+	switch (op) {
-+	case REQ_OP_WRITE:
-+	case REQ_OP_WRITE_SAME:
-+	case REQ_OP_DISCARD:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
- /*
-  * return READ, READA, or WRITE
-  */
--#define bio_rw(bio)		((bio)->bi_rw & (RW_MASK | RWA_MASK))
-+static inline int bio_rw(struct bio *bio)
-+{
-+	/*
-+	 * tmp cpmpat. Allow users to set either op or rw, until
-+	 * all code is converted in the next patches.
-+	 */
-+	if (op_is_write(bio->bi_op))
-+		return WRITE;
-+
-+	return bio->bi_rw & (RW_MASK | RWA_MASK);
-+}
+-typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
++typedef void (dio_submit_t)(struct bio *bio, struct inode *inode,
+ 			    loff_t file_offset);
  
- /*
-  * return data direction, READ or WRITE
-  */
--#define bio_data_dir(bio)	((bio)->bi_rw & 1)
-+static inline int bio_data_dir(struct bio *bio)
-+{
-+	/*
-+	 * tmp cpmpat. Allow users to set either op or rw, until
-+	 * all code is converted in the next patches.
-+	 */
-+	if (op_is_write(bio->bi_op))
-+		return WRITE;
-+
-+	return bio->bi_rw & 1;
-+}
- 
- extern void check_disk_size_change(struct gendisk *disk,
- 				   struct block_device *bdev);
+ enum {
 -- 
 2.7.2
