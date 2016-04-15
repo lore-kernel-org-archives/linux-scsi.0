@@ -1,126 +1,41 @@
 From: mchristi@redhat.com
-Subject: [PATCH 29/42] block: prepare elevator to use REQ_OPs.
-Date: Fri, 15 Apr 2016 14:16:04 -0500
-Message-ID: <1460747777-8479-30-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 36/42] ide cd: do not set REQ_WRITE on requests.
+Date: Fri, 15 Apr 2016 14:16:11 -0500
+Message-ID: <1460747777-8479-37-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch converts the elevator code to use separate variables
-for the operation and flags, and to check request->op for the REQ_OP.
+The block layer will set the correct READ/WRITE operation flags/fields
+when creating a request, so there is not need for drivers to set the
+REQ_WRITE flag.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-core.c         | 2 +-
- block/cfq-iosched.c      | 4 ++--
- block/elevator.c         | 7 +++----
- include/linux/elevator.h | 4 ++--
- 4 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/ide/ide-cd_ioctl.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3168962..a796b35 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1081,7 +1081,7 @@ static struct request *__get_request(struct request_list *rl, int op,
- 	if (unlikely(blk_queue_dying(q)))
- 		return ERR_PTR(-ENODEV);
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 474173e..5887a7a 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -459,9 +459,6 @@ int ide_cdrom_packet(struct cdrom_device_info *cdi,
+ 	   layer. the packet must be complete, as we do not
+ 	   touch it at all. */
  
--	may_queue = elv_may_queue(q, op | op_flags);
-+	may_queue = elv_may_queue(q, op, op_flags);
- 	if (may_queue == ELV_MQUEUE_NO)
- 		goto rq_starved;
+-	if (cgc->data_direction == CGC_DATA_WRITE)
+-		flags |= REQ_WRITE;
+-
+ 	if (cgc->sense)
+ 		memset(cgc->sense, 0, sizeof(struct request_sense));
  
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 4a34978..3fcc598 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -4285,7 +4285,7 @@ static inline int __cfq_may_queue(struct cfq_queue *cfqq)
- 	return ELV_MQUEUE_MAY;
- }
- 
--static int cfq_may_queue(struct request_queue *q, int rw)
-+static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
- {
- 	struct cfq_data *cfqd = q->elevator->elevator_data;
- 	struct task_struct *tsk = current;
-@@ -4302,7 +4302,7 @@ static int cfq_may_queue(struct request_queue *q, int rw)
- 	if (!cic)
- 		return ELV_MQUEUE_MAY;
- 
--	cfqq = cic_to_cfqq(cic, rw_is_sync(rw));
-+	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
- 	if (cfqq) {
- 		cfq_init_prio_data(cfqq, cic);
- 
-diff --git a/block/elevator.c b/block/elevator.c
-index c3555c9..6a282bf 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -366,8 +366,7 @@ void elv_dispatch_sort(struct request_queue *q, struct request *rq)
- 	list_for_each_prev(entry, &q->queue_head) {
- 		struct request *pos = list_entry_rq(entry);
- 
--		if ((rq->cmd_flags & REQ_DISCARD) !=
--		    (pos->cmd_flags & REQ_DISCARD))
-+		if ((rq->op == REQ_OP_DISCARD) != (pos->op == REQ_OP_DISCARD))
- 			break;
- 		if (rq_data_dir(rq) != rq_data_dir(pos))
- 			break;
-@@ -717,12 +716,12 @@ void elv_put_request(struct request_queue *q, struct request *rq)
- 		e->type->ops.elevator_put_req_fn(rq);
- }
- 
--int elv_may_queue(struct request_queue *q, int rw)
-+int elv_may_queue(struct request_queue *q, int op, int op_flags)
- {
- 	struct elevator_queue *e = q->elevator;
- 
- 	if (e->type->ops.elevator_may_queue_fn)
--		return e->type->ops.elevator_may_queue_fn(q, rw);
-+		return e->type->ops.elevator_may_queue_fn(q, op, op_flags);
- 
- 	return ELV_MQUEUE_MAY;
- }
-diff --git a/include/linux/elevator.h b/include/linux/elevator.h
-index 638b324..953d286 100644
---- a/include/linux/elevator.h
-+++ b/include/linux/elevator.h
-@@ -26,7 +26,7 @@ typedef int (elevator_dispatch_fn) (struct request_queue *, int);
- typedef void (elevator_add_req_fn) (struct request_queue *, struct request *);
- typedef struct request *(elevator_request_list_fn) (struct request_queue *, struct request *);
- typedef void (elevator_completed_req_fn) (struct request_queue *, struct request *);
--typedef int (elevator_may_queue_fn) (struct request_queue *, int);
-+typedef int (elevator_may_queue_fn) (struct request_queue *, int, int);
- 
- typedef void (elevator_init_icq_fn) (struct io_cq *);
- typedef void (elevator_exit_icq_fn) (struct io_cq *);
-@@ -134,7 +134,7 @@ extern struct request *elv_former_request(struct request_queue *, struct request
- extern struct request *elv_latter_request(struct request_queue *, struct request *);
- extern int elv_register_queue(struct request_queue *q);
- extern void elv_unregister_queue(struct request_queue *q);
--extern int elv_may_queue(struct request_queue *, int);
-+extern int elv_may_queue(struct request_queue *, int, int);
- extern void elv_completed_request(struct request_queue *, struct request *);
- extern int elv_set_request(struct request_queue *q, struct request *rq,
- 			   struct bio *bio, gfp_t gfp_mask);
 -- 
 2.7.2
