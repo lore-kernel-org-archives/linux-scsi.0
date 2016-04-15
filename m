@@ -1,35 +1,48 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] hisi_sas: add alloc_dev_quirk_v2_hw()
-Date: Fri, 15 Apr 2016 15:52:17 +0200
-Message-ID: <5710F211.5080805@suse.de>
-References: <1460727398-102091-1-git-send-email-john.garry@huawei.com>
- <1460727398-102091-4-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH v14 0/9] add support for DWC UFS Controller
+Date: Fri, 15 Apr 2016 16:09:16 +0200
+Message-ID: <5710F60C.5070800@suse.de>
+References: <cover.1459448160.git.jpinto@synopsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48028 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50373 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751176AbcDONwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2016 09:52:20 -0400
-In-Reply-To: <1460727398-102091-4-git-send-email-john.garry@huawei.com>
+	id S1750765AbcDOOJT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 10:09:19 -0400
+In-Reply-To: <cover.1459448160.git.jpinto@synopsys.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>, linux-scsi@vger.kernel.org
 
-On 04/15/2016 03:36 PM, John Garry wrote:
-> Add custom version of function to allocate
-> device, alloc_dev_quirk_v2_hw().
-> For sata devices the device id bit0 should be
-> 0.
+On 04/13/2016 11:04 AM, Joao Pinto wrote:
+> As requested, I am sending v14 to be included in the SCSI patchwork.
 >=20
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 30 ++++++++++++++++++++++++=
-++++++
->  1 file changed, 30 insertions(+)
+> The work consisted of:
+> - Fixed typo in ufshcd-pltfrm.c
+> - Tweak ufshcd.c for UFS 2.0 support
+> - Implement ufshcd-dwc which contains all DWC HW specific code
+> - Unipro attributes were added and new registers were added to the dr=
+iver
+> - Implement a tc-dwc-g210 containing G210 MPHY specific code
+> - Implement a tc-dwc-g210 glue platform driver
+> - Implement a tc-dwc-g210 glue pci driver
+> - Documentation update
 >=20
+> Joao Pinto (9):
+>   fixed typo in ufshcd-pltfrm
+>   add UFS 2.0 to ufshcd-pltfrm bindings
+>   added UFS 2.0 capabilities
+>   added unipro attributes
+>   added link status to ufshci
+>   added support for DesignWare Controller
+>   added support for Synopsys G210 Test Chip
+>   add TC G210 platform driver
+>   add TC G210 pci driver
+>=20
+=46or this series:
+
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
