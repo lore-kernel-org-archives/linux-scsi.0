@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 12/42] gfs2: set bi_op to REQ_OP
-Date: Fri, 15 Apr 2016 14:15:47 -0500
-Message-ID: <1460747777-8479-13-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 15/42] mpage: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 14:15:50 -0500
+Message-ID: <1460747777-8479-16-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,158 +23,160 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has gfs2 use bio->bi_op for REQ_OPs and rq_flag_bits to bio->bi_rw.
+This patch has mpage.c use bio->bi_op for REQ_OPs and rq_flag_bits
+to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- fs/gfs2/log.c        |  8 ++++----
- fs/gfs2/lops.c       | 12 +++++++-----
- fs/gfs2/lops.h       |  2 +-
- fs/gfs2/meta_io.c    |  8 +++++---
- fs/gfs2/ops_fstype.c |  1 +
- 5 files changed, 18 insertions(+), 13 deletions(-)
+ fs/mpage.c | 41 +++++++++++++++++++++--------------------
+ 1 file changed, 21 insertions(+), 20 deletions(-)
 
-diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
-index 0ff028c..e58ccef0 100644
---- a/fs/gfs2/log.c
-+++ b/fs/gfs2/log.c
-@@ -657,7 +657,7 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
- 	struct gfs2_log_header *lh;
- 	unsigned int tail;
- 	u32 hash;
--	int rw = WRITE_FLUSH_FUA | REQ_META;
-+	int op_flags = WRITE_FLUSH_FUA | REQ_META;
- 	struct page *page = mempool_alloc(gfs2_page_pool, GFP_NOIO);
- 	enum gfs2_freeze_state state = atomic_read(&sdp->sd_freeze_state);
- 	lh = page_address(page);
-@@ -682,12 +682,12 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags)
- 	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags)) {
- 		gfs2_ordered_wait(sdp);
- 		log_flush_wait(sdp);
--		rw = WRITE_SYNC | REQ_META | REQ_PRIO;
-+		op_flags = WRITE_SYNC | REQ_META | REQ_PRIO;
- 	}
- 
- 	sdp->sd_log_idle = (tail == sdp->sd_log_flush_head);
- 	gfs2_log_write_page(sdp, page);
--	gfs2_log_flush_bio(sdp, rw);
-+	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, op_flags);
- 	log_flush_wait(sdp);
- 
- 	if (sdp->sd_log_tail != tail)
-@@ -738,7 +738,7 @@ void gfs2_log_flush(struct gfs2_sbd *sdp, struct gfs2_glock *gl,
- 
- 	gfs2_ordered_write(sdp);
- 	lops_before_commit(sdp, tr);
--	gfs2_log_flush_bio(sdp, WRITE);
-+	gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 
- 	if (sdp->sd_log_head != sdp->sd_log_flush_head) {
- 		log_flush_wait(sdp);
-diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-index ce28242..c1099b4 100644
---- a/fs/gfs2/lops.c
-+++ b/fs/gfs2/lops.c
-@@ -230,17 +230,19 @@ static void gfs2_end_log_write(struct bio *bio)
- /**
-  * gfs2_log_flush_bio - Submit any pending log bio
-  * @sdp: The superblock
-- * @rw: The rw flags
-+ * @op: REQ_OP
-+ * @op_flags: rq_flag_bits
-  *
-  * Submit any pending part-built or full bio to the block device. If
-  * there is no pending bio, then this is a no-op.
-  */
- 
--void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw)
-+void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags)
- {
- 	if (sdp->sd_log_bio) {
- 		atomic_inc(&sdp->sd_log_in_flight);
--		sdp->sd_log_bio->bi_rw = rw;
-+		sdp->sd_log_bio->bi_op = op;
-+		sdp->sd_log_bio->bi_rw = op_flags;
- 		submit_bio(sdp->sd_log_bio);
- 		sdp->sd_log_bio = NULL;
- 	}
-@@ -300,7 +302,7 @@ static struct bio *gfs2_log_get_bio(struct gfs2_sbd *sdp, u64 blkno)
- 		nblk >>= sdp->sd_fsb2bb_shift;
- 		if (blkno == nblk)
- 			return bio;
--		gfs2_log_flush_bio(sdp, WRITE);
-+		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 	}
- 
- 	return gfs2_log_alloc_bio(sdp, blkno);
-@@ -329,7 +331,7 @@ static void gfs2_log_write(struct gfs2_sbd *sdp, struct page *page,
- 	bio = gfs2_log_get_bio(sdp, blkno);
- 	ret = bio_add_page(bio, page, size, offset);
- 	if (ret == 0) {
--		gfs2_log_flush_bio(sdp, WRITE);
-+		gfs2_log_flush_bio(sdp, REQ_OP_WRITE, 0);
- 		bio = gfs2_log_alloc_bio(sdp, blkno);
- 		ret = bio_add_page(bio, page, size, offset);
- 		WARN_ON(ret == 0);
-diff --git a/fs/gfs2/lops.h b/fs/gfs2/lops.h
-index a65a7ba..e529f53 100644
---- a/fs/gfs2/lops.h
-+++ b/fs/gfs2/lops.h
-@@ -27,7 +27,7 @@ extern const struct gfs2_log_operations gfs2_databuf_lops;
- 
- extern const struct gfs2_log_operations *gfs2_log_ops[];
- extern void gfs2_log_write_page(struct gfs2_sbd *sdp, struct page *page);
--extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int rw);
-+extern void gfs2_log_flush_bio(struct gfs2_sbd *sdp, int op, int op_flags);
- extern void gfs2_pin(struct gfs2_sbd *sdp, struct buffer_head *bh);
- 
- static inline unsigned int buf_limit(struct gfs2_sbd *sdp)
-diff --git a/fs/gfs2/meta_io.c b/fs/gfs2/meta_io.c
-index f56f3ca..55ae188 100644
---- a/fs/gfs2/meta_io.c
-+++ b/fs/gfs2/meta_io.c
-@@ -213,7 +213,8 @@ static void gfs2_meta_read_endio(struct bio *bio)
-  * Submit several consecutive buffer head I/O requests as a single bio I/O
-  * request.  (See submit_bh_wbc.)
-  */
--static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
-+static void gfs2_submit_bhs(int op, int op_flags, struct buffer_head *bhs[],
-+			    int num)
- {
- 	struct buffer_head *bh = bhs[0];
- 	struct bio *bio;
-@@ -230,7 +231,8 @@ static void gfs2_submit_bhs(int rw, struct buffer_head *bhs[], int num)
- 		bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
- 	}
- 	bio->bi_end_io = gfs2_meta_read_endio;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	submit_bio(bio);
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 2c251ec..89f58f1 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -56,11 +56,12 @@ static void mpage_end_io(struct bio *bio)
+ 	bio_put(bio);
  }
  
-@@ -281,7 +283,7 @@ int gfs2_meta_read(struct gfs2_glock *gl, u64 blkno, int flags,
- 		}
+-static struct bio *mpage_bio_submit(int rw, struct bio *bio)
++static struct bio *mpage_bio_submit(int op, int op_flags, struct bio *bio)
+ {
+ 	bio->bi_end_io = mpage_end_io;
+-	bio->bi_rw = rw;
+-	guard_bio_eod(rw, bio);
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
++	guard_bio_eod(op, bio);
+ 	submit_bio(bio);
+ 	return NULL;
+ }
+@@ -270,7 +271,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
+ 	 * This page will go to BIO.  Do we need to send this BIO off first?
+ 	 */
+ 	if (bio && (*last_block_in_bio != blocks[0] - 1))
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 
+ alloc_new:
+ 	if (bio == NULL) {
+@@ -287,7 +288,7 @@ alloc_new:
+ 
+ 	length = first_hole << blkbits;
+ 	if (bio_add_page(bio, page, length, 0) < length) {
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 		goto alloc_new;
  	}
  
--	gfs2_submit_bhs(READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
-+	gfs2_submit_bhs(REQ_OP_READ, READ_SYNC | REQ_META | REQ_PRIO, bhs, num);
- 	if (!(flags & DIO_WAIT))
- 		return 0;
+@@ -295,7 +296,7 @@ alloc_new:
+ 	nblocks = map_bh->b_size >> blkbits;
+ 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
+ 	    (first_hole != blocks_per_page))
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	else
+ 		*last_block_in_bio = blocks[blocks_per_page - 1];
+ out:
+@@ -303,7 +304,7 @@ out:
  
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index 141b560..fda3e71 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -246,6 +246,7 @@ static int gfs2_read_super(struct gfs2_sbd *sdp, sector_t sector, int silent)
+ confused:
+ 	if (bio)
+-		bio = mpage_bio_submit(READ, bio);
++		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	if (!PageUptodate(page))
+ 	        block_read_full_page(page, get_block);
+ 	else
+@@ -385,7 +386,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
+ 	}
+ 	BUG_ON(!list_empty(pages));
+ 	if (bio)
+-		mpage_bio_submit(READ, bio);
++		mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(mpage_readpages);
+@@ -406,7 +407,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
+ 	bio = do_mpage_readpage(bio, page, 1, &last_block_in_bio,
+ 			&map_bh, &first_logical_block, get_block, gfp);
+ 	if (bio)
+-		mpage_bio_submit(READ, bio);
++		mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(mpage_readpage);
+@@ -487,7 +488,7 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
+ 	struct buffer_head map_bh;
+ 	loff_t i_size = i_size_read(inode);
+ 	int ret = 0;
+-	int wr = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
++	int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : 0);
  
- 	bio->bi_end_io = end_bio_io_page;
- 	bio->bi_private = page;
-+	bio->bi_op = REQ_OP_READ;
- 	bio->bi_rw = READ_SYNC | REQ_META;
- 	submit_bio(bio);
- 	wait_on_page_locked(page);
+ 	if (page_has_buffers(page)) {
+ 		struct buffer_head *head = page_buffers(page);
+@@ -596,7 +597,7 @@ page_is_mapped:
+ 	 * This page will go to BIO.  Do we need to send this BIO off first?
+ 	 */
+ 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 
+ alloc_new:
+ 	if (bio == NULL) {
+@@ -623,7 +624,7 @@ alloc_new:
+ 	wbc_account_io(wbc, page, PAGE_SIZE);
+ 	length = first_unmapped << blkbits;
+ 	if (bio_add_page(bio, page, length, 0) < length) {
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 		goto alloc_new;
+ 	}
+ 
+@@ -633,7 +634,7 @@ alloc_new:
+ 	set_page_writeback(page);
+ 	unlock_page(page);
+ 	if (boundary || (first_unmapped != blocks_per_page)) {
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 		if (boundary_block) {
+ 			write_boundary_block(boundary_bdev,
+ 					boundary_block, 1 << blkbits);
+@@ -645,7 +646,7 @@ alloc_new:
+ 
+ confused:
+ 	if (bio)
+-		bio = mpage_bio_submit(wr, bio);
++		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
+ 
+ 	if (mpd->use_writepage) {
+ 		ret = mapping->a_ops->writepage(page, wbc);
+@@ -702,9 +703,9 @@ mpage_writepages(struct address_space *mapping,
+ 
+ 		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
+ 		if (mpd.bio) {
+-			int wr = (wbc->sync_mode == WB_SYNC_ALL ?
+-				  WRITE_SYNC : WRITE);
+-			mpage_bio_submit(wr, mpd.bio);
++			int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
++				  WRITE_SYNC : 0);
++			mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+ 		}
+ 	}
+ 	blk_finish_plug(&plug);
+@@ -723,9 +724,9 @@ int mpage_writepage(struct page *page, get_block_t get_block,
+ 	};
+ 	int ret = __mpage_writepage(page, wbc, &mpd);
+ 	if (mpd.bio) {
+-		int wr = (wbc->sync_mode == WB_SYNC_ALL ?
+-			  WRITE_SYNC : WRITE);
+-		mpage_bio_submit(wr, mpd.bio);
++		int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
++			  WRITE_SYNC : 0);
++		mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
+ 	}
+ 	return ret;
+ }
 -- 
 2.7.2
