@@ -1,385 +1,146 @@
 From: mchristi@redhat.com
-Subject: [PATCH 34/42] drivers: set request op to REQ_OP
-Date: Fri, 15 Apr 2016 14:16:09 -0500
-Message-ID: <1460747777-8479-35-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 20/42] dm: pass dm stats data dir instead of bi_rw
+Date: Fri, 15 Apr 2016 14:15:55 -0500
+Message-ID: <1460747777-8479-21-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the block drivers use the request->op for REQ_OP
-operations and cmd_flags for rq_flag_bits.
+It looks like dm stats cares about the data direction
+(READ vs WRITE) and does not need the bio/request flags.
+Commands like REQ_FLUSH, REQ_DISCARD and REQ_WRITE_SAME
+are currently always set with REQ_WRITE, so the extra check for
+REQ_DISCARD in dm_stats_account_io is not needed.
+
+This patch has it use the bio and request data_dir helpers
+instead of accessing the bi_rw/cmd_flags directly. This makes
+the next patches that remove the operation from the cmd_flags
+and bi_rw easier, because we will no longer have the REQ_WRITE
+bit set for operations like discards.
+
+This patch is compile tested only.
+
+v2:
+
+1. Merged Mike Snitzer's fixes to pass in int instead of
+unsigned long.
+
+2. Fix 80 char col issues.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/loop.c              |  6 +++---
- drivers/block/mtip32xx/mtip32xx.c |  2 +-
- drivers/block/nbd.c               |  2 +-
- drivers/block/rbd.c               |  2 +-
- drivers/block/skd_main.c          | 11 ++++-------
- drivers/block/xen-blkfront.c      |  8 +++++---
- drivers/md/dm.c                   |  2 +-
- drivers/mmc/card/block.c          |  7 +++----
- drivers/mmc/card/queue.c          |  6 ++----
- drivers/mmc/card/queue.h          |  5 ++++-
- drivers/mtd/mtd_blkdevs.c         |  2 +-
- drivers/nvme/host/core.c          |  2 +-
- drivers/nvme/host/nvme.h          |  2 +-
- drivers/nvme/host/pci.c           |  2 +-
- drivers/scsi/sd.c                 | 25 ++++++++++++++++---------
- 15 files changed, 45 insertions(+), 39 deletions(-)
+ drivers/md/dm-stats.c |  9 ++++-----
+ drivers/md/dm.c       | 21 ++++++++++++---------
+ 2 files changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 7e5e27a..0e80c9b 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -538,7 +538,7 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
- 	if (rq->cmd_flags & REQ_WRITE) {
- 		if (rq->cmd_flags & REQ_FLUSH)
- 			ret = lo_req_flush(lo, rq);
--		else if (rq->cmd_flags & REQ_DISCARD)
-+		else if (rq->op == REQ_OP_DISCARD)
- 			ret = lo_discard(lo, rq, pos);
- 		else if (lo->transfer)
- 			ret = lo_write_transfer(lo, rq, pos);
-@@ -1653,8 +1653,8 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (lo->lo_state != Lo_bound)
- 		return -EIO;
- 
--	if (lo->use_dio && !(cmd->rq->cmd_flags & (REQ_FLUSH |
--					REQ_DISCARD)))
-+	if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
-+	     cmd->rq->op == REQ_OP_DISCARD))
- 		cmd->use_aio = true;
- 	else
- 		cmd->use_aio = false;
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 6053e46..7638273 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -3765,7 +3765,7 @@ static int mtip_submit_request(struct blk_mq_hw_ctx *hctx, struct request *rq)
- 			return -ENODATA;
- 	}
- 
--	if (rq->cmd_flags & REQ_DISCARD) {
-+	if (rq->op == REQ_OP_DISCARD) {
- 		int err;
- 
- 		err = mtip_send_trim(dd, blk_rq_pos(rq), blk_rq_sectors(rq));
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index 31e73a7..68a1476 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -282,7 +282,7 @@ static int nbd_send_req(struct nbd_device *nbd, struct request *req)
- 
- 	if (req->cmd_type == REQ_TYPE_DRV_PRIV)
- 		type = NBD_CMD_DISC;
--	else if (req->cmd_flags & REQ_DISCARD)
-+	else if (req->op == REQ_OP_DISCARD)
- 		type = NBD_CMD_TRIM;
- 	else if (req->cmd_flags & REQ_FLUSH)
- 		type = NBD_CMD_FLUSH;
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index 94a1843..e8935af 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -3371,7 +3371,7 @@ static void rbd_queue_workfn(struct work_struct *work)
- 		goto err;
- 	}
- 
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->op == REQ_OP_DISCARD)
- 		op_type = OBJ_OP_DISCARD;
- 	else if (rq->cmd_flags & REQ_WRITE)
- 		op_type = OBJ_OP_WRITE;
-diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
-index 41aaae3..5739223 100644
---- a/drivers/block/skd_main.c
-+++ b/drivers/block/skd_main.c
-@@ -576,7 +576,6 @@ static void skd_request_fn(struct request_queue *q)
- 	struct request *req = NULL;
- 	struct skd_scsi_request *scsi_req;
- 	struct page *page;
--	unsigned long io_flags;
- 	int error;
- 	u32 lba;
- 	u32 count;
-@@ -624,12 +623,11 @@ static void skd_request_fn(struct request_queue *q)
- 		lba = (u32)blk_rq_pos(req);
- 		count = blk_rq_sectors(req);
- 		data_dir = rq_data_dir(req);
--		io_flags = req->cmd_flags;
- 
--		if (io_flags & REQ_FLUSH)
-+		if (req->cmd_flags & REQ_FLUSH)
- 			flush++;
- 
--		if (io_flags & REQ_FUA)
-+		if (req->cmd_flags & REQ_FUA)
- 			fua++;
- 
- 		pr_debug("%s:%s:%d new req=%p lba=%u(0x%x) "
-@@ -735,7 +733,7 @@ static void skd_request_fn(struct request_queue *q)
- 		else
- 			skreq->sg_data_dir = SKD_DATA_DIR_HOST_TO_CARD;
- 
--		if (io_flags & REQ_DISCARD) {
-+		if (req->op == REQ_OP_DISCARD) {
- 			page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
- 			if (!page) {
- 				pr_err("request_fn:Page allocation failed.\n");
-@@ -852,9 +850,8 @@ static void skd_end_request(struct skd_device *skdev,
- 			    struct skd_request_context *skreq, int error)
- {
- 	struct request *req = skreq->req;
--	unsigned int io_flags = req->cmd_flags;
- 
--	if ((io_flags & REQ_DISCARD) &&
-+	if ((req->op == REQ_OP_DISCARD) &&
- 		(skreq->discard_page == 1)) {
- 		pr_debug("%s:%s:%d, free the page!",
- 			 skdev->name, __func__, __LINE__);
-diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-index 52963a2..dc08d4d 100644
---- a/drivers/block/xen-blkfront.c
-+++ b/drivers/block/xen-blkfront.c
-@@ -844,7 +844,8 @@ static int blkif_queue_request(struct request *req, struct blkfront_ring_info *r
- 	if (unlikely(rinfo->dev_info->connected != BLKIF_STATE_CONNECTED))
- 		return 1;
- 
--	if (unlikely(req->cmd_flags & (REQ_DISCARD | REQ_SECURE)))
-+	if (unlikely(req->op == REQ_OP_DISCARD ||
-+		     req->cmd_flags & REQ_SECURE))
- 		return blkif_queue_discard_req(req, rinfo);
- 	else
- 		return blkif_queue_rw_req(req, rinfo);
-@@ -2054,8 +2055,9 @@ static int blkif_recover(struct blkfront_info *info)
- 			/*
- 			 * Get the bios in the request so we can re-queue them.
- 			 */
--			if (copy[i].request->cmd_flags &
--			    (REQ_FLUSH | REQ_FUA | REQ_DISCARD | REQ_SECURE)) {
-+			if (copy[i].request->cmd_flags & REQ_FLUSH ||
-+			    copy[i].request->op == REQ_OP_DISCARD ||
-+			    copy[i].request->cmd_flags & (REQ_FUA | REQ_SECURE)) {
- 				/*
- 				 * Flush operations don't contain bios, so
- 				 * we need to requeue the whole request
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 98fea0e..13c869c 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1322,7 +1322,7 @@ static void dm_done(struct request *clone, int error, bool mapped)
- 			r = rq_end_io(tio->ti, clone, error, &tio->info);
- 	}
- 
--	if (unlikely(r == -EREMOTEIO && (clone->cmd_flags & REQ_WRITE_SAME) &&
-+	if (unlikely(r == -EREMOTEIO && (clone->op == REQ_OP_WRITE_SAME) &&
- 		     !clone->q->limits.max_write_same_sectors))
- 		disable_write_same(tio->md);
- 
-diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
-index 8db2bf0..8fa3982 100644
---- a/drivers/mmc/card/block.c
-+++ b/drivers/mmc/card/block.c
-@@ -1696,8 +1696,7 @@ static u8 mmc_blk_prep_packed_list(struct mmc_queue *mq, struct request *req)
- 		    !IS_ALIGNED(blk_rq_sectors(next), 8))
- 			break;
- 
--		if (next->cmd_flags & REQ_DISCARD ||
--		    next->cmd_flags & REQ_FLUSH)
-+		if (next->op == REQ_OP_DISCARD || next->cmd_flags & REQ_FLUSH)
- 			break;
- 
- 		if (rq_data_dir(cur) != rq_data_dir(next))
-@@ -2138,7 +2137,7 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
- 	}
- 
- 	mq->flags &= ~MMC_QUEUE_NEW_REQUEST;
--	if (cmd_flags & REQ_DISCARD) {
-+	if (req && req->op == REQ_OP_DISCARD) {
- 		/* complete ongoing async transfer before issuing discard */
- 		if (card->host->areq)
- 			mmc_blk_issue_rw_rq(mq, NULL);
-@@ -2162,7 +2161,7 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
- 
- out:
- 	if ((!req && !(mq->flags & MMC_QUEUE_NEW_REQUEST)) ||
--	     (cmd_flags & MMC_REQ_SPECIAL_MASK))
-+	    mmc_req_is_special(req))
- 		/*
- 		 * Release host when there are no more requests
- 		 * and after special request(discard, flush) is done.
-diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
-index 6f4323c..9fb8d21 100644
---- a/drivers/mmc/card/queue.c
-+++ b/drivers/mmc/card/queue.c
-@@ -33,7 +33,7 @@ static int mmc_prep_request(struct request_queue *q, struct request *req)
- 	/*
- 	 * We only like normal block requests and discards.
- 	 */
--	if (req->cmd_type != REQ_TYPE_FS && !(req->cmd_flags & REQ_DISCARD)) {
-+	if (req->cmd_type != REQ_TYPE_FS && req->op != REQ_OP_DISCARD) {
- 		blk_dump_rq_flags(req, "MMC bad request");
- 		return BLKPREP_KILL;
- 	}
-@@ -56,7 +56,6 @@ static int mmc_queue_thread(void *d)
- 	down(&mq->thread_sem);
- 	do {
- 		struct request *req = NULL;
--		unsigned int cmd_flags = 0;
- 
- 		spin_lock_irq(q->queue_lock);
- 		set_current_state(TASK_INTERRUPTIBLE);
-@@ -66,7 +65,6 @@ static int mmc_queue_thread(void *d)
- 
- 		if (req || mq->mqrq_prev->req) {
- 			set_current_state(TASK_RUNNING);
--			cmd_flags = req ? req->cmd_flags : 0;
- 			mq->issue_fn(mq, req);
- 			cond_resched();
- 			if (mq->flags & MMC_QUEUE_NEW_REQUEST) {
-@@ -81,7 +79,7 @@ static int mmc_queue_thread(void *d)
- 			 * has been finished. Do not assign it to previous
- 			 * request.
- 			 */
--			if (cmd_flags & MMC_REQ_SPECIAL_MASK)
-+			if (mmc_req_is_special(req))
- 				mq->mqrq_cur->req = NULL;
- 
- 			mq->mqrq_prev->brq.mrq.data = NULL;
-diff --git a/drivers/mmc/card/queue.h b/drivers/mmc/card/queue.h
-index 36cddab..f166e5b 100644
---- a/drivers/mmc/card/queue.h
-+++ b/drivers/mmc/card/queue.h
-@@ -1,7 +1,10 @@
- #ifndef MMC_QUEUE_H
- #define MMC_QUEUE_H
- 
--#define MMC_REQ_SPECIAL_MASK	(REQ_DISCARD | REQ_FLUSH)
-+static inline bool mmc_req_is_special(struct request *req)
-+{
-+	return req && (req->cmd_flags & REQ_FLUSH || req->op == REQ_OP_DISCARD);
-+}
- 
- struct request;
- struct task_struct;
-diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
-index 74ae243..e8b0263 100644
---- a/drivers/mtd/mtd_blkdevs.c
-+++ b/drivers/mtd/mtd_blkdevs.c
-@@ -94,7 +94,7 @@ static int do_blktrans_request(struct mtd_blktrans_ops *tr,
- 	    get_capacity(req->rq_disk))
- 		return -EIO;
- 
--	if (req->cmd_flags & REQ_DISCARD)
-+	if (req->op == REQ_OP_DISCARD)
- 		return tr->discard(dev, block, nsect);
- 
- 	if (rq_data_dir(req) == READ) {
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 4eb5759..b741aed 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -234,7 +234,7 @@ int nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
- 		memcpy(cmd, req->cmd, sizeof(*cmd));
- 	else if (req->cmd_flags & REQ_FLUSH)
- 		nvme_setup_flush(ns, cmd);
--	else if (req->cmd_flags & REQ_DISCARD)
-+	else if (req->op == REQ_OP_DISCARD)
- 		ret = nvme_setup_discard(ns, req, cmd);
- 	else
- 		nvme_setup_rw(ns, req, cmd);
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index 8e8fae8..0f04523 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -175,7 +175,7 @@ static inline u64 nvme_block_nr(struct nvme_ns *ns, sector_t sector)
- 
- static inline unsigned nvme_map_len(struct request *rq)
- {
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->op == REQ_OP_DISCARD)
- 		return sizeof(struct nvme_dsm_range);
- 	else
- 		return blk_rq_bytes(rq);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index ff3c8d7..ea5f5eb 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -363,7 +363,7 @@ static void nvme_free_iod(struct nvme_dev *dev, struct request *req)
- 	__le64 **list = iod_list(req);
- 	dma_addr_t prp_dma = iod->first_dma;
- 
--	if (req->cmd_flags & REQ_DISCARD)
-+	if (req->op == REQ_OP_DISCARD)
- 		kfree(req->completion_data);
- 
- 	if (iod->npages == 0)
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 428c03e..2fc7191 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1012,7 +1012,8 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_6;
- 	} else {
--		scmd_printk(KERN_ERR, SCpnt, "Unknown command %llx\n", (unsigned long long) rq->cmd_flags);
-+		scmd_printk(KERN_ERR, SCpnt, "Unknown command %d,%llx\n",
-+			    rq->op, (unsigned long long) rq->cmd_flags);
- 		goto out;
- 	}
- 
-@@ -1137,21 +1138,27 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = cmd->request;
- 
--	if (rq->cmd_flags & REQ_DISCARD)
-+	switch (rq->op) {
-+	case REQ_OP_DISCARD:
- 		return sd_setup_discard_cmnd(cmd);
--	else if (rq->cmd_flags & REQ_WRITE_SAME)
-+	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
--	else if (rq->cmd_flags & REQ_FLUSH)
--		return sd_setup_flush_cmnd(cmd);
--	else
--		return sd_setup_read_write_cmnd(cmd);
-+	case REQ_OP_READ:
-+	case REQ_OP_WRITE:
-+		if (rq->cmd_flags & REQ_FLUSH)
-+			return sd_setup_flush_cmnd(cmd);
-+		else
-+			return sd_setup_read_write_cmnd(cmd);
-+	default:
-+		BUG();
-+	}
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 8289804..4fba26c 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -514,11 +514,10 @@ static void dm_stat_round(struct dm_stat *s, struct dm_stat_shared *shared,
  }
  
- static void sd_uninit_command(struct scsi_cmnd *SCpnt)
+ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+-			      unsigned long bi_rw, sector_t len,
++			      int idx, sector_t len,
+ 			      struct dm_stats_aux *stats_aux, bool end,
+ 			      unsigned long duration_jiffies)
  {
- 	struct request *rq = SCpnt->request;
+-	unsigned long idx = bi_rw & REQ_WRITE;
+ 	struct dm_stat_shared *shared = &s->stat_shared[entry];
+ 	struct dm_stat_percpu *p;
  
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->op == REQ_OP_DISCARD)
- 		__free_page(rq->completion_data);
+@@ -584,7 +583,7 @@ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+ #endif
+ }
  
- 	if (SCpnt->cmnd != rq->cmd) {
-@@ -1769,7 +1776,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	unsigned char op = SCpnt->cmnd[0];
- 	unsigned char unmap = SCpnt->cmnd[1] & 8;
+-static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
++static void __dm_stat_bio(struct dm_stat *s, int bi_rw,
+ 			  sector_t bi_sector, sector_t end_sector,
+ 			  bool end, unsigned long duration_jiffies,
+ 			  struct dm_stats_aux *stats_aux)
+@@ -645,8 +644,8 @@ void dm_stats_account_io(struct dm_stats *stats, unsigned long bi_rw,
+ 		last = raw_cpu_ptr(stats->last);
+ 		stats_aux->merged =
+ 			(bi_sector == (ACCESS_ONCE(last->last_sector) &&
+-				       ((bi_rw & (REQ_WRITE | REQ_DISCARD)) ==
+-					(ACCESS_ONCE(last->last_rw) & (REQ_WRITE | REQ_DISCARD)))
++				       ((bi_rw == WRITE) ==
++					(ACCESS_ONCE(last->last_rw) == WRITE))
+ 				       ));
+ 		ACCESS_ONCE(last->last_sector) = end_sector;
+ 		ACCESS_ONCE(last->last_rw) = bi_rw;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 5432da7..98fea0e 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -723,8 +723,9 @@ static void start_io_acct(struct dm_io *io)
+ 		atomic_inc_return(&md->pending[rw]));
  
--	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
-+	if (req->op == REQ_OP_DISCARD || req->op == REQ_OP_WRITE_SAME) {
- 		if (!result) {
- 			good_bytes = blk_rq_bytes(req);
- 			scsi_set_resid(SCpnt, 0);
+ 	if (unlikely(dm_stats_used(&md->stats)))
+-		dm_stats_account_io(&md->stats, bio->bi_rw, bio->bi_iter.bi_sector,
+-				    bio_sectors(bio), false, 0, &io->stats_aux);
++		dm_stats_account_io(&md->stats, bio_data_dir(bio),
++				    bio->bi_iter.bi_sector, bio_sectors(bio),
++				    false, 0, &io->stats_aux);
+ }
+ 
+ static void end_io_acct(struct dm_io *io)
+@@ -738,8 +739,9 @@ static void end_io_acct(struct dm_io *io)
+ 	generic_end_io_acct(rw, &dm_disk(md)->part0, io->start_time);
+ 
+ 	if (unlikely(dm_stats_used(&md->stats)))
+-		dm_stats_account_io(&md->stats, bio->bi_rw, bio->bi_iter.bi_sector,
+-				    bio_sectors(bio), true, duration, &io->stats_aux);
++		dm_stats_account_io(&md->stats, bio_data_dir(bio),
++				    bio->bi_iter.bi_sector, bio_sectors(bio),
++				    true, duration, &io->stats_aux);
+ 
+ 	/*
+ 	 * After this is decremented the bio must not be touched if it is
+@@ -1121,9 +1123,9 @@ static void rq_end_stats(struct mapped_device *md, struct request *orig)
+ 	if (unlikely(dm_stats_used(&md->stats))) {
+ 		struct dm_rq_target_io *tio = tio_from_request(orig);
+ 		tio->duration_jiffies = jiffies - tio->duration_jiffies;
+-		dm_stats_account_io(&md->stats, orig->cmd_flags, blk_rq_pos(orig),
+-				    tio->n_sectors, true, tio->duration_jiffies,
+-				    &tio->stats_aux);
++		dm_stats_account_io(&md->stats, rq_data_dir(orig),
++				    blk_rq_pos(orig), tio->n_sectors, true,
++				    tio->duration_jiffies, &tio->stats_aux);
+ 	}
+ }
+ 
+@@ -2082,8 +2084,9 @@ static void dm_start_request(struct mapped_device *md, struct request *orig)
+ 		struct dm_rq_target_io *tio = tio_from_request(orig);
+ 		tio->duration_jiffies = jiffies;
+ 		tio->n_sectors = blk_rq_sectors(orig);
+-		dm_stats_account_io(&md->stats, orig->cmd_flags, blk_rq_pos(orig),
+-				    tio->n_sectors, false, 0, &tio->stats_aux);
++		dm_stats_account_io(&md->stats, rq_data_dir(orig),
++				    blk_rq_pos(orig), tio->n_sectors, false, 0,
++				    &tio->stats_aux);
+ 	}
+ 
+ 	/*
 -- 
 2.7.2
