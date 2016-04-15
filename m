@@ -1,135 +1,168 @@
 From: mchristi@redhat.com
-Subject: [PATCH 13/42] xfs: set bi_op to REQ_OP
-Date: Fri, 15 Apr 2016 05:39:33 -0500
-Message-ID: <1460716802-2294-14-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 41/42] block: do not use REQ_FLUSH for
+	tracking flush support
+Date: Fri, 15 Apr 2016 05:40:01 -0500
+Message-ID: <1460716802-2294-42-git-send-email-mchristi@redhat.com>
 References: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has xfs use bio->bi_op for REQ_OPs and rq_flag_bits to bio->bi_rw.
+The last patch added a REQ_OP_FLUSH for request_fn drivers
+and the next patch renames REQ_FLUSH to REQ_PREFLUSH which
+will be used by file systems and make_request_fn drivers so
+they can send a write/flush combo.
+
+This patch drops xen's use of REQ_FLUSH to track if it supports
+REQ_OP_FLUSH requests, so REQ_FLUSH can be deleted.
+
+v6:
+- Dropped parts of patch handled by Jens's QUEUE_FLAG_WC/FUA
+patches and modified patch to check feature_flush/fua bits.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Acked-by: Dave Chinner <dchinner@redhat.com>
-
 ---
- fs/xfs/xfs_aops.c |  3 +--
- fs/xfs/xfs_buf.c  | 27 +++++++++++++++------------
- 2 files changed, 16 insertions(+), 14 deletions(-)
+ drivers/block/xen-blkfront.c | 47 ++++++++++++++++++++++----------------------
+ 1 file changed, 24 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 5852c5a..6c20336 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -439,10 +439,9 @@ xfs_submit_ioend(
- 
- 	ioend->io_bio->bi_private = ioend;
- 	ioend->io_bio->bi_end_io = xfs_end_bio;
-+	ioend->io_bio->bi_op = REQ_OP_WRITE;
- 	if (wbc->sync_mode)
- 		ioend->io_bio->bi_rw = WRITE_SYNC;
--	else
--		ioend->io_bio->bi_rw = WRITE;
- 	/*
- 	 * If we are failing the IO now, just mark the ioend with an
- 	 * error and finish it. This will run IO completion immediately
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 079bb77..917774e 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1131,7 +1131,8 @@ xfs_buf_ioapply_map(
- 	int		map,
- 	int		*buf_offset,
- 	int		*count,
--	int		rw)
-+	int		op,
-+	int		op_flags)
- {
- 	int		page_index;
- 	int		total_nr_pages = bp->b_page_count;
-@@ -1170,7 +1171,8 @@ next_chunk:
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 
- 	for (; size && nr_pages; nr_pages--, page_index++) {
- 		int	rbytes, nbytes = PAGE_SIZE - offset;
-@@ -1214,7 +1216,8 @@ _xfs_buf_ioapply(
- 	struct xfs_buf	*bp)
- {
- 	struct blk_plug	plug;
--	int		rw;
-+	int		op;
-+	int		op_flags = 0;
- 	int		offset;
- 	int		size;
- 	int		i;
-@@ -1233,14 +1236,13 @@ _xfs_buf_ioapply(
- 		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
- 
- 	if (bp->b_flags & XBF_WRITE) {
-+		op = REQ_OP_WRITE;
- 		if (bp->b_flags & XBF_SYNCIO)
--			rw = WRITE_SYNC;
--		else
--			rw = WRITE;
-+			op_flags = WRITE_SYNC;
- 		if (bp->b_flags & XBF_FUA)
--			rw |= REQ_FUA;
-+			op_flags |= REQ_FUA;
- 		if (bp->b_flags & XBF_FLUSH)
--			rw |= REQ_FLUSH;
-+			op_flags |= REQ_FLUSH;
- 
- 		/*
- 		 * Run the write verifier callback function if it exists. If
-@@ -1270,13 +1272,14 @@ _xfs_buf_ioapply(
- 			}
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index f01691a..d6429e7 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -196,6 +196,7 @@ struct blkfront_info
+ 	unsigned int nr_ring_pages;
+ 	struct request_queue *rq;
+ 	unsigned int feature_flush;
++	unsigned int feature_fua;
+ 	unsigned int feature_discard:1;
+ 	unsigned int feature_secdiscard:1;
+ 	unsigned int discard_granularity;
+@@ -763,19 +764,14 @@ static int blkif_queue_rw_req(struct request *req, struct blkfront_ring_info *ri
+ 			 * implement it the same way.  (It's also a FLUSH+FUA,
+ 			 * since it is guaranteed ordered WRT previous writes.)
+ 			 */
+-			switch (info->feature_flush &
+-				((REQ_FLUSH|REQ_FUA))) {
+-			case REQ_FLUSH|REQ_FUA:
++			if (info->feature_flush && info->feature_fua)
+ 				ring_req->operation =
+ 					BLKIF_OP_WRITE_BARRIER;
+-				break;
+-			case REQ_FLUSH:
++			else if (info->feature_flush)
+ 				ring_req->operation =
+ 					BLKIF_OP_FLUSH_DISKCACHE;
+-				break;
+-			default:
++			else
+ 				ring_req->operation = 0;
+-			}
  		}
- 	} else if (bp->b_flags & XBF_READ_AHEAD) {
--		rw = READA;
-+		op = REQ_OP_READ;
-+		op_flags = REQ_RAHEAD;
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
+ 		ring_req->u.rw.nr_segments = num_grant;
+ 		if (unlikely(require_extra_req)) {
+@@ -866,9 +862,9 @@ static inline bool blkif_request_flush_invalid(struct request *req,
+ {
+ 	return ((req->cmd_type != REQ_TYPE_FS) ||
+ 		((req->op == REQ_OP_FLUSH) &&
+-		 !(info->feature_flush & REQ_FLUSH)) ||
++		 !info->feature_flush) ||
+ 		((req->cmd_flags & REQ_FUA) &&
+-		 !(info->feature_flush & REQ_FUA)));
++		 !info->feature_fua));
+ }
  
- 	/* we only use the buffer cache for meta-data */
--	rw |= REQ_META;
-+	op_flags |= REQ_META;
+ static int blkif_queue_rq(struct blk_mq_hw_ctx *hctx,
+@@ -985,24 +981,22 @@ static int xlvbd_init_blk_queue(struct gendisk *gd, u16 sector_size,
+ 	return 0;
+ }
  
+-static const char *flush_info(unsigned int feature_flush)
++static const char *flush_info(struct blkfront_info *info)
+ {
+-	switch (feature_flush & ((REQ_FLUSH | REQ_FUA))) {
+-	case REQ_FLUSH|REQ_FUA:
++	if (info->feature_flush && info->feature_fua)
+ 		return "barrier: enabled;";
+-	case REQ_FLUSH:
++	else if (info->feature_fua)
+ 		return "flush diskcache: enabled;";
+-	default:
++	else
+ 		return "barrier or flush: disabled;";
+-	}
+ }
+ 
+ static void xlvbd_flush(struct blkfront_info *info)
+ {
+-	blk_queue_write_cache(info->rq, info->feature_flush & REQ_FLUSH,
+-				info->feature_flush & REQ_FUA);
++	blk_queue_write_cache(info->rq, info->feature_flush ? true : false,
++			      info->feature_flush ? true : false);
+ 	pr_info("blkfront: %s: %s %s %s %s %s\n",
+-		info->gd->disk_name, flush_info(info->feature_flush),
++		info->gd->disk_name, flush_info(info),
+ 		"persistent grants:", info->feature_persistent ?
+ 		"enabled;" : "disabled;", "indirect descriptors:",
+ 		info->max_indirect_segments ? "enabled;" : "disabled;");
+@@ -1621,6 +1615,7 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
+ 			if (unlikely(error)) {
+ 				if (error == -EOPNOTSUPP)
+ 					error = 0;
++				info->feature_fua = 0;
+ 				info->feature_flush = 0;
+ 				xlvbd_flush(info);
+ 			}
+@@ -2315,6 +2310,7 @@ static void blkfront_gather_backend_features(struct blkfront_info *info)
+ 	unsigned int indirect_segments;
+ 
+ 	info->feature_flush = 0;
++	info->feature_fua = 0;
+ 
+ 	err = xenbus_gather(XBT_NIL, info->xbdev->otherend,
+ 			"feature-barrier", "%d", &barrier,
+@@ -2327,8 +2323,11 @@ static void blkfront_gather_backend_features(struct blkfront_info *info)
+ 	 *
+ 	 * If there are barriers, then we use flush.
+ 	 */
+-	if (!err && barrier)
+-		info->feature_flush = REQ_FLUSH | REQ_FUA;
++	if (!err && barrier) {
++		info->feature_flush = 1;
++		info->feature_fua = 1;
++	}
++
  	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
-@@ -1288,7 +1291,7 @@ _xfs_buf_ioapply(
- 	size = BBTOB(bp->b_io_length);
- 	blk_start_plug(&plug);
- 	for (i = 0; i < bp->b_map_count; i++) {
--		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
-+		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
- 		if (bp->b_error)
- 			break;
- 		if (size <= 0)
+ 	 * And if there is "feature-flush-cache" use that above
+ 	 * barriers.
+@@ -2337,8 +2336,10 @@ static void blkfront_gather_backend_features(struct blkfront_info *info)
+ 			"feature-flush-cache", "%d", &flush,
+ 			NULL);
+ 
+-	if (!err && flush)
+-		info->feature_flush = REQ_FLUSH;
++	if (!err && flush) {
++		info->feature_flush = 1;
++		info->feature_fua = 0;
++	}
+ 
+ 	err = xenbus_gather(XBT_NIL, info->xbdev->otherend,
+ 			"feature-discard", "%d", &discard,
 -- 
 2.7.2
