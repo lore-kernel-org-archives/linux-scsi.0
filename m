@@ -1,169 +1,199 @@
 From: mchristi@redhat.com
-Subject: [PATCH 28/42] block: prepare mq request creation to
-	use REQ_OPs
-Date: Fri, 15 Apr 2016 05:39:48 -0500
-Message-ID: <1460716802-2294-29-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 39/42] block: shrink bio/request fields
+Date: Fri, 15 Apr 2016 05:39:59 -0500
+Message-ID: <1460716802-2294-40-git-send-email-mchristi@redhat.com>
 References: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch modifies the blk mq request creation code to use
-separate variables for the operation and flags, because in the
-the next patches the struct request users will be converted like
-was done for bios. request->op will be used for the REQ_OP and
-request->cmd_flags for the rq_flag_bits.
+bi_op only needed to be a int for temp compat reasons, so
+this patch shrinks it to u8.
 
-Like the non mq patch there is some temporary compat code in
-blk_mq_rq_ctx_init to allow users to read the operation from the
-cmd_flags. This will be deleted in one of the last patches when all
-drivers have been converted.
+There is no need for bi_rw to be so large now, so that is
+reduced to a unsigned int and bi_ioprio is just put in
+its own field.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-mq.c | 38 +++++++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 17 deletions(-)
+ block/blk-core.c           |  2 +-
+ drivers/md/dm-flakey.c     |  2 +-
+ drivers/md/raid5.c         | 13 +++++++------
+ fs/btrfs/check-integrity.c |  4 ++--
+ fs/btrfs/inode.c           |  2 +-
+ include/linux/bio.h        | 13 ++-----------
+ include/linux/blk_types.h  | 11 +++--------
+ include/linux/blkdev.h     |  2 +-
+ 8 files changed, 18 insertions(+), 31 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 1699baf..4843c0b 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -159,16 +159,19 @@ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
- EXPORT_SYMBOL(blk_mq_can_queue);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index ccf2056..57d21a0 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1854,7 +1854,7 @@ static void handle_bad_sector(struct bio *bio)
+ 	char b[BDEVNAME_SIZE];
  
- static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
--			       struct request *rq, unsigned int rw_flags)
-+			       struct request *rq, int op,
-+			       unsigned int op_flags)
- {
- 	if (blk_queue_io_stat(q))
--		rw_flags |= REQ_IO_STAT;
-+		op_flags |= REQ_IO_STAT;
+ 	printk(KERN_INFO "attempt to access beyond end of device\n");
+-	printk(KERN_INFO "%s: rw=%d,%ld, want=%Lu, limit=%Lu\n",
++	printk(KERN_INFO "%s: rw=%d,%u, want=%Lu, limit=%Lu\n",
+ 			bdevname(bio->bi_bdev, b),
+ 			bio->bi_op, bio->bi_rw,
+ 			(unsigned long long)bio_end_sector(bio),
+diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
+index b7341de..29b99fb 100644
+--- a/drivers/md/dm-flakey.c
++++ b/drivers/md/dm-flakey.c
+@@ -266,7 +266,7 @@ static void corrupt_bio_data(struct bio *bio, struct flakey_c *fc)
+ 		data[fc->corrupt_bio_byte - 1] = fc->corrupt_bio_value;
  
- 	INIT_LIST_HEAD(&rq->queuelist);
- 	/* csd/requeue_work/fifo_time is initialized before use */
- 	rq->q = q;
- 	rq->mq_ctx = ctx;
--	rq->cmd_flags |= rw_flags;
-+	rq->op = op;
-+	/* tmp compat - allow users to check either one for the op */
-+	rq->cmd_flags |= op | op_flags;
- 	/* do not touch atomic flags, it needs atomic ops against the timer */
- 	rq->cpu = -1;
- 	INIT_HLIST_NODE(&rq->hash);
-@@ -203,11 +206,11 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
- 	rq->end_io_data = NULL;
- 	rq->next_rq = NULL;
+ 		DMDEBUG("Corrupting data bio=%p by writing %u to byte %u "
+-			"(rw=%c bi_rw=%lu bi_sector=%llu cur_bytes=%u)\n",
++			"(rw=%c bi_rw=%u bi_sector=%llu cur_bytes=%u)\n",
+ 			bio, fc->corrupt_bio_value, fc->corrupt_bio_byte,
+ 			(bio_data_dir(bio) == WRITE) ? 'w' : 'r', bio->bi_rw,
+ 			(unsigned long long)bio->bi_iter.bi_sector, bio_bytes);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c36b817..7fb693f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1006,9 +1006,9 @@ again:
+ 				: raid5_end_read_request;
+ 			bi->bi_private = sh;
  
--	ctx->rq_dispatched[rw_is_sync(rw_flags)]++;
-+	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
- }
+-			pr_debug("%s: for %llu schedule op %ld on disc %d\n",
++			pr_debug("%s: for %llu schedule op %d,%u on disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+-				bi->bi_rw, i);
++				bi->bi_op, bi->bi_rw, i);
+ 			atomic_inc(&sh->count);
+ 			if (sh != head_sh)
+ 				atomic_inc(&head_sh->count);
+@@ -1058,10 +1058,10 @@ again:
+ 			rbi->bi_end_io = raid5_end_write_request;
+ 			rbi->bi_private = sh;
  
- static struct request *
--__blk_mq_alloc_request(struct blk_mq_alloc_data *data, int rw)
-+__blk_mq_alloc_request(struct blk_mq_alloc_data *data, int op, int op_flags)
- {
- 	struct request *rq;
- 	unsigned int tag;
-@@ -222,7 +225,7 @@ __blk_mq_alloc_request(struct blk_mq_alloc_data *data, int rw)
+-			pr_debug("%s: for %llu schedule op %ld on "
++			pr_debug("%s: for %llu schedule op %d,%u on "
+ 				 "replacement disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+-				rbi->bi_rw, i);
++				rbi->bi_op, rbi->bi_rw, i);
+ 			atomic_inc(&sh->count);
+ 			if (sh != head_sh)
+ 				atomic_inc(&head_sh->count);
+@@ -1093,8 +1093,9 @@ again:
+ 		if (!rdev && !rrdev) {
+ 			if (op_is_write(op))
+ 				set_bit(STRIPE_DEGRADED, &sh->state);
+-			pr_debug("skip op %ld on disc %d for sector %llu\n",
+-				bi->bi_rw, i, (unsigned long long)sh->sector);
++			pr_debug("skip op %d,%u on disc %d for sector %llu\n",
++				 bi->bi_op, bi->bi_rw, i,
++				 (unsigned long long)sh->sector);
+ 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
  		}
+diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
+index c4a48e8..921a858 100644
+--- a/fs/btrfs/check-integrity.c
++++ b/fs/btrfs/check-integrity.c
+@@ -2943,7 +2943,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bio(rw=%d,0x%lx, bi_vcnt=%u,"
++			       "submit_bio(rw=%d,0x%x, bi_vcnt=%u,"
+ 			       " bi_sector=%llu (bytenr %llu), bi_bdev=%p)\n",
+ 			       bio->bi_op, bio->bi_rw, bio->bi_vcnt,
+ 			       (unsigned long long)bio->bi_iter.bi_sector,
+@@ -2986,7 +2986,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
+ 		if (dev_state->state->print_mask &
+ 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
+ 			printk(KERN_INFO
+-			       "submit_bio(rw=%d,0x%lx FLUSH, bdev=%p)\n",
++			       "submit_bio(rw=%d,0x%x FLUSH, bdev=%p)\n",
+ 			       bio->bi_op, bio->bi_rw, bio->bi_bdev);
+ 		if (!dev_state->dummy_block_for_bio_bh_flush.is_iodone) {
+ 			if ((dev_state->state->print_mask &
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index bd214ab..e2617ba 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8153,7 +8153,7 @@ static void btrfs_end_dio_bio(struct bio *bio)
  
- 		rq->tag = tag;
--		blk_mq_rq_ctx_init(data->q, data->ctx, rq, rw);
-+		blk_mq_rq_ctx_init(data->q, data->ctx, rq, op, op_flags);
- 		return rq;
- 	}
+ 	if (err)
+ 		btrfs_warn(BTRFS_I(dip->inode)->root->fs_info,
+-			   "direct IO failed ino %llu rw %d,%lu sector %#Lx len %u err no %d",
++			   "direct IO failed ino %llu rw %d,0x%x sector %#Lx len %u err no %d",
+ 			   btrfs_ino(dip->inode), bio->bi_op, bio->bi_rw,
+ 			   (unsigned long long)bio->bi_iter.bi_sector,
+ 			   bio->bi_iter.bi_size, err);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 9e7b18b..5ece950 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -44,18 +44,9 @@
+ #define BIO_MAX_SIZE		(BIO_MAX_PAGES << PAGE_SHIFT)
+ #define BIO_MAX_SECTORS		(BIO_MAX_SIZE >> 9)
  
-@@ -246,7 +249,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, int rw,
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 	blk_mq_set_alloc_data(&alloc_data, q, flags, ctx, hctx);
+-/*
+- * upper 16 bits of bi_rw define the io priority of this bio
+- */
+-#define BIO_PRIO_SHIFT	(8 * sizeof(unsigned long) - IOPRIO_BITS)
+-#define bio_prio(bio)	((bio)->bi_rw >> BIO_PRIO_SHIFT)
++#define bio_prio(bio)		(bio)->bi_ioprio
+ #define bio_prio_valid(bio)	ioprio_valid(bio_prio(bio))
+-
+-#define bio_set_prio(bio, prio)		do {			\
+-	WARN_ON(prio >= (1 << IOPRIO_BITS));			\
+-	(bio)->bi_rw &= ((1UL << BIO_PRIO_SHIFT) - 1);		\
+-	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
+-} while (0)
++#define bio_set_prio(bio, prio)	((bio)->bi_ioprio = prio)
  
--	rq = __blk_mq_alloc_request(&alloc_data, rw);
-+	rq = __blk_mq_alloc_request(&alloc_data, rw, 0);
- 	if (!rq && !(flags & BLK_MQ_REQ_NOWAIT)) {
- 		__blk_mq_run_hw_queue(hctx);
- 		blk_mq_put_ctx(ctx);
-@@ -254,7 +257,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, int rw,
- 		ctx = blk_mq_get_ctx(q);
- 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 		blk_mq_set_alloc_data(&alloc_data, q, flags, ctx, hctx);
--		rq =  __blk_mq_alloc_request(&alloc_data, rw);
-+		rq =  __blk_mq_alloc_request(&alloc_data, rw, 0);
- 		ctx = alloc_data.ctx;
- 	}
- 	blk_mq_put_ctx(ctx);
-@@ -1170,28 +1173,29 @@ static struct request *blk_mq_map_request(struct request_queue *q,
- 	struct blk_mq_hw_ctx *hctx;
- 	struct blk_mq_ctx *ctx;
- 	struct request *rq;
--	int rw = bio_data_dir(bio);
-+	int op = bio_data_dir(bio);
-+	int op_flags = 0;
- 	struct blk_mq_alloc_data alloc_data;
+ /*
+  * various member access, note that bio_data should of course not be used
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index b4251ed..498f395 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -48,14 +48,9 @@ struct bio {
+ 	struct block_device	*bi_bdev;
+ 	unsigned int		bi_flags;	/* status, command, etc */
+ 	int			bi_error;
+-	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
+-						 * top bits priority
+-						 */
+-	/*
+-	 * this will be a u8 in the next patches and bi_rw can be shrunk to
+-	 * a u32. For compat in these transistional patches op is a int here.
+-	 */
+-	int			bi_op;		/* REQ_OP */
++	unsigned int		bi_rw;		/* rq_flag_bits */
++	unsigned short		bi_ioprio;
++	u8			bi_op;		/* REQ_OP */
  
- 	blk_queue_enter_live(q);
- 	ctx = blk_mq_get_ctx(q);
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
  
--	if (rw_is_sync(bio->bi_rw))
--		rw |= REQ_SYNC;
-+	if (rw_is_sync(bio->bi_op | bio->bi_rw))
-+		op_flags |= REQ_SYNC;
+ 	struct bvec_iter	bi_iter;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 5694894..b483a66 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -96,7 +96,7 @@ struct request {
+ 	struct request_queue *q;
+ 	struct blk_mq_ctx *mq_ctx;
  
--	trace_block_getrq(q, bio, rw);
-+	trace_block_getrq(q, bio, op);
- 	blk_mq_set_alloc_data(&alloc_data, q, BLK_MQ_REQ_NOWAIT, ctx, hctx);
--	rq = __blk_mq_alloc_request(&alloc_data, rw);
-+	rq = __blk_mq_alloc_request(&alloc_data, op, op_flags);
- 	if (unlikely(!rq)) {
- 		__blk_mq_run_hw_queue(hctx);
- 		blk_mq_put_ctx(ctx);
--		trace_block_sleeprq(q, bio, rw);
-+		trace_block_sleeprq(q, bio, op);
- 
- 		ctx = blk_mq_get_ctx(q);
- 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 		blk_mq_set_alloc_data(&alloc_data, q, 0, ctx, hctx);
--		rq = __blk_mq_alloc_request(&alloc_data, rw);
-+		rq = __blk_mq_alloc_request(&alloc_data, op, op_flags);
- 		ctx = alloc_data.ctx;
- 		hctx = alloc_data.hctx;
- 	}
-@@ -1245,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
-  */
- static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_map_ctx data;
- 	struct request *rq;
-@@ -1342,7 +1346,7 @@ done:
-  */
- static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_plug *plug;
- 	unsigned int request_count = 0;
+-	int op;
++	u8 op;
+ 	u64 cmd_flags;
+ 	unsigned cmd_type;
+ 	unsigned long atomic_flags;
 -- 
 2.7.2
