@@ -1,49 +1,29 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCHv3 0/2] target: make location of /var/targets configurable
-Date: Thu, 14 Apr 2016 18:18:49 -0700
-Message-ID: <cover.1460678002.git.lduncan@suse.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/5] hisi_sas: v2 hw SATA fixes
+Date: Thu, 14 Apr 2016 22:20:01 -0400
+Message-ID: <yq14mb3txym.fsf@sermon.lab.mkp.net>
+References: <1460107395-24501-1-git-send-email-john.garry@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1460107395-24501-1-git-send-email-john.garry@huawei.com> (John
+	Garry's message of "Fri, 8 Apr 2016 17:23:10 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, nab@linux-iscsi.org, target-devel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, hch@infradead.org, hare@suse.de, agrover@redhat.com, jxm@netiant.com, Lee Duncan <lduncan@suse.com>
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-These patches make the location of "/var/target" configurable,
-though it still defauls to "/var/target".
+>>>>> "John" == John Garry <john.garry@huawei.com> writes:
 
-This "target database directory" can only be changed
-after the target_core_mod loads but before any
-fabric drivers are loaded, and must be the pathname
-of an existing directory.
+John> This patchset introduces SATA support fixes for the HiSilicon v2
+John> hw SAS controller.
 
-This configuration is accomplished via the configfs
-top-level target attribute "dbroot", i.e. dumping
-out "/sys/kernel/config/target/dbroot" will normally
-return "/var/target". Writing to this attribute
-changes the loation where the kernel looks for the
-target database.
+John> Fixes include: - attach issue for SATA disk attached through
+John> expander - intermittent issue for directly attaching multiple SATA
+John> disks - add support for directly attaching SATA disk to phy index
+John> 4+ - ITCT config issue
 
-The first patch creates this configurable value for
-the "dbroot", and the second patch modifies users
-of this directory to use this new attribute.
-
-Changes from v2:
- * Add locking around access to target driver list
-
-Changes from v1:
- * Only allow changing target DB root before it
-   can be used by others
- * Validate that new DB root is a valid directory
-
-Lee Duncan (2):
-  target: make target db location configurable
-  target: use new "dbroot" target attribute
-
- drivers/target/target_core_alua.c     |  6 ++--
- drivers/target/target_core_configfs.c | 62 +++++++++++++++++++++++++++++++++++
- drivers/target/target_core_internal.h |  6 ++++
- drivers/target/target_core_pr.c       |  2 +-
- 4 files changed, 72 insertions(+), 4 deletions(-)
+Applied to 4.7/scsi-queue.
 
 -- 
-2.1.4
+Martin K. Petersen	Oracle Linux Engineering
