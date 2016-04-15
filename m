@@ -1,54 +1,50 @@
-From: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Subject: RE: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
-Date: Fri, 15 Apr 2016 15:27:46 +0530
-Message-ID: <649a6feca5fbc7e60aafd7d5e59e1edc@mail.gmail.com>
-References: <1459533389-19648-1-git-send-email-joe.lawrence@stratus.com>
-	<1459536717.30035.113.camel@localhost.localdomain>	<56FEC864.5050008@stratus.com>
-	<1459541058.30035.126.camel@localhost.localdomain>	<38b26e94d10098596fb11cf9bafcb7c0@mail.gmail.com>
-	<c762138f15c771759b451b16d97f199e@mail.gmail.com>	<570B93C9.3040102@stratus.com>
- <yq1r3e7sibv.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: [PATCH] qla2xxx: rewrite code to avoid hitting gcc bug 70646
+Date: Fri, 15 Apr 2016 12:36:23 +0200
+Message-ID: <1460716583-15673-1-git-send-email-dvlasenk@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:34977 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbcDOJ5s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 05:57:48 -0400
-Received: by mail-yw0-f176.google.com with SMTP id i84so131118043ywc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2016 02:57:47 -0700 (PDT)
-In-Reply-To: <yq1r3e7sibv.fsf@sermon.lab.mkp.net>
+Received: from mx1.redhat.com ([209.132.183.28]:42287 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751883AbcDOKgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 06:36:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, emilne@redhat.com, linux-scsi@vger.kernel.org, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Calvin Owens <calvinowens@fb.com>
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, qla2xxx-upstream@qlogic.com, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Joe ,
- The below mentioned patch is an older patch, verified latest code also
-the code before merging(mpt2sas & mpt3sas) didn't find changes of below
-patch. So I am searching for the patch which has removed the
-functionality/changes of the below patch.
+More info here:
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
 
-I shall get back to you on this by Monday.
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: Himanshu Madhani <himanshu.madhani@qlogic.com>
+CC: James Bottomley <James.Bottomley@HansenPartnership.com>
+CC: qla2xxx-upstream@qlogic.com
+CC: Josh Poimboeuf <jpoimboe@redhat.com>
+CC: linux-scsi@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/qla2xxx/qla_attr.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Thanks,
- Chaitra
-
------Original Message-----
-From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-Sent: Friday, April 15, 2016 8:13 AM
-To: Joe Lawrence
-Cc: Chaitra Basappa; Sathya Prakash Veerichetty; emilne@redhat.com;
-linux-scsi@vger.kernel.org; Suganath Prabu Subramani; Calvin Owens
-Subject: Re: [PATCH] mpt3sas - remove unused fw_event_work delayed_work
-
->>>>> "Joe" == Joe Lawrence <joe.lawrence@stratus.com> writes:
-
-Joe> Do we know why f1c35e6aea579 "mpt2sas: RESCAN Barrier work is added
-Joe> in case of HBA reset" was unneeded for the mpt3 version?  If that
-Joe> is interesting, that info could be added to v2 commit message as
-Joe> well.
-
-Chaitra?
-
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 4dc06a13..2dd9c72 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2003,9 +2003,14 @@ static void
+ qla2x00_get_host_fabric_name(struct Scsi_Host *shost)
+ {
+ 	scsi_qla_host_t *vha = shost_priv(shost);
++	/*
++	 * This can trigger gcc 4.9/5.3 bug.
++	 * See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+ 	uint8_t node_name[WWN_SIZE] = { 0xFF, 0xFF, 0xFF, 0xFF, \
+ 		0xFF, 0xFF, 0xFF, 0xFF};
+ 	u64 fabric_name = wwn_to_u64(node_name);
++	 */
++	u64 fabric_name = (u64)(s64)-1; /* the same as above */
+ 
+ 	if (vha->device_flags & SWITCH_FOUND)
+ 		fabric_name = wwn_to_u64(vha->fabric_node_name);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.8.1.4
+
