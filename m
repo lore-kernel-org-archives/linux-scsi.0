@@ -1,44 +1,50 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 6/9] block: Add 'zoned' sysfs queue attribute
-Date: Fri, 15 Apr 2016 11:42:19 -0700
-Message-ID: <5711360B.90309@sandisk.com>
-References: <1459764020-126038-1-git-send-email-hare@suse.de>
- <1459764020-126038-7-git-send-email-hare@suse.de>
- <571128C7.1060107@sandisk.com> <57112CDE.2080303@suse.de>
+From: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: Re: [PATCH] qla2xxx: rewrite code to avoid hitting gcc bug 70646
+Date: Fri, 15 Apr 2016 20:56:25 +0200
+Message-ID: <57113959.8050103@redhat.com>
+References: <1460716583-15673-1-git-send-email-dvlasenk@redhat.com> <1460731203.2331.7.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0082.outbound.protection.outlook.com ([157.56.110.82]:42816
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751108AbcDOSmY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2016 14:42:24 -0400
-In-Reply-To: <57112CDE.2080303@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1460731203.2331.7.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: qla2xxx-upstream@qlogic.com, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-On 04/15/2016 11:03 AM, Hannes Reinecke wrote:
-> On 04/15/2016 07:45 PM, Bart Van Assche wrote:
->> Additionally, have you considered to create one sysfs directory per zone
->> instead of one sysfs attribute with all zone information? From
->> Documentation/filesystems/sysfs.txt: "Attributes should be ASCII text
->> files, preferably with only one value per file."
+On 04/15/2016 04:40 PM, James Bottomley wrote:
+> On Fri, 2016-04-15 at 12:36 +0200, Denys Vlasenko wrote:
+>> More info here:
+>> https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+> 
+> This bug is under investigation, so I'd rather not alter code for a gcc
+> bug until we know if we can supply options to fix it rather than
+> changing code.
+
+
+Background. The bug exists in gcc for 2 years, but it is rather
+hard to trigger, so nobody noticed.
+
+Unfortunately for kernel, these two commits landed in Linus tree
+in March 16 and 17:
+
+
+On 04/13/2016 05:36 AM, Josh Poimboeuf wrote:
+> It occurs with the combination of the following two recent commits:
 >
-> Yes, I have considered it.
-> But doing so would require me to add about 20k sysfs attributes.
-> For no apparent gain.
-> So I've settled on this condensed approach here.
+> - bc27fb68aaad ("include/uapi/linux/byteorder, swab: force inlining of some byteswap operations")
+> - ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn access")
 
-Hello Hannes,
 
-My understanding is that the one-value-per-file rule was introduced for 
-sysfs to make it easy for software, e.g. shell scripts, to process that 
-information. If multiple values occur in the same sysfs file sometimes 
-complicated code is needed in shell scripts to parse these values. If 
-one value is present in each sysfs file it becomes much easier for 
-software to process that sysfs information.
+and now *many* users of qla2x00 and new-ish gcc are going to
+very much notice it, as their kernels will start crashing reliably.
 
-Bart.
+The commits can be reverted, sure, but they per se do not contain
+anything unusual. They, together with not very typical construct
+in qla2x00_get_host_fabric_name, one
+which boils down to "swab64p(constant_array_of_8_bytes)",
+just happen to nudge gcc in a right way to finally trigger the bug.
+
+So I came with another idea how to forestall the imminent deluge of
+qla2x00 oops reports - this patch.
