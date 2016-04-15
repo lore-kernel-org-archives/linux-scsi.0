@@ -1,369 +1,162 @@
 From: mchristi@redhat.com
-Subject: [PATCH 35/42] blktrace: get op from req->op/bio->bi_op
-Date: Fri, 15 Apr 2016 14:16:10 -0500
-Message-ID: <1460747777-8479-36-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 41/42] block: do not use REQ_FLUSH for tracking flush support
+Date: Fri, 15 Apr 2016 14:16:16 -0500
+Message-ID: <1460747777-8479-42-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+Cc: Mike Christie <mchristi@redhat.com>, Juergen Gross <kernel@pfupf.net>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-The bio and request structs now store the operation in
-bio->bi_op/request->op. This patch has blktrace use that
-field instead of bi_rw/cmd_flags.
+The last patch added a REQ_OP_FLUSH for request_fn drivers
+and the next patch renames REQ_FLUSH to REQ_PREFLUSH which
+will be used by file systems and make_request_fn drivers so
+they can send a write/flush combo.
+
+This patch drops xen's use of REQ_FLUSH to track if it supports
+REQ_OP_FLUSH requests, so REQ_FLUSH can be deleted.
+
+v7:
+- Fix feature_flush/fua use.
+
+v6:
+- Dropped parts of patch handled by Jens's QUEUE_FLAG_WC/FUA
+patches and modified patch to check feature_flush/fua bits.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- include/linux/blktrace_api.h  |  2 +-
- include/trace/events/bcache.h | 12 ++++++----
- include/trace/events/block.h  | 31 +++++++++++++++++---------
- kernel/trace/blktrace.c       | 52 +++++++++++++++++++++++--------------------
- 4 files changed, 57 insertions(+), 40 deletions(-)
+Cc: Juergen Gross <kernel@pfupf.net>
 
-diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
-index afc1343..ee25ba4 100644
---- a/include/linux/blktrace_api.h
-+++ b/include/linux/blktrace_api.h
-@@ -109,7 +109,7 @@ static inline int blk_cmd_buf_len(struct request *rq)
- }
- 
- extern void blk_dump_cmd(char *buf, struct request *rq);
--extern void blk_fill_rwbs(char *rwbs, u32 rw, int bytes);
-+extern void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes);
- 
- #endif /* CONFIG_EVENT_TRACING && CONFIG_BLOCK */
- 
-diff --git a/include/trace/events/bcache.h b/include/trace/events/bcache.h
-index 981acf7..8abe564 100644
---- a/include/trace/events/bcache.h
-+++ b/include/trace/events/bcache.h
-@@ -27,7 +27,8 @@ DECLARE_EVENT_CLASS(bcache_request,
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->orig_sector	= bio->bi_iter.bi_sector - 16;
- 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 	),
- 
- 	TP_printk("%d,%d %s %llu + %u (from %d,%d @ %llu)",
-@@ -101,7 +102,8 @@ DECLARE_EVENT_CLASS(bcache_bio,
- 		__entry->dev		= bio->bi_bdev->bd_dev;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 	),
- 
- 	TP_printk("%d,%d  %s %llu + %u",
-@@ -136,7 +138,8 @@ TRACE_EVENT(bcache_read,
- 		__entry->dev		= bio->bi_bdev->bd_dev;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 		__entry->cache_hit = hit;
- 		__entry->bypass = bypass;
- 	),
-@@ -167,7 +170,8 @@ TRACE_EVENT(bcache_write,
- 		__entry->inode		= inode;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 		__entry->writeback = writeback;
- 		__entry->bypass = bypass;
- 	),
-diff --git a/include/trace/events/block.h b/include/trace/events/block.h
-index e8a5eca..4416dcd 100644
---- a/include/trace/events/block.h
-+++ b/include/trace/events/block.h
-@@ -84,7 +84,8 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
- 					0 : blk_rq_sectors(rq);
- 		__entry->errors    = rq->errors;
- 
--		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
-+		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
-+			      blk_rq_bytes(rq));
- 		blk_dump_cmd(__get_str(cmd), rq);
- 	),
- 
-@@ -162,7 +163,7 @@ TRACE_EVENT(block_rq_complete,
- 		__entry->nr_sector = nr_bytes >> 9;
- 		__entry->errors    = rq->errors;
- 
--		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, nr_bytes);
-+		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags, nr_bytes);
- 		blk_dump_cmd(__get_str(cmd), rq);
- 	),
- 
-@@ -198,7 +199,8 @@ DECLARE_EVENT_CLASS(block_rq,
- 		__entry->bytes     = (rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
- 					blk_rq_bytes(rq) : 0;
- 
--		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
-+		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
-+			      blk_rq_bytes(rq));
- 		blk_dump_cmd(__get_str(cmd), rq);
- 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
- 	),
-@@ -272,7 +274,8 @@ TRACE_EVENT(block_bio_bounce,
- 					  bio->bi_bdev->bd_dev : 0;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio_sectors(bio);
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
- 	),
- 
-@@ -310,7 +313,8 @@ TRACE_EVENT(block_bio_complete,
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio_sectors(bio);
- 		__entry->error		= error;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 	),
- 
- 	TP_printk("%d,%d %s %llu + %u [%d]",
-@@ -337,7 +341,8 @@ DECLARE_EVENT_CLASS(block_bio_merge,
- 		__entry->dev		= bio->bi_bdev->bd_dev;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio_sectors(bio);
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
- 	),
- 
-@@ -404,7 +409,8 @@ TRACE_EVENT(block_bio_queue,
- 		__entry->dev		= bio->bi_bdev->bd_dev;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->nr_sector	= bio_sectors(bio);
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
- 	),
- 
-@@ -432,7 +438,7 @@ DECLARE_EVENT_CLASS(block_get_rq,
- 		__entry->dev		= bio ? bio->bi_bdev->bd_dev : 0;
- 		__entry->sector		= bio ? bio->bi_iter.bi_sector : 0;
- 		__entry->nr_sector	= bio ? bio_sectors(bio) : 0;
--		blk_fill_rwbs(__entry->rwbs,
-+		blk_fill_rwbs(__entry->rwbs, bio ? bio->bi_op : 0,
- 			      bio ? bio->bi_rw : 0, __entry->nr_sector);
- 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
-         ),
-@@ -567,7 +573,8 @@ TRACE_EVENT(block_split,
- 		__entry->dev		= bio->bi_bdev->bd_dev;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->new_sector	= new_sector;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
- 	),
- 
-@@ -610,7 +617,8 @@ TRACE_EVENT(block_bio_remap,
- 		__entry->nr_sector	= bio_sectors(bio);
- 		__entry->old_dev	= dev;
- 		__entry->old_sector	= from;
--		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
-+		blk_fill_rwbs(__entry->rwbs, bio->bi_op, bio->bi_rw,
-+			      bio->bi_iter.bi_size);
- 	),
- 
- 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu",
-@@ -656,7 +664,8 @@ TRACE_EVENT(block_rq_remap,
- 		__entry->old_dev	= dev;
- 		__entry->old_sector	= from;
- 		__entry->nr_bios	= blk_rq_count_bios(rq);
--		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
-+		blk_fill_rwbs(__entry->rwbs, rq->op, rq->cmd_flags,
-+			      blk_rq_bytes(rq));
- 	),
- 
- 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu %u",
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index f94e7a2..6a381ea 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -199,7 +199,8 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
-  * blk_io_trace structure and places it in a per-cpu subbuffer.
-  */
- static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
--		     int rw, u32 what, int error, int pdu_len, void *pdu_data)
-+		     int op, int op_flags, u32 what, int error, int pdu_len,
-+		     void *pdu_data)
+---
+ drivers/block/xen-blkfront.c | 47 ++++++++++++++++++++++----------------------
+ 1 file changed, 24 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index f01691a..d6429e7 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -196,6 +196,7 @@ struct blkfront_info
+ 	unsigned int nr_ring_pages;
+ 	struct request_queue *rq;
+ 	unsigned int feature_flush;
++	unsigned int feature_fua;
+ 	unsigned int feature_discard:1;
+ 	unsigned int feature_secdiscard:1;
+ 	unsigned int discard_granularity;
+@@ -763,19 +764,14 @@ static int blkif_queue_rw_req(struct request *req, struct blkfront_ring_info *ri
+ 			 * implement it the same way.  (It's also a FLUSH+FUA,
+ 			 * since it is guaranteed ordered WRT previous writes.)
+ 			 */
+-			switch (info->feature_flush &
+-				((REQ_FLUSH|REQ_FUA))) {
+-			case REQ_FLUSH|REQ_FUA:
++			if (info->feature_flush && info->feature_fua)
+ 				ring_req->operation =
+ 					BLKIF_OP_WRITE_BARRIER;
+-				break;
+-			case REQ_FLUSH:
++			else if (info->feature_flush)
+ 				ring_req->operation =
+ 					BLKIF_OP_FLUSH_DISKCACHE;
+-				break;
+-			default:
++			else
+ 				ring_req->operation = 0;
+-			}
+ 		}
+ 		ring_req->u.rw.nr_segments = num_grant;
+ 		if (unlikely(require_extra_req)) {
+@@ -866,9 +862,9 @@ static inline bool blkif_request_flush_invalid(struct request *req,
  {
- 	struct task_struct *tsk = current;
- 	struct ring_buffer_event *event = NULL;
-@@ -214,13 +215,14 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
- 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
- 		return;
- 
--	what |= ddir_act[rw & WRITE];
--	what |= MASK_TC_BIT(rw, SYNC);
--	what |= MASK_TC_BIT(rw, RAHEAD);
--	what |= MASK_TC_BIT(rw, META);
--	what |= MASK_TC_BIT(rw, DISCARD);
--	what |= MASK_TC_BIT(rw, FLUSH);
--	what |= MASK_TC_BIT(rw, FUA);
-+	what |= ddir_act[op_is_write(op) ? WRITE : READ];
-+	what |= MASK_TC_BIT(op_flags, SYNC);
-+	what |= MASK_TC_BIT(op_flags, RAHEAD);
-+	what |= MASK_TC_BIT(op_flags, META);
-+	what |= MASK_TC_BIT(op_flags, FLUSH);
-+	what |= MASK_TC_BIT(op_flags, FUA);
-+	if (op == REQ_OP_DISCARD)
-+		what |= BLK_TC_ACT(BLK_TC_DISCARD);
- 
- 	pid = tsk->pid;
- 	if (act_log_check(bt, what, sector, pid))
-@@ -708,11 +710,11 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
- 
- 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		what |= BLK_TC_ACT(BLK_TC_PC);
--		__blk_add_trace(bt, 0, nr_bytes, rq->cmd_flags,
-+		__blk_add_trace(bt, 0, nr_bytes, rq->op, rq->cmd_flags,
- 				what, rq->errors, rq->cmd_len, rq->cmd);
- 	} else  {
- 		what |= BLK_TC_ACT(BLK_TC_FS);
--		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes,
-+		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes, rq->op,
- 				rq->cmd_flags, what, rq->errors, 0, NULL);
- 	}
- }
-@@ -770,7 +772,7 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
- 		return;
- 
- 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
--			bio->bi_rw, what, error, 0, NULL);
-+			bio->bi_op, bio->bi_rw, what, error, 0, NULL);
+ 	return ((req->cmd_type != REQ_TYPE_FS) ||
+ 		((req->op == REQ_OP_FLUSH) &&
+-		 !(info->feature_flush & REQ_FLUSH)) ||
++		 !info->feature_flush) ||
+ 		((req->cmd_flags & REQ_FUA) &&
+-		 !(info->feature_flush & REQ_FUA)));
++		 !info->feature_fua));
  }
  
- static void blk_add_trace_bio_bounce(void *ignore,
-@@ -818,7 +820,8 @@ static void blk_add_trace_getrq(void *ignore,
- 		struct blk_trace *bt = q->blk_trace;
- 
- 		if (bt)
--			__blk_add_trace(bt, 0, 0, rw, BLK_TA_GETRQ, 0, 0, NULL);
-+			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_GETRQ, 0, 0,
-+					NULL);
- 	}
+ static int blkif_queue_rq(struct blk_mq_hw_ctx *hctx,
+@@ -985,24 +981,22 @@ static int xlvbd_init_blk_queue(struct gendisk *gd, u16 sector_size,
+ 	return 0;
  }
  
-@@ -833,7 +836,7 @@ static void blk_add_trace_sleeprq(void *ignore,
- 		struct blk_trace *bt = q->blk_trace;
- 
- 		if (bt)
--			__blk_add_trace(bt, 0, 0, rw, BLK_TA_SLEEPRQ,
-+			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
- 					0, 0, NULL);
- 	}
- }
-@@ -843,7 +846,7 @@ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
- 	struct blk_trace *bt = q->blk_trace;
- 
- 	if (bt)
--		__blk_add_trace(bt, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
-+		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
- }
- 
- static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
-@@ -860,7 +863,7 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
- 		else
- 			what = BLK_TA_UNPLUG_TIMER;
- 
--		__blk_add_trace(bt, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
-+		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
- 	}
- }
- 
-@@ -874,8 +877,9 @@ static void blk_add_trace_split(void *ignore,
- 		__be64 rpdu = cpu_to_be64(pdu);
- 
- 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
--				bio->bi_iter.bi_size, bio->bi_rw, BLK_TA_SPLIT,
--				bio->bi_error, sizeof(rpdu), &rpdu);
-+				bio->bi_iter.bi_size, bio->bi_op, bio->bi_rw,
-+				BLK_TA_SPLIT, bio->bi_error, sizeof(rpdu),
-+				&rpdu);
- 	}
- }
- 
-@@ -907,7 +911,7 @@ static void blk_add_trace_bio_remap(void *ignore,
- 	r.sector_from = cpu_to_be64(from);
- 
- 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
--			bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
-+			bio->bi_op, bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
- 			sizeof(r), &r);
- }
- 
-@@ -940,7 +944,7 @@ static void blk_add_trace_rq_remap(void *ignore,
- 	r.sector_from = cpu_to_be64(from);
- 
- 	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
--			rq_data_dir(rq), BLK_TA_REMAP, !!rq->errors,
-+			rq_data_dir(rq), 0, BLK_TA_REMAP, !!rq->errors,
- 			sizeof(r), &r);
- }
- 
-@@ -965,10 +969,10 @@ void blk_add_driver_data(struct request_queue *q,
- 		return;
- 
- 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC)
--		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0,
-+		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0, 0,
- 				BLK_TA_DRV_DATA, rq->errors, len, data);
- 	else
--		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0,
-+		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0, 0,
- 				BLK_TA_DRV_DATA, rq->errors, len, data);
- }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
-@@ -1767,16 +1771,16 @@ void blk_dump_cmd(char *buf, struct request *rq)
- 	}
- }
- 
--void blk_fill_rwbs(char *rwbs, u32 rw, int bytes)
-+void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes)
+-static const char *flush_info(unsigned int feature_flush)
++static const char *flush_info(struct blkfront_info *info)
  {
- 	int i = 0;
+-	switch (feature_flush & ((REQ_FLUSH | REQ_FUA))) {
+-	case REQ_FLUSH|REQ_FUA:
++	if (info->feature_flush && info->feature_fua)
+ 		return "barrier: enabled;";
+-	case REQ_FLUSH:
++	else if (info->feature_flush)
+ 		return "flush diskcache: enabled;";
+-	default:
++	else
+ 		return "barrier or flush: disabled;";
+-	}
+ }
  
- 	if (rw & REQ_FLUSH)
- 		rwbs[i++] = 'F';
+ static void xlvbd_flush(struct blkfront_info *info)
+ {
+-	blk_queue_write_cache(info->rq, info->feature_flush & REQ_FLUSH,
+-				info->feature_flush & REQ_FUA);
++	blk_queue_write_cache(info->rq, info->feature_flush ? true : false,
++			      info->feature_fua ? true : false);
+ 	pr_info("blkfront: %s: %s %s %s %s %s\n",
+-		info->gd->disk_name, flush_info(info->feature_flush),
++		info->gd->disk_name, flush_info(info),
+ 		"persistent grants:", info->feature_persistent ?
+ 		"enabled;" : "disabled;", "indirect descriptors:",
+ 		info->max_indirect_segments ? "enabled;" : "disabled;");
+@@ -1621,6 +1615,7 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
+ 			if (unlikely(error)) {
+ 				if (error == -EOPNOTSUPP)
+ 					error = 0;
++				info->feature_fua = 0;
+ 				info->feature_flush = 0;
+ 				xlvbd_flush(info);
+ 			}
+@@ -2315,6 +2310,7 @@ static void blkfront_gather_backend_features(struct blkfront_info *info)
+ 	unsigned int indirect_segments;
  
--	if (rw & WRITE)
-+	if (op == REQ_OP_WRITE)
- 		rwbs[i++] = 'W';
--	else if (rw & REQ_DISCARD)
-+	else if (op == REQ_OP_DISCARD)
- 		rwbs[i++] = 'D';
- 	else if (bytes)
- 		rwbs[i++] = 'R';
+ 	info->feature_flush = 0;
++	info->feature_fua = 0;
+ 
+ 	err = xenbus_gather(XBT_NIL, info->xbdev->otherend,
+ 			"feature-barrier", "%d", &barrier,
+@@ -2327,8 +2323,11 @@ static void blkfront_gather_backend_features(struct blkfront_info *info)
+ 	 *
+ 	 * If there are barriers, then we use flush.
+ 	 */
+-	if (!err && barrier)
+-		info->feature_flush = REQ_FLUSH | REQ_FUA;
++	if (!err && barrier) {
++		info->feature_flush = 1;
++		info->feature_fua = 1;
++	}
++
+ 	/*
+ 	 * And if there is "feature-flush-cache" use that above
+ 	 * barriers.
+@@ -2337,8 +2336,10 @@ static void blkfront_gather_backend_features(struct blkfront_info *info)
+ 			"feature-flush-cache", "%d", &flush,
+ 			NULL);
+ 
+-	if (!err && flush)
+-		info->feature_flush = REQ_FLUSH;
++	if (!err && flush) {
++		info->feature_flush = 1;
++		info->feature_fua = 0;
++	}
+ 
+ 	err = xenbus_gather(XBT_NIL, info->xbdev->otherend,
+ 			"feature-discard", "%d", &discard,
 -- 
 2.7.2
+
