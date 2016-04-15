@@ -1,95 +1,55 @@
-From: Xiong Zhou <jencce.kernel@gmail.com>
-Subject: Re: [PATCH v4 1/2] scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
-Date: Fri, 15 Apr 2016 11:24:02 +0800
-Message-ID: <CADJHv_sVG2yO0CcrbOFRNDrzxjJk+iUKjVLCAJsEhzJytx7Qsw@mail.gmail.com>
-References: <cover.1459848136.git.jthumshirn@suse.de>
-	<95ae7ee32dca23bb7f3ab432046fb7016b341049.1459848136.git.jthumshirn@suse.de>
-	<CADJHv_uHL0=ebUio3j5ysnaU9gDus+HQi4=pQznTy0B=6+NWAg@mail.gmail.com>
-	<1550969.mvAXU2aY35@c203>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 2/9] block: update chunk_sectors in blk_stack_limits()
+Date: Thu, 14 Apr 2016 20:41:20 -0700
+Message-ID: <571062E0.2010208@sandisk.com>
+References: <1459764020-126038-1-git-send-email-hare@suse.de>
+ <1459764020-126038-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1550969.mvAXU2aY35@c203>
-Sender: stable-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2on0055.outbound.protection.outlook.com ([65.55.169.55]:18592
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751906AbcDODl0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2016 23:41:26 -0400
+In-Reply-To: <1459764020-126038-3-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>
+Cc: linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
-On Wed, Apr 13, 2016 at 4:19 PM, Johannes Thumshirn <jthumshirn@suse.de=
-> wrote:
-> Hi Xiong
-> Sorry for the late reply
+On 04/04/16 03:00, Hannes Reinecke wrote:
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index c7bb666..29fa900 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -630,6 +630,9 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>   			t->discard_granularity;
+>   	}
 >
-> On Dienstag, 12. April 2016 21:01:53 CEST Xiong Zhou wrote:
->> How about this?
->>
->> drivers/scsi/scsi_scan: mark STARGET_REMOVE state before destroy
->>
->> Signed-off-by: Xiong Zhou <jencce.kernel@gmail.com>
->> ---
->>  drivers/scsi/scsi_scan.c | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index 27df7e7..21092e5 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -395,6 +395,8 @@ static void scsi_target_reap_ref_release(struct =
-kref *kref)
->>   transport_remove_device(&starget->dev);
->>   device_del(&starget->dev);
->>   }
->> +
->> + starget->state =3D STARGET_REMOVE;
->>   scsi_target_destroy(starget);
->>  }
->
-> The only scsi_target_reap_ref_release() caller is scsi_target_reap_re=
-f_put(),
-> which in turn is only called by scsi_target_reap(). scsi_target_reap(=
-)'s only
-> callers are scsi_remove_target()/__scsi_remove_target(), which set th=
-e
-> STARGET_REMOVE state and
->
-> __scsi_add_device()
-> scsi_get_host_dev()
-> __scsi_scan_target()
->
-> Which I'm currently investiganting (in parallel to reproducing the bu=
-g).
+> +	if (b->chunk_sectors)
+> +		t->chunk_sectors = max(t->chunk_sectors, b->chunk_sectors);
+> +
+>   	return ret;
+>   }
+>   EXPORT_SYMBOL(blk_stack_limits);
 
-Thanks !
+Hello Hannes,
 
---
-Xiong
+My understanding is that a non-zero chunk_sectors value defines a 
+maximum I/O size. Shouldn't max() be changed into min_not_zero()? From 
+include/linux/blkdev.h:
 
->
->>
->> @@ -465,6 +467,7 @@ static struct scsi_target
->> *scsi_alloc_target(struct device *parent,
->>   dev_printk(KERN_ERR, dev, "target allocation failed, error %d\n", =
-error);
->>   /* don't want scsi_target_reap to do the final
->>   * put because it will be under the host lock */
->> + starget->state =3D STARGET_REMOVE;
->>   scsi_target_destroy(starget);
->>   return NULL;
->>   }
->
-> Here starget->state is STARGET_CREATED and the assertion is already a=
-ware of
-> this state transitoin. IOTW this /shouldn't/ be needed.
->
->
-> --
-> Johannes Thumshirn                                                   =
-                             Storage
-> jthumshirn@suse.de                                                   =
-          +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=C3=BCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
->
+static inline unsigned int blk_max_size_offset(struct request_queue *q,
+					       sector_t offset)
+{
+	if (!q->limits.chunk_sectors)
+		return q->limits.max_sectors;
+
+	return q->limits.chunk_sectors -
+			(offset & (q->limits.chunk_sectors - 1));
+}
+
+Bart.
+
