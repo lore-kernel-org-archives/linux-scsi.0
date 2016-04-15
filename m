@@ -1,43 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] mpt3sas: Remove usage of 'struct timeval'
-Date: Fri, 15 Apr 2016 09:16:18 +0200
-Message-ID: <1561298.UGYTUHuOD6@c203>
-References: <20160413070140.GA35235@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <20160413070140.GA35235@localhost>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: [PATCH 0/4] megaraid_sas: Updates for scsi-next
+Date: Fri, 15 Apr 2016 00:23:29 -0700
+Message-ID: <1460705013-6482-1-git-send-email-sumit.saxena@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:35233 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650AbcDOHXs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 03:23:48 -0400
+Received: by mail-pf0-f181.google.com with SMTP id n1so54388809pfn.2
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2016 00:23:47 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, hch@infradead.org, thenzl@redhat.com
+Cc: kashyap.desai@broadcom.com, linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com
 
-T24gTWl0dHdvY2gsIDEzLiBBcHJpbCAyMDE2IDAwOjAxOjQwIENFU1QgVGluYSBSdWNoYW5kYW5p
-IHdyb3RlOgo+ICdzdHJ1Y3QgdGltZXZhbCcgd2lsbCBoYXZlIGl0cyB0dl9zZWMgdmFsdWUgb3Zl
-cmZsb3cgb24gMzItYml0IHN5c3RlbXMKPiBpbiB5ZWFyIDIwMzggYW5kIGJleW9uZC4gVGhpcyBw
-YXRjaCByZXBsYWNlcyB0aGUgdXNlIG9mIHN0cnVjdCB0aW1ldmFsCj4gZm9yIGNvbXB1dGluZyBt
-cGlfcmVxdWVzdC5UaW1lU3RhbXAsIGFuZCBpbnN0ZWFkIHVzZXMga3RpbWVfdCB3aGljaCBwcm92
-aWRlcwo+IDY0LWJpdCBzZWNvbmRzIHZhbHVlLiBUaGUgdGltZXN0YW1wIGNvbXB1dGVkIHJlbWFp
-bnMgdW5hZmZlY3RlZCAobWlsbGlzZWNvbmRzCj4gc2luY2UgVW5peCBlcG9jaCkuCj4gCj4gU2ln
-bmVkLW9mZi1ieTogVGluYSBSdWNoYW5kYW5pIDxydWNoYW5kYW5pLnRpbmFAZ21haWwuY29tPgo+
-IFJldmlld2VkLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+IC0tLQoKUmV2aWV3
-ZWQtYnk6IEpvaGFubmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPgoKLS0gCkpvaGFu
-bmVzIFRodW1zaGlybiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgU3RvcmFnZQpqdGh1bXNoaXJuQHN1
-c2UuZGUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODkKU1VTRSBMSU5VWCBHbWJILCBNYXhmZWxkc3RyLiA1
-LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEZlbGl4IEltZW5kw7ZyZmZlciwgSmFuZSBTbWl0aGFyZCwg
-R3JhaGFtIE5vcnRvbgpIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykKS2V5IGZpbmdlcnByaW50ID0g
-RUMzOCA5Q0FCIEMyQzQgRjI1RCA4NjAwIEQwRDAgMDM5MyA5NjlEIDJENzYgMDg1MAoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGluZyBs
-aXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxt
-YW4vbGlzdGluZm8veTIwMzgK
+This patchset has few small fixes/optimizations. Please consider this
+for next release.
+
+Sumit Saxena (4):
+  megaraid_sas: reduce memory footprints in kdump mode
+  megaraid_sas: call ISR function to clean up pending replies in OCR
+    path
+  megaraid_sas: task management code optimizations
+  megaraid_sas: driver version upgrade
+
+ drivers/scsi/megaraid/megaraid_sas.h        |   6 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 115 ++++++++++++++++++----------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   5 ++
+ 3 files changed, 84 insertions(+), 42 deletions(-)
+
+-- 
+2.4.11
+
