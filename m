@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_dh_alua: Declare local functions static
-Date: Fri, 15 Apr 2016 16:23:23 -0400
-Message-ID: <yq1vb3ipqo4.fsf@sermon.lab.mkp.net>
-References: <570FD2F2.90506@sandisk.com>
+Subject: Re: [patch v2] scsi_dh_alua: uninitialized variable in alua_rtpg()
+Date: Fri, 15 Apr 2016 16:26:51 -0400
+Message-ID: <yq1r3e6pqic.fsf@sermon.lab.mkp.net>
+References: <20160414182034.GA32469@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48983 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982AbcDOUXq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 16:23:46 -0400
-In-Reply-To: <570FD2F2.90506@sandisk.com> (Bart Van Assche's message of "Thu,
-	14 Apr 2016 10:27:14 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20160414182034.GA32469@mwanda> (Dan Carpenter's message of "Thu,
+	14 Apr 2016 21:20:34 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Bart> This patch avoids that building with W=1 causes gcc to report the
-Bart> following type of warning:
+Dan> It's possible to use "err" without initializing it.  If it happens
+Dan> to be a 2 which is SCSI_DH_RETRY then that could cause a bug.  Bart
+Dan> Van Assche pointed out that we should probably re-initialize it for
+Dan> every iteration through the retry loop.
 
-Bart>     no previous prototype for ... [-Wmissing-prototypes]
-
-Applied to 4.7/scsi-queue.
+Applied to 4.6/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
