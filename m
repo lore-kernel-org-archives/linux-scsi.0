@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 26/42] block: copy bio op to request op
-Date: Fri, 15 Apr 2016 14:16:01 -0500
-Message-ID: <1460747777-8479-27-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 17/42] ocfs2: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 14:15:52 -0500
+Message-ID: <1460747777-8479-18-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,35 +23,58 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-The bio users should now always be setting up the bio->bi_op. This patch
-has us copy that to the struct request op field.
+This patch has ocfs2 use bio->bi_op for REQ_OPs and rq_flag_bits
+to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-core.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/ocfs2/cluster/heartbeat.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3b238ef..94736c3 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2991,6 +2991,7 @@ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+diff --git a/fs/ocfs2/cluster/heartbeat.c b/fs/ocfs2/cluster/heartbeat.c
+index e37373d..0619a20 100644
+--- a/fs/ocfs2/cluster/heartbeat.c
++++ b/fs/ocfs2/cluster/heartbeat.c
+@@ -530,7 +530,8 @@ static void o2hb_bio_end_io(struct bio *bio)
+ static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
+ 				      struct o2hb_bio_wait_ctxt *wc,
+ 				      unsigned int *current_slot,
+-				      unsigned int max_slots, int rw)
++				      unsigned int max_slots, int op,
++				      int op_flags)
  {
- 	/* tmp compat. Allow users to set bi_op or bi_rw */
- 	rq->cmd_flags |= bio_data_dir(bio);
-+	rq->op = bio->bi_op;
+ 	int len, current_page;
+ 	unsigned int vec_len, vec_start;
+@@ -556,7 +557,8 @@ static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
+ 	bio->bi_bdev = reg->hr_bdev;
+ 	bio->bi_private = wc;
+ 	bio->bi_end_io = o2hb_bio_end_io;
+-	bio->bi_rw = rw;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
  
- 	if (bio_has_data(bio))
- 		rq->nr_phys_segments = bio_phys_segments(q, bio);
-@@ -3075,6 +3076,7 @@ EXPORT_SYMBOL_GPL(blk_rq_unprep_clone);
- static void __blk_rq_prep_clone(struct request *dst, struct request *src)
- {
- 	dst->cpu = src->cpu;
-+	dst->op = src->op;
- 	dst->cmd_flags |= (src->cmd_flags & REQ_CLONE_MASK) | REQ_NOMERGE;
- 	dst->cmd_type = src->cmd_type;
- 	dst->__sector = blk_rq_pos(src);
+ 	vec_start = (cs << bits) % PAGE_SIZE;
+ 	while(cs < max_slots) {
+@@ -593,7 +595,7 @@ static int o2hb_read_slots(struct o2hb_region *reg,
+ 
+ 	while(current_slot < max_slots) {
+ 		bio = o2hb_setup_one_bio(reg, &wc, &current_slot, max_slots,
+-					 READ);
++					 REQ_OP_READ, 0);
+ 		if (IS_ERR(bio)) {
+ 			status = PTR_ERR(bio);
+ 			mlog_errno(status);
+@@ -625,7 +627,8 @@ static int o2hb_issue_node_write(struct o2hb_region *reg,
+ 
+ 	slot = o2nm_this_node();
+ 
+-	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, WRITE_SYNC);
++	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, REQ_OP_WRITE,
++				 WRITE_SYNC);
+ 	if (IS_ERR(bio)) {
+ 		status = PTR_ERR(bio);
+ 		mlog_errno(status);
 -- 
 2.7.2
