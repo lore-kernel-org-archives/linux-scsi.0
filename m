@@ -1,49 +1,83 @@
-From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Subject: RE: [PATCH] mpt3sas: fix possible NULL dereference
-Date: Fri, 15 Apr 2016 11:35:48 -0600
-Message-ID: <5b2eca0b5053d01c09f62cf498e3fc0a@mail.gmail.com>
-References: <1460130162-30011-1-git-send-email-sudipm.mukherjee@gmail.com> <yq1mvovsiaa.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 5/9] block: Implement support for zoned block devices
+Date: Fri, 15 Apr 2016 10:37:28 -0700
+Message-ID: <571126D8.2090807@sandisk.com>
+References: <1459764020-126038-1-git-send-email-hare@suse.de>
+ <1459764020-126038-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36144 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbcDORfv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 13:35:51 -0400
-Received: by mail-io0-f178.google.com with SMTP id u185so141469112iod.3
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2016 10:35:50 -0700 (PDT)
-In-Reply-To: <yq1mvovsiaa.fsf@sermon.lab.mkp.net>
+Received: from mail-bl2on0080.outbound.protection.outlook.com ([65.55.169.80]:62059
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751846AbcDORhg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 13:37:36 -0400
+In-Reply-To: <1459764020-126038-6-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-We need to do some more changes in this.  The concept is first pool alloc
-and then memory alloc in the pool, so the memory has to be freed if the
-memory is allocated in the pool and irrespective of memory allocated or
-not the pool has to be destroyed if it is created.  We will work
-internally and provide a complete patch.
+On 04/04/2016 03:00 AM, Hannes Reinecke wrote:
+> +struct blk_zone *blk_lookup_zone(struct request_queue *q, sector_t lba)
 
-Thanks
-Sathya
+A similar comment applies to this function: does this function expect a 
+sector_t or an LBA as its second argument?
 
------Original Message-----
-From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-Sent: Thursday, April 14, 2016 8:44 PM
-To: Sudip Mukherjee
-Cc: Sathya Prakash; Chaitra P B; Suganath Prabu Subramani; James E.J.
-Bottomley; Martin K. Petersen; linux-kernel@vger.kernel.org;
-MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] mpt3sas: fix possible NULL dereference
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 7e5d7e0..f58bcdc 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -249,6 +249,50 @@ struct blk_queue_tag {
+>   #define BLK_SCSI_MAX_CMDS	(256)
+>   #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+>
+> +#ifdef CONFIG_BLK_DEV_ZONED
+> +enum blk_zone_type {
+> +	BLK_ZONE_TYPE_UNKNOWN,
+> +	BLK_ZONE_TYPE_CONVENTIONAL,
+> +	BLK_ZONE_TYPE_SEQWRITE_REQ,
+> +	BLK_ZONE_TYPE_SEQWRITE_PREF,
+> +	BLK_ZONE_TYPE_RESERVED,
+> +};
+> +
+> +enum blk_zone_state {
+> +	BLK_ZONE_UNKNOWN,
+> +	BLK_ZONE_NO_WP,
+> +	BLK_ZONE_OPEN,
+> +	BLK_ZONE_READONLY,
+> +	BLK_ZONE_OFFLINE,
+> +	BLK_ZONE_BUSY,
+> +};
+> +
+> +struct blk_zone {
+> +	struct rb_node node;
+> +	spinlock_t lock;
+> +	sector_t start;
+> +	size_t len;
+> +	sector_t wp;
+> +	enum blk_zone_type type;
+> +	enum blk_zone_state state;
+> +	void *private_data;
+> +};
+> +
+> +#define blk_zone_is_smr(z) ((z)->type == BLK_ZONE_TYPE_SEQWRITE_REQ ||	\
+> +			    (z)->type == BLK_ZONE_TYPE_SEQWRITE_PREF)
+> +
+> +#define blk_zone_is_cmr(z) ((z)->type == BLK_ZONE_TYPE_CONVENTIONAL)
+> +#define blk_zone_is_full(z) ((z)->wp == (z)->start + (z)->len)
+> +#define blk_zone_is_empty(z) ((z)->wp == (z)->start)
+> +
+> +extern struct blk_zone *blk_lookup_zone(struct request_queue *, sector_t);
+> +extern struct blk_zone *blk_insert_zone(struct request_queue *,
+> +					struct blk_zone *);
+> +extern void blk_drop_zones(struct request_queue *);
+> +#else
+> +static inline void blk_drop_zones(struct request_queue *q) { };
+> +#endif
 
->>>>> "Sudip" == Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+Have you considered to create a new header file for these definitions 
+instead of adding these to <linux/blkdev.h>?
 
-Sudip> We are dereferencing ioc->sense_dma_pool in pci_pool_free() and
-Sudip> after that we are checking if it is NULL, before calling
-Sudip> pci_pool_destroy().  Lets check if it is NULL before calling both
-Sudip> pci_pool_free() and pci_pool_destroy().
-
-Broadcom folks, please review.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
