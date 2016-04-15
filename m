@@ -1,149 +1,144 @@
 From: mchristi@redhat.com
-Subject: [PATCH 24/42] xen: set bi_op to REQ_OP
-Date: Fri, 15 Apr 2016 05:39:44 -0500
-Message-ID: <1460716802-2294-25-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 18/42] pm: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 05:39:38 -0500
+Message-ID: <1460716802-2294-19-git-send-email-mchristi@redhat.com>
 References: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the xen block driver use bio->bi_op for REQ_OPs and rq_flag_bits
+This patch has the pm code use bio->bi_op for REQ_OPs and rq_flag_bits
 to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/xen-blkback/blkback.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ kernel/power/swap.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
-index 79fe493..854ecca 100644
---- a/drivers/block/xen-blkback/blkback.c
-+++ b/drivers/block/xen-blkback/blkback.c
-@@ -501,7 +501,7 @@ static int xen_vbd_translate(struct phys_req *req, struct xen_blkif *blkif,
- 	struct xen_vbd *vbd = &blkif->vbd;
- 	int rc = -EACCES;
+diff --git a/kernel/power/swap.c b/kernel/power/swap.c
+index 4d050eb..adbcb1b 100644
+--- a/kernel/power/swap.c
++++ b/kernel/power/swap.c
+@@ -250,7 +250,7 @@ static void hib_end_io(struct bio *bio)
+ 	bio_put(bio);
+ }
  
--	if ((operation != READ) && vbd->readonly)
-+	if ((operation != REQ_OP_READ) && vbd->readonly)
- 		goto out;
+-static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
++static int hib_submit_io(int op, int op_flags, pgoff_t page_off, void *addr,
+ 		struct hib_bio_batch *hb)
+ {
+ 	struct page *page = virt_to_page(addr);
+@@ -260,7 +260,8 @@ static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
+ 	bio = bio_alloc(__GFP_RECLAIM | __GFP_HIGH, 1);
+ 	bio->bi_iter.bi_sector = page_off * (PAGE_SIZE >> 9);
+ 	bio->bi_bdev = hib_resume_bdev;
+-	bio->bi_rw = rw;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
  
- 	if (likely(req->nr_sects)) {
-@@ -1014,7 +1014,7 @@ static int dispatch_discard_io(struct xen_blkif_ring *ring,
- 	preq.sector_number = req->u.discard.sector_number;
- 	preq.nr_sects      = req->u.discard.nr_sectors;
+ 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
+ 		printk(KERN_ERR "PM: Adding page to bio failed at %llu\n",
+@@ -296,7 +297,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
+ {
+ 	int error;
  
--	err = xen_vbd_translate(&preq, blkif, WRITE);
-+	err = xen_vbd_translate(&preq, blkif, REQ_OP_WRITE);
- 	if (err) {
- 		pr_warn("access denied: DISCARD [%llu->%llu] on dev=%04x\n",
- 			preq.sector_number,
-@@ -1229,6 +1229,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	struct bio **biolist = pending_req->biolist;
- 	int i, nbio = 0;
- 	int operation;
-+	int operation_flags = 0;
- 	struct blk_plug plug;
- 	bool drain = false;
- 	struct grant_page **pages = pending_req->segments;
-@@ -1247,17 +1248,19 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	switch (req_operation) {
- 	case BLKIF_OP_READ:
- 		ring->st_rd_req++;
--		operation = READ;
-+		operation = REQ_OP_READ;
- 		break;
- 	case BLKIF_OP_WRITE:
- 		ring->st_wr_req++;
--		operation = WRITE_ODIRECT;
-+		operation = REQ_OP_WRITE;
-+		operation_flags = WRITE_ODIRECT;
- 		break;
- 	case BLKIF_OP_WRITE_BARRIER:
- 		drain = true;
- 	case BLKIF_OP_FLUSH_DISKCACHE:
- 		ring->st_f_req++;
--		operation = WRITE_FLUSH;
-+		operation = REQ_OP_WRITE;
-+		operation_flags = WRITE_FLUSH;
- 		break;
- 	default:
- 		operation = 0; /* make gcc happy */
-@@ -1269,7 +1272,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	nseg = req->operation == BLKIF_OP_INDIRECT ?
- 	       req->u.indirect.nr_segments : req->u.rw.nr_segments;
+-	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
++	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
++		      swsusp_header, NULL);
+ 	if (!memcmp("SWAP-SPACE",swsusp_header->sig, 10) ||
+ 	    !memcmp("SWAPSPACE2",swsusp_header->sig, 10)) {
+ 		memcpy(swsusp_header->orig_sig,swsusp_header->sig, 10);
+@@ -305,8 +307,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
+ 		swsusp_header->flags = flags;
+ 		if (flags & SF_CRC32_MODE)
+ 			swsusp_header->crc32 = handle->crc32;
+-		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
+-					swsusp_header, NULL);
++		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
++				      swsusp_resume_block, swsusp_header, NULL);
+ 	} else {
+ 		printk(KERN_ERR "PM: Swap header not found!\n");
+ 		error = -ENODEV;
+@@ -379,7 +381,7 @@ static int write_page(void *buf, sector_t offset, struct hib_bio_batch *hb)
+ 	} else {
+ 		src = buf;
+ 	}
+-	return hib_submit_io(WRITE_SYNC, offset, src, hb);
++	return hib_submit_io(REQ_OP_WRITE, WRITE_SYNC, offset, src, hb);
+ }
  
--	if (unlikely(nseg == 0 && operation != WRITE_FLUSH) ||
-+	if (unlikely(nseg == 0 && operation_flags != WRITE_FLUSH) ||
- 	    unlikely((req->operation != BLKIF_OP_INDIRECT) &&
- 		     (nseg > BLKIF_MAX_SEGMENTS_PER_REQUEST)) ||
- 	    unlikely((req->operation == BLKIF_OP_INDIRECT) &&
-@@ -1310,7 +1313,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 
- 	if (xen_vbd_translate(&preq, ring->blkif, operation) != 0) {
- 		pr_debug("access denied: %s of [%llu,%llu] on dev=%04x\n",
--			 operation == READ ? "read" : "write",
-+			 operation == REQ_OP_READ ? "read" : "write",
- 			 preq.sector_number,
- 			 preq.sector_number + preq.nr_sects,
- 			 ring->blkif->vbd.pdevice);
-@@ -1369,7 +1372,8 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 			bio->bi_private = pending_req;
- 			bio->bi_end_io  = end_block_io_op;
- 			bio->bi_iter.bi_sector  = preq.sector_number;
--			bio->bi_rw	= operation;
-+			bio->bi_op	= operation;
-+			bio->bi_rw	= operation_flags;
+ static void release_swap_writer(struct swap_map_handle *handle)
+@@ -982,7 +984,8 @@ static int get_swap_reader(struct swap_map_handle *handle,
+ 			return -ENOMEM;
  		}
  
- 		preq.sector_number += seg[i].nsec;
-@@ -1377,7 +1381,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+-		error = hib_submit_io(READ_SYNC, offset, tmp->map, NULL);
++		error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset,
++				      tmp->map, NULL);
+ 		if (error) {
+ 			release_swap_reader(handle);
+ 			return error;
+@@ -1006,7 +1009,7 @@ static int swap_read_page(struct swap_map_handle *handle, void *buf,
+ 	offset = handle->cur->entries[handle->k];
+ 	if (!offset)
+ 		return -EFAULT;
+-	error = hib_submit_io(READ_SYNC, offset, buf, hb);
++	error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset, buf, hb);
+ 	if (error)
+ 		return error;
+ 	if (++handle->k >= MAP_PAGE_ENTRIES) {
+@@ -1508,7 +1511,8 @@ int swsusp_check(void)
+ 	if (!IS_ERR(hib_resume_bdev)) {
+ 		set_blocksize(hib_resume_bdev, PAGE_SIZE);
+ 		clear_page(swsusp_header);
+-		error = hib_submit_io(READ_SYNC, swsusp_resume_block,
++		error = hib_submit_io(REQ_OP_READ, READ_SYNC,
++					swsusp_resume_block,
+ 					swsusp_header, NULL);
+ 		if (error)
+ 			goto put;
+@@ -1516,7 +1520,8 @@ int swsusp_check(void)
+ 		if (!memcmp(HIBERNATE_SIG, swsusp_header->sig, 10)) {
+ 			memcpy(swsusp_header->sig, swsusp_header->orig_sig, 10);
+ 			/* Reset swap signature now */
+-			error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
++			error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
++						swsusp_resume_block,
+ 						swsusp_header, NULL);
+ 		} else {
+ 			error = -EINVAL;
+@@ -1560,10 +1565,12 @@ int swsusp_unmark(void)
+ {
+ 	int error;
  
- 	/* This will be hit if the operation was a flush or discard. */
- 	if (!bio) {
--		BUG_ON(operation != WRITE_FLUSH);
-+		BUG_ON(operation_flags != WRITE_FLUSH);
- 
- 		bio = bio_alloc(GFP_KERNEL, 0);
- 		if (unlikely(bio == NULL))
-@@ -1387,7 +1391,8 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 		bio->bi_bdev    = preq.bdev;
- 		bio->bi_private = pending_req;
- 		bio->bi_end_io  = end_block_io_op;
--		bio->bi_rw	= operation;
-+		bio->bi_op	= operation;
-+		bio->bi_rw	= operation_flags;
- 	}
- 
- 	atomic_set(&pending_req->pendcnt, nbio);
-@@ -1399,9 +1404,9 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	/* Let the I/Os go.. */
- 	blk_finish_plug(&plug);
- 
--	if (operation == READ)
-+	if (operation == REQ_OP_READ)
- 		ring->st_rd_sect += preq.nr_sects;
--	else if (operation & WRITE)
-+	else if (operation == REQ_OP_WRITE)
- 		ring->st_wr_sect += preq.nr_sects;
- 
- 	return 0;
+-	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
++	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
++		      swsusp_header, NULL);
+ 	if (!memcmp(HIBERNATE_SIG,swsusp_header->sig, 10)) {
+ 		memcpy(swsusp_header->sig,swsusp_header->orig_sig, 10);
+-		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
++		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
++					swsusp_resume_block,
+ 					swsusp_header, NULL);
+ 	} else {
+ 		printk(KERN_ERR "PM: Cannot find swsusp signature!\n");
 -- 
 2.7.2
