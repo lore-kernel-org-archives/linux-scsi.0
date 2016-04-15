@@ -1,147 +1,52 @@
 From: mchristi@redhat.com
-Subject: [PATCH 32/42] block: convert is_sync helpers to use
-	REQ_OPs.
-Date: Fri, 15 Apr 2016 14:16:07 -0500
-Message-ID: <1460747777-8479-33-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 33/42] block: convert rq_data_dir helper to use
+	REQ_OPs
+Date: Fri, 15 Apr 2016 14:16:08 -0500
+Message-ID: <1460747777-8479-34-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch converts the is_sync helpers to use separate variables
-for the operation and flags.
+The request->op field is now always setup up with a REQ_OP.
+This patch has the rq_data_dir helper convert the operation
+to a WRITE or READ direction based on that.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-core.c       | 6 +++---
- block/blk-mq.c         | 8 ++++----
- block/cfq-iosched.c    | 2 +-
- include/linux/blkdev.h | 6 +++---
- 4 files changed, 11 insertions(+), 11 deletions(-)
+ include/linux/blkdev.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 660aeb8..e2f7b0a 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
- static void freed_request(struct request_list *rl, int op, unsigned int flags)
- {
- 	struct request_queue *q = rl->q;
--	int sync = rw_is_sync(op | flags);
-+	int sync = rw_is_sync(op, flags);
- 
- 	q->nr_rqs[sync]--;
- 	rl->count[sync]--;
-@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
- 	struct elevator_type *et = q->elevator->type;
- 	struct io_context *ioc = rq_ioc(bio);
- 	struct io_cq *icq = NULL;
--	const bool is_sync = rw_is_sync(op | op_flags) != 0;
-+	const bool is_sync = rw_is_sync(op, op_flags) != 0;
- 	int may_queue;
- 
- 	if (unlikely(blk_queue_dying(q)))
-@@ -1246,7 +1246,7 @@ static struct request *get_request(struct request_queue *q, int op,
- 				   int op_flags, struct bio *bio,
- 				   gfp_t gfp_mask)
- {
--	const bool is_sync = rw_is_sync(op | op_flags) != 0;
-+	const bool is_sync = rw_is_sync(op, op_flags) != 0;
- 	DEFINE_WAIT(wait);
- 	struct request_list *rl;
- 	struct request *rq;
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4843c0b..64d61be 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -206,7 +206,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
- 	rq->end_io_data = NULL;
- 	rq->next_rq = NULL;
- 
--	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
-+	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
- }
- 
- static struct request *
-@@ -1181,7 +1181,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
- 	ctx = blk_mq_get_ctx(q);
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 
--	if (rw_is_sync(bio->bi_op | bio->bi_rw))
-+	if (rw_is_sync(bio->bi_op, bio->bi_rw))
- 		op_flags |= REQ_SYNC;
- 
- 	trace_block_getrq(q, bio, op);
-@@ -1249,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
-  */
- static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_map_ctx data;
- 	struct request *rq;
-@@ -1346,7 +1346,7 @@ done:
-  */
- static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_plug *plug;
- 	unsigned int request_count = 0;
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 0dfa2dd..2fd5bcf 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
- 	if (!cic)
- 		return ELV_MQUEUE_MAY;
- 
--	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
-+	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
- 	if (cfqq) {
- 		cfq_init_prio_data(cfqq, cic);
- 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4aaa317..42711ef 100644
+index 42711ef..5694894 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -617,14 +617,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
+@@ -598,7 +598,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ 
+ #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+ 
+-#define rq_data_dir(rq)		((int)((rq)->cmd_flags & 1))
++#define rq_data_dir(rq)		(op_is_write(rq->op) ? WRITE : READ)
+ 
  /*
-  * We regard a request as sync, if either a read or a sync write
-  */
--static inline bool rw_is_sync(unsigned int rw_flags)
-+static inline bool rw_is_sync(int op, unsigned int rw_flags)
- {
--	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
-+	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
- }
- 
- static inline bool rq_is_sync(struct request *rq)
- {
--	return rw_is_sync(rq->cmd_flags);
-+	return rw_is_sync(rq->op, rq->cmd_flags);
- }
- 
- static inline bool blk_rl_full(struct request_list *rl, bool sync)
+  * Driver can handle struct request, if it either has an old style
 -- 
 2.7.2
