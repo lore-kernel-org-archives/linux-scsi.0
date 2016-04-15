@@ -1,64 +1,49 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCHv3 2/2] target: use new "dbroot" target attribute
-Date: Thu, 14 Apr 2016 18:18:51 -0700
-Message-ID: <79bbf3d51cb8bcf365f3c36faf2fe43b2420664f.1460678002.git.lduncan@suse.com>
-References: <cover.1460678002.git.lduncan@suse.com>
+Subject: [PATCHv3 0/2] target: make location of /var/targets configurable
+Date: Thu, 14 Apr 2016 18:18:49 -0700
+Message-ID: <cover.1460678002.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1460678002.git.lduncan@suse.com>
-In-Reply-To: <cover.1460678002.git.lduncan@suse.com>
-References: <cover.1460678002.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, nab@linux-iscsi.org, target-devel@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, hch@infradead.org, hare@suse.de, agrover@redhat.com, jxm@netiant.com, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This commit updates the target core ALUA and PR
-modules to use the new "dbroot" attribute instead
-of assuming the target database is in "/var/target".
+These patches make the location of "/var/target" configurable,
+though it still defauls to "/var/target".
 
-Signed-off-by: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/target/target_core_alua.c | 6 +++---
- drivers/target/target_core_pr.c   | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+This "target database directory" can only be changed
+after the target_core_mod loads but before any
+fabric drivers are loaded, and must be the pathname
+of an existing directory.
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 49aba4a31747..4c82bbe19003 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -932,7 +932,7 @@ static int core_alua_update_tpg_primary_metadata(
- 			tg_pt_gp->tg_pt_gp_alua_access_status);
- 
- 	snprintf(path, ALUA_METADATA_PATH_LEN,
--		"/var/target/alua/tpgs_%s/%s", &wwn->unit_serial[0],
-+		"%s/alua/tpgs_%s/%s", db_root, &wwn->unit_serial[0],
- 		config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
- 
- 	rc = core_alua_write_tpg_metadata(path, md_buf, len);
-@@ -1275,8 +1275,8 @@ static int core_alua_update_tpg_secondary_metadata(struct se_lun *lun)
- 			atomic_read(&lun->lun_tg_pt_secondary_offline),
- 			lun->lun_tg_pt_secondary_stat);
- 
--	snprintf(path, ALUA_METADATA_PATH_LEN, "/var/target/alua/%s/%s/lun_%llu",
--			se_tpg->se_tpg_tfo->get_fabric_name(), wwn,
-+	snprintf(path, ALUA_METADATA_PATH_LEN, "%s/alua/%s/%s/lun_%llu",
-+			db_root, se_tpg->se_tpg_tfo->get_fabric_name(), wwn,
- 			lun->unpacked_lun);
- 
- 	rc = core_alua_write_tpg_metadata(path, md_buf, len);
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index b1795735eafc..47463c99c318 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1985,7 +1985,7 @@ static int __core_scsi3_write_aptpl_to_file(
- 		return -EMSGSIZE;
- 	}
- 
--	snprintf(path, 512, "/var/target/pr/aptpl_%s", &wwn->unit_serial[0]);
-+	snprintf(path, 512, "%s/pr/aptpl_%s", db_root, &wwn->unit_serial[0]);
- 	file = filp_open(path, flags, 0600);
- 	if (IS_ERR(file)) {
- 		pr_err("filp_open(%s) for APTPL metadata"
+This configuration is accomplished via the configfs
+top-level target attribute "dbroot", i.e. dumping
+out "/sys/kernel/config/target/dbroot" will normally
+return "/var/target". Writing to this attribute
+changes the loation where the kernel looks for the
+target database.
+
+The first patch creates this configurable value for
+the "dbroot", and the second patch modifies users
+of this directory to use this new attribute.
+
+Changes from v2:
+ * Add locking around access to target driver list
+
+Changes from v1:
+ * Only allow changing target DB root before it
+   can be used by others
+ * Validate that new DB root is a valid directory
+
+Lee Duncan (2):
+  target: make target db location configurable
+  target: use new "dbroot" target attribute
+
+ drivers/target/target_core_alua.c     |  6 ++--
+ drivers/target/target_core_configfs.c | 62 +++++++++++++++++++++++++++++++++++
+ drivers/target/target_core_internal.h |  6 ++++
+ drivers/target/target_core_pr.c       |  2 +-
+ 4 files changed, 72 insertions(+), 4 deletions(-)
+
 -- 
 2.1.4
