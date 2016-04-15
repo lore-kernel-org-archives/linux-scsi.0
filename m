@@ -1,136 +1,147 @@
 From: mchristi@redhat.com
-Subject: [PATCH 25/42] target: set bi_op to REQ_OP
-Date: Fri, 15 Apr 2016 14:16:00 -0500
-Message-ID: <1460747777-8479-26-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 32/42] block: convert is_sync helpers to use
+	REQ_OPs.
+Date: Fri, 15 Apr 2016 14:16:07 -0500
+Message-ID: <1460747777-8479-33-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the target modules use bio->bi_op for REQ_OPs and
-rq_flag_bits to bio->bi_rw.
+This patch converts the is_sync helpers to use separate variables
+for the operation and flags.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_iblock.c | 30 +++++++++++++++---------------
- drivers/target/target_core_pscsi.c  |  2 +-
- 2 files changed, 16 insertions(+), 16 deletions(-)
+ block/blk-core.c       | 6 +++---
+ block/blk-mq.c         | 8 ++++----
+ block/cfq-iosched.c    | 2 +-
+ include/linux/blkdev.h | 6 +++---
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index c25109c..5e60dbc 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -312,7 +312,8 @@ static void iblock_bio_done(struct bio *bio)
- }
- 
- static struct bio *
--iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
-+iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
-+	       int op_flags)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 660aeb8..e2f7b0a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
+ static void freed_request(struct request_list *rl, int op, unsigned int flags)
  {
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
- 	struct bio *bio;
-@@ -334,7 +335,8 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
- 	bio->bi_private = cmd;
- 	bio->bi_end_io = &iblock_bio_done;
- 	bio->bi_iter.bi_sector = lba;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
+ 	struct request_queue *q = rl->q;
+-	int sync = rw_is_sync(op | flags);
++	int sync = rw_is_sync(op, flags);
  
- 	return bio;
+ 	q->nr_rqs[sync]--;
+ 	rl->count[sync]--;
+@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+ 	struct elevator_type *et = q->elevator->type;
+ 	struct io_context *ioc = rq_ioc(bio);
+ 	struct io_cq *icq = NULL;
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	int may_queue;
+ 
+ 	if (unlikely(blk_queue_dying(q)))
+@@ -1246,7 +1246,7 @@ static struct request *get_request(struct request_queue *q, int op,
+ 				   int op_flags, struct bio *bio,
+ 				   gfp_t gfp_mask)
+ {
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	DEFINE_WAIT(wait);
+ 	struct request_list *rl;
+ 	struct request *rq;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4843c0b..64d61be 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -206,7 +206,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
+ 	rq->end_io_data = NULL;
+ 	rq->next_rq = NULL;
+ 
+-	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
++	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
  }
-@@ -480,7 +482,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		goto fail;
- 	cmd->priv = ibr;
  
--	bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
-+	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE, 0);
- 	if (!bio)
- 		goto fail_free_ibr;
+ static struct request *
+@@ -1181,7 +1181,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
+ 	ctx = blk_mq_get_ctx(q);
+ 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
  
-@@ -493,7 +495,8 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
- 				!= sg->length) {
+-	if (rw_is_sync(bio->bi_op | bio->bi_rw))
++	if (rw_is_sync(bio->bi_op, bio->bi_rw))
+ 		op_flags |= REQ_SYNC;
  
--			bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
-+			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE,
-+					     0);
- 			if (!bio)
- 				goto fail_put_bios;
+ 	trace_block_getrq(q, bio, op);
+@@ -1249,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+  */
+ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
++	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_map_ctx data;
+ 	struct request *rq;
+@@ -1346,7 +1346,7 @@ done:
+  */
+ static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
++	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_plug *plug;
+ 	unsigned int request_count = 0;
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 0dfa2dd..2fd5bcf 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
+ 	if (!cic)
+ 		return ELV_MQUEUE_MAY;
  
-@@ -679,8 +682,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	struct scatterlist *sg;
- 	u32 sg_num = sgl_nents;
- 	unsigned bio_cnt;
--	int rw = 0;
--	int i;
-+	int i, op, op_flags = 0;
+-	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
++	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
+ 	if (cfqq) {
+ 		cfq_init_prio_data(cfqq, cic);
  
- 	if (data_direction == DMA_TO_DEVICE) {
- 		struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-@@ -689,18 +691,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		 * Force writethrough using WRITE_FUA if a volatile write cache
- 		 * is not enabled, or if initiator set the Force Unit Access bit.
- 		 */
-+		op = REQ_OP_WRITE;
- 		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
- 			if (cmd->se_cmd_flags & SCF_FUA)
--				rw = WRITE_FUA;
-+				op_flags = WRITE_FUA;
- 			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
--				rw = WRITE_FUA;
--			else
--				rw = WRITE;
--		} else {
--			rw = WRITE;
-+				op_flags = WRITE_FUA;
- 		}
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4aaa317..42711ef 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -617,14 +617,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
+ /*
+  * We regard a request as sync, if either a read or a sync write
+  */
+-static inline bool rw_is_sync(unsigned int rw_flags)
++static inline bool rw_is_sync(int op, unsigned int rw_flags)
+ {
+-	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
++	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
+ }
  
- 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
-@@ -714,7 +713,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		return 0;
- 	}
+ static inline bool rq_is_sync(struct request *rq)
+ {
+-	return rw_is_sync(rq->cmd_flags);
++	return rw_is_sync(rq->op, rq->cmd_flags);
+ }
  
--	bio = iblock_get_bio(cmd, block_lba, sgl_nents, rw);
-+	bio = iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
- 	if (!bio)
- 		goto fail_free_ibr;
- 
-@@ -738,7 +737,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 				bio_cnt = 0;
- 			}
- 
--			bio = iblock_get_bio(cmd, block_lba, sg_num, rw);
-+			bio = iblock_get_bio(cmd, block_lba, sg_num, op,
-+					     op_flags);
- 			if (!bio)
- 				goto fail_put_bios;
- 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index de18790..2cf915c 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -922,7 +922,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 					goto fail;
- 
- 				if (rw)
--					bio->bi_rw |= REQ_WRITE;
-+					bio->bi_op = REQ_OP_WRITE;
- 
- 				pr_debug("PSCSI: Allocated bio: %p,"
- 					" dir: %s nr_vecs: %d\n", bio,
+ static inline bool blk_rl_full(struct request_list *rl, bool sync)
 -- 
 2.7.2
