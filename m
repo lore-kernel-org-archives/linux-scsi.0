@@ -1,50 +1,104 @@
-From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Subject: RE: [PATCH] mpt3sas: Remove usage of 'struct timeval'
-Date: Fri, 15 Apr 2016 11:43:10 -0600
-Message-ID: <624c2d8b5746488ce5587db59b613c51@mail.gmail.com>
-References: <20160413070140.GA35235@localhost> <yq1inzjsi2v.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 6/9] block: Add 'zoned' sysfs queue attribute
+Date: Fri, 15 Apr 2016 10:45:43 -0700
+Message-ID: <571128C7.1060107@sandisk.com>
+References: <1459764020-126038-1-git-send-email-hare@suse.de>
+ <1459764020-126038-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:37883 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbcDORnM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2016 13:43:12 -0400
-Received: by mail-ig0-f175.google.com with SMTP id g8so29286426igr.0
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2016 10:43:12 -0700 (PDT)
-In-Reply-To: <yq1inzjsi2v.fsf@sermon.lab.mkp.net>
+Received: from mail-bn1on0092.outbound.protection.outlook.com ([157.56.110.92]:58654
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750916AbcDORp5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 13:45:57 -0400
+In-Reply-To: <1459764020-126038-7-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, suganath-prabu.subramani@avagotech.com, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 
-Hi,
-Please consider this patch as Ack-by: Sathya Prakash
-<sathya.prakash@broadcom.com>
+On 04/04/2016 03:00 AM, Hannes Reinecke wrote:
+> Add a sysfs queue attribute 'zoned' to display the zone layout
+> for zoned devices.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   block/blk-sysfs.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 47 insertions(+)
+>
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index ff97091..748bb27 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -244,6 +244,43 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
+>   	return queue_var_show(max_hw_sectors_kb, (page));
+>   }
+>
+> +#ifdef CONFIG_BLK_DEV_ZONED
+> +static ssize_t queue_zoned_show(struct request_queue *q, char *page)
+> +{
+> +	struct rb_node *node;
+> +	struct blk_zone *zone;
+> +	ssize_t offset = 0, end = 0;
+> +	size_t size = 0, num = 0;
+> +	enum blk_zone_type type = BLK_ZONE_TYPE_UNKNOWN;
+> +
+> +	for (node = rb_first(&q->zones); node; node = rb_next(node)) {
+> +		zone = rb_entry(node, struct blk_zone, node);
+> +		if (zone->type != type ||
+> +		    zone->len != size ||
+> +		    end != zone->start) {
+> +			if (size != 0)
+> +				offset += sprintf(page + offset, "%zu\n", num);
+> +			/* We can only store one page ... */
+> +			if (offset + 42 > PAGE_SIZE) {
+> +				offset += sprintf(page + offset, "...\n");
+> +				return offset;
+> +			}
+> +			size = zone->len;
+> +			type = zone->type;
+> +			offset += sprintf(page + offset, "%zu %zu %d ",
+> +					  zone->start, size, type);
+> +			num = 0;
+> +			end = zone->start + size;
+> +		} else
+> +			end += zone->len;
+> +		num++;
+> +	}
+> +	if (num > 0)
+> +		offset += sprintf(page + offset, "%zu\n", num);
+> +	return offset > 0 ? offset : -EINVAL;
+> +}
+> +#endif
+> +
+>   #define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
+>   static ssize_t								\
+>   queue_show_##name(struct request_queue *q, char *page)			\
+> @@ -468,6 +505,13 @@ static struct queue_sysfs_entry queue_write_same_max_entry = {
+>   	.show = queue_write_same_max_show,
+>   };
+>
+> +#ifdef CONFIG_BLK_DEV_ZONED
+> +static struct queue_sysfs_entry queue_zoned_entry = {
+> +	.attr = {.name = "zoned", .mode = S_IRUGO },
+> +	.show = queue_zoned_show,
+> +};
+> +#endif
+> +
+
+Hello Hannes,
+
+Have you considered to move the above definitions into a new file? That 
+would allow to avoid two #ifdefs and to move the code that decides 
+whether or not the above code gets built into block/Makefile.
+
+Additionally, have you considered to create one sysfs directory per zone 
+instead of one sysfs attribute with all zone information? From 
+Documentation/filesystems/sysfs.txt: "Attributes should be ASCII text 
+files, preferably with only one value per file."
 
 Thanks,
-Sathya
 
------Original Message-----
-From: mpt-fusionlinux.pdl@broadcom.com
-[mailto:mpt-fusionlinux.pdl@broadcom.com] On Behalf Of Martin K. Petersen
-Sent: Thursday, April 14, 2016 8:48 PM
-To: Tina Ruchandani
-Cc: MPT-FusionLinux.pdl@broadcom.com; Arnd Bergmann;
-y2038@lists.linaro.org; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; jejb@linux.vnet.ibm.com;
-suganath-prabu.subramani@avagotech.com; Chaitra P B; Sreekanth Reddy
-Subject: Re: [PATCH] mpt3sas: Remove usage of 'struct timeval'
-
->>>>> "Tina" == Tina Ruchandani <ruchandani.tina@gmail.com> writes:
-
-Tina> 'struct timeval' will have its tv_sec value overflow on 32-bit
-Tina> systems in year 2038 and beyond. This patch replaces the use of
-Tina> struct timeval for computing mpi_request.TimeStamp, and instead
-Tina> uses ktime_t which provides 64-bit seconds value. The timestamp
-Tina> computed remains unaffected (milliseconds since Unix epoch).
-
-Broadcom folks, please review.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
