@@ -1,106 +1,88 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] qla2xxx: rewrite code to avoid hitting gcc bug 70646
-Date: Fri, 15 Apr 2016 14:25:05 -0700
-Message-ID: <1460755505.2331.47.camel@HansenPartnership.com>
-References: <1460716583-15673-1-git-send-email-dvlasenk@redhat.com>
-		 <1460731203.2331.7.camel@HansenPartnership.com>
-		 <57113959.8050103@redhat.com>
-	 <1460747126.2331.28.camel@HansenPartnership.com>
-	 <571158A4.8020500@redhat.com>
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force
+ inlining of some byteswap operations)
+Date: Fri, 15 Apr 2016 17:20:37 -0500
+Message-ID: <20160415222037.wu4n6w2yedxdzfle@treble>
+References: <570E37A9.2050503@redhat.com>
+ <20160413123607.3y3v5esq3myto4kc@treble>
+ <20160413151500.tate3u6trg4agugo@treble>
+ <1460566509.2322.14.camel@HansenPartnership.com>
+ <20160413171058.24tnvvquvnipnwnd@treble>
+ <570FB742.2010309@redhat.com>
+ <20160414155708.upka6phfvwpbp6zw@treble>
+ <570FCEB7.1070200@redhat.com>
+ <20160415054518.GA28079@gmail.com>
+ <20160415134745.wxb73xemv2tqib5m@treble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39952 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751468AbcDOVZI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2016 17:25:08 -0400
-In-Reply-To: <571158A4.8020500@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160415134745.wxb73xemv2tqib5m@treble>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi <linux-scsi@vger.kernel.org>, jamborm@gcc.gnu.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: qla2xxx-upstream@qlogic.com, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2016-04-15 at 23:09 +0200, Denys Vlasenko wrote:
-> On 04/15/2016 09:05 PM, James Bottomley wrote:
-> > On Fri, 2016-04-15 at 20:56 +0200, Denys Vlasenko wrote:
-> > > On 04/15/2016 04:40 PM, James Bottomley wrote:
-> > > > On Fri, 2016-04-15 at 12:36 +0200, Denys Vlasenko wrote:
-> > > > > More info here:
-> > > > > https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+On Fri, Apr 15, 2016 at 08:47:45AM -0500, Josh Poimboeuf wrote:
+> On Fri, Apr 15, 2016 at 07:45:19AM +0200, Ingo Molnar wrote:
+> > 
+> > * Denys Vlasenko <dvlasenk@redhat.com> wrote:
+> > 
+> > > > In fact, the following patch seems to fix it:
 > > > > 
-> > > > This bug is under investigation, so I'd rather not alter code
-> > > > for a
-> > > > gcc
-> > > > bug until we know if we can supply options to fix it rather
-> > > > than
-> > > > changing code.
+> > > > diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+> > > > index bf66ea6..56b9e81 100644
+> > > > --- a/include/scsi/scsi_transport_fc.h
+> > > > +++ b/include/scsi/scsi_transport_fc.h
+> > > > @@ -796,7 +796,7 @@ fc_remote_port_chkready(struct fc_rport *rport)
+> > > >  	return result;
+> > > >  }
+> > > >  
+> > > > -static inline u64 wwn_to_u64(u8 *wwn)
+> > > > +static __always_inline u64 wwn_to_u64(u8 *wwn)
+> > > >  {
+> > > >  	return get_unaligned_be64(wwn);
+> > > >  }
 > > > 
-> > > 
-> > > Background. The bug exists in gcc for 2 years, but it is rather
-> > > hard to trigger, so nobody noticed.
+> > > It is not a guarantee.
 > > 
-> > We know this ... linux-scsi is on the cc for the other thread on
-> > this.
-> > 
-> > > Unfortunately for kernel, these two commits landed in Linus tree
-> > > in March 16 and 17:
-> > > 
-> > > 
-> > > On 04/13/2016 05:36 AM, Josh Poimboeuf wrote:
-> > > > It occurs with the combination of the following two recent
-> > > > commits:
-> > > > 
-> > > > - bc27fb68aaad ("include/uapi/linux/byteorder, swab: force
-> > > > inlining
-> > > > of some byteswap operations")
-> > > > - ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn
-> > > > access")
-> > > 
-> > > 
-> > > and now *many* users of qla2x00 and new-ish gcc are going to
-> > > very much notice it, as their kernels will start crashing
-> > > reliably.
-> > > 
-> > > The commits can be reverted, sure, but they per se do not contain
-> > > anything unusual. They, together with not very typical construct
-> > > in qla2x00_get_host_fabric_name, one
-> > > which boils down to "swab64p(constant_array_of_8_bytes)",
-> > > just happen to nudge gcc in a right way to finally trigger the
-> > > bug.
-> > > 
-> > > So I came with another idea how to forestall the imminent deluge
-> > > of
-> > > qla2x00 oops reports - this patch.
-> > 
-> > There are actually a raft of checkers that run the upstream code
-> > which
-> > aren't seeing any problem; likely because the code is harder to
-> > trigger
-> > than you think.  So, lets wait until the resolution of the other
-> > thread
-> > before we panic, especially since we're only at -rc3.
+> > Of course it's a workaround - but is there any deterministic way to turn off this 
+> > GCC bug (by activating some GCC command line switch), or do we have to live with 
+> > objtool warning about this GCC?
 > 
-> I'm not panicking, James.
+> I don't think we know yet if there's a reliable way to turn the bug off.
 > 
-> By sending a workaround, I just want to make sure that *other people*
-> won't be forced to fix up a problem which surfaced because of *my* 
-> patch.
+> Also, according to the gcc guys, this bug won't always result in a
+> truncated function, and may sometimes just make some inline function
+> call sites disappear:
+> 
+>   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646#c14
+> 
+> though I haven't been able to confirm that experimentally.  But if it's
+> true, that means that objtool won't be able to detect all cases of the
+> bug and some function calls may just silently disappear!
+> 
+> There's a lot of activity in the bug now, so hopefully they'll be able
+> to tell us soon if there's a reliable way to avoid it and/or detect it.
+> 
+> BTW, Denys posted a workaround patch for the qla2xxxx code:
+> 
+>   https://lkml.kernel.org/r/1460716583-15673-1-git-send-email-dvlasenk@redhat.com
 
-Look, if gcc really proves to be intractable, I think what should
-happen is revert the triggering patch, which is
+Martin Jambor wrote a succinct summary of the conditions needed for this
+bug:
 
-commit e3bde9568d992c5f985e6e30731a5f9f9bef7b13
-Author: Denys Vlasenko <dvlasenk@redhat.com>
-Date:   Thu Mar 17 14:22:47 2016 -0700
+  "This bug can occur when an inlineable function containing a call to
+  __builtin_constant_p, which checks a parameter or a value it
+  references and a (possibly indirect) caller of the function actually
+  passes a constant, but stores it using a type of a different size."
 
-    include/linux/unaligned: force inlining of byteswap operations
+So to prevent it from happening elsewhere in the kernel, it sounds like
+we'd have to either remove all uses of __builtin_constant_p() or disable
+inlining completely.
 
-But, as I've said a couple of times now, there are no bug reports from
-the testers about qla2xxx (yet) so we can afford to wait a bit and see
-if there's some other resolution that doesn't involve changing kernel
-code to work around a local gcc bug.
+There's also no reliable way to detect the bug has occurred, though
+objtool will detect it in cases when the function gets truncated.
 
-James
-
+-- 
+Josh
