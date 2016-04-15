@@ -1,7 +1,8 @@
 From: mchristi@redhat.com
-Subject: [PATCH 38/42] block, fs: remove old REQ definitions.
-Date: Fri, 15 Apr 2016 05:39:58 -0500
-Message-ID: <1460716802-2294-39-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 32/42] block: convert is_sync helpers to use
+	REQ_OPs.
+Date: Fri, 15 Apr 2016 05:39:52 -0500
+Message-ID: <1460716802-2294-33-git-send-email-mchristi@redhat.com>
 References: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,141 +24,124 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-We no longer use REQ_WRITE. REQ_WRITE_SAME and REQ_DISCARD,
-so this patch removes them.
+This patch converts the is_sync helpers to use separate variables
+for the operation and flags.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- include/linux/blk_types.h   | 21 ++++++---------------
- include/linux/fs.h          | 21 +++++++++++----------
- include/trace/events/f2fs.h |  1 -
- 3 files changed, 17 insertions(+), 26 deletions(-)
+ block/blk-core.c       | 6 +++---
+ block/blk-mq.c         | 8 ++++----
+ block/cfq-iosched.c    | 2 +-
+ include/linux/blkdev.h | 6 +++---
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 6e49c91..b4251ed 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -151,7 +151,6 @@ struct bio {
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 660aeb8..e2f7b0a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
+ static void freed_request(struct request_list *rl, int op, unsigned int flags)
+ {
+ 	struct request_queue *q = rl->q;
+-	int sync = rw_is_sync(op | flags);
++	int sync = rw_is_sync(op, flags);
+ 
+ 	q->nr_rqs[sync]--;
+ 	rl->count[sync]--;
+@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+ 	struct elevator_type *et = q->elevator->type;
+ 	struct io_context *ioc = rq_ioc(bio);
+ 	struct io_cq *icq = NULL;
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	int may_queue;
+ 
+ 	if (unlikely(blk_queue_dying(q)))
+@@ -1246,7 +1246,7 @@ static struct request *get_request(struct request_queue *q, int op,
+ 				   int op_flags, struct bio *bio,
+ 				   gfp_t gfp_mask)
+ {
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	DEFINE_WAIT(wait);
+ 	struct request_list *rl;
+ 	struct request *rq;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4843c0b..64d61be 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -206,7 +206,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
+ 	rq->end_io_data = NULL;
+ 	rq->next_rq = NULL;
+ 
+-	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
++	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
+ }
+ 
+ static struct request *
+@@ -1181,7 +1181,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
+ 	ctx = blk_mq_get_ctx(q);
+ 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+ 
+-	if (rw_is_sync(bio->bi_op | bio->bi_rw))
++	if (rw_is_sync(bio->bi_op, bio->bi_rw))
+ 		op_flags |= REQ_SYNC;
+ 
+ 	trace_block_getrq(q, bio, op);
+@@ -1249,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
   */
- enum rq_flag_bits {
- 	/* common flags */
--	__REQ_WRITE,		/* not set, read. set, write */
- 	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
- 	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
- 	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
-@@ -159,9 +158,7 @@ enum rq_flag_bits {
- 	__REQ_SYNC,		/* request is sync (sync write or read) */
- 	__REQ_META,		/* metadata io request */
- 	__REQ_PRIO,		/* boost priority in cfq */
--	__REQ_DISCARD,		/* request to discard sectors */
--	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
--	__REQ_WRITE_SAME,	/* write same block many times */
-+	__REQ_SECURE,		/* secure discard (used with REQ_OP_DISCARD) */
- 
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
- 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
-@@ -197,28 +194,22 @@ enum rq_flag_bits {
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
--#define REQ_WRITE		(1ULL << __REQ_WRITE)
- #define REQ_FAILFAST_DEV	(1ULL << __REQ_FAILFAST_DEV)
- #define REQ_FAILFAST_TRANSPORT	(1ULL << __REQ_FAILFAST_TRANSPORT)
- #define REQ_FAILFAST_DRIVER	(1ULL << __REQ_FAILFAST_DRIVER)
- #define REQ_SYNC		(1ULL << __REQ_SYNC)
- #define REQ_META		(1ULL << __REQ_META)
- #define REQ_PRIO		(1ULL << __REQ_PRIO)
--#define REQ_DISCARD		(1ULL << __REQ_DISCARD)
--#define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
- #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
- 
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
--	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
--	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
--	 REQ_SECURE | REQ_INTEGRITY)
-+	(REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | REQ_NOIDLE | \
-+	 REQ_FLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
- 
--#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
--
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
- 	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
-@@ -250,9 +241,9 @@ enum rq_flag_bits {
- 
- enum req_op {
- 	REQ_OP_READ,
--	REQ_OP_WRITE		= REQ_WRITE,
--	REQ_OP_DISCARD		= REQ_DISCARD,
--	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
-+	REQ_OP_WRITE,
-+	REQ_OP_DISCARD,		/* request to discard sectors */
-+	REQ_OP_WRITE_SAME,	/* write same block many times */
- };
- 
- typedef unsigned int blk_qc_t;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 9becf20..509e21f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -153,9 +153,10 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
- #define CHECK_IOVEC_ONLY -1
- 
- /*
-- * The below are the various read and write types that we support. Some of
-+ * The below are the various read and write flags that we support. Some of
-  * them include behavioral modifiers that send information down to the
-- * block layer and IO scheduler. Terminology:
-+ * block layer and IO scheduler. They should be used along with a req_op.
-+ * Terminology:
-  *
-  *	The block layer uses device plugging to defer IO a little bit, in
-  *	the hope that we will see more IO very shortly. This increases
-@@ -194,19 +195,19 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
-  *			non-volatile media on completion.
-  *
+ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
++	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_map_ctx data;
+ 	struct request *rq;
+@@ -1346,7 +1346,7 @@ done:
   */
--#define RW_MASK			REQ_WRITE
-+#define RW_MASK			REQ_OP_WRITE
- #define RWA_MASK		REQ_RAHEAD
+ static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
++	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_plug *plug;
+ 	unsigned int request_count = 0;
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 0dfa2dd..2fd5bcf 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
+ 	if (!cic)
+ 		return ELV_MQUEUE_MAY;
  
--#define READ			0
-+#define READ			REQ_OP_READ
- #define WRITE			RW_MASK
- #define READA			RWA_MASK
+-	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
++	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
+ 	if (cfqq) {
+ 		cfq_init_prio_data(cfqq, cic);
  
--#define READ_SYNC		(READ | REQ_SYNC)
--#define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE)
--#define WRITE_ODIRECT		(WRITE | REQ_SYNC)
--#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
--#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FUA)
--#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
-+#define READ_SYNC		REQ_SYNC
-+#define WRITE_SYNC		(REQ_SYNC | REQ_NOIDLE)
-+#define WRITE_ODIRECT		REQ_SYNC
-+#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
-+#define WRITE_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FUA)
-+#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
- 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4aaa317..42711ef 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -617,14 +617,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
  /*
-  * Attribute flags.  These should be or-ed together to figure out what
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index db75d69..20f708e 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -31,7 +31,6 @@ TRACE_DEFINE_ENUM(BG_GC);
- TRACE_DEFINE_ENUM(LFS);
- TRACE_DEFINE_ENUM(SSR);
- TRACE_DEFINE_ENUM(__REQ_RAHEAD);
--TRACE_DEFINE_ENUM(__REQ_WRITE);
- TRACE_DEFINE_ENUM(__REQ_SYNC);
- TRACE_DEFINE_ENUM(__REQ_NOIDLE);
- TRACE_DEFINE_ENUM(__REQ_FLUSH);
+  * We regard a request as sync, if either a read or a sync write
+  */
+-static inline bool rw_is_sync(unsigned int rw_flags)
++static inline bool rw_is_sync(int op, unsigned int rw_flags)
+ {
+-	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
++	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
+ }
+ 
+ static inline bool rq_is_sync(struct request *rq)
+ {
+-	return rw_is_sync(rq->cmd_flags);
++	return rw_is_sync(rq->op, rq->cmd_flags);
+ }
+ 
+ static inline bool blk_rl_full(struct request_list *rl, bool sync)
 -- 
 2.7.2
