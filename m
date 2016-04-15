@@ -1,77 +1,39 @@
-From: Josh Poimboeuf <jpoimboe@redhat.com>
-Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force
- inlining of some byteswap operations)
-Date: Fri, 15 Apr 2016 08:47:45 -0500
-Message-ID: <20160415134745.wxb73xemv2tqib5m@treble>
-References: <20160413033649.7r3msnmo3trtq47z@treble>
- <570E37A9.2050503@redhat.com>
- <20160413123607.3y3v5esq3myto4kc@treble>
- <20160413151500.tate3u6trg4agugo@treble>
- <1460566509.2322.14.camel@HansenPartnership.com>
- <20160413171058.24tnvvquvnipnwnd@treble>
- <570FB742.2010309@redhat.com>
- <20160414155708.upka6phfvwpbp6zw@treble>
- <570FCEB7.1070200@redhat.com>
- <20160415054518.GA28079@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] hisi_sas: add device and slot alloc hw methods
+Date: Fri, 15 Apr 2016 15:51:40 +0200
+Message-ID: <5710F1EC.9070004@suse.de>
+References: <1460727398-102091-1-git-send-email-john.garry@huawei.com>
+ <1460727398-102091-2-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40852 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924AbcDONry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2016 09:47:54 -0400
-Content-Disposition: inline
-In-Reply-To: <20160415054518.GA28079@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1460727398-102091-2-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Apr 15, 2016 at 07:45:19AM +0200, Ingo Molnar wrote:
-> 
-> * Denys Vlasenko <dvlasenk@redhat.com> wrote:
-> 
-> > > In fact, the following patch seems to fix it:
-> > > 
-> > > diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-> > > index bf66ea6..56b9e81 100644
-> > > --- a/include/scsi/scsi_transport_fc.h
-> > > +++ b/include/scsi/scsi_transport_fc.h
-> > > @@ -796,7 +796,7 @@ fc_remote_port_chkready(struct fc_rport *rport)
-> > >  	return result;
-> > >  }
-> > >  
-> > > -static inline u64 wwn_to_u64(u8 *wwn)
-> > > +static __always_inline u64 wwn_to_u64(u8 *wwn)
-> > >  {
-> > >  	return get_unaligned_be64(wwn);
-> > >  }
-> > 
-> > It is not a guarantee.
-> 
-> Of course it's a workaround - but is there any deterministic way to turn off this 
-> GCC bug (by activating some GCC command line switch), or do we have to live with 
-> objtool warning about this GCC?
+On 04/15/2016 03:36 PM, John Garry wrote:
+> Add methods to use HW specific versions of
+> functions to allocate slot and device.
+> HW specific methods are permitted to workaround
+> device id vs IPTT collision issue in v2 hw.
+>=20
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas.h      |  3 +++
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 11 +++++++++--
+>  2 files changed, 12 insertions(+), 2 deletions(-)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-I don't think we know yet if there's a reliable way to turn the bug off.
+Cheers,
 
-Also, according to the gcc guys, this bug won't always result in a
-truncated function, and may sometimes just make some inline function
-call sites disappear:
-
-  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646#c14
-
-though I haven't been able to confirm that experimentally.  But if it's
-true, that means that objtool won't be able to detect all cases of the
-bug and some function calls may just silently disappear!
-
-There's a lot of activity in the bug now, so hopefully they'll be able
-to tell us soon if there's a reliable way to avoid it and/or detect it.
-
-BTW, Denys posted a workaround patch for the qla2xxxx code:
-
-  https://lkml.kernel.org/r/1460716583-15673-1-git-send-email-dvlasenk@redhat.com
-
-
--- 
-Josh
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
