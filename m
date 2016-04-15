@@ -1,36 +1,95 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mpt3sas: Remove usage of 'struct timeval'
-Date: Thu, 14 Apr 2016 22:48:24 -0400
-Message-ID: <yq1inzjsi2v.fsf@sermon.lab.mkp.net>
-References: <20160413070140.GA35235@localhost>
+From: Xiong Zhou <jencce.kernel@gmail.com>
+Subject: Re: [PATCH v4 1/2] scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
+Date: Fri, 15 Apr 2016 11:24:02 +0800
+Message-ID: <CADJHv_sVG2yO0CcrbOFRNDrzxjJk+iUKjVLCAJsEhzJytx7Qsw@mail.gmail.com>
+References: <cover.1459848136.git.jthumshirn@suse.de>
+	<95ae7ee32dca23bb7f3ab432046fb7016b341049.1459848136.git.jthumshirn@suse.de>
+	<CADJHv_uHL0=ebUio3j5ysnaU9gDus+HQi4=pQznTy0B=6+NWAg@mail.gmail.com>
+	<1550969.mvAXU2aY35@c203>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <20160413070140.GA35235@localhost> (Tina Ruchandani's message of
- "Wed, 13 Apr 2016 00:01:40 -0700")
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, y2038@lists.linaro.org, Chaitra P B <chaitra.basappa@broadcom.com>, linux-kernel@vger.kernel.org, suganath-prabu.subramani@avagotech.com, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, MPT-FusionLinux.pdl@broadcom.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1550969.mvAXU2aY35@c203>
+Sender: stable-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Ewan D. Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Pj4+Pj4gIlRpbmEiID09IFRpbmEgUnVjaGFuZGFuaSA8cnVjaGFuZGFuaS50aW5hQGdtYWlsLmNv
-bT4gd3JpdGVzOgoKVGluYT4gJ3N0cnVjdCB0aW1ldmFsJyB3aWxsIGhhdmUgaXRzIHR2X3NlYyB2
-YWx1ZSBvdmVyZmxvdyBvbiAzMi1iaXQKVGluYT4gc3lzdGVtcyBpbiB5ZWFyIDIwMzggYW5kIGJl
-eW9uZC4gVGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNlIG9mClRpbmE+IHN0cnVjdCB0aW1ldmFs
-IGZvciBjb21wdXRpbmcgbXBpX3JlcXVlc3QuVGltZVN0YW1wLCBhbmQgaW5zdGVhZApUaW5hPiB1
-c2VzIGt0aW1lX3Qgd2hpY2ggcHJvdmlkZXMgNjQtYml0IHNlY29uZHMgdmFsdWUuIFRoZSB0aW1l
-c3RhbXAKVGluYT4gY29tcHV0ZWQgcmVtYWlucyB1bmFmZmVjdGVkIChtaWxsaXNlY29uZHMgc2lu
-Y2UgVW5peCBlcG9jaCkuCgpCcm9hZGNvbSBmb2xrcywgcGxlYXNlIHJldmlldy4KCi0tIApNYXJ0
-aW4gSy4gUGV0ZXJzZW4JT3JhY2xlIExpbnV4IEVuZ2luZWVyaW5nCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1haWxpbmcgbGlzdApZMjAzOEBs
-aXN0cy5saW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFuL2xpc3RpbmZv
-L3kyMDM4Cg==
+On Wed, Apr 13, 2016 at 4:19 PM, Johannes Thumshirn <jthumshirn@suse.de=
+> wrote:
+> Hi Xiong
+> Sorry for the late reply
+>
+> On Dienstag, 12. April 2016 21:01:53 CEST Xiong Zhou wrote:
+>> How about this?
+>>
+>> drivers/scsi/scsi_scan: mark STARGET_REMOVE state before destroy
+>>
+>> Signed-off-by: Xiong Zhou <jencce.kernel@gmail.com>
+>> ---
+>>  drivers/scsi/scsi_scan.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+>> index 27df7e7..21092e5 100644
+>> --- a/drivers/scsi/scsi_scan.c
+>> +++ b/drivers/scsi/scsi_scan.c
+>> @@ -395,6 +395,8 @@ static void scsi_target_reap_ref_release(struct =
+kref *kref)
+>>   transport_remove_device(&starget->dev);
+>>   device_del(&starget->dev);
+>>   }
+>> +
+>> + starget->state =3D STARGET_REMOVE;
+>>   scsi_target_destroy(starget);
+>>  }
+>
+> The only scsi_target_reap_ref_release() caller is scsi_target_reap_re=
+f_put(),
+> which in turn is only called by scsi_target_reap(). scsi_target_reap(=
+)'s only
+> callers are scsi_remove_target()/__scsi_remove_target(), which set th=
+e
+> STARGET_REMOVE state and
+>
+> __scsi_add_device()
+> scsi_get_host_dev()
+> __scsi_scan_target()
+>
+> Which I'm currently investiganting (in parallel to reproducing the bu=
+g).
+
+Thanks !
+
+--
+Xiong
+
+>
+>>
+>> @@ -465,6 +467,7 @@ static struct scsi_target
+>> *scsi_alloc_target(struct device *parent,
+>>   dev_printk(KERN_ERR, dev, "target allocation failed, error %d\n", =
+error);
+>>   /* don't want scsi_target_reap to do the final
+>>   * put because it will be under the host lock */
+>> + starget->state =3D STARGET_REMOVE;
+>>   scsi_target_destroy(starget);
+>>   return NULL;
+>>   }
+>
+> Here starget->state is STARGET_CREATED and the assertion is already a=
+ware of
+> this state transitoin. IOTW this /shouldn't/ be needed.
+>
+>
+> --
+> Johannes Thumshirn                                                   =
+                             Storage
+> jthumshirn@suse.de                                                   =
+          +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=C3=BCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>
