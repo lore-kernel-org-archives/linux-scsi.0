@@ -1,52 +1,58 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 00/42] v7: separate operations from flags in the
- bio/request structs
-Date: Fri, 15 Apr 2016 15:44:32 -0400
-Message-ID: <20160415194432.GA30077@redhat.com>
-References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Subject: Re: [PATCH] qla2xxx: rewrite code to avoid hitting gcc bug 70646
+Date: Fri, 15 Apr 2016 15:02:35 -0500
+Message-ID: <20160415200235.cqsozl445k6evhok@treble>
+References: <1460716583-15673-1-git-send-email-dvlasenk@redhat.com>
+ <1460731203.2331.7.camel@HansenPartnership.com>
+ <57113959.8050103@redhat.com>
+ <1460747126.2331.28.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51936 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751040AbcDOUCh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2016 16:02:37 -0400
 Content-Disposition: inline
-In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mchristi@redhat.com
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+In-Reply-To: <1460747126.2331.28.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Apr 15 2016 at  3:15pm -0400,
-mchristi@redhat.com <mchristi@redhat.com> wrote:
-
-> The following patches begin to cleanup the request->cmd_flags and
-> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-> attributes and state of the request. For bi_rw we use it for similar
-> info and also the priority but then also have another bi_flags field
-> for state. At some point, we abused them so much we just made cmd_flags
-> 64 bits, so we could add more.
+On Fri, Apr 15, 2016 at 12:05:26PM -0700, James Bottomley wrote:
+> On Fri, 2016-04-15 at 20:56 +0200, Denys Vlasenko wrote:
+> > and now *many* users of qla2x00 and new-ish gcc are going to
+> > very much notice it, as their kernels will start crashing reliably.
+> > 
+> > The commits can be reverted, sure, but they per se do not contain
+> > anything unusual. They, together with not very typical construct
+> > in qla2x00_get_host_fabric_name, one
+> > which boils down to "swab64p(constant_array_of_8_bytes)",
+> > just happen to nudge gcc in a right way to finally trigger the bug.
+> > 
+> > So I came with another idea how to forestall the imminent deluge of
+> > qla2x00 oops reports - this patch.
 > 
-> The following patches seperate the operation (read, write discard,
-> flush, etc) from cmd_flags/bi_rw.
-> 
-> This patchset was made against linux-next from today April 15
-> (git tag next-20160415).
-> 
-> I put a git tree here:
-> https://github.com/mikechristie/linux-kernel.git
-> The patches are in the op branch.
-> 
-> v7:
-> 1. Fix broken feature_flush/fua use.
-> 
-> v6 and maybe hopfully the last version:
-> 1. Adapt patch 41 to Jens's QUEUE_FLAG_WC/FUA patchset.
+> There are actually a raft of checkers that run the upstream code which
+> aren't seeing any problem; likely because the code is harder to trigger
+> than you think.  So, lets wait until the resolution of the other thread
+> before we panic, especially since we're only at -rc3.
 
-Why are you blasting out the entire patchset for updates to individual
-patches at the end of the series?
+Regardless of the outcome of the gcc bug, it seems kind of silly to
+byteswap a constant value of 0xffffffffffffffff.
 
-Mail is cheap but look at how wide you're repeatedly spamming this
-series.
+	uint8_t node_name[WWN_SIZE] = { 0xFF, 0xFF, 0xFF, 0xFF, \
+		0xFF, 0xFF, 0xFF, 0xFF};
+	u64 fabric_name = wwn_to_u64(node_name);
 
-Also, look at what you've done to the dm-devel patchwork:
-https://patchwork.kernel.org/project/dm-devel/list/?state=*
+Similar to what Denys suggested, it can just be:
 
-Just sayin'... ;)
+	u64 fabric_name = -1;
+or
+	u64 fabric_name = 0xffffffffffffffff;
+
+Wouldn't that be an improvement to the code regardless?
+
+-- 
+Josh
