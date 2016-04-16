@@ -1,201 +1,74 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force inlining of some byteswap operations)
-Date: Sat, 16 Apr 2016 09:42:37 +0200
-Message-ID: <148417843.qlNmZC1Fkn@wuerfel>
-References: <1454615136-32308-2-git-send-email-dvlasenk@redhat.com> <570FCEB7.1070200@redhat.com> <20160415054518.GA28079@gmail.com>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force
+ inlining of some byteswap operations)
+Date: Sat, 16 Apr 2016 11:03:32 +0200
+Message-ID: <20160416090332.GA30613@gmail.com>
+References: <20160413123607.3y3v5esq3myto4kc@treble>
+ <20160413151500.tate3u6trg4agugo@treble>
+ <1460566509.2322.14.camel@HansenPartnership.com>
+ <20160413171058.24tnvvquvnipnwnd@treble>
+ <570FB742.2010309@redhat.com>
+ <20160414155708.upka6phfvwpbp6zw@treble>
+ <570FCEB7.1070200@redhat.com>
+ <20160415054518.GA28079@gmail.com>
+ <20160415134745.wxb73xemv2tqib5m@treble>
+ <20160415222037.wu4n6w2yedxdzfle@treble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160415054518.GA28079@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>, Josh Poimboeuf <jpoimboe@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36598 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157AbcDPJDh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Apr 2016 05:03:37 -0400
+Content-Disposition: inline
+In-Reply-To: <20160415222037.wu4n6w2yedxdzfle@treble>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi <linux-scsi@vger.kernel.org>, jamborm@gcc.gnu.org
 
-On Friday 15 April 2016 07:45:19 Ingo Molnar wrote:
-> 
-> * Denys Vlasenko <dvlasenk@redhat.com> wrote:
-> 
-> > > In fact, the following patch seems to fix it:
-> > > 
-> > > diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-> > > index bf66ea6..56b9e81 100644
-> > > --- a/include/scsi/scsi_transport_fc.h
-> > > +++ b/include/scsi/scsi_transport_fc.h
-> > > @@ -796,7 +796,7 @@ fc_remote_port_chkready(struct fc_rport *rport)
-> > >  	return result;
-> > >  }
-> > >  
-> > > -static inline u64 wwn_to_u64(u8 *wwn)
-> > > +static __always_inline u64 wwn_to_u64(u8 *wwn)
-> > >  {
-> > >  	return get_unaligned_be64(wwn);
-> > >  }
+
+* Josh Poimboeuf <jpoimboe@redhat.com> wrote:
+
+> > I don't think we know yet if there's a reliable way to turn the bug off.
 > > 
-> > It is not a guarantee.
+> > Also, according to the gcc guys, this bug won't always result in a
+> > truncated function, and may sometimes just make some inline function
+> > call sites disappear:
+> > 
+> >   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646#c14
+> > 
+> > though I haven't been able to confirm that experimentally.  But if it's
+> > true, that means that objtool won't be able to detect all cases of the
+> > bug and some function calls may just silently disappear!
+> > 
+> > There's a lot of activity in the bug now, so hopefully they'll be able
+> > to tell us soon if there's a reliable way to avoid it and/or detect it.
+> > 
+> > BTW, Denys posted a workaround patch for the qla2xxxx code:
+> > 
+> >   https://lkml.kernel.org/r/1460716583-15673-1-git-send-email-dvlasenk@redhat.com
 > 
-> Of course it's a workaround - but is there any deterministic way to turn off this 
-> GCC bug (by activating some GCC command line switch), or do we have to live with 
-> objtool warning about this GCC?
+> Martin Jambor wrote a succinct summary of the conditions needed for this
+> bug:
 > 
-> Which, by the way, is pretty cool!
+>   "This bug can occur when an inlineable function containing a call to
+>   __builtin_constant_p, which checks a parameter or a value it
+>   references and a (possibly indirect) caller of the function actually
+>   passes a constant, but stores it using a type of a different size."
+> 
+> So to prevent it from happening elsewhere in the kernel, it sounds like
+> we'd have to either remove all uses of __builtin_constant_p() or disable
+> inlining completely.
+> 
+> There's also no reliable way to detect the bug has occurred, though
+> objtool will detect it in cases when the function gets truncated.
 
-I have done a patch for the asm-generic/unaligned handling recently that
-reworks the implementation to avoid an ARM specific bug (gcc uses certain
-CPU instructions that require aligned data when we tell it that unaligned
-data is not).
+So it appears to me that due to the hard to detect nature of the GCC bug the fix 
+will probably be backported by them, so I think we should be fine with relying on 
+objtool to detect weird code sequences in the kernel, and should work around 
+specific instances of the bug.
 
-It changes the code enough that the gcc bug might not be triggered any more,
-aside from generating far superior code in some cases.
+Thanks,
 
-I thought I had submitted that patch before, but I can't find a version
-with a proper changelog any more now, so I probably haven't. However, I did
-all the research to show that it only makes things better on ARM and x86
-except in cases where the gcc inliner happens to pick a different set of
-functions to be inline (these have a 50:50 chance of better vs worse, the
-result on average seems to be the same).
-
-	Arnd
-
-commit 752b719f6675be02a3dd29fe5d92b2f380b5743d
-Author: Arnd Bergmann <arnd@arndb.de>
-Date:   Fri Mar 4 16:15:20 2016 +0100
-
-    asm-generic: always use struct based unaligned access
-    
-    Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-diff --git a/include/asm-generic/unaligned.h b/include/asm-generic/unaligned.h
-index 1ac097279db1..e8f5523eeb0a 100644
---- a/include/asm-generic/unaligned.h
-+++ b/include/asm-generic/unaligned.h
-@@ -3,29 +3,19 @@
- 
- /*
-  * This is the most generic implementation of unaligned accesses
-- * and should work almost anywhere.
-+ * and should work almost anywhere, we trust that the compiler
-+ * knows how to handle unaligned accesses.
-  */
- #include <asm/byteorder.h>
- 
--/* Set by the arch if it can handle unaligned accesses in hardware. */
--#ifdef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
--# include <linux/unaligned/access_ok.h>
--#endif
-+#include <linux/unaligned/le_struct.h>
-+#include <linux/unaligned/be_struct.h>
-+#include <linux/unaligned/generic.h>
- 
- #if defined(__LITTLE_ENDIAN)
--# ifndef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
--#  include <linux/unaligned/le_struct.h>
--#  include <linux/unaligned/be_byteshift.h>
--# endif
--# include <linux/unaligned/generic.h>
- # define get_unaligned	__get_unaligned_le
- # define put_unaligned	__put_unaligned_le
- #elif defined(__BIG_ENDIAN)
--# ifndef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
--#  include <linux/unaligned/be_struct.h>
--#  include <linux/unaligned/le_byteshift.h>
--# endif
--# include <linux/unaligned/generic.h>
- # define get_unaligned	__get_unaligned_be
- # define put_unaligned	__put_unaligned_be
- #else
-diff --git a/include/linux/unaligned/be_struct.h b/include/linux/unaligned/be_struct.h
-index 132415836c50..9ab8c53bb3fe 100644
---- a/include/linux/unaligned/be_struct.h
-+++ b/include/linux/unaligned/be_struct.h
-@@ -2,35 +2,36 @@
- #define _LINUX_UNALIGNED_BE_STRUCT_H
- 
- #include <linux/unaligned/packed_struct.h>
-+#include <asm/byteorder.h>
- 
- static inline u16 get_unaligned_be16(const void *p)
- {
--	return __get_unaligned_cpu16((const u8 *)p);
-+	return be16_to_cpu((__le16 __force)__get_unaligned_cpu16((const u8 *)p));
- }
- 
- static inline u32 get_unaligned_be32(const void *p)
- {
--	return __get_unaligned_cpu32((const u8 *)p);
-+	return be32_to_cpu((__le32 __force)__get_unaligned_cpu32((const u8 *)p));
- }
- 
- static inline u64 get_unaligned_be64(const void *p)
- {
--	return __get_unaligned_cpu64((const u8 *)p);
-+	return be64_to_cpu((__le64 __force)__get_unaligned_cpu64((const u8 *)p));
- }
- 
- static inline void put_unaligned_be16(u16 val, void *p)
- {
--	__put_unaligned_cpu16(val, p);
-+	__put_unaligned_cpu16((u16 __force)cpu_to_be16(val), p);
- }
- 
- static inline void put_unaligned_be32(u32 val, void *p)
- {
--	__put_unaligned_cpu32(val, p);
-+	__put_unaligned_cpu32((u32 __force)cpu_to_be32(val), p);
- }
- 
- static inline void put_unaligned_be64(u64 val, void *p)
- {
--	__put_unaligned_cpu64(val, p);
-+	__put_unaligned_cpu64((u64 __force)cpu_to_be64(val), p);
- }
- 
- #endif /* _LINUX_UNALIGNED_BE_STRUCT_H */
-diff --git a/include/linux/unaligned/le_struct.h b/include/linux/unaligned/le_struct.h
-index 088c4572faa8..64171ad0b100 100644
---- a/include/linux/unaligned/le_struct.h
-+++ b/include/linux/unaligned/le_struct.h
-@@ -2,35 +2,36 @@
- #define _LINUX_UNALIGNED_LE_STRUCT_H
- 
- #include <linux/unaligned/packed_struct.h>
-+#include <asm/byteorder.h>
- 
- static inline u16 get_unaligned_le16(const void *p)
- {
--	return __get_unaligned_cpu16((const u8 *)p);
-+	return le16_to_cpu((__le16 __force)__get_unaligned_cpu16((const u8 *)p));
- }
- 
- static inline u32 get_unaligned_le32(const void *p)
- {
--	return __get_unaligned_cpu32((const u8 *)p);
-+	return le32_to_cpu((__le32 __force)__get_unaligned_cpu32((const u8 *)p));
- }
- 
- static inline u64 get_unaligned_le64(const void *p)
- {
--	return __get_unaligned_cpu64((const u8 *)p);
-+	return le64_to_cpu((__le64 __force)__get_unaligned_cpu64((const u8 *)p));
- }
- 
- static inline void put_unaligned_le16(u16 val, void *p)
- {
--	__put_unaligned_cpu16(val, p);
-+	__put_unaligned_cpu16((u16 __force)cpu_to_le16(val), p);
- }
- 
- static inline void put_unaligned_le32(u32 val, void *p)
- {
--	__put_unaligned_cpu32(val, p);
-+	__put_unaligned_cpu32((u32 __force)cpu_to_le32(val), p);
- }
- 
- static inline void put_unaligned_le64(u64 val, void *p)
- {
--	__put_unaligned_cpu64(val, p);
-+	__put_unaligned_cpu64((u64 __force)cpu_to_le64(val), p);
- }
- 
- #endif /* _LINUX_UNALIGNED_LE_STRUCT_H */
+	Ingo
