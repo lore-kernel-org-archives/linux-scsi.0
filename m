@@ -1,23 +1,109 @@
-From: =?utf-8?B?0JDQvdC90LAgKNCa0LDQtNGA0L7QstC+0LUg0LDQs9C10L3RgtGB0YLQstC+KQ==?=
-	<denisova-k826@mail.ru>
-Subject: =?utf-8?B?0J3QsNGB0YfQtdGCINCS0LDRiNC10LPQviDQvtCx0YrRj9Cy0LvQtdC90LjRjw==?=
-Date: Sat, 16 Apr 2016 16:18:52 +0300 (EEST)
-Message-ID: <20160416131852.9A3E730CE6C@aldemweb.com>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: raid 5 creation fails on usb3 connected drives kernel 4.4.x, 4.5
+Date: Sat, 16 Apr 2016 09:08:40 -0700
+Message-ID: <20160416160840.GC10824@kroah.com>
+References: <57037A8B.4010305@westnet.com.au>
+ <20160406095308.GA31167@kroah.com>
+ <5705EA77.7050408@westnet.com.au>
+ <20160407144413.GD10853@kroah.com>
+ <57067E1B.60706@westnet.com.au>
+ <20160407155908.GA8655@kroah.com>
+ <57077BC8.7010300@westnet.com.au>
+ <20160408142435.GA4793@kroah.com>
+ <5708D6F2.7000608@westnet.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.aldemweb.com ([213.142.129.84]:60381 "EHLO aldemweb.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751373AbcDPPXK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Apr 2016 11:23:10 -0400
-Subject: =?utf-8?B?0J3QsNGB0YfQtdGCINCS0LDRiNC10LPQviDQvtCx0YrRj9Cy0LvQtdC90LjRjw==?=
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <5708D6F2.7000608-ncau/BB9MAPvnOemgxGiVw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Brian Chadwick <brianchad-ncau/BB9MAPvnOemgxGiVw@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, James Bottomley <JBottomley-O3H1v1f1dlM@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: kymgcf6o@gluemanoidy.ru, ognakkbffawe@goood-mail.org, pozhtehnika.21@mail.ru, msk@pk-strop.ru, natasha@intelix.ru, ovcux@dopr.hersol.ru, market12@grasaro.ru, pb8hso01srxs@dosug-mailers.ru, kaybazakovdv@mai2000.ru, prodaja1@umalauto.ru, olga1700@mail.ru, linux-scsi@vger.kernel.org, oxiwijavn@wertaret.com, nzace@b2e.org, neurhwvj@odlrbpxq.com, mail@luatdanhchinh.com, olmix1@alandcompany.spb.ru, petrofin@petrofin.spb.ru, nsk-info@mjr.ru, patrick@omskelecom.ru
 
+On Sat, Apr 09, 2016 at 08:18:26PM +1000, Brian Chadwick wrote:
+> On 09/04/16 00:24, Greg KH wrote:
+> > On Fri, Apr 08, 2016 at 07:37:12PM +1000, Brian Chadwick wrote:
+> > > On 08/04/16 01:59, Greg KH wrote:
+> > > > On Fri, Apr 08, 2016 at 01:34:51AM +1000, Brian Chadwick wrote:
+> > > > > On 08/04/16 00:44, Greg KH wrote:
+> > > > > > On Thu, Apr 07, 2016 at 03:04:55PM +1000, Brian Chadwick wrote:
+> > > > > > > On 06/04/16 19:53, Greg KH wrote:
+> > > > > > > > On Tue, Apr 05, 2016 at 06:42:51PM +1000, Brian Chadwick wrote:
+> > > > > > > > > SETUP:
+> > > > > > > > > 
+> > > > > > > > > i7 16GB Computer.
+> > > > > > > > > 
+> > > > > > > > > 1 x PCI-x USB3 adaptor card (i think uses xhci-hcd)04:00.0 USB controller:
+> > > > > > > > > Renesas Technology Corp. uPD720202 USB 3.0 Host Controller (rev 02)
+> > > > > > > > >         Kernel driver in use: xhci_hcd
+> > > > > > > > > 
+> > > > > > > > > 2 x USB3 to dual SATA HDD docks. uses JMicron JMS56x Series controllers,
+> > > > > > > > > uses uas.ko kernel module
+> > > > > > > > > Bus 004 Device 002: ID 152d:9561 JMicron Technology Corp. / JMicron USA
+> > > > > > > > > Technology Corp.
+> > > > > > > > > Bus 004 Device 003: ID 152d:9561 JMicron Technology Corp. / JMicron USA
+> > > > > > > > > Technology Corp.
+> > > > > > > > > 
+> > > > > > > > > 3 x Western Digital 320GB 3.5" SATA drives
+> > > > > > > > > 
+> > > > > > > > > USE:
+> > > > > > > > > 
+> > > > > > > > > RAID 5
+> > > > > > > > > 
+> > > > > > > > > KERNEL:
+> > > > > > > > > 4.3.5
+> > > > > > > > > 
+> > > > > > > > > System works perfectly as expected.
+> > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > Change to kernel 4.4.x or 4.5 and RAID 5 doesnt work. I am not sure whether
+> > > > > > > > > its actually RAID 5 at fault or if its the USB Attached SCSI driver uas.ko,
+> > > > > > > > > or maybe the host driver xhci-hcd.
+> > > > > > > > Can you run 'git bisect' to try to track down the offending commit?
 
-0JfQtNGA0LDQstGB0YLQstGD0LnRgtC1IQoK0KPQstC40LTQtdC70LAg0JLQsNC60LDQvdGB0LjRjiDQvdCwINGB0LDQudGC0LUsINC80Ysg0YHQvNC+0LPQu9C4INCx0Ysg0L/QvtC00L7QsdGA0LDRgtGMINC00LvRjyDQktCw0YEg0L3QtdGB0LrQvtC70YzQutC+INCy0L7Qt9C80L7QttC90YvRhSDQutCw0L3QtNC40LTQsNGC0L7Qsi4g0KHQvtC+0LHRidC40YLQtSDQv9C+0LbQsNC70YPQudGB0YLQsCAtINCw0LrRgtGD0LDQu9GM0L3QviDQu9C4INGN0YLQviDRgdC10LnRh9Cw0YEg0LTQu9GPINCS0LDRgT8KCtCYINCz0L7RgtC+0LLRiyDQu9C4INCS0Ysg0YDQsNCx0L7RgtCw0YLRjCDRgSDQvdCw0LzQuCDQutCw0Log0YEg0LrQsNC00YDQvtCy0YvQvCDQsNCz0LXQvdGC0YHRgtCy0L7QvD8KCtCjINC90LDRgSAtINC00LXQudGB0YLQstC40YLQtdC70YzQvdC+INC90LjQt9C60LDRjyDQutC+0LzQuNGB0YHQuNGPLiDQnNGLINCf0YDQvtCy0L7QtNC40Lwg0YLQtdGB0YLQuNGA0L7QstCw0L3QuNC1INC60LDQvdC00LjQtNCw0YLQvtCyIC0g0LrQsNC6INC70LjRh9C90L7RgdGC0L3QvtC1LCDRgtCw0Log0Lgg0L/RgNC+0YTQtdGB0YHQuNC+0L3QsNC7
- 0YzQvdC+0LUuCgrQldGB0LvQuCDQv9GA0LjQvdGG0LjQv9C40LDQu9GM0L3Ri9C5INC40L3RgtC10YDQtdGBINGDINCS0LDRgSDQtdGB0YLRjCAtINGPINC/0YDQuNGI0LvRjiDQktCw0Lwg0L3QsNGI0Lgg0YLQsNGA0LjRhNGLINC4INCy0LDRgNC40LDQvdGC0Y
- sg0L/QviDQutCw0L3QtNC40LTQsNGC0LDQvC4KCtCV0YnQtSDRgdC+0L7QsdGJ0LjRgtC1IC0g0LrQsNC60LjQtSDQstCw0LrQsNC90YHQuNC4INGDINCS0LDRgSDRgdC10LnRh9Cw0YEg0LDQutGC0YPQsNC70YzQvdGLIC0g0LLQv9C+0LvQvdC1INCy0L7Qt9C80L7QttC90L4gLSDQvNGLINGB0LzQvtC20LXQvCDQv9GA0L7RgNCw0LHQvtGC0LDRgtGMINC40YUg0LLRgdC1LgoK0KEg0YPQstCw0LbQtdC90LjQtdC8LCDQkNC90L3QsC4=
+<instructions about git-bisect snipped>
 
+> Hi, well to my surprise git bisect has come up with a commit about which I
+> had no inkling. I may have to go to another mailing list it doesnt look like
+> a usb problem.
+> 
+> This is the final output of 'git bisect view' :
+> 
+> 
+> commit 64d513ac31bd02a3c9b69ef04444f36c196f9a9d
+> Author: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Date:   Thu Oct 8 09:28:04 2015 +0100
+> 
+>     scsi: use host wide tags by default
+> 
+>     This patch changes the !blk-mq path to the same defaults as the blk-mq
+>     I/O path by always enabling block tagging, and always using host wide
+>     tags.  We've had blk-mq available for a few releases so bugs with
+>     this mode should have been ironed out, and this ensures we get better
+>     coverage of over tagging setup over different configs.
+> 
+>     Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+>     Acked-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+>     Reviewed-by: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+>     Signed-off-by: James Bottomley <JBottomley-O3H1v1f1dlM@public.gmane.org>
+> 
+> 
+> 
+> Thank you for your help in narrowing this down, and in educating me about
+> git bisect (its a neat tool) ... I await your advice as how to proceed from
+> here.
+
+Sorry for the delay, nice work tracking down the problem.
+
+Christoph, any ideas?  This patch is breaking this user's system as
+described above.  Is there a more recent fix for this, or did something
+forget to get changed in the large patch you did here?
+
+thanks,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
