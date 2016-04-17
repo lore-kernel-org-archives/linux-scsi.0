@@ -1,42 +1,54 @@
-From: Juergen Gross <kernel@pfupf.net>
-Subject: Re: [PATCH 41/42] block: do not use REQ_FLUSH for tracking flush
- support
-Date: Sun, 17 Apr 2016 10:46:59 +0200
-Message-ID: <57134D83.8020309@pfupf.net>
-References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
- <1460747777-8479-42-git-send-email-mchristi@redhat.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: [PATCH] lpfc: remove incorrect lockdep assertion
+Date: Sun, 17 Apr 2016 13:27:27 +0200
+Message-ID: <20160417132727.000026f3@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <1460747777-8479-42-git-send-email-mchristi@redhat.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.15.19]:52345 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751385AbcDQL1U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Apr 2016 07:27:20 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Sebastian Herbszt <herbszt@gmx.de>
 
-On 15/04/16 21:16, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
-> 
-> The last patch added a REQ_OP_FLUSH for request_fn drivers
-> and the next patch renames REQ_FLUSH to REQ_PREFLUSH which
-> will be used by file systems and make_request_fn drivers so
-> they can send a write/flush combo.
-> 
-> This patch drops xen's use of REQ_FLUSH to track if it supports
-> REQ_OP_FLUSH requests, so REQ_FLUSH can be deleted.
-> 
-> v7:
-> - Fix feature_flush/fua use.
-> 
-> v6:
-> - Dropped parts of patch handled by Jens's QUEUE_FLAG_WC/FUA
-> patches and modified patch to check feature_flush/fua bits.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Cc: Juergen Gross <kernel@pfupf.net>
+Remove incorrect lockdep assertion from lpfc_sli_hbqbuf_find() which acquires
+the hbalock itself. Fix the comment which resulted in this mistake.
 
-Acked-by: Juergen Gross <jgross@suse.com>
+Fixes: 1c2ba475eb0e ("lpfc: Add lockdep assertions")
+Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
 
-
-Juergen
+diff -uNr -U 5 a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2016-03-15 03:25:44.324554218 +0100
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2016-04-17 13:01:59.700182669 +0200
+@@ -1998,24 +1998,21 @@
+ /**
+  * lpfc_sli_hbqbuf_find - Find the hbq buffer associated with a tag
+  * @phba: Pointer to HBA context object.
+  * @tag: Tag of the hbq buffer.
+  *
+- * This function is called with hbalock held. This function searches
+- * for the hbq buffer associated with the given tag in the hbq buffer
+- * list. If it finds the hbq buffer, it returns the hbq_buffer other wise
+- * it returns NULL.
++ * This function searches for the hbq buffer associated with the given tag in
++ * the hbq buffer list. If it finds the hbq buffer, it returns the hbq_buffer
++ * otherwise it returns NULL.
+  **/
+ static struct hbq_dmabuf *
+ lpfc_sli_hbqbuf_find(struct lpfc_hba *phba, uint32_t tag)
+ {
+ 	struct lpfc_dmabuf *d_buf;
+ 	struct hbq_dmabuf *hbq_buf;
+ 	uint32_t hbqno;
+ 
+-	lockdep_assert_held(&phba->hbalock);
+-
+ 	hbqno = tag >> 16;
+ 	if (hbqno >= LPFC_MAX_HBQS)
+ 		return NULL;
+ 
+ 	spin_lock_irq(&phba->hbalock);
