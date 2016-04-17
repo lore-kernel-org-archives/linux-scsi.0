@@ -1,54 +1,40 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: [PATCH] lpfc: remove incorrect lockdep assertion
-Date: Sun, 17 Apr 2016 13:27:27 +0200
-Message-ID: <20160417132727.000026f3@localhost>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH V3 00/29] bitops: add parity functions
+Date: Sun, 17 Apr 2016 05:38:57 -0700
+Message-ID: <20160417123857.GD33215@dtor-ws>
+References: <1460601525-3822-1-git-send-email-zengzhaoxiu@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:52345 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751385AbcDQL1U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Apr 2016 07:27:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <1460601525-3822-1-git-send-email-zengzhaoxiu@163.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: zengzhaoxiu@163.com
+Cc: linux-kernel@vger.kernel.org, Zhaoxiu Zeng <zhaoxiu.zeng@gmail.com>, adi-buildroot-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, Anton Blanchard <anton@samba.org>, Arnd Bergmann <arnd@arndb.de>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, Borislav Petkov <bp@suse.de>, Bruce Allan <bruce.w.allan@intel.com>, Christophe Leroy <christophe.leroy@c-s.fr>, David Herrmann <dh.herrmann@gmail.com>, "David S. Miller" <davem@davemloft.net>, Denys Vlasenko <dvlasenk@redhat.com>, Duson Lin <dusonlin@emc.com.tw>, Guenter Roeck <linux@roeck-us.net>, Hans de Goede <hdegoede@redhat.com>, Hans Verkuil <hans.verkuil@cisco.com>, Hartmut Knaack <knaack.h@gmx.de>, Heiko Carstens <heiko.carstens@de.ibm.com>, Hendrik
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Sebastian Herbszt <herbszt@gmx.de>
 
-Remove incorrect lockdep assertion from lpfc_sli_hbqbuf_find() which acquires
-the hbalock itself. Fix the comment which resulted in this mistake.
+On Thu, Apr 14, 2016 at 10:36:41AM +0800, zengzhaoxiu@163.com wrote:
+>  drivers/input/joystick/grip_mp.c             |  16 +--
+>  drivers/input/joystick/sidewinder.c          |  24 +----
+>  drivers/input/mouse/elantech.c               |  10 +-
+>  drivers/input/mouse/elantech.h               |   1 -
+>  drivers/input/serio/ams_delta_serio.c        |   8 +-
+>  drivers/input/serio/pcips2.c                 |   2 +-
+>  drivers/input/serio/sa1111ps2.c              |   2 +-
 
-Fixes: 1c2ba475eb0e ("lpfc: Add lockdep assertions")
-Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+For input bits:
 
-diff -uNr -U 5 a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2016-03-15 03:25:44.324554218 +0100
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2016-04-17 13:01:59.700182669 +0200
-@@ -1998,24 +1998,21 @@
- /**
-  * lpfc_sli_hbqbuf_find - Find the hbq buffer associated with a tag
-  * @phba: Pointer to HBA context object.
-  * @tag: Tag of the hbq buffer.
-  *
-- * This function is called with hbalock held. This function searches
-- * for the hbq buffer associated with the given tag in the hbq buffer
-- * list. If it finds the hbq buffer, it returns the hbq_buffer other wise
-- * it returns NULL.
-+ * This function searches for the hbq buffer associated with the given tag in
-+ * the hbq buffer list. If it finds the hbq buffer, it returns the hbq_buffer
-+ * otherwise it returns NULL.
-  **/
- static struct hbq_dmabuf *
- lpfc_sli_hbqbuf_find(struct lpfc_hba *phba, uint32_t tag)
- {
- 	struct lpfc_dmabuf *d_buf;
- 	struct hbq_dmabuf *hbq_buf;
- 	uint32_t hbqno;
- 
--	lockdep_assert_held(&phba->hbalock);
--
- 	hbqno = tag >> 16;
- 	if (hbqno >= LPFC_MAX_HBQS)
- 		return NULL;
- 
- 	spin_lock_irq(&phba->hbalock);
+Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+
+Thanks.
+
+-- 
+Dmitry
