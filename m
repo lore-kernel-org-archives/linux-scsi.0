@@ -1,81 +1,111 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v2] mpt3sas - remove unused fw_event_work elements
-Date: Mon, 18 Apr 2016 10:50:12 -0400
-Message-ID: <1460991012-10018-1-git-send-email-joe.lawrence@stratus.com>
+From: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
+Subject: Re: [PATCH 16/42] nilfs: set bi_op to REQ_OP
+Date: Tue, 19 Apr 2016 01:04:15 +0900 (JST)
+Message-ID: <20160419.010415.105960685033839882.konishi.ryusuke@lab.ntt.co.jp>
+References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
+	<1460747777-8479-17-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0116.outbound.protection.outlook.com ([207.46.100.116]:50806
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751671AbcDROu1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Apr 2016 10:50:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <1460747777-8479-17-git-send-email-mchristi@redhat.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Mike Christie <mchristi@redhat.com>
+Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Joe Lawrence <joe.lawrence@stratus.com>
 
-Firmware events are queued up using the fw_event_work's struct work, not
-its delayed_work member.  The initial driver for SAS2 controllers had
-handled firmware reset using the rescan barrier and was later redesigned
-through "mpt2sas: [Resend] Host Reset code cleanup".  The delayed_work
-variables are now unused and may provoke CONFIG_DEBUG_OBJECTS_TIMERS
-"assert_init not available" false warnings in
-_scsih_fw_event_cleanup_queue.
+On Fri, 15 Apr 2016 14:15:51 -0500, mchristi@redhat.com wrote:
+> From: Mike Christie <mchristi@redhat.com>
+> 
+> This patch has nilfs use bio->bi_op for REQ_OPs and rq_flag_bits
+> to bio->bi_rw.
+> 
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  fs/nilfs2/segbuf.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
 
-Cleanup fw_event_work's unused entries, update it's kerneldoc, and update
-_scsih_fw_event_cleanup_queue accordingly.
+Looks good to me.
 
-Fixes: 146b16c8071f (mpt3sas: Refcount fw_events and fix unsafe list usage)
-Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+Acked-by: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index e0e4920d0fa6..f2139e5604a3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -174,13 +174,13 @@ struct sense_info {
-  * struct fw_event_work - firmware event struct
-  * @list: link list framework
-  * @work: work object (ioc->fault_reset_work_q)
-- * @cancel_pending_work: flag set during reset handling
-  * @ioc: per adapter object
-  * @device_handle: device handle
-  * @VF_ID: virtual function id
-  * @VP_ID: virtual port id
-  * @ignore: flag meaning this event has been marked to ignore
-- * @event: firmware event MPI2_EVENT_XXX defined in mpt2_ioc.h
-+ * @event: firmware event MPI2_EVENT_XXX defined in mpi2_ioc.h
-+ * @refcount: kref for this event
-  * @event_data: reply event data payload follows
-  *
-  * This object stored on ioc->fw_event_list.
-@@ -188,8 +188,6 @@ struct sense_info {
- struct fw_event_work {
- 	struct list_head	list;
- 	struct work_struct	work;
--	u8			cancel_pending_work;
--	struct delayed_work	delayed_work;
- 
- 	struct MPT3SAS_ADAPTER *ioc;
- 	u16			device_handle;
-@@ -2804,12 +2802,12 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
- 		/*
- 		 * Wait on the fw_event to complete. If this returns 1, then
- 		 * the event was never executed, and we need a put for the
--		 * reference the delayed_work had on the fw_event.
-+		 * reference the work had on the fw_event.
- 		 *
- 		 * If it did execute, we wait for it to finish, and the put will
- 		 * happen from _firmware_event_work()
- 		 */
--		if (cancel_delayed_work_sync(&fw_event->delayed_work))
-+		if (cancel_work_sync(&fw_event->work))
- 			fw_event_work_put(fw_event);
- 
- 		fw_event_work_put(fw_event);
--- 
-1.8.3.1
+Thanks,
+Ryuske Konishi
 
+> 
+> diff --git a/fs/nilfs2/segbuf.c b/fs/nilfs2/segbuf.c
+> index 7666f1d..7b13e14 100644
+> --- a/fs/nilfs2/segbuf.c
+> +++ b/fs/nilfs2/segbuf.c
+> @@ -350,7 +350,8 @@ static void nilfs_end_bio_write(struct bio *bio)
+>  }
+>  
+>  static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
+> -				   struct nilfs_write_info *wi, int mode)
+> +				   struct nilfs_write_info *wi, int mode,
+> +				   int mode_flags)
+>  {
+>  	struct bio *bio = wi->bio;
+>  	int err;
+> @@ -368,7 +369,8 @@ static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
+>  
+>  	bio->bi_end_io = nilfs_end_bio_write;
+>  	bio->bi_private = segbuf;
+> -	bio->bi_rw = mode;
+> +	bio->bi_op = mode;
+> +	bio->bi_rw = mode_flags;
+>  	submit_bio(bio);
+>  	segbuf->sb_nbio++;
+>  
+> @@ -442,7 +444,7 @@ static int nilfs_segbuf_submit_bh(struct nilfs_segment_buffer *segbuf,
+>  		return 0;
+>  	}
+>  	/* bio is FULL */
+> -	err = nilfs_segbuf_submit_bio(segbuf, wi, mode);
+> +	err = nilfs_segbuf_submit_bio(segbuf, wi, mode, 0);
+>  	/* never submit current bh */
+>  	if (likely(!err))
+>  		goto repeat;
+> @@ -466,19 +468,19 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
+>  {
+>  	struct nilfs_write_info wi;
+>  	struct buffer_head *bh;
+> -	int res = 0, rw = WRITE;
+> +	int res = 0;
+>  
+>  	wi.nilfs = nilfs;
+>  	nilfs_segbuf_prepare_write(segbuf, &wi);
+>  
+>  	list_for_each_entry(bh, &segbuf->sb_segsum_buffers, b_assoc_buffers) {
+> -		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
+> +		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
+>  		if (unlikely(res))
+>  			goto failed_bio;
+>  	}
+>  
+>  	list_for_each_entry(bh, &segbuf->sb_payload_buffers, b_assoc_buffers) {
+> -		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
+> +		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
+>  		if (unlikely(res))
+>  			goto failed_bio;
+>  	}
+> @@ -488,8 +490,8 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
+>  		 * Last BIO is always sent through the following
+>  		 * submission.
+>  		 */
+> -		rw |= REQ_SYNC;
+> -		res = nilfs_segbuf_submit_bio(segbuf, &wi, rw);
+> +		res = nilfs_segbuf_submit_bio(segbuf, &wi, REQ_OP_WRITE,
+> +					      REQ_SYNC);
+>  	}
+>  
+>   failed_bio:
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
