@@ -1,36 +1,66 @@
-From: <verifelaw@gmx.com>
-Subject: IMPORTANT MAIL TO YOU
-Date: Mon, 18 Apr 2016 13:09:41 +0200
-Message-ID: <613fad89-f8e9-4340-bd2b-935a5631973f__39645.417352631$1460977860$gmane$org@GSCADMINS22.gsc.org.uk>
-Reply-To: <lawrencetyman@gmx.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH] st: clear ILI if Medium Error
+Date: Mon, 18 Apr 2016 08:06:06 -0400 (EDT)
+Message-ID: <1916314668.30408094.1460981166841.JavaMail.zimbra@redhat.com>
+References: <alpine.LSU.2.20.1604180843100.1620@xnv.znxvfnen.cevingr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db3hn0248.outbound.protection.outlook.com ([157.55.234.248]:41114
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752661AbcDRLKX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Apr 2016 07:10:23 -0400
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:60177 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbcDRMGT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2016 08:06:19 -0400
+In-Reply-To: <alpine.LSU.2.20.1604180843100.1620@xnv.znxvfnen.cevingr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, mlombard@redhat.com
 
-I am Capt. Lawrence Tyman, an officer in US Army,and also a West Point
-Graduate, serving in the Military with the 82nd Air Borne Division
-Peace keeping force deployed from Afganistan to Syria.  
-We were moved to Syria from Iraq as the last batch just left,and i
-really need your help in assisting me with the safe keeping of 1 military
-trunk box contain funds amount of $10.2M which i secured on a raiding we carried out in 
-January in one of the chief Syrian IsIs base which i headed the squard as the 
-Captain.  With every possible arrangement to lift this box out, is intended to arrive 
-Belgium from there a diplomat will deliver it to your designated location
-I hope you can be trusted? You will be rewarded handsomely if you could help
-me secure the funds until I conclude my service here in 3 month to meet you while we can 
-plan head to head on a good and profitable business or company i can invest my funds in your country.
-If you can be trusted and willing to support me in securing this safely kindly indicate 
-by Letting me know this (1) Your name (2) Your address (3) Age (4) Occupation and 
-i will explain further when i get a response from you
-kindly contact me in this my private email address below: lawrencetyman@gmx.com
+Looks good
+Reviewed-by Laurence Oberman <loberman@redhat.com>
 
-Regards,
-Capt. Lawrence Tyman
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Kai Makisara" <Kai.Makisara@kolumbus.fi>
+To: linux-scsi@vger.kernel.org
+Cc: mlombard@redhat.com
+Sent: Monday, April 18, 2016 1:47:18 AM
+Subject: [PATCH] st: clear ILI if Medium Error
+
+Some drives set the ILI flag together with MEDIUM ERROR
+sense code. Clear the ILI flag in this case so that the
+medium error will be handled. The problem was reported by
+Maurizio Lombardi.
+
+Signed-off-by: Kai M=C3=A4kisara <kai.makisara@kolumbus.fi>
+---
+ drivers/scsi/st.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+--- a/drivers/scsi/st.c	2016-04-17 21:22:15.671897001 +0300
++++ b/drivers/scsi/st.c	2016-04-17 22:25:39.234321293 +0300
+@@ -1974,9 +1974,12 @@ static long read_tape(struct scsi_tape *
+ 					transfer =3D (int)cmdstatp->uremainder64;
+ 				else
+ 					transfer =3D 0;
+-				if (STp->block_size =3D=3D 0 &&
+-				    cmdstatp->sense_hdr.sense_key =3D=3D MEDIUM_ERROR)
+-					transfer =3D bytes;
++				if (cmdstatp->sense_hdr.sense_key =3D=3D MEDIUM_ERROR) {
++					if (STp->block_size =3D=3D 0)
++						transfer =3D bytes;
++					/* Some drives set ILI with MEDIUM ERROR */
++					cmdstatp->flags &=3D ~SENSE_ILI;
++				}
+=20
+ 				if (cmdstatp->flags & SENSE_ILI) {	/* ILI */
+ 					if (STp->block_size =3D=3D 0 &&
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
