@@ -1,54 +1,81 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: This patch triggers a bad gcc bug (was Re: [PATCH] force inlining of some byteswap operations)
-Date: Mon, 18 Apr 2016 16:21:42 +0200
-Message-ID: <5175460.GbO2sgX9fL@wuerfel>
-References: <20160413151500.tate3u6trg4agugo@treble> <4545519.Kr6IHPvbv3@wuerfel> <20160418141241.gcgfawrtnmfamz6t@treble>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH v2] mpt3sas - remove unused fw_event_work elements
+Date: Mon, 18 Apr 2016 10:50:12 -0400
+Message-ID: <1460991012-10018-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:59235 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbcDROWe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2016 10:22:34 -0400
-In-Reply-To: <20160418141241.gcgfawrtnmfamz6t@treble>
+Received: from mail-by2on0116.outbound.protection.outlook.com ([207.46.100.116]:50806
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751671AbcDROu1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2016 10:50:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Ingo Molnar <mingo@kernel.org>, Denys Vlasenko <dvlasenk@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, jamborm@gcc.gnu.org
+To: linux-scsi@vger.kernel.org
+Cc: Joe Lawrence <joe.lawrence@stratus.com>
 
-On Monday 18 April 2016 09:12:41 Josh Poimboeuf wrote:
-> On Mon, Apr 18, 2016 at 04:07:51PM +0200, Arnd Bergmann wrote:
-> > On Monday 18 April 2016 08:39:32 Josh Poimboeuf wrote:
-> > > 
-> > > I agree.  So how should we work around the bug in this case?  There have
-> > > been several suggestions:
-> > > 
-> > > - change wwn_to_u64() to __always_inline
-> > > 
-> > > - change qla2x00_get_host_fabric_name() to skip the unnecessary call to
-> > >   wwn_to_u64()
-> > > 
-> > > - revert one of the two commits:
-> > >   bc27fb68aaad ("include/uapi/linux/byteorder, swab: force inlining of some byteswap operations")
-> > >   ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn access")
-> > 
-> > What about the patch to change get_unaligned_be64() that I posted?
-> > 
-> > I think we want to merge that anyway, I just don't know if that helps
-> > with this particular problem as well.
-> 
-> I replied to your other email about that -- it doesn't seem to help this
-> issue.
-> 
+Firmware events are queued up using the fw_event_work's struct work, not
+its delayed_work member.  The initial driver for SAS2 controllers had
+handled firmware reset using the rescan barrier and was later redesigned
+through "mpt2sas: [Resend] Host Reset code cleanup".  The delayed_work
+variables are now unused and may provoke CONFIG_DEBUG_OBJECTS_TIMERS
+"assert_init not available" false warnings in
+_scsih_fw_event_cleanup_queue.
 
-Ok, I see. I had problems with my mail server last week, your reply
-must have been a victim of that as I never saw it (found it on the
-web archive now).
+Cleanup fw_event_work's unused entries, update it's kerneldoc, and update
+_scsih_fw_event_cleanup_queue accordingly.
 
-I'd vote for the wwn_to_u64 change then as it should prevent the
-same thing from happining in other drivers. I would prefer not to
-see ef3fb2422ffe reverted, as that works around another gcc-6 bug
-on ARM.
+Fixes: 146b16c8071f (mpt3sas: Refcount fw_events and fix unsafe list usage)
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-	Arnd
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index e0e4920d0fa6..f2139e5604a3 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -174,13 +174,13 @@ struct sense_info {
+  * struct fw_event_work - firmware event struct
+  * @list: link list framework
+  * @work: work object (ioc->fault_reset_work_q)
+- * @cancel_pending_work: flag set during reset handling
+  * @ioc: per adapter object
+  * @device_handle: device handle
+  * @VF_ID: virtual function id
+  * @VP_ID: virtual port id
+  * @ignore: flag meaning this event has been marked to ignore
+- * @event: firmware event MPI2_EVENT_XXX defined in mpt2_ioc.h
++ * @event: firmware event MPI2_EVENT_XXX defined in mpi2_ioc.h
++ * @refcount: kref for this event
+  * @event_data: reply event data payload follows
+  *
+  * This object stored on ioc->fw_event_list.
+@@ -188,8 +188,6 @@ struct sense_info {
+ struct fw_event_work {
+ 	struct list_head	list;
+ 	struct work_struct	work;
+-	u8			cancel_pending_work;
+-	struct delayed_work	delayed_work;
+ 
+ 	struct MPT3SAS_ADAPTER *ioc;
+ 	u16			device_handle;
+@@ -2804,12 +2802,12 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		/*
+ 		 * Wait on the fw_event to complete. If this returns 1, then
+ 		 * the event was never executed, and we need a put for the
+-		 * reference the delayed_work had on the fw_event.
++		 * reference the work had on the fw_event.
+ 		 *
+ 		 * If it did execute, we wait for it to finish, and the put will
+ 		 * happen from _firmware_event_work()
+ 		 */
+-		if (cancel_delayed_work_sync(&fw_event->delayed_work))
++		if (cancel_work_sync(&fw_event->work))
+ 			fw_event_work_put(fw_event);
+ 
+ 		fw_event_work_put(fw_event);
+-- 
+1.8.3.1
+
