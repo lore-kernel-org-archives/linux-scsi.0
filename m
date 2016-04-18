@@ -1,46 +1,348 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] lpfc: remove incorrect lockdep assertion
-Date: Mon, 18 Apr 2016 09:07:37 +0200
-Message-ID: <1543520.n4UZ9fsgDT@c203>
-References: <20160417132727.000026f3@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Bob Stlt <bobstlt40@gmail.com>
+Subject: [PATCH] SCSI: LIBSCSI: Fixed codeing style errors
+Date: Mon, 18 Apr 2016 17:42:48 +0800
+Message-ID: <1460972568-3505-1-git-send-email-bobstlt40@gmail.com.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60562 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752004AbcDRHHj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2016 03:07:39 -0400
-In-Reply-To: <20160417132727.000026f3@localhost>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:35211 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbcDRJm7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2016 05:42:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: michaelc@cs.wisc.edu
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bob Stlt <bobstlt40@gmail.com.com>Bob Stlt <bobstlt40@gmail.com>
 
-On Sonntag, 17. April 2016 13:27:27 CEST Sebastian Herbszt wrote:
-> Remove incorrect lockdep assertion from lpfc_sli_hbqbuf_find() which =
-acquires
-> the hbalock itself. Fix the comment which resulted in this mistake.
->=20
-> Fixes: 1c2ba475eb0e ("lpfc: Add lockdep assertions")
-> Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
->=20
+Fixed codeing style formatting errors.
 
-Good catch,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Bob Stlt <bobstlt40@gmail.com>
+---
+ drivers/scsi/libiscsi.c | 90 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 45 insertions(+), 45 deletions(-)
 
---=20
-Johannes Thumshirn                                                     =
-                           Storage
-jthumshirn@suse.de                                                     =
-        +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 6bffd91..41be9d3 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -197,7 +197,7 @@ static int iscsi_prep_ecdb_ahs(struct iscsi_task *task)
+ 	pad_len = iscsi_padding(rlen);
+ 
+ 	rc = iscsi_add_hdr(task, sizeof(ecdb_ahdr->ahslength) +
+-	                   sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
++			sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -210,10 +210,10 @@ static int iscsi_prep_ecdb_ahs(struct iscsi_task *task)
+ 	memcpy(ecdb_ahdr->ecdb, cmd->cmnd + ISCSI_CDB_SIZE, rlen);
+ 
+ 	ISCSI_DBG_SESSION(task->conn->session,
+-			  "iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
+-		          "rlen %d pad_len %d ahs_length %d iscsi_headers_size "
+-		          "%u\n", cmd->cmd_len, rlen, pad_len, ahslength,
+-		          task->hdr_len);
++			"iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
++			"rlen %d pad_len %d ahs_length %d iscsi_headers_size "
++			"%u\n", cmd->cmd_len, rlen, pad_len, ahslength,
++			task->hdr_len);
+ 	return 0;
+ }
+ 
+@@ -236,10 +236,10 @@ static int iscsi_prep_bidi_ahs(struct iscsi_task *task)
+ 	rlen_ahdr->read_length = cpu_to_be32(scsi_in(sc)->length);
+ 
+ 	ISCSI_DBG_SESSION(task->conn->session,
+-			  "bidi-in rlen_ahdr->read_length(%d) "
+-		          "rlen_ahdr->ahslength(%d)\n",
+-		          be32_to_cpu(rlen_ahdr->read_length),
+-		          be16_to_cpu(rlen_ahdr->ahslength));
++			"bidi-in rlen_ahdr->read_length(%d) "
++			"rlen_ahdr->ahslength(%d)\n",
++			be32_to_cpu(rlen_ahdr->read_length),
++			be16_to_cpu(rlen_ahdr->ahslength));
+ 	return 0;
+ }
+ 
+@@ -500,7 +500,7 @@ static void iscsi_free_task(struct iscsi_task *task)
+ 	if (conn->login_task == task)
+ 		return;
+ 
+-	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
++	kfifo_in(&session->cmdpool.queue, (void *)&task, sizeof(void *));
+ 
+ 	if (sc) {
+ 		/* SCSI eh reuses commands to verify us */
+@@ -736,7 +736,7 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		BUG_ON(conn->c_stage == ISCSI_CONN_STOPPED);
+ 
+ 		if (!kfifo_out(&session->cmdpool.queue,
+-				 (void*)&task, sizeof(void*)))
++				 (void *)&task, sizeof(void *)))
+ 			return NULL;
+ 	}
+ 	/*
+@@ -831,7 +831,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
+-	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
++	iscsi_update_cmdsn(session, (struct iscsi_nopin *)rhdr);
+ 	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
+ 
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
+@@ -901,12 +901,12 @@ invalid_datalen:
+ 	}
+ 
+ 	if (rhdr->flags & (ISCSI_FLAG_CMD_UNDERFLOW |
+-	                   ISCSI_FLAG_CMD_OVERFLOW)) {
++			ISCSI_FLAG_CMD_OVERFLOW)) {
+ 		int res_count = be32_to_cpu(rhdr->residual_count);
+ 
+ 		if (res_count > 0 &&
+ 		    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
+-		     res_count <= scsi_bufflen(sc)))
++			res_count <= scsi_bufflen(sc)))
+ 			/* write side for bidi or uni-io set_resid */
+ 			scsi_set_resid(sc, res_count);
+ 		else
+@@ -939,7 +939,7 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
+ 	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
+ 	if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
+-	                   ISCSI_FLAG_DATA_OVERFLOW)) {
++			ISCSI_FLAG_DATA_OVERFLOW)) {
+ 		int res_count = be32_to_cpu(rhdr->residual_count);
+ 
+ 		if (res_count > 0 &&
+@@ -978,7 +978,7 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 
+ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ {
+-        struct iscsi_nopout hdr;
++	struct iscsi_nopout hdr;
+ 	struct iscsi_task *task;
+ 
+ 	if (!rhdr && conn->ping_task)
+@@ -1080,7 +1080,7 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			spin_unlock(&conn->session->back_lock);
+ 			spin_lock(&conn->session->frwd_lock);
+ 			iscsi_send_nopout(conn,
+-					  (struct iscsi_nopin*)&rejected_pdu);
++						(struct iscsi_nopin *)&rejected_pdu);
+ 			spin_unlock(&conn->session->frwd_lock);
+ 			spin_lock(&conn->session->back_lock);
+ 		} else {
+@@ -1097,7 +1097,7 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 				rc = ISCSI_ERR_BAD_ITT;
+ 			} else
+ 				rc = iscsi_nop_out_rsp(task,
+-					(struct iscsi_nopin*)&rejected_pdu,
++					(struct iscsi_nopin *)&rejected_pdu,
+ 					NULL, 0);
+ 		}
+ 		break;
+@@ -1173,9 +1173,9 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			  opcode, conn->id, itt, datalen);
+ 
+ 	if (itt == ~0U) {
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 
+-		switch(opcode) {
++		switch (opcode) {
+ 		case ISCSI_OP_NOOP_IN:
+ 			if (datalen) {
+ 				rc = ISCSI_ERR_PROTO;
+@@ -1188,7 +1188,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			/* In RX path we are under back lock */
+ 			spin_unlock(&session->back_lock);
+ 			spin_lock(&session->frwd_lock);
+-			iscsi_send_nopout(conn, (struct iscsi_nopin*)hdr);
++			iscsi_send_nopout(conn, (struct iscsi_nopin *)hdr);
+ 			spin_unlock(&session->frwd_lock);
+ 			spin_lock(&session->back_lock);
+ 			break;
+@@ -1207,7 +1207,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		goto out;
+ 	}
+ 
+-	switch(opcode) {
++	switch (opcode) {
+ 	case ISCSI_OP_SCSI_CMD_RSP:
+ 	case ISCSI_OP_SCSI_DATA_IN:
+ 		task = iscsi_itt_to_ctask(conn, hdr->itt);
+@@ -1233,7 +1233,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		return ISCSI_ERR_BAD_OPCODE;
+ 	}
+ 
+-	switch(opcode) {
++	switch (opcode) {
+ 	case ISCSI_OP_SCSI_CMD_RSP:
+ 		iscsi_scsi_cmd_rsp(conn, hdr, task, data, datalen);
+ 		break;
+@@ -1241,7 +1241,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		iscsi_data_in_rsp(conn, hdr, task);
+ 		break;
+ 	case ISCSI_OP_LOGOUT_RSP:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		if (datalen) {
+ 			rc = ISCSI_ERR_PROTO;
+ 			break;
+@@ -1250,14 +1250,14 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		goto recv_pdu;
+ 	case ISCSI_OP_LOGIN_RSP:
+ 	case ISCSI_OP_TEXT_RSP:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		/*
+ 		 * login related PDU's exp_statsn is handled in
+ 		 * userspace
+ 		 */
+ 		goto recv_pdu;
+ 	case ISCSI_OP_SCSI_TMFUNC_RSP:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		if (datalen) {
+ 			rc = ISCSI_ERR_PROTO;
+ 			break;
+@@ -1267,14 +1267,14 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ 		break;
+ 	case ISCSI_OP_NOOP_IN:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		if (hdr->ttt != cpu_to_be32(ISCSI_RESERVED_TAG) || datalen) {
+ 			rc = ISCSI_ERR_PROTO;
+ 			break;
+ 		}
+ 		conn->exp_statsn = be32_to_cpu(hdr->statsn) + 1;
+ 
+-		rc = iscsi_nop_out_rsp(task, (struct iscsi_nopin*)hdr,
++		rc = iscsi_nop_out_rsp(task, (struct iscsi_nopin *)hdr,
+ 				       data, datalen);
+ 		break;
+ 	default:
+@@ -1383,7 +1383,7 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 	dev = get_device(&conn->cls_conn->dev);
+ 	spin_unlock_bh(&session->frwd_lock);
+ 	if (!dev)
+-	        return;
++		return;
+ 	/*
+ 	 * if the host is being removed bypass the connection
+ 	 * recovery initialization because we are going to kill
+@@ -1503,8 +1503,8 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+ 
+ 	if (conn->task) {
+ 		rc = iscsi_xmit_task(conn);
+-	        if (rc)
+-		        goto done;
++		if (rc)
++			goto done;
+ 	}
+ 
+ 	/*
+@@ -2534,11 +2534,11 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 	 * the array. */
+ 	if (items)
+ 		num_arrays++;
+-	q->pool = kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
++	q->pool = kzalloc(num_arrays * max * sizeof(void *), GFP_KERNEL);
+ 	if (q->pool == NULL)
+ 		return -ENOMEM;
+ 
+-	kfifo_init(&q->queue, (void*)q->pool, max * sizeof(void*));
++	kfifo_init(&q->queue, (void *)q->pool, max * sizeof(void *));
+ 
+ 	for (i = 0; i < max; i++) {
+ 		q->pool[i] = kzalloc(item_size, GFP_KERNEL);
+@@ -2546,7 +2546,7 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 			q->max = i;
+ 			goto enomem;
+ 		}
+-		kfifo_in(&q->queue, (void*)&q->pool[i], sizeof(void*));
++		kfifo_in(&q->queue, (void *)&q->pool[i], sizeof(void *));
+ 	}
+ 
+ 	if (items) {
+@@ -2793,7 +2793,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+ 
+ 	/* initialize SCSI PDU commands pool */
+ 	if (iscsi_pool_init(&session->cmdpool, session->cmds_max,
+-			    (void***)&session->cmds,
++			    (void ***)&session->cmds,
+ 			    cmd_task_size + sizeof(struct iscsi_task)))
+ 		goto cmdpool_alloc_fail;
+ 
+@@ -2905,8 +2905,8 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 	/* allocate login_task used for the login/text sequences */
+ 	spin_lock_bh(&session->frwd_lock);
+ 	if (!kfifo_out(&session->cmdpool.queue,
+-                         (void*)&conn->login_task,
+-			 sizeof(void*))) {
++			(void *)&conn->login_task,
++			 sizeof(void *))) {
+ 		spin_unlock_bh(&session->frwd_lock);
+ 		goto login_task_alloc_fail;
+ 	}
+@@ -2924,8 +2924,8 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 	return cls_conn;
+ 
+ login_task_data_alloc_fail:
+-	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
+-		    sizeof(void*));
++	kfifo_in(&session->cmdpool.queue, (void *)&conn->login_task,
++		    sizeof(void *));
+ login_task_alloc_fail:
+ 	iscsi_destroy_conn(cls_conn);
+ 	return NULL;
+@@ -2968,8 +2968,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+ 	kfree(conn->local_ipaddr);
+ 	/* regular RX path uses back_lock */
+ 	spin_lock_bh(&session->back_lock);
+-	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
+-		    sizeof(void*));
++	kfifo_in(&session->cmdpool.queue, (void *)&conn->login_task,
++			sizeof(void *));
+ 	spin_unlock_bh(&session->back_lock);
+ 	if (session->leadconn == conn)
+ 		session->leadconn = NULL;
+@@ -3022,7 +3022,7 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
+ 		mod_timer(&conn->transport_timer,
+ 			  jiffies + (conn->recv_timeout * HZ));
+ 
+-	switch(conn->stop_stage) {
++	switch (conn->stop_stage) {
+ 	case STOP_CONN_RECOVER:
+ 		/*
+ 		 * unblock eh_abort() if it is blocked. re-try all
+@@ -3197,7 +3197,7 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ 	struct iscsi_session *session = conn->session;
+ 	int val;
+ 
+-	switch(param) {
++	switch (param) {
+ 	case ISCSI_PARAM_FAST_ABORT:
+ 		sscanf(buf, "%d", &session->fast_abort);
+ 		break;
+@@ -3310,7 +3310,7 @@ int iscsi_session_get_param(struct iscsi_cls_session *cls_session,
+ 	struct iscsi_session *session = cls_session->dd_data;
+ 	int len;
+ 
+-	switch(param) {
++	switch (param) {
+ 	case ISCSI_PARAM_FAST_ABORT:
+ 		len = sprintf(buf, "%d\n", session->fast_abort);
+ 		break;
+@@ -3488,7 +3488,7 @@ int iscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 	struct iscsi_conn *conn = cls_conn->dd_data;
+ 	int len;
+ 
+-	switch(param) {
++	switch (param) {
+ 	case ISCSI_PARAM_PING_TMO:
+ 		len = sprintf(buf, "%u\n", conn->ping_timeout);
+ 		break;
+-- 
+2.6.6
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
