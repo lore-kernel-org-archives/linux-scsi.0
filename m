@@ -1,57 +1,24 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 2/8] char: rpmb: add sysfs-class ABI documentation
-Date: Sun, 24 Apr 2016 11:19:51 +0200
-Message-ID: <20160424091951.GA23015@amd>
-References: <1459676572-29921-1-git-send-email-tomas.winkler@intel.com>
- <1459676572-29921-3-git-send-email-tomas.winkler@intel.com>
+From: =?utf-8?B?0KHQtdGA0LPQtdC5INCc0LjRhdCw0LnQu9C+0LIgKNC80LDRgdGC0LXRgCk=?=
+	<mikhaylov.631@mail.ru>
+Subject: =?utf-8?B?0J/QviDQv9C+0LLQvtC00YMg0LjQt9Cz0L7RgtC+0LLQu9C10L3QuNGPINGI0LrQsNGE0LAt0LrRg9C/0LU=?=
+Date: Tue, 19 Apr 2016 11:29:56 -0500
+Message-ID: <201604191629.u3JGTuIN021441@cdn66-171-236-18.gigecdn.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mmc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1459676572-29921-3-git-send-email-tomas.winkler@intel.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: gregkh@linuxfoundation.org, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hosted.at.gigecdn.com ([66.171.236.18]:50409 "EHLO
+	cdn66-171-236-18.gigecdn.com" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752283AbcDXKQ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Apr 2016 06:16:29 -0400
+Subject: =?utf-8?B?0J/QviDQv9C+0LLQvtC00YMg0LjQt9Cz0L7RgtC+0LLQu9C10L3QuNGPINGI0LrQsNGE0LAt0LrRg9C/0LU=?=
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Sun 2016-04-03 12:42:46, Tomas Winkler wrote:
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  Documentation/ABI/testing/sysfs-class-rpmb | 15 +++++++++++++++
->  MAINTAINERS                                |  1 +
->  2 files changed, 16 insertions(+)
->  create mode 100644 Documentation/ABI/testing/sysfs-class-rpmb
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-class-rpmb b/Documentation/ABI/testing/sysfs-class-rpmb
-> new file mode 100644
-> index 000000000000..62d1959bf19e
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/sysfs-class-rpmb
-> @@ -0,0 +1,15 @@
-> +What:		/sys/class/rpmb/
-> +Date:		Mar 2016
-> +KernelVersion:	TBD
-> +Contact:	Tomas Winkler <tomas.winkler@intel.com>
-> +Description:
-> +		The rpmb/ class sub-directory belongs to RPMB device class
-> +
-> +
-> +What:		/sys/class/rpmb/rpmbN/
-> +Date:		Mar 2016
-> +KernelVersion:	TBD
-> +Contact:	Tomas Winkler <tomas.winkler@intel.com>
-> +Description:
-> +		The /sys/class/rpmb/rpmbN directory is created for
-> +		each RPMB registered device
+To: mpwrozvo@xdwsmmqa.com, pkc@calky.org, loxd@tisx.com, linux-scsi@vger.kernel.org, mcita@referaleportaler.ru, mailtkursk@spravedlivo.ru, post@dnb.ru, mangxe@ncdeem.org, koaznr750b@penza-city.ru, kofiki@kamutoks.ru, magnet-spb@amtc.org, natalizd.17@gmail.com, mmtib@f-mailers.ru, masturbatedo897@collectmail.ru, oh@novostar.net, oksana.dunaewa@yandex.ru, office@palmail.spb.ru, niklajjovs@rambler.ru, kropotkin@hott.ru, ludmila.a.loginova@gmail.com
 
 
-Umm. Can we get some better documentation?
+0JTQvtCx0YDRi9C5INC00LXQvdGMIQoK0K8g0LjQt9Cz0L7RgtCw0LLQu9C40LLQsNGOINGI0LrQsNGE0Ysg0LrRg9C/0LUg0L/QviDQvdGD0LbQvdGL0Lwg0YDQsNC30LzQtdGA0LDQvCDQsiDRgdC+0LHRgdGC0LLQtdC90L3QvtC5INC80LDRgdGC0LXRgNGB0LrQvtC5LCDQsCDRgtCw0LrQttC1INC40YUg0LzQvtC90YLQsNC20L7QvC4KCtCg0LDRgdGG0LXQvdC60Lgg0YMg0LzQtdC90Y8g0LPQvtGA0LDQt9C00L4g0L3QuNC20LUg0LHQvtC70YzRiNC40L3RgdGC0LLQsCDRhNC40YDQvC3Qv9C+0YHRgNC10LTQvdC40LrQvtCyLiDQmCDQutCw0YfQtdGB0YLQstC+INC90Lgg0YfRg9GC0Ywg0L3QtSDRhdGD0LbQtS4KCtCvINC80L7Qs9GDINC40LfQs9C+0YLQvtCy0LjRgtGMOgotINCa0L7RgNC/0YPRgdC90YvQuSDRiNC60LDRhC3QutGD0L/QtQotINCS0YHRgtGA0L7QtdC90L3Ri9C5INGI0LrQsNGELdC60YPQv9C1Ci0g0KPQs9C70L7QstC+0Lkg0YjQutCw0YQt0LrRg9C/0LUKLSDQqNC60LDRhC3QutGD0L/QtSDRgSDQstC40YLRgNCw0LbQvdGL0Lwg0YHRgtC10LrQu9C+0LwKCtCY0LzQtdC10YLRgdGPINGC0YDQsNC90YHQv9C+0YDRgiDQtNC70Y8g
+ 0LTQvtGB0YLQsNCy0LrQuCDRiNC60LDRhNCwINCyINC70Y7QsdGD0Y4g0YLQvtGH0LrRgyDQnNC+0YHQutCy0YsuCgrQldGB0LvQuCDRgyDQktCw0YEg0LXRgdGC0Ywg0L/QvtGC0YDQtdCx0L3QvtGB0YLRjCDQsiDQvNC+0LjRhSDRg9GB0LvRg9Cz0!
+ LDRhSAtINC90LDQv9C40YjQuNGC0LUg0LPQsNCx0LDRgNC40YLRiyDRiNC60LDRhNCwIC0g0Y8g0YDQsNGB0YHRh9C40YLQsNGOINGB0YLQvtC40LzQvtGB0YLRjCDQuNC30LTQtdC70LjRjywg0L/RgNC10LTQvtGB0YLQsNCy0LvRjiDQutCw0YLQsNC70L7QsyDQvNCw0YLQtdGA0LjQsNC70L7QsiDQuCDQvtGC0L7QsdGA0LDQttGDINC60LDQuiDQsdGD0LTQtdGCINCy0YvQs9C70Y/QtNC10YLRjCDRiNC60LDRhCDQsiAzZCwg0LTQu9GPINC+0L/QtdGA0LDRgtC40LLQvdC+0Lkg0YHQstGP0LfQuCDQttC10LvQsNGC0LXQu9GM0L3QviDRg9C60LDQt9Cw0YLRjCDQvNC+0LHQuNC70YzQvdGL0Lkg0YLQtdC70LXRhNC+0L0uCgrQoSDRg9Cy0LDQttC10L3QuNC10LwsINCc0LjRhdCw0LnQu9C+0LIg0KHQtdGA0LPQtdC5Lg==
 
-This is useless.
-
-Interested reader would also like to know what "RPMB" is, and why he
-should be interested...
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
