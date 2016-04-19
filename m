@@ -1,99 +1,99 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH v3 07/13] iscsi-target: move iscsit_thread_check_cpumask()
-Date: Wed, 20 Apr 2016 00:00:14 +0530
-Message-ID: <85d0f369652ed7ae04e5267bb2abff09e0d4d710.1461088672.git.varun@chelsio.com>
+Subject: [PATCH v3 03/13] iscsi-target: add void (*iscsit_get_rx_pdu)()
+Date: Wed, 20 Apr 2016 00:00:10 +0530
+Message-ID: <f993801e40717417bb752ddeb20765b25b092584.1461088672.git.varun@chelsio.com>
 References: <cover.1461088672.git.varun@chelsio.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.32.117.8]:6677 "EHLO
+	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754613AbcDSSay (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Apr 2016 14:30:54 -0400
 In-Reply-To: <cover.1461088672.git.varun@chelsio.com>
 In-Reply-To: <cover.1461088672.git.varun@chelsio.com>
 References: <cover.1461088672.git.varun@chelsio.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com, varun@chelsio.com
-List-Id: linux-scsi@vger.kernel.org
 
-Move iscsit_thread_check_cpumask() to header
-file so that ISCSI_HW_OFFLOAD and other transport drivers
-can call this function to ensure both tx and rx thread
-runs on same cpu.
+Add void (*iscsit_get_rx_pdu)() to
+struct iscsit_transport, iscsi-target
+uses this callback to receive and
+process Rx iSCSI PDUs.
+
+cxgbit.ko needs this callback to
+reuse iscsi-target Rx thread.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
+Acked-by: Sagi Grimberg <sagi@grimberg.me>
 ---
- drivers/target/iscsi/iscsi_target.c      | 26 --------------------------
- include/target/iscsi/iscsi_target_core.h | 26 ++++++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 26 deletions(-)
+ drivers/infiniband/ulp/isert/ib_isert.c | 10 ++++++++++
+ drivers/target/iscsi/iscsi_target.c     | 10 ++--------
+ include/target/iscsi/iscsi_transport.h  |  1 +
+ 3 files changed, 13 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index 411e446..9118d7c 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -3273,6 +3273,15 @@ static void isert_free_conn(struct iscsi_conn *conn)
+ 	isert_put_conn(isert_conn);
+ }
+ 
++static void isert_get_rx_pdu(struct iscsi_conn *conn)
++{
++	struct completion comp;
++
++	init_completion(&comp);
++
++	wait_for_completion_interruptible(&comp);
++}
++
+ static struct iscsit_transport iser_target_transport = {
+ 	.name			= "IB/iSER",
+ 	.transport_type		= ISCSI_INFINIBAND,
+@@ -3291,6 +3300,7 @@ static struct iscsit_transport iser_target_transport = {
+ 	.iscsit_queue_data_in	= isert_put_datain,
+ 	.iscsit_queue_status	= isert_put_response,
+ 	.iscsit_aborted_task	= isert_aborted_task,
++	.iscsit_get_rx_pdu	= isert_get_rx_pdu,
+ 	.iscsit_get_sup_prot_ops = isert_get_sup_prot_ops,
+ };
+ 
 diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index a28eb87..28fc7fb 100644
+index 0724c83..9fa9f0b 100644
 --- a/drivers/target/iscsi/iscsi_target.c
 +++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3580,32 +3580,6 @@ void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
- 	cpumask_setall(conn->conn_cpumask);
- }
+@@ -3951,14 +3951,8 @@ int iscsi_target_rx_thread(void *arg)
+ 	if (rc < 0 || iscsi_target_check_conn_state(conn))
+ 		return 0;
  
--static inline void iscsit_thread_check_cpumask(
--	struct iscsi_conn *conn,
--	struct task_struct *p,
--	int mode)
--{
--	/*
--	 * mode == 1 signals iscsi_target_tx_thread() usage.
--	 * mode == 0 signals iscsi_target_rx_thread() usage.
--	 */
--	if (mode == 1) {
--		if (!conn->conn_tx_reset_cpumask)
--			return;
--		conn->conn_tx_reset_cpumask = 0;
--	} else {
--		if (!conn->conn_rx_reset_cpumask)
--			return;
--		conn->conn_rx_reset_cpumask = 0;
--	}
--	/*
--	 * Update the CPU mask for this single kthread so that
--	 * both TX and RX kthreads are scheduled to run on the
--	 * same CPU.
--	 */
--	set_cpus_allowed_ptr(p, conn->conn_cpumask);
--}
+-	if (conn->conn_transport->transport_type == ISCSI_INFINIBAND) {
+-		struct completion comp;
 -
- static int
- iscsit_immediate_queue(struct iscsi_conn *conn, struct iscsi_cmd *cmd, int state)
- {
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index c3371fa..01c41f2 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -890,4 +890,30 @@ static inline u32 session_get_next_ttt(struct iscsi_session *session)
- }
+-		init_completion(&comp);
+-		rc = wait_for_completion_interruptible(&comp);
+-		if (rc < 0)
+-			goto transport_err;
+-
++	if (conn->conn_transport->iscsit_get_rx_pdu) {
++		conn->conn_transport->iscsit_get_rx_pdu(conn);
+ 		goto transport_err;
+ 	}
  
- extern struct iscsi_cmd *iscsit_find_cmd_from_itt(struct iscsi_conn *, itt_t);
-+
-+static inline void iscsit_thread_check_cpumask(
-+	struct iscsi_conn *conn,
-+	struct task_struct *p,
-+	int mode)
-+{
-+	/*
-+	 * mode == 1 signals iscsi_target_tx_thread() usage.
-+	 * mode == 0 signals iscsi_target_rx_thread() usage.
-+	 */
-+	if (mode == 1) {
-+		if (!conn->conn_tx_reset_cpumask)
-+			return;
-+		conn->conn_tx_reset_cpumask = 0;
-+	} else {
-+		if (!conn->conn_rx_reset_cpumask)
-+			return;
-+		conn->conn_rx_reset_cpumask = 0;
-+	}
-+	/*
-+	 * Update the CPU mask for this single kthread so that
-+	 * both TX and RX kthreads are scheduled to run on the
-+	 * same CPU.
-+	 */
-+	set_cpus_allowed_ptr(p, conn->conn_cpumask);
-+}
- #endif /* ISCSI_TARGET_CORE_H */
+diff --git a/include/target/iscsi/iscsi_transport.h b/include/target/iscsi/iscsi_transport.h
+index 3b0053e..ccc68a0 100644
+--- a/include/target/iscsi/iscsi_transport.h
++++ b/include/target/iscsi/iscsi_transport.h
+@@ -25,6 +25,7 @@ struct iscsit_transport {
+ 	int (*iscsit_xmit_pdu)(struct iscsi_conn *, struct iscsi_cmd *,
+ 			       struct iscsi_datain_req *, const void *, u32);
+ 	void (*iscsit_release_cmd)(struct iscsi_conn *, struct iscsi_cmd *);
++	void (*iscsit_get_rx_pdu)(struct iscsi_conn *);
+ 	enum target_prot_op (*iscsit_get_sup_prot_ops)(struct iscsi_conn *);
+ };
+ 
 -- 
 2.0.2
+
