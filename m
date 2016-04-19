@@ -1,44 +1,48 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH v3 08/13] iscsi-target: use conn_transport->transport_type in text rsp
-Date: Wed, 20 Apr 2016 00:00:15 +0530
-Message-ID: <9837aa56f3ab5098cfb1d3544e0534e36382ba69.1461088672.git.varun@chelsio.com>
+Subject: [PATCH v3 10/13] iscsi-target: clear tx_thread_active
+Date: Wed, 20 Apr 2016 00:00:17 +0530
+Message-ID: <72fbf94b3b5bebf9a7688629bfa334836d003935.1461088673.git.varun@chelsio.com>
 References: <cover.1461088672.git.varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:23355 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932231AbcDSSbJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Apr 2016 14:31:09 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <cover.1461088672.git.varun@chelsio.com>
 In-Reply-To: <cover.1461088672.git.varun@chelsio.com>
 References: <cover.1461088672.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com, varun@chelsio.com
+List-Id: linux-scsi@vger.kernel.org
 
-Use conn_transport->transport_type instead of
-ISCSI_TCP to build text response.
+clear tx_thread_active for ISCSI_HW_OFFLOAD
+transport in logout_post_handler functions.
 
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/target/iscsi/iscsi_target.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/target/iscsi/iscsi_target.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 28fc7fb..348337c 100644
+index 348337c..29df956 100644
 --- a/drivers/target/iscsi/iscsi_target.c
 +++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3513,7 +3513,8 @@ static int iscsit_send_text_rsp(
- 	struct iscsi_text_rsp *hdr = (struct iscsi_text_rsp *)cmd->pdu;
- 	int text_length;
+@@ -4379,7 +4379,8 @@ static void iscsit_logout_post_handler_closesession(
+ 	 * always sleep waiting for RX/TX thread shutdown to complete
+ 	 * within iscsit_close_connection().
+ 	 */
+-	if (conn->conn_transport->transport_type == ISCSI_TCP)
++	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
++	    (conn->conn_transport->transport_type == ISCSI_HW_OFFLOAD))
+ 		sleep = cmpxchg(&conn->tx_thread_active, true, false);
  
--	text_length = iscsit_build_text_rsp(cmd, conn, hdr, ISCSI_TCP);
-+	text_length = iscsit_build_text_rsp(cmd, conn, hdr,
-+				conn->conn_transport->transport_type);
- 	if (text_length < 0)
- 		return text_length;
+ 	atomic_set(&conn->conn_logout_remove, 0);
+@@ -4396,7 +4397,8 @@ static void iscsit_logout_post_handler_samecid(
+ {
+ 	int sleep = 1;
  
+-	if (conn->conn_transport->transport_type == ISCSI_TCP)
++	if ((conn->conn_transport->transport_type == ISCSI_TCP) ||
++	    (conn->conn_transport->transport_type == ISCSI_HW_OFFLOAD))
+ 		sleep = cmpxchg(&conn->tx_thread_active, true, false);
+ 
+ 	atomic_set(&conn->conn_logout_remove, 0);
 -- 
 2.0.2
-
