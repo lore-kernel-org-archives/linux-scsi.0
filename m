@@ -1,73 +1,93 @@
-From: Michel Meyers <steltek@tcnnet.com>
-Subject: Re: [PATCH 1/1] scsi: add Synology DSM 6.0 and higher to 1024 sector
- blacklist
-Date: Wed, 20 Apr 2016 10:46:45 +0200
-Message-ID: <571741F5.7060305@tcnnet.com>
-References: <20160114003437.354D28EE1D4@bedivere.hansenpartnership.com>
- <570B63B8.6080104@tcnnet.com> <yq1oa9fzhyi.fsf@sermon.lab.mkp.net>
- <570CB1C8.5050106@tcnnet.com> <yq17fg2zn1q.fsf@sermon.lab.mkp.net>
- <570D4A19.40000@redhat.com> <yq137qqzl6f.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] libfc: unsafe refcounting in fc_rport_work()
+Date: Wed, 20 Apr 2016 15:24:21 +0200
+Message-ID: <1461158661-97688-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smail.vo.lu ([80.90.45.96]:55500 "EHLO smail.vo.lu"
+Received: from mx2.suse.de ([195.135.220.15]:39943 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932888AbcDTIrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2016 04:47:11 -0400
-In-Reply-To: <yq137qqzl6f.fsf@sermon.lab.mkp.net>
+	id S1751987AbcDTNY2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2016 09:24:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 2016-04-12 21:22, Martin K. Petersen wrote:
->>>>>> "Mike" == Mike Christie <mchristi@redhat.com> writes:
-> 
->>> Mike: Any preference?
-> 
-> Mike> I think quirking SYNOLOGY is best. It will be the safest route and
-> Mike> work for all devices.
-> 
-> Michel: Please spin a new version of the patch.
+When pushing items on a workqueue we cannot take reference
+when the workqueue item is executed, as the structure might
+already been freed at that time.
+So instead we need to take a reference before adding it
+to the workqueue, thereby ensuring that the workqueue item
+will always be valid.
 
-Apologies for not getting back earlier. SYNOLOGY have released a new
-version of their OS indicating that they have worked to fix the iSCSI
-problem (and another one to actually make that update installable):
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/libfc/fc_rport.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
-https://www.synology.com/en-global/releaseNote/RS10613xs+
-- "Fixed multiple issues that might cause iSCSI service to hang under
-heavy loading and performing Vmware VAAI commands."
-- "Fixed an issue where DSM 6.0-7321 Update 1 could not be normally
-installed with Auto-Update."
-
-(They have not updated my support ticket on this case thus far.)
-
-Both my SYNOLOGY appliances now seem to show correct vpd data when queried:
-
-root@server:/# sg_vpd -p bl /dev/sdb
-Block limits VPD page (SBC):
-  Write same non-zero (WSNZ): 1
-  Maximum compare and write length: 1 blocks
-  Optimal transfer length granularity: 128 blocks
-  Maximum transfer length: 8192 blocks
-  Optimal transfer length: 1152 blocks
-  Maximum prefetch length: 0 blocks
-
-root@server:/# sg_vpd -p bl /dev/sdd
-Block limits VPD page (SBC):
-  Write same non-zero (WSNZ): 1
-  Maximum compare and write length: 1 blocks
-  Optimal transfer length granularity: 128 blocks
-  Maximum transfer length: 8192 blocks
-  Optimal transfer length: 512 blocks
-  Maximum prefetch length: 0 blocks
-
-I am currently running tests with an unmodified Debian 4.4.0-1-amd64
-kernel, so unless I can reproduce the problem, I suggest we leave the
-current blacklist as is (thereby only quirking the pre-6.0 SYNOLOGY
-volumes that are affected) and discard the new patch.
-
---
-Michel
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 589ff9a..8b08263f 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -263,7 +263,6 @@ static void fc_rport_work(struct work_struct *work)
+ 		ids = rdata->ids;
+ 		rdata->event = RPORT_EV_NONE;
+ 		rdata->major_retries = 0;
+-		kref_get(&rdata->kref);
+ 		mutex_unlock(&rdata->rp_mutex);
+ 
+ 		if (!rport)
+@@ -297,7 +296,6 @@ static void fc_rport_work(struct work_struct *work)
+ 			FC_RPORT_DBG(rdata, "lld callback ev %d\n", event);
+ 			rdata->lld_event_callback(lport, rdata, event);
+ 		}
+-		kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 		break;
+ 
+ 	case RPORT_EV_FAILED:
+@@ -377,6 +375,7 @@ static void fc_rport_work(struct work_struct *work)
+ 		mutex_unlock(&rdata->rp_mutex);
+ 		break;
+ 	}
++	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ }
+ 
+ /**
+@@ -438,8 +437,15 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
+ 
+ 	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
+ 
+-	if (rdata->event == RPORT_EV_NONE)
+-		queue_work(rport_event_queue, &rdata->event_work);
++	if (rdata->event == RPORT_EV_NONE) {
++		if (!kref_get_unless_zero(&rdata->kref)) {
++			FC_RPORT_DBG(rdata, "port already deleted\n");
++			return;
++		}
++		if (!queue_work(rport_event_queue, &rdata->event_work))
++			kref_put(&rdata->kref,
++				 rdata->local_port->tt.rport_destroy);
++	}
+ 	rdata->event = event;
+ }
+ 
+@@ -487,8 +493,15 @@ static void fc_rport_enter_ready(struct fc_rport_priv *rdata)
+ 
+ 	FC_RPORT_DBG(rdata, "Port is Ready\n");
+ 
+-	if (rdata->event == RPORT_EV_NONE)
+-		queue_work(rport_event_queue, &rdata->event_work);
++	if (rdata->event == RPORT_EV_NONE) {
++		if (!kref_get_unless_zero(&rdata->kref)) {
++			FC_RPORT_DBG(rdata, "port already deleted\n");
++			return;
++		}
++		if (!queue_work(rport_event_queue, &rdata->event_work))
++			kref_put(&rdata->kref,
++				 rdata->local_port->tt.rport_destroy);
++	}
+ 	rdata->event = RPORT_EV_READY;
+ }
+ 
+-- 
+1.8.5.6
 
