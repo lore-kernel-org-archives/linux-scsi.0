@@ -1,118 +1,343 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 116771] New: NULL pointer dereference when 'cat
- /sys/class/fc_host/host1/fabric_name'
-Date: Wed, 20 Apr 2016 01:06:18 +0000
-Message-ID: <bug-116771-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50234 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752555AbcDTBGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Apr 2016 21:06:22 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 359FF2025A
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2016 01:06:21 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 86387201C0
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2016 01:06:18 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bob Stlt <bobstlt40@gmail.com>
+Subject: [PATCH] SCSI: LIBSCSI: Fixed codeing style errors
+Date: Wed, 20 Apr 2016 15:51:46 +0800
+Message-ID: <1461138706-24847-1-git-send-email-bobstlt40@gmail.com.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bob Stlt <bobstlt40@gmail.com.com>Bob Stlt <bobstlt40@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=116771
+Fixed codeing style formatting errors.
 
-            Bug ID: 116771
-           Summary: NULL pointer dereference when 'cat
-                    /sys/class/fc_host/host1/fabric_name'
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 4.6-rc1 to 4.6-rc4
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: QLOGIC QLA2XXX
-          Assignee: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
-          Reporter: changlimin@h3c.com
-        Regression: No
+Signed-off-by: Bob Stlt <bobstlt40@gmail.com>
+---
+ drivers/scsi/libiscsi.c | 90 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 45 insertions(+), 45 deletions(-)
 
-1. A HBA card installed in HP ProLiant DL560 Gen8, BIOS P77 08/03/2014.
-07:00.0 Fibre Channel [0c04]: QLogic Corp. ISP2532-based 8Gb Fibre Channel to
-PCI Express HBA [1077:2532] (rev 02)
-07:00.1 Fibre Channel [0c04]: QLogic Corp. ISP2532-based 8Gb Fibre Channel to
-PCI Express HBA [1077:2532] (rev 02)
-
-2. After install 4.6-rc1 to 4.6-rc4 kernel, NULL pointer dereference when 'cat
-/sys/class/fc_host/host1/fabric_name'.  Kernel 4.5.1 is good.
-
-3. The reason is starget->dev.parent is NULL in qla2x00_get_starget_node_name
-    qla2x00_get_starget_node_name(struct scsi_target *starget)
-    {
-    struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
-
-4. Detail log:
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000058
- IP: [<ffffffffa844df97>] scsi_is_host_device+0x7/0x20
- PGD 0
- Oops: 0000 [#4] SMP
- Modules linked in: target_core_user uio iscsi_target_mod tcm_loop vhost_scsi
-vhost target_core_file target_core_iblock target_core_pscsi target_core_mod
-iscsi_tcp ocfs2_dlmfs libiscsi_tcp libiscsi ocfs2_stack_o2cb
-scsi_transport_iscsi ocfs2_dlm ocfs2_nodemanager ocfs2_stackglue configfs nbd
-dm_round_robin bridge stp llc x86_pkg_temp_thermal intel_powerclamp kvm_intel
-ipmi_ssif i2c_core kvm crct10dif_pclmul crc32_pclmul ghash_clmulni_intel
-aesni_intel dm_multipath aes_x86_64 glue_helper irqbypass lrw gf128mul
-ablk_helper cryptd ipmi_si serio_raw ipmi_msghandler hpilo nfsd auth_rpcgss
-nfs_acl lockd grace sunrpc ext4 jbd2 mbcache hid_generic tg3 qla2xxx bnx2x
-hwmon usbhid hpsa ptp mdio hid scsi_transport_sas scsi_transport_fc pps_core
-libcrc32c
- CPU: 1 PID: 2666 Comm: libvirtd Tainted: G      D         4.6.0-rc1 #1
- Hardware name: HP ProLiant DL560 Gen8, BIOS P77 08/03/2014
- task: ffff881fea668000 ti: ffff881fea694000 task.ti: ffff881fea694000
- RIP: 0010:[<ffffffffa844df97>]  [<ffffffffa844df97>]
-scsi_is_host_device+0x7/0x20
- RSP: 0018:ffff881fea697cf0  EFLAGS: 00010246
- RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff880ff8eef1d0
- RDX: ffff880ff8b9a000 RSI: ffff881ff8c82340 RDI: 0000000000000000
- RBP: ffff881fea697d08 R08: ffff880ff9a49c38 R09: ffff880ff2b0b980
- R10: ffff880ff8b9a000 R11: ffff880ff9f7dac0 R12: ffff880ff8353000
- R13: ffff881ff8545900 R14: ffff880ff06bc900 R15: 0000000000000001
- FS:  00007fcf43dee700(0000) GS:ffff880ffee40000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 0000000000000058 CR3: 0000001ff84bd000 CR4: 00000000000406e0
- Stack:
-  ffffffffc053e125 ffff880ff8353000 ffff880ff8b9a000 ffff881fea697d10
-  ffff881fea697d30 ffffffffc03801bb ffff881ff8c82340 ffffffffa8870cb0
-  ffff881fea697d50 ffffffffa8432980 ffffffffa8625882 ffff880ff06bc900
- Call Trace:
-  [<ffffffffc053e125>] ? qla2x00_get_starget_node_name+0x25/0x90 [qla2xxx]
-  [<ffffffffc03801bb>] ? show_fc_host_fabric_name+0x4b/0x80 [scsi_transport_fc]
-  [<ffffffffa8432980>] ? dev_attr_show+0x20/0x50
-  [<ffffffffa8625882>] ? mutex_lock+0x12/0x30
-  [<ffffffffa8264c0c>] ? sysfs_kf_seq_show+0xbc/0x130
-  [<ffffffffa8263493>] ? kernfs_seq_show+0x23/0x30
-  [<ffffffffa820c87a>] ? seq_read+0xca/0x360
-  [<ffffffffa81f93e2>] ? do_filp_open+0x92/0xe0
-  [<ffffffffa8263d8a>] ? kernfs_fop_read+0x10a/0x160
-  [<ffffffffa81e7e78>] ? __vfs_read+0x28/0xe0
-  [<ffffffffa8298170>] ? security_file_permission+0xa0/0xc0
-  [<ffffffffa81e8d17>] ? rw_verify_area+0x57/0xd0
-  [<ffffffffa81e8e12>] ? vfs_read+0x82/0x110
-  [<ffffffffa81ea096>] ? SyS_read+0x46/0xa0
-  [<ffffffffa8002c3e>] ? do_syscall_64+0x5e/0xc0
-  [<ffffffffa86277e5>] ? entry_SYSCALL64_slow_path+0x25/0x25
- Code: 00 00 00 90 66 66 66 66 90 0f b7 06 55 39 87 b0 fc ff ff 48 89 e5 5d 0f
-94 c0 0f b6 c0 c3 66 0f 1f 44 00 00 66 66 66 66 90 31 c0 <48> 81 7f 58 60 77 d3
-a8 55 48 89 e5 5d 0f 94 c0 c3 0f 1f 84 00
- RIP  [<ffffffffa844df97>] scsi_is_host_device+0x7/0x20
-  RSP <ffff881fea697cf0>
- CR2: 0000000000000058
- ---[ end trace 8d3e3efe3450a7ba ]---
-
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 6bffd91..41be9d3 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -197,7 +197,7 @@ static int iscsi_prep_ecdb_ahs(struct iscsi_task *task)
+ 	pad_len = iscsi_padding(rlen);
+ 
+ 	rc = iscsi_add_hdr(task, sizeof(ecdb_ahdr->ahslength) +
+-	                   sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
++			sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -210,10 +210,10 @@ static int iscsi_prep_ecdb_ahs(struct iscsi_task *task)
+ 	memcpy(ecdb_ahdr->ecdb, cmd->cmnd + ISCSI_CDB_SIZE, rlen);
+ 
+ 	ISCSI_DBG_SESSION(task->conn->session,
+-			  "iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
+-		          "rlen %d pad_len %d ahs_length %d iscsi_headers_size "
+-		          "%u\n", cmd->cmd_len, rlen, pad_len, ahslength,
+-		          task->hdr_len);
++			"iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
++			"rlen %d pad_len %d ahs_length %d iscsi_headers_size "
++			"%u\n", cmd->cmd_len, rlen, pad_len, ahslength,
++			task->hdr_len);
+ 	return 0;
+ }
+ 
+@@ -236,10 +236,10 @@ static int iscsi_prep_bidi_ahs(struct iscsi_task *task)
+ 	rlen_ahdr->read_length = cpu_to_be32(scsi_in(sc)->length);
+ 
+ 	ISCSI_DBG_SESSION(task->conn->session,
+-			  "bidi-in rlen_ahdr->read_length(%d) "
+-		          "rlen_ahdr->ahslength(%d)\n",
+-		          be32_to_cpu(rlen_ahdr->read_length),
+-		          be16_to_cpu(rlen_ahdr->ahslength));
++			"bidi-in rlen_ahdr->read_length(%d) "
++			"rlen_ahdr->ahslength(%d)\n",
++			be32_to_cpu(rlen_ahdr->read_length),
++			be16_to_cpu(rlen_ahdr->ahslength));
+ 	return 0;
+ }
+ 
+@@ -500,7 +500,7 @@ static void iscsi_free_task(struct iscsi_task *task)
+ 	if (conn->login_task == task)
+ 		return;
+ 
+-	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
++	kfifo_in(&session->cmdpool.queue, (void *)&task, sizeof(void *));
+ 
+ 	if (sc) {
+ 		/* SCSI eh reuses commands to verify us */
+@@ -736,7 +736,7 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		BUG_ON(conn->c_stage == ISCSI_CONN_STOPPED);
+ 
+ 		if (!kfifo_out(&session->cmdpool.queue,
+-				 (void*)&task, sizeof(void*)))
++				 (void *)&task, sizeof(void *)))
+ 			return NULL;
+ 	}
+ 	/*
+@@ -831,7 +831,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
+-	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
++	iscsi_update_cmdsn(session, (struct iscsi_nopin *)rhdr);
+ 	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
+ 
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
+@@ -901,12 +901,12 @@ invalid_datalen:
+ 	}
+ 
+ 	if (rhdr->flags & (ISCSI_FLAG_CMD_UNDERFLOW |
+-	                   ISCSI_FLAG_CMD_OVERFLOW)) {
++			ISCSI_FLAG_CMD_OVERFLOW)) {
+ 		int res_count = be32_to_cpu(rhdr->residual_count);
+ 
+ 		if (res_count > 0 &&
+ 		    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
+-		     res_count <= scsi_bufflen(sc)))
++			res_count <= scsi_bufflen(sc)))
+ 			/* write side for bidi or uni-io set_resid */
+ 			scsi_set_resid(sc, res_count);
+ 		else
+@@ -939,7 +939,7 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
+ 	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
+ 	if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
+-	                   ISCSI_FLAG_DATA_OVERFLOW)) {
++			ISCSI_FLAG_DATA_OVERFLOW)) {
+ 		int res_count = be32_to_cpu(rhdr->residual_count);
+ 
+ 		if (res_count > 0 &&
+@@ -978,7 +978,7 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 
+ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ {
+-        struct iscsi_nopout hdr;
++	struct iscsi_nopout hdr;
+ 	struct iscsi_task *task;
+ 
+ 	if (!rhdr && conn->ping_task)
+@@ -1080,7 +1080,7 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			spin_unlock(&conn->session->back_lock);
+ 			spin_lock(&conn->session->frwd_lock);
+ 			iscsi_send_nopout(conn,
+-					  (struct iscsi_nopin*)&rejected_pdu);
++						(struct iscsi_nopin *)&rejected_pdu);
+ 			spin_unlock(&conn->session->frwd_lock);
+ 			spin_lock(&conn->session->back_lock);
+ 		} else {
+@@ -1097,7 +1097,7 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 				rc = ISCSI_ERR_BAD_ITT;
+ 			} else
+ 				rc = iscsi_nop_out_rsp(task,
+-					(struct iscsi_nopin*)&rejected_pdu,
++					(struct iscsi_nopin *)&rejected_pdu,
+ 					NULL, 0);
+ 		}
+ 		break;
+@@ -1173,9 +1173,9 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			  opcode, conn->id, itt, datalen);
+ 
+ 	if (itt == ~0U) {
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 
+-		switch(opcode) {
++		switch (opcode) {
+ 		case ISCSI_OP_NOOP_IN:
+ 			if (datalen) {
+ 				rc = ISCSI_ERR_PROTO;
+@@ -1188,7 +1188,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			/* In RX path we are under back lock */
+ 			spin_unlock(&session->back_lock);
+ 			spin_lock(&session->frwd_lock);
+-			iscsi_send_nopout(conn, (struct iscsi_nopin*)hdr);
++			iscsi_send_nopout(conn, (struct iscsi_nopin *)hdr);
+ 			spin_unlock(&session->frwd_lock);
+ 			spin_lock(&session->back_lock);
+ 			break;
+@@ -1207,7 +1207,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		goto out;
+ 	}
+ 
+-	switch(opcode) {
++	switch (opcode) {
+ 	case ISCSI_OP_SCSI_CMD_RSP:
+ 	case ISCSI_OP_SCSI_DATA_IN:
+ 		task = iscsi_itt_to_ctask(conn, hdr->itt);
+@@ -1233,7 +1233,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		return ISCSI_ERR_BAD_OPCODE;
+ 	}
+ 
+-	switch(opcode) {
++	switch (opcode) {
+ 	case ISCSI_OP_SCSI_CMD_RSP:
+ 		iscsi_scsi_cmd_rsp(conn, hdr, task, data, datalen);
+ 		break;
+@@ -1241,7 +1241,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		iscsi_data_in_rsp(conn, hdr, task);
+ 		break;
+ 	case ISCSI_OP_LOGOUT_RSP:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		if (datalen) {
+ 			rc = ISCSI_ERR_PROTO;
+ 			break;
+@@ -1250,14 +1250,14 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		goto recv_pdu;
+ 	case ISCSI_OP_LOGIN_RSP:
+ 	case ISCSI_OP_TEXT_RSP:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		/*
+ 		 * login related PDU's exp_statsn is handled in
+ 		 * userspace
+ 		 */
+ 		goto recv_pdu;
+ 	case ISCSI_OP_SCSI_TMFUNC_RSP:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		if (datalen) {
+ 			rc = ISCSI_ERR_PROTO;
+ 			break;
+@@ -1267,14 +1267,14 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ 		break;
+ 	case ISCSI_OP_NOOP_IN:
+-		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
++		iscsi_update_cmdsn(session, (struct iscsi_nopin *)hdr);
+ 		if (hdr->ttt != cpu_to_be32(ISCSI_RESERVED_TAG) || datalen) {
+ 			rc = ISCSI_ERR_PROTO;
+ 			break;
+ 		}
+ 		conn->exp_statsn = be32_to_cpu(hdr->statsn) + 1;
+ 
+-		rc = iscsi_nop_out_rsp(task, (struct iscsi_nopin*)hdr,
++		rc = iscsi_nop_out_rsp(task, (struct iscsi_nopin *)hdr,
+ 				       data, datalen);
+ 		break;
+ 	default:
+@@ -1383,7 +1383,7 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 	dev = get_device(&conn->cls_conn->dev);
+ 	spin_unlock_bh(&session->frwd_lock);
+ 	if (!dev)
+-	        return;
++		return;
+ 	/*
+ 	 * if the host is being removed bypass the connection
+ 	 * recovery initialization because we are going to kill
+@@ -1503,8 +1503,8 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+ 
+ 	if (conn->task) {
+ 		rc = iscsi_xmit_task(conn);
+-	        if (rc)
+-		        goto done;
++		if (rc)
++			goto done;
+ 	}
+ 
+ 	/*
+@@ -2534,11 +2534,11 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 	 * the array. */
+ 	if (items)
+ 		num_arrays++;
+-	q->pool = kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
++	q->pool = kzalloc(num_arrays * max * sizeof(void *), GFP_KERNEL);
+ 	if (q->pool == NULL)
+ 		return -ENOMEM;
+ 
+-	kfifo_init(&q->queue, (void*)q->pool, max * sizeof(void*));
++	kfifo_init(&q->queue, (void *)q->pool, max * sizeof(void *));
+ 
+ 	for (i = 0; i < max; i++) {
+ 		q->pool[i] = kzalloc(item_size, GFP_KERNEL);
+@@ -2546,7 +2546,7 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 			q->max = i;
+ 			goto enomem;
+ 		}
+-		kfifo_in(&q->queue, (void*)&q->pool[i], sizeof(void*));
++		kfifo_in(&q->queue, (void *)&q->pool[i], sizeof(void *));
+ 	}
+ 
+ 	if (items) {
+@@ -2793,7 +2793,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+ 
+ 	/* initialize SCSI PDU commands pool */
+ 	if (iscsi_pool_init(&session->cmdpool, session->cmds_max,
+-			    (void***)&session->cmds,
++			    (void ***)&session->cmds,
+ 			    cmd_task_size + sizeof(struct iscsi_task)))
+ 		goto cmdpool_alloc_fail;
+ 
+@@ -2905,8 +2905,8 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 	/* allocate login_task used for the login/text sequences */
+ 	spin_lock_bh(&session->frwd_lock);
+ 	if (!kfifo_out(&session->cmdpool.queue,
+-                         (void*)&conn->login_task,
+-			 sizeof(void*))) {
++			(void *)&conn->login_task,
++			 sizeof(void *))) {
+ 		spin_unlock_bh(&session->frwd_lock);
+ 		goto login_task_alloc_fail;
+ 	}
+@@ -2924,8 +2924,8 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 	return cls_conn;
+ 
+ login_task_data_alloc_fail:
+-	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
+-		    sizeof(void*));
++	kfifo_in(&session->cmdpool.queue, (void *)&conn->login_task,
++		    sizeof(void *));
+ login_task_alloc_fail:
+ 	iscsi_destroy_conn(cls_conn);
+ 	return NULL;
+@@ -2968,8 +2968,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+ 	kfree(conn->local_ipaddr);
+ 	/* regular RX path uses back_lock */
+ 	spin_lock_bh(&session->back_lock);
+-	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
+-		    sizeof(void*));
++	kfifo_in(&session->cmdpool.queue, (void *)&conn->login_task,
++			sizeof(void *));
+ 	spin_unlock_bh(&session->back_lock);
+ 	if (session->leadconn == conn)
+ 		session->leadconn = NULL;
+@@ -3022,7 +3022,7 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
+ 		mod_timer(&conn->transport_timer,
+ 			  jiffies + (conn->recv_timeout * HZ));
+ 
+-	switch(conn->stop_stage) {
++	switch (conn->stop_stage) {
+ 	case STOP_CONN_RECOVER:
+ 		/*
+ 		 * unblock eh_abort() if it is blocked. re-try all
+@@ -3197,7 +3197,7 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ 	struct iscsi_session *session = conn->session;
+ 	int val;
+ 
+-	switch(param) {
++	switch (param) {
+ 	case ISCSI_PARAM_FAST_ABORT:
+ 		sscanf(buf, "%d", &session->fast_abort);
+ 		break;
+@@ -3310,7 +3310,7 @@ int iscsi_session_get_param(struct iscsi_cls_session *cls_session,
+ 	struct iscsi_session *session = cls_session->dd_data;
+ 	int len;
+ 
+-	switch(param) {
++	switch (param) {
+ 	case ISCSI_PARAM_FAST_ABORT:
+ 		len = sprintf(buf, "%d\n", session->fast_abort);
+ 		break;
+@@ -3488,7 +3488,7 @@ int iscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 	struct iscsi_conn *conn = cls_conn->dd_data;
+ 	int len;
+ 
+-	switch(param) {
++	switch (param) {
+ 	case ISCSI_PARAM_PING_TMO:
+ 		len = sprintf(buf, "%u\n", conn->ping_timeout);
+ 		break;
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.6.6
