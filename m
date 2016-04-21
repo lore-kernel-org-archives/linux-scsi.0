@@ -1,176 +1,212 @@
-From: Laura Abbott <labbott@redhat.com>
-Subject: Re: alloc failure in qla1280 probe -- need to decrease can_queue?
-Date: Thu, 21 Apr 2016 10:03:00 -0700
-Message-ID: <571907C4.3030408@redhat.com>
-References: <57155A93.7090604@redhat.com>
- <20160420141535.GF28402@c203.arch.suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libfc: unsafe refcounting in fc_rport_work()
+Date: Thu, 21 Apr 2016 16:11:58 -0400
+Message-ID: <1461269518.2415.6.camel@HansenPartnership.com>
+References: <1461158661-97688-1-git-send-email-hare@suse.de>
+	 <1461178992.14609.12.camel@HansenPartnership.com>
+	 <42070217.42313982.1461205529271.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160420141535.GF28402@c203.arch.suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthmshirn@suse.de>
-Cc: Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44764 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751571AbcDUUML (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2016 16:12:11 -0400
+In-Reply-To: <42070217.42313982.1461205529271.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ewan Milne <emilne@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 04/20/2016 07:15 AM, Johannes Thumshirn wrote:
-> [+Cc Michael Reed as get_maintainer.pl lists him as qla1280 maintainer ]
->
-> On Mon, Apr 18, 2016 at 03:07:15PM -0700, Laura Abbott wrote:
->> Hi,
->>
->> We received a bug report https://bugzilla.redhat.com/show_bug.cgi?id=1321033
->> of qla1280 scsi host failure on 4.4 based kernels that looks to be caused
->> by page alloc failure:
->>
->> [    4.804166] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter
->>                        Firmware version:  7.65.06, Driver version 3.27.1
->> [    4.804174] ------------[ cut here ]------------
->> [    4.804184] WARNING: CPU: 2 PID: 305 at mm/page_alloc.c:2989 __alloc_pages_nodemask+0xae8/0xbc0()
->> [    4.804186] Modules linked in: amdkfd amd_iommu_v2 radeon i2c_algo_bit drm_kms_helper ttm drm megaraid_sas serio_raw 8021q garp bnx2 stp llc mrp sunhme qla1280(+) fjes
->> [    4.804208] CPU: 2 PID: 305 Comm: systemd-udevd Not tainted 4.4.6-201.fc22.x86_64 #1
->> [    4.804210] Hardware name: Google Enterprise Search Appliance/0DT021, BIOS 1.1.2 08/14/2006
->> [    4.804212]  0000000000000286 000000002f01064c ffff88042985b710 ffffffff813b542e
->> [    4.804216]  0000000000000000 ffffffff81a75024 ffff88042985b748 ffffffff810a40f2
->> [    4.804220]  0000000000000000 0000000000000000 000000000000000b 0000000000000000
->> [    4.804223] Call Trace:
->> [    4.804231]  [<ffffffff813b542e>] dump_stack+0x63/0x85
->> [    4.804236]  [<ffffffff810a40f2>] warn_slowpath_common+0x82/0xc0
->> [    4.804239]  [<ffffffff810a423a>] warn_slowpath_null+0x1a/0x20
->> [    4.804242]  [<ffffffff811b75e8>] __alloc_pages_nodemask+0xae8/0xbc0
->> [    4.804247]  [<ffffffff817a002e>] ? _raw_spin_unlock_irqrestore+0xe/0x10
->> [    4.804251]  [<ffffffff811908be>] ? irq_work_queue+0x8e/0xa0
->> [    4.804256]  [<ffffffff810fa10a>] ? console_unlock+0x20a/0x540
->> [    4.804262]  [<ffffffff812029cc>] alloc_pages_current+0x8c/0x110
->> [    4.804265]  [<ffffffff811b5159>] alloc_kmem_pages+0x19/0x90
->> [    4.804268]  [<ffffffff811d2efe>] kmalloc_order_trace+0x2e/0xe0
->> [    4.804272]  [<ffffffff8120e6d2>] __kmalloc+0x232/0x260
->> [    4.804277]  [<ffffffff8138990d>] init_tag_map+0x3d/0xc0
->> [    4.804290]  [<ffffffff813899d5>] __blk_queue_init_tags+0x45/0x80
->> [    4.804293]  [<ffffffff81389a24>] blk_init_tags+0x14/0x20
->> [    4.804298]  [<ffffffff81520e60>] scsi_add_host_with_dma+0x80/0x300
->> [    4.804305]  [<ffffffffa000fec3>] qla1280_probe_one+0x683/0x9ef [qla1280]
->> [    4.804309]  [<ffffffff81401115>] local_pci_probe+0x45/0xa0
->> [    4.804312]  [<ffffffff814024fd>] pci_device_probe+0xfd/0x140
->> [    4.804316]  [<ffffffff814ef1d2>] driver_probe_device+0x222/0x490
->> [    4.804319]  [<ffffffff814ef4c4>] __driver_attach+0x84/0x90
->> [    4.804321]  [<ffffffff814ef440>] ? driver_probe_device+0x490/0x490
->> [    4.804324]  [<ffffffff814eccac>] bus_for_each_dev+0x6c/0xc0
->> [    4.804326]  [<ffffffff814ee98e>] driver_attach+0x1e/0x20
->> [    4.804328]  [<ffffffff814ee4cb>] bus_add_driver+0x1eb/0x280
->> [    4.804331]  [<ffffffffa0015000>] ? 0xffffffffa0015000
->> [    4.804333]  [<ffffffff814efd80>] driver_register+0x60/0xe0
->> [    4.804336]  [<ffffffff81400a5c>] __pci_register_driver+0x4c/0x50
->> [    4.804339]  [<ffffffffa00151ce>] qla1280_init+0x1ce/0x1000 [qla1280]
->> [    4.804341]  [<ffffffffa0015000>] ? 0xffffffffa0015000
->> [    4.804345]  [<ffffffff81002123>] do_one_initcall+0xb3/0x200
->> [    4.804348]  [<ffffffff8120d086>] ? kmem_cache_alloc_trace+0x196/0x210
->> [    4.804352]  [<ffffffff811aba7e>] ? do_init_module+0x27/0x1cb
->> [    4.804354]  [<ffffffff811abab6>] do_init_module+0x5f/0x1cb
->> [    4.804358]  [<ffffffff8112a6e0>] load_module+0x2040/0x2680
->> [    4.804360]  [<ffffffff81126e40>] ? __symbol_put+0x60/0x60
->> [    4.804363]  [<ffffffff8112ae69>] SYSC_init_module+0x149/0x190
->> [    4.804366]  [<ffffffff8112af9e>] SyS_init_module+0xe/0x10
->> [    4.804369]  [<ffffffff817a05ae>] entry_SYSCALL_64_fastpath+0x12/0x71
->> [    4.804371] ---[ end trace 0ea3b625f86705f7 ]---
->> [    4.804581] qla1280: probe of 0000:11:04.0 failed with error -12
->>
->> This looks very similar to http://www.spinics.net/lists/linux-usb/msg136998.html
->> which was fixed by 55ff8cfbc4e1 ("USB: uas: Reduce can_queue to MAX_CMNDS").
->> Does a similar fix need to be applied here?
->>
->> Thanks,
->> Laura
->
-> Can you (or better the reporter) try below? Unfortunately I don't have a
-> qla1280 setup here, so I couldn't test it myself.
->
+On Wed, 2016-04-20 at 22:25 -0400, Ewan Milne wrote:
+> ----- Original Message -----
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> To: Hannes Reinecke <hare@suse.de>, Martin K. Petersen <
+> martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, 
+> linux-scsi@vger.kernel.org
+> Sent: Wed, 20 Apr 2016 15:03:12 -0400 (EDT)
+> Subject: Re: [PATCH] libfc: unsafe refcounting in fc_rport_work()
+> 
+> On Wed, 2016-04-20 at 15:24 +0200, Hannes Reinecke wrote:
+> > When pushing items on a workqueue we cannot take reference
+> > when the workqueue item is executed, as the structure might
+> > already been freed at that time.
+> > So instead we need to take a reference before adding it
+> > to the workqueue, thereby ensuring that the workqueue item
+> > will always be valid.
+> 
+> > Have you actually seen this happen?  The rdata structure is fully
+> > ref
+> > counted, so if it's done a final put, then something should see
+> > unreferenced memory.  It looks like the model is that the final put
+> > is
+> > done from the queue, so I don't quite see how you can lose the
+> > final
+> > reference in either of the places you alter.
+> 
+> I have two dumps with freed rport structures that have delayed_work
+> items that are still on the active timer list.  Both are with FCoE, 
+> one using bnx and the other using ixgbe.  Something is wrong.  I'm 
+> not sure why we don't see anything on regular FC.
+> 
+> It seems to me that we should be holding a kref on the rport while
+> a work item is pending, but I'm not sure releasing it at the end of 
+> the work function is OK, either.  The workqueue code might still
+> reference the embedded work or delayed_work on the way out, no?
 
-Reporter indicated that the patch worked, host is now showing up.
+OK, so I'm by no means a libfc expert, but when I took a cursory look
+at the code it seemed to me that the final kref_put is actually in the
+workqueue, here:
 
-> Byte,
-> 	Johannes
->
->  From f95e82e7e5f675c9869ea1da78021aa6abc7972b Mon Sep 17 00:00:00 2001
-> From: Johannes Thumshirn <jthumshirn@suse.de>
-> Date: Wed, 20 Apr 2016 16:07:37 +0200
-> Subject: [PATCH] qla1280: Reduce can_queue to 32
->
-> The qla1280 driver sets the scsi_host_template's can_queue field to 0xfffff
-> which results in an allocation failure when allocating the block layer tags
-> for the driver's queues like the one shown below:
->
-> [    4.804166] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter Firmware version:  7.65.06, Driver version 3.27.1
-> [    4.804174] ------------[ cut here ]------------
-> [    4.804184] WARNING: CPU: 2 PID: 305 at mm/page_alloc.c:2989 alloc_pages_nodemask+0xae8/0xbc0()
-> [    4.804186] Modules linked in: amdkfd amd_iommu_v2 radeon i2c_algo_bit m_kms_helper ttm drm megaraid_sas serio_raw 8021q garp bnx2 stp llc mrp nhme qla1280(+) fjes
-> [    4.804208] CPU: 2 PID: 305 Comm: systemd-udevd Not tainted 4.6-201.fc22.x86_64 #1
-> [    4.804210] Hardware name: Google Enterprise Search Appliance/0DT021, OS 1.1.2 08/14/2006
-> [    4.804212]  0000000000000286 000000002f01064c ffff88042985b710 ffffff813b542e
-> [    4.804216]  0000000000000000 ffffffff81a75024 ffff88042985b748 ffffff810a40f2
-> [    4.804220]  0000000000000000 0000000000000000 000000000000000b 00000000000000
-> [    4.804223] Call Trace:
-> [    4.804231]  [<ffffffff813b542e>] dump_stack+0x63/0x85
-> [    4.804236]  [<ffffffff810a40f2>] warn_slowpath_common+0x82/0xc0
-> [    4.804239]  [<ffffffff810a423a>] warn_slowpath_null+0x1a/0x20
-> [    4.804242]  [<ffffffff811b75e8>] __alloc_pages_nodemask+0xae8/0xbc0
-> [    4.804247]  [<ffffffff817a002e>] ? _raw_spin_unlock_irqrestore+0xe/0x10
-> [    4.804251]  [<ffffffff811908be>] ? irq_work_queue+0x8e/0xa0
-> [    4.804256]  [<ffffffff810fa10a>] ? console_unlock+0x20a/0x540
-> [    4.804262]  [<ffffffff812029cc>] alloc_pages_current+0x8c/0x110
-> [    4.804265]  [<ffffffff811b5159>] alloc_kmem_pages+0x19/0x90
-> [    4.804268]  [<ffffffff811d2efe>] kmalloc_order_trace+0x2e/0xe0
-> [    4.804272]  [<ffffffff8120e6d2>] __kmalloc+0x232/0x260
-> [    4.804277]  [<ffffffff8138990d>] init_tag_map+0x3d/0xc0
-> [    4.804290]  [<ffffffff813899d5>] __blk_queue_init_tags+0x45/0x80
-> [    4.804293]  [<ffffffff81389a24>] blk_init_tags+0x14/0x20
-> [    4.804298]  [<ffffffff81520e60>] scsi_add_host_with_dma+0x80/0x300
-> [    4.804305]  [<ffffffffa000fec3>] qla1280_probe_one+0x683/0x9ef [qla1280]
-> [    4.804309]  [<ffffffff81401115>] local_pci_probe+0x45/0xa0
-> [    4.804312]  [<ffffffff814024fd>] pci_device_probe+0xfd/0x140
-> [    4.804316]  [<ffffffff814ef1d2>] driver_probe_device+0x222/0x490
-> [    4.804319]  [<ffffffff814ef4c4>] __driver_attach+0x84/0x90
-> [    4.804321]  [<ffffffff814ef440>] ? driver_probe_device+0x490/0x490
-> [    4.804324]  [<ffffffff814eccac>] bus_for_each_dev+0x6c/0xc0
-> [    4.804326]  [<ffffffff814ee98e>] driver_attach+0x1e/0x20
-> [    4.804328]  [<ffffffff814ee4cb>] bus_add_driver+0x1eb/0x280
-> [    4.804331]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-> [    4.804333]  [<ffffffff814efd80>] driver_register+0x60/0xe0
-> [    4.804336]  [<ffffffff81400a5c>] __pci_register_driver+0x4c/0x50
-> [    4.804339]  [<ffffffffa00151ce>] qla1280_init+0x1ce/0x1000 [qla1280]
-> [    4.804341]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-> [    4.804345]  [<ffffffff81002123>] do_one_initcall+0xb3/0x200
-> [    4.804348]  [<ffffffff8120d086>] ? kmem_cache_alloc_trace+0x196/0x210
-> [    4.804352]  [<ffffffff811aba7e>] ? do_init_module+0x27/0x1cb
-> [    4.804354]  [<ffffffff811abab6>] do_init_module+0x5f/0x1cb
-> [    4.804358]  [<ffffffff8112a6e0>] load_module+0x2040/0x2680
-> [    4.804360]  [<ffffffff81126e40>] ? __symbol_put+0x60/0x60
-> [    4.804363]  [<ffffffff8112ae69>] SYSC_init_module+0x149/0x190
-> [    4.804366]  [<ffffffff8112af9e>] SyS_init_module+0xe/0x10
-> [    4.804369]  [<ffffffff817a05ae>] entry_SYSCALL_64_fastpath+0x12/0x71
-> [    4.804371] ---[ end trace 0ea3b625f86705f7 ]---
-> [    4.804581] qla1280: probe of 0000:11:04.0 failed with error -12
->
-> In qla1280_set_defaults() the maximum queue depth is
-> set to 32 so adopt the scsi_host_template to it as well.
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/qla1280.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-> index 5d0ec42..6bd748e 100644
-> --- a/drivers/scsi/qla1280.c
-> +++ b/drivers/scsi/qla1280.c
-> @@ -4214,7 +4214,7 @@ static struct scsi_host_template qla1280_driver_template = {
->   	.eh_bus_reset_handler	= qla1280_eh_bus_reset,
->   	.eh_host_reset_handler	= qla1280_eh_adapter_reset,
->   	.bios_param		= qla1280_biosparam,
-> -	.can_queue		= 0xfffff,
-> +	.can_queue		= 32,
->   	.this_id		= -1,
->   	.sg_tablesize		= SG_ALL,
->   	.use_clustering		= ENABLE_CLUSTERING,
->
+	case RPORT_EV_FAILED:
+	case RPORT_EV_LOGO:
+	case
+RPORT_EV_STOP:
+
+[...]
+		if (rdata->rp_state == RPORT_ST_DELETE) {
+			
+if (port_id == FC_FID_DIR_SERV) {
+				rdata->event = RPORT_EV_NONE;
+				
+mutex_unlock(&rdata->rp_mutex);
+				kref_put(&rdata->kref, lport
+->tt.rport_destroy);
+			} else if ((rdata->flags & FC_RP_STARTED)
+&&
+				   rdata->major_retries <
+				   lport
+->max_rport_retry_count) {
+				rdata->major_retries++;
+				rdata
+->event = RPORT_EV_NONE;
+				FC_RPORT_DBG(rdata, "work restart\n");
+				
+fc_rport_enter_flogi(rdata);
+				mutex_unlock(&rdata->rp_mutex);
+			
+} else {
+				FC_RPORT_DBG(rdata, "work delete\n");
+				list_del_r
+cu(&rdata->peers);
+				mutex_unlock(&rdata->rp_mutex);
+				kref_p
+ut(&rdata->kref, lport->tt.rport_destroy);
+			}
+
+So the question I have is: what does this patch fix, because the rdata
+structure can only be killed in the workqueue and therefore you should
+never need an additional kref for the workqueue call itself?  If it
+does fix something, it would indicate we have some sort of other race
+in the code, and we should find and fix that.
+
+> I agree with Christoph, this whole thing needs looking at.  All the
+> delayed_work stuff seems problematic to me.  James S fixed a 3-way
+> deadlock involving this code a while back, for instance.
+
+I'm not saying there isn't a problem in libfc, I'd just like someone to
+propose something better than what looks like a random band aid. 
+ Ideally I'd like to understand what the problem is so I know we
+actually fixed it.
+
+James
+
+> -Ewan
+> 
+> 
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  drivers/scsi/libfc/fc_rport.c | 25 +++++++++++++++++++------
+> >  1 file changed, 19 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/libfc/fc_rport.c
+> > b/drivers/scsi/libfc/fc_rport.c
+> > index 589ff9a..8b08263f 100644
+> > --- a/drivers/scsi/libfc/fc_rport.c
+> > +++ b/drivers/scsi/libfc/fc_rport.c
+> > @@ -263,7 +263,6 @@ static void fc_rport_work(struct work_struct
+> > *work)
+> >  		ids = rdata->ids;
+> >  		rdata->event = RPORT_EV_NONE;
+> >  		rdata->major_retries = 0;
+> > -		kref_get(&rdata->kref);
+> >  		mutex_unlock(&rdata->rp_mutex);
+> >  
+> >  		if (!rport)
+> > @@ -297,7 +296,6 @@ static void fc_rport_work(struct work_struct
+> > *work)
+> >  			FC_RPORT_DBG(rdata, "lld callback ev
+> > %d\n",
+> > event);
+> >  			rdata->lld_event_callback(lport, rdata,
+> > event);
+> >  		}
+> > -		kref_put(&rdata->kref, lport->tt.rport_destroy);
+> >  		break;
+> >  
+> >  	case RPORT_EV_FAILED:
+> > @@ -377,6 +375,7 @@ static void fc_rport_work(struct work_struct
+> > *work)
+> >  		mutex_unlock(&rdata->rp_mutex);
+> >  		break;
+> >  	}
+> > +	kref_put(&rdata->kref, lport->tt.rport_destroy);
+> >  }
+> >  
+> >  /**
+> > @@ -438,8 +437,15 @@ static void fc_rport_enter_delete(struct
+> > fc_rport_priv *rdata,
+> >  
+> >  	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
+> >  
+> > -	if (rdata->event == RPORT_EV_NONE)
+> > -		queue_work(rport_event_queue, &rdata->event_work);
+> > +	if (rdata->event == RPORT_EV_NONE) {
+> > +		if (!kref_get_unless_zero(&rdata->kref)) {
+> > +			FC_RPORT_DBG(rdata, "port already
+> > deleted\n");
+> > +			return;
+> > +		}
+> > +		if (!queue_work(rport_event_queue, &rdata
+> > ->event_work))
+> > +			kref_put(&rdata->kref,
+> > +				 rdata->local_port
+> > ->tt.rport_destroy);
+> > +	}
+> >  	rdata->event = event;
+> >  }
+> >  
+> > @@ -487,8 +493,15 @@ static void fc_rport_enter_ready(struct
+> > fc_rport_priv *rdata)
+> >  
+> >  	FC_RPORT_DBG(rdata, "Port is Ready\n");
+> >  
+> > -	if (rdata->event == RPORT_EV_NONE)
+> > -		queue_work(rport_event_queue, &rdata->event_work);
+> > +	if (rdata->event == RPORT_EV_NONE) {
+> > +		if (!kref_get_unless_zero(&rdata->kref)) {
+> > +			FC_RPORT_DBG(rdata, "port already
+> > deleted\n");
+> > +			return;
+> > +		}
+> > +		if (!queue_work(rport_event_queue, &rdata
+> > ->event_work))
+> > +			kref_put(&rdata->kref,
+> > +				 rdata->local_port
+> > ->tt.rport_destroy);
+> > +	}
+> >  	rdata->event = RPORT_EV_READY;
+> >  }
+> >  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
