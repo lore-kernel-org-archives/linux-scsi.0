@@ -1,7 +1,7 @@
 From: Chaitra P B <chaitra.basappa@broadcom.com>
-Subject: [PATCH 5/5] mpt3sas: Used "synchronize_irq()"API to synchronize timed-out IO & TMs
-Date: Fri, 22 Apr 2016 16:53:14 +0530
-Message-ID: <1461324194-5789-6-git-send-email-chaitra.basappa@broadcom.com>
+Subject: [PATCH 2/5] mpt3sas: Handle active cable exception event
+Date: Fri, 22 Apr 2016 16:53:11 +0530
+Message-ID: <1461324194-5789-3-git-send-email-chaitra.basappa@broadcom.com>
 References: <1461324194-5789-1-git-send-email-chaitra.basappa@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461324194-5789-1-git-send-email-chaitra.basappa@broadcom.com>
@@ -10,99 +10,79 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-kernel@vger.kernel.org, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Replaced mpt3sas_base_flush_reply_queues()with
-mpt3sas_base_sync_reply_irqs(),as mpt3sas_base_flush_reply_queues()
-skips over reply queues that are currently busy (i.e. being handled
-by interrupt processing in another core). If a reply queue is busy,
-then call to synchronize_irq()in mpt3sas_base_sync_reply_irqs()make
-sures the other core has finished flushing the queue and completed
-any calls to the mid-layer scsi_done() routine.
+In-order to handle this 'MPI2_EVENT_ACTIVE_CABLE_EXCEPTION' event,
+driver need to follow below steps,
+1. Unmask the 'MPI2_EVENT_ACTIVE_CABLE_EXCEPTION' event,
+so that FW can notify this event to host driver.
+2. After receiving this event, add this event to AEN event queue,
+for notifying this event to applications.
+3. Then Print below message in kernel logs if the event data's reason
+code is zero,
+"Currently an active cable with ReceptacleID <ID_Value> cannot be powered
+and devices connected to this active cable will not be seen. This active
+cable requires <PowerValue_in_mW> of power"
+
+This event is only for Intruder/Cutlass HBAs.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 15 +++++++--------
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  3 ++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 +++-
- 3 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  5 +++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 13 +++++++++++++
+ 2 files changed, 18 insertions(+)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 4e9142f..fd9002d 100644
+index 8c44b9c..4e9142f 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1103,18 +1103,16 @@ _base_is_controller_msix_enabled(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-- * mpt3sas_base_flush_reply_queues - flushing the MSIX reply queues
-+ * mpt3sas_base_sync_reply_irqs - flush pending MSIX interrupts
-  * @ioc: per adapter object
-- * Context: ISR conext
-+ * Context: non ISR conext
-  *
-- * Called when a Task Management request has completed. We want
-- * to flush the other reply queues so all the outstanding IO has been
-- * completed back to OS before we process the TM completetion.
-+ * Called when a Task Management request has completed.
-  *
-  * Return nothing.
-  */
- void
--mpt3sas_base_flush_reply_queues(struct MPT3SAS_ADAPTER *ioc)
-+mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc)
- {
- 	struct adapter_reply_queue *reply_q;
- 
-@@ -1125,12 +1123,13 @@ mpt3sas_base_flush_reply_queues(struct MPT3SAS_ADAPTER *ioc)
- 		return;
- 
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
--		if (ioc->shost_recovery)
-+		if (ioc->shost_recovery || ioc->remove_host ||
-+				ioc->pci_error_recovery)
- 			return;
- 		/* TMs are on msix_index == 0 */
- 		if (reply_q->msix_index == 0)
- 			continue;
--		_base_interrupt(reply_q->vector, (void *)reply_q);
-+		synchronize_irq(reply_q->vector);
+@@ -654,6 +654,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
+ 	case MPI2_EVENT_TEMP_THRESHOLD:
+ 		desc = "Temperature Threshold";
+ 		break;
++	case MPI2_EVENT_ACTIVE_CABLE_EXCEPTION:
++		desc = "Active cable exception";
++		break;
  	}
- }
  
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index a16e7f9..fd58c48 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1236,7 +1236,8 @@ void *mpt3sas_base_get_msg_frame(struct MPT3SAS_ADAPTER *ioc, u16 smid);
- void *mpt3sas_base_get_sense_buffer(struct MPT3SAS_ADAPTER *ioc, u16 smid);
- __le32 mpt3sas_base_get_sense_buffer_dma(struct MPT3SAS_ADAPTER *ioc,
- 	u16 smid);
--void mpt3sas_base_flush_reply_queues(struct MPT3SAS_ADAPTER *ioc);
-+
-+void mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc);
+ 	if (!desc)
+@@ -5424,6 +5427,8 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	_base_unmask_events(ioc, MPI2_EVENT_IR_OPERATION_STATUS);
+ 	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
+ 	_base_unmask_events(ioc, MPI2_EVENT_TEMP_THRESHOLD);
++	if (ioc->hba_mpi_version_belonged == MPI26_VERSION)
++		_base_unmask_events(ioc, MPI2_EVENT_ACTIVE_CABLE_EXCEPTION);
  
- /* hi-priority queue */
- u16 mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
+ 	r = _base_make_ioc_operational(ioc, CAN_SLEEP);
+ 	if (r)
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index abd8717..928214f 100644
+index e0e4920..221f8bf 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2126,7 +2126,6 @@ _scsih_tm_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 		return 1;
- 	if (ioc->tm_cmds.smid != smid)
- 		return 1;
--	mpt3sas_base_flush_reply_queues(ioc);
- 	ioc->tm_cmds.status |= MPT3_CMD_COMPLETE;
- 	mpi_reply =  mpt3sas_base_get_reply_virt_addr(ioc, reply);
- 	if (mpi_reply) {
-@@ -2311,6 +2310,9 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
- 		}
- 	}
+@@ -7850,6 +7850,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 	Mpi2EventNotificationReply_t *mpi_reply;
+ 	u16 event;
+ 	u16 sz;
++	Mpi26EventDataActiveCableExcept_t *ActiveCableEventData;
  
-+	/* sync IRQs in case those were busy during flush. */
-+	mpt3sas_base_sync_reply_irqs(ioc);
-+
- 	if (ioc->tm_cmds.status & MPT3_CMD_REPLY_VALID) {
- 		mpt3sas_trigger_master(ioc, MASTER_TRIGGER_TASK_MANAGMENT);
- 		mpi_reply = ioc->tm_cmds.reply;
+ 	/* events turned off due to host reset or driver unloading */
+ 	if (ioc->remove_host || ioc->pci_error_recovery)
+@@ -7962,6 +7963,18 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 			(Mpi2EventDataTemperature_t *)
+ 			mpi_reply->EventData);
+ 		break;
++	case MPI2_EVENT_ACTIVE_CABLE_EXCEPTION:
++		ActiveCableEventData =
++		    (Mpi26EventDataActiveCableExcept_t *) mpi_reply->EventData;
++		if (ActiveCableEventData->ReasonCode ==
++				MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER)
++			pr_info(MPT3SAS_FMT "Currently an active cable with ReceptacleID %d",
++			    ioc->name, ActiveCableEventData->ReceptacleID);
++			pr_info("cannot be powered and devices connected to this active cable");
++			pr_info("will not be seen. This active cable");
++			pr_info("requires %d mW of power",
++			    ActiveCableEventData->ActiveCablePowerRequirement);
++		break;
+ 
+ 	default: /* ignore the rest */
+ 		return 1;
 -- 
 1.8.3.1
