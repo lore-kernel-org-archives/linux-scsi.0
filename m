@@ -1,188 +1,159 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] qla1280: Reduce can_queue to 32
-Date: Fri, 22 Apr 2016 10:10:13 -0400 (EDT)
-Message-ID: <638247275.31174426.1461334213059.JavaMail.zimbra@redhat.com>
-References: <1461310270-8945-1-git-send-email-jthumshirn@suse.de> <668592243.31153125.1461327404017.JavaMail.zimbra@redhat.com> <20160422140148.GV28402@c203.arch.suse.de>
+From: <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/3] scsi_transport_iscsi: Add stats support for iscsi host
+Date: Fri, 22 Apr 2016 09:39:31 -0400
+Message-ID: <1461332373-18491-2-git-send-email-adheer.chandravanshi@qlogic.com>
+References: <1461332373-18491-1-git-send-email-adheer.chandravanshi@qlogic.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20160422140148.GV28402@c203.arch.suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Johannes Thumshirn <jthmshirn@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Laura Abbott <labbott@redhat.com>, Michael Reed <mdr@sgi.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBC35NFWBRAHBB6HG5C4AKGQEYADDWTA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1461332373-18491-1-git-send-email-adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shyam.sundar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Johannes
-OK , yes thanks for pointing out the commit.
+From: Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
 
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
+Add stats for iscsi initiator that will be maintained at iscsi host level
+and will be exported as iscsi_host sysfs attributes.
 
------ Original Message -----
-=46rom: "Johannes Thumshirn" <jthmshirn@suse.de>
-To: "Laurence Oberman" <loberman@redhat.com>
-Cc: "Johannes Thumshirn" <jthumshirn@suse.de>, "Martin K . Petersen" <m=
-artin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.=
-ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "La=
-ura Abbott" <labbott@redhat.com>, "Michael Reed" <mdr@sgi.com>, stable@=
-vger.kernel.org
-Sent: Friday, April 22, 2016 10:01:48 AM
-Subject: Re: [PATCH] qla1280: Reduce can_queue to 32
+Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 51 +++++++++++++++++++++++++++++++++++++
+ include/scsi/iscsi_if.h             | 24 +++++++++++++++++
+ 2 files changed, 75 insertions(+)
 
-On Fri, Apr 22, 2016 at 08:16:44AM -0400, Laurence Oberman wrote:
-> The change looks fine, I see its hard-coded to 32 in qla1280_set_defa=
-ults()
-> Would it be better to create a #define like other drivers and use tha=
-t in both.
-> Also did the below patch resolve this for the bug reporter.
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 42bca61..076843c 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -4253,6 +4253,21 @@ iscsi_host_attr(ipaddress, ISCSI_HOST_PARAM_IPADDRESS);
+ iscsi_host_attr(initiatorname, ISCSI_HOST_PARAM_INITIATOR_NAME);
+ iscsi_host_attr(port_state, ISCSI_HOST_PARAM_PORT_STATE);
+ iscsi_host_attr(port_speed, ISCSI_HOST_PARAM_PORT_SPEED);
++iscsi_host_attr(login_accept_rsps, ISCSI_HOST_PARAM_LOGIN_ACCEPT_RSPS);
++iscsi_host_attr(login_other_fails, ISCSI_HOST_PARAM_LOGIN_OTHER_FAILS);
++iscsi_host_attr(login_authentication_fails,
++		ISCSI_HOST_PARAM_LOGIN_AUTHENTICATION_FAILS);
++iscsi_host_attr(login_authorization_fails,
++		ISCSI_HOST_PARAM_LOGIN_AUTHORIZATION_FAILS);
++iscsi_host_attr(login_negotiation_fails,
++		ISCSI_HOST_PARAM_LOGIN_NEGOTIATION_FAILS);
++iscsi_host_attr(login_redirect_rsps, ISCSI_HOST_PARAM_LOGIN_REDIRECT_RSPS);
++iscsi_host_attr(logout_normal_rsps, ISCSI_HOST_PARAM_LOGOUT_NORMAL_RSPS);
++iscsi_host_attr(logout_other_rsps, ISCSI_HOST_PARAM_LOGOUT_OTHER_RSPS);
++iscsi_host_attr(digest_err, ISCSI_HOST_PARAM_DIGEST_ERR);
++iscsi_host_attr(timeout_err, ISCSI_HOST_PARAM_TIMEOUT_ERR);
++iscsi_host_attr(format_err, ISCSI_HOST_PARAM_FORMAT_ERR);
++iscsi_host_attr(session_fails, ISCSI_HOST_PARAM_SESSION_FAILS);
+ 
+ static struct attribute *iscsi_host_attrs[] = {
+ 	&dev_attr_host_netdev.attr,
+@@ -4261,6 +4276,18 @@ static struct attribute *iscsi_host_attrs[] = {
+ 	&dev_attr_host_initiatorname.attr,
+ 	&dev_attr_host_port_state.attr,
+ 	&dev_attr_host_port_speed.attr,
++	&dev_attr_host_login_accept_rsps.attr,
++	&dev_attr_host_login_other_fails.attr,
++	&dev_attr_host_login_authentication_fails.attr,
++	&dev_attr_host_login_authorization_fails.attr,
++	&dev_attr_host_login_negotiation_fails.attr,
++	&dev_attr_host_login_redirect_rsps.attr,
++	&dev_attr_host_logout_normal_rsps.attr,
++	&dev_attr_host_logout_other_rsps.attr,
++	&dev_attr_host_digest_err.attr,
++	&dev_attr_host_timeout_err.attr,
++	&dev_attr_host_format_err.attr,
++	&dev_attr_host_session_fails.attr,
+ 	NULL,
+ };
+ 
+@@ -4284,6 +4311,30 @@ static umode_t iscsi_host_attr_is_visible(struct kobject *kobj,
+ 		param = ISCSI_HOST_PARAM_PORT_STATE;
+ 	else if (attr == &dev_attr_host_port_speed.attr)
+ 		param = ISCSI_HOST_PARAM_PORT_SPEED;
++	else if (attr == &dev_attr_host_login_accept_rsps.attr)
++		param = ISCSI_HOST_PARAM_LOGIN_ACCEPT_RSPS;
++	else if (attr == &dev_attr_host_login_other_fails.attr)
++		param = ISCSI_HOST_PARAM_LOGIN_OTHER_FAILS;
++	else if (attr == &dev_attr_host_login_authentication_fails.attr)
++		param = ISCSI_HOST_PARAM_LOGIN_AUTHENTICATION_FAILS;
++	else if (attr == &dev_attr_host_login_authorization_fails.attr)
++		param = ISCSI_HOST_PARAM_LOGIN_AUTHORIZATION_FAILS;
++	else if (attr == &dev_attr_host_login_negotiation_fails.attr)
++		param = ISCSI_HOST_PARAM_LOGIN_NEGOTIATION_FAILS;
++	else if (attr == &dev_attr_host_login_redirect_rsps.attr)
++		param = ISCSI_HOST_PARAM_LOGIN_REDIRECT_RSPS;
++	else if (attr == &dev_attr_host_logout_normal_rsps.attr)
++		param = ISCSI_HOST_PARAM_LOGOUT_NORMAL_RSPS;
++	else if (attr == &dev_attr_host_logout_other_rsps.attr)
++		param = ISCSI_HOST_PARAM_LOGOUT_OTHER_RSPS;
++	else if (attr == &dev_attr_host_digest_err.attr)
++		param = ISCSI_HOST_PARAM_DIGEST_ERR;
++	else if (attr == &dev_attr_host_timeout_err.attr)
++		param = ISCSI_HOST_PARAM_TIMEOUT_ERR;
++	else if (attr == &dev_attr_host_format_err.attr)
++		param = ISCSI_HOST_PARAM_FORMAT_ERR;
++	else if (attr == &dev_attr_host_session_fails.attr)
++		param = ISCSI_HOST_PARAM_SESSION_FAILS;
+ 	else {
+ 		WARN_ONCE(1, "Invalid host attr");
+ 		return 0;
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index d66c070..d6a3909 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -632,6 +632,18 @@ enum iscsi_host_param {
+ 	ISCSI_HOST_PARAM_IPADDRESS,
+ 	ISCSI_HOST_PARAM_PORT_STATE,
+ 	ISCSI_HOST_PARAM_PORT_SPEED,
++	ISCSI_HOST_PARAM_LOGIN_ACCEPT_RSPS,
++	ISCSI_HOST_PARAM_LOGIN_OTHER_FAILS,
++	ISCSI_HOST_PARAM_LOGIN_AUTHENTICATION_FAILS,
++	ISCSI_HOST_PARAM_LOGIN_AUTHORIZATION_FAILS,
++	ISCSI_HOST_PARAM_LOGIN_NEGOTIATION_FAILS,
++	ISCSI_HOST_PARAM_LOGIN_REDIRECT_RSPS,
++	ISCSI_HOST_PARAM_LOGOUT_NORMAL_RSPS,
++	ISCSI_HOST_PARAM_LOGOUT_OTHER_RSPS,
++	ISCSI_HOST_PARAM_DIGEST_ERR,
++	ISCSI_HOST_PARAM_TIMEOUT_ERR,
++	ISCSI_HOST_PARAM_FORMAT_ERR,
++	ISCSI_HOST_PARAM_SESSION_FAILS,
+ 	ISCSI_HOST_PARAM_MAX,
+ };
+ 
+@@ -819,6 +831,18 @@ struct iscsi_stats {
+ 	/* errors */
+ 	uint32_t digest_err;
+ 	uint32_t timeout_err;
++	uint32_t format_err;
++	uint32_t session_fails;
++
++	/* login/logout stats */
++	uint32_t login_accept_rsps;
++	uint32_t login_other_fails;
++	uint32_t login_authentication_fails;
++	uint32_t login_authorization_fails;
++	uint32_t login_negotiation_fails;
++	uint32_t login_redirect_rsps;
++	uint32_t logout_normal_rsps;
++	uint32_t logout_other_rsps;
+ 
+ 	/*
+ 	 * iSCSI Custom Statistics support, i.e. Transport could
+-- 
+1.8.3.1
 
-Yes, that's probably a reasonable idea, I'll re-send.
-
-> I ask because if I check 4.3 it was also set to the same value of 0xf=
-ffff and that is reported as working.
-> So other changes in 4.4 must be "abusing" this high value.
-
-I think it was introduced with commit 64d513ac31b - "scsi: use host wid=
-e
-tags by default". Since this commit scsi_add_host_with_dma() directly c=
-alls
-blk_init_tags() instead of scsi_init_shared_tag_map(). The qla1280 driv=
-er
-has never set up the block tags though, so the bogus value was not a pr=
-oblem.
-That at least is my analysis, feel free to correct my assumptions.
-
->=20
-> Reviewed-by Laurence Oberman <loberman@redhat.com>
->=20
-> Laurence Oberman
-> Principal Software Maintenance Engineer
-> Red Hat Global Support Services
->=20
-> ----- Original Message -----
-> From: "Johannes Thumshirn" <jthumshirn@suse.de>
-> To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J =
-=2E Bottomley" <jejb@linux.vnet.ibm.com>
-> Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Johann=
-es Thumshirn" <jthumshirn@suse.de>, "Laura Abbott" <labbott@redhat.com>=
-, "Michael Reed" <mdr@sgi.com>, stable@vger.kernel.org
-> Sent: Friday, April 22, 2016 3:31:10 AM
-> Subject: [PATCH] qla1280: Reduce can_queue to 32
->=20
-> It was reported in https://bugzilla.redhat.com/show_bug.cgi?id=3D1321=
-033,
-> that the qla1280 driver sets the scsi_host_template's can_queue field
-> to 0xfffff which results in an allocation failure when allocating the
-> block layer tags for the driver's queues like the one shown below:
->=20
-> [    4.804166] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter Fi=
-rmware version:  7.65.06, Driver version 3.27.1
-> [    4.804174] ------------[ cut here ]------------
-> [    4.804184] WARNING: CPU: 2 PID: 305 at mm/page_alloc.c:2989 alloc=
-_pages_nodemask+0xae8/0xbc0()
-> [    4.804186] Modules linked in: amdkfd amd_iommu_v2 radeon i2c_algo=
-_bit m_kms_helper ttm drm megaraid_sas serio_raw 8021q garp bnx2 stp ll=
-c mrp nhme qla1280(+) fjes
-> [    4.804208] CPU: 2 PID: 305 Comm: systemd-udevd Not tainted 4.6-20=
-1.fc22.x86_64 #1
-> [    4.804210] Hardware name: Google Enterprise Search Appliance/0DT0=
-21, OS 1.1.2 08/14/2006
-> [    4.804212]  0000000000000286 000000002f01064c ffff88042985b710 ff=
-ffff813b542e
-> [    4.804216]  0000000000000000 ffffffff81a75024 ffff88042985b748 ff=
-ffff810a40f2
-> [    4.804220]  0000000000000000 0000000000000000 000000000000000b 00=
-000000000000
-> [    4.804223] Call Trace:
-> [    4.804231]  [<ffffffff813b542e>] dump_stack+0x63/0x85
-> [    4.804236]  [<ffffffff810a40f2>] warn_slowpath_common+0x82/0xc0
-> [    4.804239]  [<ffffffff810a423a>] warn_slowpath_null+0x1a/0x20
-> [    4.804242]  [<ffffffff811b75e8>] __alloc_pages_nodemask+0xae8/0xb=
-c0
-> [    4.804247]  [<ffffffff817a002e>] ? _raw_spin_unlock_irqrestore+0x=
-e/0x10
-> [    4.804251]  [<ffffffff811908be>] ? irq_work_queue+0x8e/0xa0
-> [    4.804256]  [<ffffffff810fa10a>] ? console_unlock+0x20a/0x540
-> [    4.804262]  [<ffffffff812029cc>] alloc_pages_current+0x8c/0x110
-> [    4.804265]  [<ffffffff811b5159>] alloc_kmem_pages+0x19/0x90
-> [    4.804268]  [<ffffffff811d2efe>] kmalloc_order_trace+0x2e/0xe0
-> [    4.804272]  [<ffffffff8120e6d2>] __kmalloc+0x232/0x260
-> [    4.804277]  [<ffffffff8138990d>] init_tag_map+0x3d/0xc0
-> [    4.804290]  [<ffffffff813899d5>] __blk_queue_init_tags+0x45/0x80
-> [    4.804293]  [<ffffffff81389a24>] blk_init_tags+0x14/0x20
-> [    4.804298]  [<ffffffff81520e60>] scsi_add_host_with_dma+0x80/0x30=
-0
-> [    4.804305]  [<ffffffffa000fec3>] qla1280_probe_one+0x683/0x9ef [q=
-la1280]
-> [    4.804309]  [<ffffffff81401115>] local_pci_probe+0x45/0xa0
-> [    4.804312]  [<ffffffff814024fd>] pci_device_probe+0xfd/0x140
-> [    4.804316]  [<ffffffff814ef1d2>] driver_probe_device+0x222/0x490
-> [    4.804319]  [<ffffffff814ef4c4>] __driver_attach+0x84/0x90
-> [    4.804321]  [<ffffffff814ef440>] ? driver_probe_device+0x490/0x49=
-0
-> [    4.804324]  [<ffffffff814eccac>] bus_for_each_dev+0x6c/0xc0
-> [    4.804326]  [<ffffffff814ee98e>] driver_attach+0x1e/0x20
-> [    4.804328]  [<ffffffff814ee4cb>] bus_add_driver+0x1eb/0x280
-> [    4.804331]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-> [    4.804333]  [<ffffffff814efd80>] driver_register+0x60/0xe0
-> [    4.804336]  [<ffffffff81400a5c>] __pci_register_driver+0x4c/0x50
-> [    4.804339]  [<ffffffffa00151ce>] qla1280_init+0x1ce/0x1000 [qla12=
-80]
-> [    4.804341]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-> [    4.804345]  [<ffffffff81002123>] do_one_initcall+0xb3/0x200
-> [    4.804348]  [<ffffffff8120d086>] ? kmem_cache_alloc_trace+0x196/0=
-x210
-> [    4.804352]  [<ffffffff811aba7e>] ? do_init_module+0x27/0x1cb
-> [    4.804354]  [<ffffffff811abab6>] do_init_module+0x5f/0x1cb
-> [    4.804358]  [<ffffffff8112a6e0>] load_module+0x2040/0x2680
-> [    4.804360]  [<ffffffff81126e40>] ? __symbol_put+0x60/0x60
-> [    4.804363]  [<ffffffff8112ae69>] SYSC_init_module+0x149/0x190
-> [    4.804366]  [<ffffffff8112af9e>] SyS_init_module+0xe/0x10
-> [    4.804369]  [<ffffffff817a05ae>] entry_SYSCALL_64_fastpath+0x12/0=
-x71
-> [    4.804371] ---[ end trace 0ea3b625f86705f7 ]---
-> [    4.804581] qla1280: probe of 0000:11:04.0 failed with error -12
->=20
-> In qla1280_set_defaults() the maximum queue depth is
-> set to 32 so adopt the scsi_host_template to it as well.
->=20
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Laura Abbott <labbott@redhat.com>
-> Cc: Michael Reed <mdr@sgi.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/scsi/qla1280.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-> index 5d0ec42..6bd748e 100644
-> --- a/drivers/scsi/qla1280.c
-> +++ b/drivers/scsi/qla1280.c
-> @@ -4214,7 +4214,7 @@ static struct scsi_host_template qla1280_driver=
-_template =3D {
->  	.eh_bus_reset_handler	=3D qla1280_eh_bus_reset,
->  	.eh_host_reset_handler	=3D qla1280_eh_adapter_reset,
->  	.bios_param		=3D qla1280_biosparam,
-> -	.can_queue		=3D 0xfffff,
-> +	.can_queue		=3D 32,
->  	.this_id		=3D -1,
->  	.sg_tablesize		=3D SG_ALL,
->  	.use_clustering		=3D ENABLE_CLUSTERING,
-> --=20
-> 2.8.1
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
