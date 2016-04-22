@@ -1,19 +1,35 @@
-From: Johannes Thumshirn <jthmshirn@suse.de>
+From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: [PATCH] qla1280: Reduce can_queue to 32
-Date: Fri, 22 Apr 2016 16:01:48 +0200
-Message-ID: <20160422140148.GV28402@c203.arch.suse.de>
-References: <1461310270-8945-1-git-send-email-jthumshirn@suse.de>
- <668592243.31153125.1461327404017.JavaMail.zimbra@redhat.com>
+Date: Fri, 22 Apr 2016 10:10:13 -0400 (EDT)
+Message-ID: <638247275.31174426.1461334213059.JavaMail.zimbra@redhat.com>
+References: <1461310270-8945-1-git-send-email-jthumshirn@suse.de> <668592243.31153125.1461327404017.JavaMail.zimbra@redhat.com> <20160422140148.GV28402@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <668592243.31153125.1461327404017.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20160422140148.GV28402@c203.arch.suse.de>
 Sender: stable-owner@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
+To: Johannes Thumshirn <jthmshirn@suse.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Laura Abbott <labbott@redhat.com>, Michael Reed <mdr@sgi.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+
+Johannes
+OK , yes thanks for pointing out the commit.
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+=46rom: "Johannes Thumshirn" <jthmshirn@suse.de>
+To: "Laurence Oberman" <loberman@redhat.com>
+Cc: "Johannes Thumshirn" <jthumshirn@suse.de>, "Martin K . Petersen" <m=
+artin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.=
+ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "La=
+ura Abbott" <labbott@redhat.com>, "Michael Reed" <mdr@sgi.com>, stable@=
+vger.kernel.org
+Sent: Friday, April 22, 2016 10:01:48 AM
+Subject: Re: [PATCH] qla1280: Reduce can_queue to 32
 
 On Fri, Apr 22, 2016 at 08:16:44AM -0400, Laurence Oberman wrote:
 > The change looks fine, I see its hard-coded to 32 in qla1280_set_defa=
@@ -166,7 +182,7 @@ _template =3D {
 --=20
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
 Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
