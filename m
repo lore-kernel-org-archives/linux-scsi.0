@@ -1,102 +1,68 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] qla1280: Reduce can_queue to 32
-Date: Fri, 22 Apr 2016 10:56:13 -0400
-Message-ID: <1461336973.2415.15.camel@linux.vnet.ibm.com>
-References: <1461336073-21172-1-git-send-email-jthumshirn@suse.de>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PREEMPT-RT] [PATCH v2] scsi/fcoe: convert to kworker
+Date: Fri, 22 Apr 2016 17:27:43 +0200
+Message-ID: <571A42EF.7030900@linutronix.de>
+References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
+ <1457710143-29182-2-git-send-email-bigeasy@linutronix.de>
+ <20160311161704.GA5083@infradead.org> <56E2F30F.5030108@linutronix.de>
+ <20160315081940.GB9136@infradead.org> <20160412151654.GB20685@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1461336073-21172-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Laurence Oberman <loberman@redhat.com>, Laura Abbott <labbott@redhat.com>, Michael Reed <mdr@sgi.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:54374 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101AbcDVP1w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2016 11:27:52 -0400
+In-Reply-To: <20160412151654.GB20685@linutronix.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Vasu Dev <vasu.dev@intel.com>, rt@linutronix.de, fcoe-devel@open-fcoe.org
 
-On Fri, 2016-04-22 at 16:41 +0200, Johannes Thumshirn wrote:
-> The qla1280 driver sets the scsi_host_template's can_queue field to 
-> 0xfffff which results in an allocation failure when allocating the 
-> block layer tags for the driver's queues like the one shown below:
-> 
-> [    4.804166] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter
-> Firmware version:  7.65.06, Driver version 3.27.1
-> [    4.804174] ------------[ cut here ]------------
-> [    4.804184] WARNING: CPU: 2 PID: 305 at mm/page_alloc.c:2989
-> alloc_pages_nodemask+0xae8/0xbc0()
-> [    4.804186] Modules linked in: amdkfd amd_iommu_v2 radeon
-> i2c_algo_bit m_kms_helper ttm drm megaraid_sas serio_raw 8021q garp
-> bnx2 stp llc mrp nhme qla1280(+) fjes
-> [    4.804208] CPU: 2 PID: 305 Comm: systemd-udevd Not tainted 4.6
-> -201.fc22.x86_64 #1
-> [    4.804210] Hardware name: Google Enterprise Search
-> Appliance/0DT021, OS 1.1.2 08/14/2006
-> [    4.804212]  0000000000000286 000000002f01064c ffff88042985b710
-> ffffff813b542e
-> [    4.804216]  0000000000000000 ffffffff81a75024 ffff88042985b748
-> ffffff810a40f2
-> [    4.804220]  0000000000000000 0000000000000000 000000000000000b
-> 00000000000000
-> [    4.804223] Call Trace:
-> [    4.804231]  [<ffffffff813b542e>] dump_stack+0x63/0x85
-> [    4.804236]  [<ffffffff810a40f2>] warn_slowpath_common+0x82/0xc0
-> [    4.804239]  [<ffffffff810a423a>] warn_slowpath_null+0x1a/0x20
-> [    4.804242]  [<ffffffff811b75e8>]
-> __alloc_pages_nodemask+0xae8/0xbc0
-> [    4.804247]  [<ffffffff817a002e>] ?
-> _raw_spin_unlock_irqrestore+0xe/0x10
-> [    4.804251]  [<ffffffff811908be>] ? irq_work_queue+0x8e/0xa0
-> [    4.804256]  [<ffffffff810fa10a>] ? console_unlock+0x20a/0x540
-> [    4.804262]  [<ffffffff812029cc>] alloc_pages_current+0x8c/0x110
-> [    4.804265]  [<ffffffff811b5159>] alloc_kmem_pages+0x19/0x90
-> [    4.804268]  [<ffffffff811d2efe>] kmalloc_order_trace+0x2e/0xe0
-> [    4.804272]  [<ffffffff8120e6d2>] __kmalloc+0x232/0x260
-> [    4.804277]  [<ffffffff8138990d>] init_tag_map+0x3d/0xc0
-> [    4.804290]  [<ffffffff813899d5>] __blk_queue_init_tags+0x45/0x80
-> [    4.804293]  [<ffffffff81389a24>] blk_init_tags+0x14/0x20
-> [    4.804298]  [<ffffffff81520e60>]
-> scsi_add_host_with_dma+0x80/0x300
-> [    4.804305]  [<ffffffffa000fec3>] qla1280_probe_one+0x683/0x9ef
-> [qla1280]
-> [    4.804309]  [<ffffffff81401115>] local_pci_probe+0x45/0xa0
-> [    4.804312]  [<ffffffff814024fd>] pci_device_probe+0xfd/0x140
-> [    4.804316]  [<ffffffff814ef1d2>] driver_probe_device+0x222/0x490
-> [    4.804319]  [<ffffffff814ef4c4>] __driver_attach+0x84/0x90
-> [    4.804321]  [<ffffffff814ef440>] ?
-> driver_probe_device+0x490/0x490
-> [    4.804324]  [<ffffffff814eccac>] bus_for_each_dev+0x6c/0xc0
-> [    4.804326]  [<ffffffff814ee98e>] driver_attach+0x1e/0x20
-> [    4.804328]  [<ffffffff814ee4cb>] bus_add_driver+0x1eb/0x280
-> [    4.804331]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-> [    4.804333]  [<ffffffff814efd80>] driver_register+0x60/0xe0
-> [    4.804336]  [<ffffffff81400a5c>] __pci_register_driver+0x4c/0x50
-> [    4.804339]  [<ffffffffa00151ce>] qla1280_init+0x1ce/0x1000
-> [qla1280]
-> [    4.804341]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-> [    4.804345]  [<ffffffff81002123>] do_one_initcall+0xb3/0x200
-> [    4.804348]  [<ffffffff8120d086>] ?
-> kmem_cache_alloc_trace+0x196/0x210
-> [    4.804352]  [<ffffffff811aba7e>] ? do_init_module+0x27/0x1cb
-> [    4.804354]  [<ffffffff811abab6>] do_init_module+0x5f/0x1cb
-> [    4.804358]  [<ffffffff8112a6e0>] load_module+0x2040/0x2680
-> [    4.804360]  [<ffffffff81126e40>] ? __symbol_put+0x60/0x60
-> [    4.804363]  [<ffffffff8112ae69>] SYSC_init_module+0x149/0x190
-> [    4.804366]  [<ffffffff8112af9e>] SyS_init_module+0xe/0x10
-> [    4.804369]  [<ffffffff817a05ae>]
-> entry_SYSCALL_64_fastpath+0x12/0x71
-> [    4.804371] ---[ end trace 0ea3b625f86705f7 ]---
-> [    4.804581] qla1280: probe of 0000:11:04.0 failed with error -12
-> 
-> In qla1280_set_defaults() the maximum queue depth is
-> set to 32 so adopt the scsi_host_template to it as well.
+On 04/12/2016 05:16 PM, Sebastian Andrzej Siewior wrote:
+> The driver creates its own per-CPU threads which are updated based on
+> CPU hotplug events. It is also possible to use kworkers and remove so=
+me
+> of the kthread infrastrucure.
+>=20
+> The code checked ->thread to decide if there is an active per-CPU
+> thread. By using the kworker infrastructure this is no longer possibl=
+e (or
+> required). The thread pointer is saved in `kthread' instead of `threa=
+d' so
+> anything trying to use thread is caught by the compiler. Currently on=
+ly the
+> bnx2fc driver is using struct fcoe_percpu_s and the kthread member.
+>=20
+> After a CPU went offline, we may still enqueue items on the "offline"
+> CPU. This isn't much of a problem. The work will be done on a random
+> CPU. The allocated crc_eof_page page won't be cleaned up. It is proba=
+bly
+> expected that the CPU comes up at some point so it should not be a
+> problem. The crc_eof_page memory is released of course once the modul=
+e is
+> removed.
+>=20
+> This patch was only compile-tested due to -ENODEV.
+>=20
+> Cc: Vasu Dev <vasu.dev@intel.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: fcoe-devel@open-fcoe.org
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> ---
+> v1=E2=80=A6v2: use kworker instead of smbthread as per hch
+>=20
+> If you want this I would the same for the two bnx drivers.
 
-Actually, this isn't right.  You're confusing the maximum number of
-outstanding commands per host with the per device queue depth.  For a
-single device system, what you've done is fine but in an active
-multiple device one, we'll start to starve the queues.
+*ping*
 
-If we inject reality a bit, I think 32 is way too high a queue depth
-for SPI devices, so that could come down a bit, but if we stick with it
-and say the max number of attached devices was probably around 8 (or 16
-in the maximal case), we should be setting can_queue to 256-512.
-
-James
+Sebastian
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
