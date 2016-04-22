@@ -1,92 +1,80 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] qla1280: Reduce can_queue to 32
-Date: Fri, 22 Apr 2016 09:31:10 +0200
-Message-ID: <1461310270-8945-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Laura Abbott <labbott@redhat.com>, Michael Reed <mdr@sgi.com>, stable@vger.kernel.org
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [stable] SCSI discard fixes
+Date: Fri, 22 Apr 2016 08:42:54 +0100
+Message-ID: <1461310974.3404.7.camel@decadent.org.uk>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-3l00ARvt1EjMdpq9BVin"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:56319 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753297AbcDVIBd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Apr 2016 04:01:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, stable <stable@vger.kernel.org>
 
-It was reported in https://bugzilla.redhat.com/show_bug.cgi?id=1321033,
-that the qla1280 driver sets the scsi_host_template's can_queue field
-to 0xfffff which results in an allocation failure when allocating the
-block layer tags for the driver's queues like the one shown below:
 
-[    4.804166] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter Firmware version:  7.65.06, Driver version 3.27.1
-[    4.804174] ------------[ cut here ]------------
-[    4.804184] WARNING: CPU: 2 PID: 305 at mm/page_alloc.c:2989 alloc_pages_nodemask+0xae8/0xbc0()
-[    4.804186] Modules linked in: amdkfd amd_iommu_v2 radeon i2c_algo_bit m_kms_helper ttm drm megaraid_sas serio_raw 8021q garp bnx2 stp llc mrp nhme qla1280(+) fjes
-[    4.804208] CPU: 2 PID: 305 Comm: systemd-udevd Not tainted 4.6-201.fc22.x86_64 #1
-[    4.804210] Hardware name: Google Enterprise Search Appliance/0DT021, OS 1.1.2 08/14/2006
-[    4.804212]  0000000000000286 000000002f01064c ffff88042985b710 ffffff813b542e
-[    4.804216]  0000000000000000 ffffffff81a75024 ffff88042985b748 ffffff810a40f2
-[    4.804220]  0000000000000000 0000000000000000 000000000000000b 00000000000000
-[    4.804223] Call Trace:
-[    4.804231]  [<ffffffff813b542e>] dump_stack+0x63/0x85
-[    4.804236]  [<ffffffff810a40f2>] warn_slowpath_common+0x82/0xc0
-[    4.804239]  [<ffffffff810a423a>] warn_slowpath_null+0x1a/0x20
-[    4.804242]  [<ffffffff811b75e8>] __alloc_pages_nodemask+0xae8/0xbc0
-[    4.804247]  [<ffffffff817a002e>] ? _raw_spin_unlock_irqrestore+0xe/0x10
-[    4.804251]  [<ffffffff811908be>] ? irq_work_queue+0x8e/0xa0
-[    4.804256]  [<ffffffff810fa10a>] ? console_unlock+0x20a/0x540
-[    4.804262]  [<ffffffff812029cc>] alloc_pages_current+0x8c/0x110
-[    4.804265]  [<ffffffff811b5159>] alloc_kmem_pages+0x19/0x90
-[    4.804268]  [<ffffffff811d2efe>] kmalloc_order_trace+0x2e/0xe0
-[    4.804272]  [<ffffffff8120e6d2>] __kmalloc+0x232/0x260
-[    4.804277]  [<ffffffff8138990d>] init_tag_map+0x3d/0xc0
-[    4.804290]  [<ffffffff813899d5>] __blk_queue_init_tags+0x45/0x80
-[    4.804293]  [<ffffffff81389a24>] blk_init_tags+0x14/0x20
-[    4.804298]  [<ffffffff81520e60>] scsi_add_host_with_dma+0x80/0x300
-[    4.804305]  [<ffffffffa000fec3>] qla1280_probe_one+0x683/0x9ef [qla1280]
-[    4.804309]  [<ffffffff81401115>] local_pci_probe+0x45/0xa0
-[    4.804312]  [<ffffffff814024fd>] pci_device_probe+0xfd/0x140
-[    4.804316]  [<ffffffff814ef1d2>] driver_probe_device+0x222/0x490
-[    4.804319]  [<ffffffff814ef4c4>] __driver_attach+0x84/0x90
-[    4.804321]  [<ffffffff814ef440>] ? driver_probe_device+0x490/0x490
-[    4.804324]  [<ffffffff814eccac>] bus_for_each_dev+0x6c/0xc0
-[    4.804326]  [<ffffffff814ee98e>] driver_attach+0x1e/0x20
-[    4.804328]  [<ffffffff814ee4cb>] bus_add_driver+0x1eb/0x280
-[    4.804331]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-[    4.804333]  [<ffffffff814efd80>] driver_register+0x60/0xe0
-[    4.804336]  [<ffffffff81400a5c>] __pci_register_driver+0x4c/0x50
-[    4.804339]  [<ffffffffa00151ce>] qla1280_init+0x1ce/0x1000 [qla1280]
-[    4.804341]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-[    4.804345]  [<ffffffff81002123>] do_one_initcall+0xb3/0x200
-[    4.804348]  [<ffffffff8120d086>] ? kmem_cache_alloc_trace+0x196/0x210
-[    4.804352]  [<ffffffff811aba7e>] ? do_init_module+0x27/0x1cb
-[    4.804354]  [<ffffffff811abab6>] do_init_module+0x5f/0x1cb
-[    4.804358]  [<ffffffff8112a6e0>] load_module+0x2040/0x2680
-[    4.804360]  [<ffffffff81126e40>] ? __symbol_put+0x60/0x60
-[    4.804363]  [<ffffffff8112ae69>] SYSC_init_module+0x149/0x190
-[    4.804366]  [<ffffffff8112af9e>] SyS_init_module+0xe/0x10
-[    4.804369]  [<ffffffff817a05ae>] entry_SYSCALL_64_fastpath+0x12/0x71
-[    4.804371] ---[ end trace 0ea3b625f86705f7 ]---
-[    4.804581] qla1280: probe of 0000:11:04.0 failed with error -12
+--=-3l00ARvt1EjMdpq9BVin
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-In qla1280_set_defaults() the maximum queue depth is
-set to 32 so adopt the scsi_host_template to it as well.
+This commit in 3.19:
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Laura Abbott <labbott@redhat.com>
-Cc: Michael Reed <mdr@sgi.com>
-Cc: stable@vger.kernel.org
----
- drivers/scsi/qla1280.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+commit 7985090aa0201fa7760583f9f8e6ba41a8d4c392
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:=C2=A0=C2=A0=C2=A0Fri Nov 7 00:08:13 2014 -0500
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 5d0ec42..6bd748e 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -4214,7 +4214,7 @@ static struct scsi_host_template qla1280_driver_template = {
- 	.eh_bus_reset_handler	= qla1280_eh_bus_reset,
- 	.eh_host_reset_handler	= qla1280_eh_adapter_reset,
- 	.bios_param		= qla1280_biosparam,
--	.can_queue		= 0xfffff,
-+	.can_queue		= 32,
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.use_clustering		= ENABLE_CLUSTERING,
--- 
-2.8.1
+=C2=A0=C2=A0=C2=A0=C2=A0sd: disable discard_zeroes_data for UNMAP
+
+appears to fix a data corruption bug. =C2=A0Should it be backported to olde=
+r
+stable branches?
+
+Similarly for this one in 4.4:
+
+commit 397737223c59e89dca7305feb6528caef8fbef84
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:=C2=A0=C2=A0=C2=A0Fri Nov 13 16:46:47 2015 -0500
+
+=C2=A0=C2=A0=C2=A0=C2=A0sd: Make discard granularity match logical block si=
+ze when LBPRZ=3D1
+
+(along with:
+commit f4327a95dd080ed6aecb185478a88ce1ee4fa3c4
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:=C2=A0=C2=A0=C2=A0Sat Mar 5 17:52:02 2016 -0500
+
+=C2=A0=C2=A0=C2=A0=C2=A0sd: Fix discard granularity when LBPRZ=3D1
+)
+
+Ben.
+
+--=20
+Ben Hutchings
+When in doubt, use brute force. - Ken Thompson
+
+--=-3l00ARvt1EjMdpq9BVin
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXGdX+AAoJEOe/yOyVhhEJbBUQAM3WmKe+uV8EJd4qeOCsRP9y
+NOLcA/l7j3t+3rFHQpaOh1UyxvLyLKlH4iVLWRkjunewNzfXsi4lGDLiRPbqO4Gb
+Ebwr8sdTa4OQRzSeJQggHRDvjQxwqSPnXzn+n36rBZLBdjNeToARjEWY3OPRLrzh
+JaAuWMnMdCz6V8FIH1oRBh5342/PMG2EjM7ELafAN/rst4znQl6GUtEvyk1BYBIj
+Wz6Se7xx9x9SIKf5P+VyhRwYvRITRIYHgBSheE2mq2ORP8it3FeXTjfONX0Hdfau
+FGIaxkduNy3reDwIS6/BmAeIa8c1Qt/kodPec8zHh4J0KiNWn3imt0HQ5B0+Nr8l
+APbFInhvt9BwbFcmwqxTl5CI7nUPaIDI9WnUF42M/NISJ12cAfPOqdg4wDt1ZvFf
+golsSutP4m+osiEOiV3lSmMW4gemOqcSrfeWyY5IUI6fZ6BeKJEQLOC4LR0SGRfl
+3+Wg/ISPdccdg+UozoqM7kIvXOQFxWC2KOL0LZIVT0Fh5WF7/w/85MKEtSXlLxL3
+FEhUEmqinBddRQPL5dWthlKenGpwkkF9SOqnRnlbt/H8NQrWVulQ6cgaXIbZeHk2
+oNV3a6NyrnDYTiU9NB54Gw66wj5Djd4uZD4iPfMX24VleCcl8FC6UtULA/Y6PbMC
+dRG7eb30hIBtijgpqyTe
+=NjNU
+-----END PGP SIGNATURE-----
+
+--=-3l00ARvt1EjMdpq9BVin--
