@@ -1,42 +1,43 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] MAINTAINERS: Update the file list for the NCR 5380 entry
-Date: Sat, 23 Apr 2016 12:20:07 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1604221419520.4429@nippy.intranet>
+From: William Breathitt Gray <vilhelm.gray@gmail.com>
+Subject: Re: [PATCH 1/4] pnp: pnpbios: Add explicit X86_32 dependency to
+ PNPBIOS
+Date: Sat, 23 Apr 2016 10:53:40 -0400
+Message-ID: <20160423145340.GA22767@sophia>
+References: <cover.1460379702.git.vilhelm.gray@gmail.com>
+ <bbb2f28f39cbda8923eedca61bb5d9c55520f674.1460379702.git.vilhelm.gray@gmail.com>
+ <571AB8F6.50802@intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <571AB8F6.50802@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: gregkh@linuxfoundation.org
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, rafael.j.wysocki@intel.com, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Sat, Apr 23, 2016 at 01:51:19AM +0200, Rafael J. Wysocki wrote:
+>On 4/11/2016 3:25 PM, William Breathitt Gray wrote:
+>> The PNPBIOS driver requires preprocessor defines (located in
+>> include/asm/segment.h) only declared if the architecture is set to
+>> X86_32. If the architecture is set to X86_64, the PNPBIOS driver will
+>> not build properly. The X86 dependecy for the PNPBIOS configuration
+>> option is changed to an explicit X86_32	dependency in order to prevent
+>> an attempt to build for an unsupported architecture.
+>>
+>> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Signed-off-by: William Breathitt Gray <vilhelm.gray@gmail.com>
+>
+>Has anyone taken care of this already?
+>
+>If not, can you possibly resend this patch with a CC to 
+>linux-acpi@vger.kernel.org so I can pick it up via Patchwork more easily?
 
-The file atari_NCR5380.c has been removed from the tree so remove it 
-from the MAINTAINERS file as well.
+Greg K-H,
 
-While we are here, add the file dtc3x80.txt as it is only relevant
-to the dtc driver.
+Will this patch appear in the driver-core repository along with the
+other patches in this set?
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Thanks,
 
----
-
-The patch which removed atari_NCR5380.c is queued in jejb-scsi/for-next
-(commit c4ec6f924f06) hence this change is applicable to that tree.
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 61a323a..a87defa 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7539,10 +7539,10 @@ M:	Michael Schmitz <schmitzmic@gmail.com>
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- F:	Documentation/scsi/g_NCR5380.txt
-+F:	Documentation/scsi/dtc3x80.txt
- F:	drivers/scsi/NCR5380.*
- F:	drivers/scsi/arm/cumana_1.c
- F:	drivers/scsi/arm/oak.c
--F:	drivers/scsi/atari_NCR5380.c
- F:	drivers/scsi/atari_scsi.*
- F:	drivers/scsi/dmx3191d.c
- F:	drivers/scsi/dtc.*
+William Breathitt Gray
