@@ -1,55 +1,42 @@
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 1/4] pnp: pnpbios: Add explicit X86_32 dependency to
- PNPBIOS
-Date: Sat, 23 Apr 2016 01:51:19 +0200
-Message-ID: <571AB8F6.50802@intel.com>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
- <bbb2f28f39cbda8923eedca61bb5d9c55520f674.1460379702.git.vilhelm.gray@gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] MAINTAINERS: Update the file list for the NCR 5380 entry
+Date: Sat, 23 Apr 2016 12:20:07 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1604221419520.4429@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30689 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbcDVXvZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Apr 2016 19:51:25 -0400
-In-Reply-To: <bbb2f28f39cbda8923eedca61bb5d9c55520f674.1460379702.git.vilhelm.gray@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: William Breathitt Gray <vilhelm.gray@gmail.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, gregkh@linuxfoundation.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
 
-On 4/11/2016 3:25 PM, William Breathitt Gray wrote:
-> The PNPBIOS driver requires preprocessor defines (located in
-> include/asm/segment.h) only declared if the architecture is set to
-> X86_32. If the architecture is set to X86_64, the PNPBIOS driver will
-> not build properly. The X86 dependecy for the PNPBIOS configuration
-> option is changed to an explicit X86_32	dependency in order to prevent
-> an attempt to build for an unsupported architecture.
->
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: William Breathitt Gray <vilhelm.gray@gmail.com>
 
-Has anyone taken care of this already?
+The file atari_NCR5380.c has been removed from the tree so remove it 
+from the MAINTAINERS file as well.
 
-If not, can you possibly resend this patch with a CC to 
-linux-acpi@vger.kernel.org so I can pick it up via Patchwork more easily?
+While we are here, add the file dtc3x80.txt as it is only relevant
+to the dtc driver.
 
-> ---
->   drivers/pnp/pnpbios/Kconfig | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pnp/pnpbios/Kconfig b/drivers/pnp/pnpbios/Kconfig
-> index 50c3dd0..a786086 100644
-> --- a/drivers/pnp/pnpbios/Kconfig
-> +++ b/drivers/pnp/pnpbios/Kconfig
-> @@ -3,7 +3,7 @@
->   #
->   config PNPBIOS
->   	bool "Plug and Play BIOS support"
-> -	depends on ISA && X86
-> +	depends on ISA && X86_32
->   	default n
->   	---help---
->   	  Linux uses the PNPBIOS as defined in "Plug and Play BIOS
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
+---
+
+The patch which removed atari_NCR5380.c is queued in jejb-scsi/for-next
+(commit c4ec6f924f06) hence this change is applicable to that tree.
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 61a323a..a87defa 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7539,10 +7539,10 @@ M:	Michael Schmitz <schmitzmic@gmail.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/scsi/g_NCR5380.txt
++F:	Documentation/scsi/dtc3x80.txt
+ F:	drivers/scsi/NCR5380.*
+ F:	drivers/scsi/arm/cumana_1.c
+ F:	drivers/scsi/arm/oak.c
+-F:	drivers/scsi/atari_NCR5380.c
+ F:	drivers/scsi/atari_scsi.*
+ F:	drivers/scsi/dmx3191d.c
+ F:	drivers/scsi/dtc.*
