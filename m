@@ -1,24 +1,210 @@
-From: =?utf-8?B?0KHQtdGA0LPQtdC5INCc0LjRhdCw0LnQu9C+0LIgKNC80LDRgdGC0LXRgCk=?=
-	<mikhaylov.631@mail.ru>
-Subject: =?utf-8?B?0J/QviDQv9C+0LLQvtC00YMg0LjQt9Cz0L7RgtC+0LLQu9C10L3QuNGPINGI0LrQsNGE0LAt0LrRg9C/0LU=?=
-Date: Tue, 19 Apr 2016 11:29:56 -0500
-Message-ID: <201604191629.u3JGTuIN021441@cdn66-171-236-18.gigecdn.com>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH 1/3] scsi_transport_iscsi: Add stats support for iscsi
+ host
+Date: Sun, 24 Apr 2016 12:49:51 +0200
+Message-ID: <571CA4CF.4020904@suse.de>
+References: <1461332373-18491-1-git-send-email-adheer.chandravanshi@qlogic.com>
+ <1461332373-18491-2-git-send-email-adheer.chandravanshi@qlogic.com>
+ <571A6F60.1010400@cs.wisc.edu>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hosted.at.gigecdn.com ([66.171.236.18]:50409 "EHLO
-	cdn66-171-236-18.gigecdn.com" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752283AbcDXKQ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2016 06:16:29 -0400
-Subject: =?utf-8?B?0J/QviDQv9C+0LLQvtC00YMg0LjQt9Cz0L7RgtC+0LLQu9C10L3QuNGPINGI0LrQsNGE0LAt0LrRg9C/0LU=?=
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <open-iscsi+bncBCHZVHVFVMARBVOJ6K4AKGQEY4NXALA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <571A6F60.1010400-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shyam.sundar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: mpwrozvo@xdwsmmqa.com, pkc@calky.org, loxd@tisx.com, linux-scsi@vger.kernel.org, mcita@referaleportaler.ru, mailtkursk@spravedlivo.ru, post@dnb.ru, mangxe@ncdeem.org, koaznr750b@penza-city.ru, kofiki@kamutoks.ru, magnet-spb@amtc.org, natalizd.17@gmail.com, mmtib@f-mailers.ru, masturbatedo897@collectmail.ru, oh@novostar.net, oksana.dunaewa@yandex.ru, office@palmail.spb.ru, niklajjovs@rambler.ru, kropotkin@hott.ru, ludmila.a.loginova@gmail.com
 
+On 04/22/2016 08:37 PM, Mike Christie wrote:
+> On 04/22/2016 08:39 AM, adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org wrote:
+>> From: Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+>>
+>> Add stats for iscsi initiator that will be maintained at iscsi host leve=
+l
+>> and will be exported as iscsi_host sysfs attributes.
+>>
+>> Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>  drivers/scsi/scsi_transport_iscsi.c | 51 ++++++++++++++++++++++++++++++=
++++++++
+>>  include/scsi/iscsi_if.h             | 24 +++++++++++++++++
+>>  2 files changed, 75 insertions(+)
+>>
+>> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tra=
+nsport_iscsi.c
+>> index 42bca61..076843c 100644
+>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>> @@ -4253,6 +4253,21 @@ iscsi_host_attr(ipaddress, ISCSI_HOST_PARAM_IPADD=
+RESS);
+>>  iscsi_host_attr(initiatorname, ISCSI_HOST_PARAM_INITIATOR_NAME);
+>>  iscsi_host_attr(port_state, ISCSI_HOST_PARAM_PORT_STATE);
+>>  iscsi_host_attr(port_speed, ISCSI_HOST_PARAM_PORT_SPEED);
+>> +iscsi_host_attr(login_accept_rsps, ISCSI_HOST_PARAM_LOGIN_ACCEPT_RSPS);
+>> +iscsi_host_attr(login_other_fails, ISCSI_HOST_PARAM_LOGIN_OTHER_FAILS);
+>> +iscsi_host_attr(login_authentication_fails,
+>> +		ISCSI_HOST_PARAM_LOGIN_AUTHENTICATION_FAILS);
+>> +iscsi_host_attr(login_authorization_fails,
+>> +		ISCSI_HOST_PARAM_LOGIN_AUTHORIZATION_FAILS);
+>> +iscsi_host_attr(login_negotiation_fails,
+>> +		ISCSI_HOST_PARAM_LOGIN_NEGOTIATION_FAILS);
+>> +iscsi_host_attr(login_redirect_rsps, ISCSI_HOST_PARAM_LOGIN_REDIRECT_RS=
+PS);
+>> +iscsi_host_attr(logout_normal_rsps, ISCSI_HOST_PARAM_LOGOUT_NORMAL_RSPS=
+);
+>> +iscsi_host_attr(logout_other_rsps, ISCSI_HOST_PARAM_LOGOUT_OTHER_RSPS);
+>> +iscsi_host_attr(digest_err, ISCSI_HOST_PARAM_DIGEST_ERR);
+>> +iscsi_host_attr(timeout_err, ISCSI_HOST_PARAM_TIMEOUT_ERR);
+>> +iscsi_host_attr(format_err, ISCSI_HOST_PARAM_FORMAT_ERR);
+>> +iscsi_host_attr(session_fails, ISCSI_HOST_PARAM_SESSION_FAILS);
+>> =20
+>>  static struct attribute *iscsi_host_attrs[] =3D {
+>>  	&dev_attr_host_netdev.attr,
+>> @@ -4261,6 +4276,18 @@ static struct attribute *iscsi_host_attrs[] =3D {
+>>  	&dev_attr_host_initiatorname.attr,
+>>  	&dev_attr_host_port_state.attr,
+>>  	&dev_attr_host_port_speed.attr,
+>> +	&dev_attr_host_login_accept_rsps.attr,
+>> +	&dev_attr_host_login_other_fails.attr,
+>> +	&dev_attr_host_login_authentication_fails.attr,
+>> +	&dev_attr_host_login_authorization_fails.attr,
+>> +	&dev_attr_host_login_negotiation_fails.attr,
+>> +	&dev_attr_host_login_redirect_rsps.attr,
+>> +	&dev_attr_host_logout_normal_rsps.attr,
+>> +	&dev_attr_host_logout_other_rsps.attr,
+>> +	&dev_attr_host_digest_err.attr,
+>> +	&dev_attr_host_timeout_err.attr,
+>> +	&dev_attr_host_format_err.attr,
+>> +	&dev_attr_host_session_fails.attr,
+>>  	NULL,
+>>  };
+>> =20
+>> @@ -4284,6 +4311,30 @@ static umode_t iscsi_host_attr_is_visible(struct =
+kobject *kobj,
+>>  		param =3D ISCSI_HOST_PARAM_PORT_STATE;
+>>  	else if (attr =3D=3D &dev_attr_host_port_speed.attr)
+>>  		param =3D ISCSI_HOST_PARAM_PORT_SPEED;
+>> +	else if (attr =3D=3D &dev_attr_host_login_accept_rsps.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGIN_ACCEPT_RSPS;
+>> +	else if (attr =3D=3D &dev_attr_host_login_other_fails.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGIN_OTHER_FAILS;
+>> +	else if (attr =3D=3D &dev_attr_host_login_authentication_fails.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGIN_AUTHENTICATION_FAILS;
+>> +	else if (attr =3D=3D &dev_attr_host_login_authorization_fails.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGIN_AUTHORIZATION_FAILS;
+>> +	else if (attr =3D=3D &dev_attr_host_login_negotiation_fails.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGIN_NEGOTIATION_FAILS;
+>> +	else if (attr =3D=3D &dev_attr_host_login_redirect_rsps.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGIN_REDIRECT_RSPS;
+>> +	else if (attr =3D=3D &dev_attr_host_logout_normal_rsps.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGOUT_NORMAL_RSPS;
+>> +	else if (attr =3D=3D &dev_attr_host_logout_other_rsps.attr)
+>> +		param =3D ISCSI_HOST_PARAM_LOGOUT_OTHER_RSPS;
+>> +	else if (attr =3D=3D &dev_attr_host_digest_err.attr)
+>> +		param =3D ISCSI_HOST_PARAM_DIGEST_ERR;
+>> +	else if (attr =3D=3D &dev_attr_host_timeout_err.attr)
+>> +		param =3D ISCSI_HOST_PARAM_TIMEOUT_ERR;
+>> +	else if (attr =3D=3D &dev_attr_host_format_err.attr)
+>> +		param =3D ISCSI_HOST_PARAM_FORMAT_ERR;
+>> +	else if (attr =3D=3D &dev_attr_host_session_fails.attr)
+>> +		param =3D ISCSI_HOST_PARAM_SESSION_FAILS;
+>>  	else {
+>>  		WARN_ONCE(1, "Invalid host attr");
+>>  		return 0;
+>> diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+>> index d66c070..d6a3909 100644
+>> --- a/include/scsi/iscsi_if.h
+>> +++ b/include/scsi/iscsi_if.h
+>> @@ -632,6 +632,18 @@ enum iscsi_host_param {
+>>  	ISCSI_HOST_PARAM_IPADDRESS,
+>>  	ISCSI_HOST_PARAM_PORT_STATE,
+>>  	ISCSI_HOST_PARAM_PORT_SPEED,
+>> +	ISCSI_HOST_PARAM_LOGIN_ACCEPT_RSPS,
+>> +	ISCSI_HOST_PARAM_LOGIN_OTHER_FAILS,
+>> +	ISCSI_HOST_PARAM_LOGIN_AUTHENTICATION_FAILS,
+>> +	ISCSI_HOST_PARAM_LOGIN_AUTHORIZATION_FAILS,
+>> +	ISCSI_HOST_PARAM_LOGIN_NEGOTIATION_FAILS,
+>> +	ISCSI_HOST_PARAM_LOGIN_REDIRECT_RSPS,
+>> +	ISCSI_HOST_PARAM_LOGOUT_NORMAL_RSPS,
+>> +	ISCSI_HOST_PARAM_LOGOUT_OTHER_RSPS,
+>> +	ISCSI_HOST_PARAM_DIGEST_ERR,
+>> +	ISCSI_HOST_PARAM_TIMEOUT_ERR,
+>> +	ISCSI_HOST_PARAM_FORMAT_ERR,
+>> +	ISCSI_HOST_PARAM_SESSION_FAILS,
+>>  	ISCSI_HOST_PARAM_MAX,
+>>  };
+>> =20
+>> @@ -819,6 +831,18 @@ struct iscsi_stats {
+>>  	/* errors */
+>>  	uint32_t digest_err;
+>>  	uint32_t timeout_err;
+>> +	uint32_t format_err;
+>> +	uint32_t session_fails;
+>> +
+>> +	/* login/logout stats */
+>> +	uint32_t login_accept_rsps;
+>> +	uint32_t login_other_fails;
+>> +	uint32_t login_authentication_fails;
+>> +	uint32_t login_authorization_fails;
+>> +	uint32_t login_negotiation_fails;
+>> +	uint32_t login_redirect_rsps;
+>> +	uint32_t logout_normal_rsps;
+>> +	uint32_t logout_other_rsps;
+>> =20
+>=20
+> I do not think we can add new fields here because this is passed between
+> the kernel and userspace.
+>=20
+> Also, lets either go with the get stats nl type of approach or say we
+> are depreciating that and going with sysfs now and the future. Not a mix
+> based on who is submitting patches.
+>=20
+> I can see why the get stats approach is nasty, because it is difficult
+> to extend. If we want to go sysfs based approach then we should probably
+> make it more like the other transports where there is a stats dir and a
+> reset admin file.
+>=20
+> Lee and Chris should probably decide how to proceed.
+>=20
+Hmm.
 
-0JTQvtCx0YDRi9C5INC00LXQvdGMIQoK0K8g0LjQt9Cz0L7RgtCw0LLQu9C40LLQsNGOINGI0LrQsNGE0Ysg0LrRg9C/0LUg0L/QviDQvdGD0LbQvdGL0Lwg0YDQsNC30LzQtdGA0LDQvCDQsiDRgdC+0LHRgdGC0LLQtdC90L3QvtC5INC80LDRgdGC0LXRgNGB0LrQvtC5LCDQsCDRgtCw0LrQttC1INC40YUg0LzQvtC90YLQsNC20L7QvC4KCtCg0LDRgdGG0LXQvdC60Lgg0YMg0LzQtdC90Y8g0LPQvtGA0LDQt9C00L4g0L3QuNC20LUg0LHQvtC70YzRiNC40L3RgdGC0LLQsCDRhNC40YDQvC3Qv9C+0YHRgNC10LTQvdC40LrQvtCyLiDQmCDQutCw0YfQtdGB0YLQstC+INC90Lgg0YfRg9GC0Ywg0L3QtSDRhdGD0LbQtS4KCtCvINC80L7Qs9GDINC40LfQs9C+0YLQvtCy0LjRgtGMOgotINCa0L7RgNC/0YPRgdC90YvQuSDRiNC60LDRhC3QutGD0L/QtQotINCS0YHRgtGA0L7QtdC90L3Ri9C5INGI0LrQsNGELdC60YPQv9C1Ci0g0KPQs9C70L7QstC+0Lkg0YjQutCw0YQt0LrRg9C/0LUKLSDQqNC60LDRhC3QutGD0L/QtSDRgSDQstC40YLRgNCw0LbQvdGL0Lwg0YHRgtC10LrQu9C+0LwKCtCY0LzQtdC10YLRgdGPINGC0YDQsNC90YHQv9C+0YDRgiDQtNC70Y8g
- 0LTQvtGB0YLQsNCy0LrQuCDRiNC60LDRhNCwINCyINC70Y7QsdGD0Y4g0YLQvtGH0LrRgyDQnNC+0YHQutCy0YsuCgrQldGB0LvQuCDRgyDQktCw0YEg0LXRgdGC0Ywg0L/QvtGC0YDQtdCx0L3QvtGB0YLRjCDQsiDQvNC+0LjRhSDRg9GB0LvRg9Cz0!
- LDRhSAtINC90LDQv9C40YjQuNGC0LUg0LPQsNCx0LDRgNC40YLRiyDRiNC60LDRhNCwIC0g0Y8g0YDQsNGB0YHRh9C40YLQsNGOINGB0YLQvtC40LzQvtGB0YLRjCDQuNC30LTQtdC70LjRjywg0L/RgNC10LTQvtGB0YLQsNCy0LvRjiDQutCw0YLQsNC70L7QsyDQvNCw0YLQtdGA0LjQsNC70L7QsiDQuCDQvtGC0L7QsdGA0LDQttGDINC60LDQuiDQsdGD0LTQtdGCINCy0YvQs9C70Y/QtNC10YLRjCDRiNC60LDRhCDQsiAzZCwg0LTQu9GPINC+0L/QtdGA0LDRgtC40LLQvdC+0Lkg0YHQstGP0LfQuCDQttC10LvQsNGC0LXQu9GM0L3QviDRg9C60LDQt9Cw0YLRjCDQvNC+0LHQuNC70YzQvdGL0Lkg0YLQtdC70LXRhNC+0L0uCgrQoSDRg9Cy0LDQttC10L3QuNC10LwsINCc0LjRhdCw0LnQu9C+0LIg0KHQtdGA0LPQtdC5Lg==
+For these kind of things I wonder whether debugfs isn't the correct way
+of doing. Thing is, sysfs is complicated enough already, and is
+considered a _stable_ kernel API.
+So everytime you add fields there you have to fight it out with
+upstream. It becomes especially bad when you have to _change_ fields, or
+even remove them.
 
+>From my POV statistics are unstable, as not every device/implementation
+might be able to deliver the same set. Plus I really would like to
+reserve the right to change them as needed; this patchset is the best
+example for it.
+
+Hence I would not be using sysfs for it, but rather debugfs or something
+like that.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg)
+
+--=20
+You received this message because you are subscribed to the Google Groups "=
+open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
