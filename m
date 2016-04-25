@@ -1,32 +1,49 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH]sd: Don't treat succeeded SYNC as error
-Date: Mon, 25 Apr 2016 13:28:31 -0700
-Message-ID: <571E7DEF.2090005@sandisk.com>
-References: <CAMGffEnAYXdYNfN7aHZHLjnhxY2T2V6m4tPNi4eT4kDuarrYxQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Imran Haider <imran1008@gmail.com>
+Subject: [PATCH] iscsi-target: graceful disconnect on invalid mapping to iovec
+Date: Mon, 25 Apr 2016 17:51:05 -0400
+Message-ID: <1461621065-10416-1-git-send-email-imran1008@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0061.outbound.protection.outlook.com ([207.46.100.61]:3528
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933428AbcDYU2f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2016 16:28:35 -0400
-In-Reply-To: <CAMGffEnAYXdYNfN7aHZHLjnhxY2T2V6m4tPNi4eT4kDuarrYxQ@mail.gmail.com>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:34210 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964944AbcDYVvO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 17:51:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jinpu Wang <jinpu.wang@profitbricks.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, s.parschauer@gmx.de
+To: nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Imran Haider <imran1008@gmail.com>
 
-On 04/25/2016 03:36 AM, Jinpu Wang wrote:
-> We hit IO error on fsync, it turns out was because sd treat succeeded
-> SYNC as error. From what I checked in SBC spec there is no indication
-> we should fail IO in this case, so we create this patch.
+Ensures the first page entry is within bounds. A failed check would
+terminate the iSCSI connection instead of causing a NULL-dereference.
 
-Please follow the rules in Documentation/SubmittingPatches and submit 
-patches inline. Regarding the patch itself: why is the switch(op) 
-needed? Can it be left out? And regarding (sshdr.asc == 0x2a && 
-sshdr.ascq == 0x09): which other unit attentions should cause SCSI 
-commands to succeed instead of to fail?
+This violation seems to happen with certain iSCSI commands where the
+computed CDB length is zero but the expected transfer length is
+non-zero. The real problem is probably on the iSCSI initiator side
+since there is a discrepancy between the iSCSI header and the
+encapsulated CDB Opcode.
+---
+ drivers/target/iscsi/iscsi_target.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Bart.
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 961202f..963e9a7 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -737,7 +737,14 @@ static int iscsit_map_iovec(
+ 	/*
+ 	 * We know each entry in t_data_sg contains a page.
+ 	 */
+-	sg = &cmd->se_cmd.t_data_sg[data_offset / PAGE_SIZE];
++	u32 ent = data_offset / PAGE_SIZE;
++
++	if (ent >= cmd->se_cmd.t_data_nents) {
++		pr_err("Initial page entry out-of-bounds\n");
++		return -1;
++	}
++
++	sg = &cmd->se_cmd.t_data_sg[ent];
+ 	page_off = (data_offset % PAGE_SIZE);
+ 
+ 	cmd->first_data_sg = sg;
+-- 
+2.8.0
+
