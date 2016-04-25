@@ -1,258 +1,193 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 14/14] libata: support host-aware and host-managed ZAC devices
-Date: Mon, 25 Apr 2016 12:45:56 +0200
-Message-ID: <1461581156-92581-15-git-send-email-hare@suse.de>
+Subject: [PATCHv3 12/14] libata: NCQ encapsulation for ZAC MANAGEMENT OUT
+Date: Mon, 25 Apr 2016 12:45:54 +0200
+Message-ID: <1461581156-92581-13-git-send-email-hare@suse.de>
 References: <1461581156-92581-1-git-send-email-hare@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59298 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932091AbcDYKs3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Apr 2016 06:48:29 -0400
 In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Byte 69 bits 0:1 in the IDENTIFY DEVICE data indicate a
-host-aware ZAC device.
-Host-managed ZAC devices have their own individual signature,
-and to not set the bits in the IDENTIFY DEVICE data.
-And whenever we detect a ZAC-compatible device we should
-be displaying the zoned block characteristics VPD page.
+Add NCQ encapsulation for ZAC MANAGEMENT OUT and evaluate
+NCQ Non-Data log pages to figure out if NCQ encapsulation
+is supported.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-core.c | 94 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c | 38 ++++++++++++++++++-
- include/linux/ata.h       |  1 +
- include/linux/libata.h    |  7 ++++
- 4 files changed, 138 insertions(+), 2 deletions(-)
+ drivers/ata/libata-core.c  | 43 ++++++++++++++++++++++++++++++++++++++++---
+ drivers/ata/libata-scsi.c  | 18 +++++++++++++-----
+ drivers/ata/libata-trace.c |  3 +++
+ include/linux/ata.h        |  7 +++++++
+ include/linux/libata.h     |  7 +++++++
+ 5 files changed, 70 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1528c7c..97f3170 100644
+index b2bd7c4..1528c7c 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2227,6 +2227,99 @@ static void ata_dev_config_sense_reporting(struct ata_device *dev)
+@@ -2121,6 +2121,40 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
  	}
  }
  
-+static void ata_dev_config_zac(struct ata_device *dev)
++static void ata_dev_config_ncq_non_data(struct ata_device *dev)
 +{
 +	struct ata_port *ap = dev->link->ap;
 +	unsigned int err_mask;
-+	u8 *identify_buf = ap->sector_buf;
-+	int log_index = ATA_LOG_SATA_ID_DEV_DATA * 2, i, found = 0;
++	int log_index = ATA_LOG_NCQ_NON_DATA * 2;
 +	u16 log_pages;
 +
-+	dev->zac_zones_optimal_open = U32_MAX;
-+	dev->zac_zones_optimal_nonseq = U32_MAX;
-+	dev->zac_zones_max_open = U32_MAX;
-+
-+	/*
-+	 * Always set the 'ZAC' flag for Host-managed devices.
-+	 */
-+	if (dev->class == ATA_DEV_ZAC)
-+		dev->flags |= ATA_DFLAG_ZAC;
-+	else if (ata_id_zoned_cap(dev->id) == 0x01)
-+		/*
-+		 * Check for host-aware devices.
-+		 */
-+		dev->flags |= ATA_DFLAG_ZAC;
-+
-+	if (!(dev->flags & ATA_DFLAG_ZAC))
-+		return;
-+
-+	/*
-+	 * Read Log Directory to figure out if IDENTIFY DEVICE log
-+	 * is supported.
-+	 */
 +	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
 +				     0, ap->sector_buf, 1);
 +	if (err_mask) {
-+		ata_dev_info(dev,
-+			     "failed to get Log Directory Emask 0x%x\n",
-+			     err_mask);
++		ata_dev_dbg(dev,
++			    "failed to get Log Directory Emask 0x%x\n",
++			    err_mask);
 +		return;
 +	}
 +	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
-+	if (log_pages == 0) {
++	if (!log_pages) {
 +		ata_dev_warn(dev,
-+			     "ATA Identify Device Log not supported\n");
++			     "NCQ Send/Recv Log not supported\n");
 +		return;
 +	}
-+	/*
-+	 * Read IDENTIFY DEVICE data log, page 0, to figure out
-+	 * if page 9 is supported.
-+	 */
-+	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_ID_DEV_DATA, 0,
-+				     identify_buf, 1);
++	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_NON_DATA,
++				     0, ap->sector_buf, 1);
 +	if (err_mask) {
-+		ata_dev_info(dev,
-+			     "failed to get Device Identify Log Emask 0x%x\n",
-+			     err_mask);
-+		return;
-+	}
-+	log_pages = identify_buf[8];
-+	for (i = 0; i < log_pages; i++) {
-+		if (identify_buf[9 + i] == ATA_LOG_ZONED_INFORMATION) {
-+			found++;
-+			break;
-+		}
-+	}
-+	if (!found) {
-+		ata_dev_warn(dev,
-+			     "ATA Zoned Information Log not supported\n");
-+		return;
-+	}
++		ata_dev_dbg(dev,
++			    "failed to get NCQ Non-Data Log Emask 0x%x\n",
++			    err_mask);
++	} else {
++		u8 *cmds = dev->ncq_non_data_cmds;
 +
-+	/*
-+	 * Read IDENTIFY DEVICE data log, page 9 (Zoned-device information)
-+	 */
-+	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_ID_DEV_DATA,
-+				     ATA_LOG_ZONED_INFORMATION,
-+				     identify_buf, 1);
-+	if (!err_mask) {
-+		u64 zoned_cap, opt_open, opt_nonseq, max_open;
-+
-+		zoned_cap = get_unaligned_le64(&identify_buf[8]);
-+		if ((zoned_cap >> 63))
-+			dev->zac_zoned_cap = (zoned_cap & 1);
-+		opt_open = get_unaligned_le64(&identify_buf[24]);
-+		if ((opt_open >> 63))
-+			dev->zac_zones_optimal_open = (u32)opt_open;
-+		opt_nonseq = get_unaligned_le64(&identify_buf[32]);
-+		if ((opt_nonseq >> 63))
-+			dev->zac_zones_optimal_nonseq = (u32)opt_nonseq;
-+		max_open = get_unaligned_le64(&identify_buf[40]);
-+		if ((max_open >> 63))
-+			dev->zac_zones_max_open = (u32)max_open;
++		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_NON_DATA_SIZE);
 +	}
 +}
 +
- /**
-  *	ata_dev_configure - Configure the specified ATA/ATAPI device
-  *	@dev: Target device to configure
-@@ -2450,6 +2543,7 @@ int ata_dev_configure(struct ata_device *dev)
- 				}
- 		}
- 		ata_dev_config_sense_reporting(dev);
-+		ata_dev_config_zac(dev);
- 		dev->cdb_len = 16;
- 	}
+ static int ata_dev_config_ncq(struct ata_device *dev,
+ 			       char *desc, size_t desc_sz)
+ {
+@@ -2165,9 +2199,12 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 		snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+ 			ddepth, aa_desc);
  
+-	if ((ap->flags & ATA_FLAG_FPDMA_AUX) &&
+-	    ata_id_has_ncq_send_and_recv(dev->id))
+-		ata_dev_config_ncq_send_recv(dev);
++	if ((ap->flags & ATA_FLAG_FPDMA_AUX)) {
++		if (ata_id_has_ncq_send_and_recv(dev->id))
++			ata_dev_config_ncq_send_recv(dev);
++		if (ata_id_has_ncq_non_data(dev->id))
++			ata_dev_config_ncq_non_data(dev);
++	}
+ 
+ 	return 0;
+ }
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 96abd42..b86af14 100644
+index 6afd084..43403aa 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -2144,6 +2144,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
-  */
- static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
- {
-+	int num_pages;
- 	const u8 pages[] = {
- 		0x00,	/* page 0x00, this page */
- 		0x80,	/* page 0x80, unit serial no page */
-@@ -2152,10 +2153,14 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
- 		0xb0,	/* page 0xb0, block limits page */
- 		0xb1,	/* page 0xb1, block device characteristics page */
- 		0xb2,	/* page 0xb2, thin provisioning page */
-+		0xb6,	/* page 0xb6, zoned block device characteristics */
- 	};
+@@ -3506,11 +3506,19 @@ static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
  
--	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
--	memcpy(rbuf + 4, pages, sizeof(pages));
-+	num_pages = sizeof(pages);
-+	if (!(args->dev->flags & ATA_DFLAG_ZAC))
-+		num_pages--;
-+	rbuf[3] = num_pages;	/* number of supported VPD pages */
-+	memcpy(rbuf + 4, pages, num_pages);
- 	return 0;
- }
+ 	reset_all = cdb[14] & 0x1;
  
-@@ -2343,6 +2348,26 @@ static unsigned int ata_scsiop_inq_b2(struct ata_scsi_args *args, u8 *rbuf)
- 	return 0;
- }
- 
-+static unsigned int ata_scsiop_inq_b6(struct ata_scsi_args *args, u8 *rbuf)
-+{
-+	/*
-+	 * zbc-r05 SCSI Zoned Block device characteristics VPD page
-+	 */
-+	rbuf[1] = 0xb6;
-+	rbuf[3] = 0x3C;
-+
-+	/*
-+	 * URSWRZ bit is only meaningful for host-managed ZAC drives
-+	 */
-+	if (args->dev->zac_zoned_cap & 1)
-+		rbuf[4] |= 1;
-+	put_unaligned_be32(args->dev->zac_zones_optimal_open, &rbuf[8]);
-+	put_unaligned_be32(args->dev->zac_zones_optimal_nonseq, &rbuf[12]);
-+	put_unaligned_be32(args->dev->zac_zones_max_open, &rbuf[16]);
-+
-+	return 0;
-+}
-+
- /**
-  *	ata_scsiop_noop - Command handler that simply returns success.
-  *	@args: device IDENTIFY data / SCSI command of interest.
-@@ -2661,6 +2686,9 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
- 				rbuf[14] |= 0x40; /* LBPRZ */
- 			}
+-	tf->protocol = ATA_PROT_NODATA;
+-	tf->command = ATA_CMD_ZAC_MGMT_OUT;
+-	tf->feature = sa;
+-	tf->hob_feature = reset_all & 0x1;
+-
++	if (ata_ncq_enabled(qc->dev) &&
++	    ata_fpdma_zac_mgmt_out_supported(qc->dev)) {
++		tf->protocol = ATA_PROT_NCQ;
++		tf->command = ATA_CMD_NCQ_NON_DATA;
++		tf->hob_nsect = ATA_SUBCMD_NCQ_NON_DATA_ZAC_MGMT_OUT;
++		tf->nsect = qc->tag << 3;
++		tf->auxiliary = sa | (reset_all & 0x1) << 8;
++	} else {
++		tf->protocol = ATA_PROT_NODATA;
++		tf->command = ATA_CMD_ZAC_MGMT_OUT;
++		tf->feature = sa;
++		tf->hob_feature = reset_all & 0x1;
++	}
+ 	tf->lbah = (block >> 16) & 0xff;
+ 	tf->lbam = (block >> 8) & 0xff;
+ 	tf->lbal = block & 0xff;
+diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
+index 1111ba7..f8c550d 100644
+--- a/drivers/ata/libata-trace.c
++++ b/drivers/ata/libata-trace.c
+@@ -188,6 +188,9 @@ libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
+ 		case ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT:
+ 			trace_seq_printf(p, " ZERO_EXT");
+ 			break;
++		case ATA_SUBCMD_NCQ_NON_DATA_ZAC_MGMT_OUT:
++			trace_seq_printf(p, " ZAC_MGMT_OUT");
++			break;
  		}
-+		if (ata_id_zoned_cap(args->id) ||
-+		    args->dev->class == ATA_DEV_ZAC)
-+			rbuf[12] = (1 << 4); /* RC_BASIS */
- 	}
- 	return 0;
- }
-@@ -4046,6 +4074,12 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
- 		case 0xb2:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b2);
- 			break;
-+		case 0xb6:
-+			if (dev->flags & ATA_DFLAG_ZAC) {
-+				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b6);
-+				break;
-+			}
-+			/* Fallthrough */
- 		default:
- 			ata_scsi_invalid_field(dev, cmd, 2);
- 			break;
+ 		break;
+ 	case ATA_CMD_ZAC_MGMT_IN:
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index ac1cb93..83e2a99 100644
+index 9d7c470..e627032 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -338,6 +338,7 @@ enum {
+@@ -320,6 +320,7 @@ enum {
+ 	ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE  = 0x00,
+ 	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
+ 	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
++	ATA_SUBCMD_NCQ_NON_DATA_ZAC_MGMT_OUT = 0x07,
+ 
+ 	/* Subcmds for ATA_CMD_ZAC_MGMT_IN */
+ 	ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES = 0x00,
+@@ -333,6 +334,7 @@ enum {
+ 	/* READ_LOG_EXT pages */
+ 	ATA_LOG_DIRECTORY	= 0x0,
+ 	ATA_LOG_SATA_NCQ	= 0x10,
++	ATA_LOG_NCQ_NON_DATA	  = 0x12,
  	ATA_LOG_NCQ_SEND_RECV	  = 0x13,
  	ATA_LOG_SATA_ID_DEV_DATA  = 0x30,
  	ATA_LOG_SATA_SETTINGS	  = 0x08,
-+	ATA_LOG_ZONED_INFORMATION = 0x09,
- 	ATA_LOG_DEVSLP_OFFSET	  = 0x30,
- 	ATA_LOG_DEVSLP_SIZE	  = 0x08,
- 	ATA_LOG_DEVSLP_MDAT	  = 0x00,
+@@ -877,6 +879,11 @@ static inline bool ata_id_has_ncq_send_and_recv(const u16 *id)
+ 	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(6);
+ }
+ 
++static inline bool ata_id_has_ncq_non_data(const u16 *id)
++{
++	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(5);
++}
++
+ static inline bool ata_id_has_trim(const u16 *id)
+ {
+ 	if (ata_id_major_version(id) >= 7 &&
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0019d4b..d15c19e 100644
+index c0806b6..0019d4b 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -181,6 +181,7 @@ enum {
- 	ATA_DFLAG_DEVSLP	= (1 << 27), /* device supports Device Sleep */
- 	ATA_DFLAG_ACPI_DISABLED = (1 << 28), /* ACPI for the device is disabled */
- 	ATA_DFLAG_D_SENSE	= (1 << 29), /* Descriptor sense requested */
-+	ATA_DFLAG_ZAC		= (1 << 30), /* ZAC device */
+@@ -729,6 +729,7 @@ struct ata_device {
  
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
-@@ -731,6 +732,12 @@ struct ata_device {
+ 	/* NCQ send and receive log subcommand support */
  	u8			ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_SIZE];
- 	u8			ncq_non_data_cmds[ATA_LOG_NCQ_NON_DATA_SIZE];
++	u8			ncq_non_data_cmds[ATA_LOG_NCQ_NON_DATA_SIZE];
  
-+	/* ZAC zone configuration */
-+	u32			zac_zoned_cap;
-+	u32			zac_zones_optimal_open;
-+	u32			zac_zones_optimal_nonseq;
-+	u32			zac_zones_max_open;
-+
  	/* error history */
  	int			spdn_cnt;
- 	/* ering is CLEAR_END, read comment above CLEAR_END */
+@@ -1658,6 +1659,12 @@ static inline bool ata_fpdma_zac_mgmt_in_supported(struct ata_device *dev)
+ 		ATA_LOG_NCQ_SEND_RECV_ZAC_MGMT_IN_SUPPORTED);
+ }
+ 
++static inline bool ata_fpdma_zac_mgmt_out_supported(struct ata_device *dev)
++{
++	return (dev->ncq_non_data_cmds[ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OFFSET] &
++		ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OUT);
++}
++
+ static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
+ {
+ 	qc->tf.ctl |= ATA_NIEN;
 -- 
 1.8.5.6
 
