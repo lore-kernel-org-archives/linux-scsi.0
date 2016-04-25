@@ -1,125 +1,110 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 03/14] libata/libsas: Define ATA_CMD_NCQ_NON_DATA
-Date: Mon, 25 Apr 2016 12:45:45 +0200
-Message-ID: <1461581156-92581-4-git-send-email-hare@suse.de>
+Subject: [PATCHv3 13/14] libata: support device-managed ZAC devices
+Date: Mon, 25 Apr 2016 12:45:55 +0200
+Message-ID: <1461581156-92581-14-git-send-email-hare@suse.de>
 References: <1461581156-92581-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59294 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59313 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932090AbcDYKs3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2016 06:48:29 -0400
+	id S932093AbcDYKsa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Apr 2016 06:48:30 -0400
 In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Define the NCQ NON DATA command and update libsas to handle it
-correctly.
+Device-managed ZAC devices just set the zoned capabilities field
+in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
+field in the block device characteristics VPD page.
+As this is only defined in SPC-5/SBC-4 we also need to update
+the supported SCSI version descriptor.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
- drivers/scsi/isci/request.c            | 3 ++-
- drivers/scsi/libsas/sas_ata.c          | 3 ++-
- drivers/scsi/mvsas/mv_sas.c            | 3 ++-
- drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
- include/linux/ata.h                    | 1 +
- include/trace/events/libata.h          | 1 +
- 7 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/ata/libata-scsi.c | 19 ++++++++++---------
+ include/linux/ata.h       |  5 +++++
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 063c176..e7b0a9f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int direction)
- 	case ATA_CMD_FPDMA_READ:
- 	case ATA_CMD_FPDMA_RECV:
- 	case ATA_CMD_FPDMA_SEND:
-+	case ATA_CMD_NCQ_NON_DATA:
- 	return SATA_PROTOCOL_FPDMA;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 43403aa..96abd42 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2082,14 +2082,14 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x00,
+ 		0xA0,	/* SAM-5 (no version claimed) */
  
- 	case ATA_CMD_ID_ATA:
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 29456e0..b709d2b 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -3171,7 +3171,8 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
- 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
- 		   qc->tf.command == ATA_CMD_FPDMA_READ ||
- 		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
--		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
-+		   qc->tf.command == ATA_CMD_FPDMA_SEND ||
-+		   qc->tf.command == ATA_CMD_NCQ_NON_DATA)) {
- 		fis->sector_count = qc->tag << 3;
- 		ireq->tc->type.stp.ncq_tag = qc->tag;
- 	}
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index fe1cd26..935c430 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -207,7 +207,8 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
- 	    qc->tf.command == ATA_CMD_FPDMA_READ ||
- 	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
--	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
-+	    qc->tf.command == ATA_CMD_FPDMA_SEND ||
-+	    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
- 		/* Need to zero out the tag libata assigned us */
- 		qc->tf.nsect = 0;
- 	}
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index db37149..5b9fcff 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -431,7 +431,8 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
- 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
- 		    qc->tf.command == ATA_CMD_FPDMA_READ ||
- 		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
--		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
-+		    qc->tf.command == ATA_CMD_FPDMA_SEND ||
-+		    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
- 			*tag = qc->tag;
- 			return 1;
- 		}
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 62abd98..dc33dfa 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -282,7 +282,8 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
- 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
- 		    qc->tf.command == ATA_CMD_FPDMA_READ ||
- 		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
--		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
-+		    qc->tf.command == ATA_CMD_FPDMA_SEND ||
-+		    qc->tf.command == ATA_CMD_NCQ_NON_DATA) {
- 			*tag = qc->tag;
- 			return 1;
- 		}
+-		0x04,
+-		0xC0,	/* SBC-3 (no version claimed) */
++		0x06,
++		0x00,	/* SBC-4 (no version claimed) */
+ 
+-		0x04,
+-		0x60,	/* SPC-4 (no version claimed) */
++		0x05,
++		0xC0,	/* SPC-5 (no version claimed) */
+ 
+ 		0x60,
+-		0x20,   /* ZBC (no version claimed) */
++		0x24,   /* ZBC r05 */
+ 	};
+ 
+ 	u8 hdr[] = {
+@@ -2109,10 +2109,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	    (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
+ 		hdr[1] |= (1 << 7);
+ 
+-	if (args->dev->class == ATA_DEV_ZAC) {
++	if (args->dev->class == ATA_DEV_ZAC)
+ 		hdr[0] = TYPE_ZBC;
+-		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
+-	}
+ 
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+@@ -2126,7 +2124,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (rbuf[32] == 0 || rbuf[32] == ' ')
+ 		memcpy(&rbuf[32], "n/a ", 4);
+ 
+-	if (args->dev->class == ATA_DEV_ZAC)
++	if (ata_id_zoned_cap(args->id) || args->dev->class == ATA_DEV_ZAC)
+ 		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
+ 	else
+ 		memcpy(rbuf + 58, versions, sizeof(versions));
+@@ -2322,12 +2320,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	int form_factor = ata_id_form_factor(args->id);
+ 	int media_rotation_rate = ata_id_rotation_rate(args->id);
++	u8 zoned = ata_id_zoned_cap(args->id);
+ 
+ 	rbuf[1] = 0xb1;
+ 	rbuf[3] = 0x3c;
+ 	rbuf[4] = media_rotation_rate >> 8;
+ 	rbuf[5] = media_rotation_rate;
+ 	rbuf[7] = form_factor;
++	if (zoned)
++		rbuf[8] = (zoned << 4);
+ 
+ 	return 0;
+ }
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 00aebc4..b84210a 100644
+index e627032..ac1cb93 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -243,6 +243,7 @@ enum {
- 	ATA_CMD_WRITE_QUEUED_FUA_EXT = 0x3E,
- 	ATA_CMD_FPDMA_READ	= 0x60,
- 	ATA_CMD_FPDMA_WRITE	= 0x61,
-+	ATA_CMD_NCQ_NON_DATA	= 0x63,
- 	ATA_CMD_FPDMA_SEND	= 0x64,
- 	ATA_CMD_FPDMA_RECV	= 0x65,
- 	ATA_CMD_PIO_READ	= 0x20,
-diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index 8b0fbd9..0168603 100644
---- a/include/trace/events/libata.h
-+++ b/include/trace/events/libata.h
-@@ -39,6 +39,7 @@
- 		 ata_opcode_name(ATA_CMD_WRITE_QUEUED_FUA_EXT), \
- 		 ata_opcode_name(ATA_CMD_FPDMA_READ),		\
- 		 ata_opcode_name(ATA_CMD_FPDMA_WRITE),		\
-+		 ata_opcode_name(ATA_CMD_NCQ_NON_DATA),		\
- 		 ata_opcode_name(ATA_CMD_FPDMA_SEND),		\
- 		 ata_opcode_name(ATA_CMD_FPDMA_RECV),		\
- 		 ata_opcode_name(ATA_CMD_PIO_READ),		\
+@@ -935,6 +935,11 @@ static inline bool ata_id_is_ssd(const u16 *id)
+ 	return id[ATA_ID_ROT_SPEED] == 0x01;
+ }
+ 
++static inline u8 ata_id_zoned_cap(const u16 *id)
++{
++	return (id[ATA_ID_ADDITIONAL_SUPP] & 0x3);
++}
++
+ static inline bool ata_id_pio_need_iordy(const u16 *id, const u8 pio)
+ {
+ 	/* CF spec. r4.1 Table 22 says no IORDY on PIO5 and PIO6. */
 -- 
 1.8.5.6
 
