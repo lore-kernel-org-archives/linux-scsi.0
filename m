@@ -1,140 +1,80 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 07/14] libata-trace: decode subcommands
-Date: Mon, 25 Apr 2016 12:45:49 +0200
-Message-ID: <1461581156-92581-8-git-send-email-hare@suse.de>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCHv3 13/14] libata: support device-managed ZAC devices
+Date: Mon, 25 Apr 2016 15:17:16 +0300
+Message-ID: <c14d4d8f-4d8f-9c8e-a00c-5cb5010bb66f@cogentembedded.com>
 References: <1461581156-92581-1-git-send-email-hare@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+ <1461581156-92581-14-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:34612 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932346AbcDYMRU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 08:17:20 -0400
+Received: by mail-lf0-f47.google.com with SMTP id j11so115419332lfb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2016 05:17:19 -0700 (PDT)
+In-Reply-To: <1461581156-92581-14-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-Some commands like FPDMA RECEIVE or NCQ NON DATA can encapsulate
-other commands to NCQ transport. So decode the subcmds, too.
+Hello.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/ata/libata-trace.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/ata.h           | 17 +++++++++++++++++
- include/trace/events/libata.h |  7 ++++++-
- 3 files changed, 66 insertions(+), 1 deletion(-)
+On 4/25/2016 1:45 PM, Hannes Reinecke wrote:
 
-diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
-index fd30b8c..99ec1e8 100644
---- a/drivers/ata/libata-trace.c
-+++ b/drivers/ata/libata-trace.c
-@@ -149,3 +149,46 @@ libata_trace_parse_qc_flags(struct trace_seq *p, unsigned int qc_flags)
- 
- 	return ret;
- }
-+
-+const char *
-+libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
-+			  unsigned char feature, unsigned char hob_nsect)
-+{
-+	const char *ret = trace_seq_buffer_ptr(p);
-+
-+	switch (cmd) {
-+	case ATA_CMD_FPDMA_RECV:
-+		switch (hob_nsect & 0x5f) {
-+		case ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT:
-+			trace_seq_printf(p, " READ_LOG_DMA_EXT");
-+			break;
-+		}
-+		break;
-+	case ATA_CMD_FPDMA_SEND:
-+		switch (hob_nsect & 0x5f) {
-+		case ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT:
-+			trace_seq_printf(p, " WRITE_LOG_DMA_EXT");
-+			break;
-+		case ATA_SUBCMD_FPDMA_SEND_DSM:
-+			trace_seq_printf(p, " DATASET_MANAGEMENT");
-+			break;
-+		}
-+		break;
-+	case ATA_CMD_NCQ_NON_DATA:
-+		switch (feature) {
-+		case ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE:
-+			trace_seq_printf(p, " ABORT_QUEUE");
-+			break;
-+		case ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES:
-+			trace_seq_printf(p, " SET_FEATURES");
-+			break;
-+		case ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT:
-+			trace_seq_printf(p, " ZERO_EXT");
-+			break;
-+		}
-+		break;
-+	}
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
-+}
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index b5be5e8..032bb22 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -313,6 +313,11 @@ enum {
- 	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
- 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
- 
-+	/* Subcmds for ATA_CMD_NCQ_NON_DATA */
-+	ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE  = 0x00,
-+	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
-+	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
-+
- 	/* READ_LOG_EXT pages */
- 	ATA_LOG_DIRECTORY	= 0x0,
- 	ATA_LOG_SATA_NCQ	= 0x10,
-@@ -338,6 +343,18 @@ enum {
- 	ATA_LOG_NCQ_SEND_RECV_WR_LOG_SUPPORTED  = (1 << 0),
- 	ATA_LOG_NCQ_SEND_RECV_SIZE		= 0x10,
- 
-+	/* NCQ Non-Data log */
-+	ATA_LOG_NCQ_NON_DATA_SUBCMDS_OFFSET	= 0x00,
-+	ATA_LOG_NCQ_NON_DATA_ABORT_OFFSET	= 0x00,
-+	ATA_LOG_NCQ_NON_DATA_ABORT_NCQ		= (1 << 0),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_ALL		= (1 << 1),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_STREAMING	= (1 << 2),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_NON_STREAMING = (1 << 3),
-+	ATA_LOG_NCQ_NON_DATA_ABORT_SELECTED	= (1 << 4),
-+	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OFFSET	= 0x1C,
-+	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OUT	= (1 << 0),
-+	ATA_LOG_NCQ_NON_DATA_SIZE		= 0x40,
-+
- 	/* READ/WRITE LONG (obsolete) */
- 	ATA_CMD_READ_LONG	= 0x22,
- 	ATA_CMD_READ_LONG_ONCE	= 0x23,
-diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index 0168603..8e77572 100644
---- a/include/trace/events/libata.h
-+++ b/include/trace/events/libata.h
-@@ -140,6 +140,10 @@ const char *libata_trace_parse_eh_err_mask(struct trace_seq *, unsigned int);
- const char *libata_trace_parse_qc_flags(struct trace_seq *, unsigned int);
- #define __parse_qc_flags(f) libata_trace_parse_qc_flags(p, f)
- 
-+const char *libata_trace_parse_subcmd(struct trace_seq *, unsigned char,
-+				      unsigned char, unsigned char);
-+#define __parse_subcmd(c,f,h) libata_trace_parse_subcmd(p, c, f, h)
-+
- TRACE_EVENT(ata_qc_issue,
- 
- 	TP_PROTO(struct ata_queued_cmd *qc),
-@@ -186,11 +190,12 @@ TRACE_EVENT(ata_qc_issue,
- 		__entry->hob_nsect	= qc->tf.hob_nsect;
- 	),
- 
--	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s " \
-+	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s%s " \
- 		  " tf=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
- 		  __entry->ata_port, __entry->ata_dev, __entry->tag,
- 		  show_protocol_name(__entry->proto),
- 		  show_opcode_name(__entry->cmd),
-+		  __parse_subcmd(__entry->cmd, __entry->feature, __entry->hob_nsect),
- 		  __entry->cmd, __entry->feature, __entry->nsect,
- 		  __entry->lbal, __entry->lbam, __entry->lbah,
- 		  __entry->hob_feature, __entry->hob_nsect,
--- 
-1.8.5.6
+> Device-managed ZAC devices just set the zoned capabilities field
+> in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
+> field in the block device characteristics VPD page.
+> As this is only defined in SPC-5/SBC-4 we also need to update
+> the supported SCSI version descriptor.
+>
+> Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+> Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/ata/libata-scsi.c | 19 ++++++++++---------
+>  include/linux/ata.h       |  5 +++++
+>  2 files changed, 15 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 43403aa..96abd42 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+[...]
+> @@ -2322,12 +2320,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+>  {
+>  	int form_factor = ata_id_form_factor(args->id);
+>  	int media_rotation_rate = ata_id_rotation_rate(args->id);
+> +	u8 zoned = ata_id_zoned_cap(args->id);
+>
+>  	rbuf[1] = 0xb1;
+>  	rbuf[3] = 0x3c;
+>  	rbuf[4] = media_rotation_rate >> 8;
+>  	rbuf[5] = media_rotation_rate;
+>  	rbuf[7] = form_factor;
+> +	if (zoned)
+> +		rbuf[8] = (zoned << 4);
+
+    Parens not needed here...
+
+[...]
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index e627032..ac1cb93 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -935,6 +935,11 @@ static inline bool ata_id_is_ssd(const u16 *id)
+>  	return id[ATA_ID_ROT_SPEED] == 0x01;
+>  }
+>
+> +static inline u8 ata_id_zoned_cap(const u16 *id)
+> +{
+> +	return (id[ATA_ID_ADDITIONAL_SUPP] & 0x3);
+
+    And here as well...
+
+[...]
+
+MBR, Sergei
 
