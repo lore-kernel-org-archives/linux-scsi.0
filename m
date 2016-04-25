@@ -1,32 +1,26 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv3 00/14] libata: ZAC support
-Date: Mon, 25 Apr 2016 16:16:27 -0400
-Message-ID: <20160425201627.GI7822@mtj.duckdns.org>
-References: <1461581156-92581-1-git-send-email-hare@suse.de>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] cxgbi: fix uninitialized flowi6
+Date: Mon, 25 Apr 2016 16:21:15 -0400 (EDT)
+Message-ID: <20160425.162115.128384058408635326.davem@davemloft.net>
+References: <89cb4d2647db3bc922c7067d421e983a271483ca.1461322282.git.jbenc@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <89cb4d2647db3bc922c7067d421e983a271483ca.1461322282.git.jbenc@redhat.com>
+Sender: netdev-owner@vger.kernel.org
+To: jbenc@redhat.com
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, anish@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+From: Jiri Benc <jbenc@redhat.com>
+Date: Fri, 22 Apr 2016 13:09:13 +0200
 
-On Mon, Apr 25, 2016 at 12:45:42PM +0200, Hannes Reinecke wrote:
-> here's a patchset implementing ZAC support for libata.
+> ip6_route_output looks into different fields in the passed flowi6 structure,
+> yet cxgbi passes garbage in nearly all those fields. Zero the structure out
+> first.
 > 
-> This is the second part of a larger patchset for ZAC/ZBC support;
-> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue and
-> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
+> Fixes: fc8d0590d9142 ("libcxgbi: Add ipv6 api to driver")
+> Signed-off-by: Jiri Benc <jbenc@redhat.com>
 
-The patches look good from libata side.  If others are okay with it, I
-can pull mkp/4.7/scsi-queue into tj/for-4.7-zac and apply this series
-on top of it.
-
-Thanks.
-
--- 
-tejun
+Applied.
