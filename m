@@ -1,102 +1,101 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v4] qla1280: Reduce can_queue to 512
-Date: Mon, 25 Apr 2016 16:44:33 +0200
-Message-ID: <1461595473-2828-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47065 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752549AbcDYOoo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2016 10:44:44 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
+Date: Mon, 25 Apr 2016 11:07:37 -0500
+Message-ID: <20160425160737.r6ewxzgknu7rjles@treble>
+References: <20160419085221.GA29087@gmail.com>
+ <80200c53ae54f6cb34bd6fb51e9da65fdcc03004.1461073602.git.jpoimboe@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <80200c53ae54f6cb34bd6fb51e9da65fdcc03004.1461073602.git.jpoimboe@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, jamborm@gcc.gnu.org, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Laurence Oberman <loberman@redhat.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Laura Abbott <labbott@redhat.com>, Michael Reed <mdr@sgi.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 
-The qla1280 driver sets the scsi_host_template's can_queue field to 0xfffff
-which results in an allocation failure when allocating the block layer tags
-for the driver's queues like the one shown below:
+James, 
 
-[    4.804166] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter Firmware version:  7.65.06, Driver version 3.27.1
-[    4.804174] ------------[ cut here ]------------
-[    4.804184] WARNING: CPU: 2 PID: 305 at mm/page_alloc.c:2989 alloc_pages_nodemask+0xae8/0xbc0()
-[    4.804186] Modules linked in: amdkfd amd_iommu_v2 radeon i2c_algo_bit m_kms_helper ttm drm megaraid_sas serio_raw 8021q garp bnx2 stp llc mrp nhme qla1280(+) fjes
-[    4.804208] CPU: 2 PID: 305 Comm: systemd-udevd Not tainted 4.6-201.fc22.x86_64 #1
-[    4.804210] Hardware name: Google Enterprise Search Appliance/0DT021, OS 1.1.2 08/14/2006
-[    4.804212]  0000000000000286 000000002f01064c ffff88042985b710 ffffff813b542e
-[    4.804216]  0000000000000000 ffffffff81a75024 ffff88042985b748 ffffff810a40f2
-[    4.804220]  0000000000000000 0000000000000000 000000000000000b 00000000000000
-[    4.804223] Call Trace:
-[    4.804231]  [<ffffffff813b542e>] dump_stack+0x63/0x85
-[    4.804236]  [<ffffffff810a40f2>] warn_slowpath_common+0x82/0xc0
-[    4.804239]  [<ffffffff810a423a>] warn_slowpath_null+0x1a/0x20
-[    4.804242]  [<ffffffff811b75e8>] __alloc_pages_nodemask+0xae8/0xbc0
-[    4.804247]  [<ffffffff817a002e>] ? _raw_spin_unlock_irqrestore+0xe/0x10
-[    4.804251]  [<ffffffff811908be>] ? irq_work_queue+0x8e/0xa0
-[    4.804256]  [<ffffffff810fa10a>] ? console_unlock+0x20a/0x540
-[    4.804262]  [<ffffffff812029cc>] alloc_pages_current+0x8c/0x110
-[    4.804265]  [<ffffffff811b5159>] alloc_kmem_pages+0x19/0x90
-[    4.804268]  [<ffffffff811d2efe>] kmalloc_order_trace+0x2e/0xe0
-[    4.804272]  [<ffffffff8120e6d2>] __kmalloc+0x232/0x260
-[    4.804277]  [<ffffffff8138990d>] init_tag_map+0x3d/0xc0
-[    4.804290]  [<ffffffff813899d5>] __blk_queue_init_tags+0x45/0x80
-[    4.804293]  [<ffffffff81389a24>] blk_init_tags+0x14/0x20
-[    4.804298]  [<ffffffff81520e60>] scsi_add_host_with_dma+0x80/0x300
-[    4.804305]  [<ffffffffa000fec3>] qla1280_probe_one+0x683/0x9ef [qla1280]
-[    4.804309]  [<ffffffff81401115>] local_pci_probe+0x45/0xa0
-[    4.804312]  [<ffffffff814024fd>] pci_device_probe+0xfd/0x140
-[    4.804316]  [<ffffffff814ef1d2>] driver_probe_device+0x222/0x490
-[    4.804319]  [<ffffffff814ef4c4>] __driver_attach+0x84/0x90
-[    4.804321]  [<ffffffff814ef440>] ? driver_probe_device+0x490/0x490
-[    4.804324]  [<ffffffff814eccac>] bus_for_each_dev+0x6c/0xc0
-[    4.804326]  [<ffffffff814ee98e>] driver_attach+0x1e/0x20
-[    4.804328]  [<ffffffff814ee4cb>] bus_add_driver+0x1eb/0x280
-[    4.804331]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-[    4.804333]  [<ffffffff814efd80>] driver_register+0x60/0xe0
-[    4.804336]  [<ffffffff81400a5c>] __pci_register_driver+0x4c/0x50
-[    4.804339]  [<ffffffffa00151ce>] qla1280_init+0x1ce/0x1000 [qla1280]
-[    4.804341]  [<ffffffffa0015000>] ? 0xffffffffa0015000
-[    4.804345]  [<ffffffff81002123>] do_one_initcall+0xb3/0x200
-[    4.804348]  [<ffffffff8120d086>] ? kmem_cache_alloc_trace+0x196/0x210
-[    4.804352]  [<ffffffff811aba7e>] ? do_init_module+0x27/0x1cb
-[    4.804354]  [<ffffffff811abab6>] do_init_module+0x5f/0x1cb
-[    4.804358]  [<ffffffff8112a6e0>] load_module+0x2040/0x2680
-[    4.804360]  [<ffffffff81126e40>] ? __symbol_put+0x60/0x60
-[    4.804363]  [<ffffffff8112ae69>] SYSC_init_module+0x149/0x190
-[    4.804366]  [<ffffffff8112af9e>] SyS_init_module+0xe/0x10
-[    4.804369]  [<ffffffff817a05ae>] entry_SYSCALL_64_fastpath+0x12/0x71
-[    4.804371] ---[ end trace 0ea3b625f86705f7 ]---
-[    4.804581] qla1280: probe of 0000:11:04.0 failed with error -12
+Can you merge this patch for 4.6?
 
-Reduce can_queue to 512 to solve the allocation error.
+On Tue, Apr 19, 2016 at 08:56:00AM -0500, Josh Poimboeuf wrote:
+> objtool reports [1] the following warning:
+> 
+>   drivers/scsi/qla2xxx/qla_attr.o: warning: objtool: qla2x00_get_host_fabric_name() falls through to next function qla2x00_get_starget_port_name()
+> 
+> This warning is due to a gcc bug [2] which causes corrupt code:
+> 
+>   0000000000002f53 <qla2x00_get_host_fabric_name>:
+>       2f53:       55                      push   %rbp
+>       2f54:       48 89 e5                mov    %rsp,%rbp
+> 
+>   0000000000002f57 <qla2x00_get_fc_host_stats>:
+>       2f57:       55                      push   %rbp
+>       2f58:       b9 e8 00 00 00          mov    $0xe8,%ecx
+>       2f5d:       48 89 e5                mov    %rsp,%rbp
+>   ...
+> 
+> Note that qla2x00_get_host_fabric_name() is inexplicably truncated after
+> setting up the frame pointer.  It falls through to the next function,
+> which is very bad.
+> 
+> It occurs with the combination of the following two recent commits:
+> 
+>   bc27fb68aaad ("include/uapi/linux/byteorder, swab: force inlining of some byteswap operations")
+>   ef3fb2422ffe ("scsi: fc: use get/put_unaligned64 for wwn access")
+> 
+> The call chain which appears to trigger the problem is:
+> 
+>   qla2x00_get_host_fabric_name()
+>     wwn_to_u64()
+>       get_unaligned_be64()
+>         be64_to_cpup()
+>           __be64_to_cpup()
+> 
+> The bug requires very specific conditions to trigger.  According to Martin
+> Jambor (from the gcc bugzilla):
+> 
+>   "This bug can occur when an inlineable function containing a call to
+>   __builtin_constant_p, which checks a parameter or a value it
+>   references and a (possibly indirect) caller of the function actually
+>   passes a constant, but stores it using a type of a different size."
+> 
+> There's no reliable way to avoid (or even detect) the bug.  Until it
+> gets fixed in released versions of gcc, the least intrusive workaround
+> for this particular issue is to force the wwn conversion functions to be
+> inlined.
+> 
+> [1] https://lists.01.org/pipermail/kbuild-all/2016-April/019579.html
+> [2] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646
+> 
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Josh Poimboeuf <jpoimboe@redhat.com>
+> ---
+>  include/scsi/scsi_transport_fc.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+> index bf66ea6..1919cd4 100644
+> --- a/include/scsi/scsi_transport_fc.h
+> +++ b/include/scsi/scsi_transport_fc.h
+> @@ -796,12 +796,12 @@ fc_remote_port_chkready(struct fc_rport *rport)
+>  	return result;
+>  }
+>  
+> -static inline u64 wwn_to_u64(u8 *wwn)
+> +static __always_inline u64 wwn_to_u64(u8 *wwn)
+>  {
+>  	return get_unaligned_be64(wwn);
+>  }
+>  
+> -static inline void u64_to_wwn(u64 inm, u8 *wwn)
+> +static __always_inline void u64_to_wwn(u64 inm, u8 *wwn)
+>  {
+>  	put_unaligned_be64(inm, wwn);
+>  }
+> -- 
+> 2.4.11
+> 
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Laura Abbott <labbott@redhat.com>
-Cc: Michael Reed <mdr@sgi.com>
-Cc: stable@vger.kernel.org
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
----
-Changes to v3:
-* Use  MAX_OUTSTANDING_COMMANDS insted of hard coded magical number
-
-Changes to v2:
-* Change can_queue to 512 upon James' request
-
- drivers/scsi/qla1280.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 5d0ec42..634254a 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -4214,7 +4214,7 @@ static struct scsi_host_template qla1280_driver_template = {
- 	.eh_bus_reset_handler	= qla1280_eh_bus_reset,
- 	.eh_host_reset_handler	= qla1280_eh_adapter_reset,
- 	.bios_param		= qla1280_biosparam,
--	.can_queue		= 0xfffff,
-+	.can_queue		= MAX_OUTSTANDING_COMMANDS,
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.use_clustering		= ENABLE_CLUSTERING,
 -- 
-2.8.1
-
+Josh
