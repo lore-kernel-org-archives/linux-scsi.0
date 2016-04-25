@@ -1,49 +1,35 @@
-From: Imran Haider <imran1008@gmail.com>
-Subject: [PATCH] iscsi-target: graceful disconnect on invalid mapping to iovec
-Date: Mon, 25 Apr 2016 17:51:05 -0400
-Message-ID: <1461621065-10416-1-git-send-email-imran1008@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:34210 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964944AbcDYVvO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 17:51:14 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] megaraid_sas: trivial fix, add missing space in dev_err message
+Date: Mon, 25 Apr 2016 22:58:43 +0100
+Message-ID: <1461621523-30162-1-git-send-email-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Imran Haider <imran1008@gmail.com>
 
-Ensures the first page entry is within bounds. A failed check would
-terminate the iSCSI connection instead of causing a NULL-dereference.
+From: Colin Ian King <colin.king@canonical.com>
 
-This violation seems to happen with certain iSCSI commands where the
-computed CDB length is zero but the expected transfer length is
-non-zero. The real problem is probably on the iSCSI initiator side
-since there is a discrepancy between the iSCSI header and the
-encapsulated CDB Opcode.
+Add a missing space in dev_err message, missed because the string
+spans a few lines.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/target/iscsi/iscsi_target.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 961202f..963e9a7 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -737,7 +737,14 @@ static int iscsit_map_iovec(
- 	/*
- 	 * We know each entry in t_data_sg contains a page.
- 	 */
--	sg = &cmd->se_cmd.t_data_sg[data_offset / PAGE_SIZE];
-+	u32 ent = data_offset / PAGE_SIZE;
-+
-+	if (ent >= cmd->se_cmd.t_data_nents) {
-+		pr_err("Initial page entry out-of-bounds\n");
-+		return -1;
-+	}
-+
-+	sg = &cmd->se_cmd.t_data_sg[ent];
- 	page_off = (data_offset % PAGE_SIZE);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e6ebc7a..1c038bc 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3345,7 +3345,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance)
+ 			if (!list_empty(&cmd->list)) {
+ 				dev_notice(&instance->pdev->dev, "ERROR while"
+ 					" moving this cmd:%p, %d %p, it was"
+-					"discovered on some list?\n",
++					" discovered on some list?\n",
+ 					cmd, cmd->sync_cmd, cmd->scmd);
  
- 	cmd->first_data_sg = sg;
+ 				list_del_init(&cmd->list);
 -- 
-2.8.0
-
+2.7.4
