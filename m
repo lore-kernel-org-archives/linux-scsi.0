@@ -1,113 +1,140 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 02/14] libsas: enable FPDMA SEND/RECEIVE
-Date: Mon, 25 Apr 2016 12:45:44 +0200
-Message-ID: <1461581156-92581-3-git-send-email-hare@suse.de>
+Subject: [PATCHv3 07/14] libata-trace: decode subcommands
+Date: Mon, 25 Apr 2016 12:45:49 +0200
+Message-ID: <1461581156-92581-8-git-send-email-hare@suse.de>
 References: <1461581156-92581-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59248 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932067AbcDYKs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2016 06:48:26 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Update libsas and dependent drivers to handle FPDMA
-SEND/RECEIVE correctly.
+Some commands like FPDMA RECEIVE or NCQ NON DATA can encapsulate
+other commands to NCQ transport. So decode the subcmds, too.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 ++
- drivers/scsi/isci/request.c            | 4 +++-
- drivers/scsi/libsas/sas_ata.c          | 6 ++++--
- drivers/scsi/mvsas/mv_sas.c            | 4 +++-
- drivers/scsi/pm8001/pm8001_sas.c       | 4 +++-
- 5 files changed, 15 insertions(+), 5 deletions(-)
+ drivers/ata/libata-trace.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/ata.h           | 17 +++++++++++++++++
+ include/trace/events/libata.h |  7 ++++++-
+ 3 files changed, 66 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index b733747..063c176 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1573,6 +1573,8 @@ static u8 get_ata_protocol(u8 cmd, int direction)
- 	switch (cmd) {
- 	case ATA_CMD_FPDMA_WRITE:
- 	case ATA_CMD_FPDMA_READ:
+diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
+index fd30b8c..99ec1e8 100644
+--- a/drivers/ata/libata-trace.c
++++ b/drivers/ata/libata-trace.c
+@@ -149,3 +149,46 @@ libata_trace_parse_qc_flags(struct trace_seq *p, unsigned int qc_flags)
+ 
+ 	return ret;
+ }
++
++const char *
++libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
++			  unsigned char feature, unsigned char hob_nsect)
++{
++	const char *ret = trace_seq_buffer_ptr(p);
++
++	switch (cmd) {
 +	case ATA_CMD_FPDMA_RECV:
++		switch (hob_nsect & 0x5f) {
++		case ATA_SUBCMD_FPDMA_RECV_RD_LOG_DMA_EXT:
++			trace_seq_printf(p, " READ_LOG_DMA_EXT");
++			break;
++		}
++		break;
 +	case ATA_CMD_FPDMA_SEND:
- 	return SATA_PROTOCOL_FPDMA;
++		switch (hob_nsect & 0x5f) {
++		case ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT:
++			trace_seq_printf(p, " WRITE_LOG_DMA_EXT");
++			break;
++		case ATA_SUBCMD_FPDMA_SEND_DSM:
++			trace_seq_printf(p, " DATASET_MANAGEMENT");
++			break;
++		}
++		break;
++	case ATA_CMD_NCQ_NON_DATA:
++		switch (feature) {
++		case ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE:
++			trace_seq_printf(p, " ABORT_QUEUE");
++			break;
++		case ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES:
++			trace_seq_printf(p, " SET_FEATURES");
++			break;
++		case ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT:
++			trace_seq_printf(p, " ZERO_EXT");
++			break;
++		}
++		break;
++	}
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index b5be5e8..032bb22 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -313,6 +313,11 @@ enum {
+ 	ATA_SUBCMD_FPDMA_SEND_DSM            = 0x00,
+ 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
  
- 	case ATA_CMD_ID_ATA:
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index cfd0084..29456e0 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -3169,7 +3169,9 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
- 	status = sci_io_request_construct_basic_sata(ireq);
++	/* Subcmds for ATA_CMD_NCQ_NON_DATA */
++	ATA_SUBCMD_NCQ_NON_DATA_ABORT_QUEUE  = 0x00,
++	ATA_SUBCMD_NCQ_NON_DATA_SET_FEATURES = 0x05,
++	ATA_SUBCMD_NCQ_NON_DATA_ZERO_EXT     = 0x06,
++
+ 	/* READ_LOG_EXT pages */
+ 	ATA_LOG_DIRECTORY	= 0x0,
+ 	ATA_LOG_SATA_NCQ	= 0x10,
+@@ -338,6 +343,18 @@ enum {
+ 	ATA_LOG_NCQ_SEND_RECV_WR_LOG_SUPPORTED  = (1 << 0),
+ 	ATA_LOG_NCQ_SEND_RECV_SIZE		= 0x10,
  
- 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--		   qc->tf.command == ATA_CMD_FPDMA_READ)) {
-+		   qc->tf.command == ATA_CMD_FPDMA_READ ||
-+		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
- 		fis->sector_count = qc->tag << 3;
- 		ireq->tc->type.stp.ncq_tag = qc->tag;
- 	}
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 9c706d8..fe1cd26 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -205,7 +205,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 	task->task_done = sas_ata_task_done;
++	/* NCQ Non-Data log */
++	ATA_LOG_NCQ_NON_DATA_SUBCMDS_OFFSET	= 0x00,
++	ATA_LOG_NCQ_NON_DATA_ABORT_OFFSET	= 0x00,
++	ATA_LOG_NCQ_NON_DATA_ABORT_NCQ		= (1 << 0),
++	ATA_LOG_NCQ_NON_DATA_ABORT_ALL		= (1 << 1),
++	ATA_LOG_NCQ_NON_DATA_ABORT_STREAMING	= (1 << 2),
++	ATA_LOG_NCQ_NON_DATA_ABORT_NON_STREAMING = (1 << 3),
++	ATA_LOG_NCQ_NON_DATA_ABORT_SELECTED	= (1 << 4),
++	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OFFSET	= 0x1C,
++	ATA_LOG_NCQ_NON_DATA_ZAC_MGMT_OUT	= (1 << 0),
++	ATA_LOG_NCQ_NON_DATA_SIZE		= 0x40,
++
+ 	/* READ/WRITE LONG (obsolete) */
+ 	ATA_CMD_READ_LONG	= 0x22,
+ 	ATA_CMD_READ_LONG_ONCE	= 0x23,
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+index 0168603..8e77572 100644
+--- a/include/trace/events/libata.h
++++ b/include/trace/events/libata.h
+@@ -140,6 +140,10 @@ const char *libata_trace_parse_eh_err_mask(struct trace_seq *, unsigned int);
+ const char *libata_trace_parse_qc_flags(struct trace_seq *, unsigned int);
+ #define __parse_qc_flags(f) libata_trace_parse_qc_flags(p, f)
  
- 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--	    qc->tf.command == ATA_CMD_FPDMA_READ) {
-+	    qc->tf.command == ATA_CMD_FPDMA_READ ||
-+	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
- 		/* Need to zero out the tag libata assigned us */
- 		qc->tf.nsect = 0;
- 	}
-@@ -548,7 +550,7 @@ static struct ata_port_operations sas_sata_ops = {
++const char *libata_trace_parse_subcmd(struct trace_seq *, unsigned char,
++				      unsigned char, unsigned char);
++#define __parse_subcmd(c,f,h) libata_trace_parse_subcmd(p, c, f, h)
++
+ TRACE_EVENT(ata_qc_issue,
  
- static struct ata_port_info sata_port_info = {
- 	.flags = ATA_FLAG_SATA | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ |
--		 ATA_FLAG_SAS_HOST,
-+		 ATA_FLAG_SAS_HOST | ATA_FLAG_FPDMA_AUX,
- 	.pio_mask = ATA_PIO4,
- 	.mwdma_mask = ATA_MWDMA2,
- 	.udma_mask = ATA_UDMA6,
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 83cd3ea..db37149 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -429,7 +429,9 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 	TP_PROTO(struct ata_queued_cmd *qc),
+@@ -186,11 +190,12 @@ TRACE_EVENT(ata_qc_issue,
+ 		__entry->hob_nsect	= qc->tf.hob_nsect;
+ 	),
  
- 	if (qc) {
- 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+		    qc->tf.command == ATA_CMD_FPDMA_READ ||
-+		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
- 			*tag = qc->tag;
- 			return 1;
- 		}
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 949198c..62abd98 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -280,7 +280,9 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
- 	struct ata_queued_cmd *qc = task->uldd_task;
- 	if (qc) {
- 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+		    qc->tf.command == ATA_CMD_FPDMA_READ ||
-+		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
-+		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
- 			*tag = qc->tag;
- 			return 1;
- 		}
+-	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s " \
++	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s%s " \
+ 		  " tf=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
+ 		  __entry->ata_port, __entry->ata_dev, __entry->tag,
+ 		  show_protocol_name(__entry->proto),
+ 		  show_opcode_name(__entry->cmd),
++		  __parse_subcmd(__entry->cmd, __entry->feature, __entry->hob_nsect),
+ 		  __entry->cmd, __entry->feature, __entry->nsect,
+ 		  __entry->lbal, __entry->lbam, __entry->lbah,
+ 		  __entry->hob_feature, __entry->hob_nsect,
 -- 
 1.8.5.6
 
