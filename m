@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 04/14] libata: Separate out ata_dev_config_ncq_send_recv()
-Date: Mon, 25 Apr 2016 12:45:46 +0200
-Message-ID: <1461581156-92581-5-git-send-email-hare@suse.de>
+Subject: [PATCHv3 02/14] libsas: enable FPDMA SEND/RECEIVE
+Date: Mon, 25 Apr 2016 12:45:44 +0200
+Message-ID: <1461581156-92581-3-git-send-email-hare@suse.de>
 References: <1461581156-92581-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59262 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59248 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932077AbcDYKs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S932067AbcDYKs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 25 Apr 2016 06:48:26 -0400
 In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,78 +14,100 @@ List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Move NCQ SEND/RECEIVE checks into a separate function.
+Update libsas and dependent drivers to handle FPDMA
+SEND/RECEIVE correctly.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ata/libata-core.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 ++
+ drivers/scsi/isci/request.c            | 4 +++-
+ drivers/scsi/libsas/sas_ata.c          | 6 ++++--
+ drivers/scsi/mvsas/mv_sas.c            | 4 +++-
+ drivers/scsi/pm8001/pm8001_sas.c       | 4 +++-
+ 5 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7bdb2c4..fa74b57 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2079,6 +2079,31 @@ static inline u8 ata_dev_knobble(struct ata_device *dev)
- 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
- }
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index b733747..063c176 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1573,6 +1573,8 @@ static u8 get_ata_protocol(u8 cmd, int direction)
+ 	switch (cmd) {
+ 	case ATA_CMD_FPDMA_WRITE:
+ 	case ATA_CMD_FPDMA_READ:
++	case ATA_CMD_FPDMA_RECV:
++	case ATA_CMD_FPDMA_SEND:
+ 	return SATA_PROTOCOL_FPDMA;
  
-+static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	unsigned int err_mask;
-+
-+	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
-+				     0, ap->sector_buf, 1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
-+			    err_mask);
-+	} else {
-+		u8 *cmds = dev->ncq_send_recv_cmds;
-+
-+		dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
-+		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
-+
-+		if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
-+			ata_dev_dbg(dev, "disabling queued TRIM support\n");
-+			cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
-+				~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
-+		}
-+	}
-+}
-+
- static int ata_dev_config_ncq(struct ata_device *dev,
- 			       char *desc, size_t desc_sz)
- {
-@@ -2124,26 +2149,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 			ddepth, aa_desc);
+ 	case ATA_CMD_ID_ATA:
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index cfd0084..29456e0 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3169,7 +3169,9 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
+ 	status = sci_io_request_construct_basic_sata(ireq);
  
- 	if ((ap->flags & ATA_FLAG_FPDMA_AUX) &&
--	    ata_id_has_ncq_send_and_recv(dev->id)) {
--		err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
--					     0, ap->sector_buf, 1);
--		if (err_mask) {
--			ata_dev_dbg(dev,
--				    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
--				    err_mask);
--		} else {
--			u8 *cmds = dev->ncq_send_recv_cmds;
--
--			dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
--			memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
--
--			if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
--				ata_dev_dbg(dev, "disabling queued TRIM support\n");
--				cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
--					~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
--			}
--		}
--	}
-+	    ata_id_has_ncq_send_and_recv(dev->id))
-+		ata_dev_config_ncq_send_recv(dev);
+ 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-		   qc->tf.command == ATA_CMD_FPDMA_READ)) {
++		   qc->tf.command == ATA_CMD_FPDMA_READ ||
++		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
+ 		fis->sector_count = qc->tag << 3;
+ 		ireq->tc->type.stp.ncq_tag = qc->tag;
+ 	}
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 9c706d8..fe1cd26 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -205,7 +205,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	task->task_done = sas_ata_task_done;
  
- 	return 0;
- }
+ 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-	    qc->tf.command == ATA_CMD_FPDMA_READ) {
++	    qc->tf.command == ATA_CMD_FPDMA_READ ||
++	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 		/* Need to zero out the tag libata assigned us */
+ 		qc->tf.nsect = 0;
+ 	}
+@@ -548,7 +550,7 @@ static struct ata_port_operations sas_sata_ops = {
+ 
+ static struct ata_port_info sata_port_info = {
+ 	.flags = ATA_FLAG_SATA | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ |
+-		 ATA_FLAG_SAS_HOST,
++		 ATA_FLAG_SAS_HOST | ATA_FLAG_FPDMA_AUX,
+ 	.pio_mask = ATA_PIO4,
+ 	.mwdma_mask = ATA_MWDMA2,
+ 	.udma_mask = ATA_UDMA6,
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 83cd3ea..db37149 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -429,7 +429,9 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 
+ 	if (qc) {
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
++		    qc->tf.command == ATA_CMD_FPDMA_READ ||
++		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 949198c..62abd98 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -280,7 +280,9 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 	struct ata_queued_cmd *qc = task->uldd_task;
+ 	if (qc) {
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
++		    qc->tf.command == ATA_CMD_FPDMA_READ ||
++		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
 -- 
 1.8.5.6
 
