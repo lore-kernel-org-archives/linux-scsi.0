@@ -1,67 +1,76 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: [PATCH]sd: Don't treat succeeded SYNC as error
-Date: Mon, 25 Apr 2016 12:36:12 +0200
-Message-ID: <CAMGffEnAYXdYNfN7aHZHLjnhxY2T2V6m4tPNi4eT4kDuarrYxQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a113ce046fd664305314cbff3
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:34975 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbcDYKgc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 06:36:32 -0400
-Received: by mail-oi0-f53.google.com with SMTP id x19so38100605oix.2
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2016 03:36:32 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv3 06/14] libata: Check log page directory before accessing pages
+Date: Mon, 25 Apr 2016 12:45:48 +0200
+Message-ID: <1461581156-92581-7-git-send-email-hare@suse.de>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>
-Cc: s.parschauer@gmx.de
 
---001a113ce046fd664305314cbff3
-Content-Type: text/plain; charset=UTF-8
+When reading the NCQ Send/Recv log it might actually not
+supported, thereby causing irritating messages
+'READ LOG DMA EXT failed'.
+Instead we should be reading the log directory first to
+figure out if the log is actually supported before trying
+to access it.
 
-Hi, all
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/ata/libata-core.c | 17 +++++++++++++++++
+ include/linux/ata.h       |  1 +
+ 2 files changed, 18 insertions(+)
 
-We hit IO error on fsync, it turns out was because sd treat succeeded
-SYNC as error. From what I checked in SBC spec there is no indication
-we should fail IO in this case, so we create this patch.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index fa74b57..b2bd7c4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -66,6 +66,7 @@
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <asm/byteorder.h>
++#include <asm/unaligned.h>
+ #include <linux/cdrom.h>
+ #include <linux/ratelimit.h>
+ #include <linux/pm_runtime.h>
+@@ -2083,7 +2084,23 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
+ {
+ 	struct ata_port *ap = dev->link->ap;
+ 	unsigned int err_mask;
++	int log_index = ATA_LOG_NCQ_SEND_RECV * 2;
++	u16 log_pages;
+ 
++	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
++				     0, ap->sector_buf, 1);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to get Log Directory Emask 0x%x\n",
++			    err_mask);
++		return;
++	}
++	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
++	if (!log_pages) {
++		ata_dev_warn(dev,
++			     "NCQ Send/Recv Log not supported\n");
++		return;
++	}
+ 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
+ 				     0, ap->sector_buf, 1);
+ 	if (err_mask) {
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 94ccde5..b5be5e8 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -314,6 +314,7 @@ enum {
+ 	ATA_SUBCMD_FPDMA_SEND_WR_LOG_DMA_EXT = 0x02,
+ 
+ 	/* READ_LOG_EXT pages */
++	ATA_LOG_DIRECTORY	= 0x0,
+ 	ATA_LOG_SATA_NCQ	= 0x10,
+ 	ATA_LOG_NCQ_SEND_RECV	  = 0x13,
+ 	ATA_LOG_SATA_ID_DEV_DATA  = 0x30,
+-- 
+1.8.5.6
 
-
-Best Regards,
-
-Jack Wang
-
---001a113ce046fd664305314cbff3
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-sd-Don-t-treat-succeeded-SYNC-as-error.patch"
-Content-Disposition: attachment;
-	filename="0001-sd-Don-t-treat-succeeded-SYNC-as-error.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_infv3l1x0
-
-RnJvbSA1ZDFmNzJkOTY0M2NlNjFjZDlmM2QzMTIzNzczNzhjNDNmMTcxZDBjIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBKYWNrIFdhbmcgPGppbnB1LndhbmdAcHJvZml0YnJpY2tzLmNv
-bT4KRGF0ZTogTW9uLCAyNSBBcHIgMjAxNiAxMjowNToyMiArMDIwMApTdWJqZWN0OiBbUEFUQ0hd
-IHNkOiBEb24ndCB0cmVhdCBzdWNjZWVkZWQgU1lOQyBhcyBlcnJvcgoKV2UgaGl0IElPIGVycm9y
-IGluIG91ciBwcm9kdWN0aW9uIG9uIG11bHRpcGF0aCBkZXZpY2VzIGR1cmluZyByZXNpemUKZGV2
-aWNlIG9uIHRhcmdldCBzaWRlLCB0aGUgcHJvYmxlbSB0dXJucyBvdXQgc2QgZHJpdmVyIHBhc3Nl
-cyB1cCBhcyBJTwplcnJvciB3aGVuIHNlbnNlIGRhdGEgaXMgVU5JVF9BVFRFTlRJT04gYW5kIEFT
-QyAmJiBBU0NRIGluZGljYXRlCkNhcGFjaXR5IGRhdGEgaGFzIGNoYW5nZWQsIGV2ZW4gc3RvcmFn
-ZSBzaWRlIHN5bmMgdGhlIGRhdGEgcHJvcGVybHkuCgpJbiBvcmRlciB0byBmaXggdGhpcyBjaGVj
-ayBpbiBzZF9kb25lLCByZXBvcnQgc3VjY2VzcyBpZiBjb25kaXRpb24KbWF0Y2hlcy4KClNlYmFz
-dGlhbiBQYXJzY2hhdWVyIHJlcG9ydC9hbmFseXplIHRoZSBidWcgaGVyZToKaHR0cHM6Ly9zb3Vy
-Y2Vmb3JnZS5uZXQvcC9zY3N0L21haWxtYW4vbWVzc2FnZS8zNDk1MzQxNi8KClNpZ25lZC1vZmYt
-Ynk6IFNlYmFzdGlhbiBQYXJzY2hhdWVyIDxzLnBhcnNjaGF1ZXJAZ214LmRlPgpTaWduZWQtb2Zm
-LWJ5OiBKYWNrIFdhbmcgPGppbnB1LndhbmdAcHJvZml0YnJpY2tzLmNvbT4KLS0tCiBkcml2ZXJz
-L3Njc2kvc2QuYyB8IDEzICsrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRp
-b25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2Qu
-YwppbmRleCA1YTU0NTdhLi5lOWJmZTAxIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYwor
-KysgYi9kcml2ZXJzL3Njc2kvc2QuYwpAQCAtMTgzMyw2ICsxODMzLDE5IEBAIHN0YXRpYyBpbnQg
-c2RfZG9uZShzdHJ1Y3Qgc2NzaV9jbW5kICpTQ3BudCkKIAkJCX0KIAkJfQogCQlicmVhazsKKwlj
-YXNlIFVOSVRfQVRURU5USU9OOgorCQkvKiBDYXBhY2l0eSBkYXRhIGhhcyBjaGFuZ2VkICovCisJ
-CWlmIChzc2hkci5hc2MgPT0gMHgyYSAmJiBzc2hkci5hc2NxID09IDB4MDkpIHsKKwkJCXN3aXRj
-aCAob3ApIHsKKwkJCS8qIGRvbid0IHRyZWF0IHN1Y2NlZWRlZCBmc3luYygpIGFzIGVycm9yICov
-CisJCQljYXNlIFNZTkNIUk9OSVpFX0NBQ0hFOgorCQkJY2FzZSBTWU5DSFJPTklaRV9DQUNIRV8x
-NjoKKwkJCQlpZiAoZ29vZF9ieXRlcyA9PSBzY3NpX2J1ZmZsZW4oU0NwbnQpKQorCQkJCQlTQ3Bu
-dC0+cmVzdWx0ID0gMDsKKwkJCQkJYnJlYWs7CisJCQl9CisJCX0KKwkJYnJlYWs7CiAJZGVmYXVs
-dDoKIAkJYnJlYWs7CiAJfQotLSAKMS45LjEKCg==
---001a113ce046fd664305314cbff3--
