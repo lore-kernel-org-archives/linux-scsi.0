@@ -1,59 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Double-Fetch bug in Linux-4.5/drivers/scsi/aacraid/commctrl.c
-Date: Tue, 26 Apr 2016 07:46:22 -0700
-Message-ID: <1461681982.2348.4.camel@HansenPartnership.com>
-References: <CACxtibTF72YUeOnm2Rsx6odjRXybjbbGbx32-CqAu5u6ahndKg@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
+Date: Tue, 26 Apr 2016 17:58:20 +0200
+Message-ID: <5298237.1Guzp0G04x@wuerfel>
+References: <20160419085221.GA29087@gmail.com> <5249561.9VpAPLD61M@wuerfel> <yq14maoh635.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41646 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750835AbcDZOq0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2016 10:46:26 -0400
-In-Reply-To: <CACxtibTF72YUeOnm2Rsx6odjRXybjbbGbx32-CqAu5u6ahndKg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq14maoh635.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, jamborm@gcc.gnu.org, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: Pengfei Wang <wpengfeinudt@gmail.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2016-04-26 at 13:35 +0100, Pengfei Wang wrote:
-> Hello,
+On Tuesday 26 April 2016 09:06:54 Martin K. Petersen wrote:
+> >>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 > 
-> I found this Double-Fetch bug in
-> Linux-4.5/drivers/scsi/aacraid/commctrl.c when I was examining the
-> source code.
+> Arnd> I don't think we can realistically blacklist gcc-4.9.{0,1,2,3},
+> Arnd> gcc-5.{0,1,2,3}.* and gcc-6.0 and require everyone to upgrade to
+> Arnd> compilers that have not been released yet in order to build a
+> Arnd> linux-4.6 kernel.
 > 
-> In function ioctl_send_fib(), the driver fetches user space data by
-> pointer arg via copy_from_user(), and this happens twice at line 81
-> and line 116 respectively. The first fetched value (stored in kfib) 
-> is used to get the header and calculate the size at line 90 so as to
-> copy the whole message later at line 116, which means the copy size 
-> of the whole message is based on the old value that came from the 
-> first fetch. Besides, the whole message copied in the  second fetch 
-> also contains the header.
+> I agree that compiler blacklisting is problematic and I'd like to avoid
+> it. The question is how far we go in the kernel to accommodate various
+> levels of brokenness.
 > 
-> However, when the function processes the message after the second
-> fetch at line 130, it uses kfib->header.Size that came from the 
-> second fetch, which might be different from the one came from the 
-> first fetch as well as calculated the size to copy the message from 
-> user space to driver.
+> In any case. Sticking compiler workarounds in device driver code is akin
+> to putting demolition orders on display on Alpha Centauri. At the very
+> minimum the patch should put a fat comment in the code stating that
+> these wrapper functions or #defines should not be changed in the future
+> because that'll break builds using gcc XYZ. But that does not solve the
+> problem for anybody else that might be doing something similar.
+> Converting between u64 and $RANDOM_TYPE in an inline wrapper does not
+> seem like a rare and unusual programming pattern.
 
-I don't actually see where there's a bug in this.  If the user chooses
-to alter data in-flight (quite hard to do because one thread of
-execution is already tied up in the ioctl) then the consequences are
-their own fault.
+It's not the driver really, it's the core scsi/fc layer, which makes
+it a little dangerous that a random driver.
 
-> If the kfib->header.Size is modified by a user thread under race
-> condition between the fetch operations, for example changing to a 
-> very large value, this will lead to over-boundary access or other 
-> serious consequences in function aac_fib_send().
+I agree that putting a comment in would also help. What I understand
+from the bug report is that to trigger this bug you need these elements:
 
-Our only real concern would be could an unprivileged user crash the
-kernel this way and the user must have CAP_SYS_RAWIO anyway (which is
-quite a high privilege capability) plus the only problem with
-shortening the data would be EFAULT.
+1. an inline function marked __always_inline
+2. another inline function that is automatically inlined (not __always_inline)
+3. CONFIG_OPTIMIZE_INLINING=y to guarantee 2
+4. __builtin_compatible_p inside that inline function
 
-James
+The last point is what Denys introduced in the kernel with
+bc27fb68aaad ("include/uapi/linux/byteorder, swab: force inlining of some
+byteswap operations"). So maybe it's better after all to revert that
+patch, to have a higher confidence in the same bug not appearing
+elsewhere. It's also really a workaround for another quirk of the
+compiler, but that one only results in duplicated functions in object
+code rather than functions that end in the middle.
 
-
+	Arnd
