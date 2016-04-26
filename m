@@ -1,34 +1,34 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 01/12] scsi_debug: cleanup naming and bit crunching
-Date: Tue, 26 Apr 2016 08:14:43 +0200
-Message-ID: <571F0753.1080308@suse.de>
+Subject: Re: [PATCH 02/12] scsi_debug: ignore host lock option
+Date: Tue, 26 Apr 2016 08:15:56 +0200
+Message-ID: <571F079C.7010400@suse.de>
 References: <1461600999-28893-1-git-send-email-dgilbert@interlog.com>
- <1461600999-28893-2-git-send-email-dgilbert@interlog.com>
+ <1461600999-28893-3-git-send-email-dgilbert@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50267 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50301 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752028AbcDZGOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2016 02:14:45 -0400
-In-Reply-To: <1461600999-28893-2-git-send-email-dgilbert@interlog.com>
+	id S1752112AbcDZGP6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 02:15:58 -0400
+In-Reply-To: <1461600999-28893-3-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
 
 On 04/25/2016 06:16 PM, Douglas Gilbert wrote:
-> Shorten file scope static and constant names. Use more
-> get/put_unaligned calls to hide bit banging. Introduce
-> sdebug_verbose boolean to replace frequent masking of
-> option bit flags. Add GPL and bump version.
+> Remove logic to optionally hold host_lock while each command is
+> queued. Keep module and sysfs host_lock parameters for backward
+> compatibility. Note in module parameter description that host_lock
+> is ignored.
 >=20
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->  drivers/scsi/scsi_debug.c | 1162 ++++++++++++++++++++---------------=
-----------
->  1 file changed, 525 insertions(+), 637 deletions(-)
+>  drivers/scsi/scsi_debug.c | 44 +++++++------------------------------=
+-------
+>  1 file changed, 7 insertions(+), 37 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
