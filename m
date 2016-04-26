@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] MAINTAINERS: Update the file list for the NCR 5380 entry
-Date: Mon, 25 Apr 2016 22:17:10 -0400
-Message-ID: <yq1shy9glll.fsf@sermon.lab.mkp.net>
-References: <alpine.LNX.2.00.1604221419520.4429@nippy.intranet>
+Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
+Date: Mon, 25 Apr 2016 22:40:51 -0400
+Message-ID: <yq1lh41gki4.fsf@sermon.lab.mkp.net>
+References: <20160419085221.GA29087@gmail.com>
+	<80200c53ae54f6cb34bd6fb51e9da65fdcc03004.1461073602.git.jpoimboe@redhat.com>
+	<20160425160737.r6ewxzgknu7rjles@treble>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18921 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbcDZCRU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 22:17:20 -0400
-In-Reply-To: <alpine.LNX.2.00.1604221419520.4429@nippy.intranet> (Finn Thain's
-	message of "Sat, 23 Apr 2016 12:20:07 +1000 (AEST)")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160425160737.r6ewxzgknu7rjles@treble> (Josh Poimboeuf's
+	message of "Mon, 25 Apr 2016 11:07:37 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, jamborm@gcc.gnu.org, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+>>>>> "Josh" == Josh Poimboeuf <jpoimboe@redhat.com> writes:
 
-Finn> The file atari_NCR5380.c has been removed from the tree so remove
-Finn> it from the MAINTAINERS file as well.
+Josh> Can you merge this patch for 4.6?
 
-Finn> While we are here, add the file dtc3x80.txt as it is only relevant
-Finn> to the dtc driver.
+I am really not a big fan of working around compiler bugs in a device
+driver.
 
-Applied to 4.7/scsi-queue.
+Are we sure there are no other get_unaligned_be64() calls in the kernel
+that suffer the same fate?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
