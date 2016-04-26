@@ -1,40 +1,59 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
-Date: Tue, 26 Apr 2016 09:06:54 -0400
-Message-ID: <yq14maoh635.fsf@sermon.lab.mkp.net>
-References: <20160419085221.GA29087@gmail.com>
-	<yq1lh41gki4.fsf@sermon.lab.mkp.net>
-	<1461641851.2392.32.camel@HansenPartnership.com>
-	<5249561.9VpAPLD61M@wuerfel>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Double-Fetch bug in Linux-4.5/drivers/scsi/aacraid/commctrl.c
+Date: Tue, 26 Apr 2016 07:46:22 -0700
+Message-ID: <1461681982.2348.4.camel@HansenPartnership.com>
+References: <CACxtibTF72YUeOnm2Rsx6odjRXybjbbGbx32-CqAu5u6ahndKg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5249561.9VpAPLD61M@wuerfel> (Arnd Bergmann's message of "Tue, 26
-	Apr 2016 09:22:46 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, jamborm@gcc.gnu.org, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41646 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750835AbcDZOq0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 10:46:26 -0400
+In-Reply-To: <CACxtibTF72YUeOnm2Rsx6odjRXybjbbGbx32-CqAu5u6ahndKg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Pengfei Wang <wpengfeinudt@gmail.com>, linux-scsi@vger.kernel.org
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+On Tue, 2016-04-26 at 13:35 +0100, Pengfei Wang wrote:
+> Hello,
+> 
+> I found this Double-Fetch bug in
+> Linux-4.5/drivers/scsi/aacraid/commctrl.c when I was examining the
+> source code.
+> 
+> In function ioctl_send_fib(), the driver fetches user space data by
+> pointer arg via copy_from_user(), and this happens twice at line 81
+> and line 116 respectively. The first fetched value (stored in kfib) 
+> is used to get the header and calculate the size at line 90 so as to
+> copy the whole message later at line 116, which means the copy size 
+> of the whole message is based on the old value that came from the 
+> first fetch. Besides, the whole message copied in the  second fetch 
+> also contains the header.
+> 
+> However, when the function processes the message after the second
+> fetch at line 130, it uses kfib->header.Size that came from the 
+> second fetch, which might be different from the one came from the 
+> first fetch as well as calculated the size to copy the message from 
+> user space to driver.
 
-Arnd> I don't think we can realistically blacklist gcc-4.9.{0,1,2,3},
-Arnd> gcc-5.{0,1,2,3}.* and gcc-6.0 and require everyone to upgrade to
-Arnd> compilers that have not been released yet in order to build a
-Arnd> linux-4.6 kernel.
+I don't actually see where there's a bug in this.  If the user chooses
+to alter data in-flight (quite hard to do because one thread of
+execution is already tied up in the ioctl) then the consequences are
+their own fault.
 
-I agree that compiler blacklisting is problematic and I'd like to avoid
-it. The question is how far we go in the kernel to accommodate various
-levels of brokenness.
+> If the kfib->header.Size is modified by a user thread under race
+> condition between the fetch operations, for example changing to a 
+> very large value, this will lead to over-boundary access or other 
+> serious consequences in function aac_fib_send().
 
-In any case. Sticking compiler workarounds in device driver code is akin
-to putting demolition orders on display on Alpha Centauri. At the very
-minimum the patch should put a fat comment in the code stating that
-these wrapper functions or #defines should not be changed in the future
-because that'll break builds using gcc XYZ. But that does not solve the
-problem for anybody else that might be doing something similar.
-Converting between u64 and $RANDOM_TYPE in an inline wrapper does not
-seem like a rare and unusual programming pattern.
+Our only real concern would be could an unprivileged user crash the
+kernel this way and the user must have CAP_SYS_RAWIO anyway (which is
+quite a high privilege capability) plus the only problem with
+shortening the data would be EFAULT.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+James
+
+
