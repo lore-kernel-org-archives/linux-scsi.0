@@ -1,35 +1,42 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] megaraid_sas: trivial fix, add missing space in dev_err message
-Date: Mon, 25 Apr 2016 22:58:43 +0100
-Message-ID: <1461621523-30162-1-git-send-email-colin.king@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: Re: [PATCHv3 00/14] libata: ZAC support
+Date: Tue, 26 Apr 2016 00:42:33 +0000
+Message-ID: <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <8DE3EAF7CB1411439DAE1BA2E2A2A3BB@namprd04.prod.outlook.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+DQpIYW5uZXMsDQoNCj5IaSBhbGwsDQo+DQo+aGVyZSdzIGEgcGF0Y2hzZXQgaW1wbGVtZW50aW5n
+IFpBQyBzdXBwb3J0IGZvciBsaWJhdGEuDQo+DQo+VGhpcyBpcyB0aGUgc2Vjb25kIHBhcnQgb2Yg
+YSBsYXJnZXIgcGF0Y2hzZXQgZm9yIFpBQy9aQkMgc3VwcG9ydDsNCj5pdCByZXF1aXJlcyB0aGUg
+c2NzaSB0cmFjZSBmaXhlcyBxdWV1ZWQgZm9yIGluIG1rcC80Ljcvc2NzaS1xdWV1ZSBhbmQNCj50
+aGUgcGF0Y2hzZXQgJ2xpYmF0YTogU0FUTCB1cGRhdGUnIHF1ZXVlZCBpbiB0ai9mb3ItNC43LXph
+Yy4NCj5UaGUgZnVsbCBwYXRjaHNldCBjYW4gYmUgZm91bmQgYXQ6DQo+DQo+Z2l0Lmtlcm5lbC5v
+cmcvaGFyZS9zY3NpLWRldmVsL2gvemJjLnY2DQoNCkkgZG8gbm90IHNlZSBhIHpiYy52NiBicmFu
+Y2ggaW4geW91ciBzY3NpLWRldmVsIHRyZWUuLi4NCg0KDQpDaGVlcnMuDQoNCi0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQ0KRGFtaWVuIExlIE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lzdGVt
+IFNvZnR3YXJlIEdyb3VwLCBIR1NUIFJlc2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0YWwg
+Y29tcGFueQ0KRGFtaWVuLkxlTW9hbEBoZ3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChleHQu
+IDUxMzU5MykNCjEga2lyaWhhcmEtY2hvLCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4ODgg
+SmFwYW4NCnd3dy5oZ3N0LmNvbQ0KDQpXZXN0ZXJuIERpZ2l0YWwgQ29ycG9yYXRpb24gKGFuZCBp
+dHMgc3Vic2lkaWFyaWVzKSBFLW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAmIERpc2NsYWlt
+ZXI6CgpUaGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgbWF5IGNv
+bnRhaW4gY29uZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBvZiBX
+REMgYW5kL29yIGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVkIHNvbGVseSBmb3IgdGhl
+IHVzZSBvZiB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2ggdGhleSBhcmUgYWRkcmVz
+c2VkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBhbnkgZGlzY2xvc3Vy
+ZSwgY29weWluZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFrZW4gb3Igb21pdHRlZCB0
+byBiZSB0YWtlbiBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRlZC4gSWYgeW91IGhhdmUg
+cmVjZWl2ZWQgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBp
+bW1lZGlhdGVseSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVudGlyZXR5IGZyb20geW91
+ciBzeXN0ZW0uCg==
 
-Add a missing space in dev_err message, missed because the string
-spans a few lines.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e6ebc7a..1c038bc 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3345,7 +3345,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance)
- 			if (!list_empty(&cmd->list)) {
- 				dev_notice(&instance->pdev->dev, "ERROR while"
- 					" moving this cmd:%p, %d %p, it was"
--					"discovered on some list?\n",
-+					" discovered on some list?\n",
- 					cmd, cmd->sync_cmd, cmd->scmd);
- 
- 				list_del_init(&cmd->list);
--- 
-2.7.4
