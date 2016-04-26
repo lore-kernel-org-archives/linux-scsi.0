@@ -1,27 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: remove incorrect lockdep assertion
-Date: Mon, 25 Apr 2016 22:07:30 -0400
-Message-ID: <yq160v5i0m5.fsf@sermon.lab.mkp.net>
-References: <20160417132727.000026f3@localhost>
+Subject: Re: [PATCH] st: clear ILI if Medium Error
+Date: Mon, 25 Apr 2016 22:09:21 -0400
+Message-ID: <yq11t5ti0j2.fsf@sermon.lab.mkp.net>
+References: <alpine.LSU.2.20.1604180843100.1620@xnv.znxvfnen.cevingr>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16391 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146AbcDZCHo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 22:07:44 -0400
-In-Reply-To: <20160417132727.000026f3@localhost> (Sebastian Herbszt's message
-	of "Sun, 17 Apr 2016 13:27:27 +0200")
+Received: from userp1040.oracle.com ([156.151.31.81]:21265 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbcDZCJj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 22:09:39 -0400
+In-Reply-To: <alpine.LSU.2.20.1604180843100.1620@xnv.znxvfnen.cevingr> (Kai
+	Makisara's message of "Mon, 18 Apr 2016 08:47:18 +0300 (EEST)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, mlombard@redhat.com
 
->>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
+>>>>> "Kai" == Kai Makisara <Kai.Makisara@kolumbus.fi> writes:
 
-Sebastian> Remove incorrect lockdep assertion from
-Sebastian> lpfc_sli_hbqbuf_find() which acquires the hbalock itself. Fix
-Sebastian> the comment which resulted in this mistake.
+Kai> Some drives set the ILI flag together with MEDIUM ERROR sense
+Kai> code. Clear the ILI flag in this case so that the medium error will
+Kai> be handled. The problem was reported by Maurizio Lombardi.
 
 Applied to 4.7/scsi-queue.
 
