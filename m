@@ -1,45 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 12/12] scsi_debug: use locally assigned naa
-Date: Tue, 26 Apr 2016 08:31:23 +0200
-Message-ID: <571F0B3B.40002@suse.de>
-References: <1461600999-28893-1-git-send-email-dgilbert@interlog.com>
- <1461600999-28893-13-git-send-email-dgilbert@interlog.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 02/10] aacraid: Fix incorrectly named MACRO
+Date: Mon, 25 Apr 2016 23:31:03 -0700
+Message-ID: <20160426063103.28402.96631.stgit@pmcuser-System-Product-Name>
+References: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50980 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115AbcDZGbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2016 02:31:24 -0400
-In-Reply-To: <1461600999-28893-13-git-send-email-dgilbert@interlog.com>
+Received: from mail-bn1bon0087.outbound.protection.outlook.com ([157.56.111.87]:42016
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751165AbcDZGe6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 02:34:58 -0400
+In-Reply-To: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
+To: JBottomley@odin.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc: aacraid@pmc-sierra.com, gana.sridaran@microsemi.com, scott.benesh@microsemi.com, vishal.josemannanal@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-On 04/25/2016 06:16 PM, Douglas Gilbert wrote:
-> Change NAA addresses used for SAS addresses from fake IEEE
-> registered NAA (5) to locally assigned NAA (3).
->=20
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-> ---
->  drivers/scsi/scsi_debug.c | 35 ++++++++++++++++++-----------------
->  1 file changed, 18 insertions(+), 17 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Suggested-by: Seymour, Shane M <shane.seymour@hpe.com>
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+---
+ drivers/scsi/aacraid/aacraid.h  |    2 +-
+ drivers/scsi/aacraid/comminit.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Cheers,
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index efa493c..1936e08 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -720,7 +720,7 @@ struct sa_registers {
+ };
+ 
+ 
+-#define Sa_MINIPORT_REVISION			1
++#define SA_INIT_NUM_MSIXVECTORS		1
+ 
+ #define sa_readw(AEP, CSR)		readl(&((AEP)->regs.sa->CSR))
+ #define sa_readl(AEP, CSR)		readl(&((AEP)->regs.sa->CSR))
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 2b4e753..35697c1 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -91,7 +91,7 @@ static int aac_alloc_comm(struct aac_dev *dev, void **commaddr, unsigned long co
+ 	init->InitStructRevision = cpu_to_le32(ADAPTER_INIT_STRUCT_REVISION);
+ 	if (dev->max_fib_size != sizeof(struct hw_fib))
+ 		init->InitStructRevision = cpu_to_le32(ADAPTER_INIT_STRUCT_REVISION_4);
+-	init->Sa_MSIXVectors = cpu_to_le32(Sa_MINIPORT_REVISION);
++	init->Sa_MSIXVectors = cpu_to_le32(SA_INIT_NUM_MSIXVECTORS);
+ 	init->fsrev = cpu_to_le32(dev->fsrev);
+ 
+ 	/*
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
