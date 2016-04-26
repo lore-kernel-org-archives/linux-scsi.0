@@ -1,34 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] mpt3sas - remove unused fw_event_work elements
-Date: Mon, 25 Apr 2016 21:55:11 -0400
-Message-ID: <yq1inz5i16o.fsf@sermon.lab.mkp.net>
-References: <1460991012-10018-1-git-send-email-joe.lawrence@stratus.com>
+Subject: Re: [patch] hpsa: set the enclosure identifier to zero
+Date: Mon, 25 Apr 2016 22:02:07 -0400
+Message-ID: <yq1eg9ti0v4.fsf@sermon.lab.mkp.net>
+References: <20160414093744.GJ16549@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48048 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950AbcDZBzc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 21:55:32 -0400
-In-Reply-To: <1460991012-10018-1-git-send-email-joe.lawrence@stratus.com> (Joe
-	Lawrence's message of "Mon, 18 Apr 2016 10:50:12 -0400")
+Received: from userp1040.oracle.com ([156.151.31.81]:19201 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817AbcDZCCX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 22:02:23 -0400
+In-Reply-To: <20160414093744.GJ16549@mwanda> (Dan Carpenter's message of "Thu,
+	14 Apr 2016 12:37:44 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
->>>>> "Joe" == Joe Lawrence <joe.lawrence@stratus.com> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Joe> Firmware events are queued up using the fw_event_work's struct
-Joe> work, not its delayed_work member.  The initial driver for SAS2
-Joe> controllers had handled firmware reset using the rescan barrier and
-Joe> was later redesigned through "mpt2sas: [Resend] Host Reset code
-Joe> cleanup".  The delayed_work variables are now unused and may
-Joe> provoke CONFIG_DEBUG_OBJECTS_TIMERS "assert_init not available"
-Joe> false warnings in _scsih_fw_event_cleanup_queue.
-
-Joe> Cleanup fw_event_work's unused entries, update it's kerneldoc, and
-Joe> update _scsih_fw_event_cleanup_queue accordingly.
+Dan> This has only called from show_sas_rphy_enclosure_identifier().
+Dan> The caller expects that we set an identifier, otherwise it uses an
+Dan> unintialized variable.
 
 Applied to 4.7/scsi-queue.
 
