@@ -1,47 +1,36 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] megaraid_sas: trivial fix, add missing space in dev_err
- message
-Date: Mon, 25 Apr 2016 18:05:53 -0700
-Message-ID: <1461632753.2726.108.camel@perches.com>
-References: <1461621523-30162-1-git-send-email-colin.king@canonical.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] mpt3sas - remove unused fw_event_work elements
+Date: Mon, 25 Apr 2016 21:55:11 -0400
+Message-ID: <yq1inz5i16o.fsf@sermon.lab.mkp.net>
+References: <1460991012-10018-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1461621523-30162-1-git-send-email-colin.king@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48048 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950AbcDZBzc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2016 21:55:32 -0400
+In-Reply-To: <1460991012-10018-1-git-send-email-joe.lawrence@stratus.com> (Joe
+	Lawrence's message of "Mon, 18 Apr 2016 10:50:12 -0400")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>
 
-On Mon, 2016-04-25 at 22:58 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->=20
-> Add a missing space in dev_err message, missed because the string
-> spans a few lines.
+>>>>> "Joe" == Joe Lawrence <joe.lawrence@stratus.com> writes:
 
-This is a dev_notice() not dev_err().
+Joe> Firmware events are queued up using the fw_event_work's struct
+Joe> work, not its delayed_work member.  The initial driver for SAS2
+Joe> controllers had handled firmware reset using the rescan barrier and
+Joe> was later redesigned through "mpt2sas: [Resend] Host Reset code
+Joe> cleanup".  The delayed_work variables are now unused and may
+Joe> provoke CONFIG_DEBUG_OBJECTS_TIMERS "assert_init not available"
+Joe> false warnings in _scsih_fw_event_cleanup_queue.
 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
-/megaraid/megaraid_sas_base.c
-[]
-> @@ -3345,7 +3345,7 @@ megasas_internal_reset_defer_cmds(struct megasa=
-s_instance *instance)
-> =A0			if (!list_empty(&cmd->list)) {
-> =A0				dev_notice(&instance->pdev->dev, "ERROR while"
-> =A0					" moving this cmd:%p, %d %p, it was"
-> -					"discovered on some list?\n",
-> +					" discovered on some list?\n",
-> =A0					cmd, cmd->sync_cmd, cmd->scmd);
-> =A0
-> =A0				list_del_init(&cmd->list);
+Joe> Cleanup fw_event_work's unused entries, update it's kerneldoc, and
+Joe> update _scsih_fw_event_cleanup_queue accordingly.
 
-Better would be to coalesce the format, but perhaps
-this dev_notice should be dev_err?
+Applied to 4.7/scsi-queue.
 
-				dev_notice(&instance->pdev->dev,
-					=A0 =A0"ERROR while moving this cmd:%p, %d %p, it was discovered o=
-n some list?\n",
-					   cmd, cmd->sync_cmd, cmd->scmd);
-
-And the message seems oddly phrased.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
