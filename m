@@ -1,47 +1,47 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/12] scsi_debug: make jiffy delay name clearer
-Date: Tue, 26 Apr 2016 08:17:49 +0200
-Message-ID: <571F080D.1010402@suse.de>
-References: <1461600999-28893-1-git-send-email-dgilbert@interlog.com>
- <1461600999-28893-5-git-send-email-dgilbert@interlog.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 00/10] aacraid: Patchset for aacraid driver version 41066
+Date: Mon, 25 Apr 2016 23:30:48 -0700
+Message-ID: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50456 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750995AbcDZGRv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2016 02:17:51 -0400
-In-Reply-To: <1461600999-28893-5-git-send-email-dgilbert@interlog.com>
+Received: from mail-bl2on0077.outbound.protection.outlook.com ([65.55.169.77]:56453
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752429AbcDZGTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 02:19:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
+To: JBottomley@odin.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc: aacraid@pmc-sierra.com, gana.sridaran@microsemi.com, scott.benesh@microsemi.com, vishal.josemannanal@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-On 04/25/2016 06:16 PM, Douglas Gilbert wrote:
-> Add 'j' to delay names to make it clearer that its unit is
-> jiffies and to differentiate it from sdebug_ndelay whose unit is
-> nanoseconds.
->=20
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-> ---
->  drivers/scsi/scsi_debug.c | 46 +++++++++++++++++++++++--------------=
----------
->  1 file changed, 23 insertions(+), 23 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+This patchset contains the following changes(bug fixes, features and
+code refactors) specific to the aacraid driver
 
-Cheers,
+---
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Raghava Aditya Renukunta (10):
+  [SCSI] aacraid: Removed unnecessary checks for NULL
+  [SCSI] aacraid: Fix incorrectly named MACRO
+  [SCSI] aacraid: Start adapter after updating number of MSIX vectors
+  [SCSI] aacraid: Relinquish CPU during timeout wait
+  [SCSI] aacraid: Disable MSI mode for series 6, 7, 8 cards
+  [SCSI] aacraid: Fix for aac_command_thread hang
+  [SCSI] aacraid: Log firmware AIF messages
+  [SCSI] aacraid: Remove code to needlessly complete fib
+  [SCSI] aacraid: Fix for KDUMP driver hang
+  [SCSI] aacraid: Update driver version
+
+
+ drivers/scsi/aacraid/aachba.c   |   22 --------------------
+ drivers/scsi/aacraid/aacraid.h  |    9 ++++++--
+ drivers/scsi/aacraid/comminit.c |   43 ++++++++++++++++++++++++---------------
+ drivers/scsi/aacraid/commsup.c  |   39 ++++++++++++++++++++++++++++++++---
+ drivers/scsi/aacraid/dpcsup.c   |    7 ++++--
+ drivers/scsi/aacraid/linit.c    |    4 +++-
+ drivers/scsi/aacraid/src.c      |    3 ++-
+ 7 files changed, 78 insertions(+), 49 deletions(-)
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signature
