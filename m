@@ -1,45 +1,57 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 00/14] libata: ZAC support
-Date: Tue, 26 Apr 2016 07:47:54 +0200
-Message-ID: <571F010A.2010105@suse.de>
-References: <1461581156-92581-1-git-send-email-hare@suse.de>
- <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>, Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: [PATCH] sd: get disk reference in sd_check_events()
+Date: Tue, 26 Apr 2016 08:06:58 +0200
+Message-ID: <1461650818-107190-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49941 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752225AbcDZGHB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 02:07:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 04/26/2016 02:42 AM, Damien Le Moal wrote:
->=20
-> Hannes,
->=20
->> Hi all,
->>
->> here's a patchset implementing ZAC support for libata.
->>
->> This is the second part of a larger patchset for ZAC/ZBC support;
->> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue an=
-d
->> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
->> The full patchset can be found at:
->>
->> git.kernel.org/hare/scsi-devel/h/zbc.v6
->=20
-> I do not see a zbc.v6 branch in your scsi-devel tree...
->=20
-You do now :-)
+sd_check_events() is called asynchronously, and might race
+with device removal. So always take a disk reference when
+processing the event to avoid the device being removed while
+the event is processed.
 
-Cheers,
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/sd.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f52b74c..91f609f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1398,11 +1398,15 @@ static int media_not_present(struct scsi_disk *sdkp,
+  **/
+ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ {
+-	struct scsi_disk *sdkp = scsi_disk(disk);
+-	struct scsi_device *sdp = sdkp->device;
++	struct scsi_disk *sdkp = scsi_disk_get(disk);
++	struct scsi_device *sdp;
+ 	struct scsi_sense_hdr *sshdr = NULL;
+ 	int retval;
+ 
++	if (!sdkp)
++		return 0;
++
++	sdp = sdkp->device;
+ 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_check_events\n"));
+ 
+ 	/*
+@@ -1459,6 +1463,7 @@ out:
+ 	kfree(sshdr);
+ 	retval = sdp->changed ? DISK_EVENT_MEDIA_CHANGE : 0;
+ 	sdp->changed = 0;
++	scsi_disk_put(sdkp);
+ 	return retval;
+ }
+ 
+-- 
+1.8.5.6
+
