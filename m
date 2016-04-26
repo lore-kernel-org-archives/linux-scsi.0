@@ -1,37 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
-Date: Mon, 25 Apr 2016 20:37:31 -0700
-Message-ID: <1461641851.2392.32.camel@HansenPartnership.com>
-References: <20160419085221.GA29087@gmail.com>
-	 <80200c53ae54f6cb34bd6fb51e9da65fdcc03004.1461073602.git.jpoimboe@redhat.com>
-	 <20160425160737.r6ewxzgknu7rjles@treble>
-	 <yq1lh41gki4.fsf@sermon.lab.mkp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv3 00/14] libata: ZAC support
+Date: Tue, 26 Apr 2016 07:47:54 +0200
+Message-ID: <571F010A.2010105@suse.de>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
+ <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1lh41gki4.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, jamborm@gcc.gnu.org, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Damien Le Moal <Damien.LeMoal@hgst.com>, Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2016-04-25 at 22:40 -0400, Martin K. Petersen wrote:
-> > > > > > "Josh" == Josh Poimboeuf <jpoimboe@redhat.com> writes:
-> 
-> Josh> Can you merge this patch for 4.6?
-> 
-> I am really not a big fan of working around compiler bugs in a device
-> driver.
+On 04/26/2016 02:42 AM, Damien Le Moal wrote:
+>=20
+> Hannes,
+>=20
+>> Hi all,
+>>
+>> here's a patchset implementing ZAC support for libata.
+>>
+>> This is the second part of a larger patchset for ZAC/ZBC support;
+>> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue an=
+d
+>> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
+>> The full patchset can be found at:
+>>
+>> git.kernel.org/hare/scsi-devel/h/zbc.v6
+>=20
+> I do not see a zbc.v6 branch in your scsi-devel tree...
+>=20
+You do now :-)
 
-Me neither
+Cheers,
 
-> Are we sure there are no other get_unaligned_be64() calls in the
-> kernel that suffer the same fate?
-
-Agree, plus, as I've said before, we have 3-4 weeks before we go final,
-so we still have some time before a decision has to be made.  It looks
-like the gcc people already have a patch for the compiler, so the
-distributions could just push that out through channels.
-
-James
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
