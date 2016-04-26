@@ -1,46 +1,59 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 03/10] aacraid: Start adapter after updating number of MSIX
- vectors
-Date: Mon, 25 Apr 2016 23:31:12 -0700
-Message-ID: <20160426063111.28402.3757.stgit@pmcuser-System-Product-Name>
+Subject: [PATCH 06/10] aacraid: Fix for aac_command_thread hang
+Date: Mon, 25 Apr 2016 23:31:57 -0700
+Message-ID: <20160426063157.28402.81341.stgit@pmcuser-System-Product-Name>
 References: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0092.outbound.protection.outlook.com ([207.46.100.92]:22688
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1bon0064.outbound.protection.outlook.com ([157.56.111.64]:50989
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752520AbcDZGgH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2016 02:36:07 -0400
+	id S1752552AbcDZGgQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 02:36:16 -0400
 In-Reply-To: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@odin.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc: aacraid@pmc-sierra.com, gana.sridaran@microsemi.com, scott.benesh@microsemi.com, vishal.josemannanal@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-The adapter has to be started after updating the number of MSIX Vectors
+Typically under error conditions, it is possible for aac_command_thread()
+to miss the wakeup from kthread_stop() and go back to sleep, causing it
+to hang aac_shutdown.
 
-Fixes: ecc479e00db8 (aacraid: Set correct MSIX count for EEH recovery)
+In the observed scenario, the adapter is not functioning correctly and so
+aac_fib_send() never completes (or time-outs depending on how it was
+called). Shortly after aac_command_thread() starts it performs
+aac_fib_send(SendHostTime) which hangs. When aac_probe_one
+/aac_get_adapter_info send time outs, kthread_stop is called which breaks
+the command thread out of it's hang.
+
+The code will still go back to sleep in schedule_timeout() without
+checking kthread_should_stop() so it causes aac_probe_one to hang until
+the schedule_timeout() which is 30 minutes.
+
+Fixed by: Adding another kthread_should_stop() before schedule_timeout()
 Cc: stable@vger.kernel.org
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/linit.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/commsup.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index ff6caab..79a1cec 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1431,8 +1431,8 @@ static int aac_acquire_resources(struct aac_dev *dev)
- 		/* After EEH recovery or suspend resume, max_msix count
- 		 * may change, therfore updating in init as well.
- 		 */
--		aac_adapter_start(dev);
- 		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
-+		aac_adapter_start(dev);
- 	}
- 	return 0;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 725aa78..bb7988d 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1996,6 +1996,10 @@ int aac_command_thread(void *data)
+ 		if (difference <= 0)
+ 			difference = 1;
+ 		set_current_state(TASK_INTERRUPTIBLE);
++
++		if (kthread_should_stop())
++			break;
++
+ 		schedule_timeout(difference);
  
+ 		if (kthread_should_stop())
 
