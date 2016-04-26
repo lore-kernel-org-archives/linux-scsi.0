@@ -1,34 +1,33 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 09/12] scsi_debug: add multiple queue support
-Date: Tue, 26 Apr 2016 08:29:15 +0200
-Message-ID: <571F0ABB.50106@suse.de>
+Subject: Re: [PATCH 10/12] scsi_debug: vpd and mode page work
+Date: Tue, 26 Apr 2016 08:29:49 +0200
+Message-ID: <571F0ADD.8010903@suse.de>
 References: <1461600999-28893-1-git-send-email-dgilbert@interlog.com>
- <1461600999-28893-10-git-send-email-dgilbert@interlog.com>
+ <1461600999-28893-11-git-send-email-dgilbert@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50814 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50829 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750995AbcDZG3Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2016 02:29:16 -0400
-In-Reply-To: <1461600999-28893-10-git-send-email-dgilbert@interlog.com>
+	id S1751146AbcDZG3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2016 02:29:51 -0400
+In-Reply-To: <1461600999-28893-11-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
 
 On 04/25/2016 06:16 PM, Douglas Gilbert wrote:
-> Add submit_queue parameter (minimum and default: 1; maximum:
-> nr_cpu_ids) that controls how many queues are built, each with
-> their own lock and in_use bit vector. Add statistics parameter
-> which is default on.
+> Cleanup some mode and vpd pages. Stop reporting SBC (disk) pages
+> when peripheral type is something else (e.g. tape). Update
+> version descriptors. Expand LBPRZ flag handling.
 >=20
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->  drivers/scsi/scsi_debug.c | 662 +++++++++++++++++++++++++++++-------=
+>  drivers/scsi/scsi_debug.c | 167 +++++++++++++++++++++++++++---------=
 ----------
->  1 file changed, 416 insertions(+), 246 deletions(-)
+>  1 file changed, 97 insertions(+), 70 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
