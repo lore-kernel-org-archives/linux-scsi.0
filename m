@@ -1,29 +1,31 @@
 From: Johannes Thumshirn <jthmshirn@suse.de>
-Subject: Re: [PATCH 05/10] aacraid: Disable MSI mode for series 6, 7, 8 cards
-Date: Wed, 27 Apr 2016 11:16:27 +0200
-Message-ID: <20160427091627.GC2820@c203.arch.suse.de>
+Subject: Re: [PATCH 07/10] aacraid: Log firmware AIF messages
+Date: Wed, 27 Apr 2016 11:21:47 +0200
+Message-ID: <20160427092147.GD2820@c203.arch.suse.de>
 References: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
- <20160426063143.28402.72576.stgit@pmcuser-System-Product-Name>
+ <20160426063209.28402.28263.stgit@pmcuser-System-Product-Name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38919 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39358 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752367AbcD0JQa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2016 05:16:30 -0400
+	id S1752041AbcD0JVt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2016 05:21:49 -0400
 Content-Disposition: inline
-In-Reply-To: <20160426063143.28402.72576.stgit@pmcuser-System-Product-Name>
+In-Reply-To: <20160426063209.28402.28263.stgit@pmcuser-System-Product-Name>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, aacraid@pmc-sierra.com, gana.sridaran@microsemi.com, scott.benesh@microsemi.com, vishal.josemannanal@microsemi.com
 
-On Mon, Apr 25, 2016 at 11:31:43PM -0700, Raghava Aditya Renukunta wrot=
+On Mon, Apr 25, 2016 at 11:32:09PM -0700, Raghava Aditya Renukunta wrot=
 e:
-> As the firmware for series 6, 7, 8 cards does not support msi, remove=
- it
-> in the driver
+> Firmware AIF messages about cache loss and data recovery are being mi=
+ssed
+> by the driver since currently they are not captured but rather let go=
+=2E
+> This patch to capture those messages and log them for the user.
 >=20
 > Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@micr=
 osemi.com>
