@@ -1,64 +1,116 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 07/12] scsi_debug: use likely hints on fast path
-Date: Wed, 27 Apr 2016 07:29:26 -0700
-Message-ID: <5720CCC6.70202@sandisk.com>
-References: <1461600999-28893-1-git-send-email-dgilbert@interlog.com>
- <1461600999-28893-8-git-send-email-dgilbert@interlog.com>
- <571FE840.1010304@sandisk.com> <57204D37.3050302@interlog.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH 08/10] aacraid: Remove code to needlessly complete fib
+Date: Wed, 27 Apr 2016 16:34:35 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A1635319F@avsrvexchmbx2.microsemi.net>
+References: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
+ <20160426063226.28402.37546.stgit@pmcuser-System-Product-Name>
+ <20160427092403.GE2820@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0083.outbound.protection.outlook.com ([157.56.110.83]:27424
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0090.outbound.protection.outlook.com ([65.55.169.90]:36287
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752297AbcD0O3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2016 10:29:33 -0400
-In-Reply-To: <57204D37.3050302@interlog.com>
+	id S1752520AbcD0Qe4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2016 12:34:56 -0400
+In-Reply-To: <20160427092403.GE2820@c203.arch.suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
+To: Johannes Thumshirn <jthmshirn@suse.de>
+Cc: "JBottomley@odin.com" <JBottomley@odin.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Vishal Jose Mannanal <vishal.josemannanal@microsemi.com>
 
-On 04/26/16 22:25, Douglas Gilbert wrote:
-> On 2016-04-26 06:14 PM, Bart Van Assche wrote:
->> On 04/25/2016 09:16 AM, Douglas Gilbert wrote:
->>> -    if ((SDEBUG_OPT_MEDIUM_ERR & sdebug_opts) &&
->>> -        (lba <= (OPT_MEDIUM_ERR_ADDR + OPT_MEDIUM_ERR_NUM - 1)) &&
->>> -        ((lba + num) > OPT_MEDIUM_ERR_ADDR)) {
->>> +    if (unlikely((SDEBUG_OPT_MEDIUM_ERR & sdebug_opts) &&
->>> +             (lba <= (OPT_MEDIUM_ERR_ADDR + OPT_MEDIUM_ERR_NUM - 1)) &&
->>> +             ((lba + num) > OPT_MEDIUM_ERR_ADDR))) {
->>  > [ ... ]
->>> -    if ((qa_indx < 0) || (qa_indx >= SCSI_DEBUG_CANQUEUE)) {
->>> +    if (unlikely((qa_indx < 0) || (qa_indx >= SCSI_DEBUG_CANQUEUE))) {
->>  > [ ... ]
->>> -    if ((qdepth > 0) && (num_in_q >= qdepth)) {
->>> +    if (unlikely((qdepth > 0) && (num_in_q >= qdepth))) {
->>  > [ ... ]
->>> -    } else if ((sdebug_every_nth != 0) &&
->>> -           (SDEBUG_OPT_RARE_TSF & sdebug_opts) &&
->>> -           (scsi_result == 0)) {
->>> +    } else if (unlikely((sdebug_every_nth != 0) &&
->>> +                (SDEBUG_OPT_RARE_TSF & sdebug_opts) &&
->>> +                (scsi_result == 0))) {
->>
->> Since you are modifying this code, please remove the superfluous
->> parentheses.
->
-> I can find no reference to "superfluous parentheses" in
-> Documentation/CodingStyle . As for the improved readability of:
->
->             else if (unlikely(sdebug_every_nth != 0 &&
->                        SDEBUG_OPT_RARE_TSF & sdebug_opts &&
->                        scsi_result == 0)) {
-> I have my doubts.
 
-Hello Doug,
+Hello Johannes,
 
-With my comment I wanted to refer to the parentheses around comparisons 
-only and not to the parentheses around bitwise operations. Leaving out 
-these parentheses is the most common style in the Linux kernel. But this 
-is a stylistic issue only and hence not that important to me.
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthmshirn@suse.de]
+> Sent: Wednesday, April 27, 2016 2:24 AM
+> To: Raghava Aditya Renukunta
+> Cc: JBottomley@odin.com; linux-scsi@vger.kernel.org;
+> martin.petersen@oracle.com; aacraid@pmc-sierra.com; Gana Sridaran; Sc=
+ott
+> Benesh; Vishal Jose Mannanal
+> Subject: Re: [PATCH 08/10] aacraid: Remove code to needlessly complet=
+e fib
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On Mon, Apr 25, 2016 at 11:32:26PM -0700, Raghava Aditya Renukunta wr=
+ote:
+> > Currently driver completes double completed or spurious interrupted=
+ fibs.
+> > This  is not necessary and causes the SCSI mid layer to issue abort=
+s and
+> > resets, since completing a fib  prematurely might trigger a race co=
+ndition
+> > resulting in the driver not calling the scsi_done callback.
+> >
+> > Fixed by removing the call to fib complete.
+> >
+> > Signed-off-by: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>
+> > ---
+> >  drivers/scsi/aacraid/dpcsup.c |    7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/d=
+pcsup.c
+> > index d677b52..7e83620 100644
+> > --- a/drivers/scsi/aacraid/dpcsup.c
+> > +++ b/drivers/scsi/aacraid/dpcsup.c
+> > @@ -392,9 +392,10 @@ unsigned int aac_intr_normal(struct aac_dev *d=
+ev,
+> u32 index,
+> >                       if (likely(fib->callback && fib->callback_dat=
+a)) {
+> >                               fib->flags &=3D FIB_CONTEXT_FLAG_FAST=
+RESP;
+> >                               fib->callback(fib->callback_data, fib=
+);
+> > -                     } else {
+> > -                             aac_fib_complete(fib);
+> > -                     }
+> > +                     } else
+> > +                             dev_info(&dev->pdev->dev,
+> > +                             "Invalid callback_fib[%d] (*%p)(%p)\n=
+",
+> > +                             index, fib->callback, fib->callback_d=
+ata);
+>=20
+> I'm not sure INFO is the right logging level for this. WARN or ERROR =
+might be
+> more suited.
 
-Bart.
+I intended it be an acknowledgement that we ran into this issue. That w=
+as why I used info,
+It should not impact the flow of the driver.
+
+Regards,
+Raghava Aditya
+
+>=20
+> >               } else {
+> >                       unsigned long flagv;
+> >                       dprintk((KERN_INFO "event_wait up\n"));
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scs=
+i" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
