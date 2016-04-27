@@ -1,94 +1,127 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5] qla1280: Don't allocate 512kb of host tags
-Date: Wed, 27 Apr 2016 12:39:00 +0200
-Message-ID: <572096C4.4090705@suse.de>
-References: <1461746932-123934-1-git-send-email-jthumshirn@suse.de>
+From: Martin Jambor <mjambor@suse.cz>
+Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
+Date: Wed, 27 Apr 2016 13:05:03 +0200
+Message-ID: <20160427110503.GB24887@virgil.suse.cz>
+References: <20160419085221.GA29087@gmail.com>
+ <5249561.9VpAPLD61M@wuerfel>
+ <yq14maoh635.fsf@sermon.lab.mkp.net>
+ <5298237.1Guzp0G04x@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1461746932-123934-1-git-send-email-jthumshirn@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Michael Reed <mdr@sgi.com>, Laura Abbott <labbott@redhat.com>, Laurence Oberman <loberman@redhat.com>, Lee Duncan <lduncan@suse.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.4@suse.de
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:45785 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752159AbcD0LFI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2016 07:05:08 -0400
+Content-Disposition: inline
+In-Reply-To: <5298237.1Guzp0G04x@wuerfel>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com, Jan Hubicka <hubicka@ucw.cz>
 
-On 04/27/2016 10:48 AM, Johannes Thumshirn wrote:
-> The qla1280 driver sets the scsi_host_template's can_queue field to 0=
-xfffff
-> which results in an allocation failure when allocating the block laye=
-r tags
-> for the driver's queues. This was introduced with the change for host=
- wide
-> tags in commit 64d513ac31b - "scsi: use host wide tags by default".
->=20
-> Reduce can_queue to MAX_OUTSTANDING_COMMANDS (512) to solve the alloc=
-ation
-> error.
->=20
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Fixes: 64d513ac31b - "scsi: use host wide tags by default"
-> Cc: stable@vger.kernel.org # v4.4
-> Cc: Laura Abbott <labbott@redhat.com>
-> Cc: Michael Reed <mdr@sgi.com>
-> Reviewed-by: Laurence Oberman <loberman@redhat.com>
-> Reviewed-by: Lee Duncan <lduncan@suse.com>
-> ---
-> Changes to v4:
-> * Make subject more meaningfull
-> * Remove warning's backtrace
-> * Re-add reference to commit  64d513ac31b - "scsi: use host wide tags=
- by default"
->=20
-> Changes to v3:
-> * Use  MAX_OUTSTANDING_COMMANDS insted of hard coded magical number
->=20
-> Changes to v2:
-> * Change can_queue to 512 upon James' request
->=20
->  drivers/scsi/qla1280.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-> index 5d0ec42..634254a 100644
-> --- a/drivers/scsi/qla1280.c
-> +++ b/drivers/scsi/qla1280.c
-> @@ -4214,7 +4214,7 @@ static struct scsi_host_template qla1280_driver=
-_template =3D {
->  	.eh_bus_reset_handler	=3D qla1280_eh_bus_reset,
->  	.eh_host_reset_handler	=3D qla1280_eh_adapter_reset,
->  	.bios_param		=3D qla1280_biosparam,
-> -	.can_queue		=3D 0xfffff,
-> +	.can_queue		=3D MAX_OUTSTANDING_COMMANDS,
->  	.this_id		=3D -1,
->  	.sg_tablesize		=3D SG_ALL,
->  	.use_clustering		=3D ENABLE_CLUSTERING,
->=20
-Hmm.
+Hi,
 
-The driver has this:
+On Tue, Apr 26, 2016 at 05:58:20PM +0200, Arnd Bergmann wrote:
+> On Tuesday 26 April 2016 09:06:54 Martin K. Petersen wrote:
+> > >>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+> > 
+> > Arnd> I don't think we can realistically blacklist gcc-4.9.{0,1,2,3},
+> > Arnd> gcc-5.{0,1,2,3}.* and gcc-6.0 and require everyone to upgrade to
+> > Arnd> compilers that have not been released yet in order to build a
+> > Arnd> linux-4.6 kernel.
+> > 
+> > I agree that compiler blacklisting is problematic and I'd like to avoid
+> > it. The question is how far we go in the kernel to accommodate various
+> > levels of brokenness.
+> > 
+> > In any case. Sticking compiler workarounds in device driver code is akin
+> > to putting demolition orders on display on Alpha Centauri. At the very
+> > minimum the patch should put a fat comment in the code stating that
+> > these wrapper functions or #defines should not be changed in the future
+> > because that'll break builds using gcc XYZ. But that does not solve the
+> > problem for anybody else that might be doing something similar.
+> > Converting between u64 and $RANDOM_TYPE in an inline wrapper does not
+> > seem like a rare and unusual programming pattern.
+> 
+> It's not the driver really, it's the core scsi/fc layer, which makes
+> it a little dangerous that a random driver.
+> 
+> I agree that putting a comment in would also help. What I understand
+> from the bug report is that to trigger this bug you need these elements:
+> 
+> 1. an inline function marked __always_inline
+> 2. another inline function that is automatically inlined (not __always_inline)
+> 3. CONFIG_OPTIMIZE_INLINING=y to guarantee 2
+> 4. __builtin_compatible_p inside that inline function
 
-	ha->request_ring =3D pci_alloc_consistent(ha->pdev,
-			((REQUEST_ENTRY_CNT + 1) * sizeof(request_t)),
-			&ha->request_dma);
+The __always_inline requirement is not true.  In fact, if you look at
+the example testcase filed in
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70646#c7 you'll see it
+uses __builtin_compatible_p in an __always inline function that is
+called from one that is not tagged with that attribute.
 
-and
+And generally speaking, always inline is never a requirement, any call
+or chain of calls that the inliner can decide to inline can lead to
+the bug (if it complies with the condition below).
 
-/* ISP request and response entry counts (37-65535) */
-#define REQUEST_ENTRY_CNT	255 /* Number of request entries. */
-#define RESPONSE_ENTRY_CNT	63  /* Number of response entries. */
+What is a requirement, though, is that __builtin_compatible_p is
+called on something passed in an argument by reference or in an
+aggregate (i.e. struct or array) argument.
 
-IE the driver (as it stands currently) will never be able to queue
-more than 255 requests.
-So where's the point in setting can_queue to 512? Shouldn't we
-rather use 255 here?
+So,
 
-Cheers,
+  int foo1 (unsigned long *ref)
+  {
+    if (__builtin_constant (*ref))
+      ...
+    else
+      /* wrongly unreachable code */
+  }
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+can lead to this issue, as can
+
+  int foo2 (struct S s)
+  {
+    if ((__builtin_constant (s.l))
+      ...
+    else
+      /* wrongly unreachable code */
+  }
+
+but
+
+  int foo3 (unsigned long val)
+  {
+    if (__builtin_constant (val))
+      ...
+    else
+      /* all OK */
+  }
+
+cannot, and is fine.  But please note that wrapping a foo[12]-like
+function into a dereferencing wrapper might not help if foo[12] would
+be early-inlined into such wrapper (GCC has two inliners, a very
+simple early-inliner that only handles simple cases and a full-blown
+IPA inliner that contains the bug).  I believe this can be ensured by
+making the wrapper always_inline and never calling it indirectly (via
+a pointer).  Honza (CCed), you know inlining heuristics better, please
+correct me if my last statement is somehow inaccurate (or indeed if
+you have a better idea how kernel developers can make sure they do not
+hit the bug).
+
+Thanks,
+
+Martin
+
+> 
+> The last point is what Denys introduced in the kernel with
+> bc27fb68aaad ("include/uapi/linux/byteorder, swab: force inlining of some
+> byteswap operations"). So maybe it's better after all to revert that
+> patch, to have a higher confidence in the same bug not appearing
+> elsewhere. It's also really a workaround for another quirk of the
+> compiler, but that one only results in duplicated functions in object
+> code rather than functions that end in the middle.
+> 
+> 	Arnd
+> 
