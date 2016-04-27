@@ -1,126 +1,50 @@
-From: Josh Poimboeuf <jpoimboe@redhat.com>
-Subject: Re: [PATCH, RFT] byteswap: try to avoid __builtin_constant_p gcc bug
-Date: Wed, 27 Apr 2016 17:11:01 -0500
-Message-ID: <20160427221101.hiyc7ensow667sk6@treble>
-References: <20160419085221.GA29087@gmail.com>
- <5298237.1Guzp0G04x@wuerfel>
- <20160427110503.GB24887@virgil.suse.cz>
- <25937441.NbUvhTZ9vo@wuerfel>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 0/7] hpsa driver updates
+Date: Wed, 27 Apr 2016 17:13:10 -0500
+Message-ID: <146179474454.31195.15135625511559409075.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <25937441.NbUvhTZ9vo@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Martin Jambor <mjambor@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com, Jan Hubicka <hubicka@ucw.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0068.outbound.protection.outlook.com ([157.56.111.68]:62424
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751553AbcD0W1f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2016 18:27:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 28, 2016 at 12:00:36AM +0200, Arnd Bergmann wrote:
-> This is another attempt to avoid a regression in wwn_to_u64()
-> after that started using get_unaligned_be64(), which in turn
-> ran into a bug on gcc-4.9 through 6.1.
-> 
-> As part of the problem is how __builtin_constant_p gets evaluated
-> on an argument passed by reference into an inline function, this
-> avoids the use of __builtin_constant_p() for all architectures
-> that set CONFIG_ARCH_USE_BUILTIN_BSWAP. Most architectures do not
-> set ARCH_SUPPORTS_OPTIMIZED_INLINING, which means they probably
-> do not suffer from the problem in the qla2xxx driver, but they
-> might still run into it elsewhere.
-> 
-> I have not been able to reproduce the original problem, so I don't
-> know if this patch solves it, but at least it leads to simpler
-> code doing the same thing, so at least there should be no downsides.
-> 
-> Please test.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+These patches are based on Linus's tree
 
-Nice patch.  I can confirm it fixes the issue with gcc 5.3.1.
+The changes are:
+ - move call to scsi_scan_host below where interrupts are enabled
+ - add in timouts for driver initiated commands.
+   - some faulty disks caused initialization hangs.
+ - correct ioaccel change events
+ - correct ioaccel error checking
+ - enhance hot-plug operations for HBA mode
+ - add a sysfs attribute for sas addresses
+ - bump driver version
 
-Tested-by: Josh Poimboeuf <jpoimboe@redhat.com>
-Reviewed-by: Josh Poimboeuf <jpoimboe@redhat.com>
+---
 
-> diff --git a/include/uapi/linux/swab.h b/include/uapi/linux/swab.h
-> index 3f10e5317b46..de56fd54428d 100644
-> --- a/include/uapi/linux/swab.h
-> +++ b/include/uapi/linux/swab.h
-> @@ -45,9 +45,7 @@
->  
->  static inline __attribute_const__ __u16 __fswab16(__u16 val)
->  {
-> -#ifdef __HAVE_BUILTIN_BSWAP16__
-> -	return __builtin_bswap16(val);
-> -#elif defined (__arch_swab16)
-> +#if defined (__arch_swab16)
->  	return __arch_swab16(val);
->  #else
->  	return ___constant_swab16(val);
-> @@ -56,9 +54,7 @@ static inline __attribute_const__ __u16 __fswab16(__u16 val)
->  
->  static inline __attribute_const__ __u32 __fswab32(__u32 val)
->  {
-> -#ifdef __HAVE_BUILTIN_BSWAP32__
-> -	return __builtin_bswap32(val);
-> -#elif defined(__arch_swab32)
-> +#if defined(__arch_swab32)
->  	return __arch_swab32(val);
->  #else
->  	return ___constant_swab32(val);
-> @@ -67,9 +63,7 @@ static inline __attribute_const__ __u32 __fswab32(__u32 val)
->  
->  static inline __attribute_const__ __u64 __fswab64(__u64 val)
->  {
-> -#ifdef __HAVE_BUILTIN_BSWAP64__
-> -	return __builtin_bswap64(val);
-> -#elif defined (__arch_swab64)
-> +#if defined (__arch_swab64)
->  	return __arch_swab64(val);
->  #elif defined(__SWAB_64_THRU_32__)
->  	__u32 h = val >> 32;
-> @@ -102,28 +96,40 @@ static inline __attribute_const__ __u32 __fswahb32(__u32 val)
->   * __swab16 - return a byteswapped 16-bit value
->   * @x: value to byteswap
->   */
-> +#ifdef __HAVE_BUILTIN_BSWAP16__
-> +#define __swab16(x) __builtin_bswap16((__u16)(x))
-> +#else
->  #define __swab16(x)				\
->  	(__builtin_constant_p((__u16)(x)) ?	\
->  	___constant_swab16(x) :			\
->  	__fswab16(x))
-> +#endif
->  
->  /**
->   * __swab32 - return a byteswapped 32-bit value
->   * @x: value to byteswap
->   */
-> +#ifdef __HAVE_BUILTIN_BSWAP32__
-> +#define __swab32(x) __builtin_bswap32((__u32)(x))
-> +#else
->  #define __swab32(x)				\
->  	(__builtin_constant_p((__u32)(x)) ?	\
->  	___constant_swab32(x) :			\
->  	__fswab32(x))
-> +#endif
->  
->  /**
->   * __swab64 - return a byteswapped 64-bit value
->   * @x: value to byteswap
->   */
-> +#ifdef __HAVE_BUILTIN_BSWAP64__
-> +#define __swab64(x) __builtin_bswap64((__u64)(x))
-> +#else
->  #define __swab64(x)				\
->  	(__builtin_constant_p((__u64)(x)) ?	\
->  	___constant_swab64(x) :			\
->  	__fswab64(x))
-> +#endif
->  
->  /**
->   * __swahw32 - return a word-swapped 32-bit value
-> 
+Don Brace (6):
+      hpsa: correct initialization order issue
+      hpsa: add timeouts for driver initiated commands
+      hpsa: correct ioaccel state change operation
+      hpsa: correct ioaccel2 error procecssing.
+      hpsa: correct handling of HBA device removal
+      hpsa: update driver version
 
--- 
-Josh
+Joseph T Handzik (1):
+      hpsa: add sas_address to sysfs device attibute
+
+
+ drivers/scsi/hpsa.c |  176 ++++++++++++++++++++++++++++++++++++++++++---------
+ drivers/scsi/hpsa.h |    1 
+ 2 files changed, 145 insertions(+), 32 deletions(-)
+
+--
+Signature
