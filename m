@@ -1,33 +1,29 @@
 From: Johannes Thumshirn <jthmshirn@suse.de>
-Subject: Re: [PATCH 03/10] aacraid: Start adapter after updating number of
- MSIX vectors
-Date: Wed, 27 Apr 2016 11:14:49 +0200
-Message-ID: <20160427091449.GB2820@c203.arch.suse.de>
+Subject: Re: [PATCH 05/10] aacraid: Disable MSI mode for series 6, 7, 8 cards
+Date: Wed, 27 Apr 2016 11:16:27 +0200
+Message-ID: <20160427091627.GC2820@c203.arch.suse.de>
 References: <20160426062414.28402.69178.stgit@pmcuser-System-Product-Name>
- <20160426063111.28402.3757.stgit@pmcuser-System-Product-Name>
+ <20160426063143.28402.72576.stgit@pmcuser-System-Product-Name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38832 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38919 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753087AbcD0JOx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2016 05:14:53 -0400
+	id S1752367AbcD0JQa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2016 05:16:30 -0400
 Content-Disposition: inline
-In-Reply-To: <20160426063111.28402.3757.stgit@pmcuser-System-Product-Name>
+In-Reply-To: <20160426063143.28402.72576.stgit@pmcuser-System-Product-Name>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, aacraid@pmc-sierra.com, gana.sridaran@microsemi.com, scott.benesh@microsemi.com, vishal.josemannanal@microsemi.com
 
-On Mon, Apr 25, 2016 at 11:31:12PM -0700, Raghava Aditya Renukunta wrot=
+On Mon, Apr 25, 2016 at 11:31:43PM -0700, Raghava Aditya Renukunta wrot=
 e:
-> The adapter has to be started after updating the number of MSIX Vecto=
-rs
->=20
-> Fixes: ecc479e00db8 (aacraid: Set correct MSIX count for EEH recovery=
-)
-> Cc: stable@vger.kernel.org
+> As the firmware for series 6, 7, 8 cards does not support msi, remove=
+ it
+> in the driver
 >=20
 > Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@micr=
 osemi.com>
