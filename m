@@ -1,45 +1,51 @@
-From: "Knight, Frederick" <Frederick.Knight@netapp.com>
-Subject: RE: [Lsf] Notes from the four separate IO track sessions at LSF/MM
-Date: Thu, 28 Apr 2016 16:19:19 +0000
-Message-ID: <d8e572ba7c9a46aaa3af4c5703ec07e3@hioexcmbx07-prd.hq.netapp.com>
-References: <1461800389.2311.70.camel@HansenPartnership.com>
-	<20160428121108.GA9903@redhat.com>
-	<1461858038.2307.16.camel@HansenPartnership.com>
- <5722320E.5080202@sandisk.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [Lsf] Notes from the four separate IO track sessions at LSF/MM
+Date: Thu, 28 Apr 2016 12:23:44 -0400 (EDT)
+Message-ID: <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com>
+References: <1461800389.2311.70.camel@HansenPartnership.com> <20160428121108.GA9903@redhat.com> <1461858038.2307.16.camel@HansenPartnership.com> <5722320E.5080202@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx144.netapp.com ([216.240.21.25]:63027 "EHLO mx144.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750785AbcD1QT2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2016 12:19:28 -0400
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:60101 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbcD1QXt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2016 12:23:49 -0400
 In-Reply-To: <5722320E.5080202@sandisk.com>
-Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Snitzer <snitzer@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, lsf@lists.linux-foundation.org, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-There are multiple possible situations being intermixed in this discussion.  First, I assume you're talking only about random access devices (if you try transport level error recover on a sequential access device - tape or SMR disk - there are lots of additional complexities).
+Hello Folks,
 
-Failures can occur at multiple places:
-a) Transport layer failures that the transport layer is able to detect quickly;
-b) SCSI device layer failures that the transport layer never even knows about.
+We still suffer from periodic complaints in our large customer base regarding the long recovery times for dm-multipath.
+Most of the time this is when we have something like a switch back-plane issue or an issue where RSCN'S are blocked coming back up the fabric.
+Corner cases still bite us often.
 
-For (a) there are two competing goals.  If a port drops off the fabric and comes back again, should you be able to just recover and continue.  But how long do you wait during that drop?  Some devices use this technique to "move" a WWPN from one place to another.  The port drops from the fabric, and a short time later, shows up again (the WWPN moves from one physical port to a different physical port). There are FC driver layer timers that define the length of time allowed for this operation.  The goal is fast failover, but not too fast - because too fast will break this kind of "transparent failover".  This timer also allows for the "OH crap, I pulled the wrong cable - put it back in; quick" kind of stupid user bug.
+Most of the complaints originate from customers for example seeing Oracle cluster evictions where during the waiting on the mid-layer all mpath I/O is blocked until recovery.
 
-For (b) the transport never has a failure.  A LUN (or a group of LUNs) have an ALUA transition from one set of ports to a different set of ports.  Some of the LUNs on the port continue to work just fine, but others enter ALUA TRANSITION state so they can "move" to a different part of the hardware.  After the move completes, you now have different sets of optimized and non-optimized paths (or possible standby, or unavailable).  The transport will never even know this happened.  This kind of "failure" is handled by the SCSI layer drivers.
+We have to tune eh_deadline, eh_timeout and fast_io_fail_tmo but even tuning those we have to wait on serial recovery even if we set the timeouts low.
 
-There are other cases too, but these are the most common.
+Lately we have been living with
+eh_deadline=10
+eh_timeout=5
+fast_fail_io_tmo=10
+leaving default sd timeout at 30s
 
-	Fred
+So this continues to be an issue and I have specific examples using the jammer I can provide showing the serial recovery times here.
 
------Original Message-----
-From: lsf-bounces@lists.linux-foundation.org [mailto:lsf-bounces@lists.linux-foundation.org] On Behalf Of Bart Van Assche
-Sent: Thursday, April 28, 2016 11:54 AM
-To: James Bottomley; Mike Snitzer
-Cc: linux-block@vger.kernel.org; lsf@lists.linux-foundation.org; device-mapper development; linux-scsi
+Thanks
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+To: "James Bottomley" <James.Bottomley@HansenPartnership.com>, "Mike Snitzer" <snitzer@redhat.com>
+Cc: linux-block@vger.kernel.org, lsf@lists.linux-foundation.org, "device-mapper development" <dm-devel@redhat.com>, "linux-scsi" <linux-scsi@vger.kernel.org>
+Sent: Thursday, April 28, 2016 11:53:50 AM
 Subject: Re: [Lsf] Notes from the four separate IO track sessions at LSF/MM
 
 On 04/28/2016 08:40 AM, James Bottomley wrote:
@@ -57,7 +63,7 @@ take very long (hours)?
 Thanks,
 
 Bart.
-_______________________________________________
-Lsf mailing list
-Lsf@lists.linux-foundation.org
-https://lists.linuxfoundation.org/mailman/listinfo/lsf
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
