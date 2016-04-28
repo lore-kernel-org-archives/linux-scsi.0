@@ -1,69 +1,103 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [Lsf] Notes from the four separate IO track sessions at LSF/MM
-Date: Thu, 28 Apr 2016 12:23:44 -0400 (EDT)
-Message-ID: <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com>
-References: <1461800389.2311.70.camel@HansenPartnership.com> <20160428121108.GA9903@redhat.com> <1461858038.2307.16.camel@HansenPartnership.com> <5722320E.5080202@sandisk.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH, RFT] byteswap: try to avoid __builtin_constant_p gcc bug
+Date: Thu, 28 Apr 2016 16:27:41 +0000
+Message-ID: <0BE93A68-5E0C-4372-B04E-B3209F7515D1@qlogic.com>
+References: <20160419085221.GA29087@gmail.com> <5298237.1Guzp0G04x@wuerfel>
+ <20160427110503.GB24887@virgil.suse.cz> <25937441.NbUvhTZ9vo@wuerfel>
+ <20160427221101.hiyc7ensow667sk6@treble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:60101 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbcD1QXt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2016 12:23:49 -0400
-In-Reply-To: <5722320E.5080202@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160427221101.hiyc7ensow667sk6@treble>
+Content-Language: en-US
+Content-ID: <99228F48CF53F44AB1945FE7E2A2E13A@namprd11.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Josh Poimboeuf <jpoimboe@redhat.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: Martin Jambor <mjambor@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, Jan Hubicka <hubicka@ucw.cz>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, lsf@lists.linux-foundation.org, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello Folks,
-
-We still suffer from periodic complaints in our large customer base regarding the long recovery times for dm-multipath.
-Most of the time this is when we have something like a switch back-plane issue or an issue where RSCN'S are blocked coming back up the fabric.
-Corner cases still bite us often.
-
-Most of the complaints originate from customers for example seeing Oracle cluster evictions where during the waiting on the mid-layer all mpath I/O is blocked until recovery.
-
-We have to tune eh_deadline, eh_timeout and fast_io_fail_tmo but even tuning those we have to wait on serial recovery even if we set the timeouts low.
-
-Lately we have been living with
-eh_deadline=10
-eh_timeout=5
-fast_fail_io_tmo=10
-leaving default sd timeout at 30s
-
-So this continues to be an issue and I have specific examples using the jammer I can provide showing the serial recovery times here.
-
-Thanks
-
-Laurence Oberman
-Principal Software Maintenance Engineer
-Red Hat Global Support Services
-
------ Original Message -----
-From: "Bart Van Assche" <bart.vanassche@sandisk.com>
-To: "James Bottomley" <James.Bottomley@HansenPartnership.com>, "Mike Snitzer" <snitzer@redhat.com>
-Cc: linux-block@vger.kernel.org, lsf@lists.linux-foundation.org, "device-mapper development" <dm-devel@redhat.com>, "linux-scsi" <linux-scsi@vger.kernel.org>
-Sent: Thursday, April 28, 2016 11:53:50 AM
-Subject: Re: [Lsf] Notes from the four separate IO track sessions at LSF/MM
-
-On 04/28/2016 08:40 AM, James Bottomley wrote:
-> Well, the entire room, that's vendors, users and implementors
-> complained that path failover takes far too long.  I think in their
-> minds this is enough substance to go on.
-
-The only complaints I heard about path failover taking too long came 
-from people working on FC drivers. Aren't SCSI transport layer 
-implementations expected to fail I/O after fast_io_fail_tmo expired 
-instead of waiting until the SCSI error handler has finished? If so, why 
-is it considered an issue that error handling for the FC protocol can 
-take very long (hours)?
-
-Thanks,
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiA8bGludXgtc2NzaS1vd25lckB2
+Z2VyLmtlcm5lbC5vcmc+IG9uIGJlaGFsZiBvZiBKb3NoIFBvaW1ib2V1ZiA8anBvaW1ib2VAcmVk
+aGF0LmNvbT4NCkRhdGU6IFdlZG5lc2RheSwgQXByaWwgMjcsIDIwMTYgYXQgMzoxMSBQTQ0KVG86
+IEFybmQgQmVyZ21hbm4gPGFybmRAYXJuZGIuZGU+DQpDYzogTWFydGluIEphbWJvciA8bWphbWJv
+ckBzdXNlLmN6PiwgIk1hcnRpbiBLLiBQZXRlcnNlbiIgPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUu
+Y29tPiwgSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlAaGFuc2VucGFydG5lcnNoaXAu
+Y29tPiwgbGludXgtc2NzaSA8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+LCBsaW51eC1rZXJu
+ZWwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc+LCBEZW55cyBWbGFzZW5rbyA8ZHZsYXNl
+bmtAcmVkaGF0LmNvbT4sIFRob21hcyBHcmFmIDx0Z3JhZkBzdXVnLmNoPiwgUGV0ZXIgWmlqbHN0
+cmEgPHBldGVyekBpbmZyYWRlYWQub3JnPiwgRGF2aWQgUmllbnRqZXMgPHJpZW50amVzQGdvb2ds
+ZS5jb20+LCBBbmRyZXcgTW9ydG9uIDxha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnPiwgSW5nbyBN
+b2xuYXIgPG1pbmdvQGtlcm5lbC5vcmc+LCBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRo
+YW5pQHFsb2dpYy5jb20+LCBEZXB0LUVuZyBRTEEyeHh4IFVwc3RyZWFtIDxxbGEyeHh4LXVwc3Ry
+ZWFtQHFsb2dpYy5jb20+LCBKYW4gSHViaWNrYSA8aHViaWNrYUB1Y3cuY3o+DQpTdWJqZWN0OiBS
+ZTogW1BBVENILCBSRlRdIGJ5dGVzd2FwOiB0cnkgdG8gYXZvaWQgX19idWlsdGluX2NvbnN0YW50
+X3AgZ2NjIGJ1Zw0KDQo+T24gVGh1LCBBcHIgMjgsIDIwMTYgYXQgMTI6MDA6MzZBTSArMDIwMCwg
+QXJuZCBCZXJnbWFubiB3cm90ZToNCj4+IFRoaXMgaXMgYW5vdGhlciBhdHRlbXB0IHRvIGF2b2lk
+IGEgcmVncmVzc2lvbiBpbiB3d25fdG9fdTY0KCkNCj4+IGFmdGVyIHRoYXQgc3RhcnRlZCB1c2lu
+ZyBnZXRfdW5hbGlnbmVkX2JlNjQoKSwgd2hpY2ggaW4gdHVybg0KPj4gcmFuIGludG8gYSBidWcg
+b24gZ2NjLTQuOSB0aHJvdWdoIDYuMS4NCj4+IA0KPj4gQXMgcGFydCBvZiB0aGUgcHJvYmxlbSBp
+cyBob3cgX19idWlsdGluX2NvbnN0YW50X3AgZ2V0cyBldmFsdWF0ZWQNCj4+IG9uIGFuIGFyZ3Vt
+ZW50IHBhc3NlZCBieSByZWZlcmVuY2UgaW50byBhbiBpbmxpbmUgZnVuY3Rpb24sIHRoaXMNCj4+
+IGF2b2lkcyB0aGUgdXNlIG9mIF9fYnVpbHRpbl9jb25zdGFudF9wKCkgZm9yIGFsbCBhcmNoaXRl
+Y3R1cmVzDQo+PiB0aGF0IHNldCBDT05GSUdfQVJDSF9VU0VfQlVJTFRJTl9CU1dBUC4gTW9zdCBh
+cmNoaXRlY3R1cmVzIGRvIG5vdA0KPj4gc2V0IEFSQ0hfU1VQUE9SVFNfT1BUSU1JWkVEX0lOTElO
+SU5HLCB3aGljaCBtZWFucyB0aGV5IHByb2JhYmx5DQo+PiBkbyBub3Qgc3VmZmVyIGZyb20gdGhl
+IHByb2JsZW0gaW4gdGhlIHFsYTJ4eHggZHJpdmVyLCBidXQgdGhleQ0KPj4gbWlnaHQgc3RpbGwg
+cnVuIGludG8gaXQgZWxzZXdoZXJlLg0KPj4gDQo+PiBJIGhhdmUgbm90IGJlZW4gYWJsZSB0byBy
+ZXByb2R1Y2UgdGhlIG9yaWdpbmFsIHByb2JsZW0sIHNvIEkgZG9uJ3QNCj4+IGtub3cgaWYgdGhp
+cyBwYXRjaCBzb2x2ZXMgaXQsIGJ1dCBhdCBsZWFzdCBpdCBsZWFkcyB0byBzaW1wbGVyDQo+PiBj
+b2RlIGRvaW5nIHRoZSBzYW1lIHRoaW5nLCBzbyBhdCBsZWFzdCB0aGVyZSBzaG91bGQgYmUgbm8g
+ZG93bnNpZGVzLg0KPj4gDQo+PiBQbGVhc2UgdGVzdC4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTog
+QXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4NCj4NCj5OaWNlIHBhdGNoLiAgSSBjYW4gY29u
+ZmlybSBpdCBmaXhlcyB0aGUgaXNzdWUgd2l0aCBnY2MgNS4zLjEuDQo+DQo+VGVzdGVkLWJ5OiBK
+b3NoIFBvaW1ib2V1ZiA8anBvaW1ib2VAcmVkaGF0LmNvbT4NCj5SZXZpZXdlZC1ieTogSm9zaCBQ
+b2ltYm9ldWYgPGpwb2ltYm9lQHJlZGhhdC5jb20+DQo+DQo+PiBkaWZmIC0tZ2l0IGEvaW5jbHVk
+ZS91YXBpL2xpbnV4L3N3YWIuaCBiL2luY2x1ZGUvdWFwaS9saW51eC9zd2FiLmgNCj4+IGluZGV4
+IDNmMTBlNTMxN2I0Ni4uZGU1NmZkNTQ0MjhkIDEwMDY0NA0KPj4gLS0tIGEvaW5jbHVkZS91YXBp
+L2xpbnV4L3N3YWIuaA0KPj4gKysrIGIvaW5jbHVkZS91YXBpL2xpbnV4L3N3YWIuaA0KPj4gQEAg
+LTQ1LDkgKzQ1LDcgQEANCj4+ICANCj4+ICBzdGF0aWMgaW5saW5lIF9fYXR0cmlidXRlX2NvbnN0
+X18gX191MTYgX19mc3dhYjE2KF9fdTE2IHZhbCkNCj4+ICB7DQo+PiAtI2lmZGVmIF9fSEFWRV9C
+VUlMVElOX0JTV0FQMTZfXw0KPj4gLQlyZXR1cm4gX19idWlsdGluX2Jzd2FwMTYodmFsKTsNCj4+
+IC0jZWxpZiBkZWZpbmVkIChfX2FyY2hfc3dhYjE2KQ0KPj4gKyNpZiBkZWZpbmVkIChfX2FyY2hf
+c3dhYjE2KQ0KPj4gIAlyZXR1cm4gX19hcmNoX3N3YWIxNih2YWwpOw0KPj4gICNlbHNlDQo+PiAg
+CXJldHVybiBfX19jb25zdGFudF9zd2FiMTYodmFsKTsNCj4+IEBAIC01Niw5ICs1NCw3IEBAIHN0
+YXRpYyBpbmxpbmUgX19hdHRyaWJ1dGVfY29uc3RfXyBfX3UxNiBfX2Zzd2FiMTYoX191MTYgdmFs
+KQ0KPj4gIA0KPj4gIHN0YXRpYyBpbmxpbmUgX19hdHRyaWJ1dGVfY29uc3RfXyBfX3UzMiBfX2Zz
+d2FiMzIoX191MzIgdmFsKQ0KPj4gIHsNCj4+IC0jaWZkZWYgX19IQVZFX0JVSUxUSU5fQlNXQVAz
+Ml9fDQo+PiAtCXJldHVybiBfX2J1aWx0aW5fYnN3YXAzMih2YWwpOw0KPj4gLSNlbGlmIGRlZmlu
+ZWQoX19hcmNoX3N3YWIzMikNCj4+ICsjaWYgZGVmaW5lZChfX2FyY2hfc3dhYjMyKQ0KPj4gIAly
+ZXR1cm4gX19hcmNoX3N3YWIzMih2YWwpOw0KPj4gICNlbHNlDQo+PiAgCXJldHVybiBfX19jb25z
+dGFudF9zd2FiMzIodmFsKTsNCj4+IEBAIC02Nyw5ICs2Myw3IEBAIHN0YXRpYyBpbmxpbmUgX19h
+dHRyaWJ1dGVfY29uc3RfXyBfX3UzMiBfX2Zzd2FiMzIoX191MzIgdmFsKQ0KPj4gIA0KPj4gIHN0
+YXRpYyBpbmxpbmUgX19hdHRyaWJ1dGVfY29uc3RfXyBfX3U2NCBfX2Zzd2FiNjQoX191NjQgdmFs
+KQ0KPj4gIHsNCj4+IC0jaWZkZWYgX19IQVZFX0JVSUxUSU5fQlNXQVA2NF9fDQo+PiAtCXJldHVy
+biBfX2J1aWx0aW5fYnN3YXA2NCh2YWwpOw0KPj4gLSNlbGlmIGRlZmluZWQgKF9fYXJjaF9zd2Fi
+NjQpDQo+PiArI2lmIGRlZmluZWQgKF9fYXJjaF9zd2FiNjQpDQo+PiAgCXJldHVybiBfX2FyY2hf
+c3dhYjY0KHZhbCk7DQo+PiAgI2VsaWYgZGVmaW5lZChfX1NXQUJfNjRfVEhSVV8zMl9fKQ0KPj4g
+IAlfX3UzMiBoID0gdmFsID4+IDMyOw0KPj4gQEAgLTEwMiwyOCArOTYsNDAgQEAgc3RhdGljIGlu
+bGluZSBfX2F0dHJpYnV0ZV9jb25zdF9fIF9fdTMyIF9fZnN3YWhiMzIoX191MzIgdmFsKQ0KPj4g
+ICAqIF9fc3dhYjE2IC0gcmV0dXJuIGEgYnl0ZXN3YXBwZWQgMTYtYml0IHZhbHVlDQo+PiAgICog
+QHg6IHZhbHVlIHRvIGJ5dGVzd2FwDQo+PiAgICovDQo+PiArI2lmZGVmIF9fSEFWRV9CVUlMVElO
+X0JTV0FQMTZfXw0KPj4gKyNkZWZpbmUgX19zd2FiMTYoeCkgX19idWlsdGluX2Jzd2FwMTYoKF9f
+dTE2KSh4KSkNCj4+ICsjZWxzZQ0KPj4gICNkZWZpbmUgX19zd2FiMTYoeCkJCQkJXA0KPj4gIAko
+X19idWlsdGluX2NvbnN0YW50X3AoKF9fdTE2KSh4KSkgPwlcDQo+PiAgCV9fX2NvbnN0YW50X3N3
+YWIxNih4KSA6CQkJXA0KPj4gIAlfX2Zzd2FiMTYoeCkpDQo+PiArI2VuZGlmDQo+PiAgDQo+PiAg
+LyoqDQo+PiAgICogX19zd2FiMzIgLSByZXR1cm4gYSBieXRlc3dhcHBlZCAzMi1iaXQgdmFsdWUN
+Cj4+ICAgKiBAeDogdmFsdWUgdG8gYnl0ZXN3YXANCj4+ICAgKi8NCj4+ICsjaWZkZWYgX19IQVZF
+X0JVSUxUSU5fQlNXQVAzMl9fDQo+PiArI2RlZmluZSBfX3N3YWIzMih4KSBfX2J1aWx0aW5fYnN3
+YXAzMigoX191MzIpKHgpKQ0KPj4gKyNlbHNlDQo+PiAgI2RlZmluZSBfX3N3YWIzMih4KQkJCQlc
+DQo+PiAgCShfX2J1aWx0aW5fY29uc3RhbnRfcCgoX191MzIpKHgpKSA/CVwNCj4+ICAJX19fY29u
+c3RhbnRfc3dhYjMyKHgpIDoJCQlcDQo+PiAgCV9fZnN3YWIzMih4KSkNCj4+ICsjZW5kaWYNCj4+
+ICANCj4+ICAvKioNCj4+ICAgKiBfX3N3YWI2NCAtIHJldHVybiBhIGJ5dGVzd2FwcGVkIDY0LWJp
+dCB2YWx1ZQ0KPj4gICAqIEB4OiB2YWx1ZSB0byBieXRlc3dhcA0KPj4gICAqLw0KPj4gKyNpZmRl
+ZiBfX0hBVkVfQlVJTFRJTl9CU1dBUDY0X18NCj4+ICsjZGVmaW5lIF9fc3dhYjY0KHgpIF9fYnVp
+bHRpbl9ic3dhcDY0KChfX3U2NCkoeCkpDQo+PiArI2Vsc2UNCj4+ICAjZGVmaW5lIF9fc3dhYjY0
+KHgpCQkJCVwNCj4+ICAJKF9fYnVpbHRpbl9jb25zdGFudF9wKChfX3U2NCkoeCkpID8JXA0KPj4g
+IAlfX19jb25zdGFudF9zd2FiNjQoeCkgOgkJCVwNCj4+ICAJX19mc3dhYjY0KHgpKQ0KPj4gKyNl
+bmRpZg0KPj4gIA0KPj4gIC8qKg0KPj4gICAqIF9fc3dhaHczMiAtIHJldHVybiBhIHdvcmQtc3dh
+cHBlZCAzMi1iaXQgdmFsdWUNCj4+IA0KDQpUaGUgcGF0Y2ggd29ya3MuIFRoYW5rcy4NCg0KPg0K
+Pi0tIA0KPkpvc2gNCj4tLQ0KPlRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRo
+ZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0KPnRoZSBib2R5IG9mIGEgbWVzc2Fn
+ZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAg
+aHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
