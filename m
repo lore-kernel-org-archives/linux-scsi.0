@@ -1,30 +1,30 @@
 From: Johannes Thumshirn <jthmshirn@suse.de>
-Subject: Re: [PATCH 5/7] hpsa: correct ioaccel2 error procecssing.
-Date: Thu, 28 Apr 2016 09:58:09 +0200
-Message-ID: <20160428075809.GR2820@c203.arch.suse.de>
+Subject: Re: [PATCH 6/7] hpsa: correct handling of HBA device removal
+Date: Thu, 28 Apr 2016 10:04:11 +0200
+Message-ID: <20160428080411.GS2820@c203.arch.suse.de>
 References: <146179474454.31195.15135625511559409075.stgit@brunhilda>
- <146179524703.31195.9154842043010596458.stgit@brunhilda>
+ <146179525708.31195.3535427540480802197.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56543 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57009 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751514AbcD1H6M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2016 03:58:12 -0400
+	id S1752309AbcD1IEO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2016 04:04:14 -0400
 Content-Disposition: inline
-In-Reply-To: <146179524703.31195.9154842043010596458.stgit@brunhilda>
+In-Reply-To: <146179525708.31195.3535427540480802197.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
 Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On Wed, Apr 27, 2016 at 05:14:07PM -0500, Don Brace wrote:
-> set offload_to_be_enabled to 0 when an ioaccel2 error is processed.
+On Wed, Apr 27, 2016 at 05:14:17PM -0500, Don Brace wrote:
+> Need to report HBA device removal faster than the
+> event handler polling interval.
 >=20
-> Before, an ioaccel completion error would turn of ioaccel but a resca=
-n
-> would turn it back on again.
+> Stop I/O to the removed disk and wait for all
+> I/O operations to flush before removing the device.
 >=20
 > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
