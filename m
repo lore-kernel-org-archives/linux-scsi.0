@@ -1,34 +1,30 @@
 From: Johannes Thumshirn <jthmshirn@suse.de>
-Subject: Re: [PATCH 1/7] hpsa: correct initialization order issue
-Date: Thu, 28 Apr 2016 09:50:48 +0200
-Message-ID: <20160428075048.GN2820@c203.arch.suse.de>
+Subject: Re: [PATCH 2/7] hpsa: add sas_address to sysfs device attibute
+Date: Thu, 28 Apr 2016 09:56:02 +0200
+Message-ID: <20160428075602.GO2820@c203.arch.suse.de>
 References: <146179474454.31195.15135625511559409075.stgit@brunhilda>
- <146179520607.31195.18171570890226870133.stgit@brunhilda>
+ <146179521345.31195.14282979983859682916.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55874 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56312 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845AbcD1Huv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2016 03:50:51 -0400
+	id S1751038AbcD1H4E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2016 03:56:04 -0400
 Content-Disposition: inline
-In-Reply-To: <146179520607.31195.18171570890226870133.stgit@brunhilda>
+In-Reply-To: <146179521345.31195.14282979983859682916.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
 Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On Wed, Apr 27, 2016 at 05:13:26PM -0500, Don Brace wrote:
-> The driver was calling scsi_scan_host before enabling interrupts.
+On Wed, Apr 27, 2016 at 05:13:33PM -0500, Don Brace wrote:
+> From: Joseph T Handzik <joseph.t.handzik@hpe.com>
 >=20
-> This has gone unnoticed except for customers running in intx mode.
-> Calling scsi_scan_host before interrupts are enabled causes
-> "irq XX: nobody cared" messages and the driver to hang.
+> There have been companies requesting a sysfs entry
+> to obtain the sas address of device.
 >=20
-> This patch enables interrupts before the call to scsi_scan_host.
->=20
-> Reported-by: Piotr Karbowski <piotr.karbowski@gmail.com>
 > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 > Signed-off-by: Don Brace <don.brace@microsemi.com>
