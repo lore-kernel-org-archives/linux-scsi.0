@@ -1,32 +1,38 @@
-From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Subject: RE: [PATCH 2/7] hpsa: add sas_address to sysfs device attibute
-Date: Thu, 28 Apr 2016 14:36:12 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402963912411@G4W3296.americas.hpqcorp.net>
-References: <146179474454.31195.15135625511559409075.stgit@brunhilda>
- <146179521345.31195.14282979983859682916.stgit@brunhilda>
+From: Chris Metcalf <cmetcalf@mellanox.com>
+Subject: Re: [PATCH] scsi: fc: force inlining of wwn conversion functions
+Date: Thu, 28 Apr 2016 10:58:43 -0400
+Message-ID: <fb8e623c-9a4f-655e-0670-2f8fa82021a7@mellanox.com>
+References: <20160419085221.GA29087@gmail.com> <5298237.1Guzp0G04x@wuerfel>
+ <20160427110503.GB24887@virgil.suse.cz> <4940273.pi2bWg8tAl@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5009.houston.hp.com ([15.240.92.67]:46090 "EHLO
-	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbcD1Ohb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2016 10:37:31 -0400
-In-Reply-To: <146179521345.31195.14282979983859682916.stgit@brunhilda>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4940273.pi2bWg8tAl@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, Martin Jambor <mjambor@suse.cz>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Josh Poimboeuf <jpoimboe@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, qla2xxx-upstream@qlogic.com, Jan Hubicka <hubicka@ucw.cz>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Viswas.G@microsemi.com" <Viswas.G@microsemi.com>, "Mahesh.Rajashekhara@microsemi.com" <Mahesh.Rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, "scott.teel@microsemi.com" <scott.teel@microsemi.com>, "Kevin.Barnett@microsemi.com" <Kevin.Barnett@microsemi.com>, "Justin.Lindley@microsemi.com" <Justin.Lindley@microsemi.com>, "scott.benesh@microsemi.com" <scott.benesh@microsemi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERvbiBCcmFjZSBbbWFpbHRv
-OmRvbi5icmFjZUBtaWNyb3NlbWkuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDI3LCAy
-MDE2IDU6MTQgUE0NCj4gU3ViamVjdDogW1BBVENIIDIvN10gaHBzYTogYWRkIHNhc19hZGRyZXNz
-IHRvIHN5c2ZzIGRldmljZSBhdHRpYnV0ZQ0KPiANCj4gRnJvbTogSm9zZXBoIFQgSGFuZHppayA8
-am9zZXBoLnQuaGFuZHppa0BocGUuY29tPg0KLi4uDQo+ICtzdGF0aWMgc3NpemVfdCBzYXNfYWRk
-cmVzc19zaG93KHN0cnVjdCBkZXZpY2UgKmRldiwNCj4gKwkgICAgICBzdHJ1Y3QgZGV2aWNlX2F0
-dHJpYnV0ZSAqYXR0ciwgY2hhciAqYnVmKQ0KPiArew0KLi4uDQo+ICsJcmV0dXJuIHNucHJpbnRm
-KGJ1ZiwgUEFHRV9TSVpFLCAiMHglMDE2bGx4XG4iLCBzYXNfYWRkcmVzcyk7DQoNCldoYXQgZW5k
-aWFubmVzcyBpcyBzYXNfYWRkcmVzcz8gIFVubGVzcyBpdCdzIGFscmVhZHkgYmVlbiBieXRlIHJl
-dmVyc2VkLA0KdGhhdCdsbCBwcmludCBkaWZmZXJlbnRseSBvbiBiaWctZW5kaWFuIGFuZCBsaXR0
-bGUtZW5kaWFuIHN5c3RlbXMuDQoNCg0K
+(Resending as text/plain)
+
+On 4/27/2016 5:34 PM, Arnd Bergmann wrote:
+> This won't help on TILE, which is the one architecture that sets
+> ARCH_SUPPORTS_OPTIMIZED_INLINING but does not set ARCH_USE_BUILTIN_BSWAP.
+> Chris Metcalf should be able to figure out whether we can just
+> set ARCH_USE_BUILTIN_BSWAP for tile as well.
+
+We certainly could enable ARCH_USE_BUILTIN_BSWAP.  The only problem is
+that we never added explicit support for bswap16() in gcc, which is
+efficiently done on tilegx via the "revbytes" instruction and a 48-bit
+right-shift.  So gcc instead does a generic thing with four
+instructions in three bundles, so really not as good as our asm/swab.h.
+
+I'm not sure how to weigh the implications of converting to
+builtin_bswap16 (and possibly upstreaming a better implementation to
+gcc), vs. disabling ARCH_SUPPORTS_OPTIMIZED_INLINING (which no one
+else but x86 uses anyway), vs. just ignoring the compiler bug and
+hoping it's not an issue in practice :-)
+-- 
+Chris Metcalf, Mellanox Technologies
+http://www.mellanox.com
