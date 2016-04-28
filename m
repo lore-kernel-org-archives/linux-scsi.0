@@ -1,27 +1,27 @@
 From: Johannes Thumshirn <jthmshirn@suse.de>
-Subject: Re: [PATCH 3/7] hpsa: add timeouts for driver initiated commands
-Date: Thu, 28 Apr 2016 09:57:05 +0200
-Message-ID: <20160428075705.GP2820@c203.arch.suse.de>
+Subject: Re: [PATCH 4/7] hpsa: correct ioaccel state change operation
+Date: Thu, 28 Apr 2016 09:57:47 +0200
+Message-ID: <20160428075747.GQ2820@c203.arch.suse.de>
 References: <146179474454.31195.15135625511559409075.stgit@brunhilda>
- <146179523157.31195.3103071823535194809.stgit@brunhilda>
+ <146179523934.31195.13118329992038553938.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56472 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56523 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751038AbcD1H5I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2016 03:57:08 -0400
+	id S1750845AbcD1H5u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2016 03:57:50 -0400
 Content-Disposition: inline
-In-Reply-To: <146179523157.31195.3103071823535194809.stgit@brunhilda>
+In-Reply-To: <146179523934.31195.13118329992038553938.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
 Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On Wed, Apr 27, 2016 at 05:13:51PM -0500, Don Brace wrote:
-> faulty drives can cause the driver to hang during a
-> scan operation.
+On Wed, Apr 27, 2016 at 05:13:59PM -0500, Don Brace wrote:
+> offload_to_be_enabled also needs to be set to 0 during a state
+> change.
 >=20
 > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
