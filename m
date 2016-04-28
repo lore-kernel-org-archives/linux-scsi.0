@@ -1,36 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/5] mpt3sas: driver update for Phase12
-Date: Wed, 27 Apr 2016 21:10:45 -0400
-Message-ID: <yq11t5qedwq.fsf@sermon.lab.mkp.net>
-References: <1461324194-5789-1-git-send-email-chaitra.basappa@broadcom.com>
+Subject: Re: [PATCH] mptsas: fix checks for dma mapping errors
+Date: Wed, 27 Apr 2016 21:18:17 -0400
+Message-ID: <yq1wpnicyzq.fsf@sermon.lab.mkp.net>
+References: <1460761950-8006-1-git-send-email-khoroshilov@ispras.ru>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1461324194-5789-1-git-send-email-chaitra.basappa@broadcom.com>
-	(Chaitra P. B.'s message of "Fri, 22 Apr 2016 16:53:09 +0530")
+In-Reply-To: <1460761950-8006-1-git-send-email-khoroshilov@ispras.ru> (Alexey
+	Khoroshilov's message of "Sat, 16 Apr 2016 02:12:29 +0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-kernel@vger.kernel.org
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Chaitra" == Chaitra P B <chaitra.basappa@broadcom.com> writes:
+>>>>> "Alexey" == Alexey Khoroshilov <khoroshilov@ispras.ru> writes:
 
-> Here is the change list:
-> * Updated MPI version and MPI header files.
-> * Handle active cable exception event for Intruder/Cutlass HBAs.
-> * Use scsi_prot_ref_tag()API to fill reference tag field in the CDB.
-> * Set maximum transfer length per IO on RAID volumes to 4MB.
-> * Use "synchronize_irq()"API to handle Asynchronous TM's completion
+Alexey> mptsas_smp_handler() checks for dma mapping errors by comparison
+Alexey> returned address with zero, while pci_dma_mapping_error() should
+Alexey> be used.
 
-> Chaitra P B (5):
->   mpt3sas: Update MPI header to 2.00.42
->   mpt3sas: Handle active cable exception event
->   mpt3sas: Fix initial Reference tag field for 4K PI drives.
->   mpt3sas: Set maximum transfer length per IO to 4MB for VDs
->   mpt3sas: Used "synchronize_irq()"API to synchronize timed-out IO &
->     TMs
-
-Somebody please review.
+Broadcom folks, please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
