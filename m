@@ -1,22 +1,57 @@
 From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: [dm-devel] [Lsf] Notes from the four separate IO track sessions
  at LSF/MM
-Date: Fri, 29 Apr 2016 17:47:07 -0400 (EDT)
-Message-ID: <850484819.32589649.1461966427528.JavaMail.zimbra@redhat.com>
-References: <1461800389.2311.70.camel@HansenPartnership.com> <20160428121108.GA9903@redhat.com> <1461858038.2307.16.camel@HansenPartnership.com> <5722320E.5080202@sandisk.com> <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com> <57223D36.60304@sandisk.com> <74308856.32308210.1461862044976.JavaMail.zimbra@redhat.com>
+Date: Fri, 29 Apr 2016 17:51:31 -0400 (EDT)
+Message-ID: <2009387014.32589776.1461966691447.JavaMail.zimbra@redhat.com>
+References: <1461800389.2311.70.camel@HansenPartnership.com> <20160428121108.GA9903@redhat.com> <1461858038.2307.16.camel@HansenPartnership.com> <5722320E.5080202@sandisk.com> <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com> <57223D36.60304@sandisk.com> <74308856.32308210.1461862044976.JavaMail.zimbra@redhat.com> <850484819.32589649.1461966427528.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:43688 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbcD2VrP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2016 17:47:15 -0400
-In-Reply-To: <74308856.32308210.1461862044976.JavaMail.zimbra@redhat.com>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:56500 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679AbcD2Vvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2016 17:51:39 -0400
+In-Reply-To: <850484819.32589649.1461966427528.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, device-mapper development <dm-devel@redhat.com>, lsf@lists.linux-foundation.org, Benjamin Marzinski <bmarzins@redhat.com>
+
+One small correction
+
+In the cut and past the mpath timing was this. I had a cut and past error in my prior message.
+
+Fri Apr 29 17:16:14 EDT 2016
+mpathe (360014052a6f5f9f256d4c1097eedfd95) dm-2 LIO-ORG ,block-13
+size=20G features='1 queue_if_no_path' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=1 status=active
+  |- 0:0:0:12 sds  65:32  active ready running
+  |- 0:0:1:12 sdbh 67:176 active ready running
+  |- 1:0:0:12 sdr  65:16  active ready running
+  `- 1:0:1:12 sdbi 67:192 active ready running
+
+Start again here so its the same 5 minutes while we are in the error_handler
+
+Fri Apr 29 17:21:26 EDT 2016
+mpathe (360014052a6f5f9f256d4c1097eedfd95) dm-2 LIO-ORG ,block-13
+size=20G features='1 queue_if_no_path' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=1 status=active
+  |- 0:0:0:12 sds  65:32  active ready  running
+  |- 0:0:1:12 sdbh 67:176 failed faulty offline
+  |- 1:0:0:12 sdr  65:16  active ready  running
+  `- 1:0:1:12 sdbi 67:192 failed faulty offline
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Laurence Oberman" <loberman@redhat.com>
+To: "Bart Van Assche" <bart.vanassche@sandisk.com>
+Cc: linux-block@vger.kernel.org, "linux-scsi" <linux-scsi@vger.kernel.org>, "Mike Snitzer" <snitzer@redhat.com>, "James Bottomley" <James.Bottomley@HansenPartnership.com>, "device-mapper development" <dm-devel@redhat.com>, lsf@lists.linux-foundation.org, "Benjamin Marzinski" <bmarzins@redhat.com>
+Sent: Friday, April 29, 2016 5:47:07 PM
+Subject: Re: [dm-devel] [Lsf] Notes from the four separate IO track sessions at LSF/MM
 
 Hello Bart
 
@@ -442,6 +477,10 @@ dm-multipath fails over to another path?
 Thanks,
 
 Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
