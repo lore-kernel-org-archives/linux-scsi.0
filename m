@@ -1,79 +1,40 @@
-From: "Benjamin Marzinski" <bmarzins@redhat.com>
-Subject: Re: [dm-devel] Notes from the four separate IO track sessions at
- LSF/MM
-Date: Fri, 29 Apr 2016 11:45:27 -0500
-Message-ID: <20160429164527.GL26117@octiron.msp.redhat.com>
-References: <1461800389.2311.70.camel@HansenPartnership.com>
+From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Subject: RE: [PATCH] mptsas: fix checks for dma mapping errors
+Date: Fri, 29 Apr 2016 13:13:36 -0600
+Message-ID: <e4d00c4701ebcea4239019574ffc25fd@mail.gmail.com>
+References: <1460761950-8006-1-git-send-email-khoroshilov@ispras.ru> <yq1wpnicyzq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33710 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752511AbcD2Qpa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2016 12:45:30 -0400
-Content-Disposition: inline
-In-Reply-To: <1461800389.2311.70.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1wpnicyzq.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, lsf@lists.linux-foundation.org
 
-On Wed, Apr 27, 2016 at 04:39:49PM -0700, James Bottomley wrote:
-> Multipath - Mike Snitzer
-> ------------------------
-> 
-> Mike began with a request for feedback, which quickly lead to the
-> complaint that recovery time (and how you recover) was one of the
-> biggest issues in device mapper multipath (dmmp) for those in the room.
->   This is primarily caused by having to wait for the pending I/O to be
-> released by the failing path. Christoph Hellwig said that NVMe would
-> soon do path failover internally (without any need for dmmp) and asked
-> if people would be interested in a more general implementation of this.
->  Martin Petersen said he would look at implementing this in SCSI as
-> well.  The discussion noted that internal path failover only works in
-> the case where the transport is the same across all the paths and
-> supports some type of path down notification.  In any cases where this
-> isn't true (such as failover from fibre channel to iSCSI) you still
-> have to use dmmp.  Other benefits of internal path failover are that
-> the transport level code is much better qualified to recognise when the
-> same device appears over multiple paths, so it should make a lot of the
-> configuration seamless.
+Please consider this patch as Ack-by: Sathya Prakash
+Veerichetty<sathya.prakash@broadcom.com>
 
-Given the variety of sensible configurations that I've seen for people's
-multipath setups, there will definitely be a chunk of configuration that
-will never be seemless. Just in the past few weeks, we've added code to
-make it easier to allow people to manually configure devices for
-situations where none of our automated heuristics do what the user
-needs. Even for the easy cases, like ALUA, we've been adding options to
-allow users to do things like specify what they want to happen when they
-set the TPGS Pref bit.
+PS: We don't have test environment to test this patch as this is for an
+old controller.  So ACKing based on code review and similar mpt3sas driver
+code.
 
-Recognizing which paths go together is simple. That part has always been
-seemless from the users point of view. Configuring how IO is blanced and
-failed over between the paths is where the complexity is.
+-----Original Message-----
+From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+Sent: Wednesday, April 27, 2016 7:18 PM
+To: Alexey Khoroshilov
+Cc: Sreekanth Reddy; Sathya Prakash; Chaitra P B; Suganath Prabu
+Subramani; MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org; ldv-project@linuxtesting.org
+Subject: Re: [PATCH] mptsas: fix checks for dma mapping errors
 
-> The consequence for end users would be that
-> now SCSI devices would become handles for end devices rather than
-> handles for paths to end devices.
+>>>>> "Alexey" == Alexey Khoroshilov <khoroshilov@ispras.ru> writes:
 
-This will have a lot of repercussions with applications that uses scsi
-devices.  A significant number of tools expect that a scsi device maps
-to a connection between an initiator port and a target port. Listing the
-topology of these new scsi devices, and getting the IO stats down the
-various paths to them will involve writing new tools, or rewriting
-existing one. Things like persistent reservations will work differently
-(albeit, probably more intuitively).
+Alexey> mptsas_smp_handler() checks for dma mapping errors by comparison
+Alexey> returned address with zero, while pci_dma_mapping_error() should
+Alexey> be used.
 
-I'm not saying that this can't be made to work nicely for a significant
-subset of cases (like has been pointed out with the muliple transport
-case, this won't work for all cases). I just think that it's not a small
-amount of work, and not necessarily the only way to speed up failover.
+Broadcom folks, please review!
 
--Ben
-
-> James
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+-- 
+Martin K. Petersen	Oracle Linux Engineering
