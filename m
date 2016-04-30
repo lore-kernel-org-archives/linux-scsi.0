@@ -1,61 +1,58 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 00/12] scsi_debug: multiple queue support and cleanup
-Date: Fri, 29 Apr 2016 22:06:03 -0400
-Message-ID: <5724130B.8060001@interlog.com>
-References: <1461600999-28893-1-git-send-email-dgilbert@interlog.com>
- <yq1d1p89dlp.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
+From: Or Gerlitz <gerlitz.or@gmail.com>
+Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
+Date: Sat, 30 Apr 2016 18:54:20 +0300
+Message-ID: <CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
+References: <cover.1461088672.git.varun@chelsio.com>
+	<62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:46872 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752325AbcD3CGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2016 22:06:15 -0400
-In-Reply-To: <yq1d1p89dlp.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, kxie@chelsio.com, indranil@chelsio.com, Steve Wise <swise@opengridcomputing.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, tomas.winkler@intel.com, emilne@redhat.com
 
-On 2016-04-29 07:53 PM, Martin K. Petersen wrote:
->>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+On Tue, Apr 19, 2016 at 9:30 PM, Varun Prakash <varun@chelsio.com> wrote:
+> cxgbit.h - This file contains data structure
+> definitions for cxgbit.ko.
 >
-> Doug> Primary reason for this patch series is to add multi queue support
-> Doug> modelled on the null_blk driver. Ignore host_lock option but keep
-> Doug> parameter for backward compatibility. Use high resolution timers
-> Doug> to implement both the jiffy and nanosecond delay
-> Doug> parameters. Replace the tasklets with work items. Incorporate
-> Doug> REPORT LUNS patch from Tomas Winkler sent in Febrary 2015. Add
-> Doug> parameter that permits LU names to use UUIDs (spc5r08.pdf).
+> cxgbit_lro.h - This file contains data structure
+> definitions for LRO support.
 >
-> I applied 1-7 with minor fixes based on the comments. Sounds like 8 and
-> 9 need a bit of tweaking. 10-12 look fine but don't apply out of order.
+> cxgbit_main.c - This file contains code for
+> registering with iscsi target transport and
+> cxgb4 driver.
+>
+> cxgbit_cm.c - This file contains code for
+> connection management.
+>
+> cxgbit_target.c - This file contains code
+> for processing iSCSI PDU.
+>
+> cxgbit_ddp.c - This file contains code for
+> Direct Data Placement.
 
-Version 2 of that patchset should appear before this post. I forgot
-to note that they had all been acked by Hannes Reinecke apart from
-8/12 "rework resp_report_luns". Hopefully his concerns have been
-address in v2 (new patch needed for the extras he wanted).
+Wait,
 
-I didn't see any comments on 9/12 "add multiple queue support" but
-I get the feeling that something(s) is missing. In testing I see
-very little improvement in iops or throughput (well at least it
-doesn't degrade things).
+You are adding many K's LOCs to handle things like CM (connection
+management), DDP and LRO. But your upstream solution must be using CM
+and DDP (and LRO as well) for the HW offloaded initiator side as well,
+not to mention the iWARP side of things.
 
-Patch 11/12 "uuid for lu name" indicates work is needed in other
-areas. For example when the LU name is a UUID, I see no entries
-for the that LU in /dev/disk/by-uuid (its partitions yes, but not
-the whole LU). Is that a udev issue? Also 'lsscsi -u' needs work,
-obviously I can sort that out. My other utilities (i.e. sg_inq,
-sg_vpd and sdparm) have been updated but not formally released;
-there is a sg3_utils-1.43 beta at:
-    http://sg.danny.cz/sg/
+There must be some way to refactor things instead of repeating the
+same bits over and over, thoughts?
 
-Hannes Reinecke has set up a git mirror of my development sg3_utils
-(subversion) repository. It is at:
-    https://github.com/hreinecke/sg3_utils
-and is almost up to date (it was synced yesterday).
+Or.
 
-Doug Gilbert
-
+>  drivers/target/iscsi/Kconfig                |    2 +
+>  drivers/target/iscsi/Makefile               |    1 +
+>  drivers/target/iscsi/cxgbit/Kconfig         |    7 +
+>  drivers/target/iscsi/cxgbit/Makefile        |    6 +
+>  drivers/target/iscsi/cxgbit/cxgbit.h        |  353 +++++
+>  drivers/target/iscsi/cxgbit/cxgbit_cm.c     | 2086 +++++++++++++++++++++++++++
+> drivers/target/iscsi/cxgbit/cxgbit_ddp.c    |  325 +++++
+> drivers/target/iscsi/cxgbit/cxgbit_lro.h    |   72 +
+> drivers/target/iscsi/cxgbit/cxgbit_main.c   |  701 +++++++++
+>  drivers/target/iscsi/cxgbit/cxgbit_target.c | 1561 ++++++++++++++++++++
+> 10 files changed, 5114 insertions(+)
