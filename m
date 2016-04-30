@@ -1,42 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: UFS patchset
-Date: Fri, 29 Apr 2016 20:24:24 -0400
-Message-ID: <yq1eg9o6j0n.fsf@sermon.lab.mkp.net>
-References: <57233664.3090101@synopsys.com>
-	<yq1h9ekbo9j.fsf@sermon.lab.mkp.net> <572353C6.5070308@synopsys.com>
-	<yq18tzw9cxg.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH v5] qla1280: Don't allocate 512kb of host tags
+Date: Fri, 29 Apr 2016 20:28:31 -0400
+Message-ID: <yq1a8kc6its.fsf@sermon.lab.mkp.net>
+References: <1461746932-123934-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35125 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:35933 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598AbcD3AY3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2016 20:24:29 -0400
-In-Reply-To: <yq18tzw9cxg.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
-	message of "Fri, 29 Apr 2016 20:07:39 -0400")
+	with ESMTP id S1751979AbcD3A2s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2016 20:28:48 -0400
+In-Reply-To: <1461746932-123934-1-git-send-email-jthumshirn@suse.de> (Johannes
+	Thumshirn's message of "Wed, 27 Apr 2016 10:48:52 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Michael Reed <mdr@sgi.com>, Laura Abbott <labbott@redhat.com>, Laurence Oberman <loberman@redhat.com>, Lee Duncan <lduncan@suse.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.4@suse.de
 
->>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Joao,
+Johannes> The qla1280 driver sets the scsi_host_template's can_queue
+Johannes> field to 0xfffff which results in an allocation failure when
+Johannes> allocating the block layer tags for the driver's queues. This
+Johannes> was introduced with the change for host wide tags in commit
+Johannes> 64d513ac31b - "scsi: use host wide tags by default".
 
-Martin> In a previous email you said you had sent v14 to
-Martin> linux-scsi. However, I don't see neither v14, nor v13 in
-Martin> patchworks. The latest I have is v12 and it does not apply to
-Martin> 4.7/scsi-queue.
+Johannes> Reduce can_queue to MAX_OUTSTANDING_COMMANDS (512) to solve
+Johannes> the allocation error.
 
-I found v14 in my mailbox. Not sure why it's not in patchworks.
-
-In any case: It still doesn't apply to 4.7/scsi-queue and there are
-several checkpatch warnings throughout the series. Please fix.
-
-Also make sure to prefix your patch subject lines with "ufs:" so it's
-easy to identify which subsystem they go into.
-
-Thanks!
+Applied to 4.6/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
