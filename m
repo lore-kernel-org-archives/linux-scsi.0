@@ -1,57 +1,43 @@
-From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: [PATCH RESEND] scsi: ultrastor: Use correct format identifier for
- kernel pointer
-Date: Sun, 1 May 2016 17:57:40 -0400
-Message-ID: <20160501215740.GA22213@sophia>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH RESEND] scsi: ultrastor: Use correct format identifier
+ for kernel pointer
+Date: Sun, 01 May 2016 16:08:25 -0700
+Message-ID: <1462144105.2337.11.camel@linux.vnet.ibm.com>
+References: <20160501215740.GA22213@sophia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.161.174]:34371 "EHLO
-	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459AbcEAV5s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 May 2016 17:57:48 -0400
-Content-Disposition: inline
+Received: from e38.co.us.ibm.com ([32.97.110.159]:53858 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbcEAXIc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 May 2016 19:08:32 -0400
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+	Sun, 1 May 2016 17:08:31 -0600
+In-Reply-To: <20160501215740.GA22213@sophia>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: William Breathitt Gray <vilhelm.gray@gmail.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The 'bios_segment' member of a struct ultrastor_config is passed to the
-sprintf function with a respective %05X format identifier. The
-'bio_segment' member is a kernel pointer, but the %X format identifier
-expects an int data type. A cast to int is correctly used to satisfy the
-format identifier, but this assumes that the int data type is the same
-size as the kernel pointer, which is not the case on several
-architectures such as X86_64. This patch removes the int cast and
-replaces the %05X format identifier with %pK in order to print the
-'bio_segment' member regardless of architecture.
+On Sun, 2016-05-01 at 17:57 -0400, William Breathitt Gray wrote:
+> The 'bios_segment' member of a struct ultrastor_config is passed to the
+> sprintf function with a respective %05X format identifier. The
+> 'bio_segment' member is a kernel pointer, but the %X format identifier
+> expects an int data type. A cast to int is correctly used to satisfy the
+> format identifier, but this assumes that the int data type is the same
+> size as the kernel pointer, which is not the case on several
+> architectures such as X86_64. This patch removes the int cast and
+> replaces the %05X format identifier with %pK in order to print the
+> 'bio_segment' member regardless of architecture.
 
-Signed-off-by: William Breathitt Gray <vilhelm.gray@gmail.com>
----
- drivers/scsi/ultrastor.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+But this statement is wrong: ultrastor only has seven possible hard
+coded bios segment values, all under 20 bits, as it happens, that's why
+the printk is %05X.  Unless you're proposing to alter values in the
+static table, there's no point in changing the print, is there?  Are
+you proposing to alter the static table values?
 
-diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
-index 14e0c40..2e99f98 100644
---- a/drivers/scsi/ultrastor.c
-+++ b/drivers/scsi/ultrastor.c
-@@ -670,12 +670,12 @@ static const char *ultrastor_info(struct Scsi_Host * shpnt)
-       sprintf(buf, "UltraStor 24F SCSI @ Slot %u IRQ%u",
- 	      config.slot, config.interrupt);
-     else if (config.subversion)
--      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %05X IRQ%u",
--	      config.port_address, (int)config.bios_segment,
-+      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %pK IRQ%u",
-+	      config.port_address, config.bios_segment,
- 	      config.interrupt);
-     else
--      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %05X IRQ%u DMA%u",
--	      config.port_address, (int)config.bios_segment,
-+      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %pK IRQ%u DMA%u",
-+	      config.port_address, config.bios_segment,
- 	      config.interrupt, config.dma_channel);
-     return buf;
- }
--- 
-2.7.3
+James
 
