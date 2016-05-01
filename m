@@ -1,16 +1,20 @@
 From: William Breathitt Gray <vilhelm.gray@gmail.com>
 Subject: [PATCH RESEND] scsi: ultrastor: Use correct format identifier for
  kernel pointer
-Date: Sun, 1 May 2016 17:54:08 -0400
-Message-ID: <20160501215356.GA16432@sophia>
+Date: Sun, 1 May 2016 17:57:40 -0400
+Message-ID: <20160501215740.GA22213@sophia>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:34371 "EHLO
+	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459AbcEAV5s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 May 2016 17:57:48 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 The 'bios_segment' member of a struct ultrastor_config is passed to the
 sprintf function with a respective %05X format identifier. The
@@ -50,3 +54,4 @@ index 14e0c40..2e99f98 100644
  }
 -- 
 2.7.3
+
