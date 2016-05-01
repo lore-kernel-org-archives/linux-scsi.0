@@ -1,134 +1,201 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH v2.5 6/6] scsi_debug: use locally assigned naa
-Date: Sat, 30 Apr 2016 22:44:47 -0400
-Message-ID: <1462070687-12689-7-git-send-email-dgilbert@interlog.com>
+Subject: [PATCH v2.5 2/6] scsi_debug: rework resp_report_luns
+Date: Sat, 30 Apr 2016 22:44:43 -0400
+Message-ID: <1462070687-12689-3-git-send-email-dgilbert@interlog.com>
 References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53671 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:53647 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751691AbcEACpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Apr 2016 22:45:04 -0400
+	id S1751651AbcEACo6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Apr 2016 22:44:58 -0400
 In-Reply-To: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
-For reported SAS addresses replace fake IEEE registered NAAs (5)
-with locally assigned NAAs (3).
+Based on "[PATH V2] scsi_debug: rework resp_report_luns" patch
+sent by Tomas Winkler on Thursday, 26 Feb 2015. His notes:
+  1. Remove duplicated boundary checks which simplify the fill-in
+     loop
+  2. Use more of scsi generic API
+Replace fixed length response array a with heap allocation
+allowing up to 256 normal LUNs per target.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 35 ++++++++++++++++++-----------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+ drivers/scsi/scsi_debug.c | 135 +++++++++++++++++++++++++++++-----------------
+ 1 file changed, 87 insertions(+), 48 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index c14811e..459a4d7 100644
+index fc0246c..e97ddf0 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -921,9 +921,10 @@ static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
- static const char * inq_vendor_id = "Linux   ";
- static const char * inq_product_id = "scsi_debug      ";
- static const char *inq_product_rev = "0186";	/* version less '.' */
--static const u64 naa5_comp_a = 0x5222222000000000ULL;
--static const u64 naa5_comp_b = 0x5333333000000000ULL;
--static const u64 naa5_comp_c = 0x5111111000000000ULL;
-+/* Use some locally assigned NAAs for SAS addresses. */
-+static const u64 naa3_comp_a = 0x3222222000000000ULL;
-+static const u64 naa3_comp_b = 0x3333333000000000ULL;
-+static const u64 naa3_comp_c = 0x3111111000000000ULL;
+@@ -3208,63 +3208,94 @@ static int resp_get_lba_status(struct scsi_cmnd *scp,
+ 	return fill_from_dev_buffer(scp, arr, SDEBUG_GET_LBA_STATUS_LEN);
+ }
  
- /* Device identification VPD page. Returns number of bytes placed in arr */
- static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
-@@ -957,12 +958,12 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 			memcpy(arr + num, lu_name, 16);
- 			num += 16;
- 		} else {
--			/* NAA-5, Logical unit identifier (binary) */
-+			/* NAA-3, Logical unit identifier (binary) */
- 			arr[num++] = 0x1;  /* binary (not necessarily sas) */
- 			arr[num++] = 0x3;  /* PIV=0, lu, naa */
- 			arr[num++] = 0x0;
- 			arr[num++] = 0x8;
--			put_unaligned_be64(naa5_comp_b + dev_id_num, arr + num);
-+			put_unaligned_be64(naa3_comp_b + dev_id_num, arr + num);
- 			num += 8;
- 		}
- 		/* Target relative port number */
-@@ -975,14 +976,14 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 		arr[num++] = 0x0;
- 		arr[num++] = 0x1;	/* relative port A */
+-#define SDEBUG_RLUN_ARR_SZ 256
+-
+-static int resp_report_luns(struct scsi_cmnd * scp,
+-			    struct sdebug_dev_info * devip)
++/* Even though each pseudo target has a REPORT LUNS "well known logical unit"
++ * (W-LUN), the normal Linux scanning logic does not associate it with a
++ * device (e.g. /dev/sg7). The following magic will make that association:
++ *   "cd /sys/class/scsi_host/host<n> ; echo '- - 49409' > scan"
++ * where <n> is a host number. If there are multiple targets in a host then
++ * the above will associate a W-LUN to each target. To only get a W-LUN
++ * for target 2, then use "echo '- 2 49409' > scan" .
++ */
++static int resp_report_luns(struct scsi_cmnd *scp,
++			    struct sdebug_dev_info *devip)
+ {
++	unsigned char *cmd = scp->cmnd;
+ 	unsigned int alloc_len;
+-	int lun_cnt, i, upper, num, n, want_wlun, shortish;
++	unsigned char select_report;
+ 	u64 lun;
+-	unsigned char *cmd = scp->cmnd;
+-	int select_report = (int)cmd[2];
+-	struct scsi_lun *one_lun;
+-	unsigned char arr[SDEBUG_RLUN_ARR_SZ];
+-	unsigned char * max_addr;
++	struct scsi_lun *lun_p;
++	u8 *arr;
++	unsigned int lun_cnt;	/* normal LUN count (max: 256) */
++	unsigned int wlun_cnt;	/* report luns W-LUN count */
++	unsigned int tlun_cnt;	/* total LUN count */
++	unsigned int rlen;	/* response length (in bytes) */
++	int i, res;
+ 
+ 	clear_luns_changed_on_target(devip);
+-	alloc_len = cmd[9] + (cmd[8] << 8) + (cmd[7] << 16) + (cmd[6] << 24);
+-	shortish = (alloc_len < 4);
+-	if (shortish || (select_report > 2)) {
+-		mk_sense_invalid_fld(scp, SDEB_IN_CDB, shortish ? 6 : 2, -1);
++
++	select_report = cmd[2];
++	alloc_len = get_unaligned_be32(cmd + 6);
++
++	if (alloc_len < 4) {
++		pr_err("alloc len too small %d\n", alloc_len);
++		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 6, -1);
+ 		return check_condition_result;
  	}
--	/* NAA-5, Target port identifier */
-+	/* NAA-3, Target port identifier */
- 	arr[num++] = 0x61;	/* proto=sas, binary */
- 	arr[num++] = 0x93;	/* piv=1, target port, naa */
- 	arr[num++] = 0x0;
- 	arr[num++] = 0x8;
--	put_unaligned_be64(naa5_comp_a + port_a, arr + num);
-+	put_unaligned_be64(naa3_comp_a + port_a, arr + num);
- 	num += 8;
--	/* NAA-5, Target port group identifier */
-+	/* NAA-3, Target port group identifier */
- 	arr[num++] = 0x61;	/* proto=sas, binary */
- 	arr[num++] = 0x95;	/* piv=1, target port group id */
- 	arr[num++] = 0x0;
-@@ -991,19 +992,19 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 	arr[num++] = 0;
- 	put_unaligned_be16(port_group_id, arr + num);
- 	num += 2;
--	/* NAA-5, Target device identifier */
-+	/* NAA-3, Target device identifier */
- 	arr[num++] = 0x61;	/* proto=sas, binary */
- 	arr[num++] = 0xa3;	/* piv=1, target device, naa */
- 	arr[num++] = 0x0;
- 	arr[num++] = 0x8;
--	put_unaligned_be64(naa5_comp_a + target_dev_id, arr + num);
-+	put_unaligned_be64(naa3_comp_a + target_dev_id, arr + num);
- 	num += 8;
- 	/* SCSI name string: Target device identifier */
- 	arr[num++] = 0x63;	/* proto=sas, UTF-8 */
- 	arr[num++] = 0xa8;	/* piv=1, target device, SCSI name string */
- 	arr[num++] = 0x0;
- 	arr[num++] = 24;
--	memcpy(arr + num, "naa.52222220", 12);
-+	memcpy(arr + num, "naa.32222220", 12);
- 	num += 12;
- 	snprintf(b, sizeof(b), "%08X", target_dev_id);
- 	memcpy(arr + num, b, 8);
-@@ -1082,7 +1083,7 @@ static int inquiry_vpd_88(unsigned char *arr, int target_dev_id)
- 	arr[num++] = 0x93;	/* PIV=1, target port, NAA */
- 	arr[num++] = 0x0;	/* reserved */
- 	arr[num++] = 0x8;	/* length */
--	put_unaligned_be64(naa5_comp_a + port_a, arr + num);
-+	put_unaligned_be64(naa3_comp_a + port_a, arr + num);
- 	num += 8;
- 	arr[num++] = 0x0;	/* reserved */
- 	arr[num++] = 0x0;	/* reserved */
-@@ -1097,7 +1098,7 @@ static int inquiry_vpd_88(unsigned char *arr, int target_dev_id)
- 	arr[num++] = 0x93;	/* PIV=1, target port, NAA */
- 	arr[num++] = 0x0;	/* reserved */
- 	arr[num++] = 0x8;	/* length */
--	put_unaligned_be64(naa5_comp_a + port_b, arr + num);
-+	put_unaligned_be64(naa3_comp_a + port_b, arr + num);
- 	num += 8;
+-	/* can produce response with up to 16k luns (lun 0 to lun 16383) */
+-	memset(arr, 0, SDEBUG_RLUN_ARR_SZ);
+-	lun_cnt = sdebug_max_luns;
+-	if (1 == select_report)
++
++	switch (select_report) {
++	case 0:		/* all LUNs apart from W-LUNs */
++		lun_cnt = sdebug_max_luns;
++		wlun_cnt = 0;
++		break;
++	case 1:		/* only W-LUNs */
+ 		lun_cnt = 0;
+-	else if (sdebug_no_lun_0 && (lun_cnt > 0))
++		wlun_cnt = 1;
++		break;
++	case 2:		/* all LUNs */
++		lun_cnt = sdebug_max_luns;
++		wlun_cnt = 1;
++		break;
++	case 0x10:	/* only administrative LUs */
++	case 0x11:	/* see SPC-5 */
++	case 0x12:	/* only subsiduary LUs owned by referenced LU */
++	default:
++		pr_debug("select report invalid %d\n", select_report);
++		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
++		return check_condition_result;
++	}
++
++	if (sdebug_no_lun_0 && (lun_cnt > 0))
+ 		--lun_cnt;
+-	want_wlun = (select_report > 0) ? 1 : 0;
+-	num = lun_cnt + want_wlun;
+-	arr[2] = ((sizeof(struct scsi_lun) * num) >> 8) & 0xff;
+-	arr[3] = (sizeof(struct scsi_lun) * num) & 0xff;
+-	n = min((int)((SDEBUG_RLUN_ARR_SZ - 8) /
+-			    sizeof(struct scsi_lun)), num);
+-	if (n < num) {
+-		want_wlun = 0;
+-		lun_cnt = n;
+-	}
+-	one_lun = (struct scsi_lun *) &arr[8];
+-	max_addr = arr + SDEBUG_RLUN_ARR_SZ;
+-	for (i = 0, lun = (sdebug_no_lun_0 ? 1 : 0);
+-             ((i < lun_cnt) && ((unsigned char *)(one_lun + i) < max_addr));
+-	     i++, lun++) {
+-		upper = (lun >> 8) & 0x3f;
+-		if (upper)
+-			one_lun[i].scsi_lun[0] =
+-			    (upper | (SAM2_LUN_ADDRESS_METHOD << 6));
+-		one_lun[i].scsi_lun[1] = lun & 0xff;
+-	}
+-	if (want_wlun) {
+-		one_lun[i].scsi_lun[0] = (SCSI_W_LUN_REPORT_LUNS >> 8) & 0xff;
+-		one_lun[i].scsi_lun[1] = SCSI_W_LUN_REPORT_LUNS & 0xff;
+-		i++;
+-	}
+-	alloc_len = (unsigned char *)(one_lun + i) - arr;
+-	return fill_from_dev_buffer(scp, arr,
+-				    min((int)alloc_len, SDEBUG_RLUN_ARR_SZ));
++
++	tlun_cnt = lun_cnt + wlun_cnt;
++
++	rlen = (tlun_cnt * sizeof(struct scsi_lun)) + 8;
++	arr = vmalloc(rlen);
++	if (!arr) {
++		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
++				INSUFF_RES_ASCQ);
++		return check_condition_result;
++	}
++	memset(arr, 0, rlen);
++	pr_debug("select_report %d luns = %d wluns = %d no_lun0 %d\n",
++		 select_report, lun_cnt, wlun_cnt, sdebug_no_lun_0);
++
++	/* luns start at byte 8 in response following the header */
++	lun_p = (struct scsi_lun *)&arr[8];
++
++	/* LUNs use single level peripheral device addressing method */
++	lun = sdebug_no_lun_0 ? 1 : 0;
++	for (i = 0; i < lun_cnt; i++)
++		int_to_scsilun(lun++, lun_p++);
++
++	if (wlun_cnt)
++		int_to_scsilun(SCSI_W_LUN_REPORT_LUNS, lun_p++);
++
++	put_unaligned_be32(rlen - 8, &arr[0]);
++
++	res = fill_from_dev_buffer(scp, arr, rlen);
++	vfree(arr);
++	return res;
+ }
  
- 	return num;
-@@ -1927,10 +1928,10 @@ static int resp_sas_pcd_m_spg(unsigned char * p, int pcontrol, int target,
- 		};
- 	int port_a, port_b;
+ static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
+@@ -4303,6 +4334,10 @@ static ssize_t max_luns_store(struct device_driver *ddp, const char *buf,
+ 	bool changed;
  
--	put_unaligned_be64(naa5_comp_a, sas_pcd_m_pg + 16);
--	put_unaligned_be64(naa5_comp_c + 1, sas_pcd_m_pg + 24);
--	put_unaligned_be64(naa5_comp_a, sas_pcd_m_pg + 64);
--	put_unaligned_be64(naa5_comp_c + 1, sas_pcd_m_pg + 72);
-+	put_unaligned_be64(naa3_comp_a, sas_pcd_m_pg + 16);
-+	put_unaligned_be64(naa3_comp_c + 1, sas_pcd_m_pg + 24);
-+	put_unaligned_be64(naa3_comp_a, sas_pcd_m_pg + 64);
-+	put_unaligned_be64(naa3_comp_c + 1, sas_pcd_m_pg + 72);
- 	port_a = target_dev_id + 1;
- 	port_b = port_a + 1;
- 	memcpy(p, sas_pcd_m_pg, sizeof(sas_pcd_m_pg));
+ 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		if (n > 256) {
++			pr_warn("max_luns can be no more than 256\n");
++			return -EINVAL;
++		}
+ 		changed = (sdebug_max_luns != n);
+ 		sdebug_max_luns = n;
+ 		sdebug_max_tgts_luns();
+@@ -4647,6 +4682,10 @@ static int __init scsi_debug_init(void)
+ 		pr_err("invalid physblk_exp %u\n", sdebug_physblk_exp);
+ 		return -EINVAL;
+ 	}
++	if (sdebug_max_luns > 256) {
++		pr_warn("max_luns can be no more than 256, use default\n");
++		sdebug_max_luns = DEF_MAX_LUNS;
++	}
+ 
+ 	if (sdebug_lowest_aligned > 0x3fff) {
+ 		pr_err("lowest_aligned too big: %u\n", sdebug_lowest_aligned);
 -- 
 2.7.4
 
