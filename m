@@ -1,48 +1,134 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH v2.5 0/6] scsi_debug: rebase second half of series
-Date: Sat, 30 Apr 2016 22:44:41 -0400
-Message-ID: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
+Subject: [PATCH v2.5 6/6] scsi_debug: use locally assigned naa
+Date: Sat, 30 Apr 2016 22:44:47 -0400
+Message-ID: <1462070687-12689-7-git-send-email-dgilbert@interlog.com>
+References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53629 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:53671 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751651AbcEACo4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Apr 2016 22:44:56 -0400
+	id S1751691AbcEACpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Apr 2016 22:45:04 -0400
+In-Reply-To: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
-Changes since original version:
-  - reduce resp_report_luns to reporting 256 LUNs (0 to 255)
-    using address_method=0 which is single level peripheral
-    device addressing method. Reviewer would like further
-    address_methods support which will be presented as a
-    separate patch
+For reported SAS addresses replace fake IEEE registered NAAs (5)
+with locally assigned NAAs (3).
 
-Primary reason for this patch series is to add multi queue support
-modelled on the null_blk driver. Incorporate REPORT LUNS patch from
-Tomas Winkler sent in Febrary 2015; trim to a maximum of 256 LUNs
-(0 to 255) per target. Add parameter that permits LU names to use
-UUIDs (spc5r08.pdf).
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
 
-
-The first half of this series (1 through 7) have already been applied
-to the maintainers' trees. That differed slightly from my v2 series
-(after 7/12 was applied). So 1/6 of this series is a resync and the
-next 5 patches in this series correspond to v2 8/12 through 12/12
-(give or take a little fuzz).
-
-Douglas Gilbert (6):
-  scsi_debug: use pdt constants
-  scsi_debug: rework resp_report_luns
-  scsi_debug: add multiple queue support
-  scsi_debug: vpd and mode page work
-  scsi_debug: uuid for lu name
-  scsi_debug: use locally assigned naa
-
- drivers/scsi/scsi_debug.c | 1134 ++++++++++++++++++++++++++++-----------------
- 1 file changed, 710 insertions(+), 424 deletions(-)
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index c14811e..459a4d7 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -921,9 +921,10 @@ static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+ static const char * inq_vendor_id = "Linux   ";
+ static const char * inq_product_id = "scsi_debug      ";
+ static const char *inq_product_rev = "0186";	/* version less '.' */
+-static const u64 naa5_comp_a = 0x5222222000000000ULL;
+-static const u64 naa5_comp_b = 0x5333333000000000ULL;
+-static const u64 naa5_comp_c = 0x5111111000000000ULL;
++/* Use some locally assigned NAAs for SAS addresses. */
++static const u64 naa3_comp_a = 0x3222222000000000ULL;
++static const u64 naa3_comp_b = 0x3333333000000000ULL;
++static const u64 naa3_comp_c = 0x3111111000000000ULL;
+ 
+ /* Device identification VPD page. Returns number of bytes placed in arr */
+ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
+@@ -957,12 +958,12 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
+ 			memcpy(arr + num, lu_name, 16);
+ 			num += 16;
+ 		} else {
+-			/* NAA-5, Logical unit identifier (binary) */
++			/* NAA-3, Logical unit identifier (binary) */
+ 			arr[num++] = 0x1;  /* binary (not necessarily sas) */
+ 			arr[num++] = 0x3;  /* PIV=0, lu, naa */
+ 			arr[num++] = 0x0;
+ 			arr[num++] = 0x8;
+-			put_unaligned_be64(naa5_comp_b + dev_id_num, arr + num);
++			put_unaligned_be64(naa3_comp_b + dev_id_num, arr + num);
+ 			num += 8;
+ 		}
+ 		/* Target relative port number */
+@@ -975,14 +976,14 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
+ 		arr[num++] = 0x0;
+ 		arr[num++] = 0x1;	/* relative port A */
+ 	}
+-	/* NAA-5, Target port identifier */
++	/* NAA-3, Target port identifier */
+ 	arr[num++] = 0x61;	/* proto=sas, binary */
+ 	arr[num++] = 0x93;	/* piv=1, target port, naa */
+ 	arr[num++] = 0x0;
+ 	arr[num++] = 0x8;
+-	put_unaligned_be64(naa5_comp_a + port_a, arr + num);
++	put_unaligned_be64(naa3_comp_a + port_a, arr + num);
+ 	num += 8;
+-	/* NAA-5, Target port group identifier */
++	/* NAA-3, Target port group identifier */
+ 	arr[num++] = 0x61;	/* proto=sas, binary */
+ 	arr[num++] = 0x95;	/* piv=1, target port group id */
+ 	arr[num++] = 0x0;
+@@ -991,19 +992,19 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
+ 	arr[num++] = 0;
+ 	put_unaligned_be16(port_group_id, arr + num);
+ 	num += 2;
+-	/* NAA-5, Target device identifier */
++	/* NAA-3, Target device identifier */
+ 	arr[num++] = 0x61;	/* proto=sas, binary */
+ 	arr[num++] = 0xa3;	/* piv=1, target device, naa */
+ 	arr[num++] = 0x0;
+ 	arr[num++] = 0x8;
+-	put_unaligned_be64(naa5_comp_a + target_dev_id, arr + num);
++	put_unaligned_be64(naa3_comp_a + target_dev_id, arr + num);
+ 	num += 8;
+ 	/* SCSI name string: Target device identifier */
+ 	arr[num++] = 0x63;	/* proto=sas, UTF-8 */
+ 	arr[num++] = 0xa8;	/* piv=1, target device, SCSI name string */
+ 	arr[num++] = 0x0;
+ 	arr[num++] = 24;
+-	memcpy(arr + num, "naa.52222220", 12);
++	memcpy(arr + num, "naa.32222220", 12);
+ 	num += 12;
+ 	snprintf(b, sizeof(b), "%08X", target_dev_id);
+ 	memcpy(arr + num, b, 8);
+@@ -1082,7 +1083,7 @@ static int inquiry_vpd_88(unsigned char *arr, int target_dev_id)
+ 	arr[num++] = 0x93;	/* PIV=1, target port, NAA */
+ 	arr[num++] = 0x0;	/* reserved */
+ 	arr[num++] = 0x8;	/* length */
+-	put_unaligned_be64(naa5_comp_a + port_a, arr + num);
++	put_unaligned_be64(naa3_comp_a + port_a, arr + num);
+ 	num += 8;
+ 	arr[num++] = 0x0;	/* reserved */
+ 	arr[num++] = 0x0;	/* reserved */
+@@ -1097,7 +1098,7 @@ static int inquiry_vpd_88(unsigned char *arr, int target_dev_id)
+ 	arr[num++] = 0x93;	/* PIV=1, target port, NAA */
+ 	arr[num++] = 0x0;	/* reserved */
+ 	arr[num++] = 0x8;	/* length */
+-	put_unaligned_be64(naa5_comp_a + port_b, arr + num);
++	put_unaligned_be64(naa3_comp_a + port_b, arr + num);
+ 	num += 8;
+ 
+ 	return num;
+@@ -1927,10 +1928,10 @@ static int resp_sas_pcd_m_spg(unsigned char * p, int pcontrol, int target,
+ 		};
+ 	int port_a, port_b;
+ 
+-	put_unaligned_be64(naa5_comp_a, sas_pcd_m_pg + 16);
+-	put_unaligned_be64(naa5_comp_c + 1, sas_pcd_m_pg + 24);
+-	put_unaligned_be64(naa5_comp_a, sas_pcd_m_pg + 64);
+-	put_unaligned_be64(naa5_comp_c + 1, sas_pcd_m_pg + 72);
++	put_unaligned_be64(naa3_comp_a, sas_pcd_m_pg + 16);
++	put_unaligned_be64(naa3_comp_c + 1, sas_pcd_m_pg + 24);
++	put_unaligned_be64(naa3_comp_a, sas_pcd_m_pg + 64);
++	put_unaligned_be64(naa3_comp_c + 1, sas_pcd_m_pg + 72);
+ 	port_a = target_dev_id + 1;
+ 	port_b = port_a + 1;
+ 	memcpy(p, sas_pcd_m_pg, sizeof(sas_pcd_m_pg));
 -- 
 2.7.4
 
