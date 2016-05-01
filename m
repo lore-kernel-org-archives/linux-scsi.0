@@ -1,65 +1,31 @@
-From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the
- ISA Kconfig option
-Date: Sun, 1 May 2016 12:17:07 -0400
-Message-ID: <20160501161707.GA1441@sophia>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
- <20160413072602.GA7629@gmail.com> <20160413121515.GA23870@sophia>
- <20160413143838.GD5867@gmail.com> <20160413144842.GA26005@sophia>
- <20160413151826.GA13959@kroah.com>
-Mime-Version: 1.0
+From: Arpit Patel <arpit_patel@mac.edu.au>
+Subject: hi linux
+Date: Sun, 1 May 2016 20:49:27 +0200
+Message-ID: <1A7391A9-CF79-4209-908B-633BE41A915B@mac.edu.au>
+Mime-Version: 1.0 (1.0)
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-Content-Disposition: inline
-In-Reply-To: <20160413151826.GA13959@kroah.com>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: alsa-devel@alsa-project.org, linux-scsi@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, hpa@zytor.com, tglx@linutronix.de, Ingo Molnar <mingo@kernel.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sds-mailhub.anglican.asn.au ([210.215.82.21]:49200 "EHLO
+	sds-mailhub-01.anglican.asn.au" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751467AbcEARKg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 May 2016 13:10:36 -0400
+Received: from remote.deaconessministries.org.au (sbs.domain.local [10.1.152.15] (may be forged))
+	by sds-mailhub-01.anglican.asn.au (8.14.3/8.14.3/Debian-9.4) with ESMTP id u41GwqGa003319
+	for <linux-scsi@vger.kernel.org>; Mon, 2 May 2016 02:58:52 +1000
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 13, 2016 at 08:18:26AM -0700, Greg KH wrote:
->On Wed, Apr 13, 2016 at 10:48:42AM -0400, William Breathitt Gray wrote:
->> On Wed, Apr 13, 2016 at 04:38:38PM +0200, Ingo Molnar wrote:
->> >Ah, ok, so it's for enabling real hardware, not just a cleanup, right? You might 
->> >want to put that info into the boilerplate mail or so.
->> >
->> >I'm perfectly fine with all the patches that touch x86 code:
->> >
->> >  Acked-by: Ingo Molnar <mingo@kernel.org>
->> >
->> >I suppose you'd like to have these in the driver tree, all in one place?
->> >
->> >Thanks,
->> >
->> >	Ingo
->> 
->> Ah yes, in retrospect I should have made it clear that this was for
->> supporting hardware rather than simply code cleanup. That was an
->> oversight on my part not to have made it more explicit.
->> 
->> Introducing everything to the driver tree would be most convenient, thus
->> allowing me to quickly release my subsequent patches which will be
->> rebased on top of these.
->
->Ok, I can take these.
->
->thanks,
->
->greg k-h
+Hello linux
 
-Forgive me for probing again; what is that status of this patchset? I'm
-anxious to see them accepted to prevent the regression introduced by the
-ISA_BUS configuration option from appearing in the next merge window.
 
-Many thanks,
+http://breezekiteboarding.com/teach.php?ring=chvnwaxk1nq45r55
 
-William Breathitt Gray
+
+
+
+Thanks
+
+Arpit
