@@ -1,40 +1,65 @@
 From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: Re: [PATCH 1/4] pnp: pnpbios: Add explicit X86_32 dependency to
- PNPBIOS
-Date: Sun, 1 May 2016 11:52:39 -0400
-Message-ID: <20160501155239.GA19900@sophia>
+Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the
+ ISA Kconfig option
+Date: Sun, 1 May 2016 12:17:07 -0400
+Message-ID: <20160501161707.GA1441@sophia>
 References: <cover.1460379702.git.vilhelm.gray@gmail.com>
- <bbb2f28f39cbda8923eedca61bb5d9c55520f674.1460379702.git.vilhelm.gray@gmail.com>
- <571AB8F6.50802@intel.com>
+ <20160413072602.GA7629@gmail.com> <20160413121515.GA23870@sophia>
+ <20160413143838.GD5867@gmail.com> <20160413144842.GA26005@sophia>
+ <20160413151826.GA13959@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
 Content-Disposition: inline
-In-Reply-To: <571AB8F6.50802@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, gregkh@linuxfoundation.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+In-Reply-To: <20160413151826.GA13959@kroah.com>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: alsa-devel@alsa-project.org, linux-scsi@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, hpa@zytor.com, tglx@linutronix.de, Ingo Molnar <mingo@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Apr 23, 2016 at 01:51:19AM +0200, Rafael J. Wysocki wrote:
->On 4/11/2016 3:25 PM, William Breathitt Gray wrote:
->> The PNPBIOS driver requires preprocessor defines (located in
->> include/asm/segment.h) only declared if the architecture is set to
->> X86_32. If the architecture is set to X86_64, the PNPBIOS driver will
->> not build properly. The X86 dependecy for the PNPBIOS configuration
->> option is changed to an explicit X86_32	dependency in order to prevent
->> an attempt to build for an unsupported architecture.
->>
->> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Signed-off-by: William Breathitt Gray <vilhelm.gray@gmail.com>
+On Wed, Apr 13, 2016 at 08:18:26AM -0700, Greg KH wrote:
+>On Wed, Apr 13, 2016 at 10:48:42AM -0400, William Breathitt Gray wrote:
+>> On Wed, Apr 13, 2016 at 04:38:38PM +0200, Ingo Molnar wrote:
+>> >Ah, ok, so it's for enabling real hardware, not just a cleanup, right? You might 
+>> >want to put that info into the boilerplate mail or so.
+>> >
+>> >I'm perfectly fine with all the patches that touch x86 code:
+>> >
+>> >  Acked-by: Ingo Molnar <mingo@kernel.org>
+>> >
+>> >I suppose you'd like to have these in the driver tree, all in one place?
+>> >
+>> >Thanks,
+>> >
+>> >	Ingo
+>> 
+>> Ah yes, in retrospect I should have made it clear that this was for
+>> supporting hardware rather than simply code cleanup. That was an
+>> oversight on my part not to have made it more explicit.
+>> 
+>> Introducing everything to the driver tree would be most convenient, thus
+>> allowing me to quickly release my subsequent patches which will be
+>> rebased on top of these.
 >
->Has anyone taken care of this already?
+>Ok, I can take these.
 >
->If not, can you possibly resend this patch with a CC to 
->linux-acpi@vger.kernel.org so I can pick it up via Patchwork more easily?
+>thanks,
+>
+>greg k-h
 
-I'm not sure when this patchset will appear in driver-core, so I have
-resent this particular patch with a CC to linux-acpi@vger.kernel.org so
-that Rafael J. Wysocki can pick it up more easily.
+Forgive me for probing again; what is that status of this patchset? I'm
+anxious to see them accepted to prevent the regression introduced by the
+ISA_BUS configuration option from appearing in the next merge window.
+
+Many thanks,
 
 William Breathitt Gray
