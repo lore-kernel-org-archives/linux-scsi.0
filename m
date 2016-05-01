@@ -1,66 +1,52 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/4] Decouple X86_32 dependency from the ISA Kconfig
- option
-Date: Sun, 1 May 2016 14:25:32 -0700
-Message-ID: <20160501212532.GA8337@kroah.com>
-References: <cover.1460379702.git.vilhelm.gray@gmail.com>
- <20160413072602.GA7629@gmail.com>
- <20160413121515.GA23870@sophia>
- <20160413143838.GD5867@gmail.com>
- <20160413144842.GA26005@sophia>
- <20160413151826.GA13959@kroah.com>
- <20160501161707.GA1441@sophia>
+From: William Breathitt Gray <vilhelm.gray@gmail.com>
+Subject: [PATCH RESEND] scsi: ultrastor: Use correct format identifier for
+ kernel pointer
+Date: Sun, 1 May 2016 17:54:08 -0400
+Message-ID: <20160501215356.GA16432@sophia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20160501161707.GA1441@sophia>
 Sender: linux-kernel-owner@vger.kernel.org
-To: William Breathitt Gray <vilhelm.gray@gmail.com>
-Cc: Ingo Molnar <mingo@kernel.org>, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+To: JBottomley@odin.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, May 01, 2016 at 12:17:07PM -0400, William Breathitt Gray wrote:
-> On Wed, Apr 13, 2016 at 08:18:26AM -0700, Greg KH wrote:
-> >On Wed, Apr 13, 2016 at 10:48:42AM -0400, William Breathitt Gray wrote:
-> >> On Wed, Apr 13, 2016 at 04:38:38PM +0200, Ingo Molnar wrote:
-> >> >Ah, ok, so it's for enabling real hardware, not just a cleanup, right? You might 
-> >> >want to put that info into the boilerplate mail or so.
-> >> >
-> >> >I'm perfectly fine with all the patches that touch x86 code:
-> >> >
-> >> >  Acked-by: Ingo Molnar <mingo@kernel.org>
-> >> >
-> >> >I suppose you'd like to have these in the driver tree, all in one place?
-> >> >
-> >> >Thanks,
-> >> >
-> >> >	Ingo
-> >> 
-> >> Ah yes, in retrospect I should have made it clear that this was for
-> >> supporting hardware rather than simply code cleanup. That was an
-> >> oversight on my part not to have made it more explicit.
-> >> 
-> >> Introducing everything to the driver tree would be most convenient, thus
-> >> allowing me to quickly release my subsequent patches which will be
-> >> rebased on top of these.
-> >
-> >Ok, I can take these.
-> >
-> >thanks,
-> >
-> >greg k-h
-> 
-> Forgive me for probing again; what is that status of this patchset? I'm
-> anxious to see them accepted to prevent the regression introduced by the
-> ISA_BUS configuration option from appearing in the next merge window.
+The 'bios_segment' member of a struct ultrastor_config is passed to the
+sprintf function with a respective %05X format identifier. The
+'bio_segment' member is a kernel pointer, but the %X format identifier
+expects an int data type. A cast to int is correctly used to satisfy the
+format identifier, but this assumes that the int data type is the same
+size as the kernel pointer, which is not the case on several
+architectures such as X86_64. This patch removes the int cast and
+replaces the %05X format identifier with %pK in order to print the
+'bio_segment' member regardless of architecture.
 
-Not all of these patches had anything to do with the subject of this 0/4
-patch, and seem to have gone in through other trees.
+Signed-off-by: William Breathitt Gray <vilhelm.gray@gmail.com>
+---
+ drivers/scsi/ultrastor.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-So can you resend just the patches that are for this series that have
-not been picked up?
-
-thanks,
-
-greg k-h
+diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
+index 14e0c40..2e99f98 100644
+--- a/drivers/scsi/ultrastor.c
++++ b/drivers/scsi/ultrastor.c
+@@ -670,12 +670,12 @@ static const char *ultrastor_info(struct Scsi_Host * shpnt)
+       sprintf(buf, "UltraStor 24F SCSI @ Slot %u IRQ%u",
+ 	      config.slot, config.interrupt);
+     else if (config.subversion)
+-      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %05X IRQ%u",
+-	      config.port_address, (int)config.bios_segment,
++      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %pK IRQ%u",
++	      config.port_address, config.bios_segment,
+ 	      config.interrupt);
+     else
+-      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %05X IRQ%u DMA%u",
+-	      config.port_address, (int)config.bios_segment,
++      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %pK IRQ%u DMA%u",
++	      config.port_address, config.bios_segment,
+ 	      config.interrupt, config.dma_channel);
+     return buf;
+ }
+-- 
+2.7.3
