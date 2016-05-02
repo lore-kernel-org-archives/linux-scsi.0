@@ -1,31 +1,35 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
+From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: [dm-devel] [Lsf] Notes from the four separate IO track sessions
  at LSF/MM
-Date: Mon, 2 May 2016 11:49:54 -0700
-Message-ID: <5727A152.70109@sandisk.com>
-References: <1461800389.2311.70.camel@HansenPartnership.com>
- <1461858038.2307.16.camel@HansenPartnership.com>
- <5722320E.5080202@sandisk.com>
- <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com>
- <57223D36.60304@sandisk.com>
- <74308856.32308210.1461862044976.JavaMail.zimbra@redhat.com>
- <850484819.32589649.1461966427528.JavaMail.zimbra@redhat.com>
- <5723FE06.70501@sandisk.com>
- <1184712515.32596182.1461977223746.JavaMail.zimbra@redhat.com>
+Date: Mon, 2 May 2016 15:28:04 -0400 (EDT)
+Message-ID: <766510830.33459561.1462217284242.JavaMail.zimbra@redhat.com>
+References: <1461800389.2311.70.camel@HansenPartnership.com> <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com> <57223D36.60304@sandisk.com> <74308856.32308210.1461862044976.JavaMail.zimbra@redhat.com> <850484819.32589649.1461966427528.JavaMail.zimbra@redhat.com> <5723FE06.70501@sandisk.com> <1184712515.32596182.1461977223746.JavaMail.zimbra@redhat.com> <5727A152.70109@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0083.outbound.protection.outlook.com ([65.55.169.83]:52933
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754835AbcEBSuA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 May 2016 14:50:00 -0400
-In-Reply-To: <1184712515.32596182.1461977223746.JavaMail.zimbra@redhat.com>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:53860 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754511AbcEBT2K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 15:28:10 -0400
+In-Reply-To: <5727A152.70109@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, device-mapper development <dm-devel@redhat.com>, lsf@lists.linux-foundation.org
+
+
+
+Laurence Oberman
+Principal Software Maintenance Engineer
+Red Hat Global Support Services
+
+----- Original Message -----
+From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+To: "Laurence Oberman" <loberman@redhat.com>
+Cc: linux-block@vger.kernel.org, "linux-scsi" <linux-scsi@vger.kernel.org>, "Mike Snitzer" <snitzer@redhat.com>, "James Bottomley" <James.Bottomley@HansenPartnership.com>, "device-mapper development" <dm-devel@redhat.com>, lsf@lists.linux-foundation.org
+Sent: Monday, May 2, 2016 2:49:54 PM
+Subject: Re: [dm-devel] [Lsf] Notes from the four separate IO track sessions at LSF/MM
 
 On 04/29/2016 05:47 PM, Laurence Oberman wrote:
 > From: "Bart Van Assche" <bart.vanassche@sandisk.com>
@@ -73,3 +77,15 @@ Apparently the lpfc and the qla2xxx drivers behave differently. Please
 work with the maintainers of these drivers to reduce fail-over time.
 
 Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Hello Bart
+
+Even in the case of the ib_srp, don't we also have to still run the eh_timeout for each of the devices that has inflight requiring error handling serially.
+This means we will still have to wait to get a path failover until all are through the timeout.
+
+Thanks
+Laurence
