@@ -1,13 +1,13 @@
 From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v15 9/9] ufs: add TC G210 pci driver
-Date: Mon,  2 May 2016 14:55:35 +0100
-Message-ID: <e4e557a43a2c7c319eacfd7918522978341ecbee.1462187952.git.jpinto@synopsys.com>
+Subject: [PATCH v15 7/9] ufs: added support for Synopsys G210 Test Chip
+Date: Mon,  2 May 2016 14:55:33 +0100
+Message-ID: <59f5e69a05b307554aa33e19201a9714a4764276.1462187952.git.jpinto@synopsys.com>
 References: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:46490 "EHLO
+Received: from smtprelay.synopsys.com ([198.182.47.9]:38272 "EHLO
 	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753688AbcEBN4A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:56:00 -0400
+	with ESMTP id S1752045AbcEBNzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:55:55 -0400
 In-Reply-To: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
 In-Reply-To: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
 References: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
@@ -16,63 +16,53 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, Joao Pinto <Joao.Pinto@synopsys.com>
 
-This patch adds a glue pci driver for the Synopsys G210 Test Chip.
+This patch adds support for Synopsys G210 Test Chip.
 
 Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 ---
-Changes v13->v15:
+Changes v10->v15:
 - Nothing changed (just to keep up with patch set version).
-Changes v12->v13:
-- Nothing changed (just to keep up with patch set version).
-Changes v10->v12 (Tomas Winkler):
-- custom_phy_initialization replaced by phy_initialization
-Changes v10->v11 (Arnd Bergmann):
-- tc_type is now initialized to TC_G210_INV
-- probe function checks if the test chip version is specified
 Changes v0->v10:
 - This patch only appeared in v10
 
- drivers/scsi/ufs/Kconfig           |   9 ++
- drivers/scsi/ufs/Makefile          |   1 +
- drivers/scsi/ufs/tc-dwc-g210-pci.c | 181 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 191 insertions(+)
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pci.c
+ drivers/scsi/ufs/Kconfig       |   4 +
+ drivers/scsi/ufs/Makefile      |   1 +
+ drivers/scsi/ufs/tc-dwc-g210.c | 315 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/tc-dwc-g210.h |  19 +++
+ 4 files changed, 339 insertions(+)
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210.c
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210.h
 
 diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 87f20d1..54ccff2 100644
+index 06ff8ba..9594558 100644
 --- a/drivers/scsi/ufs/Kconfig
 +++ b/drivers/scsi/ufs/Kconfig
-@@ -100,3 +100,12 @@ config SCSI_UFS_DWC_TC_PLATFORM
- 	  Synopsys Test Chip is a PHY for prototyping purposes.
+@@ -87,3 +87,7 @@ config SCSI_UFS_QCOM
  
- 	  If unsure, say N."
+ config SCSI_UFS_DWC
+ 	bool
 +
-+config SCSI_UFS_DWC_TC_PCI
-+	tristate "DesignWare pci support using a G210 Test Chip"
-+	depends on SCSI_UFSHCD_PCI
-+	select SCSI_UFS_DWC_TC
-+	---help---
-+	  Synopsys Test Chip is a PHY for prototyping purposes.
-+
-+	  If unsure, say N."
++config SCSI_UFS_DWC_TC
++	bool
++	select SCSI_UFS_DWC
 diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index a977fe0..5303d85 100644
+index ccbad53..9468d7b 100644
 --- a/drivers/scsi/ufs/Makefile
 +++ b/drivers/scsi/ufs/Makefile
-@@ -2,6 +2,7 @@
+@@ -1,5 +1,6 @@
+ # UFSHCD makefile
  obj-$(CONFIG_SCSI_UFS_DWC) += ufshcd-dwc.o
- obj-$(CONFIG_SCSI_UFS_DWC_TC) += tc-dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o
-+obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o
++obj-$(CONFIG_SCSI_UFS_DWC_TC) += tc-dwc-g210.o
  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-diff --git a/drivers/scsi/ufs/tc-dwc-g210-pci.c b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
 new file mode 100644
-index 0000000..0667c76
+index 0000000..181f208
 --- /dev/null
-+++ b/drivers/scsi/ufs/tc-dwc-g210-pci.c
-@@ -0,0 +1,181 @@
++++ b/drivers/scsi/ufs/tc-dwc-g210.c
+@@ -0,0 +1,315 @@
 +/*
 + * Synopsys G210 Test Chip driver
 + *
@@ -86,174 +76,333 @@ index 0000000..0667c76
 + */
 +
 +#include "ufshcd.h"
++#include "unipro.h"
++
 +#include "ufshcd-dwc.h"
-+#include "tc-dwc-g210.h"
-+
-+#include <linux/pci.h>
-+#include <linux/pm_runtime.h>
-+
-+/* Test Chip type expected values */
-+#define TC_G210_20BIT 20
-+#define TC_G210_40BIT 40
-+#define TC_G210_INV 0
-+
-+static int tc_type = TC_G210_INV;
-+module_param(tc_type, int, 0);
-+MODULE_PARM_DESC(tc_type, "Test Chip Type (20 = 20-bit, 40 = 40-bit)");
-+
-+static int tc_dwc_g210_pci_suspend(struct device *dev)
-+{
-+	return ufshcd_system_suspend(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_resume(struct device *dev)
-+{
-+	return ufshcd_system_resume(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_runtime_suspend(struct device *dev)
-+{
-+	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_runtime_resume(struct device *dev)
-+{
-+	return ufshcd_runtime_resume(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_runtime_idle(struct device *dev)
-+{
-+	return ufshcd_runtime_idle(dev_get_drvdata(dev));
-+}
++#include "ufshci-dwc.h"
 +
 +/**
-+ * struct ufs_hba_dwc_vops - UFS DWC specific variant operations
-+ */
-+static struct ufs_hba_variant_ops tc_dwc_g210_pci_hba_vops = {
-+	.name                   = "tc-dwc-g210-pci",
-+	.link_startup_notify	= ufshcd_dwc_link_startup_notify,
-+};
-+
-+/**
-+ * tc_dwc_g210_pci_shutdown - main function to put the controller in reset state
-+ * @pdev: pointer to PCI device handle
-+ */
-+static void tc_dwc_g210_pci_shutdown(struct pci_dev *pdev)
-+{
-+	ufshcd_shutdown((struct ufs_hba *)pci_get_drvdata(pdev));
-+}
-+
-+/**
-+ * tc_dwc_g210_pci_remove - de-allocate PCI/SCSI host and host memory space
-+ *		data structure memory
-+ * @pdev - pointer to PCI handle
-+ */
-+static void tc_dwc_g210_pci_remove(struct pci_dev *pdev)
-+{
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
-+
-+	pm_runtime_forbid(&pdev->dev);
-+	pm_runtime_get_noresume(&pdev->dev);
-+	ufshcd_remove(hba);
-+}
-+
-+/**
-+ * tc_dwc_g210_pci_probe - probe routine of the driver
-+ * @pdev: pointer to PCI device handle
-+ * @id: PCI device id
++ * tc_dwc_g210_setup_40bit_rmmi()
++ * This function configures Synopsys TC specific atributes (40-bit RMMI)
++ * @hba: Pointer to drivers structure
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * Returns 0 on success or non-zero value on failure
 + */
-+static int
-+tc_dwc_g210_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
 +{
-+	struct ufs_hba *hba;
-+	void __iomem *mmio_base;
-+	int err;
++	const struct ufshcd_dme_attr_val setup_attrs[] = {
++		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
++		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
++		{ UIC_ARG_MIB(CDIRECTCTRL6), 0x80, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDIVFACTOR), 0x08, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDCOCTRL5), 0x64, DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGTUNING), 0x09, DME_LOCAL },
++		{ UIC_ARG_MIB(RTOBSERVESELECT), 0x00, DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN0_TX), 0x14,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN0_RX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN0_RX), 4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL10), 0x04, DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL19), 0x02, DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN0_RX), 0x03,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN0_RX), 0x16,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN0_RX), 0x42,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN0_RX), 0xa4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN0_RX), 0x28,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN0_RX), 0x1E,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGPLL2), 0x00, DME_LOCAL },
++	};
 +
-+	/* Check Test Chip type and set the specific setup routine */
-+	if (tc_type == TC_G210_20BIT) {
-+		tc_dwc_g210_pci_hba_vops.phy_initialization =
-+						tc_dwc_g210_config_20_bit;
-+	} else if (tc_type == TC_G210_40BIT) {
-+		tc_dwc_g210_pci_hba_vops.phy_initialization =
-+						tc_dwc_g210_config_40_bit;
-+	} else {
-+		dev_err(&pdev->dev, "test chip version not specified\n");
-+		return -EPERM;
-+	}
-+
-+	err = pcim_enable_device(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev, "pcim_enable_device failed\n");
-+		return err;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	err = pcim_iomap_regions(pdev, 1 << 0, UFSHCD);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "request and iomap failed\n");
-+		return err;
-+	}
-+
-+	mmio_base = pcim_iomap_table(pdev)[0];
-+
-+	err = ufshcd_alloc_host(&pdev->dev, &hba);
-+	if (err) {
-+		dev_err(&pdev->dev, "Allocation failed\n");
-+		return err;
-+	}
-+
-+	INIT_LIST_HEAD(&hba->clk_list_head);
-+
-+	hba->vops = &tc_dwc_g210_pci_hba_vops;
-+
-+	err = ufshcd_init(hba, mmio_base, pdev->irq);
-+	if (err) {
-+		dev_err(&pdev->dev, "Initialization failed\n");
-+		return err;
-+	}
-+
-+	pci_set_drvdata(pdev, hba);
-+	pm_runtime_put_noidle(&pdev->dev);
-+	pm_runtime_allow(&pdev->dev);
-+
-+	return 0;
++	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
++						ARRAY_SIZE(setup_attrs));
 +}
 +
-+static const struct dev_pm_ops tc_dwc_g210_pci_pm_ops = {
-+	.suspend	= tc_dwc_g210_pci_suspend,
-+	.resume		= tc_dwc_g210_pci_resume,
-+	.runtime_suspend = tc_dwc_g210_pci_runtime_suspend,
-+	.runtime_resume  = tc_dwc_g210_pci_runtime_resume,
-+	.runtime_idle    = tc_dwc_g210_pci_runtime_idle,
-+};
++/**
++ * tc_dwc_g210_setup_20bit_rmmi_lane0()
++ * This function configures Synopsys TC 20-bit RMMI Lane 0
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success or non-zero value on failure
++ */
++static int tc_dwc_g210_setup_20bit_rmmi_lane0(struct ufs_hba *hba)
++{
++	const struct ufshcd_dme_attr_val setup_attrs[] = {
++		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN0_RX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN0_TX), 0x12,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN0_RX), 2,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL10), 0x04, DME_LOCAL },
++		{ UIC_ARG_MIB(DIRECTCTRL19), 0x02, DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN0_RX), 0x03,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN0_RX), 0x16,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN0_RX), 0x42,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN0_RX), 0xa4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN0_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN0_RX), 0x28,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN0_RX), 0x1E,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
++								DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGPLL2), 0x00, DME_LOCAL },
++	};
 +
-+static const struct pci_device_id tc_dwc_g210_pci_tbl[] = {
-+	{ PCI_VENDOR_ID_SYNOPSYS, 0xB101, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_SYNOPSYS, 0xB102, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ }	/* terminate list */
-+};
++	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
++						ARRAY_SIZE(setup_attrs));
++}
 +
-+MODULE_DEVICE_TABLE(pci, tc_dwc_g210_pci_tbl);
++/**
++ * tc_dwc_g210_setup_20bit_rmmi_lane1()
++ * This function configures Synopsys TC 20-bit RMMI Lane 1
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success or non-zero value on failure
++ */
++static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
++{
++	int connected_rx_lanes = 0;
++	int connected_tx_lanes = 0;
++	int ret = 0;
 +
-+static struct pci_driver tc_dwc_g210_pci_driver = {
-+	.name = UFSHCD,
-+	.id_table = tc_dwc_g210_pci_tbl,
-+	.probe = tc_dwc_g210_pci_probe,
-+	.remove = tc_dwc_g210_pci_remove,
-+	.shutdown = tc_dwc_g210_pci_shutdown,
-+	.driver = {
-+		.pm = &tc_dwc_g210_pci_pm_ops
-+	},
-+};
++	const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
++		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN1_TX), 0x0d,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN1_TX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN1_TX), 0x12,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
++								DME_LOCAL },
++	};
 +
-+module_pci_driver(tc_dwc_g210_pci_driver);
++	const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
++		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN1_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN1_RX), 0x19,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN1_RX), 2,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN1_RX), 0x80,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN1_RX), 0x03,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN1_RX), 0x16,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN1_RX), 0x42,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN1_RX), 0xa4,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN1_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN1_RX), 0x01,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN1_RX), 0x28,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN1_RX), 0x1E,
++								DME_LOCAL },
++		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN1_RX), 0x2f,
++								DME_LOCAL },
++	};
 +
-+MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
-+MODULE_DESCRIPTION("Synopsys Test Chip G210 PCI glue driver");
-+MODULE_LICENSE("Dual BSD/GPL");
++	/* Get the available lane count */
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
++			&connected_rx_lanes);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
++			&connected_tx_lanes);
++
++	if (connected_tx_lanes == 2) {
++
++		ret = ufshcd_dwc_dme_set_attrs(hba, setup_tx_attrs,
++						ARRAY_SIZE(setup_tx_attrs));
++
++		if (ret)
++			goto out;
++	}
++
++	if (connected_rx_lanes == 2) {
++		ret = ufshcd_dwc_dme_set_attrs(hba, setup_rx_attrs,
++						ARRAY_SIZE(setup_rx_attrs));
++	}
++
++out:
++	return ret;
++}
++
++/**
++ * tc_dwc_g210_setup_20bit_rmmi()
++ * This function configures Synopsys TC specific atributes (20-bit RMMI)
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success or non-zero value on failure
++ */
++static int tc_dwc_g210_setup_20bit_rmmi(struct ufs_hba *hba)
++{
++	int ret = 0;
++
++	const struct ufshcd_dme_attr_val setup_attrs[] = {
++		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
++		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
++		{ UIC_ARG_MIB(CDIRECTCTRL6), 0xc0, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDIVFACTOR), 0x44, DME_LOCAL },
++		{ UIC_ARG_MIB(CBDCOCTRL5), 0x64, DME_LOCAL },
++		{ UIC_ARG_MIB(CBPRGTUNING), 0x09, DME_LOCAL },
++		{ UIC_ARG_MIB(RTOBSERVESELECT), 0x00, DME_LOCAL },
++	};
++
++	ret = ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
++						ARRAY_SIZE(setup_attrs));
++	if (ret)
++		goto out;
++
++	/* Lane 0 configuration*/
++	ret = tc_dwc_g210_setup_20bit_rmmi_lane0(hba);
++	if (ret)
++		goto out;
++
++	/* Lane 1 configuration*/
++	ret = tc_dwc_g210_setup_20bit_rmmi_lane1(hba);
++	if (ret)
++		goto out;
++
++out:
++	return ret;
++}
++
++/**
++ * tc_dwc_g210_config_40_bit()
++ * This function configures Local (host) Synopsys 40-bit TC specific attributes
++ *
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success non-zero value on failure
++ */
++int tc_dwc_g210_config_40_bit(struct ufs_hba *hba)
++{
++	int ret = 0;
++
++	dev_info(hba->dev, "Configuring Test Chip 40-bit RMMI\n");
++	ret = tc_dwc_g210_setup_40bit_rmmi(hba);
++	if (ret) {
++		dev_err(hba->dev, "Configuration failed\n");
++		goto out;
++	}
++
++	/* To write Shadow register bank to effective configuration block */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
++	if (ret)
++		goto out;
++
++	/* To configure Debug OMC */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
++
++out:
++	return ret;
++}
++EXPORT_SYMBOL(tc_dwc_g210_config_40_bit);
++
++/**
++ * tc_dwc_g210_config_20_bit()
++ * This function configures Local (host) Synopsys 20-bit TC specific attributes
++ *
++ * @hba: Pointer to drivers structure
++ *
++ * Returns 0 on success non-zero value on failure
++ */
++int tc_dwc_g210_config_20_bit(struct ufs_hba *hba)
++{
++	int ret = 0;
++
++	dev_info(hba->dev, "Configuring Test Chip 20-bit RMMI\n");
++	ret = tc_dwc_g210_setup_20bit_rmmi(hba);
++	if (ret) {
++		dev_err(hba->dev, "Configuration failed\n");
++		goto out;
++	}
++
++	/* To write Shadow register bank to effective configuration block */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
++	if (ret)
++		goto out;
++
++	/* To configure Debug OMC */
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
++
++out:
++	return ret;
++}
++EXPORT_SYMBOL(tc_dwc_g210_config_20_bit);
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.h b/drivers/scsi/ufs/tc-dwc-g210.h
+new file mode 100644
+index 0000000..fb177db
+--- /dev/null
++++ b/drivers/scsi/ufs/tc-dwc-g210.h
+@@ -0,0 +1,19 @@
++/*
++ * Synopsys G210 Test Chip driver
++ *
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * Authors: Joao Pinto <jpinto@synopsys.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _TC_DWC_G210_H
++#define _TC_DWC_G210_H
++
++int tc_dwc_g210_config_40_bit(struct ufs_hba *hba);
++int tc_dwc_g210_config_20_bit(struct ufs_hba *hba);
++
++#endif /* End of Header */
 -- 
 1.8.1.5
 
