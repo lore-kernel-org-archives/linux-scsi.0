@@ -1,56 +1,75 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: hpsa: Fix type ZBC conditional checks
-Date: Mon, 02 May 2016 11:39:12 -0500
-Message-ID: <1462207152.5718.6.camel@petroskoutoupis.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [dm-devel] [Lsf] Notes from the four separate IO track sessions
+ at LSF/MM
+Date: Mon, 2 May 2016 11:49:54 -0700
+Message-ID: <5727A152.70109@sandisk.com>
+References: <1461800389.2311.70.camel@HansenPartnership.com>
+ <1461858038.2307.16.camel@HansenPartnership.com>
+ <5722320E.5080202@sandisk.com>
+ <610090691.32303585.1461860624844.JavaMail.zimbra@redhat.com>
+ <57223D36.60304@sandisk.com>
+ <74308856.32308210.1461862044976.JavaMail.zimbra@redhat.com>
+ <850484819.32589649.1461966427528.JavaMail.zimbra@redhat.com>
+ <5723FE06.70501@sandisk.com>
+ <1184712515.32596182.1461977223746.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:53566 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754161AbcEBQjV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 12:39:21 -0400
+Received: from mail-bl2on0083.outbound.protection.outlook.com ([65.55.169.83]:52933
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754835AbcEBSuA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 May 2016 14:50:00 -0400
+In-Reply-To: <1184712515.32596182.1461977223746.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: don.brace@microsemi.com
-Cc: petros@petroskoutoupis.com, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, esc.storagedev@microsemi.com
+To: Laurence Oberman <loberman@redhat.com>
+Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, device-mapper development <dm-devel@redhat.com>, lsf@lists.linux-foundation.org
 
-The device ID obtained from the inquiry can only be of a single type. T=
-he original
-code places a check for TYPE_ZBC right after the check for TYPE_DISK. L=
-ogically,
-if the first if statement sees a device of a TYPE_DISK and moves on to =
-the second
-statement checking if not TYPE_ZBC, it will always hit the continue.
+On 04/29/2016 05:47 PM, Laurence Oberman wrote:
+> From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> To: "Laurence Oberman" <loberman@redhat.com>
+> Cc: "James Bottomley" <James.Bottomley@HansenPartnership.com>, "linux-scsi" <linux-scsi@vger.kernel.org>, "Mike Snitzer" <snitzer@redhat.com>, linux-block@vger.kernel.org, "device-mapper development" <dm-devel@redhat.com>, lsf@lists.linux-foundation.org
+> Sent: Friday, April 29, 2016 8:36:22 PM
+> Subject: Re: [dm-devel] [Lsf] Notes from the four separate IO track sessions at LSF/MM
+>
+>> On 04/29/2016 02:47 PM, Laurence Oberman wrote:
+>>> Recovery with 21 LUNS is 300s that have in-flights to abort.
+>>> [ ... ]
+>>> eh_deadline is set to 10 on the 2 qlogic ports, eh_timeout is set
+>>> to 10 for all devices. In multipath fast_io_fail_tmo=5
+>>>
+>>> I jam one of the target array ports and discard the commands
+>>> effectively black-holing the commands and leave it that way until
+>>> we recover and I watch the I/O. The recovery takes around 300s even
+>>> with all the tuning and this effectively lands up in Oracle cluster
+>>> evictions.
+>>
+>> This discussion started as a discussion about the time needed to fail
+>> over from one path to another. How long did it take in your test before
+>> I/O failed over from the jammed port to another port?
+ >
+ > Around 300s before the paths were declared hard failed and the
+ > devices offlined. This is when I/O restarts.
+ > The remaining paths on the second Qlogic port (that are not jammed)
+ > will not be used until the error handler activity completes.
+ >
+ > Until we get these for example, and device-mapper starts declaring
+ > paths down we are blocked.
+ > Apr 29 17:20:51 localhost kernel: sd 1:0:1:0: Device offlined - not
+ > ready after error recovery
+ > Apr 29 17:20:51 localhost kernel: sd 1:0:1:13: Device offlined - not
+ > ready after error recovery
 
---- linux/drivers/scsi/hpsa.c.orig	2016-04-27 21:43:44.463140419 -0500
-+++ linux/drivers/scsi/hpsa.c	2016-04-27 22:45:31.015140419 -0500
-@@ -1637,9 +1637,8 @@ static void hpsa_figure_phys_disk_ptrs(s
-=C2=A0		for (j =3D 0; j < ndevices; j++) {
-=C2=A0			if (dev[j] =3D=3D NULL)
-=C2=A0				continue;
--			if (dev[j]->devtype !=3D TYPE_DISK)
--				continue;
--			if (dev[j]->devtype !=3D TYPE_ZBC)
-+			if ((dev[j]->devtype !=3D TYPE_DISK) &&
-+			=C2=A0=C2=A0=C2=A0=C2=A0(dev[j]->devtype !=3D TYPE_ZBC))
-=C2=A0				continue;
-=C2=A0			if (is_logical_device(dev[j]))
-=C2=A0				continue;
-@@ -1684,9 +1683,8 @@ static void hpsa_update_log_drive_phys_d
-=C2=A0	for (i =3D 0; i < ndevices; i++) {
-=C2=A0		if (dev[i] =3D=3D NULL)
-=C2=A0			continue;
--		if (dev[i]->devtype !=3D TYPE_DISK)
--			continue;
--		if (dev[i]->devtype !=3D TYPE_ZBC)
-+		if ((dev[i]->devtype !=3D TYPE_DISK) &&
-+		=C2=A0=C2=A0=C2=A0=C2=A0(dev[i]->devtype !=3D TYPE_ZBC))
-=C2=A0			continue;
-=C2=A0		if (!is_logical_device(dev[i]))
-=C2=A0			continue;
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hello Laurence,
+
+Everyone else on all mailing lists to which this message has been posted 
+replies below the message. Please follow this convention.
+
+Regarding the fail-over time: the ib_srp driver guarantees that 
+scsi_done() is invoked from inside its terminate_rport_io() function. 
+Apparently the lpfc and the qla2xxx drivers behave differently. Please 
+work with the maintainers of these drivers to reduce fail-over time.
+
+Bart.
