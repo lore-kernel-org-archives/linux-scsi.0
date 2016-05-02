@@ -1,90 +1,73 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
-Date: Mon, 02 May 2016 06:44:32 -0700
-Message-ID: <1462196672.2665.5.camel@linux.vnet.ibm.com>
-References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
-	 <5727266E.7040905@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v15 0/9] add support for DWC UFS Controller
+Date: Mon,  2 May 2016 14:55:26 +0100
+Message-ID: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:47876 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043AbcEBNok (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:44:40 -0400
-Received: from localhost
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-	Mon, 2 May 2016 07:44:39 -0600
-In-Reply-To: <5727266E.7040905@suse.de>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:46475 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbcEBNzn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:55:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jinpu Wang <jinpu.wang@profitbricks.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, Joao Pinto <Joao.Pinto@synopsys.com>
 
-On Mon, 2016-05-02 at 12:05 +0200, Hannes Reinecke wrote:
-> On 04/29/2016 02:49 PM, Jinpu Wang wrote:
-> > Hi, all
-> > 
-> > We hit IO error on fsync, it turns out was because sd treat
-> > succeeded
-> > SYNC as error. From what I checked in SBC spec there is no
-> > indication
-> > we should fail IO in this case, so we create this patch.
-> > 
-> > 
-> > Best Regards,
-> > 
-> > Jack Wang
-> > 
-> > v2:
-> > No change on patch itself, only resend in body as suggested by
-> > Bart,
-> > still keep the attachment in case mail client break the format.
-> > 
-> > From 5d1f72d9643ce61cd9f3d312377378c43f171d0c Mon Sep 17 00:00:00
-> > 2001
-> > From: Jack Wang <jinpu.wang@profitbricks.com>
-> > Date: Mon, 25 Apr 2016 12:05:22 +0200
-> > Subject: [PATCH] sd: Don't treat succeeded SYNC as error
-> > 
-> > We hit IO error in our production on multipath devices during
-> > resize
-> > device on target side, the problem turns out sd driver passes up as
-> > IO
-> > error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
-> > Capacity data has changed, even storage side sync the data
-> > properly.
-> > 
-> > In order to fix this check in sd_done, report success if condition
-> > matches.
-> > 
-> > Sebastian Parschauer report/analyze the bug here:
-> > https://sourceforge.net/p/scst/mailman/message/34953416/
-> > 
-> > Signed-off-by: Sebastian Parschauer <s.parschauer@gmx.de>
-> > Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-> > ---
-> >  drivers/scsi/sd.c | 13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> > 
-> Well.
-> Is there anything which guarantees us that 'capacity data has
-> changed' will be the only sense code which we'll be seeing as a
-> response to SYNCHRONIZE CACHE?
-> I sincerely doubt so.
-> So why don't you fall back to the default action (ie retry the
-> command) whenever you hit an UNIT ATTENTION?
-> This way we would cove any resulting sense code, _and_ would get rid
-> of the rather ugly special case here.
+As requested, I am sending v15 to be included in the SCSI patchwork.
+The patches were produced on top of the latest (2016-05-02) 4.7/scsi-queue
+branch. The patches were also validated by checkpatch.pl.
+I added to cover-letter the patch series 'reviewed-by' applied by
+Hannes Reinecke.
 
-Actually, why are we getting here at all?  should we be eating this
-unit attention once we've reported it in scsi_check_sense()?
+The work consisted of:
+- Fixed typo in ufshcd-pltfrm.c
+- Tweak ufshcd.c for UFS 2.0 support
+- Implement ufshcd-dwc which contains all DWC HW specific code
+- Unipro attributes were added and new registers were added to the driver
+- Implement a tc-dwc-g210 containing G210 MPHY specific code
+- Implement a tc-dwc-g210 glue platform driver
+- Implement a tc-dwc-g210 glue pci driver
+- Documentation update
 
-I also don't quite understand why the normal retry mechanism in
-scsi_io_completion() (called after drv->done()) isn't handling this. 
- We set retries on a flush command and we give sd_sync_cache three
-goes.  Any one of those should also cause the CC/UA to be ignored.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-James
+Joao Pinto (9):
+  fixed typo in ufshcd-pltfrm
+  add UFS 2.0 to ufshcd-pltfrm bindings
+  added UFS 2.0 capabilities
+  added unipro attributes
+  added link status to ufshci
+  added support for DesignWare Controller
+  added support for Synopsys G210 Test Chip
+  add TC G210 platform driver
+  add TC G210 pci driver
 
+ .../devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt |  26 ++
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   4 +-
+ MAINTAINERS                                        |   6 +
+ drivers/scsi/ufs/Kconfig                           |  25 ++
+ drivers/scsi/ufs/Makefile                          |   4 +
+ drivers/scsi/ufs/tc-dwc-g210-pci.c                 | 181 ++++++++++++
+ drivers/scsi/ufs/tc-dwc-g210-pltfrm.c              | 113 ++++++++
+ drivers/scsi/ufs/tc-dwc-g210.c                     | 315 +++++++++++++++++++++
+ drivers/scsi/ufs/tc-dwc-g210.h                     |  19 ++
+ drivers/scsi/ufs/ufshcd-dwc.c                      | 150 ++++++++++
+ drivers/scsi/ufs/ufshcd-dwc.h                      |  26 ++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |   2 +-
+ drivers/scsi/ufs/ufshcd.c                          |  90 +++---
+ drivers/scsi/ufs/ufshcd.h                          |   7 +
+ drivers/scsi/ufs/ufshci-dwc.h                      |  36 +++
+ drivers/scsi/ufs/ufshci.h                          |  11 +
+ drivers/scsi/ufs/unipro.h                          |  39 +++
+ 17 files changed, 1010 insertions(+), 44 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pci.c
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210.c
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210.h
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-dwc.h
+ create mode 100644 drivers/scsi/ufs/ufshci-dwc.h
+
+-- 
+1.8.1.5
 
