@@ -1,97 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
-Date: Mon, 02 May 2016 06:57:36 -0700
-Message-ID: <1462197456.2665.9.camel@HansenPartnership.com>
-References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
-	 <5727266E.7040905@suse.de> <1462196672.2665.5.camel@linux.vnet.ibm.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: UFS patchset
+Date: Mon, 2 May 2016 14:58:51 +0100
+Message-ID: <57275D1B.9010005@synopsys.com>
+References: <57233664.3090101@synopsys.com>
+ <yq1h9ekbo9j.fsf@sermon.lab.mkp.net> <572353C6.5070308@synopsys.com>
+ <yq18tzw9cxg.fsf@sermon.lab.mkp.net> <yq1eg9o6j0n.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47968 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750844AbcEBN5j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:57:39 -0400
-In-Reply-To: <1462196672.2665.5.camel@linux.vnet.ibm.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:46532 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbcEBN64 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:58:56 -0400
+In-Reply-To: <yq1eg9o6j0n.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jinpu Wang <jinpu.wang@profitbricks.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2016-05-02 at 06:44 -0700, James Bottomley wrote:
-> On Mon, 2016-05-02 at 12:05 +0200, Hannes Reinecke wrote:
-> > On 04/29/2016 02:49 PM, Jinpu Wang wrote:
-> > > Hi, all
-> > > 
-> > > We hit IO error on fsync, it turns out was because sd treat
-> > > succeeded
-> > > SYNC as error. From what I checked in SBC spec there is no
-> > > indication
-> > > we should fail IO in this case, so we create this patch.
-> > > 
-> > > 
-> > > Best Regards,
-> > > 
-> > > Jack Wang
-> > > 
-> > > v2:
-> > > No change on patch itself, only resend in body as suggested by
-> > > Bart,
-> > > still keep the attachment in case mail client break the format.
-> > > 
-> > > From 5d1f72d9643ce61cd9f3d312377378c43f171d0c Mon Sep 17 00:00:00
-> > > 2001
-> > > From: Jack Wang <jinpu.wang@profitbricks.com>
-> > > Date: Mon, 25 Apr 2016 12:05:22 +0200
-> > > Subject: [PATCH] sd: Don't treat succeeded SYNC as error
-> > > 
-> > > We hit IO error in our production on multipath devices during
-> > > resize
-> > > device on target side, the problem turns out sd driver passes up
-> > > as
-> > > IO
-> > > error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
-> > > Capacity data has changed, even storage side sync the data
-> > > properly.
-> > > 
-> > > In order to fix this check in sd_done, report success if
-> > > condition
-> > > matches.
-> > > 
-> > > Sebastian Parschauer report/analyze the bug here:
-> > > https://sourceforge.net/p/scst/mailman/message/34953416/
-> > > 
-> > > Signed-off-by: Sebastian Parschauer <s.parschauer@gmx.de>
-> > > Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-> > > ---
-> > >  drivers/scsi/sd.c | 13 +++++++++++++
-> > >  1 file changed, 13 insertions(+)
-> > > 
-> > Well.
-> > Is there anything which guarantees us that 'capacity data has
-> > changed' will be the only sense code which we'll be seeing as a
-> > response to SYNCHRONIZE CACHE?
-> > I sincerely doubt so.
-> > So why don't you fall back to the default action (ie retry the
-> > command) whenever you hit an UNIT ATTENTION?
-> > This way we would cove any resulting sense code, _and_ would get
-> > rid
-> > of the rather ugly special case here.
+Hi Martin,
+
+On 4/30/2016 1:24 AM, Martin K. Petersen wrote:
+>>>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
 > 
-> Actually, why are we getting here at all?  should we be eating this
-> unit attention once we've reported it in scsi_check_sense()?
+> Joao,
 > 
-> I also don't quite understand why the normal retry mechanism in
-> scsi_io_completion() (called after drv->done()) isn't handling this. 
->  We set retries on a flush command and we give sd_sync_cache three
-> goes.  Any one of those should also cause the CC/UA to be ignored.
+> Martin> In a previous email you said you had sent v14 to
+> Martin> linux-scsi. However, I don't see neither v14, nor v13 in
+> Martin> patchworks. The latest I have is v12 and it does not apply to
+> Martin> 4.7/scsi-queue.
+> 
+> I found v14 in my mailbox. Not sure why it's not in patchworks.
+> 
+> In any case: It still doesn't apply to 4.7/scsi-queue and there are
+> several checkpatch warnings throughout the series. Please fix.
+> 
+> Also make sure to prefix your patch subject lines with "ufs:" so it's
+> easy to identify which subsystem they go into.
+> 
+> Thanks!
+> 
 
-Actually, there's another problem with this patch: you're clearing the
-error and indicating success, meaning you never retry.  CC/UA for
-notifications is usually signalled in the device before acting on the
-command, so the chances are your SYNC request was never executed and if
-you never retry we'll be operating in a cache unstaged situation where
-we're assuming data will be on the medium.
+As promissed I sent you a new patch set based on the latest 4.7 queue branch,
+with "ufs:" prefix and completely tested and validated by checkpatch.
 
-James
-
-
+Thanks.
+Joao
