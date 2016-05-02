@@ -1,408 +1,97 @@
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v15 7/9] ufs: added support for Synopsys G210 Test Chip
-Date: Mon,  2 May 2016 14:55:33 +0100
-Message-ID: <59f5e69a05b307554aa33e19201a9714a4764276.1462187952.git.jpinto@synopsys.com>
-References: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
+Date: Mon, 02 May 2016 06:57:36 -0700
+Message-ID: <1462197456.2665.9.camel@HansenPartnership.com>
+References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
+	 <5727266E.7040905@suse.de> <1462196672.2665.5.camel@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:38272 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbcEBNzz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:55:55 -0400
-In-Reply-To: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
-In-Reply-To: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
-References: <c6e39c4050ec0d43186465b04fb8c4b18b93e98e.1462187952.git.jpinto@synopsys.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47968 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750844AbcEBN5j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 09:57:39 -0400
+In-Reply-To: <1462196672.2665.5.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, Joao Pinto <Joao.Pinto@synopsys.com>
+To: Hannes Reinecke <hare@suse.de>, Jinpu Wang <jinpu.wang@profitbricks.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-This patch adds support for Synopsys G210 Test Chip.
+On Mon, 2016-05-02 at 06:44 -0700, James Bottomley wrote:
+> On Mon, 2016-05-02 at 12:05 +0200, Hannes Reinecke wrote:
+> > On 04/29/2016 02:49 PM, Jinpu Wang wrote:
+> > > Hi, all
+> > > 
+> > > We hit IO error on fsync, it turns out was because sd treat
+> > > succeeded
+> > > SYNC as error. From what I checked in SBC spec there is no
+> > > indication
+> > > we should fail IO in this case, so we create this patch.
+> > > 
+> > > 
+> > > Best Regards,
+> > > 
+> > > Jack Wang
+> > > 
+> > > v2:
+> > > No change on patch itself, only resend in body as suggested by
+> > > Bart,
+> > > still keep the attachment in case mail client break the format.
+> > > 
+> > > From 5d1f72d9643ce61cd9f3d312377378c43f171d0c Mon Sep 17 00:00:00
+> > > 2001
+> > > From: Jack Wang <jinpu.wang@profitbricks.com>
+> > > Date: Mon, 25 Apr 2016 12:05:22 +0200
+> > > Subject: [PATCH] sd: Don't treat succeeded SYNC as error
+> > > 
+> > > We hit IO error in our production on multipath devices during
+> > > resize
+> > > device on target side, the problem turns out sd driver passes up
+> > > as
+> > > IO
+> > > error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
+> > > Capacity data has changed, even storage side sync the data
+> > > properly.
+> > > 
+> > > In order to fix this check in sd_done, report success if
+> > > condition
+> > > matches.
+> > > 
+> > > Sebastian Parschauer report/analyze the bug here:
+> > > https://sourceforge.net/p/scst/mailman/message/34953416/
+> > > 
+> > > Signed-off-by: Sebastian Parschauer <s.parschauer@gmx.de>
+> > > Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+> > > ---
+> > >  drivers/scsi/sd.c | 13 +++++++++++++
+> > >  1 file changed, 13 insertions(+)
+> > > 
+> > Well.
+> > Is there anything which guarantees us that 'capacity data has
+> > changed' will be the only sense code which we'll be seeing as a
+> > response to SYNCHRONIZE CACHE?
+> > I sincerely doubt so.
+> > So why don't you fall back to the default action (ie retry the
+> > command) whenever you hit an UNIT ATTENTION?
+> > This way we would cove any resulting sense code, _and_ would get
+> > rid
+> > of the rather ugly special case here.
+> 
+> Actually, why are we getting here at all?  should we be eating this
+> unit attention once we've reported it in scsi_check_sense()?
+> 
+> I also don't quite understand why the normal retry mechanism in
+> scsi_io_completion() (called after drv->done()) isn't handling this. 
+>  We set retries on a flush command and we give sd_sync_cache three
+> goes.  Any one of those should also cause the CC/UA to be ignored.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
-Changes v10->v15:
-- Nothing changed (just to keep up with patch set version).
-Changes v0->v10:
-- This patch only appeared in v10
+Actually, there's another problem with this patch: you're clearing the
+error and indicating success, meaning you never retry.  CC/UA for
+notifications is usually signalled in the device before acting on the
+command, so the chances are your SYNC request was never executed and if
+you never retry we'll be operating in a cache unstaged situation where
+we're assuming data will be on the medium.
 
- drivers/scsi/ufs/Kconfig       |   4 +
- drivers/scsi/ufs/Makefile      |   1 +
- drivers/scsi/ufs/tc-dwc-g210.c | 315 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/tc-dwc-g210.h |  19 +++
- 4 files changed, 339 insertions(+)
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210.c
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210.h
+James
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 06ff8ba..9594558 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -87,3 +87,7 @@ config SCSI_UFS_QCOM
- 
- config SCSI_UFS_DWC
- 	bool
-+
-+config SCSI_UFS_DWC_TC
-+	bool
-+	select SCSI_UFS_DWC
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index ccbad53..9468d7b 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -1,5 +1,6 @@
- # UFSHCD makefile
- obj-$(CONFIG_SCSI_UFS_DWC) += ufshcd-dwc.o
-+obj-$(CONFIG_SCSI_UFS_DWC_TC) += tc-dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
- obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
- obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
-new file mode 100644
-index 0000000..181f208
---- /dev/null
-+++ b/drivers/scsi/ufs/tc-dwc-g210.c
-@@ -0,0 +1,315 @@
-+/*
-+ * Synopsys G210 Test Chip driver
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include "ufshcd.h"
-+#include "unipro.h"
-+
-+#include "ufshcd-dwc.h"
-+#include "ufshci-dwc.h"
-+
-+/**
-+ * tc_dwc_g210_setup_40bit_rmmi()
-+ * This function configures Synopsys TC specific atributes (40-bit RMMI)
-+ * @hba: Pointer to drivers structure
-+ *
-+ * Returns 0 on success or non-zero value on failure
-+ */
-+static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
-+{
-+	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
-+		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
-+		{ UIC_ARG_MIB(CDIRECTCTRL6), 0x80, DME_LOCAL },
-+		{ UIC_ARG_MIB(CBDIVFACTOR), 0x08, DME_LOCAL },
-+		{ UIC_ARG_MIB(CBDCOCTRL5), 0x64, DME_LOCAL },
-+		{ UIC_ARG_MIB(CBPRGTUNING), 0x09, DME_LOCAL },
-+		{ UIC_ARG_MIB(RTOBSERVESELECT), 0x00, DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN0_TX), 0x14,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN0_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN0_RX), 0x19,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN0_RX), 4,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB(DIRECTCTRL10), 0x04, DME_LOCAL },
-+		{ UIC_ARG_MIB(DIRECTCTRL19), 0x02, DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN0_RX), 0x03,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN0_RX), 0x16,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN0_RX), 0x42,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN0_RX), 0xa4,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN0_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN0_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN0_RX), 0x28,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN0_RX), 0x1E,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB(CBPRGPLL2), 0x00, DME_LOCAL },
-+	};
-+
-+	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
-+						ARRAY_SIZE(setup_attrs));
-+}
-+
-+/**
-+ * tc_dwc_g210_setup_20bit_rmmi_lane0()
-+ * This function configures Synopsys TC 20-bit RMMI Lane 0
-+ * @hba: Pointer to drivers structure
-+ *
-+ * Returns 0 on success or non-zero value on failure
-+ */
-+static int tc_dwc_g210_setup_20bit_rmmi_lane0(struct ufs_hba *hba)
-+{
-+	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN0_RX), 0x19,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN0_TX), 0x12,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN0_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN0_RX), 2,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN0_RX), 0x80,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB(DIRECTCTRL10), 0x04, DME_LOCAL },
-+		{ UIC_ARG_MIB(DIRECTCTRL19), 0x02, DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN0_RX), 0x03,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN0_RX), 0x16,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN0_RX), 0x42,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN0_RX), 0xa4,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN0_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN0_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN0_RX), 0x28,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN0_RX), 0x1E,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN0_RX), 0x2f,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB(CBPRGPLL2), 0x00, DME_LOCAL },
-+	};
-+
-+	return ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
-+						ARRAY_SIZE(setup_attrs));
-+}
-+
-+/**
-+ * tc_dwc_g210_setup_20bit_rmmi_lane1()
-+ * This function configures Synopsys TC 20-bit RMMI Lane 1
-+ * @hba: Pointer to drivers structure
-+ *
-+ * Returns 0 on success or non-zero value on failure
-+ */
-+static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
-+{
-+	int connected_rx_lanes = 0;
-+	int connected_tx_lanes = 0;
-+	int ret = 0;
-+
-+	const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
-+		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN1_TX), 0x0d,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN1_TX), 0x19,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGEXTRATTR, SELIND_LN1_TX), 0x12,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(DITHERCTRL2, SELIND_LN0_TX), 0xd6,
-+								DME_LOCAL },
-+	};
-+
-+	const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
-+		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN1_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN1_RX), 0x19,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGWIDEINLN, SELIND_LN1_RX), 2,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXCDR8, SELIND_LN1_RX), 0x80,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG4, SELIND_LN1_RX), 0x03,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR8, SELIND_LN1_RX), 0x16,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXDIRECTCTRL2, SELIND_LN1_RX), 0x42,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG3, SELIND_LN1_RX), 0xa4,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXCALCTRL, SELIND_LN1_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(ENARXDIRECTCFG2, SELIND_LN1_RX), 0x01,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR4, SELIND_LN1_RX), 0x28,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(RXSQCTRL, SELIND_LN1_RX), 0x1E,
-+								DME_LOCAL },
-+		{ UIC_ARG_MIB_SEL(CFGRXOVR6, SELIND_LN1_RX), 0x2f,
-+								DME_LOCAL },
-+	};
-+
-+	/* Get the available lane count */
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
-+			&connected_rx_lanes);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
-+			&connected_tx_lanes);
-+
-+	if (connected_tx_lanes == 2) {
-+
-+		ret = ufshcd_dwc_dme_set_attrs(hba, setup_tx_attrs,
-+						ARRAY_SIZE(setup_tx_attrs));
-+
-+		if (ret)
-+			goto out;
-+	}
-+
-+	if (connected_rx_lanes == 2) {
-+		ret = ufshcd_dwc_dme_set_attrs(hba, setup_rx_attrs,
-+						ARRAY_SIZE(setup_rx_attrs));
-+	}
-+
-+out:
-+	return ret;
-+}
-+
-+/**
-+ * tc_dwc_g210_setup_20bit_rmmi()
-+ * This function configures Synopsys TC specific atributes (20-bit RMMI)
-+ * @hba: Pointer to drivers structure
-+ *
-+ * Returns 0 on success or non-zero value on failure
-+ */
-+static int tc_dwc_g210_setup_20bit_rmmi(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+
-+	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
-+		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
-+		{ UIC_ARG_MIB(CDIRECTCTRL6), 0xc0, DME_LOCAL },
-+		{ UIC_ARG_MIB(CBDIVFACTOR), 0x44, DME_LOCAL },
-+		{ UIC_ARG_MIB(CBDCOCTRL5), 0x64, DME_LOCAL },
-+		{ UIC_ARG_MIB(CBPRGTUNING), 0x09, DME_LOCAL },
-+		{ UIC_ARG_MIB(RTOBSERVESELECT), 0x00, DME_LOCAL },
-+	};
-+
-+	ret = ufshcd_dwc_dme_set_attrs(hba, setup_attrs,
-+						ARRAY_SIZE(setup_attrs));
-+	if (ret)
-+		goto out;
-+
-+	/* Lane 0 configuration*/
-+	ret = tc_dwc_g210_setup_20bit_rmmi_lane0(hba);
-+	if (ret)
-+		goto out;
-+
-+	/* Lane 1 configuration*/
-+	ret = tc_dwc_g210_setup_20bit_rmmi_lane1(hba);
-+	if (ret)
-+		goto out;
-+
-+out:
-+	return ret;
-+}
-+
-+/**
-+ * tc_dwc_g210_config_40_bit()
-+ * This function configures Local (host) Synopsys 40-bit TC specific attributes
-+ *
-+ * @hba: Pointer to drivers structure
-+ *
-+ * Returns 0 on success non-zero value on failure
-+ */
-+int tc_dwc_g210_config_40_bit(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+
-+	dev_info(hba->dev, "Configuring Test Chip 40-bit RMMI\n");
-+	ret = tc_dwc_g210_setup_40bit_rmmi(hba);
-+	if (ret) {
-+		dev_err(hba->dev, "Configuration failed\n");
-+		goto out;
-+	}
-+
-+	/* To write Shadow register bank to effective configuration block */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
-+	if (ret)
-+		goto out;
-+
-+	/* To configure Debug OMC */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
-+
-+out:
-+	return ret;
-+}
-+EXPORT_SYMBOL(tc_dwc_g210_config_40_bit);
-+
-+/**
-+ * tc_dwc_g210_config_20_bit()
-+ * This function configures Local (host) Synopsys 20-bit TC specific attributes
-+ *
-+ * @hba: Pointer to drivers structure
-+ *
-+ * Returns 0 on success non-zero value on failure
-+ */
-+int tc_dwc_g210_config_20_bit(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+
-+	dev_info(hba->dev, "Configuring Test Chip 20-bit RMMI\n");
-+	ret = tc_dwc_g210_setup_20bit_rmmi(hba);
-+	if (ret) {
-+		dev_err(hba->dev, "Configuration failed\n");
-+		goto out;
-+	}
-+
-+	/* To write Shadow register bank to effective configuration block */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_MPHYCFGUPDT), 0x01);
-+	if (ret)
-+		goto out;
-+
-+	/* To configure Debug OMC */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_DEBUGOMC), 0x01);
-+
-+out:
-+	return ret;
-+}
-+EXPORT_SYMBOL(tc_dwc_g210_config_20_bit);
-diff --git a/drivers/scsi/ufs/tc-dwc-g210.h b/drivers/scsi/ufs/tc-dwc-g210.h
-new file mode 100644
-index 0000000..fb177db
---- /dev/null
-+++ b/drivers/scsi/ufs/tc-dwc-g210.h
-@@ -0,0 +1,19 @@
-+/*
-+ * Synopsys G210 Test Chip driver
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef _TC_DWC_G210_H
-+#define _TC_DWC_G210_H
-+
-+int tc_dwc_g210_config_40_bit(struct ufs_hba *hba);
-+int tc_dwc_g210_config_20_bit(struct ufs_hba *hba);
-+
-+#endif /* End of Header */
--- 
-1.8.1.5
 
