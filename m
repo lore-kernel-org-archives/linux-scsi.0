@@ -1,51 +1,36 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v2.5 2/6] scsi_debug: rework resp_report_luns
-Date: Mon, 2 May 2016 08:29:26 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54255250@hasmsx108.ger.corp.intel.com>
-References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
- <1462070687-12689-3-git-send-email-dgilbert@interlog.com>
- <57270EF0.2070604@suse.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] aic94xx: silence a static checker warning
+Date: Mon, 2 May 2016 11:34:58 +0300
+Message-ID: <20160502083458.GA19792@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:26396 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbcEBI3b convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 04:29:31 -0400
-In-Reply-To: <57270EF0.2070604@suse.de>
-Content-Language: en-US
+Received: from aserp1040.oracle.com ([141.146.126.69]:23139 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbcEBIfK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 04:35:10 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "emilne@redhat.com" <emilne@redhat.com>, "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
+"ddb" is a number between 0-64.  It can't ever be >= 0xFFFF.  But the
+static checker complains that since we're capping the upper bound, we
+may as well cap the lower bound and disallow negatives as well.
 
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Monday, May 02, 2016 11:25
-> To: Douglas Gilbert <dgilbert@interlog.com>; linux-scsi@vger.kernel.org
-> Cc: martin.petersen@oracle.com; Winkler, Tomas
-> <tomas.winkler@intel.com>; emilne@redhat.com;
-> bart.vanassche@sandisk.com
-> Subject: Re: [PATCH v2.5 2/6] scsi_debug: rework resp_report_luns
-> 
-> On 05/01/2016 04:44 AM, Douglas Gilbert wrote:
-> > Based on "[PATH V2] scsi_debug: rework resp_report_luns" patch sent by
-> > Tomas Winkler on Thursday, 26 Feb 2015. His notes:
-> >   1. Remove duplicated boundary checks which simplify the fill-in
-> >      loop
-> >   2. Use more of scsi generic API
-> > Replace fixed length response array a with heap allocation allowing up
-> > to 256 normal LUNs per target.
-> >
-> > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-> > ---
-> >  drivers/scsi/scsi_debug.c | 135
-> > +++++++++++++++++++++++++++++-----------------
-> >  1 file changed, 87 insertions(+), 48 deletions(-)
-> >
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-Ack again 
-
+diff --git a/drivers/scsi/aic94xx/aic94xx_dev.c b/drivers/scsi/aic94xx/aic94xx_dev.c
+index 3307238..84eba3e 100644
+--- a/drivers/scsi/aic94xx/aic94xx_dev.c
++++ b/drivers/scsi/aic94xx/aic94xx_dev.c
+@@ -73,7 +73,7 @@ out:
+ 
+ static void asd_free_ddb(struct asd_ha_struct *asd_ha, int ddb)
+ {
+-	if (!ddb || ddb >= 0xFFFF)
++	if (ddb <= 0 || ddb >= 0xFFFF)
+ 		return;
+ 	asd_ddbsite_write_byte(asd_ha, ddb, DDB_TYPE, DDB_TYPE_UNUSED);
+ 	CLEAR_DDB(ddb, asd_ha);
