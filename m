@@ -1,49 +1,51 @@
-From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: Re: [PATCH RESEND] scsi: ultrastor: Use correct format identifier
- for kernel pointer
-Date: Sun, 1 May 2016 19:18:31 -0400
-Message-ID: <20160501231831.GA17680@sophia>
-References: <20160501215740.GA22213@sophia>
- <1462144105.2337.11.camel@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2.5 2/6] scsi_debug: rework resp_report_luns
+Date: Mon, 2 May 2016 10:25:20 +0200
+Message-ID: <57270EF0.2070604@suse.de>
+References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
+ <1462070687-12689-3-git-send-email-dgilbert@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:34806 "EHLO
-	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752453AbcEAXSl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 May 2016 19:18:41 -0400
-Content-Disposition: inline
-In-Reply-To: <1462144105.2337.11.camel@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:51419 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500AbcEBIZX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 May 2016 04:25:23 -0400
+In-Reply-To: <1462070687-12689-3-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
-On Sun, May 01, 2016 at 04:08:25PM -0700, James Bottomley wrote:
->On Sun, 2016-05-01 at 17:57 -0400, William Breathitt Gray wrote:
->> The 'bios_segment' member of a struct ultrastor_config is passed to the
->> sprintf function with a respective %05X format identifier. The
->> 'bio_segment' member is a kernel pointer, but the %X format identifier
->> expects an int data type. A cast to int is correctly used to satisfy the
->> format identifier, but this assumes that the int data type is the same
->> size as the kernel pointer, which is not the case on several
->> architectures such as X86_64. This patch removes the int cast and
->> replaces the %05X format identifier with %pK in order to print the
->> 'bio_segment' member regardless of architecture.
->
->But this statement is wrong: ultrastor only has seven possible hard
->coded bios segment values, all under 20 bits, as it happens, that's why
->the printk is %05X.  Unless you're proposing to alter values in the
->static table, there's no point in changing the print, is there?  Are
->you proposing to alter the static table values?
->
->James
+On 05/01/2016 04:44 AM, Douglas Gilbert wrote:
+> Based on "[PATH V2] scsi_debug: rework resp_report_luns" patch
+> sent by Tomas Winkler on Thursday, 26 Feb 2015. His notes:
+>   1. Remove duplicated boundary checks which simplify the fill-in
+>      loop
+>   2. Use more of scsi generic API
+> Replace fixed length response array a with heap allocation
+> allowing up to 256 normal LUNs per target.
+>=20
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> ---
+>  drivers/scsi/scsi_debug.c | 135 +++++++++++++++++++++++++++++-------=
+----------
+>  1 file changed, 87 insertions(+), 48 deletions(-)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-I'm sorry, I didn't realize bios_segment values were all under 20 bits;
-in which case they should all fit within the original 5 digit
-hexadecimal print. Please ignore this patch then as it was a
-misunderstanding on my part.
+Cheers,
 
-Thanks,
-
-William Breathitt Gray
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
