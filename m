@@ -1,50 +1,39 @@
 From: tom.ty89@gmail.com
-Subject: [PATCH 1/3] libata-scsi: Set CmdQue=1 when NCQ is enabled
-Date: Tue,  3 May 2016 04:13:19 +0800
-Message-ID: <5727b4e8.c923620a.641f4.17a2@mx.google.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH 2/3] libata-scsi: Fix SCSI INQUIRY version descriptor
+Date: Tue,  3 May 2016 04:13:20 +0800
+Message-ID: <5727b4ec.c923620a.641f4.17aa@mx.google.com>
+References: <1462220001-2566-1-git-send-email-me>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36108 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754864AbcEBUNd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2016 16:13:33 -0400
+In-Reply-To: <1462220001-2566-1-git-send-email-me>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: tj@kernel.org, linux-ide@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Tom Yan <tom.ty89@gmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=105931
-
-This might look trivial at first sight. However, it can be
-important to have the bit set accordingly when the device/SATL is
-SCSI-passthrough'd to a virtual machine with scsi-block in qemu:
-
-https://github.com/YanVugenfirer/kvm-guest-drivers-windows/issues/63#issuecomment-216199929
+https://bugzilla.kernel.org/show_bug.cgi?id=106931
 Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 567859c..cd30f11 100644
+index cd30f11..0295c38 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -2007,7 +2007,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 		0,
- 		0x5,	/* claim SPC-3 version compatibility */
- 		2,
--		95 - 4
-+		95 - 4,
-+		0,
-+		0,
-+		0
+@@ -1985,8 +1985,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x03,
+ 		0x20,	/* SBC-2 (no version claimed) */
+ 
+-		0x02,
+-		0x60	/* SPC-3 (no version claimed) */
++		0x03,
++		0x00	/* SPC-3 (no version claimed) */
  	};
- 
- 	VPRINTK("ENTER\n");
-@@ -2024,6 +2027,9 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
- 	}
- 
-+	if (ata_ncq_enabled(args->dev))
-+		hdr[7] |= (1 << 1);
-+
- 	memcpy(rbuf, hdr, sizeof(hdr));
- 	memcpy(&rbuf[8], "ATA     ", 8);
- 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+ 	const u8 versions_zbc[] = {
+ 		0x00,
 -- 
 2.8.2
 
