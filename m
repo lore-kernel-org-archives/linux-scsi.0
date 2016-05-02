@@ -1,37 +1,32 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2.5 2/6] scsi_debug: rework resp_report_luns
-Date: Mon, 2 May 2016 10:25:20 +0200
-Message-ID: <57270EF0.2070604@suse.de>
+Subject: Re: [PATCH v2.5 1/6] scsi_debug: use pdt constants
+Date: Mon, 2 May 2016 10:25:57 +0200
+Message-ID: <57270F15.3020306@suse.de>
 References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
- <1462070687-12689-3-git-send-email-dgilbert@interlog.com>
+ <1462070687-12689-2-git-send-email-dgilbert@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51419 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51464 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbcEBIZX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 May 2016 04:25:23 -0400
-In-Reply-To: <1462070687-12689-3-git-send-email-dgilbert@interlog.com>
+	id S1751500AbcEBIZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 May 2016 04:25:59 -0400
+In-Reply-To: <1462070687-12689-2-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
 On 05/01/2016 04:44 AM, Douglas Gilbert wrote:
-> Based on "[PATH V2] scsi_debug: rework resp_report_luns" patch
-> sent by Tomas Winkler on Thursday, 26 Feb 2015. His notes:
->   1. Remove duplicated boundary checks which simplify the fill-in
->      loop
->   2. Use more of scsi generic API
-> Replace fixed length response array a with heap allocation
-> allowing up to 256 normal LUNs per target.
+> Use TYPE_* constants for SCSI peripheral device types instead
+> of numbers. Further cleanups requested by checkpatch.pl .
 >=20
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->  drivers/scsi/scsi_debug.c | 135 +++++++++++++++++++++++++++++-------=
+>  drivers/scsi/scsi_debug.c | 86 +++++++++++++++++++++++++------------=
 ----------
->  1 file changed, 87 insertions(+), 48 deletions(-)
+>  1 file changed, 45 insertions(+), 41 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
