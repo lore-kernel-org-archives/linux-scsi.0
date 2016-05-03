@@ -1,95 +1,65 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 2/3] libata-scsi: Fix SCSI INQUIRY version descriptor
-Date: Tue, 3 May 2016 14:19:26 -0400
-Message-ID: <5728EBAE.2080200@interlog.com>
-References: <1462220001-2566-1-git-send-email-me>
- <5727b4ec.c923620a.641f4.17aa@mx.google.com>
-Reply-To: dgilbert@interlog.com
+From: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/42] v7: separate operations from flags in
+	the bio/request structs
+Date: Tue, 03 May 2016 16:44:02 -0400
+Message-ID: <x49d1p2c1nx.fsf@segfault.boston.devel.redhat.com>
+References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:43442 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932543AbcECSTi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 May 2016 14:19:38 -0400
-In-Reply-To: <5727b4ec.c923620a.641f4.17aa@mx.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <1460747777-8479-1-git-send-email-mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+	(mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org's message of "Fri, 15 Apr 2016 14:15:35 -0500")
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: tom.ty89@gmail.com, tj@kernel.org, linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
-On 2016-05-02 04:13 PM, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
+mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org writes:
+
+> The following patches begin to cleanup the request->cmd_flags and
+> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+> attributes and state of the request. For bi_rw we use it for similar
+> info and also the priority but then also have another bi_flags field
+> for state. At some point, we abused them so much we just made cmd_flags
+> 64 bits, so we could add more.
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=106931
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> The following patches seperate the operation (read, write discard,
+> flush, etc) from cmd_flags/bi_rw.
 >
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index cd30f11..0295c38 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1985,8 +1985,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
->   		0x03,
->   		0x20,	/* SBC-2 (no version claimed) */
+> This patchset was made against linux-next from today April 15
+> (git tag next-20160415).
 >
-> -		0x02,
-> -		0x60	/* SPC-3 (no version claimed) */
-> +		0x03,
-> +		0x00	/* SPC-3 (no version claimed) */
->   	};
->   	const u8 versions_zbc[] = {
->   		0x00,
->
+> I put a git tree here:
+> https://github.com/mikechristie/linux-kernel.git
+> The patches are in the op branch.
 
-SPC-3 was standardized in 2005 (ANSI INCITS 408-2005) and there
-is a more recent standard: SPC-4 (ANSI INCITS 513-2015). And
-my guess is that libata-scsi supports many things introduced
-in SPC-4 . If you switch to SPC-4 then the "version" field in
-the standard INQUIRY response (byte 2) should be changed to 6.
+Hi, Mike,
 
-Also SBC-2 is old (ANSI INCITS 405-2005) and should be updated
-to SBC-3 (ANSI INCITS 514-2014). Again many features supported
-by libata-scsi didn't exist in SBC-2.
+That git tree doesn't seem to exist.  I did manage to apply your patch
+set on top of next-20160415, though.
 
-And libata-scsi is a SCSI to ATA Translation (SAT) layer and
-there are standards for that, take your pick: SAT (ANSI INCITS
-431-2007), SAT-2 (ANSI INCITS 465-2010) or SAT-3 (ANSI INCITS
-517-2015).
+So... what testing did you do? ;-) I ran into the following problems:
+- git clone fails
+- yum segfaults
+- many blktrace/blkparse issues, including incorrect cpu recorded in
+  traces, null task names, and blkparse outputting nothing for a trace
+  file several gigabytes in size.
 
+After that, I decided to back out your patches and test the base
+linux-next kernel.  That kernel has none of those issues.
 
-Suggestion:
-   Version descriptors             value
-----------------------------------------
-     SAM-5 (no version claimed)    0x00a0
-     SPC-4 (no version claimed)    0x0460
-     SBC-3 (no version claimed)    0x04c0
-     SAT-3 (no version claimed)    0x1ee0
+So, either I'm missing some dependencies, or I think we've got some
+issues to iron out before this thing goes in.  Before I dig any further,
+am I missing something?
 
-Plus byte 2 of INQUIRY response: 0x6
-
-Doug Gilbert
-
-
-BTW in lk 4.6.0-rc5 I see this for a directly connected SATA SSD:
-
-# sg_inq -d /dev/sg0
-standard INQUIRY:
-   PQual=0  Device_type=0  RMB=0  LU_CONG=0  version=0x05  [SPC-3]
-   [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
-   SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-   EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-   [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
-   [SPI: Clocking=0x0  QAS=0  IUS=0]
-     length=96 (0x60)   Peripheral device type: disk
-  Vendor identification: ATA
-  Product identification: INTEL SSDSC2BW18
-  Product revision level: DC32
-  Unit serial number:
-
-   Version descriptors:
-     SAM-3 (no version claimed)
-     SBC-2 (no version claimed)
-     SPC-2 (no version claimed)
-
-
+Cheers,
+Jeff
