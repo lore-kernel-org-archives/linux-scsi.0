@@ -1,76 +1,48 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: Re: [PATCH] md: raid10: add prerequisite to run underneath dm-raid
-Date: Tue, 3 May 2016 19:58:04 +0200
-Message-ID: <5728E6AC.2070607@redhat.com>
-References: <1462297378-771-1-git-send-email-heinzm@redhat.com>
- <1462297882.16133.40.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: heinzm@redhat.com
+Subject: [PATCH] [REGRESSION] md: md.c: fix oops in mddev_suspend for raid0
+Date: Tue,  3 May 2016 19:11:30 +0200
+Message-ID: <1462295490-23805-1-git-send-email-heinzm@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36907 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932543AbcECR6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 May 2016 13:58:07 -0400
-In-Reply-To: <1462297882.16133.40.camel@HansenPartnership.com>
+Received: from ip5f587210.dynamic.kabel-deutschland.de ([95.88.114.16]:51496
+	"EHLO o.ww.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932270AbcECSDq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2016 14:03:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Heinz Mauelshagen <heinzm@redhat.com>
+
+From: Heinz Mauelshagen <heinzm@redhat.com>
+
+Introduced by upstream commit 70d9798b95562abac005d4ba71d28820f9a201eb
+
+The raid0 personality does not create mddev->thread as oposed to
+other personalities leading to its unconditional access in
+mddev_suspend() causing an oops.
+
+Patch checks for mddev->thread in order to keep the
+intention of aforementioned commit.
+
+Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
 
 
-On 05/03/2016 07:51 PM, James Bottomley wrote:
-> On Tue, 2016-05-03 at 19:42 +0200, heinzm@redhat.com wrote:
->> From: Heinz Mauelshagen <heinzm@redhat.com>
->>
->> In case md runs underneath the dm-raid target, the mddev does not
->> have a request queue or gendisk, thus avoid accesses to it.
->>
->> This patch adds two missing conditionals to the raid10 personality.
-> -EWRONGLIST.  drivers/md is handled by linux-raid@vger.kernel.org
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Sorry for the noise...
-
->
-> James
->
->> Signed-of-by: Heinz Mauelshagen <heinzm@redhat.com>
->>
->> ---
->>   drivers/md/raid10.c | 12 ++++++++----
->>   1 file changed, 8 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index e3fd725..84e24e6 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -3782,8 +3782,10 @@ static int raid10_resize(struct mddev *mddev,
->> sector_t sectors)
->>   			return ret;
->>   	}
->>   	md_set_array_sectors(mddev, size);
->> -	set_capacity(mddev->gendisk, mddev->array_sectors);
->> -	revalidate_disk(mddev->gendisk);
->> +	if (mddev->queue) {
->> +		set_capacity(mddev->gendisk, mddev->array_sectors);
->> +		revalidate_disk(mddev->gendisk);
->> +	}
->>   	if (sectors > mddev->dev_sectors &&
->>   	    mddev->recovery_cp > oldsize) {
->>   		mddev->recovery_cp = oldsize;
->> @@ -4593,8 +4595,10 @@ static void raid10_finish_reshape(struct mddev
->> *mddev)
->>   			set_bit(MD_RECOVERY_NEEDED, &mddev
->> ->recovery);
->>   		}
->>   		mddev->resync_max_sectors = size;
->> -		set_capacity(mddev->gendisk, mddev->array_sectors);
->> -		revalidate_disk(mddev->gendisk);
->> +		if (mddev->queue) {
->> +			set_capacity(mddev->gendisk, mddev
->> ->array_sectors);
->> +			revalidate_disk(mddev->gendisk);
->> +		}
->>   	} else {
->>   		int d;
->>   		for (d = conf->geo.raid_disks ;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 194580f..d91920d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -305,7 +305,7 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
+  */
+ void mddev_suspend(struct mddev *mddev)
+ {
+-	WARN_ON_ONCE(current == mddev->thread->tsk);
++	WARN_ON_ONCE(mddev->thread && current == mddev->thread->tsk);
+ 	if (mddev->suspended++)
+ 		return;
+ 	synchronize_rcu();
+-- 
+2.5.5
 
