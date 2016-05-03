@@ -1,57 +1,61 @@
-From: Andy Lutomirski <luto@kernel.org>
-Subject: [PATCH v2] megaraid: Downgrade two success messages to info
-Date: Tue,  3 May 2016 10:24:31 -0700
-Message-ID: <7e71f78a77208ec3f46f44e8c6dc6ebcff26c2ce.1462296213.git.luto@kernel.org>
+From: heinzm@redhat.com
+Subject: [PATCH] md: raid10: add prerequisite to run underneath dm-raid
+Date: Tue,  3 May 2016 19:42:58 +0200
+Message-ID: <1462297378-771-1-git-send-email-heinzm@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44623 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932756AbcECRYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 May 2016 13:24:35 -0400
+Received: from ip5f587210.dynamic.kabel-deutschland.de ([95.88.114.16]:51212
+	"EHLO o.ww.redhat.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933831AbcECRnE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2016 13:43:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Andy Lutomirski <luto@kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Heinz Mauelshagen <heinzm@redhat.com>
 
-I actually read the error messages in my logs, and successful
-initialization is not an error.
+From: Heinz Mauelshagen <heinzm@redhat.com>
 
-Arguably these log lines could be deleted entirely.
+In case md runs underneath the dm-raid target, the mddev does not have
+a request queue or gendisk, thus avoid accesses to it.
 
-Signed-off-by: Andy Lutomirski <luto@kernel.org>
+This patch adds two missing conditionals to the raid10 personality.
+
+
+Signed-of-by: Heinz Mauelshagen <heinzm@redhat.com>
+
 ---
+ drivers/md/raid10.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-Changes from v2: Remove hunk that didn't belong
-
-drivers/scsi/megaraid/megaraid_sas_base.c   | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e6ebc7ae2df1..d020919e8085 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5152,7 +5152,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 
- 	instance->instancet->enable_intr(instance);
- 
--	dev_err(&instance->pdev->dev, "INIT adapter done\n");
-+	dev_info(&instance->pdev->dev, "INIT adapter done\n");
- 
- 	megasas_setup_jbod_map(instance);
- 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 98a848bdfdc2..9375805670a9 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -851,7 +851,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		ret = 1;
- 		goto fail_fw_init;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index e3fd725..84e24e6 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3782,8 +3782,10 @@ static int raid10_resize(struct mddev *mddev, sector_t sectors)
+ 			return ret;
  	}
--	dev_err(&instance->pdev->dev, "Init cmd success\n");
-+	dev_info(&instance->pdev->dev, "Init cmd success\n");
- 
- 	ret = 0;
- 
+ 	md_set_array_sectors(mddev, size);
+-	set_capacity(mddev->gendisk, mddev->array_sectors);
+-	revalidate_disk(mddev->gendisk);
++	if (mddev->queue) {
++		set_capacity(mddev->gendisk, mddev->array_sectors);
++		revalidate_disk(mddev->gendisk);
++	}
+ 	if (sectors > mddev->dev_sectors &&
+ 	    mddev->recovery_cp > oldsize) {
+ 		mddev->recovery_cp = oldsize;
+@@ -4593,8 +4595,10 @@ static void raid10_finish_reshape(struct mddev *mddev)
+ 			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 		}
+ 		mddev->resync_max_sectors = size;
+-		set_capacity(mddev->gendisk, mddev->array_sectors);
+-		revalidate_disk(mddev->gendisk);
++		if (mddev->queue) {
++			set_capacity(mddev->gendisk, mddev->array_sectors);
++			revalidate_disk(mddev->gendisk);
++		}
+ 	} else {
+ 		int d;
+ 		for (d = conf->geo.raid_disks ;
 -- 
 2.5.5
 
