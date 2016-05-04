@@ -1,25 +1,50 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] cxlflash: Fix to resolve dead-lock during EEH recovery
-Date: Wed, 4 May 2016 16:46:47 -0500
-Message-ID: <C9428AEC-4B45-4B58-A3A1-E2DC02E59DF5@linux.vnet.ibm.com>
-References: <1462292801-33954-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1462292854-34014-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v2.5 3/6] scsi_debug: add multiple queue support
+Date: Wed, 4 May 2016 15:09:13 -0700
+Message-ID: <572A7309.9000703@sandisk.com>
+References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
+ <1462070687-12689-4-git-send-email-dgilbert@interlog.com>
+ <57271169.8020204@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:50475 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853AbcEDVrX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2016 17:47:23 -0400
-Received: from localhost
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 4 May 2016 15:47:22 -0600
-In-Reply-To: <1462292854-34014-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from mail-bn1on0064.outbound.protection.outlook.com ([157.56.110.64]:33894
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751132AbcEDWJU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 May 2016 18:09:20 -0400
+In-Reply-To: <57271169.8020204@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: Hannes Reinecke <hare@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+On 05/02/2016 01:35 AM, Hannes Reinecke wrote:
+> On 05/01/2016 04:44 AM, Douglas Gilbert wrote:
+>> Add submit_queue parameter (minimum and default: 1; maximum:
+>> nr_cpu_ids) that controls how many queues are built, each with
+>> their own lock and in_use bit vector. Add statistics parameter
+>> which is default on.
+>>
+>> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+>> ---
+>>   drivers/scsi/scsi_debug.c | 680 +++++++++++++++++++++++++++++-----------------
+>>   1 file changed, 426 insertions(+), 254 deletions(-)
+>>
+> Two general questions for this:
+>
+> - Why do you get rid of the embedded command payload?
+>    Where's the benefit of allocating the commands yourself?
+> - Wouldn't it be better to move to a per-cpu structure per queue?
+>    Each queue will be tacked to a CPU anyway, so you could be using
+>    per-cpu structures. Otherwise you'll run into synchronization
+>    issues, and any performance gain you might get from scsi-mq is
+>    lost as you to synchronize on the lower level.
 
+With submit_queues == nr_cpu_ids the block layer will ensure that the 
+each submit queue is always run on the same CPU core. This means that 
+there is a high chance that sdebug_queue.qc_lock will be present in the 
+L1 cache and hence that the locking overhead will be minimal.
+
+Bart.
