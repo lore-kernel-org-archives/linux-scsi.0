@@ -1,105 +1,61 @@
-From: Antonio Quartulli <a@unstable.cc>
-Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update
- with helper
-Date: Thu, 5 May 2016 01:20:42 +0800
-Message-ID: <20160504172042.GH11201@prodigo.lan>
-References: <1462285862-30946-1-git-send-email-fw@strlen.de>
- <1462285994-31983-1-git-send-email-fw@strlen.de>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 00/42] v7: separate operations from flags in the
+ bio/request structs
+Date: Wed, 4 May 2016 12:51:59 -0500
+Message-ID: <572A36BF.3070208@redhat.com>
+References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
+ <x49d1p2c1nx.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="hEk4XxIzAisM6naS"
-Return-path: <linux-can-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
-Sender: linux-can-owner@vger.kernel.org
-To: Florian Westphal <fw@strlen.de>
-Cc: netdev@vger.kernel.org, user-mode-linux-devel@lists.sourceforge.net, linux-xtensa@linux-xtensa.org, linux1394-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-can@vger.kernel.org, linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org, linux-hams@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-s390@vger.kernel.org, devel@driverdev.osuosl.org, b.a.t.m.a.n@lists.open-mesh.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <x49d1p2c1nx.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
+On 05/03/2016 03:44 PM, Jeff Moyer wrote:
+> mchristi@redhat.com writes:
+> 
+>> The following patches begin to cleanup the request->cmd_flags and
+>> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+>> attributes and state of the request. For bi_rw we use it for similar
+>> info and also the priority but then also have another bi_flags field
+>> for state. At some point, we abused them so much we just made cmd_flags
+>> 64 bits, so we could add more.
+>>
+>> The following patches seperate the operation (read, write discard,
+>> flush, etc) from cmd_flags/bi_rw.
+>>
+>> This patchset was made against linux-next from today April 15
+>> (git tag next-20160415).
+>>
+>> I put a git tree here:
+>> https://github.com/mikechristie/linux-kernel.git
+>> The patches are in the op branch.
+> 
+> Hi, Mike,
+> 
+> That git tree doesn't seem to exist.  I did manage to apply your patch
+> set on top of next-20160415, though.
+> 
+> So... what testing did you do? ;-) I ran into the following problems
 
---hEk4XxIzAisM6naS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I normally run xfstests and run it on my daily workstation and laptop. I
+did not do this for every FS this time and hit a regression.
 
-On Tue, May 03, 2016 at 04:33:13PM +0200, Florian Westphal wrote:
-> Replace all trans_start updates with netif_trans_update helper.
-> change was done via spatch:
->=20
-> struct net_device *d;
-> @@
-> - d->trans_start =3D jiffies
-> + netif_trans_update(d)
->=20
-> Compile tested only.
->=20
-> Cc: user-mode-linux-devel@lists.sourceforge.net
-> Cc: linux-xtensa@linux-xtensa.org
-> Cc: linux1394-devel@lists.sourceforge.net
-> Cc: linux-rdma@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: MPT-FusionLinux.pdl@broadcom.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-can@vger.kernel.org
-> Cc: linux-parisc@vger.kernel.org
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-hams@vger.kernel.org
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-s390@vger.kernel.org
-> Cc: devel@driverdev.osuosl.org
-> Cc: b.a.t.m.a.n@lists.open-mesh.org
-> Cc: linux-bluetooth@vger.kernel.org
-> Signed-off-by: Florian Westphal <fw@strlen.de>
-> ---
+What FS were you using?
 
-[...]
-
->  net/batman-adv/soft-interface.c                        | 2 +-
-
-[...]
-
-> diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interf=
-ace.c
-> index 0710379..bae1397 100644
-> --- a/net/batman-adv/soft-interface.c
-> +++ b/net/batman-adv/soft-interface.c
-> @@ -208,7 +208,7 @@ static int batadv_interface_tx(struct sk_buff *skb,
->  	if (atomic_read(&bat_priv->mesh_state) !=3D BATADV_MESH_ACTIVE)
->  		goto dropped;
-> =20
-> -	soft_iface->trans_start =3D jiffies;
-> +	netif_trans_update(soft_iface);
->  	vid =3D batadv_get_vid(skb, 0);
->  	ethhdr =3D eth_hdr(skb);
-> =20
+> - git clone fails
+> - yum segfaults
 
 
-Acked-by: Antonio Quartulli <a@unstable.cc>
+In v7/v6, I missed a new submit_bio call, so I hit issues like the two
+above. I have this fixed in the next version.
 
---=20
-Antonio Quartulli
+> - many blktrace/blkparse issues, including incorrect cpu recorded in
+>   traces, null task names, and blkparse outputting nothing for a trace
+>   file several gigabytes in size.
 
---hEk4XxIzAisM6naS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXKi9qAAoJEJ4aZjxxc6bKdy0QAKpnm2haE6oZ01LtxQu1VfKB
-Qer6rc7it+otFT8jIMkZ3Be9sL2++PZyMSivw0YZRQBHwv4vsauG8HeXUmnFGS9r
-rTGv5P9Z0R1TrDTlZBXH0Pui6GIWlyKkxpRqqVu4q/xHmWH8Y2yLUXi/0BA5xB6L
-3EPPoN/WyiCdZ/NGY8WJbuyF3H+UD0s8/YXLWbOGdzxZ4UgAJp5WPVr1QdvZ4Cl7
-kqnB2g/KvHc6ruY9viT21FDjEdWvxTZlKYGbLJAQNyuM1IunThZQ/fOM82Rdtnj6
-u46FixCz2AbHVnBZht+ODlnrypKj3jBdEXu1/YclguwBHzSnwdF2M7Wswpx38VZN
-zkArU7t5LIZfiGqNpwXL0A7jovBRqI6FDJrynTKqJFjNTA/IZHwzZcWErXXp/4En
-xD/9GPLK/Lr1dUY7vteYvIjzTq3YUfPsiRsMvdyhHlDU/KJWYPrJIjotjJgXCdcT
-sLyCSGpSATmyZGhQW6BEkr3rm3y1fSOxQSD2Jmyv6sBXwaGSBpQzSalTgezUQjKm
-GpARsJONS/PpV0PbIt660Of7OikWXgDOTR6z2Oe8tPt55D+UKoUHlfQU83dPm6m1
-VW+3QZx2xue3jH05I8BeX6SKBVrtQfRh1nVi6xhkWgHaVahuh9BLgcPh2copDt/3
-UB23coo6jv90cnkJg5FC
-=6q9+
------END PGP SIGNATURE-----
-
---hEk4XxIzAisM6naS--
+I will double check for these issues.
