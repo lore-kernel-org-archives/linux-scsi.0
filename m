@@ -1,89 +1,117 @@
-From: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: libiscsi: Use scsi helper to set information descriptor
-Date: Wed, 4 May 2016 14:45:54 +0300
-Message-ID: <20160504114554.GA8805@mwanda>
-References: <20160413131425.GA9719@mwanda>
- <570E5D54.8070303@grimberg.me>
- <20160413163053.GD4247@mwanda>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
+Date: Wed, 4 May 2016 19:02:53 +0200
+Message-ID: <CAMGffEmxzPrTKv=6Z=Nsiquk6L0OvZ3spYUR47CYUbaf5Spbeg@mail.gmail.com>
+References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
+ <5727266E.7040905@suse.de> <1462196672.2665.5.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDIZTUWNWICRB7GBU64QKGQEVT2RUWQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <20160413163053.GD4247@mwanda>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:36210 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbcEDRDO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2016 13:03:14 -0400
+Received: by mail-oi0-f45.google.com with SMTP id x201so72838361oif.3
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2016 10:03:13 -0700 (PDT)
+In-Reply-To: <1462196672.2665.5.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-You saw the bug in the end right?
+On Mon, May 2, 2016 at 3:44 PM, James Bottomley <jejb@linux.vnet.ibm.com> wrote:
+> On Mon, 2016-05-02 at 12:05 +0200, Hannes Reinecke wrote:
+>> On 04/29/2016 02:49 PM, Jinpu Wang wrote:
+>> > Hi, all
+>> >
+>> > We hit IO error on fsync, it turns out was because sd treat
+>> > succeeded
+>> > SYNC as error. From what I checked in SBC spec there is no
+>> > indication
+>> > we should fail IO in this case, so we create this patch.
+>> >
+>> >
+>> > Best Regards,
+>> >
+>> > Jack Wang
+>> >
+>> > v2:
+>> > No change on patch itself, only resend in body as suggested by
+>> > Bart,
+>> > still keep the attachment in case mail client break the format.
+>> >
+>> > From 5d1f72d9643ce61cd9f3d312377378c43f171d0c Mon Sep 17 00:00:00
+>> > 2001
+>> > From: Jack Wang <jinpu.wang@profitbricks.com>
+>> > Date: Mon, 25 Apr 2016 12:05:22 +0200
+>> > Subject: [PATCH] sd: Don't treat succeeded SYNC as error
+>> >
+>> > We hit IO error in our production on multipath devices during
+>> > resize
+>> > device on target side, the problem turns out sd driver passes up as
+>> > IO
+>> > error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
+>> > Capacity data has changed, even storage side sync the data
+>> > properly.
+>> >
+>> > In order to fix this check in sd_done, report success if condition
+>> > matches.
+>> >
+>> > Sebastian Parschauer report/analyze the bug here:
+>> > https://sourceforge.net/p/scst/mailman/message/34953416/
+>> >
+>> > Signed-off-by: Sebastian Parschauer <s.parschauer@gmx.de>
+>> > Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+>> > ---
+>> >  drivers/scsi/sd.c | 13 +++++++++++++
+>> >  1 file changed, 13 insertions(+)
+>> >
+>> Well.
+>> Is there anything which guarantees us that 'capacity data has
+>> changed' will be the only sense code which we'll be seeing as a
+>> response to SYNCHRONIZE CACHE?
+>> I sincerely doubt so.
+>> So why don't you fall back to the default action (ie retry the
+>> command) whenever you hit an UNIT ATTENTION?
+>> This way we would cove any resulting sense code, _and_ would get rid
+>> of the rather ugly special case here.
+>
+> Actually, why are we getting here at all?  should we be eating this
+> unit attention once we've reported it in scsi_check_sense()?
+>
+> I also don't quite understand why the normal retry mechanism in
+> scsi_io_completion() (called after drv->done()) isn't handling this.
+>  We set retries on a flush command and we give sd_sync_cache three
+> goes.  Any one of those should also cause the CC/UA to be ignored.
+>
+> James
+>
+>
 
-  1112  u8 iser_check_task_pi_status(struct iscsi_iser_task *iser_task,
-  1113                               enum iser_data_dir cmd_dir, sector_t *sector)
-                                                                           ^^^^^^
-The caller assumes sector is initialized on error.
+Sorry for delay, I agree safer to retry this command.
+I checked the code path, in scsi_io_completion, we call
+__scsi_error_from_host_byte for FLUSH request,
+and we set error to EIO by default, somehow the code report error
+directly to user space without retry.
+[  647.206270] sd 1:0:0:0: [sdb] tag#0 Send: scmd 0xffff8800b6558480
+[  647.206422] sd 1:0:0:0: [sdb] tag#0 CDB: Synchronize Cache(10) 35
+00 00 00 00 00 00 00 00 00
+[  647.209748] sd 1:0:0:0: Capacity data has changed
+[  647.209896] sd 1:0:0:0: [sdb] tag#0 Done: SUCCESS Result:
+hostbyte=DID_OK driverbyte=DRIVER_OK
+[  647.210157] sd 1:0:0:0: [sdb] tag#0 CDB: Synchronize Cache(10) 35
+00 00 00 00 00 00 00 00 00
+[  647.210419] sd 1:0:0:0: [sdb] tag#0 Sense Key : Unit Attention [current]
+[  647.210567] sd 1:0:0:0: [sdb] tag#0 Add. Sense: Capacity data has changed
+[  647.210741] sd 1:0:0:0: [sdb] tag#0 scsi host busy 1 failed 0
+[  647.210888] sd 1:0:0:0: Notifying upper driver of completion (result 8000002)
+[  647.211035] sd 1:0:0:0: [sdb] tag#0 sd_done: completed 0 of 0 bytes
+[  647.211182] sd 1:0:0:0: [sdb] tag#0 0 sectors total, 0 bytes done, error -5
+[  647.211330] blk_update_request: I/O error, dev sdb, sector 0
 
-  1114  {
-  1115          struct iser_mem_reg *reg = &iser_task->rdma_reg[cmd_dir];
-  1116          struct iser_fr_desc *desc = reg->mem_h;
-  1117          unsigned long sector_size = iser_task->sc->device->sector_size;
-  1118          struct ib_mr_status mr_status;
-  1119          int ret;
-  1120  
-  1121          if (desc && desc->pi_ctx->sig_protected) {
-  1122                  desc->pi_ctx->sig_protected = 0;
-  1123                  ret = ib_check_mr_status(desc->pi_ctx->sig_mr,
-  1124                                           IB_MR_CHECK_SIG_STATUS, &mr_status);
-  1125                  if (ret) {
-  1126                          pr_err("ib_check_mr_status failed, ret %d\n", ret);
-  1127                          goto err;
+Will figure out why retry doesn't work.
 
-But we have an error path where it's not initialized.
+Thanks James and Hannes for all your input.
 
-  1128                  }
-  1129  
-  1130                  if (mr_status.fail_status & IB_MR_CHECK_SIG_STATUS) {
-  1131                          sector_t sector_off = mr_status.sig_err.sig_err_offset;
-  1132  
-  1133                          sector_div(sector_off, sector_size + 8);
-  1134                          *sector = scsi_get_lba(iser_task->sc) + sector_off;
-  1135  
-  1136                          pr_err("PI error found type %d at sector %llx "
-  1137                                 "expected %x vs actual %x\n",
-  1138                                 mr_status.sig_err.err_type,
-  1139                                 (unsigned long long)*sector,
-  1140                                 mr_status.sig_err.expected,
-  1141                                 mr_status.sig_err.actual);
-  1142  
-  1143                          switch (mr_status.sig_err.err_type) {
-  1144                          case IB_SIG_BAD_GUARD:
-  1145                                  return 0x1;
-  1146                          case IB_SIG_BAD_REFTAG:
-  1147                                  return 0x3;
-  1148                          case IB_SIG_BAD_APPTAG:
-  1149                                  return 0x2;
-  1150                          }
-  1151                  }
-  1152          }
-  1153  
-  1154          return 0;
-  1155  err:
-  1156          /* Not alot we can do here, return ambiguous guard error */
-  1157          return 0x1;
-  1158  }
-
-regards,
-dan carpenter
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Regards,
+Jack
