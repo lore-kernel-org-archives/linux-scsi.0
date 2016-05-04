@@ -1,46 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2] megaraid: Downgrade two success messages to info
-Date: Wed, 4 May 2016 08:50:40 +0200
-Message-ID: <57299BC0.3040304@suse.de>
-References: <7e71f78a77208ec3f46f44e8c6dc6ebcff26c2ce.1462296213.git.luto@kernel.org>
+From: Paul Mackerras <paulus@ozlabs.org>
+Subject: Regression in v4.6-rc due to SCSI multipath change
+Date: Wed, 4 May 2016 16:51:02 +1000
+Message-ID: <20160504065101.GA19436@oak.ozlabs.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49614 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751293AbcEDGum (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2016 02:50:42 -0400
-In-Reply-To: <7e71f78a77208ec3f46f44e8c6dc6ebcff26c2ce.1462296213.git.luto@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Lutomirski <luto@kernel.org>, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
-On 05/03/2016 07:24 PM, Andy Lutomirski wrote:
-> I actually read the error messages in my logs, and successful
-> initialization is not an error.
->=20
-> Arguably these log lines could be deleted entirely.
->=20
-> Signed-off-by: Andy Lutomirski <luto@kernel.org>
-> ---
->=20
-> Changes from v2: Remove hunk that didn't belong
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Current upstream kernels fail to boot on my POWER8 server with
+multipath SCSI disks and IPR host bus adapters.  What happens is that
+the system finds each disk twice (as normal) and then prints messages
+like this:
 
-Cheers,
+[    2.827761] sd 1:2:4:0: alua: supports implicit TPGS
+[    2.827875] sd 1:2:4:0: alua: No device descriptors found
+[    2.827923] sd 1:2:4:0: alua: Attach failed (-22)
+[    2.827979] device-mapper: table: 253:0: multipath: error attaching hardware handler
+[    2.828048] device-mapper: ioctl: error adding target to table
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eventually dracut times out (this is with Fedora 23) enters emergency
+mode.
+
+I bisected the problem down to commit 0047220c6c36 ("scsi_dh_alua: use
+unique device id", 2016-02-19).  It seems that this commit adds the
+restriction that we can only do multipath with disks that have stuff
+in their VPD page 83 that scsi_vpd_lun_id() can parse.  The disks on
+my server apparently don't.
+
+I instrumented scsi_vpd_lun_id() to find out what was going on.  The
+disks on this machine have a vendor-specific designator and a T10
+vendor ID based designator, but no designators of types 2, 3 or 8.
+An example from one disk is:
+
+02 01 00 20 49 42 4d 20 20 20 20 20 49 50 52 2d 30 20 20 20 35 45 43
+34 41 42 30 30 30 30 30 30 30 30 32 30
+
+02 00 00 14 30 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+
+I have a patch that extends scsi_vpd_lun_id() to be able to use the
+T10 vendor ID based designator, which fixes the problem on my system.
+I'll post the patch shortly.
+
+However, was it really intentional that multipath now can't be used
+with disks like these, when it worked just fine previously?
+
+Paul.
