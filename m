@@ -1,117 +1,105 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
-Date: Wed, 4 May 2016 19:02:53 +0200
-Message-ID: <CAMGffEmxzPrTKv=6Z=Nsiquk6L0OvZ3spYUR47CYUbaf5Spbeg@mail.gmail.com>
-References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
- <5727266E.7040905@suse.de> <1462196672.2665.5.camel@linux.vnet.ibm.com>
+From: Antonio Quartulli <a@unstable.cc>
+Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update
+ with helper
+Date: Thu, 5 May 2016 01:20:42 +0800
+Message-ID: <20160504172042.GH11201@prodigo.lan>
+References: <1462285862-30946-1-git-send-email-fw@strlen.de>
+ <1462285994-31983-1-git-send-email-fw@strlen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:36210 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436AbcEDRDO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2016 13:03:14 -0400
-Received: by mail-oi0-f45.google.com with SMTP id x201so72838361oif.3
-        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2016 10:03:13 -0700 (PDT)
-In-Reply-To: <1462196672.2665.5.camel@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="hEk4XxIzAisM6naS"
+Return-path: <linux-can-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
+Sender: linux-can-owner@vger.kernel.org
+To: Florian Westphal <fw@strlen.de>
+Cc: netdev@vger.kernel.org, user-mode-linux-devel@lists.sourceforge.net, linux-xtensa@linux-xtensa.org, linux1394-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-can@vger.kernel.org, linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org, linux-hams@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-s390@vger.kernel.org, devel@driverdev.osuosl.org, b.a.t.m.a.n@lists.open-mesh.org, linux-bluetooth@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-On Mon, May 2, 2016 at 3:44 PM, James Bottomley <jejb@linux.vnet.ibm.com> wrote:
-> On Mon, 2016-05-02 at 12:05 +0200, Hannes Reinecke wrote:
->> On 04/29/2016 02:49 PM, Jinpu Wang wrote:
->> > Hi, all
->> >
->> > We hit IO error on fsync, it turns out was because sd treat
->> > succeeded
->> > SYNC as error. From what I checked in SBC spec there is no
->> > indication
->> > we should fail IO in this case, so we create this patch.
->> >
->> >
->> > Best Regards,
->> >
->> > Jack Wang
->> >
->> > v2:
->> > No change on patch itself, only resend in body as suggested by
->> > Bart,
->> > still keep the attachment in case mail client break the format.
->> >
->> > From 5d1f72d9643ce61cd9f3d312377378c43f171d0c Mon Sep 17 00:00:00
->> > 2001
->> > From: Jack Wang <jinpu.wang@profitbricks.com>
->> > Date: Mon, 25 Apr 2016 12:05:22 +0200
->> > Subject: [PATCH] sd: Don't treat succeeded SYNC as error
->> >
->> > We hit IO error in our production on multipath devices during
->> > resize
->> > device on target side, the problem turns out sd driver passes up as
->> > IO
->> > error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
->> > Capacity data has changed, even storage side sync the data
->> > properly.
->> >
->> > In order to fix this check in sd_done, report success if condition
->> > matches.
->> >
->> > Sebastian Parschauer report/analyze the bug here:
->> > https://sourceforge.net/p/scst/mailman/message/34953416/
->> >
->> > Signed-off-by: Sebastian Parschauer <s.parschauer@gmx.de>
->> > Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
->> > ---
->> >  drivers/scsi/sd.c | 13 +++++++++++++
->> >  1 file changed, 13 insertions(+)
->> >
->> Well.
->> Is there anything which guarantees us that 'capacity data has
->> changed' will be the only sense code which we'll be seeing as a
->> response to SYNCHRONIZE CACHE?
->> I sincerely doubt so.
->> So why don't you fall back to the default action (ie retry the
->> command) whenever you hit an UNIT ATTENTION?
->> This way we would cove any resulting sense code, _and_ would get rid
->> of the rather ugly special case here.
->
-> Actually, why are we getting here at all?  should we be eating this
-> unit attention once we've reported it in scsi_check_sense()?
->
-> I also don't quite understand why the normal retry mechanism in
-> scsi_io_completion() (called after drv->done()) isn't handling this.
->  We set retries on a flush command and we give sd_sync_cache three
-> goes.  Any one of those should also cause the CC/UA to be ignored.
->
-> James
->
->
 
-Sorry for delay, I agree safer to retry this command.
-I checked the code path, in scsi_io_completion, we call
-__scsi_error_from_host_byte for FLUSH request,
-and we set error to EIO by default, somehow the code report error
-directly to user space without retry.
-[  647.206270] sd 1:0:0:0: [sdb] tag#0 Send: scmd 0xffff8800b6558480
-[  647.206422] sd 1:0:0:0: [sdb] tag#0 CDB: Synchronize Cache(10) 35
-00 00 00 00 00 00 00 00 00
-[  647.209748] sd 1:0:0:0: Capacity data has changed
-[  647.209896] sd 1:0:0:0: [sdb] tag#0 Done: SUCCESS Result:
-hostbyte=DID_OK driverbyte=DRIVER_OK
-[  647.210157] sd 1:0:0:0: [sdb] tag#0 CDB: Synchronize Cache(10) 35
-00 00 00 00 00 00 00 00 00
-[  647.210419] sd 1:0:0:0: [sdb] tag#0 Sense Key : Unit Attention [current]
-[  647.210567] sd 1:0:0:0: [sdb] tag#0 Add. Sense: Capacity data has changed
-[  647.210741] sd 1:0:0:0: [sdb] tag#0 scsi host busy 1 failed 0
-[  647.210888] sd 1:0:0:0: Notifying upper driver of completion (result 8000002)
-[  647.211035] sd 1:0:0:0: [sdb] tag#0 sd_done: completed 0 of 0 bytes
-[  647.211182] sd 1:0:0:0: [sdb] tag#0 0 sectors total, 0 bytes done, error -5
-[  647.211330] blk_update_request: I/O error, dev sdb, sector 0
+--hEk4XxIzAisM6naS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Will figure out why retry doesn't work.
+On Tue, May 03, 2016 at 04:33:13PM +0200, Florian Westphal wrote:
+> Replace all trans_start updates with netif_trans_update helper.
+> change was done via spatch:
+>=20
+> struct net_device *d;
+> @@
+> - d->trans_start =3D jiffies
+> + netif_trans_update(d)
+>=20
+> Compile tested only.
+>=20
+> Cc: user-mode-linux-devel@lists.sourceforge.net
+> Cc: linux-xtensa@linux-xtensa.org
+> Cc: linux1394-devel@lists.sourceforge.net
+> Cc: linux-rdma@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Cc: MPT-FusionLinux.pdl@broadcom.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-can@vger.kernel.org
+> Cc: linux-parisc@vger.kernel.org
+> Cc: linux-omap@vger.kernel.org
+> Cc: linux-hams@vger.kernel.org
+> Cc: linux-usb@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-s390@vger.kernel.org
+> Cc: devel@driverdev.osuosl.org
+> Cc: b.a.t.m.a.n@lists.open-mesh.org
+> Cc: linux-bluetooth@vger.kernel.org
+> Signed-off-by: Florian Westphal <fw@strlen.de>
+> ---
 
-Thanks James and Hannes for all your input.
+[...]
 
-Regards,
-Jack
+>  net/batman-adv/soft-interface.c                        | 2 +-
+
+[...]
+
+> diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interf=
+ace.c
+> index 0710379..bae1397 100644
+> --- a/net/batman-adv/soft-interface.c
+> +++ b/net/batman-adv/soft-interface.c
+> @@ -208,7 +208,7 @@ static int batadv_interface_tx(struct sk_buff *skb,
+>  	if (atomic_read(&bat_priv->mesh_state) !=3D BATADV_MESH_ACTIVE)
+>  		goto dropped;
+> =20
+> -	soft_iface->trans_start =3D jiffies;
+> +	netif_trans_update(soft_iface);
+>  	vid =3D batadv_get_vid(skb, 0);
+>  	ethhdr =3D eth_hdr(skb);
+> =20
+
+
+Acked-by: Antonio Quartulli <a@unstable.cc>
+
+--=20
+Antonio Quartulli
+
+--hEk4XxIzAisM6naS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXKi9qAAoJEJ4aZjxxc6bKdy0QAKpnm2haE6oZ01LtxQu1VfKB
+Qer6rc7it+otFT8jIMkZ3Be9sL2++PZyMSivw0YZRQBHwv4vsauG8HeXUmnFGS9r
+rTGv5P9Z0R1TrDTlZBXH0Pui6GIWlyKkxpRqqVu4q/xHmWH8Y2yLUXi/0BA5xB6L
+3EPPoN/WyiCdZ/NGY8WJbuyF3H+UD0s8/YXLWbOGdzxZ4UgAJp5WPVr1QdvZ4Cl7
+kqnB2g/KvHc6ruY9viT21FDjEdWvxTZlKYGbLJAQNyuM1IunThZQ/fOM82Rdtnj6
+u46FixCz2AbHVnBZht+ODlnrypKj3jBdEXu1/YclguwBHzSnwdF2M7Wswpx38VZN
+zkArU7t5LIZfiGqNpwXL0A7jovBRqI6FDJrynTKqJFjNTA/IZHwzZcWErXXp/4En
+xD/9GPLK/Lr1dUY7vteYvIjzTq3YUfPsiRsMvdyhHlDU/KJWYPrJIjotjJgXCdcT
+sLyCSGpSATmyZGhQW6BEkr3rm3y1fSOxQSD2Jmyv6sBXwaGSBpQzSalTgezUQjKm
+GpARsJONS/PpV0PbIt660Of7OikWXgDOTR6z2Oe8tPt55D+UKoUHlfQU83dPm6m1
+VW+3QZx2xue3jH05I8BeX6SKBVrtQfRh1nVi6xhkWgHaVahuh9BLgcPh2copDt/3
+UB23coo6jv90cnkJg5FC
+=6q9+
+-----END PGP SIGNATURE-----
+
+--hEk4XxIzAisM6naS--
