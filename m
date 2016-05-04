@@ -1,121 +1,77 @@
-From: Felipe Balbi <felipe.balbi@linux.intel.com>
-Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update
- with helper
-Date: Wed, 04 May 2016 11:14:45 +0300
-Message-ID: <87vb2udytm.fsf@intel.com>
-References: <1462285862-30946-1-git-send-email-fw@strlen.de>
- <1462285994-31983-1-git-send-email-fw@strlen.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Regression in v4.6-rc due to SCSI multipath change
+Date: Wed, 4 May 2016 10:59:20 +0200
+Message-ID: <5729B9E8.2080605@suse.de>
+References: <20160504065101.GA19436@oak.ozlabs.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0612351183774410813=="
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: netdev@vger.kernel.org
-Cc: devel@driverdev.osuosl.org, linux-xtensa@linux-xtensa.org, linux-omap@vger.kernel.org, linux-scsi@vger.kernel.org, user-mode-linux-devel@lists.sourceforge.net, linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, Florian Westphal <fw@strlen.de>, linux-can@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-parisc@vger.kernel.org, b.a.t.m.a.n@lists.open-mesh.org, linux-hams@vger.kernel.org, linux1394-devel@lists.sourceforge.net, MPT-FusionLinux.pdl@broadcom.com
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160504065101.GA19436@oak.ozlabs.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Mackerras <paulus@ozlabs.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
---===============0612351183774410813==
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha1; protocol="application/pgp-signature"
+On 05/04/2016 08:51 AM, Paul Mackerras wrote:
+> Current upstream kernels fail to boot on my POWER8 server with
+> multipath SCSI disks and IPR host bus adapters.  What happens is that
+> the system finds each disk twice (as normal) and then prints messages
+> like this:
+>=20
+> [    2.827761] sd 1:2:4:0: alua: supports implicit TPGS
+> [    2.827875] sd 1:2:4:0: alua: No device descriptors found
+> [    2.827923] sd 1:2:4:0: alua: Attach failed (-22)
+> [    2.827979] device-mapper: table: 253:0: multipath: error attachin=
+g hardware handler
+> [    2.828048] device-mapper: ioctl: error adding target to table
+>=20
+> Eventually dracut times out (this is with Fedora 23) enters emergency
+> mode.
+>=20
+> I bisected the problem down to commit 0047220c6c36 ("scsi_dh_alua: us=
+e
+> unique device id", 2016-02-19).  It seems that this commit adds the
+> restriction that we can only do multipath with disks that have stuff
+> in their VPD page 83 that scsi_vpd_lun_id() can parse.  The disks on
+> my server apparently don't.
+>=20
+> I instrumented scsi_vpd_lun_id() to find out what was going on.  The
+> disks on this machine have a vendor-specific designator and a T10
+> vendor ID based designator, but no designators of types 2, 3 or 8.
+> An example from one disk is:
+>=20
+> 02 01 00 20 49 42 4d 20 20 20 20 20 49 50 52 2d 30 20 20 20 35 45 43
+> 34 41 42 30 30 30 30 30 30 30 30 32 30
+>=20
+> 02 00 00 14 30 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 =
+20
+>=20
+> I have a patch that extends scsi_vpd_lun_id() to be able to use the
+> T10 vendor ID based designator, which fixes the problem on my system.
+> I'll post the patch shortly.
+>=20
+Please do. I'm about to draft a patch myself, but if you already
+have one ...
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> However, was it really intentional that multipath now can't be used
+> with disks like these, when it worked just fine previously?
+>=20
+Well. The thing is, ALUA can't really work if no VPD descriptors are
+found, and so the check itself is correct.
 
+Howver, we really need to parse all possible VPD descriptors, for
+sure, so that is indeed a bug.
+I'm preparing a patch for decoding all possible VPD descriptors, too.
 
-Hi,
+Let's see who's first :-)
 
-Florian Westphal <fw@strlen.de> writes:
-> Replace all trans_start updates with netif_trans_update helper.
-> change was done via spatch:
->
-> struct net_device *d;
-> @@
-> - d->trans_start =3D jiffies
-> + netif_trans_update(d)
->
-> Compile tested only.
->
-> Cc: user-mode-linux-devel@lists.sourceforge.net
-> Cc: linux-xtensa@linux-xtensa.org
-> Cc: linux1394-devel@lists.sourceforge.net
-> Cc: linux-rdma@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: MPT-FusionLinux.pdl@broadcom.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-can@vger.kernel.org
-> Cc: linux-parisc@vger.kernel.org
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-hams@vger.kernel.org
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-s390@vger.kernel.org
-> Cc: devel@driverdev.osuosl.org
-> Cc: b.a.t.m.a.n@lists.open-mesh.org
-> Cc: linux-bluetooth@vger.kernel.org
-> Signed-off-by: Florian Westphal <fw@strlen.de>
-> ---
+Cheers,
 
-for u_ether.c:
-
-Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
-
-> diff --git a/drivers/usb/gadget/function/u_ether.c b/drivers/usb/gadget/f=
-unction/u_ether.c
-> index 637809e..a3f7e7c 100644
-> --- a/drivers/usb/gadget/function/u_ether.c
-> +++ b/drivers/usb/gadget/function/u_ether.c
-> @@ -597,7 +597,7 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
->  		DBG(dev, "tx queue err %d\n", retval);
->  		break;
->  	case 0:
-> -		net->trans_start =3D jiffies;
-> +		netif_trans_update(net);
->  		atomic_inc(&dev->tx_qlen);
->  	}
-
-=2D-=20
-balbi
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJXKa91AAoJEIaOsuA1yqREa0UP/35SFn4ZofIoB65PTj1xg8X/
-n7p9jjvrvEml10E4POQ/ZKeKzNBobiZfTvPVQ5fJ3DeaxYRMFNldcoNvv3XLHgb1
-J/A6NNdCBYPMo7cc/67RCJKC+NEMbplqQSrLyCL4N8KDaR0ToDvFOhDW5ENtYAFR
-+hHewPpprXHex8FPax3PMuuNCRkV/hz3PxCXnF+1h5nKD3hsXZwzQQAVC4OkWkzo
-f9pAczgygfMWpsdOK4lBqAf82sK9P/bOJoE7ag/6zJ3E8EvmiB2oqtBzWzpdpWgL
-JAZ4O8g2q2eV+vXK8ZqMt/yUwdS+V0ouR+iReYAATahEXzu0XPRZSHwmL0qKbl/D
-RN4cVtSHl9cYltkxEMUSNUWZhGDaAyOiYbWWXwDQvus915p5Nq41v2VJailJBQD0
-w+K4gJAw+0igWKgvq1M/JwoJftk9cA75Dw18f+6T6j/e78k0ZCnj1F4WHjWAIAAm
-b54FVVjKATCK8/vIl73vtUpgdAzYeue3mwfd+PP5UfMXRpcEZU2icEyvHgyvbU5U
-ChlCb1NRYIJ01e+J5Ov/Xd6+Pln8EwV4W4imFjzcsLNjiVU0OumWVqFqPtlDd4tq
-5rKSXFa4XdaMA0CAM48AjdQmE3ta+xFFe+Q0GqVTMgyc4QOvSmZuWmsdfTmgyqC+
-DjWMdryqMVHstUt2mUPA
-=NJVp
------END PGP SIGNATURE-----
---=-=-=--
-
---===============0612351183774410813==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-devel mailing list
-devel@linuxdriverproject.org
-http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
-
---===============0612351183774410813==--
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
