@@ -1,67 +1,82 @@
-From: <jha@billund.dk>
-Subject: linux-scsi
-Date: Wed, 05 May 2016 14:32:50 0000
-Message-ID: <000101d1a6db$002f1520$c0a80001@comstar.ru>
+From: Paul Mackerras <paulus@ozlabs.org>
+Subject: Re: [PATCH] scsi: Make scsi_vpd_lun_id() able to use T10 vendor ID
+ based designators
+Date: Thu, 5 May 2016 22:41:36 +1000
+Message-ID: <20160505124136.GA8374@fergus.ozlabs.ibm.com>
+References: <20160504065830.GB19436@oak.ozlabs.ibm.com>
+ <5729C920.1040206@suse.de>
+ <20160505035010.GA4635@oak.ozlabs.ibm.com>
+ <572AFDC9.1000607@suse.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DramTeatrPushkina.access.comstar.ru ([89.175.118.110]:48590
-	"HELO comstar.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with SMTP id S1756447AbcEEIcz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2016 04:32:55 -0400
-Content-Disposition: attachment
+Received: from ozlabs.org ([103.22.144.67]:42270 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752666AbcEEMlt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2016 08:41:49 -0400
+Content-Disposition: inline
+In-Reply-To: <572AFDC9.1000607@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
+On Thu, May 05, 2016 at 10:01:13AM +0200, Hannes Reinecke wrote:
+> On 05/05/2016 05:50 AM, Paul Mackerras wrote:
+> > On Wed, May 04, 2016 at 12:04:16PM +0200, Hannes Reinecke wrote:
+...
+> >> Nearly.
+> >> The thing is, a T-10 vendor specific ID is _supposed_ to be an ASCII
+> >> string. So I'd rather have it decoded as such.
+> > 
+> > Do we need to defend against non-printing characters in the string?
+> > 
+> I really would like to stick to ASCII output here, as most vendors put a
+> meaningful string in here.
+> Those who don't we should be going with the '.' normal method and print
+> a dot '.' instead.
+> (Can't we fix up snprintf do do it for us? Would be soo cool ...)
+> 
+> >> And we're missing decoding for 'vendor-specific' ID, too.
+> > 
+> > There's no guarantee that this would be ASCII, right?  So would you
+> > print it in hex?
+> > 
+> Yes, that's the plan here.
+> 
+> > Also, is there a preference between these types?  For example, is an
+> > 8-byte EUI-64 preferable to a vendor-specific ID of any length?
+> > 
+> Yes. I'd treat T10 vendor ID descriptors with the lowest preference
+> (irrespective of the length), eclipsed (sic) only by the truly vendor
+> specific ones.
 
+Well, the disks on my system all have the same vendor-specific ID,
+unfortunately -- a '0' followed by 19 spaces.  Here are the
+designators for all the disks on my system:
 
-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
+scsi 0:2:0:0: 02 01 00 20 'IBM     IPR-0   5EC4AB0000000020'
+scsi 0:2:0:0: 02 00 00 14 '0                   '
+scsi 0:2:1:0: 02 01 00 20 'IBM     IPR-0   5EC28C0000000080'
+scsi 0:2:1:0: 02 00 00 14 '0                   '
+scsi 0:2:2:0: 02 01 00 20 'IBM     IPR-0   5EC28C0000000060'
+scsi 0:2:2:0: 02 00 00 14 '0                   '
+scsi 0:2:3:0: 02 01 00 20 'IBM     IPR-0   5EC28C0000000040'
+scsi 0:2:3:0: 02 00 00 14 '0                   '
+scsi 0:2:4:0: 02 01 00 20 'IBM     IPR-0   5EC28C0000000020'
+scsi 0:2:4:0: 02 00 00 14 '0                   '
+scsi 0:2:5:0: 02 01 00 20 'IBM     IPR-0   5EC28C00000000C0'
+scsi 0:2:5:0: 02 00 00 14 '0                   '
+scsi 0:2:6:0: 02 01 00 20 'IBM     IPR-0   5EC28C00000000A0'
+scsi 0:2:6:0: 02 00 00 14 '0                   '
+
+> And actually I would make the vendor-specific decoding the default
+> entry, too, as we might come across some other descriptors which we
+> cannot decode (yet). And by having a default method for decoding we
+> ensure to always be able to come up with an ALUA identification.
+> Otherwise we might end up in the same situation as we're in now.
+
+What would happen if we pick a designator which is not unique across
+different disks?  Would we think that they were all the same disk?
+
+Paul.
