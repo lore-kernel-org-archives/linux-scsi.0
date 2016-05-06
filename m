@@ -1,136 +1,48 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH v3 6/6] scsi_debug: use locally assigned naa
-Date: Fri,  6 May 2016 00:40:29 -0400
-Message-ID: <1462509629-24282-7-git-send-email-dgilbert@interlog.com>
-References: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Subject: RE: [PATCH resend v2] [SCSI] bfa: fix bfa_fcb_itnim_alloc() error
+ handling
+Date: Fri, 6 May 2016 06:44:01 +0000
+Message-ID: <CY1PR11MB0218498E60CACA99E39CA608947D0@CY1PR11MB0218.namprd11.prod.outlook.com>
+References: <20160413111441.GC4247@mwanda>
+ <yq1inysvv12.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55646 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314AbcEFEkr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2016 00:40:47 -0400
-In-Reply-To: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
+Received: from mail-by2on0131.outbound.protection.outlook.com ([207.46.100.131]:43973
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751171AbcEFHQc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2016 03:16:32 -0400
+In-Reply-To: <yq1inysvv12.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-For reported SAS addresses replace fake IEEE registered NAAs (5)
-with locally assigned NAAs (3).
+Apologies for the delay. Patch looks good.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 35 ++++++++++++++++++-----------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+Acked by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index efb4549..0f9ba41 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -925,9 +925,10 @@ static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
- static const char * inq_vendor_id = "Linux   ";
- static const char * inq_product_id = "scsi_debug      ";
- static const char *inq_product_rev = "0186";	/* version less '.' */
--static const u64 naa5_comp_a = 0x5222222000000000ULL;
--static const u64 naa5_comp_b = 0x5333333000000000ULL;
--static const u64 naa5_comp_c = 0x5111111000000000ULL;
-+/* Use some locally assigned NAAs for SAS addresses. */
-+static const u64 naa3_comp_a = 0x3222222000000000ULL;
-+static const u64 naa3_comp_b = 0x3333333000000000ULL;
-+static const u64 naa3_comp_c = 0x3111111000000000ULL;
- 
- /* Device identification VPD page. Returns number of bytes placed in arr */
- static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
-@@ -961,12 +962,12 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 			memcpy(arr + num, lu_name, 16);
- 			num += 16;
- 		} else {
--			/* NAA-5, Logical unit identifier (binary) */
-+			/* NAA-3, Logical unit identifier (binary) */
- 			arr[num++] = 0x1;  /* binary (not necessarily sas) */
- 			arr[num++] = 0x3;  /* PIV=0, lu, naa */
- 			arr[num++] = 0x0;
- 			arr[num++] = 0x8;
--			put_unaligned_be64(naa5_comp_b + dev_id_num, arr + num);
-+			put_unaligned_be64(naa3_comp_b + dev_id_num, arr + num);
- 			num += 8;
- 		}
- 		/* Target relative port number */
-@@ -979,14 +980,14 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 		arr[num++] = 0x0;
- 		arr[num++] = 0x1;	/* relative port A */
- 	}
--	/* NAA-5, Target port identifier */
-+	/* NAA-3, Target port identifier */
- 	arr[num++] = 0x61;	/* proto=sas, binary */
- 	arr[num++] = 0x93;	/* piv=1, target port, naa */
- 	arr[num++] = 0x0;
- 	arr[num++] = 0x8;
--	put_unaligned_be64(naa5_comp_a + port_a, arr + num);
-+	put_unaligned_be64(naa3_comp_a + port_a, arr + num);
- 	num += 8;
--	/* NAA-5, Target port group identifier */
-+	/* NAA-3, Target port group identifier */
- 	arr[num++] = 0x61;	/* proto=sas, binary */
- 	arr[num++] = 0x95;	/* piv=1, target port group id */
- 	arr[num++] = 0x0;
-@@ -995,19 +996,19 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 	arr[num++] = 0;
- 	put_unaligned_be16(port_group_id, arr + num);
- 	num += 2;
--	/* NAA-5, Target device identifier */
-+	/* NAA-3, Target device identifier */
- 	arr[num++] = 0x61;	/* proto=sas, binary */
- 	arr[num++] = 0xa3;	/* piv=1, target device, naa */
- 	arr[num++] = 0x0;
- 	arr[num++] = 0x8;
--	put_unaligned_be64(naa5_comp_a + target_dev_id, arr + num);
-+	put_unaligned_be64(naa3_comp_a + target_dev_id, arr + num);
- 	num += 8;
- 	/* SCSI name string: Target device identifier */
- 	arr[num++] = 0x63;	/* proto=sas, UTF-8 */
- 	arr[num++] = 0xa8;	/* piv=1, target device, SCSI name string */
- 	arr[num++] = 0x0;
- 	arr[num++] = 24;
--	memcpy(arr + num, "naa.52222220", 12);
-+	memcpy(arr + num, "naa.32222220", 12);
- 	num += 12;
- 	snprintf(b, sizeof(b), "%08X", target_dev_id);
- 	memcpy(arr + num, b, 8);
-@@ -1086,7 +1087,7 @@ static int inquiry_vpd_88(unsigned char *arr, int target_dev_id)
- 	arr[num++] = 0x93;	/* PIV=1, target port, NAA */
- 	arr[num++] = 0x0;	/* reserved */
- 	arr[num++] = 0x8;	/* length */
--	put_unaligned_be64(naa5_comp_a + port_a, arr + num);
-+	put_unaligned_be64(naa3_comp_a + port_a, arr + num);
- 	num += 8;
- 	arr[num++] = 0x0;	/* reserved */
- 	arr[num++] = 0x0;	/* reserved */
-@@ -1101,7 +1102,7 @@ static int inquiry_vpd_88(unsigned char *arr, int target_dev_id)
- 	arr[num++] = 0x93;	/* PIV=1, target port, NAA */
- 	arr[num++] = 0x0;	/* reserved */
- 	arr[num++] = 0x8;	/* length */
--	put_unaligned_be64(naa5_comp_a + port_b, arr + num);
-+	put_unaligned_be64(naa3_comp_a + port_b, arr + num);
- 	num += 8;
- 
- 	return num;
-@@ -1931,10 +1932,10 @@ static int resp_sas_pcd_m_spg(unsigned char * p, int pcontrol, int target,
- 		};
- 	int port_a, port_b;
- 
--	put_unaligned_be64(naa5_comp_a, sas_pcd_m_pg + 16);
--	put_unaligned_be64(naa5_comp_c + 1, sas_pcd_m_pg + 24);
--	put_unaligned_be64(naa5_comp_a, sas_pcd_m_pg + 64);
--	put_unaligned_be64(naa5_comp_c + 1, sas_pcd_m_pg + 72);
-+	put_unaligned_be64(naa3_comp_a, sas_pcd_m_pg + 16);
-+	put_unaligned_be64(naa3_comp_c + 1, sas_pcd_m_pg + 24);
-+	put_unaligned_be64(naa3_comp_a, sas_pcd_m_pg + 64);
-+	put_unaligned_be64(naa3_comp_c + 1, sas_pcd_m_pg + 72);
- 	port_a = target_dev_id + 1;
- 	port_b = port_a + 1;
- 	memcpy(p, sas_pcd_m_pg, sizeof(sas_pcd_m_pg));
+
+-----Original Message-----
+From: Martin K. Petersen [mailto:martin.petersen@oracle.com] 
+Sent: 06 May 2016 06:54
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>; Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>; James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>; linux-scsi <linux-scsi@vger.kernel.org>; kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH resend v2] [SCSI] bfa: fix bfa_fcb_itnim_alloc() error handling
+
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+
+Dan> The caller assumes that "itnim" is NULL on error and non-NULL on 
+Dan> success but really "itnim" is uninitialized on error.  This 
+Dan> function should just use normal error handling where it returns 
+Dan> zero on success and negative on failure.
+
+Anil, please review:
+
+	https://patchwork.kernel.org/patch/8820751/
+
 -- 
-2.7.4
-
+Martin K. Petersen	Oracle Linux Engineering
