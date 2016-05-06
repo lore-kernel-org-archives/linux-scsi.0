@@ -1,60 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi_lib: Decode T-10 vendor IDs
-Date: Fri,  6 May 2016 10:35:07 +0200
-Message-ID: <1462523707-63224-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59830 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751928AbcEFIf0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2016 04:35:26 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chaitra P B <chaitra.basappa@broadcom.com>
+Subject: [PATCH 0/6] mpt3sas: driver update to Phase12.
+Date: Fri,  6 May 2016 14:29:25 +0530
+Message-ID: <1462525171-6877-1-git-send-email-chaitra.basappa@broadcom.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-kernel@vger.kernel.org, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Paul Mackerras <paulus@ozlabs.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Some arrays / HBAs will only present T-10 vendor IDs, so we
-should be decoding them, too.
+Here is the change list:
+* Updated MPI version and MPI header files.
+* Handle active cable exception event for Intruder/Cutlass HBAs.
+* Use scsi_prot_ref_tag()API to fill reference tag field in the CDB.
+* Updated mpt3sas driver version to Ph12 13.100.00.00
+* Set maximum transfer length per IO on RAID volumes to 4MB.
+* Use "synchronize_irq()"API to handle Asynchronous TM's completion.
 
-Suggested-by: Paul Mackerras <paulus@ozlabs.org>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_lib.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Chaitra P B (6):
+  mpt3sas: Update MPI header to 2.00.42
+  mpt3sas: Handle active cable exception event
+  mpt3sas: Fix initial Reference tag field for 4K PI drives.
+  mpt3sas: Updating mpt3sas driver version to 13.100.00.00
+  mpt3sas: Set maximum transfer length per IO to 4MB for VDs
+  mpt3sas: Used "synchronize_irq()"API to synchronize timed-out IO
+    & TMs
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b920c5d..a6158f8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3064,6 +3064,7 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
- 	 * - EUI-64 based 12-byte
- 	 * - NAA IEEE Registered
- 	 * - NAA IEEE Extended
-+	 * - T10 Vendor ID
- 	 * as longer descriptors reduce the likelyhood
- 	 * of identification clashes.
- 	 */
-@@ -3082,6 +3083,21 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
- 			goto next_desig;
- 
- 		switch (d[1] & 0xf) {
-+		case 0x1:
-+			/* T-10 Vendor ID */
-+			if (cur_id_size > d[3])
-+				break;
-+			/* Prefer anything */
-+			if (cur_id_type > 0x01)
-+				break;
-+			cur_id_size = d[3];
-+			if (cur_id_size + 4 > id_len)
-+				cur_id_size = id_len - 4;
-+			cur_id_str = d + 4;
-+			cur_id_type = d[1] & 0xf;
-+			id_size = snprintf(id, id_len, "t10.%*pE",
-+					   cur_id_size, cur_id_str);
-+			break;
- 		case 0x2:
- 			/* EUI-64 */
- 			if (cur_id_size > d[3])
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  7 +++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 18 +++++++++++-----
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h | 15 +++++++++++---
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  | 40 +++++++++++++++++++++++++++++++-----
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 20 ++++++++++--------
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  9 +++++---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 27 ++++++++++++++++++++++--
+ 7 files changed, 108 insertions(+), 28 deletions(-)
+
 -- 
-1.8.5.6
-
+1.8.3.1
