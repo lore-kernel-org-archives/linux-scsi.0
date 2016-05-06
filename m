@@ -1,48 +1,31 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] target: need_to_release is always false, remove redundant check and kfree
-Date: Fri,  6 May 2016 00:16:17 +0100
-Message-ID: <1462490177-23028-1-git-send-email-colin.king@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A . Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/1] cxlflash: Fix to resolve dead-lock during EEH recovery
+Date: Thu, 05 May 2016 21:03:08 -0400
+Message-ID: <yq11t5gxak3.fsf@sermon.lab.mkp.net>
+References: <1462292801-33954-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+	<1462292854-34014-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47454 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756016AbcEFBDa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2016 21:03:30 -0400
+In-Reply-To: <1462292854-34014-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+	(Uma Krishnan's message of "Tue, 3 May 2016 11:27:34 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+>>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
 
-The removal the #ifdef'd code on CONFIG_ARCH_HAS_SG_CHAIN in
-commit 02c4de53add1b79 ("target/rd: always chain S/G list")
-removed the setting of need_to_release to true, so we are now left
-with need_to_release always being false and hence the conditional
-kfree is never reached.  Clean up the dead code by removing need_to_release
-and the conditional kfree.
+Uma> When a cxlflash adapter goes into EEH recovery and multiple
+Uma> processes (each having established its own context) are active, the
+Uma> EEH recovery can hang if the processes attempt to recover in
+Uma> parallel. The symptom logged after a couple of minutes is:
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/target/target_core_rd.c | 4 ----
- 1 file changed, 4 deletions(-)
+Applied to 4.7/scsi-queue.
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 47a833f..24b36fd 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -403,7 +403,6 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
- 	struct se_device *se_dev = cmd->se_dev;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *prot_table;
--	bool need_to_release = false;
- 	struct scatterlist *prot_sg;
- 	u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
- 	u32 prot_offset, prot_page;
-@@ -432,9 +431,6 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
- 	if (!rc)
- 		sbc_dif_copy_prot(cmd, sectors, is_read, prot_sg, prot_offset);
- 
--	if (need_to_release)
--		kfree(prot_sg);
--
- 	return rc;
- }
- 
 -- 
-2.8.1
+Martin K. Petersen	Oracle Linux Engineering
