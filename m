@@ -1,112 +1,311 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v2.5 3/6] scsi_debug: add multiple queue support
-Date: Thu, 5 May 2016 21:20:59 -0700
-Message-ID: <572C1BAB.7030707@sandisk.com>
-References: <1462070687-12689-1-git-send-email-dgilbert@interlog.com>
- <1462070687-12689-4-git-send-email-dgilbert@interlog.com>
- <572A7888.6000804@sandisk.com> <572C13EE.2040800@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH v3 1/6] scsi_debug: use pdt constants
+Date: Fri,  6 May 2016 00:40:24 -0400
+Message-ID: <1462509629-24282-2-git-send-email-dgilbert@interlog.com>
+References: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0061.outbound.protection.outlook.com ([157.56.110.61]:58005
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750727AbcEFEVH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2016 00:21:07 -0400
-In-Reply-To: <572C13EE.2040800@interlog.com>
+Received: from smtp.infotech.no ([82.134.31.41]:55598 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750860AbcEFEkj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2016 00:40:39 -0400
+In-Reply-To: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
-On 05/05/16 20:47, Douglas Gilbert wrote:
-> On 2016-05-04 06:32 PM, Bart Van Assche wrote:
->> On 04/30/2016 07:44 PM, Douglas Gilbert wrote:
->>> +static struct sdebug_queue *get_queue(void)
->>> +{
->>> +    struct sdebug_queue *sqp = sdebug_q_arr;
->>> +
->>> +    return sqp + (raw_smp_processor_id() % submit_queues);
->>> +}
->>
->> Does this function have the same purpose as blk_mq_map_queue()? If so,
->> why has
->> this function been introduced instead of using blk_mq_map_queue()?
->
-> No, it is copied from drivers/block/null_blk.c, the nullb_to_queue()
-> function. scsi_lib.c seems to be the only user of blk_mq_map_queue().
->
->>> @@ -5001,6 +5158,10 @@ static int scsi_debug_queuecommand(struct
->>> Scsi_Host
->>> *shost,
->>>       bool has_wlun_rl;
->>>
->>>       scsi_set_resid(scp, 0);
->>> +    if (sdebug_statistics) {
->>> +        sqp = get_queue();
->>> +        atomic_inc(&sqp->cmnd_count);
->>> +    }
->>
->> Why does scsi_debug_queuecommand() call get_queue() instead of
->> blk_mq_unique_tag() and blk_mq_unique_tag_to_hwq() which is what other
->> scsi-mq
->> drivers do?
->
-> Okay I have switched to using:
->      u32 tag = blk_mq_unique_tag(cmnd->request);
->      u16 hwq = blk_mq_unique_tag_to_hwq(tag);
->      return sqp + hwq;
->
-> and as far as I can tell it works just as well as:
->      return sqp + (raw_smp_processor_id() % submit_queues);
+Use TYPE_* constants for SCSI peripheral device types instead
+of numbers. Further cleanups requested by checkpatch.pl .
 
-Thanks for the feedback. I was not yet aware that null_blk also follows 
-this approach. Apparently null_blk has its own prep function and that 
-prep function needs access to the submit queue. Maybe that is why 
-null_blk has its own submit queue selection function. However, I'd like 
-to see that kind of code being moved from the null_blk driver into the 
-blk-mq core.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 86 +++++++++++++++++++++++++----------------------
+ 1 file changed, 45 insertions(+), 41 deletions(-)
 
->> Is the role of the sqp->cmnd_count counter identical to that of
->> blk_mq_hw_ctx.queued? If so, can sqp->cmnd_count be left out and can
->> blk_mq_hw_ctx.queued be used instead?
->
-> Not quite, it counts commands in, some of which may get
-> responded to in the same thread (e.g. when a SCSI illegal request
-> type error is being reported). But it is very close to my
-> "completions" count.
->
-> So I'll move those counters back into file scope which simplifies
-> scsi_debug's logic. The cmnd_counter is used in the injection of
-> pseudo errors "every_nth" command. Can blk_mq_hw_ctx.queued be
-> viewed from the user space?
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 6b2d006..fc0246c 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -59,8 +59,8 @@
+ #include "scsi_logging.h"
+ 
+ /* make sure inq_product_rev string corresponds to this version */
+-#define SCSI_DEBUG_VERSION "1.86"
+-static const char *sdebug_version_date = "20160422";
++#define SDEBUG_VERSION "1.86"
++static const char *sdebug_version_date = "20160430";
+ 
+ #define MY_NAME "scsi_debug"
+ 
+@@ -123,7 +123,7 @@ static const char *sdebug_version_date = "20160422";
+ #define DEF_OPTS   0
+ #define DEF_OPT_BLKS 1024
+ #define DEF_PHYSBLK_EXP 0
+-#define DEF_PTYPE   0
++#define DEF_PTYPE   TYPE_DISK
+ #define DEF_REMOVABLE false
+ #define DEF_SCSI_LEVEL   6    /* INQUIRY, byte2 [6->SPC-4] */
+ #define DEF_SECTOR_SIZE 512
+@@ -137,6 +137,8 @@ static const char *sdebug_version_date = "20160422";
+ #define DEF_STRICT 0
+ #define JDELAY_OVERRIDDEN -9999
+ 
++#define SDEBUG_LUN_0_VAL 0
++
+ /* bit mask values for sdebug_opts */
+ #define SDEBUG_OPT_NOISE		1
+ #define SDEBUG_OPT_MEDIUM_ERR		2
+@@ -232,7 +234,7 @@ static const char *sdebug_version_date = "20160422";
+ 
+ #define SDEBUG_MAX_PARTS 4
+ 
+-#define SCSI_DEBUG_MAX_CMD_LEN 32
++#define SDEBUG_MAX_CMD_LEN 32
+ 
+ 
+ struct sdebug_dev_info {
+@@ -278,8 +280,8 @@ struct sdebug_scmd_extra_t {
+ };
+ 
+ struct opcode_info_t {
+-	u8 num_attached;	/* 0 if this is it (i.e. a leaf); use 0xff
+-				 * for terminating element */
++	u8 num_attached;	/* 0 if this is it (i.e. a leaf); use 0xff */
++				/* for terminating element */
+ 	u8 opcode;		/* if num_attached > 0, preferred */
+ 	u16 sa;			/* service action */
+ 	u32 flags;		/* OR-ed set of SDEB_F_* */
+@@ -571,7 +573,7 @@ static int sdebug_num_tgts = DEF_NUM_TGTS; /* targets per host */
+ static int sdebug_opt_blks = DEF_OPT_BLKS;
+ static int sdebug_opts = DEF_OPTS;
+ static int sdebug_physblk_exp = DEF_PHYSBLK_EXP;
+-static int sdebug_ptype = DEF_PTYPE; /* SCSI peripheral type (0==disk) */
++static int sdebug_ptype = DEF_PTYPE; /* SCSI peripheral device type */
+ static int sdebug_scsi_level = DEF_SCSI_LEVEL;
+ static int sdebug_sector_size = DEF_SECTOR_SIZE;
+ static int sdebug_virtual_gb = DEF_VIRTUAL_GB;
+@@ -649,7 +651,7 @@ static const int device_qfull_result =
+ 	(DID_OK << 16) | (COMMAND_COMPLETE << 8) | SAM_STAT_TASK_SET_FULL;
+ 
+ 
+-static unsigned int scsi_debug_lbp(void)
++static inline unsigned int scsi_debug_lbp(void)
+ {
+ 	return 0 == sdebug_fake_rw &&
+ 		(sdebug_lbpu || sdebug_lbpws || sdebug_lbpws10);
+@@ -825,7 +827,8 @@ static int make_ua(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			break;
+ 		case SDEBUG_UA_MICROCODE_CHANGED:
+ 			mk_sense_buffer(scp, UNIT_ATTENTION,
+-				TARGET_CHANGED_ASC, MICROCODE_CHANGED_ASCQ);
++					TARGET_CHANGED_ASC,
++					MICROCODE_CHANGED_ASCQ);
+ 			if (sdebug_verbose)
+ 				cp = "microcode has been changed";
+ 			break;
+@@ -1225,11 +1228,11 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
+ 	if (! arr)
+ 		return DID_REQUEUE << 16;
+-	have_wlun = (scp->device->lun == SCSI_W_LUN_REPORT_LUNS);
++	have_wlun = scsi_is_wlun(scp->device->lun);
+ 	if (have_wlun)
+-		pq_pdt = 0x1e;	/* present, wlun */
+-	else if (sdebug_no_lun_0 && (0 == devip->lun))
+-		pq_pdt = 0x7f;	/* not present, no device type */
++		pq_pdt = TYPE_WLUN;	/* present, wlun */
++	else if (sdebug_no_lun_0 && (devip->lun == SDEBUG_LUN_0_VAL))
++		pq_pdt = 0x7f;	/* not present, PQ=3, PDT=0x1f */
+ 	else
+ 		pq_pdt = (sdebug_ptype & 0x1f);
+ 	arr[0] = pq_pdt;
+@@ -1244,7 +1247,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		
+ 		port_group_id = (((host_no + 1) & 0x7f) << 8) +
+ 		    (devip->channel & 0x7f);
+-		if (0 == sdebug_vpd_use_hostno)
++		if (sdebug_vpd_use_hostno == 0)
+ 			host_no = 0;
+ 		lu_id_num = have_wlun ? -1 : (((host_no + 1) * 2000) +
+ 			    (devip->target * 1000) + devip->lun);
+@@ -1333,7 +1336,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	arr[3] = 2;    /* response_data_format==2 */
+ 	arr[4] = SDEBUG_LONG_INQ_SZ - 5;
+ 	arr[5] = (int)have_dif_prot;	/* PROTECT bit */
+-	if (0 == sdebug_vpd_use_hostno)
++	if (sdebug_vpd_use_hostno == 0)
+ 		arr[5] = 0x10; /* claim: implicit TGPS */
+ 	arr[6] = 0x10; /* claim: MultiP */
+ 	/* arr[6] |= 0x40; ... claim: EncServ (enclosure services) */
+@@ -1345,9 +1348,9 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	arr[58] = 0x0; arr[59] = 0xa2;  /* SAM-5 rev 4 */
+ 	arr[60] = 0x4; arr[61] = 0x68;  /* SPC-4 rev 37 */
+ 	n = 62;
+-	if (sdebug_ptype == 0) {
++	if (sdebug_ptype == TYPE_DISK) {
+ 		arr[n++] = 0x4; arr[n++] = 0xc5; /* SBC-4 rev 36 */
+-	} else if (sdebug_ptype == 1) {
++	} else if (sdebug_ptype == TYPE_TAPE) {
+ 		arr[n++] = 0x5; arr[n++] = 0x25; /* SSC-4 rev 3 */
+ 	}
+ 	arr[n++] = 0x20; arr[n++] = 0xe6;  /* SPL-3 rev 7 */
+@@ -1534,7 +1537,7 @@ static int resp_report_tgtpgs(struct scsi_cmnd * scp,
+ 	 * The asymmetric access state is cycled according to the host_id.
+ 	 */
+ 	n = 4;
+-	if (0 == sdebug_vpd_use_hostno) {
++	if (sdebug_vpd_use_hostno == 0) {
+ 		arr[n++] = host_no % 3; /* Asymm access state */
+ 		arr[n++] = 0x0F; /* claim: all states are supported */
+ 	} else {
+@@ -1938,7 +1941,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 	subpcode = cmd[3];
+ 	msense_6 = (MODE_SENSE == cmd[0]);
+ 	llbaa = msense_6 ? 0 : !!(cmd[1] & 0x10);
+-	if ((0 == sdebug_ptype) && (0 == dbd))
++	if ((sdebug_ptype == TYPE_DISK) && (dbd == 0))
+ 		bd_len = llbaa ? 16 : 8;
+ 	else
+ 		bd_len = 0;
+@@ -1950,9 +1953,9 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 	}
+ 	target_dev_id = ((devip->sdbg_host->shost->host_no + 1) * 2000) +
+ 			(devip->target * 1000) - 3;
+-	/* set DPOFUA bit for disks */
+-	if (0 == sdebug_ptype)
+-		dev_spec = 0x10;	/* would be 0x90 if read-only */
++	/* for disks set DPOFUA bit and clear write protect (WP) bit */
++	if (sdebug_ptype == TYPE_DISK)
++		dev_spec = 0x10;	/* =0x90 if WP=1 implies read-only */
+ 	else
+ 		dev_spec = 0x0;
+ 	if (msense_6) {
+@@ -3345,7 +3348,7 @@ static void sdebug_q_cmd_complete(struct sdebug_defer *sd_dp)
+ 	spin_lock_irqsave(&queued_arr_lock, iflags);
+ 	sqcp = &queued_arr[qa_indx];
+ 	scp = sqcp->a_cmnd;
+-	if (unlikely(NULL == scp)) {
++	if (unlikely(scp == NULL)) {
+ 		spin_unlock_irqrestore(&queued_arr_lock, iflags);
+ 		pr_err("scp is NULL\n");
+ 		return;
+@@ -3470,11 +3473,11 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
+ 	if (sdebug_verbose)
+ 		pr_info("slave_configure <%u %u %u %llu>\n",
+ 		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
+-	if (sdp->host->max_cmd_len != SCSI_DEBUG_MAX_CMD_LEN)
+-		sdp->host->max_cmd_len = SCSI_DEBUG_MAX_CMD_LEN;
+-	if (NULL == devip) {
++	if (sdp->host->max_cmd_len != SDEBUG_MAX_CMD_LEN)
++		sdp->host->max_cmd_len = SDEBUG_MAX_CMD_LEN;
++	if (devip == NULL) {
+ 		devip = find_build_dev_info(sdp);
+-		if (NULL == devip)
++		if (devip == NULL)
+ 			return 1;  /* no resources, will be marked offline */
+ 	}
+ 	sdp->hostdata = devip;
+@@ -3528,7 +3531,7 @@ static bool stop_queued_cmnd(struct scsi_cmnd *cmnd)
+ 			sd_dp = sqcp->sd_dp;
+ 			spin_unlock_irqrestore(&queued_arr_lock,
+ 					       iflags);
+-			if ((sdebug_jdelay > 0) || (sdebug_ndelay > 0)) {
++			if (sdebug_jdelay > 0 || sdebug_ndelay > 0) {
+ 				if (sd_dp)
+ 					hrtimer_cancel(&sd_dp->hrt);
+ 			} else if (sdebug_jdelay < 0) {
+@@ -3565,7 +3568,7 @@ static void stop_all_queued(void)
+ 			sqcp->a_cmnd = NULL;
+ 			sd_dp = sqcp->sd_dp;
+ 			spin_unlock_irqrestore(&queued_arr_lock, iflags);
+-			if ((sdebug_jdelay > 0) || (sdebug_ndelay > 0)) {
++			if (sdebug_jdelay > 0 || sdebug_ndelay > 0) {
+ 				if (sd_dp)
+ 					hrtimer_cancel(&sd_dp->hrt);
+ 			} else if (sdebug_jdelay < 0) {
+@@ -3779,8 +3782,8 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 	if (unlikely(WARN_ON(!cmnd)))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+-	if (unlikely(NULL == devip)) {
+-		if (0 == scsi_result)
++	if (unlikely(devip == NULL)) {
++		if (scsi_result == 0)
+ 			scsi_result = DID_NO_CONNECT << 16;
+ 		goto respond_in_thread;
+ 	}
+@@ -3841,7 +3844,7 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 	cmnd->result = scsi_result;
+ 	spin_unlock_irqrestore(&queued_arr_lock, iflags);
+ 	sd_dp = sqcp->sd_dp;
+-	if ((delta_jiff > 0) || (sdebug_ndelay > 0)) {
++	if (delta_jiff > 0 || sdebug_ndelay > 0) {
+ 		ktime_t kt;
+ 
+ 		if (delta_jiff > 0) {
+@@ -3938,7 +3941,7 @@ module_param_named(write_same_length, sdebug_write_same_length, int,
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION(SCSI_DEBUG_VERSION);
++MODULE_VERSION(SDEBUG_VERSION);
+ 
+ MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
+@@ -3984,9 +3987,10 @@ static char sdebug_info[256];
+ 
+ static const char * scsi_debug_info(struct Scsi_Host * shp)
+ {
+-	sprintf(sdebug_info, "scsi_debug, version %s [%s], "
+-		"dev_size_mb=%d, opts=0x%x", SCSI_DEBUG_VERSION,
+-		sdebug_version_date, sdebug_dev_size_mb, sdebug_opts);
++	sprintf(sdebug_info,
++		"scsi_debug, version %s [%s], dev_size_mb=%d, opts=0x%x",
++		SDEBUG_VERSION, sdebug_version_date, sdebug_dev_size_mb,
++		sdebug_opts);
+ 	return sdebug_info;
+ }
+ 
+@@ -4036,7 +4040,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
+ 		"command aborts=%d; RESETs: device=%d, target=%d, bus=%d, "
+ 		"host=%d\ndix_reads=%d dix_writes=%d dif_errors=%d "
+ 		"usec_in_jiffy=%lu\n",
+-		SCSI_DEBUG_VERSION, sdebug_version_date,
++		SDEBUG_VERSION, sdebug_version_date,
+ 		sdebug_num_tgts, sdebug_dev_size_mb, sdebug_opts,
+ 		sdebug_every_nth, b, sdebug_jdelay, sdebug_ndelay,
+ 		sdebug_max_luns, atomic_read(&sdebug_completions),
+@@ -4064,7 +4068,7 @@ static ssize_t delay_store(struct device_driver *ddp, const char *buf,
+ {
+ 	int jdelay, res;
+ 
+-	if ((count > 0) && (1 == sscanf(buf, "%d", &jdelay))) {
++	if (count > 0 && sscanf(buf, "%d", &jdelay) == 1) {
+ 		res = count;
+ 		if (sdebug_jdelay != jdelay) {
+ 			unsigned long iflags;
+@@ -4672,7 +4676,7 @@ static int __init scsi_debug_init(void)
+ 			       (sdebug_sectors_per * sdebug_heads);
+ 	}
+ 
+-	if (0 == sdebug_fake_rw) {
++	if (sdebug_fake_rw == 0) {
+ 		fake_storep = vmalloc(sz);
+ 		if (NULL == fake_storep) {
+ 			pr_err("out of memory, 1\n");
+@@ -5044,8 +5048,8 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		}
+ 	}
+ 	if (unlikely(!(F_SKIP_UA & flags) &&
+-		     SDEBUG_NUM_UAS != find_first_bit(devip->uas_bm,
+-						      SDEBUG_NUM_UAS))) {
++		     find_first_bit(devip->uas_bm,
++				    SDEBUG_NUM_UAS) != SDEBUG_NUM_UAS)) {
+ 		errsts = make_ua(scp, devip);
+ 		if (errsts)
+ 			goto check_cond;
+-- 
+2.7.4
 
-As far as I can see, yes. From block/blk-mq-sysfs.c:
-
-static ssize_t blk_mq_hw_sysfs_queued_show(struct blk_mq_hw_ctx *hctx,
-					   char *page)
-{
-	return sprintf(page, "%lu\n", hctx->queued);
-}
-
->>> @@ -5168,6 +5328,16 @@ static int sdebug_driver_probe(struct device *
->>> dev)
->>> +    if (sdebug_mq_available && (submit_queues > 1))
->>> +        hpnt->nr_hw_queues = submit_queues;
->>
->> There is already a submit_queues < 1 check in scsi_debug_init(). Is the
->> submit_queues > 1 check in sdebug_driver_probe() needed?
->
-> I noticed that the other (2) scsi mq LLDs take care only to set
-> hpnt->nr_hw_queues when the submit_queues > 1 .
-
-You might have overlooked the ib_srp driver. That driver is a SCSI LLD 
-to which support for multiple hardware queues was added before it was 
-added to the lpfc and virtio_scsi drivers.
-
-I haven't found any code in any of these three drivers that only 
-modifies nr_hw_queues if submit_queues > 1 ? Anyway, this is a detail 
-and something I do not consider important.
-
-Bart.
