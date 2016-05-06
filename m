@@ -1,74 +1,75 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 3/4] fusion: print lan address via %pMR
-Date: Fri,  6 May 2016 19:23:58 +0300
-Message-ID: <1462551839-44380-4-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/4] libsas: remove private hex2bin() implementation
+Date: Fri,  6 May 2016 19:23:56 +0300
+Message-ID: <1462551839-44380-2-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga11.intel.com ([192.55.52.93]:20033 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695AbcEFQYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2016 12:24:04 -0400
+	id S1757962AbcEFQYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2016 12:24:10 -0400
 In-Reply-To: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Sathya Prakash <sathya.prakash@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-LAN MAC addresses can be printed directly using %pMR specifier.
+The function sas_parse_addr() could be easily substituted by hex2bin() which is
+in kernel library code.
 
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/message/fusion/mptbase.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5537f8d..3af67e6 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -2584,10 +2584,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
- 				(void) GetLanConfigPages(ioc);
- 				a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
- 				dprintk(ioc, printk(MYIOC_s_DEBUG_FMT
--					"LanAddr = %02X:%02X:%02X"
--					":%02X:%02X:%02X\n",
--					ioc->name, a[5], a[4],
--					a[3], a[2], a[1], a[0]));
-+					"LanAddr = %pMR\n", ioc->name, a));
- 			}
- 			break;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 519dac4..30a5970 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -27,6 +27,7 @@
+ #include <linux/firmware.h>
+ #include <linux/export.h>
+ #include <linux/ctype.h>
++#include <linux/kernel.h>
  
-@@ -6782,8 +6779,7 @@ static int mpt_iocinfo_proc_show(struct seq_file *m, void *v)
- 		if (ioc->bus_type == FC) {
- 			if (ioc->pfacts[p].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN) {
- 				u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--				seq_printf(m, "    LanAddr = %02X:%02X:%02X:%02X:%02X:%02X\n",
--						a[5], a[4], a[3], a[2], a[1], a[0]);
-+				seq_printf(m, "    LanAddr = %pMR\n", a);
- 			}
- 			seq_printf(m, "    WWN = %08X%08X:%08X%08X\n",
- 					ioc->fc_port_page0[p].WWNN.High,
-@@ -6860,8 +6856,7 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
+ #include "sas_internal.h"
  
- 	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
- 		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--		y += sprintf(buffer+len+y, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
--			a[5], a[4], a[3], a[2], a[1], a[0]);
-+		y += sprintf(buffer+len+y, ", LanAddr=%pMR", a);
+@@ -961,21 +962,6 @@ void sas_target_destroy(struct scsi_target *starget)
+ 	sas_put_device(found_dev);
+ }
+ 
+-static void sas_parse_addr(u8 *sas_addr, const char *p)
+-{
+-	int i;
+-	for (i = 0; i < SAS_ADDR_SIZE; i++) {
+-		u8 h, l;
+-		if (!*p)
+-			break;
+-		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
+-		p++;
+-		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
+-		p++;
+-		sas_addr[i] = (h<<4) | l;
+-	}
+-}
+-
+ #define SAS_STRING_ADDR_SIZE	16
+ 
+ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+@@ -992,7 +978,11 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+ 		goto out;
  	}
  
- 	y += sprintf(buffer+len+y, ", IRQ=%d", ioc->pci_irq);
-@@ -6895,8 +6890,7 @@ static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int
+-	sas_parse_addr(addr, fw->data);
++	res = hex2bin(addr, fw->data, strnlen(fw->data, SAS_ADDR_SIZE * 2) / 2);
++	if (res) {
++		res = -EINVAL;
++		goto out;
++	}
  
- 	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
- 		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--		seq_printf(m, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
--			a[5], a[4], a[3], a[2], a[1], a[0]);
-+		seq_printf(m, ", LanAddr=%pMR", a);
- 	}
- 
- 	seq_printf(m, ", IRQ=%d", ioc->pci_irq);
+ out:
+ 	release_firmware(fw);
 -- 
 2.8.1
 
