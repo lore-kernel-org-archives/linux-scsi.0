@@ -1,48 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 00/14] libata: ZAC support
-Date: Fri, 6 May 2016 13:05:36 +0200
-Message-ID: <572C7A80.4000903@suse.de>
-References: <1461581156-92581-1-git-send-email-hare@suse.de>
- <20160425201627.GI7822@mtj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20160425201627.GI7822@mtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 0/4] scsi: some (very) old clean ups
+Date: Fri,  6 May 2016 19:23:55 +0300
+Message-ID: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:58868 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751418AbcEFQYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2016 12:24:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-On 04/25/2016 10:16 PM, Tejun Heo wrote:
-> Hello,
->=20
-> On Mon, Apr 25, 2016 at 12:45:42PM +0200, Hannes Reinecke wrote:
->> here's a patchset implementing ZAC support for libata.
->>
->> This is the second part of a larger patchset for ZAC/ZBC support;
->> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue an=
-d
->> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
->=20
-> The patches look good from libata side.  If others are okay with it, =
-I
-> can pull mkp/4.7/scsi-queue into tj/for-4.7-zac and apply this series
-> on top of it.
->=20
-Ping?
+This is a set of independent clean ups that didn't land upstream for ages (some
+are dated 2010!).  As agreed with Martin at some point I resend
+them.
 
-I can easily split off the libsas bits into a different patchset if
-this turns out to be an issue.
-But it would be really good if this could make it 4.7, it will help
-further integration a _lot_.
+I have more, but the rest is not yet ready for submission.
 
-Cheers,
+Andy Shevchenko (3):
+  libsas: remove private hex2bin() implementation
+  scsi: fnic: use kernel's '%pM' format option to print MAC
+  fusion: print lan address via %pMR
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Oleksandr Khoshaba (1):
+  scsi: qla4xxx: print MAC and SID via %p[mM][R]
+
+ drivers/message/fusion/mptbase.c    | 14 ++++----------
+ drivers/scsi/fnic/vnic_dev.c        | 10 ++--------
+ drivers/scsi/libsas/sas_scsi_host.c | 22 ++++++----------------
+ drivers/scsi/qla4xxx/ql4_mbx.c      |  5 +----
+ drivers/scsi/qla4xxx/ql4_nx.c       |  8 ++------
+ drivers/scsi/qla4xxx/ql4_os.c       | 15 ++++-----------
+ 6 files changed, 19 insertions(+), 55 deletions(-)
+
+-- 
+2.8.1
+
