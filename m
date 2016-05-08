@@ -1,44 +1,23 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-Date: Sun, 08 May 2016 11:34:07 -0500
-Message-ID: <1462725247.6614.3.camel@petros-ultrathin>
-References: <1462668011.32105.7.camel@petros-ultrathin>
-	  <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
-	 <1462709320.2840.15.camel@petros-ultrathin>
-	 <alpine.LNX.2.00.1605082216090.19865@nippy.intranet>
+From: Vancity Loan Company <gestor.impressoras@pm.ce.gov.br>
+Subject: 3% Loan Offer Apply Today.
+Date: Sun, 08 May 2016 19:20:12 -0300 (BRT)
+Message-ID: <bb11c070-4a52-4eff-8cf4-b750947fbc45@srvemail.pm.ce.gov.br>
+Reply-To: Vancity Loan Company <vancityloanfinance@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:54057 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750841AbcEHQeQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 May 2016 12:34:16 -0400
-In-Reply-To: <alpine.LNX.2.00.1605082216090.19865@nippy.intranet>
+Received: from smtp2.etice.ce.gov.br ([189.90.161.162]:42325 "EHLO
+	smtp2.etice.ce.gov.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbcEHWej (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 May 2016 18:34:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>
-
-On Sun, 2016-05-08 at 22:22 +1000, Finn Thain wrote:
-> On Sun, 8 May 2016, Petros Koutoupis wrote:
-> 
-> > > 
-> > > That contains a tautology.
-> > > 
-> > 
-> > How so?
-> 
-> if (x)
-> 	/* ... */
-> else if (!x && (whatever))
-> 	/* ... */
-> 
-> -- 
-
-Thank you but I know the logic of what I wrote. A tautology
-will yield the same results no matter what the interpretation.
-That is not a tautology. The two conditionals in my case check
-different states and serve different purposes.
 
 
+
+We can help you with a genuine loan to meet your needs.
+Do you need a personal or business loan without stress and quick approval?
+Do you need an urgent loan today? No Credit Checks
+Contact US for more information about loan offer and we will solve your
+financial problem. (vancityloancompany@financier.com).
