@@ -1,116 +1,48 @@
 From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-Date: Sun, 08 May 2016 07:08:40 -0500
-Message-ID: <1462709320.2840.15.camel@petros-ultrathin>
-References: <1462668011.32105.7.camel@petros-ultrathin>
-	 <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
+Subject: [PATCH] megaraid: add scsi_cmnd NULL check before use (rev 2)
+Date: Sun, 08 May 2016 07:11:56 -0500
+Message-ID: <1462709516.2840.18.camel@petros-ultrathin>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:50247 "EHLO mout.perfora.net"
+Received: from mout.perfora.net ([74.208.4.194]:63174 "EHLO mout.perfora.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750713AbcEHMIx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 May 2016 08:08:53 -0400
-In-Reply-To: <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
+	id S1750713AbcEHMMA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 May 2016 08:12:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>, "petros@petroskoutoupis.com" <petros@petroskoutoupis.com>
+To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, "petros@petroskoutoupis.com" <petros@petroskoutoupis.com>
 
-On Sun, 2016-05-08 at 13:32 +1000, Finn Thain wrote:
-> On Sat, 7 May 2016, Petros Koutoupis wrote:
-> 
-> > The current state of the code checks to see if the reference to 
-> > scsi_cmnd is not null, but it never checks to see if it is null and 
-> > always assumes it is valid before its use in below switch statement. 
-> > This patch addresses that.
-> > 
-> 
-> There is no sign-off here.
-> 
+The current state of the code checks to see if the reference to scsi_cmnd is
+not null, but it never checks to see if it is null and always assumes it is valid
+before its use in below switch statement. Our customers have been seeing panics in
+production because of this. This patch addresses that.
 
-Oops. Will resend.
+Signed-off-by: Petros Koutoupis <petros@petroskoutoupis.com>
 
-> > --- linux/drivers/scsi/megaraid/megaraid_sas_fusion.c.orig	2016-05-07 09:12:56.748969851 -0500
-> > +++ linux/drivers/scsi/megaraid/megaraid_sas_fusion.c	2016-05-07 09:15:29.612967113 -0500
-> > @@ -2277,6 +2277,10 @@ complete_cmd_fusion(struct megasas_insta
-> >  
-> >  		if (cmd_fusion->scmd)
-> >  			cmd_fusion->scmd->SCp.ptr = NULL;
-> > +		else if ((!cmd_fusion->scmd) &&
-> > +			 ((scsi_io_req->Function == MPI2_FUNCTION_SCSI_IO_REQUEST) ||
-> > +			 (scsi_io_req->Function == MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST)))
-> > +			goto next;
-> 
-> That contains a tautology.
-> 
-
-How so? The very definition of tautology implies that I am repeating
-the same kind of functionality in two different ways. The thing is,
-this function routine does not always need to have a valid scsi_cmnd
-reference, which is why in the first it checks if it is valid. In
-the second, it only checks if it is null under the only two cases
-which make use of it.
-
-> >  
-> >  		scmd_local = cmd_fusion->scmd;
-> >  		status = scsi_io_req->RaidContext.status;
-> > @@ -2336,7 +2340,7 @@ complete_cmd_fusion(struct megasas_insta
-> >  				megasas_complete_cmd(instance, cmd_mfi, DID_OK);
-> >  			break;
-> >  		}
-> > -
-> > +next:
-> >  		fusion->last_reply_idx[MSIxIndex]++;
-> >  		if (fusion->last_reply_idx[MSIxIndex] >=
-> >  		    fusion->reply_q_depth)
-> > 
-> > 
-> 
-> Your patch is equivalent to this one:
-> 
-> @@ -2294,6 +2294,8 @@
->  			complete(&cmd_fusion->done);
->  			break;
->  		case MPI2_FUNCTION_SCSI_IO_REQUEST:  /*Fast Path IO.*/
-> +			if (unlikely(!scmd_local))
-> +				break;
->  			/* Update load balancing info */
->  			device_id = MEGASAS_DEV_INDEX(scmd_local);
->  			lbinfo = &fusion->load_balance_info[device_id];
-> @@ -2311,6 +2313,8 @@
->  			}
->  			/* Fall thru and complete IO */
->  		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO Path */
-> +			if (unlikely(!scmd_local))
-> +				break;
->  			/* Map the FW Cmd Status */
->  			map_cmd_status(cmd_fusion, status, extStatus);
->  			scsi_io_req->RaidContext.status = 0;
-> 
-> 
-
-Yeah, except your patch introduces duplication of the same code and
-even worse, if the command starts in the MPI2_FUNCTION_SCSI_IO_REQUEST
-case, it will check the status of the pointer twice which seems pretty
-inefficient for systems running such high loads (i.e. the "Fall
-thru").
-
-
-> I don't know anything about this driver or hardware so I'm not actually 
-> advocating any of these changes, just pointing out that your patch has 
-> issues.
-> 
-> I would have expected the 'smatch' checker to detect either the potential 
-> NULL pointer derefs or alternatively the redundant test for a non-NULL 
-> pointer. Maybe it has detected this already (?) or maybe the NULL pointer 
-> deref can be shown to be impossible?
-> 
-
-It is very possible. We have had customers in the field hit pretty
-hard by this.
-
-> -- 
+--- linux/drivers/scsi/megaraid/megaraid_sas_fusion.c.orig	2016-05-07 09:12:56.748969851 -0500
++++ linux/drivers/scsi/megaraid/megaraid_sas_fusion.c	2016-05-07 09:15:29.612967113 -0500
+@@ -2277,6 +2277,10 @@ complete_cmd_fusion(struct megasas_insta
+ 
+ 		if (cmd_fusion->scmd)
+ 			cmd_fusion->scmd->SCp.ptr = NULL;
++		else if ((!cmd_fusion->scmd) &&
++			 ((scsi_io_req->Function == MPI2_FUNCTION_SCSI_IO_REQUEST) ||
++			 (scsi_io_req->Function == MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST)))
++			goto next;
+ 
+ 		scmd_local = cmd_fusion->scmd;
+ 		status = scsi_io_req->RaidContext.status;
+@@ -2336,7 +2340,7 @@ complete_cmd_fusion(struct megasas_insta
+ 				megasas_complete_cmd(instance, cmd_mfi, DID_OK);
+ 			break;
+ 		}
+-
++next:
+ 		fusion->last_reply_idx[MSIxIndex]++;
+ 		if (fusion->last_reply_idx[MSIxIndex] >=
+ 		    fusion->reply_q_depth)
 
 
