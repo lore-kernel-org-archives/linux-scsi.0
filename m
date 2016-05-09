@@ -1,44 +1,54 @@
-From: Johannes Thumshirn <jthmshirn@suse.de>
-Subject: Re: [PATCH] libfc: replace 'rp_mutex' with 'rp_lock'
-Date: Mon, 9 May 2016 14:29:54 +0200
-Message-ID: <20160509122954.GA22590@c203.arch.suse.de>
-References: <1461571293-953-1-git-send-email-hare@suse.de>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH] Fix a bdi reregistration race, v3
+Date: Mon, 9 May 2016 09:50:15 -0400
+Message-ID: <57309597.1040903@stratus.com>
+References: <56F9A22F.7020002@sandisk.com> <572BA5EF.6000702@sandisk.com>
+ <572BAFB0.2020305@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35512 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750998AbcEIMaB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 May 2016 08:30:01 -0400
-Content-Disposition: inline
-In-Reply-To: <1461571293-953-1-git-send-email-hare@suse.de>
+Received: from mail-bl2on0120.outbound.protection.outlook.com ([65.55.169.120]:7040
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751312AbcEIOXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 May 2016 10:23:36 -0400
+In-Reply-To: <572BAFB0.2020305@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Apr 25, 2016 at 10:01:33AM +0200, Hannes Reinecke wrote:
-> We cannot use an embedded mutex in a structure with reference
-> counting, as mutex unlock might be delayed, and the waiters
-> might then access an already freed memory area.
-> So convert it to a spinlock.
->=20
-> For details cf https://lkml.org/lkml/2015/2/11/245
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+On 05/05/2016 04:40 PM, Joe Lawrence wrote:
+> On 05/05/2016 03:58 PM, Bart Van Assche wrote:
+>> On 03/28/2016 02:29 PM, Bart Van Assche wrote:
+>>> Avoid that the sd driver registers a BDI device with a name that
+>>> is still in use. This patch avoids that the following warning gets
+>>> triggered:
+>>>
+>>> [ ... ]
+>>
+>> (replying to my own e-mail)
+>>
+>> If anyone could review this patch that would be very welcome.
+> 
+> Hi Bart,
+> 
+> I *think* I may be hitting this same problem running some tests here at Stratus
+> ... snip...
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi Bart,
+
+Good news = With your v3 patch, I didn't see the "sysfs: cannot create
+duplicate filename '/devices/virtual/bdi/65:0'" warning during my
+weekend testing (573 surprise disk HBA removals).
+
+Bad news = I still crashed in add_disk > sysfs_create_link >
+sysfs_do_create_link_sd on a NULL target_kobj->sd ... unfortunately I
+don't have kdump working, so all I have is a serial console output to
+work with for now.
+
+Regards,
+
+-- Joe
