@@ -1,23 +1,57 @@
-From: Vancity Loan Company <gestor.impressoras@pm.ce.gov.br>
-Subject: 3% Loan Offer Apply Today.
-Date: Sun, 08 May 2016 19:20:12 -0300 (BRT)
-Message-ID: <bb11c070-4a52-4eff-8cf4-b750947fbc45@srvemail.pm.ce.gov.br>
-Reply-To: Vancity Loan Company <vancityloanfinance@qq.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCHv3 0/2] target: make location of /var/targets configurable
+Date: Sun, 8 May 2016 18:17:32 -0700
+Message-ID: <572FE52C.2030806@suse.com>
+References: <cover.1460678002.git.lduncan@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.etice.ce.gov.br ([189.90.161.162]:42325 "EHLO
-	smtp2.etice.ce.gov.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbcEHWej (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 May 2016 18:34:39 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <cover.1460678002.git.lduncan@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, nab@linux-iscsi.org, target-devel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, hch@infradead.org, hare@suse.de, agrover@redhat.com, jxm@netiant.com
 List-Id: linux-scsi@vger.kernel.org
 
+On 04/14/2016 06:18 PM, Lee Duncan wrote:
+> These patches make the location of "/var/target" configurable,
+> though it still defauls to "/var/target".
+> 
+> This "target database directory" can only be changed
+> after the target_core_mod loads but before any
+> fabric drivers are loaded, and must be the pathname
+> of an existing directory.
+> 
+> This configuration is accomplished via the configfs
+> top-level target attribute "dbroot", i.e. dumping
+> out "/sys/kernel/config/target/dbroot" will normally
+> return "/var/target". Writing to this attribute
+> changes the loation where the kernel looks for the
+> target database.
+> 
+> The first patch creates this configurable value for
+> the "dbroot", and the second patch modifies users
+> of this directory to use this new attribute.
+> 
+> Changes from v2:
+>  * Add locking around access to target driver list
+> 
+> Changes from v1:
+>  * Only allow changing target DB root before it
+>    can be used by others
+>  * Validate that new DB root is a valid directory
+> 
+> Lee Duncan (2):
+>   target: make target db location configurable
+>   target: use new "dbroot" target attribute
+> 
+>  drivers/target/target_core_alua.c     |  6 ++--
+>  drivers/target/target_core_configfs.c | 62 +++++++++++++++++++++++++++++++++++
+>  drivers/target/target_core_internal.h |  6 ++++
+>  drivers/target/target_core_pr.c       |  2 +-
+>  4 files changed, 72 insertions(+), 4 deletions(-)
+> 
 
-
-We can help you with a genuine loan to meet your needs.
-Do you need a personal or business loan without stress and quick approval?
-Do you need an urgent loan today? No Credit Checks
-Contact US for more information about loan offer and we will solve your
-financial problem. (vancityloancompany@financier.com).
+Ping?
+-- 
+Lee Duncan
