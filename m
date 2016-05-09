@@ -1,80 +1,104 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-Date: Mon, 09 May 2016 16:28:58 -0500
-Message-ID: <1462829338.1873.4.camel@petroskoutoupis.com>
-References: <1462668011.32105.7.camel@petros-ultrathin>
-	 <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
-	 <20160509080551.GH29510@mwanda>
-	 <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v3 3/6] scsi_debug: add multiple queue support
+Date: Tue, 10 May 2016 00:30:43 +0200
+Message-ID: <57310F93.2000709@interlog.com>
+References: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
+ <1462509629-24282-4-git-send-email-dgilbert@interlog.com>
+ <5730B6EC.90001@sandisk.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:64547 "EHLO mout.perfora.net"
+Received: from smtp.infotech.no ([82.134.31.41]:43310 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751481AbcEIV3J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2016 17:29:09 -0400
-In-Reply-To: <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com>
+	id S1752446AbcEIWau (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 May 2016 18:30:50 -0400
+In-Reply-To: <5730B6EC.90001@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>, Dan Carpenter <dan.carpenter@oracle.com>, Finn Thain <fthain@telegraphics.com.au>
-Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
 
-On Mon, 2016-05-09 at 15:18 +0530, Sumit Saxena wrote:
-> >=20
-> > -----Original Message-----
-> > From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> > Sent: Monday, May 09, 2016 1:36 PM
-> > To: Finn Thain
-> > Cc: Petros Koutoupis; kashyap.desai@avagotech.com;
-> > sumit.saxena@avagotech.com; uday.lingala@avagotech.com;
-> > megaraidlinux.pdl@avagotech.com; linux-scsi@vger.kernel.org
-> > Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-> >=20
-> > Smatch doesn't quite catch it because we check "cmd_fusion->scmd" f=
-or
-> NULL
-> >=20
-> > then assign "scmd_local =3D cmd_fusion->scmd;" and dereference scmd=
-_local
-> > unconditionally...
-> >=20
-> > It does catch part of the bug if you have cross function analysis:
-> >=20
-> > =C2=A0 drivers/scsi/megaraid/megaraid_sas_fusion.c:2318 complete_cm=
-d_fusion()
-> > =C2=A0 error: we previously assumed 'cmd_fusion->scmd' could be nul=
-l (see
-> line 2281)
-> >=20
-> >=20
-> > But that code was from 2010 so I never reported it to the original
-> author or the
-> >=20
-> > list.
-> "cmd_fusion->scmd" should not be NULL if scsi_io_req->Function is set=
- to
-> MPI2_FUNCTION_SCSI_IO_REQUEST (OR) MEGASAS_MPI2_FUNCTION_LD_IO_REQUES
-> (inside these two cases only, cmd_fusion->scmd will be dereferenced).=
- If
-> cmd_fusion->scmd is NULL for these "scsi_io_req->Function", that will=
- a
-> BUG and
-> should not continue with other commands processing in that case.
->=20
+On 2016-05-09 06:12 PM, Bart Van Assche wrote:
+> On 05/05/2016 09:40 PM, Douglas Gilbert wrote:
+>>   static bool stop_queued_cmnd(struct scsi_cmnd *cmnd)
+>>   {
+>>       unsigned long iflags;
+>> -    int k, qmax, r_qmax;
+>> +    int j, k, qmax, r_qmax;
+>> +    struct sdebug_queue *sqp;
+>>       struct sdebug_queued_cmd *sqcp;
+>>       struct sdebug_dev_info *devip;
+>>       struct sdebug_defer *sd_dp;
+>>
+>> -    [ ... ]
+>> +    for (j = 0, sqp = sdebug_q_arr; j < submit_queues; ++j, ++sqp) {
+>> +        spin_lock_irqsave(&sqp->qc_lock, iflags);
+>> +        qmax = sdebug_max_queue;
+>> +        r_qmax = atomic_read(&retired_max_queue);
+>> +        if (r_qmax > qmax)
+>> +            qmax = r_qmax;
+>> +        for (k = 0; k < qmax; ++k) {
+>> +            if (test_bit(k, sqp->in_use_bm)) {
+>> +                sqcp = &sqp->qc_arr[k];
+>> +                if (cmnd != sqcp->a_cmnd)
+>> +                    continue;
+>> +                /* found */
+>> +                [ ... ]
+>
+> It is not clear to me why a for-loop is used in this function to look up the sqp
+> pointer instead of calling get_queue() or using sqa_idx?
 
-Sumit,
+Yes get_queue() could be used to remove the outer loop.
 
-To clarify, a detection of cmd_fusion->scmd being NULL with
-scsi_io_req->Function set to=C2=A0MPI2_FUNCTION_SCSI_IO_REQUEST or
-MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST should instead trigger a
-BUG() and not attempt to iterate to the next command in the
-list. Thank you.
+sqa_idx is found in the sdebug_defer structure and instances of it
+exist only for scsi commands that are currently deferred (on or work
+item or a hr timer). There is a pointer from scsi_defer to the
+corresponding scsi_cmnd but not vice versa.
 
---
-Petros
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Using the every_nth parameter, scsi commands can be ignored, meaning
+they are neither deferred (queued) nor completed (by calling scsi_done()).
+In this case the driver just returns on the command delivery thread
+(without error) and forgets about that scsi command instance. It is
+simulating an unreported transport or LLD failure. So there is an
+extremely high chance the mid-level will attempt to abort that command.
+In that case there is no related sqa_idx and that scsi command will not
+be found by stop_queued_cmnd(). That is fine since there are no related
+resources to free up.
+
+So IMO the code is correct as it stands but its efficiency could be
+improved by using get_queue() to replace the outer loop.
+
+>>   static const char * scsi_debug_info(struct Scsi_Host * shp)
+>>   {
+>> -    sprintf(sdebug_info,
+>> -        "scsi_debug, version %s [%s], dev_size_mb=%d, opts=0x%x",
+>> -        SDEBUG_VERSION, sdebug_version_date, sdebug_dev_size_mb,
+>> -        sdebug_opts);
+>> +    int k;
+>> +
+>> +    k = scnprintf(sdebug_info, sizeof(sdebug_info),
+>> +              "%s: version %s [%s], dev_size_mb=%d, opts=0x%x\n",
+>> +              my_name, SDEBUG_VERSION, sdebug_version_date,
+>> +              sdebug_dev_size_mb, sdebug_opts);
+>> +    if (k >= (sizeof(sdebug_info) - 1))
+>> +        return sdebug_info;
+>> +    scnprintf(sdebug_info + k, sizeof(sdebug_info) - k,
+>> +          "%s: submit_queues=%d, statistics=%d\n", my_name,
+>> +          submit_queues, (int)sdebug_statistics);
+>>       return sdebug_info;
+>>   }
+>
+>  From the comment above the definition of scnprintf(): "The return value is the
+> number of characters written into @buf not including the trailing '\0'". Maybe
+> you need snprintf() instead of scnprintf()?
+
+The maximum return value from the first scnprintf(sdebug_info ...)
+is (sizeof(sdebug_info) - 1)). So strictly speaking the early return
+comparison should be "==" for scnprintf and ">=" for snprintf. Given
+that snprintf is more dangerous then scnprintf (e.g. with repeated
+"k += snprintf(buff + k, buff_len - k, ...)" statements) then I would
+prefer to keep scnprintf and yes, ">=" is overkill but will work.
+
+Doug Gilbert
