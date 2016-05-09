@@ -1,57 +1,29 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: [PATCH] hpsa: Fix type ZBC conditional checks
-Date: Mon, 09 May 2016 13:44:10 -0500
-Message-ID: <1462819450.16056.2.camel@petroskoutoupis.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
+Date: Mon, 9 May 2016 22:29:45 +0300
+Message-ID: <20160509192914.GJ29510@mwanda>
+References: <1462668011.32105.7.camel@petros-ultrathin>
+ <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
+ <20160509080551.GH29510@mwanda>
+ <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:64764 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbcEISoT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2016 14:44:19 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:28903 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934AbcEITaO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2016 15:30:14 -0400
+Content-Disposition: inline
+In-Reply-To: <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: don.brace@microsemi.com
-Cc: petros@petroskoutoupis.com, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, esc.storagedev@microsemi.com
+To: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, Petros Koutoupis <petros@petroskoutoupis.com>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
-The device ID obtained from the inquiry can only be of a single type.
-The original code places a check for TYPE_ZBC right after the check
-for TYPE_DISK. Logically, if the first if statement sees a device of
-a TYPE_DISK and moves on to the second statement checking if not
-TYPE_ZBC, it will always hit the continue.
+I'm confused what you are saying.  According to Petros, these bugs are
+causing failures in real life, I was only added to the CC list because
+Smatch should have warned about them.
 
-Signed-off-by: Petros Koutoupis <petros@petroskoutoupis.com>
-Acked-by: Don Brace <don.brace@microsemi.com>
+regards,
+dan carpenter
 
---- linux/drivers/scsi/hpsa.c.orig	2016-04-27 21:43:44.463140419 -0500
-+++ linux/drivers/scsi/hpsa.c	2016-04-27 22:45:31.015140419 -0500
-@@ -1637,9 +1637,8 @@ static void hpsa_figure_phys_disk_ptrs(s
-=C2=A0		for (j =3D 0; j < ndevices; j++) {
-=C2=A0			if (dev[j] =3D=3D NULL)
-=C2=A0				continue;
--			if (dev[j]->devtype !=3D TYPE_DISK)
--				continue;
--			if (dev[j]->devtype !=3D TYPE_ZBC)
-+			if ((dev[j]->devtype !=3D TYPE_DISK) &&
-+			=C2=A0=C2=A0=C2=A0=C2=A0(dev[j]->devtype !=3D TYPE_ZBC))
-=C2=A0				continue;
-=C2=A0			if (is_logical_device(dev[j]))
-=C2=A0				continue;
-@@ -1684,9 +1683,8 @@ static void hpsa_update_log_drive_phys_d
-=C2=A0	for (i =3D 0; i < ndevices; i++) {
-=C2=A0		if (dev[i] =3D=3D NULL)
-=C2=A0			continue;
--		if (dev[i]->devtype !=3D TYPE_DISK)
--			continue;
--		if (dev[i]->devtype !=3D TYPE_ZBC)
-+		if ((dev[i]->devtype !=3D TYPE_DISK) &&
-+		=C2=A0=C2=A0=C2=A0=C2=A0(dev[i]->devtype !=3D TYPE_ZBC))
-=C2=A0			continue;
-=C2=A0		if (!is_logical_device(dev[i]))
-=C2=A0			continue;
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
