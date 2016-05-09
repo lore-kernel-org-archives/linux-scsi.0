@@ -1,68 +1,63 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-Date: Sun, 08 May 2016 21:59:21 -0500
-Message-ID: <1462762761.3006.1.camel@petros-ultrathin>
-References: <1462668011.32105.7.camel@petros-ultrathin>
-	 <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
-	 <1462709320.2840.15.camel@petros-ultrathin>
-	 <alpine.LNX.2.00.1605082216090.19865@nippy.intranet>
-	 <1462725247.6614.3.camel@petros-ultrathin>
-	 <CAGRGNgVYdamHZcpz6tPFK8brjNjDjytBrtjZzxb9c8+Kw7H9rg@mail.gmail.com>
+From: Paul Mackerras <paulus@ozlabs.org>
+Subject: Re: [PATCH] scsi_lib: Decode T-10 vendor IDs
+Date: Mon, 9 May 2016 13:37:47 +1000
+Message-ID: <20160509033747.GB12515@fergus.ozlabs.ibm.com>
+References: <1462523707-63224-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:54092 "EHLO mout.perfora.net"
+Received: from ozlabs.org ([103.22.144.67]:47498 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750905AbcEIC7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 May 2016 22:59:33 -0400
-In-Reply-To: <CAGRGNgVYdamHZcpz6tPFK8brjNjDjytBrtjZzxb9c8+Kw7H9rg@mail.gmail.com>
+	id S1750905AbcEIDhv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 May 2016 23:37:51 -0400
+Content-Disposition: inline
+In-Reply-To: <1462523707-63224-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi <linux-scsi@vger.kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, 2016-05-09 at 11:35 +1000, Julian Calaby wrote:
-> Hi Petros,
+On Fri, May 06, 2016 at 10:35:07AM +0200, Hannes Reinecke wrote:
+> Some arrays / HBAs will only present T-10 vendor IDs, so we
+> should be decoding them, too.
 > 
-> On Mon, May 9, 2016 at 2:34 AM, Petros Koutoupis
-> <petros@petroskoutoupis.com> wrote:
-> > On Sun, 2016-05-08 at 22:22 +1000, Finn Thain wrote:
-> >> On Sun, 8 May 2016, Petros Koutoupis wrote:
-> >>
-> >> > >
-> >> > > That contains a tautology.
-> >> > >
-> >> >
-> >> > How so?
-> >>
-> >> if (x)
-> >>       /* ... */
-> >> else if (!x && (whatever))
-> >>       /* ... */
-> >>
-> >> --
-> >
-> > Thank you but I know the logic of what I wrote. A tautology
-> > will yield the same results no matter what the interpretation.
-> > That is not a tautology. The two conditionals in my case check
-> > different states and serve different purposes.
+> Suggested-by: Paul Mackerras <paulus@ozlabs.org>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> You're missing the point.
-> 
-> Execution will only reach the else branch if "!cmd_fusion->scmd",
-> hence checking that is unnecessary. Removing that test (and all the
-> unnecessary parentheses) will reduce the second test to:
-> 
-> else if (scsi_io_req->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
->         scsi_io_req->Function == MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST)
-> 
-> which is much cleaner.
-> 
-> Thanks,
-> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index b920c5d..a6158f8 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -3064,6 +3064,7 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+>  	 * - EUI-64 based 12-byte
+>  	 * - NAA IEEE Registered
+>  	 * - NAA IEEE Extended
+> +	 * - T10 Vendor ID
+>  	 * as longer descriptors reduce the likelyhood
+>  	 * of identification clashes.
+>  	 */
+> @@ -3082,6 +3083,21 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+>  			goto next_desig;
+>  
+>  		switch (d[1] & 0xf) {
+> +		case 0x1:
+> +			/* T-10 Vendor ID */
+> +			if (cur_id_size > d[3])
+> +				break;
+> +			/* Prefer anything */
+> +			if (cur_id_type > 0x01)
+> +				break;
 
-Julian,
+This doesn't work as desired because cur_id_type is initialized to
+0xff.  The test needs to be:
 
-I agree. I will clean up and resend. Thank you.
++			if (cur_id_type > 0x01 && cur_id_type != 0xff)
++				break;
 
+With that change it works (and you could put my tested-by on it).
+
+Thanks,
+Paul.
