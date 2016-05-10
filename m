@@ -1,53 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Application error handling with write-back caching
-Date: Tue, 10 May 2016 10:31:40 -0700
-Message-ID: <1462901500.3163.4.camel@HansenPartnership.com>
-References: <20160510134737.GA1922@stefanha-x1.localdomain>
-	 <1462889808.2320.4.camel@HansenPartnership.com>
-	 <57320F7D.4010208@redhat.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] libfc: replace 'rp_mutex' with 'rp_lock'
+Date: Tue, 10 May 2016 11:33:07 -0700
+Message-ID: <57322963.7040507@sandisk.com>
+References: <1461571293-953-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40958 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751033AbcEJRbo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2016 13:31:44 -0400
-In-Reply-To: <57320F7D.4010208@redhat.com>
+Received: from mail-bn1on0094.outbound.protection.outlook.com ([157.56.110.94]:8656
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752214AbcEJSdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2016 14:33:16 -0400
+In-Reply-To: <1461571293-953-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Wolf <kwolf@redhat.com>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.orgEwan Milne <emilne@redhat.com>
 
-On Tue, 2016-05-10 at 18:42 +0200, Paolo Bonzini wrote:
-> 
-> On 10/05/2016 16:16, James Bottomley wrote:
-> > > If "is performed" just means "completes", maybe with an error, 
-> > > the application would have to resubmit write requests and then 
-> > > try to flush the write cache again.
-> > > 
-> > > I'm not aware of applications that keep acknowledged write data 
-> > > around until the cache flush completion in order to retry writes.
-> > 
-> > I think you may be misunderstanding the nature of the returned 
-> > error. It will be permanent and fatal and usually signal that the 
-> > device has a failed sector that can't be remapped and so the device 
-> > itself has for most purposes failed.  The only recovery is if you 
-> > happen to have RAID, in which case the RAID layer will mostly take
-> > care of it.
-> 
-> What about a SPACE ALLOCATION FAILED error or a similar error that 
-> can be fixed by administrator actions (or just by a concurrent 
-> process doing an UNMAP)?  Would a subsequent cache flush cause data
-> loss?
+On 04/25/2016 01:01 AM, Hannes Reinecke wrote:
+> We cannot use an embedded mutex in a structure with reference
+> counting, as mutex unlock might be delayed, and the waiters
+> might then access an already freed memory area.
+> So convert it to a spinlock.
+ >
+ > For details cf https://lkml.org/lkml/2015/2/11/245
 
-You're now asking about how these are handled?  It's not a SCSI
-problem.  I believe if you look at the various layers, RAID would still
-treat it as fatal and fail the drive and so would most filesystems. 
- The AEN warnings for TP are reported, but the admin has to sort it out
-before they become a fatal error.
+Hello Hannes,
 
-james
+Is what you describe a theoretical concern or have you observed any 
+issues that could have been caused by the rport mutex? I'm asking this 
+because my interpretation of the thread you refer to is different. My 
+conclusion is that it is safe to embed a mutex in a structure that uses 
+reference counting but that the mutex_unlock() call may trigger a 
+spurious wakeup. I think that the conclusion of that thread was that 
+glibc and kernel code should tolerate such spurious wakeups.
 
-
+Bart.
