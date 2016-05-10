@@ -1,34 +1,26 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v3 3/6] scsi_debug: add multiple queue support
-Date: Mon, 9 May 2016 15:36:33 -0700
-Message-ID: <573110F1.2030305@sandisk.com>
-References: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
- <1462509629-24282-4-git-send-email-dgilbert@interlog.com>
- <5730B6EC.90001@sandisk.com> <57310F93.2000709@interlog.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH resend v2] [SCSI] bfa: fix bfa_fcb_itnim_alloc() error handling
+Date: Mon, 09 May 2016 22:19:14 -0400
+Message-ID: <yq1lh3ir6xp.fsf@sermon.lab.mkp.net>
+References: <20160413111441.GC4247@mwanda>
+	<yq1inysvv12.fsf@sermon.lab.mkp.net>
+	<CY1PR11MB0218498E60CACA99E39CA608947D0@CY1PR11MB0218.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0076.outbound.protection.outlook.com ([157.56.110.76]:19648
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751450AbcEIWgi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 May 2016 18:36:38 -0400
-In-Reply-To: <57310F93.2000709@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <CY1PR11MB0218498E60CACA99E39CA608947D0@CY1PR11MB0218.namprd11.prod.outlook.com>
+	(Anil Gurumurthy's message of "Fri, 6 May 2016 06:44:01 +0000")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Carpenter <dan.carpenter@oracle.com>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com
 
-On 05/09/2016 03:30 PM, Douglas Gilbert wrote:> The maximum return value 
-from the first scnprintf(sdebug_info ...)
-> is (sizeof(sdebug_info) - 1)). So strictly speaking the early return
-> comparison should be "==" for scnprintf and ">=" for snprintf. Given
-> that snprintf is more dangerous then scnprintf (e.g. with repeated
-> "k += snprintf(buff + k, buff_len - k, ...)" statements) then I would
-> prefer to keep scnprintf and yes, ">=" is overkill but will work.
+>>>>> "Anil" == Anil Gurumurthy <Anil.Gurumurthy@qlogic.com> writes:
 
-Thanks for the feedback. I'm fine with the other changes in this patch, 
-hence:
+Anil> Apologies for the delay. Patch looks good.  Acked by: Anil
+Anil> Gurumurthy <anil.gurumurthy@qlogic.com>
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Applied to 4.7/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
