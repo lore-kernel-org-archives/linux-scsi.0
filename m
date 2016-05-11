@@ -1,33 +1,31 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] scsi_dh_alua: do not fail for unknown VPD identification
-Date: Tue, 10 May 2016 13:12:16 -0700
-Message-ID: <573240A0.6070400@sandisk.com>
-References: <1462523675-63172-1-git-send-email-hare@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 0/6] scsi_debug: multiple queue support and cleanup
+Date: Tue, 10 May 2016 21:27:06 -0400
+Message-ID: <yq1h9e5peol.fsf@sermon.lab.mkp.net>
+References: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0087.outbound.protection.outlook.com ([157.56.111.87]:54804
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750922AbcEJU2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2016 16:28:15 -0400
-In-Reply-To: <1462523675-63172-1-git-send-email-hare@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25536 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbcEKB1W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2016 21:27:22 -0400
+In-Reply-To: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
+	(Douglas Gilbert's message of "Fri, 6 May 2016 00:40:23 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Paul Mackerras <paulus@ozlabs.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, tomas.winkler@intel.com, emilne@redhat.com, bart.vanassche@sandisk.com
 
-On 05/06/2016 01:34 AM, Hannes Reinecke wrote:
-> Not every device will return a useable VPD identification, but
-> still might support ALUA. Rather then disable ALUA support we
-> should be allowing the device identification to be empty and
-> attach individual ALUA device handler to each devices.
->
-> Reported-by: Paul Mackerras <paulus@ozlabs.org>
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>>>>> "Douglas" == Douglas Gilbert <dgilbert@interlog.com> writes:
 
-If you have to repost this please fix the spelling of "identifcation". 
-Anyway:
+Douglas> Changes since v2.5 - rework the 'add multiple queue support'
+Douglas> patch based on reviewers' comments to more closely follow the
+Douglas> scsi/block mq template
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Applied the remaining patches in your series to 4.7/scsi-queue.
+
+Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
