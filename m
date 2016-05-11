@@ -1,54 +1,73 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
-Date: Wed, 11 May 2016 08:05:20 -0700
-Message-ID: <1462979120.2356.4.camel@HansenPartnership.com>
-References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
-	 <5727266E.7040905@suse.de> <1462196672.2665.5.camel@linux.vnet.ibm.com>
-	 <CAMGffEmxzPrTKv=6Z=Nsiquk6L0OvZ3spYUR47CYUbaf5Spbeg@mail.gmail.com>
-	 <CAMGffEmCz1vcpOgPznC+Yn7XuikbaFUFVDmQv_T4KjZqOt4hnQ@mail.gmail.com>
-	 <CAMGffEnM_w8us49dCJWHU=UeDhyk53DRt5AD=sdezY3=Rv=omQ@mail.gmail.com>
-	 <1462892898.2320.18.camel@linux.vnet.ibm.com> <5732CF6A.20802@suse.de>
-	 <1462949004.2674.6.camel@linux.vnet.ibm.com>
+Subject: [GIT PULL] SCSI fixes for 4.6-rc2
+Date: Wed, 11 May 2016 13:01:40 -0700
+Message-ID: <1462996900.2356.65.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47850 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50120 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751324AbcEKPFY (ORCPT
+	by vger.kernel.org with ESMTP id S1750984AbcEKUBm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2016 11:05:24 -0400
-In-Reply-To: <1462949004.2674.6.camel@linux.vnet.ibm.com>
+	Wed, 11 May 2016 16:01:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jinpu Wang <jinpu.wang@profitbricks.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 2016-05-10 at 23:43 -0700, James Bottomley wrote:
-> On Wed, 2016-05-11 at 08:21 +0200, Hannes Reinecke wrote:
-[..]
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index 7cb66b0..68c0e74 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -693,7 +693,7 @@ static bool scsi_end_request(struct request
-> > *req, int error,
-> >         struct scsi_device *sdev = cmd->device;
-> >         struct request_queue *q = sdev->request_queue;
-> > 
-> > -       if (blk_update_request(req, error, bytes))
-> > +       if (bytes && blk_update_request(req, error, bytes))
-> >                 return true;
-> 
-> Um, I think you mean 
-> 
-> if (bytes == 0 || blk_update_request())
+This is a couple of small fixes: one is a potential uninitialised error
+variable in the alua code, potentially causing spurious failures and
+the other is a problem caused by the conversion of SCSI to hostwide
+tags which resulted in the qla1280 driver always failing in host
+initialisation.
 
-Actually, even this would be wrong.  We expect scsi_end_request called
-with blk_rq_bytes() to complete the request and return false.  If you
-do the above, it won't and we'll trigger a BUG lower down (or retry
-forever).
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Dan Carpenter (1):
+      scsi_dh_alua: uninitialized variable in alua_rtpg()
+
+Johannes Thumshirn (1):
+      qla1280: Don't allocate 512kb of host tags
+
+And the diffstat:
+
+ drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
+ drivers/scsi/qla1280.c                     | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+With full diff below.
 
 James
 
+---
 
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 8eaed05..a655cf2 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -532,6 +532,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		return SCSI_DH_DEV_TEMP_BUSY;
+ 
+  retry:
++	err = 0;
+ 	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
+ 
+ 	if (retval) {
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 5d0ec42..634254a 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -4214,7 +4214,7 @@ static struct scsi_host_template qla1280_driver_template = {
+ 	.eh_bus_reset_handler	= qla1280_eh_bus_reset,
+ 	.eh_host_reset_handler	= qla1280_eh_adapter_reset,
+ 	.bios_param		= qla1280_biosparam,
+-	.can_queue		= 0xfffff,
++	.can_queue		= MAX_OUTSTANDING_COMMANDS,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.use_clustering		= ENABLE_CLUSTERING,
