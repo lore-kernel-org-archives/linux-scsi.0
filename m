@@ -1,49 +1,54 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] libfc: replace 'rp_mutex' with 'rp_lock'
-Date: Wed, 11 May 2016 07:44:43 -0700
-Message-ID: <5733455B.7050903@sandisk.com>
-References: <1461571293-953-1-git-send-email-hare@suse.de>
- <57322963.7040507@sandisk.com> <5732C7E5.3000709@suse.de>
- <5732CC17.20800@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCHv2]sd: Don't treat succeeded SYNC as error
+Date: Wed, 11 May 2016 08:05:20 -0700
+Message-ID: <1462979120.2356.4.camel@HansenPartnership.com>
+References: <CAMGffE=C8mr_G=X8quAO44_0+1u_YNHDULwpBEJzSJnU4A4q9Q@mail.gmail.com>
+	 <5727266E.7040905@suse.de> <1462196672.2665.5.camel@linux.vnet.ibm.com>
+	 <CAMGffEmxzPrTKv=6Z=Nsiquk6L0OvZ3spYUR47CYUbaf5Spbeg@mail.gmail.com>
+	 <CAMGffEmCz1vcpOgPznC+Yn7XuikbaFUFVDmQv_T4KjZqOt4hnQ@mail.gmail.com>
+	 <CAMGffEnM_w8us49dCJWHU=UeDhyk53DRt5AD=sdezY3=Rv=omQ@mail.gmail.com>
+	 <1462892898.2320.18.camel@linux.vnet.ibm.com> <5732CF6A.20802@suse.de>
+	 <1462949004.2674.6.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0059.outbound.protection.outlook.com ([157.56.111.59]:56271
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751627AbcEKOot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2016 10:44:49 -0400
-In-Reply-To: <5732CC17.20800@suse.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47850 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751324AbcEKPFY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 May 2016 11:05:24 -0400
+In-Reply-To: <1462949004.2674.6.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, Jinpu Wang <jinpu.wang@profitbricks.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sebastian Parschauer <s.parschauer@gmx.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-On 05/10/16 23:07, Hannes Reinecke wrote:
-> On 05/11/2016 07:49 AM, Hannes Reinecke wrote:
-> RIP: 0010:[<ffffffffa00b2adb>]  [<ffffffffa00b2adb>]
-> fc_rport_lookup+0x4b/0x70 [libfc]
-> Call Trace:
->    [<ffffffffa00b2e17>] fc_rport_create+0x17/0x1b0 [libfc]
->    [<ffffffffa00a9f81>] fc_disc_recv_req+0x261/0x480 [libfc]
->    [<ffffffffa00b1008>] fc_lport_recv_els_req+0x68/0x130 [libfc]
->    [<ffffffffa00afd5a>] fc_lport_recv_req+0x9a/0xf0 [libfc]
->    [<ffffffffa00e8333>] fnic_handle_frame+0x63/0xd0 [fnic]
->    [<ffffffff8106fd52>] process_one_work+0x172/0x420
->    [<ffffffff810709ca>] worker_thread+0x11a/0x3c0
->    [<ffffffff81077344>] kthread+0xb4/0xc0
->    [<ffffffff81521318>] ret_from_fork+0x58/0x90
+On Tue, 2016-05-10 at 23:43 -0700, James Bottomley wrote:
+> On Wed, 2016-05-11 at 08:21 +0200, Hannes Reinecke wrote:
+[..]
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 7cb66b0..68c0e74 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -693,7 +693,7 @@ static bool scsi_end_request(struct request
+> > *req, int error,
+> >         struct scsi_device *sdev = cmd->device;
+> >         struct request_queue *q = sdev->request_queue;
+> > 
+> > -       if (blk_update_request(req, error, bytes))
+> > +       if (bytes && blk_update_request(req, error, bytes))
+> >                 return true;
+> 
+> Um, I think you mean 
+> 
+> if (bytes == 0 || blk_update_request())
 
-Hello Hannes,
+Actually, even this would be wrong.  We expect scsi_end_request called
+with blk_rq_bytes() to complete the request and return false.  If you
+do the above, it won't and we'll trigger a BUG lower down (or retry
+forever).
 
-Thanks for sharing this information. fc_disc_recv_req() protects the 
-fc_rport_create() call via a mutex (disc_mutex). Since a mutex_lock() 
-call may sleep it can trigger the start of an RCU grace period. I think 
-this may result in freeing of an rport while fc_rport_lookup() is 
-examining it. Have you already considered to add a 
-rcu_read_lock()/rcu_read_unlock() pair in fc_rport_lookup()?
+James
 
-Thanks,
 
-Bart.
