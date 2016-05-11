@@ -1,13 +1,13 @@
 From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v16 9/9] ufs: add TC G210 pci driver
-Date: Wed, 11 May 2016 12:21:33 +0100
-Message-ID: <f5ba9a334da0682bb7872ef2ad6a5268d27d08b2.1462963164.git.jpinto@synopsys.com>
+Subject: [PATCH v16 8/9] add TC G210 platform driver
+Date: Wed, 11 May 2016 12:21:32 +0100
+Message-ID: <9bbb5f2917016b53371cef6952c9d6772ad06895.1462963164.git.jpinto@synopsys.com>
 References: <cover.1462963164.git.jpinto@synopsys.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:52704 "EHLO
+Received: from smtprelay.synopsys.com ([198.182.47.9]:52701 "EHLO
 	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbcEKLV4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2016 07:21:56 -0400
+	with ESMTP id S1751676AbcEKLVy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2016 07:21:54 -0400
 In-Reply-To: <cover.1462963164.git.jpinto@synopsys.com>
 In-Reply-To: <cover.1462963164.git.jpinto@synopsys.com>
 References: <cover.1462963164.git.jpinto@synopsys.com>
@@ -16,7 +16,7 @@ List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
 
-This patch adds a glue pci driver for the Synopsys G210 Test Chip.
+This patch adds a glue platform driver for the Synopsys G210 Test Chip.
 
 Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
@@ -24,57 +24,91 @@ Changes v15->v16 (Martin K. Petersen):
 - The glue driver Makefile entry calls the dwc and tc objects directly.
 Changes v13->v15:
 - Nothing changed (just to keep up with patch set version).
-Changes v12->v13:
-- Nothing changed (just to keep up with patch set version).
-Changes v10->v12 (Tomas Winkler):
+Changes v12->v13 (Rob Herring):
+- Removed spaces from the compatibility string (pltfm driver and DT bindings)
+- Removed underscores from the node descriptor
+Changes v11->v12 (Tomas Winkler):
 - custom_phy_initialization replaced by phy_initialization
 Changes v10->v11 (Arnd Bergmann):
-- tc_type is now initialized to TC_G210_INV
-- probe function checks if the test chip version is specified
+- vops structs are now passed in .data
 Changes v0->v10:
 - This patch only appeared in v10
 
- drivers/scsi/ufs/Kconfig           |   8 ++
- drivers/scsi/ufs/Makefile          |   1 +
- drivers/scsi/ufs/tc-dwc-g210-pci.c | 181 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 190 insertions(+)
- create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pci.c
+ .../devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt |  26 +++++
+ drivers/scsi/ufs/Kconfig                           |   8 ++
+ drivers/scsi/ufs/Makefile                          |   1 +
+ drivers/scsi/ufs/tc-dwc-g210-pltfrm.c              | 113 +++++++++++++++++++++
+ 4 files changed, 148 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+ create mode 100644 drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
 
+diff --git a/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+new file mode 100644
+index 0000000..71c0777
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
+@@ -0,0 +1,26 @@
++* Universal Flash Storage (UFS) DesignWare Host Controller
++
++DWC_UFS nodes are defined to describe on-chip UFS host controllers and MPHY.
++Each UFS controller instance should have its own node.
++
++Required properties:
++- compatible	: compatible list must contain the PHY type & version:
++			"snps,g210-tc-6.00-20bit"
++			"snps,g210-tc-6.00-40bit"
++		  complemented with the Controller IP version:
++			"snps,dwc-ufshcd-1.40a"
++		  complemented with the JEDEC version:
++			"jedec,ufs-1.1"
++			"jedec,ufs-2.0"
++
++- reg		: <registers mapping>
++- interrupts	: <interrupt mapping for UFS host controller IRQ>
++
++Example for a setup using a 1.40a DWC Controller with a 6.00 G210 40-bit TC:
++	dwc-ufs@d0000000 {
++		compatible = "snps,g210-tc-6.00-40bit",
++			     "snps,dwc-ufshcd-1.40a",
++			     "jedec,ufs-2.0";
++		reg = < 0xd0000000 0x10000 >;
++		interrupts = < 24 >;
++	};
 diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 81fdfb3..e27b4d4 100644
+index 097894a..81fdfb3 100644
 --- a/drivers/scsi/ufs/Kconfig
 +++ b/drivers/scsi/ufs/Kconfig
-@@ -61,6 +61,14 @@ config SCSI_UFSHCD_PCI
+@@ -72,6 +72,14 @@ config SCSI_UFSHCD_PLATFORM
  
  	  If unsure, say N.
  
-+config SCSI_UFS_DWC_TC_PCI
-+	tristate "DesignWare pci support using a G210 Test Chip"
-+	depends on SCSI_UFSHCD_PCI
++config SCSI_UFS_DWC_TC_PLATFORM
++	tristate "DesignWare platform support using a G210 Test Chip"
++	depends on SCSI_UFSHCD_PLATFORM
 +	---help---
 +	  Synopsys Test Chip is a PHY for prototyping purposes.
 +
 +	  If unsure, say N.
 +
- config SCSI_UFSHCD_PLATFORM
- 	tristate "Platform bus based UFS Controller support"
- 	depends on SCSI_UFSHCD
+ config SCSI_UFS_QCOM
+ 	tristate "QCOM specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
 diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index d5774c6..6e77cb0 100644
+index 8303bcc..d5774c6 100644
 --- a/drivers/scsi/ufs/Makefile
 +++ b/drivers/scsi/ufs/Makefile
 @@ -1,4 +1,5 @@
  # UFSHCD makefile
-+obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
++obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
-diff --git a/drivers/scsi/ufs/tc-dwc-g210-pci.c b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+diff --git a/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c b/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
 new file mode 100644
-index 0000000..0667c76
+index 0000000..69b7036
 --- /dev/null
-+++ b/drivers/scsi/ufs/tc-dwc-g210-pci.c
-@@ -0,0 +1,181 @@
++++ b/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+@@ -0,0 +1,113 @@
 +/*
 + * Synopsys G210 Test Chip driver
 + *
@@ -87,174 +121,106 @@ index 0000000..0667c76
 + * published by the Free Software Foundation.
 + */
 +
-+#include "ufshcd.h"
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/delay.h>
++
++#include "ufshcd-pltfrm.h"
 +#include "ufshcd-dwc.h"
 +#include "tc-dwc-g210.h"
 +
-+#include <linux/pci.h>
-+#include <linux/pm_runtime.h>
-+
-+/* Test Chip type expected values */
-+#define TC_G210_20BIT 20
-+#define TC_G210_40BIT 40
-+#define TC_G210_INV 0
-+
-+static int tc_type = TC_G210_INV;
-+module_param(tc_type, int, 0);
-+MODULE_PARM_DESC(tc_type, "Test Chip Type (20 = 20-bit, 40 = 40-bit)");
-+
-+static int tc_dwc_g210_pci_suspend(struct device *dev)
-+{
-+	return ufshcd_system_suspend(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_resume(struct device *dev)
-+{
-+	return ufshcd_system_resume(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_runtime_suspend(struct device *dev)
-+{
-+	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_runtime_resume(struct device *dev)
-+{
-+	return ufshcd_runtime_resume(dev_get_drvdata(dev));
-+}
-+
-+static int tc_dwc_g210_pci_runtime_idle(struct device *dev)
-+{
-+	return ufshcd_runtime_idle(dev_get_drvdata(dev));
-+}
-+
 +/**
-+ * struct ufs_hba_dwc_vops - UFS DWC specific variant operations
++ * UFS DWC specific variant operations
 + */
-+static struct ufs_hba_variant_ops tc_dwc_g210_pci_hba_vops = {
-+	.name                   = "tc-dwc-g210-pci",
++static struct ufs_hba_variant_ops tc_dwc_g210_20bit_pltfm_hba_vops = {
++	.name                   = "tc-dwc-g210-pltfm",
 +	.link_startup_notify	= ufshcd_dwc_link_startup_notify,
++	.phy_initialization = tc_dwc_g210_config_20_bit,
 +};
 +
-+/**
-+ * tc_dwc_g210_pci_shutdown - main function to put the controller in reset state
-+ * @pdev: pointer to PCI device handle
-+ */
-+static void tc_dwc_g210_pci_shutdown(struct pci_dev *pdev)
-+{
-+	ufshcd_shutdown((struct ufs_hba *)pci_get_drvdata(pdev));
-+}
++static struct ufs_hba_variant_ops tc_dwc_g210_40bit_pltfm_hba_vops = {
++	.name                   = "tc-dwc-g210-pltfm",
++	.link_startup_notify	= ufshcd_dwc_link_startup_notify,
++	.phy_initialization = tc_dwc_g210_config_40_bit,
++};
++
++static const struct of_device_id tc_dwc_g210_pltfm_match[] = {
++	{
++		.compatible = "snps,g210-tc-6.00-20bit",
++		.data = &tc_dwc_g210_20bit_pltfm_hba_vops,
++	},
++	{
++		.compatible = "snps,g210-tc-6.00-40bit",
++		.data = &tc_dwc_g210_40bit_pltfm_hba_vops,
++	},
++	{ },
++};
++MODULE_DEVICE_TABLE(of, tc_dwc_g210_pltfm_match);
 +
 +/**
-+ * tc_dwc_g210_pci_remove - de-allocate PCI/SCSI host and host memory space
-+ *		data structure memory
-+ * @pdev - pointer to PCI handle
-+ */
-+static void tc_dwc_g210_pci_remove(struct pci_dev *pdev)
-+{
-+	struct ufs_hba *hba = pci_get_drvdata(pdev);
-+
-+	pm_runtime_forbid(&pdev->dev);
-+	pm_runtime_get_noresume(&pdev->dev);
-+	ufshcd_remove(hba);
-+}
-+
-+/**
-+ * tc_dwc_g210_pci_probe - probe routine of the driver
-+ * @pdev: pointer to PCI device handle
-+ * @id: PCI device id
++ * tc_dwc_g210_pltfm_probe()
++ * @pdev: pointer to platform device structure
 + *
-+ * Returns 0 on success, non-zero value on failure
 + */
-+static int
-+tc_dwc_g210_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++static int tc_dwc_g210_pltfm_probe(struct platform_device *pdev)
 +{
-+	struct ufs_hba *hba;
-+	void __iomem *mmio_base;
 +	int err;
++	const struct of_device_id *of_id;
++	struct ufs_hba_variant_ops *vops;
++	struct device *dev = &pdev->dev;
 +
-+	/* Check Test Chip type and set the specific setup routine */
-+	if (tc_type == TC_G210_20BIT) {
-+		tc_dwc_g210_pci_hba_vops.phy_initialization =
-+						tc_dwc_g210_config_20_bit;
-+	} else if (tc_type == TC_G210_40BIT) {
-+		tc_dwc_g210_pci_hba_vops.phy_initialization =
-+						tc_dwc_g210_config_40_bit;
-+	} else {
-+		dev_err(&pdev->dev, "test chip version not specified\n");
-+		return -EPERM;
-+	}
++	of_id = of_match_node(tc_dwc_g210_pltfm_match, dev->of_node);
++	vops = (struct ufs_hba_variant_ops *)of_id->data;
 +
-+	err = pcim_enable_device(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev, "pcim_enable_device failed\n");
-+		return err;
-+	}
++	/* Perform generic probe */
++	err = ufshcd_pltfrm_init(pdev, vops);
++	if (err)
++		dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
 +
-+	pci_set_master(pdev);
++	return err;
++}
 +
-+	err = pcim_iomap_regions(pdev, 1 << 0, UFSHCD);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "request and iomap failed\n");
-+		return err;
-+	}
++/**
++ * tc_dwc_g210_pltfm_remove()
++ * @pdev: pointer to platform device structure
++ *
++ */
++static int tc_dwc_g210_pltfm_remove(struct platform_device *pdev)
++{
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
 +
-+	mmio_base = pcim_iomap_table(pdev)[0];
-+
-+	err = ufshcd_alloc_host(&pdev->dev, &hba);
-+	if (err) {
-+		dev_err(&pdev->dev, "Allocation failed\n");
-+		return err;
-+	}
-+
-+	INIT_LIST_HEAD(&hba->clk_list_head);
-+
-+	hba->vops = &tc_dwc_g210_pci_hba_vops;
-+
-+	err = ufshcd_init(hba, mmio_base, pdev->irq);
-+	if (err) {
-+		dev_err(&pdev->dev, "Initialization failed\n");
-+		return err;
-+	}
-+
-+	pci_set_drvdata(pdev, hba);
-+	pm_runtime_put_noidle(&pdev->dev);
-+	pm_runtime_allow(&pdev->dev);
++	pm_runtime_get_sync(&(pdev)->dev);
++	ufshcd_remove(hba);
 +
 +	return 0;
 +}
 +
-+static const struct dev_pm_ops tc_dwc_g210_pci_pm_ops = {
-+	.suspend	= tc_dwc_g210_pci_suspend,
-+	.resume		= tc_dwc_g210_pci_resume,
-+	.runtime_suspend = tc_dwc_g210_pci_runtime_suspend,
-+	.runtime_resume  = tc_dwc_g210_pci_runtime_resume,
-+	.runtime_idle    = tc_dwc_g210_pci_runtime_idle,
++static const struct dev_pm_ops tc_dwc_g210_pltfm_pm_ops = {
++	.suspend	= ufshcd_pltfrm_suspend,
++	.resume		= ufshcd_pltfrm_resume,
++	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
++	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
++	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
 +};
 +
-+static const struct pci_device_id tc_dwc_g210_pci_tbl[] = {
-+	{ PCI_VENDOR_ID_SYNOPSYS, 0xB101, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_SYNOPSYS, 0xB102, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ }	/* terminate list */
-+};
-+
-+MODULE_DEVICE_TABLE(pci, tc_dwc_g210_pci_tbl);
-+
-+static struct pci_driver tc_dwc_g210_pci_driver = {
-+	.name = UFSHCD,
-+	.id_table = tc_dwc_g210_pci_tbl,
-+	.probe = tc_dwc_g210_pci_probe,
-+	.remove = tc_dwc_g210_pci_remove,
-+	.shutdown = tc_dwc_g210_pci_shutdown,
-+	.driver = {
-+		.pm = &tc_dwc_g210_pci_pm_ops
++static struct platform_driver tc_dwc_g210_pltfm_driver = {
++	.probe		= tc_dwc_g210_pltfm_probe,
++	.remove		= tc_dwc_g210_pltfm_remove,
++	.shutdown = ufshcd_pltfrm_shutdown,
++	.driver		= {
++		.name	= "tc-dwc-g210-pltfm",
++		.pm	= &tc_dwc_g210_pltfm_pm_ops,
++		.of_match_table	= of_match_ptr(tc_dwc_g210_pltfm_match),
 +	},
 +};
 +
-+module_pci_driver(tc_dwc_g210_pci_driver);
++module_platform_driver(tc_dwc_g210_pltfm_driver);
 +
++MODULE_ALIAS("platform:tc-dwc-g210-pltfm");
++MODULE_DESCRIPTION("Synopsys Test Chip G210 platform glue driver");
 +MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
-+MODULE_DESCRIPTION("Synopsys Test Chip G210 PCI glue driver");
 +MODULE_LICENSE("Dual BSD/GPL");
 -- 
 1.8.1.5
