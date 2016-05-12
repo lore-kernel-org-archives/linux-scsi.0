@@ -1,70 +1,67 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 118081] New: open-iscsi Ping timeout erro
-Date: Thu, 12 May 2016 03:34:45 +0000
-Message-ID: <bug-118081-11613@https.bugzilla.kernel.org/>
+From: Fam Zheng <famz@redhat.com>
+Subject: Re: [PATCH] sd: Optimal I/O size is in bytes, not sectors
+Date: Thu, 12 May 2016 12:04:33 +0800
+Message-ID: <20160512040433.GA20240@ad.usersys.redhat.com>
+References: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36024 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:40169 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751552AbcELDes (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2016 23:34:48 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 2141B201EC
-	for <linux-scsi@vger.kernel.org>; Thu, 12 May 2016 03:34:47 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 7D606201D3
-	for <linux-scsi@vger.kernel.org>; Thu, 12 May 2016 03:34:45 +0000 (UTC)
+	id S1750877AbcELEEd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 May 2016 00:04:33 -0400
+Content-Disposition: inline
+In-Reply-To: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, borntraeger@de.ibm.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=118081
+On Wed, 01/20 11:01, Martin K. Petersen wrote:
+> Commit ca369d51b3e1 ("block/sd: Fix device-imposed transfer length
+> limits") accidentally switched optimal I/O size reporting from bytes to
+> block layer sectors.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
+> ---
+>  drivers/scsi/sd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 4e08d1cd704d..ec163d08f6c3 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2893,7 +2893,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
+>  	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_CACHE_SIZE)
+>  		rw_max = q->limits.io_opt =
+> -			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+> +			sdkp->opt_xfer_blocks * sdp->sector_size;
 
-            Bug ID: 118081
-           Summary: open-iscsi Ping timeout erro
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 4.4.7
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: liuzhengyuang521@gmail.com
-        Regression: No
+Hi Martin,
 
-Hi everyone:
-I create a target using fileio as the backend storage on ARM64 server. The
-initiator reported some errors showed bellow  while perform iozone test.
+This looks wrong to me, maybe I'm missing the obvious? Here
+sdkp->opt_xfer_blocks is in block size unit, and rw_max is in byte unit.
 
-[178444.145679]  connection14:0: ping timeout of 5 secs expired, recv timeout
-5, last rx 4339462894, last ping 4339464146, now 4339465400
-[178444.145706]  connection14:0: detected conn error (1011)
-[178469.674313]  connection14:0: detected conn error (1020)
-[178504.420979]  connection14:0: ping timeout of 5 secs expired, recv timeout
-5, last rx 4339477953, last ping 4339479204, now 4339480456
-[178504.421001]  connection14:0: detected conn error (1011)
-[178532.064262]  connection14:0: detected conn error (1020)
-[178564.584087]  connection14:0: ping timeout of 5 secs expired, recv timeout
-5, last rx 4339492980, last ping 4339494232, now 4339495484
-..............................
+Following is:
 
-I try to trace the function call of target iscsi. Then, I found the  receiving 
-thread of target iscsi blocked at fd_execute_sync_cache -> vfs_fsync_range.
-Further, vfs_fsync_range may takes more than 10 seconds to return,while
-initiator Ping timeout would happened after 5 seconds.   vfs_fsync_range was
-call with the form vfs_fsync_range(fd_dev->fd_file, 0, LLONG_MAX, 1) every
-times  which means sync all device cache. 
-So, is this a bug?
-How  does Initiator send sync_cache scsi command? 
-Does it need to sync all device cache at once?
-Any reply would be thankful.
+	else
+		rw_max = BLK_DEF_MAX_SECTORS;
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Which seems in sector unit, and is already making above change suspicious, and
+further down:
+
+	/* Combine with controller limits */
+	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
+
+looks like a unit mismatch to me.  IIUC q->limits.max_sectors _is_ in sector
+unit, similar to queue_max_hw_sectors().
+
+Is the error reported by Christian fixed just because we are setting an
+incorrect high max?
+
+(I noticed this when I see I/O error because a virtio-scsi guest starts to
+issue large reads that are rejected by host device.)
+
+Fam
