@@ -1,67 +1,53 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH] sd: Optimal I/O size is in bytes, not sectors
-Date: Thu, 12 May 2016 12:04:33 +0800
-Message-ID: <20160512040433.GA20240@ad.usersys.redhat.com>
-References: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
+Date: Thu, 12 May 2016 09:35:19 +0300
+Message-ID: <20160512062948.GG19274@mwanda>
+References: <1462668011.32105.7.camel@petros-ultrathin>
+ <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
+ <20160509080551.GH29510@mwanda>
+ <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com>
+ <1462829338.1873.4.camel@petroskoutoupis.com>
+ <166e07c6f96724c0d1f972f2a65d0a65@mail.gmail.com>
+ <1463017791.5827.4.camel@petros-ultrathin>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40169 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877AbcELEEd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 May 2016 00:04:33 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:46919 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450AbcELGjo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2016 02:39:44 -0400
 Content-Disposition: inline
-In-Reply-To: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
+In-Reply-To: <1463017791.5827.4.camel@petros-ultrathin>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, borntraeger@de.ibm.com
+To: Petros Koutoupis <petros@petroskoutoupis.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>, Finn Thain <fthain@telegraphics.com.au>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
-On Wed, 01/20 11:01, Martin K. Petersen wrote:
-> Commit ca369d51b3e1 ("block/sd: Fix device-imposed transfer length
-> limits") accidentally switched optimal I/O size reporting from bytes to
-> block layer sectors.
+On Wed, May 11, 2016 at 08:49:51PM -0500, Petros Koutoupis wrote:
+> Sumit,
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
-> ---
->  drivers/scsi/sd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> I will resubmit the patch with all the recommendations. Thank you. In case
+> you are interested, I have a crash file showcasing the error. I can always
+> provide this outside of this mailing thread.
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 4e08d1cd704d..ec163d08f6c3 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2893,7 +2893,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
->  	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_CACHE_SIZE)
->  		rw_max = q->limits.io_opt =
-> -			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
-> +			sdkp->opt_xfer_blocks * sdp->sector_size;
 
-Hi Martin,
+Please send it to the thread.
 
-This looks wrong to me, maybe I'm missing the obvious? Here
-sdkp->opt_xfer_blocks is in block size unit, and rw_max is in byte unit.
+To be honest, I totally can't understand this thread.  Sumit says it is
+impossible and you are saying that you have seen it happen in real life.
+Are you using out of tree code or something?  What are you doing that is
+unexpected?
 
-Following is:
+I don't see the point of adding a WARN_ON().  NULL derefs normally
+generate a pretty clear stack trace already (unless they are caused by
+memory corruption).  Why are we not just fixing the bugs instead of
+warning and then crashing.
 
-	else
-		rw_max = BLK_DEF_MAX_SECTORS;
+Also when I'm doing static analysis people always tell me that "that bug
+is impossible, trust me." and instead of trusting people I really wish
+they would just show me the relevant code that prevents it from
+happening.
 
-Which seems in sector unit, and is already making above change suspicious, and
-further down:
+regards,
+dan carpenter
 
-	/* Combine with controller limits */
-	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
-
-looks like a unit mismatch to me.  IIUC q->limits.max_sectors _is_ in sector
-unit, similar to queue_max_hw_sectors().
-
-Is the error reported by Christian fixed just because we are setting an
-incorrect high max?
-
-(I noticed this when I see I/O error because a virtio-scsi guest starts to
-issue large reads that are rejected by host device.)
-
-Fam
