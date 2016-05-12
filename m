@@ -1,103 +1,70 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-Date: Wed, 11 May 2016 20:49:51 -0500
-Message-ID: <1463017791.5827.4.camel@petros-ultrathin>
-References: <1462668011.32105.7.camel@petros-ultrathin>
-		 <alpine.LNX.2.00.1605081235490.19865@nippy.intranet>
-	 <20160509080551.GH29510@mwanda>
-		 <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com>
-	 <1462829338.1873.4.camel@petroskoutoupis.com>
-	 <166e07c6f96724c0d1f972f2a65d0a65@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 118071] New: open-iscsi Ping timeout erro
+Date: Thu, 12 May 2016 03:34:00 +0000
+Message-ID: <bug-118071-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:56445 "EHLO mout.perfora.net"
+Received: from mail.kernel.org ([198.145.29.136]:35984 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751552AbcELBzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2016 21:55:08 -0400
-In-Reply-To: <166e07c6f96724c0d1f972f2a65d0a65@mail.gmail.com>
+	id S1751552AbcELDeE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 May 2016 23:34:04 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 64F98201F2
+	for <linux-scsi@vger.kernel.org>; Thu, 12 May 2016 03:34:02 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id B11CD201E4
+	for <linux-scsi@vger.kernel.org>; Thu, 12 May 2016 03:34:00 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Finn Thain <fthain@telegraphics.com.au>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2016-05-11 at 15:11 +0530, Sumit Saxena wrote:
-> > -----Original Message-----
-> > From: Petros Koutoupis [mailto:petros@petroskoutoupis.com]
-> > Sent: Tuesday, May 10, 2016 2:59 AM
-> > To: Sumit Saxena; Dan Carpenter; Finn Thain
-> > Cc: kashyap.desai@avagotech.com; sumit.saxena@avagotech.com;
-> > uday.lingala@avagotech.com; megaraidlinux.pdl@avagotech.com; linux-
-> > scsi@vger.kernel.org
-> > Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-> >
-> > On Mon, 2016-05-09 at 15:18 +0530, Sumit Saxena wrote:
-> > > >
-> > > > -----Original Message-----
-> > > > From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> > > > Sent: Monday, May 09, 2016 1:36 PM
-> > > > To: Finn Thain
-> > > > Cc: Petros Koutoupis; kashyap.desai@avagotech.com;
-> > > > sumit.saxena@avagotech.com; uday.lingala@avagotech.com;
-> > > > megaraidlinux.pdl@avagotech.com; linux-scsi@vger.kernel.org
-> > > > Subject: Re: [PATCH] megaraid: add scsi_cmnd NULL check before use
-> > > >
-> > > > Smatch doesn't quite catch it because we check "cmd_fusion->scmd"
-> > > > for
-> > > NULL
-> > > >
-> > > > then assign "scmd_local = cmd_fusion->scmd;" and dereference
-> > > > scmd_local unconditionally...
-> > > >
-> > > > It does catch part of the bug if you have cross function analysis:
-> > > >
-> > > >   drivers/scsi/megaraid/megaraid_sas_fusion.c:2318
-> > > > complete_cmd_fusion()
-> > > >   error: we previously assumed 'cmd_fusion->scmd' could be null (see
-> > > line 2281)
-> > > >
-> > > >
-> > > > But that code was from 2010 so I never reported it to the original
-> > > author or the
-> > > >
-> > > > list.
-> > > "cmd_fusion->scmd" should not be NULL if scsi_io_req->Function is set
-> > > to MPI2_FUNCTION_SCSI_IO_REQUEST (OR)
-> > > MEGASAS_MPI2_FUNCTION_LD_IO_REQUES
-> > > (inside these two cases only, cmd_fusion->scmd will be dereferenced).
-> > > If cmd_fusion->scmd is NULL for these "scsi_io_req->Function", that
-> > > will a BUG and should not continue with other commands processing in
-> > > that case.
-> > >
-> >
-> > Sumit,
-> >
-> > To clarify, a detection of cmd_fusion->scmd being NULL with scsi_io_req-
-> > >Function set to MPI2_FUNCTION_SCSI_IO_REQUEST or
-> > MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST should instead trigger a
-> > BUG() and not attempt to iterate to the next command in the list. Thank
-> > you.
-> 
-> Petros,
-> 
-> WARN_ON() can be used in this case. Upstream may have concerns on using
-> BUG_ON() and also BUG_ON() won't help in this case. In production
-> environment we never encountered this.
-> 
-> Thanks,
-> Sumit
-> >
-> > --
-> > Petros
+https://bugzilla.kernel.org/show_bug.cgi?id=118071
 
-Sumit,
+            Bug ID: 118071
+           Summary: open-iscsi Ping timeout erro
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.4.7
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: liuzhengyuang521@gmail.com
+        Regression: No
 
-I will resubmit the patch with all the recommendations. Thank you. In case
-you are interested, I have a crash file showcasing the error. I can always
-provide this outside of this mailing thread.
+Hi everyone:
+I create a target using fileio as the backend storage on ARM64 server. The
+initiator reported some errors showed bellow  while perform iozone test.
 
---
-Petros
+[178444.145679]  connection14:0: ping timeout of 5 secs expired, recv timeout
+5, last rx 4339462894, last ping 4339464146, now 4339465400
+[178444.145706]  connection14:0: detected conn error (1011)
+[178469.674313]  connection14:0: detected conn error (1020)
+[178504.420979]  connection14:0: ping timeout of 5 secs expired, recv timeout
+5, last rx 4339477953, last ping 4339479204, now 4339480456
+[178504.421001]  connection14:0: detected conn error (1011)
+[178532.064262]  connection14:0: detected conn error (1020)
+[178564.584087]  connection14:0: ping timeout of 5 secs expired, recv timeout
+5, last rx 4339492980, last ping 4339494232, now 4339495484
+..............................
 
+I try to trace the function call of target iscsi. Then, I found the  receiving 
+thread of target iscsi blocked at fd_execute_sync_cache -> vfs_fsync_range.
+Further, vfs_fsync_range may takes more than 10 seconds to return,while
+initiator Ping timeout would happened after 5 seconds.   vfs_fsync_range was
+call with the form vfs_fsync_range(fd_dev->fd_file, 0, LLONG_MAX, 1) every
+times  which means sync all device cache. 
+So, is this a bug?
+How  does Initiator send sync_cache scsi command? 
+Does it need to sync all device cache at once?
+Any reply would be thankful.
 
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
