@@ -1,45 +1,39 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: UBSAN: Undefined behaviour in
- drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
-Date: Thu, 12 May 2016 13:08:30 -0700
-Message-ID: <1463083710.2380.46.camel@linux.vnet.ibm.com>
-References: <alpine.LRH.2.20.1605121859240.4797@math.ut.ee>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch 1/2] mpt3sas: add missing curly braces
+Date: Thu, 12 May 2016 23:37:38 +0300
+Message-ID: <20160512203738.GB26894@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:49961 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbcELUIj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2016 16:08:39 -0400
-Received: from localhost
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-	Thu, 12 May 2016 14:08:38 -0600
-In-Reply-To: <alpine.LRH.2.20.1605121859240.4797@math.ut.ee>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Thu, 2016-05-12 at 19:02 +0300, Meelis Roos wrote:
-> This is from a dual-AthlonMP 32-bit x86 system with onboard Adaptec
-> SCSI 
-> controller, once during bootup.
-> 
-> [    4.896307]
-> =====================================================================
-> ===========
-> [    4.896471] UBSAN: Undefined behaviour in
-> drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
-> [    4.896629] shift exponent -1 is negative
+There are some missing curly braces on this if statement, so we end up
+printing when we shouldn't.
 
-Is this some sort of false positive?  The shift in question is
+Fixes: a470a51cd648 ('mpt3sas: Handle active cable exception event')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-	devinfo->target_mask = (0x01 << devinfo->target_offset);
-
-The code which calls this in ahc_linux_initialize_scsi_bus() looks to
-be looping from 0-16 (or variations).  Since the value passed in is
-unsigned, it would have to be set to ~0, which doesn't seem possible.
-
-James
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 6a4df5a..6bff13e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -7975,13 +7975,14 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 		ActiveCableEventData =
+ 		    (Mpi26EventDataActiveCableExcept_t *) mpi_reply->EventData;
+ 		if (ActiveCableEventData->ReasonCode ==
+-				MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER)
++				MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER) {
+ 			pr_info(MPT3SAS_FMT "Currently an active cable with ReceptacleID %d",
+ 			    ioc->name, ActiveCableEventData->ReceptacleID);
+ 			pr_info("cannot be powered and devices connected to this active cable");
+ 			pr_info("will not be seen. This active cable");
+ 			pr_info("requires %d mW of power",
+ 			    ActiveCableEventData->ActiveCablePowerRequirement);
++		}
+ 		break;
+ 
+ 	default: /* ignore the rest */
