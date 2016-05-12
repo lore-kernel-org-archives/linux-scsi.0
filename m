@@ -1,95 +1,45 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update
- with helper
-Date: Thu, 12 May 2016 15:40:46 -0400
-Message-ID: <20118955-8739-b79a-e20e-96302e8b41bf@redhat.com>
-References: <1462285862-30946-1-git-send-email-fw@strlen.de>
- <1462285994-31983-1-git-send-email-fw@strlen.de>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: UBSAN: Undefined behaviour in
+ drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
+Date: Thu, 12 May 2016 13:08:30 -0700
+Message-ID: <1463083710.2380.46.camel@linux.vnet.ibm.com>
+References: <alpine.LRH.2.20.1605121859240.4797@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="MxOQ9rEvBghhBiQvcDah4SfXu2ff5Ef0r"
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Florian Westphal <fw@strlen.de>, netdev@vger.kernel.org
-Cc: user-mode-linux-devel@lists.sourceforge.net, linux-xtensa@linux-xtensa.org, linux1394-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, mpt-fusionlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-can@vger.kernel.org, linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org, linux-hams@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-s390@vger.kernel.org, devel@driverdev.osuosl.org, b.a.t.m.a.n@lists.open-mesh.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:49961 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbcELUIj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2016 16:08:39 -0400
+Received: from localhost
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+	Thu, 12 May 2016 14:08:38 -0600
+In-Reply-To: <alpine.LRH.2.20.1605121859240.4797@math.ut.ee>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---MxOQ9rEvBghhBiQvcDah4SfXu2ff5Ef0r
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2016-05-12 at 19:02 +0300, Meelis Roos wrote:
+> This is from a dual-AthlonMP 32-bit x86 system with onboard Adaptec
+> SCSI 
+> controller, once during bootup.
+> 
+> [    4.896307]
+> =====================================================================
+> ===========
+> [    4.896471] UBSAN: Undefined behaviour in
+> drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
+> [    4.896629] shift exponent -1 is negative
 
-On 05/03/2016 10:33 AM, Florian Westphal wrote:
-> Replace all trans_start updates with netif_trans_update helper.
-> change was done via spatch:
->=20
-> struct net_device *d;
-> @@
-> - d->trans_start =3D jiffies
-> + netif_trans_update(d)
->=20
-> Compile tested only.
->=20
-> Cc: user-mode-linux-devel@lists.sourceforge.net
-> Cc: linux-xtensa@linux-xtensa.org
-> Cc: linux1394-devel@lists.sourceforge.net
-> Cc: linux-rdma@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: MPT-FusionLinux.pdl@broadcom.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-can@vger.kernel.org
-> Cc: linux-parisc@vger.kernel.org
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-hams@vger.kernel.org
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-s390@vger.kernel.org
-> Cc: devel@driverdev.osuosl.org
-> Cc: b.a.t.m.a.n@lists.open-mesh.org
-> Cc: linux-bluetooth@vger.kernel.org
-> Signed-off-by: Florian Westphal <fw@strlen.de>
-> ---
->  Checkpatch complains about whitespace damage, but
->  this extra whitespace already exists before this patch.
->=20
->  drivers/infiniband/hw/nes/nes_nic.c                    | 2 +-
->  drivers/infiniband/ulp/ipoib/ipoib_cm.c                | 2 +-
->  drivers/infiniband/ulp/ipoib/ipoib_ib.c                | 2 +-
+Is this some sort of false positive?  The shift in question is
 
-For InfiniBand bits,
+	devinfo->target_mask = (0x01 << devinfo->target_offset);
 
-Acked-by: Doug Ledford <dledford@redhat.com>
+The code which calls this in ahc_linux_initialize_scsi_bus() looks to
+be looping from 0-16 (or variations).  Since the value passed in is
+unsigned, it would have to be set to ~0, which doesn't seem possible.
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: 0E572FDD
+James
 
-
-
---MxOQ9rEvBghhBiQvcDah4SfXu2ff5Ef0r
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCAAGBQJXNNw+AAoJELgmozMOVy/dVQcP/1RZvmqQVJpZMtptIm8OpoPW
-4QrFlnjv+KorYVaF1Hg7+0X6yfCF53ofTKRAg4zaYiASZw4AJWYzslxA9b0OvpPS
-TzMjJrbWm27+W2pH8ZivFepys9afxW5o/qb7CFYyOPOEml495zReUvTqt/nSh7jG
-8nTdwO4xH5kY4P82bDn18Lyqd/8cS7yFl1OAK88eqq+y9JgveiIsO2PlsrtFENtX
-+RyadCAluEUdfe6CZjMjUptBptIi6hfoMqmXXu4vcFs48mqbVf4QubFp5f+4wJa2
-KScILHNil3156j3TY3lpG1ukf2SfF0UYDYxco5tZlZ3O7nB3Xteif94gvvUiszyO
-IfGn3/wblQs6tRSHjMRNYiTVeYkyh0eXbdbha/7bkBG58mEjYFnrjtRuBMD2Ogmm
-uz6MhyD6Ez7mKKVBc3ooQ6SYpcwb4surHEGm36a2Utnb/vftxyPYpA75neZbSGZO
-X828tsNcxB9K8FUCEcP/Xasc5xE6kPtpwu5TIbJ7itYLs4yRoZbsmcI5UrhjqERp
-YAAiI07vifFHyFLUnfAOefjXxQOFJdQHtMphlnjfYiKXSpJsAhT2LIJpepgbovCc
-/268dPol/ul7WUbLu2P4zlnnIEQgABW6NKFMAg/N/b4XQ08VkeKv82yJ9aLuyG2J
-0QbOFyrXnR/I1OYFeDAU
-=2VMH
------END PGP SIGNATURE-----
-
---MxOQ9rEvBghhBiQvcDah4SfXu2ff5Ef0r--
