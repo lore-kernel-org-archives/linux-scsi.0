@@ -1,82 +1,88 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCHv3]scsi: don't fail zero length request too early
-Date: Fri, 13 May 2016 06:51:49 -0700
-Message-ID: <1463147509.2291.1.camel@linux.vnet.ibm.com>
-References: <CAMGffEmZMWSTSP3VRxn8K_ZWG3qvRWeKOjzPJN8V4ZZ8Fa_xGA@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 118081] open-iscsi Ping timeout erro
+Date: Fri, 13 May 2016 16:20:01 +0000
+Message-ID: <bug-118081-11613-7c6ltUcFQT@https.bugzilla.kernel.org/>
+References: <bug-118081-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:41374 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbcEMNv7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2016 09:51:59 -0400
-Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-	Fri, 13 May 2016 07:51:58 -0600
-In-Reply-To: <CAMGffEmZMWSTSP3VRxn8K_ZWG3qvRWeKOjzPJN8V4ZZ8Fa_xGA@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:44802 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981AbcEMQUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2016 12:20:05 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 45E6B2014A
+	for <linux-scsi@vger.kernel.org>; Fri, 13 May 2016 16:20:03 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 6F5ED2025A
+	for <linux-scsi@vger.kernel.org>; Fri, 13 May 2016 16:20:01 +0000 (UTC)
+In-Reply-To: <bug-118081-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jinpu Wang <jinpu.wang@profitbricks.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Parschauer <s.parschauer@gmx.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2016-05-13 at 10:07 +0200, Jinpu Wang wrote:
-> Hi James, and all,
-> 
-> I guess you're busy on other staff, so I create patch below as you
-> suggested, I think we also need this into stable.
+https://bugzilla.kernel.org/show_bug.cgi?id=118081
 
-No, I'll do it, but I just wanted to verify that we don't get into an
-infinite retry loop on any conditions.
-
-James
-
-
-> From 99eab170653544fa1e1bc9511ec055ba70e183d2 Mon Sep 17 00:00:00
-> 2001
-> From: Jack Wang <jinpu.wang@profitbricks.com>
-> Date: Fri, 13 May 2016 09:53:21 +0200
-> Subject: [PATCH] scsi: don't fail zero length request too early
+--- Comment #1 from Mike Christie <mchristi@redhat.com> ---
+On 05/11/2016 10:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=118081
 > 
-> We hit IO error in our production when SYNC on multipath devices
-> during resize
-> device on target side, the problem turns out scsi driver passes up as
-> IO
-> error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
-> Capacity data has changed, even storage side sync the data properly.
+>             Bug ID: 118081
+>            Summary: open-iscsi Ping timeout erro
+>            Product: SCSI Drivers
+>            Version: 2.5
+>     Kernel Version: 4.4.7
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+>           Reporter: liuzhengyuang521@gmail.com
+>         Regression: No
 > 
-> Dig it further turns out we need special case on zero length commands
-> (currently only FLUSH), when it fails, we always need to drop down
-> into retry code.
+> Hi everyone:
+> I create a target using fileio as the backend storage on ARM64 server. The
+> initiator reported some errors showed bellow  while perform iozone test.
 > 
-> Reported-by: Sebastian Parschauer <s.parschauer@gmx.de>
-> Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-> ---
->  drivers/scsi/scsi_lib.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+> [178444.145679]  connection14:0: ping timeout of 5 secs expired, recv timeout
+> 5, last rx 4339462894, last ping 4339464146, now 4339465400
+> [178444.145706]  connection14:0: detected conn error (1011)
+> [178469.674313]  connection14:0: detected conn error (1020)
+> [178504.420979]  connection14:0: ping timeout of 5 secs expired, recv timeout
+> 5, last rx 4339477953, last ping 4339479204, now 4339480456
+> [178504.421001]  connection14:0: detected conn error (1011)
+> [178532.064262]  connection14:0: detected conn error (1020)
+> [178564.584087]  connection14:0: ping timeout of 5 secs expired, recv timeout
+> 5, last rx 4339492980, last ping 4339494232, now 4339495484
+> ..............................
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 8106515..5a97866 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -911,9 +911,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
-> unsigned int good_bytes)
->   }
-> 
->   /*
-> - * If we finished all bytes in the request we are done now.
-> + * special case: failed zero length commands always need to
-> + * drop down into the retry code. Otherwise, if we finished
-> + * all bytes in the request we are done now.
->   */
-> - if (!scsi_end_request(req, error, good_bytes, 0))
-> + if (!(good_bytes == 0 && blk_rq_bytes(req) == 0 && result != 0) &&
-> +    !scsi_end_request(req, error, good_bytes, 0))
->   return;
-> 
->   /*
-> -- 
-> 1.9.1
+> I try to trace the function call of target iscsi. Then, I found the  receiving 
+> thread of target iscsi blocked at fd_execute_sync_cache -> vfs_fsync_range.
+> Further, vfs_fsync_range may takes more than 10 seconds to return,while
+> initiator Ping timeout would happened after 5 seconds.   vfs_fsync_range was
+> call with the form vfs_fsync_range(fd_dev->fd_file, 0, LLONG_MAX, 1) every
+> times  which means sync all device cache. 
+> So, is this a bug?
+> How  does Initiator send sync_cache scsi command? 
+> Does it need to sync all device cache at once?
+> Any reply would be thankful.
 > 
 
+The upper layers like the FS or application determine when to send a
+sync cache. They send down a request and the iscsi layer just sends it
+to the target.
+
+You are using LIO right? It looks like we end up syncing the entire
+device sometimes. I think for iscsi pings/Nops that have the immediate
+bit set, the target would want to reply to them right away. They should
+not be getting stuck behind these type of commands.
+
+Nick, what do you think?
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
