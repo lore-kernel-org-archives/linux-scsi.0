@@ -1,60 +1,68 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: UBSAN: Undefined behaviour in
- drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
-Date: Thu, 12 May 2016 22:26:42 -0700
-Message-ID: <1463117202.2380.88.camel@linux.vnet.ibm.com>
-References: <alpine.LRH.2.20.1605121859240.4797@math.ut.ee>
-	 <1463083710.2380.46.camel@linux.vnet.ibm.com>
-	 <CAKb7Uvh8U1ncRg1jCnAVrdew=HyF+jNpY6=MknHgKyJmAdJEkw@mail.gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: RE: [PATCH] megaraid: add scsi_cmnd NULL check before use
+Date: Fri, 13 May 2016 17:43:35 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1605131459480.7564@nippy.intranet>
+References: <1462668011.32105.7.camel@petros-ultrathin> <alpine.LNX.2.00.1605081235490.19865@nippy.intranet> <20160509080551.GH29510@mwanda> <3aced88f2434c8dd0a8aa4fd902445a9@mail.gmail.com> <1462829338.1873.4.camel@petroskoutoupis.com>
+ <166e07c6f96724c0d1f972f2a65d0a65@mail.gmail.com> <1463017791.5827.4.camel@petros-ultrathin> <20160512062948.GG19274@mwanda> <410ee24683f9720077661b90b0472ce7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKb7Uvh8U1ncRg1jCnAVrdew=HyF+jNpY6=MknHgKyJmAdJEkw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-Cc: Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:60985 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784AbcEMGpN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2016 02:45:13 -0400
+In-Reply-To: <410ee24683f9720077661b90b0472ce7@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Petros Koutoupis <petros@petroskoutoupis.com>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
-On Thu, 2016-05-12 at 17:56 -0400, Ilia Mirkin wrote:
-> On Thu, May 12, 2016 at 4:08 PM, James Bottomley
-> <jejb@linux.vnet.ibm.com> wrote:
-> > On Thu, 2016-05-12 at 19:02 +0300, Meelis Roos wrote:
-> > > This is from a dual-AthlonMP 32-bit x86 system with onboard
-> > > Adaptec
-> > > SCSI
-> > > controller, once during bootup.
-> > > 
-> > > [    4.896307]
-> > > =================================================================
-> > > ====
-> > > ===========
-> > > [    4.896471] UBSAN: Undefined behaviour in
-> > > drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
-> > > [    4.896629] shift exponent -1 is negative
-> > 
-> > Is this some sort of false positive?  The shift in question is
-> > 
-> >         devinfo->target_mask = (0x01 << devinfo->target_offset);
-> > 
-> > The code which calls this in ahc_linux_initialize_scsi_bus() looks
-> > to
-> > be looping from 0-16 (or variations).  Since the value passed in is
-> > unsigned, it would have to be set to ~0, which doesn't seem
-> > possible.
-> 
-> It's getting called from ahc_reset_channel, which does:
-> 
->         ahc_compile_devinfo(&devinfo,
->                             CAM_TARGET_WILDCARD,
->                             CAM_TARGET_WILDCARD,
->                             CAM_LUN_WILDCARD,
->                             channel, ROLE_UNKNOWN);
-> 
-> drivers/scsi/aic7xxx/cam.h:#define      CAM_TARGET_WILDCARD 
-> ((u_int)~0)
 
-OK, thanks, you can mark it as a false positive because only the SPI
-parameters are actually used for this version of devinfo.
+On Thu, 12 May 2016, Sumit Saxena wrote:
 
-James
+> > From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> >
+> > Also when I'm doing static analysis people always tell me that "that 
+> > bug is impossible, trust me." and instead of trusting people I really 
+> > wish they would just show me the relevant code that prevents it from 
+> > happening.
+> 
+> Inside megasas_build_io_fusion() function, driver sets "cmd->scmd" 
+> pointer(SCSI command pointer received from SCSI mid layer). Functions 
+> called inside megasas_build_io_fusion()(which actually builds frame to 
+> be sent to firmware) are setting Function type- 
+> MPI2_FUNCTION_SCSI_IO_REQUEST (or) MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST. 
+> So in case Function type set to any one these two, there must be valid 
+> "cmd->scmd".
+
+That doesn't show what prevents the bug. It merely shows that the bug does 
+not always manifest.
+
+For example, you might check whether anything prevents 
+megasas_build_io_fusion() from returning before assigning cmd->scmd, like 
+so:
+
+2112 	if (sge_count > instance->max_num_sge) {
+2113 		dev_err(&instance->pdev->dev, "Error. sge_count (0x%x) exceeds "
+2114 		       "max (0x%x) allowed\n", sge_count,
+2115 		       instance->max_num_sge);
+2116 		return 1;
+2117 	}
+
+Another possibility: cmd->io_request->Function is valid yet cmd->scmd is 
+NULL when seen from the interrupt handler if it intervenes between the two 
+statements in megasas_return_cmd_fusion():
+
+180 inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
+181 	struct megasas_cmd_fusion *cmd)
+182 {
+183 	cmd->scmd = NULL;
+184 	memset(cmd->io_request, 0, sizeof(struct MPI2_RAID_SCSI_IO_REQUEST));
+185 }
+
+You might want to confirm that locking always prevents that.
+
+OTOH, without an actual backtrace, I too might be reluctant to pursue this 
+kind of speculation.
+
+-- 
