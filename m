@@ -1,52 +1,39 @@
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: Re: UBSAN: Undefined behaviour in drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
-Date: Thu, 12 May 2016 17:56:04 -0400
-Message-ID: <CAKb7Uvh8U1ncRg1jCnAVrdew=HyF+jNpY6=MknHgKyJmAdJEkw@mail.gmail.com>
-References: <alpine.LRH.2.20.1605121859240.4797@math.ut.ee>
-	<1463083710.2380.46.camel@linux.vnet.ibm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: Optimal I/O size is in bytes, not sectors
+Date: Thu, 12 May 2016 22:32:23 -0400
+Message-ID: <yq1a8jun0w8.fsf@sermon.lab.mkp.net>
+References: <1453305683-22424-1-git-send-email-martin.petersen@oracle.com>
+	<20160512040433.GA20240@ad.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:36781 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbcELV4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2016 17:56:06 -0400
-In-Reply-To: <1463083710.2380.46.camel@linux.vnet.ibm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:16435 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882AbcEMCcd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2016 22:32:33 -0400
+In-Reply-To: <20160512040433.GA20240@ad.usersys.redhat.com> (Fam Zheng's
+	message of "Thu, 12 May 2016 12:04:33 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Fam Zheng <famz@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, borntraeger@de.ibm.com
 
-On Thu, May 12, 2016 at 4:08 PM, James Bottomley
-<jejb@linux.vnet.ibm.com> wrote:
-> On Thu, 2016-05-12 at 19:02 +0300, Meelis Roos wrote:
->> This is from a dual-AthlonMP 32-bit x86 system with onboard Adaptec
->> SCSI
->> controller, once during bootup.
->>
->> [    4.896307]
->> =====================================================================
->> ===========
->> [    4.896471] UBSAN: Undefined behaviour in
->> drivers/scsi/aic7xxx/aic7xxx_core.c:2831:31
->> [    4.896629] shift exponent -1 is negative
->
-> Is this some sort of false positive?  The shift in question is
->
->         devinfo->target_mask = (0x01 << devinfo->target_offset);
->
-> The code which calls this in ahc_linux_initialize_scsi_bus() looks to
-> be looping from 0-16 (or variations).  Since the value passed in is
-> unsigned, it would have to be set to ~0, which doesn't seem possible.
+>>>>> "Fam" == Fam Zheng <famz@redhat.com> writes:
 
-It's getting called from ahc_reset_channel, which does:
+Fam,
 
-        ahc_compile_devinfo(&devinfo,
-                            CAM_TARGET_WILDCARD,
-                            CAM_TARGET_WILDCARD,
-                            CAM_LUN_WILDCARD,
-                            channel, ROLE_UNKNOWN);
+Fam> This looks wrong to me, maybe I'm missing the obvious? Here sdkp->
+Fam> opt_xfer_blocks is in block size unit, and rw_max is in byte sdkp->
+Fam> unit.
 
-drivers/scsi/aic7xxx/cam.h:#define      CAM_TARGET_WILDCARD ((u_int)~0)
+Oh, joy. It's the commit that keeps on giving!
 
-  -ilia
+Back when the I/O topology was added we were set on eradicating block
+layer sectors from the stack and count everything in bytes. So the new
+fields were added as bytes but for various reasons the existing values
+were never transitioned. And now we have an error prone interface. I
+think that for 4.8 I'll fix this up properly. I'll post a fix for 4.7
+and older tomorrow...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
