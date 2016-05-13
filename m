@@ -1,121 +1,55 @@
-From: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Subject: [PATCH] Fix for hang of Ordered task in TCM
-Date: Fri, 13 May 2016 17:15:41 -0500
-Message-ID: <1463177741-4385-1-git-send-email-mikecyr@linux.vnet.ibm.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: rjui@broadcom.com, sbranden@broadcom.com, jonmason@broadcom.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-kernel@vger.kernel.org, Michael Cyr <mikecyr@linux.vnet.ibm.com>
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH] megaraid: fix error code check of register_chrdev()
+Date: Sat, 14 May 2016 02:00:05 +0300
+Message-ID: <1463180405-10177-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.ispras.ru ([83.149.199.45]:37567 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932081AbcEMXBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2016 19:01:24 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 
-If a command with a Simple task attribute is failed due to a Unit
-Attention, then a subsequent command with an Ordered task attribute will
-hang forever.  The reason for this is that the Unit Attention status is
-checked for in target_setup_cmd_from_cdb, before the call to
-target_execute_cmd, which calls target_handle_task_attr, which in turn
-increments dev->simple_cmds.  However, transport_generic_request_failure
-still calls transport_complete_task_attr, which will decrement
-dev->simple_cmds.  In this case, simple_cmds is now -1.  So when a
-command with the Ordered task attribute is sent, target_handle_task_attr
-sees that dev->simple_cmds is not 0, so it decides it can't execute the
-command until all the (nonexistent) Simple commands have completed.
+There is invalid error code check of register_chrdev() in megaraid_init().
 
-The solution I've implemented is to move target_scsi3_ua_check, as well as
-target_alua_state_check and target_check_reservation, into
-target_execute_cmd, after the call to target_handle_task_attr.  I believe
-this is actually the correct way this should be handled.  According to
-SAM-4 r14, under section 5.14:
+register_chrdev() returns negative code in case of error,
+as a result current code can try to unregister_chrdev() with error code
+instead of major that may lead to unregistering somebody else's chardev.
 
-"h) if a command other than INQUIRY, REPORT LUNS, REQUEST SENSE, or NOTIFY
-DATA TRANSFER DEVICE enters the enabled command state while a unit
-attention condition exists for the SCSI initiator port associated with
-the I_T nexus on which the command was received, the device server shall
-terminate the command with a CHECK CONDITION status. The device server
-shall provide sense data that reports a unit attention condition for the
-SCSI initiator port that sent the command on the I_T nexus."
+Found by Linux Driver Verification project (linuxtesting.org).
 
-But according to section 8.5 and 8.6, a command which is not yet executed
-because of the presence of other tasks in the task set (i.e., one for
-which target_handle_task_attr returns true) would not enter the enabled
-command state; it would be in the dormant command state.
-target_execute_cmd would get called when a command entered the enabled
-command state, and thus that is the appropriate place to check for Unit
-Attenion.  Similarly, though not quite as explicit, section 5.3.3 tells
-us that a Reservation Conflict status has a lower precedence than a Unit
-Attention, and so this would also seem to be the appropriate place to
-call target_check_reservation.  I'm less sure about
-target_alua_state_check, since I'm not very familiar with ALUA.
-
-Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 ---
- drivers/target/target_core_transport.c | 41 ++++++++++++++++++++--------------
- 1 file changed, 24 insertions(+), 17 deletions(-)
+ drivers/scsi/megaraid.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 6c089af..2ee5502 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1303,23 +1303,6 @@ target_setup_cmd_from_cdb(struct se_cmd *cmd, unsigned char *cdb)
- 
- 	trace_target_sequencer_start(cmd);
- 
--	/*
--	 * Check for an existing UNIT ATTENTION condition
--	 */
--	ret = target_scsi3_ua_check(cmd);
--	if (ret)
--		return ret;
--
--	ret = target_alua_state_check(cmd);
--	if (ret)
--		return ret;
--
--	ret = target_check_reservation(cmd);
--	if (ret) {
--		cmd->scsi_status = SAM_STAT_RESERVATION_CONFLICT;
--		return ret;
--	}
--
- 	ret = dev->transport->parse_cdb(cmd);
- 	if (ret == TCM_UNSUPPORTED_SCSI_OPCODE)
- 		pr_warn_ratelimited("%s/%s: Unsupported SCSI Opcode 0x%02x, sending CHECK_CONDITION.\n",
-@@ -1865,6 +1848,8 @@ static int __transport_check_aborted_status(struct se_cmd *, int);
- 
- void target_execute_cmd(struct se_cmd *cmd)
- {
-+	sense_reason_t ret;
-+
- 	/*
- 	 * Determine if frontend context caller is requesting the stopping of
- 	 * this command for frontend exceptions.
-@@ -1899,6 +1884,28 @@ void target_execute_cmd(struct se_cmd *cmd)
- 		return;
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 9d05302a3bcd..ded082942ca0 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4702,7 +4702,7 @@ static int __init megaraid_init(void)
+ 	 * major number allocation.
+ 	 */
+ 	major = register_chrdev(0, "megadev_legacy", &megadev_fops);
+-	if (!major) {
++	if (major < 0) {
+ 		printk(KERN_WARNING
+ 				"megaraid: failed to register char device\n");
  	}
+@@ -4715,7 +4715,10 @@ static void __exit megaraid_exit(void)
+ 	/*
+ 	 * Unregister the character device interface to the driver.
+ 	 */
+-	unregister_chrdev(major, "megadev_legacy");
++	if (major > 0) {
++		unregister_chrdev(major, "megadev_legacy");
++		major = 0;
++	}
  
-+	/*
-+	 * Check for an existing UNIT ATTENTION condition
-+	 */
-+	ret = target_scsi3_ua_check(cmd);
-+	if (ret) {
-+		transport_generic_request_failure(cmd, ret);
-+		return;
-+	}
-+
-+	ret = target_alua_state_check(cmd);
-+	if (ret) {
-+		transport_generic_request_failure(cmd, ret);
-+		return;
-+	}
-+
-+	ret = target_check_reservation(cmd);
-+	if (ret) {
-+		cmd->scsi_status = SAM_STAT_RESERVATION_CONFLICT;
-+		transport_generic_request_failure(cmd, ret);
-+		return;
-+	}
-+
- 	__target_execute_cmd(cmd);
- }
- EXPORT_SYMBOL(target_execute_cmd);
+ 	pci_unregister_driver(&megaraid_pci_driver);
+ 
 -- 
-2.5.0
+1.9.1
+
