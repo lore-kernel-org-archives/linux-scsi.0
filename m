@@ -1,71 +1,108 @@
 From: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Subject: RE: [patch 1/2] mpt3sas: add missing curly braces
-Date: Fri, 13 May 2016 15:05:45 +0530
-Message-ID: <a8f5e7c81c02912d0ef6d68f0bad8e2d@mail.gmail.com>
-References: <20160512203738.GB26894@mwanda>
+Subject: RE: [patch 2/2] mpt3sas: clean up indenting a bit
+Date: Fri, 13 May 2016 15:08:01 +0530
+Message-ID: <f4ac4d5ee7e1b8584f774674f28a9e38@mail.gmail.com>
+References: <20160512203844.GC26894@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:33556 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242AbcEMJfr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2016 05:35:47 -0400
-Received: by mail-qk0-f169.google.com with SMTP id n63so57393223qkf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 13 May 2016 02:35:47 -0700 (PDT)
-In-Reply-To: <20160512203738.GB26894@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20160512203844.GC26894@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
 To: Dan Carpenter <dan.carpenter@oracle.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Hi,
- Please consider this patch as Ack-by: Chaitra P B
-<chaitra.basappa@broadcom.com>
+Hi Dan,
+ Below patch doesn't apply smoothly on latest upstream kernel , we are
+seeing Hunk failures.
 
 Thanks,
  Chaitra
 
 -----Original Message-----
 From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-Sent: Friday, May 13, 2016 2:08 AM
-To: Sathya Prakash; Chaitra P B
-Cc: Suganath Prabu Subramani; James E.J. Bottomley; Martin K. Petersen;
-MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
+Sent: Friday, May 13, 2016 2:09 AM
+To: Sathya Prakash
+Cc: Chaitra P B; Suganath Prabu Subramani; James E.J. Bottomley; Martin K.
+Petersen; MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
 kernel-janitors@vger.kernel.org
-Subject: [patch 1/2] mpt3sas: add missing curly braces
+Subject: [patch 2/2] mpt3sas: clean up indenting a bit
 
-There are some missing curly braces on this if statement, so we end up
-printing when we shouldn't.
+The indenting is slightly off in parts of this file so I have tidied it.
 
-Fixes: a470a51cd648 ('mpt3sas: Handle active cable exception event')
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6a4df5a..6bff13e 100644
+index 6bff13e..34d6f996 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -7975,13 +7975,14 @@ mpt3sas_scsih_event_callback(struct
-MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 		ActiveCableEventData =
- 		    (Mpi26EventDataActiveCableExcept_t *)
-mpi_reply->EventData;
- 		if (ActiveCableEventData->ReasonCode ==
--
-MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER)
-+
-MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER) {
- 			pr_info(MPT3SAS_FMT "Currently an active cable
-with ReceptacleID %d",
- 			    ioc->name,
-ActiveCableEventData->ReceptacleID);
- 			pr_info("cannot be powered and devices connected
-to this active cable");
- 			pr_info("will not be seen. This active cable");
- 			pr_info("requires %d mW of power",
+@@ -1865,7 +1865,7 @@ scsih_slave_configure(struct scsi_device *sdev)
+ 			ds = "SSP";
+ 		} else {
+ 			qdepth = MPT3SAS_SATA_QUEUE_DEPTH;
+-			 if (raid_device->device_info &
++			if (raid_device->device_info &
+ 			    MPI2_SAS_DEVICE_INFO_SATA_DEVICE)
+ 				ds = "SATA";
+ 			else
+@@ -3497,21 +3497,21 @@ _scsih_issue_delayed_event_ack(struct
+MPT3SAS_ADAPTER *ioc, u16 smid, u16 event,  void
+_scsih_issue_delayed_sas_io_unit_ctrl(struct MPT3SAS_ADAPTER *ioc,
+ 					u16 smid, u16 handle)
+-	{
+-		Mpi2SasIoUnitControlRequest_t *mpi_request;
+-		u32 ioc_state;
+-		int i = smid - ioc->internal_smid;
+-		unsigned long flags;
++{
++	Mpi2SasIoUnitControlRequest_t *mpi_request;
++	u32 ioc_state;
++	int i = smid - ioc->internal_smid;
++	unsigned long flags;
 
-ActiveCableEventData->ActiveCablePowerRequirement);
-+		}
+-		if (ioc->remove_host) {
+-			dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			    "%s: host has been removed\n",
+-			     __func__, ioc->name));
+-			return;
+-		} else if (ioc->pci_error_recovery) {
+-			dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			    "%s: host in pci error recovery\n",
+-			    __func__, ioc->name));
++	if (ioc->remove_host) {
++		dewtprintk(ioc, pr_info(MPT3SAS_FMT
++		    "%s: host has been removed\n",
++		     __func__, ioc->name));
++		return;
++	} else if (ioc->pci_error_recovery) {
++		dewtprintk(ioc, pr_info(MPT3SAS_FMT
++		    "%s: host in pci error recovery\n",
++		    __func__, ioc->name));
+ 		return;
+ 	}
+ 	ioc_state = mpt3sas_base_get_iocstate(ioc, 1); @@ -5173,7 +5173,7
+@@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	}
+
+ 	_scsih_expander_node_add(ioc, sas_expander);
+-	 return 0;
++	return 0;
+
+  out_fail:
+
+@@ -7774,9 +7774,9 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct
+fw_event_work *fw_event)
  		break;
-
- 	default: /* ignore the rest */
+ 	case MPT3SAS_PORT_ENABLE_COMPLETE:
+ 		ioc->start_scan = 0;
+-	if (missing_delay[0] != -1 && missing_delay[1] != -1)
++		if (missing_delay[0] != -1 && missing_delay[1] != -1)
+ 			mpt3sas_base_update_missing_delay(ioc,
+missing_delay[0],
+-			    missing_delay[1]);
++
+missing_delay[1]);
+ 		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+ 			"port enable: complete from worker thread\n",
+ 			ioc->name));
