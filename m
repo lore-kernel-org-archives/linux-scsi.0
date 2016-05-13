@@ -1,108 +1,82 @@
-From: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Subject: RE: [patch 2/2] mpt3sas: clean up indenting a bit
-Date: Fri, 13 May 2016 15:08:01 +0530
-Message-ID: <f4ac4d5ee7e1b8584f774674f28a9e38@mail.gmail.com>
-References: <20160512203844.GC26894@mwanda>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCHv3]scsi: don't fail zero length request too early
+Date: Fri, 13 May 2016 06:51:49 -0700
+Message-ID: <1463147509.2291.1.camel@linux.vnet.ibm.com>
+References: <CAMGffEmZMWSTSP3VRxn8K_ZWG3qvRWeKOjzPJN8V4ZZ8Fa_xGA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20160512203844.GC26894@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:41374 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327AbcEMNv7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2016 09:51:59 -0400
+Received: from localhost
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+	Fri, 13 May 2016 07:51:58 -0600
+In-Reply-To: <CAMGffEmZMWSTSP3VRxn8K_ZWG3qvRWeKOjzPJN8V4ZZ8Fa_xGA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jinpu Wang <jinpu.wang@profitbricks.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Parschauer <s.parschauer@gmx.de>, linux-scsi@vger.kernel.org
 
-Hi Dan,
- Below patch doesn't apply smoothly on latest upstream kernel , we are
-seeing Hunk failures.
+On Fri, 2016-05-13 at 10:07 +0200, Jinpu Wang wrote:
+> Hi James, and all,
+> 
+> I guess you're busy on other staff, so I create patch below as you
+> suggested, I think we also need this into stable.
 
-Thanks,
- Chaitra
+No, I'll do it, but I just wanted to verify that we don't get into an
+infinite retry loop on any conditions.
 
------Original Message-----
-From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-Sent: Friday, May 13, 2016 2:09 AM
-To: Sathya Prakash
-Cc: Chaitra P B; Suganath Prabu Subramani; James E.J. Bottomley; Martin K.
-Petersen; MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
-kernel-janitors@vger.kernel.org
-Subject: [patch 2/2] mpt3sas: clean up indenting a bit
+James
 
-The indenting is slightly off in parts of this file so I have tidied it.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> From 99eab170653544fa1e1bc9511ec055ba70e183d2 Mon Sep 17 00:00:00
+> 2001
+> From: Jack Wang <jinpu.wang@profitbricks.com>
+> Date: Fri, 13 May 2016 09:53:21 +0200
+> Subject: [PATCH] scsi: don't fail zero length request too early
+> 
+> We hit IO error in our production when SYNC on multipath devices
+> during resize
+> device on target side, the problem turns out scsi driver passes up as
+> IO
+> error when sense data is UNIT_ATTENTION and ASC && ASCQ indicate
+> Capacity data has changed, even storage side sync the data properly.
+> 
+> Dig it further turns out we need special case on zero length commands
+> (currently only FLUSH), when it fails, we always need to drop down
+> into retry code.
+> 
+> Reported-by: Sebastian Parschauer <s.parschauer@gmx.de>
+> Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 8106515..5a97866 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -911,9 +911,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
+> unsigned int good_bytes)
+>   }
+> 
+>   /*
+> - * If we finished all bytes in the request we are done now.
+> + * special case: failed zero length commands always need to
+> + * drop down into the retry code. Otherwise, if we finished
+> + * all bytes in the request we are done now.
+>   */
+> - if (!scsi_end_request(req, error, good_bytes, 0))
+> + if (!(good_bytes == 0 && blk_rq_bytes(req) == 0 && result != 0) &&
+> +    !scsi_end_request(req, error, good_bytes, 0))
+>   return;
+> 
+>   /*
+> -- 
+> 1.9.1
+> 
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6bff13e..34d6f996 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1865,7 +1865,7 @@ scsih_slave_configure(struct scsi_device *sdev)
- 			ds = "SSP";
- 		} else {
- 			qdepth = MPT3SAS_SATA_QUEUE_DEPTH;
--			 if (raid_device->device_info &
-+			if (raid_device->device_info &
- 			    MPI2_SAS_DEVICE_INFO_SATA_DEVICE)
- 				ds = "SATA";
- 			else
-@@ -3497,21 +3497,21 @@ _scsih_issue_delayed_event_ack(struct
-MPT3SAS_ADAPTER *ioc, u16 smid, u16 event,  void
-_scsih_issue_delayed_sas_io_unit_ctrl(struct MPT3SAS_ADAPTER *ioc,
- 					u16 smid, u16 handle)
--	{
--		Mpi2SasIoUnitControlRequest_t *mpi_request;
--		u32 ioc_state;
--		int i = smid - ioc->internal_smid;
--		unsigned long flags;
-+{
-+	Mpi2SasIoUnitControlRequest_t *mpi_request;
-+	u32 ioc_state;
-+	int i = smid - ioc->internal_smid;
-+	unsigned long flags;
-
--		if (ioc->remove_host) {
--			dewtprintk(ioc, pr_info(MPT3SAS_FMT
--			    "%s: host has been removed\n",
--			     __func__, ioc->name));
--			return;
--		} else if (ioc->pci_error_recovery) {
--			dewtprintk(ioc, pr_info(MPT3SAS_FMT
--			    "%s: host in pci error recovery\n",
--			    __func__, ioc->name));
-+	if (ioc->remove_host) {
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: host has been removed\n",
-+		     __func__, ioc->name));
-+		return;
-+	} else if (ioc->pci_error_recovery) {
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: host in pci error recovery\n",
-+		    __func__, ioc->name));
- 		return;
- 	}
- 	ioc_state = mpt3sas_base_get_iocstate(ioc, 1); @@ -5173,7 +5173,7
-@@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	}
-
- 	_scsih_expander_node_add(ioc, sas_expander);
--	 return 0;
-+	return 0;
-
-  out_fail:
-
-@@ -7774,9 +7774,9 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct
-fw_event_work *fw_event)
- 		break;
- 	case MPT3SAS_PORT_ENABLE_COMPLETE:
- 		ioc->start_scan = 0;
--	if (missing_delay[0] != -1 && missing_delay[1] != -1)
-+		if (missing_delay[0] != -1 && missing_delay[1] != -1)
- 			mpt3sas_base_update_missing_delay(ioc,
-missing_delay[0],
--			    missing_delay[1]);
-+
-missing_delay[1]);
- 		dewtprintk(ioc, pr_info(MPT3SAS_FMT
- 			"port enable: complete from worker thread\n",
- 			ioc->name));
