@@ -1,76 +1,37 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [Bug 118081] New: open-iscsi Ping timeout erro
-Date: Fri, 13 May 2016 11:19:56 -0500
-Message-ID: <5735FEAC.9030209@redhat.com>
-References: <bug-118081-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCHv3]scsi: don't fail zero length request too early
+Date: Fri, 13 May 2016 11:55:48 -0700
+Message-ID: <1463165748.2291.77.camel@HansenPartnership.com>
+References: <CAMGffEmZMWSTSP3VRxn8K_ZWG3qvRWeKOjzPJN8V4ZZ8Fa_xGA@mail.gmail.com>
+	 <1463147509.2291.1.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42840 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625AbcEMQUD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2016 12:20:03 -0400
-In-Reply-To: <bug-118081-11613@https.bugzilla.kernel.org/>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35234 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753060AbcEMSzw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2016 14:55:52 -0400
+In-Reply-To: <1463147509.2291.1.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, liuzhengyuang521@gmail.com, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Jinpu Wang <jinpu.wang@profitbricks.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Parschauer <s.parschauer@gmx.de>, linux-scsi@vger.kernel.org
 
-On 05/11/2016 10:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=118081
+On Fri, 2016-05-13 at 06:51 -0700, James Bottomley wrote:
+> On Fri, 2016-05-13 at 10:07 +0200, Jinpu Wang wrote:
+> > Hi James, and all,
+> > 
+> > I guess you're busy on other staff, so I create patch below as you
+> > suggested, I think we also need this into stable.
 > 
->             Bug ID: 118081
->            Summary: open-iscsi Ping timeout erro
->            Product: SCSI Drivers
->            Version: 2.5
->     Kernel Version: 4.4.7
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
->           Reporter: liuzhengyuang521@gmail.com
->         Regression: No
-> 
-> Hi everyone:
-> I create a target using fileio as the backend storage on ARM64 server. The
-> initiator reported some errors showed bellow  while perform iozone test.
-> 
-> [178444.145679]  connection14:0: ping timeout of 5 secs expired, recv timeout
-> 5, last rx 4339462894, last ping 4339464146, now 4339465400
-> [178444.145706]  connection14:0: detected conn error (1011)
-> [178469.674313]  connection14:0: detected conn error (1020)
-> [178504.420979]  connection14:0: ping timeout of 5 secs expired, recv timeout
-> 5, last rx 4339477953, last ping 4339479204, now 4339480456
-> [178504.421001]  connection14:0: detected conn error (1011)
-> [178532.064262]  connection14:0: detected conn error (1020)
-> [178564.584087]  connection14:0: ping timeout of 5 secs expired, recv timeout
-> 5, last rx 4339492980, last ping 4339494232, now 4339495484
-> ..............................
-> 
-> I try to trace the function call of target iscsi. Then, I found the  receiving 
-> thread of target iscsi blocked at fd_execute_sync_cache -> vfs_fsync_range.
-> Further, vfs_fsync_range may takes more than 10 seconds to return,while
-> initiator Ping timeout would happened after 5 seconds.   vfs_fsync_range was
-> call with the form vfs_fsync_range(fd_dev->fd_file, 0, LLONG_MAX, 1) every
-> times  which means sync all device cache. 
-> So, is this a bug?
-> How  does Initiator send sync_cache scsi command? 
-> Does it need to sync all device cache at once?
-> Any reply would be thankful.
-> 
+> No, I'll do it, but I just wanted to verify that we don't get into an
+> infinite retry loop on any conditions.
 
-The upper layers like the FS or application determine when to send a
-sync cache. They send down a request and the iscsi layer just sends it
-to the target.
+OK, I checked, we're covered by the wait_for check at the bottom of the
+switch which will automatically fail the command and not retry if we've
+exceeded the timeout.
 
-You are using LIO right? It looks like we end up syncing the entire
-device sometimes. I think for iscsi pings/Nops that have the immediate
-bit set, the target would want to reply to them right away. They should
-not be getting stuck behind these type of commands.
+James
 
-Nick, what do you think?
 
