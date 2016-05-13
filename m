@@ -1,30 +1,21 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 118081] open-iscsi Ping timeout erro
-Date: Fri, 13 May 2016 16:20:01 +0000
-Message-ID: <bug-118081-11613-7c6ltUcFQT@https.bugzilla.kernel.org/>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [Bug 118081] New: open-iscsi Ping timeout erro
+Date: Fri, 13 May 2016 11:19:56 -0500
+Message-ID: <5735FEAC.9030209@redhat.com>
 References: <bug-118081-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44802 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:42840 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981AbcEMQUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2016 12:20:05 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 45E6B2014A
-	for <linux-scsi@vger.kernel.org>; Fri, 13 May 2016 16:20:03 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 6F5ED2025A
-	for <linux-scsi@vger.kernel.org>; Fri, 13 May 2016 16:20:01 +0000 (UTC)
+	id S1751625AbcEMQUD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2016 12:20:03 -0400
 In-Reply-To: <bug-118081-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, liuzhengyuang521@gmail.com, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=118081
-
---- Comment #1 from Mike Christie <mchristi@redhat.com> ---
 On 05/11/2016 10:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=118081
 > 
@@ -83,6 +74,3 @@ not be getting stuck behind these type of commands.
 
 Nick, what do you think?
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
