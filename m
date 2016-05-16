@@ -1,47 +1,109 @@
-From: John David Anglin <dave.anglin@bell.net>
-Subject: Re: parisc late boot crash in 4.4-rc, scsi-related
-Date: Mon, 16 May 2016 17:41:45 -0400
-Message-ID: <9d1ae51e-69c3-c3f6-60aa-e5238dd18241@bell.net>
-References: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee>
- <56902D77.1020200@gmx.de> <alpine.LRH.2.20.1605162336050.12607@math.ut.ee>
+From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Subject: RE: [PATCH] mpt3sas: Do scsi_remove_host() before deleting SAS PHY objects
+Date: Mon, 16 May 2016 15:51:48 -0600
+Message-ID: <f6e9d525a6435464bfa53bf7884b956f@mail.gmail.com>
+References: <41278f83ecb4de381ab49aeb94e341dc533fde8f.1463170969.git.calvinowens@fb.com>
+ <94D0CD8314A33A4D9D801C0FE68B40296396FB3E@G4W3202.americas.hpqcorp.net> <20160516202454.GA2018262@devbig337.prn1.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.20.1605162336050.12607@math.ut.ee>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f175.google.com ([209.85.223.175]:35640 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630AbcEPVvu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2016 17:51:50 -0400
+Received: by mail-io0-f175.google.com with SMTP id d62so340478iof.2
+        for <linux-scsi@vger.kernel.org>; Mon, 16 May 2016 14:51:50 -0700 (PDT)
+In-Reply-To: <20160516202454.GA2018262@devbig337.prn1.facebook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>, "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Cc: Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 2016-05-16 4:40 PM, Meelis Roos wrote:
->>> I noticed on RP3440 and A500 that recent 4.4-rc* crashes on boot.
->> >
->> >I've not seen it with 4.4-rc yet, but I've seen it on debian kernel 4.3.3:
-> This is still present in 4.6, just tested. All my pariscs are broken
-> - A500, RP3410, RP3440. 4.3 is the latest working release for me. If
-> 4.3.3 is broken, it might be possible to bisect more easily.
+Our understanding is the relationship between the SCSI host and SAS end
+devices is a parent-child and before ripping of SCSI host we need to rip of
+all the children. Why the enclosure ends up trying to re-parent the SCSI
+device from the enclosure to the SAS PHY even after we remove the SAS Phy?.
+Doesn't this need to be taken care in enclosure_removal?
 
-I believe this is fixed in current gcc versions (4.9 and latter). It was 
-exposed by a blk-merge
-change.  It was fixed by this change:
+-----Original Message-----
+From: Calvin Owens [mailto:calvinowens@fb.com]
+Sent: Monday, May 16, 2016 2:25 PM
+To: Elliott, Robert (Persistent Memory)
+Cc: Sathya Prakash; Chaitra P B; Suganath Prabu Subramani; James E.J.
+Bottomley; Martin K. Petersen; MPT-FusionLinux.pdl@broadcom.com;
+linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+kernel-team@fb.com; calvinowens@fb.com
+Subject: Re: [PATCH] mpt3sas: Do scsi_remove_host() before deleting SAS PHY
+objects
 
-2016-03-17  John David Anglin  <danglin@gcc.gnu.org>
+On Friday 05/13 at 21:17 +0000, Elliott, Robert (Persistent Memory) wrote:
+>
+>
+> > -----Original Message-----
+> > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > owner@vger.kernel.org] On Behalf Of Calvin Owens
+> > Sent: Friday, May 13, 2016 3:28 PM
+> ...
+> > Subject: [PATCH] mpt3sas: Do scsi_remove_host() before deleting SAS
+> > PHY objects
+> >
+> ...
+> > The issue is that enclosure_remove_device() expects to be able to
+> > re-add the device that was previously enclosured: so with SES
+> > running, the order we unwind things matters in a way it otherwise
+> > wouldn't.
+> >
+> > Since mpt3sas deletes the SAS objects before the SCSI hosts,
+> > enclosure ends up trying to re-parent the SCSI device from the
+> > enclosure to the SAS PHY which has already been deleted. This obviously
+> > ends in sadness.
+> >
+> > The fix appears to be simple: just call scsi_remove_host() before we
+> > call
+> > sas_port_delete() and/or sas_remove_host().
+> >
+> ...
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > @@ -8149,6 +8149,8 @@ void scsih_remove(struct pci_dev *pdev)
+> >  		_scsih_raid_device_remove(ioc, raid_device);
+> >  	}
+> >
+> > +	scsi_remove_host(shost);
+> > +
+> >  	/* free ports attached to the sas_host */
+> >  	list_for_each_entry_safe(mpt3sas_port, next_port,
+> >  	   &ioc->sas_hba.sas_port_list, port_list) { @@ -8172,7 +8174,6 @@
+> > void scsih_remove(struct pci_dev *pdev)
+> >  	}
+> >
+> >  	sas_remove_host(shost);
+> > -	scsi_remove_host(shost);
+> >  	mpt3sas_base_detach(ioc);
+> >  	spin_lock(&gioc_lock);
+> >  	list_del(&ioc->list);
+>
+> That change matches the pattern of all other drivers calling
+> sas_remove_host, except for one:
+> 	drivers/message/fusion/mptsas.c
+>
+> That consensus means this comment in drivers/scsi/scsi_transport_sas.c
+> is wrong:
+>
+> /**
+>  * sas_remove_host  -  tear down a Scsi_Host's SAS data structures
+>  * @shost:      Scsi Host that is torn down
+>  *
+>  * Removes all SAS PHYs and remote PHYs for a given Scsi_Host.
+>  * Must be called just before scsi_remove_host for SAS HBAs.
+>  */
 
-         PR target/70188
-         * config/pa/constraints.md: Revert 2015-02-13 change.  Use
-         define_constraint for "Q" and "T" constraints.
+Yes, exactly: that comment appears to be backwards, and as you say most
+drivers appear to do the opposite (I looked at HPSA at least, which calls
+sas_port_delete() before scsi_remove_host()).
 
-However, this caused a different problem fixed here:
+I suppose I should send a patch to fix the comment as well? It'd be nice to
+get some testing to be certain I'm not breaking somebody else's setup by
+fixing mine though...
 
-2016-04-05  John David Anglin  <danglin@gcc.gnu.org>
-
-         * config/pa/predicates.md (integer_store_memory_operand): Accept
-         REG+D operands with a large offset when reload_in_progress is true.
-         (floating_point_store_memory_operand): Likewise.
-
-Dave
-
--- 
-John David Anglin  dave.anglin@bell.net
-
+Thanks,
+Calvin
