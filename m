@@ -1,41 +1,51 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: SHOST_RECOVERY hang with host_busy < host_failed
-Date: Mon, 16 May 2016 15:37:46 -0700
-Message-ID: <573A4BBA.9010608@linux.vnet.ibm.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 1/2] scsi: fix max discard sectors calculation
+Date: Mon, 16 May 2016 15:44:48 -0700
+Message-ID: <573A4D60.7080902@sandisk.com>
+References: <1463424410-17196-1-git-send-email-mchristi@redhat.com>
+ <1463424410-17196-2-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:54374 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103AbcEPWhw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2016 18:37:52 -0400
-Received: from localhost
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-	Mon, 16 May 2016 16:37:51 -0600
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 0689419D803F
-	for <linux-scsi@vger.kernel.org>; Mon, 16 May 2016 16:37:30 -0600 (MDT)
+Received: from mail-bn1on0059.outbound.protection.outlook.com ([157.56.110.59]:52672
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751504AbcEPWo4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2016 18:44:56 -0400
+In-Reply-To: <1463424410-17196-2-git-send-email-mchristi@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Brian King <brking@linux.vnet.ibm.com>
+To: mchristi@redhat.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, socketpair@gmail.com
+Cc: stable@vger.kernel.org
 
-I'm seeing a non-deterministic I/O hang with the ibmvfc driver when we
-migrate a guest/partition to a different machine. So, on the occasions
-when this hits the systems becomes unresponsive blocked on I/O. I
-started by inspecting Scsi_Host of the driver which shows shost->state =
-SHOST_RECOVERY explaining the blocked I/O. What I found a little weird
-however was shost->host_failed > shost->host_busy.
+On 05/16/2016 11:46 AM, mchristi@redhat.com wrote:
+> logical_block_size and max_blocks are 32 bits, so we can
+> overflow when trying to convert SCSI device blocks to linux
+> block layer sectors.
+>
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> Cc: stable@vger.kernel.org
+>
+> ---
+>   drivers/scsi/sd.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index f52b74c..1668e1d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -690,7 +690,8 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+> -	blk_queue_max_discard_sectors(q, max_blocks * (logical_block_size >> 9));
+> +	blk_queue_max_discard_sectors(q, (u64)max_blocks *
+> +				      (logical_block_size >> 9));
 
->From the EH documentation SHOST_RECOVERY is set by scsi_eh_scmd_add thus
-blocking any new scmd's from the block queue to the host. So, every
-scmnd in flight either completes or fails with failed commands being
-inclusive of busy commands count, and the EH thread started once all
-busy commands are failed commands (ie. host_busy == host_failed). So,
-this should mean host_failed should never by greater than host_busy,
-correct?
+Hello Mike,
 
--Tyrel
+As far as I can see max_blocks <= 0xffff (SD_MAX_WS10_BLOCKS) and 512 <= 
+logical_block_size <= 4096. How can max_blocks * (logical_block_size >> 
+9) be too large for a 32 bit integer?
 
+Thanks,
+
+Bart.
