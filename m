@@ -1,26 +1,38 @@
-From: "hi" <montybrimley@aol.com>
-Subject: how are you.
-Date: Mon, 16 May 2016 13:08:26 +0800
-Message-ID: <48FEB0F2E0F4BA44F2D6EA9C6AF62C39@imojqx>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Heloise <os@iscas.ac.cn>
+Subject: [PATCH] drivers/scsi:fix memory leak
+Date: Sun, 15 May 2016 23:31:46 -0700
+Message-ID: <1463380306-5939-1-git-send-email-os@iscas.ac.cn>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oms-a004e.mx.aol.com ([204.29.186.146]:36142 "EHLO
-	oms-a004e.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbcEPFO3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2016 01:14:29 -0400
-Received: from omr-a008e.mx.aol.com (omr-a008.mx.aol.com [10.72.94.61])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by oms-a004e.mx.aol.com (AOL Outbound OMS Interface) with ESMTPS id 8017F3800135
-	for <linux-scsi@vger.kernel.org>; Mon, 16 May 2016 01:08:35 -0400 (EDT)
+Received: from m12-18.163.com ([220.181.12.18]:52703 "EHLO m12-18.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342AbcEPGqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2016 02:46:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rm4.1462584@news4.tin.it
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, os@iscas.ac.cn
 
-aG93IGFyZSB5b3UNCnRoaXMgaXMgYW4gZWxlY3Ryb25pY3Mgc2hvcA0KYmlrZSxndWl0YXIsY2Ft
-ZXJhLHR2LGlwYWQsd2F0Y2guLi4uZnJlZSBkZWxpdmVyeQ0Kd3d3LiAgc2xvb29uZSAuY29t
+In function ahc_handle_en_lun, variable lstate has not been
+freed before return, which can cause memory leak, fix it.
+
+Signed-off-by: Heloise <os@iscas.ac.cn>
+---
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 64ab9ea..e8fbdb5 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -7684,6 +7684,7 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 
+ 		if (ccb->ccb_h.status != CAM_REQ_CMP) {
+ 			ahc_unlock(ahc, &s);
++			kfree(lstate);
+ 			return;
+ 		}
+ 
+-- 
+2.1.0
 
 
