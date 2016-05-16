@@ -1,38 +1,28 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 2/2] target: fix max discard sectors calculation
-Date: Mon, 16 May 2016 11:57:42 -0700
-Message-ID: <573A1826.3050007@sandisk.com>
-References: <1463424410-17196-1-git-send-email-mchristi@redhat.com>
- <1463424410-17196-3-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1463424410-17196-3-git-send-email-mchristi@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: mchristi@redhat.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, socketpair@gmail.com
-Cc: stable@vger.kernel.org
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 0/2] UFS DWC Test Chip pci driver tweaks
+Date: Mon, 16 May 2016 19:59:00 +0100
+Message-ID: <cover.1463424861.git.jpinto@synopsys.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:56018 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753736AbcEPS7L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2016 14:59:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
 
-On 05/16/2016 11:46 AM, mchristi@redhat.com wrote:
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index a4046ca..3f9f304 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -826,8 +826,8 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
-> -	attrib->max_unmap_lba_count = (q->limits.max_discard_sectors << 9) /
-> -								block_size;
-> +	attrib->max_unmap_lba_count =
-> +			((u64)q->limits.max_discard_sectors << 9) / block_size;
+This patch set has the tweaks that I described to you in an e-mail, all
+related with the ufs test chip pci driver.
 
-Hello Mike,
+Joao Pinto (2):
+  ufs: Test Chip pci driver not dependent of Samsung's
+  ufs: driver changed to avoid name collision with Samsung's
 
-That's a good catch. But seeing this patch makes me wonder whether this 
-patch introduces a 64-bit division? If so, I'm afraid this patch will 
-make 32-bit users unhappy. Have you considered to use do_div() or >> 
-(ilog2(block_size) - 9) instead? For the latter alternative no 64-bit 
-cast is needed.
+ drivers/scsi/ufs/Kconfig           | 2 +-
+ drivers/scsi/ufs/tc-dwc-g210-pci.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
+-- 
+1.8.1.5
 
-Bart.
