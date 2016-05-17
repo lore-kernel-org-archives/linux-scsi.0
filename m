@@ -1,33 +1,31 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 1/7] snic: fix typo
-Date: Tue, 17 May 2016 16:38:40 +0200
-Message-ID: <1463495926-13728-2-git-send-email-Julia.Lawall@lip6.fr>
+From: Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 0/7] fix typo
+Date: Tue, 17 May 2016 18:07:37 +0300
+Message-ID: <874m9wpvt2.fsf@purkki.adurom.net>
 References: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Narsimhulu Musini <nmusini@cisco.com>
-Cc: kernel-janitors@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr> (Julia
+	Lawall's message of "Tue, 17 May 2016 16:38:39 +0200")
+Sender: netdev-owner@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: netdev@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org, linux-media@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, pmchba@pmcs.com
 List-Id: linux-scsi@vger.kernel.org
 
-firmare -> firmware
+Julia Lawall <Julia.Lawall@lip6.fr> writes:
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> firmare -> firmware
+>
+> ---
+>
+>  drivers/media/dvb-frontends/mn88473.c       |    2 +-
+>  drivers/net/wireless/ath/ath6kl/core.h      |    2 +-
+>  drivers/net/wireless/marvell/mwifiex/pcie.c |    2 +-
 
----
- drivers/scsi/snic/snic_fwint.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It would be good to know in advance what tree you are planning to submit
+these for. For example, should I take ath6kl and mwifiex patches or
+someone else?
 
-diff --git a/drivers/scsi/snic/snic_fwint.h b/drivers/scsi/snic/snic_fwint.h
-index c5f9e19..2a045a5 100644
---- a/drivers/scsi/snic/snic_fwint.h
-+++ b/drivers/scsi/snic/snic_fwint.h
-@@ -92,7 +92,7 @@ enum snic_io_status {
- }; /* end of enum snic_io_status */
- 
- /*
-- * snic_io_hdr : host <--> firmare
-+ * snic_io_hdr : host <--> firmware
-  *
-  * for any other message that will be queued to firmware should
-  *  have the following request header
+-- 
+Kalle Valo
