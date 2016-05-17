@@ -1,188 +1,105 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 2/2] target: fix max discard sectors calculation
-Date: Tue, 17 May 2016 16:49:11 -0500
-Message-ID: <573B91D7.8020002@redhat.com>
-References: <1463424410-17196-1-git-send-email-mchristi@redhat.com>
- <1463424410-17196-3-git-send-email-mchristi@redhat.com>
- <573A1826.3050007@sandisk.com> <yq1y479hlmp.fsf@sermon.lab.mkp.net>
- <573B6006.8010206@sandisk.com>
+From: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+Subject: UBSAN whinge in scsi_devinfo.c
+Date: Tue, 17 May 2016 18:42:00 -0400
+Message-ID: <8999.1463524920@turing-police.cc.vt.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070309090404040007000207"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <573B6006.8010206@sandisk.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, socketpair@gmail.com, stable@vger.kernel.org
+Content-Type: multipart/signed; boundary="==_Exmh_1463524920_1953P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070309090404040007000207
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+--==_Exmh_1463524920_1953P
+Content-Type: text/plain; charset=us-ascii
 
-On 05/17/2016 01:16 PM, Bart Van Assche wrote:
-> On 05/16/2016 12:02 PM, Martin K. Petersen wrote:
->>>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
->>
->> Bart> That's a good catch. But seeing this patch makes me wonder whether
->> Bart> this patch introduces a 64-bit division? If so, I'm afraid this
->> Bart> patch will make 32-bit users unhappy. Have you considered to use
->> Bart> do_div() or >> (ilog2(block_size) - 9) instead? For the latter
->> Bart> alternative no 64-bit cast is needed.
->>
->> Please use logical_to_sectors().
-> 
-> Hello Martin,
-> 
-> For SCSI initiator devices the logical block size is stored in struct
-> scsi_device. logical_to_sectors() gets the logical block size from
-> struct scsi_device. LIO however stores the logical block size in struct
-> se_dev_attrib. If we want to keep SCSI initiator and SCSI target headers
-> separate I think we will need two logical_to_sectors() functions - one
-> for SCSI initiator devices and one for SCSI target devices.
-> 
+Seen at boot in a UBSAN-enabled kernel:
 
-Or block layer helpers? Something like the attached patch. It is a
-compile only tested patch (just for show and not for submission as I
-would break it up and test, etc) that would move the scsi converter to
-the block layer, and convert the target layer and scsi to use it.
+[    2.936388] ================================================================================
+[    2.936392] UBSAN: Undefined behaviour in drivers/scsi/scsi_devinfo.c:457:21
+[    2.936396] index 8 is out of range for type 'char [8]'
 
---------------070309090404040007000207
-Content-Type: text/x-patch;
- name="blk-logical-sector-helpers.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="blk-logical-sector-helpers.patch"
+The code:
 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 654630b..d405400 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -148,7 +148,7 @@ static inline int scsi_medium_access_command(struct scsi_cmnd *scmd)
- 
- static inline sector_t logical_to_sectors(struct scsi_device *sdev, sector_t blocks)
- {
--	return blocks << (ilog2(sdev->sector_size) - 9);
-+	return blk_logical_to_sector(blocks, sdev->sector_size);
- }
- 
- /*
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index a4046ca..95d6112 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -821,13 +821,15 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
-  * in ATA and we need to set TPE=1
-  */
- bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
--				       struct request_queue *q, int block_size)
-+				       struct request_queue *q)
- {
-+	unsigned short block_size = queue_logical_block_size(q);
-+
- 	if (!blk_queue_discard(q))
- 		return false;
- 
--	attrib->max_unmap_lba_count = (q->limits.max_discard_sectors << 9) /
--								block_size;
-+	attrib->max_unmap_lba_count = queue_sector_to_logical(q,
-+						q->limits.max_discard_sectors);
- 	/*
- 	 * Currently hardcoded to 1 in Linux/SCSI code..
- 	 */
-@@ -846,16 +848,7 @@ EXPORT_SYMBOL(target_configure_unmap_from_queue);
-  */
- sector_t target_to_linux_sector(struct se_device *dev, sector_t lb)
- {
--	switch (dev->dev_attrib.block_size) {
--	case 4096:
--		return lb << 3;
--	case 2048:
--		return lb << 2;
--	case 1024:
--		return lb << 1;
--	default:
--		return lb;
--	}
-+	return blk_logical_to_sector(lb, dev->dev_attrib.block_size);
- }
- EXPORT_SYMBOL(target_to_linux_sector);
- 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 75f0f08..7929186 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -161,8 +161,7 @@ static int fd_configure_device(struct se_device *dev)
- 			dev_size, div_u64(dev_size, fd_dev->fd_block_size),
- 			fd_dev->fd_block_size);
- 
--		if (target_configure_unmap_from_queue(&dev->dev_attrib, q,
--						      fd_dev->fd_block_size))
-+		if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
- 			pr_debug("IFILE: BLOCK Discard support available,"
- 				 " disabled by default\n");
- 		/*
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 026a758..3cbe060 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -121,8 +121,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	dev->dev_attrib.hw_max_sectors = queue_max_hw_sectors(q);
- 	dev->dev_attrib.hw_queue_depth = q->nr_requests;
- 
--	if (target_configure_unmap_from_queue(&dev->dev_attrib, q,
--					      dev->dev_attrib.hw_block_size))
-+	if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
- 		pr_debug("IBLOCK: BLOCK Discard support available,"
- 			 " disabled by default\n");
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 669e419..55cb34b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1210,6 +1210,30 @@ static inline unsigned short bdev_logical_block_size(struct block_device *bdev)
- 	return queue_logical_block_size(bdev_get_queue(bdev));
- }
- 
-+static inline sector_t blk_logical_to_sector(sector_t blocks,
-+					     unsigned short block_size)
-+{
-+	return blocks << (ilog2(block_size) - 9);
-+}
-+
-+static inline sector_t queue_logical_to_sector(struct request_queue *q,
-+					       sector_t blocks)
-+{
-+	return blk_logical_to_sector(blocks, queue_logical_block_size(q));
-+}
-+
-+static inline sector_t blk_sector_to_logical(sector_t sectors,
-+					     unsigned short block_size)
-+{
-+	return sectors >> (ilog2(block_size) - 9);
-+}
-+
-+static inline sector_t queue_sector_to_logical(struct request_queue *q,
-+					       sector_t sectors)
-+{
-+	return blk_sector_to_logical(sectors, queue_logical_block_size(q));
-+}
-+
- static inline unsigned int queue_physical_block_size(struct request_queue *q)
- {
- 	return q->limits.physical_block_size;
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 28ee5c2..711322a 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -96,6 +96,6 @@ sense_reason_t passthrough_parse_cdb(struct se_cmd *cmd,
- bool target_sense_desc_format(struct se_device *dev);
- sector_t target_to_linux_sector(struct se_device *dev, sector_t lb);
- bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
--				       struct request_queue *q, int block_size);
-+				       struct request_queue *q);
- 
- #endif /* TARGET_CORE_BACKEND_H */
+    452                 if (devinfo->compatible) {
+    453                         /*
+    454                          * Behave like the older version of get_device_flags.
+    455                          */
+    456                         if (memcmp(devinfo->vendor, vskip, vmax) ||
+    457                                         devinfo->vendor[vmax])
+    458                                 continue;
+    459                         if (memcmp(devinfo->model, mskip, mmax) ||
+    460                                         devinfo->model[mmax])
+    461                                 continue;
+    462                         return devinfo;
 
---------------070309090404040007000207--
+As near as I can tell, intentionally dereferencing past the end of the
+vendor or model strings is well into "just happens to work" - and I'm
+convinced this is actually buggy for entries that have 16-character
+model identifiers, as the next field is an 'unsigned flags'.  And that's
+going to fail miserably on a big-endian machine where the flags aren't
+in the next byte that follows the 16 chars of model....
+
+The entire splat:
+
+[    2.936388] ================================================================================
+[    2.936392] UBSAN: Undefined behaviour in drivers/scsi/scsi_devinfo.c:457:21
+[    2.936396] index 8 is out of range for type 'char [8]'
+[    2.936401] CPU: 0 PID: 98 Comm: kworker/u8:1 Not tainted 4.6.0-next-20160517-00001-gede618fce89c-dirty #279
+[    2.936412] Hardware name: Dell Inc. Latitude E6530/07Y85M, BIOS A17 08/19/2015
+[    2.936424] Workqueue: events_unbound async_run_entry_fn
+[    2.936432]  0000000000000000 00000000ce26f4e7 ffff8802236eba38 ffffffffaa690aea
+[    2.936439]  ffff8802236eba50 00000000ce26f4e7 ffff8802236eba60 0000000000000008
+[    2.936446]  ffff8802236eba50 ffffffffaa7087ad ffffffffabccafc0 ffff8802236ebaa8
+[    2.936449] Call Trace:
+[    2.936459]  [<ffffffffaa690aea>] dump_stack+0x7b/0xd1
+[    2.936464]  [<ffffffffaa7087ad>] ubsan_epilogue+0xd/0x40
+[    2.936468]  [<ffffffffaa708ec5>] __ubsan_handle_out_of_bounds+0x75/0xa0
+[    2.936472]  [<ffffffffaa140038>] ? percpu_down_read_trylock+0xa8/0xb0
+[    2.936478]  [<ffffffffaa8ef922>] scsi_dev_info_list_find+0x282/0x300
+[    2.936482]  [<ffffffffaa8efa11>] scsi_get_device_flags_keyed+0x21/0xb0
+[    2.936487]  [<ffffffffaa8eff90>] scsi_get_device_flags+0x10/0x20
+[    2.936492]  [<ffffffffaa8e9032>] scsi_probe_and_add_lun+0x502/0x1200
+[    2.936497]  [<ffffffffab077f27>] ? _raw_spin_unlock_irqrestore+0x87/0x90
+[    2.936503]  [<ffffffffaa8ea9d1>] __scsi_add_device+0x121/0x150
+[    2.936510]  [<ffffffffaa91c4f7>] ata_scsi_scan_host+0x127/0x240
+[    2.936514]  [<ffffffffaa911baa>] async_port_probe+0x4a/0x90
+[    2.936518]  [<ffffffffaa0f12b8>] async_run_entry_fn+0x68/0x1b0
+[    2.936523]  [<ffffffffaa0e257f>] process_one_work+0x3bf/0xdb0
+[    2.936526]  [<ffffffffaa0e24e9>] ? process_one_work+0x329/0xdb0
+[    2.936531]  [<ffffffffaa0e32c1>] worker_thread+0x351/0xad0
+[    2.936536]  [<ffffffffaa0e2f70>] ? process_one_work+0xdb0/0xdb0
+[    2.936540]  [<ffffffffaa0ec1e2>] kthread+0x142/0x1b0
+[    2.936549]  [<ffffffffab07897f>] ret_from_fork+0x1f/0x40
+[    2.936553]  [<ffffffffaa0ec0a0>] ? kthread_create_on_node+0x280/0x280
+[    2.936557] ================================================================================
+
+
+
+
+
+--==_Exmh_1463524920_1953P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Exmh version 2.5 07/13/2001
+
+iQIVAwUBVzueOAdmEQWDXROgAQJHphAAoy4MCZAAkdhtq2A8FBpmGnXl0JPV2+ZS
+Myrw9CnGzRKtbxDjbwBoSSpLQxicV/tP1DlVH6CUzQnfc012LYNtDCG5RsSxm2DE
+VYWxniLOvqCRjVK5I1dpIzNSxDDEgGjq2pvr+d6dgLW+ghX86MxugbrM+XXxRaWm
+p3Disz1mY6Y4f6QzbjnHA1h2D0ZdQ8+eCfRGRgzkpam/NzUA2oLOvoxDUFJ+igEG
+SsZ5DjzWktzK17pHdc1GeK7NdIaA2Xm3U6Hx+EYXHqzypCJaCLQjwCEFEeghqh1Y
+x9PhountwaqtETcfTOaoAirJn7br2EVkAW6CXGutEZudNohA6sfc52Jz/7OW8f/z
+bNIUZCOQGLPmK2RR33oGZTeI1hZZer4RvW1Aj/LYCWXYS5Jgazu3TSh6MFqQ2R5J
+UhqvOUYlMcFcn3mV2iQakhm2O/GFhyTVE5TtLVeR3ExrEAohOY7RyF9VHN/0zZCN
+C4A3TzmJ4yaxSOyVxcvUDdn3S1cumv/bRcBcv4+6Z4VrRtE1sreWMIghirm0XCTk
+v+8cZWY4uW8HU4UvqzuPniJ6N6Nw+ozdLTVNEgAFXUzTPvYlFMEetaaylMPuM6xL
+XssCfk6yxSBXIG83n84Bnj92UJyu1u03qQwxJdcpjTmgqmgwEcahpKO8AyUo4YFE
+gk+ZYtDzSL4=
+=I79x
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1463524920_1953P--
