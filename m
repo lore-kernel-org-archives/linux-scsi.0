@@ -1,99 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 118081] open-iscsi Ping timeout erro
-Date: Tue, 17 May 2016 03:46:03 +0000
-Message-ID: <bug-118081-11613-K3osEQoaKp@https.bugzilla.kernel.org/>
-References: <bug-118081-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: fix max discard sectors calculation
+Date: Mon, 16 May 2016 22:46:15 -0500
+Message-ID: <573A9407.1040402@redhat.com>
+References: <1463424410-17196-1-git-send-email-mchristi@redhat.com>
+ <1463424410-17196-2-git-send-email-mchristi@redhat.com>
+ <573A4D60.7080902@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59896 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:49639 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332AbcEQDqH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2016 23:46:07 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 91F3E20251
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2016 03:46:05 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 7EAC7201FE
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2016 03:46:03 +0000 (UTC)
-In-Reply-To: <bug-118081-11613@https.bugzilla.kernel.org/>
+	id S1751332AbcEQDqR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2016 23:46:17 -0400
+In-Reply-To: <573A4D60.7080902@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, socketpair@gmail.com
+Cc: stable@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=118081
-
---- Comment #2 from Liu zhengyuan <liuzhengyuang521@gmail.com> ---
-Thanks for your replay.  Yes, I am using LIO and I had make a XFS file system
-on the LUN at the Initiator side . As you said,  the sync_cache command was
-issued by XFS log infrastructure actually. When I replace the XFS with EXT2
-that dmesg error don`t appear anymore during the iozone test.  I think
-pings/Nops got no response  because it still stay in TCP stack not received by
-the target rx-thread. 
-It is not good for me to make a file system on the LUN based on a FILEIO
-backstore?
-The Ping time out would lead to upper layers application like iozone to faild
-when issued sync at the end of IO?
-
-> On 05/11/2016 10:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=118081
-> > 
-> >             Bug ID: 118081
-> >            Summary: open-iscsi Ping timeout erro
-> >            Product: SCSI Drivers
-> >            Version: 2.5
-> >     Kernel Version: 4.4.7
-> >           Hardware: All
-> >                 OS: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: Other
-> >           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-> >           Reporter: liuzhengyuang521@gmail.com
-> >         Regression: No
-> > 
-> > Hi everyone:
-> > I create a target using fileio as the backend storage on ARM64 server. The
-> > initiator reported some errors showed bellow  while perform iozone test.
-> > 
-> > [178444.145679]  connection14:0: ping timeout of 5 secs expired, recv timeout
-> > 5, last rx 4339462894, last ping 4339464146, now 4339465400
-> > [178444.145706]  connection14:0: detected conn error (1011)
-> > [178469.674313]  connection14:0: detected conn error (1020)
-> > [178504.420979]  connection14:0: ping timeout of 5 secs expired, recv timeout
-> > 5, last rx 4339477953, last ping 4339479204, now 4339480456
-> > [178504.421001]  connection14:0: detected conn error (1011)
-> > [178532.064262]  connection14:0: detected conn error (1020)
-> > [178564.584087]  connection14:0: ping timeout of 5 secs expired, recv timeout
-> > 5, last rx 4339492980, last ping 4339494232, now 4339495484
-> > ..............................
-> > 
-> > I try to trace the function call of target iscsi. Then, I found the  receiving 
-> > thread of target iscsi blocked at fd_execute_sync_cache -> vfs_fsync_range.
-> > Further, vfs_fsync_range may takes more than 10 seconds to return,while
-> > initiator Ping timeout would happened after 5 seconds.   vfs_fsync_range was
-> > call with the form vfs_fsync_range(fd_dev->fd_file, 0, LLONG_MAX, 1) every
-> > times  which means sync all device cache. 
-> > So, is this a bug?
-> > How  does Initiator send sync_cache scsi command? 
-> > Does it need to sync all device cache at once?
-> > Any reply would be thankful.
-> > 
+On 05/16/2016 05:44 PM, Bart Van Assche wrote:
+> On 05/16/2016 11:46 AM, mchristi@redhat.com wrote:
+>> logical_block_size and max_blocks are 32 bits, so we can
+>> overflow when trying to convert SCSI device blocks to linux
+>> block layer sectors.
+>>
+>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>> Cc: stable@vger.kernel.org
+>>
+>> ---
+>>   drivers/scsi/sd.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index f52b74c..1668e1d 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -690,7 +690,8 @@ static void sd_config_discard(struct scsi_disk
+>> *sdkp, unsigned int mode)
+>> -    blk_queue_max_discard_sectors(q, max_blocks * (logical_block_size
+>> >> 9));
+>> +    blk_queue_max_discard_sectors(q, (u64)max_blocks *
+>> +                      (logical_block_size >> 9));
 > 
-> The upper layers like the FS or application determine when to send a
-> sync cache. They send down a request and the iscsi layer just sends it
-> to the target.
+> Hello Mike,
 > 
-> You are using LIO right? It looks like we end up syncing the entire
-> device sometimes. I think for iscsi pings/Nops that have the immediate
-> bit set, the target would want to reply to them right away. They should
-> not be getting stuck behind these type of commands.
+> As far as I can see max_blocks <= 0xffff (SD_MAX_WS10_BLOCKS) and 512 <=
+> logical_block_size <= 4096. How can max_blocks * (logical_block_size >>
+> 9) be too large for a 32 bit integer?
 > 
-> Nick, what do you think?
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Oops yeah, you are right. I forgot I modified the code to test the
+target patch. The patch is not needed. Thanks.
