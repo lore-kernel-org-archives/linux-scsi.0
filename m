@@ -1,277 +1,355 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [RFC PATCH] libfc: Update rport reference counting
-Date: Wed, 18 May 2016 11:52:36 +0200
-Message-ID: <1463565156-103494-1-git-send-email-hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] first round of SCSI updates for the 4.6+ merge window
+Date: Wed, 18 May 2016 07:19:06 -0400
+Message-ID: <1463570346.27423.2.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35444 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752714AbcERJwz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2016 05:52:55 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58142 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750795AbcERLTL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2016 07:19:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@intel.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Originally libfc would just be initializing the refcount to '1',
-and using the disc_mutex to synchronize if and when the final put
-should be happening.
-This has a race condition as the mutex might be delayed, causing
-other threads to access an invalid structure.
-This patch updates the rport reference counting to increase the
-reference every time 'rport_lookup' is called, and decreases
-the reference correspondingly.
-This removes the need to hold 'disc_mutex' when removing the
-structure, and avoids the above race condition.
+This patch includes the usual quota of driver updates (bnx2fc, mp3sas,
+hpsa, ncr5380, lpfc, hisi_sas, snic, aacraid, megaraid_sas) there's
+also a multiqueue update for scsi_debug, assorted bug fixes and a few
+other minor updates (refactor of scsi_sg_pools into generic code, alua
+and VPD updates, and struct timeval conversions).
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/fcoe/fcoe_ctlr.c |  6 ------
- drivers/scsi/libfc/fc_lport.c | 19 ++++++++++-------
- drivers/scsi/libfc/fc_rport.c | 49 ++++++++++++++++++++++---------------------
- 3 files changed, 37 insertions(+), 37 deletions(-)
+The patch is available here:
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 3e83d48..59b8476 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2496,14 +2496,12 @@ static int fcoe_ctlr_vn_lookup(struct fcoe_ctlr *fip, u32 port_id, u8 *mac)
- 	struct fcoe_rport *frport;
- 	int ret = -1;
- 
--	rcu_read_lock();
- 	rdata = lport->tt.rport_lookup(lport, port_id);
- 	if (rdata) {
- 		frport = fcoe_ctlr_rport(rdata);
- 		memcpy(mac, frport->enode_mac, ETH_ALEN);
- 		ret = 0;
- 	}
--	rcu_read_unlock();
- 	return ret;
- }
- 
-@@ -2585,11 +2583,7 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
- 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
- 		return;
- 	}
--	mutex_lock(&lport->disc.disc_mutex);
- 	rdata = lport->tt.rport_lookup(lport, new->ids.port_id);
--	if (rdata)
--		kref_get(&rdata->kref);
--	mutex_unlock(&lport->disc.disc_mutex);
- 	if (rdata) {
- 		if (rdata->ids.node_name == new->ids.node_name &&
- 		    rdata->ids.port_name == new->ids.port_name) {
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e01a298..b9b44da 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -2090,7 +2090,7 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
- 	struct fc_rport *rport;
- 	struct fc_rport_priv *rdata;
- 	int rc = -EINVAL;
--	u32 did;
-+	u32 did, tov;
- 
- 	job->reply->reply_payload_rcv_len = 0;
- 	if (rsp)
-@@ -2121,15 +2121,20 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
- 
- 	case FC_BSG_HST_CT:
- 		did = ntoh24(job->request->rqst_data.h_ct.port_id);
--		if (did == FC_FID_DIR_SERV)
-+		if (did == FC_FID_DIR_SERV) {
- 			rdata = lport->dns_rdata;
--		else
-+			if (!rdata)
-+				break;
-+			tov = rdata->e_d_tov;
-+		} else {
- 			rdata = lport->tt.rport_lookup(lport, did);
-+			if (!rdata)
-+				break;
-+			tov = rdata->e_d_tov;
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
-+		}
- 
--		if (!rdata)
--			break;
--
--		rc = fc_lport_ct_request(job, lport, did, rdata->e_d_tov);
-+		rc = fc_lport_ct_request(job, lport, did, tov);
- 		break;
- 
- 	case FC_BSG_HST_ELS_NOLOGIN:
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 589ff9a..93f5961 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -95,17 +95,23 @@ static const char *fc_rport_state_names[] = {
-  * @lport:   The local port to lookup the remote port on
-  * @port_id: The remote port ID to look up
-  *
-- * The caller must hold either disc_mutex or rcu_read_lock().
-+ * The reference count of the fc_rport_priv structure is
-+ * increased by one.
-  */
- static struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
- 					     u32 port_id)
- {
--	struct fc_rport_priv *rdata;
-+	struct fc_rport_priv *rdata = NULL, *tmp_rdata;
- 
--	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers)
--		if (rdata->ids.port_id == port_id)
--			return rdata;
--	return NULL;
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(tmp_rdata, &lport->disc.rports, peers)
-+		if (tmp_rdata->ids.port_id == port_id &&
-+		    kref_get_unless_zero(&tmp_rdata->kref)) {
-+			rdata = tmp_rdata;
-+			break;
-+		}
-+	rcu_read_unlock();
-+	return rdata;
- }
- 
- /**
-@@ -340,7 +346,6 @@ static void fc_rport_work(struct work_struct *work)
- 			fc_remote_port_delete(rport);
- 		}
- 
--		mutex_lock(&lport->disc.disc_mutex);
- 		mutex_lock(&rdata->rp_mutex);
- 		if (rdata->rp_state == RPORT_ST_DELETE) {
- 			if (port_id == FC_FID_DIR_SERV) {
-@@ -370,7 +375,6 @@ static void fc_rport_work(struct work_struct *work)
- 				fc_rport_enter_ready(rdata);
- 			mutex_unlock(&rdata->rp_mutex);
- 		}
--		mutex_unlock(&lport->disc.disc_mutex);
- 		break;
- 
- 	default:
-@@ -702,7 +706,7 @@ out:
- err:
- 	mutex_unlock(&rdata->rp_mutex);
- put:
--	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	return;
- bad:
- 	FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
-@@ -762,8 +766,6 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 	FC_RPORT_ID_DBG(lport, sid, "Received FLOGI request\n");
- 
- 	disc = &lport->disc;
--	mutex_lock(&disc->disc_mutex);
--
- 	if (!lport->point_to_multipoint) {
- 		rjt_data.reason = ELS_RJT_UNSUP;
- 		rjt_data.explan = ELS_EXPL_NONE;
-@@ -808,7 +810,7 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_FIP;
- 		rjt_data.explan = ELS_EXPL_NOT_NEIGHBOR;
--		goto reject;
-+		goto reject_put;
- 	case RPORT_ST_FLOGI:
- 	case RPORT_ST_PLOGI_WAIT:
- 	case RPORT_ST_PLOGI:
-@@ -825,13 +827,13 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_BUSY;
- 		rjt_data.explan = ELS_EXPL_NONE;
--		goto reject;
-+		goto reject_put;
- 	}
- 	if (fc_rport_login_complete(rdata, fp)) {
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_LOGIC;
- 		rjt_data.explan = ELS_EXPL_NONE;
--		goto reject;
-+		goto reject_put;
- 	}
- 
- 	fp = fc_frame_alloc(lport, sizeof(*flp));
-@@ -851,12 +853,13 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
- out:
- 	mutex_unlock(&rdata->rp_mutex);
--	mutex_unlock(&disc->disc_mutex);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	fc_frame_free(rx_fp);
- 	return;
- 
-+reject_put:
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- reject:
--	mutex_unlock(&disc->disc_mutex);
- 	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
- 	fc_frame_free(rx_fp);
- }
-@@ -923,7 +926,7 @@ out:
- 	fc_frame_free(fp);
- err:
- 	mutex_unlock(&rdata->rp_mutex);
--	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- }
- 
- static bool
-@@ -1477,14 +1480,11 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 	struct fc_rport_priv *rdata;
- 	struct fc_seq_els_data els_data;
- 
--	mutex_lock(&lport->disc.disc_mutex);
- 	rdata = lport->tt.rport_lookup(lport, fc_frame_sid(fp));
--	if (!rdata) {
--		mutex_unlock(&lport->disc.disc_mutex);
-+	if (!rdata)
- 		goto reject;
--	}
-+
- 	mutex_lock(&rdata->rp_mutex);
--	mutex_unlock(&lport->disc.disc_mutex);
- 
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_PRLI:
-@@ -1494,6 +1494,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 		break;
- 	default:
- 		mutex_unlock(&rdata->rp_mutex);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 		goto reject;
- 	}
- 
-@@ -1524,6 +1525,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 	}
- 
- 	mutex_unlock(&rdata->rp_mutex);
-+	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
- 	return;
- 
- reject:
-@@ -1907,7 +1909,6 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- 
- 	sid = fc_frame_sid(fp);
- 
--	mutex_lock(&lport->disc.disc_mutex);
- 	rdata = lport->tt.rport_lookup(lport, sid);
- 	if (rdata) {
- 		mutex_lock(&rdata->rp_mutex);
-@@ -1916,10 +1917,10 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- 
- 		fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
- 		mutex_unlock(&rdata->rp_mutex);
-+		kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
- 	} else
- 		FC_RPORT_ID_DBG(lport, sid,
- 				"Received LOGO from non-logged-in port\n");
--	mutex_unlock(&lport->disc.disc_mutex);
- 	fc_frame_free(fp);
- }
- 
--- 
-1.8.5.6
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+lexey Khoroshilov (1):
+      mptsas: fix checks for dma mapping errors
+
+Andy Lutomirski (1):
+      megaraid_sas: Downgrade two success messages to info
+
+Bart Van Assche (8):
+      scsi_dh_alua: Declare local functions static
+      scsi_transport_iscsi: Declare local symbols static
+      scsi_transport_iscsi: Unexport iscsi_is_flashnode_conn_dev()
+      scsi_transport_iscsi: Remove set-but-not-used variables
+      libiscsi: Remove set-but-not-used variables
+      libiscsi: Unexport iscsi_eh_target_reset()
+      qla2xxx: Indicate out-of-memory with -ENOMEM
+      scsi_transport_fc: Unexport scsi_is_fc_vport()
+
+Chad Dupuis (4):
+      bnx2fc: Update version number to 2.10.3.
+      bnx2fc: Check sc_cmd device and host pointer before returning the command to the mid-layer.
+      bnx2fc: Print netdev device name when FCoE is successfully initialized.
+      bnx2fc: Print when we send a fip keep alive.
+
+Chaitra P B (6):
+      mpt3sas: Used "synchronize_irq()"API to synchronize timed-out IO & TMs
+      mpt3sas: Set maximum transfer length per IO to 4MB for VDs
+      mpt3sas: Updating mpt3sas driver version to 13.100.00.00
+      mpt3sas: Fix initial Reference tag field for 4K PI drives.
+      mpt3sas: Handle active cable exception event
+      mpt3sas: Update MPI header to 2.00.42
+
+Dan Carpenter (4):
+      eata_pio: missing break statement
+      bfa: fix bfa_fcb_itnim_alloc() error handling
+      bnx2i: silence uninitialized variable warnings
+      hpsa: set the enclosure identifier to zero
+
+David Daney (1):
+      pm80xx: Remove bogus address masking in pm8001_ioremap()
+
+Don Brace (6):
+      hpsa: update driver version
+      hpsa: correct handling of HBA device removal
+      hpsa: correct ioaccel2 error procecssing.
+      hpsa: correct ioaccel state change operation
+      hpsa: add timeouts for driver initiated commands
+      hpsa: correct initialization order issue
+
+Douglas Gilbert (13):
+      scsi_debug: use locally assigned naa
+      scsi_debug: uuid for lu name
+      scsi_debug: vpd and mode page work
+      scsi_debug: add multiple queue support
+      scsi_debug: rework resp_report_luns
+      scsi_debug: use pdt constants
+      scsi_debug: use likely hints on fast path
+      scsi_debug: re-order file scope declarations
+      scsi_debug: replace tasklet with work queue
+      scsi_debug: make jiffy delay name clearer
+      scsi_debug: replace jiffy timers with hr timers
+      scsi_debug: ignore host lock option
+      scsi_debug: cleanup naming and bit crunching
+
+Finn Thain (24):
+      MAINTAINERS: Update the file list for the NCR 5380 entry
+      ncr5380: Call complete_cmd() for disconnected commands on bus reset
+      mac_scsi: Fix pseudo DMA implementation
+      atari_scsi: Allow can_queue to be increased for Falcon
+      atari_scsi: Set a reasonable default for cmd_per_lun
+      ncr5380: Update usage documentation
+      ncr5380: Remove DONT_USE_INTR and AUTOPROBE_IRQ macros
+      ncr5380: Remove remaining register storage qualifiers
+      ncr5380: Fix register decoding for debugging
+      dmx3191d: Drop max_sectors limit
+      ncr5380: Reduce max_lun limit
+      ncr5380: Remove disused atari_NCR5380.c core driver
+      sun3_scsi: Adopt NCR5380.c core driver
+      atari_scsi: Adopt NCR5380.c core driver
+      ncr5380: Merge DMA implementation from atari_NCR5380 core driver
+      ncr5380: Adopt uniform DMA setup convention
+      ncr5380: Use DMA hooks for PDMA
+      ncr5380: Remove BOARD_REQUIRES_NO_DELAY macro
+      ncr5380: Remove PSEUDO_DMA macro
+      ncr5380: Disable the DMA errata workaround flag by default
+      atari_NCR5380: Remove DMA_MIN_SIZE macro
+      ncr5380: Remove REAL_DMA and REAL_DMA_POLL macros
+      ncr5380: Remove FLAG_NO_PSEUDO_DMA where possible
+      g_ncr5380: Remove CONFIG_SCSI_GENERIC_NCR53C400
+
+Hannes Reinecke (8):
+      scsi_lib: Decode T10 vendor IDs
+      scsi_dh_alua: do not fail for unknown VPD identification
+      zfcp: Revert to original scanning behaviour
+      scsi: vpd pages are mandatory for SPC-2
+      scsi-trace: define ZBC_IN and ZBC_OUT
+      scsi-trace: Decode MAINTENANCE_IN and MAINTENANCE_OUT commands
+      scsi-trace: remove service action definitions
+      scsi: disable automatic target scan
+
+James Smart (9):
+      lpfc: Update driver version to 11.1.0.0
+      lpfc: Update modified file copyrights
+      lpfc: Fix interaction between fdmi_on and enable_SmartSAN
+      lpfc: Add support for SmartSAN 2.0
+      lpfc: Fix Device discovery failures during switch reboot test.
+      lpfc: Utilize embedded CDB logic to minimize IO latency
+      lpfc: Fix crash when unregistering default rpi.
+      lpfc: Fix DMA faults observed upon plugging loopback connector
+      lpfc: Correct LOGO handling during login
+
+Joe Carnuccio (1):
+      bnx2fc: Add driver tunables.
+
+Joe Lawrence (1):
+      mpt3sas - remove unused fw_event_work elements
+
+Johannes Thumshirn (2):
+      Revert "scsi: fix soft lockup in scsi_remove_target() on module removal"
+      scsi: Add intermediate STARGET_REMOVE state to scsi_target_state
+
+John Garry (8):
+      hisi_sas: add alloc_dev_quirk_v2_hw()
+      hisi_sas: add slot_index_alloc_quirk_v2_hw()
+      hisi_sas: add device and slot alloc hw methods
+      hisi_sas: update driver version to 1.4
+      hisi_sas: for v2 hw only set ITCT qw2 for SAS device
+      hisi_sas: add v2 hw support for >4 SATA phys
+      hisi_sas: fix v2 hw multiple SATA disk issue
+      hisi_sas: use device linkrate in MCR for v2 hw
+
+Joseph T Handzik (1):
+      hpsa: add sas_address to sysfs device attibute
+
+Kai Makisara (1):
+      st: clear ILI if Medium Error
+
+Leonid Moiseichuk (1):
+      mvsas: Generalize Marvell 9485 in pci_device_id
+
+Manoj N. Kumar (1):
+      cxlflash: Fix to resolve dead-lock during EEH recovery
+
+Martin K. Petersen (1):
+      Revert "lpfc: Delete unnecessary checks before the function call mempool_destroy"
+
+Ming Lin (5):
+      lib: scatterlist: move SG pool code from SCSI driver to lib/sg_pool.c
+      scsi: rename SCSI_MAX_{SG, SG_CHAIN}_SEGMENTS
+      scsi: rename SG related struct and functions
+      scsi: replace "mq" with "first_chunk" in SG functions
+      scsi: replace "scsi_data_buffer" with "sg_table" in SG functions
+
+Narsimhulu Musini (7):
+      snic: add scsi host after determining max IOs.
+      snic: Fixing race in the hba reset and IO/TM completion
+      snic: Fix for missing interrupts
+      snic: target cleanup in driver unload path
+      snic: Handling control path queue issues
+      snic: LUN goes offline due to scsi cmd timeouts
+      snic: Added additional stats
+
+Petros Koutoupis (1):
+      hpsa: Fix type ZBC conditional checks
+
+Raghava Aditya Renukunta (10):
+      aacraid: Update driver version
+      aacraid: Fix for KDUMP driver hang
+      aacraid: Remove code to needlessly complete fib
+      aacraid: Log firmware AIF messages
+      aacraid: Fix for aac_command_thread hang
+      aacraid: Disable MSI mode for series 6, 7, 8 cards
+      aacraid: Relinquish CPU during timeout wait
+      aacraid: Start adapter after updating number of MSIX vectors
+      aacraid: Fix incorrectly named MACRO
+      aacraid: Removed unnecessary checks for NULL
+
+Rasmus Villemoes (3):
+      scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
+      scsi: move Additional Sense Codes to separate file
+      scsi: make some Additional Sense strings more grep'able
+
+Satish Kharat (3):
+      fnic: Using rport->dd_data to check rport online instead of rport_lookup.
+      fnic: Cleanup the I/O pending with fw and has timed out and is used to issue LUN reset
+      fnic: Fix to cleanup aborted IO to avoid device being offlined by mid-layer
+
+Sebastian Herbszt (1):
+      lpfc: remove incorrect lockdep assertion
+
+Sumit Saxena (4):
+      megaraid_sas: driver version upgrade
+      megaraid_sas: task management code optimizations
+      megaraid_sas: call ISR function to clean up pending replies in OCR path
+      megaraid_sas: reduce memory footprints in kdump mode
+
+Tina Ruchandani (2):
+      mpt3sas: Remove usage of 'struct timeval'
+      qla2xxx: Remove use of 'struct timeval'
+
+And the diffstat:
+
+ Documentation/scsi/g_NCR5380.txt            |   17 +-
+ Documentation/scsi/scsi-parameters.txt      |   11 +-
+ MAINTAINERS                                 |    2 +-
+ drivers/ata/pata_icside.c                   |    2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c         |    6 +-
+ drivers/message/fusion/mptsas.c             |    4 +-
+ drivers/message/fusion/mptspi.c             |    2 +-
+ drivers/s390/scsi/zfcp_unit.c               |    3 +-
+ drivers/scsi/Kconfig                        |   16 +-
+ drivers/scsi/NCR5380.c                      |  657 ++++---
+ drivers/scsi/NCR5380.h                      |  143 +-
+ drivers/scsi/aacraid/aachba.c               |   22 -
+ drivers/scsi/aacraid/aacraid.h              |    9 +-
+ drivers/scsi/aacraid/comminit.c             |   43 +-
+ drivers/scsi/aacraid/commsup.c              |   39 +-
+ drivers/scsi/aacraid/dpcsup.c               |    7 +-
+ drivers/scsi/aacraid/linit.c                |    4 +-
+ drivers/scsi/aacraid/src.c                  |    3 +-
+ drivers/scsi/arm/cumana_1.c                 |   25 +-
+ drivers/scsi/arm/cumana_2.c                 |    2 +-
+ drivers/scsi/arm/eesox.c                    |    2 +-
+ drivers/scsi/arm/oak.c                      |   22 +-
+ drivers/scsi/arm/powertec.c                 |    2 +-
+ drivers/scsi/atari_NCR5380.c                | 2676 -------------------------
+ drivers/scsi/atari_scsi.c                   |  144 +-
+ drivers/scsi/bfa/bfa_fcs.h                  |    4 +-
+ drivers/scsi/bfa/bfa_fcs_fcpim.c            |    5 +-
+ drivers/scsi/bfa/bfad_im.c                  |    5 +-
+ drivers/scsi/bnx2fc/bnx2fc.h                |    3 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c           |  100 +-
+ drivers/scsi/bnx2fc/bnx2fc_io.c             |   14 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c            |    4 +-
+ drivers/scsi/constants.c                    |  859 +-------
+ drivers/scsi/cxlflash/superpipe.c           |   15 +
+ drivers/scsi/device_handler/scsi_dh_alua.c  |   33 +-
+ drivers/scsi/dmx3191d.c                     |   10 +-
+ drivers/scsi/dtc.c                          |   27 +-
+ drivers/scsi/dtc.h                          |    7 +-
+ drivers/scsi/eata_pio.c                     |    1 +
+ drivers/scsi/esas2r/esas2r_main.c           |    4 +-
+ drivers/scsi/fnic/fnic.h                    |    2 +-
+ drivers/scsi/fnic/fnic_scsi.c               |   91 +-
+ drivers/scsi/g_NCR5380.c                    |  141 +-
+ drivers/scsi/g_NCR5380.h                    |   26 +-
+ drivers/scsi/hisi_sas/hisi_sas.h            |    7 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c       |   11 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c      |   90 +-
+ drivers/scsi/hpsa.c                         |  187 +-
+ drivers/scsi/hpsa.h                         |    1 +
+ drivers/scsi/libiscsi.c                     |    9 +-
+ drivers/scsi/lpfc/lpfc.h                    |    4 +-
+ drivers/scsi/lpfc/lpfc_attr.c               |   26 +-
+ drivers/scsi/lpfc/lpfc_ct.c                 |    6 +-
+ drivers/scsi/lpfc/lpfc_els.c                |  176 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c            |    5 +-
+ drivers/scsi/lpfc/lpfc_hw.h                 |   75 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                |   29 +-
+ drivers/scsi/lpfc/lpfc_init.c               |   27 +-
+ drivers/scsi/lpfc/lpfc_mbox.c               |   12 +-
+ drivers/scsi/lpfc/lpfc_mem.c                |    6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c          |    4 +-
+ drivers/scsi/lpfc/lpfc_sli.c                |  140 +-
+ drivers/scsi/lpfc/lpfc_version.h            |    6 +-
+ drivers/scsi/lpfc/lpfc_vport.c              |    5 +-
+ drivers/scsi/mac_scsi.c                     |  241 +--
+ drivers/scsi/megaraid/megaraid_sas.h        |    6 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  117 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |    7 +-
+ drivers/scsi/mpt3sas/mpi/mpi2.h             |    7 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h        |   18 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h        |   15 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h         |   40 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c         |   32 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h         |   11 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |   37 +-
+ drivers/scsi/mvsas/mv_init.c                |   19 +-
+ drivers/scsi/pas16.c                        |   27 +-
+ drivers/scsi/pas16.h                        |    5 +-
+ drivers/scsi/pm8001/pm8001_init.c           |    2 -
+ drivers/scsi/qla2xxx/qla_mr.c               |    5 +-
+ drivers/scsi/qla2xxx/qla_nx.c               |    2 +-
+ drivers/scsi/scsi_debug.c                   | 2801 ++++++++++++++-------------
+ drivers/scsi/scsi_lib.c                     |  188 +-
+ drivers/scsi/scsi_priv.h                    |    2 +-
+ drivers/scsi/scsi_proc.c                    |    3 +-
+ drivers/scsi/scsi_scan.c                    |   45 +-
+ drivers/scsi/scsi_sysfs.c                   |    9 +-
+ drivers/scsi/scsi_trace.c                   |  161 ++
+ drivers/scsi/scsi_transport_fc.c            |    9 +-
+ drivers/scsi/scsi_transport_iscsi.c         |   19 +-
+ drivers/scsi/scsi_transport_sas.c           |    7 +-
+ drivers/scsi/sense_codes.h                  |  826 ++++++++
+ drivers/scsi/snic/snic.h                    |    5 +-
+ drivers/scsi/snic/snic_ctl.c                |    8 +-
+ drivers/scsi/snic/snic_debugfs.c            |   20 +-
+ drivers/scsi/snic/snic_disc.c               |   19 +-
+ drivers/scsi/snic/snic_fwint.h              |    4 +-
+ drivers/scsi/snic/snic_io.c                 |   62 +-
+ drivers/scsi/snic/snic_isr.c                |    6 +-
+ drivers/scsi/snic/snic_main.c               |   44 +-
+ drivers/scsi/snic/snic_scsi.c               |   56 +-
+ drivers/scsi/snic/snic_stats.h              |   12 +-
+ drivers/scsi/snic/vnic_dev.c                |   44 +-
+ drivers/scsi/st.c                           |    9 +-
+ drivers/scsi/sun3_scsi.c                    |   47 +-
+ drivers/scsi/t128.c                         |   19 +-
+ drivers/scsi/t128.h                         |    7 +-
+ drivers/usb/storage/scsiglue.c              |    2 +-
+ include/linux/scatterlist.h                 |   25 +
+ include/scsi/scsi.h                         |   19 -
+ include/scsi/scsi_device.h                  |   14 +-
+ include/scsi/scsi_host.h                    |    2 +-
+ include/scsi/scsi_proto.h                   |    9 +
+ include/trace/events/scsi.h                 |    6 +-
+ lib/Kconfig                                 |    7 +
+ lib/Makefile                                |    1 +
+ lib/sg_pool.c                               |  172 ++
+ 117 files changed, 4839 insertions(+), 6481 deletions(-)
+ delete mode 100644 drivers/scsi/atari_NCR5380.c
+ create mode 100644 drivers/scsi/sense_codes.h
+ create mode 100644 lib/sg_pool.c
+
+James
+
 
