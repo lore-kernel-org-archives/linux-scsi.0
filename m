@@ -1,47 +1,108 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] scsi: ultrastor.c depends on ISA_DMA_API
-Date: Thu, 19 May 2016 10:57:31 -0700
-Message-ID: <573DFE8B.2070808@infradead.org>
-References: <20160519164501.4cc8bc4f@canb.auug.org.au>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH] aacraid: do not activate events on non-SRC adapters
+Date: Thu, 19 May 2016 18:16:39 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A16358BB4@avsrvexchmbx2.microsemi.net>
+References: <1463559411-100841-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20160519164501.4cc8bc4f@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, vilhelm.gray@gmail.com
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:37854
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755454AbcESSRE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 14:17:04 -0400
+In-Reply-To: <1463559411-100841-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.com>, Hannes Reinecke <hare@suse.com>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+Reviewed-by: Raghava Aditya Renukunta <RaghavaAaditya.Renukunta@microsemi.com>
 
-Fix build when CONFIG_ISA_DMA_API is not enabled. Fixes these
-build errors (on x86_64):
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Wednesday, May 18, 2016 1:17 AM
+> To: Martin K. Petersen
+> Cc: James Bottomley; Christoph Hellwig; linux-scsi@vger.kernel.org;
+> Johannes Thumshirn; Raghava Aditya Renukunta; Hannes Reinecke; Hannes
+> Reinecke
+> Subject: [PATCH] aacraid: do not activate events on non-SRC adapters
+> 
+> EXTERNAL EMAIL
+> 
+> 
+> Only SRC-based adapters support the AifReqEvent function, so
+> there is no point in trying to activate it on older, non-SRC
+> based adapters.
+> Doing so lead to crashes on older adapters.
+> 
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/aacraid/aacraid.h |  5 +++++
+>  drivers/scsi/aacraid/linit.c   | 11 ++++++-----
+>  2 files changed, 11 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+> index 8f90d9e..969c312 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -621,6 +621,11 @@ struct aac_driver_ident
+>  #define AAC_QUIRK_SCSI_32      0x0020
+> 
+>  /*
+> + * SRC based adapters support the AifReqEvent functions
+> + */
+> +#define AAC_QUIRK_SRC 0x0040
+> +
+> +/*
+>   *     The adapter interface specs all queues to be located in the same
+>   *     physically contiguous block. The host structure that defines the
+>   *     commuication queues will assume they are each a separate physically
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index a943bd2..79871f3 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -236,10 +236,10 @@ static struct aac_driver_ident aac_drivers[] = {
+>         { aac_rx_init, "aacraid",  "ADAPTEC ", "RAID            ", 2 }, /* Adaptec Catch
+> All */
+>         { aac_rkt_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec
+> Rocket Catch All */
+>         { aac_nark_init, "aacraid", "ADAPTEC ", "RAID           ", 2 }, /* Adaptec
+> NEMER/ARK Catch All */
+> -       { aac_src_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec PMC
+> Series 6 (Tupelo) */
+> -       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec PMC
+> Series 7 (Denali) */
+> -       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec PMC
+> Series 8 */
+> -       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2 } /* Adaptec PMC
+> Series 9 */
+> +       { aac_src_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
+> }, /* Adaptec PMC Series 6 (Tupelo) */
+> +       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
+> }, /* Adaptec PMC Series 7 (Denali) */
+> +       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
+> }, /* Adaptec PMC Series 8 */
+> +       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
+> } /* Adaptec PMC Series 9 */
+>  };
+> 
+>  /**
+> @@ -1299,7 +1299,8 @@ static int aac_probe_one(struct pci_dev *pdev,
+> const struct pci_device_id *id)
+>         else
+>                 shost->this_id = shost->max_id;
+> 
+> -       aac_intr_normal(aac, 0, 2, 0, NULL);
+> +       if (aac_drivers[index].quirks & AAC_QUIRK_SRC)
+> +               aac_intr_normal(aac, 0, 2, 0, NULL);
+> 
+>         /*
+>          * dmb - we may need to move the setting of these parms somewhere
+> else once
+> --
+> 1.8.5.6
 
-../drivers/scsi/ultrastor.c: In function 'ultrastor_14f_detect':
-../drivers/scsi/ultrastor.c:519:5: error: implicit declaration of function 'request_dma' [-Werror=implicit-function-declaration]
-     if (config.dma_channel && request_dma(config.dma_channel,"Ultrastor")) {
-     ^
-../drivers/scsi/ultrastor.c: In function 'ultrastor_release':
-../drivers/scsi/ultrastor.c:658:3: error: implicit declaration of function 'free_dma' [-Werror=implicit-function-declaration]
-   free_dma(shost->dma_channel);
-   ^
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
- drivers/scsi/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Found in linux-next but also applies to mainline.
-
---- linux-next-20160519.orig/drivers/scsi/Kconfig
-+++ linux-next-20160519/drivers/scsi/Kconfig
-@@ -1433,7 +1433,7 @@ config SCSI_U14_34F_MAX_TAGS
- 
- config SCSI_ULTRASTOR
- 	tristate "UltraStor SCSI support"
--	depends on X86 && ISA && SCSI
-+	depends on X86 && ISA && SCSI && ISA_DMA_API
- 	---help---
- 	  This is support for the UltraStor 14F, 24F and 34F SCSI-2 host
- 	  adapter family.  This driver is explained in section 3.12 of the
