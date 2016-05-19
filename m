@@ -1,46 +1,47 @@
-From: Muhammad Falak R Wani <falakreyaz@gmail.com>
-Subject: [PATCH] [SCSI] aacraid: use kmemdup
-Date: Thu, 19 May 2016 19:38:33 +0530
-Message-ID: <1463666915-16906-3-git-send-email-falakreyaz@gmail.com>
-References: <1463666915-16906-1-git-send-email-falakreyaz@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1463666915-16906-1-git-send-email-falakreyaz@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] scsi: ultrastor.c depends on ISA_DMA_API
+Date: Thu, 19 May 2016 10:57:31 -0700
+Message-ID: <573DFE8B.2070808@infradead.org>
+References: <20160519164501.4cc8bc4f@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20160519164501.4cc8bc4f@canb.auug.org.au>
+Sender: linux-next-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, vilhelm.gray@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-Use kmemdup when some other buffer is immediately copied into allocated
-region. It replaces call to allocation followed by memcpy, by a single
-call to kmemdup.
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
+Fix build when CONFIG_ISA_DMA_API is not enabled. Fixes these
+build errors (on x86_64):
+
+../drivers/scsi/ultrastor.c: In function 'ultrastor_14f_detect':
+../drivers/scsi/ultrastor.c:519:5: error: implicit declaration of function 'request_dma' [-Werror=implicit-function-declaration]
+     if (config.dma_channel && request_dma(config.dma_channel,"Ultrastor")) {
+     ^
+../drivers/scsi/ultrastor.c: In function 'ultrastor_release':
+../drivers/scsi/ultrastor.c:658:3: error: implicit declaration of function 'free_dma' [-Werror=implicit-function-declaration]
+   free_dma(shost->dma_channel);
+   ^
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 ---
- drivers/scsi/aacraid/commctrl.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 4b3bb52..b381b37 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -635,15 +635,14 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 			}
- 		} else {
- 			struct user_sgmap* usg;
--			usg = kmalloc(actual_fibsize - sizeof(struct aac_srb)
--			  + sizeof(struct sgmap), GFP_KERNEL);
-+			usg = kmemdup(upsg,
-+				      actual_fibsize - sizeof(struct aac_srb)
-+				      + sizeof(struct sgmap), GFP_KERNEL);
- 			if (!usg) {
- 				dprintk((KERN_DEBUG"aacraid: Allocation error in Raw SRB command\n"));
- 				rcode = -ENOMEM;
- 				goto cleanup;
- 			}
--			memcpy (usg, upsg, actual_fibsize - sizeof(struct aac_srb)
--			  + sizeof(struct sgmap));
- 			actual_fibsize = actual_fibsize64;
+Found in linux-next but also applies to mainline.
+
+--- linux-next-20160519.orig/drivers/scsi/Kconfig
++++ linux-next-20160519/drivers/scsi/Kconfig
+@@ -1433,7 +1433,7 @@ config SCSI_U14_34F_MAX_TAGS
  
- 			for (i = 0; i < usg->count; i++) {
--- 
-1.9.1
+ config SCSI_ULTRASTOR
+ 	tristate "UltraStor SCSI support"
+-	depends on X86 && ISA && SCSI
++	depends on X86 && ISA && SCSI && ISA_DMA_API
+ 	---help---
+ 	  This is support for the UltraStor 14F, 24F and 34F SCSI-2 host
+ 	  adapter family.  This driver is explained in section 3.12 of the
