@@ -1,108 +1,66 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH] aacraid: do not activate events on non-SRC adapters
-Date: Thu, 19 May 2016 18:16:39 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A16358BB4@avsrvexchmbx2.microsemi.net>
-References: <1463559411-100841-1-git-send-email-hare@suse.de>
+Subject: RE: [PATCH] [SCSI] aacraid: use kmemdup
+Date: Thu, 19 May 2016 18:25:06 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A16358BC9@avsrvexchmbx2.microsemi.net>
+References: <1463666915-16906-1-git-send-email-falakreyaz@gmail.com>
+ <1463666915-16906-3-git-send-email-falakreyaz@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:37854
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755454AbcESSRE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 14:17:04 -0400
-In-Reply-To: <1463559411-100841-1-git-send-email-hare@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1463666915-16906-3-git-send-email-falakreyaz@gmail.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Muhammad Falak R Wani <falakreyaz@gmail.com>, Hannes Reinecke <hare@suse.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.com>, Hannes Reinecke <hare@suse.com>
 
-Reviewed-by: Raghava Aditya Renukunta <RaghavaAaditya.Renukunta@microsemi.com>
 
 > -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Wednesday, May 18, 2016 1:17 AM
-> To: Martin K. Petersen
-> Cc: James Bottomley; Christoph Hellwig; linux-scsi@vger.kernel.org;
-> Johannes Thumshirn; Raghava Aditya Renukunta; Hannes Reinecke; Hannes
-> Reinecke
-> Subject: [PATCH] aacraid: do not activate events on non-SRC adapters
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Muhammad Falak R Wani
+> Sent: Thursday, May 19, 2016 7:09 AM
+> To: Hannes Reinecke
+> Cc: Adaptec OEM Raid Solutions; James E.J. Bottomley; Martin K. Petersen;
+> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] [SCSI] aacraid: use kmemdup
 > 
 > EXTERNAL EMAIL
 > 
 > 
-> Only SRC-based adapters support the AifReqEvent function, so
-> there is no point in trying to activate it on older, non-SRC
-> based adapters.
-> Doing so lead to crashes on older adapters.
+> Use kmemdup when some other buffer is immediately copied into allocated
+> region. It replaces call to allocation followed by memcpy, by a single
+> call to kmemdup.
 > 
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
 > ---
->  drivers/scsi/aacraid/aacraid.h |  5 +++++
->  drivers/scsi/aacraid/linit.c   | 11 ++++++-----
->  2 files changed, 11 insertions(+), 5 deletions(-)
+>  drivers/scsi/aacraid/commctrl.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 8f90d9e..969c312 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -621,6 +621,11 @@ struct aac_driver_ident
->  #define AAC_QUIRK_SCSI_32      0x0020
+> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+> index 4b3bb52..b381b37 100644
+> --- a/drivers/scsi/aacraid/commctrl.c
+> +++ b/drivers/scsi/aacraid/commctrl.c
+> @@ -635,15 +635,14 @@ static int aac_send_raw_srb(struct aac_dev* dev,
+> void __user * arg)
+>                         }
+>                 } else {
+>                         struct user_sgmap* usg;
+> -                       usg = kmalloc(actual_fibsize - sizeof(struct aac_srb)
+> -                         + sizeof(struct sgmap), GFP_KERNEL);
+> +                       usg = kmemdup(upsg,
+> +                                     actual_fibsize - sizeof(struct aac_srb)
+> +                                     + sizeof(struct sgmap), GFP_KERNEL);
+>                         if (!usg) {
+>                                 dprintk((KERN_DEBUG"aacraid: Allocation error in Raw SRB
+> command\n"));
+>                                 rcode = -ENOMEM;
+>                                 goto cleanup;
+>                         }
+> -                       memcpy (usg, upsg, actual_fibsize - sizeof(struct aac_srb)
+> -                         + sizeof(struct sgmap));
+>                         actual_fibsize = actual_fibsize64;
 > 
->  /*
-> + * SRC based adapters support the AifReqEvent functions
-> + */
-> +#define AAC_QUIRK_SRC 0x0040
-> +
-> +/*
->   *     The adapter interface specs all queues to be located in the same
->   *     physically contiguous block. The host structure that defines the
->   *     commuication queues will assume they are each a separate physically
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index a943bd2..79871f3 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -236,10 +236,10 @@ static struct aac_driver_ident aac_drivers[] = {
->         { aac_rx_init, "aacraid",  "ADAPTEC ", "RAID            ", 2 }, /* Adaptec Catch
-> All */
->         { aac_rkt_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec
-> Rocket Catch All */
->         { aac_nark_init, "aacraid", "ADAPTEC ", "RAID           ", 2 }, /* Adaptec
-> NEMER/ARK Catch All */
-> -       { aac_src_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec PMC
-> Series 6 (Tupelo) */
-> -       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec PMC
-> Series 7 (Denali) */
-> -       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec PMC
-> Series 8 */
-> -       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2 } /* Adaptec PMC
-> Series 9 */
-> +       { aac_src_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
-> }, /* Adaptec PMC Series 6 (Tupelo) */
-> +       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
-> }, /* Adaptec PMC Series 7 (Denali) */
-> +       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
-> }, /* Adaptec PMC Series 8 */
-> +       { aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC
-> } /* Adaptec PMC Series 9 */
->  };
-> 
->  /**
-> @@ -1299,7 +1299,8 @@ static int aac_probe_one(struct pci_dev *pdev,
-> const struct pci_device_id *id)
->         else
->                 shost->this_id = shost->max_id;
-> 
-> -       aac_intr_normal(aac, 0, 2, 0, NULL);
-> +       if (aac_drivers[index].quirks & AAC_QUIRK_SRC)
-> +               aac_intr_normal(aac, 0, 2, 0, NULL);
-> 
->         /*
->          * dmb - we may need to move the setting of these parms somewhere
-> else once
-> --
-> 1.8.5.6
+>                         for (i = 0; i < usg->count; i++) {
 
+Reviewed-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
