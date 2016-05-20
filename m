@@ -1,26 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: get disk reference in sd_check_events()
-Date: Thu, 19 May 2016 22:09:06 -0400
-Message-ID: <yq1wpmpa3b1.fsf@sermon.lab.mkp.net>
-References: <1461650818-107190-1-git-send-email-hare@suse.de>
-	<1463491030.6171.81.camel@localhost.localdomain>
+Subject: Re: [PATCH] aacraid: do not activate events on non-SRC adapters
+Date: Thu, 19 May 2016 22:18:05 -0400
+Message-ID: <yq1shxda2w2.fsf@sermon.lab.mkp.net>
+References: <1463559411-100841-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46744 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753334AbcETCJZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 22:09:25 -0400
-In-Reply-To: <1463491030.6171.81.camel@localhost.localdomain> (Ewan D. Milne's
-	message of "Tue, 17 May 2016 09:17:10 -0400")
+Received: from userp1040.oracle.com ([156.151.31.81]:45753 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753693AbcETCS0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 22:18:26 -0400
+In-Reply-To: <1463559411-100841-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Wed, 18 May 2016 10:16:51 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Hannes Reinecke <hare@suse.com>
 
->>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Ewan> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Hannes> Only SRC-based adapters support the AifReqEvent function, so
+Hannes> there is no point in trying to activate it on older, non-SRC
+Hannes> based adapters.  Doing so lead to crashes on older adapters.
 
 Applied to 4.7/scsi-fixes.
 
