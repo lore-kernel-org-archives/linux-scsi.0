@@ -1,34 +1,30 @@
-From: William Breathitt Gray <vilhelm.gray@gmail.com>
-Subject: Re: [PATCH] scsi: ultrastor.c depends on ISA_DMA_API
-Date: Thu, 19 May 2016 15:14:00 -0400
-Message-ID: <20160519191400.GA16573@sophia>
-References: <20160519164501.4cc8bc4f@canb.auug.org.au>
- <573DFE8B.2070808@infradead.org>
- <20160519185335.GA18253@sophia>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/2] UFS DWC Test Chip pci driver tweaks
+Date: Thu, 19 May 2016 21:44:04 -0400
+Message-ID: <yq160u9bj17.fsf@sermon.lab.mkp.net>
+References: <cover.1463424861.git.jpinto@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160519185335.GA18253@sophia>
-Sender: linux-next-owner@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40984 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753349AbcETBoM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 21:44:12 -0400
+In-Reply-To: <cover.1463424861.git.jpinto@synopsys.com> (Joao Pinto's message
+	of "Mon, 16 May 2016 19:59:00 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Thu, May 19, 2016 at 02:53:35PM -0400, William Breathitt Gray wrote:
->Although request_dma and free_dma are conditionally dependent on
->CONFIG_ISA_DMA_API inside the arch/x86/include/asm/dma.h file, they are
->defined inside the kernel/dma.c file which depends on
->CONFIG_GENERIC_ISA_DMA in order to build on X86. Therefore,
->GENERIC_ISA_DMA should be in the depends line for SCSI_ULTRASTOR instead
->of ISA_DMA_API.
->
->William Breathitt Gray
+>>>>> "Joao" == Joao Pinto <Joao.Pinto@synopsys.com> writes:
 
-My apologies, I was too quick to send and didn't realize
-CONFIG_GENERIC_ISA_DMA is "def_bool y" in X86. In that case, ISA_DMA_API
-should suffice; thus the line becomes:
+Joao,
 
-    depends X86 && SCSI && ISA_DMA_API
+Joao> This patch set has the tweaks that I described to you in an
+Joao> e-mail, all related with the ufs test chip pci driver.
 
-William Breathitt Gray
+I have applied the amended series to 4.8/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
