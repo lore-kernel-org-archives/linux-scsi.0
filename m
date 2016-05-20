@@ -1,66 +1,93 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Fix rw_max for devices that report an optimal xfer size
-Date: Thu, 19 May 2016 23:16:34 -0400
-Message-ID: <1463714194-14258-1-git-send-email-martin.petersen@oracle.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] scsi: use spinlock instead of mutex for RCU-protected VPD inquiry data
+Date: Fri, 20 May 2016 08:56:14 -0400
+Message-ID: <1463748974-31315-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25376 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbcETDQs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 23:16:48 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:41928 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932617AbcETM4V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 May 2016 08:56:21 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 2657A552F6
+	for <linux-scsi@vger.kernel.org>; Fri, 20 May 2016 12:56:16 +0000 (UTC)
+Received: from emilne.csb (dhcp-25-104.bos.redhat.com [10.18.25.104])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u4KCuFn7018479
+	for <linux-scsi@vger.kernel.org>; Fri, 20 May 2016 08:56:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org#4.4+
 
-For historic reasons, io_opt is in bytes and max_sectors in block layer
-sectors. This interface inconsistency is error prone and should be
-fixed. But for 4.4--4.7 let's make the unit difference explicit via a
-wrapper function.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-Fixes: d0eb20a863ba ("sd: Optimal I/O size is in bytes, not sectors")
-Cc: stable@vger.kernel.org # 4.4+
-Reported-by: Fam Zheng <famz@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+A spinlock is sufficient for this purpose, and much smaller.
+
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/sd.c | 8 ++++----
- drivers/scsi/sd.h | 5 +++++
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi.c        | 8 ++++----
+ drivers/scsi/scsi_scan.c   | 2 +-
+ include/scsi/scsi_device.h | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f459dff30512..60bff78e9ead 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2867,10 +2867,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	if (sdkp->opt_xfer_blocks &&
- 	    sdkp->opt_xfer_blocks <= dev_max &&
- 	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
--	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_SIZE)
--		rw_max = q->limits.io_opt =
--			sdkp->opt_xfer_blocks * sdp->sector_size;
--	else
-+	    logical_to_bytes(sdp, sdkp->opt_xfer_blocks) >= PAGE_SIZE) {
-+		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
-+		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
-+	} else
- 		rw_max = BLK_DEF_MAX_SECTORS;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 1deb6ad..330d807 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -829,11 +829,11 @@ retry_pg80:
+ 			kfree(vpd_buf);
+ 			goto retry_pg80;
+ 		}
+-		mutex_lock(&sdev->inquiry_mutex);
++		spin_lock(&sdev->inquiry_lock);
+ 		orig_vpd_buf = sdev->vpd_pg80;
+ 		sdev->vpd_pg80_len = result;
+ 		rcu_assign_pointer(sdev->vpd_pg80, vpd_buf);
+-		mutex_unlock(&sdev->inquiry_mutex);
++		spin_unlock(&sdev->inquiry_lock);
+ 		synchronize_rcu();
+ 		if (orig_vpd_buf) {
+ 			kfree(orig_vpd_buf);
+@@ -858,11 +858,11 @@ retry_pg83:
+ 			kfree(vpd_buf);
+ 			goto retry_pg83;
+ 		}
+-		mutex_lock(&sdev->inquiry_mutex);
++		spin_lock(&sdev->inquiry_lock);
+ 		orig_vpd_buf = sdev->vpd_pg83;
+ 		sdev->vpd_pg83_len = result;
+ 		rcu_assign_pointer(sdev->vpd_pg83, vpd_buf);
+-		mutex_unlock(&sdev->inquiry_mutex);
++		spin_unlock(&sdev->inquiry_lock);
+ 		synchronize_rcu();
+ 		if (orig_vpd_buf)
+ 			kfree(orig_vpd_buf);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e0a78f5..f445615 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -240,7 +240,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	INIT_LIST_HEAD(&sdev->starved_entry);
+ 	INIT_LIST_HEAD(&sdev->event_list);
+ 	spin_lock_init(&sdev->list_lock);
+-	mutex_init(&sdev->inquiry_mutex);
++	spin_lock_init(&sdev->inquiry_lock);
+ 	INIT_WORK(&sdev->event_work, scsi_evt_thread);
+ 	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
  
- 	/* Combine with controller limits */
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 654630bb7d0e..765a6f1ac1b7 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -151,6 +151,11 @@ static inline sector_t logical_to_sectors(struct scsi_device *sdev, sector_t blo
- 	return blocks << (ilog2(sdev->sector_size) - 9);
- }
- 
-+static inline unsigned int logical_to_bytes(struct scsi_device *sdev, sector_t blocks)
-+{
-+	return blocks * sdev->sector_size;
-+}
-+
- /*
-  * A DIF-capable target device can be formatted with different
-  * protection schemes.  Currently 0 through 3 are defined:
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a6c346d..0410ed8 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -115,7 +115,7 @@ struct scsi_device {
+ 	char type;
+ 	char scsi_level;
+ 	char inq_periph_qual;	/* PQ from INQUIRY data */	
+-	struct mutex inquiry_mutex;
++	spinlock_t inquiry_lock;
+ 	unsigned char inquiry_len;	/* valid bytes in 'inquiry' */
+ 	unsigned char * inquiry;	/* INQUIRY response data */
+ 	const char * vendor;		/* [back_compat] point into 'inquiry' ... */
 -- 
-2.7.4
+2.1.0
 
