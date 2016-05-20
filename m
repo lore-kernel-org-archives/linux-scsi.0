@@ -1,29 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: do not activate events on non-SRC adapters
-Date: Thu, 19 May 2016 22:18:05 -0400
-Message-ID: <yq1shxda2w2.fsf@sermon.lab.mkp.net>
-References: <1463559411-100841-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/7] snic: fix typo
+Date: Thu, 19 May 2016 22:21:16 -0400
+Message-ID: <yq1oa81a2qr.fsf@sermon.lab.mkp.net>
+References: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr>
+	<1463495926-13728-2-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45753 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753693AbcETCS0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2016 22:18:26 -0400
-In-Reply-To: <1463559411-100841-1-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Wed, 18 May 2016 10:16:51 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <1463495926-13728-2-git-send-email-Julia.Lawall@lip6.fr> (Julia
+	Lawall's message of "Tue, 17 May 2016 16:38:40 +0200")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Narsimhulu Musini <nmusini@cisco.com>, kernel-janitors@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Hannes Reinecke <hare@suse.com>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Julia" == Julia Lawall <Julia.Lawall@lip6.fr> writes:
 
-Hannes> Only SRC-based adapters support the AifReqEvent function, so
-Hannes> there is no point in trying to activate it on older, non-SRC
-Hannes> based adapters.  Doing so lead to crashes on older adapters.
+Julia> firmare -> firmware
 
-Applied to 4.7/scsi-fixes.
+Applied to 4.8/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
