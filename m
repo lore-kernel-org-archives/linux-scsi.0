@@ -1,40 +1,26 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 42/54] MAINTAINERS: Add file patterns for scsi device tree bindings
-Date: Sun, 22 May 2016 11:06:19 +0200
-Message-ID: <1463907991-7916-43-git-send-email-geert@linux-m68k.org>
-References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: [regression] uas no longer queues commands since v4.5.2
+Date: Sun, 22 May 2016 18:39:02 +0800
+Message-ID: <CAGnHSEnR8n3-zxn767DEQv7eoDbA0cc3d_7xo8OZmO+g4jth+w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:35001 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752166AbcEVKjE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 May 2016 06:39:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Submitters of device tree binding documentation may forget to CC
-the subsystem maintainer if this is missing.
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
+To: linux-usb@vger.kernel.org, hdegoede@redhat.com, gregkh@linuxfoundation.org
 Cc: linux-scsi@vger.kernel.org
----
-Please apply this patch directly if you want to be involved in device
-tree binding documentation for your subsystem.
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 327e1d5a501340ac..139824579fa97c2c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10141,6 +10141,7 @@ M:	"Martin K. Petersen" <martin.petersen@oracle.com>
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
-+F:	Documentation/devicetree/bindings/scsi/
- F:	drivers/scsi/
- F:	include/scsi/
- 
--- 
-1.9.1
+With commit 198de51dbc3454d95b015ca0a055b673f85f01bb, uas no longer
+set `queue_depth` with scsi_change_queue_depth(), so now `queue_depth`
+of UAS drives are 1. Even though `can_queue` is set to
+`devinfo->qdepth - 2`, but apparently that does not help, since I can
+see performance impact.
+
+Suppose limiting `can_queue` is the right way to fix this bug
+(https://bugzilla.redhat.com/show_bug.cgi?id=1315013), do we really
+need to eliminate scsi_change_queue_depth() at the same time though?
+If so, how should we deal with the regression?
