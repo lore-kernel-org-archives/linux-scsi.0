@@ -1,28 +1,45 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] sd: Fix rw_max for devices that report an optimal xfer
- size
-Date: Mon, 23 May 2016 08:58:58 -0700
-Message-ID: <ff202349-11a0-83a7-980d-e5678d5e9762@sandisk.com>
-References: <1463714194-14258-1-git-send-email-martin.petersen@oracle.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/1] uas: leave can_queue as MAX_CMNDS if device reports
+ larger qdepth
+Date: Mon, 23 May 2016 10:00:25 -0700
+Message-ID: <20160523170025.GA3309@kroah.com>
+References: <574329ae.c726620a.60f3.ffffd14b@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0086.outbound.protection.outlook.com ([65.55.169.86]:29504
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753012AbcEWQOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2016 12:14:45 -0400
-In-Reply-To: <1463714194-14258-1-git-send-email-martin.petersen@oracle.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:32815 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753344AbcEWRA1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2016 13:00:27 -0400
+Content-Disposition: inline
+In-Reply-To: <574329ae.c726620a.60f3.ffffd14b@mx.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: kraxel@redhat.com, stern@rowland.harvard.edu, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, hdegoede@redhat.com
 
-On 05/19/2016 08:16 PM, Martin K. Petersen wrote:
-> For historic reasons, io_opt is in bytes and max_sectors in block layer
-> sectors. This interface inconsistency is error prone and should be
-> fixed. But for 4.4--4.7 let's make the unit difference explicit via a
-> wrapper function.
+On Tue, May 24, 2016 at 12:02:43AM +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+> 
+> Commit 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level") made
+> qdepth limit set in host template (`.can_queue = MAX_CMNDS`) useless.
+> 
+> Instead of removing the template limit, now we only change limit according
+> to the qdepth reported by the device if it is smaller than MAX_CMNDS.
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 4d49fce..d7790e6 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -972,7 +972,8 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+>  	 * 1 tag is reserved for untagged commands +
+>  	 * 1 tag to avoid off by one errors in some bridge firmwares
+>  	 */
+> -	shost->can_queue = devinfo->qdepth - 2;
+> +	if (devinfo->qdepth - 2 < MAX_CMNDS)
+> +		shost->can_queue = devinfo->qdepth - 2;
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+What's wrong with Hans's patch for this issue instead?
+
