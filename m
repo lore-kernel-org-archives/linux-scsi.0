@@ -1,39 +1,54 @@
-From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH 1/1] scsi: storvsc: Filter out storvsc messages CD-ROM medium not present
-Date: Mon, 23 May 2016 10:29:17 -0400
-Message-ID: <1464013757-30357-1-git-send-email-cavery@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kys@microsoft.com, haiyangz@microsoft.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [regression] uas no longer queues commands since v4.5.2
+Date: Mon, 23 May 2016 07:38:01 -0700
+Message-ID: <1464014281.2331.5.camel@HansenPartnership.com>
+References: <CAGnHSEnR8n3-zxn767DEQv7eoDbA0cc3d_7xo8OZmO+g4jth+w@mail.gmail.com>
+	 <b2eca29b-a954-f35b-7880-a99a2d6ddab8@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33726 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753525AbcEWOiF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 May 2016 10:38:05 -0400
+In-Reply-To: <b2eca29b-a954-f35b-7880-a99a2d6ddab8@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Tom Yan <tom.ty89@gmail.com>, linux-usb@vger.kernel.org, gregkh@linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org
 
-When a virtual scsi DVD device is present with no image file
-attached the storvsc driver logs all resulting unnecessary sense errors
-whenever IO is issued to the device.
+On Mon, 2016-05-23 at 13:48 +0200, Hans de Goede wrote:
+> Hi,
+> 
+> On 22-05-16 12:39, Tom Yan wrote:
+> > With commit 198de51dbc3454d95b015ca0a055b673f85f01bb, uas no longer
+> > set `queue_depth` with scsi_change_queue_depth(), so now
+> > `queue_depth`
+> > of UAS drives are 1. Even though `can_queue` is set to
+> > `devinfo->qdepth - 2`, but apparently that does not help, since I
+> > can
+> > see performance impact.
+> > 
+> > Suppose limiting `can_queue` is the right way to fix this bug
+> > (https://bugzilla.redhat.com/show_bug.cgi?id=1315013), do we really
+> > need to eliminate scsi_change_queue_depth() at the same time
+> > though?
+> 
+> No, I thought it was no longer needed, assuming the slave would
+> inherit the host's value, but I was mistaken, the slave will default
+> to a queue_depth of 1 if not specified.
 
-[storvsc] Sense Key : Not Ready [current]
-[storvsc] Add. Sense: Medium not present - tray closed
+Just to improve understanding: shost->can_queue is the host limit: it's
+the maximum number of commands that can be outstanding on the host at
+any one time, which is why it's used as the count for the shared tag
+map.  It's also a fixed limit and can't be altered after the host is
+instantiated.  sdev->queue_depth is the device queue limit, it can be
+altered dynamically during device operation.  There's no relation
+between them except that if you make queue_depth larger than can_queue,
+the latter rules.
 
-Signed-off-by: Cathy Avery <cavery@redhat.com>
----
- drivers/scsi/storvsc_drv.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+James
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3ddcabb..f0efa07 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -966,7 +966,9 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
- 	if (scmnd->result) {
- 		if (scsi_normalize_sense(scmnd->sense_buffer,
- 				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
--		    do_logging(STORVSC_LOGGING_ERROR))
-+		    !(sense_hdr.sense_key == NOT_READY &&
-+				 sense_hdr.asc == 0x03A) &&
-+		    do_logging(STORVSC_LOGGING_ERROR)) 
- 			scsi_print_sense_hdr(scmnd->device, "storvsc",
- 					     &sense_hdr);
- 	}
--- 
-2.5.0
+
