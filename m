@@ -1,43 +1,67 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] uas: leave can_queue as MAX_CMNDS if device reports
- larger qdepth
-Date: Mon, 23 May 2016 10:27:37 -0700
-Message-ID: <1464024457.2331.10.camel@HansenPartnership.com>
-References: <574329ae.c726620a.60f3.ffffd14b@mx.google.com>
-	 <20160523170025.GA3309@kroah.com>
-	 <CAGnHSE=Gt3XP9g5KpEyYUWGdw-kwqGDKpBQzd5qagxrjeHsxRA@mail.gmail.com>
+Subject: Re: [PATCH] USB: uas: Fix slave queue_depth not being set
+Date: Mon, 23 May 2016 10:36:47 -0700
+Message-ID: <1464025007.2331.17.camel@HansenPartnership.com>
+References: <1464004158-3062-1-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34770 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34828 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752102AbcEWR1l (ORCPT
+	by vger.kernel.org with ESMTP id S1752064AbcEWRgu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2016 13:27:41 -0400
-In-Reply-To: <CAGnHSE=Gt3XP9g5KpEyYUWGdw-kwqGDKpBQzd5qagxrjeHsxRA@mail.gmail.com>
+	Mon, 23 May 2016 13:36:50 -0400
+In-Reply-To: <1464004158-3062-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>, Greg KH <gregkh@linuxfoundation.org>
-Cc: Gerd Hoffmann <kraxel@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, hdegoede@redhat.com
+To: Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Gerd Hoffmann <kraxel@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-On Tue, 2016-05-24 at 01:23 +0800, Tom Yan wrote:
-> Nothing wrong. It's just .can_queue = MAX_CMNDS in the host template
-> is no longer neceesary, since with his patch, uas will set can_queue
-> again later (to devinfo->qdepth - 2).
+On Mon, 2016-05-23 at 13:49 +0200, Hans de Goede wrote:
+> Commit 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level")
+> removed the scsi_change_queue_depth() call from uas_slave_configure()
+> assuming that the slave would inherit the host's queue_depth, which
+> that commit sets to the same value.
 > 
-> Originally I thought .can_queue = MAX_CMNDS can hence be removed; but
-> after a second thought, I think it might probably be better if we
-> leave it there and make use of it, in case certain device somehow
-> inapproriately reports an enormous qdepth (i.e. larger than
-> MAX_CMNDS). (According to the commit message of 55ff8cfbc4e1 ("USB:
-> uas: Reduce can_queue to MAX_CMNDS"), "The uas driver can never queue
-> more then MAX_CMNDS...")
+> This is incorrect, without the scsi_change_queue_depth() call the 
+> slave's queue_depth defaults to 1, introducing a performance
+> regression.
+> 
+> This commit restores the call, fixing the performance regression.
+> 
+> Cc: stable@vger.kernel.org
+> Fixes: 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level")
+> Reported-by: Tom Yan <tom.ty89@gmail.com>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>  drivers/usb/storage/uas.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 16bc679..ecc7d4b 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -835,6 +835,7 @@ static int uas_slave_configure(struct scsi_device
+> *sdev)
+>  	if (devinfo->flags & US_FL_BROKEN_FUA)
+>  		sdev->broken_fua = 1;
+>  
+> +	scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
 
-OK, so try this as an exercise: Why would this not be the right thing
-to do after the host is prepared:  It has to do with the streams
-resources the driver has already created.
+Are you sure about this?  For spinning rust, experiments imply that the
+optimal queue depth per device is somewhere between 2 and 4.  Obviously
+that's not true for SSDs, so it depends on your use case.  Plus, for
+ATA NCQ devices (which I believe most UAS is bridged to) you have a
+maximum NCQ depth of 31.
+
+There's a good reason why you don't want a queue deeper than you can
+handle: it tends to interfere with writeback because you build up a lot
+of pending I/O in the queue which can't be issued (it's very similar to
+why bufferbloat is a problem in networks).  In theory, as long as your
+devices return the correct indicator (QUEUE_FULL status), we'll handle
+most of this in the mid-layer by plugging the block queue, but given
+what I've seen from UAS devices, that's less than probable.
 
 James
-
 
