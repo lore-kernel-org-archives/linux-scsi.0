@@ -1,42 +1,39 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] USB: uas: Fix slave queue_depth not being set
-Date: Mon, 23 May 2016 13:49:18 +0200
-Message-ID: <1464004158-3062-1-git-send-email-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Gerd Hoffmann <kraxel@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH 1/1] scsi: storvsc: Filter out storvsc messages CD-ROM medium not present
+Date: Mon, 23 May 2016 10:29:17 -0400
+Message-ID: <1464013757-30357-1-git-send-email-cavery@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: kys@microsoft.com, haiyangz@microsoft.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level")
-removed the scsi_change_queue_depth() call from uas_slave_configure()
-assuming that the slave would inherit the host's queue_depth, which
-that commit sets to the same value.
+When a virtual scsi DVD device is present with no image file
+attached the storvsc driver logs all resulting unnecessary sense errors
+whenever IO is issued to the device.
 
-This is incorrect, without the scsi_change_queue_depth() call the slave's
-queue_depth defaults to 1, introducing a performance regression.
+[storvsc] Sense Key : Not Ready [current]
+[storvsc] Add. Sense: Medium not present - tray closed
 
-This commit restores the call, fixing the performance regression.
-
-Cc: stable@vger.kernel.org
-Fixes: 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level")
-Reported-by: Tom Yan <tom.ty89@gmail.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Cathy Avery <cavery@redhat.com>
 ---
- drivers/usb/storage/uas.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/storvsc_drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 16bc679..ecc7d4b 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -835,6 +835,7 @@ static int uas_slave_configure(struct scsi_device *sdev)
- 	if (devinfo->flags & US_FL_BROKEN_FUA)
- 		sdev->broken_fua = 1;
- 
-+	scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
- 	return 0;
- }
- 
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 3ddcabb..f0efa07 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -966,7 +966,9 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
+ 	if (scmnd->result) {
+ 		if (scsi_normalize_sense(scmnd->sense_buffer,
+ 				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
+-		    do_logging(STORVSC_LOGGING_ERROR))
++		    !(sense_hdr.sense_key == NOT_READY &&
++				 sense_hdr.asc == 0x03A) &&
++		    do_logging(STORVSC_LOGGING_ERROR)) 
+ 			scsi_print_sense_hdr(scmnd->device, "storvsc",
+ 					     &sense_hdr);
+ 	}
 -- 
-2.7.4
+2.5.0
