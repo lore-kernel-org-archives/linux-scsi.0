@@ -1,34 +1,38 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [uas/scsi] untagged commands?
-Date: Tue, 24 May 2016 11:25:10 +0200
-Message-ID: <903e0bae-2a7e-104d-ab46-8cb0dfa9b5a3@redhat.com>
-References: <CAGnHSE=RB1_777Mnj8enxDPmga0p7QgZkyFwg9je5FQmzO=qDA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Thomas Huth <thuth@redhat.com>
+Subject: [PATCH] scsi/qla2xxx: Remove erroneous macro qla82xx_get_temp_val1()
+Date: Tue, 24 May 2016 12:27:34 +0200
+Message-ID: <1464085654-7485-1-git-send-email-thuth@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53148 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53529 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119AbcEXJZQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2016 05:25:16 -0400
-In-Reply-To: <CAGnHSE=RB1_777Mnj8enxDPmga0p7QgZkyFwg9je5FQmzO=qDA@mail.gmail.com>
+	id S1751575AbcEXK1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2016 06:27:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: trivial@kernel.org, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-Hi,
+That macros uses logical "&&" instead of bit-wise "&" which is
+apparently wrong. Since the macro is completely unused, simply
+remove it, so that nobody can accidentially use it anymore.
 
-On 24-05-16 10:18, Tom Yan wrote:
-> In this commit:
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/usb/storage/uas.c?id=198de51dbc3454d95b015ca0a055b673f85f01bb
->
-> There is the following comment:
->> 1 tag is reserved for untagged commands
->
-> So my question is, what exactly are "untagged commands"?
+Signed-off-by: Thomas Huth <thuth@redhat.com>
+---
+ drivers/scsi/qla2xxx/qla_nx.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-https://en.wikipedia.org/wiki/Tagged_Command_Queuing
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index 59c4778..6201dce 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -1183,7 +1183,6 @@ static const int MD_MIU_TEST_AGT_RDDATA[] = { 0x410000A8, 0x410000AC,
+ #define CRB_NIU_XG_PAUSE_CTL_P1        0x8
+ 
+ #define qla82xx_get_temp_val(x)          ((x) >> 16)
+-#define qla82xx_get_temp_val1(x)          ((x) && 0x0000FFFF)
+ #define qla82xx_get_temp_state(x)        ((x) & 0xffff)
+ #define qla82xx_encode_temp(val, state)  (((val) << 16) | (state))
+ 
+-- 
+1.8.3.1
 
-Regards,
-
-Hans
