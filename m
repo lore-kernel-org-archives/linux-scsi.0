@@ -1,19 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Bug 118081] New: open-iscsi Ping timeout erro
-Date: Tue, 24 May 2016 00:05:02 -0700
-Message-ID: <1464073502.22249.104.camel@haakon3.risingtidesystems.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 118081] open-iscsi Ping timeout erro
+Date: Tue, 24 May 2016 07:10:13 +0000
+Message-ID: <bug-118081-11613-ZF1lI0qUvx@https.bugzilla.kernel.org/>
 References: <bug-118081-11613@https.bugzilla.kernel.org/>
-	 <5735FEAC.9030209@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5735FEAC.9030209@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, liuzhengyuang521@gmail.com, target-devel <target-devel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47640 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889AbcEXHKU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2016 03:10:20 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A573D20376
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2016 07:10:18 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 939A3203B5
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2016 07:10:13 +0000 (UTC)
+In-Reply-To: <bug-118081-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=118081
+
+--- Comment #3 from nab <nab@linux-iscsi.org> ---
 Hey Mike & Co,
 
 Apologies for missing this bug-report.  Comments below.
@@ -97,3 +108,7 @@ SYNCHRONIZE_CACHE failure unless the default 120 second Linux/iSCSI
 initiator I/O timeout has elapsed.
 
 Liu, are you seeing something different wrt iozone on a Linux host..?
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
