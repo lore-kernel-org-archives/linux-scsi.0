@@ -1,53 +1,99 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v2 1/1] uas: remove can_queue set in host template
-Date: Tue, 24 May 2016 08:58:30 +0200
-Message-ID: <4b23f12a-eb80-8196-a266-c209cdb5f387@redhat.com>
-References: <574359f3.4667620a.6c0f.528f@mx.google.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Bug 118081] New: open-iscsi Ping timeout erro
+Date: Tue, 24 May 2016 00:05:02 -0700
+Message-ID: <1464073502.22249.104.camel@haakon3.risingtidesystems.com>
+References: <bug-118081-11613@https.bugzilla.kernel.org/>
+	 <5735FEAC.9030209@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45649 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634AbcEXG6h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2016 02:58:37 -0400
-In-Reply-To: <574359f3.4667620a.6c0f.528f@mx.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5735FEAC.9030209@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Mike Christie <mchristi@redhat.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, liuzhengyuang521@gmail.com, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: tom.ty89@gmail.com, gregkh@linuxfoundation.org
-Cc: kraxel@redhat.com, stern@rowland.harvard.edu, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-Hi,
+Hey Mike & Co,
 
-On 23-05-16 21:28, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
->
-> Commit 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level") made
-> qdepth limit set in host template (`.can_queue = MAX_CMNDS`) redundant.
-> Removing it to avoid confusion.
->
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+Apologies for missing this bug-report.  Comments below.
 
-I agree removing this is good:
+(Adding target-devel CC')
 
-Acked-by: Hans de Goede <hdegoede@redhat.com>
+On Fri, 2016-05-13 at 11:19 -0500, Mike Christie wrote:
+> On 05/11/2016 10:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=118081
+> > 
+> >             Bug ID: 118081
+> >            Summary: open-iscsi Ping timeout erro
+> >            Product: SCSI Drivers
+> >            Version: 2.5
+> >     Kernel Version: 4.4.7
+> >           Hardware: All
+> >                 OS: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: Other
+> >           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+> >           Reporter: liuzhengyuang521@gmail.com
+> >         Regression: No
+> > 
+> > Hi everyone:
+> > I create a target using fileio as the backend storage on ARM64 server. The
+> > initiator reported some errors showed bellow  while perform iozone test.
+> > 
+> > [178444.145679]  connection14:0: ping timeout of 5 secs expired, recv timeout
+> > 5, last rx 4339462894, last ping 4339464146, now 4339465400
+> > [178444.145706]  connection14:0: detected conn error (1011)
+> > [178469.674313]  connection14:0: detected conn error (1020)
+> > [178504.420979]  connection14:0: ping timeout of 5 secs expired, recv timeout
+> > 5, last rx 4339477953, last ping 4339479204, now 4339480456
+> > [178504.421001]  connection14:0: detected conn error (1011)
+> > [178532.064262]  connection14:0: detected conn error (1020)
+> > [178564.584087]  connection14:0: ping timeout of 5 secs expired, recv timeout
+> > 5, last rx 4339492980, last ping 4339494232, now 4339495484
+> > ..............................
+> > 
+> > I try to trace the function call of target iscsi. Then, I found the  receiving 
+> > thread of target iscsi blocked at fd_execute_sync_cache -> vfs_fsync_range.
+> > Further, vfs_fsync_range may takes more than 10 seconds to return,while
+> > initiator Ping timeout would happened after 5 seconds.   vfs_fsync_range was
+> > call with the form vfs_fsync_range(fd_dev->fd_file, 0, LLONG_MAX, 1) every
+> > times  which means sync all device cache. 
+> > So, is this a bug?
+> > How  does Initiator send sync_cache scsi command? 
+> > Does it need to sync all device cache at once?
+> > Any reply would be thankful.
+> > 
+> 
+> The upper layers like the FS or application determine when to send a
+> sync cache. They send down a request and the iscsi layer just sends it
+> to the target.
+> 
+> You are using LIO right? It looks like we end up syncing the entire
+> device sometimes. I think for iscsi pings/Nops that have the immediate
+> bit set, the target would want to reply to them right away. They should
+> not be getting stuck behind these type of commands.
+> 
+> Nick, what do you think?
+> 
 
-Regards,
+In modern iscsi-target code, the backend sbc_ops->execute_sync_cache()
+call is invoked directly from iscsi_trx kthread process context.
 
-Hans
+For FILEIO backends, this can block immediate iscsi commands like NOPs
+on the same connection (eg: socket) processing a SYNCHRONIZE_CACHE CDB
+that is taking a long time to complete.
 
+Wrt to Liu's follow-up question, an initiator should attempt to retry
+all outstanding commands that did not receive a response once the
+initiator side NopOut timeout has fired.
 
->
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 4d49fce..e03c490 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -848,7 +848,6 @@ static struct scsi_host_template uas_host_template = {
->  	.slave_configure = uas_slave_configure,
->  	.eh_abort_handler = uas_eh_abort_handler,
->  	.eh_bus_reset_handler = uas_eh_bus_reset_handler,
-> -	.can_queue = MAX_CMNDS,
->  	.this_id = -1,
->  	.sg_tablesize = SG_NONE,
->  	.skip_settle_delay = 1,
->
+So from an application perspective, the initiator NopOut timeout and
+subsequent iscsi session reinstatement should not be propagating up a
+SYNCHRONIZE_CACHE failure unless the default 120 second Linux/iSCSI
+initiator I/O timeout has elapsed.
+
+Liu, are you seeing something different wrt iozone on a Linux host..?
