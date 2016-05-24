@@ -1,278 +1,68 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2] libfc: Update rport reference counting
-Date: Tue, 24 May 2016 08:11:58 +0200
-Message-ID: <1464070318-69866-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48017 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278AbcEXGMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2016 02:12:07 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
+Date: Mon, 23 May 2016 23:40:25 -0700
+Message-ID: <1464072025.22249.87.camel@haakon3.risingtidesystems.com>
+References: <cover.1461088672.git.varun@chelsio.com>
+	 <62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
+	 <CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
+	 <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Or Gerlitz <gerlitz.or@gmail.com>
+Cc: target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com, Steve Wise <swise@opengridcomputing.com>, Varun Prakash <varun@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Originally libfc would just be initializing the refcount to '1',
-and using the disc_mutex to synchronize if and when the final put
-should be happening.
-This has a race condition as the mutex might be delayed, causing
-other threads to access an invalid structure.
-This patch updates the rport reference counting to increase the
-reference every time 'rport_lookup' is called, and decreases
-the reference correspondingly.
-This removes the need to hold 'disc_mutex' when removing the
-structure, and avoids the above race condition.
+Hi Or & Co,
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/fcoe/fcoe_ctlr.c |  7 +------
- drivers/scsi/libfc/fc_lport.c | 19 ++++++++++-------
- drivers/scsi/libfc/fc_rport.c | 49 ++++++++++++++++++++++---------------------
- 3 files changed, 38 insertions(+), 37 deletions(-)
+On Wed, 2016-05-18 at 14:45 +0300, Or Gerlitz wrote:
+> On Sat, Apr 30, 2016 at 6:54 PM, Or Gerlitz <gerlitz.or@gmail.com> wrote:
+> > On Tue, Apr 19, 2016 at 9:30 PM, Varun Prakash <varun@chelsio.com> wrote:
+> >> cxgbit.h - This file contains data structure
+> >> definitions for cxgbit.ko.
+> >>
+> >> cxgbit_lro.h - This file contains data structure
+> >> definitions for LRO support.
+> >>
+> >> cxgbit_main.c - This file contains code for
+> >> registering with iscsi target transport and
+> >> cxgb4 driver.
+> >>
+> >> cxgbit_cm.c - This file contains code for
+> >> connection management.
+> >>
+> >> cxgbit_target.c - This file contains code
+> >> for processing iSCSI PDU.
+> >>
+> >> cxgbit_ddp.c - This file contains code for
+> >> Direct Data Placement.
+> >
+> > Wait,
+> >
+> > You are adding many K's LOCs to handle things like CM (connection
+> > management), DDP and LRO. But your upstream solution must be using CM
+> > and DDP (and LRO as well) for the HW offloaded initiator side as well,
+> > not to mention the iWARP side of things.
+> >
+> > There must be some way to refactor things instead of repeating the
+> > same bits over and over, thoughts?
+> 
+> Nic,
+> 
+> The author haven't responded... where that this stands from your point of view?
+> 
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 3e83d48..ada4bde 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2496,14 +2496,13 @@ static int fcoe_ctlr_vn_lookup(struct fcoe_ctlr *fip, u32 port_id, u8 *mac)
- 	struct fcoe_rport *frport;
- 	int ret = -1;
- 
--	rcu_read_lock();
- 	rdata = lport->tt.rport_lookup(lport, port_id);
- 	if (rdata) {
- 		frport = fcoe_ctlr_rport(rdata);
- 		memcpy(mac, frport->enode_mac, ETH_ALEN);
- 		ret = 0;
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	}
--	rcu_read_unlock();
- 	return ret;
- }
- 
-@@ -2585,11 +2584,7 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
- 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
- 		return;
- 	}
--	mutex_lock(&lport->disc.disc_mutex);
- 	rdata = lport->tt.rport_lookup(lport, new->ids.port_id);
--	if (rdata)
--		kref_get(&rdata->kref);
--	mutex_unlock(&lport->disc.disc_mutex);
- 	if (rdata) {
- 		if (rdata->ids.node_name == new->ids.node_name &&
- 		    rdata->ids.port_name == new->ids.port_name) {
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e01a298..b9b44da 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -2090,7 +2090,7 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
- 	struct fc_rport *rport;
- 	struct fc_rport_priv *rdata;
- 	int rc = -EINVAL;
--	u32 did;
-+	u32 did, tov;
- 
- 	job->reply->reply_payload_rcv_len = 0;
- 	if (rsp)
-@@ -2121,15 +2121,20 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
- 
- 	case FC_BSG_HST_CT:
- 		did = ntoh24(job->request->rqst_data.h_ct.port_id);
--		if (did == FC_FID_DIR_SERV)
-+		if (did == FC_FID_DIR_SERV) {
- 			rdata = lport->dns_rdata;
--		else
-+			if (!rdata)
-+				break;
-+			tov = rdata->e_d_tov;
-+		} else {
- 			rdata = lport->tt.rport_lookup(lport, did);
-+			if (!rdata)
-+				break;
-+			tov = rdata->e_d_tov;
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
-+		}
- 
--		if (!rdata)
--			break;
--
--		rc = fc_lport_ct_request(job, lport, did, rdata->e_d_tov);
-+		rc = fc_lport_ct_request(job, lport, did, tov);
- 		break;
- 
- 	case FC_BSG_HST_ELS_NOLOGIN:
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 589ff9a..93f5961 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -95,17 +95,23 @@ static const char *fc_rport_state_names[] = {
-  * @lport:   The local port to lookup the remote port on
-  * @port_id: The remote port ID to look up
-  *
-- * The caller must hold either disc_mutex or rcu_read_lock().
-+ * The reference count of the fc_rport_priv structure is
-+ * increased by one.
-  */
- static struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
- 					     u32 port_id)
- {
--	struct fc_rport_priv *rdata;
-+	struct fc_rport_priv *rdata = NULL, *tmp_rdata;
- 
--	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers)
--		if (rdata->ids.port_id == port_id)
--			return rdata;
--	return NULL;
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(tmp_rdata, &lport->disc.rports, peers)
-+		if (tmp_rdata->ids.port_id == port_id &&
-+		    kref_get_unless_zero(&tmp_rdata->kref)) {
-+			rdata = tmp_rdata;
-+			break;
-+		}
-+	rcu_read_unlock();
-+	return rdata;
- }
- 
- /**
-@@ -340,7 +346,6 @@ static void fc_rport_work(struct work_struct *work)
- 			fc_remote_port_delete(rport);
- 		}
- 
--		mutex_lock(&lport->disc.disc_mutex);
- 		mutex_lock(&rdata->rp_mutex);
- 		if (rdata->rp_state == RPORT_ST_DELETE) {
- 			if (port_id == FC_FID_DIR_SERV) {
-@@ -370,7 +375,6 @@ static void fc_rport_work(struct work_struct *work)
- 				fc_rport_enter_ready(rdata);
- 			mutex_unlock(&rdata->rp_mutex);
- 		}
--		mutex_unlock(&lport->disc.disc_mutex);
- 		break;
- 
- 	default:
-@@ -702,7 +706,7 @@ out:
- err:
- 	mutex_unlock(&rdata->rp_mutex);
- put:
--	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	return;
- bad:
- 	FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
-@@ -762,8 +766,6 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 	FC_RPORT_ID_DBG(lport, sid, "Received FLOGI request\n");
- 
- 	disc = &lport->disc;
--	mutex_lock(&disc->disc_mutex);
--
- 	if (!lport->point_to_multipoint) {
- 		rjt_data.reason = ELS_RJT_UNSUP;
- 		rjt_data.explan = ELS_EXPL_NONE;
-@@ -808,7 +810,7 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_FIP;
- 		rjt_data.explan = ELS_EXPL_NOT_NEIGHBOR;
--		goto reject;
-+		goto reject_put;
- 	case RPORT_ST_FLOGI:
- 	case RPORT_ST_PLOGI_WAIT:
- 	case RPORT_ST_PLOGI:
-@@ -825,13 +827,13 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_BUSY;
- 		rjt_data.explan = ELS_EXPL_NONE;
--		goto reject;
-+		goto reject_put;
- 	}
- 	if (fc_rport_login_complete(rdata, fp)) {
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_LOGIC;
- 		rjt_data.explan = ELS_EXPL_NONE;
--		goto reject;
-+		goto reject_put;
- 	}
- 
- 	fp = fc_frame_alloc(lport, sizeof(*flp));
-@@ -851,12 +853,13 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
- out:
- 	mutex_unlock(&rdata->rp_mutex);
--	mutex_unlock(&disc->disc_mutex);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	fc_frame_free(rx_fp);
- 	return;
- 
-+reject_put:
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- reject:
--	mutex_unlock(&disc->disc_mutex);
- 	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
- 	fc_frame_free(rx_fp);
- }
-@@ -923,7 +926,7 @@ out:
- 	fc_frame_free(fp);
- err:
- 	mutex_unlock(&rdata->rp_mutex);
--	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- }
- 
- static bool
-@@ -1477,14 +1480,11 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 	struct fc_rport_priv *rdata;
- 	struct fc_seq_els_data els_data;
- 
--	mutex_lock(&lport->disc.disc_mutex);
- 	rdata = lport->tt.rport_lookup(lport, fc_frame_sid(fp));
--	if (!rdata) {
--		mutex_unlock(&lport->disc.disc_mutex);
-+	if (!rdata)
- 		goto reject;
--	}
-+
- 	mutex_lock(&rdata->rp_mutex);
--	mutex_unlock(&lport->disc.disc_mutex);
- 
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_PRLI:
-@@ -1494,6 +1494,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 		break;
- 	default:
- 		mutex_unlock(&rdata->rp_mutex);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 		goto reject;
- 	}
- 
-@@ -1524,6 +1525,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 	}
- 
- 	mutex_unlock(&rdata->rp_mutex);
-+	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
- 	return;
- 
- reject:
-@@ -1907,7 +1909,6 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- 
- 	sid = fc_frame_sid(fp);
- 
--	mutex_lock(&lport->disc.disc_mutex);
- 	rdata = lport->tt.rport_lookup(lport, sid);
- 	if (rdata) {
- 		mutex_lock(&rdata->rp_mutex);
-@@ -1916,10 +1917,10 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- 
- 		fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
- 		mutex_unlock(&rdata->rp_mutex);
-+		kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
- 	} else
- 		FC_RPORT_ID_DBG(lport, sid,
- 				"Received LOGO from non-logged-in port\n");
--	mutex_unlock(&lport->disc.disc_mutex);
- 	fc_frame_free(fp);
- }
- 
--- 
-1.8.5.6
+For an initial merge, I don't have an objection to this series wrt
+drivers/target/iscsi/* improvements + prerequisites, and new standalone
+cxgbit iscsit_transport driver.
 
+That said, there are areas between cxgbi + cxgbit code that can be made
+common as you've pointed out.  The Cheliso folks have mentioned off-list
+that cxgbi as-is in mainline does not support LRO, and that the majority
+of DDP logic is shared between initiator + target.
+
+Are there specific pieces of logic in DDP or iWARP for cxgb* that you'd
+like to see Varun + Co pursue as common code in v4.8+..?
