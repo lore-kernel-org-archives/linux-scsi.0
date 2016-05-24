@@ -1,62 +1,278 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] Fix for hang of Ordered task in TCM
-Date: Mon, 23 May 2016 22:47:34 -0700
-Message-ID: <1464068854.22249.69.camel@haakon3.risingtidesystems.com>
-References: <1463177741-4385-1-git-send-email-mikecyr@linux.vnet.ibm.com>
-	 <1463550825.22249.17.camel@haakon3.risingtidesystems.com>
-	 <20160523191735.Horde.6wmWQ7EiiPavHDD7pNfVtQ1@ltc.linux.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2] libfc: Update rport reference counting
+Date: Tue, 24 May 2016 08:11:58 +0200
+Message-ID: <1464070318-69866-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35085 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157AbcEXFrh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2016 01:47:37 -0400
-In-Reply-To: <20160523191735.Horde.6wmWQ7EiiPavHDD7pNfVtQ1@ltc.linux.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:48017 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751278AbcEXGMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2016 02:12:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryant G Ly <bryantly@linux.vnet.ibm.com>
-Cc: Michael Cyr <mikecyr@linux.vnet.ibm.com>, rjui@broadcom.com, sbranden@broadcom.com, jonmason@broadcom.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi Bryant,
+Originally libfc would just be initializing the refcount to '1',
+and using the disc_mutex to synchronize if and when the final put
+should be happening.
+This has a race condition as the mutex might be delayed, causing
+other threads to access an invalid structure.
+This patch updates the rport reference counting to increase the
+reference every time 'rport_lookup' is called, and decreases
+the reference correspondingly.
+This removes the need to hold 'disc_mutex' when removing the
+structure, and avoids the above race condition.
 
-On Mon, 2016-05-23 at 19:17 -0400, Bryant G Ly wrote:
-> Quoting "Nicholas A. Bellinger" <nab@linux-iscsi.org>:
-> 
-> <SNIP>
-> >
-> > So AFAICT for delayed commands, the above patch ends up skipping these
-> > three checks subsequently when doing __target_execute_cmd() directly
-> > from target_restart_delayed_cmds(), no..?
-> >
-> > After pondering this some more, what about moving these checks into
-> > __target_execute_cmd() to handle both target_core_transport.c cases
-> > instead..?
-> >
-> > We'll also need a parameter for internal COMPARE_AND_WRITE usage
-> > within compare_and_write_callback(), to bypass checks upon secondary
-> > ->execute_cmd() WRITE payload submission after READ + COMPARE has
-> > completed successfully.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/fcoe/fcoe_ctlr.c |  7 +------
+ drivers/scsi/libfc/fc_lport.c | 19 ++++++++++-------
+ drivers/scsi/libfc/fc_rport.c | 49 ++++++++++++++++++++++---------------------
+ 3 files changed, 38 insertions(+), 37 deletions(-)
 
-<SNIP>
-
-> Looks good to me.
-
-Thanks for the review!
-
-> Nick just to let you know I've been working with  
-> Mike on VSCSI Target Fabric and we need this patch in kernel 4.4 do
-> you know of the process in getting that there?
-
-So pending a bit more list feedback + testing across multiple fabric
-drivers, it's been added for the moment to target-pending/queue as post
--rc1 material.
-
-As it merged into target-pending/master next week, the extra stable CC'
-can be added to be picked up for linux-4.4.y stable and friends.
-
-Also AFAIK, we've not had reports of other SCSI host environments
-triggering this bug, but it's still a good idea to consider it for
-linux-3.x.y backport at some point as well.
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 3e83d48..ada4bde 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2496,14 +2496,13 @@ static int fcoe_ctlr_vn_lookup(struct fcoe_ctlr *fip, u32 port_id, u8 *mac)
+ 	struct fcoe_rport *frport;
+ 	int ret = -1;
+ 
+-	rcu_read_lock();
+ 	rdata = lport->tt.rport_lookup(lport, port_id);
+ 	if (rdata) {
+ 		frport = fcoe_ctlr_rport(rdata);
+ 		memcpy(mac, frport->enode_mac, ETH_ALEN);
+ 		ret = 0;
++		kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 	}
+-	rcu_read_unlock();
+ 	return ret;
+ }
+ 
+@@ -2585,11 +2584,7 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		return;
+ 	}
+-	mutex_lock(&lport->disc.disc_mutex);
+ 	rdata = lport->tt.rport_lookup(lport, new->ids.port_id);
+-	if (rdata)
+-		kref_get(&rdata->kref);
+-	mutex_unlock(&lport->disc.disc_mutex);
+ 	if (rdata) {
+ 		if (rdata->ids.node_name == new->ids.node_name &&
+ 		    rdata->ids.port_name == new->ids.port_name) {
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e01a298..b9b44da 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -2090,7 +2090,7 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
+ 	struct fc_rport *rport;
+ 	struct fc_rport_priv *rdata;
+ 	int rc = -EINVAL;
+-	u32 did;
++	u32 did, tov;
+ 
+ 	job->reply->reply_payload_rcv_len = 0;
+ 	if (rsp)
+@@ -2121,15 +2121,20 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
+ 
+ 	case FC_BSG_HST_CT:
+ 		did = ntoh24(job->request->rqst_data.h_ct.port_id);
+-		if (did == FC_FID_DIR_SERV)
++		if (did == FC_FID_DIR_SERV) {
+ 			rdata = lport->dns_rdata;
+-		else
++			if (!rdata)
++				break;
++			tov = rdata->e_d_tov;
++		} else {
+ 			rdata = lport->tt.rport_lookup(lport, did);
++			if (!rdata)
++				break;
++			tov = rdata->e_d_tov;
++			kref_put(&rdata->kref, lport->tt.rport_destroy);
++		}
+ 
+-		if (!rdata)
+-			break;
+-
+-		rc = fc_lport_ct_request(job, lport, did, rdata->e_d_tov);
++		rc = fc_lport_ct_request(job, lport, did, tov);
+ 		break;
+ 
+ 	case FC_BSG_HST_ELS_NOLOGIN:
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 589ff9a..93f5961 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -95,17 +95,23 @@ static const char *fc_rport_state_names[] = {
+  * @lport:   The local port to lookup the remote port on
+  * @port_id: The remote port ID to look up
+  *
+- * The caller must hold either disc_mutex or rcu_read_lock().
++ * The reference count of the fc_rport_priv structure is
++ * increased by one.
+  */
+ static struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
+ 					     u32 port_id)
+ {
+-	struct fc_rport_priv *rdata;
++	struct fc_rport_priv *rdata = NULL, *tmp_rdata;
+ 
+-	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers)
+-		if (rdata->ids.port_id == port_id)
+-			return rdata;
+-	return NULL;
++	rcu_read_lock();
++	list_for_each_entry_rcu(tmp_rdata, &lport->disc.rports, peers)
++		if (tmp_rdata->ids.port_id == port_id &&
++		    kref_get_unless_zero(&tmp_rdata->kref)) {
++			rdata = tmp_rdata;
++			break;
++		}
++	rcu_read_unlock();
++	return rdata;
+ }
+ 
+ /**
+@@ -340,7 +346,6 @@ static void fc_rport_work(struct work_struct *work)
+ 			fc_remote_port_delete(rport);
+ 		}
+ 
+-		mutex_lock(&lport->disc.disc_mutex);
+ 		mutex_lock(&rdata->rp_mutex);
+ 		if (rdata->rp_state == RPORT_ST_DELETE) {
+ 			if (port_id == FC_FID_DIR_SERV) {
+@@ -370,7 +375,6 @@ static void fc_rport_work(struct work_struct *work)
+ 				fc_rport_enter_ready(rdata);
+ 			mutex_unlock(&rdata->rp_mutex);
+ 		}
+-		mutex_unlock(&lport->disc.disc_mutex);
+ 		break;
+ 
+ 	default:
+@@ -702,7 +706,7 @@ out:
+ err:
+ 	mutex_unlock(&rdata->rp_mutex);
+ put:
+-	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
++	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 	return;
+ bad:
+ 	FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
+@@ -762,8 +766,6 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
+ 	FC_RPORT_ID_DBG(lport, sid, "Received FLOGI request\n");
+ 
+ 	disc = &lport->disc;
+-	mutex_lock(&disc->disc_mutex);
+-
+ 	if (!lport->point_to_multipoint) {
+ 		rjt_data.reason = ELS_RJT_UNSUP;
+ 		rjt_data.explan = ELS_EXPL_NONE;
+@@ -808,7 +810,7 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
+ 		mutex_unlock(&rdata->rp_mutex);
+ 		rjt_data.reason = ELS_RJT_FIP;
+ 		rjt_data.explan = ELS_EXPL_NOT_NEIGHBOR;
+-		goto reject;
++		goto reject_put;
+ 	case RPORT_ST_FLOGI:
+ 	case RPORT_ST_PLOGI_WAIT:
+ 	case RPORT_ST_PLOGI:
+@@ -825,13 +827,13 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
+ 		mutex_unlock(&rdata->rp_mutex);
+ 		rjt_data.reason = ELS_RJT_BUSY;
+ 		rjt_data.explan = ELS_EXPL_NONE;
+-		goto reject;
++		goto reject_put;
+ 	}
+ 	if (fc_rport_login_complete(rdata, fp)) {
+ 		mutex_unlock(&rdata->rp_mutex);
+ 		rjt_data.reason = ELS_RJT_LOGIC;
+ 		rjt_data.explan = ELS_EXPL_NONE;
+-		goto reject;
++		goto reject_put;
+ 	}
+ 
+ 	fp = fc_frame_alloc(lport, sizeof(*flp));
+@@ -851,12 +853,13 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
+ 		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
+ out:
+ 	mutex_unlock(&rdata->rp_mutex);
+-	mutex_unlock(&disc->disc_mutex);
++	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 	fc_frame_free(rx_fp);
+ 	return;
+ 
++reject_put:
++	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ reject:
+-	mutex_unlock(&disc->disc_mutex);
+ 	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
+ 	fc_frame_free(rx_fp);
+ }
+@@ -923,7 +926,7 @@ out:
+ 	fc_frame_free(fp);
+ err:
+ 	mutex_unlock(&rdata->rp_mutex);
+-	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
++	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ }
+ 
+ static bool
+@@ -1477,14 +1480,11 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+ 	struct fc_rport_priv *rdata;
+ 	struct fc_seq_els_data els_data;
+ 
+-	mutex_lock(&lport->disc.disc_mutex);
+ 	rdata = lport->tt.rport_lookup(lport, fc_frame_sid(fp));
+-	if (!rdata) {
+-		mutex_unlock(&lport->disc.disc_mutex);
++	if (!rdata)
+ 		goto reject;
+-	}
++
+ 	mutex_lock(&rdata->rp_mutex);
+-	mutex_unlock(&lport->disc.disc_mutex);
+ 
+ 	switch (rdata->rp_state) {
+ 	case RPORT_ST_PRLI:
+@@ -1494,6 +1494,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+ 		break;
+ 	default:
+ 		mutex_unlock(&rdata->rp_mutex);
++		kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 		goto reject;
+ 	}
+ 
+@@ -1524,6 +1525,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 
+ 	mutex_unlock(&rdata->rp_mutex);
++	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
+ 	return;
+ 
+ reject:
+@@ -1907,7 +1909,6 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
+ 
+ 	sid = fc_frame_sid(fp);
+ 
+-	mutex_lock(&lport->disc.disc_mutex);
+ 	rdata = lport->tt.rport_lookup(lport, sid);
+ 	if (rdata) {
+ 		mutex_lock(&rdata->rp_mutex);
+@@ -1916,10 +1917,10 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
+ 
+ 		fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
+ 		mutex_unlock(&rdata->rp_mutex);
++		kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
+ 	} else
+ 		FC_RPORT_ID_DBG(lport, sid,
+ 				"Received LOGO from non-logged-in port\n");
+-	mutex_unlock(&lport->disc.disc_mutex);
+ 	fc_frame_free(fp);
+ }
+ 
+-- 
+1.8.5.6
 
