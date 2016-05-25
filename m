@@ -1,180 +1,157 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: mpt3sas: memory allocation for firmware upgrade DMA memory question
-Date: Wed, 25 May 2016 11:18:53 +0200
-Message-ID: <20160525091853.psv6kml6oingj4fx@c203.arch.suse.de>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] USB: uas: Fix slave queue_depth not being set
+Date: Wed, 25 May 2016 13:04:34 +0200
+Message-ID: <3d83f2c4-48c3-e9ce-2733-46e6f9745f2c@redhat.com>
+References: <1464004158-3062-1-git-send-email-hdegoede@redhat.com>
+ <1464025007.2331.17.camel@HansenPartnership.com>
+ <1e1c9f07-8190-8400-0fee-455ba7ddf517@redhat.com>
+ <1464093857.2325.7.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41539 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754002AbcEYJSz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2016 05:18:55 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1464093857.2325.7.camel@HansenPartnership.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Gerd Hoffmann <kraxel@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>
 
-Hi Chaitra and Suganath,
+Hi,
 
-I've got a question regarding mpt3sas' memory allocation used when doin=
-g a
-firmware upgrade. Currently you're doing a pci_alloc_consitent() which =
-tries
-to allocate memory via GFP_ATOMIC. This memory then is passed as a sing=
-le
-element on a sg_list.
+On 24-05-16 14:44, James Bottomley wrote:
+> On Tue, 2016-05-24 at 08:53 +0200, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 23-05-16 19:36, James Bottomley wrote:
+>>> On Mon, 2016-05-23 at 13:49 +0200, Hans de Goede wrote:
+>>>> Commit 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host
+>>>> level")
+>>>> removed the scsi_change_queue_depth() call from
+>>>> uas_slave_configure() assuming that the slave would inherit the
+>>>> host's queue_depth, which that commit sets to the same value.
+>>>>
+>>>> This is incorrect, without the scsi_change_queue_depth() call the
+>>>> slave's queue_depth defaults to 1, introducing a performance
+>>>> regression.
+>>>>
+>>>> This commit restores the call, fixing the performance regression.
+>>>>
+>>>> Cc: stable@vger.kernel.org
+>>>> Fixes: 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host
+>>>> level")
+>>>> Reported-by: Tom Yan <tom.ty89@gmail.com>
+>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>> ---
+>>>>  drivers/usb/storage/uas.c | 1 +
+>>>>  1 file changed, 1 insertion(+)
+>>>>
+>>>> diff --git a/drivers/usb/storage/uas.c
+>>>> b/drivers/usb/storage/uas.c
+>>>> index 16bc679..ecc7d4b 100644
+>>>> --- a/drivers/usb/storage/uas.c
+>>>> +++ b/drivers/usb/storage/uas.c
+>>>> @@ -835,6 +835,7 @@ static int uas_slave_configure(struct
+>>>> scsi_device
+>>>> *sdev)
+>>>>  	if (devinfo->flags & US_FL_BROKEN_FUA)
+>>>>  		sdev->broken_fua = 1;
+>>>>
+>>>> +	scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
+>>>
+>>> Are you sure about this?  For spinning rust, experiments imply that
+>>> the optimal queue depth per device is somewhere between 2 and 4.
+>>>  Obviously that's not true for SSDs, so it depends on your use
+>>> case.  Plus, for ATA NCQ devices (which I believe most UAS is
+>>> bridged to) you have a maximum NCQ depth of 31.
+>>
+>> So this value is the same as host.can_queue, and is what uas has
+>> always used, basically this says it is ok to queue as much as the
+>> bridge can handle. We've seen a few rare multi-lun devices, but
+>> typically almost all uas devices have one lun, what I really want to
+>> do here is give a maximum and let say the sd driver lower that if it
+>> is sub-optimal.
+>
+> If that's what you actually want, you should be setting sdev
+> ->max_queue_depth and .track_queue_depth = 1 in the template.
 
-Jeff reported it returned -ENOMEM on his Server due to highly fragmente=
-d
-memory.
+Hmm, I've been looking into this, but that does not seem right.
 
-Is it required to have the memory for the DMA operation contiguous, or =
-can I
-just allocate several non-contiguous junks of memory and map it to a sg=
-_list?
+max_queue_depth is never set by drivers, it is set to sdev->queue_depth
+in scsi_scan.c: scsi_add_lun() after calling the host drivers'
+slave_configure callback. So it seems that the right way to set
+max_queue_depth is to actually set queue_depth, or iow restore the
+call to scsi_change_queue_depth() as the patch we're discussing does.
 
-If not, is GFP_ATMOIC really needed? I've converted the driver to use
-GFP_KERNEL but I'm a bit reluctant to test below patch on real hardware=
- to not
-brick the HBA.
+As for track_queue_depth = 1 that seems to be only set by some drivers
+under drivers/scsi and is never set by any drivers under drivers/ata,
+and we're almost exclusively dealing with sata disks in uas. It seems
+that track_queue_depth = 1 is mostly used for iscsi and fibre channel
+iow enterprise class storage stuff, so looking at existing drivers
+usage of this flag using it does not seem a good idea.
 
-Thanks,
-	Johannes
+Anyways this patch is a (partial) revert of a previous bug-fix patch
+(which has also gone to stable) so for now I would really like to
+move forward with this patch and get it upstream and in stable
+to fix the performance regressions people are seeing caused by
+me wrongly dropping the scsi_change_queue_depth() call.
 
-RFC patch for GFP_KERNEL allocation, though splitting into multiple sg =
-mapped
-elements is the preferred fix here:
+Then if we want to tweak the queuing further we can do that
+on top of this fix, and put that in next and let it get some testing
+first.
 
-=46rom 06e63654d887df7f740dc5abcb40d441a8da7fa5 Mon Sep 17 00:00:00 200=
-1
-=46rom: Johannes Thumshirn <jthumshirn@suse.de>
-Date: Tue, 24 May 2016 17:25:59 +0200
-Subject: [RFC PATCH] mpt3sas: Don't do atomic memory allocations for fi=
-rmware
- update DMA
+So are you ok with moving this patch forward ?
 
-Currently mpt3sas uses pci_alloc_consistent() to allocate memory for th=
-e DMA
-used to do firmware updates. pci_alloc_consistent() in turn uses GFP_AT=
-OMIC
-allocations. On a host with high memory fragmention this can lead to pa=
-ge
-allocation failures, as the DMA buffer holds the complete firmware upda=
-te and
-thus can need page allocations of higher orders.
+Regards,
 
-As the firmware update code path may sleep, convert allocation to a nor=
-mal
-kzalloc() call with GFP_KERNEL and map it to the DMA buffers.
-
-Reported-by: Jeff Mahoney <jeffm@suse.com>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 39 ++++++++++++++++++++++++++++--=
---------
- 1 file changed, 29 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/=
-mpt3sas_ctl.c
-index 7d00f09..14be3cf 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -751,8 +751,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, st=
-ruct mpt3_ioctl_command karg,
-=20
- 	/* obtain dma-able memory for data transfer */
- 	if (data_out_sz) /* WRITE */ {
--		data_out =3D pci_alloc_consistent(ioc->pdev, data_out_sz,
--		    &data_out_dma);
-+		data_out =3D kzalloc(data_out_sz, GFP_KERNEL);
- 		if (!data_out) {
- 			pr_err("failure at %s:%d/%s()!\n", __FILE__,
- 			    __LINE__, __func__);
-@@ -760,6 +759,14 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, s=
-truct mpt3_ioctl_command karg,
- 			mpt3sas_base_free_smid(ioc, smid);
- 			goto out;
- 		}
-+		data_out_dma =3D pci_map_single(ioc->pdev, data_out,
-+					      data_out_sz, PCI_DMA_TODEVICE);
-+		if (dma_mapping_error(&ioc->pdev->dev, data_out_dma)) {
-+			ret =3D -EINVAL;
-+			mpt3sas_base_free_smid(ioc, smid);
-+			goto out_free_data_out;
-+		}
-+
- 		if (copy_from_user(data_out, karg.data_out_buf_ptr,
- 			data_out_sz)) {
- 			pr_err("failure at %s:%d/%s()!\n", __FILE__,
-@@ -771,8 +778,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, st=
-ruct mpt3_ioctl_command karg,
- 	}
-=20
- 	if (data_in_sz) /* READ */ {
--		data_in =3D pci_alloc_consistent(ioc->pdev, data_in_sz,
--		    &data_in_dma);
-+		data_in =3D kzalloc(data_in_sz, GFP_KERNEL);
- 		if (!data_in) {
- 			pr_err("failure at %s:%d/%s()!\n", __FILE__,
- 			    __LINE__, __func__);
-@@ -780,6 +786,13 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, s=
-truct mpt3_ioctl_command karg,
- 			mpt3sas_base_free_smid(ioc, smid);
- 			goto out;
- 		}
-+		data_in_dma =3D pci_map_single(ioc->pdev, data_in,
-+					     data_in_sz, PCI_DMA_FROMDEVICE);
-+		if (dma_mapping_error(&ioc->pdev->dev, data_in_dma)) {
-+			ret =3D -EINVAL;
-+			mpt3sas_base_free_smid(ioc, smid);
-+			goto out_free_data_in;
-+		}
- 	}
-=20
- 	psge =3D (void *)request + (karg.data_sge_offset*4);
-@@ -1013,13 +1026,19 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc=
-, struct mpt3_ioctl_command karg,
-  out:
-=20
- 	/* free memory associated with sg buffers */
--	if (data_in)
--		pci_free_consistent(ioc->pdev, data_in_sz, data_in,
--		    data_in_dma);
-+	if (data_in) {
-+		pci_unmap_single(ioc->pdev, data_in_dma,
-+				 data_in_sz, PCI_DMA_TODEVICE);
-+out_free_data_in:
-+		kfree(data_in);
-+	}
-=20
--	if (data_out)
--		pci_free_consistent(ioc->pdev, data_out_sz, data_out,
--		    data_out_dma);
-+	if (data_out) {
-+		pci_unmap_single(ioc->pdev, data_out_dma,
-+				 data_out_sz, PCI_DMA_FROMDEVICE);
-+out_free_data_out:
-+		kfree(data_out);
-+	}
-=20
- 	kfree(mpi_request);
- 	ioc->ctl_cmds.status =3D MPT3_CMD_NOT_USED;
---=20
-1.8.5.6
+Hans
 
 
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> You might also need to add calls to scsi_track_queue_full() but only if
+> the devices aren't responding QUEUE_FULL correctly.
+>
+> James
+>
+>> Also notice that uas is used a lot with ssd-s, that is mostly what
+>> I want to optimize for, but it is definitely also used with spinning
+>> rust.
+>>
+>> And yes almost all uas devices are bridged sata devices (this may
+>> change in the near future though, with ssd-s specifically designed
+>> for usb-3 attachment, although sofar these all seem to use an
+>> embbeded sata bridge), so from this pov an upper limit of 31 makes
+>> sense, I guess, but I've not seen any bridges which actually do more
+>> then 32 streams anyways.
+>>
+>> Still this is a bug-fix patch, essentially a partial revert, to
+>> address performance regressions, so lets get this out as is and take
+>> our time to come up with some tweaks (if necessary) for the say 4.8.
+>>
+>>> There's a good reason why you don't want a queue deeper than you
+>>> can handle: it tends to interfere with writeback because you build
+>>> up a lot of pending I/O in the queue which can't be issued (it's
+>>> very similar to why bufferbloat is a problem in networks).  In
+>>> theory, as long as your devices return the correct indicator
+>>> (QUEUE_FULL status), we'll handle most of this in the mid-layer by
+>>> plugging the block queue, but given what I've seen from UAS
+>>> devices, that's less than probable.
+>>
+>> So any smart ideas how to be nicer to spinning rust, without
+>> negatively impacting ssd-s? As said if I've to choice I think we
+>> should chose optimizing ssd-s, as that is where uas is used a lot
+>> (although usb  attached harddisks are switching over to it too).
+>>
+>> Note I just checked the 1TB sata/ahci harddisk in my workstation and
+>> it is using a queue_depth of 31 too, so this really does seem like a
+>> mid-layer problem to me.
+>>
+>> Regards,
+>>
+>> Hans
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
