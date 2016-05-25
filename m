@@ -1,83 +1,69 @@
-From: Or Gerlitz <gerlitz.or@gmail.com>
-Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
-Date: Wed, 25 May 2016 18:04:39 +0300
-Message-ID: <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
-References: <cover.1461088672.git.varun@chelsio.com>
-	<62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
-	<CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
-	<CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
-	<1464072025.22249.87.camel@haakon3.risingtidesystems.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 1/5] blk mq: take ref to q when running it
+Date: Wed, 25 May 2016 08:53:44 -0700
+Message-ID: <8cab029e-fac5-b4cb-8e80-707abe50ab09@sandisk.com>
+References: <1464162903-14735-1-git-send-email-mchristi@redhat.com>
+ <1464162903-14735-2-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1464072025.22249.87.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com, Steve Wise <swise@opengridcomputing.com>, Varun Prakash <varun@chelsio.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0093.outbound.protection.outlook.com ([157.56.111.93]:57008
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750856AbcEYPxw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2016 11:53:52 -0400
+In-Reply-To: <1464162903-14735-2-git-send-email-mchristi@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mchristi@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
 
-On Tue, May 24, 2016 at 9:40 AM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> Hi Or & Co,
-> On Wed, 2016-05-18 at 14:45 +0300, Or Gerlitz wrote:
->> On Sat, Apr 30, 2016 at 6:54 PM, Or Gerlitz <gerlitz.or@gmail.com> wrote:
->> > On Tue, Apr 19, 2016 at 9:30 PM, Varun Prakash <varun@chelsio.com> wrote:
->> >> cxgbit.h - This file contains data structure
->> >> definitions for cxgbit.ko.
->> >>
->> >> cxgbit_lro.h - This file contains data structure
->> >> definitions for LRO support.
->> >>
->> >> cxgbit_main.c - This file contains code for
->> >> registering with iscsi target transport and
->> >> cxgb4 driver.
->> >>
->> >> cxgbit_cm.c - This file contains code for
->> >> connection management.
->> >>
->> >> cxgbit_target.c - This file contains code
->> >> for processing iSCSI PDU.
->> >>
->> >> cxgbit_ddp.c - This file contains code for
->> >> Direct Data Placement.
->> >
->> > Wait,
->> >
->> > You are adding many K's LOCs to handle things like CM (connection
->> > management), DDP and LRO. But your upstream solution must be using CM
->> > and DDP (and LRO as well) for the HW offloaded initiator side as well,
->> > not to mention the iWARP side of things.
->> >
->> > There must be some way to refactor things instead of repeating the
->> > same bits over and over, thoughts?
-
->> The author haven't responded... where that this stands from your point of view?
-
-> For an initial merge, I don't have an objection to this series wrt
-> drivers/target/iscsi/* improvements + prerequisites, and new standalone
-> cxgbit iscsit_transport driver.
+On 05/25/2016 12:54 AM, mchristi@redhat.com wrote:
+> If the __blk_mq_run_hw_queue is a result of a async run or retry
+> then we do not have a reference to the queue. At this time,
+> blk_cleanup_queue could begin tearing it down while the queue_rq
+> function is being run.
 >
-> That said, there are areas between cxgbi + cxgbit code that can be made
-> common as you've pointed out.  The Cheliso folks have mentioned off-list
-> that cxgbi as-is in mainline does not support LRO, and that the majority
-> of DDP logic is shared between initiator + target.
+> This patch just has us do a blk_queue_enter call.
 >
-> Are there specific pieces of logic in DDP or iWARP for cxgb* that you'd
-> like to see Varun + Co pursue as common code in v4.8+..?
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> ---
+>  block/blk-mq.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+>
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 7df9c92..5958a02 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -738,8 +738,13 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+>
+>  	WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask));
+>
+> -	if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
+> +	if (blk_queue_enter(q, false)) {
+> +		blk_mq_run_hw_queue(hctx, true);
+>  		return;
+> +	}
+> +
+> +	if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
+> +		goto exit_queue;
+>
+>  	hctx->run++;
+>
+> @@ -832,6 +837,9 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+>  		 **/
+>  		blk_mq_run_hw_queue(hctx, true);
+>  	}
+> +
+> +exit_queue:
+> +	blk_queue_exit(q);
+>  }
 
-Hi Nic,
+Hello Mike,
 
-As I wrote above, I have good reasons to believe that there are few K
-LOCs of duplication
-between this series to the chelsio hw iscsi initiator or the chelsio
-iwarp driver or both (triple).
+blk_cleanup_queue() waits until delay_work and run_work have finished 
+inside blk_sync_queue(). The code in blk_cleanup_queue() before the 
+blk_sync_queue() call should be safe to execute concurrently with 
+queue_rq(). Or did I perhaps miss something?
 
-Ys, I'd like to see a public response from Varun and Co on this valid
-reviewer comment
-before you proceed with this series, makes sense? There's no point to
-duplicate the same
-code in the kernel again and again. **Even** if there's one
-duplication now, we don't want
-another one.
-
-Or.
+Bart.
