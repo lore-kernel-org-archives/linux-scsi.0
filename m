@@ -1,59 +1,83 @@
-From: Petros Koutoupis <petros@petroskoutoupis.com>
-Subject: sd: ZBC Update Read/Write Commands to SCSI spec
-Date: Wed, 25 May 2016 10:02:36 -0500
-Message-ID: <1464188556.3020.4.camel@petroskoutoupis.com>
+From: Or Gerlitz <gerlitz.or@gmail.com>
+Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
+Date: Wed, 25 May 2016 18:04:39 +0300
+Message-ID: <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
+References: <cover.1461088672.git.varun@chelsio.com>
+	<62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
+	<CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
+	<CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
+	<1464072025.22249.87.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:61609 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755658AbcEYPCm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2016 11:02:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1464072025.22249.87.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com, Steve Wise <swise@opengridcomputing.com>, Varun Prakash <varun@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: hare@suse.de, linux-scsi@vger.kernel.org
-Cc: petros@petroskoutoupis.com
 
-This patch is based on:
-git.kernel.org:/pub/scm/linux/kernel/git/hare/scsi-devel branch zbc.v6
+On Tue, May 24, 2016 at 9:40 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> Hi Or & Co,
+> On Wed, 2016-05-18 at 14:45 +0300, Or Gerlitz wrote:
+>> On Sat, Apr 30, 2016 at 6:54 PM, Or Gerlitz <gerlitz.or@gmail.com> wrote:
+>> > On Tue, Apr 19, 2016 at 9:30 PM, Varun Prakash <varun@chelsio.com> wrote:
+>> >> cxgbit.h - This file contains data structure
+>> >> definitions for cxgbit.ko.
+>> >>
+>> >> cxgbit_lro.h - This file contains data structure
+>> >> definitions for LRO support.
+>> >>
+>> >> cxgbit_main.c - This file contains code for
+>> >> registering with iscsi target transport and
+>> >> cxgb4 driver.
+>> >>
+>> >> cxgbit_cm.c - This file contains code for
+>> >> connection management.
+>> >>
+>> >> cxgbit_target.c - This file contains code
+>> >> for processing iSCSI PDU.
+>> >>
+>> >> cxgbit_ddp.c - This file contains code for
+>> >> Direct Data Placement.
+>> >
+>> > Wait,
+>> >
+>> > You are adding many K's LOCs to handle things like CM (connection
+>> > management), DDP and LRO. But your upstream solution must be using CM
+>> > and DDP (and LRO as well) for the HW offloaded initiator side as well,
+>> > not to mention the iWARP side of things.
+>> >
+>> > There must be some way to refactor things instead of repeating the
+>> > same bits over and over, thoughts?
 
-According to the Zoned Block Commands (ZBC) Revision 5 SCSI specificati=
-on,
-a Host Managed and Host Aware device is limited to support at a minimum=
- the
-READ (16) and WRITE (16) read/write CDBs. This means that a drive manuf=
-acturer
-is not obligated to support anything else. We shouldn't assume that we =
-can
-send other read/write commands and should instead limit sd to only the
-mandatory list highlighted in the specification.
+>> The author haven't responded... where that this stands from your point of view?
 
-Note, I did not place the a check for zoned devices in the DIF-enabled
-conditional above, under the assumption that if the media supports Type=
--2
-then it should also support the 32-byte commands. Thoughts?
+> For an initial merge, I don't have an objection to this series wrt
+> drivers/target/iscsi/* improvements + prerequisites, and new standalone
+> cxgbit iscsit_transport driver.
+>
+> That said, there are areas between cxgbi + cxgbit code that can be made
+> common as you've pointed out.  The Cheliso folks have mentioned off-list
+> that cxgbi as-is in mainline does not support LRO, and that the majority
+> of DDP logic is shared between initiator + target.
+>
+> Are there specific pieces of logic in DDP or iWARP for cxgb* that you'd
+> like to see Varun + Co pursue as common code in v4.8+..?
 
-Signed-off-by: Petros Koutoupis <petros@petroskoutoupis.com>
+Hi Nic,
 
---- scsi-devel/drivers/scsi/sd.c.orig	2016-05-12 23:21:04.314000000 -05=
-00
-+++ scsi-devel/drivers/scsi/sd.c	2016-05-25 08:55:21.715506056 -0500
-@@ -1159,7 +1159,8 @@ static int sd_setup_read_write_cmnd(stru
-=C2=A0		SCpnt->cmnd[29] =3D (unsigned char) (this_count >> 16) & 0xff;
-=C2=A0		SCpnt->cmnd[30] =3D (unsigned char) (this_count >> 8) & 0xff;
-=C2=A0		SCpnt->cmnd[31] =3D (unsigned char) this_count & 0xff;
--	} else if (sdp->use_16_for_rw || (this_count > 0xffff)) {
-+	} else if (sdp->use_16_for_rw || (this_count > 0xffff) ||
-+		=C2=A0=C2=A0=C2=A0sdkp->zoned =3D=3D 1 || sdp->type =3D=3D TYPE_ZBC)=
- {
-=C2=A0		SCpnt->cmnd[0] +=3D READ_16 - READ_6;
-=C2=A0		SCpnt->cmnd[1] =3D protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 :=
- 0);
-=C2=A0		SCpnt->cmnd[2] =3D sizeof(block) > 4 ? (unsigned char) (block >=
-> 56) & 0xff : 0;
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As I wrote above, I have good reasons to believe that there are few K
+LOCs of duplication
+between this series to the chelsio hw iscsi initiator or the chelsio
+iwarp driver or both (triple).
+
+Ys, I'd like to see a public response from Varun and Co on this valid
+reviewer comment
+before you proceed with this series, makes sense? There's no point to
+duplicate the same
+code in the kernel again and again. **Even** if there's one
+duplication now, we don't want
+another one.
+
+Or.
