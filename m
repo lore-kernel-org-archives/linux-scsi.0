@@ -1,60 +1,209 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] target: Fix missing complete during ABORT_TASK +
-	CMD_T_FABRIC_STOP
-Date: Thu, 26 May 2016 08:33:42 +0200
-Message-ID: <20160526063342.GA21689@lst.de>
-References: <1464205660-7171-1-git-send-email-nab@linux-iscsi.org>
+From: Chaitra Basappa <chaitra.basappa@broadcom.com>
+Subject: RE: mpt3sas: memory allocation for firmware upgrade DMA memory question
+Date: Thu, 26 May 2016 15:46:58 +0530
+Message-ID: <c2f16ce7d75be5869b5888fa5198c40a@mail.gmail.com>
+References: <20160525091853.psv6kml6oingj4fx@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1464205660-7171-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:35901 "EHLO
+	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbcEZKRA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2016 06:17:00 -0400
+Received: by mail-qk0-f169.google.com with SMTP id x7so54636585qkd.3
+        for <linux-scsi@vger.kernel.org>; Thu, 26 May 2016 03:17:00 -0700 (PDT)
+In-Reply-To: <20160525091853.psv6kml6oingj4fx@c203.arch.suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>
 
-I think the function could be further cut down, given that
- 
- a) there is no need to take a lock to read a single field
- b) CMD_T_FABRIC_STOP is never cleared and we can check it later
+Johannes,
+ Could you please let us know which application is being used for firmw=
+are
+upgrade ?? Whether it is your own customized application or LSI provide=
+d
+applications?
 
-See the incremental patch below:
+Also our application use single contiguous memory buffer for ioctls and
+hence mpt3sas driver is using single contiguous memory for the DMA
+operation.
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 69abcef..dad4ab8 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2550,26 +2550,18 @@ static void target_release_cmd_kref(struct kref *kref)
- 	struct se_cmd *se_cmd = container_of(kref, struct se_cmd, cmd_kref);
- 	struct se_session *se_sess = se_cmd->se_sess;
- 	unsigned long flags;
--	bool fabric_stop;
- 
- 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
--
--	spin_lock(&se_cmd->t_state_lock);
--	fabric_stop = (se_cmd->transport_state & CMD_T_FABRIC_STOP);
--	spin_unlock(&se_cmd->t_state_lock);
--
--	if (se_cmd->cmd_wait_set || fabric_stop) {
--		list_del_init(&se_cmd->se_cmd_list);
--		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
--		target_free_cmd_mem(se_cmd);
--		complete(&se_cmd->cmd_wait_comp);
--		return;
--	}
- 	list_del_init(&se_cmd->se_cmd_list);
- 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
- 
- 	target_free_cmd_mem(se_cmd);
--	se_cmd->se_tfo->release_cmd(se_cmd);
+If we use GFP_KERNEL flag then it may be possible that ioctl thread may
+hang/wait for long,  if it doesn't get required memory from the system.
+
+We may need to test below patch thoroughly , as I don=E2=80=99t see all=
+ocation of
+several non-contiguous chunks of memory in below patch...,
+
+Thanks,
+ Chaitra
+
+-----Original Message-----
+=46rom: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+Sent: Wednesday, May 25, 2016 2:49 PM
+To: Chaitra P B; Suganath Prabu Subramani
+Cc: Linux SCSI Mailinglist; Jeff Mahoney
+Subject: mpt3sas: memory allocation for firmware upgrade DMA memory
+question
+
+Hi Chaitra and Suganath,
+
+I've got a question regarding mpt3sas' memory allocation used when doin=
+g a
+firmware upgrade. Currently you're doing a pci_alloc_consitent() which
+tries to allocate memory via GFP_ATOMIC. This memory then is passed as =
+a
+single element on a sg_list.
+
+Jeff reported it returned -ENOMEM on his Server due to highly fragmente=
+d
+memory.
+
+Is it required to have the memory for the DMA operation contiguous, or =
+can
+I just allocate several non-contiguous junks of memory and map it to a
+sg_list?
+
+If not, is GFP_ATMOIC really needed? I've converted the driver to use
+GFP_KERNEL but I'm a bit reluctant to test below patch on real hardware=
+ to
+not brick the HBA.
+
+Thanks,
+	Johannes
+
+RFC patch for GFP_KERNEL allocation, though splitting into multiple sg
+mapped elements is the preferred fix here:
+
+=46rom 06e63654d887df7f740dc5abcb40d441a8da7fa5 Mon Sep 17 00:00:00 200=
+1
+=46rom: Johannes Thumshirn <jthumshirn@suse.de>
+Date: Tue, 24 May 2016 17:25:59 +0200
+Subject: [RFC PATCH] mpt3sas: Don't do atomic memory allocations for
+firmware  update DMA
+
+Currently mpt3sas uses pci_alloc_consistent() to allocate memory for th=
+e
+DMA used to do firmware updates. pci_alloc_consistent() in turn uses
+GFP_ATOMIC allocations. On a host with high memory fragmention this can
+lead to page allocation failures, as the DMA buffer holds the complete
+firmware update and thus can need page allocations of higher orders.
+
+As the firmware update code path may sleep, convert allocation to a nor=
+mal
+kzalloc() call with GFP_KERNEL and map it to the DMA buffers.
+
+Reported-by: Jeff Mahoney <jeffm@suse.com>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 39
+++++++++++++++++++++++++++++----------
+ 1 file changed, 29 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 7d00f09..14be3cf 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -751,8 +751,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc,
+struct mpt3_ioctl_command karg,
+
+ 	/* obtain dma-able memory for data transfer */
+ 	if (data_out_sz) /* WRITE */ {
+-		data_out =3D pci_alloc_consistent(ioc->pdev, data_out_sz,
+-		    &data_out_dma);
++		data_out =3D kzalloc(data_out_sz, GFP_KERNEL);
+ 		if (!data_out) {
+ 			pr_err("failure at %s:%d/%s()!\n", __FILE__,
+ 			    __LINE__, __func__);
+@@ -760,6 +759,14 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc,
+struct mpt3_ioctl_command karg,
+ 			mpt3sas_base_free_smid(ioc, smid);
+ 			goto out;
+ 		}
++		data_out_dma =3D pci_map_single(ioc->pdev, data_out,
++					      data_out_sz,
+PCI_DMA_TODEVICE);
++		if (dma_mapping_error(&ioc->pdev->dev, data_out_dma)) {
++			ret =3D -EINVAL;
++			mpt3sas_base_free_smid(ioc, smid);
++			goto out_free_data_out;
++		}
 +
-+	if (se_cmd->cmd_wait_set ||
-+	    (se_cmd->transport_state & CMD_T_FABRIC_STOP))
-+		complete(&se_cmd->cmd_wait_comp);
-+	else
-+		se_cmd->se_tfo->release_cmd(se_cmd);
- }
- 
- /* target_put_sess_cmd - Check for active I/O shutdown via kref_put
+ 		if (copy_from_user(data_out, karg.data_out_buf_ptr,
+ 			data_out_sz)) {
+ 			pr_err("failure at %s:%d/%s()!\n", __FILE__, @@
+-771,8 +778,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struc=
+t
+mpt3_ioctl_command karg,
+ 	}
+
+ 	if (data_in_sz) /* READ */ {
+-		data_in =3D pci_alloc_consistent(ioc->pdev, data_in_sz,
+-		    &data_in_dma);
++		data_in =3D kzalloc(data_in_sz, GFP_KERNEL);
+ 		if (!data_in) {
+ 			pr_err("failure at %s:%d/%s()!\n", __FILE__,
+ 			    __LINE__, __func__);
+@@ -780,6 +786,13 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc,
+struct mpt3_ioctl_command karg,
+ 			mpt3sas_base_free_smid(ioc, smid);
+ 			goto out;
+ 		}
++		data_in_dma =3D pci_map_single(ioc->pdev, data_in,
++					     data_in_sz,
+PCI_DMA_FROMDEVICE);
++		if (dma_mapping_error(&ioc->pdev->dev, data_in_dma)) {
++			ret =3D -EINVAL;
++			mpt3sas_base_free_smid(ioc, smid);
++			goto out_free_data_in;
++		}
+ 	}
+
+ 	psge =3D (void *)request + (karg.data_sge_offset*4); @@ -1013,13
++1026,19 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct
+mpt3_ioctl_command karg,
+  out:
+
+ 	/* free memory associated with sg buffers */
+-	if (data_in)
+-		pci_free_consistent(ioc->pdev, data_in_sz, data_in,
+-		    data_in_dma);
++	if (data_in) {
++		pci_unmap_single(ioc->pdev, data_in_dma,
++				 data_in_sz, PCI_DMA_TODEVICE);
++out_free_data_in:
++		kfree(data_in);
++	}
+
+-	if (data_out)
+-		pci_free_consistent(ioc->pdev, data_out_sz, data_out,
+-		    data_out_dma);
++	if (data_out) {
++		pci_unmap_single(ioc->pdev, data_out_dma,
++				 data_out_sz, PCI_DMA_FROMDEVICE);
++out_free_data_out:
++		kfree(data_out);
++	}
+
+ 	kfree(mpi_request);
+ 	ioc->ctl_cmds.status =3D MPT3_CMD_NOT_USED;
+--
+1.8.5.6
+
+
+
+--
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
