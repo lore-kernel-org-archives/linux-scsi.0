@@ -1,64 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/5] scsi: add new async device reset support
-Date: Fri, 27 May 2016 11:16:50 +0200
-Message-ID: <57481082.9050700@suse.de>
-References: <1464162903-14735-1-git-send-email-mchristi@redhat.com>
- <1464162903-14735-5-git-send-email-mchristi@redhat.com>
- <20160527082325.GB31630@infradead.org>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
+Date: Fri, 27 May 2016 17:30:29 +0800
+Message-ID: <CAGnHSEn0ntEw_dwFNqG6CdgwcpHzQie88jgA21uioKhBbcByTg@mail.gmail.com>
+References: <20160518223616.GA409@sucs.org>
+	<20160527041824.GC9418@birch.djwong.org>
+	<CALjAwxgkgPZdXFkOuD-7Dsbxf9oVEGuXTDLnyqu8rTrJio_4mA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160527082325.GB31630@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, mchristi@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CALjAwxgkgPZdXFkOuD-7Dsbxf9oVEGuXTDLnyqu8rTrJio_4mA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/27/2016 10:23 AM, Christoph Hellwig wrote:
-> Adding Hannes to the Cc list as he's been looking into EH improvement=
-s
-> in this area.
+There seems to be some sort of race condition between
+blkdev_issue_zeroout() and the scsi disk driver (disabling write same
+after an illegal request). On my UAS drive, sometimes `blkdiscard -z
+/dev/sdX` will return right away, even though if I then check
+`write_same_max_bytes` it has turned 0. Sometimes it will just write
+zero with SCSI WRITE even if `write_same_max_bytes` is 33553920 before
+I issue `blkdiscard -z` (`write_same_max_bytes` also turned 0, as
+expected).
+
+Not sure if it is directly related to the case here though.
+
+On 27 May 2016 at 12:45, Sitsofe Wheeler <sitsofe@gmail.com> wrote:
+> On 27 May 2016 at 05:18, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>>
+>> It's possible that the pvscsi device advertised WRITE SAME, but if the device
+>> sends back ILLEGAL REQUEST then the SCSI disk driver will set
+>> write_same_max_bytes=0.  Subsequent BLKZEROOUT attempts will then issue writes
+>> of zeroes to the drive.
 >
-> On Wed, May 25, 2016 at 02:55:02AM -0500, mchristi@redhat.com wrote:
->> From: Mike Christie <mchristi@redhat.com>
->>
->> Currently, if the SCSI eh runs then before we do a LUN_RESET
->> we stop the host. This patch and the block layer one before it
->> begin to add infrastructure to be able to do a LUN_RESET and
->> eventually do a transport level recovery without having to stop the
->> host.
->>
->> For LUn-reset, this patch adds a new callout, eh_async_device_reset_=
-handler,
->> which works similar to how LLDs handle SG_SCSI_RESET_DEVICE where th=
-e
->> LLD manages the commands that are affected.
->>
->> eh_async_device_reset_handler:
->>
->> The LLD should perform a LUN RESET that affects all commands
->> that have been accepted by its queuecommand callout for the
->> device passed in to the callout. While the reset handler is running,
->> queuecommand will not be running or called for the device.
->>
->> Unlike eh_device_reset_handler, queuecommand may still be
->> called for other devices, and the LLD must call scsi_done for the
->> commands that have been affected by the reset.
->>
->> If SUCCESS or FAST_IO_FAIL is returned, the scsi_cmnds cleaned up
->> must be failed with DID_ABORT.
->>
->> Signed-off-by: Mike Christie <mchristi@redhat.com>
-In general I like the approach.
-I'll be looking into it more closely next week.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+> Thanks for following up on this but that's not what happens on the md
+> device - you can go on to issue as many BLKZEROOUT requests as you
+> like but the md disk is never zeroed nor is an error returned.
+>
+> I filed a bug at https://bugzilla.kernel.org/show_bug.cgi?id=118581
+> (see https://bugzilla.kernel.org/show_bug.cgi?id=118581#c6 for
+> alternative reproduction steps that use scsi_debug and can be reworked
+> to impact device mapper) and Shaohua Li noted that
+> blkdev_issue_write_same could return 0 even when the disk didn't
+> support write same (see
+> https://bugzilla.kernel.org/show_bug.cgi?id=118581#c8 ).
+>
+> Shaohua went on to create a patch for this ("block: correctly fallback
+> for zeroout" - https://patchwork.kernel.org/patch/9137311/ ) which has
+> yet to be reviewed.
+>
+> --
+> Sitsofe | http://sucs.org/~sits/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
