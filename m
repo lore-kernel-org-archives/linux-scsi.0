@@ -1,54 +1,48 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] Use the correct size to set block max sectors
-Date: Thu, 26 May 2016 19:18:35 -0700
-Message-ID: <aad00979-740e-b844-64fb-4bfa646796e5@sandisk.com>
-References: <1464307708-4315-1-git-send-email-longli@microsoft.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
+Date: Thu, 26 May 2016 21:18:25 -0700
+Message-ID: <20160527041824.GC9418@birch.djwong.org>
+References: <20160518223616.GA409@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0081.outbound.protection.outlook.com ([157.56.110.81]:18848
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932104AbcE0CSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 May 2016 22:18:48 -0400
-In-Reply-To: <1464307708-4315-1-git-send-email-longli@microsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160518223616.GA409@sucs.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Long Li <longli@microsoft.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: KY Srinivasan <kys@microsoft.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 05/26/16 17:08, Long Li wrote:
-> The block sector size should be in unit of 512 bytes, not in bytes.
->
-> Signed-off-by: Long Li <longli@microsoft.com>
->
-> ---
->  drivers/scsi/sd.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 428c03e..4bce17e 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2862,9 +2862,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	if (sdkp->opt_xfer_blocks &&
->  	    sdkp->opt_xfer_blocks <= dev_max &&
->  	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
-> -	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_SIZE)
-> -		rw_max = q->limits.io_opt =
-> +	    sdkp->opt_xfer_blocks * sdp->sector_size >= PAGE_SIZE) {
-> +		q->limits.io_opt =
->  			sdkp->opt_xfer_blocks * sdp->sector_size;
-> +		rw_max = (q->limits.io_opt >> 9);
-> +	}
->  	else
->  		rw_max = BLK_DEF_MAX_SECTORS;
+On Wed, May 18, 2016 at 11:39:30PM +0100, Sitsofe Wheeler wrote:
+> Hi,
+> 
+> With Ubuntu's 4.4.0-22-generic kernel and a Fedora 23
+> 4.6.0-1.vanilla.knurd.1.fc23.x86_64 kernel I've found that the
+> BLKZEROOUT syscall can malfunction and not zero data.
+> 
+> When BLKZEROOUT is issued to an MD device atop a PVSCSI controller
+> supplied VMDK from ESXi 6.0 the call returns immediately and with a zero
+> return code. Unfortunately, inspecting the data on the MD device shows
+> that it has not been zeroed and is in fact untouched. The easiest way to
+> see this behaviour is to boot the VM, create an mdadm device atop
+> /dev/sd?, scribble some non-zero value on the disk and then use
+> blkdiscard --zeroout /dev/md??? . If you then inspect the MD disk (e.g.
+> with hexdump) you will still see the old data and using POSIX_FADV_DONTNEED
+> on the MD device doesn't change the outcome.
+> 
+> The only clue I've seen is that
+> /sys/block/sd?/queue/write_same_max_bytes starts out being 33553920 but
+> after a WRITE SAME is issued it becomes 0. If the MD device is created
+> after write_same_max_bytes has become 0 on the backing disk then
+> BLKZEROOUT seems to work correctly.
 
-Isn't this a duplicate of a patch Martin Petersen posted three weeks 
-ago? See also http://thread.gmane.org/gmane.linux.scsi/113746.
+It's possible that the pvscsi device advertised WRITE SAME, but if the device
+sends back ILLEGAL REQUEST then the SCSI disk driver will set
+write_same_max_bytes=0.  Subsequent BLKZEROOUT attempts will then issue writes
+of zeroes to the drive.
 
-Bart.
+--D
 
-
-
+> 
+> -- 
+> Sitsofe | http://sucs.org/~sits/
