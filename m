@@ -1,31 +1,182 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] target: call queue reset if supported
-Date: Fri, 27 May 2016 01:22:15 -0700
-Message-ID: <20160527082215.GA31630@infradead.org>
+Subject: Re: [PATCH 4/5] scsi: add new async device reset support
+Date: Fri, 27 May 2016 01:23:25 -0700
+Message-ID: <20160527082325.GB31630@infradead.org>
 References: <1464162903-14735-1-git-send-email-mchristi@redhat.com>
- <1464162903-14735-4-git-send-email-mchristi@redhat.com>
+ <1464162903-14735-5-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54776 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932454AbcE0IWQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 May 2016 04:22:16 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1464162903-14735-4-git-send-email-mchristi@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1464162903-14735-5-git-send-email-mchristi@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
 To: mchristi@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org, hare@suse.de
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 25, 2016 at 02:55:01AM -0500, mchristi@redhat.com wrote:
+Adding Hannes to the Cc list as he's been looking into EH improvements
+in this area.
+
+On Wed, May 25, 2016 at 02:55:02AM -0500, mchristi@redhat.com wrote:
 > From: Mike Christie <mchristi@redhat.com>
 > 
-> Instead of waiting for commands, map the lun reset operation
-> to a queue reset.
+> Currently, if the SCSI eh runs then before we do a LUN_RESET
+> we stop the host. This patch and the block layer one before it
+> begin to add infrastructure to be able to do a LUN_RESET and
+> eventually do a transport level recovery without having to stop the
+> host.
 > 
-> We do not check the result of blk_reset_queue because if
-> it works then we need to wait for the bio/request completions
-> and if it failed we might as wait and hope like we did before.
-
-Please don't call into block device code from the file handler.
+> For LUn-reset, this patch adds a new callout, eh_async_device_reset_handler,
+> which works similar to how LLDs handle SG_SCSI_RESET_DEVICE where the
+> LLD manages the commands that are affected.
+> 
+> eh_async_device_reset_handler:
+> 
+> The LLD should perform a LUN RESET that affects all commands
+> that have been accepted by its queuecommand callout for the
+> device passed in to the callout. While the reset handler is running,
+> queuecommand will not be running or called for the device.
+> 
+> Unlike eh_device_reset_handler, queuecommand may still be
+> called for other devices, and the LLD must call scsi_done for the
+> commands that have been affected by the reset.
+> 
+> If SUCCESS or FAST_IO_FAIL is returned, the scsi_cmnds cleaned up
+> must be failed with DID_ABORT.
+> 
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> ---
+>  drivers/scsi/scsi_error.c | 31 ++++++++++++++++++++++++++++---
+>  drivers/scsi/scsi_lib.c   |  6 ++++++
+>  drivers/scsi/scsi_priv.h  |  1 +
+>  include/scsi/scsi_host.h  | 17 +++++++++++++++++
+>  4 files changed, 52 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 984ddcb..cec2dfb 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -853,16 +853,41 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+>  {
+>  	int rtn;
+>  	struct scsi_host_template *hostt = scmd->device->host->hostt;
+> +	struct scsi_device *sdev = scmd->device;
+>  
+> -	if (!hostt->eh_device_reset_handler)
+> +	if (!hostt->eh_device_reset_handler &&
+> +	    !hostt->eh_async_device_reset_handler)
+>  		return FAILED;
+>  
+> -	rtn = hostt->eh_device_reset_handler(scmd);
+> +	if (hostt->eh_device_reset_handler) {
+> +		rtn = hostt->eh_device_reset_handler(scmd);
+> +	} else {
+> +		if (!blk_reset_queue(sdev->request_queue))
+> +			rtn = SUCCESS;
+> +		else
+> +			rtn = FAILED;
+> +	}
+>  	if (rtn == SUCCESS)
+> -		__scsi_report_device_reset(scmd->device, NULL);
+> +		__scsi_report_device_reset(sdev, NULL);
+>  	return rtn;
+>  }
+>  
+> +enum blk_eh_timer_return scsi_reset_queue(struct request_queue *q)
+> +{
+> +	struct scsi_device *sdev = q->queuedata;
+> +	struct scsi_host_template *hostt = sdev->host->hostt;
+> +	int rtn;
+> +
+> +	if (!hostt->eh_async_device_reset_handler)
+> +		return -EOPNOTSUPP;
+> +
+> +	rtn = hostt->eh_async_device_reset_handler(sdev);
+> +	if (rtn == SUCCESS || rtn == FAST_IO_FAIL)
+> +		return BLK_EH_HANDLED;
+> +
+> +	return BLK_EH_NOT_HANDLED;
+> +}
+> +
+>  /**
+>   * scsi_try_to_abort_cmd - Ask host to abort a SCSI command
+>   * @hostt:	SCSI driver host template
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 8106515..11374dd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -779,6 +779,10 @@ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+>  		set_host_byte(cmd, DID_OK);
+>  		error = -ENODATA;
+>  		break;
+> +	case DID_ABORT:
+> +		set_host_byte(cmd, DID_OK);
+> +		error = -EINTR;
+> +		break;
+>  	default:
+>  		error = -EIO;
+>  		break;
+> @@ -2159,6 +2163,7 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
+>  	blk_queue_softirq_done(q, scsi_softirq_done);
+>  	blk_queue_rq_timed_out(q, scsi_times_out);
+>  	blk_queue_lld_busy(q, scsi_lld_busy);
+> +	blk_queue_reset(q, scsi_reset_queue);
+>  	return q;
+>  }
+>  
+> @@ -2167,6 +2172,7 @@ static struct blk_mq_ops scsi_mq_ops = {
+>  	.queue_rq	= scsi_queue_rq,
+>  	.complete	= scsi_softirq_done,
+>  	.timeout	= scsi_timeout,
+> +	.reset		= scsi_reset_queue,
+>  	.init_request	= scsi_init_request,
+>  	.exit_request	= scsi_exit_request,
+>  };
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index 27b4d0a..2e03168 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -67,6 +67,7 @@ extern void scsi_exit_devinfo(void);
+>  
+>  /* scsi_error.c */
+>  extern void scmd_eh_abort_handler(struct work_struct *work);
+> +extern enum blk_eh_timer_return scsi_reset_queue(struct request_queue *q);
+>  extern enum blk_eh_timer_return scsi_times_out(struct request *req);
+>  extern int scsi_error_handler(void *host);
+>  extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index fcfa3d7..532deb5 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -146,6 +146,23 @@ struct scsi_host_template {
+>  	 */
+>  	int (* eh_abort_handler)(struct scsi_cmnd *);
+>  	int (* eh_device_reset_handler)(struct scsi_cmnd *);
+> +	/*
+> +	 * eh_async_device_reset_handler - Perform LUN RESET
+> +	 * @scsi_device: scsi device to reset
+> +	 *
+> +	 * The LLD should perform a LUN RESET that affects all commands
+> +	 * that have been accepted by its queuecommand callout for the
+> +	 * device passed in. While the reset handler is running, queuecommand
+> +	 * will not be called for the device.
+> +	 *
+> +	 * Unlike eh_device_reset_handler, queuecommand may still be called
+> +	 * for other devices, and the LLD must call scsi_done for the commands
+> +	 * that have been affected by the reset.
+> +	 *
+> +	 * If SUCCESS or FAST_IO_FAIL is returned, the scsi_cmnds for
+> +	 * scsi_device must be failed with DID_ABORT.
+> +	 */
+> +	int (* eh_async_device_reset_handler)(struct scsi_device *);
+>  	int (* eh_target_reset_handler)(struct scsi_cmnd *);
+>  	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
+>  	int (* eh_host_reset_handler)(struct scsi_cmnd *);
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
