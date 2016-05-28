@@ -1,166 +1,215 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: [PATCH] scsi: fix race between simultaneous decrements of ->host_failed
-Date: Sat, 28 May 2016 11:51:11 +0800
-Message-ID: <1464407471-3712-1-git-send-email-fangwei1@huawei.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v3] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Fri, 27 May 2016 21:27:55 -0700
+Message-ID: <1464409675.22249.237.camel@haakon3.risingtidesystems.com>
+References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
+	 <1464359544-85969-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1464359544-85969-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, bart.vanassche@sandisk.com, martin.petersen@oracle.com, tyreld@linux.vnet.ibm.com, akpm@linux-foundation.org, gregkh@linuxfoundation.org, joe@perches.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-async_sas_ata_eh(), which will call scsi_eh_finish_cmd() in some case,
-would be performed simultaneously in sas_ata_strategy_handler(). In this
-case, ->host_failed may be decreased simultaneously in
-scsi_eh_finish_cmd() on different CPUs, and become abnormal.
+Hi Bryant,
 
-It will lead to permanently inequal between ->host_failed and
- ->host_busy. Then SCSI error handler thread won't become running,
-SCSI errors after that won't be handled forever.
+On Fri, 2016-05-27 at 09:32 -0500, Bryant G. Ly wrote
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi/ibmvscsi_tgt.c
+> new file mode 100644
+> index 0000000..292d129
+> --- /dev/null
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi_tgt.c
 
-Use atomic type for ->host_failed to fix this race.
+<SNIP>
 
-Signed-off-by: Wei Fang <fangwei1@huawei.com>
----
- drivers/ata/libata-eh.c             |    2 +-
- drivers/scsi/libsas/sas_scsi_host.c |    5 +++--
- drivers/scsi/scsi.c                 |    2 +-
- drivers/scsi/scsi_error.c           |   15 +++++++++------
- drivers/scsi/scsi_lib.c             |    3 ++-
- include/scsi/scsi_host.h            |    2 +-
- 6 files changed, 17 insertions(+), 12 deletions(-)
+> +
+> +static struct se_portal_group *ibmvscsis_make_nexus(struct ibmvscsis_tport
+> +						    *tport,
+> +						    const char *name)
+> +{
+> +	struct se_node_acl *acl;
+> +
+> +	if (tport->se_sess) {
+> +		pr_debug("tport->se_sess already exists\n");
+> +		return &tport->se_tpg;
+> +	}
+> +
+> +	/*
+> +	 *  Initialize the struct se_session pointer and setup tagpool
+> +	 *  for struct ibmvscsis_cmd descriptors
+> +	 */
+> +	tport->se_sess = transport_init_session(TARGET_PROT_NORMAL);
+> +	if (IS_ERR(tport->se_sess))
+> +		goto transport_init_fail;
+> +
+> +	/*
+> +	 * Since we are running in 'demo mode' this call will generate a
+> +	 * struct se_node_acl for the ibmvscsis struct se_portal_group with
+> +	 * the SCSI Initiator port name of the passed configfs group 'name'.
+> +	 */
+> +
+> +	acl = core_tpg_check_initiator_node_acl(&tport->se_tpg,
+> +						(unsigned char *)name);
+> +	if (!acl) {
+> +		pr_debug("core_tpg_check_initiator_node_acl() failed for %s\n",
+> +			 name);
+> +		goto acl_failed;
+> +	}
+> +	tport->se_sess->se_node_acl = acl;
+> +
+> +	/*
+> +	 * Now register the TCM ibmvscsis virtual I_T Nexus as active.
+> +	 */
+> +	transport_register_session(&tport->se_tpg,
+> +				   tport->se_sess->se_node_acl,
+> +				   tport->se_sess, tport);
+> +
+> +	tport->se_sess->se_tpg = &tport->se_tpg;
+> +
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 961acc7..a0e7612 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -606,7 +606,7 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	ata_scsi_port_error_handler(host, ap);
- 
- 	/* finish or retry handled scmd's and clean up */
--	WARN_ON(host->host_failed || !list_empty(&eh_work_q));
-+	WARN_ON(atomic_read(&host->host_failed) || !list_empty(&eh_work_q));
- 
- 	DPRINTK("EXIT\n");
- }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 519dac4..8d74003 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -757,7 +757,8 @@ retry:
- 	spin_unlock_irq(shost->host_lock);
- 
- 	SAS_DPRINTK("Enter %s busy: %d failed: %d\n",
--		    __func__, atomic_read(&shost->host_busy), shost->host_failed);
-+		    __func__, atomic_read(&shost->host_busy),
-+		    atomic_read(&shost->host_failed));
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
- 	 * complete via the normal sas_task completion mechanism),
-@@ -800,7 +801,7 @@ out:
- 
- 	SAS_DPRINTK("--- Exit %s: busy: %d failed: %d tries: %d\n",
- 		    __func__, atomic_read(&shost->host_busy),
--		    shost->host_failed, tries);
-+		    atomic_read(&shost->host_failed), tries);
- }
- 
- enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1deb6ad..7840915 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -527,7 +527,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 				scmd_printk(KERN_INFO, cmd,
- 					    "scsi host busy %d failed %d\n",
- 					    atomic_read(&cmd->device->host->host_busy),
--					    cmd->device->host->host_failed);
-+					    atomic_read(&cmd->device->host->host_failed));
- 		}
- 	}
- }
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 984ddcb..f37666f 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -62,7 +62,8 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *,
- /* called with shost->host_lock held */
- void scsi_eh_wakeup(struct Scsi_Host *shost)
- {
--	if (atomic_read(&shost->host_busy) == shost->host_failed) {
-+	if (atomic_read(&shost->host_busy) ==
-+	    atomic_read(&shost->host_failed)) {
- 		trace_scsi_eh_wakeup(shost);
- 		wake_up_process(shost->ehandler);
- 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
-@@ -250,7 +251,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
- 		eh_flag &= ~SCSI_EH_CANCEL_CMD;
- 	scmd->eh_eflags |= eh_flag;
- 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
--	shost->host_failed++;
-+	atomic_inc(&shost->host_failed);
- 	scsi_eh_wakeup(shost);
-  out_unlock:
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1127,7 +1128,7 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
-  */
- void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
- {
--	scmd->device->host->host_failed--;
-+	atomic_dec(&scmd->device->host->host_failed);
- 	scmd->eh_eflags = 0;
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
-@@ -2190,8 +2191,10 @@ int scsi_error_handler(void *data)
- 		if (kthread_should_stop())
- 			break;
- 
--		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
--		    shost->host_failed != atomic_read(&shost->host_busy)) {
-+		if ((atomic_read(&shost->host_failed) == 0 &&
-+		     shost->host_eh_scheduled == 0) ||
-+		    (atomic_read(&shost->host_failed) !=
-+		     atomic_read(&shost->host_busy))) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				shost_printk(KERN_INFO, shost,
- 					     "scsi_eh_%d: sleeping\n",
-@@ -2205,7 +2208,7 @@ int scsi_error_handler(void *data)
- 			shost_printk(KERN_INFO, shost,
- 				     "scsi_eh_%d: waking up %d/%d/%d\n",
- 				     shost->host_no, shost->host_eh_scheduled,
--				     shost->host_failed,
-+				     atomic_read(&shost->host_failed),
- 				     atomic_read(&shost->host_busy)));
- 
- 		/*
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8106515..fb3cc5d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -318,7 +318,8 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 		atomic_dec(&starget->target_busy);
- 
- 	if (unlikely(scsi_host_in_recovery(shost) &&
--		     (shost->host_failed || shost->host_eh_scheduled))) {
-+		     (atomic_read(&shost->host_failed) ||
-+		      shost->host_eh_scheduled))) {
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		scsi_eh_wakeup(shost);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index fcfa3d7..654435f 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -576,7 +576,7 @@ struct Scsi_Host {
- 	atomic_t host_busy;		   /* commands actually active on low-level */
- 	atomic_t host_blocked;
- 
--	unsigned int host_failed;	   /* commands that failed.
-+	atomic_t host_failed;		   /* commands that failed.
- 					      protected by host_lock */
- 	unsigned int host_eh_scheduled;    /* EH scheduled without command */
-     
--- 
-1.7.1
+FYI, starting in v4.6 these three calls are handled directly by a new
+target_alloc_session() helper.
 
+No objection to leaving this as-is for now to make it easier to run atop
+unmodified v4.4 target code, but note you'll want to be converting this
+post merge.
+
+> +static int ibmvscsis_shutdown_session(struct se_session *se_sess)
+> +{
+> +	return 0;
+> +}
+> +
+> +static void ibmvscsis_close_session(struct se_session *se_sess)
+> +{
+> +}
+> +
+>
+
+These two target_core_fabric_ops callers have been made optional for v4.7+
+
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi_tgt.h b/drivers/scsi/ibmvscsi/ibmvscsi_tgt.h
+> new file mode 100644
+> index 0000000..23e9449
+> --- /dev/null
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi_tgt.h
+
+<SNIP>
+
+> +
+> +struct client_info {
+> +#define SRP_VERSION "16.a"
+> +	char srp_version[8];
+> +	/* root node property ibm,partition-name */
+> +	char partition_name[PARTITION_NAMELEN];
+> +	/* root node property ibm,partition-no */
+> +	u32 partition_number;
+> +	/* initially 1 */
+> +	u32 mad_version;
+> +	u32 os_type;
+> +};
+> +
+> +struct ibmvscsis_cmd {
+> +	/* Used for libsrp processing callbacks */
+> +	struct scsi_cmnd sc;
+
+AFAICT, struct scsi_cmnd is only being used for passing io memory
+descriptors and struct iu_entry via sc->SCp.ptr between ibmvscsi_tgt +
+libsrp.
+
+Now with the other legacy libsrp.c Scsi_Host related bits removed, it
+should be easy to convert the rest in order to drop the last vestiges of
+SCSI host LLD structures from ibmvscsi_tgt code.
+
+> +	/* Used for TCM Core operations */
+> +	struct se_cmd se_cmd;
+> +	/* Sense buffer that will be mapped into outgoing status */
+> +	unsigned char sense_buf[TRANSPORT_SENSE_BUFFER];
+> +	u32 lun;
+> +};
+> +
+
+<SNIP>
+
+> diff --git a/drivers/scsi/ibmvscsi/libsrp.h b/drivers/scsi/ibmvscsi/libsrp.h
+> new file mode 100644
+> index 0000000..bf9e30b
+> --- /dev/null
+> +++ b/drivers/scsi/ibmvscsi/libsrp.h
+> @@ -0,0 +1,91 @@
+> +#ifndef __LIBSRP_H__
+> +#define __LIBSRP_H__
+> +
+> +#include <linux/list.h>
+> +#include <linux/kfifo.h>
+> +#include <scsi/scsi_cmnd.h>
+> +#include <scsi/scsi_host.h>
+> +#include <scsi/srp.h>
+> +#include <target/target_core_base.h>
+> +
+> +enum srp_task_attributes {
+> +	SRP_SIMPLE_TASK = 0,
+> +	SRP_HEAD_TASK = 1,
+> +	SRP_ORDERED_TASK = 2,
+> +	SRP_ACA_TASK = 4
+> +};
+> +
+> +enum iue_flags {
+> +	V_DIOVER,
+> +	V_WRITE,
+> +	V_LINKED,
+> +	V_FLYING,
+> +};
+> +
+> +enum {
+> +	SRP_TASK_MANAGEMENT_FUNCTION_COMPLETE           = 0,
+> +	SRP_REQUEST_FIELDS_INVALID                      = 2,
+> +	SRP_TASK_MANAGEMENT_FUNCTION_NOT_SUPPORTED      = 4,
+> +	SRP_TASK_MANAGEMENT_FUNCTION_FAILED             = 5
+> +};
+> +
+> +struct srp_buf {
+> +	dma_addr_t dma;
+> +	void *buf;
+> +};
+> +
+> +struct srp_queue {
+> +	void *pool;
+> +	void *items;
+> +	struct kfifo queue;
+> +	spinlock_t lock;
+> +};
+> +
+> +struct srp_target {
+> +	struct Scsi_Host *shost;
+
+Unused.
+
+> +	struct se_device *tgt;
+> +	struct device *dev;
+> +
+> +	spinlock_t lock;
+> +	struct list_head cmd_queue;
+> +
+> +	size_t srp_iu_size;
+> +	struct srp_queue iu_queue;
+> +	size_t rx_ring_size;
+> +	struct srp_buf **rx_ring;
+> +
+> +	void *ldata;
+> +};
+> 
+> 
+> V2
+> Addressed comments from Bart/Joe in regards to styling and code structure
+> 
+> V3
+> Addressed James Bottomley's comments in regards to having the old libsrp
+> reverted to make it clear that we are resurrecting the old vscsi target
+> driver and making changes to it to utilize LIO. I also made libsrp a linked
+> file to the ibmvscsi module per Jame's comments.
+> 
+
+Btw, the patch series changelog should go at the top of the email.
