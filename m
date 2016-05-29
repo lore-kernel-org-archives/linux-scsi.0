@@ -1,42 +1,50 @@
-From: TomK <tk@mdevsys.com>
-Subject: Re: Test
-Date: Sun, 29 May 2016 11:26:26 -0400
-Message-ID: <29bc2e25-be42-f04a-425a-69159bfff2de@mdevsys.com>
-References: <6c2639d4-dfe2-1e72-884c-b16d0437d310@mdevsys.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: fix race between simultaneous decrements of
+ ->host_failed
+Date: Sun, 29 May 2016 08:41:13 -0700
+Message-ID: <1464536473.2287.6.camel@linux.vnet.ibm.com>
+References: <1464407471-3712-1-git-send-email-fangwei1@huawei.com>
+	 <20160529065452.GA21677@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:61962 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752673AbcE2P0b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 May 2016 11:26:31 -0400
-In-Reply-To: <6c2639d4-dfe2-1e72-884c-b16d0437d310@mdevsys.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20160529065452.GA21677@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Wei Fang <fangwei1@huawei.com>
+Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "tomkcpr@microdevsys.com" <tomkcpr@microdevsys.com>
 
-Test (non-html)
+On Sat, 2016-05-28 at 23:54 -0700, Christoph Hellwig wrote:
+> On Sat, May 28, 2016 at 11:51:11AM +0800, Wei Fang wrote:
+> > async_sas_ata_eh(), which will call scsi_eh_finish_cmd() in some 
+> > case, would be performed simultaneously in 
+> > sas_ata_strategy_handler(). In this case, ->host_failed may be 
+> > decreased simultaneously in scsi_eh_finish_cmd() on different CPUs,
+> > and become abnormal.
+> > 
+> > It will lead to permanently inequal between ->host_failed and
+> >  ->host_busy. Then SCSI error handler thread won't become running,
+> > SCSI errors after that won't be handled forever.
+> > 
+> > Use atomic type for ->host_failed to fix this race.
+> 
+> Looks fine,
 
-Cheers,
-Tom K.
--------------------------------------------------------------------------------------
+Actually, it doesn't look fine at all.  The same mechanism that's
+supposed to protect the host_failed decrement is also supposed to
+protect the list_move_tail().  If there's a problem with the former
+then we're also in danger of corrupting the list.
 
-Mobile: 416 618 8456
-Home: 905 857 9652
-Living on earth is expensive, but it includes a free trip around the sun.
+Can we go back to the theory of what the problem is, since it's not
+spelled out very clearly in the change log.  Our usual reason for not
+requiring locking in eh routines is that the eh is single threaded on
+the eh thread per host, so any host manipulations can't have
+concurrency problems.  In this case, the sas_ata routines are trying to
+be clever and use asynchronous workqueues for the port error handler
+and you theorise that these can execute concurrently on two CPUs, thus
+causing the problem?
+
+James
 
 
-On 5/29/2016 11:14 AM, TomK wrote:
-> Test
->
-> --
-> Cheers,
-> Tom K.
-> -------------------------------------------------------------------------------------
->
-> Mobile: 416 618 8456
-> Home: 905 857 9652
-> Living on earth is expensive, but it includes a free trip around the sun.
->
