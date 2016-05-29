@@ -1,50 +1,75 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: fix race between simultaneous decrements of
- ->host_failed
-Date: Sun, 29 May 2016 08:41:13 -0700
-Message-ID: <1464536473.2287.6.camel@linux.vnet.ibm.com>
-References: <1464407471-3712-1-git-send-email-fangwei1@huawei.com>
-	 <20160529065452.GA21677@infradead.org>
+From: TomK <tk@mdevsys.com>
+Subject: Associate a single backingstore under a single initiator within the
+ ACLS list.
+Date: Sun, 29 May 2016 11:50:55 -0400
+Message-ID: <eed21da3-f660-f86a-60f4-6974db653590@mdevsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20160529065452.GA21677@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Wei Fang <fangwei1@huawei.com>
-Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.perfora.net ([74.208.4.197]:52411 "EHLO mout.perfora.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932282AbcE2Pu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 May 2016 11:50:59 -0400
+Received: from [192.168.0.32] ([108.168.115.11]) by mrelay.perfora.net
+ (mreueus001) with ESMTPSA (Nemesis) id 0M6kp0-1bUMdi0N64-00wX5m for
+ <linux-scsi@vger.kernel.org>; Sun, 29 May 2016 17:50:58 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2016-05-28 at 23:54 -0700, Christoph Hellwig wrote:
-> On Sat, May 28, 2016 at 11:51:11AM +0800, Wei Fang wrote:
-> > async_sas_ata_eh(), which will call scsi_eh_finish_cmd() in some 
-> > case, would be performed simultaneously in 
-> > sas_ata_strategy_handler(). In this case, ->host_failed may be 
-> > decreased simultaneously in scsi_eh_finish_cmd() on different CPUs,
-> > and become abnormal.
-> > 
-> > It will lead to permanently inequal between ->host_failed and
-> >  ->host_busy. Then SCSI error handler thread won't become running,
-> > SCSI errors after that won't be handled forever.
-> > 
-> > Use atomic type for ->host_failed to fix this race.
-> 
-> Looks fine,
+Hey All,
 
-Actually, it doesn't look fine at all.  The same mechanism that's
-supposed to protect the host_failed decrement is also supposed to
-protect the list_move_tail().  If there's a problem with the former
-then we're also in danger of corrupting the list.
+New here.  I need different backingstores / LUN's going to different 
+initiators.  When creating a LUN under the luns section, it 
+automatically get's associated with any initiator created in the ACLS 
+list.  But I need only specific single backing stores / LUN's associated 
+with single initiators in the ACLS list.  How do I therefore structure 
+the create command using mapped_lun and tpg_lun to do so?
 
-Can we go back to the theory of what the problem is, since it's not
-spelled out very clearly in the change log.  Our usual reason for not
-requiring locking in eh routines is that the eh is single threaded on
-the eh thread per host, so any host manipulations can't have
-concurrency problems.  In this case, the sas_ata routines are trying to
-be clever and use asynchronous workqueues for the port error handler
-and you theorise that these can execute concurrently on two CPUs, thus
-causing the problem?
+/qla2xxx/21:0...81:81:21/acls> cd 21:00:00:1b:32:00:83:b3
+/qla2xxx/21:0...b:32:00:83:b3> create
+Missing required parameters 'mapped_lun', 'tpg_lun'
+/qla2xxx/21:0...b:32:00:83:b3> ls /
+o- / ................................................ [...]
+   o- backstores ..................................... [...]
+   | o- fileio ....................................... [4 Storage Objects]
+   | | o- mdsesxip01-d01.img .................................... [2.0T, 
+/mnt/HTPCBackupXFS/san-luns-scst/mdsesxip01-d01.img, in use]
+   | | o- mdskvmp01-d01.img .................................. [2.0T, 
+/mnt/HTPCBackupXFS/san-luns-scst/mdskvmp01-d01.img, not in use]
+   | | o- mdskvmp02-d01.img .................................. [2.0T, 
+/mnt/HTPCBackupXFS/san-luns-scst/mdskvmp02-d01.img, not in use]
+   | | o- mdskvmp03-d01.img .................................. [2.0T, 
+/mnt/HTPCBackupXFS/san-luns-scst/mdskvmp03-d01.img, not in use]
+   | o- iblock ........................................ [0 Storage Object]
+   | o- pscsi ......................................... [0 Storage Object]
+   | o- rd_mcp ........................................ [0 Storage Object]
+   o- iscsi ........................................... [0 Targets]
+   o- loopback ........................................ [0 Targets]
+   o- qla2xxx ......................................... [1 Target]
+   | o- 21:00:00:1b:32:81:81:21 ....................... [enabled]
+   |   o- acls ........................................ [4 ACLs]
+   |   | o- 21:00:00:1b:32:00:83:b3 ................... [0 Mapped LUNs]
+   |   | o- 21:03:00:1b:32:74:b6:cb ................... [0 Mapped LUNs]
+   |   | o- 50:01:43:80:16:77:99:38 ................... [0 Mapped LUNs]
+   |   | o- 50:01:43:80:16:77:99:70 ................... [0 Mapped LUNs]
+   |   o- luns ........................................ [1 LUN]
+   |     o- lun0 .. [fileio/mdsesxip01-d01.img 
+(/mnt/HTPCBackupXFS/san-luns-scst/mdsesxip01-d01.img)]
+   o- usb_gadget ...................................... [0 Targets]
+/qla2xxx/21:0...b:32:00:83:b3>
 
-James
+I get the following on attempts that I make:
 
+Missing required parameters 'mapped_lun', 'tpg_lun'
+
+-- 
+Cheers,
+Tom K.
+-------------------------------------------------------------------------------------
+
+Mobile: 416 618 8456
+Home: 905 857 9652
+Living on earth is expensive, but it includes a free trip around the sun.
 
