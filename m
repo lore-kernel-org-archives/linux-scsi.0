@@ -1,55 +1,52 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/5] scsi: add new async device reset support
-Date: Mon, 30 May 2016 08:27:21 +0200
-Message-ID: <574BDD49.6070205@suse.de>
+Subject: Re: [PATCH 0/5] block/target queue/LUN reset support
+Date: Mon, 30 May 2016 08:37:43 +0200
+Message-ID: <574BDFB7.5000407@suse.de>
 References: <1464162903-14735-1-git-send-email-mchristi@redhat.com>
- <1464162903-14735-5-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1464162903-14735-5-git-send-email-mchristi@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: mchristi@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:58922 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751658AbcE3Ghp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 May 2016 02:37:45 -0400
+In-Reply-To: <1464162903-14735-1-git-send-email-mchristi@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mchristi@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
 
-On 05/25/2016 09:55 AM, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
+On 05/25/2016 09:54 AM, mchristi@redhat.com wrote:
+> Currently, for SCSI LUN_RESETs the target layer can only wait on
+> bio/requests it has sent. This normally results in the LUN_RESET
+> timing out on the initiator side and that SCSI error handler
+> escalating to something more disruptive.
 >=20
-> Currently, if the SCSI eh runs then before we do a LUN_RESET
-> we stop the host. This patch and the block layer one before it
-> begin to add infrastructure to be able to do a LUN_RESET and
-> eventually do a transport level recovery without having to stop the
-> host.
+> To fix this, the following patches add a block layer helper and
+> callout to reset a request queue which the target layer can use
+> to force drivers to complete/fail executing requests.
 >=20
-> For LUn-reset, this patch adds a new callout, eh_async_device_reset_h=
-andler,
-> which works similar to how LLDs handle SG_SCSI_RESET_DEVICE where the
-> LLD manages the commands that are affected.
+> Patches were made over Jens's block tree's for-next branch.
 >=20
-> eh_async_device_reset_handler:
->=20
-> The LLD should perform a LUN RESET that affects all commands
-> that have been accepted by its queuecommand callout for the
-> device passed in to the callout. While the reset handler is running,
-> queuecommand will not be running or called for the device.
->=20
-> Unlike eh_device_reset_handler, queuecommand may still be
-> called for other devices, and the LLD must call scsi_done for the
-> commands that have been affected by the reset.
->=20
-> If SUCCESS or FAST_IO_FAIL is returned, the scsi_cmnds cleaned up
-> must be failed with DID_ABORT.
->=20
-Hmm. With this patch you essentially just replaced the existing
-eh_device_reset_handler() with eh_async_device_request_handler().
-So how does this differ from the original behaviour?
-By the time we're calling it the SCSI host is already in EH, ie all
-commands have been completed or failed, so why again do we need to
-wait for the queue to be empty?
+In general I like the approach, it just looks as if the main aim (ie
+running a LUN RESET concurrent with normal I/O on other devices) is
+not quite reached.
 
-And how exactly can queuecommand be called for other devices, as the
-host is already in EH?
+The general concept of eh_async_device_reset() is quite nice, and
+renaming existing functions for doing so is okay, too.
+
+It's just the integration with SCSI EH which is somewhat deficient
+(as outlined in the comment on patch 3).
+=46or the async device reset to work we'd need to call it _before_
+SCSI EH is started, ie after the asynchronous command abort failed.
+
+The easiest way would be to add per-device reset workqueue item,
+which would be called whenever command abort failed.
+As it's being per device we'd be getting an implicit serialisation,
+and we could skip the lun reset from EH.
+
+But then I'm not sure if we want to add yet another workqueue to the
+scsi device ...
 
 Cheers,
 
@@ -60,3 +57,8 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
