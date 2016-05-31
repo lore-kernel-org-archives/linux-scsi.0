@@ -1,139 +1,54 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 0/5] Introduce pci_(request|release)_(mem|io)_regions
-Date: Tue, 31 May 2016 14:05:08 +0200
-Message-ID: <cover.1464694724.git.jthumshirn@suse.de>
+Subject: [PATCH 3/5] scsi: Use pci_(request|release)_mem_regions
+Date: Tue, 31 May 2016 14:05:11 +0200
+Message-ID: <1123377cf09b08091957c7d1f58be1601dbfb50c.1464694724.git.jthumshirn@suse.de>
+References: <cover.1464694724.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1464694724.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464694724.git.jthumshirn@suse.de>
+References: <cover.1464694724.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Frank Haverkamp <haver@linux.vnet.ibm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jay Cliburn <jcliburn@gmail.com>, Chris Snook <chris.snook@gmail.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The first patch in this series introduces the following 4 helper functions to
-the PCI core:
+Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+hand, use it in the lpfc driver.
 
-* pci_request_mem_regions()
-* pci_request_io_regions()
-* pci_release_mem_regions()
-* pci_release_io_regions()
-
-which encapsulate the request and release of a PCI device's memory or I/O
-bars.
-
-The subsequent patches convert the drivers, which use the
-pci_request_selected_regions(pdev, 
-	pci_select_bars(pdev, IORESOURCE_MEM), name); 
-and similar pattern to use the new interface.
-
-This was suggested by Christoph Hellwig in
-http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
-tested on kernel v4.6 with NVMe.
-
-The conversion of the drivers has been performed by the following coccinelle
-spatch:
-// IORESOURCE_MEM
-@@
-expression err, pdev, name;
-@@
-
-- err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
-IORESOURCE_MEM), name);
-+ err = pci_request_mem_regions(pdev, name);
-
-@@
-expression pdev;
-@@
-- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM));
-+ pci_release_mem_regions(pdev);
-
-@@
-expression err, pdev, name;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_MEM);
-...
-- err = pci_request_selected_regions(pdev, bars, name);
-+ err = pci_request_mem_regions(pdev, name);
-
-@@
-expression pdev;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_MEM);
-...
-- pci_release_selected_regions(pdev, bars);
-+ pci_release_mem_regions(pdev);
-
-// IORESOURCE_IO
-@@
-expression err, pdev, name;
-@@
-
-- err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
-IORESOURCE_IO), name);
-+ err = pci_request_io_regions(pdev, name);
-
-@@
-expression pdev;
-@@
-- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_IO));
-+ pci_release_io_regions(pdev);
-
-@@
-expression err, pdev, name;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_IO);
-...
-- err = pci_request_selected_regions(pdev, bars, name);
-+ err = pci_request_io_regions(pdev, name);
-
-@@
-expression pdev;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_IO);
-...
-- pci_release_selected_regions(pdev, bars);
-+ pci_release_io_regions(pdev);
-
-
-Johannes Thumshirn (5):
-  PCI: Add helpers to request/release memory and I/O regions
-  NVMe: Use pci_(request|release)_mem_regions
-  scsi: Use pci_(request|release)_mem_regions
-  GenWQE: Use pci_(request|release)_mem_regions
-  ethernet: Use pci_(request|release)_mem_regions
-
- drivers/misc/genwqe/card_base.c               | 13 +++++-------
- drivers/net/ethernet/atheros/alx/main.c       | 12 +++++------
- drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++-------
- drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
- drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++------
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
- drivers/nvme/host/pci.c                       | 10 +++------
- drivers/scsi/lpfc/lpfc_init.c                 |  5 +----
- include/linux/pci.h                           | 29 +++++++++++++++++++++++++++
- 10 files changed, 57 insertions(+), 57 deletions(-)
-
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: linux-nvme@lists.infradead.org
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 Cc: James Smart <james.smart@avagotech.com>
 Cc: Dick Kennedy <dick.kennedy@avagotech.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jay Cliburn <jcliburn@gmail.com>
-Cc: Chris Snook <chris.snook@gmail.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
+---
+ drivers/scsi/lpfc/lpfc_init.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f57d02c..75af768 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4820,17 +4820,14 @@ static void
+ lpfc_disable_pci_dev(struct lpfc_hba *phba)
+ {
+ 	struct pci_dev *pdev;
+-	int bars;
+ 
+ 	/* Obtain PCI device reference */
+ 	if (!phba->pcidev)
+ 		return;
+ 	else
+ 		pdev = phba->pcidev;
+-	/* Select PCI BARs */
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 	/* Release PCI resource and disable PCI device */
+-	pci_release_selected_regions(pdev, bars);
++	pci_release_mem_regions(pdev);
+ 	pci_disable_device(pdev);
+ 
+ 	return;
 -- 
 1.8.5.6
