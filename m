@@ -1,95 +1,68 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH v3 5/6] scsi_debug: uuid for lu name
-Date: Tue, 31 May 2016 15:57:40 +0300
-Message-ID: <CAHp75VfEbLdGhL851RZdM5+UHNKFNqu31VNH=2a5SWc3LjrMsA@mail.gmail.com>
-References: <1462509629-24282-1-git-send-email-dgilbert@interlog.com>
-	<1462509629-24282-6-git-send-email-dgilbert@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] scsi: Add QEMU CD-ROM to VPD Inquiry Blacklist
+Date: Tue, 31 May 2016 09:42:29 -0400
+Message-ID: <1464702149-26573-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34656 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872AbcEaM5l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2016 08:57:41 -0400
-Received: by mail-oi0-f67.google.com with SMTP id r64so30330876oie.1
-        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2016 05:57:41 -0700 (PDT)
-In-Reply-To: <1462509629-24282-6-git-send-email-dgilbert@interlog.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42091 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752890AbcEaNmc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 May 2016 09:42:32 -0400
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 51A8962664
+	for <linux-scsi@vger.kernel.org>; Tue, 31 May 2016 13:42:31 +0000 (UTC)
+Received: from emilne.csb (dhcp-25-104.bos.redhat.com [10.18.25.104])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u4VDgUQn032488
+	for <linux-scsi@vger.kernel.org>; Tue, 31 May 2016 09:42:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tomas Winkler <tomas.winkler@intel.com>, emilne@redhat.com, bart.vanassche@sandisk.com
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 6, 2016 at 7:40 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> Permit changing of a LU name from a (fake) IEEE registered NAA (5)
-> to a locally assigned UUID. Using a UUID (RFC 4122) for a SCSI
-> designation descriptor (e.g. a LU name) was added in spc5r08.pdf
-> (a draft INCITS standard) on 25 January 2016. Add parameter
-> uuid_ctl to use a separate UUID for each LU (storage device) name.
-> Additional option for all LU names to have the same UUID (since
-> their storage is shared). Previous action of using NAA identifier
-> for LU name remains the default.
+Linux fails to boot as a guest with a QEMU CD-ROM:
 
-> @@ -3503,6 +3520,9 @@ static void sdebug_q_cmd_wq_complete(struct work_struct *work)
->         sdebug_q_cmd_complete(sd_dp);
->  }
->
-> +static bool got_shared_uuid;
-> +static uuid_be shared_uuid;
+[    4.439488] ata2.00: ATAPI: QEMU CD-ROM, 0.8.2, max UDMA/100
+[    4.443649] ata2.00: configured for MWDMA2
+[    4.450267] scsi 1:0:0:0: CD-ROM            QEMU     QEMU CD-ROM      0.8. PQ: 0 ANSI: 5
+[    4.464317] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[    4.464319] ata2.00: BMDMA stat 0x5
+[    4.464339] ata2.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 0 dma 16640 in
+[    4.464339]          Inquiry 12 01 00 00 ff 00res 48/20:02:00:24:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+[    4.464341] ata2.00: status: { DRDY DRQ }
+[    4.465864] ata2: soft resetting link
+[    4.625971] ata2.00: configured for MWDMA2
+[    4.628290] ata2: EH complete
+[    4.646670] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[    4.646671] ata2.00: BMDMA stat 0x5
+[    4.646683] ata2.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 0 dma 16640 in
+[    4.646683]          Inquiry 12 01 00 00 ff 00res 48/20:02:00:24:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+[    4.646685] ata2.00: status: { DRDY DRQ }
+[    4.648193] ata2: soft resetting link
 
-So, the assignment to them is non-atomic, is it a problem here?
+...
 
-> @@ -3510,6 +3530,17 @@ static struct sdebug_dev_info *sdebug_device_create(
->
->         devip = kzalloc(sizeof(*devip), flags);
->         if (devip) {
-> +               if (sdebug_uuid_ctl == 1)
-> +                       uuid_be_gen(&devip->lu_name);
-> +               else if (sdebug_uuid_ctl == 2) {
-> +                       if (got_shared_uuid)
-> +                               devip->lu_name = shared_uuid;
-> +                       else {
-> +                               uuid_be_gen(&shared_uuid);
-> +                               got_shared_uuid = true;
-> +                               devip->lu_name = shared_uuid;
-> +                       }
-> +               }
+Fix this by suppressing VPD inquiry for this device.
 
-Perhaps
-                       if (got_shared_uuid == false)
-                               uuid_be_gen(&shared_uuid);
-                               got_shared_uuid = true;
-                       }
-                       devip->lu_name = shared_uuid;
+Reported-by: Jan Stancek <jstancek@redhat.com>
+Tested-by: Jan Stancek <jstancek@redhat.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_devinfo.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
->                 devip->sdbg_host = sdbg_host;
->                 list_add_tail(&devip->dev_list, &sdbg_host->dev_info_list);
->         }
-
-> @@ -4150,6 +4182,8 @@ MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)"
->  MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=1)");
->  MODULE_PARM_DESC(unmap_max_blocks, "max # of blocks can be unmapped in one cmd (def=0xffffffff)");
->  MODULE_PARM_DESC(unmap_max_desc, "max # of ranges that can be unmapped in one cmd (def=256)");
-> +MODULE_PARM_DESC(uuid_ctl,
-> +                "1->use uuid for lu name, 0->don't, 2->all use same (def=0)");
-
-Why not on one line?
-
->  MODULE_PARM_DESC(virtual_gb, "virtual gigabyte (GiB) size (def=0 -> use dev_size_mb)");
->  MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique dev ids)");
->  MODULE_PARM_DESC(write_same_length, "Maximum blocks per WRITE SAME cmd (def=0xffff)");
-> @@ -4787,6 +4821,12 @@ static ssize_t strict_store(struct device_driver *ddp, const char *buf,
->  }
->  static DRIVER_ATTR_RW(strict);
->
-> +static ssize_t uuid_ctl_show(struct device_driver *ddp, char *buf)
-> +{
-> +       return scnprintf(buf, PAGE_SIZE, "%d\n", !!sdebug_uuid_ctl);
-
-It will never show the difference between 1 and 2. Was it on purpose?
-
-> +}
-> +static DRIVER_ATTR_RO(uuid_ctl);
-
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index bbfbfd9..09bbd3f 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -228,6 +228,7 @@ static struct {
+ 	{"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+ 	{"Promise", "", NULL, BLIST_SPARSELUN},
++	{"QEMU", "QEMU CD-ROM", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024},
+ 	{"SYNOLOGY", "iSCSI Storage", NULL, BLIST_MAX_1024},
+ 	{"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
 -- 
-With Best Regards,
-Andy Shevchenko
+1.7.1
+
