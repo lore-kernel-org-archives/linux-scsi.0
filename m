@@ -1,80 +1,79 @@
 From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 4/5] scsi: add new async device reset support
-Date: Tue, 31 May 2016 14:38:16 -0500
-Message-ID: <574DE828.2090604@redhat.com>
+Subject: Re: [PATCH 0/5] block/target queue/LUN reset support
+Date: Tue, 31 May 2016 14:56:07 -0500
+Message-ID: <574DEC57.7090701@redhat.com>
 References: <1464162903-14735-1-git-send-email-mchristi@redhat.com>
- <1464162903-14735-5-git-send-email-mchristi@redhat.com>
- <574BDD49.6070205@suse.de>
+ <574BDFB7.5000407@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <574BDD49.6070205@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39962 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751950AbcEaT4K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 May 2016 15:56:10 -0400
+In-Reply-To: <574BDFB7.5000407@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, target-devel@vger.kernel.org
 
-On 05/30/2016 01:27 AM, Hannes Reinecke wrote:
-> On 05/25/2016 09:55 AM, mchristi@redhat.com wrote:
->> From: Mike Christie <mchristi@redhat.com>
+On 05/30/2016 01:37 AM, Hannes Reinecke wrote:
+> On 05/25/2016 09:54 AM, mchristi@redhat.com wrote:
+>> Currently, for SCSI LUN_RESETs the target layer can only wait on
+>> bio/requests it has sent. This normally results in the LUN_RESET
+>> timing out on the initiator side and that SCSI error handler
+>> escalating to something more disruptive.
 >>
->> Currently, if the SCSI eh runs then before we do a LUN_RESET
->> we stop the host. This patch and the block layer one before it
->> begin to add infrastructure to be able to do a LUN_RESET and
->> eventually do a transport level recovery without having to stop the
->> host.
+>> To fix this, the following patches add a block layer helper and
+>> callout to reset a request queue which the target layer can use
+>> to force drivers to complete/fail executing requests.
 >>
->> For LUn-reset, this patch adds a new callout, eh_async_device_reset_handler,
->> which works similar to how LLDs handle SG_SCSI_RESET_DEVICE where the
->> LLD manages the commands that are affected.
+>> Patches were made over Jens's block tree's for-next branch.
 >>
->> eh_async_device_reset_handler:
->>
->> The LLD should perform a LUN RESET that affects all commands
->> that have been accepted by its queuecommand callout for the
->> device passed in to the callout. While the reset handler is running,
->> queuecommand will not be running or called for the device.
->>
->> Unlike eh_device_reset_handler, queuecommand may still be
->> called for other devices, and the LLD must call scsi_done for the
->> commands that have been affected by the reset.
->>
->> If SUCCESS or FAST_IO_FAIL is returned, the scsi_cmnds cleaned up
->> must be failed with DID_ABORT.
->>
-> Hmm. With this patch you essentially just replaced the existing
-> eh_device_reset_handler() with eh_async_device_request_handler().
-> So how does this differ from the original behaviour?
+> In general I like the approach, it just looks as if the main aim (ie
+> running a LUN RESET concurrent with normal I/O on other devices) is
+> not quite reached.
+> 
+> The general concept of eh_async_device_reset() is quite nice, and
+> renaming existing functions for doing so is okay, too.
+> 
+> It's just the integration with SCSI EH which is somewhat deficient
+> (as outlined in the comment on patch 3).
+> For the async device reset to work we'd need to call it _before_
+> SCSI EH is started, ie after the asynchronous command abort failed.
 
+Yes that is my plan.
 
-1. LLD must call scsi_done and set host byte on each command affected by
-the reset. This is what they have to do for the SG ioctl reset, but for
-the scsi eh reset, LLDs do not have to because scsi-ml manages the
-commands for them.
-
-When doing a SG ioctl based reset or if the reset is called from the
-target like in the last patch it is not possible to have scsi-ml track
-the outstanding commands like we do today based on timeouts.
-
-2. LLDs have to support commands to other luns during device resets, so
-they cannot have any sort of host wide device resource lock/resource
-that they can rely on. It has to be per device.
-
-3. We can now support being able to do a lun reset without having to
-stop then entire host.
-
-> By the time we're calling it the SCSI host is already in EH, ie all
-> commands have been completed or failed, so why again do we need to
-> wait for the queue to be empty?
-
-I am not sure what you mean here. The patches in this set never go into
-host reset or even target level reset handling. For this set, we only
-want to drivers to be able to do a device/lun reset whenever they are
-asked to do so.
+However, these first patches are only to allow LIO to be able to do
+resets. I need the same infrastructure for both though.
 
 > 
-> And how exactly can queuecommand be called for other devices, as the
-> host is already in EH?
-> 
+> The easiest way would be to add per-device reset workqueue item,
+> which wold be called whenever command abort failed.
 
-Where in this patchset do we stop the host?
+If you want to do this without stopping the entire host, you need the
+patches like in this set where we stop and flush a queue.
+
+
+> As it's being per device we'd be getting an implicit serialisation,
+> and we could skip the lun reset from EH.
+
+To build on my patches for a new async based scsi eh what we want to do is:
+
+0. Add eh_async_target_reset callout which works like async device reset
+one. For iscsi this maps to iscsi_eh_session_reset. FC drivers have
+something similar in the code paths that call rc_remote_port_delete and
+the terminate_rport_io paths. We just need wrappers.
+
+1. scsi_times_out would kick off abort if needed and return
+BLK_EH_RESET_TIMEOUT.
+2. If abort fails, cancel queued aborts and call new async device reset
+callout in these patches.
+3. If device reset fails call new async target reset callout.
+4. if target reset fails, let fail the block timeout timer and do the
+old style scsi eh host reset.
+
+It is really simple for newer drivers/classes like FC and iSCSI because
+they handle the device and target/port level reset clean up already. The
+difficult (not really difficult but messy) part is trying to support old
+and new style EHs in a functions like scsi_times_out and scsi_abort_command.
