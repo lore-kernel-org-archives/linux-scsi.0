@@ -1,115 +1,137 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/3] hisi_sas: fix the inconsistent lock issue reported by CONFIG_PROVE_LOCKING
-Date: Tue, 31 May 2016 20:38:50 +0800
-Message-ID: <1464698331-228732-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/3] hisi_sas: add v2 hw ACPI support
+Date: Tue, 31 May 2016 20:38:49 +0800
+Message-ID: <1464698331-228732-2-git-send-email-john.garry@huawei.com>
 References: <1464698331-228732-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:30455 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227AbcEaM0B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2016 08:26:01 -0400
 In-Reply-To: <1464698331-228732-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
-It is not necessary to surround call to
-notify_port_event(, PORTE_BROADCAST_RCVD) by spin_lock_irqsave(),
-so remove.
-This was causing a warn, as below:
+Add support in v2 hw driver for ACPI.
 
-    =================================
-    [ INFO: inconsistent lock state ]
-    4.4.8+ #12 Not tainted
-    ---------------------------------
-    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
-    kworker/u64:1/168 [HC0[0]:SC0[0]:HE1:SE1] takes:
-     (&(&hisi_hba->lock)->rlock){?.....}, at: [<ffffffc00052c708>] alloc_dev_quirk_v2_hw+0x48/0xec
-    {IN-HARDIRQ-W} state was registered at:
-      [<ffffffc0000fc764>] mark_lock+0x19c/0x6a0
-      [<ffffffc0000fdc14>] __lock_acquire+0xa2c/0x1d00
-      [<ffffffc0000ff654>] lock_acquire+0x58/0x7c
-      [<ffffffc0008b609c>] _raw_spin_lock_irqsave+0x54/0x6c
-      [<ffffffc00052d3c0>] int_chnl_int_v2_hw+0x1c4/0x248
-      [<ffffffc0001098e8>] handle_irq_event_percpu+0x9c/0x144
-      [<ffffffc0001099d4>] handle_irq_event+0x44/0x74
-      [<ffffffc00010cd68>] handle_fasteoi_irq+0xb4/0x188
-      [<ffffffc000108ea8>] generic_handle_irq+0x24/0x38
-      [<ffffffc0001091fc>] __handle_domain_irq+0x60/0xac
-      [<ffffffc00008261c>] gic_handle_irq+0xcc/0x168
-      [<ffffffc0000855ac>] el1_irq+0x6c/0xe0
-      [<ffffffc0000f7414>] default_idle_call+0x1c/0x34
-      [<ffffffc0000f7654>] cpu_startup_entry+0x1d4/0x228
-      [<ffffffc0008aecd8>] rest_init+0x150/0x160
-      [<ffffffc000c4b95c>] start_kernel+0x3a4/0x3b8
-      [<00000000008bb000>] 0x8bb000
-    irq event stamp: 32661
-    hardirqs last  enabled at (32661): [<ffffffc0008b41a8>] __mutex_unlock_slowpath+0x108/0x18c
-    hardirqs last disabled at (32660): [<ffffffc0008b40e4>] __mutex_unlock_slowpath+0x44/0x18c
-    softirqs last  enabled at (25114): [<ffffffc0000bde68>] __do_softirq+0x210/0x27c
-    softirqs last disabled at (25095): [<ffffffc0000be224>] irq_exit+0x9c/0xe8
+A check on whether an ACPI handle is available for the device is used to
+decide on whether to use ACPI reset handler or syscon for hw reset.
 
-    other info that might help us debug this:
-     Possible unsafe locking scenario:
-
-           CPU0
-           ----
-      lock(&(&hisi_hba->lock)->rlock);
-      <Interrupt>
-        lock(&(&hisi_hba->lock)->rlock);
-
-     *** DEADLOCK ***
-
-    2 locks held by kworker/u64:1/168:
-     #0:  ("%s"shost->work_q_name){++++.+}, at: [<ffffffc0000d2980>] process_one_work+0x134/0x3cc
-     #1:  ((&sw->work)#2){+.+.+.}, at: [<ffffffc0000d2980>] process_one_work+0x134/0x3cc
-
-    stack backtrace:
-    CPU: 4 PID: 168 Comm: kworker/u64:1 Not tainted 4.4.8+ #12
-    Hardware name: Huawei Technologies Co., Ltd. D03/D03, BIOS 1.12 01/01/1900
-    Workqueue: scsi_wq_1 sas_discover_domain
-    Call trace:
-    [<ffffffc000089988>] dump_backtrace+0x0/0x114
-    [<ffffffc000089ab0>] show_stack+0x14/0x1c
-    [<ffffffc00035ac50>] dump_stack+0xb4/0xf0
-    [<ffffffc0000fc524>] print_usage_bug+0x210/0x2b4
-    [<ffffffc0000fcbc4>] mark_lock+0x5fc/0x6a0
-    [<ffffffc0000fd9e8>] __lock_acquire+0x800/0x1d00
-    [<ffffffc0000ff654>] lock_acquire+0x58/0x7c
-    [<ffffffc0008b5edc>] _raw_spin_lock+0x44/0x58
-    [<ffffffc00052c708>] alloc_dev_quirk_v2_hw+0x48/0xec
-    [<ffffffc000528214>] hisi_sas_dev_found+0x48/0x1b8
-    [<ffffffc00051a9b8>] sas_notify_lldd_dev_found+0x34/0xe0
-    [<ffffffc00051e5e8>] sas_discover_root_expander+0x58/0x128
-    [<ffffffc00051b38c>] sas_discover_domain+0x4bc/0x564
-    [<ffffffc0000d29ec>] process_one_work+0x1a0/0x3cc
-    [<ffffffc0000d2d50>] worker_thread+0x138/0x438
-    [<ffffffc0000d9494>] kthread+0xdc/0xf0
-    [<ffffffc000085c50>] ret_from_fork+0x10/0x40
-
-Signed-off-by: Wei Xu <xuwei5@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Wei Xu <xuwei5@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 68 +++++++++++++++++++++-------------
+ 1 file changed, 43 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index e933cdc..c8c0b45 100644
+index bbe98ec..e933cdc 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1909,14 +1909,9 @@ static void phy_bcast_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
--	unsigned long flags;
+@@ -721,30 +721,41 @@ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
+ 			return -EIO;
+ 	}
  
- 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 1);
--
--	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	sas_ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
--
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
- 			     CHL_INT0_SL_RX_BCST_ACK_MSK);
- 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 0);
+-	/* reset and disable clock*/
+-	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_reset_reg,
+-			reset_val);
+-	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg + 4,
+-			reset_val);
+-	msleep(1);
+-	regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg, &val);
+-	if (reset_val != (val & reset_val)) {
+-		dev_err(dev, "SAS reset fail.\n");
+-		return -EIO;
+-	}
++	if (ACPI_HANDLE(dev)) {
++		acpi_status s;
+ 
+-	/* De-reset and enable clock*/
+-	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_reset_reg + 4,
+-			reset_val);
+-	regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg,
+-			reset_val);
+-	msleep(1);
+-	regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg,
+-			&val);
+-	if (val & reset_val) {
+-		dev_err(dev, "SAS de-reset fail.\n");
+-		return -EIO;
+-	}
++		s = acpi_evaluate_object(ACPI_HANDLE(dev), "_RST", NULL, NULL);
++		if (ACPI_FAILURE(s)) {
++			dev_err(dev, "Reset failed\n");
++			return -EIO;
++		}
++	} else if (hisi_hba->ctrl) {
++		/* reset and disable clock*/
++		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_reset_reg,
++				reset_val);
++		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg + 4,
++				reset_val);
++		msleep(1);
++		regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg, &val);
++		if (reset_val != (val & reset_val)) {
++			dev_err(dev, "SAS reset fail.\n");
++			return -EIO;
++		}
++
++		/* De-reset and enable clock*/
++		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_reset_reg + 4,
++				reset_val);
++		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg,
++				reset_val);
++		msleep(1);
++		regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg,
++				&val);
++		if (val & reset_val) {
++			dev_err(dev, "SAS de-reset fail.\n");
++			return -EIO;
++		}
++	} else
++		dev_warn(dev, "no reset method\n");
+ 
+ 	return 0;
+ }
+@@ -752,13 +763,12 @@ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
+ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = &hisi_hba->pdev->dev;
+-	struct device_node *np = dev->of_node;
+ 	int i;
+ 
+ 	/* Global registers init */
+ 
+ 	/* Deal with am-max-transmissions quirk */
+-	if (of_get_property(np, "hip06-sas-v2-quirk-amt", NULL)) {
++	if (device_property_present(dev, "hip06-sas-v2-quirk-amt")) {
+ 		hisi_sas_write32(hisi_hba, AM_CFG_MAX_TRANS, 0x2020);
+ 		hisi_sas_write32(hisi_hba, AM_CFG_SINGLE_PORT_MAX_TRANS,
+ 				 0x2020);
+@@ -2257,12 +2267,20 @@ static const struct of_device_id sas_v2_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, sas_v2_of_match);
+ 
++static const struct acpi_device_id sas_v2_acpi_match[] = {
++	{ "HISI0162", 0 },
++	{ }
++};
++
++MODULE_DEVICE_TABLE(acpi, sas_v2_acpi_match);
++
+ static struct platform_driver hisi_sas_v2_driver = {
+ 	.probe = hisi_sas_v2_probe,
+ 	.remove = hisi_sas_v2_remove,
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = sas_v2_of_match,
++		.acpi_match_table = ACPI_PTR(sas_v2_acpi_match),
+ 	},
+ };
+ 
 -- 
 1.9.1
+
