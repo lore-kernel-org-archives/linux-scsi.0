@@ -1,171 +1,46 @@
 From: Wei Fang <fangwei1@huawei.com>
-Subject: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of ->host_failed
-Date: Tue, 31 May 2016 16:38:17 +0800
-Message-ID: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
+Subject: [PATCH v2 2/2] Documentation/scsi: update scsi_eh.txt about ->host_failed
+Date: Tue, 31 May 2016 16:38:18 +0800
+Message-ID: <1464683898-9877-2-git-send-email-fangwei1@huawei.com>
+References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
 Sender: linux-doc-owner@vger.kernel.org
 To: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, corbet@lwn.net
 Cc: hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-sas_ata_strategy_handler() adds the works of the ata error handler
-to system_unbound_wq. This workqueue asynchronously runs work items,
-so the ata error handler will be performed concurrently on different
-CPUs. In this case, ->host_failed will be decreased simultaneously in
-scsi_eh_finish_cmd() on different CPUs, and become abnormal.
+Update the new concurrency rules of ->host_failed.
 
-It will lead to permanently inequal between ->host_failed and
- ->host_busy, and scsi error handler thread won't become running.
-IO errors after that won't be handled forever.
-
-Use atomic type for ->host_failed to fix this race.
-
-This fixes the problem introduced in
-commit 50824d6c5657 ("[SCSI] libsas: async ata-eh").
-
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Wei Fang <fangwei1@huawei.com>
 ---
- drivers/ata/libata-eh.c             |    2 +-
- drivers/scsi/libsas/sas_scsi_host.c |    5 +++--
- drivers/scsi/scsi.c                 |    2 +-
- drivers/scsi/scsi_error.c           |   15 +++++++++------
- drivers/scsi/scsi_lib.c             |    3 ++-
- include/scsi/scsi_host.h            |    2 +-
- 6 files changed, 17 insertions(+), 12 deletions(-)
+ Documentation/scsi/scsi_eh.txt |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 961acc7..a0e7612 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -606,7 +606,7 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	ata_scsi_port_error_handler(host, ap);
+diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+index 8638f61..e6d0de2 100644
+--- a/Documentation/scsi/scsi_eh.txt
++++ b/Documentation/scsi/scsi_eh.txt
+@@ -252,7 +252,7 @@ scmd->allowed.
+ 	- set scmd->eh_eflags
+ 	- add scmd to shost->eh_cmd_q
+ 	- set SHOST_RECOVERY
+-	- shost->host_failed++
++	- atomic_inc(&shost->host_failed)
+     LOCKING: shost->host_lock
  
- 	/* finish or retry handled scmd's and clean up */
--	WARN_ON(host->host_failed || !list_empty(&eh_work_q));
-+	WARN_ON(atomic_read(&host->host_failed) || !list_empty(&eh_work_q));
+  2. EH starts
+@@ -263,7 +263,7 @@ scmd->allowed.
  
- 	DPRINTK("EXIT\n");
- }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 519dac4..8d74003 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -757,7 +757,8 @@ retry:
- 	spin_unlock_irq(shost->host_lock);
- 
- 	SAS_DPRINTK("Enter %s busy: %d failed: %d\n",
--		    __func__, atomic_read(&shost->host_busy), shost->host_failed);
-+		    __func__, atomic_read(&shost->host_busy),
-+		    atomic_read(&shost->host_failed));
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
- 	 * complete via the normal sas_task completion mechanism),
-@@ -800,7 +801,7 @@ out:
- 
- 	SAS_DPRINTK("--- Exit %s: busy: %d failed: %d tries: %d\n",
- 		    __func__, atomic_read(&shost->host_busy),
--		    shost->host_failed, tries);
-+		    atomic_read(&shost->host_failed), tries);
- }
- 
- enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1deb6ad..7840915 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -527,7 +527,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 				scmd_printk(KERN_INFO, cmd,
- 					    "scsi host busy %d failed %d\n",
- 					    atomic_read(&cmd->device->host->host_busy),
--					    cmd->device->host->host_failed);
-+					    atomic_read(&cmd->device->host->host_failed));
- 		}
- 	}
- }
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 984ddcb..f37666f 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -62,7 +62,8 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *,
- /* called with shost->host_lock held */
- void scsi_eh_wakeup(struct Scsi_Host *shost)
- {
--	if (atomic_read(&shost->host_busy) == shost->host_failed) {
-+	if (atomic_read(&shost->host_busy) ==
-+	    atomic_read(&shost->host_failed)) {
- 		trace_scsi_eh_wakeup(shost);
- 		wake_up_process(shost->ehandler);
- 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
-@@ -250,7 +251,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
- 		eh_flag &= ~SCSI_EH_CANCEL_CMD;
- 	scmd->eh_eflags |= eh_flag;
- 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
--	shost->host_failed++;
-+	atomic_inc(&shost->host_failed);
- 	scsi_eh_wakeup(shost);
-  out_unlock:
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1127,7 +1128,7 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
-  */
- void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
- {
--	scmd->device->host->host_failed--;
-+	atomic_dec(&scmd->device->host->host_failed);
- 	scmd->eh_eflags = 0;
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
-@@ -2190,8 +2191,10 @@ int scsi_error_handler(void *data)
- 		if (kthread_should_stop())
- 			break;
- 
--		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
--		    shost->host_failed != atomic_read(&shost->host_busy)) {
-+		if ((atomic_read(&shost->host_failed) == 0 &&
-+		     shost->host_eh_scheduled == 0) ||
-+		    (atomic_read(&shost->host_failed) !=
-+		     atomic_read(&shost->host_busy))) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				shost_printk(KERN_INFO, shost,
- 					     "scsi_eh_%d: sleeping\n",
-@@ -2205,7 +2208,7 @@ int scsi_error_handler(void *data)
- 			shost_printk(KERN_INFO, shost,
- 				     "scsi_eh_%d: waking up %d/%d/%d\n",
- 				     shost->host_no, shost->host_eh_scheduled,
--				     shost->host_failed,
-+				     atomic_read(&shost->host_failed),
- 				     atomic_read(&shost->host_busy)));
- 
- 		/*
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8106515..fb3cc5d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -318,7 +318,8 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 		atomic_dec(&starget->target_busy);
- 
- 	if (unlikely(scsi_host_in_recovery(shost) &&
--		     (shost->host_failed || shost->host_eh_scheduled))) {
-+		     (atomic_read(&shost->host_failed) ||
-+		      shost->host_eh_scheduled))) {
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		scsi_eh_wakeup(shost);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index fcfa3d7..654435f 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -576,7 +576,7 @@ struct Scsi_Host {
- 	atomic_t host_busy;		   /* commands actually active on low-level */
- 	atomic_t host_blocked;
- 
--	unsigned int host_failed;	   /* commands that failed.
-+	atomic_t host_failed;		   /* commands that failed.
- 					      protected by host_lock */
- 	unsigned int host_eh_scheduled;    /* EH scheduled without command */
-     
+  3. scmd recovered
+     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
+-	- shost->host_failed--
++	- atomic_dec(&shost->host_failed)
+ 	- clear scmd->eh_eflags
+ 	- scsi_setup_cmd_retry()
+ 	- move from local eh_work_q to local eh_done_q
 -- 
 1.7.1
 
