@@ -1,72 +1,67 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [target:queue 6/14] drivers/target/target_core_sbc.c:384:19:
- error: assignment from incompatible pointer type
-Date: Wed, 01 Jun 2016 13:53:29 -0700
-Message-ID: <1464814409.10899.1.camel@haakon3.risingtidesystems.com>
-References: <201606011755.TDYVk6T3%fengguang.wu@intel.com>
+Subject: Re: Performance degradation on 4.6
+Date: Wed, 01 Jun 2016 14:00:19 -0700
+Message-ID: <1464814819.10899.3.camel@haakon3.risingtidesystems.com>
+References: <CAANLjFp28MkaMjWKwXnMGHPCX2S_g_RKOhXqHc9dYVJvMgqvVw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:42826 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38217 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863AbcFAUxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2016 16:53:32 -0400
-In-Reply-To: <201606011755.TDYVk6T3%fengguang.wu@intel.com>
+	with ESMTP id S1751272AbcFAVAW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2016 17:00:22 -0400
+In-Reply-To: <CAANLjFp28MkaMjWKwXnMGHPCX2S_g_RKOhXqHc9dYVJvMgqvVw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, linux-rdma@vger.kernel.org, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Robert LeBlanc <robert@leblancnet.us>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>
 
-On Wed, 2016-06-01 at 17:41 +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git queue
-> head:   4d13930836b3a61c70603178d8a3c60e633e40f1
-> commit: 39a54101d1cc581dbf494b0964537e795466e0d4 [6/14] target: Convert se_cmd->execute_cmd to target_iostate
-> config: sh-allyesconfig (attached as .config)
-> compiler: sh4-linux-gnu-gcc (Debian 5.3.1-8) 5.3.1 20160205
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 39a54101d1cc581dbf494b0964537e795466e0d4
->         # save the attached .config to linux build tree
->         make.cross ARCH=sh 
-> 
-> Note: the target/queue HEAD 4d13930836b3a61c70603178d8a3c60e633e40f1 builds fine.
->       It only hurts bisectibility.
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/target/target_core_sbc.c: In function 'sbc_setup_write_same':
-> >> drivers/target/target_core_sbc.c:384:19: error: assignment from incompatible pointer type [-Werror=incompatible-pointer-types]
->      cmd->execute_cmd = ops->execute_write_same;
->                       ^
->    drivers/target/target_core_sbc.c: In function 'sbc_parse_cdb':
->    drivers/target/target_core_sbc.c:1065:21: error: assignment from incompatible pointer type [-Werror=incompatible-pointer-types]
->        cmd->execute_cmd = ops->execute_sync_cache;
->                         ^
->    cc1: some warnings being treated as errors
-> 
-> vim +384 drivers/target/target_core_sbc.c
-> 
-> cd063bef Nicholas Bellinger 2012-11-07  378  		return TCM_UNSUPPORTED_SCSI_OPCODE;
-> d6e0175c Christoph Hellwig  2012-05-20  379  
-> afd73f1b Nicholas Bellinger 2015-02-14  380  	ret = sbc_check_prot(dev, cmd, &cmd->t_task_cdb[0], sectors, true);
-> afd73f1b Nicholas Bellinger 2015-02-14  381  	if (ret)
-> afd73f1b Nicholas Bellinger 2015-02-14  382  		return ret;
-> afd73f1b Nicholas Bellinger 2015-02-14  383  
-> cd063bef Nicholas Bellinger 2012-11-07 @384  	cmd->execute_cmd = ops->execute_write_same;
-> d6e0175c Christoph Hellwig  2012-05-20  385  	return 0;
-> d6e0175c Christoph Hellwig  2012-05-20  386  }
-> d6e0175c Christoph Hellwig  2012-05-20  387  
-> 
-> :::::: The code at line 384 was first introduced by commit
-> :::::: cd063bef414c51d79b9c6ea7a8ef8f9d319529bc target/sbc: Seperate WRITE_SAME based on UNMAP flag in sbc_ops
-> 
-> :::::: TO: Nicholas Bellinger <nab@linux-iscsi.org>
-> :::::: CC: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
+Hi Robert,
 
-Fixed.
+Adding HCH + Sagi CC, as there have been significant changes made in
+RDMA for v4.6 code.
 
-Thanks Fengguang.
+On Tue, 2016-05-31 at 17:46 -0600, Robert LeBlanc wrote:
+> I've been working with iSER trying to maximize performance. I have two
+> FDR Infiniband cards (three ports total) and I've created multiple
+> address on the target and configured 12 paths from the initiator. The
+> iSER target is served up from a RAM disk. With the 4.4 kernel I'm able
+> to pretty much saturate the links (4.1 million seq 4K read IOPs 15.7
+> GB/s) using multipathd. With the same configuration on 4.6, I'm only
+> able to get 3.3 million IOPs or 12.8 GB/s.
+> 
+> Running perf top on the target and initiator, I'm seeing the target is
+> dominated by
+> 
+> 73.89% [kernel] [k] memcpy_rems
+>  1.35% [kernel] [k] get_page_from_freelist
+> ...
+> 
+> which is the same with 4.4. Perf top on the target has:
+> 
+> 13.01% [kernel] [k] copy_user_enhanced_fast_string
+>  8.48% [kernel] [K] __blk_recalc_re_segments
+>  5.35% [kernel] [k] native_queued_spin_lock_slowpath
+> ...
+> 
+> I don't recall what the initiator had on 4.4.
+> 
+> Single path performance has increase by about 5% which is nice, but
+> two path performance is about 50% that of the 4.4 kernel. Three paths
+> and greater are around 80% the 4.4 performance.
+> 
+> Any ideas on what could have caused the performance issues on 4.6? Is
+> there some additional information I can provide that would be useful?
+> 
+> Thanks,
+> 
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
