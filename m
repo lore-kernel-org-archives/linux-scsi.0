@@ -1,380 +1,659 @@
 From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v4 7/8] mmc: block: register RPMB partition with the RPMB subsystem
-Date: Wed,  1 Jun 2016 17:41:31 -0400
-Message-ID: <1464817292-5407-8-git-send-email-tomas.winkler@intel.com>
+Subject: [PATCH v4 5/8] char: rpmb: add RPMB simulation device
+Date: Wed,  1 Jun 2016 17:41:29 -0400
+Message-ID: <1464817292-5407-6-git-send-email-tomas.winkler@intel.com>
 References: <1464817292-5407-1-git-send-email-tomas.winkler@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1464817292-5407-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Alexander Usyskin <alexander.usyskin@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Register eMMC RPMB partition with the RPMB subsystem and provide
-implementation for the RPMB access operations abstracting
-actual multi step process.
+This is a simple platform device used for testing
+the rpmb subsystem.
 
-V2: resend
-V3: commit message fix
-V4: Kconfig: use select RPMB to ensure valid configuration
-    Switch back to main area after RPMB access
+The module currently supports two configuration options:
+1. max_wr_blks: for specifying max blocks that can be written
+in a single command
+2. daunits:  used to set storage capacity in 128K units.
+
+V2: remove .owner setting, it is set automatically
+V3: 1. Add shutdown handler (similar to ufshcd)
+    2. Commit message fix
+V4: use select RPMB to ensure valid configuration
 
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 ---
- drivers/mmc/card/Kconfig |   1 +
- drivers/mmc/card/block.c | 292 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 293 insertions(+)
+ drivers/char/rpmb/Kconfig    |  10 +
+ drivers/char/rpmb/Makefile   |   1 +
+ drivers/char/rpmb/rpmb_sim.c | 589 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 600 insertions(+)
+ create mode 100644 drivers/char/rpmb/rpmb_sim.c
 
-diff --git a/drivers/mmc/card/Kconfig b/drivers/mmc/card/Kconfig
-index 5562308699bc..537d0bc82781 100644
---- a/drivers/mmc/card/Kconfig
-+++ b/drivers/mmc/card/Kconfig
-@@ -7,6 +7,7 @@ comment "MMC/SD/SDIO Card Drivers"
- config MMC_BLOCK
- 	tristate "MMC block device driver"
- 	depends on BLOCK
-+	select RPMB
- 	default y
+diff --git a/drivers/char/rpmb/Kconfig b/drivers/char/rpmb/Kconfig
+index 6794be9fcc5e..c21b3934249f 100644
+--- a/drivers/char/rpmb/Kconfig
++++ b/drivers/char/rpmb/Kconfig
+@@ -13,3 +13,13 @@ config RPMB_INTF_DEV
  	help
- 	  Say Y here to enable the MMC block device driver support.
-diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
-index e62fde3ac431..274a21fe8be5 100644
---- a/drivers/mmc/card/block.c
-+++ b/drivers/mmc/card/block.c
-@@ -42,6 +42,7 @@
- #include <linux/mmc/host.h>
- #include <linux/mmc/mmc.h>
- #include <linux/mmc/sd.h>
+ 	  Say yes here if you want to access RPMB from user space
+ 	  via character device interface /dev/rpmb%d
++
++
++config RPMB_SIM
++	tristate "RPMB partition device simulator"
++	default n
++	select RPMB
++	select CRYPTO_SHA256
++	select CRYPTO_HMAC
++	help
++	  RPMB partition simulator used for testing the RPMB subsystem
+diff --git a/drivers/char/rpmb/Makefile b/drivers/char/rpmb/Makefile
+index b5dc087b1299..81f924fd9a87 100644
+--- a/drivers/char/rpmb/Makefile
++++ b/drivers/char/rpmb/Makefile
+@@ -1,5 +1,6 @@
+ obj-$(CONFIG_RPMB) += rpmb.o
+ rpmb-objs += core.o
+ rpmb-$(CONFIG_RPMB_INTF_DEV) += cdev.o
++obj-$(CONFIG_RPMB_SIM) += rpmb_sim.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/char/rpmb/rpmb_sim.c b/drivers/char/rpmb/rpmb_sim.c
+new file mode 100644
+index 000000000000..f2565f406cc1
+--- /dev/null
++++ b/drivers/char/rpmb/rpmb_sim.c
+@@ -0,0 +1,589 @@
++/******************************************************************************
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2016 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *	Intel Corporation.
++ *	linux-mei@linux.intel.com
++ *	http://www.intel.com
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2016 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/platform_device.h>
++#include <linux/device.h>
++#include <crypto/hash.h>
++#include <linux/scatterlist.h>
++#include <linux/sizes.h>
++
 +#include <linux/rpmb.h>
- 
- #include <asm/uaccess.h>
- 
-@@ -110,6 +111,7 @@ struct mmc_blk_data {
- #define MMC_BLK_WRITE		BIT(1)
- #define MMC_BLK_DISCARD		BIT(2)
- #define MMC_BLK_SECDISCARD	BIT(3)
-+#define MMC_BLK_RPMB		BIT(4)
- 
- 	/*
- 	 * Only set in main mmc_blk_data associated
-@@ -1162,6 +1164,292 @@ int mmc_access_rpmb(struct mmc_queue *mq)
- 	return false;
- }
- 
-+static int mmc_rpmb_send_cmd(struct mmc_card *card,
-+			     u16 rpmb_type, int data_type,
-+			     u8 *buf, u16 blks)
++
++static const char id[] = "RPMB:SIM";
++#define CAPACITY_UNIT SZ_128K
++#define CAPACITY_MIN  SZ_128K
++#define CAPACITY_MAX  SZ_16M
++#define BLK_UNIT      SZ_256
++
++static unsigned int max_wr_blks = 1;
++module_param(max_wr_blks, uint, 0644);
++MODULE_PARM_DESC(max_wr_blks,
++	"max blocks that can be written in a single command (default: 1)");
++
++static unsigned int daunits = 1;
++module_param(daunits, uint, 0644);
++MODULE_PARM_DESC(daunits,
++	"number of data area units of 128K (default: 1)");
++
++struct blk {
++	u8 data[BLK_UNIT];
++};
++
++/**
++ * struct rpmb_sim_dev
++ *
++ * @dev:  back pointer to the platform device
++ * @rdev: rpmb device
++ * @auth_key: Authentication key register which is used to authenticate
++ *            accesses when MAC is calculated;
++ * @auth_key_set: true if auth key was set
++ * @write_counter: Counter value for the total amount of successful
++ *             authenticated data write requests made by the host.
++ *             The initial value of this register after production is 00000000h.
++ *             The value will be incremented by one along with each successful
++ *             programming access. The value cannot be reset. After the counter
++ *             has reached the maximum value of FFFFFFFFh,
++ *             it will not be incremented anymore (overflow prevention)
++ * @hash_tfm:  hmac(sha256) tfm
++ *
++ * @capacity: size of the partition in bytes multiple of 128K
++ * @blkcnt:   block count
++ * @da:       data area in blocks
++ */
++struct rpmb_sim_dev {
++	struct device *dev;
++	struct rpmb_dev *rdev;
++	u8 auth_key[32];
++	bool auth_key_set;
++	u32 write_counter;
++	struct crypto_shash *hash_tfm;
++
++	size_t capacity;
++	size_t blkcnt;
++	struct blk *da;
++};
++
++static __be16 op_result(struct rpmb_sim_dev *rsdev, u16 result)
 +{
-+	struct mmc_command sbc = {
-+		.opcode = MMC_SET_BLOCK_COUNT,
-+		.flags  = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_AC,
-+	};
++	if (!rsdev->auth_key_set)
++		return cpu_to_be16(RPMB_ERR_NO_KEY);
 +
-+	struct mmc_command cmd = {
-+		.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC,
-+	};
++	if (rsdev->write_counter == 0xFFFFFFFF)
++		result |=  RPMB_ERR_COUNTER_EXPIRED;
 +
-+	struct mmc_data data = {
-+		.blksz = 512,
-+	};
-+	struct mmc_request mrq = {
-+		.sbc    = &sbc,
-+		.cmd    = &cmd,
-+		.data   = &data,
-+		.stop   = NULL,
-+	};
-+	struct scatterlist sg;
-+	bool do_rel_wr;
++	return cpu_to_be16(result);
++}
 +
-+	/*  set CMD23 */
-+	sbc.arg = blks & 0x0000FFFF;
-+	do_rel_wr = (rpmb_type == RPMB_WRITE_DATA ||
-+		     rpmb_type == RPMB_PROGRAM_KEY);
++static __be16 req_to_resp(u16 req)
++{
++	return cpu_to_be16(RPMB_REQ2RESP(req));
++}
 +
-+	if (do_rel_wr)
-+		sbc.arg |= MMC_CMD23_ARG_REL_WR;
++static int rpmb_sim_calc_hmac(struct rpmb_sim_dev *rsdev,
++			      struct rpmb_frame *frames,
++			      unsigned int blks, u8 *mac)
++{
++	SHASH_DESC_ON_STACK(desc, rsdev->hash_tfm);
++	int i;
++	int ret;
 +
-+	/*  set CMD25/18 */
-+	cmd.opcode = (data_type == MMC_DATA_WRITE) ?
-+		MMC_WRITE_MULTIPLE_BLOCK : MMC_READ_MULTIPLE_BLOCK;
++	desc->tfm = rsdev->hash_tfm;
++	desc->flags = 0;
 +
-+	sg_init_one(&sg, buf, 512 * blks);
++	ret = crypto_shash_init(desc);
++	if (ret)
++		goto out;
 +
-+	data.blocks = blks;
-+	data.sg     = &sg;
-+	data.sg_len = 1;
-+	data.flags  = data_type;
-+	mmc_set_data_timeout(&data, card);
-+
-+	mmc_wait_for_req(card->host, &mrq);
-+
-+	if (cmd.error) {
-+		pr_err("%s: %s cmd error (%d)\n",
-+			mmc_hostname(card->host), __func__, cmd.error);
-+		return cmd.error;
++	for (i = 0; i < blks; i++) {
++		ret = crypto_shash_update(desc, frames[i].data, hmac_data_len);
++		if (ret)
++			goto out;
 +	}
-+	if (data.error) {
-+		pr_err("%s: %s data error (%d)\n",
-+			mmc_hostname(card->host), __func__, data.error);
-+		return data.error;
-+	}
++	ret = crypto_shash_final(desc, mac);
++out:
++	if (ret)
++		dev_err(rsdev->dev, "digest error = %d", ret);
++
++	return ret;
++}
++
++static int rpmb_op_not_programmed(struct rpmb_sim_dev *rsdev,
++				  struct rpmb_data *rpmbd)
++{
++	struct rpmb_frame *in_frame, *out_frame;
++	u16 req;
++
++	in_frame = &rpmbd->in_frames[0];
++	req = be16_to_cpu(in_frame->req_resp);
++
++	out_frame = &rpmbd->out_frames[0];
++
++	out_frame->req_resp = req_to_resp(req);
++	out_frame->result = op_result(rsdev, RPMB_ERR_NO_KEY);
++
++	dev_err(rsdev->dev, "not programmed\n");
++
 +	return 0;
 +}
 +
-+static int mmc_blk_rpmb_sequence(struct mmc_card *card,
-+			    struct rpmb_data *rpmbd)
++static int rpmb_op_program_key(struct rpmb_sim_dev *rsdev,
++			       struct rpmb_data *rpmbd)
 +{
-+	struct rpmb_frame *in_frames, *out_frames;
-+	u8 *in_buf, *out_buf;
-+	u16 blks;
-+	u16 type;
-+	int err;
++	struct rpmb_frame *in_frame, *out_frame;
++	u16 req;
++	int ret;
++	u16 err = RPMB_ERR_OK;
 +
-+	in_frames = rpmbd->in_frames;
-+	out_frames = rpmbd->out_frames;
-+	in_buf = (u8 *)in_frames;
-+	out_buf = (u8 *)out_frames;
++	in_frame = rpmbd->in_frames;
++	req = be16_to_cpu(in_frame[0].req_resp);
++
++	if (req != RPMB_PROGRAM_KEY)
++		return -EINVAL;
++
++	if (rsdev->auth_key_set) {
++		dev_err(rsdev->dev, "key allread set\n");
++		err = RPMB_ERR_WRITE;
++		goto out;
++	}
++
++	ret = crypto_shash_setkey(rsdev->hash_tfm, in_frame[0].key_mac, 32);
++	if (ret) {
++		dev_err(rsdev->dev, "set key failed = %d\n", ret);
++		err = RPMB_ERR_GENERAL;
++		goto out;
++	}
++
++	dev_dbg(rsdev->dev, "digest size %u",
++		crypto_shash_digestsize(rsdev->hash_tfm));
++
++	memcpy(rsdev->auth_key, in_frame[0].key_mac, 32);
++	rsdev->auth_key_set = true;
++out:
++	out_frame = rpmbd->out_frames;
++	memset(out_frame, 0, sizeof(struct rpmb_frame));
++
++	out_frame[0].req_resp = req_to_resp(req);
++	out_frame[0].result = op_result(rsdev, err);
++
++	return 0;
++}
++
++
++static int rpmb_op_get_wr_conter(struct rpmb_sim_dev *rsdev,
++				 struct rpmb_data *rpmbd)
++{
++	struct rpmb_frame *in_frame, *out_frame;
++	u16 req;
++	u16 err;
++
++	in_frame = rpmbd->in_frames;
++	req = be16_to_cpu(in_frame[0].req_resp);
++
++	if (req != RPMB_GET_WRITE_COUNTER)
++		return -EINVAL;
++
++	out_frame = rpmbd->out_frames;
++	memset(out_frame, 0, sizeof(struct rpmb_frame));
++
++	out_frame[0].req_resp = req_to_resp(req);
++	out_frame[0].write_counter = cpu_to_be32(rsdev->write_counter);
++	memcpy(out_frame[0].nonce, in_frame[0].nonce, 16);
++
++	err = RPMB_ERR_OK;
++	out_frame[0].result = op_result(rsdev, err);
++
++	if (rpmb_sim_calc_hmac(rsdev, out_frame, 1, out_frame->key_mac))
++		err = RPMB_ERR_READ;
++
++	out_frame[0].result = op_result(rsdev, err);
++
++	return 0;
++}
++
++static int rpmb_op_write_data(struct rpmb_sim_dev *rsdev,
++			      struct rpmb_data *rpmbd)
++{
++	struct rpmb_frame *in_frame, *out_frame;
++	u8 mac[32];
++	u16 req, err, addr, blks;
++	unsigned int i;
++	int ret = 0;
++
++	in_frame = rpmbd->in_frames;
++	req = be16_to_cpu(in_frame[0].req_resp);
++
++	if (req != RPMB_WRITE_DATA)
++		return -EINVAL;
++
++
++	if (rsdev->write_counter == 0xFFFFFFFF) {
++		err = RPMB_ERR_WRITE;
++		goto out;
++	}
++
++	blks = be16_to_cpu(in_frame[0].block_count);
++	if (blks == 0 || blks > rpmbd->in_frames_cnt) {
++		ret = -EINVAL;
++		err = RPMB_ERR_GENERAL;
++		goto out;
++	}
++
++	if (blks > max_wr_blks) {
++		err = RPMB_ERR_WRITE;
++		goto out;
++	}
++
++
++	addr = be16_to_cpu(in_frame[0].addr);
++	if (addr >= rsdev->blkcnt) {
++		err = RPMB_ERR_ADDRESS;
++		goto out;
++	}
++
++	if (rpmb_sim_calc_hmac(rsdev, in_frame, blks, mac)) {
++		err = RPMB_ERR_AUTH;
++		goto out;
++	}
++
++	/* mac is in the last frame */
++	if (memcmp(mac, in_frame[blks - 1].key_mac, sizeof(mac)) != 0) {
++		err = RPMB_ERR_AUTH;
++		goto out;
++	}
++
++	if (be32_to_cpu(in_frame[0].write_counter) != rsdev->write_counter) {
++		err = RPMB_ERR_COUNTER;
++		goto out;
++	}
++
++	if (addr + blks > rsdev->blkcnt) {
++		err = RPMB_ERR_WRITE;
++		goto out;
++	}
++
++	err = RPMB_ERR_OK;
++	for (i = 0; i < blks; i++)
++		memcpy(rsdev->da[addr + i].data, in_frame[i].data, BLK_UNIT);
++
++	rsdev->write_counter++;
++
++out:
++	out_frame = &rpmbd->out_frames[0];
++	memset(out_frame, 0, sizeof(struct rpmb_frame));
++
++	if (err == RPMB_ERR_OK) {
++		out_frame[0].write_counter = cpu_to_be32(rsdev->write_counter);
++		memcpy(out_frame[0].key_mac, mac, sizeof(mac));
++	}
++	out_frame[0].req_resp = req_to_resp(req);
++	out_frame[0].result = op_result(rsdev, err);
++
++	return ret;
++}
++
++static int rpmb_op_read_data(struct rpmb_sim_dev *rsdev,
++			     struct rpmb_data *rpmbd)
++{
++	struct rpmb_frame *in_frame, *out_frame;
++	u8 mac[32];
++	u16 req, err, addr, blks;
++	unsigned int i;
++	int ret;
++
++	in_frame = rpmbd->in_frames;
++	req = be16_to_cpu(in_frame[0].req_resp);
++	if (req != RPMB_READ_DATA)
++		return -EINVAL;
++
++
++	out_frame = rpmbd->out_frames;
++
++	blks = be16_to_cpu(in_frame[0].block_count);
++	if (blks == 0 || blks > rpmbd->out_frames_cnt) {
++		ret = -EINVAL;
++		memset(out_frame, 0, sizeof(struct rpmb_frame));
++		err = RPMB_ERR_READ;
++		goto out;
++	}
++
++	ret = 0;
++	memset(out_frame, 0, sizeof(struct rpmb_frame) * blks);
++
++	addr = be16_to_cpu(in_frame[0].addr);
++	if (addr >= rsdev->blkcnt) {
++		err = RPMB_ERR_ADDRESS;
++		goto out;
++	}
++
++	if (addr + blks > rsdev->blkcnt) {
++		err = RPMB_ERR_READ;
++		goto out;
++	}
++
++	for (i = 0; i < blks; i++) {
++		memcpy(out_frame[i].data, rsdev->da[addr + i].data, BLK_UNIT);
++		memcpy(out_frame[i].nonce, in_frame[0].nonce, 16);
++		out_frame[i].req_resp = req_to_resp(req);
++		out_frame[i].addr = in_frame[0].addr;
++		out_frame[i].block_count = cpu_to_be16(blks);
++	}
++
++	if (rpmb_sim_calc_hmac(rsdev, out_frame, blks, mac)) {
++		err = RPMB_ERR_AUTH;
++		goto out;
++	}
++
++	memcpy(out_frame[blks - 1].key_mac, mac, sizeof(mac));
++
++	err = RPMB_ERR_OK;
++out:
++
++	/* FIXME: not sure if this has to be updated in each frame */
++	out_frame[0].result = op_result(rsdev, err);
++
++
++	return ret;
++}
++
++static int rpmb_sim_sequence(struct rpmb_sim_dev *rsdev,
++			     struct rpmb_data *rpmbd)
++{
++	u16 type;
++	int ret;
 +
 +	type = rpmbd->req_type;
-+	blks = be16_to_cpu(in_frames[0].block_count);
++
++	if (rpmbd->out_frames == NULL || rpmbd->in_frames == NULL ||
++	    rpmbd->out_frames_cnt == 0 || rpmbd->in_frames_cnt == 0)
++		return -EINVAL;
++
++	if (rsdev->auth_key_set == false && type != RPMB_PROGRAM_KEY)
++		return rpmb_op_not_programmed(rsdev, rpmbd);
 +
 +	switch (type) {
 +	case RPMB_PROGRAM_KEY:
-+		blks = 1;
-+		/* fall through */
++		ret = rpmb_op_program_key(rsdev, rpmbd);
++		break;
 +	case RPMB_WRITE_DATA:
-+		/* STEP 1: send request to RPMB partition */
-+		err = mmc_rpmb_send_cmd(card, type, MMC_DATA_WRITE,
-+					in_buf, blks);
-+		if (err) {
-+			pr_err("%s: mmc_rpmb_send_cmd failed(%d)\n",
-+				mmc_hostname(card->host), err);
-+			goto out;
-+		}
-+
-+		/* STEP 2: check write result (reuse out_frames) */
-+		memset(out_frames, 0, 512);
-+		out_frames[0].req_resp = cpu_to_be16(RPMB_RESULT_READ);
-+		err = mmc_rpmb_send_cmd(card,
-+			RPMB_RESULT_READ, MMC_DATA_WRITE, out_buf, 1);
-+		if (err) {
-+			pr_err("%s: mmc_rpmb_send_cmd failed(%d)\n",
-+				mmc_hostname(card->host), err);
-+			goto out;
-+		}
-+
-+		/* STEP 3: get response from RPMB partition */
-+		err = mmc_rpmb_send_cmd(card,
-+			RPMB_READ_DATA, MMC_DATA_READ, out_buf, 1);
-+
-+		if (err) {
-+			pr_err("%s: mmc_rpmb_send_cmd failed(%d)\n",
-+				mmc_hostname(card->host), err);
-+			goto out;
-+		}
++		ret = rpmb_op_write_data(rsdev, rpmbd);
 +		break;
-+
 +	case RPMB_GET_WRITE_COUNTER:
-+		blks = 1;
-+		/* fall through */
-+	case RPMB_READ_DATA:
-+		/* STEP 1: send request to RPMB partition */
-+		err = mmc_rpmb_send_cmd(card, type, MMC_DATA_WRITE, in_buf, 1);
-+		if (err) {
-+			pr_err("%s: mmc_rpmb_send_cmd failed(%d)\n",
-+				mmc_hostname(card->host), err);
-+			goto out;
-+		}
-+
-+		/* STEP 3: get response from RPMB partition */
-+		err = mmc_rpmb_send_cmd(card, type, MMC_DATA_READ,
-+					out_buf, blks);
-+		if (err) {
-+			pr_err("%s: mmc_rpmb_send_cmd failed(%d)\n",
-+				mmc_hostname(card->host), err);
-+			goto out;
-+		}
++		ret = rpmb_op_get_wr_conter(rsdev, rpmbd);
 +		break;
-+
++	case RPMB_READ_DATA:
++		ret = rpmb_op_read_data(rsdev, rpmbd);
++		break;
 +	default:
-+		err = -EINVAL;
++		ret = -EINVAL;
 +		goto out;
 +	}
 +out:
-+	return err;
++	return ret;
 +}
 +
-+static int mmc_blk_rpmb_req_process(struct mmc_blk_data *md,
-+				    struct rpmb_data *rpmbd)
++static int rpmb_sim_send_rpmb_req(struct device *dev, struct rpmb_data *rpmbd)
 +{
-+	struct mmc_card *card;
-+	int ret;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct rpmb_sim_dev *rsdev = platform_get_drvdata(pdev);
 +
-+	if (WARN_ON(!md || !rpmbd))
++	if (!rsdev)
 +		return -EINVAL;
 +
-+	if (!(md->flags & MMC_BLK_CMD23) ||
-+	     (md->part_type != EXT_CSD_PART_CONFIG_ACC_RPMB))
-+		return -EOPNOTSUPP;
++	if (!rpmbd)
++		return -EINVAL;
 +
-+	card = md->queue.card;
-+	if (!card || !mmc_card_mmc(card))
-+		return -ENODEV;
-+
-+
-+	pr_debug("%s rpmb request type = 0x%1x\n",
-+		md->disk->disk_name, rpmbd->req_type);
-+
-+	mmc_get_card(card);
-+
-+	/* switch to RPMB partition */
-+	ret = mmc_blk_part_switch(card, md);
-+	if (ret) {
-+		pr_err("%s: Invalid RPMB partition switch (%d)!\n",
-+			mmc_hostname(card->host), ret);
-+		/*
-+		 * In case partition is not in user data area, make
-+		 * a force partition switch.
-+		 * we need reset eMMC card at here
-+		 */
-+		ret = mmc_blk_reset(md, card->host, MMC_BLK_RPMB);
-+		if (!ret)
-+			mmc_blk_reset_success(md, MMC_BLK_RPMB);
-+		else
-+			pr_err("%s: eMMC card reset failed (%d)\n",
-+				mmc_hostname(card->host), ret);
-+		goto out;
-+	}
-+
-+	ret = mmc_blk_rpmb_sequence(card, rpmbd);
-+	if (ret)
-+		pr_err("%s: failed (%d) to handle RPMB request type %d!\n",
-+			mmc_hostname(card->host), ret, rpmbd->req_type);
-+
-+	/* Always switch back to main area after RPMB access */
-+	mmc_blk_part_switch(card, dev_get_drvdata(&card->dev));
-+out:
-+	mmc_put_card(card);
-+	return ret;
++	return rpmb_sim_sequence(rsdev, rpmbd);
 +}
 +
-+static int mmc_blk_rpmb_send_req(struct device *dev, struct rpmb_data *req)
-+{
-+	struct mmc_blk_data *md = mmc_blk_get(dev_to_disk(dev));
-+	int ret;
-+
-+	if (!md)
-+		return -ENODEV;
-+
-+	ret = mmc_blk_rpmb_req_process(md, req);
-+
-+	mmc_blk_put(md);
-+
-+	return ret;
-+}
-+
-+static struct rpmb_ops mmc_rpmb_dev_ops = {
-+	.send_rpmb_req = mmc_blk_rpmb_send_req,
++static struct rpmb_ops rpmb_sim_ops = {
++	.send_rpmb_req = rpmb_sim_send_rpmb_req,
 +	.type = RPMB_TYPE_EMMC,
 +};
 +
-+static struct mmc_blk_data *mmc_blk_rpmb_part_get(struct mmc_blk_data *md)
++static int rpmb_sim_hmac_256_alloc(struct rpmb_sim_dev *rsdev)
 +{
-+	struct mmc_blk_data *part_md;
++	struct crypto_shash *hash_tfm;
 +
-+	if (!md)
-+		return NULL;
++	hash_tfm = crypto_alloc_shash("hmac(sha256)", 0, 0);
++	if (IS_ERR(hash_tfm))
++		return PTR_ERR(hash_tfm);
 +
-+	list_for_each_entry(part_md, &md->part, part) {
-+		if (part_md->area_type == MMC_BLK_DATA_AREA_RPMB)
-+			return part_md;
-+	}
++	rsdev->hash_tfm = hash_tfm;
 +
-+	return NULL;
-+}
-+
-+static void mmc_blk_rpmb_unset_dev_id(struct rpmb_ops *ops)
-+{
-+	kfree(ops->dev_id);
-+	ops->dev_id = NULL;
-+}
-+
-+static int mmc_blk_rpmb_set_dev_id(struct rpmb_ops *ops, struct mmc_card *card)
-+{
-+	char *id;
-+
-+	id = kmalloc(sizeof(card->raw_cid), GFP_KERNEL);
-+	if (!id)
-+		return -ENOMEM;
-+
-+	memcpy(id, card->raw_cid, sizeof(card->raw_cid));
-+	ops->dev_id = id;
-+	ops->dev_id_len = sizeof(card->raw_cid);
-+
++	dev_dbg(rsdev->dev, "hamac(sha256) registered\n");
 +	return 0;
 +}
 +
-+static void mmc_blk_rpmb_add(struct mmc_card *card)
++static void rpmb_sim_hmac_256_free(struct rpmb_sim_dev *rsdev)
 +{
-+	struct mmc_blk_data *md = dev_get_drvdata(&card->dev);
-+	struct mmc_blk_data *part_md = mmc_blk_rpmb_part_get(md);
-+	struct rpmb_dev *rdev;
++	if (rsdev->hash_tfm)
++		crypto_free_shash(rsdev->hash_tfm);
 +
-+	if (!part_md)
-+		return;
++	rsdev->hash_tfm = NULL;
++}
 +
-+	mmc_blk_rpmb_set_dev_id(&mmc_rpmb_dev_ops, card);
++static int rpmb_sim_probe(struct platform_device *pdev)
++{
++	struct rpmb_sim_dev *rsdev;
++	int ret;
 +
-+	/* RPMB blocks are written in half sectors hence '* 2' */
-+	mmc_rpmb_dev_ops.reliable_wr_cnt = card->ext_csd.rel_sectors * 2;
++	rsdev = kzalloc(sizeof(struct rpmb_sim_dev), GFP_KERNEL);
++	if (!rsdev)
++		return -ENOMEM;
 +
-+	rdev = rpmb_dev_register(disk_to_dev(part_md->disk),
-+				  &mmc_rpmb_dev_ops);
-+	if (IS_ERR(rdev)) {
-+		pr_warn("%s: cannot register to rpmb %ld\n",
-+			part_md->disk->disk_name, PTR_ERR(rdev));
++	rsdev->dev = &pdev->dev;
++
++	ret = rpmb_sim_hmac_256_alloc(rsdev);
++	if (ret)
++		goto err;
++
++	rsdev->capacity = CAPACITY_UNIT * daunits;
++	rsdev->blkcnt  = rsdev->capacity / BLK_UNIT;
++	rsdev->da = kzalloc(rsdev->capacity, GFP_KERNEL);
++	if (!rsdev->da) {
++		ret = -ENOMEM;
++		goto err;
 +	}
++
++	rpmb_sim_ops.dev_id_len = strlen(id);
++	rpmb_sim_ops.dev_id = id;
++	rpmb_sim_ops.reliable_wr_cnt = max_wr_blks;
++
++	rsdev->rdev = rpmb_dev_register(rsdev->dev, &rpmb_sim_ops);
++	if (IS_ERR(rsdev->rdev)) {
++		ret = PTR_ERR(rsdev->rdev);
++		goto err;
++	}
++
++	dev_info(&pdev->dev, "registered RPMB capacity = %zu of %zu blocks\n",
++		 rsdev->capacity, rsdev->blkcnt);
++
++	platform_set_drvdata(pdev, rsdev);
++
++	return 0;
++err:
++	rpmb_sim_hmac_256_free(rsdev);
++	if (rsdev)
++		kfree(rsdev->da);
++	kfree(rsdev);
++	return ret;
 +}
 +
-+static void mmc_blk_rpmb_remove(struct mmc_card *card)
++static int rpmb_sim_remove(struct platform_device *pdev)
 +{
-+	struct mmc_blk_data *md = dev_get_drvdata(&card->dev);
-+	struct mmc_blk_data *part_md = mmc_blk_rpmb_part_get(md);
++	struct rpmb_sim_dev *rsdev;
 +
-+	if (part_md)
-+		rpmb_dev_unregister(disk_to_dev(part_md->disk));
++	rsdev = platform_get_drvdata(pdev);
 +
-+	mmc_blk_rpmb_unset_dev_id(&mmc_rpmb_dev_ops);
++	rpmb_dev_unregister(rsdev->dev);
++
++	platform_set_drvdata(pdev, NULL);
++
++	rpmb_sim_hmac_256_free(rsdev);
++
++	kfree(rsdev->da);
++	kfree(rsdev);
++	return 0;
 +}
 +
- static int mmc_blk_issue_discard_rq(struct mmc_queue *mq, struct request *req)
- {
- 	struct mmc_blk_data *md = mq->data;
-@@ -2613,6 +2901,8 @@ static int mmc_blk_probe(struct mmc_card *card)
- 			goto out;
- 	}
- 
-+	mmc_blk_rpmb_add(card);
++void rpmb_sim_shutdown(struct platform_device *pdev)
++{
++	rpmb_sim_remove(pdev);
++}
 +
- 	pm_runtime_set_autosuspend_delay(&card->dev, 3000);
- 	pm_runtime_use_autosuspend(&card->dev);
- 
-@@ -2637,6 +2927,7 @@ static void mmc_blk_remove(struct mmc_card *card)
- {
- 	struct mmc_blk_data *md = dev_get_drvdata(&card->dev);
- 
-+	mmc_blk_rpmb_remove(card);
- 	mmc_blk_remove_parts(card, md);
- 	pm_runtime_get_sync(&card->dev);
- 	mmc_claim_host(card->host);
-@@ -2665,6 +2956,7 @@ static int _mmc_blk_suspend(struct mmc_card *card)
- 
- static void mmc_blk_shutdown(struct mmc_card *card)
- {
-+	mmc_blk_rpmb_remove(card);
- 	_mmc_blk_suspend(card);
- }
- 
++static struct platform_driver rpmb_sim_driver = {
++	.driver = {
++		.name  = "rpmb_sim",
++	},
++	.probe         = rpmb_sim_probe,
++	.remove        = rpmb_sim_remove,
++	.shutdown      = rpmb_sim_shutdown,
++};
++
++static struct platform_device *rpmb_sim_pdev;
++
++static int __init rpmb_sim_init(void)
++{
++	int ret;
++
++	rpmb_sim_pdev = platform_device_register_simple("rpmb_sim", -1,
++							NULL, 0);
++
++	if (IS_ERR(rpmb_sim_pdev))
++		return PTR_ERR(rpmb_sim_pdev);
++
++	ret = platform_driver_register(&rpmb_sim_driver);
++	if (ret)
++		platform_device_unregister(rpmb_sim_pdev);
++
++	return ret;
++}
++
++static void __exit rpmb_sim_exit(void)
++{
++	platform_device_unregister(rpmb_sim_pdev);
++	platform_driver_unregister(&rpmb_sim_driver);
++}
++
++module_init(rpmb_sim_init);
++module_exit(rpmb_sim_exit);
++
++MODULE_AUTHOR("Tomas Winkler <tomas.winkler@intel.com");
++MODULE_LICENSE("Dual BSD/GPL");
++MODULE_ALIAS("platform:rpmb_sim");
 -- 
 2.5.5
