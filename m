@@ -1,38 +1,39 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of ->host_failed
-Date: Tue, 31 May 2016 20:30:33 -0700
-Message-ID: <CAPcyv4geu54Pdub4Cr-NOu34PvwuGwDUZFPP3K3tOb923c20-g@mail.gmail.com>
-References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
-	<CAPcyv4jtwg9J7WDzf2y5Uq-p8vthG+F6Zo+NLT=qYQcA9qqtCQ@mail.gmail.com>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
+Date: Wed, 1 Jun 2016 06:04:54 +0100
+Message-ID: <CALjAwxgdr1zSgZZzNA9BQ8Ta+UuutJ6iuBnqZfmV-BTCDL2PbA@mail.gmail.com>
+References: <20160518223616.GA409@sucs.org>
+	<20160527041824.GC9418@birch.djwong.org>
+	<CALjAwxgkgPZdXFkOuD-7Dsbxf9oVEGuXTDLnyqu8rTrJio_4mA@mail.gmail.com>
+	<CAGnHSEn0ntEw_dwFNqG6CdgwcpHzQie88jgA21uioKhBbcByTg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4jtwg9J7WDzf2y5Uq-p8vthG+F6Zo+NLT=qYQcA9qqtCQ@mail.gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Wei Fang <fangwei1@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@infradead.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-doc@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSEn0ntEw_dwFNqG6CdgwcpHzQie88jgA21uioKhBbcByTg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 31, 2016 at 8:21 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Tue, May 31, 2016 at 1:38 AM, Wei Fang <fangwei1@huawei.com> wrote:
->> sas_ata_strategy_handler() adds the works of the ata error handler
->> to system_unbound_wq. This workqueue asynchronously runs work items,
->> so the ata error handler will be performed concurrently on different
->> CPUs. In this case, ->host_failed will be decreased simultaneously in
->> scsi_eh_finish_cmd() on different CPUs, and become abnormal.
->>
->> It will lead to permanently inequal between ->host_failed and
->>  ->host_busy, and scsi error handler thread won't become running.
->> IO errors after that won't be handled forever.
->>
->> Use atomic type for ->host_failed to fix this race.
->>
->> This fixes the problem introduced in
->> commit 50824d6c5657 ("[SCSI] libsas: async ata-eh").
->>
->> Reviewed-by: Christoph Hellwig <hch@infradead.org>
->> Signed-off-by: Wei Fang <fangwei1@huawei.com>
+On 27 May 2016 at 10:30, Tom Yan <tom.ty89@gmail.com> wrote:
+> There seems to be some sort of race condition between
+> blkdev_issue_zeroout() and the scsi disk driver (disabling write same
+> after an illegal request). On my UAS drive, sometimes `blkdiscard -z
+> /dev/sdX` will return right away, even though if I then check
+> `write_same_max_bytes` it has turned 0. Sometimes it will just write
+> zero with SCSI WRITE even if `write_same_max_bytes` is 33553920 before
+> I issue `blkdiscard -z` (`write_same_max_bytes` also turned 0, as
+> expected).
 >
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
+> Not sure if it is directly related to the case here though.
 
-Should also tag this for -stable.
+I'm not aware of hitting that particular problem myself directly on
+the underlying "SCSI" device but the patch on
+https://patchwork.kernel.org/patch/9137311/ should be able to resolve
+that issue. Could you test it and follow up on
+http://permalink.gmane.org/gmane.linux.kernel/2229377 ? I'm hoping
+more testing reports will lead to the patch being reviewed and
+accepted sooner rather than later as it's currently stalled...
+
+-- 
+Sitsofe | http://sucs.org/~sits/
