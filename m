@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 08/14] target/sbc: Convert sbc_dif_copy_prot to target_iostate
-Date: Wed,  1 Jun 2016 21:48:41 +0000
-Message-ID: <1464817727-9125-9-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 10/14] target/iblock: Fold iblock_req into target_iostate
+Date: Wed,  1 Jun 2016 21:48:43 +0000
+Message-ID: <1464817727-9125-11-git-send-email-nab@linux-iscsi.org>
 References: <1464817727-9125-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:53511 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:53532 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753043AbcFAVtr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2016 17:49:47 -0400
+	with ESMTP id S1751833AbcFAVtu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2016 17:49:50 -0400
 In-Reply-To: <1464817727-9125-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,11 +16,13 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christop
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts sbc_dif_copy_prot() to use struct target_iomem
-for existing T10-PI scatterlist memory and scatterlist count
-dereferences.
+This patch folks the two existing iblock_req members
+into target_iostate, and updates associated sbc_ops
+iblock_execute_rw() iblock_execute_write_same()
+callbacks.
 
-Also convert the single external user in rd_do_prot_rw() code.
+Also, go ahead and drop target_iostate->priv now
+that it's unused.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -30,131 +32,189 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_rd.c      | 24 +++++++++++++-----------
- drivers/target/target_core_sbc.c     |  9 ++++-----
- include/target/target_core_backend.h |  4 ++--
- 3 files changed, 19 insertions(+), 18 deletions(-)
+ drivers/target/target_core_iblock.c | 40 ++++++++++---------------------------
+ drivers/target/target_core_iblock.h |  5 -----
+ include/target/target_core_base.h   |  5 ++++-
+ 3 files changed, 14 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index df8bd58..cbcb33e 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -398,19 +398,21 @@ static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
- 	return NULL;
- }
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 8e90ec42..daf052d 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -277,34 +277,30 @@ static unsigned long long iblock_emulate_read_cap_with_block_size(
  
--static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
-+static sense_reason_t rd_do_prot_rw(struct target_iostate *ios, bool is_read)
+ static void iblock_complete_cmd(struct target_iostate *ios)
  {
--	struct se_device *se_dev = cmd->se_dev;
-+	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
-+	struct se_device *se_dev = ios->se_dev;
-+	struct target_iomem *iomem = ios->iomem;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *prot_table;
- 	struct scatterlist *prot_sg;
--	u32 sectors = cmd->t_iostate.data_length / se_dev->dev_attrib.block_size;
-+	u32 sectors = ios->data_length / se_dev->dev_attrib.block_size;
- 	u32 prot_offset, prot_page;
- 	u32 prot_npages __maybe_unused;
- 	u64 tmp;
- 	sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-	struct iblock_req *ibr = ios->priv;
+ 	u8 status;
  
--	tmp = cmd->t_iostate.t_task_lba * se_dev->prot_length;
-+	tmp = ios->t_task_lba * se_dev->prot_length;
- 	prot_offset = do_div(tmp, PAGE_SIZE);
- 	prot_page = tmp;
- 
-@@ -422,14 +424,15 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
- 					prot_table->page_start_offset];
- 
- 	if (is_read)
--		rc = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba, sectors, 0,
-+		rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors, 0,
- 				    prot_sg, prot_offset);
- 	else
--		rc = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba, sectors, 0,
--				    cmd->t_iomem.t_prot_sg, 0);
-+		rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors, 0,
-+				    iomem->t_prot_sg, 0);
- 
- 	if (!rc)
--		sbc_dif_copy_prot(cmd, sectors, is_read, prot_sg, prot_offset);
-+		sbc_dif_copy_prot(iomem, sectors, is_read, prot_sg, prot_offset,
-+				  se_dev->prot_length);
- 
- 	return rc;
- }
-@@ -439,7 +442,6 @@ rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
- 	      enum dma_data_direction data_direction, bool fua_write,
- 	      void (*t_comp_func)(struct target_iostate *, u16))
- {
--	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
- 	struct se_device *se_dev = ios->se_dev;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *table;
-@@ -475,7 +477,7 @@ rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
- 
- 	if (ios->prot_type && se_dev->dev_attrib.pi_prot_type &&
- 	    data_direction == DMA_TO_DEVICE) {
--		rc = rd_do_prot_rw(cmd, false);
-+		rc = rd_do_prot_rw(ios, false);
- 		if (rc)
- 			return rc;
- 	}
-@@ -543,7 +545,7 @@ rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
- 
- 	if (ios->prot_type && se_dev->dev_attrib.pi_prot_type &&
- 	    data_direction == DMA_FROM_DEVICE) {
--		rc = rd_do_prot_rw(cmd, true);
-+		rc = rd_do_prot_rw(ios, true);
- 		if (rc)
- 			return rc;
- 	}
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index e1288de..e82b261 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -1381,10 +1381,9 @@ check_ref:
- 	return 0;
- }
- 
--void sbc_dif_copy_prot(struct se_cmd *cmd, unsigned int sectors, bool read,
--		       struct scatterlist *sg, int sg_off)
-+void sbc_dif_copy_prot(struct target_iomem *iomem, unsigned int sectors, bool read,
-+		       struct scatterlist *sg, int sg_off, u32 prot_length)
- {
--	struct se_device *dev = cmd->se_dev;
- 	struct scatterlist *psg;
- 	void *paddr, *addr;
- 	unsigned int i, len, left;
-@@ -1393,9 +1392,9 @@ void sbc_dif_copy_prot(struct se_cmd *cmd, unsigned int sectors, bool read,
- 	if (!sg)
+-	if (!atomic_dec_and_test(&ibr->pending))
++	if (!atomic_dec_and_test(&ios->backend_pending))
  		return;
  
--	left = sectors * dev->prot_length;
-+	left = sectors * prot_length;
+-	if (atomic_read(&ibr->ib_bio_err_cnt))
++	if (atomic_read(&ios->backend_err_cnt))
+ 		status = SAM_STAT_CHECK_CONDITION;
+ 	else
+ 		status = SAM_STAT_GOOD;
  
--	for_each_sg(cmd->t_iomem.t_prot_sg, psg, cmd->t_iomem.t_prot_nents, i) {
-+	for_each_sg(iomem->t_prot_sg, psg, iomem->t_prot_nents, i) {
- 		unsigned int psg_len, copied = 0;
+ 	// XXX: ios status SAM completion translation
+ 	ios->t_comp_func(ios, status);
+-
+-	kfree(ibr);
+ }
  
- 		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index ade90b7..f2d593f 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -73,8 +73,8 @@ sector_t	sbc_get_write_same_sectors(struct se_cmd *cmd);
- void	sbc_dif_generate(struct se_cmd *);
- sense_reason_t	sbc_dif_verify(struct se_cmd *, sector_t, unsigned int,
- 				     unsigned int, struct scatterlist *, int);
--void sbc_dif_copy_prot(struct se_cmd *, unsigned int, bool,
--		       struct scatterlist *, int);
-+void sbc_dif_copy_prot(struct target_iomem *, unsigned int, bool,
-+		       struct scatterlist *, int, u32);
- void	transport_set_vpd_proto_id(struct t10_vpd *, unsigned char *);
- int	transport_set_vpd_assoc(struct t10_vpd *, unsigned char *);
- int	transport_set_vpd_ident_type(struct t10_vpd *, unsigned char *);
+ static void iblock_bio_done(struct bio *bio)
+ {
+ 	struct target_iostate *ios = bio->bi_private;
+-	struct iblock_req *ibr = ios->priv;
+ 
+ 	if (bio->bi_error) {
+ 		pr_err("bio error: %p,  err: %d\n", bio, bio->bi_error);
+ 		/*
+ 		 * Bump the ib_bio_err_cnt and release bio.
+ 		 */
+-		atomic_inc(&ibr->ib_bio_err_cnt);
++		atomic_inc(&ios->backend_err_cnt);
+ 		smp_mb__after_atomic();
+ 	}
+ 
+@@ -453,7 +449,6 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ {
+ 	struct target_iostate *ios = &cmd->t_iostate;
+ 	struct block_device *bdev = IBLOCK_DEV(cmd->se_dev)->ibd_bd;
+-	struct iblock_req *ibr;
+ 	struct scatterlist *sg;
+ 	struct bio *bio;
+ 	struct bio_list list;
+@@ -480,19 +475,14 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 	if (bdev_write_same(bdev))
+ 		return iblock_execute_write_same_direct(bdev, cmd);
+ 
+-	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+-	if (!ibr)
+-		goto fail;
+-	ios->priv = ibr;
+-
+ 	bio = iblock_get_bio(ios, block_lba, 1);
+ 	if (!bio)
+-		goto fail_free_ibr;
++		goto fail;
+ 
+ 	bio_list_init(&list);
+ 	bio_list_add(&list, bio);
+ 
+-	atomic_set(&ibr->pending, 1);
++	atomic_set(&ios->backend_pending, 1);
+ 
+ 	while (sectors) {
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+@@ -502,7 +492,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+-			atomic_inc(&ibr->pending);
++			atomic_inc(&ios->backend_pending);
+ 			bio_list_add(&list, bio);
+ 		}
+ 
+@@ -517,8 +507,6 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ fail_put_bios:
+ 	while ((bio = bio_list_pop(&list)))
+ 		bio_put(bio);
+-fail_free_ibr:
+-	kfree(ibr);
+ fail:
+ 	return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ }
+@@ -680,7 +668,6 @@ iblock_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_n
+ {
+ 	struct se_device *dev = ios->se_dev;
+ 	sector_t block_lba = target_to_linux_sector(dev, ios->t_task_lba);
+-	struct iblock_req *ibr;
+ 	struct bio *bio, *bio_start;
+ 	struct bio_list list;
+ 	struct scatterlist *sg;
+@@ -710,26 +697,21 @@ iblock_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_n
+ 		rw = READ;
+ 	}
+ 
+-	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+-	if (!ibr)
+-		goto fail;
+-	ios->priv = ibr;
+-
+ 	if (!sgl_nents) {
+-		atomic_set(&ibr->pending, 1);
++		atomic_set(&ios->backend_pending, 1);
+ 		iblock_complete_cmd(ios);
+ 		return 0;
+ 	}
+ 
+ 	bio = iblock_get_bio(ios, block_lba, sgl_nents);
+ 	if (!bio)
+-		goto fail_free_ibr;
++		goto fail;
+ 
+ 	bio_start = bio;
+ 	bio_list_init(&list);
+ 	bio_list_add(&list, bio);
+ 
+-	atomic_set(&ibr->pending, 2);
++	atomic_set(&ios->backend_pending, 2);
+ 	bio_cnt = 1;
+ 
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+@@ -749,7 +731,7 @@ iblock_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_n
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+-			atomic_inc(&ibr->pending);
++			atomic_inc(&ios->backend_pending);
+ 			bio_list_add(&list, bio);
+ 			bio_cnt++;
+ 		}
+@@ -772,8 +754,6 @@ iblock_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_n
+ fail_put_bios:
+ 	while ((bio = bio_list_pop(&list)))
+ 		bio_put(bio);
+-fail_free_ibr:
+-	kfree(ibr);
+ fail:
+ 	return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ }
+diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
+index 01c2afd..ef7f91c 100644
+--- a/drivers/target/target_core_iblock.h
++++ b/drivers/target/target_core_iblock.h
+@@ -6,11 +6,6 @@
+ #define IBLOCK_MAX_CDBS		16
+ #define IBLOCK_LBA_SHIFT	9
+ 
+-struct iblock_req {
+-	atomic_t pending;
+-	atomic_t ib_bio_err_cnt;
+-} ____cacheline_aligned;
+-
+ #define IBDF_HAS_UDEV_PATH		0x01
+ 
+ struct iblock_dev {
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 9bd7559..60a180f 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -469,7 +469,10 @@ struct target_iostate {
+ 	struct target_iomem	*iomem;
+ 	struct se_device	*se_dev;
+ 	void			(*t_comp_func)(struct target_iostate *, u16);
+-	void			*priv;
++
++	/* Used by IBLOCK for BIO submission + completion */
++	atomic_t		backend_pending;
++	atomic_t		backend_err_cnt;
+ };
+ 
+ struct se_cmd {
 -- 
 1.9.1
 
