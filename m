@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 11/14] target/sbc: Convert sbc_ops->execute_sync_cache to target_iostate
-Date: Wed,  1 Jun 2016 21:48:44 +0000
-Message-ID: <1464817727-9125-12-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 09/14] target/file: Convert sbc_dif_verify to target_iostate
+Date: Wed,  1 Jun 2016 21:48:42 +0000
+Message-ID: <1464817727-9125-10-git-send-email-nab@linux-iscsi.org>
 References: <1464817727-9125-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:53542 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:53515 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbcFAVtv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2016 17:49:51 -0400
+	with ESMTP id S1750978AbcFAVtr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2016 17:49:47 -0400
 In-Reply-To: <1464817727-9125-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,166 +16,220 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christop
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch convert IBLOCK + FILEIO for sbc_ops->execute_sync_cache()
-to accept struct target_iostate, and avoid backend driver sync_cache
-SCSI CDB decoding for immediate as reported by HCH.
+This patch converts sbc_dif_verify() and associated existing
+T10-PI FILEIO driver to use target_iostate
 
-Reported-by: Christoph Hellwig <hch@lst.de>
+Also add FIXMEs for target_*_prot_action for target_iostate +
+target_iomem so this logic can eventually used by external
+drivers doing TARGET_PROT_DOUT_INSERT + TARGET_PROT_DIN_STRIP
+using software emulation.
+
 Cc: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Martin Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagi@grimberg.me>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c    | 19 +++++++++----------
- drivers/target/target_core_iblock.c  | 17 ++++++++---------
- drivers/target/target_core_sbc.c     |  6 ++++--
- include/target/target_core_backend.h |  2 +-
- 4 files changed, 22 insertions(+), 22 deletions(-)
+ drivers/target/target_core_file.c      |  5 ++---
+ drivers/target/target_core_rd.c        |  5 ++---
+ drivers/target/target_core_sbc.c       | 21 +++++++++++----------
+ drivers/target/target_core_transport.c | 15 +++++++++++----
+ include/target/target_core_backend.h   |  2 +-
+ 5 files changed, 27 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index ed94969..6fc1099 100644
+index bc82018..ed94969 100644
 --- a/drivers/target/target_core_file.c
 +++ b/drivers/target/target_core_file.c
-@@ -309,11 +309,10 @@ static int fd_do_rw(struct target_iostate *ios, struct file *fd,
- }
- 
- static sense_reason_t
--fd_execute_sync_cache(struct se_cmd *cmd)
-+fd_execute_sync_cache(struct target_iostate *ios, bool immed)
+@@ -512,7 +512,6 @@ fd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
+ 	      enum dma_data_direction data_direction, bool fua_write,
+ 	      void (*t_comp_func)(struct target_iostate *, u16))
  {
--	struct se_device *dev = cmd->se_dev;
-+	struct se_device *dev = ios->se_dev;
+-	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct target_iomem *iomem = ios->iomem;
+ 	struct se_device *dev = ios->se_dev;
  	struct fd_dev *fd_dev = FD_DEV(dev);
--	int immed = (cmd->t_task_cdb[1] & 0x2);
- 	loff_t start, end;
- 	int ret;
+@@ -552,7 +551,7 @@ fd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
+ 			u32 sectors = ios->data_length >>
+ 					ilog2(dev->dev_attrib.block_size);
  
-@@ -322,18 +321,18 @@ fd_execute_sync_cache(struct se_cmd *cmd)
- 	 * for this SYNCHRONIZE_CACHE op
- 	 */
- 	if (immed)
--		target_complete_cmd(cmd, SAM_STAT_GOOD);
-+		ios->t_comp_func(ios, SAM_STAT_GOOD);
+-			rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors,
++			rc = sbc_dif_verify(ios, ios->t_task_lba, sectors,
+ 					    0, iomem->t_prot_sg, 0);
+ 			if (rc)
+ 				return rc;
+@@ -562,7 +561,7 @@ fd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
+ 			u32 sectors = ios->data_length >>
+ 					ilog2(dev->dev_attrib.block_size);
  
- 	/*
- 	 * Determine if we will be flushing the entire device.
- 	 */
--	if (cmd->t_iostate.t_task_lba == 0 && cmd->t_iostate.data_length == 0) {
-+	if (ios->t_task_lba == 0 && ios->data_length == 0) {
- 		start = 0;
- 		end = LLONG_MAX;
- 	} else {
--		start = cmd->t_iostate.t_task_lba * dev->dev_attrib.block_size;
--		if (cmd->t_iostate.data_length)
--			end = start + cmd->t_iostate.data_length - 1;
-+		start = ios->t_task_lba * dev->dev_attrib.block_size;
-+		if (ios->data_length)
-+			end = start + ios->data_length - 1;
- 		else
- 			end = LLONG_MAX;
- 	}
-@@ -346,9 +345,9 @@ fd_execute_sync_cache(struct se_cmd *cmd)
- 		return 0;
+-			rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors,
++			rc = sbc_dif_verify(ios, ios->t_task_lba, sectors,
+ 					    0, iomem->t_prot_sg, 0);
+ 			if (rc)
+ 				return rc;
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index cbcb33e..a38a37f 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -400,7 +400,6 @@ static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
  
- 	if (ret)
--		target_complete_cmd(cmd, SAM_STAT_CHECK_CONDITION);
-+		ios->t_comp_func(ios, SAM_STAT_CHECK_CONDITION);
+ static sense_reason_t rd_do_prot_rw(struct target_iostate *ios, bool is_read)
+ {
+-	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *se_dev = ios->se_dev;
+ 	struct target_iomem *iomem = ios->iomem;
+ 	struct rd_dev *dev = RD_DEV(se_dev);
+@@ -424,10 +423,10 @@ static sense_reason_t rd_do_prot_rw(struct target_iostate *ios, bool is_read)
+ 					prot_table->page_start_offset];
+ 
+ 	if (is_read)
+-		rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors, 0,
++		rc = sbc_dif_verify(ios, ios->t_task_lba, sectors, 0,
+ 				    prot_sg, prot_offset);
  	else
--		target_complete_cmd(cmd, SAM_STAT_GOOD);
-+		ios->t_comp_func(ios, SAM_STAT_GOOD);
+-		rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors, 0,
++		rc = sbc_dif_verify(ios, ios->t_task_lba, sectors, 0,
+ 				    iomem->t_prot_sg, 0);
  
- 	return 0;
- }
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index daf052d..931dd7d 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -351,16 +351,16 @@ static void iblock_submit_bios(struct bio_list *list, int rw)
- 
- static void iblock_end_io_flush(struct bio *bio)
- {
--	struct se_cmd *cmd = bio->bi_private;
-+	struct target_iostate *ios = bio->bi_private;
- 
- 	if (bio->bi_error)
- 		pr_err("IBLOCK: cache flush failed: %d\n", bio->bi_error);
- 
--	if (cmd) {
-+	if (ios) {
- 		if (bio->bi_error)
--			target_complete_cmd(cmd, SAM_STAT_CHECK_CONDITION);
-+			ios->t_comp_func(ios, SAM_STAT_CHECK_CONDITION);
- 		else
--			target_complete_cmd(cmd, SAM_STAT_GOOD);
-+			ios->t_comp_func(ios, SAM_STAT_GOOD);
- 	}
- 
- 	bio_put(bio);
-@@ -371,10 +371,9 @@ static void iblock_end_io_flush(struct bio *bio)
-  * always flush the whole cache.
-  */
- static sense_reason_t
--iblock_execute_sync_cache(struct se_cmd *cmd)
-+iblock_execute_sync_cache(struct target_iostate *ios, bool immed)
- {
--	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
--	int immed = (cmd->t_task_cdb[1] & 0x2);
-+	struct iblock_dev *ib_dev = IBLOCK_DEV(ios->se_dev);
- 	struct bio *bio;
- 
- 	/*
-@@ -382,13 +381,13 @@ iblock_execute_sync_cache(struct se_cmd *cmd)
- 	 * for this SYNCHRONIZE_CACHE op.
- 	 */
- 	if (immed)
--		target_complete_cmd(cmd, SAM_STAT_GOOD);
-+		ios->t_comp_func(ios, SAM_STAT_GOOD);
- 
- 	bio = bio_alloc(GFP_KERNEL, 0);
- 	bio->bi_end_io = iblock_end_io_flush;
- 	bio->bi_bdev = ib_dev->ibd_bd;
- 	if (!immed)
--		bio->bi_private = cmd;
-+		bio->bi_private = ios;
- 	submit_bio(WRITE_FLUSH, bio);
- 	return 0;
- }
+ 	if (!rc)
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 649a3f2..be8dd46 100644
+index e82b261..649a3f2 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -463,12 +463,14 @@ sbc_execute_rw(struct target_iostate *ios)
- 			       cmd->t_iostate.data_direction, fua_write, &target_complete_ios);
+@@ -1341,12 +1341,12 @@ sbc_dif_generate(struct se_cmd *cmd)
  }
  
--static sense_reason_t sbc_execute_sync_cache(struct target_iostate *ios)
-+static sense_reason_t
-+sbc_execute_sync_cache(struct target_iostate *ios)
+ static sense_reason_t
+-sbc_dif_v1_verify(struct se_cmd *cmd, struct t10_pi_tuple *sdt,
++sbc_dif_v1_verify(struct target_iostate *ios, struct t10_pi_tuple *sdt,
+ 		  __u16 crc, sector_t sector, unsigned int ei_lba)
  {
- 	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
- 	struct sbc_ops *ops = cmd->protocol_data;
-+	bool immed = (cmd->t_task_cdb[1] & 0x2);
+ 	__be16 csum;
  
--	return ops->execute_sync_cache(cmd);
-+	return ops->execute_sync_cache(ios, immed);
+-	if (!(cmd->t_iostate.prot_checks & TARGET_DIF_CHECK_GUARD))
++	if (!(ios->prot_checks & TARGET_DIF_CHECK_GUARD))
+ 		goto check_ref;
+ 
+ 	csum = cpu_to_be16(crc);
+@@ -1359,10 +1359,10 @@ sbc_dif_v1_verify(struct se_cmd *cmd, struct t10_pi_tuple *sdt,
+ 	}
+ 
+ check_ref:
+-	if (!(cmd->t_iostate.prot_checks & TARGET_DIF_CHECK_REFTAG))
++	if (!(ios->prot_checks & TARGET_DIF_CHECK_REFTAG))
+ 		return 0;
+ 
+-	if (cmd->t_iostate.prot_type == TARGET_DIF_TYPE1_PROT &&
++	if (ios->prot_type == TARGET_DIF_TYPE1_PROT &&
+ 	    be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
+ 		pr_err("DIFv1 Type 1 reference failed on sector: %llu tag: 0x%08x"
+ 		       " sector MSB: 0x%08x\n", (unsigned long long)sector,
+@@ -1370,7 +1370,7 @@ check_ref:
+ 		return TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED;
+ 	}
+ 
+-	if (cmd->t_iostate.prot_type == TARGET_DIF_TYPE2_PROT &&
++	if (ios->prot_type == TARGET_DIF_TYPE2_PROT &&
+ 	    be32_to_cpu(sdt->ref_tag) != ei_lba) {
+ 		pr_err("DIFv1 Type 2 reference failed on sector: %llu tag: 0x%08x"
+ 		       " ei_lba: 0x%08x\n", (unsigned long long)sector,
+@@ -1426,12 +1426,13 @@ void sbc_dif_copy_prot(struct target_iomem *iomem, unsigned int sectors, bool re
+ EXPORT_SYMBOL(sbc_dif_copy_prot);
+ 
+ sense_reason_t
+-sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
++sbc_dif_verify(struct target_iostate *ios, sector_t start, unsigned int sectors,
+ 	       unsigned int ei_lba, struct scatterlist *psg, int psg_off)
+ {
+-	struct se_device *dev = cmd->se_dev;
++	struct target_iomem *iomem = ios->iomem;
++	struct se_device *dev = ios->se_dev;
+ 	struct t10_pi_tuple *sdt;
+-	struct scatterlist *dsg = cmd->t_iomem.t_data_sg;
++	struct scatterlist *dsg = iomem->t_data_sg;
+ 	sector_t sector = start;
+ 	void *daddr, *paddr;
+ 	int i;
+@@ -1488,11 +1489,11 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 				dsg_off += block_size;
+ 			}
+ 
+-			rc = sbc_dif_v1_verify(cmd, sdt, crc, sector, ei_lba);
++			rc = sbc_dif_v1_verify(ios, sdt, crc, sector, ei_lba);
+ 			if (rc) {
+ 				kunmap_atomic(daddr - dsg->offset);
+ 				kunmap_atomic(paddr - psg->offset);
+-				cmd->t_iostate.bad_sector = sector;
++				ios->bad_sector = sector;
+ 				return rc;
+ 			}
+ next:
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index b6a3543..d588759 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1815,8 +1815,11 @@ err:
+ 	transport_generic_request_failure(cmd, ret);
  }
  
- static sense_reason_t compare_and_write_post(struct se_cmd *cmd, bool success,
++// XXX: Convert target_write_prot_action to target_iostate
+ static int target_write_prot_action(struct se_cmd *cmd)
+ {
++	struct target_iostate *ios = &cmd->t_iostate;
++	struct target_iomem *iomem = ios->iomem;
+ 	u32 sectors;
+ 	/*
+ 	 * Perform WRITE_INSERT of PI using software emulation when backend
+@@ -1833,8 +1836,8 @@ static int target_write_prot_action(struct se_cmd *cmd)
+ 			break;
+ 
+ 		sectors = cmd->t_iostate.data_length >> ilog2(cmd->se_dev->dev_attrib.block_size);
+-		cmd->pi_err = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba,
+-					     sectors, 0, cmd->t_iomem.t_prot_sg, 0);
++		cmd->pi_err = sbc_dif_verify(ios, ios->t_task_lba,
++					     sectors, 0, iomem->t_prot_sg, 0);
+ 		if (unlikely(cmd->pi_err)) {
+ 			spin_lock_irq(&cmd->t_state_lock);
+ 			cmd->transport_state &= ~(CMD_T_BUSY|CMD_T_SENT);
+@@ -2055,17 +2058,21 @@ static void transport_handle_queue_full(
+ 	schedule_work(&cmd->se_dev->qf_work_queue);
+ }
+ 
++// XXX: Convert target_read_prot_action to target_iostate
+ static bool target_read_prot_action(struct se_cmd *cmd)
+ {
++	struct target_iostate *ios = &cmd->t_iostate;
++	struct target_iomem *iomem = ios->iomem;
++
+ 	switch (cmd->t_iostate.prot_op) {
+ 	case TARGET_PROT_DIN_STRIP:
+ 		if (!(cmd->se_sess->sup_prot_ops & TARGET_PROT_DIN_STRIP)) {
+ 			u32 sectors = cmd->t_iostate.data_length >>
+ 				  ilog2(cmd->se_dev->dev_attrib.block_size);
+ 
+-			cmd->pi_err = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba,
++			cmd->pi_err = sbc_dif_verify(ios, ios->t_task_lba,
+ 						     sectors, 0,
+-						     cmd->t_iomem.t_prot_sg, 0);
++						     iomem->t_prot_sg, 0);
+ 			if (cmd->pi_err)
+ 				return true;
+ 		}
 diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 5859ea5..47fd1fc 100644
+index f2d593f..5859ea5 100644
 --- a/include/target/target_core_backend.h
 +++ b/include/target/target_core_backend.h
-@@ -48,7 +48,7 @@ struct sbc_ops {
- 	sense_reason_t (*execute_rw)(struct target_iostate *ios, struct scatterlist *,
- 				     u32, enum dma_data_direction, bool fua_write,
- 				     void (*t_comp_func)(struct target_iostate *ios, u16));
--	sense_reason_t (*execute_sync_cache)(struct se_cmd *cmd);
-+	sense_reason_t (*execute_sync_cache)(struct target_iostate *ios, bool immed);
- 	sense_reason_t (*execute_write_same)(struct se_cmd *cmd);
- 	sense_reason_t (*execute_unmap)(struct se_cmd *cmd,
- 				sector_t lba, sector_t nolb);
+@@ -71,7 +71,7 @@ u32	sbc_get_device_rev(struct se_device *dev);
+ u32	sbc_get_device_type(struct se_device *dev);
+ sector_t	sbc_get_write_same_sectors(struct se_cmd *cmd);
+ void	sbc_dif_generate(struct se_cmd *);
+-sense_reason_t	sbc_dif_verify(struct se_cmd *, sector_t, unsigned int,
++sense_reason_t	sbc_dif_verify(struct target_iostate *, sector_t, unsigned int,
+ 				     unsigned int, struct scatterlist *, int);
+ void sbc_dif_copy_prot(struct target_iomem *, unsigned int, bool,
+ 		       struct scatterlist *, int, u32);
 -- 
 1.9.1
 
