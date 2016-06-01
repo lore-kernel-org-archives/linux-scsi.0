@@ -1,29 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] bnx2fc: replace printk() with BNX2FC_IO_DBG()
-Date: Tue, 31 May 2016 22:45:50 -0400
-Message-ID: <yq1zir5vd7l.fsf@sermon.lab.mkp.net>
-References: <1464597661-6192-1-git-send-email-mlombard@redhat.com>
+Subject: Re: sd: ZBC Update Read/Write Commands to SCSI spec
+Date: Tue, 31 May 2016 22:50:53 -0400
+Message-ID: <yq1vb1tvcz6.fsf@sermon.lab.mkp.net>
+References: <1464188556.3020.4.camel@petroskoutoupis.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30268 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756833AbcFACqE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2016 22:46:04 -0400
-In-Reply-To: <1464597661-6192-1-git-send-email-mlombard@redhat.com> (Maurizio
-	Lombardi's message of "Mon, 30 May 2016 10:41:01 +0200")
+Received: from aserp1040.oracle.com ([141.146.126.69]:23022 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbcFACvG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2016 22:51:06 -0400
+In-Reply-To: <1464188556.3020.4.camel@petroskoutoupis.com> (Petros Koutoupis's
+	message of "Wed, 25 May 2016 10:02:36 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: axboe@kernel.dk, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, loberman@redhat.com
+To: Petros Koutoupis <petros@petroskoutoupis.com>
+Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
->>>>> "Maurizio" == Maurizio Lombardi <mlombard@redhat.com> writes:
+>>>>> "Petros" == Petros Koutoupis <petros@petroskoutoupis.com> writes:
 
-Maurizio> The "fcp_rsp_code = %d" message isn't an error, it's meant to
-Maurizio> be informative only.  This patch prevents a flood of such
-Maurizio> messages in some situations.
+Petros> Note, I did not place the a check for zoned devices in the
+Petros> DIF-enabled conditional above, under the assumption that if the
+Petros> media supports Type-2 then it should also support the 32-byte
+Petros> commands. Thoughts?
 
-Applied to 4.8/scsi-queue.
+That's correct.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
