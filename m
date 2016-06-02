@@ -1,43 +1,102 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of
- ->host_failed
-Date: Thu, 2 Jun 2016 11:09:13 +0800
-Message-ID: <574FA359.2070804@huawei.com>
-References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
- <BF6B9AADDDF11740967545E971C7C0DE6B861A22@MAIL1.pickering.lenbrook.com>
- <574F9BE4.4020405@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <574F9BE4.4020405@huawei.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Kevin Groeneveld <KGroeneveld@lenbrook.com>, "tj@kernel.org" <tj@kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "corbet@lwn.net" <corbet@lwn.net>
-Cc: "hch@infradead.org" <hch@infradead.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v2 3/6] lpfc: Use pci_(request|release)_mem_regions
+Date: Thu,  2 Jun 2016 09:30:31 +0200
+Message-ID: <51b9bf3879e440da6c34094dfd1ee765f94f51c3.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+hand, use it in the lpfc driver.
 
-On 2016/6/2 10:37, Wei Fang wrote:
-> Hi, Kevin,
-> 
-> On 2016/6/1 22:36, Kevin Groeneveld wrote:
->>> Subject: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of ->host_failed
->>
->> I wonder if this could be related to http://www.spinics.net/lists/linux-scsi/msg86808.html?
->>
->> I never did get to the bottom of that.  If I have time I hope to retest my scsi hang issue with this patch.
->>
-> 
-> The concurrently decrements of host_failed only lead to abnormal
-> of host_failed, host_busy will be zero after error handler, and
-> the result may be host_failed > host_busy forever. But in your
-> case, host_busy > host_failed, so I think it's not the same
-> case. I'm afraid that this patch can't fix your scsi hang issue.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Smart <james.smart@avagotech.com>
+Cc: Dick Kennedy <dick.kennedy@avagotech.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-Something wrong in my words. host_busy may not be zero after error
-handler, but the result is true that missing decrement of host_failed
-may lead to host_failed > host_busy.
-
-Thanks,
-Wei
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f57d02c..a8735f7 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4775,20 +4775,17 @@ static int
+ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+ {
+ 	struct pci_dev *pdev;
+-	int bars = 0;
+ 
+ 	/* Obtain PCI device reference */
+ 	if (!phba->pcidev)
+ 		goto out_error;
+ 	else
+ 		pdev = phba->pcidev;
+-	/* Select PCI BARs */
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 	/* Enable PCI device */
+ 	if (pci_enable_device_mem(pdev))
+ 		goto out_error;
+ 	/* Request PCI resource for the device */
+-	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
++	if (pci_request_mem_regions(pdev, LPFC_DRIVER_NAME))
+ 		goto out_disable_device;
+ 	/* Set up device as PCI master and save state for EEH */
+ 	pci_set_master(pdev);
+@@ -4805,7 +4802,7 @@ out_disable_device:
+ 	pci_disable_device(pdev);
+ out_error:
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-			"1401 Failed to enable pci device, bars:x%x\n", bars);
++			"1401 Failed to enable pci device\n");
+ 	return -ENODEV;
+ }
+ 
+@@ -4820,17 +4817,14 @@ static void
+ lpfc_disable_pci_dev(struct lpfc_hba *phba)
+ {
+ 	struct pci_dev *pdev;
+-	int bars;
+ 
+ 	/* Obtain PCI device reference */
+ 	if (!phba->pcidev)
+ 		return;
+ 	else
+ 		pdev = phba->pcidev;
+-	/* Select PCI BARs */
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 	/* Release PCI resource and disable PCI device */
+-	pci_release_selected_regions(pdev, bars);
++	pci_release_mem_regions(pdev);
+ 	pci_disable_device(pdev);
+ 
+ 	return;
+@@ -9705,7 +9699,6 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+ 	struct lpfc_vport **vports;
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	int i;
+-	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 
+ 	spin_lock_irq(&phba->hbalock);
+ 	vport->load_flag |= FC_UNLOADING;
+@@ -9780,7 +9773,7 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+ 
+ 	lpfc_hba_free(phba);
+ 
+-	pci_release_selected_regions(pdev, bars);
++	pci_release_mem_regions(pdev);
+ 	pci_disable_device(pdev);
+ }
+ 
+-- 
+1.8.5.6
