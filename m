@@ -1,107 +1,133 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/14] lpfc: remove unused 'pring' argument
-Date: Thu,  2 Jun 2016 16:39:04 +0200
-Message-ID: <1464878356-42407-3-git-send-email-hare@suse.de>
+Subject: [PATCH 10/14] lpfc: use bitflag for exch_busy
+Date: Thu,  2 Jun 2016 16:39:12 +0200
+Message-ID: <1464878356-42407-11-git-send-email-hare@suse.de>
 References: <1464878356-42407-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54637 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54597 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161067AbcFBOj0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Jun 2016 10:39:26 -0400
+	id S932990AbcFBOjW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Jun 2016 10:39:22 -0400
 In-Reply-To: <1464878356-42407-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 19 +++++++++++--------
+ drivers/scsi/lpfc/lpfc_scsi.h |  4 +++-
+ drivers/scsi/lpfc/lpfc_sli.c  |  5 ++++-
+ 3 files changed, 18 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index fab387c..4354713 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -556,7 +556,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *phba,
+ 		&phba->sli4_hba.lpfc_abts_scsi_buf_list, list) {
+ 		if (psb->cur_iocbq.sli4_xritag == xri) {
+ 			list_del(&psb->list);
+-			psb->exch_busy = 0;
++			clear_bit(LPFC_CMD_EXCH_BUSY, &psb->flags);
+ 			psb->status = IOSTAT_SUCCESS;
+ 			spin_unlock(
+ 				&phba->sli4_hba.abts_scsi_buf_list_lock);
+@@ -588,7 +588,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *phba,
+ 		if (iocbq->sli4_xritag != xri)
+ 			continue;
+ 		psb = container_of(iocbq, struct lpfc_scsi_buf, cur_iocbq);
+-		psb->exch_busy = 0;
++		clear_bit(LPFC_CMD_EXCH_BUSY, &psb->flags);
+ 		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 		if (!list_empty(&pring->txq))
+ 			lpfc_worker_wake_up(phba);
+@@ -675,10 +675,12 @@ lpfc_sli4_post_scsi_sgl_list(struct lpfc_hba *phba,
+ 						psb->cur_iocbq.sli4_xritag);
+ 				if (status) {
+ 					/* failure, put on abort scsi list */
+-					psb->exch_busy = 1;
++					set_bit(LPFC_CMD_EXCH_BUSY,
++						&psb->flags);
+ 				} else {
+ 					/* success, put on SCSI buffer list */
+-					psb->exch_busy = 0;
++					clear_bit(LPFC_CMD_EXCH_BUSY,
++						  &psb->flags);
+ 					psb->status = IOSTAT_SUCCESS;
+ 					num_posted++;
+ 				}
+@@ -708,10 +710,10 @@ lpfc_sli4_post_scsi_sgl_list(struct lpfc_hba *phba,
+ 					 struct lpfc_scsi_buf, list);
+ 			if (status) {
+ 				/* failure, put on abort scsi list */
+-				psb->exch_busy = 1;
++				set_bit(LPFC_CMD_EXCH_BUSY, &psb->flags);
+ 			} else {
+ 				/* success, put on SCSI buffer list */
+-				psb->exch_busy = 0;
++				clear_bit(LPFC_CMD_EXCH_BUSY, &psb->flags);
+ 				psb->status = IOSTAT_SUCCESS;
+ 				num_posted++;
+ 			}
+@@ -1089,7 +1091,7 @@ lpfc_release_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb)
+ 	psb->nonsg_phys = 0;
+ 	psb->prot_seg_cnt = 0;
+ 
+-	if (psb->exch_busy) {
++	if (test_bit(LPFC_CMD_EXCH_BUSY, &psb->flags)) {
+ 		spin_lock_irqsave(&phba->sli4_hba.abts_scsi_buf_list_lock,
+ 					iflag);
+ 		psb->pCmd = NULL;
+@@ -3923,7 +3925,8 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 	lpfc_cmd->result = (pIocbOut->iocb.un.ulpWord[4] & IOERR_PARAM_MASK);
+ 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
+ 	/* pick up SLI4 exhange busy status from HBA */
+-	lpfc_cmd->exch_busy = pIocbOut->iocb_flag & LPFC_EXCHANGE_BUSY;
++	if (pIocbOut->iocb_flag & LPFC_EXCHANGE_BUSY)
++		set_bit(LPFC_CMD_EXCH_BUSY, &lpfc_cmd->flags);
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	if (lpfc_cmd->prot_data_type) {
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
+index 18b9260..a3658ce 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.h
++++ b/drivers/scsi/lpfc/lpfc_scsi.h
+@@ -134,7 +134,7 @@ struct lpfc_scsi_buf {
+ 
+ 	uint32_t timeout;
+ 
+-	uint16_t exch_busy;     /* SLI4 hba reported XB on complete WCQE */
++	uint16_t xx_exch_busy;     /* SLI4 hba reported XB on complete WCQE */
+ 	uint16_t status;	/* From IOCB Word 7- ulpStatus */
+ 	uint32_t result;	/* From IOCB Word 4. */
+ 
+@@ -143,6 +143,8 @@ struct lpfc_scsi_buf {
+ 				 * to dma_unmap_sg. */
+ 	uint32_t prot_seg_cnt;  /* seg_cnt's counterpart for protection data */
+ 
++	unsigned long flags;
++#define LPFC_CMD_EXCH_BUSY 1
+ 	dma_addr_t nonsg_phys;	/* Non scatter-gather physical address. */
+ 
+ 	/*
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 70edf21..5e38a35 100644
+index 5e38a35..52b1fa1 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2657,7 +2657,6 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- /**
-  * lpfc_sli_iocbq_lookup - Find command iocb for the given response iocb
-  * @phba: Pointer to HBA context object.
-- * @pring: Pointer to driver SLI ring object.
-  * @prspiocb: Pointer to response iocb object.
-  *
-  * This function looks up the iocb_lookup table to get the command iocb
-@@ -2668,7 +2667,6 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
-  **/
- static struct lpfc_iocbq *
- lpfc_sli_iocbq_lookup(struct lpfc_hba *phba,
--		      struct lpfc_sli_ring *pring,
- 		      struct lpfc_iocbq *prspiocb)
- {
- 	struct lpfc_iocbq *cmd_iocb = NULL;
-@@ -2697,7 +2695,6 @@ lpfc_sli_iocbq_lookup(struct lpfc_hba *phba,
- /**
-  * lpfc_sli_iocbq_lookup_by_tag - Find command iocb for the iotag
-  * @phba: Pointer to HBA context object.
-- * @pring: Pointer to driver SLI ring object.
-  * @iotag: IOCB tag.
-  *
-  * This function looks up the iocb_lookup table to get the command iocb
-@@ -2708,7 +2705,7 @@ lpfc_sli_iocbq_lookup(struct lpfc_hba *phba,
-  **/
- static struct lpfc_iocbq *
- lpfc_sli_iocbq_lookup_by_tag(struct lpfc_hba *phba,
--			     struct lpfc_sli_ring *pring, uint16_t iotag)
-+			     uint16_t iotag)
- {
- 	struct lpfc_iocbq *cmd_iocb;
+@@ -10442,7 +10442,10 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba *phba,
+ 		!(cmdiocbq->iocb_flag & LPFC_IO_LIBDFC)) {
+ 		lpfc_cmd = container_of(cmdiocbq, struct lpfc_scsi_buf,
+ 			cur_iocbq);
+-		lpfc_cmd->exch_busy = rspiocbq->iocb_flag & LPFC_EXCHANGE_BUSY;
++		if (rspiocbq->iocb_flag & LPFC_EXCHANGE_BUSY)
++			set_bit(LPFC_CMD_EXCH_BUSY, &lpfc_cmd->flags);
++		else
++			clear_bit(LPFC_CMD_EXCH_BUSY, &lpfc_cmd->flags);
+ 	}
  
-@@ -2755,7 +2752,7 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 
- 	/* Based on the iotag field, get the cmd IOCB from the txcmplq */
- 	spin_lock_irqsave(&phba->hbalock, iflag);
--	cmdiocbp = lpfc_sli_iocbq_lookup(phba, pring, saveq);
-+	cmdiocbp = lpfc_sli_iocbq_lookup(phba, saveq);
- 	spin_unlock_irqrestore(&phba->hbalock, iflag);
- 
- 	if (cmdiocbp) {
-@@ -3088,8 +3085,7 @@ lpfc_sli_handle_fast_ring_event(struct lpfc_hba *phba,
- 				break;
- 			}
- 
--			cmdiocbq = lpfc_sli_iocbq_lookup(phba, pring,
--							 &rspiocbq);
-+			cmdiocbq = lpfc_sli_iocbq_lookup(phba, &rspiocbq);
- 			if (unlikely(!cmdiocbq))
- 				break;
- 			if (cmdiocbq->iocb_flag & LPFC_DRIVER_ABORTED)
-@@ -3284,8 +3280,7 @@ lpfc_sli_sp_handle_rspiocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 		case LPFC_ABORT_IOCB:
- 			cmdiocbp = NULL;
- 			if (irsp->ulpCommand != CMD_XRI_ABORTED_CX)
--				cmdiocbp = lpfc_sli_iocbq_lookup(phba, pring,
--								 saveq);
-+				cmdiocbp = lpfc_sli_iocbq_lookup(phba, saveq);
- 			if (cmdiocbp) {
- 				/* Call the specified completion routine */
- 				if (cmdiocbp->iocb_cmpl) {
-@@ -11711,7 +11706,7 @@ lpfc_sli4_els_wcqe_to_rspiocbq(struct lpfc_hba *phba,
- 	spin_lock_irqsave(&pring->ring_lock, iflags);
- 	pring->stats.iocb_event++;
- 	/* Look up the ELS command IOCB and create pseudo response IOCB */
--	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba, pring,
-+	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba,
- 				bf_get(lpfc_wcqe_c_request_tag, wcqe));
- 	spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 
-@@ -12302,7 +12297,7 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 	/* Look up the FCP command IOCB and create pseudo response IOCB */
- 	spin_lock_irqsave(&pring->ring_lock, iflags);
- 	pring->stats.iocb_event++;
--	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba, pring,
-+	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba,
- 				bf_get(lpfc_wcqe_c_request_tag, wcqe));
- 	spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 	if (unlikely(!cmdiocbq)) {
+ 	pdone_q = cmdiocbq->context_un.wait_queue;
 -- 
 1.8.5.6
 
