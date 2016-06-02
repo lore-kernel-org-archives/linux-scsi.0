@@ -1,18 +1,14 @@
 From: Wei Fang <fangwei1@huawei.com>
-Subject: [PATCH 1/2] scsi: fix race between simultaneous decrements of ->host_failed
-Date: Thu, 2 Jun 2016 15:54:47 +0800
-Message-ID: <1464854088-26360-1-git-send-email-fangwei1@huawei.com>
+Subject: [PATCH v3 1/2] scsi: fix race between simultaneous decrements of ->host_failed
+Date: Thu, 2 Jun 2016 16:42:37 +0800
+Message-ID: <1464856958-30647-1-git-send-email-fangwei1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:10613 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932291AbcFBHrk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2016 03:47:40 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, corbet@lwn.net
 Cc: hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, stable@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 sas_ata_strategy_handler() adds the works of the ata error handler
 to system_unbound_wq. This workqueue asynchronously runs work items,
@@ -33,6 +29,11 @@ commit 50824d6c5657 ("[SCSI] libsas: async ata-eh").
 
 Signed-off-by: Wei Fang <fangwei1@huawei.com>
 ---
+Changes v1->v2:
+- update Documentation/scsi/scsi_eh.txt about ->host_failed
+Changes v2->v3:
+- don't use atomic type, just zero ->host_failed after the strategy handle
+
  drivers/ata/libata-eh.c   |    2 +-
  drivers/scsi/scsi_error.c |    4 +++-
  2 files changed, 4 insertions(+), 2 deletions(-)
@@ -74,4 +75,3 @@ index 984ddcb..1b9c049 100644
  		 * individual devices offline and flush the queue of any
 -- 
 1.7.1
-
