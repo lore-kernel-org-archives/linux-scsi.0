@@ -1,40 +1,44 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 09/14] scsi: Implement scsi_mq_resize_tags()
-Date: Thu, 2 Jun 2016 08:58:43 -0700
-Message-ID: <9a7dfdaa-a56a-3739-0f54-dbee72954aa8@sandisk.com>
-References: <1464878356-42407-1-git-send-email-hare@suse.de>
- <1464878356-42407-10-git-send-email-hare@suse.de>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v3 1/2] scsi: fix race between simultaneous decrements of
+ ->host_failed
+Date: Thu, 2 Jun 2016 09:20:51 -0700
+Message-ID: <20160602162051.GA26699@kroah.com>
+References: <1464856958-30647-1-git-send-email-fangwei1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0080.outbound.protection.outlook.com ([157.56.110.80]:23232
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751455AbcFBP6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Jun 2016 11:58:55 -0400
-In-Reply-To: <1464878356-42407-10-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1464856958-30647-1-git-send-email-fangwei1@huawei.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Wei Fang <fangwei1@huawei.com>
+Cc: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, corbet@lwn.net, hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 06/02/2016 07:39 AM, Hannes Reinecke wrote:
-> +int scsi_mq_resize_tags(struct Scsi_Host *shost, int max_tags)
-> +{
-> +	return blk_mq_resize_tag_set(&shost->tag_set, max_tags);
-> +}
-> +EXPORT_SYMBOL_GPL(scsi_mq_resize_tags);
+On Thu, Jun 02, 2016 at 04:42:37PM +0800, Wei Fang wrote:
+> sas_ata_strategy_handler() adds the works of the ata error handler
+> to system_unbound_wq. This workqueue asynchronously runs work items,
+> so the ata error handler will be performed concurrently on different
+> CPUs. In this case, ->host_failed will be decreased simultaneously in
+> scsi_eh_finish_cmd() on different CPUs, and become abnormal.
+> 
+> It will lead to permanently inequal between ->host_failed and
+>  ->host_busy, and scsi error handler thread won't become running.
+> IO errors after that won't be handled forever.
+> 
+> Since all scmds must have been handled in the strategy handle, just
+> remove the decrement in scsi_eh_finish_cmd() and zero ->host_busy
+> after the strategy handle to fix this race.
+> 
+> This fixes the problem introduced in
+> commit 50824d6c5657 ("[SCSI] libsas: async ata-eh").
+> 
+> Signed-off-by: Wei Fang <fangwei1@huawei.com>
 
-What is the meaning of the max_tags argument? Does it include the 
-reserved tag count or not? If not, shouldn't the number of reserved tags 
-be added before calling blk_mq_resize_tag_set()? Please document the 
-meaning of the max_tags argument.
 
-Please also consider choosing a name for this function that is more 
-consistent with the function names used in the block layer e.g. 
-scsi_mq_update_tag_depth().
+<formletter>
 
-Thanks,
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
 
-Bart.
+</formletter>
