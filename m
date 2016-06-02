@@ -1,29 +1,69 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Performance degradation on 4.6
-Date: Thu, 2 Jun 2016 04:37:12 -0700
-Message-ID: <20160602113712.GA24605@infradead.org>
-References: <CAANLjFp28MkaMjWKwXnMGHPCX2S_g_RKOhXqHc9dYVJvMgqvVw@mail.gmail.com>
- <1464814819.10899.3.camel@haakon3.risingtidesystems.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v4 0/8] Replay Protected Memory Block (RPMB) subsystem
+Date: Thu, 2 Jun 2016 13:17:42 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B5427E98E@hasmsx108.ger.corp.intel.com>
+References: <1464817292-5407-1-git-send-email-tomas.winkler@intel.com>
+ <CAMP5Xgfo-4h3DYki0VWhQFjBtAE9=f9dqCZQV8VDvfJ3Rc_2UQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50685 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbcFBLhO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2016 07:37:14 -0400
-Content-Disposition: inline
-In-Reply-To: <1464814819.10899.3.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAMP5Xgfo-4h3DYki0VWhQFjBtAE9=f9dqCZQV8VDvfJ3Rc_2UQ@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "arve@android.com" <arve@android.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Robert LeBlanc <robert@leblancnet.us>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>
 
-On Wed, Jun 01, 2016 at 02:00:19PM -0700, Nicholas A. Bellinger wrote:
-> Hi Robert,
-> 
-> Adding HCH + Sagi CC, as there have been significant changes made in
-> RDMA for v4.6 code.
-
-And 4.5 for that matter.  It would be really useful to figure out
-if it's the target or the initiator that regressed, and weather it's in
-4.5 or 4.6.
+PiANCj4gT24gV2VkLCBKdW4gMSwgMjAxNiBhdCAyOjQxIFBNLCBUb21hcyBXaW5rbGVyIDx0b21h
+cy53aW5rbGVyQGludGVsLmNvbT4NCj4gd3JvdGU6DQo+ID4gRmV3IHN0b3JhZ2UgdGVjaG5vbG9n
+eSBzdWNoIGlzIEVNTUMsIFVGUywgYW5kIE5WTWUgc3VwcG9ydCBSUE1CDQo+ID5oYXJkd2FyZSBw
+YXJ0aXRpb24gd2l0aCBjb21tb24gcHJvdG9jb2wgYW5kIGZyYW1lIGxheW91dC4NCj4gPiBUaGUg
+UlBNQiBwYXJ0aXRpb24gY2Fubm90IGJlIGFjY2Vzc2VkIHZpYSBzdGFuZGFyZCBibG9jayBsYXll
+ciwgYnV0DQo+ID5ieSBhIHNldCBvZiBzcGVjaWZpYyBjb21tYW5kczogV1JJVEUsIFJFQUQsIEdF
+VF9XUklURV9DT1VOVEVSLCBhbmQNCj4gPlBST0dSQU1fS0VZLg0KPiA+Li4uDQo+IA0KPiBJZiB0
+aGUgc2FtZSBwcm90b2NvbCBpcyB1c2VkIGJ5IGFsbCB0aGVzZSBzdGFuZGFyZHMsIHdoeSBub3Qg
+ZXhwb3J0IGl0IGRpcmVjdGx5DQo+IChpbmNsdWRpbmcgdGhlIFJFU1VMVF9SRUFEIGNvbW1hbmQg
+b3Igbm90IGV2ZW4ga25vd2luZyB0aGUgY29tbWFuZA0KPiB0eXBlcyk/DQpUaGUgcHJvdG9jb2wg
+aXMgdGhlICBzYW1lLCBidXQgdGhlIHdyYXBwaW5nIG9mIHRoZSBwYWNrZXRzIGlzIHN0b3JhZ2Ug
+dHlwZSBzcGVjaWZpYyBzbyANCkkgYmVsaWV2ZSB0aGF0IHRoZSBiZXN0IGFic3RyYWN0aW9uIGlz
+IG9uIHRob3NlICA0IG9wZXJhdGlvbnMgbGV2ZWwuIEknbSBub3Qgc3VyZSBpZiB0aGUgY29kZSB3
+b3VsZA0KYmUgc2ltcGxlciBpZiBpdCB3b3VsZCBiZSBleHBvc2VkIG9uIGEgbG93ZXIgbGV2ZWwu
+ICANClJFU1VMVF9SRUFEICBpcyAgYSBjb21tYW5kIHRvIGJlIGlzc3VlZCBmb3IgZ2V0dGluZyBw
+cmVjZWVkaW5nIHdyaXRlIG9wZXJhdGlvbiBzdGF0dXMsIGl0J3MgYSBraW5kIG9mIHdvcmsgYXJv
+dW5kIGFib3V0IHRoZSBmYWN0IHRoYXQgeW91IGhhdmUgdG8gaXNzdWUgYSByZWFkIG9wZXJhdGlv
+bg0KaW4gb3JkZXIgdG8gcmV0cmlldmUgZGF0YSBpbiB0aGlzIGNhc2UgYSAgd3JpdGUgb3BlcmF0
+aW9uIHJlc3VsdC4gIEl0IGNhbiBiZSBzdWNjZXNzZnVsbHkgaGlkZGVuIGFuZCBmaW5hbCByZXN1
+bHQgb2YgdGhlIG9wZXJhdGlvbiBpcyBkZWxpdmVyZWQNCnRvIHRoZSB1c2VyLg0KDQo+IFdoaWxl
+IEkgd291bGQgcHJlZmVyIGFuIHJwbWIgc3BlY2lmaWMgaW50ZXJmYWNlIG92ZXIgdGhlIGV4aXN0
+aW5nIHJhdw0KPiBtbWMgY29tbWFuZCBpbnRlcmZhY2UsIGFsbCBJIG5lZWQgaXMgYW4gcnBtYiBv
+cGVyYXRpb24gdGhhdCBsZXRzIG1lIHNlbmQNCj4gYW5kIHJlY2VpdmUgYnVmZmVycyB3aXRob3V0
+IGludGVycnVwdGlvbi4NCg0KSSBjdXJyZW50bHkgZG9uJ3Qgc2VlIGFuIG9ic3RhY2xlIG9uIGRv
+aW5nIHRoZSBzYW1lIHdpdGggcHJvcG9zZWQgaW50ZXJmYWNlLCB3aGF0IGlzIHRoZSBpc3N1ZSBh
+cmUgc2VlaW5nLg0KDQo+IFlvdSBjYW4gZmluZCBvdXIgZXhpdGluZyB1c2VyLXNwYWNlIGNvZGUg
+aGVyZSBhdA0KPiBodHRwczovL2FuZHJvaWQuZ29vZ2xlc291cmNlLmNvbS9wbGF0Zm9ybS9zeXN0
+ZW0vY29yZS8rL21hc3Rlci90cnVzdHkvcw0KPiB0b3JhZ2UvcHJveHkvcnBtYi5jLg0KPiBJZiB5
+b3UgdXNlIGFuIGludGVyZmFjZSBtb3JlIHNpbWlsYXIgdG8gdGhpcywgSSB0aGluayB5b3VyIGVt
+bWMgYW5kIHVmcw0KPiBzcGVjaWZpYyBjb2RlIHdvdWxkIGJlIHNpbXBsZXIuIEFsc28sIGlmIHlv
+dSBkb24ndCBuZWVkIHRoZSBpbi1rZXJuZWwNCj4gaW50ZXJmYWNlLCB0aGUga2VybmVsIHdvdWxk
+IG5vdCBuZWVkIHRvIGtub3cgdGhlIGRldGFpbHMgb2YgdGhlIHJwbWINCj4gcHJvdG9jb2wgYXQg
+YWxsLg0KDQpNeSBtYWpvciBpbnRlcmVzdCBpcyB0aGUgaW4ta2VybmVsIHByb3RvY29sIHRoZSB1
+c2VyIHNwYWNlIEFQSSB3YXMgbW9yZSBpbnRlbmRlZCBmb3IgZGVidWcsIGJ1dCBJIGZvdW5kIGl0
+IHdvdWxkIGJlIGV2ZW4gbW9yZSB1c2VmdWwuIA0KVGhlIHN0b3JlIHR5cGUgIGFjY2VzcyBpcyB2
+ZXJ5IFJQTUIgc3BlY2lmaWMgIGZvciBib3RoIE1NQyBhbmQgVUZTIGFuZCBuZWVkcyB0byBkbyBz
+cGVjaWFsIG9wZXJhdGlvbnMgZm9yIFJQTUIgc28gSSBkb24ndCBzZWUgaG93IHRoaXMgYXdhcmVu
+ZXNzIGNhbiBiZSByZW1vdmVkIG9yIEknbSBub3QgcmVhZGluZyB5b3VyIHByb3Bvc2FsIGNvcnJl
+Y3RseS4NCkFjY2Vzc2luZyBSUE1CIGlzIGEgbXVsdGlwbGUgc3RlcHNvcGVyYXRpb24sIHRoZSBz
+dGVwcyBjYW4gYmUgZHJpdmVuIGZyb20gdGhlIHVzZXIgc3BhY2UgYXMgZG9uZSBpbiBFTU1DIGlv
+Y3RsIGJ1dCBoaWRuaW5nIHdvdWxkIHJlZHVjZSB0aGUgbnVtYmVyIG9mIHN5c3RlbSBjYWxscyBh
+bmQgYW1vdW50IG9mIGRhdGEgcGFzc2VkLCANCmluIHNvbWUgc2Vuc2UgdGhlIHNhbWUgYXMgaW4g
+dGhlICBuZXcgbW1jICBNTUNfSU9DX01VTFRJX0NNRCBpcyB0cnlpbmcgb3QgYWNoaXZlLg0KDQo+
+IEkgaGF2ZSBub3QgdGVzdGVkIHlvdXIgY29kZSwgYnV0IGl0IGxvb2tzIGxpa2Ugd2Ugd291bGQg
+aGF2ZSB0byBtb2RpZnkgdGhlDQo+IHN0b3JhZ2UgcHJveHkgdG8gaW50ZXJwcmV0IHRoZSBkYXRh
+IGl0IGN1cnJlbnRseSBwYXNzZXMgdGhyb3VnaCBhbmQgcmVtb3ZlIGFsbA0KPiBSRVNVTFRfUkVB
+RCBwYWNrZXRzLg0KWW91ciBwcm94eSBkcml2ZXIganVzdCBzZW5kcyBpb2N0bHMgc28gdGhpcyB3
+b3VsZG4ndCBiZSBtdWNoIGRpZmZlcmVuY2UgYW5kIHRoZSBycG1iIGNvZGUgb24gdGhlIHRydXN0
+eSB3IG5lZWQgcmV3cml0ZSBqdXN0IHJwbWJfc2VuZCAoKSBmdW5jdGlvbiwNCmFjdHVhbGx5IHJl
+bW92aW5nIG9uZSBzZXQgb2YgYnVmZmVyIHNpemUuIEkgd2lsbCB0cnkgdG8gbWFrZSB0aGF0IG1v
+ZGlmaWNhdGlvbiBpZiBpdCBoZWxwcz8NCg0KVGhhbmtzIGZvciBpbnRlcmVzdCBhbmQgeW91ciBy
+ZXZpZXcuIA0KVG9tYXMgDQogDQoNCg==
