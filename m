@@ -1,42 +1,35 @@
 From: Wei Fang <fangwei1@huawei.com>
 Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of
  ->host_failed
-Date: Thu, 2 Jun 2016 09:58:30 +0800
-Message-ID: <574F92C6.6050607@huawei.com>
+Date: Thu, 2 Jun 2016 10:37:24 +0800
+Message-ID: <574F9BE4.4020405@huawei.com>
 References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
- <1464789971.23285.1.camel@linux.vnet.ibm.com>
+ <BF6B9AADDDF11740967545E971C7C0DE6B861A22@MAIL1.pickering.lenbrook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1464789971.23285.1.camel@linux.vnet.ibm.com>
+In-Reply-To: <BF6B9AADDDF11740967545E971C7C0DE6B861A22@MAIL1.pickering.lenbrook.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, tj@kernel.org, martin.petersen@oracle.com, corbet@lwn.net
-Cc: hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+To: Kevin Groeneveld <KGroeneveld@lenbrook.com>, "tj@kernel.org" <tj@kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "corbet@lwn.net" <corbet@lwn.net>
+Cc: "hch@infradead.org" <hch@infradead.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi, James,
+Hi, Kevin,
 
-On 2016/6/1 22:06, James Bottomley wrote:
-> On Tue, 2016-05-31 at 16:38 +0800, Wei Fang wrote:
->> sas_ata_strategy_handler() adds the works of the ata error handler
->> to system_unbound_wq. This workqueue asynchronously runs work items,
->> so the ata error handler will be performed concurrently on different
->> CPUs. In this case, ->host_failed will be decreased simultaneously in
->> scsi_eh_finish_cmd() on different CPUs, and become abnormal.
->>
->> It will lead to permanently inequal between ->host_failed and
->>  ->host_busy, and scsi error handler thread won't become running.
->> IO errors after that won't be handled forever.
->>
->> Use atomic type for ->host_failed to fix this race.
+On 2016/6/1 22:36, Kevin Groeneveld wrote:
+>> Subject: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of ->host_failed
 > 
-> As I said previously, you don't need atomics to do this, could you just
-> remove the decrement in scsi_eh_finish_command() and zero the counter
-> after the strategy handler completes.
+> I wonder if this could be related to http://www.spinics.net/lists/linux-scsi/msg86808.html?
+> 
+> I never did get to the bottom of that.  If I have time I hope to retest my scsi hang issue with this patch.
 > 
 
-OK, I'll send v3 later.
+The concurrently decrements of host_failed only lead to abnormal
+of host_failed, host_busy will be zero after error handler, and
+the result may be host_failed > host_busy forever. But in your
+case, host_busy > host_failed, so I think it's not the same
+case. I'm afraid that this patch can't fix your scsi hang issue.
 
 Thanks,
 Wei
