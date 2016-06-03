@@ -1,68 +1,81 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: Re: [PATCH] ses: Fix racy cleanup of /sys in remove_dev()
-Date: Thu, 2 Jun 2016 15:50:09 -0700
-Message-ID: <5750B821.7010600@fb.com>
-References: <4912ec551a8ec01181cc3e7ad1e01d3d36758810.1463170976.git.calvinowens@fb.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH] scsi: Add QEMU CD-ROM to VPD Inquiry Blacklist
+Date: Fri, 3 Jun 2016 11:19:00 +0800
+Message-ID: <CAGnHSE=4QgWjt=G7hOWS12vFVu_fMFAp+-396AiDLYXrVyfcww@mail.gmail.com>
+References: <1464702149-26573-1-git-send-email-emilne@redhat.com>
+	<20160531134335.o3jpinkdl3wg7ww2@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4912ec551a8ec01181cc3e7ad1e01d3d36758810.1463170976.git.calvinowens@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:33562 "EHLO
+	mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910AbcFCDam convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2016 23:30:42 -0400
+Received: by mail-qt0-f194.google.com with SMTP id k6so1865813qta.0
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Jun 2016 20:30:42 -0700 (PDT)
+In-Reply-To: <20160531134335.o3jpinkdl3wg7ww2@c203.arch.suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On 05/13/2016 01:28 PM, Calvin Owens wrote:
-> Currently we free the resources backing the enclosure device before we
-> call device_unregister(). This is racy: during rmmod of low-level SCSI
-> drivers that hook into enclosure, we end up with a small window of time
-> during which writing to /sys can OOPS. Example trace with mpt3sas:
+Why not get qemu have it fixed instead?
 
-Ping?
-
->    general protection fault: 0000 [#1] SMP KASAN
->    Modules linked in: mpt3sas(-) <...>
->    RIP: [<ffffffffa0388a98>] ses_get_page2_descriptor.isra.6+0x38/0x220 [ses]
->    Call Trace:
->     [<ffffffffa0389d14>] ses_set_fault+0xf4/0x400 [ses]
->     [<ffffffffa0361069>] set_component_fault+0xa9/0xf0 [enclosure]
->     [<ffffffff8205bffc>] dev_attr_store+0x3c/0x70
->     [<ffffffff81677df5>] sysfs_kf_write+0x115/0x180
->     [<ffffffff81675725>] kernfs_fop_write+0x275/0x3a0
->     [<ffffffff8151f810>] __vfs_write+0xe0/0x3e0
->     [<ffffffff8152281f>] vfs_write+0x13f/0x4a0
->     [<ffffffff81526731>] SyS_write+0x111/0x230
->     [<ffffffff828b401b>] entry_SYSCALL_64_fastpath+0x13/0x94
+On 31 May 2016 at 21:43, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+> On Tue, May 31, 2016 at 09:42:29AM -0400, Ewan D. Milne wrote:
+>> Linux fails to boot as a guest with a QEMU CD-ROM:
+>>
+>> [    4.439488] ata2.00: ATAPI: QEMU CD-ROM, 0.8.2, max UDMA/100
+>> [    4.443649] ata2.00: configured for MWDMA2
+>> [    4.450267] scsi 1:0:0:0: CD-ROM            QEMU     QEMU CD-ROM =
+     0.8. PQ: 0 ANSI: 5
+>> [    4.464317] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action=
+ 0x6 frozen
+>> [    4.464319] ata2.00: BMDMA stat 0x5
+>> [    4.464339] ata2.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag =
+0 dma 16640 in
+>> [    4.464339]          Inquiry 12 01 00 00 ff 00res 48/20:02:00:24:=
+00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+>> [    4.464341] ata2.00: status: { DRDY DRQ }
+>> [    4.465864] ata2: soft resetting link
+>> [    4.625971] ata2.00: configured for MWDMA2
+>> [    4.628290] ata2: EH complete
+>> [    4.646670] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action=
+ 0x6 frozen
+>> [    4.646671] ata2.00: BMDMA stat 0x5
+>> [    4.646683] ata2.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag =
+0 dma 16640 in
+>> [    4.646683]          Inquiry 12 01 00 00 ff 00res 48/20:02:00:24:=
+00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+>> [    4.646685] ata2.00: status: { DRDY DRQ }
+>> [    4.648193] ata2: soft resetting link
+>>
+>> ...
+>>
+>> Fix this by suppressing VPD inquiry for this device.
+>>
+>> Reported-by: Jan Stancek <jstancek@redhat.com>
+>> Tested-by: Jan Stancek <jstancek@redhat.com>
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 >
-> Fortunately the solution is extremely simple: call device_unregister()
-> before we free the resources, and the race no longer exists. The driver
-> core holds a reference over ->remove_dev(), so AFAICT this is safe.
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 >
-> Signed-off-by: Calvin Owens <calvinowens@fb.com>
-> ---
->   drivers/scsi/ses.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index 53ef1cb..0e8601a 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -778,6 +778,8 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
->   	if (!edev)
->   		return;
->
-> +	enclosure_unregister(edev);
-> +
->   	ses_dev = edev->scratch;
->   	edev->scratch = NULL;
->
-> @@ -789,7 +791,6 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
->   	kfree(edev->component[0].scratch);
->
->   	put_device(&edev->edev);
-> -	enclosure_unregister(edev);
->   }
->
->   static void ses_intf_remove(struct device *cdev,
->
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=C3=BCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
