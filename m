@@ -1,102 +1,95 @@
 From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: Re: [v2 PATCH 1/3] scsi:stex.c Support to Pegasus series.
-Date: Fri, 03 Jun 2016 20:09:15 +0800
-Message-ID: <5751736B.3060308@gmail.com>
-References: <1464955438-16568-1-git-send-email-ch1102chiou@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 1/5] Add P3 support, define reg & struct
+Date: Fri,  3 Jun 2016 20:11:44 +0800
+Message-ID: <1464955904-16738-1-git-send-email-ch1102chiou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1464955438-16568-1-git-send-email-ch1102chiou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Charles <charles.chiou@tw.promise.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linus.chen@tw.promise.com, grace.chang@tw.promise.com, victor.p@promise.com, eva.cheng@tw.promise.com, charles.chiou@tw.promise.com
+Cc: Paul <paul.lyu@tw.promise.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Sorry, this is the old patch, pls just ignore this patch
+From: Paul <paul.lyu@tw.promise.com>
 
-Thank you
-Charles
+1.Change ver
+2.Add P3 VID & DID
+2.Define device reg
+3.Add P3 struct and callback
 
-On 06/03/2016 08:03 PM, Charles Chiou wrote:
-> From: Charles <charles.chiou@tw.promise.com>
->
-> Pegasus is a high performace hardware RAID solution designed to unleash
-> the raw power of Thunderbolt technology.
->
-> 1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
->     It should support backward compatibility.
->
-> 2. Change the driver version.
->
-> Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
->   1 file changed, 26 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index 2de28d7..495d632 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -1,7 +1,7 @@
->   /*
->    * SuperTrak EX Series Storage Controller driver for Linux
->    *
-> - *	Copyright (C) 2005-2009 Promise Technology Inc.
-> + *	Copyright (C) 2005-2015 Promise Technology Inc.
->    *
->    *	This program is free software; you can redistribute it and/or
->    *	modify it under the terms of the GNU General Public License
-> @@ -38,11 +38,11 @@
->   #include <scsi/scsi_eh.h>
->
->   #define DRV_NAME "stex"
-> -#define ST_DRIVER_VERSION "4.6.0000.4"
-> -#define ST_VER_MAJOR		4
-> -#define ST_VER_MINOR		6
-> -#define ST_OEM			0
-> -#define ST_BUILD_VER		4
-> +#define ST_DRIVER_VERSION	"5.00.0000.01"
-> +#define ST_VER_MAJOR		5
-> +#define ST_VER_MINOR		00
-> +#define ST_OEM				0000
-> +#define ST_BUILD_VER		01
->
->   enum {
->   	/* MU register offset */
-> @@ -328,6 +328,7 @@ struct st_hba {
->   	u16 rq_count;
->   	u16 rq_size;
->   	u16 sts_count;
-> +	u8  supports_pm;
->   };
->
->   struct st_card_info {
-> @@ -1560,6 +1561,25 @@ static int stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->
->   	hba->cardtype = (unsigned int) id->driver_data;
->   	ci = &stex_card_info[hba->cardtype];
-> +	switch (id->subdevice) {
-> +	case 0x4221:
-> +	case 0x4222:
-> +	case 0x4223:
-> +	case 0x4224:
-> +	case 0x4225:
-> +	case 0x4226:
-> +	case 0x4227:
-> +	case 0x4261:
-> +	case 0x4262:
-> +	case 0x4263:
-> +	case 0x4264:
-> +	case 0x4265:
-> +		break;
-> +	default:
-> +		if (hba->cardtype == st_yel)
-> +			hba->supports_pm = 1;
-> +	}
-> +
->   	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
->   	if (hba->cardtype == st_yel)
->   		sts_offset += (ci->sts_count+1) * sizeof(u32);
->
+Signed-off-by: Paul <paul.lyu@tw.promise.com>
+---
+ drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 5b23175..f8195c0 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -38,8 +38,8 @@
+ #include <scsi/scsi_eh.h>
+ 
+ #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION	"5.00.0000.01"
+-#define ST_VER_MAJOR		5
++#define ST_DRIVER_VERSION	"6.00.0000.01"
++#define ST_VER_MAJOR		6
+ #define ST_VER_MINOR		00
+ #define ST_OEM				0000
+ #define ST_BUILD_VER		01
+@@ -64,6 +64,13 @@ enum {
+ 	YI2H_INT_C				= 0xa0,
+ 	YH2I_REQ				= 0xc0,
+ 	YH2I_REQ_HI				= 0xc4,
++	PSCRATCH0				= 0xb0,
++	PSCRATCH1				= 0xb4,
++	PSCRATCH2				= 0xb8,
++	PSCRATCH3				= 0xbc,
++	PSCRATCH4				= 0xc8,
++	MAILBOX_BASE			= 0x1000,
++	MAILBOX_HNDSHK_STS		= 0x0,
+ 
+ 	/* MU register value */
+ 	MU_INBOUND_DOORBELL_HANDSHAKE		= (1 << 0),
+@@ -135,6 +142,7 @@ enum {
+ 	st_yosemite				= 2,
+ 	st_seq					= 3,
+ 	st_yel					= 4,
++	st_P3					= 5,
+ 
+ 	PASSTHRU_REQ_TYPE			= 0x00000001,
+ 	PASSTHRU_REQ_NO_WAKEUP			= 0x00000100,
+@@ -1414,6 +1422,13 @@ static struct pci_device_id stex_pci_tbl[] = {
+ 	/* st_yel */
+ 	{ 0x105a, 0x8650, 0x1033, PCI_ANY_ID, 0, 0, st_yel },
+ 	{ 0x105a, 0x8760, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_yel },
++
++	/* st_P3, pluto */
++	{ PCI_VENDOR_ID_PROMISE, 0x8870, PCI_VENDOR_ID_PROMISE,
++		0x8870, 0, 0, st_P3 },
++	/* st_P3, p3 */
++	{ PCI_VENDOR_ID_PROMISE, 0x8870, PCI_VENDOR_ID_PROMISE,
++		0x4300, 0, 0, st_P3 },
+ 	{ }	/* terminate list */
+ };
+ 
+@@ -1482,6 +1497,19 @@ static struct st_card_info stex_card_info[] = {
+ 		.map_sg		= stex_ss_map_sg,
+ 		.send		= stex_ss_send_cmd,
+ 	},
++
++	/* st_P3 */
++	{
++		.max_id		= 129,
++		.max_lun	= 256,
++		.max_channel	= 0,
++		.rq_count	= 801,
++		.rq_size	= 512,
++		.sts_count	= 801,
++		.alloc_rq	= stex_ss_alloc_req,
++		.map_sg		= stex_ss_map_sg,
++		.send		= stex_ss_send_cmd,
++	},
+ };
+ 
+ static int stex_set_dma_mask(struct pci_dev * pdev)
+-- 
+1.9.1
