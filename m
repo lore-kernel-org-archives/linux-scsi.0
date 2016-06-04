@@ -1,35 +1,83 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: storvsc: Filter out storvsc messages CD-ROM
- medium not present
-Date: Sat, 04 Jun 2016 10:33:18 -0400
-Message-ID: <yq1inxpqb0x.fsf@sermon.lab.mkp.net>
-References: <1464013757-30357-1-git-send-email-cavery@redhat.com>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH] sd: remove redundant check for BLK_DEF_MAX_SECTORS
+Date: Sat, 4 Jun 2016 15:18:43 +0000
+Message-ID: <BLUPR0301MB19724E7E002D1E47719D262CCE5A0@BLUPR0301MB1972.namprd03.prod.outlook.com>
+References: <1465012678-32547-1-git-send-email-longli@microsoft.com>
+ <CAGnHSE=ZriFjvdXT5npv92VhqxtN1SqQL+jwMehCq42K3O+=VQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1464013757-30357-1-git-send-email-cavery@redhat.com> (Cathy
- Avery's message of "Mon, 23 May 2016 10:29:17 -0400")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2on0109.outbound.protection.outlook.com ([207.46.100.109]:41616
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750993AbcFDPdj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Jun 2016 11:33:39 -0400
+In-Reply-To: <CAGnHSE=ZriFjvdXT5npv92VhqxtN1SqQL+jwMehCq42K3O+=VQ@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
->>>>> "Cathy" == Cathy Avery <cavery@redhat.com> writes:
-
-Cathy> When a virtual scsi DVD device is present with no image file
-Cathy> attached the storvsc driver logs all resulting unnecessary sense
-Cathy> errors whenever IO is issued to the device.
-
-Tweaked whitespace and applied to 4.8/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+U29ycnksICJyZWR1bmRhbnQgY2hlY2siIGlzIG5vdCB0aGUgYmVzdCB3b3JkIHRvIGRlc2NyaWJl
+IHRoaXMgcGF0Y2guDQoNClRoZSByZXN1bHQgb2YgdGhpcyBwYXRjaCBpcyB0aGF0Og0KMS4gaWYg
+b3B0X3hmZXJfYmxvY2tzIGhhcyBhIHZhbGlkIHZhbHVlIChyZXR1cm5lZCBmb3JtIFZQRCBCTE9D
+SyBMSU1JVFMpLCB1c2UgaXQgdG8gc2V0IG1heF9zZWN0b3JzDQoyLiBpZiBvcHRfeGZlcl9ibG9j
+a3MgZG9lc24ndCBoYXZlIGEgdmFsaWQgdmFsdWUsIGxlYXZlIG1heF9zZWN0b3JzIHVuY2hhbmdl
+ZA0KDQpUaGUgcmVhc29uIGlzIHRoYXQsIG1heF9zZWN0b3JzIGFscmVhZHkgaGFzIHZhbHVlIGF0
+IHRoaXMgcG9pbnQsIHRoZSBkZWZhdWx0IHZhbHVlIGlzIFNDU0lfREVGQVVMVF9NQVhfU0VDVE9S
+UyAoaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oKS4gVGhlIGxvd2VyIGxheWVyIGhvc3QgZHJpdmVy
+IGNhbiBjaGFuZ2UgdGhpcyB2YWx1ZSBpbiBpdHMgdGVtcGxhdGUuIEkgdGhpbmsgdGhlIGRyaXZl
+cnMgY2FyZSBhYm91dCB0aGlzIHZhbHVlIGhhdmUgYWxyZWFkeSBzZXQgaXQuIFNvIGl0J3MgYmV0
+dGVyIG5vdCB0byBjaGFuZ2UgaXQgYWdhaW4uIElmIHRoZXkgd2FudCBtYXhfc2VjdG9ycyB0byBi
+ZSBzZXQgYnkgc2QsIHRoZXkgY2FuIHVzZSBCTE9DSyBMSU1JVFMgVlBEIHRvIHRlbGwgaXQgdG8g
+ZG8gc28uDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBUb20gWWFu
+IFttYWlsdG86dG9tLnR5ODlAZ21haWwuY29tXQ0KPiBTZW50OiBTYXR1cmRheSwgSnVuZSA0LCAy
+MDE2IDE6NDEgQU0NCj4gVG86IExvbmcgTGkgPGxvbmdsaUBtaWNyb3NvZnQuY29tPg0KPiBDYzog
+SmFtZXMgRS5KLiBCb3R0b21sZXkgPGplamJAbGludXgudm5ldC5pYm0uY29tPjsgTWFydGluIEsu
+IFBldGVyc2VuDQo+IDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0
+OiBSZTogW1BBVENIXSBzZDogcmVtb3ZlIHJlZHVuZGFudCBjaGVjayBmb3INCj4gQkxLX0RFRl9N
+QVhfU0VDVE9SUw0KPiANCj4gVGhlIG1haW4gcG9pbnQgdGhlcmUgaXMgbm90IHRvIGNoZWNrIHEt
+PmxpbWl0cy5tYXhfc2VjdG9ycyBhZ2FpbnN0DQo+IEJMS19ERUZfTUFYX1NFQ1RPUlMsIGJ1dCBz
+ZGtwLT5vcHRfeGZlcl9ibG9ja3MgYWdhaW5zdA0KPiBTRF9ERUZfWEZFUl9CTE9DS1MgZXQgYWwu
+PyBgcndfbWF4ID0gQkxLX0RFRl9NQVhfU0VDVE9SUztgIHRoZXJlIGlzDQo+IG1lcmVseSB0aGUg
+ZmFsbGJhY2sgd2hlbiBzZGtwLT5vcHRfeGZlcl9ibG9ja3MgZG9lcyBub3QgcGFzcyB0aGUNCj4g
+Y29uZGl0aW9ucy4gV2l0aCB5b3VyIHBhdGNoIGByd19tYXhgIGNhbiBiZSBpbmRldGVybWluYXRl
+IGluIHRob3NlDQo+IGNpcmN1bXN0YW5jZXMuDQo+IA0KPiBPbiA0IEp1bmUgMjAxNiBhdCAxMTo1
+NywgTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+IHdyb3RlOg0KPiA+IHEtPmxpbWl0cy5t
+YXhfc2VjdG9ycyBpcyBhbHJlYWR5IGNoZWNrZWQgYWdhaW5zdCBCTEtfREVGX01BWF9TRUNUT1JT
+DQo+IGluIF9fc2NzaV9hbGxvY19xdWV1ZSgpLCB3aGVuIGl0IGNhbGxzIGJsa19xdWV1ZV9tYXhf
+aHdfc2VjdG9ycygpLiBUaGVyZQ0KPiBpcyBubyBuZWVkIHRvIGNoZWNrIGl0IGFnYWluIGluIHNk
+Lg0KPiA+DQo+ID4gVGhpcyBjaGFuZ2UgYWxzbyBhbGxvd3MgYSBTQ1NJIGRyaXZlciBzZXQgYW4g
+bWF4aW11bSBzZWN0b3Igc2l6ZSBiaWdnZXINCj4gdGhhbiBCTEtfREVGX01BWF9TRUNUT1JTLCB3
+aXRob3V0IHJldHVybmluZyB2YWx1ZXMgb24gb3B0aW9uYWwgVlBEDQo+IHBhZ2UgMHhiMCAiQmxv
+Y2sgTGltaXRzIi4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IExvbmcgTGkgPGxvbmdsaUBtaWNy
+b3NvZnQuY29tPg0KPiA+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9zZC5jIHwgNyArKy0t
+LS0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0p
+DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kv
+c2QuYyBpbmRleA0KPiA+IDYwYmZmNzguLmQ4YzQwNDcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVy
+cy9zY3NpL3NkLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc2QuYw0KPiA+IEBAIC0yODcwLDEx
+ICsyODcwLDggQEAgc3RhdGljIGludCBzZF9yZXZhbGlkYXRlX2Rpc2soc3RydWN0IGdlbmRpc2sg
+KmRpc2spDQo+ID4gICAgICAgICAgICAgbG9naWNhbF90b19ieXRlcyhzZHAsIHNka3AtPm9wdF94
+ZmVyX2Jsb2NrcykgPj0gUEFHRV9TSVpFKSB7DQo+ID4gICAgICAgICAgICAgICAgIHEtPmxpbWl0
+cy5pb19vcHQgPSBsb2dpY2FsX3RvX2J5dGVzKHNkcCwgc2RrcC0+b3B0X3hmZXJfYmxvY2tzKTsN
+Cj4gPiAgICAgICAgICAgICAgICAgcndfbWF4ID0gbG9naWNhbF90b19zZWN0b3JzKHNkcCwgc2Rr
+cC0+b3B0X3hmZXJfYmxvY2tzKTsNCj4gPiAtICAgICAgIH0gZWxzZQ0KPiA+IC0gICAgICAgICAg
+ICAgICByd19tYXggPSBCTEtfREVGX01BWF9TRUNUT1JTOw0KPiA+IC0NCj4gPiAtICAgICAgIC8q
+IENvbWJpbmUgd2l0aCBjb250cm9sbGVyIGxpbWl0cyAqLw0KPiA+IC0gICAgICAgcS0+bGltaXRz
+Lm1heF9zZWN0b3JzID0gbWluKHJ3X21heCwgcXVldWVfbWF4X2h3X3NlY3RvcnMocSkpOw0KPiA+
+ICsgICAgICAgICAgICAgICBxLT5saW1pdHMubWF4X3NlY3RvcnMgPSBtaW4ocndfbWF4LA0KPiBx
+dWV1ZV9tYXhfaHdfc2VjdG9ycyhxKSk7DQo+ID4gKyAgICAgICB9DQo+ID4NCj4gPiAgICAgICAg
+IHNldF9jYXBhY2l0eShkaXNrLCBsb2dpY2FsX3RvX3NlY3RvcnMoc2RwLCBzZGtwLT5jYXBhY2l0
+eSkpOw0KPiA+ICAgICAgICAgc2RfY29uZmlnX3dyaXRlX3NhbWUoc2RrcCk7DQo+ID4gLS0NCj4g
+PiAyLjcuNA0KPiA+DQo+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDog
+c2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSINCj4gPiBpbiB0aGUgYm9keSBv
+ZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlDQo+IG1ham9yZG9t
+bw0KPiA+IGluZm8gYXQNCj4gPiBodHRwczovL25hMDEuc2FmZWxpbmtzLnByb3RlY3Rpb24ub3V0
+bG9vay5jb20vP3VybD1odHRwJTNhJTJmJTJmdmdlci5rDQo+ID4gZXJuZWwub3JnJTJmbWFqb3Jk
+b21vLQ0KPiBpbmZvLmh0bWwmZGF0YT0wMSU3YzAxJTdjbG9uZ2xpJTQwbWljcm9zb2Z0LmNvbSUN
+Cj4gPg0KPiA3Y2UxNDIxMjg5NThlYzQ3NjI5ZGJlMDhkMzhjNTQwMzA2JTdjNzJmOTg4YmY4NmYx
+NDFhZjkxYWIyZDdjZDAxMWQNCj4gYjQ3JQ0KPiA+IDdjMSZzZGF0YT1FampGODZjdkpxYXhPQU9X
+bk4wJTJmM1FsbjA1cWNxdXdlJTJmS0E3RGdFanRjSSUzZA0K
