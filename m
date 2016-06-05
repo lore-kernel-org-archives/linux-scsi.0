@@ -1,7 +1,8 @@
 From: mchristi@redhat.com
-Subject: [PATCH 22/45] pm: use bio op accessors
-Date: Sun,  5 Jun 2016 14:32:02 -0500
-Message-ID: <1465155145-10812-23-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 35/45] block: convert merge/insert code to
+	check for REQ_OPs.
+Date: Sun,  5 Jun 2016 14:32:15 -0500
+Message-ID: <1465155145-10812-36-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,121 +24,128 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-Separate the op from the rq_flag_bits and have the pm code
-set/get the bio using bio_set_op_attrs/bio_op.
+This patch converts the block layer merging code to use separate variables
+for the operation and flags, and to check req_op for the REQ_OP.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- kernel/power/swap.c | 30 ++++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+ block/blk-core.c       |  2 +-
+ block/blk-merge.c      | 10 ++++++----
+ include/linux/blkdev.h | 20 ++++++++++----------
+ 3 files changed, 17 insertions(+), 15 deletions(-)
 
-diff --git a/kernel/power/swap.c b/kernel/power/swap.c
-index be227f5..c1aaac4 100644
---- a/kernel/power/swap.c
-+++ b/kernel/power/swap.c
-@@ -261,7 +261,7 @@ static void hib_end_io(struct bio *bio)
- 	bio_put(bio);
- }
- 
--static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
-+static int hib_submit_io(int op, int op_flags, pgoff_t page_off, void *addr,
- 		struct hib_bio_batch *hb)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 090e55d..1333bb7 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2161,7 +2161,7 @@ EXPORT_SYMBOL(submit_bio);
+ static int blk_cloned_rq_check_limits(struct request_queue *q,
+ 				      struct request *rq)
  {
- 	struct page *page = virt_to_page(addr);
-@@ -271,7 +271,7 @@ static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
- 	bio = bio_alloc(__GFP_RECLAIM | __GFP_HIGH, 1);
- 	bio->bi_iter.bi_sector = page_off * (PAGE_SIZE >> 9);
- 	bio->bi_bdev = hib_resume_bdev;
--	bio->bi_rw = rw;
-+	bio_set_op_attrs(bio, op, op_flags);
- 
- 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
- 		printk(KERN_ERR "PM: Adding page to bio failed at %llu\n",
-@@ -307,7 +307,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
- {
- 	int error;
- 
--	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
-+	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
-+		      swsusp_header, NULL);
- 	if (!memcmp("SWAP-SPACE",swsusp_header->sig, 10) ||
- 	    !memcmp("SWAPSPACE2",swsusp_header->sig, 10)) {
- 		memcpy(swsusp_header->orig_sig,swsusp_header->sig, 10);
-@@ -316,8 +317,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
- 		swsusp_header->flags = flags;
- 		if (flags & SF_CRC32_MODE)
- 			swsusp_header->crc32 = handle->crc32;
--		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
--					swsusp_header, NULL);
-+		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+				      swsusp_resume_block, swsusp_header, NULL);
- 	} else {
- 		printk(KERN_ERR "PM: Swap header not found!\n");
- 		error = -ENODEV;
-@@ -390,7 +391,7 @@ static int write_page(void *buf, sector_t offset, struct hib_bio_batch *hb)
- 	} else {
- 		src = buf;
+-	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
++	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, req_op(rq))) {
+ 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
+ 		return -EIO;
  	}
--	return hib_submit_io(WRITE_SYNC, offset, src, hb);
-+	return hib_submit_io(REQ_OP_WRITE, WRITE_SYNC, offset, src, hb);
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 5a03f96..c265348 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -649,7 +649,8 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	if (!rq_mergeable(req) || !rq_mergeable(next))
+ 		return 0;
+ 
+-	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
++	if (!blk_check_merge_flags(req->cmd_flags, req_op(req), next->cmd_flags,
++				   req_op(next)))
+ 		return 0;
+ 
+ 	/*
+@@ -663,7 +664,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	    || req_no_special_merge(next))
+ 		return 0;
+ 
+-	if (req->cmd_flags & REQ_WRITE_SAME &&
++	if (req_op(req) == REQ_OP_WRITE_SAME &&
+ 	    !blk_write_same_mergeable(req->bio, next->bio))
+ 		return 0;
+ 
+@@ -751,7 +752,8 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 	if (!rq_mergeable(rq) || !bio_mergeable(bio))
+ 		return false;
+ 
+-	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
++	if (!blk_check_merge_flags(rq->cmd_flags, req_op(rq), bio->bi_rw,
++				   bio_op(bio)))
+ 		return false;
+ 
+ 	/* different data direction or already started, don't merge */
+@@ -767,7 +769,7 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 		return false;
+ 
+ 	/* must be using the same buffer */
+-	if (rq->cmd_flags & REQ_WRITE_SAME &&
++	if (req_op(rq) == REQ_OP_WRITE_SAME &&
+ 	    !blk_write_same_mergeable(rq->bio, bio))
+ 		return false;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8c78aca..25f01ff 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -666,16 +666,16 @@ static inline bool rq_mergeable(struct request *rq)
+ 	return true;
  }
  
- static void release_swap_writer(struct swap_map_handle *handle)
-@@ -993,7 +994,8 @@ static int get_swap_reader(struct swap_map_handle *handle,
- 			return -ENOMEM;
- 		}
- 
--		error = hib_submit_io(READ_SYNC, offset, tmp->map, NULL);
-+		error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset,
-+				      tmp->map, NULL);
- 		if (error) {
- 			release_swap_reader(handle);
- 			return error;
-@@ -1017,7 +1019,7 @@ static int swap_read_page(struct swap_map_handle *handle, void *buf,
- 	offset = handle->cur->entries[handle->k];
- 	if (!offset)
- 		return -EFAULT;
--	error = hib_submit_io(READ_SYNC, offset, buf, hb);
-+	error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset, buf, hb);
- 	if (error)
- 		return error;
- 	if (++handle->k >= MAP_PAGE_ENTRIES) {
-@@ -1526,7 +1528,8 @@ int swsusp_check(void)
- 	if (!IS_ERR(hib_resume_bdev)) {
- 		set_blocksize(hib_resume_bdev, PAGE_SIZE);
- 		clear_page(swsusp_header);
--		error = hib_submit_io(READ_SYNC, swsusp_resume_block,
-+		error = hib_submit_io(REQ_OP_READ, READ_SYNC,
-+					swsusp_resume_block,
- 					swsusp_header, NULL);
- 		if (error)
- 			goto put;
-@@ -1534,7 +1537,8 @@ int swsusp_check(void)
- 		if (!memcmp(HIBERNATE_SIG, swsusp_header->sig, 10)) {
- 			memcpy(swsusp_header->sig, swsusp_header->orig_sig, 10);
- 			/* Reset swap signature now */
--			error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
-+			error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+						swsusp_resume_block,
- 						swsusp_header, NULL);
- 		} else {
- 			error = -EINVAL;
-@@ -1578,10 +1582,12 @@ int swsusp_unmark(void)
+-static inline bool blk_check_merge_flags(unsigned int flags1,
+-					 unsigned int flags2)
++static inline bool blk_check_merge_flags(unsigned int flags1, unsigned int op1,
++					 unsigned int flags2, unsigned int op2)
  {
- 	int error;
+-	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
++	if ((op1 == REQ_OP_DISCARD) != (op2 == REQ_OP_DISCARD))
+ 		return false;
  
--	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
-+	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
-+		      swsusp_header, NULL);
- 	if (!memcmp(HIBERNATE_SIG,swsusp_header->sig, 10)) {
- 		memcpy(swsusp_header->sig,swsusp_header->orig_sig, 10);
--		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
-+		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+					swsusp_resume_block,
- 					swsusp_header, NULL);
- 	} else {
- 		printk(KERN_ERR "PM: Cannot find swsusp signature!\n");
+ 	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
+ 		return false;
+ 
+-	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
++	if ((op1 == REQ_OP_WRITE_SAME) != (op2 == REQ_OP_WRITE_SAME))
+ 		return false;
+ 
+ 	return true;
+@@ -887,12 +887,12 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+ }
+ 
+ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+-						     unsigned int cmd_flags)
++						     int op)
+ {
+-	if (unlikely(cmd_flags & REQ_DISCARD))
++	if (unlikely(op == REQ_OP_DISCARD))
+ 		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+ 
+-	if (unlikely(cmd_flags & REQ_WRITE_SAME))
++	if (unlikely(op == REQ_OP_WRITE_SAME))
+ 		return q->limits.max_write_same_sectors;
+ 
+ 	return q->limits.max_sectors;
+@@ -919,11 +919,11 @@ static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
+ 	if (unlikely(rq->cmd_type != REQ_TYPE_FS))
+ 		return q->limits.max_hw_sectors;
+ 
+-	if (!q->limits.chunk_sectors || (rq->cmd_flags & REQ_DISCARD))
+-		return blk_queue_get_max_sectors(q, rq->cmd_flags);
++	if (!q->limits.chunk_sectors || (req_op(rq) == REQ_OP_DISCARD))
++		return blk_queue_get_max_sectors(q, req_op(rq));
+ 
+ 	return min(blk_max_size_offset(q, blk_rq_pos(rq)),
+-			blk_queue_get_max_sectors(q, rq->cmd_flags));
++			blk_queue_get_max_sectors(q, req_op(rq)));
+ }
+ 
+ static inline unsigned int blk_rq_count_bios(struct request *rq)
 -- 
 2.7.2
