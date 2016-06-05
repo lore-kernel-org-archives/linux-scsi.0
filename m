@@ -1,379 +1,526 @@
 From: mchristi@redhat.com
-Subject: [PATCH 26/45] drbd: use bio op accessors
-Date: Sun,  5 Jun 2016 14:32:06 -0500
-Message-ID: <1465155145-10812-27-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 15/45] f2fs: use bio op accessors
+Date: Sun,  5 Jun 2016 14:31:55 -0500
+Message-ID: <1465155145-10812-16-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Return-path: <xfs-bounces@oss.sgi.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-Separate the op from the rq_flag_bits and have drbd
+Separate the op from the rq_flag_bits and have f2fs
 set/get the bio using bio_set_op_attrs/bio_op.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
+ fs/f2fs/checkpoint.c        | 10 ++++++----
+ fs/f2fs/data.c              | 47 ++++++++++++++++++++++++++-------------------
+ fs/f2fs/f2fs.h              |  5 +++--
+ fs/f2fs/gc.c                |  9 ++++++---
+ fs/f2fs/inline.c            |  3 ++-
+ fs/f2fs/node.c              |  8 +++++---
+ fs/f2fs/segment.c           | 12 +++++++-----
+ fs/f2fs/trace.c             |  7 ++++---
+ include/trace/events/f2fs.h | 34 +++++++++++++++++++-------------
+ 9 files changed, 81 insertions(+), 54 deletions(-)
 
-v8:
-1. Combined this patch with what was the cleanup/completion
-path handling patch so all bio op drbd changes are now only
-in this patch.
-
- drivers/block/drbd/drbd_actlog.c   | 28 +++++++++++++++-------------
- drivers/block/drbd/drbd_bitmap.c   |  6 +++---
- drivers/block/drbd/drbd_int.h      |  4 ++--
- drivers/block/drbd/drbd_main.c     | 20 +++++++++++---------
- drivers/block/drbd/drbd_receiver.c | 36 ++++++++++++++++++++++++------------
- drivers/block/drbd/drbd_worker.c   |  7 ++++---
- 6 files changed, 59 insertions(+), 42 deletions(-)
-
-diff --git a/drivers/block/drbd/drbd_actlog.c b/drivers/block/drbd/drbd_actlog.c
-index 6069e15..f236a31 100644
---- a/drivers/block/drbd/drbd_actlog.c
-+++ b/drivers/block/drbd/drbd_actlog.c
-@@ -137,19 +137,19 @@ void wait_until_done_or_force_detached(struct drbd_device *device, struct drbd_b
+diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c
+index 3891600..b6d600e 100644
+--- a/fs/f2fs/checkpoint.c
++++ b/fs/f2fs/checkpoint.c
+@@ -63,14 +63,15 @@ static struct page *__get_meta_page(struct f2fs_sb_info *sbi, pgoff_t index,
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = META,
+-		.rw = READ_SYNC | REQ_META | REQ_PRIO,
++		.op = REQ_OP_READ,
++		.op_flags = READ_SYNC | REQ_META | REQ_PRIO,
+ 		.old_blkaddr = index,
+ 		.new_blkaddr = index,
+ 		.encrypted_page = NULL,
+ 	};
  
- static int _drbd_md_sync_page_io(struct drbd_device *device,
- 				 struct drbd_backing_dev *bdev,
--				 sector_t sector, int rw)
-+				 sector_t sector, int op)
+ 	if (unlikely(!is_meta))
+-		fio.rw &= ~REQ_META;
++		fio.op_flags &= ~REQ_META;
+ repeat:
+ 	page = f2fs_grab_cache_page(mapping, index, false);
+ 	if (!page) {
+@@ -157,13 +158,14 @@ int ra_meta_pages(struct f2fs_sb_info *sbi, block_t start, int nrpages,
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = META,
+-		.rw = sync ? (READ_SYNC | REQ_META | REQ_PRIO) : READA,
++		.op = REQ_OP_READ,
++		.op_flags = sync ? (READ_SYNC | REQ_META | REQ_PRIO) : READA,
+ 		.encrypted_page = NULL,
+ 	};
+ 	struct blk_plug plug;
+ 
+ 	if (unlikely(type == META_POR))
+-		fio.rw &= ~REQ_META;
++		fio.op_flags &= ~REQ_META;
+ 
+ 	blk_start_plug(&plug);
+ 	for (; nrpages-- > 0; blkno++) {
+diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+index c595c8f..8769e83 100644
+--- a/fs/f2fs/data.c
++++ b/fs/f2fs/data.c
+@@ -97,12 +97,10 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
+ 	return bio;
+ }
+ 
+-static inline void __submit_bio(struct f2fs_sb_info *sbi, int rw,
+-						struct bio *bio)
++static inline void __submit_bio(struct f2fs_sb_info *sbi, struct bio *bio)
  {
- 	struct bio *bio;
- 	/* we do all our meta data IO in aligned 4k blocks. */
- 	const int size = 4096;
--	int err;
-+	int err, op_flags = 0;
- 
- 	device->md_io.done = 0;
- 	device->md_io.error = -ENODEV;
- 
--	if ((rw & WRITE) && !test_bit(MD_NO_FUA, &device->flags))
--		rw |= REQ_FUA | REQ_FLUSH;
--	rw |= REQ_SYNC | REQ_NOIDLE;
-+	if ((op == REQ_OP_WRITE) && !test_bit(MD_NO_FUA, &device->flags))
-+		op_flags |= REQ_FUA | REQ_FLUSH;
-+	op_flags |= REQ_SYNC | REQ_NOIDLE;
- 
- 	bio = bio_alloc_drbd(GFP_NOIO);
- 	bio->bi_bdev = bdev->md_bdev;
-@@ -159,9 +159,9 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
- 		goto out;
- 	bio->bi_private = device;
- 	bio->bi_end_io = drbd_md_endio;
+-	if (!is_read_io(rw))
++	if (!is_read_io(bio_op(bio)))
+ 		atomic_inc(&sbi->nr_wb_bios);
 -	bio->bi_rw = rw;
-+	bio_set_op_attrs(bio, op, op_flags);
+ 	submit_bio(bio);
+ }
  
--	if (!(rw & WRITE) && device->state.disk == D_DISKLESS && device->ldev == NULL)
-+	if (op != REQ_OP_WRITE && device->state.disk == D_DISKLESS && device->ldev == NULL)
- 		/* special case, drbd_md_read() during drbd_adm_attach(): no get_ldev */
- 		;
- 	else if (!get_ldev_if_state(device, D_ATTACHING)) {
-@@ -174,7 +174,7 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
- 	bio_get(bio); /* one bio_put() is in the completion handler */
- 	atomic_inc(&device->md_io.in_use); /* drbd_md_put_buffer() is in the completion handler */
- 	device->md_io.submit_jif = jiffies;
--	if (drbd_insert_fault(device, (rw & WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD))
-+	if (drbd_insert_fault(device, (op == REQ_OP_WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD))
- 		bio_io_error(bio);
+@@ -113,12 +111,14 @@ static void __submit_merged_bio(struct f2fs_bio_info *io)
+ 	if (!io->bio)
+ 		return;
+ 
+-	if (is_read_io(fio->rw))
++	if (is_read_io(fio->op))
+ 		trace_f2fs_submit_read_bio(io->sbi->sb, fio, io->bio);
  	else
- 		submit_bio(bio);
-@@ -188,7 +188,7 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
+ 		trace_f2fs_submit_write_bio(io->sbi->sb, fio, io->bio);
+ 
+-	__submit_bio(io->sbi, fio->rw, io->bio);
++	bio_set_op_attrs(io->bio, fio->op, fio->op_flags);
++
++	__submit_bio(io->sbi, io->bio);
+ 	io->bio = NULL;
  }
  
- int drbd_md_sync_page_io(struct drbd_device *device, struct drbd_backing_dev *bdev,
--			 sector_t sector, int rw)
-+			 sector_t sector, int op)
- {
- 	int err;
- 	D_ASSERT(device, atomic_read(&device->md_io.in_use) == 1);
-@@ -197,19 +197,21 @@ int drbd_md_sync_page_io(struct drbd_device *device, struct drbd_backing_dev *bd
- 
- 	dynamic_drbd_dbg(device, "meta_data io: %s [%d]:%s(,%llus,%s) %pS\n",
- 	     current->comm, current->pid, __func__,
--	     (unsigned long long)sector, (rw & WRITE) ? "WRITE" : "READ",
-+	     (unsigned long long)sector, (op == REQ_OP_WRITE) ? "WRITE" : "READ",
- 	     (void*)_RET_IP_ );
- 
- 	if (sector < drbd_md_first_sector(bdev) ||
- 	    sector + 7 > drbd_md_last_sector(bdev))
- 		drbd_alert(device, "%s [%d]:%s(,%llus,%s) out of range md access!\n",
- 		     current->comm, current->pid, __func__,
--		     (unsigned long long)sector, (rw & WRITE) ? "WRITE" : "READ");
-+		     (unsigned long long)sector,
-+		     (op == REQ_OP_WRITE) ? "WRITE" : "READ");
- 
--	err = _drbd_md_sync_page_io(device, bdev, sector, rw);
-+	err = _drbd_md_sync_page_io(device, bdev, sector, op);
- 	if (err) {
- 		drbd_err(device, "drbd_md_sync_page_io(,%llus,%s) failed with error %d\n",
--		    (unsigned long long)sector, (rw & WRITE) ? "WRITE" : "READ", err);
-+		    (unsigned long long)sector,
-+		    (op == REQ_OP_WRITE) ? "WRITE" : "READ", err);
+@@ -184,10 +184,12 @@ static void __f2fs_submit_merged_bio(struct f2fs_sb_info *sbi,
+ 	/* change META to META_FLUSH in the checkpoint procedure */
+ 	if (type >= META_FLUSH) {
+ 		io->fio.type = META_FLUSH;
++		io->fio.op = REQ_OP_WRITE;
+ 		if (test_opt(sbi, NOBARRIER))
+-			io->fio.rw = WRITE_FLUSH | REQ_META | REQ_PRIO;
++			io->fio.op_flags = WRITE_FLUSH | REQ_META | REQ_PRIO;
+ 		else
+-			io->fio.rw = WRITE_FLUSH_FUA | REQ_META | REQ_PRIO;
++			io->fio.op_flags = WRITE_FLUSH_FUA | REQ_META |
++								REQ_PRIO;
  	}
- 	return err;
- }
-diff --git a/drivers/block/drbd/drbd_bitmap.c b/drivers/block/drbd/drbd_bitmap.c
-index e8959fe..e5d89f6 100644
---- a/drivers/block/drbd/drbd_bitmap.c
-+++ b/drivers/block/drbd/drbd_bitmap.c
-@@ -980,7 +980,7 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
- 	struct drbd_bitmap *b = device->bitmap;
- 	struct page *page;
- 	unsigned int len;
--	unsigned int rw = (ctx->flags & BM_AIO_READ) ? READ : WRITE;
-+	unsigned int op = (ctx->flags & BM_AIO_READ) ? REQ_OP_READ : REQ_OP_WRITE;
+ 	__submit_merged_bio(io);
+ out:
+@@ -229,14 +231,16 @@ int f2fs_submit_page_bio(struct f2fs_io_info *fio)
+ 	f2fs_trace_ios(fio, 0);
  
- 	sector_t on_disk_sector =
- 		device->ldev->md.md_offset + device->ldev->md.bm_offset;
-@@ -1011,9 +1011,9 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
- 	bio_add_page(bio, page, len, 0);
- 	bio->bi_private = ctx;
- 	bio->bi_end_io = drbd_bm_endio;
--	bio->bi_rw = rw;
-+	bio_set_op_attrs(bio, op, 0);
+ 	/* Allocate a new bio */
+-	bio = __bio_alloc(fio->sbi, fio->new_blkaddr, 1, is_read_io(fio->rw));
++	bio = __bio_alloc(fio->sbi, fio->new_blkaddr, 1, is_read_io(fio->op));
  
--	if (drbd_insert_fault(device, (rw & WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD)) {
-+	if (drbd_insert_fault(device, (op == REQ_OP_WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD)) {
- 		bio_io_error(bio);
- 	} else {
- 		submit_bio(bio);
-diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
-index 7a1cf7e..33f0b82 100644
---- a/drivers/block/drbd/drbd_int.h
-+++ b/drivers/block/drbd/drbd_int.h
-@@ -1507,7 +1507,7 @@ extern int drbd_resync_finished(struct drbd_device *device);
- extern void *drbd_md_get_buffer(struct drbd_device *device, const char *intent);
- extern void drbd_md_put_buffer(struct drbd_device *device);
- extern int drbd_md_sync_page_io(struct drbd_device *device,
--		struct drbd_backing_dev *bdev, sector_t sector, int rw);
-+		struct drbd_backing_dev *bdev, sector_t sector, int op);
- extern void drbd_ov_out_of_sync_found(struct drbd_device *, sector_t, int);
- extern void wait_until_done_or_force_detached(struct drbd_device *device,
- 		struct drbd_backing_dev *bdev, unsigned int *done);
-@@ -1557,7 +1557,7 @@ extern bool drbd_rs_should_slow_down(struct drbd_device *device, sector_t sector
- 		bool throttle_if_app_is_waiting);
- extern int drbd_submit_peer_request(struct drbd_device *,
- 				    struct drbd_peer_request *, const unsigned,
--				    const int);
-+				    const unsigned, const int);
- extern int drbd_free_peer_reqs(struct drbd_device *, struct list_head *);
- extern struct drbd_peer_request *drbd_alloc_peer_req(struct drbd_peer_device *, u64,
- 						     sector_t, unsigned int,
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index 2ba1494..d55febc 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -1603,15 +1603,16 @@ static int _drbd_send_zc_ee(struct drbd_peer_device *peer_device,
+ 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
+ 		bio_put(bio);
+ 		return -EFAULT;
+ 	}
++	bio->bi_rw = fio->op_flags;
++	bio_set_op_attrs(bio, fio->op, fio->op_flags);
+ 
+-	__submit_bio(fio->sbi, fio->rw, bio);
++	__submit_bio(fio->sbi, bio);
  	return 0;
  }
  
--static u32 bio_flags_to_wire(struct drbd_connection *connection, unsigned long bi_rw)
-+static u32 bio_flags_to_wire(struct drbd_connection *connection,
-+			     struct bio *bio)
- {
- 	if (connection->agreed_pro_version >= 95)
--		return  (bi_rw & REQ_SYNC ? DP_RW_SYNC : 0) |
--			(bi_rw & REQ_FUA ? DP_FUA : 0) |
--			(bi_rw & REQ_FLUSH ? DP_FLUSH : 0) |
--			(bi_rw & REQ_DISCARD ? DP_DISCARD : 0);
-+		return  (bio->bi_rw & REQ_SYNC ? DP_RW_SYNC : 0) |
-+			(bio->bi_rw & REQ_FUA ? DP_FUA : 0) |
-+			(bio->bi_rw & REQ_FLUSH ? DP_FLUSH : 0) |
-+			(bio_op(bio) == REQ_OP_DISCARD ? DP_DISCARD : 0);
- 	else
--		return bi_rw & REQ_SYNC ? DP_RW_SYNC : 0;
-+		return bio->bi_rw & REQ_SYNC ? DP_RW_SYNC : 0;
+@@ -245,7 +249,7 @@ void f2fs_submit_page_mbio(struct f2fs_io_info *fio)
+ 	struct f2fs_sb_info *sbi = fio->sbi;
+ 	enum page_type btype = PAGE_TYPE_OF_BIO(fio->type);
+ 	struct f2fs_bio_info *io;
+-	bool is_read = is_read_io(fio->rw);
++	bool is_read = is_read_io(fio->op);
+ 	struct page *bio_page;
+ 
+ 	io = is_read ? &sbi->read_io : &sbi->write_io[btype];
+@@ -257,7 +261,7 @@ void f2fs_submit_page_mbio(struct f2fs_io_info *fio)
+ 	down_write(&io->io_rwsem);
+ 
+ 	if (io->bio && (io->last_block_in_bio != fio->new_blkaddr - 1 ||
+-						io->fio.rw != fio->rw))
++	    (io->fio.op != fio->op || io->fio.op_flags != fio->op_flags)))
+ 		__submit_merged_bio(io);
+ alloc_new:
+ 	if (io->bio == NULL) {
+@@ -391,7 +395,7 @@ int f2fs_get_block(struct dnode_of_data *dn, pgoff_t index)
  }
  
- /* Used to send write or TRIM aka REQ_DISCARD requests
-@@ -1636,7 +1637,7 @@ int drbd_send_dblock(struct drbd_peer_device *peer_device, struct drbd_request *
- 	p->sector = cpu_to_be64(req->i.sector);
- 	p->block_id = (unsigned long)req;
- 	p->seq_num = cpu_to_be32(atomic_inc_return(&device->packet_seq));
--	dp_flags = bio_flags_to_wire(peer_device->connection, req->master_bio->bi_rw);
-+	dp_flags = bio_flags_to_wire(peer_device->connection, req->master_bio);
- 	if (device->state.conn >= C_SYNC_SOURCE &&
- 	    device->state.conn <= C_PAUSED_SYNC_T)
- 		dp_flags |= DP_MAY_SET_IN_SYNC;
-@@ -3061,7 +3062,7 @@ void drbd_md_write(struct drbd_device *device, void *b)
- 	D_ASSERT(device, drbd_md_ss(device->ldev) == device->ldev->md.md_offset);
- 	sector = device->ldev->md.md_offset;
- 
--	if (drbd_md_sync_page_io(device, device->ldev, sector, WRITE)) {
-+	if (drbd_md_sync_page_io(device, device->ldev, sector, REQ_OP_WRITE)) {
- 		/* this was a try anyways ... */
- 		drbd_err(device, "meta data update failed!\n");
- 		drbd_chk_io_error(device, 1, DRBD_META_IO_ERROR);
-@@ -3263,7 +3264,8 @@ int drbd_md_read(struct drbd_device *device, struct drbd_backing_dev *bdev)
- 	 * Affects the paranoia out-of-range access check in drbd_md_sync_page_io(). */
- 	bdev->md.md_size_sect = 8;
- 
--	if (drbd_md_sync_page_io(device, bdev, bdev->md.md_offset, READ)) {
-+	if (drbd_md_sync_page_io(device, bdev, bdev->md.md_offset,
-+				 REQ_OP_READ)) {
- 		/* NOTE: can't do normal error processing here as this is
- 		   called BEFORE disk is attached */
- 		drbd_err(device, "Error while reading metadata.\n");
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index 050aaa1..6c59978 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -1398,7 +1398,8 @@ void drbd_bump_write_ordering(struct drbd_resource *resource, struct drbd_backin
- /* TODO allocate from our own bio_set. */
- int drbd_submit_peer_request(struct drbd_device *device,
- 			     struct drbd_peer_request *peer_req,
--			     const unsigned rw, const int fault_type)
-+			     const unsigned op, const unsigned op_flags,
-+			     const int fault_type)
+ struct page *get_read_data_page(struct inode *inode, pgoff_t index,
+-						int rw, bool for_write)
++						int op_flags, bool for_write)
  {
- 	struct bio *bios = NULL;
- 	struct bio *bio;
-@@ -1450,7 +1451,7 @@ next_bio:
- 	/* > peer_req->i.sector, unless this is the first bio */
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_bdev = device->ldev->backing_bdev;
--	bio->bi_rw = rw;
-+	bio_set_op_attrs(bio, op, op_flags);
- 	bio->bi_private = peer_req;
- 	bio->bi_end_io = drbd_peer_request_endio;
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct dnode_of_data dn;
+@@ -401,7 +405,8 @@ struct page *get_read_data_page(struct inode *inode, pgoff_t index,
+ 	struct f2fs_io_info fio = {
+ 		.sbi = F2FS_I_SB(inode),
+ 		.type = DATA,
+-		.rw = rw,
++		.op = REQ_OP_READ,
++		.op_flags = op_flags,
+ 		.encrypted_page = NULL,
+ 	};
  
-@@ -1458,7 +1459,7 @@ next_bio:
- 	bios = bio;
- 	++n_bios;
+@@ -1052,7 +1057,7 @@ got_it:
+ 		 */
+ 		if (bio && (last_block_in_bio != block_nr - 1)) {
+ submit_and_realloc:
+-			__submit_bio(F2FS_I_SB(inode), READ, bio);
++			__submit_bio(F2FS_I_SB(inode), bio);
+ 			bio = NULL;
+ 		}
+ 		if (bio == NULL) {
+@@ -1081,7 +1086,7 @@ submit_and_realloc:
+ 			bio->bi_iter.bi_sector = SECTOR_FROM_BLOCK(block_nr);
+ 			bio->bi_end_io = f2fs_read_end_io;
+ 			bio->bi_private = ctx;
+-			bio->bi_rw = READ;
++			bio_set_op_attrs(bio, REQ_OP_READ, 0);
+ 		}
  
--	if (rw & REQ_DISCARD) {
-+	if (op == REQ_OP_DISCARD) {
- 		bio->bi_iter.bi_size = data_size;
- 		goto submit;
+ 		if (bio_add_page(bio, page, blocksize, 0) < blocksize)
+@@ -1096,7 +1101,7 @@ set_error_page:
+ 		goto next_page;
+ confused:
+ 		if (bio) {
+-			__submit_bio(F2FS_I_SB(inode), READ, bio);
++			__submit_bio(F2FS_I_SB(inode), bio);
+ 			bio = NULL;
+ 		}
+ 		unlock_page(page);
+@@ -1106,7 +1111,7 @@ next_page:
  	}
-@@ -1830,7 +1831,8 @@ static int recv_resync_read(struct drbd_peer_device *peer_device, sector_t secto
- 	spin_unlock_irq(&device->resource->req_lock);
+ 	BUG_ON(pages && !list_empty(pages));
+ 	if (bio)
+-		__submit_bio(F2FS_I_SB(inode), READ, bio);
++		__submit_bio(F2FS_I_SB(inode), bio);
+ 	return 0;
+ }
  
- 	atomic_add(pi->size >> 9, &device->rs_sect_ev);
--	if (drbd_submit_peer_request(device, peer_req, WRITE, DRBD_FAULT_RS_WR) == 0)
-+	if (drbd_submit_peer_request(device, peer_req, REQ_OP_WRITE, 0,
-+				     DRBD_FAULT_RS_WR) == 0)
- 		return 0;
+@@ -1223,7 +1228,8 @@ static int f2fs_write_data_page(struct page *page,
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = DATA,
+-		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
++		.op = REQ_OP_WRITE,
++		.op_flags = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : 0,
+ 		.page = page,
+ 		.encrypted_page = NULL,
+ 	};
+@@ -1664,7 +1670,8 @@ repeat:
+ 		struct f2fs_io_info fio = {
+ 			.sbi = sbi,
+ 			.type = DATA,
+-			.rw = READ_SYNC,
++			.op = REQ_OP_READ,
++			.op_flags = READ_SYNC,
+ 			.old_blkaddr = blkaddr,
+ 			.new_blkaddr = blkaddr,
+ 			.page = page,
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 916e7c2..23ae6a8 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -686,14 +686,15 @@ enum page_type {
+ struct f2fs_io_info {
+ 	struct f2fs_sb_info *sbi;	/* f2fs_sb_info pointer */
+ 	enum page_type type;	/* contains DATA/NODE/META/META_FLUSH */
+-	int rw;			/* contains R/RS/W/WS with REQ_META/REQ_PRIO */
++	int op;			/* contains REQ_OP_ */
++	int op_flags;		/* rq_flag_bits */
+ 	block_t new_blkaddr;	/* new block address to be written */
+ 	block_t old_blkaddr;	/* old block address before Cow */
+ 	struct page *page;	/* page to be written */
+ 	struct page *encrypted_page;	/* encrypted page */
+ };
  
- 	/* don't care for the reason here */
-@@ -2152,12 +2154,19 @@ static int wait_for_and_update_peer_seq(struct drbd_peer_device *peer_device, co
- /* see also bio_flags_to_wire()
-  * DRBD_REQ_*, because we need to semantically map the flags to data packet
-  * flags and back. We may replicate to other kernel versions. */
--static unsigned long wire_flags_to_bio(u32 dpf)
-+static unsigned long wire_flags_to_bio_flags(u32 dpf)
+-#define is_read_io(rw)	(((rw) & 1) == READ)
++#define is_read_io(rw) (rw == READ)
+ struct f2fs_bio_info {
+ 	struct f2fs_sb_info *sbi;	/* f2fs superblock */
+ 	struct bio *bio;		/* bios to merge */
+diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+index 38d56f6..3649d86 100644
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -538,7 +538,8 @@ static void move_encrypted_block(struct inode *inode, block_t bidx)
+ 	struct f2fs_io_info fio = {
+ 		.sbi = F2FS_I_SB(inode),
+ 		.type = DATA,
+-		.rw = READ_SYNC,
++		.op = REQ_OP_READ,
++		.op_flags = READ_SYNC,
+ 		.encrypted_page = NULL,
+ 	};
+ 	struct dnode_of_data dn;
+@@ -612,7 +613,8 @@ static void move_encrypted_block(struct inode *inode, block_t bidx)
+ 	/* allocate block address */
+ 	f2fs_wait_on_page_writeback(dn.node_page, NODE, true);
+ 
+-	fio.rw = WRITE_SYNC;
++	fio.op = REQ_OP_WRITE;
++	fio.op_flags = WRITE_SYNC;
+ 	fio.new_blkaddr = newaddr;
+ 	f2fs_submit_page_mbio(&fio);
+ 
+@@ -649,7 +651,8 @@ static void move_data_page(struct inode *inode, block_t bidx, int gc_type)
+ 		struct f2fs_io_info fio = {
+ 			.sbi = F2FS_I_SB(inode),
+ 			.type = DATA,
+-			.rw = WRITE_SYNC,
++			.op = REQ_OP_WRITE,
++			.op_flags = WRITE_SYNC,
+ 			.page = page,
+ 			.encrypted_page = NULL,
+ 		};
+diff --git a/fs/f2fs/inline.c b/fs/f2fs/inline.c
+index a4bb155..c15e53c 100644
+--- a/fs/f2fs/inline.c
++++ b/fs/f2fs/inline.c
+@@ -108,7 +108,8 @@ int f2fs_convert_inline_page(struct dnode_of_data *dn, struct page *page)
+ 	struct f2fs_io_info fio = {
+ 		.sbi = F2FS_I_SB(dn->inode),
+ 		.type = DATA,
+-		.rw = WRITE_SYNC | REQ_PRIO,
++		.op = REQ_OP_WRITE,
++		.op_flags = WRITE_SYNC | REQ_PRIO,
+ 		.page = page,
+ 		.encrypted_page = NULL,
+ 	};
+diff --git a/fs/f2fs/node.c b/fs/f2fs/node.c
+index 1f21aae..e534039 100644
+--- a/fs/f2fs/node.c
++++ b/fs/f2fs/node.c
+@@ -1070,14 +1070,15 @@ fail:
+  * 0: f2fs_put_page(page, 0)
+  * LOCKED_PAGE or error: f2fs_put_page(page, 1)
+  */
+-static int read_node_page(struct page *page, int rw)
++static int read_node_page(struct page *page, int op_flags)
  {
- 	return  (dpf & DP_RW_SYNC ? REQ_SYNC : 0) |
- 		(dpf & DP_FUA ? REQ_FUA : 0) |
--		(dpf & DP_FLUSH ? REQ_FLUSH : 0) |
--		(dpf & DP_DISCARD ? REQ_DISCARD : 0);
-+		(dpf & DP_FLUSH ? REQ_FLUSH : 0);
-+}
+ 	struct f2fs_sb_info *sbi = F2FS_P_SB(page);
+ 	struct node_info ni;
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = NODE,
+-		.rw = rw,
++		.op = REQ_OP_READ,
++		.op_flags = op_flags,
+ 		.page = page,
+ 		.encrypted_page = NULL,
+ 	};
+@@ -1568,7 +1569,8 @@ static int f2fs_write_node_page(struct page *page,
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = NODE,
+-		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
++		.op = REQ_OP_WRITE,
++		.op_flags = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : 0,
+ 		.page = page,
+ 		.encrypted_page = NULL,
+ 	};
+diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+index 3fe2fab..4c2d1fa 100644
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -257,7 +257,8 @@ static int __commit_inmem_pages(struct inode *inode,
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = DATA,
+-		.rw = WRITE_SYNC | REQ_PRIO,
++		.op = REQ_OP_WRITE,
++		.op_flags = WRITE_SYNC | REQ_PRIO,
+ 		.encrypted_page = NULL,
+ 	};
+ 	bool submit_bio = false;
+@@ -406,7 +407,7 @@ repeat:
+ 		fcc->dispatch_list = llist_reverse_order(fcc->dispatch_list);
+ 
+ 		bio->bi_bdev = sbi->sb->s_bdev;
+-		bio->bi_rw = WRITE_FLUSH;
++		bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_FLUSH);
+ 		ret = submit_bio_wait(bio);
+ 
+ 		llist_for_each_entry_safe(cmd, next,
+@@ -439,7 +440,7 @@ int f2fs_issue_flush(struct f2fs_sb_info *sbi)
+ 		int ret;
+ 
+ 		bio->bi_bdev = sbi->sb->s_bdev;
+-		bio->bi_rw = WRITE_FLUSH;
++		bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_FLUSH);
+ 		ret = submit_bio_wait(bio);
+ 		bio_put(bio);
+ 		return ret;
+@@ -1403,7 +1404,8 @@ void write_meta_page(struct f2fs_sb_info *sbi, struct page *page)
+ 	struct f2fs_io_info fio = {
+ 		.sbi = sbi,
+ 		.type = META,
+-		.rw = WRITE_SYNC | REQ_META | REQ_PRIO,
++		.op = REQ_OP_WRITE,
++		.op_flags = WRITE_SYNC | REQ_META | REQ_PRIO,
+ 		.old_blkaddr = page->index,
+ 		.new_blkaddr = page->index,
+ 		.page = page,
+@@ -1411,7 +1413,7 @@ void write_meta_page(struct f2fs_sb_info *sbi, struct page *page)
+ 	};
+ 
+ 	if (unlikely(page->index >= MAIN_BLKADDR(sbi)))
+-		fio.rw &= ~REQ_META;
++		fio.op_flags &= ~REQ_META;
+ 
+ 	set_page_writeback(page);
+ 	f2fs_submit_page_mbio(&fio);
+diff --git a/fs/f2fs/trace.c b/fs/f2fs/trace.c
+index 562ce08..73b4e1d 100644
+--- a/fs/f2fs/trace.c
++++ b/fs/f2fs/trace.c
+@@ -25,11 +25,11 @@ static inline void __print_last_io(void)
+ 	if (!last_io.len)
+ 		return;
+ 
+-	trace_printk("%3x:%3x %4x %-16s %2x %5x %12x %4x\n",
++	trace_printk("%3x:%3x %4x %-16s %2x %5x %5x %12x %4x\n",
+ 			last_io.major, last_io.minor,
+ 			last_io.pid, "----------------",
+ 			last_io.type,
+-			last_io.fio.rw,
++			last_io.fio.op, last_io.fio.op_flags,
+ 			last_io.fio.new_blkaddr,
+ 			last_io.len);
+ 	memset(&last_io, 0, sizeof(last_io));
+@@ -101,7 +101,8 @@ void f2fs_trace_ios(struct f2fs_io_info *fio, int flush)
+ 	if (last_io.major == major && last_io.minor == minor &&
+ 			last_io.pid == pid &&
+ 			last_io.type == __file_type(inode, pid) &&
+-			last_io.fio.rw == fio->rw &&
++			last_io.fio.op == fio->op &&
++			last_io.fio.op_flags == fio->op_flags &&
+ 			last_io.fio.new_blkaddr + last_io.len ==
+ 							fio->new_blkaddr) {
+ 		last_io.len++;
+diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
+index 3a09bb4..733b896 100644
+--- a/include/trace/events/f2fs.h
++++ b/include/trace/events/f2fs.h
+@@ -56,17 +56,21 @@ TRACE_DEFINE_ENUM(CP_DISCARD);
+ 		{ IPU,		"IN-PLACE" },				\
+ 		{ OPU,		"OUT-OF-PLACE" })
+ 
+-#define F2FS_BIO_MASK(t)	(t & (READA | WRITE_FLUSH_FUA))
++#define F2FS_BIO_FLAG_MASK(t)	(t & (READA | WRITE_FLUSH_FUA))
+ #define F2FS_BIO_EXTRA_MASK(t)	(t & (REQ_META | REQ_PRIO))
+ 
+-#define show_bio_type(type)	show_bio_base(type), show_bio_extra(type)
++#define show_bio_type(op, op_flags) show_bio_op(op),			\
++			show_bio_op_flags(op_flags), show_bio_extra(op_flags)
+ 
+-#define show_bio_base(type)						\
+-	__print_symbolic(F2FS_BIO_MASK(type),				\
++#define show_bio_op(op)							\
++	__print_symbolic(op,						\
+ 		{ READ, 		"READ" },			\
++		{ WRITE,		"WRITE" })
 +
-+static unsigned long wire_flags_to_bio_op(u32 dpf)
-+{
-+	if (dpf & DP_DISCARD)
-+		return REQ_OP_DISCARD;
-+	else
-+		return REQ_OP_WRITE;
- }
++#define show_bio_op_flags(flags)					\
++	__print_symbolic(F2FS_BIO_FLAG_MASK(flags),			\
+ 		{ READA, 		"READAHEAD" },			\
+ 		{ READ_SYNC, 		"READ_SYNC" },			\
+-		{ WRITE, 		"WRITE" },			\
+ 		{ WRITE_SYNC, 		"WRITE_SYNC" },			\
+ 		{ WRITE_FLUSH,		"WRITE_FLUSH" },		\
+ 		{ WRITE_FUA, 		"WRITE_FUA" },			\
+@@ -734,7 +738,8 @@ DECLARE_EVENT_CLASS(f2fs__submit_page_bio,
+ 		__field(pgoff_t, index)
+ 		__field(block_t, old_blkaddr)
+ 		__field(block_t, new_blkaddr)
+-		__field(int, rw)
++		__field(int, op)
++		__field(int, op_flags)
+ 		__field(int, type)
+ 	),
  
- static void fail_postponed_requests(struct drbd_device *device, sector_t sector,
-@@ -2303,7 +2312,7 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 	struct drbd_peer_request *peer_req;
- 	struct p_data *p = pi->data;
- 	u32 peer_seq = be32_to_cpu(p->seq_num);
--	int rw = WRITE;
-+	int op, op_flags;
- 	u32 dp_flags;
- 	int err, tp;
+@@ -744,17 +749,18 @@ DECLARE_EVENT_CLASS(f2fs__submit_page_bio,
+ 		__entry->index		= page->index;
+ 		__entry->old_blkaddr	= fio->old_blkaddr;
+ 		__entry->new_blkaddr	= fio->new_blkaddr;
+-		__entry->rw		= fio->rw;
++		__entry->op		= fio->op;
++		__entry->op_flags	= fio->op_flags;
+ 		__entry->type		= fio->type;
+ 	),
  
-@@ -2342,14 +2351,15 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 	peer_req->flags |= EE_APPLICATION;
+ 	TP_printk("dev = (%d,%d), ino = %lu, page_index = 0x%lx, "
+-		"oldaddr = 0x%llx, newaddr = 0x%llx rw = %s%s, type = %s",
++		"oldaddr = 0x%llx, newaddr = 0x%llx rw = %s%si%s, type = %s",
+ 		show_dev_ino(__entry),
+ 		(unsigned long)__entry->index,
+ 		(unsigned long long)__entry->old_blkaddr,
+ 		(unsigned long long)__entry->new_blkaddr,
+-		show_bio_type(__entry->rw),
++		show_bio_type(__entry->op, __entry->op_flags),
+ 		show_block_type(__entry->type))
+ );
  
- 	dp_flags = be32_to_cpu(p->dp_flags);
--	rw |= wire_flags_to_bio(dp_flags);
-+	op = wire_flags_to_bio_op(dp_flags);
-+	op_flags = wire_flags_to_bio_flags(dp_flags);
- 	if (pi->cmd == P_TRIM) {
- 		struct request_queue *q = bdev_get_queue(device->ldev->backing_bdev);
- 		peer_req->flags |= EE_IS_TRIM;
- 		if (!blk_queue_discard(q))
- 			peer_req->flags |= EE_IS_TRIM_USE_ZEROOUT;
- 		D_ASSERT(peer_device, peer_req->i.size > 0);
--		D_ASSERT(peer_device, rw & REQ_DISCARD);
-+		D_ASSERT(peer_device, op == REQ_OP_DISCARD);
- 		D_ASSERT(peer_device, peer_req->pages == NULL);
- 	} else if (peer_req->pages == NULL) {
- 		D_ASSERT(device, peer_req->i.size == 0);
-@@ -2433,7 +2443,8 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 		peer_req->flags |= EE_CALL_AL_COMPLETE_IO;
- 	}
+@@ -785,7 +791,8 @@ DECLARE_EVENT_CLASS(f2fs__submit_bio,
  
--	err = drbd_submit_peer_request(device, peer_req, rw, DRBD_FAULT_DT_WR);
-+	err = drbd_submit_peer_request(device, peer_req, op, op_flags,
-+				       DRBD_FAULT_DT_WR);
- 	if (!err)
- 		return 0;
+ 	TP_STRUCT__entry(
+ 		__field(dev_t,	dev)
+-		__field(int,	rw)
++		__field(int,	op)
++		__field(int,	op_flags)
+ 		__field(int,	type)
+ 		__field(sector_t,	sector)
+ 		__field(unsigned int,	size)
+@@ -793,15 +800,16 @@ DECLARE_EVENT_CLASS(f2fs__submit_bio,
  
-@@ -2723,7 +2734,8 @@ submit_for_resync:
- submit:
- 	update_receiver_timing_details(connection, drbd_submit_peer_request);
- 	inc_unacked(device);
--	if (drbd_submit_peer_request(device, peer_req, READ, fault_type) == 0)
-+	if (drbd_submit_peer_request(device, peer_req, REQ_OP_READ, 0,
-+				     fault_type) == 0)
- 		return 0;
+ 	TP_fast_assign(
+ 		__entry->dev		= sb->s_dev;
+-		__entry->rw		= fio->rw;
++		__entry->op		= fio->op;
++		__entry->op_flags	= fio->op_flags;
+ 		__entry->type		= fio->type;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->size		= bio->bi_iter.bi_size;
+ 	),
  
- 	/* don't care for the reason here */
-diff --git a/drivers/block/drbd/drbd_worker.c b/drivers/block/drbd/drbd_worker.c
-index 4d87499..51fab97 100644
---- a/drivers/block/drbd/drbd_worker.c
-+++ b/drivers/block/drbd/drbd_worker.c
-@@ -174,7 +174,7 @@ void drbd_peer_request_endio(struct bio *bio)
- 	struct drbd_peer_request *peer_req = bio->bi_private;
- 	struct drbd_device *device = peer_req->peer_device->device;
- 	int is_write = bio_data_dir(bio) == WRITE;
--	int is_discard = !!(bio->bi_rw & REQ_DISCARD);
-+	int is_discard = !!(bio_op(bio) == REQ_OP_DISCARD);
- 
- 	if (bio->bi_error && __ratelimit(&drbd_ratelimit_state))
- 		drbd_warn(device, "%s: error=%d s=%llus\n",
-@@ -248,7 +248,7 @@ void drbd_request_endio(struct bio *bio)
- 
- 	/* to avoid recursion in __req_mod */
- 	if (unlikely(bio->bi_error)) {
--		if (bio->bi_rw & REQ_DISCARD)
-+		if (bio_op(bio) == REQ_OP_DISCARD)
- 			what = (bio->bi_error == -EOPNOTSUPP)
- 				? DISCARD_COMPLETED_NOTSUPP
- 				: DISCARD_COMPLETED_WITH_ERROR;
-@@ -397,7 +397,8 @@ static int read_for_csum(struct drbd_peer_device *peer_device, sector_t sector,
- 	spin_unlock_irq(&device->resource->req_lock);
- 
- 	atomic_add(size >> 9, &device->rs_sect_ev);
--	if (drbd_submit_peer_request(device, peer_req, READ, DRBD_FAULT_RS_RD) == 0)
-+	if (drbd_submit_peer_request(device, peer_req, REQ_OP_READ, 0,
-+				     DRBD_FAULT_RS_RD) == 0)
- 		return 0;
- 
- 	/* If it failed because of ENOMEM, retry should help.  If it failed
+-	TP_printk("dev = (%d,%d), %s%s, %s, sector = %lld, size = %u",
++	TP_printk("dev = (%d,%d), %s%s%s, %s, sector = %lld, size = %u",
+ 		show_dev(__entry),
+-		show_bio_type(__entry->rw),
++		show_bio_type(__entry->op, __entry->op_flags),
+ 		show_block_type(__entry->type),
+ 		(unsigned long long)__entry->sector,
+ 		__entry->size)
 -- 
 2.7.2
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
