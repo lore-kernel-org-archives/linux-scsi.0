@@ -1,8 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 36/45] block: convert is_sync helpers to use
-	REQ_OPs.
-Date: Sun,  5 Jun 2016 14:32:16 -0500
-Message-ID: <1465155145-10812-37-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 18/45] hfsplus: use bio op accessors
+Date: Sun,  5 Jun 2016 14:31:58 -0500
+Message-ID: <1465155145-10812-19-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -24,124 +23,132 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch converts the is_sync helpers to use separate variables
-for the operation and flags.
+Separate the op from the rq_flag_bits and have gfs2
+set/get the bio using bio_set_op_attrs/bio_op.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-core.c       | 6 +++---
- block/blk-mq.c         | 8 ++++----
- block/cfq-iosched.c    | 2 +-
- include/linux/blkdev.h | 6 +++---
- 4 files changed, 11 insertions(+), 11 deletions(-)
+ fs/hfsplus/hfsplus_fs.h |  2 +-
+ fs/hfsplus/part_tbl.c   |  5 +++--
+ fs/hfsplus/super.c      |  6 ++++--
+ fs/hfsplus/wrapper.c    | 14 ++++++++------
+ 4 files changed, 16 insertions(+), 11 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 1333bb7..f9f4228 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
- static void freed_request(struct request_list *rl, int op, unsigned int flags)
- {
- 	struct request_queue *q = rl->q;
--	int sync = rw_is_sync(op | flags);
-+	int sync = rw_is_sync(op, flags);
+diff --git a/fs/hfsplus/hfsplus_fs.h b/fs/hfsplus/hfsplus_fs.h
+index fdc3446..047245b 100644
+--- a/fs/hfsplus/hfsplus_fs.h
++++ b/fs/hfsplus/hfsplus_fs.h
+@@ -526,7 +526,7 @@ int hfsplus_compare_dentry(const struct dentry *parent,
  
- 	q->nr_rqs[sync]--;
- 	rl->count[sync]--;
-@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
- 	struct elevator_type *et = q->elevator->type;
- 	struct io_context *ioc = rq_ioc(bio);
- 	struct io_cq *icq = NULL;
--	const bool is_sync = rw_is_sync(op | op_flags) != 0;
-+	const bool is_sync = rw_is_sync(op, op_flags) != 0;
- 	int may_queue;
+ /* wrapper.c */
+ int hfsplus_submit_bio(struct super_block *sb, sector_t sector, void *buf,
+-		       void **data, int rw);
++		       void **data, int op, int op_flags);
+ int hfsplus_read_wrapper(struct super_block *sb);
  
- 	if (unlikely(blk_queue_dying(q)))
-@@ -1244,7 +1244,7 @@ static struct request *get_request(struct request_queue *q, int op,
- 				   int op_flags, struct bio *bio,
- 				   gfp_t gfp_mask)
- {
--	const bool is_sync = rw_is_sync(op | op_flags) != 0;
-+	const bool is_sync = rw_is_sync(op, op_flags) != 0;
- 	DEFINE_WAIT(wait);
- 	struct request_list *rl;
- 	struct request *rq;
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 3393f29..29bcd9c 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -204,7 +204,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
- 	rq->end_io_data = NULL;
- 	rq->next_rq = NULL;
+ /* time macros */
+diff --git a/fs/hfsplus/part_tbl.c b/fs/hfsplus/part_tbl.c
+index eb355d8..63164eb 100644
+--- a/fs/hfsplus/part_tbl.c
++++ b/fs/hfsplus/part_tbl.c
+@@ -112,7 +112,8 @@ static int hfs_parse_new_pmap(struct super_block *sb, void *buf,
+ 		if ((u8 *)pm - (u8 *)buf >= buf_size) {
+ 			res = hfsplus_submit_bio(sb,
+ 						 *part_start + HFS_PMAP_BLK + i,
+-						 buf, (void **)&pm, READ);
++						 buf, (void **)&pm, REQ_OP_READ,
++						 0);
+ 			if (res)
+ 				return res;
+ 		}
+@@ -136,7 +137,7 @@ int hfs_part_find(struct super_block *sb,
+ 		return -ENOMEM;
  
--	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
-+	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
- }
+ 	res = hfsplus_submit_bio(sb, *part_start + HFS_PMAP_BLK,
+-				 buf, &data, READ);
++				 buf, &data, REQ_OP_READ, 0);
+ 	if (res)
+ 		goto out;
  
- static struct request *
-@@ -1178,7 +1178,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
- 	ctx = blk_mq_get_ctx(q);
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+diff --git a/fs/hfsplus/super.c b/fs/hfsplus/super.c
+index 755bf30..11854dd 100644
+--- a/fs/hfsplus/super.c
++++ b/fs/hfsplus/super.c
+@@ -220,7 +220,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
  
--	if (rw_is_sync(bio->bi_rw))
-+	if (rw_is_sync(bio_op(bio), bio->bi_rw))
- 		op_flags |= REQ_SYNC;
+ 	error2 = hfsplus_submit_bio(sb,
+ 				   sbi->part_start + HFSPLUS_VOLHEAD_SECTOR,
+-				   sbi->s_vhdr_buf, NULL, WRITE_SYNC);
++				   sbi->s_vhdr_buf, NULL, REQ_OP_WRITE,
++				   WRITE_SYNC);
+ 	if (!error)
+ 		error = error2;
+ 	if (!write_backup)
+@@ -228,7 +229,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
  
- 	trace_block_getrq(q, bio, op);
-@@ -1246,7 +1246,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+ 	error2 = hfsplus_submit_bio(sb,
+ 				  sbi->part_start + sbi->sect_count - 2,
+-				  sbi->s_backup_vhdr_buf, NULL, WRITE_SYNC);
++				  sbi->s_backup_vhdr_buf, NULL, REQ_OP_WRITE,
++				  WRITE_SYNC);
+ 	if (!error)
+ 		error2 = error;
+ out:
+diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
+index d026bb3..ebb85e5 100644
+--- a/fs/hfsplus/wrapper.c
++++ b/fs/hfsplus/wrapper.c
+@@ -30,7 +30,8 @@ struct hfsplus_wd {
+  * @sector: block to read or write, for blocks of HFSPLUS_SECTOR_SIZE bytes
+  * @buf: buffer for I/O
+  * @data: output pointer for location of requested data
+- * @rw: direction of I/O
++ * @op: direction of I/O
++ * @op_flags: request op flags
+  *
+  * The unit of I/O is hfsplus_min_io_size(sb), which may be bigger than
+  * HFSPLUS_SECTOR_SIZE, and @buf must be sized accordingly. On reads
+@@ -44,7 +45,7 @@ struct hfsplus_wd {
+  * will work correctly.
   */
- static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
+-		void *buf, void **data, int rw)
++		       void *buf, void **data, int op, int op_flags)
  {
--	const int is_sync = rw_is_sync(bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio_op(bio), bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_map_ctx data;
- 	struct request *rq;
-@@ -1343,7 +1343,7 @@ done:
-  */
- static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio_op(bio), bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_plug *plug;
- 	unsigned int request_count = 0;
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 3dafdba..b115486 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
- 	if (!cic)
- 		return ELV_MQUEUE_MAY;
+ 	struct bio *bio;
+ 	int ret = 0;
+@@ -65,9 +66,9 @@ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
+ 	bio = bio_alloc(GFP_NOIO, 1);
+ 	bio->bi_iter.bi_sector = sector;
+ 	bio->bi_bdev = sb->s_bdev;
+-	bio->bi_rw = rw;
++	bio_set_op_attrs(bio, op, op_flags);
  
--	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
-+	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
- 	if (cfqq) {
- 		cfq_init_prio_data(cfqq, cic);
+-	if (!(rw & WRITE) && data)
++	if (op != WRITE && data)
+ 		*data = (u8 *)buf + offset;
  
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 25f01ff..4937c05 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -624,14 +624,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
- /*
-  * We regard a request as sync, if either a read or a sync write
-  */
--static inline bool rw_is_sync(unsigned int rw_flags)
-+static inline bool rw_is_sync(int op, unsigned int rw_flags)
- {
--	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
-+	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
- }
+ 	while (io_size > 0) {
+@@ -182,7 +183,7 @@ int hfsplus_read_wrapper(struct super_block *sb)
+ reread:
+ 	error = hfsplus_submit_bio(sb, part_start + HFSPLUS_VOLHEAD_SECTOR,
+ 				   sbi->s_vhdr_buf, (void **)&sbi->s_vhdr,
+-				   READ);
++				   REQ_OP_READ, 0);
+ 	if (error)
+ 		goto out_free_backup_vhdr;
  
- static inline bool rq_is_sync(struct request *rq)
- {
--	return rw_is_sync(rq->cmd_flags);
-+	return rw_is_sync(req_op(rq), rq->cmd_flags);
- }
+@@ -214,7 +215,8 @@ reread:
  
- static inline bool blk_rl_full(struct request_list *rl, bool sync)
+ 	error = hfsplus_submit_bio(sb, part_start + part_size - 2,
+ 				   sbi->s_backup_vhdr_buf,
+-				   (void **)&sbi->s_backup_vhdr, READ);
++				   (void **)&sbi->s_backup_vhdr, REQ_OP_READ,
++				   0);
+ 	if (error)
+ 		goto out_free_backup_vhdr;
+ 
 -- 
 2.7.2
