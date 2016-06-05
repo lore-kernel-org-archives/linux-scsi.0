@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 34/45] blkg_rwstat: separate op from flags
-Date: Sun,  5 Jun 2016 14:32:14 -0500
-Message-ID: <1465155145-10812-35-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 38/45] blktrace: use op accessors
+Date: Sun,  5 Jun 2016 14:32:18 -0500
+Message-ID: <1465155145-10812-39-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,200 +23,362 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-The bio and request operation and flags are going to be separate
-definitions, so we cannot pass them in as a bitmap. This patch
-converts the blkg_rwstat code and its caller, cfq, to pass in the
-values separately.
+Have blktrace use the req/bio op accessor to get the REQ_OP.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/cfq-iosched.c        | 49 +++++++++++++++++++++++++++-------------------
- include/linux/blk-cgroup.h | 13 ++++++------
- 2 files changed, 36 insertions(+), 26 deletions(-)
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 3fcc598..3dafdba 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -667,9 +667,10 @@ static inline void cfqg_put(struct cfq_group *cfqg)
- } while (0)
- 
- static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
--					    struct cfq_group *curr_cfqg, int rw)
-+					    struct cfq_group *curr_cfqg, int op,
-+					    int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.queued, rw, 1);
-+	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, 1);
- 	cfqg_stats_end_empty_time(&cfqg->stats);
- 	cfqg_stats_set_start_group_wait_time(cfqg, curr_cfqg);
- }
-@@ -683,26 +684,30 @@ static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
- #endif
+v8:
+1. Fix REQ_OP_WRITE_SAME handling, so it is not reported as a N.
+
+ include/linux/blktrace_api.h  |  2 +-
+ include/trace/events/bcache.h | 12 ++++++---
+ include/trace/events/block.h  | 31 ++++++++++++++--------
+ kernel/trace/blktrace.c       | 62 +++++++++++++++++++++++++------------------
+ 4 files changed, 65 insertions(+), 42 deletions(-)
+
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 0f3172b..cceb72f 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -118,7 +118,7 @@ static inline int blk_cmd_buf_len(struct request *rq)
  }
  
--static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw)
-+static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
-+					       int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.queued, rw, -1);
-+	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, -1);
- }
+ extern void blk_dump_cmd(char *buf, struct request *rq);
+-extern void blk_fill_rwbs(char *rwbs, u32 rw, int bytes);
++extern void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes);
  
--static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw)
-+static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
-+					       int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.merged, rw, 1);
-+	blkg_rwstat_add(&cfqg->stats.merged, op, op_flags, 1);
- }
+ #endif /* CONFIG_EVENT_TRACING && CONFIG_BLOCK */
  
- static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
--			uint64_t start_time, uint64_t io_start_time, int rw)
-+			uint64_t start_time, uint64_t io_start_time, int op,
-+			int op_flags)
- {
- 	struct cfqg_stats *stats = &cfqg->stats;
- 	unsigned long long now = sched_clock();
+diff --git a/include/trace/events/bcache.h b/include/trace/events/bcache.h
+index 981acf7..65673d8 100644
+--- a/include/trace/events/bcache.h
++++ b/include/trace/events/bcache.h
+@@ -27,7 +27,8 @@ DECLARE_EVENT_CLASS(bcache_request,
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->orig_sector	= bio->bi_iter.bi_sector - 16;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
  
- 	if (time_after64(now, io_start_time))
--		blkg_rwstat_add(&stats->service_time, rw, now - io_start_time);
-+		blkg_rwstat_add(&stats->service_time, op, op_flags,
-+				now - io_start_time);
- 	if (time_after64(io_start_time, start_time))
--		blkg_rwstat_add(&stats->wait_time, rw,
-+		blkg_rwstat_add(&stats->wait_time, op, op_flags,
- 				io_start_time - start_time);
- }
+ 	TP_printk("%d,%d %s %llu + %u (from %d,%d @ %llu)",
+@@ -101,7 +102,8 @@ DECLARE_EVENT_CLASS(bcache_bio,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
  
-@@ -781,13 +786,16 @@ static inline void cfqg_put(struct cfq_group *cfqg) { }
- #define cfq_log_cfqg(cfqd, cfqg, fmt, args...)		do {} while (0)
+ 	TP_printk("%d,%d  %s %llu + %u",
+@@ -136,7 +138,8 @@ TRACE_EVENT(bcache_read,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		__entry->cache_hit = hit;
+ 		__entry->bypass = bypass;
+ 	),
+@@ -167,7 +170,8 @@ TRACE_EVENT(bcache_write,
+ 		__entry->inode		= inode;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio->bi_iter.bi_size >> 9;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		__entry->writeback = writeback;
+ 		__entry->bypass = bypass;
+ 	),
+diff --git a/include/trace/events/block.h b/include/trace/events/block.h
+index e8a5eca..5a2a759 100644
+--- a/include/trace/events/block.h
++++ b/include/trace/events/block.h
+@@ -84,7 +84,8 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
+ 					0 : blk_rq_sectors(rq);
+ 		__entry->errors    = rq->errors;
  
- static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
--			struct cfq_group *curr_cfqg, int rw) { }
-+			struct cfq_group *curr_cfqg, int op, int op_flags) { }
- static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
- 			unsigned long time, unsigned long unaccounted_time) { }
--static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw) { }
--static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw) { }
-+static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
-+			int op_flags) { }
-+static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
-+			int op_flags) { }
- static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
--			uint64_t start_time, uint64_t io_start_time, int rw) { }
-+			uint64_t start_time, uint64_t io_start_time, int op,
-+			int op_flags) { }
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, req_op(rq), rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 	),
  
- #endif	/* CONFIG_CFQ_GROUP_IOSCHED */
+@@ -162,7 +163,7 @@ TRACE_EVENT(block_rq_complete,
+ 		__entry->nr_sector = nr_bytes >> 9;
+ 		__entry->errors    = rq->errors;
  
-@@ -2461,10 +2469,10 @@ static void cfq_reposition_rq_rb(struct cfq_queue *cfqq, struct request *rq)
- {
- 	elv_rb_del(&cfqq->sort_list, rq);
- 	cfqq->queued[rq_is_sync(rq)]--;
--	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
-+	cfqg_stats_update_io_remove(RQ_CFQG(rq), req_op(rq), rq->cmd_flags);
- 	cfq_add_rq_rb(rq);
- 	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqq->cfqd->serving_group,
--				 rq->cmd_flags);
-+				 req_op(rq), rq->cmd_flags);
- }
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, nr_bytes);
++		blk_fill_rwbs(__entry->rwbs, req_op(rq), rq->cmd_flags, nr_bytes);
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 	),
  
- static struct request *
-@@ -2517,7 +2525,7 @@ static void cfq_remove_request(struct request *rq)
- 	cfq_del_rq_rb(rq);
+@@ -198,7 +199,8 @@ DECLARE_EVENT_CLASS(block_rq,
+ 		__entry->bytes     = (rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
+ 					blk_rq_bytes(rq) : 0;
  
- 	cfqq->cfqd->rq_queued--;
--	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
-+	cfqg_stats_update_io_remove(RQ_CFQG(rq), req_op(rq), rq->cmd_flags);
- 	if (rq->cmd_flags & REQ_PRIO) {
- 		WARN_ON(!cfqq->prio_pending);
- 		cfqq->prio_pending--;
-@@ -2552,7 +2560,7 @@ static void cfq_merged_request(struct request_queue *q, struct request *req,
- static void cfq_bio_merged(struct request_queue *q, struct request *req,
- 				struct bio *bio)
- {
--	cfqg_stats_update_io_merged(RQ_CFQG(req), bio->bi_rw);
-+	cfqg_stats_update_io_merged(RQ_CFQG(req), bio_op(bio), bio->bi_rw);
- }
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, req_op(rq), rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 		blk_dump_cmd(__get_str(cmd), rq);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+@@ -272,7 +274,8 @@ TRACE_EVENT(block_bio_bounce,
+ 					  bio->bi_bdev->bd_dev : 0;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
  
- static void
-@@ -2575,7 +2583,7 @@ cfq_merged_requests(struct request_queue *q, struct request *rq,
- 	if (cfqq->next_rq == next)
- 		cfqq->next_rq = rq;
- 	cfq_remove_request(next);
--	cfqg_stats_update_io_merged(RQ_CFQG(rq), next->cmd_flags);
-+	cfqg_stats_update_io_merged(RQ_CFQG(rq), req_op(next), next->cmd_flags);
+@@ -310,7 +313,8 @@ TRACE_EVENT(block_bio_complete,
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+ 		__entry->error		= error;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
  
- 	cfqq = RQ_CFQQ(next);
- 	/*
-@@ -4108,7 +4116,7 @@ static void cfq_insert_request(struct request_queue *q, struct request *rq)
- 	rq->fifo_time = jiffies + cfqd->cfq_fifo_expire[rq_is_sync(rq)];
- 	list_add_tail(&rq->queuelist, &cfqq->fifo);
- 	cfq_add_rq_rb(rq);
--	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group,
-+	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group, req_op(rq),
- 				 rq->cmd_flags);
- 	cfq_rq_enqueued(cfqd, cfqq, rq);
- }
-@@ -4206,7 +4214,8 @@ static void cfq_completed_request(struct request_queue *q, struct request *rq)
- 	cfqq->dispatched--;
- 	(RQ_CFQG(rq))->dispatched--;
- 	cfqg_stats_update_completion(cfqq->cfqg, rq_start_time_ns(rq),
--				     rq_io_start_time_ns(rq), rq->cmd_flags);
-+				     rq_io_start_time_ns(rq), req_op(rq),
-+				     rq->cmd_flags);
+ 	TP_printk("%d,%d %s %llu + %u [%d]",
+@@ -337,7 +341,8 @@ DECLARE_EVENT_CLASS(block_bio_merge,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
  
- 	cfqd->rq_in_flight[cfq_cfqq_sync(cfqq)]--;
+@@ -404,7 +409,8 @@ TRACE_EVENT(block_bio_queue,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->nr_sector	= bio_sectors(bio);
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
  
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 04f9c8d..f77150a 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -590,25 +590,26 @@ static inline void blkg_rwstat_exit(struct blkg_rwstat *rwstat)
- /**
-  * blkg_rwstat_add - add a value to a blkg_rwstat
-  * @rwstat: target blkg_rwstat
-- * @rw: mask of REQ_{WRITE|SYNC}
-+ * @op: REQ_OP
-+ * @op_flags: rq_flag_bits
-  * @val: value to add
-  *
-  * Add @val to @rwstat.  The counters are chosen according to @rw.  The
-  * caller is responsible for synchronizing calls to this function.
+@@ -432,7 +438,7 @@ DECLARE_EVENT_CLASS(block_get_rq,
+ 		__entry->dev		= bio ? bio->bi_bdev->bd_dev : 0;
+ 		__entry->sector		= bio ? bio->bi_iter.bi_sector : 0;
+ 		__entry->nr_sector	= bio ? bio_sectors(bio) : 0;
+-		blk_fill_rwbs(__entry->rwbs,
++		blk_fill_rwbs(__entry->rwbs, bio ? bio_op(bio) : 0,
+ 			      bio ? bio->bi_rw : 0, __entry->nr_sector);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+         ),
+@@ -567,7 +573,8 @@ TRACE_EVENT(block_split,
+ 		__entry->dev		= bio->bi_bdev->bd_dev;
+ 		__entry->sector		= bio->bi_iter.bi_sector;
+ 		__entry->new_sector	= new_sector;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 		memcpy(__entry->comm, current->comm, TASK_COMM_LEN);
+ 	),
+ 
+@@ -610,7 +617,8 @@ TRACE_EVENT(block_bio_remap,
+ 		__entry->nr_sector	= bio_sectors(bio);
+ 		__entry->old_dev	= dev;
+ 		__entry->old_sector	= from;
+-		blk_fill_rwbs(__entry->rwbs, bio->bi_rw, bio->bi_iter.bi_size);
++		blk_fill_rwbs(__entry->rwbs, bio_op(bio), bio->bi_rw,
++			      bio->bi_iter.bi_size);
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu",
+@@ -656,7 +664,8 @@ TRACE_EVENT(block_rq_remap,
+ 		__entry->old_dev	= dev;
+ 		__entry->old_sector	= from;
+ 		__entry->nr_bios	= blk_rq_count_bios(rq);
+-		blk_fill_rwbs(__entry->rwbs, rq->cmd_flags, blk_rq_bytes(rq));
++		blk_fill_rwbs(__entry->rwbs, req_op(rq), rq->cmd_flags,
++			      blk_rq_bytes(rq));
+ 	),
+ 
+ 	TP_printk("%d,%d %s %llu + %u <- (%d,%d) %llu %u",
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 9aef865..2d16fad 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -199,7 +199,8 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
+  * blk_io_trace structure and places it in a per-cpu subbuffer.
   */
- static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
--				   int rw, uint64_t val)
-+				   int op, int op_flags, uint64_t val)
+ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+-		     int rw, u32 what, int error, int pdu_len, void *pdu_data)
++		     int op, int op_flags, u32 what, int error, int pdu_len,
++		     void *pdu_data)
  {
- 	struct percpu_counter *cnt;
+ 	struct task_struct *tsk = current;
+ 	struct ring_buffer_event *event = NULL;
+@@ -214,13 +215,14 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
+ 		return;
  
--	if (op_is_write(rw))
-+	if (op_is_write(op))
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_WRITE];
- 	else
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_READ];
+-	what |= ddir_act[rw & WRITE];
+-	what |= MASK_TC_BIT(rw, SYNC);
+-	what |= MASK_TC_BIT(rw, RAHEAD);
+-	what |= MASK_TC_BIT(rw, META);
+-	what |= MASK_TC_BIT(rw, DISCARD);
+-	what |= MASK_TC_BIT(rw, FLUSH);
+-	what |= MASK_TC_BIT(rw, FUA);
++	what |= ddir_act[op_is_write(op) ? WRITE : READ];
++	what |= MASK_TC_BIT(op_flags, SYNC);
++	what |= MASK_TC_BIT(op_flags, RAHEAD);
++	what |= MASK_TC_BIT(op_flags, META);
++	what |= MASK_TC_BIT(op_flags, FLUSH);
++	what |= MASK_TC_BIT(op_flags, FUA);
++	if (op == REQ_OP_DISCARD)
++		what |= BLK_TC_ACT(BLK_TC_DISCARD);
  
- 	__percpu_counter_add(cnt, val, BLKG_STAT_CPU_BATCH);
+ 	pid = tsk->pid;
+ 	if (act_log_check(bt, what, sector, pid))
+@@ -708,11 +710,11 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
  
--	if (rw & REQ_SYNC)
-+	if (op_flags & REQ_SYNC)
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_SYNC];
- 	else
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_ASYNC];
-@@ -713,9 +714,9 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 
- 	if (!throtl) {
- 		blkg = blkg ?: q->root_blkg;
--		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_rw,
-+		blkg_rwstat_add(&blkg->stat_bytes, bio_op(bio), bio->bi_rw,
- 				bio->bi_iter.bi_size);
--		blkg_rwstat_add(&blkg->stat_ios, bio->bi_rw, 1);
-+		blkg_rwstat_add(&blkg->stat_ios, bio_op(bio), bio->bi_rw, 1);
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		what |= BLK_TC_ACT(BLK_TC_PC);
+-		__blk_add_trace(bt, 0, nr_bytes, rq->cmd_flags,
++		__blk_add_trace(bt, 0, nr_bytes, req_op(rq), rq->cmd_flags,
+ 				what, rq->errors, rq->cmd_len, rq->cmd);
+ 	} else  {
+ 		what |= BLK_TC_ACT(BLK_TC_FS);
+-		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes,
++		__blk_add_trace(bt, blk_rq_pos(rq), nr_bytes, req_op(rq),
+ 				rq->cmd_flags, what, rq->errors, 0, NULL);
  	}
+ }
+@@ -770,7 +772,7 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+ 		return;
  
- 	rcu_read_unlock();
+ 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio->bi_rw, what, error, 0, NULL);
++			bio_op(bio), bio->bi_rw, what, error, 0, NULL);
+ }
+ 
+ static void blk_add_trace_bio_bounce(void *ignore,
+@@ -818,7 +820,8 @@ static void blk_add_trace_getrq(void *ignore,
+ 		struct blk_trace *bt = q->blk_trace;
+ 
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, BLK_TA_GETRQ, 0, 0, NULL);
++			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_GETRQ, 0, 0,
++					NULL);
+ 	}
+ }
+ 
+@@ -833,7 +836,7 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 		struct blk_trace *bt = q->blk_trace;
+ 
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, BLK_TA_SLEEPRQ,
++			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+ 					0, 0, NULL);
+ 	}
+ }
+@@ -843,7 +846,7 @@ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
+ 	struct blk_trace *bt = q->blk_trace;
+ 
+ 	if (bt)
+-		__blk_add_trace(bt, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
++		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL);
+ }
+ 
+ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+@@ -860,7 +863,7 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 		else
+ 			what = BLK_TA_UNPLUG_TIMER;
+ 
+-		__blk_add_trace(bt, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
++		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu);
+ 	}
+ }
+ 
+@@ -874,8 +877,9 @@ static void blk_add_trace_split(void *ignore,
+ 		__be64 rpdu = cpu_to_be64(pdu);
+ 
+ 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
+-				bio->bi_iter.bi_size, bio->bi_rw, BLK_TA_SPLIT,
+-				bio->bi_error, sizeof(rpdu), &rpdu);
++				bio->bi_iter.bi_size, bio_op(bio), bio->bi_rw,
++				BLK_TA_SPLIT, bio->bi_error, sizeof(rpdu),
++				&rpdu);
+ 	}
+ }
+ 
+@@ -907,7 +911,7 @@ static void blk_add_trace_bio_remap(void *ignore,
+ 	r.sector_from = cpu_to_be64(from);
+ 
+ 	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
++			bio_op(bio), bio->bi_rw, BLK_TA_REMAP, bio->bi_error,
+ 			sizeof(r), &r);
+ }
+ 
+@@ -940,7 +944,7 @@ static void blk_add_trace_rq_remap(void *ignore,
+ 	r.sector_from = cpu_to_be64(from);
+ 
+ 	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
+-			rq_data_dir(rq), BLK_TA_REMAP, !!rq->errors,
++			rq_data_dir(rq), 0, BLK_TA_REMAP, !!rq->errors,
+ 			sizeof(r), &r);
+ }
+ 
+@@ -965,10 +969,10 @@ void blk_add_driver_data(struct request_queue *q,
+ 		return;
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC)
+-		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0,
++		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0, 0,
+ 				BLK_TA_DRV_DATA, rq->errors, len, data);
+ 	else
+-		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0,
++		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0, 0,
+ 				BLK_TA_DRV_DATA, rq->errors, len, data);
+ }
+ EXPORT_SYMBOL_GPL(blk_add_driver_data);
+@@ -1769,21 +1773,27 @@ void blk_dump_cmd(char *buf, struct request *rq)
+ 	}
+ }
+ 
+-void blk_fill_rwbs(char *rwbs, u32 rw, int bytes)
++void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes)
+ {
+ 	int i = 0;
+ 
+ 	if (rw & REQ_FLUSH)
+ 		rwbs[i++] = 'F';
+ 
+-	if (rw & WRITE)
++	switch (op) {
++	case REQ_OP_WRITE:
++	case REQ_OP_WRITE_SAME:
+ 		rwbs[i++] = 'W';
+-	else if (rw & REQ_DISCARD)
++		break;
++	case REQ_OP_DISCARD:
+ 		rwbs[i++] = 'D';
+-	else if (bytes)
++		break;
++	case REQ_OP_READ:
+ 		rwbs[i++] = 'R';
+-	else
++		break;
++	default:
+ 		rwbs[i++] = 'N';
++	}
+ 
+ 	if (rw & REQ_FUA)
+ 		rwbs[i++] = 'F';
 -- 
 2.7.2
