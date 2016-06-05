@@ -1,526 +1,415 @@
 From: mchristi@redhat.com
-Subject: [PATCH 15/45] f2fs: use bio op accessors
-Date: Sun,  5 Jun 2016 14:31:55 -0500
-Message-ID: <1465155145-10812-16-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 43/45] block, drivers: add REQ_OP_FLUSH operation
+Date: Sun,  5 Jun 2016 14:32:23 -0500
+Message-ID: <1465155145-10812-44-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-Separate the op from the rq_flag_bits and have f2fs
-set/get the bio using bio_set_op_attrs/bio_op.
+This adds a REQ_OP_FLUSH operation that is sent to request_fn
+based drivers by the block layer's flush code, instead of
+sending requests with the request->cmd_flags REQ_FLUSH bit set.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- fs/f2fs/checkpoint.c        | 10 ++++++----
- fs/f2fs/data.c              | 47 ++++++++++++++++++++++++++-------------------
- fs/f2fs/f2fs.h              |  5 +++--
- fs/f2fs/gc.c                |  9 ++++++---
- fs/f2fs/inline.c            |  3 ++-
- fs/f2fs/node.c              |  8 +++++---
- fs/f2fs/segment.c           | 12 +++++++-----
- fs/f2fs/trace.c             |  7 ++++---
- include/trace/events/f2fs.h | 34 +++++++++++++++++++-------------
- 9 files changed, 81 insertions(+), 54 deletions(-)
 
-diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c
-index 3891600..b6d600e 100644
---- a/fs/f2fs/checkpoint.c
-+++ b/fs/f2fs/checkpoint.c
-@@ -63,14 +63,15 @@ static struct page *__get_meta_page(struct f2fs_sb_info *sbi, pgoff_t index,
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = META,
--		.rw = READ_SYNC | REQ_META | REQ_PRIO,
-+		.op = REQ_OP_READ,
-+		.op_flags = READ_SYNC | REQ_META | REQ_PRIO,
- 		.old_blkaddr = index,
- 		.new_blkaddr = index,
- 		.encrypted_page = NULL,
- 	};
+v2.
+
+1. Fix kbuild failures. Forgot to update ubd driver.
+
+ Documentation/block/writeback_cache_control.txt | 6 +++---
+ arch/um/drivers/ubd_kern.c                      | 2 +-
+ block/blk-flush.c                               | 4 ++--
+ drivers/block/loop.c                            | 4 ++--
+ drivers/block/nbd.c                             | 2 +-
+ drivers/block/osdblk.c                          | 2 +-
+ drivers/block/ps3disk.c                         | 4 ++--
+ drivers/block/skd_main.c                        | 2 +-
+ drivers/block/virtio_blk.c                      | 2 +-
+ drivers/block/xen-blkfront.c                    | 8 ++++----
+ drivers/ide/ide-disk.c                          | 2 +-
+ drivers/md/dm.c                                 | 2 +-
+ drivers/mmc/card/block.c                        | 6 +++---
+ drivers/mmc/card/queue.h                        | 3 ++-
+ drivers/mtd/mtd_blkdevs.c                       | 2 +-
+ drivers/nvme/host/core.c                        | 2 +-
+ drivers/scsi/sd.c                               | 7 +++----
+ include/linux/blk_types.h                       | 3 ++-
+ include/linux/blkdev.h                          | 3 +++
+ kernel/trace/blktrace.c                         | 5 +++++
+ 20 files changed, 40 insertions(+), 31 deletions(-)
+
+diff --git a/Documentation/block/writeback_cache_control.txt b/Documentation/block/writeback_cache_control.txt
+index 59e0516..da70bda 100644
+--- a/Documentation/block/writeback_cache_control.txt
++++ b/Documentation/block/writeback_cache_control.txt
+@@ -73,9 +73,9 @@ doing:
  
- 	if (unlikely(!is_meta))
--		fio.rw &= ~REQ_META;
-+		fio.op_flags &= ~REQ_META;
- repeat:
- 	page = f2fs_grab_cache_page(mapping, index, false);
- 	if (!page) {
-@@ -157,13 +158,14 @@ int ra_meta_pages(struct f2fs_sb_info *sbi, block_t start, int nrpages,
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = META,
--		.rw = sync ? (READ_SYNC | REQ_META | REQ_PRIO) : READA,
-+		.op = REQ_OP_READ,
-+		.op_flags = sync ? (READ_SYNC | REQ_META | REQ_PRIO) : READA,
- 		.encrypted_page = NULL,
- 	};
- 	struct blk_plug plug;
+ 	blk_queue_write_cache(sdkp->disk->queue, true, false);
  
- 	if (unlikely(type == META_POR))
--		fio.rw &= ~REQ_META;
-+		fio.op_flags &= ~REQ_META;
+-and handle empty REQ_FLUSH requests in its prep_fn/request_fn.  Note that
++and handle empty REQ_OP_FLUSH requests in its prep_fn/request_fn.  Note that
+ REQ_FLUSH requests with a payload are automatically turned into a sequence
+-of an empty REQ_FLUSH request followed by the actual write by the block
++of an empty REQ_OP_FLUSH request followed by the actual write by the block
+ layer.  For devices that also support the FUA bit the block layer needs
+ to be told to pass through the REQ_FUA bit using:
  
- 	blk_start_plug(&plug);
- 	for (; nrpages-- > 0; blkno++) {
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index c595c8f..8769e83 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -97,12 +97,10 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
- 	return bio;
- }
+@@ -83,4 +83,4 @@ to be told to pass through the REQ_FUA bit using:
  
--static inline void __submit_bio(struct f2fs_sb_info *sbi, int rw,
--						struct bio *bio)
-+static inline void __submit_bio(struct f2fs_sb_info *sbi, struct bio *bio)
- {
--	if (!is_read_io(rw))
-+	if (!is_read_io(bio_op(bio)))
- 		atomic_inc(&sbi->nr_wb_bios);
--	bio->bi_rw = rw;
- 	submit_bio(bio);
- }
+ and the driver must handle write requests that have the REQ_FUA bit set
+ in prep_fn/request_fn.  If the FUA bit is not natively supported the block
+-layer turns it into an empty REQ_FLUSH request after the actual write.
++layer turns it into an empty REQ_OP_FLUSH request after the actual write.
+diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
+index 17e96dc..ef6b4d9 100644
+--- a/arch/um/drivers/ubd_kern.c
++++ b/arch/um/drivers/ubd_kern.c
+@@ -1286,7 +1286,7 @@ static void do_ubd_request(struct request_queue *q)
  
-@@ -113,12 +111,14 @@ static void __submit_merged_bio(struct f2fs_bio_info *io)
- 	if (!io->bio)
- 		return;
+ 		req = dev->request;
  
--	if (is_read_io(fio->rw))
-+	if (is_read_io(fio->op))
- 		trace_f2fs_submit_read_bio(io->sbi->sb, fio, io->bio);
+-		if (req->cmd_flags & REQ_FLUSH) {
++		if (req_op(req) == REQ_OP_FLUSH) {
+ 			io_req = kmalloc(sizeof(struct io_thread_req),
+ 					 GFP_ATOMIC);
+ 			if (io_req == NULL) {
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+index 9fd1f63..21f0d5b 100644
+--- a/block/blk-flush.c
++++ b/block/blk-flush.c
+@@ -29,7 +29,7 @@
+  * The actual execution of flush is double buffered.  Whenever a request
+  * needs to execute PRE or POSTFLUSH, it queues at
+  * fq->flush_queue[fq->flush_pending_idx].  Once certain criteria are met, a
+- * flush is issued and the pending_idx is toggled.  When the flush
++ * REQ_OP_FLUSH is issued and the pending_idx is toggled.  When the flush
+  * completes, all the requests which were pending are proceeded to the next
+  * step.  This allows arbitrary merging of different types of FLUSH/FUA
+  * requests.
+@@ -330,7 +330,7 @@ static bool blk_kick_flush(struct request_queue *q, struct blk_flush_queue *fq)
+ 	}
+ 
+ 	flush_rq->cmd_type = REQ_TYPE_FS;
+-	flush_rq->cmd_flags = WRITE_FLUSH | REQ_FLUSH_SEQ;
++	req_set_op_attrs(flush_rq, REQ_OP_FLUSH, WRITE_FLUSH | REQ_FLUSH_SEQ);
+ 	flush_rq->rq_disk = first_rq->rq_disk;
+ 	flush_rq->end_io = flush_end_io;
+ 
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index b9b737c..364d491 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -542,7 +542,7 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
+ 	pos = ((loff_t) blk_rq_pos(rq) << 9) + lo->lo_offset;
+ 
+ 	if (op_is_write(req_op(rq))) {
+-		if (rq->cmd_flags & REQ_FLUSH)
++		if (req_op(rq) == REQ_OP_FLUSH)
+ 			ret = lo_req_flush(lo, rq);
+ 		else if (req_op(rq) == REQ_OP_DISCARD)
+ 			ret = lo_discard(lo, rq, pos);
+@@ -1659,7 +1659,7 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	if (lo->lo_state != Lo_bound)
+ 		return -EIO;
+ 
+-	if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
++	if (lo->use_dio && (req_op(cmd->rq) != REQ_OP_FLUSH ||
+ 	    req_op(cmd->rq) == REQ_OP_DISCARD))
+ 		cmd->use_aio = true;
  	else
- 		trace_f2fs_submit_write_bio(io->sbi->sb, fio, io->bio);
- 
--	__submit_bio(io->sbi, fio->rw, io->bio);
-+	bio_set_op_attrs(io->bio, fio->op, fio->op_flags);
-+
-+	__submit_bio(io->sbi, io->bio);
- 	io->bio = NULL;
- }
- 
-@@ -184,10 +184,12 @@ static void __f2fs_submit_merged_bio(struct f2fs_sb_info *sbi,
- 	/* change META to META_FLUSH in the checkpoint procedure */
- 	if (type >= META_FLUSH) {
- 		io->fio.type = META_FLUSH;
-+		io->fio.op = REQ_OP_WRITE;
- 		if (test_opt(sbi, NOBARRIER))
--			io->fio.rw = WRITE_FLUSH | REQ_META | REQ_PRIO;
-+			io->fio.op_flags = WRITE_FLUSH | REQ_META | REQ_PRIO;
- 		else
--			io->fio.rw = WRITE_FLUSH_FUA | REQ_META | REQ_PRIO;
-+			io->fio.op_flags = WRITE_FLUSH_FUA | REQ_META |
-+								REQ_PRIO;
- 	}
- 	__submit_merged_bio(io);
- out:
-@@ -229,14 +231,16 @@ int f2fs_submit_page_bio(struct f2fs_io_info *fio)
- 	f2fs_trace_ios(fio, 0);
- 
- 	/* Allocate a new bio */
--	bio = __bio_alloc(fio->sbi, fio->new_blkaddr, 1, is_read_io(fio->rw));
-+	bio = __bio_alloc(fio->sbi, fio->new_blkaddr, 1, is_read_io(fio->op));
- 
- 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
- 		bio_put(bio);
- 		return -EFAULT;
- 	}
-+	bio->bi_rw = fio->op_flags;
-+	bio_set_op_attrs(bio, fio->op, fio->op_flags);
- 
--	__submit_bio(fio->sbi, fio->rw, bio);
-+	__submit_bio(fio->sbi, bio);
- 	return 0;
- }
- 
-@@ -245,7 +249,7 @@ void f2fs_submit_page_mbio(struct f2fs_io_info *fio)
- 	struct f2fs_sb_info *sbi = fio->sbi;
- 	enum page_type btype = PAGE_TYPE_OF_BIO(fio->type);
- 	struct f2fs_bio_info *io;
--	bool is_read = is_read_io(fio->rw);
-+	bool is_read = is_read_io(fio->op);
- 	struct page *bio_page;
- 
- 	io = is_read ? &sbi->read_io : &sbi->write_io[btype];
-@@ -257,7 +261,7 @@ void f2fs_submit_page_mbio(struct f2fs_io_info *fio)
- 	down_write(&io->io_rwsem);
- 
- 	if (io->bio && (io->last_block_in_bio != fio->new_blkaddr - 1 ||
--						io->fio.rw != fio->rw))
-+	    (io->fio.op != fio->op || io->fio.op_flags != fio->op_flags)))
- 		__submit_merged_bio(io);
- alloc_new:
- 	if (io->bio == NULL) {
-@@ -391,7 +395,7 @@ int f2fs_get_block(struct dnode_of_data *dn, pgoff_t index)
- }
- 
- struct page *get_read_data_page(struct inode *inode, pgoff_t index,
--						int rw, bool for_write)
-+						int op_flags, bool for_write)
- {
- 	struct address_space *mapping = inode->i_mapping;
- 	struct dnode_of_data dn;
-@@ -401,7 +405,8 @@ struct page *get_read_data_page(struct inode *inode, pgoff_t index,
- 	struct f2fs_io_info fio = {
- 		.sbi = F2FS_I_SB(inode),
- 		.type = DATA,
--		.rw = rw,
-+		.op = REQ_OP_READ,
-+		.op_flags = op_flags,
- 		.encrypted_page = NULL,
- 	};
- 
-@@ -1052,7 +1057,7 @@ got_it:
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 6c2c28d..d6f3c93 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -284,7 +284,7 @@ static int nbd_send_req(struct nbd_device *nbd, struct request *req)
+ 		type = NBD_CMD_DISC;
+ 	else if (req_op(req) == REQ_OP_DISCARD)
+ 		type = NBD_CMD_TRIM;
+-	else if (req->cmd_flags & REQ_FLUSH)
++	else if (req_op(req) == REQ_OP_FLUSH)
+ 		type = NBD_CMD_FLUSH;
+ 	else if (rq_data_dir(req) == WRITE)
+ 		type = NBD_CMD_WRITE;
+diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+index c2854a2..92900f5 100644
+--- a/drivers/block/osdblk.c
++++ b/drivers/block/osdblk.c
+@@ -321,7 +321,7 @@ static void osdblk_rq_fn(struct request_queue *q)
+ 		 * driver-specific, etc.
  		 */
- 		if (bio && (last_block_in_bio != block_nr - 1)) {
- submit_and_realloc:
--			__submit_bio(F2FS_I_SB(inode), READ, bio);
-+			__submit_bio(F2FS_I_SB(inode), bio);
- 			bio = NULL;
- 		}
- 		if (bio == NULL) {
-@@ -1081,7 +1086,7 @@ submit_and_realloc:
- 			bio->bi_iter.bi_sector = SECTOR_FROM_BLOCK(block_nr);
- 			bio->bi_end_io = f2fs_read_end_io;
- 			bio->bi_private = ctx;
--			bio->bi_rw = READ;
-+			bio_set_op_attrs(bio, REQ_OP_READ, 0);
- 		}
  
- 		if (bio_add_page(bio, page, blocksize, 0) < blocksize)
-@@ -1096,7 +1101,7 @@ set_error_page:
- 		goto next_page;
- confused:
- 		if (bio) {
--			__submit_bio(F2FS_I_SB(inode), READ, bio);
-+			__submit_bio(F2FS_I_SB(inode), bio);
- 			bio = NULL;
- 		}
- 		unlock_page(page);
-@@ -1106,7 +1111,7 @@ next_page:
+-		do_flush = rq->cmd_flags & REQ_FLUSH;
++		do_flush = (req_op(rq) == REQ_OP_FLUSH);
+ 		do_write = (rq_data_dir(rq) == WRITE);
+ 
+ 		if (!do_flush) { /* osd_flush does not use a bio */
+diff --git a/drivers/block/ps3disk.c b/drivers/block/ps3disk.c
+index 4b7e405..acb4452 100644
+--- a/drivers/block/ps3disk.c
++++ b/drivers/block/ps3disk.c
+@@ -196,7 +196,7 @@ static void ps3disk_do_request(struct ps3_storage_device *dev,
+ 	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
+ 
+ 	while ((req = blk_fetch_request(q))) {
+-		if (req->cmd_flags & REQ_FLUSH) {
++		if (req_op(req) == REQ_OP_FLUSH) {
+ 			if (ps3disk_submit_flush_request(dev, req))
+ 				break;
+ 		} else if (req->cmd_type == REQ_TYPE_FS) {
+@@ -256,7 +256,7 @@ static irqreturn_t ps3disk_interrupt(int irq, void *data)
+ 		return IRQ_HANDLED;
  	}
- 	BUG_ON(pages && !list_empty(pages));
- 	if (bio)
--		__submit_bio(F2FS_I_SB(inode), READ, bio);
-+		__submit_bio(F2FS_I_SB(inode), bio);
- 	return 0;
+ 
+-	if (req->cmd_flags & REQ_FLUSH) {
++	if (req_op(req) == REQ_OP_FLUSH) {
+ 		read = 0;
+ 		op = "flush";
+ 	} else {
+diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
+index 910e065..5c07a23 100644
+--- a/drivers/block/skd_main.c
++++ b/drivers/block/skd_main.c
+@@ -597,7 +597,7 @@ static void skd_request_fn(struct request_queue *q)
+ 		data_dir = rq_data_dir(req);
+ 		io_flags = req->cmd_flags;
+ 
+-		if (io_flags & REQ_FLUSH)
++		if (req_op(req) == REQ_OP_FLUSH)
+ 			flush++;
+ 
+ 		if (io_flags & REQ_FUA)
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 42758b5..18e4069 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -172,7 +172,7 @@ static int virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	BUG_ON(req->nr_phys_segments + 2 > vblk->sg_elems);
+ 
+ 	vbr->req = req;
+-	if (req->cmd_flags & REQ_FLUSH) {
++	if (req_op(req) == REQ_OP_FLUSH) {
+ 		vbr->out_hdr.type = cpu_to_virtio32(vblk->vdev, VIRTIO_BLK_T_FLUSH);
+ 		vbr->out_hdr.sector = 0;
+ 		vbr->out_hdr.ioprio = cpu_to_virtio32(vblk->vdev, req_get_ioprio(vbr->req));
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index 6fd1601..3aeb25b 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -743,7 +743,7 @@ static int blkif_queue_rw_req(struct request *req, struct blkfront_ring_info *ri
+ 		 * The indirect operation can only be a BLKIF_OP_READ or
+ 		 * BLKIF_OP_WRITE
+ 		 */
+-		BUG_ON(req->cmd_flags & (REQ_FLUSH | REQ_FUA));
++		BUG_ON(req_op(req) == REQ_OP_FLUSH || req->cmd_flags & REQ_FUA);
+ 		ring_req->operation = BLKIF_OP_INDIRECT;
+ 		ring_req->u.indirect.indirect_op = rq_data_dir(req) ?
+ 			BLKIF_OP_WRITE : BLKIF_OP_READ;
+@@ -755,7 +755,7 @@ static int blkif_queue_rw_req(struct request *req, struct blkfront_ring_info *ri
+ 		ring_req->u.rw.handle = info->handle;
+ 		ring_req->operation = rq_data_dir(req) ?
+ 			BLKIF_OP_WRITE : BLKIF_OP_READ;
+-		if (req->cmd_flags & (REQ_FLUSH | REQ_FUA)) {
++		if (req_op(req) == REQ_OP_FLUSH || req->cmd_flags & REQ_FUA) {
+ 			/*
+ 			 * Ideally we can do an unordered flush-to-disk.
+ 			 * In case the backend onlysupports barriers, use that.
+@@ -865,7 +865,7 @@ static inline bool blkif_request_flush_invalid(struct request *req,
+ 					       struct blkfront_info *info)
+ {
+ 	return ((req->cmd_type != REQ_TYPE_FS) ||
+-		((req->cmd_flags & REQ_FLUSH) &&
++		((req_op(req) == REQ_OP_FLUSH) &&
+ 		 !(info->feature_flush & REQ_FLUSH)) ||
+ 		((req->cmd_flags & REQ_FUA) &&
+ 		 !(info->feature_flush & REQ_FUA)));
+@@ -2055,7 +2055,7 @@ static int blkif_recover(struct blkfront_info *info)
+ 			/*
+ 			 * Get the bios in the request so we can re-queue them.
+ 			 */
+-			if (copy[i].request->cmd_flags & REQ_FLUSH ||
++			if (req_op(copy[i].request) == REQ_OP_FLUSH ||
+ 			    req_op(copy[i].request) == REQ_OP_DISCARD ||
+ 			    copy[i].request->cmd_flags & (REQ_FUA | REQ_SECURE)) {
+ 				/*
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 05dbcce..e378ef7 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -431,7 +431,7 @@ static int idedisk_prep_fn(struct request_queue *q, struct request *rq)
+ 	ide_drive_t *drive = q->queuedata;
+ 	struct ide_cmd *cmd;
+ 
+-	if (!(rq->cmd_flags & REQ_FLUSH))
++	if (req_op(rq) != REQ_OP_FLUSH)
+ 		return BLKPREP_OK;
+ 
+ 	if (rq->special) {
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index f6b104c..fcc68c8 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2171,7 +2171,7 @@ static void dm_request_fn(struct request_queue *q)
+ 
+ 		/* always use block 0 to find the target for flushes for now */
+ 		pos = 0;
+-		if (!(rq->cmd_flags & REQ_FLUSH))
++		if (req_op(rq) != REQ_OP_FLUSH)
+ 			pos = blk_rq_pos(rq);
+ 
+ 		if ((dm_request_peeked_before_merge_deadline(md) &&
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index 201a871..bca20f8 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -1722,7 +1722,8 @@ static u8 mmc_blk_prep_packed_list(struct mmc_queue *mq, struct request *req)
+ 		    !IS_ALIGNED(blk_rq_sectors(next), 8))
+ 			break;
+ 
+-		if (req_op(next) == REQ_OP_DISCARD || next->cmd_flags & REQ_FLUSH)
++		if (req_op(next) == REQ_OP_DISCARD ||
++		    req_op(next) == REQ_OP_FLUSH)
+ 			break;
+ 
+ 		if (rq_data_dir(cur) != rq_data_dir(next))
+@@ -2147,7 +2148,6 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
+ 	struct mmc_card *card = md->queue.card;
+ 	struct mmc_host *host = card->host;
+ 	unsigned long flags;
+-	unsigned int cmd_flags = req ? req->cmd_flags : 0;
+ 
+ 	if (req && !mq->mqrq_prev->req)
+ 		/* claim host only for the first request */
+@@ -2171,7 +2171,7 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
+ 			ret = mmc_blk_issue_secdiscard_rq(mq, req);
+ 		else
+ 			ret = mmc_blk_issue_discard_rq(mq, req);
+-	} else if (cmd_flags & REQ_FLUSH) {
++	} else if (req && req_op(req) == REQ_OP_FLUSH) {
+ 		/* complete ongoing async transfer before issuing flush */
+ 		if (card->host->areq)
+ 			mmc_blk_issue_rw_rq(mq, NULL);
+diff --git a/drivers/mmc/card/queue.h b/drivers/mmc/card/queue.h
+index 9fb26f2..d625311 100644
+--- a/drivers/mmc/card/queue.h
++++ b/drivers/mmc/card/queue.h
+@@ -3,7 +3,8 @@
+ 
+ static inline bool mmc_req_is_special(struct request *req)
+ {
+-	return req && (req->cmd_flags & REQ_FLUSH || req_op(req) == REQ_OP_DISCARD);
++	return req &&
++		(req_op(req) == REQ_OP_FLUSH || req_op(req) == REQ_OP_DISCARD);
  }
  
-@@ -1223,7 +1228,8 @@ static int f2fs_write_data_page(struct page *page,
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = DATA,
--		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
-+		.op = REQ_OP_WRITE,
-+		.op_flags = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : 0,
- 		.page = page,
- 		.encrypted_page = NULL,
- 	};
-@@ -1664,7 +1670,8 @@ repeat:
- 		struct f2fs_io_info fio = {
- 			.sbi = sbi,
- 			.type = DATA,
--			.rw = READ_SYNC,
-+			.op = REQ_OP_READ,
-+			.op_flags = READ_SYNC,
- 			.old_blkaddr = blkaddr,
- 			.new_blkaddr = blkaddr,
- 			.page = page,
-diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-index 916e7c2..23ae6a8 100644
---- a/fs/f2fs/f2fs.h
-+++ b/fs/f2fs/f2fs.h
-@@ -686,14 +686,15 @@ enum page_type {
- struct f2fs_io_info {
- 	struct f2fs_sb_info *sbi;	/* f2fs_sb_info pointer */
- 	enum page_type type;	/* contains DATA/NODE/META/META_FLUSH */
--	int rw;			/* contains R/RS/W/WS with REQ_META/REQ_PRIO */
-+	int op;			/* contains REQ_OP_ */
-+	int op_flags;		/* rq_flag_bits */
- 	block_t new_blkaddr;	/* new block address to be written */
- 	block_t old_blkaddr;	/* old block address before Cow */
- 	struct page *page;	/* page to be written */
- 	struct page *encrypted_page;	/* encrypted page */
+ struct request;
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index 4eb9a5f..78b3eb4 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -87,7 +87,7 @@ static int do_blktrans_request(struct mtd_blktrans_ops *tr,
+ 	if (req->cmd_type != REQ_TYPE_FS)
+ 		return -EIO;
+ 
+-	if (req->cmd_flags & REQ_FLUSH)
++	if (req_op(req) == REQ_OP_FLUSH)
+ 		return tr->flush(dev);
+ 
+ 	if (blk_rq_pos(req) + blk_rq_cur_sectors(req) >
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 089b8b8..abdfdcf 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -290,7 +290,7 @@ int nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
+ 
+ 	if (req->cmd_type == REQ_TYPE_DRV_PRIV)
+ 		memcpy(cmd, req->cmd, sizeof(*cmd));
+-	else if (req->cmd_flags & REQ_FLUSH)
++	else if (req_op(req) == REQ_OP_FLUSH)
+ 		nvme_setup_flush(ns, cmd);
+ 	else if (req_op(req) == REQ_OP_DISCARD)
+ 		ret = nvme_setup_discard(ns, req, cmd);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fad86ad..5a9db0f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1143,12 +1143,11 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ 		return sd_setup_discard_cmnd(cmd);
+ 	case REQ_OP_WRITE_SAME:
+ 		return sd_setup_write_same_cmnd(cmd);
++	case REQ_OP_FLUSH:
++		return sd_setup_flush_cmnd(cmd);
+ 	case REQ_OP_READ:
+ 	case REQ_OP_WRITE:
+-		if (rq->cmd_flags & REQ_FLUSH)
+-			return sd_setup_flush_cmnd(cmd);
+-		else
+-			return sd_setup_read_write_cmnd(cmd);
++		return sd_setup_read_write_cmnd(cmd);
+ 	default:
+ 		BUG();
+ 	}
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 23c1ab2..32d8752 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -249,9 +249,10 @@ enum req_op {
+ 	REQ_OP_WRITE,
+ 	REQ_OP_DISCARD,		/* request to discard sectors */
+ 	REQ_OP_WRITE_SAME,	/* write same block many times */
++	REQ_OP_FLUSH,		/* request for cache flush */
  };
  
--#define is_read_io(rw)	(((rw) & 1) == READ)
-+#define is_read_io(rw) (rw == READ)
- struct f2fs_bio_info {
- 	struct f2fs_sb_info *sbi;	/* f2fs superblock */
- 	struct bio *bio;		/* bios to merge */
-diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
-index 38d56f6..3649d86 100644
---- a/fs/f2fs/gc.c
-+++ b/fs/f2fs/gc.c
-@@ -538,7 +538,8 @@ static void move_encrypted_block(struct inode *inode, block_t bidx)
- 	struct f2fs_io_info fio = {
- 		.sbi = F2FS_I_SB(inode),
- 		.type = DATA,
--		.rw = READ_SYNC,
-+		.op = REQ_OP_READ,
-+		.op_flags = READ_SYNC,
- 		.encrypted_page = NULL,
- 	};
- 	struct dnode_of_data dn;
-@@ -612,7 +613,8 @@ static void move_encrypted_block(struct inode *inode, block_t bidx)
- 	/* allocate block address */
- 	f2fs_wait_on_page_writeback(dn.node_page, NODE, true);
+-#define REQ_OP_BITS 2
++#define REQ_OP_BITS 3
  
--	fio.rw = WRITE_SYNC;
-+	fio.op = REQ_OP_WRITE;
-+	fio.op_flags = WRITE_SYNC;
- 	fio.new_blkaddr = newaddr;
- 	f2fs_submit_page_mbio(&fio);
+ typedef unsigned int blk_qc_t;
+ #define BLK_QC_T_NONE	-1U
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 78ae3db..0c9f879 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -666,6 +666,9 @@ static inline bool rq_mergeable(struct request *rq)
+ 	if (rq->cmd_type != REQ_TYPE_FS)
+ 		return false;
  
-@@ -649,7 +651,8 @@ static void move_data_page(struct inode *inode, block_t bidx, int gc_type)
- 		struct f2fs_io_info fio = {
- 			.sbi = F2FS_I_SB(inode),
- 			.type = DATA,
--			.rw = WRITE_SYNC,
-+			.op = REQ_OP_WRITE,
-+			.op_flags = WRITE_SYNC,
- 			.page = page,
- 			.encrypted_page = NULL,
- 		};
-diff --git a/fs/f2fs/inline.c b/fs/f2fs/inline.c
-index a4bb155..c15e53c 100644
---- a/fs/f2fs/inline.c
-+++ b/fs/f2fs/inline.c
-@@ -108,7 +108,8 @@ int f2fs_convert_inline_page(struct dnode_of_data *dn, struct page *page)
- 	struct f2fs_io_info fio = {
- 		.sbi = F2FS_I_SB(dn->inode),
- 		.type = DATA,
--		.rw = WRITE_SYNC | REQ_PRIO,
-+		.op = REQ_OP_WRITE,
-+		.op_flags = WRITE_SYNC | REQ_PRIO,
- 		.page = page,
- 		.encrypted_page = NULL,
- 	};
-diff --git a/fs/f2fs/node.c b/fs/f2fs/node.c
-index 1f21aae..e534039 100644
---- a/fs/f2fs/node.c
-+++ b/fs/f2fs/node.c
-@@ -1070,14 +1070,15 @@ fail:
-  * 0: f2fs_put_page(page, 0)
-  * LOCKED_PAGE or error: f2fs_put_page(page, 1)
-  */
--static int read_node_page(struct page *page, int rw)
-+static int read_node_page(struct page *page, int op_flags)
- {
- 	struct f2fs_sb_info *sbi = F2FS_P_SB(page);
- 	struct node_info ni;
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = NODE,
--		.rw = rw,
-+		.op = REQ_OP_READ,
-+		.op_flags = op_flags,
- 		.page = page,
- 		.encrypted_page = NULL,
- 	};
-@@ -1568,7 +1569,8 @@ static int f2fs_write_node_page(struct page *page,
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = NODE,
--		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
-+		.op = REQ_OP_WRITE,
-+		.op_flags = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : 0,
- 		.page = page,
- 		.encrypted_page = NULL,
- 	};
-diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
-index 3fe2fab..4c2d1fa 100644
---- a/fs/f2fs/segment.c
-+++ b/fs/f2fs/segment.c
-@@ -257,7 +257,8 @@ static int __commit_inmem_pages(struct inode *inode,
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = DATA,
--		.rw = WRITE_SYNC | REQ_PRIO,
-+		.op = REQ_OP_WRITE,
-+		.op_flags = WRITE_SYNC | REQ_PRIO,
- 		.encrypted_page = NULL,
- 	};
- 	bool submit_bio = false;
-@@ -406,7 +407,7 @@ repeat:
- 		fcc->dispatch_list = llist_reverse_order(fcc->dispatch_list);
- 
- 		bio->bi_bdev = sbi->sb->s_bdev;
--		bio->bi_rw = WRITE_FLUSH;
-+		bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_FLUSH);
- 		ret = submit_bio_wait(bio);
- 
- 		llist_for_each_entry_safe(cmd, next,
-@@ -439,7 +440,7 @@ int f2fs_issue_flush(struct f2fs_sb_info *sbi)
- 		int ret;
- 
- 		bio->bi_bdev = sbi->sb->s_bdev;
--		bio->bi_rw = WRITE_FLUSH;
-+		bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_FLUSH);
- 		ret = submit_bio_wait(bio);
- 		bio_put(bio);
- 		return ret;
-@@ -1403,7 +1404,8 @@ void write_meta_page(struct f2fs_sb_info *sbi, struct page *page)
- 	struct f2fs_io_info fio = {
- 		.sbi = sbi,
- 		.type = META,
--		.rw = WRITE_SYNC | REQ_META | REQ_PRIO,
-+		.op = REQ_OP_WRITE,
-+		.op_flags = WRITE_SYNC | REQ_META | REQ_PRIO,
- 		.old_blkaddr = page->index,
- 		.new_blkaddr = page->index,
- 		.page = page,
-@@ -1411,7 +1413,7 @@ void write_meta_page(struct f2fs_sb_info *sbi, struct page *page)
- 	};
- 
- 	if (unlikely(page->index >= MAIN_BLKADDR(sbi)))
--		fio.rw &= ~REQ_META;
-+		fio.op_flags &= ~REQ_META;
- 
- 	set_page_writeback(page);
- 	f2fs_submit_page_mbio(&fio);
-diff --git a/fs/f2fs/trace.c b/fs/f2fs/trace.c
-index 562ce08..73b4e1d 100644
---- a/fs/f2fs/trace.c
-+++ b/fs/f2fs/trace.c
-@@ -25,11 +25,11 @@ static inline void __print_last_io(void)
- 	if (!last_io.len)
- 		return;
- 
--	trace_printk("%3x:%3x %4x %-16s %2x %5x %12x %4x\n",
-+	trace_printk("%3x:%3x %4x %-16s %2x %5x %5x %12x %4x\n",
- 			last_io.major, last_io.minor,
- 			last_io.pid, "----------------",
- 			last_io.type,
--			last_io.fio.rw,
-+			last_io.fio.op, last_io.fio.op_flags,
- 			last_io.fio.new_blkaddr,
- 			last_io.len);
- 	memset(&last_io, 0, sizeof(last_io));
-@@ -101,7 +101,8 @@ void f2fs_trace_ios(struct f2fs_io_info *fio, int flush)
- 	if (last_io.major == major && last_io.minor == minor &&
- 			last_io.pid == pid &&
- 			last_io.type == __file_type(inode, pid) &&
--			last_io.fio.rw == fio->rw &&
-+			last_io.fio.op == fio->op &&
-+			last_io.fio.op_flags == fio->op_flags &&
- 			last_io.fio.new_blkaddr + last_io.len ==
- 							fio->new_blkaddr) {
- 		last_io.len++;
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index 3a09bb4..733b896 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -56,17 +56,21 @@ TRACE_DEFINE_ENUM(CP_DISCARD);
- 		{ IPU,		"IN-PLACE" },				\
- 		{ OPU,		"OUT-OF-PLACE" })
- 
--#define F2FS_BIO_MASK(t)	(t & (READA | WRITE_FLUSH_FUA))
-+#define F2FS_BIO_FLAG_MASK(t)	(t & (READA | WRITE_FLUSH_FUA))
- #define F2FS_BIO_EXTRA_MASK(t)	(t & (REQ_META | REQ_PRIO))
- 
--#define show_bio_type(type)	show_bio_base(type), show_bio_extra(type)
-+#define show_bio_type(op, op_flags) show_bio_op(op),			\
-+			show_bio_op_flags(op_flags), show_bio_extra(op_flags)
- 
--#define show_bio_base(type)						\
--	__print_symbolic(F2FS_BIO_MASK(type),				\
-+#define show_bio_op(op)							\
-+	__print_symbolic(op,						\
- 		{ READ, 		"READ" },			\
-+		{ WRITE,		"WRITE" })
++	if (req_op(rq) == REQ_OP_FLUSH)
++		return false;
 +
-+#define show_bio_op_flags(flags)					\
-+	__print_symbolic(F2FS_BIO_FLAG_MASK(flags),			\
- 		{ READA, 		"READAHEAD" },			\
- 		{ READ_SYNC, 		"READ_SYNC" },			\
--		{ WRITE, 		"WRITE" },			\
- 		{ WRITE_SYNC, 		"WRITE_SYNC" },			\
- 		{ WRITE_FLUSH,		"WRITE_FLUSH" },		\
- 		{ WRITE_FUA, 		"WRITE_FUA" },			\
-@@ -734,7 +738,8 @@ DECLARE_EVENT_CLASS(f2fs__submit_page_bio,
- 		__field(pgoff_t, index)
- 		__field(block_t, old_blkaddr)
- 		__field(block_t, new_blkaddr)
--		__field(int, rw)
-+		__field(int, op)
-+		__field(int, op_flags)
- 		__field(int, type)
- 	),
+ 	if (rq->cmd_flags & REQ_NOMERGE_FLAGS)
+ 		return false;
  
-@@ -744,17 +749,18 @@ DECLARE_EVENT_CLASS(f2fs__submit_page_bio,
- 		__entry->index		= page->index;
- 		__entry->old_blkaddr	= fio->old_blkaddr;
- 		__entry->new_blkaddr	= fio->new_blkaddr;
--		__entry->rw		= fio->rw;
-+		__entry->op		= fio->op;
-+		__entry->op_flags	= fio->op_flags;
- 		__entry->type		= fio->type;
- 	),
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 2d16fad..0c70fbb 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -223,6 +223,8 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	what |= MASK_TC_BIT(op_flags, FUA);
+ 	if (op == REQ_OP_DISCARD)
+ 		what |= BLK_TC_ACT(BLK_TC_DISCARD);
++	if (op == REQ_OP_FLUSH)
++		what |= BLK_TC_ACT(BLK_TC_FLUSH);
  
- 	TP_printk("dev = (%d,%d), ino = %lu, page_index = 0x%lx, "
--		"oldaddr = 0x%llx, newaddr = 0x%llx rw = %s%s, type = %s",
-+		"oldaddr = 0x%llx, newaddr = 0x%llx rw = %s%si%s, type = %s",
- 		show_dev_ino(__entry),
- 		(unsigned long)__entry->index,
- 		(unsigned long long)__entry->old_blkaddr,
- 		(unsigned long long)__entry->new_blkaddr,
--		show_bio_type(__entry->rw),
-+		show_bio_type(__entry->op, __entry->op_flags),
- 		show_block_type(__entry->type))
- );
- 
-@@ -785,7 +791,8 @@ DECLARE_EVENT_CLASS(f2fs__submit_bio,
- 
- 	TP_STRUCT__entry(
- 		__field(dev_t,	dev)
--		__field(int,	rw)
-+		__field(int,	op)
-+		__field(int,	op_flags)
- 		__field(int,	type)
- 		__field(sector_t,	sector)
- 		__field(unsigned int,	size)
-@@ -793,15 +800,16 @@ DECLARE_EVENT_CLASS(f2fs__submit_bio,
- 
- 	TP_fast_assign(
- 		__entry->dev		= sb->s_dev;
--		__entry->rw		= fio->rw;
-+		__entry->op		= fio->op;
-+		__entry->op_flags	= fio->op_flags;
- 		__entry->type		= fio->type;
- 		__entry->sector		= bio->bi_iter.bi_sector;
- 		__entry->size		= bio->bi_iter.bi_size;
- 	),
- 
--	TP_printk("dev = (%d,%d), %s%s, %s, sector = %lld, size = %u",
-+	TP_printk("dev = (%d,%d), %s%s%s, %s, sector = %lld, size = %u",
- 		show_dev(__entry),
--		show_bio_type(__entry->rw),
-+		show_bio_type(__entry->op, __entry->op_flags),
- 		show_block_type(__entry->type),
- 		(unsigned long long)__entry->sector,
- 		__entry->size)
+ 	pid = tsk->pid;
+ 	if (act_log_check(bt, what, sector, pid))
+@@ -1788,6 +1790,9 @@ void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes)
+ 	case REQ_OP_DISCARD:
+ 		rwbs[i++] = 'D';
+ 		break;
++	case REQ_OP_FLUSH:
++		rwbs[i++] = 'F';
++		break;
+ 	case REQ_OP_READ:
+ 		rwbs[i++] = 'R';
+ 		break;
 -- 
 2.7.2
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
