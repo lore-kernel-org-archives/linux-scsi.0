@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 40/45] block: move bio io prio to a new field
-Date: Sun,  5 Jun 2016 14:32:20 -0500
-Message-ID: <1465155145-10812-41-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 34/45] blkg_rwstat: separate op from flags
+Date: Sun,  5 Jun 2016 14:32:14 -0500
+Message-ID: <1465155145-10812-35-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,57 +23,200 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-In the next patch, we move drop the compat code and make
-the op a separate value that is hidden in bi_rw. To give
-the op and rq bits flags room to grow this moves prio to
-its own field.
+The bio and request operation and flags are going to be separate
+definitions, so we cannot pass them in as a bitmap. This patch
+converts the blkg_rwstat code and its caller, cfq, to pass in the
+values separately.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- include/linux/bio.h       | 14 ++------------
- include/linux/blk_types.h |  5 ++---
- 2 files changed, 4 insertions(+), 15 deletions(-)
+ block/cfq-iosched.c        | 49 +++++++++++++++++++++++++++-------------------
+ include/linux/blk-cgroup.h | 13 ++++++------
+ 2 files changed, 36 insertions(+), 26 deletions(-)
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 4568647..35108c2 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -47,18 +47,8 @@
- #define bio_op(bio)				(op_from_rq_bits((bio)->bi_rw))
- #define bio_set_op_attrs(bio, op, flags)	((bio)->bi_rw |= (op | flags))
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 3fcc598..3dafdba 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -667,9 +667,10 @@ static inline void cfqg_put(struct cfq_group *cfqg)
+ } while (0)
  
--/*
-- * upper 16 bits of bi_rw define the io priority of this bio
-- */
--#define BIO_PRIO_SHIFT	(8 * sizeof(unsigned long) - IOPRIO_BITS)
--#define bio_prio(bio)	((bio)->bi_rw >> BIO_PRIO_SHIFT)
--#define bio_prio_valid(bio)	ioprio_valid(bio_prio(bio))
--
--#define bio_set_prio(bio, prio)		do {			\
--	WARN_ON(prio >= (1 << IOPRIO_BITS));			\
--	(bio)->bi_rw &= ((1UL << BIO_PRIO_SHIFT) - 1);		\
--	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
--} while (0)
-+#define bio_prio(bio)			(bio)->bi_ioprio
-+#define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
+ static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
+-					    struct cfq_group *curr_cfqg, int rw)
++					    struct cfq_group *curr_cfqg, int op,
++					    int op_flags)
+ {
+-	blkg_rwstat_add(&cfqg->stats.queued, rw, 1);
++	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, 1);
+ 	cfqg_stats_end_empty_time(&cfqg->stats);
+ 	cfqg_stats_set_start_group_wait_time(cfqg, curr_cfqg);
+ }
+@@ -683,26 +684,30 @@ static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
+ #endif
+ }
  
- /*
-  * various member access, note that bio_data should of course not be used
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 6e60baa..2738413 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -48,9 +48,8 @@ struct bio {
- 	struct block_device	*bi_bdev;
- 	unsigned int		bi_flags;	/* status, command, etc */
- 	int			bi_error;
--	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
--						 * top bits priority
--						 */
-+	unsigned long		bi_rw;		/* READ/WRITE */
-+	unsigned short		bi_ioprio;
+-static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw)
++static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
++					       int op_flags)
+ {
+-	blkg_rwstat_add(&cfqg->stats.queued, rw, -1);
++	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, -1);
+ }
  
- 	struct bvec_iter	bi_iter;
+-static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw)
++static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
++					       int op_flags)
+ {
+-	blkg_rwstat_add(&cfqg->stats.merged, rw, 1);
++	blkg_rwstat_add(&cfqg->stats.merged, op, op_flags, 1);
+ }
  
+ static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
+-			uint64_t start_time, uint64_t io_start_time, int rw)
++			uint64_t start_time, uint64_t io_start_time, int op,
++			int op_flags)
+ {
+ 	struct cfqg_stats *stats = &cfqg->stats;
+ 	unsigned long long now = sched_clock();
+ 
+ 	if (time_after64(now, io_start_time))
+-		blkg_rwstat_add(&stats->service_time, rw, now - io_start_time);
++		blkg_rwstat_add(&stats->service_time, op, op_flags,
++				now - io_start_time);
+ 	if (time_after64(io_start_time, start_time))
+-		blkg_rwstat_add(&stats->wait_time, rw,
++		blkg_rwstat_add(&stats->wait_time, op, op_flags,
+ 				io_start_time - start_time);
+ }
+ 
+@@ -781,13 +786,16 @@ static inline void cfqg_put(struct cfq_group *cfqg) { }
+ #define cfq_log_cfqg(cfqd, cfqg, fmt, args...)		do {} while (0)
+ 
+ static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
+-			struct cfq_group *curr_cfqg, int rw) { }
++			struct cfq_group *curr_cfqg, int op, int op_flags) { }
+ static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
+ 			unsigned long time, unsigned long unaccounted_time) { }
+-static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw) { }
+-static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw) { }
++static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
++			int op_flags) { }
++static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
++			int op_flags) { }
+ static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
+-			uint64_t start_time, uint64_t io_start_time, int rw) { }
++			uint64_t start_time, uint64_t io_start_time, int op,
++			int op_flags) { }
+ 
+ #endif	/* CONFIG_CFQ_GROUP_IOSCHED */
+ 
+@@ -2461,10 +2469,10 @@ static void cfq_reposition_rq_rb(struct cfq_queue *cfqq, struct request *rq)
+ {
+ 	elv_rb_del(&cfqq->sort_list, rq);
+ 	cfqq->queued[rq_is_sync(rq)]--;
+-	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
++	cfqg_stats_update_io_remove(RQ_CFQG(rq), req_op(rq), rq->cmd_flags);
+ 	cfq_add_rq_rb(rq);
+ 	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqq->cfqd->serving_group,
+-				 rq->cmd_flags);
++				 req_op(rq), rq->cmd_flags);
+ }
+ 
+ static struct request *
+@@ -2517,7 +2525,7 @@ static void cfq_remove_request(struct request *rq)
+ 	cfq_del_rq_rb(rq);
+ 
+ 	cfqq->cfqd->rq_queued--;
+-	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
++	cfqg_stats_update_io_remove(RQ_CFQG(rq), req_op(rq), rq->cmd_flags);
+ 	if (rq->cmd_flags & REQ_PRIO) {
+ 		WARN_ON(!cfqq->prio_pending);
+ 		cfqq->prio_pending--;
+@@ -2552,7 +2560,7 @@ static void cfq_merged_request(struct request_queue *q, struct request *req,
+ static void cfq_bio_merged(struct request_queue *q, struct request *req,
+ 				struct bio *bio)
+ {
+-	cfqg_stats_update_io_merged(RQ_CFQG(req), bio->bi_rw);
++	cfqg_stats_update_io_merged(RQ_CFQG(req), bio_op(bio), bio->bi_rw);
+ }
+ 
+ static void
+@@ -2575,7 +2583,7 @@ cfq_merged_requests(struct request_queue *q, struct request *rq,
+ 	if (cfqq->next_rq == next)
+ 		cfqq->next_rq = rq;
+ 	cfq_remove_request(next);
+-	cfqg_stats_update_io_merged(RQ_CFQG(rq), next->cmd_flags);
++	cfqg_stats_update_io_merged(RQ_CFQG(rq), req_op(next), next->cmd_flags);
+ 
+ 	cfqq = RQ_CFQQ(next);
+ 	/*
+@@ -4108,7 +4116,7 @@ static void cfq_insert_request(struct request_queue *q, struct request *rq)
+ 	rq->fifo_time = jiffies + cfqd->cfq_fifo_expire[rq_is_sync(rq)];
+ 	list_add_tail(&rq->queuelist, &cfqq->fifo);
+ 	cfq_add_rq_rb(rq);
+-	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group,
++	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group, req_op(rq),
+ 				 rq->cmd_flags);
+ 	cfq_rq_enqueued(cfqd, cfqq, rq);
+ }
+@@ -4206,7 +4214,8 @@ static void cfq_completed_request(struct request_queue *q, struct request *rq)
+ 	cfqq->dispatched--;
+ 	(RQ_CFQG(rq))->dispatched--;
+ 	cfqg_stats_update_completion(cfqq->cfqg, rq_start_time_ns(rq),
+-				     rq_io_start_time_ns(rq), rq->cmd_flags);
++				     rq_io_start_time_ns(rq), req_op(rq),
++				     rq->cmd_flags);
+ 
+ 	cfqd->rq_in_flight[cfq_cfqq_sync(cfqq)]--;
+ 
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 04f9c8d..f77150a 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -590,25 +590,26 @@ static inline void blkg_rwstat_exit(struct blkg_rwstat *rwstat)
+ /**
+  * blkg_rwstat_add - add a value to a blkg_rwstat
+  * @rwstat: target blkg_rwstat
+- * @rw: mask of REQ_{WRITE|SYNC}
++ * @op: REQ_OP
++ * @op_flags: rq_flag_bits
+  * @val: value to add
+  *
+  * Add @val to @rwstat.  The counters are chosen according to @rw.  The
+  * caller is responsible for synchronizing calls to this function.
+  */
+ static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
+-				   int rw, uint64_t val)
++				   int op, int op_flags, uint64_t val)
+ {
+ 	struct percpu_counter *cnt;
+ 
+-	if (op_is_write(rw))
++	if (op_is_write(op))
+ 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_WRITE];
+ 	else
+ 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_READ];
+ 
+ 	__percpu_counter_add(cnt, val, BLKG_STAT_CPU_BATCH);
+ 
+-	if (rw & REQ_SYNC)
++	if (op_flags & REQ_SYNC)
+ 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_SYNC];
+ 	else
+ 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_ASYNC];
+@@ -713,9 +714,9 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 
+ 	if (!throtl) {
+ 		blkg = blkg ?: q->root_blkg;
+-		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_rw,
++		blkg_rwstat_add(&blkg->stat_bytes, bio_op(bio), bio->bi_rw,
+ 				bio->bi_iter.bi_size);
+-		blkg_rwstat_add(&blkg->stat_ios, bio->bi_rw, 1);
++		blkg_rwstat_add(&blkg->stat_ios, bio_op(bio), bio->bi_rw, 1);
+ 	}
+ 
+ 	rcu_read_unlock();
 -- 
 2.7.2
