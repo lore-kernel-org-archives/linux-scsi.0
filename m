@@ -1,95 +1,73 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH] sd: remove redundant check for BLK_DEF_MAX_SECTORS
-Date: Sun, 5 Jun 2016 13:16:09 +0800
-Message-ID: <CAGnHSEn0eLwjTc0NTAhsWJr47FdA_93bpR=tBZnw48=NDsCyRw@mail.gmail.com>
-References: <1465012678-32547-1-git-send-email-longli@microsoft.com>
- <CAGnHSE=ZriFjvdXT5npv92VhqxtN1SqQL+jwMehCq42K3O+=VQ@mail.gmail.com> <BLUPR0301MB19724E7E002D1E47719D262CCE5A0@BLUPR0301MB1972.namprd03.prod.outlook.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 118621] After upgrading from ubuntu 15.10 to 16.04 CD-R's won't
+ mount, others mount just fine
+Date: Sun, 05 Jun 2016 14:17:22 +0000
+Message-ID: <bug-118621-11613-RLQmfQigch@https.bugzilla.kernel.org/>
+References: <bug-118621-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BLUPR0301MB19724E7E002D1E47719D262CCE5A0@BLUPR0301MB1972.namprd03.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Long Li <longli@microsoft.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55806 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750911AbcFEOR1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Jun 2016 10:17:27 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D1BF32017D
+	for <linux-scsi@vger.kernel.org>; Sun,  5 Jun 2016 14:17:25 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 21CDF201BC
+	for <linux-scsi@vger.kernel.org>; Sun,  5 Jun 2016 14:17:23 +0000 (UTC)
+In-Reply-To: <bug-118621-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Never mind. I misread. I thought q->limits.max_sectors = min(rw_max,
-queue_max_hw_sectors(q)); can be run when rw_max is not set.
+https://bugzilla.kernel.org/show_bug.cgi?id=118621
 
-On 4 June 2016 at 23:18, Long Li <longli@microsoft.com> wrote:
-> Sorry, "redundant check" is not the best word to describe this patch.
->
-> The result of this patch is that:
-> 1. if opt_xfer_blocks has a valid value (returned form VPD BLOCK LIMITS), use it to set max_sectors
-> 2. if opt_xfer_blocks doesn't have a valid value, leave max_sectors unchanged
->
-> The reason is that, max_sectors already has value at this point, the default value is SCSI_DEFAULT_MAX_SECTORS (include/scsi/scsi_host.h). The lower layer host driver can change this value in its template. I think the drivers care about this value have already set it. So it's better not to change it again. If they want max_sectors to be set by sd, they can use BLOCK LIMITS VPD to tell it to do so.
->
->
->> -----Original Message-----
->> From: Tom Yan [mailto:tom.ty89@gmail.com]
->> Sent: Saturday, June 4, 2016 1:41 AM
->> To: Long Li <longli@microsoft.com>
->> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen
->> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
->> kernel@vger.kernel.org
->> Subject: Re: [PATCH] sd: remove redundant check for
->> BLK_DEF_MAX_SECTORS
->>
->> The main point there is not to check q->limits.max_sectors against
->> BLK_DEF_MAX_SECTORS, but sdkp->opt_xfer_blocks against
->> SD_DEF_XFER_BLOCKS et al.? `rw_max = BLK_DEF_MAX_SECTORS;` there is
->> merely the fallback when sdkp->opt_xfer_blocks does not pass the
->> conditions. With your patch `rw_max` can be indeterminate in those
->> circumstances.
->>
->> On 4 June 2016 at 11:57, Long Li <longli@microsoft.com> wrote:
->> > q->limits.max_sectors is already checked against BLK_DEF_MAX_SECTORS
->> in __scsi_alloc_queue(), when it calls blk_queue_max_hw_sectors(). There
->> is no need to check it again in sd.
->> >
->> > This change also allows a SCSI driver set an maximum sector size bigger
->> than BLK_DEF_MAX_SECTORS, without returning values on optional VPD
->> page 0xb0 "Block Limits".
->> >
->> > Signed-off-by: Long Li <longli@microsoft.com>
->> >
->> > ---
->> >  drivers/scsi/sd.c | 7 ++-----
->> >  1 file changed, 2 insertions(+), 5 deletions(-)
->> >
->> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
->> > 60bff78..d8c4047 100644
->> > --- a/drivers/scsi/sd.c
->> > +++ b/drivers/scsi/sd.c
->> > @@ -2870,11 +2870,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
->> >             logical_to_bytes(sdp, sdkp->opt_xfer_blocks) >= PAGE_SIZE) {
->> >                 q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
->> >                 rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
->> > -       } else
->> > -               rw_max = BLK_DEF_MAX_SECTORS;
->> > -
->> > -       /* Combine with controller limits */
->> > -       q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
->> > +               q->limits.max_sectors = min(rw_max,
->> queue_max_hw_sectors(q));
->> > +       }
->> >
->> >         set_capacity(disk, logical_to_sectors(sdp, sdkp->capacity));
->> >         sd_config_write_same(sdkp);
->> > --
->> > 2.7.4
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
->> > in the body of a message to majordomo@vger.kernel.org More
->> majordomo
->> > info at
->> > https://na01.safelinks.protection.outlook.com/?url=http%3a%2f%2fvger.k
->> > ernel.org%2fmajordomo-
->> info.html&data=01%7c01%7clongli%40microsoft.com%
->> >
->> 7ce142128958ec47629dbe08d38c540306%7c72f988bf86f141af91ab2d7cd011d
->> b47%
->> > 7c1&sdata=EjjF86cvJqaxOAOWnN0%2f3Qln05qcquwe%2fKA7DgEjtcI%3d
+albapompeo@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |albapompeo@gmail.com
+
+--- Comment #1 from albapompeo@gmail.com ---
+I can confirm this issue (with Alpine Linux - Kernel 4.4.11-0)
+
+[    9.698776] sr 1:0:0:0: [sr0] tag#12 UNKNOWN(0x2003) Result: hostbyte=0x00
+driverbyte=0x08
+[    9.698784] sr 1:0:0:0: [sr0] tag#12 Sense Key : 0x4 [current] 
+[    9.698788] sr 1:0:0:0: [sr0] tag#12 ASC=0x3e ASCQ=0x2 
+[    9.698795] sr 1:0:0:0: [sr0] tag#12 CDB: opcode=0x28 28 00 00 00 ae 96 00
+00 02 00
+[    9.698798] blk_update_request: I/O error, dev sr0, sector 178776
+[   16.221746] sr 1:0:0:0: [sr0] tag#13 UNKNOWN(0x2003) Result: hostbyte=0x00
+driverbyte=0x08
+[   16.221753] sr 1:0:0:0: [sr0] tag#13 Sense Key : 0x4 [current] 
+[   16.221758] sr 1:0:0:0: [sr0] tag#13 ASC=0x3e ASCQ=0x2 
+[   16.221763] sr 1:0:0:0: [sr0] tag#13 CDB: opcode=0x28 28 00 00 00 ae 96 00
+00 02 00
+[   16.221766] blk_update_request: I/O error, dev sr0, sector 178776
+[   16.221770] Buffer I/O error on dev sr0, logical block 22347, async page
+read
+[   19.491207] random: nonblocking pool is initialized
+[   26.327844] sr 1:0:0:0: [sr0] tag#12 UNKNOWN(0x2003) Result: hostbyte=0x00
+driverbyte=0x08
+[   26.327852] sr 1:0:0:0: [sr0] tag#12 Sense Key : 0x4 [current] 
+[   26.327856] sr 1:0:0:0: [sr0] tag#12 ASC=0x3e ASCQ=0x2 
+[   26.327863] sr 1:0:0:0: [sr0] tag#12 CDB: opcode=0x28 28 00 00 00 ae 96 00
+00 02 00
+[   26.327867] blk_update_request: I/O error, dev sr0, sector 178776
+[   32.870851] sr 1:0:0:0: [sr0] tag#13 UNKNOWN(0x2003) Result: hostbyte=0x00
+driverbyte=0x08
+[   32.870858] sr 1:0:0:0: [sr0] tag#13 Sense Key : 0x4 [current] 
+[   32.870863] sr 1:0:0:0: [sr0] tag#13 ASC=0x3e ASCQ=0x2 
+[   32.870868] sr 1:0:0:0: [sr0] tag#13 CDB: opcode=0x28 28 00 00 00 ae 96 00
+00 02 00
+[   32.870871] blk_update_request: I/O error, dev sr0, sector 178776
+[   32.870876] Buffer I/O error on dev sr0, logical block 22347, async page
+read
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
