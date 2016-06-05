@@ -1,94 +1,68 @@
 From: mchristi@redhat.com
-Subject: [PATCH 20/45] nilfs: use bio op accessors
-Date: Sun,  5 Jun 2016 14:32:00 -0500
-Message-ID: <1465155145-10812-21-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 21/45] ocfs2: use bio op accessors
+Date: Sun,  5 Jun 2016 14:32:01 -0500
+Message-ID: <1465155145-10812-22-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-ext4-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-Sender: linux-ext4-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-Separate the op from the rq_flag_bits and have nilfs
+Separate the op from the rq_flag_bits and have ocfs2
 set/get the bio using bio_set_op_attrs/bio_op.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Acked-by: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
 ---
- fs/nilfs2/segbuf.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ fs/ocfs2/cluster/heartbeat.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/fs/nilfs2/segbuf.c b/fs/nilfs2/segbuf.c
-index 0f62909..a962d7d 100644
---- a/fs/nilfs2/segbuf.c
-+++ b/fs/nilfs2/segbuf.c
-@@ -346,7 +346,8 @@ static void nilfs_end_bio_write(struct bio *bio)
- }
- 
- static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
--				   struct nilfs_write_info *wi, int mode)
-+				   struct nilfs_write_info *wi, int mode,
-+				   int mode_flags)
+diff --git a/fs/ocfs2/cluster/heartbeat.c b/fs/ocfs2/cluster/heartbeat.c
+index 8b1d86e..636abcb 100644
+--- a/fs/ocfs2/cluster/heartbeat.c
++++ b/fs/ocfs2/cluster/heartbeat.c
+@@ -530,7 +530,8 @@ static void o2hb_bio_end_io(struct bio *bio)
+ static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
+ 				      struct o2hb_bio_wait_ctxt *wc,
+ 				      unsigned int *current_slot,
+-				      unsigned int max_slots, int rw)
++				      unsigned int max_slots, int op,
++				      int op_flags)
  {
- 	struct bio *bio = wi->bio;
- 	int err;
-@@ -364,7 +365,7 @@ static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
+ 	int len, current_page;
+ 	unsigned int vec_len, vec_start;
+@@ -556,7 +557,7 @@ static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
+ 	bio->bi_bdev = reg->hr_bdev;
+ 	bio->bi_private = wc;
+ 	bio->bi_end_io = o2hb_bio_end_io;
+-	bio->bi_rw = rw;
++	bio_set_op_attrs(bio, op, op_flags);
  
- 	bio->bi_end_io = nilfs_end_bio_write;
- 	bio->bi_private = segbuf;
--	bio->bi_rw = mode;
-+	bio_set_op_attrs(bio, mode, mode_flags);
- 	submit_bio(bio);
- 	segbuf->sb_nbio++;
+ 	vec_start = (cs << bits) % PAGE_SIZE;
+ 	while(cs < max_slots) {
+@@ -593,7 +594,7 @@ static int o2hb_read_slots(struct o2hb_region *reg,
  
-@@ -438,7 +439,7 @@ static int nilfs_segbuf_submit_bh(struct nilfs_segment_buffer *segbuf,
- 		return 0;
- 	}
- 	/* bio is FULL */
--	err = nilfs_segbuf_submit_bio(segbuf, wi, mode);
-+	err = nilfs_segbuf_submit_bio(segbuf, wi, mode, 0);
- 	/* never submit current bh */
- 	if (likely(!err))
- 		goto repeat;
-@@ -462,19 +463,19 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
- {
- 	struct nilfs_write_info wi;
- 	struct buffer_head *bh;
--	int res = 0, rw = WRITE;
-+	int res = 0;
+ 	while(current_slot < max_slots) {
+ 		bio = o2hb_setup_one_bio(reg, &wc, &current_slot, max_slots,
+-					 READ);
++					 REQ_OP_READ, 0);
+ 		if (IS_ERR(bio)) {
+ 			status = PTR_ERR(bio);
+ 			mlog_errno(status);
+@@ -625,7 +626,8 @@ static int o2hb_issue_node_write(struct o2hb_region *reg,
  
- 	wi.nilfs = nilfs;
- 	nilfs_segbuf_prepare_write(segbuf, &wi);
+ 	slot = o2nm_this_node();
  
- 	list_for_each_entry(bh, &segbuf->sb_segsum_buffers, b_assoc_buffers) {
--		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
-+		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
- 		if (unlikely(res))
- 			goto failed_bio;
- 	}
- 
- 	list_for_each_entry(bh, &segbuf->sb_payload_buffers, b_assoc_buffers) {
--		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
-+		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
- 		if (unlikely(res))
- 			goto failed_bio;
- 	}
-@@ -484,8 +485,8 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
- 		 * Last BIO is always sent through the following
- 		 * submission.
- 		 */
--		rw |= REQ_SYNC;
--		res = nilfs_segbuf_submit_bio(segbuf, &wi, rw);
-+		res = nilfs_segbuf_submit_bio(segbuf, &wi, REQ_OP_WRITE,
-+					      REQ_SYNC);
- 	}
- 
-  failed_bio:
+-	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, WRITE_SYNC);
++	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, REQ_OP_WRITE,
++				 WRITE_SYNC);
+ 	if (IS_ERR(bio)) {
+ 		status = PTR_ERR(bio);
+ 		mlog_errno(status);
 -- 
 2.7.2
-
