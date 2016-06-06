@@ -1,108 +1,85 @@
-From: John Snow <jsnow@redhat.com>
-Subject: Re: [PATCH] scsi: Add QEMU CD-ROM to VPD Inquiry Blacklist
-Date: Mon, 6 Jun 2016 11:41:22 -0400
-Message-ID: <69fd3238-fde2-90f3-2eb6-3f71a7317016@redhat.com>
-References: <1464702149-26573-1-git-send-email-emilne@redhat.com>
- <5755278E.8040002@suse.de> <1465222299.20724.114.camel@localhost.localdomain>
- <5755873E.5080303@suse.de> <4c7c1ec8-06bf-e2f5-c971-de82eb69fdb4@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 28/45] target: use bio op accessors
+Date: Mon, 6 Jun 2016 17:43:28 +0200
+Message-ID: <57559A20.10506@suse.de>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+ <1465155145-10812-29-git-send-email-mchristi@redhat.com>
+ <57551C57.5090507@suse.de> <57559973.1020105@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45992 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837AbcFFPlX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jun 2016 11:41:23 -0400
-In-Reply-To: <4c7c1ec8-06bf-e2f5-c971-de82eb69fdb4@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <57559973.1020105@redhat.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Mike Christie <mchristi@redhat.com>, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, Hannes Reinecke <hare@suse.de>, emilne@redhat.com
-Cc: linux-scsi@vger.kernel.org
 
-
-
-On 06/06/2016 11:05 AM, Paolo Bonzini wrote:
-> 
-> 
-> On 06/06/2016 16:22, Hannes Reinecke wrote:
->> So either we dig into what went wrong with qemu 0.8, or we figure out
->> from which qemu version things start to behave nicely, and blacklist
->> earlier versions.
->>
->>>> Either way, this patch is wrong.
+On 06/06/2016 05:40 PM, Mike Christie wrote:
+> On 06/06/2016 01:46 AM, Hannes Reinecke wrote:
+>> On 06/05/2016 09:32 PM, mchristi@redhat.com wrote:
+>>> From: Mike Christie <mchristi@redhat.com>
 >>>
->>> If we can identify which versions work, we can update it.  Otherwise
->>> I think we have to be conservative.
->>
->> So far we just had this single report where the upstream kernel didn't
->> work correctly with a (really old) version of qemu.
->> Hardly justifying blacklisting qemu CD-ROM in general.
-> 
-> To further complicate the matter there are two QEMU MMC devices:
-> 
-> 1) ATAPI
->    - vendor "QEMU" / product name "QEMU CD-ROM" before QEMU 0.10.0
->    - vendor "QEMU" / product name "QEMU DVD-ROM" since QEMU 0.10.0
-> 
-> 2) native SCSI
->    - vendor "QEMU" / product name "QEMU CD-ROM"
-> 
-> VPD in the SCSI CD-ROM probably has always worked, but I would blacklist
-> up to 0.11 inclusive just to be safe.  Those versions are dead anyway.
-> 
-> VPD in the ATAPI CD-ROM is newer, and that's where the bug was reported on:
-> 
->> [    4.439488] ata2.00: ATAPI: QEMU CD-ROM, 0.8.2, max UDMA/100
->> [    4.443649] ata2.00: configured for MWDMA2
->> [    4.450267] scsi 1:0:0:0: CD-ROM            QEMU     QEMU CD-ROM      0.8. PQ: 0 ANSI: 5
->> [    4.464317] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->> [    4.464319] ata2.00: BMDMA stat 0x5
->> [    4.464339] ata2.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 0 dma 16640 in
->> [    4.464339]          Inquiry 12 01 00 00 ff 00res 48/20:02:00:24:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
->> [    4.464341] ata2.00: status: { DRDY DRQ }
-> 
-> For ATAPI, you have to blacklist all versions up to 2.2 inclusive.
-> 
-> This gives:
-> 
-> - QEMU / QEMU CD-ROM / 0.8.    (this is IDE and SCSI)
-> - QEMU / QEMU CD-ROM / 0.9.    (this is IDE and SCSI)
-> - QEMU / QEMU CD-ROM / 0.10    (this is SCSI only)
-> - QEMU / QEMU CD-ROM / 0.11    (this is SCSI only)
-> - QEMU / QEMU DVD-ROM / 0.8.   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.9.   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.10   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.11   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.12   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.13   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.14   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 0.15   (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.0    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.1    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.2    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.3    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.4    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.5    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.6    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 1.7    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 2.0    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 2.1    (this is IDE only)
-> - QEMU / QEMU DVD-ROM / 2.2    (this is IDE only)
-> 
+>>> Separate the op from the rq_flag_bits and have the target layer
+>>> set/get the bio using bio_set_op_attrs/bio_op.
+>>>
+>>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>>> ---
+>>>   drivers/target/target_core_iblock.c | 29 ++++++++++++++----------=
+-----
+>>>   drivers/target/target_core_pscsi.c  |  2 +-
+>>>   2 files changed, 15 insertions(+), 16 deletions(-)
+>>>
+>>> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/t=
+arget_core_iblock.c
+>>> index c25109c..22af12f 100644
+>>> --- a/drivers/target/target_core_iblock.c
+>>> +++ b/drivers/target/target_core_iblock.c
+>> [ .. ]
+>>> @@ -689,18 +690,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct =
+scatterlist *sgl, u32 sgl_nents,
+>>>   		 * Force writethrough using WRITE_FUA if a volatile write cache
+>>>   		 * is not enabled, or if initiator set the Force Unit Access bi=
+t.
+>>>   		 */
+>>> +		op =3D REQ_OP_WRITE;
+>>>   		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
+>>>   			if (cmd->se_cmd_flags & SCF_FUA)
+>>> -				rw =3D WRITE_FUA;
+>>> +				op_flags =3D WRITE_FUA;
+>>>   			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+>>> -				rw =3D WRITE_FUA;
+>>> -			else
+>>> -				rw =3D WRITE;
+>>> -		} else {
+>>> -			rw =3D WRITE;
+>>> +				op_flags =3D WRITE_FUA;
+>>>   		}
+>> Wrong intendation.
+>
+> It should be ok. That line is for the QUEUE_FLAG_WC test. We end up w=
+ith:
+>
+> op =3D REQ_OP_WRITE;
+> if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
+> 	if (cmd->se_cmd_flags & SCF_FUA)
+> 		op_flags =3D WRITE_FUA;
+> 	else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+> 		op_flags =3D WRITE_FUA;
+> }
+>
+>
+>
+>
+Indeed, you are correct.
 
-If this bug is caused by a missing VPD response, Paolo's version history
-here is correct.... for upstream versions.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Various downstreams may have backported the VPD fix to older versions,
-we need to be careful not to block those, too ... so targeting the core
-behavior seems like the more strictly correct, easily maintainable solution.
+Cheers,
 
-Why not just dynamically blacklist devices that fail to respond to VPD
-inquiries?
-
---js
-
-> Thanks,
-> 
-> Paolo
-> 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
