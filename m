@@ -1,209 +1,82 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH 4/4] Add ata pass-through path for ZAC commands.
-Date: Mon,  6 Jun 2016 10:39:31 -0500
-Message-ID: <1465227572-27149-5-git-send-email-shaun@tancheff.com>
-References: <1465227572-27149-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1465227572-27149-1-git-send-email-shaun@tancheff.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+From: John Snow <jsnow@redhat.com>
+Subject: Re: [PATCH] scsi: Add QEMU CD-ROM to VPD Inquiry Blacklist
+Date: Mon, 6 Jun 2016 11:47:43 -0400
+Message-ID: <d84ec540-bfcb-8ce3-8615-bcfeb0271270@redhat.com>
+References: <1464702149-26573-1-git-send-email-emilne@redhat.com>
+ <5755278E.8040002@suse.de> <1465222299.20724.114.camel@localhost.localdomain>
+ <5755873E.5080303@suse.de> <4c7c1ec8-06bf-e2f5-c971-de82eb69fdb4@redhat.com>
+ <69fd3238-fde2-90f3-2eb6-3f71a7317016@redhat.com>
+ <92aeeb5e-9b36-339e-8e44-afb78adeac6e@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37203 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313AbcFFPro (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Jun 2016 11:47:44 -0400
+In-Reply-To: <92aeeb5e-9b36-339e-8e44-afb78adeac6e@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, Hannes Reinecke <hare@suse.de>, emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-The current generation of HBA SAS adapters support connecting SATA
-drives and perform SCSI<->ATA translations in hardware.
-Unfortunately the ZBC commands are not being translate (yet).
 
-Currently users of SAS controllers can only send ZAC commands via
-ata pass-through.
 
-This method overloads the meaning of REQ_META to direct ZBC commands
-to construct ZAC equivalent ATA pass through commands.
-Note also that this approach expects the initiator to deal with the
-little endian result due to bypassing the normal translation layers.
+On 06/06/2016 11:43 AM, Paolo Bonzini wrote:
+> 
+> 
+> On 06/06/2016 17:41, John Snow wrote:
+>> On 06/06/2016 11:05 AM, Paolo Bonzini wrote:
+>>> For ATAPI, you have to blacklist all versions up to 2.2 inclusive.
+>>>
+>>> This gives:
+>>>
+>>> - QEMU / QEMU CD-ROM / 0.8.    (this is IDE and SCSI)
+>>> - QEMU / QEMU CD-ROM / 0.9.    (this is IDE and SCSI)
+>>> - QEMU / QEMU CD-ROM / 0.10    (this is SCSI only)
+>>> - QEMU / QEMU CD-ROM / 0.11    (this is SCSI only)
+>>> - QEMU / QEMU DVD-ROM / 0.8.   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.9.   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.10   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.11   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.12   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.13   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.14   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 0.15   (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.0    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.1    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.2    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.3    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.4    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.5    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.6    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 1.7    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 2.0    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 2.1    (this is IDE only)
+>>> - QEMU / QEMU DVD-ROM / 2.2    (this is IDE only)
+>>>
+>>
+>> If this bug is caused by a missing VPD response, Paolo's version history
+>> here is correct.... for upstream versions.
+>>
+>> Various downstreams may have backported the VPD fix to older versions,
+>> we need to be careful not to block those, too ... so targeting the core
+>> behavior seems like the more strictly correct, easily maintainable solution.
+> 
+> I think this is not practical.  I'm okay with the big hammer if an
+> algorithmic fix is not feasible; but otherwise it does seem a better
+> idea than blacklisting based on inquiry data...
+> 
+> Thanks,
+> 
+> Paolo
+> 
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
- block/ioctl.c       | 29 ++++++++++++++++++++++
- drivers/scsi/sd.c   | 70 +++++++++++++++++++++++++++++++++++++++++------------
- include/linux/ata.h | 15 ++++++++++++
- 3 files changed, 99 insertions(+), 15 deletions(-)
+You think the more practical solution is a SCSI driver that can hang
+because of an incorrect/missing response and to maintain a carefully
+curated blacklist to work around this behavior?
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 46a8553..03a5808 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -284,6 +284,35 @@ static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
- 		return -EFAULT;
- 	}
- 
-+	/*
-+	 * When the low bit is set force ATA passthrough try to work around
-+	 * older SAS HBA controllers that don't support ZBC to ZAC translation.
-+	 *
-+	 * When the low bit is clear follow the normal path but also correct
-+	 * for ~0ul LBA means 'for all lbas'.
-+	 *
-+	 * NB: We should do extra checking here to see if the user specified
-+	 *     the entire block device as opposed to a partition of the
-+	 *     device....
-+	 */
-+	if (arg & 1) {
-+		bi_rw |= REQ_META;
-+		if (arg != ~0ul)
-+			arg &= ~1ul; /* ~1 :: 0xFF...FE */
-+	} else {
-+		if (arg == ~1ul)
-+			arg = ~0ul;
-+	}
-+
-+	/*
-+	 * When acting on zones we explicitly disallow using a partition.
-+	 */
-+	if (bdev != bdev->bd_contains) {
-+		pr_err("%s: All zone operations disallowed on this device\n",
-+			__func__);
-+		return -EFAULT;
-+	}
-+
- 	switch (cmd) {
- 	case BLKOPENZONE:
- 		bi_rw |= REQ_OPEN_ZONE;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 372b5e2..177d5fb 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -53,6 +53,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/pr.h>
- #include <linux/blkzoned_api.h>
-+#include <linux/ata.h>
- #include <asm/uaccess.h>
- #include <asm/unaligned.h>
- 
-@@ -1182,12 +1183,29 @@ static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
- 
- 		cmd->cmd_len = 16;
- 		memset(cmd->cmnd, 0, cmd->cmd_len);
--		cmd->cmnd[0] = ZBC_IN;
--		cmd->cmnd[1] = ZI_REPORT_ZONES;
--		put_unaligned_be64(sector, &cmd->cmnd[2]);
--		put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
--		/* FUTURE ... when streamid is available */
--		/* cmd->cmnd[14] = bio_get_streamid(bio); */
-+		if (rq->cmd_flags & REQ_META) {
-+			cmd->cmnd[0] = ATA_16;
-+			cmd->cmnd[1] = (0x6 << 1) | 1;
-+			cmd->cmnd[2] = 0x0e;
-+			/* FUTURE ... when streamid is available */
-+			/* cmd->cmnd[3] = bio_get_streamid(bio); */
-+			cmd->cmnd[4] = ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES;
-+			cmd->cmnd[5] = ((nr_bytes / 512) >> 8) & 0xff;
-+			cmd->cmnd[6] = (nr_bytes / 512) & 0xff;
-+
-+			_lba_to_cmd_ata(&cmd->cmnd[7], sector);
-+
-+			cmd->cmnd[13] = 1 << 6;
-+			cmd->cmnd[14] = ATA_CMD_ZAC_MGMT_IN;
-+		} else {
-+			cmd->cmnd[0] = ZBC_IN;
-+			cmd->cmnd[1] = ZI_REPORT_ZONES;
-+			put_unaligned_be64(sector, &cmd->cmnd[2]);
-+			put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
-+			/* FUTURE ... when streamid is available */
-+			/* cmd->cmnd[14] = bio_get_streamid(bio); */
-+		}
-+
- 		cmd->sc_data_direction = DMA_FROM_DEVICE;
- 		cmd->sdb.length = nr_bytes;
- 		cmd->transfersize = sdp->sector_size;
-@@ -1208,14 +1226,29 @@ static int sd_setup_zoned_cmnd(struct scsi_cmnd *cmd)
- 	cmd->cmd_len = 16;
- 	memset(cmd->cmnd, 0, cmd->cmd_len);
- 	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
--	cmd->cmnd[0] = ZBC_OUT;
--	cmd->cmnd[1] = ZO_OPEN_ZONE;
--	if (rq->cmd_flags & REQ_CLOSE_ZONE)
--		cmd->cmnd[1] = ZO_CLOSE_ZONE;
--	if (rq->cmd_flags & REQ_RESET_ZONE)
--		cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
--	cmd->cmnd[14] = allbit;
--	put_unaligned_be64(sector, &cmd->cmnd[2]);
-+	if (rq->cmd_flags & REQ_META) {
-+		cmd->cmnd[0] = ATA_16;
-+		cmd->cmnd[1] = (3 << 1) | 1;
-+		cmd->cmnd[3] = allbit;
-+		cmd->cmnd[4] = ATA_SUBCMD_ZAC_MGMT_OUT_RESET_WRITE_POINTER;
-+		if (rq->cmd_flags & REQ_OPEN_ZONE)
-+			cmd->cmnd[4] = ATA_SUBCMD_ZAC_MGMT_OUT_OPEN_ZONE;
-+		if (rq->cmd_flags & REQ_CLOSE_ZONE)
-+			cmd->cmnd[4] = ATA_SUBCMD_ZAC_MGMT_OUT_CLOSE_ZONE;
-+		_lba_to_cmd_ata(&cmd->cmnd[7], sector);
-+		cmd->cmnd[13] = 1 << 6;
-+		cmd->cmnd[14] = ATA_CMD_ZAC_MGMT_OUT;
-+	} else {
-+		cmd->cmnd[0] = ZBC_OUT;
-+		cmd->cmnd[1] = ZO_OPEN_ZONE;
-+		if (rq->cmd_flags & REQ_CLOSE_ZONE)
-+			cmd->cmnd[1] = ZO_CLOSE_ZONE;
-+		if (rq->cmd_flags & REQ_RESET_ZONE)
-+			cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
-+		cmd->cmnd[14] = allbit;
-+		put_unaligned_be64(sector, &cmd->cmnd[2]);
-+	}
-+
- 	cmd->transfersize = 0;
- 	cmd->underflow = 0;
- 	cmd->allowed = SD_MAX_RETRIES;
-@@ -2806,7 +2839,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- {
- 	unsigned char *buffer;
- 	u16 rot;
--	const int vpd_len = 64;
-+	const int vpd_len = 512;
- 
- 	buffer = kmalloc(vpd_len, GFP_KERNEL);
- 
-@@ -2823,6 +2856,13 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 	}
- 
- 	sdkp->zoned = (buffer[8] >> 4) & 3;
-+	if (sdkp->zoned != 1) {
-+		struct scsi_device *sdev = sdkp->device;
-+
-+		/* buf size is 512, page is 60 + 512, we need page 206 */
-+		if (!scsi_get_vpd_page(sdev, 0x89, buffer, SD_BUF_SIZE))
-+			sdkp->zoned = ata_id_zoned_cap((u16 *)&buffer[60]);
-+	}
- 
-  out:
- 	kfree(buffer);
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 99346be..5cc1a85 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -1060,6 +1060,21 @@ static inline void ata_id_to_hd_driveid(u16 *id)
- #endif
- }
- 
-+/**
-+ * _lba_to_cmd_ata() - Copy lba48 to ATA command
-+ * @cmd: ATA command as an array of bytes
-+ * @_lba: lba48 in the low 48 bits
-+ */
-+static inline void _lba_to_cmd_ata(u8 *cmd, u64 _lba)
-+{
-+	cmd[1] =  _lba	      & 0xff;
-+	cmd[3] = (_lba >>  8) & 0xff;
-+	cmd[5] = (_lba >> 16) & 0xff;
-+	cmd[0] = (_lba >> 24) & 0xff;
-+	cmd[2] = (_lba >> 32) & 0xff;
-+	cmd[4] = (_lba >> 40) & 0xff;
-+}
-+
- /*
-  * Write LBA Range Entries to the buffer that will cover the extent from
-  * sector to sector + count.  This is used for TRIM and for ADD LBA(S)
--- 
-2.8.1
-
+>> Why not just dynamically blacklist devices that fail to respond to VPD
+>> inquiries?
+> 
