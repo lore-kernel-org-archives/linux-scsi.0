@@ -1,58 +1,91 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 118621] After upgrading from ubuntu 15.10 to 16.04 CD-R's won't
- mount, others mount just fine
-Date: Mon, 06 Jun 2016 14:35:49 +0000
-Message-ID: <bug-118621-11613-Fb4Xuy45o5@https.bugzilla.kernel.org/>
-References: <bug-118621-11613@https.bugzilla.kernel.org/>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] scsi: Add QEMU CD-ROM to VPD Inquiry Blacklist
+Date: Mon, 6 Jun 2016 17:05:13 +0200
+Message-ID: <4c7c1ec8-06bf-e2f5-c971-de82eb69fdb4@redhat.com>
+References: <1464702149-26573-1-git-send-email-emilne@redhat.com>
+ <5755278E.8040002@suse.de> <1465222299.20724.114.camel@localhost.localdomain>
+ <5755873E.5080303@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52895 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:53983 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbcFFOfx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jun 2016 10:35:53 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 8514B20117
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jun 2016 14:35:51 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 87B92201BC
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jun 2016 14:35:49 +0000 (UTC)
-In-Reply-To: <bug-118621-11613@https.bugzilla.kernel.org/>
+	id S1751091AbcFFPFU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Jun 2016 11:05:20 -0400
+In-Reply-To: <5755873E.5080303@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org, John Snow <jsnow@redhat.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=118621
 
---- Comment #2 from albapompeo@gmail.com ---
-After looking for more information, I found this comment on a forum.
-====================
-Hi,
-this must be a new bug with Linux kernel or udev.
-A significant difference between CD TAO and CD SAO at read time
-is that a TAO track ends by two non-data sectors, which cannot
-be read by normal SCSI READ commands.
-This can happen only with CD media. Not with DVD or USB sticks.
-In the times of kernel 2.X, the situation in the Linux kernel was
-quite bad: I/O error somewhere beginning 128 blocks before the
-track end.
-With kernel 3.X it improved. The I/O error reliably hits 2 blocks
-before track end on 3.16. I did not try 4.X with real iron yet.
-My best guess would be that this confuses the entity among the
-ISO payload, which is in charge for creating /dev/disk/by-label/ 
-links while the system boots up.
-(If somebody can explain the factor 8 between "sector 1226752"
-and "logical block 153344", then please do.)
-Obviously the problem is still in archlinux-2016.02.01-dual.iso
-====================
-https://bbs.archlinux.org/viewtopic.php?pid=1605434#p1605434
 
-After testing his theory and burning the ISO to a DVD instead of a CD, it
-worked!
+On 06/06/2016 16:22, Hannes Reinecke wrote:
+> So either we dig into what went wrong with qemu 0.8, or we figure out
+> from which qemu version things start to behave nicely, and blacklist
+> earlier versions.
+> 
+> > > Either way, this patch is wrong.
+> > 
+> > If we can identify which versions work, we can update it.  Otherwise
+> > I think we have to be conservative.
+> 
+> So far we just had this single report where the upstream kernel didn't
+> work correctly with a (really old) version of qemu.
+> Hardly justifying blacklisting qemu CD-ROM in general.
 
-Does this shed any light to the problem?
+To further complicate the matter there are two QEMU MMC devices:
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1) ATAPI
+   - vendor "QEMU" / product name "QEMU CD-ROM" before QEMU 0.10.0
+   - vendor "QEMU" / product name "QEMU DVD-ROM" since QEMU 0.10.0
+
+2) native SCSI
+   - vendor "QEMU" / product name "QEMU CD-ROM"
+
+VPD in the SCSI CD-ROM probably has always worked, but I would blacklist
+up to 0.11 inclusive just to be safe.  Those versions are dead anyway.
+
+VPD in the ATAPI CD-ROM is newer, and that's where the bug was reported on:
+
+> [    4.439488] ata2.00: ATAPI: QEMU CD-ROM, 0.8.2, max UDMA/100
+> [    4.443649] ata2.00: configured for MWDMA2
+> [    4.450267] scsi 1:0:0:0: CD-ROM            QEMU     QEMU CD-ROM      0.8. PQ: 0 ANSI: 5
+> [    4.464317] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> [    4.464319] ata2.00: BMDMA stat 0x5
+> [    4.464339] ata2.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 0 dma 16640 in
+> [    4.464339]          Inquiry 12 01 00 00 ff 00res 48/20:02:00:24:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+> [    4.464341] ata2.00: status: { DRDY DRQ }
+
+For ATAPI, you have to blacklist all versions up to 2.2 inclusive.
+
+This gives:
+
+- QEMU / QEMU CD-ROM / 0.8.    (this is IDE and SCSI)
+- QEMU / QEMU CD-ROM / 0.9.    (this is IDE and SCSI)
+- QEMU / QEMU CD-ROM / 0.10    (this is SCSI only)
+- QEMU / QEMU CD-ROM / 0.11    (this is SCSI only)
+- QEMU / QEMU DVD-ROM / 0.8.   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.9.   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.10   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.11   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.12   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.13   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.14   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 0.15   (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.0    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.1    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.2    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.3    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.4    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.5    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.6    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 1.7    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 2.0    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 2.1    (this is IDE only)
+- QEMU / QEMU DVD-ROM / 2.2    (this is IDE only)
+
+Thanks,
+
+Paolo
