@@ -1,85 +1,73 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 28/45] target: use bio op accessors
-Date: Mon, 6 Jun 2016 17:43:28 +0200
-Message-ID: <57559A20.10506@suse.de>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
- <1465155145-10812-29-git-send-email-mchristi@redhat.com>
- <57551C57.5090507@suse.de> <57559973.1020105@redhat.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] scsi: Add QEMU CD-ROM to VPD Inquiry Blacklist
+Date: Mon, 6 Jun 2016 17:43:54 +0200
+Message-ID: <92aeeb5e-9b36-339e-8e44-afb78adeac6e@redhat.com>
+References: <1464702149-26573-1-git-send-email-emilne@redhat.com>
+ <5755278E.8040002@suse.de> <1465222299.20724.114.camel@localhost.localdomain>
+ <5755873E.5080303@suse.de> <4c7c1ec8-06bf-e2f5-c971-de82eb69fdb4@redhat.com>
+ <69fd3238-fde2-90f3-2eb6-3f71a7317016@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <57559973.1020105@redhat.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36153 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752314AbcFFPoA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Jun 2016 11:44:00 -0400
+In-Reply-To: <69fd3238-fde2-90f3-2eb6-3f71a7317016@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Snow <jsnow@redhat.com>, Hannes Reinecke <hare@suse.de>, emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-On 06/06/2016 05:40 PM, Mike Christie wrote:
-> On 06/06/2016 01:46 AM, Hannes Reinecke wrote:
->> On 06/05/2016 09:32 PM, mchristi@redhat.com wrote:
->>> From: Mike Christie <mchristi@redhat.com>
->>>
->>> Separate the op from the rq_flag_bits and have the target layer
->>> set/get the bio using bio_set_op_attrs/bio_op.
->>>
->>> Signed-off-by: Mike Christie <mchristi@redhat.com>
->>> ---
->>>   drivers/target/target_core_iblock.c | 29 ++++++++++++++----------=
------
->>>   drivers/target/target_core_pscsi.c  |  2 +-
->>>   2 files changed, 15 insertions(+), 16 deletions(-)
->>>
->>> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/t=
-arget_core_iblock.c
->>> index c25109c..22af12f 100644
->>> --- a/drivers/target/target_core_iblock.c
->>> +++ b/drivers/target/target_core_iblock.c
->> [ .. ]
->>> @@ -689,18 +690,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct =
-scatterlist *sgl, u32 sgl_nents,
->>>   		 * Force writethrough using WRITE_FUA if a volatile write cache
->>>   		 * is not enabled, or if initiator set the Force Unit Access bi=
-t.
->>>   		 */
->>> +		op =3D REQ_OP_WRITE;
->>>   		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
->>>   			if (cmd->se_cmd_flags & SCF_FUA)
->>> -				rw =3D WRITE_FUA;
->>> +				op_flags =3D WRITE_FUA;
->>>   			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
->>> -				rw =3D WRITE_FUA;
->>> -			else
->>> -				rw =3D WRITE;
->>> -		} else {
->>> -			rw =3D WRITE;
->>> +				op_flags =3D WRITE_FUA;
->>>   		}
->> Wrong intendation.
->
-> It should be ok. That line is for the QUEUE_FLAG_WC test. We end up w=
-ith:
->
-> op =3D REQ_OP_WRITE;
-> if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
-> 	if (cmd->se_cmd_flags & SCF_FUA)
-> 		op_flags =3D WRITE_FUA;
-> 	else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-> 		op_flags =3D WRITE_FUA;
-> }
->
->
->
->
-Indeed, you are correct.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
+On 06/06/2016 17:41, John Snow wrote:
+> On 06/06/2016 11:05 AM, Paolo Bonzini wrote:
+>> For ATAPI, you have to blacklist all versions up to 2.2 inclusive.
+>>
+>> This gives:
+>>
+>> - QEMU / QEMU CD-ROM / 0.8.    (this is IDE and SCSI)
+>> - QEMU / QEMU CD-ROM / 0.9.    (this is IDE and SCSI)
+>> - QEMU / QEMU CD-ROM / 0.10    (this is SCSI only)
+>> - QEMU / QEMU CD-ROM / 0.11    (this is SCSI only)
+>> - QEMU / QEMU DVD-ROM / 0.8.   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.9.   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.10   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.11   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.12   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.13   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.14   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 0.15   (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.0    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.1    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.2    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.3    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.4    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.5    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.6    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 1.7    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 2.0    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 2.1    (this is IDE only)
+>> - QEMU / QEMU DVD-ROM / 2.2    (this is IDE only)
+>>
+> 
+> If this bug is caused by a missing VPD response, Paolo's version history
+> here is correct.... for upstream versions.
+> 
+> Various downstreams may have backported the VPD fix to older versions,
+> we need to be careful not to block those, too ... so targeting the core
+> behavior seems like the more strictly correct, easily maintainable solution.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+I think this is not practical.  I'm okay with the big hammer if an
+algorithmic fix is not feasible; but otherwise it does seem a better
+idea than blacklisting based on inquiry data...
+
+Thanks,
+
+Paolo
+
+> Why not just dynamically blacklist devices that fail to respond to VPD
+> inquiries?
+
