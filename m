@@ -1,7 +1,7 @@
 From: Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCH 3/3] scsi: Use device_match_always()
-Date: Mon,  6 Jun 2016 09:32:38 +0200
-Message-ID: <20160606073238.1073-3-thierry.reding@gmail.com>
+Subject: [PATCH 2/3] PCI: Use device_match_always()
+Date: Mon,  6 Jun 2016 09:32:37 +0200
+Message-ID: <20160606073238.1073-2-thierry.reding@gmail.com>
 References: <20160606073238.1073-1-thierry.reding@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20160606073238.1073-1-thierry.reding@gmail.com>
@@ -13,33 +13,37 @@ List-Id: linux-scsi@vger.kernel.org
 From: Thierry Reding <treding@nvidia.com>
 
 There is now a common implementation for a match function that will
-always match, so the SCSI-specific implementation can be removed.
+always match, so the PCI-specific implementation can be removed.
 
 Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/scsi/scsi_proc.c | 7 +------
+ drivers/pci/probe.c | 7 +------
  1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index 7a74b82e8973..4adcdc2caf27 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -371,15 +371,10 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
- 	return err;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8e3ef720997d..3db06d8d6497 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -62,11 +62,6 @@ static struct resource *get_pci_domain_busn_res(int domain_nr)
+ 	return &r->res;
  }
  
--static int always_match(struct device *dev, void *data)
+-static int find_anything(struct device *dev, void *data)
 -{
 -	return 1;
 -}
 -
- static inline struct device *next_scsi_device(struct device *start)
- {
- 	struct device *next = bus_find_device(&scsi_bus_type, start, NULL,
--					      always_match);
-+					      device_match_always);
- 	put_device(start);
- 	return next;
- }
+ /*
+  * Some device drivers need know if pci is initiated.
+  * Basically, we think pci is not initiated when there
+@@ -77,7 +72,7 @@ int no_pci_devices(void)
+ 	struct device *dev;
+ 	int no_devices;
+ 
+-	dev = bus_find_device(&pci_bus_type, NULL, NULL, find_anything);
++	dev = bus_find_device(&pci_bus_type, NULL, NULL, device_match_always);
+ 	no_devices = (dev == NULL);
+ 	put_device(dev);
+ 	return no_devices;
 -- 
 2.8.3
