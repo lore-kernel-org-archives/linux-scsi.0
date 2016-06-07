@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 3/8] nvmet: Hookup nvmet_ns->dev to nvmet_ns_enable
-Date: Tue,  7 Jun 2016 06:36:51 +0000
-Message-ID: <1465281416-28355-4-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC 4/8] nvmet/io-cmd: Hookup sbc_ops->execute_rw backend ops
+Date: Tue,  7 Jun 2016 06:36:52 +0000
+Message-ID: <1465281416-28355-5-git-send-email-nab@linux-iscsi.org>
 References: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
@@ -12,13 +12,17 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch hooks up nvmet_ns_enable() to accept the RCU protected
-struct se_device provided as a configfs symlink from existing
-/sys/kernel/config/target/core/ driver backends.
+This patch converts nvmet_execute_rw() to utilize sbc_ops->execute_rw()
+for target_iostate + target_iomem based I/O submission into existing
+backends drivers via configfs in /sys/kernel/config/target/core/.
 
-Also, drop the now unused internal ns->bdev + ns->device_path
-usage, and add WIP stubs for nvmet/io-cmd sbc_ops backend
-conversion to be added in subsequent patches.
+This includes support for passing T10-PI scatterlists via target_iomem
+into existing sbc_ops->execute_rw() logic, and is functioning with
+IBLOCK, FILEIO, and RAMDISK.
+
+Note the preceeding target/iblock patch absorbs inline bio + bvecs
+and blk_poll() optimizations from Ming + Sagi in nvmet/io-cmd into
+target_core_iblock.c code.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -28,235 +32,192 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/nvme/target/configfs-ng.c |  3 +--
- drivers/nvme/target/core.c        | 30 ++++++++----------------------
- drivers/nvme/target/io-cmd.c      | 17 +++++++++++++++--
- drivers/nvme/target/nvmet.h       |  6 ++----
- 4 files changed, 26 insertions(+), 30 deletions(-)
+ drivers/nvme/target/io-cmd.c | 116 ++++++++++++++++++++++---------------------
+ drivers/nvme/target/nvmet.h  |   7 +++
+ 2 files changed, 67 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/nvme/target/configfs-ng.c b/drivers/nvme/target/configfs-ng.c
-index d495017..e160186 100644
---- a/drivers/nvme/target/configfs-ng.c
-+++ b/drivers/nvme/target/configfs-ng.c
-@@ -392,8 +392,7 @@ static int nvmet_ns_link(struct config_item *ns_ci, struct config_item *dev_ci)
- 		return -ENOSYS;
- 	}
- 
--	// XXX: Pass in struct se_device into nvmet_ns_enable
--	return nvmet_ns_enable(ns);
-+	return nvmet_ns_enable(ns, dev);
- }
- 
- static int nvmet_ns_unlink(struct config_item *ns_ci, struct config_item *dev_ci)
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index 7b42d2b..171e440 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -13,6 +13,8 @@
-  */
+diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
+index 38c2e97..133a14a 100644
+--- a/drivers/nvme/target/io-cmd.c
++++ b/drivers/nvme/target/io-cmd.c
+@@ -14,20 +14,16 @@
  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ #include <linux/blkdev.h>
  #include <linux/module.h>
 +#include <target/target_core_base.h>
 +#include <target/target_core_backend.h>
  #include "nvmet.h"
  
- static struct nvmet_fabrics_ops *nvmet_transports[NVMF_TRTYPE_MAX];
-@@ -287,7 +289,7 @@ void nvmet_put_namespace(struct nvmet_ns *ns)
- 	percpu_ref_put(&ns->ref);
- }
- 
--int nvmet_ns_enable(struct nvmet_ns *ns)
-+int nvmet_ns_enable(struct nvmet_ns *ns, struct se_device *dev)
+-#if 0
+-static void nvmet_bio_done(struct bio *bio)
++static void nvmet_complete_ios(struct target_iostate *ios, u16 status)
  {
- 	struct nvmet_subsys *subsys = ns->subsys;
- 	struct nvmet_ctrl *ctrl;
-@@ -297,23 +299,14 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- 	if (!list_empty(&ns->dev_link))
- 		goto out_unlock;
- 
--	ns->bdev = blkdev_get_by_path(ns->device_path, FMODE_READ | FMODE_WRITE,
--			NULL);
--	if (IS_ERR(ns->bdev)) {
--		pr_err("nvmet: failed to open block device %s: (%ld)\n",
--			ns->device_path, PTR_ERR(ns->bdev));
--		ret = PTR_ERR(ns->bdev);
--		ns->bdev = NULL;
--		goto out_unlock;
--	}
+-	struct nvmet_req *req = bio->bi_private;
 -
--	ns->size = i_size_read(ns->bdev->bd_inode);
--	ns->blksize_shift = blksize_bits(bdev_logical_block_size(ns->bdev));
-+	rcu_assign_pointer(ns->dev, dev);
-+	ns->size = dev->transport->get_blocks(dev) * dev->dev_attrib.hw_block_size;
-+	ns->blksize_shift = blksize_bits(dev->dev_attrib.hw_block_size);
+-	nvmet_req_complete(req,
+-		bio->bi_error ? NVME_SC_INTERNAL | NVME_SC_DNR : 0);
++	struct nvmet_req *req = container_of(ios, struct nvmet_req, t_iostate);
  
- 	ret = percpu_ref_init(&ns->ref, nvmet_destroy_namespace,
- 				0, GFP_KERNEL);
- 	if (ret)
--		goto out_blkdev_put;
-+		goto out_unlock;
- 
- 	if (ns->nsid > subsys->max_nsid)
- 		subsys->max_nsid = ns->nsid;
-@@ -343,10 +336,6 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- out_unlock:
- 	mutex_unlock(&subsys->lock);
- 	return ret;
--out_blkdev_put:
--	blkdev_put(ns->bdev, FMODE_WRITE|FMODE_READ);
--	ns->bdev = NULL;
--	goto out_unlock;
+-	if (bio != &req->inline_bio)
+-		bio_put(bio);
++	nvmet_req_complete(req, status ? NVME_SC_INTERNAL | NVME_SC_DNR : 0);
  }
- 
- void nvmet_ns_disable(struct nvmet_ns *ns)
-@@ -379,16 +368,13 @@ void nvmet_ns_disable(struct nvmet_ns *ns)
- 	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
- 		nvmet_add_async_event(ctrl, NVME_AER_TYPE_NOTICE, 0, 0);
- 
--	if (ns->bdev)
--		blkdev_put(ns->bdev, FMODE_WRITE|FMODE_READ);
-+	rcu_assign_pointer(ns->dev, NULL);
- 	mutex_unlock(&subsys->lock);
- }
- 
- void nvmet_ns_free(struct nvmet_ns *ns)
- {
- 	nvmet_ns_disable(ns);
--
--	kfree(ns->device_path);
- 	kfree(ns);
- }
- 
-diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
-index 76dbf73..38c2e97 100644
---- a/drivers/nvme/target/io-cmd.c
-+++ b/drivers/nvme/target/io-cmd.c
-@@ -16,6 +16,7 @@
- #include <linux/module.h>
- #include "nvmet.h"
- 
-+#if 0
- static void nvmet_bio_done(struct bio *bio)
- {
- 	struct nvmet_req *req = bio->bi_private;
-@@ -26,6 +27,7 @@ static void nvmet_bio_done(struct bio *bio)
- 	if (bio != &req->inline_bio)
- 		bio_put(bio);
- }
-+#endif
+-#endif
  
  static inline u32 nvmet_rw_len(struct nvmet_req *req)
  {
-@@ -33,6 +35,7 @@ static inline u32 nvmet_rw_len(struct nvmet_req *req)
+@@ -35,72 +31,80 @@ static inline u32 nvmet_rw_len(struct nvmet_req *req)
  			req->ns->blksize_shift;
  }
  
-+#if 0
- static void nvmet_inline_bio_init(struct nvmet_req *req)
- {
- 	struct bio *bio = &req->inline_bio;
-@@ -41,21 +44,23 @@ static void nvmet_inline_bio_init(struct nvmet_req *req)
- 	bio->bi_max_vecs = NVMET_MAX_INLINE_BIOVEC;
- 	bio->bi_io_vec = req->inline_bvec;
- }
-+#endif
- 
+-#if 0
+-static void nvmet_inline_bio_init(struct nvmet_req *req)
+-{
+-	struct bio *bio = &req->inline_bio;
+-
+-	bio_init(bio);
+-	bio->bi_max_vecs = NVMET_MAX_INLINE_BIOVEC;
+-	bio->bi_io_vec = req->inline_bvec;
+-}
+-#endif
+-
  static void nvmet_execute_rw(struct nvmet_req *req)
  {
-+#if 0
- 	int sg_cnt = req->sg_cnt;
- 	struct scatterlist *sg;
- 	struct bio *bio;
+-#if 0
+-	int sg_cnt = req->sg_cnt;
+-	struct scatterlist *sg;
+-	struct bio *bio;
++	struct target_iostate *ios = &req->t_iostate;
++	struct target_iomem *iomem = &req->t_iomem;
++	struct se_device *dev = rcu_dereference_raw(req->ns->dev);
++	struct sbc_ops *sbc_ops = dev->transport->sbc_ops;
  	sector_t sector;
- 	blk_qc_t cookie;
- 	int rw, i;
--
-+#endif
+-	blk_qc_t cookie;
+-	int rw, i;
+-#endif
++	enum dma_data_direction data_direction;
++	sense_reason_t rc;
++	bool fua_write = false, prot_enabled = false;
++
++	if (!sbc_ops || !sbc_ops->execute_rw) {
++		nvmet_req_complete(req, NVME_SC_INTERNAL | NVME_SC_DNR);
++		return;
++	}
++
  	if (!req->sg_cnt) {
  		nvmet_req_complete(req, 0);
  		return;
  	}
--
-+#if 0
+-#if 0
++
  	if (req->cmd->rw.opcode == nvme_cmd_write) {
  		if (req->cmd->rw.control & cpu_to_le16(NVME_RW_FUA))
- 			rw = WRITE_FUA;
-@@ -95,10 +100,12 @@ static void nvmet_execute_rw(struct nvmet_req *req)
- 	cookie = submit_bio(rw, bio);
+-			rw = WRITE_FUA;
+-		else
+-			rw = WRITE;
++			fua_write = true;
++
++		data_direction = DMA_TO_DEVICE;
+ 	} else {
+-		rw = READ;
++		data_direction = DMA_FROM_DEVICE;
+ 	}
  
- 	blk_poll(bdev_get_queue(req->ns->bdev), cookie);
+ 	sector = le64_to_cpu(req->cmd->rw.slba);
+ 	sector <<= (req->ns->blksize_shift - 9);
+ 
+-	nvmet_inline_bio_init(req);
+-	bio = &req->inline_bio;
+-	bio->bi_bdev = req->ns->bdev;
+-	bio->bi_iter.bi_sector = sector;
+-	bio->bi_private = req;
+-	bio->bi_end_io = nvmet_bio_done;
+-
+-	for_each_sg(req->sg, sg, req->sg_cnt, i) {
+-		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+-				!= sg->length) {
+-			struct bio *prev = bio;
+-
+-			bio = bio_alloc(GFP_KERNEL, min(sg_cnt, BIO_MAX_PAGES));
+-			bio->bi_bdev = req->ns->bdev;
+-			bio->bi_iter.bi_sector = sector;
+-
+-			bio_chain(bio, prev);
+-			cookie = submit_bio(rw, prev);
+-		}
++	ios->t_task_lba = sector;
++	ios->data_length = nvmet_rw_len(req);
++	ios->data_direction = data_direction;
++	iomem->t_data_sg = req->sg;
++	iomem->t_data_nents = req->sg_cnt;
++	iomem->t_prot_sg = req->prot_sg;
++	iomem->t_prot_nents = req->prot_sg_cnt;
++
++	// XXX: Make common between sbc_check_prot and nvme-target
++	switch (dev->dev_attrib.pi_prot_type) {
++	case TARGET_DIF_TYPE3_PROT:
++		ios->reftag_seed = 0xffffffff;
++		prot_enabled = true;
++		break;
++	case TARGET_DIF_TYPE1_PROT:
++		ios->reftag_seed = ios->t_task_lba;
++		prot_enabled = true;
++		break;
++	default:
++		break;
++	}
+ 
+-		sector += sg->length >> 9;
+-		sg_cnt--;
++	if (prot_enabled) {
++		ios->prot_type = dev->dev_attrib.pi_prot_type;
++		ios->prot_length = dev->prot_length *
++				       (le16_to_cpu(req->cmd->rw.length) + 1);
++#if 0
++		printk("req->cmd->rw.length: %u\n", le16_to_cpu(req->cmd->rw.length));
++		printk("nvmet_rw_len: %u\n", nvmet_rw_len(req));
++		printk("req->se_cmd.prot_type: %d\n", req->se_cmd.prot_type);
++		printk("req->se_cmd.prot_length: %u\n", req->se_cmd.prot_length);
 +#endif
+ 	}
+ 
+-	cookie = submit_bio(rw, bio);
++	ios->se_dev = dev;
++	ios->iomem = iomem;
++	ios->t_comp_func = &nvmet_complete_ios;
+ 
+-	blk_poll(bdev_get_queue(req->ns->bdev), cookie);
+-#endif
++	rc = sbc_ops->execute_rw(ios, iomem->t_data_sg, iomem->t_data_nents,
++				 ios->data_direction, fua_write,
++				 &nvmet_complete_ios);
  }
  
  static void nvmet_execute_flush(struct nvmet_req *req)
- {
-+#if 0
- 	struct bio *bio;
- 
- 	nvmet_inline_bio_init(req);
-@@ -109,8 +116,10 @@ static void nvmet_execute_flush(struct nvmet_req *req)
- 	bio->bi_end_io = nvmet_bio_done;
- 
- 	submit_bio(WRITE_FLUSH, bio);
-+#endif
- }
- 
-+#if 0
- static u16 nvmet_discard_range(struct nvmet_ns *ns,
- 		struct nvme_dsm_range *range, int type, struct bio **bio)
- {
-@@ -119,11 +128,14 @@ static u16 nvmet_discard_range(struct nvmet_ns *ns,
- 			le32_to_cpu(range->nlb) << (ns->blksize_shift - 9),
- 			GFP_KERNEL, type, bio))
- 		return NVME_SC_INTERNAL | NVME_SC_DNR;
-+
- 	return 0;
- }
-+#endif
- 
- static void nvmet_execute_discard(struct nvmet_req *req)
- {
-+#if 0
- 	struct nvme_dsm_range range;
- 	struct bio *bio = NULL;
- 	int type = REQ_WRITE | REQ_DISCARD, i;
-@@ -152,6 +164,7 @@ static void nvmet_execute_discard(struct nvmet_req *req)
- 	} else {
- 		nvmet_req_complete(req, status);
- 	}
-+#endif
- }
- 
- static void nvmet_execute_dsm(struct nvmet_req *req)
 diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index db12e06..16c3fa1 100644
+index 16c3fa1..73f1df7 100644
 --- a/drivers/nvme/target/nvmet.h
 +++ b/drivers/nvme/target/nvmet.h
-@@ -41,15 +41,13 @@
- struct nvmet_ns {
- 	struct list_head	dev_link;
- 	struct percpu_ref	ref;
--	struct block_device	*bdev;
-+	struct se_device __rcu	*dev;
- 	u32			nsid;
- 	u32			blksize_shift;
- 	loff_t			size;
- 	u8			nguid[16];
+@@ -25,6 +25,7 @@
+ #include <linux/configfs.h>
+ #include <linux/rcupdate.h>
+ #include <linux/blkdev.h>
++#include <target/target_core_base.h>
  
- 	struct nvmet_subsys	*subsys;
--	const char		*device_path;
--
- 	struct config_group	device_group;
- 	struct config_group	group;
+ #define NVMET_ASYNC_EVENTS		4
+ #define NVMET_ERROR_LOG_SLOTS		128
+@@ -233,6 +234,12 @@ struct nvmet_req {
+ 	int			sg_cnt;
+ 	size_t			data_len;
  
-@@ -299,7 +297,7 @@ void nvmet_subsys_put(struct nvmet_subsys *subsys);
++	struct scatterlist	*prot_sg;
++	int			prot_sg_cnt;
++
++	struct target_iostate	t_iostate;
++	struct target_iomem	t_iomem;
++
+ 	struct nvmet_port	*port;
  
- struct nvmet_ns *nvmet_find_namespace(struct nvmet_ctrl *ctrl, __le32 nsid);
- void nvmet_put_namespace(struct nvmet_ns *ns);
--int nvmet_ns_enable(struct nvmet_ns *ns);
-+int nvmet_ns_enable(struct nvmet_ns *ns, struct se_device *dev);
- void nvmet_ns_disable(struct nvmet_ns *ns);
- struct nvmet_ns *nvmet_ns_alloc(struct nvmet_subsys *subsys, u32 nsid);
- void nvmet_ns_free(struct nvmet_ns *ns);
+ 	void (*execute)(struct nvmet_req *req);
 -- 
 1.9.1
