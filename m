@@ -1,194 +1,37 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH v2 3/4] Add ioctl to issue ZBC/ZAC commands via block layer
-Date: Tue,  7 Jun 2016 15:02:31 -0500
-Message-ID: <1465329752-9262-4-git-send-email-shaun@tancheff.com>
-References: <1465329752-9262-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1465329752-9262-1-git-send-email-shaun@tancheff.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Shaun Tancheff <shaun.tancheff@seagate.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: NVMe over Fabrics target implementation
+Date: Tue, 7 Jun 2016 14:02:09 -0700
+Message-ID: <9352d5f2-b75f-9cc6-9a93-2e49c0883e84@redhat.com>
+References: <1465248177-17970-1-git-send-email-hch@lst.de>
+ <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, keith.busch@intel.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add New ioctl types
-    BLKREPORT    - Issue Report Zones to device.
-    BLKOPENZONE  - Issue an Zone Action: Open Zone command.
-    BLKCLOSEZONE - Issue an Zone Action: Close Zone command.
-    BLKRESETZONE - Issue an Zone Action: Reset Zone command.
+On 06/06/2016 11:23 PM, Nicholas A. Bellinger wrote:
+> Hi HCH & Co,
+>
+> On Mon, 2016-06-06 at 23:22 +0200, Christoph Hellwig wrote:
+>> This patch set adds a generic NVMe over Fabrics target. The
+>> implementation conforms to the NVMe 1.2b specification (which
+>> includes Fabrics) and provides the NVMe over Fabrics access
+>> to Linux block devices.
+>>
+>
+> Thanks for all of the development work by the fabric_linux_driver team
+> (HCH, Sagi, Ming, James F., James S., and Dave M.) over the last year.
+>
+> Very excited to see this code get a public release now that NVMf
+> specification is out.  Now that it's in the wild, it's a good
+> opportunity to discuss some of the more interesting implementation
+> details, beyond the new NVMf wire-protocol itself.
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
-V2:
- - Added include/uapi/linux/fs.h
- - Removed REQ_META flag from this patch.
+I'm sorry but I missed it, can you repeat the link to the NVMe spec(s)?
 
- block/ioctl.c                     | 110 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/blkzoned_api.h |   6 +++
- include/uapi/linux/fs.h           |   1 +
- 3 files changed, 117 insertions(+)
-
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ed2397f..97f45f5 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -7,6 +7,7 @@
- #include <linux/backing-dev.h>
- #include <linux/fs.h>
- #include <linux/blktrace_api.h>
-+#include <linux/blkzoned_api.h>
- #include <linux/pr.h>
- #include <asm/uaccess.h>
- 
-@@ -194,6 +195,109 @@ int blkdev_reread_part(struct block_device *bdev)
- }
- EXPORT_SYMBOL(blkdev_reread_part);
- 
-+static int blk_zoned_report_ioctl(struct block_device *bdev, fmode_t mode,
-+		void __user *parg)
-+{
-+	int error = -EFAULT;
-+	gfp_t gfp = GFP_KERNEL;
-+	struct bdev_zone_report_io *zone_iodata = NULL;
-+	int order = 0;
-+	struct page *pgs = NULL;
-+	u32 alloc_size = PAGE_SIZE;
-+	unsigned long op_flags = 0;
-+	u8 opt = 0;
-+
-+	if (!(mode & FMODE_READ))
-+		return -EBADF;
-+
-+	zone_iodata = (void *)get_zeroed_page(gfp);
-+	if (!zone_iodata) {
-+		error = -ENOMEM;
-+		goto report_zones_out;
-+	}
-+	if (copy_from_user(zone_iodata, parg, sizeof(*zone_iodata))) {
-+		error = -EFAULT;
-+		goto report_zones_out;
-+	}
-+	if (zone_iodata->data.in.return_page_count > alloc_size) {
-+		int npages;
-+
-+		alloc_size = zone_iodata->data.in.return_page_count;
-+		npages = (alloc_size + PAGE_SIZE - 1) / PAGE_SIZE;
-+		order =  ilog2(roundup_pow_of_two(npages));
-+		pgs = alloc_pages(gfp, order);
-+		if (pgs) {
-+			void *mem = page_address(pgs);
-+
-+			if (!mem) {
-+				error = -ENOMEM;
-+				goto report_zones_out;
-+			}
-+			memset(mem, 0, alloc_size);
-+			memcpy(mem, zone_iodata, sizeof(*zone_iodata));
-+			free_page((unsigned long)zone_iodata);
-+			zone_iodata = mem;
-+		} else {
-+			/* Result requires DMA capable memory */
-+			pr_err("Not enough memory available for request.\n");
-+			error = -ENOMEM;
-+			goto report_zones_out;
-+		}
-+	}
-+	opt = zone_iodata->data.in.report_option & 0x7F;
-+	error = blkdev_issue_zone_report(bdev, op_flags,
-+			zone_iodata->data.in.zone_locator_lba, opt,
-+			pgs ? pgs : virt_to_page(zone_iodata),
-+			alloc_size, GFP_KERNEL);
-+
-+	if (error)
-+		goto report_zones_out;
-+
-+	if (copy_to_user(parg, zone_iodata, alloc_size))
-+		error = -EFAULT;
-+
-+report_zones_out:
-+	if (pgs)
-+		__free_pages(pgs, order);
-+	else if (zone_iodata)
-+		free_page((unsigned long)zone_iodata);
-+	return error;
-+}
-+
-+static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
-+				  unsigned int cmd, unsigned long arg)
-+{
-+	unsigned long op_flags = 0;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
-+
-+	/*
-+	 * When acting on zones we explicitly disallow using a partition.
-+	 */
-+	if (bdev != bdev->bd_contains) {
-+		pr_err("%s: All zone operations disallowed on this device\n",
-+			__func__);
-+		return -EFAULT;
-+	}
-+
-+	switch (cmd) {
-+	case BLKOPENZONE:
-+		op_flags |= REQ_OPEN_ZONE;
-+		break;
-+	case BLKCLOSEZONE:
-+		op_flags |= REQ_CLOSE_ZONE;
-+		break;
-+	case BLKRESETZONE:
-+		op_flags |= REQ_RESET_ZONE;
-+		break;
-+	default:
-+		pr_err("%s: Unknown action: %u\n", __func__, cmd);
-+		WARN_ON(1);
-+	}
-+	return blkdev_issue_zone_action(bdev, op_flags, arg, GFP_KERNEL);
-+}
-+
- static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg, unsigned long flags)
- {
-@@ -568,6 +672,12 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKTRACESETUP:
- 	case BLKTRACETEARDOWN:
- 		return blk_trace_ioctl(bdev, cmd, argp);
-+	case BLKREPORT:
-+		return blk_zoned_report_ioctl(bdev, mode, argp);
-+	case BLKOPENZONE:
-+	case BLKCLOSEZONE:
-+	case BLKRESETZONE:
-+		return blk_zoned_action_ioctl(bdev, mode, cmd, arg);
- 	case IOC_PR_REGISTER:
- 		return blkdev_pr_register(bdev, argp);
- 	case IOC_PR_RESERVE:
-diff --git a/include/uapi/linux/blkzoned_api.h b/include/uapi/linux/blkzoned_api.h
-index 189e925..2007b56 100644
---- a/include/uapi/linux/blkzoned_api.h
-+++ b/include/uapi/linux/blkzoned_api.h
-@@ -212,4 +212,10 @@ struct bdev_zone_report_io {
- 	} data;
- } __packed;
- 
-+/* continuing from uapi/linux/fs.h: */
-+#define BLKREPORT	_IOWR(0x12, 130, struct bdev_zone_report_io)
-+#define BLKOPENZONE	_IO(0x12, 131)
-+#define BLKCLOSEZONE	_IO(0x12, 132)
-+#define BLKRESETZONE	_IO(0x12, 133)
-+
- #endif /* _UAPI_BLKZONED_API_H */
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 3b00f7c..c0b565b 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -222,6 +222,7 @@ struct fsxattr {
- #define BLKSECDISCARD _IO(0x12,125)
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
-+/* A jump here: See blkzoned_api.h, Reserving 130 to 133. */
- 
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
--- 
-2.8.1
-
+Thanks -- Andy
