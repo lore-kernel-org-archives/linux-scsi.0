@@ -1,171 +1,99 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: NVMe over Fabrics target implementation
-Date: Mon, 06 Jun 2016 23:23:52 -0700
-Message-ID: <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
-References: <1465248177-17970-1-git-send-email-hch@lst.de>
+Subject: [RFC 0/8] nvmet: Add support for multi-tenant configfs
+Date: Tue,  7 Jun 2016 06:36:48 +0000
+Message-ID: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1465248177-17970-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, keith.busch@intel.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:47857 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326AbcFGGhq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 02:37:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-nvme <linux-nvme@lists.infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi HCH & Co,
+=46rom: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Mon, 2016-06-06 at 23:22 +0200, Christoph Hellwig wrote:
-> This patch set adds a generic NVMe over Fabrics target. The
-> implementation conforms to the NVMe 1.2b specification (which
-> includes Fabrics) and provides the NVMe over Fabrics access
-> to Linux block devices.
->=20
+Hi folks,
 
-Thanks for all of the development work by the fabric_linux_driver team
-(HCH, Sagi, Ming, James F., James S., and Dave M.) over the last year.=20
+Here's the first pass of a nvmet multi-tenant configfs layout,
+following what we've learned in target_core_fabric_configfs.c
+wrt to independent operation of storage endpoints.
 
-Very excited to see this code get a public release now that NVMf
-specification is out.  Now that it's in the wild, it's a good
-opportunity to discuss some of the more interesting implementation
-details, beyond the new NVMf wire-protocol itself.
-
-(Adding target-devel + linux-scsi CC')
-
-> The target implementation consists of several elements:
->=20
-> - NVMe target core: defines and manages the NVMe entities (subsystems=
-,
->   controllers, namespaces, ...) and their allocation, responsible
->   for initial commands processing and correct orchestration of
->   the stack setup and tear down.
->=20
-> - NVMe admin command implementation: responsible for parsing and
->   servicing admin commands such as controller identify, set features,
->   keep-alive, log page, ...).
->=20
-> - NVMe I/O command implementation: responsible for performing the act=
-ual
->   I/O (Read, Write, Flush, Deallocate (aka Discard).  It is a very th=
-in
->   layer on top of the block layer and implements no logic of it's own=
-=2E
->   To support exporting file systems please use the loopback block dri=
-ver
->   in direct I/O mode, which gives very good performance.
->=20
-> - NVMe over Fabrics support: responsible for servicing Fabrics comman=
-ds
->   (connect, property get/set).
->=20
-> - NVMe over Fabrics discovery service: responsible to serve the Disco=
-very
->   log page through a special cut down Discovery controller.
->=20
-> The target is configured using configfs, and configurable entities ar=
-e:
->=20
->  - NVMe subsystems and namespaces
->  - NVMe over Fabrics ports and referrals
->  - Host ACLs for primitive access control - NVMe over Fabrics access
->    control is still work in progress at the specification level and
->    will be implemented once that work has finished.
->=20
-> To configure the target use the nvmetcli tool from
-> http://git.infradead.org/users/hch/nvmetcli.git, which includes detai=
-led
-> setup documentation.
->=20
-> In addition to the Fabrics target implementation we provide a loopbac=
-k
-> driver which also conforms the NVMe over Fabrics specification and al=
-lows
-> evaluation of the target stack with local access without requiring a =
-real
-> fabric.
->=20
-
-So as-is, I have two main objections that been discussed off-list for
-some time, that won't be a big surprise to anyone following
-fabrics_linux_driver list.  ;P
-
-=46irst topic, I think nvme-target name-spaces should be utilizing
-existing configfs logic, and sharing /sys/kernel/config/target/core/
-backend driver symlinks as individual nvme-target subsystem namespaces.
-
-That is, we've already got a configfs ABI in place for target mode
-back-ends that today is able to operate independently from SCSI
-architecture model dependencies.
-
-To that end, the prerequisite series to allow target-core backends to
-operate independent of se_cmd, and allow se_device backends to be
-configfs symlinked directly into /sys/kernel/config/nvmet/, outside
-of /sys/kernel/config/target/$FABRIC/ has been posted earlier here:
-
-http://marc.info/?l=3Dlinux-scsi&m=3D146527281416606&w=3D2
-
-Note the -v2 series has absorbed the nvmet/io-cmd execute_rw()
-improvements from Sagi + Ming (inline bio/bvec and blk_poll) into
-target_core_iblock.c driver code.
-
-Second topic, and more important from a kernel ABI perspective are the
-current scale limitations around the first pass of nvmet configfs.c
-layout code in /sys/kernel/config/nvmet/.
-
-Namely, the design of having three top level configfs groups in
-/sys/kernel/config/nvmet/[subsystems,ports,hosts] that are configfs
-symlinked between each other, with a single rw_mutex (nvmet_config_sem)
-used for global list lookup and enforcing a globally synchronized
-nvmet_fabrics_ops->add_port() creation across all subsystem NQN ports.
-
-=46rom the shared experience in target_core_fabric_configfs.c over the
-last 8 years, perhaps the greatest strength of configfs has been it's
-ability to allow config_item_type parent/child relationships to exist
-and operate independently of one another.
-
-Specifically in the context of storage tenants, this means creation +
-deletion of one backend + target fabric endpoint tenant, should not
-block creation + deletion of another backend + target fabric endpoint
-tenant.
-
-As-is, a nvmet configfs layout holding a global mutex across
-subsystem/port/host creation + deletion, and doing internal list lookup
-within configfs ->allow_link + ->drop_link callbacks ends up being
-severely limiting when scaling up the total number of nvmet subsystem
-NQNs and ports.
-
-Specifically, modern deployments of /sys/kernel/config/target/iscsi/
-expect backends + fabric endpoints to be configured in parallel at
-< 100ms from user-space, in order to actively migrate and fail-over
-100s of storage instances (eg: iscsi IQNs -> NVMf NQN) across physical
-cluster nodes and L3 networks.
-
-So in order to reach this level of scale with nvmet/configfs, the layou=
-t
-I think is necessary to match iscsi-target in a multi-tenant environmen=
-t
-will, in it's most basic form look like:
+Here is how the running RFC-v1 code currently looks:
 
 /sys/kernel/config/nvmet/subsystems/
 =E2=94=94=E2=94=80=E2=94=80 nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep
-    =E2=94=9C=E2=94=80=E2=94=80 hosts
     =E2=94=9C=E2=94=80=E2=94=80 namespaces
-    =E2=94=82   =E2=94=94=E2=94=80=E2=94=80 ns_1
-    =E2=94=82       =E2=94=94=E2=94=80=E2=94=80 1 -> ../../../../../../=
-target/core/rd_mcp_1/ramdisk0
+    =E2=94=82=C2=A0=C2=A0 =E2=94=94=E2=94=80=E2=94=80 1
+    =E2=94=82=C2=A0=C2=A0     =E2=94=94=E2=94=80=E2=94=80 ramdisk0 -> .=
+=2E/../../../../target/core/rd_mcp_1/ramdisk0
     =E2=94=94=E2=94=80=E2=94=80 ports
-        =E2=94=9C=E2=94=80=E2=94=80 pcie:$SUPER_TURBO_FABRIC_EAST
-        =E2=94=9C=E2=94=80=E2=94=80 pcie:$SUPER_TURBO_FABRIC_WEST
-        =E2=94=9C=E2=94=80=E2=94=80 rdma:[$IPV6_ADDR]:$PORT
-        =E2=94=9C=E2=94=80=E2=94=80 rdma:10.10.1.75:$PORT
         =E2=94=94=E2=94=80=E2=94=80 loop
+            =E2=94=9C=E2=94=80=E2=94=80 addr_adrfam
+            =E2=94=9C=E2=94=80=E2=94=80 addr_portid
+            =E2=94=9C=E2=94=80=E2=94=80 addr_traddr
+            =E2=94=9C=E2=94=80=E2=94=80 addr_treq
+            =E2=94=9C=E2=94=80=E2=94=80 addr_trsvcid
+            =E2=94=9C=E2=94=80=E2=94=80 addr_trtype
+            =E2=94=94=E2=94=80=E2=94=80 enable
 
-That is, both NQN ports groups and host ACL groups exist below the
-nvmet_subsys->group, and NQN namespaces are configfs symlinked directly
-from /sys/kernel/config/target/core/ backends as mentioned in point #1.
+Namely, it allows existing /sys/kernel/config/target/core/ backends
+to be configfs symlinked into ../nvmet/subsystems/$SUBSYS_NQN/
+as nvme namespaces.
 
-To that end, I'll be posting a nvmet series shortly that implements a
-multi-tenant configfs layout WIP using nvme/loop, using existing
-target-core backends as configfs symlinked nvme namespaces.
+The series exposes T10-PI from /sys/kernel/config/target/core/ as
+ID_NS.ms + ID_NS.dps feature bits, and enables block integrity
+support with nvme/loop driver.
+
+Note this series depends upon the following prerequisites of
+target-core:
+
+  http://marc.info/?l=3Dlinux-scsi&m=3D146527281416606&w=3D2
+
+and of course, today's earlier release of nvmet + friends:
+
+  http://lists.infradead.org/pipermail/linux-nvme/2016-June/004754.html
+
+Note the full set of patches is available from:
+
+  https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/l=
+og/?h=3Dnvmet-configfs-ng
 
 Comments..?
+
+--nab
+
+Nicholas Bellinger (8):
+  nvmet: Add nvmet_fabric_ops get/put transport helpers
+  nvmet: Add support for configfs-ng multi-tenant logic
+  nvmet: Hookup nvmet_ns->dev to nvmet_ns_enable
+  nvmet/io-cmd: Hookup sbc_ops->execute_rw backend ops
+  nvmet/io-cmd: Hookup sbc_ops->execute_sync_cache backend ops
+  nvmet/io-cmd: Hookup sbc_ops->execute_unmap backend ops
+  nvmet/admin-cmd: Hookup T10-PI to ID_NS.ms + ID_NS.dps feature bits
+  nvme/loop: Add support for bio integrity handling
+
+ drivers/nvme/target/Makefile      |   2 +-
+ drivers/nvme/target/admin-cmd.c   |  17 ++
+ drivers/nvme/target/configfs-ng.c | 585 ++++++++++++++++++++++++++++++=
+++++++++
+ drivers/nvme/target/configfs.c    |   5 +-
+ drivers/nvme/target/core.c        |  83 +++---
+ drivers/nvme/target/io-cmd.c      | 169 ++++++-----
+ drivers/nvme/target/loop.c        |  19 ++
+ drivers/nvme/target/nvmet.h       |  27 +-
+ 8 files changed, 799 insertions(+), 108 deletions(-)
+ create mode 100644 drivers/nvme/target/configfs-ng.c
+
+--=20
+1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
