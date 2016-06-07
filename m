@@ -1,128 +1,81 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 6/8] nvmet/io-cmd: Hookup sbc_ops->execute_unmap backend ops
-Date: Tue,  7 Jun 2016 06:36:54 +0000
-Message-ID: <1465281416-28355-7-git-send-email-nab@linux-iscsi.org>
-References: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47911 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753635AbcFGGiA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 02:38:00 -0400
-In-Reply-To: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Wei Fang <fangwei1@huawei.com>
+Subject: [PATCH v4 1/2] scsi: fix race between simultaneous decrements of ->host_failed
+Date: Tue, 7 Jun 2016 14:53:56 +0800
+Message-ID: <1465282437-10653-1-git-send-email-fangwei1@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, corbet@lwn.net
+Cc: hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-nvme <linux-nvme@lists.infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+sas_ata_strategy_handler() adds the works of the ata error handler
+to system_unbound_wq. This workqueue asynchronously runs work items,
+so the ata error handler will be performed concurrently on different
+CPUs. In this case, ->host_failed will be decreased simultaneously in
+scsi_eh_finish_cmd() on different CPUs, and become abnormal.
 
-This patch converts nvmet_execute_discard() to utilize
-sbc_ops->execute_unmap() for target_iostate submission
-into existing backends drivers via configfs in
-/sys/kernel/config/target/core/.
+It will lead to permanently inequal between ->host_failed and
+ ->host_busy, and scsi error handler thread won't become running.
+IO errors after that won't be handled forever.
 
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Since all scmds must have been handled in the strategy handle, just
+remove the decrement in scsi_eh_finish_cmd() and zero ->host_busy
+after the strategy handle to fix this race.
+
+This fixes the problem introduced in
+commit 50824d6c5657 ("[SCSI] libsas: async ata-eh").
+
+Reviewed-by: James Bottomley <jejb@linux.vnet.ibm.com>
+Signed-off-by: Wei Fang <fangwei1@huawei.com>
 ---
- drivers/nvme/target/io-cmd.c | 47 ++++++++++++++++++++++++++++++++------------
- 1 file changed, 34 insertions(+), 13 deletions(-)
+Changes v1->v2:
+- update Documentation/scsi/scsi_eh.txt about ->host_failed
+Changes v2->v3:
+- don't use atomic type, just zero ->host_failed after the strategy handle
+Changes v3->v4:
+- add new concurrency rules of ->host_failed in scsi_eh.txt
 
-diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
-index 23905a8..605f560 100644
---- a/drivers/nvme/target/io-cmd.c
-+++ b/drivers/nvme/target/io-cmd.c
-@@ -126,52 +126,73 @@ static void nvmet_execute_flush(struct nvmet_req *req)
- 	rc = sbc_ops->execute_sync_cache(ios, false);
- }
+ drivers/ata/libata-eh.c   |    2 +-
+ drivers/scsi/scsi_error.c |    4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 961acc7..91a9e6a 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -606,7 +606,7 @@ void ata_scsi_error(struct Scsi_Host *host)
+ 	ata_scsi_port_error_handler(host, ap);
  
--#if 0
--static u16 nvmet_discard_range(struct nvmet_ns *ns,
--		struct nvme_dsm_range *range, int type, struct bio **bio)
-+static u16 nvmet_discard_range(struct nvmet_req *req, struct sbc_ops *sbc_ops,
-+		struct nvme_dsm_range *range, struct bio **bio)
+ 	/* finish or retry handled scmd's and clean up */
+-	WARN_ON(host->host_failed || !list_empty(&eh_work_q));
++	WARN_ON(!list_empty(&eh_work_q));
+ 
+ 	DPRINTK("EXIT\n");
+ }
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 984ddcb..1b9c049 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1127,7 +1127,6 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
+  */
+ void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
  {
--	if (__blkdev_issue_discard(ns->bdev,
-+	struct nvmet_ns *ns = req->ns;
-+	sense_reason_t rc;
-+
-+	rc = sbc_ops->execute_unmap(&req->t_iostate,
- 			le64_to_cpu(range->slba) << (ns->blksize_shift - 9),
- 			le32_to_cpu(range->nlb) << (ns->blksize_shift - 9),
--			GFP_KERNEL, type, bio))
-+			bio);
-+	if (rc)
- 		return NVME_SC_INTERNAL | NVME_SC_DNR;
- 
- 	return 0;
+-	scmd->device->host->host_failed--;
+ 	scmd->eh_eflags = 0;
+ 	list_move_tail(&scmd->eh_entry, done_q);
  }
--#endif
+@@ -2226,6 +2225,9 @@ int scsi_error_handler(void *data)
+ 		else
+ 			scsi_unjam_host(shost);
+ 
++		/* All scmds have been handled */
++		shost->host_failed = 0;
 +
-+static void nvmet_discard_bio_done(struct bio *bio)
-+{
-+	struct nvmet_req *req = bio->bi_private;
-+	int err = bio->bi_error;
-+
-+	bio_put(bio);
-+	nvmet_req_complete(req, err ? NVME_SC_INTERNAL | NVME_SC_DNR : 0);
-+}
- 
- static void nvmet_execute_discard(struct nvmet_req *req)
- {
--#if 0
--	struct nvme_dsm_range range;
-+	struct target_iostate *ios = &req->t_iostate;
-+	struct se_device *dev = rcu_dereference_raw(req->ns->dev);
-+	struct sbc_ops *sbc_ops = dev->transport->sbc_ops;
- 	struct bio *bio = NULL;
--	int type = REQ_WRITE | REQ_DISCARD, i;
-+	struct nvme_dsm_range range;
-+	int i;
- 	u16 status;
- 
-+	if (!sbc_ops || !sbc_ops->execute_unmap) {
-+		nvmet_req_complete(req, NVME_SC_INTERNAL | NVME_SC_DNR);
-+		return;
-+	}
-+
-+	ios->se_dev = dev;
-+	ios->iomem = NULL;
-+	ios->t_comp_func = NULL;
-+
- 	for (i = 0; i <= le32_to_cpu(req->cmd->dsm.nr); i++) {
- 		status = nvmet_copy_from_sgl(req, i * sizeof(range), &range,
- 				sizeof(range));
- 		if (status)
- 			break;
- 
--		status = nvmet_discard_range(req->ns, &range, type, &bio);
-+		status = nvmet_discard_range(req, sbc_ops, &range, &bio);
- 		if (status)
- 			break;
- 	}
- 
- 	if (bio) {
- 		bio->bi_private = req;
--		bio->bi_end_io = nvmet_bio_done;
-+		bio->bi_end_io = nvmet_discard_bio_done;
- 		if (status) {
- 			bio->bi_error = -EIO;
- 			bio_endio(bio);
- 		} else {
--			submit_bio(type, bio);
-+			submit_bio(REQ_WRITE | REQ_DISCARD, bio);
- 		}
- 	} else {
- 		nvmet_req_complete(req, status);
- 	}
--#endif
- }
- 
- static void nvmet_execute_dsm(struct nvmet_req *req)
+ 		/*
+ 		 * Note - if the above fails completely, the action is to take
+ 		 * individual devices offline and flush the queue of any
 -- 
-1.9.1
+1.7.1
 
