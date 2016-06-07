@@ -1,40 +1,81 @@
-From: "Tiezhu Yang" <kernelpatch@126.com>
-Subject: [PATCH] scsi: ufs: fix potential memory leak
-Date: Wed, 8 Jun 2016 02:00:35 +0800 (CST)
-Message-ID: <1a5ff649.111.1552c05f371.Coremail.kernelpatch@126.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: ufs: fix potential memory leak
+Date: Tue, 07 Jun 2016 12:12:08 -0700
+Message-ID: <1465326728.2310.39.camel@HansenPartnership.com>
+References: <1a5ff649.111.1552c05f371.Coremail.kernelpatch@126.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GBK
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m15-39.126.com ([220.181.15.39]:57822 "EHLO m15-39.126.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752606AbcFGScU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jun 2016 14:32:20 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37648 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752126AbcFGTMX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 15:12:23 -0400
+In-Reply-To: <1a5ff649.111.1552c05f371.Coremail.kernelpatch@126.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
+To: Tiezhu Yang <kernelpatch@126.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-VGhlcmUgZXhpc3RzIHBvdGVudGlhbCBtZW1vcnkgbGVhayBpbiB1ZnNoY2RfcGFyc2VfY2xvY2tf
-aW5mbygpLAp0aGlzIHBhdGNoIGZpeGVzIGl0LgoKU2lnbmVkLW9mZi1ieTogVGllemh1IFlhbmcg
-PGtlcm5lbHBhdGNoQDEyNi5jb20+Ci0tLQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QtcGx0ZnJt
-LmMgfCAxMCArKysrKysrLS0tCiAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAzIGRl
-bGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLXBsdGZybS5j
-IGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QtcGx0ZnJtLmMKaW5kZXggZGI1M2YzOC4uOGIwNTdm
-NCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QtcGx0ZnJtLmMKKysrIGIvZHJp
-dmVycy9zY3NpL3Vmcy91ZnNoY2QtcGx0ZnJtLmMKQEAgLTEwMCwxOSArMTAwLDE5IEBAIHN0YXRp
-YyBpbnQgdWZzaGNkX3BhcnNlX2Nsb2NrX2luZm8oc3RydWN0IHVmc19oYmEgKmhiYSkKIAlpZiAo
-cmV0ICYmIChyZXQgIT0gLUVJTlZBTCkpIHsKIAkJZGV2X2VycihkZXYsICIlczogZXJyb3IgcmVh
-ZGluZyBhcnJheSAlZFxuIiwKIAkJCQkiZnJlcS10YWJsZS1oeiIsIHJldCk7Ci0JCXJldHVybiBy
-ZXQ7CisJCWdvdG8gb3V0X2ZyZWU7CiAJfQogCiAJZm9yIChpID0gMDsgaSA8IHN6OyBpICs9IDIp
-IHsKIAkJcmV0ID0gb2ZfcHJvcGVydHlfcmVhZF9zdHJpbmdfaW5kZXgobnAsCiAJCQkJImNsb2Nr
-LW5hbWVzIiwgaS8yLCAoY29uc3QgY2hhciAqKikmbmFtZSk7CiAJCWlmIChyZXQpCi0JCQlnb3Rv
-IG91dDsKKwkJCWdvdG8gb3V0X2ZyZWU7CiAKIAkJY2xraSA9IGRldm1fa3phbGxvYyhkZXYsIHNp
-emVvZigqY2xraSksIEdGUF9LRVJORUwpOwogCQlpZiAoIWNsa2kpIHsKIAkJCXJldCA9IC1FTk9N
-RU07Ci0JCQlnb3RvIG91dDsKKwkJCWdvdG8gb3V0X2ZyZWU7CiAJCX0KIAogCQljbGtpLT5taW5f
-ZnJlcSA9IGNsa2ZyZXFbaV07CkBAIC0xMjIsNiArMTIyLDEwIEBAIHN0YXRpYyBpbnQgdWZzaGNk
-X3BhcnNlX2Nsb2NrX2luZm8oc3RydWN0IHVmc19oYmEgKmhiYSkKIAkJCQljbGtpLT5taW5fZnJl
-cSwgY2xraS0+bWF4X2ZyZXEsIGNsa2ktPm5hbWUpOwogCQlsaXN0X2FkZF90YWlsKCZjbGtpLT5s
-aXN0LCAmaGJhLT5jbGtfbGlzdF9oZWFkKTsKIAl9CisKK291dF9mcmVlOgorCWRldm1fa2ZyZWUo
-ZGV2LCBjbGtmcmVxKTsKKwljbGtmcmVxID0gTlVMTDsKIG91dDoKIAlyZXR1cm4gcmV0OwogfQot
-LSAKMS44LjMuMQ==
+On Wed, 2016-06-08 at 02:00 +0800, Tiezhu Yang wrote:
+> There exists potential memory leak in ufshcd_parse_clock_info(),
+> this patch fixes it.
+
+What makes you think there's a leak here?  These are all devm_
+allocations, so they're all freed when the device is.  If an error is
+returned, the device is released and the memory freed.
+
+You can argue that on successful initialization, there's no need to
+keep the clkfreq array but this patch isn't the way you'd change that.
+
+James
+
+> Signed-off-by: Tiezhu Yang <kernelpatch@126.com>
+> ---
+>  drivers/scsi/ufs/ufshcd-pltfrm.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index db53f38..8b057f4 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -100,19 +100,19 @@ static int ufshcd_parse_clock_info(struct
+> ufs_hba *hba)
+>  	if (ret && (ret != -EINVAL)) {
+>  		dev_err(dev, "%s: error reading array %d\n",
+>  				"freq-table-hz", ret);
+> -		return ret;
+> +		goto out_free;
+>  	}
+>  
+>  	for (i = 0; i < sz; i += 2) {
+>  		ret = of_property_read_string_index(np,
+>  				"clock-names", i/2, (const char
+> **)&name);
+>  		if (ret)
+> -			goto out;
+> +			goto out_free;
+>  
+>  		clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
+>  		if (!clki) {
+>  			ret = -ENOMEM;
+> -			goto out;
+> +			goto out_free;
+>  		}
+>  
+>  		clki->min_freq = clkfreq[i];
+> @@ -122,6 +122,10 @@ static int ufshcd_parse_clock_info(struct
+> ufs_hba *hba)
+>  				clki->min_freq, clki->max_freq, clki
+> ->name);
+>  		list_add_tail(&clki->list, &hba->clk_list_head);
+>  	}
+> +
+> +out_free:
+> +	devm_kfree(dev, clkfreq);
+> +	clkfreq = NULL;
+>  out:
+>  	return ret;
+>  }
+
