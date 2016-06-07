@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 5/8] nvmet/io-cmd: Hookup sbc_ops->execute_sync_cache backend ops
-Date: Tue,  7 Jun 2016 06:36:53 +0000
-Message-ID: <1465281416-28355-6-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC 8/8] nvme/loop: Add support for bio integrity handling
+Date: Tue,  7 Jun 2016 06:36:56 +0000
+Message-ID: <1465281416-28355-9-git-send-email-nab@linux-iscsi.org>
 References: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47905 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:47895 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753607AbcFGGhx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 02:37:53 -0400
+	with ESMTP id S1753625AbcFGGhz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 02:37:55 -0400
 In-Reply-To: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,10 +16,9 @@ Cc: linux-nvme <linux-nvme@lists.infradead.org>, linux-scsi <linux-scsi@vger.ker
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts nvmet_execute_flush() to utilize
-sbc_ops->execute_sync_cache() for target_iostate
-submission into existing backends drivers via
-configfs in /sys/kernel/config/target/core/.
+This patch adds support for nvme/loop block integrity,
+based upon the reported ID_NS.ms + ID_NS.dps feature
+bits in nvmet_execute_identify_ns().
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -29,44 +28,46 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/nvme/target/io-cmd.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ drivers/nvme/target/loop.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
-index 133a14a..23905a8 100644
---- a/drivers/nvme/target/io-cmd.c
-+++ b/drivers/nvme/target/io-cmd.c
-@@ -109,18 +109,21 @@ static void nvmet_execute_rw(struct nvmet_req *req)
+diff --git a/drivers/nvme/target/loop.c b/drivers/nvme/target/loop.c
+index 08b4fbb..b4b4da9 100644
+--- a/drivers/nvme/target/loop.c
++++ b/drivers/nvme/target/loop.c
+@@ -42,6 +42,7 @@ struct nvme_loop_iod {
+ 	struct nvme_loop_queue	*queue;
+ 	struct work_struct	work;
+ 	struct sg_table		sg_table;
++	struct scatterlist	meta_sg;
+ 	struct scatterlist	first_sgl[];
+ };
  
- static void nvmet_execute_flush(struct nvmet_req *req)
- {
--#if 0
--	struct bio *bio;
-+	struct target_iostate *ios = &req->t_iostate;
-+	struct se_device *dev = rcu_dereference_raw(req->ns->dev);
-+	struct sbc_ops *sbc_ops = dev->transport->sbc_ops;
-+	sense_reason_t rc;
+@@ -193,6 +194,24 @@ static int nvme_loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		BUG_ON(iod->req.sg_cnt > req->nr_phys_segments);
+ 	}
  
--	nvmet_inline_bio_init(req);
--	bio = &req->inline_bio;
-+	if (!sbc_ops || !sbc_ops->execute_sync_cache) {
-+		nvmet_req_complete(req, NVME_SC_INTERNAL | NVME_SC_DNR);
-+		return;
++	if (blk_integrity_rq(req)) {
++		int count;
++
++		if (blk_rq_count_integrity_sg(hctx->queue, req->bio) != 1)
++			BUG_ON(1);
++
++		sg_init_table(&iod->meta_sg, 1);
++		count = blk_rq_map_integrity_sg(hctx->queue, req->bio,
++						&iod->meta_sg);
++
++		iod->req.prot_sg = &iod->meta_sg;
++		iod->req.prot_sg_cnt = 1;
++#if 0
++		printk("nvme/loop: Set prot_sg %p and prot_sg_cnt: %d\n",
++			iod->req.prot_sg, iod->req.prot_sg_cnt);
++#endif
 +	}
++
+ 	iod->cmd.common.command_id = req->tag;
+ 	blk_mq_start_request(req);
  
--	bio->bi_bdev = req->ns->bdev;
--	bio->bi_private = req;
--	bio->bi_end_io = nvmet_bio_done;
-+	ios->se_dev = dev;
-+	ios->iomem = NULL;
-+	ios->t_comp_func = &nvmet_complete_ios;
- 
--	submit_bio(WRITE_FLUSH, bio);
--#endif
-+	rc = sbc_ops->execute_sync_cache(ios, false);
- }
- 
- #if 0
 -- 
 1.9.1
 
