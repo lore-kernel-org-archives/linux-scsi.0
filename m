@@ -1,24 +1,24 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 8/8] nvme/loop: Add support for bio integrity handling
-Date: Tue,  7 Jun 2016 06:36:56 +0000
-Message-ID: <1465281416-28355-9-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC 7/8] nvmet/admin-cmd: Hookup T10-PI to ID_NS.ms + ID_NS.dps feature bits
+Date: Tue,  7 Jun 2016 06:36:55 +0000
+Message-ID: <1465281416-28355-8-git-send-email-nab@linux-iscsi.org>
 References: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47895 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753625AbcFGGhz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 02:37:55 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-nvme <linux-nvme@lists.infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for nvme/loop block integrity,
-based upon the reported ID_NS.ms + ID_NS.dps feature
-bits in nvmet_execute_identify_ns().
+This patch updates nvmet_execute_identify_ns() to report
+target-core backend T10-PI related feature bits to the
+NVMe host controller.
+
+Note this assumes support for NVME_NS_DPC_PI_TYPE1 and
+NVME_NS_DPC_PI_TYPE3 as reported by backend drivers via
+/sys/kernel/config/target/core/*/*/attrib/pi_prot_type.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -28,46 +28,43 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/nvme/target/loop.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/nvme/target/admin-cmd.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/nvme/target/loop.c b/drivers/nvme/target/loop.c
-index 08b4fbb..b4b4da9 100644
---- a/drivers/nvme/target/loop.c
-+++ b/drivers/nvme/target/loop.c
-@@ -42,6 +42,7 @@ struct nvme_loop_iod {
- 	struct nvme_loop_queue	*queue;
- 	struct work_struct	work;
- 	struct sg_table		sg_table;
-+	struct scatterlist	meta_sg;
- 	struct scatterlist	first_sgl[];
- };
+diff --git a/drivers/nvme/target/admin-cmd.c b/drivers/nvme/target/admin-cmd.c
+index 240e323..3a808dc 100644
+--- a/drivers/nvme/target/admin-cmd.c
++++ b/drivers/nvme/target/admin-cmd.c
+@@ -200,6 +200,7 @@ static void nvmet_execute_identify_ns(struct nvmet_req *req)
+ {
+ 	struct nvmet_ns *ns;
+ 	struct nvme_id_ns *id;
++	struct se_device *dev;
+ 	u16 status = 0;
  
-@@ -193,6 +194,24 @@ static int nvme_loop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		BUG_ON(iod->req.sg_cnt > req->nr_phys_segments);
- 	}
+ 	ns = nvmet_find_namespace(req->sq->ctrl, req->cmd->identify.nsid);
+@@ -228,6 +229,22 @@ static void nvmet_execute_identify_ns(struct nvmet_req *req)
+ 	id->nlbaf = 0;
+ 	id->flbas = 0;
  
-+	if (blk_integrity_rq(req)) {
-+		int count;
++	/* Populate bits for T10-PI from se_device backend */
++	rcu_read_lock();
++	dev = rcu_dereference(ns->dev);
++	if (dev && dev->dev_attrib.pi_prot_type) {
++		int pi_prot_type = dev->dev_attrib.pi_prot_type;
 +
-+		if (blk_rq_count_integrity_sg(hctx->queue, req->bio) != 1)
-+			BUG_ON(1);
++		id->lbaf[0].ms = cpu_to_le16(sizeof(struct t10_pi_tuple));
++		printk("nvmet_set_id_ns: ms: %u\n", id->lbaf[0].ms);
 +
-+		sg_init_table(&iod->meta_sg, 1);
-+		count = blk_rq_map_integrity_sg(hctx->queue, req->bio,
-+						&iod->meta_sg);
-+
-+		iod->req.prot_sg = &iod->meta_sg;
-+		iod->req.prot_sg_cnt = 1;
-+#if 0
-+		printk("nvme/loop: Set prot_sg %p and prot_sg_cnt: %d\n",
-+			iod->req.prot_sg, iod->req.prot_sg_cnt);
-+#endif
++		if (pi_prot_type == 1)
++			id->dps = NVME_NS_DPC_PI_TYPE1;
++		else if (pi_prot_type == 3)
++			id->dps = NVME_NS_DPC_PI_TYPE3;
 +	}
++	rcu_read_unlock();
 +
- 	iod->cmd.common.command_id = req->tag;
- 	blk_mq_start_request(req);
- 
+ 	/*
+ 	 * Our namespace might always be shared.  Not just with other
+ 	 * controllers, but also with any other user of the block device.
 -- 
 1.9.1
-
