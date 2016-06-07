@@ -1,104 +1,122 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 00/16] target: Allow backends to operate independent of se_cmd
-Date: Tue,  7 Jun 2016 04:12:25 +0000
-Message-ID: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH-v2 04/16] target: Add target_complete_ios wrapper
+Date: Tue,  7 Jun 2016 04:12:29 +0000
+Message-ID: <1465272761-26045-5-git-send-email-nab@linux-iscsi.org>
+References: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:55951 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753038AbcFGENg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 00:13:36 -0400
+In-Reply-To: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi Jens, HCH & Co,
+This patch adds a basic target_complete_ios() wrapper to
+dereference struct se_cmd from struct target_iostate, and
+invoke existing target_complete_cmd() code.
 
-This -v2 series introduces target_iostate + target_iomem descriptors
-that abstract what existing target backend drivers require in order
-to process I/O, sync_cache, write_same and unmap via sbc_ops.
+It also includes PSCSI + TCMU backend driver conversions.
 
-The purpose is to allow existing target backend drivers from within
-/sys/kernel/config/target/core/ to be accessed externally outside
-of the existing /sys/kernel/config/target/$FABRIC/ configfs layout,
-to operate independently of se_cmd + SCSI specific dependencies.
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Martin Petersen <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_pscsi.c     | 4 ++--
+ drivers/target/target_core_transport.c | 9 ++++++++-
+ drivers/target/target_core_user.c      | 4 ++--
+ include/target/target_core_backend.h   | 1 +
+ 4 files changed, 13 insertions(+), 5 deletions(-)
 
-Namely, it's intended for the newly released nvme-target code to
-utilize existing target-core backend drivers + T10-PI logic, without
-requiring consumers to be under /sys/kernel/config/target/$FABRIC/
-configfs layout.
-
-Also included is a prerequisite bug-fix for target-core, and IBLOCK
-optimization for eliminating the internal memory allocation.
-
-v2 changes:
-
-   - Convert sbc_ops->execute_unmap() capable backends to use
-     __blkdev_issue_discard() asynchronous completion.
-   - Convert IBLOCK to use inline bio + bvec, and use blk_poll()
-     following nvmet/io-cmd for I/O submission.
-
-Please review,
-
---nab
-
-Nicholas Bellinger (16):
-  target: Fix for hang of Ordered task in TCM
-  target: Add target_iomem descriptor
-  target: Add target_iostate descriptor
-  target: Add target_complete_ios wrapper
-  target: Setup target_iostate memory in __target_execute_cmd
-  target: Convert se_cmd->execute_cmd to target_iostate
-  target/sbc: Convert sbc_ops->execute_rw to target_iostate
-  target/sbc: Convert sbc_dif_copy_prot to target_iostate
-  target/file: Convert sbc_dif_verify to target_iostate
-  target/iblock: Fold iblock_req into target_iostate
-  target/sbc: Convert sbc_ops->execute_sync_cache to target_iostate
-  target/sbc: Convert sbc_ops->execute_write_same to target_iostate
-  target/sbc: Convert sbc_ops->execute_unmap to target_iostate
-  target: Make sbc_ops accessable via target_backend_ops
-  target/sbc: Convert ->execute_unmap to __blkdev_issue_discard
-  target/iblock: Convert to inline bio/bvec + blk_poll
-
- drivers/infiniband/ulp/isert/ib_isert.c           |  61 ++--
- drivers/infiniband/ulp/srpt/ib_srpt.c             |   6 +-
- drivers/scsi/qla2xxx/qla_target.c                 |  64 ++---
- drivers/scsi/qla2xxx/tcm_qla2xxx.c                |  29 +-
- drivers/target/iscsi/cxgbit/cxgbit_ddp.c          |   8 +-
- drivers/target/iscsi/cxgbit/cxgbit_target.c       |  20 +-
- drivers/target/iscsi/iscsi_target.c               |  26 +-
- drivers/target/iscsi/iscsi_target_datain_values.c |  18 +-
- drivers/target/iscsi/iscsi_target_erl0.c          |  24 +-
- drivers/target/iscsi/iscsi_target_erl1.c          |   8 +-
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |  40 +--
- drivers/target/iscsi/iscsi_target_tmr.c           |   4 +-
- drivers/target/iscsi/iscsi_target_util.c          |   4 +-
- drivers/target/loopback/tcm_loop.c                |   2 +-
- drivers/target/sbp/sbp_target.c                   |   8 +-
- drivers/target/target_core_alua.c                 |  43 +--
- drivers/target/target_core_alua.h                 |   6 +-
- drivers/target/target_core_device.c               |  24 +-
- drivers/target/target_core_file.c                 | 148 +++++-----
- drivers/target/target_core_iblock.c               | 266 ++++++++----------
- drivers/target/target_core_iblock.h               |   5 -
- drivers/target/target_core_internal.h             |   1 +
- drivers/target/target_core_pr.c                   |  68 ++---
- drivers/target/target_core_pr.h                   |   8 +-
- drivers/target/target_core_pscsi.c                |  26 +-
- drivers/target/target_core_rd.c                   |  44 +--
- drivers/target/target_core_sbc.c                  | 321 +++++++++++++---------
- drivers/target/target_core_spc.c                  |  47 ++--
- drivers/target/target_core_transport.c            | 272 ++++++++++--------
- drivers/target/target_core_user.c                 |  41 +--
- drivers/target/target_core_xcopy.c                |  33 ++-
- drivers/target/target_core_xcopy.h                |   4 +-
- drivers/target/tcm_fc/tfc_cmd.c                   |  14 +-
- drivers/target/tcm_fc/tfc_io.c                    |  21 +-
- drivers/usb/gadget/function/f_tcm.c               |  50 ++--
- drivers/vhost/scsi.c                              |   2 +-
- include/target/target_core_backend.h              |  30 +-
- include/target/target_core_base.h                 |  76 +++--
- include/target/target_core_fabric.h               |   3 +-
- include/trace/events/target.h                     |   4 +-
- 40 files changed, 1012 insertions(+), 867 deletions(-)
-
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 105894a..b5728bc 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1109,13 +1109,13 @@ static void pscsi_req_done(struct request *req, int uptodate)
+ 
+ 	switch (host_byte(pt->pscsi_result)) {
+ 	case DID_OK:
+-		target_complete_cmd(cmd, cmd->scsi_status);
++		target_complete_ios(&cmd->t_iostate, cmd->scsi_status);
+ 		break;
+ 	default:
+ 		pr_debug("PSCSI Host Byte exception at cmd: %p CDB:"
+ 			" 0x%02x Result: 0x%08x\n", cmd, pt->pscsi_cdb[0],
+ 			pt->pscsi_result);
+-		target_complete_cmd(cmd, SAM_STAT_CHECK_CONDITION);
++		target_complete_ios(&cmd->t_iostate, SAM_STAT_CHECK_CONDITION);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 18661da..2207624 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -714,7 +714,6 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+ 
+ 	cmd->scsi_status = scsi_status;
+ 
+-
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	cmd->transport_state &= ~CMD_T_BUSY;
+ 
+@@ -752,6 +751,14 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+ }
+ EXPORT_SYMBOL(target_complete_cmd);
+ 
++void target_complete_ios(struct target_iostate *ios, u16 scsi_status)
++{
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
++
++	target_complete_cmd(cmd, scsi_status);
++}
++EXPORT_SYMBOL(target_complete_ios);
++
+ void target_complete_cmd_with_length(struct se_cmd *cmd, u8 scsi_status, int length)
+ {
+ 	if (scsi_status == SAM_STAT_GOOD && length < cmd->t_iostate.data_length) {
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index d6758a1..505b312 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -601,7 +601,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 			se_cmd->t_iostate.data_direction);
+ 	}
+ 
+-	target_complete_cmd(cmd->se_cmd, entry->rsp.scsi_status);
++	target_complete_ios(&cmd->se_cmd->t_iostate, entry->rsp.scsi_status);
+ 	cmd->se_cmd = NULL;
+ 
+ 	kmem_cache_free(tcmu_cmd_cache, cmd);
+@@ -680,7 +680,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 		return 0;
+ 
+ 	set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
+-	target_complete_cmd(cmd->se_cmd, SAM_STAT_CHECK_CONDITION);
++	target_complete_ios(&cmd->se_cmd->t_iostate, SAM_STAT_CHECK_CONDITION);
+ 	cmd->se_cmd = NULL;
+ 
+ 	kmem_cache_free(tcmu_cmd_cache, cmd);
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index d8ab510..2f6deb0 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -58,6 +58,7 @@ void	target_backend_unregister(const struct target_backend_ops *);
+ 
+ void	target_complete_cmd(struct se_cmd *, u8);
+ void	target_complete_cmd_with_length(struct se_cmd *, u8, int);
++void	target_complete_ios(struct target_iostate *, u16);
+ 
+ sense_reason_t	spc_parse_cdb(struct se_cmd *cmd, unsigned int *size);
+ sense_reason_t	spc_emulate_report_luns(struct se_cmd *cmd);
 -- 
 1.9.1
+
