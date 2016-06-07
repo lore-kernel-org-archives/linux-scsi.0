@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 07/16] target/sbc: Convert sbc_ops->execute_rw to target_iostate
-Date: Tue,  7 Jun 2016 04:12:32 +0000
-Message-ID: <1465272761-26045-8-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v2 06/16] target: Convert se_cmd->execute_cmd to target_iostate
+Date: Tue,  7 Jun 2016 04:12:31 +0000
+Message-ID: <1465272761-26045-7-git-send-email-nab@linux-iscsi.org>
 References: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
@@ -12,15 +12,9 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Convert IBLOCK, FILEIO and RD to use target_iostate.
-
-This includes converting sbc_ops->execute_rw() to accept a
-function pointer callback:
-
-    void (*t_comp_func)(struct target_iostate *, u16))
-
-As well as a 'bool fua_write' flag for signaling forced
-unit-access to IBLOCK and FILEIO backends.
+This patch converts the se_cmd->execute_cmd() caller
+to accept target_iostate, and updates existing users
+tree-wide.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -30,488 +24,502 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c    | 72 +++++++++++++++++++-----------------
- drivers/target/target_core_iblock.c  | 65 +++++++++++++++++---------------
- drivers/target/target_core_rd.c      | 22 ++++++-----
- drivers/target/target_core_sbc.c     | 11 ++++--
- include/target/target_core_backend.h |  5 ++-
- 5 files changed, 96 insertions(+), 79 deletions(-)
+ drivers/target/target_core_alua.c      |  9 ++++---
+ drivers/target/target_core_alua.h      |  6 ++---
+ drivers/target/target_core_device.c    |  2 +-
+ drivers/target/target_core_pr.c        | 12 ++++++---
+ drivers/target/target_core_pr.h        |  8 +++---
+ drivers/target/target_core_pscsi.c     |  5 ++--
+ drivers/target/target_core_sbc.c       | 47 ++++++++++++++++++++++++++--------
+ drivers/target/target_core_spc.c       | 19 +++++++++-----
+ drivers/target/target_core_transport.c |  2 +-
+ drivers/target/target_core_user.c      |  3 ++-
+ drivers/target/target_core_xcopy.c     |  6 +++--
+ drivers/target/target_core_xcopy.h     |  4 +--
+ include/target/target_core_backend.h   |  4 +--
+ include/target/target_core_base.h      |  2 +-
+ 14 files changed, 86 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index c865e45..bc82018 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -246,7 +246,7 @@ static void fd_free_device(struct se_device *dev)
- 	call_rcu(&dev->rcu_head, fd_dev_call_rcu);
- }
- 
--static int fd_do_rw(struct se_cmd *cmd, struct file *fd,
-+static int fd_do_rw(struct target_iostate *ios, struct file *fd,
- 		    u32 block_size, struct scatterlist *sgl,
- 		    u32 sgl_nents, u32 data_length, int is_write)
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index c806a96..5cb1c88 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -63,8 +63,9 @@ struct t10_alua_lu_gp *default_lu_gp;
+  * See sbc3r35 section 5.23
+  */
+ sense_reason_t
+-target_emulate_report_referrals(struct se_cmd *cmd)
++target_emulate_report_referrals(struct target_iostate *ios)
  {
-@@ -254,7 +254,7 @@ static int fd_do_rw(struct se_cmd *cmd, struct file *fd,
- 	struct iov_iter iter;
- 	struct bio_vec *bvec;
- 	ssize_t len = 0;
--	loff_t pos = (cmd->t_iostate.t_task_lba * block_size);
-+	loff_t pos = (ios->t_task_lba * block_size);
- 	int ret = 0, i;
- 
- 	bvec = kcalloc(sgl_nents, sizeof(struct bio_vec), GFP_KERNEL);
-@@ -508,23 +508,27 @@ fd_execute_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
- }
- 
- static sense_reason_t
--fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
--	      enum dma_data_direction data_direction)
-+fd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents,
-+	      enum dma_data_direction data_direction, bool fua_write,
-+	      void (*t_comp_func)(struct target_iostate *, u16))
- {
--	struct se_device *dev = cmd->se_dev;
 +	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
-+	struct target_iomem *iomem = ios->iomem;
-+	struct se_device *dev = ios->se_dev;
- 	struct fd_dev *fd_dev = FD_DEV(dev);
- 	struct file *file = fd_dev->fd_file;
- 	struct file *pfile = fd_dev->fd_prot_file;
- 	sense_reason_t rc;
- 	int ret = 0;
-+
- 	/*
- 	 * We are currently limited by the number of iovecs (2048) per
- 	 * single vfs_[writev,readv] call.
- 	 */
--	if (cmd->t_iostate.data_length > FD_MAX_BYTES) {
-+	if (ios->data_length > FD_MAX_BYTES) {
- 		pr_err("FILEIO: Not able to process I/O of %u bytes due to"
- 		       "FD_MAX_BYTES: %u iovec count limitiation\n",
--			cmd->t_iostate.data_length, FD_MAX_BYTES);
-+			ios->data_length, FD_MAX_BYTES);
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
- 	/*
-@@ -532,63 +536,63 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	 * physical memory addresses to struct iovec virtual memory.
- 	 */
- 	if (data_direction == DMA_FROM_DEVICE) {
--		if (cmd->t_iostate.prot_type && dev->dev_attrib.pi_prot_type) {
--			ret = fd_do_rw(cmd, pfile, dev->prot_length,
--				       cmd->t_iomem.t_prot_sg,
--				       cmd->t_iomem.t_prot_nents,
--				       cmd->t_iostate.prot_length, 0);
-+		if (ios->prot_type && dev->dev_attrib.pi_prot_type) {
-+			ret = fd_do_rw(ios, pfile, dev->prot_length,
-+				       iomem->t_prot_sg,
-+				       iomem->t_prot_nents,
-+				       ios->prot_length, 0);
- 			if (ret < 0)
- 				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 		}
- 
--		ret = fd_do_rw(cmd, file, dev->dev_attrib.block_size,
--			       sgl, sgl_nents, cmd->t_iostate.data_length, 0);
-+		ret = fd_do_rw(ios, file, dev->dev_attrib.block_size,
-+			       sgl, sgl_nents, ios->data_length, 0);
- 
--		if (ret > 0 && cmd->t_iostate.prot_type && dev->dev_attrib.pi_prot_type) {
--			u32 sectors = cmd->t_iostate.data_length >>
-+		if (ret > 0 && ios->prot_type && dev->dev_attrib.pi_prot_type) {
-+			u32 sectors = ios->data_length >>
- 					ilog2(dev->dev_attrib.block_size);
- 
--			rc = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba, sectors,
--					    0, cmd->t_iomem.t_prot_sg, 0);
-+			rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors,
-+					    0, iomem->t_prot_sg, 0);
- 			if (rc)
- 				return rc;
- 		}
- 	} else {
--		if (cmd->t_iostate.prot_type && dev->dev_attrib.pi_prot_type) {
--			u32 sectors = cmd->t_iostate.data_length >>
-+		if (ios->prot_type && dev->dev_attrib.pi_prot_type) {
-+			u32 sectors = ios->data_length >>
- 					ilog2(dev->dev_attrib.block_size);
- 
--			rc = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba, sectors,
--					    0, cmd->t_iomem.t_prot_sg, 0);
-+			rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors,
-+					    0, iomem->t_prot_sg, 0);
- 			if (rc)
- 				return rc;
- 		}
- 
--		ret = fd_do_rw(cmd, file, dev->dev_attrib.block_size,
--			       sgl, sgl_nents, cmd->t_iostate.data_length, 1);
-+		ret = fd_do_rw(ios, file, dev->dev_attrib.block_size,
-+			       sgl, sgl_nents, ios->data_length, 1);
- 		/*
- 		 * Perform implicit vfs_fsync_range() for fd_do_writev() ops
- 		 * for SCSI WRITEs with Forced Unit Access (FUA) set.
- 		 * Allow this to happen independent of WCE=0 setting.
- 		 */
--		if (ret > 0 && (cmd->se_cmd_flags & SCF_FUA)) {
--			loff_t start = cmd->t_iostate.t_task_lba *
-+		if (ret > 0 && fua_write) {
-+			loff_t start = ios->t_task_lba *
- 				dev->dev_attrib.block_size;
- 			loff_t end;
- 
--			if (cmd->t_iostate.data_length)
--				end = start + cmd->t_iostate.data_length - 1;
-+			if (ios->data_length)
-+				end = start + ios->data_length - 1;
- 			else
- 				end = LLONG_MAX;
- 
- 			vfs_fsync_range(fd_dev->fd_file, start, end, 1);
- 		}
- 
--		if (ret > 0 && cmd->t_iostate.prot_type && dev->dev_attrib.pi_prot_type) {
--			ret = fd_do_rw(cmd, pfile, dev->prot_length,
--				       cmd->t_iomem.t_prot_sg,
--				       cmd->t_iomem.t_prot_nents,
--				       cmd->t_iostate.prot_length, 1);
-+		if (ret > 0 && ios->prot_type && dev->dev_attrib.pi_prot_type) {
-+			ret = fd_do_rw(ios, pfile, dev->prot_length,
-+				       iomem->t_prot_sg,
-+				       iomem->t_prot_nents,
-+				       ios->prot_length, 1);
- 			if (ret < 0)
- 				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 		}
-@@ -598,7 +602,7 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
- 	if (ret)
--		target_complete_cmd(cmd, SAM_STAT_GOOD);
-+		ios->t_comp_func(ios, SAM_STAT_GOOD);
- 	return 0;
- }
- 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 0f45973..8e90ec42 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -275,9 +275,9 @@ static unsigned long long iblock_emulate_read_cap_with_block_size(
- 	return blocks_long;
- }
- 
--static void iblock_complete_cmd(struct se_cmd *cmd)
-+static void iblock_complete_cmd(struct target_iostate *ios)
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct t10_alua_lba_map *map;
+ 	struct t10_alua_lba_map_member *map_mem;
+@@ -143,8 +144,9 @@ target_emulate_report_referrals(struct se_cmd *cmd)
+  * See spc4r17 section 6.27
+  */
+ sense_reason_t
+-target_emulate_report_target_port_groups(struct se_cmd *cmd)
++target_emulate_report_target_port_groups(struct target_iostate *ios)
  {
--	struct iblock_req *ibr = cmd->priv;
-+	struct iblock_req *ibr = ios->priv;
- 	u8 status;
- 
- 	if (!atomic_dec_and_test(&ibr->pending))
-@@ -288,14 +288,16 @@ static void iblock_complete_cmd(struct se_cmd *cmd)
- 	else
- 		status = SAM_STAT_GOOD;
- 
--	target_complete_cmd(cmd, status);
-+	// XXX: ios status SAM completion translation
-+	ios->t_comp_func(ios, status);
-+
- 	kfree(ibr);
- }
- 
- static void iblock_bio_done(struct bio *bio)
- {
--	struct se_cmd *cmd = bio->bi_private;
--	struct iblock_req *ibr = cmd->priv;
-+	struct target_iostate *ios = bio->bi_private;
-+	struct iblock_req *ibr = ios->priv;
- 
- 	if (bio->bi_error) {
- 		pr_err("bio error: %p,  err: %d\n", bio, bio->bi_error);
-@@ -308,13 +310,15 @@ static void iblock_bio_done(struct bio *bio)
- 
- 	bio_put(bio);
- 
--	iblock_complete_cmd(cmd);
-+	iblock_complete_cmd(ios);
- }
- 
-+
-+
- static struct bio *
--iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num)
-+iblock_get_bio(struct target_iostate *ios, sector_t lba, u32 sg_num)
- {
--	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
-+	struct iblock_dev *ib_dev = IBLOCK_DEV(ios->se_dev);
- 	struct bio *bio;
- 
- 	/*
-@@ -331,7 +335,7 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num)
- 	}
- 
- 	bio->bi_bdev = ib_dev->ibd_bd;
--	bio->bi_private = cmd;
-+	bio->bi_private = ios;
- 	bio->bi_end_io = &iblock_bio_done;
- 	bio->bi_iter.bi_sector = lba;
- 
-@@ -447,6 +451,7 @@ iblock_execute_write_same_direct(struct block_device *bdev, struct se_cmd *cmd)
- static sense_reason_t
- iblock_execute_write_same(struct se_cmd *cmd)
- {
-+	struct target_iostate *ios = &cmd->t_iostate;
- 	struct block_device *bdev = IBLOCK_DEV(cmd->se_dev)->ibd_bd;
- 	struct iblock_req *ibr;
- 	struct scatterlist *sg;
-@@ -478,9 +483,9 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
- 	if (!ibr)
- 		goto fail;
--	cmd->priv = ibr;
-+	ios->priv = ibr;
- 
--	bio = iblock_get_bio(cmd, block_lba, 1);
-+	bio = iblock_get_bio(ios, block_lba, 1);
- 	if (!bio)
- 		goto fail_free_ibr;
- 
-@@ -493,7 +498,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
- 				!= sg->length) {
- 
--			bio = iblock_get_bio(cmd, block_lba, 1);
-+			bio = iblock_get_bio(ios, block_lba, 1);
- 			if (!bio)
- 				goto fail_put_bios;
- 
-@@ -623,9 +628,10 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
- }
- 
- static int
--iblock_alloc_bip(struct se_cmd *cmd, struct bio *bio)
-+iblock_alloc_bip(struct target_iostate *ios, struct target_iomem *iomem,
-+		 struct bio *bio)
- {
--	struct se_device *dev = cmd->se_dev;
-+	struct se_device *dev = ios->se_dev;
- 	struct blk_integrity *bi;
- 	struct bio_integrity_payload *bip;
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-@@ -638,20 +644,20 @@ iblock_alloc_bip(struct se_cmd *cmd, struct bio *bio)
- 		return -ENODEV;
- 	}
- 
--	bip = bio_integrity_alloc(bio, GFP_NOIO, cmd->t_iomem.t_prot_nents);
-+	bip = bio_integrity_alloc(bio, GFP_NOIO, iomem->t_prot_nents);
- 	if (IS_ERR(bip)) {
- 		pr_err("Unable to allocate bio_integrity_payload\n");
- 		return PTR_ERR(bip);
- 	}
- 
--	bip->bip_iter.bi_size = (cmd->t_iostate.data_length / dev->dev_attrib.block_size) *
-+	bip->bip_iter.bi_size = (ios->data_length / dev->dev_attrib.block_size) *
- 			 dev->prot_length;
- 	bip->bip_iter.bi_sector = bio->bi_iter.bi_sector;
- 
- 	pr_debug("IBLOCK BIP Size: %u Sector: %llu\n", bip->bip_iter.bi_size,
- 		 (unsigned long long)bip->bip_iter.bi_sector);
- 
--	for_each_sg(cmd->t_iomem.t_prot_sg, sg, cmd->t_iomem.t_prot_nents, i) {
-+	for_each_sg(iomem->t_prot_sg, sg, iomem->t_prot_nents, i) {
- 
- 		rc = bio_integrity_add_page(bio, sg_page(sg), sg->length,
- 					    sg->offset);
-@@ -668,11 +674,12 @@ iblock_alloc_bip(struct se_cmd *cmd, struct bio *bio)
- }
- 
- static sense_reason_t
--iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
--		  enum dma_data_direction data_direction)
-+iblock_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents,
-+		  enum dma_data_direction data_direction, bool fua_write,
-+		  void (*t_comp_func)(struct target_iostate *ios, u16))
- {
--	struct se_device *dev = cmd->se_dev;
--	sector_t block_lba = target_to_linux_sector(dev, cmd->t_iostate.t_task_lba);
-+	struct se_device *dev = ios->se_dev;
-+	sector_t block_lba = target_to_linux_sector(dev, ios->t_task_lba);
- 	struct iblock_req *ibr;
- 	struct bio *bio, *bio_start;
- 	struct bio_list list;
-@@ -690,7 +697,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		 * is not enabled, or if initiator set the Force Unit Access bit.
- 		 */
- 		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
--			if (cmd->se_cmd_flags & SCF_FUA)
-+			if (fua_write)
- 				rw = WRITE_FUA;
- 			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
- 				rw = WRITE_FUA;
-@@ -706,15 +713,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
- 	if (!ibr)
- 		goto fail;
--	cmd->priv = ibr;
-+	ios->priv = ibr;
- 
- 	if (!sgl_nents) {
- 		atomic_set(&ibr->pending, 1);
--		iblock_complete_cmd(cmd);
-+		iblock_complete_cmd(ios);
- 		return 0;
- 	}
- 
--	bio = iblock_get_bio(cmd, block_lba, sgl_nents);
-+	bio = iblock_get_bio(ios, block_lba, sgl_nents);
- 	if (!bio)
- 		goto fail_free_ibr;
- 
-@@ -738,7 +745,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 				bio_cnt = 0;
- 			}
- 
--			bio = iblock_get_bio(cmd, block_lba, sg_num);
-+			bio = iblock_get_bio(ios, block_lba, sg_num);
- 			if (!bio)
- 				goto fail_put_bios;
- 
-@@ -752,14 +759,14 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		sg_num--;
- 	}
- 
--	if (cmd->t_iostate.prot_type && dev->dev_attrib.pi_prot_type) {
--		int rc = iblock_alloc_bip(cmd, bio_start);
-+	if (ios->prot_type && dev->dev_attrib.pi_prot_type) {
-+		int rc = iblock_alloc_bip(ios, ios->iomem, bio_start);
- 		if (rc)
- 			goto fail_put_bios;
- 	}
- 
- 	iblock_submit_bios(&list, rw);
--	iblock_complete_cmd(cmd);
-+	iblock_complete_cmd(ios);
- 	return 0;
- 
- fail_put_bios:
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 4edd3e0..df8bd58 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -435,10 +435,12 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
- }
- 
- static sense_reason_t
--rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
--	      enum dma_data_direction data_direction)
-+rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents,
-+	      enum dma_data_direction data_direction, bool fua_write,
-+	      void (*t_comp_func)(struct target_iostate *, u16))
- {
--	struct se_device *se_dev = cmd->se_dev;
 +	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
-+	struct se_device *se_dev = ios->se_dev;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *table;
- 	struct scatterlist *rd_sg;
-@@ -451,14 +453,14 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	sense_reason_t rc;
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct t10_alua_tg_pt_gp *tg_pt_gp;
+ 	struct se_lun *lun;
+@@ -276,8 +278,9 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+  * See spc4r17 section 6.35
+  */
+ sense_reason_t
+-target_emulate_set_target_port_groups(struct se_cmd *cmd)
++target_emulate_set_target_port_groups(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_lun *l_lun = cmd->se_lun;
+ 	struct se_node_acl *nacl = cmd->se_sess->se_node_acl;
+diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
+index 9b250f9..1e84af2 100644
+--- a/drivers/target/target_core_alua.h
++++ b/drivers/target/target_core_alua.h
+@@ -88,9 +88,9 @@ extern struct kmem_cache *t10_alua_tg_pt_gp_cache;
+ extern struct kmem_cache *t10_alua_lba_map_cache;
+ extern struct kmem_cache *t10_alua_lba_map_mem_cache;
  
- 	if (dev->rd_flags & RDF_NULLIO) {
--		target_complete_cmd(cmd, SAM_STAT_GOOD);
-+		(*t_comp_func)(ios, SAM_STAT_GOOD);
- 		return 0;
- 	}
+-extern sense_reason_t target_emulate_report_target_port_groups(struct se_cmd *);
+-extern sense_reason_t target_emulate_set_target_port_groups(struct se_cmd *);
+-extern sense_reason_t target_emulate_report_referrals(struct se_cmd *);
++extern sense_reason_t target_emulate_report_target_port_groups(struct target_iostate *);
++extern sense_reason_t target_emulate_set_target_port_groups(struct target_iostate *);
++extern sense_reason_t target_emulate_report_referrals(struct target_iostate *);
+ extern int core_alua_check_nonop_delay(struct se_cmd *);
+ extern int core_alua_do_port_transition(struct t10_alua_tg_pt_gp *,
+ 				struct se_device *, struct se_lun *,
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 910c990..d82b9b4 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1026,7 +1026,7 @@ void core_dev_release_virtual_lun0(void)
+  */
+ sense_reason_t
+ passthrough_parse_cdb(struct se_cmd *cmd,
+-	sense_reason_t (*exec_cmd)(struct se_cmd *cmd))
++	sense_reason_t (*exec_cmd)(struct target_iostate *ios))
+ {
+ 	unsigned char *cdb = cmd->t_task_cdb;
  
--	tmp = cmd->t_iostate.t_task_lba * se_dev->dev_attrib.block_size;
-+	tmp = ios->t_task_lba * se_dev->dev_attrib.block_size;
- 	rd_offset = do_div(tmp, PAGE_SIZE);
- 	rd_page = tmp;
--	rd_size = cmd->t_iostate.data_length;
-+	rd_size = ios->data_length;
- 
- 	table = rd_get_sg_table(dev, rd_page);
- 	if (!table)
-@@ -469,9 +471,9 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	pr_debug("RD[%u]: %s LBA: %llu, Size: %u Page: %u, Offset: %u\n",
- 			dev->rd_dev_id,
- 			data_direction == DMA_FROM_DEVICE ? "Read" : "Write",
--			cmd->t_iostate.t_task_lba, rd_size, rd_page, rd_offset);
-+			ios->t_task_lba, rd_size, rd_page, rd_offset);
- 
--	if (cmd->t_iostate.prot_type && se_dev->dev_attrib.pi_prot_type &&
-+	if (ios->prot_type && se_dev->dev_attrib.pi_prot_type &&
- 	    data_direction == DMA_TO_DEVICE) {
- 		rc = rd_do_prot_rw(cmd, false);
- 		if (rc)
-@@ -539,14 +541,14 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	}
- 	sg_miter_stop(&m);
- 
--	if (cmd->t_iostate.prot_type && se_dev->dev_attrib.pi_prot_type &&
-+	if (ios->prot_type && se_dev->dev_attrib.pi_prot_type &&
- 	    data_direction == DMA_FROM_DEVICE) {
- 		rc = rd_do_prot_rw(cmd, true);
- 		if (rc)
- 			return rc;
- 	}
- 
--	target_complete_cmd(cmd, SAM_STAT_GOOD);
-+	(*t_comp_func)(ios, SAM_STAT_GOOD);
- 	return 0;
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index f91058f..022084f 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -197,8 +197,9 @@ static int target_check_scsi2_reservation_conflict(struct se_cmd *cmd)
  }
  
+ sense_reason_t
+-target_scsi2_reservation_release(struct se_cmd *cmd)
++target_scsi2_reservation_release(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
+ 	struct se_portal_group *tpg;
+@@ -243,8 +244,9 @@ out:
+ }
+ 
+ sense_reason_t
+-target_scsi2_reservation_reserve(struct se_cmd *cmd)
++target_scsi2_reservation_reserve(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
+ 	struct se_portal_group *tpg;
+@@ -3565,8 +3567,9 @@ static unsigned long long core_scsi3_extract_reservation_key(unsigned char *cdb)
+  * See spc4r17 section 6.14 Table 170
+  */
+ sense_reason_t
+-target_scsi3_emulate_pr_out(struct se_cmd *cmd)
++target_scsi3_emulate_pr_out(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned char *cdb = &cmd->t_task_cdb[0];
+ 	unsigned char *buf;
+@@ -4092,8 +4095,9 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
+ }
+ 
+ sense_reason_t
+-target_scsi3_emulate_pr_in(struct se_cmd *cmd)
++target_scsi3_emulate_pr_in(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	sense_reason_t ret;
+ 
+ 	/*
+diff --git a/drivers/target/target_core_pr.h b/drivers/target/target_core_pr.h
+index e3d26e9..181bf97 100644
+--- a/drivers/target/target_core_pr.h
++++ b/drivers/target/target_core_pr.h
+@@ -52,8 +52,8 @@ extern struct kmem_cache *t10_pr_reg_cache;
+ 
+ extern void core_pr_dump_initiator_port(struct t10_pr_registration *,
+ 			char *, u32);
+-extern sense_reason_t target_scsi2_reservation_release(struct se_cmd *);
+-extern sense_reason_t target_scsi2_reservation_reserve(struct se_cmd *);
++extern sense_reason_t target_scsi2_reservation_release(struct target_iostate *);
++extern sense_reason_t target_scsi2_reservation_reserve(struct target_iostate *);
+ extern int core_scsi3_alloc_aptpl_registration(
+ 			struct t10_reservation *, u64,
+ 			unsigned char *, unsigned char *, u64,
+@@ -66,8 +66,8 @@ extern void core_scsi3_free_pr_reg_from_nacl(struct se_device *,
+ extern void core_scsi3_free_all_registrations(struct se_device *);
+ extern unsigned char *core_scsi3_pr_dump_type(int);
+ 
+-extern sense_reason_t target_scsi3_emulate_pr_in(struct se_cmd *);
+-extern sense_reason_t target_scsi3_emulate_pr_out(struct se_cmd *);
++extern sense_reason_t target_scsi3_emulate_pr_in(struct target_iostate *ios);
++extern sense_reason_t target_scsi3_emulate_pr_out(struct target_iostate *ios);
+ extern sense_reason_t target_check_reservation(struct se_cmd *);
+ 
+ #endif /* TARGET_CORE_PR_H */
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index b5728bc..c52f943 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -54,7 +54,7 @@ static inline struct pscsi_dev_virt *PSCSI_DEV(struct se_device *dev)
+ 	return container_of(dev, struct pscsi_dev_virt, dev);
+ }
+ 
+-static sense_reason_t pscsi_execute_cmd(struct se_cmd *cmd);
++static sense_reason_t pscsi_execute_cmd(struct target_iostate *ios);
+ static void pscsi_req_done(struct request *, int);
+ 
+ /*	pscsi_attach_hba():
+@@ -988,8 +988,9 @@ pscsi_parse_cdb(struct se_cmd *cmd)
+ }
+ 
+ static sense_reason_t
+-pscsi_execute_cmd(struct se_cmd *cmd)
++pscsi_execute_cmd(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct scatterlist *sgl = cmd->t_iomem.t_data_sg;
+ 	u32 sgl_nents = cmd->t_iomem.t_data_nents;
+ 	enum dma_data_direction data_direction = cmd->t_iostate.data_direction;
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 2095f78..e1288de 100644
+index 744ef71..2095f78 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -457,9 +457,10 @@ sbc_execute_rw(struct target_iostate *ios)
- {
- 	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
- 	struct sbc_ops *ops = cmd->protocol_data;
-+	bool fua_write = (cmd->se_cmd_flags & SCF_FUA);
+@@ -38,11 +38,12 @@
  
--	return ops->execute_rw(cmd, cmd->t_iomem.t_data_sg, cmd->t_iomem.t_data_nents,
--			       cmd->t_iostate.data_direction);
-+	return ops->execute_rw(ios, cmd->t_iomem.t_data_sg, cmd->t_iomem.t_data_nents,
-+			       cmd->t_iostate.data_direction, fua_write, &target_complete_ios);
+ static sense_reason_t
+ sbc_check_prot(struct se_device *, struct se_cmd *, unsigned char *, u32, bool);
+-static sense_reason_t sbc_execute_unmap(struct se_cmd *cmd);
++static sense_reason_t sbc_execute_unmap(struct target_iostate *ios);
+ 
+ static sense_reason_t
+-sbc_emulate_readcapacity(struct se_cmd *cmd)
++sbc_emulate_readcapacity(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned char *cdb = cmd->t_task_cdb;
+ 	unsigned long long blocks_long = dev->transport->get_blocks(dev);
+@@ -90,8 +91,9 @@ sbc_emulate_readcapacity(struct se_cmd *cmd)
  }
  
- static sense_reason_t sbc_execute_sync_cache(struct target_iostate *ios)
-@@ -654,6 +655,7 @@ sbc_compare_and_write(struct target_iostate *ios)
- 	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ static sense_reason_t
+-sbc_emulate_readcapacity_16(struct se_cmd *cmd)
++sbc_emulate_readcapacity_16(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
+ 	int pi_prot_type = dev->dev_attrib.pi_prot_type;
+@@ -163,8 +165,9 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ }
+ 
+ static sense_reason_t
+-sbc_emulate_startstop(struct se_cmd *cmd)
++sbc_emulate_startstop(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	unsigned char *cdb = cmd->t_task_cdb;
+ 
+ 	/*
+@@ -218,8 +221,9 @@ sector_t sbc_get_write_same_sectors(struct se_cmd *cmd)
+ EXPORT_SYMBOL(sbc_get_write_same_sectors);
+ 
+ static sense_reason_t
+-sbc_execute_write_same_unmap(struct se_cmd *cmd)
++sbc_execute_write_same_unmap(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct sbc_ops *ops = cmd->protocol_data;
+ 	sector_t nolb = sbc_get_write_same_sectors(cmd);
+ 	sense_reason_t ret;
+@@ -235,8 +239,10 @@ sbc_execute_write_same_unmap(struct se_cmd *cmd)
+ }
+ 
+ static sense_reason_t
+-sbc_emulate_noop(struct se_cmd *cmd)
++sbc_emulate_noop(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
++
+ 	target_complete_cmd(cmd, GOOD);
+ 	return 0;
+ }
+@@ -318,6 +324,14 @@ static inline unsigned long long transport_lba_64_ext(unsigned char *cdb)
+ 	return ((unsigned long long)__v2) | (unsigned long long)__v1 << 32;
+ }
+ 
++static sense_reason_t sbc_execute_write_same(struct target_iostate *ios)
++{
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
++	struct sbc_ops *ops = cmd->protocol_data;
++
++	return ops->execute_write_same(cmd);
++}
++
+ static sense_reason_t
+ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *ops)
+ {
+@@ -375,7 +389,7 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+ 	if (ret)
+ 		return ret;
+ 
+-	cmd->execute_cmd = ops->execute_write_same;
++	cmd->execute_cmd = &sbc_execute_write_same;
+ 	return 0;
+ }
+ 
+@@ -439,14 +453,23 @@ out:
+ }
+ 
+ static sense_reason_t
+-sbc_execute_rw(struct se_cmd *cmd)
++sbc_execute_rw(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct sbc_ops *ops = cmd->protocol_data;
+ 
+ 	return ops->execute_rw(cmd, cmd->t_iomem.t_data_sg, cmd->t_iomem.t_data_nents,
+ 			       cmd->t_iostate.data_direction);
+ }
+ 
++static sense_reason_t sbc_execute_sync_cache(struct target_iostate *ios)
++{
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
++	struct sbc_ops *ops = cmd->protocol_data;
++
++	return ops->execute_sync_cache(cmd);
++}
++
+ static sense_reason_t compare_and_write_post(struct se_cmd *cmd, bool success,
+ 					     int *post_ret)
+ {
+@@ -626,8 +649,9 @@ out:
+ }
+ 
+ static sense_reason_t
+-sbc_compare_and_write(struct se_cmd *cmd)
++sbc_compare_and_write(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
  	struct sbc_ops *ops = cmd->protocol_data;
  	struct se_device *dev = cmd->se_dev;
-+	bool fua_write = (cmd->se_cmd_flags & SCF_FUA);
  	sense_reason_t ret;
- 	int rc;
- 	/*
-@@ -673,8 +675,9 @@ sbc_compare_and_write(struct target_iostate *ios)
- 	cmd->t_iostate.data_length = cmd->t_iostate.t_task_nolb *
- 				     dev->dev_attrib.block_size;
+@@ -1054,7 +1078,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 			cmd->t_iostate.t_task_lba = transport_lba_64(cdb);
+ 		}
+ 		if (ops->execute_sync_cache) {
+-			cmd->execute_cmd = ops->execute_sync_cache;
++			cmd->execute_cmd = sbc_execute_sync_cache;
+ 			goto check_lba;
+ 		}
+ 		size = 0;
+@@ -1163,8 +1187,9 @@ u32 sbc_get_device_type(struct se_device *dev)
+ EXPORT_SYMBOL(sbc_get_device_type);
  
--	ret = ops->execute_rw(cmd, cmd->t_iomem.t_bidi_data_sg,
--			      cmd->t_iomem.t_bidi_data_nents, DMA_FROM_DEVICE);
-+	ret = ops->execute_rw(ios, cmd->t_iomem.t_bidi_data_sg,
-+			      cmd->t_iomem.t_bidi_data_nents, DMA_FROM_DEVICE,
-+			      fua_write, &target_complete_ios);
- 	if (ret) {
- 		cmd->transport_complete_callback = NULL;
- 		up(&dev->caw_sem);
+ static sense_reason_t
+-sbc_execute_unmap(struct se_cmd *cmd)
++sbc_execute_unmap(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct sbc_ops *ops = cmd->protocol_data;
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned char *buf, *ptr = NULL;
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 2364de7..c672d9a 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -702,8 +702,9 @@ spc_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf)
+ }
+ 
+ static sense_reason_t
+-spc_emulate_inquiry(struct se_cmd *cmd)
++spc_emulate_inquiry(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_portal_group *tpg = cmd->se_lun->lun_tpg;
+ 	unsigned char *rbuf;
+@@ -982,8 +983,9 @@ static int spc_modesense_long_blockdesc(unsigned char *buf, u64 blocks, u32 bloc
+ 	return 17;
+ }
+ 
+-static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
++static sense_reason_t spc_emulate_modesense(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = cmd->se_dev;
+ 	char *cdb = cmd->t_task_cdb;
+ 	unsigned char buf[SE_MODE_PAGE_BUF], *rbuf;
+@@ -1107,8 +1109,9 @@ set_length:
+ 	return 0;
+ }
+ 
+-static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
++static sense_reason_t spc_emulate_modeselect(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	char *cdb = cmd->t_task_cdb;
+ 	bool ten = cdb[0] == MODE_SELECT_10;
+ 	int off = ten ? 8 : 4;
+@@ -1168,8 +1171,9 @@ out:
+ 	return ret;
+ }
+ 
+-static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
++static sense_reason_t spc_emulate_request_sense(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	unsigned char *cdb = cmd->t_task_cdb;
+ 	unsigned char *rbuf;
+ 	u8 ua_asc = 0, ua_ascq = 0;
+@@ -1201,8 +1205,9 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 	return 0;
+ }
+ 
+-sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
++sense_reason_t spc_emulate_report_luns(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_dev_entry *deve;
+ 	struct se_session *sess = cmd->se_sess;
+ 	struct se_node_acl *nacl;
+@@ -1270,8 +1275,10 @@ done:
+ EXPORT_SYMBOL(spc_emulate_report_luns);
+ 
+ static sense_reason_t
+-spc_emulate_testunitready(struct se_cmd *cmd)
++spc_emulate_testunitready(struct target_iostate *ios)
+ {
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
++
+ 	target_complete_cmd(cmd, GOOD);
+ 	return 0;
+ }
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 4156059..b6a3543 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1804,7 +1804,7 @@ void __target_execute_cmd(struct se_cmd *cmd, bool do_checks)
+ 	cmd->t_iostate.iomem = &cmd->t_iomem;
+ 	cmd->t_iostate.t_comp_func = &target_complete_ios;
+ 
+-	ret = cmd->execute_cmd(cmd);
++	ret = cmd->execute_cmd(&cmd->t_iostate);
+ 	if (!ret)
+ 		return;
+ err:
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 505b312..3467560 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1130,8 +1130,9 @@ static sector_t tcmu_get_blocks(struct se_device *dev)
+ }
+ 
+ static sense_reason_t
+-tcmu_pass_op(struct se_cmd *se_cmd)
++tcmu_pass_op(struct target_iostate *ios)
+ {
++	struct se_cmd *se_cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	int ret = tcmu_queue_cmd(se_cmd);
+ 
+ 	if (ret != 0)
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index b6aeb15..04d064f 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -822,8 +822,9 @@ out:
+ 	target_complete_cmd(ec_cmd, SAM_STAT_CHECK_CONDITION);
+ }
+ 
+-sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
++sense_reason_t target_do_xcopy(struct target_iostate *ios)
+ {
++	struct se_cmd *se_cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *dev = se_cmd->se_dev;
+ 	struct xcopy_op *xop = NULL;
+ 	unsigned char *p = NULL, *seg_desc;
+@@ -1006,8 +1007,9 @@ static sense_reason_t target_rcr_operating_parameters(struct se_cmd *se_cmd)
+ 	return TCM_NO_SENSE;
+ }
+ 
+-sense_reason_t target_do_receive_copy_results(struct se_cmd *se_cmd)
++sense_reason_t target_do_receive_copy_results(struct target_iostate *ios)
+ {
++	struct se_cmd *se_cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	unsigned char *cdb = &se_cmd->t_task_cdb[0];
+ 	int sa = (cdb[1] & 0x1f), list_id = cdb[2];
+ 	sense_reason_t rc = TCM_NO_SENSE;
+diff --git a/drivers/target/target_core_xcopy.h b/drivers/target/target_core_xcopy.h
+index 700a981..e4e057e 100644
+--- a/drivers/target/target_core_xcopy.h
++++ b/drivers/target/target_core_xcopy.h
+@@ -58,5 +58,5 @@ struct xcopy_op {
+ 
+ extern int target_xcopy_setup_pt(void);
+ extern void target_xcopy_release_pt(void);
+-extern sense_reason_t target_do_xcopy(struct se_cmd *);
+-extern sense_reason_t target_do_receive_copy_results(struct se_cmd *);
++extern sense_reason_t target_do_xcopy(struct target_iostate *);
++extern sense_reason_t target_do_receive_copy_results(struct target_iostate *);
 diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 4a57477..ade90b7 100644
+index 2f6deb0..4a57477 100644
 --- a/include/target/target_core_backend.h
 +++ b/include/target/target_core_backend.h
-@@ -45,8 +45,9 @@ struct target_backend_ops {
- };
+@@ -61,7 +61,7 @@ void	target_complete_cmd_with_length(struct se_cmd *, u8, int);
+ void	target_complete_ios(struct target_iostate *, u16);
  
- struct sbc_ops {
--	sense_reason_t (*execute_rw)(struct se_cmd *cmd, struct scatterlist *,
--				     u32, enum dma_data_direction);
-+	sense_reason_t (*execute_rw)(struct target_iostate *ios, struct scatterlist *,
-+				     u32, enum dma_data_direction, bool fua_write,
-+				     void (*t_comp_func)(struct target_iostate *ios, u16));
- 	sense_reason_t (*execute_sync_cache)(struct se_cmd *cmd);
- 	sense_reason_t (*execute_write_same)(struct se_cmd *cmd);
- 	sense_reason_t (*execute_unmap)(struct se_cmd *cmd,
+ sense_reason_t	spc_parse_cdb(struct se_cmd *cmd, unsigned int *size);
+-sense_reason_t	spc_emulate_report_luns(struct se_cmd *cmd);
++sense_reason_t	spc_emulate_report_luns(struct target_iostate *ios);
+ sense_reason_t	spc_emulate_inquiry_std(struct se_cmd *, unsigned char *);
+ sense_reason_t	spc_emulate_evpd_83(struct se_cmd *, unsigned char *);
+ 
+@@ -91,7 +91,7 @@ sense_reason_t	transport_generic_map_mem_to_cmd(struct se_cmd *,
+ 
+ bool	target_lun_is_rdonly(struct se_cmd *);
+ sense_reason_t passthrough_parse_cdb(struct se_cmd *cmd,
+-	sense_reason_t (*exec_cmd)(struct se_cmd *cmd));
++	sense_reason_t (*exec_cmd)(struct target_iostate *ios));
+ 
+ bool target_sense_desc_format(struct se_device *dev);
+ sector_t target_to_linux_sector(struct se_device *dev, sector_t lb);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index bd4346b..9bd7559 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -508,7 +508,7 @@ struct se_cmd {
+ 	struct list_head	se_cmd_list;
+ 	struct completion	cmd_wait_comp;
+ 	const struct target_core_fabric_ops *se_tfo;
+-	sense_reason_t		(*execute_cmd)(struct se_cmd *);
++	sense_reason_t		(*execute_cmd)(struct target_iostate *);
+ 	sense_reason_t (*transport_complete_callback)(struct se_cmd *, bool, int *);
+ 	void			*protocol_data;
+ 
 -- 
 1.9.1
