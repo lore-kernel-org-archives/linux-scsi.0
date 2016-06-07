@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 14/16] target: Make sbc_ops accessable via target_backend_ops
-Date: Tue,  7 Jun 2016 04:12:39 +0000
-Message-ID: <1465272761-26045-15-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v2 08/16] target/sbc: Convert sbc_dif_copy_prot to target_iostate
+Date: Tue,  7 Jun 2016 04:12:33 +0000
+Message-ID: <1465272761-26045-9-git-send-email-nab@linux-iscsi.org>
 References: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55978 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:56001 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213AbcFGENq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 00:13:46 -0400
+	with ESMTP id S1753142AbcFGENk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 00:13:40 -0400
 In-Reply-To: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,14 +16,11 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christop
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch allows backend driver sbc_ops function pointers
-to be accessed externally, so external target consumers
-can perform target_iostate + target_iomem I/O submission
-outside of /sys/kernel/config/target/$FABRIC/ users.
+This patch converts sbc_dif_copy_prot() to use struct target_iomem
+for existing T10-PI scatterlist memory and scatterlist count
+dereferences.
 
-Specifically, IBLOCK, FILEIO, and RAMDISK have been
-enabled, while PSCSI and TCMU have left sbc_ops NULL
-as they perform SCSI CDB pass-through.
+Also convert the single external user in rd_do_prot_rw() code.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -33,89 +30,131 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c    | 1 +
- drivers/target/target_core_iblock.c  | 1 +
- drivers/target/target_core_pscsi.c   | 1 +
- drivers/target/target_core_rd.c      | 1 +
- drivers/target/target_core_user.c    | 1 +
- include/target/target_core_backend.h | 4 ++++
- 6 files changed, 9 insertions(+)
+ drivers/target/target_core_rd.c      | 24 +++++++++++++-----------
+ drivers/target/target_core_sbc.c     |  9 ++++-----
+ include/target/target_core_backend.h |  4 ++--
+ 3 files changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index b4956a5e..6f0064e 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -815,6 +815,7 @@ static const struct target_backend_ops fileio_ops = {
- 	.inquiry_prod		= "FILEIO",
- 	.inquiry_rev		= FD_VERSION,
- 	.owner			= THIS_MODULE,
-+	.sbc_ops		= &fd_sbc_ops,
- 	.attach_hba		= fd_attach_hba,
- 	.detach_hba		= fd_detach_hba,
- 	.alloc_device		= fd_alloc_device,
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 00781c8..29d3167 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -833,6 +833,7 @@ static const struct target_backend_ops iblock_ops = {
- 	.inquiry_prod		= "IBLOCK",
- 	.inquiry_rev		= IBLOCK_VERSION,
- 	.owner			= THIS_MODULE,
-+	.sbc_ops		= &iblock_sbc_ops,
- 	.attach_hba		= iblock_attach_hba,
- 	.detach_hba		= iblock_detach_hba,
- 	.alloc_device		= iblock_alloc_device,
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index c52f943..4284dbf 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1127,6 +1127,7 @@ static void pscsi_req_done(struct request *req, int uptodate)
- static const struct target_backend_ops pscsi_ops = {
- 	.name			= "pscsi",
- 	.owner			= THIS_MODULE,
-+	.sbc_ops		= NULL,
- 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH,
- 	.attach_hba		= pscsi_attach_hba,
- 	.detach_hba		= pscsi_detach_hba,
 diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index a38a37f..e9df036 100644
+index df8bd58..cbcb33e 100644
 --- a/drivers/target/target_core_rd.c
 +++ b/drivers/target/target_core_rd.c
-@@ -662,6 +662,7 @@ static const struct target_backend_ops rd_mcp_ops = {
- 	.name			= "rd_mcp",
- 	.inquiry_prod		= "RAMDISK-MCP",
- 	.inquiry_rev		= RD_MCP_VERSION,
-+	.sbc_ops		= &rd_sbc_ops,
- 	.attach_hba		= rd_attach_hba,
- 	.detach_hba		= rd_detach_hba,
- 	.alloc_device		= rd_alloc_device,
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 3467560..ec6142b 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1151,6 +1151,7 @@ static const struct target_backend_ops tcmu_ops = {
- 	.name			= "user",
- 	.owner			= THIS_MODULE,
- 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH,
-+	.sbc_ops		= NULL,
- 	.attach_hba		= tcmu_attach_hba,
- 	.detach_hba		= tcmu_detach_hba,
- 	.alloc_device		= tcmu_alloc_device,
+@@ -398,19 +398,21 @@ static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
+ 	return NULL;
+ }
+ 
+-static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
++static sense_reason_t rd_do_prot_rw(struct target_iostate *ios, bool is_read)
+ {
+-	struct se_device *se_dev = cmd->se_dev;
++	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
++	struct se_device *se_dev = ios->se_dev;
++	struct target_iomem *iomem = ios->iomem;
+ 	struct rd_dev *dev = RD_DEV(se_dev);
+ 	struct rd_dev_sg_table *prot_table;
+ 	struct scatterlist *prot_sg;
+-	u32 sectors = cmd->t_iostate.data_length / se_dev->dev_attrib.block_size;
++	u32 sectors = ios->data_length / se_dev->dev_attrib.block_size;
+ 	u32 prot_offset, prot_page;
+ 	u32 prot_npages __maybe_unused;
+ 	u64 tmp;
+ 	sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	tmp = cmd->t_iostate.t_task_lba * se_dev->prot_length;
++	tmp = ios->t_task_lba * se_dev->prot_length;
+ 	prot_offset = do_div(tmp, PAGE_SIZE);
+ 	prot_page = tmp;
+ 
+@@ -422,14 +424,15 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_read)
+ 					prot_table->page_start_offset];
+ 
+ 	if (is_read)
+-		rc = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba, sectors, 0,
++		rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors, 0,
+ 				    prot_sg, prot_offset);
+ 	else
+-		rc = sbc_dif_verify(cmd, cmd->t_iostate.t_task_lba, sectors, 0,
+-				    cmd->t_iomem.t_prot_sg, 0);
++		rc = sbc_dif_verify(cmd, ios->t_task_lba, sectors, 0,
++				    iomem->t_prot_sg, 0);
+ 
+ 	if (!rc)
+-		sbc_dif_copy_prot(cmd, sectors, is_read, prot_sg, prot_offset);
++		sbc_dif_copy_prot(iomem, sectors, is_read, prot_sg, prot_offset,
++				  se_dev->prot_length);
+ 
+ 	return rc;
+ }
+@@ -439,7 +442,6 @@ rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
+ 	      enum dma_data_direction data_direction, bool fua_write,
+ 	      void (*t_comp_func)(struct target_iostate *, u16))
+ {
+-	struct se_cmd *cmd = container_of(ios, struct se_cmd, t_iostate);
+ 	struct se_device *se_dev = ios->se_dev;
+ 	struct rd_dev *dev = RD_DEV(se_dev);
+ 	struct rd_dev_sg_table *table;
+@@ -475,7 +477,7 @@ rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
+ 
+ 	if (ios->prot_type && se_dev->dev_attrib.pi_prot_type &&
+ 	    data_direction == DMA_TO_DEVICE) {
+-		rc = rd_do_prot_rw(cmd, false);
++		rc = rd_do_prot_rw(ios, false);
+ 		if (rc)
+ 			return rc;
+ 	}
+@@ -543,7 +545,7 @@ rd_execute_rw(struct target_iostate *ios, struct scatterlist *sgl, u32 sgl_nents
+ 
+ 	if (ios->prot_type && se_dev->dev_attrib.pi_prot_type &&
+ 	    data_direction == DMA_FROM_DEVICE) {
+-		rc = rd_do_prot_rw(cmd, true);
++		rc = rd_do_prot_rw(ios, true);
+ 		if (rc)
+ 			return rc;
+ 	}
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index e1288de..e82b261 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1381,10 +1381,9 @@ check_ref:
+ 	return 0;
+ }
+ 
+-void sbc_dif_copy_prot(struct se_cmd *cmd, unsigned int sectors, bool read,
+-		       struct scatterlist *sg, int sg_off)
++void sbc_dif_copy_prot(struct target_iomem *iomem, unsigned int sectors, bool read,
++		       struct scatterlist *sg, int sg_off, u32 prot_length)
+ {
+-	struct se_device *dev = cmd->se_dev;
+ 	struct scatterlist *psg;
+ 	void *paddr, *addr;
+ 	unsigned int i, len, left;
+@@ -1393,9 +1392,9 @@ void sbc_dif_copy_prot(struct se_cmd *cmd, unsigned int sectors, bool read,
+ 	if (!sg)
+ 		return;
+ 
+-	left = sectors * dev->prot_length;
++	left = sectors * prot_length;
+ 
+-	for_each_sg(cmd->t_iomem.t_prot_sg, psg, cmd->t_iomem.t_prot_nents, i) {
++	for_each_sg(iomem->t_prot_sg, psg, iomem->t_prot_nents, i) {
+ 		unsigned int psg_len, copied = 0;
+ 
+ 		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
 diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 9efe718..15f731f 100644
+index ade90b7..f2d593f 100644
 --- a/include/target/target_core_backend.h
 +++ b/include/target/target_core_backend.h
-@@ -8,6 +8,10 @@ struct target_backend_ops {
- 	char inquiry_prod[16];
- 	char inquiry_rev[4];
- 	struct module *owner;
-+	/*
-+	 * Used by NVMe-target for se_cmd dispatch without SCSI CDB parsing
-+	 */
-+	struct sbc_ops *sbc_ops;
- 
- 	u8 transport_flags;
- 
+@@ -73,8 +73,8 @@ sector_t	sbc_get_write_same_sectors(struct se_cmd *cmd);
+ void	sbc_dif_generate(struct se_cmd *);
+ sense_reason_t	sbc_dif_verify(struct se_cmd *, sector_t, unsigned int,
+ 				     unsigned int, struct scatterlist *, int);
+-void sbc_dif_copy_prot(struct se_cmd *, unsigned int, bool,
+-		       struct scatterlist *, int);
++void sbc_dif_copy_prot(struct target_iomem *, unsigned int, bool,
++		       struct scatterlist *, int, u32);
+ void	transport_set_vpd_proto_id(struct t10_vpd *, unsigned char *);
+ int	transport_set_vpd_assoc(struct t10_vpd *, unsigned char *);
+ int	transport_set_vpd_ident_type(struct t10_vpd *, unsigned char *);
 -- 
 1.9.1
 
