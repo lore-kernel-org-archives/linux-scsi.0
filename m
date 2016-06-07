@@ -1,19 +1,29 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 13/16] target/sbc: Convert sbc_ops->execute_unmap to target_iostate
-Date: Tue,  7 Jun 2016 04:12:38 +0000
-Message-ID: <1465272761-26045-14-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v2 14/16] target: Make sbc_ops accessable via target_backend_ops
+Date: Tue,  7 Jun 2016 04:12:39 +0000
+Message-ID: <1465272761-26045-15-git-send-email-nab@linux-iscsi.org>
 References: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:55978 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753213AbcFGENq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 00:13:46 -0400
 In-Reply-To: <1465272761-26045-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts IBLOCK + FILEIO for sbc_ops->execute_unmap()
-to accept struct target_iostate.
+This patch allows backend driver sbc_ops function pointers
+to be accessed externally, so external target consumers
+can perform target_iostate + target_iomem I/O submission
+outside of /sys/kernel/config/target/$FABRIC/ users.
+
+Specifically, IBLOCK, FILEIO, and RAMDISK have been
+enabled, while PSCSI and TCMU have left sbc_ops NULL
+as they perform SCSI CDB pass-through.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -23,139 +33,89 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c    | 21 ++++++++++-----------
- drivers/target/target_core_iblock.c  |  8 ++++----
- drivers/target/target_core_sbc.c     |  4 ++--
- include/target/target_core_backend.h |  4 ++--
- 4 files changed, 18 insertions(+), 19 deletions(-)
+ drivers/target/target_core_file.c    | 1 +
+ drivers/target/target_core_iblock.c  | 1 +
+ drivers/target/target_core_pscsi.c   | 1 +
+ drivers/target/target_core_rd.c      | 1 +
+ drivers/target/target_core_user.c    | 1 +
+ include/target/target_core_backend.h | 4 ++++
+ 6 files changed, 9 insertions(+)
 
 diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 8ddd561..b4956a5e 100644
+index b4956a5e..6f0064e 100644
 --- a/drivers/target/target_core_file.c
 +++ b/drivers/target/target_core_file.c
-@@ -442,7 +442,7 @@ fd_do_prot_fill(struct se_device *se_dev, sector_t lba, sector_t nolb,
- }
- 
- static int
--fd_do_prot_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
-+fd_do_prot_unmap(struct se_device *dev, sector_t lba, sector_t nolb)
- {
- 	void *buf;
- 	int rc;
-@@ -454,7 +454,7 @@ fd_do_prot_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
- 	}
- 	memset(buf, 0xff, PAGE_SIZE);
- 
--	rc = fd_do_prot_fill(cmd->se_dev, lba, nolb, buf, PAGE_SIZE);
-+	rc = fd_do_prot_fill(dev, lba, nolb, buf, PAGE_SIZE);
- 
- 	free_page((unsigned long)buf);
- 
-@@ -462,14 +462,15 @@ fd_do_prot_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
- }
- 
- static sense_reason_t
--fd_execute_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
-+fd_execute_unmap(struct target_iostate *ios, sector_t lba, sector_t nolb)
- {
--	struct file *file = FD_DEV(cmd->se_dev)->fd_file;
-+	struct se_device *dev = ios->se_dev;
-+	struct file *file = FD_DEV(dev)->fd_file;
- 	struct inode *inode = file->f_mapping->host;
- 	int ret;
- 
--	if (cmd->se_dev->dev_attrib.pi_prot_type) {
--		ret = fd_do_prot_unmap(cmd, lba, nolb);
-+	if (ios->se_dev->dev_attrib.pi_prot_type) {
-+		ret = fd_do_prot_unmap(dev, lba, nolb);
- 		if (ret)
- 			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
-@@ -477,11 +478,10 @@ fd_execute_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
- 	if (S_ISBLK(inode->i_mode)) {
- 		/* The backend is block device, use discard */
- 		struct block_device *bdev = inode->i_bdev;
--		struct se_device *dev = cmd->se_dev;
- 
- 		ret = blkdev_issue_discard(bdev,
- 					   target_to_linux_sector(dev, lba),
--					   target_to_linux_sector(dev,  nolb),
-+					   target_to_linux_sector(dev, nolb),
- 					   GFP_KERNEL, 0);
- 		if (ret < 0) {
- 			pr_warn("FILEIO: blkdev_issue_discard() failed: %d\n",
-@@ -490,9 +490,8 @@ fd_execute_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
- 		}
- 	} else {
- 		/* The backend is normal file, use fallocate */
--		struct se_device *se_dev = cmd->se_dev;
--		loff_t pos = lba * se_dev->dev_attrib.block_size;
--		unsigned int len = nolb * se_dev->dev_attrib.block_size;
-+		loff_t pos = lba * dev->dev_attrib.block_size;
-+		unsigned int len = nolb * dev->dev_attrib.block_size;
- 		int mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
- 
- 		if (!file->f_op->fallocate)
+@@ -815,6 +815,7 @@ static const struct target_backend_ops fileio_ops = {
+ 	.inquiry_prod		= "FILEIO",
+ 	.inquiry_rev		= FD_VERSION,
+ 	.owner			= THIS_MODULE,
++	.sbc_ops		= &fd_sbc_ops,
+ 	.attach_hba		= fd_attach_hba,
+ 	.detach_hba		= fd_detach_hba,
+ 	.alloc_device		= fd_alloc_device,
 diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 9623198..00781c8 100644
+index 00781c8..29d3167 100644
 --- a/drivers/target/target_core_iblock.c
 +++ b/drivers/target/target_core_iblock.c
-@@ -393,15 +393,15 @@ iblock_execute_sync_cache(struct target_iostate *ios, bool immed)
- }
- 
- static sense_reason_t
--iblock_execute_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
-+iblock_execute_unmap(struct target_iostate *ios, sector_t lba, sector_t nolb)
- {
--	struct block_device *bdev = IBLOCK_DEV(cmd->se_dev)->ibd_bd;
--	struct se_device *dev = cmd->se_dev;
-+	struct block_device *bdev = IBLOCK_DEV(ios->se_dev)->ibd_bd;
-+	struct se_device *dev = ios->se_dev;
- 	int ret;
- 
- 	ret = blkdev_issue_discard(bdev,
- 				   target_to_linux_sector(dev, lba),
--				   target_to_linux_sector(dev,  nolb),
-+				   target_to_linux_sector(dev, nolb),
- 				   GFP_KERNEL, 0);
- 	if (ret < 0) {
- 		pr_err("blkdev_issue_discard() failed: %d\n", ret);
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index a92f169..4fcbe8c 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -230,7 +230,7 @@ sbc_execute_write_same_unmap(struct target_iostate *ios)
- 	sense_reason_t ret;
- 
- 	if (nolb) {
--		ret = ops->execute_unmap(cmd, cmd->t_iostate.t_task_lba, nolb);
-+		ret = ops->execute_unmap(&cmd->t_iostate, cmd->t_iostate.t_task_lba, nolb);
- 		if (ret)
- 			return ret;
- 	}
-@@ -1260,7 +1260,7 @@ sbc_execute_unmap(struct target_iostate *ios)
- 			goto err;
- 		}
- 
--		ret = ops->execute_unmap(cmd, lba, range);
-+		ret = ops->execute_unmap(ios, lba, range);
- 		if (ret)
- 			goto err;
- 
+@@ -833,6 +833,7 @@ static const struct target_backend_ops iblock_ops = {
+ 	.inquiry_prod		= "IBLOCK",
+ 	.inquiry_rev		= IBLOCK_VERSION,
+ 	.owner			= THIS_MODULE,
++	.sbc_ops		= &iblock_sbc_ops,
+ 	.attach_hba		= iblock_attach_hba,
+ 	.detach_hba		= iblock_detach_hba,
+ 	.alloc_device		= iblock_alloc_device,
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index c52f943..4284dbf 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1127,6 +1127,7 @@ static void pscsi_req_done(struct request *req, int uptodate)
+ static const struct target_backend_ops pscsi_ops = {
+ 	.name			= "pscsi",
+ 	.owner			= THIS_MODULE,
++	.sbc_ops		= NULL,
+ 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH,
+ 	.attach_hba		= pscsi_attach_hba,
+ 	.detach_hba		= pscsi_detach_hba,
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index a38a37f..e9df036 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -662,6 +662,7 @@ static const struct target_backend_ops rd_mcp_ops = {
+ 	.name			= "rd_mcp",
+ 	.inquiry_prod		= "RAMDISK-MCP",
+ 	.inquiry_rev		= RD_MCP_VERSION,
++	.sbc_ops		= &rd_sbc_ops,
+ 	.attach_hba		= rd_attach_hba,
+ 	.detach_hba		= rd_detach_hba,
+ 	.alloc_device		= rd_alloc_device,
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 3467560..ec6142b 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1151,6 +1151,7 @@ static const struct target_backend_ops tcmu_ops = {
+ 	.name			= "user",
+ 	.owner			= THIS_MODULE,
+ 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH,
++	.sbc_ops		= NULL,
+ 	.attach_hba		= tcmu_attach_hba,
+ 	.detach_hba		= tcmu_detach_hba,
+ 	.alloc_device		= tcmu_alloc_device,
 diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index f845ff0..9efe718 100644
+index 9efe718..15f731f 100644
 --- a/include/target/target_core_backend.h
 +++ b/include/target/target_core_backend.h
-@@ -51,8 +51,8 @@ struct sbc_ops {
- 	sense_reason_t (*execute_sync_cache)(struct target_iostate *ios, bool immed);
- 	sense_reason_t (*execute_write_same)(struct target_iostate *ios,
- 					sector_t (*get_sectors)(struct target_iostate *));
--	sense_reason_t (*execute_unmap)(struct se_cmd *cmd,
--				sector_t lba, sector_t nolb);
-+	sense_reason_t (*execute_unmap)(struct target_iostate *ios,
-+					sector_t lba, sector_t nolb);
- };
+@@ -8,6 +8,10 @@ struct target_backend_ops {
+ 	char inquiry_prod[16];
+ 	char inquiry_rev[4];
+ 	struct module *owner;
++	/*
++	 * Used by NVMe-target for se_cmd dispatch without SCSI CDB parsing
++	 */
++	struct sbc_ops *sbc_ops;
  
- int	transport_backend_register(const struct target_backend_ops *);
+ 	u8 transport_flags;
+ 
 -- 
 1.9.1
+
