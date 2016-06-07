@@ -1,29 +1,46 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: NVMe over Fabrics target implementation
-Date: Tue, 7 Jun 2016 12:55:50 +0200
-Message-ID: <20160607105550.GB17113@lst.de>
-References: <1465248177-17970-1-git-send-email-hch@lst.de> <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] scsi_debug: fix sleep in invalid context
+Date: Tue, 7 Jun 2016 04:55:25 -0700
+Message-ID: <20160607115525.GA30861@infradead.org>
+References: <1464729307-22182-1-git-send-email-dgilbert@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:35998 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932279AbcFGLz1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2016 07:55:27 -0400
 Content-Disposition: inline
-In-Reply-To: <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, keith.busch@intel.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <1464729307-22182-1-git-send-email-dgilbert@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com, hch@infradead.org
 
-There is absolutely no point in dragging in an overcomplicated configfs 
-structure for a very simple protocol which also is very different from
-SCSI in it's nitty gritty details.  Keeping the nvme target self contains
-allows it to be both much simpler and much easier to understand, as well
-as much better testable - see the amount of test coverage we could easily
-add for example.
+> +static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
+> +				  int arr_len, unsigned int off_dst)
+> +{
+> +	int act_len, n;
+> +	struct scsi_data_buffer *sdb = scsi_in(scp);
+> +	off_t skip = off_dst;
 
-Or to put it the other way around - if there was any major synergy in
-reusing the SCSI target code that just shows we're missing functionality
-in the block layer or configfs.
+Why off_t which is a signed value instead of the unsigned in passed in?
 
-The only thing where this is the case mid-term is persistent reservations,
-but Mike Christie already has a plan for a pluggable PR API, which I'm
-very interested in.
+> +#define RL_BUCKET_ELEMS 8
+> +
+>  /* Even though each pseudo target has a REPORT LUNS "well known logical unit"
+>   * (W-LUN), the normal Linux scanning logic does not associate it with a
+>   * device (e.g. /dev/sg7). The following magic will make that association:
+> @@ -3285,12 +3315,14 @@ static int resp_report_luns(struct scsi_cmnd *scp,
+>  	unsigned char select_report;
+>  	u64 lun;
+>  	struct scsi_lun *lun_p;
+> -	u8 *arr;
+> +	u8 arr[RL_BUCKET_ELEMS * sizeof(struct scsi_lun)];
+
+just use an on-stack array of type struct scsi_lun here, e.g.:
+
+	struct scsi_lun arr[RL_BUCKET_ELEMS];
+
+Which you can then use directly instead of lun_p later, but which can
+also be passed p_fill_from_dev_buffer as that takes a void pointer.
