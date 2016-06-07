@@ -1,150 +1,29 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
-Date: Tue,  7 Jun 2016 09:44:00 +0200
-Message-ID: <cover.1465200424.git.jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Frank Haverkamp <haver@linux.vnet.ibm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jay Cliburn <jcliburn@gmail.com>, Chris Snook <chris.snook@gmail.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: NVMe over Fabrics target implementation
+Date: Tue, 7 Jun 2016 12:55:50 +0200
+Message-ID: <20160607105550.GB17113@lst.de>
+References: <1465248177-17970-1-git-send-email-hch@lst.de> <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1465280632.5365.58.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, keith.busch@intel.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The first patch in this series introduces the following 4 helper functions to
-the PCI core:
+There is absolutely no point in dragging in an overcomplicated configfs 
+structure for a very simple protocol which also is very different from
+SCSI in it's nitty gritty details.  Keeping the nvme target self contains
+allows it to be both much simpler and much easier to understand, as well
+as much better testable - see the amount of test coverage we could easily
+add for example.
 
-* pci_request_mem_regions()
-* pci_request_io_regions()
-* pci_release_mem_regions()
-* pci_release_io_regions()
+Or to put it the other way around - if there was any major synergy in
+reusing the SCSI target code that just shows we're missing functionality
+in the block layer or configfs.
 
-which encapsulate the request and release of a PCI device's memory or I/O
-bars.
-
-The subsequent patches convert the drivers, which use the
-pci_request_selected_regions(pdev, 
-	pci_select_bars(pdev, IORESOURCE_MEM), name); 
-and similar pattern to use the new interface.
-
-This was suggested by Christoph Hellwig in
-http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
-tested on kernel v4.6 with NVMe.
-
-The conversion of the drivers has been performed by the following coccinelle
-spatch:
-// IORESOURCE_MEM
-@@
-expression err, pdev, name;
-@@
-
-- err = pci_request_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM), name);
-+ err = pci_request_mem_regions(pdev, name);
-
-@@
-expression pdev;
-@@
-- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM));
-+ pci_release_mem_regions(pdev);
-
-@@
-expression err, pdev, name;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_MEM);
-...
-- err = pci_request_selected_regions(pdev, bars, name);
-+ err = pci_request_mem_regions(pdev, name);
-
-@@
-expression pdev;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_MEM);
-...
-- pci_release_selected_regions(pdev, bars);
-+ pci_release_mem_regions(pdev);
-
-// IORESOURCE_IO
-@@
-expression err, pdev, name;
-@@
-
-- err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
-IORESOURCE_IO), name);
-+ err = pci_request_io_regions(pdev, name);
-
-@@
-expression pdev;
-@@
-- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_IO));
-+ pci_release_io_regions(pdev);
-
-@@
-expression err, pdev, name;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_IO);
-...
-- err = pci_request_selected_regions(pdev, bars, name);
-+ err = pci_request_io_regions(pdev, name);
-
-@@
-expression pdev;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_IO);
-...
-- pci_release_selected_regions(pdev, bars);
-+ pci_release_io_regions(pdev);
-
-Changes since v2:
-* Fixed compilation error on platforms with CONFIG_PCI=n
-* Added Jeff's Acked-by on the Intel ethernet patch
-* Added Dick's Acked-by on the lpfc patch
-
-Changes since v1:
-* Fixed indendatoin in pci.h patch to not cross the 80 chars boundary.
-* Split Ethernet patches into two, one for Atheros and one for Intel drivers.
-* Correctly named lpfc patch.
-* Converted init-path of lpfc driver as well.
-* Added Reviewed-by tags were appropriate.
-
-Johannes Thumshirn (6):
-  PCI: Add helpers to request/release memory and I/O regions
-  NVMe: Use pci_(request|release)_mem_regions
-  lpfc: Use pci_(request|release)_mem_regions
-  GenWQE: Use pci_(request|release)_mem_regions
-  ethernet/intel: Use pci_(request|release)_mem_regions
-  alx: Use pci_(request|release)_mem_regions
-
- drivers/misc/genwqe/card_base.c               | 13 +++++--------
- drivers/net/ethernet/atheros/alx/main.c       | 12 +++++-------
- drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
- drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
- drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
- drivers/nvme/host/pci.c                       | 10 +++-------
- drivers/scsi/lpfc/lpfc_init.c                 | 15 ++++----------
- include/linux/pci.h                           | 28 +++++++++++++++++++++++++++
- 10 files changed, 59 insertions(+), 64 deletions(-)
-
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: linux-nvme@lists.infradead.org
-Cc: James Smart <james.smart@avagotech.com>
-Cc: Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jay Cliburn <jcliburn@gmail.com>
-Cc: Chris Snook <chris.snook@gmail.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
--- 
-1.8.5.6
+The only thing where this is the case mid-term is persistent reservations,
+but Mike Christie already has a plan for a pluggable PR API, which I'm
+very interested in.
