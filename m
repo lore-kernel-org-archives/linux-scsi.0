@@ -1,83 +1,71 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 0/2] nvme/loop: Add support for controllers-per-port model
-Date: Wed,  8 Jun 2016 03:34:19 +0000
-Message-ID: <1465356861-4321-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme <linux-nvme@lists.infradead.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, Jay Freyensee <james.p.freyensee@intel.com>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH] sd: remove redundant check for BLK_DEF_MAX_SECTORS
+Date: Wed, 8 Jun 2016 04:22:21 +0000
+Message-ID: <SN1PR0301MB1983F2C779D54D1D4C57086BCE5E0@SN1PR0301MB1983.namprd03.prod.outlook.com>
+References: <1465012678-32547-1-git-send-email-longli@microsoft.com>
+	<CAGnHSE=ZriFjvdXT5npv92VhqxtN1SqQL+jwMehCq42K3O+=VQ@mail.gmail.com>
+	<BLUPR0301MB19724E7E002D1E47719D262CCE5A0@BLUPR0301MB1972.namprd03.prod.outlook.com>
+ <yq1vb1lmzqq.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0135.outbound.protection.outlook.com ([157.56.110.135]:40576
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751608AbcFHEiH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2016 00:38:07 -0400
+In-Reply-To: <yq1vb1lmzqq.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tom Yan <tom.ty89@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hi Martin,
 
-Hi again folks,
+Thanks for looking into this. The problem I'm trying to solve is that, I want to have lower layer driver to setup max_sectors bigger than BLK_DEF_MAX_SECTORS. In Hyper-v, we use 2MB max transfer I/O size, in future version the max transfer I/O size will increase to 8MB.
+ 
+The implementation of sd.c limits the maximum value of max_sectors  to BLK_DEF_MAX_SECTORS.  Because sd_revalidate_disk is called late in the SCSI disk initialization process, there is no way for a lower layer driver to set this value to its "bigger" optimal size. 
 
-So building on the nvmet/configfs-ng WIP posted yesterday:
+The reason why I think it may not be necessary for sd.c to setup max_sectors, it's because this value may have already been setup twice before reaching the code in sd.c:
+1. When this disk device is first scanned, or re-scanned (in scsi_scan.c), where it eventually calls __scsi_init_queue(), and use the max_sectors in the scsi_host_template.
+2. in slave_configure of scsi_host_template, when the lower layer driver implements this function in its template and it can change this value there.
 
-http://marc.info/?l=linux-scsi&m=146528147018404&w=2
+Long
 
-This series adds support for nvme/loop to utilize a nvme host
-controller per nvmet_port, instead of a single hardcoded entry
-for nvmet_port pointer access in nvme_loop_queue_rq().
-
-It uses a struct device model following what we've done in
-drivers/target/loopback to allow multiple host controllers
-to co-exist under configfs, and is driven by the nvmet_port
-configfs enable attribute.
-
-Which means that any arbitary number of nvme-loop controllers
-can now exist, and each nvmet_subsystem->ports_group can
-enable/disable it's own loopback controller!
-
-Here is how it looks in action for controller id 1 + 2:
-
-root@scsi-mq:/sys/kernel/config/nvmet/subsystems# tree -if .
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/namespaces
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/namespaces/1
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/namespaces/1/ramdisk1 -> ../../../../../target/core/rd_mcp_2/ramdisk1
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/addr_adrfam
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/addr_portid
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/addr_traddr
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/addr_treq
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/addr_trsvcid
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/addr_trtype
-./nqn.2003-01.org.linux-iscsi.NVMf.newsilicon/ports/loop/enable
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/namespaces
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/namespaces/1
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/namespaces/1/ramdisk0 -> ../../../../../target/core/rd_mcp_1/ramdisk0
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/addr_adrfam
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/addr_portid
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/addr_traddr
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/addr_treq
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/addr_trsvcid
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/addr_trtype
-./nqn.2003-01.org.linux-iscsi.NVMf.skylake-ep/ports/loop/enable
-
-# cat /proc/partitions              
-major minor  #blocks  name
-
- 259        0    4194304 nvme0n1
- 259        1      65535 nvme1n1
- 259        2      65535 nvme2n1
-
-Comments..?
-
---nab
-
-Nicholas Bellinger (2):
-  nvme-fabrics: Add nvmf_get_default_host helper
-  nvme/loop: Add support for controller-per-port model
-
- drivers/nvme/host/fabrics.c |  13 +++-
- drivers/nvme/host/fabrics.h |   1 +
- drivers/nvme/target/loop.c  | 183 +++++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 177 insertions(+), 20 deletions(-)
-
--- 
-1.9.1
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Monday, June 6, 2016 8:42 PM
+> To: Long Li <longli@microsoft.com>
+> Cc: Tom Yan <tom.ty89@gmail.com>; James E.J. Bottomley
+> <jejb@linux.vnet.ibm.com>; Martin K. Petersen
+> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: Re: [PATCH] sd: remove redundant check for
+> BLK_DEF_MAX_SECTORS
+> 
+> >>>>> "Long" == Long Li <longli@microsoft.com> writes:
+> 
+> Long,
+> 
+> Long> The reason is that, max_sectors already has value at this point,
+> Long> the default value is SCSI_DEFAULT_MAX_SECTORS
+> Long> (include/scsi/scsi_host.h). The lower layer host driver can change
+> Long> this value in its template.
+> 
+> The LLD sets max_hw_sectors which indicates the capabilities of the
+> controller DMA hardware. Whereas the max_sectors limit is set by sd to
+> either follow advise by the device or--if not provided--use the block layer
+> default. max_sectors governs the size of READ/WRITE requests and do not
+> reflect the capabilities of the DMA hardware.
+> 
+> Long> I think the drivers care about this value have already set it. So
+> Long> it's better not to change it again. If they want max_sectors to be
+> Long> set by sd, they can use BLOCK LIMITS VPD to tell it to do so.
+> 
+> Most drivers don't have the luxury of being able to generate VPDs for their
+> attached target devices :)
+> 
+> --
+> Martin K. Petersen	Oracle Linux Engineering
