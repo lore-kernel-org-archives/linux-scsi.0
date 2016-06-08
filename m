@@ -1,61 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v2] scsi_debug: fix sleep in invalid context
-Date: Wed, 8 Jun 2016 16:57:55 +1000
-Message-ID: <5757C1F3.2070607@interlog.com>
-References: <1464729307-22182-1-git-send-email-dgilbert@interlog.com>
- <20160607115525.GA30861@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
+Date: Wed, 8 Jun 2016 09:28:54 +0200
+Message-ID: <20160608072854.ivcfvtlgxab2xkmp@c203.arch.suse.de>
+References: <cover.1465200424.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:43601 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752889AbcFHG6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jun 2016 02:58:07 -0400
-In-Reply-To: <20160607115525.GA30861@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Frank Haverkamp <haver@linux.vnet.ibm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jay Cliburn <jcliburn@gmail.com>, Chris Snook <chris.snook@gmail.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com
 
-On 2016-06-07 09:55 PM, Christoph Hellwig wrote:
->> +static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
->> +				  int arr_len, unsigned int off_dst)
->> +{
->> +	int act_len, n;
->> +	struct scsi_data_buffer *sdb = scsi_in(scp);
->> +	off_t skip = off_dst;
->
-> Why off_t which is a signed value instead of the unsigned in passed in?
+On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
+> The first patch in this series introduces the following 4 helper func=
+tions to
+> the PCI core:
+>=20
+> * pci_request_mem_regions()
+> * pci_request_io_regions()
+> * pci_release_mem_regions()
+> * pci_release_io_regions()
+>=20
+> which encapsulate the request and release of a PCI device's memory or=
+ I/O
+> bars.
+>=20
+> The subsequent patches convert the drivers, which use the
+> pci_request_selected_regions(pdev,=20
+> 	pci_select_bars(pdev, IORESOURCE_MEM), name);=20
+> and similar pattern to use the new interface.
+>=20
+> This was suggested by Christoph Hellwig in
+> http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html =
+and
+> tested on kernel v4.6 with NVMe.
+>=20
 
-Because off_t is the type of the last argument to sg_pcopy_from_buffer()
-which is where the off_dst value goes. So there is potentially a size
-of integer change plus signedness, IMO best expressed by defining a
-new auto variable. I notice some projects have a uoff_t typedef for
-offsets that make no sense when negative (like this case), but not the
-Linux kernel.
+Btw, as I've seen already Jeff applying the Intel Ethernet patch to his
+tree, I think this should go via the PCI tree as the build dependency i=
+s
+the PCI patch.
 
->> +#define RL_BUCKET_ELEMS 8
->> +
->>   /* Even though each pseudo target has a REPORT LUNS "well known logical unit"
->>    * (W-LUN), the normal Linux scanning logic does not associate it with a
->>    * device (e.g. /dev/sg7). The following magic will make that association:
->> @@ -3285,12 +3315,14 @@ static int resp_report_luns(struct scsi_cmnd *scp,
->>   	unsigned char select_report;
->>   	u64 lun;
->>   	struct scsi_lun *lun_p;
->> -	u8 *arr;
->> +	u8 arr[RL_BUCKET_ELEMS * sizeof(struct scsi_lun)];
->
-> just use an on-stack array of type struct scsi_lun here, e.g.:
->
-> 	struct scsi_lun arr[RL_BUCKET_ELEMS];
->
-> Which you can then use directly instead of lun_p later, but which can
-> also be passed p_fill_from_dev_buffer as that takes a void pointer.
-
-Can do.
-
-Doug Gilbert
-
+Thanks,
+	Johannes
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
