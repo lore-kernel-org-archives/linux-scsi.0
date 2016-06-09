@@ -1,39 +1,86 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Fix for hang of Ordered task in TCM
-Date: Wed, 08 Jun 2016 22:38:10 -0700
-Message-ID: <1465450690.5365.145.camel@haakon3.risingtidesystems.com>
-References: <1464067904.22249.53.camel@haakon3.risingtidesystems.com>
-	 <1465415022-79833-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [PATCH] Add support for SCT Write Same
+Date: Thu, 9 Jun 2016 01:32:21 -0500
+Message-ID: <CAJVOszDbtwOpd=OtitFOUpzHaSRTHZcrSJ9uU_r_+8eEgUXnzw@mail.gmail.com>
+References: <1465235890-15703-1-git-send-email-shaun@tancheff.com>
+ <1465235890-15703-2-git-send-email-shaun@tancheff.com> <yq1bn3bjait.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1465415022-79833-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: mikecyr@linux.vnet.ibm.com, rjui@broadcom.com, sbranden@broadcom.com, jonmason@broadcom.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-kernel@vger.kernel.org, seroyer@linux.vnet.ibm.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <yq1bn3bjait.fsf@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2016-06-08 at 14:43 -0500, Bryant G. Ly wrote:
+On Wed, Jun 8, 2016 at 10:39 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> >>>>> "Shaun" == Shaun Tancheff <shaun@tancheff.com> writes:
+>
+> Shaun,
+>
+> Shaun> SATA drives may support write same via SCT. This is useful for
+> Shaun> setting the drive contents to a specific pattern (0's).
+>
+> index 428c03e..c5c8424 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -52,6 +52,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/pr.h>
+> +#include <linux/ata.h>
+>  #include <asm/uaccess.h>
+>  #include <asm/unaligned.h>
+>
+> No ATA stuff in sd.c, please.
+>
+>
+> @@ -2761,24 +2762,26 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
+>  {
+>         struct scsi_device *sdev = sdkp->device;
+>
+> -       if (sdev->host->no_write_same) {
+> -               sdev->no_write_same = 1;
+> -
+> -               return;
+> -       }
+> -
+>         if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, INQUIRY) < 0) {
+> -               /* too large values might cause issues with arcmsr */
+> -               int vpd_buf_len = 64;
+> -
+>                 sdev->no_report_opcodes = 1;
+>
+>                 /* Disable WRITE SAME if REPORT SUPPORTED OPERATION
+>                  * CODES is unsupported and the device has an ATA
+>                  * Information VPD page (SAT).
+>                  */
+>
+> The above comment tells you how to enable WRITE SAME in libata's
+> SCSI-ATA translation.
+>
+>
+> -               if (!scsi_get_vpd_page(sdev, 0x89, buffer, vpd_buf_len))
+> +               if (!scsi_get_vpd_page(sdev, 0x89, buffer, SD_BUF_SIZE))
+>
+> That vpd_buf_len is intentional.
 
-<SNIP>
 
-> 
-> Hi Nic,
-> 
-> So I was testing the ibmvscsi target driver and I ran into some problems
-> again with UA stuff and it looks like you didnt remove the UA checks from
-> target_setup_cmd_from_cdb? Was that intentional? I thought we agreed to move
-> it completely to target_execute_cmd and not have both?
-> 
-> Let me know.
-> 
 
-Ah yes, the version of the patch I've been using for future target-core
-developments was missing the removal in target_setup_cmd_from_cdb().
+Got it. Looking at it again all of hacking here is not required.
+Posting a cleaner v2 without this.
 
-Applied the proper version to target-pending/master here:
+Thanks!
 
-https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?id=15ce22fa491aa3bab7acd89ac40a9fc27aeed915
+>
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-Thanks for the heads up!
+
+
+
+-- 
+Shaun Tancheff
