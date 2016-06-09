@@ -1,39 +1,42 @@
-From: Alba Pompeo <albapompeo@gmail.com>
-Subject: CD media burnt using TAO mode fails to boot
-Date: Thu, 9 Jun 2016 09:14:39 -0300
-Message-ID: <CAJDAfTCoLLBiOfcK+ws5wOUvg+4QkAppH_s3D7r+1rdyRoKV=g@mail.gmail.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PREEMPT-RT] [PATCH v2] scsi/fcoe: convert to
+	kworker
+Date: Thu, 9 Jun 2016 15:09:37 +0200
+Message-ID: <1749b892-401e-5e24-f8e4-6f7b13fad4c1@linutronix.de>
+References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
+ <1457710143-29182-2-git-send-email-bigeasy@linutronix.de>
+ <20160311161704.GA5083@infradead.org> <56E2F30F.5030108@linutronix.de>
+ <20160315081940.GB9136@infradead.org> <20160412151654.GB20685@linutronix.de>
+ <571A42EF.7030900@linutronix.de>
+ <1461340185.2415.28.camel@linux.vnet.ibm.com>
+ <186981952.31194082.1461343179889.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:36494 "EHLO
-	mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172AbcFIMOl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2016 08:14:41 -0400
-Received: by mail-vk0-f50.google.com with SMTP id g67so51894310vkb.3
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jun 2016 05:14:41 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <186981952.31194082.1461343179889.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, rt-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, scdbackup@gmx.net
 
-Hello,
+On 04/22/2016 06:39 PM, Laurence Oberman wrote:
+> I have fcoe for testing.
+> I will pull this in next week and test it.
 
-there is a recurrent problem bug in the kernel that makes a CD-R fail
-to boot when burnt in TAO mode.
+any update?
 
-[    9.698776] sr 1:0:0:0: [sr0] tag#12 UNKNOWN(0x2003) Result:
-hostbyte=0x00 driverbyte=0x08
-[    9.698784] sr 1:0:0:0: [sr0] tag#12 Sense Key : 0x4 [current]
-[    9.698788] sr 1:0:0:0: [sr0] tag#12 ASC=0x3e ASCQ=0x2
-[    9.698795] sr 1:0:0:0: [sr0] tag#12 CDB: opcode=0x28 28 00 00 00
-ae 96 00 00 02 00
-[    9.698798] blk_update_request: I/O error, dev sr0, sector 178776
+> 
+> Laurence Oberman
+> Principal Software Maintenance Engineer
+> Red Hat Global Support Services
 
-My best guess would be that this confuses the entity among the ISO
-payload, which is in charge for creating /dev/disk/by-label/ links
-while the system boots up.
-
-I posted about this on bugzilla too -
-https://bugzilla.kernel.org/show_bug.cgi?id=118621
-
-If any more information is needed, let me know.
-Thank you.
+Sebastian
