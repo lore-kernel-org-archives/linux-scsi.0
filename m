@@ -1,58 +1,50 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V1 0/2] Series short description
-Date: Wed, 8 Jun 2016 20:18:47 -0500
-Message-ID: <146543503567.10204.3458324982970458038.stgit@brunhilda>
+Subject: [PATCH 2/2] aacraid: remove wildcard for series 9 controllers
+Date: Wed, 8 Jun 2016 20:07:08 -0500
+Message-ID: <146543442887.9934.18384930275846242939.stgit@brunhilda>
+References: <146543426006.9934.4017687416436916766.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0071.outbound.protection.outlook.com ([157.56.111.71]:30743
+Received: from mail-bn1bon0057.outbound.protection.outlook.com ([157.56.111.57]:36572
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161745AbcFIBeS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jun 2016 21:34:18 -0400
+	id S933782AbcFIBiE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jun 2016 21:38:04 -0400
+In-Reply-To: <146543426006.9934.4017687416436916766.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-These patches are based on Linus's tree
+Depends on smartpqi driver adoption
 
-- add smartpqi to kernel.org
-- remove PCI IDs from aacraid driver
-  - Depends on adoption of smartpqi driver
-
-Changes since initial upload
- - Forgot to give correct ownership to the author.
-
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
+ drivers/scsi/aacraid/linit.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-Don Brace (1):
-      aacraid: remove wildcard for series 9 controllers
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 79871f3..d5b26fa 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -160,7 +160,6 @@ static const struct pci_device_id aac_pci_tbl[] = {
+ 	{ 0x9005, 0x028b, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 62 }, /* Adaptec PMC Series 6 (Tupelo) */
+ 	{ 0x9005, 0x028c, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 63 }, /* Adaptec PMC Series 7 (Denali) */
+ 	{ 0x9005, 0x028d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 64 }, /* Adaptec PMC Series 8 */
+-	{ 0x9005, 0x028f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 65 }, /* Adaptec PMC Series 9 */
+ 	{ 0,}
+ };
+ MODULE_DEVICE_TABLE(pci, aac_pci_tbl);
+@@ -239,7 +238,6 @@ static struct aac_driver_ident aac_drivers[] = {
+ 	{ aac_src_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC }, /* Adaptec PMC Series 6 (Tupelo) */
+ 	{ aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC }, /* Adaptec PMC Series 7 (Denali) */
+ 	{ aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC }, /* Adaptec PMC Series 8 */
+-	{ aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC } /* Adaptec PMC Series 9 */
+ };
+ 
+ /**
 
-Kevin Barnett (1):
-      smartpqi: initial commit of Microsemi smartpqi driver
-
-
- MAINTAINERS                                    |   11 
- drivers/scsi/Kconfig                           |    1 
- drivers/scsi/Makefile                          |    1 
- drivers/scsi/aacraid/linit.c                   |    2 
- drivers/scsi/smartpqi/Kconfig                  |   50 
- drivers/scsi/smartpqi/Makefile                 |    3 
- drivers/scsi/smartpqi/smartpqi.h               | 1106 ++++
- drivers/scsi/smartpqi/smartpqi_init.c          | 6817 ++++++++++++++++++++++++
- drivers/scsi/smartpqi/smartpqi_sas_transport.c |  350 +
- drivers/scsi/smartpqi/smartpqi_sis.c           |  394 +
- drivers/scsi/smartpqi/smartpqi_sis.h           |   32 
- 11 files changed, 8765 insertions(+), 2 deletions(-)
- create mode 100644 drivers/scsi/smartpqi/Kconfig
- create mode 100644 drivers/scsi/smartpqi/Makefile
- create mode 100644 drivers/scsi/smartpqi/smartpqi.h
- create mode 100644 drivers/scsi/smartpqi/smartpqi_init.c
- create mode 100644 drivers/scsi/smartpqi/smartpqi_sas_transport.c
- create mode 100644 drivers/scsi/smartpqi/smartpqi_sis.c
- create mode 100644 drivers/scsi/smartpqi/smartpqi_sis.h
-
---
-Signature
