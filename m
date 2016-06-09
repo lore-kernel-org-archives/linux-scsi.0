@@ -1,59 +1,73 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 0/2] nvme/loop: Add support for controllers-per-port model
-Date: Wed, 08 Jun 2016 22:13:53 -0700
-Message-ID: <1465449233.5365.139.camel@haakon3.risingtidesystems.com>
-References: <1465356861-4321-1-git-send-email-nab@linux-iscsi.org>
-	 <20160608121448.GA31119@lst.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v2] scsi_debug: fix sleep in invalid context
+Date: Thu, 9 Jun 2016 15:18:47 +1000
+Message-ID: <5758FC37.2000801@interlog.com>
+References: <1464729307-22182-1-git-send-email-dgilbert@interlog.com>
+ <20160607115525.GA30861@infradead.org> <5757C1F3.2070607@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160608121448.GA31119@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme <linux-nvme@lists.infradead.org>, Jens Axboe <axboe@fb.com>, Keith Busch <keith.busch@intel.com>, Jay Freyensee <james.p.freyensee@intel.com>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:35797 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751600AbcFIFS5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jun 2016 01:18:57 -0400
+In-Reply-To: <5757C1F3.2070607@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com
 
-On Wed, 2016-06-08 at 14:14 +0200, Christoph Hellwig wrote:
-> Hi Nic,
-> 
-> multiple ports have been on the todo list ever since we put that short
-> cut in place, but your patches aren't really how this should work.
-> 
-> The host NQN is not available for the actual drivers - we need to be able
-> to virtualize it for containers for example, that's why we need to pass
-> it by pointer depending on the arguments.  Also there is no need to
-> add another sysfs interface - just like for real drivers we can simply
-> create the ports in configfs and assign an address to it, we just need
-> to stop ignoring it.
-> 
+On 2016-06-08 04:57 PM, Douglas Gilbert wrote:
+> On 2016-06-07 09:55 PM, Christoph Hellwig wrote:
+>>> +static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
+>>> +                  int arr_len, unsigned int off_dst)
+>>> +{
+>>> +    int act_len, n;
+>>> +    struct scsi_data_buffer *sdb = scsi_in(scp);
+>>> +    off_t skip = off_dst;
+>>
+>> Why off_t which is a signed value instead of the unsigned in passed in?
+>
+> Because off_t is the type of the last argument to sg_pcopy_from_buffer()
+> which is where the off_dst value goes. So there is potentially a size
+> of integer change plus signedness, IMO best expressed by defining a
+> new auto variable. I notice some projects have a uoff_t typedef for
+> offsets that make no sense when negative (like this case), but not the
+> Linux kernel.
+>
+>>> +#define RL_BUCKET_ELEMS 8
+>>> +
+>>>   /* Even though each pseudo target has a REPORT LUNS "well known logical unit"
+>>>    * (W-LUN), the normal Linux scanning logic does not associate it with a
+>>>    * device (e.g. /dev/sg7). The following magic will make that association:
+>>> @@ -3285,12 +3315,14 @@ static int resp_report_luns(struct scsi_cmnd *scp,
+>>>       unsigned char select_report;
+>>>       u64 lun;
+>>>       struct scsi_lun *lun_p;
+>>> -    u8 *arr;
+>>> +    u8 arr[RL_BUCKET_ELEMS * sizeof(struct scsi_lun)];
+>>
+>> just use an on-stack array of type struct scsi_lun here, e.g.:
+>>
+>>     struct scsi_lun arr[RL_BUCKET_ELEMS];
+>>
+>> Which you can then use directly instead of lun_p later, but which can
+>> also be passed p_fill_from_dev_buffer as that takes a void pointer.
+>
+> Can do.
 
-Not sure what you mean, but my patch does not propose 'to add another
-sysfs interface'.
+When I looked at doing this, it's not that simple. The first 8 byte
+"slot" is not a LUN, it's the response header, which just happens
+to be 8 bytes long. That is the reason for the comment above that loop:
+   /* loops rely on sizeof response header same as sizeof lun (both 8) */
 
-It simply follows what drivers/target/loopback/ already does for scsi,
-and allocates a controller from nvmet/configfs-ng at subsystem NQN
-port enable time.
+So IMO: 'struct scsi_lun arr[RL_BUCKET_ELEMS];' will work but
+is deceptive. IMO the v2 patch should stand, unless someone has an
+alternate patch. The original patch is also fine. This is a bug
+fix, not a new feature.
 
-I still don't see why a loopback controller on a port of an individual
-subsystem NQN can't be created + deleted directly from configfs, and
-operate independently of other loopback controllers on a port of a
-different subsystem NQNs.
+Doug Gilbert
 
-> Something like the patch below is the right way, it just needs a bit more
-> fine tuning and proper test cases:
 
-I don't see how adding a internal mutex for loopback ports, and doing
-internal sequential list lookup holding the global nvmet_config_sem
-whilst doing nvmet_fabric_ops->add_port() helps to scale at all..
-
-AFAICT for loopback, neither of these is necessary.  Why can't a
-loopback controller on a port for a individual subsystem NQN be created
-+ deleted directly from configfs, independent of other subsystem NQN's
-loopback controller ports..?
-
-Now for rdma, just like with iscsi-target + iser with network portals,
-we do need to keep an internal list of ports, given that ports can be
-shared across different target endpoints.
-
-That's the part that I'm working on next for nvmet/configfs-ng.
