@@ -1,66 +1,75 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: block: don't check request size in blk_cloned_rq_check_limits()
-Date: Fri, 10 Jun 2016 10:18:52 -0400
-Message-ID: <20160610141852.GA28876@redhat.com>
-References: <1464593093-93527-1-git-send-email-hare@suse.de>
- <20160610131901.GA28570@redhat.com>
- <575AC10F.7020504@suse.de>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH 2/3] PCI: Use device_match_always()
+Date: Fri, 10 Jun 2016 11:13:43 -0500
+Message-ID: <20160610161343.GH19309@localhost>
+References: <20160606073238.1073-1-thierry.reding@gmail.com>
+ <20160606073238.1073-2-thierry.reding@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36527 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932082AbcFJOSy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2016 10:18:54 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <575AC10F.7020504@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20160606073238.1073-2-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, mark.bergman@uphs.upenn.edu, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, Jun 10 2016 at  9:30am -0400,
-Hannes Reinecke <hare@suse.de> wrote:
+On Mon, Jun 06, 2016 at 09:32:37AM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> There is now a common implementation for a match function that will
+> always match, so the PCI-specific implementation can be removed.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-> On 06/10/2016 03:19 PM, Mike Snitzer wrote:
-> > On Mon, May 30 2016 at  3:24am -0400,
-> > Hannes Reinecke <hare@suse.de> wrote:
-> > 
-> >> When checking a cloned request there is no need to check
-> >> the overall request size; this won't have changed even
-> >> when resubmitting to another queue.
-> >> Without this patch ppc64le on ibmvfc fails to boot.
-> > 
-> > By simply removing the check aren't you papering over the real problem?
-> > Looking at Martin's commit f31dc1cd490539 (which introduced the current
-> > variant of the limits check) I'm not convinced it is equivalent to what
-> > he replaced.  I'll look closer in a bit.
-> > 
-> The check itself is wrong, as we need (at least) to check the
-> max_hw_sectors here; the request is already fully assembled, so there is
-> a really good chance he's going beyond the max_sectors.
-> But trying the error still was found to be present.
-> So I decided to rip it out, as the overall value of this check is zero.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-fine, any chance you can improve the header to include these details.
-At least mention that commit f31dc1cd490539 incorrectly removed the
-max_hw_sectors checking.  And then please add these tags to a v2 repost:
+I'm sort of OK with this.  It's clearly not going to break anything.
 
-Fixes: f31dc1cd490539 ("block: Consolidate command flag and queue limit checks for merges")
-Reported-by: Mark Bergman <mark.bergman@uphs.upenn.edu>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
-Cc: stable@vger.kernel.org # 3.7+
+But I would far rather figure out a way to remove no_pci_devices()
+completely.  There's only one in-tree caller, and it's sort of
+dubious, although the idea was added by Linus (2bff5e94f1bf).
 
-> > Also you categorized your fix was for "ppc64le on ibmvfc"; whereas Mark
-> > has reported this issue (off-list) against x86_64.  By making it seem
-> > ppc64le specific I didn't take this patch to be generally applicable.
-> > 
-> Well, it has been observed on ppc64. That doesn't mean _only_ ppc64 is
-> affected. If it were ppc64 only it should've been marked as such, right?
+I suppose nowadays we would use ACPI or DMI to do this.  But I guess
+this is OK as-is.  It'd be pretty hard to find a PC110 to test any
+real driver changes.
 
-If it is a generic problem, being specific about the hardware you saw it
-on leads idiots like me to filter unnecessarily ;)
+I assume all three of these patches would get merged together by
+somebody else.
 
-Though I'm curious what you mean by "it should've been marked as
-such".. "it" being what?  The patch?  And how would it have been marked
-as ppc64 only?
+> ---
+>  drivers/pci/probe.c | 7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8e3ef720997d..3db06d8d6497 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -62,11 +62,6 @@ static struct resource *get_pci_domain_busn_res(int domain_nr)
+>  	return &r->res;
+>  }
+>  
+> -static int find_anything(struct device *dev, void *data)
+> -{
+> -	return 1;
+> -}
+> -
+>  /*
+>   * Some device drivers need know if pci is initiated.
+>   * Basically, we think pci is not initiated when there
+> @@ -77,7 +72,7 @@ int no_pci_devices(void)
+>  	struct device *dev;
+>  	int no_devices;
+>  
+> -	dev = bus_find_device(&pci_bus_type, NULL, NULL, find_anything);
+> +	dev = bus_find_device(&pci_bus_type, NULL, NULL, device_match_always);
+>  	no_devices = (dev == NULL);
+>  	put_device(dev);
+>  	return no_devices;
+> -- 
+> 2.8.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
