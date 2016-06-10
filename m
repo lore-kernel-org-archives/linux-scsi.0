@@ -1,80 +1,99 @@
-From: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH 2/3] PCI: Use device_match_always()
-Date: Fri, 10 Jun 2016 18:33:52 +0200
-Message-ID: <20160610163352.GS27142@ulmo.ba.sec>
-References: <20160606073238.1073-1-thierry.reding@gmail.com>
- <20160606073238.1073-2-thierry.reding@gmail.com>
- <20160610161343.GH19309@localhost>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Fri, 10 Jun 2016 12:03:51 -0700
+Message-ID: <12c6229a-3188-b88c-523f-99219ed60c05@sandisk.com>
+References: <1464097978-88457-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <3303bc98-ade7-62f0-71c7-11e7ef42b42d@sandisk.com>
+ <20160524160047.Horde.M1bK0S-HUnY41nXa9ZoJ6w1@ltc.linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="uNvczuo8OWfsyO2w"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160610161343.GH19309@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20160524160047.Horde.M1bK0S-HUnY41nXa9ZoJ6w1@ltc.linux.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bryant G Ly <bryantly@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, martin.petersen@oracle.com, tyreld@linux.vnet.ibm.com, akpm@linux-foundation.org, kvalo@codeaurora.org, davem@davemloft.net, gregkh@linuxfoundation.org, mchehab@osg.samsung.com, jslaby@suse.com, joe@perches.com, bp@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, bgly <bgly@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 05/24/2016 01:00 PM, Bryant G Ly wrote:
+> Quoting Bart Van Assche <bart.vanassche@sandisk.com>:
+>> On 05/24/2016 06:52 AM, Bryant G. Ly wrote:
+>>> +static uint64_t ibmvscsis_unpack_lun(const uint8_t *lun, int len)
+>>> +{
+>>> +    uint64_t res = NO_SUCH_LUN;
+>>> +    int addressing_method;
+>>> +
+>>> +    if (unlikely(len < 2)) {
+>>> +        pr_err("Illegal LUN length %d, expected 2 bytes or more\n",
+>>> +            len);
+>>> +        goto out;
+>>> +    }
+>>> +
+>>> +    switch (len) {
+>>> +    case 8:
+>>> +        if ((*((__be64 *)lun) & cpu_to_be64(0x0000FFFFFFFFFFFFLL))
+>>> != 0)
+>>> +            goto out_err;
+>>> +        break;
+>>> +    case 4:
+>>> +        if (*((__be16 *)&lun[2]) != 0)
+>>> +            goto out_err;
+>>> +        break;
+>>> +    case 6:
+>>> +        if (*((__be32 *)&lun[2]) != 0)
+>>> +            goto out_err;
+>>> +        break;
+>>> +    case 2:
+>>> +        break;
+>>> +    default:
+>>> +        goto out_err;
+>>> +    }
+>>> +
+>>> +    addressing_method = (*lun) >> 6; /* highest two bits of byte 0 */
+>>> +    switch (addressing_method) {
+>>> +    case SCSI_LUN_ADDR_METHOD_PERIPHERAL:
+>>> +    case SCSI_LUN_ADDR_METHOD_FLAT:
+>>> +    case SCSI_LUN_ADDR_METHOD_LUN:
+>>> +        res = *(lun + 1) | (((*lun) & 0x3f) << 8);
+>>> +        break;
+>>> +
+>>> +    case SCSI_LUN_ADDR_METHOD_EXTENDED_LUN:
+>>> +    default:
+>>> +        pr_err("Unimplemented LUN addressing method %u\n",
+>>> +            addressing_method);
+>>> +        break;
+>>> +    }
+>>> +
+>>> +out:
+>>> +    return res;
+>>> +out_err:
+>>> +    pr_err("Support for multi-level LUNs has not yet been
+>>> implemented\n");
+>>> +    goto out;
+>>> +}
+>>
+>> In the above function there is nothing that is specific to the VIO
+>> mechanism. Please consider to merge this function with
+>> scsilun_to_int(), e.g. by introducing a new function that accepts a
+>> SCSI LUN and the addressing method as arguments and by making
+>> scsilun_to_int() call that function with
+>> SCSI_LUN_ADDR_METHOD_PERIPHERAL as one of its arguments.
+>>
+>
+> We are going to keep this here atm, until we can make sure canonical can
+> pick up
+> these changes, since we have a deliverable for a 3rd party vendor who is
+> going to
+> fully utilize this driver. Once they can pick it up in 4.4 kernel I will
+> make the
+> change you recommended / move the scsi_lun_addr_method addressed below.
+> I will also
+> address the changes that ib_srpt needs to utilize this new function too.
 
---uNvczuo8OWfsyO2w
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+A much better approach would be to move this function into the SCSI core 
+and to add a copy of that function to the backported driver that will be 
+provided to Canonical.
 
-On Fri, Jun 10, 2016 at 11:13:43AM -0500, Bjorn Helgaas wrote:
-> On Mon, Jun 06, 2016 at 09:32:37AM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > There is now a common implementation for a match function that will
-> > always match, so the PCI-specific implementation can be removed.
-> >=20
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
->=20
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->=20
-> I'm sort of OK with this.  It's clearly not going to break anything.
->=20
-> But I would far rather figure out a way to remove no_pci_devices()
-> completely.  There's only one in-tree caller, and it's sort of
-> dubious, although the idea was added by Linus (2bff5e94f1bf).
+Thanks,
 
-This is sort of a spin-off from another series that I sent out, which
-introduced a common function that was used in far more places and has
-a more clearly legitimate use. While working on that other series the
-duplication here occurred to me, so I thought I'd remove it while at
-it, even if there are only two occurrences.
-
-> I suppose nowadays we would use ACPI or DMI to do this.  But I guess
-> this is OK as-is.  It'd be pretty hard to find a PC110 to test any
-> real driver changes.
->=20
-> I assume all three of these patches would get merged together by
-> somebody else.
-
-I was thinking Greg could take them through the driver core tree.
-
-Thierry
-
---uNvczuo8OWfsyO2w
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXWuvuAAoJEN0jrNd/PrOhNXMP/1JezpWDkvrEMWWZOyjl8YxN
-EbuULIADs/KksKFtNbelo/Zpa4Tm5nC/K6VKpzy8MFs7st/U/hD0rpkkONfsTo8J
-AlIPEzUaQFar8Hdx/kefclUJlWHCkkAMWGVd2r3US/ZxCk5TKH8ALbKn72n14CoE
-p6nWdiRz70RKgnaJsRsSjhafkJ1+YryLO/NmQ2dJE8NtR0q/VolwyNBobcOMXhhH
-hgD+Q2dtXNqXAU1Q9A2pkZzhrVpvz4Nc0qSEo5jjicG062VZEisBD3vj8JNA0Qwc
-S995Sdtf9pZRu2MkMKFxh8w1fHngES4uSEbaNxKTvgjPr6kKDg3MgDCGrmvF1qHP
-ZjQkjRrKWqtX27LI76JeTYaZ6AcFueCIu6nGH3qWm8hX/XrrD8JovnfXaigulRzZ
-r85orCHN3c+hMMMWN23PC0UlxXlPdhVZYHmdDBv6jaF3zndih+3sgEZOTwHGnLai
-yAQFEL3nA0J0UloH9AjoVZbBUbAbwibjP1AX3OcnVOWY6rbRB70SJrANxPnuExaM
-joKXOgcNuCv8JDKb2srrXwoZxVv/E1irT4dZ8ElcQc+TQwhADbhCN6xjyx7D8Cw0
-uXh/fw5e1uGjsFtNmXMuSXS3REUQ8WucTZ8KFbkn8EPRTHqNQnPXe6zDeej1O0x1
-SuuHHGDqDVk8V4N3u381
-=Xdo4
------END PGP SIGNATURE-----
-
---uNvczuo8OWfsyO2w--
+Bart.
