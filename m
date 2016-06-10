@@ -1,8 +1,7 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [RFC] [PATCH 1/3] ipr: Wait to do async scan until scsi host is
- initialized
-Date: Fri, 10 Jun 2016 16:36:46 -0500
-Message-ID: <575B32EE.8080403@linux.vnet.ibm.com>
+Subject: [RFC] [PATCH 2/3] scsi: Export SCSI EH commands
+Date: Fri, 10 Jun 2016 16:37:53 -0500
+Message-ID: <575B3331.6030707@linux.vnet.ibm.com>
 References: <CAOS58YO65A8TpH22tEdM4SUcn8ncpY1f_YFMzomCN09OvhoRaQ@mail.gmail.com>
  <57470450.3070000@linux.vnet.ibm.com> <575B3215.5070602@linux.vnet.ibm.com>
 Mime-Version: 1.0
@@ -15,60 +14,52 @@ To: Tejun Heo <tj@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.ker
 List-Id: linux-scsi@vger.kernel.org
 
 
-When performing an async scan, make sure the kthread doing scanning
-doesn't start before the scsi host is fully initialized.
+Export the following EH commands so that ipr can be converted to
+use libata's new EH.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ipr.c |    9 +++++++++
- drivers/scsi/ipr.h |    1 +
- 2 files changed, 10 insertions(+)
+ drivers/scsi/scsi_error.c |    5 +++--
+ include/scsi/scsi_eh.h    |    5 +++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_async_scan_fixup drivers/scsi/ipr.c
---- linux-2.6.git/drivers/scsi/ipr.c~ipr_async_scan_fixup	2016-06-01 21:04:14.088698640 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2016-06-10 15:35:56.738201739 -0500
-@@ -3287,6 +3287,11 @@ static void ipr_worker_thread(struct wor
- 		return;
- 	}
- 
-+	if (!ioa_cfg->scan_enabled) {
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+		return;
-+	}
-+
- restart:
- 	do {
- 		did_work = 0;
-@@ -10360,6 +10365,7 @@ static void ipr_remove(struct pci_dev *p
- static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+diff -puN drivers/scsi/scsi_error.c~scsi_eh_export_scsi_eh_abort_cmds drivers/scsi/scsi_error.c
+--- linux-2.6.git/drivers/scsi/scsi_error.c~scsi_eh_export_scsi_eh_abort_cmds	2016-06-10 15:50:03.191155441 -0500
++++ linux-2.6.git-bjking1/drivers/scsi/scsi_error.c	2016-06-10 15:50:03.201155322 -0500
+@@ -1320,8 +1320,8 @@ static int scsi_eh_test_devices(struct l
+  *    no sense to try and abort the command, since as far as the shost
+  *    adapter is concerned, it isn't running.
+  */
+-static int scsi_eh_abort_cmds(struct list_head *work_q,
+-			      struct list_head *done_q)
++int scsi_eh_abort_cmds(struct list_head *work_q,
++		       struct list_head *done_q)
  {
- 	struct ipr_ioa_cfg *ioa_cfg;
-+	unsigned long flags;
- 	int rc, i;
+ 	struct scsi_cmnd *scmd, *next;
+ 	LIST_HEAD(check_list);
+@@ -1361,6 +1361,7 @@ static int scsi_eh_abort_cmds(struct lis
  
- 	rc = ipr_probe_ioa(pdev, dev_id);
-@@ -10412,7 +10418,10 @@ static int ipr_probe(struct pci_dev *pde
- 		}
- 	}
- 
-+	spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
-+	ioa_cfg->scan_enabled = 1;
- 	schedule_work(&ioa_cfg->work_q);
-+	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
- 	return 0;
+ 	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
  }
++EXPORT_SYMBOL_GPL(scsi_eh_abort_cmds);
  
-diff -puN drivers/scsi/ipr.h~ipr_async_scan_fixup drivers/scsi/ipr.h
---- linux-2.6.git/drivers/scsi/ipr.h~ipr_async_scan_fixup	2016-06-01 21:04:17.186678232 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.h	2016-06-10 15:35:56.739201727 -0500
-@@ -1475,6 +1475,7 @@ struct ipr_ioa_cfg {
- 	u8 in_ioa_bringdown:1;
- 	u8 ioa_unit_checked:1;
- 	u8 dump_taken:1;
-+	u8 scan_enabled:1;
- 	u8 scan_done:1;
- 	u8 needs_hard_reset:1;
- 	u8 dual_raid:1;
+ /**
+  * scsi_eh_try_stu - Send START_UNIT to device.
+diff -puN include/scsi/scsi_eh.h~scsi_eh_export_scsi_eh_abort_cmds include/scsi/scsi_eh.h
+--- linux-2.6.git/include/scsi/scsi_eh.h~scsi_eh_export_scsi_eh_abort_cmds	2016-06-10 15:50:03.195155394 -0500
++++ linux-2.6.git-bjking1/include/scsi/scsi_eh.h	2016-06-10 15:50:03.201155322 -0500
+@@ -17,6 +17,11 @@ extern int scsi_block_when_processing_er
+ extern bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
+ 					 struct scsi_sense_hdr *sshdr);
+ extern int scsi_check_sense(struct scsi_cmnd *);
++extern int scsi_eh_abort_cmds(struct list_head *work_q,
++			      struct list_head *done_q);
++extern void scsi_eh_ready_devs(struct Scsi_Host *shost,
++			       struct list_head *work_q,
++			       struct list_head *done_q);
+ 
+ static inline bool scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
+ {
 _
 
