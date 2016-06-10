@@ -1,57 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Helge Deller <deller@gmx.de>
 Subject: Re: kernel BUG in drivers/scsi/53c700.c:1129
-Date: Fri, 10 Jun 2016 14:43:52 -0700
-Message-ID: <1465595032.2224.59.camel@HansenPartnership.com>
+Date: Fri, 10 Jun 2016 23:46:53 +0200
+Message-ID: <575B354D.3090901@gmx.de>
 References: <5759C524.2030009@gmx.de>
-	 <1465511002.2259.19.camel@HansenPartnership.com>  <575B2239.4020403@gmx.de>
-	 <1465592285.20724.173.camel@localhost.localdomain>
-	 <1465592473.2224.52.camel@HansenPartnership.com>
-	 <1465594421.2224.58.camel@HansenPartnership.com>
+ <1465511002.2259.19.camel@HansenPartnership.com> <575B2239.4020403@gmx.de>
+ <1465592285.20724.173.camel@localhost.localdomain>
+ <1465592473.2224.52.camel@HansenPartnership.com>
+ <1465594421.2224.58.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56764 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751354AbcFJVnz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2016 17:43:55 -0400
+Received: from mout.gmx.net ([212.227.15.19]:52644 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752216AbcFJVre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2016 17:47:34 -0400
 In-Reply-To: <1465594421.2224.58.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com, Helge Deller <deller@gmx.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "emilne@redhat.com" <emilne@redhat.com>
 Cc: "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, 2016-06-10 at 14:33 -0700, James Bottomley wrote:
+On 10.06.2016 23:33, James Bottomley wrote:
 > On Fri, 2016-06-10 at 14:01 -0700, James Bottomley wrote:
-> > On Fri, 2016-06-10 at 16:58 -0400, Ewan D. Milne wrote:
-> > > I'm not sure if this is the problem, but the tagging changes to
-> > > scsi_tcq.h may have altered the 53c700 driver's assumptions.
-> > > In one case it sets sdev->current_cmnd and then some of the
-> > > tagging calls would return it if the tag was SCSI_NO_TAG.
-> > > 
-> > > NCR_700_queuecommand_lck() does:
-> > > 
-> > >         if ((hostdata->tag_negotiated & (1<<scmd_id(SCp))) &&
-> > >             SCp->device->simple_tags) {
-> > >                 slot->tag = SCp->request->tag;
-> > >                 CDEBUG(KERN_DEBUG, SCp, "sending out tag %d, slot
-> > > %p\n",
-> > >                        slot->tag, slot);
-> > >         } else {
-> > >                 slot->tag = SCSI_NO_TAG;
-> > >                 /* must populate current_cmnd for
-> > > scsi_host_find_tag
-> > > to
-> > > work */
-> > >                 SCp->device->current_cmnd = SCp;
-> > >         }
-> > 
-> > Thanks ... I was just about to look for something this.  I'd got to
-> > interpreting the script as reselected with tag information present 
-> > and then trying to look the command up with no tag present, hence
-> > the
-> > BUG().
+>> On Fri, 2016-06-10 at 16:58 -0400, Ewan D. Milne wrote:
+>>> I'm not sure if this is the problem, but the tagging changes to
+>>> scsi_tcq.h may have altered the 53c700 driver's assumptions.
+>>> In one case it sets sdev->current_cmnd and then some of the
+>>> tagging calls would return it if the tag was SCSI_NO_TAG.
+>>>
+>>> NCR_700_queuecommand_lck() does:
+>>>
+>>>         if ((hostdata->tag_negotiated & (1<<scmd_id(SCp))) &&
+>>>             SCp->device->simple_tags) {
+>>>                 slot->tag = SCp->request->tag;
+>>>                 CDEBUG(KERN_DEBUG, SCp, "sending out tag %d, slot
+>>> %p\n",
+>>>                        slot->tag, slot);
+>>>         } else {
+>>>                 slot->tag = SCSI_NO_TAG;
+>>>                 /* must populate current_cmnd for
+>>> scsi_host_find_tag
+>>> to
+>>> work */
+>>>                 SCp->device->current_cmnd = SCp;
+>>>         }
+>>
+>> Thanks ... I was just about to look for something this.  I'd got to
+>> interpreting the script as reselected with tag information present 
+>> and then trying to look the command up with no tag present, hence the
+>> BUG().
 > 
 > Yes, you're right, it's
 > 
@@ -62,22 +60,63 @@ On Fri, 2016-06-10 at 14:33 -0700, James Bottomley wrote:
 >     scsi: use host wide tags by default
 > 
 > Again.  This time because it's transformation of the handling of
-> SCSI_NO_TAG is wrong.  You can't replace the return sdev
-> ->current_cmnd
+> SCSI_NO_TAG is wrong.  You can't replace the return sdev->current_cmnd
 > original in scsi_find_tag with the NULL return in scsi_find_host_tag.
 > 
 > I think this changesets wins the prize for the greatest number of
 > generated faults.
 > 
 > Does this fix 53c700.c?
-> 
+
+Yes, the patch below fixes the boot problems for 53c700.c:
+
+[    9.869236] 53c700: Version 2.8 By James.Bottomley@HansenPartnership.com
+[    9.949797] scsi0: 53c710 rev 2 
+[   10.994453] scsi host0: LASI SCSI 53c700
+[   13.008861] scsi 0:0:6:0: Direct-Access     QUANTUM  FIREBALL_TM3200S 300X PQ: 0 ANSI: 2
+[   13.106740] scsi target0:0:6: Beginning Domain Validation
+[   13.171889] scsi 0:0:6:0: tag#0 Enabling Tag Command Queuing
+[   13.239996] scsi target0:0:6: asynchronous
+[   13.305374] scsi target0:0:6: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 8)
+[   13.397482] scsi target0:0:6: Domain Validation skipping write tests
+[   13.473831] scsi target0:0:6: Ending Domain Validation
+[   13.557116] scsi 0:0:6:1: tag#0 Disabling Tag Command Queuing
+[   13.637379] st: Version 20160209, fixed bufsize 32768, s/g segs 256
+[   13.746803] sd 0:0:6:0: Attached scsi generic sg0 type 0
+
+THANKS!
+(please queue the patch up for 4.6-stable at least)
+Helge
+
+ 
 > I suppose we'd better look for other places where no tag fell through
 > ...
-
-OK, I checked: snic and fnic use SCSI_NO_TAG but they don't save
-anything in current_cmnd, so they can't rely on the original behaviour.
- I think we'll be safe with a local change in 53c700.c
-
-James
-
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+> index d4c2856..3ddc85e 100644
+> --- a/drivers/scsi/53c700.c
+> +++ b/drivers/scsi/53c700.c
+> @@ -1122,7 +1122,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
+>  		} else {
+>  			struct scsi_cmnd *SCp;
+>  
+> -			SCp = scsi_host_find_tag(SDp->host, SCSI_NO_TAG);
+> +			SCp = SDp->current_cmnd;
+>  			if(unlikely(SCp == NULL)) {
+>  				sdev_printk(KERN_ERR, SDp,
+>  					"no saved request for untagged cmd\n");
+> @@ -1826,7 +1826,7 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
+>  		       slot->tag, slot);
+>  	} else {
+>  		slot->tag = SCSI_NO_TAG;
+> -		/* must populate current_cmnd for scsi_host_find_tag to work */
+> +		/* save current command for reselection */
+>  		SCp->device->current_cmnd = SCp;
+>  	}
+>  	/* sanity check: some of the commands generated by the mid-layer
+> 
 
