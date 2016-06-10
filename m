@@ -1,31 +1,72 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 7/8] nvmet/admin-cmd: Hookup T10-PI to ID_NS.ms +
- ID_NS.dps feature bits
-Date: Thu, 09 Jun 2016 23:55:07 -0700
-Message-ID: <1465541707.5365.200.camel@haakon3.risingtidesystems.com>
-References: <1465281416-28355-1-git-send-email-nab@linux-iscsi.org>
-	 <1465281416-28355-8-git-send-email-nab@linux-iscsi.org>
-	 <20160609135242.GA29981@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160609135242.GA29981@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-nvme <linux-nvme@lists.infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v3 0/3] Block layer support ZAC/ZBC commands
+Date: Fri, 10 Jun 2016 02:10:23 -0500
+Message-ID: <1465542626-26536-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2016-06-09 at 15:52 +0200, Christoph Hellwig wrote:
-> FYI: NVMf requires metadata to be interleaved in the data, and you
-> need to indicate that in the Identify data.  Note that this is only
-> a requirement for the on the wire format and for the way the Namespaces are
-> exposed at the protocol level as RDMA HCA and FB HBAs should still
-> be able to handle our separate SGL.
+Hi Jens,
 
-Btw, nvmet needs something similar for controller creation, like how
-target_port_op works with target_alloc_session(), so hw capabilities can
-signal to host controllers when PI should be enabled for a namespace,
-but actual namespace backends don't support it.
+This series is on your for-next branch.
 
-Eg: TARGET_PROT_DOUT_STRIP and TARGET_PROT_DIN_INSERT ops
+As Host Aware drives are becoming available we would like to be able
+to make use of such drives. This series is also intended to be suitable
+for use by Host Managed drives.
+
+ZAC/ZBC drives add new commands for discovering and working with Zones.
+
+This extends the ZAC/ZBC support up to the block layer.
+
+Patches for util-linux can be found here:
+https://github.com/Seagate/ZDM-Device-Mapper/tree/master/patches/util-linux
+
+Using BIOs to issue ZBC commands allows DM targets (such as ZDM) or
+file-systems such as btrfs or nilfs2 to extend their block allocation
+schemes and issue discards that are zone aware.
+
+A perhaps non-obvious approach is that a conventional drive will 
+returns a descriptor with a single large conventional zone.
+
+The last patch dealing with ata16 passthrough is to workaround HBA SAS 
+controllers that don't support ZBC. It will be dropped now that firmware
+updates are starting to appear.
+
+V3:
+ - Rebase on Mike Cristie's separate bio operations
+ - Update blkzoned_api.h to include report zones PARTIAL bit.
+ - Use zoned report reserved bit for ata-passthrough flag.
+
+V2:
+ - Changed bi_rw to op_flags clarify sepeartion of bio op from flags.
+ - Fixed memory leak in blkdev_issue_zone_report failing to put_bio().
+ - Documented opt in blkdev_issue_zone_report.
+ - Moved include/uapi/linux/fs.h changes to patch 3
+ - Fixed commit message for first patch in series.
+
+Shaun Tancheff (3):
+  Add bio/request flags for using ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+  Add ata pass-through path for ZAC commands.
+
+ MAINTAINERS                       |   9 ++
+ block/blk-lib.c                   |  98 +++++++++++++++++
+ block/ioctl.c                     | 142 ++++++++++++++++++++++++
+ drivers/scsi/sd.c                 | 139 ++++++++++++++++++++++-
+ drivers/scsi/sd.h                 |   1 +
+ include/linux/ata.h               |  15 +++
+ include/linux/bio.h               |   4 +-
+ include/linux/blk_types.h         |  16 ++-
+ include/linux/blkzoned_api.h      |  25 +++++
+ include/uapi/linux/Kbuild         |   1 +
+ include/uapi/linux/blkzoned_api.h | 224 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h           |   1 +
+ 12 files changed, 671 insertions(+), 4 deletions(-)
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
+
+-- 
+2.8.1
+
