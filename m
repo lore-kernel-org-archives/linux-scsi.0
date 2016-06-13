@@ -1,35 +1,53 @@
-From: Oliver Neukum <oneukum@suse.com>
-Subject: Re: [PATCH resend] USB: uas: Fix slave queue_depth not being set
-Date: Mon, 13 Jun 2016 14:05:50 +0200
-Message-ID: <1465819550.15666.23.camel@suse.com>
-References: <1464679083-2914-1-git-send-email-hdegoede@redhat.com>
-	 <1464679083-2914-2-git-send-email-hdegoede@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: disable VPD page check on error
+Date: Mon, 13 Jun 2016 14:48:53 +0200
+Message-ID: <1465822133-22143-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50301 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54413 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161071AbcFMMJk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2016 08:09:40 -0400
-In-Reply-To: <1464679083-2914-2-git-send-email-hdegoede@redhat.com>
+	id S1422747AbcFMMtC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jun 2016 08:49:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gerd Hoffmann <kraxel@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, stable@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Tue, 2016-05-31 at 09:18 +0200, Hans de Goede wrote:
-> Commit 198de51dbc34 ("USB: uas: Limit qdepth at the scsi-host level")
-> removed the scsi_change_queue_depth() call from uas_slave_configure()
-> assuming that the slave would inherit the host's queue_depth, which
-> that commit sets to the same value.
-> 
-> This is incorrect, without the scsi_change_queue_depth() call the slave's
-> queue_depth defaults to 1, introducing a performance regression.
+If we encounter an error during VPD page scanning we should be
+setting the 'skip_vpd_pages' bit to avoid further accesses.
 
-Hans, may I ask what become of this patch? I don't see it in the queue.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-	Regards
-		Oliver
-
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 1deb6ad..0359864 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -796,6 +796,7 @@ retry_pg0:
+ 	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
+ 	if (result < 0) {
+ 		kfree(vpd_buf);
++		sdev->skip_vpd_pages = 1;
+ 		return;
+ 	}
+ 	if (result > vpd_len) {
+@@ -822,6 +823,7 @@ retry_pg80:
+ 		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80, vpd_len);
+ 		if (result < 0) {
+ 			kfree(vpd_buf);
++			sdev->skip_vpd_pages = 1;
+ 			return;
+ 		}
+ 		if (result > vpd_len) {
+@@ -851,6 +853,7 @@ retry_pg83:
+ 		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83, vpd_len);
+ 		if (result < 0) {
+ 			kfree(vpd_buf);
++			sdev->skip_vpd_pages = 1;
+ 			return;
+ 		}
+ 		if (result > vpd_len) {
+-- 
+1.8.5.6
 
