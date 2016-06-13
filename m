@@ -1,30 +1,28 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 1/3] Add bio/request flags for using ZBC/ZAC commands
-Date: Mon, 13 Jun 2016 01:01:07 -0700
-Message-ID: <20160613080107.GA26544@infradead.org>
-References: <1465542626-26536-1-git-send-email-shaun@tancheff.com>
- <1465542833-26828-1-git-send-email-shaun@tancheff.com>
+Subject: Re: [PATCH v2] Add support for SCT Write Same
+Date: Mon, 13 Jun 2016 01:02:43 -0700
+Message-ID: <20160613080243.GB26544@infradead.org>
+References: <1465453967-11085-1-git-send-email-shaun@tancheff.com>
+ <1465453967-11085-2-git-send-email-shaun@tancheff.com>
+ <20160609092212.GA7459@infradead.org>
+ <CAJVOszAO7YxznaUNs1+HaN=aRaA3yPiQDYHSQw+To6BKMEL++A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60466 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964889AbcFMIBL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2016 04:01:11 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1465542833-26828-1-git-send-email-shaun@tancheff.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <CAJVOszAO7YxznaUNs1+HaN=aRaA3yPiQDYHSQw+To6BKMEL++A@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>
-Cc: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Shaun Tancheff <shaun.tancheff@seagate.com>
 
-On Fri, Jun 10, 2016 at 02:13:53AM -0500, Shaun Tancheff wrote:
-> T10 ZBC and T13 ZAC specify operations for Zoned devices.
+On Thu, Jun 09, 2016 at 10:24:40PM -0500, Shaun Tancheff wrote:
+> >  - The plain page_address above looks harmful, how do we know that
+> >    the page is mapped into kernel memory?  This might actually be broken
+> >    already, though.
 > 
-> To be able to access the zone information and open and close zones
-> adding flags for the report zones command (REQ_REPORT_ZONES) and for
-> Open and Close zone (REQ_OPEN_ZONE and REQ_CLOSE_ZONE) can be added
-> for use by struct bio's bi_rw and by struct request's cmd_flags.
+> I think it just happens to work because it's always used with a recently
+> allocated page. Fixing it to include the (possible) offset is just a good thing.
 
-These need to be new operations, e.g. they should be in the REQ_OP_*
-enum.  And please use a separate opcode for each actual operation.
+I haven't spent much time with libata recently, but what prevents an
+arbitrary user page ending up here through SG_IO?
