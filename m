@@ -1,30 +1,31 @@
-From: Fab Stz <fabstz-it@yahoo.fr>
+From: Fab Stz <fabstmail@gmail.com>
 Subject: Re: Partitions not detected with firewire - 36 bytes offset - PL-3507
-Date: Tue, 14 Jun 2016 08:55:59 +0200
-Message-ID: <2653317.JXdRiB3nko@debian>
+Date: Tue, 14 Jun 2016 09:05:35 +0200
+Message-ID: <1777209.O0WHVKuHCq@debian>
 References: <4379835.Lnu4rjdqZg@debian> <20160607151554.5b33bc0c@kant>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="nextPart1938970.D8fGs969R3"
+Content-Type: multipart/mixed; boundary="nextPart29918607.CpE1kX3DtP"
 Content-Transfer-Encoding: 7Bit
-Return-path: <linux1394-user-bounces@lists.sourceforge.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35885 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377AbcFNHFr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 03:05:47 -0400
+Received: by mail-wm0-f66.google.com with SMTP id m124so19895924wme.3
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2016 00:05:46 -0700 (PDT)
 In-Reply-To: <20160607151554.5b33bc0c@kant>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
-	<mailto:linux1394-user-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-user>
-List-Post: <mailto:linux1394-user@lists.sourceforge.net>
-List-Help: <mailto:linux1394-user-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
-	<mailto:linux1394-user-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-user-bounces@lists.sourceforge.net
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
---nextPart1938970.D8fGs969R3
+--nextPart29918607.CpE1kX3DtP
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="iso-8859-1"
+
+(sent again from another email because rejected from linux-scsi)
 
 Thanks for your detailed answer
 
@@ -59,28 +60,37 @@ ular
 Y.
 
 For single-user I booted on recovery-mode in debian (having the "single=
-" option on the kernel line). The problem is the same.
+"=20
+option on the kernel line). The problem is the same.
 
 However, based on you explanations I tried a few things and noticed thi=
-s behaviour :
+s=20
+behaviour :
 
  * If I run "sg_readcap /deb/sdb" then, the offset doesn't exist anymor=
-e and when I run cfdisk /dev/sdb the partition table is correctly displ=
-ayed. However, after closure of cfdisk, the offset is there again and c=
-fdisk doesn't display the partition table anymore.
+e and=20
+when I run cfdisk /dev/sdb the partition table is correctly displayed.=20=
+
+However, after closure of cfdisk, the offset is there again and cfdisk =
+doesn't=20
+display the partition table anymore.
  * If I run "sg_readcap" followed by "sg_inq", sg_inq makes the offset =
-appear again.
+appear=20
+again.
  * If I run "sdparm /dev/sdb", there isn't an offset anymore and cfdisk=
- displays the partition table
+=20
+displays the partition table
  * If I run "sdparm -i /dev/sdb" the offset appears again
 
 So it seems "cfdisk", "sg_inq" and "sdparm -i" send a command that make=
-s the offset appear again, while "sdparm" and "sg_readcap" 'fix' the of=
-fset issue.
+s the=20
+offset appear again, while "sdparm" and "sg_readcap" 'fix' the offset i=
+ssue.
 
 Output of "sdparm -i /dev/sdb"
     /dev/sdb: SAMSUNG   SP0842N                 [simplified direct acce=
-ss device]
+ss=20
+device]
 malformed VPD response, VPD pages probably not supported
 
 
@@ -123,7 +133,7 @@ No, there are no further messages
 
 --
 Fab
---nextPart1938970.D8fGs969R3
+--nextPart29918607.CpE1kX3DtP
 Content-Disposition: attachment; filename="sdparm-a.out"
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="utf-8"; name="sdparm-a.out"
@@ -255,23 +265,5 @@ Informational exceptions control mode page:
   INTT      1227  [cha: y, def:1227, sav:1227]
   REPC      364904449  [cha: y, def:364904449, sav:364904449]
 
---nextPart1938970.D8fGs969R3
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+--nextPart29918607.CpE1kX3DtP--
 
-------------------------------------------------------------------------------
-What NetFlow Analyzer can do for you? Monitors network bandwidth and traffic
-patterns at an interface-level. Reveals which users, apps, and protocols are 
-consuming the most bandwidth. Provides multi-vendor support for NetFlow, 
-J-Flow, sFlow and other flows. Make informed decisions using capacity 
-planning reports. https://ad.doubleclick.net/ddm/clk/305295220;132659582;e
---nextPart1938970.D8fGs969R3
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---nextPart1938970.D8fGs969R3--
