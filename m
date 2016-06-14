@@ -1,27 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
-Date: Tue, 14 Jun 2016 07:55:52 -0700
-Message-ID: <20160614145552.GA18075@infradead.org>
-References: <1464097978-88457-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <3303bc98-ade7-62f0-71c7-11e7ef42b42d@sandisk.com>
- <20160524160047.Horde.M1bK0S-HUnY41nXa9ZoJ6w1@ltc.linux.ibm.com>
- <12c6229a-3188-b88c-523f-99219ed60c05@sandisk.com>
- <1465885432.5365.214.camel@haakon3.risingtidesystems.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: mpt3sas: memory allocation for firmware upgrade DMA memory
+ question
+Date: Tue, 14 Jun 2016 16:57:26 +0200
+Message-ID: <20160614145726.i2zpcbwzj2ir5kx5@c203.arch.suse.de>
+References: <20160525091853.psv6kml6oingj4fx@c203.arch.suse.de>
+ <c2f16ce7d75be5869b5888fa5198c40a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:42133 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789AbcFNO52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2016 10:57:28 -0400
 Content-Disposition: inline
-In-Reply-To: <1465885432.5365.214.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Bryant G Ly <bryantly@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, martin.petersen@oracle.com, tyreld@linux.vnet.ibm.com, akpm@linux-foundation.org, kvalo@codeaurora.org, davem@davemloft.net, gregkh@linuxfoundation.org, mchehab@osg.samsung.com, jslaby@suse.com, joe@perches.com, bp@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, bgly <bgly@us.ibm.com>
+In-Reply-To: <c2f16ce7d75be5869b5888fa5198c40a@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chaitra Basappa <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>
 
-On Mon, Jun 13, 2016 at 11:23:52PM -0700, Nicholas A. Bellinger wrote:
-> AFAICT, the problem with this improvement is that it's not stable
-> material, which means that Canonical would have to carry this separately
-> beyond linux-4.4.y, in order to support ibmvscsi-tgt.
+On Thu, May 26, 2016 at 03:46:58PM +0530, Chaitra Basappa wrote:
+> Johannes,
+>  Could you please let us know which application is being used for fir=
+mware
+> upgrade ?? Whether it is your own customized application or LSI provi=
+ded
+> applications?
+>=20
+> Also our application use single contiguous memory buffer for ioctls a=
+nd
+> hence mpt3sas driver is using single contiguous memory for the DMA
+> operation.
+>=20
+> If we use GFP_KERNEL flag then it may be possible that ioctl thread m=
+ay
+> hang/wait for long,  if it doesn't get required memory from the syste=
+m.
+>=20
+> We may need to test below patch thoroughly , as I don=E2=80=99t see a=
+llocation of
+> several non-contiguous chunks of memory in below patch...,
+>=20
 
-So who cares?  If they have a business interest in backporting the
-driver they'll need to figure out a way.  None of that should matter in
-any way whatsover for mainline.
+Any results? What about my quest whether we can allocate the buffers by
+vmalloc() and then map it in a SG list?
+
+Thanks,
+	Johannes
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
