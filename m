@@ -1,43 +1,97 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] [PATCH 0/3] Convert ipr to use
- ata_port_operations->error_handler
-Date: Mon, 13 Jun 2016 18:15:24 -0400
-Message-ID: <20160613221524.GK31708@htj.duckdns.org>
-References: <CAOS58YO65A8TpH22tEdM4SUcn8ncpY1f_YFMzomCN09OvhoRaQ@mail.gmail.com>
- <57470450.3070000@linux.vnet.ibm.com>
- <575B3215.5070602@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:36524 "EHLO
-	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753315AbcFMWP1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2016 18:15:27 -0400
-Content-Disposition: inline
-In-Reply-To: <575B3215.5070602@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [RFC-v2 01/11] nvme-fabrics: Export nvmf_host_add + generate hostnqn if necessary
+Date: Tue, 14 Jun 2016 04:35:36 +0000
+Message-ID: <1465878946-26556-2-git-send-email-nab@linux-iscsi.org>
+References: <1465878946-26556-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1465878946-26556-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme <linux-nvme@lists.infradead.org>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, Jay Freyensee <james.p.freyensee@intel.com>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Dave B Minturn <dave.b.minturn@intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Jun 10, 2016 at 04:33:09PM -0500, Brian King wrote:
-> On 05/26/2016 09:12 AM, Brian King wrote:
-> > On 05/25/2016 02:32 PM, Tejun Heo wrote:
-> >> Hello, Brian.
-> >>
-> >> So, of all the ata drivers, ipr seems to be the only driver which
-> >> doesn't implement ata_port_opeations->error_handler and thus depends
-> >> on the old error handling path. I'm wondering whether it'd be possible
-> >> to convert ipr to implement ->error_handler and drop the old path.
-> >> Would that be difficult?
-> > 
-> > Last time I looked at that there were a number of challenges in doing that,
-> > but let me take another look and see if we can figure out a way to do that.
-> 
-> Here is an initial attempt to do this conversion. Probably plenty of bugs
-> in it, and more testing is needed before this would be ready to apply.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Thanks a lot for working on this. :)
+This patch allows nvmf_host_add() to be used externally,
+and optionally if no hostnqn is passed will generate a
+hostnqn based on host->id, following nvmf_host_default().
 
+Note it's required for nvme-loop multi-controller support,
+in order to drive nvmet_port creation directly via configfs
+attribute write from in ../nvmet/subsystems/$NQN/ports/$PORT/
+group context.
+
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Jay Freyensee <james.p.freyensee@intel.com>
+Cc: Martin Petersen <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/nvme/host/fabrics.c | 18 +++++++++++++-----
+ drivers/nvme/host/fabrics.h |  1 +
+ 2 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/nvme/host/fabrics.c b/drivers/nvme/host/fabrics.c
+index ee4b7f1..2e0086a 100644
+--- a/drivers/nvme/host/fabrics.c
++++ b/drivers/nvme/host/fabrics.c
+@@ -41,28 +41,36 @@ static struct nvmf_host *__nvmf_host_find(const char *hostnqn)
+ 	return NULL;
+ }
+ 
+-static struct nvmf_host *nvmf_host_add(const char *hostnqn)
++struct nvmf_host *nvmf_host_add(const char *hostnqn)
+ {
+ 	struct nvmf_host *host;
+ 
+ 	mutex_lock(&nvmf_hosts_mutex);
+-	host = __nvmf_host_find(hostnqn);
+-	if (host)
+-		goto out_unlock;
++	if (hostnqn) {
++		host = __nvmf_host_find(hostnqn);
++		if (host)
++			goto out_unlock;
++	}
+ 
+ 	host = kmalloc(sizeof(*host), GFP_KERNEL);
+ 	if (!host)
+ 		goto out_unlock;
+ 
+ 	kref_init(&host->ref);
+-	memcpy(host->nqn, hostnqn, NVMF_NQN_SIZE);
+ 	uuid_le_gen(&host->id);
+ 
++	if (hostnqn)
++		memcpy(host->nqn, hostnqn, NVMF_NQN_SIZE);
++	else
++		snprintf(host->nqn, NVMF_NQN_SIZE,
++			"nqn.2014-08.org.nvmexpress:NVMf:uuid:%pUl", &host->id);
++
+ 	list_add_tail(&host->list, &nvmf_hosts);
+ out_unlock:
+ 	mutex_unlock(&nvmf_hosts_mutex);
+ 	return host;
+ }
++EXPORT_SYMBOL_GPL(nvmf_host_add);
+ 
+ static struct nvmf_host *nvmf_host_default(void)
+ {
+diff --git a/drivers/nvme/host/fabrics.h b/drivers/nvme/host/fabrics.h
+index b540674..956eab4 100644
+--- a/drivers/nvme/host/fabrics.h
++++ b/drivers/nvme/host/fabrics.h
+@@ -128,6 +128,7 @@ int nvmf_connect_admin_queue(struct nvme_ctrl *ctrl);
+ int nvmf_connect_io_queue(struct nvme_ctrl *ctrl, u16 qid);
+ void nvmf_register_transport(struct nvmf_transport_ops *ops);
+ void nvmf_unregister_transport(struct nvmf_transport_ops *ops);
++struct nvmf_host *nvmf_host_add(const char *hostnqn);
+ void nvmf_free_options(struct nvmf_ctrl_options *opts);
+ const char *nvmf_get_subsysnqn(struct nvme_ctrl *ctrl);
+ int nvmf_get_address(struct nvme_ctrl *ctrl, char *buf, int size);
 -- 
-tejun
+1.9.1
