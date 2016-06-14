@@ -1,110 +1,105 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
-Date: Mon, 13 Jun 2016 23:23:52 -0700
-Message-ID: <1465885432.5365.214.camel@haakon3.risingtidesystems.com>
-References: <1464097978-88457-1-git-send-email-bryantly@linux.vnet.ibm.com>
-	 <3303bc98-ade7-62f0-71c7-11e7ef42b42d@sandisk.com>
-	 <20160524160047.Horde.M1bK0S-HUnY41nXa9ZoJ6w1@ltc.linux.ibm.com>
-	 <12c6229a-3188-b88c-523f-99219ed60c05@sandisk.com>
+Subject: Re: [PATCH v4] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Mon, 13 Jun 2016 23:35:51 -0700
+Message-ID: <1465886151.5365.220.camel@haakon3.risingtidesystems.com>
+References: <1464409675.22249.237.camel@haakon3.risingtidesystems.com>
+	 <1465507614-29695-1-git-send-email-bryantly@linux.vnet.ibm.com>
+	 <c5aa5fec-3499-a899-aa22-07c655311e20@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <12c6229a-3188-b88c-523f-99219ed60c05@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Bryant G Ly <bryantly@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, martin.petersen@oracle.com, tyreld@linux.vnet.ibm.com, akpm@linux-foundation.org, kvalo@codeaurora.org, davem@davemloft.net, gregkh@linuxfoundation.org, mchehab@osg.samsung.com, jslaby@suse.com, joe@perches.com, bp@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, bgly <bgly@us.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48935 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbcFNGfy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 02:35:54 -0400
+In-Reply-To: <c5aa5fec-3499-a899-aa22-07c655311e20@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, hch@infradead.org, mikecyr@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, gregkh@linuxfoundation.org, joe@perches.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
 
-On Fri, 2016-06-10 at 12:03 -0700, Bart Van Assche wrote:
-> On 05/24/2016 01:00 PM, Bryant G Ly wrote:
-> > Quoting Bart Van Assche <bart.vanassche@sandisk.com>:
-> >> On 05/24/2016 06:52 AM, Bryant G. Ly wrote:
-> >>> +static uint64_t ibmvscsis_unpack_lun(const uint8_t *lun, int len)
-> >>> +{
-> >>> +    uint64_t res = NO_SUCH_LUN;
-> >>> +    int addressing_method;
-> >>> +
-> >>> +    if (unlikely(len < 2)) {
-> >>> +        pr_err("Illegal LUN length %d, expected 2 bytes or more\n",
-> >>> +            len);
-> >>> +        goto out;
-> >>> +    }
-> >>> +
-> >>> +    switch (len) {
-> >>> +    case 8:
-> >>> +        if ((*((__be64 *)lun) & cpu_to_be64(0x0000FFFFFFFFFFFFLL))
-> >>> != 0)
-> >>> +            goto out_err;
-> >>> +        break;
-> >>> +    case 4:
-> >>> +        if (*((__be16 *)&lun[2]) != 0)
-> >>> +            goto out_err;
-> >>> +        break;
-> >>> +    case 6:
-> >>> +        if (*((__be32 *)&lun[2]) != 0)
-> >>> +            goto out_err;
-> >>> +        break;
-> >>> +    case 2:
-> >>> +        break;
-> >>> +    default:
-> >>> +        goto out_err;
-> >>> +    }
-> >>> +
-> >>> +    addressing_method = (*lun) >> 6; /* highest two bits of byte 0 */
-> >>> +    switch (addressing_method) {
-> >>> +    case SCSI_LUN_ADDR_METHOD_PERIPHERAL:
-> >>> +    case SCSI_LUN_ADDR_METHOD_FLAT:
-> >>> +    case SCSI_LUN_ADDR_METHOD_LUN:
-> >>> +        res = *(lun + 1) | (((*lun) & 0x3f) << 8);
-> >>> +        break;
-> >>> +
-> >>> +    case SCSI_LUN_ADDR_METHOD_EXTENDED_LUN:
-> >>> +    default:
-> >>> +        pr_err("Unimplemented LUN addressing method %u\n",
-> >>> +            addressing_method);
-> >>> +        break;
-> >>> +    }
-> >>> +
-> >>> +out:
-> >>> +    return res;
-> >>> +out_err:
-> >>> +    pr_err("Support for multi-level LUNs has not yet been
-> >>> implemented\n");
-> >>> +    goto out;
-> >>> +}
-> >>
-> >> In the above function there is nothing that is specific to the VIO
-> >> mechanism. Please consider to merge this function with
-> >> scsilun_to_int(), e.g. by introducing a new function that accepts a
-> >> SCSI LUN and the addressing method as arguments and by making
-> >> scsilun_to_int() call that function with
-> >> SCSI_LUN_ADDR_METHOD_PERIPHERAL as one of its arguments.
-> >>
-> >
-> > We are going to keep this here atm, until we can make sure canonical can
-> > pick up
-> > these changes, since we have a deliverable for a 3rd party vendor who is
-> > going to
-> > fully utilize this driver. Once they can pick it up in 4.4 kernel I will
-> > make the
-> > change you recommended / move the scsi_lun_addr_method addressed below.
-> > I will also
-> > address the changes that ib_srpt needs to utilize this new function too.
+On Fri, 2016-06-10 at 12:05 -0700, Bart Van Assche wrote:
+> On 06/09/2016 02:26 PM, Bryant G. Ly wrote:
+> >  drivers/scsi/Kconfig                 |   27 +-
+> >  drivers/scsi/Makefile                |    2 +-
+> >  drivers/scsi/ibmvscsi/Makefile       |    4 +
+> >  drivers/scsi/ibmvscsi/ibmvscsi_tgt.c | 4184 ++++++++++++++++++++++++++++++++++
+> >  drivers/scsi/ibmvscsi/ibmvscsi_tgt.h |  347 +++
+> >  drivers/scsi/ibmvscsi/libsrp.c       |  427 ++++
+> >  drivers/scsi/ibmvscsi/libsrp.h       |  123 +
+> >  drivers/scsi/libsrp.c                |  447 ----
+> >  include/scsi/libsrp.h                |   78 -
 > 
-> A much better approach would be to move this function into the SCSI core 
-> and to add a copy of that function to the backported driver that will be 
-> provided to Canonical.
+> Sorry that I hadn't noticed this before but since no code is shared 
+> between the IBM vSCSI initiator and target drivers please consider 
+> moving the ibmvscsi_tgt.[ch] and libsrp.[ch] source files into a new 
+> directory. This will keep initiator and target drivers are in separate 
+> directories. This is the approach used for other upstream protocol 
+> drivers for which no code is shared between initiator and target drivers 
+> (e.g. the iSER, SRP initiator and target drivers).
 
-AFAICT, the problem with this improvement is that it's not stable
-material, which means that Canonical would have to carry this separately
-beyond linux-4.4.y, in order to support ibmvscsi-tgt.
+Yeah, if no code is shared, and will ever be shared, we might as well
+merge libsrc.[c,h] directly into ibmvscsi_tgt.[c,h].
 
-As-is, it looks like we'll have two target-core fixes to support
-ibmvscsi-tgt, both of which are considered stable material at this point
-and will eventually make it to linux-4.4.y.
+> > +/**
+> > + * ibmvscsis_modify_std_inquiry() - Modify STD Inquiry
+> > + *
+> > + * This function modifies the inquiry data prior to sending to initiator
+> > + * so that we can support current AIX. Internally we are going to
+> > + * add new ODM entries to support the emulation from LIO. This function
+> > + * is temporary until those changes are done.
+> > + */
+> > +static void ibmvscsis_modify_std_inquiry(struct se_cmd *se_cmd)
+> > +{
+> > +	struct se_device *dev = se_cmd->se_dev;
+> > +	u32 cmd_len = se_cmd->data_length;
+> > +	u32 repl_len;
+> > +	unsigned char *buf = NULL;
+> > +
+> > +	if (cmd_len <= 8)
+> > +		return;
+> > +
+> > +	buf = transport_kmap_data_sg(se_cmd);
+> > +	if (buf) {
+> > +		repl_len = 8;
+> > +		if (cmd_len - 8 < repl_len)
+> > +			repl_len = cmd_len - 8;
+> > +		memcpy(&buf[8], "IBM     ", repl_len);
+> > +
+> > +		if (cmd_len > 16) {
+> > +			repl_len = 16;
+> > +			if (cmd_len - 16 < repl_len)
+> > +				repl_len = cmd_len - 16;
+> > +			if (dev->transport->get_device_type(dev) == TYPE_ROM)
+> > +				memcpy(&buf[16], "VOPTA           ", repl_len);
+> > +			else
+> > +				memcpy(&buf[16], "3303      NVDISK", repl_len);
+> > +		}
+> > +		if (cmd_len > 32) {
+> > +			repl_len = 4;
+> > +			if (cmd_len - 32 < repl_len)
+> > +				repl_len = cmd_len - 32;
+> > +			memcpy(&buf[32], "0001", repl_len);
+> > +		}
+> > +		transport_kunmap_data_sg(se_cmd);
+> > +	}
+> > +}
+> 
+> Christoph Hellwig had asked you *not* to modify the INQUIRY response 
+> generated by the target core. Had you noticed that comment?
+> 
 
-That said Bryant, I still don't have an objection for the initial commit
-to use it's own internal ibmvscsis_unpack_lun(), but it would be nice in
-the patch series containing the initial ibmvscsi-tgt commit to include
-an incremental patch to make this common code, as Bart has highlighted.
+Yeah, so I wanted to avoid having to add a new target_core_fabric_ops
+API caller just for this special case, but there might not be another
+choice..
+
+Previously, ibmvscsi-tgt was simply picking off INQUIRY and doing
+completion, setting the special payload buffer contents without actually
+submitting to target-core.
+
+I'd probably still prefer the original method to avoid the extra
+target_core_fabric_ops API caller that will never be used by anybody
+else, unless there are issues with AIX ordered tasks wrt INQUIRY not
+actually making it into target-core.
+
