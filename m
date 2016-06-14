@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v2 05/11] nvmet/loop: Add support for controller-per-port model + nvmet_port_binding
-Date: Tue, 14 Jun 2016 04:35:40 +0000
-Message-ID: <1465878946-26556-6-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v2 07/11] nvmet/io-cmd: Hookup sbc_ops->execute_rw backend ops
+Date: Tue, 14 Jun 2016 04:35:42 +0000
+Message-ID: <1465878946-26556-8-git-send-email-nab@linux-iscsi.org>
 References: <1465878946-26556-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38491 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38529 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933269AbcFNEgz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 00:36:55 -0400
+	with ESMTP id S1751634AbcFNEg6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 00:36:58 -0400
 In-Reply-To: <1465878946-26556-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,324 +16,213 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme <linux-nvme@lists.infrad
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch introduces loopback support for a nvme host
-controller per nvmet_port instance model, following what
-we've done in drivers/target/loopback/ for allowing
-multiple host LLDs to co-exist.
+This patch converts nvmet_execute_rw() to utilize sbc_ops->execute_rw()
+for target_iostate + target_iomem based I/O submission into existing
+backends drivers via configfs in /sys/kernel/config/target/core/.
 
-It changes nvme_loop_add_port() to use struct nvme_loop_port
-and take the nvmf_host_add() reference, and invokes
-device_register() to nvme_loop_driver_probe() to kick off
-controller creation within nvme_loop_create_ctrl().
+This includes support for passing T10-PI scatterlists via target_iomem
+into existing sbc_ops->execute_rw() logic, and is functioning with
+IBLOCK, FILEIO, and RAMDISK.
 
-This allows nvme_loop_queue_rq to setup iod->req.port to
-the per nvmet_port pointer, instead of a single hardcoded
-global nvmet_loop_port.
-
-Subsequently, it also adds nvme_loop_remove_port() to call
-device_unregister() and call nvme_loop_del_ctrl() and
-nvmf_free_options() to drop nvmet_port's struct nvmf_host
-rereference, when the nvmet_port_binding is being removed
-from the associated nvmet_subsys.
+Note the preceeding target/iblock patch absorbs inline bio + bvecs
+and blk_poll() optimizations from Ming + Sagi in nvmet/io-cmd into
+target_core_iblock.c code.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jay Freyensee <james.p.freyensee@intel.com>
 Cc: Martin Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagi@grimberg.me>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/nvme/target/loop.c | 205 ++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 185 insertions(+), 20 deletions(-)
+ drivers/nvme/target/io-cmd.c | 116 ++++++++++++++++++++++---------------------
+ drivers/nvme/target/nvmet.h  |   7 +++
+ 2 files changed, 67 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/nvme/target/loop.c b/drivers/nvme/target/loop.c
-index 08b4fbb..e9f31d4 100644
---- a/drivers/nvme/target/loop.c
-+++ b/drivers/nvme/target/loop.c
-@@ -45,6 +45,13 @@ struct nvme_loop_iod {
- 	struct scatterlist	first_sgl[];
- };
+diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
+index 38c2e97..133a14a 100644
+--- a/drivers/nvme/target/io-cmd.c
++++ b/drivers/nvme/target/io-cmd.c
+@@ -14,20 +14,16 @@
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ #include <linux/blkdev.h>
+ #include <linux/module.h>
++#include <target/target_core_base.h>
++#include <target/target_core_backend.h>
+ #include "nvmet.h"
  
-+struct nvme_loop_port {
-+	struct device		dev;
-+	struct nvmf_ctrl_options *opts;
-+	struct nvme_ctrl	*ctrl;
-+	struct nvmet_port	port;
-+};
-+
- struct nvme_loop_ctrl {
- 	spinlock_t		lock;
- 	struct nvme_loop_queue	*queues;
-@@ -61,6 +68,8 @@ struct nvme_loop_ctrl {
- 	struct nvmet_ctrl	*target_ctrl;
- 	struct work_struct	delete_work;
- 	struct work_struct	reset_work;
-+
-+	struct nvme_loop_port	*port;
- };
- 
- static inline struct nvme_loop_ctrl *to_loop_ctrl(struct nvme_ctrl *ctrl)
-@@ -74,8 +83,6 @@ struct nvme_loop_queue {
- 	struct nvme_loop_ctrl	*ctrl;
- };
- 
--static struct nvmet_port *nvmet_loop_port;
+-#if 0
+-static void nvmet_bio_done(struct bio *bio)
++static void nvmet_complete_ios(struct target_iostate *ios, u16 status)
+ {
+-	struct nvmet_req *req = bio->bi_private;
 -
- static LIST_HEAD(nvme_loop_ctrl_list);
- static DEFINE_MUTEX(nvme_loop_ctrl_mutex);
+-	nvmet_req_complete(req,
+-		bio->bi_error ? NVME_SC_INTERNAL | NVME_SC_DNR : 0);
++	struct nvmet_req *req = container_of(ios, struct nvmet_req, t_iostate);
  
-@@ -172,7 +179,8 @@ static int nvme_loop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		return ret;
+-	if (bio != &req->inline_bio)
+-		bio_put(bio);
++	nvmet_req_complete(req, status ? NVME_SC_INTERNAL | NVME_SC_DNR : 0);
+ }
+-#endif
  
- 	iod->cmd.common.flags |= NVME_CMD_SGL_METABUF;
--	iod->req.port = nvmet_loop_port;
-+	iod->req.port = &queue->ctrl->port->port;
-+
- 	if (!nvmet_req_init(&iod->req, &queue->nvme_cq,
- 			&queue->nvme_sq, &nvme_loop_ops)) {
- 		nvme_cleanup_cmd(req);
-@@ -599,6 +607,8 @@ out_destroy_queues:
- static struct nvme_ctrl *nvme_loop_create_ctrl(struct device *dev,
- 		struct nvmf_ctrl_options *opts)
+ static inline u32 nvmet_rw_len(struct nvmet_req *req)
  {
-+	struct nvme_loop_port *loop_port = container_of(dev,
-+				struct nvme_loop_port, dev);
- 	struct nvme_loop_ctrl *ctrl;
- 	bool changed;
- 	int ret;
-@@ -607,6 +617,7 @@ static struct nvme_ctrl *nvme_loop_create_ctrl(struct device *dev,
- 	if (!ctrl)
- 		return ERR_PTR(-ENOMEM);
- 	ctrl->ctrl.opts = opts;
-+	ctrl->port = loop_port;
- 	INIT_LIST_HEAD(&ctrl->list);
- 
- 	INIT_WORK(&ctrl->delete_work, nvme_loop_del_ctrl_work);
-@@ -681,29 +692,135 @@ out_put_ctrl:
- 	return ERR_PTR(ret);
+@@ -35,72 +31,80 @@ static inline u32 nvmet_rw_len(struct nvmet_req *req)
+ 			req->ns->blksize_shift;
  }
  
--static int nvme_loop_add_port(struct nvmet_port *port)
-+static int nvme_loop_driver_probe(struct device *dev)
+-#if 0
+-static void nvmet_inline_bio_init(struct nvmet_req *req)
+-{
+-	struct bio *bio = &req->inline_bio;
+-
+-	bio_init(bio);
+-	bio->bi_max_vecs = NVMET_MAX_INLINE_BIOVEC;
+-	bio->bi_io_vec = req->inline_bvec;
+-}
+-#endif
+-
+ static void nvmet_execute_rw(struct nvmet_req *req)
  {
--	/*
--	 * XXX: disalow adding more than one port so
--	 * there is no connection rejections when a
--	 * a subsystem is assigned to a port for which
--	 * loop doesn't have a pointer.
--	 * This scenario would be possible if we allowed
--	 * more than one port to be added and a subsystem
--	 * was assigned to a port other than nvmet_loop_port.
--	 */
-+	struct nvme_loop_port *loop_port = container_of(dev,
-+				struct nvme_loop_port, dev);
-+	struct nvme_ctrl *ctrl;
- 
--	if (nvmet_loop_port)
--		return -EPERM;
-+	ctrl = nvme_loop_create_ctrl(dev, loop_port->opts);
-+	if (IS_ERR(ctrl))
-+		return PTR_ERR(ctrl);
- 
--	nvmet_loop_port = port;
-+	loop_port->ctrl = ctrl;
- 	return 0;
- }
- 
--static void nvme_loop_remove_port(struct nvmet_port *port)
-+static int nvme_loop_driver_remove(struct device *dev)
-+{
-+	struct nvme_loop_port *loop_port = container_of(dev,
-+				struct nvme_loop_port, dev);
-+	struct nvme_ctrl *ctrl = loop_port->ctrl;
-+	struct nvmf_ctrl_options *opts = loop_port->opts;
+-#if 0
+-	int sg_cnt = req->sg_cnt;
+-	struct scatterlist *sg;
+-	struct bio *bio;
++	struct target_iostate *ios = &req->t_iostate;
++	struct target_iomem *iomem = &req->t_iomem;
++	struct se_device *dev = rcu_dereference_raw(req->ns->dev);
++	struct sbc_ops *sbc_ops = dev->transport->sbc_ops;
+ 	sector_t sector;
+-	blk_qc_t cookie;
+-	int rw, i;
+-#endif
++	enum dma_data_direction data_direction;
++	sense_reason_t rc;
++	bool fua_write = false, prot_enabled = false;
 +
-+	nvme_loop_del_ctrl(ctrl);
-+	nvmf_free_options(opts);
-+	return 0;
-+}
-+
-+static int pseudo_bus_match(struct device *dev,
-+			    struct device_driver *dev_driver)
-+{
-+	return 1;
-+}
-+
-+static struct bus_type nvme_loop_bus = {
-+	.name			= "nvme_loop_bus",
-+	.match			= pseudo_bus_match,
-+	.probe			= nvme_loop_driver_probe,
-+	.remove			= nvme_loop_driver_remove,
-+};
-+
-+static struct device_driver nvme_loop_driverfs = {
-+	.name			= "nvme_loop",
-+	.bus			= &nvme_loop_bus,
-+};
-+
-+static void nvme_loop_release_adapter(struct device *dev)
- {
--	if (port == nvmet_loop_port)
--		nvmet_loop_port = NULL;
-+	struct nvme_loop_port *loop_port = container_of(dev,
-+				struct nvme_loop_port, dev);
-+
-+	kfree(loop_port);
-+}
-+
-+static struct device *nvme_loop_primary;
-+
-+static int nvme_loop_add_port(struct nvmet_port_binding *pb)
-+{
-+	struct nvmet_subsys *subsys = pb->nf_subsys;
-+	struct nvme_loop_port *loop_port;
-+	struct nvmf_ctrl_options *opts;
-+	struct device *dev;
-+	int ret;
-+
-+	loop_port = kzalloc(sizeof(*loop_port), GFP_KERNEL);
-+	if (!loop_port)
-+		return -ENOMEM;
-+
-+	mutex_init(&loop_port->port.port_binding_mutex);
-+	INIT_LIST_HEAD(&loop_port->port.port_binding_list);
-+	loop_port->port.priv = loop_port;
-+	loop_port->port.nf_subsys = pb->nf_subsys;
-+	loop_port->port.nf_ops = pb->nf_ops;
-+	pb->port = &loop_port->port;
-+
-+	opts = kzalloc(sizeof(*opts), GFP_KERNEL);
-+	if (!opts) {
-+		kfree(loop_port);
-+		return -ENOMEM;
-+	}
-+	loop_port->opts = opts;
-+
-+	/* Set defaults */
-+	opts->queue_size = NVMF_DEF_QUEUE_SIZE;
-+	opts->nr_io_queues = num_online_cpus();
-+	opts->tl_retry_count = 2;
-+	opts->reconnect_delay = NVMF_DEF_RECONNECT_DELAY;
-+	opts->kato = NVME_DEFAULT_KATO;
-+
-+	opts->host = nvmf_host_add(NULL);
-+	if (!opts->host) {
-+		kfree(opts);
-+		kfree(loop_port);
-+		return -ENOMEM;
-+	}
-+
-+	opts->transport = kstrdup("loop", GFP_KERNEL);
-+	opts->subsysnqn = kstrdup(subsys->subsysnqn, GFP_KERNEL);
-+
-+	dev = &loop_port->dev;
-+	dev->bus = &nvme_loop_bus;
-+	dev->parent = nvme_loop_primary;
-+	dev->release = &nvme_loop_release_adapter;
-+	dev_set_name(dev, "nvme_loop_ctrl:%s", subsys->subsysnqn);
-+
-+	nvmet_port_binding_enable(pb, &loop_port->port);
-+
-+	ret = device_register(dev);
-+	if (ret) {
-+		pr_err("device_register() failed: %d\n", ret);
-+		nvmet_port_binding_disable(pb, &loop_port->port);
-+		nvmf_free_options(opts);
-+		kfree(loop_port);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void nvme_loop_remove_port(struct nvmet_port_binding *pb)
-+{
-+	struct nvmet_port *port = pb->port;
-+	struct nvme_loop_port *loop_port;
-+
-+	if (!port)
++	if (!sbc_ops || !sbc_ops->execute_rw) {
++		nvmet_req_complete(req, NVME_SC_INTERNAL | NVME_SC_DNR);
 +		return;
++	}
 +
-+	loop_port = container_of(port, struct nvme_loop_port, port);
-+	nvmet_port_binding_disable(pb, &loop_port->port);
+ 	if (!req->sg_cnt) {
+ 		nvmet_req_complete(req, 0);
+ 		return;
+ 	}
+-#if 0
 +
-+	device_unregister(&loop_port->dev);
+ 	if (req->cmd->rw.opcode == nvme_cmd_write) {
+ 		if (req->cmd->rw.control & cpu_to_le16(NVME_RW_FUA))
+-			rw = WRITE_FUA;
+-		else
+-			rw = WRITE;
++			fua_write = true;
++
++		data_direction = DMA_TO_DEVICE;
+ 	} else {
+-		rw = READ;
++		data_direction = DMA_FROM_DEVICE;
+ 	}
+ 
+ 	sector = le64_to_cpu(req->cmd->rw.slba);
+ 	sector <<= (req->ns->blksize_shift - 9);
+ 
+-	nvmet_inline_bio_init(req);
+-	bio = &req->inline_bio;
+-	bio->bi_bdev = req->ns->bdev;
+-	bio->bi_iter.bi_sector = sector;
+-	bio->bi_private = req;
+-	bio->bi_end_io = nvmet_bio_done;
+-
+-	for_each_sg(req->sg, sg, req->sg_cnt, i) {
+-		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+-				!= sg->length) {
+-			struct bio *prev = bio;
+-
+-			bio = bio_alloc(GFP_KERNEL, min(sg_cnt, BIO_MAX_PAGES));
+-			bio->bi_bdev = req->ns->bdev;
+-			bio->bi_iter.bi_sector = sector;
+-
+-			bio_chain(bio, prev);
+-			cookie = submit_bio(rw, prev);
+-		}
++	ios->t_task_lba = sector;
++	ios->data_length = nvmet_rw_len(req);
++	ios->data_direction = data_direction;
++	iomem->t_data_sg = req->sg;
++	iomem->t_data_nents = req->sg_cnt;
++	iomem->t_prot_sg = req->prot_sg;
++	iomem->t_prot_nents = req->prot_sg_cnt;
++
++	// XXX: Make common between sbc_check_prot and nvme-target
++	switch (dev->dev_attrib.pi_prot_type) {
++	case TARGET_DIF_TYPE3_PROT:
++		ios->reftag_seed = 0xffffffff;
++		prot_enabled = true;
++		break;
++	case TARGET_DIF_TYPE1_PROT:
++		ios->reftag_seed = ios->t_task_lba;
++		prot_enabled = true;
++		break;
++	default:
++		break;
++	}
+ 
+-		sector += sg->length >> 9;
+-		sg_cnt--;
++	if (prot_enabled) {
++		ios->prot_type = dev->dev_attrib.pi_prot_type;
++		ios->prot_length = dev->prot_length *
++				       (le16_to_cpu(req->cmd->rw.length) + 1);
++#if 0
++		printk("req->cmd->rw.length: %u\n", le16_to_cpu(req->cmd->rw.length));
++		printk("nvmet_rw_len: %u\n", nvmet_rw_len(req));
++		printk("req->se_cmd.prot_type: %d\n", req->se_cmd.prot_type);
++		printk("req->se_cmd.prot_length: %u\n", req->se_cmd.prot_length);
++#endif
+ 	}
+ 
+-	cookie = submit_bio(rw, bio);
++	ios->se_dev = dev;
++	ios->iomem = iomem;
++	ios->t_comp_func = &nvmet_complete_ios;
+ 
+-	blk_poll(bdev_get_queue(req->ns->bdev), cookie);
+-#endif
++	rc = sbc_ops->execute_rw(ios, iomem->t_data_sg, iomem->t_data_nents,
++				 ios->data_direction, fua_write,
++				 &nvmet_complete_ios);
  }
  
- static struct nvmet_fabrics_ops nvme_loop_ops = {
-@@ -720,13 +837,59 @@ static struct nvmf_transport_ops nvme_loop_transport = {
- 	.create_ctrl	= nvme_loop_create_ctrl,
- };
+ static void nvmet_execute_flush(struct nvmet_req *req)
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index af616d0..a3ab4fb 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -25,6 +25,7 @@
+ #include <linux/configfs.h>
+ #include <linux/rcupdate.h>
+ #include <linux/blkdev.h>
++#include <target/target_core_base.h>
  
-+static int nvme_loop_alloc_core_bus(void)
-+{
-+	int ret;
-+
-+	nvme_loop_primary = root_device_register("nvme_loop_0");
-+	if (IS_ERR(nvme_loop_primary)) {
-+		pr_err("Unable to allocate nvme_loop_primary\n");
-+		return PTR_ERR(nvme_loop_primary);
-+	}
-+
-+	ret = bus_register(&nvme_loop_bus);
-+	if (ret) {
-+		pr_err("bus_register() failed for nvme_loop_bus\n");
-+		goto dev_unreg;
-+	}
-+
-+	ret = driver_register(&nvme_loop_driverfs);
-+	if (ret) {
-+		pr_err("driver_register() failed for"
-+				" nvme_loop_driverfs\n");
-+		goto bus_unreg;
-+	}
-+
-+	return ret;
-+
-+bus_unreg:
-+	bus_unregister(&nvme_loop_bus);
-+dev_unreg:
-+	root_device_unregister(nvme_loop_primary);
-+	return ret;
-+}
-+
-+static void nvme_loop_release_core_bus(void)
-+{
-+	driver_unregister(&nvme_loop_driverfs);
-+	bus_unregister(&nvme_loop_bus);
-+	root_device_unregister(nvme_loop_primary);
-+}
-+
- static int __init nvme_loop_init_module(void)
- {
- 	int ret;
+ #define NVMET_ASYNC_EVENTS		4
+ #define NVMET_ERROR_LOG_SLOTS		128
+@@ -262,6 +263,12 @@ struct nvmet_req {
+ 	int			sg_cnt;
+ 	size_t			data_len;
  
--	ret = nvmet_register_transport(&nvme_loop_ops);
-+	ret = nvme_loop_alloc_core_bus();
- 	if (ret)
- 		return ret;
++	struct scatterlist	*prot_sg;
++	int			prot_sg_cnt;
 +
-+	ret = nvmet_register_transport(&nvme_loop_ops);
-+	if (ret) {
-+		nvme_loop_release_core_bus();
-+		return ret;
-+	}
++	struct target_iostate	t_iostate;
++	struct target_iomem	t_iomem;
 +
- 	nvmf_register_transport(&nvme_loop_transport);
- 	return 0;
- }
-@@ -744,6 +907,8 @@ static void __exit nvme_loop_cleanup_module(void)
- 	mutex_unlock(&nvme_loop_ctrl_mutex);
+ 	struct nvmet_port	*port;
  
- 	flush_scheduled_work();
-+
-+	nvme_loop_release_core_bus();
- }
- 
- module_init(nvme_loop_init_module);
+ 	void (*execute)(struct nvmet_req *req);
 -- 
 1.9.1
 
