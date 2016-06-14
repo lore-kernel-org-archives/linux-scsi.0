@@ -1,100 +1,110 @@
-From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: [v2 PATCH 2/2] scsi:stex.c Add S6 support
-Date: Tue, 14 Jun 2016 14:22:32 +0800
-Message-ID: <1465885352-8602-1-git-send-email-ch1102chiou@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:34213 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbcFNGXD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 02:23:03 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Mon, 13 Jun 2016 23:23:52 -0700
+Message-ID: <1465885432.5365.214.camel@haakon3.risingtidesystems.com>
+References: <1464097978-88457-1-git-send-email-bryantly@linux.vnet.ibm.com>
+	 <3303bc98-ade7-62f0-71c7-11e7ef42b42d@sandisk.com>
+	 <20160524160047.Horde.M1bK0S-HUnY41nXa9ZoJ6w1@ltc.linux.ibm.com>
+	 <12c6229a-3188-b88c-523f-99219ed60c05@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <12c6229a-3188-b88c-523f-99219ed60c05@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Bryant G Ly <bryantly@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, martin.petersen@oracle.com, tyreld@linux.vnet.ibm.com, akpm@linux-foundation.org, kvalo@codeaurora.org, davem@davemloft.net, gregkh@linuxfoundation.org, mchehab@osg.samsung.com, jslaby@suse.com, joe@perches.com, bp@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, bgly <bgly@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linus.chen@tw.promise.com, grace.chang@tw.promise.com, victor.p@promise.com, eva.cheng@tw.promise.com, charles.chiou@tw.promise.com, julian.calaby@gmail.com
-Cc: Paul <paul.lyu@tw.promise.com>
 
-From: Charles <charles.chiou@tw.promise.com>
+On Fri, 2016-06-10 at 12:03 -0700, Bart Van Assche wrote:
+> On 05/24/2016 01:00 PM, Bryant G Ly wrote:
+> > Quoting Bart Van Assche <bart.vanassche@sandisk.com>:
+> >> On 05/24/2016 06:52 AM, Bryant G. Ly wrote:
+> >>> +static uint64_t ibmvscsis_unpack_lun(const uint8_t *lun, int len)
+> >>> +{
+> >>> +    uint64_t res = NO_SUCH_LUN;
+> >>> +    int addressing_method;
+> >>> +
+> >>> +    if (unlikely(len < 2)) {
+> >>> +        pr_err("Illegal LUN length %d, expected 2 bytes or more\n",
+> >>> +            len);
+> >>> +        goto out;
+> >>> +    }
+> >>> +
+> >>> +    switch (len) {
+> >>> +    case 8:
+> >>> +        if ((*((__be64 *)lun) & cpu_to_be64(0x0000FFFFFFFFFFFFLL))
+> >>> != 0)
+> >>> +            goto out_err;
+> >>> +        break;
+> >>> +    case 4:
+> >>> +        if (*((__be16 *)&lun[2]) != 0)
+> >>> +            goto out_err;
+> >>> +        break;
+> >>> +    case 6:
+> >>> +        if (*((__be32 *)&lun[2]) != 0)
+> >>> +            goto out_err;
+> >>> +        break;
+> >>> +    case 2:
+> >>> +        break;
+> >>> +    default:
+> >>> +        goto out_err;
+> >>> +    }
+> >>> +
+> >>> +    addressing_method = (*lun) >> 6; /* highest two bits of byte 0 */
+> >>> +    switch (addressing_method) {
+> >>> +    case SCSI_LUN_ADDR_METHOD_PERIPHERAL:
+> >>> +    case SCSI_LUN_ADDR_METHOD_FLAT:
+> >>> +    case SCSI_LUN_ADDR_METHOD_LUN:
+> >>> +        res = *(lun + 1) | (((*lun) & 0x3f) << 8);
+> >>> +        break;
+> >>> +
+> >>> +    case SCSI_LUN_ADDR_METHOD_EXTENDED_LUN:
+> >>> +    default:
+> >>> +        pr_err("Unimplemented LUN addressing method %u\n",
+> >>> +            addressing_method);
+> >>> +        break;
+> >>> +    }
+> >>> +
+> >>> +out:
+> >>> +    return res;
+> >>> +out_err:
+> >>> +    pr_err("Support for multi-level LUNs has not yet been
+> >>> implemented\n");
+> >>> +    goto out;
+> >>> +}
+> >>
+> >> In the above function there is nothing that is specific to the VIO
+> >> mechanism. Please consider to merge this function with
+> >> scsilun_to_int(), e.g. by introducing a new function that accepts a
+> >> SCSI LUN and the addressing method as arguments and by making
+> >> scsilun_to_int() call that function with
+> >> SCSI_LUN_ADDR_METHOD_PERIPHERAL as one of its arguments.
+> >>
+> >
+> > We are going to keep this here atm, until we can make sure canonical can
+> > pick up
+> > these changes, since we have a deliverable for a 3rd party vendor who is
+> > going to
+> > fully utilize this driver. Once they can pick it up in 4.4 kernel I will
+> > make the
+> > change you recommended / move the scsi_lun_addr_method addressed below.
+> > I will also
+> > address the changes that ib_srpt needs to utilize this new function too.
+> 
+> A much better approach would be to move this function into the SCSI core 
+> and to add a copy of that function to the backported driver that will be 
+> provided to Canonical.
 
-1.Add reboot notifier and register it in stex_probe for all supported device.
+AFAICT, the problem with this improvement is that it's not stable
+material, which means that Canonical would have to carry this separately
+beyond linux-4.4.y, in order to support ibmvscsi-tgt.
 
-2.For all supported device in restart flow, we get a callback from notifier and set S6flag for stex_shutdown & stex_hba_stop to send restart command to FW.
+As-is, it looks like we'll have two target-core fixes to support
+ibmvscsi-tgt, both of which are considered stable material at this point
+and will eventually make it to linux-4.4.y.
 
-Signed-off-by: Charles <charles.chiou@tw.promise.com>
-Signed-off-by: Paul <paul.lyu@tw.promise.com>
----
- drivers/scsi/stex.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 817e895..e1d70b1 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -26,6 +26,7 @@
- #include <linux/module.h>
- #include <linux/spinlock.h>
- #include <linux/ktime.h>
-+#include <linux/reboot.h>
- #include <asm/io.h>
- #include <asm/irq.h>
- #include <asm/byteorder.h>
-@@ -362,6 +363,12 @@ struct st_card_info {
- 	u16 sts_count;
- };
- 
-+int S6flag;
-+static int stex_halt(struct notifier_block *nb, ulong event, void *buf);
-+static struct notifier_block stex_notifier = {
-+	stex_halt, NULL, 0
-+};
-+
- static int msi;
- module_param(msi, int, 0);
- MODULE_PARM_DESC(msi, "Enable Message Signaled Interrupts(0=off, 1=on)");
-@@ -1657,6 +1664,9 @@ static int stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	pci_set_master(pdev);
- 
-+	S6flag = 0;
-+	register_reboot_notifier(&stex_notifier);
-+
- 	host = scsi_host_alloc(&driver_template, sizeof(struct st_hba));
- 
- 	if (!host) {
-@@ -1931,15 +1941,20 @@ static void stex_remove(struct pci_dev *pdev)
- 	scsi_host_put(hba->host);
- 
- 	pci_disable_device(pdev);
-+
-+	unregister_reboot_notifier(&stex_notifier);
- }
- 
- static void stex_shutdown(struct pci_dev *pdev)
- {
- 	struct st_hba *hba = pci_get_drvdata(pdev);
- 
--	if (hba->supports_pm == 0)
-+	if (hba->supports_pm == 0) {
- 		stex_hba_stop(hba, ST_IGNORED);
--	else
-+	} else if (hba->supports_pm == 1 && S6flag) {
-+		unregister_reboot_notifier(&stex_notifier);
-+		stex_hba_stop(hba, ST_S6);
-+	} else
- 		stex_hba_stop(hba, ST_S5);
- }
- 
-@@ -1976,6 +1991,12 @@ static int stex_resume(struct pci_dev *pdev)
- 	stex_handshake(hba);
- 	return 0;
- }
-+
-+static int stex_halt(struct notifier_block *nb, unsigned long event, void *buf)
-+{
-+	S6flag = 1;
-+	return NOTIFY_OK;
-+}
- MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
- 
- static struct pci_driver stex_pci_driver = {
--- 
-1.9.1
-
+That said Bryant, I still don't have an objection for the initial commit
+to use it's own internal ibmvscsis_unpack_lun(), but it would be nice in
+the patch series containing the initial ibmvscsi-tgt commit to include
+an incremental patch to make this common code, as Bart has highlighted.
