@@ -1,109 +1,174 @@
-From: Helge Deller <deller@gmx.de>
-Subject: Re: [PATCH] 53c700: fix BUG on untagged commands
-Date: Tue, 14 Jun 2016 22:32:55 +0200
-Message-ID: <576069F7.6040706@gmx.de>
-References: <1465880407.18583.18.camel@linux.vnet.ibm.com>
- <20160614150555.GA698@infradead.org>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v4 0/8] Replay Protected Memory Block (RPMB) subsystem
+Date: Tue, 14 Jun 2016 21:05:43 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54283E72@hasmsx108.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:63498 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751958AbcFNUd2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2016 16:33:28 -0400
-In-Reply-To: <20160614150555.GA698@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1255
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "arve@android.com" <arve@android.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
 
-On 14.06.2016 17:05, Christoph Hellwig wrote:
-> Looks fine:
-> 
-> Acked-by: Christoph Hellwig <hch@lst.de>
-> 
-> But it should really go together with something like this:
-> 
-> ---
-> From e54d1462ae244db3189a8b69018bc5f3e3d3b468 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Tue, 14 Jun 2016 17:04:10 +0200
-> Subject: scsi: move current_cmnd into the 53c700 driver
-> 
-> The 53c700 driver is the only user of the current_cmnd field in
-> struct scsi_device, so let's move it into the driver private data.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>> wrote:
+>>> > Few storage technology such is EMMC, UFS, and NVMe support RPMB
+>>> >hardware partition with common protocol and frame layout.
+>>> > The RPMB partition cannot be accessed via standard block layer, b=
+ut
+>>> >by a set of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
+>>> >PROGRAM_KEY.
+>>> >...
+>>>
+>>> If the same protocol is used by all these standards, why not export=
+ it directly
+>>> (including the RESULT_READ command or not even knowing the command
+>>> types)?
+>> The protocol is the =A0same, but the wrapping of the packets is stor=
+age type specific so
+>> I believe that the best abstraction is on those =A04 operations leve=
+l. I'm not sure if the code would
+>> be simpler if it would be exposed on a lower level.
+>
+> I disagree. With the two storage types you support, the packets are
+> identical. The only difference is the low level commands you use to
+> send and receive them.
+The packets are identical, but there are these little settings you need=
+ to be aware of
+like set argument =A031 in CMD23 for WRITE and PROGRAM_KEY and for othe=
+rs not so
+the storage type transparency is lost, actually the UFS protocol is a b=
+it cleaner in that sense.
+I know it can be ironed somehow, but this just stresses the point.=20
 
-Patch is OK.
+>> RESULT_READ =A0is =A0a command to be issued for getting preceeding w=
+rite operation status, it's a kind of work around about the fact that y=
+ou have to issue a read operation
+>> in order to retrieve data in this case a =A0write operation result. =
+=A0It can be successfully hidden and final result of the operation is d=
+elivered
+>> to the user.
+>>
+>
+> Yes, it is possible to hide the result read command, but that does no=
+t
+> mean you should. The rpmb protocol is designed to let two endpoints
+> communicate in a way that lets them detect tampering. While the packe=
+t
+> you inject does not contain any protected data, you can still view it
+> as a form of tampering.=20
 
-Tested-by: Helge Deller <deller@gmx.de>
+I=92m not seeing it like injecting packets, those are merely commands e=
+mbedded in the packets that need to be performed in order to complete t=
+he operation
+and there is not security value in them, the only end to end protection=
+ is truly given by the MAC verification and this is preserved.=20
 
-Even if this is not a real fix, I still would suggest to add
-Cc: stable@vger.kernel.org	# 4.4+
-as well to get both patches backported at the same time.
+>If a future rpmb protocol version adds
+> features, you could loose the ability to inject packets.
 
-Helge
+The code will have to change anyhow. =A0
 
-> ---
->  drivers/scsi/53c700.c      | 8 +++++---
->  drivers/scsi/53c700.h      | 1 +
->  include/scsi/scsi_device.h | 1 -
->  3 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-> index 3ddc85e..de53b23 100644
-> --- a/drivers/scsi/53c700.c
-> +++ b/drivers/scsi/53c700.c
-> @@ -1120,9 +1120,9 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
->  				"reselection is tag %d, slot %p(%d)\n",
->  				hostdata->msgin[2], slot, slot->tag);
->  		} else {
-> -			struct scsi_cmnd *SCp;
-> +			struct NCR_700_Device_Parameters *p = SDp->hostdata;
-> +			struct scsi_cmnd *SCp = p->current_cmnd;
->  
-> -			SCp = SDp->current_cmnd;
->  			if(unlikely(SCp == NULL)) {
->  				sdev_printk(KERN_ERR, SDp,
->  					"no saved request for untagged cmd\n");
-> @@ -1825,9 +1825,11 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
->  		CDEBUG(KERN_DEBUG, SCp, "sending out tag %d, slot %p\n",
->  		       slot->tag, slot);
->  	} else {
-> +		struct NCR_700_Device_Parameters *p = SCp->device->hostdata;
-> +
->  		slot->tag = SCSI_NO_TAG;
->  		/* save current command for reselection */
-> -		SCp->device->current_cmnd = SCp;
-> +		p->current_cmnd = SCp;
->  	}
->  	/* sanity check: some of the commands generated by the mid-layer
->  	 * have an eccentric idea of their sc_data_direction */
-> diff --git a/drivers/scsi/53c700.h b/drivers/scsi/53c700.h
-> index e06bdfe..83b157e 100644
-> --- a/drivers/scsi/53c700.h
-> +++ b/drivers/scsi/53c700.h
-> @@ -82,6 +82,7 @@ struct NCR_700_Device_Parameters {
->  	 * cmnd[1], this could be in static storage */
->  	unsigned char cmnd[MAX_COMMAND_SIZE];
->  	__u8	depth;
-> +	struct scsi_cmnd *current_cmnd;	/* currently active command */
->  };
->  
->  
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index a6c346d..8a95631 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -94,7 +94,6 @@ struct scsi_device {
->  	spinlock_t list_lock;
->  	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
->  	struct list_head starved_entry;
-> -	struct scsi_cmnd *current_cmnd;	/* currently active command */
->  	unsigned short queue_depth;	/* How deep of a queue we want */
->  	unsigned short max_queue_depth;	/* max queue depth */
->  	unsigned short last_queue_full_depth; /* These two are used by */
-> 
+>
+>>> While I would prefer an rpmb specific interface over the existing r=
+aw
+>>> mmc command interface, all I need is an rpmb operation that lets me=
+ send
+>>> and receive buffers without interruption.
+>>
+>> I currently don't see an obstacle on doing the same with proposed in=
+terface, what is the issue are seeing.
+>>
+>
+> The main issue is that you are injecting commands, so code that
+> follows the mmc spec will not work.
 
+Yes, it should be storage type independent, not mmc spec dependant.=20
+The interface reduces the number of data passed between user space and =
+kernel, the device power management is simpler.=20
+
+>
+>>> You can find our exiting user-space code here at
+>>> https://android.googlesource.com/platform/system/core/+/master/trus=
+ty/s
+>>> torage/proxy/rpmb.c.
+>>> If you use an interface more similar to this, I think your emmc and=
+ ufs
+>>> specific code would be simpler. Also, if you don't need the in-kern=
+el
+>>> interface, the kernel would not need to know the details of the rpm=
+b
+>>> protocol at all.
+>>
+>> My major interest is the in-kernel protocol the user space API was m=
+ore intended for debug, but I found it would be even more useful.
+>> The store type =A0access is very RPMB specific =A0for both MMC and U=
+=46S and needs to do special operations for RPMB so I don't see how thi=
+s awareness can be removed or I'm not reading your proposal correctly.
+>
+> The interface we use specifies reliable-write, write and read
+> operations on an rpmb partition. I don't think you need to know more
+> than this in either mmc or ufs. I have not seen the ufs spec, but
+> based on your code it looks like reliable-write and write can map to
+> the same command there.
+Yes, the interface can be also abstract on let=92s call it raw rpmb pac=
+ket read/write level, but I didn=92t see the value in at the time as RP=
+MB operations and the steps are well defined.
+Maybe there is a place for to support for fing grained access or at lea=
+sting adding RESULT_READ command as well, =A0for the usecases like your=
+s.
+
+>> Accessing RPMB is a multiple stepsoperation, the steps can be driven=
+ from the user space as done in EMMC ioctl but hidning would reduce the=
+ number of system calls and amount of data passed,
+>> in some sense the same as in the =A0new mmc =A0MMC_IOC_MULTI_CMD is =
+trying ot achive.
+>>
+> The main purpose of using the MMC_IOC_MULTI_CMD is not to reduce the
+> number of syscalls. It is to prevent other mmc operations from gettin=
+g
+> interleaved with the rpmb packets. Some emmc chips will only respond
+> error packet if any other partitions are read from between the write
+> and read operation on the rpmb partition.
+
+I didn=92t encountered as our interface doesn=92t suffer form that issu=
+e but yes this just another reason to use the new rpmb interface
+>
+>>> I have not tested your code, but it looks like we would have to mod=
+ify the
+>>> storage proxy to interpret the data it currently passes through and=
+ remove all
+>>> RESULT_READ packets.
+>> Your proxy driver just sends ioctls so this wouldn't be much differe=
+nce and the rpmb code on the trusty w need rewrite just rpmb_send () fu=
+nction,
+>> actually removing one set of buffer size. I will try to make that mo=
+dification if it helps?
+>>
+>
+> No I don't want you to modify the code that runs in the secure OS.
+> This would require additional code in boot loaders and proxy servers
+> using the existing MMC_IOC_MULTI_CMD command as they too would have t=
+o
+> interpret the packets to inject RESULT_READ packets.
+
+I=92ve looked at the proxy and and secure OS, the rewirte is not so har=
+d, though.
+I really cannot figure to boo loader and secure OS interactions, you ha=
+ve this notion of TP and TDEA ports but those are not used from the sec=
+ure OS.=20
+Is there a software you can point me to?=20
+
+Second if it won=92t be possible to use the current implementation if t=
+he storage type change UFS or NVMe anyhow and on the othernad
+I=92m not suggesting to kill MMC ioctl, so this won=92t be breackages o=
+f the existing software.=20
+
+In bottom line I will try to add raw read/write access to RPMB to suppo=
+rt fine grained access and see if you can work with that.
+
+
+I really appreciate your feedback.
+Thanks
+Tomas=20
