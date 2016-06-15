@@ -1,146 +1,90 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] Fix an sd reregistration race, v5
-Date: Wed, 15 Jun 2016 12:58:00 +0200
-Message-ID: <4345e7a0-5487-b122-28ad-7426043259b6@sandisk.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 120371] New: UBSAN splat in drivers/scsi/scsi_devinfo.c:458:21
+Date: Wed, 15 Jun 2016 12:33:36 +0000
+Message-ID: <bug-120371-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0073.outbound.protection.outlook.com ([207.46.100.73]:45888
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751778AbcFOK6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2016 06:58:17 -0400
+Received: from mail.kernel.org ([198.145.29.136]:57108 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753129AbcFOMdk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2016 08:33:40 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6F223202AE
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2016 12:33:38 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id AD2AD20279
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2016 12:33:36 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Joe Lawrence <joe.lawrence@stratus.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Avoid that the sd driver registers a BDI device with a name that
-is still in use. This patch avoids that the following warning is
-triggered sporadically:
+https://bugzilla.kernel.org/show_bug.cgi?id=120371
 
-WARNING: CPU: 7 PID: 203 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x68/0x80()
-sysfs: cannot create duplicate filename '/devices/virtual/bdi/8:32'
-Workqueue: events_unbound async_run_entry_fn
-Call Trace:
-[<ffffffff814ff5a4>] dump_stack+0x4c/0x65
-[<ffffffff810746ba>] warn_slowpath_common+0x8a/0xc0
-[<ffffffff81074736>] warn_slowpath_fmt+0x46/0x50
-[<ffffffff81237ca8>] sysfs_warn_dup+0x68/0x80
-[<ffffffff81237d8e>] sysfs_create_dir_ns+0x7e/0x90
-[<ffffffff81291f58>] kobject_add_internal+0xa8/0x320
-[<ffffffff812923a0>] kobject_add+0x60/0xb0
-[<ffffffff8138c937>] device_add+0x107/0x5e0
-[<ffffffff8138d018>] device_create_groups_vargs+0xd8/0x100
-[<ffffffff8138d05c>] device_create_vargs+0x1c/0x20
-[<ffffffff8117f233>] bdi_register+0x63/0x2a0
-[<ffffffff8117f497>] bdi_register_dev+0x27/0x30
-[<ffffffff81281549>] add_disk+0x1a9/0x4e0
-[<ffffffffa00c5739>] sd_probe_async+0x119/0x1d0 [sd_mod]
-[<ffffffff8109a81a>] async_run_entry_fn+0x4a/0x140
-[<ffffffff81091078>] process_one_work+0x1d8/0x7c0
-[<ffffffff81091774>] worker_thread+0x114/0x460
-[<ffffffff81097878>] kthread+0xf8/0x110
-[<ffffffff8150801f>] ret_from_fork+0x3f/0x70
+            Bug ID: 120371
+           Summary: UBSAN splat in drivers/scsi/scsi_devinfo.c:458:21
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.7.0-rc3
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: linux-kernel@lebenslange-mailadresse.de
+        Regression: No
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: <stable@vger.kernel.org>
----
+Created attachment 220111
+  --> https://bugzilla.kernel.org/attachment.cgi?id=220111&action=edit
+.config
 
-Changes compared to v4:
-- Renamed the device filter function.
-- Added test to skip sg child device.
+While booting, UBSAN reports an index out of range use in
+drivers/scsi/scsi_devinfo.c:458:21:
 
-Changes between v3 and v4:
-- Added (dev->class != &sdev_class) test to device filter function.
+[    2.226941]
+================================================================================
+[    2.226944] UBSAN: Undefined behaviour in
+/usr/local/src/kernel/linux-git/drivers/scsi/scsi_devinfo.c:458:21
+[    2.226945] index 8 is out of range for type 'char [8]'
+[    2.226948] CPU: 3 PID: 6 Comm: kworker/u16:0 Not tainted
+4.7.0-rc3-00002-g44c5afa #1
+[    2.226948] Hardware name: Apple Inc. MacBookPro8,2/Mac-94245A3940C91C80,
+BIOS    MBP81.88Z.0047.B27.1201241646 01/24/12
+[    2.226955] Workqueue: events_unbound async_run_entry_fn
+[    2.226958]  000000000000000e ffff88026614fa50 ffffffff815c8665
+ffffffff81190e52
+[    2.226961]  ffff88026614fa78 0000000000000008 ffff88026614fa68
+ffffffff8163e77d
+[    2.226963]  ffffffff8263a560 ffff88026614fac0 ffffffff8163ee95
+0000000000000286
+[    2.226963] Call Trace:
+[    2.226968]  [<ffffffff815c8665>] dump_stack+0x68/0xa3
+[    2.226971]  [<ffffffff81190e52>] ? down_trylock+0x32/0x60
+[    2.226975]  [<ffffffff8163e77d>] ubsan_epilogue+0xd/0x40
+[    2.226978]  [<ffffffff8163ee95>] __ubsan_handle_out_of_bounds+0x75/0xa0
+[    2.226980]  [<ffffffff8119758d>] ? trace_hardirqs_on+0xd/0x10
+[    2.226984]  [<ffffffff817ccf49>] scsi_dev_info_list_find+0x279/0x2b0
+[    2.226986]  [<ffffffff817cd49c>] scsi_get_device_flags_keyed+0x1c/0x80
+[    2.226989]  [<ffffffff817cd50b>] scsi_get_device_flags+0xb/0x10
+[    2.226991]  [<ffffffff817c6a79>] scsi_probe_and_add_lun+0x4b9/0x1200
+[    2.226993]  [<ffffffff817c7fdb>] __scsi_add_device+0x11b/0x140
+[    2.226996]  [<ffffffff817f920b>] ata_scsi_scan_host+0x10b/0x200
+[    2.226999]  [<ffffffff817eefb5>] async_port_probe+0x45/0x80
+[    2.227001]  [<ffffffff8114b052>] async_run_entry_fn+0x52/0x220
+[    2.227003]  [<ffffffff8113b4a3>] process_one_work+0x273/0x8d0
+[    2.227005]  [<ffffffff8113b43f>] ? process_one_work+0x20f/0x8d0
+[    2.227007]  [<ffffffff8113bd0d>] worker_thread+0x20d/0x7e0
+[    2.227009]  [<ffffffff8113bb00>] ? process_one_work+0x8d0/0x8d0
+[    2.227011]  [<ffffffff81146dfd>] kthread+0x13d/0x1a0
+[    2.227016]  [<ffffffff81b3232f>] ret_from_fork+0x1f/0x40
+[    2.227018]  [<ffffffff81146cc0>] ? kthread_create_on_node+0x260/0x260
+[    2.227019]
+================================================================================
 
-Changes between v2 and v3:
-- Switched from separating BDI unregistration and deletion to increasing
-  the sd device reference count.
-
-Changes between v1 and v2:
-- Changed the approach from swapping the device_del() and
-  blk_cleanup_queue() calls to separating BDI unregistration and deletion.
-
- drivers/scsi/scsi_sysfs.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 44 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 0734927..64cebf5 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1273,9 +1273,41 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	return error;
- }
- 
-+/**
-+ * scsi_filter_ulpdev - Look up the device created by the ULP SCSI driver
-+ * @dev: A sdev_gendev device
-+ * @data: A struct device pointer
-+ *
-+ * sdev_gendev devices have multiple children: the device(s) that has been
-+ * created by the SCSI ULP driver (e.g. sd), the sdev_dev device and the sg
-+ * device. The sd driver creates one device instance itself and zero or more
-+ * device instances by creating genhd instances. These last devices represent
-+ * partitions. Select the device that has been created by the ULP SCSI driver
-+ * by returning the first device that is not the sdev_dev device nor the sg
-+ * device.
-+ */
-+static int scsi_filter_ulpdev(struct device *dev, void *data)
-+{
-+	struct device **childp = data;
-+
-+	if (!*childp && dev->class != &sdev_class &&
-+	    strncmp(dev_name(dev), "sg", 2) != 0)
-+		*childp = dev;
-+	return 0;
-+}
-+
-+/* Caller must call put_device() if this function does not return NULL. */
-+static struct device *scsi_get_ulpdev(struct device *dev)
-+{
-+	struct device *child = NULL;
-+
-+	device_for_each_child(dev, &child, scsi_filter_ulpdev);
-+	return get_device(child);
-+}
-+
- void __scsi_remove_device(struct scsi_device *sdev)
- {
--	struct device *dev = &sdev->sdev_gendev;
-+	struct device *dev = &sdev->sdev_gendev, *sdp = NULL;
- 
- 	/*
- 	 * This cleanup path is not reentrant and while it is impossible
-@@ -1290,6 +1322,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 			return;
- 
- 		bsg_unregister_queue(sdev->request_queue);
-+		sdp = scsi_get_ulpdev(dev);
- 		device_unregister(&sdev->sdev_dev);
- 		transport_remove_device(dev);
- 		scsi_dh_remove_device(sdev);
-@@ -1306,6 +1339,16 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	blk_cleanup_queue(sdev->request_queue);
- 	cancel_work_sync(&sdev->requeue_work);
- 
-+	/*
-+	 * blk_cleanup_queue() unregisters the BDI device. The name of the
-+	 * BDI device is derived from the dev_t of the /dev/sd<n> device.
-+	 * Keep a reference to the /dev/sd<n> device until the BDI device
-+	 * has been unregistered to avoid that a BDI device with the same
-+	 * name gets registered before blk_cleanup_queue() has finished.
-+	 */
-+	if (sdp)
-+		put_device(sdp);
-+
- 	if (sdev->host->hostt->slave_destroy)
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_destroy_device(dev);
 -- 
-2.8.4
-
+You are receiving this mail because:
+You are the assignee for the bug.
