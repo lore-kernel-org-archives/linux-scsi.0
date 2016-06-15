@@ -1,86 +1,87 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: Re: [PATCH] ses: Fix racy cleanup of /sys in remove_dev()
-Date: Wed, 15 Jun 2016 16:24:16 -0400
-Message-ID: <20160615202416.GA52103@calvinowens-mba.dhcp.thefacebook.com>
-References: <4912ec551a8ec01181cc3e7ad1e01d3d36758810.1463170976.git.calvinowens@fb.com>
- <5750B821.7010600@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49704 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933049AbcFOUYe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2016 16:24:34 -0400
-Content-Disposition: inline
-In-Reply-To: <5750B821.7010600@fb.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 1/2] scsi: lpfc: avoid harmless comparison warning
+Date: Wed, 15 Jun 2016 22:42:17 +0200
+Message-ID: <20160615204231.3784044-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, calvinowens@fb.com
+Cc: Arnd Bergmann <arnd@arndb.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Hannes Reinicke <hare@suse.de>, James Bottomley <JBottomley@Odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Thursday 06/02 at 15:50 -0700, Calvin Owens wrote:
-> On 05/13/2016 01:28 PM, Calvin Owens wrote:
-> > Currently we free the resources backing the enclosure device before we
-> > call device_unregister(). This is racy: during rmmod of low-level SCSI
-> > drivers that hook into enclosure, we end up with a small window of time
-> > during which writing to /sys can OOPS. Example trace with mpt3sas:
-> 
-> Ping?
+When building with -Wextra, we get a lot of warnings for the lpfc driver
+concerning expressions that are always true, starting with:
 
-Any thoughts? Squinting at this more it still seems racy, but a narrow race
-is surely better than just blatantly freeing everything while the file is
-still exposed in /sys? Is there a better way you'd prefer I accomplish this?
+drivers/scsi/lpfc/lpfc_attr.c: In function 'lpfc_enable_npiv_init':
+drivers/scsi/lpfc/lpfc_attr.c:2786:77: error: comparison of unsigned expression >= 0 is always true [-Werror=type-limits]
+drivers/scsi/lpfc/lpfc_attr.c: In function 'lpfc_enable_rrq_init':
+drivers/scsi/lpfc/lpfc_attr.c:2802:76: error: comparison of unsigned expression >= 0 is always true [-Werror=type-limits]
+drivers/scsi/lpfc/lpfc_attr.c: In function 'lpfc_suppress_link_up_init':
+drivers/scsi/lpfc/lpfc_attr.c:2812:2050: error: comparison of unsigned expression >= 0 is always true [-Werror=type-limits]
+drivers/scsi/lpfc/lpfc_attr.c: In function 'lpfc_log_verbose_init':
+drivers/scsi/lpfc/lpfc_attr.c:3064:1930: error: comparison of unsigned expression >= 0 is always true [-Werror=type-limits]
 
-(I have boxes that OOPS all the time from monitoring code reading the /sys
-files, with this patch I haven't seen a single one.)
+The code works as intented, but it would be nice to shut up the
+warning so we don't clutter up build logs with this. Using a
+separate inline function for it makes it clear to the compiler
+that the comparison is necessary in the caller but still lets
+it do the constant-folding.
 
-Thanks,
-Calvin
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-> >    general protection fault: 0000 [#1] SMP KASAN
-> >    Modules linked in: mpt3sas(-) <...>
-> >    RIP: [<ffffffffa0388a98>] ses_get_page2_descriptor.isra.6+0x38/0x220 [ses]
-> >    Call Trace:
-> >     [<ffffffffa0389d14>] ses_set_fault+0xf4/0x400 [ses]
-> >     [<ffffffffa0361069>] set_component_fault+0xa9/0xf0 [enclosure]
-> >     [<ffffffff8205bffc>] dev_attr_store+0x3c/0x70
-> >     [<ffffffff81677df5>] sysfs_kf_write+0x115/0x180
-> >     [<ffffffff81675725>] kernfs_fop_write+0x275/0x3a0
-> >     [<ffffffff8151f810>] __vfs_write+0xe0/0x3e0
-> >     [<ffffffff8152281f>] vfs_write+0x13f/0x4a0
-> >     [<ffffffff81526731>] SyS_write+0x111/0x230
-> >     [<ffffffff828b401b>] entry_SYSCALL_64_fastpath+0x13/0x94
-> > 
-> > Fortunately the solution is extremely simple: call device_unregister()
-> > before we free the resources, and the race no longer exists. The driver
-> > core holds a reference over ->remove_dev(), so AFAICT this is safe.
-> > 
-> > Signed-off-by: Calvin Owens <calvinowens@fb.com>
-> > ---
-> >   drivers/scsi/ses.c | 3 ++-
-> >   1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> > index 53ef1cb..0e8601a 100644
-> > --- a/drivers/scsi/ses.c
-> > +++ b/drivers/scsi/ses.c
-> > @@ -778,6 +778,8 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
-> >   	if (!edev)
-> >   		return;
-> > 
-> > +	enclosure_unregister(edev);
-> > +
-> >   	ses_dev = edev->scratch;
-> >   	edev->scratch = NULL;
-> > 
-> > @@ -789,7 +791,6 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
-> >   	kfree(edev->component[0].scratch);
-> > 
-> >   	put_device(&edev->edev);
-> > -	enclosure_unregister(edev);
-> >   }
-> > 
-> >   static void ses_intf_remove(struct device *cdev,
-> > 
-> 
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index cfec2eca4dd3..3e1d2e669902 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -1620,6 +1620,11 @@ lpfc_sriov_hw_max_virtfn_show(struct device *dev,
+ 	return snprintf(buf, PAGE_SIZE, "%d\n", max_nr_virtfn);
+ }
+ 
++static inline bool lpfc_rangecheck(uint val, uint min, uint max)
++{
++	return val >= min && val <= max;
++}
++
+ /**
+  * lpfc_param_show - Return a cfg attribute value in decimal
+  *
+@@ -1697,7 +1702,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+ static int \
+ lpfc_##attr##_init(struct lpfc_hba *phba, uint val) \
+ { \
+-	if (val >= minval && val <= maxval) {\
++	if (lpfc_rangecheck(val, minval, maxval)) {\
+ 		phba->cfg_##attr = val;\
+ 		return 0;\
+ 	}\
+@@ -1732,7 +1737,7 @@ lpfc_##attr##_init(struct lpfc_hba *phba, uint val) \
+ static int \
+ lpfc_##attr##_set(struct lpfc_hba *phba, uint val) \
+ { \
+-	if (val >= minval && val <= maxval) {\
++	if (lpfc_rangecheck(val, minval, maxval)) {\
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT, \
+ 			"3052 lpfc_" #attr " changed from %d to %d\n", \
+ 			phba->cfg_##attr, val); \
+@@ -1856,7 +1861,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+ static int \
+ lpfc_##attr##_init(struct lpfc_vport *vport, uint val) \
+ { \
+-	if (val >= minval && val <= maxval) {\
++	if (lpfc_rangecheck(val, minval, maxval)) {\
+ 		vport->cfg_##attr = val;\
+ 		return 0;\
+ 	}\
+@@ -1888,7 +1893,7 @@ lpfc_##attr##_init(struct lpfc_vport *vport, uint val) \
+ static int \
+ lpfc_##attr##_set(struct lpfc_vport *vport, uint val) \
+ { \
+-	if (val >= minval && val <= maxval) {\
++	if (lpfc_rangecheck(val, minval, maxval)) {\
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT, \
+ 			"3053 lpfc_" #attr \
+ 			" changed from %d (x%x) to %d (x%x)\n", \
+-- 
+2.9.0
