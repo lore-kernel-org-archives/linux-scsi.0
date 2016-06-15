@@ -1,34 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi_debug: fix sleep in invalid context
-Date: Tue, 14 Jun 2016 21:54:40 -0400
-Message-ID: <yq1wplrb4in.fsf@sermon.lab.mkp.net>
-References: <1464729307-22182-1-git-send-email-dgilbert@interlog.com>
+Subject: Re: [PATCH] 53c700: fix BUG on untagged commands
+Date: Tue, 14 Jun 2016 22:00:59 -0400
+Message-ID: <yq1shwfb484.fsf@sermon.lab.mkp.net>
+References: <1465880407.18583.18.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42185 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbcFOBzW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 21:55:22 -0400
-In-Reply-To: <1464729307-22182-1-git-send-email-dgilbert@interlog.com>
-	(Douglas Gilbert's message of "Tue, 31 May 2016 17:15:07 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <1465880407.18583.18.camel@linux.vnet.ibm.com> (James Bottomley's
+	message of "Mon, 13 Jun 2016 22:00:07 -0700")
+Sender: linux-parisc-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com, hch@infradead.org
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+>>>>> "James" == James Bottomley <jejb@linux.vnet.ibm.com> writes:
 
-Doug> In this post:
-Doug> http://www.spinics.net/lists/linux-scsi/msg97124.html the author
-Doug> shows some kernel infrastructure complaining about a sleep in an
-Doug> invalid context. Remove offending call to vmalloc().  Instead of
-Doug> using kzalloc() which reviewers didn't like, use a bucket system
-Doug> (64 bytes on the stack) and potentially multiple calls to
-Doug> sg_pcopy_from_buffer() to construct the 'data-in' buffer for the
-Doug> SCSI REPORT LUNS command.
+James> The untagged command case in the 53c700 driver has been broken
+James> since host wide tags were enabled because the replaced
+James> scsi_find_tag() function had a special case for the tag value
+James> SCSI_NO_TAG to retrieve sdev-> current_cmnd.  The replacement
+James> function scsi_host_find_tag() has no such special case and
+James> returns NULL causing untagged commands to trigger a BUG() in the
+James> driver.  Inspection shows that the 53c700 is the only driver
+James> using this SCSI_NO_TAG case, so a local fix in the driver
+James> suffices to fix this problem globally.
 
-Applied to 4.8/scsi-queue.
+Applied to 4.7/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
