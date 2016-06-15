@@ -1,25 +1,53 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] 53c700: fix BUG on untagged commands
-Date: Tue, 14 Jun 2016 22:03:58 -0400
-Message-ID: <yq1oa73b435.fsf@sermon.lab.mkp.net>
-References: <1465880407.18583.18.camel@linux.vnet.ibm.com>
-	<20160614150555.GA698@infradead.org>
+Subject: Re: [PATCH v3] storvsc: use small sg_tablesize on x86
+Date: Tue, 14 Jun 2016 22:07:02 -0400
+Message-ID: <yq1fusfb3y1.fsf@sermon.lab.mkp.net>
+References: <20160609162553.10290-1-olaf@aepfle.de>
+ <1465493159.2259.14.camel@linux.vnet.ibm.com>
+ <20160609220120.GA28607@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <20160614150555.GA698@infradead.org> (Christoph Hellwig's message
-	of "Tue, 14 Jun 2016 08:05:55 -0700")
-Sender: linux-parisc-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20160609220120.GA28607@aepfle.de> (Olaf Hering's message of
+ "Fri, 10 Jun 2016 00:01:20 +0200")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Olaf Hering <olaf@aepfle.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+>>>>> "Olaf" == Olaf Hering <olaf@aepfle.de> writes:
 
-Christoph> But it should really go together with something like this:
+Olaf> On Thu, Jun 09, James Bottomley wrote:
+>> On Thu, 2016-06-09 at 18:25 +0200, Olaf Hering wrote:
+>> > Reducing the sg_tablesize allows booting of 32bit kernels in VMs, >
+>> after > commit be0cf6ca301c61458dc4aa1a37acf4f58d2ed3d6 ("scsi:
+>> storvsc: Set > the > tablesize based on the information given by the
+>> host")
+>> > 
+>> > [ 5.567138] hv_storvsc vmbus_1: adjusting sg_tablesize 0x800 -> >
+>> 0x20
+>> 
+>> Are you really sure 32 is the correct size?
 
-I completely agree with your patch but it's more of a cleanup. I'll put
-it in 4.8 once James' fix hits.
+Olaf> Its a size that works, while the current state does not work at
+Olaf> all.
+
+>> I know 32 it what it had before, but the reason for the commit you
+>> quote was to improve performance ...
+
+Olaf> The commit above broke 32bit. Whoever wants to improve performance
+Olaf> on this dead horse can submit another patch.
+
+K.Y.?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
