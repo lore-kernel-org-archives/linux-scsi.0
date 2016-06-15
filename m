@@ -1,35 +1,54 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv2] libfc: Update rport reference counting
-Date: Tue, 14 Jun 2016 21:10:00 -0400
-Message-ID: <yq1bn33cl5j.fsf@sermon.lab.mkp.net>
-References: <1464070318-69866-1-git-send-email-hare@suse.de>
+Subject: Re: block: don't check request size in blk_cloned_rq_check_limits()
+Date: Tue, 14 Jun 2016 21:39:40 -0400
+Message-ID: <yq17fdrcjs3.fsf@sermon.lab.mkp.net>
+References: <1464593093-93527-1-git-send-email-hare@suse.de>
+	<20160610131901.GA28570@redhat.com>
+	<yq160tgfoqr.fsf@sermon.lab.mkp.net> <575BE182.5010304@suse.de>
+	<yq11t44f0hi.fsf@sermon.lab.mkp.net> <575C0DAE.7070502@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50912 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:21503 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbcFOBKU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 21:10:20 -0400
-In-Reply-To: <1464070318-69866-1-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Tue, 24 May 2016 08:11:58 +0200")
+	with ESMTP id S1752314AbcFOBj4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2016 21:39:56 -0400
+In-Reply-To: <575C0DAE.7070502@suse.de> (Hannes Reinecke's message of "Sat, 11
+	Jun 2016 15:10:06 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, mark.bergman@uphs.upenn.edu
 
 >>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Hannes> Originally libfc would just be initializing the refcount to '1',
-Hannes> and using the disc_mutex to synchronize if and when the final
-Hannes> put should be happening.  This has a race condition as the mutex
-Hannes> might be delayed, causing other threads to access an invalid
-Hannes> structure.  This patch updates the rport reference counting to
-Hannes> increase the reference every time 'rport_lookup' is called, and
-Hannes> decreases the reference correspondingly.  This removes the need
-Hannes> to hold 'disc_mutex' when removing the structure, and avoids the
-Hannes> above race condition.
+Hannes> Well, the primary issue is that 'blk_cloned_rq_check_limits()'
+Hannes> doesn't check for BLOCK_PC,
 
-Applied to 4.8/scsi-queue.
+Yes it does. It calls blk_rq_get_max_sectors() which has an explicit
+check for this:
+
+static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
+{
+        struct request_queue *q = rq->q;
+
+        if (unlikely(rq->cmd_type != REQ_TYPE_FS))
+                        return q->limits.max_hw_sectors;
+[...]
+
+Hannes> The max_segments count, OTOH, _might_ change during failover
+Hannes> (different hardware has different max_segments setting, and this
+Hannes> is being changed during sg mapping), so there is some value to
+Hannes> be had from testing it here.
+
+Oh, this happens during failover? Are you sure it's not because DM is
+temporarily resetting the queue limits? max_sectors is going to be a
+single page in that case. I just discussed a backport regression in this
+department with Mike at LSF/MM. But that was for an older kernel.
+
+Accidentally resetting the limits during table swaps has happened a
+couple of times over the years. We trip it instantly with the database
+in failover testing.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
