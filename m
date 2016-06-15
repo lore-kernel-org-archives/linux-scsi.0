@@ -1,53 +1,62 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3] storvsc: use small sg_tablesize on x86
-Date: Tue, 14 Jun 2016 22:07:02 -0400
-Message-ID: <yq1fusfb3y1.fsf@sermon.lab.mkp.net>
-References: <20160609162553.10290-1-olaf@aepfle.de>
- <1465493159.2259.14.camel@linux.vnet.ibm.com>
- <20160609220120.GA28607@aepfle.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: block: don't check request size in blk_cloned_rq_check_limits()
+Date: Tue, 14 Jun 2016 22:29:03 -0400
+Message-ID: <20160615022903.GB5443@redhat.com>
+References: <1464593093-93527-1-git-send-email-hare@suse.de>
+ <20160610131901.GA28570@redhat.com>
+ <yq160tgfoqr.fsf@sermon.lab.mkp.net>
+ <575BE182.5010304@suse.de>
+ <yq11t44f0hi.fsf@sermon.lab.mkp.net>
+ <575C0DAE.7070502@suse.de>
+ <yq17fdrcjs3.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20160609220120.GA28607@aepfle.de> (Olaf Hering's message of
- "Fri, 10 Jun 2016 00:01:20 +0200")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Olaf Hering <olaf@aepfle.de>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48714 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932336AbcFOC3F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2016 22:29:05 -0400
+Content-Disposition: inline
+In-Reply-To: <yq17fdrcjs3.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, mark.bergman@uphs.upenn.edu
 
->>>>> "Olaf" == Olaf Hering <olaf@aepfle.de> writes:
+On Tue, Jun 14 2016 at  9:39pm -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Olaf> On Thu, Jun 09, James Bottomley wrote:
->> On Thu, 2016-06-09 at 18:25 +0200, Olaf Hering wrote:
->> > Reducing the sg_tablesize allows booting of 32bit kernels in VMs, >
->> after > commit be0cf6ca301c61458dc4aa1a37acf4f58d2ed3d6 ("scsi:
->> storvsc: Set > the > tablesize based on the information given by the
->> host")
->> > 
->> > [ 5.567138] hv_storvsc vmbus_1: adjusting sg_tablesize 0x800 -> >
->> 0x20
->> 
->> Are you really sure 32 is the correct size?
+> >>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+> 
+> Hannes> Well, the primary issue is that 'blk_cloned_rq_check_limits()'
+> Hannes> doesn't check for BLOCK_PC,
+> 
+> Yes it does. It calls blk_rq_get_max_sectors() which has an explicit
+> check for this:
+> 
+> static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
+> {
+>         struct request_queue *q = rq->q;
+> 
+>         if (unlikely(rq->cmd_type != REQ_TYPE_FS))
+>                         return q->limits.max_hw_sectors;
+> [...]
+> 
+> Hannes> The max_segments count, OTOH, _might_ change during failover
+> Hannes> (different hardware has different max_segments setting, and this
+> Hannes> is being changed during sg mapping), so there is some value to
+> Hannes> be had from testing it here.
+> 
+> Oh, this happens during failover? Are you sure it's not because DM is
+> temporarily resetting the queue limits? max_sectors is going to be a
+> single page in that case. I just discussed a backport regression in this
+> department with Mike at LSF/MM. But that was for an older kernel.
 
-Olaf> Its a size that works, while the current state does not work at
-Olaf> all.
+Not aware of any limits reset issue now...
 
->> I know 32 it what it had before, but the reason for the commit you
->> quote was to improve performance ...
+> Accidentally resetting the limits during table swaps has happened a
+> couple of times over the years. We trip it instantly with the database
+> in failover testing.
 
-Olaf> The commit above broke 32bit. Whoever wants to improve performance
-Olaf> on this dead horse can submit another patch.
-
-K.Y.?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+But feel free to throw your DB in failover tests (w/ dm-mpath) at a
+recent kernel ;)
