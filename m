@@ -1,31 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH] 53c700: fix BUG on untagged commands
-Date: Tue, 14 Jun 2016 22:00:59 -0400
-Message-ID: <yq1shwfb484.fsf@sermon.lab.mkp.net>
+Date: Tue, 14 Jun 2016 22:03:58 -0400
+Message-ID: <yq1oa73b435.fsf@sermon.lab.mkp.net>
 References: <1465880407.18583.18.camel@linux.vnet.ibm.com>
+	<20160614150555.GA698@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1465880407.18583.18.camel@linux.vnet.ibm.com> (James Bottomley's
-	message of "Mon, 13 Jun 2016 22:00:07 -0700")
+In-Reply-To: <20160614150555.GA698@infradead.org> (Christoph Hellwig's message
+	of "Tue, 14 Jun 2016 08:05:55 -0700")
 Sender: linux-parisc-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "James" == James Bottomley <jejb@linux.vnet.ibm.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-James> The untagged command case in the 53c700 driver has been broken
-James> since host wide tags were enabled because the replaced
-James> scsi_find_tag() function had a special case for the tag value
-James> SCSI_NO_TAG to retrieve sdev-> current_cmnd.  The replacement
-James> function scsi_host_find_tag() has no such special case and
-James> returns NULL causing untagged commands to trigger a BUG() in the
-James> driver.  Inspection shows that the 53c700 is the only driver
-James> using this SCSI_NO_TAG case, so a local fix in the driver
-James> suffices to fix this problem globally.
+Christoph> But it should really go together with something like this:
 
-Applied to 4.7/scsi-fixes.
+I completely agree with your patch but it's more of a cleanup. I'll put
+it in 4.8 once James' fix hits.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
