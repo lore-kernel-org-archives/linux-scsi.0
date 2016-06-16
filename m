@@ -1,60 +1,137 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: block: don't check request size in blk_cloned_rq_check_limits()
-Date: Thu, 16 Jun 2016 18:59:57 -0300
-Message-ID: <5763215D.4040600@linux.vnet.ibm.com>
-References: <1464593093-93527-1-git-send-email-hare@suse.de>
- <20160610131901.GA28570@redhat.com> <yq160tgfoqr.fsf@sermon.lab.mkp.net>
- <575BE182.5010304@suse.de> <yq11t44f0hi.fsf@sermon.lab.mkp.net>
- <575C0DAE.7070502@suse.de> <yq17fdrcjs3.fsf@sermon.lab.mkp.net>
- <5760F6BC.60109@suse.de> <576127FC.9020608@kernel.dk>
- <57612F12.5070505@suse.de> <5761838E.1000106@linux.vnet.ibm.com>
- <57629D23.1090704@linux.vnet.ibm.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v6] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Thu, 16 Jun 2016 15:20:52 -0700
+Message-ID: <1466115652.19647.94.camel@perches.com>
+References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
+	 <1466112055-89343-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:19391 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753864AbcFPWAJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jun 2016 18:00:09 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5GLx2Xp077871
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2016 18:00:08 -0400
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23kr61wrwx-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2016 18:00:08 -0400
-Received: from localhost
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-	Thu, 16 Jun 2016 19:00:06 -0300
-In-Reply-To: <57629D23.1090704@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1466112055-89343-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, nab@linux-iscsi.org, hch@infradead.org
+Cc: mikecyr@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, bart.vanassche@sandisk.com, gregkh@linuxfoundation.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, mark.bergman@uphs.upenn.edu
 
-On 06/16/2016 09:35 AM, Mauricio Faria de Oliveira wrote:
-> On 06/15/2016 01:34 PM, Brian King wrote:
->> [...] did you ever try to reproduce this with an
->> upstream
->> kernel?
+On Thu, 2016-06-16 at 16:20 -0500, Bryant G. Ly wrote:
+> This driver is a pick up of the old IBM VIO scsi Target Driver
+> that was started by Nick and Fujita 2-4 years ago.
+> http://comments.gmane.org/gmane.linux.scsi/90119
 
-> Now that the topic is under discussion, I've asked for some time slots
-> on that system, so we can test an upstream kernel and try to reproduce
-> the problem and analyze it more closely.
+(style trivia only, nothing important enough to force a respin
+=A0but nice to fix one day)
 
-The problem is not reproducible w/ 4.7.0-rc3 even after a few hours;
-it is instantly reproducible w/ 3.12.57-60.35 (SLES 12 SP1 updates).
+Please use git format-patch -M so file renames are more obvious.
 
-Hannes et al,
+> diff --git a/MAINTAINERS b/MAINTAINERS
+[]
+> +IBM Power Virtual SCSI Device Target Driver
+> +M:	Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> +M:	Michael Cyr <mikecyr@linux.vnet.ibm.com>
+> +L:	linux-scsi@vger.kernel.org
+> +L:	target-devel@vger.kernel.org
+> +S:	Supportedybe=20
+> +F:	drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 
-If you'd like some data collection from this system, feel free to ping
-me about it.
+Maybe
 
+=46:	drivers/scsi/ibmscsi_tgt/
 
--- 
-Mauricio Faria de Oliveira
-IBM Linux Technology Center
+> +F:	drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
+> +F:	drivers/scsi/ibmvscsi_tgt/libsrp.c
+> +F:	drivers/scsi/ibmvscsi_tgt/libsrp.h
 
+and these become unnecessary
+
+> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/=
+ibmvscsi_tgt/ibmvscsi_tgt.c
+[]
+> +/**
+> + * ibmvscsis_establish_new_q() - Establish new CRQ queue
+> + */
+
+If you use kernel-doc comment style,
+please describe the function arguments too.
+
+> +static long ibmvscsis_establish_new_q(struct scsi_info *vscsi,=A0=A0=
+uint new_state)
+> +{
+> +	long rc =3D ADAPT_SUCCESS;
+> +	uint format;
+> +
+> +	vscsi->flags &=3D PRESERVE_FLAG_FIELDS;
+> +	vscsi->rsp_q_timer.timer_pops =3D 0;
+> +	vscsi->debit =3D 0;
+> +	vscsi->credit =3D 0;
+> +	rc =3D vio_enable_interrupts(vscsi->dma_dev);
+> +	if (rc) {
+> +		pr_warn("reset_queue: failed to enable interrupts, rc %ld\n",
+> +			rc);
+> +	} else {
+> +		rc =3D ibmvscsis_check_init_msg(vscsi, &format);
+> +		if (rc) {
+> +			dev_err(&vscsi->dev, "reset_queue: check_init_msg failed, rc %ld\=
+n",
+> +				rc);
+> +		} else if (format =3D=3D UNUSED_FORMAT &&
+> +			=A0=A0=A0new_state =3D=3D WAIT_CONNECTION) {
+> +			rc =3D ibmvscsis_send_init_message(vscsi, INIT_MSG);
+> +			switch (rc) {
+> +			case H_SUCCESS:
+> +			case H_DROPPED:
+> +			case H_CLOSED:
+> +				rc =3D ADAPT_SUCCESS;
+> +				break;
+> +
+> +			case H_PARAMETER:
+> +			case H_HARDWARE:
+> +				break;
+> +
+> +			default:
+> +				vscsi->state =3D UNDEFINED;
+> +				rc =3D H_HARDWARE;
+> +				break;
+> +			}
+> +		}
+> +	}
+> +
+> +	return rc;
+> +}
+
+This sort of code can have indent reduced by doing
+
+	rc =3D vio_enable_interrupts(...)
+	if (rc) {
+		pr_warn(...);
+		return rc;
+	}
+
+	rc =3D ibmvscsis_check_init_msg(...)
+	if (rc) {
+		dev_err(...);
+		return rc;
+	}
+
+	if (format =3D=3D UNUSED_FORMAT &&=A0new_state =3D=3D WAIT_CONNECTION)=
+ {
+		rc =3D ibmvscsis_send_init_message(vscsi, INIT_MSG);=09
+		switch (rc) {
+			etc...
+		}
+	}
+
+Why use pr_warn and dev_err in the same function?
+Shouldn't dev_<level> be used whenever a struct device is available?
+
+Also it's nice to use %s, __func__ instead of directly
+embedding a function like name into the format string.
+
+A lot of the pr_debug uses seem to be function tracing
+and could be eliminated altogether.
+
+> +		/* can transition from this state to UNCONFIGURING */
+> +	case UNDEFINED:
+
+Comment style for switch / case labels could not be indented
+but start at the same indent level as the case statement.
