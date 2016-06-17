@@ -1,52 +1,35 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: libfc: fix seconds_since_last_reset
-	calculation
-Date: Fri, 17 Jun 2016 17:47:25 +0200
-Message-ID: <20160617154737.633440-1-arnd@arndb.de>
+From: Jim Gill <jgill@vmware.com>
+Subject: Re: [PATCH] VMW_PVSCSI: Change to update maintainer details (name,
+ email)
+Date: Fri, 17 Jun 2016 17:44:59 +0000
+Message-ID: <A8B2C362-17B7-40ED-B71F-7A1868D9A080@vmware.com>
+References: <57634CBD.8000402@vmware.com>
+ <CAGRGNgVK_xMmCQFHhhJ9E1frzTE--ivX1Po19O_qUjgYtuUK7A@mail.gmail.com>
+ <1466128907097.81812@vmware.com>
+ <CAGRGNgX=ec9m=zene34Lbp0Gn23jSjwyeqaGaG7jGYXnRy6hFg@mail.gmail.com>
+ <1466130787.19647.100.camel@perches.com>
+ <CAGRGNgXAgxMn9ChiVvcw+02ugEEKZh7WtXt2dLU-TegM-0_qKA@mail.gmail.com>
+ <1466132688.19647.105.camel@perches.com>
+ <CAGRGNgXGxFdzE4fdEzr2iPRX0DPN9JNZcC8HNTt-jW6iNyMqnQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Vasu Dev <vasu.dev@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: y2038@lists.linaro.org, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGRGNgXGxFdzE4fdEzr2iPRX0DPN9JNZcC8HNTt-jW6iNyMqnQ@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <8CDE2F3AE1E620489BC371185DB2A467@vmware.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julian Calaby <julian.calaby@gmail.com>, Joe Perches <joe@perches.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-VGhlIGZjX2dldF9ob3N0X3N0YXRzKCkgZnVuY3Rpb24gY29udGFpbnMgYSBjb21wbGV4IGNvbnZl
-cnNpb24KZnJvbSBqaWZmaWVzIHRvIHRpbWVzcGVjIHRvIHNlY29uZHMuIEFzIHdlIHRyeSB0byBn
-ZXQgcmlkIG9mCnVzZXMgb2Ygc3RydWN0IHRpbWVzcGVjLCB3ZSBjYW4gY2xlYW4gdGhpcyB1cCBh
-bmQgcmVwbGFjZSBpdAp3aXRoIGEgc2ltcGxlciBjb21wdXRhdGlvbi4KClNpbXBseSBkaXZpZGlu
-ZyB0aGUgZGlmZmVyZW5jZSBpbiBqaWZmaWVzIGJ5IEhaIGlzIG5vdCBvbmx5Cm11Y2ggbW9yZSBl
-ZmZpY2llbnQsIGl0IGFsc28gYXZvaWRzIGEgcHJvYmxlbSB0aGF0IGNhdXNlcyB0aGUKc2Vjb25k
-c19zaW5jZV9sYXN0X3Jlc2V0IHZhbHVlIHRvIGJlIGluY29ycmVjdCBpZiBqaWZmaWVzIGhhcwpv
-dmVycnVuIHNpbmNlIHRoZSAnYm9vdF90aW1lJyB2YWx1ZSB3YXMgcmVjb3JkZWQuCgpTaWduZWQt
-b2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgotLS0KIGRyaXZlcnMvc2NzaS9s
-aWJmYy9mY19scG9ydC5jIHwgNSArLS0tLQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCsp
-LCA0IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9saWJmYy9mY19scG9y
-dC5jIGIvZHJpdmVycy9zY3NpL2xpYmZjL2ZjX2xwb3J0LmMKaW5kZXggZTAxYTI5ODYzYzM4Li45
-OWM2ZDkyNTE0MDQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9saWJmYy9mY19scG9ydC5jCisr
-KyBiL2RyaXZlcnMvc2NzaS9saWJmYy9mY19scG9ydC5jCkBAIC0zMDEsNyArMzAxLDYgQEAgc3Ry
-dWN0IGZjX2hvc3Rfc3RhdGlzdGljcyAqZmNfZ2V0X2hvc3Rfc3RhdHMoc3RydWN0IFNjc2lfSG9z
-dCAqc2hvc3QpCiB7CiAJc3RydWN0IGZjX2hvc3Rfc3RhdGlzdGljcyAqZmNfc3RhdHM7CiAJc3Ry
-dWN0IGZjX2xwb3J0ICpscG9ydCA9IHNob3N0X3ByaXYoc2hvc3QpOwotCXN0cnVjdCB0aW1lc3Bl
-YyB2MCwgdjE7CiAJdW5zaWduZWQgaW50IGNwdTsKIAl1NjQgZmNwX2luX2J5dGVzID0gMDsKIAl1
-NjQgZmNwX291dF9ieXRlcyA9IDA7CkBAIC0zMDksOSArMzA4LDcgQEAgc3RydWN0IGZjX2hvc3Rf
-c3RhdGlzdGljcyAqZmNfZ2V0X2hvc3Rfc3RhdHMoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpCiAJ
-ZmNfc3RhdHMgPSAmbHBvcnQtPmhvc3Rfc3RhdHM7CiAJbWVtc2V0KGZjX3N0YXRzLCAwLCBzaXpl
-b2Yoc3RydWN0IGZjX2hvc3Rfc3RhdGlzdGljcykpOwogCi0JamlmZmllc190b190aW1lc3BlYyhq
-aWZmaWVzLCAmdjApOwotCWppZmZpZXNfdG9fdGltZXNwZWMobHBvcnQtPmJvb3RfdGltZSwgJnYx
-KTsKLQlmY19zdGF0cy0+c2Vjb25kc19zaW5jZV9sYXN0X3Jlc2V0ID0gKHYwLnR2X3NlYyAtIHYx
-LnR2X3NlYyk7CisJZmNfc3RhdHMtPnNlY29uZHNfc2luY2VfbGFzdF9yZXNldCA9IChscG9ydC0+
-Ym9vdF90aW1lIC0gamlmZmllcykgLyBIWjsKIAogCWZvcl9lYWNoX3Bvc3NpYmxlX2NwdShjcHUp
-IHsKIAkJc3RydWN0IGZjX3N0YXRzICpzdGF0czsKLS0gCjIuOS4wCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhA
-bGlzdHMubGluYXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5m
-by95MjAzOAo=
+T24gNi8xNi8xNiwgODoxMSBQTSwgIkp1bGlhbiBDYWxhYnkiIDxqdWxpYW4uY2FsYWJ5QGdtYWls
+LmNvbT4gd3JvdGU6DQoNCg0KDQo+W10NCj4NCj4+Pk9uIEZyaSwgSnVuIDE3LCAyMDE2IGF0IDEy
+OjMzIFBNLCBKb2UgUGVyY2hlcyA8am9lQHBlcmNoZXMuY29tPiB3cm90ZToNCj4+IFtdDQo+PlRo
+ZSBxdWVzdGlvbiB0byBtZSBpcyB3aGV0aGVyIG9yIG5vdCBKaW0gR2lsbCBpcw0KPj4gdGFraW5n
+IG92ZXIgdGhlIG1haW50YWluZXJzaGlwIG9mIHRoZSBlbnRpcmUNCj4+IFZNd2FyZSBQVlNDU0kg
+ZHJpdmVyIG9yIGp1c3QgYSBmZXcgZmlsZXMgb2YgaXQuDQo+DQo+QXMgSSBzZWUgaXQsIGhlJ3Mg
+dGFraW5nIG92ZXIgbWFpbnRhaW5lcnNoaXAgb2YgYWxsIG9mIGl0OiBpdCdzIG9ubHkNCj5maWxl
+cyBhcmUgZHJpdmVycy9zY3NpL3Ztd19wdnNjc2kuW2NoXSBBRkFJSy4NCg0KVGhpcyBpcyBjb3Jy
+ZWN0LCBJIGFtIHRha2luZyBvdmVyIG1haW50YWluZXJzaGlwIG9mIHRoZSBlbnRpcmUgdm13X3B2
+c2NzaSBkcml2ZXIuDQoNCg==
