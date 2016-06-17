@@ -1,50 +1,52 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V3 2/2] aacraid: remove wildcard for series 9 controllers
-Date: Thu, 16 Jun 2016 17:48:25 -0500
-Message-ID: <146611730580.26335.6895789298088017766.stgit@brunhilda>
-References: <146611717567.26335.4769668449125772969.stgit@brunhilda>
+From: Jim Gill <jgill@vmware.com>
+Subject: [PATCH] VMW_PVSCSI: Change to update maintainer details (name, email)
+Date: Thu, 16 Jun 2016 18:05:01 -0700
+Message-ID: <57634CBD.8000402@vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0075.outbound.protection.outlook.com ([157.56.111.75]:42176
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754006AbcFPWsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jun 2016 18:48:36 -0400
-In-Reply-To: <146611717567.26335.4769668449125772969.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: arvindkumar@vmware.com, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
 
-Depends on smartpqi driver adoption
+ From 6a076cc00ec12c6f9cba58ee7e4c3dec49e1e7e5 Mon Sep 17 00:00:00 2001
+From: Jim Gill <jgill@vmware.com>
+Date: Thu, 16 Jun 2016 14:10:43 -0700
+Subject: [PATCH] VMW_PVSCSI: Change to update maintainer details (name, email)
 
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Jim Gill <jgill@vmware.com>
 ---
- drivers/scsi/aacraid/linit.c |    2 --
- 1 file changed, 2 deletions(-)
+  drivers/scsi/vmw_pvscsi.c | 2 +-
+  drivers/scsi/vmw_pvscsi.h | 2 +-
+  2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 79871f3..d5b26fa 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -160,7 +160,6 @@ static const struct pci_device_id aac_pci_tbl[] = {
- 	{ 0x9005, 0x028b, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 62 }, /* Adaptec PMC Series 6 (Tupelo) */
- 	{ 0x9005, 0x028c, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 63 }, /* Adaptec PMC Series 7 (Denali) */
- 	{ 0x9005, 0x028d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 64 }, /* Adaptec PMC Series 8 */
--	{ 0x9005, 0x028f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 65 }, /* Adaptec PMC Series 9 */
- 	{ 0,}
- };
- MODULE_DEVICE_TABLE(pci, aac_pci_tbl);
-@@ -239,7 +238,6 @@ static struct aac_driver_ident aac_drivers[] = {
- 	{ aac_src_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC }, /* Adaptec PMC Series 6 (Tupelo) */
- 	{ aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC }, /* Adaptec PMC Series 7 (Denali) */
- 	{ aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC }, /* Adaptec PMC Series 8 */
--	{ aac_srcv_init, "aacraid", "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_SRC } /* Adaptec PMC Series 9 */
- };
- 
- /**
-
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 6164634..4a0d3cd 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -17,7 +17,7 @@
+   * along with this program; if not, write to the Free Software
+   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+   *
+- * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
++ * Maintained by: Jim Gill <jgill@vmware.com>
+   *
+   */
+  
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index 12712c9..c097d2c 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -17,7 +17,7 @@
+   * along with this program; if not, write to the Free Software
+   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+   *
+- * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
++ * Maintained by: Jim Gill <jgill@vmware.com>
+   *
+   */
+  
+-- 
+2.5.0
