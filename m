@@ -1,48 +1,52 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/3] cxlflash: Shutdown notify support for CXL Flash cards
-Date: Fri, 17 Jun 2016 08:46:14 -0500
-Message-ID: <5763FF26.2060800@linux.vnet.ibm.com>
-References: <1466034460-17797-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1466034597-17950-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: libfc: fix seconds_since_last_reset
+	calculation
+Date: Fri, 17 Jun 2016 17:47:25 +0200
+Message-ID: <20160617154737.633440-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:19559 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751386AbcFQNpi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2016 09:45:38 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5HDhwGT080718
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jun 2016 09:45:38 -0400
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23kr62r68c-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jun 2016 09:45:38 -0400
-Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Fri, 17 Jun 2016 09:45:36 -0400
-In-Reply-To: <1466034597-17950-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: Vasu Dev <vasu.dev@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: y2038@lists.linaro.org, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On 6/15/2016 6:49 PM, Uma Krishnan wrote:
-> Some CXL Flash cards need notification of device shutdown
-> in order to flush pending I/Os.
->
-> A PCI notification hook for shutdown has been added where
-> the driver notifies the card and returns. When the device
-> is removed in the PCI remove path, notification code will
-> wait for shutdown processing to complete.
->
-> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-
-Acked-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-
-
-
+VGhlIGZjX2dldF9ob3N0X3N0YXRzKCkgZnVuY3Rpb24gY29udGFpbnMgYSBjb21wbGV4IGNvbnZl
+cnNpb24KZnJvbSBqaWZmaWVzIHRvIHRpbWVzcGVjIHRvIHNlY29uZHMuIEFzIHdlIHRyeSB0byBn
+ZXQgcmlkIG9mCnVzZXMgb2Ygc3RydWN0IHRpbWVzcGVjLCB3ZSBjYW4gY2xlYW4gdGhpcyB1cCBh
+bmQgcmVwbGFjZSBpdAp3aXRoIGEgc2ltcGxlciBjb21wdXRhdGlvbi4KClNpbXBseSBkaXZpZGlu
+ZyB0aGUgZGlmZmVyZW5jZSBpbiBqaWZmaWVzIGJ5IEhaIGlzIG5vdCBvbmx5Cm11Y2ggbW9yZSBl
+ZmZpY2llbnQsIGl0IGFsc28gYXZvaWRzIGEgcHJvYmxlbSB0aGF0IGNhdXNlcyB0aGUKc2Vjb25k
+c19zaW5jZV9sYXN0X3Jlc2V0IHZhbHVlIHRvIGJlIGluY29ycmVjdCBpZiBqaWZmaWVzIGhhcwpv
+dmVycnVuIHNpbmNlIHRoZSAnYm9vdF90aW1lJyB2YWx1ZSB3YXMgcmVjb3JkZWQuCgpTaWduZWQt
+b2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgotLS0KIGRyaXZlcnMvc2NzaS9s
+aWJmYy9mY19scG9ydC5jIHwgNSArLS0tLQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCsp
+LCA0IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9saWJmYy9mY19scG9y
+dC5jIGIvZHJpdmVycy9zY3NpL2xpYmZjL2ZjX2xwb3J0LmMKaW5kZXggZTAxYTI5ODYzYzM4Li45
+OWM2ZDkyNTE0MDQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9saWJmYy9mY19scG9ydC5jCisr
+KyBiL2RyaXZlcnMvc2NzaS9saWJmYy9mY19scG9ydC5jCkBAIC0zMDEsNyArMzAxLDYgQEAgc3Ry
+dWN0IGZjX2hvc3Rfc3RhdGlzdGljcyAqZmNfZ2V0X2hvc3Rfc3RhdHMoc3RydWN0IFNjc2lfSG9z
+dCAqc2hvc3QpCiB7CiAJc3RydWN0IGZjX2hvc3Rfc3RhdGlzdGljcyAqZmNfc3RhdHM7CiAJc3Ry
+dWN0IGZjX2xwb3J0ICpscG9ydCA9IHNob3N0X3ByaXYoc2hvc3QpOwotCXN0cnVjdCB0aW1lc3Bl
+YyB2MCwgdjE7CiAJdW5zaWduZWQgaW50IGNwdTsKIAl1NjQgZmNwX2luX2J5dGVzID0gMDsKIAl1
+NjQgZmNwX291dF9ieXRlcyA9IDA7CkBAIC0zMDksOSArMzA4LDcgQEAgc3RydWN0IGZjX2hvc3Rf
+c3RhdGlzdGljcyAqZmNfZ2V0X2hvc3Rfc3RhdHMoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpCiAJ
+ZmNfc3RhdHMgPSAmbHBvcnQtPmhvc3Rfc3RhdHM7CiAJbWVtc2V0KGZjX3N0YXRzLCAwLCBzaXpl
+b2Yoc3RydWN0IGZjX2hvc3Rfc3RhdGlzdGljcykpOwogCi0JamlmZmllc190b190aW1lc3BlYyhq
+aWZmaWVzLCAmdjApOwotCWppZmZpZXNfdG9fdGltZXNwZWMobHBvcnQtPmJvb3RfdGltZSwgJnYx
+KTsKLQlmY19zdGF0cy0+c2Vjb25kc19zaW5jZV9sYXN0X3Jlc2V0ID0gKHYwLnR2X3NlYyAtIHYx
+LnR2X3NlYyk7CisJZmNfc3RhdHMtPnNlY29uZHNfc2luY2VfbGFzdF9yZXNldCA9IChscG9ydC0+
+Ym9vdF90aW1lIC0gamlmZmllcykgLyBIWjsKIAogCWZvcl9lYWNoX3Bvc3NpYmxlX2NwdShjcHUp
+IHsKIAkJc3RydWN0IGZjX3N0YXRzICpzdGF0czsKLS0gCjIuOS4wCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhA
+bGlzdHMubGluYXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5m
+by95MjAzOAo=
