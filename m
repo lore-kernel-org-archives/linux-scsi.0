@@ -1,68 +1,78 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: block: don't check request size in blk_cloned_rq_check_limits()
-Date: Fri, 17 Jun 2016 08:59:47 +0200
-Message-ID: <57639FE3.3080502@suse.de>
-References: <1464593093-93527-1-git-send-email-hare@suse.de>
- <20160610131901.GA28570@redhat.com> <yq160tgfoqr.fsf@sermon.lab.mkp.net>
- <575BE182.5010304@suse.de> <yq11t44f0hi.fsf@sermon.lab.mkp.net>
- <575C0DAE.7070502@suse.de> <yq17fdrcjs3.fsf@sermon.lab.mkp.net>
- <5760F6BC.60109@suse.de> <576127FC.9020608@kernel.dk>
- <57612F12.5070505@suse.de> <5761838E.1000106@linux.vnet.ibm.com>
- <57629D23.1090704@linux.vnet.ibm.com> <5763215D.4040600@linux.vnet.ibm.com>
+From: Thomas Hellstrom <thellstrom@vmware.com>
+Subject: Re: [Pv-drivers] [PATCH] VMW_PVSCSI: Change to update maintainer
+ details (name, email)
+Date: Fri, 17 Jun 2016 09:55:39 +0200
+Message-ID: <c398095a-4608-06ce-ceb1-f0aaaf12d426@vmware.com>
+References: <57634CBD.8000402@vmware.com>
+ <CAGRGNgVK_xMmCQFHhhJ9E1frzTE--ivX1Po19O_qUjgYtuUK7A@mail.gmail.com>
+ <1466128907097.81812@vmware.com>
+ <CAGRGNgX=ec9m=zene34Lbp0Gn23jSjwyeqaGaG7jGYXnRy6hFg@mail.gmail.com>
+ <1466130787.19647.100.camel@perches.com>
+ <CAGRGNgXAgxMn9ChiVvcw+02ugEEKZh7WtXt2dLU-TegM-0_qKA@mail.gmail.com>
+ <1466132688.19647.105.camel@perches.com>
+ <CAGRGNgXGxFdzE4fdEzr2iPRX0DPN9JNZcC8HNTt-jW6iNyMqnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55972 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899AbcFQG7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2016 02:59:52 -0400
-In-Reply-To: <5763215D.4040600@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGRGNgXGxFdzE4fdEzr2iPRX0DPN9JNZcC8HNTt-jW6iNyMqnQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julian Calaby <julian.calaby@gmail.com>, Joe Perches <joe@perches.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jim Gill <jgill@vmware.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, mark.bergman@uphs.upenn.edu
 
-On 06/16/2016 11:59 PM, Mauricio Faria de Oliveira wrote:
-> On 06/16/2016 09:35 AM, Mauricio Faria de Oliveira wrote:
->> On 06/15/2016 01:34 PM, Brian King wrote:
->>> [...] did you ever try to reproduce this with an
->>> upstream
->>> kernel?
->
->> Now that the topic is under discussion, I've asked for some time slo=
-ts
->> on that system, so we can test an upstream kernel and try to reprodu=
-ce
->> the problem and analyze it more closely.
->
-> The problem is not reproducible w/ 4.7.0-rc3 even after a few hours;
-> it is instantly reproducible w/ 3.12.57-60.35 (SLES 12 SP1 updates).
->
-> Hannes et al,
->
-> If you'd like some data collection from this system, feel free to pin=
-g
-> me about it.
->
-Ouch.
+Hi!
 
-Okay, continue discussion on the SUSE bugzilla.
-Guess we've missed some backports then.
+IMO we shouldn't have maintainer info mentioned in the source files,
+since the information is redundant and moreover if we change maintainer
+a patch touching multiple files would just look odd, and we'd leave a
+lot of stale info in older kernels.
 
-Sorry for the noise.
+Having the linux git *master* MAINTAINERS file as the authoritative
+information source for this makes most sense. If there are different
+maintainers of different parts of a single module we should be able to
+sort that out internally.
 
-Cheers,
+Thanks,
+Thomas
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+On 06/17/2016 05:11 AM, Julian Calaby wrote:
+> Hi Joe,
+>
+> On Fri, Jun 17, 2016 at 1:04 PM, Joe Perches <joe@perches.com> wrote:
+>> On Fri, 2016-06-17 at 12:44 +1000, Julian Calaby wrote:
+>>> Hi Joe,
+>> rehi Julian.
+> (I always put a salutation on my emails and always finish them with
+> "Thanks," =) )
+>
+>>> On Fri, Jun 17, 2016 at 12:33 PM, Joe Perches <joe@perches.com> wrote:
+>> []
+>>>> get_maintainer.pl also has a rarely used "--file-emails" option to
+>>>> scan for what appears to be email addresses in specific files.
+>>>>
+>>>> $ ./scripts/get_maintainer.pl  -f --file-emails drivers/scsi/vmw_pvscsi.c
+>>>> Arvind Kumar <arvindkumar@vmware.com> (maintainer:VMware PVSCSI driver,in file)
+>>>> VMware PV-Drivers <pv-drivers@vmware.com> (maintainer:VMware PVSCSI driver)
+>>>> "James E.J. Bottomley" <jejb@linux.vnet.ibm.com> (maintainer:SCSI SUBSYSTEM)
+>>>> "Martin K. Petersen" <martin.petersen@oracle.com> (maintainer:SCSI SUBSYSTEM)
+>>>> linux-scsi@vger.kernel.org (open list:VMware PVSCSI driver)
+>>>> linux-kernel@vger.kernel.org (open list)
+>>>>
+>>>> note the "in file" after Arvind's name
+>>> Didn't know this, however my point stands: the maintainer line in the
+>>> file is redundant if we find maintainers through MAINTAINERS or the
+>>> get_maintainer.pl script.
+>> Yes, I'm not suggesting anything else.  Jim's name
+>> should appear in the MAINTAINERS file somewhere.
+>>
+>> The question to me is whether or not Jim Gill is
+>> taking over the maintainership of the entire
+>> VMware PVSCSI driver or just a few files of it.
+> As I see it, he's taking over maintainership of all of it: it's only
+> files are drivers/scsi/vmw_pvscsi.[ch] AFAIK.
+>
+> Thanks,
+>
