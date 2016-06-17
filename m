@@ -1,69 +1,94 @@
-From: Arvind Kumar <arvindkumar@vmware.com>
-Subject: Re: [PATCH] VMW_PVSCSI: Change to update maintainer details (name,
- email)
-Date: Fri, 17 Jun 2016 02:03:59 +0000
-Message-ID: <1466128907097.81812@vmware.com>
-References: <57634CBD.8000402@vmware.com>,<CAGRGNgVK_xMmCQFHhhJ9E1frzTE--ivX1Po19O_qUjgYtuUK7A@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] VMW_PVSCSI: Change to update maintainer details (name, email)
+Date: Fri, 17 Jun 2016 12:18:49 +1000
+Message-ID: <CAGRGNgX=ec9m=zene34Lbp0Gn23jSjwyeqaGaG7jGYXnRy6hFg@mail.gmail.com>
+References: <57634CBD.8000402@vmware.com> <CAGRGNgVK_xMmCQFHhhJ9E1frzTE--ivX1Po19O_qUjgYtuUK7A@mail.gmail.com>
+ <1466128907097.81812@vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGRGNgVK_xMmCQFHhhJ9E1frzTE--ivX1Po19O_qUjgYtuUK7A@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <1466128907097.81812@vmware.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>, Jim Gill <jgill@vmware.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Arvind Kumar <arvindkumar@vmware.com>
+Cc: Jim Gill <jgill@vmware.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Julian,
+Hi Arvind,
 
-Thanks for spotting that. We will update that too.
-
-I don't really see it as redundant rather as a quick reference instead of digging out the MAINTAINERS file and then search for vmw_pvscsi.c file. Specially for those readers who might not even know about the MAINTAINERS file.
-
-Thanks!
-Arvind
-________________________________________
-From: Julian Calaby <julian.calaby@gmail.com>
-Sent: Thursday, June 16, 2016 6:48 PM
-To: Jim Gill
-Cc: jejb@linux.vnet.ibm.com; Martin K. Petersen; Arvind Kumar; pv-drivers@vmware.com; linux-scsi; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] VMW_PVSCSI: Change to update maintainer details (name, email)
-
-Hi Jim,
-
-On Fri, Jun 17, 2016 at 11:05 AM, Jim Gill <jgill@vmware.com> wrote:
-> From 6a076cc00ec12c6f9cba58ee7e4c3dec49e1e7e5 Mon Sep 17 00:00:00 2001
-> From: Jim Gill <jgill@vmware.com>
-> Date: Thu, 16 Jun 2016 14:10:43 -0700
-> Subject: [PATCH] VMW_PVSCSI: Change to update maintainer details (name,
-> email)
+On Fri, Jun 17, 2016 at 12:03 PM, Arvind Kumar <arvindkumar@vmware.com> wrote:
+> Hi Julian,
 >
-> Signed-off-by: Jim Gill <jgill@vmware.com>
-> ---
->  drivers/scsi/vmw_pvscsi.c | 2 +-
->  drivers/scsi/vmw_pvscsi.h | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+> Thanks for spotting that. We will update that too.
 >
-> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-> index 6164634..4a0d3cd 100644
-> --- a/drivers/scsi/vmw_pvscsi.c
-> +++ b/drivers/scsi/vmw_pvscsi.c
-> @@ -17,7 +17,7 @@
->   * along with this program; if not, write to the Free Software
->   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
-> USA.
->   *
-> - * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
-> + * Maintained by: Jim Gill <jgill@vmware.com>
+> I don't really see it as redundant rather as a quick reference instead of digging out the MAINTAINERS file and then search for vmw_pvscsi.c file. Specially for those readers who might not even know about the MAINTAINERS file.
 
-Shouldn't you update MAINTAINERs too? And isn't having this
-information in these files redundant?
+You can use the get_maintainers script in the scripts directory to
+quickly get information from MAINTAINERS, i.e.:
+
+./scripts/get_maintainers.pl -f drivers/scsi/vmw_pvscsi.c
+
+or
+
+./scripts/get_maintainers.pl patchfile.patch
 
 Thanks,
 
---
+Julian Calaby
+
+
+>
+> Thanks!
+> Arvind
+> ________________________________________
+> From: Julian Calaby <julian.calaby@gmail.com>
+> Sent: Thursday, June 16, 2016 6:48 PM
+> To: Jim Gill
+> Cc: jejb@linux.vnet.ibm.com; Martin K. Petersen; Arvind Kumar; pv-drivers@vmware.com; linux-scsi; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] VMW_PVSCSI: Change to update maintainer details (name, email)
+>
+> Hi Jim,
+>
+> On Fri, Jun 17, 2016 at 11:05 AM, Jim Gill <jgill@vmware.com> wrote:
+>> From 6a076cc00ec12c6f9cba58ee7e4c3dec49e1e7e5 Mon Sep 17 00:00:00 2001
+>> From: Jim Gill <jgill@vmware.com>
+>> Date: Thu, 16 Jun 2016 14:10:43 -0700
+>> Subject: [PATCH] VMW_PVSCSI: Change to update maintainer details (name,
+>> email)
+>>
+>> Signed-off-by: Jim Gill <jgill@vmware.com>
+>> ---
+>>  drivers/scsi/vmw_pvscsi.c | 2 +-
+>>  drivers/scsi/vmw_pvscsi.h | 2 +-
+>>  2 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+>> index 6164634..4a0d3cd 100644
+>> --- a/drivers/scsi/vmw_pvscsi.c
+>> +++ b/drivers/scsi/vmw_pvscsi.c
+>> @@ -17,7 +17,7 @@
+>>   * along with this program; if not, write to the Free Software
+>>   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+>> USA.
+>>   *
+>> - * Maintained by: Arvind Kumar <arvindkumar@vmware.com>
+>> + * Maintained by: Jim Gill <jgill@vmware.com>
+>
+> Shouldn't you update MAINTAINERs too? And isn't having this
+> information in these files redundant?
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: https://urldefense.proofpoint.com/v2/url?u=http-3A__www.google.com_profiles_julian.calaby_&d=CwIBaQ&c=Sqcl0Ez6M0X8aeM67LKIiDJAXVeAw-YihVMNtXt-uEs&r=bUMaNc7nC9xbXtaMJrOvIIPNpPH0chY2kdRsskQn6GY&m=JibRIMgSBQLffjc5PofQnpJ0k_gawmvafvIKpsEaMzk&s=CeVpY1FwvY9Qlb0VDeQUXeeL3kuVkcIKTZIC7exS6SM&e=
+
+
+
+-- 
 Julian Calaby
 
 Email: julian.calaby@gmail.com
-Profile: https://urldefense.proofpoint.com/v2/url?u=http-3A__www.google.com_profiles_julian.calaby_&d=CwIBaQ&c=Sqcl0Ez6M0X8aeM67LKIiDJAXVeAw-YihVMNtXt-uEs&r=bUMaNc7nC9xbXtaMJrOvIIPNpPH0chY2kdRsskQn6GY&m=JibRIMgSBQLffjc5PofQnpJ0k_gawmvafvIKpsEaMzk&s=CeVpY1FwvY9Qlb0VDeQUXeeL3kuVkcIKTZIC7exS6SM&e=
+Profile: http://www.google.com/profiles/julian.calaby/
