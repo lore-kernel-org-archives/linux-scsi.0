@@ -1,702 +1,325 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V3 1/2] smartpqi: initial commit of Microsemi smartpqi
- driver
-Date: Fri, 17 Jun 2016 11:57:01 +0200
-Message-ID: <20160617095701.fv5wnorvisnbhcc6@c203.arch.suse.de>
-References: <146611717567.26335.4769668449125772969.stgit@brunhilda>
- <146611729682.26335.17158396498682439988.stgit@brunhilda>
+From: Chaitra Basappa <chaitra.basappa@broadcom.com>
+Subject: Kernel panics while creating RAID volume on latest stable 4.6.2
+ kernel beacuse of "[PATCH v2 3/3] ses: fix discovery of SATA devices in SAS enclosures"
+Date: Fri, 17 Jun 2016 16:03:39 +0530
+Message-ID: <489156e657bf7073e9e37a5d1112cf14@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42213 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751711AbcFQJ5F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2016 05:57:05 -0400
-Content-Disposition: inline
-In-Reply-To: <146611729682.26335.17158396498682439988.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-Hi Don/Kevin,
+Hi,
+ Try creating RAID volume on latest stable 4.6.2 kernel, as soon as the
+volume gets created kernel panics , below are the logs...
 
-some comments inline (mostly stulistic nothing architectural)
+Carried out same experimentation on 4.4.13 kernel, issue was not
+observed.After learning diff b/w 4.4.13 & 4.6.2 kernels "[PATCH v2  3/3]
+ses: fix discovery of SATA devices in SAS enclosures" patch looks to be
+suspicious.
+commit 3f8d6f2a0797e8c650a47e5c1b5c2601a46f4293
 
-On Thu, Jun 16, 2016 at 05:48:16PM -0500, Don Brace wrote:
-> From: Kevin Barnett <kevin.barnett@microsemi.com>
->=20
-> This initial commit contains WIP of Microsemi's smartpqi module.
->=20
-> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+And hence reverted above mentioned patch changes from 4.6.2 kernel and
+tried volume creation, volume created successfully and issue is not
+observed.
 
-if this is From: Kevin it should have his S-o-b as well.
+>>Kernel panic logs:
 
-> Signed-off-by: Don Brace <don.brace@microsemi.com>
-> ---
+root@dhcp-135-24-192-112 ~]# sd 0:1:0:0: [sdw] No Caching mode page found
+sd 0:1:0:0: [sdw] Assuming drive cache: write through
+------------[ cut here ]------------
+kernel BUG at drivers/scsi/scsi_transport_sas.c:164!
+invalid opcode: 0000 [#1] SMP
+Modules linked in: mptctl mptbase ses enclosure ebtable_nat ebtables
+xt_CHECKSUM iptable_mangle bridge autofs4 8021q garp stp llc ipt_REJECT
+nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables
+ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 xt_state
+nf_conntrack ip6table_filter ip6_tables ipv6 vhost_net macvtap macvlan
+vhost tun kvm_intel kvm irqbypass uinput ipmi_devintf iTCO_wdt
+iTCO_vendor_support dcdbas pcspkr ipmi_si ipmi_msghandler acpi_pad sb_edac
+edac_core wmi sg lpc_ich mfd_core shpchp tg3 ptp pps_core joydev ioatdma
+dca ext4(E) mbcache(E) jbd2(E) sd_mod(E) ahci(E) libahci(E) mpt3sas(E)
+scsi_transport_sas(E) raid_class(E) dm_mirror(E) dm_region_hash(E)
+dm_log(E) dm_mod(E) [last unloaded: speedstep_lib]
+CPU: 1 PID: 375 Comm: kworker/u96:4 Tainted: G            E   4.6.2 #1
+Hardware name: Dell Inc. PowerEdge T420/03015M, BIOS 2.2.0 02/06/2014
+Workqueue: fw_event_mpt3sas0 _firmware_event_work [mpt3sas]
+task: ffff8800377f6480 ti: ffff8800c62c8000 task.ti: ffff8800c62c8000
+RIP: 0010:[<ffffffffa0041706>]  [<ffffffffa0041706>]
+sas_get_address+0x26/0x30 [scsi_transport_sas]
+RSP: 0018:ffff8800c62cb8a8  EFLAGS: 00010282
+RAX: ffff8800c6986208 RBX: ffff8800b04ec800 RCX: ffff8800b3deaac4
+RDX: 000000000000002b RSI: 0000000000000000 RDI: ffff8800b04ec800
+RBP: ffff8800c62cb8a8 R08: 0000000000000000 R09: 0000000000000008
+R10: 0000000000000000 R11: 0000000000000001 R12: ffff8800b04ec800
+R13: 0000000000000000 R14: ffff8800b04ec998 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88012f020000(0000)
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffffffffff600400 CR3: 0000000001c06000 CR4: 00000000000406e0
+Stack:
+ ffff8800c62cb8d8 ffffffffa066bc62 0000000000000000 0000000000000000
+ ffff8800b04ecc68 ffff880128ee8000 ffff8800c62cb938 ffffffffa066bd5c
+ ffff8800b04ecef8 ffffffff81608333 ffff8800b04ec800 ffff8800b04ecc68
+Call Trace:
+ [<ffffffffa066bc62>] ses_match_to_enclosure+0x72/0x80 [ses]
+ [<ffffffffa066bd5c>] ses_intf_add+0xec/0x494 [ses]
+ [<ffffffff81608333>] ? preempt_schedule_common+0x23/0x40
+ [<ffffffff813f4978>] device_add+0x278/0x440
+ [<ffffffff814038dc>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8143110e>] scsi_sysfs_add_sdev+0xee/0x2b0
+ [<ffffffff8142d2a7>] scsi_add_lun+0x437/0x580
+ [<ffffffff8142defb>] scsi_probe_and_add_lun+0x1bb/0x4e0
+ [<ffffffff813f21b9>] ? get_device+0x19/0x20
+ [<ffffffff8142e8e3>] ? scsi_alloc_target+0x293/0x320
+ [<ffffffff814038dc>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8142eb2f>] __scsi_add_device+0x10f/0x130
+ [<ffffffff8142eb61>] scsi_add_device+0x11/0x30
+ [<ffffffffa0067039>] _scsih_sas_volume_add+0xf9/0x1b0 [mpt3sas]
+ [<ffffffffa00678db>] _scsih_sas_ir_config_change_event+0xdb/0x210
+[mpt3sas]
+ [<ffffffffa0067ad1>] _mpt3sas_fw_work+0xc1/0x480 [mpt3sas]
+ [<ffffffff81080010>] ? pwq_dec_nr_in_flight+0x50/0xa0
+ [<ffffffffa0067ea9>] _firmware_event_work+0x19/0x20 [mpt3sas]
+ [<ffffffff810809a9>] process_one_work+0x189/0x4e0
+ [<ffffffff810cd7ec>] ? del_timer_sync+0x4c/0x60
+ [<ffffffff810818fe>] ? maybe_create_worker+0x8e/0x110
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff81081aed>] worker_thread+0x16d/0x520
+ [<ffffffff81090cb2>] ? default_wake_function+0x12/0x20
+ [<ffffffff810a5916>] ? __wake_up_common+0x56/0x90
+ [<ffffffff81081980>] ? maybe_create_worker+0x110/0x110
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff81081980>] ? maybe_create_worker+0x110/0x110
+ [<ffffffff8108666c>] kthread+0xcc/0xf0
+ [<ffffffff8108ff6e>] ? schedule_tail+0x1e/0xc0
+ [<ffffffff8160bc52>] ret_from_fork+0x22/0x40
+ [<ffffffff810865a0>] ? kthread_freezable_should_stop+0x70/0x70
+Code: 0f 1f 44 00 00 55 48 89 e5 66 66 66 66 90 48 8b 87 28 01 00 00 48 8b
+40 28 83 b8 d0 02 00 00 01 75 09 48 8b 80 e0 02 00 00 c9 c3 <0f> 0b eb fe
+66 0f 1f 44 00 00 55 48 89 e5 53 48 83 ec 08 66 66
+RIP  [<ffffffffa0041706>] sas_get_address+0x26/0x30 [scsi_transport_sas]
+ RSP <ffff8800c62cb8a8>
+---[ end trace c8c9da69e1dcb8a1 ]---
+BUG: unable to handle kernel paging request at ffffffffffffffd8
+IP: [<ffffffff81086210>] kthread_data+0x10/0x20
+PGD 1c07067 PUD 1c09067 PMD 0
+Oops: 0000 [#2] SMP
+Modules linked in: mptctl mptbase ses enclosure ebtable_nat ebtables
+xt_CHECKSUM iptable_mangle bridge autofs4 8021q garp stp llc ipt_REJECT
+nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables
+ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 xt_state
+nf_conntrack ip6table_filter ip6_tables ipv6 vhost_net macvtap macvlan
+vhost tun kvm_intel kvm irqbypass uinput ipmi_devintf iTCO_wdt
+iTCO_vendor_support dcdbas pcspkr ipmi_si ipmi_msghandler acpi_pad sb_edac
+edac_core wmi sg lpc_ich mfd_core shpchp tg3 ptp pps_core joydev ioatdma
+dca ext4(E) mbcache(E) jbd2(E) sd_mod(E) ahci(E) libahci(E) mpt3sas(E)
+scsi_transport_sas(E) raid_class(E) dm_mirror(E) dm_region_hash(E)
+dm_log(E) dm_mod(E) [last unloaded: speedstep_lib]
+CPU: 3 PID: 375 Comm: kworker/u96:4 Tainted: G      D     E   4.6.2 #1
+Hardware name: Dell Inc. PowerEdge T420/03015M, BIOS 2.2.0 02/06/2014
+task: ffff8800377f6480 ti: ffff8800c62c8000 task.ti: ffff8800c62c8000
+RIP: 0010:[<ffffffff81086210>]  [<ffffffff81086210>]
+kthread_data+0x10/0x20
+RSP: 0018:ffff8800c62cb3e8  EFLAGS: 00010082
+RAX: 0000000000000000 RBX: ffff88012f0755c0 RCX: 0000000000000003
+RDX: ffff8800377f6480 RSI: ffff8800377f6480 RDI: ffff8800377f6480
+RBP: ffff8800c62cb3e8 R08: ffff8800377f6528 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffff8800377f6e20 R14: 0000000000000001 R15: 0000000000000004
+FS:  0000000000000000(0000) GS:ffff88012f060000(0000)
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000028 CR3: 00000000c43d4000 CR4: 00000000000406e0
+Stack:
+ ffff8800c62cb418 ffffffff8107dd32 ffffe8ff00000000 ffff88012f0755c0
+ 0000000000000000 ffff8800377f6e20 ffff8800c62cb528 ffffffff81607f70
+ ffff8800377f6480 0000000000000296 ffff8800c78dff58 ffffffff812d2515
+Call Trace:
+ [<ffffffff8107dd32>] wq_worker_sleeping+0x12/0xa0
+ [<ffffffff81607f70>] __schedule+0x510/0x8b0
+ [<ffffffff812d2515>] ? cfq_put_queue+0xe5/0x280
+ [<ffffffff810c97e7>] ? call_rcu_sched+0x17/0x20
+ [<ffffffff8106a923>] ? release_task+0xf3/0x160
+ [<ffffffff812b1601>] ? put_io_context+0x81/0xc0
+ [<ffffffff812d2c95>] ? cfq_exit_cfqq+0x35/0x60
+ [<ffffffff81608470>] schedule+0x40/0xb0
+ [<ffffffff812b1b4f>] ? exit_io_context+0x3f/0x50
+ [<ffffffff8106b594>] do_exit+0x2b4/0x4e0
+ [<ffffffff810b94bb>] ? kmsg_dump+0x9b/0xc0
+ [<ffffffff81022daf>] oops_end+0x9f/0xe0
+ [<ffffffff81022eeb>] die+0x5b/0x90
+ [<ffffffff81020171>] do_trap+0x161/0x170
+ [<ffffffff810204f8>] do_error_trap+0xb8/0xf0
+ [<ffffffffa0041706>] ? sas_get_address+0x26/0x30 [scsi_transport_sas]
+ [<ffffffffa066b384>] ? ses_recv_diag+0x74/0xc0 [ses]
+ [<ffffffff81020640>] do_invalid_op+0x20/0x30
+ [<ffffffff8160d388>] invalid_op+0x18/0x20
+ [<ffffffffa0041706>] ? sas_get_address+0x26/0x30 [scsi_transport_sas]
+ [<ffffffffa066bc62>] ses_match_to_enclosure+0x72/0x80 [ses]
+ [<ffffffffa066bd5c>] ses_intf_add+0xec/0x494 [ses]
+ [<ffffffff81608333>] ? preempt_schedule_common+0x23/0x40
+ [<ffffffff813f4978>] device_add+0x278/0x440
+ [<ffffffff814038dc>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8143110e>] scsi_sysfs_add_sdev+0xee/0x2b0
+ [<ffffffff8142d2a7>] scsi_add_lun+0x437/0x580
+ [<ffffffff8142defb>] scsi_probe_and_add_lun+0x1bb/0x4e0
+ [<ffffffff813f21b9>] ? get_device+0x19/0x20
+ [<ffffffff8142e8e3>] ? scsi_alloc_target+0x293/0x320
+ [<ffffffff814038dc>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8142eb2f>] __scsi_add_device+0x10f/0x130
+ [<ffffffff8142eb61>] scsi_add_device+0x11/0x30
+ [<ffffffffa0067039>] _scsih_sas_volume_add+0xf9/0x1b0 [mpt3sas]
+ [<ffffffffa00678db>] _scsih_sas_ir_config_change_event+0xdb/0x210
+[mpt3sas]
+ [<ffffffffa0067ad1>] _mpt3sas_fw_work+0xc1/0x480 [mpt3sas]
+ [<ffffffff81080010>] ? pwq_dec_nr_in_flight+0x50/0xa0
+ [<ffffffffa0067ea9>] _firmware_event_work+0x19/0x20 [mpt3sas]
+ [<ffffffff810809a9>] process_one_work+0x189/0x4e0
+ [<ffffffff810cd7ec>] ? del_timer_sync+0x4c/0x60
+ [<ffffffff810818fe>] ? maybe_create_worker+0x8e/0x110
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff81081aed>] worker_thread+0x16d/0x520
+ [<ffffffff81090cb2>] ? default_wake_function+0x12/0x20
+ [<ffffffff810a5916>] ? __wake_up_common+0x56/0x90
+ [<ffffffff81081980>] ? maybe_create_worker+0x110/0x110
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff81081980>] ? maybe_create_worker+0x110/0x110
+ [<ffffffff8108666c>] kthread+0xcc/0xf0
+ [<ffffffff8108ff6e>] ? schedule_tail+0x1e/0xc0
+ [<ffffffff8160bc52>] ret_from_fork+0x22/0x40
+ [<ffffffff810865a0>] ? kthread_freezable_should_stop+0x70/0x70
+Code: 40 09 00 00 48 8b 40 c8 c9 48 c1 e8 02 83 e0 01 c3 66 2e 0f 1f 84 00
+00 00 00 00 55 48 89 e5 66 66 66 66 90 48 8b 87 40 09 00 00 <48> 8b 40 d8
+c9 c3 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 66
+RIP  [<ffffffff81086210>] kthread_data+0x10/0x20
+ RSP <ffff8800c62cb3e8>
+CR2: ffffffffffffffd8
+---[ end trace c8c9da69e1dcb8a2 ]---
+Fixing recursive fault but reboot is needed!
+NMI watchdog: Watchdog detected hard LOCKUP on cpu 0
+Modules linked in: mptctl mptbase ses enclosure ebtable_nat ebtables
+xt_CHECKSUM iptable_mangle bridge autofs4 8021q garp stp llc ipt_REJECT
+nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filterINFO:
+rcu_sched detected stalls on CPUs/tasks:
+        3-...: (2 GPs behind) idle=24d/140000000000000/0
+softirq=12337/12338 fqs=6999
+        (detected by 1, t=21002 jiffies, g=10149, c=10148, q=696)
+Task dump for CPU 3:
+kworker/u96:4   D ffff8800c62cb418     0   375      0 0x00000008
+ ffffffff8107dd32 ffffe8ff00000000 ffff88012f0755c0 0000000000000000
+ ffff8800377f6e20 ffff8800c62cb528 ffffffff81607f70 ffff8800377f6480
+ 0000000000000296 ffff8800c78dff58 ffffffff812d2515 ffff880000000042
+Call Trace:
+ [<ffffffff8107dd32>] ? wq_worker_sleeping+0x12/0xa0
+ [<ffffffff81607f70>] ? __schedule+0x510/0x8b0
+ [<ffffffff812d2515>] ? cfq_put_queue+0xe5/0x280
+ [<ffffffff810c97e7>] ? call_rcu_sched+0x17/0x20
+ [<ffffffff8106a923>] ? release_task+0xf3/0x160
+ [<ffffffff812b1601>] ? put_io_context+0x81/0xc0
+ [<ffffffff812d2c95>] ? cfq_exit_cfqq+0x35/0x60
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff812b1b4f>] ? exit_io_context+0x3f/0x50
+ [<ffffffff8106b594>] ? do_exit+0x2b4/0x4e0
+ [<ffffffff810b94bb>] ? kmsg_dump+0x9b/0xc0
+ [<ffffffff81022daf>] ? oops_end+0x9f/0xe0
+ [<ffffffff81022eeb>] ? die+0x5b/0x90
+ [<ffffffff81020171>] ? do_trap+0x161/0x170
+ [<ffffffff810204f8>] ? do_error_trap+0xb8/0xf0
+ [<ffffffffa0041706>] ? sas_get_address+0x26/0x30 [scsi_transport_sas]
+ [<ffffffffa066b384>] ? ses_recv_diag+0x74/0xc0 [ses]
+ [<ffffffff81020640>] ? do_invalid_op+0x20/0x30
+ [<ffffffff8160d388>] ? invalid_op+0x18/0x20
+ [<ffffffffa0041706>] ? sas_get_address+0x26/0x30 [scsi_transport_sas]
+ [<ffffffffa066bc62>] ? ses_match_to_enclosure+0x72/0x80 [ses]
+ [<ffffffffa066bd5c>] ? ses_intf_add+0xec/0x494 [ses]
+ [<ffffffff81608333>] ? preempt_schedule_common+0x23/0x40
+ [<ffffffff813f4978>] ? device_add+0x278/0x440
+ [<ffffffff814038dc>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8143110e>] ? scsi_sysfs_add_sdev+0xee/0x2b0
+ [<ffffffff8142d2a7>] ? scsi_add_lun+0x437/0x580
+ [<ffffffff8142defb>] ? scsi_probe_and_add_lun+0x1bb/0x4e0
+ [<ffffffff813f21b9>] ? get_device+0x19/0x20
+ [<ffffffff8142e8e3>] ? scsi_alloc_target+0x293/0x320
+ [<ffffffff814038dc>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8142eb2f>] ? __scsi_add_device+0x10f/0x130
+ [<ffffffff8142eb61>] ? scsi_add_device+0x11/0x30
+ [<ffffffffa0067039>] ? _scsih_sas_volume_add+0xf9/0x1b0 [mpt3sas]
+ [<ffffffffa00678db>] ? _scsih_sas_ir_config_change_event+0xdb/0x210
+[mpt3sas]
+ [<ffffffffa0067ad1>] ? _mpt3sas_fw_work+0xc1/0x480 [mpt3sas]
+ [<ffffffff81080010>] ? pwq_dec_nr_in_flight+0x50/0xa0
+ [<ffffffffa0067ea9>] ? _firmware_event_work+0x19/0x20 [mpt3sas]
+ [<ffffffff810809a9>] ? process_one_work+0x189/0x4e0
+ [<ffffffff810cd7ec>] ? del_timer_sync+0x4c/0x60
+ [<ffffffff810818fe>] ? maybe_create_worker+0x8e/0x110
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff81081aed>] ? worker_thread+0x16d/0x520
+ [<ffffffff81090cb2>] ? default_wake_function+0x12/0x20
+ [<ffffffff810a5916>] ? __wake_up_common+0x56/0x90
+ [<ffffffff81081980>] ? maybe_create_worker+0x110/0x110
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff81081980>] ? maybe_create_worker+0x110/0x110
+ [<ffffffff8108666c>] ? kthread+0xcc/0xf0
+ [<ffffffff8108ff6e>] ? schedule_tail+0x1e/0xc0
+ [<ffffffff8160bc52>] ? ret_from_fork+0x22/0x40
+ [<ffffffff810865a0>] ? kthread_freezable_should_stop+0x70/0x70
 
-[...]
-
-> + */
-> +
-> +#if !defined(_SMARTPQI_H)
-> +#define _SMARTPQI_H
-> +
-> +#pragma pack(1)
-
-I know GCC does understand #pragma pack() to be compatible with MSVC bu=
-t please
-use the kernel's __packed convention on structs you want to have packed=
-=2E
-
-> +
-> +#define PQI_DEVICE_SIGNATURE	"PQI DREG"
-
-[...]
-
-> +	pqi_index_t	oq_ci_copy;
-> +	struct task_struct *task;
-> +	u16		int_msg_num;
-> +};
-> +
-
-Just for clarification (sorry haven't looked up the sepecs yet) is this=
- a
-queue pair or more than two queues (looks like 3 to me)?=20
-
-> +struct pqi_queue_group {
-> +	struct pqi_ctrl_info *ctrl_info;	/* backpointer */
-> +	u16		iq_id[2];
-> +	u16		oq_id;
-
-[...]
-
-> +#define RAID_CTLR_LUNID		"\0\0\0\0\0\0\0\0"
-> +
-> +struct pqi_scsi_dev_t {
-
-=46or sake of consistency with the other structs "struct pqi_scsi_dev"?=
-=20
-
-> +	int	devtype;		/* as reported by INQUIRY commmand */
-> +	u8	device_type;		/* as reported by */
-
-[...]
-
-> +
-> +/* Define the PCI IDs for the controllers that we support. */
-> +static const struct pci_device_id pqi_pci_id_table[] =3D {
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0110,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0600,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0601,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0602,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0603,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0650,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0651,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0652,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0653,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0654,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0655,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0700,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x0701,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0800,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0801,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0802,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0803,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0804,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0805,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0900,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0901,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0902,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0903,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0904,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0905,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.subdevice =3D 0x0906,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x1001,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x1100,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x1101,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x1102,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_VENDOR_ID_HP,
-> +		.subdevice =3D 0x1150,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{
-> +		.vendor =3D PCI_VENDOR_ID_ADAPTEC2,
-> +		.device =3D 0x028f,
-> +		.subvendor =3D PCI_ANY_ID,
-> +		.subdevice =3D PCI_ANY_ID,
-> +		.class =3D 0,
-> +		.class_mask =3D 0,
-> +		.driver_data =3D 0
-> +	},
-> +	{ 0 }
-> +};
+ ip_tables ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6
+xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vhost_net macvtap
+macvlan vhost tun kvm_intel kvm irqbypass uinput ipmi_devintf iTCO_wdt
+iTCO_vendor_support dcdbas pcspkr ipmi_si ipmi_msghandler acpi_pad sb_edac
+edac_core wmi sg lpc_ich mfd_core shpchp tg3 ptp pps_core joydev ioatdma
+dca ext4(E) mbcache(E) jbd2(E) sd_mod(E) ahci(E) libahci(E) mpt3sas(E)
+scsi_transport_sas(E) raid_class(E) dm_mirror(E) dm_region_hash(E)
+dm_log(E) dm_mod(E) [last unloaded: speedstep_lib]
+CPU: 0 PID: 0 Comm: swapper/0 Tainted: G      D     E   4.6.2 #1
+Hardware name: Dell Inc. PowerEdge T420/03015M, BIOS 2.2.0 02/06/2014
+task: ffffffff81c0b500 ti: ffffffff81c00000 task.ti: ffffffff81c00000
+RIP: 0010:[<ffffffff814ed4db>]  [<ffffffff814ed4db>]
+cpuidle_enter_state+0xbb/0x2e0
+RSP: 0018:ffffffff81c03de8  EFLAGS: 00000206
+RAX: ffff88012f0155c0 RBX: ffffe8ffff809fd0 RCX: 0000000000000018
+RDX: 0000000000000000 RSI: ffffffff81c04000 RDI: 0000000000000000
+RBP: ffffffff81c03e68 R08: 0000000000000378 R09: 071c71c71c71c71c
+R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000005
+R13: 00000000000f3af3 R14: ffffffff81cb2c18 R15: 0000003169a7cd47
+FS:  0000000000000000(0000) GS:ffff88012f000000(0000)
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f52e1ac174b CR3: 0000000001c06000 CR4: 00000000000406f0
+Stack:
+ 00ffffff81c03e68 0000000000000000 ffffffff00000000 00000000810cfcce
+ 0000000000000000 7fffffffffffffff ffffffff00000000 ffffffff814ee9c3
+ ffffffff00000000 0000037981097a85 0000000000000000 ffffe8ffff809fd0
+Call Trace:
+ [<ffffffff814ee9c3>] ? menu_select+0x103/0x3a0
+ [<ffffffff814ed717>] cpuidle_enter+0x17/0x20
+ [<ffffffff810a68ce>] call_cpuidle+0x2e/0x40
+ [<ffffffff810a6948>] cpuidle_idle_call+0x68/0x100
+ [<ffffffff810a6b35>] cpu_idle_loop+0x155/0x240
+ [<ffffffff81090cb2>] ? default_wake_function+0x12/0x20
+ [<ffffffff81608470>] ? schedule+0x40/0xb0
+ [<ffffffff810a6c41>] cpu_startup_entry+0x21/0x30
+ [<ffffffff81600fb7>] rest_init+0x77/0x80
+ [<ffffffff81d47348>] start_kernel+0x3c8/0x3ca
+ [<ffffffff81d46da2>] ? set_init_arg+0x5f/0x5f
+ [<ffffffff81d463b2>] x86_64_start_reservations+0x2a/0x2c
+ [<ffffffff81d466a2>] x86_64_start_kernel+0xee/0xf5
+Code: 05 33 f2 80 00 8b 53 04 85 c0 89 55 8c 89 45 b0 0f 8f 55 01 00 00 31
+ff e8 b3 92 bb ff 80 7d 87 00 0f 85 d6 00 00 00 fb 4d 29 fd <48> ba cf f7
+53 e3 a5 9b c4 20 4c 89 e8 49 c1 fd 3f 48 f7 ea b8
+Kernel panic - not syncing: Hard LOCKUP
+Shutting down cpus with NMI
+Kernel Offset: disabled
+---[ end Kernel panic - not syncing: Hard LOCKUP
 
 
-The above table can be drastically reduced by using the PCI_DEVICE_SUB(=
-) macro:
-static const struct pci_device_id pqi_pci_id_table[] =3D {
-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x28f, PCI_VENDOR_ID_ADAPTEC2=
-, 0x0110) },
-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x28f, PCI_VENDOR_ID_HP, 0x06=
-00) },
-	...
 
-Also I think it makes more sense near the struct pci_driver way down, a=
-s
-that's the place it's actuall used.
+Topology:
+ Gen3 card(LSI Logic SAS3108) , An enclosure with set of drives connected
+behind Gen3 card
 
-> +MODULE_DEVICE_TABLE(pci, pqi_pci_id_table);
-> +
-> +static struct {
-> +	atomic_t	num_requests[2];
-> +	atomic_t	num_raid_bypasses;
-> +	atomic_t	num_outstanding_requests[2];
-> +	atomic_t	num_passthru_ioctls;
-> +	atomic_t	num_heartbeat_events;
-> +	atomic_t	num_all_other_events;
-> +	atomic_t	num_scans;
-> +	atomic_t	num_interrupts;
-> +	atomic_t	num_spurious_interrupts;
-> +	atomic_t	num_alloc_io_request_collisions;
-> +	atomic_t	num_spans[2];
-> +	atomic_t	num_interrupts_wrong_cpu;
-> +} pqi_statistics =3D {
-> +	.num_requests[0] =3D ATOMIC_INIT(0),
-> +	.num_requests[1] =3D ATOMIC_INIT(0),
-> +	.num_raid_bypasses =3D ATOMIC_INIT(0),
-> +	.num_outstanding_requests[0] =3D ATOMIC_INIT(0),
-> +	.num_outstanding_requests[1] =3D ATOMIC_INIT(0),
-> +	.num_passthru_ioctls =3D ATOMIC_INIT(0),
-> +	.num_heartbeat_events =3D ATOMIC_INIT(0),
-> +	.num_all_other_events =3D ATOMIC_INIT(0),
-> +	.num_scans =3D ATOMIC_INIT(0),
-> +	.num_interrupts =3D ATOMIC_INIT(0),
-> +	.num_spurious_interrupts =3D ATOMIC_INIT(0),
-> +	.num_alloc_io_request_collisions =3D ATOMIC_INIT(0),
-> +	.num_spans[0] =3D ATOMIC_INIT(0),
-> +	.num_spans[1] =3D ATOMIC_INIT(0),
-> +	.num_interrupts_wrong_cpu =3D ATOMIC_INIT(0),
-> +};
-
-Appart from Hannes' comments, I wonder if it really makes sense to have=
- these
-statistics on a driver global basis, not per adapter?
-
-> +
-> +static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info);
-
-[...]
-
-> +static ssize_t pqi_statistics_show(struct device *dev,
-> +	struct device_attribute *attr, char *buffer)
-> +{
-> +	ssize_t count =3D 0;
-> +	unsigned int num_raid_requests;
-> +	unsigned int num_aio_requests;
-> +	unsigned int num_outstanding_raid_requests =3D 0;
-> +	unsigned int num_outstanding_aio_requests =3D 0;
-> +	struct pqi_ctrl_info *ctrl_info;
-> +	struct Scsi_Host *shost;
-> +
-> +	shost =3D class_to_shost(dev);
-> +	ctrl_info =3D shost_to_hba(shost);
-> +
-> +	num_raid_requests =3D
-> +		atomic_read(&pqi_statistics.num_requests[RAID_PATH]);
-> +	num_aio_requests =3D atomic_read(&pqi_statistics.num_requests[AIO_P=
-ATH]);
-> +
-> +	num_outstanding_raid_requests =3D
-> +	atomic_read(&pqi_statistics.num_outstanding_requests[RAID_PATH]);
-> +	num_outstanding_aio_requests =3D
-> +	atomic_read(&pqi_statistics.num_outstanding_requests[AIO_PATH]);
-> +
-> +	if (pqi_ctrl_offline(ctrl_info))
-> +		count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +			"*** CONTROLLER OFFLINE ***\n");
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"            total requests: %u\n",
-> +		num_raid_requests + num_aio_requests);
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"       total RAID requests: %u\n",
-> +		num_raid_requests);
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"        total AIO requests: %u\n",
-> +		num_aio_requests);
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"             RAID bypasses: %u\n",
-> +		atomic_read(&pqi_statistics.num_raid_bypasses));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"total outstanding requests: %u\n",
-> +		num_outstanding_raid_requests + num_outstanding_aio_requests);
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		" outstanding RAID requests: %u / %u\n",
-> +		num_outstanding_raid_requests,
-> +		ctrl_info->num_queue_groups *
-> +		(ctrl_info->num_elements_per_iq - 1));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"  outstanding AIO requests: %u / %u\n",
-> +		num_outstanding_aio_requests,
-> +		ctrl_info->num_queue_groups *
-> +		(ctrl_info->num_elements_per_iq - 1));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"        passthrough IOCTLs: %u\n",
-> +		atomic_read(&pqi_statistics.num_passthru_ioctls));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"          heartbeat events: %u\n",
-> +		atomic_read(&pqi_statistics.num_heartbeat_events));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"          all other events: %u\n",
-> +		atomic_read(&pqi_statistics.num_all_other_events));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"                scan count: %u\n",
-> +		atomic_read(&pqi_statistics.num_scans));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"                interrupts: %u\n",
-> +		atomic_read(&pqi_statistics.num_interrupts));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"       spurious interrupts: %u\n",
-> +		atomic_read(&pqi_statistics.num_spurious_interrupts));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"  alloc request collisions: %u\n",
-> +		atomic_read(&pqi_statistics.num_alloc_io_request_collisions));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"                RAID spans: %u\n",
-> +		atomic_read(&pqi_statistics.num_spans[RAID_PATH]));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"                 AIO spans: %u\n",
-> +		atomic_read(&pqi_statistics.num_spans[AIO_PATH]));
-> +
-> +	count +=3D snprintf(buffer + count, PAGE_SIZE - count,
-> +		"   interrupts on wrong CPU: %u\n",
-> +		atomic_read(&pqi_statistics.num_interrupts_wrong_cpu));
-> +
-> +	return count;
-> +}
-
-Wasn't the sysfs rule one entry per file?
-
-> +
-> +static ssize_t pqi_devices_show(struct device *dev,
-> +	struct device_attribute *attr, char *buffer)
-> +{
-
-[...]
-
-> +	rc =3D pqi_build_raid_path_request(ctrl_info, &request,
-> +		SA_CACHE_FLUSH, RAID_CTLR_LUNID, buffer,
-> +		SA_CACHE_FLUSH_BUFFER_LENGTH, 0, &pci_direction);
-> +	if (rc)
-> +		goto out;
-> +
-> +	rc =3D pqi_submit_raid_request_synchronous(ctrl_info, &request.head=
-er,
-> +		0, NULL, NO_TIMEOUT);
-
-So if this is called via the shutdown() -> pqi_shutdown() path it /may/=
- block
-shutdown infinitely? I'm not shure this is what people want.
-
-> +
-> +	pqi_pci_unmap(ctrl_info->pci_dev, request.sg_descriptors, 1,
-> +		pci_direction);
-> +
-> +out:
-> +	kfree(buffer);
-> +
-
-[...]
-
-> +static void pqi_complete_queued_requests(struct pqi_ctrl_info *ctrl_=
-info,
-> +	struct pqi_scsi_dev_t *device_in_reset)
-> +{
-> +	unsigned int i;
-> +	unsigned int path;
-> +	struct pqi_queue_group *queue_group;
-> +	unsigned long flags;
-> +	struct pqi_io_request *io_request;
-> +	struct pqi_io_request *next;
-> +	struct scsi_cmnd *scmd;
-> +	struct pqi_scsi_dev_t *device;
-> +
-> +	for (i =3D 0; i < ctrl_info->num_queue_groups; i++) {
-> +		queue_group =3D &ctrl_info->queue_groups[i];
-> +
-> +		for (path =3D 0; path < 2; path++) {
-> +			spin_lock_irqsave(&queue_group->submit_lock[path],
-> +				flags);
-> +
-> +			list_for_each_entry_safe(io_request, next,
-> +				&queue_group->request_list[path],
-> +				request_list_entry) {
-> +				scmd =3D io_request->scmd;
-> +				if (scmd) {
-> +					device =3D scmd->device->hostdata;
-> +					if (device =3D=3D device_in_reset) {
-> +						set_host_byte(scmd, DID_RESET);
-> +						pqi_scsi_done(scmd);
-> +						list_del(&io_request->
-> +							request_list_entry);
-> +					}
-> +				}
-> +			}
-> +
-> +			spin_unlock_irqrestore(&queue_group->submit_lock[path],
-> +				flags);
-> +		}
-
-If you'd factor the inner for loop into an own small (inline) function,=
- it
-could drastically improve readability here.
-
-something like=20
-
-static void pqi_complete_queue_group(struct pqi_queue_group *qg, struct
-				     pqi_device_t *device_in_reset)
-{
-	unsigned int path;
-	unsigned long flags;
-	struct qpi_scsi_dev_t *dev;
-	struct pqi_io_request *ior, *next;
-
-	for (path =3D 0; path < 2; path++) {
-		spin_lock_irqsave(&qg->submit_lock[path], flags);
-
-		list_for_each_entry_save(ior, next, &qg->request_list[path],
-					 request_list_entry) {
-			scmd =3D ior->scmnd;
-			if (!scmd)=20
-				continue;
-
-			device =3D scmnd->device->hostdata;
-			if (dev =3D=3D device_in_reset) {
-				set_host_byte(scmnd, DID_RESET);
-				pqi_scsi_done(scmnd);
-				list_del(&ior->request_list_entry);
-			}
-		}
-		spin_unlock_irqresetore(&qg->submit_lock[path], flags);
-	}
-}
-
-> +	}
-> +}
-> +
-
-[..]
-
-> +
-> +static DEVICE_ATTR(sas_address, S_IRUGO, pqi_sas_address_show, NULL)=
-;
-> +static DEVICE_ATTR(ssd_smart_path_enabled, S_IRUGO,
-> +	pqi_ssd_smart_path_enabled_show, NULL);
-> +
-> +static struct device_attribute *pqi_sdev_attrs[] =3D {
-> +	&dev_attr_sas_address,
-> +	&dev_attr_ssd_smart_path_enabled,
-> +	NULL
-> +};
-> +
-> +static DEVICE_ATTR(rescan, S_IWUSR, NULL, pqi_host_store_rescan);
-> +static DEVICE_ATTR(stats, S_IRUGO, pqi_statistics_show, NULL);
-> +static DEVICE_ATTR(devices, S_IRUGO, pqi_devices_show, NULL);
-> +static DEVICE_ATTR(version, S_IRUGO, pqi_version_show, NULL);
-> +static DEVICE_ATTR(pqi, S_IRUGO, pqi_info_show, NULL);
-> +
-> +static struct device_attribute *pqi_shost_attrs[] =3D {
-> +	&dev_attr_rescan,
-> +	&dev_attr_stats,
-> +	&dev_attr_devices,
-> +	&dev_attr_version,
-> +	&dev_attr_pqi,
-> +	NULL
-> +};
-
-This should be somewhere near the functions implementing the sysfs show
-callbacks.
-
-> +
-> +static int pqi_change_queue_depth(struct scsi_device *sdev, int qdep=
-th)
-> +{
-> +	struct pqi_scsi_dev_t *device =3D sdev->hostdata;
-
-[...]
-
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+ Chaitra
