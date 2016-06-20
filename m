@@ -1,71 +1,83 @@
-From: Deepa Dinamani <deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 00/24] Delete CURRENT_TIME and
-	CURRENT_TIME_SEC macros
-Date: Mon, 20 Jun 2016 11:58:31 -0700
-Message-ID: <CABeXuvpzRy=qccBqq70iT_W9EGSfcpAjfyqkayUTT01F8Ghh5g@mail.gmail.com>
-References: <1466382443-11063-1-git-send-email-deepa.kernel@gmail.com>
-	<CA+55aFzK2K-7UeQRsWR7ooNHMMbtMFRAF60byR1Gvmbf9XWhbA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-In-Reply-To: <CA+55aFzK2K-7UeQRsWR7ooNHMMbtMFRAF60byR1Gvmbf9XWhbA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <http://lists.lustre.org/options.cgi/lustre-devel-lustre.org>,
-	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.lustre.org/pipermail/lustre-devel-lustre.org/>
-List-Post: <mailto:lustre-devel-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-List-Help: <mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.lustre.org/listinfo.cgi/lustre-devel-lustre.org>,
-	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=subscribe>
-Errors-To: lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org
-Sender: "lustre-devel" <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Dave Kleikamp <shaggy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>, Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Chris Mason <clm-b10kYP2dOMg@public.gmane.org>, "adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org" <adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org>, Brian Uchino <buchino-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "Yan, Zheng" <zyan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, y2038 Mailman List <y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, Ilya Dryomov <idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Changman Lee <cm224.lee-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Mark Fasheh <mfasheh-IBi9RG/b67k@public.gmane.org>, Suma Ramars <sramars-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>, Jaegeuk Kim <jaegeuk@>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v5 0/2] Block layer support ZAC/ZBC commands
+Date: Mon, 20 Jun 2016 16:18:34 -0500
+Message-ID: <1466457516-21843-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp78.mediacombb.net ([68.66.77.78]:55092 "EHLO
+	dsmdc-mail-smtp.mcomdc.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752255AbcFTVSr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 17:18:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>
 
-> This version now looks ok to me.
->
-> I do have a comment (or maybe just a RFD) for future work.
->
-> It does strike me that once we actually change over the inode times to
-> use timespec64, the calling conventions are going to be fairly
-> horrendous on most 32-bit architectures.
->
-> Gcc handles 8-byte structure returns (on most architectures) by
-> returning them as two 32-bit registers (%edx:%eax on x86). But once it
-> is timespec64, that will no longer be the case, and the calling
-> convention will end up using a pointer to the local stack instead.
->
-> So for 32-bit code generation, we *may* want to introduce a new model of doing
->
->     set_inode_time(inode, ATTR_ATIME | ATTR_MTIME);
->
-> which basically just does
->
->     inode->i_atime = inode->i_mtime = current_time(inode);
->
-> but with a much easier calling convention on 32-bit architectures.
+Hi Jens,
 
-Arnd and I had discussed something like this before.
-But, for entirely different reasons:
+This series is on linux-next tag next-20160617.
 
-Having the set_inode_time() like you suggest will also help switching
-of vfs inode times to timespec64.
-We were suggesting all the accesses to inode time be abstracted
-through something like inode_set_time().
-Arnd also had suggested a split representation of fields in the struct
-inode as well which led to space savings
-as well. And, having the split representation also meant no more
-direct assignments:
+As Host Aware drives are becoming available we would like to be able
+to make use of such drives. This series is also intended to be suitable
+for use by Host Managed drives.
 
-https://lkml.org/lkml/2016/1/7/20
+ZAC/ZBC drives add new commands for discovering and working with Zones.
 
-This in general will be similar to setattr_copy(), but only sets times
-rather than other attributes as well.
+This extends the ZAC/ZBC support up to the block layer.
 
-If this is what is preferred, then the patches to change vfs to use
-timespec64 could make use of this and will
-need to be refactored. So maybe it would be good to discuss before I
-post those patches.
+Patches for util-linux can be found here:
+https://github.com/Seagate/ZDM-Device-Mapper/tree/master/patches/util-linux
 
--Deepa
+Using BIOs to issue ZBC commands allows DM targets (such as ZDM) or
+file-systems such as f2fs, btrfs or nilfs2 to extend their block
+allocation schemes and/or issue discards that are zone aligned.
+
+A perhaps non-obvious approach is that a conventional drive will 
+returns a zone report descriptor with a single large conventional zone.
+
+This patch is also at
+https://github.com/stancheff/linux.git
+git@github.com:stancheff/linux.git
+branch: next-20160617+bio.zbc.v5
+
+v5:
+ - In sd_setup_zone_action_cmnd, remove unused vars and fix switch indent
+ - In blk-lib fix documentation
+v4:
+ - Rebase on linux-next tag next-20160617.
+ - Change bio flags to bio op's
+ - Dropped ata16 hackery
+V3:
+ - Rebase on Mike Cristie's separate bio operations
+ - Update blkzoned_api.h to include report zones PARTIAL bit.
+ - Use zoned report reserved bit for ata-passthrough flag.
+
+V2:
+ - Changed bi_rw to op_flags clarify sepeartion of bio op from flags.
+ - Fixed memory leak in blkdev_issue_zone_report failing to put_bio().
+ - Documented opt in blkdev_issue_zone_report.
+ - Moved include/uapi/linux/fs.h changes to patch 3
+ - Fixed commit message for first patch in series.
+
+Shaun Tancheff (2):
+  Add bio/request flags for using ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+
+ MAINTAINERS                       |   9 ++
+ block/blk-lib.c                   |  98 +++++++++++++++++
+ block/ioctl.c                     | 110 +++++++++++++++++++
+ drivers/scsi/sd.c                 | 118 ++++++++++++++++++++
+ drivers/scsi/sd.h                 |   1 +
+ include/linux/bio.h               |   7 +-
+ include/linux/blk_types.h         |   6 +-
+ include/linux/blkzoned_api.h      |  25 +++++
+ include/uapi/linux/Kbuild         |   1 +
+ include/uapi/linux/blkzoned_api.h | 220 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h           |   1 +
+ 11 files changed, 594 insertions(+), 2 deletions(-)
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
+
+-- 
+2.8.1
+
