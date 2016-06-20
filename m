@@ -1,61 +1,43 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v1 0/4] scsi: some (very) old clean ups
-Date: Mon, 20 Jun 2016 12:03:02 +0300
-Message-ID: <1466413382.30123.176.camel@linux.intel.com>
-References: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/5] SCSI EH cleanup
+Date: Mon, 20 Jun 2016 11:35:35 +0200
+Message-ID: <1466415340-104465-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65279 "EHLO mga14.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:50721 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750885AbcFTJE2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2016 05:04:28 -0400
-In-Reply-To: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	id S1753945AbcFTJfv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 05:35:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Fri, 2016-05-06 at 19:23 +0300, Andy Shevchenko wrote:
-> This is a set of independent clean ups that didn't land upstream for
-> ages (some
-> are dated 2010!).=C2=A0=C2=A0As agreed with Martin at some point I re=
-send
-> them.
->=20
-> I have more, but the rest is not yet ready for submission.
+Hi all,
 
-Gentle ping to get know what is the destiny of my patches.
+here's a patchset to cleanup SCSI EH. The main point is that we should
+finally drop the no_async_abort flag; up to now we haven't had any
+issues with the asynchronous aborts, and the flag was never used.
 
->=20
-> Andy Shevchenko (3):
-> =C2=A0 libsas: remove private hex2bin() implementation
-> =C2=A0 scsi: fnic: use kernel's '%pM' format option to print MAC
-> =C2=A0 fusion: print lan address via %pMR
->=20
-> Oleksandr Khoshaba (1):
-> =C2=A0 scsi: qla4xxx: print MAC and SID via %p[mM][R]
->=20
-> =C2=A0drivers/message/fusion/mptbase.c=C2=A0=C2=A0=C2=A0=C2=A0| 14 ++=
-++----------
-> =C2=A0drivers/scsi/fnic/vnic_dev.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0| 10 ++--------
-> =C2=A0drivers/scsi/libsas/sas_scsi_host.c | 22 ++++++----------------
-> =C2=A0drivers/scsi/qla4xxx/ql4_mbx.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0|=C2=A0=C2=A05 +----
-> =C2=A0drivers/scsi/qla4xxx/ql4_nx.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0|=C2=A0=C2=A08 ++------
-> =C2=A0drivers/scsi/qla4xxx/ql4_os.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0| 15 ++++-----------
-> =C2=A06 files changed, 19 insertions(+), 55 deletions(-)
->=20
+As usual, comments and reviews are welcome.
 
---=20
+Christoph Hellwig (1):
+  libsas: allow async aborts
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes Reinecke (4):
+  scsi: make scsi_eh_scmd_add() always succeed
+  scsi: make eh_eflags persistent
+  scsi: make asynchronous aborts mandatory
+  scsi: Do not escalate failed EH command
+
+ Documentation/scsi/scsi_eh.txt      |  31 ++++-----
+ drivers/scsi/libsas/sas_scsi_host.c |   3 -
+ drivers/scsi/scsi_error.c           | 127 +++++-------------------------------
+ drivers/scsi/scsi_lib.c             |   4 +-
+ drivers/scsi/scsi_priv.h            |   3 +-
+ include/scsi/scsi_eh.h              |   1 +
+ include/scsi/scsi_host.h            |   5 --
+ 7 files changed, 35 insertions(+), 139 deletions(-)
+
+-- 
+1.8.5.6
+
