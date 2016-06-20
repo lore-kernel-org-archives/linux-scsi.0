@@ -1,252 +1,165 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH v3] Add support for SCT Write Same
-Date: Mon, 20 Jun 2016 10:03:48 -0500
-Message-ID: <1466435028-13886-2-git-send-email-shaun@tancheff.com>
-References: <1466435028-13886-1-git-send-email-shaun@tancheff.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH 2/3] scsi: disable VPD page check on error
+Date: Mon, 20 Jun 2016 11:03:24 -0400
+Message-ID: <1466435004.4039.25.camel@localhost.localdomain>
+References: <1466405868-87720-1-git-send-email-hare@suse.de>
+	 <1466405868-87720-3-git-send-email-hare@suse.de>
+	 <1466429138.4039.15.camel@localhost.localdomain>
+	 <1466430242.2350.4.camel@HansenPartnership.com>
+Reply-To: emilne@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp78.mediacombb.net ([68.66.77.78]:54483 "EHLO
-	dsmdc-mail-smtp.mcomdc.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755467AbcFTPFB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2016 11:05:01 -0400
-In-Reply-To: <1466435028-13886-1-git-send-email-shaun@tancheff.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54907 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932858AbcFTPNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 11:13:37 -0400
+In-Reply-To: <1466430242.2350.4.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Shaun Tancheff <shaun@tancheff.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-SATA drives may support write same via SCT. This is useful
-for setting the drive contents to a specific pattern (0's).
+On Mon, 2016-06-20 at 06:44 -0700, James Bottomley wrote:
+> On Mon, 2016-06-20 at 09:25 -0400, Ewan D. Milne wrote:
+> > On Mon, 2016-06-20 at 08:57 +0200, Hannes Reinecke wrote:
+> > > If we encounter an error during initial VPD page scan we should be
+> > > setting the 'skip_vpd_pages' bit to avoid further accesses.
+> > > Any errors during rescan should be ignored, as we might encounter
+> > > temporary I/O errors during rescan.
+> > > 
+> > > Signed-off-by: Hannes Reinecke <hare@suse.com>
+> > > ---
+> > >  drivers/scsi/scsi.c      | 9 ++++++++-
+> > >  drivers/scsi/scsi_priv.h | 2 +-
+> > >  drivers/scsi/scsi_scan.c | 4 ++--
+> > >  3 files changed, 11 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> > > index 1deb6ad..1ff4a0b 100644
+> > > --- a/drivers/scsi/scsi.c
+> > > +++ b/drivers/scsi/scsi.c
+> > > @@ -770,13 +770,14 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+> > >  /**
+> > >   * scsi_attach_vpd - Attach Vital Product Data to a SCSI device
+> > > structure
+> > >   * @sdev: The device to ask
+> > > + * @first_scan: true if called during initial scan
+> > >   *
+> > >   * Attach the 'Device Identification' VPD page (0x83) and the
+> > >   * 'Unit Serial Number' VPD page (0x80) to a SCSI device
+> > >   * structure. This information can be used to identify the device
+> > >   * uniquely.
+> > >   */
+> > > -void scsi_attach_vpd(struct scsi_device *sdev)
+> > > +void scsi_attach_vpd(struct scsi_device *sdev, bool first_scan)
+> > >  {
+> > >  	int result, i;
+> > >  	int vpd_len = SCSI_VPD_PG_LEN;
+> > > @@ -796,6 +797,8 @@ retry_pg0:
+> > >  	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
+> > >  	if (result < 0) {
+> > >  		kfree(vpd_buf);
+> > > +		if (first_scan)
+> > > +			sdev->skip_vpd_pages = 1;
+> > >  		return;
+> > >  	}
+> > >  	if (result > vpd_len) {
+> > > @@ -822,6 +825,8 @@ retry_pg80:
+> > >  		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80,
+> > > vpd_len);
+> > >  		if (result < 0) {
+> > >  			kfree(vpd_buf);
+> > > +			if (first_scan)
+> > > +				sdev->skip_vpd_pages = 1;
+> > >  			return;
+> > >  		}
+> > >  		if (result > vpd_len) {
+> > > @@ -851,6 +856,8 @@ retry_pg83:
+> > >  		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83,
+> > > vpd_len);
+> > >  		if (result < 0) {
+> > >  			kfree(vpd_buf);
+> > > +			if (first_scan)
+> > > +				sdev->skip_vpd_pages = 1;
+> > >  			return;
+> > >  		}
+> > >  		if (result > vpd_len) {
+> > > diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> > > index 6c3db56..0c4cc6d 100644
+> > > --- a/drivers/scsi/scsi_priv.h
+> > > +++ b/drivers/scsi/scsi_priv.h
+> > > @@ -31,7 +31,7 @@ extern void scsi_exit_hosts(void);
+> > >  /* scsi.c */
+> > >  extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+> > >  extern void scsi_destroy_command_freelist(struct Scsi_Host
+> > > *shost);
+> > > -void scsi_attach_vpd(struct scsi_device *sdev);
+> > > +void scsi_attach_vpd(struct scsi_device *sdev, bool first_scan);
+> > >  #ifdef CONFIG_SCSI_LOGGING
+> > >  void scsi_log_send(struct scsi_cmnd *cmd);
+> > >  void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
+> > > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> > > index e0a78f5..dcc08ad 100644
+> > > --- a/drivers/scsi/scsi_scan.c
+> > > +++ b/drivers/scsi/scsi_scan.c
+> > > @@ -997,7 +997,7 @@ static int scsi_add_lun(struct scsi_device
+> > > *sdev, unsigned char *inq_result,
+> > >  	}
+> > >  
+> > >  	if (sdev->scsi_level >= SCSI_3)
+> > > -		scsi_attach_vpd(sdev);
+> > > +		scsi_attach_vpd(sdev, true);
+> > >  
+> > >  	sdev->max_queue_depth = sdev->queue_depth;
+> > >  
+> > > @@ -1536,7 +1536,7 @@ void scsi_rescan_device(struct device *dev)
+> > >  
+> > >  	device_lock(dev);
+> > >  
+> > > -	scsi_attach_vpd(sdev);
+> > > +	scsi_attach_vpd(sdev, false);
+> > >  
+> > >  	if (sdev->handler && sdev->handler->rescan)
+> > >  		sdev->handler->rescan(sdev);
+> > 
+> > Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+> 
+> I take it your concerns about never asking the device for VPD pages
+> again are addressed?
+> 
+> I also don't really like this.  If the device has a failure like the
+> QEMU one where it just hangs up, this won't help because the problem
+> already happened.  Conversely, if the device replies in the negative,
+> it should always do so, so I can't see what this buys us, except the
+> possibility of doing the wrong thing on a transient error (which can
+> happen on your ALUA devices during path switch, I believe?)
+> 
+> I'd be much happier if you can point to a problem that this would
+> solve.
+> 
+> James
 
-If UNMAP is not set or TRIM is not available then
-fall back to SCT WRITE SAME, if it is available.
+My concern with the earlier patch was that any time a rescan was
+performed, and the VPD inquiry failed, we might have VPD data that
+had been obtained on the initial scan, but might now be stale.
+And then the failed inquiry would result in it never being updated
+again, ever.  (This could happen if a path was down, for example.)
 
-In this way it would be possible to mimic lbprz for devices that 
-support TRIM but fail to zero blocks reliably. For example a
-file-system or DM target could issue a write same w/o unmap followed
-by an trim.
+With this approach, if the VPD inquiry info isn't obtained initially,
+it won't be attempted in the future.  So there shouldn't be a problem
+with stale data, since we didn't obtain it in the first place.
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
-v3:
- - Demux UNMAP/TRIM from WRITE SAME
-v2:
- - Remove fugly ata hacking from sd.c
----
- drivers/ata/libata-scsi.c  | 80 +++++++++++++++++++++++++++++++++++-----------
- drivers/scsi/sd.c          |  2 +-
- include/linux/ata.h        | 43 +++++++++++++++++++++++++
- include/scsi/scsi_device.h |  1 +
- 4 files changed, 106 insertions(+), 20 deletions(-)
+This is predicated on the assumption that stale data is an issue,
+but that was the whole point of Hannes' change to re-probe the VPD
+data on rescan.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bfec66f..3dcc29e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1204,6 +1204,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 	if (!ata_id_has_unload(dev->id))
- 		dev->flags |= ATA_DFLAG_NO_UNLOAD;
- 
-+	if (ata_id_sct_write_same(dev->id))
-+		sdev->sct_write_same = 1;
-+
- 	/* configure max sectors */
- 	blk_queue_max_hw_sectors(q, dev->max_sectors);
- 
-@@ -3272,6 +3275,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	struct ata_taskfile *tf = &qc->tf;
- 	struct scsi_cmnd *scmd = qc->scsicmd;
- 	struct ata_device *dev = qc->dev;
-+	struct scatterlist *sg;
- 	const u8 *cdb = scmd->cmnd;
- 	u64 block;
- 	u32 n_block;
-@@ -3279,6 +3283,8 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	void *buf;
- 	u16 fp;
- 	u8 bp = 0xff;
-+	u8 unmap = cdb[1] & 0x8;
-+	bool use_sct = (unmap && ata_id_has_trim(dev->id)) ? false : true;
- 
- 	/* we may not issue DMA commands if no DMA mode is set */
- 	if (unlikely(!dev->dma_mode))
-@@ -3290,8 +3296,14 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	}
- 	scsi_16_lba_len(cdb, &block, &n_block);
- 
--	/* for now we only support WRITE SAME with the unmap bit set */
--	if (unlikely(!(cdb[1] & 0x8))) {
-+	/* effectivly ignore had_trim if NOTRIM horkage is flagged */
-+	if (dev->horkage & ATA_HORKAGE_NOTRIM)
-+		use_sct = true;
-+
-+	/*
-+	 * If use_sct and SCT write same is not available then fail.
-+	 */
-+	if (use_sct && !ata_id_sct_write_same(dev->id)) {
- 		fp = 1;
- 		bp = 3;
- 		goto invalid_fld;
-@@ -3304,26 +3316,56 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	if (!scsi_sg_count(scmd))
- 		goto invalid_param_len;
- 
--	buf = page_address(sg_page(scsi_sglist(scmd)));
--	size = ata_set_lba_range_entries(buf, 512, block, n_block);
-+	sg = scsi_sglist(scmd);
-+	buf = page_address(sg_page(sg)) + sg->offset;
- 
--	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
--		/* Newer devices support queued TRIM commands */
--		tf->protocol = ATA_PROT_NCQ;
--		tf->command = ATA_CMD_FPDMA_SEND;
--		tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
--		tf->nsect = qc->tag << 3;
--		tf->hob_feature = (size / 512) >> 8;
--		tf->feature = size / 512;
-+	/*
-+	 * if we only have SCT then ignore the state of unmap request
-+	 * a zero the blocks.
-+	 */
-+	if (use_sct) {
-+		u16 *sctpg = buf;
-+
-+		put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
-+		put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
-+		put_unaligned_le64(block,   &sctpg[2]);
-+		put_unaligned_le64(n_block, &sctpg[6]);
-+		put_unaligned_le32(0u,      &sctpg[10]);
- 
--		tf->auxiliary = 1;
--	} else {
--		tf->protocol = ATA_PROT_DMA;
- 		tf->hob_feature = 0;
--		tf->feature = ATA_DSM_TRIM;
--		tf->hob_nsect = (size / 512) >> 8;
--		tf->nsect = size / 512;
--		tf->command = ATA_CMD_DSM;
-+		tf->feature = 0;
-+		tf->hob_nsect = 0;
-+		tf->nsect = 1;
-+		tf->lbah = 0;
-+		tf->lbam = 0;
-+		tf->lbal = ATA_CMD_STANDBYNOW1;
-+		tf->hob_lbah = 0;
-+		tf->hob_lbam = 0;
-+		tf->hob_lbal = 0;
-+		tf->device = ATA_CMD_STANDBYNOW1;
-+		tf->protocol = ATA_PROT_DMA;
-+		tf->command = ATA_CMD_WRITE_LOG_DMA_EXT;
-+	} else {
-+		size = ata_set_lba_range_entries(buf, 512, block, n_block);
-+
-+		if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
-+			/* Newer devices support queued TRIM commands */
-+			tf->protocol = ATA_PROT_NCQ;
-+			tf->command = ATA_CMD_FPDMA_SEND;
-+			tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
-+			tf->nsect = qc->tag << 3;
-+			tf->hob_feature = (size / 512) >> 8;
-+			tf->feature = size / 512;
-+
-+			tf->auxiliary = 1;
-+		} else {
-+			tf->protocol = ATA_PROT_DMA;
-+			tf->hob_feature = 0;
-+			tf->feature = ATA_DSM_TRIM;
-+			tf->hob_nsect = (size / 512) >> 8;
-+			tf->nsect = size / 512;
-+			tf->command = ATA_CMD_DSM;
-+		}
- 	}
- 
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f459dff..b5ffcd3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -794,7 +794,7 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
- 	struct request_queue *q = sdkp->disk->queue;
- 	unsigned int logical_block_size = sdkp->device->sector_size;
- 
--	if (sdkp->device->no_write_same) {
-+	if (sdkp->device->no_write_same && !sdkp->device->sct_write_same) {
- 		sdkp->max_ws_blocks = 0;
- 		goto out;
- 	}
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 99346be..4132de3 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -104,6 +104,7 @@ enum {
- 	ATA_ID_CFA_KEY_MGMT	= 162,
- 	ATA_ID_CFA_MODES	= 163,
- 	ATA_ID_DATA_SET_MGMT	= 169,
-+	ATA_ID_SCT_CMD_XPORT	= 206,
- 	ATA_ID_ROT_SPEED	= 217,
- 	ATA_ID_PIO4		= (1 << 1),
- 
-@@ -778,6 +779,48 @@ static inline bool ata_id_sense_reporting_enabled(const u16 *id)
- }
- 
- /**
-+ *
-+ * Word: 206 - SCT Command Transport
-+ *    15:12 - Vendor Specific
-+ *     11:6 - Reserved
-+ *        5 - SCT Command Transport Data Tables supported
-+ *        4 - SCT Command Transport Features Control supported
-+ *        3 - SCT Command Transport Error Recovery Control supported
-+ *        2 - SCT Command Transport Write Same supported
-+ *        1 - SCT Command Transport Long Sector Access supported
-+ *        0 - SCT Command Transport supported
-+ */
-+static inline bool ata_id_sct_data_tables(const u16 *id)
-+{
-+	return id[ATA_ID_SCT_CMD_XPORT] & (1 << 5) ? true : false;
-+}
-+
-+static inline bool ata_id_sct_features_ctrl(const u16 *id)
-+{
-+	return id[ATA_ID_SCT_CMD_XPORT] & (1 << 4) ? true : false;
-+}
-+
-+static inline bool ata_id_sct_error_recovery_ctrl(const u16 *id)
-+{
-+	return id[ATA_ID_SCT_CMD_XPORT] & (1 << 3) ? true : false;
-+}
-+
-+static inline bool ata_id_sct_write_same(const u16 *id)
-+{
-+	return id[ATA_ID_SCT_CMD_XPORT] & (1 << 2) ? true : false;
-+}
-+
-+static inline bool ata_id_sct_long_sector_access(const u16 *id)
-+{
-+	return id[ATA_ID_SCT_CMD_XPORT] & (1 << 1) ? true : false;
-+}
-+
-+static inline bool ata_id_sct_supported(const u16 *id)
-+{
-+	return id[ATA_ID_SCT_CMD_XPORT] & (1 << 0) ? true : false;
-+}
-+
-+/**
-  *	ata_id_major_version	-	get ATA level of drive
-  *	@id: Identify data
-  *
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a6c346d..66f5af7 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -157,6 +157,7 @@ struct scsi_device {
- 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
- 	unsigned no_report_opcodes:1;	/* no REPORT SUPPORTED OPERATION CODES */
- 	unsigned no_write_same:1;	/* no WRITE SAME command */
-+	unsigned sct_write_same:1;	/* Has WRITE SAME via SCT Command */
- 	unsigned use_16_for_rw:1; /* Use read/write(16) over read/write(10) */
- 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
- 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
--- 
-2.8.1
+-Ewan
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
