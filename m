@@ -1,201 +1,330 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH v4 1/2] Add bio/request flags for using ZBC/ZAC commands
-Date: Mon, 20 Jun 2016 03:13:21 +0800
-Message-ID: <201606200308.JPyTXzcL%fengguang.wu@intel.com>
-References: <1466359248-10544-2-git-send-email-shaun@tancheff.com>
+From: Deepa Dinamani <deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v2 00/24] Delete CURRENT_TIME and
+	CURRENT_TIME_SEC macros
+Date: Sun, 19 Jun 2016 17:26:59 -0700
+Message-ID: <1466382443-11063-1-git-send-email-deepa.kernel@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="sdtB3X0nJg68CQEu"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:56929 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751335AbcFSTTq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Jun 2016 15:19:46 -0400
-Content-Disposition: inline
-In-Reply-To: <1466359248-10544-2-git-send-email-shaun@tancheff.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
+List-Unsubscribe: <http://lists.lustre.org/options.cgi/lustre-devel-lustre.org>,
+	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.lustre.org/pipermail/lustre-devel-lustre.org/>
+List-Post: <mailto:lustre-devel-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
+List-Help: <mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.lustre.org/listinfo.cgi/lustre-devel-lustre.org>,
+	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=subscribe>
+Errors-To: lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org
+Sender: "lustre-devel" <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
+To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: shaggy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, buchino-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, zyan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cm224.lee-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mfasheh-IBi9RG/b67k@public.gmane.org, sramars-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, dsterba-IBi9RG/b67k@public.gmane.org, jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, elder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, sage-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jbacik-b10kYP2dOMg@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, jack-IBi9RG/b67k@public.gmane.orgl
 List-Id: linux-scsi@vger.kernel.org
-Cc: kbuild-all@01.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun.tancheff@seagate.com>
 
+The series is aimed at getting rid of CURRENT_TIME and CURRENT_TIME_SEC macros.
+The macros are not y2038 safe. There is no plan to transition them into being
+y2038 safe.
+ktime_get_* api's can be used in their place. And, these are y2038 safe.
 
---sdtB3X0nJg68CQEu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Thanks to Arnd Bergmann for all the guidance and discussions.
 
-Hi,
+Patches 2-4 were mostly generated using coccinelle scripts.
 
-[auto build test WARNING on block/for-next]
-[also build test WARNING on next-20160617]
-[cannot apply to v4.7-rc3]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+All filesystem timestamps use current_fs_time() for right granularity as
+mentioned in the respective commit texts of patches. This has a changed
+signature, renamed to current_time() and moved to the fs/inode.c.
 
-url:    https://github.com/0day-ci/linux/commits/Shaun-Tancheff/Add-bio-request-flags-for-using-ZBC-ZAC-commands/20160620-021844
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-reproduce: make htmldocs
+This series also serves as a preparatory series to transition vfs to 64 bit
+timestamps as outlined here: https://lkml.org/lkml/2016/2/12/104 .
 
-All warnings (new ones prefixed by >>):
+As per Linus's suggestion in https://lkml.org/lkml/2016/5/24/663 , all the
+inode timestamp changes have been squashed into a single patch. Also,
+current_time() now is used as a single generic vfs filesystem timestamp api.
+It also takes struct inode* as argument instead of struct super_block*.
+Posting all patches together in a bigger series so that the big picture is
+clear.
 
-   lib/crc32.c:148: warning: No description found for parameter 'tab)[256]'
-   lib/crc32.c:148: warning: Excess function parameter 'tab' description in 'crc32_le_generic'
-   lib/crc32.c:293: warning: No description found for parameter 'tab)[256]'
-   lib/crc32.c:293: warning: Excess function parameter 'tab' description in 'crc32_be_generic'
-   lib/crc32.c:1: warning: no structured comments found
-   mm/memory.c:2881: warning: No description found for parameter 'old'
->> block/blk-lib.c:337: warning: No description found for parameter 'op'
+As per the suggestion in https://lwn.net/Articles/672598/, CURRENT_TIME macro
+bug fixes are being handled in a series separate from transitioning vfs to use.
 
-vim +/op +337 block/blk-lib.c
+Changes from v1:
+* Change current_fs_time(struct super_block *) to current_time(struct inode *)
 
-   321	}
-   322	EXPORT_SYMBOL(blkdev_issue_zone_report);
-   323	
-   324	/**
-   325	 * blkdev_issue_zone_action - queue a report zones operation
-   326	 * @bdev:	target blockdev
-   327	 * @op_flags:	REQ_OPEN_ZONE, REQ_CLOSE_ZONE, or REQ_RESET_ZONE.
-   328	 * @sector:	starting lba of sector
-   329	 * @gfp_mask:	memory allocation flags (for bio_alloc)
-   330	 *
-   331	 * Description:
-   332	 *    Issue a zone report request for the sectors in question.
-   333	 */
-   334	int blkdev_issue_zone_action(struct block_device *bdev, unsigned int op,
-   335				     unsigned int op_flags, sector_t sector,
-   336				     gfp_t gfp_mask)
- > 337	{
-   338		int ret;
-   339		struct bio *bio;
-   340	
-   341		bio = bio_alloc(gfp_mask, 1);
-   342		if (!bio)
-   343			return -ENOMEM;
-   344	
-   345		bio->bi_iter.bi_sector = sector;
+* Note that change to add time64_to_tm() is already part of John's
+  kernel tree: https://lkml.org/lkml/2016/6/17/875 .
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Deepa Dinamani (24):
+  vfs: Add current_time() api
+  fs: Replace CURRENT_TIME with current_time() for inode timestamps
+  fs: Replace CURRENT_TIME_SEC with current_time() for inode timestamps
+  fs: Replace current_fs_time() with current_time()
+  fs: jfs: Replace CURRENT_TIME_SEC by current_time()
+  fs: ext4: Use current_time() for inode timestamps
+  fs: ubifs: Replace CURRENT_TIME_SEC with current_time
+  fs: btrfs: Use ktime_get_real_ts for root ctime
+  fs: udf: Replace CURRENT_TIME with current_time()
+  fs: cifs: Replace CURRENT_TIME by current_time()
+  fs: cifs: Replace CURRENT_TIME with ktime_get_real_ts()
+  fs: cifs: Replace CURRENT_TIME by get_seconds
+  fs: f2fs: Use ktime_get_real_seconds for sit_info times
+  drivers: staging: lustre: Replace CURRENT_TIME with current_time()
+  fs: ocfs2: Use time64_t to represent orphan scan times
+  fs: ocfs2: Replace CURRENT_TIME with ktime_get_real_seconds()
+  audit: Use timespec64 to represent audit timestamps
+  fs: nfs: Make nfs boot time y2038 safe
+  fnic: Use time64_t to represent trace timestamps
+  block: Replace CURRENT_TIME with ktime_get_real_ts
+  libceph: Replace CURRENT_TIME with ktime_get_real_ts
+  fs: ceph: Replace current_fs_time for request stamp
+  time: Delete CURRENT_TIME_SEC and CURRENT_TIME macro
+  time: Delete current_fs_time() function
 
---sdtB3X0nJg68CQEu
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+ arch/powerpc/platforms/cell/spufs/inode.c          |  2 +-
+ arch/s390/hypfs/inode.c                            |  4 ++--
+ drivers/block/rbd.c                                |  2 +-
+ drivers/char/sonypi.c                              |  2 +-
+ drivers/infiniband/hw/qib/qib_fs.c                 |  2 +-
+ drivers/misc/ibmasm/ibmasmfs.c                     |  2 +-
+ drivers/oprofile/oprofilefs.c                      |  2 +-
+ drivers/platform/x86/sony-laptop.c                 |  2 +-
+ drivers/scsi/fnic/fnic_trace.c                     |  4 ++--
+ drivers/scsi/fnic/fnic_trace.h                     |  2 +-
+ drivers/staging/lustre/lustre/llite/llite_lib.c    | 16 ++++++-------
+ drivers/staging/lustre/lustre/llite/namei.c        |  4 ++--
+ drivers/staging/lustre/lustre/mdc/mdc_reint.c      |  6 ++---
+ .../lustre/lustre/obdclass/linux/linux-obdo.c      |  6 ++---
+ drivers/staging/lustre/lustre/obdclass/obdo.c      |  6 ++---
+ drivers/staging/lustre/lustre/osc/osc_io.c         |  2 +-
+ drivers/usb/core/devio.c                           | 18 +++++++-------
+ drivers/usb/gadget/function/f_fs.c                 |  8 +++----
+ drivers/usb/gadget/legacy/inode.c                  |  2 +-
+ fs/9p/vfs_inode.c                                  |  2 +-
+ fs/adfs/inode.c                                    |  2 +-
+ fs/affs/amigaffs.c                                 |  6 ++---
+ fs/affs/inode.c                                    |  2 +-
+ fs/attr.c                                          |  2 +-
+ fs/autofs4/inode.c                                 |  2 +-
+ fs/autofs4/root.c                                  |  6 ++---
+ fs/bad_inode.c                                     |  2 +-
+ fs/bfs/dir.c                                       | 14 +++++------
+ fs/binfmt_misc.c                                   |  2 +-
+ fs/btrfs/file.c                                    |  6 ++---
+ fs/btrfs/inode.c                                   | 22 ++++++++---------
+ fs/btrfs/ioctl.c                                   |  8 +++----
+ fs/btrfs/root-tree.c                               |  3 ++-
+ fs/btrfs/transaction.c                             |  4 ++--
+ fs/btrfs/xattr.c                                   |  2 +-
+ fs/ceph/file.c                                     |  4 ++--
+ fs/ceph/inode.c                                    |  2 +-
+ fs/ceph/mds_client.c                               |  4 +++-
+ fs/ceph/xattr.c                                    |  2 +-
+ fs/cifs/cifsencrypt.c                              |  4 +++-
+ fs/cifs/cifssmb.c                                  | 10 ++++----
+ fs/cifs/file.c                                     |  4 ++--
+ fs/cifs/inode.c                                    | 28 ++++++++++++----------
+ fs/coda/dir.c                                      |  2 +-
+ fs/coda/file.c                                     |  2 +-
+ fs/coda/inode.c                                    |  2 +-
+ fs/configfs/inode.c                                |  6 ++---
+ fs/debugfs/inode.c                                 |  2 +-
+ fs/devpts/inode.c                                  |  6 ++---
+ fs/efivarfs/inode.c                                |  2 +-
+ fs/exofs/dir.c                                     |  6 ++---
+ fs/exofs/inode.c                                   |  4 ++--
+ fs/exofs/namei.c                                   |  6 ++---
+ fs/ext2/acl.c                                      |  2 +-
+ fs/ext2/dir.c                                      |  6 ++---
+ fs/ext2/ialloc.c                                   |  2 +-
+ fs/ext2/inode.c                                    |  4 ++--
+ fs/ext2/ioctl.c                                    |  4 ++--
+ fs/ext2/namei.c                                    |  6 ++---
+ fs/ext2/super.c                                    |  2 +-
+ fs/ext2/xattr.c                                    |  2 +-
+ fs/ext4/acl.c                                      |  2 +-
+ fs/ext4/ext4.h                                     |  6 -----
+ fs/ext4/extents.c                                  | 10 ++++----
+ fs/ext4/ialloc.c                                   |  2 +-
+ fs/ext4/inline.c                                   |  4 ++--
+ fs/ext4/inode.c                                    |  6 ++---
+ fs/ext4/ioctl.c                                    |  8 +++----
+ fs/ext4/namei.c                                    | 24 ++++++++++---------
+ fs/ext4/super.c                                    |  2 +-
+ fs/ext4/xattr.c                                    |  2 +-
+ fs/f2fs/dir.c                                      |  8 +++----
+ fs/f2fs/file.c                                     |  8 +++----
+ fs/f2fs/inline.c                                   |  2 +-
+ fs/f2fs/namei.c                                    | 12 +++++-----
+ fs/f2fs/segment.c                                  |  2 +-
+ fs/f2fs/segment.h                                  |  5 ++--
+ fs/f2fs/xattr.c                                    |  2 +-
+ fs/fat/dir.c                                       |  2 +-
+ fs/fat/file.c                                      |  6 ++---
+ fs/fat/inode.c                                     |  2 +-
+ fs/fat/namei_msdos.c                               | 12 +++++-----
+ fs/fat/namei_vfat.c                                | 10 ++++----
+ fs/fuse/control.c                                  |  2 +-
+ fs/fuse/dir.c                                      |  2 +-
+ fs/gfs2/bmap.c                                     |  8 +++----
+ fs/gfs2/dir.c                                      | 12 +++++-----
+ fs/gfs2/inode.c                                    |  8 +++----
+ fs/gfs2/quota.c                                    |  2 +-
+ fs/gfs2/xattr.c                                    |  8 +++----
+ fs/hfs/catalog.c                                   |  8 +++----
+ fs/hfs/dir.c                                       |  2 +-
+ fs/hfs/inode.c                                     |  2 +-
+ fs/hfsplus/catalog.c                               |  8 +++----
+ fs/hfsplus/dir.c                                   |  6 ++---
+ fs/hfsplus/inode.c                                 |  2 +-
+ fs/hfsplus/ioctl.c                                 |  2 +-
+ fs/hugetlbfs/inode.c                               | 10 ++++----
+ fs/inode.c                                         | 21 +++++++++++++---
+ fs/jffs2/acl.c                                     |  2 +-
+ fs/jffs2/fs.c                                      |  2 +-
+ fs/jfs/acl.c                                       |  2 +-
+ fs/jfs/inode.c                                     |  2 +-
+ fs/jfs/ioctl.c                                     |  2 +-
+ fs/jfs/jfs_inode.c                                 |  2 +-
+ fs/jfs/namei.c                                     | 24 +++++++++----------
+ fs/jfs/super.c                                     |  2 +-
+ fs/jfs/xattr.c                                     |  2 +-
+ fs/kernfs/inode.c                                  |  2 +-
+ fs/libfs.c                                         | 14 +++++------
+ fs/locks.c                                         |  2 +-
+ fs/logfs/dir.c                                     |  6 ++---
+ fs/logfs/file.c                                    |  2 +-
+ fs/logfs/inode.c                                   |  4 ++--
+ fs/logfs/readwrite.c                               |  4 ++--
+ fs/minix/bitmap.c                                  |  2 +-
+ fs/minix/dir.c                                     |  6 ++---
+ fs/minix/itree_common.c                            |  4 ++--
+ fs/minix/namei.c                                   |  4 ++--
+ fs/nfs/client.c                                    |  2 +-
+ fs/nfs/netns.h                                     |  2 +-
+ fs/nfs/nfs4proc.c                                  | 10 ++++----
+ fs/nfs/nfs4xdr.c                                   |  2 +-
+ fs/nfsd/blocklayout.c                              |  2 +-
+ fs/nilfs2/dir.c                                    |  6 ++---
+ fs/nilfs2/inode.c                                  |  4 ++--
+ fs/nilfs2/ioctl.c                                  |  2 +-
+ fs/nilfs2/namei.c                                  |  6 ++---
+ fs/nsfs.c                                          |  2 +-
+ fs/ntfs/inode.c                                    |  2 +-
+ fs/ntfs/mft.c                                      |  2 +-
+ fs/ocfs2/acl.c                                     |  2 +-
+ fs/ocfs2/alloc.c                                   |  2 +-
+ fs/ocfs2/aops.c                                    |  2 +-
+ fs/ocfs2/cluster/heartbeat.c                       |  2 +-
+ fs/ocfs2/dir.c                                     |  4 ++--
+ fs/ocfs2/dlmfs/dlmfs.c                             |  4 ++--
+ fs/ocfs2/file.c                                    | 12 +++++-----
+ fs/ocfs2/inode.c                                   |  2 +-
+ fs/ocfs2/journal.c                                 |  4 ++--
+ fs/ocfs2/move_extents.c                            |  2 +-
+ fs/ocfs2/namei.c                                   | 16 +++++++------
+ fs/ocfs2/ocfs2.h                                   |  2 +-
+ fs/ocfs2/refcounttree.c                            |  4 ++--
+ fs/ocfs2/super.c                                   |  2 +-
+ fs/ocfs2/xattr.c                                   |  2 +-
+ fs/omfs/dir.c                                      |  4 ++--
+ fs/omfs/inode.c                                    |  2 +-
+ fs/openpromfs/inode.c                              |  2 +-
+ fs/orangefs/file.c                                 |  2 +-
+ fs/orangefs/inode.c                                |  2 +-
+ fs/orangefs/namei.c                                | 10 ++++----
+ fs/pipe.c                                          |  2 +-
+ fs/posix_acl.c                                     |  2 +-
+ fs/proc/base.c                                     |  2 +-
+ fs/proc/inode.c                                    |  4 ++--
+ fs/proc/proc_sysctl.c                              |  2 +-
+ fs/proc/self.c                                     |  2 +-
+ fs/proc/thread_self.c                              |  2 +-
+ fs/pstore/inode.c                                  |  2 +-
+ fs/ramfs/inode.c                                   |  6 ++---
+ fs/reiserfs/inode.c                                |  2 +-
+ fs/reiserfs/ioctl.c                                |  4 ++--
+ fs/reiserfs/namei.c                                | 12 +++++-----
+ fs/reiserfs/stree.c                                |  8 +++----
+ fs/reiserfs/super.c                                |  2 +-
+ fs/reiserfs/xattr.c                                |  6 ++---
+ fs/reiserfs/xattr_acl.c                            |  2 +-
+ fs/sysv/dir.c                                      |  6 ++---
+ fs/sysv/ialloc.c                                   |  2 +-
+ fs/sysv/itree.c                                    |  4 ++--
+ fs/sysv/namei.c                                    |  4 ++--
+ fs/tracefs/inode.c                                 |  2 +-
+ fs/ubifs/dir.c                                     | 10 ++++----
+ fs/ubifs/file.c                                    | 12 +++++-----
+ fs/ubifs/ioctl.c                                   |  2 +-
+ fs/ubifs/misc.h                                    | 10 --------
+ fs/ubifs/sb.c                                      | 14 +++++++----
+ fs/ubifs/xattr.c                                   |  6 ++---
+ fs/udf/ialloc.c                                    |  2 +-
+ fs/udf/inode.c                                     |  4 ++--
+ fs/udf/namei.c                                     | 20 ++++++++--------
+ fs/udf/super.c                                     |  9 +++++--
+ fs/ufs/dir.c                                       |  6 ++---
+ fs/ufs/ialloc.c                                    |  8 ++++---
+ fs/ufs/inode.c                                     |  6 ++---
+ fs/ufs/namei.c                                     |  6 ++---
+ fs/xfs/xfs_acl.c                                   |  2 +-
+ fs/xfs/xfs_inode.c                                 |  2 +-
+ fs/xfs/xfs_iops.c                                  |  2 +-
+ fs/xfs/xfs_trans_inode.c                           |  2 +-
+ include/linux/audit.h                              |  4 ++--
+ include/linux/fs.h                                 |  2 +-
+ include/linux/time.h                               |  3 ---
+ ipc/mqueue.c                                       | 18 +++++++-------
+ kernel/audit.c                                     | 10 ++++----
+ kernel/audit.h                                     |  2 +-
+ kernel/auditsc.c                                   |  6 ++---
+ kernel/bpf/inode.c                                 |  2 +-
+ kernel/time/time.c                                 | 14 -----------
+ mm/shmem.c                                         | 20 ++++++++--------
+ net/ceph/messenger.c                               |  6 +++--
+ net/ceph/osd_client.c                              |  4 ++--
+ net/sunrpc/rpc_pipe.c                              |  2 +-
+ security/inode.c                                   |  2 +-
+ security/selinux/selinuxfs.c                       |  2 +-
+ 206 files changed, 533 insertions(+), 522 deletions(-)
 
-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
+-- 
+1.9.1
 
---sdtB3X0nJg68CQEu--
+Cc: adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org
+Cc: adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Cc: anna.schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org
+Cc: buchino-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
+Cc: ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: clm-b10kYP2dOMg@public.gmane.org
+Cc: cm224.lee-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
+Cc: dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: dsterba-IBi9RG/b67k@public.gmane.org
+Cc: elder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
+Cc: hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
+Cc: idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: jack-IBi9RG/b67k@public.gmane.org
+Cc: jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: jbacik-b10kYP2dOMg@public.gmane.org
+Cc: jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+Cc: jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Cc: jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org
+Cc: john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Cc: linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Cc: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lustre-devel-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org
+Cc: martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: mfasheh-IBi9RG/b67k@public.gmane.org
+Cc: ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org
+Cc: paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org
+Cc: sage-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org
+Cc: shaggy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: sramars-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
+Cc: trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
+Cc: zyan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
