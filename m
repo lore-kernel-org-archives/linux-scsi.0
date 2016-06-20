@@ -1,76 +1,141 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH 3/3] scsi: consolidate checking for VPD pages
-Date: Mon, 20 Jun 2016 09:26:10 -0400
-Message-ID: <1466429170.4039.16.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/3] scsi: disable VPD page check on error
+Date: Mon, 20 Jun 2016 06:44:02 -0700
+Message-ID: <1466430242.2350.4.camel@HansenPartnership.com>
 References: <1466405868-87720-1-git-send-email-hare@suse.de>
-	 <1466405868-87720-4-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+	 <1466405868-87720-3-git-send-email-hare@suse.de>
+	 <1466429138.4039.15.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38319 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751496AbcFTN0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2016 09:26:11 -0400
-In-Reply-To: <1466405868-87720-4-git-send-email-hare@suse.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60400 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754601AbcFTNot (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 09:44:49 -0400
+In-Reply-To: <1466429138.4039.15.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
+To: emilne@redhat.com, Hannes Reinecke <hare@suse.de>
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, 2016-06-20 at 08:57 +0200, Hannes Reinecke wrote:
-> scsi_get_vpd_page() has a check for 'skip_vpd_pages'. However,
-> this is not sufficient to test if the device really supports
-> VPD pages. At the same time, most sites were already calling
-> scsi_device_supports_vpd() prior to calling this function.
-> So this patchs updates all callers to use scsi_device_supports_vpd()
-> prior to calling scsi_get_vpd_page() and remove the check
-> to skip_vpd_pages.
+On Mon, 2016-06-20 at 09:25 -0400, Ewan D. Milne wrote:
+> On Mon, 2016-06-20 at 08:57 +0200, Hannes Reinecke wrote:
+> > If we encounter an error during initial VPD page scan we should be
+> > setting the 'skip_vpd_pages' bit to avoid further accesses.
+> > Any errors during rescan should be ignored, as we might encounter
+> > temporary I/O errors during rescan.
+> > 
+> > Signed-off-by: Hannes Reinecke <hare@suse.com>
+> > ---
+> >  drivers/scsi/scsi.c      | 9 ++++++++-
+> >  drivers/scsi/scsi_priv.h | 2 +-
+> >  drivers/scsi/scsi_scan.c | 4 ++--
+> >  3 files changed, 11 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> > index 1deb6ad..1ff4a0b 100644
+> > --- a/drivers/scsi/scsi.c
+> > +++ b/drivers/scsi/scsi.c
+> > @@ -770,13 +770,14 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+> >  /**
+> >   * scsi_attach_vpd - Attach Vital Product Data to a SCSI device
+> > structure
+> >   * @sdev: The device to ask
+> > + * @first_scan: true if called during initial scan
+> >   *
+> >   * Attach the 'Device Identification' VPD page (0x83) and the
+> >   * 'Unit Serial Number' VPD page (0x80) to a SCSI device
+> >   * structure. This information can be used to identify the device
+> >   * uniquely.
+> >   */
+> > -void scsi_attach_vpd(struct scsi_device *sdev)
+> > +void scsi_attach_vpd(struct scsi_device *sdev, bool first_scan)
+> >  {
+> >  	int result, i;
+> >  	int vpd_len = SCSI_VPD_PG_LEN;
+> > @@ -796,6 +797,8 @@ retry_pg0:
+> >  	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
+> >  	if (result < 0) {
+> >  		kfree(vpd_buf);
+> > +		if (first_scan)
+> > +			sdev->skip_vpd_pages = 1;
+> >  		return;
+> >  	}
+> >  	if (result > vpd_len) {
+> > @@ -822,6 +825,8 @@ retry_pg80:
+> >  		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80,
+> > vpd_len);
+> >  		if (result < 0) {
+> >  			kfree(vpd_buf);
+> > +			if (first_scan)
+> > +				sdev->skip_vpd_pages = 1;
+> >  			return;
+> >  		}
+> >  		if (result > vpd_len) {
+> > @@ -851,6 +856,8 @@ retry_pg83:
+> >  		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83,
+> > vpd_len);
+> >  		if (result < 0) {
+> >  			kfree(vpd_buf);
+> > +			if (first_scan)
+> > +				sdev->skip_vpd_pages = 1;
+> >  			return;
+> >  		}
+> >  		if (result > vpd_len) {
+> > diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> > index 6c3db56..0c4cc6d 100644
+> > --- a/drivers/scsi/scsi_priv.h
+> > +++ b/drivers/scsi/scsi_priv.h
+> > @@ -31,7 +31,7 @@ extern void scsi_exit_hosts(void);
+> >  /* scsi.c */
+> >  extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+> >  extern void scsi_destroy_command_freelist(struct Scsi_Host
+> > *shost);
+> > -void scsi_attach_vpd(struct scsi_device *sdev);
+> > +void scsi_attach_vpd(struct scsi_device *sdev, bool first_scan);
+> >  #ifdef CONFIG_SCSI_LOGGING
+> >  void scsi_log_send(struct scsi_cmnd *cmd);
+> >  void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
+> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> > index e0a78f5..dcc08ad 100644
+> > --- a/drivers/scsi/scsi_scan.c
+> > +++ b/drivers/scsi/scsi_scan.c
+> > @@ -997,7 +997,7 @@ static int scsi_add_lun(struct scsi_device
+> > *sdev, unsigned char *inq_result,
+> >  	}
+> >  
+> >  	if (sdev->scsi_level >= SCSI_3)
+> > -		scsi_attach_vpd(sdev);
+> > +		scsi_attach_vpd(sdev, true);
+> >  
+> >  	sdev->max_queue_depth = sdev->queue_depth;
+> >  
+> > @@ -1536,7 +1536,7 @@ void scsi_rescan_device(struct device *dev)
+> >  
+> >  	device_lock(dev);
+> >  
+> > -	scsi_attach_vpd(sdev);
+> > +	scsi_attach_vpd(sdev, false);
+> >  
+> >  	if (sdev->handler && sdev->handler->rescan)
+> >  		sdev->handler->rescan(sdev);
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/scsi.c               | 5 ++---
->  drivers/scsi/scsi_transport_sas.c | 3 ++-
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 1ff4a0b..f054878 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -727,15 +727,14 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
->   * to a buffer containing the data from that page.  The caller is
->   * responsible for calling kfree() on this pointer when it is no longer
->   * needed.  If we cannot retrieve the VPD page this routine returns %NULL.
-> + * The caller is responsible for checking if the device supports VPD
-> + * pages prior to calling this function.
->   */
->  int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
->  		      int buf_len)
->  {
->  	int i, result;
->  
-> -	if (sdev->skip_vpd_pages)
-> -		goto fail;
-> -
->  	/* Ask for all the pages supported by this device */
->  	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
->  	if (result < 4)
-> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-> index 3f0ff07..b2616eb 100644
-> --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -412,7 +412,8 @@ sas_tlr_supported(struct scsi_device *sdev)
->  	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
->  	int ret = 0;
->  
-> -	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
-> +	if (!scsi_device_supports_vpd(sdev) ||
-> +	    scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
->  		goto out;
->  
->  	/*
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+I take it your concerns about never asking the device for VPD pages
+again are addressed?
 
+I also don't really like this.  If the device has a failure like the
+QEMU one where it just hangs up, this won't help because the problem
+already happened.  Conversely, if the device replies in the negative,
+it should always do so, so I can't see what this buys us, except the
+possibility of doing the wrong thing on a transient error (which can
+happen on your ALUA devices during path switch, I believe?)
+
+I'd be much happier if you can point to a problem that this would
+solve.
+
+James
 
