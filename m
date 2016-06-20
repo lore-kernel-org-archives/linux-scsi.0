@@ -1,67 +1,59 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
-Date: Mon, 20 Jun 2016 13:13:50 +0200
-Message-ID: <e7fdd9b6-6ad5-387d-c1d1-67f9153d3bdd@matthiasprager.de>
-References: <56EF049F.6050809@matthiasprager.de>
- <CAK=zhgqYjocyKkXAiJTxGkxTgX_jWb3Vr_V6oMxprJgbkdpE2A@mail.gmail.com>
- <56EFBC55.9070209@matthiasprager.de>
- <CAK=zhgof7owM8bVKx2PJtVpUcYMvszvjfc12DwbPJgkEYPC4yw@mail.gmail.com>
- <56F018A0.7070307@matthiasprager.de> <56F021B9.9080305@matthiasprager.de>
- <CAK=zhgoaseek=+qP1r6uVA9s06Yfaz+7m957seiWf1v2CKkQfw@mail.gmail.com>
- <56F1B2E5.1070605@matthiasprager.de> <56F34BB5.3090007@matthiasprager.de>
- <alpine.DEB.2.11.1603240701270.3978@nanos>
- <99405e4d4b454ff59d81026597c7fd5a@WB-SVT-EXBE03.simplivity.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH 1/3] scsi: Move 'scsi_attach_vpd()' prototype to
+ scsi_priv.h
+Date: Mon, 20 Jun 2016 09:24:46 -0400
+Message-ID: <1466429086.4039.14.camel@localhost.localdomain>
+References: <1466405868-87720-1-git-send-email-hare@suse.de>
+	 <1466405868-87720-2-git-send-email-hare@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <99405e4d4b454ff59d81026597c7fd5a@WB-SVT-EXBE03.simplivity.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Taylor <jason.taylor@simplivity.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50153 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751931AbcFTNZk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 09:25:40 -0400
+In-Reply-To: <1466405868-87720-2-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Still tracking - small update: So far with the most current esxi 6
-(build 3825889 - 2016-05-12) the fix is not there yet.
+On Mon, 2016-06-20 at 08:57 +0200, Hannes Reinecke wrote:
+> scsi_attach_vpd() is not exported, so it should be in scsi_priv.h.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_priv.h   | 1 +
+>  include/scsi/scsi_device.h | 1 -
+>  2 files changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index 57a4b99..6c3db56 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -31,6 +31,7 @@ extern void scsi_exit_hosts(void);
+>  /* scsi.c */
+>  extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+>  extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+> +void scsi_attach_vpd(struct scsi_device *sdev);
+>  #ifdef CONFIG_SCSI_LOGGING
+>  void scsi_log_send(struct scsi_cmnd *cmd);
+>  void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index a6c346d..3f2f147 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -314,7 +314,6 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+>  extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
+>  extern void scsi_remove_device(struct scsi_device *);
+>  extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+> -void scsi_attach_vpd(struct scsi_device *sdev);
+>  
+>  extern int scsi_device_get(struct scsi_device *);
+>  extern void scsi_device_put(struct scsi_device *);
 
-Sidenote: the mpt driver seems to have learned to work around the irq
-handling issues (I tested kernel 4.6.2) whereas the e1000e ethernet
-driver still has trouble initializing.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-... patiently waiting for VMware to release 6.0 update 3.
 
-Am 24.03.2016 um 12:02 schrieb Jason Taylor:
-> The last update we have from VMware is that the fix will be in 6.0p3/5.5p8 - both of which are targeted for a mid year release.
-> 
-> -----Original Message-----
-> From: Thomas Gleixner [mailto:tglx@linutronix.de] 
-> Sent: Thursday, March 24, 2016 2:06 AM
-> To: Matthias Prager <linux@matthiasprager.de>
-> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>; linux-scsi <linux-scsi@vger.kernel.org>; Jason Taylor <jason.taylor@simplivity.com>; LKML <linux-kernel@vger.kernel.org>; x86@kernel.org
-> Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
-> 
-> On Thu, 24 Mar 2016, Matthias Prager wrote:
->> The timeout happens reliably after two warm boots with a 'bad' kernel 
->> after coming from a 'good' kernel, and also after one cold boot with a 
->> 'bad' kernel (meaning cold booting a 'bad' kernel leads directly to 
->> the timeout and warm booting needs a second run to produce the 
->> timeout). I haven't tested bare metal yet - I can do that tomorrow if necessary.
-> 
-> That's on VMWare, right? Jason has seen the same issue:
-> 
->  http://marc.info/?l=linux-kernel&m=145280623530135&w=2
->  http://marc.info/?l=linux-kernel&m=145523785705624&w=2
-> 
->  "Works fine on real hardware and KVM. Filed an issue with VMware and the fix
->   is in the works."
-> 
-> Jason, what's the state of this?
-> 
-> Thanks,
-> 
-> 	tglx
-> ---------------------------------------------------------------------------------------
-> PRIVACY STATEMENT:
-> This message is a PRIVATE communication.  This message and all attachments are a private communication sent by SimpliVity and are considered to be confidential or protected by privilege. If you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or use of the information contained in or attached to this message is strictly prohibited.  Please notify the sender of the delivery error by replying to this message, and then delete it from your system.
-> ---------------------------------------------------------------------------------------
-> 
