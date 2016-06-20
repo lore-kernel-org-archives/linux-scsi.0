@@ -1,141 +1,77 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/3] scsi: disable VPD page check on error
-Date: Mon, 20 Jun 2016 06:44:02 -0700
-Message-ID: <1466430242.2350.4.camel@HansenPartnership.com>
-References: <1466405868-87720-1-git-send-email-hare@suse.de>
-	 <1466405868-87720-3-git-send-email-hare@suse.de>
-	 <1466429138.4039.15.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/3] cxlflash: Fix to drain operations from previous reset
+Date: Mon, 20 Jun 2016 08:47:09 -0500
+Message-ID: <E601E96F-4C2F-48EF-BDFF-689114A05285@linux.vnet.ibm.com>
+References: <1466034460-17797-1-git-send-email-ukrishn@linux.vnet.ibm.com> <1466034560-17864-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60400 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754601AbcFTNot (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2016 09:44:49 -0400
-In-Reply-To: <1466429138.4039.15.camel@localhost.localdomain>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:13597 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753288AbcFTNrl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 09:47:41 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5KDi9sE020408
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2016 09:47:16 -0400
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23n1kum0ft-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2016 09:47:16 -0400
+Received: from localhost
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Mon, 20 Jun 2016 07:47:15 -0600
+In-Reply-To: <1466034560-17864-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com, Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Mon, 2016-06-20 at 09:25 -0400, Ewan D. Milne wrote:
-> On Mon, 2016-06-20 at 08:57 +0200, Hannes Reinecke wrote:
-> > If we encounter an error during initial VPD page scan we should be
-> > setting the 'skip_vpd_pages' bit to avoid further accesses.
-> > Any errors during rescan should be ignored, as we might encounter
-> > temporary I/O errors during rescan.
-> > 
-> > Signed-off-by: Hannes Reinecke <hare@suse.com>
-> > ---
-> >  drivers/scsi/scsi.c      | 9 ++++++++-
-> >  drivers/scsi/scsi_priv.h | 2 +-
-> >  drivers/scsi/scsi_scan.c | 4 ++--
-> >  3 files changed, 11 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > index 1deb6ad..1ff4a0b 100644
-> > --- a/drivers/scsi/scsi.c
-> > +++ b/drivers/scsi/scsi.c
-> > @@ -770,13 +770,14 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
-> >  /**
-> >   * scsi_attach_vpd - Attach Vital Product Data to a SCSI device
-> > structure
-> >   * @sdev: The device to ask
-> > + * @first_scan: true if called during initial scan
-> >   *
-> >   * Attach the 'Device Identification' VPD page (0x83) and the
-> >   * 'Unit Serial Number' VPD page (0x80) to a SCSI device
-> >   * structure. This information can be used to identify the device
-> >   * uniquely.
-> >   */
-> > -void scsi_attach_vpd(struct scsi_device *sdev)
-> > +void scsi_attach_vpd(struct scsi_device *sdev, bool first_scan)
-> >  {
-> >  	int result, i;
-> >  	int vpd_len = SCSI_VPD_PG_LEN;
-> > @@ -796,6 +797,8 @@ retry_pg0:
-> >  	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
-> >  	if (result < 0) {
-> >  		kfree(vpd_buf);
-> > +		if (first_scan)
-> > +			sdev->skip_vpd_pages = 1;
-> >  		return;
-> >  	}
-> >  	if (result > vpd_len) {
-> > @@ -822,6 +825,8 @@ retry_pg80:
-> >  		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80,
-> > vpd_len);
-> >  		if (result < 0) {
-> >  			kfree(vpd_buf);
-> > +			if (first_scan)
-> > +				sdev->skip_vpd_pages = 1;
-> >  			return;
-> >  		}
-> >  		if (result > vpd_len) {
-> > @@ -851,6 +856,8 @@ retry_pg83:
-> >  		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83,
-> > vpd_len);
-> >  		if (result < 0) {
-> >  			kfree(vpd_buf);
-> > +			if (first_scan)
-> > +				sdev->skip_vpd_pages = 1;
-> >  			return;
-> >  		}
-> >  		if (result > vpd_len) {
-> > diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-> > index 6c3db56..0c4cc6d 100644
-> > --- a/drivers/scsi/scsi_priv.h
-> > +++ b/drivers/scsi/scsi_priv.h
-> > @@ -31,7 +31,7 @@ extern void scsi_exit_hosts(void);
-> >  /* scsi.c */
-> >  extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
-> >  extern void scsi_destroy_command_freelist(struct Scsi_Host
-> > *shost);
-> > -void scsi_attach_vpd(struct scsi_device *sdev);
-> > +void scsi_attach_vpd(struct scsi_device *sdev, bool first_scan);
-> >  #ifdef CONFIG_SCSI_LOGGING
-> >  void scsi_log_send(struct scsi_cmnd *cmd);
-> >  void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
-> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > index e0a78f5..dcc08ad 100644
-> > --- a/drivers/scsi/scsi_scan.c
-> > +++ b/drivers/scsi/scsi_scan.c
-> > @@ -997,7 +997,7 @@ static int scsi_add_lun(struct scsi_device
-> > *sdev, unsigned char *inq_result,
-> >  	}
-> >  
-> >  	if (sdev->scsi_level >= SCSI_3)
-> > -		scsi_attach_vpd(sdev);
-> > +		scsi_attach_vpd(sdev, true);
-> >  
-> >  	sdev->max_queue_depth = sdev->queue_depth;
-> >  
-> > @@ -1536,7 +1536,7 @@ void scsi_rescan_device(struct device *dev)
-> >  
-> >  	device_lock(dev);
-> >  
-> > -	scsi_attach_vpd(sdev);
-> > +	scsi_attach_vpd(sdev, false);
-> >  
-> >  	if (sdev->handler && sdev->handler->rescan)
-> >  		sdev->handler->rescan(sdev);
+> On Jun 15, 2016, at 6:49 PM, Uma Krishnan <ukrishn@linux.vnet.ibm.com> wrote:
 > 
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+> From: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+> 
+> While running 'sg_reset -H' in a loop with a user-space application active,
+> hit the following exception:
+> 
+> cpu 0x2: Vector: 300 (Data Access)
+>    pc: : afu_attach+0x50/0x240 [cxlflash]
+>    lr: : cxlflash_afu_recover+0x3dc/0x7d0 [cxlflash]
+>    pid   = 20365, comm = run_block_fvt
+> 
+> Linux version 4.5.0-491-26f710d+
+> 
+> cxlflash_afu_recover+0x3dc/0x7d0 [cxlflash]
+> cxlflash_ioctl+0x5a8/0x6f0 [cxlflash]
+> scsi_ioctl+0x3b0/0x4c0
+> sd_ioctl+0x110/0x190
+> blkdev_ioctl+0x28c/0xc20
+> block_ioctl+0xa4/0xd0
+> do_vfs_ioctl+0xd8/0x8c0
+> SyS_ioctl+0xd4/0xf0
+> system_call+0x38/0xb4
+> 
+> The problem here is that the problem space area is unmapped while the
+> application issues the DK_CXLFLASH_RECOVER_AFU ioctl.
+> 
+> This is the order I observe:
+> 
+> proc1				proc2
+> 1) sg_reset
+> 				2) ioctl(DK_CXLFLASH_RECOVER_AFU)
+> 3) sg_reset again
+>   causing a PSA unmap
+> 				4) continues RECOVER_AFU processing
+> 
+> The resolution to this problem is to have the reset handler drain all
+> outstanding user space initiated ioctls before proceeding.  It is safe
+> to drain after the state has been changed to STATE_RESET. Also since
+> drain_ioctls() was static, it had to be moved up a bit to be before
+> cxlflash_eh_host_reset_handler().
+> 
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-I take it your concerns about never asking the device for VPD pages
-again are addressed?
-
-I also don't really like this.  If the device has a failure like the
-QEMU one where it just hangs up, this won't help because the problem
-already happened.  Conversely, if the device replies in the negative,
-it should always do so, so I can't see what this buys us, except the
-possibility of doing the wrong thing on a transient error (which can
-happen on your ALUA devices during path switch, I believe?)
-
-I'd be much happier if you can point to a problem that this would
-solve.
-
-James
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
