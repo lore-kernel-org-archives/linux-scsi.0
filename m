@@ -1,51 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/3] scsi: Move 'scsi_attach_vpd()' prototype to scsi_priv.h
-Date: Mon, 20 Jun 2016 08:57:46 +0200
-Message-ID: <1466405868-87720-2-git-send-email-hare@suse.de>
-References: <1466405868-87720-1-git-send-email-hare@suse.de>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH v1 0/4] scsi: some (very) old clean ups
+Date: Mon, 20 Jun 2016 12:03:02 +0300
+Message-ID: <1466413382.30123.176.camel@linux.intel.com>
+References: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37588 "EHLO mx2.suse.de"
+Received: from mga14.intel.com ([192.55.52.115]:65279 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752136AbcFTHdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2016 03:33:52 -0400
-In-Reply-To: <1466405868-87720-1-git-send-email-hare@suse.de>
+	id S1750885AbcFTJE2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 05:04:28 -0400
+In-Reply-To: <1462551839-44380-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-scsi_attach_vpd() is not exported, so it should be in scsi_priv.h.
+On Fri, 2016-05-06 at 19:23 +0300, Andy Shevchenko wrote:
+> This is a set of independent clean ups that didn't land upstream for
+> ages (some
+> are dated 2010!).=C2=A0=C2=A0As agreed with Martin at some point I re=
+send
+> them.
+>=20
+> I have more, but the rest is not yet ready for submission.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_priv.h   | 1 +
- include/scsi/scsi_device.h | 1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
+Gentle ping to get know what is the destiny of my patches.
 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 57a4b99..6c3db56 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -31,6 +31,7 @@ extern void scsi_exit_hosts(void);
- /* scsi.c */
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
-+void scsi_attach_vpd(struct scsi_device *sdev);
- #ifdef CONFIG_SCSI_LOGGING
- void scsi_log_send(struct scsi_cmnd *cmd);
- void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a6c346d..3f2f147 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -314,7 +314,6 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
- extern void scsi_remove_device(struct scsi_device *);
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
--void scsi_attach_vpd(struct scsi_device *sdev);
- 
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
--- 
-1.8.5.6
+>=20
+> Andy Shevchenko (3):
+> =C2=A0 libsas: remove private hex2bin() implementation
+> =C2=A0 scsi: fnic: use kernel's '%pM' format option to print MAC
+> =C2=A0 fusion: print lan address via %pMR
+>=20
+> Oleksandr Khoshaba (1):
+> =C2=A0 scsi: qla4xxx: print MAC and SID via %p[mM][R]
+>=20
+> =C2=A0drivers/message/fusion/mptbase.c=C2=A0=C2=A0=C2=A0=C2=A0| 14 ++=
+++----------
+> =C2=A0drivers/scsi/fnic/vnic_dev.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0| 10 ++--------
+> =C2=A0drivers/scsi/libsas/sas_scsi_host.c | 22 ++++++----------------
+> =C2=A0drivers/scsi/qla4xxx/ql4_mbx.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0|=C2=A0=C2=A05 +----
+> =C2=A0drivers/scsi/qla4xxx/ql4_nx.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0|=C2=A0=C2=A08 ++------
+> =C2=A0drivers/scsi/qla4xxx/ql4_os.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0| 15 ++++-----------
+> =C2=A06 files changed, 19 insertions(+), 55 deletions(-)
+>=20
 
+--=20
+
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
