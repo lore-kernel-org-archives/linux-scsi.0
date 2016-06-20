@@ -1,63 +1,39 @@
-From: Deepa Dinamani <deepa.kernel@gmail.com>
-Subject: [PATCH v2 19/24] fnic: Use time64_t to represent trace
-	timestamps
-Date: Sun, 19 Jun 2016 17:27:18 -0700
-Message-ID: <1466382443-11063-20-git-send-email-deepa.kernel@gmail.com>
-References: <1466382443-11063-1-git-send-email-deepa.kernel@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <1466382443-11063-1-git-send-email-deepa.kernel@gmail.com>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Suma Ramars <sramars@cisco.com>, tytso@mit.edu, "Martin K. Petersen" <martin.petersen@oracle.com>, arnd@arndb.de, y2038@lists.linaro.org, Hiral Patel <hiralpat@cisco.com>, John Stultz <john.stultz@linaro.org>, viro@zeniv.linux.org.uk, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, tglx@linutronix.de, Brian Uchino <buchino@cisco.com>, torvalds@linux-foundation.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/3] VPD page check consolidation
+Date: Mon, 20 Jun 2016 08:57:45 +0200
+Message-ID: <1466405868-87720-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:37589 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752049AbcFTHdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2016 03:33:52 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-dHJhY2UgdGltZXN0YW1wcyB1c2Ugc3RydWN0IHRpbWVzcGVjIGFuZCBDVVJSRU5UX1RJTUUgd2hp
-Y2gKYXJlIG5vdCB5MjAzOCBzYWZlLgpUaGVzZSB0aW1lc3RhbXBzIGFyZSBvbmx5IHBhcnQgb2Yg
-dGhlIHRyYWNlIGxvZyBvbiB0aGUgbWFjaGluZQphbmQgYXJlIG5vdCBzaGFyZWQgd2l0aCB0aGUg
-Zm5pYy4KUmVwbGFjZSB0aGVuIHdpdGggeTIwMzggc2FmZSBzdHJ1Y3QgdGltZXNwZWM2NCBhbmQK
-a3RpbWVfZ2V0X3JlYWxfdHM2NCgpLCByZXNwZWN0aXZlbHkuCgpOb3RlIHRoYXQgY2hhbmdlIHRv
-IGFkZCB0aW1lNjRfdG9fdG0oKSBpcyBhbHJlYWR5IHBhcnQgb2YgSm9obidzCmtlcm5lbCB0cmVl
-OiBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNi82LzE3Lzg3NSAuCgpTaWduZWQtb2ZmLWJ5OiBE
-ZWVwYSBEaW5hbWFuaSA8ZGVlcGEua2VybmVsQGdtYWlsLmNvbT4KQ2M6IEhpcmFsIFBhdGVsIDxo
-aXJhbHBhdEBjaXNjby5jb20+CkNjOiBTdW1hIFJhbWFycyA8c3JhbWFyc0BjaXNjby5jb20+CkNj
-OiBCcmlhbiBVY2hpbm8gPGJ1Y2hpbm9AY2lzY28uY29tPgpDYzogIkphbWVzIEUuSi4gQm90dG9t
-bGV5IiA8amVqYkBsaW51eC52bmV0LmlibS5jb20+CkNjOiAiTWFydGluIEsuIFBldGVyc2VuIiA8
-bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+CkNjOiBKb2huIFN0dWx0eiA8am9obi5zdHVsdHpA
-bGluYXJvLm9yZz4KQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnCi0tLQogZHJpdmVycy9z
-Y3NpL2ZuaWMvZm5pY190cmFjZS5jIHwgNCArKy0tCiBkcml2ZXJzL3Njc2kvZm5pYy9mbmljX3Ry
-YWNlLmggfCAyICstCiAyIGZpbGVzIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlv
-bnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmMgYi9kcml2
-ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmMKaW5kZXggNGUxNWM0Yi4uNWE1ZmEwMSAxMDA2NDQK
-LS0tIGEvZHJpdmVycy9zY3NpL2ZuaWMvZm5pY190cmFjZS5jCisrKyBiL2RyaXZlcnMvc2NzaS9m
-bmljL2ZuaWNfdHJhY2UuYwpAQCAtNjEzLDcgKzYxMyw3IEBAIGludCBmbmljX2ZjX3RyYWNlX3Nl
-dF9kYXRhKHUzMiBob3N0X25vLCB1OCBmcmFtZV90eXBlLAogCQkJZmNfdHJhY2VfZW50cmllcy5y
-ZF9pZHggPSAwOwogCX0KIAotCWZjX2J1Zi0+dGltZV9zdGFtcCA9IENVUlJFTlRfVElNRTsKKwlr
-dGltZV9nZXRfcmVhbF90czY0KCZmY19idWYtPnRpbWVfc3RhbXApOwogCWZjX2J1Zi0+aG9zdF9u
-byA9IGhvc3Rfbm87CiAJZmNfYnVmLT5mcmFtZV90eXBlID0gZnJhbWVfdHlwZTsKIApAQCAtNzQw
-LDcgKzc0MCw3IEBAIHZvaWQgY29weV9hbmRfZm9ybWF0X3RyYWNlX2RhdGEoc3RydWN0IGZjX3Ry
-YWNlX2hkciAqdGRhdGEsCiAKIAlsZW4gPSAqb3JpZ19sZW47CiAKLQl0aW1lX3RvX3RtKHRkYXRh
-LT50aW1lX3N0YW1wLnR2X3NlYywgMCwgJnRtKTsKKwl0aW1lNjRfdG9fdG0odGRhdGEtPnRpbWVf
-c3RhbXAudHZfc2VjLCAwLCAmdG0pOwogCiAJZm10ID0gIiUwMmQ6JTAyZDolMDRsZCAlMDJkOiUw
-MmQ6JTAyZC4lMDlsdSBucyU4eCAgICAgICAlYyU4eFx0IjsKIAlsZW4gKz0gc25wcmludGYoZm5p
-Y19kYmdmc19wcnQtPmJ1ZmZlciArIGxlbiwKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9mbmlj
-L2ZuaWNfdHJhY2UuaCBiL2RyaXZlcnMvc2NzaS9mbmljL2ZuaWNfdHJhY2UuaAppbmRleCBhOGFh
-MDU3Li5lMzc1ZDBjIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmgK
-KysrIGIvZHJpdmVycy9zY3NpL2ZuaWMvZm5pY190cmFjZS5oCkBAIC03Miw3ICs3Miw3IEBAIHN0
-cnVjdCBmbmljX3RyYWNlX2RhdGEgewogdHlwZWRlZiBzdHJ1Y3QgZm5pY190cmFjZV9kYXRhIGZu
-aWNfdHJhY2VfZGF0YV90OwogCiBzdHJ1Y3QgZmNfdHJhY2VfaGRyIHsKLQlzdHJ1Y3QgdGltZXNw
-ZWMgdGltZV9zdGFtcDsKKwlzdHJ1Y3QgdGltZXNwZWM2NCB0aW1lX3N0YW1wOwogCXUzMiBob3N0
-X25vOwogCXU4IGZyYW1lX3R5cGU7CiAJdTggZnJhbWVfbGVuOwotLSAKMS45LjEKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1haWxpbmcgbGlz
-dApZMjAzOEBsaXN0cy5saW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFu
-L2xpc3RpbmZvL3kyMDM4Cg==
+Hi all,
+
+as per recent discussion this patchset consolidates the
+VPD page checks. With it VPD page scan will be disabled
+if the initial scan encounters an error, and also the
+checks for VPD pages are consolidated in the function
+scsi_device_supports_vpd().
+
+As usual, comments and reviews are welcome.
+
+Hannes Reinecke (3):
+  scsi: Move 'scsi_attach_vpd()' prototype to scsi_priv.h
+  scsi: disable VPD page check on error
+  scsi: consolidate checking for VPD pages
+
+ drivers/scsi/scsi.c               | 14 ++++++++++----
+ drivers/scsi/scsi_priv.h          |  1 +
+ drivers/scsi/scsi_scan.c          |  4 ++--
+ drivers/scsi/scsi_transport_sas.c |  3 ++-
+ include/scsi/scsi_device.h        |  1 -
+ 5 files changed, 15 insertions(+), 8 deletions(-)
+
+-- 
+1.8.5.6
+
