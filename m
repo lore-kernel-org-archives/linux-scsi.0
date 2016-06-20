@@ -1,146 +1,67 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/5] scsi: make scsi_eh_scmd_add() always succeed
-Date: Mon, 20 Jun 2016 11:35:37 +0200
-Message-ID: <1466415340-104465-3-git-send-email-hare@suse.de>
-References: <1466415340-104465-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50723 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754032AbcFTJf5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2016 05:35:57 -0400
-In-Reply-To: <1466415340-104465-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Matthias Prager <linux@matthiasprager.de>
+Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
+Date: Mon, 20 Jun 2016 13:13:50 +0200
+Message-ID: <e7fdd9b6-6ad5-387d-c1d1-67f9153d3bdd@matthiasprager.de>
+References: <56EF049F.6050809@matthiasprager.de>
+ <CAK=zhgqYjocyKkXAiJTxGkxTgX_jWb3Vr_V6oMxprJgbkdpE2A@mail.gmail.com>
+ <56EFBC55.9070209@matthiasprager.de>
+ <CAK=zhgof7owM8bVKx2PJtVpUcYMvszvjfc12DwbPJgkEYPC4yw@mail.gmail.com>
+ <56F018A0.7070307@matthiasprager.de> <56F021B9.9080305@matthiasprager.de>
+ <CAK=zhgoaseek=+qP1r6uVA9s06Yfaz+7m957seiWf1v2CKkQfw@mail.gmail.com>
+ <56F1B2E5.1070605@matthiasprager.de> <56F34BB5.3090007@matthiasprager.de>
+ <alpine.DEB.2.11.1603240701270.3978@nanos>
+ <99405e4d4b454ff59d81026597c7fd5a@WB-SVT-EXBE03.simplivity.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <99405e4d4b454ff59d81026597c7fd5a@WB-SVT-EXBE03.simplivity.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Taylor <jason.taylor@simplivity.com>, Thomas Gleixner <tglx@linutronix.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-scsi_eh_scmd_add() currently only will fail if no
-error handler thread is started (which will never be the
-case) or if the state machine encounters an illegal transition.
+Still tracking - small update: So far with the most current esxi 6
+(build 3825889 - 2016-05-12) the fix is not there yet.
 
-But if we're encountering an invalid state transition
-chances is we cannot fixup things with the error handler.
-So better add a WARN_ON for illegal host states and
-make scsi_dh_scmd_add() a void function.
+Sidenote: the mpt driver seems to have learned to work around the irq
+handling issues (I tested kernel 4.6.2) whereas the e1000e ethernet
+driver still has trouble initializing.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_error.c | 39 +++++++++++++--------------------------
- drivers/scsi/scsi_lib.c   |  4 ++--
- drivers/scsi/scsi_priv.h  |  2 +-
- 3 files changed, 16 insertions(+), 29 deletions(-)
+... patiently waiting for VMware to release 6.0 update 3.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 984ddcb..deb35737 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -162,13 +162,7 @@ scmd_eh_abort_handler(struct work_struct *work)
- 		}
- 	}
- 
--	if (!scsi_eh_scmd_add(scmd, 0)) {
--		SCSI_LOG_ERROR_RECOVERY(3,
--			scmd_printk(KERN_WARNING, scmd,
--				    "terminate aborted command\n"));
--		set_host_byte(scmd, DID_TIME_OUT);
--		scsi_finish_command(scmd);
--	}
-+	scsi_eh_scmd_add(scmd, 0);
- }
- 
- /**
-@@ -224,37 +218,32 @@ scsi_abort_command(struct scsi_cmnd *scmd)
-  * scsi_eh_scmd_add - add scsi cmd to error handling.
-  * @scmd:	scmd to run eh on.
-  * @eh_flag:	optional SCSI_EH flag.
-- *
-- * Return value:
-- *	0 on failure.
-  */
--int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
-+void scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
- {
- 	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
--	int ret = 0;
- 
--	if (!shost->ehandler)
--		return 0;
-+	WARN_ON(!shost->ehandler);
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-+	WARN_ON(shost->shost_state != SHOST_RUNNING &&
-+		shost->shost_state != SHOST_CANCEL &&
-+		shost->shost_state != SHOST_RECOVERY &&
-+		shost->shost_state != SHOST_CANCEL_RECOVERY);
- 	if (scsi_host_set_state(shost, SHOST_RECOVERY))
--		if (scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY))
--			goto out_unlock;
-+		scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY);
- 
- 	if (shost->eh_deadline != -1 && !shost->last_reset)
- 		shost->last_reset = jiffies;
- 
--	ret = 1;
- 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
- 		eh_flag &= ~SCSI_EH_CANCEL_CMD;
- 	scmd->eh_eflags |= eh_flag;
- 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
- 	shost->host_failed++;
- 	scsi_eh_wakeup(shost);
-- out_unlock:
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	return ret;
- }
- 
- /**
-@@ -285,13 +274,11 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 		rtn = host->hostt->eh_timed_out(scmd);
- 
- 	if (rtn == BLK_EH_NOT_HANDLED) {
--		if (!host->hostt->no_async_abort &&
--		    scsi_abort_command(scmd) == SUCCESS)
--			return BLK_EH_NOT_HANDLED;
--
--		set_host_byte(scmd, DID_TIME_OUT);
--		if (!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))
--			rtn = BLK_EH_HANDLED;
-+		if (host->hostt->no_async_abort ||
-+		    scsi_abort_command(scmd) != SUCCESS) {
-+			set_host_byte(scmd, DID_TIME_OUT);
-+			scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD);
-+		}
- 	}
- 
- 	return rtn;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b2e332a..7a8c9ad 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1559,8 +1559,8 @@ static void scsi_softirq_done(struct request *rq)
- 			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
- 			break;
- 		default:
--			if (!scsi_eh_scmd_add(cmd, 0))
--				scsi_finish_command(cmd);
-+			scsi_eh_scmd_add(cmd, 0);
-+			break;
- 	}
- }
- 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 57a4b99..de937ba 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -71,7 +71,7 @@ extern enum blk_eh_timer_return scsi_times_out(struct request *req);
- extern int scsi_error_handler(void *host);
- extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
- extern void scsi_eh_wakeup(struct Scsi_Host *shost);
--extern int scsi_eh_scmd_add(struct scsi_cmnd *, int);
-+extern void scsi_eh_scmd_add(struct scsi_cmnd *, int);
- void scsi_eh_ready_devs(struct Scsi_Host *shost,
- 			struct list_head *work_q,
- 			struct list_head *done_q);
--- 
-1.8.5.6
-
+Am 24.03.2016 um 12:02 schrieb Jason Taylor:
+> The last update we have from VMware is that the fix will be in 6.0p3/5.5p8 - both of which are targeted for a mid year release.
+> 
+> -----Original Message-----
+> From: Thomas Gleixner [mailto:tglx@linutronix.de] 
+> Sent: Thursday, March 24, 2016 2:06 AM
+> To: Matthias Prager <linux@matthiasprager.de>
+> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>; linux-scsi <linux-scsi@vger.kernel.org>; Jason Taylor <jason.taylor@simplivity.com>; LKML <linux-kernel@vger.kernel.org>; x86@kernel.org
+> Subject: Re: [BUG] mpt2sas: driver init fails on kernel >=4.2 for 9211-8i IT
+> 
+> On Thu, 24 Mar 2016, Matthias Prager wrote:
+>> The timeout happens reliably after two warm boots with a 'bad' kernel 
+>> after coming from a 'good' kernel, and also after one cold boot with a 
+>> 'bad' kernel (meaning cold booting a 'bad' kernel leads directly to 
+>> the timeout and warm booting needs a second run to produce the 
+>> timeout). I haven't tested bare metal yet - I can do that tomorrow if necessary.
+> 
+> That's on VMWare, right? Jason has seen the same issue:
+> 
+>  http://marc.info/?l=linux-kernel&m=145280623530135&w=2
+>  http://marc.info/?l=linux-kernel&m=145523785705624&w=2
+> 
+>  "Works fine on real hardware and KVM. Filed an issue with VMware and the fix
+>   is in the works."
+> 
+> Jason, what's the state of this?
+> 
+> Thanks,
+> 
+> 	tglx
+> ---------------------------------------------------------------------------------------
+> PRIVACY STATEMENT:
+> This message is a PRIVATE communication.  This message and all attachments are a private communication sent by SimpliVity and are considered to be confidential or protected by privilege. If you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or use of the information contained in or attached to this message is strictly prohibited.  Please notify the sender of the delivery error by replying to this message, and then delete it from your system.
+> ---------------------------------------------------------------------------------------
+> 
