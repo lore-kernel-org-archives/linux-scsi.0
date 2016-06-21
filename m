@@ -1,47 +1,64 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: 4.8/scsi-queue sligthly outdated
-Date: Tue, 21 Jun 2016 10:33:08 +0200
-Message-ID: <5768FBC4.5030802@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2] scsi: wd7000: print sector number as 64-bit
+Date: Tue, 21 Jun 2016 11:02:39 +0200
+Message-ID: <20160621090249.774301-1-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53130 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752584AbcFUIdn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jun 2016 04:33:43 -0400
+Received: from mout.kundenserver.de ([212.227.17.24]:52000 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbcFUJC2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2016 05:02:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Martin,
+Enabling format checking in dprintk() shows that wd7000_biosparam
+uses an incorrect format string for sector_t:
 
-your 4.8/scsi-queue branch sadly is missing the libata zac fixes which
-got pulled into upstream with commit
-e4f7bdc2ec0d0dcc27f7d70db27a620dfdc1f697.
+drivers/scsi/wd7000.c: In function 'wd7000_biosparam':
+drivers/scsi/wd7000.c:1594:21: error: format '%d' expects argument of type 'int', but argument 3 has type 'sector_t {aka long long unsigned int}' [-Werror=format=]
 
-At the same time, upstream hasn't yet pulled in the request flags split
-from Mike Christie.
-So I'm having a hard time trying to rebase my ZBC patches on top of the
-scsi-queue branch or upstream, always missing one set of patches or the
-other.
-Do think it'd be possible to update 4.8/scsi-queue to latest linus tree=
-?
+As sector_t can be 32-bit wide, this adds a cast to 'u64' and prints
+that with the correct format. The change to use no_printk()
+generally helps with finding this kind of hidden format string bug,
+and I found that when building with "-Wextra", which warned about
+an empty else clause in
 
-Thanks.
+       } else
+              dprintk("ok!\n");
 
-Cheers,
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+v2: use %llu instead of %lld and use 'u64' instead of 's64' because
+sector_t is unsigned.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/scsi/wd7000.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
+index 0c0f17b9a3eb..409f959845c4 100644
+--- a/drivers/scsi/wd7000.c
++++ b/drivers/scsi/wd7000.c
+@@ -192,7 +192,7 @@
+ #ifdef WD7000_DEBUG
+ #define dprintk printk
+ #else
+-#define dprintk(format,args...)
++#define dprintk	no_printk
+ #endif
+ 
+ /*
+@@ -1591,8 +1591,8 @@ static int wd7000_biosparam(struct scsi_device *sdev,
+ {
+ 	char b[BDEVNAME_SIZE];
+ 
+-	dprintk("wd7000_biosparam: dev=%s, size=%d, ",
+-		bdevname(bdev, b), capacity);
++	dprintk("wd7000_biosparam: dev=%s, size=%llu, ",
++		bdevname(bdev, b), (u64)capacity);
+ 	(void)b;	/* unused var warning? */
+ 
+ 	/*
+-- 
+2.9.0
+
