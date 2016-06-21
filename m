@@ -1,70 +1,52 @@
-From: Sagi Grimberg <sagigrim-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Connect-IB not performing as well as ConnectX-3 with iSER
-Date: Tue, 21 Jun 2016 16:08:58 +0300
-Message-ID: <57693C6A.3020805@gmail.com>
-References: <CAANLjFoL5zow4f4RXP5t8LM7wsWN1OQ-hD2mtPUBTLkJ7UZ5kA@mail.gmail.com>
- <5756B7D2.5040009@mellanox.com>
- <CAANLjFq4CoOSbng=aPHiSsFB=1HMSwAhhLiCjt+88dzz24OT9w@mail.gmail.com>
- <CAANLjFoLJNQWtHHqjHmhc0iBq14NAV_GgkbyQabjzyeN56t+Ow@mail.gmail.com>
- <57582336.10407@mellanox.com>
- <CAANLjFrLK-ZVP5XX3TnkAMz+7_pd6qc+c88mbF4vF9DQ+F5U=A@mail.gmail.com>
- <CAANLjFrv-0VArTEkgqbrhzFjn1fg_egpCJuQZnAurVrHjbL_qA@mail.gmail.com>
- <CAANLjFqoV-5HK0c+LdEbuxd81Vm=g=WE3cQgp47dH-yfYjZjGw@mail.gmail.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/2] lpfc: PowerPC64 topology information, and per-core
+ scheduling
+Date: Tue, 21 Jun 2016 10:42:12 -0300
+Message-ID: <57694434.1010606@linux.vnet.ibm.com>
+References: <201606012043.u51KdPlB044752@mx0a-001b2d01.pphosted.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAANLjFqoV-5HK0c+LdEbuxd81Vm=g=WE3cQgp47dH-yfYjZjGw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53318 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751235AbcFUNmr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jun 2016 09:42:47 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5LDgBo1021696
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2016 09:42:29 -0400
+Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23n2u7e3pa-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2016 09:42:29 -0400
+Received: from localhost
+	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+	Tue, 21 Jun 2016 10:42:25 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id C0D333520070
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2016 09:42:00 -0400 (EDT)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u5LDgGZ95898606
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2016 10:42:16 -0300
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u5LDgGXZ009711
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2016 10:42:16 -0300
+In-Reply-To: <201606012043.u51KdPlB044752@mx0a-001b2d01.pphosted.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com
 
-Hey Robert,
+On 06/01/2016 05:43 PM, Mauricio Faria de Oliveira wrote:
+> Tested on next-20160601 (with an extra commit for patch 1/2, see commit msg).
 
-> I narrowed the performance degradation to this series
-> 7861728..5e47f19, but while trying to bisect it, the changes were
-> erratic between each commit that I could not figure out exactly which
-> introduced the issue. If someone could give me some pointers on what
-> to do, I can keep trying to dig through this.
+FYI, that commit has been accepted into powerpc next [1].
 
-This bisection brings suspects:
+[1] https://git.kernel.org/powerpc/c/f8ab481066e7246e4b272233aa
 
-e3416ab2d156 iser-target: Kill the ->isert_cmd back pointer in struct 
-iser_tx_desc
-d1ca2ed7dcf8 iser-target: Kill struct isert_rdma_wr
-9679cc51eb13 iser-target: Convert to new CQ API
-5adabdd122e4 iser-target: Split and properly type the login buffer
-ed1083b251f0 iser-target: Remove ISER_RECV_DATA_SEG_LEN
-26c7b673db57 iser-target: Remove impossible condition from isert_wait_conn
-69c48846f1c7 iser-target: Remove redundant wait in release_conn
-6d1fba0c2cc7 iser-target: Rework connection termination
-f81bf458208e iser-target: Separate flows for np listeners and 
-connections cma events
-aea92980601f iser-target: Add new state ISER_CONN_BOUND to isert_conn
-b89a7c25462b iser-target: Fix identification of login rx descriptor type
+-- 
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
 
-However I don't really see performance implications in these patches,
-not to mention something that would affect on ConnectIB...
-
-Given that your bisection brings up target side patches, I have
-a couple questions:
-
-1. Are the CPU usage in the target side at 100%, or the initiator side
-is the bottleneck?
-
-2. Would it be possible to use another target implementation? TGT maybe?
-
-3. Can you try testing right before 9679cc51eb13? This is a patch that
-involves data-plane.
-
-4. Can you try the latest upstream kernel? The iser target code uses
-a generic data-transfer library and I'm interested in knowing what is
-the status there.
-
-Cheers,
-Sagi.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
