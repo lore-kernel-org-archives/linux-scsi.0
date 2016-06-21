@@ -1,36 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] scsi: wd7000: print sector number as 64-bit
-Date: Mon, 20 Jun 2016 21:12:50 -0400
-Message-ID: <yq1eg7r5oq5.fsf@sermon.lab.mkp.net>
-References: <20160615204231.3784044-1-arnd@arndb.de>
-	<4878482.cSGU6mK9NX@wuerfel>
+Subject: Re: [PATCH 0/3] cxlflash: Shutdown notification and reset patch
+Date: Mon, 20 Jun 2016 21:17:19 -0400
+Message-ID: <yq1a8if5oio.fsf@sermon.lab.mkp.net>
+References: <1466034460-17797-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24217 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbcFUBM7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2016 21:12:59 -0400
-In-Reply-To: <4878482.cSGU6mK9NX@wuerfel> (Arnd Bergmann's message of "Wed, 15
-	Jun 2016 22:54:49 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1466034460-17797-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ (Uma Krishnan's message of "Wed, 15 Jun 2016 18:47:40 -0500")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
-
-As sector_t can be 32-bit wide, this adds a cast to 'u64' and prints
-that with the correct format. The change to use no_printk()
-
-[...]
-
-+	dprintk("wd7000_biosparam: dev=%s, size=%lld, ",
-+		bdevname(bdev, b), (s64)capacity);
-
-s64?
-
-Why not unsigned long long like we usually do with sector_t?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Pj4+Pj4gIlVtYSIgPT0gVW1hIEtyaXNobmFuIDx1a3Jpc2huQGxpbnV4LnZuZXQuaWJtLmNvbT4g
+d3JpdGVzOgoKVW1hPiBUaGlzIHBhdGNoIHNldCBjb250YWlucyBzdXBwb3J0IHRvIG5vdGlmeSBD
+WEwgRmxhc2ggZGV2aWNlcyBvZiBhbgpVbWE+IGltcGVuZGluZyBzaHV0ZG93biBhbmQgYSBmaXgg
+dG8gZHJhaW4gb3BlcmF0aW9ucyBwcmlvciB0byBhIHJlc2V0LgoKVW1hPiBUaGlzIHNlcmllcyBp
+cyBpbnRlbmRlZCBmb3IgNC44IGFuZCBpcyBiaXNlY3RhYmxlLgoKQXBwbGllZCB0byA0Ljgvc2Nz
+aS1xdWV1ZS4KCi0tIApNYXJ0aW4gSy4gUGV0ZXJzZW4JT3JhY2xlIExpbnV4IEVuZ2luZWVyaW5n
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4cHBj
+LWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9s
+aXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
