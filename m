@@ -1,63 +1,33 @@
-From: John David Anglin <dave.anglin@bell.net>
-Subject: Re: parisc late boot crash in 4.4-rc, scsi-related
-Date: Wed, 22 Jun 2016 08:22:46 -0400
-Message-ID: <EC4C2E5C-B18F-42A2-80AB-ABA286B7AA81@bell.net>
-References: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee> <56902D77.1020200@gmx.de> <alpine.LRH.2.20.1605162336050.12607@math.ut.ee> <9d1ae51e-69c3-c3f6-60aa-e5238dd18241@bell.net> <alpine.LRH.2.20.1606221451310.11869@math.ut.ee>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.20.1606221451310.11869@math.ut.ee>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] byteswap: try to avoid __builtin_constant_p gcc bug
+Date: Wed, 22 Jun 2016 14:25:11 +0200
+Message-ID: <7892604.CjmUVh55Wd@wuerfel>
+References: <1780465.XdtPJpi8Tt@wuerfel> <E607265CB020454880711A6F96C05A0388016E76@hasmsx107.ger.corp.intel.com> <CA+i0qc4TO=ucHUJduwGTAhU9Uzy0aTk-75N3uQ9piWZWKKUBFA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:61505 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366AbcFVMbK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2016 08:31:10 -0400
+In-Reply-To: <CA+i0qc4TO=ucHUJduwGTAhU9Uzy0aTk-75N3uQ9piWZWKKUBFA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>, Andrew Morton <akpm@linux-foundation.org>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jpoimboe@redhat.com" <jpoimboe@redhat.com>, Martin Jambor <mjambor@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, Jan Hubicka <hubicka@ucw.cz>
 
-On 2016-06-22, at 7:52 AM, Meelis Roos wrote:
-
->>>>> I noticed on RP3440 and A500 that recent 4.4-rc* crashes on boot.
->>>>> 
->>>>> I've not seen it with 4.4-rc yet, but I've seen it on debian kernel
->>>>> 4.3.3:
->>> This is still present in 4.6, just tested. All my pariscs are broken
->>> - A500, RP3410, RP3440. 4.3 is the latest working release for me. If
->>> 4.3.3 is broken, it might be possible to bisect more easily.
->> 
->> I believe this is fixed in current gcc versions (4.9 and latter). It was
->> exposed by a blk-merge
->> change.  It was fixed by this change:
+On Wednesday, June 22, 2016 2:44:21 PM CEST Tomas Winkler wrote:
+> >
+> > There are more than 20 files that have the statement: case cpu_to_...
+> > Sparse complains about: case __builtin_bswap, not about __builtin_constant_p.
 > 
-> Out of interest, how do other parisc users get the new compiler?
+> There is even much more in the header files used in  initializers,
+> which also require constants.  I wonder if __builtin_bswap produces
+> constant expression correctly under gcc?
 
-The Debian binaries have the change.
+In gcc-4.8 or later yes. gcc-4.6/4.7 on powerpc was a special case that we
+have worked around now, as the 16-bit byteswap there was not a constant
+expression, unlike the 32-bit and 64-bit ones.
 
-For development, I get gcc with svn from <https://gcc.gnu.org/>.  It is also possible to
-use git to access the sources.
-
-gcc -v should show how your current compiler was built.
-
-> 
-> What distro are you using?
-
-We are using Debian unstable.  Helge and myself have setup an automated build system
-with several buildds.  We are getting reasonable support from package maintainers.
-
-Approximately, 11100 packages are available using apt-get:
-https://buildd.debian.org/status/architecture.php?a=hppa&suite=sid
-In terms of package counts, we are about equal to alpha, ppc64 and sparc64.
-
-Helge has setup a Debian install disk.  Info on this is here:
-https://parisc.wiki.kernel.org/index.php/Main_Page
-
-> 
-> My pariscs are gentoo and still only the old versions are available on 
-> hppa.
-
-
-Hope this helps,
-Dave
---
-John David Anglin	dave.anglin@bell.net
-
-
-
+	Arnd
