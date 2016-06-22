@@ -1,55 +1,48 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH v3] Add support for SCT Write Same
-Date: Tue, 21 Jun 2016 22:01:56 -0500
-Message-ID: <CAJVOszBXjw67-pu-vVtY_RfYqeEFMBH1nhWkjPcgV0SO0Vv4nQ@mail.gmail.com>
-References: <1466435028-13886-1-git-send-email-shaun@tancheff.com>
- <1466435028-13886-2-git-send-email-shaun@tancheff.com> <yq17fdi2bb8.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/3] scsi: disable VPD page check on error
+Date: Tue, 21 Jun 2016 22:54:41 -0400
+Message-ID: <yq137o62ary.fsf@sermon.lab.mkp.net>
+References: <1466405868-87720-1-git-send-email-hare@suse.de>
+	<1466405868-87720-3-git-send-email-hare@suse.de>
+	<1466429138.4039.15.camel@localhost.localdomain>
+	<1466430242.2350.4.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq17fdi2bb8.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:18477 "EHLO
+	userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbcFVECw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2016 00:02:52 -0400
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+	by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u5M2ug4h019590
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2016 02:56:42 GMT
+In-Reply-To: <1466430242.2350.4.camel@HansenPartnership.com> (James
+	Bottomley's message of "Mon, 20 Jun 2016 06:44:02 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: emilne@redhat.com, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Jun 21, 2016 at 9:43 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Shaun" == Shaun Tancheff <shaun@tancheff.com> writes:
->
-> Shaun> SATA drives may support write same via SCT. This is useful for
-> Shaun> setting the drive contents to a specific pattern (0's).
->
-> As indicated a while back, my preference would be for you to add support
-> for REPORT SUPPORTED OPERATION CODES. It's fine that you keep the RSOC
-> response simple and only list WRITE SAME(10/16). But I want to avoid
-> having different heuristics for libata's SCSI-ATA translation and for
-> hardware controller ditto.
->
-> Shaun> If UNMAP is not set or TRIM is not available
->
-> Please do not conflate the two. We have the appropriate fallbacks at the
-> block layer. It happens to be the same command descriptor but it is two
-> very different implementations at the device level.
->
-> If the UNMAP bit is set you need to issue a DSM TRIM. If the device does
-> not support TRIM you need to return ILLEGAL REQUEST/INVALID FIELD IN
-> CDB.
->
-> If the UNMAP bit is not set then it's a regular WRITE SAME and should be
-> issued using SCT WRITE SAME. If the device does not support SCT WRITE
-> SAME you need to return ILLEGAL REQUEST/INVALID FIELD IN CDB.
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-Thanks for the clarification and the review.
-I will work on support for REPORT SUPPORTED OPERATION CODES and
-handle the WRITE SAME following the UNMAP as you described.
+James> I also don't really like this.  If the device has a failure like
+James> the QEMU one where it just hangs up, this won't help because the
+James> problem already happened.  Conversely, if the device replies in
+James> the negative, it should always do so, so I can't see what this
+James> buys us, except the possibility of doing the wrong thing on a
+James> transient error
 
-Thanks!
+Yeah.
 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+James> I'd be much happier if you can point to a problem that this would
+James> solve.
 
+I'd like more details as well.
 
+If we are going to entertain skipping VPD pages on error I would like it
+to be as a result of a clear indication that it's the VPD that's the
+problem and not just any error returned while querying the page.
 
 -- 
-Shaun Tancheff
+Martin K. Petersen	Oracle Linux Engineering
