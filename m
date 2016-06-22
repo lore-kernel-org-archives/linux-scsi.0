@@ -1,70 +1,39 @@
-From: dingxiang <dingxiang@huawei.com>
-Subject: Re: [PATCH V2 resend] libata:fix kernel panic when hotplug
-Date: Wed, 22 Jun 2016 14:46:24 +0800
-Message-ID: <576A3440.9090803@huawei.com>
-References: <1466052340-25520-1-git-send-email-dingxiang@huawei.com>
- <20160616202045.GF3262@mtj.duckdns.org> <yq160t35oas.fsf@sermon.lab.mkp.net>
- <CAPcyv4hnzAoiPQNHD_6C74exQrDQGaGG-fRw8XAAkj80bv5nqg@mail.gmail.com>
- <20160621154700.GH3262@mtj.duckdns.org>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: Connect-IB not performing as well as ConnectX-3 with iSER
+Date: Wed, 22 Jun 2016 10:18:31 +0200
+Message-ID: <86d4404a-fa6a-72de-8e83-827072c308b5@sandisk.com>
+References: <CAANLjFoL5zow4f4RXP5t8LM7wsWN1OQ-hD2mtPUBTLkJ7UZ5kA@mail.gmail.com>
+ <5756B7D2.5040009@mellanox.com>
+ <CAANLjFq4CoOSbng=aPHiSsFB=1HMSwAhhLiCjt+88dzz24OT9w@mail.gmail.com>
+ <CAANLjFoLJNQWtHHqjHmhc0iBq14NAV_GgkbyQabjzyeN56t+Ow@mail.gmail.com>
+ <57582336.10407@mellanox.com>
+ <CAANLjFrLK-ZVP5XX3TnkAMz+7_pd6qc+c88mbF4vF9DQ+F5U=A@mail.gmail.com>
+ <CAANLjFrv-0VArTEkgqbrhzFjn1fg_egpCJuQZnAurVrHjbL_qA@mail.gmail.com>
+ <CAANLjFqoV-5HK0c+LdEbuxd81Vm=g=WE3cQgp47dH-yfYjZjGw@mail.gmail.com>
+ <57693C6A.3020805@gmail.com>
+ <CAANLjFpUyAYB+ZzMwFKBpa4yLmALPzcRGJX1kExVrLARZmZRkA@mail.gmail.com>
+ <CAANLjFpeL0AkuGW-q5Bmm-dff0UqFOM_sAOaG7=vyqmwnOoTcQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160621154700.GH3262@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, Wei Fang <fangwei1@huawei.com>, miaoxie@huawei.com, wangyijing@huawei.com, zhangaihua1@huawei.com, zhaohongjiang@huawei.com, houtao1@huawei.com, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAANLjFpeL0AkuGW-q5Bmm-dff0UqFOM_sAOaG7=vyqmwnOoTcQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>, Sagi Grimberg <sagigrim-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 06/21/2016 10:26 PM, Robert LeBlanc wrote:
+> Srpt keeps crashing couldn't test
 
-Hi,All
-> Hello,
->
-> On Mon, Jun 20, 2016 at 06:46:55PM -0700, Dan Williams wrote:
->> On Mon, Jun 20, 2016 at 6:22 PM, Martin K. Petersen
->> <martin.petersen@oracle.com> wrote:
->>>>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
->>>>> In fact,we don't need libata to deal with hotplug in sas environment.
->>>>> So we can't run ata hotplug task when ata port is sas host.
->>> Tejun> Martin, can you please confirm whether the above is true.  If so,
->>> Tejun> I'll route the patch through libata w/ stable cc'd.
->>>
->>> Not exactly a libsas expert. James? Dan?
->> While it is true that libsas itself handles adding / removing devices
->> we have historically avoided this conflict because
->> ATA_PFLAG_SCSI_HOTPLUG is never set for libsas ata_ports.  So the bug
->> / behavior change is that  ATA_PFLAG_SCSI_HOTPLUG gets set in the
->> first place.  Ignoring it is a band-aid / not the real fix afaics.
-> I see.  I'll hold off for now then.  Ding Xiang, can you find out
-> where that flag is getting set?
->
-> Thanks!
-There are two places will set flag ATA_PFLAG_SCSI_HOTPLUG in libata-eh.c.
-I think both places should  be protected. Here is the suggestion.
-Thanks~
+If this is reproducible with the latest rc kernel or with any of the 
+stable kernels please report this in a separate e-mail, together with 
+the crash call stack and information about how to reproduce this.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 61dc7a9..2bee041 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1385,7 +1385,8 @@ void ata_eh_detach_dev(struct ata_device *dev)
+Thanks,
 
-         if (ata_scsi_offline_dev(dev)) {
-                 dev->flags |= ATA_DFLAG_DETACHED;
--               ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
-+               if (!(ap->pflags & ATA_FLAG_SAS_HOST))
-+                       ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
-         }
-
-         /* clear per-dev EH info */
-@@ -3299,7 +3300,8 @@ static int ata_eh_revalidate_and_attach(struct 
-ata_link *link,
-                 }
-
-                 spin_lock_irqsave(ap->lock, flags);
--               ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
-+               if (!(ap->pflags & ATA_FLAG_SAS_HOST))
-+                       ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
-                 spin_unlock_irqrestore(ap->lock, flags);
-
-                 /* new device discovered, configure xfermode */
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
