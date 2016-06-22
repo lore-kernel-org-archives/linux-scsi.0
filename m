@@ -1,56 +1,41 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
-Date: Tue, 21 Jun 2016 17:28:30 -0500
-Message-ID: <20160621222830.GF7603@localhost>
-References: <cover.1465200424.git.jthumshirn@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/2] lpfc: support for CPU phys_id and core_id on PowerPC64
+Date: Tue, 21 Jun 2016 22:16:33 -0400
+Message-ID: <yq1fus62cji.fsf@sermon.lab.mkp.net>
+References: <1464813809-22066-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+	<201606012043.u51KflcX004680@mx0a-001b2d01.pphosted.com>
+	<20160621142902.GA10597@infradead.org>
+	<57697C71.3060109@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Frank Haverkamp <haver@linux.vnet.ibm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jay Cliburn <jcliburn@gmail.com>, Chris Snook <chris.snook@gmail.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:26074 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513AbcFVCR2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2016 22:17:28 -0400
+In-Reply-To: <57697C71.3060109@linux.vnet.ibm.com> (Mauricio Faria de
+	Oliveira's message of "Tue, 21 Jun 2016 14:42:09 -0300")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, dick.kennedy@broadcom.com, james.smart@broadcom.com
 
-On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
-> The first patch in this series introduces the following 4 helper functions to
-> the PCI core:
-> 
-> * pci_request_mem_regions()
-> * pci_request_io_regions()
-> * pci_release_mem_regions()
-> * pci_release_io_regions()
-> 
-> which encapsulate the request and release of a PCI device's memory or I/O
-> bars.
-> 
-> The subsequent patches convert the drivers, which use the
-> pci_request_selected_regions(pdev, 
-> 	pci_select_bars(pdev, IORESOURCE_MEM), name); 
-> and similar pattern to use the new interface.
-> 
-> This was suggested by Christoph Hellwig in
-> http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
-> tested on kernel v4.6 with NVMe.
+>>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
 
-I applied all six of these to pci/resources for v4.8, thanks, Johannes.
+Mauricio,
 
-> Johannes Thumshirn (6):
->   PCI: Add helpers to request/release memory and I/O regions
->   NVMe: Use pci_(request|release)_mem_regions
->   lpfc: Use pci_(request|release)_mem_regions
->   GenWQE: Use pci_(request|release)_mem_regions
->   ethernet/intel: Use pci_(request|release)_mem_regions
->   alx: Use pci_(request|release)_mem_regions
-> 
->  drivers/misc/genwqe/card_base.c               | 13 +++++--------
->  drivers/net/ethernet/atheros/alx/main.c       | 12 +++++-------
->  drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
->  drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
->  drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
->  drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
->  drivers/nvme/host/pci.c                       | 10 +++-------
->  drivers/scsi/lpfc/lpfc_init.c                 | 15 ++++----------
->  include/linux/pci.h                           | 28 +++++++++++++++++++++++++++
+Mauricio> This turns out to still be the case w/ some distros where
+Mauricio> ppc64/le usually runs,
+
+Distros are free to carry a patch such as yours. That puts the burden on
+them and not on upstream which is going in a different direction as
+outlined by Christoph.
+
+Mauricio> on which it would be easier to adapt this relatively small
+Mauricio> change than moving forward w/ blk-mq/scsi-mq, for example --
+Mauricio> even if the latter is clearly a superior approach.
+
+This is ultimately Broadcom's decision. It is their driver.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
