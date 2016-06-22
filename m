@@ -1,81 +1,39 @@
-From: Tomas Winkler <tomasw@gmail.com>
-Subject: Re: [PATCH v2] byteswap: try to avoid __builtin_constant_p gcc bug
-Date: Wed, 22 Jun 2016 14:44:21 +0300
-Message-ID: <CA+i0qc4TO=ucHUJduwGTAhU9Uzy0aTk-75N3uQ9piWZWKKUBFA@mail.gmail.com>
-References: <1780465.XdtPJpi8Tt@wuerfel> <CA+i0qc6iCDx44hbX-VWvhinXtPBFS_wcQ3h7abNMjJpWfvbsug@mail.gmail.com>
- <CA+i0qc74R9Qfy8r+an4cwXQvtrk8W-=zXe3+2VgWft=J3EpV9Q@mail.gmail.com>
- <3864016.Cn7XXDBM38@wuerfel> <E607265CB020454880711A6F96C05A0388016E76@hasmsx107.ger.corp.intel.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: parisc late boot crash in 4.4-rc, scsi-related
+Date: Wed, 22 Jun 2016 14:52:40 +0300 (EEST)
+Message-ID: <alpine.LRH.2.20.1606221451310.11869@math.ut.ee>
+References: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee> <56902D77.1020200@gmx.de> <alpine.LRH.2.20.1605162336050.12607@math.ut.ee> <9d1ae51e-69c3-c3f6-60aa-e5238dd18241@bell.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34330 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590AbcFVLoX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2016 07:44:23 -0400
-In-Reply-To: <E607265CB020454880711A6F96C05A0388016E76@hasmsx107.ger.corp.intel.com>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:42604 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752262AbcFVMRE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jun 2016 08:17:04 -0400
+In-Reply-To: <9d1ae51e-69c3-c3f6-60aa-e5238dd18241@bell.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Andrew Morton <akpm@linux-foundation.org>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jpoimboe@redhat.com" <jpoimboe@redhat.com>, Martin Jambor <mjambor@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Denys Vlasenko <dvlasenk@redhat.com>, Thomas Graf <tgraf@suug.ch>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, Ingo Molnar <mingo@kernel.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, Jan Hubicka <hubicka@ucw.cz>
+To: John David Anglin <dave.anglin@bell.net>
+Cc: Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Jun 22, 2016 at 1:25 PM, Levy, Amir (Jer)
-<amir.jer.levy@intel.com> wrote:
-> On 2016-06-22 Arnd Bergmann wrote:
->> On Wednesday, June 22, 2016 11:24:50 AM CEST Tomas Winkler wrote:
->> > On Tue, Jun 21, 2016 at 12:02 PM, Tomas Winkler <tomasw@gmail.com>
->> wrote:
->> > > On Tue, May 3, 2016 at 9:36 AM, Arnd Bergmann <arnd@arndb.de>
->> wrote:
->> > >> On Monday 02 May 2016 16:32:25 Andrew Morton wrote:
->>
->> > >>  #ifdef __HAVE_BUILTIN_BSWAP32__
->> > >> -#define __swab32(x) __builtin_bswap32((__u32)(x))
->> > >> +#define __swab32(x) (__u32)__builtin_bswap32((__u32)(x))
->> > >>  #else
->> > >>  #define __swab32(x)                            \
->> > >>         (__builtin_constant_p((__u32)(x)) ?     \
->> > >
->> > >>
->> > >
->> > > I wonder if this doesn't break switch statement that requires a
->> > > constant expression, there few cases like this over the kernel.
->> > >
->> > > switch(val) {
->> > > case cpu_to_le32(IXGBE_RXDADV_STAT_FCSTAT_FCPRSP):
->> > >
->> > > http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgb
->> > > e/ixgbe_fcoe.c#L458
->> > >
->> >
->> > I'm asking because sparse and checkpatch doesn't agree on that ping
->> > sparse issues
->> > 'error: bad constant expression'
->> > When changing to __constant_cpu_to_le32 sparse is happy but
->> > checkpatch.ps is complaining
->> > __constant_cpu_to_le32 should be cpu_to_le32
->> >
->>
->> That is an interesting problem, as both seem to be reasonable:
->> sparse probably doesn't understand __builtin_constant_p() enough, while
->> avoiding __constant_cpu_to_le32() is a good recommendation in general.
->>
->> How many instances of this do you see in the kernel? If ixgbe is the only one,
->> I'd just move the byteswap up into the switch statement:
->>
->>       switch (le32_to_cpu(val)) {
->>       case IXGBE_RXDADV_STAT_FCSTAT_FCPRSP:
->>
->> which may cost one or two cycles for the non-constant byteswap, but is also
->> easier to read than the current code.
->>
->>       Arnd
->
-> There are more than 20 files that have the statement: case cpu_to_...
-> Sparse complains about: case __builtin_bswap, not about __builtin_constant_p.
+> > > > I noticed on RP3440 and A500 that recent 4.4-rc* crashes on boot.
+> > > >
+> > > >I've not seen it with 4.4-rc yet, but I've seen it on debian kernel
+> > > >4.3.3:
+> > This is still present in 4.6, just tested. All my pariscs are broken
+> > - A500, RP3410, RP3440. 4.3 is the latest working release for me. If
+> > 4.3.3 is broken, it might be possible to bisect more easily.
+> 
+> I believe this is fixed in current gcc versions (4.9 and latter). It was
+> exposed by a blk-merge
+> change.  It was fixed by this change:
 
-There is even much more in the header files used in  initializers,
-which also require constants.  I wonder if __builtin_bswap produces
-constant expression correctly under gcc?
+Out of interest, how do other parisc users get the new compiler?
 
-Thanks
-Tomas
+What distro are you using?
+
+My pariscs are gentoo and still only the old versions are available on 
+hppa.
+
+-- 
+Meelis Roos (mroos@linux.ee)
