@@ -1,31 +1,70 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 4.8/scsi-queue sligthly outdated
-Date: Tue, 21 Jun 2016 23:25:36 -0700
-Message-ID: <20160622062536.GB16380@infradead.org>
-References: <5768FBC4.5030802@suse.de>
+From: dingxiang <dingxiang@huawei.com>
+Subject: Re: [PATCH V2 resend] libata:fix kernel panic when hotplug
+Date: Wed, 22 Jun 2016 14:46:24 +0800
+Message-ID: <576A3440.9090803@huawei.com>
+References: <1466052340-25520-1-git-send-email-dingxiang@huawei.com>
+ <20160616202045.GF3262@mtj.duckdns.org> <yq160t35oas.fsf@sermon.lab.mkp.net>
+ <CAPcyv4hnzAoiPQNHD_6C74exQrDQGaGG-fRw8XAAkj80bv5nqg@mail.gmail.com>
+ <20160621154700.GH3262@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48615 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750847AbcFVG0U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2016 02:26:20 -0400
-Content-Disposition: inline
-In-Reply-To: <5768FBC4.5030802@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160621154700.GH3262@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, Wei Fang <fangwei1@huawei.com>, miaoxie@huawei.com, wangyijing@huawei.com, zhangaihua1@huawei.com, zhaohongjiang@huawei.com, houtao1@huawei.com, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 10:33:08AM +0200, Hannes Reinecke wrote:
-> Hi Martin,
-> 
-> your 4.8/scsi-queue branch sadly is missing the libata zac fixes which
-> got pulled into upstream with commit
-> e4f7bdc2ec0d0dcc27f7d70db27a620dfdc1f697.
-> 
-> At the same time, upstream hasn't yet pulled in the request flags split
-> from Mike Christie.
 
-The request flags split is only in Jens' for-4.8 tree, so rebasing
-on a newer 4.7 release candidate won't help.
+Hi,All
+> Hello,
+>
+> On Mon, Jun 20, 2016 at 06:46:55PM -0700, Dan Williams wrote:
+>> On Mon, Jun 20, 2016 at 6:22 PM, Martin K. Petersen
+>> <martin.petersen@oracle.com> wrote:
+>>>>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
+>>>>> In fact,we don't need libata to deal with hotplug in sas environment.
+>>>>> So we can't run ata hotplug task when ata port is sas host.
+>>> Tejun> Martin, can you please confirm whether the above is true.  If so,
+>>> Tejun> I'll route the patch through libata w/ stable cc'd.
+>>>
+>>> Not exactly a libsas expert. James? Dan?
+>> While it is true that libsas itself handles adding / removing devices
+>> we have historically avoided this conflict because
+>> ATA_PFLAG_SCSI_HOTPLUG is never set for libsas ata_ports.  So the bug
+>> / behavior change is that  ATA_PFLAG_SCSI_HOTPLUG gets set in the
+>> first place.  Ignoring it is a band-aid / not the real fix afaics.
+> I see.  I'll hold off for now then.  Ding Xiang, can you find out
+> where that flag is getting set?
+>
+> Thanks!
+There are two places will set flag ATA_PFLAG_SCSI_HOTPLUG in libata-eh.c.
+I think both places should  be protected. Here is the suggestion.
+Thanks~
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 61dc7a9..2bee041 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1385,7 +1385,8 @@ void ata_eh_detach_dev(struct ata_device *dev)
+
+         if (ata_scsi_offline_dev(dev)) {
+                 dev->flags |= ATA_DFLAG_DETACHED;
+-               ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
++               if (!(ap->pflags & ATA_FLAG_SAS_HOST))
++                       ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
+         }
+
+         /* clear per-dev EH info */
+@@ -3299,7 +3300,8 @@ static int ata_eh_revalidate_and_attach(struct 
+ata_link *link,
+                 }
+
+                 spin_lock_irqsave(ap->lock, flags);
+-               ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
++               if (!(ap->pflags & ATA_FLAG_SAS_HOST))
++                       ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
+                 spin_unlock_irqrestore(ap->lock, flags);
+
+                 /* new device discovered, configure xfermode */
