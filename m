@@ -1,45 +1,54 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] target/iblock: use ilog2 to compute block size
-Date: Wed, 22 Jun 2016 14:55:12 +0200
-Message-ID: <20160622125534.1267407-1-arnd@arndb.de>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Connect-IB not performing as well as ConnectX-3 with iSER
+Date: Wed, 22 Jun 2016 08:23:56 -0400 (EDT)
+Message-ID: <1767566647.539320.1466598236927.JavaMail.zimbra@redhat.com>
+References: <CAANLjFoL5zow4f4RXP5t8LM7wsWN1OQ-hD2mtPUBTLkJ7UZ5kA@mail.gmail.com> <CAANLjFrLK-ZVP5XX3TnkAMz+7_pd6qc+c88mbF4vF9DQ+F5U=A@mail.gmail.com> <CAANLjFrv-0VArTEkgqbrhzFjn1fg_egpCJuQZnAurVrHjbL_qA@mail.gmail.com> <CAANLjFqoV-5HK0c+LdEbuxd81Vm=g=WE3cQgp47dH-yfYjZjGw@mail.gmail.com> <57693C6A.3020805@gmail.com> <CAANLjFpUyAYB+ZzMwFKBpa4yLmALPzcRGJX1kExVrLARZmZRkA@mail.gmail.com> <CAANLjFpeL0AkuGW-q5Bmm-dff0UqFOM_sAOaG7=vyqmwnOoTcQ@mail.gmail.com> <86d4404a-fa6a-72de-8e83-827072c308b5@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <86d4404a-fa6a-72de-8e83-827072c308b5-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>, Sagi Grimberg <sagigrim-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Enabling CONFIG_UBSAN_SANITIZE_ALL on ARM caused a link error:
 
-drivers/target/built-in.o: In function `iblock_emulate_read_cap_with_block_size.constprop.1':
-target_core_iblock.c:(.text+0xc2774): undefined reference to `____ilog2_NaN'
-target_core_iblock.c:(.text+0xc27f8): undefined reference to `__aeabi_uldivmod'
-target_core_iblock.c:(.text+0xc299c): undefined reference to `__aeabi_uldivmod'
 
-This is caused by gcc not behaving in the expected ways with __builtin_constant_p(),
-but it also points to somewhat inefficient code: As we know that the
-block size is a power-of-two value, we can turn the expensive 64-bit
-division into a simpler variable bit shift.
+----- Original Message -----
+> From: "Bart Van Assche" <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> To: "Robert LeBlanc" <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>, "Sagi Grimberg" <sagigrim-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Max Gurtovoy" <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> Sent: Wednesday, June 22, 2016 4:18:31 AM
+> Subject: Re: Connect-IB not performing as well as ConnectX-3 with iSER
+> 
+> On 06/21/2016 10:26 PM, Robert LeBlanc wrote:
+> > Srpt keeps crashing couldn't test
+> 
+> If this is reproducible with the latest rc kernel or with any of the
+> stable kernels please report this in a separate e-mail, together with
+> the crash call stack and information about how to reproduce this.
+> 
+> Thanks,
+> 
+> Bart.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Robert
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/target/target_core_iblock.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I am exercising the ib_srpt configured vi a targetlio very heavily in 4.7.0-rc1.
+I have no crashes or issues.
+I also had 4.5 running ib_srpt with no crashes, although I had some other timeouts etc depending on the load.
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 22af12f8b8eb..3ab4e2d1202c 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -201,9 +201,9 @@ static unsigned long long iblock_emulate_read_cap_with_block_size(
- 	struct block_device *bd,
- 	struct request_queue *q)
- {
--	unsigned long long blocks_long = (div_u64(i_size_read(bd->bd_inode),
--					bdev_logical_block_size(bd)) - 1);
- 	u32 block_size = bdev_logical_block_size(bd);
-+	unsigned int block_shift = ilog2(block_size);
-+	unsigned long long blocks_long = (i_size_read(bd->bd_inode) >> block_shift) - 1;
- 
- 	if (block_size == dev->dev_attrib.block_size)
- 		return blocks_long;
--- 
-2.9.0
+What sort of crashes are you talking about ?
+Does the system crash, ib_srpt dump stack ?
+
+Thanks
+Laurence
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
