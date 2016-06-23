@@ -1,104 +1,57 @@
-From: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Subject: Re: [PATCH v7] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
-Date: Thu, 23 Jun 2016 15:19:47 -0500
-Message-ID: <c378ee2a-6ec7-699d-68b1-f54268833951@linux.vnet.ibm.com>
-References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1466433229-8812-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <20160623142213.GA30453@infradead.org>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: Reported regressions for 4.7 as of Sunday, 2016-06-19
+Date: Thu, 23 Jun 2016 15:56:46 -0500
+Message-ID: <874m8jd3ox.fsf@x220.int.ebiederm.org>
+References: <7cc588b7-f1cf-62a8-e45b-ec7d863ba51e@leemhuis.info>
+	<CA+5PVA63r9xLXtiiVMxKPdgZD5VZ_8io1f=9MH520LAFBbe9kg@mail.gmail.com>
+	<CA+55aFyyKjupjdd4tC82VEnZwb3AyEGJBVCJzdyvfgeUFGVfLw@mail.gmail.com>
+	<yq1wpli2ewx.fsf@sermon.lab.mkp.net>
+	<20160622115131.4bh7sh6uhmmhw44v@c203.arch.suse.de>
+	<A19CCC3E-1B00-45A5-BA4B-2E082E98AF87@qlogic.com>
+	<20160623072240.gt4wdjok27venxgr@c203.arch.suse.de>
+	<1957A3C6-C4C2-4E7A-84E1-31A48F1469CD@qlogic.com>
+	<CA+55aFx96hD29q_BQ+W8tV08zkX3BSCxF9etAzTDxfAgO3e7MQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:25723 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750876AbcFWUTf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2016 16:19:35 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5NKJ2VA004716
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2016 16:19:34 -0400
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23ra2mnka1-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2016 16:19:34 -0400
-Received: from localhost
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mikecyr@linux.vnet.ibm.com>;
-	Thu, 23 Jun 2016 14:19:33 -0600
-In-Reply-To: <20160623142213.GA30453@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFx96hD29q_BQ+W8tV08zkX3BSCxF9etAzTDxfAgO3e7MQ@mail.gmail.com>
+	(Linus Torvalds's message of "Thu, 23 Jun 2016 09:35:42 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Quinn Tran <quinn.tran@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Josh Boyer <jwboyer@fedoraproject.org>, Thorsten Leemhuis <regressions@leemhuis.info>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: nab@linux-iscsi.org, joe@perches.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, bart.vanassche@sandisk.com, gregkh@linuxfoundation.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
 
-Responding to those issues not already addressed by Bryant.
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-On 6/23/16 9:22 AM, Christoph Hellwig wrote:
+> On Thu, Jun 23, 2016 at 9:13 AM, Quinn Tran <quinn.tran@qlogic.com> wrote:
+>>
+>>
+>> QT: setting up the interrupt vector does not mean the interrupt starts firing immediately.
+>
+> Actually, it very much can mean that. If the interrupt can possibly be
+> shared, there is a very real possibility of it fiding immediately.
+>
+> Now, with MSI(-X) I guess that isn't a worry, so I suspect your patch
+> that handles just the legacy INTx case anyway is sufficient, but in
+> general I would like people to always act as if interrupts can happen
+> immediately after request_irq().
+>
+> We have had *tons* of situations where the firmware left a device
+> active, for example. Or where some random interrupt controller ended
+> up having stale interrupts pending, even.
+>
+> So in general, it's just good practice to say "spurious interrupts can
+> and do happen" - the shared irq case is the most obvious case, but
+> there have been other sources of unexpected spurious interrupts
+> firing.
 
-<SNIP>
->> +		vscsi->flags &= (~PROCESSING_MAD);
-> No need for the braces here. (ditto for many other places later on)
-Fixed.
+One case that occassionally bytes even for MSI-X is the case of kexec on
+panic where the hardware was not shut down before the kernel starts, and
+the start of the kernel masks the irq.  Then when the driver initializes
+and calls request_irq it is possible for an irq to be pending as soon as
+the MSI-X irq is actually enabled to the hardware.
 
-<SNIP>
->> +static struct ibmvscsis_tport *ibmvscsis_lookup_port(const char *name)
->> +{
->> +	struct ibmvscsis_tport *tport = NULL;
->> +	struct vio_dev *vdev;
->> +	struct scsi_info *vscsi;
->> +
->> +	spin_lock_bh(&ibmvscsis_dev_lock);
->> +	list_for_each_entry(vscsi, &ibmvscsis_dev_list, list) {
->> +		vdev = vscsi->dma_dev;
->> +		if (!strcmp(dev_name(&vdev->dev), name)) {
->> +			tport = &vscsi->tport;
->> +			break;
->> +		}
->> +	}
->> +	spin_unlock_bh(&ibmvscsis_dev_lock);
-> Without grabbing a reference this looks inherently unsafe.
-I don't understand your concern.  Could you please provide more detail?
->> +static void ibmvscsis_scheduler(struct work_struct *work)
-> Odd name for a work item.
-Not sure why it seems odd.  It schedules work to TCM.
->> +{
->> +	struct ibmvscsis_cmd *cmd = container_of(work, struct ibmvscsis_cmd,
->> +						 work);
->> +	struct scsi_info *vscsi = cmd->adapter;
->> +
->> +	spin_lock_bh(&vscsi->intr_lock);
->> +
->> +	/* Remove from schedule_q */
->> +	list_del(&cmd->list);
-> What do you need the schedule_q for as the workqueue already tracks
-> the commands?
-There are a number of places where we need to see if there is anything 
-on the work queue, and I am not aware of an existing function to do 
-this, so we keep our own list of commands which have been queued.
+And there is always CONFIG_IRQ_DEBUG which always acts like an interrupt
+happens right when after request_irq finishes.
 
-<SNIP>
->> +static void ibmvscsis_alloc_common_locks(struct scsi_info *vscsi)
->> +{
->> +	spin_lock_init(&vscsi->intr_lock);
->> +}
->> +
->> +static void ibmvscsis_free_common_locks(struct scsi_info *vscsi)
->> +{
->> +	/* Nothing to do here */
->> +}
-> No need for these wrapers.
-Removed.
->> +static irqreturn_t ibmvscsis_interrupt(int dummy, void *data)
->> +{
->> +	struct scsi_info *vscsi = data;
->> +
->> +	vio_disable_interrupts(vscsi->dma_dev);
->> +	tasklet_schedule(&vscsi->work_task);
->> +
->> +	return IRQ_HANDLED;
->> +}
-> Can you explain the need for the tasklet?  There shouldn't be a whole
-> lot of working before passing the command off to the workqueue anyway.
-There are some requests, like SRP Login and the various MADs, which can 
-be handled at the interrupt level, and so we do so.
-
+Eric
