@@ -1,85 +1,104 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH} SCSI: fix new bug in scsi_dev_info_list string matching
-Date: Thu, 23 Jun 2016 15:05:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1606231454380.1334-100000@iolanthe.rowland.org>
+From: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Subject: Re: [PATCH v7] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Thu, 23 Jun 2016 15:19:47 -0500
+Message-ID: <c378ee2a-6ec7-699d-68b1-f54268833951@linux.vnet.ibm.com>
+References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <1466433229-8812-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <20160623142213.GA30453@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44878 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750876AbcFWTF2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2016 15:05:28 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:25723 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750876AbcFWUTf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jun 2016 16:19:35 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5NKJ2VA004716
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2016 16:19:34 -0400
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23ra2mnka1-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2016 16:19:34 -0400
+Received: from localhost
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mikecyr@linux.vnet.ibm.com>;
+	Thu, 23 Jun 2016 14:19:33 -0600
+In-Reply-To: <20160623142213.GA30453@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Wilfried Klaebe <linux-kernel@lebenslange-mailadresse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: nab@linux-iscsi.org, joe@perches.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, bart.vanassche@sandisk.com, gregkh@linuxfoundation.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
 
-Commit b704f70ce200 ("SCSI: fix bug in scsi_dev_info_list matching")
-changed the way vendor- and model-string matching was carried out in
-the routine that looks up entries in a SCSI devinfo list.  The new
-matching code failed to take into account the case of a maximum-length
-string; in such cases it could end up testing for a terminating '\0'
-byte beyond the end of the memory allocated to the string.  This
-out-of-bounds bug was detected by UBSAN.
+Responding to those issues not already addressed by Bryant.
 
-I don't know if anybody has actually encountered this bug.  The
-symptom would be that a device entry in the blacklist might not be
-matched properly if it contained an 8-character vendor name or a
-16-character model name.  Such entries certainly exist in
-scsi_static_device_list.
+On 6/23/16 9:22 AM, Christoph Hellwig wrote:
 
-This patch fixes the problem by adding a check for a maximum-length
-string before the '\0' test.
+<SNIP>
+>> +		vscsi->flags &= (~PROCESSING_MAD);
+> No need for the braces here. (ditto for many other places later on)
+Fixed.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Fixes: b704f70ce200 ("SCSI: fix bug in scsi_dev_info_list matching")
-Tested-by: Wilfried Klaebe <linux-kernel@lebenslange-mailadresse.de>
-CC: <stable@vger.kernel.org>
+<SNIP>
+>> +static struct ibmvscsis_tport *ibmvscsis_lookup_port(const char *name)
+>> +{
+>> +	struct ibmvscsis_tport *tport = NULL;
+>> +	struct vio_dev *vdev;
+>> +	struct scsi_info *vscsi;
+>> +
+>> +	spin_lock_bh(&ibmvscsis_dev_lock);
+>> +	list_for_each_entry(vscsi, &ibmvscsis_dev_list, list) {
+>> +		vdev = vscsi->dma_dev;
+>> +		if (!strcmp(dev_name(&vdev->dev), name)) {
+>> +			tport = &vscsi->tport;
+>> +			break;
+>> +		}
+>> +	}
+>> +	spin_unlock_bh(&ibmvscsis_dev_lock);
+> Without grabbing a reference this looks inherently unsafe.
+I don't understand your concern.  Could you please provide more detail?
+>> +static void ibmvscsis_scheduler(struct work_struct *work)
+> Odd name for a work item.
+Not sure why it seems odd.  It schedules work to TCM.
+>> +{
+>> +	struct ibmvscsis_cmd *cmd = container_of(work, struct ibmvscsis_cmd,
+>> +						 work);
+>> +	struct scsi_info *vscsi = cmd->adapter;
+>> +
+>> +	spin_lock_bh(&vscsi->intr_lock);
+>> +
+>> +	/* Remove from schedule_q */
+>> +	list_del(&cmd->list);
+> What do you need the schedule_q for as the workqueue already tracks
+> the commands?
+There are a number of places where we need to see if there is anything 
+on the work queue, and I am not aware of an existing function to do 
+this, so we keep our own list of commands which have been queued.
 
----
-
-
-[as1804]
-
-
- drivers/scsi/scsi_devinfo.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-Index: usb-4.x/drivers/scsi/scsi_devinfo.c
-===================================================================
---- usb-4.x.orig/drivers/scsi/scsi_devinfo.c
-+++ usb-4.x/drivers/scsi/scsi_devinfo.c
-@@ -429,7 +429,7 @@ static struct scsi_dev_info_list *scsi_d
- 	 * here, and we don't know what device it is
- 	 * trying to work with, leave it as-is.
- 	 */
--	vmax = 8;	/* max length of vendor */
-+	vmax = sizeof(devinfo->vendor);
- 	vskip = vendor;
- 	while (vmax > 0 && *vskip == ' ') {
- 		vmax--;
-@@ -439,7 +439,7 @@ static struct scsi_dev_info_list *scsi_d
- 	while (vmax > 0 && vskip[vmax - 1] == ' ')
- 		--vmax;
- 
--	mmax = 16;	/* max length of model */
-+	mmax = sizeof(devinfo->model);
- 	mskip = model;
- 	while (mmax > 0 && *mskip == ' ') {
- 		mmax--;
-@@ -455,10 +455,12 @@ static struct scsi_dev_info_list *scsi_d
- 			 * Behave like the older version of get_device_flags.
- 			 */
- 			if (memcmp(devinfo->vendor, vskip, vmax) ||
--					devinfo->vendor[vmax])
-+					(vmax < sizeof(devinfo->vendor) &&
-+						devinfo->vendor[vmax]))
- 				continue;
- 			if (memcmp(devinfo->model, mskip, mmax) ||
--					devinfo->model[mmax])
-+					(mmax < sizeof(devinfo->model) &&
-+						devinfo->model[mmax]))
- 				continue;
- 			return devinfo;
- 		} else {
+<SNIP>
+>> +static void ibmvscsis_alloc_common_locks(struct scsi_info *vscsi)
+>> +{
+>> +	spin_lock_init(&vscsi->intr_lock);
+>> +}
+>> +
+>> +static void ibmvscsis_free_common_locks(struct scsi_info *vscsi)
+>> +{
+>> +	/* Nothing to do here */
+>> +}
+> No need for these wrapers.
+Removed.
+>> +static irqreturn_t ibmvscsis_interrupt(int dummy, void *data)
+>> +{
+>> +	struct scsi_info *vscsi = data;
+>> +
+>> +	vio_disable_interrupts(vscsi->dma_dev);
+>> +	tasklet_schedule(&vscsi->work_task);
+>> +
+>> +	return IRQ_HANDLED;
+>> +}
+> Can you explain the need for the tasklet?  There shouldn't be a whole
+> lot of working before passing the command off to the workqueue anyway.
+There are some requests, like SRP Login and the various MADs, which can 
+be handled at the interrupt level, and so we do so.
 
