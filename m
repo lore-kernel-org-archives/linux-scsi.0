@@ -1,34 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 120921] target: Unconfiguring ib_srpt triggers kernel crash
-Date: Thu, 23 Jun 2016 12:01:01 +0000
-Message-ID: <bug-120921-11613-bdufhfPtpn@https.bugzilla.kernel.org/>
-References: <bug-120921-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41142 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751141AbcFWMBF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2016 08:01:05 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9E5C8201CD
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2016 12:01:03 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id C3D18201BC
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2016 12:01:01 +0000 (UTC)
-In-Reply-To: <bug-120921-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] snic: Fix use-after-free in case of a dma mapping error
+Date: Thu, 23 Jun 2016 14:37:20 +0200
+Message-ID: <20160623123720.24244-1-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=120921
+If there is a dma mapping error snic kfree()s buf right before printing it.
+Change the order to not accidently trip on memory that's not owned by us
+anymore.
 
---- Comment #1 from Bart Van Assche <bvanassche@acm.org> ---
-Note: applying the following patch series on top of v4.6.2 was sufficient to
-make my test pass: "fix and simplify session shutdown"
-(http://thread.gmane.org/gmane.linux.scsi.target.devel/12031).
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/snic/snic_disc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
+index b0fefd6..b106596 100644
+--- a/drivers/scsi/snic/snic_disc.c
++++ b/drivers/scsi/snic/snic_disc.c
+@@ -113,11 +113,11 @@ snic_queue_report_tgt_req(struct snic *snic)
+ 
+ 	pa = pci_map_single(snic->pdev, buf, buf_len, PCI_DMA_FROMDEVICE);
+ 	if (pci_dma_mapping_error(snic->pdev, pa)) {
+-		kfree(buf);
+-		snic_req_free(snic, rqi);
+ 		SNIC_HOST_ERR(snic->shost,
+ 			      "Rpt-tgt rspbuf %p: PCI DMA Mapping Failed\n",
+ 			      buf);
++		kfree(buf);
++		snic_req_free(snic, rqi);
+ 		ret = -EINVAL;
+ 
+ 		goto error;
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+2.8.4
