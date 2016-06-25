@@ -1,35 +1,134 @@
-From: Geza Lucz <geza@lucz.com>
-Subject: =?utf-8?b?bWVnYXJhaWRfc2Fz?= driver bug
-Date: Sat, 25 Jun 2016 17:13:50 +0000 (UTC)
-Message-ID: <loom.20160625T191237-500@post.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.6-rc2
+Date: Sat, 25 Jun 2016 12:15:07 -0700
+Message-ID: <1466882107.2309.29.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:47861 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751315AbcFYRPH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jun 2016 13:15:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1bGrAe-0003q6-6T
-	for linux-scsi@vger.kernel.org; Sat, 25 Jun 2016 19:15:04 +0200
-Received: from 94-21-181-13.pool.digikabel.hu ([94.21.181.13])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Jun 2016 19:15:04 +0200
-Received: from geza by 94-21-181-13.pool.digikabel.hu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Jun 2016 19:15:04 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-SSBkb27igJl0IGtub3cgaWYgdGhpcyBpcyB0aGUgcmlnaHQgcGxhY2UgdG8gcmVwb3J0IHRoaXMgYW5kIHdoZXRoZXIgdGhpcyBpcwptb3JlIGxpa2UgYSBDZW50b3Mga2VybmVsIGlzc3VlLgoKU2luY2UgQ2VudG9zIDYuOCwgdGhlIG1lZ2FyYWlkX3NhcyBkcml2ZXIgc2VlbXMgdG8gYmUgc29tZXdoYXQgYnJva2VuIOKAkwp3aGljaCBhcyBJIHVuZGVyc3RhbmQgaXMgYSBiYWNrcG9ydCBvZiB0aGUgdXAtdG8tZGF0ZSBkcml2ZXIgdG8gdGhlaXIga2VybmVsCnZlcnNpb24uIEl0IGlzIHN0aWxsIHBhcnRpYWxseSB1c2FibGUsIGJ1dCBhcyBzb29uIGFzIEkgbmVlZCB0byByZWJ1aWxkIGFuCmFycmF5LCBpbnN0ZWFkIG9mIHRoZSBzY2FuIG1lc3NhZ2UgYXQgdGhlIGVuZCBJIGdldCBhIGJ1bmNoIG9mIGtlcm5lbCBlcnJvcgptZXNzYWdlcy4gVGhlcmUgYXJlIHNvIG1hbnkgb2YgdGhlc2UgdGhhdCB0aGUga2VybmVsIGxvZ2dlciB1c2VzIHRvbyBtdWNoCkNQVSBhbmQgZXZlbnR1YWxseSB0aGUgbG9nIGZpbGxzIHVwIHRoZSBwYXJ0aXRpb24sIHNvIHRoZSBzZXJ2ZXIgbmVlZHMgdG8gYmUKcmVib290ZWQuIFNvIHRlY2huaWNhbGx5IEkgbG9zZSBhbGwg
- aG90cGx1ZyBmdW5jdGlvbmFsaXR5LgoKUHJvYmFibHkgdGhlIHNhbWUgdGhpbmcgaGFwcGVucyB3aGVuIHRoZSBhcnJheSBkZWdyYWRlcy4gCgpJ4oCZbSBzZW5kaW5nIHRoaXMgcmVwb3J0IGhlcmUsIGJlY2F1c2UgdGhlcmUgaXMgYWJzb2x1dGVseSBubyBtZW50aW9uIG9mCnNpbWlsYXIgcHJvYmxlbXMgb24gdGhlIGludGVybmV0LCB5ZXQgdGhlIHByb2JsZW0gaXMgZnVsbHkgcmVwcm9kdWNpYmxlIGFuZApyZWFsLgoKSeKAmW0gdXNpbmcgRGVsbCBQZXJjIDZpIGF0IHRoZSBtb21lbnQuCgpUaGFua3MKCgpKdW4gMjUgMDg6NDk6MjkgbnM4IGtlcm5lbDogWyAgNzU3LjM1ODAxNV0gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OToyOSBuczgga2VybmVsOiBbICA3NTcuMzc5MDE2XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjI5IG5zOCBrZXJuZWw6IFsgIDc1Ny40MDAwMT
- hdIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MjkgbnM4IGtlcm5lbDogWyAgNzU3LjQyMTAyMV0gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OToyOSBuczgga2VybmVsOiBbICA3NTcuNDQyMDE3XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjI5IG5zOCBrZXJuZWw6IFsgIDc1Ny40NjMwMTVdIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MjkgbnM4IGtlcm5lbDogWyAgNzU3LjQ4NDAyMV0gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJt
- d2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OToyOSBuczgga2VybmVsOiBbICA3NTcuNTA1MDE3XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjI5IG5zOCBrZXJuZWw6IFsgIDc1Ny41MjYwMjFdIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MzAgbnM4IGtlcm5lbDogWyAgNzU3LjU0NzAxN10gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OTozMCBuczgga2VybmVsOiBbICA3NTcuNTY4MDIxXSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjMwIG5zOCBrZXJuZWw6IFsgID
- c1Ny41ODkwMTddIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MzAgbnM4IGtlcm5lbDogWyAgNzU3LjYxMDAxN10gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OTozMCBuczgga2VybmVsOiBbICA3NTcuNjMxMDE3XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjMwIG5zOCBrZXJuZWw6IFsgIDc1Ny42NTIwMTddIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MzAgbnM4IGtlcm5lbDogWyAgNzU3LjY3MzAxNl0gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRl
- ZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OTozMCBuczgga2VybmVsOiBbICA3NTcuNjk0MDE3XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjMwIG5zOCBrZXJuZWw6IFsgIDc1Ny43MTUwMTZdIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MzAgbnM4IGtlcm5lbDogWyAgNzU3LjczNjAxN10gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OTozMCBuczgga2VybmVsOiBbICA3NTcuNzU3MDE3XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjMwIG5zOCBrZX
- JuZWw6IFsgIDc1Ny43NzgwMTddIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQpKdW4gMjUgMDg6NDk6MzAgbnM4IGtlcm5lbDogWyAgNzU3Ljc5OTAxN10gbWVnYXJhaWRfc2FzIDAwMDA6MDI6MDAuMDogRENNRApmYWlsZWQvbm90IHN1cHBvcnRlZCBieSBmaXJtd2FyZTogbWVnYXNhc19nZXRfcGRfbGlzdCA0MTE1Ckp1biAyNSAwODo0OTozMCBuczgga2VybmVsOiBbICA3NTcuODIwMDE4XSBtZWdhcmFpZF9zYXMgMDAwMDowMjowMC4wOiBEQ01ECmZhaWxlZC9ub3Qgc3VwcG9ydGVkIGJ5IGZpcm13YXJlOiBtZWdhc2FzX2dldF9wZF9saXN0IDQxMTUKSnVuIDI1IDA4OjQ5OjMwIG5zOCBrZXJuZWw6IFsgIDc1Ny44NDEwMThdIG1lZ2FyYWlkX3NhcyAwMDAwOjAyOjAwLjA6IERDTUQKZmFpbGVkL25vdCBzdXBwb3J0ZWQgYnkgZmlybXdhcmU6IG1lZ2FzYXNfZ2V0X3BkX2xpc3QgNDExNQo=
+Two straightforward fixes.  One is a concurrency issue only affecting
+SAS connected SATA drives, but which could hang the storage subsystem
+if it triggers (because the outstanding command count on error never
+goes back to zero) and the other is a SCSI_NO_TAG fallout from the
+switch to host wide tags which causes the system to crash on module
+insertion (we've checked carefully and only the 53c700 family of
+drivers is vulnerable to this issue).
 
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+James Bottomley (1):
+      53c700: fix BUG on untagged commands
+
+Wei Fang (1):
+      scsi: fix race between simultaneous decrements of ->host_failed
+
+With the diffstat:
+
+ Documentation/scsi/scsi_eh.txt | 8 ++++++--
+ drivers/ata/libata-eh.c        | 2 +-
+ drivers/scsi/53c700.c          | 4 ++--
+ drivers/scsi/scsi_error.c      | 4 +++-
+ 4 files changed, 12 insertions(+), 6 deletions(-)
+
+and full diff below.
+
+James
+
+---
+
+diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+index 8638f61..37eca00 100644
+--- a/Documentation/scsi/scsi_eh.txt
++++ b/Documentation/scsi/scsi_eh.txt
+@@ -263,19 +263,23 @@ scmd->allowed.
+ 
+  3. scmd recovered
+     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
+-	- shost->host_failed--
+ 	- clear scmd->eh_eflags
+ 	- scsi_setup_cmd_retry()
+ 	- move from local eh_work_q to local eh_done_q
+     LOCKING: none
++    CONCURRENCY: at most one thread per separate eh_work_q to
++		 keep queue manipulation lockless
+ 
+  4. EH completes
+     ACTION: scsi_eh_flush_done_q() retries scmds or notifies upper
+-	    layer of failure.
++	    layer of failure. May be called concurrently but must have
++	    a no more than one thread per separate eh_work_q to
++	    manipulate the queue locklessly
+ 	- scmd is removed from eh_done_q and scmd->eh_entry is cleared
+ 	- if retry is necessary, scmd is requeued using
+           scsi_queue_insert()
+ 	- otherwise, scsi_finish_command() is invoked for scmd
++	- zero shost->host_failed
+     LOCKING: queue or finish function performs appropriate locking
+ 
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 61dc7a9..c6f0174 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -606,7 +606,7 @@ void ata_scsi_error(struct Scsi_Host *host)
+ 	ata_scsi_port_error_handler(host, ap);
+ 
+ 	/* finish or retry handled scmd's and clean up */
+-	WARN_ON(host->host_failed || !list_empty(&eh_work_q));
++	WARN_ON(!list_empty(&eh_work_q));
+ 
+ 	DPRINTK("EXIT\n");
+ }
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index d4c2856..3ddc85e 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -1122,7 +1122,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
+ 		} else {
+ 			struct scsi_cmnd *SCp;
+ 
+-			SCp = scsi_host_find_tag(SDp->host, SCSI_NO_TAG);
++			SCp = SDp->current_cmnd;
+ 			if(unlikely(SCp == NULL)) {
+ 				sdev_printk(KERN_ERR, SDp,
+ 					"no saved request for untagged cmd\n");
+@@ -1826,7 +1826,7 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
+ 		       slot->tag, slot);
+ 	} else {
+ 		slot->tag = SCSI_NO_TAG;
+-		/* must populate current_cmnd for scsi_host_find_tag to work */
++		/* save current command for reselection */
+ 		SCp->device->current_cmnd = SCp;
+ 	}
+ 	/* sanity check: some of the commands generated by the mid-layer
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index a8b610e..106a6ad 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1128,7 +1128,6 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
+  */
+ void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
+ {
+-	scmd->device->host->host_failed--;
+ 	scmd->eh_eflags = 0;
+ 	list_move_tail(&scmd->eh_entry, done_q);
+ }
+@@ -2227,6 +2226,9 @@ int scsi_error_handler(void *data)
+ 		else
+ 			scsi_unjam_host(shost);
+ 
++		/* All scmds have been handled */
++		shost->host_failed = 0;
++
+ 		/*
+ 		 * Note - if the above fails completely, the action is to take
+ 		 * individual devices offline and flush the queue of any
