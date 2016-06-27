@@ -1,34 +1,37 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ipr: Clear interrupt on croc/crocodile when running with LSI
-Date: Mon, 27 Jun 2016 09:09:40 -0500
-Message-ID: <20160627140941.BC090AE04B@b01ledav005.gho.pok.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, stable@vger.kernel.org, benh@kernel.crashing.org
+From: Davidlohr Bueso <dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] block: provide helpers for reading block count
+Date: Mon, 27 Jun 2016 09:30:12 -0700
+Message-ID: <20160627163012.GA11116@linux-80c1.suse>
+References: <20160623133016.3781907-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Return-path: <linux-efi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160623133016.3781907-1-arnd-r2nGTMty4D4@public.gmane.org>
+Sender: linux-efi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, "Nicholas A . Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Mike Christie <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-efi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 23 Jun 2016, Arnd Bergmann wrote:
 
-If we fall back to using LSI on the Croc or Crocodile chip we need
-to clear the interrupt so we don't hang the system.
+>Several drivers use an expensive do_div() to compute the number
+>of logical or physical blocks in a blockdev, which can be done
+>more efficiently using a shift, since the blocksize is always
+>a power of two number.
+>
+>Let's introduce bdev_logical_block_count() and bdev_physical_block_count()
+>helper functions mirroring the bdev_logical_block_size() and
+>bdev_physical_block_size() interfaces for the block size.
 
-Cc: stable<stable@vger.kernel.org>
-Tested-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+>@@ -1226,6 +1226,13 @@ static inline unsigned short bdev_logical_block_size(struct block_device *bdev)
+> 	return queue_logical_block_size(bdev_get_queue(bdev));
+> }
+>
+>+static inline sector_t bdev_logical_block_count(struct block_device *bdev)
 
- drivers/scsi/ipr.c |    1 +
- 1 file changed, 1 insertion(+)
+Curious, why not just return u64 instead for all these instead of sector_t (ie
+dealing with lba, it reads weird)?
 
-diff -puN drivers/scsi/ipr.c~ipr_clear_isr drivers/scsi/ipr.c
---- linux-2.6.git/drivers/scsi/ipr.c~ipr_clear_isr	2016-06-24 17:37:24.265197867 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2016-06-24 17:38:39.640943642 -0500
-@@ -10097,6 +10097,7 @@ static int ipr_probe_ioa(struct pci_dev
- 		ioa_cfg->intr_flag = IPR_USE_MSI;
- 	else {
- 		ioa_cfg->intr_flag = IPR_USE_LSI;
-+		ioa_cfg->clear_isr = 1;
- 		ioa_cfg->nvectors = 1;
- 		dev_info(&pdev->dev, "Cannot enable MSI.\n");
- 	}
-_
+Thanks,
+Davidlohr
