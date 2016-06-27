@@ -1,38 +1,29 @@
-From: Aspire Money Loan <lpse@tangerangkota.go.id>
-Subject: =?utf-8?Q?Terveisi=C3=A4,?=
-Date: Sun, 26 Jun 2016 17:24:14 +0700 (WIB)
-Message-ID: <1129211977.5571.1466936654626.JavaMail.zimbra@tangerangkota.go.id>
-Reply-To: Aspire Money Loan <aspire.offer1989@gmail.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v4 7/8] mmc: block: register RPMB partition with the
+ RPMB subsystem
+Date: Mon, 27 Jun 2016 10:17:25 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54288DE2@hasmsx108.ger.corp.intel.com>
+References: <1464817292-5407-1-git-send-email-tomas.winkler@intel.com>
+ <1464817292-5407-8-git-send-email-tomas.winkler@intel.com>
+ <576B7F10.2000508@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tangerangkota.go.id ([103.50.218.124]:34400 "EHLO
-	mail.tangerangkota.go.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbcFZKsq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jun 2016 06:48:46 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <576B7F10.2000508@intel.com>
+Content-Language: en-US
+Sender: linux-mmc-owner@vger.kernel.org
+To: "Hunter, Adrian" <adrian.hunter@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Usyskin, Alexander" <alexander.usyskin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
+> 2;
+> 
+> This looks like it does not support 8KB writes added in v5.1 spec.  Can that be
+> supported?
 
+You are right there is not support for 8K packet, but the change should be simple. 
+I will update the patch.
+Thanks
+Tomas 
 
-Terveisi=C3=A4,
-          Olen rouva Annie Ethan yksityiselt=C3=A4 lainanantajayhti=C3=B6=
-ll=C3=A4 tunnetaan Aspire Money Loan=C2=AE. Tarjoamme kaikenlaisia lain=
-a 3% korolla. Jos olet tarvitsevat lainaa yst=C3=A4v=C3=A4llisesti yhte=
-ytt=C3=A4 kanssa alla tiedot.
-Koko nimi:
-sukupuoli:
-Maa:
-Osoite:
-Lainan m=C3=A4=C3=A4r=C3=A4:
-Kesto:
-Puh:
-Odotamme vastausta, jos olet kiinnostunut
-Kiitos,
-Annie Ethan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
