@@ -1,37 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH} SCSI: fix new bug in scsi_dev_info_list string matching
-Date: Wed, 29 Jun 2016 00:54:45 -0400
-Message-ID: <yq1wpl8siga.fsf@sermon.lab.mkp.net>
-References: <Pine.LNX.4.44L0.1606231454380.1334-100000@iolanthe.rowland.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v8] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Wed, 29 Jun 2016 07:49:10 +0200
+Message-ID: <2aa7660d-2c9a-08bf-59f6-7282a0a7a6f4@sandisk.com>
+References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <1467058632-1825-1-git-send-email-mikecyr@linux.vnet.ibm.com>
+ <BB635617-87FA-4667-B1B0-657E2E9FF627@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:25882 "EHLO
-	userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbcF2E4Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2016 00:56:16 -0400
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-	by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u5T4t5oU032685
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jun 2016 04:56:15 GMT
-In-Reply-To: <Pine.LNX.4.44L0.1606231454380.1334-100000@iolanthe.rowland.org>
-	(Alan Stern's message of "Thu, 23 Jun 2016 15:05:26 -0400 (EDT)")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <BB635617-87FA-4667-B1B0-657E2E9FF627@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "joe@perches.com" <joe@perches.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "tyreld@linux.vnet.ibm.com" <tyreld@linux.vnet.ibm.com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "seroyer@linux.vnet.ibm.com" <seroyer@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Wilfried Klaebe <linux-kernel@lebenslange-mailadresse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
->>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
+On 06/28/2016 10:57 PM, Bryant G. Ly wrote:
+> I was hoping someone in the community can help answer this:
+>
+> If I were to remove the masking off of the lun addressing method prior to target_submit_cmd/target_submit_tmr then I get a hang within scsi probe
+> on bootup. (srp->lun.scsi_lun[0] &= 0x3f; and srp_tsk->lun.scsi_lun[0] &= 0x3f;)
+>
+> [    0.842648] ibmvscsi 3000000d: sent SRP login
+> [    0.842667] ibmvscsi 3000000d: SRP_LOGIN succeeded
+> [    0.842682] scsi 0:0:2:0: CD-ROM            AIX      VOPTA                 PQ: 0 ANSI: 4
+> [  OK  ] Started Show Plymouth Boot Screen.
+> [  OK  ] Reached target Paths.
+> [  OK  ] Reached target Basic System.
+> [    0.886179] sr 0:0:2:0: [sr0] scsi-1 drive
+> [    0.886199] cdrom: Uniform CD-ROM driver Revision: 3.20
+> [    0.888582] sd 0:0:1:0: [sda] 41943040 512-byte logical blocks: (21.4 GB/20.0 GiB)
+> [    0.888657] sd 0:0:1:0: [sda] Write Protect is off
+> [    0.888712] sd 0:0:1:0: [sda] Cache data unavailable
+> [    0.888722] sd 0:0:1:0: [sda] Assuming drive cache: write through
+> [    0.901443]  sda: sda1 sda2 sda3
+> [    0.901838] sd 0:0:1:0: [sda] Attached SCSI disk
+> [  124.522778] dracut-initqueue[353]: Warning: dracut-initqueue timeout - starting timeout scripts
+> [  125.151242] dracut-initqueue[353]: Warning: dracut-initqueue timeout - starting timeout scripts
+> [  125.662808] dracut-initqueue[353]: Warning: dracut-initqueue timeout - starting timeout scripts
+>
+> Does anyone know of the reasoning for having to mask off the addressing method prior
+> to submitting to target?
 
-Alan> Commit b704f70ce200 ("SCSI: fix bug in scsi_dev_info_list
-Alan> matching") changed the way vendor- and model-string matching was
-Alan> carried out in the routine that looks up entries in a SCSI devinfo
-Alan> list.  The new matching code failed to take into account the case
-Alan> of a maximum-length string; in such cases it could end up testing
-Alan> for a terminating '\0' byte beyond the end of the memory allocated
-Alan> to the string.  This out-of-bounds bug was detected by UBSAN.
+How long have you waited before giving up waiting? The SCSI initiator 
+sends a REPORT LUN and other SCSI commands to LUN 0. If LUN 0 is missing 
+these commands will time out but that should not cause a hang. Anyway, 
+SysRq-w should help to determine the cause of the hang.
 
-Applied to 4.7/scsi-fixes.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
