@@ -1,65 +1,116 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] libfc: sanity check cpu number extracted
-	from xid
-Date: Thu, 30 Jun 2016 08:32:36 -0700
-Message-ID: <1467300756-7949-1-git-send-email-cleech@redhat.com>
-References: <20160630070925.ptbgkeq57txs55gf@c203.arch.suse.de>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Fix NULL pointer deref in QLA interrupt
+Date: Thu, 30 Jun 2016 17:20:06 +0000
+Message-ID: <B3B02A22-805C-4800-AB4D-81F1E3FA298E@qlogic.com>
+References: <20160630170032.6dbaf496@pluto.restena.lu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <20160630070925.ptbgkeq57txs55gf-3LAbnSA0sDC4fIQPS+WK3rNAH6kLmebB@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160630170032.6dbaf496@pluto.restena.lu>
+Content-Language: en-US
+Content-ID: <05428EC33E3A71439FCE448DFE11A73C@namprd11.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?utf-8?B?QnJ1bm8gUHLDqW1vbnQ=?= <bonbons@linux-vserver.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In the receive path libfc extracts a cpu number from the ox_id in the
-fiber channel header and uses that to do a per_cpu_ptr conversion.
-If, for some reason, a frame is received with an invalid ox_id,
-per_cpu_ptr will return an invalid pointer and the libfc receive path
-will panic the system trying to use it.
-
-I'm currently looking at such a case, and I don't yet know why a
-cpu number > nr_cpu_ids is appearing in an exchange id.  But adding a
-sanity check in libfc prevents a system panic, and seems like good idea
-when dealing with frames coming in from the network.
-
-Signed-off-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/scsi/libfc/fc_exch.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 30f9ef0..e72673b 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -908,9 +908,17 @@ static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
- {
- 	struct fc_exch_pool *pool;
- 	struct fc_exch *ep = NULL;
-+	u16 cpu = xid & fc_cpu_mask;
-+
-+	if (cpu >= nr_cpu_ids || !cpu_possible(cpu)) {
-+		printk_ratelimited(KERN_ERR
-+			"libfc: lookup request for XID = %d, "
-+			"indicates invalid CPU %d\n", xid, cpu);
-+		return NULL;
-+	}
- 
- 	if ((xid >= mp->min_xid) && (xid <= mp->max_xid)) {
--		pool = per_cpu_ptr(mp->pool, xid & fc_cpu_mask);
-+		pool = per_cpu_ptr(mp->pool, cpu);
- 		spin_lock_bh(&pool->lock);
- 		ep = fc_exch_ptr_get(pool, (xid - mp->min_xid) >> fc_cpu_order);
- 		if (ep) {
--- 
-2.5.5
+QWNrLiAgTG9va3MgZ29vZC4gVGhhbmtzLg0KDQpSZWdhcmRzLA0KUXVpbm4gVHJhbg0KDQoNCg0K
+DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJydW5vIFByw6ltb250IDxi
+b25ib25zQGxpbnV4LXZzZXJ2ZXIub3JnPg0KRGF0ZTogVGh1cnNkYXksIEp1bmUgMzAsIDIwMTYg
+YXQgODowMCBBTQ0KVG86IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4sIEhpbWFu
+c2h1IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIE5pY2hvbGFzIEJlbGxp
+bmdlciA8bmFiQGxpbnV4LWlzY3NpLm9yZz4NCkNjOiBEZXB0LUVuZyBRTEEyeHh4IFVwc3RyZWFt
+IDxxbGEyeHh4LXVwc3RyZWFtQHFsb2dpYy5jb20+LCAiSmFtZXMgRS5KLiBCb3R0b21sZXkiIDxq
+ZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4sICJNYXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0
+ZXJzZW5Ab3JhY2xlLmNvbT4sIGxpbnV4LXNjc2kgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3Jn
+PiwgbGludXgta2VybmVsIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPg0KU3ViamVjdDog
+W1BBVENIXSBxbGEyeHh4OiBGaXggTlVMTCBwb2ludGVyIGRlcmVmIGluIFFMQSBpbnRlcnJ1cHQN
+Cg0KPkluIHFsYTI0eHhfcHJvY2Vzc19yZXNwb25zZV9xdWV1ZSgpIHJzcC0+bXNpeC0+Y3B1aWQg
+bWF5IHRyaWdnZXIgTlVMTA0KPnBvaW50ZXIgZGVyZWZlcmVuY2Ugd2hlbiByc3AtPm1zaXggaXMg
+TlVMTDoNCj4NCj5bICAgIDUuNjIyNDU3XSBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgMDAw
+MDAwMDAwMDAwMDA1MA0KPlsgICAgNS42MjI0NTddIElQOiBbPGZmZmZmZmZmODE1NWU2MTQ+XSBx
+bGEyNHh4X3Byb2Nlc3NfcmVzcG9uc2VfcXVldWUrMHg0NC8weDRiMA0KPlsgICAgNS42MjI0NTdd
+IFBHRCAwDQo+WyAgICA1LjYyMjQ1N10gT29wczogMDAwMCBbIzFdIFNNUA0KPlsgICAgNS42MjI0
+NTddIE1vZHVsZXMgbGlua2VkIGluOg0KPlsgICAgNS42MjI0NTddIENQVTogMiBQSUQ6IDAgQ29t
+bTogc3dhcHBlci8yIE5vdCB0YWludGVkIDQuNi4zLXg4Nl82NCAjMQ0KPlsgICAgNS42MjI0NTdd
+IEhhcmR3YXJlIG5hbWU6IEhQIFByb0xpYW50IERMMzYwIEc1LCBCSU9TIFA1OCAwNS8wMi8yMDEx
+DQo+WyAgICA1LjYyMjQ1N10gdGFzazogZmZmZjg4MDFhODhmMzc0MCB0aTogZmZmZjg4MDFhODk1
+NDAwMCB0YXNrLnRpOiBmZmZmODgwMWE4OTU0MDAwDQo+WyAgICA1LjYyMjQ1N10gUklQOiAwMDEw
+Ols8ZmZmZmZmZmY4MTU1ZTYxND5dICBbPGZmZmZmZmZmODE1NWU2MTQ+XSBxbGEyNHh4X3Byb2Nl
+c3NfcmVzcG9uc2VfcXVldWUrMHg0NC8weDRiMA0KPlsgICAgNS42MjI0NTddIFJTUDogMDAwMDpm
+ZmZmODgwMWFmYjAzZGU4ICBFRkxBR1M6IDAwMDEwMDAyDQo+WyAgICA1LjYyMjQ1N10gUkFYOiAw
+MDAwMDAwMDAwMDAwMDAwIFJCWDogMDAwMDAwMDAwMDAwMDAzMiBSQ1g6IDAwMDAwMDAwZmZmZmZm
+ZmYNCj5bICAgIDUuNjIyNDU3XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDIgUlNJOiBmZmZmODgwMWE3
+OWJmOGM4IFJESTogZmZmZjg4MDBjOGY3ZTdjMA0KPlsgICAgNS42MjI0NTddIFJCUDogZmZmZjg4
+MDFhZmIwM2U2OCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwDQo+
+WyAgICA1LjYyMjQ1N10gUjEwOiAwMDAwMDAwMGZmZmY4YzQ3IFIxMTogMDAwMDAwMDAwMDAwMDAw
+MiBSMTI6IGZmZmY4ODAxYTc5YmY4YzgNCj5bICAgIDUuNjIyNDU3XSBSMTM6IGZmZmY4ODAwYzhm
+N2U3YzAgUjE0OiBmZmZmODgwMGM4ZjYwMDAwIFIxNTogMDAwMDAwMDAwMDAxODAxMw0KPlsgICAg
+NS42MjI0NTddIEZTOiAgMDAwMDAwMDAwMDAwMDAwMCgwMDAwKSBHUzpmZmZmODgwMWFmYjAwMDAw
+KDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCj5bICAgIDUuNjIyNDU3XSBDUzogIDAwMTAg
+RFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQo+WyAgICA1LjYyMjQ1N10g
+Q1IyOiAwMDAwMDAwMDAwMDAwMDUwIENSMzogMDAwMDAwMDAwMWUwNzAwMCBDUjQ6IDAwMDAwMDAw
+MDAwMDA2ZTANCj5bICAgIDUuNjIyNDU3XSBTdGFjazoNCj5bICAgIDUuNjIyNDU3XSAgZmZmZjg4
+MDFhZmIwM2UzMCBmZmZmZmZmZjgxMGMwZjJkIDAwMDAwMDAwMDAwMDAwODYgMDAwMDAwMDAwMDAw
+MDAwMg0KPlsgICAgNS42MjI0NTddICBmZmZmODgwMWFmYjAzZTI4IGZmZmZmZmZmODE2NTcwZTEg
+ZmZmZjg4MDBjODk5NDYyOCAwMDAwMDAwMDAwMDAwMDAyDQo+WyAgICA1LjYyMjQ1N10gIGZmZmY4
+ODAxYWZiMDNlNjAgZmZmZmZmZmY4MTY3NzJkNCBiNDdjNDcyYWQ2OTU1ZTY4IDAwMDAwMDAwMDAw
+MDAwMzINCj5bICAgIDUuNjIyNDU3XSBDYWxsIFRyYWNlOg0KPlsgICAgNS42MjI0NTddICA8SVJR
+Pg0KPlsgICAgNS42MjI0NTddICBbPGZmZmZmZmZmODEwYzBmMmQ+XSA/IF9fd2FrZV91cF9jb21t
+b24rMHg0ZC8weDgwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZmZmY4MTY1NzBlMT5dID8gdXNi
+X2hjZF9yZXN1bWVfcm9vdF9odWIrMHg1MS8weDYwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZm
+ZmY4MTY3NzJkND5dID8gdWhjaV9odWJfc3RhdHVzX2RhdGErMHg2NC8weDI0MA0KPlsgICAgNS42
+MjI0NTddICBbPGZmZmZmZmZmODE1NjBkMDA+XSBxbGEyNHh4X2ludHJfaGFuZGxlcisweGYwLzB4
+MmUwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZmZmY4MTBkNTY5ZT5dID8gZ2V0X25leHRfdGlt
+ZXJfaW50ZXJydXB0KzB4Y2UvMHgyMDANCj5bICAgIDUuNjIyNDU3XSAgWzxmZmZmZmZmZjgxMGM4
+OWI0Pl0gaGFuZGxlX2lycV9ldmVudF9wZXJjcHUrMHg2NC8weDEwMA0KPlsgICAgNS42MjI0NTdd
+ICBbPGZmZmZmZmZmODEwYzhhNzc+XSBoYW5kbGVfaXJxX2V2ZW50KzB4MjcvMHg1MA0KPlsgICAg
+NS42MjI0NTddICBbPGZmZmZmZmZmODEwY2I5NjU+XSBoYW5kbGVfZWRnZV9pcnErMHg2NS8weDE0
+MA0KPlsgICAgNS42MjI0NTddICBbPGZmZmZmZmZmODEwMWE0OTg+XSBoYW5kbGVfaXJxKzB4MTgv
+MHgzMA0KPlsgICAgNS42MjI0NTddICBbPGZmZmZmZmZmODEwMWEyNzY+XSBkb19JUlErMHg0Ni8w
+eGQwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZmZmY4MTdmOGZmZj5dIGNvbW1vbl9pbnRlcnJ1
+cHQrMHg3Zi8weDdmDQo+WyAgICA1LjYyMjQ1N10gIDxFT0k+DQo+WyAgICA1LjYyMjQ1N10gIFs8
+ZmZmZmZmZmY4MTAyMGQzOD5dID8gbXdhaXRfaWRsZSsweDY4LzB4ODANCj5bICAgIDUuNjIyNDU3
+XSAgWzxmZmZmZmZmZjgxMDIxMTRhPl0gYXJjaF9jcHVfaWRsZSsweGEvMHgxMA0KPlsgICAgNS42
+MjI0NTddICBbPGZmZmZmZmZmODEwYzFiOTc+XSBkZWZhdWx0X2lkbGVfY2FsbCsweDI3LzB4MzAN
+Cj5bICAgIDUuNjIyNDU3XSAgWzxmZmZmZmZmZjgxMGMxZDNiPl0gY3B1X3N0YXJ0dXBfZW50cnkr
+MHgxOWIvMHgyMzANCj5bICAgIDUuNjIyNDU3XSAgWzxmZmZmZmZmZjgxMDMyNGM2Pl0gc3RhcnRf
+c2Vjb25kYXJ5KzB4MTM2LzB4MTQwDQo+WyAgICA1LjYyMjQ1N10gQ29kZTogMDAgMDAgNjUgNDgg
+OGIgMDQgMjUgMjggMDAgMDAgMDAgNDggODkgNDUgZDAgMzEgYzAgNDggOGIgNDcgNTggYTggMDIg
+MGYgODQgYzUgMDAgMDAgMDAgNDggOGIgNDYgNTAgNDkgODkgZjQgNjUgOGIgMTUgMzQgYmIgYWEg
+N2UgPDM5PiA1MCA1MCA3NCAxMSA4OSA1MCA1MCA0OCA4YiA0NiA1MCA4YiA0MCA1MCA0MSA4OSA4
+NiA2MCA4YiAwMA0KPlsgICAgNS42MjI0NTddIFJJUCAgWzxmZmZmZmZmZjgxNTVlNjE0Pl0gcWxh
+MjR4eF9wcm9jZXNzX3Jlc3BvbnNlX3F1ZXVlKzB4NDQvMHg0YjANCj5bICAgIDUuNjIyNDU3XSAg
+UlNQIDxmZmZmODgwMWFmYjAzZGU4Pg0KPlsgICAgNS42MjI0NTddIENSMjogMDAwMDAwMDAwMDAw
+MDA1MA0KPlsgICAgNS42MjI0NTddIC0tLVsgZW5kIHRyYWNlIGZhMmIxOWMyNTEwNmQ0MmIgXS0t
+LQ0KPlsgICAgNS42MjI0NTddIEtlcm5lbCBwYW5pYyAtIG5vdCBzeW5jaW5nOiBGYXRhbCBleGNl
+cHRpb24gaW4gaW50ZXJydXB0DQo+DQo+DQo+VGhlIGFmZmVjdGVkIGNvZGUgd2FzIGludHJvZHVj
+ZWQgYnkgY29tbWl0IGNkYjg5OGM1MmQxZGZhZDRiNDgwMGI4M2E1OGIzZmU1ZDM1MmVkZGUNCj4o
+cWxhMnh4eDogQWRkIGlycSBhZmZpbml0eSBub3RpZmljYXRpb24pLg0KPg0KPk9ubHkgZGVyZWZl
+cmVuY2UgcnNwLT5tc2l4IHdoZW4gaXQgaGFzIGJlZW4gc2V0IHNvIHRoZSBtYWNoaW5lIGNhbiBi
+b290DQo+ZmluZS4gUG9zc2libHkgcnNwLT5tc2l4IGlzIHVuc2V0IGJlY2F1c2U6DQo+WyAgICAz
+LjQ3OTY3OV0gcWxhMnh4eCBbMDAwMDowMDowMC4wXS0wMDA1OiA6IFFMb2dpYyBGaWJyZSBDaGFu
+bmVsIEhCQSBEcml2ZXI6IDguMDcuMDAuMzMtay4NCj5bICAgIDMuNDgxODM5XSBxbGEyeHh4IFsw
+MDAwOjEzOjAwLjBdLTAwMWQ6IDogRm91bmQgYW4gSVNQMjQzMiBpcnEgMTcgaW9iYXNlIDB4ZmZm
+ZmM5MDAwMDAzODAwMC4NCj5bICAgIDMuNDg0MDgxXSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAw
+MzU6MDogTVNJLVg7IFVuc3VwcG9ydGVkIElTUDI0MzIgKDB4MiwgMHgzKS4NCj5bICAgIDMuNDg1
+ODA0XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAwMzc6MDogRmFsbGluZyBiYWNrLXRvIE1TSSBt
+b2RlIC0yNTguDQo+WyAgICAzLjg5MDE0NV0gc2NzaSBob3N0MDogcWxhMnh4eA0KPlsgICAgMy44
+OTE5NTZdIHFsYTJ4eHggWzAwMDA6MTM6MDAuMF0tMDBmYjowOiBRTG9naWMgUUxFMjQ2MCAtIFBD
+SS1FeHByZXNzIFNpbmdsZSBDaGFubmVsIDRHYiBGaWJyZSBDaGFubmVsIEhCQS4NCj5bICAgIDMu
+ODk0MjA3XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAwZmM6MDogSVNQMjQzMjogUENJZSAoMi41
+R1QvcyB4NCkgQCAwMDAwOjEzOjAwLjAgaGRtYSsgaG9zdCM9MCBmdz03LjAzLjAwICg5NDk2KS4N
+Cj5bICAgIDUuNzE0Nzc0XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTUwMGE6MDogTE9PUCBVUCBk
+ZXRlY3RlZCAoNCBHYnBzKS4NCj4NCj4NCj5DQzogPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+DQo+
+U2lnbmVkLW9mZi1ieTogQnJ1bm8gUHLDqW1vbnQgPGJvbmJvbnNAbGludXgtdnNlcnZlci5vcmc+
+DQo+LS0tDQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYw0KPmIv
+ZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jIGluZGV4IDU2NDljMjAuLmE5MmE2MmQgMTAw
+NjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+KysrIGIvZHJpdmVy
+cy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+QEAgLTI1NDgsNyArMjU0OCw3IEBAIHZvaWQgcWxh
+MjR4eF9wcm9jZXNzX3Jlc3BvbnNlX3F1ZXVlKHN0cnVjdA0KPnNjc2lfcWxhX2hvc3QgKnZoYSwg
+aWYgKCF2aGEtPmZsYWdzLm9ubGluZSkNCj4gCQlyZXR1cm47DQo+IA0KPi0JaWYgKHJzcC0+bXNp
+eC0+Y3B1aWQgIT0gc21wX3Byb2Nlc3Nvcl9pZCgpKSB7DQo+KwlpZiAocnNwLT5tc2l4ICYmIHJz
+cC0+bXNpeC0+Y3B1aWQgIT0gc21wX3Byb2Nlc3Nvcl9pZCgpKSB7DQo+IAkJLyogaWYga2VybmVs
+IGRvZXMgbm90IG5vdGlmeSBxbGEgb2YgSVJRJ3MgQ1BVIGNoYW5nZSwNCj4gCQkgKiB0aGVuIHNl
+dCBpdCBoZXJlLg0KPiAJCSAqLw0K
