@@ -1,54 +1,124 @@
-From: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Subject: RE: DIF/DIX in mpt3sas
-Date: Thu, 30 Jun 2016 09:00:01 +0530
-Message-ID: <6d015b6be722fc5ec949b8b1b19eb8a5@mail.gmail.com>
-References: <59D68167-CD5A-4CD6-8382-7DA70A4B268C@umn.edu>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: [PATCH] qla2xxx: Fix NULL pointer deref in QLA interrupt
+Date: Thu, 30 Jun 2016 17:00:32 +0200
+Message-ID: <20160630170032.6dbaf496@pluto.restena.lu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:34972 "EHLO
-	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbcF3DaD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2016 23:30:03 -0400
-Received: by mail-qk0-f177.google.com with SMTP id a125so123963453qkc.2
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Jun 2016 20:30:02 -0700 (PDT)
-In-Reply-To: <59D68167-CD5A-4CD6-8382-7DA70A4B268C@umn.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baoquan Zhang <zhan4281@umn.edu>, linux-scsi@vger.kernel.org
-Cc: Alireza Haghdoost <haghdoost@gmail.com>, du <du@cs.umn.edu>, Raghu Raja Chandrasekar <raghu@cray.com>
 
-Zhang,
- Thanks for your email.
+In qla24xx_process_response_queue() rsp->msix->cpuid may trigger NULL
+pointer dereference when rsp->msix is NULL:
 
-DIX is supported in mpt3sas , but not by default and hence while loading
-mpt3sas driver set module parameter "prot_mask=0x7F" to enable DIX
-support.
+[    5.622457] NULL pointer dereference at 0000000000000050
+[    5.622457] IP: [<ffffffff8155e614>] qla24xx_process_response_queue+=
+0x44/0x4b0
+[    5.622457] PGD 0
+[    5.622457] Oops: 0000 [#1] SMP
+[    5.622457] Modules linked in:
+[    5.622457] CPU: 2 PID: 0 Comm: swapper/2 Not tainted 4.6.3-x86_64 #=
+1
+[    5.622457] Hardware name: HP ProLiant DL360 G5, BIOS P58 05/02/2011
+[    5.622457] task: ffff8801a88f3740 ti: ffff8801a8954000 task.ti: fff=
+f8801a8954000
+[    5.622457] RIP: 0010:[<ffffffff8155e614>]  [<ffffffff8155e614>] qla=
+24xx_process_response_queue+0x44/0x4b0
+[    5.622457] RSP: 0000:ffff8801afb03de8  EFLAGS: 00010002
+[    5.622457] RAX: 0000000000000000 RBX: 0000000000000032 RCX: 0000000=
+0ffffffff
+[    5.622457] RDX: 0000000000000002 RSI: ffff8801a79bf8c8 RDI: ffff880=
+0c8f7e7c0
+[    5.622457] RBP: ffff8801afb03e68 R08: 0000000000000000 R09: 0000000=
+000000000
+[    5.622457] R10: 00000000ffff8c47 R11: 0000000000000002 R12: ffff880=
+1a79bf8c8
+[    5.622457] R13: ffff8800c8f7e7c0 R14: ffff8800c8f60000 R15: 0000000=
+000018013
+[    5.622457] FS:  0000000000000000(0000) GS:ffff8801afb00000(0000) kn=
+lGS:0000000000000000
+[    5.622457] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    5.622457] CR2: 0000000000000050 CR3: 0000000001e07000 CR4: 0000000=
+0000006e0
+[    5.622457] Stack:
+[    5.622457]  ffff8801afb03e30 ffffffff810c0f2d 0000000000000086 0000=
+000000000002
+[    5.622457]  ffff8801afb03e28 ffffffff816570e1 ffff8800c8994628 0000=
+000000000002
+[    5.622457]  ffff8801afb03e60 ffffffff816772d4 b47c472ad6955e68 0000=
+000000000032
+[    5.622457] Call Trace:
+[    5.622457]  <IRQ>
+[    5.622457]  [<ffffffff810c0f2d>] ? __wake_up_common+0x4d/0x80
+[    5.622457]  [<ffffffff816570e1>] ? usb_hcd_resume_root_hub+0x51/0x6=
+0
+[    5.622457]  [<ffffffff816772d4>] ? uhci_hub_status_data+0x64/0x240
+[    5.622457]  [<ffffffff81560d00>] qla24xx_intr_handler+0xf0/0x2e0
+[    5.622457]  [<ffffffff810d569e>] ? get_next_timer_interrupt+0xce/0x=
+200
+[    5.622457]  [<ffffffff810c89b4>] handle_irq_event_percpu+0x64/0x100
+[    5.622457]  [<ffffffff810c8a77>] handle_irq_event+0x27/0x50
+[    5.622457]  [<ffffffff810cb965>] handle_edge_irq+0x65/0x140
+[    5.622457]  [<ffffffff8101a498>] handle_irq+0x18/0x30
+[    5.622457]  [<ffffffff8101a276>] do_IRQ+0x46/0xd0
+[    5.622457]  [<ffffffff817f8fff>] common_interrupt+0x7f/0x7f
+[    5.622457]  <EOI>
+[    5.622457]  [<ffffffff81020d38>] ? mwait_idle+0x68/0x80
+[    5.622457]  [<ffffffff8102114a>] arch_cpu_idle+0xa/0x10
+[    5.622457]  [<ffffffff810c1b97>] default_idle_call+0x27/0x30
+[    5.622457]  [<ffffffff810c1d3b>] cpu_startup_entry+0x19b/0x230
+[    5.622457]  [<ffffffff810324c6>] start_secondary+0x136/0x140
+[    5.622457] Code: 00 00 65 48 8b 04 25 28 00 00 00 48 89 45 d0 31 c0=
+ 48 8b 47 58 a8 02 0f 84 c5 00 00 00 48 8b 46 50 49 89 f4 65 8b 15 34 b=
+b aa 7e <39> 50 50 74 11 89 50 50 48 8b 46 50 8b 40 50 41 89 86 60 8b 0=
+0
+[    5.622457] RIP  [<ffffffff8155e614>] qla24xx_process_response_queue=
++0x44/0x4b0
+[    5.622457]  RSP <ffff8801afb03de8>
+[    5.622457] CR2: 0000000000000050
+[    5.622457] ---[ end trace fa2b19c25106d42b ]---
+[    5.622457] Kernel panic - not syncing: Fatal exception in interrupt
 
-Thanks,
- Chaitra
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Baoquan Zhang
-Sent: Thursday, June 30, 2016 6:27 AM
-To: linux-scsi@vger.kernel.org
-Cc: Alireza Haghdoost; du; Raghu Raja Chandrasekar
-Subject: DIF/DIX in mpt3sas
+The affected code was introduced by commit cdb898c52d1dfad4b4800b83a58b=
+3fe5d352edde
+(qla2xxx: Add irq affinity notification).
 
-Hi there,
+Only dereference rsp->msix when it has been set so the machine can boot
+fine. Possibly rsp->msix is unset because:
+[    3.479679] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA =
+Driver: 8.07.00.33-k.
+[    3.481839] qla2xxx [0000:13:00.0]-001d: : Found an ISP2432 irq 17 i=
+obase 0xffffc90000038000.
+[    3.484081] qla2xxx [0000:13:00.0]-0035:0: MSI-X; Unsupported ISP243=
+2 (0x2, 0x3).
+[    3.485804] qla2xxx [0000:13:00.0]-0037:0: Falling back-to MSI mode =
+-258.
+[    3.890145] scsi host0: qla2xxx
+[    3.891956] qla2xxx [0000:13:00.0]-00fb:0: QLogic QLE2460 - PCI-Expr=
+ess Single Channel 4Gb Fibre Channel HBA.
+[    3.894207] qla2xxx [0000:13:00.0]-00fc:0: ISP2432: PCIe (2.5GT/s x4=
+) @ 0000:13:00.0 hdma+ host#=3D0 fw=3D7.03.00 (9496).
+[    5.714774] qla2xxx [0000:13:00.0]-500a:0: LOOP UP detected (4 Gbps)=
+=2E
 
-Thanks for reading my email.
 
-I am a Ph.D student of University of Minnesota, Twin Cities. Recently, I
-am working on a project of T10 PI-capable MD module. However, I fail to
-use DIX with the HBA/driver combination of LSI Logic / Symbios Logic
-SAS3008 PCI-Express Fusion-MPT SAS-3 (rev 02) /mpt3sas even though I have
-formatted the drives with DIF protection type 1. May I know if DIX (data
-integrity extension) is supported in mpt3sas driver?
-
-Thanks,
-Baoquan Zhang--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+CC: <stable@vger.kernel.org>
+Signed-off-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
+---
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+b/drivers/scsi/qla2xxx/qla_isr.c index 5649c20..a92a62d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2548,7 +2548,7 @@ void qla24xx_process_response_queue(struct
+scsi_qla_host *vha, if (!vha->flags.online)
+ 		return;
+=20
+-	if (rsp->msix->cpuid !=3D smp_processor_id()) {
++	if (rsp->msix && rsp->msix->cpuid !=3D smp_processor_id()) {
+ 		/* if kernel does not notify qla of IRQ's CPU change,
+ 		 * then set it here.
+ 		 */
