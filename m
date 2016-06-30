@@ -1,52 +1,39 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH v8] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
-Date: Wed, 29 Jun 2016 10:22:06 -0500
-Message-ID: <A01096DE-CB0D-4C2D-88D8-CA57DFFF9AE7@linux.vnet.ibm.com>
-References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1467058632-1825-1-git-send-email-mikecyr@linux.vnet.ibm.com>
- <BB635617-87FA-4667-B1B0-657E2E9FF627@linux.vnet.ibm.com>
- <2aa7660d-2c9a-08bf-59f6-7282a0a7a6f4@sandisk.com>
- <008A3B47-6BAE-42FA-8D65-66D0F0C7747B@linux.vnet.ibm.com>
- <bc9d5ba0-4220-18ac-aab0-0e7572c8c26d@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <bc9d5ba0-4220-18ac-aab0-0e7572c8c26d@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Cc: "seroyer@linux.vnet.ibm.com" <seroyer@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+From: Baoquan Zhang <zhan4281@umn.edu>
+Subject: DIF/DIX in mpt3sas
+Date: Wed, 29 Jun 2016 19:57:24 -0500
+Message-ID: <59D68167-CD5A-4CD6-8382-7DA70A4B268C@umn.edu>
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mta-p6.oit.umn.edu ([134.84.196.206]:60721 "EHLO
+	mta-p6.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbcF3BxB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2016 21:53:01 -0400
+Received: from localhost (unknown [127.0.0.1])
+	by mta-p6.oit.umn.edu (Postfix) with ESMTP id CF9E77CD
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2016 00:57:10 +0000 (UTC)
+Received: from mta-p6.oit.umn.edu ([127.0.0.1])
+	by localhost (mta-p6.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id HzbDzdpXIhUq for <linux-scsi@vger.kernel.org>;
+	Wed, 29 Jun 2016 19:57:10 -0500 (CDT)
+Received: from mail-it0-f72.google.com (mail-it0-f72.google.com [209.85.214.72])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mta-p6.oit.umn.edu (Postfix) with ESMTPS id B06C27B8
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jun 2016 19:57:10 -0500 (CDT)
+Received: by mail-it0-f72.google.com with SMTP id f6so132269481ith.1
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jun 2016 17:57:10 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Alireza Haghdoost <haghdoost@gmail.com>, du <du@cs.umn.edu>, Raghu Raja Chandrasekar <raghu@cray.com>
 
-On 6/29/16, 9:54 AM, "Bart Van Assche" <target-devel-owner@vger.kernel.=
-org on behalf of bart.vanassche@sandisk.com> wrote:
+Hi there,
 
-On 06/29/2016 04:43 PM, Bryant G. Ly wrote:
->> It looks like the masking fixes the device mapper=E2=80=99s ability =
-to find the disk=E2=80=A6.
+Thanks for reading my email.
 
-> Is the multipath client available in your initrd? If so, running=20
-> multipath -ll -v<n> with n >=3D 3 should reveal why multipathd ignore=
-d=20
-> certain disks.
+I am a Ph.D student of University of Minnesota, Twin Cities. Recently, I am working on a project of T10 PI-capable MD module. However, I fail to use DIX with the HBA/driver combination of LSI Logic / Symbios Logic SAS3008 PCI-Express Fusion-MPT SAS-3 (rev 02) /mpt3sas even though I have formatted the drives with DIF protection type 1. May I know if DIX (data integrity extension) is supported in mpt3sas driver?
 
-I enabled it on the initiator:
-
-[root@vscsi-bry ~]# multipath -ll
-[root@vscsi-bry ~]# multipath -ll -v<n> with n >=3D 3
--bash: n: No such file or directory
-[root@vscsi-bry ~]# mpathconf
-multipath is enabled
-find_multipaths is enabled
-user_friendly_names is enabled
-dm_multipath module is loaded
-multipathd is running
-[root@vscsi-bry ~]#
-
-But it seems to not do much.
-
---
-To unsubscribe from this list: send the line "unsubscribe target-devel"=
- in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Baoquan Zhang
