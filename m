@@ -1,116 +1,95 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Fix NULL pointer deref in QLA interrupt
-Date: Thu, 30 Jun 2016 17:20:06 +0000
-Message-ID: <B3B02A22-805C-4800-AB4D-81F1E3FA298E@qlogic.com>
-References: <20160630170032.6dbaf496@pluto.restena.lu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160630170032.6dbaf496@pluto.restena.lu>
-Content-Language: en-US
-Content-ID: <05428EC33E3A71439FCE448DFE11A73C@namprd11.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?utf-8?B?QnJ1bm8gUHLDqW1vbnQ=?= <bonbons@linux-vserver.org>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH] target: Unsupported SCSI Opcode Fix
+Date: Thu, 30 Jun 2016 13:50:18 -0500
+Message-ID: <1467312618-21592-1-git-send-email-bryantly@linux.vnet.ibm.com>
+References: <B4AAE167-F030-4EDD-9221-2CD07ECD4B61@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35918 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750929AbcF3SuZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jun 2016 14:50:25 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UInLu7126608
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2016 14:50:25 -0400
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23w76nuxay-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2016 14:50:24 -0400
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+	Thu, 30 Jun 2016 14:50:24 -0400
+In-Reply-To: <B4AAE167-F030-4EDD-9221-2CD07ECD4B61@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: mikecyr@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
 
-QWNrLiAgTG9va3MgZ29vZC4gVGhhbmtzLg0KDQpSZWdhcmRzLA0KUXVpbm4gVHJhbg0KDQoNCg0K
-DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJydW5vIFByw6ltb250IDxi
-b25ib25zQGxpbnV4LXZzZXJ2ZXIub3JnPg0KRGF0ZTogVGh1cnNkYXksIEp1bmUgMzAsIDIwMTYg
-YXQgODowMCBBTQ0KVG86IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AcWxvZ2ljLmNvbT4sIEhpbWFu
-c2h1IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4sIE5pY2hvbGFzIEJlbGxp
-bmdlciA8bmFiQGxpbnV4LWlzY3NpLm9yZz4NCkNjOiBEZXB0LUVuZyBRTEEyeHh4IFVwc3RyZWFt
-IDxxbGEyeHh4LXVwc3RyZWFtQHFsb2dpYy5jb20+LCAiSmFtZXMgRS5KLiBCb3R0b21sZXkiIDxq
-ZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4sICJNYXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0
-ZXJzZW5Ab3JhY2xlLmNvbT4sIGxpbnV4LXNjc2kgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3Jn
-PiwgbGludXgta2VybmVsIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPg0KU3ViamVjdDog
-W1BBVENIXSBxbGEyeHh4OiBGaXggTlVMTCBwb2ludGVyIGRlcmVmIGluIFFMQSBpbnRlcnJ1cHQN
-Cg0KPkluIHFsYTI0eHhfcHJvY2Vzc19yZXNwb25zZV9xdWV1ZSgpIHJzcC0+bXNpeC0+Y3B1aWQg
-bWF5IHRyaWdnZXIgTlVMTA0KPnBvaW50ZXIgZGVyZWZlcmVuY2Ugd2hlbiByc3AtPm1zaXggaXMg
-TlVMTDoNCj4NCj5bICAgIDUuNjIyNDU3XSBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgMDAw
-MDAwMDAwMDAwMDA1MA0KPlsgICAgNS42MjI0NTddIElQOiBbPGZmZmZmZmZmODE1NWU2MTQ+XSBx
-bGEyNHh4X3Byb2Nlc3NfcmVzcG9uc2VfcXVldWUrMHg0NC8weDRiMA0KPlsgICAgNS42MjI0NTdd
-IFBHRCAwDQo+WyAgICA1LjYyMjQ1N10gT29wczogMDAwMCBbIzFdIFNNUA0KPlsgICAgNS42MjI0
-NTddIE1vZHVsZXMgbGlua2VkIGluOg0KPlsgICAgNS42MjI0NTddIENQVTogMiBQSUQ6IDAgQ29t
-bTogc3dhcHBlci8yIE5vdCB0YWludGVkIDQuNi4zLXg4Nl82NCAjMQ0KPlsgICAgNS42MjI0NTdd
-IEhhcmR3YXJlIG5hbWU6IEhQIFByb0xpYW50IERMMzYwIEc1LCBCSU9TIFA1OCAwNS8wMi8yMDEx
-DQo+WyAgICA1LjYyMjQ1N10gdGFzazogZmZmZjg4MDFhODhmMzc0MCB0aTogZmZmZjg4MDFhODk1
-NDAwMCB0YXNrLnRpOiBmZmZmODgwMWE4OTU0MDAwDQo+WyAgICA1LjYyMjQ1N10gUklQOiAwMDEw
-Ols8ZmZmZmZmZmY4MTU1ZTYxND5dICBbPGZmZmZmZmZmODE1NWU2MTQ+XSBxbGEyNHh4X3Byb2Nl
-c3NfcmVzcG9uc2VfcXVldWUrMHg0NC8weDRiMA0KPlsgICAgNS42MjI0NTddIFJTUDogMDAwMDpm
-ZmZmODgwMWFmYjAzZGU4ICBFRkxBR1M6IDAwMDEwMDAyDQo+WyAgICA1LjYyMjQ1N10gUkFYOiAw
-MDAwMDAwMDAwMDAwMDAwIFJCWDogMDAwMDAwMDAwMDAwMDAzMiBSQ1g6IDAwMDAwMDAwZmZmZmZm
-ZmYNCj5bICAgIDUuNjIyNDU3XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDIgUlNJOiBmZmZmODgwMWE3
-OWJmOGM4IFJESTogZmZmZjg4MDBjOGY3ZTdjMA0KPlsgICAgNS42MjI0NTddIFJCUDogZmZmZjg4
-MDFhZmIwM2U2OCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwDQo+
-WyAgICA1LjYyMjQ1N10gUjEwOiAwMDAwMDAwMGZmZmY4YzQ3IFIxMTogMDAwMDAwMDAwMDAwMDAw
-MiBSMTI6IGZmZmY4ODAxYTc5YmY4YzgNCj5bICAgIDUuNjIyNDU3XSBSMTM6IGZmZmY4ODAwYzhm
-N2U3YzAgUjE0OiBmZmZmODgwMGM4ZjYwMDAwIFIxNTogMDAwMDAwMDAwMDAxODAxMw0KPlsgICAg
-NS42MjI0NTddIEZTOiAgMDAwMDAwMDAwMDAwMDAwMCgwMDAwKSBHUzpmZmZmODgwMWFmYjAwMDAw
-KDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCj5bICAgIDUuNjIyNDU3XSBDUzogIDAwMTAg
-RFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQo+WyAgICA1LjYyMjQ1N10g
-Q1IyOiAwMDAwMDAwMDAwMDAwMDUwIENSMzogMDAwMDAwMDAwMWUwNzAwMCBDUjQ6IDAwMDAwMDAw
-MDAwMDA2ZTANCj5bICAgIDUuNjIyNDU3XSBTdGFjazoNCj5bICAgIDUuNjIyNDU3XSAgZmZmZjg4
-MDFhZmIwM2UzMCBmZmZmZmZmZjgxMGMwZjJkIDAwMDAwMDAwMDAwMDAwODYgMDAwMDAwMDAwMDAw
-MDAwMg0KPlsgICAgNS42MjI0NTddICBmZmZmODgwMWFmYjAzZTI4IGZmZmZmZmZmODE2NTcwZTEg
-ZmZmZjg4MDBjODk5NDYyOCAwMDAwMDAwMDAwMDAwMDAyDQo+WyAgICA1LjYyMjQ1N10gIGZmZmY4
-ODAxYWZiMDNlNjAgZmZmZmZmZmY4MTY3NzJkNCBiNDdjNDcyYWQ2OTU1ZTY4IDAwMDAwMDAwMDAw
-MDAwMzINCj5bICAgIDUuNjIyNDU3XSBDYWxsIFRyYWNlOg0KPlsgICAgNS42MjI0NTddICA8SVJR
-Pg0KPlsgICAgNS42MjI0NTddICBbPGZmZmZmZmZmODEwYzBmMmQ+XSA/IF9fd2FrZV91cF9jb21t
-b24rMHg0ZC8weDgwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZmZmY4MTY1NzBlMT5dID8gdXNi
-X2hjZF9yZXN1bWVfcm9vdF9odWIrMHg1MS8weDYwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZm
-ZmY4MTY3NzJkND5dID8gdWhjaV9odWJfc3RhdHVzX2RhdGErMHg2NC8weDI0MA0KPlsgICAgNS42
-MjI0NTddICBbPGZmZmZmZmZmODE1NjBkMDA+XSBxbGEyNHh4X2ludHJfaGFuZGxlcisweGYwLzB4
-MmUwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZmZmY4MTBkNTY5ZT5dID8gZ2V0X25leHRfdGlt
-ZXJfaW50ZXJydXB0KzB4Y2UvMHgyMDANCj5bICAgIDUuNjIyNDU3XSAgWzxmZmZmZmZmZjgxMGM4
-OWI0Pl0gaGFuZGxlX2lycV9ldmVudF9wZXJjcHUrMHg2NC8weDEwMA0KPlsgICAgNS42MjI0NTdd
-ICBbPGZmZmZmZmZmODEwYzhhNzc+XSBoYW5kbGVfaXJxX2V2ZW50KzB4MjcvMHg1MA0KPlsgICAg
-NS42MjI0NTddICBbPGZmZmZmZmZmODEwY2I5NjU+XSBoYW5kbGVfZWRnZV9pcnErMHg2NS8weDE0
-MA0KPlsgICAgNS42MjI0NTddICBbPGZmZmZmZmZmODEwMWE0OTg+XSBoYW5kbGVfaXJxKzB4MTgv
-MHgzMA0KPlsgICAgNS42MjI0NTddICBbPGZmZmZmZmZmODEwMWEyNzY+XSBkb19JUlErMHg0Ni8w
-eGQwDQo+WyAgICA1LjYyMjQ1N10gIFs8ZmZmZmZmZmY4MTdmOGZmZj5dIGNvbW1vbl9pbnRlcnJ1
-cHQrMHg3Zi8weDdmDQo+WyAgICA1LjYyMjQ1N10gIDxFT0k+DQo+WyAgICA1LjYyMjQ1N10gIFs8
-ZmZmZmZmZmY4MTAyMGQzOD5dID8gbXdhaXRfaWRsZSsweDY4LzB4ODANCj5bICAgIDUuNjIyNDU3
-XSAgWzxmZmZmZmZmZjgxMDIxMTRhPl0gYXJjaF9jcHVfaWRsZSsweGEvMHgxMA0KPlsgICAgNS42
-MjI0NTddICBbPGZmZmZmZmZmODEwYzFiOTc+XSBkZWZhdWx0X2lkbGVfY2FsbCsweDI3LzB4MzAN
-Cj5bICAgIDUuNjIyNDU3XSAgWzxmZmZmZmZmZjgxMGMxZDNiPl0gY3B1X3N0YXJ0dXBfZW50cnkr
-MHgxOWIvMHgyMzANCj5bICAgIDUuNjIyNDU3XSAgWzxmZmZmZmZmZjgxMDMyNGM2Pl0gc3RhcnRf
-c2Vjb25kYXJ5KzB4MTM2LzB4MTQwDQo+WyAgICA1LjYyMjQ1N10gQ29kZTogMDAgMDAgNjUgNDgg
-OGIgMDQgMjUgMjggMDAgMDAgMDAgNDggODkgNDUgZDAgMzEgYzAgNDggOGIgNDcgNTggYTggMDIg
-MGYgODQgYzUgMDAgMDAgMDAgNDggOGIgNDYgNTAgNDkgODkgZjQgNjUgOGIgMTUgMzQgYmIgYWEg
-N2UgPDM5PiA1MCA1MCA3NCAxMSA4OSA1MCA1MCA0OCA4YiA0NiA1MCA4YiA0MCA1MCA0MSA4OSA4
-NiA2MCA4YiAwMA0KPlsgICAgNS42MjI0NTddIFJJUCAgWzxmZmZmZmZmZjgxNTVlNjE0Pl0gcWxh
-MjR4eF9wcm9jZXNzX3Jlc3BvbnNlX3F1ZXVlKzB4NDQvMHg0YjANCj5bICAgIDUuNjIyNDU3XSAg
-UlNQIDxmZmZmODgwMWFmYjAzZGU4Pg0KPlsgICAgNS42MjI0NTddIENSMjogMDAwMDAwMDAwMDAw
-MDA1MA0KPlsgICAgNS42MjI0NTddIC0tLVsgZW5kIHRyYWNlIGZhMmIxOWMyNTEwNmQ0MmIgXS0t
-LQ0KPlsgICAgNS42MjI0NTddIEtlcm5lbCBwYW5pYyAtIG5vdCBzeW5jaW5nOiBGYXRhbCBleGNl
-cHRpb24gaW4gaW50ZXJydXB0DQo+DQo+DQo+VGhlIGFmZmVjdGVkIGNvZGUgd2FzIGludHJvZHVj
-ZWQgYnkgY29tbWl0IGNkYjg5OGM1MmQxZGZhZDRiNDgwMGI4M2E1OGIzZmU1ZDM1MmVkZGUNCj4o
-cWxhMnh4eDogQWRkIGlycSBhZmZpbml0eSBub3RpZmljYXRpb24pLg0KPg0KPk9ubHkgZGVyZWZl
-cmVuY2UgcnNwLT5tc2l4IHdoZW4gaXQgaGFzIGJlZW4gc2V0IHNvIHRoZSBtYWNoaW5lIGNhbiBi
-b290DQo+ZmluZS4gUG9zc2libHkgcnNwLT5tc2l4IGlzIHVuc2V0IGJlY2F1c2U6DQo+WyAgICAz
-LjQ3OTY3OV0gcWxhMnh4eCBbMDAwMDowMDowMC4wXS0wMDA1OiA6IFFMb2dpYyBGaWJyZSBDaGFu
-bmVsIEhCQSBEcml2ZXI6IDguMDcuMDAuMzMtay4NCj5bICAgIDMuNDgxODM5XSBxbGEyeHh4IFsw
-MDAwOjEzOjAwLjBdLTAwMWQ6IDogRm91bmQgYW4gSVNQMjQzMiBpcnEgMTcgaW9iYXNlIDB4ZmZm
-ZmM5MDAwMDAzODAwMC4NCj5bICAgIDMuNDg0MDgxXSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAw
-MzU6MDogTVNJLVg7IFVuc3VwcG9ydGVkIElTUDI0MzIgKDB4MiwgMHgzKS4NCj5bICAgIDMuNDg1
-ODA0XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAwMzc6MDogRmFsbGluZyBiYWNrLXRvIE1TSSBt
-b2RlIC0yNTguDQo+WyAgICAzLjg5MDE0NV0gc2NzaSBob3N0MDogcWxhMnh4eA0KPlsgICAgMy44
-OTE5NTZdIHFsYTJ4eHggWzAwMDA6MTM6MDAuMF0tMDBmYjowOiBRTG9naWMgUUxFMjQ2MCAtIFBD
-SS1FeHByZXNzIFNpbmdsZSBDaGFubmVsIDRHYiBGaWJyZSBDaGFubmVsIEhCQS4NCj5bICAgIDMu
-ODk0MjA3XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAwZmM6MDogSVNQMjQzMjogUENJZSAoMi41
-R1QvcyB4NCkgQCAwMDAwOjEzOjAwLjAgaGRtYSsgaG9zdCM9MCBmdz03LjAzLjAwICg5NDk2KS4N
-Cj5bICAgIDUuNzE0Nzc0XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTUwMGE6MDogTE9PUCBVUCBk
-ZXRlY3RlZCAoNCBHYnBzKS4NCj4NCj4NCj5DQzogPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+DQo+
-U2lnbmVkLW9mZi1ieTogQnJ1bm8gUHLDqW1vbnQgPGJvbmJvbnNAbGludXgtdnNlcnZlci5vcmc+
-DQo+LS0tDQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYw0KPmIv
-ZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jIGluZGV4IDU2NDljMjAuLmE5MmE2MmQgMTAw
-NjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+KysrIGIvZHJpdmVy
-cy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+QEAgLTI1NDgsNyArMjU0OCw3IEBAIHZvaWQgcWxh
-MjR4eF9wcm9jZXNzX3Jlc3BvbnNlX3F1ZXVlKHN0cnVjdA0KPnNjc2lfcWxhX2hvc3QgKnZoYSwg
-aWYgKCF2aGEtPmZsYWdzLm9ubGluZSkNCj4gCQlyZXR1cm47DQo+IA0KPi0JaWYgKHJzcC0+bXNp
-eC0+Y3B1aWQgIT0gc21wX3Byb2Nlc3Nvcl9pZCgpKSB7DQo+KwlpZiAocnNwLT5tc2l4ICYmIHJz
-cC0+bXNpeC0+Y3B1aWQgIT0gc21wX3Byb2Nlc3Nvcl9pZCgpKSB7DQo+IAkJLyogaWYga2VybmVs
-IGRvZXMgbm90IG5vdGlmeSBxbGEgb2YgSVJRJ3MgQ1BVIGNoYW5nZSwNCj4gCQkgKiB0aGVuIHNl
-dCBpdCBoZXJlLg0KPiAJCSAqLw0K
+If a Simple command is sent with a failure,
+target_setup_cmd_from_cdb returns with TCM_UNSUPPORTED_SCSI_OPCODE
+or TCM_INVALID_CDB_FIELD. So in the cases where target_setup_cmd_from_cdb
+returns an error, we never get far enough to call target_execute_cmd to
+increment simple_cmds. Since simple_cmds isn't incremented, the
+result of the failure from target_setup_cmd_from_cdb causes
+transport_generic_request_failure to decrement
+simple_cmds, due to call to transport_complete_task_attr.
+With this dev->simple_cmds or dev->dev_ordered_sync is now -1, not 0.
+So when a subsequent command with an Ordered Task is sent, it causes
+a hang, since dev->simple_cmds is at -1.
+
+Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+---
+ drivers/target/target_core_transport.c | 6 ++++++
+ include/target/target_core_base.h      | 3 ++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 0a8f0a6..a2e447a 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1824,6 +1824,8 @@ static bool target_handle_task_attr(struct se_cmd *cmd)
+ 	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+ 		return false;
+ 
++	cmd->se_cmd_flags |= SCF_TASK_ATTR_SET;
++
+ 	/*
+ 	 * Check for the existence of HEAD_OF_QUEUE, and if true return 1
+ 	 * to allow the passed struct se_cmd list of tasks to the front of the list.
+@@ -1946,6 +1948,9 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
+ 	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+ 		return;
+ 
++	if (!(cmd->se_cmd_flags & SCF_TASK_ATTR_SET))
++		goto restart;
++
+ 	if (cmd->sam_task_attr == TCM_SIMPLE_TAG) {
+ 		atomic_dec_mb(&dev->simple_cmds);
+ 		dev->dev_cur_ordered_id++;
+@@ -1963,6 +1968,7 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
+ 			 dev->dev_cur_ordered_id);
+ 	}
+ 
++restart:
+ 	target_restart_delayed_cmds(dev);
+ }
+ 
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index e5d0948..276f5a5 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -139,7 +139,8 @@ enum se_cmd_flags_table {
+ 	SCF_COMPARE_AND_WRITE_POST	= 0x00100000,
+ 	SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC = 0x00200000,
+ 	SCF_ACK_KREF			= 0x00400000,
+-	SCF_USE_CPUID			= 0x00800000,
++	SCF_USE_CPUID                   = 0x00800000,
++	SCF_TASK_ATTR_SET               = 0x01000000,
+ };
+ 
+ /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
+-- 
+2.5.4 (Apple Git-61)
+
