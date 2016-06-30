@@ -1,95 +1,127 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH] target: Unsupported SCSI Opcode Fix
-Date: Thu, 30 Jun 2016 13:50:18 -0500
-Message-ID: <1467312618-21592-1-git-send-email-bryantly@linux.vnet.ibm.com>
-References: <B4AAE167-F030-4EDD-9221-2CD07ECD4B61@linux.vnet.ibm.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V3 1/2] smartpqi: initial commit of Microsemi smartpqi
+ driver
+Date: Thu, 30 Jun 2016 20:20:58 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1916380AB8@avsrvexchmbx1.microsemi.net>
+References: <146611717567.26335.4769668449125772969.stgit@brunhilda>
+ <146611729682.26335.17158396498682439988.stgit@brunhilda>
+ <20160617095701.fv5wnorvisnbhcc6@c203.arch.suse.de>
+ <4993A297653ECB4581FA5C3C31323D1916380165@avsrvexchmbx1.microsemi.net>
+ <20160628075359.ypdmye7sl3y7knd4@c203.arch.suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35918 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750929AbcF3SuZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Jun 2016 14:50:25 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UInLu7126608
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2016 14:50:25 -0400
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23w76nuxay-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2016 14:50:24 -0400
-Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-	Thu, 30 Jun 2016 14:50:24 -0400
-In-Reply-To: <B4AAE167-F030-4EDD-9221-2CD07ECD4B61@linux.vnet.ibm.com>
+Received: from mail-by2nam01on0086.outbound.protection.outlook.com ([104.47.34.86]:11752
+	"EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751604AbcF3Uhd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2016 16:37:33 -0400
+In-Reply-To: <20160628075359.ypdmye7sl3y7knd4@c203.arch.suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: mikecyr@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-If a Simple command is sent with a failure,
-target_setup_cmd_from_cdb returns with TCM_UNSUPPORTED_SCSI_OPCODE
-or TCM_INVALID_CDB_FIELD. So in the cases where target_setup_cmd_from_cdb
-returns an error, we never get far enough to call target_execute_cmd to
-increment simple_cmds. Since simple_cmds isn't incremented, the
-result of the failure from target_setup_cmd_from_cdb causes
-transport_generic_request_failure to decrement
-simple_cmds, due to call to transport_complete_task_attr.
-With this dev->simple_cmds or dev->dev_ordered_sync is now -1, not 0.
-So when a subsequent command with an Ordered Task is sent, it causes
-a hang, since dev->simple_cmds is at -1.
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> Sent: Tuesday, June 28, 2016 2:54 AM
+> To: Don Brace
+> Cc: jejb@linux.vnet.ibm.com; Viswas G; Mahesh Rajashekhara;
+> hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley; Scott Benesh;
+> elliott@hpe.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH V3 1/2] smartpqi: initial commit of Microsemi smartpqi
+> driver
+> 
+> Anyway, a IMHO more important question
+> 
+> > > > +static void pqi_complete_queued_requests(struct pqi_ctrl_info
+> *ctrl_info,
+> > > > +     struct pqi_scsi_dev_t *device_in_reset)
+> > > > +{
+> > > > +     unsigned int i;
+> > > > +     unsigned int path;
+> > > > +     struct pqi_queue_group *queue_group;
+> > > > +     unsigned long flags;
+> > > > +     struct pqi_io_request *io_request;
+> > > > +     struct pqi_io_request *next;
+> > > > +     struct scsi_cmnd *scmd;
+> > > > +     struct pqi_scsi_dev_t *device;
+> > > > +
+> > > > +     for (i = 0; i < ctrl_info->num_queue_groups; i++) {
+> > > > +             queue_group = &ctrl_info->queue_groups[i];
+> > > > +
+> > > > +             for (path = 0; path < 2; path++) {
+> > > > +                     spin_lock_irqsave(&queue_group->submit_lock[path],
+> > > > +                             flags);
+> > > > +
+> > > > +                     list_for_each_entry_safe(io_request, next,
+> > > > +                             &queue_group->request_list[path],
+> > > > +                             request_list_entry) {
+> > > > +                             scmd = io_request->scmd;
+> > > > +                             if (scmd) {
+> > > > +                                     device = scmd->device->hostdata;
+> > > > +                                     if (device == device_in_reset) {
+> > > > +                                             set_host_byte(scmd, DID_RESET);
+> > > > +                                             pqi_scsi_done(scmd);
+> > > > +                                             list_del(&io_request->
+> > > > +                                                     request_list_entry);
+> > > > +                                     }
+> > > > +                             }
+> > > > +                     }
+> > > > +
+> > > > +                     spin_unlock_irqrestore(&queue_group-
+> >submit_lock[path],
+> > > > +                             flags);
+> > > > +             }
+> > >
+> > > If you'd factor the inner for loop into an own small (inline) function, it
+> > > could drastically improve readability here.
+> > >
+> > > something like
+> > >
+> > > static void pqi_complete_queue_group(struct pqi_queue_group *qg,
+> struct
+> > >                                      pqi_device_t *device_in_reset)
+> > > {
+> > >         unsigned int path;
+> > >         unsigned long flags;
+> > >         struct qpi_scsi_dev_t *dev;
+> > >         struct pqi_io_request *ior, *next;
+> > >
+> > >         for (path = 0; path < 2; path++) {
+> > >                 spin_lock_irqsave(&qg->submit_lock[path], flags);
+> > >
+> > >                 list_for_each_entry_save(ior, next, &qg->request_list[path],
+> > >                                          request_list_entry) {
+> > >                         scmd = ior->scmnd;
+> > >                         if (!scmd)
+> > >                                 continue;
+> > >
+> > >                         device = scmnd->device->hostdata;
+> > >                         if (dev == device_in_reset) {
+> > >                                 set_host_byte(scmnd, DID_RESET);
+> > >                                 pqi_scsi_done(scmnd);
+> > >                                 list_del(&ior->request_list_entry);
+> > >                         }
+> > >                 }
+> > >                 spin_unlock_irqresetore(&qg->submit_lock[path], flags);
+> > >         }
+> > > }
+> 
+> Does this have to be under a spin_lock and then even the irqsave
+> variant? From my understanding scsi-mq/blk-mq is supposed to place the
+> queues per-cpu. So if you're now deactivating local IRQs here you're
+> throwing
+> all optimizations out of the window. Can't you have the request lists and
+> queues per-cpu so this code can run lockless?
+> 
+> Thanks,
+>         Johannes
+> 
 
-Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
----
- drivers/target/target_core_transport.c | 6 ++++++
- include/target/target_core_base.h      | 3 ++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 0a8f0a6..a2e447a 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1824,6 +1824,8 @@ static bool target_handle_task_attr(struct se_cmd *cmd)
- 	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
- 		return false;
- 
-+	cmd->se_cmd_flags |= SCF_TASK_ATTR_SET;
-+
- 	/*
- 	 * Check for the existence of HEAD_OF_QUEUE, and if true return 1
- 	 * to allow the passed struct se_cmd list of tasks to the front of the list.
-@@ -1946,6 +1948,9 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
- 	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
- 		return;
- 
-+	if (!(cmd->se_cmd_flags & SCF_TASK_ATTR_SET))
-+		goto restart;
-+
- 	if (cmd->sam_task_attr == TCM_SIMPLE_TAG) {
- 		atomic_dec_mb(&dev->simple_cmds);
- 		dev->dev_cur_ordered_id++;
-@@ -1963,6 +1968,7 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
- 			 dev->dev_cur_ordered_id);
- 	}
- 
-+restart:
- 	target_restart_delayed_cmds(dev);
- }
- 
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index e5d0948..276f5a5 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -139,7 +139,8 @@ enum se_cmd_flags_table {
- 	SCF_COMPARE_AND_WRITE_POST	= 0x00100000,
- 	SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC = 0x00200000,
- 	SCF_ACK_KREF			= 0x00400000,
--	SCF_USE_CPUID			= 0x00800000,
-+	SCF_USE_CPUID                   = 0x00800000,
-+	SCF_TASK_ATTR_SET               = 0x01000000,
- };
- 
- /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
--- 
-2.5.4 (Apple Git-61)
-
+The current version was developed on older kernels which did not have
+scsi-mq enabled. We plan on fully supporting scsi-mq in the near
+future, but would like to keep the kernel.org and internal versions
+the same for now.
