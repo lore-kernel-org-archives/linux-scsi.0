@@ -1,79 +1,65 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
-Subject: Re: [PATCH 1/6] lib: string: add function strtolower()
-Date: Fri, 01 Jul 2016 20:33:18 +0300
-Message-ID: <87vb0pqn4x.fsf@intel.com>
-References: <1467330612-26242-1-git-send-email-mmayer@broadcom.com>
- <1467330612-26242-2-git-send-email-mmayer@broadcom.com>
- <87poqxpr4d.fsf@intel.com>
- <CAGt4E5teRyMJMfxz3s6PHmTgCApBWWdAiNu1VwQtdJybST3RTw@mail.gmail.com>
+From: Howard Cochran <hcochran@kernelspring.com>
+Subject: Re: [PATCH] sd: Fix crash due to race when removing scsi disk
+Date: Fri, 1 Jul 2016 13:34:33 -0400
+Message-ID: <CAEvdpX2Rv9f84tmwAeO0y+wj9609ucYV2tteJCZLoySidtO0JA@mail.gmail.com>
+References: <1467389699-10571-1-git-send-email-hcochran@kernelspring.com> <1467390990.2341.31.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAGt4E5teRyMJMfxz3s6PHmTgCApBWWdAiNu1VwQtdJybST3RTw@mail.gmail.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Markus Mayer <markus.mayer@broadcom.com>
-Cc: devel@driverdev.osuosl.org, Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, nouveau@lists.freedesktop.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Linux Kernel <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, speakup@linux-speakup.org, Chris Metcalf <cmetcalf@ezchip.com>, target-devel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, devel@acpica.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:35144 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751207AbcGARee (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2016 13:34:34 -0400
+Received: by mail-oi0-f44.google.com with SMTP id r2so120085735oih.2
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2016 10:34:34 -0700 (PDT)
+In-Reply-To: <1467390990.2341.31.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Howard Cochran <cochran@lexmark.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org
 
-T24gRnJpLCAwMSBKdWwgMjAxNiwgTWFya3VzIE1heWVyIDxtYXJrdXMubWF5ZXJAYnJvYWRjb20u
-Y29tPiB3cm90ZToKPiBPbiAxIEp1bHkgMjAxNiBhdCAwMzo1MiwgSmFuaSBOaWt1bGEgPGphbmku
-bmlrdWxhQGxpbnV4LmludGVsLmNvbT4gd3JvdGU6Cj4+IE9uIEZyaSwgMDEgSnVsIDIwMTYsIE1h
-cmt1cyBNYXllciA8bW1heWVyQGJyb2FkY29tLmNvbT4gd3JvdGU6Cj4+PiBBZGQgYSBmdW5jdGlv
-biBjYWxsZWQgc3RydG9sb3dlcigpIHRvIGNvbnZlcnQgc3RyaW5ncyB0byBsb3dlciBjYXNlCj4+
-PiBpbi1wbGFjZSwgb3ZlcndyaXRpbmcgdGhlIG9yaWdpbmFsIHN0cmluZy4KPj4+Cj4+PiBUaGlz
-IHNlZW1zIHRvIGJlIGEgcmVjdXJyaW5nIHJlcXVpcmVtZW50IGluIHRoZSBrZXJuZWwgdGhhdCBp
-cwo+Pj4gY3VycmVudGx5IGJlaW5nIHNvbHZlZCBieSBzZXZlcmFsIGR1cGxpY2F0ZWQgaW1wbGVt
-ZW50YXRpb25zIGRvaW5nIHRoZQo+Pj4gc2FtZSB0aGluZy4KPj4+Cj4+PiBTaWduZWQtb2ZmLWJ5
-OiBNYXJrdXMgTWF5ZXIgPG1tYXllckBicm9hZGNvbS5jb20+Cj4+PiAtLS0KPj4+ICBpbmNsdWRl
-L2xpbnV4L3N0cmluZy5oIHwgIDEgKwo+Pj4gIGxpYi9zdHJpbmcuYyAgICAgICAgICAgfCAxNCAr
-KysrKysrKysrKysrKwo+Pj4gIDIgZmlsZXMgY2hhbmdlZCwgMTUgaW5zZXJ0aW9ucygrKQo+Pj4K
-Pj4+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3N0cmluZy5oIGIvaW5jbHVkZS9saW51eC9z
-dHJpbmcuaAo+Pj4gaW5kZXggMjZiNmY2YS4uYWFkNjA1ZSAxMDA2NDQKPj4+IC0tLSBhL2luY2x1
-ZGUvbGludXgvc3RyaW5nLmgKPj4+ICsrKyBiL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKPj4+IEBA
-IC0xMTYsNiArMTE2LDcgQEAgZXh0ZXJuIHZvaWQgKiBtZW1jaHIoY29uc3Qgdm9pZCAqLGludCxf
-X2tlcm5lbF9zaXplX3QpOwo+Pj4gICNlbmRpZgo+Pj4gIHZvaWQgKm1lbWNocl9pbnYoY29uc3Qg
-dm9pZCAqcywgaW50IGMsIHNpemVfdCBuKTsKPj4+ICBjaGFyICpzdHJyZXBsYWNlKGNoYXIgKnMs
-IGNoYXIgb2xkLCBjaGFyIG5ldyk7Cj4+PiArY2hhciAqc3RydG9sb3dlcihjaGFyICpzKTsKPj4+
-Cj4+PiAgZXh0ZXJuIHZvaWQga2ZyZWVfY29uc3QoY29uc3Qgdm9pZCAqeCk7Cj4+Pgo+Pj4gZGlm
-ZiAtLWdpdCBhL2xpYi9zdHJpbmcuYyBiL2xpYi9zdHJpbmcuYwo+Pj4gaW5kZXggZWQ4MzU2Mi4u
-NmUzYjU2MCAxMDA2NDQKPj4+IC0tLSBhL2xpYi9zdHJpbmcuYwo+Pj4gKysrIGIvbGliL3N0cmlu
-Zy5jCj4+PiBAQCAtOTUyLDMgKzk1MiwxNyBAQCBjaGFyICpzdHJyZXBsYWNlKGNoYXIgKnMsIGNo
-YXIgb2xkLCBjaGFyIG5ldykKPj4+ICAgICAgIHJldHVybiBzOwo+Pj4gIH0KPj4+ICBFWFBPUlRf
-U1lNQk9MKHN0cnJlcGxhY2UpOwo+Pj4gKwo+Pgo+PiBUaGlzIG5lZWRzIGEga2VybmVsLWRvYyBj
-b21tZW50IHJpZ2h0IGhlcmUuCj4KPiBXaWxsIGFkZCBpdC4KPgo+Pj4gK2NoYXIgKnN0cnRvbG93
-ZXIoY2hhciAqcykKPj4+ICt7Cj4+PiArICAgICBjaGFyICpwOwo+Pj4gKwo+Pj4gKyAgICAgICAg
-aWYgKHVubGlrZWx5KCFzKSkKPj4+ICsgICAgICAgICAgICAgICAgcmV0dXJuIE5VTEw7Cj4+Cj4+
-IFVzaW5nIHNwYWNlcyBmb3IgaW5kZW50YXRpb24/IFNlZSBzY3JpcHRzL2NoZWNrcGF0Y2gucGwu
-Cj4KPiBOb3Qgb24gcHVycG9zZS4gVGhhbmtzIGZvciBzcG90dGluZyBpdC4KPgo+Pj4gKwo+Pj4g
-KyAgICAgZm9yIChwID0gczsgKnA7IHArKykKPj4+ICsgICAgICAgICAgICAgKnAgPSB0b2xvd2Vy
-KCpwKTsKPj4+ICsKPj4+ICsgICAgIHJldHVybiBzOwo+Pgo+PiBXaHkgZG9lcyBpdCByZXR1cm4g
-YSB2YWx1ZT8gQ291bGQgYmUgdm9pZD8KPgo+IEl0IGNvdWxkIGJlIHZvaWQsIGJ1dCBJIHRob3Vn
-aHQgdGhhdCB3b3VsZCBtYWtlIHRoZSBmdW5jdGlvbidzIHVzZQo+IGxlc3MgZmxleGlibGUuIEFz
-IGlzLCB0aGUgcmV0dXJuIHZhbHVlIGlzIHRoZXJlIGlmIGFueWJvZHkgd2FudHMgaXQsCj4gYnV0
-IGl0IGNhbiBiZSBpZ25vcmVkIGlmIGl0IGlzIG5vdCBuZWVkZWQuIEFsc28sIGl0IHNlZW1zIGN1
-c3RvbWFyeQo+IGZvciBzdHJpbmcgZnVuY3Rpb25zIHRvIGJlIHJldHVybmluZyB0aGUgc3RyaW5n
-IHRoYXQgd2FzIHBhc3NlZCBpbi4KPgo+IEknbGwgY2hhbmdlIGl0IHRvIHZvaWQgaWYgdGhlcmUg
-YXJlIHN0cm9uZyBvcGluaW9ucyBsZWFuaW5nIHRoYXQgd2F5Lgo+IFBlcnNvbmFsbHksIEkgbGlr
-ZSB0aGF0IGl0IHJldHVybnMgYSBjaGFyICogYmV0dGVyLgoKSSBkb24ndCBoYXZlIHN0cm9uZyBv
-cGluaW9ucyBvbiB0aGlzLiBKdXN0IGEgZ2VuZXJhbCBhdmVyc2lvbiB0bwpyZXR1cm5pbmcgc29t
-ZXRoaW5nIHJlZHVuZGFudC4gQXZvaWRzIHF1ZXN0aW9ucyBsaWtlLCBkb2VzIGl0IGFsbG9jYXRl
-IGEKbmV3IHN0cmluZywgc2hvdWxkIEkgdXNlIHRoZSByZXR1cm4gdmFsdWUgaW5zdGVhZCBvZiB0
-aGUgc3RyaW5nIEkgcGFzc2VkCmluLCBzaG91bGQgSSBjaGVjayB0aGUgcmV0dXJuIHZhbHVlIG9y
-IGNhbiBJIGlnbm9yZSBpdCwgc2hvdWxkIEkgY2hlY2sKYm90aCB0aGUgc3RyaW5nIEkgcGFzcyBp
-biBhbmQgdGhlIHJldHVybiB2YWx1ZSBmb3IgIT0gTlVMTCwgZXRjLiBCdXQgSQpjb3VsZCBiZSBw
-ZXJzdWFkZWQgZWl0aGVyIHdheS4KCkJSLApKYW5pLgoKCj4KPj4gQlIsCj4+IEphbmkuCj4+Cj4+
-PiArfQo+Pj4gK0VYUE9SVF9TWU1CT0woc3RydG9sb3dlcik7Cj4+Cj4+IC0tCj4+IEphbmkgTmlr
-dWxhLCBJbnRlbCBPcGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRlcgoKLS0gCkphbmkgTmlrdWxh
-LCBJbnRlbCBPcGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRlcgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
-ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+On Fri, Jul 1, 2016 at 12:36 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Fri, 2016-07-01 at 12:14 -0400, Howard Cochran wrote:
+>>
+
+>> This patch fixes the race by making sd_remove() hold bd_mutex during
+>> the call to del_gendisk().
+>
+> OK, so this can't be the proper fix because it's a layering violation.
+>  You can see this if you consider what happens to any other block
+> device doing the same thing: they would oops in the same way, implying
+> that this fix would have to be replicated to every other block device
+> remove path.  Instead place to fix it should be somewhere inside the
+> block subsystem.  My suspicion is that it should probably be in
+> del_gendisk() because that will fix every device, but the block people
+> should think more about the problem (linux-block cc added).
+>
+> James
+
+James,
+
+I originally attempted to fix this by grabbing bd_mutex inside
+del_gendisk(). However, I surveyed the kernel and found that some other
+block drivers already hold bd_mutex when calling del_gendisk(), so that
+would deadlock. For example: blkfront_closing() and blkfront_remove() in
+drivers/block/xen-blkfront.c
+
+Some of them ensure that there can be no dirty blocks in the same code
+path prior to calling del_gendisk() (e.g. zram_remove()).
+
+Other drivers (e.g. loop) appear to only allow removal via an ioctl(),
+which, by definition, means that you have an bd_openers, and therefore
+cannot have cleared the bdev->bd_disk pointer.
+
+In fact, it appeared that sd.c may have the only "out of band" way to
+remove a device via its "delete" node, but now I see that oasdblk.c has
+a "remove" node that appears susceptible to this problem.  Another may
+be mg_disk.c
+
+OK, so indeed, a more general solution is needed. But taking bd_mutex
+inside del_gendisk() does not appear to be it. Perhaps making
+mapping_cap_writeback_dirty() not have to dereference bdev->bd_disk
+would be better (as it didn't prior to de1414a654e6)?
+
+Howard
