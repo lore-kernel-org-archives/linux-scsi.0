@@ -1,97 +1,79 @@
-From: Markus Mayer <markus.mayer@broadcom.com>
+From: Jani Nikula <jani.nikula@linux.intel.com>
 Subject: Re: [PATCH 1/6] lib: string: add function strtolower()
-Date: Fri, 1 Jul 2016 10:14:12 -0700
-Message-ID: <CAGt4E5teRyMJMfxz3s6PHmTgCApBWWdAiNu1VwQtdJybST3RTw@mail.gmail.com>
+Date: Fri, 01 Jul 2016 20:33:18 +0300
+Message-ID: <87vb0pqn4x.fsf@intel.com>
 References: <1467330612-26242-1-git-send-email-mmayer@broadcom.com>
- <1467330612-26242-2-git-send-email-mmayer@broadcom.com> <87poqxpr4d.fsf@intel.com>
+ <1467330612-26242-2-git-send-email-mmayer@broadcom.com>
+ <87poqxpr4d.fsf@intel.com>
+ <CAGt4E5teRyMJMfxz3s6PHmTgCApBWWdAiNu1VwQtdJybST3RTw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f51.google.com ([209.85.213.51]:34915 "EHLO
-	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932AbcGAROO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2016 13:14:14 -0400
-Received: by mail-vk0-f51.google.com with SMTP id u68so118691149vkf.2
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2016 10:14:13 -0700 (PDT)
-In-Reply-To: <87poqxpr4d.fsf@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAGt4E5teRyMJMfxz3s6PHmTgCApBWWdAiNu1VwQtdJybST3RTw@mail.gmail.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Markus Mayer <markus.mayer@broadcom.com>
+Cc: devel@driverdev.osuosl.org, Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, nouveau@lists.freedesktop.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Linux Kernel <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, speakup@linux-speakup.org, Chris Metcalf <cmetcalf@ezchip.com>, target-devel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, devel@acpica.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jani Nikula <jani.nikula@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, nouveau@lists.freedesktop.org, speakup@linux-speakup.org, Linux Kernel <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, linux-acpi@vger.kernel.org, target-devel@vger.kernel.org, devel@acpica.org
 
-On 1 July 2016 at 03:52, Jani Nikula <jani.nikula@linux.intel.com> wrote:
-> On Fri, 01 Jul 2016, Markus Mayer <mmayer@broadcom.com> wrote:
->> Add a function called strtolower() to convert strings to lower case
->> in-place, overwriting the original string.
->>
->> This seems to be a recurring requirement in the kernel that is
->> currently being solved by several duplicated implementations doing the
->> same thing.
->>
->> Signed-off-by: Markus Mayer <mmayer@broadcom.com>
->> ---
->>  include/linux/string.h |  1 +
->>  lib/string.c           | 14 ++++++++++++++
->>  2 files changed, 15 insertions(+)
->>
->> diff --git a/include/linux/string.h b/include/linux/string.h
->> index 26b6f6a..aad605e 100644
->> --- a/include/linux/string.h
->> +++ b/include/linux/string.h
->> @@ -116,6 +116,7 @@ extern void * memchr(const void *,int,__kernel_size_t);
->>  #endif
->>  void *memchr_inv(const void *s, int c, size_t n);
->>  char *strreplace(char *s, char old, char new);
->> +char *strtolower(char *s);
->>
->>  extern void kfree_const(const void *x);
->>
->> diff --git a/lib/string.c b/lib/string.c
->> index ed83562..6e3b560 100644
->> --- a/lib/string.c
->> +++ b/lib/string.c
->> @@ -952,3 +952,17 @@ char *strreplace(char *s, char old, char new)
->>       return s;
->>  }
->>  EXPORT_SYMBOL(strreplace);
->> +
->
-> This needs a kernel-doc comment right here.
-
-Will add it.
-
->> +char *strtolower(char *s)
->> +{
->> +     char *p;
->> +
->> +        if (unlikely(!s))
->> +                return NULL;
->
-> Using spaces for indentation? See scripts/checkpatch.pl.
-
-Not on purpose. Thanks for spotting it.
-
->> +
->> +     for (p = s; *p; p++)
->> +             *p = tolower(*p);
->> +
->> +     return s;
->
-> Why does it return a value? Could be void?
-
-It could be void, but I thought that would make the function's use
-less flexible. As is, the return value is there if anybody wants it,
-but it can be ignored if it is not needed. Also, it seems customary
-for string functions to be returning the string that was passed in.
-
-I'll change it to void if there are strong opinions leaning that way.
-Personally, I like that it returns a char * better.
-
-> BR,
-> Jani.
->
->> +}
->> +EXPORT_SYMBOL(strtolower);
->
-> --
-> Jani Nikula, Intel Open Source Technology Center
+T24gRnJpLCAwMSBKdWwgMjAxNiwgTWFya3VzIE1heWVyIDxtYXJrdXMubWF5ZXJAYnJvYWRjb20u
+Y29tPiB3cm90ZToKPiBPbiAxIEp1bHkgMjAxNiBhdCAwMzo1MiwgSmFuaSBOaWt1bGEgPGphbmku
+bmlrdWxhQGxpbnV4LmludGVsLmNvbT4gd3JvdGU6Cj4+IE9uIEZyaSwgMDEgSnVsIDIwMTYsIE1h
+cmt1cyBNYXllciA8bW1heWVyQGJyb2FkY29tLmNvbT4gd3JvdGU6Cj4+PiBBZGQgYSBmdW5jdGlv
+biBjYWxsZWQgc3RydG9sb3dlcigpIHRvIGNvbnZlcnQgc3RyaW5ncyB0byBsb3dlciBjYXNlCj4+
+PiBpbi1wbGFjZSwgb3ZlcndyaXRpbmcgdGhlIG9yaWdpbmFsIHN0cmluZy4KPj4+Cj4+PiBUaGlz
+IHNlZW1zIHRvIGJlIGEgcmVjdXJyaW5nIHJlcXVpcmVtZW50IGluIHRoZSBrZXJuZWwgdGhhdCBp
+cwo+Pj4gY3VycmVudGx5IGJlaW5nIHNvbHZlZCBieSBzZXZlcmFsIGR1cGxpY2F0ZWQgaW1wbGVt
+ZW50YXRpb25zIGRvaW5nIHRoZQo+Pj4gc2FtZSB0aGluZy4KPj4+Cj4+PiBTaWduZWQtb2ZmLWJ5
+OiBNYXJrdXMgTWF5ZXIgPG1tYXllckBicm9hZGNvbS5jb20+Cj4+PiAtLS0KPj4+ICBpbmNsdWRl
+L2xpbnV4L3N0cmluZy5oIHwgIDEgKwo+Pj4gIGxpYi9zdHJpbmcuYyAgICAgICAgICAgfCAxNCAr
+KysrKysrKysrKysrKwo+Pj4gIDIgZmlsZXMgY2hhbmdlZCwgMTUgaW5zZXJ0aW9ucygrKQo+Pj4K
+Pj4+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3N0cmluZy5oIGIvaW5jbHVkZS9saW51eC9z
+dHJpbmcuaAo+Pj4gaW5kZXggMjZiNmY2YS4uYWFkNjA1ZSAxMDA2NDQKPj4+IC0tLSBhL2luY2x1
+ZGUvbGludXgvc3RyaW5nLmgKPj4+ICsrKyBiL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKPj4+IEBA
+IC0xMTYsNiArMTE2LDcgQEAgZXh0ZXJuIHZvaWQgKiBtZW1jaHIoY29uc3Qgdm9pZCAqLGludCxf
+X2tlcm5lbF9zaXplX3QpOwo+Pj4gICNlbmRpZgo+Pj4gIHZvaWQgKm1lbWNocl9pbnYoY29uc3Qg
+dm9pZCAqcywgaW50IGMsIHNpemVfdCBuKTsKPj4+ICBjaGFyICpzdHJyZXBsYWNlKGNoYXIgKnMs
+IGNoYXIgb2xkLCBjaGFyIG5ldyk7Cj4+PiArY2hhciAqc3RydG9sb3dlcihjaGFyICpzKTsKPj4+
+Cj4+PiAgZXh0ZXJuIHZvaWQga2ZyZWVfY29uc3QoY29uc3Qgdm9pZCAqeCk7Cj4+Pgo+Pj4gZGlm
+ZiAtLWdpdCBhL2xpYi9zdHJpbmcuYyBiL2xpYi9zdHJpbmcuYwo+Pj4gaW5kZXggZWQ4MzU2Mi4u
+NmUzYjU2MCAxMDA2NDQKPj4+IC0tLSBhL2xpYi9zdHJpbmcuYwo+Pj4gKysrIGIvbGliL3N0cmlu
+Zy5jCj4+PiBAQCAtOTUyLDMgKzk1MiwxNyBAQCBjaGFyICpzdHJyZXBsYWNlKGNoYXIgKnMsIGNo
+YXIgb2xkLCBjaGFyIG5ldykKPj4+ICAgICAgIHJldHVybiBzOwo+Pj4gIH0KPj4+ICBFWFBPUlRf
+U1lNQk9MKHN0cnJlcGxhY2UpOwo+Pj4gKwo+Pgo+PiBUaGlzIG5lZWRzIGEga2VybmVsLWRvYyBj
+b21tZW50IHJpZ2h0IGhlcmUuCj4KPiBXaWxsIGFkZCBpdC4KPgo+Pj4gK2NoYXIgKnN0cnRvbG93
+ZXIoY2hhciAqcykKPj4+ICt7Cj4+PiArICAgICBjaGFyICpwOwo+Pj4gKwo+Pj4gKyAgICAgICAg
+aWYgKHVubGlrZWx5KCFzKSkKPj4+ICsgICAgICAgICAgICAgICAgcmV0dXJuIE5VTEw7Cj4+Cj4+
+IFVzaW5nIHNwYWNlcyBmb3IgaW5kZW50YXRpb24/IFNlZSBzY3JpcHRzL2NoZWNrcGF0Y2gucGwu
+Cj4KPiBOb3Qgb24gcHVycG9zZS4gVGhhbmtzIGZvciBzcG90dGluZyBpdC4KPgo+Pj4gKwo+Pj4g
+KyAgICAgZm9yIChwID0gczsgKnA7IHArKykKPj4+ICsgICAgICAgICAgICAgKnAgPSB0b2xvd2Vy
+KCpwKTsKPj4+ICsKPj4+ICsgICAgIHJldHVybiBzOwo+Pgo+PiBXaHkgZG9lcyBpdCByZXR1cm4g
+YSB2YWx1ZT8gQ291bGQgYmUgdm9pZD8KPgo+IEl0IGNvdWxkIGJlIHZvaWQsIGJ1dCBJIHRob3Vn
+aHQgdGhhdCB3b3VsZCBtYWtlIHRoZSBmdW5jdGlvbidzIHVzZQo+IGxlc3MgZmxleGlibGUuIEFz
+IGlzLCB0aGUgcmV0dXJuIHZhbHVlIGlzIHRoZXJlIGlmIGFueWJvZHkgd2FudHMgaXQsCj4gYnV0
+IGl0IGNhbiBiZSBpZ25vcmVkIGlmIGl0IGlzIG5vdCBuZWVkZWQuIEFsc28sIGl0IHNlZW1zIGN1
+c3RvbWFyeQo+IGZvciBzdHJpbmcgZnVuY3Rpb25zIHRvIGJlIHJldHVybmluZyB0aGUgc3RyaW5n
+IHRoYXQgd2FzIHBhc3NlZCBpbi4KPgo+IEknbGwgY2hhbmdlIGl0IHRvIHZvaWQgaWYgdGhlcmUg
+YXJlIHN0cm9uZyBvcGluaW9ucyBsZWFuaW5nIHRoYXQgd2F5Lgo+IFBlcnNvbmFsbHksIEkgbGlr
+ZSB0aGF0IGl0IHJldHVybnMgYSBjaGFyICogYmV0dGVyLgoKSSBkb24ndCBoYXZlIHN0cm9uZyBv
+cGluaW9ucyBvbiB0aGlzLiBKdXN0IGEgZ2VuZXJhbCBhdmVyc2lvbiB0bwpyZXR1cm5pbmcgc29t
+ZXRoaW5nIHJlZHVuZGFudC4gQXZvaWRzIHF1ZXN0aW9ucyBsaWtlLCBkb2VzIGl0IGFsbG9jYXRl
+IGEKbmV3IHN0cmluZywgc2hvdWxkIEkgdXNlIHRoZSByZXR1cm4gdmFsdWUgaW5zdGVhZCBvZiB0
+aGUgc3RyaW5nIEkgcGFzc2VkCmluLCBzaG91bGQgSSBjaGVjayB0aGUgcmV0dXJuIHZhbHVlIG9y
+IGNhbiBJIGlnbm9yZSBpdCwgc2hvdWxkIEkgY2hlY2sKYm90aCB0aGUgc3RyaW5nIEkgcGFzcyBp
+biBhbmQgdGhlIHJldHVybiB2YWx1ZSBmb3IgIT0gTlVMTCwgZXRjLiBCdXQgSQpjb3VsZCBiZSBw
+ZXJzdWFkZWQgZWl0aGVyIHdheS4KCkJSLApKYW5pLgoKCj4KPj4gQlIsCj4+IEphbmkuCj4+Cj4+
+PiArfQo+Pj4gK0VYUE9SVF9TWU1CT0woc3RydG9sb3dlcik7Cj4+Cj4+IC0tCj4+IEphbmkgTmlr
+dWxhLCBJbnRlbCBPcGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRlcgoKLS0gCkphbmkgTmlrdWxh
+LCBJbnRlbCBPcGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRlcgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
+ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
+bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
