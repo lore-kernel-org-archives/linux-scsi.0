@@ -1,56 +1,167 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
-Subject: Re: [PATCH 1/6] lib: string: add function strtolower()
-Date: Fri, 01 Jul 2016 13:52:34 +0300
-Message-ID: <87poqxpr4d.fsf@intel.com>
-References: <1467330612-26242-1-git-send-email-mmayer@broadcom.com>
- <1467330612-26242-2-git-send-email-mmayer@broadcom.com>
+From: Kashyap Desai <kashyap.satyam@gmail.com>
+Subject: Re: megaraid_sas driver bug
+Date: Fri, 1 Jul 2016 16:36:22 +0530
+Message-ID: <CACdNGpRWi11YG30wJmosEPuRo8DX0kTStsm60Ug5K4014OvRHQ@mail.gmail.com>
+References: <loom.20160625T191237-500@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <1467330612-26242-2-git-send-email-mmayer@broadcom.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>
-Cc: devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, nouveau@lists.freedesktop.org, speakup@linux-speakup.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-acpi@vger.kernel.org, target-devel@vger.kernel.org, Markus Mayer <mmayer@broadcom.com>, devel@acpica.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35853 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751523AbcGALHR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2016 07:07:17 -0400
+Received: by mail-qk0-f194.google.com with SMTP id r68so19943708qka.3
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2016 04:06:23 -0700 (PDT)
+In-Reply-To: <loom.20160625T191237-500@post.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geza Lucz <geza@lucz.com>
+Cc: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAwMSBKdWwgMjAxNiwgTWFya3VzIE1heWVyIDxtbWF5ZXJAYnJvYWRjb20uY29tPiB3
-cm90ZToKPiBBZGQgYSBmdW5jdGlvbiBjYWxsZWQgc3RydG9sb3dlcigpIHRvIGNvbnZlcnQgc3Ry
-aW5ncyB0byBsb3dlciBjYXNlCj4gaW4tcGxhY2UsIG92ZXJ3cml0aW5nIHRoZSBvcmlnaW5hbCBz
-dHJpbmcuCj4KPiBUaGlzIHNlZW1zIHRvIGJlIGEgcmVjdXJyaW5nIHJlcXVpcmVtZW50IGluIHRo
-ZSBrZXJuZWwgdGhhdCBpcwo+IGN1cnJlbnRseSBiZWluZyBzb2x2ZWQgYnkgc2V2ZXJhbCBkdXBs
-aWNhdGVkIGltcGxlbWVudGF0aW9ucyBkb2luZyB0aGUKPiBzYW1lIHRoaW5nLgo+Cj4gU2lnbmVk
-LW9mZi1ieTogTWFya3VzIE1heWVyIDxtbWF5ZXJAYnJvYWRjb20uY29tPgo+IC0tLQo+ICBpbmNs
-dWRlL2xpbnV4L3N0cmluZy5oIHwgIDEgKwo+ICBsaWIvc3RyaW5nLmMgICAgICAgICAgIHwgMTQg
-KysrKysrKysrKysrKysKPiAgMiBmaWxlcyBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspCj4KPiBk
-aWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9zdHJpbmcuaCBiL2luY2x1ZGUvbGludXgvc3RyaW5n
-LmgKPiBpbmRleCAyNmI2ZjZhLi5hYWQ2MDVlIDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUvbGludXgv
-c3RyaW5nLmgKPiArKysgYi9pbmNsdWRlL2xpbnV4L3N0cmluZy5oCj4gQEAgLTExNiw2ICsxMTYs
-NyBAQCBleHRlcm4gdm9pZCAqIG1lbWNocihjb25zdCB2b2lkICosaW50LF9fa2VybmVsX3NpemVf
-dCk7Cj4gICNlbmRpZgo+ICB2b2lkICptZW1jaHJfaW52KGNvbnN0IHZvaWQgKnMsIGludCBjLCBz
-aXplX3Qgbik7Cj4gIGNoYXIgKnN0cnJlcGxhY2UoY2hhciAqcywgY2hhciBvbGQsIGNoYXIgbmV3
-KTsKPiArY2hhciAqc3RydG9sb3dlcihjaGFyICpzKTsKPiAgCj4gIGV4dGVybiB2b2lkIGtmcmVl
-X2NvbnN0KGNvbnN0IHZvaWQgKngpOwo+ICAKPiBkaWZmIC0tZ2l0IGEvbGliL3N0cmluZy5jIGIv
-bGliL3N0cmluZy5jCj4gaW5kZXggZWQ4MzU2Mi4uNmUzYjU2MCAxMDA2NDQKPiAtLS0gYS9saWIv
-c3RyaW5nLmMKPiArKysgYi9saWIvc3RyaW5nLmMKPiBAQCAtOTUyLDMgKzk1MiwxNyBAQCBjaGFy
-ICpzdHJyZXBsYWNlKGNoYXIgKnMsIGNoYXIgb2xkLCBjaGFyIG5ldykKPiAgCXJldHVybiBzOwo+
-ICB9Cj4gIEVYUE9SVF9TWU1CT0woc3RycmVwbGFjZSk7Cj4gKwoKVGhpcyBuZWVkcyBhIGtlcm5l
-bC1kb2MgY29tbWVudCByaWdodCBoZXJlLgoKPiArY2hhciAqc3RydG9sb3dlcihjaGFyICpzKQo+
-ICt7Cj4gKwljaGFyICpwOwo+ICsKPiArICAgICAgICBpZiAodW5saWtlbHkoIXMpKQo+ICsgICAg
-ICAgICAgICAgICAgcmV0dXJuIE5VTEw7CgpVc2luZyBzcGFjZXMgZm9yIGluZGVudGF0aW9uPyBT
-ZWUgc2NyaXB0cy9jaGVja3BhdGNoLnBsLgoKPiArCj4gKwlmb3IgKHAgPSBzOyAqcDsgcCsrKQo+
-ICsJCSpwID0gdG9sb3dlcigqcCk7Cj4gKwo+ICsJcmV0dXJuIHM7CgpXaHkgZG9lcyBpdCByZXR1
-cm4gYSB2YWx1ZT8gQ291bGQgYmUgdm9pZD8KCkJSLApKYW5pLgoKPiArfQo+ICtFWFBPUlRfU1lN
-Qk9MKHN0cnRvbG93ZXIpOwoKLS0gCkphbmkgTmlrdWxhLCBJbnRlbCBPcGVuIFNvdXJjZSBUZWNo
-bm9sb2d5IENlbnRlcgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5v
-cmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2
-ZWwK
+On Sat, Jun 25, 2016 at 10:43 PM, Geza Lucz <geza@lucz.com> wrote:
+>
+> I don=E2=80=99t know if this is the right place to report this and wh=
+ether this is
+> more like a Centos kernel issue.
+>
+> Since Centos 6.8, the megaraid_sas driver seems to be somewhat broken=
+ =E2=80=93
+> which as I understand is a backport of the up-to-date driver to their=
+ kernel
+> version. It is still partially usable, but as soon as I need to rebui=
+ld an
+> array, instead of the scan message at the end I get a bunch of kernel=
+ error
+> messages. There are so many of these that the kernel logger uses too =
+much
+> CPU and eventually the log fills up the partition, so the server need=
+s to be
+> rebooted. So technically I lose all hotplug functionality.
+>
+> Probably the same thing happens when the array degrades.
+>
+> I=E2=80=99m sending this report here, because there is absolutely no =
+mention of
+> similar problems on the internet, yet the problem is fully reproducib=
+le and
+> real.
+>
+> I=E2=80=99m using Dell Perc 6i at the moment.
+>
+> Thanks
+
+
+As we discussed, this is regression and found the proposed fix. Can
+you try below patch. ?
+
+
+---
+ megaraid_sas_base.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/megaraid_sas_base.c b/megaraid_sas_base.c
+index d15e252..bee0895 100755
+--- a/megaraid_sas_base.c
++++ b/megaraid_sas_base.c
+@@ -5309,6 +5309,12 @@ megasas_get_pd_list(struct megasas_instance *ins=
+tance)
+     struct MR_PD_ADDRESS *pd_addr;
+     dma_addr_t ci_h =3D 0;
+
++    if (instance->pd_list_not_supported) {
++        dev_info(&instance->pdev->dev, "MR_DCMD_PD_LIST_QUERY "
++            "not supported by firmware\n");
++        return ret;
++    }
++
+     cmd =3D megasas_get_cmd(instance);
+
+     if (!cmd) {
+--=20
+
+
+We have verified on our local setup, but waiting for more testing by
+Test team to make sure it is good to post.
+
+Thanks, Kashyap
+
+>
+>
+> Jun 25 08:49:29 ns8 kernel: [  757.358015] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.379016] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.400018] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.421021] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.442017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.463015] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.484021] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.505017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:29 ns8 kernel: [  757.526021] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.547017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.568021] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.589017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.610017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.631017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.652017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.673016] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.694017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.715016] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.736017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.757017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.778017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.799017] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.820018] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+> Jun 25 08:49:30 ns8 kernel: [  757.841018] megaraid_sas 0000:02:00.0:=
+ DCMD
+> failed/not supported by firmware: megasas_get_pd_list 4115
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
