@@ -1,94 +1,125 @@
-From: Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
-Subject: RE: [patch] bfa: clean up some bounds checking
-Date: Fri, 1 Jul 2016 13:12:58 +0000
-Message-ID: <SN1PR11MB042975C2DD9F663AD3D1551D90250@SN1PR11MB0429.namprd11.prod.outlook.com>
-References: <20160616104434.GB24067@mwanda> <5762997D.3020302@bfs.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Howard Cochran <hcochran@kernelspring.com>
+Subject: [PATCH] sd: Fix crash due to race when removing scsi disk
+Date: Fri,  1 Jul 2016 12:14:59 -0400
+Message-ID: <1467389699-10571-1-git-send-email-hcochran@kernelspring.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0139.outbound.protection.outlook.com ([104.47.32.139]:60864
-	"EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752544AbcGAPqf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2016 11:46:35 -0400
-In-Reply-To: <5762997D.3020302@bfs.de>
-Content-Language: en-US
+Received: from mail-it0-f49.google.com ([209.85.214.49]:38654 "EHLO
+	mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbcGAQP7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2016 12:15:59 -0400
+Received: by mail-it0-f49.google.com with SMTP id h190so20739251ith.1
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2016 09:15:59 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "wharms@bfs.de" <wharms@bfs.de>, Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Howard Cochran <hcochran@kernelspring.com>, Howard Cochran <cochran@lexmark.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@Odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-    Both the approaches (i.e., using a loop or the strchr()) look fine to me.
+This crash occurred while writing 1 to /sys/block/sda/device/delete at
+the same instant that another process was closing the block device:
 
-Thanks,
-Sudarsana
+ BUG: unable to handle kernel NULL pointer dereference at 00000230
+ IP: [<c138fa9c>] blk_get_backing_dev_info+0xc/0x20
+ Oops: 0000 [#1] PREEMPT SMP
+ Call Trace:
+  [<c112da2a>] ? __filemap_fdatawrite_range+0x15a/0x180
+  [<c112d9b5>] ? __filemap_fdatawrite_range+0xe5/0x180
+  [<c112dae8>] filemap_write_and_wait+0x38/0x70
+  [<c11b79b1>] fsync_bdev+0x41/0x50
+  [<c13a4f7c>] invalidate_partition+0x1c/0x40
+  [<c13a5d0f>] del_gendisk+0xcf/0x1c0
+  [<c15c7143>] sd_remove+0x53/0xb0
+  [<c157eaf0>] __device_release_driver+0x80/0x120
+  [<c157ebad>] device_release_driver+0x1d/0x30
+  [<c157e392>] bus_remove_device+0xb2/0xf0
+  [<c157b45c>] device_del+0xec/0x1e0
+  [<c13b6d88>] ? kobject_put+0x58/0xc0
+  [<c15c12af>] __scsi_remove_device+0xaf/0xc0
+  [<c15c12df>] scsi_remove_device+0x1f/0x30
+  [<c15c131b>] sdev_store_delete+0x2b/0x40
+  [<c15c12f0>] ? scsi_remove_device+0x30/0x30
+  [<c157a87f>] dev_attr_store+0x1f/0x40
+               ...
+  [<c11829bc>] SyS_write+0x4c/0xb0
+ EIP: [<c138fa9c>] blk_get_backing_dev_info+0xc/0x20 SS:ESP 0068:f5eb9d18
 
------Original Message-----
-From: walter harms [mailto:wharms@bfs.de] 
-Sent: 16 June 2016 17:50
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>; Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>; James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>; linux-scsi <linux-scsi@vger.kernel.org>; kernel-janitors@vger.kernel.org
-Subject: Re: [patch] bfa: clean up some bounds checking
+It is caused by this race: Between the time Thread B's instance of
+filemap_write_and_wait() has asked whether there are any pages to flush and
+when it it dereferences bdev->disk, Thread A can clear that pointer in
+__blkdev_put().
 
+Thread A:                             Thread B:
+blkdev_close()                        sdev_store_delete()
+  blkdev_put()                          sd_remove()
+    __blkdev_put()                        del_gendisk()
+      mutex_lock(bd_mutex);                 invalidate_partition()
+	sync_blkdev()                         fsync_bdev()
+          filemap_write_and_wait()              filemap_write_and_wait()
+	    if (mapping has pages)                if (mapping has pages)
+	      deref bdev->disk (OK)
+        Set bdev->bd_disk = NULL;
+      mutex_unlock(bd_mutex);                       deref. bdev->bd_disk (BOOM!)
 
+The "dereference bdev->disk" occurs on this sub-chain:
+filemap_write_and_wait()
+  __filemap_fdatawrite_range()
+    mapping_cap_writeback_dirty()
+      inode_to_bdi()
+        bdev_get_queue()
+          return bdev->disk->queue;
 
-Am 16.06.2016 12:44, schrieb Dan Carpenter:
-> This code is supposed to search ->adapter_hwpath[] and replace the 
-> second colon with a NUL character.  Unfortunately, the boundary checks 
-> that ensure we don't go beyond the end of the buffer have a couple 
-> problems.
-> 
-> Imagine that the string has no colons.  In that case, in the first 
-> loop, we read one space beyond the end of the buffer and then exit the loop.
-> In the next loop, we increment once, read two characters beyond the 
-> end of the buffer and then exit.  Then after the loop we put a NUL 
-> character two characters past the end of the buffer.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> This is from static analysis and not tested.  Caveat emptor.
-> 
-> diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c 
-> index d1ad020..dfb26f0 100644
-> --- a/drivers/scsi/bfa/bfad_bsg.c
-> +++ b/drivers/scsi/bfa/bfad_bsg.c
-> @@ -106,10 +106,17 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, 
-> void *cmd)
->  
->  	/* set adapter hw path */
->  	strcpy(iocmd->adapter_hwpath, bfad->pci_name);
-> -	for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
-> -		;
-> -	for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32; )
-> -		;
-> +	i = -1;
-> +	while (++i < BFA_STRING_32) {
-> +		if (iocmd->adapter_hwpath[i] == ':')
-> +			break;
-> +	}
-> +	while (++i < BFA_STRING_32) {
-> +		if (iocmd->adapter_hwpath[i] == ':')
-> +			break;
-> +	}
-> +	if (i >= BFA_STRING_32)
-> +		i = BFA_STRING_32 - 1;
->  	iocmd->adapter_hwpath[i] = '\0';
->  	iocmd->status = BFA_STATUS_OK;
->  	return 0;
+The problem was introduced by de1414a654e6 ("fs: export inode_to_bdi and use
+it in favor of mapping->backing_dev_info"). Before that change,
+mapping_cap_writeback_dirty() directly retrieved the backing_dev_info from
+the mapping rather than looking it up through
+mapping->host->inode_dev->bdev->bd_disk->queue.
 
+This was found while running a stress test on an ARM-based embedded system
+which involved repeatedly shutting down many services simultaneously via
+systemd isolate (thereby making it likely that "Thread B" was preempted for
+awhile just before it dereferenced bdev->bd_disk). I subsequently reproduced
+this on vanilla Linux 4.6 in QEMU/x86.
 
-I do not see the use case but i assume
-the idea is to have a string like aa:bb:something and kill everyhing after the second ':' ?
-/*
-	a few word may help here also inside the code */
+This patch fixes the race by making sd_remove() hold bd_mutex during the
+call to del_gendisk().
 
+Fixes: de1414a654e6 ("fs: export inode_to_bdi and use it in favor of
+mapping->backing_dev_info")
+Signed-off-by: Howard Cochran <hcochran@kernelspring.com>
+Cc: Howard Cochran <cochran@lexmark.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <JBottomley@Odin.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-second: maybe we can us strchr here ?
-	s1=strchr(iocmd->adapter_hwpath,':');
-	if (s1 != NULL ) s1=strchr(s1,":");
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f52b74c..0f53925 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3126,6 +3126,7 @@ static int sd_remove(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp;
+ 	dev_t devt;
++	struct block_device *bdev;
+ 
+ 	sdkp = dev_get_drvdata(dev);
+ 	devt = disk_devt(sdkp->disk);
+@@ -3134,7 +3135,13 @@ static int sd_remove(struct device *dev)
+ 	async_synchronize_full_domain(&scsi_sd_pm_domain);
+ 	async_synchronize_full_domain(&scsi_sd_probe_domain);
+ 	device_del(&sdkp->dev);
++
++	bdev = bdget_disk(sdkp->disk, 0);
++	mutex_lock(&bdev->bd_mutex);
+ 	del_gendisk(sdkp->disk);
++	mutex_unlock(&bdev->bd_mutex);
++	bdput(bdev);
++
+ 	sd_shutdown(dev);
+ 
+ 	blk_register_region(devt, SD_MINORS, NULL,
+-- 
+1.9.1
 
-
-
-re,
- wh
