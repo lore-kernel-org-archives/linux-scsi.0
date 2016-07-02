@@ -1,52 +1,51 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 2/2] hpsa: change hpsa_passthru_ioctl timeout
-Date: Fri, 1 Jul 2016 13:37:38 -0500
-Message-ID: <146739825879.24478.15918793437417180394.stgit@brunhilda>
-References: <146739698564.24478.63853333596746262.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0079.outbound.protection.outlook.com ([104.47.33.79]:60676
-	"EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750803AbcGAWL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Jul 2016 18:11:27 -0400
-In-Reply-To: <146739698564.24478.63853333596746262.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: [PATCH] scsi: replace broken specification URL
+Date: Sat,  2 Jul 2016 08:56:36 +0200
+Message-ID: <1467442596-31310-1-git-send-email-michael.opdenacker@free-electrons.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
+To: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Michael Opdenacker <michael.opdenacker@free-electrons.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
 
-Was not alloting for FW Flash times.
+The t10.org website containing SCSI-2 draft specifications now requires
+to be from a member company to access the documents.
 
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+This replaces the now broken link with another public resource
+where the specifications can be found.
+
+Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
 ---
- drivers/scsi/hpsa.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Documentation/DocBook/scsi.tmpl | 2 +-
+ drivers/scsi/scsicam.c          | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 375a396..030d002 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6524,7 +6524,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		c->SG[0].Ext = cpu_to_le32(HPSA_SG_LAST); /* not chaining */
- 	}
- 	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
--					DEFAULT_TIMEOUT);
-+					NO_TIMEOUT);
- 	if (iocommand.buf_size > 0)
- 		hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_BIDIRECTIONAL);
- 	check_ioctl_unit_attention(h, c);
-@@ -6657,7 +6657,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		c->SG[--i].Ext = cpu_to_le32(HPSA_SG_LAST);
- 	}
- 	status = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
--						DEFAULT_TIMEOUT);
-+						NO_TIMEOUT);
- 	if (sg_used)
- 		hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
- 	check_ioctl_unit_attention(h, c);
+diff --git a/Documentation/DocBook/scsi.tmpl b/Documentation/DocBook/scsi.tmpl
+index 4b9b9b286cea..41ad3086b7a2 100644
+--- a/Documentation/DocBook/scsi.tmpl
++++ b/Documentation/DocBook/scsi.tmpl
+@@ -160,7 +160,7 @@
+       <sect2 id="scsicam.c">
+         <title>drivers/scsi/scsicam.c</title>
+         <para>
+-          <ulink url='http://www.t10.org/ftp/t10/drafts/cam/cam-r12b.pdf'>SCSI
++          <ulink url='ftp://ftp.uni-duisburg.de/Hardware/SCSI/cam-r12b.pdf'>SCSI
+           Common Access Method</ulink> support functions, for use with
+           HDIO_GETGEO, etc.
+         </para>
+diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
+index 910f4a7a3924..8144618fe2de 100644
+--- a/drivers/scsi/scsicam.c
++++ b/drivers/scsi/scsicam.c
+@@ -207,7 +207,7 @@ EXPORT_SYMBOL(scsi_partsize);
+  *
+  * WORKING                                                    X3T9.2
+  * DRAFT                                                        792D
+- * see http://www.t10.org/ftp/t10/drafts/cam/cam-r12b.pdf
++ * see ftp://ftp.uni-duisburg.de/Hardware/SCSI/cam-r12b.pdf
+  *
+  *                                                        Revision 6
+  *                                                         10-MAR-94
+-- 
+2.7.4
 
