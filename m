@@ -1,58 +1,39 @@
-From: Nicholas Krause <xerofoify@gmail.com>
-Subject: [PATCH RESEND] mpt3sas:Fix missing error checks for calls to
- _transport_phy_reset in mpt3sas_transport.c
-Date: Sat,  2 Jul 2016 15:21:59 -0400
-Message-ID: <1467487319-30989-1-git-send-email-xerofoify@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 116771] NULL pointer dereference when 'cat
+ /sys/class/fc_host/host1/fabric_name'
+Date: Sun, 03 Jul 2016 02:45:24 +0000
+Message-ID: <bug-116771-11613-qkjn4rm5PF@https.bugzilla.kernel.org/>
+References: <bug-116771-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: sathya.prakash@broadcom.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, sbranden@broadcom.com, jonmason@broadcom.com, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com, rjui@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40392 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751480AbcGCCp2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Jul 2016 22:45:28 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DAB3920259
+	for <linux-scsi@vger.kernel.org>; Sun,  3 Jul 2016 02:45:26 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id D88052034C
+	for <linux-scsi@vger.kernel.org>; Sun,  3 Jul 2016 02:45:24 +0000 (UTC)
+In-Reply-To: <bug-116771-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This adds the missing error checks and paths for functions that
-call _transport_phy_reset and do not correctly check that the
-call to this particular function has succeeded by returning zero
-in the file, mpt3sas_transport.c.
+https://bugzilla.kernel.org/show_bug.cgi?id=116771
 
-Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
----
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+bastienphilbert@gmail.com changed:
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index ca36d7e..bff5a11 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -1766,7 +1766,7 @@ _transport_phy_enable(struct sas_phy *phy, int enable)
- 
- 	/* link reset */
- 	if (enable)
--		_transport_phy_reset(phy, 0);
-+		rc = _transport_phy_reset(phy, 0);
- 
-  out:
- 	kfree(sas_iounit_pg1);
-@@ -1870,7 +1870,9 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
- 	}
- 
- 	/* link reset */
--	_transport_phy_reset(phy, 0);
-+	rc = _transport_phy_reset(phy, 0);
-+	if (rc)
-+		goto out;
- 
- 	/* read phy page 0, then update the rates in the sas transport phy */
- 	if (!mpt3sas_config_get_phy_pg0(ioc, &mpi_reply, &phy_pg0,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bastienphilbert@gmail.com
+
+--- Comment #2 from bastienphilbert@gmail.com ---
+See if the below patch triggers anything new for you.
+
 -- 
-2.5.0
+You are receiving this mail because:
+You are watching the assignee of the bug.
