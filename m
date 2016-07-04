@@ -1,26 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 3/6] fcoe: fcoe->realdev is always set
-Date: Mon, 4 Jul 2016 12:16:08 +0200
-Message-ID: <20160704101608.5hxhcieiygbcsrsc@c203.arch.suse.de>
+Subject: Re: [PATCH 4/6] fcoe: Update multicast addresses on FIP mode change
+Date: Mon, 4 Jul 2016 12:16:38 +0200
+Message-ID: <20160704101638.gnr3kqb5xxqsc52o@c203.arch.suse.de>
 References: <1467620963-67047-1-git-send-email-hare@suse.de>
- <1467620963-67047-4-git-send-email-hare@suse.de>
+ <1467620963-67047-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53848 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53900 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752444AbcGDKQJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Jul 2016 06:16:09 -0400
+	id S1752444AbcGDKQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Jul 2016 06:16:39 -0400
 Content-Disposition: inline
-In-Reply-To: <1467620963-67047-4-git-send-email-hare@suse.de>
+In-Reply-To: <1467620963-67047-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, Jul 04, 2016 at 10:29:20AM +0200, Hannes Reinecke wrote:
-> '->realdev' is always set, so this check is pointless.
+On Mon, Jul 04, 2016 at 10:29:21AM +0200, Hannes Reinecke wrote:
+> When the FIP mode is changed we need to update the multicast
+> addresses to ensure we get the correct frames.
 >=20
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 
