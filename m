@@ -1,39 +1,40 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH v2] scsi/fcoe: convert to kworker
-Date: Mon, 4 Jul 2016 10:23:46 +0200
-Message-ID: <205de315-192e-cf72-7163-5e2d8175a74f@linutronix.de>
-References: <1457710143-29182-1-git-send-email-bigeasy@linutronix.de>
- <1457710143-29182-2-git-send-email-bigeasy@linutronix.de>
- <20160311161704.GA5083@infradead.org> <56E2F30F.5030108@linutronix.de>
- <20160315081940.GB9136@infradead.org> <20160412151654.GB20685@linutronix.de>
- <20160610103812.ojgzop6qdv3mos5d@c203.arch.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 3/6] fcoe: fcoe->realdev is always set
+Date: Mon,  4 Jul 2016 10:29:20 +0200
+Message-ID: <1467620963-67047-4-git-send-email-hare@suse.de>
+References: <1467620963-67047-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:57274 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbcGDIYB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2016 04:24:01 -0400
-In-Reply-To: <20160610103812.ojgzop6qdv3mos5d@c203.arch.suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:40731 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753119AbcGDI3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Jul 2016 04:29:33 -0400
+In-Reply-To: <1467620963-67047-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rt@linutronix.de, Vasu Dev <vasu.dev@intel.com>, fcoe-devel@open-fcoe.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 06/10/2016 12:38 PM, Johannes Thumshirn wrote:
-=E2=80=A6
+'->realdev' is always set, so this check is pointless.
 
->=20
-> Tested in a Boot from FCoE scenario using a BCM57840.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-This got merged over the weekend. Thanks for that. I will try to look
-into the other two (bnx2i, bnx2fc) and convert them as well within this
-week.
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 9c3742d..41c67e5 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -770,9 +770,6 @@ static void fcoe_fdmi_info(struct fc_lport *lport, struct net_device *netdev)
+ 	fcoe = port->priv;
+ 	realdev = fcoe->realdev;
+ 
+-	if (!realdev)
+-		return;
+-
+ 	/* No FDMI state m/c for NPIV ports */
+ 	if (lport->vport)
+ 		return;
+-- 
+1.8.5.6
 
-Sebastian
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
