@@ -1,51 +1,74 @@
-From: Markus Mayer <markus.mayer@broadcom.com>
-Subject: Re: [PATCH 1/6] lib: string: add function strtolower()
-Date: Mon, 4 Jul 2016 13:18:18 -0700
-Message-ID: <CAGt4E5sgTbwqb+paF2NaJP_vgQwrvGpTtzLAs28LapGRqMaKFA@mail.gmail.com>
-References: <1467330612-26242-1-git-send-email-mmayer@broadcom.com>
- <1467330612-26242-2-git-send-email-mmayer@broadcom.com> <8737nt83sc.fsf@rasmusvillemoes.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <8737nt83sc.fsf@rasmusvillemoes.dk>
-Sender: target-devel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>, dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-acpi@vger.kernel.org, devel@acpica.org, speakup@linux-speakup.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+From: tom.ty89@gmail.com
+Subject: [PATCH 1/2] libata-scsi: improve TRIM translation
+Date: Tue,  5 Jul 2016 04:53:34 +0800
+Message-ID: <577accd7.46c0620a.65070.ffffec83@mx.google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34024 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753851AbcGDUxp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2016 16:53:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tj@kernel.org, martin.petersen@oracle.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-On 1 July 2016 at 14:08, Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
+From: Tom Yan <tom.ty89@gmail.com>
 
-> A few suggestions:
->
-> - Make the function take separate src and dst parameters, making it explicitly
->   allowed to pass the same value (but not other kinds of overlap, of
->   course). That way one can avoid "strcpy(dst, src); strtolower(dst);".
->
-> - Drop the NULL check. If someone does "foo->bar = something;
->   strtolower(foo->bar); put foo in a global data structure...", the
->   dereference of foo->bar may happen much later. Doing the NULL deref
->   sooner means it's much easier to find and fix the bug. (Also, other
->   str* and mem* functions don't usually check for NULL).
->
-> - While it's true that strcpy and memcpy by definition return dst, that's
->   mostly useless. If you want it to return anything, please make it
->   something that might be used - for example, having stpcpy semantics
->   (returning a pointer to dst's terminating \0) means a caller might avoid
->   a strlen call.
->
-> - Maybe do strtoupper while you're at it. Quick grepping didn't find any
->   use for the copy-while-lowercasing, but copy-while-uppercasing can at
->   least be used in drivers/acpi/acpica/nsrepair2.c,
->   drivers/gpu/drm/nouveau/nvkm/engine/fifo/gk104.c,
->   drivers/power/power_supply_sysfs.c along with a bunch of inplace
->   uppercasing.
->
->
-> Rasmus
+Define TRIM_RANGE_SIZE and TRIM_RANGE_NUM so that the corresponding
+functions can be more generalized. Also, conform SBC by rejecting
+WRITE SAME (16) commands with number of blocks that exceeds the limit
+that is defined in the SATL.
 
-Thanks for the suggestions to you and Jani. Based on the feedback I
-received, I am reworking the series now and will post v2 probably
-tomorrow.
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-Regards,
--Markus
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bfec66f..80d732c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -75,6 +75,9 @@ static struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
+ #define ALL_MPAGES 0x3f
+ #define ALL_SUB_MPAGES 0xff
+ 
++#define TRIM_RANGE_SIZE 0xffff
++#define TRIM_RANGE_NUM 64 /* 512-byte payload / (6-byte LBA + 2-byte range per entry) */
++
+ 
+ static const u8 def_rw_recovery_mpage[RW_RECOVERY_MPAGE_LEN] = {
+ 	RW_RECOVERY_MPAGE,
+@@ -2314,7 +2317,7 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ 	 * with the unmap bit set.
+ 	 */
+ 	if (ata_id_has_trim(args->id)) {
+-		put_unaligned_be64(65535 * 512 / 8, &rbuf[36]);
++		put_unaligned_be64(TRIM_RANGE_SIZE * TRIM_RANGE_NUM, &rbuf[36]);
+ 		put_unaligned_be32(1, &rbuf[28]);
+ 	}
+ 
+@@ -3305,7 +3308,10 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_param_len;
+ 
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+-	size = ata_set_lba_range_entries(buf, 512, block, n_block);
++	if (n_block <= TRIM_RANGE_SIZE * TRIM_RANGE_NUM)
++	  size = ata_set_lba_range_entries(buf, TRIM_RANGE_NUM, block, n_block);
++	else
++	  goto invalid_fld;
+ 
+ 	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
+ 		/* Newer devices support queued TRIM commands */
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 99346be..0971c3f 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -1071,7 +1071,7 @@ static inline unsigned ata_set_lba_range_entries(void *_buffer,
+ 	__le64 *buffer = _buffer;
+ 	unsigned i = 0, used_bytes;
+ 
+-	while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry */
++	while (i < buf_size) {
+ 		u64 entry = sector |
+ 			((u64)(count > 0xffff ? 0xffff : count) << 48);
+ 		buffer[i++] = __cpu_to_le64(entry);
+-- 
+2.9.0
+
