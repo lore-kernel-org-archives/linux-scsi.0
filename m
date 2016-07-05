@@ -1,104 +1,64 @@
-From: Markus Mayer <mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 1/7] lib: string: add functions to case-convert
-	strings
-Date: Tue,  5 Jul 2016 13:47:05 -0700
-Message-ID: <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
+From: Markus Mayer <mmayer@broadcom.com>
+Subject: [PATCH v2 5/7] iscsi-target: replace iscsi_initiatorname_tolower() with strtolower()
+Date: Tue,  5 Jul 2016 13:47:09 -0700
+Message-ID: <1467751631-22878-6-git-send-email-mmayer@broadcom.com>
 References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <1467751631-22878-1-git-send-email-mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/nouveau>
-List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:35757 "EHLO
+	mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755489AbcGEUsm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2016 16:48:42 -0400
+Received: by mail-qt0-f170.google.com with SMTP id f89so107196203qtd.2
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jul 2016 13:48:42 -0700 (PDT)
+In-Reply-To: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nicholas Bellinger <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, Varun Prakash <varun@chelsio.com>
+Cc: Markus Mayer <mmayer@broadcom.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-QWRkIGEgY29sbGVjdGlvbiBvZiBnZW5lcmljIGZ1bmN0aW9ucyB0byBjb252ZXJ0IHN0cmluZ3Mg
-dG8gbG93ZXJjYXNlCm9yIHVwcGVyY2FzZS4KCkNoYW5naW5nIHRoZSBjYXNlIG9mIGEgc3RyaW5n
-ICh3aXRoIG9yIHdpdGhvdXQgY29weWluZyBpdCBmaXJzdCkgc2VlbXMKdG8gYmUgYSByZWN1cnJp
-bmcgcmVxdWlyZW1lbnQgaW4gdGhlIGtlcm5lbCB0aGF0IGlzIGN1cnJlbnRseSBiZWluZwpzb2x2
-ZWQgYnkgc2V2ZXJhbCBkdXBsaWNhdGVkIGltcGxlbWVudGF0aW9ucyBkb2luZyB0aGUgc2FtZSB0
-aGluZy4gVGhpcwpjaGFuZ2UgYWltcyBhdCByZWR1Y2luZyB0aGlzIGNvZGUgZHVwbGljYXRpb24u
-CgpUaGUgbmV3IGZ1bmN0aW9ucyBhcmUKICAgIGNoYXIgKnN0cm5jcHl0b3VwcGVyKGNoYXIgKmRz
-dCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKICAgIGNoYXIgKnN0cm5jcHl0b2xvd2Vy
-KGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKICAgIGNoYXIgKnN0cmNw
-eXRvdXBwZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMpOwogICAgY2hhciAqc3RyY3B5dG9s
-b3dlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYyk7CiAgICBjaGFyICpzdHJ0b3VwcGVyKGNo
-YXIgKnMpOwogICAgY2hhciAqc3RydG9sb3dlcihjaGFyICpzKTsKClRoZSAic3RyW25dY3B5dG8q
-IiB2ZXJzaW9ucyBvZiB0aGUgZnVuY3Rpb24gdGFrZSBhIGRlc3RpbmF0aW9uIHN0cmluZwphbmQg
-YSBzb3VyY2Ugc3RyaW5nIGFzIGFyZ3VtZW50cy4gVGhlICJzdHJuY3B5dG8qIiB2ZXJzaW9ucwph
-ZGRpdGlvbmFsbHkgdGFrZSBhIGxlbmd0aCBhcmd1bWVudCBsaWtlIHN0cm5jcHkoKSBpdHNlbGYu
-IExhc3RseSwgdGhlCnN0cnRvKiBmdW5jdGlvbnMgdGFrZSBhIHNpbmdsZSBzdHJpbmcgYXJndW1l
-bnQgYW5kIG1vZGlmeSB0aGUgcGFzc2VkLWluCnN0cmluZy4KCkFsbCBmdW5jdGlvbnMgcmV0dXJu
-IGEgcG9pbnRlciB0byB0aGUgdGVybWluYXRpbmcgJ1wwJyBjaGFyYWN0ZXIgaW4gdGhlCm1vZGlm
-aWVkIHN0cmluZyAoImRzdCIgb3IgInMiLCByZXNwZWN0aXZlbHkpLgoKU2lnbmVkLW9mZi1ieTog
-TWFya3VzIE1heWVyIDxtbWF5ZXJAYnJvYWRjb20uY29tPgotLS0KIGluY2x1ZGUvbGludXgvc3Ry
-aW5nLmggfCA0OCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysKIGxpYi9zdHJpbmcuYyAgICAgICAgICAgfCA0MiArKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgOTAgaW5zZXJ0aW9ucygrKQoKZGlm
-ZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvc3RyaW5nLmggYi9pbmNsdWRlL2xpbnV4L3N0cmluZy5o
-CmluZGV4IDI2YjZmNmEuLmM1OGQ1MTAgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvc3RyaW5n
-LmgKKysrIGIvaW5jbHVkZS9saW51eC9zdHJpbmcuaApAQCAtMTE2LDYgKzExNiw4IEBAIGV4dGVy
-biB2b2lkICogbWVtY2hyKGNvbnN0IHZvaWQgKixpbnQsX19rZXJuZWxfc2l6ZV90KTsKICNlbmRp
-Zgogdm9pZCAqbWVtY2hyX2ludihjb25zdCB2b2lkICpzLCBpbnQgYywgc2l6ZV90IG4pOwogY2hh
-ciAqc3RycmVwbGFjZShjaGFyICpzLCBjaGFyIG9sZCwgY2hhciBuZXcpOworY2hhciAqc3RybmNw
-eXRvdXBwZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOworY2hhciAq
-c3RybmNweXRvbG93ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwog
-CiBleHRlcm4gdm9pZCBrZnJlZV9jb25zdChjb25zdCB2b2lkICp4KTsKIApAQCAtMTY5LDQgKzE3
-MSw1MCBAQCBzdGF0aWMgaW5saW5lIGNvbnN0IGNoYXIgKmtiYXNlbmFtZShjb25zdCBjaGFyICpw
-YXRoKQogCXJldHVybiB0YWlsID8gdGFpbCArIDEgOiBwYXRoOwogfQogCisvKioKKyAqIHN0cmNw
-eXRvdXBwZXIgLSBDb3B5IHN0cmluZyBhbmQgY29udmVydCB0byB1cHBlcmNhc2UuCisgKiBAZHN0
-OiBUaGUgYnVmZmVyIHRvIHN0b3JlIHRoZSByZXN1bHQuCisgKiBAc3JjOiBUaGUgc3RyaW5nIHRv
-IGNvbnZlcnQgdG8gdXBwZXJjYXNlLgorICoKKyAqIFJldHVybnMgcG9pbnRlciB0byB0ZXJtaW5h
-dGluZyAnXDAnIGluIEBkc3QuCisgKi8KK3N0YXRpYyBpbmxpbmUgY2hhciAqc3RyY3B5dG91cHBl
-cihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYykKK3sKKwlyZXR1cm4gc3RybmNweXRvdXBwZXIo
-ZHN0LCBzcmMsIDApOworfQorCisvKioKKyAqIHN0cmNweXRvbG93ZXIgLSBDb3B5IHN0cmluZyBh
-bmQgY29udmVydCB0byBsb3dlcmNhc2UuCisgKiBAZHN0OiBUaGUgYnVmZmVyIHRvIHN0b3JlIHRo
-ZSByZXN1bHQuCisgKiBAc3JjOiBUaGUgc3RyaW5nIHRvIGNvbnZlcnQgdG8gbG93ZXJjYXNlLgor
-ICoKKyAqIFJldHVybnMgcG9pbnRlciB0byB0ZXJtaW5hdGluZyAnXDAnIGluIEBkc3QuCisgKi8K
-K3N0YXRpYyBpbmxpbmUgY2hhciAqc3RyY3B5dG9sb3dlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIg
-KnNyYykKK3sKKwlyZXR1cm4gc3RybmNweXRvbG93ZXIoZHN0LCBzcmMsIDApOworfQorCisvKioK
-KyAqIHN0cnRvdXBwZXIgLSBDb252ZXJ0IHN0cmluZyB0byB1cHBlcmNhc2UuCisgKiBAczogVGhl
-IHN0cmluZyB0byBvcGVyYXRlIG9uLgorICoKKyAqIFJldHVybnMgcG9pbnRlciB0byB0ZXJtaW5h
-dGluZyAnXDAnIGluIEBzLgorICovCitzdGF0aWMgaW5saW5lIGNoYXIgKnN0cnRvdXBwZXIoY2hh
-ciAqcykKK3sKKwlyZXR1cm4gc3RybmNweXRvdXBwZXIocywgcywgMCk7Cit9CisKKy8qKgorICog
-c3RydG9sb3dlciAtIENvbnZlcnQgc3RyaW5nIHRvIGxvd2VyY2FzZS4KKyAqIEBzOiBUaGUgc3Ry
-aW5nIHRvIG9wZXJhdGUgb24uCisgKgorICogUmV0dXJucyBwb2ludGVyIHRvIHRlcm1pbmF0aW5n
-ICdcMCcgaW4gQHMuCisgKi8KK3N0YXRpYyBpbmxpbmUgY2hhciAqc3RydG9sb3dlcihjaGFyICpz
-KQoreworCXJldHVybiBzdHJuY3B5dG9sb3dlcihzLCBzLCAwKTsKK30KKwogI2VuZGlmIC8qIF9M
-SU5VWF9TVFJJTkdfSF8gKi8KZGlmZiAtLWdpdCBhL2xpYi9zdHJpbmcuYyBiL2xpYi9zdHJpbmcu
-YwppbmRleCBlZDgzNTYyLi45MDBmMzU3IDEwMDY0NAotLS0gYS9saWIvc3RyaW5nLmMKKysrIGIv
-bGliL3N0cmluZy5jCkBAIC05NTIsMyArOTUyLDQ1IEBAIGNoYXIgKnN0cnJlcGxhY2UoY2hhciAq
-cywgY2hhciBvbGQsIGNoYXIgbmV3KQogCXJldHVybiBzOwogfQogRVhQT1JUX1NZTUJPTChzdHJy
-ZXBsYWNlKTsKKworLyoqCisgKiBzdHJuY3B5dG91cHBlciAtIENvcHkgYSBsZW5ndGgtbGltaXRl
-ZCBzdHJpbmcgYW5kIGNvbnZlcnQgdG8gdXBwZXJjYXNlLgorICogQGRzdDogVGhlIGJ1ZmZlciB0
-byBzdG9yZSB0aGUgcmVzdWx0LgorICogQHNyYzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRvIHVw
-cGVyY2FzZS4KKyAqIEBsZW46IE1heGltdW0gc3RyaW5nIGxlbmd0aC4gTWF5IGJlIDAgdG8gc2V0
-IG5vIGxpbWl0LgorICoKKyAqIFJldHVybnMgcG9pbnRlciB0byB0ZXJtaW5hdGluZyAnXDAnIGlu
-IEBkc3QuCisgKi8KK2NoYXIgKnN0cm5jcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAq
-c3JjLCBzaXplX3QgbGVuKQoreworCXNpemVfdCBpOworCisJZm9yIChpID0gMDsgc3JjW2ldICE9
-ICdcMCcgJiYgKGkgPCBsZW4gfHwgIWxlbik7IGkrKykKKwkJZHN0W2ldID0gdG91cHBlcihzcmNb
-aV0pOworCWlmIChpIDwgbGVuIHx8ICFsZW4pCisJCWRzdFtpXSA9ICdcMCc7CisKKwlyZXR1cm4g
-ZHN0ICsgaTsKK30KK0VYUE9SVF9TWU1CT0woc3RybmNweXRvdXBwZXIpOworCisvKioKKyAqIHN0
-cm5jcHl0b2xvd2VyIC0gQ29weSBhIGxlbmd0aC1saW1pdGVkIHN0cmluZyBhbmQgY29udmVydCB0
-byBsb3dlcmNhc2UuCisgKiBAZHN0OiBUaGUgYnVmZmVyIHRvIHN0b3JlIHRoZSByZXN1bHQuCisg
-KiBAc3JjOiBUaGUgc3RyaW5nIHRvIGNvbnZlcnQgdG8gbG93ZXJjYXNlLgorICogQGxlbjogTWF4
-aW11bSBzdHJpbmcgbGVuZ3RoLiBNYXkgYmUgMCB0byBzZXQgbm8gbGltaXQuCisgKgorICogUmV0
-dXJucyBwb2ludGVyIHRvIHRlcm1pbmF0aW5nICdcMCcgaW4gQGRzdC4KKyAqLworY2hhciAqc3Ry
-bmNweXRvbG93ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pCit7CisJ
-c2l6ZV90IGk7CisKKwlmb3IgKGkgPSAwOyBzcmNbaV0gIT0gJ1wwJyAmJiAoaSA8IGxlbiB8fCAh
-bGVuKTsgaSsrKQorCQlkc3RbaV0gPSB0b2xvd2VyKHNyY1tpXSk7CisJaWYgKGkgPCBsZW4gfHwg
-IWxlbikKKwkJZHN0W2ldID0gJ1wwJzsKKworCXJldHVybiBkc3QgKyBpOworfQorRVhQT1JUX1NZ
-TUJPTChzdHJuY3B5dG9sb3dlcik7Ci0tIAoyLjcuNAoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KTm91dmVhdSBtYWlsaW5nIGxpc3QKTm91dmVhdUBsaXN0
-cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9s
-aXN0aW5mby9ub3V2ZWF1Cg==
+After introducing generic strtolower(), iscsi_initiatorname_tolower() is
+no longer needed.
+
+Signed-off-by: Markus Mayer <mmayer@broadcom.com>
+---
+ drivers/target/iscsi/iscsi_target_nego.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 89d34bd..fa20638 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -987,21 +987,6 @@ static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *lo
+ 	return 0;
+ }
+ 
+-static void iscsi_initiatorname_tolower(
+-	char *param_buf)
+-{
+-	char *c;
+-	u32 iqn_size = strlen(param_buf), i;
+-
+-	for (i = 0; i < iqn_size; i++) {
+-		c = &param_buf[i];
+-		if (!isupper(*c))
+-			continue;
+-
+-		*c = tolower(*c);
+-	}
+-}
+-
+ /*
+  * Processes the first Login Request..
+  */
+@@ -1075,7 +1060,7 @@ int iscsi_target_locate_portal(
+ 	 * RFC-3720 3.2.6.1. section c) that says that iSCSI IQNs
+ 	 * are NOT case sensitive.
+ 	 */
+-	iscsi_initiatorname_tolower(i_buf);
++	strtolower(i_buf);
+ 
+ 	if (!s_buf) {
+ 		if (!login->leading_connection)
+-- 
+2.7.4
+
