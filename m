@@ -1,46 +1,52 @@
-From: Or Gerlitz <gerlitz.or@gmail.com>
-Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
-Date: Wed, 6 Jul 2016 00:24:43 +0300
-Message-ID: <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
-References: <cover.1461088672.git.varun@chelsio.com> <62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
- <CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
- <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
- <1464072025.22249.87.camel@haakon3.risingtidesystems.com> <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
- <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com> <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com>
- <1464238504.22249.168.camel@haakon3.risingtidesystems.com> <20160526185819.GA1672@chelsio.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v2 0/7] lib: string: add functions to case-convert
+ strings
+Date: Tue, 05 Jul 2016 15:14:34 -0700
+Message-ID: <1467756874.16342.11.camel@perches.com>
+References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160526185819.GA1672@chelsio.com>
+In-Reply-To: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Steve Wise <swise@opengridcomputing.com>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com
+To: Markus Mayer <mmayer@broadcom.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>
+Cc: dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-acpi@vger.kernel.org, speakup@linux-speakup.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 26, 2016 at 9:58 PM, Varun Prakash <varun@chelsio.com> wrote:
+On Tue, 2016-07-05 at 13:47 -0700, Markus Mayer wrote:
+> This series introduces a family of generic string case conversion
+> functions. This kind of functionality is needed in several places in
+> the kernel. Right now, everybody seems to be implementing their own
+> copy of this functionality.
+>=20
+> Based on the discussion of the previous version of this series[1] and
+> the use cases found in the kernel, it does look like having several
+> flavours of case conversion functions is beneficial. The use cases fa=
+ll
+> into three categories:
+> =A0=A0=A0=A0- copying a string and converting the case while specifyi=
+ng a
+> =A0=A0=A0=A0=A0=A0maximum length to mimic strncpy()
+> =A0=A0=A0=A0- copying a string and converting the case without specif=
+ying a
+> =A0=A0=A0=A0=A0=A0length to mimic strcpy()
+> =A0=A0=A0=A0- converting the case of a string in-place (i.e. modifyin=
+g the
+> =A0=A0=A0=A0=A0=A0string that was passed in)
+>=20
+> Consequently, I am proposing these new functions:
+> =A0=A0=A0=A0char *strncpytoupper(char *dst, const char *src, size_t l=
+en);
+> =A0=A0=A0=A0char *strncpytolower(char *dst, const char *src, size_t l=
+en);
+> =A0=A0=A0=A0char *strcpytoupper(char *dst, const char *src);
+> =A0=A0=A0=A0char *strcpytolower(char *dst, const char *src);
+> =A0=A0=A0=A0char *strtoupper(char *s);
+> =A0=A0=A0=A0char *strtolower(char *s);
 
-> Hi Or, Nicholas and Steve
-> Thank you for the feedback and apologies for the delay in my response.
+I think there isn't much value in anything other
+than strto<upper|lower>.
 
-> On Wed, May 25, 2016 at 09:55:04PM -0700, Nicholas A. Bellinger wrote:
-
->> Varun + Co have made common improvements between existing software
->> iscsi-target RX + TX PDU handling and their new driver, and no further
->> comments for these prerequisites have been made.
-
->> The additional improvements discussed here so far are cxgb* specific,
->> and will not effect other drivers, and will not change configfs user ABI
->> layout compatibility within /sys/kernel/config/target/iscsi/.
-
->> That being the case, I think it's a reasonable starting point for
->> mainline users to consume target ISO on cxgb hardware, and for Chelsio
->> to make further common code improvements across their existing host
->> drivers.
-
-> I agree that we can refactor initiator, target and iwarp drivers to
-> reduce code duplication as Steve has mentioned. We will work on this for
-> 4.8 merge window.
-
-Nic, Varun, was anything done on this matter? we're on rc6
-
-Or.
+Using str[n]cpy followed by strto<upper|lower> is
+pretty obvious and rarely used anyway.
