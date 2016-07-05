@@ -1,26 +1,46 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Unsupported ISP 2432 SSVID/SSDID (0x103C,0x7041)
-Date: Wed, 6 Jul 2016 00:09:41 +0300 (EEST)
-Message-ID: <alpine.LRH.2.20.1607060007120.8418@math.ut.ee>
+From: Or Gerlitz <gerlitz.or@gmail.com>
+Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
+Date: Wed, 6 Jul 2016 00:24:43 +0300
+Message-ID: <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
+References: <cover.1461088672.git.varun@chelsio.com> <62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
+ <CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
+ <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
+ <1464072025.22249.87.camel@haakon3.risingtidesystems.com> <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
+ <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com> <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com>
+ <1464238504.22249.168.camel@haakon3.risingtidesystems.com> <20160526185819.GA1672@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:48445 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754588AbcGEVH4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jul 2016 17:07:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20160526185819.GA1672@chelsio.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Steve Wise <swise@opengridcomputing.com>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org
 
-I just got a HP Proliant DL360G6 with a PCI-E FC card from HP and got 
-this warning during driver initialization:
+On Thu, May 26, 2016 at 9:58 PM, Varun Prakash <varun@chelsio.com> wrote:
 
-[    4.166160] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 8.07.00.33-k.
-[    4.166633] qla2xxx [0000:07:00.0]-001d: : Found an ISP2432 irq 48 iobase 0xffffc900035d2000.
-[    4.167084] qla2xxx [0000:07:00.0]-0034:3: MSI-X: Unsupported ISP 2432 SSVID/SSDID (0x103C,0x7041).
+> Hi Or, Nicholas and Steve
+> Thank you for the feedback and apologies for the delay in my response.
 
-Why does the driver need to know subsystem ID-s at all?
+> On Wed, May 25, 2016 at 09:55:04PM -0700, Nicholas A. Bellinger wrote:
 
--- 
-Meelis Roos (mroos@linux.ee)
+>> Varun + Co have made common improvements between existing software
+>> iscsi-target RX + TX PDU handling and their new driver, and no further
+>> comments for these prerequisites have been made.
+
+>> The additional improvements discussed here so far are cxgb* specific,
+>> and will not effect other drivers, and will not change configfs user ABI
+>> layout compatibility within /sys/kernel/config/target/iscsi/.
+
+>> That being the case, I think it's a reasonable starting point for
+>> mainline users to consume target ISO on cxgb hardware, and for Chelsio
+>> to make further common code improvements across their existing host
+>> drivers.
+
+> I agree that we can refactor initiator, target and iwarp drivers to
+> reduce code duplication as Steve has mentioned. We will work on this for
+> 4.8 merge window.
+
+Nic, Varun, was anything done on this matter? we're on rc6
+
+Or.
