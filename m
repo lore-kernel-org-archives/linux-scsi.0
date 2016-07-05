@@ -1,47 +1,62 @@
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: Re: Reported regressions for 4.7 as of Sunday, 2016-06-19
-Date: Tue, 5 Jul 2016 20:43:35 +0200
-Message-ID: <e9e9933c-c1dd-2e77-fd85-c1c2ff0db885@leemhuis.info>
-References: <7cc588b7-f1cf-62a8-e45b-ec7d863ba51e@leemhuis.info>
- <CA+5PVA63r9xLXtiiVMxKPdgZD5VZ_8io1f=9MH520LAFBbe9kg@mail.gmail.com>
- <CA+55aFyyKjupjdd4tC82VEnZwb3AyEGJBVCJzdyvfgeUFGVfLw@mail.gmail.com>
- <yq1wpli2ewx.fsf@sermon.lab.mkp.net>
- <20160622115131.4bh7sh6uhmmhw44v@c203.arch.suse.de>
- <A19CCC3E-1B00-45A5-BA4B-2E082E98AF87@qlogic.com>
- <CA+5PVA6NVTQUPZBCZ7J+NV-fEPkGKk2DDNQHn80sv71NNYOJnA@mail.gmail.com>
- <CA+55aFzwVT4spevcuC5Ncee974w2QyxwVJ7RS_2YCEikkqKdGQ@mail.gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v2 1/2] libata-scsi: improve TRIM translation
+Date: Wed, 6 Jul 2016 03:10:51 +0800
+Message-ID: <CAGnHSEkoJPzi0qQbu2SjqYehFW9o1g8d-mm=jYuQk=YgBKa8Yw@mail.gmail.com>
+References: <577b57b0.5b4c620a.37648.6c8d@mx.google.com> <6f5400ce-58c8-d52c-9ce5-a1450b52599e@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFzwVT4spevcuC5Ncee974w2QyxwVJ7RS_2YCEikkqKdGQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Josh Boyer <jwboyer@fedoraproject.org>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <6f5400ce-58c8-d52c-9ce5-a1450b52599e@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 05.07.2016 19:32, Linus Torvalds wrote:
-> On Tue, Jul 5, 2016 at 9:30 AM, Josh Boyer <jwboyer@fedoraproject.org=
-> wrote:
->> On Wed, Jun 22, 2016 at 11:57 AM, Quinn Tran <quinn.tran@qlogic.com>=
- wrote:
->>>
->>> -       if (rsp->msix->cpuid !=3D smp_processor_id()) {
->>> +       if (rsp->msix && (rsp->msix->cpuid !=3D smp_processor_id())=
-) {
+Well it is exactly what the patch does. We no longer do the "divide it
+by 8" thing each time we want to know the now defined TRIM_RANGE_NUM.
+
+ata_set_lba_range_entries() has only been used by
+ata_scsi_write_same_xlat()
+(http://lxr.free-electrons.com/ident?i=ata_set_lba_range_entries,
+although the comment of it seems to tell otherwise). That's why I
+(could) changed the function itself and the param ("512")
+ata_scsi_write_same_xlat() passes to it.
+
+On 5 July 2016 at 19:04, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> Hello.
+>
+> On 7/5/2016 9:45 AM, tom.ty89@gmail.com wrote:
+>
+>> From: Tom Yan <tom.ty89@gmail.com>
 >>
->> Did this wind up going into an official commit somewhere?
-> It's not in my tree, at least.
-> And I don't think I've seen a "yes, that fixes it".
-
-Quinn Tran ACKed a nearly identical patch from Bruno Pr=C3=A9mont in a
-different thread:
-http://thread.gmane.org/gmane.linux.kernel/2257008/focus=3D2257139
-
-=46rom what I can see in the initial mail in that thread it seems Bruno
-successfully tested the patch he submitted. But I have no idea if the
-patch is in someones queue to mainline right now. That's why I had it o=
-n
-my "if nothing happens soon, poke someone" list...
-
-HTH, CU, Thorsten
+>> Define TRIM_RANGE_SIZE and TRIM_RANGE_NUM so that the corresponding
+>> functions can be more generalized. Also, conform to SBC by rejecting
+>> WRITE SAME (16) commands with number of blocks that exceeds the limit
+>> that is defined in the SATL.
+>>
+>> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+>
+> [...]
+>
+>> diff --git a/include/linux/ata.h b/include/linux/ata.h
+>> index 99346be..0971c3f 100644
+>> --- a/include/linux/ata.h
+>> +++ b/include/linux/ata.h
+>> @@ -1071,7 +1071,7 @@ static inline unsigned
+>> ata_set_lba_range_entries(void *_buffer,
+>>         __le64 *buffer = _buffer;
+>>         unsigned i = 0, used_bytes;
+>>
+>> -       while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry
+>> */
+>> +       while (i < buf_size) {
+>
+>
+>    BTW, this change doesn't seem to be documented in the patch description?
+>
+> [...]
+>
+> MBR, Sergei
+>
