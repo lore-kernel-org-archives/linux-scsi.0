@@ -1,67 +1,72 @@
-From: Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v2 0/7] lib: string: add functions to
-	case-convert strings
-Date: Tue, 5 Jul 2016 15:36:22 -0700
-Message-ID: <CAGt4E5vqiUOVmgqY8OvRPNpoS54hZMOHid6ND4CRyb5p9y5ndw@mail.gmail.com>
-References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
- <1467756874.16342.11.camel@perches.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/2] libata-scsi: do not respond with "invalid field"
+ for FORMAT UNIT
+Date: Tue, 5 Jul 2016 18:39:06 -0400
+Message-ID: <20160705223906.GD25394@htj.duckdns.org>
+References: <577b57b3.5b4c620a.37648.6c91@mx.google.com>
+ <77f27e3b-afe6-2aa9-7d42-e054a7f65bb0@cogentembedded.com>
+ <CAGnHSEm2YEA2fg93w0jDR_Jou5MhxRH30RSLUqoQc_6Fg6s-Hg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <1467756874.16342.11.camel-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/nouveau>
-List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:33190 "EHLO
+	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbcGEWjJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2016 18:39:09 -0400
+Content-Disposition: inline
+In-Reply-To: <CAGnHSEm2YEA2fg93w0jDR_Jou5MhxRH30RSLUqoQc_6Fg6s-Hg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-T24gNSBKdWx5IDIwMTYgYXQgMTU6MTQsIEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5jb20+IHdy
-b3RlOgo+IE9uIFR1ZSwgMjAxNi0wNy0wNSBhdCAxMzo0NyAtMDcwMCwgTWFya3VzIE1heWVyIHdy
-b3RlOgo+PiBUaGlzIHNlcmllcyBpbnRyb2R1Y2VzIGEgZmFtaWx5IG9mIGdlbmVyaWMgc3RyaW5n
-IGNhc2UgY29udmVyc2lvbgo+PiBmdW5jdGlvbnMuIFRoaXMga2luZCBvZiBmdW5jdGlvbmFsaXR5
-IGlzIG5lZWRlZCBpbiBzZXZlcmFsIHBsYWNlcyBpbgo+PiB0aGUga2VybmVsLiBSaWdodCBub3cs
-IGV2ZXJ5Ym9keSBzZWVtcyB0byBiZSBpbXBsZW1lbnRpbmcgdGhlaXIgb3duCj4+IGNvcHkgb2Yg
-dGhpcyBmdW5jdGlvbmFsaXR5Lgo+Pgo+PiBCYXNlZCBvbiB0aGUgZGlzY3Vzc2lvbiBvZiB0aGUg
-cHJldmlvdXMgdmVyc2lvbiBvZiB0aGlzIHNlcmllc1sxXSBhbmQKPj4gdGhlIHVzZSBjYXNlcyBm
-b3VuZCBpbiB0aGUga2VybmVsLCBpdCBkb2VzIGxvb2sgbGlrZSBoYXZpbmcgc2V2ZXJhbAo+PiBm
-bGF2b3VycyBvZiBjYXNlIGNvbnZlcnNpb24gZnVuY3Rpb25zIGlzIGJlbmVmaWNpYWwuIFRoZSB1
-c2UgY2FzZXMgZmFsbAo+PiBpbnRvIHRocmVlIGNhdGVnb3JpZXM6Cj4+ICAgICAtIGNvcHlpbmcg
-YSBzdHJpbmcgYW5kIGNvbnZlcnRpbmcgdGhlIGNhc2Ugd2hpbGUgc3BlY2lmeWluZyBhCj4+ICAg
-ICAgIG1heGltdW0gbGVuZ3RoIHRvIG1pbWljIHN0cm5jcHkoKQo+PiAgICAgLSBjb3B5aW5nIGEg
-c3RyaW5nIGFuZCBjb252ZXJ0aW5nIHRoZSBjYXNlIHdpdGhvdXQgc3BlY2lmeWluZyBhCj4+ICAg
-ICAgIGxlbmd0aCB0byBtaW1pYyBzdHJjcHkoKQo+PiAgICAgLSBjb252ZXJ0aW5nIHRoZSBjYXNl
-IG9mIGEgc3RyaW5nIGluLXBsYWNlIChpLmUuIG1vZGlmeWluZyB0aGUKPj4gICAgICAgc3RyaW5n
-IHRoYXQgd2FzIHBhc3NlZCBpbikKPj4KPj4gQ29uc2VxdWVudGx5LCBJIGFtIHByb3Bvc2luZyB0
-aGVzZSBuZXcgZnVuY3Rpb25zOgo+PiAgICAgY2hhciAqc3RybmNweXRvdXBwZXIoY2hhciAqZHN0
-LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+PiAgICAgY2hhciAqc3RybmNweXRvbG93
-ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+PiAgICAgY2hhciAq
-c3RyY3B5dG91cHBlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYyk7Cj4+ICAgICBjaGFyICpz
-dHJjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4gICAgIGNoYXIgKnN0
-cnRvdXBwZXIoY2hhciAqcyk7Cj4+ICAgICBjaGFyICpzdHJ0b2xvd2VyKGNoYXIgKnMpOwo+Cj4g
-SSB0aGluayB0aGVyZSBpc24ndCBtdWNoIHZhbHVlIGluIGFueXRoaW5nIG90aGVyCj4gdGhhbiBz
-dHJ0bzx1cHBlcnxsb3dlcj4uCj4KPiBVc2luZyBzdHJbbl1jcHkgZm9sbG93ZWQgYnkgc3RydG88
-dXBwZXJ8bG93ZXI+IGlzCj4gcHJldHR5IG9idmlvdXMgYW5kIHJhcmVseSB1c2VkIGFueXdheS4K
-CkZpcnN0IHRpbWUgYXJvdW5kLCBmb2xrcyB3ZXJlIHByb3Bvc2luZyB0aGUgImNvcHkiIHZhcmlh
-bnRzIHdoZW4gSQpzdWJtaXR0ZWQganVzdCBzdHJ0b2xvd2VyKCkgYnkgaXRzZWxmWzFdLiBUaGV5
-IGp1c3QgYXNrZWQgZm9yIHNvdXJjZQphbmQgZGVzdGluYXRpb24gcGFyYW1ldGVycyB0byBzdHJ0
-b2xvd2VyKCksIGJ1dCBsb29raW5nIGF0IHRoZSB1c2UKY2FzZXMgdGhhdCB3b3VsZG4ndCBoYXZl
-IHdvcmtlZCBzbyB3ZWxsLiBIZW5jZSBpdCBldm9sdmVkIGludG8gdGhlc2UgNgpmdW5jdGlvbnMu
-CgpIZXJlJ3MgYSBicmVha2Rvd24gb2YgaG93IHRoZSBmdW5jdGlvbnMgYXJlIGJlaW5nIHVzZWQg
-KHBhdGNoZXMgMi03KSwKc2VlIGFsc28gWzJdOgoKUGF0Y2ggMjogc3RybmNweXRvbG93ZXIoKQpQ
-YXRjaCAzOiBzdHJ0b2xvd2VyKCkKUGF0Y2ggNDogc3RybmNweXRvbG93ZXIoKSBhbmQgc3RydG9s
-b3dlcigpClBhdGNoIDU6IHN0cnRvbG93ZXIoKQpQYXRjaCA2OiBzdHJjcHl0b3VwcGVyKCkKUGF0
-Y2ggNzogc3RyY3B5dG91cHBlcigpCgpTbyBpdCBkb2VzIGxvb2sgbGlrZSB0aGUgY29weSArIGNo
-YW5nZSBjYXNlIHZhcmlhbnQgaXMgbW9yZSBmcmVxdWVudGx5CnVzZWQgdGhhbiBqdXN0IHN0cnRv
-PHVwcGVyfGxvd2VyPi4KClJlZ2FyZHMsCi1NYXJrdXMKClsxXSBodHRwczovL2xrbWwub3JnL2xr
-bWwvMjAxNi83LzEvNjUyClsyXSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNi83LzUvNTQyCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCk5vdXZlYXUgbWFp
-bGluZyBsaXN0Ck5vdXZlYXVAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJl
-ZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vbm91dmVhdQo=
+Hello,
+
+On Wed, Jul 06, 2016 at 03:13:31AM +0800, Tom Yan wrote:
+> I just thought that such a minor change in a comment can fit in the
+> same patch where the issue was first noticed. Anyway, will split them
+> if I am going to send a v3 set.
+> 
+> On 5 July 2016 at 19:08, Sergei Shtylyov
+> <sergei.shtylyov@cogentembedded.com> wrote:
+> > On 7/5/2016 9:45 AM, tom.ty89@gmail.com wrote:
+> >
+> >> From: Tom Yan <tom.ty89@gmail.com>
+> >>
+> >> It does not make sense and is confusing to respond with "Invalid
+> >> field in CDB" while we have no support at all implemented for
+> >> FORMAT UNIT. It is decent to let it go to the default, which
+> >> will respond with "Invalid command operation code" instead.
+> >>
+> >> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> >>
+> >> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> >> index 029e738..ac5676e 100644
+> >> --- a/drivers/ata/libata-scsi.c
+> >> +++ b/drivers/ata/libata-scsi.c
+> >> @@ -307,7 +307,7 @@ static void ata_scsi_set_invalid_field(struct
+> >> ata_device *dev,
+> >>                                        struct scsi_cmnd *cmd, u16 field,
+> >> u8 bit)
+> >>  {
+> >>         ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x24, 0x0);
+> >> -       /* "Invalid field in cbd" */
+> >> +       /* "Invalid field in CDB" */
+> >
+> >
+> >    Don't do 2 things in one patch please> This change wasn't even documented
+> > in the patch description.
+
+So, for trivial cleanups, it's fine to do it along with other changes
+when the cleanups and the said changes are related and close by;
+however, the description should be able to encompass all changes.  It
+doesn't have to be super detailed.  Something like "While at it, do
+some trivial / typo / whatever cleanups" works fine.
+
+Here, the cleanup isn't that close.  I'd just drop that chunk.  It
+really doesn't matter whether cdb is in caps or not.
+
+Thanks.
+
+-- 
+tejun
