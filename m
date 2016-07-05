@@ -1,52 +1,67 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v2 0/7] lib: string: add functions to case-convert
- strings
-Date: Tue, 05 Jul 2016 15:14:34 -0700
-Message-ID: <1467756874.16342.11.camel@perches.com>
+From: Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v2 0/7] lib: string: add functions to
+	case-convert strings
+Date: Tue, 5 Jul 2016 15:36:22 -0700
+Message-ID: <CAGt4E5vqiUOVmgqY8OvRPNpoS54hZMOHid6ND4CRyb5p9y5ndw@mail.gmail.com>
 References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
+ <1467756874.16342.11.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Markus Mayer <mmayer@broadcom.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>
-Cc: dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-acpi@vger.kernel.org, speakup@linux-speakup.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <1467756874.16342.11.camel-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2016-07-05 at 13:47 -0700, Markus Mayer wrote:
-> This series introduces a family of generic string case conversion
-> functions. This kind of functionality is needed in several places in
-> the kernel. Right now, everybody seems to be implementing their own
-> copy of this functionality.
->=20
-> Based on the discussion of the previous version of this series[1] and
-> the use cases found in the kernel, it does look like having several
-> flavours of case conversion functions is beneficial. The use cases fa=
-ll
-> into three categories:
-> =A0=A0=A0=A0- copying a string and converting the case while specifyi=
-ng a
-> =A0=A0=A0=A0=A0=A0maximum length to mimic strncpy()
-> =A0=A0=A0=A0- copying a string and converting the case without specif=
-ying a
-> =A0=A0=A0=A0=A0=A0length to mimic strcpy()
-> =A0=A0=A0=A0- converting the case of a string in-place (i.e. modifyin=
-g the
-> =A0=A0=A0=A0=A0=A0string that was passed in)
->=20
-> Consequently, I am proposing these new functions:
-> =A0=A0=A0=A0char *strncpytoupper(char *dst, const char *src, size_t l=
-en);
-> =A0=A0=A0=A0char *strncpytolower(char *dst, const char *src, size_t l=
-en);
-> =A0=A0=A0=A0char *strcpytoupper(char *dst, const char *src);
-> =A0=A0=A0=A0char *strcpytolower(char *dst, const char *src);
-> =A0=A0=A0=A0char *strtoupper(char *s);
-> =A0=A0=A0=A0char *strtolower(char *s);
-
-I think there isn't much value in anything other
-than strto<upper|lower>.
-
-Using str[n]cpy followed by strto<upper|lower> is
-pretty obvious and rarely used anyway.
+T24gNSBKdWx5IDIwMTYgYXQgMTU6MTQsIEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5jb20+IHdy
+b3RlOgo+IE9uIFR1ZSwgMjAxNi0wNy0wNSBhdCAxMzo0NyAtMDcwMCwgTWFya3VzIE1heWVyIHdy
+b3RlOgo+PiBUaGlzIHNlcmllcyBpbnRyb2R1Y2VzIGEgZmFtaWx5IG9mIGdlbmVyaWMgc3RyaW5n
+IGNhc2UgY29udmVyc2lvbgo+PiBmdW5jdGlvbnMuIFRoaXMga2luZCBvZiBmdW5jdGlvbmFsaXR5
+IGlzIG5lZWRlZCBpbiBzZXZlcmFsIHBsYWNlcyBpbgo+PiB0aGUga2VybmVsLiBSaWdodCBub3cs
+IGV2ZXJ5Ym9keSBzZWVtcyB0byBiZSBpbXBsZW1lbnRpbmcgdGhlaXIgb3duCj4+IGNvcHkgb2Yg
+dGhpcyBmdW5jdGlvbmFsaXR5Lgo+Pgo+PiBCYXNlZCBvbiB0aGUgZGlzY3Vzc2lvbiBvZiB0aGUg
+cHJldmlvdXMgdmVyc2lvbiBvZiB0aGlzIHNlcmllc1sxXSBhbmQKPj4gdGhlIHVzZSBjYXNlcyBm
+b3VuZCBpbiB0aGUga2VybmVsLCBpdCBkb2VzIGxvb2sgbGlrZSBoYXZpbmcgc2V2ZXJhbAo+PiBm
+bGF2b3VycyBvZiBjYXNlIGNvbnZlcnNpb24gZnVuY3Rpb25zIGlzIGJlbmVmaWNpYWwuIFRoZSB1
+c2UgY2FzZXMgZmFsbAo+PiBpbnRvIHRocmVlIGNhdGVnb3JpZXM6Cj4+ICAgICAtIGNvcHlpbmcg
+YSBzdHJpbmcgYW5kIGNvbnZlcnRpbmcgdGhlIGNhc2Ugd2hpbGUgc3BlY2lmeWluZyBhCj4+ICAg
+ICAgIG1heGltdW0gbGVuZ3RoIHRvIG1pbWljIHN0cm5jcHkoKQo+PiAgICAgLSBjb3B5aW5nIGEg
+c3RyaW5nIGFuZCBjb252ZXJ0aW5nIHRoZSBjYXNlIHdpdGhvdXQgc3BlY2lmeWluZyBhCj4+ICAg
+ICAgIGxlbmd0aCB0byBtaW1pYyBzdHJjcHkoKQo+PiAgICAgLSBjb252ZXJ0aW5nIHRoZSBjYXNl
+IG9mIGEgc3RyaW5nIGluLXBsYWNlIChpLmUuIG1vZGlmeWluZyB0aGUKPj4gICAgICAgc3RyaW5n
+IHRoYXQgd2FzIHBhc3NlZCBpbikKPj4KPj4gQ29uc2VxdWVudGx5LCBJIGFtIHByb3Bvc2luZyB0
+aGVzZSBuZXcgZnVuY3Rpb25zOgo+PiAgICAgY2hhciAqc3RybmNweXRvdXBwZXIoY2hhciAqZHN0
+LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+PiAgICAgY2hhciAqc3RybmNweXRvbG93
+ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+PiAgICAgY2hhciAq
+c3RyY3B5dG91cHBlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYyk7Cj4+ICAgICBjaGFyICpz
+dHJjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4gICAgIGNoYXIgKnN0
+cnRvdXBwZXIoY2hhciAqcyk7Cj4+ICAgICBjaGFyICpzdHJ0b2xvd2VyKGNoYXIgKnMpOwo+Cj4g
+SSB0aGluayB0aGVyZSBpc24ndCBtdWNoIHZhbHVlIGluIGFueXRoaW5nIG90aGVyCj4gdGhhbiBz
+dHJ0bzx1cHBlcnxsb3dlcj4uCj4KPiBVc2luZyBzdHJbbl1jcHkgZm9sbG93ZWQgYnkgc3RydG88
+dXBwZXJ8bG93ZXI+IGlzCj4gcHJldHR5IG9idmlvdXMgYW5kIHJhcmVseSB1c2VkIGFueXdheS4K
+CkZpcnN0IHRpbWUgYXJvdW5kLCBmb2xrcyB3ZXJlIHByb3Bvc2luZyB0aGUgImNvcHkiIHZhcmlh
+bnRzIHdoZW4gSQpzdWJtaXR0ZWQganVzdCBzdHJ0b2xvd2VyKCkgYnkgaXRzZWxmWzFdLiBUaGV5
+IGp1c3QgYXNrZWQgZm9yIHNvdXJjZQphbmQgZGVzdGluYXRpb24gcGFyYW1ldGVycyB0byBzdHJ0
+b2xvd2VyKCksIGJ1dCBsb29raW5nIGF0IHRoZSB1c2UKY2FzZXMgdGhhdCB3b3VsZG4ndCBoYXZl
+IHdvcmtlZCBzbyB3ZWxsLiBIZW5jZSBpdCBldm9sdmVkIGludG8gdGhlc2UgNgpmdW5jdGlvbnMu
+CgpIZXJlJ3MgYSBicmVha2Rvd24gb2YgaG93IHRoZSBmdW5jdGlvbnMgYXJlIGJlaW5nIHVzZWQg
+KHBhdGNoZXMgMi03KSwKc2VlIGFsc28gWzJdOgoKUGF0Y2ggMjogc3RybmNweXRvbG93ZXIoKQpQ
+YXRjaCAzOiBzdHJ0b2xvd2VyKCkKUGF0Y2ggNDogc3RybmNweXRvbG93ZXIoKSBhbmQgc3RydG9s
+b3dlcigpClBhdGNoIDU6IHN0cnRvbG93ZXIoKQpQYXRjaCA2OiBzdHJjcHl0b3VwcGVyKCkKUGF0
+Y2ggNzogc3RyY3B5dG91cHBlcigpCgpTbyBpdCBkb2VzIGxvb2sgbGlrZSB0aGUgY29weSArIGNo
+YW5nZSBjYXNlIHZhcmlhbnQgaXMgbW9yZSBmcmVxdWVudGx5CnVzZWQgdGhhbiBqdXN0IHN0cnRv
+PHVwcGVyfGxvd2VyPi4KClJlZ2FyZHMsCi1NYXJrdXMKClsxXSBodHRwczovL2xrbWwub3JnL2xr
+bWwvMjAxNi83LzEvNjUyClsyXSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNi83LzUvNTQyCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCk5vdXZlYXUgbWFp
+bGluZyBsaXN0Ck5vdXZlYXVAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJl
+ZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vbm91dmVhdQo=
