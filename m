@@ -1,51 +1,39 @@
-From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 19/21] lpfc: Disable FDMI probing if not connected to a
- fabric
-Date: Wed, 06 Jul 2016 12:36:12 -0700
-Message-ID: <577d5dac.IWJT5/2li7EwQBnO%james.smart@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37447 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755719AbcGFTgS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 15:36:18 -0400
-Received: by mail-wm0-f49.google.com with SMTP id a66so5735992wme.0
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jul 2016 12:36:17 -0700 (PDT)
-Received: from flash ([192.19.245.250])
-        by smtp.gmail.com with ESMTPSA id kc7sm2433295wjb.10.2016.07.06.12.36.14
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 06 Jul 2016 12:36:15 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: tom.ty89@gmail.com
+Subject: [PATCH 1/2] libata-scsi: do not return designator for serial number
+Date: Thu,  7 Jul 2016 06:12:12 +0800
+Message-ID: <577d8249.a10c420a.da50c.ffff953e@mx.google.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+From: Tom Yan <tom.ty89@gmail.com>
 
-Disable FDMI probing if not connected to a fabric
+SAT (as of sat4r05f.pdf) does not require this vendor specific
+designator. Besides, we already have the Unit Serial Number VPD.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_ct.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index a38816e..63e48d4 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1510,6 +1510,10 @@ lpfc_fdmi_num_disc_check(struct lpfc_vport *vport)
- 	if (!lpfc_is_link_up(phba))
- 		return;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bfec66f..9f478ad 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2210,14 +2210,6 @@ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
+ 	rbuf[1] = 0x83;			/* this page code */
+ 	num = 4;
  
-+	/* Must be connected to a Fabric */
-+	if (!(vport->fc_flag & FC_FABRIC))
-+		return;
-+
- 	if (!(vport->fdmi_port_mask & LPFC_FDMI_PORT_ATTR_num_disc))
- 		return;
- 
+-	/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
+-	rbuf[num + 0] = 2;
+-	rbuf[num + 3] = ATA_ID_SERNO_LEN;
+-	num += 4;
+-	ata_id_string(args->id, (unsigned char *) rbuf + num,
+-		      ATA_ID_SERNO, ATA_ID_SERNO_LEN);
+-	num += ATA_ID_SERNO_LEN;
+-
+ 	/* SAT defined lu model and serial numbers descriptor */
+ 	/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
+ 	rbuf[num + 0] = 2;
 -- 
-2.5.0
+2.9.0
 
