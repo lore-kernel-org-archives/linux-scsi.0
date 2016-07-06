@@ -1,63 +1,59 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] qla2xxx: setup data needed in ISR before setting up the ISR
-Date: Wed,  6 Jul 2016 09:51:50 +0200
-Message-ID: <1467791510-5307-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Wei Fang <fangwei1@huawei.com>
+Subject: [PATCH] scsi:libsas: fix oops caused by assigning a freed task to ->lldd_task
+Date: Wed, 6 Jul 2016 16:28:44 +0800
+Message-ID: <1467793724-21815-1-git-send-email-fangwei1@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:26583 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015AbcGFIV6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 04:21:58 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
 
-qla2xxx first calls request_irq() and then does the setup of the queue
-entry data needed in the interrupt handlers in when using MSI-X. This
-could lead to a NULL pointer dereference when an IRQ fires between the
-request_irq() call and the assignment of the qentry data structure to the
-rsp->msix field. A possible case for such a race would be in the kdump
-case when the HBA's IRQs are still enabled but the driver is undergoing
-a new initialisation and thus is not aware of already activated IRQs in
-the HBA.
+A freed task has been assigned to ->lldd_task when lldd_execute_task()
+failed in sas_ata_qc_issue(), and access of ->lldd_task will cause
+an oops:
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Call trace:
+[<ffffffc000641f64>] sas_ata_post_internal+0x6c/0x150
+[<ffffffc0006c0d64>] ata_exec_internal_sg+0x32c/0x588
+[<ffffffc0006c1048>] ata_exec_internal+0x88/0xe8
+[<ffffffc0006c13b4>] ata_dev_read_id+0x204/0x5e0
+[<ffffffc0006c17f0>] ata_dev_reread_id+0x60/0xc8
+[<ffffffc0006c3098>] ata_dev_revalidate+0x88/0x1e0
+[<ffffffc0006cf828>] ata_eh_recover+0xcf8/0x13a8
+[<ffffffc0006d075c>] ata_do_eh+0x5c/0xe0
+[<ffffffc0006d0828>] ata_std_error_handler+0x48/0x98
+[<ffffffc0006d042c>] ata_scsi_port_error_handler+0x474/0x658
+[<ffffffc000641b78>] async_sas_ata_eh+0x50/0x80
+[<ffffffc0000ca664>] async_run_entry_fn+0x64/0x180
+[<ffffffc0000c085c>] process_one_work+0x164/0x438
+[<ffffffc0000c0c74>] worker_thread+0x144/0x4b0
+[<ffffffc0000c70fc>] kthread+0xfc/0x110
+
+Fix this by reassigning NULL to ->lldd_task in error path.
+
+Signed-off-by: Wei Fang <fangwei1@huawei.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/libsas/sas_ata.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 5649c20..20743a3 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3086,6 +3086,8 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	/* Enable MSI-X vectors for the base queue */
- 	for (i = 0; i < 2; i++) {
- 		qentry = &ha->msix_entries[i];
-+		qentry->rsp = rsp;
-+		rsp->msix = qentry;
- 		if (IS_P3P_TYPE(ha))
- 			ret = request_irq(qentry->vector,
- 				qla82xx_msix_entries[i].handler,
-@@ -3097,8 +3099,6 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		if (ret)
- 			goto msix_register_fail;
- 		qentry->have_irq = 1;
--		qentry->rsp = rsp;
--		rsp->msix = qentry;
- 
- 		/* Register for CPU affinity notification. */
- 		irq_set_affinity_notifier(qentry->vector, &qentry->irq_notify);
-@@ -3119,12 +3119,12 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	 */
- 	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
- 		qentry = &ha->msix_entries[ATIO_VECTOR];
-+		qentry->rsp = rsp;
-+		rsp->msix = qentry;
- 		ret = request_irq(qentry->vector,
- 			qla83xx_msix_entries[ATIO_VECTOR].handler,
- 			0, qla83xx_msix_entries[ATIO_VECTOR].name, rsp);
- 		qentry->have_irq = 1;
--		qentry->rsp = rsp;
--		rsp->msix = qentry;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 935c430..33c7c66 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -253,6 +253,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 		if (qc->scsicmd)
+ 			ASSIGN_SAS_TASK(qc->scsicmd, NULL);
+ 		sas_free_task(task);
++		qc->lldd_task = task;
+ 		ret = AC_ERR_SYSTEM;
  	}
  
- msix_register_fail:
 -- 
-1.8.5.6
+1.7.1
+
