@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 11/19] qla2xxx: Add bsg interface to support statistics counter reset.
-Date: Wed, 6 Jul 2016 11:14:27 -0400
-Message-ID: <1467818075-15246-12-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 17/19] qla2xxx: Fix duplicate message id.
+Date: Wed, 6 Jul 2016 11:14:33 -0400
+Message-ID: <1467818075-15246-18-git-send-email-himanshu.madhani@qlogic.com>
 References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:19269 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:41103 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754145AbcGFQAI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 12:00:08 -0400
+	by vger.kernel.org with ESMTP id S1754795AbcGFQAL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 12:00:11 -0400
 In-Reply-To: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,112 +21,71 @@ From: Sawan Chandak <sawan.chandak@qlogic.com>
 Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c | 48 ++++++++++++++++++++++--------------------
- drivers/scsi/qla2xxx/qla_bsg.h |  1 +
- 2 files changed, 26 insertions(+), 23 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c | 7 +++----
+ drivers/scsi/qla2xxx/qla_isr.c | 2 +-
+ drivers/scsi/qla2xxx/qla_mbx.c | 4 ++--
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 592e924..8a953aa 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -2246,53 +2246,54 @@ qla2x00_get_priv_stats(struct fc_bsg_job *bsg_job)
- 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
- 	struct link_statistics *stats = NULL;
- 	dma_addr_t stats_dma;
--	int rval = QLA_FUNCTION_FAILED;
-+	int rval;
-+	uint32_t *cmd = bsg_job->request->rqst_data.h_vendor.vendor_cmd;
-+	uint options = cmd[0] == QL_VND_GET_PRIV_STATS_EX ? cmd[1] : 0;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 97b0a9d..45af34d 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -14,9 +14,8 @@
+  * | Module Init and Probe        |       0x0191       | 0x0146         |
+  * |                              |                    | 0x015b-0x0160	|
+  * |                              |                    | 0x016e		|
+- * | Mailbox commands             |       0x1196       | 0x1193		|
+- * |                              |                    |		|
+- * | Device Discovery             |       0x2003       | 0x2016		|
++ * | Mailbox commands             |       0x1199       | 0x1193		|
++ * | Device Discovery             |       0x2004       | 0x2016		|
+  * |                              |                    | 0x2011-0x2012, |
+  * |                              |                    | 0x2099-0x20a4  |
+  * | Queue Command and IO tracing |       0x3074       | 0x300b         |
+@@ -26,7 +25,7 @@
+  * |                              |                    | 0x3036,0x3038  |
+  * |                              |                    | 0x303a		|
+  * | DPC Thread                   |       0x4023       | 0x4002,0x4013  |
+- * | Async Events                 |       0x5089       | 0x502b-0x502f  |
++ * | Async Events                 |       0x5090       | 0x502b-0x502f  |
+  * |				  | 		       | 0x5047         |
+  * |                              |                    | 0x5084,0x5075	|
+  * |                              |                    | 0x503d,0x5044  |
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 1b87977..90b3c2e 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -721,7 +721,7 @@ skip_rio:
+ 		break;
  
- 	if (test_bit(UNLOADING, &vha->dpc_flags))
--		goto done;
-+		return -ENODEV;
+ 	case MBA_LOOP_INIT_ERR:
+-		ql_log(ql_log_warn, vha, 0x507b,
++		ql_log(ql_log_warn, vha, 0x5090,
+ 		    "LOOP INIT ERROR (%x).\n", mb[1]);
+ 		ha->isp_ops->fw_dump(vha, 1);
+ 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index bf16e6f..23698c9 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -404,7 +404,7 @@ mbx_done:
+ 		    "**** Failed mbx[0]=%x, mb[1]=%x, mb[2]=%x, mb[3]=%x, cmd=%x ****.\n",
+ 		    mcp->mb[0], mcp->mb[1], mcp->mb[2], mcp->mb[3], command);
  
- 	if (unlikely(pci_channel_offline(ha->pdev)))
--		goto done;
-+		return -ENODEV;
+-		ql_dbg(ql_dbg_disc, vha, 0x1115,
++		ql_dbg(ql_dbg_mbx, vha, 0x1198,
+ 		    "host status: 0x%x, flags:0x%lx, intr ctrl reg:0x%x, intr status:0x%x\n",
+ 		    RD_REG_DWORD(&reg->isp24.host_status),
+ 		    ha->fw_dump_cap_flags,
+@@ -413,7 +413,7 @@ mbx_done:
  
- 	if (qla2x00_reset_active(vha))
--		goto done;
-+		return -EBUSY;
- 
- 	if (!IS_FWI2_CAPABLE(ha))
--		goto done;
-+		return -EPERM;
- 
- 	stats = dma_alloc_coherent(&ha->pdev->dev,
--		sizeof(struct link_statistics), &stats_dma, GFP_KERNEL);
-+		sizeof(*stats), &stats_dma, GFP_KERNEL);
- 	if (!stats) {
- 		ql_log(ql_log_warn, vha, 0x70e2,
--		"Failed to allocate memory for stats.\n");
--		goto done;
-+		    "Failed to allocate memory for stats.\n");
-+		return -ENOMEM;
- 	}
- 
--	memset(stats, 0, sizeof(struct link_statistics));
--
--	rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma, 0);
--
--	if (rval != QLA_SUCCESS)
--		goto done_free;
-+	memset(stats, 0, sizeof(*stats));
- 
--	ql_dump_buffer(ql_dbg_user + ql_dbg_verbose, vha, 0x70e3,
--	    (uint8_t *)stats, sizeof(struct link_statistics));
-+	rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma, options);
- 
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	bsg_job->reply_payload.sg_cnt, stats, sizeof(struct link_statistics));
--	bsg_job->reply->reply_payload_rcv_len = sizeof(struct link_statistics);
-+	if (rval == QLA_SUCCESS) {
-+		ql_dump_buffer(ql_dbg_user + ql_dbg_verbose, vha, 0x70e3,
-+		    (uint8_t *)stats, sizeof(*stats));
-+		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+			bsg_job->reply_payload.sg_cnt, stats, sizeof(*stats));
-+	}
- 
--	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
-+	bsg_job->reply->reply_payload_rcv_len = sizeof(*stats);
-+	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+	    rval ? EXT_STATUS_MAILBOX : EXT_STATUS_OK;
- 
--	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job->reply_len = sizeof(*bsg_job->reply);
- 	bsg_job->reply->result = DID_OK << 16;
- 	bsg_job->job_done(bsg_job);
- 
- done_free:
--	dma_free_coherent(&ha->pdev->dev, sizeof(struct link_statistics),
-+	dma_free_coherent(&ha->pdev->dev, sizeof(*stats),
- 		stats, stats_dma);
- done:
--	return rval;
-+	return 0;
- }
- 
- static int
-@@ -2401,6 +2402,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 		return qla27xx_get_bbcr_data(bsg_job);
- 
- 	case QL_VND_GET_PRIV_STATS:
-+	case QL_VND_GET_PRIV_STATS_EX:
- 		return qla2x00_get_priv_stats(bsg_job);
- 
- 	case QL_VND_DPORT_DIAGNOSTICS:
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index 3b1045f..d97dfd5 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -30,6 +30,7 @@
- #define QL_VND_GET_BBCR_DATA    0x17
- #define QL_VND_GET_PRIV_STATS	0x18
- #define QL_VND_DPORT_DIAGNOSTICS	0x19
-+#define QL_VND_GET_PRIV_STATS_EX	0x1A
- 
- /* BSG Vendor specific subcode returns */
- #define EXT_STATUS_OK			0
+ 		mbx_reg = &reg->isp24.mailbox0;
+ 		for (i = 0; i < 6; i++)
+-			ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0x1116,
++			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1199,
+ 			    "mbox[%d] 0x%04x\n", i, RD_REG_WORD(mbx_reg++));
+ 	} else {
+ 		ql_dbg(ql_dbg_mbx, base_vha, 0x1021, "Done %s.\n", __func__);
 -- 
 2.7.2
 
