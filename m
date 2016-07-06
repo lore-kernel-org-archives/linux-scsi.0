@@ -1,42 +1,42 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
- >80MB at once
-Date: Wed, 06 Jul 2016 16:15:26 +0000
-Message-ID: <bug-121531-11613-Mu74wHUr14@https.bugzilla.kernel.org/>
-References: <bug-121531-11613@https.bugzilla.kernel.org/>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: [PATCH] qla2xxx: Fix compiler warning
+Date: Wed, 6 Jul 2016 11:45:32 -0400
+Message-ID: <1467819932-15678-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49732 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752644AbcGFQPc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jul 2016 12:15:32 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id AC1972012D
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Jul 2016 16:15:29 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 5E35520122
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Jul 2016 16:15:27 +0000 (UTC)
-In-Reply-To: <bug-121531-11613@https.bugzilla.kernel.org/>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:49342 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754490AbcGFQaR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 12:30:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=121531
+Fixes: 7f939ab ("qla2xxx: Add bsg interface to support statistics counter reset.")
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_bsg.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Jack Wang <xjtuwjp@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |xjtuwjp@gmail.com
-
---- Comment #11 from Jack Wang <xjtuwjp@gmail.com> ---
-Have you tried the version from microsemi? they have a lot of changes which are
-not
-in upstream: 
-http://storage.microsemi.com/en-us/support/sas/sas/asa-7805h/
-
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 8a953aa..643014f 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -2289,10 +2289,9 @@ qla2x00_get_priv_stats(struct fc_bsg_job *bsg_job)
+ 	bsg_job->reply->result = DID_OK << 16;
+ 	bsg_job->job_done(bsg_job);
+ 
+-done_free:
+ 	dma_free_coherent(&ha->pdev->dev, sizeof(*stats),
+ 		stats, stats_dma);
+-done:
++
+ 	return 0;
+ }
+ 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1.7.1
+
