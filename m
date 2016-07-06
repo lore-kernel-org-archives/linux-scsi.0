@@ -1,14 +1,14 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 02/19] qla2xxx: Add ram area DDR for fwdump template entry T262.
-Date: Wed, 6 Jul 2016 11:14:18 -0400
-Message-ID: <1467818075-15246-3-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 01/19] qla2xxx: Remove sysfs node fw_dump_template.
+Date: Wed, 6 Jul 2016 11:14:17 -0400
+Message-ID: <1467818075-15246-2-git-send-email-himanshu.madhani@qlogic.com>
 References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:32950 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14823 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754522AbcGFP7U (ORCPT
+	by vger.kernel.org with ESMTP id S1754515AbcGFP7U (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 11:59:20 -0400
 In-Reply-To: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -21,76 +21,136 @@ From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  | 2 ++
- drivers/scsi/qla2xxx/qla_mbx.c  | 7 +++++--
- drivers/scsi/qla2xxx/qla_tmpl.c | 9 ++++++++-
- 3 files changed, 15 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c | 89 -----------------------------------------
+ drivers/scsi/qla2xxx/qla_dbg.c  |  1 +
+ 2 files changed, 1 insertion(+), 89 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 47f8b9b4..7f86147 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3370,6 +3370,8 @@ struct qla_hw_data {
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 4dc06a13..c9bcd82 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -147,92 +147,6 @@ static struct bin_attribute sysfs_fw_dump_attr = {
+ };
  
- 	uint32_t	fw_shared_ram_start;
- 	uint32_t	fw_shared_ram_end;
-+	uint32_t	fw_ddr_ram_start;
-+	uint32_t	fw_ddr_ram_end;
+ static ssize_t
+-qla2x00_sysfs_read_fw_dump_template(struct file *filp, struct kobject *kobj,
+-			   struct bin_attribute *bin_attr,
+-			   char *buf, loff_t off, size_t count)
+-{
+-	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
+-	    struct device, kobj)));
+-	struct qla_hw_data *ha = vha->hw;
+-
+-	if (!ha->fw_dump_template || !ha->fw_dump_template_len)
+-		return 0;
+-
+-	ql_dbg(ql_dbg_user, vha, 0x70e2,
+-	    "chunk <- off=%llx count=%zx\n", off, count);
+-	return memory_read_from_buffer(buf, count, &off,
+-	    ha->fw_dump_template, ha->fw_dump_template_len);
+-}
+-
+-static ssize_t
+-qla2x00_sysfs_write_fw_dump_template(struct file *filp, struct kobject *kobj,
+-			    struct bin_attribute *bin_attr,
+-			    char *buf, loff_t off, size_t count)
+-{
+-	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
+-	    struct device, kobj)));
+-	struct qla_hw_data *ha = vha->hw;
+-	uint32_t size;
+-
+-	if (off == 0) {
+-		if (ha->fw_dump)
+-			vfree(ha->fw_dump);
+-		if (ha->fw_dump_template)
+-			vfree(ha->fw_dump_template);
+-
+-		ha->fw_dump = NULL;
+-		ha->fw_dump_len = 0;
+-		ha->fw_dump_template = NULL;
+-		ha->fw_dump_template_len = 0;
+-
+-		size = qla27xx_fwdt_template_size(buf);
+-		ql_dbg(ql_dbg_user, vha, 0x70d1,
+-		    "-> allocating fwdt (%x bytes)...\n", size);
+-		ha->fw_dump_template = vmalloc(size);
+-		if (!ha->fw_dump_template) {
+-			ql_log(ql_log_warn, vha, 0x70d2,
+-			    "Failed allocate fwdt (%x bytes).\n", size);
+-			return -ENOMEM;
+-		}
+-		ha->fw_dump_template_len = size;
+-	}
+-
+-	if (off + count > ha->fw_dump_template_len) {
+-		count = ha->fw_dump_template_len - off;
+-		ql_dbg(ql_dbg_user, vha, 0x70d3,
+-		    "chunk -> truncating to %zx bytes.\n", count);
+-	}
+-
+-	ql_dbg(ql_dbg_user, vha, 0x70d4,
+-	    "chunk -> off=%llx count=%zx\n", off, count);
+-	memcpy(ha->fw_dump_template + off, buf, count);
+-
+-	if (off + count == ha->fw_dump_template_len) {
+-		size = qla27xx_fwdt_calculate_dump_size(vha);
+-		ql_dbg(ql_dbg_user, vha, 0x70d5,
+-		    "-> allocating fwdump (%x bytes)...\n", size);
+-		ha->fw_dump = vmalloc(size);
+-		if (!ha->fw_dump) {
+-			ql_log(ql_log_warn, vha, 0x70d6,
+-			    "Failed allocate fwdump (%x bytes).\n", size);
+-			return -ENOMEM;
+-		}
+-		ha->fw_dump_len = size;
+-	}
+-
+-	return count;
+-}
+-static struct bin_attribute sysfs_fw_dump_template_attr = {
+-	.attr = {
+-		.name = "fw_dump_template",
+-		.mode = S_IRUSR | S_IWUSR,
+-	},
+-	.size = 0,
+-	.read = qla2x00_sysfs_read_fw_dump_template,
+-	.write = qla2x00_sysfs_write_fw_dump_template,
+-};
+-
+-static ssize_t
+ qla2x00_sysfs_read_nvram(struct file *filp, struct kobject *kobj,
+ 			 struct bin_attribute *bin_attr,
+ 			 char *buf, loff_t off, size_t count)
+@@ -973,7 +887,6 @@ static struct sysfs_entry {
+ 	int is4GBp_only;
+ } bin_file_entries[] = {
+ 	{ "fw_dump", &sysfs_fw_dump_attr, },
+-	{ "fw_dump_template", &sysfs_fw_dump_template_attr, 0x27 },
+ 	{ "nvram", &sysfs_nvram_attr, },
+ 	{ "optrom", &sysfs_optrom_attr, },
+ 	{ "optrom_ctl", &sysfs_optrom_ctl_attr, },
+@@ -1000,8 +913,6 @@ qla2x00_alloc_sysfs_attr(scsi_qla_host_t *vha)
+ 			continue;
+ 		if (iter->is4GBp_only == 3 && !(IS_CNA_CAPABLE(vha->hw)))
+ 			continue;
+-		if (iter->is4GBp_only == 0x27 && !IS_QLA27XX(vha->hw))
+-			continue;
  
- 	uint16_t	fw_options[16];         /* slots: 1,2,3,10,11 */
- 	uint8_t		fw_seriallink_options[4];
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 968b846..9673a0b 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -782,8 +782,9 @@ qla2x00_get_fw_version(scsi_qla_host_t *vha)
- 	if (IS_FWI2_CAPABLE(ha))
- 		mcp->in_mb |= MBX_17|MBX_16|MBX_15;
- 	if (IS_QLA27XX(ha))
--		mcp->in_mb |= MBX_23 | MBX_22 | MBX_21 | MBX_20 | MBX_19 |
--		    MBX_18 | MBX_14 | MBX_13 | MBX_11 | MBX_10 | MBX_9 | MBX_8;
-+		mcp->in_mb |=
-+		    MBX_25|MBX_24|MBX_23|MBX_22|MBX_21|MBX_20|MBX_19|MBX_18|
-+		    MBX_14|MBX_13|MBX_11|MBX_10|MBX_9|MBX_8;
- 
- 	mcp->flags = 0;
- 	mcp->tov = MBX_TOV_SECONDS;
-@@ -842,6 +843,8 @@ qla2x00_get_fw_version(scsi_qla_host_t *vha)
- 		ha->pep_version[2] = mcp->mb[14] & 0xff;
- 		ha->fw_shared_ram_start = (mcp->mb[19] << 16) | mcp->mb[18];
- 		ha->fw_shared_ram_end = (mcp->mb[21] << 16) | mcp->mb[20];
-+		ha->fw_ddr_ram_start = (mcp->mb[23] << 16) | mcp->mb[22];
-+		ha->fw_ddr_ram_end = (mcp->mb[25] << 16) | mcp->mb[24];
- 	}
- 
- failed:
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index c3e6225..36935c9 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -357,6 +357,13 @@ qla27xx_fwdt_entry_t262(struct scsi_qla_host *vha,
- 			ent->t262.start_addr = start;
- 			ent->t262.end_addr = end;
- 		}
-+	} else if (ent->t262.ram_area == T262_RAM_AREA_DDR_RAM) {
-+		start = vha->hw->fw_ddr_ram_start;
-+		end = vha->hw->fw_ddr_ram_end;
-+		if (buf) {
-+			ent->t262.start_addr = start;
-+			ent->t262.end_addr = end;
-+		}
- 	} else {
- 		ql_dbg(ql_dbg_misc, vha, 0xd022,
- 		    "%s: unknown area %x\n", __func__, ent->t262.ram_area);
-@@ -364,7 +371,7 @@ qla27xx_fwdt_entry_t262(struct scsi_qla_host *vha,
- 		goto done;
- 	}
- 
--	if (end < start || end == 0) {
-+	if (end <= start || start == 0 || end == 0) {
- 		ql_dbg(ql_dbg_misc, vha, 0xd023,
- 		    "%s: unusable range (start=%x end=%x)\n", __func__,
- 		    ent->t262.end_addr, ent->t262.start_addr);
+ 		ret = sysfs_create_bin_file(&host->shost_gendev.kobj,
+ 		    iter->attr);
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index b64c504..b985fcb 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -39,6 +39,7 @@
+  * |                              |                    | 0x70a5-0x70a6  |
+  * |                              |                    | 0x70a8,0x70ab  |
+  * |                              |                    | 0x70ad-0x70ae  |
++ * |                              |                    | 0x70d0-0x70d6	|
+  * |                              |                    | 0x70d7-0x70db  |
+  * |                              |                    | 0x70de-0x70df  |
+  * | Task Management              |       0x803d       | 0x8000,0x800b  |
 -- 
 2.7.2
 
