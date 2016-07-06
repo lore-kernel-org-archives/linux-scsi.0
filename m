@@ -1,346 +1,327 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 02/21] lpfc: Correct RDP response sizing issue
-Date: Wed, 06 Jul 2016 12:35:55 -0700
-Message-ID: <577d5d9b.HMNnhIbUwXmez4gj%james.smart@broadcom.com>
+Subject: [PATCH 01/21] lpfc: Fix Transgression Flag of Optical Element
+ descriptor for RDP on Linux
+Date: Wed, 06 Jul 2016 12:35:54 -0700
+Message-ID: <577d5d9a.tm/ZDaxY8ldAXu0i%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36054 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755466AbcGFTgD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 15:36:03 -0400
-Received: by mail-wm0-f48.google.com with SMTP id f126so185559096wma.1
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:38500 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754599AbcGFTgC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 15:36:02 -0400
+Received: by mail-wm0-f45.google.com with SMTP id r201so5681054wme.1
         for <linux-scsi@vger.kernel.org>; Wed, 06 Jul 2016 12:36:00 -0700 (PDT)
 Received: from flash ([192.19.245.250])
-        by smtp.gmail.com with ESMTPSA id p191sm4156369wme.7.2016.07.06.12.35.57
+        by smtp.gmail.com with ESMTPSA id e16sm2427678wma.12.2016.07.06.12.35.56
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 06 Jul 2016 12:35:58 -0700 (PDT)
+        Wed, 06 Jul 2016 12:35:57 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Correct RDP response sizing issue
+Fix Transgression Flag of Optical Element descriptor for RDP on Linux
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 113 ++++++++++++++++++++++++++++---------------
- drivers/scsi/lpfc/lpfc_hw.h  |  26 +++-------
- 2 files changed, 81 insertions(+), 58 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      |  12 +++++
+ drivers/scsi/lpfc/lpfc_els.c  | 101 +++++++++++++++++++++++++++++++++---------
+ drivers/scsi/lpfc/lpfc_hw.h   |   6 +++
+ drivers/scsi/lpfc/lpfc_hw4.h  |   6 +--
+ drivers/scsi/lpfc/lpfc_init.c |   2 +
+ 5 files changed, 101 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index d5bd420..c6ade9b 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -999,6 +999,18 @@ struct lpfc_hba {
+ 	spinlock_t devicelock;	/* lock for luns list */
+ 	mempool_t *device_data_mem_pool;
+ 	struct list_head luns;
++#define LPFC_TRANSGRESSION_HIGH_TEMPERATURE	0x0080
++#define LPFC_TRANSGRESSION_LOW_TEMPERATURE	0x0040
++#define LPFC_TRANSGRESSION_HIGH_VOLTAGE		0x0020
++#define LPFC_TRANSGRESSION_LOW_VOLTAGE		0x0010
++#define LPFC_TRANSGRESSION_HIGH_TXBIAS		0x0008
++#define LPFC_TRANSGRESSION_LOW_TXBIAS		0x0004
++#define LPFC_TRANSGRESSION_HIGH_TXPOWER		0x0002
++#define LPFC_TRANSGRESSION_LOW_TXPOWER		0x0001
++#define LPFC_TRANSGRESSION_HIGH_RXPOWER		0x8000
++#define LPFC_TRANSGRESSION_LOW_RXPOWER		0x4000
++	uint16_t sfp_alarm;
++	uint16_t sfp_warning;
+ };
+ 
+ static inline struct Scsi_Host *
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 300131a..0d05e1a 100644
+index 0498f57..300131a 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4609,7 +4609,7 @@ lpfc_els_disc_plogi(struct lpfc_vport *vport)
- 	return sentplogi;
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_link_service(struct fc_rdp_link_service_desc *desc,
- 		uint32_t word0)
- {
-@@ -4617,9 +4617,11 @@ lpfc_rdp_res_link_service(struct fc_rdp_link_service_desc *desc,
- 	desc->tag = cpu_to_be32(RDP_LINK_SERVICE_DESC_TAG);
- 	desc->payload.els_req = word0;
- 	desc->length = cpu_to_be32(sizeof(desc->payload));
-+
-+	return sizeof(struct fc_rdp_link_service_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_sfp_desc(struct fc_rdp_sfp_desc *desc,
- 		uint8_t *page_a0, uint8_t *page_a2)
- {
-@@ -4680,9 +4682,11 @@ lpfc_rdp_res_sfp_desc(struct fc_rdp_sfp_desc *desc,
- 
- 	desc->sfp_info.flags = cpu_to_be16(flag);
- 	desc->length = cpu_to_be32(sizeof(desc->sfp_info));
-+
-+	return sizeof(struct fc_rdp_sfp_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_link_error(struct fc_rdp_link_error_status_desc *desc,
- 		READ_LNK_VAR *stat)
- {
-@@ -4707,9 +4711,11 @@ lpfc_rdp_res_link_error(struct fc_rdp_link_error_status_desc *desc,
- 	desc->info.link_status.invalid_crc_cnt = cpu_to_be32(stat->crcCnt);
- 
- 	desc->length = cpu_to_be32(sizeof(desc->info));
-+
-+	return sizeof(struct fc_rdp_link_error_status_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_bbc_desc(struct fc_rdp_bbc_desc *desc, READ_LNK_VAR *stat,
- 		      struct lpfc_vport *vport)
- {
-@@ -4727,9 +4733,11 @@ lpfc_rdp_res_bbc_desc(struct fc_rdp_bbc_desc *desc, READ_LNK_VAR *stat,
- 
- 	desc->bbc_info.rtt = 0;
- 	desc->length = cpu_to_be32(sizeof(desc->bbc_info));
-+
-+	return sizeof(struct fc_rdp_bbc_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_oed_temp_desc(struct lpfc_hba *phba,
- 			   struct fc_rdp_oed_sfp_desc *desc, uint8_t *page_a2)
- {
-@@ -4757,9 +4765,10 @@ lpfc_rdp_res_oed_temp_desc(struct lpfc_hba *phba,
- 	flags |= ((0xf & RDP_OED_TEMPERATURE) << RDP_OED_TYPE_SHIFT);
- 	desc->oed_info.function_flags = cpu_to_be32(flags);
- 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
-+	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_oed_voltage_desc(struct lpfc_hba *phba,
- 			      struct fc_rdp_oed_sfp_desc *desc,
- 			      uint8_t *page_a2)
-@@ -4788,9 +4797,10 @@ lpfc_rdp_res_oed_voltage_desc(struct lpfc_hba *phba,
- 	flags |= ((0xf & RDP_OED_VOLTAGE) << RDP_OED_TYPE_SHIFT);
- 	desc->oed_info.function_flags = cpu_to_be32(flags);
- 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
-+	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_oed_txbias_desc(struct lpfc_hba *phba,
- 			     struct fc_rdp_oed_sfp_desc *desc,
- 			     uint8_t *page_a2)
-@@ -4819,9 +4829,10 @@ lpfc_rdp_res_oed_txbias_desc(struct lpfc_hba *phba,
- 	flags |= ((0xf & RDP_OED_TXBIAS) << RDP_OED_TYPE_SHIFT);
- 	desc->oed_info.function_flags = cpu_to_be32(flags);
- 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
-+	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_oed_txpower_desc(struct lpfc_hba *phba,
- 			      struct fc_rdp_oed_sfp_desc *desc,
- 			      uint8_t *page_a2)
-@@ -4850,10 +4861,11 @@ lpfc_rdp_res_oed_txpower_desc(struct lpfc_hba *phba,
- 	flags |= ((0xf & RDP_OED_TXPOWER) << RDP_OED_TYPE_SHIFT);
- 	desc->oed_info.function_flags = cpu_to_be32(flags);
- 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
-+	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
- 
--void
-+uint32_t
- lpfc_rdp_res_oed_rxpower_desc(struct lpfc_hba *phba,
- 			      struct fc_rdp_oed_sfp_desc *desc,
- 			      uint8_t *page_a2)
-@@ -4882,9 +4894,10 @@ lpfc_rdp_res_oed_rxpower_desc(struct lpfc_hba *phba,
- 	flags |= ((0xf & RDP_OED_RXPOWER) << RDP_OED_TYPE_SHIFT);
- 	desc->oed_info.function_flags = cpu_to_be32(flags);
- 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
-+	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_opd_desc(struct fc_rdp_opd_sfp_desc *desc,
- 		      uint8_t *page_a0, struct lpfc_vport *vport)
- {
-@@ -4895,9 +4908,10 @@ lpfc_rdp_res_opd_desc(struct fc_rdp_opd_sfp_desc *desc,
- 	memcpy(desc->opd_info.revision, &page_a0[SSF_VENDOR_REV], 2);
- 	memcpy(desc->opd_info.date, &page_a0[SSF_DATE_CODE], 8);
- 	desc->length = cpu_to_be32(sizeof(desc->opd_info));
-+	return sizeof(struct fc_rdp_opd_sfp_desc);
- }
- 
--int
-+uint32_t
- lpfc_rdp_res_fec_desc(struct fc_fec_rdp_desc *desc, READ_LNK_VAR *stat)
- {
- 	if (bf_get(lpfc_read_link_stat_gec2, stat) == 0)
-@@ -4914,7 +4928,7 @@ lpfc_rdp_res_fec_desc(struct fc_fec_rdp_desc *desc, READ_LNK_VAR *stat)
- 	return sizeof(struct fc_fec_rdp_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
- {
- 	uint16_t rdp_cap = 0;
-@@ -4973,9 +4987,10 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
- 
- 	desc->info.port_speed.capabilities = cpu_to_be16(rdp_cap);
- 	desc->length = cpu_to_be32(sizeof(desc->info));
-+	return sizeof(struct fc_rdp_port_speed_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_diag_port_names(struct fc_rdp_port_name_desc *desc,
- 		struct lpfc_hba *phba)
- {
-@@ -4989,9 +5004,10 @@ lpfc_rdp_res_diag_port_names(struct fc_rdp_port_name_desc *desc,
- 			sizeof(desc->port_names.wwpn));
- 
- 	desc->length = cpu_to_be32(sizeof(desc->port_names));
-+	return sizeof(struct fc_rdp_port_name_desc);
- }
- 
--void
-+uint32_t
- lpfc_rdp_res_attach_port_names(struct fc_rdp_port_name_desc *desc,
- 		struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- {
-@@ -5012,6 +5028,7 @@ lpfc_rdp_res_attach_port_names(struct fc_rdp_port_name_desc *desc,
- 	}
- 
- 	desc->length = cpu_to_be32(sizeof(desc->port_names));
-+	return sizeof(struct fc_rdp_port_name_desc);
+@@ -4730,9 +4730,10 @@ lpfc_rdp_res_bbc_desc(struct fc_rdp_bbc_desc *desc, READ_LNK_VAR *stat,
  }
  
  void
-@@ -5026,9 +5043,9 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 	uint8_t *pcmd;
+-lpfc_rdp_res_oed_temp_desc(struct fc_rdp_oed_sfp_desc *desc, uint8_t *page_a2)
++lpfc_rdp_res_oed_temp_desc(struct lpfc_hba *phba,
++			   struct fc_rdp_oed_sfp_desc *desc, uint8_t *page_a2)
+ {
+-	uint32_t flags;
++	uint32_t flags = 0;
+ 
+ 	desc->tag = cpu_to_be32(RDP_OED_DESC_TAG);
+ 
+@@ -4743,17 +4744,27 @@ lpfc_rdp_res_oed_temp_desc(struct fc_rdp_oed_sfp_desc *desc, uint8_t *page_a2)
+ 			cpu_to_be16(page_a2[SSF_TEMP_HIGH_WARNING]);
+ 	desc->oed_info.lo_warning =
+ 			cpu_to_be16(page_a2[SSF_TEMP_LOW_WARNING]);
+-	flags = 0xf; /* All four are valid */
++
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_HIGH_TEMPERATURE)
++		flags |= RDP_OET_HIGH_ALARM;
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_LOW_TEMPERATURE)
++		flags |= RDP_OET_LOW_ALARM;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_HIGH_TEMPERATURE)
++		flags |= RDP_OET_HIGH_WARNING;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_LOW_TEMPERATURE)
++		flags |= RDP_OET_LOW_WARNING;
++
+ 	flags |= ((0xf & RDP_OED_TEMPERATURE) << RDP_OED_TYPE_SHIFT);
+ 	desc->oed_info.function_flags = cpu_to_be32(flags);
+ 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
+ }
+ 
+ void
+-lpfc_rdp_res_oed_voltage_desc(struct fc_rdp_oed_sfp_desc *desc,
++lpfc_rdp_res_oed_voltage_desc(struct lpfc_hba *phba,
++			      struct fc_rdp_oed_sfp_desc *desc,
+ 			      uint8_t *page_a2)
+ {
+-	uint32_t flags;
++	uint32_t flags = 0;
+ 
+ 	desc->tag = cpu_to_be32(RDP_OED_DESC_TAG);
+ 
+@@ -4764,17 +4775,27 @@ lpfc_rdp_res_oed_voltage_desc(struct fc_rdp_oed_sfp_desc *desc,
+ 			cpu_to_be16(page_a2[SSF_VOLTAGE_HIGH_WARNING]);
+ 	desc->oed_info.lo_warning =
+ 			cpu_to_be16(page_a2[SSF_VOLTAGE_LOW_WARNING]);
+-	flags = 0xf; /* All four are valid */
++
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_HIGH_VOLTAGE)
++		flags |= RDP_OET_HIGH_ALARM;
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_LOW_VOLTAGE)
++		flags |= RDP_OET_LOW_ALARM;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_HIGH_VOLTAGE)
++		flags |= RDP_OET_HIGH_WARNING;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_LOW_VOLTAGE)
++		flags |= RDP_OET_LOW_WARNING;
++
+ 	flags |= ((0xf & RDP_OED_VOLTAGE) << RDP_OED_TYPE_SHIFT);
+ 	desc->oed_info.function_flags = cpu_to_be32(flags);
+ 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
+ }
+ 
+ void
+-lpfc_rdp_res_oed_txbias_desc(struct fc_rdp_oed_sfp_desc *desc,
++lpfc_rdp_res_oed_txbias_desc(struct lpfc_hba *phba,
++			     struct fc_rdp_oed_sfp_desc *desc,
+ 			     uint8_t *page_a2)
+ {
+-	uint32_t flags;
++	uint32_t flags = 0;
+ 
+ 	desc->tag = cpu_to_be32(RDP_OED_DESC_TAG);
+ 
+@@ -4785,17 +4806,27 @@ lpfc_rdp_res_oed_txbias_desc(struct fc_rdp_oed_sfp_desc *desc,
+ 			cpu_to_be16(page_a2[SSF_BIAS_HIGH_WARNING]);
+ 	desc->oed_info.lo_warning =
+ 			cpu_to_be16(page_a2[SSF_BIAS_LOW_WARNING]);
+-	flags = 0xf; /* All four are valid */
++
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_HIGH_TXBIAS)
++		flags |= RDP_OET_HIGH_ALARM;
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_LOW_TXBIAS)
++		flags |= RDP_OET_LOW_ALARM;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_HIGH_TXBIAS)
++		flags |= RDP_OET_HIGH_WARNING;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_LOW_TXBIAS)
++		flags |= RDP_OET_LOW_WARNING;
++
+ 	flags |= ((0xf & RDP_OED_TXBIAS) << RDP_OED_TYPE_SHIFT);
+ 	desc->oed_info.function_flags = cpu_to_be32(flags);
+ 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
+ }
+ 
+ void
+-lpfc_rdp_res_oed_txpower_desc(struct fc_rdp_oed_sfp_desc *desc,
++lpfc_rdp_res_oed_txpower_desc(struct lpfc_hba *phba,
++			      struct fc_rdp_oed_sfp_desc *desc,
+ 			      uint8_t *page_a2)
+ {
+-	uint32_t flags;
++	uint32_t flags = 0;
+ 
+ 	desc->tag = cpu_to_be32(RDP_OED_DESC_TAG);
+ 
+@@ -4806,7 +4837,16 @@ lpfc_rdp_res_oed_txpower_desc(struct fc_rdp_oed_sfp_desc *desc,
+ 			cpu_to_be16(page_a2[SSF_TXPOWER_HIGH_WARNING]);
+ 	desc->oed_info.lo_warning =
+ 			cpu_to_be16(page_a2[SSF_TXPOWER_LOW_WARNING]);
+-	flags = 0xf; /* All four are valid */
++
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_HIGH_TXPOWER)
++		flags |= RDP_OET_HIGH_ALARM;
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_LOW_TXPOWER)
++		flags |= RDP_OET_LOW_ALARM;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_HIGH_TXPOWER)
++		flags |= RDP_OET_HIGH_WARNING;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_LOW_TXPOWER)
++		flags |= RDP_OET_LOW_WARNING;
++
+ 	flags |= ((0xf & RDP_OED_TXPOWER) << RDP_OED_TYPE_SHIFT);
+ 	desc->oed_info.function_flags = cpu_to_be32(flags);
+ 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
+@@ -4814,10 +4854,11 @@ lpfc_rdp_res_oed_txpower_desc(struct fc_rdp_oed_sfp_desc *desc,
+ 
+ 
+ void
+-lpfc_rdp_res_oed_rxpower_desc(struct fc_rdp_oed_sfp_desc *desc,
++lpfc_rdp_res_oed_rxpower_desc(struct lpfc_hba *phba,
++			      struct fc_rdp_oed_sfp_desc *desc,
+ 			      uint8_t *page_a2)
+ {
+-	uint32_t flags;
++	uint32_t flags = 0;
+ 
+ 	desc->tag = cpu_to_be32(RDP_OED_DESC_TAG);
+ 
+@@ -4828,7 +4869,16 @@ lpfc_rdp_res_oed_rxpower_desc(struct fc_rdp_oed_sfp_desc *desc,
+ 			cpu_to_be16(page_a2[SSF_RXPOWER_HIGH_WARNING]);
+ 	desc->oed_info.lo_warning =
+ 			cpu_to_be16(page_a2[SSF_RXPOWER_LOW_WARNING]);
+-	flags = 0xf; /* All four are valid */
++
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_HIGH_RXPOWER)
++		flags |= RDP_OET_HIGH_ALARM;
++	if (phba->sfp_alarm & LPFC_TRANSGRESSION_LOW_RXPOWER)
++		flags |= RDP_OET_LOW_ALARM;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_HIGH_RXPOWER)
++		flags |= RDP_OET_HIGH_WARNING;
++	if (phba->sfp_warning & LPFC_TRANSGRESSION_LOW_RXPOWER)
++		flags |= RDP_OET_LOW_WARNING;
++
+ 	flags |= ((0xf & RDP_OED_RXPOWER) << RDP_OED_TYPE_SHIFT);
+ 	desc->oed_info.function_flags = cpu_to_be32(flags);
+ 	desc->length = cpu_to_be32(sizeof(desc->oed_info));
+@@ -4977,6 +5027,7 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
  	struct ls_rjt *stat;
  	struct fc_rdp_res_frame *rdp_res;
--	uint32_t cmdsize;
-+	uint32_t cmdsize, len;
- 	uint16_t *flag_ptr;
--	int rc, fec_size;
-+	int rc;
+ 	uint32_t cmdsize;
++	uint16_t *flag_ptr;
+ 	int rc, fec_size;
  
  	if (status != SUCCESS)
- 		goto error;
-@@ -5066,38 +5083,54 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 	phba->sfp_warning |= *flag_ptr;
+@@ -5008,6 +5059,12 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
+ 	memset(pcmd, 0, sizeof(struct fc_rdp_res_frame));
+ 	*((uint32_t *) (pcmd)) = ELS_CMD_ACC;
  
++	/* Update Alarm and Warning */
++	flag_ptr = (uint16_t *)(rdp_context->page_a2 + SSF_ALARM_FLAGS);
++	phba->sfp_alarm |= *flag_ptr;
++	flag_ptr = (uint16_t *)(rdp_context->page_a2 + SSF_WARNING_FLAGS);
++	phba->sfp_warning |= *flag_ptr;
++
  	/* For RDP payload */
--	lpfc_rdp_res_link_service(&rdp_res->link_service_desc, ELS_CMD_RDP);
-+	len = 8;
-+	len += lpfc_rdp_res_link_service((struct fc_rdp_link_service_desc *)
-+					 (len + pcmd), ELS_CMD_RDP);
+ 	lpfc_rdp_res_link_service(&rdp_res->link_service_desc, ELS_CMD_RDP);
  
--	lpfc_rdp_res_sfp_desc(&rdp_res->sfp_desc,
-+	len += lpfc_rdp_res_sfp_desc((struct fc_rdp_sfp_desc *)(len + pcmd),
+@@ -5015,21 +5072,21 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
  			rdp_context->page_a0, rdp_context->page_a2);
--	lpfc_rdp_res_speed(&rdp_res->portspeed_desc, phba);
--	lpfc_rdp_res_link_error(&rdp_res->link_error_desc,
--				&rdp_context->link_stat);
--	lpfc_rdp_res_diag_port_names(&rdp_res->diag_port_names_desc, phba);
--	lpfc_rdp_res_attach_port_names(&rdp_res->attached_port_names_desc,
--				       vport, ndlp);
--	lpfc_rdp_res_bbc_desc(&rdp_res->bbc_desc, &rdp_context->link_stat,
--			      vport);
--	lpfc_rdp_res_oed_temp_desc(phba, &rdp_res->oed_temp_desc,
--				   rdp_context->page_a2);
--	lpfc_rdp_res_oed_voltage_desc(phba, &rdp_res->oed_voltage_desc,
--				      rdp_context->page_a2);
--	lpfc_rdp_res_oed_txbias_desc(phba, &rdp_res->oed_txbias_desc,
--				     rdp_context->page_a2);
--	lpfc_rdp_res_oed_txpower_desc(phba, &rdp_res->oed_txpower_desc,
--				      rdp_context->page_a2);
--	lpfc_rdp_res_oed_rxpower_desc(phba, &rdp_res->oed_rxpower_desc,
--				      rdp_context->page_a2);
--	lpfc_rdp_res_opd_desc(&rdp_res->opd_desc, rdp_context->page_a0, vport);
--	fec_size = lpfc_rdp_res_fec_desc(&rdp_res->fec_desc,
-+	len += lpfc_rdp_res_speed((struct fc_rdp_port_speed_desc *)(len + pcmd),
-+				  phba);
-+	len += lpfc_rdp_res_link_error((struct fc_rdp_link_error_status_desc *)
-+				       (len + pcmd), &rdp_context->link_stat);
-+	len += lpfc_rdp_res_diag_port_names((struct fc_rdp_port_name_desc *)
-+					     (len + pcmd), phba);
-+	len += lpfc_rdp_res_attach_port_names((struct fc_rdp_port_name_desc *)
-+					(len + pcmd), vport, ndlp);
-+	len += lpfc_rdp_res_fec_desc((struct fc_fec_rdp_desc *)(len + pcmd),
- 			&rdp_context->link_stat);
--	rdp_res->length = cpu_to_be32(fec_size + RDP_DESC_PAYLOAD_SIZE);
-+	/* Check if nport is logged, BZ190632 */
-+	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED))
-+		goto lpfc_skip_descriptor;
-+
-+	len += lpfc_rdp_res_bbc_desc((struct fc_rdp_bbc_desc *)(len + pcmd),
-+				     &rdp_context->link_stat, vport);
-+	len += lpfc_rdp_res_oed_temp_desc(phba,
-+				(struct fc_rdp_oed_sfp_desc *)(len + pcmd),
-+				rdp_context->page_a2);
-+	len += lpfc_rdp_res_oed_voltage_desc(phba,
-+				(struct fc_rdp_oed_sfp_desc *)(len + pcmd),
-+				rdp_context->page_a2);
-+	len += lpfc_rdp_res_oed_txbias_desc(phba,
-+				(struct fc_rdp_oed_sfp_desc *)(len + pcmd),
-+				rdp_context->page_a2);
-+	len += lpfc_rdp_res_oed_txpower_desc(phba,
-+				(struct fc_rdp_oed_sfp_desc *)(len + pcmd),
-+				rdp_context->page_a2);
-+	len += lpfc_rdp_res_oed_rxpower_desc(phba,
-+				(struct fc_rdp_oed_sfp_desc *)(len + pcmd),
-+				rdp_context->page_a2);
-+	len += lpfc_rdp_res_opd_desc((struct fc_rdp_opd_sfp_desc *)(len + pcmd),
-+				     rdp_context->page_a0, vport);
-+
-+lpfc_skip_descriptor:
-+	rdp_res->length = cpu_to_be32(len - 8);
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
- 
- 	/* Now that we know the true size of the payload, update the BPL */
- 	bpl = (struct ulp_bde64 *)
- 		(((struct lpfc_dmabuf *)(elsiocb->context3))->virt);
--	bpl->tus.f.bdeSize = (fec_size + RDP_DESC_PAYLOAD_SIZE + 8);
-+	bpl->tus.f.bdeSize = len;
- 	bpl->tus.f.bdeFlags = 0;
- 	bpl->tus.w = le32_to_cpu(bpl->tus.w);
- 
+ 	lpfc_rdp_res_speed(&rdp_res->portspeed_desc, phba);
+ 	lpfc_rdp_res_link_error(&rdp_res->link_error_desc,
+-			&rdp_context->link_stat);
++				&rdp_context->link_stat);
+ 	lpfc_rdp_res_diag_port_names(&rdp_res->diag_port_names_desc, phba);
+ 	lpfc_rdp_res_attach_port_names(&rdp_res->attached_port_names_desc,
+-			vport, ndlp);
++				       vport, ndlp);
+ 	lpfc_rdp_res_bbc_desc(&rdp_res->bbc_desc, &rdp_context->link_stat,
+ 			      vport);
+-	lpfc_rdp_res_oed_temp_desc(&rdp_res->oed_temp_desc,
++	lpfc_rdp_res_oed_temp_desc(phba, &rdp_res->oed_temp_desc,
+ 				   rdp_context->page_a2);
+-	lpfc_rdp_res_oed_voltage_desc(&rdp_res->oed_voltage_desc,
++	lpfc_rdp_res_oed_voltage_desc(phba, &rdp_res->oed_voltage_desc,
+ 				      rdp_context->page_a2);
+-	lpfc_rdp_res_oed_txbias_desc(&rdp_res->oed_txbias_desc,
++	lpfc_rdp_res_oed_txbias_desc(phba, &rdp_res->oed_txbias_desc,
+ 				     rdp_context->page_a2);
+-	lpfc_rdp_res_oed_txpower_desc(&rdp_res->oed_txpower_desc,
++	lpfc_rdp_res_oed_txpower_desc(phba, &rdp_res->oed_txpower_desc,
+ 				      rdp_context->page_a2);
+-	lpfc_rdp_res_oed_rxpower_desc(&rdp_res->oed_rxpower_desc,
++	lpfc_rdp_res_oed_rxpower_desc(phba, &rdp_res->oed_rxpower_desc,
+ 				      rdp_context->page_a2);
+ 	lpfc_rdp_res_opd_desc(&rdp_res->opd_desc, rdp_context->page_a0, vport);
+ 	fec_size = lpfc_rdp_res_fec_desc(&rdp_res->fec_desc,
 diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index 5385faf..829a114 100644
+index 39f0fd0..5385faf 100644
 --- a/drivers/scsi/lpfc/lpfc_hw.h
 +++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -1267,27 +1267,17 @@ struct fc_rdp_res_frame {
- 	struct fc_rdp_link_error_status_desc link_error_desc; /* Word 13-21 */
- 	struct fc_rdp_port_name_desc diag_port_names_desc;    /* Word 22-27 */
- 	struct fc_rdp_port_name_desc attached_port_names_desc;/* Word 28-33 */
--	struct fc_rdp_bbc_desc bbc_desc;                      /* FC Word 34-38*/
--	struct fc_rdp_oed_sfp_desc oed_temp_desc;             /* FC Word 39-43*/
--	struct fc_rdp_oed_sfp_desc oed_voltage_desc;          /* FC word 44-48*/
--	struct fc_rdp_oed_sfp_desc oed_txbias_desc;           /* FC word 49-53*/
--	struct fc_rdp_oed_sfp_desc oed_txpower_desc;          /* FC word 54-58*/
--	struct fc_rdp_oed_sfp_desc oed_rxpower_desc;          /* FC word 59-63*/
--	struct fc_rdp_opd_sfp_desc opd_desc;                  /* FC word 64-80*/
--	struct fc_fec_rdp_desc fec_desc;                      /* FC word 81-84*/
-+	struct fc_fec_rdp_desc fec_desc;                      /* FC word 34-37*/
-+	struct fc_rdp_bbc_desc bbc_desc;                      /* FC Word 38-42*/
-+	struct fc_rdp_oed_sfp_desc oed_temp_desc;             /* FC Word 43-47*/
-+	struct fc_rdp_oed_sfp_desc oed_voltage_desc;          /* FC word 48-52*/
-+	struct fc_rdp_oed_sfp_desc oed_txbias_desc;           /* FC word 53-57*/
-+	struct fc_rdp_oed_sfp_desc oed_txpower_desc;          /* FC word 58-62*/
-+	struct fc_rdp_oed_sfp_desc oed_rxpower_desc;          /* FC word 63-67*/
-+	struct fc_rdp_opd_sfp_desc opd_desc;                  /* FC word 68-84*/
+@@ -1206,6 +1206,12 @@ struct fc_rdp_bbc_desc {
+ 	struct fc_rdp_bbc_info  bbc_info;
  };
  
++/* Optical Element Type Transgression Flags */
++#define RDP_OET_LOW_WARNING  0x1
++#define RDP_OET_HIGH_WARNING 0x2
++#define RDP_OET_LOW_ALARM    0x4
++#define RDP_OET_HIGH_ALARM   0x8
++
+ #define RDP_OED_TEMPERATURE  0x1
+ #define RDP_OED_VOLTAGE      0x2
+ #define RDP_OED_TXBIAS       0x3
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 0c7070b..8a5e08d 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -2590,10 +2590,8 @@ struct lpfc_mbx_memory_dump_type3 {
+ #define SFF_RXPOWER_B1			104
+ #define SFF_RXPOWER_B0			105
+ #define SSF_STATUS_CONTROL		110
+-#define SSF_ALARM_FLAGS_B1		112
+-#define SSF_ALARM_FLAGS_B0		113
+-#define SSF_WARNING_FLAGS_B1		116
+-#define SSF_WARNING_FLAGS_B0		117
++#define SSF_ALARM_FLAGS			112
++#define SSF_WARNING_FLAGS		116
+ #define SSF_EXT_TATUS_CONTROL_B1	118
+ #define SSF_EXT_TATUS_CONTROL_B0	119
+ #define SSF_A2_VENDOR_SPECIFIC		120
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index b43f7ac..bce73b4 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1681,6 +1681,7 @@ lpfc_handle_eratt_s4(struct lpfc_hba *phba)
+ 				"taking port offline Data: x%x x%x\n",
+ 				reg_err1, reg_err2);
  
--#define RDP_DESC_PAYLOAD_SIZE (sizeof(struct fc_rdp_link_service_desc) \
--				+ sizeof(struct fc_rdp_sfp_desc) \
--				+ sizeof(struct fc_rdp_port_speed_desc) \
--				+ sizeof(struct fc_rdp_link_error_status_desc) \
--				+ (sizeof(struct fc_rdp_port_name_desc) * 2) \
--				+ sizeof(struct fc_rdp_bbc_desc) \
--				+ (sizeof(struct fc_rdp_oed_sfp_desc) * 5) \
--				+ sizeof(struct fc_rdp_opd_sfp_desc))
--
--
- /******** FDMI ********/
++			phba->sfp_alarm |= LPFC_TRANSGRESSION_HIGH_TEMPERATURE;
+ 			temp_event_data.event_type = FC_REG_TEMPERATURE_EVENT;
+ 			temp_event_data.event_code = LPFC_CRIT_TEMP;
+ 			temp_event_data.data = 0xFFFFFFFF;
+@@ -4107,6 +4108,7 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
+ 				"3190 Over Temperature:%d Celsius- Port Name %c\n",
+ 				acqe_sli->event_data1, port_name);
  
- /* lpfc_sli_ct_request defines the CT_IU preamble for FDMI commands */
++		phba->sfp_warning |= LPFC_TRANSGRESSION_HIGH_TEMPERATURE;
+ 		shost = lpfc_shost_from_vport(phba->pport);
+ 		fc_host_post_vendor_event(shost, fc_get_event_number(),
+ 					  sizeof(temp_event_data),
 -- 
 2.5.0
 
