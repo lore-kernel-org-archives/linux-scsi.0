@@ -1,48 +1,41 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
-Date: Wed, 6 Jul 2016 22:47:08 +0530
-Message-ID: <20160706171703.GA1685@chelsio.com>
-References: <62c9d9c1e609c39f714ef15c10ba62b1cbbddecd.1461088673.git.varun@chelsio.com>
- <CAJ3xEMiyQaWwsgVd_J9eVXqPwPk6=VYN_iMoEJQGz=1wHFrHqQ@mail.gmail.com>
- <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
- <1464072025.22249.87.camel@haakon3.risingtidesystems.com>
- <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
- <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com>
- <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com>
- <1464238504.22249.168.camel@haakon3.risingtidesystems.com>
- <20160526185819.GA1672@chelsio.com>
- <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v3 1/2] libata-scsi: reject WRITE SAME (16) with n_block
+ that exceeds limit
+Date: Thu, 7 Jul 2016 01:18:29 +0800
+Message-ID: <CAGnHSE=98o1O8i4iBhoDUPiNRHJ-JLEdNRLfYb=hxZdGPmnSxQ@mail.gmail.com>
+References: <577d3580.46c0620a.b8b1b.ffff9a01@mx.google.com> <41a56c06-cc57-698c-6b05-779094093714@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Or Gerlitz <gerlitz.or@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Steve Wise <swise@opengridcomputing.com>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <41a56c06-cc57-698c-6b05-779094093714@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 06, 2016 at 12:24:43AM +0300, Or Gerlitz wrote:
-> On Thu, May 26, 2016 at 9:58 PM, Varun Prakash <varun@chelsio.com> wrote:
-> 
-> > Hi Or, Nicholas and Steve
-> > Thank you for the feedback and apologies for the delay in my response.
-> 
-> > I agree that we can refactor initiator, target and iwarp drivers to
-> > reduce code duplication as Steve has mentioned. We will work on this for
-> > 4.8 merge window.
-> 
-> Nic, Varun, was anything done on this matter? we're on rc6
+I am so sorry. Now I hate acronym. v5 coming. :-)
 
-Yes, I am working on this, I will post first series
-within two days, it will add common library module
-libcxgb.ko.
-
-In first series libcxgb.ko will have common
-iSCSI DDP Page Pod Manager that will be shared
-by three Chelsio iSCSI drivers
-cxgb3i, cxgb4i, cxgbit.
-
-In subsequent series I will add common connection
-management and other hardware specific common code
-in this module.
+On 7 July 2016 at 01:02, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> On 07/06/2016 07:44 PM, tom.ty89@gmail.com wrote:
+>
+>> From: Tom Yan <tom.ty89@gmail.com>
+>>
+>> Currently if a WRITE SAME (16) command is issued to the SATL with
+>> "number of blocks" that is larger than the "Maximum write same length"
+>> (which is the maximum number of blocks per TRIM command allowed in
+>> libata, currently 65535 * 512 / 8 blocks), the SATL will accept the
+>> command and translate it to a TRIM command with the upper limit.
+>>
+>> However, according to SBC (as of sbc4r11.pdf), the "device server"
+>> should terminate the command with "Invalid field in CBD" in that case.
+>
+>
+>    CDB again. :-)
+>
+>> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> [...]
+>
+> MBR, Sergei
+>
