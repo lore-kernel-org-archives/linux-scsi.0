@@ -1,39 +1,33 @@
-From: John David Anglin <dave.anglin@bell.net>
-Subject: Re: parisc late boot crash in 4.4-rc, scsi-related
-Date: Wed, 6 Jul 2016 09:30:22 -0400
-Message-ID: <ce0e6b44-c74a-c85e-51c0-3643b414e4d6@bell.net>
-References: <alpine.LRH.2.20.1601082329270.23187@math.ut.ee>
- <9d1ae51e-69c3-c3f6-60aa-e5238dd18241@bell.net>
- <alpine.LRH.2.20.1606221451310.11869@math.ut.ee>
- <2098261.XbUFfohXuY@caliban.sf-tec.de>
- <alpine.LRH.2.20.1607060957560.8418@math.ut.ee>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/2] libata-scsi: do not respond with "invalid field"
+ for FORMAT UNIT
+Date: Wed, 6 Jul 2016 09:39:49 -0400
+Message-ID: <20160706133949.GE3262@mtj.duckdns.org>
+References: <577b57b3.5b4c620a.37648.6c91@mx.google.com>
+ <77f27e3b-afe6-2aa9-7d42-e054a7f65bb0@cogentembedded.com>
+ <CAGnHSEm2YEA2fg93w0jDR_Jou5MhxRH30RSLUqoQc_6Fg6s-Hg@mail.gmail.com>
+ <20160705223906.GD25394@htj.duckdns.org>
+ <CAGnHSEnuCTP4R1EwB0UPW1S_=GzWjbaxyKW9JK7oKGMpzyrX7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.20.1607060957560.8418@math.ut.ee>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-parisc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:33759 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753516AbcGFNjw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 09:39:52 -0400
+Content-Disposition: inline
+In-Reply-To: <CAGnHSEnuCTP4R1EwB0UPW1S_=GzWjbaxyKW9JK7oKGMpzyrX7w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 2016-07-06 2:59 AM, Meelis Roos wrote:
->>> What distro are you using?
->>>
->>> My pariscs are gentoo and still only the old versions are available on
->>> hppa.
->> Several newer versions (4.9, 5.3) are in portage, maybe they just need to be
->> unmasked.
-> 4.9.3 and 5.3.0 were too old.
-Correct.  4.9.4 will include fix if it is released.
->
-> However, at the end of June, 5.4.0 appeared masked. Unmasking kgcc64
-> 5.4.0 and building it made my pariscs work again, with 4.7-rc6 running
-> fine on all of them.
-Great!  Thanks for report.
+On Wed, Jul 06, 2016 at 06:40:32AM +0000, Tom Yan wrote:
+> Um it's not mainly about in caps or not, but more about wrongly spelled as cbd.
 
-Dave
+Heh, right, so please just note it in the description.
+
+Thanks.
 
 -- 
-John David Anglin  dave.anglin@bell.net
-
+tejun
