@@ -1,156 +1,96 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 01/19] qla2xxx: Remove sysfs node fw_dump_template.
-Date: Wed, 6 Jul 2016 11:14:17 -0400
-Message-ID: <1467818075-15246-2-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 04/19] qla2xxx: Set FLOGI retry in additional firmware options for P2P (N2N) mode.
+Date: Wed, 6 Jul 2016 11:14:20 -0400
+Message-ID: <1467818075-15246-5-git-send-email-himanshu.madhani@qlogic.com>
 References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14823 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:37583 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754515AbcGFP7U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 11:59:20 -0400
+	by vger.kernel.org with ESMTP id S1754547AbcGFP7V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 11:59:21 -0400
 In-Reply-To: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+When VP decoupling enabled, there could be a window where, FLOGI from initiators
+can be dropped before VP0 is enabled, causing link level recovery.
+Retry FLOGI to avoid link level recovery.
+
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c | 89 -----------------------------------------
- drivers/scsi/qla2xxx/qla_dbg.c  |  1 +
- 2 files changed, 1 insertion(+), 89 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |  2 +-
+ drivers/scsi/qla2xxx/qla_init.c | 24 ++++++++++++++++++++++++
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 4dc06a13..c9bcd82 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -147,92 +147,6 @@ static struct bin_attribute sysfs_fw_dump_attr = {
- };
- 
- static ssize_t
--qla2x00_sysfs_read_fw_dump_template(struct file *filp, struct kobject *kobj,
--			   struct bin_attribute *bin_attr,
--			   char *buf, loff_t off, size_t count)
--{
--	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
--	    struct device, kobj)));
--	struct qla_hw_data *ha = vha->hw;
--
--	if (!ha->fw_dump_template || !ha->fw_dump_template_len)
--		return 0;
--
--	ql_dbg(ql_dbg_user, vha, 0x70e2,
--	    "chunk <- off=%llx count=%zx\n", off, count);
--	return memory_read_from_buffer(buf, count, &off,
--	    ha->fw_dump_template, ha->fw_dump_template_len);
--}
--
--static ssize_t
--qla2x00_sysfs_write_fw_dump_template(struct file *filp, struct kobject *kobj,
--			    struct bin_attribute *bin_attr,
--			    char *buf, loff_t off, size_t count)
--{
--	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
--	    struct device, kobj)));
--	struct qla_hw_data *ha = vha->hw;
--	uint32_t size;
--
--	if (off == 0) {
--		if (ha->fw_dump)
--			vfree(ha->fw_dump);
--		if (ha->fw_dump_template)
--			vfree(ha->fw_dump_template);
--
--		ha->fw_dump = NULL;
--		ha->fw_dump_len = 0;
--		ha->fw_dump_template = NULL;
--		ha->fw_dump_template_len = 0;
--
--		size = qla27xx_fwdt_template_size(buf);
--		ql_dbg(ql_dbg_user, vha, 0x70d1,
--		    "-> allocating fwdt (%x bytes)...\n", size);
--		ha->fw_dump_template = vmalloc(size);
--		if (!ha->fw_dump_template) {
--			ql_log(ql_log_warn, vha, 0x70d2,
--			    "Failed allocate fwdt (%x bytes).\n", size);
--			return -ENOMEM;
--		}
--		ha->fw_dump_template_len = size;
--	}
--
--	if (off + count > ha->fw_dump_template_len) {
--		count = ha->fw_dump_template_len - off;
--		ql_dbg(ql_dbg_user, vha, 0x70d3,
--		    "chunk -> truncating to %zx bytes.\n", count);
--	}
--
--	ql_dbg(ql_dbg_user, vha, 0x70d4,
--	    "chunk -> off=%llx count=%zx\n", off, count);
--	memcpy(ha->fw_dump_template + off, buf, count);
--
--	if (off + count == ha->fw_dump_template_len) {
--		size = qla27xx_fwdt_calculate_dump_size(vha);
--		ql_dbg(ql_dbg_user, vha, 0x70d5,
--		    "-> allocating fwdump (%x bytes)...\n", size);
--		ha->fw_dump = vmalloc(size);
--		if (!ha->fw_dump) {
--			ql_log(ql_log_warn, vha, 0x70d6,
--			    "Failed allocate fwdump (%x bytes).\n", size);
--			return -ENOMEM;
--		}
--		ha->fw_dump_len = size;
--	}
--
--	return count;
--}
--static struct bin_attribute sysfs_fw_dump_template_attr = {
--	.attr = {
--		.name = "fw_dump_template",
--		.mode = S_IRUSR | S_IWUSR,
--	},
--	.size = 0,
--	.read = qla2x00_sysfs_read_fw_dump_template,
--	.write = qla2x00_sysfs_write_fw_dump_template,
--};
--
--static ssize_t
- qla2x00_sysfs_read_nvram(struct file *filp, struct kobject *kobj,
- 			 struct bin_attribute *bin_attr,
- 			 char *buf, loff_t off, size_t count)
-@@ -973,7 +887,6 @@ static struct sysfs_entry {
- 	int is4GBp_only;
- } bin_file_entries[] = {
- 	{ "fw_dump", &sysfs_fw_dump_attr, },
--	{ "fw_dump_template", &sysfs_fw_dump_template_attr, 0x27 },
- 	{ "nvram", &sysfs_nvram_attr, },
- 	{ "optrom", &sysfs_optrom_attr, },
- 	{ "optrom_ctl", &sysfs_optrom_ctl_attr, },
-@@ -1000,8 +913,6 @@ qla2x00_alloc_sysfs_attr(scsi_qla_host_t *vha)
- 			continue;
- 		if (iter->is4GBp_only == 3 && !(IS_CNA_CAPABLE(vha->hw)))
- 			continue;
--		if (iter->is4GBp_only == 0x27 && !IS_QLA27XX(vha->hw))
--			continue;
- 
- 		ret = sysfs_create_bin_file(&host->shost_gendev.kobj,
- 		    iter->attr);
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index b64c504..b985fcb 100644
+index 0671f07..907a7ac 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -39,6 +39,7 @@
-  * |                              |                    | 0x70a5-0x70a6  |
-  * |                              |                    | 0x70a8,0x70ab  |
-  * |                              |                    | 0x70ad-0x70ae  |
-+ * |                              |                    | 0x70d0-0x70d6	|
-  * |                              |                    | 0x70d7-0x70db  |
-  * |                              |                    | 0x70de-0x70df  |
-  * | Task Management              |       0x803d       | 0x8000,0x800b  |
+@@ -16,7 +16,7 @@
+  * |                              |                    | 0x016e-0x0170  |
+  * | Mailbox commands             |       0x1192       |		|
+  * |                              |                    |		|
+- * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
++ * | Device Discovery             |       0x2003       | 0x2016		|
+  * |                              |                    | 0x2011-0x2012, |
+  * |                              |                    | 0x2099-0x20a4  |
+  * | Queue Command and IO tracing |       0x3074       | 0x300b         |
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c56cdb3..a3685b6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2053,6 +2053,14 @@ qla2x00_update_fw_options(scsi_qla_host_t *vha)
+ 	if (IS_QLA6312(ha))
+ 		ha->fw_options[2] |= BIT_13;
+ 
++	/* Set Retry FLOGI in case of P2P connection */
++	if (ha->operating_mode == P2P) {
++		ha->fw_options[2] |= BIT_3;
++		ql_dbg(ql_dbg_disc, vha, 0x2100,
++		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
++			__func__, ha->fw_options[2]);
++	}
++
+ 	/* Update firmware options. */
+ 	qla2x00_set_fw_options(vha, ha->fw_options);
+ }
+@@ -2070,6 +2078,14 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha)
+ 	if (ql2xfwholdabts)
+ 		ha->fw_options[3] |= BIT_12;
+ 
++	/* Set Retry FLOGI in case of P2P connection */
++	if (ha->operating_mode == P2P) {
++		ha->fw_options[2] |= BIT_3;
++		ql_dbg(ql_dbg_disc, vha, 0x2101,
++		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
++			__func__, ha->fw_options[2]);
++	}
++
+ 	/* Update Serial Link options. */
+ 	if ((le16_to_cpu(ha->fw_seriallink_options24[0]) & BIT_0) == 0)
+ 		return;
+@@ -6513,6 +6529,14 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha)
+ 	if (ql2xfwholdabts)
+ 		ha->fw_options[3] |= BIT_12;
+ 
++	/* Set Retry FLOGI in case of P2P connection */
++	if (ha->operating_mode == P2P) {
++		ha->fw_options[2] |= BIT_3;
++		ql_dbg(ql_dbg_disc, vha, 0x2103,
++		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
++			__func__, ha->fw_options[2]);
++	}
++
+ 	if (!ql2xetsenable)
+ 		goto out;
+ 
 -- 
 2.7.2
 
