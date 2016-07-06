@@ -1,96 +1,72 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 04/19] qla2xxx: Set FLOGI retry in additional firmware options for P2P (N2N) mode.
-Date: Wed, 6 Jul 2016 11:14:20 -0400
-Message-ID: <1467818075-15246-5-git-send-email-himanshu.madhani@qlogic.com>
-References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 00/19] qla2xxx: Patches for scsi "misc" branch.
+Date: Wed, 6 Jul 2016 11:14:16 -0400
+Message-ID: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:37583 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:2322 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754547AbcGFP7V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 11:59:21 -0400
-In-Reply-To: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
+	by vger.kernel.org with ESMTP id S1754531AbcGFP7U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 11:59:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Hi James, Martin,
 
-When VP decoupling enabled, there could be a window where, FLOGI from initiators
-can be dropped before VP0 is enabled, causing link level recovery.
-Retry FLOGI to avoid link level recovery.
+Please apply the following patches to the scsi tree, misc branch at your
+earliest convenience.
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c  |  2 +-
- drivers/scsi/qla2xxx/qla_init.c | 24 ++++++++++++++++++++++++
- 2 files changed, 25 insertions(+), 1 deletion(-)
+Thanks,
+-Himanshu
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 0671f07..907a7ac 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -16,7 +16,7 @@
-  * |                              |                    | 0x016e-0x0170  |
-  * | Mailbox commands             |       0x1192       |		|
-  * |                              |                    |		|
-- * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
-+ * | Device Discovery             |       0x2003       | 0x2016		|
-  * |                              |                    | 0x2011-0x2012, |
-  * |                              |                    | 0x2099-0x20a4  |
-  * | Queue Command and IO tracing |       0x3074       | 0x300b         |
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index c56cdb3..a3685b6 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2053,6 +2053,14 @@ qla2x00_update_fw_options(scsi_qla_host_t *vha)
- 	if (IS_QLA6312(ha))
- 		ha->fw_options[2] |= BIT_13;
- 
-+	/* Set Retry FLOGI in case of P2P connection */
-+	if (ha->operating_mode == P2P) {
-+		ha->fw_options[2] |= BIT_3;
-+		ql_dbg(ql_dbg_disc, vha, 0x2100,
-+		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
-+			__func__, ha->fw_options[2]);
-+	}
-+
- 	/* Update firmware options. */
- 	qla2x00_set_fw_options(vha, ha->fw_options);
- }
-@@ -2070,6 +2078,14 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha)
- 	if (ql2xfwholdabts)
- 		ha->fw_options[3] |= BIT_12;
- 
-+	/* Set Retry FLOGI in case of P2P connection */
-+	if (ha->operating_mode == P2P) {
-+		ha->fw_options[2] |= BIT_3;
-+		ql_dbg(ql_dbg_disc, vha, 0x2101,
-+		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
-+			__func__, ha->fw_options[2]);
-+	}
-+
- 	/* Update Serial Link options. */
- 	if ((le16_to_cpu(ha->fw_seriallink_options24[0]) & BIT_0) == 0)
- 		return;
-@@ -6513,6 +6529,14 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha)
- 	if (ql2xfwholdabts)
- 		ha->fw_options[3] |= BIT_12;
- 
-+	/* Set Retry FLOGI in case of P2P connection */
-+	if (ha->operating_mode == P2P) {
-+		ha->fw_options[2] |= BIT_3;
-+		ql_dbg(ql_dbg_disc, vha, 0x2103,
-+		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
-+			__func__, ha->fw_options[2]);
-+	}
-+
- 	if (!ql2xetsenable)
- 		goto out;
- 
+Giridhar Malavali (1):
+  qla2xxx: Set FLOGI retry in additional firmware options for P2P (N2N)
+    mode.
+
+Himanshu Madhani (1):
+  qla2xxx: Update driver version to 8.07.00.38-k
+
+Joe Carnuccio (12):
+  qla2xxx: Remove sysfs node fw_dump_template.
+  qla2xxx: Add ram area DDR for fwdump template entry T262.
+  qla2xxx: Shutdown board on thermal shutdown aen.
+  qla2xxx: Add module parameter alternate/short names.
+  qla2xxx: Make debug buffer log easier to view.
+  qla2xxx: Properly initialize IO statistics.
+  qla2xxx: Properly reset firmware statistics.
+  qla2xxx: Add bsg interface to support D_Port Diagnostics.
+  qla2xxx: Let DPORT be enabled purely by nvram.
+  qla2xxx: Add support to handle Loop Init error Asynchronus event.
+  qla2xxx: Correction to function qla26xx_dport_diagnostics().
+  qla2xxx: Separate ISP type bits out from device type.
+
+Sawan Chandak (5):
+  qla2xxx: Check for device state before unloading the driver.
+  qla2xxx: Add bsg interface to support statistics counter reset.
+  qla2xxx: Disable the adapter and skip error recovery in case of
+    register disconnect.
+  qla2xxx: Fix duplicate message id.
+  qla2xxx: Fix BBCR offset
+
+ drivers/scsi/qla2xxx/qla_attr.c    | 170 ++++++++++++-------------------------
+ drivers/scsi/qla2xxx/qla_bsg.c     |  92 +++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_bsg.h     |  13 +++
+ drivers/scsi/qla2xxx/qla_dbg.c     |  50 +++++------
+ drivers/scsi/qla2xxx/qla_def.h     |  12 ++-
+ drivers/scsi/qla2xxx/qla_fw.h      |   2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   5 +-
+ drivers/scsi/qla2xxx/qla_init.c    |  39 +++++++--
+ drivers/scsi/qla2xxx/qla_isr.c     |  23 ++++-
+ drivers/scsi/qla2xxx/qla_mbx.c     | 123 ++++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_os.c      | 127 ++++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_target.c  |  16 ++--
+ drivers/scsi/qla2xxx/qla_tmpl.c    |   9 +-
+ drivers/scsi/qla2xxx/qla_version.h |   2 +-
+ 14 files changed, 443 insertions(+), 240 deletions(-)
+
 -- 
 2.7.2
 
