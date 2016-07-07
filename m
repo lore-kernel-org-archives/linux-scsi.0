@@ -1,55 +1,98 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 2/2] libata-scsi: better style in ata_msense_caching()
-Date: Thu, 7 Jul 2016 13:55:43 +0300
-Message-ID: <b7d33126-814b-60c2-8699-0e63bbf42834@cogentembedded.com>
-References: <20160707014334.1031-1-me>
- <577db3cf.0a6a620a.c3774.1508@mx.google.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] libata-scsi: do not return t10 designator if drive
+ has WWN
+Date: Thu, 7 Jul 2016 12:56:46 +0200
+Message-ID: <577E356E.9050209@suse.de>
+References: <20160706221213.1928-1-me>
+ <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <577db3cf.0a6a620a.c3774.1508@mx.google.com>
+In-Reply-To: <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: tom.ty89@gmail.com, tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/7/2016 4:43 AM, tom.ty89@gmail.com wrote:
-
+On 07/07/2016 12:12 AM, tom.ty89@gmail.com wrote:
 > From: Tom Yan <tom.ty89@gmail.com>
->
+>=20
+> SAT (as of sat4r05f.pdf) only requires the t10 designator if the
+> drive does not support/have WWN. Besides, we already have the ATA
+> information VPD.
+>=20
 > Signed-off-by: Tom Yan <tom.ty89@gmail.com>
->
+>=20
 > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index bfec66f..e3f5751 100644
+> index 9f478ad..84b3d42 100644
 > --- a/drivers/ata/libata-scsi.c
 > +++ b/drivers/ata/libata-scsi.c
-> @@ -2424,10 +2424,12 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
->  static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
->  {
->  	modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
-> -	if (changeable || ata_id_wcache_enabled(id))
-> -		buf[2] |= (1 << 2);	/* write cache enable */
-> -	if (!changeable && !ata_id_rahead_enabled(id))
-> -		buf[12] |= (1 << 5);	/* disable read ahead */
-> +	if (changeable)
-> +		buf[2] |= (1 << 2); /* ata_mselect_caching() */
-
-     Parens not really needed.
-
+> @@ -2210,21 +2210,6 @@ static unsigned int ata_scsiop_inq_83(struct a=
+ta_scsi_args *args, u8 *rbuf)
+>  	rbuf[1] =3D 0x83;			/* this page code */
+>  	num =3D 4;
+> =20
+> -	/* SAT defined lu model and serial numbers descriptor */
+> -	/* piv=3D0, assoc=3Dlu, code_set=3DACSII, designator=3Dt10 vendor i=
+d */
+> -	rbuf[num + 0] =3D 2;
+> -	rbuf[num + 1] =3D 1;
+> -	rbuf[num + 3] =3D sat_model_serial_desc_len;
+> -	num +=3D 4;
+> -	memcpy(rbuf + num, "ATA     ", 8);
+> -	num +=3D 8;
+> -	ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_PROD,
+> -		      ATA_ID_PROD_LEN);
+> -	num +=3D ATA_ID_PROD_LEN;
+> -	ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_SERNO,
+> -		      ATA_ID_SERNO_LEN);
+> -	num +=3D ATA_ID_SERNO_LEN;
+> -
+>  	if (ata_id_has_wwn(args->id)) {
+>  		/* SAT defined lu world wide name */
+>  		/* piv=3D0, assoc=3Dlu, code_set=3Dbinary, designator=3DNAA */
+> @@ -2236,6 +2221,23 @@ static unsigned int ata_scsiop_inq_83(struct a=
+ta_scsi_args *args, u8 *rbuf)
+>  			      ATA_ID_WWN, ATA_ID_WWN_LEN);
+>  		num +=3D ATA_ID_WWN_LEN;
+>  	}
 > +	else {
-
-    CodingStyle: {} should be used in all branches if used in at least one.
-
-> +		buf[2] |= (ata_id_wcache_enabled(id) << 2);	/* write cache enable */
-> +		buf[12] |= (!ata_id_rahead_enabled(id) << 5);	/* disable read ahead */
-
-    Outer parens not needed.
-
+> +		/* SAT defined lu model and serial numbers descriptor */
+> +		/* piv=3D0, assoc=3Dlu, code_set=3DACSII, designator=3Dt10 vendor =
+id */
+> +		rbuf[num + 0] =3D 2;
+> +		rbuf[num + 1] =3D 1;
+> +		rbuf[num + 3] =3D sat_model_serial_desc_len;
+> +		num +=3D 4;
+> +		memcpy(rbuf + num, "ATA     ", 8);
+> +		num +=3D 8;
+> +		ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_PROD,
+> +			      ATA_ID_PROD_LEN);
+> +		num +=3D ATA_ID_PROD_LEN;
+> +		ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_SERNO=
+,
+> +			      ATA_ID_SERNO_LEN);
+> +		num +=3D ATA_ID_SERNO_LEN;
 > +	}
->  	return sizeof(def_cache_mpage);
+> +
+>  	rbuf[3] =3D num - 4;    /* page len (assume less than 256 bytes) */
+>  	return 0;
 >  }
->
+>=20
+Nope.
+We cannot go about and remove VPD descriptors.
+Existing systems might rely on the VPD attribute to be present (think o=
+f
+udev persistent symlinks), and the system will refuse to boot.
+NACK.
 
-MBR, Sergei
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
