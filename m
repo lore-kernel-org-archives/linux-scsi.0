@@ -1,55 +1,85 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH 1/2] libata-scsi: fix SET FEATURES "filtering" for ata_msense_caching()
-Date: Thu,  7 Jul 2016 09:43:33 +0800
-Message-ID: <577db3cc.0a6a620a.c3774.1502@mx.google.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:34379 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754511AbcGGBnm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2016 21:43:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 0/7] lib: string: add functions to
+ case-convert strings
+Date: Thu, 7 Jul 2016 14:05:42 +0900
+Message-ID: <CAAVeFuJohuFygGZ5LECQ1uL+b95LW+potiTGBK14Df8eqiAoDw@mail.gmail.com>
+References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
+ <1467756874.16342.11.camel@perches.com>
+ <CAGt4E5vqiUOVmgqY8OvRPNpoS54hZMOHid6ND4CRyb5p9y5ndw@mail.gmail.com>
+ <1467759377.8360.12.camel@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <1467759377.8360.12.camel-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, ACPI Devel Maling List <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-From: Tom Yan <tom.ty89@gmail.com>
-
-Without this fix, the DRA bit of the caching mode page would not
-be updated when the read look-ahead feature is toggled (e.g. with
-`smartctl --set`), but will only be until, for example, the write
-cache feature is touched.
-
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6be7770..077daf0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5127,7 +5127,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- 		switch (qc->tf.command) {
- 		case ATA_CMD_SET_FEATURES:
- 			if (qc->tf.feature != SETFEATURES_WC_ON &&
--			    qc->tf.feature != SETFEATURES_WC_OFF)
-+			    qc->tf.feature != SETFEATURES_WC_OFF &&
-+			    qc->tf.feature != SETFEATURES_RA_ON &&
-+			    qc->tf.feature != SETFEATURES_RA_OFF)
- 				break;
- 			/* fall through */
- 		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 99346be..2d68793 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -409,6 +409,9 @@ enum {
- 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
- 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
- 
-+	SETFEATURES_RA_ON	= 0xaa, /* Enable read look-ahead */
-+	SETFEATURES_RA_OFF	= 0x55, /* Disable read look-ahead */
-+
- 	/* Enable/Disable Automatic Acoustic Management */
- 	SETFEATURES_AAM_ON	= 0x42,
- 	SETFEATURES_AAM_OFF	= 0xC2,
--- 
-2.9.0
-
+T24gV2VkLCBKdWwgNiwgMjAxNiBhdCA3OjU2IEFNLCBKb2UgUGVyY2hlcyA8am9lQHBlcmNoZXMu
+Y29tPiB3cm90ZToKPiBPbiBUdWUsIDIwMTYtMDctMDUgYXQgMTU6MzYgLTA3MDAsIE1hcmt1cyBN
+YXllciB3cm90ZToKPj4gT24gNSBKdWx5IDIwMTYgYXQgMTU6MTQsIEpvZSBQZXJjaGVzIDxqb2VA
+cGVyY2hlcy5jb20+IHdyb3RlOgo+PiA+IE9uIFR1ZSwgMjAxNi0wNy0wNSBhdCAxMzo0NyAtMDcw
+MCwgTWFya3VzIE1heWVyIHdyb3RlOgo+PiA+ID4gVGhpcyBzZXJpZXMgaW50cm9kdWNlcyBhIGZh
+bWlseSBvZiBnZW5lcmljIHN0cmluZyBjYXNlIGNvbnZlcnNpb24KPj4gPiA+IGZ1bmN0aW9ucy4g
+VGhpcyBraW5kIG9mIGZ1bmN0aW9uYWxpdHkgaXMgbmVlZGVkIGluIHNldmVyYWwgcGxhY2VzIGlu
+Cj4+ID4gPiB0aGUga2VybmVsLiBSaWdodCBub3csIGV2ZXJ5Ym9keSBzZWVtcyB0byBiZSBpbXBs
+ZW1lbnRpbmcgdGhlaXIgb3duCj4+ID4gPiBjb3B5IG9mIHRoaXMgZnVuY3Rpb25hbGl0eS4KPj4g
+PiA+Cj4+ID4gPiBCYXNlZCBvbiB0aGUgZGlzY3Vzc2lvbiBvZiB0aGUgcHJldmlvdXMgdmVyc2lv
+biBvZiB0aGlzIHNlcmllc1sxXSBhbmQKPj4gPiA+IHRoZSB1c2UgY2FzZXMgZm91bmQgaW4gdGhl
+IGtlcm5lbCwgaXQgZG9lcyBsb29rIGxpa2UgaGF2aW5nIHNldmVyYWwKPj4gPiA+IGZsYXZvdXJz
+IG9mIGNhc2UgY29udmVyc2lvbiBmdW5jdGlvbnMgaXMgYmVuZWZpY2lhbC4gVGhlIHVzZSBjYXNl
+cyBmYWxsCj4+ID4gPiBpbnRvIHRocmVlIGNhdGVnb3JpZXM6Cj4+ID4gPiAgICAgLSBjb3B5aW5n
+IGEgc3RyaW5nIGFuZCBjb252ZXJ0aW5nIHRoZSBjYXNlIHdoaWxlIHNwZWNpZnlpbmcgYQo+PiA+
+ID4gICAgICAgbWF4aW11bSBsZW5ndGggdG8gbWltaWMgc3RybmNweSgpCj4+ID4gPiAgICAgLSBj
+b3B5aW5nIGEgc3RyaW5nIGFuZCBjb252ZXJ0aW5nIHRoZSBjYXNlIHdpdGhvdXQgc3BlY2lmeWlu
+ZyBhCj4+ID4gPiAgICAgICBsZW5ndGggdG8gbWltaWMgc3RyY3B5KCkKPj4gPiA+ICAgICAtIGNv
+bnZlcnRpbmcgdGhlIGNhc2Ugb2YgYSBzdHJpbmcgaW4tcGxhY2UgKGkuZS4gbW9kaWZ5aW5nIHRo
+ZQo+PiA+ID4gICAgICAgc3RyaW5nIHRoYXQgd2FzIHBhc3NlZCBpbikKPj4gPiA+Cj4+ID4gPiBD
+b25zZXF1ZW50bHksIEkgYW0gcHJvcG9zaW5nIHRoZXNlIG5ldyBmdW5jdGlvbnM6Cj4+ID4gPiAg
+ICAgY2hhciAqc3RybmNweXRvdXBwZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVf
+dCBsZW4pOwo+PiA+ID4gICAgIGNoYXIgKnN0cm5jcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3Qg
+Y2hhciAqc3JjLCBzaXplX3QgbGVuKTsKPj4gPiA+ICAgICBjaGFyICpzdHJjcHl0b3VwcGVyKGNo
+YXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4gPiA+ICAgICBjaGFyICpzdHJjcHl0b2xvd2Vy
+KGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4gPiA+ICAgICBjaGFyICpzdHJ0b3VwcGVy
+KGNoYXIgKnMpOwo+PiA+ID4gICAgIGNoYXIgKnN0cnRvbG93ZXIoY2hhciAqcyk7Cj4+ID4gSSB0
+aGluayB0aGVyZSBpc24ndCBtdWNoIHZhbHVlIGluIGFueXRoaW5nIG90aGVyCj4+ID4gdGhhbiBz
+dHJ0by4KPj4gPgo+PiA+IFVzaW5nIHN0cltuXWNweSBmb2xsb3dlZCBieSBzdHJ0byBpcwo+PiA+
+IHByZXR0eSBvYnZpb3VzIGFuZCByYXJlbHkgdXNlZCBhbnl3YXkuCj4+IEZpcnN0IHRpbWUgYXJv
+dW5kLCBmb2xrcyB3ZXJlIHByb3Bvc2luZyB0aGUgImNvcHkiIHZhcmlhbnRzIHdoZW4gSQo+PiBz
+dWJtaXR0ZWQganVzdCBzdHJ0b2xvd2VyKCkgYnkgaXRzZWxmWzFdLiBUaGV5IGp1c3QgYXNrZWQg
+Zm9yIHNvdXJjZQo+PiBhbmQgZGVzdGluYXRpb24gcGFyYW1ldGVycyB0byBzdHJ0b2xvd2VyKCks
+IGJ1dCBsb29raW5nIGF0IHRoZSB1c2UKPj4gY2FzZXMgdGhhdCB3b3VsZG4ndCBoYXZlIHdvcmtl
+ZCBzbyB3ZWxsLiBIZW5jZSBpdCBldm9sdmVkIGludG8gdGhlc2UgNgo+PiBmdW5jdGlvbnMuCj4+
+Cj4+IEhlcmUncyBhIGJyZWFrZG93biBvZiBob3cgdGhlIGZ1bmN0aW9ucyBhcmUgYmVpbmcgdXNl
+ZCAocGF0Y2hlcyAyLTcpLAo+PiBzZWUgYWxzbyBbMl06Cj4+Cj4+IFBhdGNoIDI6IHN0cm5jcHl0
+b2xvd2VyKCkKPj4gUGF0Y2ggMzogc3RydG9sb3dlcigpCj4+IFBhdGNoIDQ6IHN0cm5jcHl0b2xv
+d2VyKCkgYW5kIHN0cnRvbG93ZXIoKQo+PiBQYXRjaCA1OiBzdHJ0b2xvd2VyKCkKPj4gUGF0Y2gg
+Njogc3RyY3B5dG91cHBlcigpCj4+IFBhdGNoIDc6IHN0cmNweXRvdXBwZXIoKQo+Pgo+PiBTbyBp
+dCBkb2VzIGxvb2sgbGlrZSB0aGUgY29weSArIGNoYW5nZSBjYXNlIHZhcmlhbnQgaXMgbW9yZSBm
+cmVxdWVudGx5Cj4+IHVzZWQgdGhhbiBqdXN0IHN0cnRvLgo+Cj4gQXJlIHRoZXNlIGZ1bmN0aW9u
+cyB1c2VmdWw/ICA8c2hydWc+IE5vdCB0byBtZSwgbm90IHNvIG11Y2guCj4KPiBOb25lIG9mIHRo
+ZSBmdW5jdGlvbnMgd291bGQgaGF2ZSB0aGUgc3RyY3B5IHBlcmZvcm1hbmNlIG9mCj4gdGhlIGFy
+Y2ggLyBhc20KPiB2ZXJzaW9ucyBvZiBzdHJjcHkgYW5kIHRoZSBzYXZpbmdzIGluIG92ZXJhbGwK
+PiBjb2RlIGlzbid0IHNpZ25pZmljYW50IChvcgo+IG1lYXN1cmVkPykuCj4KPiBPZiBjb3Vyc2Ug
+bm9uZSBvZiB0aGUgdXNlcyBhcmUgcnVudGltZSBwZXJmb3JtYW5jZSBpbXBvcnRhbnQuCgpJIHRl
+bmQgdG8gYWdyZWUuIHN0cmNweSBpcyBiZXR0ZXIgbGVmdCB0byBhcmNoaXRlY3R1cmUtc3BlY2lm
+aWMgY29kZQp3aGVuIGl0IGV4aXN0cy4gVGhlbiBkb2luZyBhIHN0cmNweSgpIGZvbGxvd2VkIGJ5
+IHN0cnRvbG93ZXIoKSBpcyBub3QKZXhhY3RseSB1bmludHVpdGl2ZS4gQW4gZXhwbG9zaW9uIG9m
+IGNsb3NlbHkgcmVsYXRlZCBmdW5jdGlvbiBpcwpjZXJ0YWlubHkgbW9yZSBjb25mdXNpbmcgdG8g
+bWUuCgpJJ2QganVzdCBrZWVwIHN0cnRvbG93ZXIoKS9zdHJ0b3VwcGVyKCkgYmVjYXVzZSB0aGV5
+IGFyZSBjb21tb25seSBkb25lCm9wZXJhdGlvbnMgYW5kIHdlIGNhbiBwcm9iYWJseSBzYXZlIHNv
+bWUgc3BhY2UgYnkgaGF2aW5nIGEgdW5pcXVlCmltcGxlbWVudGF0aW9uLiBCdXQgZ29pbmcgYmV5
+b25kIHRoYXQgaXMgb3ZlcnRoaW5raW5nIHRoZSBwcm9ibGVtCklNSE8uCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCk5vdXZlYXUgbWFpbGluZyBsaXN0Ck5v
+dXZlYXVAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
+L21haWxtYW4vbGlzdGluZm8vbm91dmVhdQo=
