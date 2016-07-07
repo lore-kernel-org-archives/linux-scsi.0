@@ -1,60 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
- >80MB at once
-Date: Thu, 07 Jul 2016 16:34:31 +0000
-Message-ID: <bug-121531-11613-HCS9sSYYzs@https.bugzilla.kernel.org/>
-References: <bug-121531-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
+Date: Thu, 07 Jul 2016 09:47:34 -0700
+Message-ID: <1467910054.2322.7.camel@HansenPartnership.com>
+References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39362 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808AbcGGQef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Jul 2016 12:34:35 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 964B720173
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2016 16:34:33 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id F048220165
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2016 16:34:31 +0000 (UTC)
-In-Reply-To: <bug-121531-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: tom.ty89@gmail.com, tj@kernel.org, martin.petersen@oracle.com, dgilbert@interlog.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=121531
+On Fri, 2016-07-08 at 00:32 +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+> 
+> With this patch, users can make use of the SANITIZE DEVICE feature
+> set through utility like sg_sanitize.
+> 
+> Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE MODE
+> has been implemented. Support for OVERWRITE that involves a
+> parameter list has been left out for now.
+> 
+> Further support for command with IMMED bit set to zero, REQUEST
+> SENSE translation for user-space status polling, and support
+> checking in IDENTIFY DEVICE data log (return proper sense data
+> when designated method is not supported) should be implemented
+> in the future as well.
+> 
+> `sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
 
---- Comment #14 from Jack Wang <xjtuwjp@gmail.com> ---
-The changes are huge, hard to do it, without help from MicroSemi/PMCs side.
-And I don't have hardware to test.
+Why on earth would you want to do this?  If your intent is to sanitise
+the disk using a cryptographic erase you presumably have a real
+security need for doing it and, knowing what goes into most SAT layers,
+I'd not really trust any SAT for this operation, so for an underlying
+SATA device I'd use ATA_16 to send a real ACS-2 SANITIZE command.
 
-I've asked developer from MicroSemi to upsteam their changes, but
-sadly no reply.
+Just as a general note about our SAT layer: Adding little used features
+is an invitation to bloat it with buggy implementations which makes it
+harder to understand and bug prone for odd and unlikely use cases,
+which then take ages to diagnose and track down.  The only things which
+should be in the SAT is what the Linux SCSI subsystem would actually
+use.  For everything else, if the user cares enough, they'll send down
+an encapsulated ATA command.
 
-2016-07-07 17:36 GMT+02:00  <bugzilla-daemon@bugzilla.kernel.org>:
-> https://bugzilla.kernel.org/show_bug.cgi?id=121531
->
-> --- Comment #13 from Martin von Wittich <martin.von.wittich@iserv.eu> ---
-> Yup, the Debian installation worked and seems to work fine so far. I manually
-> installed the pm80xx-1.4.0-11068-debian64.deb package in the target system
-> while I was still in the installer by chrooting to /target; then I added
-> "pm80xx" to /etc/initramfs/modules (without that update-initramfs wouldn't add
-> the pm80xx module, I'm not really sure why).
->
-> After booting the system, I've succcessfully written ~500 GB of /dev/zero data
-> into a file on an MD raid consisting of both of the disks. No error messages in
-> the dmesg either.
->
-> Can you include those missing changes into the official kernel, or how can we
-> resolve this bug? We'll ask to the customer if we can keep the server for an
-> additional two weeks for testing, so if you need me to test builds, let me
-> know.
->
-> --
-> You are receiving this mail because:
-> You are on the CC list for the bug.
+James
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+
