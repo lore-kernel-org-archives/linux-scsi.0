@@ -1,126 +1,60 @@
-From: tom.ty89@gmail.com
-Subject: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Fri,  8 Jul 2016 00:32:54 +0800
-Message-ID: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
+ >80MB at once
+Date: Thu, 07 Jul 2016 16:34:31 +0000
+Message-ID: <bug-121531-11613-HCS9sSYYzs@https.bugzilla.kernel.org/>
+References: <bug-121531-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36657 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799AbcGGQdE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2016 12:33:04 -0400
+Received: from mail.kernel.org ([198.145.29.136]:39362 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750808AbcGGQef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jul 2016 12:34:35 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 964B720173
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2016 16:34:33 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id F048220165
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2016 16:34:31 +0000 (UTC)
+In-Reply-To: <bug-121531-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org, martin.petersen@oracle.com, dgilbert@interlog.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+To: linux-scsi@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=121531
 
-With this patch, users can make use of the SANITIZE DEVICE feature
-set through utility like sg_sanitize.
+--- Comment #14 from Jack Wang <xjtuwjp@gmail.com> ---
+The changes are huge, hard to do it, without help from MicroSemi/PMCs side.
+And I don't have hardware to test.
 
-Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE MODE
-has been implemented. Support for OVERWRITE that involves a
-parameter list has been left out for now.
+I've asked developer from MicroSemi to upsteam their changes, but
+sadly no reply.
 
-Further support for command with IMMED bit set to zero, REQUEST
-SENSE translation for user-space status polling, and support
-checking in IDENTIFY DEVICE data log (return proper sense data
-when designated method is not supported) should be implemented
-in the future as well.
+2016-07-07 17:36 GMT+02:00  <bugzilla-daemon@bugzilla.kernel.org>:
+> https://bugzilla.kernel.org/show_bug.cgi?id=121531
+>
+> --- Comment #13 from Martin von Wittich <martin.von.wittich@iserv.eu> ---
+> Yup, the Debian installation worked and seems to work fine so far. I manually
+> installed the pm80xx-1.4.0-11068-debian64.deb package in the target system
+> while I was still in the installer by chrooting to /target; then I added
+> "pm80xx" to /etc/initramfs/modules (without that update-initramfs wouldn't add
+> the pm80xx module, I'm not really sure why).
+>
+> After booting the system, I've succcessfully written ~500 GB of /dev/zero data
+> into a file on an MD raid consisting of both of the disks. No error messages in
+> the dmesg either.
+>
+> Can you include those missing changes into the official kernel, or how can we
+> resolve this bug? We'll ask to the customer if we can keep the server for an
+> additional two weeks for testing, so if you need me to test builds, let me
+> know.
+>
+> --
+> You are receiving this mail because:
+> You are on the CC list for the bug.
 
-`sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
-
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bfec66f..a64991b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3346,6 +3346,63 @@ invalid_opcode:
- 	return 1;
- }
- 
-+static unsigned int ata_scsi_sanitize_xlat(struct ata_queued_cmd *qc) {
-+	struct ata_taskfile *tf = &qc->tf;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct ata_device *dev = qc->dev;
-+	const u8 *cdb = scmd->cmnd;
-+	u16 fp;
-+	u8 bp = 0xff;
-+
-+	/* for now we only support SANITIZE with IMMED bit set */
-+	if (unlikely(!(cdb[1] & 0x80))) {
-+		fp = 1;
-+		bp = 7;
-+		goto invalid_fld;
-+	}
-+
-+	tf->protocol = ATA_PROT_NODATA;
-+	tf->command = ATA_CMD_SANITIZE_DEVICE;
-+	tf->hob_nsect |= (cdb[1] & 0x40) << 1;
-+	tf->nsect |= (cdb[1] & 0x20) >> 1;
-+	tf->flags |= ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
-+
-+	switch (cdb[1] & 0x1f) {
-+	/* TODO: add support for OVERWRITE */
-+	case 0x2: /* BLOCK ERASE */
-+		tf->hob_feature = 0x0;
-+		tf->feature = 0x12;
-+		tf->hob_lbal = 0x42;
-+		tf->lbah = 0x6b;
-+		tf->lbam = 0x45;
-+		tf->lbal = 0x72;
-+		break;
-+	case 0x3: /* CRYPTOGRAPHIC ERASE */
-+		tf->hob_feature = 0x0;
-+		tf->feature = 0x11;
-+		tf->hob_lbal = 0x43;
-+		tf->lbah = 0x72;
-+		tf->lbam = 0x79;
-+		tf->lbal = 0x70;
-+		break;
-+	case 0x1f: /* EXIT FAILURE MODE */
-+		tf->hob_feature = 0x0;
-+		tf->feature = 0x0;
-+		tf->nsect |= 0x1;
-+		break;
-+	default:
-+		fp = 1;
-+		bp = 4;
-+		goto invalid_fld;
-+	}
-+
-+	return 0;
-+
-+invalid_fld:
-+	ata_scsi_set_invalid_field(dev, scmd, fp, bp);
-+	return 1;
-+}
-+
- /**
-  *	ata_scsi_report_zones_complete - convert ATA output
-  *	@qc: command structure returning the data
-@@ -3869,6 +3926,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 	case WRITE_SAME_16:
- 		return ata_scsi_write_same_xlat;
- 
-+	case SANITIZE:
-+		return ata_scsi_sanitize_xlat;
-+
- 	case SYNCHRONIZE_CACHE:
- 		if (ata_try_flush_cache(dev))
- 			return ata_scsi_flush_xlat;
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index d1defd1..20d6085 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -72,6 +72,7 @@
- #define UNMAP		      0x42
- #define READ_TOC              0x43
- #define READ_HEADER           0x44
-+#define SANITIZE              0x48
- #define GET_EVENT_STATUS_NOTIFICATION 0x4a
- #define LOG_SELECT            0x4c
- #define LOG_SENSE             0x4d
 -- 
-2.9.0
-
+You are receiving this mail because:
+You are the assignee for the bug.
