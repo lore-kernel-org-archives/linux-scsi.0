@@ -1,50 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Thu, 07 Jul 2016 09:47:34 -0700
-Message-ID: <1467910054.2322.7.camel@HansenPartnership.com>
-References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
+From: David Carroll <david.carroll@microsemi.com>
+Subject: RE: Double-Fetch bug in Linux-4.5/drivers/scsi/aacraid/commctrl.c
+Date: Thu, 7 Jul 2016 22:43:53 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A15F9B3D4@avsrvexchmbx1.microsemi.net>
+References: <CACxtibTF72YUeOnm2Rsx6odjRXybjbbGbx32-CqAu5u6ahndKg@mail.gmail.com>
+ <1461681982.2348.4.camel@HansenPartnership.com>
+ <56AE387A-9CCB-4524-A3FB-1DCA24D816E0@gmail.com>
+ <CACxtibRmuwx0athffBQ9mNdGPoHDah+UU+FF5fGjPqwzbD3R1Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tom.ty89@gmail.com, tj@kernel.org, martin.petersen@oracle.com, dgilbert@interlog.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0070.outbound.protection.outlook.com ([104.47.36.70]:1440
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753187AbcGHARq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jul 2016 20:17:46 -0400
+In-Reply-To: <CACxtibRmuwx0athffBQ9mNdGPoHDah+UU+FF5fGjPqwzbD3R1Q@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Pengfei Wang <wpengfeinudt@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2016-07-08 at 00:32 +0800, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
-> 
-> With this patch, users can make use of the SANITIZE DEVICE feature
-> set through utility like sg_sanitize.
-> 
-> Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE MODE
-> has been implemented. Support for OVERWRITE that involves a
-> parameter list has been left out for now.
-> 
-> Further support for command with IMMED bit set to zero, REQUEST
-> SENSE translation for user-space status polling, and support
-> checking in IDENTIFY DEVICE data log (return proper sense data
-> when designated method is not supported) should be implemented
-> in the future as well.
-> 
-> `sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
-
-Why on earth would you want to do this?  If your intent is to sanitise
-the disk using a cryptographic erase you presumably have a real
-security need for doing it and, knowing what goes into most SAT layers,
-I'd not really trust any SAT for this operation, so for an underlying
-SATA device I'd use ATA_16 to send a real ACS-2 SANITIZE command.
-
-Just as a general note about our SAT layer: Adding little used features
-is an invitation to bloat it with buggy implementations which makes it
-harder to understand and bug prone for odd and unlikely use cases,
-which then take ages to diagnose and track down.  The only things which
-should be in the SAT is what the Linux SCSI subsystem would actually
-use.  For everything else, if the user cares enough, they'll send down
-an encapsulated ATA command.
-
-James
-
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIFBlbmdmZWkgV2FuZw0KPiBTZW50OiBUaHVyc2RheSwgSnVseSAwNywg
+MjAxNiA3OjAwIEFNDQo+IFRvOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0
+OiBSZTogRG91YmxlLUZldGNoIGJ1ZyBpbiBMaW51eC00LjUvZHJpdmVycy9zY3NpL2FhY3JhaWQv
+Y29tbWN0cmwuYw0KPiBIaSwNCj4gDQo+IFdpbGwgYW55b25lIGJvdGhlciB0byBjb25maXJtIGFu
+ZCBmaXggdGhpcyBwcm9ibGVtIEkgcmVwb3J0ZWQgbGFzdCB0aW1lPyBGcm9tDQo+IHRoZSBwb2lu
+dCBvZiB2aWV3IG9mIHNlY3VyaXR5LCBJIHRoaW5rIGl0IHNob3VsZCBiZSBmaXhlZC4NCj4gSSBo
+YXZlIGRpc2NvdmVyZWQgc2V2ZXJhbCBjYXNlcyBvZiB0aGUgc2FtZSBraW5kIGFuZCBhbGwgaGF2
+ZSBiZWVuIGZpeGVkIGJ5DQo+IHRoZSBtYWludGFpbmVycy4gVGhhbmtzIQ0KPiANCj4gUGVuZ2Zl
+aQ0KPiANCg0KSGkgUGVuZ2ZlaSwNCg0KSSdtIGN1cnJlbnRseSB3b3JraW5nIG9uIGEgcGF0Y2gg
+c2V0IGZvciB0aGUgSEJBLTEwMDAgY2FyZCwgYW5kIEkgYWdyZWUgd2l0aCB5b3VyIGFzc2Vzc21l
+bnQuIFdlIHdpbGwgY2hlY2sgdGhlIHNpemVzIGFuZCByZXR1cm4gYW4gZXJyb3IgaWYgdGhlIHNp
+emUgaXMgbGFyZ2VyIHRoYW4gd2hlbiBmaXJzdCBjaGVja2VkOw0KIGkuZS4NCg0KCWlmIChjb3B5
+X2Zyb21fdXNlcihrZmliLCBhcmcsIHNpemUpKSB7DQoJCXJldHZhbCA9IC1FRkFVTFQ7DQoJCWdv
+dG8gY2xlYW51cDsNCgl9DQoNCglpZiAodW5saWtlbHkoKGxlMTZfdG9fY3B1KGtmaWItPmhlYWRl
+ci5TaXplKSArIHNpemVvZihzdHJ1Y3QgYWFjX2ZpYmhkcikpID4gc2l6ZSkpIHsNCgkJcmV0dmFs
+ID0gLUVJTlZBTDsNCgkJZ290byBjbGVhbnVwOw0KCX0NCg0KVGhhbmtzLCAtRGF2ZQ0KDQo=
