@@ -1,98 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] libata-scsi: do not return t10 designator if drive
- has WWN
-Date: Thu, 7 Jul 2016 12:56:46 +0200
-Message-ID: <577E356E.9050209@suse.de>
-References: <20160706221213.1928-1-me>
- <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
+From: Eric Engestrom <eric.engestrom@imgtec.com>
+Subject: Re: [PATCH v2 1/7] lib: string: add functions to case-convert strings
+Date: Thu, 7 Jul 2016 12:04:53 +0100
+Message-ID: <20160707110453.GC3417@imgtec.com>
+References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
+ <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tom.ty89@gmail.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Markus Mayer <mmayer@broadcom.com>
+Cc: devel@driverdev.osuosl.org, Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, nouveau@lists.freedesktop.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, speakup@linux-speakup.org, Chris Metcalf <cmetcalf@ezchip.com>, target-devel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/07/2016 12:12 AM, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
->=20
-> SAT (as of sat4r05f.pdf) only requires the t10 designator if the
-> drive does not support/have WWN. Besides, we already have the ATA
-> information VPD.
->=20
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
->=20
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 9f478ad..84b3d42 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2210,21 +2210,6 @@ static unsigned int ata_scsiop_inq_83(struct a=
-ta_scsi_args *args, u8 *rbuf)
->  	rbuf[1] =3D 0x83;			/* this page code */
->  	num =3D 4;
-> =20
-> -	/* SAT defined lu model and serial numbers descriptor */
-> -	/* piv=3D0, assoc=3Dlu, code_set=3DACSII, designator=3Dt10 vendor i=
-d */
-> -	rbuf[num + 0] =3D 2;
-> -	rbuf[num + 1] =3D 1;
-> -	rbuf[num + 3] =3D sat_model_serial_desc_len;
-> -	num +=3D 4;
-> -	memcpy(rbuf + num, "ATA     ", 8);
-> -	num +=3D 8;
-> -	ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_PROD,
-> -		      ATA_ID_PROD_LEN);
-> -	num +=3D ATA_ID_PROD_LEN;
-> -	ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_SERNO,
-> -		      ATA_ID_SERNO_LEN);
-> -	num +=3D ATA_ID_SERNO_LEN;
-> -
->  	if (ata_id_has_wwn(args->id)) {
->  		/* SAT defined lu world wide name */
->  		/* piv=3D0, assoc=3Dlu, code_set=3Dbinary, designator=3DNAA */
-> @@ -2236,6 +2221,23 @@ static unsigned int ata_scsiop_inq_83(struct a=
-ta_scsi_args *args, u8 *rbuf)
->  			      ATA_ID_WWN, ATA_ID_WWN_LEN);
->  		num +=3D ATA_ID_WWN_LEN;
->  	}
-> +	else {
-> +		/* SAT defined lu model and serial numbers descriptor */
-> +		/* piv=3D0, assoc=3Dlu, code_set=3DACSII, designator=3Dt10 vendor =
-id */
-> +		rbuf[num + 0] =3D 2;
-> +		rbuf[num + 1] =3D 1;
-> +		rbuf[num + 3] =3D sat_model_serial_desc_len;
-> +		num +=3D 4;
-> +		memcpy(rbuf + num, "ATA     ", 8);
-> +		num +=3D 8;
-> +		ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_PROD,
-> +			      ATA_ID_PROD_LEN);
-> +		num +=3D ATA_ID_PROD_LEN;
-> +		ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_SERNO=
-,
-> +			      ATA_ID_SERNO_LEN);
-> +		num +=3D ATA_ID_SERNO_LEN;
-> +	}
-> +
->  	rbuf[3] =3D num - 4;    /* page len (assume less than 256 bytes) */
->  	return 0;
->  }
->=20
-Nope.
-We cannot go about and remove VPD descriptors.
-Existing systems might rely on the VPD attribute to be present (think o=
-f
-udev persistent symlinks), and the system will refuse to boot.
-NACK.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+T24gVHVlLCBKdWwgMDUsIDIwMTYgYXQgMDE6NDc6MDVQTSAtMDcwMCwgTWFya3VzIE1heWVyIHdy
+b3RlOgo+IEFsbCBmdW5jdGlvbnMgcmV0dXJuIGEgcG9pbnRlciB0byB0aGUgdGVybWluYXRpbmcg
+J1wwJyBjaGFyYWN0ZXIgaW4gdGhlCj4gbW9kaWZpZWQgc3RyaW5nICgiZHN0IiBvciAicyIsIHJl
+c3BlY3RpdmVseSkuCgpJIHRoaW5rIHRoaXMgaXMgZ29pbmcgdG8gYmUgY29uZnVzaW5nLiBGcm9t
+IHRoZSBtYW46CgoJVGhlIHN0cmNweSgpIGFuZCBzdHJuY3B5KCkgZnVuY3Rpb25zIHJldHVybiBh
+IHBvaW50ZXIgdG8gdGhlCglkZXN0aW5hdGlvbiBzdHJpbmcgZGVzdC4KCkkgdGhpbmsgaXQgd291
+bGQgYmUgYmV0dGVyIHRvIGtlZXAgdGhlIHNhbWUgYmVoYXZpb3VyLCBlc3BlY2lhbGx5IHNpbmNl
+CnlvdSB1c2VkIHRoZSBzYW1lIG5hbWUgZm9yIHlvdXIgZnVuY3Rpb25zICh3aGljaCBJIHRoaW5r
+IGlzIHNlbnNpYmxlKSwKbm90IHRvIG1lbnRpb24geW91IGRvbid0IHVzZSB0aGlzIHJldHVybiB2
+YWx1ZSBpbiBhbnkgb2YgeW91ciBjYWxscy4KKElNSE8gc3RyY3B5KCkgc2hvdWxkbid0IGhhdmUg
+aGFkIGEgcmV0dXJuIHZhbHVlIGFuZCBuZWl0aGVyIHNob3VsZCB5b3VyCmZ1bmN0aW9ucywgYnV0
+IHNpbmNlIGl0IGRvZXMsIHlvdXJzIHNob3VsZCBtYXRjaC4pCgpDaGVlcnMsCiAgRXJpYwpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFp
+bGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
+cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
