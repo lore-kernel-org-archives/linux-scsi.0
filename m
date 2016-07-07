@@ -1,40 +1,49 @@
-From: Eric Engestrom <eric.engestrom@imgtec.com>
-Subject: Re: [PATCH v2 1/7] lib: string: add functions to case-convert strings
-Date: Thu, 7 Jul 2016 12:04:53 +0100
-Message-ID: <20160707110453.GC3417@imgtec.com>
-References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
- <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
+ >80MB at once
+Date: Thu, 07 Jul 2016 11:38:45 +0000
+Message-ID: <bug-121531-11613-hTxKLjR8yQ@https.bugzilla.kernel.org/>
+References: <bug-121531-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Markus Mayer <mmayer@broadcom.com>
-Cc: devel@driverdev.osuosl.org, Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, nouveau@lists.freedesktop.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, speakup@linux-speakup.org, Chris Metcalf <cmetcalf@ezchip.com>, target-devel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33282 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752118AbcGGLjY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jul 2016 07:39:24 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 1AD0420122
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2016 11:38:49 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 2881820142
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2016 11:38:46 +0000 (UTC)
+In-Reply-To: <bug-121531-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-T24gVHVlLCBKdWwgMDUsIDIwMTYgYXQgMDE6NDc6MDVQTSAtMDcwMCwgTWFya3VzIE1heWVyIHdy
-b3RlOgo+IEFsbCBmdW5jdGlvbnMgcmV0dXJuIGEgcG9pbnRlciB0byB0aGUgdGVybWluYXRpbmcg
-J1wwJyBjaGFyYWN0ZXIgaW4gdGhlCj4gbW9kaWZpZWQgc3RyaW5nICgiZHN0IiBvciAicyIsIHJl
-c3BlY3RpdmVseSkuCgpJIHRoaW5rIHRoaXMgaXMgZ29pbmcgdG8gYmUgY29uZnVzaW5nLiBGcm9t
-IHRoZSBtYW46CgoJVGhlIHN0cmNweSgpIGFuZCBzdHJuY3B5KCkgZnVuY3Rpb25zIHJldHVybiBh
-IHBvaW50ZXIgdG8gdGhlCglkZXN0aW5hdGlvbiBzdHJpbmcgZGVzdC4KCkkgdGhpbmsgaXQgd291
-bGQgYmUgYmV0dGVyIHRvIGtlZXAgdGhlIHNhbWUgYmVoYXZpb3VyLCBlc3BlY2lhbGx5IHNpbmNl
-CnlvdSB1c2VkIHRoZSBzYW1lIG5hbWUgZm9yIHlvdXIgZnVuY3Rpb25zICh3aGljaCBJIHRoaW5r
-IGlzIHNlbnNpYmxlKSwKbm90IHRvIG1lbnRpb24geW91IGRvbid0IHVzZSB0aGlzIHJldHVybiB2
-YWx1ZSBpbiBhbnkgb2YgeW91ciBjYWxscy4KKElNSE8gc3RyY3B5KCkgc2hvdWxkbid0IGhhdmUg
-aGFkIGEgcmV0dXJuIHZhbHVlIGFuZCBuZWl0aGVyIHNob3VsZCB5b3VyCmZ1bmN0aW9ucywgYnV0
-IHNpbmNlIGl0IGRvZXMsIHlvdXJzIHNob3VsZCBtYXRjaC4pCgpDaGVlcnMsCiAgRXJpYwpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFp
-bGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
-cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+https://bugzilla.kernel.org/show_bug.cgi?id=121531
+
+--- Comment #12 from Martin von Wittich <martin.von.wittich@iserv.eu> ---
+@Jack: No, I hadn't tried that yet, but I will now:
+
+I downloaded the driver from the homepage and installed the
+adaptec/debian_7.4/x64/pm80xx-1.4.0-11068-debian64.deb package on our dev
+server. After DKMS had compiled the pm80xx.ko module, I unloaded the pm80xx
+module on the installer live system and replaced
+/lib/modules/3.16.0-4-amd64/kernel/drivers/scsi/pm8001/pm80xx.ko with the newly
+compiled module and loaded it again. It seems to work better... I've been able
+to write 1024 MB successfully:
+
+root@(none):~# dd if=/dev/zero of=/dev/sdc bs=1M count=1024
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 6.51408 s, 165 MB/s
+
+I'm now installing Debian onto the machine, I'll report back how that turns
+out.
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
