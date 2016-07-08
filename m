@@ -1,67 +1,65 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [net-next 6/6] cxgb3i,cxgb4i: fix symbol not declared sparse warning
-Date: Fri,  8 Jul 2016 23:03:59 +0530
-Message-ID: <bd0f185a6dafaf31d825b67758eaec01e69f7c36.1467998293.git.varun@chelsio.com>
-References: <cover.1467998292.git.varun@chelsio.com>
+Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
+Date: Fri, 8 Jul 2016 23:33:56 +0530
+Message-ID: <20160708180354.GA1658@chelsio.com>
+References: <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
+ <1464072025.22249.87.camel@haakon3.risingtidesystems.com>
+ <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
+ <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com>
+ <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com>
+ <1464238504.22249.168.camel@haakon3.risingtidesystems.com>
+ <20160526185819.GA1672@chelsio.com>
+ <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
+ <20160706171703.GA1685@chelsio.com>
+ <CAJ3xEMhnmcJHrBot4yiz6obS9a8rHOZVNP-EfQHCAFbJhFMcZg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [12.32.117.8] ([12.32.117.8]:29242 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932252AbcGHRh0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2016 13:37:26 -0400
-In-Reply-To: <cover.1467998292.git.varun@chelsio.com>
-In-Reply-To: <cover.1467998292.git.varun@chelsio.com>
-References: <cover.1467998292.git.varun@chelsio.com>
+Received: from [12.32.117.8] ([12.32.117.8]:56511 "EHLO stargate.chelsio.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752461AbcGHSEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2016 14:04:11 -0400
+Content-Disposition: inline
+In-Reply-To: <CAJ3xEMhnmcJHrBot4yiz6obS9a8rHOZVNP-EfQHCAFbJhFMcZg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, varun@chelsio.com
+To: Or Gerlitz <gerlitz.or@gmail.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Steve Wise <swise@opengridcomputing.com>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com
 
-Fix following sparse warnings
-warning: symbol 'cxgb3i_ofld_init' was not declared. Should it be static?
-warning: symbol 'cxgb4i_cplhandlers' was not declared. Should it be static?
-warning: symbol 'cxgb4i_ofld_init' was not declared. Should it be static?
+On Thu, Jul 07, 2016 at 10:54:20AM +0300, Or Gerlitz wrote:
+> On Wed, Jul 6, 2016 at 8:17 PM, Varun Prakash <varun@chelsio.com> wrote:
+> > On Wed, Jul 06, 2016 at 12:24:43AM +0300, Or Gerlitz wrote:
+> >> On Thu, May 26, 2016 at 9:58 PM, Varun Prakash <varun@chelsio.com> wrote:
+> >>
+> >> > Hi Or, Nicholas and Steve
+> >> > Thank you for the feedback and apologies for the delay in my response.
+> >>
+> >> > I agree that we can refactor initiator, target and iwarp drivers to
+> >> > reduce code duplication as Steve has mentioned. We will work on this for
+> >> > 4.8 merge window.
+> >>
+> >> Nic, Varun, was anything done on this matter? we're on rc6
+> >
+> > Yes, I am working on this, I will post first series
+> > within two days, it will add common library module libcxgb.ko.
+> 
+> thanks for the update, the plan was to get that info 4.8-rc1,
+> and as we're after rc6 there's not much time left for submitting code
+> for 4.8, so doing that sooner rather than later would be good here.
+> 
+> > In first series libcxgb.ko will have common
+> > iSCSI DDP Page Pod Manager that will be shared
+> > by three Chelsio iSCSI drivers
+> > cxgb3i, cxgb4i, cxgbit.
+> 
+> cool
+> 
+> > In subsequent series I will add common connection
+> > management and other hardware specific common code
+> > in this module.
+> 
+> any chance to get that ready for 4.8 too?
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 2 +-
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 44a424d..40d30bd 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -1028,7 +1028,7 @@ cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
-  * cxgb3i_ofld_init - allocate and initialize resources for each adapter found
-  * @cdev:	cxgbi adapter
-  */
--int cxgb3i_ofld_init(struct cxgbi_device *cdev)
-+static int cxgb3i_ofld_init(struct cxgbi_device *cdev)
- {
- 	struct t3cdev *t3dev = (struct t3cdev *)cdev->lldev;
- 	struct adap_ports port;
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 521f9e4..e4ba2d2 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1503,7 +1503,7 @@ rel_resource_without_clip:
- 	return -EINVAL;
- }
- 
--cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
-+static cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_ACT_ESTABLISH] = do_act_establish,
- 	[CPL_ACT_OPEN_RPL] = do_act_open_rpl,
- 	[CPL_PEER_CLOSE] = do_peer_close,
-@@ -1519,7 +1519,7 @@ cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_RX_DATA] = do_rx_data,
- };
- 
--int cxgb4i_ofld_init(struct cxgbi_device *cdev)
-+static int cxgb4i_ofld_init(struct cxgbi_device *cdev)
- {
- 	int rc;
- 
--- 
-2.0.2
-
+I am working on common connection management, it is a
+big change as it involves multiple modules, so it is
+difficult to get it ready for 4.8.   
