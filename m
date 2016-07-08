@@ -1,25 +1,31 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
  >80MB at once
-Date: Fri, 8 Jul 2016 09:47:15 +0200
-Message-ID: <CAD+HZHVwXeRok3WaaJy-bQSMPU9Zk_A-dxJwtHJg==BTMZp6wA@mail.gmail.com>
-References: <bug-121531-11613@https.bugzilla.kernel.org/> <bug-121531-11613-HCS9sSYYzs@https.bugzilla.kernel.org/>
- <CAL7F=LdPLnGoq7pReB3Mv+FR6qEqMyfsR=CrNotQ7qQuqVxV0A@mail.gmail.com>
+Date: Fri, 08 Jul 2016 07:47:20 +0000
+Message-ID: <bug-121531-11613-3ffQVk4GqJ@https.bugzilla.kernel.org/>
+References: <bug-121531-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34665 "EHLO
-	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbcGHHrS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2016 03:47:18 -0400
-Received: by mail-lf0-f66.google.com with SMTP id a10so2540248lfb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Jul 2016 00:47:17 -0700 (PDT)
-In-Reply-To: <CAL7F=LdPLnGoq7pReB3Mv+FR6qEqMyfsR=CrNotQ7qQuqVxV0A@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:40994 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751881AbcGHHrZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2016 03:47:25 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A8ADA2017E
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2016 07:47:23 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 1F906201C7
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2016 07:47:21 +0000 (UTC)
+In-Reply-To: <bug-121531-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <gviswas@gmail.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, viswas.g@microsemi.com
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=121531
+
+--- Comment #15 from Jack Wang <xjtuwjp@gmail.com> ---
 Hi Viswas,
 
 Thanks for update.
@@ -82,3 +88,7 @@ Jack
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
