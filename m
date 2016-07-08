@@ -1,77 +1,45 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH] megaraid_sas: Do not fire MR_DCMD_PD_LIST_QUERY to controllers which do not support it
-Date: Fri,  8 Jul 2016 03:30:16 -0700
-Message-ID: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com, lucz@geza.com, stable@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] sd: don't use the ALL_TG_PT bit for reservations
+Date: Fri,  8 Jul 2016 21:23:50 +0900
+Message-ID: <1467980631-18945-2-git-send-email-hch@lst.de>
+References: <1467980631-18945-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:51999 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754786AbcGHMYF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2016 08:24:05 -0400
+In-Reply-To: <1467980631-18945-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: linux-block@vger.kernel.org
 
-There was an issue reported by Lucz Geza on Dell Perc 6i. As per issue =
-reported,
-megaraid_sas driver goes into an infinite error reporting loop as soon =
-as there is a change
-in the status of one of the arrays (degrade, resync online etc =E2=80=A6=
-).
-Below are the error logs reported continuously-=20
+These only work if the we use the same initiator ID for all path,
+which might not be true if we use different protocols, or even just
+different HBAs.
 
-Jun 25 08:49:30 ns8 kernel: [  757.757017] megaraid_sas 0000:02:00.0: D=
-CMD failed/not supported by firmware: megasas_get_pd_list 4115
-Jun 25 08:49:30 ns8 kernel: [  757.778017] megaraid_sas 0000:02:00.0: D=
-CMD failed/not supported by firmware: megasas_get_pd_list 4115
-Jun 25 08:49:30 ns8 kernel: [  757.799017] megaraid_sas 0000:02:00.0: D=
-CMD failed/not supported by firmware: megasas_get_pd_list 4115
-Jun 25 08:49:30 ns8 kernel: [  757.820018] megaraid_sas 0000:02:00.0: D=
-CMD failed/not supported by firmware: megasas_get_pd_list 4115
-Jun 25 08:49:30 ns8 kernel: [  757.841018] megaraid_sas 0000:02:00.0: D=
-CMD failed/not supported by firmware: megasas_get_pd_list 4115
+Instead dm-mpath will grow support to register all path manually
+later in this series.
 
-This issue is very much specific to controllers which do not support DC=
-MD- MR_DCMD_PD_LIST_QUERY.
-In case of any hotplugging/rescanning of drives, AEN thread will be sch=
-eduled by driver and fire
-DCMD- MR_DCMD_PD_LIST_QUERY and if this DCMD is failed then driver will=
- fail this event processing
-and will not go ahead for further events. This will cause infinite loop=
- of same event getting
-retried infinitely and causing above mentioned logs.
-
-=46ix for this problem is: not to fire DCMD MR_DCMD_PD_LIST_QUERY for c=
-ontrollers which do not
-support it and send DCMD SUCCESS status to AEN function so that it can =
-go ahead with other event
-processing.
-
-Reported-by: Lucz Geza <geza@lucz.com>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/sd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/m=
-egaraid/megaraid_sas_base.c
-index f4b0690..2dab3dc 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4079,6 +4079,12 @@ megasas_get_pd_list(struct megasas_instance *ins=
-tance)
- 	struct MR_PD_ADDRESS *pd_addr;
- 	dma_addr_t ci_h =3D 0;
-=20
-+	if (instance->pd_list_not_supported) {
-+		dev_info(&instance->pdev->dev, "MR_DCMD_PD_LIST_QUERY "
-+		"not supported by firmware\n");
-+		return ret;
-+	}
-+
- 	cmd =3D megasas_get_cmd(instance);
-=20
- 	if (!cmd) {
---=20
-2.4.11
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 60bff78..42b4d05 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1613,8 +1613,7 @@ static int sd_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
+ 		return -EOPNOTSUPP;
+ 	return sd_pr_command(bdev, (flags & PR_FL_IGNORE_KEY) ? 0x06 : 0x00,
+ 			old_key, new_key, 0,
+-			(1 << 0) /* APTPL */ |
+-			(1 << 2) /* ALL_TG_PT */);
++			(1 << 0) /* APTPL */);
+ }
+ 
+ static int sd_pr_reserve(struct block_device *bdev, u64 key, enum pr_type type,
+-- 
+2.1.4
+
