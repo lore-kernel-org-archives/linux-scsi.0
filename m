@@ -1,37 +1,74 @@
-From: "Steve Wise" <swise@opengridcomputing.com>
-Subject: RE: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
-Date: Fri, 8 Jul 2016 13:36:12 -0500
-Message-ID: <00fc01d1d947$9a76aff0$cf640fd0$@opengridcomputing.com>
-References: <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com> <1464072025.22249.87.camel@haakon3.risingtidesystems.com> <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com> <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com> <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com> <1464238504.22249.168.camel@haakon3.risingtidesystems.com> <20160526185819.GA1672@chelsio.com> <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com> <20160706171703.GA1685@chelsio.com> <CAJ3xEMhnmcJHrBot4yiz6obS9a8rHOZVNP-EfQHCAFbJhFMcZg@mail.gmail.com> <20160708180354.GA1658@chelsio.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Fix NULL pointer deref in QLA interrupt
+Date: Fri, 8 Jul 2016 17:23:11 +0000
+Message-ID: <6E639E75-17DD-4441-B233-93714B341C1B@qlogic.com>
+References: <20160630170032.6dbaf496@pluto.restena.lu>
+ <94d0470f-7555-8098-b382-a4fdac9b0709@leemhuis.info>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160708180354.GA1658@chelsio.com>
-Content-Language: en-us
-Sender: target-devel-owner@vger.kernel.org
-To: 'Varun Prakash' <varun@chelsio.com>, 'Or Gerlitz' <gerlitz.or@gmail.com>
-Cc: "'Nicholas A. Bellinger'" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, kxie@chelsio.com, indranil@chelsio.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0099.outbound.protection.outlook.com ([104.47.33.99]:14802
+	"EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755736AbcGHS5f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2016 14:57:35 -0400
+In-Reply-To: <94d0470f-7555-8098-b382-a4fdac9b0709@leemhuis.info>
+Content-Language: en-US
+Content-ID: <BE2B4A60A45ADA44AC0C1FBA7BE79EA2@namprd11.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Thorsten Leemhuis <regressions@leemhuis.info>, =?utf-8?B?QnJ1bm8gUHLDqW1vbnQ=?= <bonbons@linux-vserver.org>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-> > > In first series libcxgb.ko will have common
-> > > iSCSI DDP Page Pod Manager that will be shared
-> > > by three Chelsio iSCSI drivers
-> > > cxgb3i, cxgb4i, cxgbit.
-> >
-> > cool
-> >
-> > > In subsequent series I will add common connection
-> > > management and other hardware specific common code
-> > > in this module.
-> >
-> > any chance to get that ready for 4.8 too?
-> 
-> I am working on common connection management, it is a
-> big change as it involves multiple modules, so it is
-> difficult to get it ready for 4.8.
-
-Let's shoot for 4.9 for the common CM.  Nice work on the PPOD unification!
-
-Steve.
+DQpPbiA3LzgvMTYsIDEyOjI3IEFNLCAiVGhvcnN0ZW4gTGVlbWh1aXMiIDxyZWdyZXNzaW9uc0Bs
+ZWVtaHVpcy5pbmZvPiB3cm90ZToNCg0KPkJydW5vIFByw6ltb250IHdyb3RlIG9uIDMwLjA2LjIw
+MTYgMTc6MDA6DQo+PiBJbiBxbGEyNHh4X3Byb2Nlc3NfcmVzcG9uc2VfcXVldWUoKSByc3AtPm1z
+aXgtPmNwdWlkIG1heSB0cmlnZ2VyIE5VTEwNCj4+IHBvaW50ZXIgZGVyZWZlcmVuY2Ugd2hlbiBy
+c3AtPm1zaXggaXMgTlVMTDoNCj4+IFvigKZdDQo+PiBUaGUgYWZmZWN0ZWQgY29kZSB3YXMgaW50
+cm9kdWNlZCBieSBjb21taXQgY2RiODk4YzUyZDFkZmFkNGI0ODAwYjgzYTU4YjNmZTVkMzUyZWRk
+ZQ0KPj4gKHFsYTJ4eHg6IEFkZCBpcnEgYWZmaW5pdHkgbm90aWZpY2F0aW9uKS4NCj4+IA0KPj4g
+T25seSBkZXJlZmVyZW5jZSByc3AtPm1zaXggd2hlbiBpdCBoYXMgYmVlbiBzZXQgc28gdGhlIG1h
+Y2hpbmUgY2FuIGJvb3QNCj4+IGZpbmUuIFBvc3NpYmx5IHJzcC0+bXNpeCBpcyB1bnNldCBiZWNh
+dXNlOg0KPj4gWyAgICAzLjQ3OTY3OV0gcWxhMnh4eCBbMDAwMDowMDowMC4wXS0wMDA1OiA6IFFM
+b2dpYyBGaWJyZSBDaGFubmVsIEhCQSBEcml2ZXI6IDguMDcuMDAuMzMtay4NCj4+IFsgICAgMy40
+ODE4MzldIHFsYTJ4eHggWzAwMDA6MTM6MDAuMF0tMDAxZDogOiBGb3VuZCBhbiBJU1AyNDMyIGly
+cSAxNyBpb2Jhc2UgMHhmZmZmYzkwMDAwMDM4MDAwLg0KPj4gWyAgICAzLjQ4NDA4MV0gcWxhMnh4
+eCBbMDAwMDoxMzowMC4wXS0wMDM1OjA6IE1TSS1YOyBVbnN1cHBvcnRlZCBJU1AyNDMyICgweDIs
+IDB4MykuDQo+PiBbICAgIDMuNDg1ODA0XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAwMzc6MDog
+RmFsbGluZyBiYWNrLXRvIE1TSSBtb2RlIC0yNTguDQo+PiBbICAgIDMuODkwMTQ1XSBzY3NpIGhv
+c3QwOiBxbGEyeHh4DQo+PiBbICAgIDMuODkxOTU2XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAw
+ZmI6MDogUUxvZ2ljIFFMRTI0NjAgLSBQQ0ktRXhwcmVzcyBTaW5nbGUgQ2hhbm5lbCA0R2IgRmli
+cmUgQ2hhbm5lbCBIQkEuDQo+PiBbICAgIDMuODk0MjA3XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBd
+LTAwZmM6MDogSVNQMjQzMjogUENJZSAoMi41R1QvcyB4NCkgQCAwMDAwOjEzOjAwLjAgaGRtYSsg
+aG9zdCM9MCBmdz03LjAzLjAwICg5NDk2KS4NCj4+IFsgICAgNS43MTQ3NzRdIHFsYTJ4eHggWzAw
+MDA6MTM6MDAuMF0tNTAwYTowOiBMT09QIFVQIGRldGVjdGVkICg0IEdicHMpLg0KPg0KPkJydW5v
+OiBEb2VzIHRoYXQgbWVhbiB5b3UgYWN0dWFsbHkgdGVzdGVkIHRoYXQgcGF0Y2ggYW5kIGl0IGZp
+eGVkIHRoZQ0KPnByb2JsZW0gZm9yIHlvdT8gSXQgbG9va3MgbGlrZSBpdCwgYnV0IHRoZXJlIGlz
+IHNvbWUgY29uZnVzaW9uIGFib3V0IGl0Ow0KPnRoYXQncyBvbmUgb2YgdGhlIHJlYXNvbnMgd2h5
+IHRoaXMgcGF0Y2ggZGlkbid0IGdldCBhbnkgZnVydGhlciB5ZXQNCj5hZmFpY3MsIHNvIGEgcXVp
+Y2sgY2xhcmlmaWNhdGlvbiBtaWdodCBoZWxwIHRvIGZpbmFsbHkgZ2V0IHRoaXMgZml4ZWQNCj5w
+cm9wZXJseSBpbiBtYWlubGluZSBhbmQgc3RhYmxlLg0KPg0KPkhpbWFuc2h1OiBXaGlsZSBhdCBp
+dDogQ2FuIHlvdSBjb25maXJtIHRoaXMgcGF0Y2ggc2hvdWxkIGdldCBtZXJnZWQgdG8NCj5tYWlu
+bGluZT8gU2VlbXMgUXVpbm4gaXMgb24gUFRPIGFuZCBoaXMgb3V0LW9mLW9mZmljZSByZXBseSBt
+ZW50aW9uZWQNCj55b3UgYXMgb25lIHBvaW50IG9mIGNvbnRhY3QuDQoNCkkgc2VlIHRoaXMgcGF0
+Y2ggaGFzIGJlZW4gcXVldWVkIHRvIOKAnGZpeGVzIiBicmFuY2ggb24gSmFtZXPigJlzIHRyZWUu
+IFNvIGl0IHdvdWxkDQpnZXQgbWVyZ2VkIGludG8gbWFpbmxpbmUga2VybmVsLiAgSGVyZeKAmXMg
+bGluayANCg0KaHR0cDovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2VybmVsL2dpdC9qZWpi
+L3Njc2kuZ2l0L2xvZy8/aD1maXhlcw0KDQo+DQo+Q2hlZXJzLCB5b3VyIHJlZ3Jlc3Npb24gdHJh
+Y2tlciBmb3IgTGludXggNC43DQo+IFRob3JzdGVuDQo+DQo+PiBDQzogPHN0YWJsZUB2Z2VyLmtl
+cm5lbC5vcmc+DQo+PiBTaWduZWQtb2ZmLWJ5OiBCcnVubyBQcsOpbW9udCA8Ym9uYm9uc0BsaW51
+eC12c2VydmVyLm9yZz4NCj4+IC0tLQ0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9pc3IuYw0KPj4gYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgaW5kZXgg
+NTY0OWMyMC4uYTkyYTYyZCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
+YV9pc3IuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+PiBAQCAt
+MjU0OCw3ICsyNTQ4LDcgQEAgdm9pZCBxbGEyNHh4X3Byb2Nlc3NfcmVzcG9uc2VfcXVldWUoc3Ry
+dWN0DQo+PiBzY3NpX3FsYV9ob3N0ICp2aGEsIGlmICghdmhhLT5mbGFncy5vbmxpbmUpDQo+PiAg
+CQlyZXR1cm47DQo+PiAgDQo+PiAtCWlmIChyc3AtPm1zaXgtPmNwdWlkICE9IHNtcF9wcm9jZXNz
+b3JfaWQoKSkgew0KPj4gKwlpZiAocnNwLT5tc2l4ICYmIHJzcC0+bXNpeC0+Y3B1aWQgIT0gc21w
+X3Byb2Nlc3Nvcl9pZCgpKSB7DQo+PiAgCQkvKiBpZiBrZXJuZWwgZG9lcyBub3Qgbm90aWZ5IHFs
+YSBvZiBJUlEncyBDUFUgY2hhbmdlLA0KPj4gIAkJICogdGhlbiBzZXQgaXQgaGVyZS4NCj4+ICAJ
+CSAqLw0KPj4gDQo+PiBodHRwOi8vbmV3cy5nbWFuZS5vcmcvZmluZC1yb290LnBocD9tZXNzYWdl
+X2lkPTIwMTYwNjMwMTcwMDMyLjZkYmFmNDk2JTQwcGx1dG8ucmVzdGVuYS5sdSANCj4+IGh0dHA6
+Ly9taWQuZ21hbmUub3JnLzIwMTYwNjMwMTcwMDMyLjZkYmFmNDk2JTQwcGx1dG8ucmVzdGVuYS5s
+dQ0KPj4gDQo=
