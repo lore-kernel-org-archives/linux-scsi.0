@@ -1,123 +1,90 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.7-rc6
-Date: Fri, 08 Jul 2016 13:20:44 -0700
-Message-ID: <1468009244.2431.7.camel@HansenPartnership.com>
+From: Markus Mayer <mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v3 0/7] lib: string: add functions to case-convert
+	strings
+Date: Fri,  8 Jul 2016 15:43:07 -0700
+Message-ID: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55770 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755818AbcGHUVE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2016 16:21:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Three fixes.  One is the qla24xx MSI regression, one is a theoretical
-problem over blacklist matching, which would bite USB badly if it ever
-triggered and one is a system hang with a particular type of IPR
-device.
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Alan Stern (1):
-      SCSI: fix new bug in scsi_dev_info_list string matching
-
-Brian King (1):
-      ipr: Clear interrupt on croc/crocodile when running with LSI
-
-Bruno Pr=C3=83=C2=A9mont (1):
-      qla2xxx: Fix NULL pointer deref in QLA interrupt
-
-And the diffstat:
-
- drivers/scsi/ipr.c             |  1 +
- drivers/scsi/qla2xxx/qla_isr.c |  2 +-
- drivers/scsi/scsi_devinfo.c    | 10 ++++++----
- 3 files changed, 8 insertions(+), 5 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index d6a691e..d6803a9 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -10093,6 +10093,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
- 		ioa_cfg->intr_flag =3D IPR_USE_MSI;
- 	else {
- 		ioa_cfg->intr_flag =3D IPR_USE_LSI;
-+		ioa_cfg->clear_isr =3D 1;
- 		ioa_cfg->nvectors =3D 1;
- 		dev_info(&pdev->dev, "Cannot enable MSI.\n");
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_=
-isr.c
-index 5649c20..a92a62d 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2548,7 +2548,7 @@ void qla24xx_process_response_queue(struct scsi_q=
-la_host *vha,
- 	if (!vha->flags.online)
- 		return;
-=20
--	if (rsp->msix->cpuid !=3D smp_processor_id()) {
-+	if (rsp->msix && rsp->msix->cpuid !=3D smp_processor_id()) {
- 		/* if kernel does not notify qla of IRQ's CPU change,
- 		 * then set it here.
- 		 */
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index ff41c31..eaccd65 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -429,7 +429,7 @@ static struct scsi_dev_info_list *scsi_dev_info_lis=
-t_find(const char *vendor,
- 	 * here, and we don't know what device it is
- 	 * trying to work with, leave it as-is.
- 	 */
--	vmax =3D 8;	/* max length of vendor */
-+	vmax =3D sizeof(devinfo->vendor);
- 	vskip =3D vendor;
- 	while (vmax > 0 && *vskip =3D=3D ' ') {
- 		vmax--;
-@@ -439,7 +439,7 @@ static struct scsi_dev_info_list *scsi_dev_info_lis=
-t_find(const char *vendor,
- 	while (vmax > 0 && vskip[vmax - 1] =3D=3D ' ')
- 		--vmax;
-=20
--	mmax =3D 16;	/* max length of model */
-+	mmax =3D sizeof(devinfo->model);
- 	mskip =3D model;
- 	while (mmax > 0 && *mskip =3D=3D ' ') {
- 		mmax--;
-@@ -455,10 +455,12 @@ static struct scsi_dev_info_list *scsi_dev_info_l=
-ist_find(const char *vendor,
- 			 * Behave like the older version of get_device_flags.
- 			 */
- 			if (memcmp(devinfo->vendor, vskip, vmax) ||
--					devinfo->vendor[vmax])
-+					(vmax < sizeof(devinfo->vendor) &&
-+						devinfo->vendor[vmax]))
- 				continue;
- 			if (memcmp(devinfo->model, mskip, mmax) ||
--					devinfo->model[mmax])
-+					(mmax < sizeof(devinfo->model) &&
-+						devinfo->model[mmax]))
- 				continue;
- 			return devinfo;
- 		} else {
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+VGhpcyBzZXJpZXMgaW50cm9kdWNlcyBhIGZhbWlseSBvZiBnZW5lcmljIHN0cmluZyBjYXNlIGNv
+bnZlcnNpb24KZnVuY3Rpb25zLiBUaGlzIGtpbmQgb2YgZnVuY3Rpb25hbGl0eSBpcyBuZWVkZWQg
+aW4gc2V2ZXJhbCBwbGFjZXMgaW4KdGhlIGtlcm5lbC4gUmlnaHQgbm93LCBldmVyeWJvZHkgc2Vl
+bXMgdG8gYmUgaW1wbGVtZW50aW5nIHRoZWlyIG93bgpjb3B5IG9mIHRoaXMgZnVuY3Rpb25hbGl0
+eS4KCkJhc2VkIG9uIHRoZSBkaXNjdXNzaW9uIG9mIHRoZSBwcmV2aW91cyB2ZXJzaW9uIG9mIHRo
+aXMgc2VyaWVzWzFdIGFuZAp0aGUgdXNlIGNhc2VzIGZvdW5kIGluIHRoZSBrZXJuZWwsIGl0IGRv
+ZXMgbG9vayBsaWtlIGhhdmluZyBzZXZlcmFsCmZsYXZvdXJzIG9mIGNhc2UgY29udmVyc2lvbiBm
+dW5jdGlvbnMgaXMgYmVuZWZpY2lhbC4gVGhlIHVzZSBjYXNlcyBmYWxsCmludG8gdGhyZWUgY2F0
+ZWdvcmllczoKICAgIC0gY29weWluZyBhIHN0cmluZyBhbmQgY29udmVydGluZyB0aGUgY2FzZSB3
+aGlsZSBzcGVjaWZ5aW5nIGEKICAgICAgbWF4aW11bSBsZW5ndGggdG8gbWltaWMgc3RybGNweSgp
+CiAgICAtIGNvcHlpbmcgYSBzdHJpbmcgYW5kIGNvbnZlcnRpbmcgdGhlIGNhc2Ugd2l0aG91dCBz
+cGVjaWZ5aW5nIGEKICAgICAgbGVuZ3RoIHRvIG1pbWljIHN0cmNweSgpCiAgICAtIGNvbnZlcnRp
+bmcgdGhlIGNhc2Ugb2YgYSBzdHJpbmcgaW4tcGxhY2UgKGkuZS4gbW9kaWZ5aW5nIHRoZQogICAg
+ICBzdHJpbmcgdGhhdCB3YXMgcGFzc2VkIGluKQoKQ29uc2VxdWVudGx5LCBJIGFtIHByb3Bvc2lu
+ZyB0aGVzZSBuZXcgZnVuY3Rpb25zOgogICAgdm9pZCBzdHJsY3B5dG91cHBlcihjaGFyICpkc3Qs
+IGNvbnN0IGNoYXIgKnNyYywgc2l6ZV90IGxlbik7CiAgICB2b2lkIHN0cmxjcHl0b2xvd2VyKGNo
+YXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKICAgIHZvaWQgc3RyY3B5dG91
+cHBlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYyk7CiAgICB2b2lkIHN0cmNweXRvbG93ZXIo
+Y2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMpOwogICAgdm9pZCBzdHJ0b3VwcGVyKGNoYXIgKnMp
+OwogICAgdm9pZCBzdHJ0b2xvd2VyKGNoYXIgKnMpOwoKU2V2ZXJhbCBkcml2ZXJzIGFyZSBiZWlu
+ZyBtb2RpZmllZCB0byBtYWtlIHVzZSBvZiB0aGUgZnVuY3Rpb25zIGFib3ZlLgpBbm90aGVyIGRy
+aXZlciB0aGF0IGFsc28gbWFrZXMgdXNlIG9mIHRoaXMgZnVuY3Rpb25hbGl0eSB3aWxsIGJlCnN1
+Ym1pdHRlZCB1cHN0cmVhbSBzaG9ydGx5LCB3aGljaCBwcm9tcHRlZCB0aGlzIHdob2xlIGV4ZXJj
+aXNlLgoKVGhlIGNoYW5nZXMgbWFkZSBoZXJlIGhhdmUgYmVlbiBjb21waWxlLXRlc3RlZCwgYnV0
+IG5vdCB0cmllZCBvdXQsIGR1ZQp0byBsYWNrIG9mIHJlcXVpcmVkIGhhcmR3YXJlLgoKQ2hhbmdl
+cyBzaW5jZSB2MjoKICAtIHVzZSBzdHJsY3B5KCkgc2VtYW50aWNzIG5vdCBzdHJuY3B5KCkgc2Vt
+YW50aWNzLCBpLmUuIGd1YXJhbnRlZQogICAgTlVMTCB0ZXJtaW5hdGlvbgogIC0gYXMgYSByZXN1
+bHQgc3RybmNweXRvPHVwcGVyfGxvd2VyPiBhcmUgbm93IGNhbGxlZAogICAgc3RybGNweXRvPHVw
+cGVyfGxvd2VyPgogIC0gbWFrZSBmdW5jdGlvbnMgdm9pZAogIC0gdXNlIGxlbiA9PSAtMSAoU0la
+RV9NQVgpIGFzIG5vLWxpbWl0IGluZGljYXRvciByYXRoZXIgdGhlbiBsZW4gPT0gMAogIC0gY2hh
+bmdlIFBBVENIIDIvNyB0byBtYXRjaCBzdHJsY3B5KCkgc2VtYW50aWNzCiAgLSBjaGFuZ2UgUEFU
+Q0ggNC83IHRvIG1hdGNoIHN0cmxjcHkoKSBzZW1hbnRpY3MKCkNoYW5nZXMgc2luY2UgdjE6CiAg
+LSBleHBhbmRlZCBzdHJ0b2xvd2VyKCkgaW50byBhIGZhbWlseSBvZiBmdW5jdGlvbnMgdGhhdCBj
+b3ZlciB1c2UKICAgIGNhc2VzIHdoZW4gYSBsZW5ndGggYXJndW1lbnQgaXMgb3IgaXNuJ3QgcmVx
+dWlyZWQgYW5kIHRoYXQgc3VwcG9ydAogICAgY29weWluZyB0aGUgc3RyaW5nIGludG8gYSBuZXcg
+YnVmZmVyIG9yIGNoYW5naW5nIGl0IGluLXBsYWNlIAogIC0gY2hhbmdlZCB0aGUgZnVuY3Rpb24g
+c2VtYW50aWNzIHRvIHJldHVybiBhIHBvaW50ZXIgdG8gdGhlCiAgICB0ZXJtaW5hdGluZyAnXDAn
+IGNoYXJhY3RlciBvZiB0aGUgbW9kaWZpZWQgc3RyaW5nCiAgLSBhZGRlZCBzdHJ0b3VwcGVyKCkg
+ZnVuY3Rpb25hbGl0eSBtaXJyb3JpbmcgdGhlIGFib3ZlCiAgLSBkcm9wcGVkIHRoZSBBQ1BJQ0Eg
+cGF0Y2gsIHNpbmNlIHRoYXQgY29kZSBpcyBPUyBpbmRlcGVuZGVudCBhbmQKICAgIGNhbid0IHJl
+bHkgb24gYSBMaW51eCBsaWJyYXJ5IGZ1bmN0aW9uIChzZWUgWzJdKQogIC0gQWRkZWQgdHdvIG5l
+dyBwYXRjaGVzIHJlcGxhY2luZyBzdHJ0b3VwcGVyKCkgaW1wbGVtZW50YXRpb25zCgpbMV0gaHR0
+cHM6Ly9sa21sLm9yZy9sa21sLzIwMTYvNi8zMC83MjcKWzJdIGh0dHBzOi8vbGttbC5vcmcvbGtt
+bC8yMDE2LzcvMS85CgoKCk1hcmt1cyBNYXllciAoNyk6CiAgbGliOiBzdHJpbmc6IGFkZCBmdW5j
+dGlvbnMgdG8gY2FzZS1jb252ZXJ0IHN0cmluZ3MKICBkcm0vbm91dmVhdS9jb3JlOiBtYWtlIHVz
+ZSBvZiBuZXcgc3RybGNweXRvbG93ZXIoKSBmdW5jdGlvbgogIEFDUEkgLyBkZXZpY2Vfc3lzZnM6
+IG1ha2UgdXNlIG9mIG5ldyBzdHJ0b2xvd2VyKCkgZnVuY3Rpb24KICBzdGFnaW5nOiBzcGVha3Vw
+OiByZXBsYWNlIHNwa19zdHJsd3IoKSB3aXRoIHN0cmxjcHl0b2xvd2VyKCkKICBpc2NzaS10YXJn
+ZXQ6IHJlcGxhY2UgaXNjc2lfaW5pdGlhdG9ybmFtZV90b2xvd2VyKCkgd2l0aCBzdHJ0b2xvd2Vy
+KCkKICBkcm0vbm91dmVhdS9maWZvL2drMTA0OiBtYWtlIHVzZSBvZiBuZXcgc3RyY3B5dG91cHBl
+cigpIGZ1bmN0aW9uCiAgcG93ZXJfc3VwcGx5OiBtYWtlIHVzZSBvZiBuZXcgc3RyY3B5dG91cHBl
+cigpIGZ1bmN0aW9uCgogZHJpdmVycy9hY3BpL2RldmljZV9zeXNmcy5jICAgICAgICAgICAgICAg
+ICAgICAgIHwgIDQgKy0tCiBkcml2ZXJzL2dwdS9kcm0vbm91dmVhdS9udmttL2NvcmUvZmlybXdh
+cmUuYyAgICAgfCAgOSArLS0tLS0KIGRyaXZlcnMvZ3B1L2RybS9ub3V2ZWF1L252a20vZW5naW5l
+L2ZpZm8vZ2sxMDQuYyB8ICA1ICstLQogZHJpdmVycy9wb3dlci9wb3dlcl9zdXBwbHlfc3lzZnMu
+YyAgICAgICAgICAgICAgIHwgMTMgKysrLS0tLS0KIGRyaXZlcnMvc3RhZ2luZy9zcGVha3VwL2tv
+YmplY3RzLmMgICAgICAgICAgICAgICB8ICAzICstCiBkcml2ZXJzL3N0YWdpbmcvc3BlYWt1cC9t
+YWluLmMgICAgICAgICAgICAgICAgICAgfCAgMyArLQogZHJpdmVycy9zdGFnaW5nL3NwZWFrdXAv
+c3BlYWt1cC5oICAgICAgICAgICAgICAgIHwgIDEgLQogZHJpdmVycy9zdGFnaW5nL3NwZWFrdXAv
+dmFyaGFuZGxlcnMuYyAgICAgICAgICAgIHwgMTIgLS0tLS0tLQogZHJpdmVycy90YXJnZXQvaXNj
+c2kvaXNjc2lfdGFyZ2V0X25lZ28uYyAgICAgICAgIHwgMTcgKy0tLS0tLS0tLQogaW5jbHVkZS9s
+aW51eC9zdHJpbmcuaCAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgNDAgKysrKysrKysrKysr
+KysrKysrKysrKysrCiBsaWIvc3RyaW5nLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgfCAzOCArKysrKysrKysrKysrKysrKysrKysrCiAxMSBmaWxlcyBjaGFuZ2VkLCA5MCBp
+bnNlcnRpb25zKCspLCA1NSBkZWxldGlvbnMoLSkKCi0tIAoyLjcuNAoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTm91dmVhdSBtYWlsaW5nIGxpc3QKTm91
+dmVhdUBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
+bWFpbG1hbi9saXN0aW5mby9ub3V2ZWF1Cg==
