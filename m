@@ -1,62 +1,50 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] megaraid_sas: Do not fire MR_DCMD_PD_LIST_QUERY to
- controllers which do not support it
-Date: Fri, 8 Jul 2016 15:01:45 +0200
-Message-ID: <9989ca77-56cb-7ac4-5947-f979218c2f97@redhat.com>
-References: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 1/2] sd: don't use the ALL_TG_PT bit for reservations
+Date: Fri, 8 Jul 2016 10:56:18 -0500
+Message-ID: <6116ef14-c5f9-f3be-c37e-3f6901b85459@redhat.com>
+References: <1467980631-18945-1-git-send-email-hch@lst.de>
+ <1467980631-18945-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
-Sender: stable-owner@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com, lucz@geza.com, stable@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53516 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755800AbcGHP4U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2016 11:56:20 -0400
+In-Reply-To: <1467980631-18945-2-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: linux-block@vger.kernel.org
 
-On 8.7.2016 12:30, Sumit Saxena wrote:
-> There was an issue reported by Lucz Geza on Dell Perc 6i. As per issu=
-e reported,
-> megaraid_sas driver goes into an infinite error reporting loop as soo=
-n as there is a change
-> in the status of one of the arrays (degrade, resync online etc =E2=80=
-=A6).
-> Below are the error logs reported continuously-=20
->
-> Jun 25 08:49:30 ns8 kernel: [  757.757017] megaraid_sas 0000:02:00.0:=
- DCMD failed/not supported by firmware: megasas_get_pd_list 4115
-> Jun 25 08:49:30 ns8 kernel: [  757.778017] megaraid_sas 0000:02:00.0:=
- DCMD failed/not supported by firmware: megasas_get_pd_list 4115
-> Jun 25 08:49:30 ns8 kernel: [  757.799017] megaraid_sas 0000:02:00.0:=
- DCMD failed/not supported by firmware: megasas_get_pd_list 4115
-> Jun 25 08:49:30 ns8 kernel: [  757.820018] megaraid_sas 0000:02:00.0:=
- DCMD failed/not supported by firmware: megasas_get_pd_list 4115
-> Jun 25 08:49:30 ns8 kernel: [  757.841018] megaraid_sas 0000:02:00.0:=
- DCMD failed/not supported by firmware: megasas_get_pd_list 4115
->
-> This issue is very much specific to controllers which do not support =
-DCMD- MR_DCMD_PD_LIST_QUERY.
-> In case of any hotplugging/rescanning of drives, AEN thread will be s=
-cheduled by driver and fire
-> DCMD- MR_DCMD_PD_LIST_QUERY and if this DCMD is failed then driver wi=
-ll fail this event processing
-> and will not go ahead for further events. This will cause infinite lo=
-op of same event getting
-> retried infinitely and causing above mentioned logs.
->
-> Fix for this problem is: not to fire DCMD MR_DCMD_PD_LIST_QUERY for c=
-ontrollers which do not
-> support it and send DCMD SUCCESS status to AEN function so that it ca=
-n go ahead with other event
-> processing.
->
-> Reported-by: Lucz Geza <geza@lucz.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+On 07/08/2016 07:23 AM, Christoph Hellwig wrote:
+> These only work if the we use the same initiator ID for all path,
+> which might not be true if we use different protocols, or even just
+> different HBAs.
+> 
+> Instead dm-mpath will grow support to register all path manually
+> later in this series.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/sd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 60bff78..42b4d05 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1613,8 +1613,7 @@ static int sd_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
+>  		return -EOPNOTSUPP;
+>  	return sd_pr_command(bdev, (flags & PR_FL_IGNORE_KEY) ? 0x06 : 0x00,
+>  			old_key, new_key, 0,
+> -			(1 << 0) /* APTPL */ |
+> -			(1 << 2) /* ALL_TG_PT */);
+> +			(1 << 0) /* APTPL */);
+>  }
+>  
+>  static int sd_pr_reserve(struct block_device *bdev, u64 key, enum pr_type type,
+> 
 
-This makes the functionality another bit closer to what we had
-before 'megaraid_sas: MFI IO timeout handling'.
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-
-Tomas
+Reviewed-by: Mike Christie <mchristi@redhat.com>
