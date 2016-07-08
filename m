@@ -1,65 +1,62 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
-Date: Fri, 8 Jul 2016 23:33:56 +0530
-Message-ID: <20160708180354.GA1658@chelsio.com>
-References: <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
- <1464072025.22249.87.camel@haakon3.risingtidesystems.com>
- <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
- <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com>
- <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com>
- <1464238504.22249.168.camel@haakon3.risingtidesystems.com>
- <20160526185819.GA1672@chelsio.com>
- <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
- <20160706171703.GA1685@chelsio.com>
- <CAJ3xEMhnmcJHrBot4yiz6obS9a8rHOZVNP-EfQHCAFbJhFMcZg@mail.gmail.com>
+From: Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v2 1/7] lib: string: add functions to
+	case-convert strings
+Date: Fri, 8 Jul 2016 11:04:49 -0700
+Message-ID: <CAGt4E5uKzs01nL7OJPscQby5bm70Ud18hutdYEhiEsQjU9W8pg@mail.gmail.com>
+References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
+ <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
+ <87oa692d8e.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [12.32.117.8] ([12.32.117.8]:56511 "EHLO stargate.chelsio.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461AbcGHSEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jul 2016 14:04:11 -0400
-Content-Disposition: inline
-In-Reply-To: <CAJ3xEMhnmcJHrBot4yiz6obS9a8rHOZVNP-EfQHCAFbJhFMcZg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <87oa692d8e.fsf-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <gerlitz.or@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Steve Wise <swise@opengridcomputing.com>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com
 
-On Thu, Jul 07, 2016 at 10:54:20AM +0300, Or Gerlitz wrote:
-> On Wed, Jul 6, 2016 at 8:17 PM, Varun Prakash <varun@chelsio.com> wrote:
-> > On Wed, Jul 06, 2016 at 12:24:43AM +0300, Or Gerlitz wrote:
-> >> On Thu, May 26, 2016 at 9:58 PM, Varun Prakash <varun@chelsio.com> wrote:
-> >>
-> >> > Hi Or, Nicholas and Steve
-> >> > Thank you for the feedback and apologies for the delay in my response.
-> >>
-> >> > I agree that we can refactor initiator, target and iwarp drivers to
-> >> > reduce code duplication as Steve has mentioned. We will work on this for
-> >> > 4.8 merge window.
-> >>
-> >> Nic, Varun, was anything done on this matter? we're on rc6
-> >
-> > Yes, I am working on this, I will post first series
-> > within two days, it will add common library module libcxgb.ko.
-> 
-> thanks for the update, the plan was to get that info 4.8-rc1,
-> and as we're after rc6 there's not much time left for submitting code
-> for 4.8, so doing that sooner rather than later would be good here.
-> 
-> > In first series libcxgb.ko will have common
-> > iSCSI DDP Page Pod Manager that will be shared
-> > by three Chelsio iSCSI drivers
-> > cxgb3i, cxgb4i, cxgbit.
-> 
-> cool
-> 
-> > In subsequent series I will add common connection
-> > management and other hardware specific common code
-> > in this module.
-> 
-> any chance to get that ready for 4.8 too?
-
-I am working on common connection management, it is a
-big change as it involves multiple modules, so it is
-difficult to get it ready for 4.8.   
+T24gNyBKdWx5IDIwMTYgYXQgMTc6MTksIFJhc211cyBWaWxsZW1vZXMgPGxpbnV4QHJhc211c3Zp
+bGxlbW9lcy5kaz4gd3JvdGU6Cj4gT24gVHVlLCBKdWwgMDUgMjAxNiwgTWFya3VzIE1heWVyIDxt
+bWF5ZXJAYnJvYWRjb20uY29tPiB3cm90ZToKPgo+PiArLyoqCj4+ICsgKiBzdHJuY3B5dG91cHBl
+ciAtIENvcHkgYSBsZW5ndGgtbGltaXRlZCBzdHJpbmcgYW5kIGNvbnZlcnQgdG8gdXBwZXJjYXNl
+Lgo+PiArICogQGRzdDogVGhlIGJ1ZmZlciB0byBzdG9yZSB0aGUgcmVzdWx0Lgo+PiArICogQHNy
+YzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRvIHVwcGVyY2FzZS4KPj4gKyAqIEBsZW46IE1heGlt
+dW0gc3RyaW5nIGxlbmd0aC4gTWF5IGJlIDAgdG8gc2V0IG5vIGxpbWl0Lgo+PiArICoKPj4gKyAq
+IFJldHVybnMgcG9pbnRlciB0byB0ZXJtaW5hdGluZyAnXDAnIGluIEBkc3QuCj4+ICsgKi8KPj4g
+K2NoYXIgKnN0cm5jcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3Qg
+bGVuKQo+PiArewo+PiArICAgICBzaXplX3QgaTsKPj4gKwo+PiArICAgICBmb3IgKGkgPSAwOyBz
+cmNbaV0gIT0gJ1wwJyAmJiAoaSA8IGxlbiB8fCAhbGVuKTsgaSsrKQo+PiArICAgICAgICAgICAg
+IGRzdFtpXSA9IHRvdXBwZXIoc3JjW2ldKTsKPj4gKyAgICAgaWYgKGkgPCBsZW4gfHwgIWxlbikK
+Pj4gKyAgICAgICAgICAgICBkc3RbaV0gPSAnXDAnOwo+PiArCj4+ICsgICAgIHJldHVybiBkc3Qg
+KyBpOwo+PiArfQo+Cj4gSG0sIHRoaXMgc2VlbXMgdG8gY29weSB0aGUgaW5zYW5lIHNlbWFudGlj
+cyBmcm9tIHN0cm5jcHkgb2Ygbm90Cj4gZ3VhcmFudGVlaW5nICdcMCctdGVybWluYXRpb24uCgpZ
+ZWFoLiBJJ3ZlIGJlZW4gdG9zc2luZyB0aGF0IG9uZSBhcm91bmQgYSBiaXQuIFRoZSByZWFzb24g
+SSBkaWQgaXQKdGhpcyB3YXkgaW4gdGhlIGVuZCBpcyBkdWUgdG8gdGhlIHVzZSBjYXNlcyBJIGZv
+dW5kLiBzdHJuY3B5KCkgaXMKYmVpbmcgdXNlZCB0aGVyZSBhbmQgSSB3YXMgYSBsaXR0bGUgd2Fy
+eSB0byBtYWtlIHRvbyBtYW55IGNoYW5nZXMgYWxsCmF0IG9uY2UuCgpCdXQgSSB1bmRlcnN0YW5k
+IHlvdXIgcG9pbnQuIEknbGwgbG9vayBhdCBpdCBhZ2FpbiBhbmQgc2VlIHdoYXQKY2hhbmdlcyBt
+aWdodCBiZSByZXF1aXJlZCBpbiB0aGUgY29kZSB0aGF0IHVzZWQgc3RybmNweSgpIGJlZm9yZS4K
+Cj4gV2h5IHVzZSAwIGFzIGEgc2VudGluZWwsIHdoZW4gKHNpemVfdCktMSA9PSBTSVpFX01BWCB3
+b3VsZCB3b3JrIGp1c3QgYXMKPiB3ZWxsIGFuZCByZXF1aXJlIGEgbGl0dGxlIGxlc3MgY29kZSAo
+bm8gfHwgIWxlbik/CgpJJ2xsIGNoYW5nZSB0aGF0LgoKPiBJIHJlZ3JldCBzdWdnZXN0aW5nIHRo
+aXMgcmV0dXJuIHNlbWFudGljcyBhbmQgbm93IGFncmVlIHRoYXQgdm9pZCB3b3VsZAo+IGJlIGJl
+dHRlciwgZXNwZWNpYWxseSBzaW5jZSB0aGVyZSBkb2Vzbid0IHNlZW0gdG8gYmUgYW55b25lIHdo
+byBjYW4KPiB1c2UgdGhpcyAob3IgYW55IG90aGVyKSByZXR1cm4gdmFsdWUuIEhvdyBhYm91dAo+
+Cj4gaWYgKCFsZW4pCj4gICAgcmV0dXJuOwo+Cj4gZm9yIChpID0gMDsgaSA8IGxlbiAmJiBzcmNb
+aV07ICsraSkKPiAgIGRzdFtpXSA9IHRvdXBwZXIoc3JjW2ldKTsKPiBkc3RbaSA8IGxlbiA/IGkg
+OiBpLTFdID0gJ1wwJzsKClRoaXMgbWFrZXMgc2Vuc2UuCgo+IChJIHRoaW5rIHlvdSBtdXN0IGRv
+IGkgPCBsZW4gYmVmb3JlIHRlc3Rpbmcgc3JjW2ldLCBzaW5jZSB0aGUgbGVuCj4gcGFyYW1ldGVy
+IHNob3VsZCBiZSBhbiB1cHBlciBib3VuZCBvbiB0aGUgbnVtYmVyIG9mIGJ5dGVzIHRvIGFjY2Vz
+cyBpbgo+IGJvdGggc3JjIGFuZCBkc3QpLgo+Cj4gUmFzbXVzCgpUaGFua3MsCi1NYXJrdXMKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTm91dmVhdSBtYWls
+aW5nIGxpc3QKTm91dmVhdUBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVl
+ZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9ub3V2ZWF1Cg==
