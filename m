@@ -1,58 +1,68 @@
-From: Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
-Subject: Re: [PATCH v2 1/7] lib: string: add functions to
-	case-convert strings
-Date: Fri, 08 Jul 2016 02:19:13 +0200
-Message-ID: <87oa692d8e.fsf@rasmusvillemoes.dk>
-References: <1467751631-22878-1-git-send-email-mmayer@broadcom.com>
- <1467751631-22878-2-git-send-email-mmayer@broadcom.com>
+From: Viswas G <gviswas@gmail.com>
+Subject: Re: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
+ >80MB at once
+Date: Fri, 8 Jul 2016 10:17:59 +0530
+Message-ID: <CAL7F=LdPLnGoq7pReB3Mv+FR6qEqMyfsR=CrNotQ7qQuqVxV0A@mail.gmail.com>
+References: <bug-121531-11613@https.bugzilla.kernel.org/> <bug-121531-11613-HCS9sSYYzs@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <1467751631-22878-2-git-send-email-mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org> (Markus
- Mayer's message of "Tue, 5 Jul 2016 13:47:05 -0700")
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/nouveau>
-List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Markus Mayer <mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f193.google.com ([209.85.223.193]:35027 "EHLO
+	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbcGHEsA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2016 00:48:00 -0400
+Received: by mail-io0-f193.google.com with SMTP id k78so5544475ioi.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Jul 2016 21:48:00 -0700 (PDT)
+In-Reply-To: <bug-121531-11613-HCS9sSYYzs@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, viswas.g@microsemi.com
 
-T24gVHVlLCBKdWwgMDUgMjAxNiwgTWFya3VzIE1heWVyIDxtbWF5ZXJAYnJvYWRjb20uY29tPiB3
-cm90ZToKCj4gQWRkIGEgY29sbGVjdGlvbiBvZiBnZW5lcmljIGZ1bmN0aW9ucyB0byBjb252ZXJ0
-IHN0cmluZ3MgdG8gbG93ZXJjYXNlCj4gb3IgdXBwZXJjYXNlLgo+Cj4gQ2hhbmdpbmcgdGhlIGNh
-c2Ugb2YgYSBzdHJpbmcgKHdpdGggb3Igd2l0aG91dCBjb3B5aW5nIGl0IGZpcnN0KSBzZWVtcwo+
-IHRvIGJlIGEgcmVjdXJyaW5nIHJlcXVpcmVtZW50IGluIHRoZSBrZXJuZWwgdGhhdCBpcyBjdXJy
-ZW50bHkgYmVpbmcKPiBzb2x2ZWQgYnkgc2V2ZXJhbCBkdXBsaWNhdGVkIGltcGxlbWVudGF0aW9u
-cyBkb2luZyB0aGUgc2FtZSB0aGluZy4gVGhpcwo+IGNoYW5nZSBhaW1zIGF0IHJlZHVjaW5nIHRo
-aXMgY29kZSBkdXBsaWNhdGlvbi4KPgo+ICsvKioKPiArICogc3RybmNweXRvdXBwZXIgLSBDb3B5
-IGEgbGVuZ3RoLWxpbWl0ZWQgc3RyaW5nIGFuZCBjb252ZXJ0IHRvIHVwcGVyY2FzZS4KPiArICog
-QGRzdDogVGhlIGJ1ZmZlciB0byBzdG9yZSB0aGUgcmVzdWx0Lgo+ICsgKiBAc3JjOiBUaGUgc3Ry
-aW5nIHRvIGNvbnZlcnQgdG8gdXBwZXJjYXNlLgo+ICsgKiBAbGVuOiBNYXhpbXVtIHN0cmluZyBs
-ZW5ndGguIE1heSBiZSAwIHRvIHNldCBubyBsaW1pdC4KPiArICoKPiArICogUmV0dXJucyBwb2lu
-dGVyIHRvIHRlcm1pbmF0aW5nICdcMCcgaW4gQGRzdC4KPiArICovCj4gK2NoYXIgKnN0cm5jcHl0
-b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKQo+ICt7Cj4gKwlz
-aXplX3QgaTsKPiArCj4gKwlmb3IgKGkgPSAwOyBzcmNbaV0gIT0gJ1wwJyAmJiAoaSA8IGxlbiB8
-fCAhbGVuKTsgaSsrKQo+ICsJCWRzdFtpXSA9IHRvdXBwZXIoc3JjW2ldKTsKPiArCWlmIChpIDwg
-bGVuIHx8ICFsZW4pCj4gKwkJZHN0W2ldID0gJ1wwJzsKPiArCj4gKwlyZXR1cm4gZHN0ICsgaTsK
-PiArfQoKSG0sIHRoaXMgc2VlbXMgdG8gY29weSB0aGUgaW5zYW5lIHNlbWFudGljcyBmcm9tIHN0
-cm5jcHkgb2Ygbm90Cmd1YXJhbnRlZWluZyAnXDAnLXRlcm1pbmF0aW9uLgoKV2h5IHVzZSAwIGFz
-IGEgc2VudGluZWwsIHdoZW4gKHNpemVfdCktMSA9PSBTSVpFX01BWCB3b3VsZCB3b3JrIGp1c3Qg
-YXMKd2VsbCBhbmQgcmVxdWlyZSBhIGxpdHRsZSBsZXNzIGNvZGUgKG5vIHx8ICFsZW4pPwoKSSBy
-ZWdyZXQgc3VnZ2VzdGluZyB0aGlzIHJldHVybiBzZW1hbnRpY3MgYW5kIG5vdyBhZ3JlZSB0aGF0
-IHZvaWQgd291bGQKYmUgYmV0dGVyLCBlc3BlY2lhbGx5IHNpbmNlIHRoZXJlIGRvZXNuJ3Qgc2Vl
-bSB0byBiZSBhbnlvbmUgd2hvIGNhbgp1c2UgdGhpcyAob3IgYW55IG90aGVyKSByZXR1cm4gdmFs
-dWUuIEhvdyBhYm91dAoKaWYgKCFsZW4pCiAgIHJldHVybjsKCmZvciAoaSA9IDA7IGkgPCBsZW4g
-JiYgc3JjW2ldOyArK2kpCiAgZHN0W2ldID0gdG91cHBlcihzcmNbaV0pOwpkc3RbaSA8IGxlbiA/
-IGkgOiBpLTFdID0gJ1wwJzsKCihJIHRoaW5rIHlvdSBtdXN0IGRvIGkgPCBsZW4gYmVmb3JlIHRl
-c3Rpbmcgc3JjW2ldLCBzaW5jZSB0aGUgbGVuCnBhcmFtZXRlciBzaG91bGQgYmUgYW4gdXBwZXIg
-Ym91bmQgb24gdGhlIG51bWJlciBvZiBieXRlcyB0byBhY2Nlc3MgaW4KYm90aCBzcmMgYW5kIGRz
-dCkuCgpSYXNtdXMKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KTm91dmVhdSBtYWlsaW5nIGxpc3QKTm91dmVhdUBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
-cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9ub3V2ZWF1Cg==
+Patch set for pm80xx is pending for the last 3 quarters.
+We will submit those soon with all the buf fixes and  performance
+tuning changes.
+
+Regards,
+Viswas G
+
+On Thu, Jul 7, 2016 at 10:04 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=121531
+>
+> --- Comment #14 from Jack Wang <xjtuwjp@gmail.com> ---
+> The changes are huge, hard to do it, without help from MicroSemi/PMCs side.
+> And I don't have hardware to test.
+>
+> I've asked developer from MicroSemi to upsteam their changes, but
+> sadly no reply.
+>
+> 2016-07-07 17:36 GMT+02:00  <bugzilla-daemon@bugzilla.kernel.org>:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=121531
+>>
+>> --- Comment #13 from Martin von Wittich <martin.von.wittich@iserv.eu> ---
+>> Yup, the Debian installation worked and seems to work fine so far. I manually
+>> installed the pm80xx-1.4.0-11068-debian64.deb package in the target system
+>> while I was still in the installer by chrooting to /target; then I added
+>> "pm80xx" to /etc/initramfs/modules (without that update-initramfs wouldn't add
+>> the pm80xx module, I'm not really sure why).
+>>
+>> After booting the system, I've succcessfully written ~500 GB of /dev/zero data
+>> into a file on an MD raid consisting of both of the disks. No error messages in
+>> the dmesg either.
+>>
+>> Can you include those missing changes into the official kernel, or how can we
+>> resolve this bug? We'll ask to the customer if we can keep the server for an
+>> additional two weeks for testing, so if you need me to test builds, let me
+>> know.
+>>
+>> --
+>> You are receiving this mail because:
+>> You are on the CC list for the bug.
+>
+> --
+> You are receiving this mail because:
+> You are the assignee for the bug.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
