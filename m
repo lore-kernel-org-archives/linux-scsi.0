@@ -1,141 +1,76 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 2/2] dm: call PR reserve/unreserve on each underlying
- device
-Date: Fri, 8 Jul 2016 10:57:34 -0500
-Message-ID: <e77e2286-8fac-b4e8-5bbe-44f7178e8e0a@redhat.com>
-References: <1467980631-18945-1-git-send-email-hch@lst.de>
- <1467980631-18945-3-git-send-email-hch@lst.de>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
+Date: Sat, 9 Jul 2016 00:20:24 +0800
+Message-ID: <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
+References: <577e843e.0a86620a.59167.ffffb899@mx.google.com> <1467910054.2322.7.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35964 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755200AbcGHP5f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jul 2016 11:57:35 -0400
-In-Reply-To: <1467980631-18945-3-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1467910054.2322.7.camel@HansenPartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: linux-block@vger.kernel.org
 
-On 07/08/2016 07:23 AM, Christoph Hellwig wrote:
-> So far we tried to rely on the SCSI 'all target ports' bit to register
-> all path, but for many setups this didn't work properly as the different
-> path aren seen as separate initiators to the target instead of multiple
-> ports of the same initiator.  Because of that we'll stop setting the
-> 'all target ports' bit in SCSI, and let device mapper handle iterating
-> over the device for each path and register it manually.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/md/dm.c | 85 +++++++++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 70 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 1b2f962..e4e98b7 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -3601,26 +3601,81 @@ void dm_free_md_mempools(struct dm_md_mempools *pools)
->  	kfree(pools);
->  }
->  
-> -static int dm_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
-> -			  u32 flags)
-> +struct dm_pr {
-> +	u64	old_key;
-> +	u64	new_key;
-> +	u32	flags;
-> +	bool	fail_early;
-> +};
-> +
-> +static int dm_call_pr(struct block_device *bdev, iterate_devices_callout_fn fn,
-> +		void *data)
->  {
->  	struct mapped_device *md = bdev->bd_disk->private_data;
-> -	const struct pr_ops *ops;
-> -	fmode_t mode;
-> -	int r;
-> +	struct dm_table *table;
-> +	struct dm_target *ti;
-> +	int ret = 0, srcu_idx;
->  
-> -	r = dm_grab_bdev_for_ioctl(md, &bdev, &mode);
-> -	if (r < 0)
-> -		return r;
-> +	table = dm_get_live_table(md, &srcu_idx);
-> +	if (!table || !dm_table_get_size(table))
-> +		return -ENOTTY;
->  
-> -	ops = bdev->bd_disk->fops->pr_ops;
-> -	if (ops && ops->pr_register)
-> -		r = ops->pr_register(bdev, old_key, new_key, flags);
-> -	else
-> -		r = -EOPNOTSUPP;
-> +	/* We only support devices that have a single target */
-> +	ret = -ENOTTY;
-> +	if (dm_table_get_num_targets(table) != 1)
-> +		goto out;
-> +	ti = dm_table_get_target(table, 0);
->  
-> -	bdput(bdev);
-> -	return r;
-> +	ret = -EINVAL;
-> +	if (!ti->type->iterate_devices)
-> +		goto out;
-> +
-> +	ret = ti->type->iterate_devices(ti, fn, data);
-> +	if (ret)
-> +		goto out;
-> +
-> +	ret = 0;
-> +out:
-> +	dm_put_live_table(md, srcu_idx);
-> +	return ret;
-> +}
-> +
-> +/*
-> + * For register / unregister we need to manually call out to every path.
-> + */
-> +static int __dm_pr_register(struct dm_target *ti, struct dm_dev *dev,
-> +		sector_t start, sector_t len, void *data)
-> +{
-> +	struct dm_pr *pr = data;
-> +	const struct pr_ops *ops = dev->bdev->bd_disk->fops->pr_ops;
-> +
-> +	if (!ops || !ops->pr_register)
-> +		return -EOPNOTSUPP;
-> +	return ops->pr_register(dev->bdev, pr->old_key, pr->new_key, pr->flags);
-> +}
-> +
-> +static int dm_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
-> +			  u32 flags)
-> +{
-> +	struct dm_pr pr = {
-> +		.old_key	= old_key,
-> +		.new_key	= new_key,
-> +		.flags		= flags,
-> +		.fail_early	= true,
-> +	};
-> +	int ret;
-> +
-> +	ret = dm_call_pr(bdev, __dm_pr_register, &pr);
-> +	if (ret && new_key) {
-> +		/* unregister all paths if we failed to register any path */
-> +		pr.old_key = new_key;
-> +		pr.new_key = 0;
-> +		pr.flags = 0;
-> +		pr.fail_early = false;
-> +		dm_call_pr(bdev, __dm_pr_register, &pr);
-> +	}
-> +
-> +	return ret;
->  }
->  
->  static int dm_pr_reserve(struct block_device *bdev, u64 key, enum pr_type type,
-> 
+To be honest, that sounds like FUD to me.
 
+The exact reason why this can "safely" be introduced to the SATL is
+that, it is a "one-shot" command that would only be triggered by the
+user through a user space utility. It's nothing like TRIM that would
+be triggered by the filesystem layer or so "from time to time", which
+might cost users "unexpected" data loss. It is also nothing like
+SECURE ERASE (which vendors had to abuse to provide equivalence of
+BLOCK ERASE and CRYPTOGRAPHIC ERASE for SSDs and drives that does
+hardware encryption) that requires the drive to be locked before you
+can issue an erase command.
 
+Certainly you can expect users to pack an ATA PASS-THROUGH command
+themselves and issued it with sg_raw or so, or hdparm to be patched to
+support the full feature set (including the "optional"
+FREEZE/ANTIFREEZE sub-feature), but I don't see how these would be
+reasons that the translation should not be introduced to the kernel,
+so that we can make good use of its existing SATL infrastructure and
+sg_sanitize.
 
-Reviewed-by: Mike Christie <mchristi@redhat.com>
+Whether it is "secure" enough to use the implementation would be the
+user's call. To be frank, saying that implementing it in the "SAT-way"
+would make it untrustable doesn't make any sense to me, especially
+when the way the feature set works is considered.
 
+On 8 July 2016 at 00:47, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Fri, 2016-07-08 at 00:32 +0800, tom.ty89@gmail.com wrote:
+>> From: Tom Yan <tom.ty89@gmail.com>
+>>
+>> With this patch, users can make use of the SANITIZE DEVICE feature
+>> set through utility like sg_sanitize.
+>>
+>> Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE MODE
+>> has been implemented. Support for OVERWRITE that involves a
+>> parameter list has been left out for now.
+>>
+>> Further support for command with IMMED bit set to zero, REQUEST
+>> SENSE translation for user-space status polling, and support
+>> checking in IDENTIFY DEVICE data log (return proper sense data
+>> when designated method is not supported) should be implemented
+>> in the future as well.
+>>
+>> `sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
+>
+> Why on earth would you want to do this?  If your intent is to sanitise
+> the disk using a cryptographic erase you presumably have a real
+> security need for doing it and, knowing what goes into most SAT layers,
+> I'd not really trust any SAT for this operation, so for an underlying
+> SATA device I'd use ATA_16 to send a real ACS-2 SANITIZE command.
+>
+> Just as a general note about our SAT layer: Adding little used features
+> is an invitation to bloat it with buggy implementations which makes it
+> harder to understand and bug prone for odd and unlikely use cases,
+> which then take ages to diagnose and track down.  The only things which
+> should be in the SAT is what the Linux SCSI subsystem would actually
+> use.  For everything else, if the user cares enough, they'll send down
+> an encapsulated ATA command.
+>
+> James
+>
+>
