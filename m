@@ -1,74 +1,51 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Fix NULL pointer deref in QLA interrupt
-Date: Fri, 8 Jul 2016 17:23:11 +0000
-Message-ID: <6E639E75-17DD-4441-B233-93714B341C1B@qlogic.com>
-References: <20160630170032.6dbaf496@pluto.restena.lu>
- <94d0470f-7555-8098-b382-a4fdac9b0709@leemhuis.info>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
+Date: Fri, 8 Jul 2016 19:38:03 +0000
+Message-ID: <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
+References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
+ <1467910054.2322.7.camel@HansenPartnership.com> <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
+ <1467998971.2343.10.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0099.outbound.protection.outlook.com ([104.47.33.99]:14802
-	"EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755736AbcGHS5f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jul 2016 14:57:35 -0400
-In-Reply-To: <94d0470f-7555-8098-b382-a4fdac9b0709@leemhuis.info>
-Content-Language: en-US
-Content-ID: <BE2B4A60A45ADA44AC0C1FBA7BE79EA2@namprd11.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1467998971.2343.10.camel@HansenPartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thorsten Leemhuis <regressions@leemhuis.info>, =?utf-8?B?QnJ1bm8gUHLDqW1vbnQ=?= <bonbons@linux-vserver.org>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-DQpPbiA3LzgvMTYsIDEyOjI3IEFNLCAiVGhvcnN0ZW4gTGVlbWh1aXMiIDxyZWdyZXNzaW9uc0Bs
-ZWVtaHVpcy5pbmZvPiB3cm90ZToNCg0KPkJydW5vIFByw6ltb250IHdyb3RlIG9uIDMwLjA2LjIw
-MTYgMTc6MDA6DQo+PiBJbiBxbGEyNHh4X3Byb2Nlc3NfcmVzcG9uc2VfcXVldWUoKSByc3AtPm1z
-aXgtPmNwdWlkIG1heSB0cmlnZ2VyIE5VTEwNCj4+IHBvaW50ZXIgZGVyZWZlcmVuY2Ugd2hlbiBy
-c3AtPm1zaXggaXMgTlVMTDoNCj4+IFvigKZdDQo+PiBUaGUgYWZmZWN0ZWQgY29kZSB3YXMgaW50
-cm9kdWNlZCBieSBjb21taXQgY2RiODk4YzUyZDFkZmFkNGI0ODAwYjgzYTU4YjNmZTVkMzUyZWRk
-ZQ0KPj4gKHFsYTJ4eHg6IEFkZCBpcnEgYWZmaW5pdHkgbm90aWZpY2F0aW9uKS4NCj4+IA0KPj4g
-T25seSBkZXJlZmVyZW5jZSByc3AtPm1zaXggd2hlbiBpdCBoYXMgYmVlbiBzZXQgc28gdGhlIG1h
-Y2hpbmUgY2FuIGJvb3QNCj4+IGZpbmUuIFBvc3NpYmx5IHJzcC0+bXNpeCBpcyB1bnNldCBiZWNh
-dXNlOg0KPj4gWyAgICAzLjQ3OTY3OV0gcWxhMnh4eCBbMDAwMDowMDowMC4wXS0wMDA1OiA6IFFM
-b2dpYyBGaWJyZSBDaGFubmVsIEhCQSBEcml2ZXI6IDguMDcuMDAuMzMtay4NCj4+IFsgICAgMy40
-ODE4MzldIHFsYTJ4eHggWzAwMDA6MTM6MDAuMF0tMDAxZDogOiBGb3VuZCBhbiBJU1AyNDMyIGly
-cSAxNyBpb2Jhc2UgMHhmZmZmYzkwMDAwMDM4MDAwLg0KPj4gWyAgICAzLjQ4NDA4MV0gcWxhMnh4
-eCBbMDAwMDoxMzowMC4wXS0wMDM1OjA6IE1TSS1YOyBVbnN1cHBvcnRlZCBJU1AyNDMyICgweDIs
-IDB4MykuDQo+PiBbICAgIDMuNDg1ODA0XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAwMzc6MDog
-RmFsbGluZyBiYWNrLXRvIE1TSSBtb2RlIC0yNTguDQo+PiBbICAgIDMuODkwMTQ1XSBzY3NpIGhv
-c3QwOiBxbGEyeHh4DQo+PiBbICAgIDMuODkxOTU2XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBdLTAw
-ZmI6MDogUUxvZ2ljIFFMRTI0NjAgLSBQQ0ktRXhwcmVzcyBTaW5nbGUgQ2hhbm5lbCA0R2IgRmli
-cmUgQ2hhbm5lbCBIQkEuDQo+PiBbICAgIDMuODk0MjA3XSBxbGEyeHh4IFswMDAwOjEzOjAwLjBd
-LTAwZmM6MDogSVNQMjQzMjogUENJZSAoMi41R1QvcyB4NCkgQCAwMDAwOjEzOjAwLjAgaGRtYSsg
-aG9zdCM9MCBmdz03LjAzLjAwICg5NDk2KS4NCj4+IFsgICAgNS43MTQ3NzRdIHFsYTJ4eHggWzAw
-MDA6MTM6MDAuMF0tNTAwYTowOiBMT09QIFVQIGRldGVjdGVkICg0IEdicHMpLg0KPg0KPkJydW5v
-OiBEb2VzIHRoYXQgbWVhbiB5b3UgYWN0dWFsbHkgdGVzdGVkIHRoYXQgcGF0Y2ggYW5kIGl0IGZp
-eGVkIHRoZQ0KPnByb2JsZW0gZm9yIHlvdT8gSXQgbG9va3MgbGlrZSBpdCwgYnV0IHRoZXJlIGlz
-IHNvbWUgY29uZnVzaW9uIGFib3V0IGl0Ow0KPnRoYXQncyBvbmUgb2YgdGhlIHJlYXNvbnMgd2h5
-IHRoaXMgcGF0Y2ggZGlkbid0IGdldCBhbnkgZnVydGhlciB5ZXQNCj5hZmFpY3MsIHNvIGEgcXVp
-Y2sgY2xhcmlmaWNhdGlvbiBtaWdodCBoZWxwIHRvIGZpbmFsbHkgZ2V0IHRoaXMgZml4ZWQNCj5w
-cm9wZXJseSBpbiBtYWlubGluZSBhbmQgc3RhYmxlLg0KPg0KPkhpbWFuc2h1OiBXaGlsZSBhdCBp
-dDogQ2FuIHlvdSBjb25maXJtIHRoaXMgcGF0Y2ggc2hvdWxkIGdldCBtZXJnZWQgdG8NCj5tYWlu
-bGluZT8gU2VlbXMgUXVpbm4gaXMgb24gUFRPIGFuZCBoaXMgb3V0LW9mLW9mZmljZSByZXBseSBt
-ZW50aW9uZWQNCj55b3UgYXMgb25lIHBvaW50IG9mIGNvbnRhY3QuDQoNCkkgc2VlIHRoaXMgcGF0
-Y2ggaGFzIGJlZW4gcXVldWVkIHRvIOKAnGZpeGVzIiBicmFuY2ggb24gSmFtZXPigJlzIHRyZWUu
-IFNvIGl0IHdvdWxkDQpnZXQgbWVyZ2VkIGludG8gbWFpbmxpbmUga2VybmVsLiAgSGVyZeKAmXMg
-bGluayANCg0KaHR0cDovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2VybmVsL2dpdC9qZWpi
-L3Njc2kuZ2l0L2xvZy8/aD1maXhlcw0KDQo+DQo+Q2hlZXJzLCB5b3VyIHJlZ3Jlc3Npb24gdHJh
-Y2tlciBmb3IgTGludXggNC43DQo+IFRob3JzdGVuDQo+DQo+PiBDQzogPHN0YWJsZUB2Z2VyLmtl
-cm5lbC5vcmc+DQo+PiBTaWduZWQtb2ZmLWJ5OiBCcnVubyBQcsOpbW9udCA8Ym9uYm9uc0BsaW51
-eC12c2VydmVyLm9yZz4NCj4+IC0tLQ0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEy
-eHh4L3FsYV9pc3IuYw0KPj4gYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgaW5kZXgg
-NTY0OWMyMC4uYTkyYTYyZCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
-YV9pc3IuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+PiBAQCAt
-MjU0OCw3ICsyNTQ4LDcgQEAgdm9pZCBxbGEyNHh4X3Byb2Nlc3NfcmVzcG9uc2VfcXVldWUoc3Ry
-dWN0DQo+PiBzY3NpX3FsYV9ob3N0ICp2aGEsIGlmICghdmhhLT5mbGFncy5vbmxpbmUpDQo+PiAg
-CQlyZXR1cm47DQo+PiAgDQo+PiAtCWlmIChyc3AtPm1zaXgtPmNwdWlkICE9IHNtcF9wcm9jZXNz
-b3JfaWQoKSkgew0KPj4gKwlpZiAocnNwLT5tc2l4ICYmIHJzcC0+bXNpeC0+Y3B1aWQgIT0gc21w
-X3Byb2Nlc3Nvcl9pZCgpKSB7DQo+PiAgCQkvKiBpZiBrZXJuZWwgZG9lcyBub3Qgbm90aWZ5IHFs
-YSBvZiBJUlEncyBDUFUgY2hhbmdlLA0KPj4gIAkJICogdGhlbiBzZXQgaXQgaGVyZS4NCj4+ICAJ
-CSAqLw0KPj4gDQo+PiBodHRwOi8vbmV3cy5nbWFuZS5vcmcvZmluZC1yb290LnBocD9tZXNzYWdl
-X2lkPTIwMTYwNjMwMTcwMDMyLjZkYmFmNDk2JTQwcGx1dG8ucmVzdGVuYS5sdSANCj4+IGh0dHA6
-Ly9taWQuZ21hbmUub3JnLzIwMTYwNjMwMTcwMDMyLjZkYmFmNDk2JTQwcGx1dG8ucmVzdGVuYS5s
-dQ0KPj4gDQo=
+On 8 July 2016 at 17:29, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> OK, since you ignore the argument about maintenance: safety for us
+> means that it doesn't bitrot as an almost never used addition.  The
+> reason our SATL should only support the commands Linux uses is
+> precisely because if it's used often we get immediate notice of when we
+> break it.  This maintenance burden means that adding stuff isn't free
+> so we should have some utility bar before we do it.  Just "because we
+> can" doesn't seem to rise to that.
+>
+
+Well yeah it might rot just like other parts of the current SATL, but
+at least its rot would be self-contained. I don't really find it "an
+almost never used addition" btw. It's just a handy feature set that no
+one has implemented any interface for users to make use of it.
+
+>
+> Or we could simply patch sg_sanitze to issue the ATA_16 pass through
+> when it sees a sata device ...
+>
+
+Ugh that sounds ugly to me. Anyway that's off-topic.
+
+>
+> To be honest, I bet real security people won't even trust the drive
+> firmware.  Their answer will still be dd random patterns to prevent
+> easy retrieval then crush the drive to prevent forensic retrieval.
+>
+
+You know what, I don't think the feature set is totally about
+"security" anyway. It's just a handy way quickly (that's partly why I
+didn't bother to implement translation for OVERWRITE) erase all the
+data. Also, whether one considers it secure enough or not would be
+purely his opinion under the usage context of his own, as always.
