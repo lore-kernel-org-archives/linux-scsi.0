@@ -1,53 +1,30 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH] xen_pvscsi: reclaim the ring request when
- mapping data failed
-Date: Mon, 11 Jul 2016 11:53:57 +0200
-Message-ID: <57836CB5.90401@suse.com>
-References: <578309AE.1080704@huawei.com> <578367E8.2050601@suse.com>
- <57836BF4.9090000@citrix.com>
+From: David Rogers <noreply@eracom.ch>
+Subject: 2% DARLEHEN
+Date: Sat, 09 Jul 2016 12:33:44 -0700
+Message-ID: <20160709193409.BC5033B2E379__19453.4200629734$1468233466$gmane$org@webmail.eracom.ch>
+Reply-To: customer.service@umafh.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xen.org>
-In-Reply-To: <57836BF4.9090000@citrix.com>
-List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xen.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
-To: David Vrabel <david.vrabel@citrix.com>, Bin Wu <wu.wubin@huawei.com>, boris.ostrovsky@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from webmail.eracom.ch ([62.220.129.11]:44964 "EHLO
+	webmail.eracom.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033AbcGKKhJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2016 06:37:09 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <noreply@eracom.ch>
 
-T24gMTEvMDcvMTYgMTE6NTAsIERhdmlkIFZyYWJlbCB3cm90ZToKPiBPbiAxMS8wNy8xNiAxMDoz
-MywgSnVlcmdlbiBHcm9zcyB3cm90ZToKPj4gT24gMTEvMDcvMTYgMDQ6NTEsIEJpbiBXdSB3cm90
-ZToKPj4+IER1cmluZyBzY3NpIGNvbW1hbmQgcXVldWVpbmcsIGlmIG1hcHBpbmcgZGF0YSBmYWls
-cywgd2UgbmVlZCB0bwo+Pj4gcmVjbGFpbSB0aGUgZmFpbGVkIHJlcXVlc3QuIE90aGVyd2lzZSwg
-dGhlIGdhcmJhZ2UgcmVxdWVzdCB3aWxsCj4+PiBiZSBwdXNoZWQgaW50byB0aGUgcmluZyBmb3Ig
-dGhlIGJhY2tlbmQgdG8gd29yay4KPj4KPj4gV2VsbCBzcG90dGVkLiBUaGVyZSBpcyBhbm90aGVy
-IGluc3RhbmNlIG9mIHRoaXMgcHJvYmxlbSBpbgo+PiBzY3NpZnJvbnRfYWN0aW9uX2hhbmRsZXIo
-KS4gV291bGQgeW91IG1pbmQgY29ycmVjdGluZyB0aGlzIG9uZSwgdG9vPwo+IAo+IFdvdWxkIGl0
-IG1ha2UgbW9yZSBzZW5zZSB0byBhZHZhbmNlIHJlcV9wcm9kX3B2dCBvbmx5IGlmIHRoZSByZXF1
-ZXN0IGhhcwo+IGJlZW4gc3VjY2Vzc2Z1bGx5IGNyZWF0ZWQ/CgpZZWFoLCBwcm9iYWJseSBhcyB0
-aGUgZmlyc3QgYWN0aW9uIGluIHNjc2lmcm9udF9kb19yZXF1ZXN0KCkuCgoKSnVlcmdlbgoKPiAK
-PiBEYXZpZAo+IAo+Pj4gU2lnbmVkLW9mZi1ieTogQmluIFd1IDx3dS53dWJpbkBodWF3ZWkuY29t
-Pgo+Pj4gLS0tCj4+PiAgZHJpdmVycy9zY3NpL3hlbi1zY3NpZnJvbnQuYyB8IDEgKwo+Pj4gIDEg
-ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQo+Pj4KPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJz
-L3Njc2kveGVuLXNjc2lmcm9udC5jIGIvZHJpdmVycy9zY3NpL3hlbi1zY3NpZnJvbnQuYwo+Pj4g
-aW5kZXggOWRjODY4Ny4uNjU1MTYzZCAxMDA2NDQKPj4+IC0tLSBhL2RyaXZlcnMvc2NzaS94ZW4t
-c2NzaWZyb250LmMKPj4+ICsrKyBiL2RyaXZlcnMvc2NzaS94ZW4tc2NzaWZyb250LmMKPj4+IEBA
-IC01NjUsNiArNTY1LDcgQEAgc3RhdGljIGludCBzY3NpZnJvbnRfcXVldWVjb21tYW5kKHN0cnVj
-dCBTY3NpX0hvc3QKPj4+ICpzaG9zdCwKPj4+ICAgICAgZXJyID0gbWFwX2RhdGFfZm9yX3JlcXVl
-c3QoaW5mbywgc2MsIHJpbmdfcmVxLCBzaGFkb3cpOwo+Pj4gICAgICBpZiAoZXJyIDwgMCkgewo+
-Pj4gICAgICAgICAgcHJfZGVidWcoIiVzOiBlcnIgJWRcbiIsIF9fZnVuY19fLCBlcnIpOwo+Pj4g
-KyAgICAgICAgaW5mby0+cmluZy5yZXFfcHJvZF9wdnQtLTsKPj4+ICAgICAgICAgIHNjc2lmcm9u
-dF9wdXRfcnFpZChpbmZvLCBycWlkKTsKPj4+ICAgICAgICAgIHNjc2lmcm9udF9yZXR1cm4oaW5m
-byk7Cj4+PiAgICAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKHNob3N0LT5ob3N0X2xvY2ss
-IGZsYWdzKTsKPj4KPj4KPj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KPj4gWGVuLWRldmVsIG1haWxpbmcgbGlzdAo+PiBYZW4tZGV2ZWxAbGlzdHMueGVu
-Lm9yZwo+PiBodHRwczovL2xpc3RzLnhlbi5vcmcveGVuLWRldmVsCj4+Cj4gCj4gCgoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVsIG1haWxp
-bmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVuLm9yZwpodHRwczovL2xpc3RzLnhlbi5vcmcveGVu
-LWRldmVsCg==
+Aufmerksamkeit;
+
+Hiermit teilen wir Ihnen mit, dass als privates Unternehmen, Kredite Un=
+ternehmen mit Sitz in Gro=DFbritannien (Um Financial Ltd). Wir geben Kr=
+edite in H=F6he von $ 10.000 bis $ 300.000.000 bei 2% Zinssatz f=FCr al=
+le Interessierten. Land ist kein Hindernis, so f=FChlen sich frei, mit =
+uns an diese E-Mail zu kontaktieren: customer.service@umafh.co.uk
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
