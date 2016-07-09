@@ -1,159 +1,112 @@
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: Re: [PATCH v3 1/7] lib: string: add functions to case-convert strings
-Date: Sat, 09 Jul 2016 13:04:54 +0100
-Message-ID: <5780E866.8000001@osg.samsung.com>
-References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com> <1468017794-4818-2-git-send-email-mmayer@broadcom.com>
+From: Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v3 1/7] lib: string: add functions to
+	case-convert strings
+Date: Sat, 9 Jul 2016 08:30:19 -0700
+Message-ID: <CAGt4E5vYzkqgiiQXXjnX7az-KzCVSYthEW5Df03U=Y1qhEJdRQ@mail.gmail.com>
+References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
+ <1468017794-4818-2-git-send-email-mmayer@broadcom.com>
+ <5780E866.8000001@osg.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1468017794-4818-2-git-send-email-mmayer@broadcom.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Markus Mayer <mmayer@broadcom.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>
-Cc: devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, nouveau@lists.freedesktop.org, speakup@linux-speakup.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-acpi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <5780E866.8000001-JPH+aEBZ4P+UEJcrhfAQsw@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Luis de Bethencourt <luisbg-JPH+aEBZ4P+UEJcrhfAQsw@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/07/16 23:43, Markus Mayer wrote:
-> Add a collection of generic functions to convert strings to lowercase
-> or uppercase.
-> 
-> Changing the case of a string (with or without copying it first) seems
-> to be a recurring requirement in the kernel that is currently being
-> solved by several duplicated implementations doing the same thing. This
-> change aims at reducing this code duplication.
-> 
-> The new functions are
->     void strlcpytoupper(char *dst, const char *src, size_t len);
->     void strlcpytolower(char *dst, const char *src, size_t len);
->     void strcpytoupper(char *dst, const char *src);
->     void strcpytolower(char *dst, const char *src);
->     void strtoupper(char *s);
->     void strtolower(char *s);
-> 
-> The "str[l]cpyto*" versions of the function take a destination string
-> and a source string as arguments. The "strlcpyto*" versions additionally
-> take a length argument like strlcpy() itself. Lastly, the strto*
-> functions take a single string argument and modify the passed-in string.
-> 
-> Like strlcpy(), and unlike strncpy(), the functions guarantee NULL
-> termination of the destination string.
-> 
-> Signed-off-by: Markus Mayer <mmayer@broadcom.com>
-> ---
->  include/linux/string.h | 40 ++++++++++++++++++++++++++++++++++++++++
->  lib/string.c           | 38 ++++++++++++++++++++++++++++++++++++++
->  2 files changed, 78 insertions(+)
-> 
-> diff --git a/include/linux/string.h b/include/linux/string.h
-> index 26b6f6a..36c9d14 100644
-> --- a/include/linux/string.h
-> +++ b/include/linux/string.h
-> @@ -116,6 +116,8 @@ extern void * memchr(const void *,int,__kernel_size_t);
->  #endif
->  void *memchr_inv(const void *s, int c, size_t n);
->  char *strreplace(char *s, char old, char new);
-> +extern void strlcpytoupper(char *dst, const char *src, size_t len);
-> +extern void strlcpytolower(char *dst, const char *src, size_t len);
->  
->  extern void kfree_const(const void *x);
->  
-> @@ -169,4 +171,42 @@ static inline const char *kbasename(const char *path)
->  	return tail ? tail + 1 : path;
->  }
->  
-> +/**
-> + * strcpytoupper - Copy string and convert to uppercase.
-> + * @dst: The buffer to store the result.
-> + * @src: The string to convert to uppercase.
-> + */
-> +static inline void strcpytoupper(char *dst, const char *src)
-> +{
-> +	strlcpytoupper(dst, src, -1);
-> +}
-> +
-
-Why not use SIZE_MAX instead of -1?
-
-> +/**
-> + * strcpytolower - Copy string and convert to lowercase.
-> + * @dst: The buffer to store the result.
-> + * @src: The string to convert to lowercase.
-> + */
-> +static inline void strcpytolower(char *dst, const char *src)
-> +{
-> +	strlcpytolower(dst, src, -1);
-> +}
-> +
-
-Same here, and the 2 below :)
-
-Thanks Markus,
-Luis
-
-> +/**
-> + * strtoupper - Convert string to uppercase.
-> + * @s: The string to operate on.
-> + */
-> +static inline void strtoupper(char *s)
-> +{
-> +	strlcpytoupper(s, s, -1);
-> +}
-> +
-> +/**
-> + * strtolower - Convert string to lowercase.
-> + * @s: The string to operate on.
-> + */
-> +static inline void strtolower(char *s)
-> +{
-> +	strlcpytolower(s, s, -1);
-> +}
-> +
->  #endif /* _LINUX_STRING_H_ */
-> diff --git a/lib/string.c b/lib/string.c
-> index ed83562..fd8c427 100644
-> --- a/lib/string.c
-> +++ b/lib/string.c
-> @@ -952,3 +952,41 @@ char *strreplace(char *s, char old, char new)
->  	return s;
->  }
->  EXPORT_SYMBOL(strreplace);
-> +
-> +/**
-> + * strlcpytoupper - Copy a length-limited string and convert to uppercase.
-> + * @dst: The buffer to store the result.
-> + * @src: The string to convert to uppercase.
-> + * @len: Maximum string length. May be SIZE_MAX (-1) to set no limit.
-> + */
-> +void strlcpytoupper(char *dst, const char *src, size_t len)
-> +{
-> +	size_t i;
-> +
-> +	if (!len)
-> +		return;
-> +
-> +	for (i = 0; i < len && src[i]; ++i)
-> +		dst[i] = toupper(src[i]);
-> +	dst[i < len ? i : i - 1] = '\0';
-> +}
-> +EXPORT_SYMBOL(strlcpytoupper);
-> +
-> +/**
-> + * strlcpytolower - Copy a length-limited string and convert to lowercase.
-> + * @dst: The buffer to store the result.
-> + * @src: The string to convert to lowercase.
-> + * @len: Maximum string length. May be SIZE_MAX (-1) to set no limit.
-> + */
-> +void strlcpytolower(char *dst, const char *src, size_t len)
-> +{
-> +	size_t i;
-> +
-> +	if (!len)
-> +		return;
-> +
-> +	for (i = 0; i < len && src[i]; ++i)
-> +		dst[i] = tolower(src[i]);
-> +	dst[i < len ? i : i - 1] = '\0';
-> +}
-> +EXPORT_SYMBOL(strlcpytolower);
-> 
-
+T24gOSBKdWx5IDIwMTYgYXQgMDU6MDQsIEx1aXMgZGUgQmV0aGVuY291cnQgPGx1aXNiZ0Bvc2cu
+c2Ftc3VuZy5jb20+IHdyb3RlOgo+IE9uIDA4LzA3LzE2IDIzOjQzLCBNYXJrdXMgTWF5ZXIgd3Jv
+dGU6Cj4+IEFkZCBhIGNvbGxlY3Rpb24gb2YgZ2VuZXJpYyBmdW5jdGlvbnMgdG8gY29udmVydCBz
+dHJpbmdzIHRvIGxvd2VyY2FzZQo+PiBvciB1cHBlcmNhc2UuCj4+Cj4+IENoYW5naW5nIHRoZSBj
+YXNlIG9mIGEgc3RyaW5nICh3aXRoIG9yIHdpdGhvdXQgY29weWluZyBpdCBmaXJzdCkgc2VlbXMK
+Pj4gdG8gYmUgYSByZWN1cnJpbmcgcmVxdWlyZW1lbnQgaW4gdGhlIGtlcm5lbCB0aGF0IGlzIGN1
+cnJlbnRseSBiZWluZwo+PiBzb2x2ZWQgYnkgc2V2ZXJhbCBkdXBsaWNhdGVkIGltcGxlbWVudGF0
+aW9ucyBkb2luZyB0aGUgc2FtZSB0aGluZy4gVGhpcwo+PiBjaGFuZ2UgYWltcyBhdCByZWR1Y2lu
+ZyB0aGlzIGNvZGUgZHVwbGljYXRpb24uCj4+Cj4+IFRoZSBuZXcgZnVuY3Rpb25zIGFyZQo+PiAg
+ICAgdm9pZCBzdHJsY3B5dG91cHBlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYywgc2l6ZV90
+IGxlbik7Cj4+ICAgICB2b2lkIHN0cmxjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAq
+c3JjLCBzaXplX3QgbGVuKTsKPj4gICAgIHZvaWQgc3RyY3B5dG91cHBlcihjaGFyICpkc3QsIGNv
+bnN0IGNoYXIgKnNyYyk7Cj4+ICAgICB2b2lkIHN0cmNweXRvbG93ZXIoY2hhciAqZHN0LCBjb25z
+dCBjaGFyICpzcmMpOwo+PiAgICAgdm9pZCBzdHJ0b3VwcGVyKGNoYXIgKnMpOwo+PiAgICAgdm9p
+ZCBzdHJ0b2xvd2VyKGNoYXIgKnMpOwo+Pgo+PiBUaGUgInN0cltsXWNweXRvKiIgdmVyc2lvbnMg
+b2YgdGhlIGZ1bmN0aW9uIHRha2UgYSBkZXN0aW5hdGlvbiBzdHJpbmcKPj4gYW5kIGEgc291cmNl
+IHN0cmluZyBhcyBhcmd1bWVudHMuIFRoZSAic3RybGNweXRvKiIgdmVyc2lvbnMgYWRkaXRpb25h
+bGx5Cj4+IHRha2UgYSBsZW5ndGggYXJndW1lbnQgbGlrZSBzdHJsY3B5KCkgaXRzZWxmLiBMYXN0
+bHksIHRoZSBzdHJ0byoKPj4gZnVuY3Rpb25zIHRha2UgYSBzaW5nbGUgc3RyaW5nIGFyZ3VtZW50
+IGFuZCBtb2RpZnkgdGhlIHBhc3NlZC1pbiBzdHJpbmcuCj4+Cj4+IExpa2Ugc3RybGNweSgpLCBh
+bmQgdW5saWtlIHN0cm5jcHkoKSwgdGhlIGZ1bmN0aW9ucyBndWFyYW50ZWUgTlVMTAo+PiB0ZXJt
+aW5hdGlvbiBvZiB0aGUgZGVzdGluYXRpb24gc3RyaW5nLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBN
+YXJrdXMgTWF5ZXIgPG1tYXllckBicm9hZGNvbS5jb20+Cj4+IC0tLQo+PiAgaW5jbHVkZS9saW51
+eC9zdHJpbmcuaCB8IDQwICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysK
+Pj4gIGxpYi9zdHJpbmcuYyAgICAgICAgICAgfCAzOCArKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKwo+PiAgMiBmaWxlcyBjaGFuZ2VkLCA3OCBpbnNlcnRpb25zKCspCj4+Cj4+
+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3N0cmluZy5oIGIvaW5jbHVkZS9saW51eC9zdHJp
+bmcuaAo+PiBpbmRleCAyNmI2ZjZhLi4zNmM5ZDE0IDEwMDY0NAo+PiAtLS0gYS9pbmNsdWRlL2xp
+bnV4L3N0cmluZy5oCj4+ICsrKyBiL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKPj4gQEAgLTExNiw2
+ICsxMTYsOCBAQCBleHRlcm4gdm9pZCAqIG1lbWNocihjb25zdCB2b2lkICosaW50LF9fa2VybmVs
+X3NpemVfdCk7Cj4+ICAjZW5kaWYKPj4gIHZvaWQgKm1lbWNocl9pbnYoY29uc3Qgdm9pZCAqcywg
+aW50IGMsIHNpemVfdCBuKTsKPj4gIGNoYXIgKnN0cnJlcGxhY2UoY2hhciAqcywgY2hhciBvbGQs
+IGNoYXIgbmV3KTsKPj4gK2V4dGVybiB2b2lkIHN0cmxjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29u
+c3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKPj4gK2V4dGVybiB2b2lkIHN0cmxjcHl0b2xvd2Vy
+KGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKPj4KPj4gIGV4dGVybiB2
+b2lkIGtmcmVlX2NvbnN0KGNvbnN0IHZvaWQgKngpOwo+Pgo+PiBAQCAtMTY5LDQgKzE3MSw0MiBA
+QCBzdGF0aWMgaW5saW5lIGNvbnN0IGNoYXIgKmtiYXNlbmFtZShjb25zdCBjaGFyICpwYXRoKQo+
+PiAgICAgICByZXR1cm4gdGFpbCA/IHRhaWwgKyAxIDogcGF0aDsKPj4gIH0KPj4KPj4gKy8qKgo+
+PiArICogc3RyY3B5dG91cHBlciAtIENvcHkgc3RyaW5nIGFuZCBjb252ZXJ0IHRvIHVwcGVyY2Fz
+ZS4KPj4gKyAqIEBkc3Q6IFRoZSBidWZmZXIgdG8gc3RvcmUgdGhlIHJlc3VsdC4KPj4gKyAqIEBz
+cmM6IFRoZSBzdHJpbmcgdG8gY29udmVydCB0byB1cHBlcmNhc2UuCj4+ICsgKi8KPj4gK3N0YXRp
+YyBpbmxpbmUgdm9pZCBzdHJjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKQo+
+PiArewo+PiArICAgICBzdHJsY3B5dG91cHBlcihkc3QsIHNyYywgLTEpOwo+PiArfQo+PiArCj4K
+PiBXaHkgbm90IHVzZSBTSVpFX01BWCBpbnN0ZWFkIG9mIC0xPwoKU3VyZS4gSSdsbCBjaGFuZ2Ug
+YWxsIGZvdXIgb2YgdGhlbS4gVGhhbmtzLgoKPj4gKy8qKgo+PiArICogc3RyY3B5dG9sb3dlciAt
+IENvcHkgc3RyaW5nIGFuZCBjb252ZXJ0IHRvIGxvd2VyY2FzZS4KPj4gKyAqIEBkc3Q6IFRoZSBi
+dWZmZXIgdG8gc3RvcmUgdGhlIHJlc3VsdC4KPj4gKyAqIEBzcmM6IFRoZSBzdHJpbmcgdG8gY29u
+dmVydCB0byBsb3dlcmNhc2UuCj4+ICsgKi8KPj4gK3N0YXRpYyBpbmxpbmUgdm9pZCBzdHJjcHl0
+b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKQo+PiArewo+PiArICAgICBzdHJsY3B5
+dG9sb3dlcihkc3QsIHNyYywgLTEpOwo+PiArfQo+PiArCj4KPiBTYW1lIGhlcmUsIGFuZCB0aGUg
+MiBiZWxvdyA6KQo+Cj4gVGhhbmtzIE1hcmt1cywKPiBMdWlzCj4KPj4gKy8qKgo+PiArICogc3Ry
+dG91cHBlciAtIENvbnZlcnQgc3RyaW5nIHRvIHVwcGVyY2FzZS4KPj4gKyAqIEBzOiBUaGUgc3Ry
+aW5nIHRvIG9wZXJhdGUgb24uCj4+ICsgKi8KPj4gK3N0YXRpYyBpbmxpbmUgdm9pZCBzdHJ0b3Vw
+cGVyKGNoYXIgKnMpCj4+ICt7Cj4+ICsgICAgIHN0cmxjcHl0b3VwcGVyKHMsIHMsIC0xKTsKPj4g
+K30KPj4gKwo+PiArLyoqCj4+ICsgKiBzdHJ0b2xvd2VyIC0gQ29udmVydCBzdHJpbmcgdG8gbG93
+ZXJjYXNlLgo+PiArICogQHM6IFRoZSBzdHJpbmcgdG8gb3BlcmF0ZSBvbi4KPj4gKyAqLwo+PiAr
+c3RhdGljIGlubGluZSB2b2lkIHN0cnRvbG93ZXIoY2hhciAqcykKPj4gK3sKPj4gKyAgICAgc3Ry
+bGNweXRvbG93ZXIocywgcywgLTEpOwo+PiArfQo+PiArCj4+ICAjZW5kaWYgLyogX0xJTlVYX1NU
+UklOR19IXyAqLwo+PiBkaWZmIC0tZ2l0IGEvbGliL3N0cmluZy5jIGIvbGliL3N0cmluZy5jCj4+
+IGluZGV4IGVkODM1NjIuLmZkOGM0MjcgMTAwNjQ0Cj4+IC0tLSBhL2xpYi9zdHJpbmcuYwo+PiAr
+KysgYi9saWIvc3RyaW5nLmMKPj4gQEAgLTk1MiwzICs5NTIsNDEgQEAgY2hhciAqc3RycmVwbGFj
+ZShjaGFyICpzLCBjaGFyIG9sZCwgY2hhciBuZXcpCj4+ICAgICAgIHJldHVybiBzOwo+PiAgfQo+
+PiAgRVhQT1JUX1NZTUJPTChzdHJyZXBsYWNlKTsKPj4gKwo+PiArLyoqCj4+ICsgKiBzdHJsY3B5
+dG91cHBlciAtIENvcHkgYSBsZW5ndGgtbGltaXRlZCBzdHJpbmcgYW5kIGNvbnZlcnQgdG8gdXBw
+ZXJjYXNlLgo+PiArICogQGRzdDogVGhlIGJ1ZmZlciB0byBzdG9yZSB0aGUgcmVzdWx0Lgo+PiAr
+ICogQHNyYzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRvIHVwcGVyY2FzZS4KPj4gKyAqIEBsZW46
+IE1heGltdW0gc3RyaW5nIGxlbmd0aC4gTWF5IGJlIFNJWkVfTUFYICgtMSkgdG8gc2V0IG5vIGxp
+bWl0Lgo+PiArICovCj4+ICt2b2lkIHN0cmxjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hh
+ciAqc3JjLCBzaXplX3QgbGVuKQo+PiArewo+PiArICAgICBzaXplX3QgaTsKPj4gKwo+PiArICAg
+ICBpZiAoIWxlbikKPj4gKyAgICAgICAgICAgICByZXR1cm47Cj4+ICsKPj4gKyAgICAgZm9yIChp
+ID0gMDsgaSA8IGxlbiAmJiBzcmNbaV07ICsraSkKPj4gKyAgICAgICAgICAgICBkc3RbaV0gPSB0
+b3VwcGVyKHNyY1tpXSk7Cj4+ICsgICAgIGRzdFtpIDwgbGVuID8gaSA6IGkgLSAxXSA9ICdcMCc7
+Cj4+ICt9Cj4+ICtFWFBPUlRfU1lNQk9MKHN0cmxjcHl0b3VwcGVyKTsKPj4gKwo+PiArLyoqCj4+
+ICsgKiBzdHJsY3B5dG9sb3dlciAtIENvcHkgYSBsZW5ndGgtbGltaXRlZCBzdHJpbmcgYW5kIGNv
+bnZlcnQgdG8gbG93ZXJjYXNlLgo+PiArICogQGRzdDogVGhlIGJ1ZmZlciB0byBzdG9yZSB0aGUg
+cmVzdWx0Lgo+PiArICogQHNyYzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRvIGxvd2VyY2FzZS4K
+Pj4gKyAqIEBsZW46IE1heGltdW0gc3RyaW5nIGxlbmd0aC4gTWF5IGJlIFNJWkVfTUFYICgtMSkg
+dG8gc2V0IG5vIGxpbWl0Lgo+PiArICovCj4+ICt2b2lkIHN0cmxjcHl0b2xvd2VyKGNoYXIgKmRz
+dCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKQo+PiArewo+PiArICAgICBzaXplX3QgaTsK
+Pj4gKwo+PiArICAgICBpZiAoIWxlbikKPj4gKyAgICAgICAgICAgICByZXR1cm47Cj4+ICsKPj4g
+KyAgICAgZm9yIChpID0gMDsgaSA8IGxlbiAmJiBzcmNbaV07ICsraSkKPj4gKyAgICAgICAgICAg
+ICBkc3RbaV0gPSB0b2xvd2VyKHNyY1tpXSk7Cj4+ICsgICAgIGRzdFtpIDwgbGVuID8gaSA6IGkg
+LSAxXSA9ICdcMCc7Cj4+ICt9Cj4+ICtFWFBPUlRfU1lNQk9MKHN0cmxjcHl0b2xvd2VyKTsKPj4K
+PgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpOb3V2ZWF1
+IG1haWxpbmcgbGlzdApOb3V2ZWF1QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3Rz
+LmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL25vdXZlYXUK
