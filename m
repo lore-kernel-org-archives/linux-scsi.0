@@ -1,36 +1,159 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Fri, 08 Jul 2016 17:49:58 -0700
-Message-ID: <1468025398.2390.24.camel@HansenPartnership.com>
-References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
-	 <1467910054.2322.7.camel@HansenPartnership.com>
-	 <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
-	 <1467998971.2343.10.camel@HansenPartnership.com>
-	 <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: Re: [PATCH v3 1/7] lib: string: add functions to case-convert strings
+Date: Sat, 09 Jul 2016 13:04:54 +0100
+Message-ID: <5780E866.8000001@osg.samsung.com>
+References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com> <1468017794-4818-2-git-send-email-mmayer@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1468017794-4818-2-git-send-email-mmayer@broadcom.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Markus Mayer <mmayer@broadcom.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Chris Metcalf <cmetcalf@ezchip.com>, Kees Cook <keescook@chromium.org>
+Cc: devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, nouveau@lists.freedesktop.org, speakup@linux-speakup.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-acpi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2016-07-08 at 19:38 +0000, Tom Yan wrote:
-> On 8 July 2016 at 17:29, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > Or we could simply patch sg_sanitze to issue the ATA_16 pass 
-> > through when it sees a sata device ...
-> > 
+On 08/07/16 23:43, Markus Mayer wrote:
+> Add a collection of generic functions to convert strings to lowercase
+> or uppercase.
 > 
-> Ugh that sounds ugly to me. Anyway that's off-topic.
+> Changing the case of a string (with or without copying it first) seems
+> to be a recurring requirement in the kernel that is currently being
+> solved by several duplicated implementations doing the same thing. This
+> change aims at reducing this code duplication.
+> 
+> The new functions are
+>     void strlcpytoupper(char *dst, const char *src, size_t len);
+>     void strlcpytolower(char *dst, const char *src, size_t len);
+>     void strcpytoupper(char *dst, const char *src);
+>     void strcpytolower(char *dst, const char *src);
+>     void strtoupper(char *s);
+>     void strtolower(char *s);
+> 
+> The "str[l]cpyto*" versions of the function take a destination string
+> and a source string as arguments. The "strlcpyto*" versions additionally
+> take a length argument like strlcpy() itself. Lastly, the strto*
+> functions take a single string argument and modify the passed-in string.
+> 
+> Like strlcpy(), and unlike strncpy(), the functions guarantee NULL
+> termination of the destination string.
+> 
+> Signed-off-by: Markus Mayer <mmayer@broadcom.com>
+> ---
+>  include/linux/string.h | 40 ++++++++++++++++++++++++++++++++++++++++
+>  lib/string.c           | 38 ++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 78 insertions(+)
+> 
+> diff --git a/include/linux/string.h b/include/linux/string.h
+> index 26b6f6a..36c9d14 100644
+> --- a/include/linux/string.h
+> +++ b/include/linux/string.h
+> @@ -116,6 +116,8 @@ extern void * memchr(const void *,int,__kernel_size_t);
+>  #endif
+>  void *memchr_inv(const void *s, int c, size_t n);
+>  char *strreplace(char *s, char old, char new);
+> +extern void strlcpytoupper(char *dst, const char *src, size_t len);
+> +extern void strlcpytolower(char *dst, const char *src, size_t len);
+>  
+>  extern void kfree_const(const void *x);
+>  
+> @@ -169,4 +171,42 @@ static inline const char *kbasename(const char *path)
+>  	return tail ? tail + 1 : path;
+>  }
+>  
+> +/**
+> + * strcpytoupper - Copy string and convert to uppercase.
+> + * @dst: The buffer to store the result.
+> + * @src: The string to convert to uppercase.
+> + */
+> +static inline void strcpytoupper(char *dst, const char *src)
+> +{
+> +	strlcpytoupper(dst, src, -1);
+> +}
+> +
 
-Not really.  The point is that you've proposed something as an addition
-to the kernel that can also be done in userspace.  Checking if it can
-work easily there is like a barrier to entry.  If it works, then fine,
-we're done.  If it throws up problems then we reconsider the kernel
-route.
+Why not use SIZE_MAX instead of -1?
 
-James
+> +/**
+> + * strcpytolower - Copy string and convert to lowercase.
+> + * @dst: The buffer to store the result.
+> + * @src: The string to convert to lowercase.
+> + */
+> +static inline void strcpytolower(char *dst, const char *src)
+> +{
+> +	strlcpytolower(dst, src, -1);
+> +}
+> +
+
+Same here, and the 2 below :)
+
+Thanks Markus,
+Luis
+
+> +/**
+> + * strtoupper - Convert string to uppercase.
+> + * @s: The string to operate on.
+> + */
+> +static inline void strtoupper(char *s)
+> +{
+> +	strlcpytoupper(s, s, -1);
+> +}
+> +
+> +/**
+> + * strtolower - Convert string to lowercase.
+> + * @s: The string to operate on.
+> + */
+> +static inline void strtolower(char *s)
+> +{
+> +	strlcpytolower(s, s, -1);
+> +}
+> +
+>  #endif /* _LINUX_STRING_H_ */
+> diff --git a/lib/string.c b/lib/string.c
+> index ed83562..fd8c427 100644
+> --- a/lib/string.c
+> +++ b/lib/string.c
+> @@ -952,3 +952,41 @@ char *strreplace(char *s, char old, char new)
+>  	return s;
+>  }
+>  EXPORT_SYMBOL(strreplace);
+> +
+> +/**
+> + * strlcpytoupper - Copy a length-limited string and convert to uppercase.
+> + * @dst: The buffer to store the result.
+> + * @src: The string to convert to uppercase.
+> + * @len: Maximum string length. May be SIZE_MAX (-1) to set no limit.
+> + */
+> +void strlcpytoupper(char *dst, const char *src, size_t len)
+> +{
+> +	size_t i;
+> +
+> +	if (!len)
+> +		return;
+> +
+> +	for (i = 0; i < len && src[i]; ++i)
+> +		dst[i] = toupper(src[i]);
+> +	dst[i < len ? i : i - 1] = '\0';
+> +}
+> +EXPORT_SYMBOL(strlcpytoupper);
+> +
+> +/**
+> + * strlcpytolower - Copy a length-limited string and convert to lowercase.
+> + * @dst: The buffer to store the result.
+> + * @src: The string to convert to lowercase.
+> + * @len: Maximum string length. May be SIZE_MAX (-1) to set no limit.
+> + */
+> +void strlcpytolower(char *dst, const char *src, size_t len)
+> +{
+> +	size_t i;
+> +
+> +	if (!len)
+> +		return;
+> +
+> +	for (i = 0; i < len && src[i]; ++i)
+> +		dst[i] = tolower(src[i]);
+> +	dst[i < len ? i : i - 1] = '\0';
+> +}
+> +EXPORT_SYMBOL(strlcpytolower);
+> 
 
