@@ -1,60 +1,52 @@
-From: Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v3 0/7] lib: string: add functions to
-	case-convert strings
-Date: Sat, 9 Jul 2016 21:11:05 -0700
-Message-ID: <CAGt4E5t0TGMxiUfV5Mx+EGyAYAmTOCEJe4QxjpjujvZfPwvYuQ@mail.gmail.com>
+From: Chris Metcalf <cmetcalf@mellanox.com>
+Subject: Re: [PATCH v3 0/7] lib: string: add functions to case-convert strings
+Date: Sat, 9 Jul 2016 23:13:33 -0400
+Message-ID: <9b88baed-a067-fcfd-d087-66e36f3060d7@mellanox.com>
 References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
- <9b88baed-a067-fcfd-d087-66e36f3060d7@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <9b88baed-a067-fcfd-d087-66e36f3060d7-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/nouveau>
-List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Chris Metcalf <cmetcalf-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Markus Mayer <mmayer@broadcom.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Kees Cook <keescook@chromium.org>
+Cc: dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-acpi@vger.kernel.org, speakup@linux-speakup.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gOSBKdWx5IDIwMTYgYXQgMjA6MTMsIENocmlzIE1ldGNhbGYgPGNtZXRjYWxmQG1lbGxhbm94
-LmNvbT4gd3JvdGU6Cj4gT24gNy84LzIwMTYgNjo0MyBQTSwgTWFya3VzIE1heWVyIHdyb3RlOgo+
-Pgo+PiBUaGlzIHNlcmllcyBpbnRyb2R1Y2VzIGEgZmFtaWx5IG9mIGdlbmVyaWMgc3RyaW5nIGNh
-c2UgY29udmVyc2lvbgo+PiBmdW5jdGlvbnMuIFRoaXMga2luZCBvZiBmdW5jdGlvbmFsaXR5IGlz
-IG5lZWRlZCBpbiBzZXZlcmFsIHBsYWNlcyBpbgo+PiB0aGUga2VybmVsLiBSaWdodCBub3csIGV2
-ZXJ5Ym9keSBzZWVtcyB0byBiZSBpbXBsZW1lbnRpbmcgdGhlaXIgb3duCj4+IGNvcHkgb2YgdGhp
-cyBmdW5jdGlvbmFsaXR5Lgo+Pgo+PiBCYXNlZCBvbiB0aGUgZGlzY3Vzc2lvbiBvZiB0aGUgcHJl
-dmlvdXMgdmVyc2lvbiBvZiB0aGlzIHNlcmllc1sxXSBhbmQKPj4gdGhlIHVzZSBjYXNlcyBmb3Vu
-ZCBpbiB0aGUga2VybmVsLCBpdCBkb2VzIGxvb2sgbGlrZSBoYXZpbmcgc2V2ZXJhbAo+PiBmbGF2
-b3VycyBvZiBjYXNlIGNvbnZlcnNpb24gZnVuY3Rpb25zIGlzIGJlbmVmaWNpYWwuIFRoZSB1c2Ug
-Y2FzZXMgZmFsbAo+PiBpbnRvIHRocmVlIGNhdGVnb3JpZXM6Cj4+ICAgICAgLSBjb3B5aW5nIGEg
-c3RyaW5nIGFuZCBjb252ZXJ0aW5nIHRoZSBjYXNlIHdoaWxlIHNwZWNpZnlpbmcgYQo+PiAgICAg
-ICAgbWF4aW11bSBsZW5ndGggdG8gbWltaWMgc3RybGNweSgpCj4+ICAgICAgLSBjb3B5aW5nIGEg
-c3RyaW5nIGFuZCBjb252ZXJ0aW5nIHRoZSBjYXNlIHdpdGhvdXQgc3BlY2lmeWluZyBhCj4+ICAg
-ICAgICBsZW5ndGggdG8gbWltaWMgc3RyY3B5KCkKPj4gICAgICAtIGNvbnZlcnRpbmcgdGhlIGNh
-c2Ugb2YgYSBzdHJpbmcgaW4tcGxhY2UgKGkuZS4gbW9kaWZ5aW5nIHRoZQo+PiAgICAgICAgc3Ry
-aW5nIHRoYXQgd2FzIHBhc3NlZCBpbikKPj4KPj4gQ29uc2VxdWVudGx5LCBJIGFtIHByb3Bvc2lu
-ZyB0aGVzZSBuZXcgZnVuY3Rpb25zOgo+PiAgICAgIHZvaWQgc3RybGNweXRvdXBwZXIoY2hhciAq
-ZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+PiAgICAgIHZvaWQgc3RybGNweXRv
-bG93ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+PiAgICAgIHZv
-aWQgc3RyY3B5dG91cHBlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYyk7Cj4+ICAgICAgdm9p
-ZCBzdHJjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4gICAgICB2b2lk
-IHN0cnRvdXBwZXIoY2hhciAqcyk7Cj4+ICAgICAgdm9pZCBzdHJ0b2xvd2VyKGNoYXIgKnMpOwo+
-Cj4KPiBZb3UgbWF5IHdhbnQgdG8gcmVhZCB0aGUgYXJ0aWNsZSBoZXJlOgo+Cj4gaHR0cHM6Ly9s
-d24ubmV0L0FydGljbGVzLzY1OTIxNC8KCkknbGwgcmVhZCB0aGF0LiBUaGFua3MuCgo+IGFuZCBm
-b2xsb3cgdXAgc29tZSBvZiB0aGUgZGlzY3Vzc2lvbiB0aHJlYWRzIG9uIExLTUwgYWJvdXQgdGhl
-IGJlc3QKPiBzZW1hbnRpY3MgdG8gYWR2ZXJ0aXNlIGZvciB0aGUgc3RybGNweS9zdHJzY3B5IHZh
-cmlhbnRzLiAgSXQgbWlnaHQgYmUKPiBoZWxwZnVsIHRvIHJldHVybiBzb21lIGtpbmQgb2Ygb3Zl
-cmZsb3cvdHJ1bmNhdGlvbiBlcnJvciBmcm9tIHlvdXIKPiBjb3B5IGZ1bmN0aW9ucyBzbyBwZW9w
-bGUgY2FuIGVycm9yLWNoZWNrIHRoZSByZXN1bHQuCgpJIGFtIGluY2xpbmVkIHRvIGFncmVlLiBI
-b3dldmVyLCBldmVyeWJvZHkgaGFzIGJlZW4gdGVsbGluZyBtZSB0aGF0CnRoZXNlIGZ1bmN0aW9u
-cyBzaG91bGQgYmUgdm9pZC4gT3JpZ2luYWxseSB0aGV5IHdlcmVuJ3QuCgpSZWdhcmRzLAotTWFy
-a3VzCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCk5vdXZl
-YXUgbWFpbGluZyBsaXN0Ck5vdXZlYXVAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vbm91dmVhdQo=
+On 7/8/2016 6:43 PM, Markus Mayer wrote:
+> This series introduces a family of generic string case conversion
+> functions. This kind of functionality is needed in several places in
+> the kernel. Right now, everybody seems to be implementing their own
+> copy of this functionality.
+>
+> Based on the discussion of the previous version of this series[1] and
+> the use cases found in the kernel, it does look like having several
+> flavours of case conversion functions is beneficial. The use cases fall
+> into three categories:
+>      - copying a string and converting the case while specifying a
+>        maximum length to mimic strlcpy()
+>      - copying a string and converting the case without specifying a
+>        length to mimic strcpy()
+>      - converting the case of a string in-place (i.e. modifying the
+>        string that was passed in)
+>
+> Consequently, I am proposing these new functions:
+>      void strlcpytoupper(char *dst, const char *src, size_t len);
+>      void strlcpytolower(char *dst, const char *src, size_t len);
+>      void strcpytoupper(char *dst, const char *src);
+>      void strcpytolower(char *dst, const char *src);
+>      void strtoupper(char *s);
+>      void strtolower(char *s);
+
+You may want to read the article here:
+
+https://lwn.net/Articles/659214/
+
+and follow up some of the discussion threads on LKML about the best
+semantics to advertise for the strlcpy/strscpy variants.  It might be
+helpful to return some kind of overflow/truncation error from your
+copy functions so people can error-check the result.
+
+-- 
+Chris Metcalf, Mellanox Technologies
+http://www.mellanox.com
