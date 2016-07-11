@@ -1,41 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Mon, 11 Jul 2016 10:33:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1607111032310.27546-100000@netrider.rowland.org>
-References: <1468238032-17835-1-git-send-email-oneukum@suse.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [net-next 0/6] common library for Chelsio drivers
+Date: Mon, 11 Jul 2016 12:50:21 -0700 (PDT)
+Message-ID: <20160711.125021.1679165284508297380.davem@davemloft.net>
+References: <cover.1467998292.git.varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:60932 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753613AbcGKOdb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2016 10:33:31 -0400
-In-Reply-To: <1468238032-17835-1-git-send-email-oneukum@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <cover.1467998292.git.varun@chelsio.com>
+Sender: target-devel-owner@vger.kernel.org
+To: varun@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Mon, 11 Jul 2016, Oliver Neukum wrote:
+From: Varun Prakash <varun@chelsio.com>
+Date: Fri,  8 Jul 2016 23:03:53 +0530
 
-> Some SATA to USB bridges fail to cooperate with some
-> drives resulting in no cache being present being reported
-> to the host. That causes the host to skip sending
-> a command to synchronize caches. That causes data loss
-> when the drive is powered down.
+> Hi,
+> 
+>  This patch series adds common library module(libcxgb.ko)
+> for Chelsio drivers to remove duplicate code.
+> 
+> This series moves common iSCSI DDP Page Pod manager
+> code from cxgb4.ko to libcxgb.ko, earlier this code
+> was used by only cxgbit.ko now it is used by
+> three Chelsio iSCSI drivers cxgb3i, cxgb4i, cxgbit.
+> 
+> In future this module will have common connection
+> management and hardware specific code that can
+> be shared by multiple Chelsio drivers(cxgb4,
+> csiostor, iw_cxgb4, cxgb4i, cxgbit).
+> 
+> Please review.
 
-> @@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
->  		case 'w':
->  			f |= US_FL_NO_WP_DETECT;
->  			break;
-> +		case 'y':
-> +			f |= US_FL_ALWAYS_SYNC;
-> +			break;
->  		/* Ignore unrecognized flag characters */
->  		}
->  	}
-
-You need to update Documentation/kernel-parameters.txt too.
-
-Alan Stern
-
+As currently implemented the user is prompted for the Kconfig symbol
+for the library.  That really needs to be hidden from the user and
+they should be able to select these drivers without having to know
+about this implementation detail at all.
