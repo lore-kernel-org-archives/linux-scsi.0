@@ -1,54 +1,53 @@
-From: David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [Xen-devel] [PATCH] xen_pvscsi: reclaim the ring request when
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH] xen_pvscsi: reclaim the ring request when
  mapping data failed
-Date: Mon, 11 Jul 2016 10:50:44 +0100
-Message-ID: <57836BF4.9090000@citrix.com>
+Date: Mon, 11 Jul 2016 11:53:57 +0200
+Message-ID: <57836CB5.90401@suse.com>
 References: <578309AE.1080704@huawei.com> <578367E8.2050601@suse.com>
+ <57836BF4.9090000@citrix.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <578367E8.2050601@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>, Bin Wu <wu.wubin@huawei.com>, boris.ostrovsky@oracle.com, david.vrabel@citrix.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xen.org>
+In-Reply-To: <57836BF4.9090000@citrix.com>
+List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xen.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
+To: David Vrabel <david.vrabel@citrix.com>, Bin Wu <wu.wubin@huawei.com>, boris.ostrovsky@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/07/16 10:33, Juergen Gross wrote:
-> On 11/07/16 04:51, Bin Wu wrote:
->> During scsi command queueing, if mapping data fails, we need to
->> reclaim the failed request. Otherwise, the garbage request will
->> be pushed into the ring for the backend to work.
-> 
-> Well spotted. There is another instance of this problem in
-> scsifront_action_handler(). Would you mind correcting this one, too?
-
-Would it make more sense to advance req_prod_pvt only if the request has
-been successfully created?
-
-David
-
->> Signed-off-by: Bin Wu <wu.wubin@huawei.com>
->> ---
->>  drivers/scsi/xen-scsifront.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
->> index 9dc8687..655163d 100644
->> --- a/drivers/scsi/xen-scsifront.c
->> +++ b/drivers/scsi/xen-scsifront.c
->> @@ -565,6 +565,7 @@ static int scsifront_queuecommand(struct Scsi_Host
->> *shost,
->>      err = map_data_for_request(info, sc, ring_req, shadow);
->>      if (err < 0) {
->>          pr_debug("%s: err %d\n", __func__, err);
->> +        info->ring.req_prod_pvt--;
->>          scsifront_put_rqid(info, rqid);
->>          scsifront_return(info);
->>          spin_unlock_irqrestore(shost->host_lock, flags);
-> 
-> 
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xen.org
-> https://lists.xen.org/xen-devel
-> 
+T24gMTEvMDcvMTYgMTE6NTAsIERhdmlkIFZyYWJlbCB3cm90ZToKPiBPbiAxMS8wNy8xNiAxMDoz
+MywgSnVlcmdlbiBHcm9zcyB3cm90ZToKPj4gT24gMTEvMDcvMTYgMDQ6NTEsIEJpbiBXdSB3cm90
+ZToKPj4+IER1cmluZyBzY3NpIGNvbW1hbmQgcXVldWVpbmcsIGlmIG1hcHBpbmcgZGF0YSBmYWls
+cywgd2UgbmVlZCB0bwo+Pj4gcmVjbGFpbSB0aGUgZmFpbGVkIHJlcXVlc3QuIE90aGVyd2lzZSwg
+dGhlIGdhcmJhZ2UgcmVxdWVzdCB3aWxsCj4+PiBiZSBwdXNoZWQgaW50byB0aGUgcmluZyBmb3Ig
+dGhlIGJhY2tlbmQgdG8gd29yay4KPj4KPj4gV2VsbCBzcG90dGVkLiBUaGVyZSBpcyBhbm90aGVy
+IGluc3RhbmNlIG9mIHRoaXMgcHJvYmxlbSBpbgo+PiBzY3NpZnJvbnRfYWN0aW9uX2hhbmRsZXIo
+KS4gV291bGQgeW91IG1pbmQgY29ycmVjdGluZyB0aGlzIG9uZSwgdG9vPwo+IAo+IFdvdWxkIGl0
+IG1ha2UgbW9yZSBzZW5zZSB0byBhZHZhbmNlIHJlcV9wcm9kX3B2dCBvbmx5IGlmIHRoZSByZXF1
+ZXN0IGhhcwo+IGJlZW4gc3VjY2Vzc2Z1bGx5IGNyZWF0ZWQ/CgpZZWFoLCBwcm9iYWJseSBhcyB0
+aGUgZmlyc3QgYWN0aW9uIGluIHNjc2lmcm9udF9kb19yZXF1ZXN0KCkuCgoKSnVlcmdlbgoKPiAK
+PiBEYXZpZAo+IAo+Pj4gU2lnbmVkLW9mZi1ieTogQmluIFd1IDx3dS53dWJpbkBodWF3ZWkuY29t
+Pgo+Pj4gLS0tCj4+PiAgZHJpdmVycy9zY3NpL3hlbi1zY3NpZnJvbnQuYyB8IDEgKwo+Pj4gIDEg
+ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQo+Pj4KPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kveGVuLXNjc2lmcm9udC5jIGIvZHJpdmVycy9zY3NpL3hlbi1zY3NpZnJvbnQuYwo+Pj4g
+aW5kZXggOWRjODY4Ny4uNjU1MTYzZCAxMDA2NDQKPj4+IC0tLSBhL2RyaXZlcnMvc2NzaS94ZW4t
+c2NzaWZyb250LmMKPj4+ICsrKyBiL2RyaXZlcnMvc2NzaS94ZW4tc2NzaWZyb250LmMKPj4+IEBA
+IC01NjUsNiArNTY1LDcgQEAgc3RhdGljIGludCBzY3NpZnJvbnRfcXVldWVjb21tYW5kKHN0cnVj
+dCBTY3NpX0hvc3QKPj4+ICpzaG9zdCwKPj4+ICAgICAgZXJyID0gbWFwX2RhdGFfZm9yX3JlcXVl
+c3QoaW5mbywgc2MsIHJpbmdfcmVxLCBzaGFkb3cpOwo+Pj4gICAgICBpZiAoZXJyIDwgMCkgewo+
+Pj4gICAgICAgICAgcHJfZGVidWcoIiVzOiBlcnIgJWRcbiIsIF9fZnVuY19fLCBlcnIpOwo+Pj4g
+KyAgICAgICAgaW5mby0+cmluZy5yZXFfcHJvZF9wdnQtLTsKPj4+ICAgICAgICAgIHNjc2lmcm9u
+dF9wdXRfcnFpZChpbmZvLCBycWlkKTsKPj4+ICAgICAgICAgIHNjc2lmcm9udF9yZXR1cm4oaW5m
+byk7Cj4+PiAgICAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKHNob3N0LT5ob3N0X2xvY2ss
+IGZsYWdzKTsKPj4KPj4KPj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KPj4gWGVuLWRldmVsIG1haWxpbmcgbGlzdAo+PiBYZW4tZGV2ZWxAbGlzdHMueGVu
+Lm9yZwo+PiBodHRwczovL2xpc3RzLnhlbi5vcmcveGVuLWRldmVsCj4+Cj4gCj4gCgoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVsIG1haWxp
+bmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVuLm9yZwpodHRwczovL2xpc3RzLnhlbi5vcmcveGVu
+LWRldmVsCg==
