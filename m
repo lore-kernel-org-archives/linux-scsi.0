@@ -1,56 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 1/2] libata-scsi: reject WRITE SAME (16) with n_block
- that exceeds limit
-Date: Tue, 12 Jul 2016 15:55:09 -0400
-Message-ID: <20160712195509.GD10377@htj.duckdns.org>
-References: <577d3d97.24f0420a.c2bbd.ffffd426@mx.google.com>
-Mime-Version: 1.0
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH] cxl: remove dead Kconfig options
+Date: Tue, 12 Jul 2016 15:31:24 -0500
+Message-ID: <0E3E1855-3038-4414-A0A4-EABC431AEEA4@linux.vnet.ibm.com>
+References: <1467616334-20977-1-git-send-email-andrew.donnellan@au1.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:34566 "EHLO
-	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbcGLTzN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 15:55:13 -0400
-Content-Disposition: inline
-In-Reply-To: <577d3d97.24f0420a.c2bbd.ffffd426@mx.google.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56383 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750784AbcGLUbv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jul 2016 16:31:51 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6CKTc2K088291
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2016 16:31:31 -0400
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24567c2rdj-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2016 16:31:31 -0400
+Received: from localhost
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Tue, 12 Jul 2016 14:31:30 -0600
+In-Reply-To: <1467616334-20977-1-git-send-email-andrew.donnellan@au1.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: martin.petersen@oracle.com, sergei.shtylyov@cogentembedded.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, clombard@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, fbarrat@linux.vnet.ibm.com, manoj@linux.vnet.ibm.com, imunsie@au1.ibm.com
 
-On Thu, Jul 07, 2016 at 01:19:05AM +0800, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
+> On Jul 4, 2016, at 2:12 AM, Andrew Donnellan <andrew.donnellan@au1.ibm.com> wrote:
 > 
-> Currently if a WRITE SAME (16) command is issued to the SATL with
-> "number of blocks" that is larger than the "Maximum write same length"
-> (which is the maximum number of blocks per TRIM command allowed in
-> libata, currently 65535 * 512 / 8 blocks), the SATL will accept the
-> command and translate it to a TRIM command with the upper limit.
+> Remove the CXL_KERNEL_API and CXL_EEH Kconfig options, as they were only
+> needed to coordinate the merging of the cxlflash driver. Also remove the
+> stub implementation of cxl_perst_reloads_same_image() in cxlflash which is
+> only used if CXL_EEH isn't defined (i.e. never).
 > 
-> However, according to SBC (as of sbc4r11.pdf), the "device server"
-> should terminate the command with "Invalid field in CDB" in that case.
-> 
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index bfec66f..a1f061a 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3305,7 +3305,11 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
->  		goto invalid_param_len;
->  
->  	buf = page_address(sg_page(scsi_sglist(scmd)));
-> -	size = ata_set_lba_range_entries(buf, 512, block, n_block);
-> +
-> +	if (n_block <= 65535 * 512 / 8)
-> +		size = ata_set_lba_range_entries(buf, 512, block, n_block);
-> +	else
-> +		goto invalid_fld;
+> Suggested-by: Ian Munsie <imunsie@au1.ibm.com>
+> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-This triggers compiler warning about @fp used w/o initializing it.  I
-reverted the patch.  Can you please update the patch?
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-Thanks.
 
--- 
-tejun
