@@ -1,167 +1,47 @@
-From: Feng Li <lifeng1519@gmail.com>
-Subject: Re: [PATCH] iscsi-target: fix panic when add the second TCP
- connection to iSCSI session
-Date: Tue, 12 Jul 2016 11:16:13 +0800
-Message-ID: <CAEK8JBD8OJJ9YgFFSt9fni50iVffFbUwkFFUBNGGdS-75foZBA@mail.gmail.com>
-References: <20160711221544.42291-1-li.feng@oracle.com> <CAEK8JBCZstYOEHhjkSZmoy9ga5YfKQyde7UVqJhu0gsTmi1AiQ@mail.gmail.com>
+From: Or Gerlitz <gerlitz.or@gmail.com>
+Subject: Re: [PATCH v3 13/13] cxgbit: add files for cxgbit.ko
+Date: Tue, 12 Jul 2016 10:53:10 +0300
+Message-ID: <CAJ3xEMhyzVEq4u+3q-HCK4iOg_H5LHjay7_4LVVYZ3Ppbc2voA@mail.gmail.com>
+References: <CAJ3xEMgtsPiatZ-Cy2ENsGVyKVDQSSHi4jr0Ushg21JiuqdLcw@mail.gmail.com>
+ <1464072025.22249.87.camel@haakon3.risingtidesystems.com> <CAJ3xEMjE3pfz7+QKMUheH9P+xyvj81qbCtbod0mBi7pUspMRXg@mail.gmail.com>
+ <011401d1b6ac$917ea000$b47be000$@opengridcomputing.com> <CAJ3xEMhm4eemgvgbpCEKc86LbKSi3WKUX7d+57KwwtZbJB52Wg@mail.gmail.com>
+ <1464238504.22249.168.camel@haakon3.risingtidesystems.com>
+ <20160526185819.GA1672@chelsio.com> <CAJ3xEMgdx5uFdwgdhoAXBFK6dCN59xLH0bta2j3DxMGZ31Fbsg@mail.gmail.com>
+ <20160706171703.GA1685@chelsio.com> <CAJ3xEMhnmcJHrBot4yiz6obS9a8rHOZVNP-EfQHCAFbJhFMcZg@mail.gmail.com>
+ <20160708180354.GA1658@chelsio.com> <00fc01d1d947$9a76aff0$cf640fd0$@opengridcomputing.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAEK8JBCZstYOEHhjkSZmoy9ga5YfKQyde7UVqJhu0gsTmi1AiQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, agrover@redhat.com, varun@chelsio.com, Herbert Xu <herbert@gondor.apana.org.au>, Roland Dreier <roland@purestorage.com>, Zhu Lingshan <lszhu@suse.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Feng Li <lifeng1519@gmail.com>, Sumit Rai <sumit.rai@calsoftinc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <00fc01d1d947$9a76aff0$cf640fd0$@opengridcomputing.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Steve Wise <swise@opengridcomputing.com>
+Cc: Varun Prakash <varun@chelsio.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kxie@chelsio.com, indranil@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add lszhu@suse.com
-
-2016-07-11 22:23 GMT+08:00 =E5=86=AF=E5=8A=9B <lifeng1519@gmail.com>:
-> This problem exists at least from v3.16.
-> The upstream kernel still exists this issue.
->
-> I have tested my patch and the following panic is disappeared.
->
-> Thanks,
-> - Alex
->
-> #dmesg
->
-> [ 1160.788676] sd 16:0:0:0: [sde] Attached SCSI disk
-> [ 1383.962626] target_core_get_fabric() failed for usb_gadget
-> [ 1404.788910] TARGET_CORE[iSCSI]: Unsupported SCSI Opcode 0x1b,
-> sending CHECK_CONDITION.
-> [ 1404.858451] BUG: unable to handle kernel NULL pointer dereference
-> at 00000000000001f8
-> [ 1404.858911] IP: [<ffffffffa05ee5d8>]
-> iscsi_target_login_thread+0x728/0x10b0 [iscsi_target_mod]
-> [ 1404.859746] PGD 230c29067 PUD 232060067 PMD 0
-> [ 1404.859963] Oops: 0000 [#1] SMP
-> [ 1404.860154] Modules linked in: crc32c_generic tcm_loop tcm_qla2xxx
-> qla2xxx iscsi_target_mod ib_srpt vhost_scsi vhost tcm_fc libfc
-> scsi_transport_fc scsi_tgt target_core_file target_core_iblock
-> target_core_pscsi target_core_mod configfs nbd
-> vmw_vsock_vmci_transport vsock bridge stp llc vmhgfs(O) snd_ens1371
-> snd_rawmidi snd_seq_device snd_ac97_codec snd_pcm snd_timer snd
-> vmw_balloon evdev soundcore ac97_bus gameport ppdev pcspkr sg psmouse
-> serio_raw parport_pc vmwgfx parport battery ttm drm_kms_helper drm
-> i2c_piix4 shpchp i2c_core vmw_vmci processor thermal_sys ac button
-> binfmt_misc md_mod ib_iser rdma_cm iw_cm ib_cm ib_sa ib_mad ib_core
-> ib_addr iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi
-> hid_generic usbhid hid ext4 crc16 mbcache jbd2 sd_mod crc_t10dif
-> crct10dif_generic crct10dif_common ata_generic
-> [ 1404.861278]  mptspi scsi_transport_spi mptscsih ata_piix uhci_hcd
-> ehci_pci ehci_hcd mptbase libata usbcore e1000 usb_common scsi_mod
-> sunrpc dm_mirror dm_region_hash dm_log dm_mod autofs4
-> [ 1404.861742] CPU: 2 PID: 1865 Comm: iscsi_np Tainted: G           O
-> 3.16.0-4-amd64 #1 Debian 3.16.7-ckt25-1
-> [ 1404.861868] Hardware name: VMware, Inc. VMware Virtual
-> Platform/440BX Desktop Reference Platform, BIOS 6.00 07/02/2015
-> [ 1404.862033] task: ffff880234c849a0 ti: ffff8800b9c20000 task.ti:
-> ffff8800b9c20000
-> [ 1404.862114] RIP: 0010:[<ffffffffa05ee5d8>]  [<ffffffffa05ee5d8>]
-> iscsi_target_login_thread+0x728/0x10b0 [iscsi_target_mod]
-> [ 1404.862233] RSP: 0018:ffff8800b9c23e60  EFLAGS: 00010246
-> [ 1404.862282] RAX: 0000000000000000 RBX: ffff88023125b800 RCX: ffff8=
-802b4d8d000
-> [ 1404.862344] RDX: 000000000000002d RSI: 00000000fffffe01 RDI: ffff8=
-80233ef1800
-> [ 1404.862406] RBP: ffff8800b9651a00 R08: 00000000d5a073de R09: ffff8=
-8023487e6c0
-> [ 1404.862585] R10: 00000000ead0c2e5 R11: 00000000d039ef6a R12: ffff8=
-8023125b854
-> [ 1404.865580] R13: ffff88023125b908 R14: ffff880233ef1800 R15: ffff8=
-80234c849a0
-> [ 1404.867732] FS:  00007fba67e2fb80(0000) GS:ffff88023e640000(0000)
-> knlGS:0000000000000000
-> [ 1404.869772] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [ 1404.871850] CR2: 00000000000001f8 CR3: 0000000230ffa000 CR4: 00000=
-000000007e0
-> [ 1404.874271] Stack:
-> [ 1404.877492]  ffff88023125b908 00ff880234c849a0 ffff88023125b858
-> ffff88023481f400
-> [ 1404.880162]  ffffffff81510d00 ffff880230768000 ffff8800b9c23fd8
-> 0000000000012f00
-> [ 1404.883545]  ffff880234c849a0 ffff880233e9da40 ffff88023125b800
-> ffffffffa05edeb0
-> [ 1404.885865] Call Trace:
-> [ 1404.888384]  [<ffffffff81510d00>] ? __schedule+0x250/0x700
-> [ 1404.890619]  [<ffffffffa05edeb0>] ?
-> iscsi_target_login_sess_out+0x240/0x240 [iscsi_target_mod]
-> [ 1404.892668]  [<ffffffff8108809d>] ? kthread+0xbd/0xe0
-> [ 1404.894646]  [<ffffffff81087fe0>] ? kthread_create_on_node+0x180/0=
-x180
-> [ 1404.896553]  [<ffffffff81514958>] ? ret_from_fork+0x58/0x90
-> [ 1404.898556]  [<ffffffff81087fe0>] ? kthread_create_on_node+0x180/0=
-x180
-> [ 1404.900597] Code: 09 00 00 48 89 ea 4c 89 f6 48 89 df e8 52 1b 00
-> 00 85 c0 0f 88 82 02 00 00 0f b6 44 24 0f 4c 89 f7 88 45 09 49 8b 86
-> d8 04 00 00 <4c> 8b a8 f8 01 00 00 49 8b 86 a0 04 00 00 ff 90 98 00 0=
-0
-> 00 41
-> [ 1404.906962] RIP  [<ffffffffa05ee5d8>]
-> iscsi_target_login_thread+0x728/0x10b0 [iscsi_target_mod]
-> [ 1404.908962]  RSP <ffff8800b9c23e60>
-> [ 1404.910940] CR2: 00000000000001f8
-> [ 1404.917670] ---[ end trace d29d8c681ab2bdfb ]---
-> [ 1419.859690] iSCSI Login timeout on Network Portal 10.182.70.69:326=
-0
-> [ 1479.832056] iSCSI Login timeout on Network Portal 10.182.70.68:326=
-0
-> [ 1479.835739] iSCSI Login negotiation failed.
-> [ 1549.332632] iSCSI Login timeout on Network Portal 10.182.70.68:326=
-0
-> [ 1549.338432] iSCSI Login negotiation failed.
-> [ 1564.358423] iSCSI Login timeout on Network Portal 10.182.70.68:326=
-0
-> [ 1564.362443] iSCSI Login negotiation failed.
->
-> 2016-07-12 6:15 GMT+08:00 Feng Li <li.feng@oracle.com>:
->> From: Feng Li <lifeng1519@gmail.com>
+On Fri, Jul 8, 2016 at 9:36 PM, Steve Wise <swise@opengridcomputing.com> wrote:
+>> > > In first series libcxgb.ko will have common
+>> > > iSCSI DDP Page Pod Manager that will be shared
+>> > > by three Chelsio iSCSI drivers
+>> > > cxgb3i, cxgb4i, cxgbit.
+>> >
+>> > cool
+>> >
+>> > > In subsequent series I will add common connection
+>> > > management and other hardware specific common code
+>> > > in this module.
+>> >
+>> > any chance to get that ready for 4.8 too?
 >>
->> In MC/S scenario, the conn->sess has been set NULL in
->> iscsi_login_non_zero_tsih_s1 when the second connection comes here,
->> then kernel panic.
->>
->> The conn->sess will be assigned in iscsi_login_non_zero_tsih_s2. So
->> we should check whether it's NULL before calling.
->>
->> Signed-off-by: Feng Li <lifeng1519@gmail.com>
->> ---
->>  drivers/target/iscsi/iscsi_target_login.c | 5 +++--
->>  1 file changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/tar=
-get/iscsi/iscsi_target_login.c
->> index b5212f0..adf419f 100644
->> --- a/drivers/target/iscsi/iscsi_target_login.c
->> +++ b/drivers/target/iscsi/iscsi_target_login.c
->> @@ -1371,8 +1371,9 @@ static int __iscsi_target_login_thread(struct =
-iscsi_np *np)
->>         }
->>         login->zero_tsih =3D zero_tsih;
->>
->> -       conn->sess->se_sess->sup_prot_ops =3D
->> -               conn->conn_transport->iscsit_get_sup_prot_ops(conn);
->> +       if (conn->sess)
->> +               conn->sess->se_sess->sup_prot_ops =3D
->> +                       conn->conn_transport->iscsit_get_sup_prot_op=
-s(conn);
->>
->>         tpg =3D conn->tpg;
->>         if (!tpg) {
->> --
->> 2.9.0
->>
+>> I am working on common connection management, it is a
+>> big change as it involves multiple modules, so it is
+>> difficult to get it ready for 4.8.
 >
->
->
-> --
-> Thanks and Best Regards,
-> Feng Li(Alex)
+> Let's shoot for 4.9 for the common CM.  Nice work on the PPOD unification!
 
 
+Taking into account that this was a reviewer comment that basically
+should have been addressed for
+the initial merge into 4.7 and that there's more time for 4.8 work
+[1], could you try and get that for 4.8?
 
---=20
-Thanks and Best Regards,
-=46eng Li(Alex)
+[1] https://lwn.net/Articles/694055/
