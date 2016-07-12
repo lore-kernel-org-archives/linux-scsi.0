@@ -1,35 +1,41 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH v2 1/2] libata-scsi: fix D_SENSE bit relection in control mode page
-Date: Wed, 13 Jul 2016 02:54:11 +0800
-Message-ID: <57853cf5.c193420a.83221.11da@mx.google.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: tj@kernel.org, hare@suse.de
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/2] libata-scsi: rename ata_msense_ctl_mode() to
+ ata_msense_control()
+Date: Tue, 12 Jul 2016 15:04:21 -0400
+Message-ID: <20160712190421.GA10377@htj.duckdns.org>
+References: <20160712185412.4462-1-me>
+ <57853cf8.c193420a.83221.11de@mx.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:35068 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbcGLTEY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 15:04:24 -0400
+Content-Disposition: inline
+In-Reply-To: <57853cf8.c193420a.83221.11de@mx.google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: hare@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+On Wed, Jul 13, 2016 at 02:54:12AM +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+> 
+> To make it consistent with the recently added ata_mselect_control().
+> We probably shouldn't have the word "mode" in its name anyway, since
+> that's not the case for other ata_msense_*() / ata_mselect_*() either.
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-The bit should always be set to 1 when the requested version of
-page is "changeable" because we've made it so in ata_mselect_control().
-Also, it should always be set to 1 if ATA_DFLAG_D_SENSE is set (when
-the requested version of page is "current" or "default").
+Applied 1-2 to libata/for-4.8.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+In the future, can you please link patches in the same series?  If
+there are only several, either chain-replying or replying to the first
+patch is fine.  If there are more, people usually write up a head
+message and makes all patches replies to that message.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bfec66f..7e24f0a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2446,7 +2446,7 @@ static unsigned int ata_msense_ctl_mode(struct ata_device *dev, u8 *buf,
- 					bool changeable)
- {
- 	modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
--	if (changeable && (dev->flags & ATA_DFLAG_D_SENSE))
-+	if (changeable || (dev->flags & ATA_DFLAG_D_SENSE))
- 		buf[2] |= (1 << 2);	/* Descriptor sense requested */
- 	return sizeof(def_control_mpage);
- }
+Thanks.
+
 -- 
-2.9.0
-
+tejun
