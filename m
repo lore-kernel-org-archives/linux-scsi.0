@@ -1,34 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] libata-scsi: set correct VERSION field for ZAC devices
-Date: Tue, 12 Jul 2016 10:47:01 -0400
-Message-ID: <20160712144701.GC3190@htj.duckdns.org>
-References: <5784fab7.1641620a.9a531.ffff8dae@mx.google.com>
+Subject: Re: [PATCH v3 2/2] libata-scsi: better style in ata_msense_caching()
+Date: Tue, 12 Jul 2016 10:48:24 -0400
+Message-ID: <20160712144824.GD3190@htj.duckdns.org>
+References: <20160712133703.2076-1-me>
+ <5784f28c.c4d0620a.69372.3df2@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:33187 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbcGLOrF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 10:47:05 -0400
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35135 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030249AbcGLOs0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 10:48:26 -0400
 Content-Disposition: inline
-In-Reply-To: <5784fab7.1641620a.9a531.ffff8dae@mx.google.com>
+In-Reply-To: <5784f28c.c4d0620a.69372.3df2@mx.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: tom.ty89@gmail.com
-Cc: hare@suse.de, shaun.tancheff@seagate.com, sergei.shtylyov@cogentembedded.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: sergei.shtylyov@cogentembedded.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jul 12, 2016 at 10:12:01PM +0800, tom.ty89@gmail.com wrote:
+On Tue, Jul 12, 2016 at 09:37:03PM +0800, tom.ty89@gmail.com wrote:
 > From: Tom Yan <tom.ty89@gmail.com>
 > 
-> Commit 856c46639309 ("libata: support device-managed ZAC devices")
-> had the line that "bumps" the VERSION field in standard INQUIRY data
-> removed. Add it back and claim SPC-5 version compatibility, which
-> matches with the current version descriptor "SPC-5 (no version claimed)"
-> that is used for ZAC devices.
-> 
 > Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index bfec66f..48ea887 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2424,10 +2424,12 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
+>  static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+>  {
+>  	modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
+> -	if (changeable || ata_id_wcache_enabled(id))
+> -		buf[2] |= (1 << 2);	/* write cache enable */
+> -	if (!changeable && !ata_id_rahead_enabled(id))
+> -		buf[12] |= (1 << 5);	/* disable read ahead */
+> +	if (changeable) {
+> +		buf[2] |= 1 << 2; /* ata_mselect_caching() */
+> +	} else {
+> +		buf[2] |= ata_id_wcache_enabled(id) << 2;	/* write cache enable */
+> +		buf[12] |= !ata_id_rahead_enabled(id) << 5;	/* disable read ahead */
+> +	}
 
-Applied to libata/for-4.8.
+It's different but I'm not sure this is better.
 
 Thanks.
 
