@@ -1,48 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] libata-scsi: do not return designator for serial
- number
-Date: Tue, 12 Jul 2016 14:49:25 -0400
-Message-ID: <20160712184925.GG3190@htj.duckdns.org>
-References: <577d8249.a10c420a.da50c.ffff953e@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <577d8249.a10c420a.da50c.ffff953e@mx.google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: tom.ty89@gmail.com
+Subject: [PATCH v2 2/2] libata-scsi: rename ata_msense_ctl_mode() to ata_msense_control()
+Date: Wed, 13 Jul 2016 02:54:12 +0800
+Message-ID: <57853cf8.c193420a.83221.11de@mx.google.com>
+References: <20160712185412.4462-1-me>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34845 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbcGLSyy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 14:54:54 -0400
+In-Reply-To: <20160712185412.4462-1-me>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tj@kernel.org, hare@suse.de
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-On Thu, Jul 07, 2016 at 06:12:12AM +0800, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
-> 
-> SAT (as of sat4r05f.pdf) does not require this vendor specific
-> designator. Besides, we already have the Unit Serial Number VPD.
-> 
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index bfec66f..9f478ad 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2210,14 +2210,6 @@ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
->  	rbuf[1] = 0x83;			/* this page code */
->  	num = 4;
->  
-> -	/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
-> -	rbuf[num + 0] = 2;
-> -	rbuf[num + 3] = ATA_ID_SERNO_LEN;
-> -	num += 4;
-> -	ata_id_string(args->id, (unsigned char *) rbuf + num,
-> -		      ATA_ID_SERNO, ATA_ID_SERNO_LEN);
-> -	num += ATA_ID_SERNO_LEN;
-> -
+From: Tom Yan <tom.ty89@gmail.com>
 
-If it isn't actually broken, I don't want to change it.  It's a
-userland visible change which is gratuitous.
+To make it consistent with the recently added ata_mselect_control().
+We probably shouldn't have the word "mode" in its name anyway, since
+that's not the case for other ata_msense_*() / ata_mselect_*() either.
 
-Thanks.
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7e24f0a..bf4cb21 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2432,7 +2432,7 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+ }
+ 
+ /**
+- *	ata_msense_ctl_mode - Simulate MODE SENSE control mode page
++ *	ata_msense_control - Simulate MODE SENSE control mode page
+  *	@dev: ATA device of interest
+  *	@buf: output buffer
+  *	@changeable: whether changeable parameters are requested
+@@ -2442,7 +2442,7 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+  *	LOCKING:
+  *	None.
+  */
+-static unsigned int ata_msense_ctl_mode(struct ata_device *dev, u8 *buf,
++static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
+ 					bool changeable)
+ {
+ 	modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
+@@ -2566,13 +2566,13 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
+ 		break;
+ 
+ 	case CONTROL_MPAGE:
+-		p += ata_msense_ctl_mode(args->dev, p, page_control == 1);
++		p += ata_msense_control(args->dev, p, page_control == 1);
+ 		break;
+ 
+ 	case ALL_MPAGES:
+ 		p += ata_msense_rw_recovery(p, page_control == 1);
+ 		p += ata_msense_caching(args->id, p, page_control == 1);
+-		p += ata_msense_ctl_mode(args->dev, p, page_control == 1);
++		p += ata_msense_control(args->dev, p, page_control == 1);
+ 		break;
+ 
+ 	default:		/* invalid page code */
+@@ -3667,7 +3667,7 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+-	ata_msense_ctl_mode(dev, mpage, false);
++	ata_msense_control(dev, mpage, false);
+ 	for (i = 0; i < CONTROL_MPAGE_LEN - 2; i++) {
+ 		if (i == 0)
+ 			continue;
 -- 
-tejun
+2.9.0
+
