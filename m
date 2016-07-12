@@ -1,55 +1,52 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH v3 1/2] libata-scsi: fix SET FEATURES "filtering" for ata_msense_caching()
-Date: Tue, 12 Jul 2016 21:37:02 +0800
-Message-ID: <5784f286.c4d0620a.69372.3def@mx.google.com>
+From: Manjunath M B <Manjunath.MB@synopsys.com>
+Subject: [PATCH 1/1] scsi: ufs: tc-dwc-g210 driver fix for 20-bit RMMI
+Date: Tue, 12 Jul 2016 19:25:36 +0530
+Message-ID: <1468331736-23825-1-git-send-email-manjumb@synopsys.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36355 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345AbcGLNhR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 09:37:17 -0400
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:40037 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbcGLNzq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 09:55:46 -0400
+Received: from dc8secmta1.synopsys.com (dc8secmta1.synopsys.com [10.13.218.200])
+	by smtprelay.synopsys.com (Postfix) with ESMTP id 7231D10C0BB8
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2016 06:55:45 -0700 (PDT)
+Received: from dc8secmta1.internal.synopsys.com (dc8secmta1.internal.synopsys.com [127.0.0.1])
+	by dc8secmta1.internal.synopsys.com (Service) with ESMTP id 6417B27113
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2016 06:55:45 -0700 (PDT)
+Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
+	by dc8secmta1.internal.synopsys.com (Service) with ESMTP id 465FB27102
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2016 06:55:45 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+To: Joao.Pinto@synopsys.com
+Cc: linux-scsi@vger.kernel.org, Manjunath M B <Manjunath.MB@synopsys.com>
 
-From: Tom Yan <tom.ty89@gmail.com>
+The code was checking on PA_CONNECTEDRXLANES and
+PA_CONNECTEDTXLANES attributes to program the Lane#1
+attributes. The correct attributes are PA_AVAILRXDATALANES and
+PA_AVAILTXDATALANES respectively.
 
-Without this fix, the DRA bit of the caching mode page would not
-be updated when the read look-ahead feature is toggled (e.g. with
-`smartctl --set`), but will only be until, for example, the write
-cache feature is touched.
+Signed-off-by: Manjunath M B <manjumb@synopsys.com>
+---
+ drivers/scsi/ufs/tc-dwc-g210.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6be7770..077daf0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5127,7 +5127,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- 		switch (qc->tf.command) {
- 		case ATA_CMD_SET_FEATURES:
- 			if (qc->tf.feature != SETFEATURES_WC_ON &&
--			    qc->tf.feature != SETFEATURES_WC_OFF)
-+			    qc->tf.feature != SETFEATURES_WC_OFF &&
-+			    qc->tf.feature != SETFEATURES_RA_ON &&
-+			    qc->tf.feature != SETFEATURES_RA_OFF)
- 				break;
- 			/* fall through */
- 		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 99346be..2d68793 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -409,6 +409,9 @@ enum {
- 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
- 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
+index d6c5388..70db6d9 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210.c
++++ b/drivers/scsi/ufs/tc-dwc-g210.c
+@@ -187,9 +187,9 @@ static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
+ 	};
  
-+	SETFEATURES_RA_ON	= 0xaa, /* Enable read look-ahead */
-+	SETFEATURES_RA_OFF	= 0x55, /* Disable read look-ahead */
-+
- 	/* Enable/Disable Automatic Acoustic Management */
- 	SETFEATURES_AAM_ON	= 0x42,
- 	SETFEATURES_AAM_OFF	= 0xC2,
+ 	/* Get the available lane count */
+-	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_AVAILRXDATALANES),
+ 			&connected_rx_lanes);
+-	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_AVAILTXDATALANES),
+ 			&connected_tx_lanes);
+ 
+ 	if (connected_tx_lanes == 2) {
 -- 
-2.9.0
+1.9.1
 
