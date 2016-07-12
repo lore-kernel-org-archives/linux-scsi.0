@@ -1,48 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 2/2] libata-scsi: better style in ata_msense_caching()
-Date: Tue, 12 Jul 2016 10:48:24 -0400
-Message-ID: <20160712144824.GD3190@htj.duckdns.org>
-References: <20160712133703.2076-1-me>
- <5784f28c.c4d0620a.69372.3df2@mx.google.com>
+Subject: Re: [PATCH v3 1/2] libata-scsi: fix SET FEATURES "filtering" for
+ ata_msense_caching()
+Date: Tue, 12 Jul 2016 10:53:04 -0400
+Message-ID: <20160712145304.GE3190@htj.duckdns.org>
+References: <5784f286.c4d0620a.69372.3def@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35135 "EHLO
-	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030249AbcGLOs0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2016 10:48:26 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5784f28c.c4d0620a.69372.3df2@mx.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <5784f286.c4d0620a.69372.3def@mx.google.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: tom.ty89@gmail.com
 Cc: sergei.shtylyov@cogentembedded.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 12, 2016 at 09:37:03PM +0800, tom.ty89@gmail.com wrote:
+On Tue, Jul 12, 2016 at 09:37:02PM +0800, tom.ty89@gmail.com wrote:
 > From: Tom Yan <tom.ty89@gmail.com>
 > 
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> Without this fix, the DRA bit of the caching mode page would not
+> be updated when the read look-ahead feature is toggled (e.g. with
+> `smartctl --set`), but will only be until, for example, the write
+> cache feature is touched.
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index bfec66f..48ea887 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2424,10 +2424,12 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
->  static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
->  {
->  	modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
-> -	if (changeable || ata_id_wcache_enabled(id))
-> -		buf[2] |= (1 << 2);	/* write cache enable */
-> -	if (!changeable && !ata_id_rahead_enabled(id))
-> -		buf[12] |= (1 << 5);	/* disable read ahead */
-> +	if (changeable) {
-> +		buf[2] |= 1 << 2; /* ata_mselect_caching() */
-> +	} else {
-> +		buf[2] |= ata_id_wcache_enabled(id) << 2;	/* write cache enable */
-> +		buf[12] |= !ata_id_rahead_enabled(id) << 5;	/* disable read ahead */
-> +	}
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-It's different but I'm not sure this is better.
+Applied to libata/for-4.8.
 
 Thanks.
 
