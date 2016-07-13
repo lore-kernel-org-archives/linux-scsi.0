@@ -1,122 +1,201 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 129611] New: baba ji ka thullu@@!!!USA AVG support help
- 18.o..o882o..652 avg antivIRUS TEchnICal SUPPoRT PhoNE NUMbER
-Date: Wed, 13 Jul 2016 17:12:30 +0000
-Message-ID: <bug-129611-11613@https.bugzilla.kernel.org/>
+From: Luis de Bethencourt <luisbg-JPH+aEBZ4P+UEJcrhfAQsw@public.gmane.org>
+Subject: Re: [PATCH v3 1/7] lib: string: add functions to
+	case-convert strings
+Date: Wed, 13 Jul 2016 18:19:15 +0100
+Message-ID: <57867813.8010608@osg.samsung.com>
+References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
+ <1468017794-4818-2-git-send-email-mmayer@broadcom.com>
+ <5780E866.8000001@osg.samsung.com>
+ <CAGt4E5vYzkqgiiQXXjnX7az-KzCVSYthEW5Df03U=Y1qhEJdRQ@mail.gmail.com>
+ <CAGt4E5tpw0sa1PQmgJzKbPuzSbFG9_CUWjjO1z93OSc0KkjUXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51054 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750872AbcGMRMz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jul 2016 13:12:55 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 5212F20172
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2016 17:12:33 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id E997520222
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2016 17:12:30 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <CAGt4E5tpw0sa1PQmgJzKbPuzSbFG9_CUWjjO1z93OSc0KkjUXw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Markus Mayer <markus.mayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=129611
-
-            Bug ID: 129611
-           Summary: baba ji ka thullu@@!!!USA AVG support help
-                    18.o..o882o..652 avg antivIRUS TEchnICal SUPPoRT PhoNE
-                    NUMbER
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: wergwer
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: AIC94XX
-          Assignee: scsi_drivers-aic94xx@kernel-bugs.osdl.org
-          Reporter: victor.jackson.122016@gmail.com
-        Regression: No
-
-AVG support number 1800.882.0652 AVG antivirus Tech Support Phone Number USA &
-Canada
-
-AVG antivirus support 18008820652 AVG antivirus Technical Support Phone Number
-USA & Canada
-
-
-FILE: AVG antivirus support 18008820652 AVG antivirus Tech Support Phone Number
-USA & Canada
-
-
-AVG antivirus Care Number 18008820652 Help Desk Number & AVG antivirus Tech
-Support Phone Number USA & Canada
-
-AVG antivirus Care Number 18008820652 Help Desk Number & AVG antivirus Tech
-Support Phone Number USA & Canada
-AVG antivirus antivirus Care Number @(18008820652)@ Help Desk Number & AVG Tech
-Support Phone Number USA & Canada here. AVG antivirus antivirus Care Number,
-Help Desk Number & AVG Tech Support Phone Number AVG Technical Support Phone
-Number) & AVG Online Help Desk Number & AVG Password Recovery| AVG antivirus
-Help Desk Phone Number & AVG antivirus Service (18008820652) Heline Number &
-AVG Support Phone Number,AVG antivirus Support (18008820652) Heline Number &
-AVG Support Phone Number AVG Help Support (18008820652) Desk Number & AVG
-Support Phone Number AVG Online Support Number 18008820652 AVG antivirus Care
-Phone Number AVG Suppport Phone Number (18008820652) AVG Help Desk Number AVG
-antivirus (18008820652) Help Desk Number & AVG Tech Support Number AVG
-Technical services (18008820652)AVG Onlince Support Number USA 18008820652 AVG
-tech support number, Wireless AVG antivirus service number, AVG support
-number,AVG phone number AVG antivirus phone number helpline number,USA
-CANADA>>18008820652 AVG TECH SUPPORT PHONE NUMBER AVG antivirus SERVICE PHONE
-NUMBER here.18008820652 AVG TECH SUPPORT PHONE NUMBER %%%AVG antivirus SERVICE
-PHONE NUMBER AVG technical support number AVG helpdesk number AVG helpdesk
-phone number AVG Helpline number,AVG Phone number USA CANADA,(((18008820652))))
-AVG phone number===AVG tech support PHONE NUMBER Helpline tollfree
-===!!===18008820652== AVG tech support phone number ==!! ====AVG install TECH
-SUPPORT PHONE NUMBER FREE USA CANADA !!18008820652 AVG TECH SUPPORT PHONE
-NUMBER %%%AVG antivirus SERVICE PHONE NUMBER ===!!! AVG antivirus service phone
-number!!! AVG phone number==== AVG telephone number!!18008820652==AVG PHONE
-NUMBER!!!TECH SUPPORT phone number ++AVG TOLL FREE PHONE NUMBERPhone Number
-18008820652 USA CANADA, AVG  Support Phone Number, AVG Technical Support Phone
-Numbe here.Describe toll free AVG Phone Number 18008820652 USA CANADA, AVG 
-Support Phone Number, AVG Technical Support Phone Number here.toll free AVG
-Phone Number 18008820652 USA CANADA, AVG  Support Phone Number, AVG Technical
-Support Phone Number toll free AVG Phone Number 18008820652 USA CANADA, AVG 
-Support Phone Number, AVG Technical Support Phone Number, AVG antivirus Support
-Number?? This article is in need of a technical review. This article is in need
-of an editorial review. AVG Phone Number 18008820652 USA CANADA, AVG Support
-Phone Number, AVG Technical Support Phone Number, AVG antivirus Support
-Number?? AVG Support Phone Number 18008820652 USA CANADA, AVG Phone Number, AVG
-Technical Support Phone Number, AVG Service Support Number AVG Support Phone
-Number 18008820652 USA CANADA, AVG Phone Number, AVG Technical Support Phone
-Number, AVG Service Support Number?? AVG Phone Number 18008820652 USA CANADA,
-AVG  Support Phone Number, AVG Technical Support Phone Number, AVG antivirus
-Support Number?? AVG Support Phone Number 18008820652 USA CANADA, AVG Support
-Phone Number, AVG Technical Support Phone Number, AVG antivirus Support
-Number?? AVG phone number #$#18008820652##$AVG phone number AVG security phone
-number AVG  phone number #$#18008820652##$AVG support phone number AVG symantec
-phone number AVG phone number antivirus service #$#18008820652##$AVG antivirus
-service phone number AVG tech support phone number AVG technical support phone
-number AVG phone numbers AVG help phone number AVG support phone number
-#$#18008820652##$AVG phone support AVG contact phone number AVG internet
-security phone number AVG  support phone number AVG phone AVG 1855 phone number
-phone number for AVG phone numbers AVG antivirus service phone number AVG
-antivirus support phone number find a phone number AVG USA CANADA phone number
-USA CANADA phone number phone number for AVG tech support phone number AVG 
-phone support free phone numbers phone number AVG phone number get human find
-phone number phone number for AVG security us phone number phone number USA
-CANADA #$#18008820652##$AVG contact phone number AVG phone number for support
-AVG contact number phone number for AVG USA CANADA phone numbers phone number
-search us phone numbers find phone numbers Nortoumber AVG 1855 number AVG
-downloads AVG free trial AVG internet security 2012 AVG cancellation phone
-number AVG updates phone book phone numbers in USA CANADA telephone number AVG
-helpline number phone directory contact AVG by phone AVG subscription AVG ghost
-download AVG com support phone number AVG contact AVG contact number technical
-support phone number AVG phone AVG  free AVG support toll free AVG Phone Number
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+T24gMTEvMDcvMTYgMjM6NDYsIE1hcmt1cyBNYXllciB3cm90ZToKPiBPbiA5IEp1bHkgMjAxNiBh
+dCAwODozMCwgTWFya3VzIE1heWVyIDxtYXJrdXMubWF5ZXJAYnJvYWRjb20uY29tPiB3cm90ZToK
+Pj4gT24gOSBKdWx5IDIwMTYgYXQgMDU6MDQsIEx1aXMgZGUgQmV0aGVuY291cnQgPGx1aXNiZ0Bv
+c2cuc2Ftc3VuZy5jb20+IHdyb3RlOgo+Pj4gT24gMDgvMDcvMTYgMjM6NDMsIE1hcmt1cyBNYXll
+ciB3cm90ZToKPj4+PiBBZGQgYSBjb2xsZWN0aW9uIG9mIGdlbmVyaWMgZnVuY3Rpb25zIHRvIGNv
+bnZlcnQgc3RyaW5ncyB0byBsb3dlcmNhc2UKPj4+PiBvciB1cHBlcmNhc2UuCj4+Pj4KPj4+PiBD
+aGFuZ2luZyB0aGUgY2FzZSBvZiBhIHN0cmluZyAod2l0aCBvciB3aXRob3V0IGNvcHlpbmcgaXQg
+Zmlyc3QpIHNlZW1zCj4+Pj4gdG8gYmUgYSByZWN1cnJpbmcgcmVxdWlyZW1lbnQgaW4gdGhlIGtl
+cm5lbCB0aGF0IGlzIGN1cnJlbnRseSBiZWluZwo+Pj4+IHNvbHZlZCBieSBzZXZlcmFsIGR1cGxp
+Y2F0ZWQgaW1wbGVtZW50YXRpb25zIGRvaW5nIHRoZSBzYW1lIHRoaW5nLiBUaGlzCj4+Pj4gY2hh
+bmdlIGFpbXMgYXQgcmVkdWNpbmcgdGhpcyBjb2RlIGR1cGxpY2F0aW9uLgo+Pj4+Cj4+Pj4gVGhl
+IG5ldyBmdW5jdGlvbnMgYXJlCj4+Pj4gICAgIHZvaWQgc3RybGNweXRvdXBwZXIoY2hhciAqZHN0
+LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+Pj4+ICAgICB2b2lkIHN0cmxjcHl0b2xv
+d2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKPj4+PiAgICAgdm9p
+ZCBzdHJjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4+PiAgICAgdm9p
+ZCBzdHJjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4+PiAgICAgdm9p
+ZCBzdHJ0b3VwcGVyKGNoYXIgKnMpOwo+Pj4+ICAgICB2b2lkIHN0cnRvbG93ZXIoY2hhciAqcyk7
+Cj4+Pj4KPj4+PiBUaGUgInN0cltsXWNweXRvKiIgdmVyc2lvbnMgb2YgdGhlIGZ1bmN0aW9uIHRh
+a2UgYSBkZXN0aW5hdGlvbiBzdHJpbmcKPj4+PiBhbmQgYSBzb3VyY2Ugc3RyaW5nIGFzIGFyZ3Vt
+ZW50cy4gVGhlICJzdHJsY3B5dG8qIiB2ZXJzaW9ucyBhZGRpdGlvbmFsbHkKPj4+PiB0YWtlIGEg
+bGVuZ3RoIGFyZ3VtZW50IGxpa2Ugc3RybGNweSgpIGl0c2VsZi4gTGFzdGx5LCB0aGUgc3RydG8q
+Cj4+Pj4gZnVuY3Rpb25zIHRha2UgYSBzaW5nbGUgc3RyaW5nIGFyZ3VtZW50IGFuZCBtb2RpZnkg
+dGhlIHBhc3NlZC1pbiBzdHJpbmcuCj4+Pj4KPj4+PiBMaWtlIHN0cmxjcHkoKSwgYW5kIHVubGlr
+ZSBzdHJuY3B5KCksIHRoZSBmdW5jdGlvbnMgZ3VhcmFudGVlIE5VTEwKPj4+PiB0ZXJtaW5hdGlv
+biBvZiB0aGUgZGVzdGluYXRpb24gc3RyaW5nLgo+Pj4+Cj4+Pj4gU2lnbmVkLW9mZi1ieTogTWFy
+a3VzIE1heWVyIDxtbWF5ZXJAYnJvYWRjb20uY29tPgo+Pj4+IC0tLQo+Pj4+ICBpbmNsdWRlL2xp
+bnV4L3N0cmluZy5oIHwgNDAgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+Kwo+Pj4+ICBsaWIvc3RyaW5nLmMgICAgICAgICAgIHwgMzggKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysKPj4+PiAgMiBmaWxlcyBjaGFuZ2VkLCA3OCBpbnNlcnRpb25zKCsp
+Cj4+Pj4KPj4+PiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9zdHJpbmcuaCBiL2luY2x1ZGUv
+bGludXgvc3RyaW5nLmgKPj4+PiBpbmRleCAyNmI2ZjZhLi4zNmM5ZDE0IDEwMDY0NAo+Pj4+IC0t
+LSBhL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKPj4+PiArKysgYi9pbmNsdWRlL2xpbnV4L3N0cmlu
+Zy5oCj4+Pj4gQEAgLTExNiw2ICsxMTYsOCBAQCBleHRlcm4gdm9pZCAqIG1lbWNocihjb25zdCB2
+b2lkICosaW50LF9fa2VybmVsX3NpemVfdCk7Cj4+Pj4gICNlbmRpZgo+Pj4+ICB2b2lkICptZW1j
+aHJfaW52KGNvbnN0IHZvaWQgKnMsIGludCBjLCBzaXplX3Qgbik7Cj4+Pj4gIGNoYXIgKnN0cnJl
+cGxhY2UoY2hhciAqcywgY2hhciBvbGQsIGNoYXIgbmV3KTsKPj4+PiArZXh0ZXJuIHZvaWQgc3Ry
+bGNweXRvdXBwZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+Pj4+
+ICtleHRlcm4gdm9pZCBzdHJsY3B5dG9sb3dlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYywg
+c2l6ZV90IGxlbik7Cj4+Pj4KPj4+PiAgZXh0ZXJuIHZvaWQga2ZyZWVfY29uc3QoY29uc3Qgdm9p
+ZCAqeCk7Cj4+Pj4KPj4+PiBAQCAtMTY5LDQgKzE3MSw0MiBAQCBzdGF0aWMgaW5saW5lIGNvbnN0
+IGNoYXIgKmtiYXNlbmFtZShjb25zdCBjaGFyICpwYXRoKQo+Pj4+ICAgICAgIHJldHVybiB0YWls
+ID8gdGFpbCArIDEgOiBwYXRoOwo+Pj4+ICB9Cj4+Pj4KPj4+PiArLyoqCj4+Pj4gKyAqIHN0cmNw
+eXRvdXBwZXIgLSBDb3B5IHN0cmluZyBhbmQgY29udmVydCB0byB1cHBlcmNhc2UuCj4+Pj4gKyAq
+IEBkc3Q6IFRoZSBidWZmZXIgdG8gc3RvcmUgdGhlIHJlc3VsdC4KPj4+PiArICogQHNyYzogVGhl
+IHN0cmluZyB0byBjb252ZXJ0IHRvIHVwcGVyY2FzZS4KPj4+PiArICovCj4+Pj4gK3N0YXRpYyBp
+bmxpbmUgdm9pZCBzdHJjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKQo+Pj4+
+ICt7Cj4+Pj4gKyAgICAgc3RybGNweXRvdXBwZXIoZHN0LCBzcmMsIC0xKTsKPj4+PiArfQo+Pj4+
+ICsKPj4+Cj4+PiBXaHkgbm90IHVzZSBTSVpFX01BWCBpbnN0ZWFkIG9mIC0xPwo+Pgo+PiBTdXJl
+LiBJJ2xsIGNoYW5nZSBhbGwgZm91ciBvZiB0aGVtLiBUaGFua3MuCj4gCj4gVHVybnMgb3V0IHRo
+ZXJlJ3MgYWN0dWFsbHkgYSBjaXJjdWxhciBkZXBlbmRlbmN5IGhlcmUuIFNJWkVfTUFYIGlzCj4g
+ZGVmaW5lZCBpbiBsaW51eC9rZXJuZWwuaC4gU28sIHN0cmluZy5oIHdvdWxkIG5lZWQgdG8gaW5j
+bHVkZQo+IGtlcm5lbC5oLiBCdXQga2VybmVsLmgsIGJ5IHdheSBvZiBzZXZlcmFsIG90aGVyIGhl
+YWRlcnMsIGluY2x1ZGVzCj4gc3RyaW5nLmguCj4gCj4gQXR0ZW1wdGluZyB0byBpbmNsdWRlIGtl
+cm5lbC5oIGluIHN0cmluZy5oIHRoZW4gbGVhZHMgdG8gc29tZXRoaW5nIGxpa2UgdGhpczoKPiAK
+PiAgIENISyAgICAgaW5jbHVkZS9jb25maWcva2VybmVsLnJlbGVhc2UKPiAgIENISyAgICAgaW5j
+bHVkZS9nZW5lcmF0ZWQvdWFwaS9saW51eC92ZXJzaW9uLmgKPiAgIENISyAgICAgaW5jbHVkZS9n
+ZW5lcmF0ZWQvdXRzcmVsZWFzZS5oCj4gICBDQyAgICAgIHNjcmlwdHMvbW9kL2RldmljZXRhYmxl
+LW9mZnNldHMucwo+ICAgQ0hLICAgICBpbmNsdWRlL2dlbmVyYXRlZC90aW1lY29uc3QuaAo+IElu
+IGZpbGUgaW5jbHVkZWQgZnJvbSBpbmNsdWRlL2xpbnV4L3ByaW50ay5oOjI4OTowLAo+ICAgICAg
+ICAgICAgICAgICAgZnJvbSBpbmNsdWRlL2xpbnV4L2tlcm5lbC5oOjEzLAo+ICAgICAgICAgICAg
+ICAgICAgZnJvbSBpbmNsdWRlL2xpbnV4L3N0cmluZy5oOjExLAo+ICAgICAgICAgICAgICAgICAg
+ZnJvbSBpbmNsdWRlL3VhcGkvbGludXgvdXVpZC5oOjIxLAo+ICAgICAgICAgICAgICAgICAgZnJv
+bSBpbmNsdWRlL2xpbnV4L3V1aWQuaDoxOSwKPiAgICAgICAgICAgICAgICAgIGZyb20gaW5jbHVk
+ZS9saW51eC9tb2RfZGV2aWNldGFibGUuaDoxMiwKPiAgICAgICAgICAgICAgICAgIGZyb20gc2Ny
+aXB0cy9tb2QvZGV2aWNldGFibGUtb2Zmc2V0cy5jOjI6Cj4gaW5jbHVkZS9saW51eC9keW5hbWlj
+X2RlYnVnLmg6IEluIGZ1bmN0aW9uIOKAmGRkZWJ1Z19keW5kYmdfbW9kdWxlX3BhcmFtX2Ni4oCZ
+Ogo+IGluY2x1ZGUvbGludXgvZHluYW1pY19kZWJ1Zy5oOjEyMjoyOiBlcnJvcjogaW1wbGljaXQg
+ZGVjbGFyYXRpb24gb2YKPiBmdW5jdGlvbiDigJhzdHJzdHLigJkgWy1XZXJyb3I9aW1wbGljaXQt
+ZnVuY3Rpb24tZGVjbGFyYXRpb25dCj4gICBpZiAoc3Ryc3RyKHBhcmFtLCAiZHluZGJnIikpIHsK
+PiAgIF4KPiBpbmNsdWRlL2xpbnV4L2R5bmFtaWNfZGVidWcuaDoxMjI6Njogd2FybmluZzogaW5j
+b21wYXRpYmxlIGltcGxpY2l0Cj4gZGVjbGFyYXRpb24gb2YgYnVpbHQtaW4gZnVuY3Rpb24g4oCY
+c3Ryc3Ry4oCZIFtlbmFibGVkIGJ5IGRlZmF1bHRdCj4gICBpZiAoc3Ryc3RyKHBhcmFtLCAiZHlu
+ZGJnIikpIHsKPiAgICAgICBeCj4gU2luY2Uga2VybmVsLmggaXMgcmVmZXJlbmNpbmcgc3RyaW5n
+LmggKHdoaWNoIGlzIG5lZWRlZCwgYnV0IG5vdAo+IGluY2x1ZGVkIGEgc2Vjb25kIHRpbWUgZHVl
+IHRvIHRoZSBpbmNsdWRlIGd1YXJkcyksIHRoaXMgbGVhZHMgdG8KPiB1bmRlY2xhcmVkIHN0cmlu
+ZyBmdW5jdGlvbnMsIGJlY2F1c2Ugd2UgYXJlIHN0aWxsIGluIHRoZSBlYXJseSBzdGFnZXMKPiBv
+ZiBpbmNsdWRpbmcgc3RyaW5nLmggaXRzZWxmIGFuZCBoYXZlbid0IGdvdHRlbiB0byB0aGUgZnVu
+Y3Rpb24KPiBkZWNsYXJhdGlvbnMgeWV0Lgo+IAoKSGkgTWFya3VzLAoKQW1hemluZy4gSSBzZWUg
+dGhpcyBoYXBwZW5pbmcgYXMgd2VsbCwgYnV0IEkga25vdyBpdCBzaG91bGRuJ3QuCgpUaGUgcmVh
+c29uIHRoZSAjaWZuZGVmIGd1YXJkcyBpbiBoZWFkZXJzIGFyZSB0aGVyZSBpcyBwcmVjaXNlbHkg
+dG8gYWxsb3cKY2lyY3VsYXIgZGVwZW5kZW5jaWVzLgoKVGhlIHByb2JsZW0gaW4geW91ciBvdXRw
+dXQgcmVhZHMgYXM6CnN0cnN0cigpIGlzIGluIHN0cmluZy5oCiNpbmNsdWRlIHN0cmluZy5oIC0+
+IHRoYXQgaW5jbHVkZXMga2VybmVsLmggLT4gdGhhdCBpbmNsdWRlcyBzdHJpbmcuaAoKVGhlIHRo
+aXJkIHNob3VsZCBkbyBub3RoaW5nIGJhc2VkIG9uIF9MSU5VWF9TVFJJTkdfSF8gYmVpbmcgZGVm
+aW5lZCBhbHJlYWR5CmFuZCBhbGwgY29kZSBpbnNpZGUgdGhlICNpZm5kZWYgaW4gc3RyaW5nLmgg
+bm90IGJlaW5nIGV4ZWN1dGVkLgpZZXQgaXQgc2hvdWxkbid0IGJsb2NrIHRoZSBmaXJzdCBpbmNs
+dWRlIGFib3ZlIHNpbmNlIHRoYXQgbWFjcm8gaXNuJ3QgZGVmaW5lZCwKd2hpY2ggaXMgd2hhdCB0
+aGUgZXJyb3Igc3VnZ2VzdHMgc2luY2UgaXQgZG9lc24ndCBoYXZlIHN0cnN0cigpCklmIF9MSU5V
+WF9TVFJJTkdfSCBpcyBkZWZpbmVkLCBzdHJzdHIoKSBzaG91bGQgYmUgYXZhaWxhYmxlLgoKSW52
+ZXN0aWdhdGluZyB0aGlzIGlzc3VlLCBpdCBvbmx5IGhhcHBlbnMgd2hlbiBDT05GSUdfRFlOQU1J
+Q19ERUJVRyBpcyBub3QKc2V0IGFuZCBsaW5lIDE3MCBvZiBkeW5hbWljX2RlYnVnLmggcnVucywg
+YnV0IGp1c3QgYWJvdmUgd2UgaGF2ZSBhbgppbmNsdWRlIG9mIHN0cmluZy5oLgoKVmVyeSBzdHJh
+bmdlIHRoYXQgI2luY2x1ZGUgPGxpbnV4L3N0cmluZy5oPiBpc24ndCBkb2luZyBpdHMgam9iLgoK
+VGhlIGZpcnN0IHRoaW5nIEkgdHJpZWQgaXMgdG8gdW5kZXJzdGFuZCB3aGVyZSBkeW5hbWljX2Rl
+YnVnLmggaXMgdXNlZCBhbmQKcmVtb3ZlZCB0aGUgdW5uZWVkZWQgb25lczoKLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0KZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgva2VybmVsLmggYi9pbmNsdWRlL2xpbnV4
+L2tlcm5lbC5oCi0tLSBhL2luY2x1ZGUvbGludXgva2VybmVsLmgKKysrIGIvaW5jbHVkZS9saW51
+eC9rZXJuZWwuaApAQCAtMTEsNyArMTEsNiBAQAogI2luY2x1ZGUgPGxpbnV4L2xvZzIuaD4KICNp
+bmNsdWRlIDxsaW51eC90eXBlY2hlY2suaD4KICNpbmNsdWRlIDxsaW51eC9wcmludGsuaD4KLSNp
+bmNsdWRlIDxsaW51eC9keW5hbWljX2RlYnVnLmg+CiAjaW5jbHVkZSA8YXNtL2J5dGVvcmRlci5o
+PgogI2luY2x1ZGUgPHVhcGkvbGludXgva2VybmVsLmg+CgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9s
+aW51eC9wcmludGsuaCBiL2luY2x1ZGUvbGludXgvcHJpbnRrLmgKLS0tIGEvaW5jbHVkZS9saW51
+eC9wcmludGsuaAorKysgYi9pbmNsdWRlL2xpbnV4L3ByaW50ay5oCkBAIC0zMDcsMTAgKzMwNywx
+MSBAQCBhc21saW5rYWdlIF9fcHJpbnRmKDEsIDIpIF9fY29sZCB2b2lkIF9fcHJfaW5mbyhjb25z
+dCBjaGFyICpmbXQsIC4uLik7CiAgICAgICAgbm9fcHJpbnRrKEtFUk5fREVCVUcgcHJfZm10KGZt
+dCksICMjX19WQV9BUkdTX18pCiAjZW5kaWYKCi0jaW5jbHVkZSA8bGludXgvZHluYW1pY19kZWJ1
+Zy5oPgoKIC8qIElmIHlvdSBhcmUgd3JpdGluZyBhIGRyaXZlciwgcGxlYXNlIHVzZSBkZXZfZGJn
+IGluc3RlYWQgKi8KICNpZiBkZWZpbmVkKENPTkZJR19EWU5BTUlDX0RFQlVHKQorI2luY2x1ZGUg
+PGxpbnV4L2R5bmFtaWNfZGVidWcuaD4KKwogLyogZHluYW1pY19wcl9kZWJ1ZygpIHVzZXMgcHJf
+Zm10KCkgaW50ZXJuYWxseSBzbyB3ZSBkb24ndCBuZWVkIGl0IGhlcmUgKi8KICNkZWZpbmUgcHJf
+ZGVidWcoZm10LCAuLi4pIFwKICAgICAgICBkeW5hbWljX3ByX2RlYnVnKGZtdCwgIyNfX1ZBX0FS
+R1NfXykKZGlmZiAtLWdpdCBhL2tlcm5lbC9tb2R1bGUuYyBiL2tlcm5lbC9tb2R1bGUuYwppbmRl
+eCBiZWFlYmVhLi5lNzBhMmZhIDEwMDY0NAotLS0gYS9rZXJuZWwvbW9kdWxlLmMKKysrIGIva2Vy
+bmVsL21vZHVsZS5jCkBAIC02MCw2ICs2MCw3IEBACiAjaW5jbHVkZSA8bGludXgvanVtcF9sYWJl
+bC5oPgogI2luY2x1ZGUgPGxpbnV4L3Bmbi5oPgogI2luY2x1ZGUgPGxpbnV4L2JzZWFyY2guaD4K
+KyNpbmNsdWRlIDxsaW51eC9keW5hbWljX2RlYnVnLmg+CiAjaW5jbHVkZSA8dWFwaS9saW51eC9t
+b2R1bGUuaD4KICNpbmNsdWRlICJtb2R1bGUtaW50ZXJuYWwuaCIKLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+ClRoaXMgZGlmZiBbMF0gZml4ZXMgdGhlIGlzc3VlIGJ1dCBpdCBpcyBhIHdvcmthcm91bmQgZm9y
+IHRoZSBvcmlnaW5hbAppc3N1ZSBhYm91dCBzdHJpbmcuaCBub3QgYmVpbmcgcHJvcGVybHkgaW5j
+bHVkZWQgaW4gZHluYW1pY19kZWJ1Zy5oCgpQdXp6bGVkIGJ5IHRoaXMgYW5kIGNhbid0IGZpZ3Vy
+ZSBvdXQgd2hhdCBpcyBoYXBwZW5pbmcgd3JvbmcuCgpUaGUgc2Vjb25kIHRoaW5nIEkgdHJpZWQg
+d2FzIGFkZGluZwojd2FybmluZyAiTGlua2luZyB0byBzdHJpbmcgaGVhZGVyIgppbiBpbmNsdWRl
+L2xpbnV4L3N0cmluZy5oLCBhbmQgSSBkb24ndCBzZWUgYW55IGluY2x1ZGUgcGF0aCBtZW50aW9u
+aW5nCmtlcm5lbC5oLCB3aGVyZSBkbyB5b3Ugc2VlIHRoZSBjaXJjdWxhciBkZXBlbmRlbmN5PyBJ
+IG1pZ2h0IGJlIG1pc3NpbmcKc29tZXRoaW5nLgoKVGhhbmtzLApMdWlzCgoKClswXSBTZW50IGZv
+ciBjb21tZW50czoKaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTYvNy8xMy82ODYKCj4+Pj4gKy8q
+Kgo+Pj4+ICsgKiBzdHJjcHl0b2xvd2VyIC0gQ29weSBzdHJpbmcgYW5kIGNvbnZlcnQgdG8gbG93
+ZXJjYXNlLgo+Pj4+ICsgKiBAZHN0OiBUaGUgYnVmZmVyIHRvIHN0b3JlIHRoZSByZXN1bHQuCj4+
+Pj4gKyAqIEBzcmM6IFRoZSBzdHJpbmcgdG8gY29udmVydCB0byBsb3dlcmNhc2UuCj4+Pj4gKyAq
+Lwo+Pj4+ICtzdGF0aWMgaW5saW5lIHZvaWQgc3RyY3B5dG9sb3dlcihjaGFyICpkc3QsIGNvbnN0
+IGNoYXIgKnNyYykKPj4+PiArewo+Pj4+ICsgICAgIHN0cmxjcHl0b2xvd2VyKGRzdCwgc3JjLCAt
+MSk7Cj4+Pj4gK30KPj4+PiArCj4+Pgo+Pj4gU2FtZSBoZXJlLCBhbmQgdGhlIDIgYmVsb3cgOikK
+Pj4+Cj4+PiBUaGFua3MgTWFya3VzLAo+Pj4gTHVpcwo+Pj4KPj4+PiArLyoqCj4+Pj4gKyAqIHN0
+cnRvdXBwZXIgLSBDb252ZXJ0IHN0cmluZyB0byB1cHBlcmNhc2UuCj4+Pj4gKyAqIEBzOiBUaGUg
+c3RyaW5nIHRvIG9wZXJhdGUgb24uCj4+Pj4gKyAqLwo+Pj4+ICtzdGF0aWMgaW5saW5lIHZvaWQg
+c3RydG91cHBlcihjaGFyICpzKQo+Pj4+ICt7Cj4+Pj4gKyAgICAgc3RybGNweXRvdXBwZXIocywg
+cywgLTEpOwo+Pj4+ICt9Cj4+Pj4gKwo+Pj4+ICsvKioKPj4+PiArICogc3RydG9sb3dlciAtIENv
+bnZlcnQgc3RyaW5nIHRvIGxvd2VyY2FzZS4KPj4+PiArICogQHM6IFRoZSBzdHJpbmcgdG8gb3Bl
+cmF0ZSBvbi4KPj4+PiArICovCj4+Pj4gK3N0YXRpYyBpbmxpbmUgdm9pZCBzdHJ0b2xvd2VyKGNo
+YXIgKnMpCj4+Pj4gK3sKPj4+PiArICAgICBzdHJsY3B5dG9sb3dlcihzLCBzLCAtMSk7Cj4+Pj4g
+K30KPj4+PiArCj4+Pj4gICNlbmRpZiAvKiBfTElOVVhfU1RSSU5HX0hfICovCj4+Pj4gZGlmZiAt
+LWdpdCBhL2xpYi9zdHJpbmcuYyBiL2xpYi9zdHJpbmcuYwo+Pj4+IGluZGV4IGVkODM1NjIuLmZk
+OGM0MjcgMTAwNjQ0Cj4+Pj4gLS0tIGEvbGliL3N0cmluZy5jCj4+Pj4gKysrIGIvbGliL3N0cmlu
+Zy5jCj4+Pj4gQEAgLTk1MiwzICs5NTIsNDEgQEAgY2hhciAqc3RycmVwbGFjZShjaGFyICpzLCBj
+aGFyIG9sZCwgY2hhciBuZXcpCj4+Pj4gICAgICAgcmV0dXJuIHM7Cj4+Pj4gIH0KPj4+PiAgRVhQ
+T1JUX1NZTUJPTChzdHJyZXBsYWNlKTsKPj4+PiArCj4+Pj4gKy8qKgo+Pj4+ICsgKiBzdHJsY3B5
+dG91cHBlciAtIENvcHkgYSBsZW5ndGgtbGltaXRlZCBzdHJpbmcgYW5kIGNvbnZlcnQgdG8gdXBw
+ZXJjYXNlLgo+Pj4+ICsgKiBAZHN0OiBUaGUgYnVmZmVyIHRvIHN0b3JlIHRoZSByZXN1bHQuCj4+
+Pj4gKyAqIEBzcmM6IFRoZSBzdHJpbmcgdG8gY29udmVydCB0byB1cHBlcmNhc2UuCj4+Pj4gKyAq
+IEBsZW46IE1heGltdW0gc3RyaW5nIGxlbmd0aC4gTWF5IGJlIFNJWkVfTUFYICgtMSkgdG8gc2V0
+IG5vIGxpbWl0Lgo+Pj4+ICsgKi8KPj4+PiArdm9pZCBzdHJsY3B5dG91cHBlcihjaGFyICpkc3Qs
+IGNvbnN0IGNoYXIgKnNyYywgc2l6ZV90IGxlbikKPj4+PiArewo+Pj4+ICsgICAgIHNpemVfdCBp
+Owo+Pj4+ICsKPj4+PiArICAgICBpZiAoIWxlbikKPj4+PiArICAgICAgICAgICAgIHJldHVybjsK
+Pj4+PiArCj4+Pj4gKyAgICAgZm9yIChpID0gMDsgaSA8IGxlbiAmJiBzcmNbaV07ICsraSkKPj4+
+PiArICAgICAgICAgICAgIGRzdFtpXSA9IHRvdXBwZXIoc3JjW2ldKTsKPj4+PiArICAgICBkc3Rb
+aSA8IGxlbiA/IGkgOiBpIC0gMV0gPSAnXDAnOwo+Pj4+ICt9Cj4+Pj4gK0VYUE9SVF9TWU1CT0wo
+c3RybGNweXRvdXBwZXIpOwo+Pj4+ICsKPj4+PiArLyoqCj4+Pj4gKyAqIHN0cmxjcHl0b2xvd2Vy
+IC0gQ29weSBhIGxlbmd0aC1saW1pdGVkIHN0cmluZyBhbmQgY29udmVydCB0byBsb3dlcmNhc2Uu
+Cj4+Pj4gKyAqIEBkc3Q6IFRoZSBidWZmZXIgdG8gc3RvcmUgdGhlIHJlc3VsdC4KPj4+PiArICog
+QHNyYzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRvIGxvd2VyY2FzZS4KPj4+PiArICogQGxlbjog
+TWF4aW11bSBzdHJpbmcgbGVuZ3RoLiBNYXkgYmUgU0laRV9NQVggKC0xKSB0byBzZXQgbm8gbGlt
+aXQuCj4+Pj4gKyAqLwo+Pj4+ICt2b2lkIHN0cmxjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3Qg
+Y2hhciAqc3JjLCBzaXplX3QgbGVuKQo+Pj4+ICt7Cj4+Pj4gKyAgICAgc2l6ZV90IGk7Cj4+Pj4g
+Kwo+Pj4+ICsgICAgIGlmICghbGVuKQo+Pj4+ICsgICAgICAgICAgICAgcmV0dXJuOwo+Pj4+ICsK
+Pj4+PiArICAgICBmb3IgKGkgPSAwOyBpIDwgbGVuICYmIHNyY1tpXTsgKytpKQo+Pj4+ICsgICAg
+ICAgICAgICAgZHN0W2ldID0gdG9sb3dlcihzcmNbaV0pOwo+Pj4+ICsgICAgIGRzdFtpIDwgbGVu
+ID8gaSA6IGkgLSAxXSA9ICdcMCc7Cj4+Pj4gK30KPj4+PiArRVhQT1JUX1NZTUJPTChzdHJsY3B5
+dG9sb3dlcik7Cj4+Pj4KPj4+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpOb3V2ZWF1IG1haWxpbmcgbGlzdApOb3V2ZWF1QGxpc3RzLmZyZWVkZXNrdG9w
+Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL25vdXZl
+YXUK
