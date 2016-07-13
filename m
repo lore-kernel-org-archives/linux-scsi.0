@@ -1,46 +1,40 @@
 From: tom.ty89@gmail.com
-Subject: [RFC 3/3] libata-scsi: add optimal transfer length to block limits VPD
-Date: Wed, 13 Jul 2016 12:47:08 +0800
-Message-ID: <5659242e8546753768944757fc86988f1986585c.1468384890.git.tom.ty89@gmail.com>
-References: <1c10437e3cd9be8556e77462b40ad53be542dfba.1468384890.git.tom.ty89@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1c10437e3cd9be8556e77462b40ad53be542dfba.1468384890.git.tom.ty89@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [RFC 1/3] ata: bump ATA_MAX_SECTORS_LBA48 to 65536
+Date: Wed, 13 Jul 2016 12:47:06 +0800
+Message-ID: <1c10437e3cd9be8556e77462b40ad53be542dfba.1468384890.git.tom.ty89@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33172 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716AbcGMEr5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 00:47:57 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: tj@kernel.org, martin.petersen@oracle.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Tom Yan <tom.ty89@gmail.com>
 
-As of commit 6b7e9cde4969 ("sd: Fix rw_max for devices that report
-an optimal xfer size"), the scsi disk driver (correctly) derive both
-of the queue limits "io_opt" and "max_sectors" from the optimal
-transfer length field.
-
-In case we would like the two limits to be derived from a value
-other than BLK_DEF_MAX_SECTORS for ATA disks in the future, this
-patch has made it easy.
+ATA_MAX_SECTORS_LBA48 is only used for setting the queue limit
+"max_hw_sectors", which only serves as the cap for "max_sectors",
+which is in turn the actual limit being used. Therefore, it should
+be alright for us to bump ATA_MAX_SECTORS_LBA48 to 65536. Also,
+lba_48_ok() has been accepting the number of blocks to be 65536.
 
 Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bfec66f..ab75b5e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2305,6 +2305,13 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	put_unaligned_be16(min_io_sectors, &rbuf[6]);
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 99346be..24f886c 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -46,7 +46,7 @@ enum {
+ 	ATA_MAX_SECTORS_128	= 128,
+ 	ATA_MAX_SECTORS		= 256,
+ 	ATA_MAX_SECTORS_1024    = 1024,
+-	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
++	ATA_MAX_SECTORS_LBA48	= 65536,
+ 	ATA_MAX_SECTORS_TAPE	= 65535,
  
- 	/*
-+	 * Optimal transfer length.
-+	 *
-+	 * This is used to derive the queue limit "max_sector" and "io_opt".
-+	 */
-+	put_unaligned_be32(BLK_DEF_MAX_SECTORS, &rbuf[12]);
-+
-+	/*
- 	 * Optimal unmap granularity.
- 	 *
- 	 * The ATA spec doesn't even know about a granularity or alignment
+ 	ATA_ID_WORDS		= 256,
 -- 
 2.9.0
 
