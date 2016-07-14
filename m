@@ -1,32 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] fcoe: VN2VN target mode fixes
-Date: Wed, 13 Jul 2016 22:11:33 -0400
-Message-ID: <yq1furdm0iy.fsf@sermon.lab.mkp.net>
-References: <1467620963-67047-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH] cxl: remove dead Kconfig options
+Date: Wed, 13 Jul 2016 22:22:41 -0400
+Message-ID: <yq1bn21m00e.fsf@sermon.lab.mkp.net>
+References: <1467616334-20977-1-git-send-email-andrew.donnellan@au1.ibm.com>
+	<yq1k2gpm0y0.fsf@sermon.lab.mkp.net>
+	<984bdc4c-1522-f166-c4c2-4f7e5b08909a@au1.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38781 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:41513 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbcGNCLr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 22:11:47 -0400
-In-Reply-To: <1467620963-67047-1-git-send-email-hare@suse.de> (Hannes
-	Reinecke's message of "Mon, 4 Jul 2016 10:29:17 +0200")
+	with ESMTP id S1751081AbcGNCWx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 22:22:53 -0400
+In-Reply-To: <984bdc4c-1522-f166-c4c2-4f7e5b08909a@au1.ibm.com> (Andrew
+	Donnellan's message of "Thu, 14 Jul 2016 12:05:08 +1000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linuxppc-dev@lists.ozlabs.org, imunsie@au1.ibm.com, mrochs@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, manoj@linux.vnet.ibm.com, clombard@linux.vnet.ibm.com, fbarrat@linux.vnet.ibm.com
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Andrew" == Andrew Donnellan <andrew.donnellan@au1.ibm.com> writes:
 
-Hannes> Hi all, When setting up a VN2VN FCoE target there is no real
-Hannes> need to run fcoeadm, especially if DCB is disabled.  So this
-Hannes> patchset implements a VIP VLAN responder which can be enabled by
-Hannes> writing to the sysfs attribute 'fip_vlan_responder'.
-Hannes> Additionally there are some fixes for VN2VN mode, most notably
-Hannes> the multicast address update when changing modes.
+>> This patch straddles a few subsystems. Did you intend for me to queue
+>> it through SCSI?
 
-Applied patches 1-4 to 4.8/scsi-queue.
+Andrew> Sorry for not stating explicitly - I'd like this taken through
+Andrew> powerpc as the cxlflash change is incidental to the cxl changes.
+
+No problem.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
