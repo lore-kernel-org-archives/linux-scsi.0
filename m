@@ -1,33 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] cxl: remove dead Kconfig options
-Date: Wed, 13 Jul 2016 22:22:41 -0400
-Message-ID: <yq1bn21m00e.fsf@sermon.lab.mkp.net>
-References: <1467616334-20977-1-git-send-email-andrew.donnellan@au1.ibm.com>
-	<yq1k2gpm0y0.fsf@sermon.lab.mkp.net>
-	<984bdc4c-1522-f166-c4c2-4f7e5b08909a@au1.ibm.com>
+Subject: Re: [PATCH] megaraid_sas: Do not fire MR_DCMD_PD_LIST_QUERY to controllers which do not support it
+Date: Wed, 13 Jul 2016 22:30:16 -0400
+Message-ID: <yq137ndlznr.fsf@sermon.lab.mkp.net>
+References: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41513 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081AbcGNCWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 22:22:53 -0400
-In-Reply-To: <984bdc4c-1522-f166-c4c2-4f7e5b08909a@au1.ibm.com> (Andrew
-	Donnellan's message of "Thu, 14 Jul 2016 12:05:08 +1000")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
+	(Sumit Saxena's message of "Fri, 8 Jul 2016 03:30:16 -0700")
+Sender: stable-owner@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com, lucz@geza.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linuxppc-dev@lists.ozlabs.org, imunsie@au1.ibm.com, mrochs@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, manoj@linux.vnet.ibm.com, clombard@linux.vnet.ibm.com, fbarrat@linux.vnet.ibm.com
 
->>>>> "Andrew" == Andrew Donnellan <andrew.donnellan@au1.ibm.com> writes:
+>>>>> "Sumit" =3D=3D Sumit Saxena <sumit.saxena@broadcom.com> writes:
 
->> This patch straddles a few subsystems. Did you intend for me to queue
->> it through SCSI?
+Sumit> There was an issue reported by Lucz Geza on Dell Perc 6i. As per
+Sumit> issue reported, megaraid_sas driver goes into an infinite error
+Sumit> reporting loop as soon as there is a change in the status of one
+Sumit> of the arrays (degrade, resync online etc =E2=80=A6).  Below are=
+ the
+Sumit> error logs reported continuously-
 
-Andrew> Sorry for not stating explicitly - I'd like this taken through
-Andrew> powerpc as the cxlflash change is incidental to the cxl changes.
+Applied to 4.8/scsi-queue.
 
-No problem.
-
--- 
+--=20
 Martin K. Petersen	Oracle Linux Engineering
