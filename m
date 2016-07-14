@@ -1,27 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: remove current_cmnd field from struct scsi_device
-Date: Wed, 13 Jul 2016 22:34:02 -0400
-Message-ID: <yq1y455kkx1.fsf@sermon.lab.mkp.net>
-References: <1468211695-11917-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH trivial] fcoe: use defines from ethtool for 20Gbit and 40Gbit speeds
+Date: Wed, 13 Jul 2016 22:26:10 -0400
+Message-ID: <yq17fcplzul.fsf@sermon.lab.mkp.net>
+References: <1467898918-90352-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36711 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:36877 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbcGNCeJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 22:34:09 -0400
-In-Reply-To: <1468211695-11917-1-git-send-email-hch@lst.de> (Christoph
-	Hellwig's message of "Mon, 11 Jul 2016 13:34:55 +0900")
+	with ESMTP id S1750866AbcGNCeu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 22:34:50 -0400
+In-Reply-To: <1467898918-90352-1-git-send-email-jthumshirn@suse.de> (Johannes
+	Thumshirn's message of "Thu, 7 Jul 2016 15:41:58 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Jiri Kosina <trivial@kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, fcoe-devel@open-fcoe.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Christoph> The field is only used by the 53c700 driver, so move it into
-Christoph> the driver-private device data instead of having it in the
-Christoph> common structure.
+Johannes> Use defines from ethtool for 20Gbit and 40Gbit speeds instead
+Johannes> of magic numbers.
 
 Applied to 4.8/scsi-queue.
 
