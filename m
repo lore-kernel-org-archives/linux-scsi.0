@@ -1,32 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH v2] libfc: sanity check cpu number extracted from xid
-Date: Wed, 13 Jul 2016 21:50:33 -0400
-Message-ID: <yq1shvdm1hy.fsf@sermon.lab.mkp.net>
+Date: Wed, 13 Jul 2016 21:51:03 -0400
+Message-ID: <yq1oa61m1h4.fsf@sermon.lab.mkp.net>
 References: <20160630070925.ptbgkeq57txs55gf@c203.arch.suse.de>
 	<1467300756-7949-1-git-send-email-cleech@redhat.com>
+	<20160701080949.dqfit6qit4grtjjg@c203.arch.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24346 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbcGNBuq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 21:50:46 -0400
-In-Reply-To: <1467300756-7949-1-git-send-email-cleech@redhat.com> (Chris
-	Leech's message of "Thu, 30 Jun 2016 08:32:36 -0700")
+Received: from aserp1040.oracle.com ([141.146.126.69]:32536 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862AbcGNBvQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 21:51:16 -0400
+In-Reply-To: <20160701080949.dqfit6qit4grtjjg@c203.arch.suse.de> (Johannes
+	Thumshirn's message of "Fri, 1 Jul 2016 10:09:49 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Leech <cleech@redhat.com>
-Cc: Johannes Thumshirn <jth@kernel.org>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@linux.intel.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Chris Leech <cleech@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@linux.intel.com>
 
->>>>> "Chris" == Chris Leech <cleech@redhat.com> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Chris> In the receive path libfc extracts a cpu number from the ox_id in
-Chris> the fiber channel header and uses that to do a per_cpu_ptr
-Chris> conversion.  If, for some reason, a frame is received with an
-Chris> invalid ox_id, per_cpu_ptr will return an invalid pointer and the
-Chris> libfc receive path will panic the system trying to use it.
+Johannes> @Martin, do you queue the libfc patches as well?
 
-Applied to 4.8/scsi-queue.
+Sure.
+
+(Sorry about the delay, been on vacation).
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
