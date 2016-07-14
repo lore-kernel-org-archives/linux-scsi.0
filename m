@@ -1,29 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: Do not fire MR_DCMD_PD_LIST_QUERY to controllers which do not support it
-Date: Wed, 13 Jul 2016 22:30:16 -0400
-Message-ID: <yq137ndlznr.fsf@sermon.lab.mkp.net>
-References: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
+Subject: Re: [PATCH] scsi: remove current_cmnd field from struct scsi_device
+Date: Wed, 13 Jul 2016 22:34:02 -0400
+Message-ID: <yq1y455kkx1.fsf@sermon.lab.mkp.net>
+References: <1468211695-11917-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1467973816-17448-1-git-send-email-sumit.saxena@broadcom.com>
-	(Sumit Saxena's message of "Fri, 8 Jul 2016 03:30:16 -0700")
-Sender: stable-owner@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com, lucz@geza.com, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:36711 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbcGNCeJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 22:34:09 -0400
+In-Reply-To: <1468211695-11917-1-git-send-email-hch@lst.de> (Christoph
+	Hellwig's message of "Mon, 11 Jul 2016 13:34:55 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Sumit" =3D=3D Sumit Saxena <sumit.saxena@broadcom.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Sumit> There was an issue reported by Lucz Geza on Dell Perc 6i. As per
-Sumit> issue reported, megaraid_sas driver goes into an infinite error
-Sumit> reporting loop as soon as there is a change in the status of one
-Sumit> of the arrays (degrade, resync online etc =E2=80=A6).  Below are=
- the
-Sumit> error logs reported continuously-
+Christoph> The field is only used by the 53c700 driver, so move it into
+Christoph> the driver-private device data instead of having it in the
+Christoph> common structure.
 
 Applied to 4.8/scsi-queue.
 
---=20
+-- 
 Martin K. Petersen	Oracle Linux Engineering
