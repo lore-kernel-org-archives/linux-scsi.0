@@ -1,39 +1,27 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] usb: MAINTAINERS: Oliver Neukum is the new uas maintainer
-Date: Thu, 14 Jul 2016 14:26:41 +0200
-Message-ID: <1468499201-6266-1-git-send-email-hdegoede@redhat.com>
+From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] usb: MAINTAINERS: Oliver Neukum is the new uas
+ maintainer
+Date: Thu, 14 Jul 2016 14:42:49 +0200
+Message-ID: <1468500169.2429.3.camel@suse.com>
+References: <1468499201-6266-1-git-send-email-hdegoede@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1468499201-6266-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Oliver Neukum is taking over uas maintainership from me and
-Gerd Hoffmann.
-
-Cc: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Cc: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- MAINTAINERS | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 5c728d1..9c220f0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11801,8 +11801,7 @@ S:	Maintained
- F:	drivers/net/wireless/ath/ar5523/
- 
- USB ATTACHED SCSI
--M:	Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
--M:	Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-+M:	Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
- L:	linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
- L:	linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
- S:	Maintained
--- 
-2.7.4
+On Thu, 2016-07-14 at 14:26 +0200, Hans de Goede wrote:
+> Oliver Neukum is taking over uas maintainership from me and
+> Gerd Hoffmann.
+> 
+> Cc: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+> Cc: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Acked-by: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-usb" in
