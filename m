@@ -1,43 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] scsi: lpfc: avoid harmless comparison warning
-Date: Wed, 13 Jul 2016 23:15:14 -0400
-Message-ID: <yq1lh14lxkt.fsf@sermon.lab.mkp.net>
-References: <20160615204231.3784044-1-arnd@arndb.de>
+Subject: Re: [PATCH] qla2xxx: setup data needed in ISR before setting up the ISR
+Date: Thu, 14 Jul 2016 00:28:37 -0400
+Message-ID: <yq14m7slu6i.fsf@sermon.lab.mkp.net>
+References: <1467791510-5307-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20049 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:45380 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887AbcGNDP1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2016 23:15:27 -0400
-In-Reply-To: <20160615204231.3784044-1-arnd@arndb.de> (Arnd Bergmann's message
-	of "Wed, 15 Jun 2016 22:42:17 +0200")
+	with ESMTP id S1751094AbcGNEhR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2016 00:37:17 -0400
+In-Reply-To: <1467791510-5307-1-git-send-email-jthumshirn@suse.de> (Johannes
+	Thumshirn's message of "Wed, 6 Jul 2016 09:51:50 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Hannes Reinicke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Arnd> When building with -Wextra, we get a lot of warnings for the lpfc
-Arnd> driver concerning expressions that are always true, starting with:
+Johannes> qla2xxx first calls request_irq() and then does the setup of
+Johannes> the queue entry data needed in the interrupt handlers in when
+Johannes> using MSI-X. This could lead to a NULL pointer dereference
+Johannes> when an IRQ fires between the request_irq() call and the
+Johannes> assignment of the qentry data structure to the
+rsp-> msix field. A possible case for such a race would be in the kdump
+Johannes> case when the HBA's IRQs are still enabled but the driver is
+Johannes> undergoing a new initialisation and thus is not aware of
+Johannes> already activated IRQs in the HBA.
 
-Arnd> drivers/scsi/lpfc/lpfc_attr.c: In function
-Arnd> 'lpfc_enable_npiv_init': drivers/scsi/lpfc/lpfc_attr.c:2786:77:
-Arnd> error: comparison of unsigned expression >= 0 is always true
-Arnd> [-Werror=type-limits] drivers/scsi/lpfc/lpfc_attr.c: In function
-Arnd> 'lpfc_enable_rrq_init': drivers/scsi/lpfc/lpfc_attr.c:2802:76:
-Arnd> error: comparison of unsigned expression >= 0 is always true
-Arnd> [-Werror=type-limits] drivers/scsi/lpfc/lpfc_attr.c: In function
-Arnd> 'lpfc_suppress_link_up_init':
-Arnd> drivers/scsi/lpfc/lpfc_attr.c:2812:2050: error: comparison of
-Arnd> unsigned expression >= 0 is always true [-Werror=type-limits]
-Arnd> drivers/scsi/lpfc/lpfc_attr.c: In function
-Arnd> 'lpfc_log_verbose_init': drivers/scsi/lpfc/lpfc_attr.c:3064:1930:
-Arnd> error: comparison of unsigned expression >= 0 is always true
-Arnd> [-Werror=type-limits]
-
-James, Dick: Please review!
+Qlogic folks: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
