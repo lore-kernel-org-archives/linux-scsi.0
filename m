@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 18/21] lpfc: Correct issue with ioremap() call on 32bit
- kernel
-Date: Fri, 15 Jul 2016 15:22:57 +0200
-Message-ID: <62af4d63-7e7d-56a4-a1ba-2a964adc5c83@suse.de>
-References: <577d5dab.uTZuS8TRN82d5m1T%james.smart@broadcom.com>
+Subject: Re: [PATCH 19/21] lpfc: Disable FDMI probing if not connected to a
+ fabric
+Date: Fri, 15 Jul 2016 15:23:27 +0200
+Message-ID: <9609896f-9ed2-7093-ddfa-df3850a74fe2@suse.de>
+References: <577d5dac.IWJT5/2li7EwQBnO%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55851 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55906 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbcGONW7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:22:59 -0400
-In-Reply-To: <577d5dab.uTZuS8TRN82d5m1T%james.smart@broadcom.com>
+	id S1751374AbcGONX2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:23:28 -0400
+In-Reply-To: <577d5dac.IWJT5/2li7EwQBnO%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -20,32 +20,31 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Correct issue with ioremap() call on 32bit kernel
+> Disable FDMI probing if not connected to a fabric
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc.h | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  drivers/scsi/lpfc/lpfc_ct.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 >=20
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index 4d9f1b1..b484859 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -785,9 +785,9 @@ struct lpfc_hba {
+> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.=
+c
+> index a38816e..63e48d4 100644
+> --- a/drivers/scsi/lpfc/lpfc_ct.c
+> +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> @@ -1510,6 +1510,10 @@ lpfc_fdmi_num_disc_check(struct lpfc_vport *vp=
+ort)
+>  	if (!lpfc_is_link_up(phba))
+>  		return;
 > =20
->  	atomic_t fcp_qidx;		/* next work queue to post work to */
+> +	/* Must be connected to a Fabric */
+> +	if (!(vport->fc_flag & FC_FABRIC))
+> +		return;
+> +
+>  	if (!(vport->fdmi_port_mask & LPFC_FDMI_PORT_ATTR_num_disc))
+>  		return;
 > =20
-> -	unsigned long pci_bar0_map;     /* Physical address for PCI BAR0 */
-> -	unsigned long pci_bar1_map;     /* Physical address for PCI BAR1 */
-> -	unsigned long pci_bar2_map;     /* Physical address for PCI BAR2 */
-> +	phys_addr_t pci_bar0_map;     /* Physical address for PCI BAR0 */
-> +	phys_addr_t pci_bar1_map;     /* Physical address for PCI BAR1 */
-> +	phys_addr_t pci_bar2_map;     /* Physical address for PCI BAR2 */
->  	void __iomem *slim_memmap_p;	/* Kernel memory mapped address for
->  					   PCI BAR0 */
->  	void __iomem *ctrl_regs_memmap_p;/* Kernel memory mapped address fo=
-r
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
