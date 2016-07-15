@@ -1,17 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 12/21] lpfc: Add support for XLane LUN priority
-Date: Fri, 15 Jul 2016 15:18:44 +0200
-Message-ID: <8fa6794c-c4ea-2f3d-c266-c5dfae25b529@suse.de>
-References: <577d5da5.ZeUwNJhNxrqTmzvD%james.smart@broadcom.com>
+Subject: Re: [PATCH 13/21] lpfc: Correct Port reset resulting in FC port going
+ offline
+Date: Fri, 15 Jul 2016 15:19:19 +0200
+Message-ID: <735206ae-dc15-d019-23d1-bf6ae9dc0a8d@suse.de>
+References: <577d5da6.Csc9NMYwiS/8EdfU%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55457 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55503 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751040AbcGONSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:18:46 -0400
-In-Reply-To: <577d5da5.ZeUwNJhNxrqTmzvD%james.smart@broadcom.com>
+	id S1751040AbcGONTU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:19:20 -0400
+In-Reply-To: <577d5da6.Csc9NMYwiS/8EdfU%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -19,20 +20,32 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Add support for XLane LUN priority
+> Correct Port reset resulting in FC port going offline
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc.h      |  1 +
->  drivers/scsi/lpfc/lpfc_attr.c | 89 +++++++++++++++++++++++++++++++++=
-++++------
->  drivers/scsi/lpfc/lpfc_crtn.h |  2 +-
->  drivers/scsi/lpfc/lpfc_scsi.c |  9 ++++-
->  drivers/scsi/lpfc/lpfc_scsi.h |  1 +
->  drivers/scsi/lpfc/lpfc_sli.c  | 21 +++++++---
->  drivers/scsi/lpfc/lpfc_sli.h  |  1 +
->  7 files changed, 104 insertions(+), 20 deletions(-)
+>  drivers/scsi/lpfc/lpfc_init.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
+nit.c
+> index 6e11574..f4b3548 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -1595,9 +1595,10 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *p=
+hba, int mbx_action,
+>  		 * ready before performing reset.
+>  		 */
+>  		rc =3D lpfc_sli4_pdev_status_reg_wait(phba);
+> -		if (!rc)
+> +		if (rc)
+>  			return rc;
+>  	}
+> +
+>  	/* need reset: attempt for port recovery */
+>  	if (en_rn_msg)
+>  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
