@@ -1,114 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/19] qla2xxx: Set FLOGI retry in additional firmware
- options for P2P (N2N) mode.
-Date: Fri, 15 Jul 2016 14:51:11 +0200
-Message-ID: <5ac7c759-bfad-5cfd-e651-e31b5f3ae284@suse.de>
+Subject: Re: [PATCH 05/19] qla2xxx: Add module parameter alternate/short
+ names.
+Date: Fri, 15 Jul 2016 14:51:45 +0200
+Message-ID: <686463c3-54df-95c1-f9af-263827f18527@suse.de>
 References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
- <1467818075-15246-5-git-send-email-himanshu.madhani@qlogic.com>
+ <1467818075-15246-6-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51814 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51892 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751383AbcGOMvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 08:51:13 -0400
-In-Reply-To: <1467818075-15246-5-git-send-email-himanshu.madhani@qlogic.com>
+	id S1751347AbcGOMvq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 08:51:46 -0400
+In-Reply-To: <1467818075-15246-6-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
 On 07/06/2016 05:14 PM, Himanshu Madhani wrote:
-> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 >=20
-> When VP decoupling enabled, there could be a window where, FLOGI from=
- initiators
-> can be dropped before VP0 is enabled, causing link level recovery.
-> Retry FLOGI to avoid link level recovery.
->=20
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 > ---
->  drivers/scsi/qla2xxx/qla_dbg.c  |  2 +-
->  drivers/scsi/qla2xxx/qla_init.c | 24 ++++++++++++++++++++++++
->  2 files changed, 25 insertions(+), 1 deletion(-)
+>  drivers/scsi/qla2xxx/qla_os.c | 3 +++
+>  1 file changed, 3 insertions(+)
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/ql=
-a_dbg.c
-> index 0671f07..907a7ac 100644
-> --- a/drivers/scsi/qla2xxx/qla_dbg.c
-> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-> @@ -16,7 +16,7 @@
->   * |                              |                    | 0x016e-0x01=
-70  |
->   * | Mailbox commands             |       0x1192       |		|
->   * |                              |                    |		|
-> - * | Device Discovery             |       0x2016       | 0x2020-0x20=
-22, |
-> + * | Device Discovery             |       0x2003       | 0x2016		|
->   * |                              |                    | 0x2011-0x20=
-12, |
->   * |                              |                    | 0x2099-0x20=
-a4  |
->   * | Queue Command and IO tracing |       0x3074       | 0x300b     =
-    |
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/q=
-la_init.c
-> index c56cdb3..a3685b6 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2053,6 +2053,14 @@ qla2x00_update_fw_options(scsi_qla_host_t *vha=
-)
->  	if (IS_QLA6312(ha))
->  		ha->fw_options[2] |=3D BIT_13;
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla=
+_os.c
+> index dc608ce..f1a2394 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -80,6 +80,7 @@ MODULE_PARM_DESC(ql2xallocfwdump,
 > =20
-> +	/* Set Retry FLOGI in case of P2P connection */
-> +	if (ha->operating_mode =3D=3D P2P) {
-> +		ha->fw_options[2] |=3D BIT_3;
-> +		ql_dbg(ql_dbg_disc, vha, 0x2100,
-> +		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
-> +			__func__, ha->fw_options[2]);
-> +	}
-> +
->  	/* Update firmware options. */
->  	qla2x00_set_fw_options(vha, ha->fw_options);
->  }
-> @@ -2070,6 +2078,14 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha=
-)
->  	if (ql2xfwholdabts)
->  		ha->fw_options[3] |=3D BIT_12;
+>  int ql2xextended_error_logging;
+>  module_param(ql2xextended_error_logging, int, S_IRUGO|S_IWUSR);
+> +module_param_named(logging, ql2xextended_error_logging, int, S_IRUGO=
+|S_IWUSR);
+>  MODULE_PARM_DESC(ql2xextended_error_logging,
+>  		"Option to enable extended error logging,\n"
+>  		"\t\tDefault is 0 - no logging.  0x40000000 - Module Init & Probe.=
+\n"
+> @@ -106,6 +107,7 @@ MODULE_PARM_DESC(ql2xshiftctondsd,
 > =20
-> +	/* Set Retry FLOGI in case of P2P connection */
-> +	if (ha->operating_mode =3D=3D P2P) {
-> +		ha->fw_options[2] |=3D BIT_3;
-> +		ql_dbg(ql_dbg_disc, vha, 0x2101,
-> +		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
-> +			__func__, ha->fw_options[2]);
-> +	}
-> +
->  	/* Update Serial Link options. */
->  	if ((le16_to_cpu(ha->fw_seriallink_options24[0]) & BIT_0) =3D=3D 0)
->  		return;
-> @@ -6513,6 +6529,14 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha=
-)
->  	if (ql2xfwholdabts)
->  		ha->fw_options[3] |=3D BIT_12;
+>  int ql2xfdmienable=3D1;
+>  module_param(ql2xfdmienable, int, S_IRUGO|S_IWUSR);
+> +module_param_named(fdmi, ql2xfdmienable, int, S_IRUGO|S_IWUSR);
+>  MODULE_PARM_DESC(ql2xfdmienable,
+>  		"Enables FDMI registrations. "
+>  		"0 - no FDMI. Default is 1 - perform FDMI.");
+> @@ -157,6 +159,7 @@ MODULE_PARM_DESC(ql2xmultique_tag,
 > =20
-> +	/* Set Retry FLOGI in case of P2P connection */
-> +	if (ha->operating_mode =3D=3D P2P) {
-> +		ha->fw_options[2] |=3D BIT_3;
-> +		ql_dbg(ql_dbg_disc, vha, 0x2103,
-> +		    "(%s): Setting FLOGI retry BIT in fw_options[2]: 0x%x\n",
-> +			__func__, ha->fw_options[2]);
-> +	}
-> +
->  	if (!ql2xetsenable)
->  		goto out;
-> =20
+>  int ql2xfwloadbin;
+>  module_param(ql2xfwloadbin, int, S_IRUGO|S_IWUSR);
+> +module_param_named(fwload, ql2xfwloadbin, int, S_IRUGO|S_IWUSR);
+>  MODULE_PARM_DESC(ql2xfwloadbin,
+>  		"Option to specify location from which to load ISP firmware:.\n"
+>  		" 2 -- load firmware via the request_firmware() (hotplug).\n"
 >=20
-Is this bit available for all firmware versions?
-Or does one need a newer firmware here?
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
