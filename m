@@ -1,43 +1,29 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [patch] ibmvfc: prevent a potential deadlock
-Date: Fri, 15 Jul 2016 11:06:05 -0400
-Message-ID: <1468595165.4064.44.camel@localhost.localdomain>
-References: <20160715111857.GC13153@mwanda>
-Reply-To: emilne@redhat.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] qla2xxx: setup data needed in ISR before setting up the ISR
+Date: Fri, 15 Jul 2016 15:00:22 -0400
+Message-ID: <yq137nak9q1.fsf@sermon.lab.mkp.net>
+References: <1467791510-5307-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53739 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042AbcGOPGH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 11:06:07 -0400
-In-Reply-To: <20160715111857.GC13153@mwanda>
+Received: from userp1040.oracle.com ([156.151.31.81]:34890 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbcGOTAd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2016 15:00:33 -0400
+In-Reply-To: <1467791510-5307-1-git-send-email-jthumshirn@suse.de> (Johannes
+	Thumshirn's message of "Wed, 6 Jul 2016 09:51:50 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, himanshu.madhani@qlogic.com
 
-On Fri, 2016-07-15 at 14:18 +0300, Dan Carpenter wrote:
-> My static checker complains that we need to unlock on this path.  Seems
-> true.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index fc523c3..ab67ec4 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -4722,6 +4722,8 @@ static void ibmvfc_rport_add_thread(struct work_struct *work)
->  					tgt_dbg(tgt, "Setting rport roles\n");
->  					fc_remote_port_rolechg(rport, tgt->ids.roles);
->  					put_device(&rport->dev);
-> +				} else {
-> +					spin_unlock_irqrestore(vhost->host->host_lock, flags);
->  				}
->  
->  				kref_put(&tgt->kref, ibmvfc_release_tgt);
-> --
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Johannes> qla2xxx first calls request_irq() and then does the setup of
+Johannes> the queue entry data needed in the interrupt handlers in when
+Johannes> using MSI-X.
 
+Applied to 4.8/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
