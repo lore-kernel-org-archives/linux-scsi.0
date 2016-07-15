@@ -1,18 +1,17 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 19/21] lpfc: Disable FDMI probing if not connected to a
- fabric
-Date: Fri, 15 Jul 2016 15:23:27 +0200
-Message-ID: <9609896f-9ed2-7093-ddfa-df3850a74fe2@suse.de>
-References: <577d5dac.IWJT5/2li7EwQBnO%james.smart@broadcom.com>
+Subject: Re: [PATCH 20/21] lpfc: Copyright updates
+Date: Fri, 15 Jul 2016 15:24:03 +0200
+Message-ID: <92a29d74-17c7-3cff-bea8-a46284ed4fc6@suse.de>
+References: <577d5dad.fpc/IaY4A88VleYK%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55906 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55973 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751374AbcGONX2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:23:28 -0400
-In-Reply-To: <577d5dac.IWJT5/2li7EwQBnO%james.smart@broadcom.com>
+	id S1751056AbcGONYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:24:04 -0400
+In-Reply-To: <577d5dad.fpc/IaY4A88VleYK%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -20,31 +19,17 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Disable FDMI probing if not connected to a fabric
+> Copyright updates
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_ct.c | 4 ++++
->  1 file changed, 4 insertions(+)
->=20
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.=
-c
-> index a38816e..63e48d4 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -1510,6 +1510,10 @@ lpfc_fdmi_num_disc_check(struct lpfc_vport *vp=
-ort)
->  	if (!lpfc_is_link_up(phba))
->  		return;
-> =20
-> +	/* Must be connected to a Fabric */
-> +	if (!(vport->fc_flag & FC_FABRIC))
-> +		return;
-> +
->  	if (!(vport->fdmi_port_mask & LPFC_FDMI_PORT_ATTR_num_disc))
->  		return;
-> =20
+>  drivers/scsi/lpfc/lpfc_crtn.h | 2 +-
+>  drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
+>  drivers/scsi/lpfc/lpfc_scsi.h | 2 +-
+>  drivers/scsi/lpfc/lpfc_sli.h  | 2 +-
+>  drivers/scsi/lpfc/lpfc_sli4.h | 2 +-
+>  5 files changed, 5 insertions(+), 5 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
