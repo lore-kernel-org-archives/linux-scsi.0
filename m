@@ -1,18 +1,19 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 12/19] qla2xxx: Let DPORT be enabled purely by nvram.
-Date: Fri, 15 Jul 2016 14:57:26 +0200
-Message-ID: <1d5be457-3e1f-b328-a69d-473db1874fed@suse.de>
+Subject: Re: [PATCH 13/19] qla2xxx: Add support to handle Loop Init error
+ Asynchronus event.
+Date: Fri, 15 Jul 2016 14:58:25 +0200
+Message-ID: <93e62339-85af-9efe-d0e6-927f546b2bdd@suse.de>
 References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
- <1467818075-15246-13-git-send-email-himanshu.madhani@qlogic.com>
+ <1467818075-15246-14-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52598 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52683 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbcGOM51 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 08:57:27 -0400
-In-Reply-To: <1467818075-15246-13-git-send-email-himanshu.madhani@qlogic.com>
+	id S1751032AbcGOM61 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 08:58:27 -0400
+In-Reply-To: <1467818075-15246-14-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
@@ -24,10 +25,9 @@ On 07/06/2016 05:14 PM, Himanshu Madhani wrote:
 > Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 > ---
->  drivers/scsi/qla2xxx/qla_dbg.c  |  2 +-
->  drivers/scsi/qla2xxx/qla_def.h  |  1 +
->  drivers/scsi/qla2xxx/qla_init.c | 12 ++++++------
->  3 files changed, 8 insertions(+), 7 deletions(-)
+>  drivers/scsi/qla2xxx/qla_dbg.c |  2 +-
+>  drivers/scsi/qla2xxx/qla_isr.c | 11 +++++++++--
+>  2 files changed, 10 insertions(+), 3 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
