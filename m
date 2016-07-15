@@ -1,17 +1,17 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 20/21] lpfc: Copyright updates
-Date: Fri, 15 Jul 2016 15:24:03 +0200
-Message-ID: <92a29d74-17c7-3cff-bea8-a46284ed4fc6@suse.de>
-References: <577d5dad.fpc/IaY4A88VleYK%james.smart@broadcom.com>
+Subject: Re: [PATCH 21/21] lpfc: Update lpfc version to 11.2.0.0
+Date: Fri, 15 Jul 2016 15:24:26 +0200
+Message-ID: <2335c04a-88b2-3663-58d1-ffa57d55617a@suse.de>
+References: <577d5dae.JJ1RapoIAcQ234VS%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55973 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56010 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbcGONYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:24:04 -0400
-In-Reply-To: <577d5dad.fpc/IaY4A88VleYK%james.smart@broadcom.com>
+	id S1752223AbcGONY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:24:27 -0400
+In-Reply-To: <577d5dae.JJ1RapoIAcQ234VS%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -19,17 +19,29 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Copyright updates
+> Update lpfc version to 11.2.0.0
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_crtn.h | 2 +-
->  drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
->  drivers/scsi/lpfc/lpfc_scsi.h | 2 +-
->  drivers/scsi/lpfc/lpfc_sli.h  | 2 +-
->  drivers/scsi/lpfc/lpfc_sli4.h | 2 +-
->  5 files changed, 5 insertions(+), 5 deletions(-)
+>  drivers/scsi/lpfc/lpfc_version.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpf=
+c_version.h
+> index fa0d531..c9bf20e 100644
+> --- a/drivers/scsi/lpfc/lpfc_version.h
+> +++ b/drivers/scsi/lpfc/lpfc_version.h
+> @@ -18,7 +18,7 @@
+>   * included with this package.                                     *
+>   *******************************************************************=
+/
+> =20
+> -#define LPFC_DRIVER_VERSION "11.1.0.0."
+> +#define LPFC_DRIVER_VERSION "11.2.0.0."
+>  #define LPFC_DRIVER_NAME		"lpfc"
+> =20
+>  /* Used for SLI 2/3 */
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
