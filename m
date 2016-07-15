@@ -1,58 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/21] lpfc: Fix SLI mode 2 config failure
-Date: Fri, 15 Jul 2016 15:12:22 +0200
-Message-ID: <395782c9-734b-3319-e52c-a1df4effc33f@suse.de>
-References: <577d5da1.howAJT6W/zY/7Gi8%james.smart@broadcom.com>
+Subject: Re: [PATCH 09/21] lpfc: Correct FCOE discovery to avoid loss of
+ storage devices after system reboot
+Date: Fri, 15 Jul 2016 15:16:00 +0200
+Message-ID: <c1418ff4-2552-c734-9cb2-c53d3378b73e@suse.de>
+References: <577d5da2.z0GKKgjcgUhFJ0Im%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54706 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55139 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751196AbcGONMY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:12:24 -0400
-In-Reply-To: <577d5da1.howAJT6W/zY/7Gi8%james.smart@broadcom.com>
+	id S1751082AbcGONQC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:16:02 -0400
+In-Reply-To: <577d5da2.z0GKKgjcgUhFJ0Im%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Fix SLI mode 2 config failure
+> Correct FCOE discovery to avoid loss of storage devices after system =
+reboot
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_sli.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/lpfc/lpfc_init.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 >=20
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sl=
-i.c
-> index 6eef972..b1ddbaa 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -4696,6 +4696,8 @@ lpfc_sli_hba_setup(struct lpfc_hba *phba)
->  				"Not supported by adapter.\n");
->  	if (rc && mode !=3D 2)
->  		rc =3D lpfc_sli_config_port(phba, 2);
-> +	else if (rc && mode =3D=3D 2)
-> +		rc =3D lpfc_sli_config_port(phba, 3);
->  	if (rc)
->  		goto lpfc_sli_hba_setup_error;
-> =20
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
+nit.c
+> index bb514d2..8d940ed 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4484,7 +4484,8 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
+>  		 * the corresponding FCF bit in the roundrobin bitmap.
+>  		 */
+>  		spin_lock_irq(&phba->hbalock);
+> -		if (phba->fcf.fcf_flag & FCF_DISCOVERY) {
+> +		if ((phba->fcf.fcf_flag & FCF_DISCOVERY) &&
+> +		    (phba->fcf.current_rec.fcf_indx !=3D acqe_fip->index)) {
+>  			spin_unlock_irq(&phba->hbalock);
+>  			/* Update FLOGI FCF failover eligible FCF bmask */
+>  			lpfc_sli4_fcf_rr_index_clear(phba, acqe_fip->index);
 >=20
-Hmm. Maybe a code reorg here
-if (rc) {
-  if (mode =3D=3D 2)
-     ..
-   else
-     ..
- goto ...
-}
-
-would make things easier to read.
-But it's not that important.
-
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
