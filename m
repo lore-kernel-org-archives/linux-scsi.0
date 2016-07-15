@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/21] lpfc: Add recovery from adapter parity errors on
- some SLI4 adapters
-Date: Fri, 15 Jul 2016 15:08:10 +0200
-Message-ID: <b448ac73-7ee0-49cb-456f-6312948691cf@suse.de>
-References: <577d5d9c.g/OM5R56OszAE5y0%james.smart@broadcom.com>
+Subject: Re: [PATCH 04/21] lpfc: Correct Buffer credit descriptor values in
+ RDP response
+Date: Fri, 15 Jul 2016 15:08:52 +0200
+Message-ID: <04a19488-3470-e7c2-efb5-b6ba8202c4f5@suse.de>
+References: <577d5d9d.AH+Xlv92PaXiAzMm%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53949 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54041 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751032AbcGONIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:08:12 -0400
-In-Reply-To: <577d5d9c.g/OM5R56OszAE5y0%james.smart@broadcom.com>
+	id S1751161AbcGONIx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:08:53 -0400
+In-Reply-To: <577d5d9d.AH+Xlv92PaXiAzMm%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -20,18 +20,15 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:35 PM, James Smart wrote:
 >=20
-> Add recovery from adapter parity errors on some SLI4 adapters
+> Correct Buffer credit descriptor values in RDP response
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc.h      |   2 +
->  drivers/scsi/lpfc/lpfc_hw4.h  |  23 ++++++++
->  drivers/scsi/lpfc/lpfc_init.c | 118 +++++++++++++++++++++++++++++++-=
+>  drivers/scsi/lpfc/lpfc_els.c | 74 +++++++++++++++++++---------------=
 ----------
->  drivers/scsi/lpfc/lpfc_sli.c  |  45 ++++++++++++++--
->  drivers/scsi/lpfc/lpfc_sli4.h |   2 +
->  5 files changed, 155 insertions(+), 35 deletions(-)
+>  drivers/scsi/lpfc/lpfc_hw.h  |  2 +-
+>  2 files changed, 32 insertions(+), 44 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
