@@ -1,17 +1,17 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 11/21] lpfc: Correct RDP response Revision location
-Date: Fri, 15 Jul 2016 15:17:41 +0200
-Message-ID: <3714eddd-8dd3-d9d4-4940-342bfddb8547@suse.de>
-References: <577d5da4.qF0SkwMSM91wH60d%james.smart@broadcom.com>
+Subject: Re: [PATCH 12/21] lpfc: Add support for XLane LUN priority
+Date: Fri, 15 Jul 2016 15:18:44 +0200
+Message-ID: <8fa6794c-c4ea-2f3d-c266-c5dfae25b529@suse.de>
+References: <577d5da5.ZeUwNJhNxrqTmzvD%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55370 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55457 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbcGONRn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:17:43 -0400
-In-Reply-To: <577d5da4.qF0SkwMSM91wH60d%james.smart@broadcom.com>
+	id S1751040AbcGONSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:18:46 -0400
+In-Reply-To: <577d5da5.ZeUwNJhNxrqTmzvD%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -19,29 +19,20 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Correct RDP response Revision location
+> Add support for XLane LUN priority
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_hw.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.=
-h
-> index c99c2b3..8226543 100644
-> --- a/drivers/scsi/lpfc/lpfc_hw.h
-> +++ b/drivers/scsi/lpfc/lpfc_hw.h
-> @@ -1239,8 +1239,8 @@ struct fc_rdp_opd_sfp_info {
->  	uint8_t            vendor_name[16];
->  	uint8_t            model_number[16];
->  	uint8_t            serial_number[16];
-> -	uint8_t            reserved[2];
->  	uint8_t            revision[2];
-> +	uint8_t            reserved[2];
->  	uint8_t            date[8];
->  };
-> =20
+>  drivers/scsi/lpfc/lpfc.h      |  1 +
+>  drivers/scsi/lpfc/lpfc_attr.c | 89 +++++++++++++++++++++++++++++++++=
+++++------
+>  drivers/scsi/lpfc/lpfc_crtn.h |  2 +-
+>  drivers/scsi/lpfc/lpfc_scsi.c |  9 ++++-
+>  drivers/scsi/lpfc/lpfc_scsi.h |  1 +
+>  drivers/scsi/lpfc/lpfc_sli.c  | 21 +++++++---
+>  drivers/scsi/lpfc/lpfc_sli.h  |  1 +
+>  7 files changed, 104 insertions(+), 20 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
