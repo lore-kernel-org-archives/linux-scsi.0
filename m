@@ -1,61 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 21/21] lpfc: Update lpfc version to 11.2.0.0
-Date: Fri, 15 Jul 2016 15:24:26 +0200
-Message-ID: <2335c04a-88b2-3663-58d1-ffa57d55617a@suse.de>
-References: <577d5dae.JJ1RapoIAcQ234VS%james.smart@broadcom.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [patch] ibmvfc: prevent a potential deadlock
+Date: Fri, 15 Jul 2016 08:38:54 -0500
+Message-ID: <5788E76E.4010506@linux.vnet.ibm.com>
+References: <20160715111857.GC13153@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56010 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752223AbcGONY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:24:27 -0400
-In-Reply-To: <577d5dae.JJ1RapoIAcQ234VS%james.smart@broadcom.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37596 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751498AbcGONjF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:39:05 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6FDcgiL124574
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2016 09:39:02 -0400
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 246k0ug2p8-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2016 09:39:02 -0400
+Received: from localhost
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 15 Jul 2016 07:39:01 -0600
+In-Reply-To: <20160715111857.GC13153@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, kernel-janitors@vger.kernel.org
 
-On 07/06/2016 09:36 PM, James Smart wrote:
->=20
-> Update lpfc version to 11.2.0.0
->=20
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpf=
-c_version.h
-> index fa0d531..c9bf20e 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -18,7 +18,7 @@
->   * included with this package.                                     *
->   *******************************************************************=
-/
-> =20
-> -#define LPFC_DRIVER_VERSION "11.1.0.0."
-> +#define LPFC_DRIVER_VERSION "11.2.0.0."
->  #define LPFC_DRIVER_NAME		"lpfc"
-> =20
->  /* Used for SLI 2/3 */
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 
-Cheers,
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
