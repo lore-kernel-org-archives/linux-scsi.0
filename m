@@ -1,34 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/21] lpfc: Correct Buffer credit descriptor values in
- RDP response
-Date: Fri, 15 Jul 2016 15:08:52 +0200
-Message-ID: <04a19488-3470-e7c2-efb5-b6ba8202c4f5@suse.de>
-References: <577d5d9d.AH+Xlv92PaXiAzMm%james.smart@broadcom.com>
+Subject: Re: [PATCH 05/21] lpfc: Reject RDP ELS if port has no login
+Date: Fri, 15 Jul 2016 15:09:11 +0200
+Message-ID: <9fb2c855-d5fc-22fc-54ae-59fdb1f35012@suse.de>
+References: <577d5d9e.DGbam2YjJ7SVt9GU%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54041 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54272 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161AbcGONIx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:08:53 -0400
-In-Reply-To: <577d5d9d.AH+Xlv92PaXiAzMm%james.smart@broadcom.com>
+	id S1751161AbcGONJM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:09:12 -0400
+In-Reply-To: <577d5d9e.DGbam2YjJ7SVt9GU%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
 On 07/06/2016 09:35 PM, James Smart wrote:
 >=20
-> Correct Buffer credit descriptor values in RDP response
+> Reject RDP ELS if port has no login
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_els.c | 74 +++++++++++++++++++---------------=
-----------
->  drivers/scsi/lpfc/lpfc_hw.h  |  2 +-
->  2 files changed, 32 insertions(+), 44 deletions(-)
+>  drivers/scsi/lpfc/lpfc_els.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_el=
+s.c
+> index 02e3a1f..861270e 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -5243,6 +5243,12 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, str=
+uct lpfc_iocbq *cmdiocb,
+>  			 be32_to_cpu(rdp_req->nport_id_desc.nport_id),
+>  			 be32_to_cpu(rdp_req->nport_id_desc.length));
+> =20
+> +	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED) &&
+> +	    !phba->cfg_enable_SmartSAN) {
+> +		rjt_err =3D LSRJT_UNABLE_TPC;
+> +		rjt_expl =3D LSEXP_PORT_LOGIN_REQ;
+> +		goto error;
+> +	}
+>  	if (sizeof(struct fc_rdp_nport_desc) !=3D
+>  			be32_to_cpu(rdp_req->rdp_des_length))
+>  		goto rjt_logerr;
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
