@@ -1,44 +1,37 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 19/19] qla2xxx: Update driver version to 8.07.00.38-k
-Date: Fri, 15 Jul 2016 15:03:27 +0200
-Message-ID: <81efd2b3-6046-e454-d3c0-fc658bcc49a9@suse.de>
-References: <1467818075-15246-1-git-send-email-himanshu.madhani@qlogic.com>
- <1467818075-15246-20-git-send-email-himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 01/21] lpfc: Fix Transgression Flag of Optical Element
+ descriptor for RDP on Linux
+Date: Fri, 15 Jul 2016 15:05:25 +0200
+Message-ID: <7df313e8-ccf2-eefd-f6fa-0c98a6d35a89@suse.de>
+References: <577d5d9a.tm/ZDaxY8ldAXu0i%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53403 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53581 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751196AbcGOND3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:03:29 -0400
-In-Reply-To: <1467818075-15246-20-git-send-email-himanshu.madhani@qlogic.com>
+	id S1751040AbcGONF1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:05:27 -0400
+In-Reply-To: <577d5d9a.tm/ZDaxY8ldAXu0i%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 07/06/2016 05:14 PM, Himanshu Madhani wrote:
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> ---
->  drivers/scsi/qla2xxx/qla_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 07/06/2016 09:35 PM, James Smart wrote:
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xx=
-x/qla_version.h
-> index 0bc93fa..3cb1964 100644
-> --- a/drivers/scsi/qla2xxx/qla_version.h
-> +++ b/drivers/scsi/qla2xxx/qla_version.h
-> @@ -7,7 +7,7 @@
->  /*
->   * Driver version
->   */
-> -#define QLA2XXX_VERSION      "8.07.00.33-k"
-> +#define QLA2XXX_VERSION      "8.07.00.38-k"
-> =20
->  #define QLA_DRIVER_MAJOR_VER	8
->  #define QLA_DRIVER_MINOR_VER	7
+> Fix Transgression Flag of Optical Element descriptor for RDP on Linux
+>=20
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc.h      |  12 +++++
+>  drivers/scsi/lpfc/lpfc_els.c  | 101 ++++++++++++++++++++++++++++++++=
++---------
+>  drivers/scsi/lpfc/lpfc_hw.h   |   6 +++
+>  drivers/scsi/lpfc/lpfc_hw4.h  |   6 +--
+>  drivers/scsi/lpfc/lpfc_init.c |   2 +
+>  5 files changed, 101 insertions(+), 26 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
