@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 14/21] lpfc: Remove global lpfc_enable_npiv attribute in
- leiu of per-hba lpfc_enable_npiv
-Date: Fri, 15 Jul 2016 15:20:41 +0200
-Message-ID: <2aa57f28-14ef-8133-2026-8424d5da9ace@suse.de>
-References: <577d5da7./vyZx4juvghfj41Q%james.smart@broadcom.com>
+Subject: Re: [PATCH 15/21] lpfc: Remove global lpfc_delay_discovery attribute
+ in leiu of per-hba lpfc_delay_discovery
+Date: Fri, 15 Jul 2016 15:21:15 +0200
+Message-ID: <6b0aa686-9676-8403-e744-4d7bf0a0d88c@suse.de>
+References: <577d5da8.yaONlww2cpqz4lnm%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55623 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55652 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbcGONUn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 09:20:43 -0400
-In-Reply-To: <577d5da7./vyZx4juvghfj41Q%james.smart@broadcom.com>
+	id S1751082AbcGONVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2016 09:21:17 -0400
+In-Reply-To: <577d5da8.yaONlww2cpqz4lnm%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
@@ -20,17 +20,17 @@ Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com
 
 On 07/06/2016 09:36 PM, James Smart wrote:
 >=20
-> Remove global lpfc_enable_npiv attribute in leiu of per-hba lpfc_enab=
-le_npiv
-                                         lieu ^^^^
+> Remove global lpfc_delay_discovery attribute in leiu of per-hba
+> lpfc_delay_discovery
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_attr.c |  8 ++------
->  drivers/scsi/lpfc/lpfc_crtn.h |  1 -
->  drivers/scsi/lpfc/lpfc_init.c | 24 +++++++++---------------
->  3 files changed, 11 insertions(+), 22 deletions(-)
+>  drivers/scsi/lpfc/lpfc.h      | 1 +
+>  drivers/scsi/lpfc/lpfc_attr.c | 8 +++-----
+>  drivers/scsi/lpfc/lpfc_crtn.h | 1 -
+>  drivers/scsi/lpfc/lpfc_els.c  | 3 ++-
+>  4 files changed, 6 insertions(+), 7 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
