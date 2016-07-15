@@ -1,22 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch] ibmvfc: prevent a potential deadlock
-Date: Fri, 15 Jul 2016 15:14:24 -0400
-Message-ID: <yq1d1meiui7.fsf@sermon.lab.mkp.net>
-References: <20160715111857.GC13153@mwanda>
+Subject: Re: [PATCH 00/21] lpfc: Update to revision 11.2.0.0
+Date: Fri, 15 Jul 2016 15:25:43 -0400
+Message-ID: <yq18tx2itzc.fsf@sermon.lab.mkp.net>
+References: <577d5d99.GQVS5IBL5oM3VXr7%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20160715111857.GC13153@mwanda> (Dan Carpenter's message of "Fri,
-	15 Jul 2016 14:18:57 +0300")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18999 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbcGOTZv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2016 15:25:51 -0400
+In-Reply-To: <577d5d99.GQVS5IBL5oM3VXr7%james.smart@broadcom.com> (James
+	Smart's message of "Wed, 06 Jul 2016 12:35:53 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+>>>>> "James" == James Smart <james.smart@broadcom.com> writes:
 
-Dan> My static checker complains that we need to unlock on this path.
-Dan> Seems true.
+James> This patch set updates the lpfc driver to revision 11.2.0.00
 
 Applied to 4.8/scsi-queue.
 
