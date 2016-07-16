@@ -1,47 +1,67 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [net-next 3/6] cxgb4i,libcxgbi: add iSCSI DDP support
-Date: Sat, 16 Jul 2016 21:24:06 +0530
-Message-ID: <20160716155405.GB1653@chelsio.com>
-References: <cover.1467998292.git.varun@chelsio.com>
- <81194c2febf45634eea991621d6522886c495065.1467998293.git.varun@chelsio.com>
- <099501d1dea3$04818e50$0d84aaf0$@opengridcomputing.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [12.32.117.8] ([12.32.117.8]:11059 "EHLO stargate.chelsio.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751473AbcGPPyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Jul 2016 11:54:15 -0400
-Content-Disposition: inline
-In-Reply-To: <099501d1dea3$04818e50$0d84aaf0$@opengridcomputing.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [net-next v2 0/6] common library for Chelsio drivers
+Date: Sat, 16 Jul 2016 22:49:14 +0530
+Message-ID: <cover.1468689125.git.varun@chelsio.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Wise <swise@opengridcomputing.com>
-Cc: "davem@davemloft.net" <davem@davemloft.net>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "gerlitz.or@gmail.com" <gerlitz.or@gmail.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, Indranil Choudhury <indranil@chelsio.com>
 
-On Fri, Jul 15, 2016 at 07:43:10PM +0530, Steve Wise wrote:
-> > Add iSCSI DDP support in cxgb4i driver
-> > using common iSCSI DDP Page Pod Manager.
-> > 
-> > Signed-off-by: Varun Prakash <varun@chelsio.com>
-> > ---
-> >  drivers/scsi/cxgbi/Makefile        |   2 +
-> >  drivers/scsi/cxgbi/cxgb3i/Kbuild   |   1 +
-> >  drivers/scsi/cxgbi/cxgb3i/Kconfig  |   1 +
-> 
-> Should the cxgb3i changes be in patch 4?
+Hi,
 
-Both cxgb3i and cxgb4i depends on libcxgbi, this
-patch adds DDP code in libcxgbi, to compile
-cxgb3i Kconfig and Kbuild update is required in
-this patch.
+ This patch series adds common library module(libcxgb.ko)
+ for Chelsio drivers to remove duplicate code.
 
-> 
-> >  drivers/scsi/cxgbi/cxgb4i/Kbuild   |   1 +
-> >  drivers/scsi/cxgbi/cxgb4i/Kconfig  |   1 +
-> >  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 145 ++++++++++++++++
-> >  drivers/scsi/cxgbi/libcxgbi.c      | 331
-> +++++++++++++++++++++++++++++++++++++
-> >  drivers/scsi/cxgbi/libcxgbi.h      |  27 ++-
-> >  8 files changed, 507 insertions(+), 2 deletions(-)
-> > 
+ This series moves common iSCSI DDP Page Pod manager
+ code from cxgb4.ko to libcxgb.ko, earlier this code
+ was used by only cxgbit.ko now it is used by
+ three Chelsio iSCSI drivers cxgb3i, cxgb4i, cxgbit.
+
+ In future this module will have common connection
+ management and hardware specific code that can
+ be shared by multiple Chelsio drivers(cxgb4,
+ csiostor, iw_cxgb4, cxgb4i, cxgbit).
+
+ Please review.
+
+ Thanks
+
+-v2
+- updated CONFIG_CHELSIO_LIB to an invisible option
+- changed libcxgb.ko module license from GPL to Dual BSD/GPL
+
+Varun Prakash (6):
+  libcxgb: add library module for Chelsio drivers
+  cxgb3i,cxgb4i,libcxgbi: remove iSCSI DDP support
+  cxgb4i,libcxgbi: add iSCSI DDP support
+  cxgb3i: add iSCSI DDP support
+  libcxgb: export ppm release and tagmask set api
+  cxgb3i,cxgb4i: fix symbol not declared sparse warning
+
+ drivers/net/ethernet/chelsio/Kconfig               |  16 +-
+ drivers/net/ethernet/chelsio/Makefile              |   1 +
+ drivers/net/ethernet/chelsio/cxgb4/Makefile        |   1 -
+ drivers/net/ethernet/chelsio/libcxgb/Makefile      |   3 +
+ .../{cxgb4/cxgb4_ppm.c => libcxgb/libcxgb_ppm.c}   |  57 +-
+ .../{cxgb4/cxgb4_ppm.h => libcxgb/libcxgb_ppm.h}   |  38 +-
+ drivers/scsi/cxgbi/Makefile                        |   2 +
+ drivers/scsi/cxgbi/cxgb3i/Kbuild                   |   1 +
+ drivers/scsi/cxgbi/cxgb3i/Kconfig                  |   1 +
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c                 | 164 +++--
+ drivers/scsi/cxgbi/cxgb4i/Kbuild                   |   1 +
+ drivers/scsi/cxgbi/cxgb4i/Kconfig                  |   1 +
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c                 | 203 +++---
+ drivers/scsi/cxgbi/libcxgbi.c                      | 734 +++++++--------------
+ drivers/scsi/cxgbi/libcxgbi.h                      | 188 +-----
+ drivers/target/iscsi/cxgbit/Kconfig                |   2 +-
+ drivers/target/iscsi/cxgbit/Makefile               |   1 +
+ drivers/target/iscsi/cxgbit/cxgbit.h               |   2 +-
+ drivers/target/iscsi/cxgbit/cxgbit_main.c          |   2 +
+ 19 files changed, 552 insertions(+), 866 deletions(-)
+ create mode 100644 drivers/net/ethernet/chelsio/libcxgb/Makefile
+ rename drivers/net/ethernet/chelsio/{cxgb4/cxgb4_ppm.c => libcxgb/libcxgb_ppm.c} (85%)
+ rename drivers/net/ethernet/chelsio/{cxgb4/cxgb4_ppm.h => libcxgb/libcxgb_ppm.h} (84%)
+
+-- 
+2.0.2
