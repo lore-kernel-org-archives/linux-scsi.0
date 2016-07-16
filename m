@@ -1,63 +1,84 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [net-next v2 6/6] cxgb3i,cxgb4i: fix symbol not declared sparse warning
-Date: Sat, 16 Jul 2016 22:49:20 +0530
-Message-ID: <9da780ff8ce12d235d292ab4bb06a57359859810.1468689125.git.varun@chelsio.com>
-References: <cover.1468689125.git.varun@chelsio.com>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <cover.1468689125.git.varun@chelsio.com>
-In-Reply-To: <cover.1468689125.git.varun@chelsio.com>
-References: <cover.1468689125.git.varun@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: PR API fixes for multipathing
+Date: Sat, 16 Jul 2016 14:10:07 -0400
+Message-ID: <20160716181007.GA14215@redhat.com>
+References: <1467980631-18945-1-git-send-email-hch@lst.de>
+ <yq1y452iuzp.fsf@sermon.lab.mkp.net>
+ <20160716010844.GA29087@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40704 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751629AbcGPSKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Jul 2016 14:10:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20160716010844.GA29087@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-Fix following sparse warnings
-warning: symbol 'cxgb3i_ofld_init' was not declared. Should it be static?
-warning: symbol 'cxgb4i_cplhandlers' was not declared. Should it be static?
-warning: symbol 'cxgb4i_ofld_init' was not declared. Should it be static?
+On Fri, Jul 15 2016 at  9:08pm -0400,
+Christoph Hellwig <hch@lst.de> wrote:
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
-Reviewed-by: Steve Wise <swise@opengridcomputing.com>
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 2 +-
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> On Fri, Jul 15, 2016 at 03:03:54PM -0400, Martin K. Petersen wrote:
+> > >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+> > 
+> > Christoph> I was a bit overeager to thing ALL_TG_PT would solve all our
+> > Christoph> multipathing woes in respect to persistent reservation.
+> > Christoph> Turns out that there are lots of possible setups where it
+> > Christoph> doesn't work, and we'll have to ask device mapper to register
+> > Christoph> all underlying devices instead.
+> > 
+> > Should I queue the sd patch or let Mike take both through the DM tree?
+> 
+> I think having both in the same tree would be very useful.  I don't care
+> which one that is.
 
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 61f16a2..33e8346 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -1028,7 +1028,7 @@ cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
-  * cxgb3i_ofld_init - allocate and initialize resources for each adapter found
-  * @cdev:	cxgbi adapter
-  */
--int cxgb3i_ofld_init(struct cxgbi_device *cdev)
-+static int cxgb3i_ofld_init(struct cxgbi_device *cdev)
- {
- 	struct t3cdev *t3dev = (struct t3cdev *)cdev->lldev;
- 	struct adap_ports port;
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 521f9e4..e4ba2d2 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1503,7 +1503,7 @@ rel_resource_without_clip:
- 	return -EINVAL;
- }
- 
--cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
-+static cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_ACT_ESTABLISH] = do_act_establish,
- 	[CPL_ACT_OPEN_RPL] = do_act_open_rpl,
- 	[CPL_PEER_CLOSE] = do_peer_close,
-@@ -1519,7 +1519,7 @@ cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_RX_DATA] = do_rx_data,
- };
- 
--int cxgb4i_ofld_init(struct cxgbi_device *cdev)
-+static int cxgb4i_ofld_init(struct cxgbi_device *cdev)
- {
- 	int rc;
- 
--- 
-2.0.2
+I've picked both of them up.  Staged for 4.8 merge and in linux-next via
+linux-dm.git's 'for-next'.
+
+(I added Martin's Acked-by to the sd patch header, Martin: if not OK, or
+if you'd prefer Reviewed-by just let me know)
+
+Christoph, I had to fix this:
+
+drivers/md/dm.c:2564:12: warning: context imbalance in 'dm_call_pr' - different lock contexts for basic block
+
+here is the incremental I folded in to the dm patch:
+
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 214fa03..4dca5a7 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2567,14 +2567,13 @@ static int dm_call_pr(struct block_device *bdev, iterate_devices_callout_fn fn,
+        struct mapped_device *md = bdev->bd_disk->private_data;
+        struct dm_table *table;
+        struct dm_target *ti;
+-       int ret = 0, srcu_idx;
++       int ret = -ENOTTY, srcu_idx;
+
+        table = dm_get_live_table(md, &srcu_idx);
+        if (!table || !dm_table_get_size(table))
+-               return -ENOTTY;
++               goto out;
+
+        /* We only support devices that have a single target */
+-       ret = -ENOTTY;
+        if (dm_table_get_num_targets(table) != 1)
+                goto out;
+        ti = dm_table_get_target(table, 0);
+@@ -2584,10 +2583,6 @@ static int dm_call_pr(struct block_device *bdev, iterate_devices_callout_fn fn,
+                goto out;
+
+        ret = ti->type->iterate_devices(ti, fn, data);
+-       if (ret)
+-               goto out;
+-
+-       ret = 0;
+ out:
+        dm_put_live_table(md, srcu_idx);
+        return ret;
+
+Mike
