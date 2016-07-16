@@ -1,68 +1,36 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/3] xen-scsiback: Pass a failure indication as a constant
-Date: Sat, 16 Jul 2016 22:24:54 +0200
-Message-ID: <e447cf62-ffc7-4b82-cff2-947c8874756a@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
- <59e51c7d-f7bb-c55f-d2fe-06dccfef6a99@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <59e51c7d-f7bb-c55f-d2fe-06dccfef6a99@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>, David Vrabel <david.vrabel@citrix.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+From: "Aleksey Dashevsky" <alekseyd@terra.com.br>
+Subject: Hi linux
+Date: Sat, 16 Jul 2016 22:17:43 +0000
+Message-ID: <33A3C5A6-019F-4820-D30E-1EF967E0D7F1@terra.com.br>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from if10-mail-fb05-mia.mta.terra.com ([98.142.233.72]:41288 "EHLO
+	if10-mail-fb05-mia.mta.terra.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751524AbcGPWRq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Jul 2016 18:17:46 -0400
+Received: from mail-smtp14-mia.tpn.terra.com (unknown [10.235.200.53])
+	by mail-fb05-mia.tpn.terra.com (Postfix) with ESMTP id 875F58236DDA
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2016 22:17:45 +0000 (UTC)
+Received: from smtp.terra.com.br (unknown [41.141.86.12])
+	(authenticated user deni.ponce)
+	by mail-smtp14-mia.tpn.terra.com (Postfix) with ESMTPA id ACFFEC005E5A
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2016 22:17:43 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux scsi <linux-scsi@vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 16 Jul 2016 21:55:01 +0200
+Good evening linux
 
-Pass the constant "FAILED" in a function call directly instead of
-using an intialisation for a local variable.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/xen/xen-scsiback.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+http://jobspacking.co.uk/club.php?break=m1z6s437vsfptc
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 7612bc9..ec5546c 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -601,7 +601,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
- 	struct se_cmd *se_cmd = &pending_req->se_cmd;
- 	struct scsiback_tmr *tmr;
- 	u64 unpacked_lun = pending_req->v2p->lun;
--	int rc, err = FAILED;
-+	int rc, err;
- 
- 	tmr = kzalloc(sizeof(struct scsiback_tmr), GFP_KERNEL);
- 	if (!tmr) {
-@@ -629,7 +629,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
- free_tmr:
- 	kfree(tmr);
- do_resp:
--	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
-+	scsiback_do_resp_with_sense(NULL, FAILED, 0, pending_req);
- }
- 
- /*
--- 
-2.9.1
 
+
+
+
+Hope this helps
+Aleksey Dashevsky
