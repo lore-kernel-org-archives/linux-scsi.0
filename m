@@ -1,32 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: PR API fixes for multipathing
-Date: Sat, 16 Jul 2016 03:08:44 +0200
-Message-ID: <20160716010844.GA29087@lst.de>
-References: <1467980631-18945-1-git-send-email-hch@lst.de> <yq1y452iuzp.fsf@sermon.lab.mkp.net>
+From: Varun Prakash <varun@chelsio.com>
+Subject: Re: [net-next 2/6] cxgb3i,cxgb4i,libcxgbi: remove iSCSI DDP support
+Date: Sat, 16 Jul 2016 21:14:28 +0530
+Message-ID: <20160716154426.GA1653@chelsio.com>
+References: <cover.1467998292.git.varun@chelsio.com>
+ <73c3770a7b69e10c80b3f3a690c5819f735b1a28.1467998292.git.varun@chelsio.com>
+ <099301d1dea1$f36ec980$da4c5c80$@opengridcomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41066 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080AbcGPBIq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2016 21:08:46 -0400
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <yq1y452iuzp.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <099301d1dea1$f36ec980$da4c5c80$@opengridcomputing.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Steve Wise <swise@opengridcomputing.com>
+Cc: "davem@davemloft.net" <davem@davemloft.net>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "gerlitz.or@gmail.com" <gerlitz.or@gmail.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, Indranil Choudhury <indranil@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-On Fri, Jul 15, 2016 at 03:03:54PM -0400, Martin K. Petersen wrote:
-> >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+On Fri, Jul 15, 2016 at 07:35:32PM +0530, Steve Wise wrote:
+> > Remove old ddp code from cxgb3i,cxgb4i,libcxgbi.
+> > 
+> > Next two commits adds DDP support using
+> > common iSCSI DDP Page Pod Manager.
+> > 
+> > Signed-off-by: Varun Prakash <varun@chelsio.com>
+> > ---
+> >  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 128 --------
+> >  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 142 ---------
+> >  drivers/scsi/cxgbi/libcxgbi.c      | 578
+> -------------------------------------
+> >  drivers/scsi/cxgbi/libcxgbi.h      | 161 -----------
+> >  4 files changed, 1009 deletions(-)
 > 
-> Christoph> I was a bit overeager to thing ALL_TG_PT would solve all our
-> Christoph> multipathing woes in respect to persistent reservation.
-> Christoph> Turns out that there are lots of possible setups where it
-> Christoph> doesn't work, and we'll have to ask device mapper to register
-> Christoph> all underlying devices instead.
-> 
-> Should I queue the sd patch or let Mike take both through the DM tree?
+> Looks good.  I guess this series needs to be squashed or we'll have bisect
+> compile problems?
 
-I think having both in the same tree would be very useful.  I don't care
-which one that is.
+All cxgb* drivers compiles successfully after applying
+patches incrementally. 
