@@ -1,367 +1,95 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v5 7/8] mmc: block: register RPMB partition with the RPMB subsystem
-Date: Mon, 18 Jul 2016 23:27:52 +0300
-Message-ID: <1468873673-21776-8-git-send-email-tomas.winkler@intel.com>
-References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:49105 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752663AbcGRUaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jul 2016 16:30:10 -0400
-In-Reply-To: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH v5 4/8] char: rpmb: provide a user space interface
+Date: Mon, 18 Jul 2016 18:15:22 -0400
+Message-ID: <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
+References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com> <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Alexander Usyskin <alexander.usyskin@intel.com>
 
-Register eMMC RPMB partition with the RPMB subsystem and provide
-implementation for the RPMB access operations abstracting
-actual multi step process.
+On Mon, Jul 18, 2016 at 4:27 PM, Tomas Winkler <tomas.winkler@intel.com> wrote:
+> The user space API is achieved via two synchronous IOCTL.
+> Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is performed
+> by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD where
+> the whole RPMB sequence including RESULT_READ is supplied by the caller.
+> The latter is intended for  easier adjusting  of the  applications that
+> use MMC_IOC_MULTI_CMD ioctl.
+>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
----
-V2: resend
-V3: commit message fix
-V4: Kconfig: use select RPMB to ensure valid configuration
-    Switch back to main area after RPMB access
-V5: Revamp code using new sequence command
-    Support for 8K packets in e.MMC v5.1
+[...]
 
- drivers/mmc/card/Kconfig |   1 +
- drivers/mmc/card/block.c | 258 ++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 256 insertions(+), 3 deletions(-)
+> diff --git a/drivers/char/rpmb/Kconfig b/drivers/char/rpmb/Kconfig
+> index c5e6e909efce..6794be9fcc5e 100644
+> --- a/drivers/char/rpmb/Kconfig
+> +++ b/drivers/char/rpmb/Kconfig
+> @@ -6,3 +6,10 @@ config RPMB
+>           access RPMB partition.
+>
+>           If unsure, select N.
+> +
+> +config RPMB_INTF_DEV
+> +       bool "RPMB character device interface /dev/rpmbN"
 
-diff --git a/drivers/mmc/card/Kconfig b/drivers/mmc/card/Kconfig
-index 5562308699bc..537d0bc82781 100644
---- a/drivers/mmc/card/Kconfig
-+++ b/drivers/mmc/card/Kconfig
-@@ -7,6 +7,7 @@ comment "MMC/SD/SDIO Card Drivers"
- config MMC_BLOCK
- 	tristate "MMC block device driver"
- 	depends on BLOCK
-+	select RPMB
- 	default y
- 	help
- 	  Say Y here to enable the MMC block device driver support.
-diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
-index e62fde3ac431..0e1f11da40c2 100644
---- a/drivers/mmc/card/block.c
-+++ b/drivers/mmc/card/block.c
-@@ -42,6 +42,7 @@
- #include <linux/mmc/host.h>
- #include <linux/mmc/mmc.h>
- #include <linux/mmc/sd.h>
-+#include <linux/rpmb.h>
- 
- #include <asm/uaccess.h>
- 
-@@ -110,6 +111,7 @@ struct mmc_blk_data {
- #define MMC_BLK_WRITE		BIT(1)
- #define MMC_BLK_DISCARD		BIT(2)
- #define MMC_BLK_SECDISCARD	BIT(3)
-+#define MMC_BLK_RPMB		BIT(4)
- 
- 	/*
- 	 * Only set in main mmc_blk_data associated
-@@ -398,8 +400,8 @@ static int mmc_blk_ioctl_copy_to_user(struct mmc_ioc_cmd __user *ic_ptr,
- 	return 0;
- }
- 
--static int ioctl_rpmb_card_status_poll(struct mmc_card *card, u32 *status,
--				       u32 retries_max)
-+static int mmc_blk_rpmb_status_poll(struct mmc_card *card, u32 *status,
-+				    u32 retries_max)
- {
- 	int err;
- 	u32 retry_count = 0;
-@@ -572,7 +574,7 @@ static int __mmc_blk_ioctl_cmd(struct mmc_card *card, struct mmc_blk_data *md,
- 		 * Ensure RPMB command has completed by polling CMD13
- 		 * "Send Status".
- 		 */
--		err = ioctl_rpmb_card_status_poll(card, &status, 5);
-+		err = mmc_blk_rpmb_status_poll(card, &status, 5);
- 		if (err)
- 			dev_err(mmc_dev(card->host),
- 					"%s: Card Status=0x%08X, error %d\n",
-@@ -1162,6 +1164,252 @@ int mmc_access_rpmb(struct mmc_queue *mq)
- 	return false;
- }
- 
-+static int mmc_rpmb_send_cmd(struct mmc_card *card,
-+			     unsigned int data_type, bool do_rel_wr,
-+			     void *buf, u16 blks)
-+{
-+	int err;
-+	u32 status;
-+	struct mmc_command sbc = {
-+		.opcode = MMC_SET_BLOCK_COUNT,
-+		.flags  = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_AC,
-+	};
-+
-+	struct mmc_command cmd = {
-+		.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC,
-+	};
-+
-+	struct mmc_data data = {
-+		.blksz = 512,
-+	};
-+	struct mmc_request mrq = {
-+		.sbc    = &sbc,
-+		.cmd    = &cmd,
-+		.data   = &data,
-+		.stop   = NULL,
-+	};
-+	struct scatterlist sg;
-+
-+	/*  set CMD23 */
-+	sbc.arg = blks & 0x0000FFFF;
-+	if (do_rel_wr)
-+		sbc.arg |= MMC_CMD23_ARG_REL_WR;
-+
-+	/*  set CMD25/18 */
-+	cmd.opcode = (data_type == MMC_DATA_WRITE) ?
-+		MMC_WRITE_MULTIPLE_BLOCK : MMC_READ_MULTIPLE_BLOCK;
-+
-+	sg_init_one(&sg, buf, 512 * blks);
-+
-+	data.blocks = blks;
-+	data.sg     = &sg;
-+	data.sg_len = 1;
-+	data.flags  = data_type;
-+	mmc_set_data_timeout(&data, card);
-+
-+	mmc_wait_for_req(card->host, &mrq);
-+
-+	if (cmd.error) {
-+		dev_err(mmc_dev(card->host), "cmd error (%d)\n", cmd.error);
-+		return cmd.error;
-+	}
-+
-+	if (data.error) {
-+		dev_err(mmc_dev(card->host), "data error (%d)\n", data.error);
-+		return data.error;
-+	}
-+
-+	err = mmc_blk_rpmb_status_poll(card, &status, 5);
-+	if (err)
-+		dev_err(mmc_dev(card->host), "Card Status=0x%08X, error %d\n",
-+			status, err);
-+	return err;
-+}
-+
-+static int mmc_blk_rpmb_sequence(struct mmc_card *card,
-+				 struct rpmb_cmd *cmds, u32 ncmds)
-+{
-+	int err, i;
-+	struct rpmb_cmd *cmd;
-+	unsigned int data_type;
-+	bool do_rel_wr;
-+
-+	for (err = 0, i = 0; i < ncmds && !err; i++) {
-+		cmd = &cmds[i];
-+		if (cmd->flags & RPMB_F_WRITE) {
-+			data_type = MMC_DATA_WRITE;
-+			do_rel_wr = !!(cmd->flags & RPMB_F_REL_WRITE);
-+		} else {
-+			data_type = MMC_DATA_READ;
-+			do_rel_wr = false;
-+		}
-+
-+		err =  mmc_rpmb_send_cmd(card, data_type, do_rel_wr,
-+					 cmd->frames, cmd->nframes);
-+	}
-+
-+	return err;
-+}
-+
-+static int mmc_blk_rpmb_process(struct mmc_blk_data *md,
-+				struct rpmb_cmd *cmds, u32 ncmds)
-+{
-+	struct mmc_card *card;
-+	int ret;
-+
-+	if (WARN_ON(!md || !cmds || !ncmds))
-+		return -EINVAL;
-+
-+	if (!(md->flags & MMC_BLK_CMD23) ||
-+	    (md->part_type != EXT_CSD_PART_CONFIG_ACC_RPMB))
-+		return -EOPNOTSUPP;
-+
-+	card = md->queue.card;
-+	if (!card || !mmc_card_mmc(card))
-+		return -ENODEV;
-+
-+	mmc_get_card(card);
-+
-+	/* switch to RPMB partition */
-+	ret = mmc_blk_part_switch(card, md);
-+	if (ret) {
-+		dev_err(mmc_dev(card->host), "Invalid RPMB partition switch (%d)!\n",
-+			ret);
-+		/*
-+		 * In case partition is not in user data area, make
-+		 * a force partition switch.
-+		 * we need reset eMMC card at here
-+		 */
-+		ret = mmc_blk_reset(md, card->host, MMC_BLK_RPMB);
-+		if (!ret)
-+			mmc_blk_reset_success(md, MMC_BLK_RPMB);
-+		else
-+			dev_err(mmc_dev(card->host), "eMMC card reset failed (%d)\n",
-+				ret);
-+		goto out;
-+	}
-+
-+	ret = mmc_blk_rpmb_sequence(card, cmds, ncmds);
-+	if (ret)
-+		dev_err(mmc_dev(card->host), "failed (%d) to handle RPMB request\n",
-+			ret);
-+
-+	/* Always switch back to main area after RPMB access */
-+	mmc_blk_part_switch(card, dev_get_drvdata(&card->dev));
-+out:
-+	mmc_put_card(card);
-+	return ret;
-+}
-+
-+static int mmc_blk_rpmb_cmd_seq(struct device *dev,
-+				struct rpmb_cmd *cmds, u32 ncmds)
-+{
-+	struct mmc_blk_data *md;
-+	int ret;
-+
-+	md = mmc_blk_get(dev_to_disk(dev));
-+	if (!md)
-+		return -ENODEV;
-+
-+	if (!cmds || !ncmds)
-+		return -EINVAL;
-+
-+	ret = mmc_blk_rpmb_process(md, cmds, ncmds);
-+
-+	mmc_blk_put(md);
-+
-+	return ret;
-+}
-+
-+static struct rpmb_ops mmc_rpmb_dev_ops = {
-+	.cmd_seq = mmc_blk_rpmb_cmd_seq,
-+	.type = RPMB_TYPE_EMMC,
-+};
-+
-+static struct mmc_blk_data *mmc_blk_rpmb_part_get(struct mmc_blk_data *md)
-+{
-+	struct mmc_blk_data *part_md;
-+
-+	if (!md)
-+		return NULL;
-+
-+	list_for_each_entry(part_md, &md->part, part) {
-+		if (part_md->area_type == MMC_BLK_DATA_AREA_RPMB)
-+			return part_md;
-+	}
-+
-+	return NULL;
-+}
-+
-+static void mmc_blk_rpmb_unset_dev_id(struct rpmb_ops *ops)
-+{
-+	kfree(ops->dev_id);
-+	ops->dev_id = NULL;
-+}
-+
-+static int mmc_blk_rpmb_set_dev_id(struct rpmb_ops *ops, struct mmc_card *card)
-+{
-+	char *id;
-+
-+	id = kmalloc(sizeof(card->raw_cid), GFP_KERNEL);
-+	if (!id)
-+		return -ENOMEM;
-+
-+	memcpy(id, card->raw_cid, sizeof(card->raw_cid));
-+	ops->dev_id = id;
-+	ops->dev_id_len = sizeof(card->raw_cid);
-+
-+	return 0;
-+}
-+
-+static void mmc_blk_rpmb_set_rel_wr_cnt(struct rpmb_ops *ops,
-+					struct mmc_card *card)
-+{
-+	u16 rel_wr_cnt;
-+
-+	/* RPMB blocks are written in half sectors hence '* 2' */
-+	rel_wr_cnt = card->ext_csd.rel_sectors * 2;
-+	/* eMMC 5.1 may support RPMB 8K (32) frames */
-+	if (card->ext_csd.rev >= 8) {
-+		if (card->ext_csd.rel_param & EXT_CSD_WR_REL_PARAM_EN)
-+			rel_wr_cnt = 32;
-+		else
-+			rel_wr_cnt = 2;
-+	}
-+	ops->reliable_wr_cnt = rel_wr_cnt;
-+}
-+
-+static void mmc_blk_rpmb_add(struct mmc_card *card)
-+{
-+	struct mmc_blk_data *md = dev_get_drvdata(&card->dev);
-+	struct mmc_blk_data *part_md = mmc_blk_rpmb_part_get(md);
-+	struct rpmb_dev *rdev;
-+
-+	if (!part_md)
-+		return;
-+
-+	mmc_blk_rpmb_set_dev_id(&mmc_rpmb_dev_ops, card);
-+	mmc_blk_rpmb_set_rel_wr_cnt(&mmc_rpmb_dev_ops, card);
-+
-+	rdev = rpmb_dev_register(disk_to_dev(part_md->disk),
-+				 &mmc_rpmb_dev_ops);
-+	if (IS_ERR(rdev)) {
-+		pr_warn("%s: cannot register to rpmb %ld\n",
-+			part_md->disk->disk_name, PTR_ERR(rdev));
-+	}
-+}
-+
-+static void mmc_blk_rpmb_remove(struct mmc_card *card)
-+{
-+	struct mmc_blk_data *md = dev_get_drvdata(&card->dev);
-+	struct mmc_blk_data *part_md = mmc_blk_rpmb_part_get(md);
-+
-+	if (part_md)
-+		rpmb_dev_unregister(disk_to_dev(part_md->disk));
-+
-+	mmc_blk_rpmb_unset_dev_id(&mmc_rpmb_dev_ops);
-+}
-+
- static int mmc_blk_issue_discard_rq(struct mmc_queue *mq, struct request *req)
- {
- 	struct mmc_blk_data *md = mq->data;
-@@ -2613,6 +2861,8 @@ static int mmc_blk_probe(struct mmc_card *card)
- 			goto out;
- 	}
- 
-+	mmc_blk_rpmb_add(card);
-+
- 	pm_runtime_set_autosuspend_delay(&card->dev, 3000);
- 	pm_runtime_use_autosuspend(&card->dev);
- 
-@@ -2637,6 +2887,7 @@ static void mmc_blk_remove(struct mmc_card *card)
- {
- 	struct mmc_blk_data *md = dev_get_drvdata(&card->dev);
- 
-+	mmc_blk_rpmb_remove(card);
- 	mmc_blk_remove_parts(card, md);
- 	pm_runtime_get_sync(&card->dev);
- 	mmc_claim_host(card->host);
-@@ -2665,6 +2916,7 @@ static int _mmc_blk_suspend(struct mmc_card *card)
- 
- static void mmc_blk_shutdown(struct mmc_card *card)
- {
-+	mmc_blk_rpmb_remove(card);
- 	_mmc_blk_suspend(card);
- }
- 
--- 
-2.5.5
+A bool Kconfig should ideally....
 
+> +       depends on RPMB
+> +       help
+> +         Say yes here if you want to access RPMB from user space
+> +         via character device interface /dev/rpmb%d
+> diff --git a/drivers/char/rpmb/Makefile b/drivers/char/rpmb/Makefile
+> index 812b3ed264c0..b5dc087b1299 100644
+> --- a/drivers/char/rpmb/Makefile
+> +++ b/drivers/char/rpmb/Makefile
+> @@ -1,4 +1,5 @@
+>  obj-$(CONFIG_RPMB) += rpmb.o
+>  rpmb-objs += core.o
+> +rpmb-$(CONFIG_RPMB_INTF_DEV) += cdev.o
+>
+>  ccflags-y += -D__CHECK_ENDIAN__
+> diff --git a/drivers/char/rpmb/cdev.c b/drivers/char/rpmb/cdev.c
+> new file mode 100644
+> index 000000000000..f3ad3444f76d
+> --- /dev/null
+> +++ b/drivers/char/rpmb/cdev.c
+> @@ -0,0 +1,269 @@
+> +/*
+> + * Copyright (C) 2015-2016 Intel Corp. All rights reserved
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; version 2 of the License.
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+> + * General Public License for more details.
+> + */
+> +
+> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+> +
+> +#include <linux/module.h>
+
+....not use module.h or any MODULE_ macros from within it.
+
+Thanks,
+Paul.
+--
+
+> +#include <linux/fs.h>
+> +#include <linux/uaccess.h>
+> +#include <linux/compat.h>
+> +#include <linux/slab.h>
+> +#include <linux/capability.h>
+> +
+> +#include <linux/rpmb.h>
+> +
+> +#include "rpmb-cdev.h"
+> +
+> +static dev_t rpmb_devt;
