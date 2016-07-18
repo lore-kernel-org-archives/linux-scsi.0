@@ -1,74 +1,97 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH 1/2] lpfc: call lpfc_sli_validate_fcp_iocb() with the
- hbalock held
-Date: Mon, 18 Jul 2016 16:28:57 -0400 (EDT)
-Message-ID: <1095600204.5575668.1468873737267.JavaMail.zimbra@redhat.com>
-References: <1468850763-72179-1-git-send-email-jthumshirn@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5-phx2.redhat.com ([209.132.183.37]:34937 "EHLO
-	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752148AbcGRU3G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2016 16:29:06 -0400
-In-Reply-To: <1468850763-72179-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH v5 0/8] Replay Protected Memory Block (RPMB) subsystem
+Date: Mon, 18 Jul 2016 23:27:45 +0300
+Message-ID: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Sender: linux-mmc-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
+Few storage technologies such is EMMC, UFS, and NVMe support RPMB
+hardware partition with common protocol and frame layout.
+The RPMB partition cannot be accessed via standard block layer, but by a
+set of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
+PROGRAM_KEY.
+Such a partition provides authenticated and replay protected access,
+hence suitable as a secure storage.
 
+The RPMB layer aims to provide in-kernel API for Trusted Execution
+Environment (TEE) devices that are capable to securely compute block
+frame signature. In case a TEE device wish to store a replay protected
+data, it creates an RPMB frame with requested data and computes HMAC of
+the frame, then it requests the storage device via RPMB layer to store
+the data.
+A TEE driver can claim the RPMB interface, for example, via
+class_interface_register ().
+The layer provides two APIs, for rpmb_req_cmd() for issuing one of RPMB
+specific commands and rpmb_seq_cmd() for issuing of raw RPMB protocol
+frames,  which is close to emmc multi ioctl interface.
 
------ Original Message -----
-> From: "Johannes Thumshirn" <jthumshirn@suse.de>
-> To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James Bottomley" <jejb@linux.vnet.ibm.com>, "James Smart"
-> <james.smart@avagotech.com>, "Dick Kennedy" <dick.kennedy@avagotech.com>
-> Cc: "Linux SCSI Mailinglist" <linux-scsi@vger.kernel.org>, "Johannes Thumshirn" <jthumshirn@suse.de>
-> Sent: Monday, July 18, 2016 10:06:03 AM
-> Subject: [PATCH 1/2] lpfc: call lpfc_sli_validate_fcp_iocb() with the hbalock held
-> 
-> Call lpfc_sli_validate_fcp_iocb() with the hbalock held, as the pointer to
-> iocbq is not guaranteed to still be valid after looking it up.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/lpfc/lpfc_sli.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 1a248a2..d58ec4c 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -9978,6 +9978,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t
-> tgt_id, uint64_t lun_id,
->  	struct lpfc_iocbq *iocbq;
->  	int sum, i;
->  
-> +	spin_lock_irq(&phba->hbalock);
->  	for (i = 1, sum = 0; i <= phba->sli.last_iotag; i++) {
->  		iocbq = phba->sli.iocbq_lookup[i];
->  
-> @@ -9985,6 +9986,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t
-> tgt_id, uint64_t lun_id,
->  						ctx_cmd) == 0)
->  			sum++;
->  	}
-> +	spin_unlock_irq(&phba->hbalock);
->  
->  	return sum;
->  }
-> --
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-Hi Johannes
+A storage device registers its RPMB hardware (eMMC) partition or RPMB
+W-LUN (UFS) with the RPMB layer providing an implementation for
+rpmb_seq_cmd() handler. The interface enables sending sequence of RPMB
+standard frames.
 
-The code looks correct, but I would get a review from James Smart or Dick Kennedy at Emulex (now Broadcom :))
-Have you experienced an issue already due to this, can you share the stack trace of the issue if you have it.
+A parallel user space API is provided via /dev/rpmbX character
+device with two IOCTL commands.
+Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is performed
+by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD where
+the whole RPMB sequence, including RESULT_READ is supplied by the caller.
+The latter is intended for easier adjusting of the applications that
+use MMC_IOC_MULTI_CMD ioctl, such as 
+https://android.googlesource.com/trusty/app/storage/
 
-Reviewed-by Laurence Oberman <loberman@redhat.com>
+There is a also sample tool under tools/rpmb/ directory that exercises
+these interfaces and a simulation device that implements the device part.
+
+Tomas Winkler (8):
+  rpmb: add Replay Protected Memory Block (RPMB) subsystem
+  char: rpmb: add sysfs-class ABI documentation
+  char: rpmb: add device attributes
+  char: rpmb: provide a user space interface
+  char: rpmb: add RPMB simulation device
+  tools rpmb: add RPBM access tool
+  mmc: block: register RPMB partition with the RPMB subsystem
+  scsi: ufs: connect to RPMB subsystem
+
+ Documentation/ABI/testing/sysfs-class-rpmb |  44 ++
+ Documentation/ioctl/ioctl-number.txt       |   1 +
+ MAINTAINERS                                |  10 +
+ drivers/char/Kconfig                       |   2 +
+ drivers/char/Makefile                      |   1 +
+ drivers/char/rpmb/Kconfig                  |  25 +
+ drivers/char/rpmb/Makefile                 |   6 +
+ drivers/char/rpmb/cdev.c                   | 269 ++++++++
+ drivers/char/rpmb/core.c                   | 484 +++++++++++++++
+ drivers/char/rpmb/rpmb-cdev.h              |  25 +
+ drivers/char/rpmb/rpmb_sim.c               | 668 ++++++++++++++++++++
+ drivers/mmc/card/Kconfig                   |   1 +
+ drivers/mmc/card/block.c                   | 258 +++++++-
+ drivers/scsi/ufs/Kconfig                   |   1 +
+ drivers/scsi/ufs/ufshcd.c                  | 183 ++++++
+ drivers/scsi/ufs/ufshcd.h                  |   2 +
+ include/linux/rpmb.h                       | 165 +++++
+ include/uapi/linux/Kbuild                  |   1 +
+ include/uapi/linux/rpmb.h                  | 152 +++++
+ tools/Makefile                             |  14 +-
+ tools/rpmb/.gitignore                      |   2 +
+ tools/rpmb/Makefile                        |  33 +
+ tools/rpmb/rpmb.c                          | 948 +++++++++++++++++++++++++++++
+ 23 files changed, 3287 insertions(+), 8 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-rpmb
+ create mode 100644 drivers/char/rpmb/Kconfig
+ create mode 100644 drivers/char/rpmb/Makefile
+ create mode 100644 drivers/char/rpmb/cdev.c
+ create mode 100644 drivers/char/rpmb/core.c
+ create mode 100644 drivers/char/rpmb/rpmb-cdev.h
+ create mode 100644 drivers/char/rpmb/rpmb_sim.c
+ create mode 100644 include/linux/rpmb.h
+ create mode 100644 include/uapi/linux/rpmb.h
+ create mode 100644 tools/rpmb/.gitignore
+ create mode 100644 tools/rpmb/Makefile
+ create mode 100644 tools/rpmb/rpmb.c
+
+-- 
+2.5.5
+
