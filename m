@@ -1,108 +1,173 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH 2/3] xen-scsiback: One function call less in
- scsiback_device_action() after error detection
-Date: Mon, 18 Jul 2016 07:11:36 +0200
-Message-ID: <fb5824ad-fb09-e471-7dc4-3e32564cc334@suse.com>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
- <59e51c7d-f7bb-c55f-d2fe-06dccfef6a99@users.sourceforge.net>
- <87e55a72-71ad-d0a1-b936-12565bbc6508@users.sourceforge.net>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
+Date: Mon, 18 Jul 2016 16:02:15 +1000
+Message-ID: <20160718060215.GB16044@dastard>
+References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
+ <20160717000003.GW1922@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <87e55a72-71ad-d0a1-b936-12565bbc6508@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16600 "EHLO
+	ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751802AbcGRGCV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jul 2016 02:02:21 -0400
+Content-Disposition: inline
+In-Reply-To: <20160717000003.GW1922@dastard>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>
+Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
 
-On 16/07/16 22:23, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sat, 16 Jul 2016 21:42:42 +0200
+On Sun, Jul 17, 2016 at 10:00:03AM +1000, Dave Chinner wrote:
+> On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
+> > Hello all,
+> > 
+> > I've found a nasty source of slab corruption. Based on seeing similar symptoms
+> > on boxes at Facebook, I suspect it's been around since at least 3.10.
+> > 
+> > It only reproduces under memory pressure so far as I can tell: the issue seems
+> > to be that XFS reclaims pages from buffers that are still in use by
+> > scsi/block. I'm not sure which side the bug lies on, but I've only observed it
+> > with XFS.
+[....]
+> But this indicates that the page is under writeback at this point,
+> so that tends to indicate that the above freeing was incorrect.
 > 
-> The kfree() function was called in one case by the
-> scsiback_device_action() function during error handling
-> even if the passed variable "tmr" contained a null pointer.
-> 
-> Adjust jump targets according to the Linux coding style convention.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/xen/xen-scsiback.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-> index 4a48c06..7612bc9 100644
-> --- a/drivers/xen/xen-scsiback.c
-> +++ b/drivers/xen/xen-scsiback.c
-> @@ -606,7 +606,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
->  	tmr = kzalloc(sizeof(struct scsiback_tmr), GFP_KERNEL);
->  	if (!tmr) {
->  		target_put_sess_cmd(se_cmd);
-> -		goto err;
-> +		goto do_resp;
->  	}
+> Hmmm - it's clear we've got direct reclaim involved here, and the
+> suspicion of a dirty page that has had it's bufferheads cleared.
+> Are there any other warnings in the log from XFS prior to kasan
+> throwing the error?
 
-Hmm, I'm not convinced this is an improvement.
+Can you try the patch below?
 
-I'd rather rename the new error label to "put_cmd" and get rid of the
-braces in above if statement:
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
--	if (!tmr) {
--		target_put_sess_cmd(se_cmd);
--		goto err;
--	}
-+	if (!tmr)
-+		goto put_cmd;
+xfs: bufferhead chains are invalid after end_page_writeback
 
-and then in the error path:
+From: Dave Chinner <dchinner@redhat.com>
 
--err:
-+put_cmd:
-+	target_put_sess_cmd(se_cmd);
-+free_tmr:
-	kfree(tmr);
+In xfs_finish_page_writeback(), we have a loop that looks like this:
+
+        do {
+                if (off < bvec->bv_offset)
+                        goto next_bh;
+                if (off > end)
+                        break;
+                bh->b_end_io(bh, !error);
+next_bh:
+                off += bh->b_size;
+        } while ((bh = bh->b_this_page) != head);
+
+The b_end_io function is end_buffer_async_write(), which will call
+end_page_writeback() once all the buffers have marked as no longer
+under IO.  This issue here is that the only thing currently
+protecting both the bufferhead chain and the page from being
+reclaimed is the PageWriteback state held on the page.
+
+While we attempt to limit the loop to just the buffers covered by
+the IO, we still read from the buffer size and follow the next
+pointer in the bufferhead chain. There is no guarantee that either
+of these are valid after the PageWriteback flag has been cleared.
+Hence, loops like this are completely unsafe, and result in
+use-after-free issues. One such problem was caught by Calvin Owens
+with KASAN:
+
+.....
+ INFO: Freed in 0x103fc80ec age=18446651500051355200 cpu=2165122683 pid=-1
+  free_buffer_head+0x41/0x90
+  __slab_free+0x1ed/0x340
+  kmem_cache_free+0x270/0x300
+  free_buffer_head+0x41/0x90
+  try_to_free_buffers+0x171/0x240
+  xfs_vm_releasepage+0xcb/0x3b0
+  try_to_release_page+0x106/0x190
+  shrink_page_list+0x118e/0x1a10
+  shrink_inactive_list+0x42c/0xdf0
+  shrink_zone_memcg+0xa09/0xfa0
+  shrink_zone+0x2c3/0xbc0
+.....
+ Call Trace:
+  <IRQ>  [<ffffffff81e8b8e4>] dump_stack+0x68/0x94
+  [<ffffffff8153a995>] print_trailer+0x115/0x1a0
+  [<ffffffff81541174>] object_err+0x34/0x40
+  [<ffffffff815436e7>] kasan_report_error+0x217/0x530
+  [<ffffffff81543b33>] __asan_report_load8_noabort+0x43/0x50
+  [<ffffffff819d651f>] xfs_destroy_ioend+0x3bf/0x4c0
+  [<ffffffff819d69d4>] xfs_end_bio+0x154/0x220
+  [<ffffffff81de0c58>] bio_endio+0x158/0x1b0
+  [<ffffffff81dff61b>] blk_update_request+0x18b/0xb80
+  [<ffffffff821baf57>] scsi_end_request+0x97/0x5a0
+  [<ffffffff821c5558>] scsi_io_completion+0x438/0x1690
+  [<ffffffff821a8d95>] scsi_finish_command+0x375/0x4e0
+  [<ffffffff821c3940>] scsi_softirq_done+0x280/0x340
 
 
-Juergen
+Where the access is occuring during IO completion after the buffer
+had been freed from direct memory reclaim.
 
->  
->  	init_waitqueue_head(&tmr->tmr_wait);
-> @@ -616,7 +616,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
->  			       unpacked_lun, tmr, act, GFP_KERNEL,
->  			       tag, TARGET_SCF_ACK_KREF);
->  	if (rc)
-> -		goto err;
-> +		goto free_tmr;
->  
->  	wait_event(tmr->tmr_wait, atomic_read(&tmr->tmr_complete));
->  
-> @@ -626,8 +626,9 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
->  	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
->  	transport_generic_free_cmd(&pending_req->se_cmd, 1);
->  	return;
-> -err:
-> +free_tmr:
->  	kfree(tmr);
-> +do_resp:
->  	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
->  }
->  
-> 
+Prevent use-after-free accidents in this end_io processing loop by
+pre-calculating the loop conditionals before calling bh->b_end_io().
+The loop is already limited to just the bufferheads covered by the
+IO in progress, so the offset checks are sufficient to prevent
+accessing buffers in the chain after end_page_writeback() has been
+called by the the bh->b_end_io() callout.
 
+Yet another example of why Bufferheads Must Die.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_aops.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 80714eb..0cfb944 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -87,6 +87,12 @@ xfs_find_bdev_for_inode(
+  * We're now finished for good with this page.  Update the page state via the
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
++ *
++ * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
++ * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
++ * the page at all, as we may be racing with memory reclaim and it can free both
++ * the bufferhead chain and the page as it will see the page as clean and
++ * unused.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -95,8 +101,9 @@ xfs_finish_page_writeback(
+ 	int			error)
+ {
+ 	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh;
++	struct buffer_head	*head, *bh, *next;
+ 	unsigned int		off = 0;
++	unsigned int		bsize;
+ 
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & ((1 << inode->i_blkbits) - 1)) == 0);
+@@ -105,15 +112,17 @@ xfs_finish_page_writeback(
+ 
+ 	bh = head = page_buffers(bvec->bv_page);
+ 
++	bsize = bh->b_size;
+ 	do {
++		next = bh->b_this_page;
+ 		if (off < bvec->bv_offset)
+ 			goto next_bh;
+ 		if (off > end)
+ 			break;
+ 		bh->b_end_io(bh, !error);
+ next_bh:
+-		off += bh->b_size;
+-	} while ((bh = bh->b_this_page) != head);
++		off += bsize;
++	} while ((bh = next) != head);
+ }
+ 
+ /*
