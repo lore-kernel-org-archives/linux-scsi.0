@@ -1,63 +1,49 @@
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Subject: Re: [PATCH v2] cxl: remove dead Kconfig options
-Date: Mon, 18 Jul 2016 14:59:14 +1000
-Message-ID: <14b26416-8ead-5329-13bb-078b6badd0cd@au1.ibm.com>
-References: <1467616334-20977-1-git-send-email-andrew.donnellan@au1.ibm.com>
- <1468817577-1843-1-git-send-email-andrew.donnellan@au1.ibm.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH 1/3] xen-scsiback: Delete an unnecessary check before the
+ function call "kfree"
+Date: Mon, 18 Jul 2016 07:01:48 +0200
+Message-ID: <0efb482b-8cad-9d0a-253b-5cd2f56baf1b@suse.com>
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <59e51c7d-f7bb-c55f-d2fe-06dccfef6a99@users.sourceforge.net>
+ <fa839c03-b076-0264-c363-5581d0298632@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45133 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750929AbcGRE7W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jul 2016 00:59:22 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6I4wNC8134437
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2016 00:59:21 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 2481yfh40v-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2016 00:59:21 -0400
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
-	Mon, 18 Jul 2016 14:59:18 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 867443578053
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2016 14:59:15 +1000 (EST)
-Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u6I4xFG026017876
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2016 14:59:15 +1000
-Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
-	by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u6I4xEgX027823
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2016 14:59:15 +1000
-In-Reply-To: <1468817577-1843-1-git-send-email-andrew.donnellan@au1.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <fa839c03-b076-0264-c363-5581d0298632@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org
-Cc: clombard@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, mrochs@linux.vnet.ibm.com, fbarrat@linux.vnet.ibm.com, manoj@linux.vnet.ibm.com, imunsie@au1.ibm.com
 
-On 18/07/16 14:52, Andrew Donnellan wrote:
-> Remove the CXL_KERNEL_API and CXL_EEH Kconfig options, as they were only
-> needed to coordinate the merging of the cxlflash driver. Also remove the
-> stub implementation of cxl_perst_reloads_same_image() in cxlflash which is
-> only used if CXL_EEH isn't defined (i.e. never).
->
-> Suggested-by: Ian Munsie <imunsie@au1.ibm.com>
-> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-> Acked-by: Ian Munsie <imunsie@au1.ibm.com>
-> Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
->
-> ---
->
-> Applies on top of powerpc#next, now that the Mellanox CX-4 patches have
-> been applied.
+On 16/07/16 22:22, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 16 Jul 2016 21:21:05 +0200
+> 
+> The kfree() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-As it turns out, this patch is exactly identical to V1... oh well.
+Reviewed-by: Juergen Gross <jgross@suse.com>
 
--- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
 
+Juergen
