@@ -1,83 +1,82 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v4] libata-scsi: better style in ata_msense_*()
-Date: Wed, 20 Jul 2016 04:44:46 +0800
-Message-ID: <CAGnHSEkEKhOhYUF06hk5K-YTWfhokrnT=hpkAHGGZ20y6zvbFA@mail.gmail.com>
-References: <5784f28c.c4d0620a.69372.3df2@mx.google.com> <578e9008.4500420a.2d828.d131@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:34105 "EHLO
-	mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023AbcGSUos (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2016 16:44:48 -0400
+From: tom.ty89@gmail.com
+Subject: [PATCH v4] libata-scsi: minor cleanup in ata_mselect_*()
+Date: Wed, 20 Jul 2016 05:11:50 +0800
+Message-ID: <578e979d.d40c620a.f5800.0924@mx.google.com>
+References: <578e9008.4500420a.2d828.d131@mx.google.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <578e9008.4500420a.2d828.d131@mx.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-FWIW, I end up using `bool d_sense = (dev->flags &
-ATA_DFLAG_D_SENSE)`, which was introduced to ata_scsi_set_sense() in
-commit 06dbde5f3a44 ("libata: Implement control mode page to select
-sense format"), in the polished ata_msense_control().
+From: Tom Yan <tom.ty89@gmail.com>
 
-@Sergei, I kept the parentheses for the bit shifting/masking results
-because it appears that the rest of the code in libata-scsi.c does
-that as well. So I am not going to partially clean up that to avoid
-making it look inconsistent.
+1. Removed a repeated bit masking in ata_mselect_control()
+2. Moved `wce`/`d_sense` assignment below the page validity checks
+3. Added/Removed empty lines where appropriate
 
-On 20 July 2016 at 04:39,  <tom.ty89@gmail.com> wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
->
-> `changeable` is the "version" of mode page requested by the user.
-> It will be less confusing/misleading if we do not check it
-> "together" with the setting bits of the drive.
->
-> Not to mention that we currently have ata_mselect_*() implemented
-> in a way that each of them will serve exclusively a particular bit
-> on each page. The old style will hence make the condition look even
-> more unnecessarily arcane if the ata_msense_*() is reflecting more
-> than one bit.
->
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
->
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index bf4cb21..b00521b 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2424,10 +2424,12 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
->  static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
->  {
->         modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
-> -       if (changeable || ata_id_wcache_enabled(id))
-> -               buf[2] |= (1 << 2);     /* write cache enable */
-> -       if (!changeable && !ata_id_rahead_enabled(id))
-> -               buf[12] |= (1 << 5);    /* disable read ahead */
-> +       if (changeable) {
-> +               buf[2] |= (1 << 2);     /* ata_mselect_caching() */
-> +       } else {
-> +               buf[2] |= (ata_id_wcache_enabled(id) << 2);     /* write cache enable */
-> +               buf[12] |= (!ata_id_rahead_enabled(id) << 5);   /* disable read ahead */
-> +       }
->         return sizeof(def_cache_mpage);
->  }
->
-> @@ -2446,8 +2448,13 @@ static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
->                                         bool changeable)
->  {
->         modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
-> -       if (changeable || (dev->flags & ATA_DFLAG_D_SENSE))
-> -               buf[2] |= (1 << 2);     /* Descriptor sense requested */
-> +       if (changeable) {
-> +               buf[2] |= (1 << 2);     /* ata_mselect_control() */
-> +       } else {
-> +               bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
-> +
-> +               buf[2] |= (d_sense << 2);       /* descriptor format sense data */
-> +       }
->         return sizeof(def_control_mpage);
->  }
->
-> --
-> 2.9.0
->
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index b00521b..06afe63 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3604,7 +3604,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 	 * The first two bytes of def_cache_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+-
+ 	if (len != CACHE_MPAGE_LEN - 2) {
+ 		if (len < CACHE_MPAGE_LEN - 2)
+ 			*fp = len;
+@@ -3613,8 +3612,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 		return -EINVAL;
+ 	}
+ 
+-	wce = buf[0] & (1 << 2);
+-
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+@@ -3628,6 +3625,8 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 		}
+ 	}
+ 
++	wce = buf[0] & (1 << 2);
++
+ 	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+ 	tf->protocol = ATA_PROT_NODATA;
+ 	tf->nsect = 0;
+@@ -3660,7 +3659,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 	 * The first two bytes of def_control_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+-
+ 	if (len != CONTROL_MPAGE_LEN - 2) {
+ 		if (len < CONTROL_MPAGE_LEN - 2)
+ 			*fp = len;
+@@ -3669,8 +3667,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 		return -EINVAL;
+ 	}
+ 
+-	d_sense = buf[0] & (1 << 2);
+-
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+@@ -3683,7 +3679,10 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 			return -EINVAL;
+ 		}
+ 	}
+-	if (d_sense & (1 << 2))
++
++	d_sense = buf[0] & (1 << 2);
++
++	if (d_sense)
+ 		dev->flags |= ATA_DFLAG_D_SENSE;
+ 	else
+ 		dev->flags &= ~ATA_DFLAG_D_SENSE;
+-- 
+2.9.0
+
