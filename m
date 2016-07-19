@@ -1,47 +1,270 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/5] sd: Limit messages for ZBC disks capacity change
-Date: Tue, 19 Jul 2016 15:25:09 +0200
-Message-ID: <1468934710-93876-5-git-send-email-hare@suse.de>
+Subject: [PATCH 1/5] sd: configure ZBC devices
+Date: Tue, 19 Jul 2016 15:25:06 +0200
+Message-ID: <1468934710-93876-2-git-send-email-hare@suse.de>
 References: <1468934710-93876-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60560 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60534 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753775AbcGSNZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2016 09:25:14 -0400
+	id S1753763AbcGSNZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jul 2016 09:25:13 -0400
 In-Reply-To: <1468934710-93876-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-From: Damien Le Moal <damien.lemoal@hgst.com>
+For ZBC devices I/O must not cross zone boundaries, so setup
+the 'chunk_sectors' block queue setting to the zone size.
+This is only valid for REPORT ZONES SAME type 2 or 3;
+for other types the zone sizes might be different
+for individual zones. So issue a warning if the type is
+found to be different.
+Also the capacity might be different from the announced
+capacity, so adjust it as needed.
 
-For ZBC disks with RC_BASIS=0, limit the message indicating
-the capacity adjustment to the disk first scan.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/sd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/sd.c         | 120 ++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/sd.h         |  12 +++++
+ include/scsi/scsi_proto.h |  17 +++++++
+ 3 files changed, 144 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f7b6132..3a9d96e 100644
+index 428c03e..249ea81 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -2128,9 +2128,10 @@ static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
- 		/* The max_lba field is the capacity of a zoned device */
- 		lba = get_unaligned_be64(&buffer[8]);
- 		if (lba + 1 > sdkp->capacity) {
--			sd_printk(KERN_WARNING, sdkp,
--				  "Max LBA %zu (capacity %zu)\n",
--				  (sector_t) lba + 1, sdkp->capacity);
-+			if (sdkp->first_scan)
-+				sd_printk(KERN_WARNING, sdkp,
-+					  "Changing capacity from %zu to Max LBA+1 %zu\n",
-+					  sdkp->capacity, (sector_t) lba + 1);
- 			sdkp->capacity = lba + 1;
- 		}
+@@ -1972,6 +1972,57 @@ sd_spinup_disk(struct scsi_disk *sdkp)
  	}
+ }
+ 
++/**
++ * sd_zbc_report_zones - Issue a REPORT ZONES scsi command
++ * @sdkp: SCSI disk to which the command should be send
++ * @buffer: response buffer
++ * @bufflen: length of @buffer
++ * @start_sector: logical sector for the zone information should be reported
++ * @option: option for report zones command
++ * @partial: flag to set 'partial' bit for report zones command
++ */
++static int
++sd_zbc_report_zones(struct scsi_disk *sdkp, unsigned char *buffer,
++		    int bufflen, sector_t start_sector,
++		    enum zbc_zone_reporting_options option, bool partial)
++{
++	struct scsi_device *sdp = sdkp->device;
++	const int timeout = sdp->request_queue->rq_timeout
++		* SD_FLUSH_TIMEOUT_MULTIPLIER;
++	struct scsi_sense_hdr sshdr;
++	sector_t start_lba = sectors_to_logical(sdkp->device, start_sector);
++	unsigned char cmd[16];
++	int result;
++
++	if (!scsi_device_online(sdp)) {
++		sd_printk(KERN_INFO, sdkp, "device not online\n");
++		return -ENODEV;
++	}
++
++	sd_printk(KERN_INFO, sdkp, "REPORT ZONES lba %zu len %d\n",
++		  start_lba, bufflen);
++
++	memset(cmd, 0, 16);
++	cmd[0] = ZBC_IN;
++	cmd[1] = ZI_REPORT_ZONES;
++	put_unaligned_be64(start_lba, &cmd[2]);
++	put_unaligned_be32(bufflen, &cmd[10]);
++	cmd[14] = (partial ? ZBC_REPORT_ZONE_PARTIAL : 0) | option;
++	memset(buffer, 0, bufflen);
++
++	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
++				  buffer, bufflen, &sshdr,
++				  timeout, SD_MAX_RETRIES, NULL);
++
++	if (result) {
++		sd_printk(KERN_NOTICE, sdkp,
++			  "REPORT ZONES lba %zu failed with %d/%d\n",
++			  start_lba, host_byte(result), driver_byte(result));
++
++		return -EIO;
++	}
++	return 0;
++}
+ 
+ /*
+  * Determine whether disk supports Data Integrity Field.
+@@ -2014,6 +2065,59 @@ static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer
+ 	return ret;
+ }
+ 
++static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	int retval;
++	unsigned char *desc;
++	u32 rep_len;
++	u8 same;
++	u64 zone_len, lba;
++
++	if (sdkp->zoned != 1)
++		/* Device managed, no special handling required */
++		return;
++
++	retval = sd_zbc_report_zones(sdkp, buffer, SD_BUF_SIZE,
++				     0, ZBC_ZONE_REPORTING_OPTION_ALL, false);
++	if (retval < 0)
++		return;
++
++	rep_len = get_unaligned_be32(&buffer[0]);
++	if (rep_len < 64) {
++		sd_printk(KERN_WARNING, sdkp,
++			  "REPORT ZONES report invalid length %u\n",
++			  rep_len);
++		return;
++	}
++
++	if (sdkp->rc_basis == 0) {
++		/* The max_lba field is the capacity of a zoned device */
++		lba = get_unaligned_be64(&buffer[8]);
++		if (lba + 1 > sdkp->capacity) {
++			sd_printk(KERN_WARNING, sdkp,
++				  "Max LBA %zu (capacity %zu)\n",
++				  (sector_t) lba + 1, sdkp->capacity);
++			sdkp->capacity = lba + 1;
++		}
++	}
++
++	/*
++	 * Adjust 'chunk_sectors' to the zone length if the device
++	 * supports equal zone sizes.
++	 */
++	same = buffer[4] & 0xf;
++	if (same == 0 || same > 3) {
++		sd_printk(KERN_WARNING, sdkp,
++			  "REPORT ZONES SAME type %d not supported\n", same);
++		return;
++	}
++	/* Read the zone length from the first zone descriptor */
++	desc = &buffer[64];
++	zone_len = logical_to_sectors(sdkp->device,
++				      get_unaligned_be64(&desc[8]));
++	blk_queue_chunk_sectors(sdkp->disk->queue, zone_len);
++}
++
+ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 			struct scsi_sense_hdr *sshdr, int sense_valid,
+ 			int the_result)
+@@ -2122,6 +2226,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	/* Logical blocks per physical block exponent */
+ 	sdkp->physical_block_size = (1 << (buffer[13] & 0xf)) * sector_size;
+ 
++	/* RC basis */
++	sdkp->rc_basis = (buffer[12] >> 4) & 0x3;
++
+ 	/* Lowest aligned logical block */
+ 	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
+ 	blk_queue_alignment_offset(sdp->request_queue, alignment);
+@@ -2312,6 +2419,11 @@ got_data:
+ 		sector_size = 512;
+ 	}
+ 	blk_queue_logical_block_size(sdp->request_queue, sector_size);
++	blk_queue_physical_block_size(sdp->request_queue,
++				      sdkp->physical_block_size);
++	sdkp->device->sector_size = sector_size;
++
++	sd_read_zones(sdkp, buffer);
+ 
+ 	{
+ 		char cap_str_2[10], cap_str_10[10];
+@@ -2338,9 +2450,6 @@ got_data:
+ 	if (sdkp->capacity > 0xffffffff)
+ 		sdp->use_16_for_rw = 1;
+ 
+-	blk_queue_physical_block_size(sdp->request_queue,
+-				      sdkp->physical_block_size);
+-	sdkp->device->sector_size = sector_size;
+ }
+ 
+ /* called with buffer of length 512 */
+@@ -2727,6 +2836,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 		queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, sdkp->disk->queue);
+ 	}
+ 
++	sdkp->zoned = (buffer[8] >> 4) & 3;
+  out:
+ 	kfree(buffer);
+ }
+@@ -2825,14 +2935,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 * react badly if we do.
+ 	 */
+ 	if (sdkp->media_present) {
+-		sd_read_capacity(sdkp, buffer);
+-
+ 		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+ 			sd_read_block_limits(sdkp);
+ 			sd_read_block_characteristics(sdkp);
+ 		}
+ 
++		sd_read_capacity(sdkp, buffer);
++
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 654630b..74ec357 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -94,6 +94,8 @@ struct scsi_disk {
+ 	unsigned	lbpvpd : 1;
+ 	unsigned	ws10 : 1;
+ 	unsigned	ws16 : 1;
++	unsigned	rc_basis: 2;
++	unsigned	zoned: 2;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
+@@ -151,6 +153,16 @@ static inline sector_t logical_to_sectors(struct scsi_device *sdev, sector_t blo
+ 	return blocks << (ilog2(sdev->sector_size) - 9);
+ }
+ 
++static inline sector_t sectors_to_logical(struct scsi_device *sdev, sector_t sector)
++{
++	return sector >> (ilog2(sdev->sector_size) - 9);
++}
++
++static inline unsigned int logical_to_bytes(struct scsi_device *sdev, sector_t blocks)
++{
++	return blocks * sdev->sector_size;
++}
++
+ /*
+  * A DIF-capable target device can be formatted with different
+  * protection schemes.  Currently 0 through 3 are defined:
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index d1defd1..6ba66e0 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -299,4 +299,21 @@ struct scsi_lun {
+ #define SCSI_ACCESS_STATE_MASK        0x0f
+ #define SCSI_ACCESS_STATE_PREFERRED   0x80
+ 
++/* Reporting options for REPORT ZONES */
++enum zbc_zone_reporting_options {
++	ZBC_ZONE_REPORTING_OPTION_ALL = 0,
++	ZBC_ZONE_REPORTING_OPTION_EMPTY,
++	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN,
++	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN,
++	ZBC_ZONE_REPORTING_OPTION_CLOSED,
++	ZBC_ZONE_REPORTING_OPTION_FULL,
++	ZBC_ZONE_REPORTING_OPTION_READONLY,
++	ZBC_ZONE_REPORTING_OPTION_OFFLINE,
++	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP = 0x10,
++	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE,
++	ZBC_ZONE_REPORTING_OPTION_NON_WP = 0x3f,
++};
++
++#define ZBC_REPORT_ZONE_PARTIAL 0x80
++
+ #endif /* _SCSI_PROTO_H_ */
 -- 
 1.8.5.6
 
