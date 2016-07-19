@@ -1,62 +1,37 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH 1/2] lpfc: call lpfc_sli_validate_fcp_iocb() with the
- hbalock held
-Date: Tue, 19 Jul 2016 08:31:17 -0700
-Message-ID: <fe32617c-68e6-a60a-c5c3-c1926fdf7b1e@broadcom.com>
-References: <1468850763-72179-1-git-send-email-jthumshirn@suse.de>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [net-next v2 1/6] libcxgb: add library module for Chelsio
+ drivers
+Date: Tue, 19 Jul 2016 10:43:11 -0700 (PDT)
+Message-ID: <20160719.104311.2236254119909398910.davem@davemloft.net>
+References: <cover.1468689125.git.varun@chelsio.com>
+	<cover.1468689125.git.varun@chelsio.com>
+	<c7109ba4c9c00f0580b8e603a3c9ac53e5750ad4.1468689125.git.varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:35475 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753468AbcGSPbT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2016 11:31:19 -0400
-Received: by mail-pf0-f181.google.com with SMTP id x72so8395126pfd.2
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2016 08:31:19 -0700 (PDT)
-In-Reply-To: <1468850763-72179-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <c7109ba4c9c00f0580b8e603a3c9ac53e5750ad4.1468689125.git.varun@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: varun@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, hariprasad@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-The check is better and is fine to accept. However, in reviewing the 
-code, there may still be some raciness as some of the fields validated 
-aren't set under lock. We'll look deeper. Regardless, holding the lock 
-while counting is a very good thing to do.
+From: Varun Prakash <varun@chelsio.com>
+Date: Sat, 16 Jul 2016 22:49:15 +0530
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
+>  }
+> +
+> +static int __init libcxgb_init(void)
+> +{
+> +	return 0;
+> +}
+> +
+> +static void __exit libcxgb_exit(void)
+> +{
+> +}
+> +
+> +module_init(libcxgb_init);
+> +module_exit(libcxgb_exit);
 
--- james
-
-
-On 7/18/2016 7:06 AM, Johannes Thumshirn wrote:
-> Call lpfc_sli_validate_fcp_iocb() with the hbalock held, as the pointer to
-> iocbq is not guaranteed to still be valid after looking it up.
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/lpfc/lpfc_sli.c | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 1a248a2..d58ec4c 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -9978,6 +9978,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t tgt_id, uint64_t lun_id,
->   	struct lpfc_iocbq *iocbq;
->   	int sum, i;
->   
-> +	spin_lock_irq(&phba->hbalock);
->   	for (i = 1, sum = 0; i <= phba->sli.last_iotag; i++) {
->   		iocbq = phba->sli.iocbq_lookup[i];
->   
-> @@ -9985,6 +9986,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t tgt_id, uint64_t lun_id,
->   						ctx_cmd) == 0)
->   			sum++;
->   	}
-> +	spin_unlock_irq(&phba->hbalock);
->   
->   	return sum;
->   }
-
+If these functions don't have to do anything, you can remove this
+entire sequence entirely.
